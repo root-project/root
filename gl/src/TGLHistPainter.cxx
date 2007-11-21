@@ -39,7 +39,7 @@ The following types of plots are provided:
   Lego painter in cartesian supports logarithmic scales for X, Y, Z.
   In polar only Z axis can be logarithmic, in cylindrical only Y (if you see
   what it means).
-  
+
 
 <p><li><b>Surfaces (<tt>TF2</tt> and <tt>TH2</tt> with <tt>"GLSURF"</tt> options) - (<tt>TGLSurfacePainter</tt>)</b>
   <br> The supported options are:
@@ -53,7 +53,7 @@ The following types of plots are provided:
 
   The surface painting in cartesian coordinates supports logarithmic scales along X, Y, Z axis.
   In polar coordinates only the Z axis can be logarithmic, in cylindrical coordinates only the Y axis.
-  
+
 <p><li><b>Additional options to <tt>SURF</tt> and <tt>LEGO</tt> - Coordinate systems:</b>
   <br> The supported options are:
   <ul>
@@ -69,13 +69,13 @@ The following types of plots are provided:
   <li> <tt>"GLBOX" :</tt> TH3 as a set of boxes, size of box is proportional to bin content.
   <li> <tt>"GLBOX1":</tt> the same as "glbox", but spheres are drawn instead of boxes.
   </ul>
-  
+
 <p><li><b><tt>TH3</tt> as iso-surface(s) - (<tt>TGLIsoPainter</tt>)</b>
   <br> The supported option is:
   <ul>
   <li> <tt>"GLISO" :</tt> TH3 is drawn using iso-surfaces.
   </ul>
-  
+
 
 <p><li><b><tt>TF3</tt> (implicit function) - (<tt>TGLTF3Painter</tt>)</b>
   <br> The supported option is:
@@ -84,7 +84,7 @@ The following types of plots are provided:
   </ul>
 
 <p><li><b>Parametric surfaces - (<tt>TGLParametricPlot</tt>)</b>
-  <br><tt>$ROOTSYS/tutorials/gl/glparametric.C</tt> shows how to create parametric equations and 
+  <br><tt>$ROOTSYS/tutorials/gl/glparametric.C</tt> shows how to create parametric equations and
   visualize the surface.
 </ul>
 
@@ -93,21 +93,21 @@ The following types of plots are provided:
 <ul>
 <p><li><b>General information.</b>
   <br>
-  All the interactions are implemented via standard methods <tt>DistancetoPrimitive</tt> and 
+  All the interactions are implemented via standard methods <tt>DistancetoPrimitive</tt> and
   <tt>ExecuteEvent</tt>. That's why all the interactions with the OpenGL plots are possible i
-  only when the mouse cursor is in the plot's area (the plot's area is the part of a the pad 
-  occupied by gl-produced picture). If the mouse cursor is not above gl-picture, 
+  only when the mouse cursor is in the plot's area (the plot's area is the part of a the pad
+  occupied by gl-produced picture). If the mouse cursor is not above gl-picture,
   the standard pad interaction is performed.
-  
+
 <p><li><b>Selectable parts.</b>
   <br>
   Different parts of the plot can be selected:
   <ul>
-  <li> <em>xoz, yoz, xoy back planes</em>: 
+  <li> <em>xoz, yoz, xoy back planes</em>:
      <br>When such a plane selected, it's highlighted in green if the dynamic slicing
-     by this plane is supported, and it's highlighted in red, if the dynamic slicing 
+     by this plane is supported, and it's highlighted in red, if the dynamic slicing
      is not supported.
-  <li><em>The plot itself</em>: 
+  <li><em>The plot itself</em>:
      <br>On surfaces, the selected surface is outlined in red. (TF3 and ISO are not
      outlined). On lego plots, the selected bin is highlihted. The bin number and content are displayed in pad's status
      bar. In box plots, the box or sphere is highlighted and the bin info is displayed in pad's status bar.
@@ -116,10 +116,10 @@ The following types of plots are provided:
 <p><li><b>Rotation and zooming.</b>
   <br>
   <ul>
-  <li> <em>Rotation</em>: 
+  <li> <em>Rotation</em>:
   <br>
   When the plot is selected, it can be rotated by pressing and holding the left mouse button and move the cursor.
-  <li> <em>Zoom/Unzoom</em>: 
+  <li> <em>Zoom/Unzoom</em>:
   <br>
   Mouse wheel or <tt>'j'</tt>, <tt>'J'</tt>, <tt>'k'</tt>, <tt>'K'</tt> keys.
   </ul>
@@ -131,9 +131,9 @@ The following types of plots are provided:
 </ul>
 
 <h3>Box cut</h3>
-  Surface, iso, box, TF3 and parametric painters support box cut by pressing the <tt>'c'</tt> or 
-  <tt>'C'</tt> key when the mouse cursor is in a plot's area. That will display a transparent box, 
-  cutting away part of the surface (or boxes) in order to show internal part of plot. 
+  Surface, iso, box, TF3 and parametric painters support box cut by pressing the <tt>'c'</tt> or
+  <tt>'C'</tt> key when the mouse cursor is in a plot's area. That will display a transparent box,
+  cutting away part of the surface (or boxes) in order to show internal part of plot.
   This box can be moved inside the plot's area (the full size of the box is equal to the plot's
   surrounding box) by selecting one of the box cut axes and pressing the left mouse button to move it.
 
@@ -148,7 +148,7 @@ The following types of plots are provided:
   <p><li><b>Surface with option <tt>"GLSURF"</tt></b>
   <br>
   The surface profile is displayed on the slicing plane.
-  The profile projection is drawn on the back plane 
+  The profile projection is drawn on the back plane
   by pressing <tt>'p'</tt> or <tt>'P'</tt> key.
 
   <p><li><b>TF3</b>
@@ -163,11 +163,11 @@ The following types of plots are provided:
   <p><li><b>Iso</b>
   <br>
   Slicing is similar to <tt>"GLBOX"</tt> option.
-  
+
   <p><li><b>Parametric plot</b>
   <br>
   No slicing. Additional keys: <tt>'s'</tt> or <tt>'S'</tt> to change color scheme - about 20 color schemes supported
-  (<tt>'s'</tt> for "scheme"); <tt>'l'</tt> or <tt>'L'</tt> to increase number of polygons (<tt>'l'</tt> for "level" of details), 
+  (<tt>'s'</tt> for "scheme"); <tt>'l'</tt> or <tt>'L'</tt> to increase number of polygons (<tt>'l'</tt> for "level" of details),
   <tt>'w'</tt> or <tt>'W'</tt> to show outlines (<tt>'w'</tt> for "wireframe").
   </ul>
 End_Html */
@@ -382,7 +382,7 @@ char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
    //(this can work incorrectly now, because of wrong code in TF2).
    //For TF3 no info now.
    //For box info is: bin numbers (i, j, k), bin content.
-   static char *errMsg = (char*)"TGLHistPainter::GetObjectInfo: Error in a hist painter\n";
+   static char errMsg[] = { "TGLHistPainter::GetObjectInfo: Error in a hist painter\n" };
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py)
                                    : errMsg;

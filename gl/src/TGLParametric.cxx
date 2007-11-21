@@ -250,7 +250,9 @@ void TGLParametricEquation::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 char *TGLParametricEquation::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
    //No object info yet.
-   return (char *)"parametric surface";
+
+   static char mess[] = { "parametric surface" };
+   return mess;
 }
 
 //______________________________________________________________________________
@@ -402,7 +404,9 @@ void TGLParametricPlot::Pan(Int_t px, Int_t py)
 char *TGLParametricPlot::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
 {
    //No object info yet.
-   return (char *)"parametric surface";
+
+   static char mess[] = { "parametric surface" };
+   return mess;
 }
 
 //______________________________________________________________________________

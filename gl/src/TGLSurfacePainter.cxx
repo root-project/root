@@ -44,12 +44,14 @@ TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotC
 char *TGLSurfacePainter::GetPlotInfo(Int_t px, Int_t py)
 {
    //Coords for point on surface under cursor.
+
+   static char null[] = { "" };
    if (fSelectedPart) {
       if (fHighColor)
          return fSelectedPart < fSelectionBase ? (char *)"TF2" : (char *)"Switch to true-color mode to obtain correct info";
       return fSelectedPart < fSelectionBase ? (char *)"TF2" : WindowPointTo3DPoint(px, py);
    }
-   return (char *)"";
+   return null;
 }
 
 //______________________________________________________________________________
@@ -1018,8 +1020,10 @@ void TGLSurfacePainter::ClampZ(Double_t &zVal)const
 char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
 {
    //Find 3d coords using mouse cursor coords.
-   if (!MakeGLContextCurrent())
-      return (char *)"Apocalipshit!";
+   if (!MakeGLContextCurrent()) {
+      static char err[] = { "Apocalipshit!" };
+      return err;
+   }
 
    py = fCamera->GetHeight() - py;
 

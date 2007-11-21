@@ -164,22 +164,22 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 {
    int fontid = fontnumber / 10;
 
-   char *fontname=0;
-   if (fontid == 0)  fontname = (char *)"arialbd.ttf";
-   if (fontid == 1)  fontname = (char *)"timesi.ttf";
-   if (fontid == 2)  fontname = (char *)"timesbd.ttf";
-   if (fontid == 3)  fontname = (char *)"timesbi.ttf";
-   if (fontid == 4)  fontname = (char *)"arial.ttf";
-   if (fontid == 5)  fontname = (char *)"ariali.ttf";
-   if (fontid == 6)  fontname = (char *)"arialbd.ttf";
-   if (fontid == 7)  fontname = (char *)"arialbi.ttf";
-   if (fontid == 8)  fontname = (char *)"cour.ttf";
-   if (fontid == 9)  fontname = (char *)"couri.ttf";
-   if (fontid == 10) fontname = (char *)"courbd.ttf";
-   if (fontid == 11) fontname = (char *)"courbi.ttf";
-   if (fontid == 12) fontname = (char *)"symbol.ttf";
-   if (fontid == 13) fontname = (char *)"times.ttf";
-   if (fontid == 14) fontname = (char *)"wingding.ttf";
+   const char *fontname=0;
+   if (fontid == 0)  fontname = "arialbd.ttf";
+   if (fontid == 1)  fontname = "timesi.ttf";
+   if (fontid == 2)  fontname = "timesbd.ttf";
+   if (fontid == 3)  fontname = "timesbi.ttf";
+   if (fontid == 4)  fontname = "arial.ttf";
+   if (fontid == 5)  fontname = "ariali.ttf";
+   if (fontid == 6)  fontname = "arialbd.ttf";
+   if (fontid == 7)  fontname = "arialbi.ttf";
+   if (fontid == 8)  fontname = "cour.ttf";
+   if (fontid == 9)  fontname = "couri.ttf";
+   if (fontid == 10) fontname = "courbd.ttf";
+   if (fontid == 11) fontname = "courbi.ttf";
+   if (fontid == 12) fontname = "symbol.ttf";
+   if (fontid == 13) fontname = "times.ttf";
+   if (fontid == 14) fontname = "wingding.ttf";
 
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
