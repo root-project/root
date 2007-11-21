@@ -118,7 +118,7 @@ namespace ROOT {
 
       void Cintex::Enable() {
          if ( Instance().fEnabled ) return;
-         ArtificialSourceFile asf;
+         //ArtificialSourceFile asf;
          //---Declare some extra typdefs to please CINT
          Declare_additional_CINT_typedefs();
          //---Install the callback to fothcoming classes ----//
