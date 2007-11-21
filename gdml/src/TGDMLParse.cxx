@@ -98,7 +98,6 @@ When most solids or volumes are added to the geometry they
 #include "TGeoVolume.h"
 #include "TROOT.h"
 #include "TMath.h"
-#include "TFormula.h"
 #include "TGeoMaterial.h"
 #include "TGeoBoolNode.h"
 #include "TGeoMedium.h"
@@ -112,7 +111,7 @@ ClassImp(TGDMLParse)
 //_________________________________________________________________
 TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename)
 {
-  //creates the new instance of the XMLEngine called 'gdml', using the filename 
+  //creates the new instance of the XMLEngine called 'gdml', using the filename >>
   //then parses the file and creates the DOM tree. Then passes the DOM to the 
   //next funtion to translate it. 
 
@@ -163,6 +162,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* consstr = "constant";
    const char* varistr = "variable";
    const char* rotastr = "rotation";
+   const char* scalstr = "scale";
    const char* elemstr = "element";
    const char* matestr = "material";
    const char* volustr = "volume";
@@ -194,6 +194,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = PosProcess(gdml, node, attr);
    } else if ((strcmp(name, rotastr)) == 0){ 
       node = RotProcess(gdml, node, attr);
+   } else if ((strcmp(name, scalstr)) == 0){ 
+      node = SclProcess(gdml, node, attr);
    } else if ((strcmp(name, setustr)) == 0){ 
       node = TopProcess(gdml, node);
    } else if ((strcmp(name, consstr)) == 0){ 
@@ -285,20 +287,9 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
 //____________________________________________________________
 double TGDMLParse::Evaluate(const char* evalline) {
 
-   //takes in a string containing a mathematical expression and
-   //returns the result of the expression as a double.
+   //takes a string containing a mathematical expression and returns the value of the expression
 
-   char expression[256];
-
-   SolveConst(expression,evalline);
-	
-   TFormula form;
-
-   form.Compile(expression);
- 
-   double result = 0;
-   result = form.Eval(0);
-   return result;
+   return TFormula("TFormula",evalline).Eval(0);
 }
 
 //____________________________________________________________
@@ -381,59 +372,18 @@ const char* TGDMLParse::NameShortB(const char* name)
    return retname;   
 }
 
-//_____________________________________________________________
-void TGDMLParse::SolveConst(char *outStr,const char *inStr)
-{
-   // The following function finds and replaces the 
-   // constants with its values in an expression.
-
-   const char *findStr = NULL;
-   const char *nameStr = NULL;
-   const char *valueStr = NULL;
-   int offset = 0;
-
-   char tempStr[256];
-
-   bool isOtherFile = (strcmp(fCurrentFile,fStartFile)!=0);
-
-   strcpy(outStr,inStr);
-
-   bool isAnyReplaced;
-
-   do {
-      isAnyReplaced = false;
-
-      for (ConMap::iterator iter=fconmap.begin();iter!=fconmap.end();iter++) {     // Look up all the defined constants!
-   
-         nameStr = iter->first;                                                    // Get name and value of constant
-         valueStr = iter->second;
-
-         if (isOtherFile) nameStr = Form("%s_%s",nameStr,fCurrentFile);
- 	
-         findStr = strstr(outStr,nameStr);                                         // Try to find constant by its name in the expression
-         
-         if (findStr==0) continue;                                                 // Skip if not found, otherwise replace
-
-         strcpy(tempStr,outStr);                                                   // We need a copy of the string
-         strcpy(outStr+offset,valueStr);					   // Substitue value of the constant
-         strcpy(outStr+offset+strlen(valueStr),tempStr+offset+strlen(nameStr));	   // Copy characters following the constant
-	
-         isAnyReplaced = true;
-      }
-   } while (isAnyReplaced);                                                        // The while loop is to solve recursion
-}
 
 //________________________________________________________
 XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    //In the define section of the GDML file, constants can be declared.
    //when the constant keyword is found, this function is called, and the
-   //name and value of the constant is stored in fconmap map using the 
-   //constant name as its key.
+   //name and value of the constant is stored in the "fformvec" vector as
+   //a TFormula class, representing a constant function
 
    const char* name = "";
    const char* value = "";
-   const char* tempattr; 
+   const char* tempattr;
    
    while (attr!=0) {
       tempattr = gdml->GetAttrName(attr);
@@ -451,7 +401,7 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       name = Form("%s_%s", name, fCurrentFile);
    }
 
-   fconmap[name] = value;
+   fformvec.push_back(new TFormula(name,value));
 
    return node;
 }
@@ -642,6 +592,52 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    
    return node;
    
+}
+
+//___________________________________________________________________
+XMLNodePointer_t TGDMLParse::SclProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   //In the define section of the GDML file, rotations can be declared.
+   //when the scale keyword is found, this function is called, and the
+   //name and values of the scale are converted into type TGeoScale
+   //and stored in fsclmap map using the name as its key. This function 
+   //can also be called when declaring solids.
+
+   const char* xpos = "0"; 
+   const char* ypos = "0"; 
+   const char* zpos = "0"; 
+   const char* name = "";
+   const char* tempattr; 
+   
+   while (attr!=0) {
+      
+      tempattr = gdml->GetAttrName(attr);
+      
+      if((strcmp(tempattr, "name")) == 0) { 
+         name = gdml->GetAttrValue(attr);
+      }
+      else if((strcmp(tempattr, "x")) == 0) { 
+         xpos = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "y") == 0){
+         ypos = gdml->GetAttrValue(attr);
+      }
+      else if (strcmp(tempattr, "z") == 0){
+         zpos = gdml->GetAttrValue(attr);
+      }
+      
+      attr = gdml->GetNextAttr(attr);   
+   }
+
+   if((strcmp(fCurrentFile,fStartFile)) != 0){
+      name = Form("%s_%s", name, fCurrentFile);
+   }
+
+   TGeoScale* scl = new TGeoScale(Evaluate(xpos),Evaluate(ypos),Evaluate(zpos));
+   
+   fsclmap[name] = scl;
+   
+   return node;
 }
 
 //___________________________________________________________
@@ -917,14 +913,9 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    TGeoVolume* vol = 0; 
    TGeoVolume* lv = 0;
    TGeoShape* reflex = 0;
-   TGeoTranslation* pos = new TGeoTranslation(0,0,0);
-   TGeoRotation* rot = new TGeoRotation();
-   TGeoMatrix* matr;
-   TGeoMatrix* tempmatr = 0;
    const Double_t* parentrot = 0;
    int yesrefl = 0;
    const char* reftemp = "";
-   
    
    while (child!=0) {
       if((strcmp(gdml->GetNodeName(child), "solidref")) == 0){
@@ -986,10 +977,14 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    
    while (child!=0) {
       if((strcmp(gdml->GetNodeName(child), "physvol")) == 0){
+
          const char* volref = "";
+
+         TGeoTranslation* pos = 0;
+         TGeoRotation* rot = 0;
+         TGeoScale* scl = 0;
+	
          subchild = gdml->GetChild(child);
-         pos = new TGeoTranslation(0,0,0);
-         rot = new TGeoRotation();
 
          while (subchild!=0){
             tempattr = gdml->GetNodeName(subchild);
@@ -1045,15 +1040,6 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
                gdml->FreeDoc(filedoc1);
                delete gdml2;
             }
-            else if((strcmp(tempattr, "positionref")) == 0){
-               reftemp = gdml->GetAttr(subchild, "ref");
-               if((strcmp(fCurrentFile,fStartFile)) != 0){
-                  reftemp = Form("%s_%s", reftemp, fCurrentFile);
-               }
-               if(fposmap.find(reftemp) != fposmap.end()){ 
-                  pos = fposmap[reftemp];
-               }
-            } 
             else if((strcmp(tempattr, "position")) == 0){
                attr = gdml->GetFirstAttr(subchild);
                PosProcess(gdml, subchild, attr);
@@ -1063,16 +1049,15 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
                }
                pos = fposmap[reftemp];
             }
-            else if((strcmp(tempattr, "rotationref")) == 0){
+            else if((strcmp(tempattr, "positionref")) == 0){
                reftemp = gdml->GetAttr(subchild, "ref");
                if((strcmp(fCurrentFile,fStartFile)) != 0){
                   reftemp = Form("%s_%s", reftemp, fCurrentFile);
                }
-               if(frotmap.find(reftemp) != frotmap.end()){ 
-                  rot = frotmap[reftemp];
-               }
-            }
-            else if((strcmp(tempattr, "rotation")) == 0){
+               if(fposmap.find(reftemp) != fposmap.end()) pos = fposmap[reftemp];
+	       else std::cout << "ERROR! Physvol's position " << reftemp << " not found!" << std::endl;
+	    } 
+            else if((strcmp(tempattr, "rotation")) == 0) {
                attr = gdml->GetFirstAttr(subchild);
                RotProcess(gdml, subchild, attr);
                reftemp = gdml->GetAttr(subchild, "name");
@@ -1081,6 +1066,31 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
                }
                rot = frotmap[reftemp];
             }
+            else if((strcmp(tempattr, "rotationref")) == 0){
+               reftemp = gdml->GetAttr(subchild, "ref");
+               if((strcmp(fCurrentFile,fStartFile)) != 0){
+                  reftemp = Form("%s_%s", reftemp, fCurrentFile);
+               }
+               if (frotmap.find(reftemp) != frotmap.end()) rot = frotmap[reftemp];
+	       else std::cout << "ERROR! Physvol's rotation " << reftemp << " not found!" << std::endl;
+            }
+            else if((strcmp(tempattr,"scale")) == 0) {
+               attr = gdml->GetFirstAttr(subchild);
+               SclProcess(gdml, subchild, attr);
+               reftemp = gdml->GetAttr(subchild, "name");
+               if((strcmp(fCurrentFile,fStartFile)) != 0){
+                  reftemp = Form("%s_%s", reftemp, fCurrentFile);
+               }
+               scl = fsclmap[reftemp];
+            }
+            else if((strcmp(tempattr, "scaleref")) == 0){
+               reftemp = gdml->GetAttr(subchild, "ref");
+               if((strcmp(fCurrentFile,fStartFile)) != 0){
+                  reftemp = Form("%s_%s", reftemp, fCurrentFile);
+               }
+               if (fsclmap.find(reftemp) != fsclmap.end()) scl = fsclmap[reftemp];
+	       else std::cout << "ERROR! Physvol's scale " << reftemp << " not found!" << std::endl;
+	    }
 
             subchild = gdml->GetNext(subchild);
          }
@@ -1088,50 +1098,45 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          //ADD PHYSVOL TO GEOMETRY
          fVolID = fVolID + 1;
 
-         //if the volume is a reflected volume the matrix needs to be CHANGED
-         if(freflvolmap.find(volref) != freflvolmap.end()){ 
-            TGDMLRefl* temprefl = freflsolidmap[freflvolmap[volref]];
-            tempmatr = new TGeoCombiTrans(*pos, *rot);
-       
-            const Double_t* a_pos = temprefl->GetMatrix()->GetTranslation();
-            const Double_t* b_pos = tempmatr->GetTranslation();
-            const Double_t* a_rot = temprefl->GetMatrix()->GetRotationMatrix();
-            const Double_t* b_rot = tempmatr->GetRotationMatrix();
-            double c_rot[8]; for (int i = 0; i < 9; i++){c_rot[i] = 0;}
-            int a = 0, c = 0;
- 
-            //matrix multiplication
-            for(a=0; a<9; a+=3){
-               for(c=a; c<(a+3); c++){
-                  int b = (c-a);
-                  c_rot[c] = (a_rot[a] * b_rot[b]) + (a_rot[(a+1)] * b_rot[(b+3)]) + (a_rot[(a+2)] * b_rot[(b+6)]);
-               }  
-            }
-       
-            //new matrix values being set
-            rot = new TGeoRotation();
-            rot->SetMatrix(c_rot);
-            pos = new TGeoTranslation();
-            pos->SetDx((a_pos[0] + b_pos[0]));
-            pos->SetDy((a_pos[1] + b_pos[1]));
-            pos->SetDz((a_pos[2] + b_pos[2]));
-       
-         }
-         
-         //reflection from mother volume being carried forward
-         if(yesrefl == 1){
-            const Double_t* tempPos = pos->GetTranslation();      
-            pos->SetDx(tempPos[0]*parentrot[0]);
-            pos->SetDy(tempPos[1]*parentrot[4]);
-            pos->SetDz(tempPos[2]*parentrot[8]);
+         TGeoHMatrix *transform = new TGeoHMatrix();         
 
+         if (pos!=0) transform->SetTranslation(pos->GetTranslation());
+	 if (rot!=0) transform->SetRotation(rot->GetRotationMatrix());
+
+         if (scl!=0) { // Scaling must be added to the rotation matrix!
+
+            Double_t scale3x3[9];
+            memset(scale3x3,0,9*sizeof(Double_t));
+	    const Double_t *diagonal = scl->GetScale();
+
+            scale3x3[0] = diagonal[0];
+            scale3x3[4] = diagonal[1];
+            scale3x3[8] = diagonal[2];
+         
+            TGeoRotation scaleMatrix;
+            scaleMatrix.SetMatrix(scale3x3);
+            transform->Multiply(&scaleMatrix);
+	 }
+
+// BEGIN: reflectedSolid. Remove lines between if reflectedSolid will be removed from GDML!!!
+
+         if(freflvolmap.find(volref) != freflvolmap.end()) { // if the volume is a reflected volume the matrix needs to be CHANGED
+
+            TGDMLRefl* temprefl = freflsolidmap[freflvolmap[volref]];
+            transform->Multiply(temprefl->GetMatrix());
+       	 }
+
+         if(yesrefl == 1) { // reflection is done per solid so that we cancel it if exists in mother volume!!!
+
+              TGeoRotation prot;
+	      prot.SetMatrix(parentrot);
+              transform->MultiplyLeft(&prot);
          }
-         
-         matr = new TGeoCombiTrans(*pos, *rot);
-         vol->AddNode(lv, fVolID, matr);
-         
+
+// END: reflectedSolid
+
+         vol->AddNode(lv,fVolID,transform);
       }
-      
       else if((strcmp(gdml->GetNodeName(child), "divisionvol")) == 0){
    
          const char* divVolref = "";
@@ -3339,6 +3344,8 @@ XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node,
    //be reflected is stored in a map called freflectmap with the reflection 
    //name as a reference.
 
+   std::cout << "WARNING! The reflectedSolid is obsolete! Use scale transformation instead!" << std::endl;
+
    const char* sx = "0"; 
    const char* sy = "0"; 
    const char* sz = "0"; 
@@ -3421,7 +3428,6 @@ XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node,
    freflectmap[name] = solid;
 
    return node;
-   
 }
 
 

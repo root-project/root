@@ -24,7 +24,10 @@
 #include "TGeoVolume.h"
 #endif
 
+#include "TFormula.h"
+
 #include <map>
+#include <vector>
 #include <iostream>
 
 /*************************************************************************
@@ -32,17 +35,17 @@
  *************************************************************************/
 
 class TGDMLRefl : public TObject {
-  
 public:
 
+   TGDMLRefl() {              
 
-   TGDMLRefl() {              //constructor
       fNameS = ""; 
       fSolid = "";
       fMatrix = 0;  
    }       
      
-   virtual ~TGDMLRefl() {}    //destructor 
+   virtual ~TGDMLRefl() {}
+   
    TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix);
    TGeoMatrix* GetMatrix();  
    
@@ -53,7 +56,6 @@ private:
    TGeoMatrix     *fMatrix;     //!matrix of reflected solid
    
    ClassDef(TGDMLRefl, 0)     //helper class used for the storage of reflected solids
-    
 };
      
 /*************************************************************************
@@ -98,9 +100,7 @@ public:
    }
 };
 
-
 class TGDMLParse : public TObject {
-
 public:
   
    const char* fWorldName; //top volume of geometry name
@@ -111,12 +111,17 @@ public:
    const char* fStartFile; //name of originating file
    const char* fCurrentFile; //current file name being parsed
 
-   TGDMLParse() {              //constructor
+   TGDMLParse() { //constructor
+
       fVolID = 0;
       fFILENO = 0;
    }       
      
-   virtual ~TGDMLParse() {}    //destructor
+   virtual ~TGDMLParse() { //destructor
+
+      for (size_t i=0;i<fformvec.size();i++)
+         if (fformvec[i] != NULL) delete fformvec[i];
+   }
 
    static TGeoVolume* StartGDML(const char* filename){
       TGDMLParse* fParser = new TGDMLParse;
@@ -133,12 +138,12 @@ private:
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
    const char*       NameShortB(const char* name);
-   void              SolveConst(char*,const char*);
     
    //'define' section
    XMLNodePointer_t  ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  PosProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  RotProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  SclProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
     
    //'materials' section
    XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
@@ -176,11 +181,11 @@ private:
     
    typedef TGDMMapHelper<TGeoTranslation> PosMap;
    typedef TGDMMapHelper<TGeoRotation> RotMap;
+   typedef TGDMMapHelper<TGeoScale> SclMap;
    typedef TGDMMapHelper<TGeoElement> EleMap;
    typedef TGDMMapHelper<TGeoMaterial> MatMap;
    typedef TGDMMapHelper<TGeoMedium> MedMap;
    typedef TGDMMapHelper<TGeoMixture> MixMap;
-   typedef std::map<const char*,const char*> ConMap;
   
    typedef TGDMMapHelper<TGeoShape> SolMap;
    typedef TGDMMapHelper<TGeoVolume> VolMap;
@@ -189,25 +194,24 @@ private:
    typedef std::map<std::string, std::string> ReflectionsMap;
    typedef std::map<std::string, std::string> ReflVolMap; 
    typedef std::map<std::string, double> FracMap;
+   typedef std::vector<TFormula*> FormVec;
 
    PosMap fposmap;                //!Map containing position names and the TGeoTranslation for it
    RotMap frotmap;                //!Map containing rotation names and the TGeoRotation for it
+   SclMap fsclmap;                //!Map containing scale names and the TGeoScale for it
    EleMap felemap;                //!Map containing element names and the TGeoElement for it
    MatMap fmatmap;                //!Map containing material names and the TGeoMaterial for it
    MedMap fmedmap;                //!Map containing medium names and the TGeoMedium for it
    MixMap fmixmap;                //!Map containing mixture names and the TGeoMixture for it
-   ConMap fconmap;                //!Map containing constant names and the constant's value
    SolMap fsolmap;                //!Map containing solid names and the TGeoShape for it
    VolMap fvolmap;                //!Map containing volume names and the TGeoVolume for it
    ReflectionsMap freflectmap;    //!Map containing reflection names and the Solid name ir references to
    ReflSolidMap freflsolidmap;    //!Map containing reflection names and the TGDMLRefl for it - containing refl matrix
    ReflVolMap freflvolmap;        //!Map containing reflected volume names and the solid ref for it
    FileMap ffilemap;              //!Map containing files parsed during entire parsing, with their world volume name
+   FormVec fformvec;              //!Vector containing constant functions for GDML constant definitions
 
    ClassDef(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
-      
 };
       
 #endif
-      
-      
