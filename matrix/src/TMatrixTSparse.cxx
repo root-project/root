@@ -391,7 +391,7 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
          return;
       }
 
-      if (acoln+nr >= this->fNcols || nr < 0) {
+      if (acoln+nr > this->fNcols || nr < 0) {
          Error("ExtractRow","row length %d out of range",nr);
          return;
       }
