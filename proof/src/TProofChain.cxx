@@ -241,7 +241,7 @@ Long64_t TProofChain::Process(TSelector *selector, Option_t *option,
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
-   if (selector || option || nentries || firstentry);
+   if (selector || option || nentries || firstentry) { }
    //   return fSet->Process(selector, option, nentries, firstentry);
    Warning("Process", "not implemented"); // TODO
    return -1;
@@ -289,8 +289,7 @@ void TProofChain::Progress(Long64_t total, Long64_t processed)
 
    if (gROOT->IsInterrupted() && gProof)
       gProof->StopProcess(kTRUE);
-   if (total)
-      ;
+   if (total) { }
 
    fReadEntry = processed;
 }
