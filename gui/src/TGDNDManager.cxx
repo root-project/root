@@ -181,6 +181,7 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t *typelist)
 
    fMain = toplevel;
    fVersion = ROOTDND_PROTOCOL_VERSION;
+   fUseVersion = kTRUE;
    fTypelist = typelist;
 
    if (!fgInit) {
