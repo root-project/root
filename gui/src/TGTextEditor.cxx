@@ -244,8 +244,6 @@ TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
       // remove the command line combo box and its associated label
       fComboCmd->UnmapWindow();
       fLabel->UnmapWindow();
-      fToolBar->RemoveFrame(fComboCmd);
-      fToolBar->RemoveFrame(fLabel);
       fToolBar->GetButton(kM_FILE_EXIT)->SetState(kButtonDisabled);
       fToolBar->Layout();
    }
@@ -268,8 +266,6 @@ TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h)
       // remove the command line combo box and its associated label
       fComboCmd->UnmapWindow();
       fLabel->UnmapWindow();
-      fToolBar->RemoveFrame(fComboCmd);
-      fToolBar->RemoveFrame(fLabel);
       fToolBar->GetButton(kM_FILE_EXIT)->SetState(kButtonDisabled);
       fToolBar->Layout();
    }
