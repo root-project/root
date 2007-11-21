@@ -77,7 +77,7 @@ STRESSFILESCOPIEDTAG := test/.COPIEDTAG
 
 # Every tests consists of running the test in compiled and
 # interpreted mode
-$(STRESSTESTS): %-test: %-itest %-ctest
+$(STRESSTESTS): %-test: %-itest # no compiled tests - takes too long: %-ctest
 
 # .ref: reference file, should match .log.nomark
 # .log: output of running the test
@@ -99,7 +99,8 @@ $(STRESSFILESCOPIEDTAG): $(STRESSFILESHERE)
 # $(STRESSFLAGS) can be a target-specific variable holding optional
 # arguments to the test; see below for stress-ctest.log
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
-	$(CMDECHO) $(CALLROOTEXE:root.exe=) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1
+	$(CMDECHO) unset DISPLAY; \
+	  $(CALLROOTEXE:root.exe=) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1
 
 # To run an interpreted test we need the source + includes. We don't know
 # the exact dependencies, to we trust the binary: if we have it we have
