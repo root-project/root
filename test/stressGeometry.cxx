@@ -182,7 +182,7 @@ void stressGeometry(const char *exp="*") {
 
 void ReadRef(Int_t kexp) {
    TStopwatch sw;
-   char fname[24];
+   char fname[100];
    sprintf(fname, "http://root.cern.ch/files/%s_ref.root", exps[kexp]);
    TFile::SetCacheFileDir(".");   
    TFile *f = TFile::Open(fname, "CACHEREAD");
