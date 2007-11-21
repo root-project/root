@@ -17,7 +17,8 @@ valgrind: scripts/analyze_valgrind
 	( \
 	valgrind-listener > $$valgrindlogfile 2>&1 & ) && \
 	valgrindlistenerpid=$$$$ && \
-	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) CALLROOTEXE="valgrind --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
+	$(MAKE) -C $$PWD $(filter-out valgrind,$(MAKECMDGOALS)) \
+          CALLROOTEXE="valgrind --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT.supp --suppressions=$(ROOTTEST_HOME)/scripts/valgrind-suppression_ROOT_optional.supp --log-socket=127.0.0.1 --error-limit=no --leak-check=full -v root.exe" ; \
 	killall valgrind-listener; \
 	grep '==[[:digit:]]\+==' $$valgrindlogfile | scripts/analyze_valgrind \
 	&& scripts/analyze_valgrind.sh $$valgrindlogfile > $$valgrindlogfile.summary.txt \
