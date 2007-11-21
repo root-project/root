@@ -2343,6 +2343,27 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
+      cout << "Check insertion/extraction of rows" << endl;
+
+    TMatrixDSparse m1 = m;
+    TVectorD v1(1,csize);
+    TVectorD v2(1,csize);
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
+      v1 = TMatrixDSparseRow(m,i);
+      m1.InsertRow(i,1,v1.GetMatrixArray());
+      ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
+      m1.InsertRow(i,3,v1.GetMatrixArray()+2,v1.GetNrows()-2);
+      ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
+
+      m1.ExtractRow(i,1,v2.GetMatrixArray());
+      ok &= VerifyVectorIdentity(v1,v2,gVerbose,EPSILON);
+      m1.ExtractRow(i,3,v2.GetMatrixArray()+2,v1.GetNrows()-2);
+      ok &= VerifyVectorIdentity(v1,v2,gVerbose,EPSILON);
+    }
+  }
+
+  {
+    if (gVerbose)
       cout << "Check array Use" << endl;
     {
       TMatrixDSparse *m1a = new TMatrixDSparse(m);
