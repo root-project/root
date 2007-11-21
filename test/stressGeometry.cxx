@@ -217,11 +217,10 @@ void ReadRef(Int_t kexp) {
       vect(2) += length;
       vect(3) += rad;
       diff = 0;
-      diff += TMath::Abs(nbound-p.nbound);
       diff += TMath::Abs(length-p.length);
       diff += TMath::Abs(safe-p.safe);
       diff += TMath::Abs(rad-p.rad);
-      if (diff > diffmax) {
+      if (TMath::Abs(rad-p.rad) > 0.1 || TMath::Abs(nbound-p.nbound) > 1) {
          nbad++;
          if (nbad < 10) {
             printf(" ==>Point %lld differs with diff = %g, x=%g, y=%g, z=%g\n",i,diff,p.x,p.y,p.z);
@@ -239,7 +238,8 @@ void ReadRef(Int_t kexp) {
       }    
    }
    diff = 0.;
-   for (Int_t j=1; j<4; j++) diff += TMath::Abs(vect_ref(j)-vect(j));
+   //for (Int_t j=1; j<4; j++) diff += TMath::Abs(vect_ref(j)-vect(j));
+   diff += TMath::Abs(vect_ref(3)-vect(3));
    if (diff > diffmax) {
 //      printf("Total weight=%g   ref=%g\n", vect(0), vect_ref(0));
       printf("Total nbound=%g   ref=%g\n", vect(1), vect_ref(1));
