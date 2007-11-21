@@ -8,7 +8,7 @@
 //                                                                          //
 // TPython                                                                  //
 //                                                                          //
-// Access to the python interpreter.                                        //
+// Access to the python interpreter and API onto PyROOT.                    //
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +45,16 @@ public:
 
 // enter an interactive python session (exit with ^D)
    static void Prompt();
+
+// type verifiers for ObjectProxy
+   Bool_t ObjectProxy_Check( PyObject* pyobject );
+   Bool_t ObjectProxy_CheckExact( PyObject* pyobject );
+
+// object proxy to void* conversion
+   void* ObjectProxy_AsVoidPtr( PyObject* pyobject );
+
+// void* to object proxy conversion
+   PyObject* ObjectProxy_FromVoidPtr( void* addr, const char* classname );
 
    virtual ~TPython() { }
    ClassDef(TPython,0)   //Access to the python interpreter

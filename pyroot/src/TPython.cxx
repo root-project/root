@@ -68,6 +68,12 @@
 // It is possible to switch between interpreters by calling "TPython::Prompt()"
 // on the CINT side, while returning with ^D (EOF). State is preserved between
 // successive switches.
+//
+// The API part provides (direct) C++ access to the bindings functionality of
+// PyROOT. It allows verifying that you deal with a PyROOT python object in the
+// first place (ObjectProxy_Check for ObjectProxy and any derived types, as well
+// as ObjectProxy_CheckExact for ObjectProxy's only); and it allows conversions
+// of void* to an ObjectProxy and vice versa.
 
 
 //- data ---------------------------------------------------------------------
@@ -366,4 +372,61 @@ void TPython::Prompt() {
 
 // enter i/o interactive mode
    PyRun_InteractiveLoop( stdin, const_cast< char* >( "\0" ) );
+}
+
+//____________________________________________________________________________
+Bool_t TPython::ObjectProxy_Check( PyObject* pyobject )
+{
+// Test whether the type of the given pyobject is of ObjectProxy type or any
+// derived type.
+
+// setup
+   if ( ! Initialize() )
+      return kFALSE;
+
+// detailed walk through inheritance hierarchy
+   return PyROOT::ObjectProxy_Check( pyobject );
+}
+
+//____________________________________________________________________________
+Bool_t TPython::ObjectProxy_CheckExact( PyObject* pyobject )
+{
+// Test whether the type of the given pyobject is ObjectProxy type.
+
+// setup
+   if ( ! Initialize() )
+      return kFALSE;
+
+// direct pointer comparison of type member
+   return PyROOT::ObjectProxy_CheckExact( pyobject );
+}
+
+//____________________________________________________________________________
+void* TPython::ObjectProxy_AsVoidPtr( PyObject* pyobject )
+{
+// Extract the object pointer held by the ObjectProxy pyobject.
+
+// setup
+   if ( ! Initialize() )
+      return 0;
+
+// check validity of cast
+   if ( ! PyROOT::ObjectProxy_Check( pyobject ) )
+      return 0;
+
+// get held object (may be null)
+   return ((PyROOT::ObjectProxy*)pyobject)->GetObject();
+}
+
+//____________________________________________________________________________
+PyObject* TPython::ObjectProxy_FromVoidPtr( void* addr, const char* classname )
+{
+// Bind the addr to a python object of class defined by classname.
+
+// setup
+   if ( ! Initialize() )
+      return 0;
+
+// perform cast (the call will check TClass and addr, and set python errors)
+   return PyROOT::BindRootObjectNoCast( addr, TClass::GetClass( classname ), kFALSE );
 }
