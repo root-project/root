@@ -166,6 +166,10 @@ STRESSSHAPESO   = stressShapes.$(ObjSuf)
 STRESSSHAPESS   = stressShapes.$(SrcSuf)
 STRESSSHAPES    = stressShapes$(ExeSuf)
 
+STRESSROOFITO  = stressRooFit.$(ObjSuf)
+STRESSROOFITS  = stressRooFit.$(SrcSuf)
+STRESSROOFIT   = stressRooFit$(ExeSuf)
+
 STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
@@ -205,7 +209,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) \
                 $(STRESSFITO) $(STRESSHEPIXO) \
-                $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
+                $(GUITESTO) $(GUIVIEWERO) $(TETRISO) $(STRESSROOFITO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
@@ -213,7 +217,7 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) \
-                $(GUITEST) $(GUIVIEWER) $(TETRISSO)
+                $(GUITEST) $(GUIVIEWER) $(TETRISSO) $(STRESSROOFIT)
 
 all:            $(PROGRAMS)
 
@@ -336,6 +340,11 @@ $(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
 
 $(STRESSSHAPES):  $(STRESSSHAPESO)
                 $(LD) $(LDFLAGS)  $(STRESSSHAPESO) $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSROOFIT):  $(STRESSROOFITO)
+                $(LD) $(LDFLAGS)  $(STRESSROOFITO) $(LIBS) ../lib/libRooFit.lib  ../lib/libRooFitCore.lib  ../lib/libHtml.lib  ../lib/libThread.lib  ../lib/libMinuit.lib $(OutPutOpt)$@
                 $(MT_EXE)
                 @echo "$@ done"
 
