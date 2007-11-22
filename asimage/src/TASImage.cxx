@@ -123,16 +123,14 @@ typedef struct {
    unsigned char a;
 } __argb32__;
 
-static __argb32__ *t = new __argb32__;
-static __argb32__ *b = new __argb32__;
 
 //______________________________________________________________________________
 #define _alphaBlend(bot, top) do {\
-   t = (__argb32__*)(top);\
-   b = (__argb32__*)(bot);\
+   __argb32__ *t = (__argb32__*)(top);\
+   __argb32__ *b = (__argb32__*)(bot);\
    int aa = 255-t->a;\
    if (!aa) {\
-      *bot = *top;\
+      *b = *t;\
       break;\
    }\
    b->a = (b->a*aa)>>8 + t->a;\
