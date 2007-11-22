@@ -119,7 +119,8 @@ RooFitTestUnit::~RooFitTestUnit()
 void RooFitTestUnit::regPlot(RooPlot* frame, const char* refName) 
 {
   if (_refFile) {
-    _regPlots.push_back(make_pair(frame,refName)) ;
+    string refNameStr(refName) ;
+    _regPlots.push_back(make_pair(frame,refNameStr)) ;
   } else {
     delete frame ;
   }
@@ -128,7 +129,8 @@ void RooFitTestUnit::regPlot(RooPlot* frame, const char* refName)
 void RooFitTestUnit::regResult(RooFitResult* r, const char* refName) 
 {
   if (_refFile) {
-    _regResults.push_back(make_pair(r,refName)) ;
+    string refNameStr(refName) ;
+    _regResults.push_back(make_pair(r,refNameStr)) ;
   } else {
     delete r ;
   }
@@ -137,14 +139,16 @@ void RooFitTestUnit::regResult(RooFitResult* r, const char* refName)
 void RooFitTestUnit::regValue(Double_t d, const char* refName) 
 {
   if (_refFile) {
-    _regValues.push_back(make_pair(d,refName)) ;
+    string refNameStr(refName) ;
+    _regValues.push_back(make_pair(d,refNameStr)) ;
   }
 }
 
 void RooFitTestUnit::regTable(RooTable* t, const char* refName) 
 {
   if (_refFile) {
-    _regTables.push_back(make_pair(t,refName)) ;
+    string refNameStr(refName) ;
+    _regTables.push_back(make_pair(t,refNameStr)) ;
   } else {
     delete t ;
   }
