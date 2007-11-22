@@ -37,7 +37,11 @@ class RooAbsArg ;
 #define oocoutE(o,a) RooMsgService::instance().log(o,RooMsgService::ERROR,RooMsgService::a) 
 #define oocoutF(o,a) RooMsgService::instance().log(o,RooMsgService::FATAL,RooMsgService::a) 
 
+#ifndef _WIN32
 #define ANYDEBUG (RooMsgService::_debugCount>0)
+#else
+#define ANYDEBUG (RooMsgService::anyDebug())
+#endif
 
 #define dologD(a) (ANYDEBUG && RooMsgService::instance().isActive(this,RooMsgService::a,RooMsgService::DEBUG))
 #define dologI(a) (RooMsgService::instance().isActive(this,RooMsgService::a,RooMsgService::INFO))
@@ -106,7 +110,7 @@ public:
 
   // Access to instance
   static RooMsgService& instance() ;
-  static Bool_t anyDebug() { return instance()._debugCount>0 ; }
+  static Bool_t anyDebug() ;
 
   // User interface -- Add or delete reporting streams ;
   Int_t addStream(MsgLevel level, const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),

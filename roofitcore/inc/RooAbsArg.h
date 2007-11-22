@@ -149,17 +149,17 @@ public:
   virtual Bool_t IsSortable() const { return kTRUE ; }
 
   //Debug hooks
-  static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
+  static void verboseDirty(Bool_t flag) ;
   static void copyList(TList& dest, const TList& source) ;
   void printDirty(Bool_t depth=kTRUE) const ;
 
-  static void setDirtyInhibit(Bool_t flag) { _inhibitDirty = flag ; }
-  static void setACleanADirty(Bool_t flag) { _flipAClean = flag ; }
+  static void setDirtyInhibit(Bool_t flag) ;
+  static void setACleanADirty(Bool_t flag) ;
 
   virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
 
   // Formatting control
-  static void nameFieldLength(Int_t newLen) { _nameLength = newLen>0 ? newLen : 0 ; }
+  static void nameFieldLength(Int_t newLen) ;
 
   // Range management
   virtual Bool_t inRange(const char*) const { return kTRUE ; }

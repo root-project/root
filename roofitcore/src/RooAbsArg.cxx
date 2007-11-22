@@ -185,6 +185,28 @@ RooAbsArg::~RooAbsArg()
 }
 
 
+void RooAbsArg::setDirtyInhibit(Bool_t flag) 
+{ 
+  _inhibitDirty = flag ; 
+}
+
+
+void RooAbsArg::setACleanADirty(Bool_t flag) 
+{ 
+  _flipAClean = flag ; 
+}
+
+void RooAbsArg::verboseDirty(Bool_t flag) 
+{ 
+  _verboseDirty = flag ; 
+}
+
+void RooAbsArg::nameFieldLength(Int_t newLen) 
+{ 
+  _nameLength = newLen>0 ? newLen : 0 ; 
+}
+
+
 Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const 
 {
   // Check if this object was created as a clone of 'other' 

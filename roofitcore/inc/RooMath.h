@@ -34,19 +34,13 @@ public:
   static RooComplex ComplexErrFunc(const RooComplex& z);
 
   // Interpolated CERF with automatic interpolation order selection
-  static inline RooComplex FastComplexErrFunc(const RooComplex& z){
-    return ITPComplexErrFunc(z,z.im()>0?3:4) ;
-  }
+  static RooComplex FastComplexErrFunc(const RooComplex& z) ;
   
   // Interpolated Re(CERF) with automatic interpolation order selection
-  static inline Double_t FastComplexErrFuncRe(const RooComplex& z) {
-    return ITPComplexErrFuncRe(z,z.im()>0?3:4) ;
-  }
+  static Double_t FastComplexErrFuncRe(const RooComplex& z) ;
 
   // Interpolated Im(CERF) with automatic interpolation order selection
-  static inline Double_t FastComplexErrFuncIm(const RooComplex& z) {
-    return ITPComplexErrFuncIm(z,z.im()>0?3:4) ;
-  }
+  static Double_t FastComplexErrFuncIm(const RooComplex& z) ;
 
   // Interpolated complex error function at specified interpolation order
   static RooComplex ITPComplexErrFunc(const RooComplex& z, Int_t nOrder) ;
@@ -54,7 +48,7 @@ public:
   static Double_t ITPComplexErrFuncIm(const RooComplex& z, Int_t nOrder) ;
 
   // Switch to use file cache for CERF lookup table
-  static void cacheCERF(Bool_t flag=kTRUE) { _cacheTable = flag ; }
+  static void cacheCERF(Bool_t flag=kTRUE) ;
 
   // 1-D nth order polynomial interpolation routines
   static Double_t interpolate(Double_t yArr[],Int_t nOrder, Double_t x) ;

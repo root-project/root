@@ -26,9 +26,9 @@ public:
 
   // Constructors, assignment etc
   RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& data,
-	     const RooCmdArg& arg1                , const RooCmdArg& arg2=RooCmdArg::none,const RooCmdArg& arg3=RooCmdArg::none,
-	     const RooCmdArg& arg4=RooCmdArg::none, const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none,
-	     const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none,const RooCmdArg& arg9=RooCmdArg::none) ;
+	     const RooCmdArg& arg1                , const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
+	     const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
+	     const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
 	    Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;

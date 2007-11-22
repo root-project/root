@@ -24,9 +24,7 @@ public:
   virtual ~RooNumber() {} ;
 
   static Double_t infinity;
-  static inline Int_t isInfinite(Double_t x) {
-    return (x >= +infinity) ? +1 : ((x <= -infinity) ? -1 : 0);
-  }
+  static Int_t isInfinite(Double_t x) ;
 
   ClassDef(RooNumber,0) // wrapper class for portable numerics
 };

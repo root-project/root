@@ -119,6 +119,12 @@ RooMsgService::~RooMsgService()
 }
 
 
+Bool_t RooMsgService::anyDebug() 
+{ 
+  return instance()._debugCount>0 ; 
+}
+
+
 Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
     	      			               const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6) 
 {

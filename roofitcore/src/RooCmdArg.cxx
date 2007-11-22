@@ -24,7 +24,12 @@
 ClassImp(RooCmdArg)
   ;
 
-const RooCmdArg RooCmdArg::none ;
+const RooCmdArg RooCmdArg::_none ;
+
+const RooCmdArg& RooCmdArg::none() 
+{
+  return _none ;
+}
 
 RooCmdArg::RooCmdArg() : TNamed("","")
 {

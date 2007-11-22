@@ -2077,6 +2077,11 @@ void RooAbsReal::selectNormalizationRange(const char*, Bool_t)
 {
 }
 
+void RooAbsReal::setCacheCheck(Bool_t flag) 
+{ 
+  _cacheCheck = flag ; 
+}
+
 
 
 Int_t RooAbsReal::getMaxVal(const RooArgSet& /*vars*/) const 

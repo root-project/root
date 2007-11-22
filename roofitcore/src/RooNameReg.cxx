@@ -82,3 +82,13 @@ const char* RooNameReg::constStr(const TNamed* namePtr)
   if (namePtr) return namePtr->GetName() ;
   return 0 ;  
 }
+
+const TNamed* RooNameReg::ptr(const char* stringPtr) 
+{ 
+  return instance().constPtr(stringPtr) ; 
+}
+
+const char* RooNameReg::str(const TNamed* ptr) 
+{ 
+  return instance().constStr(ptr) ; 
+}

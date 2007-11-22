@@ -46,9 +46,11 @@ public:
 
   ~RooCmdArg();
 
-  static const RooCmdArg none  ;
+  static const RooCmdArg& none() ;
 
 protected:
+
+  static const RooCmdArg _none  ;
 
   friend class RooCmdConfig ;
   friend class RooProdPdf ;

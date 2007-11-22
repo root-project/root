@@ -82,10 +82,10 @@ RooCmdArg NumCPU(Int_t nCPU) ;
 RooCmdArg Columns(Int_t ncol) ;
 RooCmdArg OutputFile(const char* fileName) ;
 RooCmdArg Format(const char* format, Int_t sigDigit) ;
-RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
-                 const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
-                 const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none,
-                 const RooCmdArg& arg7=RooCmdArg::none,const RooCmdArg& arg8=RooCmdArg::none) ;
+RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
+                 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+                 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
+                 const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 
 // RooAbsRealLValue::frame arguments
@@ -132,8 +132,8 @@ RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE, B
 RooCmdArg NumEvents(Int_t numEvents) ;
 
 // RooAbsRealLValue::createHistogram arguments
-RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none) ;
-RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none) ;
+RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
+RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
 RooCmdArg AxisLabel(const char* name) ;
 
 // RooAbsReal::createIntegral arguments
@@ -142,15 +142,15 @@ RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 
 // RooMCStudy::ctor arguments
 RooCmdArg FitModel(RooAbsPdf& pdf) ;
-RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none,
-                     const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
-                     const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
+RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
+                     const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+                     const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 RooCmdArg Binned(Bool_t flag=kTRUE) ;
 
 // RooMCStudy::plot* arguments
-RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none,
-                const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
-                const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
+RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
+                const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+                const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 RooCmdArg FrameBins(Int_t nbins) ;
 RooCmdArg FrameRange(Double_t xlo, Double_t xhi) ;
 RooCmdArg FitGauss(Bool_t flag=kTRUE) ;

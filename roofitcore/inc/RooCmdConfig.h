@@ -50,9 +50,9 @@ public:
 
   Bool_t process(const RooCmdArg& arg) ;
   Bool_t process(const RooCmdArg& arg1, const RooCmdArg& arg2, 
-                 const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, 
-                 const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
-                 const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+                 const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), 
+                 const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(), 
+                 const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
   Bool_t process(const RooLinkedList& argList) ;
 
   Int_t getInt(const char* name, Int_t defaultValue=0) ;

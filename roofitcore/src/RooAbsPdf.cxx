@@ -1997,3 +1997,23 @@ RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
   // Return projected p.d.f.
   return new RooProjectedPdf(name.Data(),name.Data(),*this,iset) ;
 }
+
+void RooAbsPdf::clearEvalError() 
+{ 
+  _evalError = kFALSE ; 
+}
+
+Bool_t RooAbsPdf::evalError() 
+{ 
+  return _evalError ; 
+}
+
+void RooAbsPdf::globalSelectComp(Bool_t flag) 
+{ 
+  _globalSelectComp = flag ; 
+}
+
+void RooAbsPdf::raiseEvalError() 
+{ 
+  _evalError = kTRUE ; 
+}

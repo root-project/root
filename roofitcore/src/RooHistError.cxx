@@ -227,3 +227,14 @@ Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step
 
   return x;
 }
+
+
+RooAbsFunc *RooHistError::createPoissonSum(Int_t n) 
+{ 
+  return new PoissonSum(n); 
+}
+
+RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m) 
+{ 
+  return new BinomialSum(n,m); 
+}

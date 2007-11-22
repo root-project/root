@@ -27,8 +27,8 @@ public:
   virtual ~RooNameReg();
   const TNamed* constPtr(const char* stringPtr) ;
   const char* constStr(const TNamed* namePtr) ; 
-  static const TNamed* ptr(const char* stringPtr) { return instance().constPtr(stringPtr) ; }
-  static const char* str(const TNamed* ptr) { return instance().constStr(ptr) ; }
+  static const TNamed* ptr(const char* stringPtr) ;
+  static const char* str(const TNamed* ptr) ;
 
   static void cleanup() ;
 

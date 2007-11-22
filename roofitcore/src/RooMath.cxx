@@ -34,6 +34,27 @@ ClassImp(RooMath)
 ;
 
 
+RooComplex RooMath::FastComplexErrFunc(const RooComplex& z)
+{
+  return ITPComplexErrFunc(z,z.im()>0?3:4) ;
+}
+  
+Double_t RooMath::FastComplexErrFuncRe(const RooComplex& z) 
+{
+  return ITPComplexErrFuncRe(z,z.im()>0?3:4) ;
+}
+
+Double_t RooMath::FastComplexErrFuncIm(const RooComplex& z) 
+{
+  return ITPComplexErrFuncIm(z,z.im()>0?3:4) ;
+}
+
+void RooMath::cacheCERF(Bool_t flag) 
+{ 
+  _cacheTable = flag ; 
+}
+
+
 RooComplex RooMath::ComplexErrFunc(Double_t re, Double_t im) {
   // Return CERNlib complex error function for Z(re,im)
   return ComplexErrFunc(RooComplex(re,im));

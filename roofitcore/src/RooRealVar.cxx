@@ -937,3 +937,12 @@ void RooRealVar::deleteSharedProperties()
   }  
 }
 
+void RooRealVar::printScientific(Bool_t flag) 
+{ 
+  _printScientific = flag ; 
+}
+
+void RooRealVar::printSigDigits(Int_t ndig) 
+{ 
+  _printSigDigits = ndig>1?ndig:1 ; 
+}

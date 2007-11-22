@@ -36,3 +36,8 @@ Double_t RooNumber::infinity= numeric_limits<Double_t>::infinity();
 Double_t RooNumber::infinity= 1.0e30 ;  //1./0.;
 
 #endif
+
+Int_t RooNumber::isInfinite(Double_t x) 
+{
+  return (x >= +infinity) ? +1 : ((x <= -infinity) ? -1 : 0);
+}

@@ -47,22 +47,22 @@ public:
 
   // Toy MC generation
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
-                       const RooCmdArg& arg2=RooCmdArg::none, const RooCmdArg& arg3=RooCmdArg::none,
-                       const RooCmdArg& arg4=RooCmdArg::none, const RooCmdArg& arg5=RooCmdArg::none) ;
+                       const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
+                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) ;
   RooDataSet *generate(const RooArgSet &whatVars,  
-                       const RooCmdArg& arg1=RooCmdArg::none,const RooCmdArg& arg2=RooCmdArg::none,
-                       const RooCmdArg& arg3=RooCmdArg::none,const RooCmdArg& arg4=RooCmdArg::none,
-                       const RooCmdArg& arg5=RooCmdArg::none,const RooCmdArg& arg6=RooCmdArg::none) ;
+                       const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
+                       const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+                       const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0, Bool_t verbose=kFALSE) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
 		       Bool_t verbose=kFALSE, Bool_t randProtoOrder=kFALSE, Bool_t resampleProto=kFALSE) const;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none,
-			  const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none,
-			  const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none,
-			  const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none,
-			  const RooCmdArg& arg9=RooCmdArg::none, const RooCmdArg& arg10=RooCmdArg::none
+			  const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
+			  const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
+			  const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
+			  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),
+			  const RooCmdArg& arg9=RooCmdArg::none(), const RooCmdArg& arg10=RooCmdArg::none()
               ) const {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
@@ -98,10 +98,10 @@ public:
 
 
   virtual RooPlot* paramOn(RooPlot* frame, 
-                           const RooCmdArg& arg1=RooCmdArg::none, const RooCmdArg& arg2=RooCmdArg::none, 
-                           const RooCmdArg& arg3=RooCmdArg::none, const RooCmdArg& arg4=RooCmdArg::none, 
-                           const RooCmdArg& arg5=RooCmdArg::none, const RooCmdArg& arg6=RooCmdArg::none, 
-                           const RooCmdArg& arg7=RooCmdArg::none, const RooCmdArg& arg8=RooCmdArg::none) ;
+                           const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(), 
+                           const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), 
+                           const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(), 
+                           const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
 			   Option_t *options = "NELU", Double_t xmin=0.65,
@@ -115,9 +115,9 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
-  virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1,  RooCmdArg arg2=RooCmdArg::none,  
-                              RooCmdArg arg3=RooCmdArg::none,  RooCmdArg arg4=RooCmdArg::none, RooCmdArg arg5=RooCmdArg::none,  
-                              RooCmdArg arg6=RooCmdArg::none,  RooCmdArg arg7=RooCmdArg::none, RooCmdArg arg8=RooCmdArg::none) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, RooCmdArg arg1,  RooCmdArg arg2=RooCmdArg::none(),  
+                              RooCmdArg arg3=RooCmdArg::none(),  RooCmdArg arg4=RooCmdArg::none(), RooCmdArg arg5=RooCmdArg::none(),  
+                              RooCmdArg arg6=RooCmdArg::none(),  RooCmdArg arg7=RooCmdArg::none(), RooCmdArg arg8=RooCmdArg::none()) ;
   virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList) ;
 
   virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
@@ -166,8 +166,8 @@ public:
 
   virtual Double_t extendedTerm(UInt_t observedEvents, const RooArgSet* nset=0) const ;
 
-  static void clearEvalError() { _evalError = kFALSE ; }
-  static Bool_t evalError() { return _evalError ; }
+  static void clearEvalError() ;
+  static Bool_t evalError() ;
   
 protected:
 
@@ -241,11 +241,11 @@ protected:
 
   friend class RooAddPdf ;
   void selectComp(Bool_t flag) { _selectComp = flag ; }
-  static void globalSelectComp(Bool_t flag) { _globalSelectComp = flag ; }
+  static void globalSelectComp(Bool_t flag) ;
   Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection
 
-  static void raiseEvalError() { _evalError = kTRUE ; }
+  static void raiseEvalError() ;
   
   static Bool_t _evalError ;
   
