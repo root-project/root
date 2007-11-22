@@ -106,7 +106,7 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
 
    int sock = ks->fSocket->GetDescriptor();
    rc = krb5_sendauth(fgContext, &ks->fAuthContext, (krb5_pointer) &sock,
-                      "KRB5_TCP_Python_v1.0", fgClient, ks->fServer,
+                      (char *)"KRB5_TCP_Python_v1.0", fgClient, ks->fServer,
                       AP_OPTS_MUTUAL_REQUIRED,
                       &cksum_data,
                       0,           /* no creds, use ccache instead */

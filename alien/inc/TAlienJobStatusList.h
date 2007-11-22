@@ -33,7 +33,7 @@ protected:
 
 public:
    TAlienJobStatusList() { gGridJobStatusList = this; }
-   virtual ~TAlienJobStatusList() { if (gGridJobStatusList == this); gGridJobStatusList=0;}
+   virtual ~TAlienJobStatusList() { if (gGridJobStatusList == this) gGridJobStatusList=0; }
    virtual void Print(Option_t *options) const;
    virtual void Print(Option_t *wildcard, Option_t *option) const { TCollection::Print(wildcard, option); }
 

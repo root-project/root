@@ -51,7 +51,7 @@
 
 ClassImp(TTableMap)
 
-TTableMap::TTableMap(const TTable *table) 
+TTableMap::TTableMap(const TTable *table)
           : fTable((TTable *)table)
 {
    //to be documented
@@ -64,7 +64,7 @@ void TTableMap::Streamer(TBuffer &R__b)
    TArrayL vecIO;
    if (R__b.IsReading()) {
       Version_t v =  R__b.ReadVersion();
-      if (v);
+      if (v) { }
       // read Table
       R__b >> fTable;
       // Read index array
