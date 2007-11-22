@@ -132,6 +132,9 @@ Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
 TFile    *gFile;
+char      gCfile[16];
+char      gPSfile[16];
+char      gLine[80];
 
 
 #ifndef __CINT__
@@ -325,20 +328,27 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
    // Print test program number and its title
 
    if (!gOptionR) {
-      TString header;
+///   TString header;
       if (id>0) {
-         header = TString("Test ")+Form("%2d",id)+" : "+title;
+///      header = TString("Test ")+Form("%2d",id)+" : "+title;
+///      header = TString("Test ")+" : "+title;
+	 sprintf(gLine,"Test %2d  : %s",id,title.Data());
       } else {
-         header = TString("          ")+title;
+///      header = TString("          ")+title;
+	 sprintf(gLine,"         %s",title.Data());
       }
-      const Int_t nch = header.Length();
+
+///   const Int_t nch = header.Length();
+      const Int_t nch = strlen(gLine);
       if (TMath::Abs(res-ref)<=err) {
-         for (Int_t i = nch; i < 67; i++) header += '.';
-         cout << header <<  " OK" << endl;
+         cout << gLine;
+         for (Int_t i = nch; i < 67; i++) cout << ".";
+         cout << " OK" << endl;
          if (!gOptionK) gSystem->Unlink(filename.Data());
       } else {
-         for (Int_t i = nch; i < 63; i++) header += '.';
-         cout << header << " FAILED" << endl;
+         cout << gLine;
+         for (Int_t i = nch; i < 63; i++) cout << ".";
+         cout << " FAILED" << endl;
          cout << "          Result    = "  << res << endl;
          cout << "          Reference = "  << ref << endl;
          cout << "          Error     = "  << TMath::Abs(res-ref) 
@@ -400,15 +410,16 @@ void TestReport1(TCanvas *C, const TString &title)
    // Draw the canvas generate as PostScript, count the number of characters in
    // the PS file and compare the result with the reference value.
 
-   TString f1 = Form("sg1_%2.2d.ps",gTestNum);
+   sprintf(gPSfile,"sg1_%2.2d.ps",gTestNum);
    
-   TPostScript *ps1 = new TPostScript(f1, 111);
+   TPostScript *ps1 = new TPostScript(gPSfile, 111);
    C->Draw();
    ps1->Close();
 
-   StatusPrint(f1,  gTestNum, title, AnalysePS(f1) ,
-                                     gRefNb[gTestNum-1],
-                                     gErrNb[gTestNum-1]);
+   TString psfile = gPSfile;
+   StatusPrint(psfile,  gTestNum, title, AnalysePS(gPSfile) ,
+                                          gRefNb[gTestNum-1],
+                                          gErrNb[gTestNum-1]);
    return;
 }
 
@@ -419,7 +430,10 @@ void DoCcode(TCanvas *C)
    // Generate the C code conresponding to the canvas C.
 
    gErrorIgnoreLevel = 9999;
-   C->SaveAs(Form("sg%2.2d.C",gTestNum));
+
+   sprintf(gCfile,"sg%2.2d.C",gTestNum);
+
+   C->SaveAs(gCfile);
    if (C) {delete C; C = 0;}
    gErrorIgnoreLevel = 0;
    return;
@@ -434,18 +448,21 @@ void TestReport2()
    // file (using gPad), count the number of characters in it and compare the
    // result with the reference value.
 
-   TString f2 = Form("sg2_%2.2d.ps",gTestNum);
+   sprintf(gPSfile,"sg2_%2.2d.ps",gTestNum);
 
    gErrorIgnoreLevel = 9999;
-   gROOT->ProcessLine(Form(".x sg%2.2d.C",gTestNum));
-   gPad->SaveAs(f2);
+   sprintf(gCfile,".x sg%2.2d.C",gTestNum);
+   gROOT->ProcessLine(gCfile);
+   gPad->SaveAs(gPSfile);
    gErrorIgnoreLevel = 0;
 
-   Int_t i = StatusPrint(f2, 0, "C file result", AnalysePS(f2),
-                                                 gRefNb[gTestNum-1],
-                                                 gErrNb[gTestNum-1]);
+   TString psfile = gPSfile;
+   Int_t i = StatusPrint(psfile, 0, "C file result", AnalysePS(gPSfile),
+                                                      gRefNb[gTestNum-1],
+                                                      gErrNb[gTestNum-1]);
 
-   if (!gOptionK && !i) gSystem->Unlink(Form("sg%2.2d.C",gTestNum));
+   sprintf(gCfile,"sg%2.2d.C",gTestNum);
+   if (!gOptionK && !i) gSystem->Unlink(gCfile);
 
    return;
 }
@@ -1217,9 +1234,6 @@ void labels1()
    TCanvas *C = StartTest(900,500);
 
    const Int_t nx = 20;
-   char *people[nx] = {"Jean","Pierre","Marie","Odile","Sebastien","Fons","Rene",
-   "Nicolas","Xavier","Greg","Bjarne","Anton","Otto","Eddy","Peter","Pasha",
-   "Philippe","Suzanne","Jeff","Valery"};
 
    C->SetGrid();
    C->SetBottomMargin(0.15);
@@ -1229,9 +1243,27 @@ void labels1()
       hlab1->Fill(gRandom->Gaus(0.5*nx,0.2*nx));
    }
    hlab1->SetStats(0);
-   for (Int_t i=1;i<=nx;i++) {
-      hlab1->GetXaxis()->SetBinLabel(i,people[i-1]);
-   }
+   TAxis *xa = hlab1->GetXaxis();
+   xa->SetBinLabel( 1, "Jean");
+   xa->SetBinLabel( 2, "Pierre");
+   xa->SetBinLabel( 3, "Marie");
+   xa->SetBinLabel( 4, "Odile");
+   xa->SetBinLabel( 5, "Sebastien");
+   xa->SetBinLabel( 6, "Fons");
+   xa->SetBinLabel( 7, "Rene");
+   xa->SetBinLabel( 8, "Nicolas");
+   xa->SetBinLabel( 9, "Xavier");
+   xa->SetBinLabel(10, "Greg");
+   xa->SetBinLabel(11, "Bjarne");
+   xa->SetBinLabel(12, "Anton");
+   xa->SetBinLabel(13, "Otto");
+   xa->SetBinLabel(14, "Eddy");
+   xa->SetBinLabel(15, "Peter");
+   xa->SetBinLabel(16, "Pasha");
+   xa->SetBinLabel(17, "Philippe");
+   xa->SetBinLabel(18, "Suzanne");
+   xa->SetBinLabel(19, "Jeff");
+   xa->SetBinLabel(20, "Valery");
    hlab1->Draw();
    TPaveText *pt = new TPaveText(0.6,0.7,0.98,0.98,"brNDC");
    pt->SetFillColor(18);
@@ -2156,8 +2188,8 @@ void parallelcoord()
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
    TestReport1(C, "Parallel Coordinates");
-   DoCcode(C);
-   TestReport2();
+///DoCcode(C);
+///TestReport2();
 }
 
 
