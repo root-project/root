@@ -5820,6 +5820,7 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
 
       ev.fSendEvent = kFALSE; //xev.any.send_event ? kTRUE : kFALSE;
       ev.fTime = gdk_event_get_time((GdkEvent *)&xev);
+      ev.fWindow = (Window_t) xev.any.window;
 
       if ((xev.type == GDK_MAP) || (xev.type == GDK_UNMAP)) {
          ev.fWindow = (Window_t) xev.any.window;
