@@ -130,7 +130,8 @@ public:
       kCanRebin    = BIT(11), // can rebin axis
       kLogX        = BIT(15), // X-axis in log scale
       kIsZoomed    = BIT(16), // bit set when zooming on Y axis
-      kNoTitle     = BIT(17)  // don't draw the histogram title
+      kNoTitle     = BIT(17), // don't draw the histogram title
+      kIsAverage   = BIT(18)  // Bin contents are average (used by Add)
    };
 
    TH1(const TH1&);
@@ -332,7 +333,7 @@ public:
    void             UseCurrentStyle();
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
-   ClassDef(TH1,5)  //1-Dim histogram base class
+   ClassDef(TH1,6)  //1-Dim histogram base class
 };
 
 //________________________________________________________________________

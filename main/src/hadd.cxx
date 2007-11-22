@@ -1,6 +1,6 @@
 /*
 
-  This program will add histograms and Trees from a list of root files and write them
+  This program will add histograms (see note) and Trees from a list of root files and write them
   to a target root file. The target file is newly created and must not be
   identical to one of the source files.
          
@@ -48,6 +48,9 @@
   (i.e. direct copy of the raw byte on disk). The "fast" mode is typically
   5 times faster than the mode unzipping and unstreaming the baskets.
    
+  NOTE: By default histograms are added. However if histograms have their bit kIsAverage
+        set, the contents are averaged instead of being summed. See TH1::Add.
+        
   Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
          : rewritten from scratch by Rene Brun (30 November 2005)
             to support files with nested directories.

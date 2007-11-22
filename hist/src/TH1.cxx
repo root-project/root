@@ -334,6 +334,10 @@ All histogram classes are derived from the base class TH1
      If an histogram has associated error bars (TH1::Sumw2 has been called),
      the resulting error bars are also computed assuming independent histograms.
      In case of divisions, Binomial errors are also supported.
+     One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
+       myhist.SetBit(TH1::kIsAverage);
+     When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
+       
 
 
 <h4>Fitting histograms</h4>
@@ -824,6 +828,13 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 // Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
 // if not already set.
 //
+// SPECIAL CASE (Average/Efficiency histograms)
+// For histograms representing averages or efficiencies, one should compute the average
+// of the two histograms and not the sum. One can mark a histogram to be an average
+// histogram by setting its bit kIsAverage with
+//    myhist.SetBit(TH1::kIsAverage);
+// Note that the two histograms must have their kIsAverage bit set
+//
 // IMPORTANT NOTE1: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Add
@@ -885,11 +896,24 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       for (biny=0;biny<=nbinsy+1;biny++) {
          for (binx=0;binx<=nbinsx+1;binx++) {
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            cu  = c1*factor*h1->GetBinContent(bin);
-            AddBinContent(bin,cu);
-            if (fSumw2.fN) {
-               Double_t error1 = factor*h1->GetBinError(bin);
-               fSumw2.fArray[bin] += c1*c1*error1*error1;
+            //special case where histograms have the kIsAverage bit set
+            if (this->TestBit(kIsAverage) && h1->TestBit(kIsAverage)) {
+               Double_t y1 = h1->GetBinContent(bin);
+               Double_t y2 = this->GetBinContent(bin);
+               Double_t e1 = h1->GetBinError(bin);
+               Double_t e2 = this->GetBinError(bin);
+               Double_t w1 = 1., w2 = 1.;
+               if (e1 > 0) w1 = 1./(e1*e1);
+               if (e2 > 0) w2 = 1./(e2*e2);
+               SetBinContent(bin, (w1*y1 + w2*y2)/(w1 + w2));
+               if (fSumw2.fN) fSumw2.fArray[bin] = 1./(w1 + w2);
+            } else {
+               cu  = c1*factor*h1->GetBinContent(bin);
+               AddBinContent(bin,cu);
+               if (fSumw2.fN) {
+                  Double_t e1 = factor*h1->GetBinError(bin);
+                  fSumw2.fArray[bin] += c1*c1*e1*e1;
+               }
             }
          }
       }
@@ -906,6 +930,13 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 //   if errors are defined (see TH1::Sumw2), errors are also recalculated
 //   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
+//
+// SPECIAL CASE (Average/Efficiency histograms)
+// For histograms representing averages or efficiencies, one should compute the average
+// of the two histograms and not the sum. One can mark a histogram to be an average
+// histogram by setting its bit kIsAverage with
+//    myhist.SetBit(TH1::kIsAverage);
+// Note that the two histograms must have their kIsAverage bit set
 //
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
@@ -977,12 +1008,25 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       for (biny=0;biny<=nbinsy+1;biny++) {
          for (binx=0;binx<=nbinsx+1;binx++) {
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            cu  = c1*h1->GetBinContent(bin)+ c2*h2->GetBinContent(bin);
-            SetBinContent(bin,cu);
-            if (fSumw2.fN) {
-               Double_t error1 = h1->GetBinError(bin);
-               Double_t error2 = h2->GetBinError(bin);
-               fSumw2.fArray[bin] = c1*c1*error1*error1 + c2*c2*error2*error2;
+            //special case where histograms have the kIsAverage bit set
+            if (h1->TestBit(kIsAverage) && h2->TestBit(kIsAverage)) {
+               Double_t y1 = h1->GetBinContent(bin);
+               Double_t y2 = h2->GetBinContent(bin);
+               Double_t e1 = h1->GetBinError(bin);
+               Double_t e2 = h2->GetBinError(bin);
+               Double_t w1 = 1., w2 = 1.;
+               if (e1 > 0) w1 = 1./(e1*e1);
+               if (e2 > 0) w2 = 1./(e2*e2);
+               SetBinContent(bin, (w1*y1 + w2*y2)/(w1 + w2));
+               if (fSumw2.fN) fSumw2.fArray[bin] = 1./(w1 + w2);
+            } else {
+               cu  = c1*h1->GetBinContent(bin)+ c2*h2->GetBinContent(bin);
+               SetBinContent(bin,cu);
+               if (fSumw2.fN) {
+                  Double_t e1 = h1->GetBinError(bin);
+                  Double_t e2 = h2->GetBinError(bin);
+                  fSumw2.fArray[bin] = c1*c1*e1*e1 + c2*c2*e2*e2;
+               }
             }
          }
       }
