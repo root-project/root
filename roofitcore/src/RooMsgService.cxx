@@ -37,14 +37,18 @@
 // The singleton instance is accessible through RooMsgService::instance() ;
 //
 
+#define INST_MSG_SERVICE
+
 #include "RooFit.h"
 #include "RooAbsArg.h"
 #include "TClass.h"
+#include "TROOT.h"
 
 #include "RooMsgService.h"
 #include "RooCmdArg.h"
 #include "RooCmdConfig.h"
 #include "RooGlobalFunc.h"
+#include "RooSentinel.h"
 
 #include <iostream>
 #include <iomanip>
@@ -56,19 +60,48 @@ ClassImp(RooMsgService)
 ;
 
 RooMsgService* RooMsgService::_instance = 0 ;
+Int_t RooMsgService::_debugCount = 0 ;
+
+void RooMsgService::cleanup() 
+{
+  if (_instance) {
+    delete _instance ;
+    _instance = 0 ;
+  }
+}
 
 
-RooMsgService::RooMsgService() : _debugCount(0)
+RooMsgService::RooMsgService() 
 {
   // Constructor
+  _silentMode = kFALSE ;
+
   _devnull = new ofstream("/dev/null") ;
-  addStream(WARNING) ;
-  addStream(INFO,Topic("Generation")) ;
-  addStream(INFO,Topic("Plotting")) ;
-  addStream(INFO,Topic("Fitting")) ;
-  // addStream(INFO,Topic("Integration")) ;
-  addStream(INFO,Topic("Optimization")) ;
-  addStream(INFO,Topic("Minimization")) ;
+
+  _levelNames[DEBUG]="DEBUG" ;
+  _levelNames[INFO]="INFO" ;
+  _levelNames[WARNING]="WARNING" ;
+  _levelNames[ERROR]="ERROR" ;
+  _levelNames[FATAL]="FATAL" ;
+
+  _topicNames[Generation]="Generation" ;
+  _topicNames[Minimization]="Minization" ;
+  _topicNames[Plotting]="Plotting" ;
+  _topicNames[Fitting]="Fitting" ;
+  _topicNames[Integration]="Integration" ;
+  _topicNames[ChangeTracking]="ChangeTracking" ;
+  _topicNames[Eval]="Eval" ;
+  _topicNames[Caching]="Caching" ;
+  _topicNames[Optimization]="Optimization" ;
+  _topicNames[Workspace]="Workspace" ;
+  _topicNames[InputArguments]="InputArguments" ;
+  _topicNames[Tracing]="Tracing" ;
+
+  addStream(RooMsgService::WARNING) ;
+  addStream(RooMsgService::INFO,Topic(RooMsgService::Generation|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Optimization|RooMsgService::Minimization|RooMsgService::Caching)) ;
+
+  gMsgService = this ;
+
 }
 
 RooMsgService::~RooMsgService() 
@@ -87,7 +120,7 @@ RooMsgService::~RooMsgService()
 
 
 Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
-      					                const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6) 
+    	      			               const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6) 
 {
   // Add a message logging stream for message with given MsgLevel or higher (i.e. more severe)
   // This method accepts the following arguments to configure the stream
@@ -122,7 +155,7 @@ Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooC
   RooCmdConfig pc(Form("RooMsgService::addReportingStream(%s)",GetName())) ;
   pc.defineInt("prefix","Prefix",0,kTRUE) ;
   pc.defineInt("color","Color",0,static_cast<Int_t>(kBlack)) ;
-  pc.defineString("topic","Topic",0,"") ;
+  pc.defineInt("topic","Topic",0,0xFFFFF) ;
   pc.defineString("objName","ObjectName",0,"") ;
   pc.defineString("className","ClassName",0,"") ;
   pc.defineString("baseClassName","BaseClassName",0,"") ;
@@ -138,7 +171,7 @@ Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooC
   }
 
   // Extract values from named arguments
-  const char* topic =  pc.getString("topic") ;
+  MsgTopic topic =  (MsgTopic) pc.getInt("topic") ;
   const char* objName =  pc.getString("objName") ;
   const char* className =  pc.getString("className") ;
   const char* baseClassName =  pc.getString("baseClassName") ;
@@ -154,13 +187,14 @@ Int_t RooMsgService::addStream(MsgLevel level, const RooCmdArg& arg1, const RooC
   // Store configuration info
   newStream.active = kTRUE ;
   newStream.minLevel = level ;
-  newStream.topic = (topic ? topic : "" ) ;
+  newStream.topic = topic ;
   newStream.objectName = (objName ? objName : "" ) ;
   newStream.className = (className ? className : "" ) ;
   newStream.baseClassName = (baseClassName ? baseClassName : "" ) ;
   newStream.tagName = (tagName ? tagName : "" ) ;
   newStream.color = color ;
   newStream.prefix = prefix ;
+  newStream.universal = (newStream.objectName=="" && newStream.className=="" && newStream.baseClassName=="" && newStream.tagName=="") ;
 
   // Update debug stream count 
   if (level==DEBUG) {
@@ -259,24 +293,25 @@ RooMsgService& RooMsgService::instance()
   // Return reference to singleton instance 
   if (!_instance) {
     _instance = new RooMsgService() ;    
+    RooSentinel::activate() ;
   }
   return *_instance ;
 }
 
 
-Bool_t RooMsgService::isActive(const RooAbsArg* self, const char* topic, MsgLevel level) 
+Bool_t RooMsgService::isActive(const RooAbsArg* self, MsgTopic topic, MsgLevel level) 
 {
   // Check if logging is active for given object/topic/MsgLevel combination
   return (activeStream(self,topic,level)>=0) ;
 }
 
-Bool_t RooMsgService::isActive(const TObject* self, const char* topic, MsgLevel level) 
+Bool_t RooMsgService::isActive(const TObject* self, MsgTopic topic, MsgLevel level) 
 {
   // Check if logging is active for given object/topic/MsgLevel combination
   return (activeStream(self,topic,level)>=0) ;
 }
 
-Int_t RooMsgService::activeStream(const RooAbsArg* self, const char* topic, MsgLevel level) 
+Int_t RooMsgService::activeStream(const RooAbsArg* self, MsgTopic topic, MsgLevel level) 
 {
   // Find appropriate logging stream for message from given object with given topic and message level
   for (UInt_t i=0 ; i<_streams.size() ; i++) {
@@ -287,7 +322,7 @@ Int_t RooMsgService::activeStream(const RooAbsArg* self, const char* topic, MsgL
   return -1 ;
 }
 
-Int_t RooMsgService::activeStream(const TObject* self, const char* topic, MsgLevel level) 
+Int_t RooMsgService::activeStream(const TObject* self, MsgTopic topic, MsgLevel level) 
 {
   // Find appropriate logging stream for message from given object with given topic and message level
   for (UInt_t i=0 ; i<_streams.size() ; i++) {
@@ -298,12 +333,15 @@ Int_t RooMsgService::activeStream(const TObject* self, const char* topic, MsgLev
   return -1 ;
 }
 
-Bool_t RooMsgService::StreamConfig::match(MsgLevel level, const char* top, const RooAbsArg* obj) 
+Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const RooAbsArg* obj) 
 {
   // Determine if message from given object at given level on given topic is logged
   if (!active) return kFALSE ;
   if (level<minLevel) return kFALSE ;
-  if (topic.size()>0 && topic!=top) return kFALSE ;
+  if (!(topic&top)) return kFALSE ;
+
+  if (universal) return kTRUE ;
+
   if (objectName.size()>0 && objectName != obj->GetName()) return kFALSE ;
   if (className.size()>0 && className != obj->IsA()->GetName()) return kFALSE ;
   if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return kFALSE ;
@@ -312,11 +350,15 @@ Bool_t RooMsgService::StreamConfig::match(MsgLevel level, const char* top, const
   return kTRUE ;
 }
 
-Bool_t RooMsgService::StreamConfig::match(MsgLevel level, const char* top, const TObject* obj) 
+Bool_t RooMsgService::StreamConfig::match(MsgLevel level, MsgTopic top, const TObject* obj) 
 {
   // Determine if message from given object at given level on given topic is logged
+  if (!active) return kFALSE ;
   if (level<minLevel) return kFALSE ;
-  if (topic.size()>0 && topic!=top) return kFALSE ;
+  if (!(topic&top)) return kFALSE ;
+
+  if (universal) return kTRUE ;
+  
   if (objectName.size()>0 && objectName != obj->GetName()) return kFALSE ;
   if (className.size()>0 && className != obj->IsA()->GetName()) return kFALSE ;
   if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return kFALSE ;
@@ -325,8 +367,12 @@ Bool_t RooMsgService::StreamConfig::match(MsgLevel level, const char* top, const
 }
 
 
-ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, const char* topic, Bool_t skipPrefix) 
+ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, MsgTopic topic, Bool_t skipPrefix) 
 {
+  if (level>=ERROR) {
+    _errorCount++ ;
+  }
+
   // Return C++ ostream associated with given message configuration
   Int_t as = activeStream(self,topic,level) ;
   if (as==-1) {
@@ -336,16 +382,19 @@ ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, const char* t
   // Flush any previous messages
   (*_streams[as].os).flush() ;
     
-  const char* levelName[5] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" } ;
   if (_streams[as].prefix && !skipPrefix) {
-    (*_streams[as].os) << "[#" << as << "] " << levelName[level] << ":" << topic  << " -- " ;
+    (*_streams[as].os) << "[#" << as << "] " << _levelNames[level] << ":" << _topicNames[topic]  << " -- " ;
   }
   return (*_streams[as].os) ;
 }
 
 
-ostream& RooMsgService::log(const TObject* self, MsgLevel level, const char* topic, Bool_t skipPrefix) 
+ostream& RooMsgService::log(const TObject* self, MsgLevel level, MsgTopic topic, Bool_t skipPrefix) 
 {
+  if (level>=ERROR) {
+    _errorCount++ ;
+  }
+
   // Return C++ ostream associated with given message configuration
   Int_t as = activeStream(self,topic,level) ;
   if (as==-1) {
@@ -355,9 +404,8 @@ ostream& RooMsgService::log(const TObject* self, MsgLevel level, const char* top
   // Flush any previous messages
   (*_streams[as].os).flush() ;
     
-  const char* levelName[5] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" } ;
   if (_streams[as].prefix && !skipPrefix) {
-    (*_streams[as].os) << "[#" << as << "] " << levelName[level] << ":" << topic  << " -- " ;
+    (*_streams[as].os) << "[#" << as << "] " << _levelNames[level] << ":" << _topicNames[topic]  << " -- " ;
   }
   return (*_streams[as].os) ;
 }
@@ -368,7 +416,6 @@ void RooMsgService::Print(Option_t *options) const
   // Print configuration of message service. If "v" option is given also
   // inactive streams are listed
 
-  const char* levelName[5] = { "DEBUG", "INFO", "WARNING", "ERROR", "FATAL" } ;
 
   Bool_t activeOnly = kTRUE ;
   if (TString(options).Contains("V") || TString(options).Contains("v")) {
@@ -384,10 +431,23 @@ void RooMsgService::Print(Option_t *options) const
     }
 
     
-    cout << "[" << i << "] MinLevel = " << levelName[_streams[i].minLevel] ;
-    if (_streams[i].topic.size()>0) {
-      cout << " Topic = " << _streams[i].topic ;
+    map<int,string>::const_iterator is = _levelNames.find(_streams[i].minLevel) ;
+    cout << "[" << i << "] MinLevel = " << is->second ;
+
+    cout << " Topic = " ;
+    if (_streams[i].topic != 0xFFFFF) {      
+      map<int,string>::const_iterator iter = _topicNames.begin() ;
+      while(iter!=_topicNames.end()) {
+	if (iter->first & _streams[i].topic) {
+	  cout << iter->second << " " ;
+	}
+	++iter ;
+      }
+    } else {
+      cout << " Any " ;
     }
+    
+
     if (_streams[i].objectName.size()>0) {
       cout << " ObjectName = " << _streams[i].objectName ;
     }

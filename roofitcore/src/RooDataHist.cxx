@@ -485,6 +485,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
 
   RooArgSet* myVarSubset = (RooArgSet*) _vars.selectCommon(varSubset) ;
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), *myVarSubset) ;
+  delete myVarSubset ;
 
   RooFormulaVar* cloneVar = 0;
   RooArgSet* tmp(0) ;
@@ -1137,7 +1138,7 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
   
   RooAbsArg* intArg = _vars.find(sliceArg.GetName()) ;
   if (!intArg) {
-    coutE("InputArgs") << "RooDataHist::sliceIterator() variable " << sliceArg.GetName() << " is not part of this RooDataHist" << endl ;
+    coutE(InputArguments) << "RooDataHist::sliceIterator() variable " << sliceArg.GetName() << " is not part of this RooDataHist" << endl ;
     return 0 ;
   }
   return new RooDataHistSliceIter(*this,*intArg) ;

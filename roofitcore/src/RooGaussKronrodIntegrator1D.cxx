@@ -81,7 +81,7 @@ void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 
 
 
-RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D()
+RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D() : _x(0)
 {
 }
 
@@ -132,7 +132,9 @@ Bool_t RooGaussKronrodIntegrator1D::initialize()
 
 RooGaussKronrodIntegrator1D::~RooGaussKronrodIntegrator1D()
 {
-  delete[] _x ;
+  if (_x) {
+    delete[] _x ;
+  }
 }
 
 

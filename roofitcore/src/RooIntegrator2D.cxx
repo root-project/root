@@ -42,7 +42,8 @@ void RooIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
   RooNumIntConfig::defaultConfig().method2D().setLabel(proto->IsA()->GetName()) ;
 }
 
-RooIntegrator2D::RooIntegrator2D()
+RooIntegrator2D::RooIntegrator2D() :
+  _xIntegrator(0), _xint(0)
 {
 }
 

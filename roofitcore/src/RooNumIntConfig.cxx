@@ -32,10 +32,20 @@
 ClassImp(RooNumIntConfig)
 ;
 
+RooNumIntConfig* RooNumIntConfig::_default = 0 ;
+
+void RooNumIntConfig::cleanup()
+{
+  if (_default) {
+    delete _default ;
+    _default = 0 ;
+  }
+}
+
+
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
   // Return reference to instance of default numeric integrator configuration object
-  static RooNumIntConfig* _default = 0 ;
   
   // Instantiate object if it doesn't exist yet
   if (_default==0) {

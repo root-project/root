@@ -20,6 +20,7 @@
 #include "RooDataHist.h"
 #include "RooAbsPdf.h"
 #include "RooRealConstant.h"
+#include "RooMsgService.h"
 
 class RooAbsData ;
 class RooArgSet ;
@@ -163,7 +164,7 @@ RooCmdArg LatexTableStyle(Bool_t flag=kTRUE) ;
 RooCmdArg VerbatimName(Bool_t flag=kTRUE) ;
 
 // RooMsgService::addReportingStream arguments
-RooCmdArg Topic(const char* name) ;
+RooCmdArg Topic(Int_t topic) ;
 RooCmdArg ObjectName(const char* name) ;
 RooCmdArg ClassName(const char* name) ;
 RooCmdArg BaseClassName(const char* name) ;

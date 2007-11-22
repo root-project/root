@@ -678,7 +678,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   }
 
   // Propagate dirty flag to all clients if this is a down->up transition
-  if (dologD("Dirty")) {
+  if (dologD(ChangeTracking)) {
     cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
 	 << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
   }
@@ -1235,7 +1235,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables)
   RooArgSet opt ;
   optimizeCacheMode(observables,opt,proc) ;
   
-  coutI("Optimization") << "RooAbsArg::optimizeCacheMode(" << GetName() << ") nodes " << opt << " depend on observables, "
+  coutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") nodes " << opt << " depend on observables, "
 			<< "changing cache operation mode from change tracking to unconditional evaluation" << endl ;
 }
 
@@ -1261,10 +1261,13 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
   if (dependsOnValue(observables)) {
 
     if (dynamic_cast<RooRealIntegral*>(this)) {
-      cxcoutW("Integration") << "RooAbsArg::optimizeCacheMode(" << GetName() << ") integral depends on value of one or more observables and will be evaluated for every event" << endl ;
+      cxcoutI(Integration) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") integral depends on value of one or more observables and will be evaluated for every event" << endl ;
     }
     optimizedNodes.add(*this) ;
-    setOperMode(ADirty) ;
+    if (operMode()==AClean) {
+    } else {
+      setOperMode(ADirty) ;
+    }
   }
   // Process any RooAbsArgs contained in any of the caches of this object
   for (Int_t i=0 ;i<numCaches() ; i++) {
@@ -1287,7 +1290,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   Bool_t ret = findConstantNodes(observables,cacheList,proc) ;
 
   // If node can be optimized and hasn't been identified yet, add it to the list
-  coutI("Optimization") << "RooAbsArg::findConstantNodes(" << GetName() << "): components " 
+  coutI(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << "): components " 
 			<< cacheList << " depend exclusively on constant parameters and will be precalculated and cached" << endl ;
 
   return ret ;
@@ -1332,6 +1335,8 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
     if (!cacheList.find(GetName()) && dependsOnValue(observables)) {
 
       // Add to cache list
+      cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
+
       cacheList.add(*this) ;
     } 
 
@@ -1588,7 +1593,7 @@ void RooAbsArg::graphVizTree(const char* fileName)
 {
   ofstream ofs(fileName) ;
   if (!ofs) {
-    coutE("InputArguments") << "RooAbsArg::graphVizTree() ERROR: Cannot open graphViz output file with name " << fileName << endl ;
+    coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: Cannot open graphViz output file with name " << fileName << endl ;
     return ;
   }
   graphVizTree(ofs) ;
@@ -1597,7 +1602,7 @@ void RooAbsArg::graphVizTree(const char* fileName)
 void RooAbsArg::graphVizTree(ostream& os) 
 {
   if (!os) {
-    coutE("InputArguments") << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << endl ;
+    coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << endl ;
   }
   
   // Write header

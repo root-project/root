@@ -47,8 +47,8 @@ void RooTrace::create2(const TObject* obj) {
 void RooTrace::destroy2(const TObject* obj) {
 
   if (!_list.Remove((RooAbsArg*)obj)) {
-    cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
-	 << " already deleted, or created before trace activation[" << obj->GetTitle() << "]" << endl ;
+//     cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
+// 	 << " already deleted, or created before trace activation[" << obj->GetTitle() << "]" << endl ;
   } else if (_verbose) {
     cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
 	 << " destroyed [" << obj->GetTitle() << "]" << endl ;

@@ -378,6 +378,19 @@ Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
 }
 
 
+Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol) const 
+{
+  Int_t n= GetN();
+  for(Int_t i= 0; i < n; i++) {
+    if (fabs(fX[i]-other.fX[i])>tol) return kFALSE ;
+    if (fabs(fY[i]-other.fY[i])>tol) return kFALSE ;
+  }
+  
+  return kTRUE ;
+}
+
+
+
 void RooHist::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this histogram to the specified output stream.
   //

@@ -25,7 +25,7 @@
 #include "RooAbsCache.h"
 #include "RooAbsCacheElement.h"
 #include "RooCacheManager.h"
-#include <vector>
+#include <list>
 
 class RooNameSet ;
 
@@ -50,10 +50,11 @@ public:
 protected:
 
   Bool_t _clearOnRedirect ;
-
   Bool_t _optCacheModeSeen  ;
-  RooArgSet* _optCacheObservables ; //!
 
+  std::list<RooArgSet*> _optCacheObsList ; //! list of all optCacheObservables owned
+  RooArgSet* _optCacheObservables ; //! current optCacheObservables 
+  
   ClassDef(RooObjCacheManager,1) // Cache Manager class generic objects
 } ;
 

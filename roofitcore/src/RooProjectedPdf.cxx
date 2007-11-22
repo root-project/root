@@ -97,7 +97,7 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   cache->_projection = proj ;
 
   code = _cacheMgr.setObj(nset,iset,(RooAbsCacheElement*)cache,0) ;
-  coutI("Integration") << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
+  coutI(Integration) << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
 
   return proj ;
 }

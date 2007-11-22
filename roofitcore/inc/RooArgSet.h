@@ -106,6 +106,8 @@ public:
   Bool_t setCatIndex(const char* name, Int_t newVal=0, Bool_t verbose=kFALSE) ;
   Bool_t setStringValue(const char* name, const char* newVal="", Bool_t verbose=kFALSE) ;
 
+  static void cleanup() ;
+
 protected:
 
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;

@@ -232,6 +232,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   }
   
   _genContext = genModel.genContext(dependents,genProtoData,0,_verboseGen) ;
+  _genParams = _genModel->getParameters(&_dependents) ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
   _genInitParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
   delete tmp ;

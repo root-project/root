@@ -155,8 +155,8 @@ Double_t RooAbsReal::getVal(const RooArgSet* set) const
 
     if (checkValue != _value) {
       // If not, print warning
-      cout << "RooAbsReal::getVal(" << GetName() << ") WARNING: cache contains " << _value 
-	   << " but evaluate() returns " << checkValue << endl ;
+      coutW(Eval) << "RooAbsReal::getVal(" << GetName() << ") WARNING: cache contains " << _value 
+		  << " but evaluate() returns " << checkValue << endl ;
 
       // And update cache (so that we see the difference)
       _value = checkValue ;
@@ -172,12 +172,12 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
 {
   // Calculate current value of object, with error tracing wrapper
   Double_t value = evaluate() ;
-  cxcoutD("ChangeTracking") << "RooAbsReal::getVal(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
+  cxcoutD(ChangeTracking) << "RooAbsReal::getVal(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
   
   //Standard tracing code goes here
   if (!isValidReal(value)) {
-    cout << "RooAbsReal::traceEval(" << GetName() 
-	 << "): validation failed: " << value << endl ;
+    coutW(Tracing) << "RooAbsReal::traceEval(" << GetName() 
+		   << "): validation failed: " << value << endl ;
   }
 
   //Call optional subclass tracing code
@@ -217,7 +217,7 @@ Double_t RooAbsReal::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 Double_t RooAbsReal::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   // By default no analytical integrals are implemented
-  cout << "RooAbsReal::analyticalIntegral(" << GetName() << ") code " << code << " not implemented" << endl ;
+  coutF(Eval)  << "RooAbsReal::analyticalIntegral(" << GetName() << ") code " << code << " not implemented" << endl ;
   assert(0) ;
   return 0 ;
 }
@@ -276,8 +276,8 @@ void RooAbsReal::setPlotMin(Double_t value) {
 
   // Check if new limit is consistent
   if (_plotMin>_plotMax) {
-    cout << "RooAbsReal::setPlotMin(" << GetName() 
-	 << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
+    coutW(Plotting) << "RooAbsReal::setPlotMin(" << GetName() 
+		    << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
     _plotMin = _plotMax ;
   } else {
     _plotMin = value ;
@@ -290,8 +290,8 @@ void RooAbsReal::setPlotMax(Double_t value) {
 
   // Check if new limit is consistent
   if (_plotMax<_plotMin) {
-    cout << "RooAbsReal::setPlotMax(" << GetName() 
-	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
+    coutW(Plotting) << "RooAbsReal::setPlotMax(" << GetName() 
+		    << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
     _plotMax = _plotMin ;
   } else {
     _plotMax = value ;
@@ -302,8 +302,8 @@ void RooAbsReal::setPlotMax(Double_t value) {
 
 void RooAbsReal::setPlotRange(Double_t, Double_t) {
   // Set a new plot range
-  cout << "RooAbsReal::setPlotBins(" << GetName() 
-       << ") WARNING: setPlotRange deprecated. Specify plot range in RooAbsRealLValue::frame() when different from fitRange" << endl ;
+  coutW(Plotting) << "RooAbsReal::setPlotBins(" << GetName() 
+		  << ") WARNING: setPlotRange deprecated. Specify plot range in RooAbsRealLValue::frame() when different from fitRange" << endl ;
 
 //   // Check if new limit is consistent
 //   if (min>max) {
@@ -320,8 +320,8 @@ void RooAbsReal::setPlotRange(Double_t, Double_t) {
 
 void RooAbsReal::setPlotBins(Int_t /*value*/) {
   // Set number of histogram bins 
-  cout << "RooAbsReal::setPlotBins(" << GetName() 
-       << ") WARNING: setPlotBins deprecated. Specify plot bins in RooAbsRealLValue::frame() when different from fitBins" << endl ;
+  coutW(Plotting) << "RooAbsReal::setPlotBins(" << GetName() 
+		  << ") WARNING: setPlotBins deprecated. Specify plot bins in RooAbsRealLValue::frame() when different from fitBins" << endl ;
 //   _plotBins = value ;  
 }
 
@@ -518,7 +518,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   const RooAbsArg *arg = 0;
   while((arg= (const RooAbsArg*)dependentIterator->Next())) {
     if(!arg->isFundamental() && !dynamic_cast<const RooAbsLValue*>(arg)) {
-      cout << ClassName() << "::" << GetName() << ":createPlotProjection: variable \"" << arg->GetName()
+      coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: variable \"" << arg->GetName()
 	   << "\" of wrong type: " << arg->ClassName() << endl;
       delete dependentIterator;
       return 0;
@@ -526,8 +526,8 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     //RooAbsArg *found= leafNodes.find(arg->GetName()); 
     RooAbsArg *found= treeNodes.find(arg->GetName()); 
     if(!found) {
-      cout << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
-	   << "\" is not a dependent and will be ignored." << endl;
+      coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
+		      << "\" is not a dependent and will be ignored." << endl;
       continue;
     }
     if(found != arg) {
@@ -557,8 +557,8 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
     // check if this arg is also in the projection set
     if(0 != projectedVars && projectedVars->find(arg->GetName())) {
-      cout << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
-	   << "\" cannot be both a dependent and a projected variable." << endl;
+      coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
+		      << "\" cannot be both a dependent and a projected variable." << endl;
       delete dependentIterator;
       return 0;
     }
@@ -577,7 +577,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   //cout << "RooAbsReal::createPlotProjection(" << GetName() << ") finished snapshot" << endl ;
 
   if (!cloneSet) {
-    cout << "RooAbsPdf::createPlotProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
+    coutE(Plotting) << "RooAbsPdf::createPlotProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     return 0 ;
   }
   RooAbsReal *clone= (RooAbsReal*)cloneSet->find(GetName());
@@ -626,7 +626,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
   RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*clone,*projectedVars,&normSet,0,rangeName);
   if(0 == projected || !projected->isValid()) {
-    cout << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
     projectedVars->printToStream(cout,OneLine);
     // cleanup and exit
     if(0 != projected) delete projected;
@@ -658,14 +658,14 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
   // Do we have a valid histogram to use?
   if(0 == hist) {
-    cout << ClassName() << "::" << GetName() << ":fillHistogram: no valid histogram to fill" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: no valid histogram to fill" << endl;
     return 0;
   }
 
   // Check that the number of plotVars matches the input histogram's dimension
   Int_t hdim= hist->GetDimension();
   if(hdim != plotVars.getSize()) {
-    cout << ClassName() << "::" << GetName() << ":fillHistogram: plotVars has the wrong dimension" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: plotVars has the wrong dimension" << endl;
     return 0;
   }
 
@@ -677,12 +677,12 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     const RooAbsArg *var= plotVars.at(index);
     const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(var);
     if(0 == realVar) {
-      cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
+      coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
 	   << "\" of type " << var->ClassName() << endl;
       return 0;
     }
     if(!this->dependsOn(*realVar)) {
-      cout << ClassName() << "::" << GetName()
+      coutE(InputArguments) << ClassName() << "::" << GetName()
 	   << ":fillHistogram: WARNING: variable is not an explicit dependent: " << realVar->GetName() << endl;
     }
     plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
@@ -692,7 +692,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
   RooArgSet allDeps(plotClones) ;
   if (projectedVars) allDeps.add(*projectedVars) ;
   if (checkObservables(&allDeps)) {
-    cout << "RooAbsReal::fillHistogram(" << GetName() << ") error in checkObservables, abort" << endl ;
+    coutE(InputArguments) << "RooAbsReal::fillHistogram(" << GetName() << ") error in checkObservables, abort" << endl ;
     return hist ;
   }
 
@@ -731,8 +731,8 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     scaleFactor*= (xaxis->GetXmax() - xaxis->GetXmin())/xbins;
     break;
   default:
-    cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
-	 << hdim << " dimensions" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
+			  << hdim << " dimensions" << endl;
     break;
   }
 
@@ -759,7 +759,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
       xvar->setVal(xaxis->GetBinCenter(xbin));
       break;
     default:
-      cout << "RooAbsReal::fillHistogram: Internal Error!" << endl;
+      coutE(InputArguments) << "RooAbsReal::fillHistogram: Internal Error!" << endl;
       break;
     }
     Double_t result= scaleFactor*projected->getVal();
@@ -783,14 +783,14 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, Double_t scaleFactor) c
 
   // Do we have a valid histogram to use?
   if(0 == hist) {
-    cout << ClassName() << "::" << GetName() << ":fillDataHist: no valid RooDataHist to fill" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillDataHist: no valid RooDataHist to fill" << endl;
     return 0;
   }
 
   // Call checkObservables
   RooArgSet allDeps(*hist->get()) ;
   if (checkObservables(&allDeps)) {
-    cout << "RooAbsReal::fillDataHist(" << GetName() << ") error in checkObservables, abort" << endl ;
+    coutE(InputArguments) << "RooAbsReal::fillDataHist(" << GetName() << ") error in checkObservables, abort" << endl ;
     return hist ;
   }
   
@@ -1041,13 +1041,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.addToWgtOther = pc.getDouble("addToWgtOther") ;  
 
   if (o.addToCurveName && !frame->findObject(o.addToCurveName,RooCurve::Class())) {
-    cout << "RooAbsReal::plotOn(" << GetName() << ") cannot find existing curve " << o.addToCurveName << " to add to in RooPlot" << endl ;
+    coutE(InputArguments) << "RooAbsReal::plotOn(" << GetName() << ") cannot find existing curve " << o.addToCurveName << " to add to in RooPlot" << endl ;
     return frame ;
   }
   
   RooArgSet projectedVars ;
   if (sliceSet) {
-    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have slice " << *sliceSet << endl ;
+    cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have slice " << *sliceSet << endl ;
 
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
     
@@ -1059,21 +1059,21 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
       if (arg) {
 	projectedVars.remove(*arg) ;
       } else {
-	cout << "RooAbsReal::plotOn(" << GetName() << ") slice variable " 
-	     << sliceArg->GetName() << " was not projected anyway" << endl ;
+	coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") slice variable " 
+			<< sliceArg->GetName() << " was not projected anyway" << endl ;
       }
     }
     delete iter ;
   } else if (projSet) {
-    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have projSet " << *projSet << endl ;
+    cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have projSet " << *projSet << endl ;
     makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
   } else {
-    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have neither sliceSet nor projSet " << endl ;
+    cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: have neither sliceSet nor projSet " << endl ;
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
   o.projSet = &projectedVars ;
 
-  coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: projectedVars = " << projectedVars << endl ;
+  cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") Preprocessing: projectedVars = " << projectedVars << endl ;
 
 
   RooPlot* ret ;
@@ -1127,33 +1127,33 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   // ProjDataVars is either all projData observables, or the user indicated subset of it
   RooArgSet projDataVars ;
   if (o.projData) {
-    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") have ProjData with observables = " << *o.projData->get() << endl ;
+    cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") have ProjData with observables = " << *o.projData->get() << endl ;
     if (o.projDataSet) {
       RooArgSet* tmp = (RooArgSet*) o.projData->get()->selectCommon(*o.projDataSet) ;
       projDataVars.add(*tmp) ;
-      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") have ProjDataSet = " << *o.projDataSet << " will only use this subset of projData" << endl ;
+      cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") have ProjDataSet = " << *o.projDataSet << " will only use this subset of projData" << endl ;
       delete tmp ;
     } else {
-      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") using full ProjData" << endl ;
+      cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") using full ProjData" << endl ;
       projDataVars.add(*o.projData->get()) ;
     }
   }
 
-  coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") ProjDataVars = " << projDataVars << endl ;
+  cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") ProjDataVars = " << projDataVars << endl ;
 
   // Make list of variables to be projected
   RooArgSet projectedVars ;
   RooArgSet sliceSet ;
   if (o.projSet) {
-    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") have input projSet = " << *o.projSet << endl ;
+    cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") have input projSet = " << *o.projSet << endl ;
     makeProjectionSet(frame->getPlotVar(),o.projSet,projectedVars,kFALSE) ;
-    coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") calculated projectedVars = " << *o.projSet << endl ;
+    cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") calculated projectedVars = " << *o.projSet << endl ;
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
       RooArgSet *sliceSetTmp = getObservables(*frame->getNormVars()) ;
 
-      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") frame->getNormVars() that are also observables = " << *sliceSetTmp << endl ;
+      cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") frame->getNormVars() that are also observables = " << *sliceSetTmp << endl ;
 
       sliceSetTmp->remove(projectedVars,kTRUE,kTRUE) ;
       sliceSetTmp->remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
@@ -1165,9 +1165,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       }
 
       if (sliceSetTmp->getSize()) {
-	cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " 
-	     << frame->getPlotVar()->GetName() << " represents a slice in " ;
-	sliceSetTmp->Print("1") ;
+	coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " 
+			<< frame->getPlotVar()->GetName() << " represents a slice in " << *sliceSetTmp << endl ;
       }
       sliceSet.add(*sliceSetTmp) ;
       delete sliceSetTmp ;
@@ -1176,7 +1175,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
 
-  coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() << ") projectedVars = " << projectedVars << " sliceSet = " << sliceSet << endl ;
+  cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") projectedVars = " << projectedVars << " sliceSet = " << sliceSet << endl ;
 
 
   RooArgSet* projDataNeededVars = 0 ;
@@ -1190,20 +1189,20 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   RooAbsReal* realVar = (RooRealVar*) frame->getPlotVar() ;
   RooArgSet* plotCloneSet = (RooArgSet*) RooArgSet(*realVar).snapshot(kTRUE) ;
   if (!plotCloneSet) {
-    cout << "RooAbsReal::plotOn(" << GetName() << ") Couldn't deep-clone self, abort," << endl ;
+    coutE(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") Couldn't deep-clone self, abort," << endl ;
     return frame ;
   }
   RooRealVar* plotVar = (RooRealVar*) plotCloneSet->find(realVar->GetName());
 
   // Inform user about projections
   if (projectedVars.getSize()) {
-    cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
-	 << " integrates over variables " << projectedVars 
-	 << (o.projectionRangeName?Form(" in range %s",o.projectionRangeName):"") << endl;
+    coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
+		    << " integrates over variables " << projectedVars 
+		    << (o.projectionRangeName?Form(" in range %s",o.projectionRangeName):"") << endl;
   }  
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
-    cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
-	 << " averages using data variables " ; projDataNeededVars->Print("1") ;
+    coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
+		    << " averages using data variables " << *projDataNeededVars << endl ;
   }
 
   // Create projection integral
@@ -1219,7 +1218,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
   // Now that we have the final set of dependents, call checkObservables()
   if (checkObservables(deps)) {
-    cout << "RooAbsReal::plotOn(" << GetName() << ") error in checkObservables, abort" << endl ;
+    coutE(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") error in checkObservables, abort" << endl ;
     delete deps ;
     delete plotCloneSet ;
     if (projDataNeededVars) delete projDataNeededVars ;
@@ -1298,13 +1297,12 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
       if (!cutString.IsNull()) {
 	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
-	cout << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << endl ;
+	coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << endl ;
       } else {
 	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
       }
-      cout << "RooAbsReal::plotOn(" << GetName() 
-	   << ") only the following components of the projection data will be used: " ; 
-      projDataNeededVars->Print("1") ;
+      coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() 
+		      << ") only the following components of the projection data will be used: " << *projDataNeededVars << endl ;
     }
 
 
@@ -1332,7 +1330,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
 				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode) ;
-    cout << endl ;
+
+    if (dologW(Eval)) {
+      cout << endl ;
+    }
 
     // Add self to other curve if requested
     if (o.addToCurveName) {
@@ -1417,8 +1418,8 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
     if (arg) {
       projectedVars.remove(*arg) ;
     } else {
-      cout << "RooAbsReal::plotSliceOn(" << GetName() << ") slice variable " 
-	   << sliceArg->GetName() << " was not projected anyway" << endl ;
+      coutI(Plotting) << "RooAbsReal::plotSliceOn(" << GetName() << ") slice variable " 
+		      << sliceArg->GetName() << " was not projected anyway" << endl ;
     }
   }
   delete iter ;
@@ -1467,15 +1468,15 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Must depend on asymCat
   if (!dependsOn(asymCat)) {
-    cout << "RooAbsReal::plotAsymOn(" << GetName() 
-	 << ") function doesn't depend on asymmetry category " << asymCat.GetName() << endl ;
+    coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() 
+		    << ") function doesn't depend on asymmetry category " << asymCat.GetName() << endl ;
     return frame ;
   }
 
   // asymCat must be a signCat
   if (!asymCat.isSignType()) {
-    cout << "RooAbsReal::plotAsymOn(" << GetName()
-	 << ") asymmetry category must have 2 or 3 states with index values -1,0,1" << endl ;
+    coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
+		    << ") asymmetry category must have 2 or 3 states with index values -1,0,1" << endl ;
     return frame ;
   }
   
@@ -1498,9 +1499,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       }
 
       if (sliceSetTmp->getSize()) {
-	cout << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " 
-	     << frame->getPlotVar()->GetName() << " represents a slice in " ;
-	sliceSetTmp->Print("1") ;
+	coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " 
+			<< frame->getPlotVar()->GetName() << " represents a slice in " << *sliceSetTmp << endl ;
       }
       sliceSet.add(*sliceSetTmp) ;
       delete sliceSetTmp ;
@@ -1528,12 +1528,12 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Inform user about projections
   if (projectedVars.getSize()) {
-    cout << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " << plotVar->GetName() 
-	 << " projects variables " ; projectedVars.Print("1") ;
+    coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " << plotVar->GetName() 
+		    << " projects variables " << projectedVars << endl ;
   }  
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
-    cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
-	 << " averages using data variables " ; projDataNeededVars->Print("1") ;
+    coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
+		    << " averages using data variables "<<  *projDataNeededVars << endl ;
   }
 
 
@@ -1542,12 +1542,12 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   RooAbsCategoryLValue* asymNeg = (RooAbsCategoryLValue*) asymCat.Clone("asym_neg") ;
   asymPos->setIndex(1) ;
   asymNeg->setIndex(-1) ;
-  RooCustomizer custPos(*this,"pos") ;
-  RooCustomizer custNeg(*this,"neg") ;
-  custPos.replaceArg(asymCat,*asymPos) ;
-  custNeg.replaceArg(asymCat,*asymNeg) ;
-  RooAbsReal* funcPos = (RooAbsReal*) custPos.build() ;
-  RooAbsReal* funcNeg = (RooAbsReal*) custNeg.build() ;
+  RooCustomizer* custPos = new RooCustomizer(*this,"pos") ;
+  RooCustomizer* custNeg = new RooCustomizer(*this,"neg") ;
+  custPos->replaceArg(asymCat,*asymPos) ;
+  custNeg->replaceArg(asymCat,*asymNeg) ;
+  RooAbsReal* funcPos = (RooAbsReal*) custPos->build() ;
+  RooAbsReal* funcNeg = (RooAbsReal*) custNeg->build() ;
 
   // Create projection integral 
   RooArgSet *posProjCompList, *negProjCompList ;
@@ -1562,7 +1562,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   const RooAbsReal *posProj = funcPos->createPlotProjection(depPos, &projectedVars, posProjCompList) ;
   const RooAbsReal *negProj = funcNeg->createPlotProjection(depNeg, &projectedVars, negProjCompList) ;
   if (!posProj || !negProj) {
-    cout << "RooAbsReal::plotAsymOn(" << GetName() << ") Unable to create projections, abort" << endl ;
+    coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") Unable to create projections, abort" << endl ;
     return frame ; 
   }
 
@@ -1610,14 +1610,13 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
       if (!cutString.IsNull()) {
 	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
- 	cout << "RooAbsReal::plotAsymOn(" << GetName() 
-	     << ") reducing given projection dataset to entries with " << cutString << endl ;
+ 	coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() 
+			<< ") reducing given projection dataset to entries with " << cutString << endl ;
       } else {
 	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
       }
-      cout << "RooAbsReal::plotAsymOn(" << GetName() 
-	   << ") only the following components of the projection data will be used: " ; 
-      projDataNeededVars->Print("1") ;
+      coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() 
+		      << ") only the following components of the projection data will be used: " << *projDataNeededVars << endl ;
     }    
 
     RooDataProjBinding projBind(*funcAsym,*projDataSel,*plotVar) ;
@@ -1660,11 +1659,15 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   }
 
   // Cleanup
+  delete custPos ;
+  delete custNeg ;
   delete posProjCompList ;
   delete negProjCompList ;
   delete asymPos ;
   delete asymNeg ;
   delete funcAsym ;
+
+  delete plotVar ;
 
   return frame;
 }
@@ -1677,29 +1680,29 @@ Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
 
   // check that we are passed a valid plot frame to use
   if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
     return kTRUE;
   }
 
   // check that this frame knows what variable to plot
   RooAbsReal* var = frame->getPlotVar() ;
   if(!var) {
-    cout << ClassName() << "::" << GetName()
+    coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotOn: frame does not specify a plot variable" << endl;
     return kTRUE;
   }
 
   // check that the plot variable is not derived
   if(!dynamic_cast<RooAbsRealLValue*>(var)) {
-     cout << ClassName() << "::" << GetName() << ":plotOn: cannot plot variable \""
-	  << var->GetName() << "\" of type " << var->ClassName() << endl;
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOn: cannot plot variable \""
+		    << var->GetName() << "\" of type " << var->ClassName() << endl;
     return kTRUE;
   }
 
   // check if we actually depend on the plot variable
   if(!this->dependsOn(*var)) {
-    cout << ClassName() << "::" << GetName() << ":plotOn: WARNING: variable is not an explicit dependent: "
-	 << var->GetName() << endl;
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOn: WARNING: variable is not an explicit dependent: "
+		    << var->GetName() << endl;
   }
   
   return kFALSE ;
@@ -1716,7 +1719,7 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   // may contain variables that we do not depend on. If 'silent' is cleared,
   // warnings about inconsistent input parameters will be printed.
 
-  cxcoutD("Plotting") << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName() << " allVars = " << (allVars?(*allVars):RooArgSet()) << endl ;
+  cxcoutD(Plotting) << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName() << " allVars = " << (allVars?(*allVars):RooArgSet()) << endl ;
 
   projectedVars.removeAll() ;
   if (!allVars) return ;
@@ -1736,7 +1739,7 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     while((ps=(RooAbsArg*)psIter->Next())) {
       RooAbsArg* tmp = projectedVars.find(ps->GetName()) ;
       if (tmp) {
-	coutD("Plotting") << "RooAbsReal::makeProjectionSet(" << GetName() << ") removing " << tmp->GetName() 
+	cxcoutD(Plotting) << "RooAbsReal::makeProjectionSet(" << GetName() << ") removing " << tmp->GetName() 
 			  << " from projection set because it a server of " << plotVar->GetName() << endl ;
 	projectedVars.remove(*tmp) ;
       }
@@ -1745,9 +1748,9 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     delete plotServers ;
 
     if (!silent) {
-      cout << "RooAbsReal::plotOn(" << GetName() 
-	   << ") WARNING: cannot project out frame variable (" 
-	   << found->GetName() << "), ignoring" << endl ; 
+      coutW(Plotting) << "RooAbsReal::plotOn(" << GetName() 
+		      << ") WARNING: cannot project out frame variable (" 
+		      << found->GetName() << "), ignoring" << endl ; 
     }
   }
 
@@ -1758,7 +1761,7 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     if (!dependsOnValue(*arg)) {
       projectedVars.remove(*arg,kTRUE) ;
 
-      coutD("Plotting") << "RooAbsReal::plotOn(" << GetName() 
+      cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() 
 			<< ") function doesn't depend on projection variable " 
 			<< arg->GetName() << ", ignoring" << endl ;
     }
@@ -1778,8 +1781,7 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
 
   RooAbsFunc *binding= new RooRealBinding(*this,vars,nset,clipInvalid);
   if(binding && !binding->isValid()) {
-    cout << ClassName() << "::" << GetName() << ":bindVars: cannot bind to ";
-    vars.Print();
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":bindVars: cannot bind to " << vars << endl ;
     delete binding;
     binding= 0;
   }
@@ -1826,26 +1828,26 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     // Determine if existing branch is Float_t or Double_t
     TString typeName(((TLeaf*)branch->GetListOfLeaves()->At(0))->GetTypeName()) ;
     if (!typeName.CompareTo("Float_t")) {
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Float_t branch " << GetName() 
-	   << " will be converted to double precision" << endl ;
+      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Float_t branch " << GetName() 
+		  << " will be converted to double precision" << endl ;
       setAttribute("FLOAT_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
       t.SetBranchAddress(cleanName,reinterpret_cast<Float_t*>(&_value)) ;
     } else if (!typeName.CompareTo("Int_t")) {
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Int_t branch " << GetName() 
-	   << " will be converted to double precision" << endl ;
+      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Int_t branch " << GetName() 
+		  << " will be converted to double precision" << endl ;
       setAttribute("INTEGER_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
       t.SetBranchAddress(cleanName,reinterpret_cast<Int_t*>(&_value)) ;
     } else if (!typeName.CompareTo("UChar_t")) {
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
-	   << " will be converted to double precision" << endl ;
+      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
+		  << " will be converted to double precision" << endl ;
       setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
       t.SetBranchAddress(cleanName,reinterpret_cast<UChar_t*>(&_value)) ;
     }  else if (!typeName.CompareTo("UInt_t")) { 
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UInt_t branch " << GetName() 
-	   << " will be converted to double precision" << endl ;
+      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UInt_t branch " << GetName() 
+		  << " will be converted to double precision" << endl ;
       setAttribute("UNSIGNED_INTEGER_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
       t.SetBranchAddress(cleanName,reinterpret_cast<UInt_t*>(&_value)) ;
@@ -1879,7 +1881,7 @@ void RooAbsReal::fillTreeBranch(TTree& t)
   // First determine if branch is taken
   TBranch* branch = t.GetBranch(cleanBranchName()) ;
   if (!branch) { 
-    cout << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree: " << cleanBranchName() << endl ;
+    coutE(Eval) << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree: " << cleanBranchName() << endl ;
     assert(0) ;
   }
   branch->Fill() ;

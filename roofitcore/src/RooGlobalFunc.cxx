@@ -177,7 +177,7 @@ namespace RooFit {
   RooCmdArg VerbatimName(Bool_t flag)     { return RooCmdArg("VerbatimName",flag,0,0,0,0,0,0,0) ; }
 
   // RooMsgService::addReportingStream arguments
-  RooCmdArg Topic(const char* name)         { return RooCmdArg("Topic",0,0,0,0,name,0,0,0) ; }
+  RooCmdArg Topic(Int_t topic)              { return RooCmdArg("Topic",topic,0,0,0,0,0,0,0) ; }
   RooCmdArg ObjectName(const char* name)    { return RooCmdArg("ObjectName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg ClassName(const char* name)     { return RooCmdArg("ClassName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg BaseClassName(const char* name) { return RooCmdArg("BaseClassName",0,0,0,0,name,0,0,0) ; }

@@ -45,6 +45,7 @@
 #include "Riostream.h"
 #include <iomanip>
 #include <fstream>
+#include <list>
 #include "TClass.h"
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
@@ -54,6 +55,7 @@
 #include "RooStringVar.h"
 #include "RooTrace.h"
 #include "RooArgList.h"
+#include "RooSentinel.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );
@@ -66,6 +68,17 @@ char* RooArgSet::_poolBegin = 0 ;
 char* RooArgSet::_poolCur = 0 ;
 char* RooArgSet::_poolEnd = 0 ;
 
+static std::list<void*> _memPoolList ;
+
+void RooArgSet::cleanup()
+{
+  std::list<void*>::iterator iter = _memPoolList.begin() ;
+  while(iter!=_memPoolList.end()) {
+    free(*iter) ;
+    iter++ ;
+  }
+}
+
 
 void* RooArgSet::operator new (size_t bytes)
 {
@@ -75,9 +88,13 @@ void* RooArgSet::operator new (size_t bytes)
       cout << "RooArgSet::operator new(), starting new 1MB memory pool" << endl ;
     }
 
-    _poolBegin = (char*)malloc(1048576) ;
+    void* mem = malloc(1048576) ;
+    _poolBegin = (char*)mem ;
     _poolCur = _poolBegin ;
     _poolEnd = _poolBegin+(1048576) ;
+
+    _memPoolList.push_back(mem) ;
+    RooSentinel::activate() ;
   }
 
   char* ptr = _poolCur ;

@@ -523,3 +523,17 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
  
   return retVal ;
 }
+
+
+Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const 
+{
+  Int_t n= GetN();
+  for(Int_t i= 0; i < n; i++) {
+    if (fabs(fX[i]-other.fX[i])>tol) return kFALSE ;
+    if (fabs(fY[i]-other.fY[i])>tol) return kFALSE ;
+  }
+
+  return kTRUE ;
+}
+
+

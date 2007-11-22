@@ -34,7 +34,8 @@
 ClassImp(RooGrid)
 ;
 
-RooGrid::RooGrid()
+RooGrid::RooGrid() :
+  _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
 {
 }
 

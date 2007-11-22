@@ -53,7 +53,12 @@ RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsAr
 RooObjCacheManager::~RooObjCacheManager()
 {
   if (_optCacheObservables) {
-    delete _optCacheObservables ;
+
+    list<RooArgSet*>::iterator iter = _optCacheObsList.begin() ;
+    for (; iter!=_optCacheObsList.end() ; ++iter) {
+      delete *iter ;
+    }
+
     _optCacheObservables=0 ;
   }
 }
@@ -93,19 +98,12 @@ void RooObjCacheManager::operModeHook()
 
 void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes) 
 {
-  oocxcoutD(_owner,"Caching") << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
+  oocxcoutD(_owner,Caching) << "RooObjCacheManager::optimizeCacheMode(owner=" << _owner->GetName() << ") obs = " << obs << endl ;
 
   _optCacheModeSeen = kTRUE ;
-  RooArgSet* oldObs = 0 ;
-  if (_optCacheObservables) {    
-    oldObs = _optCacheObservables ; 
-  }
+
   _optCacheObservables = (RooArgSet*) obs.snapshot() ;
-  
-  if (oldObs) {
-    //cout << "deleting old _optCacheObservables" << endl ;
-    delete oldObs ;
-  }
+  _optCacheObsList.push_back(_optCacheObservables) ;
 
   for (Int_t i=0 ; i<_size ; i++) {
     if (_object[i]) {
@@ -122,7 +120,6 @@ void RooObjCacheManager::insertObjectHook(RooAbsCacheElement& obj)
 
   // If value caching mode optimization has happened, process it now on object being inserted
   if (_optCacheModeSeen) {
-    //cout << "performing posterior optimization with _optCacheObservables = " << *_optCacheObservables << endl ;
     RooLinkedList l ;
     RooArgSet s ;
     obj.optimizeCacheMode(*_optCacheObservables,s,l) ;
@@ -149,10 +146,15 @@ void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *inde
 
 void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) 
 {
+  // Cache contents cannot be const optimized if it is erased on a server redirect.
+  if (_clearOnRedirect) {
+    return ;
+  }
+  
   for (Int_t i=0 ; i<_size ; i++) {
-    if (_object[i]) {
-      _object[i]->findConstantNodes(obs,cacheList, processedNodes) ;
-    }
+      if (_object[i]) {
+	_object[i]->findConstantNodes(obs,cacheList, processedNodes) ;
+      }
   }    
 }
 

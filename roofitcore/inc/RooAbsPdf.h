@@ -132,7 +132,7 @@ public:
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
   virtual Double_t getVal(const RooArgSet* set=0) const ;
-  Double_t getLogVal(const RooArgSet* set=0) const ;
+  virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
   Double_t getNorm(const RooArgSet& nset) const { return getNorm(&nset) ; }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
@@ -208,8 +208,6 @@ protected:
   static Int_t _verboseEval ;
 
   virtual Bool_t syncNormalization(const RooArgSet* dset, Bool_t adjustProxies=kTRUE) const ;
-  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* dset) const ;
-  virtual void syncNormalizationPostHook(RooAbsReal* norm,const RooArgSet* dset) const ;
 
   virtual RooPlot *plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option_t* drawOptions="L",
 				    Double_t scaleFactor= 1.0, ScaleType stype=Relative, 

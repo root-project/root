@@ -726,9 +726,42 @@ Int_t  RooPlot::GetNbinsX() const { return _hist->GetNbinsX() ; }
 Int_t  RooPlot::GetNdivisions(Option_t* axis) const { return _hist->GetNdivisions(axis) ; }
 Double_t  RooPlot::GetMinimum(Double_t minval) const { return _hist->GetMinimum(minval) ; }
 Double_t   RooPlot::GetMaximum(Double_t maxval) const { return _hist->GetMaximum(maxval) ; }
+
+
+void RooPlot::SetAxisColor(Color_t color, Option_t* axis) { _hist->SetAxisColor(color,axis) ; }
+void RooPlot::SetAxisRange(Double_t xmin, Double_t xmax, Option_t* axis) { _hist->SetAxisRange(xmin,xmax,axis) ; }
+void RooPlot::SetBarOffset(Float_t offset) { _hist->SetBarOffset(offset) ; }
+void RooPlot::SetBarWidth(Float_t width) { _hist->SetBarWidth(width) ; }
+void RooPlot::SetContour(Int_t nlevels, const Double_t* levels) { _hist->SetContour(nlevels,levels) ; } 
+void RooPlot::SetContourLevel(Int_t level, Double_t value) { _hist->SetContourLevel(level,value) ; } 
+void RooPlot::SetDrawOption(Option_t* option) { _hist->SetDrawOption(option) ; } 
+void RooPlot::SetFillAttributes() { _hist->SetFillAttributes() ; } 
+void RooPlot::SetFillColor(Color_t fcolor) { _hist->SetFillColor(fcolor) ; } 
+void RooPlot::SetFillStyle(Style_t fstyle) { _hist->SetFillStyle(fstyle) ; } 
+void RooPlot::SetLabelColor(Color_t color, Option_t* axis) { _hist->SetLabelColor(color,axis) ; } 
+void RooPlot::SetLabelFont(Style_t font, Option_t* axis) { _hist->SetLabelFont(font,axis) ; } 
+void RooPlot::SetLabelOffset(Float_t offset, Option_t* axis) { _hist->SetLabelOffset(offset,axis) ; } 
+void RooPlot::SetLabelSize(Float_t size, Option_t* axis) { _hist->SetLabelSize(size,axis) ; } 
+void RooPlot::SetLineAttributes() { _hist->SetLineAttributes() ; } 
+void RooPlot::SetLineColor(Color_t lcolor) { _hist->SetLineColor(lcolor) ; } 
+void RooPlot::SetLineStyle(Style_t lstyle) { _hist->SetLineStyle(lstyle) ; } 
+void RooPlot::SetLineWidth(Width_t lwidth) { _hist->SetLineWidth(lwidth) ; } 
+void RooPlot::SetMarkerAttributes() { _hist->SetMarkerAttributes() ; } 
+void RooPlot::SetMarkerColor(Color_t tcolor) { _hist->SetMarkerColor(tcolor) ; } 
+void RooPlot::SetMarkerSize(Size_t msize) { _hist->SetMarkerSize(msize) ; } 
+void RooPlot::SetMarkerStyle(Style_t mstyle) { _hist->SetMarkerStyle(mstyle) ; } 
+void RooPlot::SetNameTitle(const char* name, const char* title) { _hist->SetNameTitle(name,title) ; } 
+void RooPlot::SetNdivisions(Int_t n, Option_t* axis) { _hist->SetNdivisions(n,axis) ; } 
+void RooPlot::SetOption(Option_t* option) { _hist->SetOption(option) ; } 
+void RooPlot::SetStats(Bool_t stats) { _hist->SetStats(stats) ; } 
+void RooPlot::SetTickLength(Float_t length, Option_t* axis) { _hist->SetTickLength(length,axis) ; } 
+void RooPlot::SetTitleFont(Style_t font, Option_t* axis) { _hist->SetTitleFont(font,axis) ; } 
+void RooPlot::SetTitleOffset(Float_t offset, Option_t* axis) { _hist->SetTitleOffset(offset,axis) ; } 
+void RooPlot::SetTitleSize(Float_t size, Option_t* axis) { _hist->SetTitleSize(size,axis) ; } 
 void RooPlot::SetXTitle(const char *title) { _hist->SetXTitle(title) ; }
 void RooPlot::SetYTitle(const char *title) { _hist->SetYTitle(title) ; }
 void RooPlot::SetZTitle(const char *title) { _hist->SetZTitle(title) ; }
+
 
 void RooPlot::Streamer(TBuffer &R__b)
 {

@@ -39,7 +39,7 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
   // Use fill() to fill the table.
 
   //Take types from reference category
-  Int_t nbin(0) ;
+  Int_t nbin=0 ;
   TIterator* tIter = cat.typeIterator() ;
   RooCatType* type ;
   while (((type = (RooCatType*)tIter->Next()))) {
@@ -49,29 +49,24 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
   delete tIter ;
 
   // Create counter array and initialize
-  _count = new Double_t[nbin] ;
+  _count.resize(nbin) ;
   for (int i=0 ; i<nbin ; i++) _count[i] = 0 ;
 }
 
 
 
 Roo1DTable::Roo1DTable(const Roo1DTable& other) : 
-  RooTable(other), _total(other._total), _nOverflow(other._nOverflow)
+  RooTable(other), _count(other._count), _total(other._total), _nOverflow(other._nOverflow)
 {  
   // Copy constructor
 
   // Take types from reference category
-  Int_t nbin(0) ;
 
   int i;
   for (i=0 ; i<other._types.GetEntries() ; i++) {
     _types.Add(new RooCatType(*(RooCatType*)other._types.At(i))) ;
-    nbin++ ;
   }
 
-  // Create counter array and initialize
-  _count = new Double_t[nbin] ;
-  for (i=0 ; i<nbin ; i++) _count[i] = other._count[i] ;
 }
 
 
@@ -81,7 +76,6 @@ Roo1DTable::~Roo1DTable()
 
   // We own the contents of the object array
   _types.Delete() ;
-  delete[] _count ;
 }
 
 
@@ -200,4 +194,23 @@ Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const
     if (!silent) cout << "Roo1DTable::getFrac: WARNING table empty, returning 0" << endl ;
     return 0. ;
   }
+}
+
+
+Bool_t Roo1DTable::isIdentical(const RooTable& other) 
+{
+  const Roo1DTable* other1d = &dynamic_cast<const Roo1DTable&>(other) ;
+
+  if (!other1d) {
+    return kFALSE ;
+  }
+
+  int i;
+  for (i=0 ; i<_types.GetEntries() ; i++) {
+    // RooCatType* entry = (RooCatType*) _types.At(i) ;        
+    if (_count[i] != other1d->_count[i]) {
+      return kFALSE ;
+    }
+  }
+  return kTRUE ;
 }

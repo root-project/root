@@ -20,6 +20,7 @@
 #include <assert.h>
 #include "TObjArray.h"
 #include "RooTable.h"
+#include <vector>
 
 class Roo1DTable : public RooTable {
 public:
@@ -38,11 +39,13 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
+  virtual Bool_t isIdentical(const RooTable& other) ;
+
 protected:
 
   
   TObjArray _types ;
-  Double_t* _count ; //! do not persist
+  std::vector<Double_t> _count ;
   Double_t  _total ;
   Double_t  _nOverflow ;
 

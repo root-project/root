@@ -31,6 +31,7 @@
 #include "RooRealConstant.h"
 #include "RooConstVar.h"
 #include "RooArgList.h"
+#include "RooSentinel.h"
 
 ClassImp(RooRealConstant)
 ;
@@ -38,6 +39,17 @@ ClassImp(RooRealConstant)
 
 RooArgList* RooRealConstant::_constDB = 0;
 TIterator* RooRealConstant::_constDBIter = 0;
+
+
+void RooRealConstant::cleanup() 
+{
+  if (_constDB) {
+    delete _constDB ;
+    delete _constDBIter ;
+    _constDB = 0 ;
+  }
+}
+
 
 RooConstVar& RooRealConstant::value(Double_t value) 
 {
@@ -53,7 +65,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
   sprintf(label,"%8.6f",value) ;
   var = new RooConstVar(label,label,value) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
-  _constDB->add(*var) ;
+  _constDB->addOwned(*var) ;
 
   return *var ;
 }
@@ -65,6 +77,7 @@ void RooRealConstant::init()
   if (!_constDB) {
     _constDB = new RooArgList("RooRealVar Constants Database") ;
     _constDBIter = _constDB->createIterator() ;
+    RooSentinel::activate() ;
   } else {
     _constDBIter->Reset() ;
   }

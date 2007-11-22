@@ -38,11 +38,11 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 				   Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
-  cxcoutI("Generation") << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName() 
+  cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars ;
-  if (prototype) ccxcoutI("Generation") << " with prototype data for " << *prototype->get() ;
-  if (auxProto && auxProto->getSize()>0)  ccxcoutI("Generation") << " with auxiliary prototypes " << *auxProto ;
-  ccxcoutI("Generation") << endl ;
+  if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
+  if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
+  ccxcoutI(Generation) << endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF
   _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;

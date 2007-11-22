@@ -33,6 +33,7 @@
 #include "RooSuperCategory.h"
 #include "RooCategory.h"
 #include "RooAbsPdf.h"
+#include "RooMsgService.h"
 
 #include <assert.h>
 
@@ -111,10 +112,12 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
 
     // Procedure might be lengthy, give some progress indication
     if (_first) {
-      cout << "RooDataProjBinding::operator() projecting over " << nEvt << " events" << endl ;
+      oocoutW(_real,Eval) << "RooDataProjBinding::operator() projecting over " << nEvt << " events" << endl ;
       _first = kFALSE ;
     } else {
-      cout << "." ; cout.flush() ;
+      if (oodologW(_real,Eval)) {
+	cout << "." ; cout.flush() ;
+      }
     }
 
     for (i=0 ; i<nEvt ; i++) {

@@ -137,7 +137,7 @@ public:
 
   static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
   static RooRealVarSharedProperties _nullProp ; // Null property
-  mutable RooRealVarSharedProperties* _sharedProp ; // Shared properties associated with this instance
+  mutable RooRealVarSharedProperties* _sharedProp ; //! Shared properties associated with this instance
 
   ClassDef(RooRealVar,4) // Real-valued variable 
 };

@@ -18,6 +18,8 @@
 
 #include "RooFit.h"
 #include "RooRealVarSharedProperties.h"
+#include <iostream>
+using namespace std ;
 
 ClassImp(RooRealVarSharedProperties)
 ;
@@ -25,15 +27,26 @@ ClassImp(RooRealVarSharedProperties)
 
 RooRealVarSharedProperties::RooRealVarSharedProperties() 
 {
+//   cout << "RooRealVarSharedProperties::defctor(" << this << ")" << endl ;
 } 
 
 RooRealVarSharedProperties::RooRealVarSharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
 {
+//   cout << "RooRealVarSharedProperties::ctor(" << this << ")" << endl ;
 } 
+
+RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedProperties& other) :
+  RooSharedProperties(other), 
+  _altBinning(other._altBinning)
+{
+//   cout << "RooRealVarSharedProperties::cctor(" << this << ") other = " << &other << endl ;
+}
+
 
 
 RooRealVarSharedProperties::~RooRealVarSharedProperties() 
 {
+//   cout << "RooRealVarSharedProperties::dtor(" << this << ")" << endl ;
   _altBinning.Delete() ;
 } 
 

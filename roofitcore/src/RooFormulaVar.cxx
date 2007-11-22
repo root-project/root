@@ -42,6 +42,7 @@
 #include "RooStreamParser.h"
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
+#include "RooMsgService.h"
 
 ClassImp(RooFormulaVar)
 
@@ -142,7 +143,7 @@ void RooFormulaVar::printToStream(ostream& os, PrintOption opt, TString indent) 
 Bool_t RooFormulaVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/)
 {
   // Read object contents from given stream
-  cout << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
+  coutE(InputArguments) << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
   return kTRUE ;
 }
 
@@ -177,19 +178,19 @@ Double_t RooFormulaVar::defaultErrorLevel() const
   delete iter ;
 
   if (nllArg && !chi2Arg) {
-    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() 
-	 << ") Formula contains a RooNLLVar, using its error level" << endl ;
+    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() 
+			<< ") Formula contains a RooNLLVar, using its error level" << endl ;
     return nllArg->defaultErrorLevel() ;
   } else if (chi2Arg && !nllArg) {
-    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() 
+    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() 
 	 << ") Formula contains a RooChi2Var, using its error level" << endl ;
     return chi2Arg->defaultErrorLevel() ;
   } else if (!nllArg && !chi2Arg) {
-    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-	 << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
+    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
+		      << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
   } else {
-    cout << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-	 << "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
+    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
+			<< "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
   }
 
   return 1.0 ;

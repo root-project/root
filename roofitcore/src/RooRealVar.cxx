@@ -35,6 +35,7 @@
 #include "RooErrorVar.h"
 #include "RooRangeBinning.h"
 #include "RooCmdConfig.h"
+#include "RooMsgService.h"
 
 ClassImp(RooRealVar)
 ;
@@ -195,8 +196,8 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
   // Create a new RooRangeBinning with this name with default range
   binning = new RooRangeBinning(getMin(),getMax(),name) ;
   if (verbose) {
-    cout << "RooRealVar::getBinning(" << GetName() << ") new range named '" 
-	 << name << "' created with default bounds" << endl ;
+    coutI(Eval) << "RooRealVar::getBinning(" << GetName() << ") new range named '" 
+		<< name << "' created with default bounds" << endl ;
   }
   sharedProp()->_altBinning.Add(binning) ;
   
@@ -238,8 +239,8 @@ void RooRealVar::setMin(const char* name, Double_t value)
 
   // Check if new limit is consistent
   if (value >= getMax()) {
-    cout << "RooRealVar::setMin(" << GetName() 
-	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
+    coutW(InputArguments) << "RooRealVar::setMin(" << GetName() 
+			  << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
     binning.setMin(getMax()) ;
   } else {
     binning.setMin(value) ;
@@ -263,8 +264,8 @@ void RooRealVar::setMax(const char* name, Double_t value)
 
   // Check if new limit is consistent
   if (value < getMin()) {
-    cout << "RooRealVar::setMax(" << GetName() 
-	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    coutW(InputArguments) << "RooRealVar::setMax(" << GetName() 
+			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setMax(getMin()) ;
   } else {
     binning.setMax(value) ;
@@ -290,17 +291,17 @@ void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
 
   // Check if new limit is consistent
   if (min>max) {
-    cout << "RooRealVar::setRange(" << GetName() 
-	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    coutW(InputArguments) << "RooRealVar::setRange(" << GetName() 
+			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setRange(min,min) ;
   } else {
     binning.setRange(min,max) ;
   }
 
   if (!exists) {
-    cout << "RooRealVar::setRange(" << GetName() 
-	 << ") new range named '" << name << "' created with bounds [" 
-	 << min << "," << max << "]" << endl ;
+    coutI(Eval) << "RooRealVar::setRange(" << GetName() 
+		<< ") new range named '" << name << "' created with bounds [" 
+		<< min << "," << max << "]" << endl ;
   }
 
   setShapeDirty() ;  
@@ -390,7 +391,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
             parser.readInteger(plotBins,kTRUE) || 
 	    parser.expectToken(")",kTRUE)) break ;
 //   	setPlotRange(plotMin,plotMax) ;
-	cout << "RooRealVar::readFromStrem(" << GetName() 
+	coutW(Eval) << "RooRealVar::readFromStrem(" << GetName() 
 	     << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
 
       } else if (!token.CompareTo("F")) {
@@ -407,7 +408,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	    parser.expectToken(")",kTRUE)) break ;
 	//setBins(fitBins) ;
 	//setRange(fitMin,fitMax) ;
-	cout << "RooRealVar::readFromStream(" << GetName() 
+	coutW(Eval) << "RooRealVar::readFromStream(" << GetName() 
 	     << ") WARNING: F(lo-hi:bins) token deprecated, use L(lo-hi) B(bins)" << endl ;	
 	if (!haveConstant) setConstant(kFALSE) ;
 
@@ -776,7 +777,7 @@ void RooRealVar::fillTreeBranch(TTree& t)
   TString cleanName(cleanBranchName()) ;
   TBranch* valBranch = t.GetBranch(cleanName) ;
   if (!valBranch) { 
-    cout << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    coutE(Eval) << "RooAbsReal::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
     assert(0) ;
   }
   valBranch->Fill() ;
@@ -833,7 +834,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       RooAbsRealLValue::Streamer(R__b);
       if (R__v==1) {
-	cout << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << endl ;
+	coutI(Eval) << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << endl ;
 	Double_t fitMin, fitMax ;
 	Int_t fitBins ; 
 	R__b >> fitMin;
@@ -855,8 +856,10 @@ void RooRealVar::Streamer(TBuffer &R__b)
 	RooRealVarSharedProperties* tmpSharedProp = new RooRealVarSharedProperties() ;
 	tmpSharedProp->Streamer(R__b) ;
 	if (!(_nullProp==*tmpSharedProp)) {
+// 	  cout << "RooRealVar::streamer registering shared prop " << tmpSharedProp << endl ;
 	  _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(tmpSharedProp) ;
 	} else {
+// 	  cout << "RooRealVar::streamer deleting shared prop " << tmpSharedProp << endl ;
 	  delete tmpSharedProp ;
 	  _sharedProp = 0 ;
 	}
@@ -885,48 +888,49 @@ void RooRealVar::Streamer(TBuffer &R__b)
 
 void RooRealVar::setFitBins(Int_t nBins) 
 {
-  cout << "WARNING setFitBins() IS OBSOLETE, PLEASE USE setBins()" << endl ;
+  coutW(Eval) << "WARNING setFitBins() IS OBSOLETE, PLEASE USE setBins()" << endl ;
   setBins(nBins) ;
 }
 
 void RooRealVar::setFitMin(Double_t value) 
 {
-  cout << "WARNING setFitMin() IS OBSOLETE, PLEASE USE setMin()" << endl ;
+  coutW(Eval) << "WARNING setFitMin() IS OBSOLETE, PLEASE USE setMin()" << endl ;
   setMin(value) ;
 }
 
 void RooRealVar::setFitMax(Double_t value) 
 {
-  cout << "WARNING setFitMax() IS OBSOLETE, PLEASE USE setMin()" << endl ;
+  coutW(Eval) << "WARNING setFitMax() IS OBSOLETE, PLEASE USE setMin()" << endl ;
   setMax(value) ;
 }
 
 void RooRealVar::setFitRange(Double_t min, Double_t max) 
 {
-  cout << "WARNING setFitRange() IS OBSOLETE, PLEASE USE setRange()" << endl ;
+  coutW(Eval) << "WARNING setFitRange() IS OBSOLETE, PLEASE USE setRange()" << endl ;
   setRange(min,max) ;
 }
 
 void RooRealVar::removeFitMin() 
 {
-  cout << "WARNING removeFitMin() IS OBSOLETE, PLEASE USE removeMin()" << endl ;
+  coutW(Eval) << "WARNING removeFitMin() IS OBSOLETE, PLEASE USE removeMin()" << endl ;
   removeMin() ;
 }
 
 void RooRealVar::removeFitMax() 
 {
-  cout << "WARNING removeFitMax() IS OBSOLETE, PLEASE USE removeMax()" << endl ;
+  coutW(Eval) << "WARNING removeFitMax() IS OBSOLETE, PLEASE USE removeMax()" << endl ;
   removeMax() ;
 }
 
 void RooRealVar::removeFitRange() 
 {
-  cout << "WARNING removeFitRange() IS OBSOLETE, PLEASE USE removeRange()" << endl ;
+  coutW(Eval) << "WARNING removeFitRange() IS OBSOLETE, PLEASE USE removeRange()" << endl ;
   removeRange() ;
 }
 
 void RooRealVar::deleteSharedProperties()
 {
+//   cout << "RooRealVar::deleteSharedProperties called" << endl ;
   if (_sharedProp) {
     _sharedPropList.unregisterProperties(_sharedProp) ;
     _sharedProp = 0 ;

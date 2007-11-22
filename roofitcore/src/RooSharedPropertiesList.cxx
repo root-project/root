@@ -35,10 +35,12 @@ RooSharedPropertiesList::RooSharedPropertiesList()
 
 RooSharedPropertiesList::~RooSharedPropertiesList() 
 {
+//   cout << "RooSharedPropertiesList::dtor" << endl ;
   // Delete all objects in property list
   TIterator* iter = _propList.MakeIterator() ;
   RooSharedProperties* prop ;
   while((prop=(RooSharedProperties*)iter->Next())) {
+//     cout << "deleting shared prop " << prop << endl ;
     delete prop ;
   }
   delete iter ;
@@ -69,16 +71,29 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
       // Found another instance of object with identical UUID 
 
       // Delete incoming instance, increase ref count of already stored instance
-      delete prop ;
+//       cout << "RooSharedProperties::reg deleting incoming prop " << prop << " recycling existing prop " << tmp << endl ;
+
+      // Check if prop is in _propList
+      if (_propList.FindObject(prop)) {
+// 	cout << "incoming object to be deleted is in proplist!!" << endl ;
+      } else {
+// 	cout << "deleting prop object " << prop << endl ;
+	//delete prop ;
+      }
+
+      // delete prop ;
       _propList.Add(tmp) ;
 
-      // Return pointer to already-stored instance
       delete iter ;
+
+      // Return pointer to already-stored instance
       return tmp ;
     }
   }
   delete iter ;
 
+
+//   cout << "RooSharedProperties::reg storing incoming prop " << prop << endl ;
   _propList.Add(prop) ;
   return prop ;
 }
@@ -87,11 +102,13 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
 void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop) 
 {
   // Decrease reference count
+//   cout << "RooSharedPropertiesList::unreg decreasing ref cout of prop " << prop << endl ;
   _propList.Remove(prop) ;
 
   // We own object if ref-counted list. If count drops to zero, delete object
   if (_propList.refCount(prop)==0) {
     //cout << "RooSharedPropertiesList::unregisterProperties: deleting property " << prop << endl ;
+//     cout << "RooSharedPropertiesList::unreg deleting prop with zero ref count " << prop << endl ;
     delete prop ;
   }
 

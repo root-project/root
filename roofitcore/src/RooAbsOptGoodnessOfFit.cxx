@@ -107,7 +107,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   
   if (rangeName) {
     
-    cxcoutI("Fitting") << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing likelihood for sub-range named " << rangeName << endl ;
+    cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing likelihood for sub-range named " << rangeName << endl ;
 
     // Adjust PDF normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     TIterator* iter2 = _dataClone->get()->createIterator() ;
@@ -154,10 +154,10 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     _pdfClone->fixAddCoefNormalization(*_dataClone->get()) ;
     
     if (addCoefRangeName) {
-      cxcoutI("Fitting") << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
+      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
       _pdfClone->fixAddCoefRange(addCoefRangeName,kFALSE) ;
     } else {
-      cxcoutI("Fitting") << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
+      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
       _pdfClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
     }
   }
@@ -165,13 +165,25 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   // Attach PDF to data set
   _pdfClone->attachDataSet(*_dataClone) ;
 
-  // Store normalization set
+  // Store normalization set  
   _normSet = (RooArgSet*) data.get()->snapshot(kFALSE) ;
 
   // Remove projected dependents from normalization set
   if (projDeps.getSize()>0) {
+
     _projDeps = (RooArgSet*) projDeps.snapshot(kFALSE) ;
+    
+    RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
+    
+    // Delete owned projected dependent copy in _normSet
+    TIterator* ii = tobedel->createIterator() ;
+    RooAbsArg* aa ;
+    while((aa=(RooAbsArg*)ii->Next())) {
+      delete aa ;
+    }
+    delete ii ;
+    delete tobedel ;
 
     // Mark all projected dependents as such
     RooArgSet *projDataDeps = (RooArgSet*) _dataClone->get()->selectCommon(*_projDeps) ;
@@ -191,7 +203,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     delete projDataDeps ;
   }
 
-  coutI("Optimization") << "RooAbsOptTestStatistic::ctor(" << GetName() << ") optimizing internal clone of p.d.f for likelihood evaluation." 
+  coutI(Optimization) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") optimizing internal clone of p.d.f for likelihood evaluation." 
 			<< "Lazy evaluation and associated change tracking will disabled for all nodes that depend on observables" << endl ;
 
   optimizeCaching() ;
@@ -206,6 +218,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& oth
 {
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
+    _projDeps = 0 ;
     _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;   
     return ;
   }
@@ -241,9 +254,9 @@ RooAbsOptGoodnessOfFit::~RooAbsOptGoodnessOfFit()
   if (operMode()==Slave) {
     delete _pdfCloneSet ;
     delete _dataClone ;
-    delete _normSet ;
     delete _projDeps ;
   } 
+  delete _normSet ;
 }
 
 
@@ -290,22 +303,22 @@ void RooAbsOptGoodnessOfFit::constOptimizeTestStatistic(ConstOpCode opcode)
 
   switch(opcode) {
   case Activate:     
-    cxcoutI("Optimization") << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
 			    << " on observables and constant parameters and precalculating their values" << endl ;
     optimizeConstantTerms(kTRUE) ;
     break ;
   case DeActivate:  
-    cxcoutI("Optimization") << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") deactivating optimization of constant terms in test statistic" << endl ;
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") deactivating optimization of constant terms in test statistic" << endl ;
     optimizeConstantTerms(kFALSE) ;
     break ;
   case ConfigChange: 
-    cxcoutI("Optimization") << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") one ore more parameter were changed from constant to floating or vice versa, "
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") one ore more parameter were changed from constant to floating or vice versa, "
 			    << "re-evaluating constant term optimization" << endl ;
     optimizeConstantTerms(kFALSE) ;
     optimizeConstantTerms(kTRUE) ;
     break ;
   case ValueChange: 
-    cxcoutI("Optimization") << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << endl ;
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << endl ;
     optimizeConstantTerms(kFALSE) ;
     optimizeConstantTerms(kTRUE) ;
     break ;
@@ -348,7 +361,7 @@ void RooAbsOptGoodnessOfFit::optimizeConstantTerms(Bool_t activate)
     // Find all nodes that depend exclusively on constant parameters
     RooArgSet cacheableNodes ;
     _pdfClone->findConstantNodes(*_dataClone->get(),cacheableNodes) ;
-    
+
     // Cache constant nodes with dataset 
     _dataClone->cacheArgs(cacheableNodes,_normSet) ;  
     

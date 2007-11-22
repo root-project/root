@@ -140,6 +140,8 @@ RooAddition::RooAddition(const RooAddition& other, const char* name) :
 
 RooAddition::~RooAddition() 
 {
+  if (_setIter1) delete _setIter1 ;
+  if (_setIter2) delete _setIter2 ;
 }
 
 

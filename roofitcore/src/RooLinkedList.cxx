@@ -116,7 +116,6 @@ void RooLinkedList::setHashTableSize(Int_t size)
 RooLinkedList::~RooLinkedList() 
 {
   // Destructor
-  Clear() ;
   if (_htableName) {
     delete _htableName ;
     _htableName=0 ;
@@ -125,6 +124,8 @@ RooLinkedList::~RooLinkedList()
     delete _htableLink ;
     _htableLink=0 ;
   }
+
+  Clear() ;
 }
 
 

@@ -86,7 +86,7 @@ const RooAbsCachedPdf::CacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nse
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx,0) ;
   if (cache) {
     if (cache->_params->isValueDirty()) {
-      coutI("Caching") << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache->_pdf->GetName() << " requires recalculation as parameters changed" << endl ;
+      coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache->_pdf->GetName() << " requires recalculation as parameters changed" << endl ;
       fillCacheObject(*cache) ;  
       cache->_pdf->setValueDirty() ;
       cache->_params->getVal() ;
@@ -135,7 +135,7 @@ const RooAbsCachedPdf::CacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nse
 
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
-  coutI("Caching") << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache->_pdf->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
+  coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache->_pdf->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
   
   return cache ;
 }

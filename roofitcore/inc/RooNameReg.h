@@ -18,6 +18,7 @@
 
 #include "TNamed.h"
 #include "RooHashTable.h"
+#include "RooLinkedList.h"
 
 class RooNameReg : public TNamed {
 public:
@@ -29,6 +30,8 @@ public:
   static const TNamed* ptr(const char* stringPtr) { return instance().constPtr(stringPtr) ; }
   static const char* str(const TNamed* ptr) { return instance().constStr(ptr) ; }
 
+  static void cleanup() ;
+
 protected:
 
   static RooNameReg* _instance ;
@@ -37,6 +40,7 @@ protected:
   RooNameReg(const RooNameReg& other) ;
 
   RooHashTable _htable ; // Repository of registered names
+  RooLinkedList _list ; // 
 
   ClassDef(RooNameReg,1) // String name registry
 };

@@ -39,6 +39,8 @@ public:
 
   RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0) ;
 
+  static void cleanup() ;
+
 
 protected:
 	 
@@ -48,6 +50,9 @@ protected:
 
   RooNumIntFactory(); 
   RooNumIntFactory(const RooNumIntFactory& other) ;
+
+  static RooNumIntFactory* _instance ;
+
 
   ClassDef(RooNumIntFactory,1) // Numeric Integrator factory
 };

@@ -145,7 +145,7 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
 
 
 
-RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D()
+RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D() : _x(0), _workspace(0)
 {
 }
 
@@ -213,7 +213,9 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
   if (_workspace) {
     gsl_integration_workspace_free ((gsl_integration_workspace*) _workspace) ;
   }
-  delete[] _x ;
+  if (_x) {
+    delete[] _x ;
+  }
 }
 
 
@@ -291,8 +293,6 @@ Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 
   // Return values
   double result, error;
-
-  //cout << "integrating over range " << _xmin << " - " << _xmax << endl ;
 
   // Call GSL implementation of integeator  
   switch(_domainType) {

@@ -759,7 +759,6 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   partList = &cache->_partList ;
   nsetList = &cache->_normList; 
 
-
   // We own contents of all lists filled by factorizeProduct() 
   groupedList.Delete() ;
   terms.Delete() ;
@@ -979,10 +978,14 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
       
       RooAbsReal* partInt = new RooRealIntegral(name.Data(),name.Data(),*pdf,RooArgSet(),&termNSet) ;
       isOwned=kTRUE ;      
+
+      delete pIter ;
       return partInt ;
 
     } else {
       isOwned=kFALSE ;
+
+      delete pIter ;
       return pdf  ;
     }
   }
@@ -1230,6 +1233,13 @@ void RooProdPdf::generateEvent(Int_t code)
   }
 
 }
+
+
+RooProdPdf::CacheElem::~CacheElem() 
+{
+  _normList.Delete() ;
+}
+
 
 RooArgList RooProdPdf::CacheElem::containedArgs(Action) 
 {

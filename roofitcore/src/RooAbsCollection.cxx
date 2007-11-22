@@ -179,7 +179,9 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   TString snapName("Snapshot of ") ;
   snapName.Append(GetName()) ;
   RooAbsCollection* output = (RooAbsCollection*) create(snapName.Data()) ;
-  output->setHashTableSize(1000) ;
+  if (deepCopy || getSize()>100) {
+    output->setHashTableSize(1000) ;
+  }
   Bool_t error = snapshot(*output,deepCopy) ;
   if (error) {
     delete output ;

@@ -21,9 +21,11 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsData.h"
+#include <list>
 class RooSimultaneous ;
 class RooAbsPdf ;
 class RooCategory ;
+class RooSuperCategory ;
 
 class RooSimPdfBuilder : public TObject {
 public:
@@ -33,20 +35,20 @@ public:
 
   RooArgSet* createProtoBuildConfig() ;
 
-  const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents, 
+  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents, 
 				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) ;
 
-  const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
+  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
 				  const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
     return buildPdf(buildConfig,*dataSet->get(),&auxSplitCats,verbose) ;
   }
 
-  const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
+  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
 				  const RooArgSet& auxSplitCats, Bool_t verbose=kFALSE) {
     return buildPdf(buildConfig,dependents,&auxSplitCats,verbose) ;
   }
 
-  const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
+  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
 				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) {
     return buildPdf(buildConfig,*dataSet->get(),auxSplitCats,verbose) ;
   }
@@ -62,6 +64,10 @@ protected:
   RooArgSet _compSplitCatSet ;   // List of owned composite splitting categories
   RooArgSet _splitNodeList ;     // List of owned split nodes
   TList     _retiredCustomizerList ; // Retired customizer from previous builds (own their PDF branch nodes)
+ 
+  std::list<RooSimultaneous*> _simPdfList ;     // The simpdfs that we built
+  std::list<RooSuperCategory*> _fitCatList ;     // The supercategories that we built
+
 
 private:
   RooSimPdfBuilder(const RooSimPdfBuilder&) ; // No copying allowed

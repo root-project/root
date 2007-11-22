@@ -62,6 +62,8 @@ public:
 
   static Double_t erf(Double_t x) ;
   static Double_t erfc(Double_t x) ;
+  
+  static void cleanup() ;
 
 private:
 

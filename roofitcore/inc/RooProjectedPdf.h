@@ -52,7 +52,7 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    virtual ~CacheElem() {} ;
+    virtual ~CacheElem() { delete _projection ; } ;
     // Payload
     RooAbsReal* _projection ;
     // Cache management functions

@@ -208,7 +208,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   // Deep clone cutVar and attach clone to this dataset
   RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
   if (!tmp) {
-    cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
+    coutE(InputArguments) << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -240,7 +240,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
   // Deep clone cutVar and attach clone to this dataset
   RooArgSet* tmp = (RooArgSet*) RooArgSet(cutVar).snapshot() ;
   if (!tmp) {
-    cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
+    coutE(InputArguments) << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
     RooErrorHandler::softAbort() ;
   }
   RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
@@ -273,7 +273,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   if (cutVar) {
     cloneVarSet = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
     if (!cloneVarSet) {
-      cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
+      coutE(InputArguments) << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone cut variable, abort." << endl ;
       RooErrorHandler::softAbort() ;
     }
    cloneVar = (RooFormulaVar*) cloneVarSet->find(cutVar->GetName()) ;
@@ -438,7 +438,7 @@ void RooTreeData::loadValues(const char *filename, const char *treename,
   TFile *file= (TFile*)gROOT->GetListOfFiles()->FindObject(filename);
   if(!file) file= new TFile(filename);
   if(!file) {
-    cout << "RooTreeData::loadValues: unable to open " << filename << endl;
+    coutE(InputArguments) << "RooTreeData::loadValues: unable to open " << filename << endl;
   }
   else {
     TTree* tree= (TTree*)gDirectory->Get(treename);
@@ -581,7 +581,7 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select, const char* 
    }
 
   if (numInvalid>0) {
-    cout << "RooTreeData::loadValues(" << GetName() << ") Ignored " << numInvalid << " out of range events" << endl ;
+    coutI(Eval) << "RooTreeData::loadValues(" << GetName() << ") Ignored " << numInvalid << " out of range events" << endl ;
   }
   
   SetTitle(t->GetTitle());
@@ -646,7 +646,7 @@ Bool_t RooTreeData::changeObservableName(const char* from, const char* to)
 
   // Check that we found it
   if (!var) {
-    coutE("Dataset") << "RooTreeData::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
+    coutE(InputArguments) << "RooTreeData::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
     return kTRUE ;
   }
 
@@ -671,8 +671,8 @@ void RooTreeData::setArgStatus(const RooArgSet& set, Bool_t active)
   while ((arg=(RooAbsArg*)iter->Next())) {
     RooAbsArg* depArg = _vars.find(arg->GetName()) ;
     if (!depArg) {
-      cout << "RooTreeData::setArgStatus(" << GetName() 
-	   << ") dataset doesn't contain variable " << arg->GetName() << endl ;
+      coutE(InputArguments) << "RooTreeData::setArgStatus(" << GetName() 
+			    << ") dataset doesn't contain variable " << arg->GetName() << endl ;
       continue ;
     }
     depArg->setTreeBranchStatus(*_tree,active) ;
@@ -786,7 +786,7 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   RooAbsArg* valHolder= newVar.createFundamental();
   // Sanity check that the holder really is fundamental
   if(!valHolder->isFundamental()) {
-    cout << GetName() << "::addColumn: holder argument is not fundamental: \""
+    coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
 	 << valHolder->GetName() << "\"" << endl;
     return 0;
   }
@@ -794,7 +794,7 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
   // Clone variable and attach to cloned tree 
   RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(newVar).snapshot() ;  
   if (!newVarCloneList) {
-    cout << "RooTreeData::addColumn(" << GetName() << ") Couldn't deep-clone variable to add, abort." << endl ;
+    coutE(InputArguments) << "RooTreeData::addColumn(" << GetName() << ") Couldn't deep-clone variable to add, abort." << endl ;
     return 0 ;
   }
   RooAbsArg* newVarClone = newVarCloneList->find(newVar.GetName()) ;
@@ -838,7 +838,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
 
     // Sanity check that the holder really is fundamental
     if(!valHolder->isFundamental()) {
-      cout << GetName() << "::addColumn: holder argument is not fundamental: \""
+      coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
 	   << valHolder->GetName() << "\"" << endl;
       return 0;
     }
@@ -846,7 +846,7 @@ RooArgSet* RooTreeData::addColumns(const RooArgList& varList)
     // Clone variable and attach to cloned tree 
     RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(*var).snapshot() ;  
     if (!newVarCloneList) {
-      cout << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone variable " << var->GetName() << ", abort." << endl ;
+      coutE(InputArguments) << "RooTreeData::RooTreeData(" << GetName() << ") Couldn't deep-clone variable " << var->GetName() << ", abort." << endl ;
       return 0 ;
     }
     RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;   
@@ -895,7 +895,7 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 {
   // Sanity check
   if (!splitCat.dependsOn(*get())) {
-    cout << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName() 
+    coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName() 
 	 << " doesn't depend on any variable in this dataset" << endl ;
     return 0 ;
   }
@@ -906,7 +906,7 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
   if (splitCat.isDerived()) {
     cloneSet = (RooArgSet*) RooArgSet(splitCat).snapshot(kTRUE) ;
     if (!cloneSet) {
-      cout << "RooTreeData::split(" << GetName() << ") Couldn't deep-clone splitting category, abort." << endl ;
+      coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") Couldn't deep-clone splitting category, abort." << endl ;
       return 0 ;
     }
     cloneCat = (RooAbsCategory*) cloneSet->find(splitCat.GetName()) ;
@@ -914,7 +914,7 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
   } else {
     cloneCat = dynamic_cast<RooAbsCategory*>(get()->find(splitCat.GetName())) ;
     if (!cloneCat) {
-      cout << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName() 
+      coutE(InputArguments) << "RooTreeData::split(" << GetName() << ") ERROR category " << splitCat.GetName() 
 	   << " is fundamental and does not appear in this dataset" << endl ;
       return 0 ;      
     }
@@ -1059,7 +1059,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   o.refreshFrameNorm = pc.getInt("refreshFrameNorm") ;
   
   if (o.addToHistName && !frame->findObject(o.addToHistName,RooHist::Class())) {
-    cout << "RooTreeData::plotOn(" << GetName() << ") cannot find existing histogram " << o.addToHistName << " to add to in RooPlot" << endl ;
+    coutE(InputArguments) << "RooTreeData::plotOn(" << GetName() << ") cannot find existing histogram " << o.addToHistName << " to add to in RooPlot" << endl ;
     return frame ;
   }
 
@@ -1105,12 +1105,12 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   // The drawOptions are passed to the TH1::Draw() method
 
   if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
     return 0;
   }
   RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
   if(0 == var) {
-    cout << ClassName() << "::" << GetName()
+    coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotOn: frame does not specify a plot variable" << endl;
     return 0;
   }
@@ -1130,7 +1130,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   hist->Sumw2() ;
 
   if(0 == fillHistogram(hist,RooArgList(*var),o.cuts,o.cutRange)) {
-    cout << ClassName() << "::" << GetName()
+    coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotOn: fillHistogram() failed" << endl;
     return 0;
   }
@@ -1147,7 +1147,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   // convert this histogram to a RooHist object on the heap
   RooHist *graph= new RooHist(*hist,nomBinWidth,1,o.etype,o.xErrorSize);
   if(0 == graph) {
-    cout << ClassName() << "::" << GetName()
+    coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
     delete hist;
     return 0;
@@ -1165,7 +1165,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
 
   // Store the number of entries before the cut, if any was made
   if ((o.cuts && strlen(o.cuts)) || o.cutRange) {
-    cout << "RooTreeData::plotOn: plotting " << hist->GetSum() << " events out of " << nEnt << " total events" << endl ;
+    coutI(Plotting) << "RooTreeData::plotOn: plotting " << hist->GetSum() << " events out of " << nEnt << " total events" << endl ;
     graph->setRawEntries(nEnt) ;
   }
 
@@ -1174,7 +1174,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
     RooHist* otherGraph = static_cast<RooHist*>(frame->findObject(o.addToHistName,RooHist::Class())) ;
 
     if (!graph->hasIdenticalBinning(*otherGraph)) {
-      cout << "RooTreeData::plotOn: ERROR Histogram to be added to, '" << o.addToHistName << "',has different binning" << endl ;
+      coutE(Plotting) << "RooTreeData::plotOn: ERROR Histogram to be added to, '" << o.addToHistName << "',has different binning" << endl ;
       delete graph ;
       return frame ;
     }
@@ -1223,12 +1223,12 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   // The drawOptions are passed to the TH1::Draw() method
 
   if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plotAsymOn: frame is null" << endl;
+    coutE(Plotting) << ClassName() << "::" << GetName() << ":plotAsymOn: frame is null" << endl;
     return 0;
   }
   RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
   if(0 == var) {
-    cout << ClassName() << "::" << GetName()
+    coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotAsymOn: frame does not specify a plot variable" << endl;
     return 0;
   }
@@ -1264,7 +1264,7 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
 
   if(0 == fillHistogram(hist1,RooArgList(*var),cuts1.Data()) ||
      0 == fillHistogram(hist2,RooArgList(*var),cuts2.Data())) {
-    cout << ClassName() << "::" << GetName()
+    coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotAsymOn: createHistogram() failed" << endl;
     return 0;
   }
@@ -1272,7 +1272,7 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   // convert this histogram to a RooHist object on the heap
   RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize);
   if(0 == graph) {
-    cout << ClassName() << "::" << GetName()
+    coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
     delete hist1;
     delete hist2;
@@ -1308,14 +1308,14 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
 
   // Do we have a valid histogram to use?
   if(0 == hist) {
-    cout << ClassName() << "::" << GetName() << ":fillHistogram: no valid histogram to fill" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: no valid histogram to fill" << endl;
     return 0;
   }
 
   // Check that the number of plotVars matches the input histogram's dimension
   Int_t hdim= hist->GetDimension();
   if(hdim != plotVars.getSize()) {
-    cout << ClassName() << "::" << GetName() << ":fillHistogram: plotVars has the wrong dimension" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: plotVars has the wrong dimension" << endl;
     return 0;
   }
 
@@ -1327,7 +1327,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     const RooAbsArg *var= plotVars.at(index);
     const RooAbsReal *realVar= dynamic_cast<const RooAbsReal*>(var);
     if(0 == realVar) {
-      cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
+      coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
 	   << "\" of type " << var->ClassName() << endl;
       return 0;
     }
@@ -1336,7 +1336,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
       RooAbsArg *clone= plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
       assert(0 != clone);
       if(!clone->dependsOn(_vars)) {
-	cout << ClassName() << "::" << GetName()
+	coutW(InputArguments) << ClassName() << "::" << GetName()
 	     << ":fillHistogram: WARNING: data does not contain variable: " << realVar->GetName() << endl;
       }
       else {
@@ -1354,7 +1354,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
   if(0 != cuts && strlen(cuts)) {
     select=new RooFormula(cuts,cuts,_vars);
     if (!select || !select->ok()) {
-      cout << ClassName() << "::" << GetName() << ":fillHistogram: invalid cuts \"" << cuts << "\"" << endl;
+      coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: invalid cuts \"" << cuts << "\"" << endl;
       delete select;
       return 0 ;
     }
@@ -1378,7 +1378,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     assert(0 != xvar);
     break;
   default:
-    cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
 	 << hdim << " dimensions" << endl;
     break;
   }
@@ -1491,7 +1491,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
   Bool_t ownPlotVar(kFALSE) ;
   if (!tableVar) {
     if (!cat.dependsOn(_vars)) {
-      cout << "RooTreeData::Table(" << GetName() << "): Argument " << cat.GetName() 
+      coutE(Plotting) << "RooTreeData::Table(" << GetName() << "): Argument " << cat.GetName() 
 	   << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
@@ -1499,7 +1499,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
     // Clone derived variable 
     tableSet = (RooArgSet*) RooArgSet(cat).snapshot(kTRUE) ;
     if (!tableSet) {
-      cout << "RooTreeData::table(" << GetName() << ") Couldn't deep-clone table category, abort." << endl ;
+      coutE(Plotting) << "RooTreeData::table(" << GetName() << ") Couldn't deep-clone table category, abort." << endl ;
       return 0 ;
     }
     tableVar = (RooAbsCategory*) tableSet->find(cat.GetName()) ;
@@ -1549,19 +1549,19 @@ Double_t RooTreeData::moment(RooRealVar &var, Double_t order, Double_t offset, c
   // Lookup variable in dataset
   RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
   if(0 == varPtr) {
-    cout << "RooDataSet::moment(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
+    coutE(InputArguments) << "RooDataSet::moment(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
     return 0;
   }
 
   // Check if found variable is of type RooRealVar
   if (!dynamic_cast<RooRealVar*>(varPtr)) {
-    cout << "RooDataSet::moment(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
+    coutE(InputArguments) << "RooDataSet::moment(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
     return 0;
   }
 
   // Check if dataset is not empty
   if(sumEntries() == 0.) {
-    cout << "RooDataSet::moment(" << GetName() << ") WARNING: empty dataset" << endl ;
+    coutE(InputArguments) << "RooDataSet::moment(" << GetName() << ") WARNING: empty dataset" << endl ;
     return 0;
   }
 
@@ -1651,19 +1651,19 @@ Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highes
   // Lookup variable in dataset
   RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
   if(0 == varPtr) {
-    cout << "RooDataSet::getRange(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
+    coutE(InputArguments) << "RooDataSet::getRange(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
     return kTRUE;
   }
 
   // Check if found variable is of type RooRealVar
   if (!dynamic_cast<RooRealVar*>(varPtr)) {
-    cout << "RooDataSet::getRange(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
+    coutE(InputArguments) << "RooDataSet::getRange(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
     return kTRUE;
   }
 
   // Check if dataset is not empty
   if(sumEntries() == 0.) {
-    cout << "RooDataSet::getRange(" << GetName() << ") WARNING: empty dataset" << endl ;
+    coutE(InputArguments) << "RooDataSet::getRange(" << GetName() << ") WARNING: empty dataset" << endl ;
     return kTRUE;
   }
 
@@ -1887,7 +1887,7 @@ void RooTreeData::optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& ca
 
   if (pruneSet.getSize()!=0) {
     // Deactivate tree branches here
-    cxcoutI("Optimization") << "RooTreeData::optimizeReadingForTestStatistic(" << GetName() << "): Observables " << pruneSet
+    cxcoutI(Optimization) << "RooTreeData::optimizeReadingForTestStatistic(" << GetName() << "): Observables " << pruneSet
 			    << " in dataset are either not used at all, orserving exclusively p.d.f nodes that are now cached, disabling reading of these observables for TTree" << endl ;
     setArgStatus(pruneSet,kFALSE) ;
   }

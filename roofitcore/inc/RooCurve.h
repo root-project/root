@@ -56,6 +56,8 @@ public:
   Double_t average(Double_t lo, Double_t hi) const ;
   Double_t interpolate(Double_t x, Double_t tolerance=1e-10) const ;
 
+  Bool_t isIdentical(const RooCurve& other, Double_t tol=1e-6) const ;
+
 protected:
   void initialize();
   void addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,

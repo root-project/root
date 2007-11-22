@@ -404,26 +404,26 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
 		      ((RooAbsPdf&)_pdf2.arg()).isDirectGenSafe(_x.arg())) ;
 
   if (pdfCanDir) {
-    cxcoutI("Generation") << "RooFFTConvPdf::genContext() input p.d.f " << _pdf1.arg().GetName() << " has internal generator that is safe to use in current context" << endl ;
+    cxcoutI(Generation) << "RooFFTConvPdf::genContext() input p.d.f " << _pdf1.arg().GetName() << " has internal generator that is safe to use in current context" << endl ;
   }
   if (resCanDir) {
-    cxcoutI("Generation") << "RooFFTConvPdf::genContext() input p.d.f. " << _pdf2.arg().GetName() << " has internal generator that is safe to use in current context" << endl ;
+    cxcoutI(Generation) << "RooFFTConvPdf::genContext() input p.d.f. " << _pdf2.arg().GetName() << " has internal generator that is safe to use in current context" << endl ;
   }
   if (numAddDep>0) {
-    cxcoutI("Generation") << "RooFFTConvPdf::genContext() generation requested for observables other than the convolution observable " << _x.arg().GetName() << endl ;
+    cxcoutI(Generation) << "RooFFTConvPdf::genContext() generation requested for observables other than the convolution observable " << _x.arg().GetName() << endl ;
   }  
 
   
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable
     // or pdf or resmodel do not support direct generation
-    cxcoutI("Generation") << "RooFFTConvPdf::genContext() selecting accept/reject generator context because one or both of the input p.d.f.s cannot use internal generator and/or " 
+    cxcoutI(Generation) << "RooFFTConvPdf::genContext() selecting accept/reject generator context because one or both of the input p.d.f.s cannot use internal generator and/or " 
 			  << "observables other than the convolution variable are requested for generation" << endl ;
     return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
   } 
   
   // Any other resolution model: use specialized generator context
-  cxcoutI("Generation") << "RooFFTConvPdf::genContext() selecting specialized convolution generator context as both input p.d.fs are safe for internal generator and only "
+  cxcoutI(Generation) << "RooFFTConvPdf::genContext() selecting specialized convolution generator context as both input p.d.fs are safe for internal generator and only "
 			<< "the convolution observables is requested for generation" << endl ;
   return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
@@ -432,7 +432,7 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
 void RooFFTConvPdf::setBufferFraction(Double_t frac) 
 {
   if (frac<0) {
-    coutE("InputArgs") << "RooFFTConvPdf::setBufferFraction(" << GetName() << ") fraction should be greater than or equal to zero" << endl ;
+    coutE(InputArguments) << "RooFFTConvPdf::setBufferFraction(" << GetName() << ") fraction should be greater than or equal to zero" << endl ;
     return ;
   }
   _bufFrac = frac ;

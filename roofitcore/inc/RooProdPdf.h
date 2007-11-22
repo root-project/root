@@ -99,7 +99,7 @@ protected:
   // The cache object
   class CacheElem : public RooAbsCacheElement {
   public:
-    virtual ~CacheElem() {} ;
+    virtual ~CacheElem() ;
     // Payload
     RooArgList _partList ;
     RooArgList _ownedList ;

@@ -21,6 +21,7 @@
 // fast searches and comparisons.
 
 #include "RooFit.h"
+#include "RooSentinel.h"
 
 #include "RooNameReg.h"
 #include "RooNameReg.h"
@@ -33,6 +34,7 @@ RooNameReg* RooNameReg::_instance = 0 ;
 
 RooNameReg::~RooNameReg()
 {
+  _list.Delete() ;
 }
 
 RooNameReg::RooNameReg(const RooNameReg& other) : TNamed(other)
@@ -43,9 +45,19 @@ RooNameReg& RooNameReg::instance()
 {
   if (_instance==0) {
     _instance = new RooNameReg ;
+    RooSentinel::activate() ;
   }
   return *_instance ;
 }
+
+void RooNameReg::cleanup()
+{
+  if(_instance) {
+    delete _instance ;
+    _instance = 0 ;
+  }
+}
+
 
 const TNamed* RooNameReg::constPtr(const char* str) {
 
@@ -59,6 +71,7 @@ const TNamed* RooNameReg::constPtr(const char* str) {
   // If not, register now
   t = new TNamed(str,str) ;
   _htable.add(t) ;
+  _list.Add(t) ;
   
   return t ;
 }

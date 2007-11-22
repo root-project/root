@@ -41,7 +41,8 @@ void RooSegmentedIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 }
 
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D()
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() :
+  _xIntegrator(0), _xint(0)
 {
 }
 

@@ -37,6 +37,8 @@ ClassImp(RooBinning)
 
 RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) : 
   RooAbsBinning(name), 
+  _xlo(0),
+  _xhi(0),
   _ownBoundLo(kTRUE), 
   _ownBoundHi(kTRUE), 
   _array(0)
@@ -50,6 +52,8 @@ RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) :
 
 RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name) : 
   RooAbsBinning(name), 
+  _xlo(0),
+  _xhi(0),
   _ownBoundLo(kTRUE), 
   _ownBoundHi(kTRUE), 
   _array(0)
@@ -66,6 +70,8 @@ RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name
 
 RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries, const char* name) : 
   RooAbsBinning(name),
+  _xlo(0),
+  _xhi(0),
   _ownBoundLo(kTRUE), 
   _ownBoundHi(kTRUE), 
   _array(0)
@@ -305,7 +311,7 @@ void RooBinning::setRange(Double_t xlo, Double_t xhi)
 void RooBinning::updateBinCount()
 {
   _bIter->Reset() ;
-  RooDouble* boundary ;  
+  RooDouble* boundary=0 ;  
   Int_t i(-1) ;
   while((boundary=(RooDouble*)_bIter->Next())) {
     Double_t bval = (Double_t)*boundary ;

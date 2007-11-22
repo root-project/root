@@ -60,7 +60,7 @@ Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expressi
       if (catArgNames.size()>0) catArgNames += "," ;
       catArgNames += arg->GetName() ;
     } else {
-      oocoutE((RooAbsArg*)0,"InputArguments") << "RooClassFactory::makeAndCompilePdf ERROR input argument " << arg->GetName() 
+      oocoutE((RooAbsArg*)0,InputArguments) << "RooClassFactory::makeAndCompilePdf ERROR input argument " << arg->GetName() 
 					      << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
     }
   }
@@ -94,8 +94,8 @@ Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* exp
       if (catArgNames.size()>0) catArgNames += "," ;
       catArgNames += arg->GetName() ;
     } else {
-      oocoutE((RooAbsArg*)0,"InputArguments") << "RooClassFactory::makeAndCompileFunction ERROR input argument " << arg->GetName() 
-					      << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
+      oocoutE((RooAbsArg*)0,InputArguments) << "RooClassFactory::makeAndCompileFunction ERROR input argument " << arg->GetName() 
+					    << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
     }
   }
   delete iter ;

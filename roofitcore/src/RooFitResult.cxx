@@ -44,6 +44,7 @@
 #include "RooPlot.h"
 #include "RooEllipse.h"
 #include "RooRandom.h"
+#include "RooMsgService.h"
 
 ClassImp(RooFitResult) 
 ;
@@ -489,12 +490,12 @@ void RooFitResult::fillCorrMatrix()
 
   // Sanity check
   if (gMinuit->fNpar <= 1) {
-    cout << "RooFitResult::fillCorrMatrix: number of floating parameters <=1, correlation matrix not filled" << endl ;
+    coutI(Minimization) << "RooFitResult::fillCorrMatrix: number of floating parameters <=1, correlation matrix not filled" << endl ;
     return ;
   }
 
   if (!_initPars) {
-    cout << "RooFitResult::fillCorrMatrix: ERROR: list of initial parameters must be filled first" << endl ;
+    coutE(Minimization) << "RooFitResult::fillCorrMatrix: ERROR: list of initial parameters must be filled first" << endl ;
     return ;
   }
 
@@ -584,6 +585,91 @@ void RooFitResult::fillCorrMatrix()
   delete parIter ;
 } 
 
+
+Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Bool_t /*verbose*/) const 
+{
+  Bool_t ret = kTRUE ;
+
+  if (fabs(_minNLL-other._minNLL)>=tol) {
+    cout << "RooFitResult::isIdentical: minimized value of -log(L) is different " << _minNLL << " vs. " << other._minNLL << endl ;
+    ret = kFALSE ;
+  }
+
+  for (Int_t i=0 ; i<_constPars->getSize() ; i++) {
+    RooAbsReal* ov = static_cast<RooAbsReal*>(other._constPars->find(_constPars->at(i)->GetName())) ;
+    if (!ov) {
+      cout << "RooFitResult::isIdentical: cannot find constant parameter " << _constPars->at(i)->GetName() << " in reference" << endl ;
+      ret = kFALSE ;
+    }
+    if (fabs(static_cast<RooAbsReal*>(_constPars->at(i))->getVal()-ov->getVal())>=tol) {
+      cout << "RooFitResult::isIdentical: constant parameter " << _constPars->at(i)->GetName() 
+	   << " differs in value: " << static_cast<RooAbsReal*>(_constPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+      ret = kFALSE ;
+    }
+  }
+
+  for (Int_t i=0 ; i<_initPars->getSize() ; i++) {
+    RooAbsReal* ov = static_cast<RooAbsReal*>(other._initPars->find(_initPars->at(i)->GetName())) ;
+    if (!ov) {
+      cout << "RooFitResult::isIdentical: cannot find initial parameter " << _initPars->at(i)->GetName() << " in reference" << endl ;
+      ret = kFALSE ;
+    }
+    if (fabs(static_cast<RooAbsReal*>(_initPars->at(i))->getVal()-ov->getVal())>=tol) {
+      cout << "RooFitResult::isIdentical: initial parameter " << _initPars->at(i)->GetName() 
+	   << " differs in value: " << static_cast<RooAbsReal*>(_initPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+      ret = kFALSE ;
+    }
+  }
+
+  for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
+    RooAbsReal* ov = static_cast<RooAbsReal*>(other._finalPars->find(_finalPars->at(i)->GetName())) ;
+    if (!ov) {
+      cout << "RooFitResult::isIdentical: cannot find final parameter " << _finalPars->at(i)->GetName() << " in reference" << endl ;
+      ret = kFALSE ;
+    }
+    if (fabs(static_cast<RooAbsReal*>(_finalPars->at(i))->getVal()-ov->getVal())>=tol) {
+      cout << "RooFitResult::isIdentical: final parameter " << _finalPars->at(i)->GetName() 
+	   << " differs in value: " << static_cast<RooAbsReal*>(_finalPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+      ret = kFALSE ;
+    }
+  }
+
+  // Only examine correlations for cases with >1 floating paramater
+  if (_finalPars->getSize()>1) {
+    
+    for (Int_t i=0 ; i<_globalCorr->getSize() ; i++) {
+      RooAbsReal* ov = static_cast<RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
+      if (!ov) {
+	cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << _globalCorr->at(i)->GetName() << " in reference" << endl ;
+	ret = kFALSE ;
+      }
+      if (fabs(static_cast<RooAbsReal*>(_globalCorr->at(i))->getVal()-ov->getVal())>=tol) {
+	cout << "RooFitResult::isIdentical: global correlation coefficient " << _globalCorr->at(i)->GetName() 
+	     << " differs in value: " << static_cast<RooAbsReal*>(_globalCorr->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+	ret = kFALSE ;
+      }
+    }
+    
+    for (Int_t j=0 ; j<_corrMatrix.GetSize() ; j++) {
+      RooArgList* row = (RooArgList*) _corrMatrix.At(j) ;
+      RooArgList* orow = (RooArgList*) other._corrMatrix.At(j) ;
+      for (Int_t i=0 ; i<row->getSize() ; i++) {
+	RooAbsReal* ov = static_cast<RooAbsReal*>(orow->find(row->at(i)->GetName())) ;
+	if (!ov) {
+	  cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << row->at(i)->GetName() << " in reference" << endl ;
+	  ret = kFALSE ;
+	}
+	if (fabs(static_cast<RooAbsReal*>(row->at(i))->getVal()-ov->getVal())>=tol) {
+	  cout << "RooFitResult::isIdentical: correlation coefficient " << row->at(i)->GetName() 
+	       << " differs in value: " << static_cast<RooAbsReal*>(row->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+	  ret = kFALSE ;
+	}
+      }
+    }
+  }    
+
+  return ret ;
+}
 
 
 

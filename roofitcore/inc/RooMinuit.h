@@ -25,6 +25,7 @@ class RooFitResult ;
 class RooArgList ;
 class RooRealVar ;
 class RooArgSet ;
+class TVirtualFitter ;
 class TH2F ;
 
 void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,  Double_t &f, Double_t *par, Int_t /*flag*/) ;
@@ -62,6 +63,8 @@ public:
   void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
   Bool_t setLogFile(const char* logfile=0) ;  
+
+  static void cleanup() ;
   
 protected:
 
@@ -105,6 +108,8 @@ private:
   Bool_t      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;
+
+  static TVirtualFitter *_theFitter ; 
 
   RooMinuit(const RooMinuit&) ;
 	

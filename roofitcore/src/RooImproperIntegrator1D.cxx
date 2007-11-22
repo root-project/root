@@ -45,7 +45,8 @@ void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 }
 
 
-RooImproperIntegrator1D::RooImproperIntegrator1D()
+RooImproperIntegrator1D::RooImproperIntegrator1D() :  
+  _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
 {
 }
 

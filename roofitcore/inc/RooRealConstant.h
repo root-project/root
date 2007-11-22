@@ -31,6 +31,8 @@ public:
   virtual ~RooRealConstant() {} ;
   static RooConstVar& value(Double_t value) ;
 
+  static void cleanup() ;
+
 protected:
 
   static void init() ;

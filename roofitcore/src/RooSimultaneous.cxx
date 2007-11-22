@@ -92,8 +92,8 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   // PDFs may not overlap (i.e. share any variables) with the index category
 
   if (pdfList.getSize() != indexCat.numTypes()) {
-    cout << "RooSimultaneous::ctor(" << GetName() 
-	 << " ERROR: Number PDF list entries must match number of index category states, no PDFs added" << endl ;
+    coutE(InputArguments) << "RooSimultaneous::ctor(" << GetName() 
+			  << " ERROR: Number PDF list entries must match number of index category states, no PDFs added" << endl ;
     return ;    
   }
 
@@ -168,8 +168,8 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
   // PDFs cannot overlap with the index category
   if (pdf.dependsOn(_indexCat.arg())) {
-    cout << "RooSimultaneous::addPdf(" << GetName() << "): ERROR, PDF " << pdf.GetName() 
-	 << " overlaps with index category " << _indexCat.arg().GetName() << endl ;
+    coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName() << "): ERROR, PDF " << pdf.GetName() 
+			  << " overlaps with index category " << _indexCat.arg().GetName() << endl ;
     return kTRUE ;
   }
 
@@ -338,7 +338,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   // Check if we have a projection dataset
   if (!projData) {
-    cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: must have a projection dataset for index category" << endl ;
+    coutE(InputArguments) << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: must have a projection dataset for index category" << endl ;
     return frame ;
   }
 
@@ -357,8 +357,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       if (arg) {
 	projectedVars.remove(*arg) ;
       } else {
-	cout << "RooAbsReal::plotOn(" << GetName() << ") slice variable " 
-	     << sliceArg->GetName() << " was not projected anyway" << endl ;
+	coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") slice variable " 
+			<< sliceArg->GetName() << " was not projected anyway" << endl ;
       }
     }
     delete iter ;
@@ -376,8 +376,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       
     // Check that the provided projection dataset contains our index variable
     if (!projData->get()->find(_indexCat.arg().GetName())) {
-      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
-	   << "requested, but projection data set doesn't contain index category" << endl ;
+      coutE(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
+		      << "requested, but projection data set doesn't contain index category" << endl ;
       return frame ;
     }
 
@@ -415,7 +415,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     delete sIter ;
     
     if (!allServers) {      
-      cout << "RooSimultaneous::plotOn(" << GetName() 
+      coutE(Plotting) << "RooSimultaneous::plotOn(" << GetName() 
 	   << ") ERROR: Projection dataset doesn't contain complete set of index category dependents" << endl ;
       return frame ;
     }
@@ -431,8 +431,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // If we don't project over the index, just do the regular plotOn
   if (!projIndex) {
 
-    cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
-	 << " represents a slice in the index category ("  << _indexCat.arg().GetName() << ")" << endl ;
+    coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+		    << " represents a slice in the index category ("  << _indexCat.arg().GetName() << ")" << endl ;
 
     // Reduce projData: take out fitCat (component) columns and entries that don't match selected slice
     // Construct cut string to only select projection data event that match the current slice
@@ -484,6 +484,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Plot single component
     RooPlot* retFrame =  getPdf(_indexCat.arg().getLabel())->plotOn(frame,cmdList2) ;
+
+    // Delete temporary dataset
+    if (projDataTmp) {
+      delete projDataTmp ;
+    }
 
     delete wTable ;
     return retFrame ;
@@ -587,19 +592,19 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
 
   if (_indexCat.arg().isDerived() && idxCompSliceSet->getSize()>0) {
-    cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
-	 << " represents a slice in index category components " ; idxCompSliceSet->Print("1") ;
+    coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+		    << " represents a slice in index category components " << *idxCompSliceSet << endl ;
 
     RooArgSet* idxCompProjSet = _indexCat.arg().getObservables(frame->getNormVars()) ;
     idxCompProjSet->remove(*idxCompSliceSet,kTRUE,kTRUE) ;
     if (idxCompProjSet->getSize()>0) {
-      cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
-	   << " averages with data index category components " ; idxCompProjSet->Print("1") ;
+      coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+		      << " averages with data index category components " << *idxCompProjSet << endl ;
     }
     delete idxCompProjSet ;
   } else {
-    cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
-	 << " averages with data index category (" << _indexCat.arg().GetName() << ")" << endl ;
+    coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName() 
+		    << " averages with data index category (" << _indexCat.arg().GetName() << ")" << endl ;
   }
 
 
@@ -712,8 +717,8 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
       return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
     } else if (!allServers && anyServer) {
       // Abort if we have only part of the servers
-      cout << "RooSimultaneous::genContext: ERROR: prototype must include either all "
-	   << " components of the RooSimultaneous index category or none " << endl ;
+      coutE(Plotting) << "RooSimultaneous::genContext: ERROR: prototype must include either all "
+		      << " components of the RooSimultaneous index category or none " << endl ;
       return 0 ; 
     } 
     // Otherwise make single gencontext for current state
@@ -722,9 +727,9 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
   // Not generating index cat: return context for pdf associated with present index state
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.arg().getLabel()) ;
   if (!proxy) {
-    cout << "RooSimultaneous::genContext(" << GetName() 
-	 << ") ERROR: no PDF associated with current state (" 
-         << _indexCat.arg().GetName() << "=" << _indexCat.arg().getLabel() << ")" << endl ; 
+    coutE(InputArguments) << "RooSimultaneous::genContext(" << GetName() 
+			  << ") ERROR: no PDF associated with current state (" 
+			  << _indexCat.arg().GetName() << "=" << _indexCat.arg().getLabel() << ")" << endl ; 
     return 0 ;
   }
   return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,auxProto,verbose) ;

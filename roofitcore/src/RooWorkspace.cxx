@@ -126,7 +126,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   
   // Scan for overlaps with current contents
   if (!suffix && _allOwnedNodes.find(arg.GetName())) {
-    coutE("RooWorkpace") << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << arg.GetName() 
+    coutE(Workspace) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << arg.GetName() 
 			 << ": already in the workspace and no conflict resolution protocol specified" << endl ;
     return kTRUE ;    
   }
@@ -146,7 +146,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   
   // Terminate here if there are conflicts and no resolution protocol
   if (conflictNodes.getSize()>0 && !suffix) {
-      coutE("Workspace") << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << arg.GetName() << ": component(s) " 
+      coutE(Workspace) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << arg.GetName() << ": component(s) " 
 	   << conflictNodes << " already in the workspace and no conflict resolution protocol specified" << endl ;      
       return kTRUE ;
   }
@@ -178,7 +178,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
       topName2 = cnode2->GetName() ;
     }
 
-    coutI("Workspace") << "RooWorkspace::import(" << GetName() 
+    coutI(Workspace) << "RooWorkspace::import(" << GetName() 
 		       << ") Resolving name conflict in workspace by changing name of imported node  " 
 		       << origName << " to " << cnode2->GetName() << endl ;
   }  
@@ -218,7 +218,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
 	cnode->SetName(varMap[cnode->GetName()].c_str()) ;
 	string tag = Form("ORIGNAME:%s",origName.c_str()) ;
 	cnode->setAttribute(tag.c_str()) ;
-	coutI("Workspace") << "RooWorkspace::import(" << GetName() << ") Changing name of variable " 
+	coutI(Workspace) << "RooWorkspace::import(" << GetName() << ") Changing name of variable " 
 			   << origName << " to " << cnode->GetName() << " on request" << endl ;
       }    
     }
@@ -244,7 +244,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
 
   // Terminate here if there are conflicts and no resolution protocol
   if (conflictNodes2.getSize()) {
-    coutE("Workspace") << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << arg.GetName() << ": component(s) " 
+    coutE(Workspace) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << arg.GetName() << ": component(s) " 
 			  << conflictNodes2 << " cause naming conflict after conflict resolution protocol was executed" << endl ;      
     return kTRUE ;
   }
@@ -258,14 +258,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
     // Check if node is already in workspace (can only happen for variables)
     if (_allOwnedNodes.find(node->GetName())) {
       // Do not import node, add not to list of nodes that require reconnection
-      coutI("Workspace") << "RooWorkspace::import(" << GetName() << ") using existing copy of variable " << node->IsA()->GetName() 
+      coutI(Workspace) << "RooWorkspace::import(" << GetName() << ") using existing copy of variable " << node->IsA()->GetName() 
 			 << "::" << node->GetName() << " for import of " << cloneTop2->IsA()->GetName() << "::" 
 			 << cloneTop2->GetName() << endl ;      
       recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
 
     } else {
       // Import node
-      coutI("Workspace") << "RooWorkspace::import(" << GetName() << ") importing " << node->IsA()->GetName() << "::" 
+      coutI(Workspace) << "RooWorkspace::import(" << GetName() << ") importing " << node->IsA()->GetName() << "::" 
 			 << node->GetName() << endl ;
       _allOwnedNodes.addOwned(*node) ;
     }
@@ -300,7 +300,7 @@ Bool_t RooWorkspace::import(RooAbsData& data, const RooCmdArg& arg1, const RooCm
   //  RenameDataset(const char* suffix) -- Rename dataset upon insertion
   //  RenameVariable(const char* inputName, const char* outputName) -- Change names of observables in dataset upon insertion
 
-  coutI("Workspace") << "RooWorkspace::import(" << GetName() << ") importing dataset " << data.GetName() << endl ;
+  coutI(Workspace) << "RooWorkspace::import(" << GetName() << ") importing dataset " << data.GetName() << endl ;
 
   RooLinkedList args ;
   args.Add((TObject*)&arg1) ;
@@ -333,7 +333,7 @@ Bool_t RooWorkspace::import(RooAbsData& data, const RooCmdArg& arg1, const RooCm
   // Rename dataset if required
   RooAbsData* clone ;
   if (dsetName) {
-    coutI("Workspace") << "RooWorkSpace::import(" << GetName() << ") changing name of dataset from  " << data.GetName() << " to " << dsetName << endl ;
+    coutI(Workspace) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset from  " << data.GetName() << " to " << dsetName << endl ;
     clone = (RooAbsData*) data.Clone(dsetName) ;
   } else {
     clone = (RooAbsData*) data.Clone(data.GetName()) ;
@@ -362,7 +362,7 @@ Bool_t RooWorkspace::import(RooAbsData& data, const RooCmdArg& arg1, const RooCm
     list<string>::iterator iout = tmpOut.begin() ;
 
     for (; iin!=tmpIn.end() ; ++iin,++iout) {
-      coutI("Workspace") << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << *iin << " to " << *iout << endl ;
+      coutI(Workspace) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << *iin << " to " << *iout << endl ;
       clone->changeObservableName(iin->c_str(),iout->c_str()) ;
     }
   }

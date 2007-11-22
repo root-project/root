@@ -24,6 +24,7 @@ class RooRealVarSharedProperties : public RooSharedProperties {
 public:
 
   RooRealVarSharedProperties() ;
+  RooRealVarSharedProperties(const RooRealVarSharedProperties&) ;
   RooRealVarSharedProperties(const char* uuidstr) ;
   virtual ~RooRealVarSharedProperties() ;
 

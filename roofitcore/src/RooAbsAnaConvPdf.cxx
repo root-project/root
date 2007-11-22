@@ -56,6 +56,7 @@
 
 
 #include "RooFit.h"
+#include "RooMsgService.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
@@ -307,8 +308,13 @@ Double_t RooAbsAnaConvPdf::evaluate() const
   while(((conv=(RooAbsPdf*)_convSetIter->Next()))) {
     Double_t coef = coefficient(index++) ;
     if (coef!=0.) {
+      Double_t c = conv->getVal(0) ;
+      Double_t r = coef ;
+      cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") val += coef*conv [" << index-1 << "/" << _convSet.getSize() << "] coef = " << r << " conv = " << c << endl ;
       result += conv->getVal(0)*coef ;
-   }
+    } else {
+      cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") [" << index-1 << "/" << _convSet.getSize() << "] coef = 0" << endl ;
+    }
   }
   
   return result ;
@@ -473,7 +479,11 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
     while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
       Double_t coef = getCoefNorm(index++,intCoefSet,rangeName) ; 
       //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ; 
-      if (coef!=0) integral += coef*(rangeName ? conv->getNormObj(0,intConvSet,RooNameReg::ptr(rangeName))->getVal() :  conv->getNorm(intConvSet) ) ; 
+      if (coef!=0) {
+	integral += coef*(rangeName ? conv->getNormObj(0,intConvSet,RooNameReg::ptr(rangeName))->getVal() :  conv->getNorm(intConvSet) ) ;       
+	cxcoutD(Eval) << "RooAbsAnaConv::aiWN(" << GetName() << ") [" << index-1 << "] integral += " << conv->getNorm(intConvSet) << endl ;
+      }
+
     }
     answer = integral ;
     
@@ -602,90 +612,6 @@ RooArgSet* RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
 }
 
 
-
-
-Bool_t RooAbsAnaConvPdf::syncNormalizationPreHook(RooAbsReal* /*norm*/,const RooArgSet* nset) const 
-{
-  // Overload of hook function in RooAbsPdf::syncNormalization(). This functions serves
-  // two purposes: 
-  //
-  //   - Modify default normalization behaviour of RooAbsPdf: integration requests over
-  //     unrelated variables are properly executed (introducing a trivial multiplication
-  //     for each unrelated dependent). This is necessary if composite resolution models
-  //     are used in which the components do not necessarily all have the same set
-  //     of dependents.
-  //
-  //   - Built the sub set of normalization dependents that is contained the basis function/
-  //     resolution model convolution (to be used in syncNormalizationPostHook().
-
-  delete _convNormSet ;
-  RooArgSet convNormArgs("convNormArgs") ;
-
-  // Make iterator over data set arguments
-  TIterator* dsIter = nset->createIterator() ;
-  RooAbsArg* dsArg ;
-
-  // Make iterator over convolution integrals
-  TIterator* cvIter = _convSet.createIterator() ;
-  RooResolutionModel* conv ;
-
-  // Build integration list for convolutions
-  while (((dsArg = (RooAbsArg*) dsIter->Next()))) {
-    cvIter->Reset() ;
-    while(((conv = (RooResolutionModel*) cvIter->Next()))) {
-      if (conv->dependsOn(*dsArg)) {
-	// Add any data set variable that occurs in any convolution integral
-	convNormArgs.add(*dsArg) ;
-      }
-    }
-  }
-  delete dsIter ;
-  delete cvIter ;
-  _convNormSet = new RooArgSet(convNormArgs,"convNormSet") ;
-  
-  return kFALSE ;
-}
-
-
-
-
-void RooAbsAnaConvPdf::syncNormalizationPostHook(RooAbsReal* /*norm*/,const RooArgSet* /*nset*/) const 
-{
-  // Overload of hook function in RooAbsPdf::syncNormalization(). This function propagates
-  // the syncNormalization() call to all basis-function/resolution-model convolution component
-  // objects and fixes the physics models client-server links by adding each variable that
-  // serves any of the convolution objects normalizations. PDFs by default have all client-server
-  // links that control the unnormalized value (as returned by evaluate()), but convoluted PDFs
-  // have a non-trivial normalization term that may introduce dependencies on additional server
-  // that exclusively appear in the normalization.
-
-  TIterator* cvIter = _convSet.createIterator() ;
-  RooResolutionModel* conv ;
-
-  // Make convolution normalizations servers of the convoluted pdf normalization
-  while(((conv=(RooResolutionModel*)cvIter->Next()))) {
-    conv->syncNormalization(_convNormSet) ;
-
-    // Add leaf node servers of convolution normalization integrals to our normalization
-    // integral, except for the integrated variables
-
-    RooArgSet leafList("leafNodeServerList") ;
-    conv->normLeafServerList(leafList) ;
-    TIterator* sIter = leafList.createIterator() ;
-
-    RooAbsArg* server ;
-    while(((server=(RooAbsArg*)sIter->Next()))) {
-      if (!_norm->findServer(*server)) {
-	_norm->addServer(*server,kTRUE,kFALSE) ;
-      }
-    }
-    delete sIter ;
-
-  }  
-  delete cvIter ;
-
-  return ;
-}
 
 
 void RooAbsAnaConvPdf::printToStream(ostream& os, PrintOption opt, TString indent) const {

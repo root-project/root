@@ -93,7 +93,7 @@ Double_t RooProfileLL::evaluate() const
 
   // Instantiate minuit if we haven't done that already
   if (!_minuit) {
-    coutI("Minimization") << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
+    coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
     _minuit = new RooMinuit(const_cast<RooAbsReal&>(_nll.arg())) ;
     _minuit->setPrintLevel(-999) ;
     _minuit->setNoWarn() ;
@@ -106,7 +106,7 @@ Double_t RooProfileLL::evaluate() const
     RooAbsArg* par ;
     while((par=(RooAbsArg*)_piter->Next())) {
       if (_paramFixed[par->GetName()] != par->isConstant()) {
-	cxcoutI("Minimization") << "RooProfileLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from " 
+	cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from " 
 				<< (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating") 
 				<< ", recalculating absolute minimum" << endl ;
 	_absMinValid = kFALSE ;
@@ -121,7 +121,7 @@ Double_t RooProfileLL::evaluate() const
   // If we don't have the absolute minimum w.r.t all observables, calculate that first
   if (!_absMinValid) {
     
-    cxcoutI("Minimization") << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
+    cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
     
 
     // Find minimum with all observables floating
@@ -139,17 +139,17 @@ Double_t RooProfileLL::evaluate() const
       _paramFixed[par->GetName()] = par->isConstant() ;
     }
     
-    if (dologI("Minimization")) {
-      cxcoutI("Minimization") << "RooProfileLL::evaluate(" << GetName() << ") minimum found at (" ;
+    if (dologI(Minimization)) {
+      cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") minimum found at (" ;
 
       RooAbsReal* arg ;
       Bool_t first=kTRUE ;
       _oiter->Reset() ;
       while ((arg=(RooAbsReal*)_oiter->Next())) {
-	ccxcoutI("Minimization") << (first?"":", ") << arg->GetName() << "=" << arg->getVal() ;	
+	ccxcoutI(Minimization) << (first?"":", ") << arg->GetName() << "=" << arg->getVal() ;	
 	first=kFALSE ;
       }      
-      ccxcoutI("Minimization") << ")" << endl ;            
+      ccxcoutI(Minimization) << ")" << endl ;            
     }
     
   }

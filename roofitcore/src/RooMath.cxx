@@ -27,9 +27,12 @@
 #include "TMath.h"
 #include <math.h>
 #include "Riostream.h"
+#include "RooMsgService.h"
+#include "RooSentinel.h"
 
 ClassImp(RooMath)
 ;
+
 
 RooComplex RooMath::ComplexErrFunc(Double_t re, Double_t im) {
   // Return CERNlib complex error function for Z(re,im)
@@ -114,13 +117,15 @@ void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t i
   _imRange = _imMax-_imMin ;
   _imStep = _imRange/_imBins ;
 
-  cout << "RooMath::initFastCERF: Allocating Complex Error Function lookup table" << endl
-       << "                       Re: " << _reBins << " bins in range (" << _reMin << "," << _reMax << ")" << endl
-       << "                       Im: " << _imBins << " bins in range (" << _imMin << "," << _imMax << ")" << endl
-       << "                       Allocation size : " << _reBins*_imBins * 2 * sizeof(Double_t) / 1024 << " kB" << endl ;
+  oocoutI((TObject*)0,Eval) << endl
+			    << "RooMath::initFastCERF: Allocating Complex Error Function lookup table" << endl
+			    << "                       Re: " << _reBins << " bins in range (" << _reMin << "," << _reMax << ")" << endl
+			    << "                       Im: " << _imBins << " bins in range (" << _imMin << "," << _imMax << ")" << endl
+			    << "                       Allocation size : " << _reBins*_imBins * 2 * sizeof(Double_t) / 1024 << " kB" << endl ;
 
 
   // Allocate storage matrix for Im(cerf) and Re(cerf) and fill it using ComplexErrFunc()
+  RooSentinel::activate() ;
   Int_t imIdx,reIdx ;
   _reCerfArray = new pDouble_t[_imBins] ;
   _imCerfArray = new pDouble_t[_imBins] ;
@@ -132,8 +137,9 @@ void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t i
   Bool_t cacheLoaded(kFALSE) ;
   if (!_cacheTable || !(cacheLoaded=loadCache())) {
 
-    cout << "                       Filling table: |..................................................|\r" 
-	 << "                       Filling table: |" ;
+    oocoutI((TObject*)0,Eval) << endl
+			      << "                       Filling table: |..................................................|\r" 
+			      << "                       Filling table: |" ;
     
     // Allocate storage matrix for Im(cerf) and Re(cerf) and fill it using ComplexErrFunc()
     for (imIdx=0 ; imIdx<_imBins ; imIdx++) {
@@ -153,6 +159,20 @@ void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t i
 }
 
 
+void RooMath::cleanup()
+{
+  if (_reCerfArray) {
+    for (Int_t imIdx=0 ; imIdx<_imBins ; imIdx++) {
+      delete[] _reCerfArray[imIdx] ;
+      delete[] _imCerfArray[imIdx] ;
+    }
+    delete[] _reCerfArray ;
+    delete[] _imCerfArray ;
+    _reCerfArray = 0 ;
+    _imCerfArray = 0 ;
+  }
+  
+}
 
 
 RooComplex RooMath::ITPComplexErrFunc(const RooComplex& z, Int_t nOrder)
@@ -378,7 +398,7 @@ Bool_t RooMath::loadCache()
   // Return immediately if file doesn't exist
   if (ifs.fail()) return kFALSE ;
 
-  cout << "                       Filling table from cache file " << fName << endl ;
+  oocoutI((TObject*)0,Eval) << endl << "                       Filling table from cache file " << fName << endl ;
 
   // Load data in memory arrays
   Bool_t ok(kTRUE) ;
@@ -392,7 +412,7 @@ Bool_t RooMath::loadCache()
 
   // Issue error message on partial read failure
   if (!ok) {
-    cout << "RooMath::loadCERFCache: error reading file " << cacheFileName() << endl ;
+    oocoutE((TObject*)0,Eval) << "RooMath::loadCERFCache: error reading file " << cacheFileName() << endl ;
   }
   return ok ;
 }
@@ -404,7 +424,7 @@ void RooMath::storeCache()
 
   ofstream ofs(cacheFileName()) ;
   
-  cout << "                       Writing table to cache file " << cacheFileName() << endl ;
+  oocoutI((TObject*)0,Eval) << endl << "                       Writing table to cache file " << cacheFileName() << endl ;
   Int_t i ;
   for (i=0 ; i<_imBins ; i++) {
     ofs.write((char*)_imCerfArray[i],_reBins*sizeof(Double_t)) ;

@@ -64,12 +64,19 @@
 #include "TMath.h"
 #include "Riostream.h"
 #include "RooResolutionModel.h"
+#include "RooSentinel.h"
 
 ClassImp(RooResolutionModel) 
 ;
 
 RooFormulaVar* RooResolutionModel::_identity = 0;
 
+
+void RooResolutionModel::cleanup()
+{
+  delete _identity ;
+  _identity = 0 ;
+}
 
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
   RooAbsPdf(name,title), 
@@ -78,7 +85,9 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
   _ownBasis(kFALSE)
 {
   // Constructor with convolution variable 'x'
-  if (!_identity) _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
+  if (!_identity) {
+    _identity = identity() ; 
+  }
 }
 
 
@@ -122,6 +131,11 @@ RooResolutionModel::~RooResolutionModel()
 RooFormulaVar* RooResolutionModel::identity() 
 { 
   // Return identity formula pointer
+  if (!_identity) {
+    _identity = new RooFormulaVar("identity","1",RooArgSet("")) ;  
+    RooSentinel::activate() ;
+  }
+
   return _identity ; 
 }
 
@@ -324,8 +338,3 @@ void RooResolutionModel::printToStream(ostream& os, PrintOption opt, TString ind
   }
 }
 
-
-Bool_t RooResolutionModel::syncNormalizationPreHook(RooAbsReal*,const RooArgSet*) const 
-{ 
-  return (_basisCode!=0) ; 
-} 

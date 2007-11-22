@@ -113,7 +113,8 @@ RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNu
 }
 
 
-RooMCIntegrator::~RooMCIntegrator() {
+RooMCIntegrator::~RooMCIntegrator() 
+{
 }
 
 Bool_t RooMCIntegrator::checkLimits() const {

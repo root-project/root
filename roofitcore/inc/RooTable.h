@@ -40,6 +40,8 @@ public:
     printToStream(defaultStream(),parseOptions(options));
   }
 
+  virtual Bool_t isIdentical(const RooTable& other) = 0 ;
+
 protected:
 
   ClassDef(RooTable,1) // Abstract interface for tables
