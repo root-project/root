@@ -90,7 +90,7 @@ public:
   // Generate random perturbations of the final parameters using the covariance matrix
   const RooArgList& randomizePars() const;
 
-  Bool_t isIdentical(const RooFitResult& other, Double_t tol=1e-6, Bool_t verbose=kTRUE) const ;
+  Bool_t isIdentical(const RooFitResult& other, Double_t tol=1e-6, Double_t tolCorr=1e-4, Bool_t verbose=kTRUE) const ;
 
 protected:
   
