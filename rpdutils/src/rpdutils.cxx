@@ -3916,7 +3916,7 @@ int RpdGlobusAuth(const char *sstr)
                 Subj, lSubj, strlen(Subj));
    if (Subj) delete[] Subj;
 
-   if (gClientProtocol < 17) { 
+   if (gClientProtocol < 17) {
       // GlbClientName will be determined from the security context ...
       // Now wait for client to communicate the issuer name of the certificate ...
       char *answer = new char[20];
@@ -4580,7 +4580,7 @@ int RpdUser(const char *sstr)
 
    // Check /etc/hosts.equiv and/or $HOME/.rhosts
    int errheq = 0;
-   if (gCheckHostsEquiv && ruser && strlen(ruser)) {
+   if (gCheckHostsEquiv && strlen(ruser)) {
       if (RpdCheckHostsEquiv(gOpenHost.c_str(),ruser,user,errheq)) {
          auth = 3;
          strcpy(gUser, user);

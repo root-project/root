@@ -223,7 +223,7 @@ int XrdProofWorker::GetNActiveSessions()
    std::list<XrdProofServProxy *>::iterator iter;
    for (iter = fProofServs.begin(); iter != fProofServs.end(); ++iter) {
       if (*iter) {
-         if ((*iter)->Status() == kXPD_running);
+         if ((*iter)->Status() == kXPD_running)
             myRunning++;
       }
    }
