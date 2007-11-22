@@ -131,11 +131,9 @@ STRESSSPO     = stressSpectrum.$(ObjSuf)
 STRESSSPS     = stressSpectrum.$(SrcSuf)
 STRESSSP      = stressSpectrum$(ExeSuf)
 
-ifeq ($(shell $(ROOTCONFIG) --has-proof),yes)
 STRESSPROOFO  = stressProof.$(ObjSuf)
 STRESSPROOFS  = stressProof.$(SrcSuf)
 STRESSPROOF   = stressProof$(ExeSuf)
-endif
 
 TBENCHO       = TBench.$(ObjSuf) TBenchDict.$(ObjSuf)
 TBENCHS       = TBench.$(SrcSuf) TBenchDict.$(SrcSuf)
