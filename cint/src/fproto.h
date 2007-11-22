@@ -336,7 +336,6 @@ int G__update_stdio(void);
 int G__setaccess(char *statement,int iout);
 int G__class_conversion_operator(int tagnum,G__value *presult,char* ttt);
 int G__fundamental_conversion_operator(int type,int tagnum,int typenum,int reftype,int constvar,G__value *presult,char* ttt);
-int G__asm_gen_stvar(long G__struct_offset,int ig15,int paran,struct G__var_array *var,char *item,long store_struct_offset,int var_type,G__value *presult);
 int G__exec_asm(int start,int stack,G__value *presult,long localmem);
 int G__asm_test_E(int *a,int *b);
 int G__asm_test_N(int *a,int *b);

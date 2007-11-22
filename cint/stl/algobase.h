@@ -38,7 +38,7 @@ inline void __iter_swap(ForwardIterator1 a, ForwardIterator2 b, T*) {
 
 template <class ForwardIterator1, class ForwardIterator2>
 inline void iter_swap(ForwardIterator1 a, ForwardIterator2 b) {
-    __iter_swap(a, b, value_type(a));
+    __iter_swap(a, b, &(*a));
 }
 
 template <class T>

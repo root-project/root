@@ -6910,7 +6910,7 @@ G__value G__exec_statement(int* mparen)
                      // -- We have a new expression, either placement or parenthesized typename.
                      // Grab the rest of the line.
                      statement[iout++] = c;
-                     c = G__fgetstream(statement + iout, ";");
+                     c = G__fgetstream_template(statement + iout, ";");
                      // Find the position of the first open parenthesis.
                      char* pnew = strchr(statement, '(');
                      G__ASSERT(pnew);

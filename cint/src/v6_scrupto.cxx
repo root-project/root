@@ -222,10 +222,14 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             if (G__struct.incsetup_memvar[itag])
             {
                G__struct.incsetup_memvar[itag]->clear();
+               delete G__struct.incsetup_memvar[itag];
+               G__struct.incsetup_memvar[itag] = 0;
             }
             if (G__struct.incsetup_memfunc[itag])
             {
                G__struct.incsetup_memfunc[itag]->clear();
+               delete G__struct.incsetup_memfunc[itag];
+               G__struct.incsetup_memfunc[itag] = 0;
             }
             G__struct.rootflag[itag] = 0;
             G__struct.rootspecial[itag] = 0;
@@ -513,9 +517,13 @@ static int G__free_struct_upto(int tagnum)
       // freeing _memfunc_setup and memvar_setup function pointers
       if (G__struct.incsetup_memvar[G__struct.alltag]) {
          G__struct.incsetup_memvar[G__struct.alltag]->clear();
+         delete G__struct.incsetup_memvar[G__struct.alltag];
+         G__struct.incsetup_memvar[G__struct.alltag] = 0;
       }
       if (G__struct.incsetup_memfunc[G__struct.alltag]) {
          G__struct.incsetup_memfunc[G__struct.alltag]->clear();
+         delete G__struct.incsetup_memfunc[G__struct.alltag];
+         G__struct.incsetup_memfunc[G__struct.alltag] = 0;
       }
       // freeing tagname
       free((void*) G__struct.name[G__struct.alltag]);
@@ -775,7 +783,7 @@ int G__free_ifunc_table(G__ifunc_table_internal* passed_ifunc)
 }
 
 //______________________________________________________________________________
-int G__destroy_upto(G__var_array* var, int global, G__var_array* dictpos /*unused*/, int index)
+int G__destroy_upto(G__var_array* var, int global, G__var_array* /* dictpos*/, int index)
 {
    // -- Destroy a variable chain up to a given index in the first page.
    ++G__scratch_count;

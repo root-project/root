@@ -55,17 +55,17 @@ template <> inline double &G__value_ref<double>(G__value &buf){ return buf.obj.d
 template <> inline float &G__value_ref<float>(G__value &buf)
 { buf.obj.fl = buf.obj.d; return (float&) buf.obj.fl; }
 
-template <> inline unsigned char & G__value_ref<unsigned char>(G__value  & buf){ return buf.obj.uch;};
-template <> inline unsigned short & G__value_ref<unsigned short>(G__value  & buf){ return buf.obj.ush;};
-template <> inline unsigned int & G__value_ref<unsigned int>(G__value  & buf){ return buf.obj.uin;};
-template <> inline unsigned long & G__value_ref<unsigned long>(G__value  & buf){ return buf.obj.ulo;};
-template <> inline unsigned long long & G__value_ref<unsigned long long>(G__value  & buf){ return buf.obj.ull;};
+template <> inline unsigned char & G__value_ref<unsigned char>(G__value  & buf){ return buf.obj.uch;}
+template <> inline unsigned short & G__value_ref<unsigned short>(G__value  & buf){ return buf.obj.ush;}
+template <> inline unsigned int & G__value_ref<unsigned int>(G__value  & buf){ return buf.obj.uin;}
+template <> inline unsigned long & G__value_ref<unsigned long>(G__value  & buf){ return buf.obj.ulo;}
+template <> inline unsigned long long & G__value_ref<unsigned long long>(G__value  & buf){ return buf.obj.ull;}
 
-template <> inline char & G__value_ref<char>(G__value  & buf){ return buf.obj.ch;};
-template <> inline short & G__value_ref<short>(G__value  & buf){ return buf.obj.sh;};
-template <> inline int & G__value_ref<int>(G__value  & buf){ return buf.obj.in;};
-template <> inline long & G__value_ref<long>(G__value  & buf){ return buf.obj.i;};
-template <> inline long long & G__value_ref<long long>(G__value  & buf){ return buf.obj.ll;};
+template <> inline char & G__value_ref<char>(G__value  & buf){ return buf.obj.ch;}
+template <> inline short & G__value_ref<short>(G__value  & buf){ return buf.obj.sh;}
+template <> inline int & G__value_ref<int>(G__value  & buf){ return buf.obj.in;}
+template <> inline long & G__value_ref<long>(G__value  & buf){ return buf.obj.i;}
+template <> inline long long & G__value_ref<long long>(G__value  & buf){ return buf.obj.ll;}
 
 template <typename T>
 inline void G__setvalue(G__value* pbuf, const T& value) { pbuf->obj.i = (long) value; }

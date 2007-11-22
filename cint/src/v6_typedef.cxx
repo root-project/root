@@ -1091,7 +1091,13 @@ int G__defined_typename(const char *type_name)
              && G__ignore_stdnamespace
              ) env_tagnum = -1;
 #endif
-    else         env_tagnum = G__defined_tagname(temp2,0);
+    else {
+       // const ns::T - the const does not belong to the ns!
+       char* skipconst = temp2;
+       while (!strncmp(skipconst, "const ", 6))
+          skipconst += 6;
+       env_tagnum = G__defined_tagname(skipconst,0);
+    }
   }
   else {
     strcpy(temp,temp2);
