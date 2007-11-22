@@ -434,6 +434,7 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
       mninit(5,6,7);
    }
 
+   fFCN = 0;
    gMinuit = this;
    gROOT->GetListOfSpecials()->Add(gMinuit);
 
