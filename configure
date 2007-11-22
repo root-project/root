@@ -731,7 +731,7 @@ guess_architecture () {
             ;;
     esac
     if [ "$arch" = "macosx" ]; then
-       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` = 5 ]; then
+       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 5 ]; then
           if `sysctl machdep.cpu.extfeatures | grep "64" > /dev/null  2>&1` ; then
              arch=macosx64
           fi
@@ -1391,9 +1391,22 @@ fi
 # Check for posix thread library
 #
 case $platform in
-macosx|win32)
+win32)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
+    fi
+    ;;
+macosx)
+    if test "x$enable_thread" = "x" || test "x$enable_thread" = "xyes"; then
+        if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 5 ]; then
+            enable_thread="yes"
+            threadflag="-D_REENTRANT -pthread"
+            threadlib="-pthread"
+            threadlibdir=
+        else
+            enable_thread="yes"
+            threadflag="-D_REENTRANT"
+        fi
     fi
     ;;
 linux|fbsd)
@@ -1414,7 +1427,7 @@ win32gcc)
     fi
     ;;
 hpuxia64acc)
-    if test "x$enable_thread" = "x"; then
+    if test "x$enable_thread" = "x" || test "x$enable_thread" = "xyes"; then
         enable_thread="yes"
         threadflag="-mt"
         threadlib="-mt"
@@ -1615,7 +1628,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
 
     # Mac OS X 10.5.0 problem
     if test "x$platform" = "xmacosx"; then
-       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` = 5 ]; then
+       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -eq 5 ]; then
           opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib"
        fi
     fi
