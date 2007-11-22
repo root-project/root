@@ -457,12 +457,15 @@ Double_t TMath::Gamma(Double_t z)
 //______________________________________________________________________________
 Double_t TMath::Gamma(Double_t a,Double_t x)
 {
-   // Computation of the upper incomplete gamma function P(a,x) as defined in the
+   // Computation of the normalized lower incomplete gamma function P(a,x) as defined in the
    // Handbook of Mathematical Functions by Abramowitz and Stegun, formula 6.5.1 on page 260 .
+   // Its normalization is such that TMath::Gamma(a,+infinity) = 1 .
    //
-   // Note that this is the version of the incomplete gamma function as used in statistics :
-   // its normalization is such that TMath::Gamma(a,+infinity) = 1 .
-   //
+   //  Begin_Latex 
+   //  P(a, x) = #frac{ 1} {#Gamma(a) } #int_{0}^{x} t^{a-1} e^{-t} dt 
+   //   End_Latex
+   // 
+   // 
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
    if (a <= 0 || x <= 0) return 0;
