@@ -2196,9 +2196,11 @@ void TGNumberEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    TGToolTip *tip = GetNumberEntry()->GetToolTip();
    if (tip) {
+      TString tiptext = tip->GetText()->GetString();
+      tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->GetNumberEntry()->SetToolTipText(" << quote
-          << tip->GetText()->GetString() << quote << ");"  << endl;
+          << tiptext << quote << ");"  << endl;
    }
 }
 
@@ -2308,8 +2310,10 @@ void TGNumberEntryField::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    TGToolTip *tip = GetToolTip();
    if (tip) {
+      TString tiptext = tip->GetText()->GetString();
+      tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->SetToolTipText(" << quote
-          << tip->GetText()->GetString() << quote << ");"  << endl;
+          << tiptext << quote << ");"  << endl;
    }
 }

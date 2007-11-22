@@ -1850,8 +1850,10 @@ void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
        << "->GetDefaultHeight());" << endl;
 
    if (fTip) {
+      TString tiptext = fTip->GetText()->GetString();
+      tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->SetToolTipText(" << quote
-          << fTip->GetText()->GetString() << quote << ");"  << endl;
+          << tiptext << quote << ");"  << endl;
    }
 }

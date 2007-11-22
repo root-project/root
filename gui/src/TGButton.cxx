@@ -1703,9 +1703,11 @@ void TGButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
 
    if (fTip) {
+      TString tiptext = fTip->GetText()->GetString();
+      tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->SetToolTipText(" << quote
-          << fTip->GetText()->GetString() << quote << ");"  << endl;
+          << tiptext << quote << ");"  << endl;
    }
    if (strlen(fCommand)) {
       out << "   " << GetName() << "->SetCommand(" << quote << fCommand
