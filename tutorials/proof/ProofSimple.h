@@ -22,7 +22,7 @@ public :
    TRandom3        *fRandom;
 
    ProofSimple();
-   virtual ~ProofSimple() { }
+   virtual ~ProofSimple();
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
    virtual void    SlaveBegin(TTree *tree);

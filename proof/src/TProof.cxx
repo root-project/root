@@ -2325,16 +2325,18 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                (*mess) >> selec >> dsz >> first >> nent;
 
                // Start or reset the progress dialog
-               if (fProgressDialog && !TestBit(kUsingSessionGui)) {
-                  if (!fProgressDialogStarted) {
-                     fProgressDialog->ExecPlugin(5, this,
-                                                 selec.Data(), dsz, first, nent);
-                     fProgressDialogStarted = kTRUE;
-                  } else {
-                     ResetProgressDialog(selec, dsz, first, nent);
+               if (!gROOT->IsBatch()) {
+                  if (fProgressDialog && !TestBit(kUsingSessionGui)) {
+                     if (!fProgressDialogStarted) {
+                        fProgressDialog->ExecPlugin(5, this,
+                                                   selec.Data(), dsz, first, nent);
+                        fProgressDialogStarted = kTRUE;
+                     } else {
+                        ResetProgressDialog(selec, dsz, first, nent);
+                     }
                   }
+                  ResetBit(kUsingSessionGui);
                }
-               ResetBit(kUsingSessionGui);
             }
          }
          break;

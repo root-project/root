@@ -39,9 +39,18 @@
 
 ProofSimple::ProofSimple()
 {
-   // The Begin() function is called at the start of the query.
-   // When running with PROOF Begin() is only called on the client.
-   // The tree argument is deprecated (on PROOF 0 is passed).
+   // Constructor
+
+   fNhist = -1;
+   fHist = 0;
+   fRandom = 0;
+}
+
+ProofSimple::~ProofSimple()
+{
+   // Destructor
+
+   SafeDelete(fRandom);
 }
 
 void ProofSimple::Begin(TTree * /*tree*/)
