@@ -632,7 +632,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fCascadeMenu->AddEntry("ID = 5&3", 53);
    fCascadeMenu->AddSeparator();
    fCascadeMenu->AddPopup("&Cascaded 1", fCascade1Menu);
-   fCascadeMenu->AddPopup("C&ascaded 2", fCascade2Menu);
 
    fMenuTest = new TGPopupMenu(gClient->GetRoot());
    fMenuTest->AddLabel("Test different features...");
