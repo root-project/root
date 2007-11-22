@@ -109,9 +109,11 @@ STRESSSHAPESO   = stressShapes.$(ObjSuf)
 STRESSSHAPESS   = stressShapes.$(SrcSuf)
 STRESSSHAPES    = stressShapes$(ExeSuf)
 
+ifeq ($(shell $(ROOTCONFIG) --has-roofit),yes)
 STRESSROOFITO  = stressRooFit.$(ObjSuf)
 STRESSROOFITS  = stressRooFit.$(SrcSuf)
 STRESSROOFIT   = stressRooFit$(ExeSuf)
+endif
 
 STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
@@ -129,9 +131,11 @@ STRESSSPO     = stressSpectrum.$(ObjSuf)
 STRESSSPS     = stressSpectrum.$(SrcSuf)
 STRESSSP      = stressSpectrum$(ExeSuf)
 
+ifeq ($(shell $(ROOTCONFIG) --has-proof),yes)
 STRESSPROOFO  = stressProof.$(ObjSuf)
 STRESSPROOFS  = stressProof.$(SrcSuf)
 STRESSPROOF   = stressProof$(ExeSuf)
+endif
 
 TBENCHO       = TBench.$(ObjSuf) TBenchDict.$(ObjSuf)
 TBENCHS       = TBench.$(SrcSuf) TBenchDict.$(SrcSuf)
