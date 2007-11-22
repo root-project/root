@@ -8,26 +8,26 @@
 // *                                                                       * //
 // *  $ cd $ROOTSYS/test                                                   * //
 // *  $ make stressProof                                                   * //
-// *  $ ./stressProof [-h] [master] [Nworkers] [verbose] [logfile]         * //
+// *  $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [master]    * //
 // *                                                                       * //
-// *  Run with '-h' allows to get some help about the other optional       * //
-// *  arguments, which are described below                                 * //
+// * Optional arguments:                                                   * //
+// *   -h          show help info                                          * //
+// *   master      entry point of the cluster where to run the test        * //
+// *               in the form '[user@]host.domain[:port]';                * //
+// *               default 'localhost:11093'                               * //
+// *   -n wrks     number of workers to be started when running on the     * //
+// *               local host; default is the nuber of local cores         * //
+// *   -v[v[v]]    verbosity level (not implemented)                       * //
+// *   -l logfile  file where to redirect the processing logs; default is  * //
+// *               a temporary file deleted at the end of the test; in     * //
+// *               case of success                                         * //
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
 // * root[] .L stressProof.cxx                                             * //
-// * root[] stressProof(master, Nworkers, verbose, logfile)                * //
+// * root[] stressProof(master, wrks, verbose, logfile)                    * //
 // *                                                                       * //
-// * Optional arguments:                                                   * //
-// *   master   entry point of the cluster where to run the test           * //
-// *            in the form '[user@]host.domain[:port]';                   * //
-// *            default 'localhost:11093'                                  * //
-// *   Nworkers number of workers to be started when running on the local  * //
-// *            host; default is the nuber of local cores                  * //
-// *   verbose  verbosity level (not implemented)                          * //
-// *   logfile  file where to redirect the processing logs; default is a   * //
-// *            temporary file deleted at the end of the test; in case of  * //
-// *            success                                                    * //
+// * The arguments have the same meaning as above.                         * //
 // *                                                                       * //
 // * The successful output looks like this:                                * //
 // *                                                                       * //
@@ -49,7 +49,7 @@
 // * specifies a log file path of her/his choice, the log file is never    * //
 // * deleted.
 // *                                                                       * //
-// * New tests can be easilty added by providing a function performing the * //
+// * New tests can be easily added by providing a function performing the  * //
 // * test and a name for the test; see examples below.                     * //
 // *                                                                       * //
 // ************************************************************************* //
@@ -91,30 +91,60 @@ int main(int argc,const char *argv[])
       printf(" \n");
       printf(" Usage:\n");
       printf(" \n");
-      printf(" $ ./stressProof [-h] [master] [Nworkers] [verbose] [logfile]\n");
+      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
       printf("   master        entry point of the cluster where to run the test\n");
       printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:11093'\n");
-      printf("   Nworkers      number of workers to be started when running on the local host;\n");
+      printf("   -n wrks       number of workers to be started when running on the local host;\n");
       printf("                 default is the nuber of local cores\n");
-      printf("   verbose       verbosity level (not implemented)\n");
-      printf("   logfile       file where to redirect the processing logs; must be writable;\n");
+      printf("   -v[v[v]]      verbosity level (not implemented)\n");
+      printf("   -l logfile    file where to redirect the processing logs; must be writable;\n");
       printf("                 default is a temporary file deleted at the end of the test\n");
       printf("                 in case of success\n");
       printf(" \n");
       gSystem->Exit(0);
    }
 
-   const char *url = (argc > 1) ? argv[1] : urldef;
-   Int_t nWrks = 2;
-   if (argc > 2)
-      nWrks = atoi(argv[2]);
+   // Parse options
+   const char *url = 0;
+   Int_t nWrks = -1;
    Int_t verbose = 0;
-   if (argc > 3)
-      verbose = atoi(argv[3]);
-   const char *logfile = (argc > 4) ? argv[4] : 0;
+   const char *logfile = 0;
+   Int_t i = 1;
+   while (i < argc) {
+      if (!strcmp(argv[i],"-h")) {
+         // Ignore if not first argument
+         i++;
+      } else if (!strcmp(argv[i],"-n")) {
+         if (i+1 == argc || argv[i+1][0] == '-') {
+            printf(" -n should be followed by the number of workers: ignoring \n");
+            i++;
+         } else  {
+            nWrks = atoi(argv[i+1]);
+            i += 2;
+         }
+      } else if (!strcmp(argv[i],"-l")) {
+         if (i+1 == argc || argv[i+1][0] == '-') {
+            printf(" -l should be followed by a path: ignoring \n");
+            i++;
+         } else { 
+            logfile = argv[i+1];
+            i += 2;
+         }
+      } else if (!strncmp(argv[i],"-v",2)) {
+         verbose++;
+         if (!strncmp(argv[i],"-vv",3)) verbose++;
+         if (!strncmp(argv[i],"-vvv",4)) verbose++;
+         i++;
+      } else {
+         url = argv[i];
+         i++;
+      }
+   }
+   // Use defaults where required
+   if (!url) url = urldef;
 
    stressProof(url, nWrks, verbose, logfile);
 
@@ -190,7 +220,7 @@ typedef struct {            // Open
 void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile)
 {
    printf("******************************************************************\n");
-   printf("*  Starting  P R O O F - S T R E S S suite                       *\n");
+   printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
    printf("******************************************************************\n");
 
    // Set verbosity
@@ -256,7 +286,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    if (failed) {
       Bool_t kept = kTRUE;
       if (usedeflog) {
-         char *answer = Getline(" Some tests failed: would like to keep the log file (N,Y)? [Y] ");
+         char *answer = Getline(" Some tests failed: would you like to keep the log file (N,Y)? [Y] ");
          if (answer && (answer[0] == 'N' || answer[0] == 'n')) {
             // Remove log file
             gSystem->Unlink(glogfile);
