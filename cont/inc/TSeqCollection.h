@@ -58,6 +58,7 @@ public:
    virtual Int_t     IndexOf(const TObject *obj) const;
    virtual Bool_t    IsSorted() const { return fSorted; }
    void              UnSort() { fSorted = kFALSE; }
+   Long64_t          Merge(TCollection *list);
 
    static Int_t      ObjCompare(TObject *a, TObject *b);
    static void       QSort(TObject **a, Int_t first, Int_t last);

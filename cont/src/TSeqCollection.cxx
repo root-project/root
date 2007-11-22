@@ -21,7 +21,8 @@
 #include "TSeqCollection.h"
 #include "TCollection.h"
 #include "TVirtualMutex.h"
-
+#include "TClass.h"
+#include "TMethodCall.h"
 
 ClassImp(TSeqCollection)
 
@@ -139,4 +140,83 @@ void TSeqCollection::QSort(TObject **a, TObject **b, Int_t first, Int_t last)
          last = j;        // QSort(first, j);
       }
    }
+}
+
+//______________________________________________________________________________
+Long64_t TSeqCollection::Merge(TCollection *list)
+{
+   // Merge this collection with all collections coming in the input list. The
+   // input list must contain other collections of objects compatible with the
+   // ones in this collection and ordered in the same manner. For example, if this
+   // collection contains a TH1 object and a tree, all collections in the input
+   // list have to contain a histogram and a tree. In case the list contains
+   // collections, the objects in the input lists must also be collections with
+   // the same structure and number of objects.
+   //
+   // Example
+   // =========
+   //   this                          list
+   // ____________                  ---------------------|
+   // | A (TH1F) |  __________      | L1 (TSeqCollection)|- [A1, B1(C1,D1,E1)]
+   // | B (TList)|-| C (TTree)|     | L1 (TSeqCollection)|- [A2, B2(C2,D2,E2)]
+   // |__________| | D (TH1F) |     | ...                |- [...]
+   //              | E (TH1F) |     |____________________|
+   //              |__________|
+
+   Long64_t nmerged = 0;
+   if (IsEmpty() || !list) {
+      Warning("Merge", "list is empty - nothing to merge");
+      return 0;
+   }
+   if (list->IsEmpty()) {
+      Warning("Merge", "input list is empty - nothing to merge with");
+      return 0;
+   }
+   TIter nextobject(this);
+   TIter nextlist(list);
+   TObject *object;
+   TObject *objtomerge;
+   TObject *collcrt;
+   TSeqCollection *templist;
+   TMethodCall callEnv;
+   Int_t indobj = 0;
+   while ((object = nextobject())) {   // loop objects in this collection
+      // If current object is not mergeable just skip it
+      if (!object->IsA()) {
+         indobj++;  // current object non-mergeable, go to next object
+         continue;
+      }
+      callEnv.InitWithPrototype(object->IsA(), "Merge", "TCollection*");
+      if (!callEnv.IsValid()) {
+         indobj++;  // no Merge() interface, go to next object
+         continue;
+      }
+      // Current object mergeable - get corresponding objects in input lists
+      templist = (TSeqCollection*)IsA()->New();
+      nextlist.Reset();
+      while ((collcrt = nextlist())) {      // loop input lists
+         if (!collcrt->InheritsFrom(TSeqCollection::Class())) {
+            Error("Merge", "some objects in the input list are not collections - merging aborted");
+            delete templist;
+            return 0;
+         }
+         // The next object to be merged with is a collection
+         objtomerge = ((TSeqCollection*)collcrt)->At(indobj);
+         if (object->IsA() != objtomerge->IsA()) {
+            Error("Merge", "object of type %s at index %d not matching object of type %s in input list",
+                  object->ClassName(), indobj, objtomerge->ClassName());
+            delete templist;
+            return 0;
+         }
+         // Add object at index indobj in the temporary list
+         templist->Add(objtomerge);
+         nmerged++;
+      }
+      // Merge current object with objects in the temporary list
+      callEnv.SetParam((Long_t) templist);
+      callEnv.Execute(object);
+      delete templist;
+      indobj++;
+   }
+   return nmerged;
 }
