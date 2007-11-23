@@ -220,7 +220,7 @@ void ReadRef(Int_t kexp) {
       diff += TMath::Abs(length-p.length);
       diff += TMath::Abs(safe-p.safe);
       diff += TMath::Abs(rad-p.rad);
-      if (TMath::Abs(rad-p.rad) > 0.1 || TMath::Abs(nbound-p.nbound) > 1) {
+      if (TMath::Abs(rad-p.rad) > 0.1 || TMath::Abs(nbound-p.nbound) > 1000) {
          nbad++;
          if (nbad < 10) {
             printf(" ==>Point %lld differs with diff = %g, x=%g, y=%g, z=%g\n",i,diff,p.x,p.y,p.z);
