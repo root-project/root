@@ -7,6 +7,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 include Makefile.arch
+-include ../MyConfig.mk
 
 #------------------------------------------------------------------------------
 
