@@ -413,21 +413,35 @@
 
 
 
-#ifndef _REENTRANT
- #define _REENTRANT
-#endif
 #include "RooFit.h"
 
 #include <string.h>
 #include <string.h>
 
-// Matthew D. Langston  <langston@SLAC.Stanford.EDU>
-//
-// Microsoft doesn't supply strings.h.  However, strings.h is only
-// required for strtok_r (a reentrant version of strtok), and
-// Microsoft's version of strtok is already thread safe.
 #ifndef _WIN32
 #include <strings.h>
+#else
+
+char *
+strtok_r(char *s1, const char *s2, char **lasts)
+{
+  char *ret;
+  
+  if (s1 == NULL)
+    s1 = *lasts;
+  while(*s1 && strchr(s2, *s1))
+    ++s1;
+  if(*s1 == '\0')
+    return NULL;
+  ret = s1;
+  while(*s1 && !strchr(s2, *s1))
+    ++s1;
+  if(*s1)
+    *s1++ = '\0';
+  *lasts = s1;
+  return ret;
+}
+
 #endif
 
 #include "RooSimPdfBuilder.h"
@@ -612,15 +626,10 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     char* tokenPtr(0) ;
     if (strchr(catName,'(')) {
 
-#ifndef _WIN32
       catName = strtok_r(catName,"(",&tokenPtr) ;
       stateList = strtok_r(0,")",&tokenPtr) ;
-#else
-      catName = strtok(catName,"(") ;
-      stateList = strtok(0,")") ;
-#endif
 
-	} else {
+    } else {
       stateList = 0 ;
     }
 
@@ -643,11 +652,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       slist->SetName(catName) ;
       splitStateList.Add(slist) ;
 
-#ifndef _WIN32
       char* stateLabel = strtok_r(stateList,",",&tokenPtr) ;
-#else
-      char* stateLabel = strtok(stateList,",") ;
-#endif
 
       while(stateLabel) {
 	// Lookup state label and require it exists
@@ -661,11 +666,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	}
 	slist->Add((TObject*)type) ;
 
-#ifndef _WIN32
 	stateLabel = strtok_r(0,",",&tokenPtr) ;
-#else
-	stateLabel = strtok(0,",") ;
-#endif
       }
     }
     
@@ -745,11 +746,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       strcpy(buf,ruleStr->getVal()) ;
       char *tokenPtr(0) ;
 
-#ifndef _WIN32
       char* token = strtok_r(buf,spaceChars,&tokenPtr) ;
-#else
-      char* token = strtok(buf,spaceChars) ;
-#endif
       
       enum Mode { SplitCat, Colon, ParamList } ;
       Mode mode(SplitCat) ;
@@ -758,6 +755,9 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       RooAbsCategory* splitCat(0) ;
 
       while(token) {
+
+	cout << "RSPB parser processing token " << token << endl ;
+
 	switch (mode) {
 	case SplitCat:
 	  {
@@ -772,12 +772,8 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	      if (!splitCat) {
 		// Build now
 
-#ifndef _WIN32
 		char *tokptr = 0;
 		char *catName = strtok_r(token,",",&tokptr) ;
-#else
-		char *catName = strtok(token,",") ;
-#endif
 
 		RooArgSet compCatSet ;
 		while(catName) {
@@ -800,11 +796,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		  }
 		  compCatSet.add(*cat) ;
 
-#ifndef _WIN32
 		  catName = strtok_r(0,",",&tokptr) ;
-#else
-		  catName = strtok(0,",") ;
-#endif
 		}		
 
 
@@ -885,26 +877,15 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
 	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
 
-#ifndef _WIN32
 	    char *tokptr = 0 ;
 	    char *paramName = strtok_r(token,",",&tokptr) ;
-#else
-	    char *tokptr(0) ;
-	    char *paramName = strtok(token,",") ;
-#endif
 
 	    // Check for fractional split option 'param_name[remainder_state]'
 	    char *remainderState = 0 ;
-#ifndef _WIN32
 	    char *tokptr2 = 0 ;
 	    if (paramName && strtok_r(paramName,"[",&tokptr2)) {
 	      remainderState = strtok_r(0,"]",&tokptr2) ;
 	    }
-#else
-	    if (paramName && strtok(paramName,"[")) {
-	      remainderState = strtok(0,"]") ;
-	    }
-#endif
 
 	    while(paramName) {
 
@@ -1014,17 +995,10 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	      }
 
 	      // Parse next parameter name
-#ifndef _WIN32
 	      paramName = strtok_r(0,",",&tokptr) ;
 	      if (paramName && strtok_r(paramName,"[",&tokptr2)) {
 		remainderState = strtok_r(0,"]",&tokptr2) ;
 	      }
-#else
-	      paramName = strtok(0,",") ;
-	      if (paramName && strtok(paramName,"[")) {
-		remainderState = strtok(0,"]") ;
-	      }
-#endif
 	    }
 
 	    // Add the rule to the appropriate customizer ;
@@ -1037,11 +1011,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	  }
 	}
 
-#ifndef _WIN32
 	token = strtok_r(0,spaceChars,&tokenPtr) ;
-#else
-	token = strtok(0,spaceChars) ;
-#endif
 
       }
       if (mode!=SplitCat) {
