@@ -724,9 +724,9 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
                znew = (apr-apgout)/db;
                dout = (znew-pt[2])*invdir;
             }
-            // protection for the first segment
-            Double_t dinp = (din>snext)?din:TGeoShape::Big();
-            Double_t doutp = (dout>snext)?dout:TGeoShape::Big();
+            // protection for the first segment            
+            Double_t dinp = (din>snext-TGeoShape::Tolerance())?din:TGeoShape::Big();
+            Double_t doutp = (dout>snext-TGeoShape::Tolerance())?dout:TGeoShape::Big();
             distr = TMath::Min(dinp, doutp);
             if (iphcrt==iphstart && ipl==iplstart) {
                if (rproj<rpgin+TGeoShape::Tolerance()) {
@@ -748,7 +748,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
                }  
             }
          } 
-         if (distr<snext) distr=TGeoShape::Big();        
+         if (distr<snext-TGeoShape::Tolerance()) distr=TGeoShape::Big();
          if (snextphi < step+TMath::Min(distz,distr)) {
             for (i=0; i<3; i++) pt[i] = point[i] + snextphi*dir[i];
             step = snextphi;
@@ -1491,8 +1491,12 @@ Double_t TGeoPgon::Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_
 //   Rpg(z) = a + b*z
 // Note: ipl must be in range [0,fNz-2]
    Double_t rpg;
+   if (ipl<0 || ipl>fNz-2) {
+      Fatal("Rpg", "Plane index parameter ipl=%i out of range\n", ipl);
+      return 0;
+   }   
    Double_t dz = fZ[ipl+1] - fZ[ipl];
-   if (dz==0.) {
+   if (dz<TGeoShape::Tolerance()) {
       // radius-changing region
       rpg = (inner)?TMath::Min(fRmin[ipl],fRmin[ipl+1]):TMath::Max(fRmax[ipl],fRmax[ipl+1]);
       a = rpg;
@@ -1519,7 +1523,10 @@ Double_t TGeoPgon::Rproj(Double_t z, Double_t *point, Double_t *dir, Double_t cp
 // Computes projected distance at a given Z for a given ray inside a given sector 
 // and fills coefficients:
 //   Rproj = a + b*z
-   if (TMath::Abs(dir[2])<1E-8) return TGeoShape::Big();
+   if (TMath::Abs(dir[2])<1E-8) {
+      a =  b = TGeoShape::Big();
+      return TGeoShape::Big();
+   }
    Double_t invdirz = 1./dir[2];
    a = ((point[0]*dir[2]-point[2]*dir[0])*cphi+(point[1]*dir[2]-point[2]*dir[1])*sphi)*invdirz;
    b = (dir[0]*cphi+dir[1]*sphi)*invdirz;
