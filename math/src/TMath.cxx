@@ -961,6 +961,59 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 //      Statistical Methods in Experimental Physics, (North-Holland,
 //      Amsterdam 1971) 269-271)
 //
+//  Method Improvement by Jason A Detwiler (JADetwiler@lbl.gov)
+//  -----------------------------------------------------------
+//   The nuts-and-bolts of the TMath::KolmogorovTest() algorithm is a for-loop
+//   over the two sorted arrays a and b representing empirical distribution
+//   functions. The for-loop handles 3 cases: when the next points to be 
+//   evaluated satisfy a>b, a<b, or a=b:
+//    
+//      for (Int_t i=0;i<na+nb;i++) {
+//         if (a[ia-1] < b[ib-1]) {
+//            rdiff -= sa;
+//            ia++;
+//            if (ia > na) {ok = kTRUE; break;}
+//         } else if (a[ia-1] > b[ib-1]) {
+//            rdiff += sb;
+//            ib++;
+//            if (ib > nb) {ok = kTRUE; break;}
+//         } else {
+//            rdiff += sb - sa;
+//            ia++;
+//            ib++;
+//            if (ia > na) {ok = kTRUE; break;}
+//            if (ib > nb) {ok = kTRUE; break;}
+//        }
+//         rdmax = TMath::Max(rdmax,TMath::Abs(rdiff));
+//      }
+//    
+//   For the last case, a=b, the algorithm advances each array by one index in an
+//   attempt to move through the equality. However, this is incorrect when one or
+//   the other of a or b (or both) have a repeated value, call it x. For the KS
+//   statistic to be computed properly, rdiff needs to be calculated after all of
+//   the a and b at x have been tallied (this is due to the definition of the
+//   empirical distribution function; another way to convince yourself that the
+//   old CERNLIB method is wrong is that it implies that the function defined as the
+//   difference between a and b is multi-valued at x -- besides being ugly, this
+//   would invalidate Kolmogorov's theorem).
+//    
+//   The solution is to just add while-loops into the equality-case handling to
+//   perform the tally:
+//    
+//         } else {
+//            double x = a[ia-1];
+//            while(a[ia-1] == x && ia <= na) {
+//              rdiff -= sa;
+//              ia++;
+//            }
+//            while(b[ib-1] == x && ib <= nb) {
+//              rdiff += sb;
+//              ib++;
+//            }
+//            if (ia > na) {ok = kTRUE; break;}
+//            if (ib > nb) {ok = kTRUE; break;}
+//         }
+//
 //  NOTE1
 //  A good description of the Kolmogorov test can be seen at:
 //    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
@@ -1006,9 +1059,15 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
          ib++;
          if (ib > nb) {ok = kTRUE; break;}
       } else {
-         rdiff += sb - sa;
-         ia++;
-         ib++;
+         double x = a[ia-1];
+         while(a[ia-1] == x && ia <= na) {
+           rdiff -= sa;
+           ia++;
+         }
+         while(b[ib-1] == x && ib <= nb) {
+           rdiff += sb;
+           ib++;
+         }
          if (ia > na) {ok = kTRUE; break;}
          if (ib > nb) {ok = kTRUE; break;}
       }
