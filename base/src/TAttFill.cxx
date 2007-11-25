@@ -81,6 +81,11 @@ Begin_Macro(source)
 End_Macro
       
 Begin_Html
+<h4>Special case forcing black&white output.</h4>
+If the current style fill area color is set to 0, then ROOT will force
+a black&white output for all objects with a fill area defined and independently
+of the object fill style.
+   
 <a name="F2"></a><h3>Fill Area style</h3>
 The fill area style defines the pattern used to fill a polygon.
 The fill area style of any class inheriting from <tt>TAttFill</tt> can
