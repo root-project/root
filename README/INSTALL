@@ -64,24 +64,19 @@ Here's a short summary:
 
      prompt% gzip -dc root-<version>.source.tar.gz | tar -xf -
 
-An alternative approach is to use our public CVS repository to get
-the latest version. See URL: http://root.cern.ch/root/CVS.html.
+An alternative approach is to use our public Subversion repository to get
+the latest version. See URL:
+   http://root.cern.ch/twiki/bin/view/ROOT/SubversionHowto
 
 Here's a short summary:
 
-1) Login to server, using anonymous read-only access:
+1a) Get a specific version (>= 2.25/00), e.g.: version 2.25/03:
 
-     prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs login
-     Password: cvs
+     prompt% svn co http://root.cern.ch/svn/root/tags/v5-16-00 root
 
-2a) Get a specific version (>= 2.25/00), e.g.: version 2.25/03:
+1b) Alternatively, checkout the head (development version) of the sources:
 
-     prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs export \
-                -P -r v2-25-03 root
-
-2b) Alternatively, checkout the head (development version) of the sources:
-
-     prompt% cvs -d :pserver:cvs@root.cern.ch:/user/cvs export -P root
+     prompt% svn co http://root.cern.ch/svn/root/trunk root
 
 In both cases you should have a subdirectory called "root" in the
 directory you ran the above commands in.
@@ -204,7 +199,7 @@ libraries.
 
 3.2. Redhat packages:
 ---------------------
-Get the sources for a specific release from CVS or from a tar-ball, as
+Get the sources for a specific release from Subversion or from a tar-ball, as
 outlined above and cd into the source directory. Then just do
 
         make redhat
@@ -277,7 +272,7 @@ spec file.  See also build/package/common/README.
 
 3.4. Debian GNU/Linux packages:
 -------------------------------
-Get the sources for a specific release from CVS or from a tar-ball, as
+Get the sources for a specific release from Subversion or from a tar-ball, as
 outlined above and cd into the source directory. Then just do
 
         make debian

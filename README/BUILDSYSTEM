@@ -2,7 +2,7 @@ THE ROOT BUILD SYSTEM
 =====================
 
 The new ROOT development system is based on Open Source tools like
-CVS, configure and make.
+Subversion, configure and make.
 
 
 The Makefile
@@ -79,7 +79,7 @@ importcint:                      import a new version of CINT into the cint
                                  directory. The new CINT tar file must be
                                  available as $HOME/cint. Any new or removed
                                  files are listed. Use this information to
-                                 manually update the CVS repository
+                                 manually update the Subversion repository
 
 cintdlls:                        build all CINT add-on shared libs (dll's)
 
@@ -88,7 +88,7 @@ html:                            generate the complete html documentation of
                                  README/ChangeLog file
 
 changelog:                       generate the README/ChangeLog file from
-                                 information obtained by the "cvs log" command
+                                 information obtained by the "svn log" command
 
 install:                         install the root binary distribution to the
                                  locations specified via configure. Does
