@@ -3,13 +3,7 @@ Downloading roottest:
 
 You can download read-only it via:
 
-   cvs -d :pserver:anonymous@cdcvs.fnal.gov:/cvs/cd_read_only co roottest
-
-If you have a Fermilab kerberos principal you can download with write access
-
-   cvs -d cvsuser@cdcvs.fnal.gov:/cvs/cd co roottest
-
-If you have a Fermilab ID number, you can also get pserver access.
+   svn co http://root.cern.ch/svn/roottest/trunk roottest
 
 ==============================================================================
 Running roottest:
