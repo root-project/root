@@ -391,19 +391,25 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             }
             argv[i] = null;
          } else {
-            char *mac, *s = strtok(dir, "+(");
-            if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
-                                      kReadPermission))) {
-               // if file add to list of files to be processed
-               if (!fFiles) fFiles = new TObjArray;
-               fFiles->Add(new TObjString(argv[i]));
-               argv[i] = null;
-               delete [] mac;
-            } else
-               // only warn if we're plain root,
-               // other progs might have their own params
-               if (!strcmp(GetName(),"Rint"))
-                  Warning("GetOptions", "Macro %s not found.", s);
+            if (TString(dir).EndsWith(".root") && !strcmp(gROOT->GetName(), "Rint")) {
+               // file ending on .root but does not exist, likely a typo, warn user...
+               Warning("GetOptions", "file %s not found", dir);
+            } else {
+               char *mac, *s = strtok(dir, "+(");
+               if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
+                                         kReadPermission))) {
+                  // if file add to list of files to be processed
+                  if (!fFiles) fFiles = new TObjArray;
+                  fFiles->Add(new TObjString(argv[i]));
+                  argv[i] = null;
+                  delete [] mac;
+               } else {
+                  // only warn if we're plain root,
+                  // other progs might have their own params
+                  if (!strcmp(gROOT->GetName(), "Rint"))
+                     Warning("GetOptions", "macro %s not found", s);
+               }
+            }
          }
          delete [] dir;
       }
