@@ -62,6 +62,7 @@ namespace ROOT { namespace Cintex {
       IsAFunc_t                fIsa_func;
 #endif
       VoidFuncPtr_t            fDictionary_func;
+      Int_t                    fVersion;
 
    public:
       ROOTClassEnhancerInfo(Type& t);
@@ -78,6 +79,7 @@ namespace ROOT { namespace Cintex {
       const Type&   TypeGet() const { return fType; }
       const string& Name() const { return fName; }
       ROOT::TGenericClassInfo* Info() const { return fClassInfo; }
+      Int_t         Version() const {return fVersion;}
 
       void AddFunction( const std::string& Name, const ROOT::Reflex::Type& sig,
                         ROOT::Reflex::StubFunction stubFP, void*  stubCtx, int );
@@ -183,6 +185,15 @@ namespace ROOT { namespace Cintex {
       if ( Cintex::Debug() > 1 )  {
          std::cout << "Cintex: Enhancing:" << nam << std::endl;
       }
+      fVersion = 1;
+      if (TypeGet().Properties().HasProperty("ClassVersion")) {
+         std::stringstream ssVersion(TypeGet().Properties().PropertyAsString("ClassVersion"));
+         if (ssVersion)
+            ssVersion >> fVersion;
+         if ( Cintex::Debug() > 2 )  {
+            cout << "Cintex: ROOTClassEnhancer: setting class version of " << nam << " to " << fVersion << endl;
+         }
+      }
       if ( ! IsSTLext(nam) && (IsSTL(nam) || IsSTLinternal(nam)) )  {
          //--- create TGenericClassInfo Instance
          //createInfo();
@@ -226,6 +237,7 @@ namespace ROOT { namespace Cintex {
 
       ::ROOT::TGenericClassInfo* info = new ::ROOT::TGenericClassInfo(
                                                                       Name().c_str(),                     // Class Name
+                                                                      Version(),                           // class version
                                                                       "",                              // declaration file Name
                                                                       1,                                  // declaration line number
                                                                       TypeGet().TypeInfo(),                  // typeid
