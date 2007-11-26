@@ -28,6 +28,10 @@ E: Ilka.Antcheva@cern.ch
 D: editor of the User's Guide, quality assurance
 D: many contributions to the high level GUIs
 
+N: Silvia Arcelli
+E: Silvia.Arcelli@cern.ch
+D: Contribution to THnSparse
+
 N: Khamit Ardashev
 E: ardashev@legsux5.phy.bnl.gov
 D: Improvements in h2root/hntvar2 to support small integers as shorts
