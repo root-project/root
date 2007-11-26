@@ -213,7 +213,7 @@ struct RedirectHandle_t {
    Int_t     fStdOutDup;   // Duplicated descriptor for stdout
    Int_t     fStdErrDup;   // Duplicated descriptor for stderr
    Int_t     fReadOffSet;  // Offset where to start reading the file (used by ShowOutput(...))
-   RedirectHandle_t(const char *n = 0) : fFile(n), fStdOutDup(-1),
+   RedirectHandle_t(const char *n = 0) : fFile(n), fStdOutTty(), fStdErrTty(), fStdOutDup(-1),
                                          fStdErrDup(-1), fReadOffSet(-1) { }
    void Reset() { fFile = ""; fStdOutTty = ""; fStdErrTty = "";
                   fStdOutDup = -1; fStdErrDup = -1; fReadOffSet = -1; }
@@ -281,7 +281,7 @@ protected:
 
    TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
    TString          fBuildCompiler;    // Compiler used to build this ROOT
-   TString          fBuildCompilerVersion; //Compiler version used to build this ROOT 
+   TString          fBuildCompilerVersion; //Compiler version used to build this ROOT
    TString          fBuildNode;        //Detailed information where ROOT was built
    TString          fBuildDir;         //Location where to build ACLiC shared library and use as scratch area.
    TString          fFlagsDebug;       //Flags for debug compilation
