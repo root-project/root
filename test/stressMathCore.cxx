@@ -1140,9 +1140,9 @@ int testSMatrix(int ngen,bool io) {
    std::cout <<"******************************************************************************\n";
 
    if (io) { 
-      iret = gSystem->Load("libSMatrix");
+      iret = gSystem->Load("libSmatrix");
       if (iret !=0) { 
-         std::cerr <<"Error Loading libSMatrix" << std::endl;
+         std::cerr <<"Error Loading libSmatrix" << std::endl;
          io = false;
       }
    }
