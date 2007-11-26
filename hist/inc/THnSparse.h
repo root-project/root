@@ -73,7 +73,8 @@ class THnSparseArrayChunk: public TObject {
    void AddBin(ULong_t idx, const Char_t* idxbuf);
    void AddBinContent(ULong_t idx, Double_t v = 1.) {
       fContent->SetAt(v + fContent->GetAt(idx), idx);
-      if (fSumw2) fSumw2->AddAt(v * v, idx);
+      if (fSumw2)
+         fSumw2->SetAt(v * v+ fSumw2->GetAt(idx), idx);
    }
    void Sumw2();
    ULong64_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
@@ -100,12 +101,16 @@ class THnSparse: public TNamed {
    TExMap     fBinsContinued;// filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
    Double_t   fEntries;      // number of entries, spread over chunks
    Double_t   fTsumw;        // total sum of weights
-   Double_t   fTsumw2;        // total sum of weights
+   Double_t   fTsumw2;       // total sum of weights squared; -1 if no errors are calculated
    TArrayD    fTsumwx;       // total sum of weight*X for each dimension
    TArrayD    fTsumwx2;      // total sum of weight*X*X for each dimension
    THnSparseCompactBinCoord *fCompactCoord; //! compact coordinate
    Double_t  *fIntegral;     //! array with bin weight sums
-   enum {kNoInt, kValidInt, kInvalidInt} fIntegralStatus; //! status of integral
+   enum {
+      kNoInt,
+      kValidInt,
+      kInvalidInt
+   } fIntegralStatus;        //! status of integral
 
  protected:
    Int_t GetChunkSize() const { return fChunkSize; }
@@ -120,16 +125,19 @@ class THnSparse: public TNamed {
       // Increment the bin content of "bin" by "w",
       // return the bin index.
       fEntries += 1;
-      fTsumw += w;
-      fTsumw2 += w*w;
+      if (GetCalculateErrors()) {
+         fTsumw += w;
+         fTsumw2 += w*w;
+      }
       fIntegralStatus = kInvalidInt;
       THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
       chunk->AddBinContent(bin % fChunkSize, w);
       return bin;
    }
-   THnSparse* CloneEmpty(const char* name, const char* title, Int_t dim,
-                         const Int_t* nbins, const Double_t* xmin,
-                         const Double_t* xmax, Int_t chunksize) const;
+   THnSparse* CloneEmpty(const char* name, const char* title,
+                         const TObjArray* axes, Int_t chunksize) const;
+
+   Bool_t CheckConsistency(const THnSparse *h, Char_t * tag) const;
 
  public:
    THnSparse(const char* name, const char* title, Int_t dim,
@@ -138,14 +146,17 @@ class THnSparse: public TNamed {
    THnSparse();
    virtual ~THnSparse();
 
+   Int_t  GetNChunks() const { return fBinContent.GetEntriesFast(); }
    TObjArray* GetListOfAxes() { return &fAxes; }
    TAxis* GetAxis(Int_t dim) const { return (TAxis*)fAxes[dim]; }
 
    Long_t Fill(const Double_t *x, Double_t w = 1.) {
-      for (Int_t d = 0; d < fNdimensions; ++d) {
-         const Double_t xd = x[d];
-         fTsumwx[d]  += w * xd;
-         fTsumwx2[d] += w * xd * xd;
+      if (GetCalculateErrors()) {
+         for (Int_t d = 0; d < fNdimensions; ++d) {
+            const Double_t xd = x[d];
+            fTsumwx[d]  += w * xd;
+            fTsumwx2[d] += w * xd * xd;
+         }
       }
       return Fill(GetBin(x), w);
    }
@@ -156,12 +167,19 @@ class THnSparse: public TNamed {
    Double_t GetEntries() const { return fEntries; }
    Double_t GetWeightSum() const { return fTsumw; }
    Long64_t GetNbins() const { return fFilledBins; }
-   Int_t   GetNdimensions() const { return fNdimensions; }
+   Int_t    GetNdimensions() const { return fNdimensions; }
+   Bool_t   GetCalculateErrors() const { return fTsumw2 >= 0.; }
+   void     CalculateErrors(Bool_t calc = kTRUE) {
+      // Calculate errors (or not if "calc" == kFALSE)
+      if (calc) Sumw2();
+      else fTsumw2 = -1.;
+   }
 
    Long_t GetBin(const Int_t* idx, Bool_t allocate = kTRUE);
    Long_t GetBin(const Double_t* x, Bool_t allocate = kTRUE);
    Long_t GetBin(const char* name[], Bool_t allocate = kTRUE);
 
+   void SetBinEdges(Int_t idim, const Double_t* bins);
    void SetBinContent(const Int_t* x, Double_t v);
    void SetBinError(const Int_t* x, Double_t e);
    void AddBinContent(const Int_t* x, Double_t v = 1.);
@@ -188,6 +206,15 @@ class THnSparse: public TNamed {
    THnSparse* Projection(Int_t ndim, const Int_t* dim,
                          Option_t* option = "") const;
 
+   THnSparse* Rebin(Int_t group) const;
+   THnSparse* Rebin(const Int_t* group) const;
+
+   void Scale(Double_t c);
+   void Add(const THnSparse* h, Double_t c=1.);
+   void Multiply(const THnSparse* h);
+   void Divide(const THnSparse* h);
+   void Divide(const THnSparse* h1, const THnSparse* h2, Double_t c1 = 1., Double_t c2 = 1., Option_t* option=""); 
+
    void Reset(Option_t* option = "");
    void Sumw2();
 
@@ -204,8 +231,8 @@ class THnSparseT: public THnSparse {
  public:
    THnSparseT() {}
    THnSparseT(const char* name, const char* title, Int_t dim,
-              const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
-              Int_t chunksize = 1024 * 16):
+              const Int_t* nbins, const Double_t* xmin = 0,
+              const Double_t* xmax = 0, Int_t chunksize = 1024 * 16):
       THnSparse(name, title, dim, nbins, xmin, xmax, chunksize) {}
 
    TArray* GenerateArray() const { return new CONT(GetChunkSize()); }
