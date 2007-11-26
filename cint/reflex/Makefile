@@ -1,0 +1,83 @@
+# This is a template for all makefiles.
+
+#Set the list of files to be deleted by clean (Targets can also be specified).:
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
+
+# Set the list of target to make while testing.  By default, mytest is the
+# only target added.  If the name of the target is changed in the rules then
+# the name should be changed accordingly in this list.
+
+# We only run these tests if libCintex exists
+ifneq ($(wildcard $(ROOTSYS)/lib/libCintex.*),)
+TEST_TARGETS += classVersion_rflx
+endif
+
+# Search for Rules.mk in roottest/scripts
+# Algorithm:  Find the current working directory and remove everything after
+#  '*roottest/'.  Append the path for Rules.mk from within roottest, which 
+#  should be 'scripts/Rules.mk'.  The roottest path is saved in the
+#  ROOTTEST_HOME variable for use by the SUBDIRECTORIES variable and is 
+#  exported to eliminate the overhead of findding the path again during 
+#  recursive calls of gmake.
+# Since all makefiles should be under roottest or one of its
+#  subdirectories and all recursions of gmake are called by 
+#    'cd [DIR]; gmake ...'
+#  this algorithm should not fail in finding /roottest/ in the
+#  current working directory.  
+# Issues:  This algorithm will fail if a makefile is called from outside the 
+#  roottest folder, as in executing 'gmake -f ~/roottest/Makefile' from 
+#  the home directory.
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
+# Generic chain of files for running Reflex tests.
+# Naming scheme: MyReflex_test() in MyReflex_test.C tests
+# the dictionary MyReflex_rflx.cxx which is generated from
+# MyReflex.h with MyReflex_selection.xml.
+
+# The dictionary:
+%_rflx.cpp: %_selection.xml %.h
+	$(CMDECHO) genreflex $*.h -s $*_selection.xml > $@.log
+
+# the driver which includes the relevant files for the library:
+%_rflxdriver.C: %_rflx.cpp %_test.C
+	$(CMDECHO) echo '#include "$*_rflx.cpp" // the dictionary' > $@
+	$(CMDECHO) echo '#include "$*_test.C" // the test' >> $@
+	$(CMDECHO) echo 'void $(@:.C=()){ $*_test();} // forward' >> $@
+
+# and the actual test, building and "running" the library
+%_rflx.log: %_rflxdriver.C
+	$(CMDECHO) echo '{gSystem->Load("libCintex"); gROOT->ProcessLine(".x $<+");}' | root -l -b 2>&1 | grep -v 'creating shared' > $@
+
+# The name of this target should be changed according to the test being run.  Any name changes
+#  should also be reflected in the TEST_TARGETS variable above.
+
+classVersion_rflx: classVersion_rflx.log classVersion_rflx.ref
+	$(TestDiff)
+
+
+# Outputs a message if the FAIL variable is null
+
+testWithFailure:
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+endif
+
+
+# Remember that sometest.log can be made automatically from
+#  from runsometest.C
+# This target attempts to create a log file (which should be the output of running the test), and
+#  compares its output with a prebuilt reference file.  The reference file should be copied from
+#  the log files produced during what is considered a successful run of the test.  The testWithDiff
+#  files should be renamed according to the test being run.
+# By default the TestDiff variable is set to compare the .log and .ref files
+# To run a diff and ignore whitespacing use $(TestDiffW)
+
+testWithDiff: testWithDiff.log testWithDiff.ref
+	$(TestDiff)
+
+
