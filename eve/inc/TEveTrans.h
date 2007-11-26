@@ -28,12 +28,12 @@ class TEveTrans : public TObject
    friend class TEveTransEditor;
 
 protected:
-   Double32_t            M[16];
+   Double32_t            fM[16];
 
-   mutable Float_t       mA1;   //!
-   mutable Float_t       mA2;   //!
-   mutable Float_t       mA3;   //!
-   mutable Bool_t        bAsOK; //!
+   mutable Float_t       fA1;   //!
+   mutable Float_t       fA2;   //!
+   mutable Float_t       fA3;   //!
+   mutable Bool_t        fAsOK; //!
 
    // TEveUtil
    Bool_t                fUseTrans;
@@ -86,20 +86,20 @@ public:
 
    // Element access
 
-   Double_t* Array() { return M; }      const Double_t* Array() const { return M; }
-   Double_t* ArrX()  { return M; }      const Double_t* ArrX()  const { return M; }
-   Double_t* ArrY()  { return M +  4; } const Double_t* ArrY()  const { return M +  4; }
-   Double_t* ArrZ()  { return M +  8; } const Double_t* ArrZ()  const { return M +  8; }
-   Double_t* ArrT()  { return M + 12; } const Double_t* ArrT()  const { return M + 12; }
+   Double_t* Array() { return fM; }      const Double_t* Array() const { return fM; }
+   Double_t* ArrX()  { return fM; }      const Double_t* ArrX()  const { return fM; }
+   Double_t* ArrY()  { return fM +  4; } const Double_t* ArrY()  const { return fM +  4; }
+   Double_t* ArrZ()  { return fM +  8; } const Double_t* ArrZ()  const { return fM +  8; }
+   Double_t* ArrT()  { return fM + 12; } const Double_t* ArrT()  const { return fM + 12; }
 
-   Double_t  operator[](Int_t i) const { return M[i]; }
-   Double_t& operator[](Int_t i)       { return M[i]; }
+   Double_t  operator[](Int_t i) const { return fM[i]; }
+   Double_t& operator[](Int_t i)       { return fM[i]; }
 
-   Double_t  CM(Int_t i, Int_t j) const { return M[4*j + i]; }
-   Double_t& CM(Int_t i, Int_t j)       { return M[4*j + i]; }
+   Double_t  CM(Int_t i, Int_t j) const { return fM[4*j + i]; }
+   Double_t& CM(Int_t i, Int_t j)       { return fM[4*j + i]; }
 
-   Double_t  operator()(Int_t i, Int_t j) const { return M[4*j + i - 5]; }
-   Double_t& operator()(Int_t i, Int_t j)       { return M[4*j + i - 5]; }
+   Double_t  operator()(Int_t i, Int_t j) const { return fM[4*j + i - 5]; }
+   Double_t& operator()(Int_t i, Int_t j)       { return fM[4*j + i - 5]; }
 
    // Base-vector interface
 

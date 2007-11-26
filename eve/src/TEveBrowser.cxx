@@ -415,14 +415,14 @@ enum ReveMenu_e {
 
 //______________________________________________________________________________
 TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
-   TRootBrowser(0, "Reve Main Window", w, h, kFALSE),
-   fFileBrowser (0)
+   TRootBrowser(0, "Eve Main Window", w, h, "", kFALSE),
+   fFileBrowser(0)
 {
-   // Construct TEveUtil menu
+   // Construct Eve menu
 
    fRevePopup = new TGPopupMenu(gClient->GetRoot());
-   fRevePopup->AddEntry("New &TEveViewer",      kNewViewer);
-   fRevePopup->AddEntry("New &TEveScene",       kNewScene);
+   fRevePopup->AddEntry("New &Viewer",      kNewViewer);
+   fRevePopup->AddEntry("New &Scene",       kNewScene);
    fRevePopup->AddEntry("New &Projector",   kNewProjector);
    fRevePopup->AddSeparator();
    fRevePopup->AddEntry("New &Browser",     kNewBrowser);
@@ -437,9 +437,7 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    fRevePopup->Connect("Activated(Int_t)", "TEveBrowser",
                        this, "ReveMenu(Int_t)");
 
-   fMenuBar->RemovePopup("Framework");
-   // ?? should disconnect / delete.
-   fMenuBar->AddPopup("&TEveUtil", fRevePopup, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+   fMenuBar->AddPopup("&Eve", fRevePopup, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
 
    fPreMenuFrame->ChangeOptions(fPreMenuFrame->GetOptions() | kRaisedFrame);
    fTopMenuFrame->Layout();
@@ -454,7 +452,7 @@ void TEveBrowser::ReveMenu(Int_t id)
    switch (id)
    {
       case kNewViewer:
-         gEve->SpawnNewViewer("TEveViewer Pepe");
+         gEve->SpawnNewViewer("Viewer Pepe");
          break;
 
       case kNewScene:

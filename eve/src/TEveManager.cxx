@@ -106,9 +106,9 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
 
    // ListTreeEditor
    fBrowser->StartEmbedding(0);
-   fLTEFrame = new TEveGListTreeEditorFrame("REVE");
+   fLTEFrame = new TEveGListTreeEditorFrame("Eve list-tree/editor");
    fBrowser->StopEmbedding();
-   fBrowser->SetTabTitle("TEveUtil", 0);
+   fBrowser->SetTabTitle("Eve", 0);
    fEditor   = fLTEFrame->fEditor;
 
    // GL viewer
@@ -129,7 +129,7 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
    fViewers->IncDenyDestroy();
    AddToListTree(fViewers, kTRUE);
 
-   fViewer  = new TEveViewer("GL-One");
+   fViewer  = new TEveViewer("GLViewer");
    fViewer->SetGLViewer(glv);
    fViewer->IncDenyDestroy();
    AddElement(fViewer, fViewers);
@@ -294,28 +294,30 @@ void TEveManager::ElementChanged(TEveElement* rnr_element)
 //______________________________________________________________________________
 void TEveManager::ScenesChanged(std::list<TEveElement*>& scenes)
 {
+   // Mark all scenes from the given list as changed.
+
    for (TEveElement::List_i s=scenes.begin(); s!=scenes.end(); ++s)
       ((TEveScene*)*s)->Changed();
 }
 
-/******************************************************************************/
-
 
 /******************************************************************************/
+// GUI interface
 /******************************************************************************/
 
 //______________________________________________________________________________
 TGListTree* TEveManager::GetListTree() const
 {
+   // Get default list-tree widget.
+
    return fLTEFrame->fListTree;
 }
 
 TGListTreeItem*
 TEveManager::AddToListTree(TEveElement* re, Bool_t open, TGListTree* lt)
 {
-   // Add rnr-el as a top-level to a list-tree.
-   // Please add a single copy of a render-element as a top level
-   // or we will have to check for that, too.
+   // Add element as a top-level to a list-tree.
+   // Only add a single copy of a render-element as a top level.
 
    if (lt == 0) lt = GetListTree();
    TGListTreeItem* lti = re->AddIntoListTree(lt, (TGListTreeItem*)0);
