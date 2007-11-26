@@ -1,0 +1,10 @@
+
+Processing runsparse.C+...
+Projecting a THnSparse: SUCCESS
+Scaling of THnSparse: SUCCESS
+Cloning of THnSparse: SUCCESS
+Substracting two THnSparse: SUCCESS
+Dividing two THnSparse: SUCCESS
+Error calculation: SUCCESS
+Dividing two THnSparse (binomial): SUCCESS
+Binomial errors of division result: SUCCESS
