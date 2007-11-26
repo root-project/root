@@ -152,6 +152,15 @@ ROOT::Reflex::Reflex::Reflex() {
                          typeid( void ));
    tb->Properties().AddProperty( "Description", "fundamental type" );
 
+      // Large integer definition depends of the platform
+#if defined(_WIN32) && !defined(__CINT__)
+   typedef __int64 longlong;
+   typedef unsigned __int64 ulonglong;
+#else
+   typedef long long int longlong; /* */
+   typedef unsigned long long int /**/ ulonglong;
+#endif
+
    // non fundamental types but also supported at initialisation
    tb = new Fundamental( "longlong", 
                          sizeof( longlong ), 
