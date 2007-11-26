@@ -15,6 +15,7 @@
 #include "CINTdefs.h"
 #include "CINTVariableBuilder.h"
 #include "CINTScopeBuilder.h"
+#include "CINTCommentBuffer.h"
 
 #include "Api.h"
 
@@ -64,26 +65,6 @@ namespace ROOT { namespace Cintex {
       }
       return;
    }
-
-   class CommentBuffer  {
-   private:
-      typedef std::vector<char*> VecC;
-      VecC fC;
-      CommentBuffer() {}
-      ~CommentBuffer()  {
-         for(VecC::iterator i=fC.begin(); i != fC.end(); ++i)
-            delete [] *i;
-         fC.clear();
-      }
-   public:
-      static CommentBuffer& Instance()  {     
-         static CommentBuffer inst;
-         return inst;
-      }
-      void Add(char* cm)  {
-         fC.push_back(cm);
-      }
-   };
 
    void CINTVariableBuilder::Setup(const Member& dm ) {
       // Setup variable info.
@@ -162,6 +143,15 @@ namespace ROOT { namespace Cintex {
       }
 
       if ( type.first == 'u' )  {
+         // Large integer definition depends of the platform
+#if defined(_WIN32) && !defined(__CINT__)
+         typedef __int64 longlong;
+         typedef unsigned __int64 ulonglong;
+#else
+         typedef long long int longlong; /* */
+         typedef unsigned long long int /**/ ulonglong;
+#endif
+
          //dependencies.push_back(indir.second);
          member_tagnum = dm.Properties().HasProperty("iotype") ? CintTag(dm.Properties().PropertyAsString("iotype")) : CintTag(type.second);
          if ( typeid(longlong) == indir.second.TypeInfo() )
