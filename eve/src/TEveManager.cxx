@@ -300,38 +300,6 @@ void TEveManager::ScenesChanged(std::list<TEveElement*>& scenes)
 
 /******************************************************************************/
 
-//______________________________________________________________________________
-int TEveManager::SpawnGuiAndRun(int argc, char **argv)
-{
-   Int_t w = 1024;
-   Int_t h =  768;
-
-   TRint theApp("App", &argc, argv);
-
-   TEveUtil::SetupGUI();
-   /* gEve = */ new TEveManager(w, h);
-
-run_loop:
-   try {
-      theApp.Run();
-   }
-   catch(TEveException& exc) {
-      gEve->SetStatusLine(exc.Data());
-      fprintf(stderr, "Exception: %s\n", exc.Data());
-      goto run_loop;
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-void TEveManager::SpawnGui()
-{
-   Int_t w = 1024;
-   Int_t h =  768;
-
-   TEveUtil::SetupGUI();
-   /* gEve = */ new TEveManager(w, h);
-}
 
 /******************************************************************************/
 /******************************************************************************/
@@ -514,6 +482,29 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
       return gGeoManager;
    }
 }
+
+
+/******************************************************************************/
+// Static initialization.
+/******************************************************************************/
+
+//______________________________________________________________________________
+TEveManager* TEveManager::Create()
+{
+   // If global TEveManager* gEve is not set initialize it.
+   // Returns gEve.
+
+   if (gEve == 0) {
+      Int_t w = 1024;
+      Int_t h =  768;
+
+      TEveUtil::SetupEnvironment();
+      TEveUtil::SetupGUI();
+      gEve = new TEveManager(w, h);
+   }
+   return gEve;
+}
+
 
 /******************************************************************************/
 // Testing exceptions

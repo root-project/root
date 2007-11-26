@@ -1,5 +1,5 @@
-// @(#)root/reve:$Id$
-// Author: Matevz Tadel
+// @(#)root/eve:$Id$
+// Author: Bertrand Bellenot
 
 #include "TCanvas.h"
 #include "TStyle.h"
@@ -547,7 +547,7 @@ Int_t ConvertModel()
       if (strcmp(model.matname, material[i]->name) == 0) {
          ts[nummodels]->SetTransparency(material[i]->transparency);
          ts[nummodels]->SetColor(Color_t(TColor::GetColor(material[i]->color[0], 
-                                 material[i]->color[1], material[i]->color[2])));
+                                                          material[i]->color[1], material[i]->color[2])));
          break;
       }
    }
@@ -557,7 +557,9 @@ Int_t ConvertModel()
 //______________________________________________________________________________
 void view3ds(const char *fname = "nasashuttle.3ds")
 {
-   // main...
+   // Main.
+
+   TEveManager::Create();
 
    Int_t i;
    for (i=0;i<2048;i++) ts[i] = 0;

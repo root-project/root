@@ -1,26 +1,28 @@
-// @(#)root/reve:$Id$
+// @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
 TEveStraightLineSet* lineset_test(Int_t nlines = 40, Int_t nmarkers = 4) 
 {
-  TEveStraightLineSet* ls = new TEveStraightLineSet();
+   TEveManager::Create();
 
-  TRandom r(0);
-  Float_t s = 100;
+   TRandom r(0);
+   Float_t s = 100;
 
-  for(Int_t i = 0; i<nlines; i++)
-  {
-    ls->AddLine( r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s),
-		 r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
-    // add random number of markers
-    Int_t nm = Int_t(nmarkers* r.Rndm());
-    for(Int_t m = 0; m < nm; m++) {
-      ls->AddMarker(i, r.Rndm());
-    }
-  }
+   TEveStraightLineSet* ls = new TEveStraightLineSet();
+
+   for(Int_t i = 0; i<nlines; i++)
+   {
+      ls->AddLine( r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s),
+                   r.Uniform(-s,s), r.Uniform(-s,s), r.Uniform(-s,s));
+      // add random number of markers
+      Int_t nm = Int_t(nmarkers* r.Rndm());
+      for(Int_t m = 0; m < nm; m++) {
+         ls->AddMarker(i, r.Rndm());
+      }
+   }
   
-  gEve->AddElement(ls);
-  gEve->Redraw3D();
+   gEve->AddElement(ls);
+   gEve->Redraw3D();
  
-  return ls;  
+   return ls;  
 }

@@ -139,12 +139,8 @@ public:
    Bool_t GetKeepEmptyCont() const   { return fKeepEmptyCont; }
    void   SetKeepEmptyCont(Bool_t k) { fKeepEmptyCont = k; }
 
-
    void ElementChanged(TEveElement* rnr_element);
    void ScenesChanged(std::list<TEveElement*>& scenes);
-
-   static int  SpawnGuiAndRun(int argc, char **argv);
-   static void SpawnGui();
 
    // These are more like TEveManager stuff.
    TGListTree*     GetListTree() const;
@@ -172,6 +168,8 @@ public:
 
    void SetStatusLine(const char* text);
    void ThrowException(const char* text="foo");
+
+   static TEveManager* Create();
 
    ClassDef(TEveManager, 0); // Reve application manager.
 };
