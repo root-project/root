@@ -27,68 +27,68 @@
 class TEveChunkManager
 {
 private:
-  TEveChunkManager(const TEveChunkManager&);            // Not implemented
-  TEveChunkManager& operator=(const TEveChunkManager&); // Not implemented
+   TEveChunkManager(const TEveChunkManager&);            // Not implemented
+   TEveChunkManager& operator=(const TEveChunkManager&); // Not implemented
 
 protected:
-  Int_t fS;        // Size of atom
-  Int_t fN;        // Number of atoms in a chunk
+   Int_t fS;        // Size of atom
+   Int_t fN;        // Number of atoms in a chunk
 
-  Int_t fSize;     // Size of container, number of atoms
-  Int_t fVecSize;  // Number of allocated chunks
-  Int_t fCapacity; // Available capacity within the chunks
+   Int_t fSize;     // Size of container, number of atoms
+   Int_t fVecSize;  // Number of allocated chunks
+   Int_t fCapacity; // Available capacity within the chunks
 
-  std::vector<TArrayC*> fChunks; // Memory blocks
+   std::vector<TArrayC*> fChunks; // Memory blocks
 
-  void ReleaseChunks();
+   void ReleaseChunks();
 
 public:
-  TEveChunkManager();
-  TEveChunkManager(Int_t atom_size, Int_t chunk_size);
-  virtual ~TEveChunkManager();
+   TEveChunkManager();
+   TEveChunkManager(Int_t atom_size, Int_t chunk_size);
+   virtual ~TEveChunkManager();
 
-  void Reset(Int_t atom_size, Int_t chunk_size);
-  void Refit();
+   void Reset(Int_t atom_size, Int_t chunk_size);
+   void Refit();
 
-  Int_t    S() const { return fS; }
-  Int_t    N() const { return fN; }
+   Int_t    S() const { return fS; }
+   Int_t    N() const { return fN; }
 
-  Int_t    Size()     const { return fSize; }
-  Int_t    VecSize()  const { return fVecSize; }
-  Int_t    Capacity() const { return fCapacity; }
+   Int_t    Size()     const { return fSize; }
+   Int_t    VecSize()  const { return fVecSize; }
+   Int_t    Capacity() const { return fCapacity; }
 
-  Char_t* Atom(Int_t idx)   const { return fChunks[idx/fN]->fArray + idx%fN*fS; }
-  Char_t* Chunk(Int_t chk)  const { return fChunks[chk]->fArray; }
-  Int_t   NAtoms(Int_t chk) const { return (chk < fVecSize-1) ? fN : (fSize-1)%fN + 1; }
+   Char_t* Atom(Int_t idx)   const { return fChunks[idx/fN]->fArray + idx%fN*fS; }
+   Char_t* Chunk(Int_t chk)  const { return fChunks[chk]->fArray; }
+   Int_t   NAtoms(Int_t chk) const { return (chk < fVecSize-1) ? fN : (fSize-1)%fN + 1; }
 
-  Char_t* NewAtom();
-  Char_t* NewChunk();
+   Char_t* NewAtom();
+   Char_t* NewChunk();
 
 
-  // Iterator
+   // Iterator
 
-  struct iterator
-  {
-    TEveChunkManager *fPlex;
-    Char_t           *fCurrent;
-    Int_t             fAtomIndex;
-    Int_t             fNextChunk;
-    Int_t             fAtomsToGo;
+   struct iterator
+   {
+      TEveChunkManager *fPlex;
+      Char_t           *fCurrent;
+      Int_t             fAtomIndex;
+      Int_t             fNextChunk;
+      Int_t             fAtomsToGo;
 
-    iterator(TEveChunkManager* p) :
-      fPlex(p),  fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
-    iterator(TEveChunkManager& p) :
-      fPlex(&p), fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
+      iterator(TEveChunkManager* p) :
+         fPlex(p),  fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
+      iterator(TEveChunkManager& p) :
+         fPlex(&p), fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
 
-    Bool_t  next();
-    void    reset() { fCurrent = 0; fNextChunk = fAtomsToGo = 0; }
+      Bool_t  next();
+      void    reset() { fCurrent = 0; fNextChunk = fAtomsToGo = 0; }
 
-    Char_t* operator()() { return fCurrent; }
-    Char_t* operator*()  { return fCurrent; }
-    Int_t   index()      { return fAtomIndex; }
-  };
+      Char_t* operator()() { return fCurrent; }
+      Char_t* operator*()  { return fCurrent; }
+      Int_t   index()      { return fAtomIndex; }
+   };
 
-  ClassDef(TEveChunkManager, 1); // Vector-like container with chunked memory allocation.
+   ClassDef(TEveChunkManager, 1); // Vector-like container with chunked memory allocation.
 };
 
 
@@ -97,28 +97,28 @@ public:
 //______________________________________________________________________________
 inline Char_t* TEveChunkManager::NewAtom()
 {
-  Char_t *a = (fSize >= fCapacity) ? NewChunk() : Atom(fSize);
-  ++fSize;
-  return a;
+   Char_t *a = (fSize >= fCapacity) ? NewChunk() : Atom(fSize);
+   ++fSize;
+   return a;
 }
 
 //______________________________________________________________________________
 inline Bool_t TEveChunkManager::iterator::next()
 {
-  if (fAtomsToGo <= 0) {
-    if (fNextChunk < fPlex->fVecSize) {
-      fCurrent   = fPlex->Chunk(fNextChunk);
-      fAtomsToGo = fPlex->NAtoms(fNextChunk);
-      ++fNextChunk;
-    } else {
-      return kFALSE;
-    }
-  } else {
-    fCurrent += fPlex->fS;
-  }
-  ++fAtomIndex;
-  --fAtomsToGo;
-  return kTRUE;
+   if (fAtomsToGo <= 0) {
+      if (fNextChunk < fPlex->VecSize()) {
+         fCurrent   = fPlex->Chunk(fNextChunk);
+         fAtomsToGo = fPlex->NAtoms(fNextChunk);
+         ++fNextChunk;
+      } else {
+         return kFALSE;
+      }
+   } else {
+      fCurrent += fPlex->S();
+   }
+   ++fAtomIndex;
+   --fAtomsToGo;
+   return kTRUE;
 }
 
 
@@ -130,20 +130,20 @@ template<class T>
 class TEveChunkVector : public TEveChunkManager
 {
 private:
-  TEveChunkVector(const TEveChunkVector&);            // Not implemented
-  TEveChunkVector& operator=(const TEveChunkVector&); // Not implemented
+   TEveChunkVector(const TEveChunkVector&);            // Not implemented
+   TEveChunkVector& operator=(const TEveChunkVector&); // Not implemented
 
 public:
-  TEveChunkVector()                 : TEveChunkManager() {}
-  TEveChunkVector(Int_t chunk_size) : TEveChunkManager(sizeof(T), chunk_size) {}
-  virtual ~TEveChunkVector() {}
+   TEveChunkVector()                 : TEveChunkManager() {}
+   TEveChunkVector(Int_t chunk_size) : TEveChunkManager(sizeof(T), chunk_size) {}
+   virtual ~TEveChunkVector() {}
 
-  void Reset(Int_t chunk_size) { Reset(sizeof(T), chunk_size); }
+   void Reset(Int_t chunk_size) { Reset(sizeof(T), chunk_size); }
 
-  T* At(Int_t idx)  { return reinterpret_cast<T*>(Atom(idx)); }
-  T& Ref(Int_t idx) { return *At(idx); }
+   T* At(Int_t idx)  { return reinterpret_cast<T*>(Atom(idx)); }
+   T& Ref(Int_t idx) { return *At(idx); }
 
-  ClassDef(TEveChunkVector, 1); // Templated class for specific atom classes (given as template argument).
+   ClassDef(TEveChunkVector, 1); // Templated class for specific atom classes (given as template argument).
 };
 
 #endif

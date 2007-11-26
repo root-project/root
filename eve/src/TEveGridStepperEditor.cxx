@@ -31,14 +31,9 @@ ClassImp(TEveGridStepperSubEditor)
 //______________________________________________________________________________
 TEveGridStepperSubEditor::TEveGridStepperSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
-   fM             (0),
-
-   fNx            (0),
-   fNy            (0),
-   fNz            (0),
-   fDx            (0),
-   fDy            (0),
-   fDz            (0)
+   fM (0),
+   fNx(0), fNy(0), fNz(0),
+   fDx(0), fDy(0), fDz(0)
 {
    Int_t labelW = 15;
 
@@ -127,13 +122,13 @@ void TEveGridStepperSubEditor::SetModel(TEveGridStepper* m)
    // Set model object.
    fM = m;
 
-   fNx->SetValue(m->Nx);
-   fNy->SetValue(m->Ny);
-   fNz->SetValue(m->Nz);
+   fNx->SetValue(fM->fNx);
+   fNy->SetValue(fM->fNy);
+   fNz->SetValue(fM->fNz);
 
-   fDx->SetValue(m->Dx);
-   fDy->SetValue(m->Dy);
-   fDz->SetValue(m->Dz);
+   fDx->SetValue(fM->fDx);
+   fDy->SetValue(fM->fDy);
+   fDz->SetValue(fM->fDz);
 }
 
 //______________________________________________________________________________

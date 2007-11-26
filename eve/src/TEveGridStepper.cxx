@@ -23,55 +23,56 @@ ClassImp(TEveGridStepper)
 //______________________________________________________________________________
 TEveGridStepper::TEveGridStepper(Int_t sm) :
    Mode(StepMode_e(sm)),
-   nx(0), ny(0), nz(0), Nx(0), Ny(0), Nz(0),
-   Dx(0), Dy(0), Dz(0), Ox(0), Oy(0), Oz(0)
+   fCx(0), fCy(0), fCz(0), fNx(0), fNy(0), fNz(0),
+   fDx(0), fDy(0), fDz(0), fOx(0), fOy(0), fOz(0)
 {
    switch(Mode) {
       default:
       case SM_XYZ:
-         ls[0] = &Nx; ls[1] = &Ny; ls[2] = &Nz;
-         ns[0] = &nx; ns[1] = &ny; ns[2] = &nz;
+         fLimitArr[0] = &fNx; fLimitArr[1] = &fNy; fLimitArr[2] = &fNz;
+         fValueArr[0] = &fCx; fValueArr[1] = &fCy; fValueArr[2] = &fCz;
          break;
       case SM_YXZ:
-         ls[0] = &Ny; ls[1] = &Nx; ls[2] = &Nz;
-         ns[0] = &ny; ns[1] = &nx; ns[2] = &nz;
+         fLimitArr[0] = &fNy; fLimitArr[1] = &fNx; fLimitArr[2] = &fNz;
+         fValueArr[0] = &fCy; fValueArr[1] = &fCx; fValueArr[2] = &fCz;
          break;
       case SM_XZY:
-         ls[0] = &Nx; ls[1] = &Nz; ls[2] = &Ny;
-         ns[0] = &nx; ns[1] = &nz; ns[2] = &ny;
+         fLimitArr[0] = &fNx; fLimitArr[1] = &fNz; fLimitArr[2] = &fNy;
+         fValueArr[0] = &fCx; fValueArr[1] = &fCz; fValueArr[2] = &fCy;
          break;
    }
 
-   nx = ny = nz = 0;
-   Nx = Ny = Nz = 16;
-   Dx = Dy = Dz = 1;
-   Ox = Oy = Oz = 0;
+   fCx = fCy = fCz = 0;
+   fNx = fNy = fNz = 16;
+   fDx = fDy = fDz = 1;
+   fOx = fOy = fOz = 0;
 }
 
 //______________________________________________________________________________
 void TEveGridStepper::Reset()
 {
-   nx = ny = nz = 0;
+   fCx = fCy = fCz = 0;
 }
 
 //______________________________________________________________________________
 void TEveGridStepper::Subtract(TEveGridStepper& s)
 {
-   Ox = -(s.Ox + s.nx*s.Dx);
-   Oy = -(s.Oy + s.ny*s.Dy);
-   Oz = -(s.Oz + s.nz*s.Dz);
+   fOx = -(s.fOx + s.fCx*s.fDx);
+   fOy = -(s.fOy + s.fCy*s.fDy);
+   fOz = -(s.fOz + s.fCz*s.fDz);
 }
+
 /******************************************************************************/
 
 //______________________________________________________________________________
 Bool_t TEveGridStepper::Step()
 {
-   (*ns[0])++;
-   if (*ns[0] >= *ls[0]) {
-      *ns[0] = 0; (*ns[1])++;
-      if (*ns[1] >= *ls[1]) {
-         *ns[1] = 0; (*ns[2])++;
-         if (*ns[2] >= *ls[2]) {
+   (*fValueArr[0])++;
+   if (*fValueArr[0] >= *fLimitArr[0]) {
+      *fValueArr[0] = 0; (*fValueArr[1])++;
+      if (*fValueArr[1] >= *fLimitArr[1]) {
+         *fValueArr[1] = 0; (*fValueArr[2])++;
+         if (*fValueArr[2] >= *fLimitArr[2]) {
             return kFALSE;
          }
       }
@@ -84,13 +85,15 @@ Bool_t TEveGridStepper::Step()
 //______________________________________________________________________________
 void TEveGridStepper::GetPosition(Float_t* p)
 {
-   p[0] = Ox + nx*Dx; p[1] = Oy + ny*Dy; p[2] = Oz + nz*Dz;
+   p[0] = fOx + fCx*fDx;
+   p[1] = fOy + fCy*fDy;
+   p[2] = fOz + fCz*fDz;
 }
 
 //______________________________________________________________________________
 void TEveGridStepper::SetTrans(TEveTrans* mx)
 {
-   mx->SetPos(Ox + nx*Dx, Oy + ny*Dy, Oz + nz*Dz);
+   mx->SetPos(fOx + fCx*fDx, fOy + fCy*fDy, fOz + fCz*fDz);
 }
 
 //______________________________________________________________________________

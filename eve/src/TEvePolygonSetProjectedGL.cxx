@@ -33,11 +33,15 @@ TEvePolygonSetProjectedGL::TEvePolygonSetProjectedGL() : TGLObject()
 
 //______________________________________________________________________________
 TEvePolygonSetProjectedGL::~TEvePolygonSetProjectedGL()
-{}
+{
+   // Destructor. Noop.
+}
 
 /******************************************************************************/
 Bool_t TEvePolygonSetProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
+   // Set model object.
+
    return SetModelCheckClass(obj, TEvePolygonSetProjected::Class());
 }
 
@@ -46,12 +50,17 @@ Bool_t TEvePolygonSetProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/
 //______________________________________________________________________________
 void TEvePolygonSetProjectedGL::SetBBox()
 {
+   // Setup bounding-box information.
+
    SetAxisAlignedBBox(((TEvePolygonSetProjected*)fExternalObj)->AssertBBox());
 }
 
 /******************************************************************************/
+
 static GLUtriangulatorObj *GetTesselator()
 {
+   // Return default static GLU triangulator object.
+
    static struct Init {
       Init()
       {
@@ -67,9 +76,9 @@ static GLUtriangulatorObj *GetTesselator()
          if (!fTess) {
             Error("GetTesselator::Init", "could not create tesselation object");
          } else {
-            gluTessCallback(fTess, (GLenum)GLU_BEGIN, (tessfuncptr_t)glBegin);
-            gluTessCallback(fTess, (GLenum)GLU_END, (tessfuncptr_t)glEnd);
-            gluTessCallback(fTess, (GLenum)GLU_VERTEX, (tessfuncptr_t)glVertex3fv);
+            gluTessCallback(fTess, (GLenum)GLU_BEGIN,  (tessfuncptr_t) glBegin);
+            gluTessCallback(fTess, (GLenum)GLU_END,    (tessfuncptr_t) glEnd);
+            gluTessCallback(fTess, (GLenum)GLU_VERTEX, (tessfuncptr_t) glVertex3fv);
          }
       }
       ~Init()
@@ -78,7 +87,7 @@ static GLUtriangulatorObj *GetTesselator()
             gluDeleteTess(fTess);
       }
       GLUtriangulatorObj *fTess;
-   }singleton;
+   } singleton;
 
    return singleton.fTess;
 }
@@ -88,7 +97,8 @@ static GLUtriangulatorObj *GetTesselator()
 //______________________________________________________________________________
 void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 {
-   //  printf("TEvePolygonSetProjectedGL::DirectDraw %s \n",fExternalObj->GetName() );
+   // Do GL rendering.
+
    TEvePolygonSetProjected& PS = * (TEvePolygonSetProjected*) fExternalObj;
    if(PS.fPols.size() == 0) return;
 

@@ -76,7 +76,7 @@ public:
 
    virtual const char* what() const throw () { return Data(); }
 
-   ClassDef(TEveException, 1); // Exception-type thrown by TEveUtil functions and classes.
+   ClassDef(TEveException, 1); // Exception-type thrown by Eve classes.
 };
 
 TEveException operator+(const TEveException &s1, const std::string  &s2);

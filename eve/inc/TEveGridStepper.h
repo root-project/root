@@ -20,32 +20,37 @@ class TEveTrans;
 
 class TEveGridStepper : public TObject
 {
+   friend class TEveGridStepperSubEditor;
+
 private:
-   Int_t *ls[3], *ns[3]; //! Internal traversal variables.
+   Int_t *fLimitArr[3], *fValueArr[3]; //! Internal traversal variables.
 
    TEveGridStepper(const TEveGridStepper&);            // Not implemented
    TEveGridStepper& operator=(const TEveGridStepper&); // Not implemented
 
 public:
    enum StepMode_e { SM_XYZ, SM_YXZ, SM_XZY };
-   StepMode_e Mode;      // Stepping mode, order of filling.
 
-   Int_t   nx, ny, nz;   // Current positions during filling / traversal.
-   Int_t   Nx, Ny, Nz;   // Number of slots in eaxh direction.
-   Float_t Dx, Dy, Dz;   // Step size in each direction.
-   Float_t Ox, Oy, Oz;   // Initial offset for each direction.
+protected:
+   StepMode_e Mode;         // Stepping mode, order of filling.
 
+   Int_t   fCx, fCy, fCz;   // Current positions during filling / traversal.
+   Int_t   fNx, fNy, fNz;   // Number of slots in each direction.
+   Float_t fDx, fDy, fDz;   // Step size in each direction.
+   Float_t fOx, fOy, fOz;   // Initial offset for each direction.
+
+public:
    TEveGridStepper(Int_t sm=SM_XYZ);
    virtual ~TEveGridStepper() {}
 
    void Reset();
    void Subtract(TEveGridStepper& s);
    void SetNs(Int_t nx, Int_t ny, Int_t nz=1)
-   { Nx = nx; Ny = ny; Nz = nz; }
+   { fNx = nx; fNy = ny; fNz = nz; }
    void SetDs(Float_t dx, Float_t dy, Float_t dz=0)
-   { Dx = dx; Dy = dy; Dz = dz; }
+   { fDx = dx; fDy = dy; fDz = dz; }
    void SetOs(Float_t ox, Float_t oy, Float_t oz=0)
-   { Ox = ox; Oy = oy; Oz = oz; }
+   { fOx = ox; fOy = oy; fOz = oz; }
 
    Bool_t Step();
 

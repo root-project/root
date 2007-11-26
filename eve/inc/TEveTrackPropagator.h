@@ -52,6 +52,7 @@ protected:
       Vertex4D& operator += (const Vertex4D & b)
       { x += b.x; y += b.y; z += b.z; t += b.t; return *this; }
    };
+   friend struct Vertex4D;
 
    struct Helix
    {
@@ -72,6 +73,7 @@ protected:
       void Step(Vertex4D& v, TEveVector& p);
       void StepVertex(Vertex4D& v, TEveVector& p, Vertex4D& forw);
    };
+   friend struct Helix;
 
 private:
    TEveTrackPropagator(const TEveTrackPropagator&);            // Not implemented
