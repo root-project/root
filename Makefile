@@ -75,7 +75,7 @@ endif
 endif
 ifeq ($(BUILDGL),yes)
 ifeq ($(BUILDFTGL),yes)
-MODULES      += ftgl
+MODULES      += ftgl eve
 endif
 MODULES      += gl
 endif
@@ -219,7 +219,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofitcore roofit \
-                minuit2 monalisa fftw odbc unuran gdml g4root cint7
+                minuit2 monalisa fftw odbc unuran gdml eve g4root cint7
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -1077,7 +1077,7 @@ showbuild:
 showit:
 	@echo "Modules:$(word 1, $(MODULES))"
 	@$(foreach m, $(filter-out $(word 1, $(MODULES)), $(MODULES)), \
-	  echo -e "\t$(m)" ;) 
+	  echo -e "\t$(m)" ;)
 	@echo "Libraries:$(word 1, $(ALLLIBS))"
 	@$(foreach l, $(filter-out $(word 1, $(ALLLIBS)), $(ALLLIBS)), \
-	  echo -e "\t$(l)" ;) 
+	  echo -e "\t$(l)" ;)
