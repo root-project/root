@@ -203,6 +203,13 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    }
 
    WindowAttributes_t attributes;
+   // Initialize some values - needed for batch mode!
+   attributes.fX      = 0;
+   attributes.fY      = 0;
+   attributes.fWidth  = 100;
+   attributes.fHeight = 100;
+   attributes.fBorderWidth = 4;
+   attributes.fYourEventMask = 0;
    gVirtualX->GetWindowAttributes(id, attributes);
 
    fDNDState    = 0;
