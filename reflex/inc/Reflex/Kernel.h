@@ -117,6 +117,12 @@
 namespace ROOT {
    namespace Reflex {
 
+#if 0
+      // The definition of ROOT::Reflex::longlong is now removed.
+      // It is not needed by the Reflex API, and it interfers
+      // with user code defining its own longlong, because
+      // the dictionaries pull it in via "using namespace ROOT::Reflex".
+
       // Large integer definition depends of the platform
 #if defined(_WIN32) && !defined(__CINT__)
       typedef __int64 longlong;
@@ -124,6 +130,7 @@ namespace ROOT {
 #else
       typedef long long int longlong; /* */
       typedef unsigned long long int /**/ ulonglong;
+#endif
 #endif
 
       // forward declarations
