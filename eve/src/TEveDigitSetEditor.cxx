@@ -9,25 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveDigitSetEditor.h>
-#include <TEveDigitSet.h>
+#include "TEveDigitSetEditor.h"
+#include "TEveDigitSet.h"
 
-#include <TEveGValuators.h>
-#include <TEveTransEditor.h>
-#include <TEveRGBAPaletteEditor.h>
-#include <TEveGedEditor.h>
+#include "TEveGValuators.h"
+#include "TEveTransEditor.h"
+#include "TEveRGBAPaletteEditor.h"
+#include "TEveGedEditor.h"
 
-#include <TVirtualPad.h>
-#include <TColor.h>
-#include <TH1F.h>
-#include <TStyle.h>
+#include "TVirtualPad.h"
+#include "TColor.h"
+#include "TH1F.h"
+#include "TStyle.h"
 
-#include <TGLabel.h>
-#include <TG3DLine.h>
-#include <TGButton.h>
-#include <TGNumberEntry.h>
-#include <TGColorSelect.h>
-#include <TGDoubleSlider.h>
+#include "TGLabel.h"
+#include "TG3DLine.h"
+#include "TGButton.h"
+#include "TGNumberEntry.h"
+#include "TGColorSelect.h"
+#include "TGDoubleSlider.h"
 
 //______________________________________________________________________________
 // TEveDigitSetEditor

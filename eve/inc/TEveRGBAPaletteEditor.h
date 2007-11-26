@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveRGBAPaletteEditor
 #define ROOT_TEveRGBAPaletteEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGCheckButton;
 class TGColorSelect;

@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTrackProjected.h>
-#include <TEveTrackPropagator.h>
-#include <TEveProjectionManager.h>
-#include <TEveVSDStructs.h>
+#include "TEveTrackProjected.h"
+#include "TEveTrackPropagator.h"
+#include "TEveProjectionManager.h"
+#include "TEveVSDStructs.h"
 
 //______________________________________________________________________________
 // TEveTrackProjected
@@ -110,7 +110,7 @@ Int_t  TEveTrackProjected::GetBreakPointIdx(Int_t start)
       {
          GetPoint(i,   v1.x, v1.y, v1.z);
          GetPoint(i+1, v2.x, v2.y, v2.z);
-         if(fProjection->AcceptSegment(v1, v2, fPropagator->fDelta) == kFALSE)
+         if(fProjection->AcceptSegment(v1, v2, fPropagator->GetDelta()) == kFALSE)
          {
             val = i;
             break;

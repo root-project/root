@@ -12,12 +12,12 @@
 #ifndef ROOT_TEveProjectionManager
 #define ROOT_TEveProjectionManager
 
-#include <TAtt3D.h>
-#include <TAttBBox.h>
+#include "TAtt3D.h"
+#include "TAttBBox.h"
 
-#include <TEveElement.h>
-#include <TEveProjections.h>
-#include <TEveVSDStructs.h>
+#include "TEveElement.h"
+#include "TEveProjections.h"
+#include "TEveVSDStructs.h"
 
 class TEveProjectionManager : public TEveElementList,
                               public TAttBBox,

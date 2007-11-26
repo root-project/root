@@ -12,9 +12,9 @@
 #ifndef ROOT_TEveRGBAPalette
 #define ROOT_TEveRGBAPalette
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
-#include <TObject.h>
+#include "TObject.h"
 
 class TEveRGBAPalette : public TObject, public TEveRefCnt
 {

@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveDigitSet.h>
+#include "TEveDigitSet.h"
 
-#include <TEveManager.h>
+#include "TEveManager.h"
 
-#include <TColor.h>
+#include "TColor.h"
 
-#include <TBuffer3D.h>
-#include <TBuffer3DTypes.h>
-#include <TVirtualPad.h>
-#include <TVirtualViewer3D.h>
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
 
 //______________________________________________________________________________
 // TEveDigitSet

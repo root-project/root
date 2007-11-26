@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveTreeTools
 #define ROOT_TEveTreeTools
 
-#include <TSelectorDraw.h>
-#include <TEventList.h>
+#include "TSelectorDraw.h"
+#include "TEventList.h"
 
 /******************************************************************************/
 // TEveSelectorToEventList

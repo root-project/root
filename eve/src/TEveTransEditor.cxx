@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTransEditor.h>
-#include <TEveTrans.h>
-#include <TEveGValuators.h>
+#include "TEveTransEditor.h"
+#include "TEveTrans.h"
+#include "TEveGValuators.h"
 
-#include <TVirtualPad.h>
-#include <TMath.h>
+#include "TVirtualPad.h"
+#include "TMath.h"
 
-#include <TGButton.h>
+#include "TGButton.h"
 
 //______________________________________________________________________________
 // TEveTransSubEditor

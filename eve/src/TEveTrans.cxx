@@ -35,10 +35,10 @@
 // Shorthands in method-names:
 // LF ~ LocalFrame; PF ~ ParentFrame; IP ~ InPlace
 
-#include <TEveTrans.h>
-#include <TEveUtil.h>
-#include <TMath.h>
-#include <TClass.h>
+#include "TEveTrans.h"
+#include "TEveUtil.h"
+#include "TMath.h"
+#include "TClass.h"
 
 #include <ctype.h>
 
@@ -740,8 +740,8 @@ ostream& operator<<(ostream& s, const TEveTrans& t) {
 // TEveUtil stuff
 /******************************************************************************/
 
-#include <TGeoMatrix.h>
-#include <TBuffer3D.h>
+#include "TGeoMatrix.h"
+#include "TBuffer3D.h"
 
 void TEveTrans::SetFrom(Double_t* carr)
 {

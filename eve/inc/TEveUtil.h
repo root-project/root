@@ -12,15 +12,15 @@
 #ifndef ROOT_TEveUtil
 #define ROOT_TEveUtil
 
+#include "TObject.h"
+#include "TString.h"
+#include "TError.h"
+
+#include "GuiTypes.h"
+
 #include <exception>
 #include <list>
 #include <set>
-
-#include <TObject.h>
-#include <TString.h>
-#include <TError.h>
-#include <Gtypes.h>
-#include <GuiTypes.h>
 
 class TVirtualPad;
 class TGeoManager;

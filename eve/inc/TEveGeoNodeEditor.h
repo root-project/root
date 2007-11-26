@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveGeoNodeEditor
 #define ROOT_TEveGeoNodeEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGCheckButton;
 class TGNumberEntry;

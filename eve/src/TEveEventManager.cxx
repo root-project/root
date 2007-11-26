@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveEventManager.h>
+#include "TEveEventManager.h"
 
-#include <TObjString.h>
-#include <TCint.h>
+#include "TObjString.h"
+#include "TCint.h"
 
 //______________________________________________________________________________
 // TEveEventManager

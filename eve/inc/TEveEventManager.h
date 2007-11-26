@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveEventManager
 #define ROOT_TEveEventManager
 
-#include <TEveElement.h>
-#include <TList.h>
+#include "TEveElement.h"
+#include "TList.h"
 
 class TEveEventManager : public TEveElementList
 {

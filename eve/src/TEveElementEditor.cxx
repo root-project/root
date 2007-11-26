@@ -9,18 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveElementEditor.h>
-#include <TEveElement.h>
-#include <TEveTransEditor.h>
+#include "TEveElementEditor.h"
+#include "TEveElement.h"
+#include "TEveTransEditor.h"
 
-#include <TVirtualPad.h>
-#include <TColor.h>
+#include "TVirtualPad.h"
+#include "TColor.h"
 
-#include <TGLabel.h>
-#include <TGButton.h>
-#include <TGNumberEntry.h>
-#include <TGColorSelect.h>
-#include <TGDoubleSlider.h>
+#include "TGLabel.h"
+#include "TGButton.h"
+#include "TGNumberEntry.h"
+#include "TGColorSelect.h"
+#include "TGDoubleSlider.h"
 
 //______________________________________________________________________________
 // TEveElementEditor

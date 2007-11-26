@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveVSD.h>
-#include <TFile.h>
+#include "TEveVSD.h"
+#include "TFile.h"
 
 //______________________________________________________________________________
 // TEveVSD

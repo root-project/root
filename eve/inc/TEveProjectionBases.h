@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveProjectionBases
 #define ROOT_TEveProjectionBases
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
 #include <list>
 

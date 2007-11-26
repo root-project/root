@@ -12,13 +12,13 @@
 #ifndef ROOT_TEvePointSet
 #define ROOT_TEvePointSet
 
-#include <TEveVSDStructs.h>
-#include <TEveElement.h>
-#include <TEveProjectionBases.h>
-#include <TEveTreeTools.h>
+#include "TEveVSDStructs.h"
+#include "TEveElement.h"
+#include "TEveProjectionBases.h"
+#include "TEveTreeTools.h"
 
-#include <TPointSet3D.h>
-#include <TArrayI.h>
+#include "TPointSet3D.h"
+#include "TArrayI.h"
 
 class TTree;
 class TF3;

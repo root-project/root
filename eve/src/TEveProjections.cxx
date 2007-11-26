@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveProjections.h>
-#include <TEveUtil.h>
+#include "TEveProjections.h"
+#include "TEveUtil.h"
 
 //______________________________________________________________________________
 // TEveProjection

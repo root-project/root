@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveFrameBox.h>
-#include <TColor.h>
+#include "TEveFrameBox.h"
+#include "TColor.h"
 
 //______________________________________________________________________________
 // TEveFrameBox

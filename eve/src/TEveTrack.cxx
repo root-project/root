@@ -9,20 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTrack.h>
-#include <TEveTrackPropagator.h>
-#include <TEvePointSet.h>
+#include "TEveTrack.h"
+#include "TEveTrackPropagator.h"
+#include "TEvePointSet.h"
 
-#include <TPolyLine3D.h>
-#include <TMarker.h>
-#include <TPolyMarker3D.h>
-#include <TColor.h>
+#include "TPolyLine3D.h"
+#include "TMarker.h"
+#include "TPolyMarker3D.h"
+#include "TColor.h"
 
 // Updates
-#include <TEveManager.h>
-#include <TEveBrowser.h>
-#include <TEveTrackProjected.h>
-#include <TCanvas.h>
+#include "TEveManager.h"
+#include "TEveBrowser.h"
+#include "TEveTrackProjected.h"
+#include "TCanvas.h"
 
 #include <vector>
 #include <algorithm>
@@ -269,8 +269,10 @@ void TEveTrack::MakeTrack(Bool_t recurse)
    Reset(0);
 
    TEveTrackPropagator& RS((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefStyle);
-   if ((TMath::Abs(fV.z) < RS.fMaxZ) &&
-       (fV.x*fV.x + fV.y*fV.y < RS.fMaxR*RS.fMaxR))
+
+   const Float_t maxRsq = RS.GetMaxR() * RS.GetMaxR();
+
+   if (TMath::Abs(fV.z) < RS.GetMaxZ() && fV.x*fV.x + fV.y*fV.y < maxRsq)
    {
       TEveVector currP = fP;
       Bool_t decay = kFALSE;
@@ -278,30 +280,30 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       for (std::vector<TEvePathMark*>::iterator i=fPathMarks.begin(); i!=fPathMarks.end(); ++i)
       {
          TEvePathMark* pm = *i;
-         if (RS.fFitReferences && pm->type == TEvePathMark::Reference)
+         if (RS.GetFitReferences() && pm->type == TEvePathMark::Reference)
          {
-            if (TMath::Abs(pm->V.z) > RS.fMaxZ ||
-               TMath::Sqrt(pm->V.x*pm->V.x + pm->V.y*pm->V.y) > RS.fMaxR)
+            if (TMath::Abs(pm->V.z) > RS.GetMaxZ() ||
+               pm->V.x*pm->V.x + pm->V.y*pm->V.y > maxRsq)
                goto bounds;
             // printf("%s fit reference  \n", fName.Data());
             if (fPropagator->GoToVertex(pm->V, currP)) {
                currP.x = pm->P.x; currP.y = pm->P.y; currP.z = pm->P.z;
             }
          }
-         else if (RS.fFitDaughters &&  pm->type == TEvePathMark::Daughter)
+         else if (RS.GetFitDaughters() &&  pm->type == TEvePathMark::Daughter)
          {
-            if (TMath::Abs(pm->V.z) > RS.fMaxZ ||
-                TMath::Sqrt(pm->V.x*pm->V.x + pm->V.y*pm->V.y) > RS.fMaxR)
+            if (TMath::Abs(pm->V.z) > RS.GetMaxZ() ||
+                pm->V.x*pm->V.x + pm->V.y*pm->V.y > maxRsq)
                goto bounds;
             // printf("%s fit daughter  \n", fName.Data());
             if (fPropagator->GoToVertex(pm->V, currP)) {
                currP.x -= pm->P.x; currP.y -= pm->P.y; currP.z -= pm->P.z;
             }
          }
-         else if (RS.fFitDecay &&  pm->type == TEvePathMark::Decay)
+         else if (RS.GetFitDecay() &&  pm->type == TEvePathMark::Decay)
          {
-            if (TMath::Abs(pm->V.z) > RS.fMaxZ ||
-                TMath::Sqrt(pm->V.x*pm->V.x + pm->V.y*pm->V.y) > RS.fMaxR)
+            if (TMath::Abs(pm->V.z) > RS.GetMaxZ() ||
+                pm->V.x*pm->V.x + pm->V.y*pm->V.y > maxRsq)
                goto bounds;
             // printf("%s fit decay \n", fName.Data());
             fPropagator->GoToVertex(pm->V, currP);
@@ -311,7 +313,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       } // loop path-marks
 
    bounds:
-      if(!decay || RS.fFitDecay == kFALSE)
+      if(!decay || RS.GetFitDecay() == kFALSE)
       {
          // printf("%s loop to bounds  \n",fName.Data() );
          fPropagator->GoToBounds(currP);
@@ -1119,7 +1121,7 @@ TClass* TEveTrackList::ProjectedClass() const
 /******************************************************************************/
 /******************************************************************************/
 
-#include <TEveGedEditor.h>
+#include "TEveGedEditor.h"
 
 //______________________________________________________________________________
 // TEveTrackCounter

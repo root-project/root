@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveBoxSetGL.h>
-#include <TEveBoxSet.h>
+#include "TEveBoxSetGL.h"
+#include "TEveBoxSet.h"
 
-#include <TGLIncludes.h>
-#include <TGLRnrCtx.h>
-#include <TGLScene.h>
-#include <TGLSelectRecord.h>
-#include <TGLContext.h>
+#include "TGLIncludes.h"
+#include "TGLRnrCtx.h"
+#include "TGLScene.h"
+#include "TGLSelectRecord.h"
+#include "TGLContext.h"
 
 //______________________________________________________________________________
 // TEveBoxSetGL

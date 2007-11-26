@@ -12,9 +12,9 @@
 #ifndef ROOT_TEveMacro
 #define ROOT_TEveMacro
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
-#include <TMacro.h>
+#include "TMacro.h"
 
 class TEveMacro : public TMacro
 {

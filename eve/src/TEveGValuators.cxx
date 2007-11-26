@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveGValuators.h>
+#include "TEveGValuators.h"
 
-#include <TMath.h>
-#include <TGLabel.h>
-#include <TGSlider.h>
-#include <TGDoubleSlider.h>
+#include "TMath.h"
+#include "TGLabel.h"
+#include "TGSlider.h"
+#include "TGDoubleSlider.h"
 
 
 //______________________________________________________________________________

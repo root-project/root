@@ -12,11 +12,11 @@
 #ifndef ROOT_TEveManager
 #define ROOT_TEveManager
 
-#include <TClass.h>
-#include <TGeoManager.h>
-#include <TROOT.h>
-#include <TTimer.h>
-#include <TVirtualPad.h>
+#include "TClass.h"
+#include "TGeoManager.h"
+#include "TROOT.h"
+#include "TTimer.h"
+#include "TVirtualPad.h"
 
 #include <list>
 #include <map>

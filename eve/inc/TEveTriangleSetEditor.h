@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveTriangleSetEditor
 #define ROOT_TEveTriangleSetEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGCheckButton;
 class TGNumberEntry;

@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveProjectionManager.h>
-#include <TEveManager.h>
-#include <TEveProjectionBases.h>
+#include "TEveProjectionManager.h"
+#include "TEveManager.h"
+#include "TEveProjectionBases.h"
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include <TVirtualPad.h>
-#include <TVirtualViewer3D.h>
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
 
 #include <list>
 

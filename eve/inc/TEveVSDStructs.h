@@ -12,10 +12,10 @@
 #ifndef ROOT_TEveVSDStructs
 #define ROOT_TEveVSDStructs
 
-#include <TObject.h>
-#include <TMath.h>
+#include "TObject.h"
+#include "TMath.h"
 
-#include <TParticle.h>
+#include "TParticle.h"
 
 /******************************************************************************/
 // VSD Structures

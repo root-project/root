@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveProjectionManagerGL
 #define ROOT_TEveProjectionManagerGL
 
-#include <TGLObject.h>
-#include <TEveElement.h>
+#include "TGLObject.h"
+#include "TEveElement.h"
 
 class TGLViewer;
 class TGLScene;

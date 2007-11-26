@@ -12,7 +12,7 @@
 #ifndef ROOT_TEvePointSetProjectedGL
 #define ROOT_TEvePointSetProjectedGL
 
-#include <TPointSet3DGL.h>
+#include "TPointSet3DGL.h"
 
 class TGLViewer;
 class TGLScene;

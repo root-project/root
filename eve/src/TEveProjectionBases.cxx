@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEvePolygonSetProjected.h>
-#include <TEveProjectionBases.h>
+#include "TEvePolygonSetProjected.h"
+#include "TEveProjectionBases.h"
 
 //______________________________________________________________________________
 // TEveProjectable

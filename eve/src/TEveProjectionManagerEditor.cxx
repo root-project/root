@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveProjectionManagerEditor.h>
-#include <TEveProjectionManager.h>
+#include "TEveProjectionManagerEditor.h"
+#include "TEveProjectionManager.h"
 
-#include <TEveGValuators.h>
+#include "TEveGValuators.h"
 
-#include <TColor.h>
-#include <TGNumberEntry.h>
-#include <TGColorSelect.h>
-#include <TGComboBox.h>
-#include <TGLabel.h>
-#include <TG3DLine.h>
+#include "TColor.h"
+#include "TGNumberEntry.h"
+#include "TGColorSelect.h"
+#include "TGComboBox.h"
+#include "TGLabel.h"
+#include "TG3DLine.h"
 
 //______________________________________________________________________________
 // TEveProjectionManagerEditor

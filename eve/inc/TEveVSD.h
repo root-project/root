@@ -12,9 +12,9 @@
 #ifndef ROOT_TEveVSD
 #define ROOT_TEveVSD
 
-#include <TEveUtil.h>
-#include <TEveVSDStructs.h>
-#include <TTree.h>
+#include "TEveUtil.h"
+#include "TEveVSDStructs.h"
+#include "TTree.h"
 
 class TEveVSD : public TObject
 {

@@ -12,21 +12,21 @@
 #ifndef ROOT_TEveStraightLineSet
 #define ROOT_TEveStraightLineSet
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
 #include <Gtypes.h>
-#include <TNamed.h>
-#include <TQObject.h>
-#include <TAtt3D.h>
-#include <TAttMarker.h>
-#include <TAttLine.h>
-#include <TAttBBox.h>
+#include "TNamed.h"
+#include "TQObject.h"
+#include "TAtt3D.h"
+#include "TAttMarker.h"
+#include "TAttLine.h"
+#include "TAttBBox.h"
 
-#include <TEveUtil.h>
-#include <TEveElement.h>
-#include <TEveProjectionBases.h>
-#include <TEveChunkManager.h>
-#include <TEveTrans.h>
+#include "TEveUtil.h"
+#include "TEveElement.h"
+#include "TEveProjectionBases.h"
+#include "TEveChunkManager.h"
+#include "TEveTrans.h"
 
 class TRandom;
 

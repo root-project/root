@@ -12,7 +12,7 @@
 #ifndef ROOT_TEvePad
 #define ROOT_TEvePad
 
-#include <TPad.h>
+#include "TPad.h"
 
 class TEvePad : public TPad
 {

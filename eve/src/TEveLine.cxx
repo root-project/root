@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveLine.h>
+#include "TEveLine.h"
 
 //______________________________________________________________________________
 // TEveLine

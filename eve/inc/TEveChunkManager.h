@@ -12,10 +12,10 @@
 #ifndef ROOT_TEveChunkManager
 #define ROOT_TEveChunkManager
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
-#include <TObject.h>
-#include <TArrayC.h>
+#include "TObject.h"
+#include "TArrayC.h"
 
 #include <vector>
 

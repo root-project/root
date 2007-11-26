@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTriangleSet.h>
-#include <TEveRGBAPalette.h>
-#include <TEveManager.h>
+#include "TEveTriangleSet.h"
+#include "TEveRGBAPalette.h"
+#include "TEveManager.h"
 
-#include <TMath.h>
-#include <TVector3.h>
-#include <TRandom3.h>
-#include <TVirtualPad.h>
-#include <TVirtualViewer3D.h>
-#include <TBuffer3D.h>
-#include <TBuffer3DTypes.h>
+#include "TMath.h"
+#include "TVector3.h"
+#include "TRandom3.h"
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 //______________________________________________________________________________
 // TEveTriangleSet

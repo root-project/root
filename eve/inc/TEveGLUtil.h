@@ -13,10 +13,10 @@
 #define Reve_TEveGLUtil
 
 #ifndef __CINT__
-#include <TGLIncludes.h>
+#include "TGLIncludes.h"
 #endif
 
-#include <TObject.h>
+#include "TObject.h"
 
 class TAttMarker;
 class TAttLine;

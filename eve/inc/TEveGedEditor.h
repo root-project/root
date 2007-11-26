@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveGedEditor
 #define ROOT_TEveGedEditor
 
-#include <TGedEditor.h>
+#include "TGedEditor.h"
 
 class TEveElement;
 

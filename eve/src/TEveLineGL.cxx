@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveLineGL.h>
-#include <TEveLine.h>
+#include "TEveLineGL.h"
+#include "TEveLine.h"
 
-#include <TGLRnrCtx.h>
-#include <TEveGLUtil.h>
-#include <TGLIncludes.h>
+#include "TGLRnrCtx.h"
+#include "TEveGLUtil.h"
+#include "TGLIncludes.h"
 
 //______________________________________________________________________________
 // TEveLineGL

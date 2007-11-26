@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveBoxSet
 #define ROOT_TEveBoxSet
 
-#include <TEveDigitSet.h>
+#include "TEveDigitSet.h"
 
 class TGeoMatrix;
 class TRandom;

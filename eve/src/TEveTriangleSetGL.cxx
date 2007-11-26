@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTriangleSetGL.h>
-#include <TEveTriangleSet.h>
-#include <TVector3.h>
+#include "TEveTriangleSetGL.h"
+#include "TEveTriangleSet.h"
+#include "TVector3.h"
 
-#include <TGLIncludes.h>
+#include "TGLIncludes.h"
 
 //______________________________________________________________________________
 // TEveTriangleSetGL

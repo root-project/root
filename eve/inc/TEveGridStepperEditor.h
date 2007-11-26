@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveGridStepperEditor
 #define ROOT_TEveGridStepperEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGButton;
 class TGCheckButton;

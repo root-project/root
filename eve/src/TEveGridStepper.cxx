@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveGridStepper.h>
-#include <TEveTrans.h>
+#include "TEveGridStepper.h"
+#include "TEveTrans.h"
 
 //______________________________________________________________________________
 // TEveGridStepper

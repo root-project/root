@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveStraightLineSetGL.h>
-#include <TEveStraightLineSet.h>
-#include <TEveGLUtil.h>
+#include "TEveStraightLineSetGL.h"
+#include "TEveStraightLineSet.h"
+#include "TEveGLUtil.h"
 
-#include <TGLRnrCtx.h>
-#include <TGLSelectRecord.h>
+#include "TGLRnrCtx.h"
+#include "TGLSelectRecord.h"
 
-#include <TGLIncludes.h>
+#include "TGLIncludes.h"
 
 //______________________________________________________________________________
 // TEveStraightLineSetGL

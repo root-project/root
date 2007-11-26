@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveGeoShapeExtract.h>
+#include "TEveGeoShapeExtract.h"
 
-#include <TList.h>
-#include <TGeoShape.h>
+#include "TList.h"
+#include "TGeoShape.h"
 
 //______________________________________________________________________________
 // TEveGeoShapeExtract

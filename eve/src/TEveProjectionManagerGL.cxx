@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveProjectionManagerGL.h>
-#include <TEveProjectionManager.h>
+#include "TEveProjectionManagerGL.h"
+#include "TEveProjectionManager.h"
 
-#include <TGLRnrCtx.h>
-#include <TGLIncludes.h>
-#include <TGLText.h>
-#include <TMath.h>
+#include "TGLRnrCtx.h"
+#include "TGLIncludes.h"
+#include "TGLText.h"
+#include "TMath.h"
 
 #include <list>
 

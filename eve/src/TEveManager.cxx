@@ -9,43 +9,43 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveManager.h>
+#include "TEveManager.h"
 
-#include <TEveViewer.h>
-#include <TEveScene.h>
-#include <TEvePad.h>
-#include <TEveEventManager.h>
+#include "TEveViewer.h"
+#include "TEveScene.h"
+#include "TEvePad.h"
+#include "TEveEventManager.h"
 
-#include <TEveBrowser.h>
-#include <TEveGedEditor.h>
+#include "TEveBrowser.h"
+#include "TEveGedEditor.h"
 
-#include <TGMenu.h>
-#include <TGTab.h>
-#include <TGToolBar.h>
-#include <TGLabel.h>
-#include <TGTextEntry.h>
-#include <TGSplitter.h>
-#include <TRootEmbeddedCanvas.h>
+#include "TGMenu.h"
+#include "TGTab.h"
+#include "TGToolBar.h"
+#include "TGLabel.h"
+#include "TGTextEntry.h"
+#include "TGSplitter.h"
+#include "TRootEmbeddedCanvas.h"
 
-#include <TGStatusBar.h>
+#include "TGStatusBar.h"
 
-#include <TGLSAViewer.h>
+#include "TGLSAViewer.h"
 
-#include <TROOT.h>
-#include <TFile.h>
-#include <TMacro.h>
-#include <TFolder.h>
-#include <TStyle.h>
-#include <TBrowser.h>
-#include <TPad.h>
-#include <TCanvas.h>
-#include <TSystem.h>
-#include <TRint.h>
-#include <TVirtualX.h>
-#include <TEnv.h>
-#include <TStyle.h>
-#include <TColor.h>
-#include <TGeoShape.h>
+#include "TROOT.h"
+#include "TFile.h"
+#include "TMacro.h"
+#include "TFolder.h"
+#include "TStyle.h"
+#include "TBrowser.h"
+#include "TPad.h"
+#include "TCanvas.h"
+#include "TSystem.h"
+#include "TRint.h"
+#include "TVirtualX.h"
+#include "TEnv.h"
+#include "TStyle.h"
+#include "TColor.h"
+#include "TGeoShape.h"
 #include <KeySymbols.h>
 #include "TVirtualGL.h"
 #include "TPluginManager.h"

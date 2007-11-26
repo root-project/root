@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveViewer
 #define ROOT_TEveViewer
 
-#include <TEveElement.h>
+#include "TEveElement.h"
 
 class TGWindow;
 class TGedEditor;

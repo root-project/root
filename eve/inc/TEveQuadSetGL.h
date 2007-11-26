@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveQuadSetGL
 #define ROOT_TEveQuadSetGL
 
-#include <TGLObject.h>
-#include <TEveQuadSet.h>
+#include "TGLObject.h"
+#include "TEveQuadSet.h"
 
 class TEveQuadSetGL : public TGLObject
 {

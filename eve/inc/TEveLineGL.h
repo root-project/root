@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveLineGL
 #define ROOT_TEveLineGL
 
-#include <TGLObject.h>
-#include <TPointSet3DGL.h>
+#include "TGLObject.h"
+#include "TPointSet3DGL.h"
 
 class TGLViewer;
 class TGLScene;

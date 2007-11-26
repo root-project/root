@@ -12,19 +12,19 @@
 #ifndef ROOT_TEveDigitSet
 #define ROOT_TEveDigitSet
 
-#include <TNamed.h>
-#include <TQObject.h>
-#include <TAtt3D.h>
-#include <TAttBBox.h>
+#include "TNamed.h"
+#include "TQObject.h"
+#include "TAtt3D.h"
+#include "TAttBBox.h"
 
-#include <TEveUtil.h>
-#include <TEveElement.h>
-#include <TEveFrameBox.h>
-#include <TEveRGBAPalette.h>
-#include <TEveChunkManager.h>
-#include <TEveTrans.h>
+#include "TEveUtil.h"
+#include "TEveElement.h"
+#include "TEveFrameBox.h"
+#include "TEveRGBAPalette.h"
+#include "TEveChunkManager.h"
+#include "TEveTrans.h"
 
-#include <TObject.h>
+#include "TObject.h"
 
 class TEveDigitSet : public TEveElement,
                      public TNamed, public TQObject,

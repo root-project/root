@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveViewer.h>
-#include <TEveScene.h>
-#include <TEveSceneInfo.h>
+#include "TEveViewer.h"
+#include "TEveScene.h"
+#include "TEveSceneInfo.h"
 
-#include <TEveManager.h>
+#include "TEveManager.h"
 
-#include <TGLSAViewer.h>
-#include <TGLScenePad.h>
+#include "TGLSAViewer.h"
+#include "TGLScenePad.h"
 
-#include <TGLOrthoCamera.h> // For fixing defaults in root 5.17.4
+#include "TGLOrthoCamera.h" // For fixing defaults in root 5.17.4
 
 //______________________________________________________________________________
 // TEveViewer

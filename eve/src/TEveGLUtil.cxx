@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveGLUtil.h>
-#include <TEveUtil.h>
+#include "TEveGLUtil.h"
+#include "TEveUtil.h"
 
-#include <TAttMarker.h>
-#include <TAttLine.h>
-#include <TGLIncludes.h>
+#include "TAttMarker.h"
+#include "TAttLine.h"
+#include "TGLIncludes.h"
 
 //______________________________________________________________________________
 // TEveGLUtil

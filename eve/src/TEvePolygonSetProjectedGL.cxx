@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEvePolygonSetProjectedGL.h>
-#include <TEvePolygonSetProjected.h>
-#include <TEveVSDStructs.h>
+#include "TEvePolygonSetProjectedGL.h"
+#include "TEvePolygonSetProjected.h"
+#include "TEveVSDStructs.h"
 
-#include <TGLRnrCtx.h>
-#include <TGLIncludes.h>
+#include "TGLRnrCtx.h"
+#include "TGLIncludes.h"
 
 //______________________________________________________________________________
 // TEvePolygonSetProjectedGL

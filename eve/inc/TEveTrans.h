@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveTrans
 #define ROOT_TEveTrans
 
-#include <TVector3.h>
+#include "TVector3.h"
 
 class TGeoMatrix;
 class TGeoHMatrix;

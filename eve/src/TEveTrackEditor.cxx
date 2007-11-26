@@ -9,31 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTrackEditor.h>
-#include <TEveTrack.h>
-#include <TEveTrackPropagator.h>
-#include <TEveTrackPropagatorEditor.h>
-#include <TEveManager.h>
+#include "TEveTrackEditor.h"
+#include "TEveTrack.h"
+#include "TEveTrackPropagator.h"
+#include "TEveTrackPropagatorEditor.h"
+#include "TEveManager.h"
 
-#include <TEveGValuators.h>
+#include "TEveGValuators.h"
 
-#include <TVirtualPad.h>
-#include <TColor.h>
+#include "TVirtualPad.h"
+#include "TColor.h"
 
-#include <TGedEditor.h>
-#include <TAttMarkerEditor.h>
-#include <TGLabel.h>
-#include <TG3DLine.h>
-#include <TGButton.h>
-#include <TGNumberEntry.h>
-#include <TGColorSelect.h>
-#include <TGDoubleSlider.h>
-#include <TGComboBox.h>
+#include "TGedEditor.h"
+#include "TAttMarkerEditor.h"
+#include "TGLabel.h"
+#include "TG3DLine.h"
+#include "TGButton.h"
+#include "TGNumberEntry.h"
+#include "TGColorSelect.h"
+#include "TGDoubleSlider.h"
+#include "TGComboBox.h"
 
-#include <TGMsgBox.h>
-#include <TH1F.h>
+#include "TGMsgBox.h"
+#include "TH1F.h"
 
-#include <TSystem.h> // File input/output for track-count status.
+#include "TSystem.h" // File input/output for track-count status.
 
 //______________________________________________________________________________
 // TEveTrackEditor
@@ -221,9 +221,9 @@ void TEveTrackListEditor::DoPRange()
 /******************************************************************************/
 /******************************************************************************/
 
-#include <TCanvas.h>
-#include <TGLViewer.h>
-#include <TEveManager.h>
+#include "TCanvas.h"
+#include "TGLViewer.h"
+#include "TEveManager.h"
 
 //______________________________________________________________________________
 // TEveTrackCounterEditor

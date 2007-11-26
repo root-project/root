@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEvePad.h>
-#include <THashList.h>
+#include "TEvePad.h"
+#include "THashList.h"
 
 //______________________________________________________________________________
 // TEvePad

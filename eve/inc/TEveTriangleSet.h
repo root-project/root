@@ -12,12 +12,12 @@
 #ifndef ROOT_TEveTriangleSet
 #define ROOT_TEveTriangleSet
 
-#include <TEveElement.h>
-#include <TNamed.h>
-#include <TAttBBox.h>
-#include <TAtt3D.h>
+#include "TEveElement.h"
+#include "TNamed.h"
+#include "TAttBBox.h"
+#include "TAtt3D.h"
 
-#include <TEveTrans.h>
+#include "TEveTrans.h"
 
 class TGeoMatrix;
 

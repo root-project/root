@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTrackProjectedGL.h>
-#include <TEveTrackProjected.h>
-#include <TEveTrackPropagator.h>
-#include <TEveProjectionManager.h>
-#include <TEveGLUtil.h>
+#include "TEveTrackProjectedGL.h"
+#include "TEveTrackProjected.h"
+#include "TEveTrackPropagator.h"
+#include "TEveProjectionManager.h"
+#include "TEveGLUtil.h"
 
-#include <TGLRnrCtx.h>
-#include <TGLIncludes.h>
+#include "TGLRnrCtx.h"
+#include "TGLIncludes.h"
 
 //______________________________________________________________________________
 // TEveTrackProjectedGL
@@ -86,18 +86,18 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          switch((*i)->type)
          {
             case(TEvePathMark::Daughter):
-               if(RS.fRnrDaughters) accept = kTRUE;
+               if(RS.GetRnrDaughters()) accept = kTRUE;
                break;
             case(TEvePathMark::Reference):
-               if(RS.fRnrReferences) accept = kTRUE;
+               if(RS.GetRnrReferences()) accept = kTRUE;
                break;
             case(TEvePathMark::Decay):
-               if(RS.fRnrDecay) accept = kTRUE;
+               if(RS.GetRnrDecay()) accept = kTRUE;
                break;
          }
          if(accept)
          {
-            if((TMath::Abs((*i)->V.z) < RS.fMaxZ) && ((*i)->V.Perp() < RS.fMaxR))
+            if((TMath::Abs((*i)->V.z) < RS.GetMaxZ()) && ((*i)->V.Perp() < RS.GetMaxR()))
             {
                pnts[3*N  ] =(*i)->V.x;
                pnts[3*N+1] =(*i)->V.y;
@@ -107,11 +107,11 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
             }
          }
       }
-      TEveGLUtil::RenderPolyMarkers(RS.fPMAtt, pnts, N);
+      TEveGLUtil::RenderPolyMarkers(RS.RefPMAtt(), pnts, N);
       delete [] pnts;
    }
 
    // fist vertex
-   if(RS.fRnrFV && fTrack->GetLastPoint())
-      TEveGLUtil::RenderPolyMarkers(RS.fFVAtt, fTrack->GetP(), 1);
+   if(RS.GetRnrFV() && fTrack->GetLastPoint())
+      TEveGLUtil::RenderPolyMarkers(RS.RefFVAtt(), fTrack->GetP(), 1);
 }

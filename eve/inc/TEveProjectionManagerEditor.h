@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveProjectionManagerEditor
 #define ROOT_TEveProjectionManagerEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGComboBox;
 class TGCheckButton;

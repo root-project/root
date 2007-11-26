@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEvePointSet.h>
+#include "TEvePointSet.h"
 
-#include <TEveManager.h>
-#include <TEveProjectionManager.h>
+#include "TEveManager.h"
+#include "TEveProjectionManager.h"
 
-#include <TTree.h>
-#include <TTreePlayer.h>
-#include <TF3.h>
+#include "TTree.h"
+#include "TTreePlayer.h"
+#include "TF3.h"
 
-#include <TColor.h>
-#include <TCanvas.h>
+#include "TColor.h"
+#include "TCanvas.h"
 
 //______________________________________________________________________________
 // TEvePointSet

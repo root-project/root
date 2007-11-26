@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveTrackPropagator.h>
-#include <TEveTrack.h>
+#include "TEveTrackPropagator.h"
+#include "TEveTrack.h"
 
-#include <TMath.h>
+#include "TMath.h"
 
 #include <cassert>
 
@@ -39,9 +39,7 @@ void TEveTrackPropagator::Helix::StepVertex(Vertex4D& v, TEveVector& p, Vertex4D
    forw.t = v.t + fTimeStep;
 }
 
-//______________________________________________________________________________
-// TEveTrackPropagator
-//
+
 //______________________________________________________________________________
 // TEveTrackPropagator
 //
@@ -57,8 +55,8 @@ void TEveTrackPropagator::Helix::StepVertex(Vertex4D& v, TEveVector& p, Vertex4D
 
 ClassImp(TEveTrackPropagator)
 
-Float_t       TEveTrackPropagator::fgDefMagField = 5;
-const Float_t TEveTrackPropagator::fgkB2C        = 0.299792458e-3;
+Float_t             TEveTrackPropagator::fgDefMagField = 5;
+const Float_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-3;
 TEveTrackPropagator TEveTrackPropagator::fgDefStyle;
 
 //______________________________________________________________________________
@@ -67,26 +65,21 @@ TEveTrackPropagator::TEveTrackPropagator() :
    TEveRefBackPtr(),
 
    fMagField(fgDefMagField),
-
    fMaxR  (350),
    fMaxZ  (450),
-
    fMaxOrbs (0.5),
    fMinAng  (45),
    fDelta   (0.1),
 
    fEditPathMarks(kFALSE),
-   fPMAtt(),
-
    fFitDaughters  (kTRUE),
    fFitReferences (kTRUE),
    fFitDecay      (kTRUE),
-
    fRnrDaughters  (kTRUE),
    fRnrReferences (kTRUE),
    fRnrDecay      (kTRUE),
-
    fRnrFV(kFALSE),
+   fPMAtt(),
    fFVAtt(),
 
    fCharge   (0),
@@ -99,7 +92,7 @@ TEveTrackPropagator::TEveTrackPropagator() :
 }
 
 //______________________________________________________________________________
-void   TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p, Float_t beta, Int_t charge)
+void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p, Float_t beta, Int_t charge)
 { 
    fV.x = v.x;
    fV.y = v.y;
@@ -134,7 +127,7 @@ void   TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p, Float_t beta
 }
 
 //______________________________________________________________________________
-void   TEveTrackPropagator::ResetTrack()
+void TEveTrackPropagator::ResetTrack()
 {
    fPoints.clear();
    fN = 0; 
@@ -342,6 +335,15 @@ void TEveTrackPropagator::RebuildTracks()
 }
 
 /******************************************************************************/
+
+//______________________________________________________________________________
+void TEveTrackPropagator::SetMagField(Float_t x)
+{
+   // Set constant magnetic field and rebuild tracks.
+
+   fMagField = x;
+   RebuildTracks();
+}
 
 //______________________________________________________________________________
 void TEveTrackPropagator::SetMaxR(Float_t x)

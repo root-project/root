@@ -12,9 +12,9 @@
 #ifndef ROOT_TEveGeoNode
 #define ROOT_TEveGeoNode
 
-#include <TEveElement.h>
-#include <TEveTrans.h>
-#include <TEveProjectionBases.h>
+#include "TEveElement.h"
+#include "TEveTrans.h"
+#include "TEveProjectionBases.h"
 
 class TGeoVolume;
 class TGeoNode;

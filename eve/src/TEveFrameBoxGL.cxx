@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveFrameBoxGL.h>
-#include <TEveFrameBox.h>
+#include "TEveFrameBoxGL.h"
+#include "TEveFrameBox.h"
 
-#include <TGLIncludes.h>
+#include "TGLIncludes.h"
 
-#include <TMath.h>
+#include "TMath.h"
 
 //______________________________________________________________________________
 // TEveFrameBoxGL

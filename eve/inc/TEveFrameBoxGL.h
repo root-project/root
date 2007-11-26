@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveFrameBoxGL
 #define ROOT_TEveFrameBoxGL
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
 class TEveFrameBox;
 

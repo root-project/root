@@ -12,10 +12,10 @@
 #ifndef ROOT_TEveLine
 #define ROOT_TEveLine
 
-#include <TEveUtil.h>
-#include <TEvePointSet.h>
+#include "TEveUtil.h"
+#include "TEvePointSet.h"
 
-#include <TAttLine.h>
+#include "TAttLine.h"
 
 class TEveLine : public TEvePointSet,
                  public TAttLine

@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveQuadSet
 #define ROOT_TEveQuadSet
 
-#include <TEveDigitSet.h>
+#include "TEveDigitSet.h"
 
 class TRandom;
 

@@ -11,10 +11,10 @@
 #ifndef ROOT_TEveBrowser
 #define ROOT_TEveBrowser
 
-#include <TRootBrowser.h>
-#include <TGListTree.h>
+#include "TRootBrowser.h"
+#include "TGListTree.h"
 
-#include <TContextMenu.h>
+#include "TContextMenu.h"
 
 class TGFileBrowser;
 class TGSplitter;

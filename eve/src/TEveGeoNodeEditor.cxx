@@ -9,20 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveGeoNodeEditor.h>
-#include <TEveGValuators.h>
+#include "TEveGeoNodeEditor.h"
+#include "TEveGValuators.h"
 
-#include <TEveGeoNode.h>
-#include <TGeoNode.h>
+#include "TEveGeoNode.h"
+#include "TGeoNode.h"
 
-#include <TVirtualPad.h>
-#include <TColor.h>
+#include "TVirtualPad.h"
+#include "TColor.h"
 
-#include <TGLabel.h>
-#include <TGButton.h>
-#include <TGNumberEntry.h>
-#include <TGColorSelect.h>
-#include <TGDoubleSlider.h>
+#include "TGLabel.h"
+#include "TGButton.h"
+#include "TGNumberEntry.h"
+#include "TGColorSelect.h"
+#include "TGDoubleSlider.h"
 
 //______________________________________________________________________________
 // TEveGeoNodeEditor

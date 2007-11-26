@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveScene
 #define ROOT_TEveScene
 
-#include <TEveElement.h>
-#include <TEvePad.h>
+#include "TEveElement.h"
+#include "TEvePad.h"
 
 class TGLScenePad;
 

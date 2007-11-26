@@ -12,7 +12,7 @@
 #ifndef ROOT_TEvePolygonSetProjectedGL
 #define ROOT_TEvePolygonSetProjectedGL
 
-#include <TGLObject.h>
+#include "TGLObject.h"
 
 class TEvePolygonSetProjectedGL : public TGLObject
 {

@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveGeoShapeExtract
 #define ROOT_TEveGeoShapeExtract
 
-#include <TNamed.h>
+#include "TNamed.h"
 
 class TList;
 class TGeoShape;

@@ -23,8 +23,8 @@
 
 #ifndef __CINT__
 
-#include <TObject.h>
-#include <TGLIncludes.h>
+#include "TObject.h"
+#include "TGLIncludes.h"
 
 class TString;
 
@@ -105,7 +105,7 @@ extern void txfRenderStringZW(TexFont* txf, const char *TString, int len,
 extern void txfRenderFancyString(TexFont* txf, char *TString, int len);
 
 
-bool        LoadDefaultFont(TString font_file);
+bool        LoadDefaultFont(const TString& font_file);
 
 extern TexFont* fgDefaultFont;
 

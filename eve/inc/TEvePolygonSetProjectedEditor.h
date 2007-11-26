@@ -12,7 +12,7 @@
 #ifndef ROOT_TEvePolygonSetProjectedEditor
 #define ROOT_TEvePolygonSetProjectedEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGNumberEntry;
 class TGColorSelect;

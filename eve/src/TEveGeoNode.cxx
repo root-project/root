@@ -9,24 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveGeoNode.h>
-#include <TEveManager.h>
-#include <TEvePolygonSetProjected.h>
+#include "TEveGeoNode.h"
+#include "TEveManager.h"
+#include "TEvePolygonSetProjected.h"
 
-#include <TEveGeoShapeExtract.h>
+#include "TEveGeoShapeExtract.h"
 
-#include <TPad.h>
-#include <TBuffer3D.h>
-#include <TVirtualViewer3D.h>
-#include <TColor.h>
-#include <TFile.h>
+#include "TPad.h"
+#include "TBuffer3D.h"
+#include "TVirtualViewer3D.h"
+#include "TColor.h"
+#include "TFile.h"
 
-#include <TGeoShape.h>
-#include <TGeoVolume.h>
-#include <TGeoNode.h>
-#include <TGeoShapeAssembly.h>
-#include <TGeoManager.h>
-#include <TVirtualGeoPainter.h>
+#include "TGeoShape.h"
+#include "TGeoVolume.h"
+#include "TGeoNode.h"
+#include "TGeoShapeAssembly.h"
+#include "TGeoManager.h"
+#include "TVirtualGeoPainter.h"
 
 //______________________________________________________________________________
 // TEveGeoNode

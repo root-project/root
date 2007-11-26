@@ -18,20 +18,18 @@
    provided without guarantee or warrantee expressed or implied. This
    program is -not- in the public domain. */
 
-#include <TEveGLText.h>
+#include "TEveGLText.h"
+#include "TEveUtil.h"
 
-#include <TMath.h>
-#include <TString.h>
+#include "TMath.h"
+#include "TString.h"
 
 #include <GL/glu.h>
 
-#include <assert.h>
+#include <cassert>
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#include <TEveUtil.h>
-#include <TEveGLText.h>
 
 
 /**********************/
@@ -127,23 +125,23 @@ TexFont* txfLoadFont(const char *filename)
    int endianness, swap, format, stride, width, height;
    int i, j, got;
 
-   txf = NULL;
+   txf = 0;
    file = fopen(filename, "rb");
-   if (file == NULL) {
+   if (file == 0) {
       lastError = "file open failed.";
       goto error;
    }
    txf = (TexFont *) malloc(sizeof(TexFont));
-   if (txf == NULL) {
+   if (txf == 0) {
       lastError = "out of memory.";
       goto error;
    }
    /* For easy cleanup in error case. */
    txf->texobj = 0; // MT add
-   txf->tgi = NULL;
-   txf->tgvi = NULL;
-   txf->lut = NULL;
-   txf->teximage = NULL;
+   txf->tgi = 0;
+   txf->tgvi = 0;
+   txf->lut = 0;
+   txf->teximage = 0;
 
    got = fread(fileid, 1, 4, file);
    if (got != 4 || strncmp(fileid, "\377txf", 4)) {
@@ -183,7 +181,7 @@ TexFont* txfLoadFont(const char *filename)
       SWAPL(&txf->num_glyphs, tmp);
    }
    txf->tgi = (TexGlyphInfo *) malloc(txf->num_glyphs * sizeof(TexGlyphInfo));
-   if (txf->tgi == NULL) {
+   if (txf->tgi == 0) {
       lastError = "out of memory.";
       goto error;
    }
@@ -200,7 +198,7 @@ TexFont* txfLoadFont(const char *filename)
    }
    txf->tgvi = (TexGlyphVertexInfo *)
       malloc(txf->num_glyphs * sizeof(TexGlyphVertexInfo));
-   if (txf->tgvi == NULL) {
+   if (txf->tgvi == 0) {
       lastError = "out of memory.";
       goto error;
    }
@@ -249,7 +247,7 @@ TexFont* txfLoadFont(const char *filename)
 
    txf->lut = (TexGlyphVertexInfo **)
       calloc(txf->range, sizeof(TexGlyphVertexInfo *));
-   if (txf->lut == NULL) {
+   if (txf->lut == 0) {
       lastError = "out of memory.";
       goto error;
    }
@@ -263,7 +261,7 @@ TexFont* txfLoadFont(const char *filename)
             unsigned char *orig;
 
             orig = (unsigned char *) malloc(txf->tex_width * txf->tex_height);
-            if (orig == NULL) {
+            if (orig == 0) {
                lastError = "out of memory.";
                goto error;
             }
@@ -271,7 +269,7 @@ TexFont* txfLoadFont(const char *filename)
             EXPECT(txf->tex_width * txf->tex_height);
             txf->teximage = (unsigned char *)
                malloc(2 * txf->tex_width * txf->tex_height);
-            if (txf->teximage == NULL) {
+            if (txf->teximage == 0) {
                lastError = "out of memory.";
                goto error;
             }
@@ -283,7 +281,7 @@ TexFont* txfLoadFont(const char *filename)
          } else {
             txf->teximage = (unsigned char *)
                malloc(txf->tex_width * txf->tex_height);
-            if (txf->teximage == NULL) {
+            if (txf->teximage == 0) {
                lastError = "out of memory.";
                goto error;
             }
@@ -296,7 +294,7 @@ TexFont* txfLoadFont(const char *filename)
          height = txf->tex_height;
          stride = (width + 7) >> 3;
          texbitmap = (unsigned char *) malloc(stride * height);
-         if (texbitmap == NULL) {
+         if (texbitmap == 0) {
             lastError = "out of memory.";
             goto error;
          }
@@ -304,7 +302,7 @@ TexFont* txfLoadFont(const char *filename)
          EXPECT(stride * height);
          if (useLuminanceAlpha) {
             txf->teximage = (unsigned char *) calloc(width * height * 2, 1);
-            if (txf->teximage == NULL) {
+            if (txf->teximage == 0) {
                lastError = "out of memory.";
                goto error;
             }
@@ -318,7 +316,7 @@ TexFont* txfLoadFont(const char *filename)
             }
          } else {
             txf->teximage = (unsigned char *) calloc(width * height, 1);
-            if (txf->teximage == NULL) {
+            if (txf->teximage == 0) {
                lastError = "out of memory.";
                goto error;
             }
@@ -352,7 +350,7 @@ error:
    }
    if (file)
       fclose(file);
-   return NULL;
+   return 0;
 }
 
 /******************************************************************************/
@@ -702,7 +700,7 @@ int txfInFont(TexFont * txf, int c)
 /******************************************************************************/
 
 //______________________________________________________________________________
-bool LoadDefaultFont( TString file)
+bool LoadDefaultFont(const TString& file)
 {
    static const TEveException _eh("TEveGLText::LoadFont ");
 

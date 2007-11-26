@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveProjections
 #define ROOT_TEveProjections
 
-#include <TEveVSDStructs.h>
+#include "TEveVSDStructs.h"
 
 ////////////////////////////////////////////////////////////////
 //                                                            //

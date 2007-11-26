@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveStraightLineSetGL
 #define ROOT_TEveStraightLineSetGL
 
-#include <TGLObject.h>
+#include "TGLObject.h"
 
 class TGLViewer;
 class TGLScene;

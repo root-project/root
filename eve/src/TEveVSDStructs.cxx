@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveVSDStructs.h>
+#include "TEveVSDStructs.h"
 
 //______________________________________________________________________________
 // TEveVector

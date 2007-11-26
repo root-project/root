@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveRGBAPalette.h>
+#include "TEveRGBAPalette.h"
 
-#include <TColor.h>
-#include <TStyle.h>
-#include <TMath.h>
+#include "TColor.h"
+#include "TStyle.h"
+#include "TMath.h"
 //______________________________________________________________________________
 // TEveRGBAPalette
 //

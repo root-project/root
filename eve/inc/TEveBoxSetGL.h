@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveBoxSetGL
 #define ROOT_TEveBoxSetGL
 
-#include <TGLObject.h>
-#include <TEveBoxSet.h>
+#include "TGLObject.h"
+#include "TEveBoxSet.h"
 
 class TEveBoxSetGL : public TGLObject
 {

@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TMath.h>
+#include "TMath.h"
 
-#include <TEveQuadSetGL.h>
-#include <TEveFrameBoxGL.h>
+#include "TEveQuadSetGL.h"
+#include "TEveFrameBoxGL.h"
 
-#include <TGLRnrCtx.h>
-#include <TGLSelectRecord.h>
-#include <TGLIncludes.h>
+#include "TGLRnrCtx.h"
+#include "TGLSelectRecord.h"
+#include "TGLIncludes.h"
 
 //______________________________________________________________________________
 // TEveQuadSetGL

@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEvePolygonSetProjected.h>
-#include <TEveVSDStructs.h>
-#include <TEveGeoNode.h>
-#include <TEveProjectionManager.h>
+#include "TEvePolygonSetProjected.h"
+#include "TEveVSDStructs.h"
+#include "TEveGeoNode.h"
+#include "TEveProjectionManager.h"
 
-#include <TBuffer3D.h>
-#include <TBuffer3DTypes.h>
-#include <TVirtualPad.h>
-#include <TVirtualViewer3D.h>
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
 
 #include <list>
 

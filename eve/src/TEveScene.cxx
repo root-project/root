@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveScene.h>
-#include <TEveViewer.h>
-#include <TEveManager.h>
+#include "TEveScene.h"
+#include "TEveViewer.h"
+#include "TEveManager.h"
 
-#include <TList.h>
-#include <TGLScenePad.h>
+#include "TList.h"
+#include "TGLScenePad.h"
 
 //______________________________________________________________________________
 // TEveScene

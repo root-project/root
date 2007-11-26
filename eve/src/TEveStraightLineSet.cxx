@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveStraightLineSet.h>
+#include "TEveStraightLineSet.h"
 
-#include <TBuffer3D.h>
-#include <TBuffer3DTypes.h>
-#include <TVirtualPad.h>
-#include <TVirtualViewer3D.h>
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
 
-#include <TRandom.h>
-#include <TEveProjectionManager.h>
+#include "TRandom.h"
+#include "TEveProjectionManager.h"
 
 //______________________________________________________________________________
 // TEveStraightLineSet

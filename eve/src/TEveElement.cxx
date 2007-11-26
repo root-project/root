@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveElement.h>
-#include <TEveManager.h>
-#include <TEveGedEditor.h>
+#include "TEveElement.h"
+#include "TEveManager.h"
+#include "TEveGedEditor.h"
 
-#include <TColor.h>
-#include <TCanvas.h>
-#include <TGListTree.h>
-#include <TGPicture.h>
+#include "TColor.h"
+#include "TCanvas.h"
+#include "TGListTree.h"
+#include "TGPicture.h"
 
 #include <algorithm>
 

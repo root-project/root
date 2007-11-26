@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveGValuators
 #define ROOT_TEveGValuators
 
-#include <TGNumberEntry.h>
+#include "TGNumberEntry.h"
 
 class TGLabel;
 class TGHSlider;

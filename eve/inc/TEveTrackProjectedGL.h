@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveTrackProjectedGL
 #define ROOT_TEveTrackProjectedGL
 
-#include <TEveTrackGL.h>
+#include "TEveTrackGL.h"
 
 class TGLViewer;
 class TGLScene;

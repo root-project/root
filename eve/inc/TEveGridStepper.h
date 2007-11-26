@@ -12,9 +12,9 @@
 #ifndef ROOT_TEveGridStepper
 #define ROOT_TEveGridStepper
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
-#include <TObject.h>
+#include "TObject.h"
 
 class TEveTrans;
 

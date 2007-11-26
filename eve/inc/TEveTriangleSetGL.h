@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveTriangleSetGL
 #define ROOT_TEveTriangleSetGL
 
-#include <TGLObject.h>
+#include "TGLObject.h"
 
 class TGLRnrCtx;
 

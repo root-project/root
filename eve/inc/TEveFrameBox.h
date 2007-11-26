@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveFrameBox
 #define ROOT_TEveFrameBox
 
-#include <TEveUtil.h>
-#include <TObject.h>
+#include "TEveUtil.h"
+#include "TObject.h"
 
 class TEveFrameBox : public TObject, public TEveRefBackPtr
 {

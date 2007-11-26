@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveTrackPropagatorEditor
 #define ROOT_TEveTrackPropagatorEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGButton;
 class TGCheckButton;

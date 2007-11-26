@@ -9,19 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveQuadSet.h>
+#include "TEveQuadSet.h"
 
-#include <TEveManager.h>
+#include "TEveManager.h"
 
-#include <TColor.h>
+#include "TColor.h"
 
-#include <TBuffer3D.h>
-#include <TBuffer3DTypes.h>
-#include <TVirtualPad.h>
-#include <TVirtualViewer3D.h>
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
 
-#include <TROOT.h>
-#include <TRandom.h>
+#include "TROOT.h"
+#include "TRandom.h"
 
 //______________________________________________________________________________
 // TEveQuadSet

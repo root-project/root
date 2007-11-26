@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveTransEditor
 #define ROOT_TEveTransEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGCheckButton;
 class TGTextButton;

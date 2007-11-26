@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEveMacro.h>
+#include "TEveMacro.h"
 
-#include <TSystem.h>
-#include <TROOT.h>
+#include "TSystem.h"
+#include "TROOT.h"
 #include <G__ci.h>
 
 //______________________________________________________________________________
@@ -46,7 +46,7 @@ TEveMacro::TEveMacro(const char* name) :
 
 /******************************************************************************/
 
-#include <TTimer.h>
+#include "TTimer.h"
 
 //______________________________________________________________________________
 Long_t TEveMacro::Exec(const char* params, Int_t* error)
@@ -102,7 +102,7 @@ Long_t TEveMacro::Exec(const char* params, Int_t* error)
    return retval;
 }
 
-#include <TApplication.h>
+#include "TApplication.h"
 
 //______________________________________________________________________________
 void TEveMacro::ResetRoot()

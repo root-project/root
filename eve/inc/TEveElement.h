@@ -12,10 +12,10 @@
 #ifndef ROOT_TEveElement
 #define ROOT_TEveElement
 
-#include <TEveUtil.h>
+#include "TEveUtil.h"
 
-#include <TNamed.h>
-#include <TRef.h>
+#include "TNamed.h"
+#include "TRef.h"
 
 class TGListTree;
 class TGListTreeItem;

@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveSceneInfo
 #define ROOT_TEveSceneInfo
 
-#include <TEveElement.h>
+#include "TEveElement.h"
 
 class TGLSceneBase;
 class TGLSceneInfo;

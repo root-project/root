@@ -12,7 +12,7 @@
 #ifndef ROOT_TEveStraightLineSetEditor
 #define ROOT_TEveStraightLineSetEditor
 
-#include <TGedFrame.h>
+#include "TGedFrame.h"
 
 class TGCheckButton;
 class TGNumberEntry;

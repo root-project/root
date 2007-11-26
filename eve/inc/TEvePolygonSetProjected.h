@@ -12,14 +12,14 @@
 #ifndef ROOT_TEvePolygonSetProjected
 #define ROOT_TEvePolygonSetProjected
 
-#include <TEveElement.h>
-#include <TEveProjectionBases.h>
+#include "TEveElement.h"
+#include "TEveProjectionBases.h"
 
 #include "TNamed.h"
 #include "TAtt3D.h"
 #include "TAttBBox.h"
 #include "TColor.h"
-#include <TEveVSDStructs.h>
+#include "TEveVSDStructs.h"
 
 class TBuffer3D;
 

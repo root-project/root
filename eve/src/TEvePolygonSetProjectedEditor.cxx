@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TEvePolygonSetProjectedEditor.h>
-#include <TEvePolygonSetProjected.h>
+#include "TEvePolygonSetProjectedEditor.h"
+#include "TEvePolygonSetProjected.h"
 
-#include <TColor.h>
+#include "TColor.h"
 
-#include <TGLabel.h>
-#include <TGNumberEntry.h>
-#include <TGColorSelect.h>
-#include <TGColorDialog.h>
+#include "TGLabel.h"
+#include "TGNumberEntry.h"
+#include "TGColorSelect.h"
+#include "TGColorDialog.h"
 
 ClassImp(TEvePolygonSetProjectedEditor)
 

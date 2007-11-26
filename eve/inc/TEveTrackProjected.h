@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveTrackProjected
 #define ROOT_TEveTrackProjected
 
-#include <TEveTrack.h>
-#include <TEveProjectionBases.h>
+#include "TEveTrack.h"
+#include "TEveProjectionBases.h"
 
 class TEveProjection;
 
