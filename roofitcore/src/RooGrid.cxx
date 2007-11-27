@@ -26,6 +26,7 @@
 #include "RooNumber.h"
 #include "RooRandom.h"
 #include "TMath.h"
+#include "RooMsgService.h"
 
 #include <math.h>
 #include "Riostream.h"
@@ -44,7 +45,7 @@ RooGrid::RooGrid(const RooAbsFunc &function)
 {
   // check that the input function is valid
   if(!(_valid= function.isValid())) {
-    cout << ClassName() << ": cannot initialize using an invalid function" << endl;
+    oocoutE((TObject*)0,InputArguments) << ClassName() << ": cannot initialize using an invalid function" << endl;
     return;
   }
 
@@ -58,7 +59,7 @@ RooGrid::RooGrid(const RooAbsFunc &function)
   _xin= new Double_t[maxBins+1];
   _weight= new Double_t[maxBins];
   if(!_xl || !_xu || !_delx || !_d || !_xi || !_xin || !_weight) {
-    cout << ClassName() << ": memory allocation failed" << endl;
+    oocoutE((TObject*)0,Integration) << ClassName() << ": memory allocation failed" << endl;
     _valid= kFALSE;
     return;
   }
@@ -87,18 +88,18 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function) {
   for(UInt_t index= 0; index < _dim; index++) {
     _xl[index]= function.getMinLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
-      cout << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
+      oocoutE((TObject*)0,Integration) << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
       return kFALSE;
     }
     _xu[index]= function.getMaxLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
-      cout << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
+      oocoutE((TObject*)0,Integration) << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
       return kFALSE;
     }
     Double_t dx= _xu[index] - _xl[index];
     if(dx <= 0) {
-      cout << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
-	   << "," << _xu[index] << "]" << endl;
+      oocoutE((TObject*)0,Integration) << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
+				       << "," << _xu[index] << "]" << endl;
       return kFALSE;
     }
     _delx[index]= dx;
@@ -232,15 +233,15 @@ void RooGrid::printToStream(ostream& os, PrintOption opt, TString indent) const 
 
   os << ClassName() << ": volume = " << getVolume() << endl;
   if(opt >= Standard) {
-    cout << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "
-	 << getNBins() << " bin(s) and sampled with " << _boxes << " box(es)" << endl;
+    os << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "
+       << getNBins() << " bin(s) and sampled with " << _boxes << " box(es)" << endl;
     for(UInt_t index= 0; index < getDimension(); index++) {
-      cout << indent << "  (" << index << ") ["
-	   << setw(10) << _xl[index] << "," << setw(10) << _xu[index] << "]" << endl;
+      os << indent << "  (" << index << ") ["
+	 << setw(10) << _xl[index] << "," << setw(10) << _xu[index] << "]" << endl;
       if(opt < Verbose) continue;
       for(UInt_t bin= 0; bin < _bins; bin++) {
-	cout << indent << "    bin-" << bin << " : x = " << coord(bin,index) << " , y = "
-	     << value(bin,index) << endl;
+	os << indent << "    bin-" << bin << " : x = " << coord(bin,index) << " , y = "
+	   << value(bin,index) << endl;
       }
     }
   }

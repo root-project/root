@@ -110,9 +110,6 @@ Double_t RooHashTable::avgCollisions() const
     }
   }
 
-  for (i=0 ; i<20 ; i++) {
-    cout << "h[" << i << "] = " << h[i] << endl ;
-  }
   return 0 ;
 }
 

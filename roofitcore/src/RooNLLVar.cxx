@@ -29,6 +29,7 @@
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
+#include "RooMsgService.h"
 
 ClassImp(RooNLLVar)
 ;
@@ -121,8 +122,8 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
 
     // If any event evaluates with zero probability, abort calculation
     if(term == 0) {
-      cout << "RooNLLVar::evaluatePartition(" << GetName() 
-	   << "): WARNING: event " << i << " has zero or negative probability" << endl ;
+      coutE(Eval) << "RooNLLVar::evaluatePartition(" << GetName() 
+		  << "): WARNING: event " << i << " has zero or negative probability" << endl ;
       return 0 ;
     }
 

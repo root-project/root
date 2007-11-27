@@ -40,6 +40,8 @@
 #include "RooAddGenContext.h"
 #include "RooRealConstant.h"
 #include "RooRealIntegral.h"
+#include "RooMsgService.h"
+
 
 ClassImp(RooRealSumPdf)
 ;
@@ -102,8 +104,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   // All functions and coefficients must inherit from RooAbsReal. 
 
   if (!(funcList.getSize()==coefList.getSize()+1 || funcList.getSize()==coefList.getSize())) {
-    cout << "RooRealSumPdf::RooRealSumPdf(" << GetName() 
-	 << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << endl ;
+    coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() 
+			  << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << endl ;
     assert(0) ;
   }
 
@@ -120,11 +122,11 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
     func = (RooAbsReal*) funcIter->Next() ;
 
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      cout << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") coefficient " << coef->GetName() << " is not of type RooAbsReal, ignored" << endl ;
+      coutW(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") coefficient " << coef->GetName() << " is not of type RooAbsReal, ignored" << endl ;
       continue ;
     }
     if (!dynamic_cast<RooAbsReal*>(func)) {
-      cout << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") func " << func->GetName() << " is not of type RooAbsReal, ignored" << endl ;
+      coutW(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") func " << func->GetName() << " is not of type RooAbsReal, ignored" << endl ;
       continue ;
     }
     _funcList.add(*func) ;
@@ -134,7 +136,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   func = (RooAbsReal*) funcIter->Next() ;
   if (func) {
     if (!dynamic_cast<RooAbsReal*>(func)) {
-      cout << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") last func " << coef->GetName() << " is not of type RooAbsReal, fatal error" << endl ;
+      coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") last func " << coef->GetName() << " is not of type RooAbsReal, fatal error" << endl ;
       assert(0) ;
     }
     _funcList.add(*func) ;  
@@ -214,9 +216,9 @@ Double_t RooRealSumPdf::evaluate() const
     
     // Warn about coefficient degeneration
     if (lastCoef<0 || lastCoef>1) {
-      cout << "RooRealSumPdf::evaluate(" << GetName() 
-	   << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
-	   << 1-lastCoef << endl ;
+      coutW(Eval) << "RooRealSumPdf::evaluate(" << GetName() 
+		  << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
+		  << 1-lastCoef << endl ;
     } 
   }
 
@@ -244,13 +246,13 @@ Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
   while((coef=(RooAbsReal*)_coefIter->Next())) {
     func = (RooAbsReal*)_funcIter->Next() ;
     if (func->observableOverlaps(nset,*coef)) {
-      cout << "RooRealSumPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
-	   << " and FUNC " << func->GetName() << " have one or more observables in common" << endl ;
+      coutE(InputArguments) << "RooRealSumPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
+			    << " and FUNC " << func->GetName() << " have one or more observables in common" << endl ;
       ret = kTRUE ;
     }
     if (coef->dependsOn(*nset)) {
-      cout << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient " << coef->GetName() 
-	   << " depends on one or more of the following observables" ; nset->Print("1") ;
+      coutE(InputArguments) << "RooRealPdf::checkObservables(" << GetName() << "): ERROR coefficient " << coef->GetName() 
+			    << " depends on one or more of the following observables" ; nset->Print("1") ;
       ret = kTRUE ;
     }
   }
@@ -333,9 +335,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     
     // Warn about coefficient degeneration
     if (lastCoef<0 || lastCoef>1) {
-      cout << "RooRealSumPdf::evaluate(" << GetName() 
-	   << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
-	   << 1-lastCoef << endl ;
+      coutW(Eval) << "RooRealSumPdf::evaluate(" << GetName() 
+		  << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
+		  << 1-lastCoef << endl ;
     } 
   }
 

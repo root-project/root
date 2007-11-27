@@ -38,6 +38,7 @@
 #include "RooRealIntegral.h"
 #include "RooRealBinding.h"
 #include "RooScaledFunc.h"
+#include "RooMsgService.h"
 
 #include "Riostream.h"
 #include <iomanip>
@@ -237,11 +238,11 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 
   // check the inputs
   if(!func.isValid()) {
-    cout << fName << "::addPoints: input function is not valid" << endl;
+    coutE(InputArguments) << fName << "::addPoints: input function is not valid" << endl;
     return;
   }
   if(minPoints <= 0 || xhi <= xlo) {
-    cout << fName << "::addPoints: bad input (nothing added)" << endl;
+    coutE(InputArguments) << fName << "::addPoints: bad input (nothing added)" << endl;
     return;
   }
 
@@ -412,8 +413,8 @@ Double_t RooCurve::average(Double_t xFirst, Double_t xLast) const
   // and dividing by xLast-xFirst
 
   if (xFirst>=xLast) {
-    cout << "RooCurve::average(" << GetName() 
-	 << ") invalid range (" << xFirst << "," << xLast << ")" << endl ;
+    coutE(InputArguments) << "RooCurve::average(" << GetName() 
+			  << ") invalid range (" << xFirst << "," << xLast << ")" << endl ;
     return 0 ;
   }
 

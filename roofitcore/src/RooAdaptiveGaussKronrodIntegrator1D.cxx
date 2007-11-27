@@ -51,6 +51,7 @@
 #include "RooNumIntFactory.h"
 #include "RooIntegratorBinding.h"
 #include "TMath.h"
+#include "RooMsgService.h"
 
 
 ClassImp(RooAdaptiveGaussKronrodIntegrator1D)
@@ -226,7 +227,7 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t xmin, Double_t xm
   // if this object was constructed to always use our integrand's limits.
 
   if(_useIntegrandLimits) {
-    cout << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    coutE(Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
 
@@ -346,7 +347,7 @@ Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 #define GSL_ENOMEM   8  /* malloc failed */
 #define GSL_EBADTOL 13  /* user specified an invalid tolerance */
 #define GSL_ETOL    14  /* failed to reach the specified tolerance */
-#define GSL_ERROR(a,b) cout << "RooAdaptiveGaussKronrodIntegrator1D::integral() ERROR: " << a << endl ; return b ;
+#define GSL_ERROR(a,b) oocoutE((TObject*)0,Integration) << "RooAdaptiveGaussKronrodIntegrator1D::integral() ERROR: " << a << endl ; return b ;
 #define GSL_DBL_MIN        2.2250738585072014e-308
 #define GSL_DBL_MAX        1.7976931348623157e+308
 #define GSL_DBL_EPSILON    2.2204460492503131e-16

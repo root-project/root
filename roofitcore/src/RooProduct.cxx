@@ -31,6 +31,7 @@
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooErrorHandler.h"
+#include "RooMsgService.h"
 
 ClassImp(RooProduct)
 ;
@@ -67,8 +68,8 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& pro
     } else if (dynamic_cast<RooAbsCategory*>(comp)) {
       _compCSet.add(*comp) ;
     } else {
-      cout << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-	   << " is not of type RooAbsReal or RooAbsCategory" << endl ;
+      coutE(InputArguments) << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
+			    << " is not of type RooAbsReal or RooAbsCategory" << endl ;
       RooErrorHandler::softAbort() ;
     }
   }

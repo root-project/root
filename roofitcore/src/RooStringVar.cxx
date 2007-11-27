@@ -28,6 +28,7 @@
 #include "TTree.h"
 #include "RooStringVar.h"
 #include "RooStreamParser.h"
+#include "RooMsgService.h"
 
 ClassImp(RooStringVar)
 
@@ -38,7 +39,7 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
 {
   // Constructor with initial value
   if(!isValidString(value)) {
-    cout << "RooStringVar::RooStringVar(" << GetName() 
+    coutW(InputArguments) << "RooStringVar::RooStringVar(" << GetName() 
 	 << "): initial contents too long and ignored" << endl ;
   } else {
     strcpy(_value,value) ;
@@ -71,7 +72,7 @@ RooStringVar::operator TString() {
 void RooStringVar::setVal(const char* value) {
   // Set value to given TString
   if (!isValidString(value)) {    
-    cout << "RooStringVar::setVal(" << GetName() << "): new string too long and ignored" << endl ;
+    coutW(InputArguments) << "RooStringVar::setVal(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
     if (value) {
       strcpy(_value,value) ;
@@ -87,7 +88,7 @@ RooAbsArg& RooStringVar::operator=(const char* newValue)
 {
   // Set value to given TString
   if (!isValidString(newValue)) {
-    cout << "RooStringVar::operator=(" << GetName() << "): new string too long and ignored" << endl ;
+    coutW(InputArguments) << "RooStringVar::operator=(" << GetName() << "): new string too long and ignored" << endl ;
   } else {
     if (newValue) {
       strcpy(_value,newValue) ;
@@ -120,8 +121,8 @@ Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   
   if (!isValidString(newValue)) {
     if (verbose) 
-      cout << "RooStringVar::readFromStream(" << GetName() 
-	   << "): new string too long and ignored" << endl ;
+      coutW(InputArguments) << "RooStringVar::readFromStream(" << GetName() 
+			    << "): new string too long and ignored" << endl ;
   } else {
     strcpy(_value,newValue) ;
   }

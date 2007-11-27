@@ -30,6 +30,7 @@
 
 #include "RooNormListManager.h"
 #include "RooNormListManager.h"
+#include "RooMsgService.h"
 
 ClassImp(RooNormListManager)
   ;
@@ -156,11 +157,8 @@ Int_t RooNormListManager::setNormList(const RooAbsArg* self, const RooArgSet* ns
     //cout << "RooNormListManager::setNormList(" << self->GetName() << "): deleting previous normalization list of slot " << _size << endl ;
     delete _normList[_size] ;
   }
-  if (_verbose) {
-    cout << "RooNormListManager::setNormList(" << self->GetName() << "): storing normalization list in slot " 
-	 << _size << ":" << normList << "=" << normList->GetName() << " nset=" ;
-    if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
-  }
+  oocxcoutD(self,Caching) << "RooNormListManager::setNormList(" << self->GetName() << "): storing normalization list in slot " 
+			  << _size << ":" << normList << "=" << normList->GetName() << " nset="  << (nset?*nset:RooArgSet()) << endl ;
 
   _normList[_size] = normList ;
   _size++ ;
@@ -197,8 +195,8 @@ RooArgList* RooNormListManager::getNormList(const RooAbsArg* self, const RooArgS
 RooArgList* RooNormListManager::getNormListByIndex(Int_t index) const 
 {
   if (index<0||index>=_size) {
-    cout << "RooNormListManager::getNormListByIndex: ERROR index (" 
-	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNormListManager::getNormListByIndex: ERROR index (" 
+					<< index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return _normList[index] ;
@@ -207,8 +205,8 @@ RooArgList* RooNormListManager::getNormListByIndex(Int_t index) const
 const RooNameSet* RooNormListManager::nameSet1ByIndex(Int_t index) const
 {
   if (index<0||index>=_size) {
-    cout << "RooNormListManager::getNormListByIndex: ERROR index (" 
-	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNormListManager::getNormListByIndex: ERROR index (" 
+					<< index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet1() ;
@@ -217,8 +215,8 @@ const RooNameSet* RooNormListManager::nameSet1ByIndex(Int_t index) const
 const RooNameSet* RooNormListManager::nameSet2ByIndex(Int_t index) const 
 {
   if (index<0||index>=_size) {
-    cout << "RooNormListManager::getNormListByIndex: ERROR index (" 
-	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNormListManager::getNormListByIndex: ERROR index (" 
+					<< index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet2() ;

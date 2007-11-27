@@ -26,6 +26,7 @@
 #include "RooAbsFunc.h"
 #include <math.h>
 #include "Riostream.h"
+#include "RooMsgService.h"
 
 ClassImp(RooBrentRootFinder)
 ;
@@ -47,8 +48,8 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   Double_t fa= (*_function)(&a) - value;
   Double_t fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
-    cout << "RooBrentRootFinder::findRoot: initial interval does not bracket a root: ("
-	 << a << "," << b << "), value = " << value << endl;
+    oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot: initial interval does not bracket a root: ("
+			      << a << "," << b << "), value = " << value << endl;
     return kFALSE;
   }
 
@@ -140,7 +141,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
 
   }
   // Return our best guess if we run out of iterations
-  cout << "RooBrentRootFinder::findRoot: maximum iterations exceeded." << endl;
+  oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot: maximum iterations exceeded." << endl;
   result= b;
   return kFALSE;
 }

@@ -34,6 +34,7 @@
 #include "RooArgSet.h"
 #include "RooMultiCatIter.h"
 #include "RooAbsCategory.h"
+#include "RooMsgService.h"
 
 ClassImp(RooMultiCategory)
 ;
@@ -48,8 +49,8 @@ RooMultiCategory::RooMultiCategory(const char *name, const char *title, const Ro
   RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooAbsCategory*>(arg)) {
-      cout << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName() 
-	   << " is not a RooAbsCategory" << endl ;
+      coutE(InputArguments) << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName() 
+			    << " is not a RooAbsCategory" << endl ;
     }
     _catSet.add(*arg) ;
   }

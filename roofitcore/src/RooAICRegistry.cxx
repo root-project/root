@@ -18,8 +18,9 @@
 #include "RooFit.h"
 
 #include "RooAICRegistry.h"
-#include "RooAICRegistry.h"
+#include "RooMsgService.h"
 #include "RooArgSet.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAICRegistry)
 ;
@@ -168,7 +169,7 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
     }
   }
 
-  cout << "RooAICRegistry::store: ERROR: capacity exceeded" << endl ;
+  oocoutF((TObject*)0,Caching) << "RooAICRegistry::store: ERROR: capacity exceeded" << endl ;
   assert(0) ;
   return 0 ;
 }

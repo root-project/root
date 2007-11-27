@@ -30,6 +30,7 @@
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
+#include "RooMsgService.h"
 
 ClassImp(RooBinning)
 ;
@@ -271,7 +272,7 @@ Double_t* RooBinning::array() const
 void RooBinning::setRange(Double_t xlo, Double_t xhi) 
 {
   if (xlo>xhi) {
-    cout << "RooUniformBinning::setRange: ERROR low bound > high bound" << endl ;
+    coutE(InputArguments) << "RooUniformBinning::setRange: ERROR low bound > high bound" << endl ;
     return ;
   }
   
@@ -327,7 +328,7 @@ void RooBinning::updateBinCount()
 Bool_t RooBinning::binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const 
 {
   if (bin<0 || bin>= _nbins) {
-    cout << "RooBinning::binEdges ERROR: bin number must be in range (0," << _nbins << ")" << endl ; 
+    coutE(InputArguments) << "RooBinning::binEdges ERROR: bin number must be in range (0," << _nbins << ")" << endl ; 
     return kTRUE ;
   }
   

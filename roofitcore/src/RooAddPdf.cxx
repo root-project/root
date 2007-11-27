@@ -53,6 +53,7 @@
 #include "RooAddGenContext.h"
 #include "RooRealConstant.h"
 #include "RooNameReg.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAddPdf)
 ;
@@ -354,9 +355,10 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
   delete fullDepList ;
     
   if (_verboseEval>1) {
-    cout << "RooAddPdf::syncSuppNormList(" << GetName() << ") synching supplemental normalization list for norm" ;
-    if (nset) { nset->Print("1") ; } else { cout << "(null)" << endl ; }
-    cache->_suppNormList.Print("v") ;
+    cxcoutD(Caching) << "RooAddPdf::syncSuppNormList(" << GetName() << ") synching supplemental normalization list for norm" << (nset?*nset:RooArgSet()) << endl ;
+    if dologD(Caching) {
+      cache->_suppNormList.Print("v") ;
+    }
   }
 
 
@@ -504,11 +506,11 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       Double_t lastCoef(1) ;
       for (i=0 ; i<_coefList.getSize() ; i++) {
 	_coefCache[i] = ((RooAbsPdf*)_coefList.at(i))->getVal(nset) ;
- 	cxcoutD(ChangeTracking) << "SYNC: orig coef[" << i << "] = " << _coefCache[i] << endl ;
+ 	cxcoutD(Caching) << "SYNC: orig coef[" << i << "] = " << _coefCache[i] << endl ;
 	lastCoef -= _coefCache[i] ;
       }			
       _coefCache[_coefList.getSize()] = lastCoef ;
-      cxcoutD(ChangeTracking) << "SYNC: orig coef[" << _coefList.getSize() << "] = " << _coefCache[_coefList.getSize()] << endl ;
+      cxcoutD(Caching) << "SYNC: orig coef[" << _coefList.getSize() << "] = " << _coefCache[_coefList.getSize()] << endl ;
       
       
       // Warn about coefficient degeneration
@@ -542,14 +544,13 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
     RooAbsReal* r1 = ((RooAbsReal*)cache._refRangeProjList.at(i)) ;
     RooAbsReal* r2 = ((RooAbsReal*)cache._rangeProjList.at(i)) ;
     
-    if (dologD(Eval)) {
-      cout << "pp = " << pp->GetName() << endl ;
-      cout << "sn = " << sn->GetName() << endl ;
-      cout << "r1 = " << r1->GetName() << endl ;
-      cout << "r2 = " << r2->GetName() << endl ;
-
-      r1->Print("v") ;
-      r1->printCompactTree() ;
+    cxcoutD(Caching) << "pp = " << pp->GetName() << endl 
+		     << "sn = " << sn->GetName() << endl 
+		     << "r1 = " << r1->GetName() << endl 
+		     << "r2 = " << r2->GetName() << endl ;
+    if (dologD(Caching)) {
+      r1->printToStream(ccoutD(Caching),Verbose) ;
+      r1->printCompactTree(ccoutD(Caching)) ;
     }
 
     Double_t proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;  

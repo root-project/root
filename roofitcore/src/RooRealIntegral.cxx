@@ -141,7 +141,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   TIterator* depIter = intDepList.createIterator() ;
   while((arg=(RooAbsArg*)depIter->Next())) {
     if(!arg->isLValue()) {
-      cout << ClassName() << "::" << GetName() << ": cannot integrate non-lvalue ";
+      coutE(InputArguments) << ClassName() << "::" << GetName() << ": cannot integrate non-lvalue ";
       arg->Print("1");
       _valid= kFALSE;
     }
@@ -552,7 +552,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     _numIntegrand= new RooRealBinding(_function.arg(),_intList,_funcNormSet,kFALSE,_rangeName);
   }
   if(0 == _numIntegrand || !_numIntegrand->isValid()) {
-    cout << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
+    coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
     return kFALSE;
   }
 
@@ -560,7 +560,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig) ;
 
   if(0 == _numIntEngine || !_numIntEngine->isValid()) {
-    cout << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
+    coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
     return kFALSE;
   }
 
@@ -643,7 +643,7 @@ Double_t RooRealIntegral::evaluate() const
 
       // try to initialize our numerical integration engine
       if(!(_valid= initNumIntegrator())) {
-	cout << ClassName() << "::" << GetName()
+	coutE(Integration) << ClassName() << "::" << GetName()
 	     << ":evaluate: cannot initialize numerical integrator" << endl;
 	return 0;
       }
@@ -666,9 +666,9 @@ Double_t RooRealIntegral::evaluate() const
     {
       retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) / jacobianProduct() ;
       if (RooAbsPdf::_verboseEval>0)
-	cout << "RooRealIntegral::evaluate_analytic(" << GetName() 
-	     << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
-	     << " raw = " << retVal << endl ;
+	cxcoutD(Tracing) << "RooRealIntegral::evaluate_analytic(" << GetName() 
+			 << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
+			 << " raw = " << retVal << endl ;
       break ;
     }
 
@@ -701,17 +701,17 @@ Double_t RooRealIntegral::evaluate() const
   }
 
 
-  if (dologD(ChangeTracking)) {
-    cxcoutD(ChangeTracking) << "RooRealIntegral::evaluate() anaInt = " << _anaList << " numInt = " << _intList << _sumList << " mode = " ;
+  if (dologD(Tracing)) {
+    cxcoutD(Tracing) << "RooRealIntegral::evaluate() anaInt = " << _anaList << " numInt = " << _intList << _sumList << " mode = " ;
     switch(_mode) {
-    case Hybrid: cout << "Hybrid" << endl ; break ;
-    case Analytic: cout << "Analytic" << endl ; break ;
-    case PassThrough: cout << "PassThrough" << endl ; break ;
+    case Hybrid: ccoutD(Tracing) << "Hybrid" << endl ; break ;
+    case Analytic: ccoutD(Tracing) << "Analytic" << endl ; break ;
+    case PassThrough: ccoutD(Tracing) << "PassThrough" << endl ; break ;
     }
   }
 
   if (RooAbsPdf::_verboseEval>0) {
-    cout << "RooRealIntegral::evaluate(" << GetName() << ") raw*fact = " << retVal << endl ;
+    cxcoutD(Tracing) << "RooRealIntegral::evaluate(" << GetName() << ") raw*fact = " << retVal << endl ;
   }
   return retVal ;
 }

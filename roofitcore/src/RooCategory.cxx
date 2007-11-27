@@ -31,6 +31,7 @@
 #include "RooCategory.h"
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
+#include "RooMsgService.h"
 
 ClassImp(RooCategory) 
 ;
@@ -110,8 +111,8 @@ Bool_t RooCategory::defineType(const char* label)
   // is already defined
 
   if (TString(label).Contains(";")) {
-  cout << "RooCategory::defineType(" << GetName() 
-       << "): semicolons not allowed in label name" << endl ;
+  coutE(InputArguments) << "RooCategory::defineType(" << GetName() 
+			<< "): semicolons not allowed in label name" << endl ;
   return kTRUE ;
   }
 
@@ -127,8 +128,8 @@ Bool_t RooCategory::defineType(const char* label, Int_t index)
   // or index is already defined
 
   if (TString(label).Contains(";")) {
-  cout << "RooCategory::defineType(" << GetName() 
-       << "): semicolons not allowed in label name" << endl ;
+  coutE(InputArguments) << "RooCategory::defineType(" << GetName() 
+			<< "): semicolons not allowed in label name" << endl ;
   return kTRUE ;
   }
 
@@ -164,7 +165,7 @@ void RooCategory::clearRange(const char* name, Bool_t silent)
 {
   // Check that both input arguments are not null pointers
   if (!name) {
-    cout << "RooCategory::clearRange(" << GetName() << ") ERROR: must specificy valid range name" << endl ;
+    coutE(InputArguments) << "RooCategory::clearRange(" << GetName() << ") ERROR: must specificy valid range name" << endl ;
     return ;
   }
   
@@ -175,7 +176,7 @@ void RooCategory::clearRange(const char* name, Bool_t silent)
   if (rangeNameList) {
     rangeNameList->Clear() ;
   } else if (!silent) {
-    cout << "RooCategory::clearRange(" << GetName() << ") ERROR: range '" << name << "' does not exist" << endl ;
+    coutE(InputArguments) << "RooCategory::clearRange(" << GetName() << ") ERROR: range '" << name << "' does not exist" << endl ;
   } 
 }
 
@@ -191,7 +192,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
 {
   // Check that both input arguments are not null pointers
   if (!name || !stateNameList) {
-    cout << "RooCategory::setRange(" << GetName() << ") ERROR: must specificy valid name and state name list" << endl ;
+    coutE(InputArguments) << "RooCategory::setRange(" << GetName() << ") ERROR: must specificy valid name and state name list" << endl ;
     return ;
   }
   
@@ -200,8 +201,8 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
 
   // If it does not exist, create it on the fly
   if (!rangeNameList) {
-    cout << "RooCategory::setRange(" << GetName() 
-	 << ") new range named '" << name << "' created with state list " << stateNameList << endl ;
+    coutI(Contents) << "RooCategory::setRange(" << GetName() 
+		    << ") new range named '" << name << "' created with state list " << stateNameList << endl ;
 
     rangeNameList = new TList ;
     rangeNameList->SetName(name) ;
@@ -217,8 +218,8 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
     if (state && !rangeNameList->FindObject(token)) {
       rangeNameList->Add(const_cast<RooCatType*>(state)) ;	
     } else {
-      cout << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
-	   << token << "' in state name list" << endl ;
+      coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
+			    << token << "' in state name list" << endl ;
     }
     token = strtok(0,",") ;
   }
@@ -230,7 +231,7 @@ Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName)
 {
   // Check that both input arguments are not null pointers
   if (!rangeName||!stateName) {
-    cout << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specificy valid range name and state name" << endl ;
+    coutE(InputArguments) << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specificy valid range name and state name" << endl ;
     return kFALSE ;
   }
 

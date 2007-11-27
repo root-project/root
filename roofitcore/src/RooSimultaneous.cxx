@@ -47,6 +47,7 @@
 #include "RooNameReg.h"
 #include "RooGlobalFunc.h"
 #include "RooNameReg.h"
+#include "RooMsgService.h"
 
 ClassImp(RooSimultaneous)
 ;
@@ -175,8 +176,8 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
   // Each index state can only have one PDF associated with it
   if (_pdfProxyList.FindObject(catLabel)) {
-    cout << "RooSimultaneous::addPdf(" << GetName() << "): ERROR, index state " 
-	 << catLabel << " has already an associated PDF" << endl ;
+    coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName() << "): ERROR, index state " 
+			  << catLabel << " has already an associated PDF" << endl ;
     return kTRUE ;
   }
 

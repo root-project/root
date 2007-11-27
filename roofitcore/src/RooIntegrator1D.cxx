@@ -29,6 +29,7 @@
 #include "RooIntegratorBinding.h"
 #include "RooNumIntConfig.h"
 #include "RooNumIntFactory.h"
+#include "RooMsgService.h"
 
 #include <assert.h>
 
@@ -106,7 +107,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConf
   _doExtrap = (Bool_t) configSet.getCatIndex("extrapolation",1) ;
 
   if (_fixSteps>_maxSteps) {
-    cout << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
+    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
     _fixSteps = _maxSteps ;
   }
 
@@ -157,7 +158,7 @@ Bool_t RooIntegrator1D::initialize()
 
   // check that the integrand is a valid function
   if(!isValid()) {
-    cout << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
+    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
     return kFALSE;
   }
 
@@ -197,7 +198,7 @@ Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
   // if this object was constructed to always use our integrand's limits.
 
   if(_useIntegrandLimits) {
-    cout << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
   _xmin= xmin;
@@ -216,7 +217,7 @@ Bool_t RooIntegrator1D::checkLimits() const {
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    cout << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
     return kFALSE;
   }
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
@@ -283,10 +284,10 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;
   }
 
-  cout << "RooIntegrator1D::integral: integral over range (" << _xmin << "," << _xmax << ") did not converge after " 
-       << _maxSteps << " steps" << endl;
+  oocoutW((TObject*)0,Integration) << "RooIntegrator1D::integral: integral over range (" << _xmin << "," << _xmax << ") did not converge after " 
+				   << _maxSteps << " steps" << endl;
   for(j= 1; j <= _maxSteps; j++) {
-    cout << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
+    ooccoutW((TObject*)0,Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
   }
   return 0;
 }
@@ -374,7 +375,7 @@ void RooIntegrator1D::extrapolate(Int_t n)
       hp=xa[i+m];
       w=_c[i+1]-_d[i];
       if((den=ho-hp) == 0.0) {
-	cout << "RooIntegrator1D::extrapolate: internal error" << endl;
+	oocoutE((TObject*)0,Integration) << "RooIntegrator1D::extrapolate: internal error" << endl;
       }
       den=w/den;
       _d[i]=hp*den;

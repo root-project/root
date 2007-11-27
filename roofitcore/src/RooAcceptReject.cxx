@@ -31,6 +31,7 @@
 
 #include "TString.h"
 #include "TIterator.h"
+#include "RooMsgService.h"
 
 #include <assert.h>
 
@@ -50,7 +51,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   RooArgSet nodes(func,func.GetName());
   _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
   if (!_cloneSet) {
-    cout << "RooAcceptReject::RooAcceptReject(" << GetName() << ") Couldn't deep-clone function, abort," << endl ;
+    coutE(Generation) << "RooAcceptReject::RooAcceptReject(" << GetName() << ") Couldn't deep-clone function, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -68,8 +69,8 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   const RooAbsArg *arg   = 0;
   while((arg= (const RooAbsArg*)iterator->Next())) {
     if(arg->isDerived()) {
-      cout << fName << "::" << ClassName() << ": cannot generate values for derived \""
-	   << arg->GetName() << "\"" << endl;
+      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
+			<< arg->GetName() << "\"" << endl;
       _isValid= kFALSE;
       continue;
     }
@@ -100,20 +101,20 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
 	_realVars.add(*realVar);
       }
       else {
-	cout << fName << "::" << ClassName() << ": cannot generate values for \""
-	     << realVar->GetName() << "\" with unbound range" << endl;
+	coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
+			  << realVar->GetName() << "\" with unbound range" << endl;
 	_isValid= kFALSE;
       }
     }
     else {
-      cout << fName << "::" << ClassName() << ": cannot generate values for \""
-	   << arg->GetName() << "\" with unexpected type" << endl;
+      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
+			<< arg->GetName() << "\" with unexpected type" << endl;
       _isValid= kFALSE;
     }
   }
   delete iterator;
   if(!_isValid) {
-    cout << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
+    coutE(Generation) << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
     return;
   }
 
@@ -121,8 +122,8 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   if (!_funcMaxVal) {
     if(_realSampleDim > _maxSampleDim) {
       _minTrials= _minTrialsArray[_maxSampleDim]*_catSampleMult;
-      cout << fName << "::" << ClassName() << ": WARNING: generating " << _realSampleDim
-	   << " variables with accept-reject may not be accurate" << endl;
+      coutW(Generation) << fName << "::" << ClassName() << ": WARNING: generating " << _realSampleDim
+			<< " variables with accept-reject may not be accurate" << endl;
     }
     else {
       _minTrials= _minTrialsArray[_realSampleDim]*_catSampleMult;
@@ -134,21 +135,21 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
 
   // print a verbose summary of our configuration, if requested
   if(_verbose) {
-    cout << fName << "::" << ClassName() << ":" << endl
-	 << "  Initializing accept-reject generator for" << endl << "    ";
+    coutI(Generation) << fName << "::" << ClassName() << ":" << endl
+		      << "  Initializing accept-reject generator for" << endl << "    ";
     _funcClone->Print();
     if (_funcMaxVal) {
-      cout << "  Function maximum provided, no trial sampling performed" << endl ;
+      ccoutI(Generation) << "  Function maximum provided, no trial sampling performed" << endl ;
     } else {
-      cout << "  Real sampling dimension is " << _realSampleDim << endl;
-      cout << "  Category sampling multiplier is " << _catSampleMult << endl ;
-      cout << "  Min sampling trials is " << _minTrials << endl;
+      ccoutI(Generation) << "  Real sampling dimension is " << _realSampleDim << endl;
+      ccoutI(Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
+      ccoutI(Generation) << "  Min sampling trials is " << _minTrials << endl;
     }
-    cout << "  Will generate category vars ";
+    ccoutI(Generation) << "  Will generate category vars ";
     TString indent("  ");
-    _catVars.printToStream(cout,Standard,indent);
-    cout << "  Will generate real vars ";
-    _realVars.printToStream(cout,Standard,indent);
+    _catVars.printToStream(ccoutI(Generation),Standard,indent);
+    ccoutI(Generation) << "  Will generate real vars ";
+    _realVars.printToStream(ccoutI(Generation),Standard,indent);
   }
 
   // create a fundamental type for storing function values
@@ -231,7 +232,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
 
       // Limit cache size to 1M events
       if (_cache->numEntries()>1000000) {
-	cout << "RooAcceptReject::generateEvent: resetting event cache" << endl ;
+	coutI(Generation) << "RooAcceptReject::generateEvent: resetting event cache" << endl ;
 	_cache->reset() ;
 	_eventsUsed = 0 ;
       }
@@ -249,19 +250,17 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
       // Calculate how many more events to generate using our best estimate of our efficiency.
       // Always generate at least one more event so we don't get stuck.
       if(_totalEvents*_maxFuncVal <= 0) {
-	cout << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
+	coutE(Generation) << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
 	return 0;
       }
       Double_t eff= _funcSum/(_totalEvents*_maxFuncVal);
       Int_t extra= 1 + (Int_t)(1.05*remaining/eff);
-      if(_verbose) {
-	cout << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache" << endl;
-      }
+      cxcoutD(Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache" << endl;
       Double_t oldMax(_maxFuncVal);
       while(extra--) addEventToCache();
-      if(_verbose && (_maxFuncVal > oldMax)) {
-	cout << "RooAcceptReject::generateEvent: estimated function maximum increased from "
-	     << oldMax << " to " << _maxFuncVal << endl;
+      if((_maxFuncVal > oldMax)) {
+	cxcoutD(Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
+			  << oldMax << " to " << _maxFuncVal << endl;
       }
     }
 
@@ -351,7 +350,7 @@ Double_t RooAcceptReject::getFuncMax()
 
     // Limit cache size to 1M events
     if (_cache->numEntries()>1000000) {
-      cout << "RooAcceptReject::getFuncMax: resetting event cache" << endl ;
+      coutI(Generation) << "RooAcceptReject::getFuncMax: resetting event cache" << endl ;
       _cache->reset() ;
       _eventsUsed = 0 ;
     }

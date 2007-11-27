@@ -42,7 +42,7 @@ void* RooSetProxy::operator new (size_t bytes)
   return malloc(bytes) ;
 }
 
-void RooSetProxy::operator delete (void */*ptr*/)
+void RooSetProxy::operator delete (void * /*ptr*/)
 {
 }
 

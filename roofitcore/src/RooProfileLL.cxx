@@ -24,6 +24,7 @@
 #include "RooMinuit.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
+#include "RooMsgService.h"
 
 ClassImp(RooProfileLL) 
 
@@ -156,7 +157,7 @@ Double_t RooProfileLL::evaluate() const
   
   // Set all observables constant in the minimization
   const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kTRUE) ;  
-  cout << "." ; cout.flush() ;
+  ccoutW(Eval) << "." ; ccoutW(Eval).flush() ;
   _minuit->migrad() ;
 
   // Restore original values and constant status of observables

@@ -27,6 +27,7 @@
 #include "RooLinkedListIter.h"
 #include "RooHashTable.h"
 #include "RooAbsArg.h"
+#include "RooMsgService.h"
 
 ClassImp(RooLinkedList)
 ;
@@ -78,7 +79,7 @@ RooLinkedList& RooLinkedList::operator=(const RooLinkedList& other)
 void RooLinkedList::setHashTableSize(Int_t size) 
 {        
   if (size<0) {
-    cout << "RooLinkedList::setHashTable() ERROR size must be positive" << endl ;
+    coutE(InputArguments) << "RooLinkedList::setHashTable() ERROR size must be positive" << endl ;
     return ;
   }
   if (size==0) {

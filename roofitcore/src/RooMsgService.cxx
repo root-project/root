@@ -89,11 +89,11 @@ RooMsgService::RooMsgService()
   _topicNames[Plotting]="Plotting" ;
   _topicNames[Fitting]="Fitting" ;
   _topicNames[Integration]="Integration" ;
-  _topicNames[ChangeTracking]="ChangeTracking" ;
+  _topicNames[LinkStateMgmt]="LinkStateMgmt" ;
   _topicNames[Eval]="Eval" ;
   _topicNames[Caching]="Caching" ;
   _topicNames[Optimization]="Optimization" ;
-  _topicNames[Workspace]="Workspace" ;
+  _topicNames[ObjectHandling]="ObjectHandling" ;
   _topicNames[InputArguments]="InputArguments" ;
   _topicNames[Tracing]="Tracing" ;
 

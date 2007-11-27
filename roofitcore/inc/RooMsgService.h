@@ -32,10 +32,22 @@ class RooAbsArg ;
 #define coutE(a) RooMsgService::instance().log(this,RooMsgService::ERROR,RooMsgService::a) 
 #define coutF(a) RooMsgService::instance().log(this,RooMsgService::FATAL,RooMsgService::a) 
 
+#define ccoutD(a) RooMsgService::instance().log(this,RooMsgService::DEBUG,RooMsgService::a,kTRUE) 
+#define ccoutI(a) RooMsgService::instance().log(this,RooMsgService::INFO,RooMsgService::a,kTRUE) 
+#define ccoutW(a) RooMsgService::instance().log(this,RooMsgService::WARNING,RooMsgService::a,kTRUE) 
+#define ccoutE(a) RooMsgService::instance().log(this,RooMsgService::ERROR,RooMsgService::a,kTRUE) 
+#define ccoutF(a) RooMsgService::instance().log(this,RooMsgService::FATAL,RooMsgService::a,kTRUE) 
+
 #define oocoutI(o,a) RooMsgService::instance().log(o,RooMsgService::INFO,RooMsgService::a) 
 #define oocoutW(o,a) RooMsgService::instance().log(o,RooMsgService::WARNING,RooMsgService::a) 
 #define oocoutE(o,a) RooMsgService::instance().log(o,RooMsgService::ERROR,RooMsgService::a) 
 #define oocoutF(o,a) RooMsgService::instance().log(o,RooMsgService::FATAL,RooMsgService::a) 
+
+#define ooccoutD(o,a) RooMsgService::instance().log(o,RooMsgService::DEBUG,RooMsgService::a,kTRUE) 
+#define ooccoutI(o,a) RooMsgService::instance().log(o,RooMsgService::INFO,RooMsgService::a,kTRUE) 
+#define ooccoutW(o,a) RooMsgService::instance().log(o,RooMsgService::WARNING,RooMsgService::a,kTRUE) 
+#define ooccoutE(o,a) RooMsgService::instance().log(o,RooMsgService::ERROR,RooMsgService::a,kTRUE) 
+#define ooccoutF(o,a) RooMsgService::instance().log(o,RooMsgService::FATAL,RooMsgService::a,kTRUE) 
 
 #ifndef _WIN32
 #define ANYDEBUG (RooMsgService::_debugCount>0)
@@ -84,8 +96,9 @@ public:
   virtual ~RooMsgService() ;
 
   enum MsgLevel { DEBUG=0, INFO=1, WARNING=2, ERROR=3, FATAL=4 } ;
-  enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, ChangeTracking=32, 
-                  Eval=64, Caching=128, Optimization=256, Workspace=512, InputArguments=1024, Tracing=2048 } ;
+  enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32, 
+                  Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048, 
+		  Contents=4096, DataHandling=8192 } ;
 
   struct StreamConfig {
 

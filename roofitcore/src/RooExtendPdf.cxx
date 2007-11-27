@@ -44,6 +44,7 @@
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
 #include "RooNameReg.h"
+#include "RooMsgService.h"
 
 ClassImp(RooExtendPdf)
 ;
@@ -63,7 +64,7 @@ RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf&
   // Constructor. The ExtendedPdf behaves identical to the supplied input pdf,
   // but adds an extended likelihood term. The expected number of events return
   // is 'norm'. If a rangename is given, the number of events is interpreted as
-  // the number of events in the given range
+#  // the number of events in the given range
 
   // Copy various setting from pdf
   setUnit(_pdf.arg().getUnit()) ;
@@ -104,8 +105,8 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
   RooAbsPdf& pdf = (RooAbsPdf&)_pdf.arg() ;
 
   if (_rangeName && (!nset || nset->getSize()==0)) {
-    cout << "RooExtendPdf::expectedEvents(" << GetName() << ") WARNING: RooExtendPdf needs non-null normalization set to calculate fraction in range " 
-	 << _rangeName << ".  Results may be nonsensical" << endl ;  
+    coutW(InputArguments) << "RooExtendPdf::expectedEvents(" << GetName() << ") WARNING: RooExtendPdf needs non-null normalization set to calculate fraction in range " 
+			  << _rangeName << ".  Results may be nonsensical" << endl ;  
   }
 
   Double_t nExp = _n ;
@@ -119,9 +120,8 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 
 
     if ( fracInt == 0. || _n == 0.) {
-      cout << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / " 
-	   << fracInt << " for nset = " ;
-      if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
+      coutW(Eval) << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / " 
+		  << fracInt << " for nset = " << (nset?*nset:RooArgSet()) << endl ;
     }
 
     nExp /= fracInt ;    

@@ -27,6 +27,7 @@
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
+#include "RooMsgService.h"
 #include "TMath.h"
 
 ClassImp(RooPolyVar)
@@ -49,8 +50,8 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
 
   // Check lowest order
   if (_lowestOrder<0) {
-    cout << "RooPolyVar::ctor(" << GetName() 
-	 << ") WARNING: lowestOrder must be >=1, setting value to 1" << endl ;
+    coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() 
+			  << ") WARNING: lowestOrder must be >=1, setting value to 1" << endl ;
     _lowestOrder=0 ;
   }
 
@@ -58,8 +59,8 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   RooAbsArg* coef ;
   while((coef = (RooAbsArg*)coefIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-      cout << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
-	   << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
+			    << " is not of type RooAbsReal" << endl ;
       assert(0) ;
     }
     _coefList.add(*coef) ;

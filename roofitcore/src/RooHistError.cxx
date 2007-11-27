@@ -24,6 +24,7 @@
 #include "RooHistError.h"
 #include "RooHistError.h"
 #include "RooBrentRootFinder.h"
+#include "RooMsgService.h"
 #include "TMath.h"
 
 #include "Riostream.h"
@@ -80,7 +81,7 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
 
   // sanity checks
   if(n < 0) {
-    cout << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << endl;
+    oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << endl;
     return kFALSE;
   }
 
@@ -107,7 +108,7 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
 {
   // sanity checks
   if(n < 0 || m < 0) {
-    cout << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
+    oocoutE((TObject*)0,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n,m = " << n << "," << m << endl;
     return kFALSE;
   }
 
@@ -205,7 +206,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
     ok= lFinder.findRoot(lo,lo,lo+stepSize,alpha+beta);
     ok|= uFinder.findRoot(hi,hi-stepSize,hi,alpha);
   }
-  if(!ok) cout << "RooHistError::getInterval: failed to find root(s)" << endl;
+  if(!ok) oocoutE((TObject*)0,Plotting) << "RooHistError::getInterval: failed to find root(s)" << endl;
 
   return ok;
 }

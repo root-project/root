@@ -46,6 +46,7 @@
 #include "RooTrace.h"
 #include "RooStringVar.h" 
 #include "RooRealIntegral.h"
+#include "RooMsgService.h"
 
 #include <string.h>
 #include <iomanip>
@@ -166,12 +167,12 @@ RooAbsArg::~RooAbsArg()
     if (_verboseDirty || deleteWatch()) {
 
       if (deleteWatch() && first) {
-	cout << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << endl ;
+	cxcoutD(Tracing) << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << endl ;
 	first = kFALSE ;
       }
 
-      cout << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
-	   << client->GetName() << "\" should have been deleted first" << endl ;
+      cxcoutD(Tracing)  << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
+		       << client->GetName() << "\" should have been deleted first" << endl ;
     }
   }
   delete clientIter ;
@@ -272,8 +273,8 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
   // we can declare dependence on the server's value and/or shape.
 
   if (_verboseDirty) {
-       cout << "RooAbsArg::addServer(" << GetName() << "): adding server " << server.GetName() 
-	    << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+       cxcoutD(LinkStateMgmt) << "RooAbsArg::addServer(" << GetName() << "): adding server " << server.GetName() 
+			      << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
   }
 
   // Add server link to given server
@@ -306,8 +307,8 @@ void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force)
   // we no longer depend on its value and shape.
 
   if (_verboseDirty) {
-    cout << "RooAbsArg::removeServer(" << GetName() << "): removing server " 
-	 << server.GetName() << "(" << &server << ")" << endl ;
+    cxcoutD(LinkStateMgmt) << "RooAbsArg::removeServer(" << GetName() << "): removing server " 
+			   << server.GetName() << "(" << &server << ")" << endl ;
   }
 
   // Remove server link to given server
@@ -342,15 +343,15 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
   // Change dirty flag propagation mask for specified server
 
   if (!_serverList.FindObject(&server)) {
-    cout << "RooAbsArg::changeServer(" << GetName() << "): Server " 
+    coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server " 
 	 << server.GetName() << " not registered" << endl ;
     return ;
   }
 
   // This condition should not happen, but check anyway
   if (!server._clientList.FindObject(this)) {    
-    cout << "RooAbsArg::changeServer(" << GetName() << "): Server " 
-	 << server.GetName() << " doesn't have us registered as client" << endl ;
+    coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server " 
+			 << server.GetName() << " doesn't have us registered as client" << endl ;
     return ;
   }
 
@@ -569,8 +570,8 @@ Bool_t RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
   Bool_t ret(kFALSE) ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (arg->getAttribute("ServerDied")) {
-      cout << "RooAbsArg::recursiveCheckObservables(" << GetName() << "): ERROR: one or more servers of node " 
-	   << arg->GetName() << " no longer exists!" << endl ;
+      coutE(LinkStateMgmt) << "RooAbsArg::recursiveCheckObservables(" << GetName() << "): ERROR: one or more servers of node " 
+			   << arg->GetName() << " no longer exists!" << endl ;
       arg->Print("v") ;
       ret = kTRUE ;
     }
@@ -694,16 +695,14 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
     source=this ; 
   } else if (source==this) {
     // Cyclical dependency, abort
-    cout << "RooAbsArg::setValueDirty(" << GetName() 
+    coutE(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << GetName() 
 	 << "): cyclical dependency detected" << endl ;
     return ;
   }
 
   // Propagate dirty flag to all clients if this is a down->up transition
-  if (dologD(ChangeTracking)) {
-    cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
-	 << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
-  }
+  cxcoutD(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
+			 << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
 
   _valueDirty = kTRUE ;
   
@@ -720,8 +719,8 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
   // Mark this object as having changed its shape, and propagate this status
   // change to all of our clients.
 
-  if (_verboseDirty) cout << "RooAbsArg::setShapeDirty(" << GetName() 
-			  << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
+  cxcoutD(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName() 
+			 << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
 
   if (_clientListShape.GetSize()==0) {
     _shapeDirty = kTRUE ;
@@ -733,7 +732,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
     source=this ; 
   } else if (source==this) {
     // Cyclical dependency, abort
-    cout << "RooAbsArg::setShapeDirty(" << GetName() 
+    coutE(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName() 
 	 << "): cyclical dependency detected" << endl ;
     return ;
   }
@@ -792,14 +791,14 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
 
     newServer= oldServer->findNewServer(newSet, nameChange);
     if (newServer && _verboseDirty) {
-      cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
- 	   << " redirected from " << oldServer << " to " << newServer << endl ;
+      cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
+			     << " redirected from " << oldServer << " to " << newServer << endl ;
     }
 
     if (!newServer) {
       if (mustReplaceAll) {
-	cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
-	     << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
+	cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
+			       << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
 	ret = kTRUE ;
       }
       continue ;
@@ -825,8 +824,8 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   }
 
   if (mustReplaceAll && !allReplaced) {
-    cout << "RooAbsArg::redirectServers(" << GetName() 
-	 << "): ERROR, some proxies could not be adjusted" << endl ;
+    coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName() 
+			 << "): ERROR, some proxies could not be adjusted" << endl ;
     ret = kTRUE ;
   }
   
@@ -866,8 +865,8 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 
       // Check if match is unique
       if(tmp->getSize()>1) {
-	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->getSize() << " servers with " 
-	     << nameAttrib << " attribute" << endl ;
+	coutF(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->getSize() << " servers with " 
+			     << nameAttrib << " attribute" << endl ;
 	tmp->Print("v") ;
 	assert(0) ;
       }
@@ -920,9 +919,9 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
 
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
-    cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
-	 << proxy.GetName() << " for arg " << proxy.absArg()->GetName() 
-	 << " already registered" << endl ;
+    coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
+			 << proxy.GetName() << " for arg " << proxy.absArg()->GetName() 
+			 << " already registered" << endl ;
     return ;
   }
 
@@ -957,8 +956,8 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
 
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
-    cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
- 	 << proxy.GetName() << " already registered" << endl ;
+    coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
+			 << proxy.GetName() << " already registered" << endl ;
     return ;
   }
 
@@ -987,8 +986,8 @@ void RooAbsArg::registerProxy(RooListProxy& proxy)
 
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
-    cout << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
- 	 << proxy.GetName() << " already registered" << endl ;
+    coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named " 
+			 << proxy.GetName() << " already registered" << endl ;
     return ;
   }
 
@@ -1046,8 +1045,8 @@ void RooAbsArg::attachToTree(TTree& ,Int_t)
   // Overloadable function for derived classes to implement
   // attachment as branch to a TTree
 
-  cout << "RooAbsArg::attachToTree(" << GetName() 
-       << "): Cannot be attached to a TTree" << endl ;
+  coutE(Contents) << "RooAbsArg::attachToTree(" << GetName() 
+		  << "): Cannot be attached to a TTree" << endl ;
 }
 
 
@@ -1511,7 +1510,7 @@ UInt_t RooAbsArg::crc32(const char* data) const
   // Calculate and extract length of string
   Int_t len = strlen(data) ;
   if (len<4) {
-    cout << "RooAbsReal::crc32 cannot calculate checksum of less than 4 bytes of data" << endl ;
+    coutE(InputArguments) << "RooAbsReal::crc32 cannot calculate checksum of less than 4 bytes of data" << endl ;
     return 0 ;
   }
 

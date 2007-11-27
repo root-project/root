@@ -39,12 +39,14 @@
 #include "RooArgSet.h"
 #include "RooCurve.h"
 #include "RooHist.h"
+#include "RooMsgService.h"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
 #include "TAttText.h"
 #include "TDirectory.h"
+
 
 #include "Riostream.h"
 #include <string.h>
@@ -91,12 +93,12 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
 
   if(!var1.hasMin() || !var1.hasMax()) {
-    cout << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
+    coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
 	 << var1.GetName() << endl;
     return;
   }
   if(!var2.hasMin() || !var2.hasMax()) {
-    cout << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
+    coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
 	 << var1.GetName() << endl;
     return;
   }
@@ -250,7 +252,7 @@ void RooPlot::addObject(TObject *obj, Option_t *drawOptions, Bool_t invisible) {
   // when its containing plot object is destroyed.
 
   if(0 == obj) {
-    cout << fName << "::addObject: called with a null pointer" << endl;
+    coutE(InputArguments) << fName << "::addObject: called with a null pointer" << endl;
     return;
   }
   DrawOpt opt(drawOptions) ;
@@ -271,12 +273,12 @@ void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, Bool_t invisible) {
   // containing plot object is destroyed.
 
   if(0 == hist) {
-    cout << fName << "::addTH1: called with a null pointer" << endl;
+    coutE(InputArguments) << fName << "::addTH1: called with a null pointer" << endl;
     return;
   }
   // check that this histogram is really 1D
   if(1 != hist->GetDimension()) {
-    cout << fName << "::addTH1: cannot plot histogram with "
+    coutE(InputArguments) << fName << "::addTH1: cannot plot histogram with "
 	 << hist->GetDimension() << " dimensions" << endl;
     return;
   }
@@ -312,7 +314,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t i
   // add this element to our list and remember its drawing option
   TObject *obj= plotable->crossCast();
   if(0 == obj) {
-    cout << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
+    coutE(InputArguments) << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
   }
   else {
     DrawOpt opt(drawOptions) ;
@@ -344,8 +346,8 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm) {
     if (dynamic_cast<const RooHist*>(rp)) corFac = _normBinWidth/rp->getFitRangeBinW() ;
     
     
-    cout << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac 
-	 << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+    coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac 
+		    << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
 
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
     // scale this histogram to match that density
@@ -465,7 +467,7 @@ const char* RooPlot::nameOf(Int_t idx) const
   
   TObject* obj = _items.At(idx) ;
   if (!obj) {
-    cout << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << endl ;
+    coutE(InputArguments) << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << endl ;
     return 0 ;
   }
   return obj->GetName() ;
@@ -479,7 +481,7 @@ TObject* RooPlot::getObject(Int_t idx) const
   
   TObject* obj = _items.At(idx) ;
   if (!obj) {
-    cout << "RooPlot::getObject(" << GetName() << ") index " << idx << " out of range" << endl ;
+    coutE(InputArguments) << "RooPlot::getObject(" << GetName() << ") index " << idx << " out of range" << endl ;
     return 0 ;
   }
   return obj ;
@@ -570,7 +572,7 @@ TObject *RooPlot::findObject(const char *name, const TClass* clas) const {
   delete iter ;
   
   if (ret==0) {
-    cout << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << endl ;
+    coutE(InputArguments) << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << endl ;
   }
   return ret ;
 }
@@ -647,14 +649,14 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, Int_t n
   // Find curve object
   RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
   if (!curve) {
-    cout << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << endl ;
+    coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << endl ;
     return -1. ;
   }
 
   // Find histogram object
   RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
   if (!hist) {
-    cout << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << endl ;
+    coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << endl ;
     return -1. ;
   }
 
@@ -666,14 +668,14 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename,bool nor
   // Find curve object
   RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
   if (!curve) {
-    cout << "RooPlot::residHist(" << GetName() << ") cannot find curve" << endl ;
+    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find curve" << endl ;
     return 0 ;
   }
 
   // Find histogram object
   RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
   if (!hist) {
-    cout << "RooPlot::residHist(" << GetName() << ") cannot find histogram" << endl ;
+    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find histogram" << endl ;
     return 0 ;
   }  
 
@@ -713,8 +715,8 @@ Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   if (_normObj) {
     scaleFactor = _normObj->getFitRangeNEvt(xlo,xhi)/_normObj->getFitRangeNEvt() ;
   } else {
-    cout << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range " 
-	 << xlo << " to " << xhi << ", substituting full event count" << endl ;
+    coutW(Plotting) << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range " 
+		    << xlo << " to " << xhi << ", substituting full event count" << endl ;
   }
   return getFitRangeNEvt()*scaleFactor ;
 }

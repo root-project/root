@@ -68,7 +68,7 @@
 #include "RooNumIntFactory.h"
 #include "RooGenContext.h"
 #include "RooConvGenContext.h"
-
+#include "RooMsgService.h"
 
 
 ClassImp(RooNumConvolution)
@@ -219,8 +219,8 @@ Double_t RooNumConvolution::evaluate() const
   if (_doProf) {
     _callHist->Fill(x,_integrand->numCall()) ;
     if (_integrand->numCall()>_verboseThresh) {
-      cout << "RooNumConvolution::eveluate(" << GetName() << ") WARNING convolution integral at x=" << x 
-	   << " required " << _integrand->numCall() << " function evaluations" << endl ;
+      coutW(Integration) << "RooNumConvolution::eveluate(" << GetName() << ") WARNING convolution integral at x=" << x 
+			 << " required " << _integrand->numCall() << " function evaluations" << endl ;
     }
   }
 
@@ -265,7 +265,7 @@ void RooNumConvolution::setCallWarning(Int_t threshold)
   // exceeds given threshold
 
   if (threshold<0) {
-    cout << "RooNumConvolution::setCallWarning(" << GetName() << ") ERROR: threshold must be positive, value unchanged" << endl ;
+    coutE(InputArguments) << "RooNumConvolution::setCallWarning(" << GetName() << ") ERROR: threshold must be positive, value unchanged" << endl ;
     return ;
   }
   _verboseThresh = threshold ;

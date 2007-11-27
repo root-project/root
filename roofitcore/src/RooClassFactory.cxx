@@ -187,22 +187,22 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
 {
   // Check that arguments were given
   if (!baseName) {
-    cout << "RooClassFactory::makeClass: ERROR: a base class name must be given" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: a base class name must be given" << endl ;
     return kTRUE ;
   }
 
   if (!className) {
-    cout << "RooClassFactory::makeClass: ERROR: a class name must be given" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: a class name must be given" << endl ;
     return kTRUE ;
   }
 
   if ((!realArgNames || !*realArgNames) && (!catArgNames || !*catArgNames)) {
-    cout << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
     return kTRUE ;
   }
 
   if (intExpression && !hasAnaInt) {
-    cout << "RooClassFactory::makeClass: ERROR no analytical integration code requestion, but expression for analytical integral provided" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR no analytical integration code requestion, but expression for analytical integral provided" << endl ;
     return kTRUE ;
   }
 

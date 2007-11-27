@@ -37,6 +37,7 @@
 #include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooAddition.h"
+#include "RooMsgService.h"
 #include "RooRandomizeParamMCSModule.h"
 
 ClassImp(RooRandomizeParamMCSModule)
@@ -76,7 +77,7 @@ void RooRandomizeParamMCSModule::sampleUniform(RooRealVar& param, Double_t lo, D
   if (genParams()) {
     RooRealVar* actualPar = static_cast<RooRealVar*>(genParams()->find(param.GetName())) ;
     if (!actualPar) {
-      cout << "RooRandomizeParamMCSModule::initializeInstance: variable " << param.GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
+      oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::initializeInstance: variable " << param.GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
       return ;
     }
   }
@@ -95,7 +96,7 @@ void RooRandomizeParamMCSModule::sampleGaussian(RooRealVar& param, Double_t mean
   if (genParams()) {
     RooRealVar* actualPar = static_cast<RooRealVar*>(genParams()->find(param.GetName())) ;
     if (!actualPar) {
-      cout << "RooRandomizeParamMCSModule::initializeInstance: variable " << param.GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
+      oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::initializeInstance: variable " << param.GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
       return ;
     }
   }
@@ -121,7 +122,7 @@ void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Dou
     // Check that arg is a RooRealVar
     RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
     if (!rrv) {
-      cout << "RooRandomizeParamMCSModule::sampleSumUniform() ERROR: input parameter " << arg->GetName() << " is not a RooRealVar and is ignored" << endl ;
+      oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumUniform() ERROR: input parameter " << arg->GetName() << " is not a RooRealVar and is ignored" << endl ;
       continue;
     }
     okset.add(*rrv) ;
@@ -136,7 +137,7 @@ void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Dou
     while ((arg=(RooAbsArg*)psiter->Next())) {
       RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg->GetName())) ;
       if (!actualVar) {
-	cout << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
+	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
       } else {
 	okset2.add(*actualVar) ;
       }
@@ -171,7 +172,7 @@ void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, Doubl
     // Check that arg is a RooRealVar
     RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
     if (!rrv) {
-      cout << "RooRandomizeParamMCSModule::sampleSumGauss() ERROR: input parameter " << arg->GetName() << " is not a RooRealVar and is ignored" << endl ;
+      oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumGauss() ERROR: input parameter " << arg->GetName() << " is not a RooRealVar and is ignored" << endl ;
       continue;
     }
     okset.add(*rrv) ;
@@ -186,7 +187,7 @@ void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, Doubl
     while ((arg=(RooAbsArg*)psiter->Next())) {
       RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg->GetName())) ;
       if (!actualVar) {
-	cout << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
+	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
       } else {
 	okset2.add(*actualVar) ;
       }
@@ -217,7 +218,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
     // Check that listed variable is actual generator model parameter
     RooRealVar* actualPar = static_cast<RooRealVar*>(genParams()->find(uiter->_param->GetName())) ;
     if (!actualPar) {
-      cout << "RooRandomizeParamMCSModule::initializeInstance: variable " << uiter->_param->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
+      oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::initializeInstance: variable " << uiter->_param->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
       uiter = _unifParams.erase(uiter) ;
       continue ;
     }
@@ -237,7 +238,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
     // Check that listed variable is actual generator model parameter
     RooRealVar* actualPar = static_cast<RooRealVar*>(genParams()->find(giter->_param->GetName())) ;
     if (!actualPar) {
-      cout << "RooRandomizeParamMCSModule::initializeInstance: variable " << giter->_param->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
+      oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::initializeInstance: variable " << giter->_param->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;
       giter = _unifParams.erase(giter) ;
       continue ;
     }
@@ -262,7 +263,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
     while ((arg=(RooAbsArg*)psiter->Next())) {
       RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg->GetName())) ;
       if (!actualVar) {
-	cout << "RooRandomizeParamMCSModule::initializeInstance: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
+	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::initializeInstance: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
       } else {
 	actualPSet.add(*actualVar) ;
       }
@@ -292,7 +293,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
     while ((arg=(RooAbsArg*)psiter->Next())) {
       RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg->GetName())) ;
       if (!actualVar) {
-	cout << "RooRandomizeParamMCSModule::initializeInstance: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
+	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::initializeInstance: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
       } else {
 	actualPSet.add(*actualVar) ;
       }
@@ -337,7 +338,7 @@ Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
   std::list<UniParam>::iterator uiter ;
   for (uiter= _unifParams.begin() ; uiter!= _unifParams.end() ; ++uiter) {
     Double_t newVal = RooRandom::randomGenerator()->Uniform(uiter->_lo,uiter->_hi) ;        
-    cout << "RooRandomizeParamMCSModule::processBeforeGen: applying uniform smearing to generator parameter " 
+    oocoutE((TObject*)0,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying uniform smearing to generator parameter " 
 	 << uiter->_param->GetName() << " in range [" << uiter->_lo << "," << uiter->_hi << "], chosen value for this sample is " << newVal << endl ;
     uiter->_param->setVal(newVal) ;
 
@@ -349,7 +350,7 @@ Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
   std::list<GausParam>::iterator giter ;
   for (giter= _gausParams.begin() ; giter!= _gausParams.end() ; ++giter) {
     Double_t newVal = RooRandom::randomGenerator()->Gaus(giter->_mean,giter->_sigma) ;
-    cout << "RooRandomizeParamMCSModule::processBeforeGen: applying gaussian smearing to generator parameter " 
+    oocoutI((TObject*)0,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying gaussian smearing to generator parameter " 
 	 << giter->_param->GetName() << " with a mean of " << giter->_mean << " and a width of " << giter->_sigma << ", chosen value for this sample is " << newVal << endl ;
     giter->_param->setVal(newVal) ;
 
@@ -363,9 +364,9 @@ Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
 
     // Calculate new value for sum 
     Double_t newVal = RooRandom::randomGenerator()->Uniform(usiter->_lo,usiter->_hi) ;        
-    cout << "RooRandomizeParamMCSModule::processBeforeGen: applying uniform smearing to sum of set of generator parameters " ;
-    usiter->_pset.Print("I")  ;
-    cout << " in range [" << usiter->_lo << "," << usiter->_hi << "], chosen sum value for this sample is " << newVal << endl ;
+    oocoutI((TObject*)0,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying uniform smearing to sum of set of generator parameters " 
+				    <<  usiter->_pset
+				    << " in range [" << usiter->_lo << "," << usiter->_hi << "], chosen sum value for this sample is " << newVal << endl ;
 
     // Determine original value of sum and calculate per-component scale factor to obtain new valye for sum
     RooAddition sumVal("sumVal","sumVal",usiter->_pset) ;
@@ -387,9 +388,10 @@ Bool_t RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
     
     // Calculate new value for sum 
     Double_t newVal = RooRandom::randomGenerator()->Gaus(gsiter->_mean,gsiter->_sigma) ;        
-    cout << "RooRandomizeParamMCSModule::processBeforeGen: applying gaussian smearing to sum of set of generator parameters " ;
-    gsiter->_pset.Print("I")  ;
-    cout << " with a mean of " << gsiter->_mean << " and a width of " << gsiter->_sigma << ", chosen value for this sample is " << newVal << endl ;
+    oocoutI((TObject*)0,Generation) << "RooRandomizeParamMCSModule::processBeforeGen: applying gaussian smearing to sum of set of generator parameters " 
+				    << gsiter->_pset
+				    << " with a mean of " << gsiter->_mean << " and a width of " << gsiter->_sigma 
+				    << ", chosen value for this sample is " << newVal << endl ;
 
     // Determine original value of sum and calculate per-component scale factor to obtain new valye for sum
     RooAddition sumVal("sumVal","sumVal",gsiter->_pset) ;

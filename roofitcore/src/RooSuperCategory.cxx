@@ -36,6 +36,7 @@
 #include "RooArgSet.h"
 #include "RooMultiCatIter.h"
 #include "RooAbsCategoryLValue.h"
+#include "RooMsgService.h"
 
 ClassImp(RooSuperCategory)
 ;
@@ -50,8 +51,8 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
   RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)iter->Next())) {
     if (!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
-      cout << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName() 
-	   << " is not an lvalue" << endl ;
+      coutE(InputArguments) << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName() 
+			    << " is not an lvalue" << endl ;
     }
     _catSet.add(*arg) ;
   }
@@ -142,8 +143,8 @@ RooSuperCategory::evaluate() const
   }
   const RooCatType* ret = lookupType(currentLabel(),kTRUE) ;
   if (!ret) {
-    cout << "RooSuperCat::evaluate(" << this << ") error: current state not defined: '" << currentLabel() << "'" << endl ;
-    Print("v") ;
+    coutE(Eval) << "RooSuperCat::evaluate(" << this << ") error: current state not defined: '" << currentLabel() << "'" << endl ;
+    printToStream(ccoutE(Eval),Verbose) ;
   }
   return *ret ;
 }

@@ -29,6 +29,7 @@
 #include "RooAbsBinning.h"
 #include "RooStreamParser.h"
 #include "RooRangeBinning.h"
+#include "RooMsgService.h"
 
 ClassImp(RooErrorVar)
 ;
@@ -104,10 +105,8 @@ RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t 
 
   // Create a new RooRangeBinning with this name with default range
   binning = new RooRangeBinning(getMin(),getMax(),name) ;
-  if (verbose) {
-    cout << "RooErrorVar::getBinning(" << GetName() << ") new range named '" 
-	 << name << "' created with default bounds" << endl ;
-  }
+  coutI(Contents) << "RooErrorVar::getBinning(" << GetName() << ") new range named '" 
+		  << name << "' created with default bounds" << endl ;
 
   _altBinning.Add(binning) ;
 
@@ -149,8 +148,8 @@ void RooErrorVar::setMin(const char* name, Double_t value)
 
   // Check if new limit is consistent
   if (value >= getMax()) {
-    cout << "RooErrorVar::setMin(" << GetName() 
-	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
+    coutW(InputArguments) << "RooErrorVar::setMin(" << GetName() 
+			  << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
     binning.setMin(getMax()) ;
   } else {
     binning.setMin(value) ;
@@ -174,8 +173,8 @@ void RooErrorVar::setMax(const char* name, Double_t value)
 
   // Check if new limit is consistent
   if (value < getMin()) {
-    cout << "RooErrorVar::setMax(" << GetName() 
-	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    coutW(InputArguments) << "RooErrorVar::setMax(" << GetName() 
+			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setMax(getMin()) ;
   } else {
     binning.setMax(value) ;
@@ -202,17 +201,17 @@ void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
 
   // Check if new limit is consistent
   if (min>max) {
-    cout << "RooErrorVar::setRange(" << GetName() 
-	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    coutW(InputArguments) << "RooErrorVar::setRange(" << GetName() 
+			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setRange(min,min) ;
   } else {
     binning.setRange(min,max) ;
   }
 
   if (!exists) {
-    cout << "RooErrorVar::setRange(" << GetName() 
-	 << ") new range named '" << name << "' created with bounds [" 
-	 << min << "," << max << "]" << endl ;
+    coutI(InputArguments) << "RooErrorVar::setRange(" << GetName() 
+			  << ") new range named '" << name << "' created with bounds [" 
+			  << min << "," << max << "]" << endl ;
   }
 
   setShapeDirty() ;  

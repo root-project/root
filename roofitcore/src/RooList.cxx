@@ -22,6 +22,7 @@
 
 #include "RooList.h"
 #include "RooList.h"
+#include "RooMsgService.h"
 
 #include "Riostream.h"
 
@@ -43,7 +44,7 @@ TObjOptLink *RooList::findLink(const char *name, const char *caller) const {
   }
   if(0 == link) {
     if(strlen(caller)) {
-      cout << caller << ": cannot find object named \"" << name << "\"" << endl;
+      coutE(InputArguments) << caller << ": cannot find object named \"" << name << "\"" << endl;
     }
     return 0;
   }

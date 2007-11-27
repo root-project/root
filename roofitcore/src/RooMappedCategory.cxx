@@ -33,6 +33,7 @@
 #include "RooMappedCategory.h"
 #include "RooStreamParser.h"
 #include "RooMapCatEntry.h"
+#include "RooMsgService.h"
 
 ClassImp(RooMappedCategory)
 
@@ -84,8 +85,8 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
 
   // Check if pattern is already registered
   if (_mapArray.FindObject(inKeyRegExp)) {
-    cout << "RooMappedCategory::map(" << GetName() << "): ERROR expression " 
-	 << inKeyRegExp << " already mapped" << endl ;
+    coutE(InputArguments) << "RooMappedCategory::map(" << GetName() << "): ERROR expression " 
+			  << inKeyRegExp << " already mapped" << endl ;
     return kTRUE ;
   }
 
@@ -99,16 +100,16 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
     }
   }
   if (!outType) {
-    cout << "RooMappedCategory::map(" << GetName() 
-	 << "): ERROR, unable to output type " << outKey << endl ;
+    coutE(InputArguments) << "RooMappedCategory::map(" << GetName() 
+			  << "): ERROR, unable to output type " << outKey << endl ;
     return kTRUE ;    
   }
 
   // Create new map entry ;
   RooMapCatEntry *newMap = new RooMapCatEntry(inKeyRegExp,outType) ;
   if (!newMap->ok()) {
-    cout << "RooMappedCategory::map(" << GetName() 
-	 << "): ERROR, expression " << inKeyRegExp << " didn't compile" << endl ;
+    coutE(InputArguments) << "RooMappedCategory::map(" << GetName() 
+			  << "): ERROR, expression " << inKeyRegExp << " didn't compile" << endl ;
     delete newMap ;
     return kTRUE ;    
   }
@@ -171,7 +172,7 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t /*v
 {
   // Read object contents from given stream
    if (compact) {
-     cout << "RooMappedCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
+     coutE(InputArguments) << "RooMappedCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
      return kTRUE ;    
    } else {
 

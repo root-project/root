@@ -27,6 +27,7 @@
 
 #include "RooQuasiRandomGenerator.h"
 #include "RooQuasiRandomGenerator.h"
+#include "RooMsgService.h"
 #include "TMath.h"
 
 #include "Riostream.h"
@@ -85,7 +86,7 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[]) {
     else break;
   }
   if(r >= NBits) {
-    cout << "RooQuasiRandomGenerator::generate: internal error!" << endl;
+    oocoutE((TObject*)0,Integration) << "RooQuasiRandomGenerator::generate: internal error!" << endl;
     return kFALSE;
   }
 

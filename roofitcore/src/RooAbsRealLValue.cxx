@@ -49,6 +49,7 @@
 #include "RooCmdConfig.h"
 #include "RooTreeData.h"
 #include "RooRealVar.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAbsRealLValue)
 
@@ -85,8 +86,8 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
   // test this value against our upper fit limit
   if(hasMax() && value > (getMax(rangeName)+1e-6)) {
     if (clippedValPtr) {
-      cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-	   << " rounded down to max limit " << getMax(rangeName) << endl ;
+      coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
+			    << " rounded down to max limit " << getMax(rangeName) << endl ;
     }
     clippedValue = getMax(rangeName);
     inRange = kFALSE ;
@@ -94,8 +95,8 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
   // test this value against our lower fit limit
   if(hasMin() && value < getMin(rangeName)-1e-6) {
     if (clippedValPtr) {
-      cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-	   << " rounded up to min limit " << getMin(rangeName) << endl;
+      coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
+			    << " rounded up to min limit " << getMin(rangeName) << endl;
     }
     clippedValue = getMin(rangeName);
     inRange = kFALSE ;
@@ -112,8 +113,8 @@ Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const
   // Check if given value is valid
   if (!inRange(value,0)) {
     if (verbose)
-      cout << "RooRealVar::isValid(" << GetName() << "): value " << value
-           << " out of range (" << getMin() << " - " << getMax() << ")" << endl ;
+      coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value
+			    << " out of range (" << getMin() << " - " << getMax() << ")" << endl ;
     return kFALSE ;
   }
   return kTRUE ;
@@ -286,11 +287,11 @@ RooPlot *RooAbsRealLValue::frame(Int_t nbins) const {
 
   // Plot range of variable may not be infinite or empty
   if (getMin()==getMax()) {
-    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
     return 0 ;
   }
   if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
-    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
     return 0 ;
   }
 
@@ -309,11 +310,11 @@ RooPlot *RooAbsRealLValue::frame() const {
 
   // Plot range of variable may not be infinite or empty
   if (getMin()==getMax()) {
-    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
     return 0 ;
   }
   if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
-    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
     return 0 ;
   }
 
@@ -368,7 +369,7 @@ void RooAbsRealLValue::randomize() {
     setVal(getMin() + RooRandom::uniform()*range);
   }
   else {
-    cout << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;
+    coutE(Generation) << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;
   }
 }
 
@@ -377,8 +378,8 @@ void RooAbsRealLValue::setBin(Int_t ibin)
 {
   // Check range of plot bin index
   if (ibin<0 || ibin>=numBins()) {
-    cout << "RooAbsRealLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-	 << " is out of range (0," << getBins()-1 << ")" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
+			  << " is out of range (0," << getBins()-1 << ")" << endl ;
     return ;
   }
  
@@ -545,8 +546,8 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
 
   // Check if the fit range is usable as plot range
   if (!fitRangeOKForPlotting()) {
-    cout << "RooAbsRealLValue::createHistogram(" << GetName() 
-	 << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
+			  << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
     return 0 ;
   }
 
@@ -585,8 +586,8 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   // and is responsible for deleting it.
 
   if ((!xlo && xhi) || (xlo && !xhi)) {
-    cout << "RooAbsRealLValue::createHistogram(" << GetName() 
-	 << ") ERROR must specify either no range, or both limits" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
+			  << ") ERROR must specify either no range, or both limits" << endl ;
     return 0 ;
   }
 
@@ -601,12 +602,12 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   if (!xlo2) {
 
     if (!fitRangeOKForPlotting()) {
-      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+      coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
 	   << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;      
       return 0 ;
     }
     if (!yvar.fitRangeOKForPlotting()) {
-      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
+      coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
 	   << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
       return 0 ;
     }
@@ -649,8 +650,8 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   // and is responsible for deleting it.
 
   if ((!xlo && xhi) || (xlo && !xhi)) {
-    cout << "RooAbsRealLValue::createHistogram(" << GetName() 
-	 << ") ERROR must specify either no range, or both limits" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
+			  << ") ERROR must specify either no range, or both limits" << endl ;
     return 0 ;
   }
 
@@ -664,18 +665,18 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   if (!xlo2) {
 
     if (!fitRangeOKForPlotting()) {
-      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
-	   << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;      
+      coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
+			    << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;      
       return 0 ;
     }
     if (!yvar.fitRangeOKForPlotting()) {
-      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
-	   << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
+      coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
+			    << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
       return 0 ;
     }
     if (!zvar.fitRangeOKForPlotting()) {
-      cout << "RooAbsRealLValue::createHistogram(" << GetName() 
-	   << ") ERROR: fit range of " << zvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
+      coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
+			    << ") ERROR: fit range of " << zvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
       return 0 ;
     }
 
@@ -742,7 +743,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   // Check that we have 1-3 vars
   Int_t dim= vars.getSize();
   if(dim < 1 || dim > 3) {
-    cout << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
+    oocoutE((TObject*)0,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
     return 0;
   }
 
@@ -756,7 +757,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     const RooAbsArg *arg= vars.at(index);
     xyz[index]= dynamic_cast<const RooAbsRealLValue*>(arg);
     if(!xyz[index]) {
-      cout << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
+      oocoutE((TObject*)0,InputArguments) << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
       return 0;
     }
     histName.Append("_");
@@ -788,7 +789,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     break;
   }
   if(!histogram) {
-    cout << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
+    oocoutE((TObject*)0,InputArguments) << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
     return 0;
   }
 
@@ -847,37 +848,37 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 
 Double_t RooAbsRealLValue::getFitMin() const 
 {
-  cout << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMin()" << endl ;
+  coutW(InputArguments) << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMin()" << endl ;
   return getMin() ;
 }
 
 Double_t RooAbsRealLValue::getFitMax() const 
 {
-  cout << "WARNING getFitMax() IS OBSOLETE, PLEASE USE getMax()" << endl ;
+  coutW(InputArguments) << "WARNING getFitMax() IS OBSOLETE, PLEASE USE getMax()" << endl ;
   return getMax() ;
 }
 
 Bool_t RooAbsRealLValue::hasFitMin() const 
 {
-  cout << "WARNING hasFitMin() IS OBSOLETE, PLEASE USE hasMin()" << endl ;
+  coutW(InputArguments) << "WARNING hasFitMin() IS OBSOLETE, PLEASE USE hasMin()" << endl ;
   return hasMin() ;
 }
 
 Bool_t RooAbsRealLValue::hasFitMax() const 
 {
-  cout << "WARNING hasFitMax() IS OBSOLETE, PLEASE USE hasMax()" << endl ;
+  coutW(InputArguments) << "WARNING hasFitMax() IS OBSOLETE, PLEASE USE hasMax()" << endl ;
   return hasMax() ;
 }
 
 Int_t RooAbsRealLValue::getFitBins() const
 {
-  cout << "WARNING getFitBins() IS OBSOLETE, PLEASE USE getBins()" << endl ;
+  coutW(InputArguments) << "WARNING getFitBins() IS OBSOLETE, PLEASE USE getBins()" << endl ;
   return hasMax() ;
 }
 
 Int_t RooAbsRealLValue::numFitBins() const
 {
-  cout << "WARNING numFitBins() IS OBSOLETE, PLEASE USE numBins()" << endl ;
+  coutW(InputArguments) << "WARNING numFitBins() IS OBSOLETE, PLEASE USE numBins()" << endl ;
   return hasMax() ;
 }
 

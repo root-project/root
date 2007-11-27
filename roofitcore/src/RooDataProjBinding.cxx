@@ -116,7 +116,7 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
       _first = kFALSE ;
     } else {
       if (oodologW(_real,Eval)) {
-	cout << "." ; cout.flush() ;
+	ooccoutW(_real,Eval) << "." ; cout.flush() ;
       }
     }
 

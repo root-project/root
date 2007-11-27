@@ -44,6 +44,7 @@
 #endif
 
 #include "RooStreamParser.h"
+#include "RooMsgService.h"
 #include "RooNumber.h"
 
 
@@ -116,7 +117,7 @@ TString RooStreamParser::readToken()
   while(1) {
     // Buffer overflow protection
     if (bufptr>=10239) {
-      cout << "RooStreamParser::readToken: token length exceeds buffer capacity, terminating token early" << endl ;
+      oocoutW((TObject*)0,InputArguments) << "RooStreamParser::readToken: token length exceeds buffer capacity, terminating token early" << endl ;
       break ;
     }
 
@@ -206,7 +207,7 @@ TString RooStreamParser::readToken()
 
   // Check if closing quote was encountered
   if (quotedString) {
-    cout << "RooStreamParser::readToken: closing quote (\") missing" << endl ;
+    oocoutW((TObject*)0,InputArguments) << "RooStreamParser::readToken: closing quote (\") missing" << endl ;
   }
 
   // Absorb trailing white space or absorb rest of line if // is encountered
@@ -326,8 +327,8 @@ Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError)
 
   Bool_t error=token.CompareTo(expected) ;
   if (error && !_prefix.IsNull()) {
-    cout << _prefix << ": parse error, expected '" 
-	 << expected << "'" << ", got '" << token << "'" << endl ;
+    oocoutW((TObject*)0,InputArguments) << _prefix << ": parse error, expected '" 
+					<< expected << "'" << ", got '" << token << "'" << endl ;
     if (zapOnError) zapToEnd(kTRUE) ;
   }
   return error ;
@@ -360,8 +361,8 @@ Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value)
   Bool_t error = (endptr-data!=token.Length()) ;
 
   if (error && !_prefix.IsNull()) {
-    cout << _prefix << ": parse error, cannot convert '" 
-	 << token << "'" << " to double precision" <<  endl ;
+    oocoutE((TObject*)0,InputArguments) << _prefix << ": parse error, cannot convert '" 
+					<< token << "'" << " to double precision" <<  endl ;
   }
   return error ;
 }
@@ -385,8 +386,8 @@ Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value)
   Bool_t error = (endptr-data!=token.Length()) ;
 
   if (error && !_prefix.IsNull()) {
-    cout << _prefix << ": parse error, cannot convert '" 
-	 << token << "'" << " to integer" <<  endl ;
+    oocoutE((TObject*)0,InputArguments)<< _prefix << ": parse error, cannot convert '" 
+				       << token << "'" << " to integer" <<  endl ;
   }
   return error ;
 }
@@ -409,7 +410,7 @@ Bool_t RooStreamParser::convertToString(const TString& token, TString& string)
   char buffer[10240],*ptr ;
   strncpy(buffer,token.Data(),10239) ;
   if (token.Length()>=10239) {
-    cout << "RooStreamParser::convertToString: token length exceeds 1023, truncated" << endl ;
+    oocoutW((TObject*)0,InputArguments) << "RooStreamParser::convertToString: token length exceeds 1023, truncated" << endl ;
     buffer[10239]=0 ;
   }
   int len = strlen(buffer) ;

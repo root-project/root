@@ -33,6 +33,7 @@
 #include "RooArgSet.h"
 #include "RooAbsString.h"
 #include "RooStringVar.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAbsString) 
 ;
@@ -154,7 +155,7 @@ const char* RooAbsString::traceEval() const
   
   //Standard tracing code goes here
   if (!isValidString(value)) {
-    cout << "RooAbsString::traceEval(" << GetName() << "): new output too long (>" << _len << " chars): " << value << endl ;
+    cxcoutD(Tracing) << "RooAbsString::traceEval(" << GetName() << "): new output too long (>" << _len << " chars): " << value << endl ;
   }
 
   //Call optional subclass tracing code
@@ -195,7 +196,7 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
   if ((branch = t.GetBranch(GetName()))) {
     t.SetBranchAddress(GetName(),_value) ;
     if (branch->GetCompressionLevel()<0) {
-      cout << "RooAbsString::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
+      cxcoutD(DataHandling) << "RooAbsString::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
       branch->SetCompressionLevel(1) ;
     }
   } else {
@@ -213,7 +214,7 @@ void RooAbsString::fillTreeBranch(TTree& t)
   // First determine if branch is taken
   TBranch* branch = t.GetBranch(GetName()) ;
   if (!branch) { 
-    cout << "RooAbsString::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    coutE(DataHandling) << "RooAbsString::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
     assert(0) ;
   }
   branch->Fill() ;  

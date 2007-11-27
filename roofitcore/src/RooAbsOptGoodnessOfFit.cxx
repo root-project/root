@@ -62,7 +62,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   // Check that the PDF is valid for use with this dataset
   // Check if there are any unprotected multiple occurrences of dependents
   if (pdf.recursiveCheckObservables(&obs)) {
-    cout << "RooAbsOptGoodnessOfFit: ERROR in PDF dependents, abort" << endl ;
+    coutE(InputArguments) << "RooAbsOptGoodnessOfFit: ERROR in PDF dependents, abort" << endl ;
     RooErrorHandler::softAbort() ;
     return ;
   }
@@ -81,16 +81,16 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     if (!datReal) continue ;
     
     if (pdfReal->getMin()<(datReal->getMin()-1e-6)) {
-      cout << "RooAbsOptGoodnessOfFit: ERROR minimum of PDF variable " << arg->GetName() 
-	   << "(" << pdfReal->getMin() << ") is smaller than that of " 
-	   << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
+      coutE(InputArguments) << "RooAbsOptGoodnessOfFit: ERROR minimum of PDF variable " << arg->GetName() 
+			    << "(" << pdfReal->getMin() << ") is smaller than that of " 
+			    << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
     
     if (pdfReal->getMax()>(datReal->getMax()+1e-6)) {
-      cout << "RooAbsOptGoodnessOfFit: ERROR maximum of PDF variable " << arg->GetName() 
-	   << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
+      coutE(InputArguments) << "RooAbsOptGoodnessOfFit: ERROR maximum of PDF variable " << arg->GetName() 
+			    << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }

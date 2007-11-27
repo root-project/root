@@ -32,6 +32,7 @@
 #include "RooDataHist.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
+#include "RooMsgService.h"
 
 ClassImp(RooChi2Var)
 ;
@@ -138,8 +139,8 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
 
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {
-      cout << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i 
-	   << " has zero error, but function is not zero (" << nPdf << ")" << endl ;
+      coutE(Eval) << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i 
+		  << " has zero error, but function is not zero (" << nPdf << ")" << endl ;
       return 0 ;
     }
 

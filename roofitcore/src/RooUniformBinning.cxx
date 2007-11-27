@@ -18,6 +18,7 @@
 
 #include "RooUniformBinning.h"
 #include "RooUniformBinning.h"
+#include "RooMsgService.h"
 
 ClassImp(RooUniformBinning)
 ;
@@ -58,7 +59,7 @@ RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char*
 void RooUniformBinning::setRange(Double_t xlo, Double_t xhi) 
 {
   if (xlo>xhi) {
-    cout << "RooUniformBinning::setRange: ERROR low bound > high bound" << endl ;
+    coutE(InputArguments) << "RooUniformBinning::setRange: ERROR low bound > high bound" << endl ;
     return ;
   }
   
@@ -83,8 +84,8 @@ Double_t RooUniformBinning::binCenter(Int_t i) const
 {
   // Return the central value of the 'i'-th fit bin
   if (i<0 || i>=_nbins) {
-    cout << "RooUniformBinning::binCenter ERROR: bin index " << i 
-	 << " is out of range (0," << _nbins-1 << ")" << endl ;
+    coutE(InputArguments) << "RooUniformBinning::binCenter ERROR: bin index " << i 
+			  << " is out of range (0," << _nbins-1 << ")" << endl ;
     return 0 ;
   }
 
@@ -105,8 +106,8 @@ Double_t RooUniformBinning::binLow(Int_t i) const
 {
   // Return the low edge of the 'i'-th fit bin
   if (i<0 || i>=_nbins) {
-    cout << "RooUniformBinning::binLow ERROR: bin index " << i 
-	 << " is out of range (0," << _nbins-1 << ")" << endl ;
+    coutE(InputArguments) << "RooUniformBinning::binLow ERROR: bin index " << i 
+			  << " is out of range (0," << _nbins-1 << ")" << endl ;
     return 0 ;
   }
 
@@ -118,8 +119,8 @@ Double_t RooUniformBinning::binHigh(Int_t i) const
 {
   // Return the high edge of the 'i'-th fit bin
   if (i<0 || i>=_nbins) {
-    cout << "RooUniformBinning::fitBinHigh ERROR: bin index " << i 
-	 << " is out of range (0," << _nbins-1 << ")" << endl ;
+    coutE(InputArguments) << "RooUniformBinning::fitBinHigh ERROR: bin index " << i 
+			  << " is out of range (0," << _nbins-1 << ")" << endl ;
     return 0 ;
   }
 

@@ -23,6 +23,7 @@
 #include "RooAbsGenContext.h"
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAbsGenContext)
 ;
@@ -40,7 +41,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
   // Check PDF dependents 
   if (model.recursiveCheckObservables(&vars)) {
-    cout << "RooAbsGenContext::ctor: Error in PDF dependents" << endl ;
+    coutE(Generation) << "RooAbsGenContext::ctor: Error in PDF dependents" << endl ;
     _isValid = kFALSE ;
     return ;
   }
@@ -101,7 +102,7 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
   // first call to generateEvent().
   
   if(!isValid()) {
-    cout << ClassName() << "::" << GetName() << ": context is not valid" << endl;
+    coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
     return 0;
   }
 
@@ -112,21 +113,19 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
     }
     else {
       if (_extendMode == RooAbsPdf::CanNotBeExtended) {
-	cout << ClassName() << "::" << GetName()
+	coutE(Generation) << ClassName() << "::" << GetName()
 	     << ":generate: PDF not extendable: cannot calculate expected number of events" << endl;
 	return 0;	
       }
       nEvents= _expectedEvents;
     }
     if(nEvents <= 0) {
-      cout << ClassName() << "::" << GetName()
-	   << ":generate: cannot calculate expected number of events" << endl;
+      coutE(Generation) << ClassName() << "::" << GetName()
+			<< ":generate: cannot calculate expected number of events" << endl;
       return 0;
     }
-    else if(_verbose) {
-      cout << ClassName() << "::" << GetName() << ":generate: will generate "
-	   << nEvents << " events" << endl;
-    }
+    coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
+		      << nEvents << " events" << endl;
   }
 
   // check that any prototype dataset still defines the variables we need
@@ -138,8 +137,8 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
     Bool_t ok(kTRUE);
     while((arg= (const RooAbsArg*)iterator->Next())) {
       if(vars->contains(*arg)) continue;
-      cout << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
-	   << arg->GetName() << "\"" << endl;
+      coutE(InputArguments) << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
+			    << arg->GetName() << "\"" << endl;
 
       // WVE disable this for the moment
       // ok= kFALSE;
@@ -174,8 +173,8 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
 	*_theEvent= *subEvent;
       }
       else {
-	cout << ClassName() << "::" << GetName() << ":generate: cannot load event "
-	     << actualProtoIdx << " from prototype dataset" << endl;
+	coutE(Generation) << ClassName() << "::" << GetName() << ":generate: cannot load event "
+			  << actualProtoIdx << " from prototype dataset" << endl;
 	return 0;
       }
     }

@@ -25,6 +25,7 @@
 #include "RooHist.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
+#include "RooMsgService.h"
 
 #include "TH1.h"
 #include "Riostream.h"
@@ -117,13 +118,13 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
   // initialize our contents from the input histogram contents
   Int_t nbin= data1.GetNbinsX();
   if(data2.GetNbinsX() != nbin) {
-    cout << "RooHist::RooHist: histograms have different number of bins" << endl;
+    coutE(InputArguments) << "RooHist::RooHist: histograms have different number of bins" << endl;
     return;
   }
   for(Int_t bin= 1; bin <= nbin; bin++) {
     Axis_t x= data1.GetBinCenter(bin);
     if(fabs(data2.GetBinCenter(bin)-x)>1e-10) {
-      cout << "RooHist::RooHist: histograms have different centers for bin " << bin << endl;
+      coutW(InputArguments) << "RooHist::RooHist: histograms have different centers for bin " << bin << endl;
     }
     Stat_t y1= data1.GetBinContent(bin);
     Stat_t y2= data2.GetBinContent(bin);
@@ -151,7 +152,7 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
   setYAxisLabel(hist1.getYAxisLabel()) ;
 
   if (!hist1.hasIdenticalBinning(hist2)) {
-    cout << "RooHist::RooHist input histograms have incompatible binning, combined histogram will remain empty" << endl ;
+    coutE(InputArguments) << "RooHist::RooHist input histograms have incompatible binning, combined histogram will remain empty" << endl ;
     return ;
   }
 
@@ -160,8 +161,8 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
 
     // Issue warning if weights are not 1
     if (wgt1!=1.0 || wgt2 != 1.0) {
-      cout << "RooHist::RooHist: WARNING: Poisson errors of weighted sum of two histograms is not well defined! " << endl
-	   << "                  Summed histogram bins will rounded to nearest integer for Poisson confidence interval calculation" << endl ;
+      coutW(InputArguments) << "RooHist::RooHist: WARNING: Poisson errors of weighted sum of two histograms is not well defined! " << endl
+			    << "                  Summed histogram bins will rounded to nearest integer for Poisson confidence interval calculation" << endl ;
     }
 
     // Add histograms, calculate Poisson confidence interval on sum value
@@ -239,10 +240,10 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   }
   
   if (_rawEntries!=-1) {
-    cout << "RooHist::getFitRangeNEvt() WARNING: Number of normalization events associated to histogram is not equal to number of events in histogram" << endl
-	 << "                           due cut made in RooAbsData::plotOn() call. Automatic normalization over sub-range of plot variable assumes"    << endl
-         << "                           that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To be sure of"   << endl 
-         << "                           correct normalization explicit pass normalization information to RooAbsPdf::plotOn() call using Normalization()" << endl ;
+    coutW(Plotting) << "RooHist::getFitRangeNEvt() WARNING: Number of normalization events associated to histogram is not equal to number of events in histogram" << endl
+		    << "                           due cut made in RooAbsData::plotOn() call. Automatic normalization over sub-range of plot variable assumes"    << endl
+		    << "                           that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To be sure of"   << endl 
+		    << "                           correct normalization explicit pass normalization information to RooAbsPdf::plotOn() call using Normalization()" << endl ;
     sum *= _rawEntries / _entries ;
   }
 
@@ -260,12 +261,12 @@ Int_t RooHist::roundBin(Double_t y) {
   // and print a warning if an adjustment is required.
 
   if(y < 0) {
-    cout << fName << "::roundBin: rounding negative bin contents to zero: " << y << endl;
+    coutW(Plotting) << fName << "::roundBin: rounding negative bin contents to zero: " << y << endl;
     return 0;
   }
   Int_t n= (Int_t)(y+0.5);
   if(fabs(y-n)>1e-6) {
-    cout << fName << "::roundBin: rounding non-integer bin contents: " << y << endl;
+    coutW(Plotting) << fName << "::roundBin: rounding non-integer bin contents: " << y << endl;
   }
   return n;
 }
@@ -285,7 +286,7 @@ void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth, Double_t xErr
   // calculate Poisson errors for this bin
   Double_t ym,yp,dx(0.5*binWidth);
   if(!RooHistError::instance().getPoissonInterval(n,ym,yp,_nSigma)) {
-    cout << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
+    coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
     return;
   }
 
@@ -333,7 +334,7 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
   // calculate Binomial errors for this bin
   Double_t ym,yp,dx(0.5*binWidth);
   if(!RooHistError::instance().getBinomialInterval(n1,n2,ym,yp,_nSigma)) {
-    cout << "RooHist::addAsymmetryBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
+    coutE(Plotting) << "RooHist::addAsymmetryBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
     return;
   }
 
@@ -458,7 +459,7 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve,bool normalize) const {
     if (normalize) {
         Double_t norm = (y>0?dyh:dyl);
 	if (norm==0.) {
-	  cout << "RooHist::makeResisHist(" << GetName() << ") WARNING: point " << i << " has zero error, setting residual to zero" << endl ;
+	  coutW(Plotting) << "RooHist::makeResisHist(" << GetName() << ") WARNING: point " << i << " has zero error, setting residual to zero" << endl ;
 	  y=0 ;
 	  dyh=0 ;
 	  dyl=0 ;

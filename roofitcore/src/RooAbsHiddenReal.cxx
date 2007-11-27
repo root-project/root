@@ -29,6 +29,7 @@
 #include "RooArgSet.h"
 #include "RooAbsHiddenReal.h"
 #include "RooCategory.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAbsHiddenReal)
 ;
@@ -86,7 +87,7 @@ Bool_t RooAbsHiddenReal::readFromStream(istream& is, Bool_t compact, Bool_t verb
 {
   if (isHidden()) {
     // No-op version of readFromStream 
-    cout << "RooAbsHiddenReal::readFromStream(" << GetName() << "): not allowed" << endl ;
+    coutE(InputArguments) << "RooAbsHiddenReal::readFromStream(" << GetName() << "): not allowed" << endl ;
     return kTRUE ;
   } else {
     return readFromStream(is,compact,verbose) ;
@@ -98,7 +99,7 @@ void RooAbsHiddenReal::writeToStream(ostream& os, Bool_t compact) const
 {
   if (isHidden()) {
     // No-op version of writeToStream 
-    cout << "RooAbsHiddenReal::writeToStream(" << GetName() << "): not allowed" << endl ;
+    coutE(InputArguments) << "RooAbsHiddenReal::writeToStream(" << GetName() << "): not allowed" << endl ;
   } else {
     RooAbsReal::writeToStream(os,compact) ;
   }

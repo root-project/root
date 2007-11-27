@@ -31,6 +31,7 @@
 #include "RooNumIntFactory.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
+#include "RooMsgService.h"
 
 #include <math.h>
 #include <assert.h>
@@ -176,12 +177,12 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
 	bins= boxes/box_per_bin;
 	if(bins > RooGrid::maxBins) bins= RooGrid::maxBins;
 	boxes = box_per_bin * bins;	
-	if(_verbose) cout << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
-			  << box_per_bin << " boxes/bin" << endl;
+	oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
+					 << box_per_bin << " boxes/bin" << endl;
       }
       else {
-	if(_verbose) cout << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
-			  << boxes << " boxes" << endl;
+	oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
+					 << boxes << " boxes" << endl;
       }
     }
 
@@ -245,7 +246,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
 
       // print occasional progress messages
       if(_timer.RealTime() > 1) { // wait at least 1 sec since the last message
-	cout << "RooMCIntegrator: still working..." << endl;
+	oocoutW((TObject*)0,Integration) << "RooMCIntegrator: still working..." << endl;
 	_timer.Start(kTRUE);
       }
       else {
@@ -287,11 +288,11 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
       cum_int += (intgrl - cum_int) / (it + 1.0);
       cum_sig = 0.0;
     }         
-    if (_verbose) {
-      cout << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
-	   << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
-	   << ")" << endl;
-      // print the grid after the final iteration
+    oocxcoutD((TObject*)0,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
+				     << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
+				     << ")" << endl;
+    // print the grid after the final iteration
+    if (oodologD((TObject*)0,Integration)) {
       if(it + 1 == iterations) _grid.Print("V");
     }
     _grid.refine(_alpha);

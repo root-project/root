@@ -35,6 +35,7 @@
 #include "RooArgSet.h"
 #include "Roo1DTable.h"
 #include "RooCategory.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAbsCategory) 
 ;
@@ -200,14 +201,14 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
   // Define new state with given name and index number.
 
   if (isValidIndex(index)) {
-    cout << "RooAbsCategory::defineType(" << GetName() << "): index " 
-	 << index << " already assigned" << endl ;
+    coutE(InputArguments) << "RooAbsCategory::defineType(" << GetName() << "): index " 
+			  << index << " already assigned" << endl ;
     return 0 ;
   }
 
   if (isValidLabel(label)) {
-    cout << "RooAbsCategory::defineType(" << GetName() << "): label " 
-	 << label << " already assigned or not allowed" << endl ;
+    coutE(InputArguments) << "RooAbsCategory::defineType(" << GetName() << "): label " 
+			  << label << " already assigned or not allowed" << endl ;
     return 0 ;
   }
 
@@ -238,8 +239,10 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
   }
 
   if (printError) {
-    cout << ClassName() << "::" << GetName() << ":lookupType: no match for ";
-    other.printToStream(cout,OneLine);
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for ";
+    if (dologE(InputArguments)) {
+      other.printToStream(ccoutE(InputArguments),OneLine);
+    }
   }
   return 0 ;
 }
@@ -254,8 +257,8 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
     if((*type) == index) return type; // delegate comparison to RooCatType
   }
   if (printError) {
-    cout << ClassName() << "::" << GetName() << ":lookupType: no match for index "
-	 << index << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for index "
+			  << index << endl;
   }
   return 0 ;
 }
@@ -281,8 +284,8 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
   }
 
   if (printError) {
-    cout << ClassName() << "::" << GetName() << ":lookupType: no match for label "
-	 << label << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for label "
+			  << label << endl;
   }
   return 0 ;
 }
@@ -366,16 +369,16 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     if (!typeName.CompareTo("Int_t")) {
       // Imported TTree: attach only index field as branch
 
-      cout << "RooAbsCategory::attachToTree(" << GetName() << ") TTree branch " << GetName() 
-	   << " will be interpreted as category index" << endl ;
-
+      coutI(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") TTree branch " << GetName() 
+			  << " will be interpreted as category index" << endl ;
+      
       t.SetBranchAddress(cleanName,&((Int_t&)_value._value)) ;
       setAttribute("INTIDXONLY_TREE_BRANCH",kTRUE) ;      
       _treeVar = kTRUE ;
       return ;
     } else if (!typeName.CompareTo("UChar_t")) {
-      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
-	   << " will be interpreted as category index" << endl ;
+      coutI(DataHandling) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
+			  << " will be interpreted as category index" << endl ;
       t.SetBranchAddress(cleanName,&((Bool_t&)_value._value)) ;
       setAttribute("UCHARIDXONLY_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
@@ -383,7 +386,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     } 
 
     if (branch->GetCompressionLevel()<0) {
-      cout << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
+      cxcoutD(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << GetName() << endl ;
       branch->SetCompressionLevel(1) ;
     }
   }
@@ -399,7 +402,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 
     t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
     if (branch->GetCompressionLevel()<0) {
-      cout << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << idxName << endl ;
+      cxcoutD(Contents) << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << idxName << endl ;
       branch->SetCompressionLevel(1) ;
     }
     
@@ -416,7 +419,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 
     t.SetBranchAddress(lblName,_value._label) ;
     if (branch->GetCompressionLevel()<0) {
-      cout << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << lblName << endl ;
+      cxcoutD(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") Fixing compression level of branch " << lblName << endl ;
       branch->SetCompressionLevel(1) ;
     }
 
@@ -444,7 +447,7 @@ void RooAbsCategory::fillTreeBranch(TTree& t)
   TBranch* idxBranch = t.GetBranch(idxName) ;
   TBranch* lblBranch = t.GetBranch(lblName) ;
   if (!idxBranch||!lblBranch) { 
-    cout << "RooAbsCategory::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
+    coutF(DataHandling) << "RooAbsCategory::fillTreeBranch(" << GetName() << ") ERROR: not attached to tree" << endl ;
     assert(0) ;
   }
 
@@ -490,10 +493,10 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
       if (type) {
 	_value = *type ;
       } else {
-	cout << "RooAbsCategory::copyCache(" << GetName() 
-	     << ") ERROR: index of source arg " << source->GetName() 
-	     << " is invalid (" << other->_value._value 
-	     << "), value not updated" << endl ;
+	coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() 
+			    << ") ERROR: index of source arg " << source->GetName() 
+			    << " is invalid (" << other->_value._value 
+			    << "), value not updated" << endl ;
       }
     } if (source->getAttribute("UCHARIDXONLY_TREE_BRANCH")) {
       // Lookup cat state from other-index because label is missing
@@ -502,10 +505,10 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
       if (type) {
 	_value = *type ;
       } else {
-	cout << "RooAbsCategory::copyCache(" << GetName() 
-	     << ") ERROR: index of source arg " << source->GetName() 
-	     << " is invalid (" << tmp
-	     << "), value not updated" << endl ;
+	coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() 
+			    << ") ERROR: index of source arg " << source->GetName() 
+			    << " is invalid (" << tmp
+			    << "), value not updated" << endl ;
       }
     } 
   }

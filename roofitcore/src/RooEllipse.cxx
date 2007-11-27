@@ -24,6 +24,7 @@
 #include "RooEllipse.h"
 #include "RooEllipse.h"
 #include "TMath.h"
+#include "RooMsgService.h"
 
 #include "Riostream.h"
 #include <math.h>
@@ -59,12 +60,12 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
   SetTitle(name);
 
   if(s1 <= 0 || s2 <= 0) {
-    cout << "RooEllipse::RooEllipse: bad parameter s1 or s2 < 0" << endl;
+    coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter s1 or s2 < 0" << endl;
     return;
   }
   Double_t tmp= 1-rho*rho;
   if(tmp < 0) {
-    cout << "RooEllipse::RooEllipse: bad parameter |rho| > 1" << endl;
+    coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter |rho| > 1" << endl;
     return;
   }
 
@@ -108,7 +109,7 @@ void RooEllipse::printToStream(ostream& os, PrintOption opt, TString indent) con
   RooPlotable::printToStream(os,opt,indent);
   if(opt == Verbose) {
     for(Int_t index=0; index < fNpoints; index++) {
-      cout << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;
+      os << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;
     }
   }
 }

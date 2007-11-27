@@ -30,6 +30,7 @@
 
 #include "RooNormManager.h"
 #include "RooNormManager.h"
+#include "RooMsgService.h"
 
 ClassImp(RooNormManager)
   ;
@@ -87,8 +88,8 @@ RooNormManager::~RooNormManager()
 RooAbsArg* RooNormManager::getNormByIndex(Int_t index) const 
 {
   if (index<0||index>=_size) {
-    cout << "RooNormManager::getNormByIndex: ERROR index (" 
-	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNormManager::getNormByIndex: ERROR index (" 
+					<< index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return _norm[index] ;
@@ -99,18 +100,18 @@ void RooNormManager::setNormalization(const RooAbsArg* self, const RooArgSet* ns
 {
   // Check if normalization is already registered
   if (getNormalization(self,nset,iset,isetRangeName)) {
-    cout << "RooNormManager::setNormalization(" << self->GetName() << "): normalization already registered" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNormManager::setNormalization(" << self->GetName() << "): normalization already registered" << endl ;
     return ;
   }
 
   if (_size==_maxSize) {
-    cout << "RooNormManager::setNormalization(" << self->GetName() << "): cache is full" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNormManager::setNormalization(" << self->GetName() << "): cache is full" << endl ;
     return ;
   }
 
   _nsetCache[_size].autoCache(self,nset,iset,isetRangeName,kTRUE) ;
   if (_norm[_size]) {
-    cout << "RooNormManager::setNormalization(" << self->GetName() << "): deleting previous normalization of slot " << _size << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooNormManager::setNormalization(" << self->GetName() << "): deleting previous normalization of slot " << _size << endl ;
     delete _norm[_size] ;
   }
 //    cout << "RooNormManager::setNormalization(" << self->GetName() << "): storing normalization in slot " 

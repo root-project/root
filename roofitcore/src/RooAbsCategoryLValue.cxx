@@ -36,6 +36,7 @@
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
 #include "RooRandom.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAbsCategoryLValue) 
 ;
@@ -144,8 +145,8 @@ void RooAbsCategoryLValue::setBin(Int_t ibin)
 
   // Check validity of ibin
   if (ibin<0 || ibin>=numBins()) {
-    cout << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-	 << " is out of range (0," << numBins()-1 << ")" << endl ;
+    coutE(InputArguments) << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
+			  << " is out of range (0," << numBins()-1 << ")" << endl ;
     return ;
   }
 

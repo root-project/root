@@ -25,6 +25,7 @@
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooAbsRealLValue.h"
+#include "RooMsgService.h"
 
 #include <assert.h>
 
@@ -63,14 +64,14 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
   // check that all of the arguments are real valued and store them
   _vars[0]= dynamic_cast<RooAbsRealLValue*>(&xprime);
   if(0 == _vars[0]) {
-    cout << "RooConvIntegrandBinding: cannot bind to ";
+    oocoutE(&func,InputArguments) << "RooConvIntegrandBinding: cannot bind to ";
     xprime.Print("1");
     _valid= kFALSE;
   }
 
   _vars[1]= dynamic_cast<RooAbsRealLValue*>(&x);
   if(0 == _vars[1]) {
-    cout << "RooConvIntegrandBinding: cannot bind to ";
+    oocoutE(&func,InputArguments) << "RooConvIntegrandBinding: cannot bind to ";
     x.Print("1");
     _valid= kFALSE;
   }

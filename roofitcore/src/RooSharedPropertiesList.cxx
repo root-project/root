@@ -20,6 +20,7 @@
 #include "RooSharedPropertiesList.h"
 #include "RooSharedProperties.h"
 #include "TIterator.h"
+#include "RooMsgService.h"
 #include <iostream>
 using std::cout ;
 using std::endl ;
@@ -59,7 +60,7 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
   // as the object cannot be assumed to be live.
 
   if (prop==0) {
-    cout << "RooSharedPropertiesList::ERROR null pointer!:" << endl ;
+    oocoutE((TObject*)0,InputArguments) << "RooSharedPropertiesList::ERROR null pointer!:" << endl ;
     return 0 ;
   }
 

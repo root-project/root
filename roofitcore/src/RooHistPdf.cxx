@@ -25,6 +25,7 @@
 #include "RooHistPdf.h"
 #include "RooHistPdf.h"
 #include "RooDataHist.h"
+#include "RooMsgService.h"
 
 ClassImp(RooHistPdf)
 ;
@@ -48,16 +49,16 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
   if (vars.getSize()!=dvars->getSize()) {
-    cout << "RooHistPdf::ctor(" << GetName() 
-	 << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+    coutE(InputArguments) << "RooHistPdf::ctor(" << GetName() 
+			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
     assert(0) ;
   }
   TIterator* iter = vars.createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (!dvars->find(arg->GetName())) {
-      cout << "RooHistPdf::ctor(" << GetName() 
-	   << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName() 
+			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
       assert(0) ;
     }
   }

@@ -145,8 +145,8 @@ void RooAbsCollection::safeDeleteList()
 
   // Check if there are any remaining elements
   if (getSize()>1) {    
-    cout << "RooAbsCollection::safeDeleteList(" << GetName() 
-	 << ") WARNING: unable to delete following elements in client-server order " ;
+    coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName() 
+			  << ") WARNING: unable to delete following elements in client-server order " ;
     Print("1") ;
   }
 
@@ -237,7 +237,7 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
 
   // Handle eventual error conditions
   if (error) {
-    cout << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << endl ;
+    coutE(ObjectHandling) << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << endl ;
     output._ownCont = kTRUE ;    
     return kTRUE ;
   }
@@ -323,7 +323,7 @@ Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent) {
 
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
-    cout << ClassName() << "::" << GetName() << "::addOwned: can only add to an owned list" << endl;
+    coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addOwned: can only add to an owned list" << endl;
     return kFALSE;
   }
   _ownCont= kTRUE;
@@ -342,7 +342,7 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent) {
 
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
-    cout << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
+    coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
     return 0;
   }
   _ownCont= kTRUE;
@@ -363,7 +363,7 @@ Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent) {
 
   // check that this isn't a copy of a list
   if(_ownCont && !silent) {
-    cout << ClassName() << "::" << GetName() << "::add: cannot add to an owned list" << endl;
+    coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::add: cannot add to an owned list" << endl;
     return kFALSE;
   }
 
@@ -423,7 +423,7 @@ Bool_t RooAbsCollection::replace(const RooAbsCollection &other) {
 
   // check that this isn't a copy of a list
   if(_ownCont) {
-    cout << "RooAbsCollection: cannot replace variables in a copied list" << endl;
+    coutE(ObjectHandling) << "RooAbsCollection: cannot replace variables in a copied list" << endl;
     return kFALSE;
   }
   // loop over elements in the other list
@@ -447,7 +447,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
   // check that this isn't a copy of a list
   if(_ownCont) {
-    cout << "RooAbsCollection: cannot replace variables in a copied list" << endl;
+    coutE(ObjectHandling) << "RooAbsCollection: cannot replace variables in a copied list" << endl;
     return kFALSE;
   }
   // is var1 already in this list?
@@ -461,7 +461,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
   delete iter ;
   if (!foundVar1) {
-    cout << "RooAbsCollection: variable \"" << name << "\" is not in the list"
+    coutE(ObjectHandling) << "RooAbsCollection: variable \"" << name << "\" is not in the list"
 	 << " and cannot be replaced" << endl;
     return kFALSE;
   }
@@ -471,7 +471,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   if (dynamic_cast<RooArgSet*>(this)) {
     other= find(var2.GetName());
     if(other != 0 && other != &var1) {
-      cout << "RooAbsCollection: cannot replace \"" << name
+      coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name
 	   << "\" with already existing \"" << var2.GetName() << "\"" << endl;
       return kFALSE;
     }
@@ -623,7 +623,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
   while(wcExpr) {
     TRegexp rexp(wcExpr,kTRUE) ;
     if (verbose) {
-      cout << "RooAbsCollection::selectByName(" << GetName() << ") processing expression '" << wcExpr << "'" << endl ;
+      cxcoutD(ObjectHandling) << "RooAbsCollection::selectByName(" << GetName() << ") processing expression '" << wcExpr << "'" << endl ;
     }
 
     iter->Reset() ;
@@ -631,7 +631,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
     while((arg=(RooAbsArg*)iter->Next())) {
       if (TString(arg->GetName()).Index(rexp)>=0) {
 	if (verbose) {
-	  cout << "RooAbsCollection::selectByName(" << GetName() << ") selected element " << arg->GetName() << endl ;
+	  cxcoutD(ObjectHandling) << "RooAbsCollection::selectByName(" << GetName() << ") selected element " << arg->GetName() << endl ;
 	}
 	sel->add(*arg) ;
       }
@@ -906,17 +906,17 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
       if (rrv) {
 	list->add(*rrv) ;
       } else {
-	cout << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
+	coutW(InputArguments) << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
 	     << arg->GetName() << endl ;      
       }
       if (prevList && TString(rrv->GetName()).CompareTo(prevList->at(list->getSize()-1)->GetName())) {
-	cout << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << endl ;
+	coutW(InputArguments) << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << endl ;
       }
     }
     delete iter ;
     listListRRV.Add(list) ;
     if (prevList && list->getSize() != prevList->getSize()) {
-      cout << "RooAbsCollection::printLatex: ERROR: sibling list(s) must have same length as self" << endl ;
+      coutW(InputArguments) << "RooAbsCollection::printLatex: ERROR: sibling list(s) must have same length as self" << endl ;
       delete list ;
       listListRRV.Delete() ;
       return ;

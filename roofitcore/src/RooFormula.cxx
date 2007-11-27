@@ -35,6 +35,7 @@
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
+#include "RooMsgService.h"
 
 ClassImp(RooFormula)
 
@@ -59,7 +60,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
 
   _compiled = kTRUE ;
   if (Compile()) {
-    cout << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;
+    coutE(InputArguments) << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;
     _isOK = kFALSE ;
     return ;
   }
@@ -96,7 +97,7 @@ Bool_t RooFormula::reCompile(const char* newFormula)
 
   TString oldFormula=GetTitle() ;
   if (Compile(newFormula)) {
-    cout << "RooFormula::reCompile: new equation doesn't compile, formula unchanged" << endl ;
+    coutE(InputArguments) << "RooFormula::reCompile: new equation doesn't compile, formula unchanged" << endl ;
     reCompile(oldFormula) ;    
     return kTRUE ;
   }
@@ -167,8 +168,8 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
     if (replace) {
       _useList.Replace(_useList.At(i),replace) ;
     } else if (mustReplaceAll) {
-      cout << "RooFormula::changeDependents(1): cannot find replacement for " 
-	   << _useList.At(i)->GetName() << endl ;
+      coutE(LinkStateMgmt) << "RooFormula::changeDependents(1): cannot find replacement for " 
+			   << _useList.At(i)->GetName() << endl ;
       errorStat = kTRUE ;
     }
   }  
@@ -199,7 +200,7 @@ Double_t RooFormula::eval(const RooArgSet* nset)
 
   // WVE sanity check should go here
   if (!_isOK) {
-    cout << "RooFormula::eval(" << GetName() << "): Formula doesn't compile: " << GetTitle() << endl ;
+    coutE(Eval) << "RooFormula::eval(" << GetName() << "): Formula doesn't compile: " << GetTitle() << endl ;
     return 0. ;
   }
 
@@ -275,9 +276,9 @@ RooFormula::DefinedVariable(TString &name) {
     if (index>=0 && index<_origList.GetSize()) {
       arg = (RooAbsArg*) _origList.At(index) ;
     } else {
-      cout << "RooFormula::DefinedVariable(" << GetName() 
-	   << ") ERROR: ordinal variable reference " << name 
-	   << " out of range (0 - " << _origList.GetSize()-1 << ")" << endl ;
+      coutE(Eval) << "RooFormula::DefinedVariable(" << GetName() 
+		  << ") ERROR: ordinal variable reference " << name 
+		  << " out of range (0 - " << _origList.GetSize()-1 << ")" << endl ;
     }
   } else {
     // Access by name
@@ -291,14 +292,14 @@ RooFormula::DefinedVariable(TString &name) {
   if (labelName) {
     RooAbsCategory* cat = dynamic_cast<RooAbsCategory*>(arg) ;
     if (!cat) {
-      cout << "RooFormula::DefinedVariable(" << GetName() << ") ERROR: " 
-	   << arg->GetName() << "' is not a RooAbsCategory" << endl ;
+      coutE(Eval) << "RooFormula::DefinedVariable(" << GetName() << ") ERROR: " 
+		  << arg->GetName() << "' is not a RooAbsCategory" << endl ;
       return -1 ;
     }
 
     if (!cat->lookupType(labelName)) {
-      cout << "RooFormula::DefinedVariable(" << GetName() << ") ERROR '" 
-	   << labelName << "' is not a state of " << arg->GetName() << endl ;
+      coutE(Eval) << "RooFormula::DefinedVariable(" << GetName() << ") ERROR '" 
+		  << labelName << "' is not a state of " << arg->GetName() << endl ;
       return -1 ;
     }
 

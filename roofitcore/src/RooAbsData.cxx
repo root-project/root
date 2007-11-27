@@ -27,6 +27,7 @@
 #include "RooFormulaVar.h"
 #include "RooCmdConfig.h"
 #include "RooAbsRealLValue.h"
+#include "RooMsgService.h"
 
 
 ClassImp(RooAbsData)
@@ -53,9 +54,9 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   RooAbsArg *var;
   while((0 != (var= (RooAbsArg*)iter->Next()))) {
     if (!var->isFundamental()) {
-      cout << "RooAbsSet::initialize(" << GetName() 
-	   << "): Data set cannot contain non-fundamental types, ignoring " 
-	   << var->GetName() << endl ;
+      coutE(InputArguments) << "RooAbsSet::initialize(" << GetName() 
+			    << "): Data set cannot contain non-fundamental types, ignoring " 
+			    << var->GetName() << endl ;
     } else {
       _vars.addClone(*var);
     }
@@ -145,8 +146,8 @@ RooAbsData* RooAbsData::reduce(RooCmdArg arg1,RooCmdArg arg2,RooCmdArg arg3,RooC
     RooAbsArg* arg ;
     while((arg=(RooAbsArg*)iter->Next())) {
       if (!_vars.find(arg->GetName())) {
-	cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
-	     << arg->GetName() << " not in dataset, ignored" << endl ;
+	coutW(InputArguments) << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
+			      << arg->GetName() << " not in dataset, ignored" << endl ;
 	varSubset.remove(*arg) ;
       }
     }
@@ -224,8 +225,8 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (!_vars.find(arg->GetName())) {
-      cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
-	   << arg->GetName() << " not in dataset, ignored" << endl ;
+      coutW(InputArguments) << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
+			    << arg->GetName() << " not in dataset, ignored" << endl ;
       varSubset2.remove(*arg) ;
     }
   }
@@ -255,8 +256,8 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (!_vars.find(arg->GetName())) {
-      cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
-	   << arg->GetName() << " not in dataset, ignored" << endl ;
+      coutW(InputArguments) << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
+			    << arg->GetName() << " not in dataset, ignored" << endl ;
       varSubset2.remove(*arg) ;
     }
   }

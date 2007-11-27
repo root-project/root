@@ -40,6 +40,7 @@
 #include "RooNLLVar.h"
 #include "RooRealMPFE.h"
 #include "RooErrorHandler.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAbsGoodnessOfFit)
 ;
@@ -291,7 +292,7 @@ void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const Roo
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i)) ;
     
     Bool_t doInline = (i==_nCPU-1) ;
-    if (!doInline && _verbose) cout << "RooAbsGoodnessOfFit::initMPMode: starting remote GOF server process #" << i << endl ; 
+    if (!doInline) coutI(Generation) << "RooAbsGoodnessOfFit::initMPMode: starting remote GOF server process #" << i << endl ; 
     //cout << "initMPMode -- creating MP front-end" << endl ;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_MPFE%d",GetName(),i),Form("%s_MPFE%d",GetTitle(),i),*gof,doInline) ;    
     //cout << "initMPMode -- initializing MP front-end" << endl ;
@@ -310,7 +311,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   TString simCatName(simCat.GetName()) ;
   TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat) ;
   if (!dsetList) {
-    cout << "RooAbsGoodnessOfFit::initSimMode(" << GetName() << ") unable to split dataset, abort" << endl ;
+    coutE(Fitting) << "RooAbsGoodnessOfFit::initSimMode(" << GetName() << ") unable to split dataset, abort" << endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -342,14 +343,9 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
     if (pdf && dset && dset->numEntries(kTRUE)!=0.) {      
-      if (_verbose) {
-	cout << "RooAbsGoodnessOfFit::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
-	     << " (" << dset->numEntries() << " dataset entries)" << endl ;
-      }
+      coutE(Fitting) << "RooAbsGoodnessOfFit::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
+		     << " (" << dset->numEntries() << " dataset entries)" << endl ;
       if (_splitRange) {
-	if (_verbose) {
-	  cout << "calling create with range " << Form("%s_%s",rangeName,type->GetName()) << endl ;
-	}
 	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU,_verbose,_splitRange) ;
       } else {
 	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,rangeName,addCoefRangeName,_nCPU,_verbose,_splitRange) ;
@@ -362,8 +358,8 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     } else {
       if ((!dset || dset->numEntries(kTRUE)==0.) && pdf) {
 	if (_verbose) {
-	  cout << "RooAbsGoodnessOfFit::initSimMode: state " << type->GetName() 
-	       << " has no data entries, no slave GOF calculator created" << endl ;
+	  coutI(Fitting) << "RooAbsGoodnessOfFit::initSimMode: state " << type->GetName() 
+			 << " has no data entries, no slave GOF calculator created" << endl ;
 	}
       }      
     }

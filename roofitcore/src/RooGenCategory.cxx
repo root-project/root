@@ -37,6 +37,7 @@
 #include "RooStreamParser.h"
 #include "RooMapCatEntry.h"
 #include "RooErrorHandler.h"
+#include "RooMsgService.h"
 
 ClassImp(RooGenCategory)
 
@@ -54,8 +55,8 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
   // dictionary in memory.
   _userFuncName = G__p2f2funcname(userFunc);
   if(_userFuncName.IsNull()) {
-    cout << GetName() << ": cannot find dictionary info for (void*)"
-         << (void*)userFunc << endl;
+    coutE(InputArguments) << GetName() << ": cannot find dictionary info for (void*)"
+			  << (void*)userFunc << endl;
     return;
   }
   initialize() ;
@@ -130,7 +131,7 @@ void RooGenCategory::updateIndexList()
   // DeepClone super category for iteration
   RooArgSet* tmp=(RooArgSet*) RooArgSet(_superCatProxy.arg()).snapshot(kTRUE) ;
   if (!tmp) {
-    cout << "RooGenCategory::updateIndexList(" << GetName() << ") Couldn't deep-clone super category, abort," << endl ;
+    coutE(ObjectHandling) << "RooGenCategory::updateIndexList(" << GetName() << ") Couldn't deep-clone super category, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
   RooSuperCategory* superClone = (RooSuperCategory*) tmp->find(_superCatProxy.arg().GetName()) ;
@@ -203,7 +204,7 @@ Bool_t RooGenCategory::readFromStream(istream& /*is*/, Bool_t compact, Bool_t /*
 {
   // Read object contents from given stream
    if (compact) {
-     cout << "RooGenCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
+     coutE(InputArguments) << "RooGenCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
      return kTRUE ;    
    } else {
      return kFALSE ;

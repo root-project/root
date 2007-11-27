@@ -35,6 +35,7 @@
 #include "RooGenericPdf.h"
 #include "RooGenericPdf.h"
 #include "RooStreamParser.h"
+#include "RooMsgService.h"
 #include "RooArgList.h"
 
 ClassImp(RooGenericPdf)
@@ -129,7 +130,7 @@ Bool_t RooGenericPdf::readFromStream(istream& is, Bool_t compact, Bool_t /*verbo
 {
   // Read object contents from given stream
   if (compact) {
-    cout << "RooGenericPdf::readFromStream(" << GetName() << "): can't read in compact mode" << endl ;
+    coutE(InputArguments) << "RooGenericPdf::readFromStream(" << GetName() << "): can't read in compact mode" << endl ;
     return kTRUE ;
   } else {
     RooStreamParser parser(is) ;
@@ -141,7 +142,7 @@ void RooGenericPdf::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream
   if (compact) {
-    cout << getVal() << endl ;
+    os << getVal() << endl ;
   } else {
     os << GetTitle() ;
   }

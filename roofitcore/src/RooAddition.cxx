@@ -34,6 +34,7 @@
 #include "RooArgSet.h"
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
+#include "RooMsgService.h"
 
 ClassImp(RooAddition)
 ;
@@ -58,8 +59,8 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgSet& s
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)inputIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      cout << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-	   << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
+			    << " is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
     _set1.add(*comp) ;
@@ -83,7 +84,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
   _setIter2 = _set2.createIterator() ;
 
   if (sumSet1.getSize() != sumSet2.getSize()) {
-    cout << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << endl ;
+    coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << endl ;
     RooErrorHandler::softAbort() ;    
   }
 
@@ -91,8 +92,8 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)inputIter1->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      cout << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-	   << " in first list is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
+			    << " in first list is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
     _set1.add(*comp) ;
@@ -106,8 +107,8 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
   TIterator* inputIter2 = sumSet2.createIterator() ;
   while((comp = (RooAbsArg*)inputIter2->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      cout << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-	   << " in first list is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
+			    << " in first list is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
     _set2.add(*comp) ;
@@ -208,19 +209,19 @@ Double_t RooAddition::defaultErrorLevel() const
   }
 
   if (nllArg && !chi2Arg) {
-    cout << "RooAddition::defaultErrorLevel(" << GetName() 
-	 << ") Summation contains a RooNLLVar, using its error level" << endl ;
+    coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() 
+		   << ") Summation contains a RooNLLVar, using its error level" << endl ;
     return nllArg->defaultErrorLevel() ;
   } else if (chi2Arg && !nllArg) {
-    cout << "RooAddition::defaultErrorLevel(" << GetName() 
-	 << ") Summation contains a RooChi2Var, using its error level" << endl ;
+    coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() 
+		   << ") Summation contains a RooChi2Var, using its error level" << endl ;
     return chi2Arg->defaultErrorLevel() ;
   } else if (!nllArg && !chi2Arg) {
-    cout << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
-	 << "Summation contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
+    coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
+		   << "Summation contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
   } else {
-    cout << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
-	 << "Summation contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
+    coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
+		   << "Summation contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
   }
 
   return 1.0 ;

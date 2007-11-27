@@ -122,8 +122,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
   // Check consistency in number of dimensions
   if (vars.getSize() != hist->GetDimension()) {
-    cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension of input histogram must match "
-	 << "number of dimension variables" << endl ;
+    coutE(InputArguments) << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension of input histogram must match "
+			  << "number of dimension variables" << endl ;
     assert(0) ; 
   }
 
@@ -134,7 +134,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   // X
   RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
   if (!dynamic_cast<RooRealVar*>(xvar)) {
-    cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << xvar->GetName() << " must be real" << endl ;
+    coutE(InputArguments) << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << xvar->GetName() << " must be real" << endl ;
     assert(0) ;
   }
 
@@ -151,8 +151,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     xbins.setRange(xloAdj,xhiAdj) ;
     ((RooRealVar*)vars.at(0))->setBinning(xbins) ;
     if (fabs(xloAdj-xlo)>1e-6||fabs(xhiAdj-xhi)) {
-      cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << xvar->GetName() << " expanded to nearest bin boundaries: [" 
-	   << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl ;
+      coutI(DataHandling) << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << xvar->GetName() << " expanded to nearest bin boundaries: [" 
+			  << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl ;
     }
 
     xvar->setBinning(xbins) ;
@@ -168,8 +168,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     xbins.setRange(xloAdj,xhiAdj) ;
     ((RooRealVar*)vars.at(0))->setRange(xloAdj,xhiAdj) ;
     if (fabs(xloAdj-xlo)>1e-6||fabs(xhiAdj-xhi)) {
-      cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << xvar->GetName() << " expanded to nearest bin boundaries: [" 
-	   << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl ;
+      coutI(DataHandling) << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << xvar->GetName() << " expanded to nearest bin boundaries: [" 
+			  << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl ;
     }
 
     RooUniformBinning xbins2(xloAdj,xhiAdj,xbins.numBins()) ;
@@ -187,7 +187,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     Double_t yhi = ((RooRealVar*)vars.at(1))->getMax() ;
 
     if (!dynamic_cast<RooRealVar*>(yvar)) {
-      cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << yvar->GetName() << " must be real" << endl ;
+      coutE(InputArguments) << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << yvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
 
@@ -201,8 +201,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       ybins.setRange(yloAdj,yhiAdj) ;
       ((RooRealVar*)vars.at(1))->setBinning(ybins) ;
       if (fabs(yloAdj-ylo)>1e-6||fabs(yhiAdj-yhi)) {
-	cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << yvar->GetName() << " expanded to nearest bin boundaries: [" 
-	     << ylo << "," << yhi << "] --> [" << yloAdj << "," << yhiAdj << "]" << endl ;
+	coutI(DataHandling) << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << yvar->GetName() << " expanded to nearest bin boundaries: [" 
+			    << ylo << "," << yhi << "] --> [" << yloAdj << "," << yhiAdj << "]" << endl ;
       }
 
       yvar->setBinning(ybins) ;
@@ -219,8 +219,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       ybins.setRange(yloAdj,yhiAdj) ;
       ((RooRealVar*)vars.at(1))->setRange(yloAdj,yhiAdj) ;
       if (fabs(yloAdj-ylo)>1e-6||fabs(yhiAdj-yhi)) {
-	cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << yvar->GetName() << " expanded to nearest bin boundaries: [" 
-	     << ylo << "," << yhi << "] --> [" << yloAdj << "," << yhiAdj << "]" << endl ;
+	coutI(DataHandling) << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << yvar->GetName() << " expanded to nearest bin boundaries: [" 
+			    << ylo << "," << yhi << "] --> [" << yloAdj << "," << yhiAdj << "]" << endl ;
       }
       
       RooUniformBinning ybins2(yloAdj,yhiAdj,ybins.numBins()) ;
@@ -237,7 +237,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     Double_t zhi = ((RooRealVar*)vars.at(2))->getMax() ;
 
     if (!dynamic_cast<RooRealVar*>(zvar)) {
-      cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << zvar->GetName() << " must be real" << endl ;
+      coutE(InputArguments) << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << zvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
 
@@ -251,8 +251,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       zbins.setRange(zloAdj,zhiAdj) ;
       ((RooRealVar*)vars.at(2))->setBinning(zbins) ;
       if (fabs(zloAdj-zlo)>1e-6||fabs(zhiAdj-zhi)) {
-	cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
-	     << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;
+	coutI(DataHandling) << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
+			    << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;
       }
       
       zvar->setBinning(zbins) ;
@@ -269,8 +269,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       zbins.setRange(zloAdj,zhiAdj) ;
       ((RooRealVar*)vars.at(2))->setRange(zloAdj,zhiAdj) ;
       if (fabs(zloAdj-zlo)>1e-6||fabs(zhiAdj-zhi)) {
-	cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
-	     << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;
+	coutI(DataHandling) << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
+			    << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;
       }
       
       RooUniformBinning zbins2(zloAdj,zhiAdj,zbins.numBins()) ;
@@ -493,7 +493,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
     // Deep clone cutVar and attach clone to this dataset
     tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
     if (!tmp) {
-      cout << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
+      coutE(DataHandling) << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
       return 0 ;
     }
     cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
@@ -586,19 +586,19 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   if (o.bins) return RooTreeData::plotOn(frame,o) ;
 
   if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
     return 0;
   }
   RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
   if(0 == var) {
-    cout << ClassName() << "::" << GetName()
+    coutE(InputArguments) << ClassName() << "::" << GetName()
 	 << ":plotOn: frame does not specify a plot variable" << endl;
     return 0;
   }
 
   RooRealVar* dataVar = (RooRealVar*) _vars.find(var->GetName()) ;
   if (!dataVar) {
-    cout << ClassName() << "::" << GetName()
+    coutE(InputArguments) << ClassName() << "::" << GetName()
 	 << ":plotOn: dataset doesn't contain plot frame variable" << endl;
     return 0;
   }
@@ -622,7 +622,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 
   // Handle illegal intOrder values
   if (intOrder<0) {
-    cout << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
+    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
     return 0 ;
   }
 
@@ -690,7 +690,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   } else {
 
     // Higher dimensional scenarios not yet implemented
-    cout << "RooDataHist::weight(" << GetName() << ") interpolation in " 
+    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") interpolation in " 
 	 << _realVars.getSize() << " dimensions not yet implemented" << endl ;
     return weight(bin,0) ;
 
@@ -863,7 +863,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
     // Deep clone cutVar and attach clone to this dataset
     tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
     if (!tmp) {
-      cout << "RooDataHist::add(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
+      coutE(DataHandling) << "RooDataHist::add(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
       return ;
     }
 

@@ -53,7 +53,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   // Clone PDF and change model to internal truth model
   _pdfCloneSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
   if (!_pdfCloneSet) {
-    cout << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
+    coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -69,7 +69,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   // Clone resolution model and use as normal PDF
   _modelCloneSet = (RooArgSet*) RooArgSet(*model._convSet.at(0)).snapshot(kTRUE) ;
   if (!_modelCloneSet) {
-    cout << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone resolution model, abort," << endl ;
+    coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone resolution model, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
   RooResolutionModel* modelClone = (RooResolutionModel*) 

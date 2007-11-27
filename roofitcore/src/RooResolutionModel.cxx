@@ -64,6 +64,7 @@
 #include "TMath.h"
 #include "Riostream.h"
 #include "RooResolutionModel.h"
+#include "RooMsgService.h"
 #include "RooSentinel.h"
 
 ClassImp(RooResolutionModel) 
@@ -148,10 +149,10 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbs
 
   // Check that primary variable of basis functions is our convolution variable  
   if (basis->getParameter(0) != x.absArg()) {
-    cout << "RooResolutionModel::convolution(" << GetName() << "," << this  
-	 << ") convolution parameter of basis function and PDF don't match" << endl ;
-    cout << "basis->findServer(0) = " << basis->findServer(0) << endl ;
-    cout << "x.absArg()           = " << x.absArg() << endl ;
+    coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this  
+			  << ") convolution parameter of basis function and PDF don't match" << endl 
+			  << "basis->findServer(0) = " << basis->findServer(0) << endl 
+			  << "x.absArg()           = " << x.absArg() << endl ;
     return 0 ;
   }
 
@@ -247,7 +248,7 @@ Double_t RooResolutionModel::getVal(const RooArgSet* nset) const
     _value = evaluate() ; 
 
     // WVE insert traceEval traceEval
-    if (_verboseDirty) cout << "RooResolutionModel(" << GetName() << ") value = " << _value << endl ;
+    if (_verboseDirty) cxcoutD(Tracing) << "RooResolutionModel(" << GetName() << ") value = " << _value << endl ;
 
     clearValueDirty() ; 
     clearShapeDirty() ; 
@@ -309,8 +310,8 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
   }
 
   syncNormalization(nset,kFALSE) ;
-  if (_verboseEval>1) cout << IsA()->GetName() << "::getNorm(" << GetName() 
-			   << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
+  if (_verboseEval>1) cxcoutD(Tracing) << IsA()->GetName() << "::getNorm(" << GetName() 
+				       << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 
   Double_t ret = _norm->getVal() ;
   return ret ;

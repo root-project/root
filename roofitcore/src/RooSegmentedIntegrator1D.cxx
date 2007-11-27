@@ -26,6 +26,7 @@
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
+#include "RooMsgService.h"
 #include "RooNumIntFactory.h"
 
 #include <assert.h>
@@ -118,7 +119,7 @@ Bool_t RooSegmentedIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
   // if this object was constructed to always use our integrand's limits.
 
   if(_useIntegrandLimits) {
-    cout << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE((TObject*)0,InputArguments) << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
   _xmin= xmin;
@@ -139,7 +140,7 @@ Bool_t RooSegmentedIntegrator1D::checkLimits() const {
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    cout << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+    oocoutE((TObject*)0,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
     return kFALSE;
   }
   Bool_t ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;

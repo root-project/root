@@ -29,6 +29,7 @@
 #include "RooThresholdCategory.h"
 #include "RooStreamParser.h"
 #include "RooThreshEntry.h"
+#include "RooMsgService.h"
 
 ClassImp(RooThresholdCategory)
 
@@ -76,8 +77,8 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
   RooThreshEntry* te ;
   while ((te=(RooThreshEntry*)_threshIter->Next())) {
     if (te->thresh() == upperLimit) {
-      cout << "RooThresholdCategory::addThreshold(" << GetName() 
-	   << ") threshold at " << upperLimit << " already defined" << endl ;
+      coutW(InputArguments) << "RooThresholdCategory::addThreshold(" << GetName() 
+			    << ") threshold at " << upperLimit << " already defined" << endl ;
       return kTRUE ;
     }    
   }

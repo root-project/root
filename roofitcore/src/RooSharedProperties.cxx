@@ -18,6 +18,7 @@
 
 #include "RooFit.h"
 #include "RooSharedProperties.h"
+#include "RooMsgService.h"
 #include "RooTrace.h"
 
 #include <iostream>

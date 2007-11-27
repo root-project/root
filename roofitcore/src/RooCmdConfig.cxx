@@ -25,6 +25,7 @@
 #include "RooTObjWrap.h"
 #include "RooAbsData.h"
 #include "TObjString.h"
+#include "RooMsgService.h"
 
 ClassImp(RooCmdConfig) 
   ;
@@ -230,7 +231,7 @@ void RooCmdConfig::defineMutex(const char* argName1, const char* argName2, const
 Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intNum, Int_t defVal)
 {
   if (_iList.FindObject(name)) {
-    cout << "RooCmdConfig::defintInt: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defintInt: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
@@ -248,7 +249,7 @@ Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intN
 Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defVal) 
 {
   if (_dList.FindObject(name)) {
-    cout << "RooCmdConfig::defineDouble: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineDouble: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
@@ -266,7 +267,7 @@ Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t d
 Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t stringNum, const char* defVal, Bool_t appendMode) 
 {
   if (_sList.FindObject(name)) {
-    cout << "RooCmdConfig::defineString: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineString: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
@@ -285,7 +286,7 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
 Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t setNum, const TObject* defVal, Bool_t isArray) 
 {
   if (_oList.FindObject(name)) {
-    cout << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
@@ -376,7 +377,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
 
   // Check if not forbidden
   if (_fList.FindObject(opc)) {
-    cout << _name << " ERROR: argument " << opc << " not allowed in this context" << endl ;
+    coutE(InputArguments) << _name << " ERROR: argument " << opc << " not allowed in this context" << endl ;
     _error = kTRUE ;
     return kTRUE ;
   }
@@ -475,7 +476,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   }
 
   if (!anyField && !_allowUndefined) {
-    cout << _name << " ERROR: unrecognized command: " << opc << endl ;
+    coutE(InputArguments) << _name << " ERROR: unrecognized command: " << opc << endl ;
   }
 
 
@@ -556,9 +557,9 @@ Bool_t RooCmdConfig::ok(Bool_t verbose) const
   if (verbose) {
     const char* margs = missingArgs() ;
     if (margs) {
-      cout << _name << " ERROR: missing arguments: " << margs << endl ;
+      coutE(InputArguments) << _name << " ERROR: missing arguments: " << margs << endl ;
     } else {
-      cout << _name << " ERROR: illegal combination of arguments and/or missing arguments" << endl ;
+      coutE(InputArguments) << _name << " ERROR: illegal combination of arguments and/or missing arguments" << endl ;
     }
   }
   return kFALSE ;

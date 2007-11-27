@@ -51,6 +51,7 @@
 #include "RooAbsCategoryLValue.h"
 #include "RooStringVar.h"
 #include "RooTrace.h"
+#include "RooMsgService.h"
 
 ClassImp(RooArgList)
   ;
@@ -185,8 +186,8 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
   TObject* obj ;
   while((obj=iter->Next())) {
     if (!dynamic_cast<RooAbsArg*>(obj)) {
-      cout << "RooArgList::RooArgList(TCollection) element " << obj->GetName() 
-	   << " is not a RooAbsArg, ignored" << endl ;
+      coutW(InputArguments) << "RooArgList::RooArgList(TCollection) element " << obj->GetName() 
+			    << " is not a RooAbsArg, ignored" << endl ;
       continue ;
     }
     add(*(RooAbsArg*)obj) ;
@@ -223,8 +224,8 @@ RooAbsArg& RooArgList::operator[](Int_t idx) const
 
   RooAbsArg* arg = at(idx) ;
   if (!arg) {
-    cout << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
-	 << idx << " out of range (0," << getSize() << ")" << endl ;
+    coutE(InputArguments) << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
+			  << idx << " out of range (0," << getSize() << ")" << endl ;
     RooErrorHandler::softAbort() ;
   }
   return *arg ; 
@@ -240,7 +241,7 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
   // writeToStream() function
 
   if (!compact) {
-    cout << "RooArgList::writeToStream(" << GetName() << ") non-compact mode not supported" << endl ;
+    coutE(InputArguments) << "RooArgList::writeToStream(" << GetName() << ") non-compact mode not supported" << endl ;
     return ;
   }
 
@@ -266,7 +267,7 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   // readFromStream function.
 
   if (!compact) {
-    cout << "RooArgList::readFromStream(" << GetName() << ") non-compact mode not supported" << endl ;
+    coutE(InputArguments) << "RooArgList::readFromStream(" << GetName() << ") non-compact mode not supported" << endl ;
     return kTRUE ;
   }    
 
@@ -288,8 +289,8 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   if (!parser.atEOL()) {
     TString rest = parser.readLine() ;
     if (verbose) {
-      cout << "RooArgSet::readFromStream(" << GetName() 
-	   << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
+      coutW(InputArguments) << "RooArgSet::readFromStream(" << GetName() 
+			    << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
     }
   }
   

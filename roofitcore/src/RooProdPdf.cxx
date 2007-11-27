@@ -47,6 +47,7 @@
 #include "RooGenProdProj.h"
 #include "RooProduct.h"
 #include "RooNameReg.h"
+#include "RooMsgService.h"
 
 ClassImp(RooProdPdf)
 ;
@@ -118,9 +119,9 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   if (pdf2.canBeExtended()) {
     if (_extendedIndex>=0) {
       // Protect against multiple extended terms
-      cout << "RooProdPdf::RooProdPdf(" << GetName() 
-	   << ") multiple components with extended terms detected,"
-	   << " product will not be extendible." << endl ;
+      coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName() 
+			    << ") multiple components with extended terms detected,"
+			    << " product will not be extendible." << endl ;
       _extendedIndex=-1 ;
     } else {
       _extendedIndex=_pdfList.index(&pdf2) ;
@@ -162,8 +163,8 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   while((arg=(RooAbsArg*)iter->Next())) {
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (!pdf) {
-      cout << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg " 
-	   << pdf->GetName() << " is not a PDF, ignored" << endl ;
+      coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg " 
+			    << pdf->GetName() << " is not a PDF, ignored" << endl ;
       continue ;
     }
     _pdfList.add(*pdf) ;
@@ -179,9 +180,9 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
 
   // Protect against multiple extended terms
   if (numExtended>1) {
-    cout << "RooProdPdf::RooProdPdf(" << GetName() 
-	 << ") WARNING: multiple components with extended terms detected,"
-	 << " product will not be extendible." << endl ;
+    coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName() 
+			  << ") WARNING: multiple components with extended terms detected,"
+			  << " product will not be extendible." << endl ;
     _extendedIndex = -1 ;
   }
 
@@ -375,15 +376,15 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
 
 
     } else if (TString(carg->GetName()).CompareTo("")) {
-      cout << "Unknown arg: " << carg->GetName() << endl ;
+      coutW(InputArguments) << "Unknown arg: " << carg->GetName() << endl ;
     }
   }
 
   // Protect against multiple extended terms
   if (numExtended>1) {
-    cout << "RooProdPdf::RooProdPdf(" << GetName() 
-	 << ") WARNING: multiple components with extended terms detected,"
-	 << " product will not be extendible." << endl ;
+    coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName() 
+			  << ") WARNING: multiple components with extended terms detected,"
+			  << " product will not be extendible." << endl ;
     _extendedIndex = -1 ;
   }
 
@@ -991,7 +992,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
   }
   delete pIter ;
 
-  cout << "RooProdPdf::processProductTerm(" << GetName() << ") unidentified term!!!" << endl ;
+  coutE(Eval) << "RooProdPdf::processProductTerm(" << GetName() << ") unidentified term!!!" << endl ;
   return 0;
 }
 

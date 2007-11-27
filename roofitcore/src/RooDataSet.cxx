@@ -37,6 +37,7 @@
 #include "RooAbsRealLValue.h"
 #include "RooRealVar.h"
 #include "RooDataHist.h"
+#include "RooMsgService.h"
 #include "TROOT.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
@@ -263,11 +264,11 @@ void RooDataSet::initialize(const char* wgtVarName)
   if (wgtVarName) {
     RooAbsArg* wgt = _varsNoWgt.find(wgtVarName) ;
     if (!wgt) {
-      cout << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
-	   << wgtVarName << " not found in set of variables, no weighting will be assigned" << endl ;
+      coutW(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
+			  << wgtVarName << " not found in set of variables, no weighting will be assigned" << endl ;
     } else if (!dynamic_cast<RooRealVar*>(wgt)) {
-      cout << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
-	   << wgtVarName << " is not of type RooRealVar, no weighting will be assigned" << endl ;
+      coutW(DataHandling) << "RooDataSet::RooDataSet(" << GetName() << ") WARNING: designated weight variable " 
+			  << wgtVarName << " is not of type RooRealVar, no weighting will be assigned" << endl ;
     } else {
       _varsNoWgt.remove(*wgt) ;
       _wgtVar = (RooRealVar*) wgt ;
@@ -435,7 +436,7 @@ Bool_t RooDataSet::merge(const TList& dsetList)
   // Sanity checks: data sets must have the same size
   while((data=(RooDataSet*)iter->Next())) {
     if (numEntries()!=data->numEntries()) {
-      cout << "RooDataSet::merge(" << GetName() << " ERROR: datasets have different size" << endl ;
+      coutE(InputArguments) << "RooDataSet::merge(" << GetName() << " ERROR: datasets have different size" << endl ;
       delete iter ;
       return kTRUE ;    
     }
@@ -536,8 +537,8 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   if(0 == plotVarX) {
     // Is this variable a client of our dataset?
     if (!var1.dependsOn(_vars)) {
-      cout << GetName() << "::createHistogram: Argument " << var1.GetName() 
-           << " is not in dataset and is also not dependent on data set" << endl ;
+      coutE(InputArguments) << GetName() << "::createHistogram: Argument " << var1.GetName() 
+			    << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
 
@@ -555,8 +556,8 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   if(0 == plotVarY) {
     // Is this variable a client of our dataset?
     if (!var2.dependsOn(_vars)) {
-      cout << GetName() << "::createHistogram: Argument " << var2.GetName() 
-           << " is not in dataset and is also not dependent on data set" << endl ;
+      coutE(InputArguments) << GetName() << "::createHistogram: Argument " << var2.GetName() 
+			    << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
 
@@ -588,7 +589,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   TH2F* histogram=new TH2F(histName.Data(), "Events", nx, var1.getMin(), var1.getMax(), 
                                                       ny, var2.getMin(), var2.getMax());
   if(!histogram) {
-    cout << fName << "::createHistogram: unable to create a new histogram" << endl;
+    coutE(DataHandling) << fName << "::createHistogram: unable to create a new histogram" << endl;
     return 0;
   }
 
@@ -672,12 +673,12 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   } else {
     ownIsBlind = kFALSE ;    
     if (blindState->IsA()!=RooCategory::Class()) {
-      cout << "RooDataSet::read: ERROR: variable list already contains" 
-	   << "a non-RooCategory blindState member" << endl ;
+      oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: ERROR: variable list already contains" 
+			  << "a non-RooCategory blindState member" << endl ;
       return 0 ;
     }
-    cout << "RooDataSet::read: WARNING: recycling existing "
-         << "blindState category in variable list" << endl ;
+    oocoutW((TObject*)0,DataHandling) << "RooDataSet::read: WARNING: recycling existing "
+			<< "blindState category in variable list" << endl ;
   }
   RooCategory* blindCat = (RooCategory*) blindState ;
 
@@ -696,8 +697,8 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   RooDataSet *data= new RooDataSet("dataset", fileList, variables);
   if (ownIsBlind) { variables.remove(*blindState) ; delete blindState ; }
   if(!data) {
-    cout << "RooDataSet::read: unable to create a new dataset"
-	 << endl;
+    oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: unable to create a new dataset"
+			<< endl;
     return 0;
   }
 
@@ -711,13 +712,13 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     RooAbsArg* tmp = 0;
     tmp = data->_vars.find(indexCatName) ;
     if (!tmp) {
-      cout << "RooDataSet::read: no index category named " 
-	   << indexCatName << " in supplied variable list" << endl ;
+      oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: no index category named " 
+			  << indexCatName << " in supplied variable list" << endl ;
       return 0 ;
     }
     if (tmp->IsA()!=RooCategory::Class()) {
-      cout << "RooDataSet::read: variable " << indexCatName 
-	   << " is not a RooCategory" << endl ;
+      oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: variable " << indexCatName 
+			  << " is not a RooCategory" << endl ;
       return 0 ;
     }
     indexCat = (RooCategory*)tmp ;
@@ -762,8 +763,8 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	char newLabel[128] ;
 	sprintf(newLabel,"file%03d",fileSeqNum) ;
 	if (indexCat->defineType(newLabel,fileSeqNum)) {
-	  cout << "RooDataSet::read: Error, cannot register automatic type name " << newLabel 
-	       << " in index category " << indexCat->GetName() << endl ;
+	  oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: Error, cannot register automatic type name " << newLabel 
+			      << " in index category " << indexCat->GetName() << endl ;
 	  return 0 ;
 	}	
 	// Assign new category number
@@ -771,7 +772,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       }
     }
 
-    cout << "RooDataSet::read: reading file " << filename << endl ;
+    oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: reading file " << filename << endl ;
 
     // Prefix common path 
     TString fullName(commonPath) ;
@@ -779,7 +780,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     ifstream file(fullName) ;
 
     if(!file.good()) {
-      cout << "RooDataSet::read: unable to open '"
+      oocoutW((TObject*)0,DataHandling) << "RooDataSet::read: unable to open '"
 	   << filename << "', skipping" << endl;
     }
     
@@ -789,12 +790,12 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
     while(file.good() && !file.eof()) {
       line++;
-      if(debug) cout << "reading line " << line << endl;
+      if(debug) oocxcoutD((TObject*)0,DataHandling) << "reading line " << line << endl;
 
       // process comment lines
       if (file.peek() == '#')
 	{
-	  if(debug) cout << "skipping comment on line " << line << endl;
+	  if(debug) oocxcoutD((TObject*)0,DataHandling) << "skipping comment on line " << line << endl;
 	    
 	  TString line ;
 	  line.ReadLine(file) ;
@@ -804,16 +805,16 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	      
 	      // compare to ref blind string 
 	      TString curBlindString(line(7,line.Length()-7)) ;
-	      if (debug) cout << "Found blind string " << curBlindString << endl ;
+	      if (debug) oocxcoutD((TObject*)0,DataHandling) << "Found blind string " << curBlindString << endl ;
 	      if (curBlindString != data->_blindString) {
-		  cout << "RooDataSet::read: ERROR blinding string mismatch, abort" << endl ;
+		  oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: ERROR blinding string mismatch, abort" << endl ;
 		  return 0 ;
 		}
 	      
 	    } else {
 	      // store ref blind string 
 	      data->_blindString=TString(line(7,line.Length()-7)) ;
-	      if (debug) cout << "Storing ref blind string " << data->_blindString << endl ;
+	      if (debug) oocxcoutD((TObject*)0,DataHandling) << "Storing ref blind string " << data->_blindString << endl ;
 	      haveRefBlindString = true ;
 	    }	    
 	  }     
@@ -831,7 +832,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	// Stop at end of file or on read error
 	if(file.eof()) break ;	
 	if(!file.good()) {
-	  cout << "RooDataSet::read(static): read error at line " << line << endl ;
+	  oocoutE((TObject*)0,DataHandling) << "RooDataSet::read(static): read error at line " << line << endl ;
 	  break;
 	}	
 
@@ -860,8 +861,8 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	origIndexCat->defineType(type->GetName(),type->getVal()) ;
       }
   }
-  cout << "RooDataSet::read: read " << data->GetEntries()
-       << " events (ignored " << outOfRange << " out of range events)" << endl;
+  oocoutI((TObject*)0,DataHandling) << "RooDataSet::read: read " << data->GetEntries()
+				    << " events (ignored " << outOfRange << " out of range events)" << endl;
   return data;
 }
 
@@ -875,12 +876,12 @@ Bool_t RooDataSet::write(const char* filename)
   // Open file for writing 
   ofstream ofs(filename) ;
   if (ofs.fail()) {
-    cout << "RooDataSet::write(" << GetName() << ") cannot create file " << filename << endl ;
+    coutE(DataHandling) << "RooDataSet::write(" << GetName() << ") cannot create file " << filename << endl ;
     return kTRUE ;
   }
 
   // Write all lines as arglist in compact mode
-  cout << "RooDataSet::write(" << GetName() << ") writing ASCII file " << filename << endl ;
+  coutI(DataHandling) << "RooDataSet::write(" << GetName() << ") writing ASCII file " << filename << endl ;
   Int_t i ;
   for (i=0 ; i<numEntries() ; i++) {
     RooArgList list(*get(i),"line") ;
@@ -888,7 +889,7 @@ Bool_t RooDataSet::write(const char* filename)
   }
 
   if (ofs.fail()) {
-    cout << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occured in writing" << endl ;
+    coutW(DataHandling) << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occured in writing" << endl ;
   }
   return ofs.fail() ;
 }
