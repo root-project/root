@@ -104,7 +104,7 @@ protected:
   // Constant term optimizer interface
   friend class RooAbsArg ;
   friend class RooAbsReal ;
-  friend class RooAbsOptGoodnessOfFit ;
+  friend class RooAbsOptTestStatistic ;
   friend class RooAbsCachedPdf ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) = 0 ;

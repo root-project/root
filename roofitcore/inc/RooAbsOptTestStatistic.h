@@ -13,27 +13,27 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_ABS_OPT_GOODNESS_OF_FIT
-#define ROO_ABS_OPT_GOODNESS_OF_FIT
+#ifndef ROO_ABS_OPT_TEST_STATISTIC
+#define ROO_ABS_OPT_TEST_STATISTIC
 
 #include "Riostream.h"
-#include "RooAbsGoodnessOfFit.h"
+#include "RooAbsTestStatistic.h"
 #include "RooSetProxy.h"
 
 class RooArgSet ;
 class RooAbsData ;
 class RooAbsPdf ;
 
-class RooAbsOptGoodnessOfFit : public RooAbsGoodnessOfFit {
+class RooAbsOptTestStatistic : public RooAbsTestStatistic {
 public:
 
   // Constructors, assignment etc
-  inline RooAbsOptGoodnessOfFit() { }
-  RooAbsOptGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  inline RooAbsOptTestStatistic() { }
+  RooAbsOptTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
 			 Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
-  RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& other, const char* name=0);
-  virtual ~RooAbsOptGoodnessOfFit();
+  RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
+  virtual ~RooAbsOptTestStatistic();
 
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const ;
 
@@ -53,7 +53,7 @@ protected:
   RooAbsPdf*  _pdfClone ;
   RooArgSet*  _projDeps ;
 
-  ClassDef(RooAbsOptGoodnessOfFit,1) // Abstract real-valued variable
+  ClassDef(RooAbsOptTestStatistic,1) // Abstract real-valued variable
 };
 
 #endif

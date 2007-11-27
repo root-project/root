@@ -101,10 +101,11 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name) : 
   RooAbsPdf(other,name), _isCopy(kTRUE),
-  _model(other._model), _convVar(other._convVar), 
+  _model(other._model), 
+  _convVar(other._convVar), 
   _convSet("convSet",this,other._convSet),
   _basisList(other._basisList),
-  _convNormSet(new RooArgSet(*other._convNormSet)),
+  _convNormSet(other._convNormSet? new RooArgSet(*other._convNormSet) : new RooArgSet() ),
   _convSetIter(_convSet.createIterator()),
   _coefNormMgr(other._coefNormMgr,this),
   _codeReg(other._codeReg)

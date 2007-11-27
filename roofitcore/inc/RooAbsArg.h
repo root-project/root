@@ -271,7 +271,7 @@ public:
   friend class RooSimGenContext ;  
   friend class RooEffGenContext ;  
   friend class RooSimPdfBuilder ;
-  friend class RooAbsOptGoodnessOfFit ;
+  friend class RooAbsOptTestStatistic ;
   friend class RooAbsPdf ;
   friend class RooGenProdProj ;
 

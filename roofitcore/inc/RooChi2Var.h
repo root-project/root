@@ -17,11 +17,11 @@
 #ifndef ROO_CHI2_VAR
 #define ROO_CHI2_VAR
 
-#include "RooAbsOptGoodnessOfFit.h"
+#include "RooAbsOptTestStatistic.h"
 #include "RooCmdArg.h"
 #include "RooDataHist.h"
 
-class RooChi2Var : public RooAbsOptGoodnessOfFit {
+class RooChi2Var : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
@@ -39,7 +39,7 @@ public:
   RooChi2Var(const RooChi2Var& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
 
-  virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) {
     return new RooChi2Var(name,title,pdf,(RooDataHist&)data,projDeps,_extended,rangeName,addCoefRangeName,nCPU, verbose, splitCutRange) ;
   }

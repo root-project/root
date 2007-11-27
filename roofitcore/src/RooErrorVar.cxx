@@ -85,7 +85,7 @@ const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, B
 }
 
 
-RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 
+RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Bool_t createOnTheFly) 
 {
   // Return default (normalization) binning and range if no name is specified
   if (name==0) {

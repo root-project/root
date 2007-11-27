@@ -16,10 +16,10 @@
 #ifndef ROO_NLL_VAR
 #define ROO_NLL_VAR
 
-#include "RooAbsOptGoodnessOfFit.h"
+#include "RooAbsOptTestStatistic.h"
 #include "RooCmdArg.h"
 
-class RooNLLVar : public RooAbsOptGoodnessOfFit {
+class RooNLLVar : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
@@ -40,7 +40,7 @@ public:
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
 
-  virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) {
     return new RooNLLVar(name,title,pdf,data,projDeps,_extended,rangeName, addCoefRangeName, nCPU, verbose,splitRange) ;
   }

@@ -17,14 +17,10 @@
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooGenProdProj+ ;
-#pragma link C++ class RooGraphEdge+ ;
-#pragma link C++ class RooGraphNode+ ;
-#pragma link C++ class RooGraphSpring+ ;
 #pragma link C++ class RooGrid+ ;
 #pragma link C++ class RooHashTable+ ;
 #pragma link C++ class RooHistError+ ;
 #pragma link C++ class RooHist+ ;
-#pragma link C++ class RooHtml+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
 #pragma link C++ class RooIntegrator1D+ ;
 #pragma link C++ class RooIntegrator2D+ ;

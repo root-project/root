@@ -15,9 +15,9 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
-// RooAbsGoodnessOfFit is the abstract base class for goodness-of-fit
+// RooAbsTestStatistic is the abstract base class for goodness-of-fit
 // for all goodness-of-fit variables. Goodness-of-fit quantities that
-// evaluate the PDF at each data point should inherit from the RooAbsOptGoodnessOfFit
+// evaluate the PDF at each data point should inherit from the RooAbsOptTestStatistic
 // class which implements several generic optimizations that can be done for
 // such quantities.
 //
@@ -30,8 +30,8 @@
 
 #include "RooFit.h"
 
-#include "RooAbsGoodnessOfFit.h"
-#include "RooAbsGoodnessOfFit.h"
+#include "RooAbsTestStatistic.h"
+#include "RooAbsTestStatistic.h"
 #include "RooAbsPdf.h"
 #include "RooSimultaneous.h"
 #include "RooAbsData.h"
@@ -42,10 +42,10 @@
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 
-ClassImp(RooAbsGoodnessOfFit)
+ClassImp(RooAbsTestStatistic)
 ;
 
-RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName, 
 					 Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsReal(name,title),
@@ -92,7 +92,7 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, Ro
 
 
 
-RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const char* name) : 
+RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name) : 
   RooAbsReal(other,name), 
   _paramSet("paramSet",this,other._paramSet),
   _pdf(other._pdf),
@@ -111,10 +111,10 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const
 {
   if (operMode()==SimMaster) {
     _nGof = other._nGof ; 
-    _gofArray = new pRooAbsGoodnessOfFit[_nGof] ;
+    _gofArray = new pRooAbsTestStatistic[_nGof] ;
     Int_t i ;
     for (i=0 ; i<_nGof ; i++) {
-      _gofArray[i] = (RooAbsGoodnessOfFit*) other._gofArray[i]->Clone() ;
+      _gofArray[i] = (RooAbsTestStatistic*) other._gofArray[i]->Clone() ;
     }
   }
 
@@ -132,7 +132,7 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const
 
 
 
-RooAbsGoodnessOfFit::~RooAbsGoodnessOfFit()
+RooAbsTestStatistic::~RooAbsTestStatistic()
 {
   if (_gofOpMode==MPMaster && _init) {
     Int_t i ;
@@ -155,11 +155,11 @@ RooAbsGoodnessOfFit::~RooAbsGoodnessOfFit()
 
 
 
-Double_t RooAbsGoodnessOfFit::evaluate() const
+Double_t RooAbsTestStatistic::evaluate() const
 {
   // One-time Initialization
   if (!_init) {
-    const_cast<RooAbsGoodnessOfFit*>(this)->initialize() ;
+    const_cast<RooAbsTestStatistic*>(this)->initialize() ;
   }
 
   if (_gofOpMode==SimMaster) {
@@ -191,7 +191,7 @@ Double_t RooAbsGoodnessOfFit::evaluate() const
 
 
 
-Bool_t RooAbsGoodnessOfFit::initialize() 
+Bool_t RooAbsTestStatistic::initialize() 
 {
   if (_init) return kFALSE ;
 
@@ -206,7 +206,7 @@ Bool_t RooAbsGoodnessOfFit::initialize()
 
 
 
-Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t) 
+Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t) 
 {
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
@@ -223,12 +223,12 @@ Bool_t RooAbsGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServe
 }
 
 
-void RooAbsGoodnessOfFit::printCompactTreeHook(ostream& os, const char* indent) 
+void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent) 
 {
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     Int_t i ;
-    os << indent << "RooAbsGoodnessOfFit begin GOF contents" << endl ;
+    os << indent << "RooAbsTestStatistic begin GOF contents" << endl ;
     for (i=0 ; i<_nGof ; i++) {
       if (_gofArray[i]) {
 	TString indent2(indent) ;
@@ -236,14 +236,14 @@ void RooAbsGoodnessOfFit::printCompactTreeHook(ostream& os, const char* indent)
 	_gofArray[i]->printCompactTreeHook(os,indent2) ;
       }
     }
-    os << indent << "RooAbsGoodnessOfFit end GOF contents" << endl ;
+    os << indent << "RooAbsTestStatistic end GOF contents" << endl ;
   } else if (_gofOpMode==MPMaster) {
     // WVE implement this
   }
 }
 
 
-void RooAbsGoodnessOfFit::constOptimizeTestStatistic(ConstOpCode opcode) 
+void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode) 
 {
   Int_t i ;
   initialize() ;
@@ -261,7 +261,7 @@ void RooAbsGoodnessOfFit::constOptimizeTestStatistic(ConstOpCode opcode)
 
 
 
-void RooAbsGoodnessOfFit::setMPSet(Int_t setNum, Int_t numSets) 
+void RooAbsTestStatistic::setMPSet(Int_t setNum, Int_t numSets) 
 {
   _setNum = setNum ; _numSets = numSets ;
   if (_gofOpMode==SimMaster) {
@@ -275,14 +275,14 @@ void RooAbsGoodnessOfFit::setMPSet(Int_t setNum, Int_t numSets)
 }
 
 
-void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
+void RooAbsTestStatistic::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
   Int_t i ;
   _mpfeArray = new pRooRealMPFE[_nCPU] ;
 
   // Create proto-goodness-of-fit 
   //cout << "initMPMode -- creating prototype gof" << endl ;
-  RooAbsGoodnessOfFit* gof = create(GetName(),GetTitle(),*pdf,*data,*projDeps,rangeName,addCoefRangeName) ;
+  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*pdf,*data,*projDeps,rangeName,addCoefRangeName) ;
 
   for (i=0 ; i<_nCPU ; i++) {
 
@@ -292,7 +292,7 @@ void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const Roo
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i)) ;
     
     Bool_t doInline = (i==_nCPU-1) ;
-    if (!doInline) coutI(Generation) << "RooAbsGoodnessOfFit::initMPMode: starting remote GOF server process #" << i << endl ; 
+    if (!doInline) coutI(Generation) << "RooAbsTestStatistic::initMPMode: starting remote GOF server process #" << i << endl ; 
     //cout << "initMPMode -- creating MP front-end" << endl ;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_MPFE%d",GetName(),i),Form("%s_MPFE%d",GetTitle(),i),*gof,doInline) ;    
     //cout << "initMPMode -- initializing MP front-end" << endl ;
@@ -303,7 +303,7 @@ void RooAbsGoodnessOfFit::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const Roo
 }
 
 
-void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
+void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->indexCat() ;
 
@@ -311,7 +311,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   TString simCatName(simCat.GetName()) ;
   TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat) ;
   if (!dsetList) {
-    coutE(Fitting) << "RooAbsGoodnessOfFit::initSimMode(" << GetName() << ") unable to split dataset, abort" << endl ;
+    coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") unable to split dataset, abort" << endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -332,7 +332,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   }
 
   // Allocate arrays 
-  _gofArray = new pRooAbsGoodnessOfFit[_nGof] ;
+  _gofArray = new pRooAbsTestStatistic[_nGof] ;
 
   // Create array of regular fit contexts, containing subset of data and single fitCat PDF
   catIter->Reset() ;
@@ -343,7 +343,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
     if (pdf && dset && dset->numEntries(kTRUE)!=0.) {      
-      coutE(Fitting) << "RooAbsGoodnessOfFit::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
+      coutE(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
 		     << " (" << dset->numEntries() << " dataset entries)" << endl ;
       if (_splitRange) {
 	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU,_verbose,_splitRange) ;
@@ -358,7 +358,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     } else {
       if ((!dset || dset->numEntries(kTRUE)==0.) && pdf) {
 	if (_verbose) {
-	  coutI(Fitting) << "RooAbsGoodnessOfFit::initSimMode: state " << type->GetName() 
+	  coutI(Fitting) << "RooAbsTestStatistic::initSimMode: state " << type->GetName() 
 			 << " has no data entries, no slave GOF calculator created" << endl ;
 	}
       }      

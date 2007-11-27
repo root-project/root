@@ -11,12 +11,12 @@
 #pragma link C++ class RooAbsData+ ;
 #pragma link C++ class RooAbsFunc+ ;
 #pragma link C++ class RooAbsGenContext+ ;
-#pragma link C++ class RooAbsGoodnessOfFit+ ;
+#pragma link C++ class RooAbsTestStatistic+ ;
 #pragma link C++ class RooAbsHiddenReal+ ;
 #pragma link C++ class RooAbsIntegrator+ ;
 #pragma link C++ class RooAbsLValue+ ;
 #pragma link C++ class RooAbsMCStudyModule+ ;
-#pragma link C++ class RooAbsOptGoodnessOfFit+ ;
+#pragma link C++ class RooAbsOptTestStatistic+ ;
 #pragma link C++ class RooAbsPdf+ ;
 #pragma link C++ class RooAbsProxy+ ;
 #pragma link C++ class RooAbsReal+ ;

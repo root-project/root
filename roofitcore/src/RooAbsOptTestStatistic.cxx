@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
-// RooAbsOptGoodnessOfFit is the abstract base class for goodness-of-fit
+// RooAbsOptTestStatistic is the abstract base class for goodness-of-fit
 // variables that evaluate the PDF at each point of a given dataset.
 // This class provides generic optimizations, such as caching and precalculation
 // of constant terms that can be made for all such quantities
@@ -31,7 +31,7 @@
 
 #include "RooFit.h"
 
-#include "RooAbsOptGoodnessOfFit.h"
+#include "RooAbsOptTestStatistic.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
@@ -40,13 +40,13 @@
 #include "RooErrorHandler.h"
 #include "RooGlobalFunc.h"
 
-ClassImp(RooAbsOptGoodnessOfFit)
+ClassImp(RooAbsOptTestStatistic)
 ;
 
-RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
 					       Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
-  RooAbsGoodnessOfFit(name,title,pdf,data,projDeps,rangeName, addCoefRangeName, nCPU, verbose, splitCutRange),
+  RooAbsTestStatistic(name,title,pdf,data,projDeps,rangeName, addCoefRangeName, nCPU, verbose, splitCutRange),
   _projDeps(0)
 {
 
@@ -62,7 +62,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
   // Check that the PDF is valid for use with this dataset
   // Check if there are any unprotected multiple occurrences of dependents
   if (pdf.recursiveCheckObservables(&obs)) {
-    coutE(InputArguments) << "RooAbsOptGoodnessOfFit: ERROR in PDF dependents, abort" << endl ;
+    coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR in PDF dependents, abort" << endl ;
     RooErrorHandler::softAbort() ;
     return ;
   }
@@ -81,7 +81,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     if (!datReal) continue ;
     
     if (pdfReal->getMin()<(datReal->getMin()-1e-6)) {
-      coutE(InputArguments) << "RooAbsOptGoodnessOfFit: ERROR minimum of PDF variable " << arg->GetName() 
+      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR minimum of PDF variable " << arg->GetName() 
 			    << "(" << pdfReal->getMin() << ") is smaller than that of " 
 			    << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
       RooErrorHandler::softAbort() ;
@@ -89,7 +89,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     }
     
     if (pdfReal->getMax()>(datReal->getMax()+1e-6)) {
-      coutE(InputArguments) << "RooAbsOptGoodnessOfFit: ERROR maximum of PDF variable " << arg->GetName() 
+      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of PDF variable " << arg->GetName() 
 			    << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
@@ -213,8 +213,8 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
 
 
 
-RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& other, const char* name) : 
-  RooAbsGoodnessOfFit(other,name)
+RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
+  RooAbsTestStatistic(other,name)
 {
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
@@ -249,7 +249,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& oth
 
 
 
-RooAbsOptGoodnessOfFit::~RooAbsOptGoodnessOfFit()
+RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
 {
   if (operMode()==Slave) {
     delete _pdfCloneSet ;
@@ -261,7 +261,7 @@ RooAbsOptGoodnessOfFit::~RooAbsOptGoodnessOfFit()
 
 
 
-Double_t RooAbsOptGoodnessOfFit::combinedValue(RooAbsReal** array, Int_t n) const
+Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) const
 {
   // Default implementation returns sum of components
   Double_t sum(0) ;
@@ -275,18 +275,18 @@ Double_t RooAbsOptGoodnessOfFit::combinedValue(RooAbsReal** array, Int_t n) cons
 }
 
 
-Bool_t RooAbsOptGoodnessOfFit::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
+Bool_t RooAbsOptTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 {
-  RooAbsGoodnessOfFit::redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
+  RooAbsTestStatistic::redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
   if (operMode()!=Slave) return kFALSE ;  
   Bool_t ret = _pdfClone->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
   return ret ;
 }
 
 
-void RooAbsOptGoodnessOfFit::printCompactTreeHook(ostream& os, const char* indent) 
+void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* indent) 
 {
-  RooAbsGoodnessOfFit::printCompactTreeHook(os,indent) ;
+  RooAbsTestStatistic::printCompactTreeHook(os,indent) ;
   if (operMode()!=Slave) return ;
   TString indent2(indent) ;
   indent2 += ">>" ;
@@ -295,10 +295,10 @@ void RooAbsOptGoodnessOfFit::printCompactTreeHook(ostream& os, const char* inden
 
 
 
-void RooAbsOptGoodnessOfFit::constOptimizeTestStatistic(ConstOpCode opcode) 
+void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode) 
 {
   // Driver function to propagate const optimization
-  RooAbsGoodnessOfFit::constOptimizeTestStatistic(opcode);
+  RooAbsTestStatistic::constOptimizeTestStatistic(opcode);
   if (operMode()!=Slave) return ;
 
   switch(opcode) {
@@ -326,7 +326,7 @@ void RooAbsOptGoodnessOfFit::constOptimizeTestStatistic(ConstOpCode opcode)
 }
 
 
-void RooAbsOptGoodnessOfFit::optimizeCaching() 
+void RooAbsOptTestStatistic::optimizeCaching() 
 {
   // This method changes the value caching logic for all nodes that depends on any of the observables
   // as defined by the given dataset. When evaluating a test statistic constructed from the RooAbsReal
@@ -351,7 +351,7 @@ void RooAbsOptGoodnessOfFit::optimizeCaching()
 }
 
 
-void RooAbsOptGoodnessOfFit::optimizeConstantTerms(Bool_t activate)
+void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
 {
   if(activate) {
     // Trigger create of all object caches now in nodes that have deferred object creation

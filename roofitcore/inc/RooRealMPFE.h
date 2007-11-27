@@ -42,7 +42,7 @@ public:
 
   // Function evaluation
   virtual Double_t evaluate() const ;
-  friend class RooAbsGoodnessOfFit ;
+  friend class RooAbsTestStatistic ;
   virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
 
   enum State { Initialize,Client,Server,Inline } ;

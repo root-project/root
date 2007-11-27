@@ -69,7 +69,7 @@ protected:
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 
   RooListProxy _actualVars ; 
-  mutable RooFormula* _formula ; // Formula engine 
+  mutable RooFormula* _formula ; //! Formula engine 
   mutable RooArgSet* _nset ; //! Normalization set to be passed along to contents
   TString _formExpr ;
 

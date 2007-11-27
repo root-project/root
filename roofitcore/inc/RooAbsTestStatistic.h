@@ -13,8 +13,8 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_ABS_GOODNESS_OF_FIT
-#define ROO_ABS_GOODNESS_OF_FIT
+#ifndef ROO_ABS_TEST_STATISTIC
+#define ROO_ABS_TEST_STATISTIC
 
 #include "Riostream.h"
 #include "RooAbsReal.h"
@@ -26,22 +26,22 @@ class RooAbsPdf ;
 class RooSimultaneous ;
 class RooRealMPFE ;
 
-class RooAbsGoodnessOfFit ;
-typedef RooAbsGoodnessOfFit* pRooAbsGoodnessOfFit ;
+class RooAbsTestStatistic ;
+typedef RooAbsTestStatistic* pRooAbsTestStatistic ;
 typedef RooAbsData* pRooAbsData ;
 typedef RooRealMPFE* pRooRealMPFE ;
 
-class RooAbsGoodnessOfFit : public RooAbsReal {
+class RooAbsTestStatistic : public RooAbsReal {
 public:
 
   // Constructors, assignment etc
-  inline RooAbsGoodnessOfFit() { }
-  RooAbsGoodnessOfFit(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  inline RooAbsTestStatistic() { }
+  RooAbsTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
 		      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
-  RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const char* name=0);
-  virtual ~RooAbsGoodnessOfFit();
-  virtual RooAbsGoodnessOfFit* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
+  virtual ~RooAbsTestStatistic();
+  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
 				      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) = 0 ;
 
@@ -91,13 +91,13 @@ private:
 
   // Simultaneous mode data
   Int_t          _nGof        ; // Number of sub-contexts 
-  pRooAbsGoodnessOfFit* _gofArray ; //! Array of sub-contexts representing part of the total NLL
+  pRooAbsTestStatistic* _gofArray ; //! Array of sub-contexts representing part of the total NLL
 
   // Parallel mode data
   Int_t          _nCPU ;
   pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
 
-  ClassDef(RooAbsGoodnessOfFit,1) // Abstract real-valued variable
+  ClassDef(RooAbsTestStatistic,1) // Abstract real-valued variable
 };
 
 #endif
