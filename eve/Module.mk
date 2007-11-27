@@ -45,7 +45,7 @@ $(EVELIB):      $(EVEO) $(EVEDO) $(ORDER_) $(MAINLIBS) $(EVELIBDEP)
 
 $(EVEDS):       $(EVEH) $(EVEL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(EVEH) $(EVEL)
+		$(ROOTCINTTMP) -f $@ -c $(EVEH) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL)
 
 $(EVEMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(EVEL)
 		$(RLIBMAP) -o $(EVEMAP) -l $(EVELIB) \
