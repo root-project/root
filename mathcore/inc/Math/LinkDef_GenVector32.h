@@ -14,6 +14,9 @@
 #pragma link C++ class ROOT::Math::Cartesian2D<Double32_t>+;
 #pragma link C++ class ROOT::Math::Polar2D<Double32_t>+;
 
+#pragma link C++ class ROOT::Math::DisplacementVector2D<ROOT::Math::Cartesian2D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::DisplacementVector2D<ROOT::Math::Polar2D<Double32_t> >+;
+
 
 #pragma link C++ class ROOT::Math::Cartesian3D<Double32_t>+;
 #pragma link C++ class ROOT::Math::CylindricalEta3D<Double32_t>+;
@@ -23,15 +26,16 @@
 
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<Double32_t> >+;
-//#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<Double32_t> >+;
-//#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cylindrical3D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Polar3D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cylindrical3D<Double32_t> >+;
 #
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<Double32_t> >+;
-//#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<Double32_t> >+;
-//#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cylindrical3D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Polar3D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cylindrical3D<Double32_t> >+;
 
-// using a tag 
+// using a tag (only cartesuab abd cylindrical eta)
+
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>, ROOT::Math::LocalCoordinateSystemTag >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::CylindricalEta3D<Double32_t>,ROOT::Math::LocalCoordinateSystemTag >+;
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>, ROOT::Math::GlobalCoordinateSystemTag >+;
@@ -51,7 +55,7 @@
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<Double32_t> >+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >+;
-//#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<Double32_t> >+;
+#pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<Double32_t> >+;
 
 
 
