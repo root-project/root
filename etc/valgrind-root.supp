@@ -42,21 +42,32 @@
    fun:_ZN4ROOT8AddClassEPKcsRKSt9type_infoPFvvEi
 }
 
-
-
 ######### ROOT I/O
 
 {
-   TStreamerInfo stays around
+   TStreamerInfo stays around: Compile
    Memcheck:Leak
    fun:_Znam
    fun:_ZN13TStreamerInfo7CompileEv
-   fun:_ZN13TStreamerInfo5BuildEv
-   fun:_ZN11TBufferFile16WriteClassBufferEP6TClassPv
-   fun:_ZN18TStreamerBasicType8StreamerER7TBuffer
 }
 
+{
+   TStreamerInfo stays around: NewInfo
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN13TStreamerInfo7NewInfoEP6TClass
+}
 
+######### Misc
+
+{
+   TUnixSystem::Setenv, see its doc
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN11TUnixSystem6SetenvEPKcS1_
+}
 
 ######### X11 errors triggered by ROOT
 
