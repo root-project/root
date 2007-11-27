@@ -1229,6 +1229,9 @@ void TestDialog::DoOK()
 {
    fFillHistos = kFALSE;
    printf("\nTerminating dialog: OK pressed\n");
+   // Add protection against double-clicks
+   fOkButton->SetState(kButtonDisabled);
+   fCancelButton->SetState(kButtonDisabled);
 
    // Send a close message to the main frame. This will trigger the
    // emission of a CloseWindow() signal, which will then call
@@ -1251,6 +1254,9 @@ void TestDialog::DoCancel()
 {
    fFillHistos = kFALSE;
    printf("\nTerminating dialog: Cancel pressed\n");
+   // Add protection against double-clicks
+   fOkButton->SetState(kButtonDisabled);
+   fCancelButton->SetState(kButtonDisabled);
    TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
    // Close the Ged editor if it was activated.
    if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)

@@ -1136,6 +1136,9 @@ void TestDialog::CloseWindow()
    // Called when window is closed (via the window manager or not).
    // Let's stop histogram filling...
    fFillHistos = kFALSE;
+   // Add protection against double-clicks
+   fOkButton->SetState(kButtonDisabled);
+   fCancelButton->SetState(kButtonDisabled);
    // ... and close the Ged editor if it was activated.
    if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
       TVirtualPadEditor::Terminate();
