@@ -371,6 +371,8 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
    fLogger << kINFO << "Booked classifier " << ((MethodBase*)method)->GetMethodName()
            << " with title: \"" << ((MethodBase*)method)->GetMethodTitle() << "\"" << Endl;
 
+   
+
 #ifdef TMVA_Reader_TestIO__
    // testing the read/write procedure
    std::ofstream tfile( weightfile+".control" );

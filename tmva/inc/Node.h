@@ -38,7 +38,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iosfwd>
+//#include <iosfwd>
+#include <iostream>
 
 #include "Rtypes.h"
 
@@ -108,9 +109,6 @@ namespace TMVA {
 
       // recursive printout of the node and it daughters 
       virtual void PrintRec ( ostream& os ) const = 0;
-      // recursive reading of the node (essectially the whole tree) from a text file 
-      virtual void ReadRec( istream& is, char &pos, 
-                            UInt_t &depth, Node* parent=NULL ) = 0;
       
       // Set depth, layer of the where the node is within the tree, seen from the top (root)
       void SetDepth(UInt_t d){fDepth=d;}
@@ -132,7 +130,7 @@ namespace TMVA {
 
       int GetCount(){return fgCount;}
 
-      virtual Int_t GetMemSize() const;
+      virtual Bool_t ReadDataRecord( std::istream& ) = 0;
 
    private: 
 

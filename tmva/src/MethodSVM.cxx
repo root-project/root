@@ -272,7 +272,7 @@ void  TMVA::MethodSVM::WriteWeightsToStream( ostream& o ) const
 
       for (Int_t isv = 0; isv < fNsupv; isv++ ) {
          o << isv;
-         for (Int_t ivar = 0; ivar <= GetNvar(); ivar++)	  o << " " << (*fSupportVectors)[ivar][isv];
+         for (Int_t ivar = 0; ivar <= GetNvar(); ivar++)    o << " " << (*fSupportVectors)[ivar][isv];
          o << endl;
       }
 
@@ -314,12 +314,12 @@ void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
     
    for (Int_t ievt = 0; ievt < Data().GetNEvtTrain(); ievt++) {
       if ((*fAlphas)[ievt] != 0) {
-	
+  
          for (Int_t ivar = 0; ivar < GetNvar(); ivar++) {
             sVVar[ivar] = (*fVariables)[ivar][ievt];
          }
          alpha_t->push_back((Double_t)(*fAlphas)[ievt] * (*fTypesVec)[ievt]);
-	
+  
          suppVecTree->Fill();
       }
    }

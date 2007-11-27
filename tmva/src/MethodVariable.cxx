@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         *
- *      U. of Victoria, Canada                                                    *
- *      MPI-K Heidelberg, Germany                                                 *
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -28,9 +28,9 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//
-// Wrapper class for a single variable "MVA"; this is required for
-// the evaluation of the single variable discrimination performance
+//                                                                      
+// Wrapper class for a single variable "MVA"; this is required for      
+// the evaluation of the single variable discrimination performance     
 //_______________________________________________________________________
 
 #include "TMVA/MethodVariable.h"
@@ -39,14 +39,14 @@
 ClassImp(TMVA::MethodVariable)
 
 using std::endl;
-
+ 
 //_______________________________________________________________________
-TMVA::MethodVariable::MethodVariable( TString jobName, TString methodTitle, DataSet& theData,
+TMVA::MethodVariable::MethodVariable( TString jobName, TString methodTitle, DataSet& theData, 
                                       TString theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
-   // option string contains variable name - but not only !
+   // option string contains variable name - but not only ! 
    // there is a "Var_" prefix, which is useful in the context of later root plotting
    // so, remove this part
 
@@ -57,7 +57,7 @@ TMVA::MethodVariable::MethodVariable( TString jobName, TString methodTitle, Data
 
    fLogger << kVERBOSE << "uses as discriminating variable just "
            << GetOptions() << " as specified in the option" << Endl;
-
+  
    if (0 == Data().GetTrainingTree()->FindBranch(GetOptions())) {
       Data().GetTrainingTree()->Print();
       fLogger << kFATAL << "variable " << GetOptions() << " not found in tree" << Endl;
@@ -93,16 +93,16 @@ Double_t TMVA::MethodVariable::GetMvaValue()
 
 //_______________________________________________________________________
 void  TMVA::MethodVariable::WriteWeightsToStream( ostream & o ) const
-{
+{  
    // Write configuration to output stream
    o << "";
 }
-
+  
 //_______________________________________________________________________
 void  TMVA::MethodVariable::ReadWeightsFromStream( istream & istr )
 {
    // Read configuration from input stream
-   if (istr.eof()) { }
+   if (istr.eof());
 }
 
 //_______________________________________________________________________
@@ -118,7 +118,7 @@ void TMVA::MethodVariable::GetHelpMessage() const
 {
    // get help message text
    //
-   // typical length of text line:
+   // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
    fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;

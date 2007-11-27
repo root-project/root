@@ -401,7 +401,7 @@ UInt_t TMVA::kNN::Find(std::list<std::pair<const TMVA::kNN::Node<T> *, Float_t> 
          count += Find(nlist, node->GetNodeL(), event, nfind);
          count += Find(nlist, node->GetNodeR(), event, nfind);
       }
-      else {	 
+      else {   
          count += Find(nlist, node->GetNodeR(), event, nfind);
          count += Find(nlist, node->GetNodeL(), event, nfind);
       }

@@ -79,6 +79,7 @@ namespace TMVA {
       // default destructor
       virtual ~Factory();
 
+      virtual const char*  GetName() const { return "Factory"; }
       /* 
        * Create signal and background trees from individual ascii files
        * note that the format of the file must be the following:
@@ -195,6 +196,7 @@ namespace TMVA {
       TString          fOptions;            // option string given by construction (presently only "V")
       Bool_t           fVerbose;            // verbose mode
       Bool_t           fColor;              // color mode
+      Bool_t           fSilent;             // silent: no output at all
 
       std::vector<TTreeFormula*> fInputVarFormulas; // local forulas of the same
       std::vector<IMethod*>      fMethods;          // all MVA methods
@@ -205,8 +207,6 @@ namespace TMVA {
       TDirectory* fLocalTDir;
 
    protected:
-
-      mutable MsgLogger fLogger;  // message logger
 
       ClassDef(Factory,0)  // The factory creates all MVA methods, and performs their training and testing
    };

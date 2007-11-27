@@ -214,6 +214,7 @@ namespace TMVAGlob {
          //          cout << "If you want to save the image as gif or png, please comment out "
          //               << "the corresponding lines (line no. 142+143) in tmvaglob.C" << endl;
          c->Print(pngName);
+         c->Print(epsName);
       }
    }
    

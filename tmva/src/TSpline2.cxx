@@ -40,7 +40,7 @@ ClassImp(TMVA::TSpline2)
 
 //_______________________________________________________________________
 TMVA::TSpline2::TSpline2( TString title, TGraph* theGraph )
-   : fGraph( theGraph )
+   : fGraph( theGraph ) // not owned by TSpline2
 {
    // constructor from TGraph
    // TSpline is a TNamed object
@@ -51,7 +51,8 @@ TMVA::TSpline2::TSpline2( TString title, TGraph* theGraph )
 TMVA::TSpline2::~TSpline2( void )
 {
    // destructor
-   if (NULL != fGraph) delete fGraph;
+   // if (NULL != fGraph) delete fGraph; // ROOT's spline classes don't own the TGraph either
+   // so we will do the same
 }
 
 //_______________________________________________________________________

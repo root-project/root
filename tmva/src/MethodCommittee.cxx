@@ -171,7 +171,7 @@ void TMVA::MethodCommittee::WriteStateToFile() const
    std::ofstream* fout = new std::ofstream( fname );
    if (!fout->good()) { // file not found --> Error
       fLogger << kFATAL << "<WriteStateToFile> "
-              << "unable to open output  weight file: " << fname << endl;
+              << "unable to open output  weight file: " << fname << Endl;
    }
    
    WriteStateToStream( *fout );
@@ -450,7 +450,7 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
          method = new TMVA::MethodBayesClassifier( Data(), "" ); break;
       default:
          fLogger << kFATAL << "<ReadWeightsFromStream> fatal error: method: " 
-                 << fMemberType << " does not exist" << endl;
+                 << fMemberType << " does not exist" << Endl;
       }
 
       // read weight file

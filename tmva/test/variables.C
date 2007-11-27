@@ -65,8 +65,9 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
 
    // loop over all objects in directory
    TIter next(dir->GetListOfKeys());
-   TKey    * key  = 0;
-   TCanvas * canv = 0;
+   TKey   * key  = 0;
+   TCanvas* canv = 0;
+   Bool_t   createNewFig = kFALSE;
    while ((key = (TKey*)next())) {
       if (key->GetCycle() != 1) continue;
 
@@ -155,8 +156,18 @@ void variables( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGlob:
          TString fname = Form( "plots/%s_c%i", outfname[type].Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
+         createNewFig = kFALSE;
       }
-
+      else {
+         createNewFig = kTRUE;
+      }
+   }
+   
+   if (createNewFig) {
+      TString fname = Form( "plots/%s_c%i", outfname[type].Data(), countCanvas );
+      TMVAGlob::plot_logo();
+      TMVAGlob::imgconv( canv, fname );
+      createNewFig = kFALSE;
    }
 
    return;

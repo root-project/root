@@ -166,8 +166,21 @@ TMVA::MethodLikelihood::~MethodLikelihood( void )
    if (NULL != fHistBgd)        delete fHistBgd;
    if (NULL != fHistSig_smooth) delete fHistSig_smooth;
    if (NULL != fHistBgd_smooth) delete fHistBgd_smooth;
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++){
+      if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
+      if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
+   }
    if (NULL != fPDFSig)         delete fPDFSig;
    if (NULL != fPDFBgd)         delete fPDFBgd;
+
+   delete[] fNsmoothVarS;
+   delete[] fNsmoothVarB;
+
+   delete[] fAverageEvtPerBinVarS;
+   delete[] fAverageEvtPerBinVarB;
+
+   delete[] fInterpolateString;
+   delete[] fInterpolateMethod;
 }
 
 //_______________________________________________________________________
@@ -189,13 +202,12 @@ void TMVA::MethodLikelihood::InitLik( void )
 
    fEpsilon        = 1e-8;
 
-   fHistSig        = new std::vector<TH1*>      ( GetNvar() ); 
-   fHistBgd        = new std::vector<TH1*>      ( GetNvar() ); 
-   fHistSig_smooth = new std::vector<TH1*>      ( GetNvar() ); 
-   fHistBgd_smooth = new std::vector<TH1*>      ( GetNvar() );
-   fPDFSig         = new std::vector<TMVA::PDF*>( GetNvar() );
-   fPDFBgd         = new std::vector<TMVA::PDF*>( GetNvar() );
-
+   fHistSig        = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 ); 
+   fHistBgd        = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 ); 
+   fHistSig_smooth = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 ); 
+   fHistBgd_smooth = new std::vector<TH1*>      ( GetNvar(), (TH1*)0 );
+   fPDFSig         = new std::vector<TMVA::PDF*>( GetNvar(), (TMVA::PDF*)0 );
+   fPDFBgd         = new std::vector<TMVA::PDF*>( GetNvar(), (TMVA::PDF*)0 );
    fSpline         = -1;
 }
 
@@ -454,7 +466,6 @@ void TMVA::MethodLikelihood::Train( void )
                ptmp = new TMVA::PDF( htmp, fInterpolateMethod[ivar], nsmooth );  
             }
          }
-
          vPDF[ivar]     = ptmp;
          vHistSmo[ivar] = ptmp->GetSmoothedHist();
           
@@ -470,7 +481,9 @@ void TMVA::MethodLikelihood::Train( void )
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
       delete (*sigFineBinKDE)[ivar];
       delete (*bgdFineBinKDE)[ivar];
-   }   
+   }
+   delete sigFineBinKDE;
+   delete bgdFineBinKDE;
 }
 
 //_______________________________________________________________________
@@ -574,6 +587,7 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
    // computes ranking of input variables
 
    // create the ranking object
+   if(fRanking) delete fRanking;
    fRanking = new Ranking( GetName(), "Delta Separation" );
 
    Double_t sepRef = -1, sep = -1;
@@ -606,7 +620,7 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
       delete rS;
       delete rB;
 
-      if (ivar >= 0) fRanking->AddRank( *new Rank( GetInputExp(ivar), sep ) );
+      if (ivar >= 0) fRanking->AddRank( Rank( GetInputExp(ivar), sep ) );
    }
 
    fDropVariable = -1;
@@ -684,7 +698,6 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
 void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 {
    // write histograms and PDFs to file for monitoring purposes
-
    fLogger << kINFO << "write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
   
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) { 
@@ -908,7 +921,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    fout << "}; " << endl;
    fout << endl;
 
-   delete nbin;
+   delete[] nbin;
 }
 
 //_______________________________________________________________________

@@ -56,6 +56,9 @@ namespace TMVA {
       Bool_t UseColor() { return fUseColoredConsole; }
       void SetUseColor( Bool_t uc ) { fUseColoredConsole = uc; }
 
+      Bool_t Silent() { return fSilent; }
+      void SetSilent( Bool_t s ) { fSilent = s; }
+
    public:
 
       class VariablePlotting;
@@ -90,7 +93,8 @@ namespace TMVA {
    private:
 
       Bool_t fUseColoredConsole;
-         
+      Bool_t fSilent; // no output at all
+
       mutable MsgLogger fLogger;   // message logger
          
       ClassDef(Config,0) // Singleton class for global configuration settings

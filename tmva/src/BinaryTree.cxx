@@ -111,7 +111,7 @@ UInt_t TMVA::BinaryTree::CountNodes(TMVA::Node *n)
 //_______________________________________________________________________
 void TMVA::BinaryTree::Print(ostream & os) const
 {
-   //recursively print the tree
+   // recursively print the tree
    this->GetRoot()->PrintRec(os);
    os << "-1" << endl;
 }
@@ -119,7 +119,7 @@ void TMVA::BinaryTree::Print(ostream & os) const
 //_______________________________________________________________________
 ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 { 
-   //print the tree recursinvely using the << operator
+   // print the tree recursinvely using the << operator
    tree.Print(os);
    return os; // Return the output stream.
 }
@@ -127,11 +127,33 @@ ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 //_______________________________________________________________________
 void TMVA::BinaryTree::Read(istream & istr)
 {
-   // recursively read the tree
-   if (GetRoot()==0) SetRoot(CreateNode());
-   char pos='s';
-   UInt_t depth =0;
-   GetRoot()->ReadRec(istr,pos,depth);
+   Node * currentNode = GetRoot();
+   Node* parent = 0;
+
+   if(currentNode==0) {
+      currentNode=CreateNode();
+      SetRoot(currentNode);
+   }
+
+   while(1) {
+      if ( ! currentNode->ReadDataRecord(istr) ) {
+         delete currentNode;
+         return;
+      }
+
+      // find parent node
+      while( parent!=0 && parent->GetDepth() != currentNode->GetDepth()-1) parent=parent->GetParent();
+      
+      if (parent!=0) { // link new node to parent
+         currentNode->SetParent(parent);
+         if (currentNode->GetPos()=='l') parent->SetLeft(currentNode);
+         if (currentNode->GetPos()=='r') parent->SetRight(currentNode);
+      }
+
+      parent = currentNode; // latest node read might be parent of new one
+
+      currentNode = CreateNode(); // create a new node to be read next
+   }
 }
 
 //_______________________________________________________________________

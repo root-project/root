@@ -109,26 +109,26 @@ void TMVA::MethodKNN::ProcessOptions()
 
    if (!(fnkNN > 0)) {      
       fnkNN = 10;
-      fLogger << kWARNING << "kNN must be a positive integer: set kNN = " << fnkNN << endl;
+      fLogger << kWARNING << "kNN must be a positive integer: set kNN = " << fnkNN << Endl;
    }
    if (fScaleFrac < 0.0) {      
       fScaleFrac = 0.0;
-      fLogger << kWARNING << "ScaleFrac can not be negative: set ScaleFrac = " << fScaleFrac << endl;
+      fLogger << kWARNING << "ScaleFrac can not be negative: set ScaleFrac = " << fScaleFrac << Endl;
    }
    if (fScaleFrac > 1.0) {
       fScaleFrac = 1.0;
    }
    if (!(fTreeOptDepth > 0)) {
       fTreeOptDepth = 6;
-      fLogger << kWARNING << "Optimize must be a positive integer: set Optimize = " << fTreeOptDepth << endl;      
+      fLogger << kWARNING << "Optimize must be a positive integer: set Optimize = " << fTreeOptDepth << Endl;      
    }
 
    fLogger << kVERBOSE 
-           << "kNN options: " << endl
-           << "  kNN = " << fnkNN << endl
-           << "  UseKernel = " << fUseKernel << endl
-           << "  ScaleFrac = " << fScaleFrac << endl
-           << "  Trim = " << fTrim << endl
+           << "kNN options: " << Endl
+           << "  kNN = " << fnkNN << Endl
+           << "  UseKernel = " << fUseKernel << Endl
+           << "  ScaleFrac = " << fScaleFrac << Endl
+           << "  Trim = " << fTrim << Endl
            << "  Optimize = " << fTreeOptDepth << Endl;
 }
 
@@ -153,9 +153,7 @@ void TMVA::MethodKNN::InitKNN()
 void TMVA::MethodKNN::MakeKNN() 
 {
    // create kNN
-   if (!fModule) {
-      fLogger << kFATAL << "ModulekNN is not created" << Endl;
-   }
+   if (!fModule) fLogger << kFATAL << "ModulekNN is not created" << Endl;
 
    fModule->Clear();
 
@@ -439,38 +437,20 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
       std::string::size_type prev = 0;
       
       for (std::string::size_type ipos = 0; ipos < line.size(); ++ipos) {
-         if (line[ipos] != ',' && ipos + 1 != line.size()) {
-            continue;
-         }
+         if (line[ipos] != ',' && ipos + 1 != line.size()) continue;
          
-         if (!(ipos > prev)) {
-            fLogger << kFATAL << "Wrog substring limits" << Endl;
-         }
+         if (!(ipos > prev)) fLogger << kFATAL << "Wrog substring limits" << Endl;
          
          std::string vstring = line.substr(prev, ipos - prev);
-         if (ipos + 1 == line.size()) {
-            vstring = line.substr(prev, ipos - prev + 1);
-         }
+         if (ipos + 1 == line.size()) vstring = line.substr(prev, ipos - prev + 1);
          
-         if (vstring.empty()) {	    
-            fLogger << kFATAL << "Failed to parse string" << Endl;
-         }
+         if (vstring.empty()) fLogger << kFATAL << "Failed to parse string" << Endl;
          
-         if (vcount == 0) {
-            ievent = std::atoi(vstring.c_str());
-         }
-         else if (vcount == 1) {
-            type = std::atoi(vstring.c_str());
-         }
-         else if (vcount == 2) {
-            weight = std::atof(vstring.c_str());
-         }
-         else if (vcount - 3 < vvec.size()) {	 
-            vvec[vcount - 3] = std::atof(vstring.c_str());
-         }
-         else {
-            fLogger << kFATAL << "Wrong variable count" << Endl;
-         }
+         if      (vcount == 0) ievent = std::atoi(vstring.c_str());
+         else if (vcount == 1) type = std::atoi(vstring.c_str());
+         else if (vcount == 2) weight = std::atof(vstring.c_str());
+         else if (vcount - 3 < vvec.size()) vvec[vcount - 3] = std::atof(vstring.c_str());
+         else fLogger << kFATAL << "Wrong variable count" << Endl;
          
          prev = ipos + 1;
          ++vcount;
@@ -534,7 +514,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(TFile &rf)
    // !!! hard coded tree name !!!
    TTree *tree = dynamic_cast<TTree *>(rf.Get("knn"));
    if (!tree) {
-      fLogger << kFATAL << "Failed to find knn tree" << endl;
+      fLogger << kFATAL << "Failed to find knn tree" << Endl;
       return;
    }
 

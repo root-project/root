@@ -89,12 +89,6 @@ namespace TMVA {
 
       void Print(std::ostream & o) const;
 
-      Int_t GetMemSize() const { 
-         Int_t size = sizeof(*this);
-         size += GetNVars() * (sizeof(void*)+sizeof(Int_t)+sizeof(Float_t));
-         return size;
-      }
-
    private:
 
       void InitPointers(bool AllowExternalLink = kTRUE);

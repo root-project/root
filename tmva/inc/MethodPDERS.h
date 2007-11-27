@@ -166,7 +166,7 @@ namespace TMVA {
          kLanczos3,
          kLanczos5,
          kLanczos8,
-	 kTrim
+   kTrim
       } fKernelEstimator;
 
       BinarySearchTree*  fBinaryTreeS;   // binary tree for signal
@@ -192,11 +192,11 @@ namespace TMVA {
       Bool_t             fInitializedVolumeEle; // is volume element initialized ?
       
       Int_t              fkNNMin;        // min number of events in kNN tree
-      Int_t              fkNNMax;	     // max number of events in kNN tree
-      Int_t	             fkNNTests;      // maximum number of iterations to adapt volume size
+      Int_t              fkNNMax;       // max number of events in kNN tree
+      Int_t               fkNNTests;      // maximum number of iterations to adapt volume size
       
-      Double_t		       fMax_distance;  // maximum distance
-      Bool_t   	       fPrinted;       // print
+      Double_t           fMax_distance;  // maximum distance
+      Bool_t            fPrinted;       // print
       Bool_t             fNormTree;      // binary-search tree is normalised
 
       void    SetVolumeElement ( void );

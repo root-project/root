@@ -74,9 +74,10 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
      fDataSet              ( new DataSet ),
      fTargetFile           ( theTargetFile ),
      fVerbose              ( kFALSE ),
-     fJobName              ( jobName ),
-     fLogger               ( "Factory" )
+     fSilent               ( kFALSE ),
+     fJobName              ( jobName )
 {  
+
    // standard constructor
    //   jobname       : this name will appear in all weight file names produced by the MVAs
    //   theTargetFile : output ROOT file; the test tree and all evaluation plots 
@@ -88,12 +89,14 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    // TH1::AddDirectory(kFALSE);
    DeclareOptionRef( fVerbose, "V", "verbose flag" );
    DeclareOptionRef( fColor=!gROOT->IsBatch(), "Color", "color flag (default on)" );
+   DeclareOptionRef( fSilent, "S", "boolean silent flag (default off)" );
 
    ParseOptions( kFALSE );
 
-   fLogger.SetMinType( Verbose() ? kVERBOSE : kINFO );
+   fLogger.SetMinType( Verbose() ? kVERBOSE: kINFO );
 
    gConfig().SetUseColor( fColor );
+   gConfig().SetSilent( fSilent );
 
    Greetings();
 
@@ -117,6 +120,7 @@ TMVA::Factory::~Factory( void )
 {
    // default destructor
    this->DeleteAllMethods();
+   delete fDataSet;
 }
 
 //_______________________________________________________________________

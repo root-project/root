@@ -28,6 +28,7 @@
 //_______________________________________________________________________
 
 #include <iostream>
+#include <float.h>
 
 #include "Riostream.h"
 
@@ -44,7 +45,15 @@ ClassImp(TMVA::GeneticAlgorithm)
 //_______________________________________________________________________
 TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populationSize, 
                                           const std::vector<Interval*>& ranges, UInt_t seed )
-   : fFitterTarget( target ),
+   : fConvCounter(-1),
+     fFitterTarget( target ),
+     fConvValue(0.),
+     fLastResult(DBL_MAX),
+     fSpread(0.1),
+     fMirror(kTRUE),
+     fSexual(kTRUE),
+     fFirstTime(kTRUE),
+     fPopulationSize(populationSize),
      fRanges( ranges ),
      fLogger( "GeneticAlgorithm" )
 {
@@ -66,13 +75,6 @@ TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populatio
    }
 
    fPopulation.CreatePopulation( populationSize );
-   fPopulationSize = populationSize;
-   fSexual      = kTRUE;
-   fFirstTime   = kTRUE;
-   fSpread      = 0.1;
-   fMirror      = kTRUE;
-   fConvCounter = -1;
-   fConvValue   = 0.;
 }
 
 //_______________________________________________________________________

@@ -163,10 +163,6 @@ namespace TMVA {
 
       //recursively print the node and its daughters (--> print the 'tree')
       virtual void PrintRec( ostream&  os ) const;
-
-      //recursively read the node and its daughters (--> read the 'tree')
-      virtual void ReadRec( istream& is, char &pos, 
-                            UInt_t &depth, TMVA::Node* parent=NULL );
       
       //recursively clear the nodes content (S/N etc, but not the cut criteria) 
       void ClearNodeAndAllDaughters();

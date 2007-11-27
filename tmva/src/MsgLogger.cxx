@@ -24,8 +24,6 @@
 
 // Local include(s):
 #include "TMVA/MsgLogger.h"
-
-// Local include(s):
 #include "TMVA/Config.h"
 
 // STL include(s):
@@ -183,19 +181,23 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    if (type < fMinType) return;
    std::map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
-   if (gConfig().UseColor()) {
-      // no text for INFO
-      if (type == kINFO) cout << fPrefix << line << endl; // no color for info
-      else               cout << fColorMap.find( type )->second << fPrefix << "<" 
-                              << stype->second << "> " << line  << "\033[0m" << endl;
-   } 
-   else {
-      if (type == kINFO) cout << fPrefix << line << endl;
-      else               cout << fPrefix << "<" << stype->second << "> " << line << endl;
+   if( !gConfig().Silent() ) {
+      if (gConfig().UseColor()) {
+         // no text for INFO
+         if (type == kINFO) cout << fPrefix << line << endl; // no color for info
+         else               cout << fColorMap.find( type )->second << fPrefix << "<" 
+                                 << stype->second << "> " << line  << "\033[0m" << endl;
+      } 
+      else {
+         if (type == kINFO) cout << fPrefix << line << endl;
+         else               cout << fPrefix << "<" << stype->second << "> " << line << endl;
+      }
    }
-
    // take decision to stop if fatal error
-   if (type == kFATAL) { cout << "***> abort program execution" << endl; exit(1); }
+   if (type == kFATAL) { 
+      if( !gConfig().Silent() ) cout << "***> abort program execution" << endl;
+      exit(1);
+   }
 }
 
 TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger ) 
@@ -214,7 +216,7 @@ void TMVA::MsgLogger::InitMaps()
    fTypeMap[kWARNING]  = "WARNING";
    fTypeMap[kERROR]    = "ERROR";
    fTypeMap[kFATAL]    = "FATAL";
-   fTypeMap[kALWAYS]   = "ALWAYS";
+   fTypeMap[kSILENT]   = "SILENT";
 
    fColorMap[kVERBOSE] = "\033[1;34m";
    fColorMap[kDEBUG]   = "\033[34m";
@@ -222,5 +224,5 @@ void TMVA::MsgLogger::InitMaps()
    fColorMap[kWARNING] = "\033[31m";
    fColorMap[kERROR]   = "\033[31m";
    fColorMap[kFATAL]   = "\033[37;41;1m";
-   fColorMap[kALWAYS]  = "\033[30m";   
+   fColorMap[kSILENT]  = "\033[30m";   
 }

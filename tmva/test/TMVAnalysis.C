@@ -222,7 +222,7 @@ void TMVAnalysis( TString myMethodList = "" )
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
 
    // tell the factory to use all remaining events in the trees after training for testing:
-   factory->PrepareTrainingAndTestTree( mycuts, mycutb, "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:NormMode=None:!V" );  
+   factory->PrepareTrainingAndTestTree( mycuts, mycutb, "NSigTrain=3000:NBkgTrain=3000:SplitMode=Random:NormMode=NumEvents:!V" );  
 
    // If no numbers of events are given, half of the events in the tree are used for training, and 
    // the other half for testing:
@@ -279,14 +279,13 @@ void TMVAnalysis( TString myMethodList = "" )
    if (Use_PDERS)
       factory->BookMethod( TMVA::Types::kPDERS, "PDERS", 
                            "!H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
+   // And the options strings for the MinMax and RMS methods, respectively:
+   //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
+   //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
 
    if (Use_PDERSkNN) // depreciated until further notice
       factory->BookMethod( TMVA::Types::kPDERS, "PDERSkNN", 
                            "!H:!V:VolumeRangeMode=kNN:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" );
-
-   // And the options strings for the MinMax and RMS methods, respectively:
-   //      "!H:!V:VolumeRangeMode=MinMax:DeltaFrac=0.2:KernelEstimator=Gauss:GaussSigma=0.3" );   
-   //      "!H:!V:VolumeRangeMode=RMS:DeltaFrac=3:KernelEstimator=Gauss:GaussSigma=0.3" );   
 
    if (Use_PDERSD) 
       factory->BookMethod( TMVA::Types::kPDERS, "PDERSD", 

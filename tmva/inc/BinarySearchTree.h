@@ -135,9 +135,8 @@ namespace TMVA {
       // access to Maximum for signal and background for each variable
       Float_t Max(Types::ESBType sb, UInt_t var ) { return fMax[sb==Types::kSignal?0:1][var]; }
 
-      Int_t GetMemSize() { return sizeof(*this) + GetRoot()->GetMemSize(); }
+      Int_t SearchVolumeWithMaxLimit( TMVA::Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = 0, Int_t = -1);
 
-      Int_t SearchVolumeWithMaxLimit( Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = 0, Int_t = -1);
 
       void SetNormalize( Bool_t norm ) { fCanNormalize = norm; }
 

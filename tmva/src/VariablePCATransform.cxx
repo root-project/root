@@ -35,6 +35,8 @@
 #include "TMVA/VariablePCATransform.h"
 #include "TMVA/Tools.h"
 
+using std::endl;
+
 ClassImp(TMVA::VariablePCATransform)
 
 //_______________________________________________________________________
@@ -58,10 +60,8 @@ TMVA::VariablePCATransform::VariablePCATransform( std::vector<VariableInfo>& var
 TMVA::VariablePCATransform::~VariablePCATransform() 
 {
    // destructor
-   for (Int_t i=0; i<2; i++) {
-      if (fMeanValues[i]   != 0) delete fMeanValues[i];
-      if (fEigenVectors[i] != 0) delete fEigenVectors[i];
-   }
+   for (Int_t i=0; i<2; i++)
+      if (fPCA[i]) delete fPCA[i];
 }
 
 //_______________________________________________________________________
@@ -270,14 +270,14 @@ void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString
 {
    // creates a PCA transformation function
    if (part==1) {
-      fout << std::endl;
-      fout << "   void X2P( const double*, double*, int ) const;" << std::endl;
+      fout << endl;
+      fout << "   void X2P( const double*, double*, int ) const;" << endl;
       fout << "   double fMeanValues[2]["   
-           << fMeanValues[0]->GetNrows()   << "];" << std::endl;   // mean values
+           << fMeanValues[0]->GetNrows()   << "];" << endl;   // mean values
       fout << "   double fEigenVectors[2][" 
            << fEigenVectors[0]->GetNrows() << "][" 
-           << fEigenVectors[0]->GetNcols() <<"];" << std::endl;   // eigenvectors
-      fout << std::endl;
+           << fEigenVectors[0]->GetNcols() <<"];" << endl;   // eigenvectors
+      fout << endl;
    }
 
    // sanity check
@@ -289,58 +289,58 @@ void TMVA::VariablePCATransform::MakeFunction( std::ostream& fout, const TString
 
    if (part==2) {
 
-      fout << "inline void " << fcncName << "::X2P( const double* x, double* p, int index ) const" << std::endl;
-      fout << "{" << std::endl;
-      fout << "   // Calculate the principal components from the original data vector" << std::endl;
-      fout << "   // x, and return it in p (function extracted from TPrincipal::X2P)" << std::endl;
-      fout << "   // It's the users responsibility to make sure that both x and p are" << std::endl;
-      fout << "   // of the right size (i.e., memory must be allocated for p)." << std::endl;
-      fout << "   const int nvar = " << GetNVariables() << ";" << std::endl;
-      fout << std::endl;
-      fout << "   for (int i = 0; i < nvar; i++) {" << std::endl;
-      fout << "      p[i] = 0;" << std::endl;
-      fout << "      for (int j = 0; j < nvar; j++) p[i] += (x[j] - fMeanValues[index][j]) * fEigenVectors[index][j][i];" << std::endl;
-      fout << "   }" << std::endl;
-      fout << "}" << std::endl;
-      fout << std::endl;
-      fout << "inline void " << fcncName << "::InitTransform()" << std::endl;
-      fout << "{" << std::endl;
+      fout << "inline void " << fcncName << "::X2P( const double* x, double* p, int index ) const" << endl;
+      fout << "{" << endl;
+      fout << "   // Calculate the principal components from the original data vector" << endl;
+      fout << "   // x, and return it in p (function extracted from TPrincipal::X2P)" << endl;
+      fout << "   // It's the users responsibility to make sure that both x and p are" << endl;
+      fout << "   // of the right size (i.e., memory must be allocated for p)." << endl;
+      fout << "   const int nvar = " << GetNVariables() << ";" << endl;
+      fout << endl;
+      fout << "   for (int i = 0; i < nvar; i++) {" << endl;
+      fout << "      p[i] = 0;" << endl;
+      fout << "      for (int j = 0; j < nvar; j++) p[i] += (x[j] - fMeanValues[index][j]) * fEigenVectors[index][j][i];" << endl;
+      fout << "   }" << endl;
+      fout << "}" << endl;
+      fout << endl;
+      fout << "inline void " << fcncName << "::InitTransform()" << endl;
+      fout << "{" << endl;
 
       // fill vector of mean values
-      fout << "   // initialise vector of mean values" << std::endl;
+      fout << "   // initialise vector of mean values" << endl;
       for (int index=0; index<2; index++) {
          for (int i=0; i<fMeanValues[index]->GetNrows(); i++) {
             fout << "   fMeanValues["<<index<<"]["<<i<<"] = " << std::setprecision(12) 
-                 << (*fMeanValues[index])(i) << ";" << std::endl;
+                 << (*fMeanValues[index])(i) << ";" << endl;
          }
       }
 
       // fill matrix of eigenvectors
-      fout << std::endl;
-      fout << "   // initialise matrix of eigenvectors" << std::endl;
+      fout << endl;
+      fout << "   // initialise matrix of eigenvectors" << endl;
       for (int index=0; index<2; index++) {
          for (int i=0; i<fEigenVectors[index]->GetNrows(); i++) {
             for (int j=0; j<fEigenVectors[index]->GetNcols(); j++) {
                fout << "   fEigenVectors["<<index<<"]["<<i<<"]["<<j<<"] = " << std::setprecision(12) 
-                    << (*fEigenVectors[index])(i,j) << ";" << std::endl;
+                    << (*fEigenVectors[index])(i,j) << ";" << endl;
             }
          }
       }
-      fout << "}" << std::endl;
-      fout << std::endl;
-      fout << "inline void " << fcncName << "::Transform( std::vector<double>& iv, int sigOrBgd ) const" << std::endl;
-      fout << "{" << std::endl;      
-      fout << "   const int nvar = " << GetNVariables() << ";" << std::endl;
-      fout << "   double *dv = new double[nvar];" << std::endl;
-      fout << "   double *rv = new double[nvar];" << std::endl;
-      fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[ivar];" << std::endl;
-      fout << std::endl;
-      fout << "   // Perform PCA and put it into PCAed events tree" << std::endl;
-      fout << "   this->X2P( dv, rv, (sigOrBgd==0 ? 0 : 1 ) );" << std::endl;
-      fout << "   for (int ivar=0; ivar<nvar; ivar++) iv[ivar] = rv[ivar];" << std::endl;
-      fout << std::endl;
-      fout << "   delete [] dv;" << std::endl;
-      fout << "   delete [] rv;" << std::endl;
-      fout << "}" << std::endl;
+      fout << "}" << endl;
+      fout << endl;
+      fout << "inline void " << fcncName << "::Transform( std::vector<double>& iv, int sigOrBgd ) const" << endl;
+      fout << "{" << endl;      
+      fout << "   const int nvar = " << GetNVariables() << ";" << endl;
+      fout << "   double *dv = new double[nvar];" << endl;
+      fout << "   double *rv = new double[nvar];" << endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[ivar];" << endl;
+      fout << endl;
+      fout << "   // Perform PCA and put it into PCAed events tree" << endl;
+      fout << "   this->X2P( dv, rv, (sigOrBgd==0 ? 0 : 1 ) );" << endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) iv[ivar] = rv[ivar];" << endl;
+      fout << endl;
+      fout << "   delete [] dv;" << endl;
+      fout << "   delete [] rv;" << endl;
+      fout << "}" << endl;
    }
 }

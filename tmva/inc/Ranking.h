@@ -59,7 +59,7 @@ namespace TMVA {
       Ranking( const TString& context, const TString& rankingDiscriminatorName );
       virtual ~Ranking();
      
-      virtual void AddRank( Rank& rank );
+      virtual void AddRank( const Rank& rank );
       virtual void Print() const;
 
       void SetContext  ( const TString context   ) { fContext = context; fLogger.SetSource( fContext.Data() ); }
@@ -67,7 +67,7 @@ namespace TMVA {
 
    private:
                   
-      std::vector<TMVA::Rank> fRanking;                  // vector of ranks
+      std::vector<TMVA::Rank*> fRanking;                  // vector of ranks
       TString                 fContext;                  // the ranking context
       TString                 fRankingDiscriminatorName; // the name of the ranking discriminator
 

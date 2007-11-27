@@ -142,10 +142,10 @@ void TMVA::MethodPDERS::InitPDERS( void )
    fGaussSigma      = 0.1;
    fNormTree        = kFALSE;
    
-   fkNNTests	    = 1000;
+   fkNNTests      = 1000;
     
-   fkNNMin	    = Int_t(fNEventsMin);
-   fkNNMax	    = Int_t(fNEventsMax);
+   fkNNMin      = Int_t(fNEventsMin);
+   fkNNMax      = Int_t(fNEventsMax);
 
    fInitializedVolumeEle = kFALSE;
    fAverageRMS.clear();
@@ -171,7 +171,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    //    available values are:        MinMax 
    //                                 Unscaled
    //                                 RMS
-   //	                                kNN
+   //                                  kNN
    //                                 Adaptive <default>
    //
    // KernelEstimator   <string>  Kernel estimation function
@@ -244,7 +244,7 @@ void TMVA::MethodPDERS::ProcessOptions()
    else if (fVolumeRange == "RMS"       ) fVRangeMode = kRMS;
    else if (fVolumeRange == "Adaptive"  ) fVRangeMode = kAdaptive;
    else if (fVolumeRange == "Unscaled"  ) fVRangeMode = kUnscaled;
-   else if (fVolumeRange == "kNN" 	) fVRangeMode = kkNN;
+   else if (fVolumeRange == "kNN"   ) fVRangeMode = kkNN;
    else {
       fLogger << kFATAL << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown" << Endl;
    }
@@ -378,8 +378,8 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
 
    // init relative scales
 
-   fkNNMin	    = Int_t(fNEventsMin);
-   fkNNMax	    = Int_t(fNEventsMax);   
+   fkNNMin      = Int_t(fNEventsMin);
+   fkNNMax      = Int_t(fNEventsMax);   
 
    fDelta = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
    fShift = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
@@ -622,7 +622,7 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
                     << "[ nEvents: " << nEventsN << "  " << fNEventsMin << "  " << fNEventsMax << "]"
                     << Endl;
       }
-      	
+        
    } // end of adaptive method
    else if (fVRangeMode == kkNN)
       {
@@ -639,16 +639,16 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
       
          while ( !(kNNcountS+kNNcountB >= fkNNMin && kNNcountS+kNNcountB <= fkNNMax) ) {
             if (kNNcountS+kNNcountB < fkNNMin) {         //if we have too less points
-               Float_t scale = 2;			//better scale needed
+               Float_t scale = 2;      //better scale needed
                volume->ScaleInterval( scale );
             }
             else if (kNNcountS+kNNcountB > fkNNMax) {    //uf we have too many points
-               Float_t scale = 0.1;			//better scale needed
+               Float_t scale = 0.1;      //better scale needed
                volume->ScaleInterval( scale );
             }
             eventsS.clear();
             eventsB.clear();
-    	    
+          
             v = *volume ;
          
             kNNcountS = fBinaryTreeS->SearchVolumeWithMaxLimit( &v, &eventsS, fkNNMax+1 );  //new search
@@ -695,15 +695,15 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
             for (Int_t j=0;j<Int_t(eventsS.size());j++) {
                Double_t dist = GetNormalizedDistance( e, *eventsS[j], dim_normalization );
                
-               if (dist <= (*distances)[fkNNMin-1])		    
+               if (dist <= (*distances)[fkNNMin-1])        
                   tempVectorS.push_back( eventsS[j] );
-            }	    
+            }      
             //backgrounds
             for (Int_t j=0;j<Int_t(eventsB.size());j++) {
                Double_t dist = GetNormalizedDistance( e, *eventsB[j], dim_normalization );
             
                if (dist <= (*distances)[fkNNMin-1]) tempVectorB.push_back( eventsB[j] );
-            }	    
+            }      
             fMax_distance = (*distances)[fkNNMin-1];
             delete distances;
          }      
@@ -949,15 +949,12 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
 {
    // read weight info from file
    if (TxtWeightsOnly()) {
-      if (NULL != fBinaryTreeS) { delete fBinaryTreeS; fBinaryTreeS = 0; }
-      if (NULL != fBinaryTreeB) { delete fBinaryTreeB; fBinaryTreeB = 0; }
+      if (NULL != fBinaryTreeS) delete fBinaryTreeS;
+      if (NULL != fBinaryTreeB) delete fBinaryTreeB;
 
       fBinaryTreeS = new BinarySearchTree();
       fBinaryTreeB = new BinarySearchTree();
-      fBinaryTreeS->SetRoot( fBinaryTreeS->CreateNode(&GetVarTransform().Variables()));
-      fBinaryTreeS->Read(istr);
-      fBinaryTreeB->SetRoot( fBinaryTreeB->CreateNode(&GetVarTransform().Variables()));
-      fBinaryTreeB->Read(istr);
+      istr >> *fBinaryTreeS >> *fBinaryTreeB;
 
       fBinaryTreeS->SetPeriode( GetVarTransform().Variables().size() );
       fBinaryTreeB->SetPeriode( GetVarTransform().Variables().size() );

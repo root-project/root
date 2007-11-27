@@ -107,7 +107,8 @@ namespace TMVA {
       TList       fListOfOptions;       // option list
 
       TString     fName;                // the name of this configurable
-      
+
+   public:
       // the mutable declaration is needed to use the logger in const methods
       mutable MsgLogger fLogger; // message logger
 

@@ -113,16 +113,6 @@ Int_t TMVA::Node::CountMeAndAllDaughters( void ) const
    return n;
 }
 
-//_______________________________________________________________________
-Int_t TMVA::Node::GetMemSize() const 
-{ 
-   // calculates the memory size of the node
-   Int_t size = sizeof(*this);
-   if (fLeft !=0) size += fLeft->GetMemSize();
-   if (fRight!=0) size += fRight->GetMemSize();
-   return size;
-}
-
 // print a node
 //_______________________________________________________________________
 ostream& TMVA::operator<<(ostream& os, const TMVA::Node& node)

@@ -51,7 +51,7 @@ TMVA::TSpline1::TSpline1( TString title, TGraph* theGraph )
 TMVA::TSpline1::~TSpline1( void )
 {
    // destructor
-   if (NULL != fGraph) delete fGraph;
+   //if (NULL != fGraph) delete fGraph; // we don't own this graph
 }
 
 //_______________________________________________________________________

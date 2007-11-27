@@ -97,6 +97,7 @@
 
 ClassImp(TMVA::MethodBase)
 
+using std::cout;
 using std::endl;
 
 const Int_t    MethodBase_MaxIterations_ = 200;
@@ -180,6 +181,24 @@ TMVA::MethodBase::~MethodBase( void )
    if (fRanking   != 0) delete fRanking;
    if (fMVAPdfS   != 0) delete fMVAPdfS;
    if (fMVAPdfB   != 0) delete fMVAPdfB;
+
+   if (fGraphS)          delete fGraphS;
+   if (fGraphB)          delete fGraphB;
+   if (fSplS)            delete fSplS;
+   if (fSplB)            delete fSplB;
+   if (fGrapheffBvsS)    delete fGrapheffBvsS;
+
+
+   if (fHistS_plotbin)   delete fHistS_plotbin;
+   if (fHistB_plotbin)   delete fHistB_plotbin;
+   if (fProbaS_plotbin)  delete fProbaS_plotbin;
+   if (fProbaB_plotbin)  delete fProbaB_plotbin;
+   if (fRarityS_plotbin) delete fRarityS_plotbin;
+   if (fRarityB_plotbin) delete fRarityB_plotbin;
+   if (fHistS_highbin)   delete fHistS_highbin;
+   if (fHistB_highbin)   delete fHistB_highbin;
+
+   if (fVarTransform)    delete fVarTransform;
 }
 
 //_______________________________________________________________________
@@ -215,6 +234,12 @@ void TMVA::MethodBase::Init()
    fSplRefB            = 0; 
 
    fRanking            = 0;
+
+   fGraphS             = 0;
+   fGraphB             = 0;
+   fGrapheffBvsS       = 0;
+   fSplS               = 0;
+   fSplB               = 0;
 
    fHistS_plotbin      = 0;
    fHistB_plotbin      = 0;
@@ -426,7 +451,7 @@ void TMVA::MethodBase::AddClassifierToTestTree( TTree* testTree )
 //_______________________________________________________________________
 void TMVA::MethodBase::Test( TTree *theTestTree )
 {
-   // test the method - not much is done here... mainly furthor initialization
+   // test the method - not much is done here... mainly further initialization
 
    // initialization 
 
@@ -467,16 +492,24 @@ void TMVA::MethodBase::Test( TTree *theTestTree )
    Double_t sxmax = fXmax+0.00001;
 
    // classifier response distributions for training sample
+   if(fHistS_plotbin) delete fHistS_plotbin;
+   if(fHistB_plotbin) delete fHistB_plotbin;
    fHistS_plotbin   = new TH1F( GetTestvarName() + "_S",GetTestvarName() + "_S", fNbins, fXmin, sxmax );
    fHistB_plotbin   = new TH1F( GetTestvarName() + "_B",GetTestvarName() + "_B", fNbins, fXmin, sxmax );
 
    if (HasMVAPdfs()) {
+      if(fProbaS_plotbin) delete fProbaS_plotbin;
+      if(fProbaB_plotbin) delete fProbaB_plotbin;
       fProbaS_plotbin = new TH1F( GetTestvarName() + "_Proba_S",GetTestvarName() + "_Proba_S", fNbins, 0.0, 1.0 );
       fProbaB_plotbin = new TH1F( GetTestvarName() + "_Proba_B",GetTestvarName() + "_Proba_B", fNbins, 0.0, 1.0 );
 
+      if(fRarityS_plotbin) delete fRarityS_plotbin;
+      if(fRarityB_plotbin) delete fRarityB_plotbin;
       fRarityS_plotbin = new TH1F( GetTestvarName() + "_Rarity_S",GetTestvarName() + "_Rarity_S", fNbins, 0.0, 1.0 );
       fRarityB_plotbin = new TH1F( GetTestvarName() + "_Rarity_B",GetTestvarName() + "_Rarity_B", fNbins, 0.0, 1.0 );
    }
+   if(fHistS_highbin) delete fHistS_highbin;
+   if(fHistB_highbin) delete fHistB_highbin;
    fHistS_highbin  = new TH1F( GetTestvarName() + "_S_high",GetTestvarName() + "_S_high", fNbinsH, fXmin, sxmax );
    fHistB_highbin  = new TH1F( GetTestvarName() + "_B_high",GetTestvarName() + "_B_high", fNbinsH, fXmin, sxmax );
 
@@ -565,6 +598,8 @@ void TMVA::MethodBase::Test( TTree *theTestTree )
    fHistB_highbin ->SetDirectory(0);
 
    // create PDFs from histograms, using default splines, and no additional smoothing
+   if(fSplS) delete fSplS;
+   if(fSplB) delete fSplB;
    fSplS = new PDF( fHistS_plotbin, PDF::kSpline2 );
    fSplB = new PDF( fHistB_plotbin, PDF::kSpline2 );
 }
@@ -576,13 +611,14 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
    // the used variables, variable transformation type etc. is specified
 
    TString prefix = "";
+   UserGroup_t * userInfo = gSystem->GetUserInfo();
 
    tf << prefix << "#GEN -*-*-*-*-*-*-*-*-*-*-*- general info -*-*-*-*-*-*-*-*-*-*-*-" << endl << prefix << endl;
    tf << prefix << "Method         : " << GetMethodName() << "::" << GetMethodTitle() << endl;
    tf.setf(std::ios::left);
    tf << prefix << "TMVA Release   : " << std::setw(10) << GetTrainingTMVAVersionString() << "    [" << GetTrainingTMVAVersionCode() << "]" << endl;
    tf << prefix << "ROOT Release   : " << std::setw(10) << GetTrainingROOTVersionString() << "    [" << GetTrainingROOTVersionCode() << "]" << endl;
-   tf << prefix << "Creator        : " << gSystem->GetUserInfo()->fUser << endl;
+   tf << prefix << "Creator        : " << userInfo->fUser << endl;
    tf << prefix << "Date           : "; TDatime *d = new TDatime; tf << d->AsString() << endl; delete d;
    tf << prefix << "Host           : " << gSystem->GetBuildNode() << endl;
    tf << prefix << "Dir            : " << gSystem->WorkingDirectory() << endl;
@@ -620,6 +656,7 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
       // no weights when standalone class is produced, which would be duplication
       WriteWeightsToStream( tf ); 
    }
+   delete userInfo;
 }
 
 //_______________________________________________________________________
@@ -1145,19 +1182,19 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
          // count signal and background events in tree
          if (theType == 1) nevtS+=theWeight;
 
-         TAxis* axis   = theHist->GetXaxis();
-         Int_t  maxbin = Int_t((theVal - axis->GetXmin())/(axis->GetXmax() - axis->GetXmin())*fNbinsH) + 1;
+         Int_t  maxbin = theHist->GetXaxis()->FindBin( theVal );
          if (sign > 0 && maxbin > fNbinsH) continue; // can happen... event doesn't count
          if (sign < 0 && maxbin < 1      ) continue; // can happen... event doesn't count
          if (sign > 0 && maxbin < 1      ) maxbin = 1;
          if (sign < 0 && maxbin > fNbinsH) maxbin = fNbinsH;
 
-         if (sign > 0)
-            for (Int_t ibin=1; ibin<=maxbin; ibin++) theHist->AddBinContent( ibin , theWeight);
-         else if (sign < 0)
-            for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theHist->AddBinContent( ibin , theWeight );
-         else
-            fLogger << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
+         if (sign > 0) {
+            for (Int_t ibin=1; ibin<=maxbin; ibin++) theHist->AddBinContent( ibin, theWeight );
+         }
+         else if (sign < 0) {
+            for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theHist->AddBinContent( ibin, theWeight );
+         }
+         else fLogger << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
       }
       theTree->ResetBranchAddresses();
 
@@ -1181,6 +1218,8 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
       // spline background efficiency plot
       // note that there is a bin shift when going from a TH1F object to a TGraph :-(
       if (Use_Splines_for_Eff_) {
+         if(fGraphS) delete fGraphS;
+         if(fGraphB) delete fGraphB;
          fGraphS   = new TGraph( fEffS );
          fGraphB   = new TGraph( fEffB );
          fSplRefS  = new TSpline1( "spline2_signal",     fGraphS );
@@ -1203,14 +1242,11 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
 
          // find cut value corresponding to a given signal efficiency
          Double_t effS = fEffBvsS->GetBinCenter( bini );
-
          Double_t cut  = rootFinder.Root( effS );
 
          // retrieve background efficiency for given cut
-         if (Use_Splines_for_Eff_)
-            effB = fSplRefB->Eval( cut );
-         else
-            effB = fEffB->GetBinContent( fEffB->FindBin( cut ) );
+         if (Use_Splines_for_Eff_) effB = fSplRefB->Eval( cut );
+         else                      effB = fEffB->GetBinContent( fEffB->FindBin( cut ) );
 
          // and fill histograms
          fEffBvsS->SetBinContent( bini, effB     );
@@ -1220,6 +1256,7 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
       }
 
       // create splines for histogram
+      if(fGrapheffBvsS) delete fGrapheffBvsS;
       fGrapheffBvsS = new TGraph( fEffBvsS );
       fSpleffBvsS   = new TSpline1( "effBvsS", fGrapheffBvsS );
 
@@ -1280,7 +1317,7 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree, Dou
          effB = fSpleffBvsS->Eval( effS );
 
          // find signal efficiency that corresponds to required background efficiency
-         if ((effB - effBref)*(effB_ - effBref) < 0) break;
+         if ((effB - effBref)*(effB_ - effBref) <= 0) break;
          effS_ = effS;
          effB_ = effB;
       }
@@ -1368,19 +1405,19 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
 
          theClsHist->Fill( theVal, theWeight );
 
-         TAxis* axis   = theEffHist->GetXaxis();
-         Int_t  maxbin = Int_t((theVal - axis->GetXmin())/(axis->GetXmax() - axis->GetXmin())*fNbinsH) + 1;
+         Int_t  maxbin = theEffHist->GetXaxis()->FindBin( theVal );
          if (sign > 0 && maxbin > fNbinsH) continue; // can happen... event doesn't count
          if (sign < 0 && maxbin < 1      ) continue; // can happen... event doesn't count
          if (sign > 0 && maxbin < 1      ) maxbin = 1;
          if (sign < 0 && maxbin > fNbinsH) maxbin = fNbinsH;
 
-         if (sign > 0)
+         if (sign > 0) {
             for (Int_t ibin=1; ibin<=maxbin; ibin++) theEffHist->AddBinContent( ibin , theWeight );
-         else if (sign < 0)
+         }
+         else if (sign < 0) {
             for (Int_t ibin=maxbin+1; ibin<=fNbinsH; ibin++) theEffHist->AddBinContent( ibin , theWeight );
-         else
-            fLogger << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
+         }
+         else fLogger << kFATAL << "<GetEfficiency> Mismatch in sign" << Endl;
       }
 
       // normalise output distributions
@@ -1401,6 +1438,8 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
       // spline background efficiency plot
       // note that there is a bin shift when going from a TH1F object to a TGraph :-(
       if (Use_Splines_for_Eff_) {
+         if(fGraphTrainS) delete fGraphTrainS;
+         if(fGraphTrainB) delete fGraphTrainB;
          fGraphTrainS   = new TGraph( fTrainEffS );
          fGraphTrainB   = new TGraph( fTrainEffB );
          fSplTrainRefS  = new TSpline1( "spline2_signal",     fGraphTrainS );
@@ -1427,10 +1466,8 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
          Double_t cut  = rootFinder.Root( effS );
 
          // retrieve background efficiency for given cut
-         if (Use_Splines_for_Eff_)
-            effB = fSplTrainRefB->Eval( cut );
-         else
-            effB = fTrainEffB->GetBinContent( fTrainEffB->FindBin( cut ) );
+         if (Use_Splines_for_Eff_) effB = fSplTrainRefB->Eval( cut );
+         else                      effB = fTrainEffB->GetBinContent( fTrainEffB->FindBin( cut ) );
 
          // and fill histograms
          fTrainEffBvsS->SetBinContent( bini, effB     );
@@ -1455,7 +1492,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
       effB = fSplTrainEffBvsS->Eval( effS );
 
       // find signal efficiency that corresponds to required background efficiency
-      if ((effB - effBref)*(effB_ - effBref) < 0) break;
+      if ((effB - effBref)*(effB_ - effBref) <= 0) break;
       effS_ = effS;
       effB_ = effB;
    }

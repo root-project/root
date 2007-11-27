@@ -55,7 +55,7 @@ namespace TMVA {
       kWARNING = 4,
       kERROR   = 5,
       kFATAL   = 6,
-      kALWAYS  = 7
+      kSILENT  = 7
    };
 
    class MsgLogger : public std::ostringstream, public TObject {

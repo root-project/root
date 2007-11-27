@@ -52,6 +52,7 @@ TMVA::VariableTransformBase::VariableTransformBase( std::vector<VariableInfo>& v
      fCurrentTree(0), 
      fCurrentEvtIdx(0),
      fOutputBaseDir(0),
+     fRanking(0),
      fLogger( GetName(), kINFO )
 {
    // standard constructor
@@ -65,6 +66,7 @@ TMVA::VariableTransformBase::~VariableTransformBase()
    // destructor
    if (fEvent != fEventRaw && fEvent != 0) { delete fEvent; fEvent = 0; }
    if (fEventRaw != 0)                     { delete fEventRaw; fEventRaw = 0; }
+   if(fRanking) delete fRanking;
 }
 
 //_______________________________________________________________________
@@ -351,7 +353,6 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
                                       nbins2D, Variable(j).GetMin(), Variable(j).GetMax() );
             mycorrB[i][j]->SetXTitle(Variable(i).GetExpression());
             mycorrB[i][j]->SetYTitle(Variable(j).GetExpression());
-            
             myprofS[i][j] = new TProfile( Form( "prof_%s_vs_%s_sig%s", myVarj.Data(), myVari.Data(), transfType.Data() ), 
                                           Form( "profile %s versus %s (signal)%s", myVarj.Data(), myVari.Data(), transfType.Data() ), 
                                           nbins1D, Variable(i).GetMin(), Variable(i).GetMax() );
@@ -394,10 +395,11 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    }
       
    // computes ranking of input variables
+   if(fRanking) delete fRanking;
    fRanking = new Ranking( GetName(), "Separation" );
    for (UInt_t i=0; i<nvar; i++) {   
       Double_t sep = Tools::GetSeparation( vS[i], vB[i] );
-      fRanking->AddRank( *new Rank( vS[i]->GetTitle(), sep ) );
+      fRanking->AddRank( Rank( vS[i]->GetTitle(), sep ) );
    }
 
    // write histograms
@@ -418,6 +420,8 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
       vB[i]->Write();
       vS[i]->SetDirectory(0);
       vB[i]->SetDirectory(0);
+      delete vS[i];
+      delete vB[i];
    }
 
    // correlation plots have dedicated directory
@@ -438,6 +442,10 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
             mycorrB[i][j]->SetDirectory(0);
             myprofS[i][j]->SetDirectory(0);
             myprofB[i][j]->SetDirectory(0);
+            delete mycorrS[i][j];
+            delete mycorrB[i][j];
+            delete myprofS[i][j];
+            delete myprofB[i][j];
          }
       }         
    }

@@ -67,6 +67,7 @@ TMVA::Configurable::Configurable( const TString& theOption)
 {
    // constructor
    fLogger.SetMinType( kINFO );
+   fListOfOptions.SetOwner();   
 }
 
 //_______________________________________________________________________
@@ -80,6 +81,7 @@ void TMVA::Configurable::SplitOptions(const TString& theOpt, TList& loo) const
 {
    // splits the option string at ':' and fills the list 'loo' with the primitive strings
    TString splitOpt(theOpt);
+   loo.SetOwner();
    while (splitOpt.Length()>0) {
       if ( ! splitOpt.Contains(':') ) {
          loo.Add(new TObjString(splitOpt));
@@ -185,7 +187,7 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
                paramParsed = kTRUE;
             }
             else fLogger << kFATAL << "Option " << decOpt->TheName() 
-                         << " has no predefined value " << optval << Endl;               
+                         << " does not have predefined value: \"" << optval << "\"" << Endl;               
          }
       }
 

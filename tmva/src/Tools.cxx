@@ -66,7 +66,6 @@ namespace TMVA {
 TMVA::MsgLogger& TMVA::Tools::Logger()
 {
    // static access to a common MsgLogger
-
    return Tools_Logger ? *Tools_Logger : *(Tools_Logger = new MsgLogger( Tools_NAME_ ));
 }
 

@@ -30,6 +30,8 @@
 #include "TMVA/DataSet.h"
 #include "TMVA/Tools.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Config.h"
+
 #include "TEventList.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -37,6 +39,7 @@
 #include "TProfile.h"
 #include "TRandom.h"
 #include "TMatrixF.h"
+#include "TObjString.h"
 #include "TVectorF.h"
 #include "TMath.h"
 #include "TROOT.h"
@@ -82,7 +85,7 @@ TMVA::DataSet::DataSet()
      fEvent( 0 ),
      fCurrentTree( 0 ),
      fCurrentEvtIdx( 0 ),
-     fLogger( GetName(), kINFO )
+     fLogger( "DataSet", kINFO )
 {
    // constructor
 
@@ -103,6 +106,27 @@ TMVA::DataSet::DataSet()
 TMVA::DataSet::~DataSet() 
 {
    // destructor
+   std::vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
+   for (;varFIt!=fInputVarFormulas.end();varFIt++) {
+      if(*varFIt) delete *varFIt;
+   }
+
+   for (Int_t sb=0; sb<2; sb++) {
+      if (fWeightFormula[sb]!=0) {
+         delete fWeightFormula[sb]; fWeightFormula[sb]=0;
+      }
+   }
+
+   if(fTrainingTree) { delete fTrainingTree; fTrainingTree = 0; }
+   if(fTestTree) { delete fTestTree; fTestTree = 0; }
+   if(fMultiCutTestTree) { delete fMultiCutTestTree; fMultiCutTestTree = 0; }
+
+   std::map<Types::EVariableTransform,VariableTransformBase*>::iterator vtIt = fVarTransforms.begin();
+   for(; vtIt != fVarTransforms.end(); vtIt++ ) {
+      delete (*vtIt).second;
+   }
+
+   if(fEvent) delete fEvent;
 }
 
 //_______________________________________________________________________
@@ -274,6 +298,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 
    Configurable splitSpecs( splitOpt );
    splitSpecs.SetName("DataSet");
+   splitSpecs.fLogger.SetMinType( Verbose() ? kVERBOSE: kINFO );
 
    UInt_t splitSeed(0);
 
@@ -312,6 +337,8 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    
    splitSpecs.DeclareOptionRef( fVerbose, "V", "Verbosity (default: true)" );
    splitSpecs.ParseOptions();
+
+   fLogger.SetMinType( Verbose() ? kVERBOSE: kINFO );
 
    // put all to upper case
    splitMode.ToUpper(); normMode.ToUpper(); 
@@ -658,7 +685,6 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 
       fLogger << kINFO << "Create " << (itreeType == Types::kTraining ? "training" : "testing") << " tree" << Endl;        
       TTree* newTree = tmpTree[Types::kSignal]->CloneTree(0); 
-
       for (Int_t sb=0; sb<2; sb++) {
 
          // renormalise only if non-trivial renormalisation factor
@@ -672,7 +698,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
          }
       }
       if (itreeType == Types::kTraining) SetTrainingTree( newTree );
-      else                               SetTestTree    ( newTree );
+      else                               SetTestTree( newTree );
    }
 
    delete tmpTree[Types::kSignal];
@@ -699,7 +725,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
               << "background sample" << Endl;
    }
 
-   if (Verbose()) {
+   if (!gConfig().Silent() && Verbose()) {
       GetTrainingTree()->Print();
       GetTestTree()->Print();
       GetTrainingTree()->Show(0);
@@ -713,7 +739,9 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    GetTransform( Types::kNone );
    
    BaseRootDir()->mkdir("input_expressions")->cd();
-   for (UInt_t ivar=0; ivar<nvars; ivar++) fInputVarFormulas[ivar]->Write();
+   for (UInt_t ivar=0; ivar<nvars; ivar++) {
+      fInputVarFormulas[ivar]->Write();
+   }
    BaseRootDir()->cd();
 
    // sanity check (should be removed from all methods!)
@@ -738,7 +766,8 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
    tr->SetBranchStatus("*",1);
 
    std::vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
-   for (;varFIt!=fInputVarFormulas.end();varFIt++) delete *varFIt;
+   for (;varFIt!=fInputVarFormulas.end();varFIt++)
+      if(*varFIt) delete *varFIt;
    fInputVarFormulas.clear();
    for (UInt_t i=0; i<GetNVariables(); i++) {
       TTreeFormula* ttf = new TTreeFormula( Form( "Formula%s", GetInternalVarName(i).Data() ),
@@ -757,9 +786,12 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
    //    for (;varFIt!=fInputVarFormulas.end();varFIt++) delete *varFIt;
 
    for (Int_t sb=0; sb<2; sb++) {
-      if (fWeightFormula[sb]!=0) { delete fWeightFormula[sb]; fWeightFormula[sb]=0; }
-      if (fWeightExp[sb]!=TString("")) 
+      if (fWeightFormula[sb]!=0) {
+         delete fWeightFormula[sb]; fWeightFormula[sb]=0;
+      }
+      if (fWeightExp[sb]!=TString("")) {
          fWeightFormula[sb] = new TTreeFormula("FormulaWeight",fWeightExp[sb].Data(),tr);
+      }
    }
 
    tr->SetBranchStatus("*",0);

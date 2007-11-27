@@ -95,15 +95,9 @@ namespace TMVA {
       // recursive printout of the node and it daughters 
       virtual void PrintRec( ostream& os ) const;
 
-      // recursive reading of the node (essectially the whole tree) from a text file 
-      virtual void ReadRec( istream& is, char &pos, 
-                            UInt_t &depth, TMVA::Node* parent=NULL );
-
-      virtual Int_t GetMemSize() const;
-
    private: 
       // Read the data block
-      Bool_t      ReadDataRecord( istream& is );
+      virtual Bool_t ReadDataRecord( istream& is );
 
       std::vector<Float_t> fEventV;
       Float_t     fWeight;

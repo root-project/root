@@ -189,7 +189,7 @@ void TMVA::DecisionTreeNode::Print(ostream& os) const
       << " sepI: "  << this->GetSeparationIndex()
       << " sepG: "  << this->GetSeparationGain()
       << " nType: " << this->GetNodeType()
-      <<endl;
+      << endl;
    
    os << "My address is " << long(this) << ", ";
    if (this->GetParent() != NULL) os << " parent at addr: "         << long(this->GetParent()) ;
@@ -220,7 +220,7 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
       << " sepI: "   << this->GetSeparationIndex()
       << " sepG: "   << this->GetSeparationGain()
       << " nType: "  << this->GetNodeType()
-      <<endl;
+      << endl;
   
    if (this->GetLeft()  != NULL) this->GetLeft() ->PrintRec(os);
    if (this->GetRight() != NULL) this->GetRight()->PrintRec(os);
@@ -241,7 +241,7 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is )
    // 2 r seq: 2 ivar: 0 cut: -1.5324 cType: 0 s: 353 b: 1053 nEv: 1406 suw: 353 buw: 1053 nEvuw: 1406 sepI: 0.188032 sepG: 8.18513 nType: 0
 
    is >> depth;                                         // 2
-   if ( depth==-1 ) { delete this; return kFALSE; }
+   if ( depth==-1 ) { return kFALSE; }
    is >> pos ;                                          // r
    this->SetDepth(depth);
    this->SetPos(pos);
@@ -275,31 +275,6 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is )
    this->SetSequence(lseq);
 
    return kTRUE;
-}
-
-//_______________________________________________________________________
-void TMVA::DecisionTreeNode::ReadRec( istream& is,  char &pos, UInt_t &depth,
-                                      TMVA::Node* parent )
-{
-   //recursively read the node and its daughters (--> read the 'tree')
-   if (!ReadDataRecord(is)) return;
-
-   depth = GetDepth();
-   pos   = GetPos();
-
-   // find parent node
-   while( parent!=0 && parent->GetDepth() != GetDepth()-1) parent=parent->GetParent();
-
-   if (parent!=0) {
-      SetParent(parent);
-      if (GetPos()=='l') parent->SetLeft(this);
-      if (GetPos()=='r') parent->SetRight(this);
-   }
-   
-   char childPos;
-   UInt_t childDepth;
-   TMVA::Node * newNode = new TMVA::DecisionTreeNode();
-   newNode->ReadRec(is, childPos, childDepth, this);
 }
 
 //_______________________________________________________________________

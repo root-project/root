@@ -48,16 +48,17 @@ TMVA::Ranking::Ranking( const TString& context, const TString& rankingDiscrimina
      fLogger( fContext.Data(), kINFO )
 {
    // constructor
-   fRanking.clear();
 }
 
 TMVA::Ranking::~Ranking() 
 {
    // destructor
+   for (std::vector<Rank*>::iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ )
+      delete *ir;
    fRanking.clear();
 }
 
-void TMVA::Ranking::AddRank( Rank& rank )
+void TMVA::Ranking::AddRank( const Rank& rank )
 {
    // Add a new rank
    // sort according to rank value (descending)
@@ -65,27 +66,26 @@ void TMVA::Ranking::AddRank( Rank& rank )
    // reversing myself... (means sorting in "descending" order)
    //   --> std::sort   ( fRanking.begin(), fRanking.end() );
    //   --> std::reverse( fRanking.begin(), fRanking.end() );
-   fRanking.push_back( rank );
+   fRanking.push_back( new Rank(rank) );
       
    UInt_t sizeofarray=fRanking.size();
-   Rank  temp(fRanking[0]);
    for (UInt_t i=0; i<sizeofarray; i++) {
       for (UInt_t j=sizeofarray-1; j>i; j--) {
-         if (fRanking[j-1] < fRanking[j]) {
-            temp = fRanking[j-1];fRanking[j-1] = fRanking[j]; fRanking[j] = temp;
+         if (*fRanking[j-1] < *fRanking[j]) {
+            Rank * temp = fRanking[j-1];fRanking[j-1] = fRanking[j]; fRanking[j] = temp;
          }
       }
    }
    
-   for (UInt_t i=0; i<fRanking.size(); i++) fRanking[i].SetRank( i+1 );
+   for (UInt_t i=0; i<fRanking.size(); i++) fRanking[i]->SetRank( i+1 );
 }
 
 void TMVA::Ranking::Print() const
 {
    // get maximum length of variable names
    Int_t maxL = 0; 
-   for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) 
-      if ((*ir).GetVariable().Length() > maxL) maxL = (*ir).GetVariable().Length();
+   for (std::vector<Rank*>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) 
+      if ((*ir)->GetVariable().Length() > maxL) maxL = (*ir)->GetVariable().Length();
    
    fLogger << kINFO << "Ranking result (top variable is best ranked)" << Endl;
    fLogger << kINFO << "----------------------------------------------------------------" << Endl;
@@ -95,11 +95,11 @@ void TMVA::Ranking::Print() const
            << resetiosflags(ios::right) 
            << " : " << fRankingDiscriminatorName << Endl;
    fLogger << kINFO << "----------------------------------------------------------------" << Endl;
-   for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) {
+   for (std::vector<Rank*>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ir++ ) {
       fLogger << kINFO 
-              << Form( "%4i : ",(*ir).GetRank() )
-              << setw(TMath::Max(maxL+0,9)) << (*ir).GetVariable().Data()
-              << Form( " : %3.3e", (*ir).GetRankValue() ) << Endl;
+              << Form( "%4i : ",(*ir)->GetRank() )
+              << setw(TMath::Max(maxL+0,9)) << (*ir)->GetVariable().Data()
+              << Form( " : %3.3e", (*ir)->GetRankValue() ) << Endl;
    }
    fLogger << kINFO << "----------------------------------------------------------------" << Endl;
 }
