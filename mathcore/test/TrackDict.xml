@@ -1,14 +1,6 @@
 <lcgdict>
 
 
-<class name="ROOT::Math::PtEtaPhiM4D<Double32_t>" 
-  <field name="fPt" iotype="Double32_t" />
-  <field name="fEta" iotype="Double32_t" />
-  <field name="fPhi" iotype="Double32_t" />
-  <field name="fM" iotype="Double32_t" />
-</class>
-
-<class pattern="ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D*>" />
 
 
 

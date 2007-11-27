@@ -33,7 +33,7 @@ endif
 
 # use reflex
 #useReflex=yes
-ifneq ($(useReflex),)
+ifneq ($(USE_REFLEX),)
 GCCXML=yes
 CXXFLAGS += -DUSE_REFLEX
 ifeq ($(PLATFORM),win32)
@@ -139,7 +139,7 @@ $(GENVECTOR):     $(GENVECTOROBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(VECTORIO):   	  $(VECTORIOOBJ)
+$(VECTORIO):   	  $(VECTORIOOBJ) libTrackDict.$(DllSuf)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
@@ -169,7 +169,7 @@ $(VECTOROP):   	$(VECTOROPOBJ)
 # 		    @echo "$@ done"
 
 
-ifneq ($(useReflex),)
+ifneq ($(USE_REFLEX),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
 			@echo "Generating dictionary $@ using gccxml ..."
 			genreflex Track.h --selection_file=TrackDict.xml -o TrackDict.cxx -I$(ROOTSYS)/include
