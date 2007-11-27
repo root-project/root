@@ -18,9 +18,17 @@
 
 #include "GuiTypes.h"
 
-#include <exception>
 #include <list>
 #include <set>
+#include <exception>
+
+#if defined(G__DICTIONARY) && defined(R__SOLARIS)
+// Force the inclusion of rw/math.h
+#include <limits>
+// Work around interaction between a struct named exception in math.h,
+// std::exception and the use of using namespace std;
+#define exception std::exception
+#endif
 
 class TVirtualPad;
 class TGeoManager;
