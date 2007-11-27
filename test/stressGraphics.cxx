@@ -5,17 +5,17 @@
 //    ROOT  Graphics test suite and benchmarks.
 //
 // The suite of programs below tests many elements of the graphics classes
-// 
+//
 // The test can be run as a standalone program or with the interpreter.
 //
 // To run as a standalone program:
-// 
+//
 //    make stressGraphics
 //    stressGraphics
 //
 // To get a short help:
 //    stressGraphics -h
-// 
+//
 // To run interactively, do
 // root
 //  Root > .L stressGraphics.cxx
@@ -46,6 +46,7 @@
 #include <TColor.h>
 #include <TFrame.h>
 #include <TPostScript.h>
+#include <TPDF.h>
 #include <TLine.h>
 #include <TMarker.h>
 #include <TPolyLine.h>
@@ -71,6 +72,7 @@
 void     stressGraphics (Int_t verbose);
 Int_t    StatusPrint    (TString &filename, Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err);
 Int_t    AnalysePS      (const TString &filename);
+Int_t    FileSize       (char *filename);
 TCanvas *StartTest      (Int_t w, Int_t h);
 void     TestReport1    (TCanvas *C, const TString &title);
 void     TestReport2    ();
@@ -126,14 +128,18 @@ void     cleanup        ();
 // Global variables.
 Int_t     gVerbose;
 Int_t     gTestNum;
-Int_t     gRefNb[39];
-Int_t     gErrNb[39];
+Int_t     gPS1RefNb[39];
+Int_t     gPS1ErrNb[39];
+Int_t     gPDFRefNb[39];
+Int_t     gPDFErrNb[39];
+Int_t     gPS2RefNb[39];
+Int_t     gPS2ErrNb[39];
 Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
 TFile    *gFile;
 char      gCfile[16];
-char      gPSfile[16];
+char      outfile[16];
 char      gLine[80];
 
 
@@ -141,7 +147,7 @@ char      gLine[80];
 //______________________________________________________________________________
 int main(int argc, char *argv[])
 {
-   TApplication theApp("App", &argc, argv);
+///TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
 
    TString opt;
@@ -200,22 +206,26 @@ void stressGraphics(Int_t verbose = 0)
       }
    }
    gErrorIgnoreLevel = 0;
-   
+
    // Read the reference file "stressGraphics.ref"
    FILE *sg = fopen("stressGraphics.ref","r");
    char line[80];
    Int_t i = -1;
    while (fgets(line,80,sg)) {
       if (i>=0) {
-         sscanf(&line[4], "%d",&gRefNb[i]);
-         sscanf(&line[12],"%d",&gErrNb[i]);
+         sscanf(&line[8], "%d",&gPS1RefNb[i]);
+         sscanf(&line[18],"%d",&gPS1ErrNb[i]);
+         sscanf(&line[28],"%d",&gPDFRefNb[i]);
+         sscanf(&line[38],"%d",&gPDFErrNb[i]);
+         sscanf(&line[48],"%d",&gPS2RefNb[i]);
+         sscanf(&line[58],"%d",&gPS2ErrNb[i]);
       }
       i++;
    }
    fclose(sg);
 
    if (gOptionR) {
-      cout << "Test#   Ref#   Err#   Time" <<endl;
+      cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   PS2Ref#   PS2Err#" <<endl;
    } else {
       cout << "**********************************************************************" <<endl;
       cout << "*  Starting  Graphics - S T R E S S suite                            *" <<endl;
@@ -322,23 +332,18 @@ void stressGraphics(Int_t verbose = 0)
 
 
 //______________________________________________________________________________
-Int_t StatusPrint(TString &filename, Int_t id, const TString &title, 
+Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
                   Int_t res, Int_t ref, Int_t err)
 {
    // Print test program number and its title
 
    if (!gOptionR) {
-///   TString header;
       if (id>0) {
-///      header = TString("Test ")+Form("%2d",id)+" : "+title;
-///      header = TString("Test ")+" : "+title;
-	 sprintf(gLine,"Test %2d  : %s",id,title.Data());
+         sprintf(gLine,"Test %2d: %s",id,title.Data());
       } else {
-///      header = TString("          ")+title;
-	 sprintf(gLine,"         %s",title.Data());
+         sprintf(gLine,"       %s",title.Data());
       }
 
-///   const Int_t nch = header.Length();
       const Int_t nch = strlen(gLine);
       if (TMath::Abs(res-ref)<=err) {
          cout << gLine;
@@ -351,14 +356,27 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          cout << " FAILED" << endl;
          cout << "          Result    = "  << res << endl;
          cout << "          Reference = "  << ref << endl;
-         cout << "          Error     = "  << TMath::Abs(res-ref) 
+         cout << "          Error     = "  << TMath::Abs(res-ref)
                                            << " (was " << err << ")"<< endl;
          return 1;
       }
    } else {
-      printf("%3d %8d %5d\n",id,res,err);
+      if (id>0)  printf("%5d%10d%10d",id,res,err);
+      if (id==0) printf("%10d%10d",res,err);
+      if (id<0)  printf("%10d%10d\n",res,err);
    }
    return 0;
+}
+
+
+//______________________________________________________________________________
+Int_t FileSize (char *filename)
+{
+   // Return the size of filename
+
+   FileStat_t fs;
+   gSystem->GetPathInfo(outfile, fs);
+   return (Int_t)fs.fSize;
 }
 
 
@@ -368,7 +386,7 @@ Int_t AnalysePS(const TString &filename)
    // Analyse the PS file "filename" and return the number of character in the
    // meaningful part of the file. The variable part (date etc..) are not
    // counted.
-   
+
    Bool_t counting = kFALSE;
    Int_t count = 0;
 
@@ -410,16 +428,31 @@ void TestReport1(TCanvas *C, const TString &title)
    // Draw the canvas generate as PostScript, count the number of characters in
    // the PS file and compare the result with the reference value.
 
-   sprintf(gPSfile,"sg1_%2.2d.ps",gTestNum);
-   
-   TPostScript *ps1 = new TPostScript(gPSfile, 111);
+   gErrorIgnoreLevel = 9999;
+   sprintf(outfile,"sg1_%2.2d.ps",gTestNum);
+
+   TPostScript *ps1 = new TPostScript(outfile, 111);
    C->Draw();
    ps1->Close();
 
-   TString psfile = gPSfile;
-   StatusPrint(psfile,  gTestNum, title, AnalysePS(gPSfile) ,
-                                          gRefNb[gTestNum-1],
-                                          gErrNb[gTestNum-1]);
+   TString psfile = outfile;
+   StatusPrint(psfile,  gTestNum, title, AnalysePS(outfile) ,
+                                         gPS1RefNb[gTestNum-1],
+                                         gPS1ErrNb[gTestNum-1]);
+
+   sprintf(outfile,"sg%2.2d.pdf",gTestNum);
+
+   C->cd(0);
+   TPDF *pdf = new TPDF(outfile,111);
+   C->Draw();
+   pdf->Close();
+
+   TString pdffile = outfile;
+   StatusPrint(pdffile, 0, "  PDF output", FileSize(outfile),
+                                           gPDFRefNb[gTestNum-1],
+                                           gPDFErrNb[gTestNum-1]);
+   gErrorIgnoreLevel = 0;
+
    return;
 }
 
@@ -448,18 +481,18 @@ void TestReport2()
    // file (using gPad), count the number of characters in it and compare the
    // result with the reference value.
 
-   sprintf(gPSfile,"sg2_%2.2d.ps",gTestNum);
+   sprintf(outfile,"sg2_%2.2d.ps",gTestNum);
 
    gErrorIgnoreLevel = 9999;
    sprintf(gCfile,".x sg%2.2d.C",gTestNum);
    gROOT->ProcessLine(gCfile);
-   gPad->SaveAs(gPSfile);
+   gPad->SaveAs(outfile);
    gErrorIgnoreLevel = 0;
 
-   TString psfile = gPSfile;
-   Int_t i = StatusPrint(psfile, 0, "C file result", AnalysePS(gPSfile),
-                                                      gRefNb[gTestNum-1],
-                                                      gErrNb[gTestNum-1]);
+   TString psfile = outfile;
+   Int_t i = StatusPrint(psfile,-1, "  C file result", AnalysePS(outfile),
+                                                       gPS2RefNb[gTestNum-1],
+                                                       gPS2ErrNb[gTestNum-1]);
 
    sprintf(gCfile,"sg%2.2d.C",gTestNum);
    if (!gOptionK && !i) gSystem->Unlink(gCfile);
@@ -587,7 +620,7 @@ void patterns()
    C->SetBorderSize(2);
    C->SetFrameFillColor(0);
    Double_t bh = 0.059;
-   Double_t db = 0.01; 
+   Double_t db = 0.01;
    Double_t y  = 0.995;
    Int_t i,j=3001;
    for (i=1; i<=5; i++) {
@@ -1011,7 +1044,7 @@ void transpad()
    ps1->SetX1NDC(0.4); ps1->SetX2NDC(0.6);
    pad1->Modified();
    C->cd();
-   
+
    //compute the pad range with suitable margins
    Double_t ymin = 0;
    Double_t ymax = 2000;
@@ -1028,12 +1061,12 @@ void transpad()
    TPaveStats *ps2 = (TPaveStats*)ht2->GetListOfFunctions()->FindObject("stats");
    ps2->SetX1NDC(0.65); ps2->SetX2NDC(0.85);
    ps2->SetTextColor(kRed);
-   
+
    // draw axis on the right side of the pad
    TGaxis *axis = new TGaxis(xmax,ymin,xmax,ymax,ymin,ymax,50510,"+L");
    axis->SetLabelColor(kRed);
    axis->Draw();
-      
+
    TestReport1(C, "Transparent pad");
    DoCcode(C);
    TestReport2();
@@ -1187,7 +1220,7 @@ void tgaxis3()
    gt2->GetXaxis()->SetLabelSize(0.05);
    gt2->GetXaxis()->SetTimeDisplay(1);
    gt2->GetXaxis()->SetTimeFormat("y. %Y");
-   
+
    TestReport1(C, "TGaxis 3 (Time on axis)");
    DoCcode(C);
    TestReport2();
@@ -1407,7 +1440,7 @@ void tgraph1()
 void tgraph2()
 {
    // 2nd TGraph test.
-   
+
    TCanvas *C = StartTest(700,500);
 
    C->SetGrid();
@@ -1482,8 +1515,8 @@ void tmultigraph1()
    C->Update();
    TPaveStats *stats1 = (TPaveStats*)gr1->GetListOfFunctions()->FindObject("stats");
    TPaveStats *stats2 = (TPaveStats*)gr2->GetListOfFunctions()->FindObject("stats");
-   stats1->SetTextColor(kBlue); 
-   stats2->SetTextColor(kRed); 
+   stats1->SetTextColor(kBlue);
+   stats2->SetTextColor(kRed);
    stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
    stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
    C->Modified();
@@ -1607,8 +1640,8 @@ void tmultigraph2()
 //______________________________________________________________________________
 void options2d1()
 {
-   // 1st 2D options Test 
-   
+   // 1st 2D options Test
+
    TCanvas *C = StartTest(800,600);
 
    gStyle->SetOptStat(0);
@@ -1634,7 +1667,7 @@ void options2d1()
    gH2->Draw("arr");  pl1.DrawPaveLabel(x1,y1,x2,y2,"ARR","brNDC");
    C->cd(4);
    gH2->Draw("colz"); pl1.DrawPaveLabel(x1,y1,x2,y2,"COLZ","brNDC");
-   
+
    TestReport1(C, "Basic 2D options");
    DoCcode(C);
    TestReport2();
@@ -1644,8 +1677,8 @@ void options2d1()
 //______________________________________________________________________________
 void options2d2()
 {
-   // 2nd 2D options Test 
-   
+   // 2nd 2D options Test
+
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl2;
@@ -1654,7 +1687,7 @@ void options2d2()
    C->SetFillColor(17);
    C->SetGrid();
    gH2->Draw("text"); pl2.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
-   
+
    TestReport1(C, "Text option");
    DoCcode(C);
    TestReport2();
@@ -1664,8 +1697,8 @@ void options2d2()
 //______________________________________________________________________________
 void options2d3()
 {
-   // 3rd 2D options Test 
-   
+   // 3rd 2D options Test
+
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl3;
@@ -1684,7 +1717,7 @@ void options2d3()
    C->cd(4);
    gPad->SetGrid();
    gH2->Draw("cont3"); pl3.DrawPaveLabel(x1,y1,x2,y2,"CONT3","brNDC");
-   
+
    TestReport1(C, "Contour options");
    DoCcode(C);
    TestReport2();
@@ -1694,8 +1727,8 @@ void options2d3()
 //______________________________________________________________________________
 void options2d4()
 {
-   // 4th 2D options Test 
-   
+   // 4th 2D options Test
+
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl4;
@@ -1712,7 +1745,7 @@ void options2d4()
    C->cd(4);
    gPad->SetTheta(21); gPad->SetPhi(-90);
    gH2->Draw("surf1cyl"); pl4.DrawPaveLabel(x1,y1,x2+0.05,y2,"SURF1CYL","brNDC");
-   
+
    TestReport1(C, "Lego options");
    DoCcode(C);
    TestReport2();
@@ -1722,8 +1755,8 @@ void options2d4()
 //______________________________________________________________________________
 void options2d5()
 {
-   // 5th 2D options Test 
-   
+   // 5th 2D options Test
+
    TCanvas *C = StartTest(800,600);
 
    TPaveLabel pl5;
@@ -1749,10 +1782,10 @@ void options2d5()
 //______________________________________________________________________________
 void earth()
 {
-   // 5th 2D options Test 
-   
+   // 5th 2D options Test
+
    TCanvas *C = StartTest(1000,800);
-   
+
    gStyle->SetPalette(1);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
@@ -1797,8 +1830,8 @@ void earth()
 //______________________________________________________________________________
 void tgraph2d1()
 {
-   // 1st TGraph2D Test 
-   
+   // 1st TGraph2D Test
+
    TCanvas *C = StartTest(600,600);
 
    Double_t P = 5.;
@@ -1836,7 +1869,7 @@ void tgraph2d1()
 
    TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
    if (old) gDirectory->GetList()->Remove(old);
-	 
+
    TestReport2();
    delete dt;
 }
@@ -1845,8 +1878,8 @@ void tgraph2d1()
 //______________________________________________________________________________
 void tgraph2d2()
 {
-   // 2nd TGraph2D Test 
-   
+   // 2nd TGraph2D Test
+
    TCanvas *C = StartTest(600,600);
 
    gStyle->SetPadBorderMode(0);
@@ -1871,13 +1904,13 @@ void tgraph2d2()
    dt->SetFillColor(0);
    dt->SetMarkerStyle(20);
    dt->Draw("PCOL");
-   
+
    TestReport1(C, "TGraph2D 2 (COL and P)");
    DoCcode(C);
 
    TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
    if (old) gDirectory->GetList()->Remove(old);
-	 
+
    TestReport2();
    delete dt;
 }
@@ -1886,8 +1919,8 @@ void tgraph2d2()
 //______________________________________________________________________________
 void tgraph2d3()
 {
-   // 3rd TGraph2D Test 
-   
+   // 3rd TGraph2D Test
+
    TCanvas *C = StartTest(600,600);
 
    gStyle->SetPadBorderMode(0);
@@ -1917,7 +1950,7 @@ void tgraph2d3()
 
    TObject *old = (TObject*)gDirectory->GetList()->FindObject(dt->GetName());
    if (old) gDirectory->GetList()->Remove(old);
-	 
+
    TestReport2();
    delete dt;
 }
@@ -1927,7 +1960,7 @@ void tgraph2d3()
 void ntuple1()
 {
    // 1st complex drawing and TPad test
-   
+
    TCanvas *C = StartTest(700,780);
 
    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.48,0.98,21);
@@ -1999,7 +2032,7 @@ void ntuple1()
 void quarks()
 {
    // 2nd complex drawing and TPad test
-   
+
    TCanvas *C = StartTest(630,760);
 
    C->SetFillColor(kBlack);
@@ -2074,7 +2107,7 @@ void quarks()
 void timage()
 {
    // TImage test
-   
+
    TCanvas *C = StartTest(800,800);
 
    TImage *img = TImage::Open("$(ROOTSYS)/tutorials/image/rose512.jpg");
@@ -2127,7 +2160,7 @@ double fg(double *x, double *p) {return sin((*p)*(*x));}
 void zoomtf1()
 {
    // Zoom/UnZoom a collection of TF1
-   
+
    TCanvas *C = StartTest(800,800);
 
    TF1* f[6];
@@ -2144,8 +2177,10 @@ void zoomtf1()
    gPad->Modified();
 
    TestReport1(C, "Zoom/UnZoom a collection of TF1");
-///DoCcode(C);
-///TestReport2();
+   if (gOptionR) {
+      DoCcode(C);
+      TestReport2();
+   }
 }
 
 
@@ -2188,8 +2223,10 @@ void parallelcoord()
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
    TestReport1(C, "Parallel Coordinates");
-///DoCcode(C);
-///TestReport2();
+   if (gOptionR) {
+      DoCcode(C);
+      TestReport2();
+   }
 }
 
 
