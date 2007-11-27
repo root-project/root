@@ -35,7 +35,7 @@ LIBM = -lm
 CXXFLAGS += -g
 endif
 
-ifneq ($(useReflex),)
+ifneq ($(USE_REFLEX),)
 GCCXML=yes
 CXXFLAGS+=-DUSE_REFLEX
 ifeq ($(PLATFORM),win32)
@@ -104,11 +104,11 @@ $(TESTKALMAN):    $(TESTKALMANOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(TESTIO):        $(TESTIOOBJ) 
+$(TESTIO):        $(TESTIOOBJ) libTrackDict.$(DllSuf)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-ifneq ($(useReflex),)
+ifneq ($(USE_REFLEX),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
 			@echo "Generating dictionary $@ using gccxml ..."
 			#rootcint -gccxml -f $@ -c $^	

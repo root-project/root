@@ -920,7 +920,9 @@ int testIO() {
 
   std::cout << "Use Reflex dictionary " << std::endl; 
 
+#ifdef USE_REFLEX_SMATRIX
   iret |= gSystem->Load("libSmatrixRflx");  
+#endif
   iret |= gSystem->Load("libSmatrix");  
 
 
