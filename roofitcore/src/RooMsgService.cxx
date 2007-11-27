@@ -97,10 +97,12 @@ RooMsgService::RooMsgService()
   _topicNames[InputArguments]="InputArguments" ;
   _topicNames[Tracing]="Tracing" ;
 
+  _instance = this ;
+  gMsgService = this ;
+
   addStream(RooMsgService::WARNING) ;
   addStream(RooMsgService::INFO,Topic(RooMsgService::Generation|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Optimization|RooMsgService::Minimization|RooMsgService::Caching)) ;
 
-  gMsgService = this ;
 
 }
 
@@ -298,7 +300,7 @@ RooMsgService& RooMsgService::instance()
 {
   // Return reference to singleton instance 
   if (!_instance) {
-    _instance = new RooMsgService() ;    
+    new RooMsgService() ;    
     RooSentinel::activate() ;
   }
   return *_instance ;
