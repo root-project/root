@@ -9,7 +9,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
 
 # We only run these tests if libCintex exists
 ifneq ($(wildcard $(ROOTSYS)/lib/libCintex.*),)
-TEST_TARGETS += classVersion_rflx
+TEST_TARGETS += classVersion_rflx properties_rflx
 endif
 
 # Search for Rules.mk in roottest/scripts
@@ -41,11 +41,12 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 # The dictionary:
 %_rflx.cpp: %_selection.xml %.h
-	$(CMDECHO) genreflex $*.h -s $*_selection.xml > $@.log
+	$(CMDECHO) genreflex $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I$(ROOTSYS)/include > $@.log
 
 # the driver which includes the relevant files for the library:
-%_rflxdriver.C: %_rflx.cpp %_test.C
-	$(CMDECHO) echo '#include "$*_rflx.cpp" // the dictionary' > $@
+%_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h
+	$(CMDECHO) echo '#include "TestHelper.h" // some helper functions' > $@
+	$(CMDECHO) echo '#include "$*_rflx.cpp" // the dictionary' >> $@
 	$(CMDECHO) echo '#include "$*_test.C" // the test' >> $@
 	$(CMDECHO) echo 'void $(@:.C=()){ $*_test();} // forward' >> $@
 
@@ -56,28 +57,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
 
-classVersion_rflx: classVersion_rflx.log classVersion_rflx.ref
+$(TEST_TARGETS): %_rflx: %_rflx.log %_rflx.ref
 	$(TestDiff)
 
-
-# Outputs a message if the FAIL variable is null
-
-testWithFailure:
-ifeq ($(FAIL),)
-	$(WarnFailTest)
-endif
-
-
-# Remember that sometest.log can be made automatically from
-#  from runsometest.C
-# This target attempts to create a log file (which should be the output of running the test), and
-#  compares its output with a prebuilt reference file.  The reference file should be copied from
-#  the log files produced during what is considered a successful run of the test.  The testWithDiff
-#  files should be renamed according to the test being run.
-# By default the TestDiff variable is set to compare the .log and .ref files
-# To run a diff and ignore whitespacing use $(TestDiffW)
-
-testWithDiff: testWithDiff.log testWithDiff.ref
-	$(TestDiff)
-
-
+properties_rflx: GENREFLEXFLAGS=--iocomments
