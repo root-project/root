@@ -140,7 +140,7 @@ $(GENVECTOR):     $(GENVECTOROBJ)
 		    @echo "$@ done"
 
 $(VECTORIO):   	  $(VECTORIOOBJ) libTrackDict.$(DllSuf)
-		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
+		    $(LD) $(LDFLAGS) $(VECTORIOOBJ) $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
 $(STRESS3D):      $(STRESS3DOBJ)

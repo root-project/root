@@ -105,7 +105,7 @@ $(TESTKALMAN):    $(TESTKALMANOBJ)
 		    @echo "$@ done"
 
 $(TESTIO):        $(TESTIOOBJ) libTrackDict.$(DllSuf)
-		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    $(LD) $(LDFLAGS) $(TESTIOOBJ) $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
 ifneq ($(USE_REFLEX),)

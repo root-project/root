@@ -8,6 +8,10 @@
 // root[0]: .x  mathcoreVectorIO.C
 
 
+#ifdef USE_REFLEX
+#include "Cintex/Cintex.h"
+#include "Reflex/Reflex.h"
+#endif
 
 #include "TRandom3.h"
 #include "TStopwatch.h"
@@ -27,15 +31,13 @@
 
 #include "Track.h"
 
+
 #define DEBUG
+
 
 //#define READONLY
 
 //#define USE_REFLEX
-#ifdef USE_REFLEX
-#include "Cintex/Cintex.h"
-#include "Reflex/Reflex.h"
-#endif
 
 #define DEFVECTOR4D(TYPE) \
 typedef TYPE AVector4D; \
@@ -54,8 +56,8 @@ const std::string point3d_type = #TYPE ;
 //const double tol = 1.0E-16;
 const double tol = 1.0E-6; // or doublr 32 or float
 
-//DEFVECTOR4D(ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >);
-DEFVECTOR4D(ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >);
+DEFVECTOR4D(ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >);
+//DEFVECTOR4D(ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >);
 
 DEFVECTOR3D(ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t> >); 
 
@@ -343,24 +345,28 @@ int testVectorIO(bool readOnly = false) {
 
   int iret = 0; 
 
-#ifdef __CINT__
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
-  using namespace ROOT::Math;
-#endif
+// #ifdef __CINT__
+//   gSystem->Load("libMathCore");  
+//   gSystem->Load("libPhysics");  
+//   using namespace ROOT::Math;
+// #endif
 
 #ifdef USE_REFLEX
 
-#ifdef __CINT__
+// #ifdef __CINT__
+//   gSystem->Load("libReflex");  
+//   gSystem->Load("libCintex");  
+// #endif
+
+  std::cout << "Use Reflex dictionary " << std::endl; 
+
   gSystem->Load("libReflex");  
   gSystem->Load("libCintex");  
-#endif
 
   ROOT::Cintex::Cintex::SetDebug(1);
   ROOT::Cintex::Cintex::Enable();
 
 
-  std::cout << "Use Reflex dictionary " << std::endl; 
 
   //iret |= gSystem->Load("libSmatrixRflx");  
   //iret |= gSystem->Load("libMathAddRflx");  

@@ -12,8 +12,8 @@ typedef double Double32_t;
 
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >        Vector4D; 
-//typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >    Vector4D32;
-typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >    Vector4D32;
+typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >    Vector4D32;
+//typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> >    Vector4D32;
 
 typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> >        Point3D; 
 typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t> >    Point3D32; 
