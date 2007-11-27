@@ -17,8 +17,9 @@
 #include "TEveProjectionBases.h"
 #include "TEveTreeTools.h"
 
-#include "TPointSet3D.h"
 #include "TArrayI.h"
+#include "TPointSet3D.h"
+#include "TQObject.h"
 
 class TTree;
 class TF3;
@@ -31,7 +32,8 @@ class TGListTreeItem;
 class TEvePointSet : public TEveElement,
                      public TPointSet3D,
                      public TEvePointSelectorConsumer,
-                     public TEveProjectable
+                     public TEveProjectable,
+                     public TQObject
 {
    friend class TEvePointSetArray;
 

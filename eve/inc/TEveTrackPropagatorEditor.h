@@ -32,59 +32,59 @@ class TEveTrackPropagatorSubEditor;
 
 class TEveTrackPropagatorSubEditor : public TGVerticalFrame
 {
-  friend class TEveTrackPropagatorEditor;
-  friend class TEveTrackListEditor;
+   friend class TEveTrackPropagatorEditor;
+   friend class TEveTrackListEditor;
 
 private:
-  TEveTrackPropagatorSubEditor(const TEveTrackPropagatorSubEditor&);            // Not implemented
-  TEveTrackPropagatorSubEditor& operator=(const TEveTrackPropagatorSubEditor&); // Not implemented
+   TEveTrackPropagatorSubEditor(const TEveTrackPropagatorSubEditor&);            // Not implemented
+   TEveTrackPropagatorSubEditor& operator=(const TEveTrackPropagatorSubEditor&); // Not implemented
 
 protected:
-  TEveTrackPropagator  *fM;
+   TEveTrackPropagator  *fM;
 
-  TEveGValuator      *fMaxR;
-  TEveGValuator      *fMaxZ;
-  TEveGValuator      *fMaxOrbits;
-  TEveGValuator      *fMinAng;
-  TEveGValuator      *fDelta;
+   TEveGValuator      *fMaxR;
+   TEveGValuator      *fMaxZ;
+   TEveGValuator      *fMaxOrbits;
+   TEveGValuator      *fMinAng;
+   TEveGValuator      *fDelta;
 
-  TGCheckButton      *fRnrFV;
+   TGCheckButton      *fRnrFV;
 
-  TGCompositeFrame   *fPMFrame;
-  TGButton           *fFitDaughters;
-  TGButton           *fFitReferences;
-  TGButton           *fFitDecay;
-  TGButton           *fRnrDaughters;
-  TGButton           *fRnrReferences;
-  TGButton           *fRnrDecay;
+   TGCompositeFrame   *fPMFrame;
+   TGButton           *fFitDaughters;
+   TGButton           *fFitReferences;
+   TGButton           *fFitDecay;
+   TGButton           *fRnrDaughters;
+   TGButton           *fRnrReferences;
+   TGButton           *fRnrDecay;
 
-  TGCompositeFrame   *fRefsCont;
+   TGCompositeFrame   *fRefsCont;
 
-  TAttMarkerEditor   *fPMAtt;
-  TAttMarkerEditor   *fFVAtt;
+   TAttMarkerEditor   *fPMAtt;
+   TAttMarkerEditor   *fFVAtt;
 
 public:
-  TEveTrackPropagatorSubEditor(const TGWindow* p);
-  virtual ~TEveTrackPropagatorSubEditor() {}
+   TEveTrackPropagatorSubEditor(const TGWindow* p);
+   virtual ~TEveTrackPropagatorSubEditor() {}
 
-  void SetModel(TEveTrackPropagator* m);
+   void SetModel(TEveTrackPropagator* m);
 
-  void Changed(); //*SIGNAL*
+   void Changed(); //*SIGNAL*
 
-  void DoMaxR();
-  void DoMaxZ();
-  void DoMaxOrbits();
-  void DoMinAng();
-  void DoDelta();
+   void DoMaxR();
+   void DoMaxZ();
+   void DoMaxOrbits();
+   void DoMinAng();
+   void DoDelta();
 
-  void DoFitPM();
-  void DoRnrPM();
+   void DoFitPM();
+   void DoRnrPM();
 
-  void DoRnrFV();
+   void DoRnrFV();
 
-  void CreateRefsContainer(TGVerticalFrame* p);
+   void CreateRefsContainer(TGVerticalFrame* p);
 
-  ClassDef(TEveTrackPropagatorSubEditor, 0) // Sub-editor for TEveTrackPropagator class.
+   ClassDef(TEveTrackPropagatorSubEditor, 0); // Sub-editor for TEveTrackPropagator class.
 };
 
 /******************************************************************************/
@@ -94,22 +94,22 @@ public:
 class TEveTrackPropagatorEditor : public TGedFrame
 {
 private:
-  TEveTrackPropagatorEditor(const TEveTrackPropagatorEditor&);            // Not implemented
-  TEveTrackPropagatorEditor& operator=(const TEveTrackPropagatorEditor&); // Not implemented
+   TEveTrackPropagatorEditor(const TEveTrackPropagatorEditor&);            // Not implemented
+   TEveTrackPropagatorEditor& operator=(const TEveTrackPropagatorEditor&); // Not implemented
 
-  void CreateRefTab();
+   void CreateRefTab();
 protected:
-  TEveTrackPropagator           *fM;           // Model object.
-  TEveTrackPropagatorSubEditor  *fRSSubEditor; // Render-style sub-editor.
+   TEveTrackPropagator           *fM;           // Model object.
+   TEveTrackPropagatorSubEditor  *fRSSubEditor; // Render-style sub-editor.
 
 public:
-  TEveTrackPropagatorEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
-                  UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-  ~TEveTrackPropagatorEditor();
+   TEveTrackPropagatorEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+                             UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
+   ~TEveTrackPropagatorEditor();
 
-  virtual void SetModel(TObject* obj);
+   virtual void SetModel(TObject* obj);
 
-  ClassDef(TEveTrackPropagatorEditor, 1); // Editor for TEveTrackPropagator class.
+   ClassDef(TEveTrackPropagatorEditor, 1); // Editor for TEveTrackPropagator class.
 };
 
 #endif

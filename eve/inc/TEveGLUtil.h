@@ -28,7 +28,7 @@ public:
 
 #ifndef __CINT__
 
-   class GL_Capability_Switch {
+   class TGLCapabilitySwitch {
       GLenum    fWhat;
       GLboolean fState;
       bool      fFlip;
@@ -37,21 +37,21 @@ public:
       { if(s) glEnable(fWhat); else glDisable(fWhat); }
 
    public:
-      GL_Capability_Switch(GLenum what, GLboolean state) :
+      TGLCapabilitySwitch(GLenum what, GLboolean state) :
          fWhat(what), fState(kFALSE), fFlip(kFALSE)
       {
          fState = glIsEnabled(fWhat);
          fFlip  = (fState != state);
          if(fFlip)        set_state(state);
       }
-      ~GL_Capability_Switch()
+      ~TGLCapabilitySwitch()
       { if(fFlip) set_state(fState); }
    };
 
-   class GL_Float_Holder
+   class TGLFloatHolder
    {
-      GL_Float_Holder(const GL_Float_Holder&);            // Not implemented
-      GL_Float_Holder& operator=(const GL_Float_Holder&); // Not implemented
+      TGLFloatHolder(const TGLFloatHolder&);            // Not implemented
+      TGLFloatHolder& operator=(const TGLFloatHolder&); // Not implemented
 
       GLenum    fWhat;
       GLfloat   fState;
@@ -59,14 +59,14 @@ public:
       void    (*fFoo)(GLfloat);
 
    public:
-      GL_Float_Holder(GLenum what, GLfloat state, void (*foo)(GLfloat)) :
+      TGLFloatHolder(GLenum what, GLfloat state, void (*foo)(GLfloat)) :
          fWhat(what), fState(kFALSE), fFlip(kFALSE), fFoo(foo)
       {
          glGetFloatv(fWhat, &fState);
          fFlip = (fState != state);
          if(fFlip) fFoo(state);
       }
-      ~GL_Float_Holder()
+      ~TGLFloatHolder()
       { if(fFlip) fFoo(fState); }
    };
 

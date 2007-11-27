@@ -79,7 +79,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPushAttrib(GL_POINT_BIT | GL_LINE_BIT | GL_ENABLE_BIT);
 
    // lines
-   TEveGLUtil::GL_Capability_Switch lights_off(GL_LIGHTING, false);
+   TEveGLUtil::TGLCapabilitySwitch lights_off(GL_LIGHTING, false);
    if(mL.GetRnrLines() && mL.GetLinePlex().Size() > 0)
    {
       glDisable(GL_LIGHTING);

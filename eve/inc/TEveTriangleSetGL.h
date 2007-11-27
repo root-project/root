@@ -21,26 +21,26 @@ class TEveTriangleSet;
 class TEveTriangleSetGL : public TGLObject
 {
 private:
-  TEveTriangleSetGL(const TEveTriangleSetGL&);            // Not implemented
-  TEveTriangleSetGL& operator=(const TEveTriangleSetGL&); // Not implemented
+   TEveTriangleSetGL(const TEveTriangleSetGL&);            // Not implemented
+   TEveTriangleSetGL& operator=(const TEveTriangleSetGL&); // Not implemented
 
 protected:
-  TEveTriangleSet* fM; // Model object.
+   TEveTriangleSet* fM; // Model object.
 
-  virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
 public:
-  TEveTriangleSetGL();
-  virtual ~TEveTriangleSetGL();
+   TEveTriangleSetGL();
+   virtual ~TEveTriangleSetGL();
 
-  virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-  virtual void   SetBBox();
+   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual void   SetBBox();
 
-  // To support two-level selection
-  // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-  // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
+   // To support two-level selection
+   // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
+   // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
-  ClassDef(TEveTriangleSetGL, 0); // GL-renderer for TEveTriangleSet class.
+   ClassDef(TEveTriangleSetGL, 0); // GL-renderer for TEveTriangleSet class.
 };
 
 #endif

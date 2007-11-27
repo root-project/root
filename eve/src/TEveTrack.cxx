@@ -139,7 +139,6 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* rs) :
 //______________________________________________________________________________
 TEveTrack::TEveTrack(const TEveTrack& t) :
    TEveLine(),
-   TQObject(),
    fV(t.fV),
    fP(t.fP),
    fBeta(t.fBeta),

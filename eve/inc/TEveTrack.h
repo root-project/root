@@ -20,13 +20,11 @@
 
 #include "TPolyMarker3D.h"
 #include "TMarker.h"
-#include "TQObject.h"
 
 class TEveTrackPropagator;
 class TEveTrackList;
 
-class TEveTrack : public TEveLine,
-		  public TQObject
+class TEveTrack : public TEveLine
 {
    friend class TEveTrackPropagator;
    friend class TEveTrackList;

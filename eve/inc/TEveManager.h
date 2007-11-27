@@ -53,17 +53,17 @@ class TEveManager
    TEveManager& operator=(const TEveManager&); // Not implemented
 
 public:
-   class RedrawDisabler
+   class TRedrawDisabler
    {
    private:
-      RedrawDisabler(const RedrawDisabler&);            // Not implemented
-      RedrawDisabler& operator=(const RedrawDisabler&); // Not implemented
+      TRedrawDisabler(const TRedrawDisabler&);            // Not implemented
+      TRedrawDisabler& operator=(const TRedrawDisabler&); // Not implemented
 
       TEveManager* fFrame;
    public:
-      RedrawDisabler(TEveManager* f) : fFrame(f)
+      TRedrawDisabler(TEveManager* f) : fFrame(f)
       { if (fFrame) fFrame->DisableRedraw(); }
-      ~RedrawDisabler()
+      ~TRedrawDisabler()
       { if (fFrame) fFrame->EnableRedraw(); }
    };
 
