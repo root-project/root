@@ -73,9 +73,30 @@ STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
 STRESSVEC    = stressVector$(ExeSuf)
 
-STRESSMATHO   = stressMathCore.$(ObjSuf)
-STRESSMATHS   = stressMathCore.$(SrcSuf)
+ifneq ($(USE_REFLEX),)
+CXXFLAGS += -DUSE_REFLEX
+STRESSMATHO   = stressMathCore.$(ObjSuf) TrackMathCoreCint.$(ObjSuf) TrackMathCoreRflx.$(ObjSuf) 
+STRESSMATHS   = stressMathCore.$(SrcSuf) TrackMathCoreCint.$(SrcSuf) TrackMathCoreRflx.$(SrcSuf)
+ifeq ($(PLATFORM),win32)
+STRESSMATHLIBS = '$(ROOTSYS)/lib/libMathCore.lib' '$(ROOTSYS)/lib/libReflex.lib' '$(ROOTSYS)/lib/libCintex.lib' 
+else
+STRESSMATHLIBS = -lMathCore -lReflex -lCintex
+endif
+
+else 
+STRESSMATHO   = stressMathCore.$(ObjSuf) TrackMathCoreCint.$(ObjSuf) 
+STRESSMATHS   = stressMathCore.$(SrcSuf) TrackMathCoreCint.$(SrcSuf)
+
+ifeq ($(PLATFORM),win32)
+STRESSMATHLIBS = '$(ROOTSYS)/lib/libMathCore.lib'
+else
+STRESSMATHLIBS = -lMathCore
+endif
+ 
+endif
+
 STRESSMATH    = stressMathCore$(ExeSuf)
+
 
 
 endif
@@ -306,12 +327,84 @@ else
 endif
 		@echo "$@ done"
 
+
+#ifneq ($(useReflex),)
+
+
+
+libTrackMathCoreRflx.$(DllSuf): 	TrackMathCoreRflx.$(ObjSuf) 
+ifeq ($(ARCH),aix)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+else
+ifeq ($(PLATFORM),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
+else
+ifeq ($(PLATFORM),win32)
+		bindexplib $* $^ > $*.def
+		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+		   $(OutPutOpt)$(EVENTLIB)
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
+		   $(OutPutOpt)$@
+		$(MT_DLL)
+else
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
+endif
+endif
+endif
+endif
+		@echo "$@ done"
+
+#endif
+
+libTrackMathCoreCint.$(DllSuf): 	TrackMathCoreCint.$(ObjSuf) 
+ifeq ($(ARCH),aix)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+else
+ifeq ($(PLATFORM),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
+else
+ifeq ($(PLATFORM),win32)
+		bindexplib $* $^ > $*.def
+		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+		   $(OutPutOpt)$(EVENTLIB)
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
+		   $(OutPutOpt)$@
+		$(MT_DLL)
+else
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
+endif
+endif
+endif
+endif
+		@echo "$@ done"
+
+
 $(STRESSMATH):   $(STRESSMATHO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libMathCore.lib  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
 		$(MT_EXE)
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
@@ -557,6 +650,17 @@ guiviewer.$(ObjSuf): guiviewer.h
 guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 	@echo "Generating dictionary $@..."
 	@rootcint -f $@ -c $^
+
+stressMathCore.$(ObjSuf): 	TrackMathCore.h
+TrackMathCoreCint.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
+	@echo "Generating dictionary $@ using rootcint ..."
+	@rootcint -f $@ -c $^	
+
+TrackMathCoreRflx.$(SrcSuf): 	TrackMathCore.h TrackMathCoreRflx.xml
+			@echo "Generating dictionary $@ using gccxml ..."
+			genreflex TrackMathCore.h --selection_file=TrackMathCoreRflx.xml -o TrackMathCoreRflx.cxx  -I$(ROOTSYS)/include
+
+
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX)  $(CXXFLAGS) -c $<
