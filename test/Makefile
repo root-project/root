@@ -147,6 +147,10 @@ STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
 
+STRESSTMVAO    = stressTMVA.$(ObjSuf)
+STRESSTMVAS    = stressTMVA.$(SrcSuf)
+STRESSTMVA     = stressTMVA$(ExeSuf)
+
 STRESSENTRYLISTO = stressEntryList.$(ObjSuf)
 STRESSENTRYLISTS = stressEntryList.$(SrcSuf)
 STRESSENTRYLIST  = stressEntryList$(ExeSuf)
@@ -187,7 +191,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
-                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) $(STRESSTMVAO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) $(STRESSMATHO) \
                 $(STRESSFITO) $(STRESSHEPIXO) $(STRESSENTRYLISTO) \
                 $(STRESSROOFITO) $(STRESSPROOFO)
@@ -199,7 +203,7 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
-                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH)
+                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) $(STRESSTMVA)
 
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -472,6 +476,15 @@ endif
 $(STRESSFIT):   $(STRESSFITO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
+		@echo "$@ done"
+
+$(STRESSTMVA): $(STRESSTMVAO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libTMVA.lib' $(OutPutOpt)$@
+		$(MT_EXE)
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lTMVA  $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(STRESSENTRYLIST):	$(STRESSENTRYLISTO)
