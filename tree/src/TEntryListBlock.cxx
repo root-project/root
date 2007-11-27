@@ -382,6 +382,11 @@ Int_t TEntryListBlock::GetEntry(Int_t entry)
             return fIndices[entry];
          } else {
             fLastIndexQueried = entry;
+            if (!fIndices || fNPassed==0){
+               //all entries pass
+               fLastIndexReturned = entry;
+               return fLastIndexReturned;
+            } 
             for (i=0; i<fIndices[0]; i++){               
                entries_found++;
                if (entries_found==entry+1){

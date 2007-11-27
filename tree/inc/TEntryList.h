@@ -84,7 +84,6 @@ class TEntryList: public TNamed
    virtual void        Reset();
 
    virtual void        Print(const Option_t* option = "") const;
-
    virtual void        SetDirectory(TDirectory *dir);
    virtual void        SetEntriesToProcess(Long64_t nen) { fEntriesToProcess = nen; }
    virtual void        SetShift(Bool_t shift) { fShift = shift; };

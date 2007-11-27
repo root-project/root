@@ -923,14 +923,15 @@ void TEntryList::Print(const Option_t* option) const
    }
    else {
       TEntryList *elist = 0;
-      TIter next(fLists);
       if (fN>0){
+         TIter next(fLists);
          while((elist = (TEntryList*)next())){
             elist->Print(option);
          }
       } else {
-         if (fN==0) printf("%s %s\n", fTreeName.Data(), fFileName.Data());
+         if (!fLists) printf("%s %s\n", fTreeName.Data(), fFileName.Data());
          else {
+            TIter next(fLists);
             while ((elist = (TEntryList*)next())){
                printf("%s %s\n", elist->GetTreeName(), elist->GetFileName());
             }
@@ -1013,9 +1014,17 @@ void TEntryList::SetTree(const char *treename, const char *filename)
       while ((elist = (TEntryList*)next())){
          if (newhash == elist->fStringHash){
             if (!strcmp(elist->GetTreeName(), treename) && !strcmp(elist->GetFileName(), filename)){
-               fCurrent = elist;
                //the current entry list was changed. reset the fLastIndexQueried,
                //so that Next() doesn't start with the wrong current list
+               //Also, reset those indices in the previously current list
+               if (fCurrent->fBlocks){
+                  Int_t currentblock = (fCurrent->fLastIndexReturned)/kBlockSize;
+                  TEntryListBlock *block = (TEntryListBlock*)fCurrent->fBlocks->UncheckedAt(currentblock);
+                  block->ResetIndices();
+                  fCurrent->fLastIndexReturned = 0;
+                  fCurrent->fLastIndexQueried = -1;
+               }
+               fCurrent = elist;
                fLastIndexQueried = -3;
                return;
             }
