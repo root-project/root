@@ -393,6 +393,123 @@ Bool_t Test4()
    return kTRUE;
 }
 
+Bool_t Test5()
+{
+//Test entry lists with very many or very few events
+//Only makes sense to check if there are > 64000 events
+
+   TChain *chain = new TChain("chain", "chain");
+   chain->Add("stressEntryListTrees*.root/tree1");
+   chain->Add("stressEntryListTrees*.root/tree2");
+   Int_t wrongentries1=0;
+   Int_t wrongentries2=0;
+   Int_t wrongentries3=0;
+   Int_t wrongentries4=0;
+   Int_t wrongentries5=0;
+   //Let's make a full entry list
+   chain->Draw(">>elfull", "", "entrylist");
+   TEntryList *elfull = (TEntryList*)gDirectory->Get("elfull");
+
+   //printf("entries in the list: %lld\n", elfull->GetN());
+   //check the contents
+   Long64_t cur, real;
+   Int_t ntrees = chain->GetNtrees();
+   Long64_t *offset = chain->GetTreeOffset();
+   //This loop will check if TEntryList::Next() is correct
+   for (Int_t itree=0; itree<ntrees; itree++){
+      for (Int_t i=offset[itree]; i<offset[itree+1]; i++){
+         real = i-offset[itree];
+         cur = elfull->GetEntry(i);
+         if (TMath::Abs(real-cur)>0.1){
+            //printf("real=%lld, cur=%lld\n", real, cur);
+            wrongentries1++;
+         }
+      }
+   }
+   //printf("wrongentries1=%d\n", wrongentries1);
+//    //This loop will check if TEntryList::GetEntry() is correct
+   for (Int_t itree=0; itree<ntrees; itree++){
+      for (Int_t i=offset[itree]; i<offset[itree+1]; i+=2){
+         real = i-offset[itree];
+         cur = elfull->GetEntry(i);
+         if (TMath::Abs(real-cur)>0.1){
+            //printf("real=%lld, cur=%lld\n", real, cur);
+            wrongentries2++;
+         }
+      }
+   }
+   //printf("wrongentries2=%d\n", wrongentries2);
+
+
+   //now let's make an empty entry list
+   chain->Draw(">>elempty", "x>0 && x<0", "entrylist");
+   TEntryList *elempty = (TEntryList*)gDirectory->Get("elempty");
+   //just a check
+   Long64_t temp = elempty->GetEntry(3);
+   if (TMath::Abs(temp+1)>0.1)
+   wrongentries5++;
+
+   //Merge the almost full list with the almost empty list
+   //Note, how the chain pointer is passed to the Remove() and Enter()
+   //functions. This is needed, because we want to remove entry #3 in 
+   //the chain, not entry that has #3 in the currently active sublist
+
+   elfull->Remove(3, chain);
+   elempty->Enter(3, chain);
+   elfull->Add(elempty);
+
+   //This loop will check if TEntryList::Next() is correct
+   for (Int_t itree=0; itree<ntrees-1; itree++){
+      for (Int_t i=offset[itree]; i<offset[itree+1]; i++){
+         real = i-offset[itree];
+         cur = elfull->GetEntry(i);
+         if (TMath::Abs(real-cur)>0.1){
+            //printf("real=%lld, cur=%lld\n", real, cur);
+            wrongentries3++;
+         }
+      }
+   }
+   //printf("wrongentries3=%d\n", wrongentries3);
+
+   //This loop will check if TEntryList::GetEntry() is correct
+   for (Int_t itree=0; itree<ntrees-1; itree++){
+      for (Int_t i=offset[itree]; i<offset[itree+1]; i+=2){
+         real = i-offset[itree];
+         cur = elfull->GetEntry(i);
+         if (TMath::Abs(real-cur)>0.1){
+            //printf("real=%lld, cur=%lld\n", real, cur);
+            wrongentries4++;
+         }
+      }
+   }
+   // printf("wrongentries4=%d\n", wrongentries4);
+   
+   //Now let's use the full and empty lists on the chain
+   chain->SetEntryList(elfull);
+   chain->Draw("x>>hx", "", "goff");
+   TH1F *hx = (TH1F*)gDirectory->Get("hx");
+   if (TMath::Abs(hx->GetEntries()-chain->GetEntries())>0.1){
+      wrongentries5++;
+      //printf("entries in chain: %lld, entries in histo: %f\n", chain->GetEntries(), hx->GetEntries());
+   }
+
+   elempty->Remove(3);
+   //elempty->Print("all");
+   chain->SetEntryList(elempty);
+   Long64_t nen = chain->Draw("x", "", "goff");
+   if (nen!=0) wrongentries5++;
+
+   //printf("wrongentries5=%d\n", wrongentries5);
+
+   delete elempty;
+   delete elfull;
+   delete hx;
+   if (wrongentries1>0 || wrongentries2>0 || wrongentries3>0 || wrongentries4>0 || wrongentries5>0) 
+      return kFALSE;
+   else 
+      return kTRUE;
+}
+
 
 void MakeTrees(Int_t nentries, Int_t nfiles)
 {
@@ -459,6 +576,7 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
    Bool_t ok2=kTRUE;
    Bool_t ok3=kTRUE;
    Bool_t ok4=kTRUE;
+   Bool_t ok5=kTRUE;
 
    ok1 = Test1();
    if (ok1)
@@ -487,6 +605,12 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
    else{
       printf("Test4: TEntryList and TEventList for TTree------------------------- FAILED\n");
    }
+
+   ok5 = Test5();
+   if (ok5)
+      printf("Test5: Full and Empty TEntryList----------------------------------- OK\n");
+   else
+      printf("Test5: Full and Empty TEntryList----------------------------------- FAILED\n");
 
    printf("**********************************************************************\n");
    printf("*******************Deleting the data files****************************\n");
