@@ -196,7 +196,6 @@ private:
    double fParams[NPAR];
    double fScale1;
    double fScale2;
-   int NFuncTest; 
 };
 
 
