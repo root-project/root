@@ -188,7 +188,7 @@ namespace ROOT { namespace Cintex {
       fVersion = 1;
       if (TypeGet().Properties().HasProperty("ClassVersion")) {
          std::stringstream ssVersion(TypeGet().Properties().PropertyAsString("ClassVersion"));
-         if (ssVersion)
+         if (ssVersion.good())
             ssVersion >> fVersion;
          if ( Cintex::Debug() > 2 )  {
             cout << "Cintex: ROOTClassEnhancer: setting class version of " << nam << " to " << fVersion << endl;
