@@ -13,9 +13,9 @@
 #pragma extra_include "vector";
 #include <vector>
 
+#pragma link C++ class VecTrackD+;
 #pragma link C++ class vector<TrackD >+;
 
-#pragma link C++ class VecTrackD+;
 
 
 #endif

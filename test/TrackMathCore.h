@@ -1,5 +1,9 @@
 // dummy track class for testing I/o of matric
 
+//#ifdef USE_REFLEX
+//#define G__DICTIONARY
+//#endif
+
 #include "Math/Point3D.h"
 #include "Math/Vector4D.h"
 #include "Math/SMatrix.h"
@@ -9,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <cassert>
+
 
 
 
@@ -156,9 +161,9 @@ public:
 
 private:
 
-   Point3D32    fPos;
-   Vector4D32   fVec; 
-   Matrix4D32 fMat; 
+   Point3D32     fPos;
+   Vector4D32    fVec; 
+   Matrix4D32    fMat; 
    SymMatrix6D32 fSymMat; 
       
 }; 
@@ -190,7 +195,7 @@ public:
        assert( itr == end); 
      }
 
-   enum {  kLen = 10, kSize =  kLen*TrackD::kSize };
+   enum {  kLen = 3, kSize =  kLen*TrackD::kSize };
 
    static std::string Type() { return "VecTrackD"; } 
 

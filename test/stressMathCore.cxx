@@ -863,7 +863,9 @@ public:
          tree.Fill();
       }
 
-      //tree.Print(); // debug
+#ifdef DEBUG
+      tree.Print(); // debug
+#endif
 
       file.Write();
       file.Close();
@@ -957,7 +959,9 @@ public:
       for (int i = 0; i < nGen; ++i) { 
          v0 += dataV[i]; 
       }
-      //v0.Print();
+#ifdef DEBUG
+      v0.Print();
+#endif
       return v0.Sum();
    }  
 
@@ -1255,7 +1259,7 @@ int testTrack(int ngen) {
    const int Dim = T::kSize;
    std::string name = T::Type();
    
-   std::cout << "Dim is " << Dim << std::endl;
+   //std::cout << "Dim is " << Dim << std::endl;
    
    VectorTest<Dim> a(ngen); 
    a.genDataN();
@@ -1271,7 +1275,7 @@ int testTrack(int ngen) {
    a.testCreateSV(v1);             iret |= a.check(name+" creation",v1.size(),ngen);
    s1 = a.testAdditionTR(v1);    iret |= a.check(name+" addition",s1,a.Sum(),Dim*4);
    sref1 = s1; 
-   std::cout << " reference sum is " << sref1 << std::endl;
+   //std::cout << " reference sum is " << sref1 << std::endl;
 
    double fsize = 0;
    int ir = 0;
@@ -1375,7 +1379,9 @@ int testCompositeObj(int ngen) {
 #else 
    std::cout << "Test Using Reflex library\n\n"; 
 
+#ifdef DEBUG
    ROOT::Cintex::Cintex::SetDebug(1);
+#endif
    ROOT::Cintex::Cintex::Enable();
 
    iret |= testTrack<TrackD>(ngen); 
@@ -1416,7 +1422,7 @@ int stressMathCore(double nscale = 1) {
    bm.Stop("stressMathCore");
    std::cout <<"******************************************************************************\n";
    bm.Print("stressMathCore");
-   const double reftime = 0.73; // ref time on  macbook pro (intel core duo 2.2 GHz)
+   const double reftime = 1.00; // ref time on  macbook pro (intel core duo 2.2 GHz)
    double rootmarks = 800 * reftime / bm.GetCpuTime("stressMathCore");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
              << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
