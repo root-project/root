@@ -375,7 +375,7 @@ Int_t FileSize (char *filename)
    // Return the size of filename
 
    FileStat_t fs;
-   gSystem->GetPathInfo(outfile, fs);
+   gSystem->GetPathInfo(filename, fs);
    return (Int_t)fs.fSize;
 }
 
