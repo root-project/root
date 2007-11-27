@@ -807,6 +807,14 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
       new TWin32SplashThread(FALSE);
    }
 
+   if (gApplication) {
+      TString arg = gSystem->BaseName(gApplication->Argv(0));
+      if (!arg.Contains("PVSS"))
+         fRefreshTimer = new TGWin32RefreshTimer();
+   } else {
+      fRefreshTimer = new TGWin32RefreshTimer();
+   }
+
    // initialize GUI thread and proxy objects
    if (!gROOT->IsBatch() && !gMainThread) {
       gMainThread = new TGWin32MainThread();
@@ -824,7 +832,8 @@ TGWin32::~TGWin32()
    // destructor.
 
    CloseDisplay();
-   delete fRefreshTimer;
+   if (fRefreshTimer)
+      delete fRefreshTimer;
 }
 
 //______________________________________________________________________________
@@ -833,19 +842,6 @@ Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
    // Message processing function for the GUI thread.
    // Kicks in once TGWin32 becomes active, and "replaces" the dummy one
    // in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
-
-   if (!fRefreshTimer)
-      // periodically we refresh windows
-      // Don't create refresh timer if the application has been created inside PVSS
-      if (gApplication) {
-         TString arg = gSystem->BaseName(gApplication->Argv(0));
-         if (!arg.Contains("PVSS"))
-            fRefreshTimer = new TGWin32RefreshTimer();
-         else
-            // dummy object to not continuosly test for PVSS if !fRefreshTimer
-            fRefreshTimer = new TObject();
-      } else
-         fRefreshTimer = new TGWin32RefreshTimer();
 
    Bool_t ret = kFALSE;
 
