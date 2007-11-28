@@ -307,6 +307,24 @@ TGCompositeFrame *TGTab::AddTab(const char *text)
 }
 
 //______________________________________________________________________________
+void TGTab::AddTab(const char *text, TGCompositeFrame *cf)
+{
+   // Add a tab to the tab widget and fill it with given TGCompositeFrame.
+
+   AddTab(new TGString(text), cf);
+}
+
+//______________________________________________________________________________
+void TGTab::AddTab(TGString *text, TGCompositeFrame *cf)
+{
+   // Add a tab to the tab widget and fill it with given TGCompositeFrame.
+
+   AddFrame(new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct), 0);
+   AddFrame(cf, 0);
+   cf->SetEditDisabled(kEditDisableResize);
+}
+
+//______________________________________________________________________________
 void TGTab::RemoveTab(Int_t tabIndex, Bool_t storeRemoved)
 {
    // Remove container and tab of tab with index tabIndex.

@@ -94,6 +94,8 @@ public:
 
    virtual TGCompositeFrame *AddTab(TGString *text);
    virtual TGCompositeFrame *AddTab(const char *text);
+   virtual void              AddTab(const char *text, TGCompositeFrame *cf);
+   virtual void              AddTab(TGString *text, TGCompositeFrame *cf);
 
    virtual void              NewTab(const char *text = "tab");   // *MENU*icon=bld_newtab.png*
    virtual void              RemoveTab(Int_t tabIndex = -1,
