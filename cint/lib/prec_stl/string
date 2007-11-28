@@ -307,7 +307,7 @@ istream& getline(istream& is,string& st);
 istream& getline(istream& is,string& st,char delim);
 
 
-#if (G__GNUC_VER>=3001) 
+#if (G__GNUC_VER>=3001) && !defined(G__INTEL_COMPILER) 
 bool operator==(const string::iterator& _Left, const string::iterator& _Right);
 bool operator!=(const string::iterator& _Left, const string::iterator& _Right);
 #endif
