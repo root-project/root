@@ -32,7 +32,7 @@ typedef ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >      Sy
 typedef ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >      SymMatrix6D32;;
 
 
-// track class 
+// track class containing a vector and a point
 class  TrackD { 
 
 public:
@@ -45,6 +45,117 @@ public:
       double * itr = begin; 
       fPos.SetCoordinates(itr, itr+3); itr +=3;
       fVec.SetCoordinates(itr,itr+4); itr+=4;
+      assert(itr == end);
+   }
+
+   enum {  kSize =        3 + 4    };
+
+   static std::string Type() { return "TrackD"; } 
+
+   static bool IsD32() { return false; }
+
+   TrackD & operator += (const TrackD & t) { 
+      fPos += Vector3D(t.fPos);
+      fVec += t.fVec;
+      return *this;
+   }
+
+   double Sum() const { 
+      double s = 0; 
+      double d[4]; 
+      fPos.GetCoordinates(d,d+3);
+      for (int i=0; i<3;++i)
+         s+= d[i];
+      fVec.GetCoordinates(d,d+4);
+      for (int i=0; i<4;++i)
+         s+= d[i];
+      return s;
+  }
+
+   void Print() const { 
+     std::cout << "Point  " << fPos << std::endl;
+     std::cout << "Vec    " << fVec << std::endl;
+   }
+
+private:
+
+   Point3D    fPos;
+   Vector4D   fVec; 
+      
+}; 
+
+// track class based on  of Double32
+
+
+class  TrackD32 { 
+
+public:
+
+   typedef Matrix4D::const_iterator const_iterator; 
+
+   TrackD32() {}
+
+   enum {  kSize =        3 + 4    };
+
+   static std::string Type() { return "TrackD32"; } 
+
+   static bool IsD32() { return true; }
+   
+   TrackD32(double * begin, double * end)  {
+      double * itr = begin; 
+      fPos.SetCoordinates(itr, itr+3); itr +=3;
+      fVec.SetCoordinates(itr,itr+4); itr+=4;
+      assert(itr == end);
+      
+   }
+
+
+   TrackD32 & operator += (const TrackD32 & t) { 
+      fPos += Vector3D(t.fPos);
+      fVec += t.fVec;
+      return *this;
+   }
+
+   double Sum() const { 
+      double s = 0; 
+      double d[4]; 
+      fPos.GetCoordinates(d,d+3);
+      for (int i=0; i<3;++i)
+         s+= d[i];
+      fVec.GetCoordinates(d,d+4);
+      for (int i=0; i<4;++i)
+         s+= d[i];
+      return s;
+  }
+
+   void Print() const { 
+     std::cout << "Point  " << fPos << std::endl;
+     std::cout << "Vec    " << fVec << std::endl;
+   }
+
+private:
+
+   Point3D32     fPos;
+   Vector4D32    fVec; 
+
+      
+}; 
+
+
+// track class  (containing a vector and a point) and matrices
+
+class  TrackErrD { 
+
+public:
+
+   typedef Matrix4D::const_iterator const_iterator; 
+
+   TrackErrD() {}
+   
+   TrackErrD(double * begin, double * end)  {
+      double * itr = begin; 
+      fPos.SetCoordinates(itr, itr+3); itr +=3;
+      fVec.SetCoordinates(itr,itr+4); itr+=4;
       fMat = Matrix4D(itr,itr+16); itr += 16;
       fSymMat = SymMatrix6D(itr,itr+21); 
       assert(itr+21 == end);
@@ -54,11 +165,11 @@ public:
       3 + 4 + Matrix4D32::kSize + SymMatrix6D32::rep_type::kSize
    };
 
-   static std::string Type() { return "TrackD"; } 
+   static std::string Type() { return "TrackErrD"; } 
 
    static bool IsD32() { return false; }
 
-   TrackD & operator += (const TrackD & t) { 
+   TrackErrD & operator += (const TrackErrD & t) { 
       fPos += Vector3D(t.fPos);
       fVec += t.fVec;
       fMat += t.fMat;
@@ -101,23 +212,23 @@ private:
 // track class based on  of Double32
 
 
-class  TrackD32 { 
+class  TrackErrD32 { 
 
 public:
 
    typedef Matrix4D::const_iterator const_iterator; 
 
-   TrackD32() {}
+   TrackErrD32() {}
 
    enum {  kSize =  
       3 + 4 + Matrix4D32::kSize + SymMatrix6D32::rep_type::kSize
    };
 
-   static std::string Type() { return "TrackD32"; } 
+   static std::string Type() { return "TrackErrD32"; } 
 
    static bool IsD32() { return true; }
    
-   TrackD32(double * begin, double * end)  {
+   TrackErrD32(double * begin, double * end)  {
       double * itr = begin; 
       fPos.SetCoordinates(itr, itr+3); itr +=3;
       fVec.SetCoordinates(itr,itr+4); itr+=4;
@@ -128,7 +239,7 @@ public:
    }
 
 
-   TrackD32 & operator += (const TrackD32 & t) { 
+   TrackErrD32 & operator += (const TrackErrD32 & t) { 
       fPos += Vector3D(t.fPos);
       fVec += t.fVec;
       fMat += t.fMat;
@@ -167,42 +278,44 @@ private:
    SymMatrix6D32 fSymMat; 
       
 }; 
+
 // class containning a vector of tracks
 
-class VecTrackD {
+template<class T> 
+class VecTrack {
 
 public: 
 
-   typedef std::vector<TrackD>::const_iterator It;
+   typedef typename std::vector<T>::const_iterator It;
    
  
-   VecTrackD() {
+   VecTrack() {
      // create klen empty trackD
        fTrks.reserve(kLen);
        for (int i = 0; i < kLen; ++i) { 
-         fTrks.push_back(TrackD() ); 
+         fTrks.push_back(T() ); 
        }
    }
 
-   VecTrackD(double * begin, double * end) 
+   VecTrack(double * begin, double * end) 
      {
        fTrks.reserve(kLen);
        double * itr = begin;
        for (int i = 0; i < kLen; ++i) { 
-         fTrks.push_back(TrackD(itr, itr + TrackD::kSize) ); 
-         itr += TrackD::kSize;
+         fTrks.push_back(T(itr, itr + T::kSize) ); 
+         itr += T::kSize;
        }
        assert( itr == end); 
      }
 
-   enum {  kLen = 3, kSize =  kLen*TrackD::kSize };
+   enum {  kLen = 3, kSize =  kLen*T::kSize };
 
-   static std::string Type() { return "VecTrackD"; } 
+   static std::string Type() { return "VecTrack<"+T::Type()+">"; } 
 
    static bool IsD32() { return false; }
 
 
-   VecTrackD & operator += (const VecTrackD & v) { 
+   VecTrack & operator += (const VecTrack & v) { 
     for (unsigned int i = 0; i < fTrks.size() ; ++i) 
        fTrks[i] += v.fTrks[i];
 
@@ -233,6 +346,6 @@ public:
 
 private:
 
-  std::vector<TrackD>  fTrks;
+  std::vector<T>  fTrks;
 
 };

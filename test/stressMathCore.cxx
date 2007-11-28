@@ -50,10 +50,11 @@ using namespace ROOT::Math;
 #endif
 
 
+//#define DEBUG
 
 bool debug = true;  // print out reason of test failures
 bool debugTime = false; // print out separate timings for vectors 
-bool removeFiles = true; // remove Output root files 
+bool removeFiles = false; // remove Output root files 
 
 void PrintTest(std::string name) { 
    std::cout << std::left << std::setw(40) << name; 
@@ -502,8 +503,20 @@ struct VecType<TrackD32> {
    static std::string name() { return "TrackD32";}
 }; 
 template<>
-struct VecType<VecTrackD> {
-   static std::string name() { return "VecTrackD";}
+struct VecType<TrackErrD> {
+   static std::string name() { return "TrackErrD";}
+}; 
+template<>
+struct VecType<TrackErrD32> {
+   static std::string name() { return "TrackErrD32";}
+}; 
+template<>
+struct VecType<VecTrack<TrackD> > {
+   static std::string name() { return "VecTrack<TrackD> >";}
+}; 
+template<>
+struct VecType<VecTrack<TrackErrD> > {
+   static std::string name() { return "VecTrack<TrackErrD> >";}
 }; 
 
 
@@ -840,6 +853,7 @@ public:
       TTree tree("VectorTree",tree_name.c_str());
 
       V *v1 = new V();
+
       //std::cout << "typeID written : " << typeid(*v1).name() << std::endl;
 
       // need to add namespace to full type name
@@ -858,7 +872,7 @@ public:
 
       Timer timer;
       for (int i = 0; i < nGen; ++i) { 
-         *v1 = dataV[i];  
+	*v1 = dataV[i];  
          tree.Fill();
       }
 
@@ -897,8 +911,9 @@ public:
       V *v1 = 0;
       
       //std::cout << "reading typeID  : " << typeid(*v1).name() << std::endl;
-      
-      tree->SetBranchAddress("Vector branch",&v1);
+
+      // cast to void * to avoid a warning
+      tree->SetBranchAddress("Vector branch",(void *) &v1);
       
       Timer timer;
       int n = (int) tree->GetEntries();
@@ -966,6 +981,7 @@ public:
 
 
 };
+
 
 //--------------------------------------------------------------------------------------
 // test of all physics vector (GenVector's)
@@ -1246,6 +1262,7 @@ int testSMatrix(int ngen, bool testio=false) {
 }
 
 
+
 //--------------------------------------------------------------------------------------
 // test of a track an object containing vector and matrices
 //--------------------------------------------------------------------------------------
@@ -1285,7 +1302,7 @@ int testTrack(int ngen) {
    int wsize = 8; 
    if (T::IsD32() ) wsize = 4;
    double estSize = ngen*wsize * Dim + 10 * ngen;
-   double scale = 0.1 / std::numeric_limits<double>::epsilon();
+   double scale = 0.2 / std::numeric_limits<double>::epsilon();
    fsize = a.testWrite(v1,typeName);  iret |= a.check(name+" write",fsize,estSize,scale);
    ir = a.testRead(v1);   iret |= a.check(name+" read",ir,0);
    scale = 1; 
@@ -1304,6 +1321,7 @@ int testTrack(int ngen) {
 
 
 #endif
+
 
 int testGenVectors(int ngen,bool io) { 
 
@@ -1330,13 +1348,6 @@ int testSMatrix(int ngen,bool io) {
    std::cout << "\tTest of SMatrix package\n";
    std::cout <<"******************************************************************************\n";
 
-   if (io) { 
-      iret = gSystem->Load("libSmatrix");
-      if (iret !=0) { 
-         std::cerr <<"Error Loading libSmatrix" << std::endl;
-         io = false;
-      }
-   }
 
    iret |= testVector34<3>(ngen,io); 
    iret |= testVector34<4>(ngen,io); 
@@ -1355,6 +1366,7 @@ int testSMatrix(int ngen,bool io) {
    return iret; 
 }
 
+
 int testCompositeObj(int ngen) { 
 
    int iret = 0; 
@@ -1363,19 +1375,18 @@ int testCompositeObj(int ngen) {
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
 
+
+
 #ifndef USE_REFLEX
+
    std::cout << "Test Using CINT library\n\n"; 
 
 //    iret = gSystem->Load("libTrackMathCoreCint");
 //    if (iret !=0) { 
 //       std::cerr <<"Error Loading libTrackMathCoreCint" << std::endl;
 //    }
+#else
 
-   iret |= testTrack<TrackD>(ngen); 
-   iret |= testTrack<TrackD32>(ngen); 
-   iret |= testTrack<VecTrackD>(ngen); 
-
-#else 
    std::cout << "Test Using Reflex library\n\n"; 
 
 #ifdef DEBUG
@@ -1383,10 +1394,16 @@ int testCompositeObj(int ngen) {
 #endif
    ROOT::Cintex::Cintex::Enable();
 
-   iret |= testTrack<TrackD>(ngen); 
-   iret |= testTrack<TrackD32>(ngen); 
-   iret |= testTrack<VecTrackD>(ngen); 
 #endif
+
+    iret |= testTrack<TrackD>(ngen); 
+    iret |= testTrack<TrackD32>(ngen); 
+    iret |= testTrack<TrackErrD>(ngen); 
+    iret |= testTrack<TrackErrD32>(ngen); 
+    iret |= testTrack<VecTrack<TrackD> >(ngen); 
+    iret |= testTrack<VecTrack<TrackErrD> >(ngen); 
+
+
 
    return iret;
 }
@@ -1407,16 +1424,22 @@ int stressMathCore(double nscale = 1) {
    TBenchmark bm;
    bm.Start("stressMathCore");
 
-   std::cout << nscale*100 << std::endl;
    iret |= testStatFunctions(100);
 
    bool io = true; 
+
+   iret |= gSystem->Load("libSmatrix");
+   if (iret !=0) { 
+     std::cerr <<"Error Loading libSmatrix" << std::endl;
+     io = false;
+   }
+
 
    iret |= testGenVectors(int(nscale*1000),io); 
 
    iret |= testSMatrix(int(nscale*1000),io); 
 
-   iret |= testCompositeObj(int(nscale*1000)); 
+   if (io) iret |= testCompositeObj(int(nscale*1000)); 
 
    bm.Stop("stressMathCore");
    std::cout <<"******************************************************************************\n";
@@ -1426,7 +1449,9 @@ int stressMathCore(double nscale = 1) {
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
              << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
    std::cout <<"*******************************************************************************\n";
- 
+
+
+   if (iret !=0) std::cerr << "stressMathCore Test Failed !!" << std::endl;
    return iret; 
 }
 
