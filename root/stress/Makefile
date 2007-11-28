@@ -1,12 +1,15 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.nomark *.log *.root *.dat *.ps test files
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.nomark *.log *.root *.dat *.ps test files \
+  stressGraphics.ref *.tmp weights
 
 # we don't run stressHepix for now; it's simply calling all the other stress tests
 # anyway, making it and the directly called ones stumble over their feet.
 STRESSSRC := $(wildcard $(ROOTSYS)/test/stress*.cxx)
-STRESSTESTS  := $(filter-out stressHepix-test,$(notdir $(STRESSSRC:.cxx=-test)))
+STRESSTESTS  := $(filter-out stressHepix-test,\
+	$(filter-out stressProof-test,\
+	$(notdir $(STRESSSRC:.cxx=-test))))
 TEST_TARGETS += $(STRESSTESTS)
 
 # Search for Rules.mk in roottest/scripts
@@ -57,9 +60,18 @@ endef
 STRESSEXE := $(addprefix test/,$(STRESSTESTS:-test=$(ExeSuf)))
 STRESSTESTSCOMP := $(STRESSTESTS:-test=-ctest)
 
+#### disabled tests
+# ctests take too long - disable all that can be run in interpreted mode
+# Tests that cannot be run in interpreted mode:
+# stressMathCore stressRooFit stressLinear-itest stressVector-itest
+STRESSTESTSCOMP_VETO := stress-ctest stressEntryList-ctest stressFit-ctest \
+  stressGeometry-ctest stressGraphics-ctest
+STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-ctest))
+
 STRESSTESTSINTERP := $(STRESSTESTS:-test=-itest)
 # CINT cannot interpret these 
-STRESSTESTSINTERP_VETO := stressLinear-itest stressVector-itest
+STRESSTESTSINTERP_VETO := stressMathCore-itest stressRooFit-itest \
+  stressLinear-itest stressVector-itest
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
 
 STRESSFILES := $(filter-out %.o,\
@@ -77,7 +89,7 @@ STRESSFILESCOPIEDTAG := test/.COPIEDTAG
 
 # Every tests consists of running the test in compiled and
 # interpreted mode
-$(STRESSTESTS): %-test: %-itest # no compiled tests - takes too long: %-ctest
+$(STRESSTESTS): %-test: %-itest %-ctest
 
 # .ref: reference file, should match .log.nomark
 # .log: output of running the test
@@ -87,8 +99,11 @@ $(STRESSTESTSCOMP): %-ctest: %-ctest.log %-ctest.ref
 	$(RootsysTestDiff)
 
 # rule for interpreted tests
-$(STRESSTESTSINTERP) $(STRESSTESTSINTERP_VETO): %-itest: %-itest.log %-itest.ref
+$(STRESSTESTSINTERP): %-itest: %-itest.log %-itest.ref
 	$(RootsysTestDiff)
+
+# tests to skip
+$(STRESSTESTSCOMP_VETO) $(STRESSTESTSINTERP_VETO): ;
 
 # tag file to ensure that all files have been copied from $(ROOT_LOC)/test
 $(STRESSFILESCOPIEDTAG): $(STRESSFILESHERE)
@@ -126,7 +141,7 @@ $(STRESSFILESHERE): test/%: $(ROOT_LOC)/test/%
 	$(CMDECHO) test -d test || mkdir -p test
 	$(CMDECHO) cp -f $< $@
 
-test/libEvent.$(SOEXT): $(STRESSFILESCOPIEDTAG)
+test/libEvent.$(DllSuf): $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
 
 test/hsimple.C: $(ROOT_LOC)/tutorials/hsimple.C
@@ -143,10 +158,6 @@ stressGraphics.ref: test/stressGraphics.ref
 earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
 	$(CMDECHO) cp -f $< $@
 
-# Tests that cannot be run interpreted
-$(addsuffix .log,$(STRESSTESTSINTERP_VETO)):
-	$(CMDECHO) echo "Test cannot be run in interpreted mode" > $@
-
 #### Extra parameters for some tests ####
 
 stress-ctest.log: STRESSFLAGS:=-b 30
@@ -154,6 +165,6 @@ stress-itest.log: STRESSFLAGS:="(30)"
 
 #### Extra dependencies for some tests ####
 
-stress: test/libEvent.$(SOEXT)
+stress: test/libEvent.$(DllSuf)
 stressGraphics-itest.log stressGraphics-ctest.log: hsimple.root stressGraphics.ref earth.dat
 test/stressLinear$(ExeSuf): linearIO.root

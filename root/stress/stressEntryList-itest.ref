@@ -9,6 +9,7 @@ Test1: Applying different entry lists to different chains --------- OK
 Test2: Adding and subtracting entry lists-------------------------- OK
 Test3: TEntryList and TEventList for TChain------------------------ OK
 Test4: TEntryList and TEventList for TTree------------------------- OK
+Test5: Full and Empty TEntryList----------------------------------- OK
 **********************************************************************
 *******************Deleting the data files****************************
 **********************************************************************

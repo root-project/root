@@ -1,0 +1,37 @@
+
+[1mRooFit v2.22 -- Developed by Wouter Verkerke and David Kirkby[0m 
+                Copyright (C) 2000-2007 NIKHEF, University of California & Stanford University
+                All rights reserved, please read http://roofit.sourceforge.net/license.txt
+
+******************************************************************
+*  RooFit - S T R E S S suite                                    *
+******************************************************************
+******************************************************************
+*  Starting  S T R E S S  basic suite                            *
+******************************************************************
+Test  1 : Generate,Fit and Plot on basic p.d.f...................OK
+Test  2 : Addition operator p.d.f................................OK
+Test  3 : Product operator p.d.f.................................OK
+Test  4 : Conditional product operator p.d.f.....................OK
+Test  5 : Analytically convolved p.d.f...........................OK
+Test  6 : Simultaneous operator p.d.f............................SKIPPED
+Test  7 : Addition oper. p.d.f with range transformed fractions..SKIPPED
+Test  8 : Multiple observable configurations of p.d.f.s..........OK
+Test  9 : Formula expressions....................................OK
+Test 10 : Functions of discrete variables........................OK
+Test 11 : Workspace persistence..................................SKIPPED
+Test 12 : Extended likelihood constructions......................OK
+Test 13 : Data import and persistence............................OK
+Test 14 : Plotting with variable bin sizes.......................OK
+Test 15 : Likelihood ratio projections...........................OK
+Test 16 : Complex slice projections..............................OK
+Test 17 : Interactive fitting....................................OK
+Test 18 : Lagrange multipliers...................................OK
+Test 19 : Chi^2 fits.............................................OK
+Test 20 : Use of conditional observables.........................OK
+Test 21 : Constant term optimization.............................SKIPPED
+Test 22 : Numeric Integration....................................SKIPPED
+******************************************************************
+******************************************************************
+******************************************************************
+******************************************************************
