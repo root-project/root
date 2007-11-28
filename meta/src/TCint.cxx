@@ -42,6 +42,8 @@
 #include "TEnv.h"
 #include "THashTable.h"
 
+#include "RConfigure.h"
+
 #include <vector>
 #include <set>
 #include <string>
@@ -209,7 +211,16 @@ Bool_t TCint::IsLoaded(const char* filename) const
       incPath.ReplaceAll(" :",":");
    }
    incPath.Prepend(".:");
-   incPath.Append(":$ROOTSYS/cint/include:$ROOTSYS/cint/stl");
+# ifdef CINTINCDIR
+   TString cintdir = CINTINCDIR;
+# else
+   TString cintdir = "$(ROOTSYS)/cint";
+# endif
+   incPath.Append(":");
+   incPath.Append(cintdir);
+   incPath.Append("/include:");
+   incPath.Append(cintdir);
+   incPath.Append("/stl");
    next = gSystem->Which(incPath, filename, kReadPermission);
    if (next) {
       file.Init(next);
