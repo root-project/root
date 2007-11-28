@@ -8088,7 +8088,7 @@ void G__specify_link(int link_stub)
       store_line = G__ifile.line_number;
       fgetpos(G__ifile.fp,&pos);
       buf[len] = G__fgetc();
-      if(buf[len]==c||'='==buf[len]) c=G__fgetstream_template(buf+10,";\n\r");
+      if(buf[len]==c||'='==buf[len]) c=G__fgetstream_template(buf+len+1,";\n\r");
       else {
         fsetpos(G__ifile.fp,&pos);
         G__ifile.line_number = store_line;
