@@ -74,10 +74,10 @@ SYSTEMDO      = $(UNIXDO)
 endif
 endif
 ifeq ($(BUILDGL),yes)
+MODULES      += gl
 ifeq ($(BUILDFTGL),yes)
 MODULES      += ftgl eve
 endif
-MODULES      += gl
 endif
 ifeq ($(BUILDMYSQL),yes)
 MODULES      += mysql
