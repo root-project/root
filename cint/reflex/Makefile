@@ -9,7 +9,9 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
 
 # We only run these tests if libCintex exists
 ifneq ($(wildcard $(ROOTSYS)/lib/libCintex.*),)
+ifneq ($(shell root-config --has-gccxml),no)
 TEST_TARGETS += classVersion_rflx properties_rflx
+endif
 endif
 
 # Search for Rules.mk in roottest/scripts
