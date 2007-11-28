@@ -8,8 +8,8 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
 # the name should be changed accordingly in this list.
 
 # We only run these tests if libCintex exists
-ifneq ($(wildcard $(ROOTSYS)/lib/libCintex.*),)
-ifneq ($(shell root-config --has-gccxml),no)
+ifneq ($(wildcard $(ROOT_LOC)/lib/libCintex.*),)
+ifneq ($(shell grep GCCXML $(ROOT_LOC)/config/Makefile.config),GCCXML         := )
 TEST_TARGETS += classVersion_rflx properties_rflx
 endif
 endif
