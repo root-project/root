@@ -7,12 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-# We only run these tests if libCintex exists
-ifneq ($(wildcard $(ROOT_LOC)/lib/libCintex.*),)
-ifneq ($(shell grep GCCXML $(ROOT_LOC)/config/Makefile.config),GCCXML         := )
 TEST_TARGETS += classVersion_rflx properties_rflx
-endif
-endif
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -35,6 +30,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 
 # Generic chain of files for running Reflex tests.
 # Naming scheme: MyReflex_test() in MyReflex_test.C tests
@@ -59,7 +55,16 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
 
+# We only run these tests if libCintex exists
+ifneq ($(wildcard $(ROOT_LOC)/lib/libCintex.*),)
+ifneq ($(shell grep GCCXML $(ROOT_LOC)/config/Makefile.config),GCCXML         := )
 $(TEST_TARGETS): %_rflx: %_rflx.log %_rflx.ref
 	$(TestDiff)
+else
+$(TEST_TARGETS): %_rflx:
+endif
+else
+$(TEST_TARGETS): %_rflx:
+endif
 
 properties_rflx: GENREFLEXFLAGS=--iocomments
