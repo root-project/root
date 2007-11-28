@@ -476,8 +476,13 @@ int G__class_autoloading(int tagnum)
          int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
          if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
             if (strstr(G__struct.name[tagnum],"<") != 0) {
-               // Kill this entry.      
+               // Kill this entry.
+               int store_def_tagnum = G__def_tagnum;
+               int store_tagdefining = G__tagdefining;
+               G__tagdefining = G__def_tagnum = G__struct.parent_tagnum[tagnum];
                int found_tagnum = G__defined_tagname(G__struct.name[tagnum],3);
+               G__def_tagnum = store_def_tagnum;
+               G__tagdefining = store_tagdefining;
                if (found_tagnum != tagnum) {
                   // The autoload has seemingly failed!
                   // This can happens in 'normal' case if the string representation of the
