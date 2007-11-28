@@ -254,7 +254,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                TDirectory *ndir = nextsource->GetDirectory(path);
                if (ndir) {
                   ndir->cd();
-                  TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
+                  TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
                   if (key2) {
                      TObject *hobj = key2->ReadObj();
                      hobj->ResetBit(kMustCleanup);
