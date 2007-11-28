@@ -132,6 +132,8 @@ Int_t     gPS1RefNb[39];
 Int_t     gPS1ErrNb[39];
 Int_t     gPDFRefNb[39];
 Int_t     gPDFErrNb[39];
+Int_t     gGIFRefNb[39];
+Int_t     gGIFErrNb[39];
 Int_t     gPS2RefNb[39];
 Int_t     gPS2ErrNb[39];
 Bool_t    gOptionR;
@@ -209,23 +211,25 @@ void stressGraphics(Int_t verbose = 0)
 
    // Read the reference file "stressGraphics.ref"
    FILE *sg = fopen("stressGraphics.ref","r");
-   char line[80];
+   char line[160];
    Int_t i = -1;
-   while (fgets(line,80,sg)) {
+   while (fgets(line,160,sg)) {
       if (i>=0) {
          sscanf(&line[8], "%d",&gPS1RefNb[i]);
          sscanf(&line[18],"%d",&gPS1ErrNb[i]);
          sscanf(&line[28],"%d",&gPDFRefNb[i]);
          sscanf(&line[38],"%d",&gPDFErrNb[i]);
-         sscanf(&line[48],"%d",&gPS2RefNb[i]);
-         sscanf(&line[58],"%d",&gPS2ErrNb[i]);
+         sscanf(&line[48],"%d",&gGIFRefNb[i]);
+         sscanf(&line[58],"%d",&gGIFErrNb[i]);
+         sscanf(&line[68],"%d",&gPS2RefNb[i]);
+         sscanf(&line[78],"%d",&gPS2ErrNb[i]);
       }
       i++;
    }
    fclose(sg);
 
    if (gOptionR) {
-      cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   PS2Ref#   PS2Err#" <<endl;
+      cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   PS2Ref#   PS2Err#" <<endl;
    } else {
       cout << "**********************************************************************" <<endl;
       cout << "*  Starting  Graphics - S T R E S S suite                            *" <<endl;
@@ -354,9 +358,9 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          cout << gLine;
          for (Int_t i = nch; i < 63; i++) cout << ".";
          cout << " FAILED" << endl;
-         cout << "          Result    = "  << res << endl;
-         cout << "          Reference = "  << ref << endl;
-         cout << "          Error     = "  << TMath::Abs(res-ref)
+         cout << "         Result    = "  << res << endl;
+         cout << "         Reference = "  << ref << endl;
+         cout << "         Error     = "  << TMath::Abs(res-ref)
                                            << " (was " << err << ")"<< endl;
          return 1;
       }
@@ -434,23 +438,30 @@ void TestReport1(TCanvas *C, const TString &title)
    TPostScript *ps1 = new TPostScript(outfile, 111);
    C->Draw();
    ps1->Close();
-
    TString psfile = outfile;
    StatusPrint(psfile,  gTestNum, title, AnalysePS(outfile) ,
                                          gPS1RefNb[gTestNum-1],
                                          gPS1ErrNb[gTestNum-1]);
 
    sprintf(outfile,"sg%2.2d.pdf",gTestNum);
-
    C->cd(0);
    TPDF *pdf = new TPDF(outfile,111);
    C->Draw();
    pdf->Close();
-
    TString pdffile = outfile;
    StatusPrint(pdffile, 0, "  PDF output", FileSize(outfile),
                                            gPDFRefNb[gTestNum-1],
                                            gPDFErrNb[gTestNum-1]);
+
+   sprintf(outfile,"sg%2.2d.gif",gTestNum);
+   C->cd(0);
+   C->SaveAs(outfile);
+   TString giffile = outfile;
+   StatusPrint(giffile, 0, "  GIF output", FileSize(outfile),
+                                           gGIFRefNb[gTestNum-1],
+                                           gGIFErrNb[gTestNum-1]);
+
+
    gErrorIgnoreLevel = 0;
 
    return;
