@@ -125,7 +125,7 @@ $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 # Add %-ctest.log as dependency so they don't stumble over one
 # another's feet (e.g. by both interpreted and compiled version
 # opening the same file)
-$(addsuffix .log,$(STRESSTESTSINTERP)): %-itest.log: test/%$(ExeSuf) %-ctest.log
+$(addsuffix .log,$(STRESSTESTSINTERP)): %-itest.log: test/%$(ExeSuf) $(find %-ctest, $(STRESSTESTSCOMP))
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q test/$*.cxx$(STRESSFLAGS) > $@ 2>&1 
 
 # If we need a file in test/ we just copy all files from $(ROOT_LOC)/test.
