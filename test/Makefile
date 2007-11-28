@@ -75,8 +75,8 @@ STRESSVEC    = stressVector$(ExeSuf)
 
 ifneq ($(USE_REFLEX),)
 CXXFLAGS += -DUSE_REFLEX
-STRESSMATHO   = stressMathCore.$(ObjSuf) TrackMathCoreCint.$(ObjSuf) TrackMathCoreRflx.$(ObjSuf) 
-STRESSMATHS   = stressMathCore.$(SrcSuf) TrackMathCoreCint.$(SrcSuf) TrackMathCoreRflx.$(SrcSuf)
+STRESSMATHO   = stressMathCore.$(ObjSuf)  TrackMathCoreRflx.$(ObjSuf) 
+STRESSMATHS   = stressMathCore.$(SrcSuf)  TrackMathCoreRflx.$(SrcSuf)
 ifeq ($(PLATFORM),win32)
 STRESSMATHLIBS = '$(ROOTSYS)/lib/libMathCore.lib' '$(ROOTSYS)/lib/libReflex.lib' '$(ROOTSYS)/lib/libCintex.lib' 
 else

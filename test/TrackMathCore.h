@@ -349,3 +349,10 @@ private:
   std::vector<T>  fTrks;
 
 };
+
+// for instantiating the template VecTrackD class for reflex
+struct Dummy { 
+
+  VecTrack<TrackD>     v1; 
+  VecTrack<TrackErrD> v2; 
+}; 
