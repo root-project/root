@@ -1,6 +1,5 @@
 
 Processing test/stressTMVA.cxx...
-Warning: Automatic variable Endl is allocated /build/axel/root/deb/include/TMVA/MsgLogger.h:149:
 ******************************************************************
 * TMVA - S T R E S S suite *
 ******************************************************************
