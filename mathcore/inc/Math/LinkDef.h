@@ -51,6 +51,8 @@
 #pragma link C++ class ROOT::Math::AdaptiveIntegratorMultiDim+;
 #pragma link C++ typedef ROOT::Math::Integrator;
 
+#pragma link C++ class ROOT::Math::Factory+;
+
 
 #include "LinkDef_Func.h" 
 #include "LinkDef_GenVector.h" 

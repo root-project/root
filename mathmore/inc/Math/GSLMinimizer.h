@@ -50,7 +50,7 @@
    @defgroup MultiMin Multi-dimensional Minimization
    @ingroup NumAlgo
 
-   Classes implementing algorith for multi-dimensional minimization 
+   Classes implementing algorithms for multi-dimensional minimization 
  */
 
 

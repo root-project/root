@@ -138,7 +138,7 @@ private:
    <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Nonlinear-Least_002dSquares-Fitting.html">
    GSL Non Linear Least Sqaure fitting</A>.
 
-   @ingroup Min1D
+   @ingroup MultiMin
 */ 
 class GSLNLSMinimizer : public  ROOT::Math::Minimizer {
 

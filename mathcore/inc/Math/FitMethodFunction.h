@@ -30,29 +30,41 @@ namespace ROOT {
 
    @ingroup  CppFunctions
 */ 
-class FitMethodFunction : public ROOT::Math::IMultiGenFunction {
+template<class FunctionType>
+class BasicFitMethodFunction : public FunctionType {
 
 public:
 
-   typedef  ROOT::Math::IMultiGenFunction BaseFunction; 
-   
+   typedef  typename FunctionType::BaseFunc BaseFunction; 
 
+   /// enumeration specyfing the possible fit method types
+   enum Type { kUndefined , kLeastSquare, kLogLikelihood }; 
+
+  
 
    /** 
       Virtual Destructor (no operations)
    */ 
-   virtual ~FitMethodFunction ()  {}  
+   virtual ~BasicFitMethodFunction ()  {}  
 
    /**
       method returning the data i-th contribution to the fit objective function
-      For example the residual for the chi2 
+      For example the residual for the least square functions or the pdf element for the 
+      likelihood functions. 
+      Estimating eventually also the gradient of the data element if the passed pointer  is not null
     */
-   virtual double DataElement(const double *x, unsigned int i) const = 0; 
+   virtual double DataElement(const double *x, unsigned int i, double *g = 0) const = 0; 
+
 
    /**
       return the number of data points used in evaluating the function
     */
    virtual unsigned int NPoints() const = 0; 
+
+   /**
+      return the type of method, override if needed
+    */
+   virtual Type GetType() const { return kUndefined; }
 
 public: 
 
@@ -64,6 +76,11 @@ private:
 
 
 }; 
+
+      // define the normal and gradient function
+      typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;      
+      typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
+
 
    } // end namespace Math
 

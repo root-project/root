@@ -83,7 +83,7 @@ public:
    Polynomial(double a, double b, double c, double d, double e);
 
 
-   virtual ~Polynomial(); 
+   virtual ~Polynomial() {}
 
 //    /**
 //       Copy constructor 

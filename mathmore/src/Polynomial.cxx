@@ -105,10 +105,6 @@ Polynomial::Polynomial(double a, double b, double c, double d, double e) :
 
 
 
-Polynomial::~Polynomial() 
-{
-}
-
 // Polynomial::Polynomial(const Polynomial &) 
 // {
 // }

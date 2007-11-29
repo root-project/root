@@ -163,7 +163,7 @@ public:
       return operator() (x); 
    }
 
-   /// muldim-like interface
+   /// multidim-like interface
    virtual double operator() (const double * x, const double *  p ) 
    { 
       return operator() (*x, p); 

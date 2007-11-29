@@ -33,6 +33,7 @@
 #endif
 
 #include <vector>
+#include <cassert>
 
 namespace ROOT {
 

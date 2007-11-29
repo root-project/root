@@ -12,6 +12,7 @@
 
 #ifndef __CINT__
 
+
 #include "Math/DistFunc.h"
 #include "Math/IParamFunction.h"
 #include "Math/Integrator.h"
@@ -165,11 +166,9 @@ public:
    double Cdf(double x) const { 
       return Evaluator<Func,NPAR>::F(fCdf,x, fParams); 
    }
-#ifdef HAVE_MATHMORE
    double Quantile(double x) const { 
       return Evaluator<FuncQ,NPARQ>::F(fQuant,x, fParams); 
    }
-#endif
 
    // test cumulative function
    int Test(double x1, double x2, double xl = 1, double xu = 0, bool cumul = false); 
@@ -275,11 +274,16 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
          q2 = f->Integral(x1,v1); 
          // use a larger scale (integral error is 10-9)
          iret |= compare("test _cdf", q1, q2, fScale1 );
+         // test the quantile 
+         double v2 = Quantile(q1); 
+         iret |= compare("test _quantile", v1, v2, fScale2 );
       }
       else { 
          // upper integral (cdf_c)
          q2 = f->Integral(v1,x2);  
          iret |= compare("test _cdf_c", q1, q2, fScale1);
+         double v2 = Quantile(q1); 
+         iret |= compare("test _quantile_c", v1, v2, fScale2 );
       }
    }
    delete f; 
@@ -304,14 +308,14 @@ typedef StatFunction<F3,F2,3> Dist_gamma;
 typedef StatFunction<F2,F1,2> Dist_gaussian; 
 typedef StatFunction<F3,F2,3> Dist_lognormal; 
 typedef StatFunction<F2,F1,2> Dist_tdistribution; 
+
  
-#ifdef HAVE_MATHMORE
+//#ifdef HAVE_MATHMORE
 #define CREATE_DIST(name) Dist_ ##name  dist( name ## _pdf, name ## _cdf, name ##_quantile );
 #define CREATE_DIST_C(name) Dist_ ##name  distc( name ## _pdf, name ## _cdf_c, name ##_quantile_c );
-#else
-#define CREATE_DIST(name) Dist_ ##name  dist( name ## _pdf, name ## _cdf, 0 );
-#define CREATE_DIST_C(name) Dist_ ##name  distc( name ## _pdf, name ## _cdf_c, 0 );
-#endif
+// #define CREATE_DIST_C(name) Dist_ ##name  distc( name ## _pdf, name ## _cdf_c, 0 );
+// #else
+// #endif
 
 template<class Distribution> 
 int TestDist(Distribution & d, double x1, double x2) { 
@@ -326,7 +330,7 @@ int testStatFunctions(int /* nfunc */) {
    int iret = 0; 
    //NFuncTest = nfunc; 
 
-#ifdef HAVE_MATHMORE // wait that beta_pdf is in mathcore      
+
    { 
       PrintTest("Beta distribution"); 
       CREATE_DIST(beta);
@@ -336,13 +340,14 @@ int testStatFunctions(int /* nfunc */) {
       distc.SetParameters( 2, 2);
       iret |= distc.Test(0.01,0.99,0.,1.,true);
    }
-#endif
 
    {
       PrintTest("Gamma distribution"); 
+#ifdef HAVE_MATHMORE // gamma_quantile is in mathmore
       CREATE_DIST(gamma);
       dist.SetParameters( 2, 1);
       iret |= dist.Test(0.05,5, 0.,1.);
+#endif
       CREATE_DIST_C(gamma);
       distc.SetParameters( 2, 1);
       iret |= distc.Test(0.05,5, 0.,1.,true);
@@ -350,14 +355,17 @@ int testStatFunctions(int /* nfunc */) {
 
    {
       PrintTest("Chisquare distribution"); 
+#ifdef HAVE_MATHMORE
       CREATE_DIST(chisquared);
       dist.SetParameters( 10, 0);
       dist.ScaleTol2(10);
       iret |= dist.Test(0.05,30, 0.,1.);
+#endif
       CREATE_DIST_C(chisquared);
       distc.SetParameters( 10, 0);
       distc.ScaleTol2(10000000);  // t.b.c.
       iret |= distc.Test(0.05,30, 0.,1.,true);
+
    }
    {
       PrintTest("Normal distribution "); 
@@ -370,19 +378,23 @@ int testStatFunctions(int /* nfunc */) {
       distc.ScaleTol2(100);
       iret |= distc.Test(-4,4,1,0,true);
    }
-#ifdef HAVE_MATHMORE
    {
       PrintTest("BreitWigner distribution "); 
       CREATE_DIST(breitwigner);
       dist.SetParameters( 1);
+#ifndef USE_MATHMORE
+      dist.ScaleTol1(1E8);
+#endif
       dist.ScaleTol2(10);
       iret |= dist.Test(-5,5);
       CREATE_DIST_C(breitwigner);
       distc.SetParameters( 1);
+#ifndef USE_MATHMORE
+      distc.ScaleTol1(1E8);
+#endif
       distc.ScaleTol2(10);
       iret |= distc.Test(-5,5,1,0,true);
    }
-#endif
    {
       PrintTest("F    distribution "); 
       CREATE_DIST(fdistribution);
@@ -400,6 +412,7 @@ int testStatFunctions(int /* nfunc */) {
       // if enlarge scale test fails
       iret |= distc.Test(0.05,5,0,1,true);
    }
+#ifdef HAVE_MATHMORE // wait t quantile is in mathcore
    {
       PrintTest("t    distribution "); 
       CREATE_DIST(tdistribution);
@@ -412,6 +425,7 @@ int testStatFunctions(int /* nfunc */) {
       distc.ScaleTol2(10000);  // t.b.c.
       iret |= distc.Test(-10,10,1,0,true);
    }
+#endif
    {
       PrintTest("lognormal distribution"); 
       CREATE_DIST(lognormal);

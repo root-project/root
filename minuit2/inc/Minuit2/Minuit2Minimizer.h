@@ -187,6 +187,7 @@ private:
    unsigned int fStrategy; 
    // error code
    int fErrorCode; 
+   bool fUseFumili; 
 
    ROOT::Minuit2::MnUserParameterState fState;
    // std::vector<ROOT::Minuit2::MinosError> fMinosErrors;

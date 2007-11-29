@@ -32,11 +32,22 @@ namespace ROOT {
 
    namespace Math { 
 
+/**
+   @defgroup MultiMin Multi-dimensional Minimization
+   @ingroup NumAlgo
+
+   Classes implementing algorithms for multi-dimensional minimization 
+ */
+
+
 
 /** 
    Abstract Minimizer class, defining  interface for the various minimizer
-   (like TMinuit, Minuit2, Fumili, etc..)  
-*/ 
+   (like Minuit2, Minuit, GSL, etc..) 
+
+   @ingroup MultiMin
+*/
+ 
 class Minimizer {
 
 public: 
@@ -63,6 +74,9 @@ public:
       Destructor (no operations)
    */ 
    virtual ~Minimizer ()  {}  
+
+
+
 
 private:
    // usually copying is non trivial, so we make this unaccessible

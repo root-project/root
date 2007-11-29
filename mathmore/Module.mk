@@ -19,8 +19,7 @@ MATHMOREDIRI := $(MATHMOREDIR)/inc
 
 ##### libMathMore #####
 MATHMOREL    := $(MODDIRI)/Math/LinkDef.h
-MATHMORELINC := $(MODDIRI)/Math/LinkDef_SpecFunc.h \
-		$(MODDIRI)/Math/LinkDef_StatFunc.h \
+MATHMORELINC := $(MODDIRI)/Math/LinkDef_Func.h \
 		$(MODDIRI)/Math/LinkDef_RootFinding.h 
 
 MATHMOREDS   := $(MODDIRS)/G__MathMore.cxx

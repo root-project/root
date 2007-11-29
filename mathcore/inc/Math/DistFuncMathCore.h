@@ -18,9 +18,14 @@
 #include "Math/PdfFuncMathCore.h"
 #endif
 
-// some cdf are in mathcore others in mathmore
+// cdf from mathcore
 #ifndef ROOT_Math_ProbFuncMathCore
 #include "Math/ProbFuncMathCore.h"
+#endif
+
+// quantile functions from mathcore
+#ifndef ROOT_Math_QuantFuncMathCore
+#include "Math/QuantFuncMathCore.h"
 #endif
 
 

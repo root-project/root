@@ -15,6 +15,7 @@
 #include "Math/IFunction.h"
 
 #include "Minuit2/FCNAdapter.h"
+#include "Minuit2/FumiliFCNAdapter.h"
 #include "Minuit2/FCNGradAdapter.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
@@ -28,6 +29,7 @@
 #include "Minuit2/SimplexMinimizer.h"
 #include "Minuit2/CombinedMinimizer.h"
 #include "Minuit2/ScanMinimizer.h"
+#include "Minuit2/FumiliMinimizer.h"
  
 
 
@@ -81,6 +83,7 @@ Minuit2Minimizer::Minuit2Minimizer(const char *  type ) :
 
 void Minuit2Minimizer::SetMinimizerType(ROOT::Minuit2::EMinimizerType type) {
    // Set  minimizer algorithm type 
+   fUseFumili = false;
    switch (type) { 
       case ROOT::Minuit2::kMigrad: 
          //std::cout << "Minuit2Minimizer: minimize using MIGRAD " << std::endl;
@@ -96,9 +99,9 @@ void Minuit2Minimizer::SetMinimizerType(ROOT::Minuit2::EMinimizerType type) {
       case ROOT::Minuit2::kScan: 
          SetMinimizer( new ROOT::Minuit2::ScanMinimizer() );
          return;
-      case ROOT::Minuit2::kFumili: 
-         std::cout << "TFitterMinuit::Error - Fumili Minimizer must be created from TFitterFumili " << std::endl;
-         SetMinimizer(0);
+      case ROOT::Minuit2::kFumili:          
+         SetMinimizer( new ROOT::Minuit2::FumiliMinimizer() );
+         fUseFumili = true;
          return;
       default: 
          //migrad minimizer
@@ -189,15 +192,37 @@ bool Minuit2Minimizer::SetFixedVariable(unsigned int ivar , const std::string & 
 void Minuit2Minimizer::SetFunction(const  IObjFunction & func) { 
    // set function to be minimized
    if (fMinuitFCN) delete fMinuitFCN;
-   fMinuitFCN = new ROOT::Minuit2::FCNAdapter<IObjFunction> (func, ErrorUp() );
    fDim = func.NDim(); 
-}
+   if (!fUseFumili) {
+      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<IObjFunction> (func, ErrorUp() );
+   }
+   else { 
+      // for Fumili the fit method function interface is required
+      const ROOT::Math::FitMethodFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
+      if (!fcnfunc) {
+          MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
+          return;
+      }
+      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction> (*fcnfunc, fDim, ErrorUp() );
+   }
+ }
 
 void Minuit2Minimizer::SetFunction(const  IGradObjFunction & func) { 
    // set function to be minimized
-   if (fMinuitFCN) delete fMinuitFCN;
-   fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<IGradObjFunction> (func, ErrorUp() );
    fDim = func.NDim(); 
+   if (fMinuitFCN) delete fMinuitFCN;
+   if (!fUseFumili) { 
+      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<IGradObjFunction> (func, ErrorUp() );
+   }
+   else { 
+      // for Fumili the fit method function interface is required
+      const ROOT::Math::FitMethodGradFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction*>(&func);
+      if (!fcnfunc) {
+          MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
+          return;
+      }
+      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction> (*fcnfunc, fDim, ErrorUp() );
+   }
 }
                                    
 bool Minuit2Minimizer::Minimize() { 

@@ -10,6 +10,8 @@
 #ifndef ROOT_Minuit2_SimplexParameters
 #define ROOT_Minuit2_SimplexParameters
 
+#include <cassert>
+
 #include "Minuit2/MnMatrix.h"
 
 #include <vector>

@@ -115,7 +115,7 @@ namespace Math {
    /**
       Calculates the normalized (regularized) lower incomplete gamma function (lower integral) 
 
-      \f[ \gamma(a, x) = \frac{ 1} {\Gamma(a) } \int_{0}^{x} t^{a-1} e^{-t} dt  \f]
+      \f[ P(a, x) = \frac{ 1} {\Gamma(a) } \int_{0}^{x} t^{a-1} e^{-t} dt  \f]
 
 
       For a detailed description see 
@@ -130,7 +130,7 @@ namespace Math {
    /**
       Calculates the normalized (regularized) upper incomplete gamma function (upper integral)
 
-      \f[ \Gamma(a, x) = \frac{ 1} {\Gamma(a) } \int_{x}^{\infty} t^{a-1} e^{-t} dt  \f]
+      \f[ Q(a, x) = \frac{ 1} {\Gamma(a) } \int_{x}^{\infty} t^{a-1} e^{-t} dt  \f]
 
 
       For a detailed description see 
@@ -177,10 +177,6 @@ namespace Math {
 
    double inc_beta( double x, double a, double b); 
 
-
-   double erf_inv (double x); 
-   double inc_gamma_inv (double x, double a); 
-   double inc_beta_inv (double x, double a, double b); 
    
    
 

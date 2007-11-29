@@ -300,45 +300,39 @@ namespace Math {
 
 
 
-   /**
+  /**
 
-   Complement of the cumulative distribution function of the normal (Gaussian) 
-   distribution (upper tail).
-
-   \f[ D(x) = \int_{x}^{+\infty} {1 \over \sqrt{2 \pi \sigma^2}} e^{-x'^2 / 2\sigma^2} dx' \f]
-
-   For detailed description see 
-   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
-   Mathworld</A>. It can also be evaluated using #normal_cdf_c which will 
-   call the same implementation. 
-
-   @ingroup ProbFunc
-
-   */
-
-   double gaussian_cdf_c(double x, double sigma, double x0 = 0);
-
-
-
-   /**
-
-   Cumulative distribution function of the normal (Gaussian) 
+   Cumulative distribution function of the Landau 
    distribution (lower tail).
 
-   \f[ D(x) = \int_{-\infty}^{x} {1 \over \sqrt{2 \pi \sigma^2}} e^{-x'^2 / 2\sigma^2} dx' \f]
+   \f[ D(x) = \int_{-\infty}^{x} p(x) dx  \f]
+   Where p(x) is the Landau probability density function : 
 
-   For detailed description see 
-   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
-   Mathworld</A>. It can also be evaluated using #normal_quant which will 
-   call the same implementation. 
+   \f[  p(x) = \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} e^{x s + s \log{s}} ds\f]
+
+   Where s = (x-x0)/sigma. For detailed description see 
+   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   CERNLIB</A>. The same algorithms as in CERNLIB (DISLAN) is used.  
 
    @ingroup ProbFunc
  
    */
 
-   double gaussian_cdf(double x, double sigma, double x0 = 0);
+   double landau_cdf(double x, double sigma = 1, double x0 = 0);
 
+  /**
 
+     Complement of the distribution function of the Landau 
+     distribution (upper tail).
+
+     \f[ D(x) = \int_{x}^{+\infty} p(x) dx  \f]
+     
+     where p(x) is the Landau probability density function. 
+     It is implemented simply as 1. - #landau_cdf
+  */
+   inline double landau_cdf_c(double x, double sigma = 1, double x0 = 0) { 
+      return 1. - landau_cdf(x,sigma,x0);
+   }
 
    /**
 
@@ -389,14 +383,17 @@ namespace Math {
 
    For detailed description see 
    <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
-   Mathworld</A>. It can also be evaluated using #gaussian_prob which will 
-   call the same implementation. 
+   Mathworld</A>.  
 
    @ingroup ProbFunc
 
    */
 
-   double normal_cdf_c(double x, double sigma, double x0 = 0);
+   double normal_cdf_c(double x, double sigma = 1, double x0 = 0);
+   /// Alternative name for same function
+   inline double gaussian_cdf_c(double x, double sigma = 1, double x0 = 0) { 
+      return normal_cdf_c(x,sigma,x0);
+   }
 
 
 
@@ -409,14 +406,16 @@ namespace Math {
 
    For detailed description see 
    <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
-   Mathworld</A>. It can also be evaluated using #gaussian_quant which will 
-   call the same implementation. 
-
+   Mathworld</A>. 
    @ingroup ProbFunc
  
    */
 
-   double normal_cdf(double x, double sigma, double x0 = 0);
+   double normal_cdf(double x, double sigma = 1, double x0 = 0);
+   /// Alternative name for same function
+   inline double gaussian_cdf(double x, double sigma = 1, double x0 = 0) { 
+      return normal_cdf(x,sigma,x0);
+   }
 
 
 
@@ -548,6 +547,7 @@ namespace Math {
 
 
 
+#ifdef HAVE_OLD_STAT_FUNC
 
    /** @name Backward compatible MathCore CDF functions */ 
 
@@ -627,7 +627,7 @@ namespace Math {
       return tdistribution_cdf    (x, r, x0); 
    }
 
-
+#endif
 
 } // namespace Math
 } // namespace ROOT

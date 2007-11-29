@@ -5,7 +5,7 @@
 
 
 
-
+#include "Math/Error.h"
 
 #include "SpecFuncCephes.h"
 
@@ -227,6 +227,21 @@ double igami( double a, double y0 )
    double x0, x1, x, yl, yh, y, d, lgm, dithresh;
    int i, dir;
 
+   // check the domain
+   if (a<= 0) { 
+      MATH_ERROR_MSG("Cephes::igami","Wrong domain for parameter a (must be > 0)"); 
+      return 0; 
+   }
+   if (y0 <= 0) { 
+      //if (y0<0) MATH_ERROR_MSG("Cephes::igami","Wrong domain for y (must be in [0,1])"); 
+      return std::numeric_limits<double>::infinity();
+   }
+   if (y0 >= 1) { 
+      //if (y0>1) MATH_ERROR_MSG("Cephes::igami","Wrong domain for y (must be in [0,1])"); 
+      return 0; 
+   }
+      
+
 /* bound the solution */
    static double kMAXNUM = std::numeric_limits<double>::max(); 
    x0 = kMAXNUM;
@@ -397,6 +412,16 @@ double incbi( double aa, double bb, double yy0 )
 {
    double a, b, y0, d, y, x, x0, x1, lgm, yp, di, dithresh, yl, yh, xt;
    int i, rflg, dir, nflg;
+
+   // check the domain
+   if (aa<= 0) { 
+      MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter a (must be > 0)"); 
+      return 0; 
+   }
+   if (bb<= 0) { 
+      MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter b (must be > 0)"); 
+      return 0; 
+   }
 
 
    i = 0;

@@ -9,34 +9,34 @@
   **********************************************************************/
 
 /** 
-    Header file declaring the pdf distributions present in both 
+    Header file declaring the quantile distributions present in both 
     MathCore and optionally MathMore. 
     The MathMore ones are included only if ROOT has been built with MathMore. 
 */
 
 
-#ifndef ROOT_Math_PdfFunc
-#define ROOT_Math_PdfFunc
+#ifndef ROOT_Math_QuantFunc
+#define ROOT_Math_QuantFunc
 
 
 #ifndef ROOT_RConfigure
 #include "RConfigure.h"
 #endif
 
-// all cdf are in mathcore now
-#ifndef ROOT_Math_PdfFuncMathCore
-#include "Math/PdfFuncMathCore.h"
+
+
+#ifndef ROOT_Math_QuantFuncMathCore
+#include "Math/QuantFuncMathCore.h"
 #endif
 
-// // include distributions from MathMore when is there
-// #ifdef R__HAS_MATHMORE  
+// include distributions from MathMore when is there
+#ifdef R__HAS_MATHMORE  
 
-// // extra cdf in MathMore
-// #ifndef ROOT_Math_PdfFuncMathMore
-// #include "Math/PdfFuncMathMore.h"
-// #endif
-
+// extra quantiles in MathMore
+#ifndef ROOT_Math_QuantFuncMathMore
+#include "Math/QuantFuncMathMore.h"
+#endif
 
 #endif
 
-#endif  // ROOT_Math_PdfFunc
+#endif  // ROOT_Math_QuantFunc

@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <cassert>
 
 namespace ROOT {
 

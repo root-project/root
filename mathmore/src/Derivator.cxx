@@ -34,7 +34,7 @@
 #include "Math/Derivator.h"
 #include "GSLDerivator.h"
 
-#include "OneDimFunctionAdapter.h"
+#include "Math/OneDimFunctionAdapter.h"
 
 // for GSL greater then 1.5
 #include "gsl/gsl_deriv.h"

@@ -112,15 +112,6 @@ double inc_beta( double x, double a, double b) {
 } 
 
 
-double erf_inv (double x) { 
-   return  ROOT::Math::Cephes::ndtri(x);
-} 
-double inc_gamma_inv (double x, double a) { 
-   return ROOT::Math::Cephes::igami(a,x);
-}
-double inc_beta_inv (double x, double a, double b) { 
-   return ROOT::Math::Cephes::incbi(a,b,x);
-}
 
 
 } // namespace Math

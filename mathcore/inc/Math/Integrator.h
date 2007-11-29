@@ -30,6 +30,7 @@
 
 
 
+
 /**
 
 @defgroup Integration Numerical Integration
@@ -156,19 +157,28 @@ public:
 
    */
 
+
    template<class Function>
-inline void SetFunction(Function f); 
+   inline void SetFunction(Function f); 
 
    /** 
        set one dimensional function for 1D integration
     */
-   //template<>
-   //void SetFunction<const ROOT::Math::IGenFunction &> (const IGenFunction &f) 
 
-void SetFunction  (const IGenFunction &f, bool copy = false) { 
-  if (fIntegrator) fIntegrator->SetFunction(f,copy);
+
+   void SetFunction  (const IGenFunction &f, bool copy = false) { 
+      if (fIntegrator) fIntegrator->SetFunction(f,copy);
    }
-   
+
+
+   /** 
+      Set integration function from a multi-dim function type. 
+      Can be used in case of having 1D function implementing the generic interface
+       @param f      integration function
+       @param icoord index of coordinate on which the intergation is performed 
+       @param x  array of the passed variables values. In case of dim=1 is not required
+   */
+   void SetFunction(const IMultiGenFunction &f, unsigned int icoord = 0, const double * x = 0);
 
     // integration methods using a function 
 
