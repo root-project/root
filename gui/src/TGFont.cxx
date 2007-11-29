@@ -1655,15 +1655,7 @@ TGFont *TGFontPool::GetFont(FontStruct_t fs)
    }
 
    static int i = 0;
-
-   f = new TGFont(Form("unknown-%d", i));
-
-   f->fFontStruct = fs;
-   f->fFontH      = gVirtualX->GetFontHandle(fs);
-   gVirtualX->GetFontProperties(fs, f->fFM.fAscent, f->fFM.fDescent);
-   f->fFM.fLinespace = f->fFM.fAscent + f->fFM.fDescent;
-   f->fFM.fMaxWidth = gVirtualX->TextWidth(fs, "@", 1);
-   f->fFM.fFixed = (f->fFM.fMaxWidth == gVirtualX->TextWidth(fs, "i", 1)) ? kTRUE : kFALSE;
+   f = MakeFont(0, fs, Form("unknown-%d", i));
    fList->Add(f);
    i++;
 
