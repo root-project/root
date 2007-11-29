@@ -31,7 +31,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   math/normalDist \
   math/tStudent net/authserv net/hcons net/hprod net/hserv2 net/hserv \
   net/LDAPExample net/pserv net/spyserv \
-  proof/getProof proof/runProof \
+  proof/getProof proof/runProof proof/ProofSimple \
   pythia/pythiaExample \
   sql/sqlcanvas \
   sql/sqlcreatedb sql/sqlfilldb sql/sqlselect \
