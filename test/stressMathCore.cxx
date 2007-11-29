@@ -55,7 +55,7 @@ using namespace ROOT::Math;
 
 bool debug = true;  // print out reason of test failures
 bool debugTime = false; // print out separate timings for vectors 
-bool removeFiles = false; // remove Output root files 
+bool removeFiles = true; // remove Output root files 
 
 void PrintTest(std::string name) { 
    std::cout << std::left << std::setw(40) << name; 
@@ -1458,7 +1458,8 @@ int stressMathCore(double nscale = 1) {
    bm.Stop("stressMathCore");
    std::cout <<"******************************************************************************\n";
    bm.Print("stressMathCore");
-   const double reftime = 1.00; // ref time on  macbook pro (intel core duo 2.2 GHz)
+   //const double reftime = 1.00; // ref time on  macbook pro (intel core duo 2.2 GHz)
+   const double reftime = 1.17; // ref time on  imac  (intel dual core 32 bits  2. GHz)
    double rootmarks = 800 * reftime / bm.GetCpuTime("stressMathCore");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
              << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
