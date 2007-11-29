@@ -47,8 +47,6 @@ private:
     TGLabel *fTextLabel1;                   // First line title's label
     TGLabel *fTextLabel2;                   // Second line title's label
 
-    TGGC fTextGC;
-
 public:
 
     // Constructor & destructor

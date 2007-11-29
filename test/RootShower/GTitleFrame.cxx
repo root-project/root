@@ -22,23 +22,15 @@
 //______________________________________________________________________________
 
 //______________________________________________________________________________
-GTitleFrame::GTitleFrame(const TGWindow *p,
-              const Text_t *mainText, const Text_t *subText,
-              UInt_t w, UInt_t h,
-              UInt_t options):
-             TGCompositeFrame(p, w, h, options)
+GTitleFrame::GTitleFrame(const TGWindow *p, const Text_t *mainText, 
+                         const Text_t *subText, UInt_t w, UInt_t h,
+                         UInt_t options): TGCompositeFrame(p, w, h, options)
 {
     // Create GTitleFrame object, with TGWindow parent 'p', text 'mainText'
     // with sub text 'subText'.
-    const TGFont *font = fClient->GetFont("-*-times-bold-r-*-*-24-*-*-*-*-*-*-*");
-    if (!font)
-       font = fClient->GetResourcePool()->GetDefaultFont();
-    FontStruct_t labelfont = font->GetFontStruct();
-    GCValues_t   gval;
-    gval.fMask = kGCForeground | kGCFont;
-    gval.fFont = font->GetFontHandle();
-    gClient->GetColorByName("red", gval.fForeground);
-    fTextGC.SetAttributes(&gval);
+    Pixel_t col;
+    TString fontname("-*-times-bold-r-*-*-24-*-*-*-*-*-*-*");
+    gClient->GetColorByName("red", col);
 
     // add pictures
     TString theLeftLogoFilename = StrDup(gProgPath);
@@ -63,14 +55,17 @@ GTitleFrame::GTitleFrame(const TGWindow *p,
     fTextFrameLayout = new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 0, 0, 0, 0);
     fTextLabelLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 10, 10, 10, 10);
     fTextFrame = new TGCompositeFrame(this, 0, 0, kVerticalFrame);
-    fTextLabel1 = new TGLabel(fTextFrame, mainText, fTextGC(), labelfont);
+    fTextLabel1 = new TGLabel(fTextFrame, mainText);
+    fTextLabel1->SetTextFont(fontname.Data());
+    fTextLabel1->SetTextColor(col);
 
-    fTextLabel2 = new TGLabel(fTextFrame, subText, fTextGC(), labelfont);
+    fTextLabel2 = new TGLabel(fTextFrame, subText);
+    fTextLabel2->SetTextFont(fontname.Data());
+    fTextLabel2->SetTextColor(col);
     fTextFrame->AddFrame(fTextLabel1, fTextLabelLayout);
     fTextFrame->AddFrame(fTextLabel2, fTextLabelLayout);
 
     AddFrame(fTextFrame, fTextFrameLayout);
-
 }
 
 //______________________________________________________________________________
