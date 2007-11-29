@@ -526,11 +526,11 @@ struct VecType<TrackErrD32> {
 }; 
 template<>
 struct VecType<VecTrack<TrackD> > {
-   static std::string name() { return "VecTrack<TrackD> >";}
+   static std::string name() { return "VecTrackD";}
 }; 
 template<>
 struct VecType<VecTrack<TrackErrD> > {
-   static std::string name() { return "VecTrack<TrackErrD> >";}
+   static std::string name() { return "VecTrackErrD";}
 }; 
 
 
