@@ -79,7 +79,9 @@ STRESSFILES := $(filter-out %.o,\
 	$(filter-out %~,\
 	$(wildcard $(ROOT_LOC)/test/*.*)))) \
 	$(ROOT_LOC)/test/Makefile
-STRESSFILESHERE := $(filter-out $(STRESSEXE),$(subst $(ROOT_LOC)/,,$(STRESSFILES)))
+STRESSFILESHERE := $(filter-out $(STRESSEXE),\
+	$(filter-out test/TrackMathCoreCint.cxx,\
+	$(subst $(ROOT_LOC)/,,$(STRESSFILES))))
 STRESSFILESCOPIEDTAG := test/.COPIEDTAG
 
 
