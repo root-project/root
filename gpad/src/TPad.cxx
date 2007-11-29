@@ -1407,8 +1407,12 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    //  Use services of TH1F class
 
    if (!IsEditable()) return 0;
-
    TPad *padsav = (TPad*)gPad;
+   if (this !=  padsav) {
+      Warning("DrawFrame","Drawframe must be called for the current pad only");
+      return padsav->DrawFrame(xmin,ymin,xmax,ymax,title);
+   }
+
    cd();
 
    TH1F *hframe = (TH1F*)FindObject("hframe");
