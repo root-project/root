@@ -75,13 +75,14 @@ STRESSTESTSINTERP_VETO := stressMathCore-itest stressRooFit-itest \
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
 
 STRESSFILES := $(filter-out %.o,\
+	$(filter-out %.$(DllSuf),\
 	$(filter-out %.log,\
 	$(filter-out %~,\
-	$(wildcard $(ROOT_LOC)/test/*.*)))) \
-	$(ROOT_LOC)/test/Makefile
-STRESSFILESHERE := $(filter-out $(STRESSEXE),\
+	$(filter-out $(STRESSEXE),\
 	$(filter-out test/TrackMathCoreCint.cxx,\
-	$(subst $(ROOT_LOC)/,,$(STRESSFILES))))
+	$(wildcard $(ROOT_LOC)/test/*.*))))))) \
+	$(ROOT_LOC)/test/Makefile
+STRESSFILESHERE := $(subst $(ROOT_LOC)/,,$(STRESSFILES))
 STRESSFILESCOPIEDTAG := test/.COPIEDTAG
 
 
