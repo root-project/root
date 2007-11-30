@@ -8,6 +8,7 @@ Test name resolution of template with namespace parameter ... ok
 Test conversion of Int(64) limit values to unsigned long ... ok
 Test conversion of Int(64) limit values to unsigned long long ... ok
 Test return type against proper overload w/ const and covariance ... ok
+Do not crash on classes with iterators in a namespace ... ok
 
 ----------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 06/13/07
+# Last: 11/30/07
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -16,7 +16,8 @@ __all__ = [
    'Regression4ThreadingTestCase',
    'Regression5LoKiNamespaceTestCase',
    'Regression6Int64ConversionTestCase',
-   'Regression7MatchConstWithProperReturn'
+   'Regression7MatchConstWithProperReturn',
+   'Regression8UseNamespaceProperlyInPythonize'
 ]
 
 
@@ -182,6 +183,15 @@ class Regression7MatchConstWithProperReturn( unittest.TestCase ):
 
       self.assertEqual( MyOverloadOneWay().gime(), 1 )
       self.assertEqual( MyOverloadTheOtherWay().gime(), "aap" )
+
+
+### Don't forget namespace when looking up a class in Pythonize! =============
+class Regression8UseNamespaceProperlyInPythonize( unittest.TestCase ):
+   def test1UseNamespaceInIteratorPythonization( self ):
+      """Do not crash on classes with iterators in a namespace"""
+
+      gROOT.LoadMacro( "Marco.C" )
+      self.assert_( ns.MyClass )
 
 
 ## actual test run
