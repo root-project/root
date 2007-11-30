@@ -7703,7 +7703,7 @@ void TH1C::SetBinContent(Int_t bin, Double_t content)
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
-         while (bin >  fNcells-1)  LabelsInflate();
+         while (bin >=  fNcells-1)  LabelsInflate();
       } else {
          if (!TestBit(kCanRebin)) {
             if (bin == fNcells-1) fArray[bin] = Char_t (content);
@@ -7941,7 +7941,7 @@ void TH1S::SetBinContent(Int_t bin, Double_t content)
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
-         while (bin >  fNcells-1)  LabelsInflate();
+         while (bin >=  fNcells-1)  LabelsInflate();
       } else {
          if (!TestBit(kCanRebin)) {
             if (bin == fNcells-1) fArray[bin] = Short_t (content);
@@ -8178,7 +8178,7 @@ void TH1I::SetBinContent(Int_t bin, Double_t content)
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
-         while (bin >  fNcells-1)  LabelsInflate();
+         while (bin >=  fNcells-1)  LabelsInflate();
       } else {
          if (!TestBit(kCanRebin)) {
             if (bin == fNcells-1) fArray[bin] = Int_t (content);
@@ -8412,7 +8412,7 @@ void TH1F::SetBinContent(Int_t bin, Double_t content)
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
-         while (bin >  fNcells-1)  LabelsInflate();
+         while (bin >=  fNcells-1)  LabelsInflate();
       } else {
          if (!TestBit(kCanRebin)) {
             if (bin == fNcells-1) fArray[bin] = Float_t (content);
@@ -8647,7 +8647,7 @@ void TH1D::SetBinContent(Int_t bin, Double_t content)
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
-         while (bin >  fNcells-1)  LabelsInflate();
+         while (bin >=  fNcells-1)  LabelsInflate();
       } else {
          if (!TestBit(kCanRebin)) {
             if (bin == fNcells-1) fArray[bin] = content;
