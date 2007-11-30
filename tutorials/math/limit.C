@@ -1,3 +1,19 @@
+#include <iostream>
+#include "TH1.h"
+#include "THStack.h"
+#include "TCanvas.h"
+#include "TFRame.h"
+#include "TRandom2.h"
+#include "TSystem.h"
+#include "TVector.h"
+#include "TObjArray.h"
+#include "TLimit.h"
+#include "TLimitDataSource.h"
+#include "TConfidenceLevel.h"
+
+using std::cout; 
+using std::endl;
+
 void limit() {
 //This program demonstrates the computation of 95 % C.L. limits.
 //It uses a set of randomly created histograms.
@@ -20,7 +36,7 @@ void limit() {
   signal->Sumw2(); // needed for stat uncertainty
   
 // Fill histograms randomly
-  TRandom r;
+  TRandom2 r;
   Float_t bg,sig,dt;
   for (Int_t i = 0; i < 25000; i++) {
      bg  = r.Gaus(0,1);

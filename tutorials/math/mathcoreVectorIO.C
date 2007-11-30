@@ -8,7 +8,7 @@
 //Author: Lorenzo Moneta
 
 
-#include "TRandom.h"
+#include "TRandom2.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
 #include "TFile.h"
@@ -30,21 +30,24 @@ using namespace ROOT::Math;
 void write(int n) { 
 
 
-  TRandom R; 
+  TRandom2 R; 
   TStopwatch timer;
 
 
+  R.SetSeed(1);
   timer.Start();
+  double s = 0; 
   for (int i = 0; i < n; ++i) { 
-        double Px = R.Gaus(0,10);
-	double Py = R.Gaus(0,10);
-	double Pz = R.Gaus(0,10);
-	double E  = R.Gaus(100,10);
+        s  += R.Gaus(0,10);
+	s  += R.Gaus(0,10);
+	s  += R.Gaus(0,10);
+	s  += R.Gaus(100,10);
   }
 
   timer.Stop();
+  std::cout << s/double(n) << std::endl;
   std::cout << " Time for Random gen " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
-
+  
 
   TFile f1("mathcoreVectorIO_1.root","RECREATE");
 
@@ -54,6 +57,7 @@ void write(int n) {
   XYZTVector *v1 = new XYZTVector();
   t1.Branch("LV branch","ROOT::Math::XYZTVector",&v1);
 
+  R.SetSeed(1);
   timer.Start();
   for (int i = 0; i < n; ++i) { 
         double Px = R.Gaus(0,10);
@@ -83,6 +87,7 @@ void write(int n) {
 
   t2.Branch("TLV branch","TLorentzVector",&v2,16000,2);
 
+  R.SetSeed(1);
   timer.Start();
   for (int i = 0; i < n; ++i) { 
         double Px = R.Gaus(0,10);
@@ -125,18 +130,17 @@ void read() {
   double etot=0;
   for (int i = 0; i < n; ++i) { 
     t1->GetEntry(i);
-    double Px = v1->Px();
-    double Py = v1->Py();
-    double Pz = v1->Pz();
-    double E = v1->E();
-    etot += E;
+    etot += v1->Px();
+    etot += v1->Py();
+    etot += v1->Pz();
+    etot += v1->E();
   }
 
 
   timer.Stop();
   std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
 
-  std::cout << " E average" << n<< "  " << etot << "  " << etot/double(n) << endl; 
+  std::cout << " TOT average : n = " << n << "\t " << etot/double(n) << endl; 
 
 
   // create tree with old LV 
@@ -154,16 +158,15 @@ void read() {
   etot = 0;
   for (int i = 0; i < n; ++i) { 
     t2->GetEntry(i);
-    double Px = v2->Px();
-    double Py = v2->Py();
-    double Pz = v2->Pz();
-    double E = v2->E();
-    etot += E;
+    etot  += v2->Px();
+    etot  += v2->Py();
+    etot  += v2->Pz();
+    etot  += v2->E();
   }
 
   timer.Stop();
   std::cout << " Time for old Vector " << timer.RealTime() << "  " << timer.CpuTime() << endl; 
-  std::cout << " E average" << etot/double(n) << endl; 
+  std::cout << " TOT average:\t" << etot/double(n) << endl; 
 }
 
 

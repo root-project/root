@@ -29,20 +29,30 @@
 void mathcoreSpecFunc() {
 
 gSystem->Load("libMathCore");
-TF1 *f1a = new TF1("f1a","ROOT::Math::tgamma(x)",0,100);
-TF1 *f1b = new TF1("f1b","TMath::Abs((ROOT::Math::tgamma(x)-TMath::Gamma(x))/ROOT::Math::tgamma(x))",0,100);
+TF1 *f1a = new TF1("f1a","ROOT::Math::tgamma(x)",0,20);
+TF1 *f1b = new TF1("f1b","abs((ROOT::Math::tgamma(x)-TMath::Gamma(x))/ROOT::Math::tgamma(x))",0,20);
 
 TF1 *f2a = new TF1("f2a","ROOT::Math::lgamma(x)",0,100);
-TF1 *f2b = new TF1("f2b","TMath::Abs((ROOT::Math::lgamma(x)-TMath::LnGamma(x))/ROOT::Math::lgamma(x))",0,100);
+TF1 *f2b = new TF1("f2b","abs((ROOT::Math::lgamma(x)-TMath::LnGamma(x))/ROOT::Math::lgamma(x))",0,100);
 
 TF1 *f3a = new TF1("f3a","ROOT::Math::erf(x)",0,5);
-TF1 *f3b = new TF1("f3b","TMath::Abs((ROOT::Math::erf(x)-TMath::Erf(x))/ROOT::Math::erf(x))",0,5);
+TF1 *f3b = new TF1("f3b","abs((ROOT::Math::erf(x)-TMath::Erf(x))/ROOT::Math::erf(x))",0,5);
 
 TF1 *f4a = new TF1("f4a","ROOT::Math::erfc(x)",0,5);
-TF1 *f4b = new TF1("f4b","TMath::Abs((ROOT::Math::erfc(x)-TMath::Erfc(x))/ROOT::Math::erfc(x))",0,5);
+TF1 *f4b = new TF1("f4b","abs((ROOT::Math::erfc(x)-TMath::Erfc(x))/ROOT::Math::erfc(x))",0,5);
 
 
 TCanvas *c1 = new TCanvas("c1","c1",1000,750);
+c1->SetFillColor(kYellow-10);
+
+f1a->SetLineColor(kBlue);
+f1b->SetLineColor(kBlue);
+f2a->SetLineColor(kBlue);
+f2b->SetLineColor(kBlue);
+f3a->SetLineColor(kBlue);
+f3b->SetLineColor(kBlue);
+f4a->SetLineColor(kBlue);
+f4b->SetLineColor(kBlue);
 
 c1->Divide(2,2);
 
@@ -57,6 +67,8 @@ f4a->Draw();
 
 
 TCanvas *c2 = new TCanvas("c2","c2",1000,750);
+
+c2->SetFillColor(kYellow-10);
 
 c2->Divide(2,2);
 

@@ -30,6 +30,7 @@
 #include "Math/RotationX.h"
 #include "Math/RotationY.h"
 #include "Math/RotationZ.h"
+#include "Math/RotationZYX.h"
 #include "Math/LorentzRotation.h"
 #include "Math/Boost.h"
 #include "Math/BoostX.h"
