@@ -2,8 +2,6 @@
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
-// Authors: Andras Zsenei & Lorenzo Moneta   08/2005 
-
 
  /**********************************************************************
   *                                                                    *
@@ -25,6 +23,17 @@
   * 330, Boston, MA 02111-1307 USA, or contact the author.             *
   *                                                                    *
   **********************************************************************/
+
+
+#if defined(__CINT__) && !defined(__MAKECINT__)
+// avoid to include header file when using CINT 
+#ifndef _WIN32
+#include "../lib/libMathMore.so"
+#else
+#include "../bin/libMathMore.dll"
+#endif
+
+#else
 
 
 #ifndef ROOT_Math_QuantFuncMathMore
@@ -178,3 +187,5 @@ namespace Math {
 
 
 #endif // ROOT_Math_QuantFuncMathMore
+
+#endif // if defined (__CINT__) && !defined(__MAKECINT__)

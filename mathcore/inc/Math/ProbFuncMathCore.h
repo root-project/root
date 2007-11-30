@@ -1,6 +1,25 @@
 // @(#)root/mathcore:$Id$
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+
+
+#if defined(__CINT__) && !defined(__MAKECINT__)
+// avoid to include header file when using CINT 
+#ifndef _WIN32
+#include "../lib/libMathCore.so"
+#else
+#include "../bin/libMathCore.dll"
+#endif
+
+#else
+
+
 #ifndef ROOT_Math_ProbFuncMathCore
 #define ROOT_Math_ProbFuncMathCore
 
@@ -634,3 +653,5 @@ namespace Math {
 
 
 #endif // ROOT_Math_ProbFuncMathCore
+
+#endif // if defined (__CINT__) && !defined(__MAKECINT__)
