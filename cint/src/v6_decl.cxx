@@ -108,7 +108,7 @@ static int G__get_newname(char* new_name)
       else if (!strcmp(new_name, "&") || !strcmp(new_name, "*")) {
          cin = G__fgetvarname(new_name + 1, ",;=():");
       }
-      else if (!strcmp(new_name, "&*") || !strcmp(new_name, "*&")) {
+      if (!strcmp(new_name, "&*") || !strcmp(new_name, "*&")) {
          cin = G__fgetvarname(new_name + 2, ",;=():");
       }
       if (!strcmp(new_name, "double") && (G__var_type != 'l')) {
