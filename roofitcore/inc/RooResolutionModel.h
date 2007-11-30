@@ -25,7 +25,7 @@ class RooResolutionModel : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooResolutionModel() { }
+  inline RooResolutionModel() : _basis(0) { }
   RooResolutionModel(const char *name, const char *title, RooRealVar& x) ; 
   RooResolutionModel(const RooResolutionModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const = 0 ;

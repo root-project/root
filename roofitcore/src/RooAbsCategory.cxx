@@ -41,7 +41,7 @@ ClassImp(RooAbsCategory)
 ;
 
 RooAbsCategory::RooAbsCategory(const char *name, const char *title) : 
-  RooAbsArg(name,title), _treeVar(kFALSE)
+  RooAbsArg(name,title), _value("NULL",0), _treeVar(kFALSE)
 {
   // Constructor
   _typeIter = _types.MakeIterator() ;

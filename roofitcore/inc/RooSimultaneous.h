@@ -35,7 +35,7 @@ class RooSimultaneous : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooSimultaneous() { }
+  inline RooSimultaneous() : _plotCoefNormRange(0) { }
   RooSimultaneous(const char *name, const char *title, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const RooSimultaneous& other, const char* name=0);

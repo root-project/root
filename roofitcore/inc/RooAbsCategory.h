@@ -29,7 +29,7 @@ class Roo1DTable ;
 class RooAbsCategory : public RooAbsArg {
 public:
   // Constructors, assignment etc.
-  RooAbsCategory() { _typeIter = _types.MakeIterator() ; } ;
+  RooAbsCategory() { _treeVar = kFALSE ; _typeIter = _types.MakeIterator() ; } ;
   RooAbsCategory(const char *name, const char *title);
   RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
   virtual ~RooAbsCategory();
