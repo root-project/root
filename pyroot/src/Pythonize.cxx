@@ -780,8 +780,6 @@ namespace {
       PyObject* iter = CallPySelfMethod( args, "begin", "O" );
       if ( iter ) {
          PyObject* end = CallPySelfMethod( args, "end", "O" );
-      //         if ( end )
-      //            PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
          if ( end ) {
             if ( *(void**)((ObjectProxy*)end)->fObject == *(void**)((ObjectProxy*)iter)->fObject ) {
             // no iter if there are no entries
@@ -1663,7 +1661,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( HasAttrDirect( pyclass, "begin" ) && HasAttrDirect( pyclass, "end" ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
-      TClass* klass = TClass::GetClass( name.c_str() );
+      PyObject* pyfullname = PyObject_GetAttrString( pyclass, (char*)"__name__" );
+      TClass* klass = TClass::GetClass( PyString_AS_STRING( pyfullname ) );
+      Py_DECREF( pyfullname );
       TMethod* meth = klass->GetMethodAllAny( "begin" );
 
       TClass* iklass = 0;
