@@ -117,9 +117,11 @@ private:
          return fFunc( fX );
       }
       else { 
+
          // case vector fX represents useful values needed later
          // need to modify fX and restore afterwards the original values
          double xprev = fX[fCoord]; // keep original value to restore in fX
+         fX[fCoord] = x; 
          double y =  fFunc( fX );
          // restore original values
          fX[fCoord] = xprev; 
