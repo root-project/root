@@ -243,6 +243,15 @@ bool Minuit2Minimizer::Minimize() {
       std::cout << "Minuit2Minimizer: Minimize with max iterations " << maxfcn << " edmval " << tol << " strategy " 
                 << fStrategy << std::endl; 
 
+#ifdef USE_ROOT_ERROR
+   // switch off Minuit2 printing
+   int prevErrorIgnoreLevel = gErrorIgnoreLevel; 
+   if (PrintLevel() ==0)  
+  // switch off printing of info messages in Minuit2
+      gErrorIgnoreLevel = 1001;
+#endif 
+      
+
    const ROOT::Minuit2::FCNGradientBase * gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>( fMinuitFCN ); 
    if ( gradFCN != 0) {
       // use gradient
@@ -254,7 +263,13 @@ bool Minuit2Minimizer::Minimize() {
       ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, ROOT::Minuit2::MnStrategy(fStrategy), maxfcn, tol);
       fMinimum = new ROOT::Minuit2::FunctionMinimum (min);    
    }
-//     
+
+
+#ifdef USE_ROOT_ERROR
+//restore previous printing level
+   if (PrintLevel() ==0)  
+      gErrorIgnoreLevel = prevErrorIgnoreLevel;
+#endif 
 
 //    //fMinimum = new ROOT::Minuit2::FunctionMinimum (min);    
 //    fMinimum = &min;    

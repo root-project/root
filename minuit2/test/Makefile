@@ -30,10 +30,14 @@ MINIMIZEOBJ      = testMinimize.$(ObjSuf)
 MINIMIZESRC      = testMinimize.$(SrcSuf)
 MINIMIZE         = testMinimize$(ExeSuf)
 
+NEWMINIMIZEROBJ      = testNewMinimizer.$(ObjSuf)
+NEWMINIMIZERSRC      = testNewMinimizer.$(SrcSuf)
+NEWMINIMIZER         = testNewMinimizer$(ExeSuf)
 
-OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ) $(MINIMIZEOBJ)
 
-PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE)
+OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ) $(MINIMIZEOBJ) $(NEWMINIMIZEROBJ)
+
+PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE) $(NEWMINIMIZER)
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -50,6 +54,14 @@ $(GRAPH): 	$(GRAPHOBJ)
 
 $(MINIMIZE): 	$(MINIMIZEOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(NEWMINIMIZER): 	$(NEWMINIMIZEROBJ)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS)  "$(ROOTSYS)/lib/libMinuit2.lib" $(OutPutOpt)$@
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 
