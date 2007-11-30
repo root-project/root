@@ -32,23 +32,23 @@ protected:
    TEveProjectionManager    *fM; // Model object.
 
    // projection
-   TGComboBox      *fType;
-   TEveGValuator   *fDistortion;
-   TEveGValuator   *fFixedRadius;
-   TEveGValuator   *fCurrentDepth;
+   TGComboBox      *fType;         // TEveProjection type widget
+   TEveGValuator   *fDistortion;   // TEveProjection distortion widget
+   TEveGValuator   *fFixedRadius;  // TEveProjection fixed-radius widget
+   TEveGValuator   *fCurrentDepth; // TEveProjection z-coordinate widget
 
    // center
-   TGVerticalFrame *fCenterFrame;  // Parent frame for projection center interface.
-   TGCheckButton   *fDrawCenter;
-   TGCheckButton   *fDrawOrigin;
-   TEveGValuator   *fCenterX;
-   TEveGValuator   *fCenterY;
-   TEveGValuator   *fCenterZ;
+   TGVerticalFrame *fCenterFrame;  // Parent frame for Center tab.
+   TGCheckButton   *fDrawCenter;   // draw center widget
+   TGCheckButton   *fDrawOrigin;   // draw origin widget
+   TEveGValuator   *fCenterX;      // center x value widget
+   TEveGValuator   *fCenterY;      // center y value widget
+   TEveGValuator   *fCenterZ;      // center z value widget
 
    // axis
-   TGColorSelect   *fAxisColor;
-   TGComboBox      *fSIMode;
-   TGNumberEntry   *fSILevel;
+   TGColorSelect   *fAxisColor;  // color of axis widget
+   TGComboBox      *fSIMode;     // tick-mark positioning widget 
+   TGNumberEntry   *fSILevel;    // tick-mark density widget
 
 public:
    TEveProjectionManagerEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());

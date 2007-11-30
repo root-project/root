@@ -30,13 +30,13 @@ private:
    TEveProjectionManagerGL(const TEveProjectionManagerGL&);            // Not implemented
    TEveProjectionManagerGL& operator=(const TEveProjectionManagerGL&); // Not implemented
 
-   mutable TMList_t   fPos;
-   mutable TMList_t   fVals;
+   mutable TMList_t   fPos;  // current tick-mark position
+   mutable TMList_t   fVals; // current tick-mark value
 
-   mutable Float_t    fRange;
-   Float_t            fLabelSize;
-   Float_t            fLabelOff;
-   Float_t            fTMSize;
+   mutable Float_t    fRange;     // bounding box size in the current axis
+   Float_t            fLabelSize; // size of labels
+   Float_t            fLabelOff;  // distance between labels and tick-marks
+   Float_t            fTMSize;    // tick-mark size
 
    void               DrawTickMarks(Float_t tms) const;
    void               DrawHInfo() const;
@@ -57,7 +57,7 @@ protected:
 
 public:
    TEveProjectionManagerGL();
-   virtual ~TEveProjectionManagerGL();
+   virtual ~TEveProjectionManagerGL() {}
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();

@@ -41,6 +41,8 @@ TEveTrackProjected::~TEveTrackProjected()
 //______________________________________________________________________________
 void TEveTrackProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* model)
 {
+   // This is virtual method from base-class TEveProjected.
+  
    TEveProjected::SetProjection(proj, model);
    TEveTrack* origTrack = dynamic_cast<TEveTrack*>(fProjectable);
 
@@ -53,6 +55,8 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* proj, TEveProjecta
 //______________________________________________________________________________
 void TEveTrackProjected::UpdateProjection()
 {
+   // This is virtual method from base-class TEveProjected.
+
    fProjection = fProjector->GetProjection();
    MakeTrack(kFALSE); // TEveProjectionManager makes recursive calls
 }
@@ -61,6 +65,8 @@ void TEveTrackProjected::UpdateProjection()
 void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
                                        Float_t& x, Float_t& y, Float_t& z)
 {
+   // With bisection calculate break-point vertex.
+
    TEveVector vL = fOrigPnts[idx];
    TEveVector vR = fOrigPnts[idx+1];
    TEveVector vM, vLP, vMP;
@@ -77,7 +83,6 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
       {
          vR.Set(vM);
       }
-      //printf("new interval Mag %f (%f, %f, %f)(%f, %f, %f) \n",(vL-vR).Mag(), vL.x, vL.y, vL.z, vR.x, vR.y, vR.z);
    }
 
    if(back)
@@ -89,7 +94,6 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
       x = vR.x; y = vR.y; z = vR.z;
    }
    fProjection->ProjectPoint(x, y, z);
-   // printf("TEveTrackProjected::GetBreakPoint %d (%f, %f, %f) \n", idx, x, y, z);
 }
 
 //______________________________________________________________________________
@@ -118,7 +122,6 @@ Int_t  TEveTrackProjected::GetBreakPointIdx(Int_t start)
          i++;
       }
    }
-   // printf("BreakPoint IDX start:%d, BREAK %d,  total:%d \n", start, val, Size());
    return val;
 }
 
@@ -179,6 +182,8 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 //______________________________________________________________________________
 void TEveTrackProjected::PrintLineSegments()
 {
+   // Print line segments info.
+
    printf("%s LineSegments:\n", GetName());
    Int_t start = 0;
    Int_t segment = 0;
@@ -203,6 +208,8 @@ void TEveTrackProjected::PrintLineSegments()
 //______________________________________________________________________________
 void TEveTrackProjected::CtrlClicked(TEveTrack* /*track*/)
 {
+    // Virtual method from from base-class TEveTrack.
+
    TEveTrack* t = dynamic_cast<TEveTrack*>(fProjectable);
    if (t)
       t->CtrlClicked(t);
@@ -230,6 +237,8 @@ TEveTrackListProjected::TEveTrackListProjected() :
 //______________________________________________________________________________
 void TEveTrackListProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* model)
 {
+   // This is virtual method from base-class TEveProjected.
+
    TEveProjected::SetProjection(proj, model);
 
    TEveTrackList& tl   = * dynamic_cast<TEveTrackList*>(model);

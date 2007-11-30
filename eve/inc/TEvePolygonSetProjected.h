@@ -31,9 +31,6 @@ template<typename _Tp, typename _Alloc > class list;
 
 class TEveVector;
 
-
-
-
 class TEvePolygonSetProjected :  public TEveElementList,
                                  public TEveProjected,
                                  public TAtt3D,
@@ -48,8 +45,8 @@ private:
 protected:
    struct Polygon_t
    {
-      Int_t     fNPnts;
-      Int_t*    fPnts;
+      Int_t     fNPnts;  // number of points
+      Int_t*    fPnts;   // point indices
 
       Polygon_t() : fNPnts(0), fPnts(0) {}
       Polygon_t(Int_t n, Int_t* p) : fNPnts(n), fPnts(p) {}
@@ -68,7 +65,7 @@ protected:
    typedef vpPolygon_t::const_iterator             vpPolygon_ci;
 
 private:
-   TBuffer3D*   fBuff;
+   TBuffer3D*   fBuff;   // buffer of projectable object
    Int_t*       fIdxMap; // map from original to projected and reduced point needed oly for geometry
 
    Bool_t       IsFirstIdxHead(Int_t s0, Int_t s1);
@@ -80,19 +77,18 @@ private:
    void         ClearPolygonSet();
 
 protected:
-   vpPolygon_t  fPols;     // NLT polygons
-   vpPolygon_t  fPolsBS;   // NLT polygons build freom TBuffer3D segments
-   vpPolygon_t  fPolsBP;   // NLT polygons build freom TBuffer3D polygond
+   vpPolygon_t  fPols;     // polygons
+   vpPolygon_t  fPolsBS;   // polygons build from TBuffer3D segments
+   vpPolygon_t  fPolsBP;   // polygons build from TBuffer3D polygons
    Float_t      fSurf;     // sum of surface of polygons
 
    Int_t        fNPnts;    // number of reduced and projected points
    TEveVector*  fPnts;     // reduced and projected points
 
-   Color_t      fFillColor;
-   Color_t      fLineColor;
-   Float_t      fLineWidth;
-
-   UChar_t      fTransparency;
+   Color_t      fFillColor; // fill color of polygons
+   Color_t      fLineColor; // outline color of polygons
+   Float_t      fLineWidth; // outline width of polygons
+   UChar_t      fTransparency; // transparency of polygons
 
 public:
    TEvePolygonSetProjected(const Text_t* n="TEvePolygonSetProjected", const Text_t* t="");

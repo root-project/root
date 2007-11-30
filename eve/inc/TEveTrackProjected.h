@@ -29,11 +29,11 @@ private:
    Int_t GetBreakPointIdx(Int_t start);
    void  GetBreakPoint(Int_t N, Bool_t back, Float_t& x, Float_t& y, Float_t& z);
 
-   TEveVector*          fOrigPnts;
+   TEveVector*          fOrigPnts;     // original track points
 
 protected:
-   std::vector<Int_t>   fBreakPoints;
-   TEveProjection      *fProjection;
+   std::vector<Int_t>   fBreakPoints; // indices of track break-points
+   TEveProjection      *fProjection;  // projection
 
 public:
    TEveTrackProjected();

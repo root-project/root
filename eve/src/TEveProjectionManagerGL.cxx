@@ -38,23 +38,22 @@ TEveProjectionManagerGL::TEveProjectionManagerGL() :
    fM(0),
    fText(0)
 {
+   // Constructor.
+
    fDLCache = kFALSE; // Disable display list.
    fText = new TGLText();
    fText->SetGLTextFont(40);
    fText->SetTextColor(0);
 }
 
-//______________________________________________________________________________
-TEveProjectionManagerGL::~TEveProjectionManagerGL()
-{}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
 const char* TEveProjectionManagerGL::GetText(Float_t x) const
 {
+   // Get formatted text.
+
    using  namespace TMath;
-   // TODO: Form could be replaced with own version of printf
    if     ( Abs(x) > 1000 )
    {
       Float_t v = 10*TMath::Nint(x/10.0f);
@@ -84,14 +83,14 @@ const char* TEveProjectionManagerGL::GetText(Float_t x) const
 //______________________________________________________________________________
 void TEveProjectionManagerGL::SetRange(Float_t pos, Int_t ax) const
 {
+   // Set values for bounding box.
+  
    using namespace TMath;
    Float_t limit =  fM->GetProjection()->GetLimit(ax, pos > 0 ? kTRUE: kFALSE);
-   // printf("TEveProjectionManagerGL::SetRange pos %f range %f \n", pos, limit );
    if ( fM->GetProjection()->GetDistortion() > 0.001 && Abs(pos) > Abs(limit *0.97))
    {
       fPos.push_back(limit *0.7);
       fVals.push_back(fM->GetProjection()->GetValForScreenPos(ax, fPos.back()));
-      // printf("bbox value out of limit:: val %f, pos %f\n", limit, fVals.back());
    }
    else
    {
@@ -105,6 +104,8 @@ void TEveProjectionManagerGL::SetRange(Float_t pos, Int_t ax) const
 //______________________________________________________________________________
 void TEveProjectionManagerGL::DrawTickMarks(Float_t tm) const
 {
+   // Draw tick-marks on the current axis.
+
    glBegin(GL_LINES);
    for( std::list<Float_t>::iterator pi = fPos.begin(); pi!= fPos.end(); pi++)
    {
@@ -117,6 +118,8 @@ void TEveProjectionManagerGL::DrawTickMarks(Float_t tm) const
 //______________________________________________________________________________
 void TEveProjectionManagerGL::DrawHInfo() const
 {
+   // Draw labels on horizontal axis.
+
    Float_t tms = fTMSize*fRange;
    DrawTickMarks(-tms);
 
@@ -141,6 +144,8 @@ void TEveProjectionManagerGL::DrawHInfo() const
 //______________________________________________________________________________
 void TEveProjectionManagerGL::DrawVInfo() const
 {
+   // Draw labels on vertical axis.
+
    Float_t tms = fTMSize*fRange;
    glRotatef(90, 0, 0, 1);
    DrawTickMarks(tms);
@@ -169,6 +174,8 @@ void TEveProjectionManagerGL::DrawVInfo() const
 //______________________________________________________________________________
 void TEveProjectionManagerGL::SplitInterval(Int_t ax) const
 {
+   // Build a list of labels and their positions.
+
    if (fM->GetSplitInfoLevel())
    {
       if(fM->GetSplitInfoMode())
@@ -181,11 +188,12 @@ void TEveProjectionManagerGL::SplitInterval(Int_t ax) const
 //______________________________________________________________________________
 void TEveProjectionManagerGL::SplitIntervalByPos(Float_t minp, Float_t maxp, Int_t ax, Int_t level) const
 {
+   // Add tick-mark and label with position in the middle of given interval.
+
    Float_t p = (minp+maxp)*0.5;
    fPos.push_back(p);
    Float_t v = fM->GetProjection()->GetValForScreenPos(ax, p);
    fVals.push_back(v);
-   // printf("level %d position %f value %f\n", level, p,v);
    level++;
    if(level<fM->GetSplitInfoLevel())
    {
@@ -197,11 +205,12 @@ void TEveProjectionManagerGL::SplitIntervalByPos(Float_t minp, Float_t maxp, Int
 //______________________________________________________________________________
 void TEveProjectionManagerGL::SplitIntervalByVal(Float_t minv, Float_t maxv, Int_t ax, Int_t level) const
 {
+   // Add tick-mark and label with value in the middle of given interval.
+
    Float_t v = (minv+maxv)*0.5;
    fVals.push_back(v);
    Float_t p = fM->GetProjection()->GetScreenVal(ax, v);
    fPos.push_back(p);
-   //printf("level %d position %f value %f MINMAX val(%f, %f)\n", level, p,v, minv, maxv);
    level++;
    if(level<fM->GetSplitInfoLevel())
    {
@@ -215,7 +224,9 @@ void TEveProjectionManagerGL::SplitIntervalByVal(Float_t minv, Float_t maxv, Int
 //______________________________________________________________________________
 void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 {
-   // printf("TEveProjectionManagerGL::DirectDraw %d\n.", fM->GetMainColor());
+   // Actual rendering code.
+   // Virtual from TGLLogicalShape.
+
    GLboolean lightp;
    glGetBooleanv(GL_LIGHTING, &lightp);
    if (lightp) glDisable(GL_LIGHTING);
@@ -300,6 +311,9 @@ void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 //______________________________________________________________________________
 Bool_t TEveProjectionManagerGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
+   // Set model object.
+   // Virtual from TGLObject.
+
    if(SetModelCheckClass(obj, TEveProjectionManager::Class())) {
       fM = dynamic_cast<TEveProjectionManager*>(obj);
       return kTRUE;
@@ -310,6 +324,9 @@ Bool_t TEveProjectionManagerGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 //______________________________________________________________________________
 void TEveProjectionManagerGL::SetBBox()
 {
+   // Fill the bounding-box data of the logical-shape.
+   // Virtual from TGLObject.
+
    // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveProjectionManager*)fExternalObj)->AssertBBox());
 }

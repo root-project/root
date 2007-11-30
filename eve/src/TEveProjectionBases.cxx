@@ -74,6 +74,10 @@ TEveProjected::~TEveProjected()
 //______________________________________________________________________________
 void TEveProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* model)
 {
+   // Sets projection manager and reference in the projectable object. Method called
+   // immediately after default constructor.
+   // See also TEveProjectionManager::ImportElements().
+
    fProjector   = proj;
    if (fProjectable) fProjectable->RemoveProjected(this);
    fProjectable = model;
@@ -83,6 +87,8 @@ void TEveProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* 
 //______________________________________________________________________________
 void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent)
 {
+   // Remove reference to projectable.
+
    static const TEveException eH("TEveProjected::UnRefProjectable ");
 
    if (fProjectable != assumed_parent) {
