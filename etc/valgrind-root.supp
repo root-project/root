@@ -60,6 +60,14 @@
    fun:_ZN13TStreamerInfo7NewInfoEP6TClass
 }
 
+{
+   zlib fill_window issue, see zlib.net FAQ #36 and comment "If n is not on any hash chain, prev[n] is garbage but" in zlib deflate.c
+   Memcheck:Cond
+   fun:fill_window
+   fun:deflate_fast
+   fun:deflate
+}
+
 ######### Misc
 
 {
