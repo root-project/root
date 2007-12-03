@@ -2876,19 +2876,24 @@ Bool_t TGeoManager::InsertPNEId(Int_t uid, Int_t ientry)
    // Resize the arrays and insert the value
    Bool_t resize = (fNPNEId==fSizePNEId)?kTRUE:kFALSE;
    if (resize) {
+      // Double the size of the array
       fSizePNEId *= 2;
+      // Create new arrays of keys and values
       Int_t *keys = new Int_t[fSizePNEId];
       memset(keys, 0, fSizePNEId*sizeof(Int_t));
       Int_t *values = new Int_t[fSizePNEId];
       memset(values, 0, fSizePNEId*sizeof(Int_t));
-      memcpy(keys, fKeyPNEId, (index+1)*sizeof(Int_t));
-      keys[index+1] = uid;
+      // Copy all keys<uid in the new keys array (0 to index)
+      memcpy(keys,   fKeyPNEId,   (index+1)*sizeof(Int_t));
+      memcpy(values, fValuePNEId, (index+1)*sizeof(Int_t));
+      // Insert current key at index+1
+      keys[index+1]   = uid;
+      values[index+1] = ientry;
+      // Copy all remaining keys from the old to new array
+      memcpy(&keys[index+2],   &fKeyPNEId[index+1],   (fNPNEId-index-1)*sizeof(Int_t));
+      memcpy(&values[index+2], &fValuePNEId[index+1], (fNPNEId-index-1)*sizeof(Int_t));
       delete [] fKeyPNEId;
       fKeyPNEId = keys;
-      memcpy(&keys[index+2], &fKeyPNEId[index+1], (fNPNEId-index-1)*sizeof(Int_t));
-      memcpy(values, fValuePNEId, (index+1)*sizeof(Int_t));
-      values[index+1] = ientry;
-      memcpy(&values[index+2], &fValuePNEId[index+1], (fNPNEId-index-1)*sizeof(Int_t));
       delete [] fValuePNEId;
       fValuePNEId = values;
       fNPNEId++;
