@@ -34,8 +34,8 @@
 #pragma link C++ class ROOT::TBranchProxyDescriptor;
 #pragma link C++ class ROOT::TBranchProxyClassDescriptor;
 
-#pragma link C++ class ROOT::TImpProxy<Double_t>+;
-#pragma link C++ class ROOT::TImpProxy<Float_t>+;
+#pragma link C++ class ROOT::TImpProxy<double>+;
+#pragma link C++ class ROOT::TImpProxy<float>+;
 #pragma link C++ class ROOT::TImpProxy<UInt_t>+;
 #pragma link C++ class ROOT::TImpProxy<ULong_t>+;
 #pragma link C++ class ROOT::TImpProxy<UShort_t>+;
@@ -46,8 +46,8 @@
 #pragma link C++ class ROOT::TImpProxy<Char_t>+;
 #pragma link C++ class ROOT::TImpProxy<Bool_t>+;
 
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Double_t> >+;
-#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Float_t> >+;
+#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<double> >+;
+#pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<float> >+;
 #pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<UInt_t> >+;
 #pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<ULong_t> >+;
 #pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<UShort_t> >+;
@@ -59,8 +59,8 @@
 #pragma link C++ class ROOT::TArrayProxy<ROOT::TArrayType<Bool_t> >+;
    //specialized ! typedef TArrayProxy<ROOT::TArrayType<Char_t> >+;
 
-#pragma link C++ class ROOT::TClaImpProxy<Double_t>+;
-#pragma link C++ class ROOT::TClaImpProxy<Float_t>+;
+#pragma link C++ class ROOT::TClaImpProxy<double>+;
+#pragma link C++ class ROOT::TClaImpProxy<float>+;
 #pragma link C++ class ROOT::TClaImpProxy<UInt_t>+;
 #pragma link C++ class ROOT::TClaImpProxy<ULong_t>+;
 #pragma link C++ class ROOT::TClaImpProxy<UShort_t>+;
@@ -71,8 +71,8 @@
 #pragma link C++ class ROOT::TClaImpProxy<Char_t>+;
 #pragma link C++ class ROOT::TClaImpProxy<Bool_t>+;
 
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Double_t> >+;
-#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Float_t> >+;
+#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<double> >+;
+#pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<float> >+;
 #pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<UInt_t> >+;
 #pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<ULong_t> >+;
 #pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<UShort_t> >+;

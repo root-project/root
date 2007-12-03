@@ -17,57 +17,57 @@
 #pragma link C++ global gMatrixCheck;
 
 #pragma link C++ namespace TMatrixTCramerInv;
-#pragma link C++ function  TMatrixTCramerInv::Inv2x2(TMatrixT<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv2x2(TMatrixT<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv3x3(TMatrixT<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv3x3(TMatrixT<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv4x4(TMatrixT<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv4x4(TMatrixT<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv5x5(TMatrixT<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv5x5(TMatrixT<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv6x6(TMatrixT<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTCramerInv::Inv6x6(TMatrixT<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv2x2(TMatrixT<float>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv2x2(TMatrixT<double>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv3x3(TMatrixT<float>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv3x3(TMatrixT<double>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv4x4(TMatrixT<float>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv4x4(TMatrixT<double>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv5x5(TMatrixT<float>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv5x5(TMatrixT<double>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv6x6(TMatrixT<float>&,Double_t*);
+#pragma link C++ function  TMatrixTCramerInv::Inv6x6(TMatrixT<double>&,Double_t*);
 
 #pragma link C++ namespace TMatrixTSymCramerInv;
-#pragma link C++ function  TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Double_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Float_t>&,Double_t*);
-#pragma link C++ function  TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Double_t>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<float>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<double>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<float>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<double>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<float>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<double>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<float>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<double>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<float>&,Double_t*);
+#pragma link C++ function  TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<double>&,Double_t*);
 
-#pragma link C++ class TVectorT                <Float_t>-;
-#pragma link C++ class TMatrixTBase            <Float_t>-;
-#pragma link C++ class TMatrixT                <Float_t>-;
-#pragma link C++ class TMatrixTSym             <Float_t>-;
-#pragma link C++ class TMatrixTSparse          <Float_t>+;
+#pragma link C++ class TVectorT                <float>-;
+#pragma link C++ class TMatrixTBase            <float>-;
+#pragma link C++ class TMatrixT                <float>-;
+#pragma link C++ class TMatrixTSym             <float>-;
+#pragma link C++ class TMatrixTSparse          <float>+;
 
-#pragma link C++ class TMatrixTLazy            <Float_t>+;
-#pragma link C++ class TMatrixTSymLazy         <Float_t>+;
-#pragma link C++ class THaarMatrixT            <Float_t>+;
-#pragma link C++ class THilbertMatrixT         <Float_t>+;
-#pragma link C++ class THilbertMatrixTSym      <Float_t>+;
+#pragma link C++ class TMatrixTLazy            <float>+;
+#pragma link C++ class TMatrixTSymLazy         <float>+;
+#pragma link C++ class THaarMatrixT            <float>+;
+#pragma link C++ class THilbertMatrixT         <float>+;
+#pragma link C++ class THilbertMatrixTSym      <float>+;
 
-#pragma link C++ class TMatrixTRow_const       <Float_t>;
-#pragma link C++ class TMatrixTColumn_const    <Float_t>;
-#pragma link C++ class TMatrixTDiag_const      <Float_t>;
-#pragma link C++ class TMatrixTFlat_const      <Float_t>;
-#pragma link C++ class TMatrixTSub_const       <Float_t>;
+#pragma link C++ class TMatrixTRow_const       <float>;
+#pragma link C++ class TMatrixTColumn_const    <float>;
+#pragma link C++ class TMatrixTDiag_const      <float>;
+#pragma link C++ class TMatrixTFlat_const      <float>;
+#pragma link C++ class TMatrixTSub_const       <float>;
 
-#pragma link C++ class TMatrixTRow             <Float_t>;
-#pragma link C++ class TMatrixTColumn          <Float_t>;
-#pragma link C++ class TMatrixTDiag            <Float_t>;
-#pragma link C++ class TMatrixTFlat            <Float_t>;
-#pragma link C++ class TMatrixTSub             <Float_t>;
+#pragma link C++ class TMatrixTRow             <float>;
+#pragma link C++ class TMatrixTColumn          <float>;
+#pragma link C++ class TMatrixTDiag            <float>;
+#pragma link C++ class TMatrixTFlat            <float>;
+#pragma link C++ class TMatrixTSub             <float>;
 
-#pragma link C++ class TMatrixTSparseRow_const <Float_t>;
-#pragma link C++ class TMatrixTSparseRow       <Float_t>;
-#pragma link C++ class TMatrixTSparseDiag_const<Float_t>;
-#pragma link C++ class TMatrixTSparseDiag      <Float_t>;
+#pragma link C++ class TMatrixTSparseRow_const <float>;
+#pragma link C++ class TMatrixTSparseRow       <float>;
+#pragma link C++ class TMatrixTSparseDiag_const<float>;
+#pragma link C++ class TMatrixTSparseDiag      <float>;
 
 #pragma link C++ typedef TVector;
 #pragma link C++ typedef TVectorF;
@@ -98,34 +98,34 @@
 #pragma link C++ typedef TMatrixFSparseDiag_const;
 #pragma link C++ typedef TMatrixFSparseDiag;
 
-#pragma link C++ class TVectorT                <Double_t>-;
-#pragma link C++ class TMatrixTBase            <Double_t>-;
-#pragma link C++ class TMatrixT                <Double_t>-;
-#pragma link C++ class TMatrixTSym             <Double_t>-;
-#pragma link C++ class TMatrixTSparse          <Double_t>+;
+#pragma link C++ class TVectorT                <double>-;
+#pragma link C++ class TMatrixTBase            <double>-;
+#pragma link C++ class TMatrixT                <double>-;
+#pragma link C++ class TMatrixTSym             <double>-;
+#pragma link C++ class TMatrixTSparse          <double>+;
 
-#pragma link C++ class TMatrixTLazy            <Double_t>+;
-#pragma link C++ class TMatrixTSymLazy         <Double_t>+;
-#pragma link C++ class THaarMatrixT            <Double_t>+;
-#pragma link C++ class THilbertMatrixT         <Double_t>+;
-#pragma link C++ class THilbertMatrixTSym      <Double_t>+;
+#pragma link C++ class TMatrixTLazy            <double>+;
+#pragma link C++ class TMatrixTSymLazy         <double>+;
+#pragma link C++ class THaarMatrixT            <double>+;
+#pragma link C++ class THilbertMatrixT         <double>+;
+#pragma link C++ class THilbertMatrixTSym      <double>+;
 
-#pragma link C++ class TMatrixTRow_const       <Double_t>;
-#pragma link C++ class TMatrixTColumn_const    <Double_t>;
-#pragma link C++ class TMatrixTDiag_const      <Double_t>;
-#pragma link C++ class TMatrixTFlat_const      <Double_t>;
-#pragma link C++ class TMatrixTSub_const       <Double_t>;
+#pragma link C++ class TMatrixTRow_const       <double>;
+#pragma link C++ class TMatrixTColumn_const    <double>;
+#pragma link C++ class TMatrixTDiag_const      <double>;
+#pragma link C++ class TMatrixTFlat_const      <double>;
+#pragma link C++ class TMatrixTSub_const       <double>;
 
-#pragma link C++ class TMatrixTRow             <Double_t>;
-#pragma link C++ class TMatrixTColumn          <Double_t>;
-#pragma link C++ class TMatrixTDiag            <Double_t>;
-#pragma link C++ class TMatrixTFlat            <Double_t>;
-#pragma link C++ class TMatrixTSub             <Double_t>;
+#pragma link C++ class TMatrixTRow             <double>;
+#pragma link C++ class TMatrixTColumn          <double>;
+#pragma link C++ class TMatrixTDiag            <double>;
+#pragma link C++ class TMatrixTFlat            <double>;
+#pragma link C++ class TMatrixTSub             <double>;
 
-#pragma link C++ class TMatrixTSparseRow_const <Double_t>;
-#pragma link C++ class TMatrixTSparseRow       <Double_t>;
-#pragma link C++ class TMatrixTSparseDiag_const<Double_t>;
-#pragma link C++ class TMatrixTSparseDiag      <Double_t>;
+#pragma link C++ class TMatrixTSparseRow_const <double>;
+#pragma link C++ class TMatrixTSparseRow       <double>;
+#pragma link C++ class TMatrixTSparseDiag_const<double>;
+#pragma link C++ class TMatrixTSparseDiag      <double>;
 
 #pragma link C++ typedef TVectorD;
 #pragma link C++ typedef TMatrixD;
@@ -166,7 +166,7 @@
 #pragma link C++ class TDecompSVD+;
 #pragma link C++ class TDecompSparse+;
 
-//TVectorT<Float_t>
+//TVectorT<float>
 #pragma link C++ function operator==          (const TVectorF       &,const TVectorF &);
 #pragma link C++ function operator+           (const TVectorF       &,const TVectorF &);
 #pragma link C++ function operator-           (const TVectorF       &,const TVectorF &);
@@ -196,7 +196,7 @@
 #pragma link C++ function VerifyVectorValue   (const TVectorF       &,      Float_t   ,      Int_t,          Float_t);
 #pragma link C++ function VerifyVectorIdentity(const TVectorF       &,const TVectorF &,      Int_t,          Float_t);
 
-//TMatrixTBase<Float_t>
+//TMatrixTBase<float>
 #pragma link C++ function operator==          (const TMatrixFBase   &,const TMatrixFBase &);
 #pragma link C++ function E2Norm              (const TMatrixFBase   &,const TMatrixFBase &);
 #pragma link C++ function AreCompatible       (const TMatrixFBase   &,const TMatrixFBase &,Int_t);
@@ -205,7 +205,7 @@
 #pragma link C++ function VerifyMatrixValue   (const TMatrixFBase   &,      Float_t       ,Int_t,Float_t);
 #pragma link C++ function VerifyMatrixIdentity(const TMatrixFBase   &,const TMatrixFBase &,Int_t,Float_t);
 
-//TMatrixT<Float_t>
+//TMatrixT<float>
 #pragma link C++ function operator+  (const TMatrixF    &,const TMatrixF    &);
 #pragma link C++ function operator+  (const TMatrixF    &,const TMatrixFSym &);
 #pragma link C++ function operator+  (const TMatrixFSym &,const TMatrixF    &);
@@ -253,7 +253,7 @@
 #pragma link C++ function ElementDiv (      TMatrixF    &,const TMatrixF    &);
 #pragma link C++ function ElementDiv (      TMatrixF    &,const TMatrixFSym &);
 
-//TMatrixTSym<Float_t>
+//TMatrixTSym<float>
 #pragma link C++ function operator== (const TMatrixFSym &,const TMatrixFSym &);
 #pragma link C++ function operator+  (const TMatrixFSym &,const TMatrixFSym &);
 #pragma link C++ function operator+  (const TMatrixFSym &,      Float_t      );
@@ -273,7 +273,7 @@
 #pragma link C++ function ElementMult(      TMatrixFSym &,const TMatrixFSym &);
 #pragma link C++ function ElementDiv (      TMatrixFSym &,const TMatrixFSym &);
 
-//TMatrixTSparse<Float_t>
+//TMatrixTSparse<float>
 #pragma link C++ function operator+    (const TMatrixFSparse &,const TMatrixFSparse &);
 #pragma link C++ function operator+    (const TMatrixFSparse &,const TMatrixF       &);
 #pragma link C++ function operator+    (const TMatrixF       &,const TMatrixFSparse &);
@@ -294,7 +294,7 @@
 #pragma link C++ function ElementDiv   (      TMatrixFSparse &,const TMatrixFSparse &);
 #pragma link C++ function AreCompatible(const TMatrixFSparse &,const TMatrixFSparse &,Int_t);
 
-//TVectorT<Double_t>
+//TVectorT<double>
 #pragma link C++ function operator==          (const TVectorD       &,const TVectorD &);
 #pragma link C++ function operator+           (const TVectorD       &,const TVectorD &);
 #pragma link C++ function operator-           (const TVectorD       &,const TVectorD &);
@@ -324,7 +324,7 @@
 #pragma link C++ function VerifyVectorValue   (const TVectorD       &,      Double_t  ,      Int_t,          Double_t);
 #pragma link C++ function VerifyVectorIdentity(const TVectorD       &,const TVectorD &,      Int_t,          Double_t);
 
-//TMatrixTBase<Double_t>
+//TMatrixTBase<double>
 #pragma link C++ function operator==          (const TMatrixDBase   &,const TMatrixDBase &);
 #pragma link C++ function E2Norm              (const TMatrixDBase   &,const TMatrixDBase &);
 #pragma link C++ function AreCompatible       (const TMatrixDBase   &,const TMatrixDBase &,Int_t);
@@ -333,7 +333,7 @@
 #pragma link C++ function VerifyMatrixValue   (const TMatrixDBase   &,      Double_t      ,Int_t,Double_t);
 #pragma link C++ function VerifyMatrixIdentity(const TMatrixDBase   &,const TMatrixDBase &,Int_t,Double_t);
 
-//TMatrixT<Double_t>
+//TMatrixT<double>
 #pragma link C++ function operator+  (const TMatrixD    &,const TMatrixD    &);
 #pragma link C++ function operator+  (const TMatrixD    &,const TMatrixDSym &);
 #pragma link C++ function operator+  (const TMatrixDSym &,const TMatrixD    &);
@@ -381,7 +381,7 @@
 #pragma link C++ function ElementDiv (      TMatrixD    &,const TMatrixD    &);
 #pragma link C++ function ElementDiv (      TMatrixD    &,const TMatrixDSym &);
 
-//TMatrixTSym<Double_t>
+//TMatrixTSym<double>
 #pragma link C++ function operator== (const TMatrixDSym &,const TMatrixDSym &);
 #pragma link C++ function operator+  (const TMatrixDSym &,const TMatrixDSym &);
 #pragma link C++ function operator+  (const TMatrixDSym &,      Double_t     );
@@ -401,7 +401,7 @@
 #pragma link C++ function ElementMult(      TMatrixDSym &,const TMatrixDSym &);
 #pragma link C++ function ElementDiv (      TMatrixDSym &,const TMatrixDSym &);
 
-//TMatrixTSparse<Double_t>
+//TMatrixTSparse<double>
 #pragma link C++ function operator+    (const TMatrixDSparse &,const TMatrixDSparse &);
 #pragma link C++ function operator+    (const TMatrixDSparse &,const TMatrixD       &);
 #pragma link C++ function operator+    (const TMatrixD       &,const TMatrixDSparse &);

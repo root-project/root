@@ -933,6 +933,30 @@ void THtml::CreateListOfClasses(const char* filter)
 
       TString modulename;
       GetModuleName(modulename, impname);
+      if (!modulename.Length() || modulename == "USER") 
+         GetModuleNameForClass(modulename, classPtr);
+      if (modulename == "(UNKNOWN)") modulename = "USER";
+      if (!modulename.Length() || modulename == "USER") {
+         modulename = classPtr->GetSharedLibs();
+         Ssiz_t pos = modulename.Index(' ');
+         if (pos != kNPOS)
+            modulename.Remove(pos, modulename.Length());
+         if (modulename.BeginsWith("lib"))
+            modulename.Remove(0,3);
+         pos = modulename.Index('.');
+         if (pos != kNPOS)
+            modulename.Remove(pos, modulename.Length());
+         modulename.ToUpper();
+      }
+      if (!modulename.Length())
+         if (strstr(cname, "::SMatrix<") || strstr(cname, "::SVector<"))
+            modulename = "SMATRIX";
+         else if (strstr(cname, "::TArrayProxy<") || strstr(cname, "::TClaArrayProxy<")
+                  || strstr(cname, "::TImpProxy<") || strstr(cname, "::TClaImpProxy<"))
+            modulename = "TREEPLAYER";
+      if (!modulename.Length())
+         modulename = "USER";
+      
       TModuleDocInfo* module = (TModuleDocInfo*) fModules.FindObject(modulename);
       if (!module) {
          module = new TModuleDocInfo(modulename);
