@@ -196,7 +196,7 @@ public:
   // Dirty state accessor
   inline Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
   inline Bool_t isValueDirty() const { 
-    if (_inhibitDirty) return kTRUE ;
+    if (inhibitDirty()) return kTRUE ;
     switch(_operMode) {
     case AClean: return kFALSE ;
     case ADirty: return kTRUE ;
@@ -329,6 +329,8 @@ public:
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
   static Bool_t _flipAClean ; // Static flag controlling flipping status of all AClean nodes to ADirty ;
   Bool_t _deleteWatch ; //! Delete watch flag 
+
+  static Bool_t inhibitDirty() ;
 
   static Int_t _nameLength ;
 

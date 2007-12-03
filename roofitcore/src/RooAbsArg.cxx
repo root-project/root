@@ -1664,3 +1664,9 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
   }
   delete sIter ;
 }
+
+
+Bool_t RooAbsArg::inhibitDirty() 
+{
+  return _inhibitDirty ;
+}
