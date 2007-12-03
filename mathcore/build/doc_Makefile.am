@@ -9,7 +9,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST =					\
-	main.html vector.html LorentzVector.html Point3D.html Transformation.html \
+	MathCore.html vector.html LorentzVector.html Point3D.html Transformation.html \
         Vector3D.html externalUsage.html VectorPoint2D.html doxyconfig.in
 
 docs:

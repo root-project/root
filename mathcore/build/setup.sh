@@ -9,4 +9,10 @@ cp -p build/doc_Makefile.am doc/Makefile.am
 cp -p build/autogen . 
 cp -p -r build/config . 
 
+#make dummy file RConfigure.h
+echo "///Dummy file to simulate ROOT configure file
+#ifndef ROOT_RConfigure
+#define ROOT_RConfigure
+#endif" > RConfigure.h
+cp RConfigure.h inc/.
 ./autogen

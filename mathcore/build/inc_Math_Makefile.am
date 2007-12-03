@@ -13,6 +13,8 @@ mathdir = $(includedir)/Math
 SUBDIRS = GenVector
 
 math_HEADERS =           	        \
+	 AdaptiveIntegratorMultiDim.h   \
+         AllIntegrationTypes.h          \
          AxisAngle.h                    \
          Boost.h                        \
          BoostX.h                       \
@@ -26,15 +28,21 @@ math_HEADERS =           	        \
          DisplacementVector3D.h         \
          DistFunc.h                     \
          DistFuncMathCore.h             \
+         Error.h                        \
          EulerAngles.h                  \
+         FitMethodFunction.h            \
          Functor.h                      \
          IFunction.h                    \
          IFunctionfwd.h                 \
          IParamFunction.h               \
          IParamFunctionfwd.h            \
+         Integrator.h                   \
+         IntegratorMultiDim.h           \
          LorentzRotation.h              \
          LorentzVector.h                \
          Math.h                         \
+         Minimizer.h                    \
+         OneDimFunctionAdapter.h        \
          PdfFunc.h                      \
          PdfFuncMathCore.h              \
          Plane3D.h                      \
@@ -52,6 +60,8 @@ math_HEADERS =           	        \
          PtEtaPhiM4D.h                  \
          PxPyPzE4D.h                    \
          PxPyPzM4D.h                    \
+         QuantFunc.h                    \
+         QuantFuncMathCore.h            \
          Quaternion.h                   \
          Rotation3D.h                   \
          RotationX.h                    \
@@ -64,13 +74,14 @@ math_HEADERS =           	        \
          Translation3D.h                \
          Util.h                         \
          Vector2D.h                     \
-         Vector3D.h                     \
          Vector2Dfwd.h                  \
+         Vector3D.h                     \
          Vector3Dfwd.h                  \
          Vector4D.h                     \
          Vector4Dfwd.h                  \
          VectorUtil.h                   \
          VectorUtil_Cint.h              \
+         VirtualIntegrator.h            \
          WrappedFunction.h              \
          WrappedParamFunction.h
 

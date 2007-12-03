@@ -20,7 +20,10 @@
 #include "Math/OneDimFunctionAdapter.h"
 
 
-
+#include "RConfigure.h"
+#ifndef ROOTINCDIR
+#define MATH_NO_PLUGIN_MANAGER
+#endif
 
 #ifndef MATH_NO_PLUGIN_MANAGER
 
@@ -28,8 +31,11 @@
 #include "TPluginManager.h"
 
 #else // case no plugin manager is available
+#ifdef R__HAS_MATHMORE
 #include "Math/GSLIntegrator.h"
 #include "Math/GSLMCIntegrator.h"
+#endif
+
 #endif
 
 #include <cassert>
@@ -57,9 +63,14 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
    VirtualIntegratorOneDim * ig = 0; 
 
 #ifdef MATH_NO_PLUGIN_MANAGER    // no PM available
+#ifdef R__HAS_MATHMORE   
    ig =  new GSLIntegrator(type, absTol, relTol, size);
 #else 
+   MATH_ERROR_MSG("IntegratorOneDim::CreateIntegrator","Integrator type is not available in MathCore");
+#endif
 
+#else  // case of using Plugin Manager
+   
 
 
    TPluginHandler *h; 
@@ -102,7 +113,11 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
    VirtualIntegratorMultiDim * ig = 0; 
 
 #ifdef MATH_NO_PLUGIN_MANAGER  // no PM available 
+#ifdef R__HAS_MATHMORE   
    ig =  new GSLMCIntegrator(type, absTol, relTol, ncall);
+#else 
+   MATH_ERROR_MSG("IntegratorMultiDim::CreateIntegrator","Integrator type is not available in MathCore");
+#endif
 
 #else  // use ROOT PM 
       

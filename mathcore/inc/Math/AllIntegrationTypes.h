@@ -22,13 +22,23 @@ namespace ROOT {
 namespace Math {
 
 
+    // type of integration
 
 
   
-    // type of integration
+    //for 1-dim integration
   namespace IntegrationOneDim {
 
-    //for 1-dim integration
+
+    /**
+	 enumeration specifying the integration types.
+	 <ul>
+	 <li>NONADAPTIVE : to be used for smooth functions
+	 <li>ADAPTIVE : to be used for general functions without singularities.
+	 <li>ADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
+	 </ul>
+	 @ingroup Integration
+    */
      enum Type {ADAPTIVE, ADAPTIVESINGULAR, NONADAPTIVE};
 
   }
@@ -36,7 +46,18 @@ namespace Math {
     //for multi-dim integration
   namespace IntegrationMultiDim {
 
-    //for 1-dim integration
+
+    /**
+	 enumeration specifying the integration types.
+	 <ul>
+         <li>ADAPTIVE : adaptive multi-dimensional integration
+	 <li>PLAIN    MC integration
+	 <li>MISER    MC integration 
+	 <li>VEGAS    MC integration
+	 </ul>
+	 @ingroup MCIntegration
+    */
+
      enum Type {ADAPTIVE, VEGAS, MISER, PLAIN};
 
   }  

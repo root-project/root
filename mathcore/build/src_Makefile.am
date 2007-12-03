@@ -14,24 +14,30 @@ lib_LTLIBRARIES = libMathCore.la
 libMathCore_la_SOURCES =		\
          3DConversions.cxx              \
          3DDistances.cxx                \
+         AdaptiveIntegratorMultiDim.cxx \
+         AxisAngle.cxx                  \
+         AxisAngleXother.cxx            \
+         BitReproducible.cxx            \
          Boost.cxx                      \
          BoostX.cxx                     \
          BoostY.cxx                     \
          BoostZ.cxx                     \
-         AxisAngle.cxx                  \
-         AxisAngleXother.cxx            \
-         BitReproducible.cxx            \
          EulerAngles.cxx                \
          GenVector_exception.cxx        \
+         Integrator.cxx                 \
          LorentzRotation.cxx            \
          PdfFuncMathCore.cxx            \
 	 Plane3D.cxx                    \
          ProbFuncMathCore.cxx           \
+         QuantFuncMathCore.cxx          \
          Quaternion.cxx                 \
          QuaternionXaxial.cxx           \
          Rotation3D.cxx                 \
          Rotation3DxAxial.cxx           \
          RotationZYX.cxx                \
+         SpecFuncCephes.h               \
+         SpecFuncCephes.cxx             \
+         SpecFuncCephesInv.cxx          \
          SpecFuncMathCore.cxx           \
          Transform3D.cxx                \
          Translation3D.cxx              \
