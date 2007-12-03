@@ -3437,8 +3437,8 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
    if (cbase=="<=") cbase="XleY";
    if (cbase==">") cbase="XgY";
    if (cbase==">=") cbase="XgeY";
-   if (cbase=="==") cbase="XeY";
-   if (cbase=="!=") cbase="XneY";
+   if (cbase=="==" && GetActionOptimized(pos)!=kStringEqual) cbase="XeY";
+   if (cbase=="!=" && GetActionOptimized(pos)!=kStringNotEqual) cbase="XneY";
 
    TFormulaPrimitive *prim = TFormulaPrimitive::FindFormula(cbase);
    if (prim) {
