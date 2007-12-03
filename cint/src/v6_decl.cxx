@@ -240,12 +240,13 @@ static int G__get_newname(char* new_name)
          }
       }
       if (isspace(cin)) {
-         if (strcmp(new_name, "*const") == 0) {
-            cin = G__fgetvarname(new_name + 1, ",;=():");
-            G__constvar |= G__PCONSTVAR;
-         }
-         else if (strcmp(new_name, "const") == 0) {
-            cin = G__fgetvarname(new_name, ",;=():");
+         if (strcmp(new_name, "*const") == 0 || strcmp(new_name, "const") == 0) {
+            if (new_name[0]=='*') {
+               cin = G__fgetvarname(new_name + 1, ",;=():");
+               G__constvar |= G__PCONSTVAR;
+            } else {
+               cin = G__fgetvarname(new_name, ",;=():");
+            }
             if (strcmp(new_name, "&*") == 0 || strcmp(new_name, "*&") == 0) {
                G__reftype = G__PARAREFERENCE;
                new_name[0] = '*';
