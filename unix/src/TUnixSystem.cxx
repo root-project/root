@@ -160,8 +160,18 @@
 #   define HAVE_UTMPX_H
 #   define UTMP_NO_ADDR
 #endif
+
+#if defined(MAC_OS_X_VERSION_10_5)
+#   define HAVE_UTMPX_H
+#   define UTMP_NO_ADDR
+#   ifndef ut_user
+#      define ut_user ut_name
+#   endif
+#endif
+
 #if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || \
-    defined(R__OBSD) || defined(R__LYNXOS) || defined(R__MACOSX)
+    defined(R__OBSD) || defined(R__LYNXOS) || \
+    (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5))
 #   define UTMP_NO_ADDR
 #endif
 

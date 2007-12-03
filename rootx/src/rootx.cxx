@@ -25,17 +25,28 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <errno.h>
-
 #include <netdb.h>
 #include <sys/socket.h>
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif
 
 #if defined(__sgi) || defined(__sun)
 #define HAVE_UTMPX_H
 #define UTMP_NO_ADDR
 #endif
+
+#if defined(MAC_OS_X_VERSION_10_5)
+#   define HAVE_UTMPX_H
+#   define UTMP_NO_ADDR
+#   ifndef ut_user
+#      define ut_user ut_name
+#   endif
+#endif
+
 #if (defined(__alpha) && !defined(__linux)) || defined(_AIX) || \
-    defined(__FreeBSD__) || defined(__Lynx__) || defined(__APPLE__) || \
-    defined(__OpenBSD__)
+    defined(__FreeBSD__) || defined(__Lynx__) || defined(__OpenBSD__) || \
+    (defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_5))
 #define UTMP_NO_ADDR
 #endif
 
@@ -444,4 +455,3 @@ int main(int argc, char **argv)
 
    return 1;
 }
-
