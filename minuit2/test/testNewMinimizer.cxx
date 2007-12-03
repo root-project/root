@@ -425,7 +425,6 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
    edm = min->Edm(); 
 
    if (!ret) { 
-      delete min; 
       return -1;
    }
    
