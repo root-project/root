@@ -341,8 +341,10 @@ endif
 
 ifeq ($(GCC_MAJOR),3)
 ifneq ($(GCC_MINOR),0)
+ifneq ($(F77),)
 LIBFRTBEGIN  := $(shell $(F77) -print-file-name=libfrtbegin.a)
 F77LIBS      := $(LIBFRTBEGIN) $(F77LIBS)
+endif
 endif
 endif
 ifeq ($(GCC_MAJOR),4)
