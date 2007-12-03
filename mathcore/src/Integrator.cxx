@@ -21,9 +21,9 @@
 
 
 #include "RConfigure.h"
-#ifndef ROOTINCDIR
-#define MATH_NO_PLUGIN_MANAGER
-#endif
+// #ifndef ROOTINCDIR
+// #define MATH_NO_PLUGIN_MANAGER
+// #endif
 
 #ifndef MATH_NO_PLUGIN_MANAGER
 
