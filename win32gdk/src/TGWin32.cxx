@@ -52,6 +52,7 @@
 #include "TString.h"
 #include "TObjString.h"
 #include "TObjArray.h"
+#include "TExMap.h"
 #include "TEnv.h"
 #include "RStipples.h"
 #include "TEnv.h"
@@ -143,11 +144,11 @@ static XWindow_t *gTws;         // gTws: temporary pointer
 // gColors[2..kMAXCOL-1]: colors which can be set by SetColor
 //
 const Int_t kBIGGEST_RGB_VALUE = 65535;
-const Int_t kMAXCOL = 1000;
-static struct {
-   Int_t defined;
-   GdkColor color;
-} gColors[kMAXCOL];
+//const Int_t kMAXCOL = 1000;
+//static struct {
+//   Int_t defined;
+//   GdkColor color;
+//} gColors[kMAXCOL];
 
 //
 // Primitives Graphic Contexts global for all windows
@@ -772,7 +773,8 @@ TGWin32::TGWin32(): fRefreshTimer(0)
    // Default constructor.
 
    fScreenNumber = 0;
-   fWindows = 0;
+   fWindows      = 0;
+   fColors       = 0;
 }
 
 //______________________________________________________________________________
@@ -802,6 +804,8 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
 
    fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
    for (int i = 0; i < fMaxNumberOfWindows; i++) fWindows[i].open = 0;
+
+   fColors = new TExMap;
 
    if (NeedSplash()) {
       new TWin32SplashThread(FALSE);
@@ -834,6 +838,14 @@ TGWin32::~TGWin32()
    CloseDisplay();
    if (fRefreshTimer)
       delete fRefreshTimer;
+   if (!fColors) return;
+   Long_t     key, value;
+   TExMapIter it(fColors);
+   while (it.Next(key, value)) {
+      XColor_t *col = (XColor_t *) value;
+      delete col;
+   }
+   delete fColors;
 }
 
 //______________________________________________________________________________
@@ -1004,17 +1016,17 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    fColormap = gdk_colormap_get_system();
    fDepth = gdk_visual_get_best_depth();
 
-   gColors[1].defined = 1;      // default foreground
-   gdk_color_black((GdkColormap *)fColormap, &gColors[1].color);
+   GetColor(1).fDefined = kTRUE; // default foreground
+   gdk_color_black((GdkColormap *)fColormap, &GetColor(1).color);
 
-   gColors[0].defined = 1;      // default background
-   gdk_color_white((GdkColormap *)fColormap, &gColors[0].color);
+   GetColor(0).fDefined = kTRUE; // default background
+   gdk_color_white((GdkColormap *)fColormap, &GetColor(0).color);
 
    // Create primitives graphic contexts
    for (i = 0; i < kMAXGC; i++) {
       gGClist[i]  = gdk_gc_new(GDK_ROOT_PARENT());
-      gdk_gc_set_foreground(gGClist[i], &gColors[1].color);
-      gdk_gc_set_background(gGClist[i], &gColors[0].color);
+      gdk_gc_set_foreground(gGClist[i], &GetColor(1).color);
+      gdk_gc_set_background(gGClist[i], &GetColor(0).color);
    }
 
    gGCline = gGClist[0];        // PolyLines
@@ -1561,7 +1573,7 @@ void TGWin32::ClearWindow()
    if (!fWindows) return;
 
    if (!gCws->ispixmap && !gCws->double_buffer) {
-      gdk_window_set_background(gCws->drawing, (GdkColor *) & gColors[0].color);
+      gdk_window_set_background(gCws->drawing, (GdkColor *) & GetColor(0).color);
       gdk_window_clear(gCws->drawing);
       GdiFlush();
    } else {
@@ -1704,7 +1716,7 @@ void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
       for (j = 0; j < ny; j++) {
          icol = ic[i + (nx * j)];
          if (icol != current_icol) {
-            gdk_gc_set_foreground(gGCfill, (GdkColor *) & gColors[icol].color);
+            gdk_gc_set_foreground(gGCfill, (GdkColor *) & GetColor(icol).color);
             current_icol = icol;
          }
 
@@ -1922,6 +1934,20 @@ void TGWin32::GetCharacterUp(Float_t & chupx, Float_t & chupy)
 }
 
 //______________________________________________________________________________
+XColor_t &TGWin32::GetColor(Int_t cid)
+{
+   // Return reference to internal color structure associated
+   // to color index cid.
+
+   XColor_t *col = (XColor_t*) fColors->GetValue(cid);
+   if (!col) {
+      col = new XColor_t;
+      fColors->Add(cid, (Long_t) col);
+   }
+   return *col;
+}
+
+//______________________________________________________________________________
 Window_t TGWin32::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGWin32TTF.
@@ -2017,9 +2043,16 @@ void TGWin32::GetRGB(int index, float &r, float &g, float &b)
 {
    // Get rgb values for color "index".
 
-   r = gColors[index].color.red;
-   g = gColors[index].color.green;
-   b = gColors[index].color.blue;
+   if (index == 0) {
+      r = g = b = 1.0;
+   } else if (index == 1) {
+      r = g = b = 0.0;
+   } else {
+      XColor_t &col = GetColor(index);
+      r = ((float) col.color.red) / ((float) kBIGGEST_RGB_VALUE);
+      g = ((float) col.color.green) / ((float) kBIGGEST_RGB_VALUE);
+      b = ((float) col.color.blue) / ((float) kBIGGEST_RGB_VALUE);
+   }
 }
 
 //______________________________________________________________________________
@@ -2289,7 +2322,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
    if (cursor == NULL) {
       if (ctyp > 1) {
          gdk_window_set_cursor((GdkWindow *)gCws->window, (GdkCursor *)gNullCursor);
-         gdk_gc_set_foreground((GdkGC *) gGCecho, &gColors[0].color);
+         gdk_gc_set_foreground((GdkGC *) gGCecho, &GetColor(0).color);
       } else {
          if (fUseSysPointers)
             cursor = gdk_syscursor_new((ULong_t)IDC_CROSS);
@@ -2911,15 +2944,11 @@ ULong_t TGWin32::GetPixel(Color_t ci)
 {
    // Return pixel value associated to specified ROOT color number.
 
-   if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
-      TColor *color = gROOT->GetColor(ci);
-      if (color) {
-         SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
-      } else {
-         Warning("GetPixel", "color with index %d not defined", ci);
-      }
-   }
-   return gColors[ci].color.pixel;
+   TColor *color = gROOT->GetColor(ci);
+   if (color)
+      SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
+   XColor_t &col = GetColor(ci);
+   return col.color.pixel;
 }
 
 //______________________________________________________________________________
@@ -2932,47 +2961,34 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
 
    if (ci<=0) ci = 10; //white
 
-   if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
-      TColor *tcol = gROOT->GetColor(ci);
+   TColor *clr = gROOT->GetColor(ci);
+   if (clr)
+      SetRGB(ci, clr->GetRed(), clr->GetGreen(), clr->GetBlue());
 
-      if (tcol) {
-         SetRGB(ci, tcol->GetRed(), tcol->GetGreen(), tcol->GetBlue());
-      }
-   }
-
-   if (fColormap && (ci < 0 || ci >= kMAXCOL || !gColors[ci].defined)) {
-      ci = 0;
-   } else if (!fColormap && ci < 0) {
-      ci = 0;
-   } else if (!fColormap && ci > 1) {
-      ci = 0;
+   XColor_t &col = GetColor(ci);
+   if (fColormap && !col.fDefined) {
+      col = GetColor(0);
+   } else if (!fColormap && (ci < 0 || ci > 1)) {
+      col = GetColor(0);
    }
 
    if (fDrawMode == kXor) {
       gdk_gc_get_values(gc, &gcvals);
 
-      color.pixel = gColors[ci].color.pixel ^ gcvals.background.pixel;
+      color.pixel = col.color.pixel ^ gcvals.background.pixel;
       color.red = GetRValue(color.pixel);
       color.green = GetGValue(color.pixel);
       color.blue = GetBValue(color.pixel);
       gdk_gc_set_foreground(gc, &color);
 
    } else {
-      color.pixel = gColors[ci].color.pixel;
-      color.red = gColors[ci].color.red;
-      color.green = gColors[ci].color.green;
-      color.blue = gColors[ci].color.blue;
-      gdk_gc_set_foreground(gc, &color);
+      gdk_gc_set_foreground(gc, &col.color);
 
       // make sure that foreground and background are different
       gdk_gc_get_values(gc, &gcvals);
 
       if (gcvals.foreground.pixel != gcvals.background.pixel) {
-         color.pixel = gColors[!ci].color.pixel;
-         color.red = gColors[!ci].color.red;
-         color.green = gColors[!ci].color.green;
-         color.blue = gColors[!ci].color.blue;
-         gdk_gc_set_background(gc, &color);
+         gdk_gc_set_background(gc, &GetColor(!ci).color);
       }
    }
 }
@@ -3804,23 +3820,30 @@ void TGWin32::SetRGB(int cindex, float r, float g, float b)
 
    GdkColor xcol;
 
-   if (fColormap && cindex >= 0 && cindex < kMAXCOL) {
+   if (fColormap && cindex >= 0) {
       xcol.red = (unsigned short) (r * kBIGGEST_RGB_VALUE);
       xcol.green = (unsigned short) (g * kBIGGEST_RGB_VALUE);
       xcol.blue = (unsigned short) (b * kBIGGEST_RGB_VALUE);
       xcol.pixel = RGB(xcol.red, xcol.green, xcol.blue);
 
-      if (gColors[cindex].defined == 1) {
-         gColors[cindex].defined = 0;
+      XColor_t &col = GetColor(cindex);
+      if (col.fDefined) {
+         // if color is already defined with same rgb just return
+         if (col.color.red  == xcol.red && col.color.green == xcol.green &&
+             col.color.blue == xcol.blue)
+            return;
+         col.fDefined = kFALSE;
+         gdk_colormap_free_colors((GdkColormap *) fColormap,
+                                  (GdkColor *)&col, 1);
       }
 
       Int_t ret = gdk_colormap_alloc_color(fColormap, &xcol, 1, 1);
       if (ret != 0) {
-         gColors[cindex].defined = 1;
-         gColors[cindex].color.pixel = xcol.pixel;
-         gColors[cindex].color.red = r;
-         gColors[cindex].color.green = g;
-         gColors[cindex].color.blue = b;
+         col.fDefined = kTRUE;
+         col.color.pixel   = xcol.pixel;
+         col.color.red     = xcol.red;
+         col.color.green   = xcol.green;
+         col.color.blue    = xcol.blue;
       }
    }
 }
@@ -3899,7 +3922,7 @@ void TGWin32::SetTextColor(Color_t cindex)
    gdk_gc_get_values(gGCtext, &values);
    gdk_gc_set_foreground(gGCinvt, &values.background);
    gdk_gc_set_background(gGCinvt, &values.foreground);
-   gdk_gc_set_background(gGCtext, (GdkColor *) & gColors[0].color);
+   gdk_gc_set_background(gGCtext, (GdkColor *) & GetColor(0).color);
    current = Int_t(cindex);
 }
 

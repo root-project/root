@@ -69,6 +69,14 @@ typedef unsigned long KeySym;
 
 struct XWindow_t;
 
+struct XColor_t {
+   GdkColor color;
+   Bool_t   fDefined;             // true if pixel value is defined
+   XColor_t() { color.pixel = 0; color.red = color.green = color.blue = 0; fDefined = kFALSE; }
+};
+
+class TExMap;
+
 class TGWin32 : public TVirtualX {
 
 private:
@@ -86,6 +94,7 @@ private:
 
    Int_t            fMaxNumberOfWindows;    //Maximum number of windows
    XWindow_t       *fWindows;               //List of windows
+   TExMap          *fColors;                //Hash list of colors
    GdkCursor       *fCursors[kNumCursors];  //List of cursors
 
    void  CloseWindow1();
@@ -153,6 +162,7 @@ protected:
    Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
    void       QueryColors(GdkColormap *cmap, GdkColor *colors, Int_t ncolors);
    GdkGC     *GetGC(Int_t which) const;
+   XColor_t  &GetColor(Int_t cid);
 
 public:
    TGWin32();
