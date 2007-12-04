@@ -3709,7 +3709,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
   if('n'==G__struct.type[tagnum]) return;
 
   page = ifunc->page;
-  if(ifn==G__MAXIFUNC) {
+  if(ifn>=G__MAXIFUNC) {
     ifn=0;
     ++page;
   }
@@ -3838,7 +3838,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     fprintf(fp,         "}\n\n");
 
     ++ifn;
-    if (ifn == G__MAXIFUNC) {
+    if (ifn >= G__MAXIFUNC) {
       ifn = 0;
       ++page;
     }
@@ -3886,7 +3886,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     fprintf(fp,     "}\n\n");
 
     ++ifn;
-    if (ifn == G__MAXIFUNC) {
+    if (ifn >= G__MAXIFUNC) {
       ifn = 0;
       ++page;
     }
@@ -3981,7 +3981,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     fprintf(fp,   "}\n\n");
 
     ++ifn;
-    if (ifn == G__MAXIFUNC) {
+    if (ifn >= G__MAXIFUNC) {
       ifn = 0;
       ++page;
     }
@@ -4025,7 +4025,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     fprintf(fp,   "}\n\n");
 
     ++ifn;
-    if (ifn == G__MAXIFUNC) {
+    if (ifn >= G__MAXIFUNC) {
       ifn = 0;
       ++page;
     }
@@ -6027,7 +6027,7 @@ void G__cpplink_memfunc(FILE *fp)
 #endif
            ) {
           page = ifunc->page;
-          if (j == G__MAXIFUNC) {
+          if (j >= G__MAXIFUNC) {
             j = 0;
             ++page;
           }
@@ -6060,7 +6060,7 @@ void G__cpplink_memfunc(FILE *fp)
 #endif
 
             ++j;
-            if (j == G__MAXIFUNC) {
+            if (j >= G__MAXIFUNC) {
               j = 0;
               ++page;
             }
@@ -6093,7 +6093,7 @@ void G__cpplink_memfunc(FILE *fp)
             fprintf(fp, ", \"u '%s' - 11 - -\", (char*) NULL);\n", G__fulltagname(i, 0));
 #endif
             ++j;
-            if (j == G__MAXIFUNC) {
+            if (j >= G__MAXIFUNC) {
               j = 0;
               ++page;
             }
@@ -6128,7 +6128,7 @@ void G__cpplink_memfunc(FILE *fp)
             fprintf(fp, ", \"\", (char*) NULL);\n");
 #endif
             if (0 == isdestructor) ++j;
-            if (j == G__MAXIFUNC) {
+            if (j >= G__MAXIFUNC) {
               j = 0;
               ++page;
             }
@@ -7026,7 +7026,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   struct G__ifunc_table_internal *store_p_ifunc = 0;
   int dtorflag=0;
    
-  if (G__p_ifunc->allifunc == G__MAXIFUNC) {
+  if (G__p_ifunc->allifunc >= G__MAXIFUNC) {
     G__p_ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
     memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table_internal));
     G__p_ifunc->next->allifunc=0;
@@ -7494,11 +7494,12 @@ int G__memfunc_next()
 {
 #ifndef G__SMALLOBJECT
   /* increment count */
-  ++G__p_ifunc->allifunc;
+  if(G__p_ifunc->allifunc < G__MAXIFUNC)
+     ++G__p_ifunc->allifunc;
   /***************************************************************
    * Allocate and initialize function table list
    ***************************************************************/
-  if(G__p_ifunc->allifunc==G__MAXIFUNC) {
+  if(G__p_ifunc->allifunc >= G__MAXIFUNC) {
     G__p_ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
     memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table_internal));
     G__p_ifunc->next->allifunc=0;
