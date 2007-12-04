@@ -78,8 +78,8 @@ STRESSFILES := $(filter-out %.o,\
 	$(filter-out %.$(DllSuf),\
 	$(filter-out %.log,\
 	$(filter-out %~,\
-	$(filter-out $(STRESSEXE),\
-	$(filter-out test/TrackMathCoreCint.cxx,\
+	$(filter-out %/$(STRESSEXE),\
+	$(filter-out %/TrackMathCoreCint.cxx,\
 	$(wildcard $(ROOT_LOC)/test/*.*))))))) \
 	$(ROOT_LOC)/test/Makefile
 STRESSFILESHERE := $(subst $(ROOT_LOC)/,,$(STRESSFILES))
