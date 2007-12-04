@@ -1061,12 +1061,12 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
       } else {
          double x = a[ia-1];
          while(a[ia-1] == x && ia <= na) {
-           rdiff -= sa;
-           ia++;
+            rdiff -= sa;
+            ia++;
          }
          while(b[ib-1] == x && ib <= nb) {
-           rdiff += sb;
-           ib++;
+            rdiff += sb;
+            ib++;
          }
          if (ia > na) {ok = kTRUE; break;}
          if (ib > nb) {ok = kTRUE; break;}
