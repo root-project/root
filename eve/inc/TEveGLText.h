@@ -33,7 +33,7 @@ namespace TEveGLText {
 #define TXF_FORMAT_BYTE          0
 #define TXF_FORMAT_BITMAP        1
 
-struct TexGlyphInfo {
+struct TexGlyphInfo_t {
    unsigned short c;       /* Potentially support 16-bit glyphs. */
    unsigned char width;
    unsigned char height;
@@ -45,7 +45,7 @@ struct TexGlyphInfo {
    short y;
 };
 
-struct TexGlyphVertexInfo {
+struct TexGlyphVertexInfo_t {
    GLfloat t0[2];
    GLshort v0[2];
    GLfloat t1[2];
@@ -69,9 +69,9 @@ public:
    int min_glyph;
    int range;
    unsigned char *teximage;
-   TexGlyphInfo *tgi;
-   TexGlyphVertexInfo *tgvi;
-   TexGlyphVertexInfo **lut;
+   TexGlyphInfo_t *tgi;
+   TexGlyphVertexInfo_t *tgvi;
+   TexGlyphVertexInfo_t **lut;
 
    int max_height() { return max_ascent + max_descent; }
 };

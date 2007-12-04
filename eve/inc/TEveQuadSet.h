@@ -57,21 +57,21 @@ public:
 
 protected:
 
-   struct QFreeQuad     : public DigitBase      { Float_t fVertices[12]; };
+   struct QFreeQuad_t     : public DigitBase_t      { Float_t fVertices[12]; };
 
-   struct QOrigin       : public DigitBase      { Float_t fA, fB; };
+   struct QOrigin_t       : public DigitBase_t      { Float_t fA, fB; };
 
-   struct QRectFixDimC  : public QOrigin       { };
+   struct QRectFixDimC_t  : public QOrigin_t       { };
 
-   struct QRectFixDim   : public QRectFixDimC  { Float_t fC; };
+   struct QRectFixDim_t   : public QRectFixDimC_t  { Float_t fC; };
 
-   struct QRectFixC     : public QRectFixDimC  { Float_t fW, fH; };
+   struct QRectFixC_t     : public QRectFixDimC_t  { Float_t fW, fH; };
 
-   struct QRect         : public QRectFixDim   { Float_t fW, fH; };
+   struct QRect_t         : public QRectFixDim_t   { Float_t fW, fH; };
 
-   struct QLineFixC     : public QOrigin       { Float_t fDx, fDy; };
+   struct QLineFixC_t     : public QOrigin_t       { Float_t fDx, fDy; };
 
-   struct QHex          : public QOrigin       { Float_t fC, fR; };
+   struct QHex_t          : public QOrigin_t       { Float_t fC, fR; };
 
 protected:
    QuadType_e        fQuadType;

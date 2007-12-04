@@ -65,9 +65,9 @@ int useLuminanceAlpha = 1;
 /******************************************************************************/
 
 //______________________________________________________________________________
-static TexGlyphVertexInfo* getTCVI(TexFont * txf, int c)
+static TexGlyphVertexInfo_t* getTCVI(TexFont * txf, int c)
 {
-   TexGlyphVertexInfo *tgvi;
+   TexGlyphVertexInfo_t *tgvi;
 
    /* Automatically substitute uppercase letters with lowercase if not
       uppercase available (and vice versa). */
@@ -180,13 +180,13 @@ TexFont* txfLoadFont(const char *filename)
       SWAPL(&txf->max_descent, tmp);
       SWAPL(&txf->num_glyphs, tmp);
    }
-   txf->tgi = (TexGlyphInfo *) malloc(txf->num_glyphs * sizeof(TexGlyphInfo));
+   txf->tgi = (TexGlyphInfo_t *) malloc(txf->num_glyphs * sizeof(TexGlyphInfo_t));
    if (txf->tgi == 0) {
       lastError = "out of memory.";
       goto error;
    }
-   assert(sizeof(TexGlyphInfo) == 12);  /* Ensure external file format size. */
-   got = fread(txf->tgi, sizeof(TexGlyphInfo), txf->num_glyphs, file);
+   assert(sizeof(TexGlyphInfo_t) == 12);  /* Ensure external file format size. */
+   got = fread(txf->tgi, sizeof(TexGlyphInfo_t), txf->num_glyphs, file);
    EXPECT(txf->num_glyphs);
 
    if (swap) {
@@ -196,8 +196,8 @@ TexFont* txfLoadFont(const char *filename)
          SWAPS(&txf->tgi[i].y, tmp);
       }
    }
-   txf->tgvi = (TexGlyphVertexInfo *)
-      malloc(txf->num_glyphs * sizeof(TexGlyphVertexInfo));
+   txf->tgvi = (TexGlyphVertexInfo_t *)
+      malloc(txf->num_glyphs * sizeof(TexGlyphVertexInfo_t));
    if (txf->tgvi == 0) {
       lastError = "out of memory.";
       goto error;
@@ -208,7 +208,7 @@ TexFont* txfLoadFont(const char *filename)
    xstep = 0.5 / w;
    ystep = 0.5 / h;
    for (i = 0; i < txf->num_glyphs; i++) {
-      TexGlyphInfo *tgi;
+      TexGlyphInfo_t *tgi;
 
       tgi = &txf->tgi[i];
       txf->tgvi[i].t0[0] = tgi->x / w - xstep; // MT - xstep
@@ -245,8 +245,8 @@ TexFont* txfLoadFont(const char *filename)
    txf->min_glyph = min_glyph;
    txf->range = max_glyph - min_glyph + 1;
 
-   txf->lut = (TexGlyphVertexInfo **)
-      calloc(txf->range, sizeof(TexGlyphVertexInfo *));
+   txf->lut = (TexGlyphVertexInfo_t **)
+      calloc(txf->range, sizeof(TexGlyphVertexInfo_t *));
    if (txf->lut == 0) {
       lastError = "out of memory.";
       goto error;
@@ -426,7 +426,7 @@ void txfUnloadFont(TexFont * txf)
 void txfGetStringMetrics(TexFont * txf, const char *TString, int len,
                          int &width, int &max_ascent, int &max_descent)
 {
-   TexGlyphVertexInfo *tgvi;
+   TexGlyphVertexInfo_t *tgvi;
    int     w, i;
    int ma = 0, md = 0;
 
@@ -465,7 +465,7 @@ void txfGetStringMetrics(TexFont * txf, const char *TString, int len,
 //______________________________________________________________________________
 void txfRenderGlyph(TexFont * txf, int c)
 {
-   TexGlyphVertexInfo *tgvi;
+   TexGlyphVertexInfo_t *tgvi;
 
    tgvi = getTCVI(txf, c);
    glBegin(GL_QUADS);
@@ -508,7 +508,7 @@ void txfRenderString(TexFont * txf, const char *TString, int len,
    glBegin(GL_QUADS);
    for (int i = 0; i < len; i++) {
 
-      TexGlyphVertexInfo *tgvi;
+      TexGlyphVertexInfo_t *tgvi;
 
       tgvi = getTCVI(txf, TString[i]);
 
@@ -552,7 +552,7 @@ void txfRenderString(TexFont * txf, const char *TString, int len,
 //______________________________________________________________________________
 void txfRenderGlyphZW(TexFont * txf, int c, float z, float w)
 {
-   TexGlyphVertexInfo *tgvi;
+   TexGlyphVertexInfo_t *tgvi;
 
    tgvi = getTCVI(txf, c);
    glBegin(GL_QUADS);
@@ -592,7 +592,7 @@ enum {
 //______________________________________________________________________________
 void txfRenderFancyString(TexFont * txf, char *TString, int len)
 {
-   TexGlyphVertexInfo *tgvi;
+   TexGlyphVertexInfo_t *tgvi;
    GLubyte c[4][3];
    int mode = MONO;
    int i;

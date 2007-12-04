@@ -21,16 +21,16 @@
 
 namespace
 {
-struct Seg
+struct Seg_t
 {
    // Helper class for building 2D polygons from TBuffer3D.
 
    Int_t v1;
    Int_t v2;
 
-   Seg(Int_t i1=-1, Int_t i2=-1):v1(i1), v2(i2){};
+   Seg_t(Int_t i1=-1, Int_t i2=-1):v1(i1), v2(i2){};
 };
-typedef std::list<Seg>::iterator It_t;
+typedef std::list<Seg_t>::iterator It_t;
 }
 
 
@@ -267,13 +267,13 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
       }
       pp.push_back(head);
       // printf("start idx head %d, tail %d\n", head, tail);
-      std::list<Seg> segs;
+      std::list<Seg_t> segs;
       for(UInt_t s = 1; s < Nseg; ++s)
-         segs.push_back(Seg(fBuff->fSegs[3*seg[s] + 1],fBuff->fSegs[3*seg[s] + 2]));
+         segs.push_back(Seg_t(fBuff->fSegs[3*seg[s] + 1],fBuff->fSegs[3*seg[s] + 2]));
 
 
       Bool_t accepted = kFALSE;
-      for(std::list<Seg>::iterator it = segs.begin(); it != segs.end(); it++ )
+      for(std::list<Seg_t>::iterator it = segs.begin(); it != segs.end(); it++ )
       {
          Int_t mv1 = fIdxMap[(*it).v1];
          Int_t mv2 = fIdxMap[(*it).v2];
@@ -304,8 +304,8 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
    // First creates a segment pool according to reduced and projected points
    // and then build polygons from the pool.
 
-   std::list<Seg> segs;
-   std::list<Seg>::iterator it;
+   std::list<Seg_t> segs;
+   std::list<Seg_t>::iterator it;
    TEveProjection* projection = fProjector->GetProjection();
    for(UInt_t s = 0; s < fBuff->NbSegs(); ++s)
    {
@@ -328,7 +328,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
       }
       if(duplicate == kFALSE && projection->AcceptSegment(fPnts[vor1], fPnts[vor2], TEveProjection::fgEps))
       {
-         segs.push_back(Seg(vor1, vor2));
+         segs.push_back(Seg_t(vor1, vor2));
       }
    }
 

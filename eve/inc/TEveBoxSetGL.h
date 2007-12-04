@@ -28,7 +28,7 @@ protected:
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    Int_t  PrimitiveType() const;
-   Bool_t SetupColor(const TEveDigitSet::DigitBase& q) const;
+   Bool_t SetupColor(const TEveDigitSet::DigitBase_t& q) const;
    void   MakeOriginBox(Float_t p[24], Float_t dx, Float_t dy, Float_t dz) const;
    void   RenderBox(const Float_t p[24]) const;
    void   MakeDisplayList() const;

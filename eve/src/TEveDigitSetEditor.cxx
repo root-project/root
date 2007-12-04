@@ -178,7 +178,7 @@ void TEveDigitSetEditor::PlotHisto(Int_t min, Int_t max)
    h->SetBit(kCanDelete);
    TEveChunkManager::iterator qi(fM->fPlex);
    while (qi.next())
-      h->Fill(((TEveDigitSet::DigitBase*)qi())->fValue);
+      h->Fill(((TEveDigitSet::DigitBase_t*)qi())->fValue);
 
    gStyle->SetOptStat(1111111);
    h->Draw();

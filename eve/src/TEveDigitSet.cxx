@@ -80,11 +80,11 @@ TEveDigitSet::~TEveDigitSet()
 /******************************************************************************/
 
 //______________________________________________________________________________
-TEveDigitSet::DigitBase* TEveDigitSet::NewDigit()
+TEveDigitSet::DigitBase_t* TEveDigitSet::NewDigit()
 {
    // Protected method called whenever a new digit is added.
 
-   fLastDigit = new (fPlex.NewAtom()) DigitBase(fDefaultValue);
+   fLastDigit = new (fPlex.NewAtom()) DigitBase_t(fDefaultValue);
    return fLastDigit;
 }
 
@@ -96,7 +96,7 @@ void TEveDigitSet::ReleaseIds()
 
    TEveChunkManager::iterator qi(fPlex);
    while (qi.next()) {
-      DigitBase& q = * (DigitBase*) qi();
+      DigitBase_t& q = * (DigitBase_t*) qi();
       if (q.fId.GetObject()) {
          delete q.fId.GetObject();
          q.fId = 0;
@@ -147,7 +147,7 @@ void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
       Int_t   n = fPlex.NAtoms(c);
       while (n--)
       {
-         Int_t v = ((DigitBase*)a)->fValue;
+         Int_t v = ((DigitBase_t*)a)->fValue;
          if (v < min) min = v;
          if (v > max) max = v;
          a += fPlex.S();
@@ -233,7 +233,7 @@ void TEveDigitSet::DigitSelected(Int_t idx)
    if (fEmitSignals) {
       CtrlClicked(this, idx);
    } else {
-      DigitBase* qb = GetDigit(idx);
+      DigitBase_t* qb = GetDigit(idx);
       TObject* obj = qb->fId.GetObject();
       printf("TEveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%lx\n",
              idx, qb->fValue, (ULong_t)obj);

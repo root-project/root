@@ -34,7 +34,7 @@ protected:
 public:
    TEveLine(Int_t n_points=0, TreeVarType_e tv_type=TVT_XYZ);
    TEveLine(const Text_t* name, Int_t n_points=0, TreeVarType_e tv_type=TVT_XYZ);
-   virtual ~TEveLine();
+   virtual ~TEveLine() {}
 
    virtual void SetMarkerColor(Color_t col)
    { TAttMarker::SetMarkerColor(col); }

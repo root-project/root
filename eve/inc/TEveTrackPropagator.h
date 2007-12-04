@@ -27,12 +27,12 @@ class TEveTrackPropagator: public TObject,
    friend class TEveTrackPropagatorSubEditor;
 
 public:
-   struct Vertex4D
+   struct Vertex4D_t
    {
       Float_t x, y, z, t;
 
-      Vertex4D() : x(0), y(0), z(0), t(0) {}
-      Vertex4D(Float_t _x, Float_t _y, Float_t _z, Float_t _t=0) :
+      Vertex4D_t() : x(0), y(0), z(0), t(0) {}
+      Vertex4D_t(Float_t _x, Float_t _y, Float_t _z, Float_t _t=0) :
          x(_x), y(_y), z(_z), t(_t) {}
 
       Float_t Mag()  const { return TMath::Sqrt(x*x+y*y+z*z);}
@@ -42,20 +42,20 @@ public:
       Float_t Perp2() const { return x*x+y*y;}
       Float_t R()     const { return Perp(); }
 
-      Vertex4D operator + (const Vertex4D & b)
-      { return Vertex4D(x + b.x, y + b.y, z + b.z, t + b.t); }
+      Vertex4D_t operator + (const Vertex4D_t & b)
+      { return Vertex4D_t(x + b.x, y + b.y, z + b.z, t + b.t); }
 
-      Vertex4D operator - (const Vertex4D & b)
-      { return Vertex4D(x - b.x, y - b.y, z - b.z, t - b.t); }
+      Vertex4D_t operator - (const Vertex4D_t & b)
+      { return Vertex4D_t(x - b.x, y - b.y, z - b.z, t - b.t); }
 
-      Vertex4D operator * (Float_t a)
-      { return Vertex4D(a*x, a*y, a*z, a*t); }
+      Vertex4D_t operator * (Float_t a)
+      { return Vertex4D_t(a*x, a*y, a*z, a*t); }
 
-      Vertex4D& operator += (const Vertex4D & b)
+      Vertex4D_t& operator += (const Vertex4D_t & b)
       { x += b.x; y += b.y; z += b.z; t += b.t; return *this; }
    };
 
-   struct Helix
+   struct Helix_t
    {
       Float_t fA;           // contains charge and magnetic field data
       Float_t fLam;         // momentum ratio pT/pZ
@@ -65,14 +65,14 @@ public:
       Float_t fSin,  fCos;  // current sin, cos
       Float_t fXoff, fYoff; // offset for fitting daughters
 
-      Helix() :
+      Helix_t() :
          fLam  (0), fR    (0), fPhiStep (0), fTimeStep (0) ,
          fSin  (0), fCos  (0),
          fXoff (0), fYoff (0)
       {}
 
-      void Step(Vertex4D& v, TEveVector& p);
-      void StepVertex(Vertex4D& v, TEveVector& p, Vertex4D& forw);
+      void Step(Vertex4D_t& v, TEveVector& p);
+      void StepVertex(Vertex4D_t& v, TEveVector& p, Vertex4D_t& forw);
    };
 
 private:
@@ -108,12 +108,12 @@ protected:
 
    Int_t                    fCharge;        // particle charge
    Float_t                  fVelocity;      // particle velocity 
-   std::vector<Vertex4D>    fPoints;        // calculated point
-   Vertex4D                 fV;             // current vertex 
+   std::vector<Vertex4D_t>  fPoints;        // calculated point
+   Vertex4D_t               fV;             // current vertex 
    Int_t                    fN;             // current step number;
    Int_t                    fNLast;         // last step
    Int_t                    fNMax;          // max steps
-   Helix                    fH;             // helix
+   Helix_t                  fH;             // helix
 
    void    RebuildTracks();
 

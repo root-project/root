@@ -17,7 +17,7 @@
 #include <cassert>
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix::Step(Vertex4D& v, TEveVector& p)
+void TEveTrackPropagator::Helix_t::Step(Vertex4D_t& v, TEveVector& p)
 {
    v.x += (p.x*fSin - p.y*(1 - fCos))/fA + fXoff;
    v.y += (p.y*fSin + p.x*(1 - fCos))/fA + fYoff;
@@ -31,7 +31,7 @@ void TEveTrackPropagator::Helix::Step(Vertex4D& v, TEveVector& p)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix::StepVertex(Vertex4D& v, TEveVector& p, Vertex4D& forw)
+void TEveTrackPropagator::Helix_t::StepVertex(Vertex4D_t& v, TEveVector& p, Vertex4D_t& forw)
 {
    forw.x = v.x + (p.x*fSin - p.y*(1 - fCos))/fA + fXoff;
    forw.y = v.y + (p.y*fSin + p.x*(1 - fCos))/fA + fYoff;
@@ -198,7 +198,7 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
          crosR = true;
 
       Float_t maxR2 = fMaxR * fMaxR;
-      Vertex4D forw;
+      Vertex4D_t forw;
       while (fN < fNLast)
       {
          fH.StepVertex(fV, p, forw);
@@ -245,7 +245,7 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
          Float_t yf =  fV.y + (p.y*sinf + p.x*(1 - cosf))/fH.fA;
          fH.fXoff =  (v.x - xf)/fnsteps;
          fH.fYoff =  (v.y - yf)/fnsteps;
-         Vertex4D forw;
+         Vertex4D_t forw;
          for (Int_t l=0; l<nsteps; l++)
          {
             fH.StepVertex(fV, p, forw);
@@ -333,7 +333,7 @@ void TEveTrackPropagator::FillPointSet(TEvePointSet* ps) const
    ps->Reset(size);
    for (Int_t i = 0; i < size; ++i)
    {
-      const Vertex4D& v = fPoints[i];
+      const Vertex4D_t& v = fPoints[i];
       ps->SetNextPoint(v.x, v.y, v.z);
    }
 }

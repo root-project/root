@@ -31,8 +31,8 @@ TEveStraightLineSet::TEveStraightLineSet(const Text_t* n, const Text_t* t):
    TEveElement (),
    TNamed        (n, t),
 
-   fLinePlex      (sizeof(TEveLine), 4),
-   fMarkerPlex    (sizeof(Marker), 8),
+   fLinePlex      (sizeof(Line_t), 4),
+   fMarkerPlex    (sizeof(Marker_t), 8),
    fOwnLinesIds   (kFALSE),
    fOwnMarkersIds (kFALSE),
    fRnrMarkers    (kTRUE),
@@ -41,6 +41,8 @@ TEveStraightLineSet::TEveStraightLineSet(const Text_t* n, const Text_t* t):
    fTrans         (kFALSE),
    fHMTrans       ()
 {
+   // Constructor.
+
    fMainColorPtr = &fLineColor;
    fLineColor    = 4;
    fMarkerColor  = 2;
@@ -53,7 +55,9 @@ TEveStraightLineSet::TEveStraightLineSet(const Text_t* n, const Text_t* t):
 void TEveStraightLineSet::AddLine(Float_t x1, Float_t y1, Float_t z1,
                                   Float_t x2, Float_t y2, Float_t z2)
 {
-   fLastLine = new (fLinePlex.NewAtom()) TEveLine(x1, y1, z1, x2, y2, z2);
+   // Add a line.
+
+   fLastLine = new (fLinePlex.NewAtom()) Line_t(x1, y1, z1, x2, y2, z2);
 }
 
 /******************************************************************************/
@@ -61,7 +65,9 @@ void TEveStraightLineSet::AddLine(Float_t x1, Float_t y1, Float_t z1,
 //______________________________________________________________________________
 void TEveStraightLineSet::AddMarker(Int_t line, Float_t pos)
 {
-   /*Marker* marker = */new (fMarkerPlex.NewAtom()) Marker(line, pos);
+   // Add a marker for line with given index on relative position pos.
+
+   /*Marker_t* marker = */new (fMarkerPlex.NewAtom()) Marker_t(line, pos);
 }
 
 /******************************************************************************/
@@ -69,6 +75,9 @@ void TEveStraightLineSet::AddMarker(Int_t line, Float_t pos)
 //______________________________________________________________________________
 void TEveStraightLineSet::ComputeBBox()
 {
+   // Compute bounding-box.
+   // Virtual from TAttBBox.
+
    static const TEveException eH("TEveStraightLineSet::ComputeBBox ");
    if(fLinePlex.Size() == 0) {
       BBoxZero();
@@ -79,8 +88,8 @@ void TEveStraightLineSet::ComputeBBox()
 
    TEveChunkManager::iterator li(fLinePlex);
    while (li.next()) {
-      BBoxCheckPoint(((TEveLine*)li())->fV1);
-      BBoxCheckPoint(((TEveLine*)li())->fV2);
+      BBoxCheckPoint(((Line_t*)li())->fV1);
+      BBoxCheckPoint(((Line_t*)li())->fV2);
    }
 }
 
@@ -89,6 +98,8 @@ void TEveStraightLineSet::ComputeBBox()
 //______________________________________________________________________________
 void TEveStraightLineSet::Paint(Option_t* /*option*/)
 {
+   // Paint the line-set.
+
    static const TEveException eH("TEveStraightLineSet::Paint ");
 
    TBuffer3D buff(TBuffer3DTypes::kGeneric);
@@ -111,6 +122,9 @@ void TEveStraightLineSet::Paint(Option_t* /*option*/)
 //______________________________________________________________________________
 TClass* TEveStraightLineSet::ProjectedClass() const
 {
+   // Return class of projected object.
+   // Virtual from TEveProjectable.
+
    return TEveStraightLineSetProjected::Class();
 }
 
@@ -123,19 +137,25 @@ TClass* TEveStraightLineSet::ProjectedClass() const
 ClassImp(TEveStraightLineSetProjected)
 
 //______________________________________________________________________________
-   TEveStraightLineSetProjected::TEveStraightLineSetProjected() : TEveStraightLineSet(), TEveProjected ()
-{}
+TEveStraightLineSetProjected::TEveStraightLineSetProjected() :
+   TEveStraightLineSet(), TEveProjected ()
+{
+   // Constructor.
+}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* model)
+void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* proj,
+                                                 TEveProjectable* model)
 {
+   // Set projection manager and model object.
+
    TEveProjected::SetProjection(proj, model);
 
    // copy line and marker attributes
    * (TAttMarker*)this = * dynamic_cast<TAttMarker*>(fProjectable);
-   * (TAttLine*)this   = * dynamic_cast<TAttLine*>(fProjectable);
+   * (TAttLine*)  this = * dynamic_cast<TAttLine*>(fProjectable);
 }
 
 /******************************************************************************/
@@ -143,13 +163,15 @@ void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* proj, TE
 //______________________________________________________________________________
 void TEveStraightLineSetProjected::UpdateProjection()
 {
-   TEveProjection&   proj  = * fProjector->GetProjection();
+   // Callback that actually performs the projection.
+   // Called when projection parameters have been updated.
+
+   TEveProjection&      proj  = * fProjector->GetProjection();
    TEveStraightLineSet& orig  = * dynamic_cast<TEveStraightLineSet*>(fProjectable);
 
-   // lines
+   // Lines
    Int_t NL = orig.GetLinePlex().Size();
-   fLinePlex.Reset(sizeof(TEveLine), NL);
-   TEveLine* l;
+   fLinePlex.Reset(sizeof(Line_t), NL);
    Float_t p1[3];
    Float_t p2[3];
    TEveChunkManager::iterator li(orig.GetLinePlex());
@@ -161,7 +183,7 @@ void TEveStraightLineSetProjected::UpdateProjection()
    orig.RefHMTrans().GetPos(x, y,z);
    while (li.next())
    {
-      l = (TEveLine*) li();
+      Line_t* l = (Line_t*) li();
       p1[0] = l->fV1[0];  p1[1] = l->fV1[1]; p1[2] = l->fV1[2];
       p2[0] = l->fV2[0];  p2[1] = l->fV2[1]; p2[2] = l->fV2[2];
       mx.MultiplyIP(p1);
@@ -173,14 +195,13 @@ void TEveStraightLineSetProjected::UpdateProjection()
       AddLine(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
    }
 
-   // markers
+   // Markers
    Int_t NM = orig.GetMarkerPlex().Size();
-   fMarkerPlex.Reset(sizeof(Marker), NM);
-   Marker* m;
+   fMarkerPlex.Reset(sizeof(Marker_t), NM);
    TEveChunkManager::iterator mi(orig.GetMarkerPlex());
    while (mi.next())
    {
-      m = (Marker*) mi();
+      Marker_t* m = (Marker_t*) mi();
       AddMarker(m->fLineID, m->fPos);
    }
 }

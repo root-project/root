@@ -25,7 +25,7 @@ protected:
 
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
-   Bool_t SetupColor(const TEveDigitSet::DigitBase& q) const;
+   Bool_t SetupColor(const TEveDigitSet::DigitBase_t& q) const;
 
    void   RenderQuads(TGLRnrCtx & rnrCtx) const;
    void   RenderLines(TGLRnrCtx & rnrCtx) const;

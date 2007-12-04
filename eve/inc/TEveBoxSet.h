@@ -35,13 +35,13 @@ public:
 
 protected:
 
-   struct BFreeBox       : public DigitBase { Float_t fVertices[24]; };
+   struct BFreeBox       : public DigitBase_t { Float_t fVertices[24]; };
 
-   struct BOrigin        : public DigitBase { Float_t fA, fB, fC; };
+   struct BOrigin_t        : public DigitBase_t { Float_t fA, fB, fC; };
 
-   struct BAABox         : public BOrigin   { Float_t fW, fH, fD; };
+   struct BAABox_t         : public BOrigin_t   { Float_t fW, fH, fD; };
 
-   struct BAABoxFixedDim : public BOrigin {};
+   struct BAABoxFixedDim_t : public BOrigin_t {};
 
 protected:
    BoxType_e         fBoxType;      // Type of rendered box.

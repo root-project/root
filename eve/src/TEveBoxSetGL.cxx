@@ -54,7 +54,7 @@ Int_t TEveBoxSetGL::PrimitiveType() const
 }
 
 //______________________________________________________________________________
-inline Bool_t TEveBoxSetGL::SetupColor(const TEveDigitSet::DigitBase& q) const
+inline Bool_t TEveBoxSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 {
    // Set GL color for given primitive.
 
@@ -281,7 +281,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          glEnable(GL_NORMALIZE);
          while (bi.next())
          {
-            TEveBoxSet::BAABox& b = * (TEveBoxSet::BAABox*) bi();
+            TEveBoxSet::BAABox_t& b = * (TEveBoxSet::BAABox_t*) bi();
             if (SetupColor(b))
             {
                if (rnrCtx.SecSelection()) glLoadName(bi.index());
@@ -300,7 +300,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       {
          while (bi.next())
          {
-            TEveBoxSet::BAABoxFixedDim& b = * (TEveBoxSet::BAABoxFixedDim*) bi();
+            TEveBoxSet::BAABoxFixedDim_t& b = * (TEveBoxSet::BAABoxFixedDim_t*) bi();
             if (SetupColor(b))
             {
                if (rnrCtx.SecSelection()) glLoadName(bi.index());

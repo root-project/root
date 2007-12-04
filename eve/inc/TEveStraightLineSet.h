@@ -57,13 +57,13 @@ public:
       }
    };
 
-   struct Marker
+   struct Marker_t
    {
       Int_t        fLineID;
       Float_t      fPos;
       TRef         fRef;
 
-      Marker(Int_t lineID, Float_t pos) : fLineID(lineID), fPos(pos) {};
+      Marker_t(Int_t lineID, Float_t pos) : fLineID(lineID), fPos(pos) {};
    };
 
 protected:
@@ -76,10 +76,11 @@ protected:
    Bool_t            fRnrMarkers;
    Bool_t            fRnrLines;
 
-   TEveLine*         fLastLine; //!
+   TEveLine*           fLastLine; //!
 
    Bool_t            fTrans;
    TEveTrans         fHMTrans;
+
 public:
    TEveStraightLineSet(const Text_t* n="StraightLine", const Text_t* t="");
    virtual ~TEveStraightLineSet() {}
@@ -91,9 +92,7 @@ public:
    void SetTransMatrix(Double_t* carr)        { fHMTrans.SetFrom(carr); }
    void SetTransMatrix(const TGeoMatrix& mat) { fHMTrans.SetFrom(mat);  }
 
-
    virtual void SetLineColor(Color_t col) { SetMainColor(col); }
-
 
    void AddLine(Float_t x1, Float_t y1, Float_t z1, Float_t x2, Float_t y2, Float_t z2);
    void AddMarker(Int_t lineID, Float_t pos);
@@ -104,11 +103,11 @@ public:
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option="");
 
-   virtual void SetRnrMarkers(Bool_t x) {fRnrMarkers = x;}
-   virtual Bool_t GetRnrMarkers(){return fRnrMarkers;}
+   virtual Bool_t GetRnrMarkers() { return fRnrMarkers; }
+   virtual Bool_t GetRnrLines()   { return fRnrLines;   }
 
-   virtual void SetRnrLines(Bool_t x) {fRnrLines = x;}
-   virtual Bool_t GetRnrLines(){return fRnrLines;}
+   virtual void SetRnrMarkers(Bool_t x) { fRnrMarkers = x; }
+   virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
 
    virtual TClass* ProjectedClass() const;
 

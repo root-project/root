@@ -24,6 +24,8 @@ TEveLine::TEveLine(Int_t n_points, TreeVarType_e tv_type) :
    fRnrLine   (kTRUE),
    fRnrPoints (kFALSE)
 {
+   // Constructor.
+
    fMainColorPtr = &fLineColor;
 }
 
@@ -33,9 +35,7 @@ TEveLine::TEveLine(const Text_t* name, Int_t n_points, TreeVarType_e tv_type) :
    fRnrLine   (kTRUE),
    fRnrPoints (kFALSE)
 {
+   // Constructor.
+
    fMainColorPtr = &fLineColor;
 }
-
-//______________________________________________________________________________
-TEveLine::~TEveLine()
-{}

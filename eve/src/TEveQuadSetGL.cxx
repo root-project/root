@@ -65,7 +65,7 @@ void TEveQuadSetGL::SetBBox()
 /******************************************************************************/
 
 //______________________________________________________________________________
-inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase& q) const
+inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 {
    if (fM->fValueIsColor)
    {
@@ -156,7 +156,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
       {
          Float_t e1[3], e2[3], normal[3];
          while (qi.next()) {
-            TEveQuadSet::QFreeQuad& q = * (TEveQuadSet::QFreeQuad*) qi();
+            TEveQuadSet::QFreeQuad_t& q = * (TEveQuadSet::QFreeQuad_t*) qi();
             if (SetupColor(q))
             {
                Float_t* p = q.fVertices;
@@ -179,7 +179,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
       case TEveQuadSet::QT_RectangleXY:
       {
          while (qi.next()) {
-            TEveQuadSet::QRect& q = * (TEveQuadSet::QRect*) qi();
+            TEveQuadSet::QRect_t& q = * (TEveQuadSet::QRect_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -197,7 +197,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
       case TEveQuadSet::QT_RectangleXZ:
       {
          while (qi.next()) {
-            TEveQuadSet::QRect& q = * (TEveQuadSet::QRect*) qi();
+            TEveQuadSet::QRect_t& q = * (TEveQuadSet::QRect_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -215,7 +215,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
       case TEveQuadSet::QT_RectangleYZ:
       {
          while (qi.next()) {
-            TEveQuadSet::QRect& q = * (TEveQuadSet::QRect*) qi();
+            TEveQuadSet::QRect_t& q = * (TEveQuadSet::QRect_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -235,7 +235,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          const Float_t& w = mQ.fDefWidth;
          const Float_t& h = mQ.fDefHeight;
          while (qi.next()) {
-            TEveQuadSet::QRectFixDim& q = * (TEveQuadSet::QRectFixDim*) qi();
+            TEveQuadSet::QRectFixDim_t& q = * (TEveQuadSet::QRectFixDim_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -254,7 +254,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
       {
          const Float_t& z = mQ.fDefCoord;
          while (qi.next()) {
-            TEveQuadSet::QRectFixC& q = * (TEveQuadSet::QRectFixC*) qi();
+            TEveQuadSet::QRectFixC_t& q = * (TEveQuadSet::QRectFixC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -273,7 +273,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
       {
          const Float_t& y = mQ.fDefCoord;
          while (qi.next()) {
-            TEveQuadSet::QRectFixC& q = * (TEveQuadSet::QRectFixC*) qi();
+            TEveQuadSet::QRectFixC_t& q = * (TEveQuadSet::QRectFixC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -292,7 +292,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
       {
          const Float_t& x = mQ.fDefCoord;
          while (qi.next()) {
-            TEveQuadSet::QRectFixC& q = * (TEveQuadSet::QRectFixC*) qi();
+            TEveQuadSet::QRectFixC_t& q = * (TEveQuadSet::QRectFixC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -313,7 +313,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          const Float_t& w = mQ.fDefWidth;
          const Float_t& h = mQ.fDefHeight;
          while (qi.next()) {
-            TEveQuadSet::QRectFixDimC& q = * (TEveQuadSet::QRectFixDimC*) qi();
+            TEveQuadSet::QRectFixDimC_t& q = * (TEveQuadSet::QRectFixDimC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -334,7 +334,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          const Float_t& w = mQ.fDefWidth;
          const Float_t& h = mQ.fDefHeight;
          while (qi.next()) {
-            TEveQuadSet::QRectFixDimC& q = * (TEveQuadSet::QRectFixDimC*) qi();
+            TEveQuadSet::QRectFixDimC_t& q = * (TEveQuadSet::QRectFixDimC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -355,7 +355,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          const Float_t& w = mQ.fDefWidth;
          const Float_t& h = mQ.fDefHeight;
          while (qi.next()) {
-            TEveQuadSet::QRectFixDimC& q = * (TEveQuadSet::QRectFixDimC*) qi();
+            TEveQuadSet::QRectFixDimC_t& q = * (TEveQuadSet::QRectFixDimC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -396,7 +396,7 @@ void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
       {
          const Float_t& z = mQ.fDefCoord;
          while (qi.next()) {
-            TEveQuadSet::QLineFixC& q = * (TEveQuadSet::QLineFixC*) qi();
+            TEveQuadSet::QLineFixC_t& q = * (TEveQuadSet::QLineFixC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -413,7 +413,7 @@ void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
       {
          const Float_t& z = mQ.fDefCoord;
          while (qi.next()) {
-            TEveQuadSet::QLineFixC& q = * (TEveQuadSet::QLineFixC*) qi();
+            TEveQuadSet::QLineFixC_t& q = * (TEveQuadSet::QLineFixC_t*) qi();
             if (SetupColor(q))
             {
                if (rnrCtx.SecSelection()) glLoadName(qi.index());
@@ -458,7 +458,7 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
       case TEveQuadSet::QT_HexagonXY:
       {
          while (qi.next()) {
-            TEveQuadSet::QHex& q = * (TEveQuadSet::QHex*) qi();
+            TEveQuadSet::QHex_t& q = * (TEveQuadSet::QHex_t*) qi();
             if (SetupColor(q))
             {
                const Float_t rh = q.fR * 0.5;
@@ -480,7 +480,7 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
       case TEveQuadSet::QT_HexagonYX:
       {
          while (qi.next()) {
-            TEveQuadSet::QHex& q = * (TEveQuadSet::QHex*) qi();
+            TEveQuadSet::QHex_t& q = * (TEveQuadSet::QHex_t*) qi();
             if (SetupColor(q))
             {
                const Float_t rh = q.fR * 0.5;

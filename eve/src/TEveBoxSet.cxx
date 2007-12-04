@@ -66,8 +66,8 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::BoxType_e bt)
    switch (bt) {
       case BT_Undef:                return 0;
       case BT_FreeBox:              return sizeof(BFreeBox);
-      case BT_AABox:                return sizeof(BAABox);
-      case BT_AABoxFixedDim:        return sizeof(BAABoxFixedDim);
+      case BT_AABox:                return sizeof(BAABox_t);
+      case BT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
       default:                      throw(eH + "unexpected atom type.");
    }
    return 0;
@@ -129,7 +129,7 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, F
    if (fBoxType != BT_AABox)
       throw(eH + "expect axis-aligned box-type.");
 
-   BAABox* box = (BAABox*) NewDigit();
+   BAABox_t* box = (BAABox_t*) NewDigit();
    box->fA = a; box->fB = b; box->fC = c;
    box->fW = w; box->fH = h; box->fD = d;
 }
@@ -145,7 +145,7 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c)
    if (fBoxType != BT_AABoxFixedDim)
       throw(eH + "expect axis-aligned fixed-dimension box-type.");
 
-   BAABoxFixedDim* box = (BAABoxFixedDim*) NewDigit();
+   BAABoxFixedDim_t* box = (BAABoxFixedDim_t*) NewDigit();
    box->fA = a; box->fB = b; box->fC = c;
 }
 
@@ -195,7 +195,7 @@ void TEveBoxSet::ComputeBBox()
       case BT_AABox:
       {
          while (bi.next()) {
-            BAABox& b = * (BAABox*) bi();
+            BAABox_t& b = * (BAABox_t*) bi();
             BBoxCheckPoint(b.fA, b.fB, b.fC);
             BBoxCheckPoint(b.fA + b.fW, b.fB + b.fH , b.fC + b.fD);
          }
@@ -205,7 +205,7 @@ void TEveBoxSet::ComputeBBox()
       case BT_AABoxFixedDim:
       {
          while (bi.next()) {
-            BAABoxFixedDim& b = * (BAABoxFixedDim*) bi();
+            BAABoxFixedDim_t& b = * (BAABoxFixedDim_t*) bi();
             BBoxCheckPoint(b.fA, b.fB, b.fC);
             BBoxCheckPoint(b.fA + fDefWidth, b.fB + fDefHeight , b.fC + fDefDepth);
          }

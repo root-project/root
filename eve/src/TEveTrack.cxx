@@ -346,7 +346,7 @@ TClass* TEveTrack::ProjectedClass() const
 
 namespace {
 
-struct cmp_pathmark
+struct Cmp_pathmark_t
 {
    bool operator()(TEvePathMark* const & a, TEvePathMark* const & b)
    { return a->time < b->time; }
@@ -359,7 +359,7 @@ void TEveTrack::SortPathMarksByTime()
 {
    // Sort registerd pat-marks by time.
 
-   std::sort(fPathMarks.begin(), fPathMarks.end(), cmp_pathmark());
+   std::sort(fPathMarks.begin(), fPathMarks.end(), Cmp_pathmark_t());
 }
 
 /******************************************************************************/
