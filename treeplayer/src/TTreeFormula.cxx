@@ -5118,7 +5118,7 @@ Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)
             fDataMembers.AddAtAndExpand(collectioninfo,code);
             fLookupType[code]=kDataMember;
 
-         } else if (br->GetType()==0) {
+         } else if (br->GetID()<0) { 
             return kFALSE;
          } else {
             last = new TFormLeafInfoDirect(br);
