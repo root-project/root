@@ -2128,6 +2128,81 @@ int G__loadfile(const char *filenamein)
 }
 
 /**************************************************************************
+* G__setfilecontext()
+*
+* Set the current G__ifile to filename, allocate an entry in G__srcfiles
+* if necessary. Set ifile to the previous G__ifile to it can be popped.
+* This function does not load any file, it just provides a valid G__ifile
+* context for type manipulations.
+*
+* Returns 0 in case of error.
+* Returns 1 if file entry is newly allocated, 2 otherwise.
+*
+**************************************************************************/
+
+int  G__setfilecontext(const char* filename, G__input_file* ifile)
+{
+   if (!filename) return 0;
+   
+   int null_entry = -1;
+   int found_entry = -1;
+   // find G__srcfile index matching filename
+   for (int i = 0; (found_entry == -1) && i < G__nfile; ++i)
+      if (G__srcfile[i].filename)
+          if (!strcmp(G__srcfile[i].filename, filename)) {
+          }
+          else if (null_entry == -1)
+             null_entry = i;
+
+   if (found_entry == -1) {
+      int fentry = null_entry;
+      if (fentry == -1)
+         fentry = G__nfile;
+
+      G__srcfile[fentry].dictpos
+         = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
+      G__srcfile[fentry].dictpos->ptype = (char*)NULL;
+      G__store_dictposition(G__srcfile[fentry].dictpos);
+      if (null_entry == -1) {
+         G__nfile++;
+      }
+
+#ifdef G__SECURITY
+      G__srcfile[fentry].security = G__security;
+#endif
+      int hash = 0;
+      int temp = 0;
+      G__hash(filename,hash,temp);
+      G__srcfile[fentry].hash = hash;
+      G__srcfile[fentry].prepname = NULL;
+      G__srcfile[fentry].filename = (char*)malloc(strlen(filename)+1);
+      strcpy(G__srcfile[fentry].filename,filename);
+      G__srcfile[fentry].fp = 0;
+      G__srcfile[fentry].included_from = G__ifile.filenum;
+      G__srcfile[fentry].ispermanentsl = 1;
+      G__srcfile[fentry].initsl = 0;
+      G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
+      G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
+      G__srcfile[fentry].slindex = -1;
+      G__srcfile[fentry].breakpoint = 0;
+      found_entry = fentry;
+   }
+
+   if (ifile) *ifile = G__ifile;
+   G__ifile.fp = G__srcfile[found_entry].fp;
+   G__ifile.filenum = found_entry;
+   strcpy(G__ifile.name, G__srcfile[found_entry].filename);
+   G__ifile.line_number = 0;
+   G__ifile.str = 0;
+   G__ifile.pos = 0;
+   G__ifile.vindex = 0;
+   if (found_entry != -1)
+      return 2;
+   return 1;
+}
+
+
+/**************************************************************************
 * G__preprocessor()
 *
 * Use C/C++ preprocessor prior to interpretation.

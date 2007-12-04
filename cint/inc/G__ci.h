@@ -1775,6 +1775,7 @@ extern G__EXPORT long G__int_cast G__P((G__value buf));
 extern G__EXPORT double G__double G__P((G__value buf));
 extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
 extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));
+extern G__EXPORT int  G__setfilecontext G__P((G__CONST char* filename, struct G__input_file* ifile));
 extern G__EXPORT int  G__unloadfile G__P((G__CONST char* filename));
 extern G__EXPORT int G__init_cint G__P((G__CONST char* command));
 extern G__EXPORT void G__scratch_all G__P((void));
