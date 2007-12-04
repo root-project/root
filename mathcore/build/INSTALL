@@ -1,7 +1,6 @@
-To install MathCore from CVS do the following: 
+To install MathMore from SVN (trunk revision) do the following : 
 
-   >   cvs -d :pserver:cvs@root.cern.ch:/user/cvs co -d mathcore root/mathcore
-
+   >   svn co  https://root.cern.ch/svn/root/trunk/mathcore mathcore
 
    >   cd mathcore 
 

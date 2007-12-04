@@ -13,7 +13,9 @@ lib_LTLIBRARIES = libMathMore.la
 
 libMathMore_la_SOURCES =	       \
          Chebyshev.cxx                 \
+         complex_quartic.h             \
          Derivator.cxx                 \
+         GSL1DMinimizer.h              \
          GSLChebSeries.h               \
          GSLDerivator.cxx              \
          GSLDerivator.h                \
@@ -21,28 +23,73 @@ libMathMore_la_SOURCES =	       \
          GSLFunctionWrapper.h          \
          GSLIntegrationWorkspace.h     \
          GSLIntegrator.cxx             \
-         GSLIntegrator.h               \
          GSLInterpolator.cxx           \
          GSLInterpolator.h             \
-         GSL1DMinimizer.h              \
-	 GSLRndmEngines.cxx            \
+         GSLMCIntegrationWorkspace.h   \
+         GSLMCIntegrator.cxx           \
+         GSLMinimizer.cxx              \
+         GSLMonteFunctionAdapter.h     \
+         GSLMonteFunctionWrapper.h     \
+         GSLMultiFit.h                 \
+         GSLMultiFitFunctionAdapter.h  \
+         GSLMultiFitFunctionWrapper.h  \
+         GSLMultiMinFunctionAdapter.h  \
+         GSLMultiMinFunctionWrapper.h  \
+         GSLMultiMinimizer.h           \
+         GSLNLSMinimizer.cxx           \
+         GSLRndmEngines.cxx            \
+         GSLRngWrapper.h               \
          GSLRootFdFSolver.h            \
          GSLRootFinder.cxx             \
          GSLRootFinderDeriv.cxx        \
          GSLRootFSolver.h              \
          GSLRootHelper.cxx             \
-         Integrator.cxx                \
+         GSLSimAnMinimizer.cxx         \
+         GSLSimAnnealing.cxx           \
          Interpolator.cxx              \
+         KelvinFunctions.cxx           \
          Minimizer1D.cxx               \
-         OneDimFunctionAdapter.h       \
          ParamFunction.cxx             \
-         PdfFuncMathMore.cxx           \
          Polynomial.cxx                \
-         ProbFuncInv.cxx               \
-         ProbFuncMathMore.cxx          \
+         QuantFuncMathMore.cxx         \
          RootFinderAlgorithms.cxx      \
-         SpecFuncMathMore.cxx          \
-         complex_quartic.h
+         SpecFuncMathMore.cxx          
+
+#add mathcore files 
+#include also Factory.cxx to ccreate GSL minimizers
+
+libMathMore_la_SOURCES +=	       \
+         3DConversions.cxx              \
+         3DDistances.cxx                \
+         AdaptiveIntegratorMultiDim.cxx \
+         AxisAngle.cxx                  \
+         AxisAngleXother.cxx            \
+         BitReproducible.cxx            \
+         Boost.cxx                      \
+         BoostX.cxx                     \
+         BoostY.cxx                     \
+         BoostZ.cxx                     \
+         EulerAngles.cxx                \
+         Factory.cxx                    \
+         GenVector_exception.cxx        \
+         Integrator.cxx                 \
+         LorentzRotation.cxx            \
+         PdfFuncMathCore.cxx            \
+	 Plane3D.cxx                    \
+         ProbFuncMathCore.cxx           \
+         QuantFuncMathCore.cxx          \
+         Quaternion.cxx                 \
+         QuaternionXaxial.cxx           \
+         Rotation3D.cxx                 \
+         Rotation3DxAxial.cxx           \
+         RotationZYX.cxx                \
+         SpecFuncCephes.h               \
+         SpecFuncCephes.cxx             \
+         SpecFuncCephesInv.cxx          \
+         SpecFuncMathCore.cxx           \
+         Transform3D.cxx                \
+         Translation3D.cxx              \
+         VectorUtil.cxx        
 
 
 INCLUDES = -I$(top_srcdir)/inc

@@ -42,7 +42,7 @@ public:
   MnFumiliMinimize(const FumiliFCNBase& fcn, const std::vector<double>& par, const std::vector<double>& err, unsigned int stra = 1) : MnApplication(fcn, MnUserParameterState(par,err), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn) {}
 
   /// construct from FumiliFCNBase + std::vector for parameters and covariance
-  MnFumiliMinimize(const FumiliFCNBase& fcn, const std::vector<double>& par, const std::vector<double>& cov, unsigned int nrow, unsigned int stra = 1) : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn) {}
+  MnFumiliMinimize(const FumiliFCNBase& fcn, const std::vector<double>& par, unsigned int nrow, const std::vector<double>& cov,  unsigned int stra = 1) : MnApplication(fcn, MnUserParameterState(par, cov, nrow), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn) {}
 
   /// construct from FumiliFCNBase + std::vector for parameters and MnUserCovariance
   MnFumiliMinimize(const FumiliFCNBase& fcn, const std::vector<double>& par, const MnUserCovariance& cov, unsigned int stra = 1) : MnApplication(fcn, MnUserParameterState(par, cov), MnStrategy(stra)), fMinimizer(FumiliMinimizer()), fFCN(fcn) {}

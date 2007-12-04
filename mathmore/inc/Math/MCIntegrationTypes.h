@@ -28,6 +28,10 @@
 #ifndef ROOT_Math_MCIntegrationTypes
 #define ROOT_Math_MCIntegrationTypes
 
+#ifndef ROOT_Math_AllIntegrationTypes
+#include "Math/AllIntegrationTypes.h"
+#endif
+
 
 namespace ROOT {
 namespace Math {
@@ -36,19 +40,13 @@ namespace Math {
 
   namespace MCIntegration {
 
-    /**
-	 enumeration specifying the integration types.
-	 <ul>
-	 <li>PLAIN
-	 <li>MISER
-	 <li>VEGAS
-	 </ul>
-	 @ingroup MCIntegration
-    */
+
+     using namespace IntegrationMultiDim;   
+
 
     // type of integration
 
-    enum Type { PLAIN, MISER, VEGAS};
+    //enum Type { PLAIN, MISER, VEGAS};
 
     enum Mode{IMPORTANCE, STRATIFIED, IMPORTANCE_ONLY };
  

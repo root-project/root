@@ -9,7 +9,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST =					\
-	Doxyfile.in
+	Minuit2.html Doxyfile.in
 
 docs:
 	if test -d html; then \

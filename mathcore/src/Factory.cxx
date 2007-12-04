@@ -1,4 +1,4 @@
-// @(#)root/fit:$Id$
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Fri Dec 22 14:43:33 2006
 
 /**********************************************************************
@@ -12,23 +12,29 @@
 
 #include "Math/Factory.h"
 
+#include "RConfigure.h"
 
-#define USE_PLUGIN_MANAGER
-
-#ifdef USE_PLUGIN_MANAGER
-// use PM 
 #include "Math/Minimizer.h"
+
+#ifndef MATH_NO_PLUGIN_MANAGER
+
+// use PM 
 #include "TPluginManager.h"
 #include "TROOT.h"
 
 #else 
 // all the minimizer implementation classes 
+#ifdef HAS_MINUIT2
 #include "Minuit2/Minuit2Minimizer.h"
+#endif
+#ifdef HAS_MINUIT
 #include "TMinuitMinimizer.h"
-#include "Fit/DummyMinimizer.h"
+#endif
+#ifdef R__HAS_MATHMORE
 #include "Math/GSLMinimizer.h"
 #include "Math/GSLNLSMinimizer.h"
 #include "Math/GSLSimAnMinimizer.h"
+#endif
 
 #endif
 
@@ -39,47 +45,13 @@
 #include <iostream>
 #endif
 
+#ifndef MATH_NO_PLUGIN_MANAGER 
+// use ROOT Plugin Manager to create Minimizer concrete classes 
 
-#ifndef USE_PLUGIN_MANAGER 
-int GetAlgorithmIndex(const std::string & minimType, const std::string & algoType) { 
-   // get index of specific algorithm for a given minimizer 
-
-   std::string algoname = algoType; 
-   std::transform(algoType.begin(), algoType.end(), algoname.begin(), (int(*)(int)) std::tolower ); 
-
-#ifdef DEBUG
-   std::cout << "get index for algorithm " << algoname << std::endl;
-#endif
-
-   if (minimType == "Fumili2" ) {
-      minimType = "Minuit2"; 
-      algoname = "fumili";
-   }
-
-   if (minimType == "Minuit2" || minimType == "Minuit" ) { 
-      if (algoname == "migrad") return 0; 
-      if (algoname == "simplex") return 1; 
-      if (algoname == "minimize" ) return 2; 
-      if (algoname == "scan" ) return 3; 
-      if (algoname == "fumili" ) return 4;
-      return 0; 
-   }
-
-   if (minimType == "GSLMultiMin") { 
-      if (algoname == "conjugatefr") return 0; 
-      if (algoname == "conjugatepr") return 1; 
-      if (algoname == "bfgs") return 2;
-   }
-   // for all other case use default value
-   return 0; 
-      
-}
-   
-#endif
-
-#ifdef USE_PLUGIN_MANAGER
 ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType, const std::string & algoType)  
 {
+   // create Minimizer using the plug-in manager given the type of Minimizer (MINUIT, MINUIT2, FUMILI, etc..) and 
+   // algorithm (MIGRAD, SIMPLEX, etc..)
 
    const char * minim = minimizerType.c_str();
    const char * algo = algoType.c_str();  
@@ -111,42 +83,54 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
    return 0;
                                                                                           
 }
+
 #else 
+
+// use directly classes instances 
+
 ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType, const std::string & algoType)  
 {
    // static method to create a minimizer . 
    // not using PM so direct dependency on all libraries (Minuit, Minuit2, MathMore, etc...)
-   // The default is the Minuit2 minimizer
+   // The default is the Minuit2 minimizer or GSL Minimizer
 
    // should use enumerations instead of string ?  
    
    Minimizer * min = 0; 
-   int algo = GetAlgorithmIndex(minimizerType,algoType);
+   std::string algo = algoType; 
 
-   if (minimizerType ==  "Minuit2" )        
-       min = new ROOT::Minuit2::Minuit2Minimizer(algo); 
 
+#ifdef HAS_MINUIT2
+   if (minimizerType ==  "Minuit2")        
+      min = new ROOT::Minuit2::Minuit2Minimizer(algoType.c_str()); 
+   if (minimizerType ==  "Fumili2")        
+      min = new ROOT::Minuit2::Minuit2Minimizer("fumili"); 
+#endif
+
+#ifdef HAS_MINUIT
    // use TMinuit
-//    else if (minimizerType ==  "Minuit" || minimizerType ==  "TMinuit")        
-//        min = new ROOT::Fit::TMinuitMinimizer(algo);        
+   if (minimizerType ==  "Minuit" || minimizerType ==  "TMinuit")        
+      min = new ROOT::Fit::TMinuitMinimizer(algoType,c_str());        
+#endif
 
+#ifdef R__HAS_MATHMORE
    // use GSL minimizer 
-   else if (minimizerType ==  "GSL")        
-       min = new ROOT::Math::GSLMinimizer(algo);        
+   if (minimizerType ==  "GSL")        
+      min = new ROOT::Math::GSLMinimizer(algoType.c_str());        
 
    else if (minimizerType ==  "GSL_NLS")        
-       min = new ROOT::Math::GSLNLSMinimizer();        
+      min = new ROOT::Math::GSLNLSMinimizer();        
 
    else if (minimizerType ==  "GSL_SIMAN")        
-       min = new ROOT::Math::GSLSimAnMinimizer();        
+      min = new ROOT::Math::GSLSimAnMinimizer();        
+#endif
 
-   // use dummy for testing
-   else if (minimizerType ==  "Dummy")        
-       min = new ROOT::Fit::DummyMinimizer();        
 
-   // DEFAULT IS MINUIT2 based on MIGRAD
+#ifdef HAS_MINUIT2
+   // DEFAULT IS MINUIT2 based on MIGRAD id minuit2 exists
    else
-       min = new ROOT::Minuit2::Minuit2Minimizer(); 
+      min = new ROOT::Minuit2::Minuit2Minimizer(); 
+#endif
 
    return min; 
 }

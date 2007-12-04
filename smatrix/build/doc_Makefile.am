@@ -9,7 +9,7 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST =					\
-	main.html doxyconfig.in
+	SMatrix.html SMatrixClass.html Functions.html SVector.html doxyconfig.in
 
 docs:
 	if test -d html; then \

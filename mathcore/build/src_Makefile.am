@@ -45,5 +45,5 @@ libMathCore_la_SOURCES =		\
 
 
 INCLUDES =			        \
-	-I$(top_srcdir)/inc
+	-I$(top_srcdir)/inc -DMATH_NO_PLUGIN_MANAGER
 

@@ -12,6 +12,7 @@
 
 #include "Minuit2/MnUserTransformation.h"
 
+
 #include <vector>
 
 namespace ROOT {
@@ -58,7 +59,7 @@ public:
   }
 
   /// access to parameters (row-wise)
-  const std::vector<MinuitParameter>& Parameters() const;
+   const std::vector<ROOT::Minuit2::MinuitParameter>& Parameters() const;
 
   /// access to parameters and errors in column-wise representation 
   std::vector<double> Params() const;

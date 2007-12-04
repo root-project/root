@@ -6,7 +6,7 @@ dnl
 AC_INIT(src/VariableMetricBuilder.cxx)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(Minuit2, 5.11.06)
+AM_INIT_AUTOMAKE(Minuit2, 5.18.00)
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -41,7 +41,7 @@ AC_SUBST(GMAKE)
 AC_PROG_RANLIB
 
 dnl files to be generated 
-AC_OUTPUT(Makefile inc/Makefile inc/Minuit2/Makefile src/Makefile 
+AC_OUTPUT(Makefile inc/Makefile inc/Minuit2/Makefile inc/Math/Makefile src/Makefile 
   doc/Doxyfile doc/Makefile test/Makefile test/MnSim/Makefile 
   test/MnTutorial/Makefile )
 

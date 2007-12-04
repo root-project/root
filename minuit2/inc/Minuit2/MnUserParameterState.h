@@ -109,7 +109,7 @@ public:
 // facade: forward interface of MnUserParameters and MnUserTransformation
 
   //access to parameters (row-wise)
-  const std::vector<MinuitParameter>& MinuitParameters() const;
+   const std::vector<ROOT::Minuit2::MinuitParameter>& MinuitParameters() const;
   //access to parameters and errors in column-wise representation 
   std::vector<double> Params() const;
   std::vector<double> Errors() const;

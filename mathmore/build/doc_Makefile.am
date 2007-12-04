@@ -8,7 +8,7 @@
 # conventions.
 AUTOMAKE_OPTIONS = foreign
 
-EXTRA_DIST =	main.html doxyconfig.in
+EXTRA_DIST =	MathMore.html doxyconfig.in
 
 
 docs:

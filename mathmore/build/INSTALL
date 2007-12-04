@@ -1,7 +1,7 @@
-To install MathMore from CVS do the following: 
+To install MathMore from SVN (trunk revision) do the following (you need also mathcore), since the built library will contain both: 
 
-   >   cvs -d :pserver:cvs@root.cern.ch:/user/cvs co -d mathmore root/mathmore
-
+   >   svn co  https://root.cern.ch/svn/root/trunk/mathcore mathcore
+   >   svn co  https://root.cern.ch/svn/root/trunk/mathmore mathmore
 
    >   cd mathmore 
 
@@ -14,7 +14,7 @@ To install MathMore from CVS do the following:
 configure with the configure script. To use MathMore outside ROOT, you need to specify a location of GSL. A tar file of GSL with the functions needed by MathMore is available in the mathmore/src directory. If you don't have a version of GSL in your system you can build  the one distributed with mathmore using configure and make. 
 
 
-   > ./configure --with-gsl=$gsl_dir
+   > ./configure --with-gsl=$gsl_dir 
 
 
 

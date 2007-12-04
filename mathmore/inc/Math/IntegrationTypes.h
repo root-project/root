@@ -45,15 +45,6 @@ namespace Math {
 
      using namespace IntegrationOneDim; 
 
-//     /**
-// 	 enumeration specifying the integration types.
-// 	 <ul>
-// 	 <li>NONADAPTIVE : to be used for smooth functions
-// 	 <li>ADAPTIVE : to be used for general functions without singularities.
-// 	 <li>ADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
-// 	 </ul>
-// 	 @ingroup Integration
-//     */
 
 //     // type of integration
 

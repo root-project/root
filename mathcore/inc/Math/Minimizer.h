@@ -64,6 +64,7 @@ public:
 #else
       fDebug(3),
 #endif 
+      fStrategy(1),
       fMaxCalls(0), 
       fMaxIter(0),
       fTol(1.E-6), 
@@ -221,6 +222,9 @@ public:
    /// absolute tolerance 
    double Tolerance() const { return  fTol; }
 
+   /// strategy 
+   int Strategy() const { return fStrategy; }
+
    /// return the statistical scale used for calculate the error
    /// is typically 1 for Chi2 minimizetion and 0.5 for likelihood's
    double ErrorUp() const { return fUp; } 
@@ -237,6 +241,9 @@ public:
    /// set the tolerance
    void SetTolerance(double tol) { fTol = tol; }
 
+   ///set the strategy 
+   void SetStrategy(int strategyLevel) { fStrategy = strategyLevel; }  
+
    /// set scale for calculating the errors
    void SetErrorUp(double up) { fUp = up; }
 
@@ -251,6 +258,7 @@ protected:
  
    // print level
    int fDebug; 
+   int fStrategy; 
    unsigned int fMaxCalls; 
    unsigned int fMaxIter; 
    double fTol; 

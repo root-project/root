@@ -6,7 +6,7 @@ dnl
 AC_INIT(src/SpecFuncMathMore.cxx)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(MathMore, 5.14.00)
+AM_INIT_AUTOMAKE(MathMore, 5.18.00)
 
 dnl Checks for programs.
 AC_PROG_CXX
@@ -43,7 +43,7 @@ AC_SUBST(GMAKE)
 AC_PROG_RANLIB
 
 
-AC_OUTPUT(Makefile src/Makefile inc/Makefile inc/Math/Makefile  test/Makefile doc/doxyconfig doc/Makefile)
+AC_OUTPUT(Makefile src/Makefile inc/Makefile inc/Math/Makefile inc/Math/GenVector/Makefile test/Makefile doc/doxyconfig doc/Makefile)
 
 AC_MSG_RESULT([
     MathMore project now configured.

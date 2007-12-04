@@ -12,6 +12,10 @@
 
 #include "Minuit2/BasicFunctionMinimum.h"
 
+#ifdef G__DICTIONARY
+typedef ROOT::Minuit2::MinimumState MinimumState; 
+#endif
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -30,10 +34,11 @@ public:
   class MnAboveMaxEdm {};
 
 public:
-  
+   
+
   FunctionMinimum(const MinimumSeed& seed, double up) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, up))) {}
   
-  FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up))) {}
+   FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up))) {}
   
   FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up, MnReachedCallLimit) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up, BasicFunctionMinimum::MnReachedCallLimit()))) {}
   
@@ -52,7 +57,7 @@ public:
   void Add(const MinimumState& state) {fData->Add(state);}
 
   const MinimumSeed& Seed() const {return fData->Seed();}
-  const std::vector<MinimumState>& States() const {return fData->States();}
+   const std::vector<ROOT::Minuit2::MinimumState>& States() const {return fData->States();}
 
 // user representation of state at Minimum
   const MnUserParameterState& UserState() const {

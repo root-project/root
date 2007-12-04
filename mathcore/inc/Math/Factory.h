@@ -27,7 +27,8 @@ namespace ROOT {
    Factory  structure holding static functions to create interfaces 
    using the Plugin Manager
 */ 
-struct Factory { 
+class Factory { 
+      public: 
 
    /**
       static method to create the corrisponding Minimizer given the string

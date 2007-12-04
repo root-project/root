@@ -1,9 +1,7 @@
-To install Minuit2 from CVS do the following: 
-	
-   >   cvs -d :pserver:cvs@root.cern.ch:/user/cvs login  (password:  cvs ) 
+To install Minuit2 from SVN (trunk revision) do the following (you need also mathcore), since the built library will contain both:  
 
-   >   cvs -d :pserver:cvs@root.cern.ch:/user/cvs co -d Minuit2 root/minuit2
-
+   >   svn co  https://root.cern.ch/svn/root/trunk/mathcore mathcore
+   >   svn co  https://root.cern.ch/svn/root/trunk/minuit2 minuit2
 
    >   cd minuit2 
 

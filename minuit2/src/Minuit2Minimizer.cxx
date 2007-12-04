@@ -41,12 +41,11 @@
 
 namespace ROOT { 
 
-   namespace Minuit2 { 
+namespace Minuit2 { 
 
 
 Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type ) : 
    fDim(0),
-   fStrategy(1),
    fErrorCode(0),
    fMinimizer(0),
    fMinuitFCN(0),
@@ -59,7 +58,6 @@ Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type ) :
 
 Minuit2Minimizer::Minuit2Minimizer(const char *  type ) : 
    fDim(0),
-   fStrategy(1),
    fErrorCode(0),
    fMinimizer(0),
    fMinuitFCN(0),
@@ -85,27 +83,27 @@ void Minuit2Minimizer::SetMinimizerType(ROOT::Minuit2::EMinimizerType type) {
    // Set  minimizer algorithm type 
    fUseFumili = false;
    switch (type) { 
-      case ROOT::Minuit2::kMigrad: 
-         //std::cout << "Minuit2Minimizer: minimize using MIGRAD " << std::endl;
-         SetMinimizer( new ROOT::Minuit2::VariableMetricMinimizer() );
-         return;
-      case ROOT::Minuit2::kSimplex: 
-         //std::cout << "Minuit2Minimizer: minimize using SIMPLEX " << std::endl;
-         SetMinimizer( new ROOT::Minuit2::SimplexMinimizer() );
-         return;
-      case ROOT::Minuit2::kCombined: 
-         SetMinimizer( new ROOT::Minuit2::CombinedMinimizer() );
-         return;
-      case ROOT::Minuit2::kScan: 
-         SetMinimizer( new ROOT::Minuit2::ScanMinimizer() );
-         return;
-      case ROOT::Minuit2::kFumili:          
-         SetMinimizer( new ROOT::Minuit2::FumiliMinimizer() );
-         fUseFumili = true;
-         return;
-      default: 
-         //migrad minimizer
-         SetMinimizer( new ROOT::Minuit2::VariableMetricMinimizer() );
+   case ROOT::Minuit2::kMigrad: 
+      //std::cout << "Minuit2Minimizer: minimize using MIGRAD " << std::endl;
+      SetMinimizer( new ROOT::Minuit2::VariableMetricMinimizer() );
+      return;
+   case ROOT::Minuit2::kSimplex: 
+      //std::cout << "Minuit2Minimizer: minimize using SIMPLEX " << std::endl;
+      SetMinimizer( new ROOT::Minuit2::SimplexMinimizer() );
+      return;
+   case ROOT::Minuit2::kCombined: 
+      SetMinimizer( new ROOT::Minuit2::CombinedMinimizer() );
+      return;
+   case ROOT::Minuit2::kScan: 
+      SetMinimizer( new ROOT::Minuit2::ScanMinimizer() );
+      return;
+   case ROOT::Minuit2::kFumili:          
+      SetMinimizer( new ROOT::Minuit2::FumiliMinimizer() );
+      fUseFumili = true;
+      return;
+   default: 
+      //migrad minimizer
+      SetMinimizer( new ROOT::Minuit2::VariableMetricMinimizer() );
 
    }
 }
@@ -132,10 +130,6 @@ Minuit2Minimizer & Minuit2Minimizer::operator = (const Minuit2Minimizer &rhs)
    return *this;
 }
 
-// bool Minuit2Minimizer & Minuit2Minimizer::DoInit( const ROOT::Math::IGenFunction & func) { 
-//    // initialize the minimizer setting all the paramters using the given function
-   
-// }
 
 void Minuit2Minimizer::Clear() { 
    // delete the state in case of consecutive minimizations
@@ -159,33 +153,33 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string & name, 
 }
 
 bool Minuit2Minimizer::SetLowerLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double lower ) {
-    // add a lower bounded variable
-    if (!SetVariable(ivar, name, val, step) ) return false;
-    fState.SetLowerLimit(ivar, lower);
-    return true;
+   // add a lower bounded variable
+   if (!SetVariable(ivar, name, val, step) ) return false;
+   fState.SetLowerLimit(ivar, lower);
+   return true;
 }
 
 bool Minuit2Minimizer::SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ) {
-    // add a upper bounded variable
-    if (!SetVariable(ivar, name, val, step) ) return false;
-    fState.SetUpperLimit(ivar, upper);
-    return true;
+   // add a upper bounded variable
+   if (!SetVariable(ivar, name, val, step) ) return false;
+   fState.SetUpperLimit(ivar, upper);
+   return true;
 }
 
 
 
 bool Minuit2Minimizer::SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double lower , double upper) {
-    // add a double bound variable
-    if (!SetVariable(ivar, name, val, step) ) return false;
-    fState.SetLimits(ivar, lower, upper);
-    return true;
+   // add a double bound variable
+   if (!SetVariable(ivar, name, val, step) ) return false;
+   fState.SetLimits(ivar, lower, upper);
+   return true;
 }
 
 bool Minuit2Minimizer::SetFixedVariable(unsigned int ivar , const std::string & name , double val ) {
-    // add a fixed variable
-    if (!SetVariable(ivar, name, val, 0.0) ) return false;
-    fState.Fix(ivar);
-    return true;
+   // add a fixed variable
+   if (!SetVariable(ivar, name, val, 0.0) ) return false;
+   fState.Fix(ivar);
+   return true;
 }
 
 
@@ -200,12 +194,12 @@ void Minuit2Minimizer::SetFunction(const  IObjFunction & func) {
       // for Fumili the fit method function interface is required
       const ROOT::Math::FitMethodFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
       if (!fcnfunc) {
-          MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
-          return;
+         MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
+         return;
       }
       fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction> (*fcnfunc, fDim, ErrorUp() );
    }
- }
+}
 
 void Minuit2Minimizer::SetFunction(const  IGradObjFunction & func) { 
    // set function to be minimized
@@ -218,8 +212,8 @@ void Minuit2Minimizer::SetFunction(const  IGradObjFunction & func) {
       // for Fumili the fit method function interface is required
       const ROOT::Math::FitMethodGradFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction*>(&func);
       if (!fcnfunc) {
-          MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
-          return;
+         MN_ERROR_MSG("Minuit2Minimizer: Wrong Fit method function for Fumili");
+         return;
       }
       fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction> (*fcnfunc, fDim, ErrorUp() );
    }
@@ -236,18 +230,19 @@ bool Minuit2Minimizer::Minimize() {
 
 
    int maxfcn = MaxFunctionCalls(); 
-   double tol = Tolerance(); 
+   double tol = Tolerance();
+   int strategy = Strategy(); 
    fMinuitFCN->SetErrorDef(ErrorUp() );
 
    if (PrintLevel() >=1)
       std::cout << "Minuit2Minimizer: Minimize with max iterations " << maxfcn << " edmval " << tol << " strategy " 
-                << fStrategy << std::endl; 
+                << strategy << std::endl; 
 
 #ifdef USE_ROOT_ERROR
    // switch off Minuit2 printing
    int prevErrorIgnoreLevel = gErrorIgnoreLevel; 
    if (PrintLevel() ==0)  
-  // switch off printing of info messages in Minuit2
+      // switch off printing of info messages in Minuit2
       gErrorIgnoreLevel = 1001;
 #endif 
       
@@ -256,11 +251,11 @@ bool Minuit2Minimizer::Minimize() {
    if ( gradFCN != 0) {
       // use gradient
       //SetPrintLevel(3);
-      ROOT::Minuit2::FunctionMinimum min =  GetMinimizer()->Minimize(*gradFCN, fState, ROOT::Minuit2::MnStrategy(fStrategy), maxfcn, tol);
+      ROOT::Minuit2::FunctionMinimum min =  GetMinimizer()->Minimize(*gradFCN, fState, ROOT::Minuit2::MnStrategy(strategy), maxfcn, tol);
       fMinimum = new ROOT::Minuit2::FunctionMinimum (min);    
    }
    else {
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, ROOT::Minuit2::MnStrategy(fStrategy), maxfcn, tol);
+      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, ROOT::Minuit2::MnStrategy(strategy), maxfcn, tol);
       fMinimum = new ROOT::Minuit2::FunctionMinimum (min);    
    }
 
@@ -380,7 +375,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // to run minos I need function minimum class 
    // redo minimization from current state
 //    ROOT::Minuit2::FunctionMinimum min =  
-//       GetMinimizer()->Minimize(*GetFCN(),fState, ROOT::Minuit2::MnStrategy(fStrategy), MaxFunctionCalls(), Tolerance());
+//       GetMinimizer()->Minimize(*GetFCN(),fState, ROOT::Minuit2::MnStrategy(strategy), MaxFunctionCalls(), Tolerance());
 //    fState = min.UserState();
    if (fMinimum == 0) { 
       std::cout << "Minuit2Minimizer::GetMinosErrors:  failed - no function minimum existing" << std::endl;
@@ -440,10 +435,11 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
 //           ime != fMinosErrors.end(); ime++) 
 //          std::cout<<*ime<<std::endl;
 //       }
+
    return true;
 } 
 
-   } // end namespace Fit
+} // end namespace Minuit2
 
 } // end namespace ROOT
 

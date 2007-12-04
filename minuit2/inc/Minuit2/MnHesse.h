@@ -56,7 +56,7 @@ public:
   /// FCN + parameters + errors
   MnUserParameterState operator()(const FCNBase&, const std::vector<double>&, const std::vector<double>&, unsigned int maxcalls=0) const;
   /// FCN + parameters + covariance
-  MnUserParameterState operator()(const FCNBase&, const std::vector<double>&, const std::vector<double>&, unsigned int, unsigned int maxcalls=0) const;
+  MnUserParameterState operator()(const FCNBase&, const std::vector<double>&,  unsigned int nrow, const std::vector<double>&, unsigned int maxcalls = 0) const;
   /// FCN + parameters + MnUserCovariance
   MnUserParameterState operator()(const FCNBase&, const std::vector<double>&, const MnUserCovariance&, unsigned int maxcalls=0) const;
   ///

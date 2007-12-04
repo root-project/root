@@ -11,4 +11,13 @@ cp -p build/doc_Makefile.am doc/Makefile.am
 cp -p build/autogen . 
 cp -p -r build/config . 
 
+# add extra files from mathcore
+mkdir inc/Math
+cp -p ../mathcore/inc/Math/Functor.h inc/Math/.
+cp -p ../mathcore/inc/Math/IFunction.h inc/Math/.
+cp -p ../mathcore/inc/Math/IFunctionfwd.h inc/Math/.
+cp -p ../mathcore/inc/Math/Minimizer.h inc/Math/.
+cp -p ../mathcore/inc/Math/WrappedFunction.h inc/Math/.
+cp -p build/inc_Math_Makefile.am inc/Math/Makefile.am
+
 ./autogen

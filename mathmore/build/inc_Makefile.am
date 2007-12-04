@@ -7,4 +7,8 @@
 # The following is set, otherwise it would follow GNU conventions.
 AUTOMAKE_OPTIONS = foreign
 
+incdir = $(includedir)
+
 SUBDIRS =   Math
+
+inc_HEADERS =  RConfigure.h 

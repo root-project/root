@@ -34,7 +34,7 @@ MnUserParameterState MnHesse::operator()(const FCNBase& fcn, const std::vector<d
    return (*this)(fcn, MnUserParameterState(par, err), maxcalls);
 }
 
-MnUserParameterState MnHesse::operator()(const FCNBase& fcn, const std::vector<double>& par, const std::vector<double>& cov, unsigned int nrow, unsigned int maxcalls) const {
+MnUserParameterState MnHesse::operator()(const FCNBase& fcn, const std::vector<double>& par, unsigned int nrow, const std::vector<double>& cov,  unsigned int maxcalls) const {
    // interface from vector of params and covariance
    return (*this)(fcn, MnUserParameterState(par, cov, nrow), maxcalls);
 }

@@ -183,8 +183,6 @@ private:
    
    // dimension of the function to be minimized 
    unsigned int fDim; 
-   // Minuit2 strategy to be used 
-   unsigned int fStrategy; 
    // error code
    int fErrorCode; 
    bool fUseFumili; 

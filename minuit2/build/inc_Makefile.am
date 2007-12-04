@@ -7,4 +7,4 @@
 # The following is set, otherwise it would follow GNU conventions.
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS =   Minuit2
+SUBDIRS =   Minuit2 Math

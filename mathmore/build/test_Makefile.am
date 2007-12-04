@@ -25,7 +25,7 @@ testStatFunc_SOURCES =  testStatFunc.cxx
 
 
 
-INCLUDES = -I$(top_srcdir)/inc -DNO_MATHCORE
+INCLUDES = -I$(top_srcdir)/inc 
 
 # testInterpolation_LDADD =  $(top_builddir)/src/libMathCore.la
 # testInterpolation_LDFLAGS = @GSL_LDFLAGS@
