@@ -23,6 +23,7 @@
 class RooRealSumPdf : public RooAbsPdf {
 public:
 
+  RooRealSumPdf() ;
   RooRealSumPdf(const char *name, const char *title);
   RooRealSumPdf(const char *name, const char *title,
 		   RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
@@ -44,12 +45,12 @@ public:
 
 protected:
   
-  mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
+  mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
 
   void syncFuncIntList(const RooArgSet* intSet) const ;
   void syncFuncNormList(const RooArgSet* normSet) const ;
-  mutable RooArgSet* _lastFuncIntSet ;
-  mutable RooArgSet* _lastFuncNormSet ;
+  mutable RooArgSet* _lastFuncIntSet ; //!
+  mutable RooArgSet* _lastFuncNormSet ; //!
   mutable RooArgList* _funcIntList ;  //!
   mutable RooArgList* _funcNormList ; //!
 

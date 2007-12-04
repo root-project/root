@@ -46,6 +46,16 @@
 ClassImp(RooRealSumPdf)
 ;
 
+RooRealSumPdf::RooRealSumPdf() :
+  _lastFuncIntSet(0),
+  _lastFuncNormSet(0),
+  _funcIntList(0),
+  _funcNormList(0),
+  _funcIter(0),
+  _coefIter(0)
+{
+}
+
 
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
