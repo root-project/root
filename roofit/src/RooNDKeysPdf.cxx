@@ -11,6 +11,7 @@
  *****************************************************************************/
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 #include "TMath.h"
 #include "TMatrixDSymEigen.h"
@@ -944,10 +945,11 @@ RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   BoxInfo* bi(0);
 
   if (rangeName) {
-    bi = _rangeBoxInfo[make_pair(rangeName,code)] ;
+    string rangeNameStr(rangeName) ;
+    bi = _rangeBoxInfo[make_pair(rangeNameStr,code)] ;
     if (!bi) {
       bi = new BoxInfo ;
-      _rangeBoxInfo[make_pair(rangeName,code)] = bi ;      
+      _rangeBoxInfo[make_pair(rangeNameStr,code)] = bi ;      
       boxInfoInit(bi,rangeName,code);
     }
   } else bi= &_fullBoxInfo ;
