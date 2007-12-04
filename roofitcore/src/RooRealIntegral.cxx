@@ -322,7 +322,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
-  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,_anaList,_funcNormSet,RooNameReg::str(_rangeName)) ;    
+
+  RooArgSet *anaSet = new RooArgSet( _anaList, Form("UniqueCloneOf_%s",_anaList.GetName()));
+  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,*anaSet,_funcNormSet,RooNameReg::str(_rangeName)) ;    
+  _anaList.removeAll() ;
+  _anaList.add(*anaSet);    
+  delete anaSet;
 
   // Avoid confusion -- if mode is zero no analytical integral is defined regardless of contents of _anaListx
   if (_mode==0) {

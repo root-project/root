@@ -4,9 +4,9 @@
  *    File: $Id: RooProduct.h,v 1.5 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *   GR, Gerhard Raven,   VU Amsterdan,     graven@nikhef.nl                 *
  *                                                                           *
- * Copyright (c) 2000-2005, Regents of the University of California          *
+ * Copyright (c) 2000-2007, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -18,9 +18,16 @@
 
 #include "RooAbsReal.h"
 #include "RooSetProxy.h"
+#include "RooCacheManager.h"
+#include "RooObjCacheManager.h"
+
+#include <vector>
+#include <utility>
+
 
 class RooRealVar;
 class RooArgList ;
+
 
 class RooProduct : public RooAbsReal {
 public:
@@ -30,7 +37,16 @@ public:
 
   RooProduct(const RooProduct& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
+  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
+                                                   const RooArgSet* normSet,
+                                                   const char* rangeName=0) const ;
+  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const;
+
+
   virtual ~RooProduct() ;
+
+  class ProdMap ;
 
 protected:
 
@@ -39,7 +55,25 @@ protected:
   TIterator* _compRIter ;  //! do not persist
   TIterator* _compCIter ;  //! do not persist
 
+  class CacheElem : public RooAbsCacheElement {
+  public:
+      virtual ~CacheElem();
+      // Payload
+      RooArgList _prodList ;
+      RooArgList _ownedList ;
+      virtual RooArgList containedArgs(Action) ;
+  };
+  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+                                                                                                                                                             
+
+  Double_t calculate(const RooArgList& partIntList) const;
   Double_t evaluate() const;
+  const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
+  ProdMap* groupProductTerms(const RooArgSet&) const;
+  Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=0) const;
+    
+
+
 
   ClassDef(RooProduct,1) // Product of RooAbsReal and RooAbsCategory terms
 };
