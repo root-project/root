@@ -496,7 +496,12 @@ TEveManager* TEveManager::Create()
    // If global TEveManager* gEve is not set initialize it.
    // Returns gEve.
 
-   if (gEve == 0) {
+   if (gEve == 0)
+   {
+      // Make sure that the GUI system is initialized.
+      TApplication::NeedGraphicsLibs();
+      gApplication->InitializeGraphics();
+
       Int_t w = 1024;
       Int_t h =  768;
 
