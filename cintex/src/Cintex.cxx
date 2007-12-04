@@ -118,7 +118,6 @@ namespace ROOT {
 
       void Cintex::Enable() {
          if ( Instance().fEnabled ) return;
-         //ArtificialSourceFile asf;
          //---Declare some extra typdefs to please CINT
          Declare_additional_CINT_typedefs();
          //---Install the callback to fothcoming classes ----//
@@ -174,6 +173,7 @@ namespace ROOT {
       }
   
       void Callback::operator () ( const Type& t ) {
+         ArtificialSourceFile asf;
          int autoload = G__set_class_autoloading(0); // To avoid recursive loads
          if ( t.IsClass() || t.IsStruct() ) {
             ROOTClassEnhancer enhancer(t);
@@ -191,6 +191,7 @@ namespace ROOT {
       }
   
       void Callback::operator () ( const Member& m ) {
+         ArtificialSourceFile asf;
          int autoload = G__set_class_autoloading(0); // To avoid recursive loads
          if ( m.IsFunctionMember() ) {
             if( Cintex::Debug() ) cout << "Cintex: Building function " << m.Name(SCOPED|QUALIFIED) << endl; 
