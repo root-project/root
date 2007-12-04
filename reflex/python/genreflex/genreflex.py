@@ -289,7 +289,7 @@ class genreflex:
       else :
         dicfile = os.path.join(self.outputDir,name+file_extension)
       #---------------Parse the header file with GCC_XML
-      cmd  = '%s %s \'%s\' \'-fxml=%s\' %s -D__REFLEX__' %(self.gccxml, self.gccxmlopt, source, xmlfile, self.cppopt)
+      cmd  = '%s %s %s -fxml=%s %s -D__REFLEX__' %(self.gccxml, self.gccxmlopt, source, xmlfile, self.cppopt)
       if not self.quiet : print '--->> genreflex: INFO: Parsing file %s with GCC_XML' % source,
       status = os.system(cmd)
       if status :
