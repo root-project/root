@@ -60,9 +60,9 @@ typedef int Py_ssize_t;
 #else
 # ifdef R__MACOSX
 #  if SIZEOF_SIZE_T == SIZEOF_INT
-#    define PY_SSIZE_T_FORMAT "%zd"
+#    define PY_SSIZE_T_FORMAT "%ld"
 #  elif SIZEOF_SIZE_T == SIZEOF_LONG
-#    define PY_SSIZE_T_FORMAT "%l"
+#    define PY_SSIZE_T_FORMAT "%ld"
 #  endif
 # else
 #  define PY_SSIZE_T_FORMAT "%zd"
