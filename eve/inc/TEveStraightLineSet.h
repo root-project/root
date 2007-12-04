@@ -44,13 +44,13 @@ private:
    TEveStraightLineSet& operator=(const TEveStraightLineSet&); // Not implemented
 
 public:
-   struct TEveLine
+   struct Line_t
    {
       Float_t        fV1[3];
       Float_t        fV2[3];
       TRef           fRef;
 
-      TEveLine(Float_t x1, Float_t y1, Float_t z1,Float_t x2, Float_t y2, Float_t z2)
+      Line_t(Float_t x1, Float_t y1, Float_t z1,Float_t x2, Float_t y2, Float_t z2)
       {
          fV1[0] = x1, fV1[1] = y1, fV1[2] = z1;
          fV2[0] = x2, fV2[1] = y2, fV2[2] = z2;
@@ -76,7 +76,7 @@ protected:
    Bool_t            fRnrMarkers;
    Bool_t            fRnrLines;
 
-   TEveLine*           fLastLine; //!
+   Line_t*           fLastLine; //!
 
    Bool_t            fTrans;
    TEveTrans         fHMTrans;
