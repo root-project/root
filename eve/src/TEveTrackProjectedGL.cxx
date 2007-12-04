@@ -75,15 +75,15 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // path-marks
    std::vector<TEvePathMark*>& pm = fM->fPathMarks;
    TEveTrackPropagator& RS = *fM->GetPropagator();
-   if(pm.size())
+   if (pm.size())
    {
       Float_t* pnts = new Float_t[3*pm.size()]; // maximum
       Int_t N = 0;
       Bool_t accept;
-      for(std::vector<TEvePathMark*>::iterator i=pm.begin(); i!=pm.end(); ++i)
+      for (std::vector<TEvePathMark*>::iterator i=pm.begin(); i!=pm.end(); ++i)
       {
          accept = kFALSE;
-         switch((*i)->type)
+         switch ((*i)->type)
          {
             case(TEvePathMark::Daughter):
                if(RS.GetRnrDaughters()) accept = kTRUE;

@@ -33,10 +33,6 @@ TEveTrackGL::TEveTrackGL() : TEveLineGL()
    // fDLCache = false; // Disable display list.
 }
 
-//______________________________________________________________________________
-TEveTrackGL::~TEveTrackGL()
-{}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -49,7 +45,6 @@ Bool_t TEveTrackGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    }
    return kFALSE;
 }
-/******************************************************************************/
 
 //______________________________________________________________________________
 void TEveTrackGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
@@ -67,23 +62,26 @@ void TEveTrackGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec
    ((TEveTrack*)fM)->CtrlClicked((TEveTrack*)fM);
 }
 
-/******************************************************************************/
+//______________________________________________________________________________
 void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
+   // Actual rendering code.
+   // Virtual from TGLLogicalShape.
+
    TEveLineGL::DirectDraw(rnrCtx);
 
    // path-marks
    std::vector<TEvePathMark*>& pm = fTrack->fPathMarks;
    TEveTrackPropagator& RS = *fTrack->GetPropagator();
-   if(pm.size())
+   if (pm.size())
    {
       Float_t* pnts = new Float_t[3*pm.size()]; // maximum
       Int_t N = 0;
       Bool_t accept;
-      for(std::vector<TEvePathMark*>::iterator i=pm.begin(); i!=pm.end(); ++i)
+      for (std::vector<TEvePathMark*>::iterator i=pm.begin(); i!=pm.end(); ++i)
       {
          accept = kFALSE;
-         switch((*i)->type)
+         switch ((*i)->type)
          {
             case(TEvePathMark::Daughter):
                if(RS.GetRnrDaughters()) accept = kTRUE;
@@ -95,7 +93,7 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
                if(RS.GetRnrDecay()) accept = kTRUE;
                break;
          }
-         if(accept)
+         if (accept)
          {
             if((TMath::Abs((*i)->V.z) < RS.GetMaxZ()) && ((*i)->V.Perp() < RS.GetMaxR()))
             {
@@ -111,6 +109,6 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    }
 
    // fist vertex
-   if(RS.GetRnrFV() && fTrack->GetLastPoint())
+   if (RS.GetRnrFV() && fTrack->GetLastPoint())
       TEveGLUtil::RenderPolyMarkers(RS.RefFVAtt(), fTrack->GetP(), 1);
 }

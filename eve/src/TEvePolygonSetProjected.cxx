@@ -19,8 +19,6 @@
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
-#include <list>
-
 namespace
 {
 struct Seg
@@ -197,27 +195,27 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
    // Check if polygon has dimensions above TEveProjection::fgEps and add it
    // to a list if it is not a duplicate.
 
-   if(pp.size() <= 2) return;
+   if (pp.size() <= 2) return;
 
    // dimension of bbox
    Float_t bbox[] = { 1e6, -1e6, 1e6, -1e6, 1e6, -1e6 };
    for (std::list<Int_t>::iterator u = pp.begin(); u!= pp.end(); u++)
    {
       Int_t idx = *u;
-      if(fPnts[idx].x < bbox[0]) bbox[0] = fPnts[idx].x;
-      if(fPnts[idx].x > bbox[1]) bbox[1] = fPnts[idx].x;
+      if (fPnts[idx].x < bbox[0]) bbox[0] = fPnts[idx].x;
+      if (fPnts[idx].x > bbox[1]) bbox[1] = fPnts[idx].x;
 
-      if(fPnts[idx].y < bbox[2]) bbox[2] = fPnts[idx].y;
-      if(fPnts[idx].y > bbox[3]) bbox[3] = fPnts[idx].y;
+      if (fPnts[idx].y < bbox[2]) bbox[2] = fPnts[idx].y;
+      if (fPnts[idx].y > bbox[3]) bbox[3] = fPnts[idx].y;
    }
    Float_t eps = 2*TEveProjection::fgEps;
-   if((bbox[1]-bbox[0])<eps || (bbox[3]-bbox[2])<eps) return;
+   if ((bbox[1]-bbox[0]) < eps || (bbox[3]-bbox[2]) < eps) return;
 
    // duplication
-   for (vpPolygon_i poi = pols.begin(); poi!= pols.end(); poi++)
+   for (vpPolygon_i poi = pols.begin(); poi != pols.end(); poi++)
    {
       Polygon_t P = *poi;
-      if (pp.size() != (UInt_t)P.fNPnts)
+      if ((Int_t)pp.size() != P.fNPnts)
          continue;
       std::list<Int_t>::iterator u = pp.begin();
       Int_t pidx = P.FindPoint(*u);
@@ -235,12 +233,13 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
 
    Int_t* pv = new Int_t[pp.size()];
    Int_t count=0;
-   for( std::list<Int_t>::iterator u = pp.begin(); u!= pp.end(); u++){
+   for (std::list<Int_t>::iterator u = pp.begin(); u != pp.end(); u++)
+   {
       pv[count] = *u;
       count++;
    }
-   pols.push_back(Polygon_t(pp.size(), pv));
-   fSurf += (bbox[1]-bbox[0])*(bbox[3]-bbox[2]);
+   pols.push_back(Polygon_t((Int_t)pp.size(), pv));
+   fSurf += (bbox[1]-bbox[0]) * (bbox[3]-bbox[2]);
 }
 
 //______________________________________________________________________________
@@ -454,11 +453,11 @@ void TEvePolygonSetProjected::DumpPolys() const
 {
    // Dump information about built polygons.
 
-   printf("TEvePolygonSetProjected %ld polygons\n", fPols.size());
+   printf("TEvePolygonSetProjected %d polygons\n", (Int_t)fPols.size());
    for (vpPolygon_ci i = fPols.begin(); i!= fPols.end(); i++)
    {
       Int_t N =  (*i).fNPnts;
-      printf("polygon %d points :\n", N);
+      printf("Points of polygon %d:\n", N);
       for(Int_t vi = 0; vi<N; vi++) {
          Int_t pi = (*i).fPnts[vi];
          printf("(%f, %f, %f)", fPnts[pi].x, fPnts[pi].y, fPnts[pi].z);

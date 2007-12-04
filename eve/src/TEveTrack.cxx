@@ -491,8 +491,8 @@ void TEveTrack::PrintPathMarks()
 
    static const TEveException eH("TEveTrack::PrintPathMarks ");
 
-   printf("TEveTrack '%s', number of path marks %ld, label %d\n",
-          GetName(), fPathMarks.size(), fLabel);
+   printf("TEveTrack '%s', number of path marks %d, label %d\n",
+          GetName(), (Int_t)fPathMarks.size(), fLabel);
 
    TEvePathMark* pm;
    for(vpPathMark_i i=fPathMarks.begin(); i!=fPathMarks.end(); i++)

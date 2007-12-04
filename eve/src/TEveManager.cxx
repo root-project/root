@@ -351,7 +351,7 @@ TGListTreeItem* TEveManager::AddEvent(TEveEventManager* event)
 
 //______________________________________________________________________________
 TGListTreeItem* TEveManager::AddElement(TEveElement* rnr_element,
-                                              TEveElement* parent)
+                                        TEveElement* parent)
 {
    if (parent == 0) {
       if (fCurrentEvent == 0)

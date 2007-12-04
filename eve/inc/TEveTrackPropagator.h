@@ -82,7 +82,7 @@ private:
 protected:
    //----------------------------------
    // Track extrapolation configuration
-   Float_t                  fMagField;      // Constant magnetic field along z.
+   Float_t                  fMagField;      // Constant magnetic field along z in Tesla.
    // TEveTrack limits
    Float_t                  fMaxR;          // Max radius for track extrapolation
    Float_t                  fMaxZ;          // Max z-coordinate for track extrapolation.

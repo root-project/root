@@ -163,15 +163,15 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
          break;
 
       GetBreakPoint(bR, kTRUE,  x, y, z); vvec.push_back(TEveVector(x, y, z));
-      fBreakPoints.push_back(vvec.size());
+      fBreakPoints.push_back((Int_t)vvec.size());
       GetBreakPoint(bR, kFALSE, x, y, z); vvec.push_back(TEveVector(x, y, z));
 
       bL = bR + 1;
       bR = GetBreakPointIdx(bL);
    }
-   fBreakPoints.push_back(vvec.size()); // Mark the track-end for drawing.
+   fBreakPoints.push_back((Int_t)vvec.size()); // Mark the track-end for drawing.
 
-   Reset(vvec.size());
+   Reset((Int_t)vvec.size());
    for (std::vector<TEveVector>::iterator i=vvec.begin(); i!=vvec.end(); ++i)
       SetNextPoint((*i).x, (*i).y, (*i).z);
    delete [] fOrigPnts;
