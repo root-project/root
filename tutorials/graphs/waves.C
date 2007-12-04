@@ -1,6 +1,6 @@
 //Hint: Spherical waves
 //Author; Otto Schaile
-   
+
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TColor.h"
@@ -13,41 +13,43 @@
 #include "TStyle.h"
 #include "Riostream.h"
 
-
 TF2 * finter;
-//____________________________________________________________________________________
 
-Double_t interference( Double_t *x, Double_t *par) {
+
+//______________________________________________________________________________
+Double_t interference( Double_t *x, Double_t *par)
+{
    Double_t x_p2 = x[0] * x[0];
    Double_t d_2 = 0.5 * par[2];
    Double_t ym_p2 = (x[1] - d_2) * (x[1] - d_2);
    Double_t yp_p2 = (x[1] + d_2) * (x[1] + d_2);
    Double_t  tpi_l = TMath::Pi() /  par[1];
-   Double_t amplitude = par[0] * (cos(tpi_l  * sqrt(x_p2 + ym_p2)) 
+   Double_t amplitude = par[0] * (cos(tpi_l  * sqrt(x_p2 + ym_p2))
                          + par[3] * cos(tpi_l  * sqrt(x_p2 + yp_p2)));
    return amplitude * amplitude;
-}; 
-//____________________________________________________________________________________
+}
 
-Double_t result( Double_t *x, Double_t *par) {
+
+//______________________________________________________________________________
+Double_t result( Double_t *x, Double_t *par)
+{
    Double_t xint[2];
- 
    Double_t  maxintens = 0, xcur = 14;
    Double_t dlambda = 0.1 * par[1];
    for(Int_t i=0; i<10; i++){
       xint[0] = xcur;
-      xint[1] = x[1];   
+      xint[1] = x[1];
       Double_t  intens = interference(xint, par);
       if(intens > maxintens) maxintens = intens;
       xcur -= dlambda;
    }
    return maxintens;
 }
-//____________________________________________________________________________________
 
+
+//______________________________________________________________________________
 void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 {
-//   extern void * interference;
    TCanvas *c1 = new TCanvas("waves", "A double slit experiment", 300,40, 1004, 759);
    c1->Range(0, -10,  30, 10);
    c1->SetFillColor(0);
@@ -58,11 +60,11 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    const Int_t colNum = 30;
    Int_t palette[colNum];
    for (Int_t i=0;i<colNum;i++) {
-      TColor *color = new TColor(301+i
+      TColor *color = new TColor(1001+i
       ,    pow(i/((colNum)*1.0),0.3)
       ,    pow(i/((colNum)*1.0),0.3)
       ,0.5*(i/((colNum)*1.0)),"");
-      palette[i] = 301+i;
+      palette[i] = 1001+i;
       if(color);
    }
    gStyle->SetPalette(colNum,palette);
@@ -115,18 +117,15 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    finter->SetNpy(200);
    finter->SetContour(colNum-2);
    finter->Draw("samecolorz");
-   
-   TArc * arc;
+
+   TArc *arc = new TArc();;
+   arc->SetFillStyle(0);
+   arc->SetLineWidth(2);
+   arc->SetLineColor(5);
    Float_t r = 0.5 * lambda, dr = lambda;
-   for(Int_t i = 0; i < 26; i++){
-      arc = new TArc(0, 0.5 * d, r);
-      arc->Draw();
-      arc->SetLineWidth(2);
-      arc->SetLineColor(5);
-      arc = new TArc(0, -0.5 * d, r);
-      arc->SetLineWidth(2);
-      arc->SetLineColor(5);
-      arc->Draw();
+   for (Int_t i = 0; i < 16; i++) {
+      arc->DrawArc(0,  0.5*d, r, 0., 360., "only");
+      arc->DrawArc(0, -0.5*d, r, 0., 360., "only");
       r += dr;
    }
 
