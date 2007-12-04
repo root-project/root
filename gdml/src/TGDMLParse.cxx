@@ -1120,14 +1120,14 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
 // BEGIN: reflectedSolid. Remove lines between if reflectedSolid will be removed from GDML!!!
 
-         if(freflvolmap.find(volref) != freflvolmap.end()) { // if the volume is a reflected volume the matrix needs to be CHANGED
-
+         if(freflvolmap.find(volref) != freflvolmap.end()) { 
+            // if the volume is a reflected volume the matrix needs to be CHANGED
             TGDMLRefl* temprefl = freflsolidmap[freflvolmap[volref]];
             transform->Multiply(temprefl->GetMatrix());
        	 }
 
-         if(yesrefl == 1) { // reflection is done per solid so that we cancel it if exists in mother volume!!!
-
+         if(yesrefl == 1) { 
+            // reflection is done per solid so that we cancel it if exists in mother volume!!!
             TGeoRotation prot;
             prot.SetMatrix(parentrot);
             transform->MultiplyLeft(&prot);
