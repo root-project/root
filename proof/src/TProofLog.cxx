@@ -24,6 +24,7 @@
 #include "TObjString.h"
 #include "TUrl.h"
 
+ClassImp(TProofLog)
 
 //________________________________________________________________________
 TProofLog::TProofLog(const char *stag, const char *url, TProofMgr *mgr)
