@@ -136,6 +136,8 @@ Int_t     gGIFRefNb[39];
 Int_t     gGIFErrNb[39];
 Int_t     gJPGRefNb[39];
 Int_t     gJPGErrNb[39];
+Int_t     gPNGRefNb[39];
+Int_t     gPNGErrNb[39];
 Int_t     gPS2RefNb[39];
 Int_t     gPS2ErrNb[39];
 Bool_t    gOptionR;
@@ -151,7 +153,7 @@ char      gLine[80];
 //______________________________________________________________________________
 int main(int argc, char *argv[])
 {
-///TApplication theApp("App", &argc, argv);
+   TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
 
    TString opt;
@@ -217,23 +219,25 @@ void stressGraphics(Int_t verbose = 0)
    Int_t i = -1;
    while (fgets(line,160,sg)) {
       if (i>=0) {
-         sscanf(&line[8], "%d",&gPS1RefNb[i]);
-         sscanf(&line[18],"%d",&gPS1ErrNb[i]);
-         sscanf(&line[28],"%d",&gPDFRefNb[i]);
-         sscanf(&line[38],"%d",&gPDFErrNb[i]);
-         sscanf(&line[48],"%d",&gGIFRefNb[i]);
-         sscanf(&line[58],"%d",&gGIFErrNb[i]);
-         sscanf(&line[68],"%d",&gJPGRefNb[i]);
-         sscanf(&line[78],"%d",&gJPGErrNb[i]);
-         sscanf(&line[88],"%d",&gPS2RefNb[i]);
-         sscanf(&line[98],"%d",&gPS2ErrNb[i]);
+         sscanf(&line[8]  ,"%d",&gPS1RefNb[i]);
+         sscanf(&line[18] ,"%d",&gPS1ErrNb[i]);
+         sscanf(&line[28] ,"%d",&gPDFRefNb[i]);
+         sscanf(&line[38] ,"%d",&gPDFErrNb[i]);
+         sscanf(&line[48] ,"%d",&gGIFRefNb[i]);
+         sscanf(&line[58] ,"%d",&gGIFErrNb[i]);
+         sscanf(&line[68] ,"%d",&gJPGRefNb[i]);
+         sscanf(&line[78] ,"%d",&gJPGErrNb[i]);
+         sscanf(&line[88] ,"%d",&gPNGRefNb[i]);
+         sscanf(&line[98] ,"%d",&gPNGErrNb[i]);
+         sscanf(&line[108],"%d",&gPS2RefNb[i]);
+         sscanf(&line[118],"%d",&gPS2ErrNb[i]);
       }
       i++;
    }
    fclose(sg);
 
    if (gOptionR) {
-      cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PS2Ref#   PS2Err#" <<endl;
+      cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<endl;
    } else {
       cout << "**********************************************************************" <<endl;
       cout << "*  Starting  Graphics - S T R E S S suite                            *" <<endl;
@@ -473,6 +477,15 @@ void TestReport1(TCanvas *C, const TString &title)
                                            gJPGRefNb[gTestNum-1],
                                            gJPGErrNb[gTestNum-1]);
 
+   sprintf(outfile,"sg%2.2d.png",gTestNum);
+   C->cd(0);
+   C->SaveAs(outfile);
+   TString pngfile = outfile;
+   StatusPrint(pngfile, 0, "  PNG output", FileSize(outfile),
+                                           gPNGRefNb[gTestNum-1],
+                                           gPNGErrNb[gTestNum-1]);
+
+   gErrorIgnoreLevel = 0;
    gErrorIgnoreLevel = 0;
 
    return;
