@@ -927,9 +927,11 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       else if (IsTextFile(dirname.Data())) {
          gSystem->ChangeDirectory(gSystem->DirName(dirname.Data()));
          if (fNewBrowser) {
+            TGFrameElement *fe = 0;
             TGTab *tabRight = fNewBrowser->GetTabRight();
             TGCompositeFrame *frame = tabRight->GetCurrentContainer();
-            TGFrameElement *fe = (TGFrameElement *)frame->GetList()->First();
+            if (frame)
+               fe = (TGFrameElement *)frame->GetList()->First();
             if (fe) {
                TGCompositeFrame *embed = (TGCompositeFrame *)fe->fFrame;
                if (embed->InheritsFrom("TGTextEditor")) {
@@ -943,6 +945,9 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                else {
                   XXExecuteDefaultAction(&f);
                }
+            }
+            else {
+               XXExecuteDefaultAction(&f);
             }
          }
       }
