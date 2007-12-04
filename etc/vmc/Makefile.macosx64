@@ -1,6 +1,6 @@
-# $Id$
+# $Id: Makefile.macosx 20845 2007-11-16 15:48:58Z rdm $
 
-# MacOSX platform dependent definitions
+# MacOSX 64-bit platform dependent definitions
 
 # OS version
 MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
@@ -34,9 +34,9 @@ AWK	  = awk
 # The options
 #
 #
-CXXOPTS       = $(OPT) -pipe -Wall -W -Woverloaded-virtual  
-COPT	      = $(OPT) 
-FOPT	      = $(OPT) -fno-second-underscore
+CXXOPTS       = $(OPT) -m64 -pipe -Wall -W -Woverloaded-virtual  
+COPT	      = $(OPT) -m64
+FOPT	      = $(OPT) -m64 -fno-second-underscore
 
 # CERNLIB defines
 
@@ -55,10 +55,10 @@ LD            = export MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) 
 		unset LD_PREBIND ; \
 		g++
 
-LDFLAGS       = $(OPT) -bind_at_load
+LDFLAGS       = $(OPT) -m64 -bind_at_load
 
 SHLD	      = $(LD)
-SOFLAGS       = -dynamiclib -undefined dynamic_lookup -single_module
+SOFLAGS       = -m64 -dynamiclib -undefined dynamic_lookup -single_module
 
 ifeq (g95,$(findstring g95,$(ROOTBUILD)))
 SHLIB += -L$(shell g95 --print-search-dirs | sed -n -e 's/install: //p') -lf95
