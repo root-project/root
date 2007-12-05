@@ -773,7 +773,7 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    Bool_t haveErrors = GetCalculateErrors();
    Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e'));
 
-    TH3D* h = new TH3D(name, title, GetAxis(xDim)->GetNbins(),
+   TH3D* h = new TH3D(name, title, GetAxis(xDim)->GetNbins(),
                       GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax(),
                       GetAxis(yDim)->GetNbins(),
                       GetAxis(yDim)->GetXmin(), GetAxis(yDim)->GetXmax(),
