@@ -22,7 +22,7 @@ class TEveRGBAPalette : public TObject, public TEveRefCnt
    friend class TEveRGBAPaletteSubEditor;
 
 public:
-   enum ELimitAction_e { LA_Cut, LA_Mark, LA_Clip, LA_Wrap };
+   enum ELimitAction_e { kLA_Cut, kLA_Mark, kLA_Clip, kLA_Wrap };
 
 private:
    TEveRGBAPalette(const TEveRGBAPalette&);            // Not implemented
@@ -140,8 +140,8 @@ public:
 //______________________________________________________________________________
 inline Bool_t TEveRGBAPalette::WithinVisibleRange(Int_t val) const
 {
-   if ((val < fMinVal && fUnderflowAction == LA_Cut) ||
-       (val > fMaxVal && fOverflowAction  == LA_Cut))
+   if ((val < fMinVal && fUnderflowAction == kLA_Cut) ||
+       (val > fMaxVal && fOverflowAction  == kLA_Cut))
       return kFALSE;
    else
       return kTRUE;
@@ -150,22 +150,22 @@ inline Bool_t TEveRGBAPalette::WithinVisibleRange(Int_t val) const
 //______________________________________________________________________________
 inline const UChar_t* TEveRGBAPalette::ColorFromValue(Int_t val) const
 {
-   // Here we expect that LA_Cut has been checked; we further check
-   // for LA_Wrap and LA_Clip otherwise we proceed as for LA_Mark.
+   // Here we expect that kLA_Cut has been checked; we further check
+   // for kLA_Wrap and kLA_Clip otherwise we proceed as for kLA_Mark.
 
    if (!fColorArray)  SetupColorArray();
    if (val < fMinVal) {
-      if (fUnderflowAction == LA_Wrap)
+      if (fUnderflowAction == kLA_Wrap)
          val = (val+1-fMinVal)%fNBins + fMaxVal;
-      else if (fUnderflowAction == LA_Clip)
+      else if (fUnderflowAction == kLA_Clip)
          val = fMinVal;
       else
          return fUnderRGBA;
    }
    else if(val > fMaxVal) {
-      if (fOverflowAction == LA_Wrap)
+      if (fOverflowAction == kLA_Wrap)
          val = (val-1-fMaxVal)%fNBins + fMinVal;
-      else if (fOverflowAction == LA_Clip)
+      else if (fOverflowAction == kLA_Clip)
          val = fMaxVal;
       else
          return fOverRGBA;

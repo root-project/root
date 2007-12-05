@@ -29,8 +29,8 @@ TEveRGBAPalette::TEveRGBAPalette() :
 
    fInterpolate     (kFALSE),
    fShowDefValue    (kTRUE),
-   fUnderflowAction (LA_Cut),
-   fOverflowAction  (LA_Clip),
+   fUnderflowAction (kLA_Cut),
+   fOverflowAction  (kLA_Clip),
 
    fDefaultColor(0),
    fUnderColor  (1),
@@ -50,8 +50,8 @@ TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp, Bool_t sho
 
    fInterpolate     (interp),
    fShowDefValue    (showdef),
-   fUnderflowAction (LA_Cut),
-   fOverflowAction  (LA_Clip),
+   fUnderflowAction (kLA_Cut),
+   fOverflowAction  (kLA_Clip),
 
    fDefaultColor(0),
    fUnderColor  (1),

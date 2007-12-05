@@ -29,7 +29,7 @@ private:
    TEveGridStepper& operator=(const TEveGridStepper&); // Not implemented
 
 public:
-   enum EStepMode_e { SM_XYZ, SM_YXZ, SM_XZY };
+   enum EStepMode_e { kSM_XYZ, kSM_YXZ, kSM_XZY };
 
 protected:
    EStepMode_e fMode;       // Stepping mode, order of filling.
@@ -40,7 +40,7 @@ protected:
    Float_t fOx, fOy, fOz;   // Initial offset for each direction.
 
 public:
-   TEveGridStepper(Int_t sm=SM_XYZ);
+   TEveGridStepper(Int_t sm=kSM_XYZ);
    virtual ~TEveGridStepper() {}
 
    void Reset();

@@ -279,7 +279,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       for (std::vector<TEvePathMark*>::iterator i=fPathMarks.begin(); i!=fPathMarks.end(); ++i)
       {
          TEvePathMark* pm = *i;
-         if (RS.GetFitReferences() && pm->fType == TEvePathMark::Reference)
+         if (RS.GetFitReferences() && pm->fType == TEvePathMark::kReference)
          {
             if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
                pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
@@ -289,7 +289,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
             }
          }
-         else if (RS.GetFitDaughters() &&  pm->fType == TEvePathMark::Daughter)
+         else if (RS.GetFitDaughters() &&  pm->fType == TEvePathMark::kDaughter)
          {
             if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
                 pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
@@ -299,7 +299,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
             }
          }
-         else if (RS.GetFitDecay() &&  pm->fType == TEvePathMark::Decay)
+         else if (RS.GetFitDecay() &&  pm->fType == TEvePathMark::kDecay)
          {
             if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
                 pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
@@ -1145,7 +1145,7 @@ TEveTrackCounter::TEveTrackCounter(const Text_t* name, const Text_t* title) :
    TNamed(name, title),
 
    fBadLineStyle (6),
-   fClickAction  (CA_ToggleTrack),
+   fClickAction  (kCA_ToggleTrack),
    fAllTracks    (0),
    fGoodTracks   (0),
    fTrackLists   ()
@@ -1228,7 +1228,7 @@ void TEveTrackCounter::DoTrackAction(TEveTrack* track)
    switch (fClickAction)
    {
 
-      case CA_PrintTrackInfo:
+      case kCA_PrintTrackInfo:
       {
          printf("TEveTrack '%s'\n", track->GetObject()->GetName());
          TEveVector &v = track->fV, &p = track->fP;
@@ -1238,7 +1238,7 @@ void TEveTrackCounter::DoTrackAction(TEveTrack* track)
          break;
       }
 
-      case CA_ToggleTrack:
+      case kCA_ToggleTrack:
       {
          if (track->GetLineStyle() == 1)
          {

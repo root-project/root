@@ -111,16 +111,16 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glEnable(GL_COLOR_MATERIAL);
    glDisable(GL_CULL_FACE);
 
-   if (mQ.fRenderMode == TEveDigitSet::RM_Fill)
+   if (mQ.fRenderMode == TEveDigitSet::kRM_Fill)
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   else if (mQ.fRenderMode == TEveDigitSet::RM_TEveLine)
+   else if (mQ.fRenderMode == TEveDigitSet::kRM_TEveLine)
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
    if (mQ.fDisableLigting)  glDisable(GL_LIGHTING);
 
-   if (mQ.fQuadType < TEveQuadSet::QT_Rectangle_End)      RenderQuads(rnrCtx);
-   else if (mQ.fQuadType < TEveQuadSet::QT_Line_End)      RenderLines(rnrCtx);
-   else if (mQ.fQuadType < TEveQuadSet::QT_Hexagon_End)   RenderHexagons(rnrCtx);
+   if (mQ.fQuadType < TEveQuadSet::kQT_Rectangle_End)      RenderQuads(rnrCtx);
+   else if (mQ.fQuadType < TEveQuadSet::kQT_Line_End)      RenderLines(rnrCtx);
+   else if (mQ.fQuadType < TEveQuadSet::kQT_Hexagon_End)   RenderHexagons(rnrCtx);
 
    glPopAttrib();
 
@@ -134,10 +134,10 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
    TEveQuadSet& mQ = * fM;
 
    GLenum primitiveType;
-   if (mQ.fRenderMode != TEveDigitSet::RM_TEveLine)
+   if (mQ.fRenderMode != TEveDigitSet::kRM_TEveLine)
    {
       primitiveType = GL_QUADS;
-      if (mQ.fQuadType == TEveQuadSet::QT_FreeQuad)
+      if (mQ.fQuadType == TEveQuadSet::kQT_FreeQuad)
          glEnable(GL_NORMALIZE);
       else
          glNormal3f(0, 0, 1);
@@ -152,7 +152,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
    switch (mQ.fQuadType)
    {
 
-      case TEveQuadSet::QT_FreeQuad:
+      case TEveQuadSet::kQT_FreeQuad:
       {
          Float_t e1[3], e2[3], normal[3];
          while (qi.next()) {
@@ -176,7 +176,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleXY:
+      case TEveQuadSet::kQT_RectangleXY:
       {
          while (qi.next()) {
             TEveQuadSet::QRect_t& q = * (TEveQuadSet::QRect_t*) qi();
@@ -194,7 +194,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleXZ:
+      case TEveQuadSet::kQT_RectangleXZ:
       {
          while (qi.next()) {
             TEveQuadSet::QRect_t& q = * (TEveQuadSet::QRect_t*) qi();
@@ -212,7 +212,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleYZ:
+      case TEveQuadSet::kQT_RectangleYZ:
       {
          while (qi.next()) {
             TEveQuadSet::QRect_t& q = * (TEveQuadSet::QRect_t*) qi();
@@ -230,7 +230,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleXYFixedDim:
+      case TEveQuadSet::kQT_RectangleXYFixedDim:
       {
          const Float_t& w = mQ.fDefWidth;
          const Float_t& h = mQ.fDefHeight;
@@ -250,7 +250,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleXYFixedZ:
+      case TEveQuadSet::kQT_RectangleXYFixedZ:
       {
          const Float_t& z = mQ.fDefCoord;
          while (qi.next()) {
@@ -269,7 +269,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleXZFixedY:
+      case TEveQuadSet::kQT_RectangleXZFixedY:
       {
          const Float_t& y = mQ.fDefCoord;
          while (qi.next()) {
@@ -288,7 +288,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleYZFixedX:
+      case TEveQuadSet::kQT_RectangleYZFixedX:
       {
          const Float_t& x = mQ.fDefCoord;
          while (qi.next()) {
@@ -307,7 +307,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleXYFixedDimZ:
+      case TEveQuadSet::kQT_RectangleXYFixedDimZ:
       {
          const Float_t& z = mQ.fDefCoord;
          const Float_t& w = mQ.fDefWidth;
@@ -328,7 +328,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleXZFixedDimY:
+      case TEveQuadSet::kQT_RectangleXZFixedDimY:
       {
          const Float_t& y = mQ.fDefCoord;
          const Float_t& w = mQ.fDefWidth;
@@ -349,7 +349,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_RectangleYZFixedDimX:
+      case TEveQuadSet::kQT_RectangleYZFixedDimX:
       {
          const Float_t& x = mQ.fDefCoord;
          const Float_t& w = mQ.fDefWidth;
@@ -392,7 +392,7 @@ void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
    switch (mQ.fQuadType)
    {
 
-      case TEveQuadSet::QT_LineXYFixedZ:
+      case TEveQuadSet::kQT_LineXYFixedZ:
       {
          const Float_t& z = mQ.fDefCoord;
          while (qi.next()) {
@@ -409,7 +409,7 @@ void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_LineXZFixedY:
+      case TEveQuadSet::kQT_LineXZFixedY:
       {
          const Float_t& z = mQ.fDefCoord;
          while (qi.next()) {
@@ -443,7 +443,7 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
 
    TEveQuadSet& mQ = * fM;
 
-   GLenum primitveType = (mQ.fRenderMode != TEveDigitSet::RM_TEveLine) ?
+   GLenum primitveType = (mQ.fRenderMode != TEveDigitSet::kRM_TEveLine) ?
       GL_POLYGON : GL_LINE_LOOP;
 
    glNormal3f(0, 0, 1);
@@ -455,7 +455,7 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
    switch (mQ.fQuadType)
    {
 
-      case TEveQuadSet::QT_HexagonXY:
+      case TEveQuadSet::kQT_HexagonXY:
       {
          while (qi.next()) {
             TEveQuadSet::QHex_t& q = * (TEveQuadSet::QHex_t*) qi();
@@ -477,7 +477,7 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveQuadSet::QT_HexagonYX:
+      case TEveQuadSet::kQT_HexagonYX:
       {
          while (qi.next()) {
             TEveQuadSet::QHex_t& q = * (TEveQuadSet::QHex_t*) qi();

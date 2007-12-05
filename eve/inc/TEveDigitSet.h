@@ -37,7 +37,7 @@ class TEveDigitSet : public TEveElement,
    TEveDigitSet& operator=(const TEveDigitSet&); // Not implemented
 
 public:
-   enum ERenderMode_e { RM_AsIs, RM_TEveLine, RM_Fill };
+   enum ERenderMode_e { kRM_AsIs, kRM_TEveLine, kRM_Fill };
 
 protected:
    struct DigitBase_t

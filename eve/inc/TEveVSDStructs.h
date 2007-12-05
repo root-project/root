@@ -129,14 +129,14 @@ inline Float_t TEveVector::operator [] (Int_t idx) const
 class TEvePathMark
 {
 public:
-   enum EType_e   { Reference, Daughter, Decay };
+   enum EType_e   { kReference, kDaughter, kDecay };
 
    TEveVector  fV;    // Vertex.
    TEveVector  fP;    // Momentum.
    Float_t     fTime; // Time.
    EType_e     fType; // Mark-type.
 
-   TEvePathMark(EType_e t=Reference) : fV(), fP(), fTime(0), fType(t) {}
+   TEvePathMark(EType_e t=kReference) : fV(), fP(), fTime(0), fType(t) {}
    virtual ~TEvePathMark() {}
 
    const char* TypeName();

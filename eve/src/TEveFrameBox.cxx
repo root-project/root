@@ -21,7 +21,7 @@ ClassImp(TEveFrameBox)
 
 //______________________________________________________________________________
 TEveFrameBox::TEveFrameBox() :
-   fFrameType   (FT_None),
+   fFrameType   (kFT_None),
    fFrameSize   (0),
    fFramePoints (0),
 
@@ -47,7 +47,7 @@ TEveFrameBox::~TEveFrameBox()
 void TEveFrameBox::SetAAQuadXY(Float_t x,  Float_t y, Float_t z,
                                Float_t dx, Float_t dy)
 {
-   fFrameType = FT_Quad;
+   fFrameType = kFT_Quad;
    fFrameSize = 12;
    delete [] fFramePoints;
    fFramePoints = new Float_t [fFrameSize];
@@ -62,7 +62,7 @@ void TEveFrameBox::SetAAQuadXY(Float_t x,  Float_t y, Float_t z,
 void TEveFrameBox::SetAAQuadXZ(Float_t x,  Float_t y, Float_t z,
                                Float_t dx, Float_t dz)
 {
-   fFrameType = FT_Quad;
+   fFrameType = kFT_Quad;
    fFrameSize = 12;
    delete [] fFramePoints;
    fFramePoints = new Float_t [fFrameSize];
@@ -77,7 +77,7 @@ void TEveFrameBox::SetAAQuadXZ(Float_t x,  Float_t y, Float_t z,
 void TEveFrameBox::SetAABox(Float_t x,  Float_t y,  Float_t z,
                             Float_t dx, Float_t dy, Float_t dz)
 {
-   fFrameType = FT_Box;
+   fFrameType = kFT_Box;
    fFrameSize = 24;
    delete [] fFramePoints;
    fFramePoints = new Float_t [fFrameSize];
@@ -99,7 +99,7 @@ void TEveFrameBox::SetAABox(Float_t x,  Float_t y,  Float_t z,
 void TEveFrameBox::SetAABoxCenterHalfSize(Float_t x,  Float_t y,  Float_t z,
                                           Float_t dx, Float_t dy, Float_t dz)
 {
-   fFrameType = FT_Box;
+   fFrameType = kFT_Box;
    fFrameSize = 24;
    delete [] fFramePoints;
    fFramePoints = new Float_t [fFrameSize];

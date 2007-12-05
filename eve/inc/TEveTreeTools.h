@@ -45,13 +45,13 @@ class TEvePointSelector;
 class TEvePointSelectorConsumer
 {
 public:
-   enum ETreeVarType_e { TVT_XYZ, TVT_RPhiZ };
+   enum ETreeVarType_e { kTVT_XYZ, kTVT_RPhiZ };
 
 protected:
    ETreeVarType_e fSourceCS; // Coordinate-System of the source tree variables
 
 public:
-   TEvePointSelectorConsumer(ETreeVarType_e cs=TVT_XYZ) :fSourceCS(cs) {}
+   TEvePointSelectorConsumer(ETreeVarType_e cs=kTVT_XYZ) :fSourceCS(cs) {}
    virtual ~TEvePointSelectorConsumer() {}
 
    virtual void InitFill(Int_t /*subIdNum*/) {}

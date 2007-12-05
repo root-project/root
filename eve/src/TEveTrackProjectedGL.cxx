@@ -81,13 +81,13 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          accept = kFALSE;
          switch ((*i)->fType)
          {
-            case(TEvePathMark::Daughter):
+            case(TEvePathMark::kDaughter):
                if(RS.GetRnrDaughters()) accept = kTRUE;
                break;
-            case(TEvePathMark::Reference):
+            case(TEvePathMark::kReference):
                if(RS.GetRnrReferences()) accept = kTRUE;
                break;
-            case(TEvePathMark::Decay):
+            case(TEvePathMark::kDecay):
                if(RS.GetRnrDecay()) accept = kTRUE;
                break;
          }

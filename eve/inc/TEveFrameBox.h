@@ -20,7 +20,7 @@ class TEveFrameBox : public TObject, public TEveRefBackPtr
    friend class TEveFrameBoxGL;
 
 public:
-   enum EFrameType_e  { FT_None, FT_Quad, FT_Box };
+   enum EFrameType_e  { kFT_None, kFT_Quad, kFT_Box };
 
 private:
    TEveFrameBox(const TEveFrameBox&);            // Not implemented

@@ -26,34 +26,34 @@ class TEveQuadSet : public TEveDigitSet
 public:
    enum EQuadType_e
       {
-         QT_Undef,                // unknown-ignored
-         QT_FreeQuad,             // arbitrary quad: specify 4*(x,y,z) quad corners
-         QT_RectangleXY,          // rectangle in x-y plane: specify x, y, z, w, h
-         QT_RectangleXZ,          // rectangle in x-z plane: specify x, y, z, w, h
-         QT_RectangleYZ,          // rectangle in y-z plane: specify x, y, z, w, h
-         QT_RectangleXYFixedDim,  // rectangle in x-y plane: specify x, y, z; w, h taken from fDefWidth/Height
-         QT_RectangleXYFixedZ,    // rectangle in x-y plane: specify x, y, w, h; z taken from fDefCoord
-         QT_RectangleXZFixedY,    // rectangle in x-z plane: specify x, z, w, h; y taken from fDefCoord
-         QT_RectangleYZFixedX,    // rectangle in y-z plane: specify y, z, w, h; x taken from fDefWidth/Height/Coord
-         QT_RectangleXYFixedDimZ, // rectangle in x-y plane: specify x, y; w, h, z taken from fDefWidth/Height/Coord
-         QT_RectangleXZFixedDimY, // rectangle in x-z plane: specify x, z; w, h, y taken from fDefWidth/Height/Coord
-         QT_RectangleYZFixedDimX, // rectangle in y-z plane: specify y, z; w, h, x taken from fDefWidth/Height/Coord
-         QT_Rectangle_End,
+         kQT_Undef,                // unknown-ignored
+         kQT_FreeQuad,             // arbitrary quad: specify 4*(x,y,z) quad corners
+         kQT_RectangleXY,          // rectangle in x-y plane: specify x, y, z, w, h
+         kQT_RectangleXZ,          // rectangle in x-z plane: specify x, y, z, w, h
+         kQT_RectangleYZ,          // rectangle in y-z plane: specify x, y, z, w, h
+         kQT_RectangleXYFixedDim,  // rectangle in x-y plane: specify x, y, z; w, h taken from fDefWidth/Height
+         kQT_RectangleXYFixedZ,    // rectangle in x-y plane: specify x, y, w, h; z taken from fDefCoord
+         kQT_RectangleXZFixedY,    // rectangle in x-z plane: specify x, z, w, h; y taken from fDefCoord
+         kQT_RectangleYZFixedX,    // rectangle in y-z plane: specify y, z, w, h; x taken from fDefWidth/Height/Coord
+         kQT_RectangleXYFixedDimZ, // rectangle in x-y plane: specify x, y; w, h, z taken from fDefWidth/Height/Coord
+         kQT_RectangleXZFixedDimY, // rectangle in x-z plane: specify x, z; w, h, y taken from fDefWidth/Height/Coord
+         kQT_RectangleYZFixedDimX, // rectangle in y-z plane: specify y, z; w, h, x taken from fDefWidth/Height/Coord
+         kQT_Rectangle_End,
          // line modes (needed for uniform handling of silicon-strip digits)
-         QT_LineXYFixedZ,         // line in x-y plane: specify x, y, w(dx), h(dy); z taken from fDefCoord
-         QT_LineXZFixedY,         // line in x-z plane: specify x, z, w(dx), h(dz); y taken from fDefCoord
-         QT_Line_End,
+         kQT_LineXYFixedZ,         // line in x-y plane: specify x, y, w(dx), h(dy); z taken from fDefCoord
+         kQT_LineXZFixedY,         // line in x-z plane: specify x, z, w(dx), h(dz); y taken from fDefCoord
+         kQT_Line_End,
          // hexagon modes
-         QT_HexagonXY,            // horizontal hexagon: specify x, y, z, r
-         QT_HexagonYX,            // vertical   hexagon: specify x, y, z, r
-         QT_Hexagon_End
+         kQT_HexagonXY,            // horizontal hexagon: specify x, y, z, r
+         kQT_HexagonYX,            // vertical   hexagon: specify x, y, z, r
+         kQT_Hexagon_End
          // circle modes:
          // QT_CircleXY,          // specify r, z
          // QT_CircleXYFixedZ,    // specify r
          // QT_CircleXYFixedR,    // specify z
       };
 
-   enum ERenderMode_e { RM_AsIs, RM_TEveLine, RM_Fill };
+   enum ERenderMode_e { kRM_AsIs, kRM_TEveLine, kRM_Fill };
 
 protected:
 

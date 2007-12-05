@@ -25,9 +25,9 @@
 //
 // A collection of 3D-boxes. The way how the boxes are defined depends
 // on the fBoxType data-member.
-//   BT_FreeBox         arbitrary box: specify 8*(x,y,z) box corners
-//   BT_AABox           axis-aligned box: specify (x,y,z) and (w, h, d)
-//   BT_AABoxFixedDim   axis-aligned box w/ fixed dimensions: specify (x,y,z)
+//   kBT_FreeBox         arbitrary box: specify 8*(x,y,z) box corners
+//   kBT_AABox           axis-aligned box: specify (x,y,z) and (w, h, d)
+//   kBT_AABoxFixedDim   axis-aligned box w/ fixed dimensions: specify (x,y,z)
 //                      also set fDefWidth, fDefHeight and fDefDepth
 //
 // Each box can be assigned:
@@ -43,7 +43,7 @@ ClassImp(TEveBoxSet)
 TEveBoxSet::TEveBoxSet(const Text_t* n, const Text_t* t) :
    TEveDigitSet  (n, t),
 
-   fBoxType      (BT_Undef),
+   fBoxType      (kBT_Undef),
    fDefWidth     (1),
    fDefHeight    (1),
    fDefDepth     (1)
@@ -64,10 +64,10 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
    static const TEveException eH("TEveBoxSet::SizeofAtom ");
 
    switch (bt) {
-      case BT_Undef:                return 0;
-      case BT_FreeBox:              return sizeof(BFreeBox);
-      case BT_AABox:                return sizeof(BAABox_t);
-      case BT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
+      case kBT_Undef:                return 0;
+      case kBT_FreeBox:              return sizeof(BFreeBox);
+      case kBT_AABox:                return sizeof(BAABox_t);
+      case kBT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
       default:                      throw(eH + "unexpected atom type.");
    }
    return 0;
@@ -106,11 +106,11 @@ void TEveBoxSet::Reset()
 void TEveBoxSet::AddBox(const Float_t* verts)
 {
    // Create a new box from a set of 8 vertices.
-   // To be used for box-type BT_FreeBox.
+   // To be used for box-type kBT_FreeBox.
 
    static const TEveException eH("TEveBoxSet::AddBox ");
 
-   if (fBoxType != BT_FreeBox)
+   if (fBoxType != kBT_FreeBox)
       throw(eH + "expect free box-type.");
 
    BFreeBox* b = (BFreeBox*) NewDigit();
@@ -122,11 +122,11 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, F
 {
    // Create a new axis-aligned box from at a given position and with
    // specified dimensions.
-   // To be used for box-type BT_AABox.
+   // To be used for box-type kBT_AABox.
 
    static const TEveException eH("TEveBoxSet::AddBox ");
 
-   if (fBoxType != BT_AABox)
+   if (fBoxType != kBT_AABox)
       throw(eH + "expect axis-aligned box-type.");
 
    BAABox_t* box = (BAABox_t*) NewDigit();
@@ -138,11 +138,11 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, F
 void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c)
 {
    // Create a new axis-aligned box from at a given position.
-   // To be used for box-type BT_AABoxFixedDim.
+   // To be used for box-type kBT_AABoxFixedDim.
 
    static const TEveException eH("TEveBoxSet::AddBox ");
 
-   if (fBoxType != BT_AABoxFixedDim)
+   if (fBoxType != kBT_AABoxFixedDim)
       throw(eH + "expect axis-aligned fixed-dimension box-type.");
 
    BAABoxFixedDim_t* box = (BAABoxFixedDim_t*) NewDigit();
@@ -181,7 +181,7 @@ void TEveBoxSet::ComputeBBox()
    switch (fBoxType)
    {
 
-      case BT_FreeBox:
+      case kBT_FreeBox:
       {
          while (bi.next()) {
             BFreeBox& b = * (BFreeBox*) bi();
@@ -192,7 +192,7 @@ void TEveBoxSet::ComputeBBox()
          break;
       }
 
-      case BT_AABox:
+      case kBT_AABox:
       {
          while (bi.next()) {
             BAABox_t& b = * (BAABox_t*) bi();
@@ -202,7 +202,7 @@ void TEveBoxSet::ComputeBBox()
          break;
       }
 
-      case BT_AABoxFixedDim:
+      case kBT_AABoxFixedDim:
       {
          while (bi.next()) {
             BAABoxFixedDim_t& b = * (BAABoxFixedDim_t*) bi();
@@ -230,7 +230,7 @@ void TEveBoxSet::Test(Int_t nboxes)
 {
    // Fill the structure with a random set of boxes.
 
-   Reset(BT_AABox, kTRUE, nboxes);
+   Reset(kBT_AABox, kTRUE, nboxes);
    TRandom rnd(0);
    const Float_t origin = 10, size = 2;
    Int_t color;

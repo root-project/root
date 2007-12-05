@@ -59,8 +59,8 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
       TGLabel* lab = new TGLabel(f, "Type");
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 31, 1, 2));
       fType = new TGComboBox(f);
-      fType->AddEntry("CFishEye", TEveProjection::PT_CFishEye);
-      fType->AddEntry("RhoZ",     TEveProjection::PT_RhoZ);
+      fType->AddEntry("CFishEye", TEveProjection::kPT_CFishEye);
+      fType->AddEntry("RhoZ",     TEveProjection::kPT_RhoZ);
       TGListBox* lb = fType->GetListBox();
       lb->Resize(lb->GetWidth(), 2*18);
       fType->Resize(80, 20);

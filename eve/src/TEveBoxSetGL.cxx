@@ -50,7 +50,7 @@ Int_t TEveBoxSetGL::PrimitiveType() const
    // Return GL primitive used to render the boxes, based on the
    // render-mode specified in the model object.
 
-   return (fM->fRenderMode != TEveDigitSet::RM_TEveLine) ? GL_QUADS : GL_LINE_LOOP;
+   return (fM->fRenderMode != TEveDigitSet::kRM_TEveLine) ? GL_QUADS : GL_LINE_LOOP;
 }
 
 //______________________________________________________________________________
@@ -129,14 +129,14 @@ void TEveBoxSetGL::MakeDisplayList() const
    // Some box-types don't benefit from the display-list rendering and
    // so display-list is not created.
 
-   if (fM->fBoxType == TEveBoxSet::BT_AABox ||
-       fM->fBoxType == TEveBoxSet::BT_AABoxFixedDim)
+   if (fM->fBoxType == TEveBoxSet::kBT_AABox ||
+       fM->fBoxType == TEveBoxSet::kBT_AABoxFixedDim)
    {
       if (fBoxDL == 0)
          fBoxDL = glGenLists(1);
 
       Float_t p[24];
-      if (fM->fBoxType == TEveBoxSet::BT_AABox)
+      if (fM->fBoxType == TEveBoxSet::kBT_AABox)
          MakeOriginBox(p, 1.0f, 1.0f, 1.0f);
       else
          MakeOriginBox(p, fM->fDefWidth, fM->fDefHeight, fM->fDefDepth);
@@ -240,9 +240,9 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
    glEnable(GL_COLOR_MATERIAL);
 
-   if (mB.fRenderMode == TEveDigitSet::RM_Fill)
+   if (mB.fRenderMode == TEveDigitSet::kRM_Fill)
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   else if (mB.fRenderMode == TEveDigitSet::RM_TEveLine)
+   else if (mB.fRenderMode == TEveDigitSet::kRM_TEveLine)
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
    if (mB.fDisableLigting) glDisable(GL_LIGHTING);
@@ -258,7 +258,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    switch (mB.fBoxType)
    {
 
-      case TEveBoxSet::BT_FreeBox:
+      case TEveBoxSet::kBT_FreeBox:
       {
          GLenum primitiveType = PrimitiveType();
          while (bi.next())
@@ -276,7 +276,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          break;
       } // end case free-box
 
-      case TEveBoxSet::BT_AABox:
+      case TEveBoxSet::kBT_AABox:
       {
          glEnable(GL_NORMALIZE);
          while (bi.next())
@@ -296,7 +296,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          break;
       }
 
-      case TEveBoxSet::BT_AABoxFixedDim:
+      case TEveBoxSet::kBT_AABoxFixedDim:
       {
          while (bi.next())
          {

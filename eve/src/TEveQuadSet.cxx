@@ -44,7 +44,7 @@ ClassImp(TEveQuadSet)
 TEveQuadSet::TEveQuadSet(const Text_t* n, const Text_t* t) :
    TEveDigitSet   (n, t),
 
-   fQuadType  (QT_Undef),
+   fQuadType  (kQT_Undef),
    fDefWidth  (1),
    fDefHeight (1),
    fDefCoord  (0)
@@ -55,7 +55,7 @@ TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                          const Text_t* n, const Text_t* t) :
    TEveDigitSet   (n, t),
 
-   fQuadType  (QT_Undef),
+   fQuadType  (kQT_Undef),
    fDefWidth  (1),
    fDefHeight (1),
    fDefCoord  (0)
@@ -75,22 +75,22 @@ Int_t TEveQuadSet::SizeofAtom(TEveQuadSet::EQuadType_e qt)
    static const TEveException eH("TEveQuadSet::SizeofAtom ");
 
    switch (qt) {
-      case QT_Undef:                return 0;
-      case QT_FreeQuad:             return sizeof(QFreeQuad_t);
-      case QT_RectangleXY:
-      case QT_RectangleXZ:
-      case QT_RectangleYZ:          return sizeof(QRect_t);
-      case QT_RectangleXYFixedDim:  return sizeof(QRectFixDim_t);
-      case QT_RectangleXYFixedZ:
-      case QT_RectangleXZFixedY:
-      case QT_RectangleYZFixedX:    return sizeof(QRectFixC_t);
-      case QT_RectangleXYFixedDimZ:
-      case QT_RectangleXZFixedDimY:
-      case QT_RectangleYZFixedDimX: return sizeof(QRectFixDimC_t);
-      case QT_LineXZFixedY:
-      case QT_LineXYFixedZ:         return sizeof(QLineFixC_t);
-      case QT_HexagonXY:
-      case QT_HexagonYX:            return sizeof(QHex_t);
+      case kQT_Undef:                return 0;
+      case kQT_FreeQuad:             return sizeof(QFreeQuad_t);
+      case kQT_RectangleXY:
+      case kQT_RectangleXZ:
+      case kQT_RectangleYZ:          return sizeof(QRect_t);
+      case kQT_RectangleXYFixedDim:  return sizeof(QRectFixDim_t);
+      case kQT_RectangleXYFixedZ:
+      case kQT_RectangleXZFixedY:
+      case kQT_RectangleYZFixedX:    return sizeof(QRectFixC_t);
+      case kQT_RectangleXYFixedDimZ:
+      case kQT_RectangleXZFixedDimY:
+      case kQT_RectangleYZFixedDimX: return sizeof(QRectFixDimC_t);
+      case kQT_LineXZFixedY:
+      case kQT_LineXYFixedZ:         return sizeof(QLineFixC_t);
+      case kQT_HexagonXY:
+      case kQT_HexagonYX:            return sizeof(QHex_t);
       default:                      throw(eH + "unexpected atom type.");
    }
    return 0;
@@ -116,7 +116,7 @@ void TEveQuadSet::AddQuad(Float_t* verts)
 {
    static const TEveException eH("TEveQuadSet::AddQuad ");
 
-   if (fQuadType != QT_FreeQuad)
+   if (fQuadType != kQT_FreeQuad)
       throw(eH + "expect free quad-type.");
 
    QFreeQuad_t* fq = (QFreeQuad_t*) NewDigit();
@@ -150,34 +150,34 @@ void TEveQuadSet::AddQuad(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h)
    fq.fA = a; fq.fB = b;
    switch (fQuadType)
    {
-      case QT_RectangleXY:
-      case QT_RectangleXZ:
-      case QT_RectangleYZ:
+      case kQT_RectangleXY:
+      case kQT_RectangleXZ:
+      case kQT_RectangleYZ:
       {
          QRect_t& q = (QRect_t&) fq;
          q.fC = c; q.fW = w; q.fH = h;
          break;
       }
 
-      case QT_RectangleXYFixedDim:
+      case kQT_RectangleXYFixedDim:
       {
          QRectFixDim_t& q =  (QRectFixDim_t&) fq;
          q.fC = c;
          break;
       }
 
-      case QT_RectangleXYFixedZ:
-      case QT_RectangleXZFixedY:
-      case QT_RectangleYZFixedX:
+      case kQT_RectangleXYFixedZ:
+      case kQT_RectangleXZFixedY:
+      case kQT_RectangleYZFixedX:
       {
          QRectFixC_t& q = (QRectFixC_t&) fq;
          q.fW = w; q.fH = h;
          break;
       }
 
-      case QT_RectangleXYFixedDimZ:
-      case QT_RectangleXZFixedDimY:
-      case QT_RectangleYZFixedDimX:
+      case kQT_RectangleXYFixedDimZ:
+      case kQT_RectangleXZFixedDimY:
+      case kQT_RectangleYZFixedDimX:
       {
          break;
       }
@@ -196,8 +196,8 @@ void TEveQuadSet::AddLine(Float_t a, Float_t b, Float_t w, Float_t h)
    fq.fA = a; fq.fB = b;
    switch (fQuadType)
    {
-      case QT_LineXZFixedY:
-      case QT_LineXYFixedZ: {
+      case kQT_LineXZFixedY:
+      case kQT_LineXYFixedZ: {
          QLineFixC_t& q = (QLineFixC_t&) fq;
          q.fDx = w; q.fDy = h;
          break;
@@ -216,8 +216,8 @@ void TEveQuadSet::AddHexagon(Float_t a, Float_t b, Float_t c, Float_t r)
    fq.fA = a; fq.fB = b;
    switch (fQuadType)
    {
-      case QT_HexagonXY:
-      case QT_HexagonYX: {
+      case kQT_HexagonXY:
+      case kQT_HexagonYX: {
          QHex_t& q = (QHex_t&) fq;
          q.fC = c; q.fR = r;
          break;
@@ -253,20 +253,20 @@ void TEveQuadSet::ComputeBBox()
       }
 
       BBoxInit();
-      if (fQuadType == QT_RectangleXYFixedZ    ||
-          fQuadType == QT_RectangleXYFixedDimZ)
+      if (fQuadType == kQT_RectangleXYFixedZ    ||
+          fQuadType == kQT_RectangleXYFixedDimZ)
       {
          fBBox[4] = fDefCoord;
          fBBox[5] = fDefCoord;
       }
-      else if (fQuadType == QT_RectangleXZFixedY    ||
-               fQuadType == QT_RectangleXZFixedDimY)
+      else if (fQuadType == kQT_RectangleXZFixedY    ||
+               fQuadType == kQT_RectangleXZFixedDimY)
       {
          fBBox[2] = fDefCoord;
          fBBox[3] = fDefCoord;
       }
-      else if (fQuadType == QT_RectangleYZFixedX    ||
-               fQuadType == QT_RectangleYZFixedDimX)
+      else if (fQuadType == kQT_RectangleYZFixedX    ||
+               fQuadType == kQT_RectangleYZFixedDimX)
       {
          fBBox[0] = fDefCoord;
          fBBox[1] = fDefCoord;
@@ -277,7 +277,7 @@ void TEveQuadSet::ComputeBBox()
       switch (fQuadType)
       {
 
-         case QT_FreeQuad:
+         case kQT_FreeQuad:
          {
             while (qi.next()) {
                const Float_t* p =  ((QFreeQuad_t*) qi())->fVertices;
@@ -289,7 +289,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleXY:
+         case kQT_RectangleXY:
          {
             while (qi.next()) {
                QRect_t& q = * (QRect_t*) qi();
@@ -303,7 +303,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleXZ:
+         case kQT_RectangleXZ:
          {
             while (qi.next()) {
                QRect_t& q = * (QRect_t*) qi();
@@ -317,7 +317,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleYZ:
+         case kQT_RectangleYZ:
          {
             while (qi.next()) {
                QRect_t& q = * (QRect_t*) qi();
@@ -331,7 +331,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleXYFixedDim:
+         case kQT_RectangleXYFixedDim:
          {
             const Float_t& w = fDefWidth;
             const Float_t& h = fDefHeight;
@@ -347,7 +347,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleXYFixedZ:
+         case kQT_RectangleXYFixedZ:
          {
             while (qi.next()) {
                QRectFixC_t& q = * (QRectFixC_t*) qi();
@@ -359,7 +359,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleXZFixedY:
+         case kQT_RectangleXZFixedY:
          {
             while (qi.next()) {
                QRectFixC_t& q = * (QRectFixC_t*) qi();
@@ -371,7 +371,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleYZFixedX:
+         case kQT_RectangleYZFixedX:
          {
             while (qi.next()) {
                QRectFixC_t& q = * (QRectFixC_t*) qi();
@@ -383,7 +383,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleXYFixedDimZ:
+         case kQT_RectangleXYFixedDimZ:
          {
             const Float_t& w = fDefWidth;
             const Float_t& h = fDefHeight;
@@ -397,7 +397,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleXZFixedDimY:
+         case kQT_RectangleXZFixedDimY:
          {
             const Float_t& w = fDefWidth;
             const Float_t& h = fDefHeight;
@@ -411,7 +411,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_RectangleYZFixedDimX:
+         case kQT_RectangleYZFixedDimX:
          {
             const Float_t& w = fDefWidth;
             const Float_t& h = fDefHeight;
@@ -427,7 +427,7 @@ void TEveQuadSet::ComputeBBox()
 
          // TEveLine modes
 
-         case QT_LineXYFixedZ:
+         case kQT_LineXYFixedZ:
          {
             while (qi.next()) {
                QLineFixC_t& q = * (QLineFixC_t*) qi();
@@ -437,7 +437,7 @@ void TEveQuadSet::ComputeBBox()
             break;
          }
 
-         case QT_LineXZFixedY:
+         case kQT_LineXZFixedY:
          {
             while (qi.next()) {
                QLineFixC_t& q = * (QLineFixC_t*) qi();
@@ -450,8 +450,8 @@ void TEveQuadSet::ComputeBBox()
          // Hexagon modes
 
          // Ignore 'slight' difference, assume square box for both cases.
-         case QT_HexagonXY:
-         case QT_HexagonYX:
+         case kQT_HexagonXY:
+         case kQT_HexagonYX:
          {
             while (qi.next()) {
                QHex_t& q = * (QHex_t*) qi();

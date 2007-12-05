@@ -28,15 +28,15 @@ TEveGridStepper::TEveGridStepper(Int_t sm) :
 {
    switch(fMode) {
       default:
-      case SM_XYZ:
+      case kSM_XYZ:
          fLimitArr[0] = &fNx; fLimitArr[1] = &fNy; fLimitArr[2] = &fNz;
          fValueArr[0] = &fCx; fValueArr[1] = &fCy; fValueArr[2] = &fCz;
          break;
-      case SM_YXZ:
+      case kSM_YXZ:
          fLimitArr[0] = &fNy; fLimitArr[1] = &fNx; fLimitArr[2] = &fNz;
          fValueArr[0] = &fCy; fValueArr[1] = &fCx; fValueArr[2] = &fCz;
          break;
-      case SM_XZY:
+      case kSM_XZY:
          fLimitArr[0] = &fNx; fLimitArr[1] = &fNz; fLimitArr[2] = &fNy;
          fValueArr[0] = &fCx; fValueArr[1] = &fCz; fValueArr[2] = &fCy;
          break;

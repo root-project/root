@@ -150,7 +150,7 @@ void TEvePolygonSetProjected::ProjectAndReducePoints()
    for (Int_t i = 0; i<N; ++i)
    {
       pnts[i].Set(fBuff->fPnts[3*i],fBuff->fPnts[3*i+1], fBuff->fPnts[3*i+2]);
-      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, TEveProjection::PP_Plane);
+      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, TEveProjection::kPP_Plane);
    }
    fIdxMap   = new Int_t[N];
    Int_t* ra = new Int_t[N];  // list of reduced vertices
@@ -179,7 +179,7 @@ void TEvePolygonSetProjected::ProjectAndReducePoints()
    for (Int_t idx = 0; idx < fNPnts; ++idx)
    {
       Int_t i = ra[idx];
-      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, TEveProjection::PP_Distort);
+      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, TEveProjection::kPP_Distort);
       fPnts[idx].Set(pnts[i]);
    }
    delete [] ra;
@@ -374,19 +374,19 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
 
    switch (mode)
    {
-      case TEveProjection::GM_Polygons :
+      case TEveProjection::kGM_Polygons :
       {
          MakePolygonsFromBP();
          fPolsBP.swap(fPols);
          break;
       }
-      case TEveProjection::GM_Segments :
+      case TEveProjection::kGM_Segments :
       {
          MakePolygonsFromBS();
          fPolsBS.swap(fPols);
          break;
       }
-      case TEveProjection::GM_Unknown:
+      case TEveProjection::kGM_Unknown:
       {
          Float_t BPsurf = fSurf;
          fSurf = 0;

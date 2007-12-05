@@ -199,7 +199,7 @@ class TEveTrackCounter : public TEveElement, public TNamed
    friend class TEveTrackCounterEditor;
 
 public:
-   enum EClickAction_e { CA_PrintTrackInfo, CA_ToggleTrack };
+   enum EClickAction_e { kCA_PrintTrackInfo, kCA_ToggleTrack };
 
 private:
    TEveTrackCounter(const TEveTrackCounter&);            // Not implemented

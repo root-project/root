@@ -45,8 +45,8 @@ protected:
    void AssertIntIdsSize();
 
 public:
-   TEvePointSet(Int_t n_points=0, ETreeVarType_e tv_type=TVT_XYZ);
-   TEvePointSet(const Text_t* name, Int_t n_points=0, ETreeVarType_e tv_type=TVT_XYZ);
+   TEvePointSet(Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
+   TEvePointSet(const Text_t* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
    virtual ~TEvePointSet();
 
    virtual void ComputeBBox();

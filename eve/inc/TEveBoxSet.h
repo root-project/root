@@ -27,10 +27,10 @@ class TEveBoxSet: public TEveDigitSet
 public:
    enum EBoxType_e
       {
-         BT_Undef,           // unknown-ignored
-         BT_FreeBox,         // arbitrary box: specify 8*(x,y,z) box corners
-         BT_AABox,           // axis-aligned box: specify (x,y,z) and (w, h, d)
-         BT_AABoxFixedDim    // axis-aligned box w/ fixed dimensions: specify (x,y,z)
+         kBT_Undef,           // unknown-ignored
+         kBT_FreeBox,         // arbitrary box: specify 8*(x,y,z) box corners
+         kBT_AABox,           // axis-aligned box: specify (x,y,z) and (w, h, d)
+         kBT_AABoxFixedDim    // axis-aligned box w/ fixed dimensions: specify (x,y,z)
       };
 
 protected:

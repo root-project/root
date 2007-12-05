@@ -60,10 +60,10 @@ const char* TEvePathMark::TypeName()
 {
    switch (fType)
    {
-      case Daughter:  return "Daughter";
-      case Reference: return "Reference";
-      case Decay:     return "Decay";
-      default:        return "Unknown";
+      case kDaughter:  return "Daughter";
+      case kReference: return "Reference";
+      case kDecay:     return "Decay";
+      default:         return "Unknown";
    }
 }
 

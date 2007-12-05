@@ -33,125 +33,83 @@ namespace TEveGLText {
 #define TXF_FORMAT_BYTE          0
 #define TXF_FORMAT_BITMAP        1
 
-struct TexGlyphInfo_t {
-   unsigned short c;       /* Potentially support 16-bit glyphs. */
-   unsigned char width;
-   unsigned char height;
-   signed char xoffset;
-   signed char yoffset;
-   signed char advance;
-   char dummy;           /* Space holder for alignment reasons. */
-   short x;
-   short y;
+struct TexGlyphInfo_t
+{
+   short unsigned fC;       // Potentially support 16-bit glyphs.
+   unsigned char  fWidth;
+   unsigned char  fHeight;
+   signed char    fXoffset;
+   signed char    fYoffset;
+   signed char    fAdvance;
+   char           fDummy;   // Space holder for alignment reasons.
+   short          fX;
+   short          fY;
 };
 
-struct TexGlyphVertexInfo_t {
-   GLfloat t0[2];
-   GLshort v0[2];
-   GLfloat t1[2];
-   GLshort v1[2];
-   GLfloat t2[2];
-   GLshort v2[2];
-   GLfloat t3[2];
-   GLshort v3[2];
-   GLfloat advance;
+struct TexGlyphVertexInfo_t
+{
+   GLfloat fT0[2];
+   GLshort fV0[2];
+   GLfloat fT1[2];
+   GLshort fV1[2];
+   GLfloat fT2[2];
+   GLshort fV2[2];
+   GLfloat fT3[2];
+   GLshort fV3[2];
+   GLfloat fAdvance;
 };
 
-class TexFont : public TObject {
-public:
-   GLuint texobj;
-   int tex_width;
-   int tex_height;
-   int max_ascent;
-   int max_descent;
-   int max_width;   // max glyph width (MT)
-   int num_glyphs;
-   int min_glyph;
-   int range;
-   unsigned char *teximage;
-   TexGlyphInfo_t *tgi;
-   TexGlyphVertexInfo_t *tgvi;
-   TexGlyphVertexInfo_t **lut;
+struct TexFont_t
+{
+   GLuint                 fTexObj;
+   int                    fTexWidth;
+   int                    fTexHeight;
+   int                    fMaxAscent;
+   int                    fMaxDescent;
+   int                    fMaxWidth;   // max glyph width (MT)
+   int                    fNumGlyphs;
+   int                    fMinGlyph;
+   int                    fRange;
+   unsigned char         *fTeximage;
+   TexGlyphInfo_t        *fTgi;
+   TexGlyphVertexInfo_t  *fTgvi;
+   TexGlyphVertexInfo_t **fLut;
 
-   int max_height() { return max_ascent + max_descent; }
+   int MaxHeight() { return fMaxAscent + fMaxDescent; }
 };
 
 
 extern const char *txfErrorString(void);
 
-extern TexFont *txfLoadFont(const char *filename);
+extern TexFont_t *txfLoadFont(const char *filename);
 
-extern void txfUnloadFont(TexFont* txf);
+extern void txfUnloadFont(TexFont_t* txf);
 
-extern GLuint txfEstablishTexture(TexFont* txf, GLuint texobj,
+extern GLuint txfEstablishTexture(TexFont_t* txf, GLuint texobj,
                                   GLboolean setupMipmaps);
 
-extern void txfBindFontTexture(TexFont* txf);
+extern void txfBindFontTexture(TexFont_t* txf);
 
-extern void txfGetStringMetrics(TexFont* txf, const char *TString, int len,
+extern void txfGetStringMetrics(TexFont_t* txf, const char *TString, int len,
                                 int &width, int &max_ascent, int &max_descent);
 
-extern void txfRenderGlyph(TexFont* txf, int c);
-extern void txfRenderString(TexFont* txf, const char *TString, int len,
+extern void txfRenderGlyph(TexFont_t* txf, int c);
+extern void txfRenderString(TexFont_t* txf, const char *TString, int len,
                             bool keep_pos=true);
-extern void txfRenderString(TexFont* txf, const char *TString, int len,
+extern void txfRenderString(TexFont_t* txf, const char *TString, int len,
                             GLfloat maxx, GLfloat fadew,
                             bool keep_pos=true);
 
-extern void txfRenderGlyphZW(TexFont* txf, int c, float z, float w);
-extern void txfRenderStringZW(TexFont* txf, const char *TString, int len,
+extern void txfRenderGlyphZW(TexFont_t* txf, int c, float z, float w);
+extern void txfRenderStringZW(TexFont_t* txf, const char *TString, int len,
                               float z, float w, bool keep_pos=true);
 
-extern void txfRenderFancyString(TexFont* txf, char *TString, int len);
+extern void txfRenderFancyString(TexFont_t* txf, char *TString, int len);
 
 
 bool        LoadDefaultFont(const TString& font_file);
 
-extern TexFont* fgDefaultFont;
-
-/******************************************************************************/
-// Here starts MT higher-level interface
-/******************************************************************************/
-/*
-  struct BoxSpecs {
-  int     lm, rm, tm, bm;
-  int     lineskip;
-  char    align;
-  TString pos;
-
-  void _init() { align = 'l'; lineskip = 0; }
-
-  BoxSpecs()
-  { lm = rm = 3; tm = 0; bm = 2; _init(); }
-
-  BoxSpecs(int lr, int tb)
-  { lm = rm = lr; tm = bm = tb; _init(); }
-
-  BoxSpecs(int l, int r, int t, int b)
-  { lm = l; rm = r; tm = t; bm = b; _init(); }
-  };
-  struct TextLineData {
-  int    width, ascent, descent, hfull;
-  TString text;
-
-  TextLineData(TexFont *txf, TString line);
-  };
-
-  extern void RnrTextBar(RnrDriver* rd, const TString& text);
-
-  extern void RnrTextBar(RnrDriver* rd, const TString& text,
-  BoxSpecs& bs, float zoffset=0);
-
-  extern void RnrTextPoly(RnrDriver* rd, const TString& text);
-
-  extern void RnrText(RnrDriver* rd, const TString& text,
-  int x, int y, float z,
-  const ZColor* front_col, const ZColor* back_col=0);
-
-  extern void RnrTextAt(RnrDriver* rd, const TString& text,
-  int x, int yrow, float z,
-  const ZColor* front_col, const ZColor* back_col=0);
-*/
+extern TexFont_t* fgDefaultFont;
 
 }  // namescape TEveGLText
 

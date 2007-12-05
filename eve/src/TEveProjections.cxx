@@ -26,8 +26,8 @@ Float_t TEveProjection::fgEps = 0.005f;
 
 //______________________________________________________________________________
 TEveProjection::TEveProjection(TEveVector& center) :
-   fType(PT_Unknown),
-   fGeoMode(GM_Unknown),
+   fType(kPT_Unknown),
+   fGeoMode(kGM_Unknown),
    fName(0),
    fCenter(center.fX, center.fY, center.fZ),
    fDistortion(0.0f),
@@ -187,13 +187,13 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,  EPPro
 
    using namespace TMath;
 
-   if(proc == PP_Plane || proc == PP_Full)
+   if(proc == kPP_Plane || proc == kPP_Full)
    {
       // project
       y = Sign((Float_t)Sqrt(x*x+y*y), y);
       x = z;
    }
-   if(proc == PP_Distort || proc == PP_Full)
+   if(proc == kPP_Distort || proc == kPP_Full)
    {
       // move to center
       x -= fProjectedCenter.fX;
@@ -263,7 +263,7 @@ void TEveCircularFishEyeProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t
 
    using namespace TMath;
 
-   if (proc != PP_Plane)
+   if (proc != kPP_Plane)
    {
       x -= fCenter.fX;
       y -= fCenter.fY;
