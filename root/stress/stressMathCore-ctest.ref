@@ -1,8 +1,9 @@
+Beta distribution                       		................ OK
 Gamma distribution                      		................ OK
 Chisquare distribution                  		................ OK
 Normal distribution                     		................ OK
+BreitWigner distribution                		................ OK
 F    distribution                       		................ OK
-t    distribution                       		................ OK
 lognormal distribution                  		................ OK
 ******************************************************************************
 	Test of Physics Vector (GenVector package)

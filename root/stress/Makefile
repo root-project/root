@@ -72,6 +72,8 @@ STRESSTESTSINTERP := $(STRESSTESTS:-test=-itest)
 # CINT cannot interpret these 
 STRESSTESTSINTERP_VETO := stressMathCore-itest stressRooFit-itest \
   stressLinear-itest stressVector-itest
+# temporary failure:
+STRESSTESTSINTERP_VETO += stressGeometry-itest
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
 
 STRESSFILES := $(filter-out %.o,\

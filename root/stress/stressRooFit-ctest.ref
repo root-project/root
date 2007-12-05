@@ -1,5 +1,5 @@
 
-[1mRooFit v2.22 -- Developed by Wouter Verkerke and David Kirkby[0m 
+[1mRooFit v2.23 -- Developed by Wouter Verkerke and David Kirkby[0m 
                 Copyright (C) 2000-2007 NIKHEF, University of California & Stanford University
                 All rights reserved, please read http://roofit.sourceforge.net/license.txt
 
@@ -19,7 +19,7 @@ Test  7 : Addition oper. p.d.f with range transformed fractions..SKIPPED
 Test  8 : Multiple observable configurations of p.d.f.s..........OK
 Test  9 : Formula expressions....................................OK
 Test 10 : Functions of discrete variables........................OK
-Test 11 : Workspace persistence..................................SKIPPED
+Test 11 : Workspace persistence..................................OK
 Test 12 : Extended likelihood constructions......................OK
 Test 13 : Data import and persistence............................OK
 Test 14 : Plotting with variable bin sizes.......................OK
