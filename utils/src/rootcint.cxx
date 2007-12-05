@@ -4427,7 +4427,12 @@ int main(int argc, char **argv)
                // break when we see positional options
                break;
             }
-            argvv[argcc++] = argv[ic++];
+	    if (strcmp("-pipe", argv[ic])!=0) {
+	       // filter out undesirable options
+	       argvv[argcc++] = argv[ic++];
+	    } else {
+	       ic++;
+	    }
          }
 
          for (i = 0; path[i][0]; i++)
@@ -4589,8 +4594,11 @@ int main(int argc, char **argv)
             insertedBundle = true;
          }
       } else {
-         argvv[argcc++] = (char*)calloc(strlen(argv[i])+1,1);
-         StrcpyArg(argvv[argcc-1],argv[i]);
+         if (strcmp("-pipe", argv[ic])!=0) {
+	   // filter out undesirable options
+	   argvv[argcc++] = (char*)calloc(strlen(argv[i])+1,1);
+	   StrcpyArg(argvv[argcc-1],argv[i]);
+	 }
       }
    }
    if (use_preprocessor) {
