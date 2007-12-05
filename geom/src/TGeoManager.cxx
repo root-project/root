@@ -2939,7 +2939,6 @@ TGeoPhysicalNode *TGeoManager::MakeAlignablePN(TGeoPNEntry *entry)
    }
    TGeoPhysicalNode *node = MakePhysicalNode(path);
    entry->SetPhysicalNode(node);
-   node->SetMatrixOrig(entry->GetMatrixOrig());
    return node;
 }
 

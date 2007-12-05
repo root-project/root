@@ -358,7 +358,7 @@ TGeoPNEntry::TGeoPNEntry()
    else SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
    fMatrix = 0;
-   fMatrixOrig = 0;
+   fGlobalOrig = 0;
 }
 
 //_____________________________________________________________________________
@@ -374,7 +374,8 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
    }   
    gGeoManager->PushPath();
    gGeoManager->cd(path);
-   fMatrixOrig = gGeoManager->GetCurrentNode()->GetMatrix();
+   fGlobalOrig = new TGeoHMatrix();
+   *fGlobalOrig = gGeoManager->GetCurrentMatrix();
    gGeoManager->PopPath();
    SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
@@ -386,6 +387,7 @@ TGeoPNEntry::~TGeoPNEntry()
 {
 // Destructor
    if (fMatrix && TestBit(kPNEntryOwnMatrix)) delete fMatrix;
+   delete fGlobalOrig;
 }
    
 //_____________________________________________________________________________
@@ -405,3 +407,4 @@ void TGeoPNEntry::SetMatrix(const TGeoHMatrix *mat)
 // Set the additional matrix for this node entry. The matrix is owned by user.
    fMatrix = mat;
 }
+
