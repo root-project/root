@@ -92,6 +92,9 @@ public:
 
   Bool_t isIdentical(const RooFitResult& other, Double_t tol=5e-5, Double_t tolCorr=1e-4, Bool_t verbose=kTRUE) const ;
 
+  void SetName(const char *name) ;
+  void SetNameTitle(const char *name, const char* title) ;
+
 protected:
   
   friend class RooMinuit ;

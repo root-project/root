@@ -29,6 +29,7 @@ class RooArgSet ;
 class RooHist;
 class RooCurve ;
 class RooPlotable;
+class TDirectory ;
 class TAttLine;
 class TAttFill;
 class TAttMarker;
@@ -38,9 +39,10 @@ class TAxis;
 
 class RooPlot : public TNamed, public RooPrintable {
 public:
+  RooPlot() ;
   RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins) ;
   RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
-  RooPlot(Double_t xmin= 0, Double_t xmax= 1);
+  RooPlot(Double_t xmin, Double_t xmax);
   RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
@@ -83,7 +85,8 @@ public:
   void SetMarkerColor(Color_t tcolor = 1) ; 
   void SetMarkerSize(Size_t msize = 1) ; 
   void SetMarkerStyle(Style_t mstyle = 1) ; 
-  void SetNameTitle(const char* name, const char* title) ; 
+  void SetName(const char *name) ;
+  void SetNameTitle(const char *name, const char* title) ;
   void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ; 
   void SetOption(Option_t* option = " ") ; 
   void SetStats(Bool_t stats = kTRUE) ; 
@@ -94,9 +97,6 @@ public:
   void SetXTitle(const char* title) ; 
   void SetYTitle(const char* title) ; 
   void SetZTitle(const char* title) ; 
-
-  virtual void SetName(const char* name) ;
-  virtual void SetTitle(const char* title = "") ;
 
   // container management
   const char* nameOf(Int_t idx) const ;
@@ -191,6 +191,8 @@ protected:
 
   Double_t _defYmin ;        // Default minimum for Yaxis (as calculated from contents)
   Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
+
+  TDirectory* _dir ;         //! non-persistent
 
   RooPlot(const RooPlot& other); // object cannot be copied
 

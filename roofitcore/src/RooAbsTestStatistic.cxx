@@ -282,7 +282,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const Roo
 
   // Create proto-goodness-of-fit 
   //cout << "initMPMode -- creating prototype gof" << endl ;
-  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*pdf,*data,*projDeps,rangeName,addCoefRangeName) ;
+  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*pdf,*data,*projDeps,rangeName,addCoefRangeName,_verbose,1,_splitRange) ;
 
   for (i=0 ; i<_nCPU ; i++) {
 
@@ -345,7 +345,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     if (pdf && dset && dset->numEntries(kTRUE)!=0.) {      
       coutE(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
 		     << " (" << dset->numEntries() << " dataset entries)" << endl ;
-      if (_splitRange) {
+      if (_splitRange && rangeName) {
 	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU,_verbose,_splitRange) ;
       } else {
 	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,rangeName,addCoefRangeName,_nCPU,_verbose,_splitRange) ;

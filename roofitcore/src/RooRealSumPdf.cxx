@@ -50,10 +50,10 @@ RooRealSumPdf::RooRealSumPdf() :
   _lastFuncIntSet(0),
   _lastFuncNormSet(0),
   _funcIntList(0),
-  _funcNormList(0),
-  _funcIter(0),
-  _coefIter(0)
+  _funcNormList(0)
 {
+  _funcIter  = _funcList.createIterator() ;
+  _coefIter  = _coefList.createIterator() ;
 }
 
 

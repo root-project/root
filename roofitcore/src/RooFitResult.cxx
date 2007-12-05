@@ -37,6 +37,7 @@
 #include "TGaxis.h"
 #include "TMatrix.h"
 #include "TVector.h"
+#include "TDirectory.h"
 #include "RooFitResult.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -758,4 +759,19 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   r->fillCorrMatrix() ;
 
   return r ;
+}
+
+
+void RooFitResult::SetName(const char *name) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetName(name) ;
+  if (_dir) _dir->GetList()->Add(this);
+}
+
+void RooFitResult::SetNameTitle(const char *name, const char* title) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetNameTitle(name,title) ;
+  if (_dir) _dir->GetList()->Add(this);
 }

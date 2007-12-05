@@ -90,6 +90,9 @@ public:
   virtual void reset() ;
   void dump2() ;
 
+  void SetName(const char *name) ;
+  void SetNameTitle(const char *name, const char* title) ;
+
 protected:
 
   friend class RooAbsCachedPdf ;

@@ -46,7 +46,7 @@
 #include "TAttMarker.h"
 #include "TAttText.h"
 #include "TDirectory.h"
-
+#include "TDirectoryFile.h"
 
 #include "Riostream.h"
 #include <string.h>
@@ -55,11 +55,23 @@
 ClassImp(RooPlot)
 ;
 
+RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _normObj(0), _dir(0)
+{
+  _iterator= _items.MakeIterator() ;
+
+  if (gDirectory) {
+    _dir = gDirectory ;
+    gDirectory->Append(this) ;
+  }
+}
+
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   _hist(0), _items(), _plotVarClone(0), _plotVarSet(0), _normObj(0),
-  _defYmin(1e-5), _defYmax(1)
+  _defYmin(1e-5), _defYmax(1), _dir(0)
 {
+  TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  TH1::AddDirectory(kTRUE) ;
 
   // Create an empty frame with the specified x-axis limits.
   initialize();
@@ -73,11 +85,13 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   _hist(0), _items(), _plotVarClone(0), 
-  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
+  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
 {
   // Create an empty frame with the specified x- and y-axis limits.
 
+  TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  TH1::AddDirectory(kFALSE) ;
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -86,11 +100,13 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   _hist(0), _items(),
-  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
+  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
+  TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
+  TH1::AddDirectory(kTRUE) ;
 
   if(!var1.hasMin() || !var1.hasMax()) {
     coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
@@ -112,11 +128,13 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   _hist(0), _items(), _plotVarClone(0), 
-  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0)
+  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
+  TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  TH1::AddDirectory(kTRUE) ;
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -127,14 +145,16 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 
 RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   _hist(0), _items(), 
-  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1)
+  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
   // so that we do not depend on its lifetime and are decoupled from
   // any later changes to its state.
 
+  TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(name,title,nbins,xmin,xmax) ;
+  TH1::AddDirectory(kTRUE) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -150,14 +170,16 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
 
 RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   _hist(0), _items(), 
-  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1)
+  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
   // so that we do not depend on its lifetime and are decoupled from
   // any later changes to its state.
     
+  TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
+  TH1::AddDirectory(kTRUE) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -178,6 +200,13 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
 void RooPlot::initialize() {
   // Perform initialization that is common to all constructors.
 
+  SetName(histName()) ;
+
+  if (gDirectory) {
+    _dir = gDirectory ;
+    gDirectory->Append(this) ;
+  }
+
   // We do not have useful stats of our own
   _hist->SetStats(kFALSE);
   // Default vertical padding of our enclosed objects
@@ -191,20 +220,6 @@ void RooPlot::initialize() {
   assert(0 != _iterator);
 }
 
-void RooPlot::SetName(const char* name) 
-{
-  TNamed::SetName(name) ;
-  _hist->SetName(name) ;
-}
-
-
-void RooPlot::SetTitle(const char* title) 
-{
-  TNamed::SetTitle(title) ;
-  _hist->SetTitle(title) ;
-}
-
-
 TString RooPlot::histName() const 
 {
   return TString(Form("frame_%08x",this)) ;
@@ -212,6 +227,11 @@ TString RooPlot::histName() const
 
 RooPlot::~RooPlot() {
   // Delete the items in our container and our iterator.
+
+  if (_dir) {
+    if (!_dir->TestBit(TDirectoryFile::kCloseDirectory))
+      _dir->GetList()->Remove(this) ;
+  }
 
   _items.Delete();
   delete _iterator;
@@ -721,6 +741,20 @@ Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
   return getFitRangeNEvt()*scaleFactor ;
 }
 
+void RooPlot::SetName(const char *name) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetName(name) ;
+  if (_dir) _dir->GetList()->Add(this);
+}
+
+void RooPlot::SetNameTitle(const char *name, const char* title) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetNameTitle(name,title) ;
+  if (_dir) _dir->GetList()->Add(this);
+}
+
 
 TAxis* RooPlot::GetXaxis() const { return _hist->GetXaxis() ; }
 TAxis* RooPlot::GetYaxis() const { return _hist->GetYaxis() ; }
@@ -752,7 +786,6 @@ void RooPlot::SetMarkerAttributes() { _hist->SetMarkerAttributes() ; }
 void RooPlot::SetMarkerColor(Color_t tcolor) { _hist->SetMarkerColor(tcolor) ; } 
 void RooPlot::SetMarkerSize(Size_t msize) { _hist->SetMarkerSize(msize) ; } 
 void RooPlot::SetMarkerStyle(Style_t mstyle) { _hist->SetMarkerStyle(mstyle) ; } 
-void RooPlot::SetNameTitle(const char* name, const char* title) { _hist->SetNameTitle(name,title) ; } 
 void RooPlot::SetNdivisions(Int_t n, Option_t* axis) { _hist->SetNdivisions(n,axis) ; } 
 void RooPlot::SetOption(Option_t* option) { _hist->SetOption(option) ; } 
 void RooPlot::SetStats(Bool_t stats) { _hist->SetStats(stats) ; } 
@@ -771,6 +804,9 @@ void RooPlot::Streamer(TBuffer &R__b)
   // Stream an object of class RooPlot.
   
   if (R__b.IsReading()) {
+
+    TH1::AddDirectory(kFALSE) ;
+
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v > 1) {
@@ -795,6 +831,10 @@ void RooPlot::Streamer(TBuffer &R__b)
       R__b >> _defYmax;
       R__b.CheckByteCount(R__s, R__c, RooPlot::IsA());
     } 
+    
+    TH1::AddDirectory(kTRUE) ;
+
+
   } else {
     R__b.WriteClassBuffer(RooPlot::Class(),this);
   }

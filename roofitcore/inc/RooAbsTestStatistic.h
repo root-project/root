@@ -43,7 +43,7 @@ public:
   virtual ~RooAbsTestStatistic();
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) = 0 ;
+				      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) = 0 ;
 
   virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;

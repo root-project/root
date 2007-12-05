@@ -27,6 +27,7 @@
 #include <fstream>
 #include "TTree.h"
 #include "TH2.h"
+#include "TDirectory.h"
 #include "RooDataSet.h"
 #include "RooPlot.h"
 #include "RooAbsReal.h"
@@ -905,4 +906,19 @@ void RooDataSet::printToStream(ostream& os, PrintOption opt, TString indent) con
   if (opt>=Shape && _wgtVar) {
     os << indent << "  Dataset variable \"" << _wgtVar->GetName() << "\" is interpreted as the event weight" << endl ;
   }
+}
+
+
+void RooDataSet::SetName(const char *name) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetName(name) ;
+  if (_dir) _dir->GetList()->Add(this);
+}
+
+void RooDataSet::SetNameTitle(const char *name, const char* title) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetNameTitle(name,title) ;
+  if (_dir) _dir->GetList()->Add(this);
 }

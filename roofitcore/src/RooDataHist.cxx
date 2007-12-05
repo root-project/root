@@ -24,6 +24,7 @@
 
 #include "TH1.h"
 #include "TH1.h"
+#include "TDirectory.h"
 #include "TMath.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
@@ -1144,5 +1145,18 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
   return new RooDataHistSliceIter(*this,*intArg) ;
 }
 
+void RooDataHist::SetName(const char *name) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetName(name) ;
+  if (_dir) _dir->GetList()->Add(this);
+}
+
+void RooDataHist::SetNameTitle(const char *name, const char* title) 
+{
+  if (_dir) _dir->GetList()->Remove(this);
+  TNamed::SetNameTitle(name,title) ;
+  if (_dir) _dir->GetList()->Add(this);
+}
 
 

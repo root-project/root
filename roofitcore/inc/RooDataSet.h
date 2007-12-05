@@ -83,6 +83,9 @@ public:
 
   void printToStream(ostream& os, PrintOption opt, TString indent) const ;
 
+  void SetName(const char *name) ;
+  void SetNameTitle(const char *name, const char* title) ;
+
 protected:
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
