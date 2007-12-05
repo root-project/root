@@ -36,6 +36,7 @@
 #include <TDatime.h>
 #include <TFile.h>
 #include <TF1.h>
+#include "TF2.h"
 #include <TF3.h>
 #include <TH2.h>
 #include <TNtuple.h>
@@ -118,28 +119,31 @@ void     zoomtf1        ();
 void     zoomfit        ();
 void     parallelcoord  ();
 void     clonepad       ();
+void     waves          ();
 
 // Auxiliary functions
 void     patterns_box   (Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
 void     tmarker_draw   (Double_t x, Double_t y, Int_t mt, Double_t d);
+Double_t interference   (Double_t *x, Double_t *par);
+Double_t result         (Double_t *x, Double_t *par);
 void     cleanup        ();
 #endif
 
 // Global variables.
 Int_t     gVerbose;
 Int_t     gTestNum;
-Int_t     gPS1RefNb[39];
-Int_t     gPS1ErrNb[39];
-Int_t     gPDFRefNb[39];
-Int_t     gPDFErrNb[39];
-Int_t     gGIFRefNb[39];
-Int_t     gGIFErrNb[39];
-Int_t     gJPGRefNb[39];
-Int_t     gJPGErrNb[39];
-Int_t     gPNGRefNb[39];
-Int_t     gPNGErrNb[39];
-Int_t     gPS2RefNb[39];
-Int_t     gPS2ErrNb[39];
+Int_t     gPS1RefNb[40];
+Int_t     gPS1ErrNb[40];
+Int_t     gPDFRefNb[40];
+Int_t     gPDFErrNb[40];
+Int_t     gGIFRefNb[40];
+Int_t     gGIFErrNb[40];
+Int_t     gJPGRefNb[40];
+Int_t     gJPGErrNb[40];
+Int_t     gPNGRefNb[40];
+Int_t     gPNGErrNb[40];
+Int_t     gPS2RefNb[40];
+Int_t     gPS2ErrNb[40];
 Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
@@ -283,6 +287,7 @@ void stressGraphics(Int_t verbose = 0)
    tgraph2      ();
    tmultigraph1 ();
    tmultigraph2 ();
+   waves        ();
    if (!gOptionR) {
       cout << "**********************************************************************" <<endl;
       cout << "*  Starting High Level 3D Primitives - S T R E S S                   *" <<endl;
@@ -2277,6 +2282,149 @@ void clonepad()
    TCanvas *C2 = (TCanvas*)C->DrawClone();
 
    TestReport1(C2, "Draw a pad and clone it");
+}
+
+
+//______________________________________________________________________________
+Double_t interference( Double_t *x, Double_t *par)
+{
+   // Needed for the "waves" test
+
+   Double_t x_p2 = x[0] * x[0];
+   Double_t d_2 = 0.5 * par[2];
+   Double_t ym_p2 = (x[1] - d_2) * (x[1] - d_2);
+   Double_t yp_p2 = (x[1] + d_2) * (x[1] + d_2);
+   Double_t  tpi_l = TMath::Pi() /  par[1];
+   Double_t amplitude = par[0] * (cos(tpi_l  * sqrt(x_p2 + ym_p2))
+                         + par[3] * cos(tpi_l  * sqrt(x_p2 + yp_p2)));
+   return amplitude * amplitude;
+}
+
+
+//______________________________________________________________________________
+Double_t result( Double_t *x, Double_t *par)
+{
+   // Needed for the "waves" test
+
+   Double_t xint[2];
+   Double_t  maxintens = 0, xcur = 14;
+   Double_t dlambda = 0.1 * par[1];
+   for(Int_t i=0; i<10; i++){
+      xint[0] = xcur;
+      xint[1] = x[1];
+      Double_t  intens = interference(xint, par);
+      if(intens > maxintens) maxintens = intens;
+      xcur -= dlambda;
+   }
+   return maxintens;
+}
+
+
+//______________________________________________________________________________
+void waves()
+{
+   // TGraph, TArc, TPalette and TColor
+
+   TF2 * finter;
+   Double_t d = 3;
+   Double_t lambda = 1;
+   Double_t amp = 10;
+
+   TCanvas *C = StartTest(1004, 759);
+
+   C->Range(0, -10,  30, 10);
+   C->SetFillColor(0);
+   TPad *pad = new TPad("pr","pr",  0.5, 0 , 1., 1);
+   pad->Range(0, -10,  15, 10);
+   pad->Draw();
+
+   const Int_t colNum = 30;
+   Int_t palette[colNum];
+   Int_t color_offset = 1001;
+   for (Int_t i=0;i<colNum;i++) {
+      TColor *color = new TColor(color_offset+i
+      ,    pow(i/((colNum)*1.0),0.3)
+      ,    pow(i/((colNum)*1.0),0.3)
+      ,0.5*(i/((colNum)*1.0)),"");
+      palette[i] = color_offset+i;
+      if(color);
+   }
+   gStyle->SetPalette(colNum,palette);
+   C->cd();
+   TF2 * f0 = new TF2("ray_source",interference, 0.02, 15, -8, 8, 4);
+
+   f0->SetParameters(amp, lambda, 0, 0);
+   f0->SetNpx(200);
+   f0->SetNpy(200);
+   f0->SetContour(colNum-2);
+   f0->Draw("samecolz");
+
+   TLatex title;
+   title.DrawLatex(1.6, 8.5, "A double slit experiment");
+
+   TGraph *graph = new TGraph(4);
+   graph->SetFillColor(0);
+   graph->SetFillStyle(1001);
+   graph->SetLineWidth(0);
+   graph->SetPoint(0, 0., 0.1);
+   graph->SetPoint(1, 14.8, 8);
+   graph->SetPoint(2, 0, 8);
+   graph->SetPoint(3, 0, 0.1);
+   graph->Draw("F");
+
+   graph = new TGraph(4);
+   graph->SetFillColor(0);
+   graph->SetFillStyle(1001);
+   graph->SetLineWidth(0);
+   graph->SetPoint(0, 0, -0.1);
+   graph->SetPoint(1, 14.8, -8);
+   graph->SetPoint(2, 0, -8);
+   graph->SetPoint(3, 0, -0.1);
+   graph->Draw("F");
+
+   TLine * line;
+   line = new TLine(15,-10, 15, 0 - 0.5*d -0.2);
+   line->SetLineWidth(10); line->Draw();
+   line = new TLine(15, 0 - 0.5*d +0.2 ,15, 0 + 0.5*d -0.2);
+   line->SetLineWidth(10); line->Draw();
+
+   line = new TLine(15,0 + 0.5*d + 0.2,15, 10);
+   line->SetLineWidth(10); line->Draw();
+
+   pad ->cd();
+   finter = new TF2("interference",interference, 0.01, 14, -10, 10, 4);
+
+   finter->SetParameters(amp, lambda, d, 1);
+   finter->SetNpx(200);
+   finter->SetNpy(200);
+   finter->SetContour(colNum-2);
+   finter->Draw("samecolorz");
+
+   TArc *arc = new TArc();;
+   arc->SetFillStyle(0); 
+   arc->SetLineWidth(2);   
+   arc->SetLineColor(5);   
+   Float_t r = 0.5 * lambda, dr = lambda;
+      for (Int_t i = 0; i < 15; i++) {   
+      arc->DrawArc(0,  0.5*d, r, 0., 360., "only");
+      arc->DrawArc(0, -0.5*d, r, 0., 360., "only");
+      r += dr;
+   }
+
+   pad ->cd();
+   TF2 * fresult = new TF2("result",result, 14, 15, -10, 10, 4);
+
+   fresult->SetParameters(amp, lambda, d, 1);
+   fresult->SetNpx(300);
+   fresult->SetNpy(300);
+   fresult->SetContour(colNum-2);
+   fresult->Draw("samecolor");
+   line = new TLine(13.8,-10, 14, 10);
+   line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
+
+   TestReport1(C, "TGraph, TArc, TPalette and TColor");
+///DoCcode(C);
+///TestReport2();
 }
 
 
