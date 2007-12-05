@@ -119,5 +119,5 @@ MyMainFrame::~MyMainFrame()
 void guilabels()
 {
    // Popup the GUI...
-   new MyMainFrame(0, 200, 200);
+   new MyMainFrame(gClient->GetRoot(), 200, 200);
 }

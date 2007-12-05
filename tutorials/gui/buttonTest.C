@@ -55,7 +55,7 @@ public:
 
 
 //______________________________________________________________________________
-ButtonWindow::ButtonWindow() : TGMainFrame(0, 10, 10, kHorizontalFrame)
+ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizontalFrame)
 {
    // Main test window.
 

@@ -2541,7 +2541,7 @@ void Editor::DoClose()
 
 void guitest()
 {
-   new TestMainFrame(0, 400, 220);
+   new TestMainFrame(gClient->GetRoot(), 400, 220);
 }
 
 //---- Main program ------------------------------------------------------------

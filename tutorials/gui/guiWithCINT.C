@@ -151,6 +151,6 @@ void MyApplication::DoEnteredCommand()
 
 void guiWithCINT() 
 {
-   new MyApplication(0,600,300);
+   new MyApplication(gClient->GetRoot(),600,300);
 }
 

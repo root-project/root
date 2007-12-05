@@ -67,15 +67,15 @@ public:                    // make them public for shorter code
    Int_t    fYear;         // year
    Int_t    fMonth;        // month
 
-   TString  fBorder;		     // border width
-   TString  fBgColor;	     // background color
+   TString  fBorder;       // border width
+   TString  fBgColor;      // background color
    TString  fCellpadding;  // cell padding
    TString  fCellFontSize; // cell font size
    TString  fCellBgcolor;  // cell background color
    TString  fTodayColor;   // background color of cell correspondent today date
 
-   TDatime  fToday;			     // today's date
-   TString  fHtml;			      // HTML output code
+   TDatime  fToday;        // today's date
+   TString  fHtml;         // HTML output code
 
    void Build();
    void BuildDayNames();
@@ -308,7 +308,7 @@ CalendarWindow::CalendarWindow()
 {
    // Main  window.
 
-   fMain = new TGMainFrame(0, 10, 10, kVerticalFrame);
+   fMain = new TGMainFrame(gClient->GetRoot(), 10, 10, kVerticalFrame);
    fMain->SetCleanup(kDeepCleanup); // delete all subframes on exit
 
    // Controls 

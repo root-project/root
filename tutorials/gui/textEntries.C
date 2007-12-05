@@ -17,8 +17,8 @@
 //////////// auxilary class ///////////////////////////////////////////////////
 class GroupBox : public TGGroupFrame {
 private:
-   TGComboBox 	*fCombo;	// combo box
-   TGTextEntry *fEntry;	// text entry 
+   TGComboBox  *fCombo; // combo box
+   TGTextEntry *fEntry; // text entry 
 
 public:
    GroupBox(const TGWindow *p, const char *name, const char *title);
@@ -52,11 +52,11 @@ GroupBox::GroupBox(const TGWindow *p, const char *name, const char *title) :
 class TextEntryWindow {
 
 protected:
-   TGMainFrame *fMain;		// main frame
-   GroupBox		*fEcho;		// echo mode (echo, password, no echo)
-   GroupBox		*fAlign;		// alignment (left, right, center)
-   GroupBox		*fAccess;	// read-only mode
-   GroupBox		*fBorder;	// border mode
+   TGMainFrame *fMain;     // main frame
+   GroupBox    *fEcho;     // echo mode (echo, password, no echo)
+   GroupBox    *fAlign;    // alignment (left, right, center)
+   GroupBox    *fAccess;   // read-only mode
+   GroupBox    *fBorder;   // border mode
 
 public:
    TextEntryWindow();
@@ -74,7 +74,7 @@ TextEntryWindow::TextEntryWindow()
    TGComboBox  *combo;
    TGTextEntry *entry; 
 
-   fMain = new TGMainFrame(0, 10, 10, kVerticalFrame);
+   fMain = new TGMainFrame(gClient->GetRoot(), 10, 10, kVerticalFrame);
 
    // recusively delete all subframes on exit
    fMain->SetCleanup(kDeepCleanup);

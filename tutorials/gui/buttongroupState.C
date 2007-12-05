@@ -111,6 +111,6 @@ void MyButtonTest::SetGroupEnabled(Bool_t on)
 
 void buttongroupState() 
 {
-   new MyButtonTest(0,100,100);
+   new MyButtonTest(gClient->GetRoot(),100,100);
 }
 

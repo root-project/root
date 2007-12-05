@@ -144,7 +144,7 @@ void CPUMeter()
 {
    // Main application.
 
-   gMainWindow = new TGShapedMain(0, 500, 200);
+   gMainWindow = new TGShapedMain(gClient->GetRoot(), 500, 200);
    gSpeedo = gMainWindow->GetSpeedo();
 
    // set threshold values

@@ -82,5 +82,5 @@ MyMainFrame::~MyMainFrame()
 void buttonsLayout()
 {
    // Popup the GUI...
-   new MyMainFrame(0, 350, 80);
+   new MyMainFrame(gClient->GetRoot(), 350, 80);
 }

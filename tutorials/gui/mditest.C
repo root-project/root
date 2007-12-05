@@ -395,7 +395,7 @@ void TGMdiHintTest::HandleText(const char *)
 
 void mditest()
 {
-   new TGAppMainFrame(0, 640, 400);
+   new TGAppMainFrame(gClient->GetRoot(), 640, 400);
 }
 
 //----------------------------------------------------------------------

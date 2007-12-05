@@ -44,7 +44,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fHor1->AddFrame(fExit, new TGLayoutHints(kLHintsTop | kLHintsLeft | 
                                             kLHintsExpandX, 4, 4, 4, 4));
    AddFrame(fHor1,new TGLayoutHints(kLHintsBottom | kLHintsRight, 2, 2, 5, 1));
-	
+   
    fNumber = new TGNumberEntry(this, 0, 9,999, TGNumberFormat::kNESInteger,
                                                TGNumberFormat::kNEANonNegative, 
                                                TGNumberFormat::kNELLimitMinMax,
@@ -84,5 +84,5 @@ void MyMainFrame::DoSetlabel()
 
 void numberEntry()
 {
-	new MyMainFrame(0, 50, 50); 
+   new MyMainFrame(gClient->GetRoot(), 50, 50); 
 }

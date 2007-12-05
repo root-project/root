@@ -153,6 +153,6 @@ void SplitButtonTest::HandleMenu(Int_t id)
 }
 void splitbuttonTest() 
 {
-   new SplitButtonTest(0,100,100);
+   new SplitButtonTest(gClient->GetRoot(),100,100);
 }
 

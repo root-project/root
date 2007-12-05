@@ -14,7 +14,7 @@
 class MyMainFrame : public TGMainFrame {
 
 private:
-  	TGCompositeFrame *fCframe;
+   TGCompositeFrame *fCframe;
    TGTextButton     *fStart, *fPause, *fExit;
    Bool_t            start, pause;
 
@@ -67,14 +67,14 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    fCframe = new TGCompositeFrame(this, 170, 20, kHorizontalFrame | kFixedWidth);
    
    fStart = new TGTextButton(fCframe, "&Start");
-	  fStart->Connect("Clicked()", "MyMainFrame", this, "ChangeStartLabel()");
+   fStart->Connect("Clicked()", "MyMainFrame", this, "ChangeStartLabel()");
    fCframe->AddFrame(fStart, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,3,2,2,2));
-	  fStart->SetToolTipText("Click to toggle the button label (Start/Stop)");
+   fStart->SetToolTipText("Click to toggle the button label (Start/Stop)");
    start = kFALSE;
    
    fPause = new TGTextButton(fCframe, "&Pause");
-	  fPause->Connect("Clicked()", "MyMainFrame", this, "ChangePauseLabel()");
-	  fPause->SetToolTipText("Click to toggle the button label (Pause/Resume)");
+   fPause->Connect("Clicked()", "MyMainFrame", this, "ChangePauseLabel()");
+   fPause->SetToolTipText("Click to toggle the button label (Pause/Resume)");
    fCframe->AddFrame(fPause, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,3,2,2,2));
    pause = kFALSE;
    
@@ -102,5 +102,5 @@ MyMainFrame::~MyMainFrame()
 void buttonChangelabel()
 {
    // Popup the GUI...
-   new MyMainFrame(0, 350, 80);
+   new MyMainFrame(gClient->GetRoot(), 350, 80);
 }
