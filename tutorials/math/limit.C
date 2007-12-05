@@ -2,7 +2,7 @@
 #include "TH1.h"
 #include "THStack.h"
 #include "TCanvas.h"
-#include "TFRame.h"
+#include "TFrame.h"
 #include "TRandom2.h"
 #include "TSystem.h"
 #include "TVector.h"
