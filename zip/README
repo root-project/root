@@ -14,7 +14,7 @@ Only the useful code has been extracted from this tar file. It consists of:
 To put a new zlib version in ROOT, all these files must be replaced.
 
 The zlib version number can be found in zip/inc/zlib.h.
-The current zlib is 1.2.1.
+The current zlib is 1.2.3.
 
 zlib is now used in TPDF to compress the "stream" part of PDF files.
 
