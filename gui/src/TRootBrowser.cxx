@@ -251,6 +251,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fNbInitPlugins = 0;
    fEditFrame = 0;
    fEditTab   = 0;
+   fEditPos   = -1;
    fNbTab[0]  = fNbTab[1] = fNbTab[2] = 0;
    fCrTab[0]  = fCrTab[1] = fCrTab[2] = -1;
    
@@ -910,6 +911,7 @@ void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
    // Start embedding external frame in the tab "pos" and tab element "subpos".
 
    fEditTab = GetTab(pos);
+   fEditPos = pos;
 
    if (fEditFrame == 0) {
       if (subpos == -1) {
@@ -945,11 +947,12 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
       fEditFrame->Layout();
       if (fEditTab == fTabRight)
          SwitchMenus(fEditFrame);
-      fEditFrame = fEditTab = 0;
    }
    if (name && strlen(name)) {
-      SetTabTitle(name);
+      SetTabTitle(name, fEditPos);
    }
+   fEditFrame = fEditTab = 0;
+   fEditPos = -1;
 }
 
 //______________________________________________________________________________
