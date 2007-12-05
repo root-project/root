@@ -41,7 +41,7 @@
 ClassImp(TEvePointSet)
 
 //______________________________________________________________________________
-TEvePointSet::TEvePointSet(Int_t n_points, TreeVarType_e tv_type) :
+TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(fMarkerColor),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),
@@ -56,7 +56,7 @@ TEvePointSet::TEvePointSet(Int_t n_points, TreeVarType_e tv_type) :
 }
 
 //______________________________________________________________________________
-TEvePointSet::TEvePointSet(const Text_t* name, Int_t n_points, TreeVarType_e tv_type) :
+TEvePointSet::TEvePointSet(const Text_t* name, Int_t n_points, ETreeVarType_e tv_type) :
    TEveElement(fMarkerColor),
    TPointSet3D(n_points),
    TEvePointSelectorConsumer(tv_type),

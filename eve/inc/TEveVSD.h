@@ -24,27 +24,25 @@ class TEveVSD : public TObject
 protected:
    Int_t        fBuffSize;
 
-   TFile*       mFile;        //!
-   TDirectory*  mDirectory;   //!
+   TFile*       fFile;        //!
+   TDirectory*  fDirectory;   //!
 
 public:
-   TTree*       mTreeK;       //! X{g}
-   // TTree*    mTreeTR;      //! X{g}
-   TTree*       mTreeH;       //! X{g}
-   TTree*       mTreeC;       //! X{g}
-   TTree*       mTreeR;       //! X{g}
-   TTree*       mTreeKK;      //! X{g}
-   TTree*       mTreeV0;      //! X{g}
-   TTree*       mTreeGI;      //! X{g}
+   TTree*             fTreeK;       //!
+   TTree*             fTreeH;       //!
+   TTree*             fTreeC;       //!
+   TTree*             fTreeR;       //!
+   TTree*             fTreeKK;      //!
+   TTree*             fTreeV0;      //!
+   TTree*             fTreeGI;      //!
 
-   TEveMCTrack        mK,  *mpK;    //!
-   // MCTrackRef      mTR, *mpTR;   //!
-   TEveHit            mH,  *mpH;    //!
-   TEveCluster        mC,  *mpC;    //!
-   TEveRecTrack       mR,  *mpR;    //!
-   TEveRecKink        mKK, *mpKK;   //!
-   TEveRecV0          mV0, *mpV0;   //!
-   TEveMCRecCrossRef  mGI, *mpGI;   //!
+   TEveMCTrack        fK,  *fpK;    //!
+   TEveHit            fH,  *fpH;    //!
+   TEveCluster        fC,  *fpC;    //!
+   TEveRecTrack       fR,  *fpR;    //!
+   TEveRecKink        fKK, *fpKK;   //!
+   TEveRecV0          fV0, *fpV0;   //!
+   TEveMCRecCrossRef  fGI, *fpGI;   //!
 
 public:
    TEveVSD(const Text_t* name="TEveVSD", const Text_t* title="");

@@ -30,12 +30,6 @@ TEveTrackProjected::TEveTrackProjected() :
    // Default constructor.
 }
 
-//______________________________________________________________________________
-TEveTrackProjected::~TEveTrackProjected()
-{
-   // Destructor. Noop.
-}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -73,8 +67,8 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
    while((vL-vR).Mag() > 0.01)
    {
       vM.Mult(vL+vR, 0.5f);
-      vLP.Set(vL); fProjection->ProjectPoint(vLP.x, vLP.y, vLP.z);
-      vMP.Set(vM); fProjection->ProjectPoint(vMP.x, vMP.y, vMP.z);
+      vLP.Set(vL); fProjection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ);
+      vMP.Set(vM); fProjection->ProjectPoint(vMP.fX, vMP.fY, vMP.fZ);
       if(fProjection->AcceptSegment(vLP, vMP, 0.0f))
       {
          vL.Set(vM);
@@ -85,13 +79,10 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
       }
    }
 
-   if(back)
-   {
-      x = vL.x; y = vL.y; z = vL.z;
-   }
-   else
-   {
-      x = vR.x; y = vR.y; z = vR.z;
+   if(back) {
+      x = vL.fX; y = vL.fY; z = vL.fZ;
+   } else {
+      x = vR.fX; y = vR.fY; z = vR.fZ;
    }
    fProjection->ProjectPoint(x, y, z);
 }
@@ -112,8 +103,8 @@ Int_t  TEveTrackProjected::GetBreakPointIdx(Int_t start)
       Int_t i = start;
       while(i < fLastPoint)
       {
-         GetPoint(i,   v1.x, v1.y, v1.z);
-         GetPoint(i+1, v2.x, v2.y, v2.z);
+         GetPoint(i,   v1.fX, v1.fY, v1.fZ);
+         GetPoint(i+1, v2.fX, v2.fY, v2.fZ);
          if(fProjection->AcceptSegment(v1, v2, fPropagator->GetDelta()) == kFALSE)
          {
             val = i;
@@ -173,7 +164,7 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 
    Reset((Int_t)vvec.size());
    for (std::vector<TEveVector>::iterator i=vvec.begin(); i!=vvec.end(); ++i)
-      SetNextPoint((*i).x, (*i).y, (*i).z);
+      SetNextPoint((*i).fX, (*i).fY, (*i).fZ);
    delete [] fOrigPnts;
 }
 
@@ -194,10 +185,10 @@ void TEveTrackProjected::PrintLineSegments()
    {
       Int_t size = *bpi - start;
 
-      GetPoint(start, S.x, S.y, S.z);
-      GetPoint((*bpi)-1, E.x, E.y, E.z);
+      GetPoint(start, S.fX, S.fY, S.fZ);
+      GetPoint((*bpi)-1, E.fX, E.fY, E.fZ);
       printf("seg %d size %d start %d ::(%f, %f, %f) (%f, %f, %f)\n",
-             segment, size, start, S.x, S.y, S.z, E.x, E.y, E.z);
+             segment, size, start, S.fX, S.fY, S.fZ, E.fX, E.fY, E.fZ);
       start   += size;
       segment ++;
    }

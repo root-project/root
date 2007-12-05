@@ -19,18 +19,16 @@ class TGeoShape;
 
 class TEveGeoShapeExtract : public TNamed
 {
-   friend class ZGeoRepacker;
-
    TEveGeoShapeExtract(const TEveGeoShapeExtract&);            // Not implemented
    TEveGeoShapeExtract& operator=(const TEveGeoShapeExtract&); // Not implemented
 
 protected:
-   Double_t    mTrans[16];
-   Float_t     mRGBA[4];
-   Bool_t      mRnrSelf;
-   Bool_t      mRnrElements;
-   TGeoShape*  mShape;
-   TList*      mElements;
+   Double_t    fTrans[16];   // Transformation matrix, 4x4 column major.
+   Float_t     fRGBA[4];     // RGBA color.
+   Bool_t      fRnrSelf;     // Render this object.
+   Bool_t      fRnrElements; // Render children of this object.
+   TGeoShape*  fShape;       // Shape to be drawn for this object.
+   TList*      fElements;    // Children elements.
 
 public:
    TEveGeoShapeExtract(const Text_t* n="TEveGeoShapeExtract", const Text_t* t=0);
@@ -41,17 +39,17 @@ public:
 
    void SetTrans(const Double_t arr[16]);
    void SetRGBA (const Float_t  arr[4]);
-   void SetRnrSelf(Bool_t r)     { mRnrSelf = r;     }
-   void SetRnrElements(Bool_t r) { mRnrElements = r; }
-   void SetShape(TGeoShape* s)   { mShape = s;       }
-   void SetElements(TList* e)    { mElements = e;    }
+   void SetRnrSelf(Bool_t r)     { fRnrSelf = r;     }
+   void SetRnrElements(Bool_t r) { fRnrElements = r; }
+   void SetShape(TGeoShape* s)   { fShape = s;       }
+   void SetElements(TList* e)    { fElements = e;    }
 
-   Double_t*  GetTrans()       { return mTrans; }
-   Float_t*   GetRGBA()        { return mRGBA;  }
-   Bool_t     GetRnrSelf()     { return mRnrSelf;     }
-   Bool_t     GetRnrElements() { return mRnrElements; }
-   TGeoShape* GetShape()       { return mShape;    }
-   TList*     GetElements()    { return mElements; }
+   Double_t*  GetTrans()       { return fTrans; }
+   Float_t*   GetRGBA()        { return fRGBA;  }
+   Bool_t     GetRnrSelf()     { return fRnrSelf;     }
+   Bool_t     GetRnrElements() { return fRnrElements; }
+   TGeoShape* GetShape()       { return fShape;    }
+   TList*     GetElements()    { return fElements; }
 
    ClassDef(TEveGeoShapeExtract, 1); // Globally positioned TGeoShape with rendering attributes and an optional list of daughter shape-extracts.
 };

@@ -25,25 +25,25 @@ Float_t TEveVector::Eta() const
    Float_t cosTheta = CosTheta();
    if (cosTheta*cosTheta < 1) return -0.5* TMath::Log( (1.0-cosTheta)/(1.0+cosTheta) );
    Warning("Eta","transverse momentum = 0! return +/- 10e10");
-   return (z >= 0) ? 10e10 : -10e10;
+   return (fZ >= 0) ? 10e10 : -10e10;
 }
 
 //______________________________________________________________________________
 TEveVector TEveVector::operator + (const TEveVector & b)
 {
-   return TEveVector(x + b.x, y + b.y, z + b.z);
+   return TEveVector(fX + b.fX, fY + b.fY, fZ + b.fZ);
 }
 
 //______________________________________________________________________________
 TEveVector TEveVector::operator - (const TEveVector & b)
 {
-   return TEveVector(x - b.x, y - b.y, z - b.z);
+   return TEveVector(fX - b.fX, fY - b.fY, fZ - b.fZ);
 }
 
 //______________________________________________________________________________
 TEveVector TEveVector::operator * (Float_t a)
 {
-   return TEveVector(a*x, a*y, a*z);
+   return TEveVector(a*fX, a*fY, a*fZ);
 }
 
 
@@ -56,9 +56,9 @@ TEveVector TEveVector::operator * (Float_t a)
 ClassImp(TEvePathMark)
 
 //______________________________________________________________________________
-const char* TEvePathMark::type_name()
+const char* TEvePathMark::TypeName()
 {
-   switch (type)
+   switch (fType)
    {
       case Daughter:  return "Daughter";
       case Reference: return "Reference";

@@ -51,7 +51,7 @@ TEveQuadSet::TEveQuadSet(const Text_t* n, const Text_t* t) :
 {}
 
 //______________________________________________________________________________
-TEveQuadSet::TEveQuadSet(QuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
+TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                          const Text_t* n, const Text_t* t) :
    TEveDigitSet   (n, t),
 
@@ -70,7 +70,7 @@ TEveQuadSet::~TEveQuadSet()
 /******************************************************************************/
 
 //______________________________________________________________________________
-Int_t TEveQuadSet::SizeofAtom(TEveQuadSet::QuadType_e qt)
+Int_t TEveQuadSet::SizeofAtom(TEveQuadSet::EQuadType_e qt)
 {
    static const TEveException eH("TEveQuadSet::SizeofAtom ");
 
@@ -99,7 +99,7 @@ Int_t TEveQuadSet::SizeofAtom(TEveQuadSet::QuadType_e qt)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveQuadSet::Reset(TEveQuadSet::QuadType_e quadType, Bool_t valIsCol, Int_t chunkSize)
+void TEveQuadSet::Reset(TEveQuadSet::EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize)
 {
    fQuadType     = quadType;
    fValueIsColor = valIsCol;

@@ -29,10 +29,10 @@ private:
    TEveGridStepper& operator=(const TEveGridStepper&); // Not implemented
 
 public:
-   enum StepMode_e { SM_XYZ, SM_YXZ, SM_XZY };
+   enum EStepMode_e { SM_XYZ, SM_YXZ, SM_XZY };
 
 protected:
-   StepMode_e Mode;         // Stepping mode, order of filling.
+   EStepMode_e fMode;       // Stepping mode, order of filling.
 
    Int_t   fCx, fCy, fCz;   // Current positions during filling / traversal.
    Int_t   fNx, fNy, fNz;   // Number of slots in each direction.

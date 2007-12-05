@@ -15,7 +15,8 @@
 //______________________________________________________________________________
 // TEveVSD
 //
-// Visualization Summary Data - a collection of trees holding standard event data in experiment independant format.
+// Visualization Summary Data - a collection of trees holding standard
+// event data in experiment independant format.
 
 ClassImp(TEveVSD)
 
@@ -25,33 +26,35 @@ TEveVSD::TEveVSD(const Text_t* , const Text_t* ) :
 
    fBuffSize  (128*1024),
 
-   mFile      (0),
-   mDirectory (0),
+   fFile      (0),
+   fDirectory (0),
 
-   mTreeK  (0),
-   //mTreeTR (0),
-   mTreeH  (0),
-   mTreeC  (0),
-   mTreeR  (0),
-   mTreeKK (0),
-   mTreeV0 (0),
-   mTreeGI (0),
+   fTreeK  (0),
+   fTreeH  (0),
+   fTreeC  (0),
+   fTreeR  (0),
+   fTreeKK (0),
+   fTreeV0 (0),
+   fTreeGI (0),
 
-   mK(),  mpK (&mK),
-   mH(),  mpH (&mH),
-   mC(),  mpC (&mC),
-   mR(),  mpR (&mR),
-   mKK(), mpKK(&mKK),
-   mV0(), mpV0(&mV0),
-   mGI(), mpGI(&mGI)
-{}
+   fK(),  fpK (&fK),
+   fH(),  fpH (&fH),
+   fC(),  fpC (&fC),
+   fR(),  fpR (&fR),
+   fKK(), fpKK(&fKK),
+   fV0(), fpV0(&fV0),
+   fGI(), fpGI(&fGI)
+{
+   // Constructor.
+}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveVSD::SetDirectory(TDirectory* dir)
 {
-   mDirectory = dir;
+   // Set directory in which the trees are (or will be) created.
+   fDirectory = dir;
 }
 
 /******************************************************************************/
@@ -59,82 +62,86 @@ void TEveVSD::SetDirectory(TDirectory* dir)
 //______________________________________________________________________________
 void TEveVSD::CreateTrees()
 {
-   mDirectory->cd();
-   // TR missing ...
-   mTreeK  = new TTree("Kinematics", "Simulated tracks.");
-   mTreeH  = new TTree("Hits",       "Combined detector hits.");
-   mTreeC  = new TTree("Clusters",   "Reconstructed clusters.");
-   mTreeR  = new TTree("RecTracks",  "Reconstructed tracks.");
-   mTreeKK = new TTree("RecKinks",   "Reconstructed kinks.");
-   mTreeV0 = new TTree("RecV0s",     "Reconstructed V0s.");
-   mTreeGI = new TTree("TEveMCRecCrossRef",    "Objects prepared for cross query.");
+   // Create internal trees.
+
+   fDirectory->cd();
+   fTreeK  = new TTree("Kinematics", "Simulated tracks.");
+   fTreeH  = new TTree("Hits",       "Combined detector hits.");
+   fTreeC  = new TTree("Clusters",   "Reconstructed clusters.");
+   fTreeR  = new TTree("RecTracks",  "Reconstructed tracks.");
+   fTreeKK = new TTree("RecKinks",   "Reconstructed kinks.");
+   fTreeV0 = new TTree("RecV0s",     "Reconstructed V0s.");
+   fTreeGI = new TTree("TEveMCRecCrossRef",    "Objects prepared for cross query.");
 }
 
 //______________________________________________________________________________
 void TEveVSD::DeleteTrees()
 {
-   delete mTreeK;      mTreeK      = 0;
-   // delete mTreeTR;     mTreeTR     = 0;
-   delete mTreeH;      mTreeH      = 0;
-   delete mTreeC;      mTreeC      = 0;
-   delete mTreeR;      mTreeR      = 0;
-   delete mTreeV0;     mTreeV0     = 0;
-   delete mTreeKK;     mTreeKK     = 0;
-   delete mTreeGI;     mTreeGI     = 0;
+   // Delete interal trees.
+
+   delete fTreeK;      fTreeK      = 0;
+   delete fTreeH;      fTreeH      = 0;
+   delete fTreeC;      fTreeC      = 0;
+   delete fTreeR;      fTreeR      = 0;
+   delete fTreeV0;     fTreeV0     = 0;
+   delete fTreeKK;     fTreeKK     = 0;
+   delete fTreeGI;     fTreeGI     = 0;
 }
 
 //______________________________________________________________________________
 void TEveVSD::CreateBranches()
 {
-   // TR missing ...
-   if(mTreeK)
-      mTreeK ->Branch("K",  "TEveMCTrack",  &mpK,  fBuffSize);
-   if(mTreeH)
-      mTreeH ->Branch("H",  "TEveHit",      &mpH,  fBuffSize);
-   if(mTreeC)
-      mTreeC ->Branch("C",  "TEveCluster",  &mpC,  fBuffSize);
-   if(mTreeR)
-      mTreeR ->Branch("R",  "TEveRecTrack", &mpR,  fBuffSize);
-   if(mTreeKK)
-      mTreeKK->Branch("KK", "TEveRecKink",  &mpKK, fBuffSize);
-   if(mTreeV0)
-      mTreeV0->Branch("V0", "TEveRecV0",    &mpV0, fBuffSize);
+   // Create internal VSD branches.
 
-   if(mTreeGI) {
-      mTreeGI->Branch("GI", "TEveMCRecCrossRef",  &mpGI, fBuffSize);
-      mTreeGI->Branch("K.", "TEveMCTrack",  &mpK);
-      mTreeGI->Branch("R.", "TEveRecTrack", &mpR);
+   if(fTreeK)
+      fTreeK ->Branch("K",  "TEveMCTrack",  &fpK,  fBuffSize);
+   if(fTreeH)
+      fTreeH ->Branch("H",  "TEveHit",      &fpH,  fBuffSize);
+   if(fTreeC)
+      fTreeC ->Branch("C",  "TEveCluster",  &fpC,  fBuffSize);
+   if(fTreeR)
+      fTreeR ->Branch("R",  "TEveRecTrack", &fpR,  fBuffSize);
+   if(fTreeKK)
+      fTreeKK->Branch("KK", "TEveRecKink",  &fpKK, fBuffSize);
+   if(fTreeV0)
+      fTreeV0->Branch("V0", "TEveRecV0",    &fpV0, fBuffSize);
+
+   if(fTreeGI) {
+      fTreeGI->Branch("GI", "TEveMCRecCrossRef",  &fpGI, fBuffSize);
+      fTreeGI->Branch("K.", "TEveMCTrack",  &fpK);
+      fTreeGI->Branch("R.", "TEveRecTrack", &fpR);
    }
 }
 
 //______________________________________________________________________________
 void TEveVSD::SetBranchAddresses()
 {
-   // TR missing ...
-   if(mTreeK)
-      mTreeK ->SetBranchAddress("K",  &mpK);
-   if(mTreeH)
-      mTreeH ->SetBranchAddress("H",  &mpH);
-   if(mTreeC)
-      mTreeC ->SetBranchAddress("C",  &mpC);
-   if(mTreeR)
-      mTreeR ->SetBranchAddress("R",  &mpR);
-   if(mTreeKK)
-      mTreeKK->SetBranchAddress("KK", &mpKK);
-   if(mTreeV0)
-      mTreeV0->SetBranchAddress("V0", &mpV0);
+   // Set branche addresses of internal trees.
 
-   if(mTreeGI) {
-      mTreeGI->SetBranchAddress("GI", &mpGI);
-      mTreeGI->SetBranchAddress("K.", &mpK);
-      mTreeGI->SetBranchAddress("R.", &mpR);
+   if(fTreeK)
+      fTreeK ->SetBranchAddress("K",  &fpK);
+   if(fTreeH)
+      fTreeH ->SetBranchAddress("H",  &fpH);
+   if(fTreeC)
+      fTreeC ->SetBranchAddress("C",  &fpC);
+   if(fTreeR)
+      fTreeR ->SetBranchAddress("R",  &fpR);
+   if(fTreeKK)
+      fTreeKK->SetBranchAddress("KK", &fpKK);
+   if(fTreeV0)
+      fTreeV0->SetBranchAddress("V0", &fpV0);
+
+   if(fTreeGI) {
+      fTreeGI->SetBranchAddress("GI", &fpGI);
+      fTreeGI->SetBranchAddress("K.", &fpK);
+      fTreeGI->SetBranchAddress("R.", &fpR);
    }
 }
 
 //______________________________________________________________________________
 void TEveVSD::WriteTrees()
 {
-   // Does nothing here ...
+   // Does nothing here ... reimplemented in sub-classes.
 }
 
 /******************************************************************************/
@@ -142,58 +149,60 @@ void TEveVSD::WriteTrees()
 //______________________________________________________________________________
 void TEveVSD::LoadTrees()
 {
+   // Load internal trees from directory.
+
    static const TEveException eH("TEveVSD::LoadTrees ");
 
-   if(mDirectory == 0)
+   if(fDirectory == 0)
       throw(eH + "directory not set.");
 
    printf("Reading kinematics.\n");
-   mTreeK = (TTree*) mDirectory->Get("Kinematics");
-   if(mTreeK == 0) {
-      printf("%s Kinematics not available in mDirectory %s.\n",
-             eH.Data(), mDirectory->GetName());
+   fTreeK = (TTree*) fDirectory->Get("Kinematics");
+   if(fTreeK == 0) {
+      printf("%s Kinematics not available in fDirectory %s.\n",
+             eH.Data(), fDirectory->GetName());
    }
 
    printf("Reading hits.\n");
-   mTreeH = (TTree*) mDirectory->Get("Hits");
-   if(mTreeH == 0) {
-      printf("%s Hits not available in mDirectory %s.\n",
-             eH.Data(), mDirectory->GetName());
+   fTreeH = (TTree*) fDirectory->Get("Hits");
+   if(fTreeH == 0) {
+      printf("%s Hits not available in fDirectory %s.\n",
+             eH.Data(), fDirectory->GetName());
    }
 
    printf("Reading clusters.\n");
-   mTreeC = (TTree*) mDirectory->Get("Clusters");
-   if(mTreeC == 0) {
-      printf("%s Clusters not available in mDirectory %s.\n",
-             eH.Data(), mDirectory->GetName());
+   fTreeC = (TTree*) fDirectory->Get("Clusters");
+   if(fTreeC == 0) {
+      printf("%s Clusters not available in fDirectory %s.\n",
+             eH.Data(), fDirectory->GetName());
    }
 
    printf("Reading reconstructed tracks.\n");
-   mTreeR = (TTree*) mDirectory->Get("RecTracks");
-   if(mTreeR == 0) {
-      printf("%s RecTracks not available in mDirectory %s.\n",
-             eH.Data(), mDirectory->GetName());
+   fTreeR = (TTree*) fDirectory->Get("RecTracks");
+   if(fTreeR == 0) {
+      printf("%s RecTracks not available in fDirectory %s.\n",
+             eH.Data(), fDirectory->GetName());
    }
 
    printf("Reading reconstructed kinks. \n");
-   mTreeKK =  (TTree*) mDirectory->Get("RecKinks");
-   if(mTreeKK == 0) {
-      printf("%s Kinks not available in mDirectory %s.\n",
-             eH.Data(), mDirectory->GetName());
+   fTreeKK =  (TTree*) fDirectory->Get("RecKinks");
+   if(fTreeKK == 0) {
+      printf("%s Kinks not available in fDirectory %s.\n",
+             eH.Data(), fDirectory->GetName());
    }
 
    printf("Reading Reconstructed V0s.\n");
-   mTreeV0 =  (TTree*) mDirectory->Get("RecV0s");
-   if(mTreeV0 == 0) {
-      printf("%s V0 not available in mDirectory %s.\n",
-             eH.Data(), mDirectory->GetName());
+   fTreeV0 =  (TTree*) fDirectory->Get("RecV0s");
+   if(fTreeV0 == 0) {
+      printf("%s V0 not available in fDirectory %s.\n",
+             eH.Data(), fDirectory->GetName());
    }
 
    printf("Reading TEveMCRecCrossRef.\n");
-   mTreeGI = (TTree*)mDirectory->Get("TEveMCRecCrossRef");
-   if(mTreeGI == 0) {
-      printf("%s TEveMCRecCrossRef not available in mDirectory %s.\n",
-             eH.Data(), mDirectory->GetName());
+   fTreeGI = (TTree*)fDirectory->Get("TEveMCRecCrossRef");
+   if(fTreeGI == 0) {
+      printf("%s TEveMCRecCrossRef not available in fDirectory %s.\n",
+             eH.Data(), fDirectory->GetName());
    }
 
 }
@@ -201,16 +210,18 @@ void TEveVSD::LoadTrees()
 //______________________________________________________________________________
 void TEveVSD::LoadVSD(const Text_t* vsd_file_name, const Text_t* dir_name)
 {
+   // Load VSD data from given file and directory.
+
    static const TEveException eH("TEveVSD::LoadVSD ");
 
-   mFile = TFile::Open(vsd_file_name);
-   if(mFile == 0)
+   fFile = TFile::Open(vsd_file_name);
+   if( fFile == 0)
       throw(eH + "can not open TEveVSD file '" + vsd_file_name + "'.");
 
-   mDirectory = (TDirectory*) mFile->Get(dir_name);
-   if(mDirectory == 0)
+   fDirectory = (TDirectory*) fFile->Get(dir_name);
+   if (fDirectory == 0)
       throw(eH + "directory '" + dir_name + "' not found in TEveVSD file '" + vsd_file_name + "'.");
-   printf("%p\n", (void*)mDirectory);
+   printf("%p\n", (void*)fDirectory);
    LoadTrees();
    SetBranchAddresses();
 }

@@ -22,7 +22,7 @@ class TEveRGBAPalette : public TObject, public TEveRefCnt
    friend class TEveRGBAPaletteSubEditor;
 
 public:
-   enum LimitAction_e { LA_Cut, LA_Mark, LA_Clip, LA_Wrap };
+   enum ELimitAction_e { LA_Cut, LA_Mark, LA_Clip, LA_Wrap };
 
 private:
    TEveRGBAPalette(const TEveRGBAPalette&);            // Not implemented

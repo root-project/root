@@ -284,7 +284,7 @@ void TEveTrackPropagatorSubEditor::DoDelta()
 void TEveTrackPropagatorSubEditor::DoFitPM()
 {
    TGButton* b = (TGButton *) gTQSender;
-   TEvePathMark::Type_e type = TEvePathMark::Type_e(b->WidgetId());
+   TEvePathMark::EType_e type = TEvePathMark::EType_e(b->WidgetId());
    Bool_t on = b->IsOn();
 
    switch(type)
@@ -308,7 +308,7 @@ void TEveTrackPropagatorSubEditor::DoFitPM()
 void TEveTrackPropagatorSubEditor::DoRnrPM()
 {
    TGButton * b = (TGButton *) gTQSender;
-   TEvePathMark::Type_e type = TEvePathMark::Type_e(b->WidgetId());
+   TEvePathMark::EType_e type = TEvePathMark::EType_e(b->WidgetId());
    Bool_t on = b->IsOn();
    switch(type){
       case  TEvePathMark::Daughter:

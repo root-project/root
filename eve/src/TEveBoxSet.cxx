@@ -57,7 +57,7 @@ TEveBoxSet::TEveBoxSet(const Text_t* n, const Text_t* t) :
 /******************************************************************************/
 
 //______________________________________________________________________________
-Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::BoxType_e bt)
+Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
 {
    // Return size of data-structure describing a box of type bt.
 
@@ -76,7 +76,7 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::BoxType_e bt)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveBoxSet::Reset(TEveBoxSet::BoxType_e boxType, Bool_t valIsCol, Int_t chunkSize)
+void TEveBoxSet::Reset(TEveBoxSet::EBoxType_e boxType, Bool_t valIsCol, Int_t chunkSize)
 {
    // Reset the data containers to zero size.
    // The arguments describe the basic parameters of data storage.

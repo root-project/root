@@ -24,7 +24,7 @@ class TEveQuadSet : public TEveDigitSet
    TEveQuadSet& operator=(const TEveQuadSet&); // Not implemented
 
 public:
-   enum QuadType_e
+   enum EQuadType_e
       {
          QT_Undef,                // unknown-ignored
          QT_FreeQuad,             // arbitrary quad: specify 4*(x,y,z) quad corners
@@ -53,7 +53,7 @@ public:
          // QT_CircleXYFixedR,    // specify z
       };
 
-   enum RenderMode_e { RM_AsIs, RM_TEveLine, RM_Fill };
+   enum ERenderMode_e { RM_AsIs, RM_TEveLine, RM_Fill };
 
 protected:
 
@@ -74,21 +74,21 @@ protected:
    struct QHex_t          : public QOrigin_t       { Float_t fC, fR; };
 
 protected:
-   QuadType_e        fQuadType;
+   EQuadType_e        fQuadType;
 
    Float_t           fDefWidth;     // Breadth assigned to first coordinate  (A)
    Float_t           fDefHeight;    // Breadth assigned to second coordinate (B)
    Float_t           fDefCoord;     // Default value for third coordinate    (C)
 
-   static Int_t SizeofAtom(QuadType_e qt);
+   static Int_t SizeofAtom(EQuadType_e qt);
 
 public:
    TEveQuadSet(const Text_t* n="TEveQuadSet", const Text_t* t="");
-   TEveQuadSet(QuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
+   TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                const Text_t* n="TEveQuadSet", const Text_t* t="");
    virtual ~TEveQuadSet();
 
-   void Reset(QuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
+   void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
 
    Float_t GetDefWidth()  const { return fDefWidth;  }
    Float_t GetDefHeight() const { return fDefHeight; }

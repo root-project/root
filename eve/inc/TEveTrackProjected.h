@@ -37,7 +37,7 @@ protected:
 
 public:
    TEveTrackProjected();
-   virtual ~TEveTrackProjected();
+   virtual ~TEveTrackProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
 

@@ -32,7 +32,7 @@ protected:
 
 public:
    TEveTrackProjectedGL();
-   virtual ~TEveTrackProjectedGL();
+   virtual ~TEveTrackProjectedGL() {}
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
 

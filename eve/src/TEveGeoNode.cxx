@@ -51,8 +51,19 @@ TEveGeoNode::TEveGeoNode(TGeoNode* node) :
 }
 
 //______________________________________________________________________________
-const Text_t* TEveGeoNode::GetName()  const { return fNode->GetName(); }
-const Text_t* TEveGeoNode::GetTitle() const { return fNode->GetTitle(); }
+const Text_t* TEveGeoNode::GetName()  const
+{
+   // Return name, taken from geo-node.
+
+   return fNode->GetName();
+}
+
+const Text_t* TEveGeoNode::GetTitle() const
+{
+   // Return title, taken from geo-node.
+
+   return fNode->GetTitle();
+}
 
 /******************************************************************************/
 
@@ -408,12 +419,16 @@ TEveGeoShape::TEveGeoShape(const Text_t* name, const Text_t* title) :
    fTransparency (0),
    fShape        (0)
 {
+   // Constructor.
+
    fMainColorPtr = &fColor;
 }
 
 //______________________________________________________________________________
 TEveGeoShape::~TEveGeoShape()
 {
+   // Destructor.
+
    if (fShape) {
       fShape->SetUniqueID(fShape->GetUniqueID() - 1);
       if (fShape->GetUniqueID() == 0)
@@ -426,6 +441,8 @@ TEveGeoShape::~TEveGeoShape()
 //______________________________________________________________________________
 void TEveGeoShape::Paint(Option_t* /*option*/)
 {
+   // Paint object.
+
    if (fShape == 0)
       return;
 
@@ -456,6 +473,9 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
 //______________________________________________________________________________
 void TEveGeoShape::Save(const char* file, const char* name)
 {
+   // Save the shape tree as TEveGeoShapeExtract.
+   // File is always recreated.
+
    TEveGeoShapeExtract* gse = DumpShapeTree(this, 0);
 
    TFile f(file, "RECREATE");
@@ -466,9 +486,11 @@ void TEveGeoShape::Save(const char* file, const char* name)
 /******************************************************************************/
 
 //______________________________________________________________________________
-TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre, TEveGeoShapeExtract* parent)
+TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
+                                                 TEveGeoShapeExtract* parent)
 {
-   //  printf("dump_shape_tree %s \n", gsre->GetName());
+   // Export this shape and its descendants into a geoshape-extract.
+
    TEveGeoShapeExtract* she = new TEveGeoShapeExtract(gsre->GetName(), gsre->GetTitle());
    she->SetTrans(gsre->RefHMTrans().Array());
    Int_t ci = gsre->GetColor();
@@ -503,8 +525,8 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre, TEveGeoShap
 }
 
 //______________________________________________________________________________
-TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract * gse,
-                                               TEveElement    * parent)
+TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
+                                               TEveElement*         parent)
 {
    gEve->DisableRedraw();
    TEveGeoShape* gsre = SubImportShapeExtract(gse, parent);
@@ -515,8 +537,8 @@ TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract * gse,
 
 
 //______________________________________________________________________________
-TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract * gse,
-                                                  TEveElement    * parent)
+TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
+                                                  TEveElement*         parent)
 {
    TEveGeoShape* gsre = new TEveGeoShape(gse->GetName(), gse->GetTitle());
    gsre->fHMTrans.SetFromArray(gse->GetTrans());
@@ -547,6 +569,9 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract * gse,
 //______________________________________________________________________________
 TClass* TEveGeoShape::ProjectedClass() const
 {
+   // Return class for projected objects, TEvePolygonSetProjected.
+   // Virtual from TEveProjectable.
+
    return TEvePolygonSetProjected::Class();
 }
 
@@ -555,6 +580,9 @@ TClass* TEveGeoShape::ProjectedClass() const
 //______________________________________________________________________________
 TBuffer3D* TEveGeoShape::MakeBuffer3D()
 {
+   // Create a TBuffer3D suitable for presentation of the shape.
+   // Transformation matrix is also applied.
+
    if(fShape == 0) return 0;
 
    if(dynamic_cast<TGeoShapeAssembly*>(fShape)){
@@ -575,6 +603,3 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
    }
    return buff;
 }
-
-
-

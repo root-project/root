@@ -406,7 +406,7 @@ void TEveBrowser::CalculateReparentXY(TGObject* parent, Int_t& x, Int_t& y)
 
 namespace
 {
-enum ReveMenu_e {
+enum EReveMenu_e {
    kNewViewer,  kNewScene,  kNewProjector,
    kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
    kVerticalBrowser

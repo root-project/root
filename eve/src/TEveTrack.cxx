@@ -93,8 +93,8 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* rs):
    fBeta(t->P()/t->Energy()),
    fPdg(0),
    fCharge(0),
-   fLabel(t->label),
-   fIndex(t->index),
+   fLabel(t->fLabel),
+   fIndex(t->fIndex),
    fPathMarks(),
 
    fPropagator(0)
@@ -117,13 +117,13 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* rs):
 TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* rs) :
    TEveLine(),
 
-   fV(t->V),
-   fP(t->P),
-   fBeta(t->beta),
+   fV(t->fV),
+   fP(t->fP),
+   fBeta(t->fBeta),
    fPdg(0),
-   fCharge(t->sign),
-   fLabel(t->label),
-   fIndex(t->index),
+   fCharge(t->fSign),
+   fLabel(t->fLabel),
+   fIndex(t->fIndex),
    fPathMarks(),
 
    fPropagator(0)
@@ -185,7 +185,7 @@ void TEveTrack::SetStdTitle()
    SetTitle(Form("Index=%s, Label=%s\nChg=%d, Pdg=%d\n"
                  "pT=%.3f, pZ=%.3f\nV=(%.3f, %.3f, %.3f)",
                  idx.Data(), lbl.Data(), fCharge, fPdg,
-                 fP.Perp(), fP.z, fV.x, fV.y, fV.z));
+                 fP.Perp(), fP.fZ, fV.fX, fV.fY, fV.fZ));
 }
 
 //______________________________________________________________________________
@@ -271,7 +271,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
 
    const Float_t maxRsq = RS.GetMaxR() * RS.GetMaxR();
 
-   if (TMath::Abs(fV.z) < RS.GetMaxZ() && fV.x*fV.x + fV.y*fV.y < maxRsq)
+   if (TMath::Abs(fV.fZ) < RS.GetMaxZ() && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
    {
       TEveVector currP = fP;
       Bool_t decay = kFALSE;
@@ -279,33 +279,33 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       for (std::vector<TEvePathMark*>::iterator i=fPathMarks.begin(); i!=fPathMarks.end(); ++i)
       {
          TEvePathMark* pm = *i;
-         if (RS.GetFitReferences() && pm->type == TEvePathMark::Reference)
+         if (RS.GetFitReferences() && pm->fType == TEvePathMark::Reference)
          {
-            if (TMath::Abs(pm->V.z) > RS.GetMaxZ() ||
-               pm->V.x*pm->V.x + pm->V.y*pm->V.y > maxRsq)
+            if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
+               pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
                goto bounds;
             // printf("%s fit reference  \n", fName.Data());
-            if (fPropagator->GoToVertex(pm->V, currP)) {
-               currP.x = pm->P.x; currP.y = pm->P.y; currP.z = pm->P.z;
+            if (fPropagator->GoToVertex(pm->fV, currP)) {
+               currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
             }
          }
-         else if (RS.GetFitDaughters() &&  pm->type == TEvePathMark::Daughter)
+         else if (RS.GetFitDaughters() &&  pm->fType == TEvePathMark::Daughter)
          {
-            if (TMath::Abs(pm->V.z) > RS.GetMaxZ() ||
-                pm->V.x*pm->V.x + pm->V.y*pm->V.y > maxRsq)
+            if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
+                pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
                goto bounds;
             // printf("%s fit daughter  \n", fName.Data());
-            if (fPropagator->GoToVertex(pm->V, currP)) {
-               currP.x -= pm->P.x; currP.y -= pm->P.y; currP.z -= pm->P.z;
+            if (fPropagator->GoToVertex(pm->fV, currP)) {
+               currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
             }
          }
-         else if (RS.GetFitDecay() &&  pm->type == TEvePathMark::Decay)
+         else if (RS.GetFitDecay() &&  pm->fType == TEvePathMark::Decay)
          {
-            if (TMath::Abs(pm->V.z) > RS.GetMaxZ() ||
-                pm->V.x*pm->V.x + pm->V.y*pm->V.y > maxRsq)
+            if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
+                pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
                goto bounds;
             // printf("%s fit decay \n", fName.Data());
-            fPropagator->GoToVertex(pm->V, currP);
+            fPropagator->GoToVertex(pm->fV, currP);
             decay = true;
             break;
          }
@@ -349,7 +349,7 @@ namespace {
 struct Cmp_pathmark_t
 {
    bool operator()(TEvePathMark* const & a, TEvePathMark* const & b)
-   { return a->time < b->time; }
+   { return a->fTime < b->fTime; }
 };
 
 }
@@ -499,10 +499,10 @@ void TEveTrack::PrintPathMarks()
    {
       pm = *i;
       printf("  %-9s  p: %8f %8f %8f Vertex: %8e %8e %8e %g \n",
-             pm->type_name(),
-             pm->P.x,  pm->P.y, pm->P.z,
-             pm->V.x,  pm->V.y, pm->V.z,
-             pm->time);
+             pm->TypeName(),
+             pm->fP.fX,  pm->fP.fY, pm->fP.fZ,
+             pm->fV.fX,  pm->fV.fY, pm->fV.fZ,
+             pm->fTime);
    }
 }
 
@@ -1233,7 +1233,7 @@ void TEveTrackCounter::DoTrackAction(TEveTrack* track)
          printf("TEveTrack '%s'\n", track->GetObject()->GetName());
          TEveVector &v = track->fV, &p = track->fP;
          printf("  Vx=%f, Vy=%f, Vz=%f; Pt=%f, Pz=%f, phi=%f)\n",
-                v.x, v.y, v.z, p.Perp(), p.z, TMath::RadToDeg()*p.Phi());
+                v.fX, v.fY, v.fZ, p.Perp(), p.fZ, TMath::RadToDeg()*p.Phi());
          printf("  <other information should be printed ... full AliESDtrack>\n");
          break;
       }

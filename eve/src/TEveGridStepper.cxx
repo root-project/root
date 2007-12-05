@@ -22,11 +22,11 @@ ClassImp(TEveGridStepper)
 
 //______________________________________________________________________________
 TEveGridStepper::TEveGridStepper(Int_t sm) :
-   Mode(StepMode_e(sm)),
+   fMode(EStepMode_e(sm)),
    fCx(0), fCy(0), fCz(0), fNx(0), fNy(0), fNz(0),
    fDx(0), fDy(0), fDz(0), fOx(0), fOy(0), fOz(0)
 {
-   switch(Mode) {
+   switch(fMode) {
       default:
       case SM_XYZ:
          fLimitArr[0] = &fNx; fLimitArr[1] = &fNy; fLimitArr[2] = &fNz;

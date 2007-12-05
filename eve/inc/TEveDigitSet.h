@@ -37,7 +37,7 @@ class TEveDigitSet : public TEveElement,
    TEveDigitSet& operator=(const TEveDigitSet&); // Not implemented
 
 public:
-   enum RenderMode_e { RM_AsIs, RM_TEveLine, RM_Fill };
+   enum ERenderMode_e { RM_AsIs, RM_TEveLine, RM_Fill };
 
 protected:
    struct DigitBase_t
@@ -58,7 +58,7 @@ protected:
 
    TEveFrameBox*     fFrame;          // Pointer to frame structure.
    TEveRGBAPalette*  fPalette;        // Pointer to signal-color palette.
-   RenderMode_e      fRenderMode;     // Render mode: as-is / line / filled.
+   ERenderMode_e      fRenderMode;     // Render mode: as-is / line / filled.
    Bool_t            fDisableLigting; // Disable lighting for rendering.
    Bool_t            fEmitSignals;    // Emit signals on secondary-select.
    Bool_t            fHistoButtons;   // Show histogram buttons in object editor.
@@ -75,7 +75,7 @@ public:
    virtual void   SetMainColor(Color_t color);
 
    // Implemented in sub-classes:
-   // virtual void Reset(QuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
+   // virtual void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
 
    void RefitPlex();
    void ScanMinMaxValues(Int_t& min, Int_t& max);
@@ -118,8 +118,8 @@ public:
    void         SetPalette(TEveRGBAPalette* p);
    TEveRGBAPalette* AssertPalette();
 
-   RenderMode_e  GetRenderMode() const { return fRenderMode; }
-   void SetRenderMode(RenderMode_e rm) { fRenderMode = rm; }
+   ERenderMode_e  GetRenderMode() const { return fRenderMode; }
+   void SetRenderMode(ERenderMode_e rm) { fRenderMode = rm; }
 
    Bool_t GetEmitSignals() const   { return fEmitSignals; }
    void   SetEmitSignals(Bool_t f) { fEmitSignals = f; }

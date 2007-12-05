@@ -19,24 +19,24 @@
 //______________________________________________________________________________
 void TEveTrackPropagator::Helix_t::Step(Vertex4D_t& v, TEveVector& p)
 {
-   v.x += (p.x*fSin - p.y*(1 - fCos))/fA + fXoff;
-   v.y += (p.y*fSin + p.x*(1 - fCos))/fA + fYoff;
-   v.z += fLam*TMath::Abs(fR*fPhiStep);
-   v.t += fTimeStep;
+   v.fX += (p.fX*fSin - p.fY*(1 - fCos))/fA + fXoff;
+   v.fY += (p.fY*fSin + p.fX*(1 - fCos))/fA + fYoff;
+   v.fZ += fLam*TMath::Abs(fR*fPhiStep);
+   v.fT += fTimeStep;
 
-   Float_t pxt = p.x*fCos  - p.y*fSin;
-   Float_t pyt = p.y*fCos  + p.x*fSin;
-   p.x = pxt;
-   p.y = pyt;
+   Float_t pxt = p.fX*fCos  - p.fY*fSin;
+   Float_t pyt = p.fY*fCos  + p.fX*fSin;
+   p.fX = pxt;
+   p.fY = pyt;
 }
 
 //______________________________________________________________________________
 void TEveTrackPropagator::Helix_t::StepVertex(Vertex4D_t& v, TEveVector& p, Vertex4D_t& forw)
 {
-   forw.x = v.x + (p.x*fSin - p.y*(1 - fCos))/fA + fXoff;
-   forw.y = v.y + (p.y*fSin + p.x*(1 - fCos))/fA + fYoff;
-   forw.z = v.z + fLam*TMath::Abs(fR*fPhiStep);
-   forw.t = v.t + fTimeStep;
+   forw.fX = v.fX + (p.fX*fSin - p.fY*(1 - fCos))/fA + fXoff;
+   forw.fY = v.fY + (p.fY*fSin + p.fX*(1 - fCos))/fA + fYoff;
+   forw.fZ = v.fZ + fLam*TMath::Abs(fR*fPhiStep);
+   forw.fT = v.fT + fTimeStep;
 }
 
 
@@ -65,8 +65,8 @@ TEveTrackPropagator::TEveTrackPropagator() :
    TEveRefBackPtr(),
 
    fMagField(fgDefMagField),
-   fMaxR  (350),
-   fMaxZ  (450),
+   fMaxR    (350),
+   fMaxZ    (450),
    fMaxOrbs (0.5),
    fMinAng  (45),
    fDelta   (0.1),
@@ -78,7 +78,7 @@ TEveTrackPropagator::TEveTrackPropagator() :
    fRnrDaughters  (kTRUE),
    fRnrReferences (kTRUE),
    fRnrDecay      (kTRUE),
-   fRnrFV(kFALSE),
+   fRnrFV         (kFALSE),
    fPMAtt(),
    fFVAtt(),
 
@@ -98,10 +98,10 @@ void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p,
 { 
    // Initializae internal data-members for given particle parameters.
 
-   fV.x = v.x;
-   fV.y = v.y;
-   fV.z = v.z;
-   fV.t = 0;
+   fV.fX = v.fX;
+   fV.fY = v.fY;
+   fV.fZ = v.fZ;
+   fV.fT = 0;
    fPoints.push_back(fV);
 
    fVelocity = TMath::C()*beta;
@@ -112,8 +112,8 @@ void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p,
       using namespace TMath;
       Float_t pT = p.Perp();
       fH.fA      = fgkB2C * fMagField * charge;
-      fH.fLam    = p.z / pT;
-      fH.fR      = pT  / fH.fA;
+      fH.fLam    = p.fZ / pT;
+      fH.fR      = pT   / fH.fA;
 
       fH.fPhiStep = fMinAng * DegToRad();
       if (fDelta < Abs(fH.fR))
@@ -136,7 +136,7 @@ void TEveTrackPropagator::ResetTrack()
    // Reset cache holding particle trajectory.
 
    fPoints.clear();
-   fN = 0; 
+   fN     = 0; 
    fNLast = 0;
 }
 
@@ -175,9 +175,9 @@ void TEveTrackPropagator::SetNumOfSteps()
    // Z boundaries
    Float_t nz;
    if (fH.fLam > 0) {
-      nz = ( fMaxZ - fV.z) / (fH.fLam*Abs(fH.fR*fH.fPhiStep));
+      nz = ( fMaxZ - fV.fZ) / (fH.fLam*Abs(fH.fR*fH.fPhiStep));
    } else {
-      nz = (-fMaxZ - fV.z) / (fH.fLam*Abs(fH.fR*fH.fPhiStep));
+      nz = (-fMaxZ - fV.fZ) / (fH.fLam*Abs(fH.fR*fH.fPhiStep));
    }
    if (nz < fNLast) fNLast = Int_t(nz + 1);
    // printf("end steps in helix line %d \n", fNLast);
@@ -209,11 +209,11 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
             fPoints.push_back(fV + (forw-fV)*t);fN++;
             return;
          }
-         if (TMath::Abs(forw.z) > fMaxZ)
+         if (TMath::Abs(forw.fZ) > fMaxZ)
          {
-            Float_t t = (fMaxZ - TMath::Abs(fV.z)) / TMath::Abs((forw.z - fV.z));
+            Float_t t = (fMaxZ - TMath::Abs(fV.fZ)) / TMath::Abs((forw.fZ - fV.fZ));
             assert(t >= 0 && t <= 1);
-            fPoints.push_back(fV + (forw-fV)*t);fN++;
+            fPoints.push_back(fV + (forw-fV)*t); fN++;
             return;
          }
          fH.Step(fV, p); fPoints.push_back(fV); fN++;
@@ -227,11 +227,11 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
 {
    // Propagate charged particle with momentum p to vertex v.
 
-   Float_t p0x = p.x, p0y = p.y;
-   Float_t zs = fH.fLam*TMath::Abs(fH.fR*fH.fPhiStep);
+   Float_t p0x = p.fX, p0y = p.fY;
+   Float_t zs  = fH.fLam*TMath::Abs(fH.fR*fH.fPhiStep);
    Float_t maxrsq  = fMaxR * fMaxR;
-   Float_t fnsteps = (v.z - fV.z)/zs;
-   Int_t   nsteps  = Int_t((v.z - fV.z)/zs);
+   Float_t fnsteps = (v.fZ - fV.fZ)/zs;
+   Int_t   nsteps  = Int_t((v.fZ - fV.fZ)/zs);
    Float_t sinf = TMath::Sin(fnsteps*fH.fPhiStep); // final sin
    Float_t cosf = TMath::Cos(fnsteps*fH.fPhiStep); // final cos
 
@@ -241,38 +241,40 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
       if (nsteps > 0)
       {
          // check offset and distribute it over all steps
-         Float_t xf  = fV.x + (p.x*sinf - p.y*(1 - cosf))/fH.fA;
-         Float_t yf =  fV.y + (p.y*sinf + p.x*(1 - cosf))/fH.fA;
-         fH.fXoff =  (v.x - xf)/fnsteps;
-         fH.fYoff =  (v.y - yf)/fnsteps;
+         Float_t xf = fV.fX + (p.fX*sinf - p.fY*(1 - cosf)) / fH.fA;
+         Float_t yf = fV.fY + (p.fY*sinf + p.fX*(1 - cosf)) / fH.fA;
+         fH.fXoff   = (v.fX - xf) / fnsteps;
+         fH.fYoff   = (v.fY - yf) / fnsteps;
          Vertex4D_t forw;
          for (Int_t l=0; l<nsteps; l++)
          {
             fH.StepVertex(fV, p, forw);
-            if (fV.Perp2() > maxrsq || TMath::Abs(fV.z) > fMaxZ)
+            if (fV.Perp2() > maxrsq || TMath::Abs(fV.fZ) > fMaxZ)
                return kFALSE;
             fH.Step(fV, p); fPoints.push_back(fV); fN++;
          }
       }
       // set time to the end point
-      fV.t += TMath::Sqrt((fV.x-v.x)*(fV.x-v.x)+(fV.y-v.y)*(fV.y-v.y) +(fV.z-v.z)*(fV.z-v.z))/fVelocity;
-      fV.x = v.x; fV.y = v.y; fV.z = v.z;
+      fV.fT += TMath::Sqrt((fV.fX-v.fX)*(fV.fX-v.fX) +
+                           (fV.fY-v.fY)*(fV.fY-v.fY) +
+                           (fV.fZ-v.fZ)*(fV.fZ-v.fZ)) / fVelocity;
+      fV.fX = v.fX; fV.fY = v.fY; fV.fZ = v.fZ;
       fPoints.push_back(fV); fN++;
    }
    { // rotate momentum for residuum
       Float_t cosr = TMath::Cos((fnsteps-nsteps)*fH.fPhiStep);
       Float_t sinr = TMath::Sin((fnsteps-nsteps)*fH.fPhiStep);
-      Float_t pxt = p.x*cosr - p.y*sinr;
-      Float_t pyt = p.y*cosr + p.x*sinr;
-      p.x = pxt;
-      p.y = pyt;
+      Float_t pxt = p.fX*cosr - p.fY*sinr;
+      Float_t pyt = p.fY*cosr + p.fX*sinr;
+      p.fX = pxt;
+      p.fY = pyt;
    }
-   { // calculate size of faked p.x,py
+   { // calculate size of faked p.fX,py
       Float_t pxf = (p0x*cosf - p0y*sinf)/TMath::Abs(fH.fA) + fH.fXoff/fH.fPhiStep;
       Float_t pyf = (p0y*cosf + p0x*sinf)/TMath::Abs(fH.fA) + fH.fYoff/fH.fPhiStep;
       Float_t fac = TMath::Sqrt((p0x*p0x + p0y*p0y) / (pxf*pxf + pyf*pyf));
-      p.x = fac*pxf;
-      p.y = fac*pyf;
+      p.fX = fac*pxf;
+      p.fY = fac*pyf;
    }
    return kTRUE;
 }
@@ -282,10 +284,12 @@ Bool_t TEveTrackPropagator::LineToVertex(TEveVector& v)
 {
    // Propagate neutral particle to vertex v.
 
-   fV.t += TMath::Sqrt((fV.x-v.x)*(fV.x-v.x)+(fV.y-v.y)*(fV.y-v.y)+(fV.z-v.z)*(fV.z-v.z))/fVelocity;
-   fV.x = v.x;
-   fV.y = v.y;
-   fV.z = v.z;
+   fV.fT += TMath::Sqrt((fV.fX-v.fX)*(fV.fX-v.fX) +
+                        (fV.fY-v.fY)*(fV.fY-v.fY) +
+                        (fV.fZ-v.fZ)*(fV.fZ-v.fZ)) / fVelocity;
+   fV.fX = v.fX;
+   fV.fY = v.fY;
+   fV.fZ = v.fZ;
    fPoints.push_back(fV);
 
    return kTRUE;
@@ -298,17 +302,17 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
 
    Float_t tZ = 0, Tb = 0;
    // time where particle intersect +/- fMaxZ
-   if (p.z > 0) {
-      tZ = (fMaxZ - fV.z)/p.z;
+   if (p.fZ > 0) {
+      tZ = (fMaxZ - fV.fZ)/p.fZ;
    }
-   else  if (p.z < 0 ) {
-      tZ = (-1)*(fMaxZ + fV.z)/p.z;
+   else  if (p.fZ < 0 ) {
+      tZ = (-1)*(fMaxZ + fV.fZ)/p.fZ;
    }
    // time where particle intersects cylinder
    Float_t tR = 0;
-   Double_t a = p.x*p.x + p.y*p.y;
-   Double_t b = 2*(fV.x*p.x + fV.y*p.y);
-   Double_t c = fV.x*fV.x + fV.y*fV.y - fMaxR*fMaxR;
+   Double_t a = p.fX*p.fX + p.fY*p.fY;
+   Double_t b = 2*(fV.fX*p.fX + fV.fY*p.fY);
+   Double_t c = fV.fX*fV.fX + fV.fY*fV.fY - fMaxR*fMaxR;
    Double_t D = b*b - 4*a*c;
    if (D >= 0) {
       Double_t D_sqrt=TMath::Sqrt(D);
@@ -320,7 +324,7 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
    } else {
       Tb = tZ;
    }
-   TEveVector nv(fV.x + p.x*Tb, fV.y + p.y*Tb, fV.z+ p.z*Tb);
+   TEveVector nv(fV.fX + p.fX*Tb, fV.fY + p.fY*Tb, fV.fZ+ p.fZ*Tb);
    LineToVertex(nv);
 }
 
@@ -334,7 +338,7 @@ void TEveTrackPropagator::FillPointSet(TEvePointSet* ps) const
    for (Int_t i = 0; i < size; ++i)
    {
       const Vertex4D_t& v = fPoints[i];
-      ps->SetNextPoint(v.x, v.y, v.z);
+      ps->SetNextPoint(v.fX, v.fY, v.fZ);
    }
 }
 

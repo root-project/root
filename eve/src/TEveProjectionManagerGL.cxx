@@ -54,28 +54,18 @@ const char* TEveProjectionManagerGL::GetText(Float_t x) const
    // Get formatted text.
 
    using  namespace TMath;
-   if     ( Abs(x) > 1000 )
-   {
+   if (Abs(x) > 1000) {
       Float_t v = 10*TMath::Nint(x/10.0f);
       return Form("%.0f", v);
-   }
-   else if( Abs(x) > 100  )
-   {
+   } else if(Abs(x) > 100) {
       Float_t v = TMath::Nint(x);
       return Form("%.0f", v);
-   }
-   else if ( Abs(x) > 10  )
-   {
+   } else if (Abs(x) > 10)
       return Form("%.1f", x);
-   }
-   else if ( Abs(x) > 1   )
-   {
+   else if ( Abs(x) > 1 )
       return Form("%.2f", x);
-   }
    else
-   {
       return Form("%.3f", x);
-   }
 }
 
 /******************************************************************************/
@@ -87,7 +77,7 @@ void TEveProjectionManagerGL::SetRange(Float_t pos, Int_t ax) const
   
    using namespace TMath;
    Float_t limit =  fM->GetProjection()->GetLimit(ax, pos > 0 ? kTRUE: kFALSE);
-   if ( fM->GetProjection()->GetDistortion() > 0.001 && Abs(pos) > Abs(limit *0.97))
+   if (fM->GetProjection()->GetDistortion() > 0.001 && Abs(pos) > Abs(limit *0.97))
    {
       fPos.push_back(limit *0.7);
       fVals.push_back(fM->GetProjection()->GetValForScreenPos(ax, fPos.back()));
@@ -107,7 +97,7 @@ void TEveProjectionManagerGL::DrawTickMarks(Float_t tm) const
    // Draw tick-marks on the current axis.
 
    glBegin(GL_LINES);
-   for( std::list<Float_t>::iterator pi = fPos.begin(); pi!= fPos.end(); pi++)
+   for (std::list<Float_t>::iterator pi = fPos.begin(); pi!= fPos.end(); ++pi)
    {
       glVertex3f(*pi, 0,   0.);
       glVertex3f(*pi, tm, 0.);
@@ -157,7 +147,7 @@ void TEveProjectionManagerGL::DrawVInfo() const
    const char* txt;
    Float_t llx, lly, llz, urx, ury, urz;
    std::list<Float_t>::iterator vi = fVals.begin();
-   for( std::list<Float_t>::iterator pi = fPos.begin(); pi!= fPos.end(); pi++)
+   for (std::list<Float_t>::iterator pi = fPos.begin(); pi!= fPos.end(); ++pi)
    {
       txt= GetText(*vi);
       fText->BBox(txt, llx, lly, llz, urx, ury, urz);
@@ -195,7 +185,7 @@ void TEveProjectionManagerGL::SplitIntervalByPos(Float_t minp, Float_t maxp, Int
    Float_t v = fM->GetProjection()->GetValForScreenPos(ax, p);
    fVals.push_back(v);
    level++;
-   if(level<fM->GetSplitInfoLevel())
+   if (level<fM->GetSplitInfoLevel())
    {
       SplitIntervalByPos(minp, p , ax, level);
       SplitIntervalByPos(p, maxp, ax, level);
@@ -212,7 +202,7 @@ void TEveProjectionManagerGL::SplitIntervalByVal(Float_t minv, Float_t maxv, Int
    Float_t p = fM->GetProjection()->GetScreenVal(ax, v);
    fPos.push_back(p);
    level++;
-   if(level<fM->GetSplitInfoLevel())
+   if (level<fM->GetSplitInfoLevel())
    {
       SplitIntervalByVal(minv, v , ax, level);
       SplitIntervalByVal(v, maxv, ax, level);
@@ -244,11 +234,11 @@ void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
       glTranslatef(0, bbox[2], 0);
       // left
       SetRange(bbox[0], 0);
-      fPos.push_back(zeroPos.x); fVals.push_back(0);
+      fPos.push_back(zeroPos.fX); fVals.push_back(0);
       SplitInterval(0);
       DrawHInfo();
       // right
-      fPos.push_back(zeroPos.x); fVals.push_back(0);
+      fPos.push_back(zeroPos.fX); fVals.push_back(0);
       SetRange(bbox[1], 0);
       SplitInterval(0); fVals.pop_front(); fPos.pop_front();
       DrawHInfo();
@@ -258,12 +248,12 @@ void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
       glPushMatrix();
       glTranslatef(bbox[0], 0, 0);
       // bottom
-      fPos.push_back(zeroPos.y);fVals.push_back(0);
+      fPos.push_back(zeroPos.fY);fVals.push_back(0);
       SetRange(bbox[2], 1);
       SplitInterval(1);
       DrawVInfo();
       // top
-      fPos.push_back(zeroPos.y); fVals.push_back(0);
+      fPos.push_back(zeroPos.fY); fVals.push_back(0);
       SetRange(bbox[3], 1);
       SplitInterval(1);fPos.pop_front(); fVals.pop_front();
       DrawVInfo();
@@ -279,7 +269,7 @@ void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    glEnd();
 
    Float_t d = 10;
-   if(fM->GetDrawCenter())
+   if (fM->GetDrawCenter())
    {
       Float_t* c = fM->GetProjection()->GetProjectedCenter();
       glColor3f(1., 0., 0.);
@@ -291,7 +281,7 @@ void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 
    }
 
-   if(fM->GetDrawOrigin())
+   if (fM->GetDrawOrigin())
    {
       TEveVector zero;
       fM->GetProjection()->ProjectVector(zero);
@@ -314,7 +304,7 @@ Bool_t TEveProjectionManagerGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    // Set model object.
    // Virtual from TGLObject.
 
-   if(SetModelCheckClass(obj, TEveProjectionManager::Class())) {
+   if (SetModelCheckClass(obj, TEveProjectionManager::Class())) {
       fM = dynamic_cast<TEveProjectionManager*>(obj);
       return kTRUE;
    }

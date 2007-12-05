@@ -42,44 +42,45 @@
 class TEveVector
 {
 public:
-   Float_t x, y, z;
+   Float_t fX, fY, fZ; // Components of the vector.
 
-   TEveVector() : x(0), y(0), z(0) {}
-   TEveVector(Float_t _x, Float_t _y, Float_t _z) : x(_x), y(_y), z(_z) {}
+   TEveVector() : fX(0), fY(0), fZ(0) {}
+   TEveVector(Float_t x, Float_t y, Float_t z) : fX(x), fY(y), fZ(z) {}
    virtual ~TEveVector() {}
 
    TEveVector operator + (const TEveVector &);
    TEveVector operator - (const TEveVector &);
    TEveVector operator * (Float_t a);
 
-   Float_t* c_vec() { return &x; }
+   Float_t* c_vec() { return &fX; }
    Float_t& operator [] (Int_t indx);
    Float_t  operator [] (Int_t indx) const;
 
-   void Set(Float_t*  v) { x=v[0]; y=v[1]; z=v[2]; }
-   void Set(Double_t* v) { x=v[0]; y=v[1]; z=v[2]; }
-   void Set(Float_t  _x, Float_t  _y, Float_t  _z) { x=_x; y=_y; z=_z; }
-   void Set(Double_t _x, Double_t _y, Double_t _z) { x=_x; y=_y; z=_z; }
-   void Set(const TVector3& v) { x=v.x(); y=v.y(); z=v.z(); }
-   void Set(const TEveVector& v) { x=v.x; y=v.y; z=v.z; }
+   void Set(Float_t*  v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
+   void Set(Double_t* v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
+   void Set(Float_t  x, Float_t  y, Float_t  z) { fX = x; fY = y; fZ = z; }
+   void Set(Double_t x, Double_t y, Double_t z) { fX = x; fY = y; fZ = z; }
+   void Set(const TVector3& v)   { fX = v.x(); fY = v.y(); fZ = v.z(); }
+   void Set(const TEveVector& v) { fX = v.fX;  fY = v.fY;  fZ = v.fZ;  }
 
    Float_t Phi()      const;
    Float_t Theta()    const;
    Float_t CosTheta() const;
    Float_t Eta()      const;
 
-   Float_t Mag()  const { return TMath::Sqrt(x*x+y*y+z*z);}
-   Float_t Mag2() const { return x*x+y*y+z*z;}
+   Float_t Mag()  const { return TMath::Sqrt(fX*fX + fY*fY + fZ*fZ);}
+   Float_t Mag2() const { return fX*fX + fY*fY + fZ*fZ;}
 
-   Float_t Perp()  const { return TMath::Sqrt(x*x+y*y);}
-   Float_t Perp2() const { return x*x+y*y;}
+   Float_t Perp()  const { return TMath::Sqrt(fX*fX + fY*fY);}
+   Float_t Perp2() const { return fX*fX + fY*fY;}
    Float_t R()     const { return Perp(); }
 
    Float_t Distance(const TEveVector& v) const;
    Float_t SquareDistance(const TEveVector& v) const;
    Float_t Dot(const TEveVector&a) const;
 
-   TEveVector& Mult(const TEveVector&a, Float_t af) { x = a.x*af; y = a.y*af; z = a.z*af; return *this; }
+   TEveVector& Mult(const TEveVector&a, Float_t af)
+   { fX = a.fX*af; fY = a.fY*af; fZ = a.fZ*af; return *this; }
 
 
    ClassDef(TEveVector, 1); // Float three-vector; a inimal Float_t copy of TVector3 used to represent points and momenta (also used in VSD).
@@ -87,34 +88,38 @@ public:
 
 //______________________________________________________________________________
 inline Float_t TEveVector::Phi() const
-{ return x == 0.0 && y == 0.0 ? 0.0 : TMath::ATan2(y,x); }
+{ return fX == 0.0 && fY == 0.0 ? 0.0 : TMath::ATan2(fY, fX); }
 
 inline Float_t TEveVector::Theta() const
-{ return x == 0.0 && y == 0.0 && z == 0.0 ? 0.0 : TMath::ATan2(Perp(),z); }
+{ return fX == 0.0 && fY == 0.0 && fZ == 0.0 ? 0.0 : TMath::ATan2(Perp(), fZ); }
 
 inline Float_t TEveVector::CosTheta() const
-{ Float_t ptot = Mag(); return ptot == 0.0 ? 1.0 : z/ptot; }
+{ Float_t ptot = Mag(); return ptot == 0.0 ? 1.0 : fZ/ptot; }
 
 inline Float_t TEveVector::Distance( const TEveVector& b) const
 {
-   return TMath::Sqrt((x - b.x)*(x - b.x) + (y - b.y)*(y - b.y) + (z - b.z)*(z - b.z));
+   return TMath::Sqrt((fX - b.fX)*(fX - b.fX) +
+                      (fY - b.fY)*(fY - b.fY) +
+                      (fZ - b.fZ)*(fZ - b.fZ));
 }
 inline Float_t TEveVector::SquareDistance(const TEveVector& b) const
 {
-   return ((x - b.x)*(x - b.x) + (y - b.y)*(y - b.y) + (z - b.z)*(z - b.z));
+   return ((fX - b.fX) * (fX - b.fX) +
+           (fY - b.fY) * (fY - b.fY) +
+           (fZ - b.fZ) * (fZ - b.fZ));
 }
 
 //______________________________________________________________________________
 inline Float_t TEveVector::Dot(const TEveVector& a) const
 {
-   return a.x*x + a.y*y + a.z*z;
+   return a.fX*fX + a.fY*fY + a.fZ*fZ;
 }
 
 inline Float_t& TEveVector::operator [] (Int_t idx)
-{ return (&x)[idx]; }
+{ return (&fX)[idx]; }
 
 inline Float_t TEveVector::operator [] (Int_t idx) const
-{ return (&x)[idx]; }
+{ return (&fX)[idx]; }
 
 
 /******************************************************************************/
@@ -124,17 +129,17 @@ inline Float_t TEveVector::operator [] (Int_t idx) const
 class TEvePathMark
 {
 public:
-   enum Type_e   { Reference, Daughter, Decay };
+   enum EType_e   { Reference, Daughter, Decay };
 
-   TEveVector  V;    // vertex
-   TEveVector  P;    // momentum
-   Float_t     time; // time
-   Type_e      type; // mark-type
+   TEveVector  fV;    // Vertex.
+   TEveVector  fP;    // Momentum.
+   Float_t     fTime; // Time.
+   EType_e     fType; // Mark-type.
 
-   TEvePathMark(Type_e t=Reference) : V(), P(), time(0), type(t) {}
+   TEvePathMark(EType_e t=Reference) : fV(), fP(), fTime(0), fType(t) {}
    virtual ~TEvePathMark() {}
 
-   const char* type_name();
+   const char* TypeName();
 
    ClassDef(TEvePathMark, 1); // Special-point on track: position/momentum reference, daughter creation or decay (also used in VSD).
 };
@@ -146,18 +151,18 @@ public:
 class TEveMCTrack : public TParticle // ?? Copy stuff over ??
 {
 public:
-   Int_t       label;       // Label of the track
-   Int_t       index;       // Index of the track (in some source array)
-   Int_t       eva_label;   // Label of primary particle
+   Int_t       fLabel;      // Label of the track
+   Int_t       fIndex;      // Index of the track (in some source array)
+   Int_t       fEvaLabel;   // Label of primary particle
 
-   Bool_t      decayed;     // True if decayed during tracking.
+   Bool_t      fDecayed;    // True if decayed during tracking.
    // ?? Perhaps end-of-tracking point/momentum would be better.
-   Float_t     t_decay;     // Decay time
-   TEveVector  V_decay;     // Decay vertex
-   TEveVector  P_decay;     // Decay momentum
+   Float_t     fTDecay;     // Decay time
+   TEveVector  fVDecay;     // Decay vertex
+   TEveVector  fPDecay;     // Decay momentum
 
-   TEveMCTrack() : label(-1), index(-1), eva_label(-1),
-                   decayed(false), t_decay(0), V_decay(), P_decay() {}
+   TEveMCTrack() : fLabel(-1), fIndex(-1), fEvaLabel(-1),
+                   fDecayed(kFALSE), fTDecay(0), fVDecay(), fPDecay() {}
    virtual ~TEveMCTrack() {}
 
    TEveMCTrack& operator=(const TParticle& p)
@@ -175,23 +180,23 @@ public:
 
 // Representation of a hit.
 
-// Members det_id (and subdet_id) serve for cross-referencing into
-// geometry. Hits should be stored in det_id (+some label ordering) in
+// Members det_id (and fSubdetId) serve for cross-referencing into
+// geometry. Hits should be stored in fDetId (+some label ordering) in
 // order to maximize branch compression.
 
 
 class TEveHit : public TObject
 {
 public:
-   UShort_t     det_id;    // Custom detector id
-   UShort_t     subdet_id; // Custom sub-detector id
-   Int_t        label;     // Label of particle that produced the hit
-   Int_t        eva_label; // Label of primary particle, ancestor of label
-   TEveVector   V;     // Hit position
+   UShort_t     fDetId;    // Custom detector id.
+   UShort_t     fSubdetId; // Custom sub-detector id.
+   Int_t        fLabel;    // Label of particle that produced the hit.
+   Int_t        fEvaLabel; // Label of primary particle, ancestor of label.
+   TEveVector   fV;        // Hit position.
 
-   // Float_t charge; Probably specific.
+   // Float_t charge; probably specific.
 
-   TEveHit() : det_id(0), subdet_id(0), label(0), eva_label(0), V() {}
+   TEveHit() : fDetId(0), fSubdetId(0), fLabel(0), fEvaLabel(0), fV() {}
    virtual ~TEveHit() {}
 
    ClassDef(TEveHit, 1); // Monte Carlo hit (also used in VSD).
@@ -209,16 +214,17 @@ public:
 class TEveCluster : public TObject
 {
 public:
-   UShort_t     det_id;    // Custom detector id
-   UShort_t     subdet_id; // Custom sub-detector id
-   Int_t        label[3];  // Labels of particles that contributed hits
-   // ?? Should include reconstructed track using it? Rather not, separate.
+   UShort_t     fDetId;     // Custom detector id.
+   UShort_t     fSubdetId;  // Custom sub-detector id.
+   Int_t        fLabel[3];  // Labels of particles that contributed hits.
 
-   TEveVector   V;         // Vertex
-   // TEveVector   W;      // Cluster widths
-   // ?? Coord system? Special variables Wz, Wy?
+   // ?? Should include reconstructed track(s) using it? Rather not, separate.
 
-   TEveCluster() : det_id(0), subdet_id(0), V() { label[0] = label[1] = label [2] = 0; }
+   TEveVector      fV;      // Vertex.
+   // TEveVector   fW;      // Cluster widths.
+   // Coord system? Errors and/or widths Wz, Wy?
+
+   TEveCluster() : fDetId(0), fSubdetId(0), fV() { fLabel[0] = fLabel[1] = fLabel[2] = 0; }
    virtual ~TEveCluster() {}
 
    ClassDef(TEveCluster, 1); // Reconstructed cluster (also used in VSD).
@@ -232,20 +238,20 @@ public:
 class TEveRecTrack : public TObject
 {
 public:
-   Int_t       label;       // Label of the track
-   Int_t       index;       // Index of the track (in some source array)
-   Int_t       status;      // Status as exported from reconstruction
-   Int_t       sign;        // Charge of the track
-   TEveVector  V;           // Start vertex from reconstruction
-   TEveVector  P;           // Reconstructed momentum at start vertex
-   Float_t     beta;
+   Int_t       fLabel;       // Label of the track.
+   Int_t       fIndex;       // Index of the track (in some source array).
+   Int_t       fStatus;      // Status as exported from reconstruction.
+   Int_t       fSign;        // Charge of the track.
+   TEveVector  fV;           // Start vertex from reconstruction.
+   TEveVector  fP;           // Reconstructed momentum at start vertex.
+   Float_t     fBeta;        // Relativistic beta factor.
 
    // PID data missing
 
-   TEveRecTrack() : label(-1), index(-1), status(0), sign(0), V(), P(), beta(0) {}
+   TEveRecTrack() : fLabel(-1), fIndex(-1), fStatus(0), fSign(0), fV(), fP(), fBeta(0) {}
    virtual ~TEveRecTrack() {}
 
-   Float_t Pt() { return P.Perp(); }
+   Float_t Pt() { return fP.Perp(); }
 
    ClassDef(TEveRecTrack, 1); // Reconstructed track (also used in VSD).
 };
@@ -258,12 +264,12 @@ public:
 class TEveRecKink : public TEveRecTrack
 {
 public:
-   Int_t       label_sec;  // Label of the secondary track
-   TEveVector  V_end;      // End vertex: last point on the primary track
-   TEveVector  V_kink;     // Kink vertex: reconstructed position of the kink
-   TEveVector  P_sec;      // Momentum of secondary track
+   Int_t       fLabelSec;  // Label of the secondary track
+   TEveVector  fVEnd;      // End vertex: last point on the primary track
+   TEveVector  fVKink;     // Kink vertex: reconstructed position of the kink
+   TEveVector  fPSec;      // Momentum of secondary track
 
-   TEveRecKink() : TEveRecTrack(), label_sec(0), V_end(), V_kink(), P_sec() {}
+   TEveRecKink() : TEveRecTrack(), fLabelSec(0), fVEnd(), fVKink(), fPSec() {}
    virtual ~TEveRecKink() {}
 
    ClassDef(TEveRecKink, 1); // Reconstructed kink (also used in VSD).
@@ -277,24 +283,24 @@ public:
 class TEveRecV0 : public TObject
 {
 public:
-   Int_t      status;
+   Int_t      fStatus;
 
-   TEveVector V_neg;       // Vertex of negative track
-   TEveVector P_neg;       // Momentum of negative track
-   TEveVector V_pos;       // Vertex of positive track
-   TEveVector P_pos;       // Momentum of positive track
+   TEveVector fVNeg;       // Vertex of negative track.
+   TEveVector fPNeg;       // Momentum of negative track.
+   TEveVector fVPos;       // Vertex of positive track.
+   TEveVector fPPos;       // Momentum of positive track.
 
-   TEveVector V_ca;        // Point of closest approach
-   TEveVector V0_birth;    // Reconstucted birth point of neutral particle
+   TEveVector fVCa;        // Point of closest approach.
+   TEveVector fV0Birth;    // Reconstucted birth point of neutral particle.
 
    // ? Data from simulation.
-   Int_t      label;        // Neutral mother label read from kinematics
-   Int_t      pdg;          // PDG code of mother
-   Int_t      d_label[2];   // Daughter labels ?? Rec labels present anyway.
+   Int_t      fLabel;      // Neutral mother label read from kinematics.
+   Int_t      fPdg;        // PDG code of mother.
+   Int_t      fDLabel[2];  // Daughter labels.
 
-   TEveRecV0() : status(), V_neg(), P_neg(), V_pos(), P_pos(),
-                 V_ca(), V0_birth(), label(0), pdg(0)
-   { d_label[0] = d_label[1] = 0; }
+   TEveRecV0() : fStatus(), fVNeg(), fPNeg(), fVPos(), fPPos(),
+                 fVCa(), fV0Birth(), fLabel(0), fPdg(0)
+   { fDLabel[0] = fDLabel[1] = 0; }
    virtual ~TEveRecV0() {}
 
    ClassDef(TEveRecV0, 1); // Reconstructed V0 (also used in VSD).
@@ -310,15 +316,15 @@ public:
 class TEveMCRecCrossRef : public TObject
 {
 public:
-   Bool_t       is_rec;   // is reconstructed
-   Bool_t       has_V0;
-   Bool_t       has_kink;
-   Int_t        label;
-   Int_t        n_hits;
-   Int_t        n_clus;
+   Bool_t       fIsRec;   // Is reconstructed.
+   Bool_t       fHasV0;
+   Bool_t       fHasKink;
+   Int_t        fLabel;
+   Int_t        fNHits;
+   Int_t        fNClus;
 
-   TEveMCRecCrossRef() : is_rec(false), has_V0(false), has_kink(false),
-                         label(0), n_hits(0), n_clus(0) {}
+   TEveMCRecCrossRef() : fIsRec(false), fHasV0(false), fHasKink(false),
+                         fLabel(0), fNHits(0), fNClus(0) {}
    virtual ~TEveMCRecCrossRef() {}
 
    ClassDef(TEveMCRecCrossRef, 1); // Cross-reference of sim/rec data per particle (also used in VSD).

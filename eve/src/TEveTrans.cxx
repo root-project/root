@@ -681,7 +681,7 @@ TVector3 TEveTrans::Rotate(const TVector3& v) const
 /******************************************************************************/
 
 //______________________________________________________________________________
-Double_t TEveTrans::norm3_column(Int_t col)
+Double_t TEveTrans::Norm3Column(Int_t col)
 {
    // Norm 3-vector in column col.
 
@@ -692,7 +692,7 @@ Double_t TEveTrans::norm3_column(Int_t col)
 }
 
 //______________________________________________________________________________
-Double_t TEveTrans::orto3_column(Int_t col, Int_t ref)
+Double_t TEveTrans::Orto3Column(Int_t col, Int_t ref)
 {
    // Orto-norm 3-vector in column col with respect to column ref.
 
@@ -708,13 +708,13 @@ void TEveTrans::OrtoNorm3()
 {
    // Orto-norm columns 1 to 3.
 
-   norm3_column(1);
-   orto3_column(2,1); norm3_column(2);
+   Norm3Column(1);
+   Orto3Column(2,1); Norm3Column(2);
    fM[F02] = fM[F10]*fM[F21] - fM[F11]*fM[F20];
    fM[F12] = fM[F20]*fM[F01] - fM[F21]*fM[F00];
    fM[F22] = fM[F00]*fM[F11] - fM[F01]*fM[F10];
-   // cross-product faster.
-   // orto3_column(3,1); orto3_column(3,2); norm3_column(3);
+   // Cross-product faster than the following.
+   // Orto3Column(3,1); Orto3Column(3,2); Norm3Column(3);
 }
 
 /******************************************************************************/
@@ -727,7 +727,7 @@ Double_t TEveTrans::Invert()
    // Invert matrix.
    // Copied from ROOT's TMatrixFCramerInv.
 
-   static const TEveException _eh("TEveTrans::Invert ");
+   static const TEveException eh("TEveTrans::Invert ");
 
    // Find all NECESSARY 2x2 dets:  (18 of them)
    const Double_t det2_12_01 = fM[F10]*fM[F21] - fM[F11]*fM[F20];
@@ -772,7 +772,7 @@ Double_t TEveTrans::Invert()
       fM[F02]*det3_123_013 - fM[F03]*det3_123_012;
 
    if(det == 0) {
-      throw(_eh + "matrix is singular.");
+      throw(eh + "matrix is singular.");
    }
 
    const Double_t oneOverDet = 1.0/det;

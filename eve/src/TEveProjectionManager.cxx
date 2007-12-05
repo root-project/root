@@ -71,7 +71,7 @@ void TEveProjectionManager::UpdateName()
 }
 
 //______________________________________________________________________________
-void TEveProjectionManager::SetProjection(TEveProjection::PType_e type, Float_t distort)
+void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type, Float_t distort)
 {
    // Set projection type and distortion.
 

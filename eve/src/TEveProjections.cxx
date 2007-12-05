@@ -29,7 +29,7 @@ TEveProjection::TEveProjection(TEveVector& center) :
    fType(PT_Unknown),
    fGeoMode(GM_Unknown),
    fName(0),
-   fCenter(center.x, center.y, center.z),
+   fCenter(center.fX, center.fY, center.fZ),
    fDistortion(0.0f),
    fFixedRadius(300),
    fScale(1.0f)
@@ -42,7 +42,7 @@ void TEveProjection::ProjectVector(TEveVector& v)
 {
    // Project TEveVector.
 
-   ProjectPoint(v.x, v.y, v.z);
+   ProjectPoint(v.fX, v.fY, v.fZ);
 }
 
 //______________________________________________________________________________
@@ -50,7 +50,7 @@ void TEveProjection::UpdateLimit()
 {
    // Update convergence in +inf and -inf.
 
-   if ( fDistortion == 0.0f )
+   if (fDistortion == 0.0f)
       return;
 
    Float_t lim =  1.0f/fDistortion + fFixedRadius;
@@ -64,8 +64,8 @@ void TEveProjection::SetDistortion(Float_t d)
 {
    // Set distortion.
 
-   fDistortion=d;
-   fScale = 1+fFixedRadius*fDistortion;
+   fDistortion = d;
+   fScale      = 1.0f + fFixedRadius*fDistortion;
    UpdateLimit();
 }
 
@@ -173,15 +173,15 @@ void TEveRhoZProjection::SetCenter(TEveVector& v)
 
    fCenter = v;
 
-   Float_t R = TMath::Sqrt(v.x*v.x+v.y*v.y);
-   fProjectedCenter.x = fCenter.z;
-   fProjectedCenter.y = TMath::Sign(R, fCenter.y);
-   fProjectedCenter.z = 0;
+   Float_t R = TMath::Sqrt(v.fX*v.fX + v.fY*v.fY);
+   fProjectedCenter.fX = fCenter.fZ;
+   fProjectedCenter.fY = TMath::Sign(R, fCenter.fY);
+   fProjectedCenter.fZ = 0;
    UpdateLimit();
 }
 
 //______________________________________________________________________________
-void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,  PProc_e proc )
+void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,  EPProc_e proc )
 {
    // Project point.
 
@@ -196,14 +196,14 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,  PProc
    if(proc == PP_Distort || proc == PP_Full)
    {
       // move to center
-      x -= fProjectedCenter.x;
-      y -= fProjectedCenter.y;
+      x -= fProjectedCenter.fX;
+      y -= fProjectedCenter.fY;
       // distort
       y = (y*fScale) / (1.0f + Abs(y)*fDistortion);
       x = (x*fScale) / (1.0f + Abs(x)*fDistortion);
       // move back from center
-      x += fProjectedCenter.x;
-      y += fProjectedCenter.y;
+      x += fProjectedCenter.fX;
+      y += fProjectedCenter.fY;
    }
    z = 0.0f;
 }
@@ -211,7 +211,8 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,  PProc
 //______________________________________________________________________________
 void TEveRhoZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 {
-   // Get direction in the unprojected space for axis index in the projected space.
+   // Get direction in the unprojected space for axis index in the
+   // projected space.
    // This is virtual method from base-class TEveProjection.
 
    if(screenAxis == 0)
@@ -225,21 +226,21 @@ Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t
 {
    // Check if segment of two projected points is valid.
 
-   Float_t a = fProjectedCenter.y;
+   Float_t a = fProjectedCenter.fY;
    Bool_t val = kTRUE;
-   if((v1.y <  a && v2.y > a) || (v1.y > a && v2.y < a))
+   if((v1.fY <  a && v2.fY > a) || (v1.fY > a && v2.fY < a))
    {
       val = kFALSE;
       if (tolerance > 0)
       {
-         Float_t a1 = TMath::Abs(v1.y - a), a2 = TMath::Abs(v2.y - a);
+         Float_t a1 = TMath::Abs(v1.fY - a), a2 = TMath::Abs(v2.fY - a);
          if (a1 < a2)
          {
-            if (a1 < tolerance) { v1.y = a; val = kTRUE; }
+            if (a1 < tolerance) { v1.fY = a; val = kTRUE; }
          }
          else
          {
-            if (a2 < tolerance) { v2.y = a; val = kTRUE; }
+            if (a2 < tolerance) { v2.fY = a; val = kTRUE; }
          }
       }
    }
@@ -256,7 +257,7 @@ ClassImp(TEveCircularFishEyeProjection)
 
 //______________________________________________________________________________
 void TEveCircularFishEyeProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
-                                                 PProc_e proc)
+                                                 EPProc_e proc)
 {
    // Project point.
 
@@ -264,14 +265,14 @@ void TEveCircularFishEyeProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t
 
    if (proc != PP_Plane)
    {
-      x -= fCenter.x;
-      y -= fCenter.y;
-      Float_t phi = x == 0.0 && y == 0.0 ? 0.0 : ATan2(y,x);
-      Float_t R = Sqrt(x*x+y*y);
+      x -= fCenter.fX;
+      y -= fCenter.fY;
+      Float_t phi = (x == 0.0 && y == 0.0) ? 0.0f : ATan2(y, x);
+      Float_t R = Sqrt(x*x + y*y);
       // distort
       Float_t NR = (R*fScale) / (1.0f + R*fDistortion);
-      x = NR*Cos(phi) + fCenter.x;
-      y = NR*Sin(phi) + fCenter.y;
+      x = NR*Cos(phi) + fCenter.fX;
+      y = NR*Sin(phi) + fCenter.fY;
    }
    z = 0.0f;
 }

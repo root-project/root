@@ -23,14 +23,14 @@
 class TEveProjection
 {
 public:
-   enum PType_e   { PT_Unknown, PT_CFishEye, PT_RhoZ };     // type
-   enum PProc_e   { PP_Plane, PP_Distort, PP_Full };        // procedure
-   enum GeoMode_e { GM_Unknown, GM_Polygons, GM_Segments }; // reconstruction of geometry
+   enum EPType_e   { PT_Unknown, PT_CFishEye, PT_RhoZ };     // type
+   enum EPProc_e   { PP_Plane, PP_Distort, PP_Full };        // procedure
+   enum EGeoMode_e { GM_Unknown, GM_Polygons, GM_Segments }; // reconstruction of geometry
 
 protected:
-   PType_e             fType;          // type
-   GeoMode_e           fGeoMode;       // way of polygon reconstruction
-   const char*         fName;          // name
+   EPType_e            fType;          // type
+   EGeoMode_e          fGeoMode;       // way of polygon reconstruction
+   TString             fName;          // name
 
    TEveVector          fCenter;        // center of distortion
    TEveVector          fZeroPosVal;    // projected origin (0, 0, 0)
@@ -45,27 +45,27 @@ public:
    TEveProjection(TEveVector& center);
    virtual ~TEveProjection(){}
 
-   virtual   void      ProjectPoint(Float_t&, Float_t&, Float_t&, PProc_e p = PP_Full ) = 0;
+   virtual   void      ProjectPoint(Float_t&, Float_t&, Float_t&, EPProc_e p = PP_Full ) = 0;
    virtual   void      ProjectPointFv(Float_t* v){ ProjectPoint(v[0], v[1], v[2]); }
    virtual   void      ProjectVector(TEveVector& v);
 
-   const     char*     GetName(){return fName;}
-   void                SetName(const char* txt){ fName = txt; }
+   const     char*     GetName() { return fName.Data(); }
+   void                SetName(const char* txt) { fName = txt; }
 
-   virtual void        SetCenter(TEveVector& v){ fCenter = v; UpdateLimit();}
+   virtual void        SetCenter(TEveVector& v) { fCenter = v; UpdateLimit(); }
    virtual Float_t*    GetProjectedCenter() { return fCenter.c_vec(); }
 
-   void                SetType(PType_e t){fType = t;}
-   PType_e             GetType(){return fType;}
+   void                SetType(EPType_e t) { fType = t; }
+   EPType_e            GetType() { return fType; }
 
-   void                SetGeoMode(GeoMode_e m){fGeoMode = m;}
-   GeoMode_e           GetGeoMode(){return fGeoMode;}
+   void                SetGeoMode(EGeoMode_e m) { fGeoMode = m; }
+   EGeoMode_e          GetGeoMode() { return fGeoMode; }
 
    void                UpdateLimit();
    void                SetDistortion(Float_t d);
-   Float_t             GetDistortion(){return fDistortion;}
+   Float_t             GetDistortion() { return fDistortion; }
    void                SetFixedRadius(Float_t x);
-   Float_t             GetFixedRadius(){return fFixedRadius;}
+   Float_t             GetFixedRadius() { return fFixedRadius; }
 
    virtual   Bool_t    AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) { return kTRUE; }
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
@@ -97,7 +97,7 @@ public:
    virtual ~TEveRhoZProjection() {}
 
    virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance);
-   virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, PProc_e proc = PP_Full);
+   virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = PP_Full);
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    virtual   void      SetCenter(TEveVector& center);
@@ -119,7 +119,7 @@ public:
    TEveCircularFishEyeProjection(TEveVector& center):TEveProjection(center) { fType = PT_CFishEye; fGeoMode = GM_Polygons; fName="CircularFishEye"; }
    virtual ~TEveCircularFishEyeProjection() {}
 
-   virtual void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, PProc_e proc = PP_Full);
+   virtual void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = PP_Full);
 
    ClassDef(TEveCircularFishEyeProjection, 0); // XY non-linear projection.
 };

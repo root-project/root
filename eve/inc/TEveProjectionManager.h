@@ -45,7 +45,7 @@ public:
    TEveProjectionManager();
    virtual ~TEveProjectionManager();
 
-   void            SetProjection(TEveProjection::PType_e type, Float_t distort=0);
+   void            SetProjection(TEveProjection::EPType_e type, Float_t distort=0);
    TEveProjection* GetProjection() { return fProjection; }
 
    virtual void    UpdateName();

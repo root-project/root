@@ -139,8 +139,8 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
          for (Int_t k = 0; k<N; k++)
          {
             vi = (*i).fPnts[k];
-            coords[0] = pnts[vi].x;
-            coords[1] = pnts[vi].y;
+            coords[0] = pnts[vi].fX;
+            coords[1] = pnts[vi].fY;
             gluTessVertex(tessObj, coords, pnts[vi].c_vec());
          }
          gluEndPolygon(tessObj);

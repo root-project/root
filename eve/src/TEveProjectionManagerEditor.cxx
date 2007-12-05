@@ -234,9 +234,9 @@ void TEveProjectionManagerEditor::SetModel(TObject* obj)
 
    fDrawCenter->SetState(fM->GetDrawCenter()  ? kButtonDown : kButtonUp);
    fDrawOrigin->SetState(fM->GetDrawOrigin()  ? kButtonDown : kButtonUp);
-   fCenterX->SetValue(fM->GetCenter().x);
-   fCenterY->SetValue(fM->GetCenter().y);
-   fCenterZ->SetValue(fM->GetCenter().z);
+   fCenterX->SetValue(fM->GetCenter().fX);
+   fCenterY->SetValue(fM->GetCenter().fY);
+   fCenterZ->SetValue(fM->GetCenter().fZ);
 }
 
 //______________________________________________________________________________
@@ -244,7 +244,7 @@ void TEveProjectionManagerEditor::DoType(Int_t type)
 {
    // Slot for setting of projection type.
 
-   fM->SetProjection((TEveProjection::PType_e)type, 0.001f * fDistortion->GetValue());
+   fM->SetProjection((TEveProjection::EPType_e)type, 0.001f * fDistortion->GetValue());
    fM->ProjectChildren();
    Update();
 }

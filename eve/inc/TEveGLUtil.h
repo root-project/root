@@ -16,7 +16,7 @@
 #include "TGLIncludes.h"
 #endif
 
-#include "TObject.h"
+#include "Rtypes.h"
 
 class TAttMarker;
 class TAttLine;
@@ -28,13 +28,16 @@ public:
 
 #ifndef __CINT__
 
-   class TGLCapabilitySwitch {
+   class TGLCapabilitySwitch
+   {
       GLenum    fWhat;
       GLboolean fState;
-      bool      fFlip;
+      Bool_t    fFlip;
 
-      void set_state(GLboolean s)
-      { if(s) glEnable(fWhat); else glDisable(fWhat); }
+      void SetState(GLboolean s)
+      {
+         if(s) glEnable(fWhat); else glDisable(fWhat);
+      }
 
    public:
       TGLCapabilitySwitch(GLenum what, GLboolean state) :
@@ -42,10 +45,12 @@ public:
       {
          fState = glIsEnabled(fWhat);
          fFlip  = (fState != state);
-         if(fFlip)        set_state(state);
+         if (fFlip) SetState(state);
       }
       ~TGLCapabilitySwitch()
-      { if(fFlip) set_state(fState); }
+      {
+         if (fFlip) SetState(fState);
+      }
    };
 
    class TGLFloatHolder
@@ -55,7 +60,7 @@ public:
 
       GLenum    fWhat;
       GLfloat   fState;
-      bool      fFlip;
+      Bool_t    fFlip;
       void    (*fFoo)(GLfloat);
 
    public:
@@ -64,10 +69,12 @@ public:
       {
          glGetFloatv(fWhat, &fState);
          fFlip = (fState != state);
-         if(fFlip) fFoo(state);
+         if (fFlip) fFoo(state);
       }
       ~TGLFloatHolder()
-      { if(fFlip) fFoo(fState); }
+      {
+         if (fFlip) fFoo(fState);
+      }
    };
 
 #endif

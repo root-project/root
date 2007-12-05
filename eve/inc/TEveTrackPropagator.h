@@ -29,30 +29,30 @@ class TEveTrackPropagator: public TObject,
 public:
    struct Vertex4D_t
    {
-      Float_t x, y, z, t;
+      Float_t fX, fY, fZ, fT;
 
-      Vertex4D_t() : x(0), y(0), z(0), t(0) {}
-      Vertex4D_t(Float_t _x, Float_t _y, Float_t _z, Float_t _t=0) :
-         x(_x), y(_y), z(_z), t(_t) {}
+      Vertex4D_t() : fX(0), fY(0), fZ(0), fT(0) {}
+      Vertex4D_t(Float_t x, Float_t y, Float_t z, Float_t t=0) :
+         fX(x), fY(y), fZ(z), fT(t) {}
 
-      Float_t Mag()  const { return TMath::Sqrt(x*x+y*y+z*z);}
-      Float_t Mag2() const { return x*x+y*y+z*z;}
+      Float_t Mag()   const { return TMath::Sqrt(fX*fX + fY*fY + fZ*fZ);}
+      Float_t Mag2()  const { return fX*fX + fY*fY + fZ*fZ;}
 
-      Float_t Perp()  const { return TMath::Sqrt(x*x+y*y);}
-      Float_t Perp2() const { return x*x+y*y;}
+      Float_t Perp()  const { return TMath::Sqrt(fX*fX + fY*fY);}
+      Float_t Perp2() const { return fX*fX + fY*fY;}
       Float_t R()     const { return Perp(); }
 
       Vertex4D_t operator + (const Vertex4D_t & b)
-      { return Vertex4D_t(x + b.x, y + b.y, z + b.z, t + b.t); }
+      { return Vertex4D_t(fX + b.fX, fY + b.fY, fZ + b.fZ, fT + b.fT); }
 
       Vertex4D_t operator - (const Vertex4D_t & b)
-      { return Vertex4D_t(x - b.x, y - b.y, z - b.z, t - b.t); }
+      { return Vertex4D_t(fX - b.fX, fY - b.fY, fZ - b.fZ, fT - b.fT); }
 
       Vertex4D_t operator * (Float_t a)
-      { return Vertex4D_t(a*x, a*y, a*z, a*t); }
+      { return Vertex4D_t(a*fX, a*fY, a*fZ, a*fT); }
 
       Vertex4D_t& operator += (const Vertex4D_t & b)
-      { x += b.x; y += b.y; z += b.z; t += b.t; return *this; }
+      { fX += b.fX; fY += b.fY; fZ += b.fZ; fT += b.fT; return *this; }
    };
 
    struct Helix_t

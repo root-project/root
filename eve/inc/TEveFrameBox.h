@@ -20,14 +20,14 @@ class TEveFrameBox : public TObject, public TEveRefBackPtr
    friend class TEveFrameBoxGL;
 
 public:
-   enum FrameType_e  { FT_None, FT_Quad, FT_Box };
+   enum EFrameType_e  { FT_None, FT_Quad, FT_Box };
 
 private:
    TEveFrameBox(const TEveFrameBox&);            // Not implemented
    TEveFrameBox& operator=(const TEveFrameBox&); // Not implemented
 
 protected:
-   FrameType_e  fFrameType;
+   EFrameType_e  fFrameType;
    Int_t        fFrameSize;
    Float_t     *fFramePoints;  //[fFrameSize]
 
@@ -54,7 +54,7 @@ public:
 
    // ----------------------------------------------------------------
 
-   FrameType_e  GetFrameType()   const { return fFrameType; }
+   EFrameType_e  GetFrameType()   const { return fFrameType; }
    Int_t        GetFrameSize()   const { return fFrameSize; }
    Float_t*     GetFramePoints() const { return fFramePoints; }
 
