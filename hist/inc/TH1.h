@@ -200,6 +200,7 @@ public:
    virtual Double_t GetContourLevelPad(Int_t level) const;
 
    virtual Int_t    GetBin(Int_t binx, Int_t biny=0, Int_t binz=0) const;
+   virtual void     GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) const;
    virtual Double_t GetBinCenter(Int_t bin) const {return fXaxis.GetBinCenter(bin);}
    virtual Double_t GetBinContent(Int_t bin) const;
    virtual Double_t GetBinContent(Int_t binx, Int_t biny) const;

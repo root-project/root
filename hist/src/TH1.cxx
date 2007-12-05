@@ -4014,6 +4014,7 @@ Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz) const
    //        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
    //
    //     In case of a TH1x, returns binx directly.
+   //     see TH1::GetBinXYZ for the inverse transformation.
    //
    //      Convention for numbering bins
    //      =============================
@@ -4058,6 +4059,29 @@ Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz) const
    }
    return -1;
 }
+//______________________________________________________________________________
+void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) const
+{
+   // return binx, biny, binz corresponding to the global bin number globalbin
+   // see TH1::GetBin function above
+   
+   Int_t nx  = fXaxis.GetNbins()+2;
+   Int_t ny  = fYaxis.GetNbins()+2;
+   
+   if (GetDimension() < 2) {
+      binx = binglobal%nx;
+   }
+   if (GetDimension() < 3) {
+      binx = binglobal%nx;
+      biny = ((binglobal-binx)/nx)%ny;
+   }
+   if (GetDimension() < 4) {
+      binx = binglobal%nx;
+      biny = ((binglobal-binx)/nx)%ny;
+      binz = ((binglobal-binx)/nx -biny)/ny; 
+   }
+}
+
 
 //______________________________________________________________________________
 Double_t TH1::GetRandom() const
