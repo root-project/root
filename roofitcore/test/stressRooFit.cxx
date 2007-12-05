@@ -1,29 +1,59 @@
 // @(#)root/roofitcore:$name:  $:$id$
 // Authors: Wouter Verkerke  November 2007
 
-#include "TROOT.h"
-#include "TSystem.h"
-#include "TStopwatch.h"
-#include "TBenchmark.h"
-#include "RooPlot.h"
-#include "TString.h"
-#include "TClass.h"
-#include "RooMsgService.h"
-#include <iostream>
-#include <list>
-#include <string>
-#include "TFile.h"
-#include "RooHist.h"
-#include "RooCurve.h"
 #include "TWebFile.h"
-#include "RooRandom.h"
-#include "RooFitResult.h"
-#include "RooDouble.h"
-#include "Roo1DTable.h"
+#include "TSystem.h"
+#include "TString.h"
+#include "TStopwatch.h"
+#include "TROOT.h"
+#include "TLine.h"
+#include "TFile.h"
+#include "TClass.h"
+#include "TCanvas.h"
+#include "TBenchmark.h"
+#include "RooWorkspace.h"
+#include "RooTruthModel.h"
 #include "RooTrace.h"
+#include "RooThresholdCategory.h"
+#include "RooSuperCategory.h"
+#include "RooSimultaneous.h"
+#include "RooSimPdfBuilder.h"
+#include "RooRealVar.h"
+#include "RooRandom.h"
+#include "RooProdPdf.h"
+#include "RooPolynomial.h"
+#include "RooPlot.h"
 #include "RooNumIntConfig.h"
+#include "RooNLLVar.h"
+#include "RooMsgService.h"
+#include "RooMinuit.h"
+#include "RooMappedCategory.h"
+#include "RooHist.h"
+#include "RooGlobalFunc.h"
+#include "RooGaussModel.h"
+#include "RooGaussian.h"
+#include "RooFitResult.h"
+#include "RooExtendPdf.h"
+#include "RooDouble.h"
+#include "RooDecay.h"
+#include "RooDataSet.h"
+#include "RooDataHist.h"
+#include "RooCurve.h"
+#include "RooChi2Var.h"
+#include "RooCategory.h"
+#include "RooBMixDecay.h"
+#include "RooBinning.h"
+#include "RooBifurGauss.h"
+#include "RooArgusBG.h"
+#include "RooAddPdf.h"
+#include "RooAddModel.h"
+#include "Roo1DTable.h"
+#include <string>
+#include <list>
+#include <iostream>
 
 using namespace std ;
+using namespace RooFit ;
    
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 //                                                                           //
@@ -63,6 +93,8 @@ public:
   void regResult(RooFitResult* r, const char* refName) ;
   void regValue(Double_t value, const char* refName) ;
   void regTable(RooTable* t, const char* refName) ;
+  void regWS(RooWorkspace* ws, const char* refName) ;
+  RooWorkspace* getWS(const char* refName) ;
   Bool_t runTest() ;
   Bool_t runCompTests() ;
 
@@ -75,6 +107,7 @@ protected:
   list<pair<RooFitResult*, string> > _regResults ;
   list<pair<Double_t, string> > _regValues ;
   list<pair<RooTable*,string> > _regTables ;
+  list<pair<RooWorkspace*,string> > _regWS ;
 } ;
 
 
@@ -90,7 +123,8 @@ RooFitTestUnit::~RooFitTestUnit()
 void RooFitTestUnit::regPlot(RooPlot* frame, const char* refName) 
 {
   if (_refFile) {
-    _regPlots.push_back(make_pair(frame,refName)) ;
+    string refNameStr(refName) ;
+    _regPlots.push_back(make_pair(frame,refNameStr)) ;
   } else {
     delete frame ;
   }
@@ -99,7 +133,8 @@ void RooFitTestUnit::regPlot(RooPlot* frame, const char* refName)
 void RooFitTestUnit::regResult(RooFitResult* r, const char* refName) 
 {
   if (_refFile) {
-    _regResults.push_back(make_pair(r,refName)) ;
+    string refNameStr(refName) ;
+    _regResults.push_back(make_pair(r,refNameStr)) ;
   } else {
     delete r ;
   }
@@ -108,17 +143,42 @@ void RooFitTestUnit::regResult(RooFitResult* r, const char* refName)
 void RooFitTestUnit::regValue(Double_t d, const char* refName) 
 {
   if (_refFile) {
-    _regValues.push_back(make_pair(d,refName)) ;
+    string refNameStr(refName) ;
+    _regValues.push_back(make_pair(d,refNameStr)) ;
   }
 }
 
 void RooFitTestUnit::regTable(RooTable* t, const char* refName) 
 {
   if (_refFile) {
-    _regTables.push_back(make_pair(t,refName)) ;
+    string refNameStr(refName) ;
+    _regTables.push_back(make_pair(t,refNameStr)) ;
   } else {
     delete t ;
   }
+}
+
+void RooFitTestUnit::regWS(RooWorkspace* ws, const char* refName) 
+{
+  if (_refFile) {
+    string refNameStr(refName) ;
+    _regWS.push_back(make_pair(ws,refNameStr)) ;
+  } else {
+    delete ws ;
+  }
+}
+
+
+RooWorkspace* RooFitTestUnit::getWS(const char* refName) 
+{
+  RooWorkspace* ws = dynamic_cast<RooWorkspace*>(_refFile->Get(refName)) ;
+  if (!ws) {
+    cout << "stressRooFit ERROR: cannot retrieve RooWorkspace " << refName 
+	 << " from reference file, skipping " << endl ;
+    return 0 ;
+  }
+  
+  return ws ;
 }
 
 
@@ -218,7 +278,7 @@ Bool_t RooFitTestUnit::runCompTests()
 	cout << "comparing RooFitResult " << iter2->first << " to benchmark " << iter2->second << " = " << bmark << endl ;      
       }
 
-      if (!iter2->first->isIdentical(*bmark)) {
+      if (!iter2->first->isIdentical(*bmark,1e-6,1e-4)) {
 	cout << "stressRooFit ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName() 
 	     <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << endl ;
 	ret = kFALSE ;
@@ -326,6 +386,23 @@ Bool_t RooFitTestUnit::runCompTests()
   }
 
 
+  list<pair<RooWorkspace*, string> >::iterator iter5 = _regWS.begin() ;
+  while (iter5!=_regWS.end()) {
+
+    if (_write) {
+
+      // Writing mode
+      
+      cout <<"stressRooFit: Writing reference RooWorkspace " << iter5->first << " as benchmark " << iter5->second << endl ;
+      _refFile->cd() ;
+      iter5->first->Write(iter5->second.c_str()) ;
+      gMemDir->cd() ;
+    }
+      
+    ++iter5 ;
+  }
+
+
 
   return ret ;
 }
@@ -379,7 +456,6 @@ Bool_t RooFitTestUnit::runTest()
 
   return runCompTests() ;
 }
-
 
 
 #include "TestBasic1.cxx"
@@ -505,7 +581,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
 
   if (oneTest<0 || oneTest==11) {
     TestBasic11 test11(fref,writeRef,doVerbose) ;
-    StatusPrint(11,"Workspace persistence",-1) ; // to do
+    StatusPrint(11,"Workspace persistence",test11.runTest()) ; // to do
   }
 
   if (oneTest<0 || oneTest==12) {
@@ -622,7 +698,7 @@ int main(int argc,const char *argv[])
   Int_t oneTest   = -1 ;
   Int_t dryRun    = kFALSE ;
 
-  string refFileName = "stressRooFit_ref.root" ;
+  string refFileName = "http://root.cern.ch/files/stressRooFit_ref.root" ;
 
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {
