@@ -923,11 +923,12 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   // represented by this histogram
   
 
-  RooArgSet sliceOnlySet(sliceSet) ;
-  sliceOnlySet.remove(sumSet,kTRUE,kTRUE) ;
+  RooArgSet* sliceOnlySet = new RooArgSet(sliceSet) ;
+  sliceOnlySet->remove(sumSet,kTRUE,kTRUE) ;
 
-  _vars = sliceOnlySet ;
-  calculatePartialBinVolume(sliceOnlySet) ;
+  _vars = *sliceOnlySet ;
+  calculatePartialBinVolume(*sliceOnlySet) ;
+  delete sliceOnlySet ;
 
   TIterator* ssIter = sumSet.createIterator() ;
   
@@ -966,7 +967,6 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     }
     
     if (!skip) {
-
       Double_t binVolume = correctForBinSize ? (*_pbinv)[ibin] : 1.0 ;
       total += _wgt[ibin]/binVolume ;
     }
