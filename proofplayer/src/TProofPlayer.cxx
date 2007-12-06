@@ -1200,6 +1200,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          // Lookup - resolve the end-point urls to optmize the distribution.
          // The lookup was previously called in the packetizer's constructor.
          TList *listOfMissingFiles = dset->Lookup(kTRUE);
+         if (fProof->GetRunStatus() != TProof::kRunning) {
+            // We have been asked to stop
+            Error("Process", "received stop/abort request");
+            fExitStatus = kAborted;
+            return -1;
+         }
          if (!(dset->GetListOfElements()) ||
              !(dset->GetListOfElements()->GetSize())) {
             gProofServ->SendAsynMessage("Process: No files from the data set were found - Aborting");
@@ -1764,7 +1770,7 @@ void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
 //______________________________________________________________________________
 Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 {
-   // Incorporate the recived object 'obj' into the output list fOutput.
+   // Incorporate the received object 'obj' into the output list fOutput.
    // The latter is created if not existing.
    // This method short cuts 'StoreOutput + MergeOutput' optimizing the memory
    // consumption.

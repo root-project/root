@@ -1262,6 +1262,9 @@ TList *TDSet::Lookup(Bool_t removeMissing)
       // Notify the client
       if (gProof && (n > 0 && !(n % n2)))
          gProof->SendDataSetStatus(msg, n, tot, st);
+      // Break if we have been asked to stop
+      if (gProof && gProof->GetRunStatus() != TProof::kRunning)
+         break;
    }
    // Notify the client if not all the files have entries to be processed
    // (which may happen if an entry-list is used)

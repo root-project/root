@@ -273,6 +273,11 @@ public:
       kUntar               = 0x0,  //Untar over existing dir [default]
       kRemoveOld           = 0x1   //Remove existing dir with same name
    };
+   enum ERunStatus {
+      kRunning             = 0,    // Normal status
+      kStopped             = 1,    // After the stop button has been pressed
+      kAborted             = 2     // After the abort button has been pressed
+   };
 
 private:
    enum EUrgent {
@@ -368,6 +373,7 @@ private:
 
    Bool_t          fIdle;            //on clients, true if no PROOF jobs running
    Bool_t          fSync;            //true if type of currently processed query is sync
+   ERunStatus      fRunStatus;       //run status 
 
    Bool_t          fRedirLog;        //redirect received log info
    TString         fLogFileName;     //name of the temp file for redirected logs
@@ -490,6 +496,8 @@ private:
 
    Bool_t   IsSync() const { return fSync; }
    void     InterruptCurrentMonitor();
+
+   void     SetRunStatus(ERunStatus rst) { fRunStatus = rst; }
 
    void     MarkBad(TSlave *sl);
    void     MarkBad(TSocket *s);
@@ -651,6 +659,8 @@ public:
    Bool_t      IsValid() const { return fValid; }
    Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
    Bool_t      IsIdle() const { return fIdle; }
+
+   ERunStatus  GetRunStatus() const { return fRunStatus; }
 
    //-- input list parameter handling
    void        SetParameter(const char *par, const char *value);

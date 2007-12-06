@@ -3335,11 +3335,16 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
    if (!IsValid())
       return;
 
+   // Flag that we have been stopped
+   ERunStatus rst = abort ? TProof::kAborted : TProof::kStopped;
+   SetRunStatus(rst);
+
    if (fPlayer)
       fPlayer->StopProcess(abort, timeout);
 
-   // Stop any blocking 'Collect' request
-   if (!IsMaster())
+   // Stop any blocking 'Collect' request; on masters we do this only if
+   // aborting; when stopping, we still need to receive the results 
+   if (!IsMaster() || abort)
       InterruptCurrentMonitor();
 
    if (fSlaves->GetSize() == 0)
