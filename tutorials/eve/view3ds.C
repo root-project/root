@@ -66,7 +66,7 @@ public:
 // Chunk structure
 typedef struct _Chunk {
    UShort_t idnum;
-   ULong_t  offset, len, endoffset;
+   UInt_t   offset, len, endoffset;
 } Chunk;
 
 // vertex structure
@@ -77,7 +77,7 @@ typedef struct _Vertex {
 
 // face structure
 typedef struct _Face {
-   ULong_t v1, v2, v3;
+   UInt_t  v1, v2, v3;
 } Face;
 
 // model structure
@@ -87,7 +87,7 @@ public:
    char     matname[256];
    Vertex   *vlist;
    Face     *flist;
-   ULong_t  numverts, numfaces;
+   UInt_t   numverts, numfaces;
    
    Model() {  
       sprintf(name,"");
@@ -107,16 +107,16 @@ Int_t ReadChunk(FILE*, Chunk*);
 
 // data reading routines
 Int_t ReadMainChunk(FILE*);
-Int_t Read3DChunk(FILE*, ULong_t);
-Int_t ReadObjectChunk(FILE*, ULong_t);
-Int_t ReadMeshChunk(FILE*, ULong_t, char*);
+Int_t Read3DChunk(FILE*, UInt_t);
+Int_t ReadObjectChunk(FILE*, UInt_t);
+Int_t ReadMeshChunk(FILE*, UInt_t, char*);
 Int_t ReadVerticesChunk(FILE*);
 Int_t ReadFacesChunk(FILE*);
 Int_t ReadMappingChunk(FILE*);
 Int_t ReadASCIIZ(FILE*, char*);
-Int_t ReadMaterialChunk(FILE *, ULong_t);
-Int_t ReadColor(FILE *, ULong_t);
-Int_t ReadTransparency(FILE *, ULong_t);
+Int_t ReadMaterialChunk(FILE *, UInt_t);
+Int_t ReadColor(FILE *, UInt_t);
+Int_t ReadTransparency(FILE *, UInt_t);
 Int_t ReadObjectMaterial(FILE *);
 Int_t ConvertModel();
 
@@ -155,9 +155,9 @@ Int_t ReadChunk(FILE *f, Chunk *c)
    if (feof(f)) return(-1);
    c->idnum = 0;
    c->offset = c->len = 0;
-   c->offset = (ULong_t) ftell(f);
+   c->offset = (UInt_t) ftell(f);
    fread(&c->idnum, sizeof(UShort_t), 1, f);
-   fread(&c->len, sizeof(ULong_t), 1, f);
+   fread(&c->len, sizeof(UInt_t), 1, f);
    c->endoffset = c->offset + c->len;
    return(0);
 }
@@ -184,7 +184,7 @@ Int_t ReadMainChunk(FILE *f)
 }
 
 //______________________________________________________________________________
-Int_t Read3DChunk(FILE *f, ULong_t len)
+Int_t Read3DChunk(FILE *f, UInt_t len)
 {
    // reads the 3D Edit Chunk
 
@@ -213,7 +213,7 @@ Int_t Read3DChunk(FILE *f, ULong_t len)
 }
 
 //______________________________________________________________________________
-Int_t ReadMaterialChunk(FILE *f, ULong_t len)
+Int_t ReadMaterialChunk(FILE *f, UInt_t len)
 {
    // reads the Material sub-chunk of the 3D Edit Chunk
 
@@ -250,7 +250,7 @@ Int_t ReadMaterialChunk(FILE *f, ULong_t len)
 }
 
 //______________________________________________________________________________
-Int_t ReadColor(FILE *f, ULong_t len)
+Int_t ReadColor(FILE *f, UInt_t len)
 {
    // reads the Color property of the Material Chunk
    
@@ -296,7 +296,7 @@ Int_t ReadColor(FILE *f, ULong_t len)
 }
 
 //______________________________________________________________________________
-Int_t ReadTransparency(FILE *f, ULong_t len)
+Int_t ReadTransparency(FILE *f, UInt_t len)
 {
    // reads the Transparency property of the Material Chunk
    
@@ -337,7 +337,7 @@ Int_t ReadObjectMaterial(FILE *f)
 }
 
 //______________________________________________________________________________
-Int_t ReadObjectChunk(FILE *f, ULong_t len)
+Int_t ReadObjectChunk(FILE *f, UInt_t len)
 {
    // reads the Object sub-chunk of the 3D Edit Chunk
 
@@ -362,7 +362,7 @@ Int_t ReadObjectChunk(FILE *f, ULong_t len)
 }
 
 //______________________________________________________________________________
-Int_t ReadMeshChunk(FILE *f, ULong_t len, char *objname)
+Int_t ReadMeshChunk(FILE *f, UInt_t len, char *objname)
 {
    // reads the TriMesh sub-chunk of the Object Chunk
 
@@ -436,7 +436,7 @@ Int_t ReadVerticesChunk(FILE *f)
       fread(&model.vlist[i].y, sizeof(Float_t), 1, f);
       fread(&model.vlist[i].z, sizeof(Float_t), 1, f);
    }
-   model.numverts = (ULong_t) numv;
+   model.numverts = (UInt_t) numv;
    printf("Done!\n");
    return 0;
 }
@@ -467,11 +467,11 @@ Int_t ReadFacesChunk(FILE *f)
       fread(&v2, sizeof(UShort_t), 1, f);
       fread(&v3, sizeof(UShort_t), 1, f);
       fread(&attr, sizeof(UShort_t), 1, f);
-      model.flist[i].v1 = (ULong_t)(v1);
-      model.flist[i].v2 = (ULong_t)(v2);
-      model.flist[i].v3 = (ULong_t)(v3);
+      model.flist[i].v1 = (UInt_t)(v1);
+      model.flist[i].v2 = (UInt_t)(v2);
+      model.flist[i].v3 = (UInt_t)(v3);
    }
-   model.numfaces = (ULong_t)(numf);
+   model.numfaces = (UInt_t)(numf);
    printf("Done!\n");
    return 0;
 }
