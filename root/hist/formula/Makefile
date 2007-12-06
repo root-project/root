@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog temp.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += recurse formio constargs 
+TEST_TARGETS += recurse formio constargs string 
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -66,4 +66,7 @@ formio: formio.log
 	$(TestDiff)
 
 recurse: recurse.log
+	$(TestDiff)
+
+string: string.log
 	$(TestDiff)
