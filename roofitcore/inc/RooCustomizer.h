@@ -33,7 +33,7 @@ class RooCustomizer : public TNamed, public RooPrintable {
 public:
 
   // Constructors, assignment etc
-  RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
+  RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=0) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
   virtual ~RooCustomizer() ;
   
@@ -44,7 +44,7 @@ public:
   RooAbsArg* build(Bool_t verbose=kFALSE) ;
 
   const RooArgSet& cloneBranchList() const { return *_cloneBranchList ; }
-  const RooArgSet& cloneLeafList() const { return *_cloneNodeList ; }
+  const RooArgSet& cloneLeafList() const { return *_cloneNodeListOwned ; }
 
   // Printing interface 
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
@@ -85,7 +85,8 @@ protected:
   RooArgSet* _cloneBranchList ;
 
   // Cloned leafs are owned by the user supplied list in the ctor
-  RooArgSet* _cloneNodeList ;
+  RooArgSet* _cloneNodeListAll ;
+  RooArgSet* _cloneNodeListOwned ;
 
   ClassDef(RooCustomizer,0) // PDF customizer 
 } ;

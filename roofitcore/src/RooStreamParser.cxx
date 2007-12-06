@@ -94,7 +94,7 @@ TString RooStreamParser::readToken()
 
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
   Bool_t first(kTRUE), quotedString(kFALSE), lineCont(kFALSE) ;
-  char buffer[10240], c, cnext, cprev=' ' ;
+  char buffer[10240], c(0), cnext, cprev=' ' ;
   Int_t bufptr(0) ;
 
   // Check for end of file 

@@ -120,7 +120,7 @@ ClassImp(RooCustomizer)
 ;
 
 
-RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
+RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs, RooArgSet* splitLeafsAll) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
   _sterile(kFALSE),
   _masterPdf((RooAbsArg*)&pdf), 
@@ -128,7 +128,8 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
   _masterBranchList("masterBranchList"), 
   _masterLeafList("masterLeafList"), 
   _internalCloneBranchList("cloneBranchList"),
-  _cloneNodeList(&splitLeafs)
+  _cloneNodeListAll(splitLeafsAll),
+  _cloneNodeListOwned(&splitLeafs)
 {
   // Constructor with masterCat state. Customizers created by this constructor offer the full functionality
   _masterBranchList.setHashTableSize(1000) ;
@@ -151,7 +152,8 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   _masterBranchList("masterBranchList"), 
   _masterLeafList("masterLeafList"), 
   _internalCloneBranchList("cloneBranchList"),
-  _cloneNodeList(0)
+  _cloneNodeListAll(0),
+  _cloneNodeListOwned(0)
 {
   // Sterile Constructor. Customizers created by this constructor offer only the replace() method. The supplied
   // 'name' is used as suffix for any cloned branch nodes
@@ -314,8 +316,6 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   nodeList.add(_masterBranchList) ;
   TIterator* nIter = nodeList.createIterator() ;
 
-//   cout << "#cloneNodeList = " << _cloneNodeList->getSize() << endl ;
-
 //   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
   while((node=(RooAbsArg*)nIter->Next())) {
     RooAbsArg* splitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):0 ;
@@ -331,7 +331,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       newName.Append(splitCat->getLabel()) ;	
 
       // Check if this node instance already exists
-      RooAbsArg* specNode = _cloneNodeList->find(newName) ;
+      RooAbsArg* specNode = _cloneNodeListAll ? _cloneNodeListAll->find(newName) : _cloneNodeListOwned->find(newName) ;
       if (specNode) {
 
 	// Copy instance to one-time use list for this build
@@ -369,7 +369,10 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
 	// Add to one-time use list and life-time use list
 	clonedMasterNodes.add(*clone) ;
-	_cloneNodeList->addOwned(*clone) ;	
+	_cloneNodeListOwned->addOwned(*clone) ;	
+	if (_cloneNodeListAll) {
+	  _cloneNodeListAll->add(*clone) ;	
+	}	
       }
       masterNodesToBeSplit.add(*node) ;     
     }
@@ -394,7 +397,12 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
   delete nIter ;
 
-  if (!_sterile) _cloneNodeList->addOwned(clonedMasterNodes) ;
+  if (!_sterile) {
+    _cloneNodeListOwned->addOwned(clonedMasterNodes) ;
+    if (_cloneNodeListAll) {
+      _cloneNodeListAll->add(clonedMasterNodes) ;
+    }
+  }
 
   // Find branches that are affected by splitting and must be cloned
   RooArgSet masterBranchesToBeCloned("masterBranchesToBeCloned") ;

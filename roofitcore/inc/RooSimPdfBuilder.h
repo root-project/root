@@ -62,7 +62,8 @@ protected:
   RooArgSet _protoPdfSet ;       // Set of prototype PDFS
 
   RooArgSet _compSplitCatSet ;   // List of owned composite splitting categories
-  RooArgSet _splitNodeList ;     // List of owned split nodes
+  RooArgSet _splitNodeListOwned ;  // List of all split nodes
+  RooArgSet _splitNodeList ;       // List of owned split nodes
   TList     _retiredCustomizerList ; // Retired customizer from previous builds (own their PDF branch nodes)
  
   std::list<RooSimultaneous*> _simPdfList ;     // The simpdfs that we built
