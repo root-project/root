@@ -11,7 +11,7 @@ STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressProof-test,\
 	$(notdir $(STRESSSRC:.cxx=-test))))
 ifeq ($(findstring roofit,$(shell root-config --features)),)
-STRESSTESTS  := $(filter-out stressRooFit-test)
+STRESSTESTS  := $(filter-out stressRooFit-test,$(STRESSTESTS))
 endif
 
 TEST_TARGETS += $(STRESSTESTS)
