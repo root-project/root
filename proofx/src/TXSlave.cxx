@@ -42,16 +42,14 @@ ClassImp(TXSlave)
 //---- Hook to the constructor -------------------------------------------------
 //---- This is needed to avoid using the plugin manager which may create -------
 //---- problems in multi-threaded environments. --------------------------------
-
-extern "C" {
-   TSlave *GetTXSlave(const char *url, const char *ord, Int_t perf,
-                      const char *image, TProof *proof, Int_t stype,
-                      const char *workdir, const char *msd)
-   {
-      return ((TSlave *)(new TXSlave(url, ord, perf, image,
-                                     proof, stype, workdir, msd)));
-   }
+TSlave *GetTXSlave(const char *url, const char *ord, Int_t perf,
+                     const char *image, TProof *proof, Int_t stype,
+                     const char *workdir, const char *msd)
+{
+   return ((TSlave *)(new TXSlave(url, ord, perf, image,
+                                    proof, stype, workdir, msd)));
 }
+
 class XSlaveInit {
  public:
    XSlaveInit() {

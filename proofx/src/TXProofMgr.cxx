@@ -39,10 +39,9 @@ ClassImp(TXProofMgr)
 // Autoloading hooks.
 // These are needed to avoid using the plugin manager which may create
 // problems in multi-threaded environments.
-extern "C" {
-   TProofMgr *GetTXProofMgr(const char *url, Int_t l, const char *al)
-   { return ((TProofMgr *) new TXProofMgr(url, l, al)); }
-}
+TProofMgr *GetTXProofMgr(const char *url, Int_t l, const char *al)
+{ return ((TProofMgr *) new TXProofMgr(url, l, al)); }
+
 class TXProofMgrInit {
 public:
    TXProofMgrInit() {
