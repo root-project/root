@@ -1848,11 +1848,11 @@ TFormLeafInfoMethod::TFormLeafInfoMethod( TClass* classptr,
             fCopyFormat += rtype;
             fCopyFormat += "(*(";
             fCopyFormat += rtype;
-            fCopyFormat += "*)0x%x)";
+            fCopyFormat += "*)0x%lx)";
 
             fDeleteFormat  = "delete (";
             fDeleteFormat += rtype;
-            fDeleteFormat += "*)0x%x";
+            fDeleteFormat += "*)0x%lx";
 
             fIsByValue = kTRUE;
          }
