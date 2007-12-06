@@ -376,7 +376,7 @@ public:
    TestShutter(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h);
    ~TestShutter();
 
-   void AddShutterItem(const char *name, shutterData_t data[]);
+   void AddShutterItem(const char *name, shutterData_t *data);
 
    // slots
    void CloseWindow();
@@ -1810,7 +1810,7 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
    //gClient->WaitFor(fMain);
 }
 
-void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
+void TestShutter::AddShutterItem(const char *name, shutterData_t *data)
 {
    TGShutterItem    *item;
    TGCompositeFrame *container;
