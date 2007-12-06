@@ -10,6 +10,10 @@ STRESSSRC := $(wildcard $(ROOTSYS)/test/stress*.cxx)
 STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressProof-test,\
 	$(notdir $(STRESSSRC:.cxx=-test))))
+ifeq ($(findstring roofit,$(shell root-config --features)),)
+STRESSTESTS  := $(filter-out stressRooFit-test)
+endif
+
 TEST_TARGETS += $(STRESSTESTS)
 
 # Search for Rules.mk in roottest/scripts
