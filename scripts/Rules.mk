@@ -78,7 +78,9 @@ endif
 ifeq ($(ARCH),)
    export ARCH          := $(shell root-config --arch)
 endif
-PLATFORM      = $(ARCH)
+ifeq ($(PLATFORM),)
+   export PLATFORM      := $(shell root-config --platform)
+endif
 
 ifeq ($(ROOTTEST_LOC),)
 
@@ -167,7 +169,7 @@ ifeq ($(HAS_PYTHON),yes)
          export PYTHONPATH := $(ROOTSYS)/lib:$(PYTHONPATH)
        endif
    endif
-   ifeq ($(ARCH),macosx)
+   ifeq ($(PLATFORM),macosx)
       PYTHONLIB:=$(shell grep ^PYTHONLIB $(ROOTSYS)/config/Makefile.config | sed 's,^.*\:=,,')
       PYTHONFWK:=$(dir $(PYTHONLIB))
       ifneq ($(PYTHONFWK),)
@@ -273,19 +275,50 @@ endif
 ifeq ($(MACOSX_MINOR),) 
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 endif
-ifeq ($(MACOSX_MINOR),4)
+ifeq ($(subst $(MACOSX_MINOR),,123),123)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
-LD            = MACOSX_DEPLOYMENT_TARGET=10.3 c++
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 UNDEFOPT      = suppress
 LD            = c++
 endif
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+DllSuf        = so
+LibSuf        = dylib
+endif
+
+
+ifeq ($(ARCH),macosx64)
+
+# MacOSX 64 bit with cc/g++
+CXX           = g++
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -m64 -g -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+else
+CXXFLAGS      += -m64 -O -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+endif
+ifeq ($(MACOSX_MINOR),) 
+  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+endif
+ifeq ($(subst $(MACOSX_MINOR),,123),123)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+else
+ifeq ($(MACOSX_MINOR),3)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+else
+UNDEFOPT      = suppress
+LD            = c++
+endif
+endif
+LDFLAGS       = -m64
+SOFLAGS       = -m64 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
 LibSuf        = dylib
 endif
