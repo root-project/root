@@ -17,9 +17,10 @@
 //                                                                      //
 // TGToolTip                                                            //
 //                                                                      //
-// A tooltip is a one line help text that is displayed in a window      //
-// when the cursor rests over a widget. For an example of usage see     //
-// the TGButton class.                                                  //
+// A tooltip can be a one or multiple lines help text that is displayed //
+// in a window when the mouse cursor overs a widget, without clicking   //
+// it. A small box appears with suplementary information regarding the  //
+// item being hovered over.                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +67,7 @@ public:
    void   SetDelay(Long_t delayms);
    const TGString *GetText() const;
 
-   ClassDef(TGToolTip,0)  //One line help text
+   ClassDef(TGToolTip,0)  //One or multiple lines help text
 };
 
 #endif

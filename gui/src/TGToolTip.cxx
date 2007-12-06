@@ -24,9 +24,15 @@
 //                                                                      //
 // TGToolTip                                                            //
 //                                                                      //
-// A tooltip is a one line help text that is displayed in a window      //
-// when the cursor rests over a widget. For an example of usage see     //
-// the TGButton class.                                                  //
+// A tooltip can be a one or multiple lines help text that is displayed //
+// in a window when the mouse cursor overs a widget, without clicking   //
+// it. A small box appears with suplementary information regarding the  //
+// item being hovered over.                                             //                               //
+//                                                                      //
+// A multiline tooltip can be created by inserting a new-line character //
+// "\n" in the tooltip string. For example:                             //
+//                                                                      //
+// fButton->SetToolTipText("Go to the ROOT page\n (http://root.cern.ch) //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
