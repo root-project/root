@@ -13,7 +13,7 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
 
    TEveQuadSet* q = new TEveQuadSet("RectangleXY");
    q->SetPalette(pal);
-   q->Reset(TEveQuadSet::QT_RectangleXY, kFALSE, 32);
+   q->Reset(TEveQuadSet::kQT_RectangleXY, kFALSE, 32);
    for (Int_t i=0; i<num; ++i) {
       q->AddQuad(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                  r.Uniform(0.2, 1), r.Uniform(0.2, 1));
@@ -43,7 +43,7 @@ TEveQuadSet* quad_test_emc(Float_t x=0, Float_t y=0, Float_t z=0,
 
    TEveQuadSet* q = new TEveQuadSet("EMC Supermodule");
    q->SetOwnIds(kTRUE);
-   q->Reset(TEveQuadSet::QT_RectangleXZFixedDimY, kFALSE, 32);
+   q->Reset(TEveQuadSet::kQT_RectangleXZFixedDimY, kFALSE, 32);
    q->SetDefWidth(8);
    q->SetDefHeight(8);
 
@@ -71,7 +71,7 @@ TEveQuadSet* quad_test_circ()
    gStyle->SetPalette(1, 0);
 
    TEveQuadSet* q = new TEveQuadSet("Pepe");
-   q->Reset(TEveQuadSet::QT_RectangleXY, kFALSE, 32);
+   q->Reset(TEveQuadSet::kQT_RectangleXY, kFALSE, 32);
 
    Float_t R = 10, dW = 1, dH = .5;
    for (Int_t i=0; i<12; ++i) {
@@ -101,7 +101,7 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
 
    {
       TEveQuadSet* q = new TEveQuadSet("HexagonXY");
-      q->Reset(TEveQuadSet::QT_HexagonXY, kFALSE, 32);
+      q->Reset(TEveQuadSet::kQT_HexagonXY, kFALSE, 32);
       for (Int_t i=0; i<num; ++i) {
          q->AddHexagon(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                        r.Uniform(0.2, 1));
@@ -121,7 +121,7 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
 
    {
       TEveQuadSet* q = new TEveQuadSet("HexagonYX");
-      q->Reset(TEveQuadSet::QT_HexagonYX, kFALSE, 32);
+      q->Reset(TEveQuadSet::kQT_HexagonYX, kFALSE, 32);
       for (Int_t i=0; i<num; ++i) {
          q->AddHexagon(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                        r.Uniform(0.2, 1));
@@ -153,7 +153,7 @@ TEveQuadSet* quad_test_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
    {
       TEveQuadSet* q = new TEveQuadSet("HexagonXY");
       q->SetOwnIds(kTRUE);
-      q->Reset(TEveQuadSet::QT_HexagonXY, kFALSE, 32);
+      q->Reset(TEveQuadSet::kQT_HexagonXY, kFALSE, 32);
       for (Int_t i=0; i<num; ++i) {
          q->AddHexagon(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                        r.Uniform(0.2, 1));
