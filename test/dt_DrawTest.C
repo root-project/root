@@ -132,13 +132,13 @@ TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
    DrawSkippable(tree,"fMatrix[][]   - fVertex[][]","hFullOper2");
 
    // Test on variable arrays
-   DrawSkippable(tree,"fClosestDistance","hClosestDistance");
-   DrawSkippable(tree,"fClosestDistance[2]","hClosestDistance2");
-   DrawSkippable(tree,"fClosestDistance[9]","hClosestDistance9");
+   DrawSkippable(tree,"fClosestDistance","hClosestDistance",gBranchStyle!=0);
+   DrawSkippable(tree,"fClosestDistance[2]","hClosestDistance2",gBranchStyle!=0);
+   DrawSkippable(tree,"fClosestDistance[9]","hClosestDistance9",gBranchStyle!=0);
 
    // Test variable indexing
    DrawSkippable(tree,"fClosestDistance[fNvertex/2]","hClosestDistanceIndex",
-                 (level>0));
+                 (level>0)&&gBranchStyle!=0);
    DrawSkippable(tree,"fPx:fPy[fNpoint/6]","fPy[fNpoint/6]>0","hPxInd",(level>0));
 
    // Test of simple function calls
