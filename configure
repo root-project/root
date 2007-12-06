@@ -2894,6 +2894,7 @@ xrdcomm=""
 # If we are required to use an external XROOTD distribution
 # we just define the pointers
 extraxrdflags=""
+# extraxrdflags="-DOLDXRDLOCATE"
 if test ! "x$xrootddir" = "x"; then
 
    # We do not need to build, just the paths for includes and libs
@@ -2910,22 +2911,26 @@ if test ! "x$xrootddir" = "x"; then
    fi
    decrefone=20070628
    decreftwo=20070723
+   decrefthree=20071004
    decver=0
    if test ! "x$xrdver" = "xunknown"; then
       tmpver=`echo $xrdver | cut -c2-9`
       decver=`expr 1 \* 0"$tmpver"`
    fi
    if [ $decver -gt $decrefone ] ; then
-      if [ $decver -gt $decreftwo ] ; then
-         xrdcomm="$xrdcomm (version is > 20070723)"
+      if [ $decver -gt $decrefthree ] ; then
+         xrdcomm="$xrdcomm (version is > 20071004)"
          extraxrdflags=""
+      elif [ $decver -gt $decreftwo ] ; then
+         xrdcomm="$xrdcomm (version is > 20070723)"
+         extraxrdflags="-DOLDXRDLOCATE"
       else
          xrdcomm="$xrdcomm (version is > 20070628)"
-         extraxrdflags="-DOLDXRDOUC"
+         extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE"
       fi
    else
       xrdcomm="$xrdcomm (version is <= 20070628: setting the appropriate compilation flag)"
-      extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC"
+      extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE"
    fi
 
 else

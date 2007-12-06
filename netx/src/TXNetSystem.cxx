@@ -43,6 +43,10 @@ ClassImp(TXNetSystem);
 
 Bool_t TXNetSystem::fgInitDone = kFALSE;
 Bool_t TXNetSystem::fgRootdBC = kTRUE;
+#ifndef OLDXRDLOCATE
+THashList TXNetSystem::fgAddrFQDN;
+THashList TXNetSystem::fgAdminHash;
+#endif
 
 //_____________________________________________________________________________
 TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner)
@@ -69,6 +73,11 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    fDirp = 0;
    fDirListValid = kFALSE;
    fUrl = url;
+
+#ifndef OLDXRDLOCATE
+   fgAddrFQDN.SetOwner();
+   fgAdminHash.SetOwner();
+#endif
 
    // Set debug level
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
@@ -98,7 +107,11 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
    TString dummy = url;
    dummy += "/dummy";
 
+#ifndef OLDXRDLOCATE
+   XrdClientAdmin *cadm = TXNetSystem::GetClientAdmin(dummy);
+#else
    XrdClientAdmin *cadm = XrdClientAdmin::GetClientAdmin(dummy);
+#endif
 
    if (!cadm) {
       Error("Connect","fatal error: new object creation failed.");
@@ -186,7 +199,7 @@ void TXNetSystem::InitXrdClient()
    // Init vars with default debug level -1, so we do not get warnings
    TXNetFile::SetEnv();
 
-#ifndef OLDXRDOUC
+#if defined(OLDXRDLOCATE) && !defined(OLDXRDOUC)
    // Use optimized connections
    XrdClientAdmin::SetAdminConn();
 #endif
@@ -605,6 +618,37 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
       TXNetSystemConnectGuard cg(this, path);
       if (cg.IsValid()) {
 
+#ifndef OLDXRDLOCATE
+         // Extract the directory name
+         XrdClientLocate_Info li;
+         TString edir = TUrl(path).GetFile();
+
+         if (cg.ClientAdmin()->Locate((kXR_char *)edir.Data(), li)) {
+            TUrl u(path);
+            XrdClientUrlInfo ui((const char *)&li.Location[0]);
+            // We got the IP address but we need the FQDN: if we did not resolve
+            // it yet do it and cache the result
+            TNamed *hn = 0;
+            if (fgAddrFQDN.GetSize() <= 0 ||
+               !(hn = dynamic_cast<TNamed *>(fgAddrFQDN.FindObject(ui.Host.c_str())))) {
+               TInetAddress a(gSystem->GetHostByName(ui.Host.c_str()));
+               if (strlen(a.GetHostName()) > 0)
+                  hn = new TNamed(ui.Host.c_str(), a.GetHostName());
+               else
+                  hn = new TNamed(ui.Host.c_str(), ui.Host.c_str());
+               fgAddrFQDN.Add(hn);
+               if (gDebug > 0)
+                  Info("Locate","caching host name: %s", hn->GetTitle());
+            }
+            if (hn)
+               u.SetHost(hn->GetTitle());
+            else
+               u.SetHost(ui.Host.c_str());
+            u.SetPort(ui.Port);
+            eurl = u.GetUrl();
+            return 0;
+         }
+#else
          // Extract the directory name
          XrdClientUrlInfo ui;
          TString edir = TUrl(path).GetFile();
@@ -616,6 +660,7 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
             eurl = u.GetUrl();
             return 0;
          }
+#endif
          cg.NotifyLastError();
       }
       return 1;
@@ -625,6 +670,62 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
    Warning("Locate", "method not implemented!");
    return -1;
 }
+
+#ifndef OLDXRDLOCATE
+//_____________________________________________________________________________
+XrdClientAdmin *TXNetSystem::GetClientAdmin(const char *url)
+{
+   // Checks if an admin for 'url' exists already.
+   // Avoid duplications.
+   XrdClientAdmin *ca = 0;
+
+   // ID key
+   TString key = TXNetSystem::GetKey(url);
+
+   // If we have one for 'key', just use it
+   TXrdClientAdminWrapper *caw = 0;
+   if (fgAdminHash.GetSize() > 0 &&
+      (caw = dynamic_cast<TXrdClientAdminWrapper *>(fgAdminHash.FindObject(key.Data()))))
+      return caw->fXCA;
+
+   // Create one and save the reference in the hash table
+   ca = new XrdClientAdmin(url);
+   fgAdminHash.Add(new TXrdClientAdminWrapper(key, ca));
+
+   // Done
+   return ca;
+}
+
+//_____________________________________________________________________________
+TString TXNetSystem::GetKey(const char *url)
+{
+   // Build from uu a unique ID key used in hash tables
+
+   TUrl u(url);
+   TString key(u.GetUser());
+   if (!key.IsNull())
+      key += "@";
+   key += u.GetHost();
+   if (u.GetPort() > 0) {
+      key += ":";
+      key += u.GetPort();
+   }
+
+   // Done
+   return key;
+}
+
+//
+// Wrapper class
+//
+//_____________________________________________________________________________
+TXrdClientAdminWrapper::~TXrdClientAdminWrapper()
+{
+   // Destructor: destroy the instance
+
+   SafeDelete(fXCA);
+}
+#endif
 
 //
 // Guard methods

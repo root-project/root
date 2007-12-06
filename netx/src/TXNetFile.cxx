@@ -109,11 +109,6 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    // Set debug level
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
 
-   // Read ahead size. We need to reset it in any case
-   Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",
-                                     DFLT_READAHEADSIZE);
-   EnvPutInt(NAME_READAHEADSIZE, rAheadsiz);
-
    // Set environment, if needed
    if (!fgInitDone || strstr(urlnoanchor.GetOptions(),"checkenv")) {
       SetEnv();
@@ -121,12 +116,8 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
 
       // Print the tag, if required (only once)
       if (gEnv->GetValue("XNet.PrintTAG",0) == 1)
-         Info("TXNetFile","(C) 2005 SLAC TXNetFile (eXtended TNetFile) %s",
+         Info("TXNetFile","(eXtended TNetFile) %s",
               gROOT->GetVersion());
-   }
-
-   if (IsRaw()) {
-      EnvPutInt(NAME_READAHEADSIZE, 0);
    }
 
    // Remove anchors from the URL!
@@ -223,6 +214,15 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
             " out of system resources.");
       gSystem->Abort();
       goto zombie;
+   }
+
+   if (IsRaw()) {
+     // Set cache and readahead off for raw files
+#ifndef OLDXRDLOCATE
+     fClient->SetCacheParameters(0, 0, 0);
+#else
+     EnvPutInt(NAME_READAHEADSIZE, 0);
+#endif
    }
 
    //
@@ -511,16 +511,31 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    //  1 it looks like the block has already been prefetched
    //  0 it looks like the block has not been prefetched
    // But we don't want it to return the buffer, to avoid recursion
-   Int_t st = ReadBufferViaCache(0, bufferLength);
-   if (st == 1) fOffset -= bufferLength;
-
-   if (!st) {
-      // Not prefetched. set the read ahead at its default value
-      Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize", DFLT_READAHEADSIZE);
-      EnvPutInt(NAME_READAHEADSIZE, rAheadsiz);
+   Int_t st = 0;
+   if (GetCacheRead() && GetCacheRead()->IsAsyncReading()) {
+      st = ReadBufferViaCache(0, bufferLength);
+      if (st == 1)
+         fOffset -= bufferLength;
+   } else {
+      if (GetCacheRead()) {
+         st = ReadBufferViaCache(buffer, bufferLength);
+         if (st == 1)
+            return kFALSE;
+      }
    }
 
-   // Read for the remote xrootd
+   if (!st) {
+      // The data chunk was not prefetched.
+      // Set the read ahead (again) at its default value
+      Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize", DFLT_READAHEADSIZE);
+#ifndef OLDXRDLOCATE
+      fClient->SetCacheParameters(-1, rAheadsiz, -1);
+#else
+      EnvPutInt(NAME_READAHEADSIZE, rAheadsiz);
+#endif
+   }
+
+   // Read from the remote xrootd
    Int_t nr = fClient->Read(buffer, fOffset, bufferLength);
 
    if (!nr)
@@ -1161,9 +1176,14 @@ void TXNetFile::SetEnv()
 void TXNetFile::SynchronizeCacheSize()
 {
    // Synchronize the cache size
+   // Alternative purging policy
 
    fClient->UseCache(TRUE);
+#ifndef OLDXRDLOCATE
+   fClient->SetCacheParameters(-1, 0, XrdClientReadCache::kRmBlk_FIFO);
+#else
    EnvPutInt(NAME_READAHEADSIZE, 0);
+#endif
 }
 
 //_____________________________________________________________________________
@@ -1179,7 +1199,51 @@ void TXNetFile::ResetCache()
 Int_t TXNetFile::GetBytesToPrefetch() const
 {
    // Max number of bytes to prefetch.
-
-   Int_t bytes = gEnv->GetValue("XNet.ReadCacheSize", 0)/4*3;
+#ifndef OLDXRDLOCATE
+   Int_t size;
+   Long64_t bytessubmitted, byteshit, misscount, readreqcnt;
+   Float_t  missrate, bytesusefulness;
+   Int_t bytes = 0;
+   if (fClient && fClient->GetCacheInfo(size, bytessubmitted,
+                                        byteshit, misscount,
+                                        missrate, readreqcnt,
+                                        bytesusefulness) )
+   bytes = size/2;
+#else
+   Int_t bytes = gEnv->GetValue("XNet.ReadCacheSize", 0)/2;
+#endif
    return ((bytes < 0) ? 0 : bytes);
+}
+
+
+//______________________________________________________________________________
+void TXNetFile::Print(Option_t *option) const
+{
+   // Print the local statistics
+#ifndef OLDXRDLOCATE
+  Printf("TXNetFile caching information:\n");
+
+  int size;
+  long long bytessubmitted, byteshit, misscount, readreqcnt;
+  float	missrate, bytesusefulness;
+
+
+  if ( fClient && fClient->GetCacheInfo(size, bytessubmitted,
+                                        byteshit, misscount,
+                                        missrate, readreqcnt,
+                                        bytesusefulness) ) {
+    Printf(" Max size:                  %ld\n", size);
+    Printf(" Bytes submitted:           %lld\n", bytessubmitted);
+    Printf(" Bytes hit (estimation):    %lld\n", byteshit);
+    Printf(" Miss count:                %lld\n", misscount);
+    Printf(" Miss rate:                 %f\n", missrate);
+    Printf(" Read requests count:       %lld\n", readreqcnt);
+    Printf(" Bytes usefulness:          %f\n\n", bytesusefulness);
+  }
+  else
+    Printf(" -- No Xrd client instance allocated --\n\n");
+#endif
+
+  TFile::Print(option);
+
 }

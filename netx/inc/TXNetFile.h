@@ -115,6 +115,8 @@ public:
    virtual Bool_t   ReadBufferAsync(Long64_t offs, Int_t len);
    virtual TFile::EAsyncOpenStatus GetAsyncOpenStatus();
    virtual Bool_t   IsOpen() const;
+
+   virtual void     Print(Option_t *option="") const;
    virtual Bool_t   ReadBuffer(char *buf, Int_t len);
    virtual Bool_t   ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual Int_t    ReOpen(const Option_t *mode);
