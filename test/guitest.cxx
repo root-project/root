@@ -1683,7 +1683,7 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
    //fClient->WaitFor(this);
 }
 
-void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
+void TestShutter::AddShutterItem(const char *name, shutterData_t *data)
 {
    TGShutterItem    *item;
    TGCompositeFrame *container;
