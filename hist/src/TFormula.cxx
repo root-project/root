@@ -2169,6 +2169,7 @@ Int_t TFormula::Compile(const char *expression)
             return -1;
          }
          SetBit(kIsCharacter);
+         last_string = kFALSE;
 
       } else if (last_string) {
          if (GetAction(i) == kEqual) {
@@ -2178,6 +2179,7 @@ Int_t TFormula::Compile(const char *expression)
             }
             SetAction(i, kStringEqual, GetActionParam(i) );
             SetBit(kIsCharacter);
+            last_string = kFALSE;
          } else if (GetAction(i) == kNotEqual) {
             if (!before_last_string) {
                Error("Compile", "Both operands of the operator != have to be either numbers or strings");
@@ -2185,6 +2187,7 @@ Int_t TFormula::Compile(const char *expression)
             }
             SetAction(i, kStringNotEqual, GetActionParam(i) );
             SetBit(kIsCharacter);
+            last_string = kFALSE;
          } else if (before_last_string) {
             // the i-2 element is a string not used in a string operation, let's down grade it
             // to a char array:
