@@ -6320,7 +6320,7 @@ void TProof::Detach(Option_t *opt)
    }
 
    // Delete this instance
-   if (!fProgressDialogStarted)
+   if ((!fProgressDialogStarted) && !TestBit(kUsingSessionGui))
       delete this;
    else
       // ~TProgressDialog will delete this
