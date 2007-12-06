@@ -65,7 +65,7 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
 
    switch (bt) {
       case kBT_Undef:                return 0;
-      case kBT_FreeBox:              return sizeof(BFreeBox);
+      case kBT_FreeBox:              return sizeof(BFreeBox_t);
       case kBT_AABox:                return sizeof(BAABox_t);
       case kBT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
       default:                      throw(eH + "unexpected atom type.");
@@ -113,7 +113,7 @@ void TEveBoxSet::AddBox(const Float_t* verts)
    if (fBoxType != kBT_FreeBox)
       throw(eH + "expect free box-type.");
 
-   BFreeBox* b = (BFreeBox*) NewDigit();
+   BFreeBox_t* b = (BFreeBox_t*) NewDigit();
    memcpy(b->fVertices, verts, sizeof(b->fVertices));
 }
 
@@ -184,7 +184,7 @@ void TEveBoxSet::ComputeBBox()
       case kBT_FreeBox:
       {
          while (bi.next()) {
-            BFreeBox& b = * (BFreeBox*) bi();
+            BFreeBox_t& b = * (BFreeBox_t*) bi();
             Float_t * p = b.fVertices;
             for(int i=0; i<8; ++i, p+=3)
                BBoxCheckPoint(p);

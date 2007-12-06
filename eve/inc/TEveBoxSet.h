@@ -35,7 +35,7 @@ public:
 
 protected:
 
-   struct BFreeBox       : public DigitBase_t { Float_t fVertices[24]; };
+   struct BFreeBox_t       : public DigitBase_t { Float_t fVertices[24]; };
 
    struct BOrigin_t        : public DigitBase_t { Float_t fA, fB, fC; };
 
@@ -44,7 +44,7 @@ protected:
    struct BAABoxFixedDim_t : public BOrigin_t {};
 
 protected:
-   EBoxType_e         fBoxType;      // Type of rendered box.
+   EBoxType_e        fBoxType;      // Type of rendered box.
 
    Float_t           fDefWidth;     // Breadth assigned to first coordinate  (A).
    Float_t           fDefHeight;    // Breadth assigned to second coordinate (B).

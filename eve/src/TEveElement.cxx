@@ -65,8 +65,6 @@ TEveElement::~TEveElement()
 {
    // Destructor.
 
-   static const TEveException _eh("TEveElement::TEveElement ");
-
    RemoveElements();
 
    for (List_i p=fParents.begin(); p!=fParents.end(); ++p)

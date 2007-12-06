@@ -702,7 +702,7 @@ int txfInFont(TexFont_t* txf, int c)
 //______________________________________________________________________________
 bool LoadDefaultFont(const TString& file)
 {
-   static const TEveException _eh("TEveGLText::LoadFont ");
+   static const TEveException eH("TEveGLText::LoadFont ");
 
    if(fgDefaultFont) {
       txfUnloadFont(fgDefaultFont);
@@ -715,8 +715,8 @@ bool LoadDefaultFont(const TString& file)
       return true;
    }
    else {
-      throw(_eh + Form("Error loading font from file '%s': %s",
-                       file.Data(), txfErrorString()));
+      throw(eH + Form("Error loading font from file '%s': %s",
+                      file.Data(), txfErrorString()));
    }
 
    return false;

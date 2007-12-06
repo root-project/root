@@ -263,7 +263,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          GLenum primitiveType = PrimitiveType();
          while (bi.next())
          {
-            TEveBoxSet::BFreeBox& b = * (TEveBoxSet::BFreeBox*) bi();
+            TEveBoxSet::BFreeBox_t& b = * (TEveBoxSet::BFreeBox_t*) bi();
             if (SetupColor(b))
             {
                if (rnrCtx.SecSelection()) glLoadName(bi.index());

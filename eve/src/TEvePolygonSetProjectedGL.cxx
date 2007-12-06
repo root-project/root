@@ -126,7 +126,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
          for(Int_t k=0; k<N; k++)
          {
             vi = (*i).fPnts[k];
-            glVertex3fv(pnts[vi].c_vec());
+            glVertex3fv(pnts[vi].Arr());
          }
          glEnd();
       }
@@ -141,7 +141,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
             vi = (*i).fPnts[k];
             coords[0] = pnts[vi].fX;
             coords[1] = pnts[vi].fY;
-            gluTessVertex(tessObj, coords, pnts[vi].c_vec());
+            gluTessVertex(tessObj, coords, pnts[vi].Arr());
          }
          gluEndPolygon(tessObj);
       }
@@ -162,7 +162,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
       for(Int_t k=0; k<(*i).fNPnts; k++)
       {
          vi = (*i).fPnts[k];
-         glVertex3fv(PS.fPnts[vi].c_vec());
+         glVertex3fv(PS.fPnts[vi].Arr());
       }
       glEnd();
    }

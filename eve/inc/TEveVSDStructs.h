@@ -52,9 +52,11 @@ public:
    TEveVector operator - (const TEveVector &);
    TEveVector operator * (Float_t a);
 
-   Float_t* c_vec() { return &fX; }
    Float_t& operator [] (Int_t indx);
    Float_t  operator [] (Int_t indx) const;
+
+   const Float_t* Arr() const { return &fX; }
+         Float_t* Arr()       { return &fX; }
 
    void Set(Float_t*  v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
    void Set(Double_t* v) { fX = v[0]; fY = v[1]; fZ = v[2]; }

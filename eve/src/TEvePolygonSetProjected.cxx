@@ -29,8 +29,8 @@ struct Seg_t
 
    Seg_t(Int_t i1=-1, Int_t i2=-1) : fV1(i1), fV2(i2) {}
 };
-typedef std::list<Seg_t>           lSeg_t;
-typedef std::list<Seg_t>::iterator lSeg_i;
+typedef std::list<Seg_t>           LSeg_t;
+typedef std::list<Seg_t>::iterator LSegIt_t;
 }
 
 
@@ -266,12 +266,12 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
       }
       pp.push_back(head);
       // printf("start idx head %d, tail %d\n", head, tail);
-      lSeg_t segs;
+      LSeg_t segs;
       for (UInt_t s = 1; s < Nseg; ++s)
          segs.push_back(Seg_t(fBuff->fSegs[3*seg[s] + 1],fBuff->fSegs[3*seg[s] + 2]));
 
       Bool_t accepted = kFALSE;
-      for (lSeg_i it = segs.begin(); it != segs.end(); ++it)
+      for (LSegIt_t it = segs.begin(); it != segs.end(); ++it)
       {
          Int_t mv1 = fIdxMap[(*it).fV1];
          Int_t mv2 = fIdxMap[(*it).fV2];
@@ -302,8 +302,8 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
    // First creates a segment pool according to reduced and projected points
    // and then build polygons from the pool.
 
-   lSeg_t segs;
-   lSeg_i it;
+   LSeg_t segs;
+   LSegIt_t it;
    TEveProjection* projection = fProjector->GetProjection();
    for (UInt_t s = 0; s < fBuff->NbSegs(); ++s)
    {
@@ -337,7 +337,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
       Bool_t match = kTRUE;
       while (match && segs.empty() == kFALSE)
       {
-         for (lSeg_i k = segs.begin(); k != segs.end(); ++k)
+         for (LSegIt_t k = segs.begin(); k != segs.end(); ++k)
          {
             Int_t cv1 = (*k).fV1;
             Int_t cv2 = (*k).fV2;
@@ -345,7 +345,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
             {
                pp.push_back(tail);
                tail = (cv1 == tail) ? cv2 : cv1;
-               lSeg_i to_erase = k--;
+               LSegIt_t to_erase = k--;
                segs.erase(to_erase);
                match = kTRUE;
                break;

@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////
 //                                                            //
-// TEveProjection                                              //
+// TEveProjection                                             //
 //                                                            //
 ////////////////////////////////////////////////////////////////
 
@@ -53,7 +53,7 @@ public:
    void                SetName(const char* txt) { fName = txt; }
 
    virtual void        SetCenter(TEveVector& v) { fCenter = v; UpdateLimit(); }
-   virtual Float_t*    GetProjectedCenter() { return fCenter.c_vec(); }
+   virtual Float_t*    GetProjectedCenter() { return fCenter.Arr(); }
 
    void                SetType(EPType_e t) { fType = t; }
    EPType_e            GetType() { return fType; }
@@ -101,7 +101,7 @@ public:
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    virtual   void      SetCenter(TEveVector& center);
-   virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.c_vec(); }
+   virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
 
    ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.
 };
