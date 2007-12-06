@@ -196,7 +196,7 @@ void TObjArray::AddAtAndExpand(TObject *obj, Int_t idx)
    // of the array, expand the array (double its size).
 
    if (idx < fLowerBound) {
-      Error("AddAt", "out of bounds at %d in %x", idx, this);
+      Error("AddAt", "out of bounds at %d in %lx", idx, this);
       return;
    }
    if (idx-fLowerBound >= fSize)

@@ -531,7 +531,7 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
          Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",funcname);
       }
    } else {
-      Error("TF1","can not find any function at the address 0x%x. This function requested for %s",fcn,name);
+      Error("TF1","can not find any function at the address 0x%lx. This function requested for %s",fcn,name);
    }
 
 
@@ -901,7 +901,7 @@ void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_
             Error("TF1","No function found in class %s with the signature operator() (Double_t*,Double_t*) or Eval(Double_t*,Double_t*)",className);
       }
    } else {
-      Error("TF1","can not find any class with name %s at the address 0x%x",className,ptr);
+      Error("TF1","can not find any class with name %s at the address 0x%lx",className,ptr);
    }
 
 

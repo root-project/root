@@ -311,7 +311,7 @@ void TGLPShapeObjEditor::SetRGBA(const Float_t *rgba)
    fBlueSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 2] * 100));
 
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
    } else {
       DrawSphere();
    }
@@ -350,7 +350,7 @@ void TGLPShapeObjEditor::DoColorSlider(Int_t val)
             if (!fIsLight) fColorApplyFamily->SetState(kButtonUp);
 
          if (!gVirtualX->IsCmdThread()) {
-            gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+            gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
          } else {
             DrawSphere();
          }
@@ -406,7 +406,7 @@ void TGLPShapeObjEditor::DoColorButton()
    }
 
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
    } else {
       DrawSphere();
    }
@@ -648,7 +648,7 @@ void TGLPShapeObjEditor::CreateColorControls()
    fColorApplyFamily->Connect("Pressed()", "TGLPShapeObjEditor", this, "DoColorButton()");
 
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%x)->DrawSphere()", this));
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
    } else {
       DrawSphere();
    }

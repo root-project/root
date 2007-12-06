@@ -143,7 +143,7 @@ namespace ROOT {
          middle = "Cla";
       } else if  (container == TTreeProxyGenerator::kSTL) {
          middle = "Stl";
-      } 
+      }
 
       if (ndim==0) {
          result = "T";
@@ -375,7 +375,7 @@ namespace ROOT {
       if (cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ) {
          // Actually we probably should look for the file ..
          const char *filename = cl->GetDeclFileName();
-         
+
          if (!filename) return;
 
 #ifdef R__WIN32
@@ -393,7 +393,7 @@ namespace ROOT {
          const char* pdelim = ":";
          static const char ddelim = '/';
 #endif
-         while (inclPath.Tokenize(inclDir, posDelim, pdelim)) 
+         while (inclPath.Tokenize(inclDir, posDelim, pdelim))
          {
             if (sIncl.BeginsWith(inclDir)) {
                filename += inclDir.Length();
@@ -447,7 +447,7 @@ namespace ROOT {
       }
    }
 
-static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer) 
+static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer)
 {
    TString cname = branch->GetClonesName();
    if (cname.Length()==0) {
@@ -491,9 +491,9 @@ static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *e
    return cname;
 }
 
-static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl) 
+static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl)
 {
-   // Return the correct TStreamerInfo of class 'cname' in the list of 
+   // Return the correct TStreamerInfo of class 'cname' in the list of
    // branch (current) [Assuming these branches correspond to a flattened
    // version of the class.
 
@@ -540,7 +540,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
    }
 
    UInt_t TTreeProxyGenerator::AnalyzeBranches(UInt_t level,
-                                               TBranchProxyClassDescriptor *topdesc,                                               
+                                               TBranchProxyClassDescriptor *topdesc,
                                                TIter &branches,
                                                TVirtualStreamerInfo *info)
    {
@@ -548,10 +548,10 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       // the streamer elements and create the appropriate class proxies.
 
 /*
-   
+
    Find the content class name (GetClassName)
    Record wether this is a collection or not
-   
+
    Find the StreamerInfo
 
    For each streamerelement
@@ -561,7 +561,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       else if eleement is object (or pointer to object?)
          if name match go ahead, loop over subbranches
          if name does not match. loop over current branches (fix names).
-      else 
+      else
          add branch.
 
 */
@@ -575,7 +575,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
       {
          TIter peek = branches;
-         TBranchElement *branch = (TBranchElement*)peek(); 
+         TBranchElement *branch = (TBranchElement*)peek();
          if (topdesc && topdesc->IsClones()) {
             container = kClones;
             middle = "Cla";
@@ -620,7 +620,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          Bool_t usedBranch = kTRUE;
          TString prefix;
          TIter peek = branches;
-         TBranchElement *branch = (TBranchElement*)peek(); 
+         TBranchElement *branch = (TBranchElement*)peek();
 
          if (branch==0) {
             Error("AnalyzeBranches","Ran out of branches when looking in branch %s, class %s",
@@ -723,7 +723,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             case TVirtualStreamerInfo::kTNamed:
             case TVirtualStreamerInfo::kTObject:
             case TVirtualStreamerInfo::kAny:
-            case TVirtualStreamerInfo::kBase: 
+            case TVirtualStreamerInfo::kBase:
             case TVirtualStreamerInfo::kSTL: {
                TClass *cl = element->GetClassPointer();
                R__ASSERT(cl);
@@ -739,8 +739,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                   if (valueClass) cname = valueClass->GetName();
                   else {
                      proxyTypeName = Form("TStlSimpleProxy<%s >", cl->GetName());
-//                   AddPragma(Form("#pragma create TClass %s;\n", cl->GetName())); 
-                     AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName())); 
+//                   AddPragma(Form("#pragma create TClass %s;\n", cl->GetName()));
+                     AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
                   }
                }
 
@@ -755,7 +755,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                   isBase = true;
                   prefix  = "base";
 
-                  if (cl == TObject::Class() && info->GetClass()->CanIgnoreTObjectStreamer()) 
+                  if (cl == TObject::Class() && info->GetClass()->CanIgnoreTObjectStreamer())
                   {
                      continue;
                   }
@@ -799,7 +799,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                                                                  isclones, branch->GetSplitLevel());
                         lookedAt += AnalyzeBranches( level+1, cldesc, branch, objInfo);
                      }
-                  } else {                   
+                  } else {
                      // We do not have a proper node for the base class, we need to loop over
                      // the next branches
                      Int_t pos = branchname.Last('.');
@@ -856,14 +856,14 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                            // We have to guess the version number!
                            cl = TClass::GetClass(cname);
                            objInfo = GetStreamerInfo(branch,branch->GetListOfBranches(),cl);
-                        } 
+                        }
                         cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                                  branch->GetName(),
                                                                  branch->GetName(),
                                                                  isclones, branch->GetSplitLevel());
                         lookedAt += AnalyzeBranches( level+1, cldesc, branch, objInfo);
                      }
-                  } else {                   
+                  } else {
                      // We do not have a proper node for the base class, we need to loop over
                      // the next branches
                      TString prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
@@ -878,7 +878,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         // We have to guess the version number!
                         cl = TClass::GetClass(cname);
                         objInfo = GetStreamerInfo(branch, branches, cl);
-                     } 
+                     }
                      cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                               branchname,
                                                               prefix,
@@ -915,8 +915,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                proxyTypeName, branchname, true, skipped ) );
          }
 
-         if (usedBranch) { 
-            branches.Next(); 
+         if (usedBranch) {
+            branches.Next();
             ++lookedAt;
          }
       }
@@ -1820,7 +1820,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
       fprintf(hf,"\n");
       fprintf(hf,"   TString option = GetOption();\n");
-      fprintf(hf,"   if (fBeginMethod.IsValid()) fBeginMethod.Execute(this,Form(\"0x%%x\",tree));\n");
+      fprintf(hf,"   if (fBeginMethod.IsValid()) fBeginMethod.Execute(this,Form(\"0x%%lx\",tree));\n");
       fprintf(hf,"\n");
       fprintf(hf,"}\n");
 
@@ -1845,7 +1845,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       }
       fprintf(hf,"   fObject = htemp;\n");
       fprintf(hf,"   if (fSlaveBeginMethod.IsValid()) {\n");
-      fprintf(hf,"      fSlaveBeginMethod.Execute(this,Form(\"0x%%x\",tree));\n");
+      fprintf(hf,"      fSlaveBeginMethod.Execute(this,Form(\"0x%%lx\",tree));\n");
       fprintf(hf,"   }\n");
       fprintf(hf,"\n");
       fprintf(hf,"}\n");

@@ -623,7 +623,7 @@ Color_t TStyle::GetAxisColor( Option_t *axis) const
 Int_t TStyle::GetColorPalette(Int_t i) const
 {
    // Return color number i in current palette.
-   
+
    return TColor::GetColorPalette(i);
 }
 
@@ -686,9 +686,9 @@ const char *TStyle::GetLineStyleString(Int_t i) const
 Int_t TStyle::GetNumberOfColors() const
 {
    // Return number of colors in the color palette
-   
+
    return TColor::GetNumberOfColors();
-} 
+}
 
 //______________________________________________________________________________
 void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize)
@@ -759,7 +759,7 @@ void TStyle::Paint(Option_t *option)
 {
    //show the options from the current style
    //if (TClass::GetClass("TStyleManager")) gSystem->Load("libGed");
-   gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%x,\"%s\")",this,option));
+   gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%lx,\"%s\")",this,option));
 }
 
 //______________________________________________________________________________

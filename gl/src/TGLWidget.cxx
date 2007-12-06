@@ -252,7 +252,7 @@ Bool_t TGLWidget::HandleButton(Event_t *ev)
    //Signal. Under Win32 I have to switch between
    //threads to let direct usage of gl code.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->HandleButton((Event_t *)0x%x)", this, ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleButton((Event_t *)0x%lx)", this, ev));
       return kTRUE;
    }
 
@@ -267,7 +267,7 @@ Bool_t TGLWidget::HandleDoubleClick(Event_t *ev)
    //Signal. Under Win32 I have to switch between
    //threads to let direct usage of gl code.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->HandleDoubleClick((Event_t *)0x%x)", this, ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleDoubleClick((Event_t *)0x%lx)", this, ev));
       return kTRUE;
    }
 
@@ -282,7 +282,7 @@ Bool_t TGLWidget::HandleConfigureNotify(Event_t *ev)
    //Signal. Under Win32 I have to switch between
    //threads to let direct usage of gl code.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->HandleConfigureNotify((Event_t *)0x%x)", this, ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleConfigureNotify((Event_t *)0x%lx)", this, ev));
       return kTRUE;
    }
 
@@ -297,7 +297,7 @@ Bool_t TGLWidget::HandleKey(Event_t *ev)
    //Signal. Under Win32 I have to switch between
    //threads to let direct usage of gl code.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->HandleKey((Event_t *)0x%x)", this, ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleKey((Event_t *)0x%lx)", this, ev));
       return kTRUE;
    }
 
@@ -312,7 +312,7 @@ Bool_t TGLWidget::HandleMotion(Event_t *ev)
    //Signal. Under Win32 I have to switch between
    //threads to let direct usage of gl code.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->HandleMotion((Event_t *)0x%x)", this, ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleMotion((Event_t *)0x%lx)", this, ev));
       return kTRUE;
    }
 
@@ -328,7 +328,7 @@ Bool_t TGLWidget::HandleExpose(Event_t *ev)
    //Signal. Under Win32 I have to switch between
    //threads to let direct usage of gl code.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->HandleExpose((Event_t *)0x%x)", this, ev));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleExpose((Event_t *)0x%lx)", this, ev));
       return kTRUE;
    }
 
@@ -440,7 +440,7 @@ void TGLWidget::CreateWidget(const TGLPaintDevice *shareDevice)
 
    try {
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->SetFormat()", this));
+         gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->SetFormat()", this));
       else
          SetFormat();
       fGLContext.reset(new TGLContext(this, shareDevice ? shareDevice->GetContext() : 0));
@@ -461,7 +461,7 @@ void TGLWidget::CreateWidget()
 
    try {
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->SetFormat()", this));
+         gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->SetFormat()", this));
       else
          SetFormat();
       fGLContext.reset(new TGLContext(this));
@@ -669,7 +669,7 @@ void TGLWidget::Repaint()
 {
    //Forse re-drawing of gl-widget.
 /*   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%x)->Repaint()", this));
+      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->Repaint()", this));
       return;
    }
 
@@ -677,7 +677,7 @@ void TGLWidget::Repaint()
    InitGL();
    PaintGL();
    SwapBuffers();*/
-   
+
    Emit("Repaint()");
 }
 

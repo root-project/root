@@ -48,7 +48,7 @@ templateClassImp(TVectorT)
 template<class Element>
 void TVectorT<Element>::Delete_m(Int_t size,Element *&m)
 {
-// Delete data pointer m, if it was assigned on the heap 
+// Delete data pointer m, if it was assigned on the heap
 
    if (m) {
       if (size > kSizeMax)
@@ -422,7 +422,7 @@ TVectorT<Element> &TVectorT<Element>::SetSub(Int_t row_lwb,const TVectorT<Elemen
    if (gMatrixCheck) {
       R__ASSERT(IsValid());
       R__ASSERT(source.IsValid());
- 
+
       if (row_lwb < fRowLwb && row_lwb > fRowLwb+fNrows-1) {
          Error("SetSub","row_lwb outof bounds");
          return *this;
@@ -1347,10 +1347,10 @@ TVectorT<Element> &TVectorT<Element>::Apply(const TElementPosActionT<Element> &a
 template<class Element>
 void TVectorT<Element>::Draw(Option_t *option)
 {
-// Draw this vector 
+// Draw this vector
 // The histogram is named "TVectorT" by default and no title
 
-   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%x,\"%s\");",this,option));
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",this,option));
 }
 
 //______________________________________________________________________________

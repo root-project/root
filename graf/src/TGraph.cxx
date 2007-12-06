@@ -1625,7 +1625,7 @@ void TGraph::FitPanel()
    }
 
    if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
-   gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,this));
+   gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%lx,(TObject*)0x%lx)",gPad,this));
 }
 
 

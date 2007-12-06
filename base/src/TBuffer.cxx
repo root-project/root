@@ -106,7 +106,7 @@ TBuffer::~TBuffer()
    // Delete an I/O buffer object.
 
    if (TestBit(kIsOwner)) {
-      //printf("Deleting fBuffer=%x\n",fBuffer);
+      //printf("Deleting fBuffer=%lx\n", fBuffer);
       delete [] fBuffer;
    }
    fBuffer = 0;

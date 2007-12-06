@@ -414,14 +414,14 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLSaveEPS:
             fPictureFileName = "viewer.eps";
             if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
             else
                SavePicture();
             break;
          case kGLSavePDF:
             fPictureFileName = "viewer.pdf";
             if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
             else
                SavePicture();
             break;
@@ -446,20 +446,20 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLSaveGIF:
             fPictureFileName = "viewer.gif";
             if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
             else
                SavePicture();
             break;
          case kGLSaveJPG:
             fPictureFileName = "viewer.jpg";
             if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
             else
                SavePicture();
          case kGLSavePNG:
             fPictureFileName = "viewer.png";
             if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
             else
                SavePicture();
             break;
@@ -489,7 +489,7 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
                   }
 
                if (!gVirtualX->IsCmdThread())
-                  gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+                  gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
                else
                   SavePicture();
             }
@@ -577,7 +577,7 @@ void TGLSAViewer::SavePicture(const TString &fileName)
    // Save the current GL structure in various formats (eps,pdf, gif, jpg, png).
    fPictureFileName = fileName;
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%x)->SavePicture()", this));
+      gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
    else
       SavePicture();
 }

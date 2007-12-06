@@ -116,7 +116,7 @@ TPaveText& TPaveText::operator=(const TPaveText& pt)
       fLongest=pt.fLongest;
       fMargin=pt.fMargin;
       fLines=pt.fLines;
-   } 
+   }
    return *this;
 }
 
@@ -235,8 +235,8 @@ void TPaveText::EditText()
    if (!obj->InheritsFrom(TText::Class())) return;
    TText *text = (TText*)obj;
    gROOT->SetSelectedPrimitive(text);
-   gROOT->ProcessLine(Form("((TCanvas*)0x%x)->SetSelected((TObject*)0x%x)",gPad->GetCanvas(),text));   
-   gROOT->ProcessLine(Form("((TCanvas*)0x%x)->Selected((TVirtualPad*)0x%x,(TObject*)0x%x,1)",gPad->GetCanvas(),gPad,text));   
+   gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->SetSelected((TObject*)0x%lx)",gPad->GetCanvas(),text));
+   gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->Selected((TVirtualPad*)0x%lx,(TObject*)0x%lx,1)",gPad->GetCanvas(),gPad,text));
    text->SetTextAttributes();
 }
 
@@ -707,7 +707,7 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             if (linel->GetLineColor() > 228) {
                TColor::SaveColor(out, linel->GetLineColor());
                out<<"   line->SetLineColor(ci);" << endl;
-            } else 
+            } else
                out<<"   line->SetLineColor("<<linel->GetLineColor()<<");"<<endl;
          }
          if (linel->GetLineStyle() != 1) {
@@ -732,7 +732,7 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             if (lineb->GetFillColor() > 228) {
                TColor::SaveColor(out, lineb->GetFillColor());
                out<<"   box->SetFillColor(ci);" << endl;
-            } else 
+            } else
                out<<"   box->SetFillColor("<<lineb->GetFillColor()<<");"<<endl;
          }
          if (lineb->GetFillStyle() != 1001) {
@@ -742,7 +742,7 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             if (lineb->GetLineColor() > 228) {
                TColor::SaveColor(out, lineb->GetLineColor());
                out<<"   box->SetLineColor(ci);" << endl;
-            } else 
+            } else
                out<<"   box->SetLineColor("<<lineb->GetLineColor()<<");"<<endl;
          }
          if (lineb->GetLineStyle() != 1) {
@@ -774,7 +774,7 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             if (linet->GetTextColor() > 228) {
                TColor::SaveColor(out, linet->GetTextColor());
                out<<"   text->SetTextColor(ci);" << endl;
-            } else 
+            } else
                out<<"   text->SetTextColor("<<linet->GetTextColor()<<");"<<endl;
          }
          if (linet->GetTextFont()) {
@@ -811,7 +811,7 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             if (latex->GetTextColor() > 228) {
                TColor::SaveColor(out, latex->GetTextColor());
                out<<"   text->SetTextColor(ci);" << endl;
-            } else 
+            } else
                out<<"   text->SetTextColor("<<latex->GetTextColor()<<");"<<endl;
          }
          if (latex->GetTextFont()) {

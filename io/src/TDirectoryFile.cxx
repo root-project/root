@@ -81,7 +81,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 
    fName = name;
    fTitle = title;
-   
+
    if (initMotherDir==0) initMotherDir = gDirectory;
 
    if (strchr(name,'/')) {
@@ -297,7 +297,7 @@ Bool_t TDirectoryFile::cd(const char *path)
 }
 
 //______________________________________________________________________________
-void TDirectoryFile::CleanTargets() 
+void TDirectoryFile::CleanTargets()
 {
    // Clean the pointers to this object (gDirectory, TContext, etc.)
 
@@ -565,7 +565,7 @@ void TDirectoryFile::Delete(const char *namecycle)
          }
       }
 //      if (deleteOK == 2) {
-//         Info("Delete","Dir:%x %s", fList->FindObject(name), name);
+//         Info("Delete","Dir:%lx %s", fList->FindObject(name), name);
 //         delete fList->FindObject(name); //deleting a TDirectory
 //      }
    }
@@ -1429,9 +1429,9 @@ void TDirectoryFile::Streamer(TBuffer &b)
 
       if (fFile && !fFile->IsBinary()) {
          Version_t R__v = b.ReadVersion(0, 0);
-         
+
          TClass* dirclass = (R__v < 5) ? TDirectory::Class() : TDirectoryFile::Class();
-         
+
          b.ClassBegin(dirclass, R__v);
 
          TString sbuf;

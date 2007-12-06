@@ -172,7 +172,7 @@ void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fXOYSectionPos = frame[0].Z();
 
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
       else
          Paint();
    }
@@ -623,7 +623,7 @@ void TGLIsoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fXOYSectionPos = frame[0].Z();
 
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
       else
          Paint();
    }

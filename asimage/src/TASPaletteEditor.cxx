@@ -179,7 +179,7 @@ TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
    fRamps[0]->Associate(this);
    fRamps[1]->Associate(this);
    fRamps[2]->Associate(this);
-   
+
    // the histogram of the data
    fHistCanvas = new TRootEmbeddedCanvas("data hist", this, 300, 50);
    AddFrame(fHistCanvas, new TGXYLayoutHints(1, 1, 48, 20,
@@ -446,8 +446,8 @@ void TASPaletteEditor::Save()
          sprintf(fn, "%s%s", fi.fFilename, ".pal.root");
       else
          strcpy(fn, fi.fFilename);
-      
-      gROOT->ProcessLine(Form("TFile::SaveObjectAs((TASPaletteEditor*)0x%x,\"%s\",\"%s\");",this,fn,"q"));
+
+      gROOT->ProcessLine(Form("TFile::SaveObjectAs((TASPaletteEditor*)0x%lx,\"%s\",\"%s\");",this,fn,"q"));
    }
 }
 

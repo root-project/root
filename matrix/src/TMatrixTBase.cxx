@@ -672,7 +672,7 @@ Element TMatrixTBase<Element>::RowNorm() const
    const Element *       ep = GetMatrixArray();
    const Element * const fp = ep+fNelems;
          Element norm = 0;
- 
+
    // Scan the matrix row-after-row
    while (ep < fp) {
       Element sum = 0;
@@ -797,10 +797,10 @@ Element TMatrixTBase<Element>::Max() const
 template<class Element>
 void TMatrixTBase<Element>::Draw(Option_t *option)
 {
-// Draw this matrix 
+// Draw this matrix
 // The histogram is named "TMatrixT" by default and no title
 
-   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%x,\"%s\");",this,option));
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",this,option));
 }
 
 //______________________________________________________________________________
@@ -836,11 +836,11 @@ void TMatrixTBase<Element>::Print(Option_t *option) const
    for (i=nch2;i<nch;i++) ftopbar[i] = ' ';
    ftopbar[nch] = '|';
    ftopbar[nch+1] = 0;
-   
+
    printf("\n%dx%d matrix is as follows",fNrows,fNcols);
 
    Int_t cols_per_sheet = 5;
-   if (nch <=8) cols_per_sheet =10; 
+   if (nch <=8) cols_per_sheet =10;
    const Int_t ncols  = fNcols;
    const Int_t nrows  = fNrows;
    const Int_t collwb = fColLwb;

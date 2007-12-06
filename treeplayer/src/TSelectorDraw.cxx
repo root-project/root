@@ -368,13 +368,13 @@ void TSelectorDraw::Begin(TTree *tree)
             delete fOldHistogram; fOldHistogram=0;
          }
 
-      } else { 
+      } else {
          // make selection list (i.e. varexp0 starts with ">>")
          TObject *oldObject = gDirectory->Get(hname);
          if (optEnlist){
             //write into a TEntryList
             enlist = oldObject ? dynamic_cast<TEntryList*>(oldObject) : 0;
-            
+
             if (!enlist && oldObject) {
                Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
                   oldObject->IsA()->GetName(),hname);
@@ -405,7 +405,7 @@ void TSelectorDraw::Begin(TTree *tree)
          else {
             //write into a TEventList
             evlist = oldObject ? dynamic_cast<TEventList*>(oldObject) : 0;
-            
+
             if (!evlist && oldObject) {
                Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
                   oldObject->IsA()->GetName(),hname);
@@ -835,21 +835,21 @@ void TSelectorDraw::Begin(TTree *tree)
    for(Int_t i=0;i<fDimension;++i){
       if(fVar[i] && fVar[i]->GetMultiplicity()) fVarMultiple[i] = kTRUE;
    }
-   
+
    if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = kTRUE;
 
    fForceRead = fTree->TestBit(TTree::kForceRead);
    fWeight  = fTree->GetWeight();
    fNfill   = 0;
-   
+
    for(Int_t i=0;i<fDimension;++i){
       if(!fVal[i] && fVar[i]){
          fVal[i] = new Double_t[(Int_t)fTree->GetEstimate()];
       }
    }
-   
+
    if (!fW)             fW  = new Double_t[(Int_t)fTree->GetEstimate()];
-   
+
    for(Int_t i=0;i<fValSize;++i){
       fVmin[i] = FLT_MAX;
       fVmax[i] = -FLT_MAX;
@@ -929,7 +929,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    Int_t *index;
    index = new Int_t[ncols+1];
    MakeIndex(title,index);
-   
+
    InitArrays(ncols);
 
    fManager = new TTreeFormulaManager();
@@ -979,7 +979,7 @@ const char *TSelectorDraw::GetNameByIndex(TString &varexp, Int_t *index,Int_t co
 Double_t* TSelectorDraw::GetVal(Int_t i) const
 {
    //Get variable buffer.
-   
+
    if(i<0 || i >= fDimension)
       return 0;
    else
@@ -990,7 +990,7 @@ Double_t* TSelectorDraw::GetVal(Int_t i) const
 TTreeFormula* TSelectorDraw::GetVar(Int_t i) const
 {
    //Get variable formula.
-   
+
    if(i<0 || i>=fDimension)
       return 0;
    else
@@ -1001,7 +1001,7 @@ TTreeFormula* TSelectorDraw::GetVar(Int_t i) const
 void TSelectorDraw::InitArrays(Int_t newsize)
 {
    // Initialization of the primitive type arrays if the new size is bigger than the available space.
-   
+
    if(newsize>fValSize){
       Int_t oldsize = fValSize;
       while(fValSize<newsize)
@@ -1010,12 +1010,12 @@ void TSelectorDraw::InitArrays(Int_t newsize)
       if(fVmin) delete [] fVmin;
       if(fVmax) delete [] fVmax;
       if(fVarMultiple) delete [] fVarMultiple;
-      
+
       fNbins = new Int_t[fValSize];
       fVmin = new Double_t[fValSize];
       fVmax = new Double_t[fValSize];
       fVarMultiple = new Bool_t[fValSize];
-      
+
       for(Int_t i=0;i<oldsize;++i)
          delete [] fVal[i];
       delete [] fVal;
@@ -1392,8 +1392,9 @@ void TSelectorDraw::TakeAction()
    TakeEstimate();
    Bool_t candle = (fAction==7);
    // Using CINT to avoid a dependency in TParallelCoord
-   if (!fOption.Contains("goff"))gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%x,0x%x",
-                                                             this, candle));
+   if (!fOption.Contains("goff"))
+      gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%lx,0x%lx",
+                                  this, candle));
    }
    //__________________________something else_______________________
    else if (fAction < 0) {

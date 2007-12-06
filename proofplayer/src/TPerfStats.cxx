@@ -481,7 +481,7 @@ void TPerfStats::WriteQueryLog()
    if (fMonitoringWriter) {
       if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() ||
           !gProofServ->GetProof()->GetQueryResult()) {
-         Error("WriteQueryLog", "some require object are 0 (0x%x 0x%x 0x%x 0x%x)",
+         Error("WriteQueryLog", "some require object are 0 (0x%lx 0x%lx 0x%lx 0x%lx)",
                gProofServ, gProofServ->GetSessionTag(), gProofServ->GetProof(),
                gProofServ->GetProof()->GetQueryResult());
          return;

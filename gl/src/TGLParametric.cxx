@@ -423,7 +423,7 @@ void TGLParametricPlot::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    if (event == kButton1Double && fBoxCut.IsActive()) {
       fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%x)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
       else
          Paint();
    } else if (event == kKeyPress) {

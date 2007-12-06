@@ -678,7 +678,7 @@ void TClonesArray::Streamer(TBuffer &b)
       //if (optim) TStreamerInfo::Optimize(kTRUE);
       //if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
       b.ForceWriteInfo(this);
-      
+
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
@@ -718,7 +718,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
    // the clones array use Remove() or RemoveAt().
 
    if (idx < 0) {
-      Error("operator[]", "out of bounds at %d in %x", idx, this);
+      Error("operator[]", "out of bounds at %d in %lx", idx, this);
       return fCont[0];
    }
    if (!fClass) {
@@ -745,7 +745,7 @@ TObject *TClonesArray::operator[](Int_t idx) const
    // Return the object at position idx. Returns 0 if idx is out of bounds.
 
    if (idx < 0 || idx >= fSize) {
-      Error("operator[]", "out of bounds at %d in %x", idx, this);
+      Error("operator[]", "out of bounds at %d in %lx", idx, this);
       return 0;
    }
 
@@ -759,7 +759,7 @@ TObject *TClonesArray::New(Int_t idx)
    // index. Returns 0 in case of error.
 
    if (idx < 0) {
-      Error("New", "out of bounds at %d in %x", idx, this);
+      Error("New", "out of bounds at %d in %lx", idx, this);
       return 0;
    }
    if (!fClass) {

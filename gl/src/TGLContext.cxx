@@ -47,7 +47,7 @@ TGLContext::TGLContext(TGLWidget *wid)
    //Makes thread switching.
    const TGLContext *shareList = TGLContextIdentity::GetDefaultContextAny();
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContext((TGLWidget *)0x%x, (TGLContext *)0x%x)",
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
                                   this, wid, shareList));
    } else
       SetContext(wid, shareList);
@@ -71,7 +71,7 @@ TGLContext::TGLContext(TGLWidget *wid, const TGLContext *shareList)
    //TGLContext ctor "from" TGLWidget. Specify shareList, can be null.
    //Makes thread switching.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContext((TGLWidget *)0x%x, (TGLContext *)0x%x)",
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
                                   this, wid, shareList));
    } else
       SetContext(wid, shareList);
@@ -93,7 +93,7 @@ TGLContext::TGLContext(TGLPBuffer *pbuff, const TGLContext *shareList)
                  fValid(kFALSE)
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SetContextPB((TGLPBuffer *)0x%x, (TGLContext *)0x%x)",
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContextPB((TGLPBuffer *)0x%lx, (TGLContext *)0x%lx)",
                                   this, pbuff, shareList));
    } else
       SetContextPB(pbuff, shareList);
@@ -200,7 +200,7 @@ Bool_t TGLContext::MakeCurrent()
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->MakeCurrent()", this)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->MakeCurrent()", this)));
    else {
       Bool_t rez = wglMakeCurrent(fPimpl->fHDC, fPimpl->fGLContext);
       if (rez)
@@ -220,7 +220,7 @@ void TGLContext::SwapBuffers()
    }
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->SwapBuffers()", this));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SwapBuffers()", this));
    else {
       if (fPimpl->fHWND)
          wglSwapLayerBuffers(fPimpl->fHDC, WGL_SWAP_MAIN_PLANE);
@@ -235,7 +235,7 @@ void TGLContext::Release()
    //Make the context invalid and (do thread switch, if needed)
    //free resources.
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%x)->Release()", this));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->Release()", this));
       return;
    }
 

@@ -335,7 +335,7 @@ void THistPainter::DrawPanel()
    }
    TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
    editor->Show();
-   gROOT->ProcessLine(Form("((TCanvas*)0x%x)->Selected((TVirtualPad*)0x%x,(TObject*)0x%x,1)",gPad->GetCanvas(),gPad,fH));
+   gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->Selected((TVirtualPad*)0x%lx,(TObject*)0x%lx,1)",gPad->GetCanvas(),gPad,fH));
 }
 
 
@@ -467,7 +467,7 @@ void THistPainter::FitPanel()
    }
 
    if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
-   gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,fH));
+   gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%lx,(TObject*)0x%lx)",gPad,fH));
 }
 
 
@@ -1665,7 +1665,7 @@ void THistPainter::Paint(Option_t *option)
    if (Hoption.Spec) {
       if (!TableInit()) return;
       if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
-      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%x,\"%s\")",fH,option));
+      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%lx,\"%s\")",fH,option));
       return;
    }
 

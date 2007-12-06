@@ -180,7 +180,7 @@ All histogram classes are derived from the base class TH1
 
      By default, an histogram axis is drawn with its numeric bin labels.
      One can specify alphanumeric labels instead with:
-<ul>        
+<ul>
        <li> call TAxis::SetBinLabel(bin,label);
            This can always be done before or after filling.
            When the histogram is drawn, bin labels will be automatically drawn.
@@ -196,7 +196,7 @@ All histogram classes are derived from the base class TH1
        <li> via TTree::Draw.
            see for example $ROOTSYS/tutorials/tree/cernstaff.C
 <pre>
-           tree.Draw("Nation::Division"); 
+           tree.Draw("Nation::Division");
 </pre>
            where "Nation" and "Division" are two branches of a Tree.
 </ul>
@@ -314,7 +314,7 @@ All histogram classes are derived from the base class TH1
      of functions (fFunctions) associated to each histogram.
      When TH1::Fit is invoked, the fitted function is added to this list.
      Given an histogram h, one can retrieve an associated function
-     with:  
+     with:
 <pre>
         TF1 *myfunc = h->GetFunction("myfunc");
 </pre>
@@ -337,7 +337,7 @@ All histogram classes are derived from the base class TH1
      One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
        myhist.SetBit(TH1::kIsAverage);
      When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
-       
+
 
 
 <h4>Fitting histograms</h4>
@@ -397,7 +397,7 @@ All histogram classes are derived from the base class TH1
 
      One can scale an histogram such that the bins integral is equal to
      the normalization parameter via TH1::Scale(Double_t norm), where norm
-     is the desired normalization divided by the integral of the histogram.   
+     is the desired normalization divided by the integral of the histogram.
 
 <h4>Drawing histograms</h4>
 
@@ -405,7 +405,7 @@ All histogram classes are derived from the base class TH1
      a pointer to its own painter (to be usable in a multithreaded program).
      Many drawing options are supported.
      See THistPainter::Paint() for more details.
-<p>     
+<p>
     The same histogram can be drawn with different options in different pads.
      When an histogram drawn in a pad is deleted, the histogram is
      automatically removed from the pad or pads where it was drawn.
@@ -1157,14 +1157,14 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    // Begin_Latex #chi^{2} End_Latex test for comparing weighted and unweighted histograms
    //
    // Function: Returns p-value. Other return values are specified by the 3rd parameter <br>
-   // 
+   //
    // Parameters:
    //
    //    - h2: the second histogram
    //    - option:
    //       o "UU" = experiment experiment comparison (unweighted-unweighted)
    //       o "UW" = experiment MC comparison (unweighted-weighted). Note that
-   //          the first histogram should be unweighted 
+   //          the first histogram should be unweighted
    //       o "WW" = MC MC comparison (weighted-weighted)
    //       o "NORM" = to be used when one or both of the histograms is scaled
    //          (unweighted-unweighted)
@@ -1190,22 +1190,22 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   This paper describes the implementation modified Begin_Latex #chi^{2} End_Latex tests
    //   for comparison of weighted and unweighted  histograms and two weighted
    //   histograms [2] as well as usual Pearson's Begin_Latex #chi^{2} End_Latex test for
-   //   comparison two usual (unweighted) histograms.  
+   //   comparison two usual (unweighted) histograms.
    //
    // Overview:
-   // 
+   //
    //   Comparison of two histograms expect hypotheses that two histograms
    //   represent the identical distributions. To make a decision p-value should
    //   be calculated. The hypotheses of identity is rejected if p-value is
    //   lower then some significance level. Traditionally significance levels
    //   0.1, 0.05 and 0.01 are used. The comparison procedure should include an
-   //   analysis of the residuals which is often helpful in identifying the 
+   //   analysis of the residuals which is often helpful in identifying the
    //   bins of histograms responsible for a significant overall Begin_Latex #chi^{2} End_Latex value.
    //   Residuals are the difference between bin contents and expected bin
    //   contents. Most convenient for analysis are the normalized residuals. If
    //   hypotheses of identity are valid then normalized residuals are
    //   approximately independent and identically distributed random variables
-   //   having N(0,1) distribution. Analysis of residuals expect test of above 
+   //   having N(0,1) distribution. Analysis of residuals expect test of above
    //   mentioned properties of residuals. Notice that indirectly the analysis
    //   of residuals increase the power of Begin_Latex #chi^{2} End_Latex test.
    //
@@ -1226,7 +1226,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   in the second histogram. The hypothesis of identity (homogeneity) [3]
    //   is that the two histograms represent random values with identical
    //   distributions. It is equivalent that there exist r constants p1,...,pr,
-   //   such that  
+   //   such that
    //Begin_Latex
    //   #sum_{i=1}^{r} p_{i}=1
    //End_Latex
@@ -1253,19 +1253,19 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   has approximately a Begin_Latex #chi^{2}_{(r-1)} End_Latex distribution [3].
    //   The comparison procedure can include an analysis of the residuals which
    //   is often helpful in identifying the bins of histograms responsible for
-   //   a significant overall Begin_Latex #chi^{2} End_Latexvalue. Most convenient for 
+   //   a significant overall Begin_Latex #chi^{2} End_Latexvalue. Most convenient for
    //   analysis are the adjusted (normalized) residuals [4]
    //Begin_Latex
    //   r_{i} = #frac{n_{i}-N#hat{p}_{i}}{#sqrt{N#hat{p}_{i}}#sqrt{(1-N/(N+M))(1-(n_{i}+m_{i})/(N+M))}}
    //End_Latex
    //   If hypotheses of  homogeneity are valid then residuals ri are
    //   approximately independent and identically distributed random variables
-   //   having N(0,1) distribution. The application of the Begin_Latex #chi^{2} End_latex test has 
+   //   having N(0,1) distribution. The application of the Begin_Latex #chi^{2} End_latex test has
    //   restrictions related to the value of the expected frequencies Npi,
    //   Mpi, i=1,...,r. A conservative rule formulated in [5] is that all the
    //   expectations must be 1 or greater for both histograms. In practical
    //   cases when expected frequencies are not known the estimated expected
-   //   frequencies Begin_Latex M#hat{p}_{i}, N#hat{p}_{i}, i=1,...,r End_Latex  can be used.  
+   //   frequencies Begin_Latex M#hat{p}_{i}, N#hat{p}_{i}, i=1,...,r End_Latex  can be used.
    //
    //  Unweighted and weighted histograms comparison:
    //
@@ -1274,7 +1274,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   denote the number of events in the ith bin in the unweighted
    //   histogram as ni and the common weight of events in the ith bin of the
    //   weighted histogram as wi. The total number of events in the
-   //   unweighted histogram is equal to 
+   //   unweighted histogram is equal to
    //Begin_Latex
    //   N = #sum_{i=1}^{r} n_{i}
    //End_Latex
@@ -1282,9 +1282,9 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //Begin_Latex
    //   W = #sum_{i=1}^{r} w_{i}
    //End_Latex
-   //   Let us formulate the hypothesis of identity of an unweighted histogram 
+   //   Let us formulate the hypothesis of identity of an unweighted histogram
    //   to a weighted histogram so that there exist r constants p1,...,pr, such
-   //   that 
+   //   that
    //Begin_Latex
    //   #sum_{i=1}^{r} p_{i} = 1
    //End_Latex
@@ -1331,7 +1331,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //
    //   Let us denote the common  weight of events of the ith bin in the first
    //   histogram as w1i and as w2i in the second one. The total weight of events
-   //   in the first histogram is equal to 
+   //   in the first histogram is equal to
    //Begin_Latex
    //   W_{1} = #sum_{i=1}^{r} w_{1i}
    //End_Latex
@@ -1414,7 +1414,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //      b) weighted histogram;
    //      c) normalized residuals plot;
    //      d) normal Q-Q plot of residuals.
-   // 
+   //
    //   The value of the test statistic Begin_Latex #chi^{2} End_Latex is equal to
    //   32.33 with p-value equal to 0.029, therefore the hypothesis of identity of
    //   the two histograms is rejected for 0.05 significant level. The behavior of
@@ -1438,18 +1438,18 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    // [4] Haberman, S.J., 1973. The analysis of residuals in cross-classified tables.
    //     Biometrics 29, 205-220.
    // [5] Lewontin, R.C. and Felsenstein, J., 1965. The robustness of homogeneity
-   //     test in 2xN tables. Biometrics 21, 19-33. 
+   //     test in 2xN tables. Biometrics 21, 19-33.
    // [6] Seber, G.A.F., Lee, A.J., 2003, Linear Regression Analysis.
    //     John Wiley & Sons Inc., New York.
 
    Double_t chi2 = 0;
    Int_t ndf = 0, igood = 0;
-   
+
    TString opt = option;
    opt.ToUpper();
-   
+
    Double_t prob = Chi2TestX(h2,chi2,ndf,igood,option,res);
-   
+
    if(opt.Contains("P")) {
       printf("Chi2 = %f, Prob = %g, NDF = %d, igood = %d\n", chi2,prob,ndf,igood);
    }
@@ -1460,7 +1460,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    if(opt.Contains("CHI2")) {
       return chi2;
    }
-   
+
    return prob;
 }
 
@@ -1471,7 +1471,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    // see Chi2Test() function.
    // Returns p-value
    // parameters:
-   //  - h2-second histogram 
+   //  - h2-second histogram
    //  - option:
    //     "UU" = experiment experiment comparison (unweighted-unweighted)
    //     "UW" = experiment MC comparison (unweighted-weighted). Note that the first
@@ -1484,25 +1484,25 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //     "UF" = underflows included
    //         by default underflows and overlows are not included
    //
-   //  - igood:  
+   //  - igood:
    //       igood=0 - no problems
-   //        For unweighted unweighted  comparison               
+   //        For unweighted unweighted  comparison
    //       igood=1'There is a bin in the 1st histogram with less than 1 event'
    //       igood=2'There is a bin in the 2nd histogram with less than 1 event'
    //        For  unweighted weighted  comparison
    //       igood=1'There is a bin in the 1st histogram with less then 1 event'
-   //       igood=2'There is a bin in the 2nd histogram with less then 10 effective 
+   //       igood=2'There is a bin in the 2nd histogram with less then 10 effective
    //               number of events'
-   //        For  weighted weighted  comparison 
-   //       igood=1'There is a bin in the 1st  histogram with less then 10 effective 
+   //        For  weighted weighted  comparison
+   //       igood=1'There is a bin in the 1st  histogram with less then 10 effective
    //        number of events'
-   //       igood=2'There is a bin in the 2nd  histogram with less then 10 effective 
-   //               number of events'     
+   //       igood=2'There is a bin in the 2nd  histogram with less then 10 effective
+   //               number of events'
    //  - chi2 - chisquare of the test
    //  - ndf  - number of degrees of freedom (important, when both histograms have the same
    //         empty bins)
    //  - res -  normalized residuals for further analysis
-  
+
 
    Int_t i, j, k;
    Int_t i_start, i_end;
@@ -1512,33 +1512,33 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    Double_t bin1, bin2;
    Double_t err1,err2;
    Double_t sum1=0, sum2=0;
-   
+
    chi2 = 0;
    ndf = 0;
-   
+
    TString opt = option;
    opt.ToUpper();
-   
+
    TAxis *xaxis1 = this->GetXaxis();
    TAxis *xaxis2 = h2->GetXaxis();
    TAxis *yaxis1 = this->GetYaxis();
    TAxis *yaxis2 = h2->GetYaxis();
    TAxis *zaxis1 = this->GetZaxis();
    TAxis *zaxis2 = h2->GetZaxis();
-   
+
    Int_t nbinx1 = xaxis1->GetNbins();
    Int_t nbinx2 = xaxis2->GetNbins();
    Int_t nbiny1 = yaxis1->GetNbins();
    Int_t nbiny2 = yaxis2->GetNbins();
    Int_t nbinz1 = zaxis1->GetNbins();
    Int_t nbinz2 = zaxis2->GetNbins();
-   
+
    //check dimensions
    if (this->GetDimension() != h2->GetDimension() ){
       Error("ChistatTestX","Histograms have different dimensions.");
       return 0;
    }
-   
+
    //check number of channels
    if (nbinx1 != nbinx2) {
       Error("ChistatTestX","different number of x channels");
@@ -1549,7 +1549,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    if (nbinz1 != nbinz2) {
       Error("ChistatTestX","different number of z channels");
    }
-   
+
    //check for ranges
    i_start = j_start = k_start = 1;
    i_end = nbinx1;
@@ -1568,14 +1568,14 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       k_start = zaxis1->GetFirst();
       k_end   = zaxis1->GetLast();
    }
-   
-   
+
+
    if (opt.Contains("OF")) {
       if (this->GetDimension() == 3) k_end = ++nbinz1;
       if (this->GetDimension() >= 2) j_end = ++nbiny1;
       if (this->GetDimension() >= 1) i_end = ++nbinx1;
    }
-   
+
    if (opt.Contains("UF")) {
       if (this->GetDimension() == 3) k_start = 0;
       if (this->GetDimension() >= 2) j_start = 0;
@@ -1584,7 +1584,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    ndf = (i_end - i_start + 1)*(j_end - j_start + 1)*(k_end - k_start + 1) - 1;
 
-   
+
   //small number of events diagnostics
    for(i=i_start; i<=i_end; i++) {
       for (j=j_start; j<=j_end; j++) {
@@ -1636,7 +1636,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          }
       }
    }
-   
+
    //checks that the histograms are not empty
    if (sum1 == 0 || sum2 == 0) {
       Error("ChistatTestX","one of the histograms is empty");
@@ -1645,7 +1645,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    //THE TEST
    Int_t m=0, n=0;
-   
+
    //Experiment - experiment comparison
    if (opt.Contains("UU")) {
       Double_t sum = sum1 + sum2;
@@ -1677,13 +1677,13 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   binsum = bin1 + bin2;
                   temp1 = binsum*sum1/sum;
                   temp2 = binsum*sum2/sum;
-                  
+
                   if (res)
                      res[i-i_start] = (bin1-temp1)/TMath::Sqrt(temp1);
-  
+
                   if (temp1 < 1) m++;
                   if (temp2 < 1) n++;
-                  
+
                   //Habermann correction for residuals
                   correc = (1-sum1/sum)*(1-binsum/sum);
                   if (res) {
@@ -1706,13 +1706,13 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          igood = 2;
          Info("Chi2TestX","There is bin in Hist2 with less than 1 number of events.\n");
       }
-      
+
       Double_t prob = TMath::Prob(chi2,ndf);
       return prob;
 
    }
 
-   
+
    //Experiment - MC comparison
    if (opt.Contains("UW")) {
       Double_t var1,var2;
@@ -1726,10 +1726,10 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                err2 = h2->GetBinError(i,j,k);
 
                err2 *= err2;
-       
+
                var1 = sum2*bin2 - sum1*err2;
                var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
-               
+
                while (var1*var1+bin1 == 0 || var1+var2 == 0) {
                   sum1++;
                   bin1++;
@@ -1756,30 +1756,30 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   }
                   var2 = TMath::Sqrt(var2);
                }
-               
+
                probb = (var1+var2)/(2*sum2*sum2);
                temp1 = probb * sum1;
                temp2 = probb * sum2;
-               
+
                if (temp1 < 1) m++;
                if (bin2*bin2/err2 < 10) n++;
-               
+
                temp = bin1 - temp1;
                chi2 += temp*temp/temp1;
                temp = bin2 - temp2;
                chi2 += temp*temp/err2;
- 
+
                temp1 = sum2*err2/var2;
                temp2 = 1 + (sum1*err2 - sum2*bin2)/var2;
                temp2 = temp1*temp1*sum1*probb*(1-probb) + temp2*temp2*err2/4;
                if (res)
                   res[i-i_start] = temp/TMath::Sqrt(temp2);
-       
+
                //if (y) this->SetBinContent(i,j,k,bin1-x);
             }
          }
       }
-      
+
       if (m) {
          igood = 1;
          Info("Chi2TestX","There is bin in Hist1 with less than 1 number of events.\n");
@@ -1788,12 +1788,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          igood = 2;
          Info("Chi2TestX","There is bin in Hist2 with less than 10 effective number of events.\n");
       }
-      
+
       Double_t prob = TMath::Prob(chi2,ndf);
-      
+
       return prob;
    }
-   
+
    //MC - MC comarison
    if (opt.Contains("WW")) {
       Double_t temp,temp1,temp2,temp3;
@@ -1806,18 +1806,18 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                err2 = h2->GetBinError(i,j,k);
                err1 *= err1;
                err2 *= err2;
-               
+
                temp  = sum1*sum1*err2 + sum2*sum2*err1;
                temp1 = sum2*bin1 - sum1*bin2;
                chi2 += temp1*temp1/temp;
-               
+
                temp2 = bin1*sum1*err2 + bin2*sum2*err1;
                temp2 *= sum1/temp;
                temp2 = bin1-temp2;
                temp3 = sum1*sum1 / (sum1*sum1/err1 + sum2*sum2/err2);
                if (res)
-                  res[i-i_start] = temp2/TMath::Sqrt(err1-temp3);               
-               
+                  res[i-i_start] = temp2/TMath::Sqrt(err1-temp3);
+
                bin1 *= bin1/err1;
                bin2 *= bin2/err2;
                if (bin1 < 10) m++;
@@ -1935,7 +1935,7 @@ void TH1::Copy(TObject &obj) const
    if (a) a->Set(fNcells);
    for (i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
    ((TH1&)obj).fEntries   = fEntries;
-   
+
    TAttLine::Copy(((TH1&)obj));
    TAttFill::Copy(((TH1&)obj));
    TAttMarker::Copy(((TH1&)obj));
@@ -2139,17 +2139,17 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
 //   if not already set.
 //   The resulting errors are calculated assuming uncorrelated histograms.
 //   However, if option ="B" is specified, Binomial errors are computed.
-//   In this case c1 and c2 do not make real sense and they are ignored.   
+//   In this case c1 and c2 do not make real sense and they are ignored.
 //
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Divide
-// 
-//  Please note also that in the binomial case errors are calculated using standard 
+//
+//  Please note also that in the binomial case errors are calculated using standard
 //  binomial statistics, which means when b1 = b2, the error is zero.
-//  If you prefer to have efficiency errors not going to zero when the efficiency is 1, you must 
-//  use the function TGraphAsymmErrors::BayesDivide, which will return an asymmetric and non-zero lower 
-//  error for the case b1=b2.     
+//  If you prefer to have efficiency errors not going to zero when the efficiency is 1, you must
+//  use the function TGraphAsymmErrors::BayesDivide, which will return an asymmetric and non-zero lower
+//  error for the case b1=b2.
 
    TString opt = option;
    opt.ToLower();
@@ -2233,10 +2233,10 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                      w = b1/b2;    // c1 and c2 are ignored
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
-                     // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 ) 
+                     // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 )
                      fSumw2.fArray[bin] = TMath::Abs( ( (1.-2.*w)*e1*e1 + w*w*e2*e2 )/(b2*b2) );
                   } else {
-                     //in case b1=b2 error is zero 
+                     //in case b1=b2 error is zero
                      //use  TGraphAsymmErrors::BayesDivide for getting the asymmetric error not equal to zero
                      fSumw2.fArray[bin] = 0;
                   }
@@ -2296,7 +2296,7 @@ void TH1::Draw(Option_t *option)
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (opt.Contains("same")) {
-         if (opt.Contains("same") && 
+         if (opt.Contains("same") &&
              gPad->GetX1() == 0   && gPad->GetX2() == 1 &&
              gPad->GetY1() == 0   && gPad->GetY2() == 1 &&
              gPad->GetListOfPrimitives()->GetSize()==0) opt.ReplaceAll("same","");
@@ -3083,7 +3083,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
             f1->GetName(), f1->GetNdim(), GetDimension());
       return -4;
    }
-   
+
    // We must empty the current buffer (if any), otherwise TH1::Reset may be
    // called at some point, resetting the function created by this function
    if (fBuffer) BufferEmpty(1);
@@ -3538,8 +3538,8 @@ Double_t TH1::GetEntries() const
 Double_t TH1::GetEffectiveEntries() const
 {
    // number of effective entries of the histogram,
-   // i.e. the number of unweighted entries a histogram would need to 
-   // have the same statistical power as this histogram with possibly 
+   // i.e. the number of unweighted entries a histogram would need to
+   // have the same statistical power as this histogram with possibly
    // weighted entries (i.e. <= TH1::GetEntries())
 
    Stat_t s[kNstat];
@@ -4064,10 +4064,10 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 {
    // return binx, biny, binz corresponding to the global bin number globalbin
    // see TH1::GetBin function above
-   
+
    Int_t nx  = fXaxis.GetNbins()+2;
    Int_t ny  = fYaxis.GetNbins()+2;
-   
+
    if (GetDimension() < 2) {
       binx = binglobal%nx;
    }
@@ -4078,7 +4078,7 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
    if (GetDimension() < 4) {
       binx = binglobal%nx;
       biny = ((binglobal-binx)/nx)%ny;
-      binz = ((binglobal-binx)/nx -biny)/ny; 
+      binz = ((binglobal-binx)/nx -biny)/ny;
    }
 }
 
@@ -5175,10 +5175,10 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       Error("Rebin","if xbins is specified, newname must be given");
       return 0;
    }
-   
+
    Int_t newbins = nbins/ngroup;
    if (xbins) newbins = ngroup;
-   
+
    // Save old bin contents into a new array
    Double_t entries = fEntries;
    Double_t *oldBins = new Double_t[nbins+2];
@@ -5248,7 +5248,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       Int_t imax = ngroup;
       Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
       for (i=0;i<ngroup;i++) {
-         if( (hnew == this && (oldbin+i > nbins)) || 
+         if( (hnew == this && (oldbin+i > nbins)) ||
              ( hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
             imax = i;
             break;
@@ -5413,8 +5413,8 @@ void TH1::Scale(Double_t c1)
    //
    // One can scale an histogram such that the bins integral is equal to
    // the normalization parameter via TH1::Scale(Double_t norm), where norm
-   // is the desired normalization divided by the integral of the histogram.   
- 
+   // is the desired normalization divided by the integral of the histogram.
+
    Double_t ent = fEntries;
    Add(this,this,c1,0);
    fEntries = ent;
@@ -5463,7 +5463,7 @@ void TH1::SetTitle(const char *title)
    //   the y axis title to stringy, and the z axis title to stringz.
    //   To insert the character ";" in one of the titles, one should use "#;"
    //   or "#semicolon".
-   
+
    fTitle = title;
    fTitle.ReplaceAll("#;",2,"#semicolon",10);
 
@@ -6183,8 +6183,8 @@ Double_t TH1::GetMean(Int_t axis) const
    } else {
       // mean error = RMS / sqrt( Neff )
       Double_t rms = GetRMS(axis-10);
-      Double_t neff = GetEffectiveEntries(); 
-      return ( neff > 0 ? rms/TMath::Sqrt(neff) : 0. ); 
+      Double_t neff = GetEffectiveEntries();
+      return ( neff > 0 ? rms/TMath::Sqrt(neff) : 0. );
    }
 }
 
@@ -6237,8 +6237,8 @@ Double_t TH1::GetRMS(Int_t axis) const
    rms2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
    if (axis<10)
       return TMath::Sqrt(rms2);
-   else { 
-      // The right formula for RMS error is 
+   else {
+      // The right formula for RMS error is
       // formula valid for only gaussian distribution ( 4-th momentum =  )
       Double_t neff = GetEffectiveEntries();
       return ( neff > 0 ? TMath::Sqrt(rms2/(2*neff) ) : 0. );
@@ -6257,10 +6257,10 @@ Double_t TH1::GetRMSError(Int_t axis) const
    //  call the static function TH1::StatOverflows(kTRUE) before filling
    //  the histogram.
    //  Value returned is standard deviation of sample standard deviation.
-   //  Note that it is an approximated value which is valid only in the case that the 
-   //  original data distribution is Normal. The correct one would require  
-   //  the 4-th momentum value, which cannot be accuratly estimated from an histogram since 
-   //  the x-information for all entries is not kept.  
+   //  Note that it is an approximated value which is valid only in the case that the
+   //  original data distribution is Normal. The correct one would require
+   //  the 4-th momentum value, which cannot be accuratly estimated from an histogram since
+   //  the x-information for all entries is not kept.
 
    return GetRMS(axis+10);
 }
@@ -6378,12 +6378,12 @@ void TH1::GetStats(Double_t *stats) const
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
 
-      Int_t firstBinX = fXaxis.GetFirst(); 
+      Int_t firstBinX = fXaxis.GetFirst();
       Int_t lastBinX  = fXaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows && !fXaxis.TestBit(TAxis::kAxisRange)) { 
-         if (firstBinX == 1) firstBinX = 0; 
-         if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1; 
+      if (fgStatOverflows && !fXaxis.TestBit(TAxis::kAxisRange)) {
+         if (firstBinX == 1) firstBinX = 0;
+         if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
       }
       for (binx = firstBinX; binx <= lastBinX; binx++) {
          x   = fXaxis.GetBinCenter(binx);
@@ -7405,27 +7405,27 @@ void TH1::SetBinContent(Int_t, Double_t)
 TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 {
 //   This function calculates the background spectrum in this histogram.
-//   The background is returned as a histogram. 
-//                
+//   The background is returned as a histogram.
+//
 //   Function parameters:
 //   -niter, number of iterations (default value = 2)
 //      Increasing niter make the result smoother and lower.
 //   -option: may contain one of the following options
 //      - to set the direction parameter
 //        "BackDecreasingWindow". By default the direction is BackIncreasingWindow
-//      - filterOrder-order of clipping filter,  (default "BackOrder2"                         
-//                  -possible values= "BackOrder4"                          
-//                                    "BackOrder6"                          
-//                                    "BackOrder8"                           
+//      - filterOrder-order of clipping filter,  (default "BackOrder2"
+//                  -possible values= "BackOrder4"
+//                                    "BackOrder6"
+//                                    "BackOrder8"
 //      - "nosmoothing"- if selected, the background is not smoothed
 //           By default the background is smoothed.
-//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")         
-//                  -possible values= "BackSmoothing5"                        
-//                                    "BackSmoothing7"                       
-//                                    "BackSmoothing9"                        
-//                                    "BackSmoothing11"                       
-//                                    "BackSmoothing13"                       
-//                                    "BackSmoothing15"                        
+//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")
+//                  -possible values= "BackSmoothing5"
+//                                    "BackSmoothing7"
+//                                    "BackSmoothing9"
+//                                    "BackSmoothing11"
+//                                    "BackSmoothing13"
+//                                    "BackSmoothing15"
 //      - "nocompton"- if selected the estimation of Compton edge
 //                  will be not be included   (by default the compton estimation is set)
 //      - "same" : if this option is specified, the resulting background
@@ -7439,8 +7439,8 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 //  with the estimated background.
 //
 
-   
-   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%x,%d,\"%s\")",this,niter,option));
+
+   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%lx,%d,\"%s\")",this,niter,option));
 }
 
 //______________________________________________________________________________
@@ -7452,10 +7452,10 @@ Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
    //for more detauils see TSpectrum::Search.
    //note the difference in the default value for option compared to TSpectrum::Search
    //option="" by default (instead of "goff")
-   
-   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%x,%g,\"%s\",%g)",this,sigma,option,threshold));
+
+   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",this,sigma,option,threshold));
 }
-   
+
 
 //______________________________________________________________________________
 TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
@@ -7675,7 +7675,7 @@ void TH1C::AddBinContent(Int_t bin, Double_t w)
 void TH1C::Copy(TObject &newth1) const
 {
    // Copy this to newth1
-   
+
    TH1::Copy(newth1);
 }
 
@@ -8620,7 +8620,7 @@ TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 void TH1D::Copy(TObject &newth1) const
 {
    // Copy this to newth1
-   
+
    TH1::Copy(newth1);
 }
 

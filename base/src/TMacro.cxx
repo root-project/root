@@ -110,12 +110,12 @@ TMacro::~TMacro()
    if (fLines) fLines->Delete();
    delete fLines;
 }
- 
+
 //______________________________________________________________________________
 TMacro& TMacro::operator=(const TMacro &macro)
 {
    // Copy constructor.
-  
+
    if(this!=&macro) {
       TNamed::operator=(macro);
       if(fLines) delete fLines;
@@ -172,7 +172,7 @@ void TMacro::Browse(TBrowser * /*b*/)
       return;
    }
    if (opt.Contains(".C")) {
-      const char *cmd = Form(".x %s((TMacro*)0x%x)",opt.Data(),this);
+      const char *cmd = Form(".x %s((TMacro*)0x%lx)",opt.Data(),this);
       gROOT->ProcessLine(cmd);
       return;
    }
@@ -237,7 +237,7 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
    // Execute this macro with params, if params is 0, default parameters
    // (set via SetParams) are used.
    // error is set to an TInterpreter::EErrorCode by TApplication::ProcessLine().
-   // Returns the result of the macro (return value or value of the last 
+   // Returns the result of the macro (return value or value of the last
    // expression), cast to a Long_t.
 
    //the current implementation uses a file in the current directory.

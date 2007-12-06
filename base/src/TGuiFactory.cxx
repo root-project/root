@@ -95,7 +95,7 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
 {
    // Create a batch version of TControlBarImp.
 
-   return new TControlBarImp(c, title); 
+   return new TControlBarImp(c, title);
 }
 
 //______________________________________________________________________________
@@ -115,7 +115,7 @@ TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width,
       return new TInspectorImp(obj, width, height);
    }
 
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject*)0x%x);",obj));
+   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject*)0x%lx);",obj));
    return 0;
 }
 
