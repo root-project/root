@@ -52,13 +52,13 @@
 #include "TSystem.h"
 
 #ifndef __CINT__
-void stressGeometry(const char*);
+void stressGeometry(const char*, Bool_t);
 
 int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
-   if (argc > 1) stressGeometry(argv[1]);
-   else          stressGeometry("*");
+   if (argc > 1) stressGeometry(argv[1],kFALSE);
+   else          stressGeometry("*",kFALSE);
    return 0;
 }
 
@@ -114,12 +114,14 @@ Double_t tpsref = 70.90; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
                          
 Int_t iexp[10];
+Bool_t gen_ref=kFALSE;
 void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, Int_t &nbound, Float_t &length, Float_t &safe, Float_t &rad, Bool_t verbose=kFALSE);
 void ReadRef(Int_t kexp);
 void WriteRef(Int_t kexp);
 void InspectRef(const char *exp="alice");
 
-void stressGeometry(const char *exp="*") {
+void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
+   gen_ref = generate_ref;
    gErrorIgnoreLevel = 10;
    
    printf("******************************************************************\n");
@@ -148,13 +150,14 @@ void stressGeometry(const char *exp="*") {
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
          
       sprintf(fname, "%s_ref.root", exps[i]);
-      if (!TFile::Open(Form("http://root.cern.ch/files/%s",fname))) {
-         printf("File: %s does not exist, generating it\n", fname);
+      
+      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s",fname))) {
+         if (!gen_ref) printf("File: %s does not exist, generating it\n", fname);
+         else               printf("Generating reference file %s\n", fname);
          WriteRef(i);
       }
    
       ReadRef(i);
-//      InspectRef(exps[i]);
    }   
    if (all && tpstot>0) {
       Float_t rootmarks = 800*tpsref/tpstot;
@@ -183,11 +186,20 @@ void stressGeometry(const char *exp="*") {
 void ReadRef(Int_t kexp) {
    TStopwatch sw;
    char fname[100];
-   sprintf(fname, "http://root.cern.ch/files/%s_ref.root", exps[kexp]);
-   TFile::SetCacheFileDir(".");   
-   TFile *f = TFile::Open(fname, "CACHEREAD");
-   if (!f) return;
+   TFile *f = 0;
+   if (!gen_ref)
+      sprintf(fname, "http://root.cern.ch/files/%s_ref.root", exps[kexp]);
+   else
+      sprintf(fname, "%s_ref.root", exps[kexp]);
+   
+   f = TFile::Open(fname);
+   if (!f) {
+      printf("Reference file %s not found ! Skipping.\n", fname);
+      return;
+   }   
    printf("Reference file %s found\n", fname);
+   sprintf(fname, "%s_diff.root", exps[kexp]);
+   TFile fdiff(fname,"RECREATE");
    TTree *TD = new TTree("TD","TGeo stress diff");
    TD->Branch("p",&p.x,"x/D:y/D:z/D:theta/D:phi/D:rad[4]/F");
    TTree *T = (TTree*)f->Get("T");
@@ -203,7 +215,7 @@ void ReadRef(Int_t kexp) {
    Int_t nbound;
    Float_t length, safe, rad;
    Float_t diff;
-   Float_t diffmax = 1e-1;
+   Float_t diffmax = 0.01;  // percent of rad!
    Int_t nbad = 0;
    vect(0) = 0;//gGeoManager->Weight(0.01, "va");
    for (Long64_t i=0;i<nentries;i++) {
@@ -220,7 +232,7 @@ void ReadRef(Int_t kexp) {
       diff += TMath::Abs(length-p.length);
       diff += TMath::Abs(safe-p.safe);
       diff += TMath::Abs(rad-p.rad);
-      if (TMath::Abs(rad-p.rad) > 0.1 || TMath::Abs(nbound-p.nbound) > 1000) {
+      if ((TMath::Abs(rad-p.rad)/p.rad)>diffmax || TMath::Abs(nbound-p.nbound)>100) {
          nbad++;
          if (nbad < 10) {
             printf(" ==>Point %lld differs with diff = %g, x=%g, y=%g, z=%g\n",i,diff,p.x,p.y,p.z);
@@ -239,7 +251,7 @@ void ReadRef(Int_t kexp) {
    }
    diff = 0.;
    //for (Int_t j=1; j<4; j++) diff += TMath::Abs(vect_ref(j)-vect(j));
-   diff += TMath::Abs(vect_ref(3)-vect(3));
+   diff += TMath::Abs(vect_ref(3)-vect(3))/vect_ref(3);
    if (diff > diffmax) {
 //      printf("Total weight=%g   ref=%g\n", vect(0), vect_ref(0));
       printf("Total nbound=%g   ref=%g\n", vect(1), vect_ref(1));
@@ -250,8 +262,6 @@ void ReadRef(Int_t kexp) {
       
    if (nbad) {
       testfailed = kTRUE;
-      sprintf(fname, "%s_diff.root", exps[kexp]);
-      TFile fdiff(fname,"RECREATE");
       TD->AutoSave();
       TD->Print();
    }   
@@ -312,14 +322,18 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
    Double_t zp  = TMath::Cos(theta);
    Double_t snext;
    char path[256];
+   Double_t pt[3];
+   Double_t loc[3];
+   Double_t epsil = 1.E-2;
+   Double_t lastrad = 0.;
    Int_t ismall = 0;
    nbound = 0;
    length = 0.;
    safe   = 0.;
    rad    = 0.;
    TGeoMedium *med;
+   TGeoShape *shape;
    gGeoManager->InitTrack(x,y,z,xp,yp,zp);
-//   Double_t *point = gGeoManager->GetCurrentPoint();
    if (verbose) {
       printf("Track: (%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f)\n",
                        x,y,z,xp,yp,zp);
@@ -331,14 +345,45 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
       med = 0;
       if (nextnode) med = nextnode->GetVolume()->GetMedium();
       else return;      
+      shape = nextnode->GetVolume()->GetShape();
       nextnode = gGeoManager->FindNextBoundaryAndStep();
-      nbound++;
       snext  = gGeoManager->GetStep();
+      if (snext<1.e-8) {
+         ismall++;
+         if (ismall > 3) {
+            printf("ERROR: Small steps in: %s shape=%s\n",gGeoManager->GetPath(), shape->ClassName());
+            return;
+         }   
+         memcpy(pt,gGeoManager->GetCurrentPoint(),3*sizeof(Double_t));
+         const Double_t *dir = gGeoManager->GetCurrentDirection();
+         for (Int_t i=0;i<3;i++) pt[i] += epsil*dir[i];
+         snext = epsil;
+         length += snext;
+         rad += lastrad*snext;
+         gGeoManager->CdTop();
+         nextnode = gGeoManager->FindNode(pt[0],pt[1],pt[2]);
+         if (gGeoManager->IsOutside()) return;
+         TGeoMatrix *mat = gGeoManager->GetCurrentMatrix();
+         mat->MasterToLocal(pt,loc);
+         if (!gGeoManager->GetCurrentVolume()->Contains(loc)) {
+//            printf("Woops - out\n");
+            gGeoManager->CdUp();
+            nextnode = gGeoManager->GetCurrentNode();
+         }   
+         continue;
+      } else {
+         ismall = 0;
+      }      
+      nbound++;
       length += snext;
       if (med) {
          Double_t radlen = med->GetMaterial()->GetRadLen();
-         if (radlen>1.e-5 && radlen<1.e10)
-            rad += med->GetMaterial()->GetDensity()*snext/radlen;
+         if (radlen>1.e-5 && radlen<1.e10) {
+            lastrad = med->GetMaterial()->GetDensity()/radlen;
+            rad += lastrad*snext;
+         } else {
+            lastrad = 0.;
+         }      
          if (verbose) {
             printf(" STEP #%d: %s\n",nbound, path);
             printf("    step=%g  length=%g  rad=%g %s\n", snext,length,
@@ -346,36 +391,23 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
             sprintf(path, "%s", gGeoManager->GetPath());
          }   
       }
-      if (snext<1.e-9) {
-         ismall++;
-         if (ismall > 3) {
-            nbound -= ismall; 
-//            nextnode = gGeoManager->FindNode();
-//            printf("     (%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f)\n",
-//                       point[0],point[1],point[2],xp,yp,zp);
-//            printf("Small steps in: %s\n",gGeoManager->GetPath());
-//            gGeoManager->InspectState();
-            return;
-         }   
-      } else {
-         ismall = 0;
-      }      
    }   
 }
   
-void InspectDiff(Long64_t ientry=-1) {
+void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
+   char fname[100];
    Int_t nbound = 0;   
    Float_t length = 0.;
    Float_t safe   = 0.;
    Float_t rad    = 0.;
-   if (!gSystem->AccessPathName("alice.root")) {
-      TGeoManager::Import("alice.root");
+   sprintf(fname, "%s.root",exp);
+   if (gSystem->AccessPathName(fname)) {
+      TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
    } else {
-      printf(" ERROR: To run this script you must copy the Alice geometry from\n");
-      printf("        ftp://root.cern.ch/root/geom_name.root\n");
-      return;
+      TGeoManager::Import(fname);
    }
-   TFile f("alice_diff.root");
+   sprintf(fname, "%s_diff.root",exp);   
+   TFile f(fname);
    if (f.IsZombie()) return;
    TTree *TD = (TTree*)f.Get("TD");
    TD->SetBranchAddress("p",&p.x);
