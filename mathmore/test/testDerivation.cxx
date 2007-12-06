@@ -82,7 +82,7 @@ void testDerivation() {
   
   // Derivative of a free function wrapped in an IGenFunction
   // Works when compiled c++, compiled ACLiC, does not work when interpreted by CINT  
-  ROOT::Math::Functor1D<ROOT::Math::IGenFunction> *f3 = new ROOT::Math::Functor1D<ROOT::Math::IGenFunction>(myfunc2);
+  ROOT::Math::Functor1D *f3 = new ROOT::Math::Functor1D (&myfunc2);
 
   std::cout << "Derivative of a free function wrapped in a Functor f(x) = x^(3/2) at x = 2" << std::endl;
   std::cout << "EvalCentral:  " << der->Eval( *f3, x0) << std::endl;

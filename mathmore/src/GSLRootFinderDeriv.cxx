@@ -30,7 +30,7 @@
 // 
 
 #include "Math/IFunction.h"
-
+#include "Math/Error.h"
 #include "Math/GSLRootFinderDeriv.h"
 #include "Math/GSLRootHelper.h"
 #include "GSLRootFdFSolver.h"
@@ -40,6 +40,7 @@
 #include "gsl/gsl_errno.h"
 
 #include <iostream>
+#include <cmath>
 
 namespace ROOT {
 namespace Math {
@@ -110,6 +111,7 @@ int GSLRootFinderDeriv::Iterate() {
       std::cerr << "GSLRootFinderDeriv - Error: Starting point is not valid" << std::endl;
       return -2; 
    }
+
    
    int status = gsl_root_fdfsolver_iterate(fS->Solver()); 
    // update Root
@@ -148,6 +150,12 @@ int GSLRootFinderDeriv::Solve (int maxIter, double absTol, double relTol)
       //       fPrevRoot << std::endl;
    }
    while (status == GSL_CONTINUE && iter < maxIter); 
+
+   if (status == GSL_CONTINUE) { 
+      double tol = std::abs(fRoot-fPrevRoot);
+      MATH_INFO_MSGVAL("GSLRootFinderDeriv::Solve","exceeded max iterations, reached tolerance is not sufficient",tol);
+   }
+
    return status;
 }
 

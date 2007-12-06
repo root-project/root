@@ -167,7 +167,10 @@ public:
       return Evaluator<Func,NPAR>::F(fCdf,x, fParams); 
    }
    double Quantile(double x) const { 
-      return Evaluator<FuncQ,NPARQ>::F(fQuant,x, fParams); 
+      double z =  Evaluator<FuncQ,NPARQ>::F(fQuant,x, fParams); 
+      if ((NPAR - NPARQ) == 1) 
+         z += fParams[NPAR-1]; // adjust the offset
+      return z; 
    }
 
    // test cumulative function
@@ -256,13 +259,13 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
    if (xlow >= xup) {
       x1 = -100; x2 = 100; 
    }
-   else if (xup <= xmax) {
+   else if (xup < xmax) {
       x1 = xlow; x2 = 100; 
    } 
    else { 
       x1=xlow;   x2 = xup;
    }
-//   std::cout << "x1-x2 " << x1 << "   " << x2 << std::endl;
+   //std::cout << "x1-x2 " << x1 << "   " << x2 << std::endl;
    TF1 * f = new TF1("ftemp",ParamFunctor(*this),x1,x2,0);
 
    for (int i = 0; i < NFuncTest; ++i) { 
@@ -301,13 +304,15 @@ typedef double ( * F2) ( double, double, double);
 typedef double ( * F3) ( double, double, double, double); 
 
 typedef StatFunction<F2,F2,2,2> Dist_beta; 
-typedef StatFunction<F2,F1,2> Dist_breitwigner; 
-typedef StatFunction<F2,F1,2> Dist_chisquared; 
-typedef StatFunction<F3,F2,3> Dist_fdistribution; 
-typedef StatFunction<F3,F2,3> Dist_gamma; 
-typedef StatFunction<F2,F1,2> Dist_gaussian; 
-typedef StatFunction<F3,F2,3> Dist_lognormal; 
-typedef StatFunction<F2,F1,2> Dist_tdistribution; 
+typedef StatFunction<F2,F1,2>   Dist_breitwigner; 
+typedef StatFunction<F2,F1,2>   Dist_chisquared; 
+typedef StatFunction<F3,F2,3>   Dist_fdistribution; 
+typedef StatFunction<F3,F2,3>   Dist_gamma; 
+typedef StatFunction<F2,F1,2>   Dist_gaussian; 
+typedef StatFunction<F3,F2,3>   Dist_lognormal; 
+typedef StatFunction<F2,F1,2>   Dist_tdistribution; 
+typedef StatFunction<F2,F1,2>   Dist_exponential; 
+typedef StatFunction<F3,F2,3>   Dist_uniform; 
 
  
 //#ifdef HAVE_MATHMORE
@@ -370,13 +375,13 @@ int testStatFunctions(int /* nfunc */) {
    {
       PrintTest("Normal distribution "); 
       CREATE_DIST(gaussian);
-      dist.SetParameters( 1, 0);
+      dist.SetParameters( 2, 1);
       dist.ScaleTol2(100);
-      iret |= dist.Test(-4,4);
+      iret |= dist.Test(-3,5);
       CREATE_DIST_C(gaussian);
       distc.SetParameters( 1, 0);
       distc.ScaleTol2(100);
-      iret |= distc.Test(-4,4,1,0,true);
+      iret |= distc.Test(-3,5,1,0,true);
    }
    {
       PrintTest("BreitWigner distribution "); 
@@ -439,6 +444,28 @@ int testStatFunctions(int /* nfunc */) {
 #endif
       distc.ScaleTol2(1000000); // t.b.c.
       iret |= distc.Test(0.01,5,0,1,true);
+   }
+
+   { 
+      PrintTest("Exponential distribution"); 
+      CREATE_DIST(exponential);
+      dist.SetParameters( 2);
+      dist.ScaleTol2(100);
+      iret |= dist.Test(0.,5.,0.,1.);
+      CREATE_DIST_C(exponential);
+      distc.SetParameters( 2);
+      distc.ScaleTol2(100);
+      iret |= distc.Test(0.,5.,0.,1.,true);
+   }
+
+   { 
+      PrintTest("Uniform distribution"); 
+      CREATE_DIST(uniform);
+      dist.SetParameters( 1, 2);
+      iret |= dist.Test(1.,2.,1.,2.);
+      CREATE_DIST_C(uniform);
+      distc.SetParameters( 1, 2);
+      iret |= distc.Test(1.,2.,1.,2.,true);
    }
 
 
@@ -859,6 +886,7 @@ public:
 
       
       std::string fname = VecType<V>::name() + ".root";
+      // replace < character with _
       TFile file(fname.c_str(),"RECREATE","",compress);
 
       // create tree

@@ -101,6 +101,17 @@ STRESSMATH    = stressMathCore$(ExeSuf)
 
 endif
 
+ifeq ($(shell $(ROOTCONFIG) --has-mathmore),yes)
+STRESSMATHMOREO   = stressMathMore.$(ObjSuf) 
+STRESSMATHMORES   = stressMathMore.$(SrcSuf)  
+ifeq ($(PLATFORM),win32)
+STRESSMATHMORELIBS = '$(ROOTSYS)/lib/libMathCore.lib' '$(ROOTSYS)/lib/libMathMore.lib'  
+else
+STRESSMATHMORELIBS = -lMathCore -lMathMore
+endif
+STRESSMATHMORE    = stressMathMore$(ExeSuf)
+endif
+
 VLAZYO        = vlazy.$(ObjSuf)
 VLAZYS        = vlazy.$(SrcSuf)
 VLAZY         = vlazy$(ExeSuf)
@@ -194,7 +205,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(STRESSGO) $(STRESSSPO) $(TESTBITSO) $(STRESSTMVAO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) $(STRESSMATHO) \
                 $(STRESSFITO) $(STRESSHEPIXO) $(STRESSENTRYLISTO) \
-                $(STRESSROOFITO) $(STRESSPROOFO)
+                $(STRESSROOFITO) $(STRESSPROOFO) $(STRESSMATHMOREO)
 
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
@@ -203,7 +214,8 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
-                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) $(STRESSTMVA)
+                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) $(STRESSTMVA) \
+                $(STRESSMATHMORE)
 
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -411,6 +423,16 @@ else
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
 endif
 		@echo "$@ done"
+
+$(STRESSMATHMORE):   $(STRESSMATHMOREO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHMORELIBS)  $(OutPutOpt)$@
+		$(MT_EXE)
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHMORELIBS)  $(OutPutOpt)$@
+endif
+		@echo "$@ done"
+
 
 $(TESTBITS):    $(TESTBITSO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@

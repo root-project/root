@@ -93,7 +93,8 @@ double integral_num(unsigned int dim, double* a, double* b, double* p)
   TStopwatch timer; 
   timer.Start();
   ROOT::Math::WrappedParamFunction<> funptr1(&SimpleFun, dim, p, p+1);
-  ROOT::Math::AdaptiveIntegratorMultiDim ig1(funptr1, 1.E-5, 1.E-5, (unsigned int)1.E7);
+  unsigned int nmax = (unsigned int) 1.E7; // apply cut off to avoid routine to explode
+  ROOT::Math::AdaptiveIntegratorMultiDim ig1(funptr1, 1.E-5, 1.E-5, nmax);
   //  std::cout << "1. integral= " << std::endl; 
   ig1.SetFunction(funptr1); 
   ig1.Integral(a, b);

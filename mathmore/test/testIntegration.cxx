@@ -103,7 +103,7 @@ void testIntegration() {
 
   std::cout << "Testing a singular function: 1/sqrt(x)" << std::endl;
   //ROOT::Math::WrappedFunction<FreeFunc> wf(&singularFunction); 
-  ROOT::Math::Functor1D<ROOT::Math::IGenFunction> wf(&singularFunction);
+  ROOT::Math::Functor1D wf(&singularFunction);
   
   ig.SetFunction(wf); 
   double r = ig.Integral(0,1); 

@@ -32,12 +32,14 @@
 #include "Math/IFunction.h"
 #include "Math/GSLRootFinder.h"
 #include "Math/GSLRootHelper.h"
+#include "Math/Error.h"
 
 #include "GSLRootFSolver.h"
 #include "GSLFunctionWrapper.h"
 
 #include "gsl/gsl_roots.h"
 #include "gsl/gsl_errno.h"
+#include <cmath>
 
 
 namespace ROOT {
@@ -119,11 +121,16 @@ int GSLRootFinder::Iterate() {
       return -2; 
    }
    int status =  gsl_root_fsolver_iterate(fS->Solver());
+
    // update Root 
    fRoot = gsl_root_fsolver_root(fS->Solver() );
    // update interval
    fXlow =  gsl_root_fsolver_x_lower(fS->Solver() ); 
    fXup =  gsl_root_fsolver_x_upper(fS->Solver() );
+
+   //std::cout << "iterate .." << fRoot << " status " << status << " interval " 
+   //          << fXlow << "  " << fXup << std::endl;
+
    return status;
 }
 
@@ -161,7 +168,11 @@ int GSLRootFinder::Solve (int maxIter, double absTol, double relTol)
          return status; 
       }
    }
-   while (status == GSL_CONTINUE && iter < maxIter); 
+   while (status == GSL_CONTINUE && iter < maxIter);
+   if (status == GSL_CONTINUE) { 
+      double tol = std::abs(fXup-fXlow);
+      MATH_INFO_MSGVAL("GSLRootFinder::Solve","exceeded max iterations, reached tolerance is not sufficient",tol);
+   }
    return status;
 }
 
