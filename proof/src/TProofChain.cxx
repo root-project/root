@@ -69,7 +69,7 @@ TProofChain::~TProofChain()
       while ((o = nxp()))
          if ((p = dynamic_cast<TProof *>(o)))
             p->RemoveChain(fChain);
-      fChain->SetProof(0);
+      fChain = 0;
    } else {
       // Not owner
       fSet = 0;
