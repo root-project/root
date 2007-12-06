@@ -34,6 +34,7 @@
 
 #include "Xrd/XrdLink.hh"
 
+#include "XrdProofdProtocol.h"
 #include "XrdProofdResponse.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -70,7 +71,6 @@ private:
 };
 
 
-class XrdProofdProtocol;
 class XrdROOT;
 
 //////////////////////////////////////////////////////////////////////////
@@ -83,16 +83,22 @@ class XrdROOT;
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 class XrdClientID {
-public:
+private:
    XrdProofdProtocol *fP;
    unsigned short     fSid;
 
+public:
    XrdClientID(XrdProofdProtocol *pt = 0, unsigned short id = 0)
             { fP = pt; fSid = id; }
    ~XrdClientID() { }
 
-   bool   IsValid() const { return (fP != 0); }
-   void   Reset() { fP = 0; fSid = 0; }
+   XrdProofdClient   *C() const { return fP->Client(); }
+   bool               IsValid() const { return (fP != 0); }
+   XrdProofdProtocol *P() const { return fP; }
+   void               Reset() { fP = 0; fSid = 0; }
+   void               SetP(XrdProofdProtocol *p) { fP = p; }
+   void               SetSid(unsigned short sid) { fSid = sid; }
+   unsigned short     Sid() const { return fSid; }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -128,7 +134,7 @@ public:
    inline XrdProofGroup *Group() const { XrdSysMutexHelper mhp(fMutex); return fGroup; }
    inline short int    ID() const { XrdSysMutexHelper mhp(fMutex); return fID; }
    inline bool         IsParent(XrdProofdProtocol *p) const
-                                 { XrdSysMutexHelper mhp(fMutex); return (fParent && fParent->fP == p); }
+                                 { XrdSysMutexHelper mhp(fMutex); return (fParent && fParent->P() == p); }
    inline XrdLink     *Link() const { XrdSysMutexHelper mhp(fMutex); return fLink; }
    inline bool         Match(short int id) const { XrdSysMutexHelper mhp(fMutex); return (id == fID); }
    inline XrdSysMutex *Mutex() { return fMutex; }

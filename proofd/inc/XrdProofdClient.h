@@ -84,7 +84,7 @@ class XrdProofdClient {
    void                    SetValid(bool valid = 1) { fIsValid = valid; }
    void                    SetWorkdir(const char *wrk) { fUI.fWorkDir = wrk; }
 
-   int                     CreateUNIXSock(XrdSysError *edest, char *tmpdir);
+   int                     CreateUNIXSock(XrdSysError *edest, const char *tmpdir);
    XrdNet                 *UNIXSock() const { return fUNIXSock; }
    char                   *UNIXSockPath() const { return fUNIXSockPath; }
    void                    SaveUNIXPath(); // Save path in the sandbox

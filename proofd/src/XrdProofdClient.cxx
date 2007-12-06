@@ -27,9 +27,11 @@
 
 #include "XrdProofdAux.h"
 #include "XrdProofdClient.h"
+#include "XrdProofdManager.h"
 #include "XrdProofdPlatform.h"
 #include "XrdProofdProtocol.h"
 #include "XrdProofGroup.h"
+#include "XrdProofServProxy.h"
 
 #include "XrdProofdTrace.h"
 static const char *gTraceID = " ";
@@ -217,7 +219,7 @@ int XrdProofdClient::GetClientID(XrdProofdProtocol *p)
 }
 
 //__________________________________________________________________________
-int XrdProofdClient::CreateUNIXSock(XrdSysError *edest, char *tmpdir)
+int XrdProofdClient::CreateUNIXSock(XrdSysError *edest, const char *tmpdir)
 {
    // Create UNIX socket for internal connections
 
@@ -324,7 +326,7 @@ void XrdProofdClient::SaveUNIXPath()
       sscanf(ln, "%d %s", &pid, path);
       // Verify if still running
       int vrc = -1;
-      if ((vrc = XrdProofdProtocol::VerifyProcessByID(pid, "xrootd")) != 0) {
+      if ((vrc = XrdProofdProtocol::Mgr()->VerifyProcessByID(pid, "xrootd")) != 0) {
          // Still there
          actln.push_back(new XrdOucString(ln));
       } else if (vrc == 0) {
@@ -794,4 +796,60 @@ int XrdProofdClient::GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
 
    // Done
    return ((opt == 3 && found) ? 1 : 0);
+}
+//__________________________________________________________________________
+int XrdProofdClient::GetFreeServID()
+{
+   // Get next free server ID. If none is found, increase the vector size
+   // and get the first new one
+
+   TRACE(ACT,"GetFreeServID: enter");
+
+   XrdSysMutexHelper mh(fMutex);
+
+   TRACE(DBG,"GetFreeServID: size = "<<fProofServs.size()<<
+              "; capacity = "<<fProofServs.capacity());
+   int ic = 0;
+   // Search for free places in the existing vector
+   for (ic = 0; ic < (int)fProofServs.size() ; ic++) {
+      if (fProofServs[ic] && !(fProofServs[ic]->IsValid())) {
+         fProofServs[ic]->SetValid();
+         return ic;
+      }
+   }
+
+   // We may need to resize (double it)
+   if (ic >= (int)fProofServs.capacity()) {
+      int newsz = 2 * fProofServs.capacity();
+      fProofServs.reserve(newsz);
+   }
+
+   // Allocate new element
+   fProofServs.push_back(new XrdProofServProxy());
+
+   TRACE(DBG,"GetFreeServID: size = "<<fProofServs.size()<<
+              "; new capacity = "<<fProofServs.capacity()<<"; ic = "<<ic);
+
+   // We are done
+   return ic;
+}
+
+//______________________________________________________________________________
+void XrdProofdClient::EraseServer(int psid)
+{
+   // Erase server with id psid from the list
+
+   TRACE(ACT,"EraseServer: enter: psid: " << psid);
+
+   XrdSysMutexHelper mh(fMutex);
+
+   XrdProofServProxy *xps = 0;
+   std::vector<XrdProofServProxy *>::iterator ip;
+   for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
+      xps = *ip;
+      if (xps && xps->Match(psid)) {
+         fProofServs.erase(ip);
+         break;
+      }
+   }
 }

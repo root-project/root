@@ -43,11 +43,13 @@ public:
 
    const char *Dir() const { return fDir.c_str(); }
    const char *Export() const { return fExport.c_str(); }
+   bool        IsParked() const { return ((fStatus == 2) ? 1: 0); }
    bool        IsValid() const { return ((fStatus == 1) ? 1: 0); }
    bool        IsInvalid() const { return ((fStatus == -1) ? 1: 0); }
    bool        Match(const char *dir, const char *tag)
                           { return ((fTag == tag && fDir == dir) ? 1 : 0); }
    bool        MatchTag(const char *tag) { return ((fTag == tag) ? 1 : 0); }
+   void        Park() { fStatus = 2; }
    const char *PrgmSrv() const { return fPrgmSrv.c_str(); }
    void        SetValid() { fStatus = 1; }
    kXR_int16   SrvProtVers() const { return fSrvProtVers; }

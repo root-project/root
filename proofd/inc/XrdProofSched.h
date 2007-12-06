@@ -42,6 +42,7 @@
 
 #include <list>
 
+#include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucString.hh"
 #ifdef OLDXRDOUC
 #  include "XrdSysToOuc.h"
@@ -54,6 +55,8 @@ class XrdProofGroupMgr;
 class XrdProofServProxy;
 class XrdProofWorker;
 class XrdSysError;
+class XrdProofdDirective;
+class XrdOucStream;
 
 class XrdProofSched
 {
@@ -76,6 +79,9 @@ public:
 
    const char *Name() const { return (const char *) &fName[0]; }
 
+   virtual int ProcessDirective(XrdProofdDirective *d,
+                                char *val, XrdOucStream *cfg, bool rcf);
+
 protected:
    char              fName[kXPSMXNMLEN];   // Name of this protocol
    bool              fValid;  // TRUE if the scheduler is usable
@@ -91,9 +97,13 @@ protected:
    double            fNodesFraction; // the fraction of free units to assign
                                      // to a query.
 
+   XrdOucHash<XrdProofdDirective> fConfigDirectives; // Config directives
+
    XrdSysError      *fEDest;      // Error message handler
 
    virtual int       Config(const char *cfn);
+   virtual int       DoDirectiveSchedParam(char *, XrdOucStream *, bool);
+   virtual int       DoDirectiveResource(char *, XrdOucStream *, bool);
    virtual int       GetNumWorkers(XrdProofServProxy *xps);
    virtual void      ResetParameters();
 };

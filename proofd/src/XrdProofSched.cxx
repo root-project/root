@@ -90,6 +90,18 @@ static bool XpdWrkComp(XrdProofWorker *&lhs, XrdProofWorker *&rhs)
 }
 
 //______________________________________________________________________________
+int DoSchedDirective(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool rcf)
+{
+   // Generic directive processor
+
+   if (!d || !(d->fVal))
+      // undefined inputs
+      return -1;
+
+   return ((XrdProofSched *)d->fVal)->ProcessDirective(d, val, cfg, rcf);
+}
+
+//______________________________________________________________________________
 XrdProofSched::XrdProofSched(const char *name,
                              XrdProofdManager *mgr, XrdProofGroupMgr *grpmgr,
                              const char *cfn, XrdSysError *e)
@@ -106,6 +118,12 @@ XrdProofSched::XrdProofSched(const char *name,
    memset(fName, 0, kXPSMXNMLEN);
    if (name)
       memcpy(fName, name, kXPSMXNMLEN-1);
+
+   // Config directives
+   fConfigDirectives.Add("schedparam",
+      new XrdProofdDirective("schedparam", this, &DoSchedDirective));
+   fConfigDirectives.Add("resource",
+      new XrdProofdDirective("resource", this, &DoSchedDirective));
 
    // Read config file, if required
    if (cfn && strlen(cfn) > 0)
@@ -127,90 +145,44 @@ void XrdProofSched::ResetParameters()
 }
 
 //_________________________________________________________________________________
-int XrdProofSched::Config(const char *cfg)
+int XrdProofSched::Config(const char *cfn)
 {
-   // Configure this instance using the content of file 'cfg'.
+   // Configure this instance using the content of file 'cfn'.
    // Return 0 on success, -1 in case of failure (file does not exists
    // or containing incoherent information).
 
    int rc = 0;
 
    // Nothing to do if no file
-   if (!cfg || strlen(cfg) <= 0)
+   if (!cfn || strlen(cfn) <= 0)
       return rc;
 
-   XrdOucStream config(fEDest, getenv("XRDINSTANCE"));
+   XrdOucStream cfg(fEDest, getenv("XRDINSTANCE"));
 
    // Open and attach the config file
    int cfgFD = 0;
-   if ((cfgFD = open(cfg, O_RDONLY, 0)) < 0) {
+   if ((cfgFD = open(cfn, O_RDONLY, 0)) < 0) {
       XrdOucString msg("XrdProofSched::Config: error open config file: ");
-      msg += fMaxSessions;
+      msg += cfn;
       TRACE(XERR, msg.c_str());
       return -1;
    }
-   config.Attach(cfgFD);
+   cfg.Attach(cfgFD);
 
    // Process items
    char *var = 0;
    char *val = 0;
-   while ((var = config.GetMyFirstWord())) {
-      if (!(strncmp("xpd.schedparam", var, 14))) {
-         var += 14;
-         // Get the parameters
-         while ((val = config.GetToken()) && val[0]) {
-            XrdOucString s(val);
-            if (s.beginswith("wmx:")) {
-               s.replace("wmx:","");
-               fWorkerMax = strtol(s.c_str(), (char **)0, 10);
-            } else if (s.beginswith("mxsess:")) {
-               s.replace("mxsess:","");
-               fMaxSessions = strtol(s.c_str(), (char **)0, 10);
-            } else if (s.beginswith("selopt:")) {
-               if (s.endswith("random"))
-                  fWorkerSel = kSSORandom;
-               else if (s.endswith("load"))
-                  fWorkerSel = kSSOLoadBased;
-               else
-                  fWorkerSel = kSSORoundRobin;
-            } else if (s.beginswith("fraction:")) {
-               s.replace("fraction:","");
-               fNodesFraction = strtod(s.c_str(), (char **)0);
-            } else if (s.beginswith("optnwrks:")) {
-               s.replace("optnwrks:","");
-               fOptWrksPerUnit = strtol(s.c_str(), (char **)0, 10);
-            } else if (s.beginswith("minforquery:")) {
-               s.replace("minforquery:","");
-               fMinForQuery = strtol(s.c_str(), (char **)0, 10);
-            } else if (strncmp(val, "default", 7)) {
-               // This line applies to another scheduler
-               ResetParameters();
-               break;
-            }
-         }
-      } else if (!(strncmp("xpd.resource", var, 12))) {
-         // For backward compatibility
-         var += 12;
-         // Get the scheduler name
-         if (!(val = config.GetToken()) || !val[0])
-            continue;
-         if (strncmp(val, "static", 6) && strncmp(val, "default", 7))
-            continue;
-         // Get the values
-         while ((val = config.GetToken()) && val[0]) {
-            XrdOucString s(val);
-            if (s.beginswith("wmx:")) {
-               s.replace("wmx:","");
-               fWorkerMax = strtol(s.c_str(), (char **)0, 10);
-            } else if (s.beginswith("mxsess:")) {
-               s.replace("mxsess:","");
-               fMaxSessions = strtol(s.c_str(), (char **)0, 10);
-            } else if (s.beginswith("selopt:")) {
-               if (s.endswith("random"))
-                  fWorkerSel = kSSORandom;
-               else
-                  fWorkerSel = kSSORoundRobin;
-            }
+   while ((var = cfg.GetMyFirstWord())) {
+      if (!(strncmp("xpd.", var, 4)) && var[4]) {
+         // xpd directive: process it
+         var += 4;
+         // Get the value
+         val = cfg.GetToken();
+         // Get the directive
+         XrdProofdDirective *d = fConfigDirectives.Find(var);
+         if (d) {
+            // Process it
+            d->DoDirective(val, &cfg, 0);
          }
       }
    }
@@ -459,5 +431,98 @@ int XrdProofSched::ExportInfo(XrdOucString &sbuf)
    }
 
    // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofSched::ProcessDirective(XrdProofdDirective *d,
+                                    char *val, XrdOucStream *cfg, bool rcf)
+{
+   // Update the priorities of the active sessions.
+
+   if (!d)
+      // undefined inputs
+      return -1;
+
+   if (d->fName == "schedparam") {
+      return DoDirectiveSchedParam(val, cfg, rcf);
+   } else if (d->fName == "resource") {
+      return DoDirectiveResource(val, cfg, rcf);
+   }
+   TRACE(XERR,"ProcessDirective: unknown directive: "<<d->fName);
+   return -1;
+}
+
+//______________________________________________________________________________
+int XrdProofSched::DoDirectiveSchedParam(char *val, XrdOucStream *cfg, bool)
+{
+   // Process 'schedparam' directive
+
+   if (!val || !cfg)
+      // undefined inputs
+      return -1;
+
+   // Get the parameters
+   while ((val = cfg->GetToken()) && val[0]) {
+      XrdOucString s(val);
+      if (s.beginswith("wmx:")) {
+         s.replace("wmx:","");
+         fWorkerMax = strtol(s.c_str(), (char **)0, 10);
+      } else if (s.beginswith("mxsess:")) {
+         s.replace("mxsess:","");
+         fMaxSessions = strtol(s.c_str(), (char **)0, 10);
+      } else if (s.beginswith("selopt:")) {
+         if (s.endswith("random"))
+            fWorkerSel = kSSORandom;
+         else if (s.endswith("load"))
+            fWorkerSel = kSSOLoadBased;
+         else
+            fWorkerSel = kSSORoundRobin;
+      } else if (s.beginswith("fraction:")) {
+         s.replace("fraction:","");
+         fNodesFraction = strtod(s.c_str(), (char **)0);
+      } else if (s.beginswith("optnwrks:")) {
+         s.replace("optnwrks:","");
+         fOptWrksPerUnit = strtol(s.c_str(), (char **)0, 10);
+      } else if (s.beginswith("minforquery:")) {
+         s.replace("minforquery:","");
+         fMinForQuery = strtol(s.c_str(), (char **)0, 10);
+      } else if (strncmp(val, "default", 7)) {
+         // This line applies to another scheduler
+         ResetParameters();
+         break;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofSched::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
+{
+   // Process 'resource' directive
+
+   if (!val || !cfg)
+      // undefined inputs
+      return -1;
+
+   // Get the scheduler name
+   if (strncmp(val, "static", 6) && strncmp(val, "default", 7))
+      return 0;
+   // Get the values
+   while ((val = cfg->GetToken()) && val[0]) {
+      XrdOucString s(val);
+      if (s.beginswith("wmx:")) {
+         s.replace("wmx:","");
+         fWorkerMax = strtol(s.c_str(), (char **)0, 10);
+      } else if (s.beginswith("mxsess:")) {
+         s.replace("mxsess:","");
+         fMaxSessions = strtol(s.c_str(), (char **)0, 10);
+      } else if (s.beginswith("selopt:")) {
+         if (s.endswith("random"))
+            fWorkerSel = kSSORandom;
+         else
+            fWorkerSel = kSSORoundRobin;
+      }
+   }
    return 0;
 }

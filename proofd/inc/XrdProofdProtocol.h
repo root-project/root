@@ -33,6 +33,7 @@
 #  include "XrdSys/XrdSysSemWait.hh"
 #endif
 
+#include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
@@ -44,7 +45,6 @@
 #include "XrdProofdManager.h"
 #include "XrdProofdResponse.h"
 #include "XrdProofGroup.h"
-#include "XrdProofServProxy.h"
 #include "XrdProofdAux.h"
 
 #include <list>
@@ -54,15 +54,15 @@
 // To be increment when non-backward compatible changes are introduced
 //  1001 (0x3E9) -> 1002 (0x3EA) : support for flexible env setting
 //  1002 (0x3EA) -> 1003 (0x3EB) : many new features
-#define XPROOFD_VERSBIN 0x000003EB
-#define XPROOFD_VERSION "0.3"
+//  1003 (0x3EB) -> 1004 (0x3EC) : restructuring
+#define XPROOFD_VERSBIN 0x000003EC
+#define XPROOFD_VERSION "0.4"
 
 #define XPD_LOGGEDIN       1
 #define XPD_NEED_AUTH      2
 #define XPD_ADMINUSER      4
 #define XPD_NEED_MAP       8
 
-class XrdROOT;
 class XrdBuffer;
 class XrdClientMessage;
 class XrdLink;
@@ -71,7 +71,7 @@ class XrdOucTrace;
 class XrdProofdClient;
 class XrdProofdPInfo;
 class XrdProofdPriority;
-class XrdProofSched;
+class XrdProofServProxy;
 class XrdProofWorker;
 class XrdScheduler;
 class XrdSrvBuffer;
@@ -93,11 +93,14 @@ public:
    int           Stats(char *buff, int blen, int do_sync);
 
    const char   *GetID() const { return (const char *)fClientID; }
+   const char   *GetGroupID() const { return (const char *)fGroupID; }
+   XrdProofdClient *Client() const { return fPClient; }
 
-   static int    Reconfig();
-   static int    TraceConfig(const char *cfn);
-   static int    TrimTerminatedProcesses();
-   static int    UpdatePriorities(bool forceupdate = 0);
+   static void   Reconfig();
+   static int    ProcessDirective(XrdProofdDirective *d,
+                                  char *val, XrdOucStream *cfg, bool rcf);
+
+   static XrdProofdManager *Mgr() { return &fgMgr; }
 
  private:
 
@@ -176,7 +179,7 @@ public:
    static XrdObjectQ<XrdProofdProtocol> fgProtStack;
    static XrdBuffManager        *fgBPool;     // Buffer manager
    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
-   static XrdSecService         *fgCIA;       // Authentication Server
+
    static XrdScheduler          *fgSched;     // System scheduler
    static XrdSysError            fgEDest;     // Error message handler
    static XrdSysLogger           fgMainLogger; // Error logger
@@ -186,76 +189,33 @@ public:
    //
    static XrdProofdFile          fgCfgFile;    // Main config file
    static bool                   fgConfigDone; // Whether configure has been run
-   static std::list<XrdROOT *>   fgROOT;     // ROOT versions; the first is the default
-   static XrdOucString           fgBareLibPath; // LIBPATH cleaned from ROOT dists
-   static char                  *fgTMPdir;   // directory for temporary files
-   static char                  *fgSecLib;
-   // 
-   static char                  *fgPoolURL;    // Local pool URL
-   static char                  *fgNamespace;  // Local pool namespace
-   static XrdOucString           fgLocalroot;  // Local root prefix (directive oss.localroot)
    //
    static XrdSysSemWait          fgForkSem;   // To serialize fork requests
-   //
-   static std::list<XrdOucString *> fgMastersAllowed;  // list of master (domains) allowed
-   static std::list<XrdProofdPriority *> fgPriorities;  // list of {users, priority change}
-   static char                  *fgSuperUsers;  // ':' separated list of privileged users
-   //
-   static bool                   fgWorkerUsrCfg; // user cfg files enabled / disabled
    //
    static int                    fgReadWait;
    static int                    fgInternalWait; // Timeout on replies from proofsrv
    //
-   static int                    fgShutdownOpt; // What to do when a client disconnects
-   static int                    fgShutdownDelay; // Delay shutdown by this (if enabled)
-   // 
-   static int                    fgCron; // Cron thread option [1 ==> start]
-   static int                    fgCronFrequency; // Frequency for running cron checks in secs
-   //
-   static int                    fgOperationMode; // Operation mode
-   static XrdOucString           fgAllowedUsers; // Users allowed in controlled mode
-   static bool                   fgMultiUser;    // Allow/disallow multi-user mode
-   static bool                   fgChangeOwn;    // TRUE is ownership has to be changed
-   //
    static XrdOucString           fgProofServEnvs; // Additional envs to be exported before proofserv
    static XrdOucString           fgProofServRCs; // Additional rcs to be passed to proofserv
    //
-   static XrdProofGroupMgr       fgGroupsMgr; // Groups manager
-   //
    static XrdProofdManager       fgMgr;       // Cluster manager
-   //
-   static XrdProofSched         *fgProofSched;   // Instance of the PROOF scheduler
-   //
-   // Worker level scheduling control
-   static float                  fgOverallInflate; // Overall inflate factor
-   static int                    fgSchedOpt;  // Worker sched option
-   static int                    fgPriorityMax;  // Max session priority [1,40], [20]
-   static int                    fgPriorityMin;  // Min session priority [1,40], [1]
-   //
-   // Static area: client section
-   //
-   static std::list<XrdProofdClient *> fgProofdClients;  // keeps track of all users
-   static std::list<XrdProofdPInfo *> fgTerminatedProcess; // List of pids of processes terminating
+
+   static XrdOucHash<XrdProofdDirective> fgConfigDirectives; // Config directives
+   static XrdOucHash<XrdProofdDirective> fgReConfigDirectives; // Re-configurable directives
 
    //
    // Static area: methods
    //
-   static int    BroadcastPriorities();
-   static bool   CheckMaster(const char *m);
-   static int    CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e);
-   static int    Config(const char *fn);
-   static char  *FilterSecConfig(const char *cfn, int &nd);
-   static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
-   static XrdProofSched *LoadScheduler(const char *cfn, XrdSysError *edest);
-   static XrdSecService *LoadSecurity(const char *seclib, const char *cfn);
-   static int    LogTerminatedProc(int pid);
-   static int    ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl);
-   static int    SetGroupEffectiveFractions();
-   static int    SetInflateFactors();
-   static int    SetNiceValues(int opt = 0);
    static int    SetProofServEnv(XrdROOT *r);
    static int    SaveAFSkey(XrdSecCredentials *c, const char *fn);
-   static int    VerifyProcessByID(int pid, const char *pname = 0);
+
+   static int    Config(const char *fn, bool rcf = 0);
+   static int    TraceConfig(const char *cfn);
+
+   static void   RegisterConfigDirectives();
+   static void   RegisterReConfigDirectives();
+   static int    DoDirectivePutEnv(char *, XrdOucStream *, bool);
+   static int    DoDirectivePutRc(char *, XrdOucStream *, bool);
 };
 
 #endif

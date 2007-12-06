@@ -419,6 +419,11 @@ int XrdProofdAux::CheckIf(XrdOucStream *s, const char *host)
    if (!val)
       return -1;
 
+   // Deprecate
+   MPRINT(MHEAD, ">>> Warning: 'if' conditions at the end of the directive are deprecated ");
+   MPRINT(MHEAD, ">>> Please use standard Scalla/Xrootd 'if-else-fi' constructs");
+   MPRINT(MHEAD, ">>> (see http://xrootd.slac.stanford.edu/doc/xrd_config/xrd_config.htm)");
+
    // Notify
    MTRACE(DBG, MHEAD, "CheckIf: <pattern>: " <<val);
 
@@ -493,3 +498,67 @@ int XrdProofdAux::GetNumCPUs()
    // Done
    return (ncpu <= 0) ? (int)(-1) : ncpu ;
 }
+
+//
+// Functions to process directives for integer and strings
+//
+
+//______________________________________________________________________________
+int DoDirectiveInt(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool)
+{
+   // Process directive for an integer
+
+   if (!d || !(d->fVal) || !val)
+      // undefined inputs
+      return -1;
+
+   // Check deprecated 'if' directive
+   if (d->fHost && cfg)
+      if (XrdProofdAux::CheckIf(cfg, d->fHost) == 0)
+         return 0;
+
+   int v = strtol(val,0,10);
+   *((int *)d->fVal) = v;
+
+   MTRACE(DBG,MHEAD,"DoDirectiveInt: set "<<d->fName<<" to "<<*((int *)d->fVal));
+
+   return 0;
+}
+
+//______________________________________________________________________________
+int DoDirectiveString(XrdProofdDirective *d, char *val, XrdOucStream *cfg, bool)
+{
+   // Process directive for a string
+
+   if (!d || !(d->fVal) || !val)
+      // undefined inputs
+      return -1;
+
+   // Check deprecated 'if' directive
+   if (d->fHost && cfg)
+      if (XrdProofdAux::CheckIf(cfg, d->fHost) == 0)
+         return 0;
+
+   *((XrdOucString *)d->fVal) = val;
+
+   MTRACE(DBG,MHEAD,"DoDirectiveString: set "<<d->fName<<" to "<<*((XrdOucString *)d->fVal));
+   return 0;
+}
+
+//__________________________________________________________________________
+int SetHostInDirectives(const char *, XrdProofdDirective *d, void *h)
+{
+   // Set host field for directive 'd' to (const char *h)
+
+   const char *host = (const char *)h;
+
+   if (!d || !host || strlen(host) <= 0)
+      // Dataset root dir undefined: we cannot continue
+      return 1;
+
+   d->fHost = host;
+
+   // Process next
+   return 0;
+}
+

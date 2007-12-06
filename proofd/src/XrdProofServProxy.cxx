@@ -21,7 +21,6 @@
 #include "XrdNet/XrdNet.hh"
 #include "XrdSys/XrdSysPriv.hh"
 #include "XrdProofServProxy.h"
-#include "XrdProofdProtocol.h"
 #include "XrdProofWorker.h"
 
 // Tracing utils
@@ -202,7 +201,7 @@ int XrdProofServProxy::GetFreeID()
    int ic = 0;
    // Search for free places in the existing vector
    for (ic = 0; ic < (int)fClients.size() ; ic++) {
-      if (fClients[ic] && (fClients[ic]->fP == 0))
+      if (fClients[ic] && (fClients[ic]->P() == 0))
          return ic;
    }
 
