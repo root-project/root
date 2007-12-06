@@ -1745,13 +1745,18 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         }
                      } else if (chaine(0,7) == "strstr(") {
                         compt = 7; nomb = 0; virgule = 0; nest=0;
+                        inString = false;
                         while(compt != lchain) {
                            compt++;
-                           if (chaine(compt-1,1) == "(") nest++;
-                           else if (chaine(compt-1,1) == ")") nest--;
-                           else if (chaine(compt-1,1) == "," && nest==0) {
-                              nomb++;
-                              if (nomb == 1 && virgule == 0) virgule = compt;
+                           if (chaine(compt-1,1) == "\"") {
+                              inString = !inString;
+                           }  else if (!inString) {
+                              if (chaine(compt-1,1) == "(") nest++;
+                              else if (chaine(compt-1,1) == ")") nest--;
+                              else if (chaine(compt-1,1) == "," && nest==0) {
+                                 nomb++;
+                                 if (nomb == 1 && virgule == 0) virgule = compt;
+                              }
                            }
                         }
                         if (nomb != 1) err = 28; // There are plus or minus than 2 arguments for strstr
