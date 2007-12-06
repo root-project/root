@@ -127,6 +127,10 @@ ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 //_______________________________________________________________________
 void TMVA::BinaryTree::Read(istream & istr)
 {
+   // Read the binary tree from an input stream.
+   // The input stream format depends on the tree type,
+   // it is defined be the node of the tree
+
    Node * currentNode = GetRoot();
    Node* parent = 0;
 
