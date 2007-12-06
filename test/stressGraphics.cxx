@@ -433,6 +433,7 @@ TCanvas *StartTest(Int_t w, Int_t h)
    // Open the TCanvas C and set the acceptable error (number of characters)
 
    gTestNum++;
+   gStyle->Reset();
    TCanvas *C = new TCanvas("C","C",0,0,w,h);
    return C;
 }
