@@ -2,7 +2,7 @@
 
 #if !defined(__sun)
 
-#define G__DICTIONARY
+#define MAKE_CINT_FUNCTOR
 
 #include <Math/Functor.h>
 #include <iostream>
@@ -352,5 +352,5 @@ inline double FunctorCintHandler<PF>::DoDerivative (const double *x, unsigned in
 
 } //end namespace ROOT
 
-#undef G__DICTIONARY
+#undef MAKE_CINT_FUNCTOR
 #endif // if not sun is defined

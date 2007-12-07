@@ -374,7 +374,7 @@ public:
 
 
    //implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY)
+#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
    Functor(void * p, unsigned int dim, const char * className = 0, const char * methodName = 0);
 #endif 
 
@@ -480,7 +480,7 @@ public:
 
 
    //implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY)
+#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
    Functor1D(void * p, const char * className = 0, const char * methodName = 0);
 #endif 
 
@@ -596,7 +596,7 @@ public:
    { }
 
    // for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY)
+#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
    GradFunctor(void * p1, unsigned int dim, const char * className, const char * methodName, const char * derivName);
    GradFunctor(void * p1, void * p2, unsigned int dim);
 #endif 
@@ -719,7 +719,7 @@ public:
    {}
 
    // eventually implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY)
+#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
    GradFunctor1D(void * p1, const char * className, const char * methodName, const char * derivName);
    GradFunctor1D(void * p1, void * p2);
 #endif 
