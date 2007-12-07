@@ -220,7 +220,10 @@ void TDSetElement::Validate(TDSetElement *elem)
       return;
    }
 
-   if (!strcmp(GetFileName(), elem->GetFileName()) &&
+   const char *name = TUrl(GetFileName()).GetFileAndOptions();
+   const char *elemname = TUrl(elem->GetFileName()).GetFileAndOptions();
+
+   if (!strcmp(name, elemname) &&
        !strcmp(GetDirectory(), elem->GetDirectory()) &&
        !strcmp(GetObjName(), elem->GetObjName())) {
       Long64_t entries = elem->fFirst + elem->fNum;
@@ -351,6 +354,8 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree)
    // Record end-point Url and mark as looked-up; be careful to change
    // nothing in the file name, otherwise some cross-checks may fail
    TUrl *eu = (TUrl *) file->GetEndpointUrl();
+   eu->SetOptions(TUrl(fname).GetOptions());
+   eu->SetAnchor(TUrl(fname).GetAnchor());
    if (strlen(eu->GetProtocol()) > 0 && strcmp(eu->GetProtocol(), "file"))
       fName = eu->GetUrl();
    else
