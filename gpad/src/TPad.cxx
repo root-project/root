@@ -4220,6 +4220,8 @@ void TPad::Print(const char *filenam, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
+   if (!gPad->IsBatch() && fCanvas) 
+      gVirtualX->SelectWindow(GetCanvasID());
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
