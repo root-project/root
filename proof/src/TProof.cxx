@@ -5338,7 +5338,8 @@ void TProof::Progress(Long64_t total, Long64_t processed)
 
    if (gROOT->IsBatch()) {
       // Simple progress bar
-      PrintProgress(total, processed);
+      if (total > 0)
+         PrintProgress(total, processed);
    } else {
       EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
    }
@@ -5358,7 +5359,8 @@ void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
 
    if (gROOT->IsBatch()) {
       // Simple progress bar
-      PrintProgress(total, processed, procTime);
+      if (total > 0)
+         PrintProgress(total, processed, procTime);
    } else {
       EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
              7, total, processed, bytesread, initTime, procTime, evtrti, mbrti);
