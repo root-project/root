@@ -1126,7 +1126,7 @@ int XrdProofdManager::VerifyProcessByID(int pid, const char *pname)
    kinfo_proc *pl = 0;
    int np;
    int ern = 0;
-   if ((ern = GetMacProcList(&pl, np)) != 0) {
+   if ((ern = XrdProofdAux::GetMacProcList(&pl, np)) != 0) {
       XrdOucString emsg("VerifyProcessByID: cannot get the process list: errno: ");
       emsg += ern;
       TRACE(XERR, emsg.c_str());

@@ -107,6 +107,9 @@ int SetHostInDirectives(const char *, XrdProofdDirective *d, void *h);
 //
 // Static methods
 //
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+typedef struct kinfo_proc kinfo_proc;
+#endif
 class XrdOucStream;
 class XrdProofdAux {
 public:
@@ -118,6 +121,9 @@ public:
    static char *Expand(char *p);
    static void Expand(XrdOucString &path);
    static long int GetLong(char *str);
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+   static int GetMacProcList(kinfo_proc **plist, int &nproc);
+#endif
    static int GetNumCPUs();
    static int GetUserInfo(const char *usr, XrdProofUI &ui);
    static int GetUserInfo(int uid, XrdProofUI &ui);

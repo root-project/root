@@ -499,6 +499,95 @@ int XrdProofdAux::GetNumCPUs()
    return (ncpu <= 0) ? (int)(-1) : ncpu ;
 }
 
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+//__________________________________________________________________________
+int XrdProofdAux::GetMacProcList(kinfo_proc **plist, int &nproc)
+{
+   // Returns a list of all processes on the system.  This routine
+   // allocates the list and puts it in *plist and counts the
+   // number of entries in 'nproc'. Caller is responsible for 'freeing'
+   // the list.
+   // On success, the function returns 0.
+   // On error, the function returns an errno value.
+   //
+   // Adapted from: reply to Technical Q&A 1123,
+   //               http://developer.apple.com/qa/qa2001/qa1123.html
+   //
+
+   int rc = 0;
+   kinfo_proc *res;
+   bool done = 0;
+   static const int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
+
+   MTRACE(ACT, MHEAD, "GetMacProcList: enter ");
+
+   // Declaring name as const requires us to cast it when passing it to
+   // sysctl because the prototype doesn't include the const modifier.
+   size_t len = 0;
+
+   if (!plist || (*plist))
+      return EINVAL;
+   nproc = 0;
+
+   // We start by calling sysctl with res == 0 and len == 0.
+   // That will succeed, and set len to the appropriate length.
+   // We then allocate a buffer of that size and call sysctl again
+   // with that buffer.  If that succeeds, we're done.  If that fails
+   // with ENOMEM, we have to throw away our buffer and loop.  Note
+   // that the loop causes use to call sysctl with 0 again; this
+   // is necessary because the ENOMEM failure case sets length to
+   // the amount of data returned, not the amount of data that
+   // could have been returned.
+
+   res = 0;
+   do {
+      // Call sysctl with a 0 buffer.
+      len = 0;
+      if ((rc = sysctl((int *)name, (sizeof(name)/sizeof(*name)) - 1,
+                       0, &len, 0, 0)) == -1) {
+         rc = errno;
+      }
+
+      // Allocate an appropriately sized buffer based on the results
+      // from the previous call.
+      if (rc == 0) {
+         res = (kinfo_proc *) malloc(len);
+         if (!res)
+            rc = ENOMEM;
+      }
+
+      // Call sysctl again with the new buffer.  If we get an ENOMEM
+      // error, toss away our buffer and start again.
+      if (rc == 0) {
+         if ((rc = sysctl((int *)name, (sizeof(name)/sizeof(*name)) - 1,
+                          res, &len, 0, 0)) == -1) {
+            rc = errno;
+         }
+         if (rc == 0) {
+            done = 1;
+         } else if (rc == ENOMEM) {
+            if (res)
+               free(res);
+            res = 0;
+            rc = 0;
+         }
+      }
+   } while (rc == 0 && !done);
+
+   // Clean up and establish post conditions.
+   if (rc != 0 && !res) {
+      free(res);
+      res = 0;
+   }
+   *plist = res;
+   if (rc == 0)
+      nproc = len / sizeof(kinfo_proc);
+
+   // Done
+   return rc;
+}
+#endif
+
 //
 // Functions to process directives for integer and strings
 //
