@@ -626,6 +626,23 @@ Double_t THnSparse::GetSparseFractionMem() const {
 }
 
 //______________________________________________________________________________
+Bool_t THnSparse::IsInRange(Int_t *coord) const
+{
+   // Check whether bin coord is in range - i.e. not an underflow of overflow.
+
+   // will use whatever is set by SetRange() later...
+
+   for (Int_t i = 0; i < fNdimensions; ++i){
+      TAxis *axis = GetAxis(i);
+      if (axis->TestBit(TAxis::kAxisRange)
+          && (coord[i] < axis->GetFirst()
+               || coord[i] > axis->GetLast()))
+         return kFALSE;
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
 {
    // Project all bins into a 1-dimensional histogram,
@@ -656,9 +673,17 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    Double_t err = 0.;
    Double_t preverr = 0.;
    Double_t v = 0.;
+   Int_t inRangeX = GetAxis(xDim)->GetFirst(); // force it to be in-range
+   Int_t oldCoordX = 0;
 
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
+
+      oldCoordX = coord[xDim];
+      coord[xDim] = inRangeX;
+      if (!IsInRange(coord)) continue;
+      coord[xDim] = oldCoordX;
+
       h->AddBinContent(coord[xDim], v);
 
       if (wantErrors) {
@@ -706,21 +731,36 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
    Bool_t haveErrors = GetCalculateErrors();
    Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e'));
 
-   TH2D* h = new TH2D(name, title, GetAxis(xDim)->GetNbins(),
-                      GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax(),
+   // y, x looks wrong, but it's what TH3::Project3D("xy") does
+   TH2D* h = new TH2D(name, title,
                       GetAxis(yDim)->GetNbins(),
-                      GetAxis(yDim)->GetXmin(), GetAxis(yDim)->GetXmax());
+                      GetAxis(yDim)->GetXmin(), GetAxis(yDim)->GetXmax(),
+                      GetAxis(xDim)->GetNbins(),
+                      GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax());
 
    Int_t* coord = new Int_t[fNdimensions];
    Double_t err = 0.;
    Double_t preverr = 0.;
    Double_t v = 0.;
    Long_t bin = 0;
+   Int_t inRangeX = GetAxis(xDim)->GetFirst(); // force it to be in-range
+   Int_t inRangeY = GetAxis(yDim)->GetFirst(); // force it to be in-range
+   Int_t oldCoordX = 0;
+   Int_t oldCoordY = 0;
 
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
-      bin = h->GetBin(coord[xDim], coord[yDim]);
+      
+      oldCoordX = coord[xDim];
+      oldCoordY = coord[yDim];
+      coord[xDim] = inRangeX;
+      coord[yDim] = inRangeY;
+      if (!IsInRange(coord)) continue;
+      coord[xDim] = oldCoordX;
+      coord[yDim] = oldCoordY;
+
+      bin = h->GetBin(coord[yDim],coord[xDim] );
       h->AddBinContent(bin, v);
 
       if (wantErrors) {
@@ -728,8 +768,8 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
             err = GetBinError(i);
             err *= err;
          } else err = v;
-         preverr = h->GetBinError(coord[xDim],coord[yDim]);
-         h->SetBinError(coord[xDim], coord[yDim],
+         preverr = h->GetBinError(coord[yDim], coord[xDim]);
+         h->SetBinError(coord[yDim], coord[xDim],
                         TMath::Sqrt(preverr * preverr + err));
       }
    }
@@ -786,9 +826,27 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    Double_t preverr = 0.;
    Double_t v = 0.;
    Long_t bin = 0;
+   Int_t inRangeX = GetAxis(xDim)->GetFirst(); // force it to be in-range
+   Int_t inRangeY = GetAxis(yDim)->GetFirst(); // force it to be in-range
+   Int_t inRangeZ = GetAxis(zDim)->GetFirst(); // force it to be in-range
+   Int_t oldCoordX = 0;
+   Int_t oldCoordY = 0;
+   Int_t oldCoordZ = 0;
 
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
+
+      oldCoordX = coord[xDim];
+      oldCoordY = coord[yDim];
+      oldCoordZ = coord[zDim];
+      coord[xDim] = inRangeX;
+      coord[yDim] = inRangeY;
+      coord[zDim] = inRangeZ;
+      if (!IsInRange(coord)) continue;
+      coord[xDim] = oldCoordX;
+      coord[yDim] = oldCoordY;
+      coord[zDim] = oldCoordZ;
+
       bin = h->GetBin(coord[xDim], coord[yDim], coord[zDim]);
       h->AddBinContent(bin, v);
 
@@ -850,14 +908,24 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    Int_t* bins  = new Int_t[ndim];
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
+   Int_t* inRange = new Int_t[ndim];
+   for (Int_t d = 0; d < ndim; ++d)
+      inRange[d] = GetAxis(dim[d])->GetFirst(); // force it to be in-range
+
    Double_t err = 0.;
    Double_t preverr = 0.;
    Double_t v = 0.;
 
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
-      for (Int_t d = 0; d < ndim; ++d)
+
+      for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = coord[dim[d]];
+         coord[dim[d]] = inRange[dim[d]];
+      }
+
+      if (!IsInRange(coord)) continue;
+
       h->AddBinContent(bins, v);
 
       if (wantErrors) {

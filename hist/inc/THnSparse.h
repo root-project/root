@@ -138,6 +138,7 @@ class THnSparse: public TNamed {
                          const TObjArray* axes, Int_t chunksize) const;
 
    Bool_t CheckConsistency(const THnSparse *h, Char_t * tag) const;
+   Bool_t IsInRange(Int_t *coord) const;
 
  public:
    THnSparse(const char* name, const char* title, Int_t dim,
