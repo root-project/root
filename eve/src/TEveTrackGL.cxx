@@ -68,8 +68,6 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // Actual rendering code.
    // Virtual from TGLLogicalShape.
 
-   TEveLineGL::DirectDraw(rnrCtx);
-
    // path-marks
    std::vector<TEvePathMark*>& pm = fTrack->fPathMarks;
    TEveTrackPropagator& RS = *fTrack->GetPropagator();
@@ -111,4 +109,6 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // fist vertex
    if (RS.GetRnrFV() && fTrack->GetLastPoint())
       TEveGLUtil::RenderPolyMarkers(RS.RefFVAtt(), fTrack->GetP(), 1);
+
+   TEveLineGL::DirectDraw(rnrCtx);
 }

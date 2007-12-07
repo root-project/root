@@ -16,16 +16,15 @@
 
 class TEvePolygonSetProjectedGL : public TGLObject
 {
-protected:
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TEvePolygonSetProjectedGL();
    virtual  ~TEvePolygonSetProjectedGL();
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+
+   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 
    ClassDef(TEvePolygonSetProjectedGL,0);  // GL-renderer for TEvePolygonSetProjected class.
 };

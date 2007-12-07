@@ -28,14 +28,13 @@ private:
 protected:
    TEveStraightLineSet* fM; // fModel dynamic-casted to TEveStraightLineSetGL
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TEveStraightLineSetGL();
    virtual ~TEveStraightLineSetGL() {}
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    // To support two-level selectionvirtual
    Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }

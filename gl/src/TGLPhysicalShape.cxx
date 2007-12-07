@@ -260,16 +260,18 @@ void TGLPhysicalShape::SetDiffuseColor(const UChar_t rgba[4])
 }
 
 //______________________________________________________________________________
-void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx) const
+void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) const
 {
    // Setup colors - avoid setting things not required
    // for current draw flags.
+
+   if (color == 0) color = fColor;
 
    switch (rnrCtx.DrawPass()) {
       case TGLRnrCtx::kPassWireFrame:
       {
          // Wireframe needs basic color only
-         glColor4fv(fColor);
+         glColor4fv(color);
          break;
       }
       case TGLRnrCtx::kPassFill:
@@ -281,20 +283,20 @@ void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx) const
          // are shown. Don't set shinneness or specular as we want
          // back face to appear as 'flat' as possible as crude visual
          // approximation to proper capped clipped solid
-         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, fColor);
-         glMaterialfv(GL_FRONT, GL_AMBIENT,  fColor + 4);
-         glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
-         glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
-         glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
+         glMaterialfv(GL_FRONT, GL_AMBIENT,  color + 4);
+         glMaterialfv(GL_FRONT, GL_SPECULAR, color + 8);
+         glMaterialfv(GL_FRONT, GL_EMISSION, color + 12);
+         glMaterialf(GL_FRONT, GL_SHININESS, color[16]);
          // Some objects use point/line graphics. Material mode disabled.
-         glColor4fv(fColor);
+         glColor4fv(color);
          break;
       }
       case TGLRnrCtx::kPassOutlineLine:
       {
          // Outline also needs grey wireframe but respecting
          // transparency of main diffuse color.
-         glColor4f(0.1, 0.1, 0.1, fColor[3]/2.0);
+         glColor4f(0.1, 0.1, 0.1, color[3]/2.0);
          break;
       }
       default:
@@ -303,6 +305,15 @@ void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx) const
       }
    }
 }
+
+static const Float_t selColor[] =
+{
+   1,   1,   1,   1,     // base color
+   0,   0,   0,   1,     // ambient
+   0,   0,   0,   1,     // specular
+   0.5, 0,   0,   1,     // emission
+   0                     // shininess
+};
 
 //______________________________________________________________________________
 void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
@@ -329,8 +340,6 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       return;
    }
 
-   SetupGLColors(rnrCtx);
-
    if (gDebug > 4) {
       Info("TGLPhysicalShape::Draw", "this %d (class %s) LOD %d",
            this, IsA()->GetName(), rnrCtx.ShapeLOD());
@@ -339,7 +348,38 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    glPushMatrix();
    glMultMatrixd(fTransform.CArr());
    if (fInvertedWind)  glFrontFace(GL_CW);
-   fLogicalShape->Draw(rnrCtx);
+   if (fSelected)
+   {
+      const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
+      Int_t inner[5][2] = { {0,-1}, {1,0}, {0,1}, {-1,0}, {0,0} };
+      Int_t outer[8][2] = { {0,-2}, {2,0}, {0,2}, {-2,0}, {-1,-1}, {1,-1}, {1,1}, {-1,1} };
+
+      // TGLCapabilitySwitch bs(GL_BLEND, kTRUE), lss(GL_LINE_SMOOTH, kTRUE);
+
+      SetupGLColors(rnrCtx, selColor);
+      TGLUtil::LockColor();
+      for (int i = 0; i < 8; ++i)
+      {
+         glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
+         fLogicalShape->DirectDraw(rnrCtx);
+      }
+      TGLUtil::UnlockColor();
+
+      SetupGLColors(rnrCtx);
+      glDepthFunc(GL_ALWAYS);
+      for (int i = 0; i < 5; ++i)
+      {
+         glViewport(vp.X() + inner[i][0], vp.Y() + inner[i][1], vp.Width(), vp.Height());
+         fLogicalShape->Draw(rnrCtx);
+      }
+      glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
+      glDepthFunc(GL_LESS);
+   }
+   else
+   {
+      SetupGLColors(rnrCtx);
+      fLogicalShape->Draw(rnrCtx);
+   }
    if (fInvertedWind)  glFrontFace(GL_CCW);
    glPopMatrix();
 }

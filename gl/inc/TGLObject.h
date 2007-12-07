@@ -24,9 +24,6 @@ private:
    static TClass* SearchGLRenderer(TClass* cls);
 
 protected:
-   // Abstract method from TGLLogicalShape:
-   // virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0;
-
    Bool_t SetModelCheckClass(TObject* obj, TClass* cls);
 
    void   SetAxisAlignedBBox(Float_t xmin, Float_t xmax,
@@ -48,7 +45,8 @@ public:
    // TGLObject virtuals
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0) = 0;
    virtual void   SetBBox() = 0;
-
+   // Abstract method from TGLLogicalShape:
+   // virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0;
 
    // Interface to class .vs. classGL map.
    static TClass* GetGLRenderer(TClass* isa);

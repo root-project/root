@@ -29,13 +29,12 @@ private:
 protected:
    TEveLine* fM; // fModel dynamic-casted to TEveLineGL
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TEveLineGL();
    virtual ~TEveLineGL();
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }

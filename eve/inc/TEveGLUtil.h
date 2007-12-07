@@ -12,10 +12,6 @@
 #ifndef Reve_TEveGLUtil
 #define Reve_TEveGLUtil
 
-#ifndef __CINT__
-#include "TGLIncludes.h"
-#endif
-
 #include "Rtypes.h"
 
 class TAttMarker;
@@ -25,59 +21,6 @@ class TEveGLUtil
 {
 public:
    virtual ~TEveGLUtil() {}
-
-#ifndef __CINT__
-
-   class TGLCapabilitySwitch
-   {
-      GLenum    fWhat;
-      GLboolean fState;
-      Bool_t    fFlip;
-
-      void SetState(GLboolean s)
-      {
-         if(s) glEnable(fWhat); else glDisable(fWhat);
-      }
-
-   public:
-      TGLCapabilitySwitch(GLenum what, GLboolean state) :
-         fWhat(what), fState(kFALSE), fFlip(kFALSE)
-      {
-         fState = glIsEnabled(fWhat);
-         fFlip  = (fState != state);
-         if (fFlip) SetState(state);
-      }
-      ~TGLCapabilitySwitch()
-      {
-         if (fFlip) SetState(fState);
-      }
-   };
-
-   class TGLFloatHolder
-   {
-      TGLFloatHolder(const TGLFloatHolder&);            // Not implemented
-      TGLFloatHolder& operator=(const TGLFloatHolder&); // Not implemented
-
-      GLenum    fWhat;
-      GLfloat   fState;
-      Bool_t    fFlip;
-      void    (*fFoo)(GLfloat);
-
-   public:
-      TGLFloatHolder(GLenum what, GLfloat state, void (*foo)(GLfloat)) :
-         fWhat(what), fState(kFALSE), fFlip(kFALSE), fFoo(foo)
-      {
-         glGetFloatv(fWhat, &fState);
-         fFlip = (fState != state);
-         if (fFlip) fFoo(state);
-      }
-      ~TGLFloatHolder()
-      {
-         if (fFlip) fFoo(fState);
-      }
-   };
-
-#endif
 
    // Commonly used rendering primitives.
 

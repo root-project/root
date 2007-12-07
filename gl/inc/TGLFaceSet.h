@@ -30,11 +30,10 @@ private:
    std::vector<Int_t>    fPolyDesc;
    UInt_t                fNbPols;
 
-protected:
-   void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TGLFaceSet(const TBuffer3D & buffer);
+
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    void SetFromMesh(const RootCsg::TBaseMesh *m);
 

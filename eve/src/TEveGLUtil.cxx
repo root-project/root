@@ -15,6 +15,7 @@
 #include "TAttMarker.h"
 #include "TAttLine.h"
 #include "TGLIncludes.h"
+#include "TGLUtil.h"
 
 //______________________________________________________________________________
 // TEveGLUtil
@@ -27,15 +28,15 @@ ClassImp(TEveGLUtil)
 void TEveGLUtil::RenderLine(const TAttLine& aline, Float_t* p, Int_t n,
                             Bool_t /*selection*/, Bool_t /*sec_selection*/)
 {
+   // Render poly-line as specified by the p-array.
+
    if(n == 0) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
    glDisable(GL_LIGHTING);
    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
    glEnable(GL_COLOR_MATERIAL);
-   UChar_t color[4];
-   TEveUtil::ColorFromIdx(aline.GetLineColor(), color);
-   glColor4ubv(color);
+   TGLUtil::Color(aline.GetLineColor());
    glLineWidth(aline.GetLineWidth());
    if (aline.GetLineStyle() > 1) {
       Int_t    fac = 1;
@@ -69,14 +70,14 @@ void TEveGLUtil::RenderLine(const TAttLine& aline, Float_t* p, Int_t n,
 void TEveGLUtil::RenderPolyMarkers(const TAttMarker& marker, Float_t* p, Int_t n,
                                    Bool_t selection, Bool_t sec_selection)
 {
-   // Store attributes GL_POINT_BIT and GL_LINE_BIT before call this function !
-   glPushAttrib(GL_ENABLE_BIT |GL_POINT_BIT | GL_LINE_BIT);
+   // Render polymarkers at points specified by p-array.
+   // Supports point and cross-like styles.
+
+   glPushAttrib(GL_ENABLE_BIT | GL_POINT_BIT | GL_LINE_BIT);
    glDisable(GL_LIGHTING);
    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
    glEnable(GL_COLOR_MATERIAL);
-   UChar_t color[4];
-   TEveUtil::ColorFromIdx(marker.GetMarkerColor(), color);
-   glColor4ubv(color);
+   TGLUtil::Color(marker.GetMarkerColor());
 
    Int_t s = marker.GetMarkerStyle();
    if (s == 2 || s == 3 || s == 5 || s == 28)
@@ -92,6 +93,7 @@ void TEveGLUtil::RenderPoints(const TAttMarker& marker, Float_t* op, Int_t n,
                               Bool_t selection, Bool_t sec_selection)
 {
    // Render markers as circular or square points.
+   // Color is never changed.
 
    Int_t ms = marker.GetMarkerStyle();
    Float_t size = 5*marker.GetMarkerSize();
@@ -172,7 +174,8 @@ void TEveGLUtil::RenderCrosses(const TAttMarker& marker, Float_t* op, Int_t n,
                                Bool_t sec_selection)
 {
    // Render markers as crosses.
-   //
+   // Color is never changed.
+
    if (marker.GetMarkerStyle() == 28)
    {
       glEnable(GL_BLEND);

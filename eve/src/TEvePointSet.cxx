@@ -13,6 +13,7 @@
 
 #include "TEveManager.h"
 #include "TEveProjectionManager.h"
+#include "TEveTrans.h"
 
 #include "TTree.h"
 #include "TTreePlayer.h"
@@ -20,6 +21,9 @@
 
 #include "TColor.h"
 #include "TCanvas.h"
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
+#include "TVirtualViewer3D.h"
 
 //______________________________________________________________________________
 // TEvePointSet
@@ -204,9 +208,23 @@ void TEvePointSet::Paint(Option_t* option)
 {
    // Paint point-set.
 
-   if(fRnrSelf == kFALSE) return;
+   static const TEveException eH("TEvePointSet::Paint ");
 
-   TPointSet3D::Paint(option);
+   if (fRnrSelf == kFALSE) return;
+
+   TBuffer3D buff(TBuffer3DTypes::kGeneric);
+
+   // Section kCore
+   buff.fID           = this;
+   buff.fColor        = GetMainColor();
+   buff.fTransparency = GetMainTransparency();
+   if (PtrMainHMTrans())
+      PtrMainHMTrans()->SetBuffer3D(buff);
+   buff.SetSectionsValid(TBuffer3D::kCore);
+
+   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
+   if (reqSections != TBuffer3D::kNone)
+      Error(eH, "only direct GL rendering supported.");
 }
 
 /******************************************************************************/

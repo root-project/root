@@ -23,8 +23,6 @@ class TEveQuadSetGL : public TGLObject
 protected:
    TEveQuadSet* fM;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
    Bool_t SetupColor(const TEveDigitSet::DigitBase_t& q) const;
 
    void   RenderQuads(TGLRnrCtx & rnrCtx) const;
@@ -39,6 +37,7 @@ public:
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 

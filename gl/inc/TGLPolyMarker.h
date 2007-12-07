@@ -30,11 +30,10 @@ private:
    UInt_t   fStyle;
    Double_t fSize;
 
-protected:
-   void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TGLPolyMarker(const TBuffer3D & buffer);
+
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t   IgnoreSizeForOfInterest() const { return kTRUE; }
 

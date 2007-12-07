@@ -34,14 +34,13 @@ protected:
    TGLParametricEquation  *fM;
    TGLPlotPainter         *fPlotPainter;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TGLParametricEquationGL();
    virtual ~TGLParametricEquationGL();
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
 

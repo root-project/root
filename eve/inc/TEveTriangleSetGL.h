@@ -27,14 +27,13 @@ private:
 protected:
    TEveTriangleSet* fM; // Model object.
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TEveTriangleSetGL();
    virtual ~TEveTriangleSetGL();
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }

@@ -57,8 +57,6 @@ protected:
    mutable Bool_t     fRefStrong;   //! Strong ref (delete on 0 ref); not in scene
    mutable Bool_t     fOwnExtObj;   //! External object is a fake
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0; // Actual draw method (non DL cached)
-
 public:
    TGLLogicalShape();
    TGLLogicalShape(TObject* obj);
@@ -95,6 +93,7 @@ public:
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
    virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
    virtual void     Draw(TGLRnrCtx & rnrCtx) const;
+   virtual void     DirectDraw(TGLRnrCtx & rnrCtx) const = 0; // Actual draw method (non DL cached)
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kFALSE; }
 

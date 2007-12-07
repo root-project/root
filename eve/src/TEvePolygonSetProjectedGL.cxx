@@ -151,7 +151,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    // outline
    UChar_t lcol[4];
    TEveUtil::ColorFromIdx(PS.fLineColor, lcol);
-   glColor4ubv(lcol);
+   TGLUtil::Color4ubv(lcol);
    glEnable(GL_LINE_SMOOTH);
 
    glLineWidth(PS.fLineWidth);

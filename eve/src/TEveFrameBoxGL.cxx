@@ -13,6 +13,7 @@
 #include "TEveFrameBox.h"
 
 #include "TGLIncludes.h"
+#include "TGLUtil.h"
 
 #include "TMath.h"
 
@@ -81,7 +82,7 @@ void TEveFrameBoxGL::Render(const TEveFrameBox* box)
       TMath::Normal2Plane(p, p+3, p+6, normal);
       glNormal3fv(normal);
 
-      glColor4ubv(b.fBackRGBA);
+      TGLUtil::Color4ubv(b.fBackRGBA);
       RenderFrame(b, kTRUE);
 
       if (!lmts) glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
@@ -94,7 +95,7 @@ void TEveFrameBoxGL::Render(const TEveFrameBox* box)
    glEnable(GL_LINE_SMOOTH);
 
    glLineWidth(b.fFrameWidth);
-   glColor4ubv(b.fFrameRGBA);
+   TGLUtil::Color4ubv(b.fFrameRGBA);
    RenderFrame(b, b.fFrameFill);
 
    glPopAttrib();

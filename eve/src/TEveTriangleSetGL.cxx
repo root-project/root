@@ -108,7 +108,7 @@ void TEveTriangleSetGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
          glNormal3d(n.x(), n.y(), n.z());
       }
       if (C) {
-         glColor3ubv(C);  C += 3;
+         TGLUtil::Color3ubv(C);  C += 3;
       }
       glArrayElement(T[0]);
       glArrayElement(T[1]);

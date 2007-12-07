@@ -30,9 +30,6 @@ private:
    TGLVector3 fLowPlaneNorm, fHighPlaneNorm;
    Bool_t fSegMesh;
 
-protected:
-   void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TGLCylinder(const TBuffer3DTube & buffer);
    ~TGLCylinder();
@@ -44,6 +41,7 @@ public:
    // X/Y axes (round the cylinder radius), but not along length (Z)
    virtual ELODAxes SupportedLODAxes() const { return ELODAxes(kLODAxesX | kLODAxesY); }
    virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
 private:
    ClassDef(TGLCylinder,0) // a cylinderical logical shape

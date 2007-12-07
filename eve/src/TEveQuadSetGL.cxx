@@ -69,7 +69,7 @@ inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) cons
 {
    if (fM->fValueIsColor)
    {
-      glColor4ubv((UChar_t*) & q.fValue);
+      TGLUtil::Color4ubv((UChar_t*) & q.fValue);
       return kTRUE;
    }
    else
@@ -77,7 +77,7 @@ inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) cons
       UChar_t c[4];
       Bool_t visible = fM->fPalette->ColorFromValue(q.fValue, fM->fDefaultValue, c);
       if (visible)
-         glColor4ubv(c);
+         TGLUtil::Color4ubv(c);
       return visible;
    }
 }

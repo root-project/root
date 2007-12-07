@@ -53,14 +53,14 @@ protected:
    TEveProjectionManager    *fM;    // Model object.
    TGLText                  *fText; // Text renderer for axis labels.
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TEveProjectionManagerGL();
    virtual ~TEveProjectionManagerGL() {}
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+
    Bool_t IgnoreSizeForOfInterest() const { return kTRUE;}
 
    ClassDef(TEveProjectionManagerGL, 0); // GL-renderer for TEveProjectionManager.

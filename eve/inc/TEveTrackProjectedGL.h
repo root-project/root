@@ -28,13 +28,12 @@ private:
 protected:
    TEveTrackProjected* fM; // Model object.
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TEveTrackProjectedGL();
    virtual ~TEveTrackProjectedGL() {}
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    ClassDef(TEveTrackProjectedGL, 0); // GL-renderer for TEveTrackProjected class.
 };

@@ -63,9 +63,9 @@ void TEveLineGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    TEveLine& q = *fM;
    if (q.Size() <= 0) return;
 
-   if (q.fRnrLine)
-      TEveGLUtil::RenderLine(q, q.GetP(), q.Size());
-
    if (q.fRnrPoints)
       TEveGLUtil::RenderPolyMarkers(q, q.GetP(), q.Size());
+
+   if (q.fRnrLine)
+      TEveGLUtil::RenderLine(q, q.GetP(), q.Size());
 }

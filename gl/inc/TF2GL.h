@@ -33,14 +33,13 @@ protected:
    TGLPlotPainter     *fPlotPainter;
    TGLPlotCoordinates  fCoord;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TF2GL();
    virtual ~TF2GL();
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
 

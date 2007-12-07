@@ -22,7 +22,6 @@ class TGLRnrCtx;
 class TPointSet3DGL : public TGLObject
 {
 protected:
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
    void RenderPoints (TGLRnrCtx & rnrCtx) const;
    void RenderCrosses(TGLRnrCtx & rnrCtx) const;
 
@@ -31,6 +30,7 @@ public:
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
+   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 

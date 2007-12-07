@@ -25,9 +25,6 @@ class TGLSphere : public TGLLogicalShape
 private:
    Double_t fRadius; // Sphere radius
 
-protected:
-   void DirectDraw(TGLRnrCtx & rnrCtx) const;
-
 public:
    TGLSphere(const TBuffer3DSphere &buffer);
 
@@ -36,6 +33,7 @@ public:
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesAll; }
    virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
+   virtual void     DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    ClassDef(TGLSphere,0) // a spherical logical shape
 };

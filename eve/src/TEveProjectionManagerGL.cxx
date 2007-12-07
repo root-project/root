@@ -272,7 +272,7 @@ void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    if (fM->GetDrawCenter())
    {
       Float_t* c = fM->GetProjection()->GetProjectedCenter();
-      glColor3f(1., 0., 0.);
+      TGLUtil::Color3f(1., 0., 0.);
       glBegin(GL_LINES);
       glVertex3f(c[0] +d, c[1],    c[2]);     glVertex3f(c[0] - d, c[1]   , c[2]);
       glVertex3f(c[0] ,   c[1] +d, c[2]);     glVertex3f(c[0]    , c[1] -d, c[2]);
@@ -285,7 +285,7 @@ void TEveProjectionManagerGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    {
       TEveVector zero;
       fM->GetProjection()->ProjectVector(zero);
-      glColor3f(1., 1., 1.);
+      TGLUtil::Color3f(1., 1., 1.);
       glBegin(GL_LINES);
       glVertex3f(zero[0] +d, zero[1],    zero[2]);     glVertex3f(zero[0] - d, zero[1]   , zero[2]);
       glVertex3f(zero[0] ,   zero[1] +d, zero[2]);     glVertex3f(zero[0]    , zero[1] -d, zero[2]);

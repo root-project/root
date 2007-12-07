@@ -27,11 +27,11 @@ class TGLPolyLine : public TGLLogicalShape
 private:
    std::vector<Double_t> fVertices;
    Double_t              fLineWidth;
-protected:
-   void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
 public:
    TGLPolyLine(const TBuffer3D & buffer);
+
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    ClassDef(TGLPolyLine,0) // a polyline logical shape
 };

@@ -973,6 +973,7 @@ ClassImp(TGLUtil)
 
 UInt_t TGLUtil::fgDefaultDrawQuality = 60;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
+UInt_t TGLUtil::fgColorLockCount     = 0;
 
 //______________________________________________________________________________
 void TGLUtil::CheckError(const char * loc)
@@ -991,6 +992,104 @@ void TGLUtil::CheckError(const char * loc)
       }
    }
 }
+
+/******************************************************************************/
+// Color wrapping functions
+/******************************************************************************/
+
+//______________________________________________________________________________
+UInt_t TGLUtil::LockColor()
+{
+   // Prevent further color changes.
+
+   return ++fgColorLockCount;
+}
+
+//______________________________________________________________________________
+UInt_t TGLUtil::UnlockColor()
+{
+   // Allow color changes.
+
+   if (fgColorLockCount)
+      --fgColorLockCount;
+   else
+      Error("TGLUtil::UnlockColor", "fgColorLockCount already 0.");
+   return fgColorLockCount;
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color(Color_t color_index, Float_t alpha)
+{
+   // Set color from color_index.
+
+   if (fgColorLockCount == 0) {
+      if (color_index < 0)
+         color_index = 1;
+      TColor* c = gROOT->GetColor(color_index);
+      if (c)
+         glColor4f(c->GetRed(), c->GetGreen(), c->GetBlue(), alpha);
+   } 
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color3ub(UChar_t r, UChar_t g, UChar_t b)
+{
+   // Wrapper for glColor3f.
+   if (fgColorLockCount == 0) glColor3ub(r, g, b);
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color4ub(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
+{
+   // Wrapper for glColor4f.
+   if (fgColorLockCount == 0) glColor4ub(r, g, b, a);
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color3ubv(const UChar_t* rgb)
+{
+   // Wrapper for glColor3fv.
+   if (fgColorLockCount == 0) glColor3ubv(rgb);
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color4ubv(const UChar_t* rgba)
+{
+   // Wrapper for glColor4fv.
+   if (fgColorLockCount == 0) glColor4ubv(rgba);
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color3f(Float_t r, Float_t g, Float_t b)
+{
+   // Wrapper for glColor3f.
+   if (fgColorLockCount == 0) glColor3f(r, g, b);
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color4f(Float_t r, Float_t g, Float_t b, Float_t a)
+{
+   // Wrapper for glColor4f.
+   if (fgColorLockCount == 0) glColor4f(r, g, b, a);
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color3fv(const Float_t* rgb)
+{
+   // Wrapper for glColor3fv.
+   if (fgColorLockCount == 0) glColor3fv(rgb);
+}
+
+//______________________________________________________________________________
+void TGLUtil::Color4fv(const Float_t* rgba)
+{
+   // Wrapper for glColor4fv.
+   if (fgColorLockCount == 0) glColor4fv(rgba);
+}
+
+/******************************************************************************/
+// Rendering atoms used by TGLViewer / TGScene.
+/******************************************************************************/
 
 //______________________________________________________________________________
 void TGLUtil::SetDrawColors(const Float_t rgba[4])
@@ -1016,7 +1115,7 @@ void TGLUtil::SetDrawColors(const Float_t rgba[4])
    static Float_t specular[4] = {0.6, 0.6, 0.6, 1.0};
    Float_t emission[4] = {rgba[0]/4.f, rgba[1]/4.f, rgba[2]/4.f, rgba[3]};
 
-   glColor3d(rgba[0], rgba[1], rgba[2]);
+   glColor4fv(rgba);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);
    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
    glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
@@ -1376,6 +1475,22 @@ void TGLCapabilitySwitch::SetState(Bool_t s)
    else
       glDisable(fWhat);
 }
+
+
+//______________________________________________________________________________
+TGLFloatHolder::TGLFloatHolder(Int_t what, Float_t state, void (*foo)(Float_t)) :
+      fWhat(what), fState(0), fFlip(kFALSE), fFoo(foo)
+   {
+      glGetFloatv(fWhat, &fState);
+      fFlip = (fState != state);
+      if (fFlip) fFoo(state);
+   }
+
+//______________________________________________________________________________
+TGLFloatHolder::~TGLFloatHolder()
+   {
+      if (fFlip) fFoo(fState);
+   }
 
 
 //______________________________________________________________________________

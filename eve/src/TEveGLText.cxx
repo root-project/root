@@ -21,10 +21,11 @@
 #include "TEveGLText.h"
 #include "TEveUtil.h"
 
+#include "TGLIncludes.h"
+#include "TGLUtil.h"
+
 #include "TMath.h"
 #include "TString.h"
-
-#include <GL/glu.h>
 
 #include <cassert>
 #include <ctype.h>
@@ -525,12 +526,12 @@ void txfRenderString(TexFont_t * txf, const char *TString, int len,
          //        TString, TString[i], f0, f1,
          //        xg0, xg1,yg0, yg1);
 
-         glColor4f(f0*col[0], f0*col[1], f0*col[2], f0*col[3]);
+         TGLUtil::Color4f(f0*col[0], f0*col[1], f0*col[2], f0*col[3]);
          glTexCoord2fv(tgvi->fT0);    glVertex2f(xg0, yg0);
-         glColor4f(f1*col[0], f1*col[1], f1*col[2], f1*col[3]);
+         TGLUtil::Color4f(f1*col[0], f1*col[1], f1*col[2], f1*col[3]);
          glTexCoord2fv(tgvi->fT1);    glVertex2f(xg1, yg0);
          glTexCoord2fv(tgvi->fT2);    glVertex2f(xg1, yg1);
-         glColor4f(f0*col[0], f0*col[1], f0*col[2], f0*col[3]);
+         TGLUtil::Color4f(f0*col[0], f0*col[1], f0*col[2], f0*col[3]);
          glTexCoord2fv(tgvi->fT3);    glVertex2f(xg0, yg1);
       } else {
          glTexCoord2fv(tgvi->fT0);    glVertex2f(xg0, yg0);
@@ -602,7 +603,7 @@ void txfRenderFancyString(TexFont_t * txf, char *TString, int len)
          switch (TString[i + 1]) {
             case 'M':
                mode = kMONO;
-               glColor3ubv((GLubyte *) & TString[i + 2]);
+               TGLUtil::Color3ubv((GLubyte *) & TString[i + 2]);
                i += 4;
                break;
             case 'T':
@@ -629,12 +630,12 @@ void txfRenderFancyString(TexFont_t * txf, char *TString, int len)
             case kTOP_BOTTOM:
                tgvi = getTCVI(txf, TString[i]);
                glBegin(GL_QUADS);
-               glColor3ubv(c[0]);
+               TGLUtil::Color3ubv(c[0]);
                glTexCoord2fv(tgvi->fT0);
                glVertex2sv(tgvi->fV0);
                glTexCoord2fv(tgvi->fT1);
                glVertex2sv(tgvi->fV1);
-               glColor3ubv(c[1]);
+               TGLUtil::Color3ubv(c[1]);
                glTexCoord2fv(tgvi->fT2);
                glVertex2sv(tgvi->fV2);
                glTexCoord2fv(tgvi->fT3);
@@ -645,16 +646,16 @@ void txfRenderFancyString(TexFont_t * txf, char *TString, int len)
             case kLEFT_RIGHT:
                tgvi = getTCVI(txf, TString[i]);
                glBegin(GL_QUADS);
-               glColor3ubv(c[0]);
+               TGLUtil::Color3ubv(c[0]);
                glTexCoord2fv(tgvi->fT0);
                glVertex2sv(tgvi->fV0);
-               glColor3ubv(c[1]);
+               TGLUtil::Color3ubv(c[1]);
                glTexCoord2fv(tgvi->fT1);
                glVertex2sv(tgvi->fV1);
-               glColor3ubv(c[1]);
+               TGLUtil::Color3ubv(c[1]);
                glTexCoord2fv(tgvi->fT2);
                glVertex2sv(tgvi->fV2);
-               glColor3ubv(c[0]);
+               TGLUtil::Color3ubv(c[0]);
                glTexCoord2fv(tgvi->fT3);
                glVertex2sv(tgvi->fV3);
                glEnd();
@@ -663,16 +664,16 @@ void txfRenderFancyString(TexFont_t * txf, char *TString, int len)
             case kFOUR:
                tgvi = getTCVI(txf, TString[i]);
                glBegin(GL_QUADS);
-               glColor3ubv(c[0]);
+               TGLUtil::Color3ubv(c[0]);
                glTexCoord2fv(tgvi->fT0);
                glVertex2sv(tgvi->fV0);
-               glColor3ubv(c[1]);
+               TGLUtil::Color3ubv(c[1]);
                glTexCoord2fv(tgvi->fT1);
                glVertex2sv(tgvi->fV1);
-               glColor3ubv(c[2]);
+               TGLUtil::Color3ubv(c[2]);
                glTexCoord2fv(tgvi->fT2);
                glVertex2sv(tgvi->fV2);
-               glColor3ubv(c[3]);
+               TGLUtil::Color3ubv(c[3]);
                glTexCoord2fv(tgvi->fT3);
                glVertex2sv(tgvi->fV3);
                glEnd();
