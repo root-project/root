@@ -319,6 +319,7 @@ public:
 }; 
 #endif   
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 /**
    Functor class for Multidimensional functions. 
@@ -371,6 +372,11 @@ public:
       fImpl(new FunctorHandler<Functor,Func>(dim,f) )
    {}
 
+
+   //implement for interpreted CINT functions
+#if defined(__CINT__) || defined(G__DICTIONARY)
+   Functor(void * p, unsigned int dim, const char * className = 0, const char * methodName = 0);
+#endif 
 
 
    /** 
@@ -472,6 +478,11 @@ public:
       fImpl(new FunctorHandler<Functor1D,Func>(f) )
    {}
 
+
+   //implement for interpreted CINT functions
+#if defined(__CINT__) || defined(G__DICTIONARY)
+   Functor1D(void * p, const char * className = 0, const char * methodName = 0);
+#endif 
 
    /** 
       Destructor (no operations)
@@ -584,6 +595,11 @@ public:
       fImpl(new FunctorGradHandler<GradFunctor,Func,GradFunc>(dim, f, g) )
    { }
 
+   // for interpreted CINT functions
+#if defined(__CINT__) || defined(G__DICTIONARY)
+   GradFunctor(void * p1, unsigned int dim, const char * className, const char * methodName, const char * derivName);
+   GradFunctor(void * p1, void * p2, unsigned int dim);
+#endif 
 
    /** 
       Destructor (no operations)
@@ -702,6 +718,11 @@ public:
       fImpl(new FunctorGradHandler<GradFunctor1D,Func, GradFunc>(f, g) )
    {}
 
+   // eventually implement for interpreted CINT functions
+#if defined(__CINT__) || defined(G__DICTIONARY)
+   GradFunctor1D(void * p1, const char * className, const char * methodName, const char * derivName);
+   GradFunctor1D(void * p1, void * p2);
+#endif 
 
    /** 
       Destructor (no operations)

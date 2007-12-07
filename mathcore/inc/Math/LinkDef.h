@@ -35,12 +35,12 @@
 #pragma link C++ class ROOT::Math::IParametricFunctionMultiDim+;
 #pragma link C++ class ROOT::Math::IParametricGradFunctionMultiDim+;
 
-
+#if !defined(__sun)  // some problem on Solaris
 #pragma link C++ class ROOT::Math::Functor-;
 #pragma link C++ class ROOT::Math::GradFunctor-;
 #pragma link C++ class ROOT::Math::Functor1D-;
 #pragma link C++ class ROOT::Math::GradFunctor1D-;
-
+#endif
 
 #pragma link C++ class ROOT::Math::Minimizer+;
 #pragma link C++ class ROOT::Math::IntegratorOneDim+;
