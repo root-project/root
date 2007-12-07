@@ -60,7 +60,8 @@ private:
    Bool_t             fNoLogo;         //Do not show splash screen and welcome message
    Bool_t             fQuit;           //Exit after having processed input files
    Bool_t             fGraphInit;      //True if graphics has been initialized
-   TObjArray         *fFiles;          //Array of input files (TObjString's)
+   TObjArray         *fFiles;          //Array of input files (TObjString's) specified via argv
+   TString            fWorkDir;        //Working directory specified via argv
    TString            fIdleCommand;    //Command to execute while application is idle
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
@@ -132,6 +133,7 @@ public:
    Bool_t          NoLogoOpt() const { return fNoLogo; }
    Bool_t          QuitOpt() const { return fQuit; }
    TObjArray      *InputFiles() const { return fFiles; }
+   const char     *WorkingDirectory() const { return fWorkDir; }
    void            ClearInputFiles();
 
    TApplication   *GetAppRemote() const { return fAppRemote; }

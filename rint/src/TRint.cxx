@@ -31,6 +31,7 @@
 #include "TSystem.h"
 #include "TEnv.h"
 #include "TSysEvtHandler.h"
+#include "TSystemDirectory.h"
 #include "TError.h"
 #include "TException.h"
 #include "TInterpreter.h"
@@ -301,6 +302,23 @@ void TRint::Run(Bool_t retrn)
    Long_t retval = 0;
    Int_t  error = 0;
    volatile Bool_t needGetlinemInit = kFALSE;
+
+   if (strlen(WorkingDirectory())) {
+      // if directory specified as argument make it the working directory
+      gSystem->ChangeDirectory(WorkingDirectory());
+      TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
+      TObject *w = gROOT->GetListOfBrowsables()->FindObject("workdir");
+      TObjLink *lnk = gROOT->GetListOfBrowsables()->FirstLink();
+      while (lnk) {
+         if (lnk->GetObject() == w) {
+            lnk->SetObject(workdir);
+            lnk->SetOption(gSystem->WorkingDirectory());
+            break;
+         }
+         lnk = lnk->Next();
+      }
+      delete w;
+   }
 
    // Process shell command line input files
    if (InputFiles()) {

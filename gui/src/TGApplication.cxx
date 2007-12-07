@@ -63,6 +63,9 @@ TGApplication::TGApplication(const char *appClassName,
    if (argv && argv[0])
       gSystem->SetProgname(argv[0]);
 
+   // Tell TSystem the TApplication has been created
+   gSystem->NotifyApplicationCreated();
+
    // Enable autoloading
    gInterpreter->EnableAutoLoading();
 

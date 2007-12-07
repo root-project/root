@@ -40,15 +40,10 @@
 #include "TEnv.h"
 #include "TColor.h"
 #include "TClassTable.h"
-#include "TSystemDirectory.h"
 #include "TPluginManager.h"
 #include "TClassTable.h"
 #include "TBrowser.h"
 #include "TUrl.h"
-
-#ifdef R__WIN32
-#include "TWinNTSystem.h"
-#endif
 
 TApplication *gApplication = 0;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
@@ -158,9 +153,8 @@ TApplication::TApplication(const char *appClassName,
    if (fArgv)
       gSystem->SetProgname(fArgv[0]);
 
-#ifdef R__WIN32
-   ((TWinNTSystem*)gSystem)->NotifyApplicationCreated();
-#endif
+   // Tell TSystem the TApplication has been created
+   gSystem->NotifyApplicationCreated();
 
    fIdleTimer     = 0;
    fSigHandler    = 0;
@@ -312,6 +306,16 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    //    -h      : print usage
    //    --help  : print usage
    //    -config : print ./configure options
+   // In addition to the above options the arguments that are not options,
+   // i.e. they don't start with - or + are treated as follows:
+   //   <file>.root are considered ROOT files and added to the InputFiles() list
+   //   <macro>.C   are considered ROOT macros and also added to the InputFiles() list
+   //   <dir>       is considered the desired working directory and available
+   //               via WorkingDirectory(), if more than one dir is specified the
+   //               last one will prevail
+   // In TRint we set the working directory to the <dir>, the ROOT files are
+   // connected, and the macros are executed. If your main TApplication is not
+   // TRint you have to decide yourself what to do whith these options.
 
    static char null[1] = { "" };
 
@@ -323,6 +327,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       return;
 
    int i, j;
+   TString pwd;
 
    for (i = 1; i < *argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
@@ -370,26 +375,21 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          if (arg) *arg = '(';
          if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
-               // if directory make it working directory
-               gSystem->ChangeDirectory(dir);
-               TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
-               TObject *w = gROOT->GetListOfBrowsables()->FindObject("workdir");
-               TObjLink *lnk = gROOT->GetListOfBrowsables()->FirstLink();
-               while (lnk) {
-                  if (lnk->GetObject() == w) {
-                     lnk->SetObject(workdir);
-                     lnk->SetOption(gSystem->WorkingDirectory());
-                     break;
-                  }
-                  lnk = lnk->Next();
+               // if directory set it in fWorkDir
+               if (pwd == "") {
+                  pwd = gSystem->WorkingDirectory();
+                  fWorkDir = dir;
+                  gSystem->ChangeDirectory(dir);
+                  argv[i] = null;
+               } else if (!strcmp(gROOT->GetName(), "Rint")) {
+                  Warning("GetOptions", "only one directory argument can be specified (%s)", dir);
                }
-               delete w;
             } else if (flags == 0 || flags == 1) {
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
+               argv[i] = null;
             }
-            argv[i] = null;
          } else {
             if (TString(dir).EndsWith(".root") && !strcmp(gROOT->GetName(), "Rint")) {
                // file ending on .root but does not exist, likely a typo, warn user...
@@ -416,10 +416,14 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       // ignore unknown options
    }
 
+   // go back to startup directory
+   if (pwd != "")
+      gSystem->ChangeDirectory(pwd);
+
    // remove handled arguments from argument array
    j = 0;
    for (i = 0; i < *argc; i++) {
-      if (strcmp(argv[i],"")) {
+      if (strcmp(argv[i], "")) {
          argv[j] = argv[i];
          j++;
       }
