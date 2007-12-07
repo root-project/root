@@ -287,6 +287,14 @@ const char *TSystem::HostName()
 }
 
 //______________________________________________________________________________
+void TSystem::NotifyApplicationCreated()
+{
+   // Hook to tell TSystem that the TApplication object has been created.
+
+   // Currently needed only for WinNT interface.
+}
+
+//______________________________________________________________________________
 void TSystem::Beep(Int_t freq /*=-1*/, Int_t duration /*=-1*/,
                    Bool_t setDefault /*=kFALSE*/)
 {

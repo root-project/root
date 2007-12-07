@@ -1063,6 +1063,7 @@ void TWinNTSystem::DoBeep(Int_t freq /*=-1*/, Int_t duration /*=-1*/) const
    ::Beep(freq, duration);
 }
 
+//______________________________________________________________________________
 void TWinNTSystem::SetGUIThreadMsgHandler(ThreadMsgFunc_t func)
 {
    // Set the (static part of) the event handler func for GUI messages.
@@ -1070,9 +1071,10 @@ void TWinNTSystem::SetGUIThreadMsgHandler(ThreadMsgFunc_t func)
    gGUIThreadMsgFunc = func;
 }
 
+//______________________________________________________________________________
 void TWinNTSystem::NotifyApplicationCreated()
 {
-   // hook to tell TSystem that the TApplication object has been created
+   // Hook to tell TSystem that the TApplication object has been created.
 
    // send a dummy message to the GUI thread to kick it into life
    ::PostThreadMessage(fGUIThreadId, 0, NULL, 0L);

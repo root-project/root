@@ -326,6 +326,7 @@ public:
    virtual const char     *GetError();
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();
+   virtual void            NotifyApplicationCreated();
 
    static Int_t            GetErrno();
    static void             ResetErrno();
