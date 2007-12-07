@@ -90,9 +90,9 @@ private:
    //void * fPtr2; // pointer to callable object
 
    // function required by interface
-   inline double DoEval (double ) const; 
-   inline double DoDerivative (double ) const; 
-   inline double DoDerivative (const double *,unsigned int  ) const; 
+   inline double DoEval (double x) const; 
+   inline double DoDerivative (double x) const; 
+   inline double DoDerivative (const double * x,unsigned int ipar ) const; 
    inline double DoEval (const double * x) const; 
 
 
