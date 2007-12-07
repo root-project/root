@@ -7,6 +7,7 @@ void gldemos()
    bar->AddButton("glrose", ".x $ROOTSYS/tutorials/gl/glrose.C", "Surface in polar system");
    bar->AddButton("gltf3", ".x $ROOTSYS/tutorials/gl/gltf3.C", "TF3 painter");
    bar->AddButton("glbox", ".x $ROOTSYS/tutorials/gl/glbox.C", "BOX painter");
+   bar->AddButton("glparametric", ".x $ROOTSYS/tutorials/gl/glparametric.C", "Parametric surface");
    bar->Show();
 }
 
@@ -26,6 +27,7 @@ void help()
    hdemo->AddText("2. Glrose demontrates \"glsurf2pol\" drawing option and user-defined palette.");
    hdemo->AddText("3. Gltf3 demo shows \"gltf3\" option.");
    hdemo->AddText("4. Glbox demo shows \"glbox\" and \"glbox1\" options for TH3.");
+   hdemo->AddText("5. Glparametric demo shows how to define and display parametric surfaces.");
    hdemo->AddText("You can zoom any plot: press 'J', 'K', 'j', 'k' keys, or use mouse wheel.");
    hdemo->AddText("Rotate any plot:"); 
    hdemo->AddText("  ---select plot with mouse cursor,");
