@@ -2143,7 +2143,27 @@ int main(int argc,const char *argv[])
       cout << "stressRooFit: running single test " << argv[i+1] << endl ;
       oneTest = atoi(argv[++i]) ;      
     }
+    
+    if (arg=="-d") {
+      cout << "stressRooFit: setting gDebug to " << argv[i+1] << endl ;
+      gDebug = atoi(argv[++i]) ;
+    }
 
+   }
+
+  if (doWrite && refFileName.find("http:")==0) {
+
+    // Locate file name part in URL and update refFileName accordingly
+    char* buf = new char[refFileName.size()+1] ;
+    strcpy(buf,refFileName.c_str()) ;
+    char *ptr = strrchr(buf,'/') ;
+    if (!ptr) {
+      ptr = strrchr(buf,':') ;
+    }
+    refFileName = ptr+1 ;
+    delete[] buf ;
+
+    cout << "stressRooFit: WARNING running in write mode, but reference file is web file, writing local file instead: " << refFileName << endl ;
   }
 
   gBenchmark = new TBenchmark();
