@@ -24,6 +24,7 @@
 ClassImp(TSysEvtHandler)
 ClassImp(TFileHandler)
 ClassImp(TSignalHandler)
+ClassImp(TStdExceptionHandler)
 
 
 //______________________________________________________________________________
@@ -183,4 +184,54 @@ void TSignalHandler::Remove()
       gSystem->RemoveSignalHandler(this);
       Removed();     // emit Removed() signal
    }
+}
+
+
+//______________________________________________________________________________
+TStdExceptionHandler::TStdExceptionHandler() : TSysEvtHandler()
+{
+   // Handle standard C++ exceptions intercepted by the TSystem::Run().
+   //
+   // Virtual method EStatus Handle(std::exception& exc) is called on the
+   // collection of handlers registered to TSystem. The return value of
+   // each handler influences the continuation of handling procedure:
+   //    kSEProceed - Proceed with passing of the exception to other
+   //                 handlers, the exception has not been handled.
+   //    kSEHandled - The exception has been handled, do not pass it to
+   //                 other handlers.
+   //    kSEAbort   - Abort application.
+   // If all handlers return kSEProceed TSystem::Run() rethrows the
+   // exception, possibly resulting in process abortion.
+
+}
+
+//______________________________________________________________________________
+void TStdExceptionHandler::Add()
+{
+   // Add std::exception handler to system handler list.
+
+   if (gSystem) {
+      gSystem->AddStdExceptionHandler(this);
+      Added();      // emit Added() signal
+   }
+}
+
+//______________________________________________________________________________
+void TStdExceptionHandler::Remove()
+{
+   // Remove std::exception handler from system handler list.
+
+   if (gSystem) {
+      gSystem->RemoveStdExceptionHandler(this);
+      Removed();     // emit Removed() signal
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TStdExceptionHandler::Notify()
+{
+   // Notify when signal occurs.
+
+   Notified();       // emit Notified() signal
+   return kFALSE;
 }

@@ -161,4 +161,32 @@ inline void TSignalHandler::HandleDelayedSignal()
       fDelay = 0;
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TStdExceptionHandler                                                 //
+//                                                                      //
+// Handles standard C++ exceptions.                                     //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+namespace std { class exception; }
+
+class TStdExceptionHandler : public TSysEvtHandler {
+
+public:
+   enum EStatus { kSEProceed, kSEHandled, kSEAbort };
+
+   TStdExceptionHandler();
+   virtual ~TStdExceptionHandler() { }
+
+   virtual void     Add();
+   virtual void     Remove();
+   virtual Bool_t   Notify();
+
+   virtual EStatus  Handle(std::exception& exc) = 0;
+
+   ClassDef(TStdExceptionHandler,0)  //C++ exception handler
+};
+
 #endif

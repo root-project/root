@@ -97,6 +97,7 @@
 #pragma link C++ class TPRegexp;
 #pragma link C++ class TRefCnt;
 #pragma link C++ class TSignalHandler;
+#pragma link C++ class TStdExceptionHandler;
 #pragma link C++ class TStopwatch+;
 #pragma link C++ class TStorage;
 #pragma link C++ class TString-!;
