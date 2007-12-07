@@ -254,7 +254,23 @@ void RooAbsReal::printToStream(ostream& os, PrintOption opt, TString indent) con
   //     Shape : value, units, plot range
   //   Verbose : default binning and print label
 
-  RooAbsArg::printToStream(os,opt,indent);
+  if (opt == OneLine) { 
+    RooAbsArg::printToStream(os,opt,indent);
+  }
+
+  if (opt == Standard) {
+    os << ClassName() << "::" << GetName() << "[ " ;
+
+    for (Int_t i=0 ; i<numProxies() ; i++) {
+      RooAbsProxy* p = getProxy(i) ;
+      if (!TString(p->name()).BeginsWith("!")) {
+	p->print(os) ;
+	os << " " ;
+      }
+    }    
+    os << "] = " << _value << endl ;
+  }
+
   if(opt >= Shape) {
     os << indent << "--- RooAbsReal ---" << endl;
     TString unit(_unit);

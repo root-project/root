@@ -55,13 +55,12 @@ RooDataHist::RooDataHist()
   _curWeight = 0 ;
   _curIndex = -1 ;
   _realIter = 0 ;
-
 }
 
 
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars) : 
-  RooTreeData(name,title,vars), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of an empty data hist from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
@@ -85,7 +84,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t weight) :
-  RooTreeData(name,title,vars), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from an existing data collection (binned or unbinned)
   // The RooArgSet 'vars' defines the dimensions of the histogram. 
@@ -114,7 +113,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight) :
-  RooTreeData(name,title,vars), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
   // The RooArgSet 'vars' defines the dimensions of the histogram. The ranges
@@ -319,7 +318,7 @@ void RooDataHist::initialize(Bool_t fillTree)
   // Initialization procedure: allocate weights array, calculate
   // multipliers needed for N-space to 1-dim array jump table,
   // and fill the internal tree with all bin center coordinates
-
+  
   // Allocate coefficients array
   _idxMult = new Int_t[_vars.getSize()] ;
 
@@ -339,17 +338,20 @@ void RooDataHist::initialize(Bool_t fillTree)
     _arrSize *= arg->numBins() ;
   }  
 
-  // Allocate and initialize weight array 
-  _wgt = new Double_t[_arrSize] ;
-  _errLo = new Double_t[_arrSize] ;
-  _errHi = new Double_t[_arrSize] ;
-  _sumw2 = new Double_t[_arrSize] ;
-  _binv = new Double_t[_arrSize] ;
-  for (i=0 ; i<_arrSize ; i++) {
-    _wgt[i] = 0 ;
-    _errLo[i] = -1 ;
-    _errHi[i] = -1 ;
-    _sumw2[i] = 0 ;
+  // Allocate and initialize weight array if necessary
+  if (!_wgt) {
+    _wgt = new Double_t[_arrSize] ;
+    _errLo = new Double_t[_arrSize] ;
+    _errHi = new Double_t[_arrSize] ;
+    _sumw2 = new Double_t[_arrSize] ;
+    _binv = new Double_t[_arrSize] ;
+    
+    for (i=0 ; i<_arrSize ; i++) {
+      _wgt[i] = 0 ;
+      _errLo[i] = -1 ;
+      _errHi[i] = -1 ;
+      _sumw2[i] = 0 ;
+    }
   }
 
   // Save real dimensions of dataset separately
@@ -359,6 +361,13 @@ void RooDataHist::initialize(Bool_t fillTree)
     if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real) ;
   }
   _realIter = _realVars.createIterator() ;
+
+  // Fill array of LValue pointers to variables
+  _iterator->Reset() ;
+  RooAbsArg* rvarg ;
+  while((rvarg=(RooAbsArg*)_iterator->Next())) {
+    _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;
+  }
 
   if (!fillTree) return ;
 
@@ -381,12 +390,6 @@ void RooDataHist::initialize(Bool_t fillTree)
     Fill() ;
   }
 
-  // Fill array of LValue pointers to variables
-  _iterator->Reset() ;
-  RooAbsArg* rvarg ;
-  while((rvarg=(RooAbsArg*)_iterator->Next())) {
-    _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;
-  }
 }
 
 
@@ -557,6 +560,10 @@ Int_t RooDataHist::calcTreeIndex() const
 {
   // Calculate the index for the weights array corresponding to 
   // to the bin enclosing the current coordinates of the internal argset
+
+  if (!_idxMult) {
+    const_cast<RooDataHist*>(this)->initialize(kFALSE) ;
+  }
 
   Int_t masterIdx(0), i(0) ;
   list<RooAbsLValue*>::const_iterator iter = _lvvars.begin() ;
@@ -1001,6 +1008,9 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
   }
 
   // Recalculate partial bin volume cache
+  if (!_idxMult) {
+    const_cast<RooDataHist*>(this)->initialize(kFALSE) ;
+  }
   Int_t ibin ;
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
     _iterator->Reset() ;

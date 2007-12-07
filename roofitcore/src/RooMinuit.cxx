@@ -656,7 +656,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
 
 
 
-TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3) 
+TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3, Double_t n4, Double_t n5, Double_t n6) 
 {
   // Verify that both variables are floating parameters of PDF
   Int_t index1= _floatParamList->index(&var1);
@@ -726,6 +726,58 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     }
 
   }
+
+  TGraph* graph4 = 0;
+  if(n4 > 0) {
+    // set the value corresponding to an n3-sigma contour
+    gMinuit->SetErrorDef(n4*n4*errdef);
+    // calculate and draw the contour
+    
+    graph4= (TGraph*)gMinuit->Contour(25, index1, index2);
+
+    if (graph4) {
+      graph4->SetLineStyle(4);
+      gDirectory->Append(graph4) ;   
+    } else {
+      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n4 << endl ;
+    }
+
+  }
+
+  TGraph* graph5 = 0;
+  if(n5 > 0) {
+    // set the value corresponding to an n5-sigma contour
+    gMinuit->SetErrorDef(n5*n5*errdef);
+    // calculate and draw the contour
+    
+    graph5= (TGraph*)gMinuit->Contour(25, index1, index2);
+
+    if (graph5) {
+      graph5->SetLineStyle(5);
+      gDirectory->Append(graph5) ;   
+    } else {
+      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n5 << endl ;
+    }
+
+  }
+
+  TGraph* graph6 = 0;
+  if(n6 > 0) {
+    // set the value corresponding to an n6-sigma contour
+    gMinuit->SetErrorDef(n6*n6*errdef);
+    // calculate and draw the contour
+    
+    graph6= (TGraph*)gMinuit->Contour(25, index1, index2);
+
+    if (graph6) {
+      graph6->SetLineStyle(6);
+      gDirectory->Append(graph6) ;   
+    } else {
+      coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n6 << endl ;
+    }
+
+  }
+
   // restore the original ERRDEF
   gMinuit->SetErrorDef(errdef);
 
@@ -736,6 +788,9 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
   if (graph1) graph1->Draw() ;
   if (graph2) graph2->Draw();
   if (graph3) graph3->Draw();
+  if (graph4) graph4->Draw();
+  if (graph5) graph5->Draw();
+  if (graph6) graph6->Draw();
   
   return frame;
 }

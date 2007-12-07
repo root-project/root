@@ -27,7 +27,7 @@ class RooDataHist ;
 
 class RooHistPdf : public RooAbsPdf {
 public:
-  RooHistPdf() {} ;
+  RooHistPdf() ; 
   RooHistPdf(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooHistPdf(*this,newname); }
