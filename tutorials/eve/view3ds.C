@@ -219,7 +219,6 @@ Int_t ReadMaterialChunk(FILE *f, UInt_t len)
 
    Chunk chunk;
    char name[256];
-   char rgb[3];
    material[nummaterials] = new Material();
    while ((ReadChunk(f, &chunk) == 0) && (!feof(f))) {
       if (chunk.idnum == MATNAME) {
@@ -256,7 +255,6 @@ Int_t ReadColor(FILE *f, UInt_t len)
    
    Chunk chunk;
    float fr, fg, fb;
-   int   irgb[3];
    while ((ReadChunk(f, &chunk) == 0) && (!feof(f))) {
       if (chunk.idnum == LIN_COLOR_24) {
          fread(&material[nummaterials]->color[0], sizeof(UChar_t), 1, f);
@@ -301,7 +299,6 @@ Int_t ReadTransparency(FILE *f, UInt_t len)
    // reads the Transparency property of the Material Chunk
    
    Chunk    chunk;
-   char     byte[2];
    float    ftransp;
    UShort_t stransp;
    while ((ReadChunk(f, &chunk) == 0) && (!feof(f))) {
@@ -366,7 +363,6 @@ Int_t ReadMeshChunk(FILE *f, UInt_t len, char *objname)
 {
    // reads the TriMesh sub-chunk of the Object Chunk
 
-   Int_t i;
    Chunk chunk;
    model.vlist = 0;
    model.flist = 0;
@@ -396,10 +392,7 @@ Int_t ReadMeshChunk(FILE *f, UInt_t len, char *objname)
          }
       }
    }
-   if (model.numverts != 0 && model.numfaces != 0 &&
-       model.vlist != 0 && model.flist != 0) {
-      ConvertModel();
-   }
+   ConvertModel();
    if (model.vlist != 0) delete [] model.vlist;
    if (model.flist != 0) delete [] model.flist;
    model.vlist = 0;
@@ -547,7 +540,8 @@ Int_t ConvertModel()
       if (strcmp(model.matname, material[i]->name) == 0) {
          ts[nummodels]->SetTransparency(material[i]->transparency);
          ts[nummodels]->SetColor(Color_t(TColor::GetColor(material[i]->color[0], 
-                                                          material[i]->color[1], material[i]->color[2])));
+                                                          material[i]->color[1], 
+                                                          material[i]->color[2])));
          break;
       }
    }
