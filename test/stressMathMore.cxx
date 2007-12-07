@@ -92,8 +92,8 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
 }
 
 // typedef fot a free function like gamma(double x, double a, double b)
-typedef double( * FreeFunc3) (double, double, double ); 
-typedef double( * FreeFunc4 ) (double, double, double, double ); 
+typedef double (*FreeFunc3)(double, double, double ); 
+typedef double (*FreeFunc4)(double, double, double, double ); 
 
 //implement simple functor
 struct Func { 
@@ -116,7 +116,10 @@ struct Func4 : public Func {
    FreeFunc4 fFunc; 
 };
 
-
+#ifdef __MAKECINT__
+template <class T> class numeric_limits;
+double numeric_limits<double>::infinity();
+#endif
 
 // statistical function class 
 const int NPAR = 2; 
