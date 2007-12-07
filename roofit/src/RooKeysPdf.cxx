@@ -28,6 +28,11 @@
 
 ClassImp(RooKeysPdf)
 
+
+RooKeysPdf::RooKeysPdf() : _dataPts(0), _weights(0)
+{
+}
+
 RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
                        Mirror mirror, Double_t rho) :

@@ -1262,8 +1262,8 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
     cuts2 = Form("(%s<0)",asymCat.GetName());
   }
 
-  if(0 == fillHistogram(hist1,RooArgList(*var),cuts1.Data()) ||
-     0 == fillHistogram(hist2,RooArgList(*var),cuts2.Data())) {
+  if(0 == fillHistogram(hist1,RooArgList(*var),cuts1.Data(),o.cutRange) ||
+     0 == fillHistogram(hist2,RooArgList(*var),cuts2.Data(),o.cutRange)) {
     coutE(Plotting) << ClassName() << "::" << GetName()
 	 << ":plotAsymOn: createHistogram() failed" << endl;
     return 0;

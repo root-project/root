@@ -239,7 +239,7 @@ def main():
 
     # the new TMVA ANN: MLP (recommended ANN)
     if "MLP" in mlist:
-        factory.BookMethod( TMVA.Types.kMLP, "MLP", "Normalise:H:!V:NCycles=200:HiddenLayers=N+1,N:TestRate=5" )
+        factory.BookMethod( TMVA.Types.kMLP, "MLP", "Normalise:H:!V:NeuronType=tanh:NCycles=200:HiddenLayers=N+1,N:TestRate=5" )
         
     # CF(Clermont-Ferrand)ANN
     if "CFMlpANN" in mlist:

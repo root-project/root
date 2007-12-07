@@ -336,7 +336,7 @@ void TMVAnalysis( TString myMethodList = "" )
 
    // TMVA ANN: MLP (recommended ANN) -- all ANNs in TMVA are Multilayer Perceptrons
    if (Use_MLP)
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "Normalise:H:!V:NCycles=200:HiddenLayers=N+1,N:TestRate=5" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLP", "Normalise:H:!V:NeuronType=tanh:NCycles=200:HiddenLayers=N+1,N:TestRate=5" );
 
    // CF(Clermont-Ferrand)ANN
    if (Use_CFMlpANN)

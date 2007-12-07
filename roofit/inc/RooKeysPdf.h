@@ -28,6 +28,7 @@ public:
 		MirrorAsymLeft, MirrorAsymLeftRight,
 		MirrorAsymRight, MirrorLeftAsymRight,
 		MirrorAsymBoth };
+  RooKeysPdf() ;
   RooKeysPdf(const char *name, const char *title,
              RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror,
 	     Double_t rho=1);
@@ -47,8 +48,8 @@ private:
   Double_t evaluateFull(Double_t x) const;
 
   Int_t _nEvents;
-  Double_t *_dataPts; //!
-  Double_t *_weights; //!
+  Double_t *_dataPts; //[_nEvents]
+  Double_t *_weights; //[_nEvents]
   
   enum { _nPoints = 1000 };
   Double_t _lookupTable[_nPoints+1];

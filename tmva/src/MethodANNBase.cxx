@@ -90,7 +90,7 @@ void TMVA::MethodANNBase::DeclareOptions()
 
    DeclareOptionRef( fNcycles    = 3000,      "NCycles",      "Number of training cycles" );
    DeclareOptionRef( fLayerSpec  = "N-1,N-2", "HiddenLayers", "Specification of hidden layer architecture" );
-   DeclareOptionRef( fNeuronType = "sigmoid", "NeuronType",   "Neuron activation function type" );
+   DeclareOptionRef( fNeuronType = "tanh",    "NeuronType",   "Neuron activation function type" );
 
    TActivationChooser aChooser;
    vector<TString>* names = aChooser.GetAllActivationNames();
