@@ -355,7 +355,7 @@ void sparsehist() {
       const char* name = t ? "htime_ratio" : "htime_ratio_r";
       htime_ratio[t] = (TH2F*) htime[TTimeHists::kSparse][t]->Clone(name);
       TString title;
-      title.Form("Relative speed improvement (CPU, 1M entries/sec): sparse/hist;dim;bins;#Delta 1M entries/sec", t == 0 ? "real" : "CPU");
+      title.Form("Relative speed improvement (%s, 1M entries/sec): sparse/hist;dim;bins;#Delta 1M entries/sec", t == 0 ? "real" : "CPU");
       htime_ratio[t]->SetTitle(title);
       htime_ratio[t]->Divide(htime[TTimeHists::kHist][t]);
       htime_ratio[t]->SetMinimum(0.1);
