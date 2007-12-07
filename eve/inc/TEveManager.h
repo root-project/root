@@ -174,6 +174,6 @@ public:
    ClassDef(TEveManager, 0); // Reve application manager.
 };
 
-extern TEveManager* gEve;
+R__EXTERN TEveManager* gEve;
 
 #endif
