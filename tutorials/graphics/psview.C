@@ -7,17 +7,18 @@
 
 void psview()
 {
-   // set to batch  mode -> do not display graphics
+   // set to batch mode -> do not display graphics
    gROOT->SetBatch(1);
 
-   // create PostScript file psexam.ps
-   gROOT->Macro("psexam.C");
+   // create a PostScript file
+   gROOT->Macro("feynman.C");
+   gPad->Print("feynman.ps");
 
    // back to graphics mode
    gROOT->SetBatch(0);
 
    // create an image from PS file
-   TImage *ps = TImage::Open("psexam.ps");
+   TImage *ps = TImage::Open("feynman.ps");
 
    if (!ps) {
       printf("GhostScript (gs) program must be installed\n");
