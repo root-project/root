@@ -1636,6 +1636,10 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //   NOTE that if a TProfile named name exists in the current directory or pad,
    //   the histogram is reset and filled again with the current contents of the TH2.
    //   The X axis attributes of the TH2 are copied to the X axis of the profile.
+   //
+   //   NOTE2 that the default under- / overflow behavior differs from what ProjectionX
+   //   does! Profiles take the bin center into account, so here the under- and overflow
+   //   bins are ignored by default.
 
    TString opt = option;
    Int_t nx = fXaxis.GetNbins();
@@ -1746,6 +1750,10 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //   NOTE that if a TProfile named name exists in the current directory or pad,
    //   the histogram is reset and filled again with the current contents of the TH2.
    //   The Y axis attributes of the TH2 are copied to the X axis of the profile.
+   //
+   //   NOTE2 that the default under- / overflow behavior differs from what ProjectionX
+   //   does! Profiles take the bin center into account, so here the under- and overflow
+   //   bins are ignored by default.
 
    TString opt = option;
    Int_t nx = fXaxis.GetNbins();
@@ -1835,12 +1843,12 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   The projection is always of the type TH1D.
    //   The projection is made from the channels along the Y axis
    //   ranging from firstybin to lastybin included.
-   //   By default, bins 1 to ny are included
+   //   By default, all bins including under- and overflow are included.
    //   The number of entries in the projection is estimated from the
    //   number of effective entries for all the cells included in the projection
    //
-   //   To make the projection in X of the underflow bin in Y, use firstybin=lastybin=0;
-   //   To make the projection in X of the overflow bin in Y, use firstybin=lastybin=ny+1;
+   //   To exclude the the underflow bins in Y, use firstybin=1;
+   //   to exclude the the underflow bins in Y, use lastybin=nx.
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
@@ -1862,9 +1870,9 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    TString opt = option;
    Int_t nx = fXaxis.GetNbins();
    Int_t ny = fYaxis.GetNbins();
-   if (firstybin < 0) firstybin = 1;
-   if (lastybin  < 0) lastybin  = ny;
-   if (lastybin  > ny+1) lastybin  = ny;
+   if (firstybin < 0) firstybin = 0;
+   if (lastybin  <= 0) lastybin  = ny + 1;
+   if (lastybin  > ny+1) lastybin  = ny + 1;
 
    // Create the projection histogram
    char *pname = (char*)name;
@@ -1968,12 +1976,12 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //   The projection is always of the type TH1D.
    //   The projection is made from the channels along the X axis
    //   ranging from firstxbin to lastxbin included.
-   //   By default, bins 1 to nx are included
+   //   By default, all bins including under- and overflow are included.
    //   The number of entries in the projection is estimated from the
    //   number of effective entries for all the cells included in the projection
    //
-   //   To make the projection in Y of the underflow bin in X, use firstxbin=lastxbin=0;
-   //   To make the projection in Y of the overflow bin in X, use firstxbin=lastxbin=nx+1;
+   //   To exclude the the underflow bins in X, use firstxbin=1;
+   //   to exclude the the underflow bins in X, use lastxbin=nx.
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
@@ -1995,9 +2003,9 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    TString opt = option;
    Int_t nx = fXaxis.GetNbins();
    Int_t ny = fYaxis.GetNbins();
-   if (firstxbin < 0) firstxbin = 1;
-   if (lastxbin  < 0) lastxbin  = nx;
-   if (lastxbin  > nx+1) lastxbin  = nx;
+   if (firstxbin < 0) firstxbin = 0;
+   if (lastxbin  <= 0) lastxbin  = nx + 1;
+   if (lastxbin  > nx + 1) lastxbin  = nx + 1;
 
    // Create the projection histogram
    char *pname = (char*)name;
