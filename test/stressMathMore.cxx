@@ -542,7 +542,7 @@ int stressMathMore(double nscale = 1) {
    TBenchmark bm;
    bm.Start("stressMathMore");
    
-   int n = nscale*100;
+   int n = int(nscale*100);
 
    iret |= testGammaFunction(n);
    iret |= testBetaFunction(n);

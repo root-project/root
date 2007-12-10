@@ -73,10 +73,10 @@ STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
 STRESSVEC    = stressVector$(ExeSuf)
 
+STRESSMATHO   = stressMathCore.$(ObjSuf) 
+STRESSMATHS   = stressMathCore.$(SrcSuf) 
 ifneq ($(USE_REFLEX),)
 CXXFLAGS += -DUSE_REFLEX
-STRESSMATHO   = stressMathCore.$(ObjSuf)  TrackMathCoreRflx.$(ObjSuf) 
-STRESSMATHS   = stressMathCore.$(SrcSuf)  TrackMathCoreRflx.$(SrcSuf)
 ifeq ($(PLATFORM),win32)
 STRESSMATHLIBS = '$(ROOTSYS)/lib/libMathCore.lib' '$(ROOTSYS)/lib/libReflex.lib' '$(ROOTSYS)/lib/libCintex.lib' 
 else
@@ -88,8 +88,6 @@ TRACKMATHLIB = libTrackMathcoreRflx.$(DllSuf)
 
 
 else 
-STRESSMATHO   = stressMathCore.$(ObjSuf) 
-STRESSMATHS   = stressMathCore.$(SrcSuf) 
 
 ifeq ($(PLATFORM),win32)
 STRESSMATHLIBS = '$(ROOTSYS)/lib/libMathCore.lib'
@@ -351,75 +349,8 @@ endif
 		@echo "$@ done"
 
 
-#ifneq ($(useReflex),)
 
 
-
-libTrackMathCoreRflx.$(DllSuf): 	TrackMathCoreRflx.$(ObjSuf) 
-ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-endif
-else
-ifeq ($(PLATFORM),win32)
-		bindexplib $* $^ > $*.def
-		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
-		   $(OutPutOpt)$(EVENTLIB)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
-		   $(OutPutOpt)$@
-		$(MT_DLL)
-else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-endif
-endif
-endif
-endif
-		@echo "$@ done"
-
-#endif
-
-libTrackMathCoreCint.$(DllSuf): 	TrackMathCoreCint.$(ObjSuf) 
-ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-endif
-else
-ifeq ($(PLATFORM),win32)
-		bindexplib $* $^ > $*.def
-		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
-		   $(OutPutOpt)$(EVENTLIB)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
-		   $(OutPutOpt)$@
-		$(MT_DLL)
-else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-endif
-endif
-endif
-endif
-		@echo "$@ done"
 
 
 $(TRACKMATHLIB):	$(TRACKMATHOBJ)
@@ -439,19 +370,19 @@ else
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
+#endif
 endif
 endif
 endif
-
 
 $(STRESSMATH):   $(STRESSMATHO) $(TRACKMATHLIB)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
 		$(MT_EXE)
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
