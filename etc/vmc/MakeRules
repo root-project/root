@@ -46,7 +46,7 @@ $(BINDIR)/%.o : %.f
 $(BINDIR)/%.o : %.F
 	@echo $*.F
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	@$(F77) $(FFLAGS) -c $*.F -o $(BINDIR)/$*.o
+	$(F77) $(FFLAGS) -c $*.F -o $(BINDIR)/$*.o
 
 
 

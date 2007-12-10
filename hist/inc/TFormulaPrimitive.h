@@ -66,6 +66,9 @@ protected:
    Int_t      fNArguments;                                //number of arguments
    Int_t      fNParameters;                               //number of parameters
    Bool_t     fIsStatic;                                  // indication if the function is static
+private:
+   TFormulaPrimitive(const TFormulaPrimitive&); // Not implemented
+   TFormulaPrimitive& operator=(const TFormulaPrimitive&); // Not implemented
 public:
    TFormulaPrimitive();
    TFormulaPrimitive(const char *name,const char *formula, GenFunc0 fpointer);
