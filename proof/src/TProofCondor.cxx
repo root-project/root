@@ -403,10 +403,10 @@ TString TProofCondor::GetJobAd()
 
    ad = "JobUniverse = 5\n"; // vanilla
    ad += Form("Cmd = \"%s/bin/proofd\"\n", GetConfDir());
-   ad += "Iwd = \"/tmp\"\n";
+   ad += Form("Iwd = \"%s\"\n", gSystem->TempDirectory());
    ad += "In = \"/dev/null\"\n";
-   ad += "Out = \"/tmp/proofd.out.$(Port)\"\n";
-   ad += "Err = \"/tmp/proofd.err.$(Port)\"\n";
+   ad += Form("Out = \"%s/proofd.out.$(Port)\"\n", gSystem->TempDirectory());
+   ad += Form("Err = \"%s/proofd.err.$(Port)\"\n", gSystem->TempDirectory());
    ad += Form("Args = \"-f -p $(Port) -d %d %s\"\n", GetLogLevel(), GetConfDir());
 
    return ad;

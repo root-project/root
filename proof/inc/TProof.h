@@ -116,10 +116,10 @@ const char* const kPROOF_CacheDir        = "cache";       // file cache dir, und
 const char* const kPROOF_PackDir         = "packages";    // package dir, under WorkDir
 const char* const kPROOF_QueryDir        = "queries";     // query dir, under WorkDir
 const char* const kPROOF_DataSetDir      = "datasets";    // dataset dir, under WorkDir
-const char* const kPROOF_CacheLockFile   = "/tmp/proof-cache-lock-";   // cache lock file
-const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // package lock file
-const char* const kPROOF_QueryLockFile   = "/tmp/proof-query-lock-";   // query lock file
-const char* const kPROOF_DataSetLockFile = "/tmp/proof-dataset-lock-"; // dataset lock file
+const char* const kPROOF_CacheLockFile   = "proof-cache-lock-";   // cache lock file
+const char* const kPROOF_PackageLockFile = "proof-package-lock-"; // package lock file
+const char* const kPROOF_QueryLockFile   = "proof-query-lock-";   // query lock file
+const char* const kPROOF_DataSetLockFile = "proof-dataset-lock-"; // dataset lock file
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -fp";

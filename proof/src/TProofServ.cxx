@@ -2138,7 +2138,8 @@ Int_t TProofServ::SetupCommon()
    if (gProofDebugLevel > 0)
       Info("SetupCommon", "cache directory set to %s", fCacheDir.Data());
    fCacheLock =
-      new TProofLockPath(Form("%s%s",kPROOF_CacheLockFile,
+      new TProofLockPath(Form("%s/%s%s",
+                         gSystem->TempDirectory(), kPROOF_CacheLockFile,
                          TString(fCacheDir).ReplaceAll("/","%").Data()));
 
    // check and make sure "packages" directory exists
@@ -2149,7 +2150,8 @@ Int_t TProofServ::SetupCommon()
    if (gProofDebugLevel > 0)
       Info("SetupCommon", "package directory set to %s", fPackageDir.Data());
    fPackageLock =
-      new TProofLockPath(Form("%s%s",kPROOF_PackageLockFile,
+      new TProofLockPath(Form("%s/%s%s",
+                         gSystem->TempDirectory(), kPROOF_PackageLockFile,
                          TString(fPackageDir).ReplaceAll("/","%").Data()));
 
    // List of directories where to look for global packages
@@ -2207,8 +2209,9 @@ Int_t TProofServ::SetupCommon()
          Info("SetupCommon", "queries dir is %s", fQueryDir.Data());
 
       // Create 'queries' locker instance and lock it
-      fQueryLock = new TProofLockPath(Form("%s%s-%s",
-                       kPROOF_QueryLockFile,fSessionTag.Data(),
+      fQueryLock = new TProofLockPath(Form("%s/%s%s-%s",
+                       gSystem->TempDirectory(),
+                       kPROOF_QueryLockFile, fSessionTag.Data(),
                        TString(fQueryDir).ReplaceAll("/","%").Data()));
       fQueryLock->Lock();
 
@@ -2223,7 +2226,8 @@ Int_t TProofServ::SetupCommon()
       if (gProofDebugLevel > 0)
          Info("SetupCommon", "dataset dir is %s", fDataSetDir.Data());
       fDataSetLock =
-         new TProofLockPath(Form("%s%s", kPROOF_DataSetLockFile,
+         new TProofLockPath(Form("%s/%s%s",
+                            gSystem->TempDirectory(), kPROOF_DataSetLockFile,
                             TString(fDataSetDir).ReplaceAll("/","%").Data()));
 
       // Send session tag to client
