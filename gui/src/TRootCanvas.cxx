@@ -1693,6 +1693,9 @@ Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
             sfname.EndsWith(".gif") ||
             sfname.EndsWith(".jpg") ||
             sfname.EndsWith(".png") ||
+            sfname.EndsWith(".ps")  ||
+            sfname.EndsWith(".eps") ||
+            sfname.EndsWith(".pdf") ||
             sfname.EndsWith(".tiff") ||
             sfname.EndsWith(".xpm")) {
             TImage *img = TImage::Open(uri.GetFile());
