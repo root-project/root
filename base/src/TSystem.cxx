@@ -355,20 +355,19 @@ loop_entry:
                goto loop_entry;
                break;
             case TStdExceptionHandler::kSEAbort:
-               Warning("Run", "instructed to abort.\n");
+               Warning("Run", "instructed to abort");
                goto loop_end;
                break;
          }
-         Warning("Run", "unhandled std::exception, rethrowing.\n");
-         throw;
       }
+      throw;
    }
    catch (const char *str) {
       printf("%s\n", str);
    }
    // handle every exception
    catch (...) {
-      Warning("Run", "handle uncaugth exception, terminating\n");
+      Warning("Run", "handle uncaugth exception, terminating");
    }
 
 loop_end:
