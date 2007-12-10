@@ -1,4 +1,7 @@
 // An example how to display PS, EPS, PDF files in canvas
+// To load a PS file in a TCanvas, the ghostscript program needs to be install.
+// On most unix systems it is usually installed. On Windows it has to be
+// installed from http://pages.cs.wisc.edu/~ghost/
 //Author: Valeriy Onoutchin
    
 #include "TROOT.h"
