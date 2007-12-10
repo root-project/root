@@ -26,7 +26,7 @@
 //  * provide basic cross-referencing functionality;
 //
 //  * small memory/disk footprint (floats / count on compression in
-//  split mode);
+//    split mode);
 //
 //  * simple usage from tree selections;
 //

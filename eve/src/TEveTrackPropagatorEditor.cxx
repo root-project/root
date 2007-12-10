@@ -60,6 +60,8 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    fPMAtt(0),
    fFVAtt(0)
 {
+   // Constructor.
+
    Int_t labelW = 51;
 
    // --- Limits
@@ -246,6 +248,8 @@ void TEveTrackPropagatorSubEditor::Changed()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoMaxR()
 {
+   // Slot for MaxR.
+
    fM->SetMaxR(fMaxR->GetValue());
    Changed();
 }
@@ -253,6 +257,8 @@ void TEveTrackPropagatorSubEditor::DoMaxR()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoMaxZ()
 {
+   // Slot for MaxZ.
+
    fM->SetMaxZ(fMaxZ->GetValue());
    Changed();
 }
@@ -260,6 +266,8 @@ void TEveTrackPropagatorSubEditor::DoMaxZ()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoMaxOrbits()
 {
+   // Slot for MaxOrbits.
+
    fM->SetMaxOrbs(fMaxOrbits->GetValue());
    Changed();
 }
@@ -267,6 +275,8 @@ void TEveTrackPropagatorSubEditor::DoMaxOrbits()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoMinAng()
 {
+   // Slot for MinAng.
+
    fM->SetMinAng(fMinAng->GetValue());
    Changed();
 }
@@ -274,6 +284,8 @@ void TEveTrackPropagatorSubEditor::DoMinAng()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoDelta()
 {
+   // Slot for Delta.
+
    fM->SetDelta(fDelta->GetValue());
    Changed();
 }
@@ -283,6 +295,8 @@ void TEveTrackPropagatorSubEditor::DoDelta()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoFitPM()
 {
+   // Slot for FitPM.
+
    TGButton* b = (TGButton *) gTQSender;
    TEvePathMark::EType_e type = TEvePathMark::EType_e(b->WidgetId());
    Bool_t on = b->IsOn();
@@ -307,6 +321,8 @@ void TEveTrackPropagatorSubEditor::DoFitPM()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoRnrPM()
 {
+   // Slot for RnrPM.
+
    TGButton * b = (TGButton *) gTQSender;
    TEvePathMark::EType_e type = TEvePathMark::EType_e(b->WidgetId());
    Bool_t on = b->IsOn();
@@ -330,6 +346,8 @@ void TEveTrackPropagatorSubEditor::DoRnrPM()
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::DoRnrFV()
 {
+   // Slot for RnrFV.
+
    fM->SetRnrFV(fRnrFV->IsOn());
    Changed();
 }
@@ -378,12 +396,6 @@ TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
    fRSSubEditor->fFVAtt->SetGedEditor((TGedEditor*)gEve->GetEditor());
 
    fRSSubEditor->Connect("Changed()", "TEveTrackPropagatorEditor", this, "Update()");
-}
-
-//______________________________________________________________________________
-TEveTrackPropagatorEditor::~TEveTrackPropagatorEditor()
-{
-   // Destructor. Noop.
 }
 
 /******************************************************************************/

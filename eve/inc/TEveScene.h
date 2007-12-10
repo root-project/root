@@ -71,7 +71,7 @@ protected:
 
 public:
    TEveSceneList(const Text_t* n="TEveSceneList", const Text_t* t="");
-   virtual ~TEveSceneList();
+   virtual ~TEveSceneList() {}
 
    void RepaintChangedScenes();
    void RepaintAllScenes();

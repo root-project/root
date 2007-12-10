@@ -267,11 +267,11 @@ void TEveTrack::MakeTrack(Bool_t recurse)
 
    Reset(0);
 
-   TEveTrackPropagator& RS((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefStyle);
+   TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefStyle);
 
-   const Float_t maxRsq = RS.GetMaxR() * RS.GetMaxR();
+   const Float_t maxRsq = rTP.GetMaxR() * rTP.GetMaxR();
 
-   if (TMath::Abs(fV.fZ) < RS.GetMaxZ() && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
+   if (TMath::Abs(fV.fZ) < rTP.GetMaxZ() && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
    {
       TEveVector currP = fP;
       Bool_t decay = kFALSE;
@@ -279,9 +279,9 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       for (std::vector<TEvePathMark*>::iterator i=fPathMarks.begin(); i!=fPathMarks.end(); ++i)
       {
          TEvePathMark* pm = *i;
-         if (RS.GetFitReferences() && pm->fType == TEvePathMark::kReference)
+         if (rTP.GetFitReferences() && pm->fType == TEvePathMark::kReference)
          {
-            if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
+            if (TMath::Abs(pm->fV.fZ) > rTP.GetMaxZ() ||
                pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
                goto bounds;
             // printf("%s fit reference  \n", fName.Data());
@@ -289,9 +289,9 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
             }
          }
-         else if (RS.GetFitDaughters() &&  pm->fType == TEvePathMark::kDaughter)
+         else if (rTP.GetFitDaughters() &&  pm->fType == TEvePathMark::kDaughter)
          {
-            if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
+            if (TMath::Abs(pm->fV.fZ) > rTP.GetMaxZ() ||
                 pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
                goto bounds;
             // printf("%s fit daughter  \n", fName.Data());
@@ -299,9 +299,9 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
             }
          }
-         else if (RS.GetFitDecay() &&  pm->fType == TEvePathMark::kDecay)
+         else if (rTP.GetFitDecay() &&  pm->fType == TEvePathMark::kDecay)
          {
-            if (TMath::Abs(pm->fV.fZ) > RS.GetMaxZ() ||
+            if (TMath::Abs(pm->fV.fZ) > rTP.GetMaxZ() ||
                 pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
                goto bounds;
             // printf("%s fit decay \n", fName.Data());
@@ -312,7 +312,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       } // loop path-marks
 
    bounds:
-      if(!decay || RS.GetFitDecay() == kFALSE)
+      if(!decay || rTP.GetFitDecay() == kFALSE)
       {
          // printf("%s loop to bounds  \n",fName.Data() );
          fPropagator->GoToBounds(currP);

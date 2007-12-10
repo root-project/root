@@ -37,6 +37,8 @@ TEveRGBAPalette::TEveRGBAPalette() :
    fOverColor   (2),
    fColorArray  (0)
 {
+   // Constructor.
+
    SetLimits(0, 1024);
    SetMinMax(0,  512);
 }
@@ -58,6 +60,8 @@ TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp, Bool_t sho
    fOverColor   (2),
    fColorArray  (0)
 {
+   // Constructor.
+
    SetLimits(min, max);
    SetMinMax(min, max);
 }
@@ -65,6 +69,8 @@ TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp, Bool_t sho
 //______________________________________________________________________________
 TEveRGBAPalette::~TEveRGBAPalette()
 {
+   // Destructor.
+
    delete [] fColorArray;
 }
 
@@ -73,6 +79,8 @@ TEveRGBAPalette::~TEveRGBAPalette()
 //______________________________________________________________________________
 void TEveRGBAPalette::SetupColor(Int_t val, UChar_t* pixel) const
 {
+   // Set RGBA color 'pixel' for signal-value 'val'.
+
    using namespace TMath;
    Float_t div  = Max(1, fMaxVal - fMinVal);
    Int_t   nCol = gStyle->GetNumberOfColors();
@@ -96,10 +104,10 @@ void TEveRGBAPalette::SetupColor(Int_t val, UChar_t* pixel) const
 //______________________________________________________________________________
 void TEveRGBAPalette::SetupColorArray() const
 {
-   if(fColorArray) // !!!! should reinit anyway, maybe palette in gstyle changed
-      return;
+   // Construct internal color array that maps signal value to RGBA color.
 
-   // !!!! probably should store original palette for editing ...
+   if (fColorArray)
+      delete [] fColorArray;
 
    fColorArray = new UChar_t [4 * fNBins];
    UChar_t* p = fColorArray;
@@ -110,7 +118,9 @@ void TEveRGBAPalette::SetupColorArray() const
 //______________________________________________________________________________
 void TEveRGBAPalette::ClearColorArray()
 {
-   if(fColorArray) {
+   // Clear internal color array.
+
+   if (fColorArray) {
       delete [] fColorArray;
       fColorArray = 0;
    }
@@ -121,6 +131,9 @@ void TEveRGBAPalette::ClearColorArray()
 //______________________________________________________________________________
 void TEveRGBAPalette::SetLimits(Int_t low, Int_t high)
 {
+   // Set low/high limits on signal value. Current min/max values are
+   // clamped into the new limits.
+
    fLowLimit  = low;
    fHighLimit = high;
    Bool_t changed = kFALSE;
@@ -135,6 +148,8 @@ void TEveRGBAPalette::SetLimits(Int_t low, Int_t high)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetLimitsScaleMinMax(Int_t low, Int_t high)
 {
+   // Set low/high limits and rescale current min/max values.
+
    Float_t rng_old = fHighLimit - fLowLimit;
    Float_t rng_new = high - low;
 
@@ -150,6 +165,8 @@ void TEveRGBAPalette::SetLimitsScaleMinMax(Int_t low, Int_t high)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetMin(Int_t min)
 {
+   // Set current min value.
+
    fMinVal = TMath::Min(min, fMaxVal);
    fNBins  = fMaxVal - fMinVal + 1;
    ClearColorArray();
@@ -158,6 +175,8 @@ void TEveRGBAPalette::SetMin(Int_t min)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetMax(Int_t max)
 {
+   // Set current max value.
+
    fMaxVal = TMath::Max(max, fMinVal);
    fNBins  = fMaxVal - fMinVal + 1;
    ClearColorArray();
@@ -166,6 +185,8 @@ void TEveRGBAPalette::SetMax(Int_t max)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetMinMax(Int_t min, Int_t max)
 {
+   // Set current min/max values.
+
    fMinVal = min;
    fMaxVal = max;
    fNBins  = fMaxVal - fMinVal + 1;
@@ -177,6 +198,9 @@ void TEveRGBAPalette::SetMinMax(Int_t min, Int_t max)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetInterpolate(Bool_t b)
 {
+   // Set interpolation flag. This determines how colors from ROOT's
+   // palette are mapped into RGBA values for given signal.
+
    fInterpolate = b;
    ClearColorArray();
 }
@@ -186,6 +210,8 @@ void TEveRGBAPalette::SetInterpolate(Bool_t b)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetDefaultColor(Color_t ci)
 {
+   // Set default color.
+
    fDefaultColor = ci;
    TEveUtil::ColorFromIdx(ci, fDefaultRGBA, kTRUE);
 }
@@ -193,12 +219,16 @@ void TEveRGBAPalette::SetDefaultColor(Color_t ci)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetDefaultColor(Pixel_t pix)
 {
+   // Set default color.
+
    SetDefaultColor(Color_t(TColor::GetColor(pix)));
 }
 
 //______________________________________________________________________________
 void TEveRGBAPalette::SetDefaultColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
+   // Set default color.
+
    fDefaultColor = Color_t(TColor::GetColor(r, g, b));
    fDefaultRGBA[0] = r;
    fDefaultRGBA[1] = g;
@@ -211,6 +241,8 @@ void TEveRGBAPalette::SetDefaultColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a
 //______________________________________________________________________________
 void TEveRGBAPalette::SetUnderColor(Color_t ci)
 {
+   // Set underflow color.
+
    fUnderColor = ci;
    TEveUtil::ColorFromIdx(ci, fUnderRGBA, kTRUE);
 }
@@ -218,12 +250,16 @@ void TEveRGBAPalette::SetUnderColor(Color_t ci)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetUnderColor(Pixel_t pix)
 {
+   // Set underflow color.
+
    SetUnderColor(Color_t(TColor::GetColor(pix)));
 }
 
 //______________________________________________________________________________
 void TEveRGBAPalette::SetUnderColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
+   // Set underflow color.
+
    fUnderColor = Color_t(TColor::GetColor(r, g, b));
    fUnderRGBA[0] = r;
    fUnderRGBA[1] = g;
@@ -236,6 +272,8 @@ void TEveRGBAPalette::SetUnderColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetOverColor(Color_t ci)
 {
+   // Set overflow color.
+
    fOverColor = ci;
    TEveUtil::ColorFromIdx(ci, fOverRGBA, kTRUE);
 }
@@ -243,12 +281,16 @@ void TEveRGBAPalette::SetOverColor(Color_t ci)
 //______________________________________________________________________________
 void TEveRGBAPalette::SetOverColor(Pixel_t pix)
 {
+   // Set overflow color.
+
    SetOverColor(Color_t(TColor::GetColor(pix)));
 }
 
 //______________________________________________________________________________
 void TEveRGBAPalette::SetOverColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
+   // Set overflow color.
+
    fOverColor = Color_t(TColor::GetColor(r, g, b));
    fOverRGBA[0] = r;
    fOverRGBA[1] = g;

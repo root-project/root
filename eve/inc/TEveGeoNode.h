@@ -37,6 +37,7 @@ class TEveGeoNode : public TEveElement,
 protected:
    TGeoNode *fNode;
    TEveGeoShapeExtract* DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeExtract* parent = 0, Int_t level = 0);
+
 public:
    TEveGeoNode(TGeoNode* node);
 
@@ -45,7 +46,7 @@ public:
 
    TGeoNode* GetNode() const { return fNode; }
 
-   virtual Int_t ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
+   virtual void   ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
 
    virtual Bool_t CanEditRnrElement() { return false; }
    virtual void SetRnrSelf(Bool_t rnr);
@@ -75,13 +76,13 @@ class TEveGeoTopNode : public TEveGeoNode
 
 protected:
    TGeoManager* fManager;
-   TEveTrans       fGlobalTrans;
+   TEveTrans    fGlobalTrans;
    Int_t        fVisOption;
    Int_t        fVisLevel;
 
 public:
    TEveGeoTopNode(TGeoManager* manager, TGeoNode* node, Int_t visopt=1, Int_t vislvl=3);
-   virtual ~TEveGeoTopNode();
+   virtual ~TEveGeoTopNode() {}
 
    virtual Bool_t     CanEditMainHMTrans() { return  kTRUE; }
    virtual TEveTrans* PtrMainHMTrans()     { return &fGlobalTrans; }
@@ -129,7 +130,7 @@ protected:
    TGeoShape*        fShape;
 
    static TEveGeoShape* SubImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
-   TEveGeoShapeExtract*     DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent = 0);
+   TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent = 0);
 
 public:
    TEveGeoShape(const Text_t* name="TEveGeoShape", const Text_t* title=0);
@@ -156,7 +157,7 @@ public:
    void Save(const char* file, const char* name="Extract");
    static TEveGeoShape*        ImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
 
-   // NLTGeoProjectable
+   // GeoProjectable
    virtual TBuffer3D*           MakeBuffer3D();
    virtual TClass*              ProjectedClass() const;
 

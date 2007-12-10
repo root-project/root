@@ -114,6 +114,9 @@ namespace
 //______________________________________________________________________________
 void ChompTail(TString& s, char c='.')
 {
+   // Remove last part of string 's', starting from the last
+   // occurrence of character 'c'.
+
    Ssiz_t p = s.Last(c);
    if(p != kNPOS)
       s.Remove(p);
@@ -253,7 +256,10 @@ bool operator==(const std::string&  s, const TString& t)
 
 // Exc
 
-TEveException::TEveException(const std::string& s) : TString(s.c_str()) {}
+TEveException::TEveException(const std::string& s) : TString(s.c_str())
+{
+   // Constructor.
+}
 
 // Exc + ops
 
@@ -275,6 +281,8 @@ TEvePadHolder::TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t
    fOldPad        (gPad),
    fModifyUpdateP (modify_update_p)
 {
+   // Constructor.
+
    if (new_pad != 0)
       new_pad->cd(subpad);
    else
@@ -284,6 +292,8 @@ TEvePadHolder::TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t
 //______________________________________________________________________________
 TEvePadHolder::~TEvePadHolder()
 {
+   // Destructor.
+
    if(fModifyUpdateP && gPad != 0) {
       gPad->Modified();
       gPad->Update();
@@ -299,12 +309,16 @@ TEvePadHolder::~TEvePadHolder()
 TEveGeoManagerHolder::TEveGeoManagerHolder(TGeoManager* new_gmgr) :
    fManager(gGeoManager)
 {
+   // Constructor.
+
    gGeoManager = new_gmgr;
 }
 
 //______________________________________________________________________________
 TEveGeoManagerHolder::~TEveGeoManagerHolder()
 {
+   // Destructor.
+
    gGeoManager = fManager;
 }
 
@@ -330,7 +344,7 @@ TEveRefBackPtr::~TEveRefBackPtr()
 {
    // Destructor. Noop, should complain if back-ref list is not empty.
 
-   // !!!! Complain if list not empty.
+   // !!! Complain if list not empty.
 }
 
 //______________________________________________________________________________
@@ -386,6 +400,8 @@ void TEveRefBackPtr::DecRefCount(TEveElement* re)
 //______________________________________________________________________________
 void TEveRefBackPtr::UpdateBackPtrItems()
 {
+   // Call UpdateItems() on list of reverse references.
+
    std::list<TEveElement*>::iterator i = fBackRefs.begin();
    while (i != fBackRefs.end())
    {

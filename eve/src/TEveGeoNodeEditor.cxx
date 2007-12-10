@@ -46,6 +46,8 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
 
    fTransparency(0)
 {
+   // Constructor.
+
    MakeTitle("GeoNode");
 
    // --- Visibility control
@@ -97,6 +99,8 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
 //______________________________________________________________________________
 void TEveGeoNodeEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fNodeRE = dynamic_cast<TEveGeoNode*>(obj);
    TGeoNode*  node = fNodeRE->fNode;
    TGeoVolume* vol = node->GetVolume();
@@ -114,6 +118,8 @@ void TEveGeoNodeEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TEveGeoNodeEditor::DoVizNode()
 {
+   // Slot for VizNode.
+
    fNodeRE->SetRnrSelf(fVizNode->IsOn());
    Update();
 }
@@ -121,6 +127,8 @@ void TEveGeoNodeEditor::DoVizNode()
 //______________________________________________________________________________
 void TEveGeoNodeEditor::DoVizNodeDaughters()
 {
+   // Slot for VizNodeDaughters.
+
    fNodeRE->SetRnrChildren(fVizNodeDaughters->IsOn());
    Update();
 }
@@ -128,6 +136,8 @@ void TEveGeoNodeEditor::DoVizNodeDaughters()
 //______________________________________________________________________________
 void TEveGeoNodeEditor::DoVizVolume()
 {
+   // Slot for VizVolume.
+
    fNodeRE->fNode->GetVolume()->SetVisibility(fVizVolume->IsOn());
    Update();
 }
@@ -135,6 +145,8 @@ void TEveGeoNodeEditor::DoVizVolume()
 //______________________________________________________________________________
 void TEveGeoNodeEditor::DoVizVolumeDaughters()
 {
+   // Slot for VizVolumeDaughters.
+
    fNodeRE->fNode->GetVolume()->VisibleDaughters(fVizVolumeDaughters->IsOn());
    Update();
 }
@@ -144,6 +156,8 @@ void TEveGeoNodeEditor::DoVizVolumeDaughters()
 //______________________________________________________________________________
 void TEveGeoNodeEditor::DoTransparency()
 {
+   // Slot for Transparenc.
+
    fNodeRE->fNode->GetVolume()->SetTransparency(char(fTransparency->GetNumber()));
    Update();
 }
@@ -166,6 +180,8 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
    fVisOption (0),
    fVisLevel  (0)
 {
+   // Constructor.
+
    MakeTitle("GeoTopNode");
 
    Int_t labelW = 58;
@@ -196,6 +212,8 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
 //______________________________________________________________________________
 void TEveGeoTopNodeEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fTopNodeRE = dynamic_cast<TEveGeoTopNode*>(obj);
 
    fVisOption->SetValue(fTopNodeRE->GetVisOption());
@@ -207,6 +225,8 @@ void TEveGeoTopNodeEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TEveGeoTopNodeEditor::DoVisOption()
 {
+   // Slot for VisOption.
+
    fTopNodeRE->SetVisOption(Int_t(fVisOption->GetValue()));
    Update();
 }
@@ -214,6 +234,8 @@ void TEveGeoTopNodeEditor::DoVisOption()
 //______________________________________________________________________________
 void TEveGeoTopNodeEditor::DoVisLevel()
 {
+   // Slot for VisLevel.
+
    fTopNodeRE->SetVisLevel(Int_t(fVisLevel->GetValue()));
    Update();
 }

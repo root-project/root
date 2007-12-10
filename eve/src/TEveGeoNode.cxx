@@ -68,21 +68,21 @@ const Text_t* TEveGeoNode::GetTitle() const
 
 /******************************************************************************/
 
-Int_t TEveGeoNode::ExpandIntoListTree(TGListTree* ltree,
-                                      TGListTreeItem* parent)
+void TEveGeoNode::ExpandIntoListTree(TGListTree* ltree,
+                                     TGListTreeItem* parent)
 {
    // Checks if child-nodes have been imported ... imports them if not.
    // Then calls TEveElement::ExpandIntoListTree.
 
-   if(fChildren.empty() && fNode->GetVolume()->GetNdaughters() > 0) {
+   if (fChildren.empty() && fNode->GetVolume()->GetNdaughters() > 0) {
       TIter next(fNode->GetVolume()->GetNodes());
       TGeoNode* dnode;
-      while((dnode = (TGeoNode*) next()) != 0) {
+      while ((dnode = (TGeoNode*) next()) != 0) {
          TEveGeoNode* node_re = new TEveGeoNode(dnode);
          AddElement(node_re);
       }
    }
-   return TEveElement::ExpandIntoListTree(ltree, parent);
+   TEveElement::ExpandIntoListTree(ltree, parent);
 }
 
 /******************************************************************************/
@@ -90,6 +90,8 @@ Int_t TEveGeoNode::ExpandIntoListTree(TGListTree* ltree,
 //______________________________________________________________________________
 void TEveGeoNode::SetRnrSelf(Bool_t rnr)
 {
+   // Set render state of self, propagate also to TGeoNode.
+
    TEveElement::SetRnrSelf(rnr);
    fNode->SetVisibility(rnr);
 }
@@ -97,6 +99,8 @@ void TEveGeoNode::SetRnrSelf(Bool_t rnr)
 //______________________________________________________________________________
 void TEveGeoNode::SetRnrChildren(Bool_t rnr)
 {
+   // Set render state of children, propagate also to TGeoNode.
+
    TEveElement::SetRnrChildren(rnr);
    fNode->VisibleDaughters(rnr);
 }
@@ -104,6 +108,8 @@ void TEveGeoNode::SetRnrChildren(Bool_t rnr)
 //______________________________________________________________________________
 void TEveGeoNode::SetRnrState(Bool_t rnr)
 {
+   // Set common render state, propagate also to TGeoNode.
+
    TEveElement::SetRnrState(rnr);
    fNode->SetVisibility(rnr);
    fNode->VisibleDaughters(rnr);
@@ -114,6 +120,8 @@ void TEveGeoNode::SetRnrState(Bool_t rnr)
 //______________________________________________________________________________
 void TEveGeoNode::SetMainColor(Color_t color)
 {
+   // Set color, propagate to volume's line color.
+
    fNode->GetVolume()->SetLineColor(color);
    UpdateItems();
 }
@@ -178,6 +186,8 @@ void TEveGeoNode::UpdateVolume(TGeoVolume* volume)
 //______________________________________________________________________________
 void TEveGeoNode::Draw(Option_t* option)
 {
+   // Draw the object.
+
    TString opt("SAME");
    opt += option;
    fNode->GetVolume()->Draw(opt);
@@ -188,6 +198,8 @@ void TEveGeoNode::Draw(Option_t* option)
 //______________________________________________________________________________
 void TEveGeoNode::Save(const char* file, const char* name)
 {
+   // Save TEveGeoShapeExtract tree starting at this node.
+
    TEveGeoShapeExtract* gse = DumpShapeTree(this, 0, 0);
 
    TFile f(file, "RECREATE");
@@ -200,6 +212,8 @@ void TEveGeoNode::Save(const char* file, const char* name)
 //______________________________________________________________________________
 TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeExtract* parent, Int_t level)
 {
+   // Export the node hierarchy into tree of TEveGeoShapeExtract objects.
+
    printf("dump_shape_tree %s \n", geon->GetName());
    TGeoNode*   tnode   = 0;
    TGeoVolume* tvolume = 0;
@@ -292,30 +306,33 @@ ClassImp(TEveGeoTopNode)
 //______________________________________________________________________________
 TEveGeoTopNode::TEveGeoTopNode(TGeoManager* manager, TGeoNode* node,
                                Int_t visopt, Int_t vislvl) :
-   TEveGeoNode (node),
+   TEveGeoNode  (node),
    fManager     (manager),
    fGlobalTrans (),
    fVisOption   (visopt),
    fVisLevel    (vislvl)
 {
+   // Constructor.
+
    fRnrSelf = kTRUE;
 }
-
-//______________________________________________________________________________
-TEveGeoTopNode::~TEveGeoTopNode()
-{}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveGeoTopNode::SetGlobalTrans(const TGeoHMatrix* m)
 {
+   // Set transformation matrix.
+
    fGlobalTrans.SetFrom(*m);
 }
 
 //______________________________________________________________________________
 void TEveGeoTopNode::UseNodeTrans()
 {
+   // Use transforamtion matrix from the TGeoNode.
+   // Warning: this is local transformation of the node!
+
    fGlobalTrans.SetFrom(*fNode->GetMatrix());
 }
 
@@ -324,6 +341,8 @@ void TEveGeoTopNode::UseNodeTrans()
 //______________________________________________________________________________
 void TEveGeoTopNode::SetVisOption(Int_t visopt)
 {
+   // Set visibility option, see TGeoPainter.
+
    fVisOption = visopt;
    gEve->Redraw3D();
 }
@@ -331,6 +350,8 @@ void TEveGeoTopNode::SetVisOption(Int_t visopt)
 //______________________________________________________________________________
 void TEveGeoTopNode::SetVisLevel(Int_t vislvl)
 {
+   // Set visibility level, see TGeoPainter.
+
    fVisLevel = vislvl;
    gEve->Redraw3D();
 }
@@ -341,6 +362,7 @@ void TEveGeoTopNode::SetVisLevel(Int_t vislvl)
 void TEveGeoTopNode::SetRnrSelf(Bool_t rnr)
 {
    // Revert from GeoNode to back to standard behaviour.
+
    TEveElement::SetRnrSelf(rnr);
 }
 
@@ -385,6 +407,8 @@ void TEveGeoTopNode::Paint(Option_t* option)
 //______________________________________________________________________________
 void TEveGeoTopNode::VolumeVisChanged(TGeoVolume* volume)
 {
+   // Callback for propagating volume visibility changes.
+
    static const TEveException eH("TEveGeoTopNode::VolumeVisChanged ");
    printf("%s volume %s %p\n", eH.Data(), volume->GetName(), (void*)volume);
    UpdateVolume(volume);
@@ -539,7 +563,7 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
 TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
                                                TEveElement*         parent)
 {
-   // Import a shape extract gse under parent.
+   // Import a shape extract 'gse' under element 'parent'.
 
    gEve->DisableRedraw();
    TEveGeoShape* gsre = SubImportShapeExtract(gse, parent);

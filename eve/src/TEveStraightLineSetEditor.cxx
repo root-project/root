@@ -35,6 +35,8 @@ TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t wi
    fM(0)
                                                     // Initialize widget pointers to 0
 {
+   // Constructor.
+
    MakeTitle("TEveStraightLineSet");
 
    TGHorizontalFrame* frame = new TGHorizontalFrame(this);
@@ -54,14 +56,13 @@ TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t wi
    AddFrame(frame, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
 }
 
-TEveStraightLineSetEditor::~TEveStraightLineSetEditor()
-{}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveStraightLineSetEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fM = dynamic_cast<TEveStraightLineSet*>(obj);
 
    // Set values of widgets
@@ -76,6 +77,8 @@ void TEveStraightLineSetEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TEveStraightLineSetEditor::DoRnrMarkers()
 {
+   // Slot for RnrMarkers.
+
    fM->SetRnrMarkers(fRnrMarkers->IsOn());
    Update();
 }
@@ -83,6 +86,8 @@ void TEveStraightLineSetEditor::DoRnrMarkers()
 //______________________________________________________________________________
 void TEveStraightLineSetEditor::DoRnrLines()
 {
+   // Slot for RnrLines.
+
    fM->SetRnrLines(fRnrLines->IsOn());
    Update();
 }

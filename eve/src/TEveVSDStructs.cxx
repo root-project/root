@@ -22,27 +22,35 @@ ClassImp(TEveVector)
 //______________________________________________________________________________
 Float_t TEveVector::Eta() const
 {
+   // Calculate eta of the point, pretending it's a momentum vector.
+
    Float_t cosTheta = CosTheta();
    if (cosTheta*cosTheta < 1) return -0.5* TMath::Log( (1.0-cosTheta)/(1.0+cosTheta) );
-   Warning("Eta","transverse momentum = 0! return +/- 10e10");
-   return (fZ >= 0) ? 10e10 : -10e10;
+   Warning("Eta","transverse momentum = 0, returning +/- 1e10");
+   return (fZ >= 0) ? 1e10 : -1e10;
 }
 
 //______________________________________________________________________________
 TEveVector TEveVector::operator + (const TEveVector & b)
 {
+   // Vector addition.
+
    return TEveVector(fX + b.fX, fY + b.fY, fZ + b.fZ);
 }
 
 //______________________________________________________________________________
 TEveVector TEveVector::operator - (const TEveVector & b)
 {
+   // Vector subtraction.
+
    return TEveVector(fX - b.fX, fY - b.fY, fZ - b.fZ);
 }
 
 //______________________________________________________________________________
 TEveVector TEveVector::operator * (Float_t a)
 {
+   // Multiplication with scalar.
+
    return TEveVector(a*fX, a*fY, a*fZ);
 }
 
@@ -58,6 +66,8 @@ ClassImp(TEvePathMark)
 //______________________________________________________________________________
 const char* TEvePathMark::TypeName()
 {
+   // Return the name of path-mark type.
+
    switch (fType)
    {
       case kDaughter:  return "Daughter";

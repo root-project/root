@@ -54,13 +54,6 @@ TEvePolygonSetProjectedEditor::TEvePolygonSetProjectedEditor(const TGWindow *p,
    }
 }
 
-//______________________________________________________________________________
-TEvePolygonSetProjectedEditor::~TEvePolygonSetProjectedEditor()
-{
-   // Destructor. Noop.
-
-}
-
 /******************************************************************************/
 
 //______________________________________________________________________________

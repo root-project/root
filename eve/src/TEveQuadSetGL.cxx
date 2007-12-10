@@ -29,18 +29,19 @@ ClassImp(TEveQuadSetGL)
 
 TEveQuadSetGL::TEveQuadSetGL() : TGLObject(), fM(0)
 {
+   // Constructor.
+
    // fDLCache = false; // Disable DL.
 }
-
-//______________________________________________________________________________
-TEveQuadSetGL::~TEveQuadSetGL()
-{}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 Bool_t TEveQuadSetGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
 {
+   // Decide if render-pass given by rnrCtx should use the display-list cache.
+   // Virtual from TGLLogicalShape.
+
    if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
       return kFALSE;
    return TGLObject::ShouldDLCache(rnrCtx);
@@ -51,6 +52,8 @@ Bool_t TEveQuadSetGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
 //______________________________________________________________________________
 Bool_t TEveQuadSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
+   // Set model object.
+
    Bool_t ok = SetModelCheckClass(obj, TEveQuadSet::Class());
    fM = ok ? dynamic_cast<TEveQuadSet*>(obj) : 0;
    return ok;
@@ -59,6 +62,8 @@ Bool_t TEveQuadSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 //______________________________________________________________________________
 void TEveQuadSetGL::SetBBox()
 {
+   // Setup bounding box.
+
    SetAxisAlignedBBox(fM->AssertBBox());
 }
 
@@ -67,6 +72,8 @@ void TEveQuadSetGL::SetBBox()
 //______________________________________________________________________________
 inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 {
+   // Set color for rendering of the specified quad.
+
    if (fM->fValueIsColor)
    {
       TGLUtil::Color4ubv((UChar_t*) & q.fValue);
@@ -87,6 +94,8 @@ inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) cons
 //______________________________________________________________________________
 void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
+   // Draw quad-set with GL.
+
    static const TEveException eH("TEveQuadSetGL::DirectDraw ");
 
    // printf("QuadSetGLRenderer::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
@@ -129,6 +138,8 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 //______________________________________________________________________________
 void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
 {
+   // GL rendering for free-quads and rectangles.
+
    static const TEveException eH("TEveQuadSetGL::RenderQuads ");
 
    TEveQuadSet& mQ = * fM;
@@ -381,6 +392,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
 //______________________________________________________________________________
 void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
 {
+   // GL rendering for line-types.
+ 
    static const TEveException eH("TEveQuadSetGL::RenderLines ");
 
    TEveQuadSet& mQ = * fM;
@@ -437,6 +450,8 @@ void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
 //______________________________________________________________________________
 void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
 {
+   // GL rendering for hexagons.
+
    static const TEveException eH("TEveQuadSetGL::RenderHexagons ");
 
    const Float_t sqr3hf = 0.5*TMath::Sqrt(3);
@@ -513,8 +528,8 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
 void TEveQuadSetGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
 {
    // Processes secondary selection from TGLViewer.
-   // Calls TPointSet3D::PointSelected(Int_t) with index of selected
-   // point as an argument.
+   // Calls DigitSelected(Int_t) in the model object with index of
+   // selected point as the argument.
 
    if (rec.GetN() < 2) return;
    fM->DigitSelected(rec.GetItem(1));

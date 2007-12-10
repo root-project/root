@@ -72,18 +72,18 @@ void TEveTriangleSet::GenerateTriangleNormals()
    if (fTringNorms == 0)  fTringNorms = new Float_t[3*fNTrings];
 
    TVector3 e1, e2, n;
-   Float_t *N = fTringNorms;
-   Int_t   *T = fTrings;
-   for(Int_t t=0; t<fNTrings; ++t, N+=3, T+=3)
+   Float_t *norm = fTringNorms;
+   Int_t   *tring  = fTrings;
+   for(Int_t t=0; t<fNTrings; ++t, norm+=3, tring+=3)
    {
-      Float_t* v0 = Vertex(T[0]);
-      Float_t* v1 = Vertex(T[1]);
-      Float_t* v2 = Vertex(T[2]);
+      Float_t* v0 = Vertex(tring[0]);
+      Float_t* v1 = Vertex(tring[1]);
+      Float_t* v2 = Vertex(tring[2]);
       e1.SetXYZ(v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]);
       e2.SetXYZ(v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]);
       n = e1.Cross(e2);
       n.SetMag(1);
-      n.GetXYZ(N);
+      n.GetXYZ(norm);
    }
 }
 
@@ -96,12 +96,12 @@ void TEveTriangleSet::GenerateRandomColors()
 
    TRandom r;
    r.SetSeed(0);
-   UChar_t *C = fTringCols;
-   for(Int_t t=0; t<fNTrings; ++t, C+=3)
+   UChar_t *col = fTringCols;
+   for(Int_t t=0; t<fNTrings; ++t, col+=3)
    {
-      C[0] = (UChar_t) r.Uniform(60, 255);
-      C[1] = (UChar_t) r.Uniform(60, 255);
-      C[2] = (UChar_t) r.Uniform(60, 255);
+      col[0] = (UChar_t) r.Uniform(60, 255);
+      col[1] = (UChar_t) r.Uniform(60, 255);
+      col[2] = (UChar_t) r.Uniform(60, 255);
    }
 }
 
@@ -116,12 +116,12 @@ void TEveTriangleSet::GenerateZNormalColors(Float_t fac, Int_t min, Int_t max,
    if (fTringNorms == 0)  GenerateTriangleNormals();
 
    TEveRGBAPalette pal(min, max, interp, wrap);
-   UChar_t *C = fTringCols;
-   Float_t *N = fTringNorms;
-   for(Int_t t=0; t<fNTrings; ++t, C+=3, N+=3)
+   UChar_t *col = fTringCols;
+   Float_t *norm = fTringNorms;
+   for(Int_t t=0; t<fNTrings; ++t, col+=3, norm+=3)
    {
-      Int_t v = TMath::Nint(fac * N[2]);
-      pal.ColorFromValue(v, C, kFALSE);
+      Int_t v = TMath::Nint(fac * norm[2]);
+      pal.ColorFromValue(v, col, kFALSE);
    }
    gEve->Redraw3D();
 }
@@ -131,6 +131,9 @@ void TEveTriangleSet::GenerateZNormalColors(Float_t fac, Int_t min, Int_t max,
 //______________________________________________________________________________
 void TEveTriangleSet::ComputeBBox()
 {
+   // Compute bounding box.
+   // Virtual from TAttBBox.
+
    if (fNVerts <= 0) {
       BBoxZero();
       return;
@@ -145,6 +148,8 @@ void TEveTriangleSet::ComputeBBox()
 //______________________________________________________________________________
 void TEveTriangleSet::Paint(Option_t* )
 {
+   // Paint the object.
+
    TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    // Section kCore
@@ -170,6 +175,8 @@ void TEveTriangleSet::Paint(Option_t* )
 //______________________________________________________________________________
 TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
 {
+   // Read a simple ascii input file describing vertices and triangles.
+
    FILE* f = fopen(file, "r");
    if (f == 0) {
       ::Error("TEveTriangleSet::ReadTrivialFile", Form("file '%s' not found.", file));
@@ -181,14 +188,14 @@ TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
 
    TEveTriangleSet* ts = new TEveTriangleSet(nv, nt);
 
-   Float_t *V = ts->Vertex(0);
-   for (Int_t i=0; i<nv; ++i, V+=3) {
-      fscanf(f, "%f %f %f", &V[0], &V[1], &V[2]);
+   Float_t *vtx = ts->Vertex(0);
+   for (Int_t i=0; i<nv; ++i, vtx+=3) {
+      fscanf(f, "%f %f %f", &vtx[0], &vtx[1], &vtx[2]);
    }
 
-   Int_t *T = ts->Triangle(0);
-   for (Int_t i=0; i<nt; ++i, T+=3) {
-      fscanf(f, "%d %d %d", &T[0], &T[1], &T[2]);
+   Int_t *tngl = ts->Triangle(0);
+   for (Int_t i=0; i<nt; ++i, tngl+=3) {
+      fscanf(f, "%d %d %d", &tngl[0], &tngl[1], &tngl[2]);
    }
 
    fclose(f);

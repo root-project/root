@@ -24,6 +24,8 @@ ClassImp(TEvePad)
 //______________________________________________________________________________
 TEvePad::TEvePad()
 {
+   // Default constructor.
+
    fPrimitives = new THashList;
 }
 
@@ -33,6 +35,8 @@ TEvePad::TEvePad(const char *name, const char *title, Double_t xlow,
                  Color_t color, Short_t bordersize, Short_t bordermode)
    : TPad(name,title,xlow,ylow,xup,yup,color,bordersize,bordermode)
 {
+   // Constructor.
+
    delete fPrimitives;
    fPrimitives = new THashList;
 }

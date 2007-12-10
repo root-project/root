@@ -35,7 +35,7 @@ protected:
 
 public:
    TEveViewer(const Text_t* n="TEveViewer", const Text_t* t="");
-   virtual ~TEveViewer();
+   virtual ~TEveViewer() {}
 
    TGLViewer* GetGLViewer() const { return fGLViewer; }
    void SetGLViewer(TGLViewer* s);
@@ -70,7 +70,7 @@ protected:
 
 public:
    TEveViewerList(const Text_t* n="TEveViewerList", const Text_t* t="");
-   virtual ~TEveViewerList();
+   virtual ~TEveViewerList() {}
 
    void RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogicals);
    void RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals);

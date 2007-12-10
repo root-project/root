@@ -19,6 +19,9 @@
 //______________________________________________________________________________
 void TEveTrackPropagator::Helix_t::Step(Vertex4D_t& v, TEveVector& p)
 {
+   // Step from position 'v' with momentum 'p'.
+   // Both quantities are input and output.
+
    v.fX += (p.fX*fSin - p.fY*(1 - fCos))/fA + fXoff;
    v.fY += (p.fY*fSin + p.fX*(1 - fCos))/fA + fYoff;
    v.fZ += fLam*TMath::Abs(fR*fPhiStep);
@@ -31,8 +34,15 @@ void TEveTrackPropagator::Helix_t::Step(Vertex4D_t& v, TEveVector& p)
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::StepVertex(Vertex4D_t& v, TEveVector& p, Vertex4D_t& forw)
+void TEveTrackPropagator::Helix_t::StepVertex(const Vertex4D_t& v, const TEveVector& p,
+                                              Vertex4D_t& forw)
 {
+   // Step from position 'v' with momentum 'p'.
+   // Return end position in 'forw'. Momentum is not changed.
+   //
+   // This is used for checking if particle goes outside of the
+   // boundaries in next step.
+
    forw.fX = v.fX + (p.fX*fSin - p.fY*(1 - fCos))/fA + fXoff;
    forw.fY = v.fY + (p.fY*fSin + p.fX*(1 - fCos))/fA + fYoff;
    forw.fZ = v.fZ + fLam*TMath::Abs(fR*fPhiStep);
@@ -158,7 +168,7 @@ void TEveTrackPropagator::GoToBounds(TEveVector& p)
 {
    // Propagate particle to bounds.
 
-   if(fCharge != 0 && TMath::Abs(fMagField) > 1e-5 && p.Perp2() > 1e-12)
+   if (fCharge != 0 && TMath::Abs(fMagField) > 1e-5 && p.Perp2() > 1e-12)
       HelixToBounds(p);
    else
       LineToBounds(p);
@@ -300,7 +310,7 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
 {
    // Propagatate neutral particle with momentum p to bounds.
 
-   Float_t tZ = 0, Tb = 0;
+   Float_t tZ = 0, tR = 0, tB = 0;
    // time where particle intersect +/- fMaxZ
    if (p.fZ > 0) {
       tZ = (fMaxZ - fV.fZ)/p.fZ;
@@ -309,22 +319,21 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
       tZ = (-1)*(fMaxZ + fV.fZ)/p.fZ;
    }
    // time where particle intersects cylinder
-   Float_t tR = 0;
    Double_t a = p.fX*p.fX + p.fY*p.fY;
    Double_t b = 2*(fV.fX*p.fX + fV.fY*p.fY);
    Double_t c = fV.fX*fV.fX + fV.fY*fV.fY - fMaxR*fMaxR;
-   Double_t D = b*b - 4*a*c;
-   if (D >= 0) {
-      Double_t D_sqrt=TMath::Sqrt(D);
-      tR = ( -b - D_sqrt )/(2*a);
+   Double_t d = b*b - 4*a*c;
+   if (d >= 0) {
+      Double_t sqrtD=TMath::Sqrt(d);
+      tR = ( -b - sqrtD )/(2*a);
       if (tR < 0) {
-         tR = ( -b + D_sqrt )/(2*a);
+         tR = ( -b + sqrtD )/(2*a);
       }
-      Tb = tR < tZ ? tR : tZ; // compare the two times
+      tB = tR < tZ ? tR : tZ; // compare the two times
    } else {
-      Tb = tZ;
+      tB = tZ;
    }
-   TEveVector nv(fV.fX + p.fX*Tb, fV.fY + p.fY*Tb, fV.fZ+ p.fZ*Tb);
+   TEveVector nv(fV.fX + p.fX*tB, fV.fY + p.fY*tB, fV.fZ+ p.fZ*tB);
    LineToVertex(nv);
 }
 

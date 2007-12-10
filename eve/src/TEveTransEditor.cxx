@@ -44,6 +44,8 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fAutoUpdate(0),
    fUpdate(0)
 {
+   // Constructor.
+
    // --- Top controls
 
    fTopHorFrame = new TGHorizontalFrame(this);
@@ -56,7 +58,6 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fEditTrans->Connect("Toggled(Bool_t)"," TEveTransSubEditor", this, "DoEditTrans()");
 
    AddFrame(fTopHorFrame, new TGLayoutHints(kLHintsTop, 0,0,2,1));
-
 
    // --- Trans edit part
 
@@ -105,8 +106,10 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveTransSubEditor::SetDataFromTrans(TEveTrans* t)
+void TEveTransSubEditor::SetModel(TEveTrans* t)
 {
+   // Set model object.
+
    fTrans = t;
 
    fUseTrans ->SetState(fTrans->fUseTrans  ? kButtonDown : kButtonUp);
@@ -132,6 +135,8 @@ void TEveTransSubEditor::SetDataFromTrans(TEveTrans* t)
 //______________________________________________________________________________
 void TEveTransSubEditor::SetTransFromData()
 {
+   // Set model object from widget data.
+
    Double_t v[3];
    fTrans->UnitTrans();
    fRot->GetValues(v);
@@ -147,12 +152,16 @@ void TEveTransSubEditor::SetTransFromData()
 //______________________________________________________________________________
 void TEveTransSubEditor::UseTrans()
 {
+   // Emit "UseTrans()" signal.
+
    Emit("UseTrans()");
 }
 
 //______________________________________________________________________________
 void TEveTransSubEditor::TransChanged()
 {
+   // Set transformation values from widget and emit "TransChanged()" signal.
+
    SetTransFromData();
    Emit("TransChanged()");
 }
@@ -162,6 +171,8 @@ void TEveTransSubEditor::TransChanged()
 //______________________________________________________________________________
 void TEveTransSubEditor::DoUseTrans()
 {
+   // Slot for UseTrans.
+
    fTrans->SetUseTrans(fUseTrans->IsOn());
    UseTrans();
 }
@@ -169,6 +180,8 @@ void TEveTransSubEditor::DoUseTrans()
 //______________________________________________________________________________
 void TEveTransSubEditor::DoEditTrans()
 {
+   // Slot for EditTrans.
+
    fTrans->SetEditTrans(fEditTrans->IsOn());
    if (fEditTrans->IsOn())
       fEditTransFrame->MapWindow();
@@ -180,6 +193,8 @@ void TEveTransSubEditor::DoEditTrans()
 //______________________________________________________________________________
 void TEveTransSubEditor::DoTransChanged()
 {
+   // Slot for TransChanged.
+
    if (fAutoUpdate->IsOn())
       TransChanged();
 }
@@ -196,37 +211,26 @@ ClassImp(TEveTransEditor)
 TEveTransEditor::TEveTransEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0)
-                                   // Initialize widget pointers to 0
+   fM (0),
+   fSE(0)
 {
+   // Constructor.
+
    MakeTitle("TEveTrans");
 
-   // Create widgets
-   // fXYZZ = new TGSomeWidget(this, ...);
-   // AddFrame(fXYZZ, new TGLayoutHints(...));
-   // fXYZZ->Connect("SignalName()", "TEveTransEditor", this, "DoXYZZ()");
+   fSE = new TEveTransSubEditor(this);
+   AddFrame(fSE, new TGLayoutHints(kLHintsTop, 2, 0, 2, 2));
+   fSE->Connect("UseTrans()",     "TEveTransEditor", this, "Update()");
+   fSE->Connect("TransChanged()", "TEveTransEditor", this, "Update()");
 }
-
-TEveTransEditor::~TEveTransEditor()
-{}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveTransEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fM = dynamic_cast<TEveTrans*>(obj);
-
-   // Set values of widgets
-   // fXYZZ->SetValue(fM->GetXYZZ());
+   fSE->SetModel(fM);
 }
-
-/******************************************************************************/
-
-// Implements callback/slot methods
-
-// void TEveTransEditor::DoXYZZ()
-// {
-//   fM->SetXYZZ(fXYZZ->GetValue());
-//   Update();
-// }

@@ -49,6 +49,8 @@ TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
    fM(0),
    fRSEditor(0)
 {
+   // Constructor.
+
    MakeTitle("TEveTrack");
 
    TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -63,12 +65,16 @@ TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
 //______________________________________________________________________________
 void TEveTrackEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fM = dynamic_cast<TEveTrack*>(obj);
 }
 
 //______________________________________________________________________________
 void TEveTrackEditor::DoEditPropagator()
 {
+   // Slot for EditPropagator.
+
    fGedEditor->SetModel(fGedEditor->GetPad(), fM->GetPropagator(), kButton1Down);
 }
 
@@ -91,6 +97,8 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
    fPRange     (0),
    fRSSubEditor(0)
 {
+   // Constructor.
+
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
 
@@ -136,15 +144,13 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
    CreateRefsTab();
 }
 
-//______________________________________________________________________________
-TEveTrackListEditor::~TEveTrackListEditor()
-{}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveTrackListEditor::CreateRefsTab()
 {
+   // Create tab for control of path-mark display.
+
    fRefs = CreateEditorTabSubFrame("Refs");
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fRefs, 145, 10,
@@ -169,6 +175,8 @@ void TEveTrackListEditor::CreateRefsTab()
 //______________________________________________________________________________
 void TEveTrackListEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fTC = dynamic_cast<TEveTrackList*>(obj);
    fRnrLine  ->SetState(fTC->GetRnrLine()   ? kButtonDown : kButtonUp);
    fRnrPoints->SetState(fTC->GetRnrPoints() ? kButtonDown : kButtonUp);
@@ -189,6 +197,8 @@ void TEveTrackListEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TEveTrackListEditor::DoRnrLine()
 {
+   // Slot for RnrLine.
+
    fTC->SetRnrLine(fRnrLine->IsOn());
    Update();
 }
@@ -196,6 +206,8 @@ void TEveTrackListEditor::DoRnrLine()
 //______________________________________________________________________________
 void TEveTrackListEditor::DoRnrPoints()
 {
+   // Slot for RnrPoints.
+
    fTC->SetRnrPoints(fRnrPoints->IsOn());
    Update();
 }
@@ -205,6 +217,8 @@ void TEveTrackListEditor::DoRnrPoints()
 //______________________________________________________________________________
 void TEveTrackListEditor::DoPtRange()
 {
+   // Slot for PtRange.
+
    fTC->SelectByPt(fPtRange->GetMin(), fPtRange->GetMax());
    Update();
 }
@@ -212,6 +226,8 @@ void TEveTrackListEditor::DoPtRange()
 //______________________________________________________________________________
 void TEveTrackListEditor::DoPRange()
 {
+   // Slot for PRange.
+
    fTC->SelectByP(fPRange->GetMin(), fPRange->GetMax());
    Update();
 }
@@ -241,6 +257,8 @@ TEveTrackCounterEditor::TEveTrackCounterEditor(const TGWindow *p, Int_t width, I
    fInfoLabel   (0),
    fEventId     (0)
 {
+   // Constructor.
+
    MakeTitle("TEveTrackCounter");
 
    Int_t labelW = 42;
@@ -363,15 +381,13 @@ TEveTrackCounterEditor::TEveTrackCounterEditor(const TGWindow *p, Int_t width, I
 
 }
 
-//______________________________________________________________________________
-TEveTrackCounterEditor::~TEveTrackCounterEditor()
-{}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveTrackCounterEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fM = dynamic_cast<TEveTrackCounter*>(obj);
 
    fClickAction->Select(fM->fClickAction, kFALSE);
@@ -384,18 +400,24 @@ void TEveTrackCounterEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoOrtoXY()
 {
+   // Slot for .
+
    gEve->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraOrthoXOY) ;
 }
 
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoOrtoZY()
 {
+   // Slot for OrtoZY.
+
    gEve->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraOrthoZOY) ;
 }
 
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoPersp()
 {
+   // Slot for Persp.
+
    gEve->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraPerspXOZ) ;
 }
 
@@ -404,6 +426,8 @@ void TEveTrackCounterEditor::DoPersp()
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoPrev()
 {
+   // Slot for Prev.
+
    TEveUtil::Macro("event_prev.C");
    gEve->EditElement(fM);
 }
@@ -411,6 +435,8 @@ void TEveTrackCounterEditor::DoPrev()
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoNext()
 {
+   // Slot for Next.
+
    TEveUtil::Macro("event_next.C");
    gEve->EditElement(fM);
 }
@@ -418,6 +444,8 @@ void TEveTrackCounterEditor::DoNext()
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoSetEvent()
 {
+   // Slot for SetEvent.
+
    TEveUtil::LoadMacro("event_goto.C");
    gROOT->ProcessLine(Form("event_goto(%d);", (Int_t) fEventId->GetNumber()));
    gEve->EditElement(fM);
@@ -428,12 +456,16 @@ void TEveTrackCounterEditor::DoSetEvent()
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoPrintReport()
 {
+   // Slot for PrintReport.
+
    fM->OutputEventTracks();
 }
 
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoFileReport()
 {
+   // Slot for FileReport.
+
    TString file(Form("ev-report-%03d.txt", fM->GetEventId()));
    if (gSystem->AccessPathName(file) == kFALSE)
    {
@@ -453,6 +485,8 @@ void TEveTrackCounterEditor::DoFileReport()
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoShowHistos()
 {
+   // Slot for ShowHistos.
+
    TH1F* hcnt = new TH1F("cnt", "Primeries per event", 41, -0.5, 40.5);
    TH1F* hchg = new TH1F("chg", "Primary charge",       3, -1.5,  1.5);
    TH1F* hpt  = new TH1F("pt",  "pT distribution",     40,  0.0,  8.0);
@@ -507,5 +541,7 @@ void TEveTrackCounterEditor::DoShowHistos()
 //______________________________________________________________________________
 void TEveTrackCounterEditor::DoClickAction(Int_t mode)
 {
+   // Slot for ClickAction.
+
    fM->SetClickAction(mode);
 }

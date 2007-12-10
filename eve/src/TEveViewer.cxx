@@ -32,18 +32,18 @@ TEveViewer::TEveViewer(const Text_t* n, const Text_t* t) :
    TEveElementList(n, t),
    fGLViewer (0)
 {
+   // Constructor.
+
    SetChildClass(TEveSceneInfo::Class());
 }
-
-//______________________________________________________________________________
-TEveViewer::~TEveViewer()
-{}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveViewer::SetGLViewer(TGLViewer* s)
 {
+   // Set TGLViewer that is represented by this object.
+
    delete fGLViewer;
    fGLViewer = s;
 
@@ -64,6 +64,8 @@ void TEveViewer::SetGLViewer(TGLViewer* s)
 //______________________________________________________________________________
 void TEveViewer::SpawnGLViewer(const TGWindow* parent, TGedEditor* ged)
 {
+   // Spawn new GLViewer and adopt it.
+
    TGLSAViewer* v = new TGLSAViewer(parent, 0, ged);
    v->ToggleEditObject();
    SetGLViewer(v);
@@ -74,6 +76,8 @@ void TEveViewer::SpawnGLViewer(const TGWindow* parent, TGedEditor* ged)
 //______________________________________________________________________________
 void TEveViewer::AddScene(TEveScene* scene)
 {
+   // Add 'scene' to the list of scenes.
+
    static const TEveException eH("TEveViewer::AddScene ");
 
    TGLSceneInfo* glsi = fGLViewer->AddScene(scene->GetGLScene());
@@ -88,24 +92,38 @@ void TEveViewer::AddScene(TEveScene* scene)
 //______________________________________________________________________________
 void TEveViewer::RemoveElementLocal(TEveElement* el)
 {
+   // Remove element 'el' from the list of children and also remove
+   // appropriate GLScene from GLViewer's list of scenes.
+   // Virtual from TEveElement.
+
    fGLViewer->RemoveScene(((TEveSceneInfo*)el)->GetGLScene());
 }
 
 //______________________________________________________________________________
 void TEveViewer::RemoveElementsLocal()
 {
+   // Remove all children, forwarded to GLViewer.
+   // Virtual from TEveElement.
+
    fGLViewer->RemoveAllScenes();
 }
 
 //______________________________________________________________________________
 TObject* TEveViewer::GetEditorObject() const
 {
+   // Object to be edited when this is selected, returns the TGLViewer.
+   // Virtual from TEveElement.
+
    return fGLViewer;
 }
 
 //______________________________________________________________________________
 Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
 {
+   // Receive a pasted object. TEveViewer only accepts objects of
+   // class TEveScene.
+   // Virtual from TEveElement.
+
    static const TEveException eH("TEveViewer::HandleElementPaste ");
 
    TEveScene* scene = dynamic_cast<TEveScene*>(el);
@@ -133,18 +151,18 @@ ClassImp(TEveViewerList)
 TEveViewerList::TEveViewerList(const Text_t* n, const Text_t* t) :
    TEveElementList(n, t)
 {
+   // Constructor.
+
    SetChildClass(TEveViewer::Class());
 }
-
-//______________________________________________________________________________
-TEveViewerList::~TEveViewerList()
-{}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveViewerList::RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogicals)
 {
+   // Repaint viewers that are tagged as changed.
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
@@ -165,6 +183,8 @@ void TEveViewerList::RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogic
 //______________________________________________________________________________
 void TEveViewerList::RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals)
 {
+   // Repaint all viewers.
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
@@ -185,6 +205,9 @@ void TEveViewerList::RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals)
 //______________________________________________________________________________
 void TEveViewerList::SceneDestructing(TEveScene* scene)
 {
+   // Callback done from a TEveScene destructor allowing proper
+   // removal of the scene from affected viewers.
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TEveViewer* viewer = (TEveViewer*) *i;

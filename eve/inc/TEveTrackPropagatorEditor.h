@@ -40,7 +40,7 @@ private:
    TEveTrackPropagatorSubEditor& operator=(const TEveTrackPropagatorSubEditor&); // Not implemented
 
 protected:
-   TEveTrackPropagator  *fM;
+   TEveTrackPropagator *fM;
 
    TEveGValuator      *fMaxR;
    TEveGValuator      *fMaxZ;
@@ -105,7 +105,7 @@ protected:
 public:
    TEveTrackPropagatorEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                              UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TEveTrackPropagatorEditor();
+   virtual ~TEveTrackPropagatorEditor() {}
 
    virtual void SetModel(TObject* obj);
 

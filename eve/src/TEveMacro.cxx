@@ -24,13 +24,21 @@
 ClassImp(TEveMacro)
 
 //______________________________________________________________________________
-TEveMacro::TEveMacro() : TMacro() {}
+TEveMacro::TEveMacro() : TMacro()
+{
+   // Default constructor.
+}
 
-TEveMacro::TEveMacro(const TEveMacro& m) : TMacro(m) {}
+TEveMacro::TEveMacro(const TEveMacro& m) : TMacro(m)
+{
+   // Copy constructor.
+}
 
 TEveMacro::TEveMacro(const char* name) :
    TMacro()
 {
+   // Constructor with file name.
+
    if (!name) return;
 
    fTitle = name;
@@ -51,6 +59,8 @@ TEveMacro::TEveMacro(const char* name) :
 //______________________________________________________________________________
 Long_t TEveMacro::Exec(const char* params, Int_t* error)
 {
+   // Execute the macro.
+
    Long_t retval = -1;
 
    if (gROOT->GetGlobalFunction(fName, 0, kTRUE) != 0)
@@ -107,6 +117,8 @@ Long_t TEveMacro::Exec(const char* params, Int_t* error)
 //______________________________________________________________________________
 void TEveMacro::ResetRoot()
 {
+   // Call gROOT->Reset() via interpreter.
+
    // printf ("TEveMacro::ResetRoot doing 'gROOT->Reset()'.\n");
    gROOT->GetApplication()->ProcessLine("gROOT->Reset()");
 }

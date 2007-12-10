@@ -31,7 +31,7 @@ protected:
 
 public:
    TEveQuadSetGL();
-   virtual ~TEveQuadSetGL();
+   virtual ~TEveQuadSetGL() {}
 
    virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
 

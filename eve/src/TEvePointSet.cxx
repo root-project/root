@@ -204,7 +204,7 @@ void TEvePointSet::SetRnrElNameTitle(const Text_t* name, const Text_t* title)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEvePointSet::Paint(Option_t* option)
+void TEvePointSet::Paint(Option_t* /*option*/)
 {
    // Paint point-set.
 
@@ -405,6 +405,8 @@ void TEvePointSetArray::RemoveElementsLocal()
 //______________________________________________________________________________
 void TEvePointSetArray::SetMarkerColor(Color_t tcolor)
 {
+   // Set marker color, propagate to children.
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject());
       if (m && m->GetMarkerColor() == fMarkerColor)
@@ -416,6 +418,8 @@ void TEvePointSetArray::SetMarkerColor(Color_t tcolor)
 //______________________________________________________________________________
 void TEvePointSetArray::SetMarkerStyle(Style_t mstyle)
 {
+   // Set marker style, propagate to children.
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject());
       if (m && m->GetMarkerStyle() == fMarkerStyle)
@@ -427,6 +431,8 @@ void TEvePointSetArray::SetMarkerStyle(Style_t mstyle)
 //______________________________________________________________________________
 void TEvePointSetArray::SetMarkerSize(Size_t msize)
 {
+   // Set marker size, propagate to children.
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject());
       if (m && m->GetMarkerSize() == fMarkerSize)
@@ -484,6 +490,8 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
                                  Int_t nbins, Double_t min, Double_t max,
                                  Bool_t addRe)
 {
+   // Initialize internal point-sets with given binning parameters.
+
    static const TEveException eH("TEvePointSetArray::InitBins ");
 
    if (nbins < 1) throw(eH + "nbins < 1.");
@@ -516,6 +524,9 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
 //______________________________________________________________________________
 void TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quant)
 {
+   // Add a new point. Appropriate point-set will be chosen based on
+   // the value of the separating quantity 'quant'.
+
    fLastBin = Int_t( (quant - fMin)/fBinWidth );
    if (fLastBin >= 0 && fLastBin < fNBins && fBins[fLastBin] != 0)
       fBins[fLastBin]->SetNextPoint(x, y, z);
@@ -526,6 +537,8 @@ void TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quant)
 //______________________________________________________________________________
 void TEvePointSetArray::SetPointId(TObject* id)
 {
+   // Set external object id of the last added point.
+
    if (fLastBin >= 0)
       fBins[fLastBin]->SetPointId(id);
 }
@@ -533,6 +546,10 @@ void TEvePointSetArray::SetPointId(TObject* id)
 //______________________________________________________________________________
 void TEvePointSetArray::CloseBins()
 {
+   // Call this after all the points have been filled.
+   // At this point we can calculate bounding-boxes of individual
+   // point-sets.
+
    for (Int_t i=0; i<fNBins; ++i) {
       if (fBins[i] != 0) {
          // HACK! PolyMarker3D does half-management of array size.
@@ -551,6 +568,8 @@ void TEvePointSetArray::CloseBins()
 //______________________________________________________________________________
 void TEvePointSetArray::SetOwnIds(Bool_t o)
 {
+   // Propagate id-object ownership to children.
+
    for (Int_t i=0; i<fNBins; ++i)
    {
       if (fBins[i] != 0)
@@ -563,6 +582,9 @@ void TEvePointSetArray::SetOwnIds(Bool_t o)
 //______________________________________________________________________________
 void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 {
+   // Set active range of the separating quantity.
+   // Appropriate point-sets are tagged for rendering.
+
    using namespace TMath;
 
    fCurMin = min; fCurMax = max;
@@ -594,16 +616,22 @@ TEvePointSetProjected::TEvePointSetProjected() :
 }
 
 //______________________________________________________________________________
-void TEvePointSetProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* model)
+void TEvePointSetProjected::SetProjection(TEveProjectionManager* proj,
+                                          TEveProjectable* model)
 {
-   TEveProjected::SetProjection(proj, model);
+   // Set projection manager and projection model.
+   // Virtual from TEveProjected.
 
+   TEveProjected::SetProjection(proj, model);
    * (TAttMarker*)this = * dynamic_cast<TAttMarker*>(fProjectable);
 }
 
 //______________________________________________________________________________
 void TEvePointSetProjected::UpdateProjection()
 {
+   // Reapply the projection.
+   // Virtual from TEveProjected.
+
    TEveProjection& proj = * fProjector->GetProjection();
    TEvePointSet     & ps   = * dynamic_cast<TEvePointSet*>(fProjectable);
 

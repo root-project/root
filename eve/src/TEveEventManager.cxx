@@ -25,13 +25,19 @@ ClassImp(TEveEventManager)
 TEveEventManager::TEveEventManager(const Text_t* n, const Text_t* t) :
    TEveElementList(n, t),
    fNewEventCommands()
-{}
+{
+   // Constructor.
+}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveEventManager::AfterNewEventLoaded()
 {
+   // Virtual function to be called after a new event is loaded.
+   // It iterates over the list of registered commands
+   // (fNewEventCommands) and executes them in given order.
+
    TIter next(&fNewEventCommands);
    TObject* o;
    while ((o = next())) {
@@ -44,5 +50,7 @@ void TEveEventManager::AfterNewEventLoaded()
 //______________________________________________________________________________
 void TEveEventManager::AddNewEventCommand(const Text_t* cmd)
 {
+   // Register a command to be executed on each new event.
+
    fNewEventCommands.Add(new TObjString(cmd));
 }

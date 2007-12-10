@@ -36,18 +36,14 @@ TEveTriangleSetEditor::TEveTriangleSetEditor(const TGWindow *p, Int_t width, Int
    fM(0),
    fHMTrans(0)
 {
+   // Constructor.
+
    MakeTitle("TEveTriangleSet");
 
    fHMTrans = new TEveTransSubEditor(this);
+   AddFrame(fHMTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
    fHMTrans->Connect("UseTrans()",     "TEveTriangleSetEditor", this, "Update()");
    fHMTrans->Connect("TransChanged()", "TEveTriangleSetEditor", this, "Update()");
-   AddFrame(fHMTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
-}
-
-//______________________________________________________________________________
-TEveTriangleSetEditor::~TEveTriangleSetEditor()
-{
-   delete fHMTrans;
 }
 
 /******************************************************************************/
@@ -55,7 +51,8 @@ TEveTriangleSetEditor::~TEveTriangleSetEditor()
 //______________________________________________________________________________
 void TEveTriangleSetEditor::SetModel(TObject* obj)
 {
-   fM = dynamic_cast<TEveTriangleSet*>(obj);
+   // Set model object.
 
-   fHMTrans->SetDataFromTrans(&fM->fHMTrans);
+   fM = dynamic_cast<TEveTriangleSet*>(obj);
+   fHMTrans->SetModel(&fM->fHMTrans);
 }

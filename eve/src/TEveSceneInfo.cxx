@@ -30,17 +30,17 @@ TEveSceneInfo::TEveSceneInfo(TEveViewer* viewer, TEveScene* scene, TGLSceneInfo*
    fViewer       (viewer),
    fScene        (scene),
    fGLSceneInfo  (sinfo)
-{}
-
-//______________________________________________________________________________
-TEveSceneInfo::~TEveSceneInfo()
-{}
+{
+   // Constructor.
+}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 TGLSceneBase* TEveSceneInfo::GetGLScene() const
 {
+   // Return the TGLSceneBase represented by this SceneInfo object.
+
    return fGLSceneInfo->GetScene();
 }
 
@@ -49,6 +49,8 @@ TGLSceneBase* TEveSceneInfo::GetGLScene() const
 //______________________________________________________________________________
 void TEveSceneInfo::SetRnrSelf(Bool_t rnr)
 {
+   // Set self render state.
+
    TEveElement::SetRnrSelf(rnr);
    fGLSceneInfo->SetActive(fRnrSelf);
 }
@@ -56,6 +58,8 @@ void TEveSceneInfo::SetRnrSelf(Bool_t rnr)
 //______________________________________________________________________________
 void TEveSceneInfo::SetRnrState(Bool_t rnr)
 {
+   // Set combined render state (self and children).
+
    TEveElement::SetRnrState(rnr);
    fGLSceneInfo->SetActive(fRnrSelf);
 }
@@ -65,6 +69,9 @@ void TEveSceneInfo::SetRnrState(Bool_t rnr)
 //______________________________________________________________________________
 Bool_t TEveSceneInfo::AcceptElement(TEveElement* /*el*/)
 {
+   // Virtual from TEveElement.
+   // TEveSceneInfo does not accept children.
+
    static const TEveException eH("TEveSceneInfo::AcceptElement ");
 
    gEve->SetStatusLine(eH + "this class does not accept children.");
@@ -74,6 +81,9 @@ Bool_t TEveSceneInfo::AcceptElement(TEveElement* /*el*/)
 //______________________________________________________________________________
 Bool_t TEveSceneInfo::HandleElementPaste(TEveElement* /*el*/)
 {
+   // Virtual from TEveElement.
+   // TEveSceneInfo does not accept children.
+
    static const TEveException eH("TEveSceneInfo::HandleElementPaste ");
 
    gEve->SetStatusLine(eH + "this class does not accept children.");

@@ -43,7 +43,7 @@ protected:
 public:
    TEveTrackEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TEveTrackEditor(){}
+   virtual ~TEveTrackEditor() {}
 
    virtual void SetModel(TObject* obj);
    void DoEditPropagator();
@@ -79,7 +79,7 @@ protected:
 public:
    TEveTrackListEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                        UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TEveTrackListEditor();
+   virtual ~TEveTrackListEditor() {}
 
    void CreateRefsTab();
    virtual void SetModel(TObject* obj);
@@ -117,7 +117,7 @@ protected:
 public:
    TEveTrackCounterEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                           UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTrackCounterEditor();
+   virtual ~TEveTrackCounterEditor() {}
 
    virtual void SetModel(TObject* obj);
 

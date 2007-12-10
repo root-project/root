@@ -43,6 +43,8 @@ TEveElementEditor::TEveElementEditor(const TGWindow *p,
    fTransparency (0),
    fHMTrans      (0)
 {
+   // Constructor.
+
    MakeTitle("TEveElement");
    fPriority = 0;
 
@@ -84,15 +86,13 @@ TEveElementEditor::TEveElementEditor(const TGWindow *p,
    AddFrame(fHMTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
 }
 
-//______________________________________________________________________________
-TEveElementEditor::~TEveElementEditor()
-{}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveElementEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fRE = dynamic_cast<TEveElement*>(obj);
 
    if (fRE->CanEditRnrElement()) {
@@ -118,7 +118,7 @@ void TEveElementEditor::SetModel(TObject* obj)
       fTransparency->UnmapWindow();
    }
    if (fRE->CanEditMainHMTrans()) {
-      fHMTrans->SetDataFromTrans(fRE->PtrMainHMTrans());
+      fHMTrans->SetModel(fRE->PtrMainHMTrans());
       fHMTrans->MapWindow();
    } else {
       fHMTrans->UnmapWindow();
@@ -129,10 +129,11 @@ void TEveElementEditor::SetModel(TObject* obj)
 
 /******************************************************************************/
 
-
 //______________________________________________________________________________
 void TEveElementEditor::DoRnrSelf()
 {
+   // Slot for RnrSelf.
+
    fRE->SetRnrSelf(fRnrSelf->IsOn());
    Update();
 }
@@ -141,6 +142,8 @@ void TEveElementEditor::DoRnrSelf()
 //______________________________________________________________________________
 void TEveElementEditor::DoRnrChildren()
 {
+   // Slot for RnrChildren.
+
    fRE->SetRnrChildren(fRnrChildren->IsOn());
    Update();
 }
@@ -148,6 +151,8 @@ void TEveElementEditor::DoRnrChildren()
 //______________________________________________________________________________
 void TEveElementEditor::DoMainColor(Pixel_t color)
 {
+   // Slot for MainColor.
+
    fRE->SetMainColor(color);
    Update();
 }
@@ -155,6 +160,8 @@ void TEveElementEditor::DoMainColor(Pixel_t color)
 //______________________________________________________________________________
 void TEveElementEditor::DoTransparency()
 {
+   // Slot for Transparency.
+
    fRE->SetMainTransparency((UChar_t)(fTransparency->GetNumber()));
    Update();
 }

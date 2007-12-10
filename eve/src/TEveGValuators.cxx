@@ -39,6 +39,8 @@ TEveGValuatorBase::TEveGValuatorBase(const TGWindow *p, const char* name,
 
    fLabel (0)
 {
+   // Constructor.
+
    SetName(name);
 }
 
@@ -63,11 +65,15 @@ TEveGValuator::TEveGValuator(const TGWindow *p, const char* title,
    fSliderDivs    (-1),
    fEntry  (0),
    fSlider (0)
-{}
+{
+   // Constructor.
+}
 
 //______________________________________________________________________________
 void TEveGValuator::Build(Bool_t connect)
 {
+   // Create sub-components (label, number entry, slider).
+
    TGCompositeFrame *hf1, *hfs;
    if(fShowSlider && fSliderNewLine) {
       SetLayoutManager(new TGVerticalLayout(this));
@@ -129,6 +135,8 @@ void TEveGValuator::Build(Bool_t connect)
 void TEveGValuator::SetLimits(Float_t min, Float_t max, Int_t npos,
                               TGNumberFormat::EStyle nef)
 {
+   // Set limits of the represented value.
+
    fMin = Float_t(min);
    fMax = Float_t(max);
    fEntry->SetFormat(nef);
@@ -143,6 +151,8 @@ void TEveGValuator::SetLimits(Float_t min, Float_t max, Int_t npos,
 //______________________________________________________________________________
 void TEveGValuator::SetLimits(Int_t min, Int_t max)
 {
+   // Set limits of the represented value for integer values.
+
    fMin = Float_t(min);
    fMax = Float_t(max);
    fEntry->SetFormat(TGNumberFormat::kNESInteger);
@@ -157,12 +167,16 @@ void TEveGValuator::SetLimits(Int_t min, Int_t max)
 //______________________________________________________________________________
 Int_t TEveGValuator::CalcSliderPos(Float_t v)
 {
+   // Return slider position for given value.
+
    return (Int_t) TMath::Nint((v - fMin)*fSliderDivs/(fMax - fMin));
 }
 
 //______________________________________________________________________________
 void TEveGValuator::EntryCallback()
 {
+   // Callback for change in number-entry.
+
    fValue = fEntry->GetNumber();
    if(fSlider) {
       fSlider->SetPosition(CalcSliderPos(fValue));
@@ -173,6 +187,8 @@ void TEveGValuator::EntryCallback()
 //______________________________________________________________________________
 void TEveGValuator::SliderCallback()
 {
+   // Callback for change in slider position.
+
    fValue = fMin + fSlider->GetPosition()*(fMax-fMin)/fSliderDivs;
    fEntry->SetNumber(fValue);
    ValueSet(fValue);
@@ -182,12 +198,16 @@ void TEveGValuator::SliderCallback()
 //______________________________________________________________________________
 void TEveGValuator::ValueSet(Double_t val)
 {
+   // Emit "ValueSet(Double_t)" signal.
+
    Emit("ValueSet(Double_t)", val);
 }
 
 //______________________________________________________________________________
 void TEveGValuator::SetValue(Float_t val, Bool_t emit)
 {
+   // Set value, optionally emit signal.
+
    fValue = val;
    fEntry->SetNumber(fValue);
 
@@ -201,12 +221,16 @@ void TEveGValuator::SetValue(Float_t val, Bool_t emit)
 //______________________________________________________________________________
 void TEveGValuator::SetToolTip(const Text_t* tip)
 {
+   // Set the tooltip of the number-entry.
+
    fEntry->GetNumberEntry()->SetToolTipText(tip);
 }
 
 //______________________________________________________________________________
 void TEveGValuator::SetEnabled(Bool_t state)
 {
+   // Set enabled state of the whole widget.
+
    fEntry->GetNumberEntry()->SetEnabled(state);
    fEntry->GetButtonUp()->SetEnabled(state);
    fEntry->GetButtonDown()->SetEnabled(state);
@@ -233,11 +257,15 @@ TEveGDoubleValuator::TEveGDoubleValuator(const TGWindow *p, const char* title,
    fMinEntry(0),
    fMaxEntry(0),
    fSlider(0)
-{}
+{
+   // Constructor.
+}
 
 //______________________________________________________________________________
 void TEveGDoubleValuator::Build(Bool_t connect)
 {
+   // Create sub-components (label, number entries, double-slider).
+
    TGCompositeFrame *hf1, *hfs;
    if(fShowSlider) {
       SetLayoutManager(new TGVerticalLayout(this));
@@ -305,6 +333,8 @@ void TEveGDoubleValuator::Build(Bool_t connect)
 //______________________________________________________________________________
 void TEveGDoubleValuator::SetLimits(Int_t min, Int_t max)
 {
+   // Set limits of the represented range for integer values.
+
    fMinEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, min, max);
    fMinEntry->SetFormat(TGNumberFormat::kNESInteger);
    fMaxEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, min, max);
@@ -319,6 +349,8 @@ void TEveGDoubleValuator::SetLimits(Int_t min, Int_t max)
 void TEveGDoubleValuator::SetLimits(Float_t min, Float_t max,
                                     TGNumberFormat::EStyle nef)
 {
+   // Set limits of the represented range.
+
    //  printf("TEveGDoubleValuator::SetLimits(Float_t min, Float_t max, Int_ \n");
    fMinEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, min, max);
    fMinEntry->SetFormat(nef);
@@ -331,6 +363,8 @@ void TEveGDoubleValuator::SetLimits(Float_t min, Float_t max,
 //______________________________________________________________________________
 void TEveGDoubleValuator::MinEntryCallback()
 {
+   // Callback for change in low number-entry.
+
    if(GetMin() > GetMax())
       fMaxEntry->SetNumber(GetMin());
    if(fSlider) fSlider->SetPosition(GetMin(), GetMax());
@@ -340,6 +374,8 @@ void TEveGDoubleValuator::MinEntryCallback()
 //______________________________________________________________________________
 void TEveGDoubleValuator::MaxEntryCallback()
 {
+   // Callback for change in high number-entry.
+
    if(GetMax() < GetMin())
       fMinEntry->SetNumber(GetMax());
    if(fSlider) fSlider->SetPosition(GetMin(), GetMax());
@@ -349,6 +385,8 @@ void TEveGDoubleValuator::MaxEntryCallback()
 //______________________________________________________________________________
 void TEveGDoubleValuator::SliderCallback()
 {
+   // Callback for change in slider position / width.
+
    Float_t minp, maxp;
    fSlider->GetPosition(minp, maxp);
    //printf("TEveGDoubleValuator::SliderCallback %f %f\n", minp, maxp);
@@ -360,6 +398,8 @@ void TEveGDoubleValuator::SliderCallback()
 //______________________________________________________________________________
 void TEveGDoubleValuator::SetValues(Float_t min, Float_t max, Bool_t emit)
 {
+   // Set min/max values, optionally emit signal.
+
    fMinEntry->SetNumber(min);
    fMaxEntry->SetNumber(max);
 
@@ -370,6 +410,8 @@ void TEveGDoubleValuator::SetValues(Float_t min, Float_t max, Bool_t emit)
 //______________________________________________________________________________
 void TEveGDoubleValuator::ValueSet()
 {
+   // Emit "ValueSet()" signal.
+
    Emit("ValueSet()");
 }
 
@@ -392,11 +434,15 @@ TEveGTriVecValuator::TEveGTriVecValuator(const TGWindow *p, const char* name,
 
 //______________________________________________________________________________
 TEveGTriVecValuator::~TEveGTriVecValuator()
-{}
+{
+   // Constructor.
+}
 
 //______________________________________________________________________________
 void TEveGTriVecValuator::Build(Bool_t vertical, const char* lab0, const char* lab1, const char* lab2)
 {
+   // Create sub-components (label, number entries).
+
    if (vertical) SetLayoutManager(new TGVerticalLayout(this));
    else          SetLayoutManager(new TGHorizontalLayout(this));
 
@@ -420,6 +466,8 @@ void TEveGTriVecValuator::Build(Bool_t vertical, const char* lab0, const char* l
 //______________________________________________________________________________
 void TEveGTriVecValuator::ValueSet()
 {
+   // Emit "ValueSet()" signal.
+
    Emit("ValueSet()");
 }
 
@@ -428,6 +476,8 @@ void TEveGTriVecValuator::ValueSet()
 //______________________________________________________________________________
 void TEveGTriVecValuator::SetLimits(Int_t min, Int_t max)
 {
+   // Set limits for all three number-entries, integer values.
+
    for (Int_t i=0; i<3; ++i)
       fVal[i]->SetLimits(min, max);
 }
@@ -436,6 +486,8 @@ void TEveGTriVecValuator::SetLimits(Int_t min, Int_t max)
 void TEveGTriVecValuator::SetLimits(Float_t min, Float_t max,
                                     TGNumberFormat::EStyle nef)
 {
+   // Set limits for all three number-entries.
+
    for (Int_t i=0; i<3; ++i)
       fVal[i]->SetLimits(min, max, 0, nef);
 }

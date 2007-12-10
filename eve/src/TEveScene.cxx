@@ -31,6 +31,8 @@ TEveScene::TEveScene(const Text_t* n, const Text_t* t) :
    fChanged      (kFALSE),
    fSmartRefresh (kTRUE)
 {
+   // Constructor.
+
    fPad = new TEvePad;
    fPad->GetListOfPrimitives()->Add(this);
    fGLScene = new TGLScenePad(fPad);
@@ -41,6 +43,8 @@ TEveScene::TEveScene(const Text_t* n, const Text_t* t) :
 //______________________________________________________________________________
 TEveScene::~TEveScene()
 {
+   // Destructor.
+
    gEve->GetViewers()->SceneDestructing(this);
 }
 
@@ -49,6 +53,9 @@ TEveScene::~TEveScene()
 //______________________________________________________________________________
 void TEveScene::CollectSceneParents(List_t& scenes)
 {
+   // Virtual from TEveElement; here we simply append this scene to
+   // the list.
+
    scenes.push_back(this);
 }
 
@@ -57,6 +64,8 @@ void TEveScene::CollectSceneParents(List_t& scenes)
 //______________________________________________________________________________
 void TEveScene::Repaint()
 {
+   // Repaint the scene.
+
    fGLScene->PadPaint(fPad);
    fChanged = kFALSE;
 }
@@ -66,6 +75,8 @@ void TEveScene::Repaint()
 //______________________________________________________________________________
 void TEveScene::SetName(const Text_t* n)
 {
+   // Set scene's name.
+
    TEveElementList::SetName(n);
    fGLScene->SetName(n);
 }
@@ -73,6 +84,8 @@ void TEveScene::SetName(const Text_t* n)
 //______________________________________________________________________________
 void TEveScene::Paint(Option_t* option)
 {
+   // Paint the scene. Iterate over children and calls PadPaint().
+
    if (fRnrChildren)
    {
       for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
@@ -92,36 +105,34 @@ ClassImp(TEveSceneList)
 TEveSceneList::TEveSceneList(const Text_t* n, const Text_t* t) :
    TEveElementList(n, t)
 {
+   // Constructor.
+
    SetChildClass(TEveScene::Class());
 }
-
-//______________________________________________________________________________
-TEveSceneList::~TEveSceneList()
-{}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveSceneList::RepaintChangedScenes()
 {
+   // Repaint scenes that are tagged as changed.
+
    for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TEveScene* s = (TEveScene*) *i;
       if (s->IsChanged())
-      {
-         // printf(" TEveScene '%s' changed ... repainting.\n", s->GetName());
          s->Repaint();
-      }
    }
 }
 
 //______________________________________________________________________________
 void TEveSceneList::RepaintAllScenes()
 {
+   // Repaint all scenes.
+
    for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TEveScene* s = (TEveScene*) *i;
-      // printf(" TEveScene '%s' repainting.\n", s->GetName());
       s->Repaint();
    }
 }

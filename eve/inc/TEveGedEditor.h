@@ -22,14 +22,14 @@ class TEveGedEditor : public TGedEditor
    TEveGedEditor& operator=(const TEveGedEditor&); // Not implemented
 
 protected:
-   TEveElement   *fRnrElement; // Cached rnr-el pointer
-   TObject       *fObject;     // Cached tobj pointer
+   TEveElement   *fElement;    // Cached eve-element pointer.
+   TObject       *fObject;     // Cached tobj pointer.
 
 public:
    TEveGedEditor(TCanvas* canvas=0, Int_t width=250, Int_t height=400);
    virtual ~TEveGedEditor() {}
 
-   TEveElement* GetRnrElement() const;
+   TEveElement* GetEveElement() const;
 
    void DisplayElement(TEveElement* re);
    void DisplayObject(TObject* obj);

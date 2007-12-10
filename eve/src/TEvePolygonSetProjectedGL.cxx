@@ -31,21 +31,15 @@ TEvePolygonSetProjectedGL::TEvePolygonSetProjectedGL() : TGLObject()
    // fDLCache = false; // Disable DL.
 }
 
-//______________________________________________________________________________
-TEvePolygonSetProjectedGL::~TEvePolygonSetProjectedGL()
-{
-   // Destructor. Noop.
-}
-
 /******************************************************************************/
+
+//______________________________________________________________________________
 Bool_t TEvePolygonSetProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
    return SetModelCheckClass(obj, TEvePolygonSetProjected::Class());
 }
-
-/******************************************************************************/
 
 //______________________________________________________________________________
 void TEvePolygonSetProjectedGL::SetBBox()
@@ -99,8 +93,8 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 {
    // Do GL rendering.
 
-   TEvePolygonSetProjected& PS = * (TEvePolygonSetProjected*) fExternalObj;
-   if(PS.fPols.size() == 0) return;
+   TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
+   if(refPS.fPols.size() == 0) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
 
@@ -115,15 +109,15 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    glPolygonOffset(1.,1.);
    GLUtriangulatorObj *tessObj = GetTesselator();
 
-   TEveVector* pnts = PS.fPnts;
-   for (TEvePolygonSetProjected::vpPolygon_ci i = PS.fPols.begin(); i!= PS.fPols.end(); i++)
+   TEveVector* pnts = refPS.fPnts;
+   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin(); i!= refPS.fPols.end(); i++)
    {
       Int_t vi; //current vertex index of curent polygon
-      Int_t N = (*i).fNPnts; // number of points in current polygon
-      if(N < 4)
+      Int_t pntsN = (*i).fNPnts; // number of points in current polygon
+      if(pntsN < 4)
       {
          glBegin(GL_POLYGON);
-         for(Int_t k=0; k<N; k++)
+         for(Int_t k=0; k<pntsN; k++)
          {
             vi = (*i).fPnts[k];
             glVertex3fv(pnts[vi].Arr());
@@ -136,7 +130,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
          glNormal3f(0., 0., 1.);
          Double_t coords[3];
          coords[2] = 0.;
-         for (Int_t k = 0; k<N; k++)
+         for (Int_t k = 0; k<pntsN; k++)
          {
             vi = (*i).fPnts[k];
             coords[0] = pnts[vi].fX;
@@ -150,19 +144,19 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 
    // outline
    UChar_t lcol[4];
-   TEveUtil::ColorFromIdx(PS.fLineColor, lcol);
+   TEveUtil::ColorFromIdx(refPS.fLineColor, lcol);
    TGLUtil::Color4ubv(lcol);
    glEnable(GL_LINE_SMOOTH);
 
-   glLineWidth(PS.fLineWidth);
+   glLineWidth(refPS.fLineWidth);
    Int_t vi;
-   for (TEvePolygonSetProjected::vpPolygon_ci i = PS.fPols.begin(); i!= PS.fPols.end(); i++)
+   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin(); i!= refPS.fPols.end(); i++)
    {
       glBegin(GL_LINE_LOOP);
       for(Int_t k=0; k<(*i).fNPnts; k++)
       {
          vi = (*i).fPnts[k];
-         glVertex3fv(PS.fPnts[vi].Arr());
+         glVertex3fv(refPS.fPnts[vi].Arr());
       }
       glEnd();
    }

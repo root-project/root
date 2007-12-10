@@ -130,8 +130,8 @@ public:
 
    // --------------------------------
 
-   virtual Int_t ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
-   virtual Int_t DestroyListSubTree(TGListTree* ltree, TGListTreeItem* parent);
+   virtual void ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
+   virtual void DestroyListSubTree(TGListTree* ltree, TGListTreeItem* parent);
 
    virtual TGListTreeItem* AddIntoListTree(TGListTree* ltree,
                                            TGListTreeItem* parent_lti);

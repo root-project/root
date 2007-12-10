@@ -36,6 +36,8 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
    fRnrLine   (0),
    fRnrPoints (0)
 {
+   // Constructor.
+
    fPriority = 20;
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -52,15 +54,13 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
    }
 }
 
-//______________________________________________________________________________
-TEveLineEditor::~TEveLineEditor()
-{}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
 void TEveLineEditor::SetModel(TObject* obj)
 {
+   // Set model object.
+
    fM = dynamic_cast<TEveLine*>(obj);
 
    fRnrLine  ->SetState(fM->fRnrLine  ? kButtonDown : kButtonUp);
@@ -72,6 +72,8 @@ void TEveLineEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TEveLineEditor::DoRnrLine()
 {
+   // Slot for RnrLine.
+
    fM->SetRnrLine(fRnrLine->IsOn());
    Update();
 }
@@ -79,6 +81,8 @@ void TEveLineEditor::DoRnrLine()
 //______________________________________________________________________________
 void TEveLineEditor::DoRnrPoints()
 {
+   // Slot for RnrPoints.
+
    fM->SetRnrPoints(fRnrPoints->IsOn());
    Update();
 }

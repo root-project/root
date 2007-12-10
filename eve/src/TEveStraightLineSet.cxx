@@ -170,8 +170,7 @@ void TEveStraightLineSetProjected::UpdateProjection()
    TEveStraightLineSet& orig  = * dynamic_cast<TEveStraightLineSet*>(fProjectable);
 
    // Lines
-   Int_t NL = orig.GetLinePlex().Size();
-   fLinePlex.Reset(sizeof(Line_t), NL);
+   fLinePlex.Reset(sizeof(Line_t), orig.GetLinePlex().Size());
    Float_t p1[3];
    Float_t p2[3];
    TEveChunkManager::iterator li(orig.GetLinePlex());
@@ -196,8 +195,7 @@ void TEveStraightLineSetProjected::UpdateProjection()
    }
 
    // Markers
-   Int_t NM = orig.GetMarkerPlex().Size();
-   fMarkerPlex.Reset(sizeof(Marker_t), NM);
+   fMarkerPlex.Reset(sizeof(Marker_t), orig.GetMarkerPlex().Size());
    TEveChunkManager::iterator mi(orig.GetMarkerPlex());
    while (mi.next())
    {

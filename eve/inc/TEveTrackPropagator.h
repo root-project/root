@@ -72,7 +72,7 @@ public:
       {}
 
       void Step(Vertex4D_t& v, TEveVector& p);
-      void StepVertex(Vertex4D_t& v, TEveVector& p, Vertex4D_t& forw);
+      void StepVertex(const Vertex4D_t& v, const TEveVector& p, Vertex4D_t& forw);
    };
 
 private:

@@ -34,7 +34,7 @@ protected:
 
 public:
    TEveSceneInfo(TEveViewer* viewer, TEveScene* scene, TGLSceneInfo* sinfo);
-   virtual ~TEveSceneInfo();
+   virtual ~TEveSceneInfo() {}
 
    TEveViewer   * GetViewer()      const { return fViewer; }
    TEveScene    * GetScene()       const { return fScene;  }

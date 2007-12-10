@@ -38,8 +38,10 @@ TEveTrackProjectedGL::TEveTrackProjectedGL() : TEveTrackGL(), fM(0)
 //______________________________________________________________________________
 Bool_t TEveTrackProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   if(TEveTrackGL::SetModel(obj) == kFALSE) return kFALSE;
-   if(SetModelCheckClass(obj, TEveTrackProjected::Class())) {
+   // Set model object.
+
+   if (TEveTrackGL::SetModel(obj) == kFALSE) return kFALSE;
+   if (SetModelCheckClass(obj, TEveTrackProjected::Class())) {
       fM = dynamic_cast<TEveTrackProjected*>(obj);
       return kTRUE;
    }
@@ -51,6 +53,8 @@ Bool_t TEveTrackProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 //______________________________________________________________________________
 void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
+   // Draw track with GL.
+
    // printf("TEveTrackProjectedGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
    if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine || fM->Size() == 0)
       return;
@@ -70,44 +74,46 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    // path-marks
    std::vector<TEvePathMark*>& pm = fM->fPathMarks;
-   TEveTrackPropagator& RS = *fM->GetPropagator();
+   TEveTrackPropagator& rTP = *fM->GetPropagator();
    if (pm.size())
    {
       Float_t* pnts = new Float_t[3*pm.size()]; // maximum
-      Int_t N = 0;
+      Float_t*  pnt = pnts;
+      Int_t   pntsN = 0;
       Bool_t accept;
       for (std::vector<TEvePathMark*>::iterator i=pm.begin(); i!=pm.end(); ++i)
       {
          accept = kFALSE;
          switch ((*i)->fType)
          {
-            case(TEvePathMark::kDaughter):
-               if(RS.GetRnrDaughters()) accept = kTRUE;
+            case TEvePathMark::kDaughter:
+               if (rTP.GetRnrDaughters())  accept = kTRUE;
                break;
-            case(TEvePathMark::kReference):
-               if(RS.GetRnrReferences()) accept = kTRUE;
+            case TEvePathMark::kReference:
+               if (rTP.GetRnrReferences()) accept = kTRUE;
                break;
-            case(TEvePathMark::kDecay):
-               if(RS.GetRnrDecay()) accept = kTRUE;
+            case TEvePathMark::kDecay:
+               if (rTP.GetRnrDecay())      accept = kTRUE;
                break;
          }
-         if(accept)
+         if (accept)
          {
-            if((TMath::Abs((*i)->fV.fZ) < RS.GetMaxZ()) && ((*i)->fV.Perp() < RS.GetMaxR()))
+            if ((TMath::Abs((*i)->fV.fZ) < rTP.GetMaxZ()) && ((*i)->fV.Perp() < rTP.GetMaxR()))
             {
-               pnts[3*N  ] =(*i)->fV.fX;
-               pnts[3*N+1] =(*i)->fV.fY;
-               pnts[3*N+2] =(*i)->fV.fZ;
-               fM->fProjection->ProjectPoint(pnts[3*N], pnts[3*N+1], pnts[3*N+2]);
-               N++;
+               pnt[0] =(*i)->fV.fX;
+               pnt[1] =(*i)->fV.fY;
+               pnt[2] =(*i)->fV.fZ;
+               fM->fProjection->ProjectPointFv(pnt);
+               pnt   += 3;
+               ++pntsN;
             }
          }
       }
-      TEveGLUtil::RenderPolyMarkers(RS.RefPMAtt(), pnts, N);
+      TEveGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, pntsN);
       delete [] pnts;
    }
 
    // fist vertex
-   if(RS.GetRnrFV() && fTrack->GetLastPoint())
-      TEveGLUtil::RenderPolyMarkers(RS.RefFVAtt(), fTrack->GetP(), 1);
+   if (rTP.GetRnrFV() && fTrack->GetLastPoint())
+      TEveGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1);
 }

@@ -413,7 +413,7 @@ void TEveManager::PreDeleteElement(TEveElement* element)
    // Called from TEveElement prior to its destruction so the
    // framework components (like object editor) can unreference it.
 
-   if (fEditor->GetRnrElement() == element)
+   if (fEditor->GetEveElement() == element)
       fEditor->DisplayObject(0);
 }
 
@@ -435,7 +435,7 @@ Bool_t TEveManager::ElementPaste(TEveElement* element)
    // The object to paste is taken from the editor (this is not
    // exactly right) and handed to 'element' for pasting.
 
-   TEveElement* src = fEditor->GetRnrElement();
+   TEveElement* src = fEditor->GetEveElement();
    if (src)
       return element->HandleElementPaste(src);
    return kFALSE;

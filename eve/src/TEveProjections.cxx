@@ -98,8 +98,9 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
    static const TEveException eH("TEveProjection::GetValForScreenPos ");
 
    Float_t xL, xM, xR;
-   TEveVector V, DirVec;
-   SetDirectionalVector(i, DirVec);
+   TEveVector vec;
+   TEveVector dirVec;
+   SetDirectionalVector(i, dirVec);
    if (fDistortion > 0.0f && ((sv > 0 && sv > fUpLimit[i]) || (sv < 0 && sv < fLowLimit[i])))
       throw(eH + Form("screen value '%f' out of limit '%f'.", sv, sv > 0 ? fUpLimit[i] : fLowLimit[i]));
 
@@ -110,9 +111,9 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
       xL = 0; xR = 1000;
       while (1)
       {
-         V.Mult(DirVec, xR); ProjectVector(V);
-         // printf("positive projected %f, value %f,xL, xR ( %f, %f)\n", V[i], sv, xL, xR);
-         if (V[i] > sv || V[i] == sv) break;
+         vec.Mult(dirVec, xR); ProjectVector(vec);
+         // printf("positive projected %f, value %f,xL, xR ( %f, %f)\n", vec[i], sv, xL, xR);
+         if (vec[i] > sv || vec[i] == sv) break;
          xL = xR; xR *= 2;
       }
    }
@@ -121,9 +122,9 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
       xR = 0; xL = -1000;
       while (1)
       {
-         V.Mult(DirVec, xL); ProjectVector(V);
-         // printf("negative projected %f, value %f,xL, xR ( %f, %f)\n", V[i], sv, xL, xR);
-         if (V[i] < sv || V[i] == sv) break;
+         vec.Mult(dirVec, xL); ProjectVector(vec);
+         // printf("negative projected %f, value %f,xL, xR ( %f, %f)\n", vec[i], sv, xL, xR);
+         if (vec[i] < sv || vec[i] == sv) break;
          xR = xL; xL *= 2;
       }
    }
@@ -135,13 +136,13 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
    do
    {
       xM = 0.5f * (xL + xR);
-      V.Mult(DirVec, xM);
-      ProjectVector(V);
-      if (V[i] > sv)
+      vec.Mult(dirVec, xM);
+      ProjectVector(vec);
+      if (vec[i] > sv)
          xR = xM;
       else
          xL = xM;
-   } while(TMath::Abs(V[i] - sv) >= fgEps);
+   } while(TMath::Abs(vec[i] - sv) >= fgEps);
 
    return xM;
 }
@@ -173,9 +174,9 @@ void TEveRhoZProjection::SetCenter(TEveVector& v)
 
    fCenter = v;
 
-   Float_t R = TMath::Sqrt(v.fX*v.fX + v.fY*v.fY);
+   Float_t r = TMath::Sqrt(v.fX*v.fX + v.fY*v.fY);
    fProjectedCenter.fX = fCenter.fZ;
-   fProjectedCenter.fY = TMath::Sign(R, fCenter.fY);
+   fProjectedCenter.fY = TMath::Sign(r, fCenter.fY);
    fProjectedCenter.fZ = 0;
    UpdateLimit();
 }
@@ -268,9 +269,9 @@ void TEveCircularFishEyeProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t
       x -= fCenter.fX;
       y -= fCenter.fY;
       Float_t phi = (x == 0.0 && y == 0.0) ? 0.0f : ATan2(y, x);
-      Float_t R = Sqrt(x*x + y*y);
+      Float_t r = Sqrt(x*x + y*y);
       // distort
-      Float_t NR = (R*fScale) / (1.0f + R*fDistortion);
+      Float_t NR = (r*fScale) / (1.0f + r*fDistortion);
       x = NR*Cos(phi) + fCenter.fX;
       y = NR*Sin(phi) + fCenter.fY;
    }

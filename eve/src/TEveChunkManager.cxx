@@ -27,6 +27,8 @@ ClassImp(TEveChunkManager::iterator)
 
 void TEveChunkManager::ReleaseChunks()
 {
+   // Release all memory chunks.
+
    for (Int_t i=0; i<fVecSize; ++i)
       delete fChunks[i];
    fChunks.clear();
@@ -36,17 +38,24 @@ void TEveChunkManager::ReleaseChunks()
 TEveChunkManager::TEveChunkManager() :
    fS(0), fN(0),
    fSize(0), fVecSize(0), fCapacity(0)
-{}
+{
+   // Default constructor.
+   // Call reset for initialization.
+}
 
 //______________________________________________________________________________
 TEveChunkManager::TEveChunkManager(Int_t atom_size, Int_t chunk_size) :
    fS(atom_size), fN(chunk_size),
    fSize(0), fVecSize(0), fCapacity(0)
-{}
+{
+   // Constructor.
+}
 
 //______________________________________________________________________________
 TEveChunkManager::~TEveChunkManager()
 {
+   // Destructor.
+
    ReleaseChunks();
 }
 
@@ -55,6 +64,8 @@ TEveChunkManager::~TEveChunkManager()
 //______________________________________________________________________________
 void TEveChunkManager::Reset(Int_t atom_size, Int_t chunk_size)
 {
+   // Empty the container and reset it with given atom and chunk sizes.
+
    ReleaseChunks();
    fS = atom_size;
    fN = chunk_size;
@@ -64,6 +75,9 @@ void TEveChunkManager::Reset(Int_t atom_size, Int_t chunk_size)
 //______________________________________________________________________________
 void TEveChunkManager::Refit()
 {
+   // Refit the container so that all current data fits into a single
+   // chunk.
+
    if (fSize == 0 || (fVecSize == 1 && fSize == fCapacity))
       return;
 
@@ -86,6 +100,8 @@ void TEveChunkManager::Refit()
 //______________________________________________________________________________
 Char_t* TEveChunkManager::NewChunk()
 {
+   // Allocate a new memory chunk and register it.
+
    fChunks.push_back(new TArrayC(fS*fN));
    ++fVecSize;
    fCapacity += fN;

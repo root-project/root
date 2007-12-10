@@ -23,8 +23,8 @@ ClassImp(TEveTrackProjected)
 
 //______________________________________________________________________________
 TEveTrackProjected::TEveTrackProjected() :
-   TEveTrack     (),
-   fOrigPnts(0),
+   TEveTrack  (),
+   fOrigPnts  (0),
    fProjection(0)
 {
    // Default constructor.
@@ -178,17 +178,18 @@ void TEveTrackProjected::PrintLineSegments()
    printf("%s LineSegments:\n", GetName());
    Int_t start = 0;
    Int_t segment = 0;
-   TEveVector S;
-   TEveVector E;
+   TEveVector sVec;
+   TEveVector bPnt;
    for (std::vector<Int_t>::iterator bpi = fBreakPoints.begin();
         bpi != fBreakPoints.end(); ++bpi)
    {
       Int_t size = *bpi - start;
 
-      GetPoint(start, S.fX, S.fY, S.fZ);
-      GetPoint((*bpi)-1, E.fX, E.fY, E.fZ);
+      GetPoint(start, sVec.fX, sVec.fY, sVec.fZ);
+      GetPoint((*bpi)-1, bPnt.fX, bPnt.fY, bPnt.fZ);
       printf("seg %d size %d start %d ::(%f, %f, %f) (%f, %f, %f)\n",
-             segment, size, start, S.fX, S.fY, S.fZ, E.fX, E.fY, E.fZ);
+             segment, size, start, sVec.fX, sVec.fY, sVec.fZ,
+             bPnt.fX, bPnt.fY, bPnt.fZ);
       start   += size;
       segment ++;
    }

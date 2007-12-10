@@ -195,8 +195,8 @@ void TEveElement::CollectSceneParentsFromChildren(List_t& scenes, TEveElement* p
 /******************************************************************************/
 
 //______________________________________________________________________________
-Int_t TEveElement::ExpandIntoListTree(TGListTree* ltree,
-                                      TGListTreeItem* parent)
+void TEveElement::ExpandIntoListTree(TGListTree* ltree,
+                                     TGListTreeItem* parent)
 {
    // Populates parent with elements.
    // parent must be an already existing representation of *this*.
@@ -208,36 +208,32 @@ Int_t TEveElement::ExpandIntoListTree(TGListTree* ltree,
    // Anyhow, it is probably known as it must have been selected by the user.
 
    if (parent->GetFirstChild() != 0)
-      return 0;
-   Int_t n = 0;
+      return;
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       (*i)->AddIntoListTree(ltree, parent);
-      ++n;
    }
-   return n;
 }
 
 //______________________________________________________________________________
-Int_t TEveElement::DestroyListSubTree(TGListTree* ltree,
-                                      TGListTreeItem* parent)
+void TEveElement::DestroyListSubTree(TGListTree* ltree,
+                                     TGListTreeItem* parent)
 {
-   Int_t n = 0;
+   // Destroy sub-tree under item 'parent' in list-tree 'ltree'.
+
    TGListTreeItem* i = parent->GetFirstChild();
    while (i != 0)
    {
-      //n += DestroyListSubTree(ltree, i);
       TEveElement* re = (TEveElement*) i->GetUserData();
       i = i->GetNextSibling();
       re->RemoveFromListTree(ltree, parent);
    }
-   return n;
 }
 
 //______________________________________________________________________________
 TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
                                              TGListTreeItem* parent_lti)
 {
-   // Add this render element into ltree to already existing item
+   // Add this element into ltree to an already existing item
    // parent_lti.
 
    static const TEveException eH("TEveElement::AddIntoListTree ");
@@ -300,6 +296,11 @@ TGListTreeItem* TEveElement::AddIntoListTrees(TEveElement* parent)
 Bool_t TEveElement::RemoveFromListTree(TGListTree* ltree,
                                        TGListTreeItem* parent_lti)
 {
+   // Remove element from list-tree 'ltree' where its parent item is
+   // 'parent_lti'.
+   // Returns kTRUE if the item was found and removed, kFALSE
+   // otherwise.
+
    static const TEveException eH("TEveElement::RemoveFromListTree ");
 
    sLTI_i i = FindItem(ltree, parent_lti);
@@ -318,6 +319,9 @@ Bool_t TEveElement::RemoveFromListTree(TGListTree* ltree,
 //______________________________________________________________________________
 Int_t TEveElement::RemoveFromListTrees(TEveElement* parent)
 {
+   // Remove element from all list-trees where 'parent' is the
+   // user-data of the list-tree-item.
+
    Int_t count = 0;
 
    sLTI_i i  = fItems.begin();
@@ -341,6 +345,10 @@ Int_t TEveElement::RemoveFromListTrees(TEveElement* parent)
 //______________________________________________________________________________
 TEveElement::sLTI_i TEveElement::FindItem(TGListTree* ltree)
 {
+   // Find any list-tree-item of this element in list-tree 'ltree'.
+   // Note that each element can be placed into the same list-tree on
+   // several postions.
+
    for (sLTI_i i = fItems.begin(); i != fItems.end(); ++i)
       if (i->fTree == ltree)
          return i;
@@ -351,6 +359,9 @@ TEveElement::sLTI_i TEveElement::FindItem(TGListTree* ltree)
 TEveElement::sLTI_i TEveElement::FindItem(TGListTree* ltree,
                                           TGListTreeItem* parent_lti)
 {
+   // Find list-tree-item of this element with given parent
+   // list-tree-item.
+
    for (sLTI_i i = fItems.begin(); i != fItems.end(); ++i)
       if (i->fTree == ltree && i->fItem->GetParent() == parent_lti)
          return i;
@@ -360,6 +371,10 @@ TEveElement::sLTI_i TEveElement::FindItem(TGListTree* ltree,
 //______________________________________________________________________________
 TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree)
 {
+   // Find any list-tree-item of this element in list-tree 'ltree'.
+   // Note that each element can be placed into the same list-tree on
+   // several postions.
+
    for (sLTI_i i = fItems.begin(); i != fItems.end(); ++i)
       if (i->fTree == ltree)
          return i->fItem;
@@ -370,6 +385,9 @@ TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree)
 TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree,
                                               TGListTreeItem* parent_lti)
 {
+   // Find list-tree-item of this element with given parent
+   // list-tree-item.
+
    for (sLTI_i i = fItems.begin(); i != fItems.end(); ++i)
       if (i->fTree == ltree && i->fItem->GetParent() == parent_lti)
          return i->fItem;
@@ -379,7 +397,7 @@ TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree,
 //______________________________________________________________________________
 void TEveElement::UpdateItems()
 {
-   // Update list-tree-items representing this render-element.
+   // Update list-tree-items representing this element.
 
    static const TEveException eH("TEveElement::UpdateItems ");
 
@@ -415,6 +433,7 @@ TObject* TEveElement::GetObject(TEveException eh) const
 void TEveElement::SpawnEditor()
 {
    // Show GUI editor for this object.
+   // This is forwarded to TEveManager::EditElement().
 
    gEve->EditElement(this);
 }
@@ -451,6 +470,9 @@ void TEveElement::PadPaint(Option_t* option)
 //______________________________________________________________________________
 void TEveElement::SetRnrSelf(Bool_t rnr)
 {
+   // Set render state of this element, i.e. if it will be published
+   // on next scene update pass.
+
    if (rnr != fRnrSelf)
    {
       fRnrSelf = rnr;
@@ -470,6 +492,9 @@ void TEveElement::SetRnrSelf(Bool_t rnr)
 //______________________________________________________________________________
 void TEveElement::SetRnrChildren(Bool_t rnr)
 {
+   // Set render state of this element's children, i.e. if they will
+   // be published on next scene update pass.
+
    if (rnr != fRnrChildren)
    {
       fRnrChildren = rnr;
@@ -486,6 +511,9 @@ void TEveElement::SetRnrChildren(Bool_t rnr)
 //______________________________________________________________________________
 void TEveElement::SetRnrState(Bool_t rnr)
 {
+   // Set render state of this element and of its children to the same
+   // value.
+
    if (fRnrSelf != rnr || fRnrChildren != rnr)
    {
       fRnrSelf = fRnrChildren = rnr;
@@ -643,6 +671,8 @@ void TEveElement::DisableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 //______________________________________________________________________________
 void TEveElement::Destroy()
 {
+   // Destroy this element.
+
    static const TEveException eH("TEveElement::Destroy ");
 
    if (fDenyDestroy > 0)
@@ -656,6 +686,8 @@ void TEveElement::Destroy()
 //______________________________________________________________________________
 void TEveElement::DestroyElements()
 {
+   // Destroy all children of this element.
+
    static const TEveException eH("TEveElement::DestroyElements ");
 
    while ( ! fChildren.empty()) {
@@ -695,6 +727,9 @@ Bool_t TEveElement::HandleElementPaste(TEveElement* el)
 //______________________________________________________________________________
 void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 {
+   // Call this after an element has been changed so that the state
+   // can be propagated around the framework.
+
    if (update_scenes)
       gEve->ElementChanged(this);
    if (redraw)
@@ -709,6 +744,9 @@ void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 const TGPicture*
 TEveElement::GetCheckBoxPicture(Bool_t rnrSelf, Bool_t rnrDaughters)
 {
+   // Returns list-tree-item check-box picture appropriate for given
+   // rendering state.
+
    Int_t idx = 0;
    if (rnrSelf)       idx = 2;
    if (rnrDaughters ) idx++;

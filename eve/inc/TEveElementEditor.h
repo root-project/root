@@ -39,7 +39,7 @@ protected:
 public:
    TEveElementEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TEveElementEditor();
+   virtual ~TEveElementEditor() {}
 
    virtual void SetModel(TObject* obj);
 

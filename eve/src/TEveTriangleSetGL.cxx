@@ -68,8 +68,8 @@ void TEveTriangleSetGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 {
    // Low-level GL rendering.
 
-   TEveTriangleSet& TS = *fM;
-   Bool_t isScaled = TS.fHMTrans.IsScale();
+   TEveTriangleSet& refTS = *fM;
+   Bool_t isScaled = refTS.fHMTrans.IsScale();
 
    GLint ex_shade_model;
    glGetIntegerv(GL_SHADE_MODEL, &ex_shade_model);
@@ -84,36 +84,36 @@ void TEveTriangleSetGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    glDisable(GL_CULL_FACE);
    if (isScaled) glEnable(GL_NORMALIZE);
    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-   glVertexPointer(3, GL_FLOAT, 0, TS.fVerts);
+   glVertexPointer(3, GL_FLOAT, 0, refTS.fVerts);
    glEnableClientState(GL_VERTEX_ARRAY);
 
-   Int_t*   T = TS.fTrings;
-   Float_t* N = TS.fTringNorms;
-   UChar_t* C = TS.fTringCols;
+   Int_t*   tng = refTS.fTrings;
+   Float_t* nrm = refTS.fTringNorms;
+   UChar_t* col = refTS.fTringCols;
 
    TVector3 e1, e2, n;
 
    glBegin(GL_TRIANGLES);
-   for(Int_t t=0; t<TS.fNTrings; ++t) {
-      if (N) {
-         glNormal3fv(N); N += 3;
+   for(Int_t t=0; t<refTS.fNTrings; ++t) {
+      if (nrm) {
+         glNormal3fv(nrm); nrm += 3;
       } else {
-         Float_t* v0 = TS.Vertex(T[0]);
-         Float_t* v1 = TS.Vertex(T[1]);
-         Float_t* v2 = TS.Vertex(T[2]);
+         Float_t* v0 = refTS.Vertex(tng[0]);
+         Float_t* v1 = refTS.Vertex(tng[1]);
+         Float_t* v2 = refTS.Vertex(tng[2]);
          e1.SetXYZ(v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]);
          e2.SetXYZ(v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]);
          n = e1.Cross(e2);
          if (!isScaled) n.SetMag(1);
          glNormal3d(n.x(), n.y(), n.z());
       }
-      if (C) {
-         TGLUtil::Color3ubv(C);  C += 3;
+      if (col) {
+         TGLUtil::Color3ubv(col);  col += 3;
       }
-      glArrayElement(T[0]);
-      glArrayElement(T[1]);
-      glArrayElement(T[2]);
-      T += 3;
+      glArrayElement(tng[0]);
+      glArrayElement(tng[1]);
+      glArrayElement(tng[2]);
+      tng += 3;
    }
    glEnd();
 

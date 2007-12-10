@@ -35,7 +35,7 @@ protected:
 
 public:
    TEveStraightLineSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveStraightLineSetEditor();
+   virtual ~TEveStraightLineSetEditor() {}
 
    virtual void SetModel(TObject* obj);
 

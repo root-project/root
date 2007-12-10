@@ -145,16 +145,16 @@ void TEvePolygonSetProjected::ProjectAndReducePoints()
 
    TEveProjection* projection = fProjector->GetProjection();
 
-   Int_t N = fBuff->NbPnts();
-   TEveVector*  pnts  = new TEveVector[N];
-   for (Int_t i = 0; i<N; ++i)
+   Int_t buffN = fBuff->NbPnts();
+   TEveVector*  pnts  = new TEveVector[buffN];
+   for (Int_t i = 0; i<buffN; ++i)
    {
       pnts[i].Set(fBuff->fPnts[3*i],fBuff->fPnts[3*i+1], fBuff->fPnts[3*i+2]);
       projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, TEveProjection::kPP_Plane);
    }
-   fIdxMap   = new Int_t[N];
-   Int_t* ra = new Int_t[N];  // list of reduced vertices
-   for (UInt_t v = 0; v < (UInt_t)N; ++v)
+   fIdxMap   = new Int_t[buffN];
+   Int_t* ra = new Int_t[buffN];  // list of reduced vertices
+   for (UInt_t v = 0; v < (UInt_t)buffN; ++v)
    {
       fIdxMap[v] = -1;
       for (Int_t k = 0; k < fNPnts; ++k)
@@ -212,19 +212,19 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
    // duplication
    for (vpPolygon_i poi = pols.begin(); poi != pols.end(); poi++)
    {
-      Polygon_t P = *poi;
-      if ((Int_t)pp.size() != P.fNPnts)
+      Polygon_t& refP = *poi;
+      if ((Int_t)pp.size() != refP.fNPnts)
          continue;
       std::list<Int_t>::iterator u = pp.begin();
-      Int_t pidx = P.FindPoint(*u);
+      Int_t pidx = refP.FindPoint(*u);
       if (pidx < 0)
          continue;
       while (u != pp.end())
       {
-         if ((*u) != P.fPnts[pidx])
+         if ((*u) != refP.fPnts[pidx])
             break;
          ++u;
-         if (++pidx >= P.fNPnts) pidx = 0;
+         if (++pidx >= refP.fNPnts) pidx = 0;
       }
       if (u == pp.end()) return;
    }
@@ -250,7 +250,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
    for (UInt_t pi = 0; pi< fBuff->NbPols(); pi++)
    {
       std::list<Int_t> pp; // points in current polygon
-      UInt_t Nseg = bpols[1];
+      UInt_t segN = bpols[1];
       Int_t* seg =  &bpols[2];
       // start idx in the fist segment depends of second segment
       Int_t  tail, head;
@@ -267,7 +267,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
       pp.push_back(head);
       // printf("start idx head %d, tail %d\n", head, tail);
       LSeg_t segs;
-      for (UInt_t s = 1; s < Nseg; ++s)
+      for (UInt_t s = 1; s < segN; ++s)
          segs.push_back(Seg_t(fBuff->fSegs[3*seg[s] + 1],fBuff->fSegs[3*seg[s] + 2]));
 
       Bool_t accepted = kFALSE;
@@ -291,7 +291,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
          if (pp.front() == pp.back()) pp.pop_front();
          AddPolygon(pp, fPolsBP);
       }
-      bpols += (Nseg+2);
+      bpols += (segN+2);
    }
 }
 
@@ -388,10 +388,10 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
       }
       case TEveProjection::kGM_Unknown:
       {
-         Float_t BPsurf = fSurf;
+         Float_t surfBP = fSurf;
          fSurf = 0;
          MakePolygonsFromBS();
-         if(fSurf < BPsurf)
+         if(fSurf < surfBP)
          {
             fPolsBP.swap(fPols);
             fPolsBS.clear();
@@ -455,9 +455,9 @@ void TEvePolygonSetProjected::DumpPolys() const
    printf("TEvePolygonSetProjected %d polygons\n", (Int_t)fPols.size());
    for (vpPolygon_ci i = fPols.begin(); i!= fPols.end(); i++)
    {
-      Int_t N = (*i).fNPnts;
-      printf("Points of polygon %d:\n", N);
-      for (Int_t vi = 0; vi<N; vi++) {
+      Int_t nPnts = (*i).fNPnts;
+      printf("Points of polygon %d:\n", nPnts);
+      for (Int_t vi = 0; vi<nPnts; vi++) {
          Int_t pi = (*i).fPnts[vi];
          printf("(%f, %f, %f)", fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
       }
@@ -474,11 +474,11 @@ void TEvePolygonSetProjected::DumpBuffer3D()
 
    for(UInt_t pi = 0; pi< fBuff->NbPols(); ++pi)
    {
-      UInt_t Nseg = bpols[1];
-      printf("%d polygon of %d has %d segments \n", pi,fBuff->NbPols(),Nseg);
+      UInt_t segN = bpols[1];
+      printf("%d polygon of %d has %d segments \n", pi,fBuff->NbPols(),segN);
 
       Int_t* seg =  &bpols[2];
-      for (UInt_t a=0; a<Nseg; ++a)
+      for (UInt_t a=0; a<segN; ++a)
       {
          Int_t a1 = fBuff->fSegs[3*seg[a] + 1];
          Int_t a2 = fBuff->fSegs[3*seg[a] + 2];
@@ -488,6 +488,6 @@ void TEvePolygonSetProjected::DumpBuffer3D()
                 fBuff->fPnts[3*a2],fBuff->fPnts[3*a2+1], fBuff->fPnts[3*a2+2]);
       }
       printf("\n");
-      bpols += (Nseg+2);
+      bpols += (segN+2);
    }
 }
