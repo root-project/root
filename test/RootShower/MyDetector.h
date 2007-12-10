@@ -26,6 +26,7 @@
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"
 #include "TGeoVolume.h"
+#include "TGeoMatrix.h"
 
 class MyDetector : public TObject {
 
