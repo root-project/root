@@ -1084,8 +1084,10 @@ void RootShower::OnShowerProduce()
 }
 
 //______________________________________________________________________________
-void RootShower::HighLight(TGListTreeItem *item)
+void RootShower::HighLight(TGListTreeItem * /*item*/)
 {
+   // No comment...
+
 }
 
 //______________________________________________________________________________

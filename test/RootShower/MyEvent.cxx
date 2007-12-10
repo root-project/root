@@ -105,7 +105,7 @@ void MyEvent::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
-void MyEvent::Reset(Option_t *option)
+void MyEvent::Reset(Option_t * /*option*/)
 {
    // Static function to reset all static objects for this event
    delete fgParticles; fgParticles = 0;

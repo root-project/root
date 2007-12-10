@@ -132,7 +132,8 @@ void RootShowerAbout::CloseWindow()
 }
 
 //______________________________________________________________________________
-Bool_t RootShowerAbout::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t RootShowerAbout::ProcessMessage(Long_t msg, Long_t /*parm1*/, 
+                                       Long_t /*parm2*/)
 {
    // Process messages sent to this dialog.
    switch (GET_MSG(msg)) {

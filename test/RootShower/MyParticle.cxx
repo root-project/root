@@ -228,7 +228,7 @@ void MyParticle::HighLight()
     TIter next(fTracks);
     for (i=0;i<5;i++) {
         next.Reset();
-        while (poly = (TPolyLine3D *)next()) {
+        while ((poly = (TPolyLine3D *)next())) {
             poly->SetLineColor(poly->GetLineColor() + 25);
             poly->SetLineWidth(3);
             gSystem->ProcessEvents();
@@ -236,7 +236,7 @@ void MyParticle::HighLight()
         gRootShower->UpdateDisplay();
         gSystem->ProcessEvents();
         next.Reset();
-        while (poly = (TPolyLine3D *)next()) {
+        while ((poly = (TPolyLine3D *)next())) {
             poly->SetLineColor(poly->GetLineColor() - 25);
             poly->SetLineWidth(1);
             gSystem->ProcessEvents();
