@@ -6,9 +6,20 @@
 //  ==============================
 //
 //  This program performs tests : 
-//     - mathematical functions in particular the statistical functions by estimating 
-//         pdf, cdf and quantiles. 
-//     - cdf are estimated directly and compared with integral calulated ones 
+//     - numerical integration, derivation and root finders
+//    - it compares for various values of the gamma and beta distribution) 
+//          - the numerical calculated integral of pdf  with cdf function, 
+//           - the calculated derivative of cdf with pdf 
+//           - the inverse (using root finder) of cdf with quantile
+//
+//     to run the program outside ROOT do: 
+//        > make stressMathMore
+//        > ./stressMathMore
+// 
+//     to run the program in ROOT
+//       root> gSystem->Load("libMathMore") 
+//       root> .x stressMathMore.cxx+
+//
 
 #include "Math/DistFunc.h"
 #include "Math/IParamFunction.h"
@@ -32,6 +43,12 @@ using namespace ROOT::Math;
 
 
 
+
+#if defined(__CINT__) && defined(__MAKEDICT__)
+#define INF std::numeric_limits<double>::infinity() 
+#else  
+#define INF 1.0E400
+#endif 
 
 //#define DEBUG
 
@@ -91,18 +108,20 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
    return iret; 
 }
 
-// typedef fot a free function like gamma(double x, double a, double b)
+// typedef for a free function like gamma(double x, double a, double b)
+// (dont have blank spaces between for not confusing CINT parser) 
 typedef double (*FreeFunc3)(double, double, double ); 
 typedef double (*FreeFunc4)(double, double, double, double ); 
 
 //implement simple functor
 struct Func { 
    virtual ~Func() {}
-   virtual double operator() (double , double, double) = 0; 
+   virtual double operator() (double , double, double) const = 0; 
+   
 };
 struct Func3 : public Func { 
    Func3(FreeFunc3 f) : fFunc(f) {};
-   double operator() (double x, double a, double b) {
+   double operator() (double x, double a, double b) const {
       return fFunc(x,a,b);
    }  
    FreeFunc3 fFunc; 
@@ -110,16 +129,13 @@ struct Func3 : public Func {
 
 struct Func4 : public Func { 
    Func4(FreeFunc4 f) : fFunc(f) {};
-   double operator() (double x, double a, double b) {
+   double operator() (double x, double a, double b) const {
       return fFunc(x,a,b,0.);
    }  
    FreeFunc4 fFunc; 
 };
 
-#ifdef __MAKECINT__
-template <class T> class numeric_limits;
-double numeric_limits<double>::infinity();
-#endif
+
 
 // statistical function class 
 const int NPAR = 2; 
@@ -128,10 +144,10 @@ class StatFunction : public ROOT::Math::IParamFunction {
 
 public: 
 
-   StatFunction(Func & pdf, Func &cdf, Func & quant, 
-                double x1 = -std::numeric_limits<double>::infinity(), 
-                double x2 = std::numeric_limits<double>::infinity() ) : 
-      fPdf(pdf), fCdf(cdf), fQuant(quant),
+   StatFunction(Func & pdf, Func & cdf, Func & quant, 
+                double x1 = -INF, 
+                double x2 = INF ) : 
+      fPdf(&pdf), fCdf(&cdf), fQuant(&quant),
       xlow(x1), xup(x2), 
       fHasLowRange(false), fHasUpRange(false)
    {
@@ -140,15 +156,15 @@ public:
       fScaleInv = 100;  //scale for der test
       for(int i = 0; i< NPAR; ++i) fParams[i]=0;
       NFuncTest = 100; 
-      if (xlow > -std::numeric_limits<double>::infinity()) fHasLowRange = true;
-      if (xup < std::numeric_limits<double>::infinity()) fHasUpRange = true;
+      if (xlow > -INF) fHasLowRange = true;
+      if (xup < INF) fHasUpRange = true;
    } 
 
 
 
    unsigned int NPar() const { return NPAR; } 
    const double * Parameters() const { return fParams; }
-   ROOT::Math::IGenFunction * Clone() const { return new StatFunction(fPdf,fCdf,fQuant); }
+   ROOT::Math::IGenFunction * Clone() const { return new StatFunction(*fPdf,*fCdf,*fQuant); }
 
    void SetParameters(const double * p) { std::copy(p,p+NPAR,fParams); }
 
@@ -164,11 +180,11 @@ public:
    }
 
    double Cdf(double x) const { 
-      return fCdf ( x, fParams[0], fParams[1] ); 
+      return  (*fCdf) ( x, fParams[0], fParams[1] ); 
    }
 
    double Quantile(double x) const { 
-      return fQuant( x, fParams[0], fParams[1]  ); 
+      return (*fQuant)( x, fParams[0], fParams[1]  ); 
    }
 
 
@@ -203,12 +219,15 @@ private:
 
 
    double DoEval(double x) const { 
-      return fPdf(x, *fParams, *(fParams+1)); 
+      return (*fPdf)(x, *fParams, *(fParams+1)); 
    }
 
-   Func & fPdf; 
-   Func & fCdf;
-   Func & fQuant; 
+//    std::auto_ptr<Func>  fPdf; 
+//    std::auto_ptr<Func>  fCdf; 
+//    std::auto_ptr<Func>  fQuant; 
+   Func * fPdf; 
+   Func *  fCdf; 
+   Func *  fQuant; 
    double fParams[NPAR];
    double fScaleIg;
    double fScaleDer;
@@ -522,9 +541,11 @@ int stressMathMore(double nscale = 1) {
 
    TBenchmark bm;
    bm.Start("stressMathMore");
+   
+   int n = nscale*100;
 
-   iret |= testGammaFunction(nscale*100);
-   iret |= testBetaFunction(nscale*100);
+   iret |= testGammaFunction(n);
+   iret |= testBetaFunction(n);
 
    bm.Stop("stressMathMore");
    std::cout <<"******************************************************************************\n";

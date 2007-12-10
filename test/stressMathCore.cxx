@@ -7,13 +7,61 @@
 //
 //  This program performs tests : 
 //     - mathematical functions in particular the statistical functions by estimating 
-//         pdf, cdf and quantiles. 
-//     - cdf are estimated directly and compared with integral calulated ones 
+//         pdf, cdf and quantiles. cdf are estimated directly and compared with calculated integral from pdf
+//     - physics vectors (2D, 3D and 4D) including I/O for every type and for both double and Double32_t
+//     - SMatrix and SVectors including I/O for double and Double32_t types
+//     - I/O of complex objects which dictionary has been generated using CINT (default) or Reflex 
+//           TrackD and TrackD32 which contain  physics vectors of double and Double32_t  
+//           TrackErrD and TrackErrD32 which contain physics vectors and an SMatrix of double and Double32_t
+//           VecTrackD which contains an std::vector<TrackD>  
+//       
+//
+// the program cun run only in compiled mode. 
+// To run outside ROOT do:
+//    
+//    > cd $ROOTSYS/test
+//    > make stressMathMore
+//    > ./stressMathMore
+//
+//  to run using REflex set before compiling the environment variable useReflex. 
+// 
+//    > export useReflex=1
+//    > make stressMathMore
+//    > ./stressMathMore
+//
+// to run inside ROOT using ACliC
+//  for using CINT you need first to have the library libTrackMathCoreCint.so 
+//   (type:  make libTrackMathCoreCint.so to make it)
+//  
+//   root> gSystem->Load("libMathCore");
+//   root> gSystem->Load("libTree");
+//   root> gSystem->Load("libHist");
+//   root> .x stressMathCore.cxx+
+// 
+
+// for using Reflex dictionaries you need first to have the library libTrackMathCoreRflx.so
+//   (type:  make libTrackMathCoreRflx.so to make it)
+// 
+//   root> gSystem->Load("libMathCore");
+//   root> gSystem->Load("libTree");
+//   root> gSystem->Load("libHist");
+//   root> gSystem->Load("libReflex");
+//   root> gSystem->Load("libCintex");
+//   root> gSystem->SetIncludePath("-DUSE_REFLEX");
+//   root> .x stressMathCore.cxx+
+// 
+//
+    
 
 #ifndef __CINT__
 
 
-#include "Math/DistFunc.h"
+
+#include "Math/DistFuncMathCore.h"
+#ifdef USE_MATHMORE
+#include "Math/DistMathMore.h"
+#endif
+
 #include "Math/IParamFunction.h"
 #include "Math/Integrator.h"
 #include <iostream>
@@ -211,7 +259,7 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
 
    // scan all values from xmin to xmax
    double dx = (xmax-xmin)/NFuncTest; 
-#ifdef HAVE_MATHMORE
+#ifdef USE_MATHMORE
    for (int i = 0; i < NFuncTest; ++i) { 
       double v1 = xmin + dx*i;  // value used  for testing
       double q1 = Cdf(v1);
@@ -315,7 +363,7 @@ typedef StatFunction<F2,F1,2>   Dist_exponential;
 typedef StatFunction<F3,F2,3>   Dist_uniform; 
 
  
-//#ifdef HAVE_MATHMORE
+
 #define CREATE_DIST(name) Dist_ ##name  dist( name ## _pdf, name ## _cdf, name ##_quantile );
 #define CREATE_DIST_C(name) Dist_ ##name  distc( name ## _pdf, name ## _cdf_c, name ##_quantile_c );
 // #define CREATE_DIST_C(name) Dist_ ##name  distc( name ## _pdf, name ## _cdf_c, 0 );
@@ -348,7 +396,7 @@ int testStatFunctions(int /* nfunc */) {
 
    {
       PrintTest("Gamma distribution"); 
-#ifdef HAVE_MATHMORE // gamma_quantile is in mathmore
+#ifdef USE_MATHMORE // gamma_quantile is in mathmore
       CREATE_DIST(gamma);
       dist.SetParameters( 2, 1);
       iret |= dist.Test(0.05,5, 0.,1.);
@@ -360,7 +408,7 @@ int testStatFunctions(int /* nfunc */) {
 
    {
       PrintTest("Chisquare distribution"); 
-#ifdef HAVE_MATHMORE
+#ifdef USE_MATHMORE
       CREATE_DIST(chisquared);
       dist.SetParameters( 10, 0);
       dist.ScaleTol2(10);
@@ -417,7 +465,7 @@ int testStatFunctions(int /* nfunc */) {
       // if enlarge scale test fails
       iret |= distc.Test(0.05,5,0,1,true);
    }
-#ifdef HAVE_MATHMORE // wait t quantile is in mathcore
+#ifdef USE_MATHMORE // wait t quantile is in mathcore
    {
       PrintTest("t    distribution "); 
       CREATE_DIST(tdistribution);
@@ -1362,7 +1410,6 @@ int testTrack(int ngen) {
 }
 
 
-#endif
 
 
 int testGenVectors(int ngen,bool io) { 
@@ -1423,10 +1470,11 @@ int testCompositeObj(int ngen) {
 
    std::cout << "Test Using CINT library\n\n"; 
 
-//    iret = gSystem->Load("libTrackMathCoreCint");
-//    if (iret !=0) { 
-//       std::cerr <<"Error Loading libTrackMathCoreCint" << std::endl;
-//    }
+   iret = gSystem->Load("libTrackMathCoreCint");
+   if (iret !=0) { 
+      std::cerr <<"Error Loading libTrackMathCoreCint" << std::endl;
+      return iret; 
+   }
 #else
 
    std::cout << "Test Using Reflex library\n\n"; 
@@ -1436,7 +1484,14 @@ int testCompositeObj(int ngen) {
 #endif
    ROOT::Cintex::Cintex::Enable();
 
+   iret = gSystem->Load("libTrackMathCoreRflx");
+   if (iret !=0) { 
+      std::cerr <<"Error Loading libTrackMathCoreRflx" << std::endl;
+      return iret; 
+   }
+
 #endif
+
 
     iret |= testTrack<TrackD>(ngen); 
     iret |= testTrack<TrackD32>(ngen); 
@@ -1450,12 +1505,18 @@ int testCompositeObj(int ngen) {
    return iret;
 }
 
+
+#endif // endif ifndef __CINT__
+
+
 int stressMathCore(double nscale = 1) { 
 
    int iret = 0; 
 
 #ifdef __CINT__
-   std::cout << "Test must be run in compile mode - please use ACLIC !!" << std::endl; 
+   std::cout << "Test must be run in compile mode - use ACLIC to compile!!" << std::endl; 
+
+
    return 0; 
 #endif
 //    iret |= gSystem->Load("libMathCore");
@@ -1497,6 +1558,8 @@ int stressMathCore(double nscale = 1) {
    if (iret !=0) std::cerr << "stressMathCore Test Failed !!" << std::endl;
    return iret; 
 }
+
+
 
 int main(int argc,const char *argv[]) { 
    double nscale = 1;

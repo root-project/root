@@ -83,15 +83,22 @@ else
 STRESSMATHLIBS = -lMathCore -lReflex -lCintex
 endif
 
+TRACKMATHOBJ = TrackMathCoreRflx.$(ObjSuf)
+TRACKMATHLIB = libTrackMathcoreRflx.$(DllSuf)
+
+
 else 
-STRESSMATHO   = stressMathCore.$(ObjSuf) TrackMathCoreCint.$(ObjSuf) 
-STRESSMATHS   = stressMathCore.$(SrcSuf) TrackMathCoreCint.$(SrcSuf)
+STRESSMATHO   = stressMathCore.$(ObjSuf) 
+STRESSMATHS   = stressMathCore.$(SrcSuf) 
 
 ifeq ($(PLATFORM),win32)
 STRESSMATHLIBS = '$(ROOTSYS)/lib/libMathCore.lib'
 else
 STRESSMATHLIBS = -lMathCore
 endif
+
+TRACKMATHOBJ = TrackMathCoreCint.$(ObjSuf)
+TRACKMATHLIB = libTrackMathcoreCint.$(DllSuf)
  
 endif
 
@@ -415,7 +422,31 @@ endif
 		@echo "$@ done"
 
 
-$(STRESSMATH):   $(STRESSMATHO)
+$(TRACKMATHLIB):	$(TRACKMATHOBJ)
+ifeq ($(ARCH),aix)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+else
+ifeq ($(PLATFORM),macosx)
+# We need to make both the .dylib and the .so
+		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
+ifeq ($(MACOSX_MINOR),4)
+		ln -sf $@ $(subst .$(DllSuf),.so,$@)
+else
+		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+endif
+else
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
+		$(MT_DLL)
+endif
+endif
+endif
+
+
+$(STRESSMATH):   $(STRESSMATHO) $(TRACKMATHLIB)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
 		$(MT_EXE)
@@ -423,6 +454,7 @@ else
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
 endif
 		@echo "$@ done"
+
 
 $(STRESSMATHMORE):   $(STRESSMATHMOREO)
 ifeq ($(PLATFORM),win32)
@@ -636,6 +668,7 @@ else
 endif
 endif
 endif
+
 
 clean:
 		@rm -f $(OBJS) core
