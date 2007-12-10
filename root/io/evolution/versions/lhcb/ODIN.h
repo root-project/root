@@ -218,10 +218,10 @@ namespace LHCb
     unsigned int m_bunchId;           ///< Bunch ID
     unsigned int m_triggerType;       ///< Trigger Type
       //    ReadoutTypes m_readoutType;       ///< Readout Type (@see enum LHCb::ODIN::ReadoutTypes)
-    int          m_readoutType;
+    int          m_readoutType;       ///< Readout Type (@see enum LHCb::ODIN::ReadoutTypes)
     bool         m_forceBit;          ///< Force Bit
       //    BXTypes      m_bunchCrossingType; ///< Bunch Crossing Type (BXType, @see enum LHCb::ODIN::BXTypes)
-    int m_bunchCrossingType;
+    int m_bunchCrossingType;          ///< Bunch Crossing Type (BXType, @see enum LHCb::ODIN::BXTypes)
     unsigned int m_bunchCurrent;      ///< Bunch Current
   
   }; // class ODIN
