@@ -7,6 +7,7 @@
 #include <TGeoManager.h>
 #include <TGeoVolume.h>
 #include <TGeoPcon.h>
+#include <TGeoMatrix.h>
 #include <TBenchmark.h>
 #include <TApplication.h>
 
