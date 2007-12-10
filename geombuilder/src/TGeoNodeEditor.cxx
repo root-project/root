@@ -18,6 +18,7 @@
 #include "TGeoNodeEditor.h"
 #include "TGedEditor.h"
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoNode.h"
 #include "TPad.h"
 #include "TGTab.h"

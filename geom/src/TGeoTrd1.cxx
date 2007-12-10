@@ -43,6 +43,7 @@
 #include "Riostream.h"
 
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoVolume.h"
 #include "TGeoTrd1.h"
 #include "TMath.h"

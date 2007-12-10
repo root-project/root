@@ -18,6 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
 #include "TGeoPatternFinder.h"
@@ -61,6 +62,7 @@ TGeoNavigator::TGeoNavigator()
                fNextNode(0),
                fBackupState(0),
                fCurrentMatrix(0),
+               fGlobalMatrix(0),
                fPath()
                 
 {
@@ -97,6 +99,7 @@ TGeoNavigator::TGeoNavigator(TGeoManager* geom)
                fNextNode(0),
                fBackupState(0),
                fCurrentMatrix(0),
+               fGlobalMatrix(0),
                fPath()
                 
 {
@@ -145,6 +148,7 @@ TGeoNavigator::TGeoNavigator(const TGeoNavigator& gm)
                fNextNode(gm.fNextNode),
                fBackupState(gm.fBackupState),
                fCurrentMatrix(gm.fCurrentMatrix),
+               fGlobalMatrix(gm.fGlobalMatrix),
                fPath(gm.fPath)               
 {
 // Copy constructor.
@@ -192,6 +196,7 @@ TGeoNavigator& TGeoNavigator::operator=(const TGeoNavigator& gm)
       fNextNode = gm.fNextNode;
       fBackupState = gm.fBackupState;
       fCurrentMatrix = gm.fCurrentMatrix;
+      fGlobalMatrix = gm.fGlobalMatrix;
       fPath = gm.fPath;
       for (Int_t i=0; i<3; i++) {
          fNormal[i] = gm.fNormal[i];
@@ -229,6 +234,7 @@ void TGeoNavigator::BuildCache(Bool_t /*dummy*/, Bool_t nodeid)
       }   
       // build cache
       fCache = new TGeoNodeCache(fGeometry->GetTopNode(), nodeid, nlevel+1);
+      fGlobalMatrix = fCache->GetCurrentMatrix();
       fBackupState = new TGeoCacheState(nlevel+1);
    }
    first = kFALSE;
@@ -323,7 +329,10 @@ void TGeoNavigator::CdNode(Int_t nodeid)
 {
 // Change current path to point to the node having this id.
 // Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
-   if (fCache) fCache->CdNode(nodeid);
+   if (fCache) {
+      fCache->CdNode(nodeid);
+      fGlobalMatrix = fCache->GetCurrentMatrix();
+   }   
 }
 
 //_____________________________________________________________________________
@@ -340,6 +349,7 @@ void TGeoNavigator::CdDown(Int_t index)
       fCurrentOverlapping = node->IsOverlapping();
    fCache->CdDown(index);
    fCurrentNode = node;
+   fGlobalMatrix = fCache->GetCurrentMatrix();
    if (fCurrentOverlapping) fNmany++;
    fLevel++;
 }
@@ -362,6 +372,7 @@ void TGeoNavigator::CdUp()
       fNmany--;
    }   
    fCurrentNode = fCache->GetNode();
+   fGlobalMatrix = fCache->GetCurrentMatrix();
    if (!fCurrentNode->IsOffset()) {
       fCurrentOverlapping = fCurrentNode->IsOverlapping();
    } else {
@@ -387,6 +398,7 @@ void TGeoNavigator::CdTop()
    if (fCurrentOverlapping) fLastNode = fCurrentNode;
    fCurrentNode = fGeometry->GetTopNode();
    fCache->CdTop();
+   fGlobalMatrix = fCache->GetCurrentMatrix();
    fCurrentOverlapping = fCurrentNode->IsOverlapping();
    if (fCurrentOverlapping) fNmany++;
 }
@@ -542,8 +554,8 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
       if (computeGlobal) *fCurrentMatrix = GetCurrentMatrix();
       fNextNode = fCurrentNode;
       TGeoVolume *tvol=fCurrentNode->GetVolume();
-      fCache->MasterToLocal(fPoint, &point[0]);
-      fCache->MasterToLocalVect(fDirection, &dir[0]);
+      fGlobalMatrix->MasterToLocal(fPoint, &point[0]);
+      fGlobalMatrix->MasterToLocalVect(fDirection, &dir[0]);
       if (tvol->Contains(&point[0])) {
          fStep=tvol->GetShape()->DistFromInside(&point[0], &dir[0], iact, fStep, &safe);
       } else {
@@ -572,8 +584,8 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
       }
       return 0;
    }
-   fCache->MasterToLocal(fPoint, &point[0]);
-   fCache->MasterToLocalVect(fDirection, &dir[0]);
+   fGlobalMatrix->MasterToLocal(fPoint, &point[0]);
+   fGlobalMatrix->MasterToLocalVect(fDirection, &dir[0]);
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // find distance to exiting current node
    snext = vol->GetShape()->DistFromInside(&point[0], &dir[0], iact, fStep, &safe);
@@ -606,8 +618,8 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          Int_t *ovlps = fCurrentNode->GetOverlaps(novlps);
          CdUp();
          mother = fCurrentNode->GetVolume();
-         fCache->MasterToLocal(fPoint, &mothpt[0]);
-         fCache->MasterToLocalVect(fDirection, &vecpt[0]);
+         fGlobalMatrix->MasterToLocal(fPoint, &mothpt[0]);
+         fGlobalMatrix->MasterToLocalVect(fDirection, &vecpt[0]);
          // check distance to out
          snext = TGeoShape::Big();
          if (!mother->IsAssembly()) snext = mother->GetShape()->DistFromInside(&mothpt[0], &vecpt[0], iact, fStep, &safe);
@@ -984,8 +996,8 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    }
    Double_t point[3],dir[3];
    Int_t icrossed = -2;
-   fCache->MasterToLocal(fPoint, &point[0]);
-   fCache->MasterToLocalVect(fDirection, &dir[0]);
+   fGlobalMatrix->MasterToLocal(fPoint, &point[0]);
+   fGlobalMatrix->MasterToLocalVect(fDirection, &dir[0]);
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // find distance to exiting current node
    snext = vol->GetShape()->DistFromInside(point, dir, iact, fStep);
@@ -1036,8 +1048,8 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
          Int_t *ovlps = fCurrentNode->GetOverlaps(novlps);
          CdUp();
          mother = fCurrentNode->GetVolume();
-         fCache->MasterToLocal(fPoint, &mothpt[0]);
-         fCache->MasterToLocalVect(fDirection, &vecpt[0]);
+         fGlobalMatrix->MasterToLocal(fPoint, &mothpt[0]);
+         fGlobalMatrix->MasterToLocalVect(fDirection, &vecpt[0]);
          // check distance to out
          snext = TGeoShape::Big();
          if (!mother->IsAssembly()) snext = mother->GetShape()->DistFromInside(mothpt, vecpt, iact, fStep);
@@ -1331,7 +1343,7 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
       return fSafety;
    }
    //---> convert point to local reference frame of current node
-   fCache->MasterToLocal(fPoint, point);
+   fGlobalMatrix->MasterToLocal(fPoint, point);
 
    //---> compute safety to current node
    TGeoVolume *vol = fCurrentNode->GetVolume();
@@ -1522,7 +1534,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       if (vol->IsAssembly()) inside_current=kTRUE;
       // If the current node is not to be skipped
       if (!inside_current) {
-         fCache->MasterToLocal(fPoint, point);
+         fGlobalMatrix->MasterToLocal(fPoint, point);
          inside_current = vol->Contains(point);
       }   
       // Point might be inside an overlapping node
@@ -1543,7 +1555,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       }
    }
    vol = fCurrentNode->GetVolume();
-   fCache->MasterToLocal(fPoint, point);
+   fGlobalMatrix->MasterToLocal(fPoint, point);
    if (!inside_current && downwards) {
    // we are looking downwards
       inside_current = vol->Contains(point);
@@ -1570,7 +1582,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       CdDown(crtindex);
       vol = fCurrentNode->GetVolume();
       crtindex = vol->GetCurrentNodeIndex();
-      if (crtindex<0) fCache->MasterToLocal(fPoint, point);
+      if (crtindex<0) fGlobalMatrix->MasterToLocal(fPoint, point);
    }   
       
    Int_t nd = vol->GetNdaughters();
@@ -1862,7 +1874,7 @@ Bool_t TGeoNavigator::GotoSafeLevel()
 // Go upwards the tree until a non-overlaping node
    while (fCurrentOverlapping && fLevel) CdUp();
    Double_t point[3];
-   fCache->MasterToLocal(fPoint, point);
+   fGlobalMatrix->MasterToLocal(fPoint, point);
    if (!fCurrentNode->GetVolume()->Contains(point)) return kFALSE;
    if (fNmany) {
    // We still have overlaps on the branch
@@ -2076,6 +2088,7 @@ void TGeoNavigator::DoRestoreState()
    if (fBackupState && fCache) {
       fCurrentOverlapping = fCache->RestoreState(fNmany, fBackupState);
       fCurrentNode=fCache->GetNode();
+      fGlobalMatrix = fCache->GetCurrentMatrix();
       fLevel=fCache->GetLevel();
    }   
 }

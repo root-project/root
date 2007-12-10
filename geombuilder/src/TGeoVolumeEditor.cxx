@@ -43,6 +43,7 @@
 #include "TGeoVolume.h"
 #include "TGeoPatternFinder.h"
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TVirtualPad.h"
 #include "TBaseClass.h"
 #include "TGTab.h"

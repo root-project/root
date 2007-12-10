@@ -36,6 +36,7 @@
 
 #include "TStopwatch.h"
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoNode.h"
 #include "TGeoMedium.h"
 #include "TGeoMaterial.h"

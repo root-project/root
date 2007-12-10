@@ -17,12 +17,9 @@
 #include "TGeoNode.h"
 #endif
 
-#ifndef ROOT_TGeoMatrix
-#include "TGeoMatrix.h"
-#endif
-
 // forward declarations
 class TGeoManager;
+class TGeoHMatrix;
 
 /*************************************************************************
  * TGeoCacheState - class storing the state of the cache at a given moment
@@ -119,12 +116,12 @@ public:
    Bool_t               HasIdArray() const {return (fNodeIdArray)?kTRUE:kFALSE;}
    Bool_t               IsDummy() const {return kTRUE;}
 
-   void                 LocalToMaster(const Double_t *local, Double_t *master) const {fMatrix->LocalToMaster(local, master);}
-   void                 MasterToLocal(const Double_t *master, Double_t *local) const {fMatrix->MasterToLocal(master, local);}
-   void                 LocalToMasterVect(const Double_t *local, Double_t *master) const {fMatrix->LocalToMasterVect(local, master);}
-   void                 MasterToLocalVect(const Double_t *master, Double_t *local) const {fMatrix->MasterToLocalVect(master,local);}
-   void                 LocalToMasterBomb(const Double_t *local, Double_t *master) const {fMatrix->LocalToMasterBomb(local, master);}
-   void                 MasterToLocalBomb(const Double_t *master, Double_t *local) const {fMatrix->MasterToLocalBomb(master, local);}
+   void                 LocalToMaster(const Double_t *local, Double_t *master) const;
+   void                 MasterToLocal(const Double_t *master, Double_t *local) const;
+   void                 LocalToMasterVect(const Double_t *local, Double_t *master) const;
+   void                 MasterToLocalVect(const Double_t *master, Double_t *local) const;
+   void                 LocalToMasterBomb(const Double_t *local, Double_t *master) const;
+   void                 MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    Int_t                PushState(Bool_t ovlp, Int_t ntmany=0, Int_t startlevel=0, Double_t *point=0);
    Bool_t               PopState(Int_t &nmany, Double_t *point=0);
    Bool_t               PopState(Int_t &nmany, Int_t level, Double_t *point=0);

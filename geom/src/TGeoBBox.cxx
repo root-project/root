@@ -74,6 +74,7 @@
 #include "Riostream.h"
 
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoBBox.h"

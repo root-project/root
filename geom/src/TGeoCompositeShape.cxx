@@ -147,6 +147,7 @@
 #include "TRandom3.h"
 
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoBoolNode.h"
 #include "TVirtualGeoPainter.h"
 

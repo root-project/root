@@ -65,6 +65,7 @@
 #include "TGeoTabManager.h"
 #include "TGeoVolume.h"
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoBBox.h"
 #include "TGeoPara.h"
 #include "TGeoArb8.h"

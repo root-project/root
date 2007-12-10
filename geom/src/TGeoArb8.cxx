@@ -14,6 +14,7 @@
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoArb8.h"
+#include "TGeoMatrix.h"
 #include "TMath.h"
 
 ClassImp(TGeoArb8)

@@ -39,8 +39,9 @@
 //   - propagation in a geometry until the next crossed surface
 //   - computation of the total track length along a helix
 
-#include "TGeoHelix.h"
 #include "TMath.h"
+#include "TGeoMatrix.h"
+#include "TGeoHelix.h"
 
 ClassImp(TGeoHelix)
 

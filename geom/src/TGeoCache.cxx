@@ -22,7 +22,7 @@
 //End_Html
 
 #include "TGeoManager.h"
-//#include "TGeoShape.h"
+#include "TGeoMatrix.h"
 #include "TGeoVolume.h"
 #include "TGeoCache.h"
 
@@ -326,6 +326,48 @@ Bool_t TGeoNodeCache::RestoreState(Int_t &nmany, TGeoCacheState *state, Double_t
    Bool_t ovlp = state->GetState(fLevel,nmany,point);
    Refresh();
    return ovlp;
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::LocalToMaster(const Double_t *local, Double_t *master) const 
+{
+// Local point converted to master frame defined by current matrix.
+   fMatrix->LocalToMaster(local, master);
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::MasterToLocal(const Double_t *master, Double_t *local) const 
+{
+// Point in master frame defined by current matrix converted to local one.
+   fMatrix->MasterToLocal(master, local);
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::LocalToMasterVect(const Double_t *local, Double_t *master) const 
+{
+// Local vector converted to master frame defined by current matrix.
+   fMatrix->LocalToMasterVect(local, master);
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::MasterToLocalVect(const Double_t *master, Double_t *local) const 
+{
+// Vector in master frame defined by current matrix converted to local one.
+   fMatrix->MasterToLocalVect(master,local);
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::LocalToMasterBomb(const Double_t *local, Double_t *master) const 
+{
+// Local point converted to master frame defined by current matrix and rescaled with bomb factor.
+   fMatrix->LocalToMasterBomb(local, master);
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::MasterToLocalBomb(const Double_t *master, Double_t *local) const 
+{
+// Point in master frame defined by current matrix converted to local one and rescaled with bomb factor.
+   fMatrix->MasterToLocalBomb(master, local);
 }
 
 ClassImp(TGeoCacheState)

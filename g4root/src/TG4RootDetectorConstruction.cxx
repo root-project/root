@@ -61,6 +61,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "G4UnitsTable.hh"
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"

@@ -26,6 +26,7 @@
 #include "TGeoNode.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
 
 //______________________________________________________________________________

@@ -42,6 +42,7 @@ class TGeoVolume;
 class TGeoShape;
 class TGeoMedium;
 class TGeoMatrix;
+class TGeoHMatrix;
 
 /*************************************************************************
  * TGeoNode - base class for logical nodes. They represent volumes
@@ -153,11 +154,8 @@ private:
    TGeoMatrix       *fMatrix;         // transf. matrix of fNode in fMother system
 
 protected:
-   TGeoNodeMatrix(const TGeoNodeMatrix& gnm) 
-     : TGeoNode(gnm), fMatrix(gnm.fMatrix) { }
-   TGeoNodeMatrix& operator=(const TGeoNodeMatrix& gnm)
-     {if(this!=&gnm) {TGeoNode::operator=(gnm); fMatrix=gnm.fMatrix;}
-     return *this;}
+   TGeoNodeMatrix(const TGeoNodeMatrix& gnm);
+   TGeoNodeMatrix& operator=(const TGeoNodeMatrix& gnm);
 
 public:
    // constructors
@@ -171,7 +169,7 @@ public:
    virtual Bool_t    IsFolder() const {return kTRUE;}
    virtual TGeoMatrix *GetMatrix() const   {return fMatrix;}
    virtual TGeoNode *MakeCopyNode() const;
-   void              SetMatrix(const TGeoMatrix *matrix) {fMatrix = (TGeoMatrix*)matrix;}
+   void              SetMatrix(const TGeoMatrix *matrix);
 
    ClassDef(TGeoNodeMatrix, 1)               // a geometry node in the general case
 };

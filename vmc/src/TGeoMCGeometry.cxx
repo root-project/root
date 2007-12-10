@@ -23,6 +23,7 @@
 
 #include "TGeoMCGeometry.h"
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoVolume.h"
 #include "TGeoArb8.h"
 #include "TGeoTrd1.h"

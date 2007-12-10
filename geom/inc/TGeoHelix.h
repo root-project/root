@@ -17,10 +17,7 @@
 #include "TObject.h"
 #endif
 
-#ifndef ROOT_TGeoMatrix
-#include "TGeoMatrix.h"
-#endif
-
+class TGeoHMatrix;
 
 /*************************************************************************
  * TGeoHelix - A helix defined by:

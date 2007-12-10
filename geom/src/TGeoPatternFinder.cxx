@@ -157,6 +157,14 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
 }
 
 //_____________________________________________________________________________
+void TGeoPatternX::cd(Int_t idiv)
+{
+// Update current division index and global matrix to point to a given slice.
+   fCurrent=idiv; 
+   fMatrix->SetDx(fStart+idiv*fStep+0.5*fStep);
+}
+
+//_____________________________________________________________________________
 TGeoPatternX::~TGeoPatternX()
 {
 // Destructor
@@ -274,6 +282,14 @@ TGeoPatternY::~TGeoPatternY()
 }
 
 //_____________________________________________________________________________
+void TGeoPatternY::cd(Int_t idiv)
+{
+// Update current division index and global matrix to point to a given slice.
+   fCurrent=idiv; 
+   fMatrix->SetDy(fStart+idiv*fStep+0.5*fStep);
+}
+
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternY::FindNode(Double_t *point)
 {
 // find the node containing the query point
@@ -378,6 +394,13 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
 TGeoPatternZ::~TGeoPatternZ()
 {
 // Destructor
+}
+//_____________________________________________________________________________
+void TGeoPatternZ::cd(Int_t idiv)
+{
+// Update current division index and global matrix to point to a given slice.
+   fCurrent=idiv; 
+   fMatrix->SetDz(((IsReflected())?-1.:1.)*(fStart+idiv*fStep+0.5*fStep));
 }
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
@@ -487,6 +510,13 @@ TGeoPatternParaX::~TGeoPatternParaX()
 // Destructor
 }
 //_____________________________________________________________________________
+void TGeoPatternParaX::cd(Int_t idiv)
+{
+// Update current division index and global matrix to point to a given slice.
+   fCurrent=idiv; 
+   fMatrix->SetDx(fStart+idiv*fStep+0.5*fStep);
+}
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
 {
 // get the node division containing the query point
@@ -583,6 +613,7 @@ TGeoPatternParaY::~TGeoPatternParaY()
 //_____________________________________________________________________________
 void TGeoPatternParaY::cd(Int_t idiv)
 {
+// Update current division index and global matrix to point to a given slice.
    fCurrent = idiv;
    Double_t dy = fStart+idiv*fStep+0.5*fStep;
    fMatrix->SetDx(fTxy*dy);
@@ -687,6 +718,7 @@ TGeoPatternParaZ::~TGeoPatternParaZ()
 //_____________________________________________________________________________
 void TGeoPatternParaZ::cd(Int_t idiv)
 {
+// Update current division index and global matrix to point to a given slice.
    fCurrent = idiv;
    Double_t dz = fStart+idiv*fStep+0.5*fStep;
    fMatrix->SetDx(fTxz*dz);
@@ -798,6 +830,7 @@ TGeoPatternTrapZ::~TGeoPatternTrapZ()
 //_____________________________________________________________________________
 void TGeoPatternTrapZ::cd(Int_t idiv)
 {
+// Update current division index and global matrix to point to a given slice.
    fCurrent = idiv;
    Double_t dz = fStart+idiv*fStep+0.5*fStep;
    fMatrix->SetDx(fTxz*dz);
@@ -987,6 +1020,7 @@ TGeoPatternCylPhi::~TGeoPatternCylPhi()
 //_____________________________________________________________________________
 void TGeoPatternCylPhi::cd(Int_t idiv)
 {
+// Update current division index and global matrix to point to a given slice.
    fCurrent = idiv;
    if (!fSinCos) {
       fSinCos     = new Double_t[2*fNdivisions];

@@ -16,15 +16,12 @@
 #include "TObject.h"
 #endif
 
-#ifndef ROOT_TGeoMatrix
-#include "TGeoMatrix.h"
-#endif
-
 #ifndef ROOT_TGeoVolume
 #include "TGeoVolume.h"
 #endif
 
 
+class TGeoMatrix;
 /*************************************************************************
  * TGeoPatternFinder - base finder class for patterns. A pattern is specifying 
  *   a division type
@@ -97,7 +94,7 @@ public:
    // destructor
    virtual ~TGeoPatternX();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; fMatrix->SetDx(fStart+idiv*fStep+0.5*fStep);}
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 1;}
@@ -124,7 +121,7 @@ public:
    // destructor
    virtual ~TGeoPatternY();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; fMatrix->SetDy(fStart+idiv*fStep+0.5*fStep);}
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 2;}
@@ -151,7 +148,7 @@ public:
    // destructor
    virtual ~TGeoPatternZ();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; fMatrix->SetDz(((IsReflected())?-1.:1.)*(fStart+idiv*fStep+0.5*fStep));}
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point); 
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 3;}
@@ -179,7 +176,7 @@ public:
    // destructor
    virtual ~TGeoPatternParaX();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv; fMatrix->SetDx(fStart+idiv*fStep+0.5*fStep);}
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point);
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual 

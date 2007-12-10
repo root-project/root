@@ -13,6 +13,7 @@
 #include "Riostream.h"
 
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 #include "TGeoScaledShape.h"
