@@ -1760,7 +1760,7 @@ void TSystem::ListSymbols(const char *, const char *)
 //______________________________________________________________________________
 void TSystem::ListLibraries(const char *regexp)
 {
-   // List all loaded shared libraries.
+   // List all loaded shared libraries. Regexp is a wildcard expression.
 
    TString libs = GetLibraries(regexp);
    TRegexp separator("[^ \\t\\s]+");
@@ -1816,17 +1816,20 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    //   D: shared libraries dynamically loaded after the start of the program.
    // For MacOS only:
    //   L: list the .dylib rather than the .so (this is intended for linking)
-   //      [This options is not the default]
+   //      This options is not the default
+   //
 
    fListLibs = "";
    TString libs = "";
    TString opt = options;
-   if ((opt.Length()==0) || (opt.First('D')!=kNPOS))
+   Bool_t so2dylib = (opt.First('L') != kNPOS);
+   if (so2dylib)
+      opt.ReplaceAll("L", "");
+   if (opt.IsNull() || opt.First('D') != kNPOS)
       libs += gInterpreter->GetSharedLibs();
 
-   if ((opt.Length()==0) || (opt.First('S')!=kNPOS)) {
+   if (opt.IsNull() || opt.First('S') != kNPOS) {
       if (!libs.IsNull()) libs.Append(" ");
-//#ifndef WIN32
       const char *linked;
       if ((linked = GetLinkedLibraries())) {
          if (fLinkedLibs != LINKEDLIBS) {
@@ -1843,12 +1846,11 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
             libs.Append(linked);
          }
       } else
-//#endif
          libs.Append(fLinkedLibs);
    }
 
    // Select according to regexp
-   if (regexp!=0 && strlen(regexp)!=0) {
+   if (regexp && *regexp) {
       TRegexp separator("[^ \\t\\s]+");
       TRegexp user_re(regexp, kTRUE);
       TString s;
@@ -1872,7 +1874,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
       fListLibs = libs;
 
 #if defined(R__MACOSX)
-   if ( (opt.First('L')!=kNPOS) ) {
+   if (so2dylib) {
       TString libs = fListLibs;
       TString maclibs;
 
@@ -1886,7 +1888,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
          index = libs.Index(separator, &end, start);
          if (index >= 0) {
             // Change .so into .dylib and remove the
-            // path info if it not accessible.
+            // path info if it is not accessible
             TString s = libs(index, end);
             if (s.Index(user_so) != kNPOS) {
                s.ReplaceAll(".so",".dylib");
