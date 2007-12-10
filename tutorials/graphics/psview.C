@@ -28,19 +28,25 @@ void psview()
 
    // create a PostScript file
    gROOT->Macro("feynman.C");
-   gPad->Print("feynman.ps");
+   gPad->Print("feynman.eps");
 
    // back to graphics mode
    gROOT->SetBatch(0);
 
    // create an image from PS file
-   TImage *ps = TImage::Open("feynman.ps");
+   TImage *ps = TImage::Open("feynman.eps");
 
    if (!ps) {
       printf("GhostScript (gs) program must be installed\n");
       return;
    }
 
-   new TCanvas("psexam", "Example how to display PS file in canvas", 500, 650);
+   new TCanvas("psexam", "Example how to display PS file in canvas", 600, 400);
+   TLatex *tex = new TLatex(0.06,0.9,"The picture below has been loaded from a PS file:");
+   tex->Draw();
+
+   TPad *eps = new TPad("eps", "eps", 0., 0., 1., 0.75);
+   eps->Draw();
+   eps->cd();
    ps->Draw("xxx"); 
 }
