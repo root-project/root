@@ -15,6 +15,7 @@
 #include "TClass.h"
 #include "TGeoManager.h"
 #include "TROOT.h"
+#include "TSysEvtHandler.h"
 #include "TTimer.h"
 #include "TVirtualPad.h"
 
@@ -67,7 +68,17 @@ public:
       { if (fFrame) fFrame->EnableRedraw(); }
    };
 
+   class TExceptionHandler : public TStdExceptionHandler
+   {
+   public:
+      TExceptionHandler() : TStdExceptionHandler() { Add();}
+      virtual ~TExceptionHandler() { Remove(); }
+
+      virtual EStatus  Handle(std::exception& exc);
+   };
+
 private:
+   TExceptionHandler        *fExcHandler;
 
    TEveBrowser              *fBrowser;
    TEveGListTreeEditorFrame *fLTEFrame;
@@ -121,7 +132,7 @@ public:
    TFolder*     GetMacroFolder() const { return fMacroFolder; }
    TMacro*      GetMacro(const Text_t* name) const;
 
-   void EditElement(TEveElement* rnr_element);
+   void EditElement(TEveElement* element);
 
    void DisableRedraw() { ++fRedrawDisabled; }
    void EnableRedraw()  { --fRedrawDisabled; if(fRedrawDisabled <= 0) Redraw3D(); }
@@ -139,35 +150,31 @@ public:
    Bool_t GetKeepEmptyCont() const   { return fKeepEmptyCont; }
    void   SetKeepEmptyCont(Bool_t k) { fKeepEmptyCont = k; }
 
-   void ElementChanged(TEveElement* rnr_element);
+   void ElementChanged(TEveElement* element);
    void ScenesChanged(std::list<TEveElement*>& scenes);
 
    // These are more like TEveManager stuff.
    TGListTree*     GetListTree() const;
    TGListTreeItem* AddToListTree(TEveElement* re, Bool_t open, TGListTree* lt=0);
-   void            RemoveFromListTree(TEveElement* re, TGListTree* lt, TGListTreeItem* lti);
+   void            RemoveFromListTree(TEveElement* element, TGListTree* lt, TGListTreeItem* lti);
 
    TGListTreeItem* AddEvent(TEveEventManager* event);
-   TGListTreeItem* AddElement(TEveElement* rnr_element,
+   TGListTreeItem* AddElement(TEveElement* element,
                               TEveElement* parent=0);
-   TGListTreeItem* AddGlobalElement(TEveElement* rnr_element,
+   TGListTreeItem* AddGlobalElement(TEveElement* element,
                                     TEveElement* parent=0);
 
-   void RemoveElement(TEveElement* rnr_element, TEveElement* parent);
-   void PreDeleteElement(TEveElement* rnr_element);
+   void RemoveElement(TEveElement* element, TEveElement* parent);
+   void PreDeleteElement(TEveElement* element);
 
-   void   ElementSelect(TEveElement* rnr_element);
-   Bool_t ElementPaste(TEveElement* rnr_element);
-   void   ElementChecked(TEveElement* rnrEl, Bool_t state);
-
-   void NotifyBrowser(TGListTreeItem* parent_lti=0);
-   void NotifyBrowser(TEveElement* parent);
+   void   ElementSelect(TEveElement* element);
+   Bool_t ElementPaste(TEveElement* element);
+   void   ElementChecked(TEveElement* element, Bool_t state);
 
    // Hmmph ... geometry management?
    TGeoManager* GetGeometry(const TString& filename);
 
    void SetStatusLine(const char* text);
-   void ThrowException(const char* text="foo");
 
    static TEveManager* Create();
 
