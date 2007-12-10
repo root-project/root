@@ -30,8 +30,12 @@
 #include <vector>
 #include "RooCacheManager.h"
 
-templateClassImp(RooCacheManager)
-   ;
+
+#ifndef ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
+#define ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
+templateClassImp(RooCacheManager) 
+#endif 
+
 
 
 

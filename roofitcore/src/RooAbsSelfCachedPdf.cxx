@@ -14,6 +14,7 @@
 
 #include <iostream> 
 
+#include "RooFit.h"
 #include "RooAbsSelfCachedPdf.h" 
 #include "RooAbsReal.h" 
 #include "RooMsgService.h"

@@ -773,7 +773,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       }
     }
 
-    oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: reading file " << filename << endl ;
+    oocoutI((TObject*)0,DataHandling) << "RooDataSet::read: reading file " << filename << endl ;
 
     // Prefix common path 
     TString fullName(commonPath) ;

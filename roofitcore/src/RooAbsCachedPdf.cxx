@@ -14,6 +14,7 @@
 
 #include <iostream> 
 
+#include "RooFit.h"
 #include "TString.h"
 #include "RooAbsCachedPdf.h" 
 #include "RooAbsReal.h" 

@@ -19,6 +19,7 @@
 
 #include <iostream> 
 
+#include "RooFit.h"
 #include "RooProfileLL.h" 
 #include "RooAbsReal.h" 
 #include "RooMinuit.h"

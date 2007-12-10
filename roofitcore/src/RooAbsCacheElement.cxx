@@ -14,6 +14,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include "RooFit.h"
 #include "RooAbsCacheElement.h"
 #include "RooAbsArg.h"
 #include "RooArgList.h"

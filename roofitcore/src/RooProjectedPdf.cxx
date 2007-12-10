@@ -16,6 +16,7 @@
 
 #include <iostream> 
 
+#include "RooFit.h"
 #include "RooProjectedPdf.h" 
 #include "RooMsgService.h"
 #include "RooAbsReal.h" 

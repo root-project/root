@@ -62,6 +62,7 @@
 
 #include <iostream> 
 
+#include "RooFit.h"
 #include "RooFFTConvPdf.h" 
 #include "RooAbsReal.h" 
 #include "RooMsgService.h"
