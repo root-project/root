@@ -16,5 +16,6 @@
 
 #pragma link C++ class TASImage-;
 #pragma link C++ class TASImagePlugin;
+#pragma link C++ class TASPluginGS;
 
 #endif

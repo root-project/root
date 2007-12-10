@@ -21,8 +21,10 @@
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
+#   define popen_flags "r"
 #else
 #   include "Windows4root.h"
+#   define popen_flags "rb"
 #endif
 
 extern "C" {
@@ -45,7 +47,16 @@ TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 {
    // ctor
 
-   fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gs", kExecutePermission);   
+#ifndef WIN32
+   fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gs", kExecutePermission);
+#else
+   fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gswin32c.exe", kExecutePermission);
+   if (fInterpreter) {
+      // which returned path may include blanks, like "Program Files" which popen does not like
+      delete [] fInterpreter;
+      fInterpreter = StrDup("gswin32c.exe");
+   }
+#endif
 }
 
 //______________________________________________________________________________
@@ -53,7 +64,7 @@ TASPluginGS::~TASPluginGS()
 {
    // dtor
 
-   delete fInterpreter;
+   delete [] fInterpreter;
    fInterpreter = 0;
 }
 
@@ -88,7 +99,6 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
          return 0;
       }
 
-
       do {
          char buf[128];
          TString line = fgets(buf, 128, fd);
@@ -102,19 +112,19 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
             height = TMath::Abs(uy - ly);
             break;
          }
-      } while (!feof(fd)); 
+      } while (!feof(fd));
 
-      fclose(fd);      
+      fclose(fd);
    }
 
    // command line to execute
    TString cmd = fInterpreter;
    if (eps) {
-      cmd += Form(" -g%dx%d", width, height); 
+      cmd += Form(" -g%dx%d", width, height);
    }
    cmd += " -dSAFER -dBATCH -dNOPAUSE -dQUIET -sDEVICE=png16m -dGraphicsAlphaBits=4 -sOutputFile=- ";
    cmd += filename;
-   FILE *in = gSystem->OpenPipe(cmd.Data(), "r");
+   FILE *in = gSystem->OpenPipe(cmd.Data(), popen_flags);
 
    if (!in) {
       return 0;
@@ -131,10 +141,10 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
 
    gSystem->ClosePipe(in);
 
-   ASImageImportParams params; 
-   params.flags = width;
-   params.width = height;
-   params.height = 0 ;
+   ASImageImportParams params;
+   params.flags =  0;
+   params.width = width;
+   params.height = height;
    params.filter = SCL_DO_ALL;
    params.gamma = 0;
    params.gamma_table = 0;
@@ -146,5 +156,3 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    ASImage *ret = PNGBuff2ASimage((CARD8 *)raw.Data(), &params);
    return ret;
 }
-
-
