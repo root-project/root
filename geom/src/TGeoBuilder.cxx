@@ -166,7 +166,7 @@ TGeoVolume *TGeoBuilder::MakeArb8(const char *name, const TGeoMedium *medium,
                                   Double_t dz, Double_t *vertices)
 {
 // Make an TGeoArb8 volume.
-   TGeoArb8 *arb = new TGeoArb8(dz, vertices);
+   TGeoArb8 *arb = new TGeoArb8(name, dz, vertices);
    TGeoVolume *vol = new TGeoVolume(name, arb, medium);
    return vol;
 }
@@ -176,7 +176,7 @@ TGeoVolume *TGeoBuilder::MakeBox(const char *name, const TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a box shape with given medium.
-   TGeoBBox *box = new TGeoBBox(dx, dy, dz);
+   TGeoBBox *box = new TGeoBBox(name, dx, dy, dz);
    TGeoVolume *vol = 0;
    if (box->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -198,7 +198,7 @@ TGeoVolume *TGeoBuilder::MakePara(const char *name, const TGeoMedium *medium,
       return MakeBox(name, medium, dx, dy, dz);
    }
    TGeoPara *para=0;
-   para = new TGeoPara(dx, dy, dz, alpha, theta, phi);
+   para = new TGeoPara(name, dx, dy, dz, alpha, theta, phi);
    TGeoVolume *vol = 0;
    if (para->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -215,7 +215,7 @@ TGeoVolume *TGeoBuilder::MakeSphere(const char *name, const TGeoMedium *medium,
                                     Double_t phimin, Double_t phimax)
 {
 // Make in one step a volume pointing to a sphere shape with given medium
-   TGeoSphere *sph = new TGeoSphere(rmin, rmax, themin, themax, phimin, phimax);
+   TGeoSphere *sph = new TGeoSphere(name, rmin, rmax, themin, themax, phimin, phimax);
    TGeoVolume *vol = new TGeoVolume(name, sph, medium);
    return vol;
 }
@@ -238,7 +238,7 @@ TGeoVolume *TGeoBuilder::MakeTube(const char *name, const TGeoMedium *medium,
    if (rmin>rmax) {
       Error("MakeTube", "tube %s, Rmin=%g greater than Rmax=%g", name,rmin,rmax);
    }
-   TGeoTube *tube = new TGeoTube(rmin, rmax, dz);
+   TGeoTube *tube = new TGeoTube(name, rmin, rmax, dz);
    TGeoVolume *vol = 0;
    if (tube->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -255,7 +255,7 @@ TGeoVolume *TGeoBuilder::MakeTubs(const char *name, const TGeoMedium *medium,
                                      Double_t phi1, Double_t phi2)
 {
 // Make in one step a volume pointing to a tube segment shape with given medium.
-   TGeoTubeSeg *tubs = new TGeoTubeSeg(rmin, rmax, dz, phi1, phi2);
+   TGeoTubeSeg *tubs = new TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2);
    TGeoVolume *vol = 0;
    if (tubs->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -271,7 +271,7 @@ TGeoVolume *TGeoBuilder::MakeEltu(const char *name, const TGeoMedium *medium,
                                      Double_t a, Double_t b, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
-   TGeoEltu *eltu = new TGeoEltu(a, b, dz);
+   TGeoEltu *eltu = new TGeoEltu(name, a, b, dz);
    TGeoVolume *vol = 0;
    if (eltu->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -303,7 +303,7 @@ TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, const TGeoMedium *medi
                                         Double_t rlo, Double_t rhi, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
-   TGeoParaboloid *parab = new TGeoParaboloid(rlo, rhi, dz);
+   TGeoParaboloid *parab = new TGeoParaboloid(name, rlo, rhi, dz);
    TGeoVolume *vol = 0;
    if (parab->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -320,7 +320,7 @@ TGeoVolume *TGeoBuilder::MakeCtub(const char *name, const TGeoMedium *medium,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
 // Make in one step a volume pointing to a tube segment shape with given medium
-   TGeoCtub *ctub = new TGeoCtub(rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
+   TGeoCtub *ctub = new TGeoCtub(name, rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
    TGeoVolume *vol = new TGeoVolume(name, ctub, medium);
    return vol;
 }
@@ -349,7 +349,7 @@ TGeoVolume *TGeoBuilder::MakeCons(const char *name, const TGeoMedium *medium,
                                      Double_t phi1, Double_t phi2)
 {
 // Make in one step a volume pointing to a cone segment shape with given medium
-   TGeoConeSeg *cons = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
+   TGeoConeSeg *cons = new TGeoConeSeg(name, dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    TGeoVolume *vol = 0;
    if (cons->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -365,7 +365,7 @@ TGeoVolume *TGeoBuilder::MakePcon(const char *name, const TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
 // Make in one step a volume pointing to a polycone shape with given medium.
-   TGeoPcon *pcon = new TGeoPcon(phi, dphi, nz);
+   TGeoPcon *pcon = new TGeoPcon(name, phi, dphi, nz);
    TGeoVolume *vol = new TGeoVolume(name, pcon, medium);
    return vol;
 }
@@ -375,7 +375,7 @@ TGeoVolume *TGeoBuilder::MakePgon(const char *name, const TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
 // Make in one step a volume pointing to a polygone shape with given medium.
-   TGeoPgon *pgon = new TGeoPgon(phi, dphi, nedges, nz);
+   TGeoPgon *pgon = new TGeoPgon(name, phi, dphi, nedges, nz);
    TGeoVolume *vol = new TGeoVolume(name, pgon, medium);
    return vol;
 }
@@ -385,7 +385,7 @@ TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, const TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
-   TGeoTrd1 *trd1 = new TGeoTrd1(dx1, dx2, dy, dz);
+   TGeoTrd1 *trd1 = new TGeoTrd1(name, dx1, dx2, dy, dz);
    TGeoVolume *vol = 0;
    if (trd1->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -402,7 +402,7 @@ TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, const TGeoMedium *medium,
                                   Double_t dz)
 {
 // Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
-   TGeoTrd2 *trd2 = new TGeoTrd2(dx1, dx2, dy1, dy2, dz);
+   TGeoTrd2 *trd2 = new TGeoTrd2(name, dx1, dx2, dy1, dy2, dz);
    TGeoVolume *vol = 0;
    if (trd2->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -420,7 +420,7 @@ TGeoVolume *TGeoBuilder::MakeTrap(const char *name, const TGeoMedium *medium,
                                   Double_t tl2, Double_t alpha2)
 {
 // Make in one step a volume pointing to a trapezoid shape with given medium.
-   TGeoTrap *trap = new TGeoTrap(dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2,
+   TGeoTrap *trap = new TGeoTrap(name, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, trap, medium);
    return vol;
@@ -433,7 +433,7 @@ TGeoVolume *TGeoBuilder::MakeGtra(const char *name, const TGeoMedium *medium,
                                   Double_t tl2, Double_t alpha2)
 {
 // Make in one step a volume pointing to a twisted trapezoid shape with given medium.
-   TGeoGtra *gtra = new TGeoGtra(dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2,
+   TGeoGtra *gtra = new TGeoGtra(name, dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, gtra, medium);
    return vol;
@@ -443,7 +443,7 @@ TGeoVolume *TGeoBuilder::MakeXtru(const char *name, const TGeoMedium *medium, In
 {
 // Make a TGeoXtru-shaped volume with nz planes
    TGeoXtru *xtru = new TGeoXtru(nz);
-
+   xtru->SetName(name);
    TGeoVolume *vol = new TGeoVolume(name, xtru, medium);
    return vol;
 }
