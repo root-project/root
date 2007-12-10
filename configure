@@ -1955,24 +1955,28 @@ if test ! "x$enable_qt" = "xno" || \
 	fi
 	check_qtvers "$qttestdir" $qtverneed $qttoonew
 	if test $qtvers -eq 4 ; then 
-	    check_library "libQtCore QtCore QtCore4" "$enable_shared" \
+	    qt4suffix="4" 	 
+	    if test "x$enable_winrtdebug" = "xyes"; then 	 
+	        qt4suffix="d4" 	 
+	    fi
+	    check_library "libQtCore QtCore QtCore$qt4suffix" "$enable_shared" \
 		"$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
 		/usr/local/qt/lib /usr/lib /usr/qt/lib
 	    qtlib=$found_lib
 	    qtlibdir=$found_dir
-	    check_library "libQtGui QtGui QtGui4" "$enable_shared" \
+	    check_library "libQtGui QtGui QtGui$qt4suffix" "$enable_shared" \
 		"$found_raw_dir"  "" 
 	    qtlib="$qtlib $found_lib"
-	    check_library "libQt3Support Qt3Support Qt3Support4" \
+	    check_library "libQt3Support Qt3Support Qt3Support$qt4suffix" \
 		"$enable_shared" "$found_raw_dir"  ""
 	    qtlib="$qtlib $found_lib"
-	    check_library "libQtOpenGL QtOpenGL QtOpenGL4" "$enable_shared" \
+	    check_library "libQtOpenGL QtOpenGL QtOpenGL$qt4suffix" \
+		"$enable_shared" "$found_raw_dir"  ""
+	    qtlib="$qtlib $found_lib"
+	    check_library "libQtSvg QtSvg QtSvg$qt4suffix" "$enable_shared" \
 		"$found_raw_dir"  ""
 	    qtlib="$qtlib $found_lib"
-	    check_library "libQtSvg QtSvg QtSvg4" "$enable_shared" \
-		"$found_raw_dir"  ""
-	    qtlib="$qtlib $found_lib"
-	    check_library "libQtXml QtXml QtXml4" "$enable_shared" \
+	    check_library "libQtXml QtXml QtXml$qt4suffix" "$enable_shared" \
 		"$found_raw_dir"  ""
 	    qtlib="$qtlib $found_lib"
 	else

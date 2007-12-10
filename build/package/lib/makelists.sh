@@ -84,10 +84,12 @@ for d in * ; do
 	xrootd)     lib=root-system-$d      ; dev=$lib       ; bin=$lib ;
 	            xrdlibs=                ; extra="ALLLIBS= NOVERS=1" ;; 
                     # NOMAP=1" ;;     
-	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;;  
+	pyroot)     lib=libroot-python      ; dev=${lib}-dev ; bin=$lib ;; 
+	roofitcore) lib=libroot-roofit	    ; dev=${lib}-dev ; bin=$lib ;;
 	clarens|ldap|mlp|quadp|roofit|ruby|mathmore|minuit|tmva|unuran)
 	            lib=libroot-$d          ; dev=${lib}-dev ; bin=$lib ;;  
 	build|freetype|win*|main) continue ;; 			
+	eve)        lib=root-plugin-gl	    ; dev=$lib       ; bin=$lib ;;  
 	proofx)     lib=root-plugin-xproof  ; dev=$lib       ; bin=$lib ;;  
 	sapdb)      lib=root-plugin-maxdb   ; dev=$lib       ; bin=$lib ;;  
 	qtgsi)      lib=root-plugin-qt      ; dev=$lib       ; bin=$lib ;;  

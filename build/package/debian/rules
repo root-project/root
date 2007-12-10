@@ -372,6 +372,7 @@ clean:	$(TEMPLATES:%.in=%)
 	touch xrootd/src/headers.d 
 	touch asimage/src/headers.d 
 	touch unuran/src/headers.d 
+	-rm -f  $(filter-out debian/control, $(TEMPLATES:%.in=%))
 	dh_clean 
 
 pkglists:
@@ -633,7 +634,7 @@ ifeq ($(HAVEPYTHON), libroot-python)
 	# named something like 'python-*', so we make it ourselves. 
 	echo "python:Provides=python$(PYVER)-pyroot" >> debian/libroot-python-dev.substvars
 endif
-	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))
+	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST))) -proot-plugin-proof
 	dh_installdeb -s
 	dh_shlibdeps -s $(SPKGLIST:%=-L%) \
 	  -l$(shell echo $(SPKGLIST:%=debian/%/$(PREFIX)/lib/root/$(SOVERS)) | tr ' ' ':')

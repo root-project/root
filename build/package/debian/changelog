@@ -1,3 +1,23 @@
+root-system (5.17.07-1) unstable; urgency=low
+
+  * New upstream version
+  * Fixed problem with libroot-python-dev being uninstallable on 
+    ubuntu.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun, 09 Dec 2007 14:17:30 +0100
+
+root-system (5.17.05-6) unstable; urgency=low
+
+  * Fix configure to allow GSL > 1.9 (Closes: #450507)
+  * Builds on hppa, mips, mipsel (Closes: #434855, 425257)
+  * All linux platforms will use gfortran by default (Closes: #429186)
+  * Use proper GCC 4 I/O bits fixed upstream (Closes: #441333)
+  * ttf-root-installer: Suggest proper URL for font downloading
+    (Closes: #451510)
+  * Add missing libRooFitCore to libroot-roofit package.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 23 Nov 2007 17:15:52 +0100
+
 root-system (5.17.05-5) unstable; urgency=low
 
   * Fixes to Qt discovery and code in qtgsi.

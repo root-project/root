@@ -113,7 +113,7 @@ for i in $* ; do
             echo -n ", libungif4-dev, libxinerama-dev";;
 	*castor)   echo -n ", libshift-dev"				;;
 	*chirp)	   echo -n ", libchirp-dev"				;;
-	*clarens)  echo -n ", libxmlrpc-c3-dev | libxmlrpc-c-dev"	;;
+	*clarens)  echo -n ", libxmlrpc-c3-dev | libxmlrpc-c-dev, libcurl4-gnutls-dev | libcurl4-openssl-dev | libcurl-dev"	;;
 	*dcache)   echo -n ", libdcap-dev"				;;
 	*fftw3)	   echo -n ", fftw3-dev"				;;
 	*fumili)   							;;
