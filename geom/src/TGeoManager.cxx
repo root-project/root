@@ -3352,8 +3352,8 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
          return 0;
       }
       char keyname[256];
-      if (name) strcpy(keyname,name);
-      if (strlen(keyname) == 0) strcpy(keyname,GetName());
+      if (name && strlen(name)) strcpy(keyname,name);
+      else                      strcpy(keyname,GetName());
       TString opt = option;
       opt.ToLower();
       if (opt.Contains("v")) {

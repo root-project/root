@@ -92,7 +92,7 @@ public :
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const;
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    static void          Normalize(Double_t *vect);
-   void                 Print(Option_t *option="") const;
+   void                 Print(Option_t *option="") const; // *MENU*
    virtual void         RotateX(Double_t) {}
    virtual void         RotateY(Double_t) {}
    virtual void         RotateZ(Double_t) {}
