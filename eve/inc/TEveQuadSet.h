@@ -74,7 +74,7 @@ protected:
    struct QHex_t          : public QOrigin_t       { Float_t fC, fR; };
 
 protected:
-   EQuadType_e        fQuadType;
+   EQuadType_e       fQuadType;
 
    Float_t           fDefWidth;     // Breadth assigned to first coordinate  (A)
    Float_t           fDefHeight;    // Breadth assigned to second coordinate (B)
@@ -86,7 +86,7 @@ public:
    TEveQuadSet(const Text_t* n="TEveQuadSet", const Text_t* t="");
    TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                const Text_t* n="TEveQuadSet", const Text_t* t="");
-   virtual ~TEveQuadSet();
+   virtual ~TEveQuadSet() {}
 
    void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
 
