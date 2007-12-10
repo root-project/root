@@ -116,6 +116,9 @@ void glViewerExercise()
    }
 
    // Now animate the camera
+   TGLSAViewer* sav = dynamic_cast<TGLSAViewer*>(v);
+   if (sav)
+     sav->GetFrame()->Connect("CloseWindow()", "TTimer", &timer, "TurnOff()");
    timer.SetCommand("AnimateCamera()");
    timer.TurnOn();
 }
