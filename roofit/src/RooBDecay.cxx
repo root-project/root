@@ -194,7 +194,7 @@ Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 void RooBDecay::generateEvent(Int_t code)
 {
   assert(code==1);
-  Double_t gammamin = 1/_tau-fabs(_dgamma)/2;
+  Double_t gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
   while(1) {
     Double_t t = -log(RooRandom::uniform())/gammamin;
     if (_type == Flipped || (_type == DoubleSided && RooRandom::uniform() <0.5) ) t *= -1;

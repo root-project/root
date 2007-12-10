@@ -412,7 +412,7 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 
     // update weight if weight depends on observables of event
     if ( nWObs>0 ) { *weightObs = *values; } // update _weight
-    if ( fabs(_weight)>_maxWeight ) { _maxWeight = fabs(_weight); }
+    if ( TMath::Abs(_weight)>_maxWeight ) { _maxWeight = TMath::Abs(_weight); }
     _nEventsW += _weight;
 
     for (Int_t j=0; j<_nDim; j++) {

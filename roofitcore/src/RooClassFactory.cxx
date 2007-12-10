@@ -164,10 +164,53 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
 }
 
 
-RooAbsPdf* RooClassFactory::makePdfInstance(const char* /*name*/, const char* /*expression*/, 
-					    const RooArgList& /*vars*/, const char* /*intExpression*/)
+RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expression, 
+					    const RooArgList& vars, const char* intExpression)
 {
-  return 0 ;
+  if (gInterpreter->GetRootMapFiles()==0) {
+    gInterpreter->EnableAutoLoading() ;
+  }
+
+  // Construct unique class name for this function expression
+  string className = Form("Roo%sClass",name) ;
+
+  // Use class factory to compile and link specialized function
+  Bool_t error = makeAndCompilePdf(className.c_str(),expression,vars,intExpression) ;
+
+  // Check that class was created OK
+  if (error) {
+    RooErrorHandler::softAbort() ;
+  }
+
+  // Create CINT line that instantiates specialized object
+  string line = Form("new %s(\"%s\",\"%s\"",className.c_str(),name,name) ;
+
+  // Make list of pointer values (represented in hex ascii) to be passed to cint  
+  // Note that the order of passing arguments must match the convention in which
+  // the class code is generated: first all reals, then all categories
+
+  TIterator* iter = vars.createIterator() ;
+  string argList ;
+  // First pass the RooAbsReal arguments in the list order
+  RooAbsArg* var ;
+  while((var=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsReal*>(var)) {
+      argList += Form(",*((RooAbsReal*)%p)",var) ;
+    }
+  }
+  iter->Reset() ;
+  // Next pass the RooAbsCategory arguments in the list order
+  while((var=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsCategory*>(var)) {
+      argList += Form(",*((RooAbsCategory*)%p)",var) ;
+    }
+  }
+  delete iter ;
+
+  line += argList + ") " ;
+
+  // Let CINT instantiate specialized formula
+  return (RooAbsPdf*) gInterpreter->ProcessLineSynch(line.c_str()) ;
 }
 
 
@@ -263,6 +306,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << " " << endl
      << "class " << className << " : public " << baseName << " {" << endl
      << "public:" << endl
+     << "  " << className << "() {} ; " << endl 
      << "  " << className << "(const char *name, const char *title," << endl ;
   
   // Insert list of input arguments
@@ -316,7 +360,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << "" << endl
      << "private:" << endl
      << "" << endl
-     << "  ClassDef(" << className << ",0) // Your description goes here..." << endl
+     << "  ClassDef(" << className << ",1) // Your description goes here..." << endl
      << "};" << endl
      << " " << endl
      << "#endif" << endl ;
