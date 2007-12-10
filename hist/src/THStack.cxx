@@ -87,8 +87,8 @@ THStack::THStack(const char *name, const char *title)
 //______________________________________________________________________________
 THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
                  const char *name /*=0*/, const char *title /*=0*/,
-                 Int_t firstbin /*=-1*/, Int_t lastbin /*=-1*/,
-                 Int_t firstbin2 /*=-1*/, Int_t lastbin2 /*=-1*/,
+                 Int_t firstbin /*=1*/, Int_t lastbin /*=-1*/,
+                 Int_t firstbin2 /*=1*/, Int_t lastbin2 /*=-1*/,
                  Option_t* proj_option /*=""*/, Option_t* draw_option /*=""*/): TNamed(name, title) {
 // Creates a new THStack from a TH2 or TH3
 // It is filled with the 1D histograms from GetProjectionX or GetProjectionY
@@ -108,10 +108,10 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
 // - firstbin, lastbin:
 //          for each bin within [firstbin,lastbin] a stack entry is created.
 //          See TH2::ProjectionX/Y for use overflow bins.
-//          Defaults to "all bins"
+//          Defaults to "all bins but under- / overflow"
 // - firstbin2, lastbin2:
-//          Other axis range for TH3::Project3D, defaults to "all bins".
-//          Ignored for TH2s
+//          Other axis range for TH3::Project3D, defaults to "all bins but 
+//          under- / overflow". Ignored for TH2s
 // - proj_option:
 //          option passed to TH2::ProjectionX/Y and TH3::Project3D (along
 //          with axis)

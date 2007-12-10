@@ -5673,10 +5673,11 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
 void  TH1::Smooth(Int_t ntimes, Int_t firstbin, Int_t lastbin)
 {
    // Smooth bin contents of this histogram between firstbin and lastbin.
-   // (if firstbin=-1 and lastbin=-1 (default) all bins are smoothed.
-   // bin contents are replaced by their smooth values.
+   // (if firstbin=1 and lastbin=-1 (default) all bins except for over- and
+   // undeflow are smoothed.
+   // Bin contents are replaced by their smooth values.
    // Errors (if any) are not modified.
-   // algorithm can only be applied to 1-d histograms
+   // The algorithm can only be applied to 1-d histograms
 
    if (fDimension != 1) {
       Error("Smooth","Smooth only supported for 1-d histograms");

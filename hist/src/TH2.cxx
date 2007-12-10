@@ -594,12 +594,14 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
 
 
 //______________________________________________________________________________
-void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *option)
+void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option_t *option)
 {
    // Project slices along X in case of a 2-D histogram, then fit each slice
    // with function f1 and make a histogram for each fit parameter
-   // Only bins along Y between binmin and binmax are considered.
-   // if f1=0, a gaussian is assumed
+   // Only bins along Y between firstybin and lastybin are considered.
+   // By default (firstybin == 0, lastybin == -1), all bins in y including 
+   // over- and underflows are taken into account.
+   // If f1=0, a gaussian is assumed
    // Before invoking this function, one can set a subrange to be fitted along X
    // via f1->SetRange(xmin,xmax)
    // The argument option (default="QNR") can be used to change the fit options.
@@ -632,9 +634,9 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    //     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
 
    Int_t nbins  = fYaxis.GetNbins();
-   if (binmin < 1) binmin = 1;
-   if (binmax > nbins) binmax = nbins;
-   if (binmax < binmin) {binmin = 1; binmax = nbins;}
+   if (firstybin < 0) firstybin = 0;
+   if (lastybin < 0 || lastybin > nbins + 1) lastybin = nbins + 1;
+   if (lastybin < firstybin) {firstybin = 0; lastybin = nbins + 1;}
    TString opt = option;
    opt.ToLower();
    Int_t ngroup = 1;
@@ -679,7 +681,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    //Loop on all bins in Y, generate a projection along X
    Int_t bin;
    Int_t nentries;
-   for (bin=binmin;bin<=binmax;bin += ngroup) {
+   for (bin=firstybin;bin<=lastybin;bin += ngroup) {
       TH1D *hpx = ProjectionX("_temp",bin,bin+ngroup-1,"e");
       if (hpx == 0) continue;
       nentries = Int_t(hpx->GetEntries());
@@ -704,12 +706,14 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 }
 
 //______________________________________________________________________________
-void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *option)
+void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option_t *option)
 {
    // Project slices along Y in case of a 2-D histogram, then fit each slice
    // with function f1 and make a histogram for each fit parameter
-   // Only bins along X between binmin and binmax are considered.
-   // if f1=0, a gaussian is assumed
+   // Only bins along X between firstxbin and lastxbin are considered.
+   // By default (firstxbin == 0, lastxbin == -1), all bins in x including 
+   // over- and underflows are taken into account.
+   // If f1=0, a gaussian is assumed
    // Before invoking this function, one can set a subrange to be fitted along Y
    // via f1->SetRange(ymin,ymax)
    // The argument option (default="QNR") can be used to change the fit options.
@@ -750,9 +754,9 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    //End_Html
 
    Int_t nbins  = fXaxis.GetNbins();
-   if (binmin < 1) binmin = 1;
-   if (binmax > nbins) binmax = nbins;
-   if (binmax < binmin) {binmin = 1; binmax = nbins;}
+   if (firstxbin < 0) firstxbin = 0;
+   if (lastxbin < 0 || lastxbin > nbins + 1) lastxbin = nbins + 1;
+   if (lastxbin < firstxbin) {firstxbin = 0; lastxbin = nbins + 1;}
    TString opt = option;
    opt.ToLower();
    Int_t ngroup = 1;
@@ -797,7 +801,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
    //Loop on all bins in X, generate a projection along Y
    Int_t bin;
    Int_t nentries;
-   for (bin=binmin;bin<=binmax;bin += ngroup) {
+   for (bin=firstxbin;bin<=lastxbin;bin += ngroup) {
       TH1D *hpy = ProjectionY("_temp",bin,bin+ngroup-1,"e");
       if (hpy == 0) continue;
       nentries = Int_t(hpy->GetEntries());
@@ -822,9 +826,10 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 }
 
 //______________________________________________________________________________
-Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstx, Int_t lastx, Int_t firsty, Int_t lasty, Double_t maxdiff) const
+Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin, Int_t lastxbin,
+                                 Int_t firstybin, Int_t lastybin, Double_t maxdiff) const
 {
-   // compute first cell (binx,biny) in the range [firstx,lastx](firsty,lasty] for which
+   // compute first cell (binx,biny) in the range [firstxbin,lastxbin][firstybin,lastybin] for which
    // diff = abs(cell_content-c) <= maxdiff
    // In case several cells in the specified range with diff=0 are found
    // the first cell found is returned in binx,biny.
@@ -832,35 +837,34 @@ Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t fir
    // the cell with the smallest difference is returned in binx,biny.
    // In all cases the function returns the smallest difference.
    //
-   // NOTE1: if firstx <= 0, firstx is set to bin 1
-   //        if (lastx < firstx then firstx is set to the number of bins in X
-   //        ie if firstx=0 and lastx=0 (default) the search is on all bins in X.
-   //        if firsty <= 0, firsty is set to bin 1
-   //        if (lasty < firsty then firsty is set to the number of bins in Y
-   //        ie if firsty=0 and lasty=0 (default) the search is on all bins in Y.
+   // NOTE1: if firstxbin < 0, firstxbin is set to 1
+   //        if (lastxbin < firstxbin then lastxbin is set to the number of bins in X
+   //          ie if firstxbin=1 and lastxbin=0 (default) the search is on all bins in X except
+   //          for X's under- and overflow bins.
+   //        if firstybin < 0, firstybin is set to 1
+   //        if (lastybin < firstybin then lastybin is set to the number of bins in Y
+   //          ie if firstybin=1 and lastybin=0 (default) the search is on all bins in Y except
+   //          for Y's under- and overflow bins.
    // NOTE2: if maxdiff=0 (default), the first cell with content=c is returned.
 
    if (fDimension != 2) {
-      binx = 0;
-      biny = 0;
+      binx = -1;
+      biny = -1;
       Error("GetBinWithContent2","function is only valid for 2-D histograms");
       return 0;
    }
-   if (firstx <= 0) firstx = 1;
-   if (lastx < firstx) lastx = fXaxis.GetNbins();
-   if (firsty <= 0) firsty = 1;
-   if (lasty < firsty) lasty = fYaxis.GetNbins();
-   Int_t binminx = 0, binminy=0;
+   if (firstxbin < 0) firstxbin = 1;
+   if (lastxbin < firstxbin) lastxbin = fXaxis.GetNbins();
+   if (firstybin < 0) firstybin = 1;
+   if (lastybin < firstybin) lastybin = fYaxis.GetNbins();
    Double_t diff, curmax = 1.e240;
-   for (Int_t j=firsty;j<=lasty;j++) {
-      for (Int_t i=firstx;i<=lastx;i++) {
+   for (Int_t j = firstybin; j <= lastybin; j++) {
+      for (Int_t i = firstxbin; i <= lastxbin; i++) {
          diff = TMath::Abs(GetBinContent(i,j)-c);
          if (diff <= 0) {binx = i; biny=j; return diff;}
-         if (diff < curmax && diff <= maxdiff) {curmax = diff, binminx=i; binminy=j;}
+         if (diff < curmax && diff <= maxdiff) {curmax = diff, binx=i; biny=j;}
       }
    }
-   binx = binminx;
-   biny = binminy;
    return curmax;
 }
 
@@ -1013,9 +1017,9 @@ Double_t TH2::Integral(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option) const
+Double_t TH2::Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
-   //Return integral of bin contents in range [binx1,binx2],[biny1,biny2]
+   //Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
    // for a 2-D histogram
    // By default the integral is computed as the sum of bin contents in the range.
    // if option "width" is specified, the integral is the sum of
@@ -1025,12 +1029,12 @@ Double_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Optio
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
-   if (binx1 < 0) binx1 = 0;
-   if (binx2 > nbinsx+1) binx2 = nbinsx+1;
-   if (binx2 < binx1)    binx2 = nbinsx;
-   if (biny1 < 0) biny1 = 0;
-   if (biny2 > nbinsy+1) biny2 = nbinsy+1;
-   if (biny2 < biny1)    biny2 = nbinsy;
+   if (firstxbin < 0) firstxbin = 0;
+   if (lastxbin > nbinsx+1)  lastxbin = nbinsx+1;
+   if (lastxbin < firstxbin) lastxbin = nbinsx;
+   if (firstybin < 0) firstybin = 0;
+   if (lastybin > nbinsy+1)  lastybin = nbinsy+1;
+   if (lastybin < firstybin) lastybin = nbinsy;
    Double_t integral = 0;
 
    //*-*- Loop on bins in specified range
@@ -1039,8 +1043,8 @@ Double_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Optio
    Bool_t width = kFALSE;
    if (opt.Contains("width")) width = kTRUE;
    Int_t bin, binx, biny;
-   for (biny=biny1;biny<=biny2;biny++) {
-      for (binx=binx1;binx<=binx2;binx++) {
+   for (biny = firstybin; biny <= lastybin; biny++) {
+      for (binx = firstxbin;binx <= lastxbin; binx++) {
          bin = binx +(nbinsx+2)*biny;
          if (width) integral += GetBinContent(bin)*fXaxis.GetBinWidth(binx)*fYaxis.GetBinWidth(biny);
          else       integral += GetBinContent(bin);
@@ -1871,7 +1875,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    Int_t nx = fXaxis.GetNbins();
    Int_t ny = fYaxis.GetNbins();
    if (firstybin < 0) firstybin = 0;
-   if (lastybin  <= 0) lastybin  = ny + 1;
+   if (lastybin  < 0) lastybin  = ny + 1;
    if (lastybin  > ny+1) lastybin  = ny + 1;
 
    // Create the projection histogram
@@ -2004,7 +2008,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    Int_t nx = fXaxis.GetNbins();
    Int_t ny = fYaxis.GetNbins();
    if (firstxbin < 0) firstxbin = 0;
-   if (lastxbin  <= 0) lastxbin  = nx + 1;
+   if (lastxbin  < 0) lastxbin  = nx + 1;
    if (lastxbin  > nx + 1) lastxbin  = nx + 1;
 
    // Create the projection histogram

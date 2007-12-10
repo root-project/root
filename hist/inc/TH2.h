@@ -71,26 +71,26 @@ public:
    virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride=1);
    virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
-   virtual void     FitSlicesX(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
-   virtual void     FitSlicesY(TF1 *f1=0,Int_t binmin=1, Int_t binmax=0, Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
-   virtual Double_t GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstx=0, Int_t lastx=0,Int_t firsty=0, Int_t lasty=0, Double_t maxdiff=0) const;
+   virtual void     FitSlicesX(TF1 *f1=0,Int_t firstybin=0, Int_t lastybin=-1, Int_t cut=0, Option_t *option="QNR"); // *MENU*
+   virtual void     FitSlicesY(TF1 *f1=0,Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR"); // *MENU*
+   virtual Double_t GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin=1, Int_t lastxbin=-1,Int_t firstybin=1, Int_t lastybin=-1, Double_t maxdiff=0) const;
    virtual Double_t GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
    virtual Double_t GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
    virtual void     GetRandom2(Double_t &x, Double_t &y);
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t Integral(Option_t *option="") const;
    virtual Double_t Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
-   virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
+   virtual Double_t Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t lastybin, Option_t *option="") const;
    virtual Double_t Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual Long64_t Merge(TCollection *list);
    virtual TH2     *RebinX(Int_t ngroup=2, const char *newname="");
    virtual TH2     *RebinY(Int_t ngroup=2, const char *newname="");  
    virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");     
-      TProfile     *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
-      TProfile     *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const ;   // *MENU*
-         TH1D      *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=0, Option_t *option="") const; // *MENU*
-         TH1D      *ProjectionY(const char *name="_py", Int_t firstxbin=0, Int_t lastxbin=0, Option_t *option="") const; // *MENU*
+      TProfile     *ProfileX(const char *name="_pfx", Int_t firstybin=1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
+      TProfile     *ProfileY(const char *name="_pfy", Int_t firstxbin=1, Int_t lastxbin=-1, Option_t *option="") const;   // *MENU*
+         TH1D      *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="") const; // *MENU*
+         TH1D      *ProjectionY(const char *name="_py", Int_t firstxbin=0, Int_t lastxbin=-1, Option_t *option="") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
    virtual void     Reset(Option_t *option="");
    virtual void     SetShowProjectionX(Int_t nbins);  // *MENU*
