@@ -87,10 +87,11 @@ void XrdProofWorker::Reset(const char *str)
    else if (tok == "master")
       fType = 'M';
 
-   // Next token is the user@host string, make sure it is a full qualified host name
+   // Next token is the user@host:port string, make sure it is a full qualified host name
    if ((from = s.tokenize(tok, from, ' ')) == STR_NPOS)
       return;
    XrdClientUrlInfo ui(tok.c_str());
+   // Take the user name, if specified
    fUser = ui.User;
    char *err;
    char *fullHostName = XrdNetDNS::getHostName((char *)ui.Host.c_str(), &err);
@@ -100,6 +101,8 @@ void XrdProofWorker::Reset(const char *str)
    }
    fHost = fullHostName;
    SafeFree(fullHostName);
+   // Take the port, if specified
+   fPort = (ui.Port > 0) ? ui.Port : fPort;
 
    // and then the remaining options
    while ((from = s.tokenize(tok, from, ' ')) != STR_NPOS) {
