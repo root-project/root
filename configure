@@ -3776,6 +3776,10 @@ if test ! "x$enable_mathmore" = "xno"; then
     # Check for GSL include and library
     gslskip=
     hasmathmore="define"
+    # by default use now static GSL library everywhere
+    #enable_gsl_shared=$enable_shared"
+    enable_gsl_shared="no"
+
     check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
 	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
 	$finkdir/include
@@ -3800,7 +3804,7 @@ if test ! "x$enable_mathmore" = "xno"; then
     if test ! "x$gslflags" = "x"; then
 	#check for the library now
 	gsllibdir0=$gsllibdir
-	check_library "libgsl gslML gsl" "$enable_shared" "$gsllibdir" \
+	check_library "libgsl gslML gsl" "$enable_gsl_shared" "$gsllibdir" \
 	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
 	    $finkdir/lib
 
@@ -3810,7 +3814,7 @@ if test ! "x$enable_mathmore" = "xno"; then
 	    # in case of shared libs (gsllibdir is not empty) need gslcblas
 	    # assume libgslcblas is in same dir as libgsl
 	    #if test ! "x$gsllibdir" = "x"; then
-		check_library "libgslcblas gslcblasML gslcblas cblas" "$enable_shared" "$gsllibdir0" \
+		check_library "libgslcblas gslcblasML gslcblas cblas" "$enable_gsl_shared" "$gsllibdir0" \
 		    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
 		    $finkdir/lib
 		if test ! "x$found_lib" = "x"; then
@@ -3860,7 +3864,10 @@ if test ! "x$enable_mathmore" = "xno"; then
 	        # and linker flags
 		result "ok"
 	        gslflags=`gsl-config --cflags`
-	        gsllibs=`gsl-config --libs`
+	        #gsllibs=`gsl-config --libs`
+		#use static libs
+		gslprefix=`gsl-config --prefix`
+		gsllibs="$gslprefix/lib/libgsl.a $gslprefix/lib/libgslcblas.a"
 		gsllibdir=""
                 gslversion=$gsl_version
             fi
