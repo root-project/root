@@ -1768,7 +1768,7 @@ const char* TBranchElement::GetTypeName() const
       "Bool_t",
       "Float16_t"
    };
-   Int_t itype = fStreamerType % 21;
+   Int_t itype = fStreamerType % 20;
    return types[itype];
 }
 
