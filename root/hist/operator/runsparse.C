@@ -1,4 +1,6 @@
 #include "TH3.h"
+#include "TCanvas.h"
+#include "TFile.h"
 #include "THnSparse.h"
 #include "TRandom.h"
 #include <iostream>
@@ -9,16 +11,35 @@ using namespace std;
 
 void Test(TH1* h, TH1* s, const char* test)
 {
-   // Check that ihst and sparse are equal, print the test result
+   // Check that hist and sparse are equal, print the test result
    cout << test << ": ";
    
+   // What exactly is "equal"?
+   // Define it as  the max of 1/1000 of the "amplitude" of the 
+   // original hist, or 1E-4, whatever is larger.
+   Double_t epsilon = 1E-4;
+   Double_t diffH = h->GetMaximum() - h->GetMinimum();
+   if (diffH < 0.) diffH = -diffH;
+   if (diffH / 1000. > epsilon)
+      epsilon = diffH / 1000.;
+
    TH1* diff = (TH1*)s->Clone("diff");
    diff->Add(h, -1);
    Double_t max = diff->GetMaximum();
    Double_t min = diff->GetMinimum();
    if (max < -min) max = -min;
-   if (max < 0.5) cout << "SUCCESS";
-   else cout << "FAIL: delta=" << max;
+   if (max < epsilon) cout << "SUCCESS";
+   else {
+      cout << "FAIL: delta=" << max;
+      TCanvas* c = new TCanvas(test, test);
+      c->Divide(1,3);
+      c->cd(1); h->Draw();
+      c->cd(2); s->Draw();
+      c->cd(3); diff->Draw();
+      TFile f("runsparse.root", "UPDATE");
+      c->Write();
+      delete c;
+   }
    cout <<endl;
    delete diff;
 }
@@ -32,6 +53,32 @@ void CheckFillProjection(TH3* h, THnSparse* sparse)
    delete proj;
 }
 
+void CheckProjection1(TH3* h, THnSparse* sparse) 
+{
+   // Check projection of THnSparse and TH3 to a TH1
+   TH1* proj = sparse->Projection(1);
+   TH1* hproj = h->Project3D("y");
+   Test(hproj, proj, "Projecting a THnSparse to a TH1 (TH3::Project3D)");
+   delete hproj;
+   delete proj;
+
+   proj = sparse->Projection(2);
+   hproj = h->ProjectionZ();
+   Test(hproj, proj, "Projecting a THnSparse to a TH1 (TH3::ProjectZ)");
+   delete hproj;
+   delete proj;
+}
+
+void CheckProjection2(TH3* h, THnSparse* sparse) 
+{
+   // Check projection of THnSparse and TH3 to a TH2
+   TH2D* proj = sparse->Projection(1, 2);
+   TH1* hproj = h->Project3D("yz");
+   Test(hproj, proj, "Projecting a THnSparse to a TH2");
+   delete proj;
+   delete hproj;
+}
+
 void CheckScale(TH3* h, THnSparse* sparse)
 {
    // Check scaling
@@ -43,9 +90,10 @@ void CheckScale(TH3* h, THnSparse* sparse)
 
 }
 
-void CheckClone(TH3*, THnSparse* sparse)
+void CheckClone(TH3* h, THnSparse* sparse)
 {
    // Check cloning of a THnSparse
+   if (h) {}
    THnSparse* clone = (THnSparse*)sparse->Clone("clone");
    TH3* proj = sparse->Projection(0, 1, 2);
    TH3* projclone = clone->Projection(0, 1, 2);
@@ -175,6 +223,8 @@ void runsparse()
    }
 
    CheckFillProjection(h, sparse);
+   CheckProjection1(h, sparse);
+   CheckProjection2(h, sparse);
    CheckScale(h, sparse);
    CheckClone(h, sparse);
    CheckSubstract(h, sparse);

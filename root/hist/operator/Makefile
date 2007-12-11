@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += copy addTest sparse
+TEST_TARGETS += copy addTest sparse Projections
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -24,5 +24,8 @@ endif
 copy: copy.clog
 	$(TestDiff)
 
-sparse: sparse.clog sparse.ref
+sparse: sparse.log sparse.ref
+	$(TestDiff)
+
+Projections: Projections.log Projections.ref
 	$(TestDiff)
