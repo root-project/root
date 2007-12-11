@@ -410,16 +410,20 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
       //This is the Bayes calculation...
       Efficiency(p,t,0.683,mode,low,high);
 
-      if (mode <= 0) continue;
+      // exclude the poits where result is less < 0
+      if (mode < 0) continue;
       //These are the low and high error bars
       low = mode-low;
       high = high-mode;
 
       //If either of the errors are 0, set them to 1/10 of the other error
       //so that the fitters don't get confused.
-      if (low==0.0) low=high/10.;
-      if (high==0.0) high=low/10.;
-      if (high+mode > 1) high = 1-mode;
+      // LM: what is this ??? The scope of this routine is to have lower error zero for eff = 0
+      // and uppper error zero for eff=1 
+      // remove this code
+      //if (low==0.0) low=high/10.;
+      //if (high==0.0) high=low/10.;
+      //if (high+mode > 1) high = 1-mode;
 
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),mode);
@@ -1100,7 +1104,7 @@ double TGraphAsymmErrors::SearchLower(double high, int k, int N, double c) const
    // use a bracket-and-bisect search
    // LM: looping 20 times might be not enough to get an accurate precision. 
    // see for example bug https://savannah.cern.ch/bugs/?30246
-   // now break loop when difference is less than 1E-6
+   // now break loop when difference is less than 1E-15 
    // t.b.d: use directly the beta distribution quantile
 
    for (int loop=0; loop<50; loop++) {
@@ -1108,7 +1112,7 @@ double TGraphAsymmErrors::SearchLower(double high, int k, int N, double c) const
       integral = Beta_ab(test, high, k, N);
       if (integral > c)  too_low = test;
       else too_high = test;
-      if ( TMath::Abs(integral - c) <= 1.E-6) break;
+      if ( TMath::Abs(integral - c) <= 1.E-15) break;
    }
    return test;
 }
@@ -1135,7 +1139,7 @@ double TGraphAsymmErrors::SearchUpper(double low, int k, int N, double c) const
    // use a bracket-and-bisect search
    // LM: looping 20 times might be not enough to get an accurate precision. 
    // see for example bug https://savannah.cern.ch/bugs/?30246
-   // now break loop when difference is less than 1E-6
+   // now break loop when difference is less than 1E-15
    // t.b.d: use directly the beta distribution quantile
 
    for (int loop=0; loop<50; loop++) {
@@ -1143,7 +1147,7 @@ double TGraphAsymmErrors::SearchUpper(double low, int k, int N, double c) const
       integral = Beta_ab(low, test, k, N);
       if (integral > c)  too_high = test;
       else too_low = test;
-      if ( TMath::Abs(integral - c) <= 1.E-6) break;
+      if ( TMath::Abs(integral - c) <= 1.E-15) break;
    }
    return test;
 }
