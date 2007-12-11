@@ -118,6 +118,8 @@ FILES := int.root float16.root double32.root regular.root char.root  \
 
 LIBS := $(patsubst %.root,lib%.$(DllSuf),$(FILES))
 
+.PHONY: files
+
 files: $(FILES)
 
 logs: $(patsubst %.root,check.%.log,$(FILES))
@@ -132,7 +134,7 @@ $(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h
 %.root: lib%.$(DllSuf) rootalias.C
 	$(CMDECHO) root.exe -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
 
-check.%.log: %.root files
+check.%.log: %.root $(FILES)
 	$(CMDECHO) root.exe -b -l -q 'read.C("$*")' 2>&1 | grep -v Processing > $@
 
 check%.success: check.%.log
