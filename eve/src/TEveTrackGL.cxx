@@ -76,7 +76,7 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    if (pm.size())
    {
       Float_t* pnts = new Float_t[3*pm.size()]; // maximum
-      Int_t N = 0;
+      Int_t n = 0;
       Bool_t accept;
       for (std::vector<TEvePathMark*>::iterator i=pm.begin(); i!=pm.end(); ++i)
       {
@@ -97,14 +97,14 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          {
             if ((TMath::Abs((*i)->fV.fZ) < rTP.GetMaxZ()) && ((*i)->fV.Perp() < rTP.GetMaxR()))
             {
-               pnts[3*N  ] =(*i)->fV.fX;
-               pnts[3*N+1] =(*i)->fV.fY;
-               pnts[3*N+2] =(*i)->fV.fZ;
-               N++;
+               pnts[3*n  ] =(*i)->fV.fX;
+               pnts[3*n+1] =(*i)->fV.fY;
+               pnts[3*n+2] =(*i)->fV.fZ;
+               ++n;
             }
          }
       }
-      TEveGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, N);
+      TEveGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, n);
       delete [] pnts;
    }
 

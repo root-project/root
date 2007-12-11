@@ -429,13 +429,9 @@ TEveGTriVecValuator::TEveGTriVecValuator(const TGWindow *p, const char* name,
    fNELength   (5),
    fNEHeight   (20)
 {
-   SetName(name);
-}
-
-//______________________________________________________________________________
-TEveGTriVecValuator::~TEveGTriVecValuator()
-{
    // Constructor.
+   
+   SetName(name);
 }
 
 //______________________________________________________________________________

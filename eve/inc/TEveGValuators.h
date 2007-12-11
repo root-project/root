@@ -160,7 +160,7 @@ protected:
 
 public:
    TEveGTriVecValuator(const TGWindow *p, const char* name, UInt_t w, UInt_t h);
-   virtual ~TEveGTriVecValuator();
+   virtual ~TEveGTriVecValuator() {}
 
    void Build(Bool_t vertical, const char* lab0, const char* lab1, const char* lab2);
 

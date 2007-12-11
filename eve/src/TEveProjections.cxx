@@ -271,9 +271,9 @@ void TEveCircularFishEyeProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t
       Float_t phi = (x == 0.0 && y == 0.0) ? 0.0f : ATan2(y, x);
       Float_t r = Sqrt(x*x + y*y);
       // distort
-      Float_t NR = (r*fScale) / (1.0f + r*fDistortion);
-      x = NR*Cos(phi) + fCenter.fX;
-      y = NR*Sin(phi) + fCenter.fY;
+      Float_t nR = (r*fScale) / (1.0f + r*fDistortion);
+      x = nR*Cos(phi) + fCenter.fX;
+      y = nR*Sin(phi) + fCenter.fY;
    }
    z = 0.0f;
 }

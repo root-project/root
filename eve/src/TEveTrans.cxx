@@ -280,12 +280,12 @@ void TEveTrans::RotateLF(Int_t i1, Int_t i2, Double_t amount)
    // Optimized version:
    const Double_t cos = TMath::Cos(amount), sin = TMath::Sin(amount);
    Double_t  b1, b2;
-   Double_t* C = fM;
+   Double_t* row = fM;
    --i1 <<= 2; --i2 <<= 2; // column major
-   for(int r=0; r<4; ++r, ++C) {
-      b1 = cos*C[i1] + sin*C[i2];
-      b2 = cos*C[i2] - sin*C[i1];
-      C[i1] = b1; C[i2] = b2;
+   for (int r=0; r<4; ++r, ++row) {
+      b1 = cos*row[i1] + sin*row[i2];
+      b2 = cos*row[i2] - sin*row[i1];
+      row[i1] = b1; row[i2] = b2;
    }
    fAsOK = kFALSE;
 }
