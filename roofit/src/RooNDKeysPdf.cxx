@@ -587,7 +587,7 @@ RooNDKeysPdf::loadWeightSet() const
   for (Int_t i=0; i<_nEventsM; i++) {
     _data.get(_idx[i]);
     if ( nWObs>0 ) { *weightObs = *values; } // update _weight
-    if ( fabs(_weight)>_minWeight ) { 
+    if ( TMath::Abs(_weight)>_minWeight ) { 
       _wMap[i] = _weight; 
     }
   }
