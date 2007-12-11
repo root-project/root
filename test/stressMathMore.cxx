@@ -47,7 +47,7 @@ using namespace ROOT::Math;
 #if defined(__CINT__) && defined(__MAKEDICT__)
 #define INF std::numeric_limits<double>::infinity() 
 #else  
-#define INF 1.0E400
+#define INF 1.7E308
 #endif 
 
 //#define DEBUG
