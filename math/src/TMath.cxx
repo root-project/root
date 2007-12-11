@@ -462,7 +462,7 @@ Double_t TMath::Gamma(Double_t a,Double_t x)
    // Its normalization is such that TMath::Gamma(a,+infinity) = 1 .
    //
    //  Begin_Latex 
-   //  P(a, x) = #frac{1} {#Gamma(a) } #int_{0}^{x} t^{a-1} e^{-t} dt 
+   //  P(a, x) = #frac{1}{#Gamma(a) } #int_{0}^{x} t^{a-1} e^{-t} dt 
    //   End_Latex
    // 
    // 
