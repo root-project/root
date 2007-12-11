@@ -84,7 +84,7 @@ STRESSMATHLIBS = -lMathCore -lReflex -lCintex
 endif
 
 TRACKMATHOBJ = TrackMathCoreRflx.$(ObjSuf)
-TRACKMATHLIB = libTrackMathcoreRflx.$(DllSuf)
+TRACKMATHLIB = libTrackMathCoreRflx.$(DllSuf)
 
 
 else 
@@ -96,7 +96,7 @@ STRESSMATHLIBS = -lMathCore
 endif
 
 TRACKMATHOBJ = TrackMathCoreCint.$(ObjSuf)
-TRACKMATHLIB = libTrackMathcoreCint.$(DllSuf)
+TRACKMATHLIB = libTrackMathCoreCint.$(DllSuf)
  
 endif
 
@@ -370,7 +370,7 @@ else
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
 #endif
 endif

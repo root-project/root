@@ -1470,7 +1470,8 @@ int testCompositeObj(int ngen) {
 
    std::cout << "Test Using CINT library\n\n"; 
 
-   iret = gSystem->Load("libTrackMathCoreCint");
+   // put path relative to LD_LIBRARY_PATH
+   iret = gSystem->Load("../test/libTrackMathCoreCint");
    if (iret !=0) { 
       std::cerr <<"Error Loading libTrackMathCoreCint" << std::endl;
       return iret; 
@@ -1484,7 +1485,7 @@ int testCompositeObj(int ngen) {
 #endif
    ROOT::Cintex::Cintex::Enable();
 
-   iret = gSystem->Load("libTrackMathCoreRflx");
+   iret = gSystem->Load("../test/libTrackMathCoreRflx");
    if (iret !=0) { 
       std::cerr <<"Error Loading libTrackMathCoreRflx" << std::endl;
       return iret; 
@@ -1517,7 +1518,10 @@ int stressMathCore(double nscale = 1) {
    std::cout << "Test must be run in compile mode - use ACLIC to compile!!" << std::endl; 
 
 
-   return 0; 
+   gSystem->Load("libMathCore");
+   gSystem->Load("libTree");
+   gROOT->ProcessLine(".L stressMathCore.cxx++");
+   return stressMathCore();
 #endif
 //    iret |= gSystem->Load("libMathCore");
 //    iret |= gSystem->Load("libMathMore");
