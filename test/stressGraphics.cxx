@@ -341,7 +341,8 @@ void stressGraphics(Int_t verbose = 0)
       gBenchmark->Print("stressGraphics");
 
       Double_t ct = gBenchmark->GetCpuTime("stressGraphics");
-      const Double_t rootmarks = 600*(4.85/ct);
+      //normalize at 860 rootmarks on pcbrun4
+      const Double_t rootmarks = 860*(47.12/ct);
 
       printf("**********************************************************************\n");
       printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
