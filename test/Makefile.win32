@@ -130,6 +130,19 @@ STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
 STRESSVEC    = stressVector$(ExeSuf)
 
+STRESSMATHO   = stressMathCore.$(ObjSuf) 
+STRESSMATHS   = stressMathCore.$(SrcSuf) 
+STRESSMATHLIBS = $(ROOTSYS)/lib/libMathCore.lib
+
+TRACKMATHOBJ = TrackMathCoreCint.$(ObjSuf)
+TRACKMATHLIB = libTrackMathCoreCint.$(DllSuf)
+STRESSMATH    = stressMathCore$(ExeSuf)
+
+STRESSMATHMOREO   = stressMathMore.$(ObjSuf) 
+STRESSMATHMORES   = stressMathMore.$(SrcSuf)  
+STRESSMATHMORELIBS = $(ROOTSYS)/lib/libMathCore.lib $(ROOTSYS)/lib/libMathMore.lib
+STRESSMATHMORE    = stressMathMore$(ExeSuf)
+
 VLAZYO        = vlazy.$(ObjSuf)
 VLAZYS        = vlazy.$(SrcSuf)
 VLAZY         = vlazy$(ExeSuf)
@@ -174,6 +187,14 @@ STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
 
+STRESSTMVAO    = stressTMVA.$(ObjSuf)
+STRESSTMVAS    = stressTMVA.$(SrcSuf)
+STRESSTMVA     = stressTMVA$(ExeSuf)
+
+STRESSENTRYLISTO = stressEntryList.$(ObjSuf)
+STRESSENTRYLISTS = stressEntryList.$(SrcSuf)
+STRESSENTRYLIST  = stressEntryList$(ExeSuf)
+
 STRESSHEPIXO  = stressHepix.$(ObjSuf)
 STRESSHEPIXS  = stressHepix.$(SrcSuf)
 STRESSHEPIX   = stressHepix$(ExeSuf)
@@ -205,19 +226,21 @@ THREADS       = threads$(ExeSuf)
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
+                $(GUITESTO) $(GUIVIEWERO) $(TETRISO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
-                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) $(STRESSTMVAO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) \
-                $(STRESSFITO) $(STRESSHEPIXO) \
-                $(GUITESTO) $(GUIVIEWERO) $(TETRISO) $(STRESSROOFITO)
+                $(STRESSMATHO) $(STRESSFITO) $(STRESSHEPIXO) \
+                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSMATHMOREO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
+                $(GUITEST) $(GUIVIEWER) $(TETRISSO) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
-                $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) \
-                $(GUITEST) $(GUIVIEWER) $(TETRISSO) $(STRESSROOFIT)
+                $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
+                $(STRESSROOFIT) $(STRESSMATH) $(STRESSTMVA) $(STRESSMATHMORE)
 
 all:            $(PROGRAMS)
 
@@ -303,6 +326,21 @@ $(STRESSVEC):   $(STRESSVECO)
                 $(MT_EXE)
                 @echo "$@ done"
 
+$(TRACKMATHLIB):  $(TRACKMATHOBJ)
+                  $(LD) $(SOFLAGS) $(LDFLAGS) $(TRACKMATHOBJ) $(LIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
+                  $(MT_DLL)
+                  @echo "$@ done"
+
+$(STRESSMATH):    $(STRESSMATHO) $(TRACKMATHLIB)
+                  $(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
+                  $(MT_EXE)
+                  @echo "$@ done"
+
+$(STRESSMATHMORE): $(STRESSMATHMOREO)
+                   $(LD) $(LDFLAGS) $(STRESSMATHMOREO) $(LIBS) $(STRESSMATHMORELIBS)  $(OutPutOpt)$@
+                   $(MT_EXE)
+                   @echo "$@ done"
+
 $(TESTBITS):    $(TESTBITSO)
                 $(LD) $(LDFLAGS) $(TESTBITSO) $(LIBS) $(OutPutOpt)$@
                 $(MT_EXE)
@@ -353,11 +391,25 @@ $(STRESSFIT):   $(STRESSFITO)
                 $(MT_EXE)
                 @echo "$@ done"
 
+$(STRESSTMVA): $(STRESSTMVAO)
+               $(LD) $(LDFLAGS) $(STRESSTMVAO) $(LIBS) ../lib/libTMVA.lib ../lib/libMinuit.lib ../lib/libMLP.lib ../lib/libTreePlayer.lib $(OutPutOpt)$@
+               $(MT_EXE)
+               @echo "$@ done"
+
+$(STRESSENTRYLIST): $(STRESSENTRYLISTO)
+                    $(LD) $(LDFLAGS) $(STRESSENTRYLISTO) $(LIBS) $(OutPutOpt)$@
+                    @echo "$@ done"
+
 $(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
                 $(STRESSSP) $(STRESS)
                 $(LD) $(LDFLAGS) $(STRESSHEPIXO) $(LIBS) $(OutPutOpt)$@
                 $(MT_EXE)
                 @echo "$@ done"
+
+$(STRESSROOFIT): $(STRESSROOFITO)
+                 $(LD) $(LDFLAGS) $(STRESSROOFITO) $(LIBS) '$(ROOTSYS)/lib/libRooFit.lib' '$(ROOTSYS)/lib/libRooFitCore.lib' '$(ROOTSYS)/lib/libHtml.lib' '$(ROOTSYS)/lib/libThread.lib' '$(ROOTSYS)/lib/libMinuit.lib' $(OutPutOpt)$@
+                 $(MT_EXE)
+                 @echo "$@ done"
 
 $(BENCH):       $(BENCHO) $(TBENCHSO)
                 $(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
@@ -421,6 +473,11 @@ guiviewer.$(ObjSuf): guiviewer.h
 guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
    @echo "Generating dictionary $@..."
    @rootcint -f $@ -c guiviewer.h guiviewerLinkDef.h
+
+stressMathCore.$(ObjSuf): TrackMathCore.h
+TrackMathCoreCint.$(SrcSuf): TrackMathCore.h TrackMathCoreLinkDef.h
+   @echo "Generating dictionary $@ using rootcint ..."
+   @rootcint -f $@ -c TrackMathCore.h TrackMathCoreLinkDef.h
 
 .$(SrcSuf).$(ObjSuf):
         $(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(CXXOPT) -c $<
