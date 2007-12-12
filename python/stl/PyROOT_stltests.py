@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 03/20/07
+# Last: 12/12/07
 
 """STL unit tests for PyROOT package."""
 
@@ -96,6 +96,19 @@ class STL3MapTestCase( unittest.TestCase ):
 
       for key, value in a:
          self.assertEqual( key, value )
+      self.assertEqual( key,   self.N-1 )
+      self.assertEqual( value, self.N-1 )
+
+    # add a variation, just in case
+      m = std.map( int, int )()
+      for i in range(self.N):
+         m[i] = i*i
+         self.assertEqual( m[i], i*i )
+
+      for key, value in m:
+         self.assertEqual( key*key, value )
+      self.assertEqual( key,   self.N-1 )
+      self.assertEqual( value, (self.N-1)*(self.N-1) )
 
    def test2KeyedMapType( self ):
       """Test access to a map<std::string,int> (part of cintdlls)"""
