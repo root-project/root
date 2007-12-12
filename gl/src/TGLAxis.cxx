@@ -21,6 +21,12 @@
 
 ClassImp(TGLAxis)
 
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>GL Axis</h2></center>
+To draw a 3D axis in a GL window. The labels are drawn using FTGL.
+End_Html */
+
 
 //______________________________________________________________________________
 TGLAxis::TGLAxis(): TAttLine(1,1,1), TAttText(20,0.,1,42,0.04)
