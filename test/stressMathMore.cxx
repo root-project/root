@@ -550,9 +550,8 @@ int stressMathMore(double nscale = 1) {
    bm.Stop("stressMathMore");
    std::cout <<"******************************************************************************\n";
    bm.Print("stressMathMore");
-   //const double reftime = 1.00; // ref time on  macbook pro (intel core duo 2.2 GHz)
-   const double reftime = 0.07; // ref time on  imac  (intel dual core 32 bits  2. GHz)
-   double rootmarks = 800 * reftime / bm.GetCpuTime("stressMathMore");
+   const double reftime = 0.12; // ref time on  pcbrun4
+   double rootmarks = 860 * reftime / bm.GetCpuTime("stressMathMore");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
              << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
    std::cout <<"*******************************************************************************\n";
