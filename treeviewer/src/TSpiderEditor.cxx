@@ -25,6 +25,11 @@
 #include "TGedPatternSelect.h"
 #include "TColor.h"
 
+//______________________________________________________________________________
+//
+// Editor class for spider plots.
+//
+
 ClassImp(TSpiderEditor)
 
 enum ESpiderWid {
