@@ -115,6 +115,8 @@ enum ENewBrowserMessages {
    kQuitRoot
 };
 
+ClassImp(TRootBrowser)
+
 //______________________________________________________________________________
 TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width, 
                            UInt_t height, Option_t *opt, Bool_t initshow) : 
