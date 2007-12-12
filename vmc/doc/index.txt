@@ -10,7 +10,7 @@ BEGIN_HTML
     </a></li>
 <li><a href="http://root.cern.ch/root/vmc/HowtoMC.html">How to use ROOT with Monte Carlo programs like Geant3, Geant4
     </a></li>
-<li><a href="http://fca.web.cern.ch/fca/vmc.htm">Alice Virtual Monte Carlo
+<li><a href="http://aliceinfo.cern.ch/Offline">The ALICE Offline Project
       </A></li>
 </ul>
 END_HTML
