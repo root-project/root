@@ -218,6 +218,26 @@ namespace {
 
 }
 
+//______________________________________________________________________________
+//
+// THtml generated documentation is written to file by TDocOutput. So far only
+// output of HTML is implemented. Customization of the output should be done
+// with THtml's interfaces - TDocOutput should not be used nor re-implemented
+// directly.
+//
+// TDocOutput generates the index tables:
+// * classes (THtml invokes TClassDocOutput for each),
+// * inheritance hierarchy,
+// * types and typedefs,
+// * libraries,
+// * the product index, and
+// * the module index (including the links to per-module documentation).
+// It invokes AT&T's GraphViz tool (dot) if available; charts benefit a lot
+// from it.
+//
+// TDocOutput also writes all pages' header and footer, which can be customized 
+// by calling THtml::SetHeader(), THtml::SetFooter().
+//______________________________________________________________________________
 
 ClassImp(TDocOutput);
 

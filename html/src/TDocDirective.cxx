@@ -19,6 +19,27 @@
 #include <fstream>
 #include <sstream>
 
+//______________________________________________________________________________
+//
+// When THtml parses documentation (through TDocParser), it checks for special
+// words ("begin_something", "end_something", where the begin and end are the
+// significant part). THtml then searches for a TDocDirective which can handle
+// these tags ("whatever" in the example), passes the text enclosed by these
+// tags to the directive, which in turn processes it.
+//
+// That way, HTML, latex, and C++ macros can be processed by THtml, e.g. to
+// generate plain HTML or GIF pictures. The classes reposinsible for parsing
+// that are TDocHtmlDirective, TDocLatexDirective, and TDocMacroDirective,
+// respecively.
+//
+// Directives can have optional parameters; these are passed as paranthesis
+// enclosed, comma delimited name=value pairs; see SetParameters().
+//
+// You can implement your own directive simply by deriving from TDocDirective;
+// the tag corresponds to TDocDirective's name (e.g. "HTML" for "begin_html" /
+// "end_html").
+//______________________________________________________________________________
+
 ClassImp(TDocDirective);
 
 //______________________________________________________________________________
@@ -103,6 +124,13 @@ void TDocDirective::SetParser(TDocParser* parser)
    fHtml      = fDocOutput? fDocOutput->GetHtml() : 0;
 }
 
+
+//______________________________________________________________________________
+//
+// Process a "begin_html" / "end_html" block. Stop linking keywords and simply
+// copy the text enclosed by the directive to the output HTML file.
+//______________________________________________________________________________
+
 ClassImp(TDocHtmlDirective);
 
 //______________________________________________________________________________
@@ -167,6 +195,23 @@ Bool_t TDocHtmlDirective::GetResult(TString& result)
 }
 
 
+
+//______________________________________________________________________________
+//
+// Process a "begin_macro" / "end_macro" block. The block can be a file name
+// or a CINT script (i.e. even ".x file.C" is allowed). See AddParameter() for
+// supported options. Example (the quotes prevent THtml from expanding the
+// example):
+//
+// "BEGIN_MACRO"
+// .x $ROOTSYS/tutorials/hsimple.C
+// "END_MACRO"
+//
+// The macro is meant to create an object that can be saved as a GIF file by
+// calling object->SaveAs(outputfile.gif). The macro is expected to return that
+// object as a TObject*; if it does not, gPad is used and saved. The object
+// is deleted by TDocMacroDirective once saved.
+//______________________________________________________________________________
 
 ClassImp(TDocMacroDirective);
 
