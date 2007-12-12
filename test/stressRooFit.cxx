@@ -2074,11 +2074,11 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   printf("******************************************************************\n");
   gBenchmark->Print("StressFit");
 #ifdef __CINT__
-  Double_t reftime = 86.34; //macbrun interpreted
+  Double_t reftime = 86.34; //pcbrun4 interpreted
 #else
-  Double_t reftime = 12.07; //macbrun compiled
+  Double_t reftime = 21.27; //pcbrun4 compiled
 #endif
-  const Double_t rootmarks = 800*reftime/gBenchmark->GetCpuTime("StressRooFit");
+  const Double_t rootmarks = 860*reftime/gBenchmark->GetCpuTime("StressRooFit");
   
   printf("******************************************************************\n");
   printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
