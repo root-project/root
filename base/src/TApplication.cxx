@@ -555,13 +555,6 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
    // The last argument 'script' allows to specify an alternative script to
    // be executed remotely to startup the session.
 
-   // Parse the content of a line starting with ".R" (already stripped-off)
-   // The format of teh remaining part is
-   //      hostdir [-l user] [-d dbg] [script]
-   // The variable 'hostdir' contains the host to connect to and the remote
-   // directory to be used as working dir.
-   // A username can also be included in hostdir in the usual form user@host.
-
    if (!ln || strlen(ln) <= 0)
       return 0;
 
@@ -598,10 +591,7 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
             isScript = kTRUE;
          } else if (isScript) {
             // Add everything left
-            script = line;
-            Int_t itkn = script.Index(tkn);
-            if (itkn != kNPOS)
-               script.Remove(0, itkn);
+            script = tkn;
             script.Insert(0, "\"");
             script += "\"";
             isScript = kFALSE;
@@ -622,7 +612,7 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
 {
    // Process the content of a line starting with ".R" (already stripped-off)
    // The format is
-   //      [user@]host[:dir] [-l user] [-d dbg] [script]
+   //      [user@]host[:dir] [-l user] [-d dbg] [script] | [host] -close
    // The variable 'dir' is the remote directory to be used as working dir.
    // The username can be specified in two ways, "-l" having the priority
    // (as in ssh).
@@ -631,6 +621,27 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
    // be executed remotely to startup the session.
 
    if (!line) return 0;
+
+   if (!strncmp(line, "-?", 2) || !strncmp(line, "-h", 2) ||
+       !strncmp(line, "--help", 6)) {
+       Info("ProcessRemote", "remote session help:");
+       Printf(".R [user@]host[:dir] [-l user] [-d dbg] [[<]script] | [host] -close");
+       Printf("Create a ROOT session on the specified remote host.");
+       Printf("The variable \"dir\" is the remote directory to be used as working dir.");
+       Printf("The username can be specified in two ways, \"-l\" having the priority");
+       Printf("(as in ssh). A \"dbg\" value > 0 gives increasing verbosity.");
+       Printf("The last argument \"script\" allows to specify an alternative script to");
+       Printf("be executed remotely to startup the session, \"roots\" being");
+       Printf("the default. If the script is preceeded by a \"<\" the script will be");
+       Printf("sourced, after which \"roots\" is executed. The sourced script can be ");
+       Printf("used to change the PATH and other variables, allowing an alternative");
+       Printf("\"roots\" script to be found.");
+       Printf("To close down a session do \".R host -close\".");
+       Printf("To switch between sessions do \".R host\", to switch to the local");
+       Printf("session do \".R\".");
+       Printf("To list all open sessions do \"gApplication->GetApplications()->Print()\".");
+       return 0;
+   }
 
    TString hostdir, user, script;
    Int_t dbg = 0;
@@ -647,7 +658,7 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
       return 1;
    } else if (rc == 1) {
       // close an existing remote application
-      TApplication *ap = Open(hostdir, 0, 0);
+      TApplication *ap = TApplication::Open(hostdir, 0, 0);
       if (ap) {
          TApplication::Close(ap);
          delete ap;
@@ -657,7 +668,7 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
    if (user.Length() > 0)
       hostdir.Insert(0,Form("%s@", user.Data()));
    const char *sc = (script.Length() > 0) ? script.Data() : 0;
-   TApplication *ap = Open(hostdir, dbg, sc);
+   TApplication *ap = TApplication::Open(hostdir, dbg, sc);
    if (ap) {
       fAppRemote = ap;
    }
@@ -1038,7 +1049,7 @@ TApplication *TApplication::Open(const char *url,
                                   Int_t debug, const char *script)
 {
    // Static function used to attach to an existing remote application
-   // or to start one
+   // or to start one.
 
    TApplication *ap = 0;
    TUrl nu(url);

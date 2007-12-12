@@ -62,9 +62,9 @@ static const char *gScriptCmd = "\\\"%s %d localhost:%d/%s -d=%d\\\"";
 #ifndef WIN32
 static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
    \"'(sh=\\`basename \'\\\\\\$SHELL\'\\`; \
-   if test xbash = x\'\\\\\\$sh\' -o xsh = x\'\\\\\\$sh\' -o xksh = x\'\\\\\\$sh\' -o xzsh = x\'\\\\\\$sh\' -o xdash = x\'\\\\\\$sh\'; then \
+   if test xbash = x\'\\\\\\$sh\' -o xsh = x\'\\\\\\$sh\' -o xzsh = x\'\\\\\\$sh\' -o xdash = x\'\\\\\\$sh\'; then \
       \'\\\\\\$SHELL\' -l -c %s; \
-   elif test xcsh = x\'\\\\\\$sh\' -o xtcsh = x\'\\\\\\$sh\'; then \
+   elif test xcsh = x\'\\\\\\$sh\' -o xtcsh = x\'\\\\\\$sh\' -o xksh = x\'\\\\\\$sh\'; then \
       \'\\\\\\$SHELL\' -c %s; \
    else \
       echo \\\"Unknown shell \'\\\\\\$SHELL\'\\\"; \
@@ -72,9 +72,9 @@ static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
 #else
 static const char *gSshCmd = "ssh %s -f4 %s -R %d:localhost:%d sh -c \
    \"'(sh=`basename $SHELL`; \
-   if test xbash = x$sh -o xsh = x$sh -o xksh = x$sh -o xzsh = x$sh -o xdash = x$sh; then \
+   if test xbash = x$sh -o xsh = x$sh -o xzsh = x$sh -o xdash = x$sh; then \
       $SHELL -l -c %s; \
-   elif test xcsh = x$sh -o xtcsh = x$sh; then \
+   elif test xcsh = x$sh -o xtcsh = x$sh -o xksh = x$sh; then \
       $SHELL -c %s; \
    else \
       echo \"Unknown shell $SHELL\"; \
@@ -139,7 +139,17 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
 
    // Start the remote server
    Int_t rport = (port < fgPortUpper) ? port + 1 : port - 1;
-   TString sc(((script) ? script : gScript));
+   TString sc = gScript;
+   if (script && *script) {
+      // script is enclosed by " ", so ignore first " char
+      if (script[1] == '<') {
+         if (script[2])
+            sc.Form("source %s; %s", script+2, gScript);
+         else
+            Error("TApplicationRemote", "illegal script name <");
+      } else
+         sc = script;
+   }
    sc.ReplaceAll("\"","");
    TString userhost = fUrl.GetHost();
    if (strlen(fUrl.GetUser()) > 0)
