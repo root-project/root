@@ -37,8 +37,15 @@ include config/Makefile.$(ARCH)
 endif
 
 ##### Include compiler overrides specified via ./configure #####
+##### However, if we are building packages or cleaning, we #####
+##### don't include this file since it may screw up things #####
 
+ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
 include config/Makefile.comp
+endif
+ifeq ($(MAKECMDGOALS),clean)
+include config/Makefile.comp
+endif
 
 ##### Include library dependencies for explicit linking #####
 
@@ -534,13 +541,15 @@ compiledata:    $(COMPILEDATA)
 
 config config/Makefile.:
 ifeq ($(BUILDING_WITHIN_IDE),)
-	@(if [ ! -f config/Makefile.config ] ; then \
+	@(if [ ! -f config/Makefile.config ] || \
+	     [ ! -f config/Makefile.comp ]; then \
 	   echo ""; echo "Please, run ./configure first"; echo ""; \
 	   exit 1; \
 	fi)
 else
 # Building from within an IDE, running configure
-	@(if [ ! -f config/Makefile.config ] ; then \
+	@(if [ ! -f config/Makefile.config ] || \
+	     [ ! -f config/Makefile.comp ]; then \
 	   ./configure --build=debug `cat config.status 2>/dev/null`; \
 	fi)
 endif
@@ -548,8 +557,9 @@ endif
 # Target Makefile is synonym for "run (re-)configure"
 # Makefile is target as we need to re-parse dependencies after
 # configure is run (as RConfigure.h changed etc)
-config/Makefile.config include/RConfigure.h etc/system.rootauthrc \
-  etc/system.rootdaemonrc etc/root.mimes $(ROOTRC) bin/root-config: Makefile
+config/Makefile.config config/Makefile.comp include/RConfigure.h \
+  etc/system.rootauthrc etc/system.rootdaemonrc etc/root.mimes $(ROOTRC) \
+  bin/root-config: Makefile
 
 ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
 Makefile: configure config/rootrc.in config/RConfigure.in config/Makefile.in \
