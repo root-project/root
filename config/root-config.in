@@ -12,6 +12,10 @@ libdir=@libdir@
 incdir=@incdir@
 features="@features@"
 configargs="@configargs@"
+cccomp="@cccomp@"
+cxxcomp="@cxxcomp@"
+f77comp="@f77comp@"
+ldcomp="@ldcomp@"
 dicttype=@dicttype@
 zliblib=@zliblib@
 
@@ -471,7 +475,12 @@ noauxcflags=no
 noldflags=no
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs] [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype] [--config] [--features] [--svn-revision] [--python-version] [--help]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
+ [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
+ [--glibs] [--bindir] [--libdir] [--incdir] [--noauxcflags] [--noauxlibs]\
+ [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype]\
+ [--config] [--features] [--svn-revision] [--python-version]\
+ [--cc] [--cxx] [--f77] [--ld ][--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -709,6 +718,22 @@ while test $# -gt 0; do
       ### output the dictionary type
       out="$out $dicttype"
       ;;
+    --cc)
+      ### output used C compiler
+      out="$out $cccomp"
+      ;;
+    --cxx)
+      ### output used C++ compiler
+      out="$out $cxxcomp"
+      ;;
+    --f77)
+      ### output used Fortran compiler
+      out="$out $f77comp"
+      ;;
+    --ld)
+      ### output used Linker
+      out="$out $ldcomp"
+      ;;
     --help)
       ### Print a help message
       echo "Usage: `basename $0` [options]"
@@ -737,6 +762,10 @@ while test $# -gt 0; do
       echo "  --version             Print the ROOT version"
       echo "  --svn-revision        Print the ROOT SVN revision number"
       echo "  --python-version      Print the Python version used by ROOT"
+      echo "  --cc                  Print alternative C compiler specified when ROOT was built"
+      echo "  --cxx                 Print alternative C++ compiler specified when ROOT was built"
+      echo "  --f77                 Print alternative Fortran compiler specified when ROOT was built"
+      echo "  --ld                  Print alternative Linker specified when ROOT was built"
       echo "  --help                Print this message"
       exit 0
       ;;

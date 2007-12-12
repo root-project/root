@@ -81,6 +81,7 @@ options="                    \
    enable_xft                \
    enable_xml                \
    enable_xrootd             \
+   enable_compilers          \
 "
 
 #
@@ -108,6 +109,7 @@ enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
+enable_compilers=no
 
 # Remove old log file
 rm -f $logfile
@@ -725,7 +727,7 @@ guess_architecture () {
             echo "Please specify the architecture as the first argument."
             echo "Do '$0 --help' for a list of avaliable architectures."
             echo "Or file a bug at https://savannah.cern.ch/projects/savroot/"
-            echo "including the full config.log and a dump of" 
+            echo "including the full config.log and a dump of"
             echo "  touch dummy_file.c; gcc -E -dM dummy_file.c"
             exit 1
             ;;
@@ -747,6 +749,8 @@ guess_architecture () {
 ARCHS=config/ARCHS
 MAKEIN=config/Makefile.in
 MAKEOUT=config/Makefile.config
+MAKECOMPIN=config/Makefile-comp.in
+MAKECOMPOUT=config/Makefile.comp
 CONFIGUREIN=config/RConfigure.in
 CONFIGUREOUT=include/RConfigure.h
 RCONFIN=config/root-config.in
@@ -852,6 +856,7 @@ ROOT will be compiled with static directory names, and you should not set
 the ROOTSYS environment variable.
 
 enable/disable options, prefix with either --enable- or --disable-
+
   afs                AFS support, requires AFS libs and objects
   alien              AliEn support, requires libgapiUI from ALICE
   asimage            Image processing support, requires libAfterImage
@@ -980,6 +985,13 @@ with options, prefix with --with-, enables corresponding support
   xpm-libdir         XPM support, path to libXpm
   xrootd             XROOTD support, path to alternative XROOTD distribution
 
+with compiler options, prefix with --with-, overrides default value
+
+  cc                 alternative C compiler and options to be used
+  cxx                alternative C++ compiler and options to be used
+  f77                alternative Fortran compiler and options to be used
+  ld                 alternative Linker and options to be used
+
 Supported Architectures:
 
 EOF
@@ -1077,7 +1089,7 @@ fi
 ### echo %%% Some clean up
 #
 trapcmd="rm -f Makefile.tmp RConfigure.tmp RConfigure-out.tmp \
-         root-config.tmp rootrc.tmp \
+         Makefile-comp.tmp root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
          proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
          conftest.c conftest xrootd.tmp olbd.tmp"
@@ -1177,6 +1189,10 @@ if test $# -gt 0 ; then
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       --with-xrootd=*)         xrootddir=$optarg     ; enable_xrootd="yes"  ;;
+      --with-cc=*)             cccomp=$optarg        ; enable_compilers="yes" ;;
+      --with-cxx=*)            cxxcomp=$optarg       ; enable_compilers="yes" ;;
+      --with-f77=*)            f77comp=$optarg       ; enable_compilers="yes" ;;
+      --with-ld=*)             ldcomp=$optarg        ; enable_compilers="yes" ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
@@ -1247,6 +1263,7 @@ fi
 #
 if test "x$noact" = "xno"; then
     cp -f $MAKEIN Makefile.tmp
+    cp -f $MAKECOMPIN Makefile-comp.tmp
     cp -f $CONFIGUREIN RConfigure.tmp
     cp -f $RCONFIN root-config.tmp
     cp -f $ROOTRCIN rootrc.tmp
@@ -1494,8 +1511,8 @@ result "$enable_builtin_freetype"
 #
 ### echo %%% libftgl (builtin or system) - Mandatory lib
 #
-# Mandatory test, must succeed 
-# (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL) 
+# Mandatory test, must succeed
+# (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL)
 #
 ftglincdir=include
 if test "x$platform" = "xwin32"; then
@@ -1508,17 +1525,17 @@ fi
 if test "x$enable_builtin_ftgl" = "x" || \
    test "x$enable_builtin_ftgl" = "xno" ; then
 
-   # check if we have pkg-config 
+   # check if we have pkg-config
    if `$cwhich pkg-config > /dev/null 2>&1` ; then
 
       message "Checking for libftgl"
-      if pkg-config --exists ftgl ; then 
+      if pkg-config --exists ftgl ; then
 	  result "ok"
-	  ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'` 
-	  ftgllibs=`pkg-config --libs-only-l ftgl | sed s'/-lftgl/-lftgl_pic/'` 
-	  ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`  
+	  ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
+	  ftgllibs=`pkg-config --libs-only-l ftgl | sed s'/-lftgl/-lftgl_pic/'`
+	  ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
 	  enable_builtin_ftgl=no
-      else 
+      else
 	  enable_builtin_ftgl=yes
 	  result "no"
       fi
@@ -1929,7 +1946,7 @@ check_qtvers()
 if test ! "x$enable_qt" = "xno" || \
    test ! "x$enable_qtgsi" = "xno"; then
     # Check for Qt include and library
-    # Check for Qt 4 first 
+    # Check for Qt 4 first
     check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
         /usr/local/include/  /usr/local/qt/include  \
         /usr/include /usr/include/qt4
@@ -1954,10 +1971,10 @@ if test ! "x$enable_qt" = "xno" || \
 	    qttestdir=$qtmainincdir/Qt
 	fi
 	check_qtvers "$qttestdir" $qtverneed $qttoonew
-	if test $qtvers -eq 4 ; then 
-	    qt4suffix="4" 	 
-	    if test "x$enable_winrtdebug" = "xyes"; then 	 
-	        qt4suffix="d4" 	 
+	if test $qtvers -eq 4 ; then
+	    qt4suffix="4"
+	    if test "x$enable_winrtdebug" = "xyes"; then
+	        qt4suffix="d4"
 	    fi
 	    check_library "libQtCore QtCore QtCore$qt4suffix" "$enable_shared" \
 		"$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
@@ -1965,7 +1982,7 @@ if test ! "x$enable_qt" = "xno" || \
 	    qtlib=$found_lib
 	    qtlibdir=$found_dir
 	    check_library "libQtGui QtGui QtGui$qt4suffix" "$enable_shared" \
-		"$found_raw_dir"  "" 
+		"$found_raw_dir"  ""
 	    qtlib="$qtlib $found_lib"
 	    check_library "libQt3Support Qt3Support Qt3Support$qt4suffix" \
 		"$enable_shared" "$found_raw_dir"  ""
@@ -1986,20 +2003,20 @@ if test ! "x$enable_qt" = "xno" || \
 	fi
     fi
 
-    if test $qtvers -eq 0 ; then 
+    if test $qtvers -eq 0 ; then
 	logmsg "No Qt4 was found, let's try to find Qt3 instead"
 	check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
             /usr/local/include  /usr/local/qt/include /usr/include \
             /usr/include/qt /usr/include/qt3
 	qtinc=$found_hdr
 	qtincdir=$found_dir
-	if ! test "x$found_hdr" = "x" ; then 
+	if ! test "x$found_hdr" = "x" ; then
 	    qtverneed="3.3.0"
 	    qttoonew="4.0.0"
 	    qttestdir=$qtincdir
 	    check_qtvers "$qttestdir" $qtverneed $qttoonew
 	fi
-	if test $qtvers -eq 3 ; then 
+	if test $qtvers -eq 3 ; then
 	    check_library \
 		"libqt-mt libqt qt-mt* qt-mt334 qt-mt335 qt-mt336 qt" \
 		"$enable_shared" "$qtlibdir" \
@@ -2021,11 +2038,11 @@ if test ! "x$enable_qt" = "xno" || \
 	logmsg " Checking for $qtmocexe in $i"
 	for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
 	do
-	    if test -x $j ; then 
+	    if test -x $j ; then
 		moc_vers=`$j -v >/dev/stdout 2>&1 | \
 		    sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9]*)//'`
-		if test $moc_vers -ne $qtvers ; then 
-		    # Moc version does not match Qt version 
+		if test $moc_vers -ne $qtvers ; then
+		    # Moc version does not match Qt version
 		    continue
 		fi
 		qtmocexe=$j
@@ -2033,7 +2050,7 @@ if test ! "x$enable_qt" = "xno" || \
 		break
 	    fi
 	done
-	if ! test "x$qtmocexe" = "x" ; then break ; fi 
+	if ! test "x$qtmocexe" = "x" ; then break ; fi
     done
 
     # Correct path for win32
@@ -4595,7 +4612,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildsrputil@|$enable_srputil|"      \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
-    -e "s|@buildxrdgsi@|$buildxrdgsi|"        \
+    -e "s|@buildxrdgsi@|$buildxrdgsi|"          \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
     < Makefile.tmp > $MAKEOUT
@@ -4611,6 +4628,23 @@ if test "x$platform" = "xwin32"; then
 fi
 
 result "done"
+
+#---------------------------------------------------------------------
+# config/Makefile.comp
+#
+
+if test "x$enable_compilers" = "xyes"; then
+   message "Writing $MAKECOMPOUT"
+   sed -e "s|@cccomp@|$cccomp|"     \
+       -e "s|@cxxcomp@|$cxxcomp|"   \
+       -e "s|@f77comp@|$f77comp|"   \
+       -e "s|@ldcomp@|$ldcomp|"     \
+       < Makefile-comp.tmp > $MAKECOMPOUT
+   rm -f Makefile-comp.tmp
+   result "done"
+else
+   rm -f $MAKECOMPOUT
+fi
 
 #---------------------------------------------------------------------
 # include/RConfigure.h
@@ -4698,6 +4732,10 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@dicttype@|$dicttype|"           \
     -e "s|@zliblib@|$zliblib|"             \
     -e "s|@pythonvers@|$pythonvers|"       \
+    -e "s|@cccomp@|$cccomp|"               \
+    -e "s|@cxxcomp@|$cxxcomp|"             \
+    -e "s|@f77comp@|$f77comp|"             \
+    -e "s|@ldcomp@|$ldcomp|"               \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

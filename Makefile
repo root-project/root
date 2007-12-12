@@ -36,6 +36,10 @@ ifeq ($(MAKECMDGOALS),clean)
 include config/Makefile.$(ARCH)
 endif
 
+##### Include compiler overrides specified via ./configure #####
+
+-include config/Makefile.comp
+
 ##### Include library dependencies for explicit linking #####
 
 MAKEFILEDEP = config/Makefile.depend
@@ -549,12 +553,13 @@ config/Makefile.config include/RConfigure.h etc/system.rootauthrc \
 
 ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
 Makefile: configure config/rootrc.in config/RConfigure.in config/Makefile.in \
-  config/root-config.in config/rootauthrc.in config/rootdaemonrc.in \
-  config/mimes.unix.in config/mimes.win32.in config.status
-	@(if [ ! -x $(RECONFIGURE) ] || ! $(RECONFIGURE) "$?"; then \
+  config/Makefile-comp.in config/root-config.in config/rootauthrc.in \
+  config/rootdaemonrc.in config/mimes.unix.in config/mimes.win32.in \
+  config.status
+	@( $(RECONFIGURE) "$?" || ( \
 	   echo ""; echo "Please, run ./configure again as config option files ($?) have changed."; \
 	   echo ""; exit 1; \
-	 fi)
+	 ) )
 endif
 
 $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
@@ -755,8 +760,8 @@ endif
 
 maintainer-clean:: distclean
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
-	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
-	   etc/root.mimes build/misc/root-help.el \
+	   config/Makefile.comp $(ROOTRC) etc/system.rootauthrc \
+	   etc/system.rootdaemonrc etc/root.mimes build/misc/root-help.el \
 	   rootd/misc/rootd.rc.d build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 

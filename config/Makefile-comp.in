@@ -1,0 +1,26 @@
+# -*- mode: makefile -*-
+#
+# Makefile compiler definitions included by the top Makefile.
+# Used to override the compilers specified in the architecture
+# specific Makefiles.
+
+CCCOMP    := @cccomp@
+CXXCOMP   := @cxxcomp@
+F77COMP   := @f77comp@
+LDCOMP    := @ldcomp@
+
+ifneq ($(CCCOMP),)
+CC         = $(CCCOMP)
+endif
+
+ifneq ($(CXXCOMP),)
+CXX        = $(CXXCOMP)
+endif
+
+ifneq ($(F77COMP),)
+F77        = $(F77COMP)
+endif
+
+ifneq ($(LDCOMP),)
+LD         = $(LDCOMP)
+endif
