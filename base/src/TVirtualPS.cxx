@@ -9,11 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualPS is an abstract interface to a Postscript and SVG drivers  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+//
+// TVirtualPS is an abstract interface to a Postscript, PDF and SVG drivers
+//
 
 #include "Riostream.h"
 #include "TVirtualPS.h"
@@ -24,10 +23,6 @@ const Int_t  kMaxBuffer = 250;
 
 ClassImp(TVirtualPS)
 
-//______________________________________________________________________________
-//
-//  TVirtualPS is an abstract interface to a Postscript driver
-//
 
 //______________________________________________________________________________
 TVirtualPS::TVirtualPS()
@@ -38,6 +33,7 @@ TVirtualPS::TVirtualPS()
    fSizBuffer = kMaxBuffer;
    fBuffer    = new char[fSizBuffer+1];
 }
+
 
 //______________________________________________________________________________
 TVirtualPS::TVirtualPS(const char *name, Int_t)
@@ -50,6 +46,7 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
    fBuffer    = new char[fSizBuffer+1];
 }
 
+
 //______________________________________________________________________________
 TVirtualPS::~TVirtualPS()
 {
@@ -57,6 +54,7 @@ TVirtualPS::~TVirtualPS()
 
    if (fBuffer) delete [] fBuffer;
 }
+
 
 //______________________________________________________________________________
 void TVirtualPS::PrintStr(const char *str)
@@ -108,6 +106,7 @@ void TVirtualPS::PrintStr(const char *str)
    fPrinted = kTRUE;
 }
 
+
 //______________________________________________________________________________
 void TVirtualPS::PrintFast(Int_t len, const char *str)
 {
@@ -131,6 +130,7 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
    fPrinted = kTRUE;
 }
 
+
 //______________________________________________________________________________
 void TVirtualPS::WriteInteger(Int_t n, Bool_t space )
 {
@@ -147,6 +147,7 @@ void TVirtualPS::WriteInteger(Int_t n, Bool_t space )
    }
    PrintStr(str);
 }
+
 
 //______________________________________________________________________________
 void TVirtualPS::WriteReal(Float_t z)

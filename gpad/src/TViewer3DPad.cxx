@@ -17,14 +17,11 @@
 
 #include <assert.h>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TViewer3DPad                                                         //
-//                                                                      //
-// Provides 3D viewer interface (TVirtualViewer3D) support on a pad.    //
-// Will be merged with TView / TView3D eventually.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+//
+// Provides 3D viewer interface (TVirtualViewer3D) support on a pad.
+// Will be merged with TView / TView3D eventually.
+
 
 ClassImp(TViewer3DPad)
 

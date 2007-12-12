@@ -19,6 +19,12 @@ TClass *TVirtualHistPainter::fgPainter = 0;
 ClassImp(TVirtualHistPainter)
 
 //______________________________________________________________________________
+//
+//  TVirtualHistPainter is an abstract interface to a histogram painter.
+//
+
+
+//______________________________________________________________________________
 TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
 {
    // Static function returning a pointer to the current histogram painter.

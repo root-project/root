@@ -13,6 +13,11 @@
 #include "X3DBuffer.h"
 #include "TClass.h"
 
+//______________________________________________________________________________
+//
+//  TVirtualPad is an abstract base class for the Pad and Canvas classes.
+//
+
 Size3D gVarSize3D;
 Size3D* gFuncSize3D(){ return &gVarSize3D; }
 
@@ -33,11 +38,6 @@ TVirtualPad *&TVirtualPad::Pad()
 
 
 ClassImp(TVirtualPad)
-
-//______________________________________________________________________________
-//
-//  TVirtualPad is an abstract base class for the Pad and Canvas classes.
-//
 
 //______________________________________________________________________________
 TVirtualPad::TVirtualPad() : TAttPad()
