@@ -26,7 +26,16 @@
 
 //______________________________________________________________________________
 //
-// THnSparseCompactBinCoord
+// THnSparseCompactBinCoord is a class used by THnSparse internally. It
+// represents a compacted n-dimensional array of bin coordinates (indices).
+// As the total number of bins in each dimension is known by THnSparse, bin
+// indices can be compacted to only use the amount of bins needed by the total
+// number of bins in each dimension. E.g. for a THnSparse with
+// {15, 100, 2, 20, 10, 100} bins per dimension, a bin index will only occupy
+// 28 bits (4+7+1+5+4+7), i.e. less than a 32bit integer. The tricky part is
+// the fast compression and decompression, the platform-independent storage
+// (think of endianness: the bits of the number 0x123456 depend on the
+// platform), and the hashing needed by THnSparseArrayChunk.
 //______________________________________________________________________________
 
 class THnSparseCompactBinCoord {
@@ -54,9 +63,10 @@ private:
    Int_t  fCoordBufferSize; // size of fBinCoordBuffer
    Int_t *fCurrentBin;      // current coordinates
 };
-//______________________________________________________________________________
-//______________________________________________________________________________
 
+
+//______________________________________________________________________________
+//______________________________________________________________________________
 
 
 //______________________________________________________________________________
@@ -158,9 +168,17 @@ ULong64_t THnSparseCompactBinCoord::GetHash()
 }
 
 
-//______________________________________________________________________________
-//______________________________________________________________________________
 
+//______________________________________________________________________________
+//
+// THnSparseArrayChunk is used internally by THnSparse.
+//
+// THnSparse stores its (dynamic size) array of bin coordinates and their
+// contents (and possibly errors) in a TObjArray of THnSparseArrayChunk. Each
+// of the chunks holds an array of THnSparseCompactBinCoord and the content
+// (a TArray*), which is created outside (by the templated derived classes of
+// THnSparse) and passed in at construction time.
+//______________________________________________________________________________
 
 
 ClassImp(THnSparseArrayChunk);
@@ -207,6 +225,9 @@ void THnSparseArrayChunk::Sumw2()
 
 
 //______________________________________________________________________________
+//
+//
+//    Efficient multidimensional histogram.
 //
 // Use a THnSparse instead of TH1 / TH2 / TH3 / array for histogramming when
 // only a small fraction of bins is filled. A 10-dimensional histogram with 10
