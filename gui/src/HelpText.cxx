@@ -24,8 +24,47 @@ communication classes allowing the transfer of complete objects\n\
 from one process to another.\n\
 ";
 
-
 const char gHelpBrowser[] = "\
+The ROOT general object browser (see TBrowser) can be used to \n\
+browse collections such as the list of classes, geometries, files \n\
+and TTrees. A browser can be started from the Start Browser item in \n\
+the canvas View menu or by creating a browser object. \n\
+More than one browser can be active at any time. \n\
+A Browser window has three main tabs, separated by horizontal and \n\
+vertical splitters.\n\
+By default, the left pane contains the file browser, which is the core \n\
+of the browser. \n\
+From there, user can: \n\
+ - Execute Root macros: \n\
+   To execute the macro, double-click on the file icon. \n\
+   NB: the editor must not be active on the right tab, otherwise the \n\
+   macro will be opened in the editor. \n\
+ - Open text files in the editor: \n\
+   To open the file, double-click on the file icon while the editor \n\
+   tab being active on the right tab. \n\
+   It is also possible to drag the file from the list tree and drop it \n\
+   in the editor. \n\
+   Once the file is opened in the editor, if it is a Root Macro, it \n\
+   can be executed with the button 'execute' in the editors's tool bar. \n\
+ - Display picture files in the canvas: \n\
+   Drag the picture file from the list tree and drop it in the canvas. \n\
+ - Browse ROOT files: \n\
+   To open the file, double-click on the file icon. Its content will be \n\
+   displayed in the list tree. \n\
+   From there, user can double-click on any item (i.e. histogram) to \n\
+   display it in the canvas. \n\
+   It is also possible to drag the item from the list tree and drop it \n\
+   in the canvas. \n\
+ - Browse ROOT files from Web: \n\
+   From the 'Browser' menu, select 'New HTML'. A new tab is created, \n\
+   containing a HTML browser. \n\
+   From there, type the URL from where you want to access Root files. \n\
+   Click once on the file you want to open. The file is opened and the \n\
+   browser automatically switch to the 'ROOT Files' folder in the list \n\
+   tree. Now, just browse the file as a local Root file. \n\
+";
+
+const char gHelpBrowserLite[] = "\
 The ROOT general object browser (see TBrowser) can be used to browse collections\n\
 such as the list of classes, geometries, files and TTrees. A browser can be \n\
 started from the Start Browser item in the canvas View menu or by creating a \n\
@@ -402,4 +441,23 @@ Ctrl+H            Delete character before cursor, or text selection.\n\
 Ctrl+K            Delete characters from current position to the end of\n\
                   line.\n\
 Ctrl+U            Delete current line.\n\
+";
+
+const char gHelpRemote[] = "\
+Remote session help:\n\
+.R [user@]host[:dir] [-l user] [-d dbg] [[<]script] | [host] -close\n\
+Create a ROOT session on the specified remote host.\n\
+The variable \"dir\" is the remote directory to be used as working dir.\n\
+The username can be specified in two ways, \"-l\" having the priority\n\
+(as in ssh). A \"dbg\" value > 0 gives increasing verbosity.\n\
+The last argument \"script\" allows to specify an alternative script to\n\
+be executed remotely to startup the session, \"roots\" being\n\
+the default. If the script is preceeded by a \"<\" the script will be\n\
+sourced, after which \"roots\" is executed. The sourced script can be \n\
+used to change the PATH and other variables, allowing an alternative\n\
+\"roots\" script to be found.\n\
+To close down a session do \".R host -close\".\n\
+To switch between sessions do \".R host\", to switch to the local\n\
+session do \".R\".\n\
+To list all open sessions do \"gApplication->GetApplications()->Print()\".\n\
 ";

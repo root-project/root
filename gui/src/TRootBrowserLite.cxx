@@ -122,7 +122,8 @@ enum ERootBrowserCommands {
    kHelpOnMenus,
    kHelpOnGraphicsEd,
    kHelpOnObjects,
-   kHelpOnPS
+   kHelpOnPS,
+   kHelpOnRemote
 };
 
 
@@ -1040,6 +1041,7 @@ void TRootBrowserLite::CreateBrowser(const char *name)
    fHelpMenu->AddEntry("Help On Graphics Editor...", kHelpOnGraphicsEd);
    fHelpMenu->AddEntry("Help On Objects...",    kHelpOnObjects);
    fHelpMenu->AddEntry("Help On PostScript...", kHelpOnPS);
+   fHelpMenu->AddEntry("Help On Remote Session...", kHelpOnRemote);
 
    // This main frame will process the menu commands
    fFileMenu->Associate(this);
@@ -1934,7 +1936,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kHelpOnBrowser:
                      hd = new TRootHelpDialog(this, "Help on Browser...", 600, 400);
-                     hd->SetText(gHelpBrowser);
+                     hd->SetText(gHelpBrowserLite);
                      hd->Popup();
                      break;
                   case kHelpOnObjects:
@@ -1945,6 +1947,11 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kHelpOnPS:
                      hd = new TRootHelpDialog(this, "Help on PostScript...", 600, 400);
                      hd->SetText(gHelpPostscript);
+                     hd->Popup();
+                     break;
+                  case kHelpOnRemote:
+                     hd = new TRootHelpDialog(this, "Help on Browser...", 600, 400);
+                     hd->SetText(gHelpRemote);
                      hd->Popup();
                      break;
                }
