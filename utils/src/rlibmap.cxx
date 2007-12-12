@@ -134,6 +134,53 @@ char *Compress(const char *str)
 }
 
 //______________________________________________________________________________
+void UnCompressTemplate(char*& str)
+{
+   // Replace ">>" by "> >" except for operator>>.
+   // str might be changed; the old string gets deleted in here.
+
+   // Even handles cases like "A<B<operator>>()>>::operator >>()".
+
+   char* pos = strstr(str, ">>");
+   char* fixed = 0;
+   int countgtgt = 0;
+   while (pos) {
+      // first run: just count, so we can allocate space for fixed
+      ++countgtgt;
+      pos = strstr(pos+1, ">>");
+   }
+   if (!countgtgt)
+      return;
+   pos = strstr(str, ">>");
+   while (pos && pos > str) {
+      bool isop = false;
+      // check that it's not op>>:
+      if (pos - str >= 8) {
+         char* posop = pos - 1;
+         // remove spaces in front of ">>":
+         while (posop >= str && *posop == ' ')
+            --posop;
+         if (!strncmp("operator", posop - 7, 8)) {
+            // it is an operator!
+            isop = true;
+         }
+      }
+      if (!isop) {
+         // not an operator; we need to add a space.
+         if (!fixed) {
+            fixed = new char[strlen(str) + countgtgt + 1];
+            strcpy(fixed, str);
+         }
+         fixed[pos - str + 1] = ' ';
+         strcpy(fixed + (pos - str) + 2, pos + 1);
+      }
+      pos = strstr(pos + 1, ">>");
+   }
+   delete [] str;
+   str = fixed;
+}
+
+//______________________________________________________________________________
 int RemoveLib(const string &solib, bool fullpath, FILE *fp)
 {
    // Remove entries from the map file for the specified solib.
@@ -229,6 +276,8 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
                      cls[len--] = '\0';
                   //no space between tmpl arguments allowed
                   cls = Compress(cls);
+                  // except for A<B<C> >!
+                  UnCompressTemplate(cls);
 
                   // don't include "vector<string>" and "std::pair<" classes
                   if (!strncmp(cls, "vector<string>", 14) ||
