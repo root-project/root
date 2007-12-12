@@ -4,23 +4,23 @@
 # Used to override the compilers specified in the architecture
 # specific Makefiles.
 
-CCCOMP    := @cccomp@
-CXXCOMP   := @cxxcomp@
-F77COMP   := @f77comp@
-LDCOMP    := @ldcomp@
+ALTCC    := @altcc@
+ALTCXX   := @altcxx@
+ALTF77   := @altf77@
+ALTLD    := @altld@
 
-ifneq ($(CCCOMP),)
-CC         = $(CCCOMP)
+ifneq ($(ALTCC),)
+CC         = $(ALTCC)
 endif
 
-ifneq ($(CXXCOMP),)
-CXX        = $(CXXCOMP)
+ifneq ($(ALTCXX),)
+CXX        = $(ALTCXX)
 endif
 
-ifneq ($(F77COMP),)
-F77        = $(F77COMP)
+ifneq ($(ALTF77),)
+F77        = $(ALTF77)
 endif
 
-ifneq ($(LDCOMP),)
-LD         = $(LDCOMP)
+ifneq ($(ALTLD),)
+LD         = $(ALTLD)
 endif

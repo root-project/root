@@ -12,10 +12,10 @@ libdir=@libdir@
 incdir=@incdir@
 features="@features@"
 configargs="@configargs@"
-cccomp="@cccomp@"
-cxxcomp="@cxxcomp@"
-f77comp="@f77comp@"
-ldcomp="@ldcomp@"
+altcc="@altcc@"
+altcxx="@altcxx@"
+altf77="@altf77@"
+altld="@altld@"
 dicttype=@dicttype@
 zliblib=@zliblib@
 
@@ -720,19 +720,19 @@ while test $# -gt 0; do
       ;;
     --cc)
       ### output used C compiler
-      out="$out $cccomp"
+      out="$out $altcc"
       ;;
     --cxx)
       ### output used C++ compiler
-      out="$out $cxxcomp"
+      out="$out $altcxx"
       ;;
     --f77)
       ### output used Fortran compiler
-      out="$out $f77comp"
+      out="$out $altf77"
       ;;
     --ld)
       ### output used Linker
-      out="$out $ldcomp"
+      out="$out $altld"
       ;;
     --help)
       ### Print a help message

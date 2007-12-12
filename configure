@@ -22,6 +22,10 @@ fail_on_missing=no
 noact="no"
 nohowto="no"
 logfile=config.log
+altcc=
+altcxx=
+altf77=
+altld=
 
 options="                    \
    enable_afs                \
@@ -81,7 +85,6 @@ options="                    \
    enable_xft                \
    enable_xml                \
    enable_xrootd             \
-   enable_compilers          \
 "
 
 #
@@ -109,7 +112,6 @@ enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
-enable_compilers=no
 
 # Remove old log file
 rm -f $logfile
@@ -1189,10 +1191,10 @@ if test $# -gt 0 ; then
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       --with-xrootd=*)         xrootddir=$optarg     ; enable_xrootd="yes"  ;;
-      --with-cc=*)             cccomp=$optarg        ; enable_compilers="yes" ;;
-      --with-cxx=*)            cxxcomp=$optarg       ; enable_compilers="yes" ;;
-      --with-f77=*)            f77comp=$optarg       ; enable_compilers="yes" ;;
-      --with-ld=*)             ldcomp=$optarg        ; enable_compilers="yes" ;;
+      --with-cc=*)             altcc=$optarg         ;;
+      --with-cxx=*)            altcxx=$optarg        ;;
+      --with-f77=*)            altf77=$optarg        ;;
+      --with-ld=*)             altld=$optarg         ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
@@ -4633,18 +4635,15 @@ result "done"
 # config/Makefile.comp
 #
 
-if test "x$enable_compilers" = "xyes"; then
-   message "Writing $MAKECOMPOUT"
-   sed -e "s|@cccomp@|$cccomp|"     \
-       -e "s|@cxxcomp@|$cxxcomp|"   \
-       -e "s|@f77comp@|$f77comp|"   \
-       -e "s|@ldcomp@|$ldcomp|"     \
-       < Makefile-comp.tmp > $MAKECOMPOUT
-   rm -f Makefile-comp.tmp
-   result "done"
-else
-   rm -f $MAKECOMPOUT
-fi
+message "Writing $MAKECOMPOUT"
+sed -e "s|@altcc@|$altcc|"     \
+    -e "s|@altcxx@|$altcxx|"   \
+    -e "s|@altf77@|$altf77|"   \
+    -e "s|@altld@|$altld|"     \
+    < Makefile-comp.tmp > $MAKECOMPOUT
+rm -f Makefile-comp.tmp
+
+result "done"
 
 #---------------------------------------------------------------------
 # include/RConfigure.h
@@ -4732,10 +4731,10 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@dicttype@|$dicttype|"           \
     -e "s|@zliblib@|$zliblib|"             \
     -e "s|@pythonvers@|$pythonvers|"       \
-    -e "s|@cccomp@|$cccomp|"               \
-    -e "s|@cxxcomp@|$cxxcomp|"             \
-    -e "s|@f77comp@|$f77comp|"             \
-    -e "s|@ldcomp@|$ldcomp|"               \
+    -e "s|@altcc@|$altcc|"                 \
+    -e "s|@altcxx@|$altcxx|"               \
+    -e "s|@altf77@|$altf77|"               \
+    -e "s|@altld@|$altld|"                 \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

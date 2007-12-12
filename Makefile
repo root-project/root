@@ -38,7 +38,7 @@ endif
 
 ##### Include compiler overrides specified via ./configure #####
 
--include config/Makefile.comp
+include config/Makefile.comp
 
 ##### Include library dependencies for explicit linking #####
 
@@ -562,7 +562,7 @@ Makefile: configure config/rootrc.in config/RConfigure.in config/Makefile.in \
 	 ) )
 endif
 
-$(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
+$(COMPILEDATA): config/Makefile.$(ARCH) config/Makefile.comp $(MAKECOMPDATA)
 	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPTFLAGS)" "$(DEBUGFLAGS)" \
 	   "$(CXXFLAGS)" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
 	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
