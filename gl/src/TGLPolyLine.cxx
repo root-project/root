@@ -24,6 +24,14 @@
 
 ClassImp(TGLPolyLine)
 
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>GL Polyline</h2></center>
+To draw a 3D polyline in a GL window.
+End_Html */
+
+
 //______________________________________________________________________________
 TGLPolyLine::TGLPolyLine(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
@@ -35,6 +43,7 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D & buffer) :
    if (TAttLine *lineAtt = dynamic_cast<TAttLine *>(buffer.fID))
       fLineWidth = lineAtt->GetLineWidth();
 }
+
 
 //______________________________________________________________________________
 void TGLPolyLine::DirectDraw(TGLRnrCtx & rnrCtx) const

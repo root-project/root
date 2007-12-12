@@ -28,6 +28,13 @@
 ClassImp(TGLPolyMarker)
 
 //______________________________________________________________________________
+/* Begin_Html
+<center><h2>GL Polymarker</h2></center>
+To draw a 3D polymarker in a GL window.
+End_Html */
+
+
+//______________________________________________________________________________
 TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
@@ -40,6 +47,7 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
       fSize  = realObj->GetMarkerSize() / 2.;
    }
 }
+
 
 //______________________________________________________________________________
 void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
@@ -104,6 +112,7 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
       break;
    }
 }
+
 
 //______________________________________________________________________________
 void TGLPolyMarker::DrawStars()const
