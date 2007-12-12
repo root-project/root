@@ -131,8 +131,8 @@ std::set<std::string>  TDocParser::fgKeywords;
 TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(cl), fDirectiveCount(0), fDocContext(kIgnore), 
-   fCheckForMethod(kFALSE), fFoundClassDescription(kFALSE), 
-   fLookForClassDescription(kTRUE), fCommentAtBOL(kFALSE)
+   fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized), 
+   fCommentAtBOL(kFALSE)
 {
    // Constructor called for parsing class sources
 
@@ -166,8 +166,8 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
 TDocParser::TDocParser(TDocOutput& docOutput):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(0), fDirectiveCount(0), fDocContext(kIgnore), 
-   fCheckForMethod(kFALSE), fFoundClassDescription(kFALSE), 
-   fLookForClassDescription(kTRUE), fCommentAtBOL(kFALSE)
+   fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
+   fCommentAtBOL(kFALSE)
 {
    // constructor called for parsing text files with Convert()
    InitKeywords();
@@ -1400,6 +1400,8 @@ void TDocParser::Parse(std::ostream& out)
    // immediately inside the class declaration. While doing that also
    // find the class description and special tags like the macro tag etc.
 
+   fClassDocState = kClassDoc_LookingNothingFound;
+
    LocateMethodsInSource(out);
    LocateMethodsInHeaderInline(out);
    LocateMethodsInHeaderClassDecl(out);
@@ -1414,7 +1416,6 @@ void TDocParser::Parse(std::ostream& out)
 void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                           Bool_t lookForSourceInfo /*= kTRUE*/, 
                           Bool_t useDocxxStyle /*= kFALSE*/, 
-                          Bool_t lookForClassDescr /*= kTRUE*/,
                           Bool_t allowPureVirtual /*= kFALSE*/,
                           const char* methodPattern /*= 0*/, 
                           const char* sourceExt /*= 0 */)
@@ -1449,8 +1450,6 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
       Error("LocateMethods", "Can't open file '%s' for reading!", sourceFileName.Data());
       return;
    }
-
-   fLookForClassDescription = lookForClassDescr;
 
    TString pattern(methodPattern);
 
@@ -1500,17 +1499,47 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
       if (!ProcessComment()) {
          // not a commented line
 
+         if (fDocContext == kDocClass && fClassDocState < kClassDoc_Written) {
+            TString strippedComment(fComment);
+            Strip(strippedComment);
+            if (strippedComment.Length() > 0) {
+               fLastClassDoc = fComment;
+               if (fClassDocState == kClassDoc_LookingNothingFound) {
+                  fFirstClassDoc = fComment;
+                  fClassDocState = kClassDoc_LookingHaveSomething;
+               }
+            }
+            fDocContext = kIgnore;
+         }
+
+         Ssiz_t impIdx = fLineStripped.Index("ClassImp(");
+         if (impIdx == 0 && fClassDocState == kClassDoc_LookingHaveSomething) {
+            TString name(fCurrentClass->GetName());
+            // take unscoped version
+            Ssiz_t posLastScope = kNPOS;
+            while ((posLastScope = name.Index("::")) != kNPOS)
+               name.Remove(0, posLastScope + 2);
+
+            Ssiz_t posName = fLineStripped.Index(name, impIdx);
+            if (posName != kNPOS) {
+               Ssiz_t posClosingParen = posName + name.Length();
+               while (isspace(fLineStripped[posClosingParen])) ++posClosingParen;
+               if (fLineStripped[posClosingParen] == ')') {
+                  WriteClassDoc(out, kFALSE);
+                  fDocContext = kIgnore;
+               }
+            }
+         }
+
+         if (fLineStripped.Length())
+            // remove last class doc if it not followed by ClassImp
+            // (with optional empty lines in between)
+            fLastClassDoc = "";
+
          // write previous method
          if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
             WriteMethod(out, methodRet, methodName, methodParam, 
                gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
-         } else if (fDocContext == kDocClass) {
-            // write class description
-            dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, fComment);
-            fLookForClassDescription = kFALSE;
-            fFoundClassDescription = kTRUE;
-            fComment.Remove(0);
-            fDocContext = kIgnore;
          }
 
          if (!wroteMethodNowWaitingForOpenBlock) {
@@ -1551,6 +1580,9 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                codeOneLiner.Remove(codeOneLiner.Index('}') + 1);
             }
          } // if method name and '{'
+         // else not a comment, and we don't need the previous one:
+         else fComment.Remove(0);
+
          if (needAnchor || fExtraLinesWithAnchor.find(fLineNo) != fExtraLinesWithAnchor.end()) {
             AnchorFromLine(anchor);
             if (sourceExt)
@@ -1581,14 +1613,8 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    if (methodName.Length()) {
       WriteMethod(out, methodRet, methodName, methodParam, 
          gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
-   } else if (fDocContext == kDocClass) {
-      // write class description
-      out << fComment << "</div>" << std::endl;
-   } else if (!fFoundClassDescription && fLookForClassDescription) {
-      dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, TString());
-      fLookForClassDescription = kFALSE;
-      fFoundClassDescription = kTRUE;
-   }
+   } else
+      WriteClassDoc(out);
 
    srcHtmlOut << "</pre>" << std::endl;
    fDocOutput->WriteHtmlFooter(srcHtmlOut, "../");
@@ -1618,7 +1644,7 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    
    const char* implFileName = fHtml->GetImplFileName(fCurrentClass);
    if (implFileName && implFileName[0])
-      LocateMethods(out, implFileName, kTRUE, useDocxxStyle, kTRUE, 
+      LocateMethods(out, implFileName, useDocxxStyle, kTRUE, 
          kFALSE, pattern, ".cxx.html");
    else out << "</div>" << endl; // close class descr div
 }
@@ -1641,7 +1667,7 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
    
    const char* declFileName = fHtml->GetDeclFileName(fCurrentClass);
    if (declFileName && declFileName[0])
-      LocateMethods(out, declFileName, kFALSE, useDocxxStyle, fLookForClassDescription, 
+      LocateMethods(out, declFileName, useDocxxStyle, 
          kFALSE, pattern, 0);
 }
 
@@ -1654,7 +1680,7 @@ void TDocParser::LocateMethodsInHeaderClassDecl(std::ostream& out)
 
    const char* declFileName = fHtml->GetDeclFileName(fCurrentClass);
    if (declFileName && declFileName[0])
-      LocateMethods(out, declFileName, kFALSE, kTRUE, kFALSE, kTRUE, 0, ".h.html");
+      LocateMethods(out, declFileName, kTRUE, kFALSE, kTRUE, 0, ".h.html");
 }
 
 //______________________________________________________________________________
@@ -1723,11 +1749,11 @@ Bool_t TDocParser::ProcessComment()
    Strip(commentLine);
 
    // look for start tag of class description
-   if (!fFoundClassDescription && fLookForClassDescription && !fComment.Length() 
+   if ((fClassDocState == kClassDoc_LookingNothingFound
+      || fClassDocState == kClassDoc_LookingHaveSomething)
+      && !fComment.Length() 
       && fDocContext == kIgnore && commentLine.Contains(fClassDescrTag)) {
       fDocContext = kDocClass;
-      fFoundClassDescription = kTRUE;
-      fLookForClassDescription = kFALSE;
    }
 
    char start_or_end = 0;
@@ -1759,11 +1785,11 @@ Bool_t TDocParser::ProcessComment()
                commentLine.Remove(0);
 
                // also a class doc signature: line consists of ////
-               if (!fFoundClassDescription && fLookForClassDescription && !fComment.Length() 
+               if ((fClassDocState == kClassDoc_LookingNothingFound
+                  || fClassDocState == kClassDoc_LookingHaveSomething)
+                  && !fComment.Length() 
                    && fDocContext == kIgnore && start_or_end=='/') {
                   fDocContext = kDocClass;
-                  fFoundClassDescription = kTRUE;
-                  fLookForClassDescription = kFALSE;
                }
             }
          }
@@ -1807,22 +1833,35 @@ void TDocParser::RemoveCommentContext(Bool_t cxxcomment)
 //______________________________________________________________________________
 Bool_t TDocParser::Strip(TString& str)
 {
-   // strips ' ' and tabs from both sides of str
-   Bool_t changed = str[0] == ' ' || str[0] == '\t';
-   changed |= str[str.Length()] == ' ' || str[str.Length()] == '\t';
+   // strips ' ', tabs, and newlines from both sides of str
+   Bool_t changed = str[0] == ' ' || str[0] == '\t' || str[0] == '\n';
+   changed |= str.Length()
+      && (str[str.Length() - 1] == ' ' || str[str.Length() - 1] == '\t' 
+         || str[str.Length() - 1] == '\n');
    if (!changed) return kFALSE;
    Ssiz_t i = 0;
-   while (str[i] == ' ' || str[i] == '\t')
+   while (str[i] == ' ' || str[i] == '\t' || str[i] == '\n')
       ++i;
    str.Remove(0,i);
    i = str.Length() - 1;
-   while (i >= 0 && (str[i] == ' ' || str[i] == '\t'))
+   while (i >= 0 && (str[i] == ' ' || str[i] == '\t' || str[i] == '\n'))
       --i;
    str.Remove(i + 1, str.Length());
    return kTRUE;
 }
 
+//______________________________________________________________________________
+void TDocParser::WriteClassDoc(std::ostream& out, Bool_t first /*= kTRUE*/)
+{
+   // Write the class description depending (among others) on fClassDocState.
 
+   if (fClassDocState == kClassDoc_LookingHaveSomething || fClassDocState == kClassDoc_LookingNothingFound) {
+      TString& classDoc = first || !fLastClassDoc.Length() ? fFirstClassDoc : fLastClassDoc;
+      dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, classDoc);
+      fClassDocState = kClassDoc_Written;
+   }
+
+}
 
 //______________________________________________________________________________
 void TDocParser::WriteMethod(std::ostream& out, TString& ret, 
@@ -1833,11 +1872,8 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    // Write a method, forwarding to TClassDocOutput
 
    // if we haven't found the class description until now it's too late.
-   if (!fFoundClassDescription && fLookForClassDescription) {
-      dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, TString());
-      fLookForClassDescription = kFALSE;
-      fFoundClassDescription = kTRUE;
-   }
+   if (fClassDocState < kClassDoc_Written)
+      WriteClassDoc(out);
 
    TMethod* guessedMethod = 0;
    int nparams = params.CountChar(',');

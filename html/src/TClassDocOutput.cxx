@@ -1509,13 +1509,13 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       classFile << "<a class=\"descrheadentry\" href=\"" << wikiLink << "\">wiki</a> ";
    }
 
-   classFile << "</div>" << endl;
+   classFile << endl << "</div>" << endl;
 
    classFile << "<div class=\"descrhead\">" << endl
       << "<span class=\"descrtitle\">Sections:</span>" << endl
       << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled;
    if (fHtml->IsNamespace(fCurrentClass))
-      classFile << ":description\">namespace description</a></span> ";
+      classFile << ":description\">namespace description</a> ";
    else
       classFile << ":description\">class description</a> ";
    classFile << endl

@@ -96,6 +96,8 @@ protected:
    TString        fLineComment;         // current line with links and directives for doc
    TString        fLineSource;      // current line with links
    TString        fComment;         // current comment
+   TString        fFirstClassDoc;   // first class-doc found - per file, taken if fLastClassDoc is empty
+   TString        fLastClassDoc;    // last class-doc found - becomes class doc at ClassImp or first method
    TClass*        fCurrentClass;    // current class context of sources being parsed
    TString        fCurrentMethodTag;// name_idx of the currently parsed method
    Int_t          fDirectiveCount;  // index of directive for current method
@@ -104,8 +106,14 @@ protected:
    EDocContext    fDocContext;      // current context of parsed sources for documenting
    std::list<UInt_t> fParseContext; // current context of parsed sources
    Bool_t         fCheckForMethod;  // whether to check the current line for a method
-   Bool_t         fFoundClassDescription; // whether we found the class description
-   Bool_t         fLookForClassDescription; // whether we are looking for the class description
+   enum {
+      kClassDoc_Uninitialized,
+      kClassDoc_LookingNothingFound,
+      kClassDoc_LookingHaveSomething,
+      kClassDoc_Written,
+      kClassDoc_Ignore,
+      kClassDoc_NumStates
+   }              fClassDocState; // whether we found the class description
    Bool_t         fCommentAtBOL;    // at the beginning of the current line, fParseContext contained kComment
    TString        fClassDescrTag;   // tag for finding the class description
    TString        fSourceInfoTags[kNumSourceInfos]; // tags for source info elements (copyright, last changed, author)
@@ -135,17 +143,17 @@ protected:
    void           LocateMethods(std::ostream& out, const char* filename,
                                 Bool_t lookForSourceInfo = kTRUE, 
                                 Bool_t useDocxxStyle = kFALSE, 
-                                Bool_t lookForClassDescr = kTRUE,
                                 Bool_t allowPureVirtual = kFALSE,
                                 const char* methodPattern = 0, 
                                 const char* sourceExt = 0);
    virtual Bool_t ProcessComment();
    void           RemoveCommentContext(Bool_t cxxcomment);
-   void   WriteMethod(std::ostream& out, TString& ret, 
-                      TString& name, TString& params,
-                      const char* file, TString& anchor,
-                      TString& codeOneLiner);
-   void  WriteSourceLine(std::ostream& out);
+   void           WriteClassDoc(std::ostream& out, Bool_t first = kTRUE);
+   void           WriteMethod(std::ostream& out, TString& ret, 
+                              TString& name, TString& params,
+                              const char* file, TString& anchor,
+                              TString& codeOneLiner);
+   void           WriteSourceLine(std::ostream& out);
 
 public:
    TDocParser(TClassDocOutput& docOutput, TClass* cl);
