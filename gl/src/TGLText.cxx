@@ -33,6 +33,13 @@
 
 ClassImp(TGLText)
 
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>GL Text</h2></center>
+To draw a 3D text in a GL window. This class uses uses FTGL to render text.
+FTGL is a package making the interface between the Free Type fonts and GL.
+End_Html */
+
 
 //______________________________________________________________________________
 TGLText::TGLText()
