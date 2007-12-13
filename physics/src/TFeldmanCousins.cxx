@@ -208,24 +208,7 @@ Double_t TFeldmanCousins::Prob(Int_t N, Double_t mu, Double_t B)
 // a mean of mu+B events with a variance of N //
 ////////////////////////////////////////////////
 
-   //calculate the factorial
-   Double_t    factorial = 1.0;
-   if (N == 2) factorial = 2.0;
-   else if (N > 2) {
-      for (Int_t ifact = N; ifact>=2; ifact--) {
-         factorial = (Double_t)ifact * factorial;
-      }
-   }
-
-   Double_t sum = mu+B;
-   Double_t power;
-   if      (N==1) power = sum;
-   else if (N==2) power = sum*sum;
-   else if (N==3) power = sum*sum*sum;
-   else if (N==4) power = sum*sum*sum*sum;
-   else           power = pow(sum, N);
-
-   return ( power * exp(-sum) / factorial );
+   return TMath::Poisson( N, mu+B);
 }
 
 //______________________________________________________________________________
