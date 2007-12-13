@@ -4,7 +4,7 @@
 CLEAN_TARGETS += *.log $(ALL_LIBRARIES) scopeDict.* scopeDict2.*
 
 #Set the list of target to make while testing
-TEST_TARGETS += lessThan operatorLessThanTemplate testTable scopeTest multiScope Readbool
+TEST_TARGETS += lessThan operatorLessThanTemplate testTable scopeTest multiScope Readbool ptrconst
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -61,4 +61,10 @@ else
 endif
 
 Readbool: Readbool.log
+	$(TestDiff)
+
+ptrconst.clog: ptrconst_C.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ptrconst.C+ > ptrconst.clog 2>&1
+
+ptrconst: ptrconst.clog
 	$(TestDiff)
