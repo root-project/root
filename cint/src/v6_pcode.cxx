@@ -2229,6 +2229,7 @@ void G__OP2_divassign(G__value *bufm1,G__value *bufm2)
 void G__OP1_postfixinc_i(G__value* pbuf)
 {
   *(int*)pbuf->ref = (int) pbuf->obj.i + 1;
+  pbuf->ref= (long) &(pbuf->obj.i);
 }
 
 /****************************************************************
@@ -2237,6 +2238,7 @@ void G__OP1_postfixinc_i(G__value* pbuf)
 void G__OP1_postfixdec_i(G__value* pbuf)
 {
   *(int*)pbuf->ref = (int) pbuf->obj.i - 1;
+  pbuf->ref= (long) &(pbuf->obj.i);
 }
 
 /****************************************************************
@@ -2261,6 +2263,7 @@ void G__OP1_prefixdec_i(G__value *pbuf)
 void G__OP1_postfixinc_d(G__value *pbuf)
 {
   *(double*)pbuf->ref = (double)pbuf->obj.d + 1.0;
+  pbuf->ref= (long) &(pbuf->obj.d);
 }
 
 /****************************************************************
@@ -2269,6 +2272,7 @@ void G__OP1_postfixinc_d(G__value *pbuf)
 void G__OP1_postfixdec_d(G__value *pbuf)
 {
   *(double*)pbuf->ref = (double)pbuf->obj.d-1.0;
+  pbuf->ref= (long) &(pbuf->obj.d);
 }
 /****************************************************************
 * G__OP1_prefixinc_d()

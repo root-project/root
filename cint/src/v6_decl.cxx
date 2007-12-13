@@ -242,9 +242,11 @@ static int G__get_newname(char* new_name)
       if (isspace(cin)) {
          if (strcmp(new_name, "*const") == 0 || strcmp(new_name, "const") == 0) {
             if (new_name[0]=='*') {
-               cin = G__fgetvarname(new_name + 1, ",;=():");
                G__constvar |= G__PCONSTVAR;
+               cin = G__fgetvarname(new_name + 1, ",;=():");
             } else {
+               if (isupper(G__var_type)) G__constvar |= G__PCONSTVAR;
+               else                     G__constvar |= G__CONSTVAR;
                cin = G__fgetvarname(new_name, ",;=():");
             }
             if (strcmp(new_name, "&*") == 0 || strcmp(new_name, "*&") == 0) {
@@ -263,8 +265,6 @@ static int G__get_newname(char* new_name)
                   cin = G__fgetvarname(new_name + 1, ",;=():");
                }
             }
-            if (isupper(G__var_type)) G__constvar |= G__PCONSTVAR;
-            else                     G__constvar |= G__CONSTVAR;
          }
          else if (strcmp(new_name, "const&") == 0) {
             cin = G__fgetvarname(new_name, ",;=():");
