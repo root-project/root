@@ -5,12 +5,12 @@ Warning in <TClass::TClass>: no dictionary for class Tdata is available
 
 ==> Looking at the StreamerInfo before loading the library
 
-StreamerInfo for class: data, version=1
+StreamerInfo for class: data, version=1, checksum=0x810cd3a3
   int            myvar_one       offset=  0 type= 3                     
    i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
 data's streamerInfo #1 has a checksum of 0x810cd3a3
 
-StreamerInfo for class: Tdata, version=1
+StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=  0 type= 3                     
    i= 0, myvar_one       type=  3, offset=  0, len=1, method=0
 Tdata's streamerInfo #1 has a checksum of 0x589374f7
@@ -27,7 +27,7 @@ Warning in <TClass::PostLoadCheck>:
 StreamerInfo for class: data, checksum=0x72709669
   double         mydouble_two    offset=  0 type= 8                     
    i= 0, mydouble_two    type=  8, offset=  0, len=1, method=0
-data's streamerInfo #1 has a checksum of 0x72709669
+data's streamerInfo #ffffffff has a checksum of 0x72709669
 
 ==> List all the StreamerInfo after loading the library
 
@@ -40,14 +40,14 @@ StreamerInfo for class: data, checksum=0x810cd3a3
 
 ==> Looking at the StreamerInfo after loading the library
 
-StreamerInfo for class: Tdata, version=1
+StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 Tdata's streamerInfo #1 has a checksum of 0x589374f7
 
 ==> List all the StreamerInfo after loading the library
 
-StreamerInfo for class: Tdata, version=1
+StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset=99999 type= 3                     
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 

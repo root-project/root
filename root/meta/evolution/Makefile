@@ -51,7 +51,7 @@ data6.root: writefile.C data6_C.$(DllSuf)
 foreign.log: data1.root data2.root data3.root data4.root data2_C.$(DllSuf)
 
 warning.log: data1.root data2.root data3.root data4.root data5.root \
-	         data6.root data2_C.$(DllSuf) checkWarn.C
+	         data6.root data2_C.$(DllSuf) checkWarn.C $(ROOTCORELIBS)
 	$(CMDECHO) ($(CALLROOTEXE) -q -b -l 'checkWarn.C(0)' \
 	    && $(CALLROOTEXE) -q -b -l 'checkWarn.C(1)' \
 	    && $(CALLROOTEXE) -q -b -l 'checkWarn.C(2)' \

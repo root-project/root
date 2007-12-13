@@ -60,7 +60,7 @@ LHCb.build.log: DataObject.h  ODIN.h  RawBank.h  RawEvent.h
 	$(CMDECHO) root.exe -b -l -q loadLHCb.C > LHCb.build.log 2>&1  
 
 LHCb.log: LHCb.build.log runLHCb.C
-	$(CMDECHO) root.exe -b -l -q runLHCb.C 2>&1 |  sed -e 's@offset= *[0-9]*@offset= n/a@' > LHCb.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q runLHCb.C 2>&1 |  sed -e 's@offset= *[0-9]*@offset= n/a@' > LHCb.log
 
 LHCb: LHCb.log LHCb.ref
 	$(TestDiff)

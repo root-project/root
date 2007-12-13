@@ -140,7 +140,7 @@ int main(int argc, char **argv)
         
     // Verify the class version:
     bool result = true;
-    result &= verifyVersion("RootPCvirt",1);
+    result &= verifyVersion("RootPCvirt",-1);
     //no header file version setting yet result &= verifyVersion("RootPCellID",2);
     result &= verifyVersion("RootPCfix",3);
     result &= verifyVersion("RootPCnodict",1);

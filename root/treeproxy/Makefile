@@ -59,7 +59,7 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-leaflist.log: simPosProxy.C hsimpleProxy.C Makefile
+leaflist.log: simPosProxy.C hsimpleProxy.C Makefile runleaflist.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runleaflist.C 2>&1 | grep -v -e ACLiC -e 'Creating library' \
 	     -e _cint.cxx -e '_[0-9].cxx' -e '_.cxx' \
 	     -e 'Warning in <TClassTable::Add>: class generatedSel already in TClassTable'> leaflist.log

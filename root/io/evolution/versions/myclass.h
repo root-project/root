@@ -10,7 +10,11 @@ public:
    short a;
 #elif VERSION==5
    long a;
-#endif;
+#elif VERSION==6
+   long long a;
+   virtual ~MyClass() {}
+   ClassDef(MyClass,1);
+#endif
 };
 
 #include "TFile.h"
@@ -27,6 +31,7 @@ RootClassVersion(MyClass,2)
 
 #if VERSION==5
 // Intentional too low
+// Actually this is a no-op :)
 RootClassVersion(MyClass,1)
 #endif
 
