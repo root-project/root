@@ -64,6 +64,7 @@ public:
 private:
    UInt_t            fCheckSum;          //checksum of original class
    Int_t             fClassVersion;      //Class version identifier
+   Int_t             fOnFileClassVersion;//!Class version identifier as stored on file.
    Int_t             fNumber;            //!Unique identifier
    Int_t             fNdata;             //!number of optmized types
    Int_t             fSize;              //!size of the persistent class
@@ -162,6 +163,7 @@ public:
    Int_t               GetOffset(const char *) const;
    Int_t              *GetOffsets() const {return fOffset;}
    Version_t           GetOldVersion() const {return fOldVersion;}
+   Int_t               GetOnFileClassVersion() const {return fOnFileClassVersion;}
    Int_t               GetSize()    const;
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;

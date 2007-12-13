@@ -110,6 +110,7 @@ public:
    virtual Int_t       GetOffset(const char *) const = 0;
    virtual Int_t      *GetOffsets() const = 0;
    virtual Version_t   GetOldVersion() const = 0;
+   virtual Int_t       GetOnFileClassVersion() const = 0;
    virtual Int_t       GetNumber()  const = 0;
    virtual Int_t       GetSize()    const = 0;
    virtual TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;

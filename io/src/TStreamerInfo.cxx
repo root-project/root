@@ -72,6 +72,7 @@ TStreamerInfo::TStreamerInfo()
    fNdata    = 0;
    fSize     = 0;
    fClassVersion = 0;
+   fOnFileClassVersion = 0;
    fOptimized = kFALSE;
    fOldVersion = Class()->GetClassVersion();
    fIsBuilt  = kFALSE;
@@ -100,6 +101,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fOptimized = kFALSE;
    fIsBuilt  = kFALSE;
    fClassVersion = fClass->GetClassVersion();
+   fOnFileClassVersion = 0;
    fOldVersion = Class()->GetClassVersion();
 
    if (info) BuildUserInfo(info);
@@ -110,6 +112,7 @@ TStreamerInfo::TStreamerInfo(const TStreamerInfo& si) :
   TVirtualStreamerInfo(si),
   fCheckSum(si.fCheckSum),
   fClassVersion(si.fClassVersion),
+  fOnFileClassVersion(si.fOnFileClassVersion),
   fNumber(si.fNumber),
   fNdata(si.fNdata),
   fSize(si.fSize),
@@ -137,6 +140,7 @@ TStreamerInfo& TStreamerInfo::operator=(const TStreamerInfo& si)
       TVirtualStreamerInfo::operator=(si);
       fCheckSum=si.fCheckSum;
       fClassVersion=si.fClassVersion;
+      fOnFileClassVersion=si.fOnFileClassVersion;
       fNumber=si.fNumber;
       fNdata=si.fNdata;
       fSize=si.fSize;
@@ -420,7 +424,6 @@ void TStreamerInfo::BuildCheck()
    TObjArray* array = 0;
    fClass = TClass::GetClass(GetName());
    if (!fClass) {
-      // FIXME: Is this the proper version number?
       fClass = new TClass(GetName(), fClassVersion, 0, 0, -1, -1);
       fClass->SetBit(TClass::kIsEmulation);
       array = fClass->GetStreamerInfos();
@@ -430,30 +433,95 @@ void TStreamerInfo::BuildCheck()
       }
       array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
-      // If we have a foreign class, we need to search for
-      // a StreamerInfo with same checksum.
+
+      // If the user has not specified a class version (this _used to_
+      // always be the case when the class is Foreign) or if the user
+      // has specified a version to be explicitly 1. [We can not
+      // distringuish the two cases using the information in the "on
+      // file" StreamerInfo.]
+
       Bool_t searchOnChecksum = kFALSE;
-      if (fClass->IsLoaded()) {
-         if (fClass->IsForeign()) {
-            searchOnChecksum = kTRUE;
+      if (fClass->IsLoaded() && fClass->GetClassVersion() >= 2) {
+         // We know for sure that the user specified the version.
+
+         if (fOnFileClassVersion >= 2) {
+            // The class version was specified when the object was
+            // written
+
+            searchOnChecksum = kFALSE;
+
+         } else {
+            // The class version was not specified when the object was
+            // written OR it was specified to be 1.
+
+            searchOnChecksum = kTRUE;            
          }
+      } else if (fClass->IsLoaded() && !fClass->IsForeign()) {
+         // We are in the case where the class has a Streamer function.
+         // and fClass->GetClassVersion is 1, we still assume that the
+         // Class Version is specified (to be one).
+
+         searchOnChecksum = kFALSE;
+
+      } else if (fClass->IsLoaded() /* implied: && fClass->IsForeign() */ ) {
+         // We are in the case of a Foreign class with no specified
+         // class version.
+
+         searchOnChecksum = kTRUE;
+
       } else {
-         // When the class is not loaded the result of IsForeign()
-         // is not what we are looking for (technically it means
-         // IsLoaded() and there is no Streamer() method).
-         //
-         // A foreign class would have the ClassVersion equal to 1.
-         // Also we only care if a StreamerInfo has already been loaded.
-         if (fClassVersion == 1) {
+         // We are in the case of an 'emulated' class.
+
+         if (fOnFileClassVersion >= 2) {
+            // The class version was specified when the object was
+            // written
+
+            searchOnChecksum = kFALSE;
+
+         } else {
+            // The class version was not specified when the object was
+            // written OR it was specified to be 1.
+
+            searchOnChecksum = kTRUE;
+
             TStreamerInfo* v1 = (TStreamerInfo*) array->At(1);
             if (v1) {
                if (fCheckSum != v1->GetCheckSum()) {
-                  searchOnChecksum = kTRUE;
                   fClassVersion = array->GetLast() + 1;
                }
             }
          }
       }
+            
+
+
+//       searchOnChecksum = kTRUE;
+
+//       // If we have a foreign class, we need to search for
+//       // a StreamerInfo with same checksum.
+//       Bool_t searchOnChecksum = kFALSE;
+//       if (fClass->IsLoaded()) {
+//          if (fClass->IsForeign()) {
+//             searchOnChecksum = kTRUE;
+//          }
+//       } else {
+//          // When the class is not loaded the result of IsForeign()
+//          // is not what we are looking for (technically it means
+//          // IsLoaded() and there is no Streamer() method).
+//          //
+//          // A foreign class would have the ClassVersion equal to 1.
+//          // Also we only care if a StreamerInfo has already been loaded.
+//          if (fClassVersion == 1) {
+//             TStreamerInfo* v1 = (TStreamerInfo*) array->At(1);
+//             if (v1) {
+//                if (fCheckSum != v1->GetCheckSum()) {
+//                   searchOnChecksum = kTRUE;
+//                   fClassVersion = array->GetLast() + 1;
+//                }
+//             }
+//          }
+//       }
+
       if (!searchOnChecksum) {
          info = (TStreamerInfo*) array->At(fClassVersion);
       } else {
@@ -469,7 +537,17 @@ void TStreamerInfo::BuildCheck()
             }
             info = 0;
          }
+         if (info==0) {
+            // Find an empty slot.
+            Int_t ninfos = array->GetEntriesFast() - 1;
+            Int_t slot = 1; // Start of Class version 1.
+            while ((slot < ninfos) && (array->UncheckedAt(slot) != 0)) {
+               ++slot;
+            }
+            fClassVersion = slot;
+         }
       }
+
       // NOTE: Should we check if the already existing info is the same as
       // the current one? Yes
       // In case a class (eg Event.h) has a TClonesArray of Tracks, it could be
@@ -479,9 +557,11 @@ void TStreamerInfo::BuildCheck()
          // We found an existing TStreamerInfo for our ClassVersion
          Bool_t match = kTRUE;
          Bool_t done = kFALSE;
+         Bool_t oldIsNonVersioned = kFALSE;
          if (!fClass->TestBit(TClass::kWarned) && (fClassVersion == info->GetClassVersion()) && (fCheckSum != info->GetCheckSum())) {
 
             match = kFALSE;
+            oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
 
             if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->GetListOfDataMembers() && (fClass->GetClassInfo())) {
                // In the case where the read-in TStreamerInfo does not
@@ -529,16 +609,35 @@ void TStreamerInfo::BuildCheck()
             info = 0;
          }
          if (!match && !fClass->TestBit(TClass::kWarned)) {
-            if (done) {
+            if (oldIsNonVersioned) {
                Warning("BuildCheck", "\n\
+   The class %s transitioned from not having a specified class version\n\
+   to having a specified class version (the current class version is %d).\n\
+   However too many different non-versioned layouts of the class have been\n\
+   loaded so far.  This prevent the proper reading of objects written with\n\
+   the class layout version %d, in particular from the file:\n\
+   %s.\n\
+   To work around this issue, load fewer 'old' files in the same ROOT session.",
+                       GetName(),fClass->GetClassVersion(),fClassVersion,gDirectory->GetFile()->GetName());
+            } else {
+               if (done) {
+                  Warning("BuildCheck", "\n\
    The StreamerInfo for version %d of class %s read from file %s\n\
    has a different checksum than the previously loaded StreamerInfo.\n\
    Reading objects of type %s from the file %s \n\
    (and potentially other files) might not work correctly.\n\
    Most likely the version number of the class was not properly\n\
-   updated [See ClassDef(%s,%d)].\n", fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
-            } else {
-               Warning("BuildCheck", "TStreamerInfo (WriteWarning) from %s does not match existing one (%s:%d)", gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
+   updated [See ClassDef(%s,%d)].", 
+                          fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
+               } else {
+                  Warning("BuildCheck", "\n\
+   The StreamerInfo from %s does not match existing one (%s:%d)\n\
+   The existing one has not been used yet and will be discarded.\n\
+   Reading the %s will work properly, however writing object of\n\
+   type %s will not work properly.  Most likely the version number\n\
+   of the class was not properly updated [See ClassDef(%s,%d)].", 
+                          gDirectory->GetFile()->GetName(), GetName(), fClassVersion,gDirectory->GetFile()->GetName(),GetName(), GetName(), fClassVersion);
+               }
             }
             fClass->SetBit(TClass::kWarned);
          }
@@ -546,41 +645,45 @@ void TStreamerInfo::BuildCheck()
             return;
          }
       }
-      if (fClass->GetListOfDataMembers() && (fClassVersion == fClass->GetClassVersion()) && (fCheckSum != fClass->GetCheckSum()) && (fClass->GetClassInfo())) {
-         // Give a last chance. Due to a new CINT behaviour with enums
-         //verify the checksum ignoring members of type enum and 
-         //verify the checksum without the comments annotation (//[xyz])
+      // The slot was free, however it might still be reversed for the current 
+      // loaded version of the class
+      if (fClass->GetListOfDataMembers() 
+          && (fClassVersion == fClass->GetClassVersion()) 
+          && (fCheckSum != fClass->GetCheckSum()) 
+          && (fClass->GetClassInfo())) {
+
+         // If the old TStreamerInfo matches the in-memory one when we either
+         //   - ignore the members of type enum
+         // or
+         //   - ignore the comments annotation (//[xyz])
+         // we can accept the old TStreamerInfo.
+         
          if (fCheckSum != fClass->GetCheckSum(1) && fCheckSum != fClass->GetCheckSum(2)) {
-            if (fClass->IsForeign()) {
-               // Find an empty slot.
-               Int_t ninfos = array->GetEntriesFast() - 1;
-               Int_t slot = 2; // Start of Class version 2.
-               while ((slot < ninfos) && (array->UncheckedAt(slot) != 0)) {
-                  ++slot;
-               }
-               fClassVersion = slot;
-            } else {
-               Bool_t warn = !fClass->TestBit(TClass::kWarned);
-               if (warn && (fOldVersion <= 2)) {
-                  // Names of STL base classes was modified in vers==3. Allocators removed
-                  //
-                  TIter nextBC(fClass->GetListOfBases());
-                  TBaseClass* bc = 0;
-                  while ((bc = (TBaseClass*) nextBC())) {
-                     if (TClassEdit::IsSTLCont(bc->GetName())) {
-                        warn = kFALSE;
-                     }
+            
+            Bool_t warn = !fClass->TestBit(TClass::kWarned);
+            if (warn && (fOldVersion <= 2)) {
+               // Names of STL base classes was modified in vers==3. Allocators removed
+               //
+               TIter nextBC(fClass->GetListOfBases());
+               TBaseClass* bc = 0;
+               while ((bc = (TBaseClass*) nextBC())) {
+                  if (TClassEdit::IsSTLCont(bc->GetName())) {
+                     warn = kFALSE;
                   }
                }
-               if (warn) {
-                  Warning("BuildCheck", "\n\
+            }
+            if (warn) {
+               Warning("BuildCheck", "\n\
    The StreamerInfo of class %s read from file %s\n\
    has the same version (=%d) as the active class but a different checksum.\n\
    You should update the version to ClassDef(%s,%d).\n\
    Do not try to write objects with the current class definition,\n\
    the files will not be readable.\n", GetName(), gDirectory->GetFile()->GetName(), fClassVersion, GetName(), fClassVersion + 1);
-                  fClass->SetBit(TClass::kWarned);
-               }
+               fClass->SetBit(TClass::kWarned);
+            }
+         } else {
+            if (fClass->IsForeign()) {
+               R__ASSERT(0);
             }
          }
       } else {
@@ -597,7 +700,7 @@ void TStreamerInfo::BuildCheck()
    if (TestBit(kIgnoreTObjectStreamer)) {
       fClass->IgnoreTObjectStreamer();
    }
-   if ((fClassVersion < 0) || (fClassVersion > 65000)) {
+   if ((fClassVersion < -1) || (fClassVersion > 65000)) {
       printf("ERROR reading TStreamerInfo: %s fClassVersion=%d\n", GetName(), fClassVersion);
       SetBit(kCanDelete);
       fNumber = -1;
@@ -825,10 +928,6 @@ void TStreamerInfo::BuildOld()
       //  Instead we force the creation of the main streamerInfo object
       //  before the creation of fRealData.
       fClass->GetStreamerInfo();
-   }
-
-   // FIXME: This is a little strange.
-   if (fClass->GetCollectionProxy() && (fElements->GetEntries() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
    }
 
    TIter next(fElements);
@@ -2010,10 +2109,10 @@ Double_t TStreamerInfo::GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables
-   if (fClass && fClass->IsForeign()) {
+   if (fClass && fClass->IsForeign() && fClass->GetClassVersion()<2) {
       Printf("\nStreamerInfo for class: %s, checksum=0x%x",GetName(),GetCheckSum());
    } else {
-      Printf("\nStreamerInfo for class: %s, version=%d",GetName(),fClassVersion);
+      Printf("\nStreamerInfo for class: %s, version=%d, checksum=0x%x",GetName(),fClassVersion,GetCheckSum());
    }
 
    if (fElements) fElements->ls(option);
@@ -2430,6 +2529,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b >> fCheckSum;
          R__b.ClassMember("fClassVersion","Int_t");
          R__b >> fClassVersion;
+         fOnFileClassVersion = fClassVersion;
          R__b.ClassMember("fElements","TObjArray*");
          R__b >> fElements;
          R__b.ClassEnd(TStreamerInfo::Class());
@@ -2440,6 +2540,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       TNamed::Streamer(R__b);
       R__b >> fCheckSum;
       R__b >> fClassVersion;
+      fOnFileClassVersion = fClassVersion;
       R__b >> fElements;
       R__b.CheckByteCount(R__s, R__c, TStreamerInfo::IsA());
    } else {
@@ -2451,7 +2552,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       R__b.ClassMember("fCheckSum","UInt_t");
       R__b << fCheckSum;
       R__b.ClassMember("fClassVersion","Int_t");
-      R__b << fClassVersion;
+      R__b << ((fClassVersion > 0) ? fClassVersion : -fClassVersion);
       R__b.ClassMember("fElements","TObjArray*");
       R__b << fElements;
       R__b.ClassEnd(TStreamerInfo::Class());

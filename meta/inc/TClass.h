@@ -79,7 +79,7 @@ public:
 
 private:
 
-   TObjArray         *fStreamerInfo;    //Array of TVirtualStreamerInfo
+   mutable TObjArray *fStreamerInfo;    //Array of TVirtualStreamerInfo
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TList             *fData;            //linked list for data members
@@ -92,7 +92,7 @@ private:
    Short_t            fImplFileLine;    //line of class implementation
    UInt_t             fInstanceCount;   //number of instances of this class
    UInt_t             fOnHeap;          //number of instances on heap
-   UInt_t             fCheckSum;        //checksum of data members and base classes
+   mutable UInt_t     fCheckSum;        //checksum of data members and base classes
    TVirtualCollectionProxy *fCollectionProxy; //Collection interface
    Version_t          fClassVersion;    //Class version Identifier
    G__ClassInfo      *fClassInfo;       //pointer to CINT class info class
@@ -105,7 +105,7 @@ private:
 
    TVirtualIsAProxy  *fIsA;             //!pointer to the class's IsA proxy.
    IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
-   TMethodCall       *fIsAMethod;       //!saved info to call a IsA member function
+   mutable TMethodCall *fIsAMethod;       //!saved info to call a IsA member function
 
    ROOT::NewFunc_t    fNew;             //pointer to a function newing one object.
    ROOT::NewArrFunc_t fNewArray;        //pointer to a function newing an array of objects.
@@ -114,13 +114,13 @@ private:
    ROOT::DesFunc_t    fDestructor;      //pointer to a function call an object's destructor.
    Int_t              fSizeof;          //Sizeof the class.
 
-   Bool_t             fVersionUsed;     //!Indicates whether GetClassVersion has been called
-   Long_t             fProperty;        //!Property
+   mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
+   mutable Long_t     fProperty;        //!Property
 
    void              *fInterStreamer;   //!saved info to call Streamer
    Long_t             fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
-   TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
+   mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    TMethod           *GetClassMethod(Long_t faddr);
@@ -209,7 +209,7 @@ public:
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
-   Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return (fClassVersion>=0) ? fClassVersion : (-fClassVersion); }
+   Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
    TDataMember       *GetDataMember(const char *datamember) const;
    Long_t              GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const { return fDeclFileName; }
@@ -254,7 +254,7 @@ public:
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const; 
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
-   TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0);
+   TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;

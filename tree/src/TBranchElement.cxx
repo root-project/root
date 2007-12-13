@@ -1451,9 +1451,9 @@ void TBranchElement::InitInfo()
             // Try to compensate for a class that got unloaded on us.
             // Search through the streamer infos by checksum
             // and take the first match.
-            Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
-            for (Int_t i = 1; i < ninfos; ++i) {
-               TVirtualStreamerInfo* info = (TVirtualStreamerInfo*) cl->GetStreamerInfos()->At(i);
+            Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast() - 1;
+            for (Int_t i = -1; i < ninfos; ++i) {
+               TVirtualStreamerInfo* info = (TVirtualStreamerInfo*) cl->GetStreamerInfos()->UncheckedAt(i);
                if (!info) {
                   continue;
                }
@@ -3492,11 +3492,17 @@ void TBranchElement::Streamer(TBuffer& R__b)
       TDirectory *dirsav = fDirectory;
       fDirectory = 0;  // to avoid recursive calls
 
+      // Record only positive 'version number'
+      Int_t classVersion = fClassVersion;
+      if (fClassVersion < 0) fClassVersion = -fClassVersion;
+
       // FIXME: Should we clear the kDeleteObject bit before writing?
       //        If we did we would have to remember to old value and
       //        put it back, we wouldn't want to forget that we owned
       //        something just because we got written to disk.
       R__b.WriteClassBuffer(TBranchElement::Class(), this);
+      
+      fClassVersion = classVersion;
 
       // make sure that all TVirtualStreamerInfo objects referenced by
       // this class are written to the file

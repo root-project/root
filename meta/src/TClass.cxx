@@ -1595,11 +1595,11 @@ TClass *TClass::GetActualClass(const void *object) const
       //will not work if the class derives from TObject but not as primary
       //inheritance.
       if (fIsAMethod==0) {
-         ((TClass*)this)->fIsAMethod = new TMethodCall((TClass*)this, "IsA", "");
+         fIsAMethod = new TMethodCall((TClass*)this, "IsA", "");
 
          if (!fIsAMethod->GetMethod()) {
             delete fIsAMethod;
-            ((TClass*)this)->fIsAMethod = 0;
+            fIsAMethod = 0;
             Error("IsA","Can not find any IsA function for %s!",GetName());
             return (TClass*)this;
          }
@@ -1618,7 +1618,7 @@ TClass *TClass::GetBaseClass(const char *classname)
    // "classname" is not a base class. Takes care of multiple inheritance.
 
    // check if class name itself is equal to classname
-   if (strcmp(GetName(), classname) == 0) return (TClass*)this;
+   if (strcmp(GetName(), classname) == 0) return this;
 
    if (!fClassInfo) return 0;
 
@@ -1646,7 +1646,7 @@ TClass *TClass::GetBaseClass(const TClass *cl)
    // is not a base class. Takes care of multiple inheritance.
 
    // check if class name itself is equal to classname
-   if (cl == this) return (TClass*)this;
+   if (cl == this) return this;
 
    if (!fClassInfo) return 0;
 
@@ -1768,7 +1768,7 @@ TClass *TClass::GetBaseDataMember(const char *datamember)
 
    // Check if data member exists in class itself
    TDataMember *dm = GetDataMember(datamember);
-   if (dm) return (TClass*)this;
+   if (dm) return this;
 
    // if datamember not found in class, search in next base classes
    TBaseClass *inh;
@@ -2819,7 +2819,7 @@ Int_t TClass::GetNmethods()
 }
 
 //______________________________________________________________________________
-TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version)
+TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
 {
    // returns a pointer to the TVirtualStreamerInfo object for version
    // If the object doest not exist, it is created
@@ -2860,7 +2860,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version)
    }
    if (!sinfo) {
       // We just were not able to find a streamer info, we have to make a new one.
-      sinfo = TVirtualStreamerInfo::Factory(this);
+      sinfo = TVirtualStreamerInfo::Factory(const_cast<TClass*>(this));
       fStreamerInfo->AddAtAndExpand(sinfo, fClassVersion);
       if (gDebug > 0) {
          printf("Creating StreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
@@ -2957,7 +2957,7 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
 
    if (!fClassInfo) {
       TVirtualStreamerInfo *sinfo = ((TClass *)this)->GetCurrentStreamerInfo();
-      if (sinfo==0) sinfo = ((TClass *)this)->GetStreamerInfo();
+      if (sinfo==0) sinfo = GetStreamerInfo();
       TIter next(sinfo->GetElements());
       TStreamerElement *element;
       while ((element = (TStreamerElement*)next())) {
@@ -3608,7 +3608,7 @@ Int_t TClass::Size() const
    if (fSizeof!=-1) return fSizeof;
    if (fCollectionProxy) return fCollectionProxy->Sizeof();
    if (fClassInfo) return GetClassInfo()->Size();
-   return ((TClass*)this)->GetStreamerInfo()->GetSize();
+   return GetStreamerInfo()->GetSize();
 }
 
 //______________________________________________________________________________
@@ -3756,12 +3756,12 @@ void TClass::PostLoadCheck()
    // we reset fClassVersion to be -1 so that the current TVirtualStreamerInfo will not
    // be confused with a previously loaded streamerInfo.
 
-   if (IsLoaded() && fClassInfo && fClassVersion==1 && fStreamerInfo
-      && fStreamerInfo->At(1) && IsForeign() )
+   if (IsLoaded() && fClassInfo && fClassVersion==1 /*&& fStreamerInfo
+       && fStreamerInfo->At(1)*/ && IsForeign() )
    {
       SetClassVersion(-1);
    }
-   else if (IsLoaded() && fClassInfo && fStreamerInfo && !IsForeign() )
+   else if (IsLoaded() && fClassInfo && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
    {
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
       // Here we need to check whether this TVirtualStreamerInfo (which presumably has been
@@ -3782,13 +3782,27 @@ void TClass::PostLoadCheck()
          }
 
          if (warn) {
-            Warning("PostLoadCheck","\n\
-        The StreamerInfo version %d for the class %s which was read\n\
-        from a file previously opened has the same version as the active class \n\
-        but a different checksum. You should update the version to ClassDef(%s,%d).\n\
-        Do not try to write objects with the current class definition,\n\
-        the files will not be readable.\n"
-                    , fClassVersion, GetName(), GetName(), fClassVersion+1);
+            if (info->GetOnFileClassVersion()==1 && fClassVersion>1) {
+               Warning("PostLoadCheck","\n\
+   The class %s transitioned from not having a specified class version\n\
+   to having a specified class version (the current class version is %d).\n\
+   However too many different non-versioned layouts of the class have\n\
+   already been loaded so far.  To work around this problem you can\n\
+   load fewer 'old' file in the same ROOT session or load the C++ library\n\
+   describing the class %s before opening the files or increase the version\n\
+   number of the class for example ClassDef(%s,%d).\n\
+   Do not try to write objects with the current class definition,\n\
+   the files might not be readable.\n",
+                       GetName(), fClassVersion, GetName(), GetName(), fStreamerInfo->GetLast()+1);
+            } else {
+               Warning("PostLoadCheck","\n\
+   The StreamerInfo version %d for the class %s which was read\n\
+   from a file previously opened has the same version as the active class\n\
+   but a different checksum. You should update the version to ClassDef(%s,%d).\n\
+   Do not try to write objects with the current class definition,\n\
+   the files will not be readable.\n"
+                       , fClassVersion, GetName(), GetName(), fStreamerInfo->GetLast()+1);
+            }
             SetBit(kWarned);
          }
       }
@@ -3804,7 +3818,7 @@ Long_t TClass::Property() const
    //    kStartWithTObject:  TObject is the left-most class in the inheritance tree
    //    kIsForeign : the class doe not have a Streamer method
    // The value of fStreamerType are
-   //    kTObject : the class inhetis from TObject
+   //    kTObject : the class inherits from TObject
    //    kForeign : the class does not have a Streamer method
    //    kInstrumented: the class does have a Streamer method
    //    kExternal: the class has a free standing way of streaming itself
@@ -4142,7 +4156,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
          }
       }/*EndMembLoop*/
    }
-   if (code==0) ((TClass*)this)->fCheckSum = id;
+   if (code==0) fCheckSum = id;
    return id;
 }
 
