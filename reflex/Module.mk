@@ -130,7 +130,7 @@ $(RFLX_GRFLXDD)/%.py: $(RFLX_GRFLXSD)/%.py $(RFLX_GCCXMLPATHPY)
 $(RFLX_GRFLXDD)/%.pyc: $(RFLX_GRFLXDD)/%.py
 		@python -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(RFLX_GENREFLEX): $(RFLX_GRFLXPYC)
+$(RFLX_GENREFLEX): $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 		@echo $(RFLX_GNRFLX_L1) > $(RFLX_GENREFLEX)
 		@echo $(RFLX_GNRFLX_L2) >> $(RFLX_GENREFLEX)
 ifneq ($(PLATFORM),win32)
