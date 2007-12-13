@@ -1458,6 +1458,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    TString methodName;
    TString methodParam;
    TString anchor;
+   TString docxxComment;
 
    Bool_t wroteMethodNowWaitingForOpenBlock = kFALSE;
 
@@ -1538,8 +1539,11 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
 
          // write previous method
          if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
+            if (useDocxxStyle && docxxComment.Length())
+               fComment = docxxComment;
             WriteMethod(out, methodRet, methodName, methodParam, 
                gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
+            docxxComment.Remove(0);
          }
 
          if (!wroteMethodNowWaitingForOpenBlock) {
@@ -1552,8 +1556,9 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                if (methodName.Length()) {
                   fDocContext = kDocFunc;
                   needAnchor = !anchor.Length();
-                  if (!useDocxxStyle)
-                     fComment.Remove(0);
+                  if (useDocxxStyle)
+                     docxxComment = fComment;
+                  fComment.Remove(0);
                   codeOneLiner.Remove(0);
 
                   wroteMethodNowWaitingForOpenBlock = fLineRaw.Index("{", posPattern) == kNPOS;
@@ -1581,7 +1586,8 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
             }
          } // if method name and '{'
          // else not a comment, and we don't need the previous one:
-         else fComment.Remove(0);
+         else if (!methodName.Length() && !useDocxxStyle)
+            fComment.Remove(0);
 
          if (needAnchor || fExtraLinesWithAnchor.find(fLineNo) != fExtraLinesWithAnchor.end()) {
             AnchorFromLine(anchor);
@@ -1611,8 +1617,11 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
 
    // deal with last func
    if (methodName.Length()) {
+      if (useDocxxStyle && docxxComment.Length())
+         fComment = docxxComment;
       WriteMethod(out, methodRet, methodName, methodParam, 
          gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
+      docxxComment.Remove(0);
    } else
       WriteClassDoc(out);
 
@@ -1644,8 +1653,8 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    
    const char* implFileName = fHtml->GetImplFileName(fCurrentClass);
    if (implFileName && implFileName[0])
-      LocateMethods(out, implFileName, useDocxxStyle, kTRUE, 
-         kFALSE, pattern, ".cxx.html");
+      LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle, 
+                    kFALSE /*allowPureVirtual*/, pattern, ".cxx.html");
    else out << "</div>" << endl; // close class descr div
 }
 
@@ -1667,8 +1676,8 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
    
    const char* declFileName = fHtml->GetDeclFileName(fCurrentClass);
    if (declFileName && declFileName[0])
-      LocateMethods(out, declFileName, useDocxxStyle, 
-         kFALSE, pattern, 0);
+      LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle, 
+                    kFALSE /*allowPureVirtual*/, pattern, 0);
 }
 
 //______________________________________________________________________________
@@ -1680,7 +1689,8 @@ void TDocParser::LocateMethodsInHeaderClassDecl(std::ostream& out)
 
    const char* declFileName = fHtml->GetDeclFileName(fCurrentClass);
    if (declFileName && declFileName[0])
-      LocateMethods(out, declFileName, kTRUE, kFALSE, kTRUE, 0, ".h.html");
+      LocateMethods(out, declFileName, kTRUE/*source info*/, kTRUE /*useDocxxStyle*/,
+                    kTRUE /*allowPureVirtual*/, 0, ".h.html");
 }
 
 //______________________________________________________________________________
