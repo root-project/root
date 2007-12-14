@@ -1760,7 +1760,8 @@ void TSystem::ListSymbols(const char *, const char *)
 //______________________________________________________________________________
 void TSystem::ListLibraries(const char *regexp)
 {
-   // List all loaded shared libraries. Regexp is a wildcard expression.
+   // List all loaded shared libraries. Regexp is a wildcard expression,
+   // see TRegexp::MakeWildcard.
 
    TString libs = GetLibraries(regexp);
    TRegexp separator("[^ \\t\\s]+");
@@ -1808,6 +1809,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
                                   Bool_t isRegexp)
 {
    // Return a space separated list of loaded shared libraries.
+   // Regexp is a wildcard expression, see TRegexp::MakeWildcard.
    // This list is of a format suitable for a linker, i.e it may contain
    // -Lpathname and/or -lNameOfLib.
    // Option can be any of:
@@ -1817,7 +1819,6 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    // For MacOS only:
    //   L: list the .dylib rather than the .so (this is intended for linking)
    //      This options is not the default
-   //
 
    fListLibs = "";
    TString libs = "";
