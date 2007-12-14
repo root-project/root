@@ -3208,7 +3208,7 @@ static struct Signalmap_t {
    struct sigaction *fOldHandler;
    const char       *fSigName;
 } gSignalMap[kMAXSIGNALS] = {       // the order of the signals should be identical
-   { SIGBUS,   0, 0, "bus error" }, // to the one in SysEvtHandler.h
+   { SIGBUS,   0, 0, "bus error" }, // to the one in TSysEvtHandler.h
    { SIGSEGV,  0, 0, "segmentation violation" },
    { SIGSYS,   0, 0, "bad argument to system call" },
    { SIGPIPE,  0, 0, "write on a pipe with no one to read it" },
