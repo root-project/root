@@ -1116,14 +1116,18 @@ void TBranchElement::FillLeaves(TBuffer& b)
    //        inherit from tobject are not handled correctly?
    //
 
-   if ((fType <= 2) && TestBit(kBranchObject)) {
+   if ((fType <= 2)) {
       // We are not a TClonesArray master/sub nor an STL container master/sub,
       // so we are either a top-level branch, a base class branch, a split class
       // branch, or a data member branch.
       // FIXME: We should probably only map data member branches.
       // FIXME: We should only map addresses we actually do i/o on.
       // FIXME: We should map fAddress instead for MakeClass() trees.
-      b.MapObject((TObject*) fObject);
+      if (TestBit(kBranchObject)) {
+         b.MapObject((TObject*) fObject);
+      } else {
+         b.MapObject(fObject, fBranchClass);
+      }
    }
 
    //
@@ -2716,8 +2720,12 @@ void TBranchElement::ReadLeaves(TBuffer& b)
    // FIXME: Does this mean that pointers to objects which
    //        do not inherit from tobject are not handled correctly?
 
-   if ((fType <= 2) && TestBit(kBranchObject) && fBranchClass->IsLoaded()) {
-      b.MapObject((TObject*) fObject);
+   if ((fType <= 2) && fBranchClass->IsLoaded()) {
+      if (TestBit(kBranchObject)) {
+         b.MapObject((TObject*) fObject);
+      } else {
+         b.MapObject(fObject, fBranchClass);
+      }
    }
 
    if (fType == 4) {
