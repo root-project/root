@@ -3698,10 +3698,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kStringNotEqual: pos2 -= 2; pos++;if (strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
                                                    else tab[pos-1]=0; continue;
 
-            case kBitAnd    : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
-            case kBitOr     : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
-            case kLeftShift : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); continue;
-            case kRightShift: pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); continue;
+            case kBitAnd    : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) & ((Long64_t) tab[pos]); continue;
+            case kBitOr     : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) | ((Long64_t) tab[pos]); continue;
+            case kLeftShift : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) <<((Long64_t) tab[pos]); continue;
+            case kRightShift: pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) >>((Long64_t) tab[pos]); continue;
 
             case kStringConst: {
                // String
