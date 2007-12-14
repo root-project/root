@@ -13,6 +13,9 @@
 //                                                                      //
 // TGuiBldHintsButton                                                   //
 //                                                                      //
+// Special button class used for editing layout hints in the ROOT       //
+// GUI Builder.                                                         //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGuiBldHintsButton.h"

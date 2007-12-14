@@ -43,7 +43,7 @@ public:
    TGuiBldHintsButton(const TGWindow *p, Int_t id);
    virtual ~TGuiBldHintsButton() {}
 
-   ClassDef(TGuiBldHintsButton,0) //button used to edit layout hints
+   ClassDef(TGuiBldHintsButton,0) //Button for editing layout hints in GUI Builder
 };
 
 #endif

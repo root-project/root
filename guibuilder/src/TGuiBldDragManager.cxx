@@ -59,6 +59,8 @@
 //                                                                      //
 // TGuiBldDragManager                                                   //
 //                                                                      //
+// Drag and drop manager used by the ROOT GUI Builder.                  //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 

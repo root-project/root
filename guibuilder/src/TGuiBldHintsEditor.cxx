@@ -13,6 +13,9 @@
 //                                                                      //
 // TGuiBldHintsEditor                                                   //
 //                                                                      //
+// Editor of widget's layout hints used by the ROOT GUI builder.        //
+//                                                                      //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGuiBldHintsEditor.h"
