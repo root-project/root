@@ -3226,7 +3226,7 @@ Int_t TBufferFile::ReadClassBuffer(TClass *cl, void *pointer, Int_t version, UIn
    //the StreamerInfo should exist at this point
    TObjArray *infos = cl->GetStreamerInfos();
    Int_t ninfos = infos->GetSize();
-   if (version < 0 || version >= ninfos) {
+   if (version < -1 || version >= ninfos) {
       Error("ReadBuffer1","class: %s, attempting to access a wrong version: %d",cl->GetName(),version);
       CheckByteCount(start,count,cl);
       return 0;
