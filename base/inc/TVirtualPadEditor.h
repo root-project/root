@@ -16,7 +16,7 @@
 //                                                                      //
 // TVirtualPadEditor                                                    //
 //                                                                      //
-// Abstract base class for pad editing                                  //
+// Abstract base class used by ROOT graphics editor                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
