@@ -12,8 +12,12 @@
 #ifndef ROOT_TGraphPolar
 #define ROOT_TGraphPolar
 
+#ifndef ROOT_TGraphErrors
 #include "TGraphErrors.h"
-#include "Riostream.h"
+#endif
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 #ifndef ROOT_TAttText
 #include "TAttText.h"
 #endif

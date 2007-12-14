@@ -52,6 +52,7 @@ End_Macro */
 #include "TEllipse.h"
 #include "TH1.h"
 #include "TMath.h"
+#include "Riostream.h"
 
 
 ClassImp(TGraphPolar);
