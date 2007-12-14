@@ -14,7 +14,7 @@
 
 /*************************************************************************
 
- THnSparse: histogramming multi-dimensional, sparse distributions in 
+ THnSparse: histogramming multi-dimensional, sparse distributions in
  a memory-efficient way.
 
 *************************************************************************/
@@ -58,7 +58,7 @@ class TH3D;
 class THnSparseArrayChunk: public TObject {
  public:
    THnSparseArrayChunk():
-      fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0), 
+      fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0),
       fContent(0), fSumw2(0) {}
 
    THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
@@ -82,7 +82,7 @@ class THnSparseArrayChunk: public TObject {
       // Check whether bin at idx batches idxbuf.
       // If we don't store indexes we trust the caller that it does match,
       // see comment in THnSparseCompactBinCoord::GetHash().
-      return fCoordinatesSize <= 4 || 
+      return fCoordinatesSize <= 4 ||
          !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
 
    ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
@@ -137,7 +137,7 @@ class THnSparse: public TNamed {
    THnSparse* CloneEmpty(const char* name, const char* title,
                          const TObjArray* axes, Int_t chunksize) const;
 
-   Bool_t CheckConsistency(const THnSparse *h, Char_t * tag) const;
+   Bool_t CheckConsistency(const THnSparse *h, const char *tag) const;
    Bool_t IsInRange(Int_t *coord) const;
 
  public:
@@ -214,7 +214,7 @@ class THnSparse: public TNamed {
    void Add(const THnSparse* h, Double_t c=1.);
    void Multiply(const THnSparse* h);
    void Divide(const THnSparse* h);
-   void Divide(const THnSparse* h1, const THnSparse* h2, Double_t c1 = 1., Double_t c2 = 1., Option_t* option=""); 
+   void Divide(const THnSparse* h1, const THnSparse* h2, Double_t c1 = 1., Double_t c2 = 1., Option_t* option="");
 
    void Reset(Option_t* option = "");
    void Sumw2();

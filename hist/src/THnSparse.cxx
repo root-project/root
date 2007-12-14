@@ -772,7 +772,7 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
-      
+
       oldCoordX = coord[xDim];
       oldCoordY = coord[yDim];
       coord[xDim] = inRangeX;
@@ -1225,11 +1225,11 @@ void THnSparse::Divide(const THnSparse *h1, const THnSparse *h2, Double_t c1, Do
 }
 
 //______________________________________________________________________________
-Bool_t THnSparse::CheckConsistency(const THnSparse *h, Char_t * tag) const
+Bool_t THnSparse::CheckConsistency(const THnSparse *h, const char *tag) const
 {
-   // consistency check on (some of) the parameters of two histograms (for operations)
+   // Consistency check on (some of) the parameters of two histograms (for operations).
 
-   if(fNdimensions!=h->GetNdimensions()){
+   if (fNdimensions!=h->GetNdimensions()) {
       Warning(tag,"Different number of dimensions, cannot carry out operation on the histograms");
       return kFALSE;
    }

@@ -647,7 +647,7 @@ void LoadLibraryMap() {
                               sbuffer = base.size()+20;
                            }
                            strcpy(buffer,base.c_str());
-                           G__set_class_autoloading_table(buffer,""); // We never load namespaces on their own.
+                           G__set_class_autoloading_table(buffer, (char*)""); // We never load namespaces on their own.
                         }
                         ++k;
                      }
@@ -682,7 +682,7 @@ extern "C" {
 }
 
 void EnableAutoLoading() {
-   G__set_class_autoloading_table("ROOT","libCore.so");
+   G__set_class_autoloading_table((char*)"ROOT", (char*)"libCore.so");
    LoadLibraryMap();
    G__set_class_autoloading_callback(&AutoLoadCallback);
 }
@@ -2512,18 +2512,17 @@ void WriteClassInit(G__ClassInfo &cl)
       //fprintf(stderr,"DEBUG: %s has value %d\n",classname.c_str(),(int)G__int(G__calc(temporary)));
    }
 
-   char *filename = (char*)cl.FileName();
-   if (filename) {
+   char *filename = cl.FileName() ? StrDup(cl.FileName()) : StrDup("");
+   if (strlen(filename) > 0) {
       for (unsigned int i=0; i<strlen(filename); i++) {
          if (filename[i]=='\\') filename[i]='/';
       }
-   } else {
-      filename = "";
    }
    (*dictSrcOut) << "\"" << filename << "\", " << cl.LineNumber() << "," << std::endl
        << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
    //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
        << "                  ";
+   delete [] filename;
    if (!NeedShadowClass(cl)) {
       if (!cl.HasMethod("ShowMembers")) (*dictSrcOut) << "0, ";
    } else {
@@ -4411,11 +4410,11 @@ int main(int argc, char **argv)
       if (ifl) {
          char *s;
          ic++;
-         argvv[argcc++] = "-q0";
-         argvv[argcc++] = "-n";
+         argvv[argcc++] = (char *)"-q0";
+         argvv[argcc++] = (char *)"-n";
          argvv[argcc] = (char *)calloc(strlen(argv[ifl])+1, 1);
          strcpy(argvv[argcc], argv[ifl]); argcc++;
-         argvv[argcc++] = "-N";
+         argvv[argcc++] = (char *)"-N";
          s = strrchr(dictname,'.');
          argvv[argcc] = (char *)calloc(strlen(dictname), 1);
          strncpy(argvv[argcc], dictname, s-dictname); argcc++;
@@ -4439,16 +4438,16 @@ int main(int argc, char **argv)
             argvv[argcc++] = path[i];
 
 #ifdef __hpux
-         argvv[argcc++] = "-I/usr/include/X11R5";
+         argvv[argcc++] = (char *)"-I/usr/include/X11R5";
 #endif
          switch (gErrorIgnoreLevel) {
-            case kInfo:     argvv[argcc++] = "-J4"; break;
-            case kNote:     argvv[argcc++] = "-J3"; break;
-            case kWarning:  argvv[argcc++] = "-J2"; break;
-            case kError:    argvv[argcc++] = "-J1"; break;
+            case kInfo:     argvv[argcc++] = (char *)"-J4"; break;
+            case kNote:     argvv[argcc++] = (char *)"-J3"; break;
+            case kWarning:  argvv[argcc++] = (char *)"-J2"; break;
+            case kError:    argvv[argcc++] = (char *)"-J1"; break;
             case kSysError:
-            case kFatal:    argvv[argcc++] = "-J0"; break;
-            default:        argvv[argcc++] = "-J1"; break;
+            case kFatal:    argvv[argcc++] = (char *)"-J0"; break;
+            default:        argvv[argcc++] = (char *)"-J1"; break;
          }
 
          if (!use_preprocessor) {
@@ -4513,28 +4512,29 @@ int main(int argc, char **argv)
 #endif
          }
 #ifdef ROOTBUILD
-         argvv[argcc++] = "-DG__NOCINTDLL";
+         argvv[argcc++] = (char *)"-DG__NOCINTDLL";
 #endif
-         argvv[argcc++] = "-DTRUE=1";
-         argvv[argcc++] = "-DFALSE=0";
-         argvv[argcc++] = "-Dexternalref=extern";
-         argvv[argcc++] = "-DSYSV";
-         argvv[argcc++] = "-D__MAKECINT__";
-         argvv[argcc++] = "-V";        // include info on private members
+         argvv[argcc++] = (char *)"-DTRUE=1";
+         argvv[argcc++] = (char *)"-DFALSE=0";
+         argvv[argcc++] = (char *)"-Dexternalref=extern";
+         argvv[argcc++] = (char *)"-DSYSV";
+         argvv[argcc++] = (char *)"-D__MAKECINT__";
+         argvv[argcc++] = (char *)"-V";        // include info on private members
          if (dict_type==kDictTypeReflex) {
-            argvv[argcc++] = "-c-3";
+            argvv[argcc++] = (char *)"-c-3";
+         } else {
+            argvv[argcc++] = (char *)"-c-10";
          }
-         else argvv[argcc++] = "-c-10";
-         argvv[argcc++] = "+V";        // turn on class comment mode
+         argvv[argcc++] = (char *)"+V";        // turn on class comment mode
          if (!use_preprocessor) {
 #ifdef ROOTBUILD
-            argvv[argcc++] = "TObject.h";
-            argvv[argcc++] = "TMemberInspector.h";
-            //argvv[argcc++] = "base/inc/TObject.h";
-            //argvv[argcc++] = "base/inc/TMemberInspector.h";
+            argvv[argcc++] = (char *)"TObject.h";
+            argvv[argcc++] = (char *)"TMemberInspector.h";
+            //argvv[argcc++] = (char *)"base/inc/TObject.h";
+            //argvv[argcc++] = (char *)"base/inc/TMemberInspector.h";
 #else
-            argvv[argcc++] = "TObject.h";
-            argvv[argcc++] = "TMemberInspector.h";
+            argvv[argcc++] = (char *)"TObject.h";
+            argvv[argcc++] = (char *)"TMemberInspector.h";
 #endif
          }
       } else {
@@ -4569,7 +4569,7 @@ int main(int argc, char **argv)
             for (j = 0; path[j][0]; j++) {
                argvv[argcc++] = (char*)path[j];
             }
-            argvv[argcc++] = "+V";
+            argvv[argcc++] = (char *)"+V";
          }
          iv = argcc;
       }
