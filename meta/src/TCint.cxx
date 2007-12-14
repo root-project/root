@@ -168,7 +168,7 @@ void TCint::EnableAutoLoading()
    // Enable the automatic loading of shared libraries when a class
    // is used that is stored in a not yet loaded library. Uses the
    // information stored in the class/library map (typically
-   // $ROOTSYS/etc/system.rootmap).
+   // coming from the <lib>.rootmap files).
 
    G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
    LoadLibraryMap();
