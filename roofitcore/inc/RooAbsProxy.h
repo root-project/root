@@ -18,7 +18,7 @@
 
 #include "TObject.h"
 #include "RooAbsArg.h"
-#include <iostream>
+#include "Riosfwd.h"
 
 #ifdef _WIN32
 // Turn off 'warning C4355: 'this' : used in base member initializer list'
@@ -39,7 +39,7 @@ public:
 
   virtual const char* name() const { return "dummy" ; } ;  
   inline const RooArgSet* nset() const { return _nset ; }
-  virtual void print(ostream& os=std::cout) const { os << name() << std::endl ; }
+  virtual void print(ostream& os) const ;
 
 protected:
 

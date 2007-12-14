@@ -17,7 +17,6 @@
 #include "RooAbsReal.h"
 #include "RooHistPdf.h"
 #include "RooObjCacheManager.h"
-#include <list>
 #include <map>
 class RooArgSet ;
  
@@ -69,7 +68,7 @@ protected:
   TString cacheNameSuffix(const RooArgSet& nset) const ;
   void disableCache(Bool_t flag) { _disableCache = flag ; }
 
-  mutable std::map<Int_t,pair<const RooArgSet*,const RooArgSet*> > _anaIntMap ; //!
+  mutable std::map<Int_t,std::pair<const RooArgSet*,const RooArgSet*> > _anaIntMap ; //!
   
 
 private:

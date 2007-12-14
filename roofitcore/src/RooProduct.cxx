@@ -29,13 +29,14 @@
 #include <utility>
 #include <memory>
 
-
 #include "RooProduct.h"
 #include "RooNameReg.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
+
+using namespace std ;
 
 ClassImp(RooProduct)
 ;

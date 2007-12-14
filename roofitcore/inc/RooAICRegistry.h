@@ -16,7 +16,7 @@
 #ifndef ROO_AIC_REGISTRY
 #define ROO_AIC_REGISTRY
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <assert.h>
 #include "Rtypes.h"
 class RooArgSet ;

@@ -20,6 +20,9 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
+
+
 #include "RooAbsIntegrator.h"
 #include "RooAbsIntegrator.h"
 #include "RooMsgService.h"

@@ -17,12 +17,14 @@
 // -- CLASS DESCRIPTION [AUX] --
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "TObjString.h"
 #include "TObjString.h"
 #include "RooNameSet.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
+
+
 
 ClassImp(RooNameSet)
 ;

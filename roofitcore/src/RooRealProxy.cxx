@@ -23,8 +23,8 @@
 // the proxy to functions a Double_t on the right hand side of expressions.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "TClass.h"
 #include "TClass.h"
 #include "RooRealProxy.h"
 #include "RooRealVar.h"
@@ -53,4 +53,14 @@ RooRealProxy::~RooRealProxy()
 }
 
 
+RooAbsRealLValue* RooRealProxy::lvptr() const 
+{
+  // Assert that the held arg is an LValue
+  RooAbsRealLValue* lvptr = (RooAbsRealLValue*)dynamic_cast<const RooAbsRealLValue*>(_arg) ;
+  if (!lvptr) {
+    cout << "RooRealProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
+    assert(0) ;
+  }
+  return lvptr ;
+}
 

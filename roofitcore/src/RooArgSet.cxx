@@ -42,7 +42,6 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 #include <list>
@@ -57,6 +56,8 @@
 #include "RooArgList.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
+
+using namespace std ;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );

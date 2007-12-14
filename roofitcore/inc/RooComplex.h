@@ -18,7 +18,7 @@
 
 #include <math.h>
 #include "Rtypes.h"
-#include "Riostream.h"
+#include "Riosfwd.h"
 
 // This is a bare-bones complex class adapted from the CINT complex.h header,
 // and introduced to support the complex error function in RooMath. The main

@@ -18,8 +18,8 @@
 
 #include "RooFit.h"
 #include "RooRealVarSharedProperties.h"
-#include <iostream>
-using namespace std ;
+#include "Riostream.h"
+
 
 ClassImp(RooRealVarSharedProperties)
 ;

@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_CATEGORY
 #define ROO_ABS_CATEGORY
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "TObjArray.h"
 #include "RooAbsArg.h"
 #include "RooCatType.h"

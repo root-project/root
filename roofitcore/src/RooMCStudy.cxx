@@ -31,6 +31,7 @@
 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooMCStudy.h"
 #include "RooAbsMCStudyModule.h"
@@ -51,6 +52,8 @@
 #include "RooGlobalFunc.h"
 #include "RooPullVar.h"
 #include "RooMsgService.h"
+
+using namespace std ;
 
 ClassImp(RooMCStudy)
   ;

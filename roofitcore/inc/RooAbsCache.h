@@ -17,8 +17,7 @@
 #define ROO_ABS_CACHE
 
 #include "Rtypes.h"
-
-#include <iostream> 
+#include "Riosfwd.h"
 
 class RooAbsArg ;
 class RooAbsCollection ;
@@ -36,7 +35,7 @@ public:
   virtual void operModeHook() ;
   virtual void optimizeCacheMode(const RooArgSet&, RooArgSet&, RooLinkedList& ) ;
   virtual void findConstantNodes(const RooArgSet&, RooArgSet& , RooLinkedList&) ;
-  virtual void printCompactTreeHook(std::ostream&, const char *) ;
+  virtual void printCompactTreeHook(ostream&, const char *) ;
 
   virtual ~RooAbsCache() ;
    

@@ -16,7 +16,7 @@
 #ifndef ROO_LINEAR_VAR
 #define ROO_LINEAR_VAR
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <math.h>
 #include <float.h>
 #include "TString.h"

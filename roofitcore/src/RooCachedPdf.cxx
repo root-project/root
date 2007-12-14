@@ -12,7 +12,7 @@
  // -- CLASS DESCRIPTION [PDF] -- 
  // Your description goes here... 
 
-#include <iostream> 
+#include "Riostream.h" 
 
 #include "RooAbsPdf.h"
 #include "RooCachedPdf.h" 

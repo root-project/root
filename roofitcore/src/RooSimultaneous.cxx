@@ -30,8 +30,8 @@
 // state of the index category is returned.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "TObjString.h"
 #include "TObjString.h"
 #include "RooSimultaneous.h"
 #include "RooAbsCategoryLValue.h"
@@ -48,6 +48,8 @@
 #include "RooGlobalFunc.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooSimultaneous)
 ;

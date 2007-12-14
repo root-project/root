@@ -36,6 +36,7 @@
 // automatic PDF optimization.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "TClass.h"
 #include <fstream>
@@ -58,6 +59,7 @@
 #include "RooAbsPdf.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
+
 
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)

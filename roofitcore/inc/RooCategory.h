@@ -16,7 +16,7 @@
 #ifndef ROO_CATEGORY
 #define ROO_CATEGORY
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "RooAbsCategoryLValue.h"
 
 #include "RooSharedPropertiesList.h"

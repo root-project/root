@@ -16,8 +16,8 @@
 #ifndef ROO_TRACE
 #define ROO_TRACE
 
-#include "Riostream.h"
 #include <assert.h>
+#include "Riosfwd.h"
 #include "RooLinkedList.h"
 
 class RooTrace {
@@ -30,8 +30,9 @@ public:
   
   static void active(Bool_t flag) ;
   static void verbose(Bool_t flag) ;
-  
-  static void dump(ostream& os=cout, Bool_t sinceMarked=kFALSE) ;
+
+  static void dump() ;
+  static void dump(ostream& os, Bool_t sinceMarked=kFALSE) ;
   static void mark() ;
 
 protected:

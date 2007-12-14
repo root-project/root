@@ -21,7 +21,7 @@
 #include "RooSharedProperties.h"
 #include "TIterator.h"
 #include "RooMsgService.h"
-#include <iostream>
+#include "Riostream.h"
 using std::cout ;
 using std::endl ;
 

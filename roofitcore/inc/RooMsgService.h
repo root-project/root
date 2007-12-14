@@ -16,10 +16,9 @@
 #ifndef ROO_MSG_SERVICE
 #define ROO_MSG_SERVICE
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <assert.h>
 #include "TObject.h"
-#include <map>
 #include <string>
 #include <vector>
 #include <map>
@@ -162,9 +161,9 @@ protected:
   Int_t activeStream(const TObject* self, MsgTopic facility, MsgLevel level) ;
 
   std::vector<StreamConfig> _streams ;
-  ostream* _devnull ;
+  std::ostream* _devnull ;
 
-  std::map<string,ostream*> _files ;
+  std::map<std::string,std::ostream*> _files ;
 
   Bool_t _silentMode ; 
 

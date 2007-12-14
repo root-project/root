@@ -128,7 +128,7 @@ protected:
   mutable Double_t _curVolume ; // Volume of bin enclosing current coordinate
   mutable Int_t    _curIndex ; // Current index
 
-  mutable vector<Double_t>* _pbinv ; //! Partial bin volume array
+  mutable std::vector<Double_t>* _pbinv ; //! Partial bin volume array
   mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; // Cache manager for arrays of partial bin volumes
   std::list<RooAbsLValue*> _lvvars ; //!
 

@@ -33,7 +33,7 @@ public:
   inline RooAbsArg* absArg() const { return _arg ; }
 
   virtual const char* name() const { return GetName() ; }
-  virtual void print(ostream& os=std::cout) const { os << name() << "=" << (_arg?_arg->GetName():"NULL") ; }
+  virtual void print(ostream& os) const ;
 
 protected:
 

@@ -25,8 +25,21 @@
 #include <stdlib.h>
 #include "RooCatType.h"
 
+#include "Riostream.h"
+
+
 ClassImp(RooCatType)
 ;
+
+
+void RooCatType::SetName(const Text_t* name) 
+{ 
+  if (strlen(name)>255) {
+    std::cout << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << std::endl ;
+    _label[255]=0 ;
+  }
+  strncpy(_label,name,255) ;
+}
 
 void RooCatType::printToStream(ostream& os, PrintOption /*opt*/, TString /*indent*/) const {
   // Print info about this category type to the specified stream. We only have a

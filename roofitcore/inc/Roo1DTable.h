@@ -16,7 +16,7 @@
 #ifndef ROO_1D_TABLE
 #define ROO_1D_TABLE
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <assert.h>
 #include "TObjArray.h"
 #include "RooTable.h"

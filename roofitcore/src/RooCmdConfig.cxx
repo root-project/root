@@ -27,6 +27,9 @@
 #include "TObjString.h"
 #include "RooMsgService.h"
 
+#include "Riostream.h"
+
+
 ClassImp(RooCmdConfig) 
   ;
 

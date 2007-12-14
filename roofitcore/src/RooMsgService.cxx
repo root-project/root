@@ -50,7 +50,7 @@
 #include "RooGlobalFunc.h"
 #include "RooSentinel.h"
 
-#include <iostream>
+#include "Riostream.h"
 #include <iomanip>
 #include <fstream>
 using namespace std ;
@@ -101,7 +101,7 @@ RooMsgService::RooMsgService()
   gMsgService = this ;
 
   addStream(RooMsgService::WARNING) ;
-  addStream(RooMsgService::INFO,Topic(RooMsgService::Generation|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Optimization|RooMsgService::Minimization|RooMsgService::Caching)) ;
+  addStream(RooMsgService::INFO,Topic(RooMsgService::Generation|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Optimization|RooMsgService::Minimization|RooMsgService::Caching|RooMsgService::ObjectHandling)) ;
 
 
 }

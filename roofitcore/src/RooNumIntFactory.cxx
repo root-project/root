@@ -20,10 +20,10 @@
 // use this class in the (normalization) integral configuration interface
 
 #include "TClass.h"
+#include "Riostream.h"
 
 #include "RooFit.h"
 
-#include "RooNumIntFactory.h"
 #include "RooNumIntFactory.h"
 #include "RooArgSet.h"
 #include "RooAbsFunc.h"
@@ -42,6 +42,7 @@
 
 #include "RooMsgService.h"
 
+using namespace std ;
 
 ClassImp(RooNumIntFactory)
 ;

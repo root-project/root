@@ -23,6 +23,9 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
+
+
 #include "RooMsgService.h"
 #include "RooAddGenContext.h"
 #include "RooAddGenContext.h"

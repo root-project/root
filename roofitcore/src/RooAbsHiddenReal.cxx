@@ -25,6 +25,8 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
+
 #include "RooArgSet.h"
 #include "RooArgSet.h"
 #include "RooAbsHiddenReal.h"

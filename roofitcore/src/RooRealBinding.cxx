@@ -20,8 +20,8 @@
 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooRealBinding.h"
 #include "RooRealBinding.h"
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
@@ -30,6 +30,8 @@
 #include "RooMsgService.h"
 
 #include <assert.h>
+
+
 
 ClassImp(RooRealBinding)
 ;

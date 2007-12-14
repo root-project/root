@@ -20,6 +20,7 @@
 
 #include "RooFit.h"
 #include "RooMsgService.h"
+#include "Riostream.h"
 
 #include "RooGenContext.h"
 #include "RooGenContext.h"
@@ -33,6 +34,8 @@
 
 #include "TString.h"
 #include "TIterator.h"
+
+
 
 ClassImp(RooGenContext)
   ;

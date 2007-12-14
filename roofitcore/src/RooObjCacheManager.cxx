@@ -27,9 +27,12 @@
 // 
 
 #include "RooFit.h"
+#include "Riostream.h"
 #include <vector>
 #include "RooObjCacheManager.h"
 #include "RooMsgService.h"
+
+using namespace std ;
 
 ClassImp(RooObjCacheManager)
    ;

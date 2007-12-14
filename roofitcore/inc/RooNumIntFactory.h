@@ -46,7 +46,7 @@ protected:
 	 
   friend class RooNumIntConfig ;
 
-  std::map<std::string,pair<RooAbsIntegrator*,std::string> > _map ;
+  std::map<std::string,std::pair<RooAbsIntegrator*,std::string> > _map ;
 
   RooNumIntFactory(); 
   RooNumIntFactory(const RooNumIntFactory& other) ;

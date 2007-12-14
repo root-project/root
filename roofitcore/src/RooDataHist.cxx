@@ -21,6 +21,7 @@
 //
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "TH1.h"
 #include "TH1.h"
@@ -36,6 +37,8 @@
 #include "RooBinning.h"
 #include "RooPlot.h"
 #include "RooHistError.h"
+
+using namespace std ;
 
 ClassImp(RooDataHist) 
 ;

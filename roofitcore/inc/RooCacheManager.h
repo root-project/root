@@ -18,6 +18,8 @@
 
 #include "Rtypes.h"
 
+#include "Riostream.h"
+#include "RooMsgService.h"
 #include "RooNormSetCache.h"
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
@@ -241,8 +243,8 @@ template<class T>
 T* RooCacheManager<T>::getObjByIndex(Int_t index) const 
 {
   if (index<0||index>=_size) {
-    cout << "RooCacheManager::getNormListByIndex: ERROR index (" 
-	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
+				   << index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return _object[index] ;
@@ -252,8 +254,8 @@ template<class T>
 const RooNameSet* RooCacheManager<T>::nameSet1ByIndex(Int_t index) const
 {
   if (index<0||index>=_size) {
-    cout << "RooCacheManager::getNormListByIndex: ERROR index (" 
-	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
+				   << index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet1() ;
@@ -263,8 +265,8 @@ template<class T>
 const RooNameSet* RooCacheManager<T>::nameSet2ByIndex(Int_t index) const 
 {
   if (index<0||index>=_size) {
-    cout << "RooCacheManager::getNormListByIndex: ERROR index (" 
-	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
+				   << index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet2() ;

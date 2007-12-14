@@ -25,6 +25,9 @@
 #include "RooDataSet.h"
 #include "RooMsgService.h"
 
+#include "Riostream.h"
+
+
 ClassImp(RooAbsGenContext)
 ;
 

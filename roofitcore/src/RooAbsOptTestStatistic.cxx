@@ -31,6 +31,9 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
+
+
 #include "RooAbsOptTestStatistic.h"
 #include "RooMsgService.h"
 #include "RooAbsPdf.h"

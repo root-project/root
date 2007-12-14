@@ -20,7 +20,6 @@
 #include "RooAbsMCStudyModule.h"
 #include "RooRealVar.h"
 #include <list>
-#include <string>
 
 class RooRandomizeParamMCSModule : public RooAbsMCStudyModule {
 public:

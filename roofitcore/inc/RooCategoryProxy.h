@@ -39,15 +39,7 @@ public:
 
 protected:
 
-  inline RooAbsCategoryLValue* lvptr() const {
-    // Assert that the held arg is an LValue
-    RooAbsCategoryLValue* lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
-    if (!lvptr) {
-      cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
-      assert(0) ;
-    }
-    return lvptr ;
-  }
+  RooAbsCategoryLValue* lvptr() const ;
 
 public:
 

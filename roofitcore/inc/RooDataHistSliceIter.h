@@ -16,7 +16,7 @@
 #ifndef ROO_DATA_HIST_SLICE_ITER
 #define ROO_DATA_HIST_SLICE_ITER
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "TIterator.h"
 #include "RooArgSet.h"
 #include "TObjString.h"

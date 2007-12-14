@@ -26,6 +26,8 @@
 // to test that assumption.
 //
 
+#include "Riostream.h"
+
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "TString.h"
@@ -33,6 +35,8 @@
 #include "RooFitResult.h"
 #include "RooDLLSignificanceMCSModule.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooDLLSignificanceMCSModule)
   ;

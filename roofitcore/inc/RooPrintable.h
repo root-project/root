@@ -19,7 +19,7 @@
 
 class TNamed ;
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "Rtypes.h"
 #include "TString.h"
 

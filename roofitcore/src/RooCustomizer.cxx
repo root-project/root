@@ -116,6 +116,9 @@
 
 #include "RooCustomizer.h"
 
+#include "Riostream.h"
+
+
 ClassImp(RooCustomizer) 
 ;
 

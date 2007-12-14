@@ -51,13 +51,13 @@
 ClassImp(RooStreamParser)
 
 RooStreamParser::RooStreamParser(istream& is) : 
-  _is(is), _atEOF(kFALSE), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
+  _is(&is), _atEOF(kFALSE), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor
 }
 
 RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) : 
-  _is(is), _atEOF(kFALSE), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
+  _is(&is), _atEOF(kFALSE), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor with error message prefix
 }
@@ -66,6 +66,13 @@ RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) :
 RooStreamParser::~RooStreamParser()
 {
   // Destructor
+}
+
+
+Bool_t RooStreamParser::atEOL() 
+{ 
+  Int_t nc(_is->peek()) ; 
+  return (nc=='\n'||nc==-1) ; 
 }
 
 
@@ -98,19 +105,19 @@ TString RooStreamParser::readToken()
   Int_t bufptr(0) ;
 
   // Check for end of file 
-   if (_is.eof() || _is.fail()) {
+   if (_is->eof() || _is->fail()) {
      _atEOF = kTRUE ;
      return TString("") ;
    }
 
   //Ignore leading newline
-  if (_is.peek()=='\n') {
-    _is.get(c) ;
+  if (_is->peek()=='\n') {
+    _is->get(c) ;
 
     // If new line starts with #, zap it    
-    while (_is.peek()=='#') {
+    while (_is->peek()=='#') {
       zapToEnd(kFALSE) ;
-      _is.get(c) ; // absorb newline
+      _is->get(c) ; // absorb newline
     }
   }
 
@@ -122,11 +129,11 @@ TString RooStreamParser::readToken()
     }
 
     // Read next char
-    _is.get(c) ;
+    _is->get(c) ;
     
 
     // Terminate at EOF, EOL or trouble
-    if (_is.eof() || _is.fail() || c=='\n') break ;
+    if (_is->eof() || _is->fail() || c=='\n') break ;
 
     // Terminate as SPACE, unless we haven't seen any non-SPACE yet
     if (isspace(c)) {
@@ -140,15 +147,15 @@ TString RooStreamParser::readToken()
 
     // If '-' or '/' see what the next character is
     if (c == '.' || c=='-' || c=='+' || c=='/' || c=='\\') {
-      _is.get(cnext) ;
-      _is.putback(cnext) ;
+      _is->get(cnext) ;
+      _is->putback(cnext) ;
     }
 
     // Check for line continuation marker
     if (c=='\\' && cnext=='\\') {
       // Kill rest of line including endline marker
       zapToEnd(kFALSE) ;
-      _is.get(c) ;
+      _is->get(c) ;
       lineCont=kTRUE ;
       break ;
     }
@@ -165,7 +172,7 @@ TString RooStreamParser::readToken()
 	quotedString=kTRUE ;		
       } else if (!quotedString) {
 	// Terminate current token. Next token will be quoted string
-	_is.putback('"') ;
+	_is->putback('"') ;
 	break ;
       }
     }
@@ -180,7 +187,7 @@ TString RooStreamParser::readToken()
 	  break ;
 	} else {
 	  // Put back punct. char and terminate current alphanum token
-	  _is.putback(c) ;
+	  _is->putback(c) ;
 	  break ;
 	} 
       }       
@@ -201,7 +208,7 @@ TString RooStreamParser::readToken()
     cprev=c ;
   }
 
-  if (_is.eof() || _is.bad()) {
+  if (_is->eof() || _is->bad()) {
     _atEOF = kTRUE ;
   }
 
@@ -213,23 +220,23 @@ TString RooStreamParser::readToken()
   // Absorb trailing white space or absorb rest of line if // is encountered
   if (c=='\n') {
     if (!lineCont) {
-      _is.putback(c) ;
+      _is->putback(c) ;
     }
   } else {
-    c = _is.peek() ;
+    c = _is->peek() ;
 
     while ((isspace(c) || c=='/') && c != '\n') {
       if (c=='/') {
-	_is.get(c) ;
-	if (_is.peek()=='/') {
+	_is->get(c) ;
+	if (_is->peek()=='/') {
 	  zapToEnd(kFALSE) ;	
 	} else {
-	  _is.putback('/') ;
+	  _is->putback('/') ;
 	}
 	break ;
       } else {
-	_is.get(c) ;
-	c = _is.peek() ;
+	_is->get(c) ;
+	c = _is->peek() ;
       }
     }
   }
@@ -252,16 +259,16 @@ TString RooStreamParser::readLine()
   char c,buffer[10240] ;
   Int_t nfree(10239) ; 
   
-  if (_is.peek()=='\n') _is.get(c) ;
+  if (_is->peek()=='\n') _is->get(c) ;
 
   // Read till end of line
-  _is.getline(buffer,nfree,'\n') ;
+  _is->getline(buffer,nfree,'\n') ;
 
   // Look for eventual continuation line sequence  
   char *pcontseq = strstr(buffer,"\\\\") ;
   if (pcontseq) nfree -= (pcontseq-buffer) ;
   while(pcontseq) {
-    _is.getline(pcontseq,nfree,'\n') ;
+    _is->getline(pcontseq,nfree,'\n') ;
 
     char* nextpcontseq = strstr(pcontseq,"\\\\") ;
     if (nextpcontseq) nfree -= (nextpcontseq-pcontseq) ;
@@ -281,7 +288,7 @@ TString RooStreamParser::readLine()
   if (pend>pstart)
     while (isspace(*pend)) { *pend--=0 ; }
 
-  if (_is.eof() || _is.fail()) {
+  if (_is->eof() || _is->fail()) {
     _atEOF = kTRUE ;
   }
 
@@ -293,20 +300,20 @@ TString RooStreamParser::readLine()
 void RooStreamParser::zapToEnd(Bool_t inclContLines) 
 {
   // Skip over everything until the end of the current line
-  if (_is.peek()!='\n') {
+  if (_is->peek()!='\n') {
 
     char buffer[10240] ;
     Int_t nfree(10239) ; 
 
     // Read till end of line
-    _is.getline(buffer,nfree,'\n') ;
+    _is->getline(buffer,nfree,'\n') ;
 
     if (inclContLines) {
       // Look for eventual continuation line sequence  
       char *pcontseq = strstr(buffer,"\\\\") ;
       if (pcontseq) nfree -= (pcontseq-buffer) ;
       while(pcontseq) {
-	_is.getline(pcontseq,nfree,'\n') ;
+	_is->getline(pcontseq,nfree,'\n') ;
 	
 	char* nextpcontseq = strstr(pcontseq,"\\\\") ;
 	if (nextpcontseq) nfree -= (nextpcontseq-pcontseq) ;
@@ -315,7 +322,7 @@ void RooStreamParser::zapToEnd(Bool_t inclContLines)
     }
 
     // Put back newline character in stream buffer
-   _is.putback('\n') ;
+   _is->putback('\n') ;
   }
 }
 

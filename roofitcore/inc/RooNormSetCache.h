@@ -16,7 +16,7 @@
 #ifndef ROO_NORMSET_CACHE
 #define ROO_NORMSET_CACHE
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <assert.h>
 #include "Rtypes.h"
 #include "RooNameSet.h"

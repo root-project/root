@@ -20,8 +20,8 @@
 // use this class in the (normalization) integral configuration interface
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooNumIntConfig.h"
 #include "RooNumIntConfig.h"
 #include "RooArgSet.h"
 #include "RooAbsIntegrator.h"
@@ -29,6 +29,8 @@
 #include "RooMsgService.h"
 
 #include "TClass.h"
+
+
 
 ClassImp(RooNumIntConfig)
 ;

@@ -20,7 +20,7 @@
 
 #include "RooFit.h"
 
-#include "RooConstVar.h"
+#include "Riostream.h"
 #include "RooConstVar.h"
 
 ClassImp(RooConstVar)

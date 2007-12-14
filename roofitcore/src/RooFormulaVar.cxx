@@ -36,6 +36,7 @@
 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooFormulaVar.h"
 #include "RooFormulaVar.h"
@@ -43,6 +44,8 @@
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooFormulaVar)
 

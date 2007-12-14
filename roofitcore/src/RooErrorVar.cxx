@@ -23,6 +23,7 @@
 //
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooErrorVar.h"
 #include "RooErrorVar.h"
@@ -30,6 +31,8 @@
 #include "RooStreamParser.h"
 #include "RooRangeBinning.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooErrorVar)
 ;

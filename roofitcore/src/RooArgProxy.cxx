@@ -87,3 +87,8 @@ void RooArgProxy::changeDataSet(const RooArgSet* newNormSet)
   RooAbsProxy::changeNormSet(newNormSet) ;
   _arg->setProxyNormSet(newNormSet) ;
 }
+
+void RooArgProxy::print(ostream& os) const 
+{ 
+  os << name() << "=" << (_arg?_arg->GetName():"NULL") ; 
+}

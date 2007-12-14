@@ -24,8 +24,8 @@
 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooCategoryProxy.h"
 #include "RooCategoryProxy.h"
 
 ClassImp(RooCategoryProxy)
@@ -49,5 +49,16 @@ RooCategoryProxy::RooCategoryProxy(const char* name, RooAbsArg* owner, const Roo
 RooCategoryProxy::~RooCategoryProxy() 
 {
   // Destructor
+}
+
+RooAbsCategoryLValue* RooCategoryProxy::lvptr() const 
+{
+  // Assert that the held arg is an LValue
+  RooAbsCategoryLValue* lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
+  if (!lvptr) {
+    cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
+    assert(0) ;
+  }
+  return lvptr ;
 }
 

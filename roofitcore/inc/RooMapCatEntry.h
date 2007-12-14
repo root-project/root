@@ -16,7 +16,7 @@
 #ifndef ROO_MAP_CAT_ENTRY
 #define ROO_MAP_CAT_ENTRY
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "TNamed.h"
 #include "TRegexp.h"
 #include "RooCatType.h"

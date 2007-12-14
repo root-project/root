@@ -19,7 +19,7 @@
 #include "TVirtualFFT.h"
 class RooRealVar ;
 
-#include <list>
+#include <map>
  
 class RooFFTConvPdf : public RooAbsCachedPdf {
 public:
@@ -57,7 +57,7 @@ protected:
     TVirtualFFT* fftc2r ;
   };
 
-  mutable map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
+  mutable std::map<const RooHistPdf*,CacheAuxInfo*> _cacheAuxInfo ; //! Auxilary Cache information (do not persist)
   Double_t _bufFrac ; // Sampling buffer size as fraction of domain size 
 
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 

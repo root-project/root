@@ -60,7 +60,7 @@
  // as FFTW can calculate them
 
 
-#include <iostream> 
+#include "Riostream.h" 
 
 #include "RooFit.h"
 #include "RooFFTConvPdf.h" 
@@ -73,6 +73,8 @@
 #include "TVirtualFFT.h"
 #include "RooGenContext.h"
 #include "RooConvGenContext.h"
+
+using namespace std ;
 
 ClassImp(RooFFTConvPdf) 
 

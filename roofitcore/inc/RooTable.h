@@ -16,7 +16,7 @@
 #ifndef ROO_TABLE
 #define ROO_TABLE
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <assert.h>
 #include "TNamed.h"
 #include "RooAbsCategory.h"

@@ -21,6 +21,7 @@
 // for each component PDF sequentially. 
 
 #include "RooFit.h"
+#include "Riostream.h"
 #include "RooMsgService.h"
 
 #include "RooProdGenContext.h"
@@ -29,6 +30,8 @@
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
+
+
 
 ClassImp(RooProdGenContext)
 ;

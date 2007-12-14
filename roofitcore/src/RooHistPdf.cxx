@@ -21,11 +21,14 @@
 // discrete dimensions.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooHistPdf.h"
 #include "RooHistPdf.h"
 #include "RooDataHist.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooHistPdf)
 ;

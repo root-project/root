@@ -16,7 +16,7 @@
 #ifndef ROO_MULTI_CAT_ITER
 #define ROO_MULTI_CAT_ITER
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "TIterator.h"
 #include "RooArgSet.h"
 #include "TObjString.h"

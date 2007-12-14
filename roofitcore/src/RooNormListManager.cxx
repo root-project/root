@@ -27,10 +27,12 @@
 // 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooNormListManager.h"
-#include "RooNormListManager.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooNormListManager)
   ;

@@ -16,7 +16,7 @@
 #ifndef ROO_ABS_LVALUE
 #define ROO_ABS_LVALUE
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "Rtypes.h"
 
 

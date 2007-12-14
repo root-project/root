@@ -23,13 +23,15 @@
 // In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooNLLVar.h"
 #include "RooNLLVar.h"
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooNLLVar)
 ;

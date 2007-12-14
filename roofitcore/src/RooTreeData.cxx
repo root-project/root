@@ -65,6 +65,8 @@
 #include "RooCmdConfig.h" 
 #include "RooGlobalFunc.h"
 
+using namespace std ;
+
 ClassImp(RooTreeData)
 ;
 

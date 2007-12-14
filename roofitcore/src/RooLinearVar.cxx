@@ -36,6 +36,7 @@
 //
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -51,6 +52,8 @@
 #include "RooNumber.h"
 #include "RooBinning.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooLinearVar)
 

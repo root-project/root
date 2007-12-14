@@ -30,6 +30,7 @@
 // also defines a pure virtual public interface for I/O streaming.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "TClass.h"
 #include "TObjString.h"
@@ -52,6 +53,8 @@
 #include <iomanip>
 #include <fstream>
 #include <algorithm>
+
+using namespace std ;
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );

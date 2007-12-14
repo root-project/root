@@ -24,8 +24,8 @@
 // constructed from all the categories in the dataset
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooDataProjBinding.h"
 #include "RooDataProjBinding.h"
 #include "RooAbsReal.h"
 #include "RooAbsData.h"
@@ -36,6 +36,8 @@
 #include "RooMsgService.h"
 
 #include <assert.h>
+
+
 
 ClassImp(RooDataProjBinding)
 ;

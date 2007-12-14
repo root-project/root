@@ -17,7 +17,7 @@
 #define ROO_REAL_CONSTANT
 
 #include "Rtypes.h"
-#include "Riostream.h"
+#include "Riosfwd.h"
 
 class RooAbsReal ;
 class RooArgList ;

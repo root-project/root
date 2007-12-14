@@ -16,6 +16,7 @@
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include <map>
+#include <string>
 
 class RooMinuit ;
  
@@ -42,7 +43,7 @@ protected:
   mutable Double_t _absMin ; // absolute minimum of -log(L)
   
   Double_t evaluate() const ;
-  mutable std::map<string,bool> _paramFixed ;
+  mutable std::map<std::string,bool> _paramFixed ;
 
 private:
 

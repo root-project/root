@@ -16,7 +16,6 @@
 #ifndef ROO_ABS_ARG
 #define ROO_ABS_ARG
 
-#include "Riostream.h"
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
@@ -135,11 +134,11 @@ public:
   // Accessors to attributes
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
   Bool_t getAttribute(const Text_t* name) const ;
-  inline const std::set<string>& attributes() const { return _boolAttrib ; }
+  inline const std::set<std::string>& attributes() const { return _boolAttrib ; }
 
   void setStringAttribute(const Text_t* key, const Text_t* value) ;
   const Text_t* getStringAttribute(const Text_t* key) const ;
-  inline const std::map<string,string>& stringAttributes() const { return _stringAttrib ; }
+  inline const std::map<std::string,std::string>& stringAttributes() const { return _stringAttrib ; }
 
   inline Bool_t isConstant() const { return getAttribute("Constant") ; }
   RooLinkedList getCloningAncestors() const ;
@@ -217,7 +216,7 @@ public:
 	
   protected:
 
-  void graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >&) ;
+  void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
 
   friend class RooExtendPdf ;
   friend class RooRealIntegral ;
@@ -238,13 +237,9 @@ public:
   inline void setValueDirty() const { setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 
   inline void clearValueDirty() const { 
-    if (_verboseDirty) cout << "RooAbsArg::clearValueDirty(" << GetName() 
-			    << "): dirty flag " << (_valueDirty?"":"already ") << "cleared" << endl ;
     _valueDirty=kFALSE ; 
   }
   inline void clearShapeDirty() const { 
-    if (_verboseDirty) cout << "RooAbsArg::clearShapeDirty(" << GetName() 
-			    << "): dirty flag " << (_shapeDirty?"":"already ") << "cleared" << endl ;
     _shapeDirty=kFALSE ; 
   }
 
@@ -304,8 +299,8 @@ public:
   Int_t numProxies() const ;
 
   // Attribute list
-  std::set<string> _boolAttrib ; // Boolean attributes
-  std::map<string,string> _stringAttrib ; // String attributes
+  std::set<std::string> _boolAttrib ; // Boolean attributes
+  std::map<std::string,std::string> _stringAttrib ; // String attributes
   void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
@@ -343,7 +338,7 @@ private:
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
   mutable OperMode _operMode ; // Dirty state propagation mode
 
-  ClassDef(RooAbsArg,2) // Abstract variable
+  ClassDef(RooAbsArg,3) // Abstract variable
 };
 
 ostream& operator<<(ostream& os, const RooAbsArg &arg);  

@@ -25,12 +25,13 @@
 // The forked calculation process is terminated when the front-end object
 // is deleted
 
-#ifndef _WIN32
+#include "Riostream.h"
 #include "RooFit.h"
 
-#include <unistd.h>
+#ifndef _WIN32
 #include <unistd.h>
 #endif
+
 #include <errno.h>
 #include "RooRealMPFE.h"
 #include "RooArgSet.h"
@@ -38,6 +39,8 @@
 #include "RooRealVar.h"
 #include "RooCategory.h"
 #include "RooMPSentinel.h"
+
+
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 

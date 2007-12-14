@@ -16,6 +16,7 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
 #include "RooAbsProxy.h"
 #include "RooAbsProxy.h"
 #include "RooArgSet.h"
@@ -50,4 +51,9 @@ void RooAbsProxy::changeNormSet(const RooArgSet* newNormSet)
 {
   // Destructor
   _nset = (RooArgSet*) newNormSet ;
+}
+
+void RooAbsProxy::print(ostream& os) const 
+{ 
+  os << name() << endl ; 
 }

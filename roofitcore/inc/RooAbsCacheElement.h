@@ -19,8 +19,6 @@
 #include "Rtypes.h"
 #include "RooAbsArg.h"
 
-#include <iostream> 
-
 class RooAbsCollection ;
 class RooArgSet ;
 class RooArgList ;

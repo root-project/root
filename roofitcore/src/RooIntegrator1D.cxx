@@ -20,6 +20,7 @@
 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "TClass.h"
 #include "RooIntegrator1D.h"
@@ -32,6 +33,8 @@
 #include "RooMsgService.h"
 
 #include <assert.h>
+
+
 
 ClassImp(RooIntegrator1D)
 ;

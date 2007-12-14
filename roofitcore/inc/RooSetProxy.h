@@ -17,10 +17,10 @@
 #define ROO_SET_PROXY
 
 #include "TObject.h"
+#include "Riosfwd.h"
 #include "RooAbsProxy.h"
 #include "RooAbsArg.h"
 #include "RooArgSet.h"
-#include <iostream> 
 
 class RooSetProxy : public RooArgSet, public RooAbsProxy  {
 public:
@@ -50,7 +50,7 @@ public:
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
 
-  virtual void print(ostream& os=std::cout) const { os << name() << "=" ; printToStream(os,InLine) ; }
+  virtual void print(ostream& os) const ;
 
   RooSetProxy& operator=(const RooArgSet& other) ;
   

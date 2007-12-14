@@ -21,13 +21,15 @@
 // (RooArgSet and RooArgList) 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooLinkedList.h"
 #include "RooLinkedList.h"
 #include "RooLinkedListIter.h"
 #include "RooHashTable.h"
 #include "RooAbsArg.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooLinkedList)
 ;

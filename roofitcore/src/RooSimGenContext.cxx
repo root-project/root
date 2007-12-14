@@ -20,8 +20,8 @@
 // component pdfs.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooSimGenContext.h"
 #include "RooSimGenContext.h"
 #include "RooSimultaneous.h"
 #include "RooRealProxy.h"
@@ -30,6 +30,7 @@
 #include "RooCategory.h"
 #include "RooMsgService.h"
 #include "RooRandom.h"
+
 
 
 ClassImp(RooSimGenContext)

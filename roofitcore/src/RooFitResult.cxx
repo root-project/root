@@ -26,8 +26,8 @@
 // No references to the fitted PDF and dataset are stored
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include <iomanip>
 #include <iomanip>
 #include "TMinuit.h"
 #include "TMath.h"
@@ -46,6 +46,8 @@
 #include "RooEllipse.h"
 #include "RooRandom.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooFitResult) 
 ;

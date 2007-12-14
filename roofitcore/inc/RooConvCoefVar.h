@@ -16,7 +16,7 @@
 #ifndef ROO_CONV_COEF_VAR
 #define ROO_CONV_COEF_VAR
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <math.h>
 #include <float.h>
 

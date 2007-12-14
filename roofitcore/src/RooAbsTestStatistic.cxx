@@ -30,6 +30,9 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
+
+
 #include "RooAbsTestStatistic.h"
 #include "RooAbsTestStatistic.h"
 #include "RooAbsPdf.h"

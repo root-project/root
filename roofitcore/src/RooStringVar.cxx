@@ -18,8 +18,8 @@
 // RooStringVar represents a fundamental string valued object.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include <math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +29,8 @@
 #include "RooStringVar.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooStringVar)
 

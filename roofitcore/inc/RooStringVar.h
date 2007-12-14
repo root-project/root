@@ -16,7 +16,7 @@
 #ifndef ROO_STRING_VAR
 #define ROO_STRING_VAR
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "TString.h"
 #include "RooAbsString.h"
 class RooArgSet ;

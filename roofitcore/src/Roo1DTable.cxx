@@ -21,12 +21,13 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <iomanip>
 #include "TString.h"
 #include "TMath.h"
 #include "Roo1DTable.h"
 #include "RooMsgService.h"
+
+using namespace std ;
 
 ClassImp(Roo1DTable)
 

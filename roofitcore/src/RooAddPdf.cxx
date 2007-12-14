@@ -55,6 +55,9 @@
 #include "RooNameReg.h"
 #include "RooMsgService.h"
 
+#include "Riostream.h"
+
+
 ClassImp(RooAddPdf)
 ;
 

@@ -23,6 +23,8 @@
 #include "RooAbsBinning.h"
 #include "RooAbsBinning.h"
 
+#include "Riostream.h"
+
 ClassImp(RooAbsBinning)
 ;
 

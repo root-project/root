@@ -21,8 +21,8 @@
 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include <math.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,6 +36,8 @@
 #include "RooRangeBinning.h"
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooRealVar)
 ;

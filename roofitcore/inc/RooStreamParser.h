@@ -16,7 +16,7 @@
 #ifndef ROO_STREAM_PARSER
 #define ROO_STREAM_PARSER
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "TString.h"
 
 class RooStreamParser {
@@ -41,7 +41,7 @@ public:
   Bool_t readString(TString& value, Bool_t zapOnError=kFALSE) ;
   Bool_t convertToString(const TString& token, TString& string) ;
 
-  inline Bool_t atEOL() { Int_t nc(_is.peek()) ; return (nc=='\n'||nc==-1) ; }
+  Bool_t atEOL() ;
   inline Bool_t atEOF() { return _atEOF ; }
   void zapToEnd(Bool_t inclContLines=kFALSE) ;
 
@@ -49,7 +49,7 @@ public:
   
 protected:
 
-  istream& _is ;
+  istream* _is ;
   Bool_t _atEOL ;
   Bool_t _atEOF ;
   TString _prefix ;

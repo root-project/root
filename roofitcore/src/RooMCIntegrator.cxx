@@ -21,6 +21,7 @@
 // based on a C version from the 0.9 beta release of the GNU scientific library.
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "TMath.h"
 #include "TClass.h"
@@ -35,6 +36,8 @@
 
 #include <math.h>
 #include <assert.h>
+
+
 
 ClassImp(RooMCIntegrator)
 ;

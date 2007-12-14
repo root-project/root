@@ -20,6 +20,9 @@
 #include "RooUniformBinning.h"
 #include "RooMsgService.h"
 
+#include "Riostream.h"
+
+
 ClassImp(RooUniformBinning)
 ;
 

@@ -422,6 +422,7 @@
 #include <strings.h>
 #else
 
+
 char *
 strtok_r(char *s1, const char *s2, char **lasts)
 {
@@ -444,6 +445,7 @@ strtok_r(char *s1, const char *s2, char **lasts)
 
 #endif
 
+#include "Riostream.h"
 #include "RooSimPdfBuilder.h"
 
 #include "RooRealVar.h"
@@ -472,10 +474,10 @@ strtok_r(char *s1, const char *s2, char **lasts)
 #include "RooGenericPdf.h"
 #include "RooMsgService.h"
 
+using namespace std ;
 
 ClassImp(RooSimPdfBuilder)
 ;
-
 
 
 RooSimPdfBuilder::RooSimPdfBuilder(const RooArgSet& protoPdfSet) :

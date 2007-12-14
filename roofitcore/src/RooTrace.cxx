@@ -19,10 +19,12 @@
 #include "RooFit.h"
 
 #include "RooTrace.h"
-#include "RooTrace.h"
 #include "RooAbsArg.h"
+#include "Riostream.h"
 
 #include <iomanip>
+
+
 
 ClassImp(RooTrace)
 ;
@@ -83,6 +85,10 @@ void RooTrace::mark()
   _markList = _list ;
 }
 
+
+void RooTrace::dump() {
+  dump(cout,kFALSE) ;
+}
 
 void RooTrace::dump(ostream& os, Bool_t sinceMarked) {
   os << "List of RooFit objects allocated while trace active:" << endl ;

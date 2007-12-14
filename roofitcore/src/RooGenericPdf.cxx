@@ -31,12 +31,15 @@
 // doesn't hardcode any of the variable names it expects
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooGenericPdf.h"
 #include "RooGenericPdf.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooArgList.h"
+
+
 
 ClassImp(RooGenericPdf)
 

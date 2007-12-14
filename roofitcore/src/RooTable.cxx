@@ -20,9 +20,11 @@
 // (which are used for real-valued objects)
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooTable.h"
-#include "RooTable.h"
+
+
 
 ClassImp(RooTable)
 

@@ -33,6 +33,8 @@
 #include <vector>
 #include <string>
 
+using namespace std ;
+
 ClassImp(RooClassFactory) 
 ;
 
@@ -384,7 +386,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << " // Your description goes here... " << endl 
      << endl 
 
-     << " #include <iostream> " << endl 
+     << " #include \"Riostream.h\" " << endl 
      << endl 
 
      << " #include \"" << className << ".h\" " << endl 

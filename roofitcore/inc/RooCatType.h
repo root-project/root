@@ -16,7 +16,7 @@
 #ifndef ROO_CAT_TYPE
 #define ROO_CAT_TYPE
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "TObject.h"
 #include "RooPrintable.h"
 
@@ -28,13 +28,7 @@ public:
   virtual ~RooCatType() {} ;
   virtual TObject* Clone(const char*) const { return new RooCatType(*this); }
   virtual const Text_t* GetName() const { return _label ; }
-  virtual void SetName(const Text_t* name) { 
-    if (strlen(name)>255) {
-      cout << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << endl ;
-      _label[255]=0 ;
-    }
-    strncpy(_label,name,255) ;
-  }
+  virtual void SetName(const Text_t* name) ;
 
   inline RooCatType& operator=(const RooCatType& other) { 
     if (&other==this) return *this ;

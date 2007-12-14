@@ -17,7 +17,7 @@
  // minimized w.r.t. all parameters. Note that this function is slow to evaluate
  // as a MIGRAD minimization step is executed for each function evaluation
 
-#include <iostream> 
+#include "Riostream.h" 
 
 #include "RooFit.h"
 #include "RooProfileLL.h" 
@@ -26,6 +26,8 @@
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
+
+using namespace std ;
 
 ClassImp(RooProfileLL) 
 

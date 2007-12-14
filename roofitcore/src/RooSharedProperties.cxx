@@ -21,7 +21,7 @@
 #include "RooMsgService.h"
 #include "RooTrace.h"
 
-#include <iostream>
+#include "Riostream.h"
 using std::cout ;
 using std::endl ;
 

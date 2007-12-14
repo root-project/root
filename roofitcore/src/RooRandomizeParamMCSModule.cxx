@@ -30,6 +30,7 @@
 // number of expected events of an extended p.d.f/
 
 
+#include "Riostream.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
@@ -39,6 +40,8 @@
 #include "RooAddition.h"
 #include "RooMsgService.h"
 #include "RooRandomizeParamMCSModule.h"
+
+using namespace std ;
 
 ClassImp(RooRandomizeParamMCSModule)
   ;

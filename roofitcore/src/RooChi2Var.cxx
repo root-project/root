@@ -34,6 +34,9 @@
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
 
+#include "Riostream.h"
+
+
 ClassImp(RooChi2Var)
 ;
 

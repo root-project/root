@@ -20,6 +20,9 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
+
+
 #include "RooAcceptReject.h"
 #include "RooAcceptReject.h"
 #include "RooAbsReal.h"

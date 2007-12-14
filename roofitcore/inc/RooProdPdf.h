@@ -16,7 +16,7 @@
 #ifndef ROO_PROD_PDF
 #define ROO_PROD_PDF
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
 #include "RooLinkedList.h"

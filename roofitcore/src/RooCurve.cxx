@@ -30,7 +30,6 @@
 #include "RooFit.h"
 
 #include "RooCurve.h"
-#include "RooCurve.h"
 #include "RooHist.h"
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
@@ -46,6 +45,8 @@
 #include <assert.h>
 #include <deque>
 #include <algorithm>
+
+using namespace std ;
 
 ClassImp(RooCurve)
 

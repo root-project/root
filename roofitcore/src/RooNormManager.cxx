@@ -27,13 +27,14 @@
 // 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "RooNormManager.h"
 #include "RooNormManager.h"
 #include "RooMsgService.h"
 
 ClassImp(RooNormManager)
   ;
+
 
 
 RooNormManager::RooNormManager(Int_t maxSize) 

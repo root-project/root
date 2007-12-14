@@ -28,6 +28,7 @@
 
 #include "RooFit.h"
 
+#include "Riostream.h"
 #include "RooSetProxy.h"
 #include "RooSetProxy.h"
 #include "RooArgSet.h"
@@ -198,3 +199,8 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
   return !error ;
 }
 
+
+void RooSetProxy::print(ostream& os) const 
+{ 
+  os << name() << "=" ; printToStream(os,InLine) ; 
+}

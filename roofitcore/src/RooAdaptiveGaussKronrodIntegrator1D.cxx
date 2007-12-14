@@ -53,6 +53,8 @@
 #include "TMath.h"
 #include "RooMsgService.h"
 
+using namespace std ;
+
 
 ClassImp(RooAdaptiveGaussKronrodIntegrator1D)
 ;

@@ -17,10 +17,10 @@
 #define ROO_LIST_PROXY
 
 #include "TObject.h"
+#include "Riosfwd.h"
 #include "RooAbsProxy.h"
 #include "RooAbsArg.h"
 #include "RooArgList.h"
-#include <iostream>
 
 class RooListProxy : public RooArgList, public RooAbsProxy  {
 public:
@@ -46,7 +46,7 @@ public:
 
   RooListProxy& operator=(const RooArgList& other) ;
 
-  virtual void print(ostream& os=std::cout) const { os << name() << "=" ; printToStream(os,InLine) ; }
+  virtual void print(ostream& os) const ;
   
 protected:
 

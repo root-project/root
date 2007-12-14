@@ -21,6 +21,7 @@
 // (bins for binned data sets, data points for unbinned datasets).
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooAbsData.h"
 #include "RooAbsData.h"
@@ -28,6 +29,7 @@
 #include "RooCmdConfig.h"
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
+
 
 
 ClassImp(RooAbsData)

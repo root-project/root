@@ -37,6 +37,7 @@
 //
 
 #include "RooFit.h"
+#include "Riostream.h"
 
 #include "RooExtendPdf.h"
 #include "RooExtendPdf.h"
@@ -45,6 +46,8 @@
 #include "RooFormulaVar.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooExtendPdf)
 ;

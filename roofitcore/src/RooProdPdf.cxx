@@ -38,8 +38,8 @@
 // 
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "TIterator.h"
 #include "TIterator.h"
 #include "RooProdPdf.h"
 #include "RooRealProxy.h"
@@ -48,6 +48,8 @@
 #include "RooProduct.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
+
+
 
 ClassImp(RooProdPdf)
 ;

@@ -29,8 +29,8 @@
 //
 
 #include "RooFit.h"
+#include "Riostream.h"
 
-#include "TIterator.h"
 #include "TIterator.h"
 #include "TList.h"
 #include "RooRealSumPdf.h"
@@ -41,6 +41,7 @@
 #include "RooRealConstant.h"
 #include "RooRealIntegral.h"
 #include "RooMsgService.h"
+
 
 
 ClassImp(RooRealSumPdf)

@@ -16,7 +16,7 @@
 #ifndef ROO_ERROR_VAR
 #define ROO_ERROR_VAR
 
-#include "Riostream.h"
+#include "Riosfwd.h"
 #include <math.h>
 #include <float.h>
 
