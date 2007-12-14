@@ -138,7 +138,7 @@ TBrowser::TBrowser(const char *name, const char *title, Int_t x, Int_t y,
 
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
+   : TNamed(name, title), fLastSelectedObject(0), fImp(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
