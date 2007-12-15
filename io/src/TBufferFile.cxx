@@ -1439,7 +1439,10 @@ void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
 
       for (Int_t j=0; j<n; j++){
          //delete the object or collection
-         if (start[j] && TStreamerInfo::CanDelete()
+         void *old = start[j];
+         start[j] = ReadObjectAny(cl);
+         if (old && old!=start[j] && 
+             TStreamerInfo::CanDelete()
              // There are some cases where the user may set up a pointer in the (default)
              // constructor but not mark this pointer as transient.  Sometime the value
              // of this pointer is the address of one of the object with just created
@@ -1450,8 +1453,14 @@ void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
              // && !CheckObject(start[j],cl)
              // However this can increase the read time significantly (10% in the case
              // of one TLine pointer in the test/Track and run ./Event 200 0 0 20 30000
-             ) ((TClass*)cl)->Destructor(start[j],kFALSE); // call delete and desctructor
-         start[j] = ReadObjectAny(cl);
+             //
+             // If ReadObjectAny returned the same value as we previous had, this means
+             // that when writing this object (start[j] had already been written and
+             // is indeed pointing to the same object as the object the user set up
+             // in the default constructor).
+             ) {
+            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and desctructor
+         }
       }
 
    } else {	//case //-> in comment
