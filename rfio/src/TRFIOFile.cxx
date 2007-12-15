@@ -1,8 +1,8 @@
 // @(#)root/rfio:$Id$
-// Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
+// Author: Fons Rademakers 20/01/99 + Giulia Taurelli 29/06/2006 + Andreas Peters 07/12/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -76,36 +76,9 @@ struct dirent {
 };
 #endif
 
-//#include <rfio_api.h>    // prototypes don't have "const char*" ?!?
+#include <rfio.h>
+#include <rfio_api.h>
 
-extern "C" {
-   int     rfio_open(const char *path, int flags, int mode);
-   int     rfio_open64(const char *path, int flags, int mode);
-   int     rfio_close(int s);
-   int     rfio_read(int s, void *ptr, int size);
-   int     rfio_write(int s, const void *ptr, int size);
-   off_t   rfio_lseek(int s, off_t offset, int how);
-   off64_t rfio_lseek64(int s, off64_t offset, int how);
-   int     rfio_access(const char *path, int mode);
-   int     rfio_unlink(const char *path);
-   int     rfio_parse(const char *name, char **host, char **path);
-   int     rfio_stat(const char *path, struct stat *statbuf);
-   int     rfio_stat64(const char *path, struct stat64 *statbuf);
-   int     rfio_fstat(int s, struct stat *statbuf);
-   int     rfio_fstat64(int s, struct stat64 *statbuf);
-   void    rfio_perror(const char *msg);
-   char   *rfio_serror();
-   int     rfiosetopt(int opt, int *pval, int len);
-   int     rfio_mkdir(const char *path, int mode);
-   int     rfio_rmdir (const char *path);
-   void   *rfio_opendir(const char *dirpath);
-   int     rfio_closedir(void *dirp);
-   void   *rfio_readdir(void *dirp);
-#ifdef R__WIN32
-   int    *C__serrno(void);
-   int    *C__rfio_errno (void);
-#endif
-};
 
 #ifndef RFIO_READOPT
 #define RFIO_READOPT 1
@@ -150,8 +123,7 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    fOption = option;
    fOption.ToUpper();
 
-   // tell RFIO to not read large buffers, ROOT does own buffering
-   Int_t readopt = 0;
+   Int_t readopt = RFIO_READBUF;
    ::rfiosetopt(RFIO_READOPT, &readopt, 4);
 
    if (fOption == "NEW")
@@ -194,33 +166,23 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
       fname.Form("%s:///%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
 
    if (recreate) {
-      if (::rfio_access(fname.Data(), kFileExists) == 0)
-         ::rfio_unlink(fname.Data());
+      if (::rfio_access((char*)fname.Data(), kFileExists) == 0)
+         ::rfio_unlink((char*)fname.Data());
       recreate = kFALSE;
       create   = kTRUE;
       fOption  = "CREATE";
    }
-   if (create && ::rfio_access(fname.Data(), kFileExists) == 0) {
+   if (create && ::rfio_access((char*)fname.Data(), kFileExists) == 0) {
       Error("TRFIOFile", "file %s already exists", fname.Data());
       goto zombie;
    }
    if (update) {
-      if (::rfio_access(fname.Data(), kFileExists) != 0) {
+      if (::rfio_access((char*)fname.Data(), kFileExists) != 0) {
          update = kFALSE;
          create = kTRUE;
       }
-      if (update && ::rfio_access(fname.Data(), kWritePermission) != 0) {
+      if (update && ::rfio_access((char*)fname.Data(), kWritePermission) != 0) {
          Error("TRFIOFile", "no write permission, could not open file %s", fname.Data());
-         goto zombie;
-      }
-   }
-   if (read) {
-      if (::rfio_access(fname.Data(), kFileExists) != 0) {
-         Error("TRFIOFile", "file %s does not exist", fname.Data());
-         goto zombie;
-      }
-      if (::rfio_access(fname.Data(), kReadPermission) != 0) {
-         Error("TRFIOFile", "no read permission, could not open file %s", fname.Data());
          goto zombie;
       }
    }
@@ -271,11 +233,99 @@ TRFIOFile::~TRFIOFile()
 }
 
 //______________________________________________________________________________
+Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read a list of buffers given in pos[] and len[] and return it
+   // in a single buffer. Returns kTRUE in case of error.
+
+   static struct iovec64 *iov = 0;
+   static Int_t iovsize = 128;
+   Int_t n;
+
+   if (IsZombie()) {
+      Error("ReadBuffers", "cannot read because object is in 'zombie' state");
+      return kTRUE;
+   }
+
+   if (!IsOpen()) {
+      Error("ReadBuffers", "the remote file is not open");
+      return kTRUE;
+   }
+
+   // we maintain a static iove64 buffer to avoid malloc/free with every call
+   if (!iov) {
+      if (nbuf > iovsize)
+         iovsize = nbuf;
+
+      iov = (struct iovec64*)malloc(sizeof(struct iovec64) * iovsize);
+      if (gDebug > 1)
+         Info("TRFIOFile", "allocating iovec64 with size %d", iovsize);
+      if (!iov) {
+         Error("TRFIOFile", "error allocating preseek vector of size %d",
+               sizeof(struct iovec64) * iovsize);
+         return kTRUE;
+      }
+   } else {
+      if (nbuf > iovsize) {
+         iovsize = nbuf;
+         iov = (struct iovec64*) realloc(iov, sizeof(struct iovec64) * iovsize);
+         if (gDebug > 1)
+            Info("TRFIOFile", "re-allocating iovec64 with size %d", iovsize);
+         if (!iov) {
+            Error("TRFIOFile", "error reallocating preseek vector of size %d",
+                  sizeof(struct iovec64) * iovsize);
+            return kTRUE;
+         }
+      }
+   }
+
+
+   for (n = 0; n < nbuf; n++) {
+      if (gDebug>1)
+         Info("TFIOFile", "adding chunk %lld, %d %d", n, pos[n], len[n]);
+      iov[n].iov_base = pos[n];
+      iov[n].iov_len  = len[n];
+   }
+
+   // prefetch the stuff
+   if (rfio_preseek64(fD, iov, nbuf) < 0) {
+      Error("TRFIOFile", "error doing rfio_preseek");
+      return kTRUE;
+   }
+
+   // read the chunks
+   Int_t k = 0;
+
+   for (n = 0; n < nbuf; n++) {
+      if (rfio_lseek64(fD, (off_t) iov[n].iov_base, SEEK_SET) < 0) {
+         Error("TRFIOFile", "error doing rfio_lseek");
+         return kTRUE;
+      }
+      if (rfio_read(fD, buf+k, iov[n].iov_len) < 0) {
+         Error("TRFIOFile", "error doing rfio_read");
+         return kTRUE;
+      }
+      k += iov[n].iov_len;
+   }
+
+   fOffset    += k;
+   fBytesRead += k;
+#ifdef WIN32
+   SetFileBytesRead(GetFileBytesRead() + k);
+   SetFileReadCalls(GetFileReadCalls() + 1);
+#else
+   fgBytesRead += k;
+   fgReadCalls++;
+#endif
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Int_t TRFIOFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    // Interface to system open. All arguments like in POSIX open.
-
-   Int_t ret = ::rfio_open64(pathname, flags, (Int_t) mode);
+   Int_t ret = ::rfio_open64((char*)pathname, flags, (Int_t) mode);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
@@ -409,8 +459,7 @@ Int_t TRFIOSystem::MakeDirectory(const char *dir)
    // Make a directory via rfiod.
 
    TUrl url(dir);
-
-   Int_t ret = ::rfio_mkdir(url.GetFileAndOptions(), 0755);
+   Int_t ret = ::rfio_mkdir((char*)url.GetFileAndOptions(), 0755);
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
    return ret;
@@ -430,14 +479,13 @@ void *TRFIOSystem::OpenDirectory(const char *dir)
    TUrl url(dir);
 
    struct stat finfo;
-
-   if (::rfio_stat(url.GetFileAndOptions(), &finfo) < 0)
+   if (::rfio_stat((char*)url.GetFileAndOptions(), &finfo) < 0)
       return 0;
 
    if ((finfo.st_mode & S_IFMT) != S_IFDIR)
       return 0;
 
-   fDirp = (void*) ::rfio_opendir(url.GetFileAndOptions());
+   fDirp = (void*) ::rfio_opendir((char*)url.GetFileAndOptions());
 
    if (!fDirp)
       gSystem->SetErrorStr(::rfio_serror());
@@ -456,7 +504,7 @@ void TRFIOSystem::FreeDirectory(void *dirp)
    }
 
    if (dirp)
-      ::rfio_closedir(dirp);
+      ::rfio_closedir((DIR*)dirp);
 
    fDirp = 0;
 }
@@ -474,7 +522,7 @@ const char *TRFIOSystem::GetDirEntry(void *dirp)
    struct dirent *dp;
 
    if (dirp) {
-      dp = (struct dirent *) ::rfio_readdir(dirp);
+      dp = (struct dirent *) ::rfio_readdir((DIR*)dirp);
       if (!dp)
          return 0;
       return dp->d_name;
@@ -493,8 +541,7 @@ Int_t TRFIOSystem::GetPathInfo(const char *path, FileStat_t &buf)
    TUrl url(path);
 
    struct stat64 sbuf;
-
-   if (path && ::rfio_stat64(url.GetFileAndOptions(), &sbuf) >= 0) {
+   if (path && ::rfio_stat64((char*)url.GetFileAndOptions(), &sbuf) >= 0) {
 
       buf.fDev    = sbuf.st_dev;
       buf.fIno    = sbuf.st_ino;
@@ -518,7 +565,7 @@ Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
    // Attention, bizarre convention of return value!!
 
    TUrl url(path);
-   if (::rfio_access(url.GetFileAndOptions(), mode) == 0)
+   if (::rfio_access((char*)url.GetFileAndOptions(), mode) == 0)
       return kFALSE;
    gSystem->SetErrorStr(::rfio_serror());
    return kTRUE;
@@ -533,12 +580,11 @@ Int_t TRFIOSystem::Unlink(const char *path)
    TUrl url(path);
 
    struct stat finfo;
-   if (rfio_stat(url.GetFileAndOptions(), &finfo) < 0)
+   if (rfio_stat((char*)url.GetFileAndOptions(), &finfo) < 0)
       return -1;
 
    if (R_ISDIR(finfo.st_mode))
-      return rfio_rmdir(url.GetFileAndOptions());
+      return rfio_rmdir((char*)url.GetFileAndOptions());
    else
-      return rfio_unlink(url.GetFileAndOptions());
+      return rfio_unlink((char*)url.GetFileAndOptions());
 }
-
