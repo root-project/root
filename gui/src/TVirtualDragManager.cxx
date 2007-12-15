@@ -20,6 +20,10 @@
 #include "TPluginManager.h"
 
 
+//______________________________________________________________________________
+// TVirtualDragManager
+//
+// Virtual drag and drop manager used for the GUI builder.
 
 ClassImp(TVirtualDragManager)
 

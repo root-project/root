@@ -55,7 +55,15 @@ const char *filters[] = {
    "*.txt"
 };
 
-////////////////////////////////////////////////////////////////////////////////////
+//_____________________________________________________________________________
+//
+// TCursorSwitcher
+//
+// Helper class used to change the cursor in a method and restore the 
+// original one when going out of the method scope.
+//_____________________________________________________________________________
+
+///////////////////////////////////////////////////////////////////////////////
 class TCursorSwitcher {
 private:
    TGWindow *fW1;
@@ -70,6 +78,14 @@ public:
       if (fW2) gVirtualX->SetCursor(fW2->GetId(), gVirtualX->CreateCursor(kPointer));
    }
 };
+
+//_____________________________________________________________________________
+//
+// TGFileBrowser
+//
+// System file browser, used as TRootBrowser plug-in.
+// This class is the real core of the ROOT browser.
+//_____________________________________________________________________________
 
 ClassImp(TGFileBrowser)
 

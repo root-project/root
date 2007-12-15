@@ -54,8 +54,14 @@ TGDNDManager *gDNDManager = 0;
 
 Cursor_t TGDragWindow::fgDefaultCursor = kNone;
 
+//_____________________________________________________________________________
+//
+// TGDragWindow
+//
+// Window used as drag icon during drag and drop operations.
+//_____________________________________________________________________________
+
 ClassImp(TGDragWindow)
-ClassImp(TGDNDManager)
 
 //______________________________________________________________________________
 TGDragWindow::TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
@@ -170,6 +176,15 @@ void TGDragWindow::DoRedraw()
 
    gVirtualX->CopyArea(fPic, fId, GetBckgndGC()(), 0, 0, fWidth, fHeight, 0, 0);
 }
+
+//_____________________________________________________________________________
+//
+// TGDNDManager
+//
+// Central Drag and Drop manager for ROOT.
+//_____________________________________________________________________________
+
+ClassImp(TGDNDManager)
 
 //______________________________________________________________________________
 TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t *typelist)

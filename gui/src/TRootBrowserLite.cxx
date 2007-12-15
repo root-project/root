@@ -883,6 +883,12 @@ void TRootIconBox::RemoveAll()
 }
 
 
+//_____________________________________________________________________________
+//
+// TRootBrowserLite
+//
+// ROOT object browser (looking like Windows Explorer).
+//_____________________________________________________________________________
 
 ClassImp(TRootBrowserLite)
 
