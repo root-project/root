@@ -6,4 +6,5 @@
   tree->Branch("ui", &ui, "ui/i");
   tree->Fill();
   tree->Scan("ui:ui & 0x7fffffff", "", "col=10x:16x");
+  return 0;
 }
