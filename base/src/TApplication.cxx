@@ -624,23 +624,23 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
 
    if (!strncmp(line, "-?", 2) || !strncmp(line, "-h", 2) ||
        !strncmp(line, "--help", 6)) {
-       Info("ProcessRemote", "remote session help:");
-       Printf(".R [user@]host[:dir] [-l user] [-d dbg] [[<]script] | [host] -close");
-       Printf("Create a ROOT session on the specified remote host.");
-       Printf("The variable \"dir\" is the remote directory to be used as working dir.");
-       Printf("The username can be specified in two ways, \"-l\" having the priority");
-       Printf("(as in ssh). A \"dbg\" value > 0 gives increasing verbosity.");
-       Printf("The last argument \"script\" allows to specify an alternative script to");
-       Printf("be executed remotely to startup the session, \"roots\" being");
-       Printf("the default. If the script is preceeded by a \"<\" the script will be");
-       Printf("sourced, after which \"roots\" is executed. The sourced script can be ");
-       Printf("used to change the PATH and other variables, allowing an alternative");
-       Printf("\"roots\" script to be found.");
-       Printf("To close down a session do \".R host -close\".");
-       Printf("To switch between sessions do \".R host\", to switch to the local");
-       Printf("session do \".R\".");
-       Printf("To list all open sessions do \"gApplication->GetApplications()->Print()\".");
-       return 0;
+      Info("ProcessRemote", "remote session help:");
+      Printf(".R [user@]host[:dir] [-l user] [-d dbg] [[<]script] | [host] -close");
+      Printf("Create a ROOT session on the specified remote host.");
+      Printf("The variable \"dir\" is the remote directory to be used as working dir.");
+      Printf("The username can be specified in two ways, \"-l\" having the priority");
+      Printf("(as in ssh). A \"dbg\" value > 0 gives increasing verbosity.");
+      Printf("The last argument \"script\" allows to specify an alternative script to");
+      Printf("be executed remotely to startup the session, \"roots\" being");
+      Printf("the default. If the script is preceeded by a \"<\" the script will be");
+      Printf("sourced, after which \"roots\" is executed. The sourced script can be ");
+      Printf("used to change the PATH and other variables, allowing an alternative");
+      Printf("\"roots\" script to be found.");
+      Printf("To close down a session do \".R host -close\".");
+      Printf("To switch between sessions do \".R host\", to switch to the local");
+      Printf("session do \".R\".");
+      Printf("To list all open sessions do \"gApplication->GetApplications()->Print()\".");
+      return 0;
    }
 
    TString hostdir, user, script;
