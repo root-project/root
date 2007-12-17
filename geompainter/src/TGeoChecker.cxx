@@ -1994,73 +1994,10 @@ Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Doub
 }   
 
 //______________________________________________________________________________
-Bool_t TGeoChecker::TestVoxels(TGeoVolume *vol, Int_t npoints)
+Bool_t TGeoChecker::TestVoxels(TGeoVolume */*vol*/, Int_t /*npoints*/)
 {
 // Returns optimal voxelization type for volume vol.
 //   kFALSE - cartesian
 //   kTRUE  - cylindrical
-   TGeoVoxelFinder *voxels = vol->GetVoxels();
-   if (!voxels) return kFALSE;
-   gRandom= new TRandom3();
-   const TGeoShape *shape = vol->GetShape();
-   Double_t dx = ((TGeoBBox*)shape)->GetDX();
-   Double_t dy = ((TGeoBBox*)shape)->GetDY();
-   Double_t dz = ((TGeoBBox*)shape)->GetDZ();
-   Double_t ox = (((TGeoBBox*)shape)->GetOrigin())[0];
-   Double_t oy = (((TGeoBBox*)shape)->GetOrigin())[1];
-   Double_t oz = (((TGeoBBox*)shape)->GetOrigin())[2];
-   Double_t *xyz = new Double_t[3*npoints];
-   Int_t i;
-   // generate npoints
-   for (i=0; i<npoints; i++) {
-      xyz[3*i] = ox-dx+2*dx*gRandom->Rndm();
-      xyz[3*i+1] = oy-dy+2*dy*gRandom->Rndm();
-      xyz[3*i+2] = oz-dz+2*dz*gRandom->Rndm();
-   }
-   Bool_t voxtype = vol->IsCylVoxels();
-   Double_t time1, time2;
-   TGeoVoxelFinder *vox1, *vox2;
-   // build both voxelization types
-   if (voxtype) {
-      printf("   default voxelization was cylindrical.\n");
-      vox2 = voxels;
-      vox1 = new TGeoVoxelFinder(vol);
-      vox1->Voxelize("");
-      if (!vol->GetVoxels()) {
-         vol->SetVoxelFinder(voxels);
-         delete xyz;
-         return voxtype;
-      }   
-   } else {
-      printf("   default voxelization was cartesian.\n");
-      vox1 = voxels;
-      vox2 = new TGeoCylVoxels(vol);
-      vox2->Voxelize("");
-      if (!vol->GetVoxels()) {
-         vol->SetVoxelFinder(voxels);
-         delete xyz;
-         return voxtype;
-      }   
-   }   
-   // count both voxelization timings
-   time1 = CheckVoxels(vol, vox1, xyz, npoints);
-   time2 = CheckVoxels(vol, vox2, xyz, npoints);
-
-   printf("   --- time for XYZ : %g\n", time1);
-   printf("   --- time for cyl : %g\n", time2);
-
-   if (time1<time2) {
-      printf("   best : XYZ\n");
-      delete vox2;
-      vol->SetVoxelFinder(vox1);
-      vol->SetCylVoxels(kFALSE);
-      delete xyz;
-      return kFALSE;
-   }
-   printf("   best : cyl\n");
-   delete vox1;
-   vol->SetVoxelFinder(vox2);
-   vol->SetCylVoxels(kTRUE);
-   delete xyz;
-   return kTRUE;      
+   return kFALSE;
 }

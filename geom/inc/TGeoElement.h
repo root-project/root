@@ -36,10 +36,11 @@
 
 class TGeoElementTable;
 
-/*************************************************************************
- * TGeoElement - a chemical element
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoElement - a chemical element                                       //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoElement : public TNamed
 {
@@ -74,10 +75,12 @@ public:
    ClassDef(TGeoElement, 1)              // base element class
 };
 
-/*************************************************************************
- * TGeoElementRN - a radionuclide.
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoElementRN - a radionuclide.                                        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
 class TGeoDecayChannel;
 class TGeoBatemanSol;
 
@@ -150,10 +153,11 @@ public:
    ClassDef(TGeoElementRN, 2)           // radionuclides class
 };
 
-/*************************************************************************
- * TGeoDecayChannel - a decay channel.
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoDecayChannel - decay channel utility class.                        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoDecayChannel : public TObject
 {
@@ -214,10 +218,11 @@ public:
    ClassDef(TGeoDecayChannel,1)    // Decay channel for Elements
 };
 
-/*************************************************************************
- * TGeoBatemanSol -Class representing the Bateman solution for a decay branch
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// TGeoBatemanSol -Class representing the Bateman solution for a decay branch //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class TGeoBatemanSol : public TObject, public TAttLine, public TAttFill, public TAttMarker
 {
@@ -260,10 +265,11 @@ public:
    ClassDef(TGeoBatemanSol,1)       // Solution for the Bateman equation
 };   
    
-/*************************************************************************
- * TGeoElemIter - iterator for decay chains.
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoElemIter - iterator for decay chains.                              //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoElemIter
 {
@@ -300,10 +306,11 @@ public:
    ClassDef(TGeoElemIter,0)    // Iterator for radionuclide chains.
 };
 
-/*************************************************************************
- * TGeoElementTable - table of elements 
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoElementTable - table of elements                                   //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoElementTable : public TObject
 {

@@ -20,10 +20,13 @@
 #include "TGeoCache.h"
 #endif
 
-/*************************************************************************
- * TGeoNavigator - Geometry navigator
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoNavigator - Class containing the implementation of all navigation  //
+//   methods.
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
 class TGeoManager;
 class TGeoNode;
 class TGeoVolume;

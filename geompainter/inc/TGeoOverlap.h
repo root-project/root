@@ -32,16 +32,17 @@
 #include "TGeoMatrix.h"
 #endif
 
+///////////////////////////////////////////////////////////////////////////
+//                                                                       //
+// TGeoOverlap - base class describing geometry overlaps. Overlaps apply //
+//   to the nodes contained inside a volume. These should not overlap to //
+//   each other nor extrude the shape of their mother volume.            //
+//                                                                       //
+///////////////////////////////////////////////////////////////////////////
+
 class TGeoVolume;
 class TPolyMarker3D;
 class TBrowser;
-
-/*************************************************************************
- * TGeoOverlap - base class describing geometry overlaps. Overlaps apply
- *   to the nodes contained inside a volume. These should not overlap to
- *   each other nor extrude the shape of their mother volume.
- *
- *************************************************************************/
 
 class TGeoOverlap : public TNamed,
                     public TAttLine,

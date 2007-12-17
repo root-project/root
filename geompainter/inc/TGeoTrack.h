@@ -21,16 +21,15 @@
 #endif
 
 class TPolyMarker3D;
-//class TPolyLine3D;
 
-/*************************************************************************
- * TGeoTrack - Tracks attached to a geometry.
- *             Tracks are 3D objects made of points and they store a 
- *             pointer to a TParticle. The geometry manager holds a list
- *             of all tracks that will be deleted on destruction of 
- *             gGeoManager.
- *
- *************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
+// TGeoTrack - Tracks attached to a geometry.                              //
+//             Tracks are 3D objects made of points and they store a       //
+//             pointer to a TParticle. The geometry manager holds a list   //
+//             of all tracks that will be deleted on destruction of        //
+//             gGeoManager.                                                //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
 
 class TGeoTrack : public TVirtualGeoTrack
 {

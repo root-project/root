@@ -16,15 +16,16 @@
 #include "TGeoBBox.h"
 #endif
 
-/*************************************************************************
- * TGeoPara - parallelipeped class. It has 6 parameters :
- *         dx, dy, dz - half lengths in X, Y, Z
- *         alpha - angle w.r.t the Y axis from center of low Y edge to
- *                 center of high Y edge [deg]
- *         theta, phi - polar and azimuthal angles of the segment between
- *                 low and high Z surfaces [deg]
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPara - parallelipeped class. It has 6 parameters :                 //
+//         dx, dy, dz - half lengths in X, Y, Z                           //
+//         alpha - angle w.r.t the Y axis from center of low Y edge to    //
+//                 center of high Y edge [deg]                            //
+//         theta, phi - polar and azimuthal angles of the segment between //
+//                 low and high Z surfaces [deg]                          //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPara : public TGeoBBox
 {

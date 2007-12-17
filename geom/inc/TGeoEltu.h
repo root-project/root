@@ -16,13 +16,14 @@
 #include "TGeoTube.h"
 #endif
 
-/*************************************************************************
- * TGeoEltu - elliptical tube  class. An elliptical tube has 3 parameters :
- *            A - semi-axis of the ellipse along x
- *            B - semi-axis of the ellipse along y
- *            dz - half length in z
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoEltu - elliptical tube  class. An elliptical tube has 3 parameters //
+//            A - semi-axis of the ellipse along x                        //
+//            B - semi-axis of the ellipse along y                        //
+//            dz - half length in z                                       //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoEltu : public TGeoTube
 {

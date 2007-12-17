@@ -15,17 +15,18 @@
 #ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
 #endif
-
   
-/*************************************************************************
- * TGeoXtru - An extrusion with fixed outline shape in x-y and a sequence
- * of z extents (segments).  The overall scale of the outline scales
- * linearly between z points and the center can have an x-y offset.
- *
- * Based on the initial implementation of R. Hatcher
- *************************************************************************/
-
 class TGeoPolygon;
+
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoXtru - An extrusion with fixed outline shape in x-y and a sequence //
+//   of z extents (segments).  The overall scale of the outline scales    //
+//   linearly between z points and the center can have an x-y offset.     //
+//                                                                        //
+//   Based on the initial implementation of R. Hatcher                    //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoXtru : public TGeoBBox
 {

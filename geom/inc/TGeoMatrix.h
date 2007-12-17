@@ -31,11 +31,11 @@ const Double_t kIdentityMatrix[3*3] =       {1.0,  0.0,  0.0,
 
 const Double_t kUnitScale[3]        =       {1.0,  1.0,  1.0};
 
-/*************************************************************************
- * TGeoMatrix - base class for geometrical transformations.              *
- * 
- * 
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoMatrix - base class for geometrical transformations.               //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoMatrix : public TNamed
 {
@@ -110,12 +110,14 @@ public :
 
 
 
-/*************************************************************************
- * TGeoTranslation - class describing translations. A translation is     *
- *    basicaly an array of 3 doubles matching the positions 12, 13       *
- *    and 14 in the homogenous matrix description.                       *
- *                                                                       *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoTranslation - class describing translations. A translation is      //
+//    basicaly an array of 3 doubles matching the positions 12, 13        //
+//    and 14 in the homogenous matrix description.                        //
+//                                                                        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoTranslation : public TGeoMatrix
 {
@@ -159,11 +161,12 @@ public :
    ClassDef(TGeoTranslation, 1)                 // translation class
 };
 
-/*************************************************************************
- * TGeoRotation - class describing rotations. A rotation is a 3*3 array  *
- *    Column vectors has to be orthogonal unit vectors. 
- * 
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoRotation - class describing rotations. A rotation is a 3*3 array   //
+//    Column vectors has to be orthogonal unit vectors.                   //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoRotation : public TGeoMatrix
 {
@@ -223,11 +226,13 @@ public :
    ClassDef(TGeoRotation, 1)               // rotation class
 };
 
-/*************************************************************************
- * TGeoScale - class describing scale transformations. A scale is an     *
- *    array of 3 doubles (sx, sy, sz) multiplying elements 0, 5 and 10
- *    of the homogenous matrix. A scale is normalized : sx*sy*sz = 1
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoScale - class describing scale transformations. A scale is an      //
+//    array of 3 doubles (sx, sy, sz) multiplying elements 0, 5 and 10    //
+//    of the homogenous matrix. A scale is normalized : sx*sy*sz = 1      //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoScale : public TGeoMatrix
 {
@@ -260,11 +265,12 @@ public :
    ClassDef(TGeoScale, 1)                 // scaling class
 };
 
-/*************************************************************************
- * TGeoCombiTrans - class describing rotation + translation. Most        *
- *    frequently used in the description of TGeoNode 's
- * 
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoCombiTrans - class describing rotation + translation. Most         //
+//    frequently used in the description of TGeoNode 's                   //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoCombiTrans : public TGeoMatrix
 {
@@ -314,11 +320,12 @@ public :
    ClassDef(TGeoCombiTrans, 1)            // rotation + translation
 };
 
-/*************************************************************************
- * TGeoGenTrans - most general transformation, holding a translation,    *
- *    a rotation and a scale
- * 
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoGenTrans - most general transformation, holding a translation,     //
+//    a rotation and a scale                                              //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoGenTrans : public TGeoCombiTrans
 {
@@ -345,12 +352,13 @@ public :
    ClassDef(TGeoGenTrans, 1)            // rotation + translation + scale
 };
 
-/*************************************************************************
- * TGeoIdentity - an identity transformation. It holds no data member    *
- *    and returns pointers to static null translation and identity       *
- *    transformations for rotation and scale                             *
- *                                                                       *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoIdentity - an identity transformation. It holds no data member     //
+//    and returns pointers to static null translation and identity        //
+//    transformations for rotation and scale                              //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoIdentity : public TGeoMatrix
 {
@@ -380,12 +388,14 @@ public :
 
 
 
-/*************************************************************************
- * TGeoHMatrix - Matrix class used for computing global transformations  *
- *     Should NOT be used for node definition. An instance of this class *
- *     is generally used to pile-up local transformations starting from  *
- *     the top level physical node, down to the current node.            *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoHMatrix - Matrix class used for computing global transformations   //
+//     Should NOT be used for node definition. An instance of this class  //
+//     is generally used to pile-up local transformations starting from   //
+//     the top level physical node, down to the current node.             //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoHMatrix : public TGeoMatrix
 {

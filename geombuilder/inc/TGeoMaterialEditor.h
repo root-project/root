@@ -13,9 +13,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TGeoMaterialEditor                                                      //
+//  TGeoMaterialEditor                                                  //
 //                                                                      //
-//  Editor for a TGeoMaterial.                                              //
+//  Editor for a TGeoMaterial.                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -88,6 +88,14 @@ public:
    
    ClassDef(TGeoMaterialEditor,0)   // TGeoMaterial editor
 };   
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TGeoMixtureEditor                                                   //
+//                                                                      //
+//  Editor for a TGeoMixture.                                           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 class TGCheckButton;
 class TGeoMixture;

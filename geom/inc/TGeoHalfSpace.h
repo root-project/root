@@ -16,14 +16,15 @@
 #include "TGeoBBox.h"
 #endif
 
-/*************************************************************************
- * TGeoHalfSpace - A half-space defined by:
- *            p[3] - an arbitrary point on the plane
- *            n[3] - normal at the plane in point P
- *    A half-space is not really a shape, because it is infinite. The normal
- *    points "outside" the half-space
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoHalfSpace - A half-space defined by:                               // 
+//            p[3] - an arbitrary point on the plane                      //
+//            n[3] - normal at the plane in point P                       //
+//    A half-space is not really a shape, because it is infinite. The     //
+//    normal vector points "outside" the half-space                       //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 
 class TGeoHalfSpace : public TGeoBBox
@@ -58,7 +59,6 @@ public:
    virtual Int_t         GetNmeshVertices() const {return 0;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
-   //virtual void          Paint(Option_t * /*option*/) {;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t *param);

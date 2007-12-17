@@ -19,17 +19,18 @@
 
 class TGeoHMatrix;
 
-/*************************************************************************
- * TGeoHelix - A helix defined by:
- *     x = (1/c) * COS(phi)
- *     y = (1/c) * SIN(phi)
- *     z = s * alfa
- * where:
- *     c = 1/Rxy  - curvature in XY plane
- *     phi        - phi angle 
- *     S = 2*PI*s - vertical separation between helix loops
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoHelix - A helix defined by:                                        //
+//     x = (1/c) * COS(phi)                                               //
+//     y = (1/c) * SIN(phi)                                               //
+//     z = s * alfa                                                       //
+// where:                                                                 //
+//     c = 1/Rxy  - curvature in XY plane                                 //
+//     phi        - phi angle                                             //
+//     S = 2*PI*s - vertical separation between helix loops               //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoHelix  : public TObject
 {

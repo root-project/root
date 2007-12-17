@@ -90,6 +90,14 @@ public:
    ClassDef(TGeoPconEditor,0)   // TGeoPcon editor
 };   
   
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TGeoPconSection                                                     //
+//                                                                      //
+//  Utility frame used by TGeoPcon editor.                              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 class TGeoPconSection : public TGCompositeFrame, public TGWidget  {
 
 protected:

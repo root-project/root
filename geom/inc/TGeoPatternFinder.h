@@ -22,10 +22,13 @@
 
 
 class TGeoMatrix;
-/*************************************************************************
- * TGeoPatternFinder - base finder class for patterns. A pattern is specifying 
- *   a division type
- *************************************************************************/
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// TGeoPatternFinder - base finder class for patterns. A pattern is specifying 
+//   a division type                                                          //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternFinder : public TObject
 {
@@ -75,11 +78,12 @@ public:
    ClassDef(TGeoPatternFinder, 3)              // patterns to divide volumes
 };
 
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternX - a X axis divison pattern                                //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
-/*************************************************************************
- * TGeoPatternX - a X axis divison pattern
- *   
- *************************************************************************/
 class TGeoTranslation;
 
 class TGeoPatternX : public TGeoPatternFinder 
@@ -105,10 +109,11 @@ public:
    ClassDef(TGeoPatternX, 1)              // X division pattern
 };
 
-/*************************************************************************
- * TGeoPatternY - a Y axis divison pattern
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternY - a Y axis divison pattern                                //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternY : public TGeoPatternFinder
 {
@@ -132,10 +137,11 @@ public:
    ClassDef(TGeoPatternY, 1)              // Y division pattern
 };
 
-/*************************************************************************
- * TGeoPatternZ - a Z axis divison pattern
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternZ - a Z axis divison pattern                                //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternZ : public TGeoPatternFinder
 {
@@ -159,10 +165,11 @@ public:
    ClassDef(TGeoPatternZ, 1)              // Z division pattern
 };
 
-/*************************************************************************
- * TGeoPatternParaX - a X axis divison pattern for PARA shapes
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternParaX - a X axis divison pattern for PARA shapes            //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternParaX : public TGeoPatternFinder 
 {
@@ -186,10 +193,11 @@ public:
    ClassDef(TGeoPatternParaX, 1)              // Para X division pattern
 };
 
-/*************************************************************************
- * TGeoPatternParaY - a Y axis divison pattern for PARA shapes
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternParaY - a Y axis divison pattern for PARA shapes            //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternParaY : public TGeoPatternFinder 
 {
@@ -216,10 +224,11 @@ public:
    ClassDef(TGeoPatternParaY, 1)              // Para Y division pattern
 };
 
-/*************************************************************************
- * TGeoPatternParaZ - a Z axis divison pattern for PARA shapes
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternParaZ - a Z axis divison pattern for PARA shapes            //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternParaZ : public TGeoPatternFinder 
 {
@@ -247,10 +256,11 @@ public:
    ClassDef(TGeoPatternParaZ, 1)              // Para Z division pattern
 };
 
-/*************************************************************************
- * TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes    //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternTrapZ : public TGeoPatternFinder 
 {
@@ -281,10 +291,11 @@ public:
 };
 
 
-/*************************************************************************
- * TGeoPatternCylR - a cylindrical R divison pattern
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternCylR - a cylindrical R divison pattern                      //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternCylR : public TGeoPatternFinder
 {
@@ -307,10 +318,11 @@ public:
    ClassDef(TGeoPatternCylR, 1)              // Cylindrical R division pattern
 };
 
-/*************************************************************************
- * TGeoPatternCylPhi - a cylindrical phi divison pattern
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternCylPhi - a cylindrical phi divison pattern                  //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternCylPhi : public TGeoPatternFinder
 {
@@ -344,10 +356,11 @@ public:
    ClassDef(TGeoPatternCylPhi, 1)              // Cylindrical phi division pattern
 };
 
-/*************************************************************************
- * TGeoPatternSphR - a spherical R divison pattern
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternSphR - a spherical R divison pattern                        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternSphR : public TGeoPatternFinder
 {
@@ -370,16 +383,14 @@ public:
    ClassDef(TGeoPatternSphR, 1)              // spherical R division pattern
 };
 
-/*************************************************************************
- * TGeoPatternSphTheta - a spherical theta divison pattern
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternSphTheta - a spherical theta divison pattern                //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternSphTheta : public TGeoPatternFinder
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternSphTheta();
@@ -397,14 +408,13 @@ public:
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGeoPatternSphTheta, 1)              // spherical theta division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
-/*************************************************************************
- * TGeoPatternSphPhi - a spherical phi divison pattern
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternSphPhi - a spherical phi divison pattern                    //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternSphPhi : public TGeoPatternFinder
 {
@@ -427,10 +437,11 @@ public:
    ClassDef(TGeoPatternSphPhi, 1)              // Spherical phi division pattern
 };
 
-/*************************************************************************
- * TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
- *   
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoPatternHoneycomb - a divison pattern specialized for honeycombs    //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternHoneycomb : public TGeoPatternFinder
 {
@@ -459,4 +470,3 @@ public:
 };
 
 #endif
-

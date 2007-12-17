@@ -17,28 +17,29 @@
 #endif
 
 
-/*************************************************************************
- * TGeoArb8 - a arbitrary trapezoid with less than 8 vertices standing on
- *   two paralel planes perpendicular to Z axis. Parameters :
- *            - dz - half length in Z;
- *            - xy[8][2] - vector of (x,y) coordinates of vertices
- *               - first four points (xy[i][j], i<4, j<2) are the (x,y)
- *                 coordinates of the vertices sitting on the -dz plane;
- *               - last four points (xy[i][j], i>=4, j<2) are the (x,y)
- *                 coordinates of the vertices sitting on the +dz plane;
- *   The order of defining the vertices of an arb8 is the following :
- *      - point 0 is connected with points 1,3,4
- *      - point 1 is connected with points 0,2,5
- *      - point 2 is connected with points 1,3,6
- *      - point 3 is connected with points 0,2,7
- *      - point 4 is connected with points 0,5,7
- *      - point 5 is connected with points 1,4,6
- *      - point 6 is connected with points 2,5,7
- *      - point 7 is connected with points 3,4,6
- *   Points can be identical in order to create shapes with less than 
- *   8 vertices.
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoArb8 - a arbitrary trapezoid with less than 8 vertices standing on //
+//   two paralel planes perpendicular to Z axis. Parameters :             //
+//            - dz - half length in Z;                                    //
+//            - xy[8][2] - vector of (x,y) coordinates of vertices        //
+//               - first four points (xy[i][j], i<4, j<2) are the (x,y)   //
+//                 coordinates of the vertices sitting on the -dz plane;  //
+//               - last four points (xy[i][j], i>=4, j<2) are the (x,y)   //
+//                 coordinates of the vertices sitting on the +dz plane;  //
+//   The order of defining the vertices of an arb8 is the following :     //
+//      - point 0 is connected with points 1,3,4                          //
+//      - point 1 is connected with points 0,2,5                          //
+//      - point 2 is connected with points 1,3,6                          //
+//      - point 3 is connected with points 0,2,7                          //
+//      - point 4 is connected with points 0,5,7                          //
+//      - point 5 is connected with points 1,4,6                          //
+//      - point 6 is connected with points 2,5,7                          //
+//      - point 7 is connected with points 3,4,6                          //
+//   Points can be identical in order to create shapes with less than     // 
+//   8 vertices.                                                          //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoArb8 : public TGeoBBox
 {

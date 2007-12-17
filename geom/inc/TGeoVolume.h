@@ -53,10 +53,12 @@ class TGeoMatrix;
 class TGeoPatternFinder;
 class TGeoManager;
 
-/*************************************************************************
- * TGeoVolume - class description
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoVolume - base class representing a single volume having a shape    //
+//   and a medium.                                                        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoVolume : public TNamed,
                    public TGeoAtt,
@@ -234,11 +236,12 @@ public:
    ClassDef(TGeoVolume, 5)              // geometry volume descriptor
 };
 
-/*************************************************************************
- * TGeoVolumeMulti - class storing a list of volumes that have to
- *   be handled togeather at build time
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoVolumeMulti - class storing a list of volumes that have to         //
+//   be handled togeather at build time                                   //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoVolumeMulti : public TGeoVolume
 {
@@ -284,11 +287,12 @@ public:
    ClassDef(TGeoVolumeMulti, 3)     // class to handle multiple volumes in one step
 };
 
-/*************************************************************************
- * TGeoVolumeAssembly - special assembly of volumes
- *  
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoVolumeAssembly - special assembly of volumes. The assembly has no  //
+//   medium and its shape is the union of all component shapes            //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoVolumeAssembly : public TGeoVolume
 {

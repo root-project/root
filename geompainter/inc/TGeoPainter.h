@@ -14,7 +14,8 @@
 //                                                                      //
 // TGeoPainter                                                          //
 //                                                                      //
-// Painter for TGeo geometries                                          //
+// Painter class utility TGeo geometries. Interfaces visualization      //
+// queries with the viewers.                                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

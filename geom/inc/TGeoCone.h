@@ -18,13 +18,14 @@
 
 
 
-/*************************************************************************
- * TGeoCone - conical tube  class. It has 5 parameters :
- *            dz - half length in z
- *            Rmin1, Rmax1 - inside and outside radii at -dz
- *            Rmin2, Rmax2 - inside and outside radii at +dz
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoCone - conical tube  class. It has 5 parameters :                  //
+//            dz - half length in z                                       //
+//            Rmin1, Rmax1 - inside and outside radii at -dz              //
+//            Rmin2, Rmax2 - inside and outside radii at +dz              //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 
 class TGeoCone : public TGeoBBox
@@ -102,13 +103,14 @@ public:
 
 };
 
-/*************************************************************************
- * TGeoConeSeg - a phi segment of a conical tube. Has 7 parameters :
- *            - the same 5 as a cone;
- *            - first phi limit (in degrees)
- *            - second phi limit 
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoConeSeg - a phi segment of a conical tube. Has 7 parameters :      //
+//            - the same 5 as a cone;                                     //
+//            - first phi limit (in degrees)                              //
+//            - second phi limit                                          //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoConeSeg : public TGeoCone
 {

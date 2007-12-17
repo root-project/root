@@ -17,12 +17,13 @@
 #endif
 
   
- /*************************************************************************
- * TGeoTrd2 - a trapezoid with both x and y lengths varying with z. It 
- *   has 5 parameters, the half lengths in x at -dz and +dz, the half
- *  lengths in y at -dz and +dz, and the half length in z (dz).
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoTrd2 - a trapezoid with both x and y lengths varying with z. It    //
+//   has 5 parameters, the half lengths in x at -dz and +dz, the half     //
+//  lengths in y at -dz and +dz, and the half length in z (dz).           //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoTrd2 : public TGeoBBox
 {

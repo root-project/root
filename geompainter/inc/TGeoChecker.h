@@ -28,12 +28,12 @@ class TBuffer3D;
 class TH2F;
 class TStopwatch;
 
-/*************************************************************************
- * TGeoChecker - A simple checker generating random points inside a 
- *   geometry. Generates a tree of points on the surfaces coresponding
- *   to the safety of each generated point
- *
- *************************************************************************/
+///////////////////////////////////////////////////////////////////////////
+// TGeoChecker - A simple checker generating random points inside a      //
+//   geometry. Generates a tree of points on the surfaces coresponding   //
+//   to the safety of each generated point                               //
+//                                                                       //
+///////////////////////////////////////////////////////////////////////////
 
 class TGeoChecker : public TObject
 {

@@ -34,11 +34,13 @@ class TGeoShape;
 class TVirtualGeoPainter;
 class THashList;
 
-/*************************************************************************
- * TGeoManager - class description
- *
- *************************************************************************/
-
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoManager - The manager class for any TGeo geometry. Provides user   //
+//    interface for geometry creation, navigation, state querying,        //
+//    visualization, IO, geometry checking and other utilities.           //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoManager : public TNamed
 {

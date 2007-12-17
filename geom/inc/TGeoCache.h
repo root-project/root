@@ -21,11 +21,11 @@
 class TGeoManager;
 class TGeoHMatrix;
 
-/*************************************************************************
- * TGeoCacheState - class storing the state of the cache at a given moment
- *
- *
- *************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
+//                                                                         //
+// TGeoCacheState - class storing the state of the cache at a given moment //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
 
 class TGeoCacheState : public TObject
 {
@@ -56,11 +56,11 @@ public:
    ClassDef(TGeoCacheState, 4)       // class storing the cache state
 };
 
-/*************************************************************************
- * TGeoNodeCache - cache of reusable physical nodes
- *
- *
- *************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
+//                                                                         //
+// TGeoNodeCache - cache of reusable physical nodes                        //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
 
 class TGeoNodeCache : public TObject
 {

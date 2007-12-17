@@ -16,14 +16,15 @@
 #include "TGeoBBox.h"
 #endif
 
-/*************************************************************************
- * TGeoSphere - spherical shell class. It takes 6 parameters : 
- *           - inner and outer radius Rmin, Rmax
- *           - the theta limits Tmin, Tmax
- *           - the phi limits Pmin, Pmax (the sector in phi is considered
- *             starting from Pmin to Pmax counter-clockwise
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoSphere - spherical shell class. It takes 6 parameters :            //
+//           - inner and outer radius Rmin, Rmax                          //
+//           - the theta limits Tmin, Tmax                                //
+//           - the phi limits Pmin, Pmax (the sector in phi is considered //
+//             starting from Pmin to Pmax counter-clockwise               //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoSphere : public TGeoBBox
 {

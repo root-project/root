@@ -16,14 +16,14 @@
 #include "TGeoBBox.h"
 #endif
 
-/*************************************************************************
- * TGeoTube - cylindrical tube  class. A tube has 3 parameters :
- *            Rmin - minimum radius
- *            Rmax - maximum radius 
- *            dz - half length
- *
- *************************************************************************/
-
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoTube - cylindrical tube  class. A tube has 3 parameters :          //
+//            Rmin - minimum radius                                       //
+//            Rmax - maximum radius                                       //
+//            dz - half length                                            //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoTube : public TGeoBBox
 {
@@ -90,13 +90,14 @@ public:
 
 };
 
-/*************************************************************************
- * TGeoTubeSeg - a phi segment of a tube. Has 5 parameters :
- *            - the same 3 as a tube;
- *            - first phi limit (in degrees)
- *            - second phi limit 
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoTubeSeg - a phi segment of a tube. Has 5 parameters :              //
+//            - the same 3 as a tube;                                     //
+//            - first phi limit (in degrees)                              //
+//            - second phi limit                                          //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoTubeSeg : public TGeoTube
 {
@@ -160,15 +161,17 @@ public:
 
    ClassDef(TGeoTubeSeg, 1)         // cylindrical tube segment class 
 };
-/*************************************************************************
- * TGeoCtub - a tube segment cut with 2 planes. Has 11 parameters :
- *            - the same 5 as a tube segment;
- *            - x,y,z components of the normal to the -dZ cut plane in 
- *              point (0,0,-dZ)
- *            -  x,y,z components of the normal to the +dZ cut plane in 
- *              point (0,0,dZ)
- *
- *************************************************************************/
+
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoCtub - a tube segment cut with 2 planes. Has 11 parameters :       //
+//            - the same 5 as a tube segment;                             //
+//            - x,y,z components of the normal to the -dZ cut plane in    //
+//              point (0,0,-dZ)                                           //
+//            -  x,y,z components of the normal to the +dZ cut plane in   //
+//              point (0,0,dZ)                                            //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoCtub : public TGeoTubeSeg
 {
@@ -219,6 +222,5 @@ public:
 
    ClassDef(TGeoCtub, 1)         // cut tube segment class 
 };
-
 
 #endif

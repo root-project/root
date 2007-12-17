@@ -24,12 +24,13 @@ class TGeoHMatrix;
 class TGeoVolume;
 class TBuffer3D;
 
-/*************************************************************************
- * TGeoShape - base class for geometric shapes. Provides virtual methods
- *   for point and segment classification that has to be implemented by 
- *   all classes inheriting from it.
- *
- *************************************************************************/
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoShape - base class for geometric shapes. Provides virtual methods  //
+//   for point and segment classification that has to be implemented by   //
+//   all classes inheriting from it.                                      //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGeoShape : public TNamed
 {

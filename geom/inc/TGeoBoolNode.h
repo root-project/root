@@ -16,18 +16,19 @@
 #include "TObject.h"
 #endif
 
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// TGeoBoolNode - Base class for boolean nodes. A boolean node has pointers //
+//  to two shapes having two transformations with respect to the mother     //
+//  composite shape they belong to. It represents the boolean operation     //
+//  between the two component shapes.                                       //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+
 // forward declarations
 class TGeoShape;
 class TGeoMatrix;
 class TGeoHMatrix;
-
-/*************************************************************************
- * TGeoBoolNode - Base class for boolean nodes. A boolean node has pointers
- *  to two shapes having two transformations with respect to the mother
- *  composite shape they belong to. It represents the boolean operation
- *  between the two component shapes. 
- *
- *************************************************************************/
 
 class TGeoBoolNode : public TObject
 {
@@ -81,11 +82,11 @@ public:
    ClassDef(TGeoBoolNode, 1)              // a boolean node
 };
 
-/*************************************************************************
- * TGeoUnion - Boolean node representing a union between two components.
- *  
- *  
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// TGeoUnion - Boolean node representing a union between two components.    //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
 
 class TGeoUnion : public TGeoBoolNode
 {
@@ -116,16 +117,16 @@ public:
 
    //CS specific
    virtual void      Paint(Option_t *option);
-   ///////////////////////////////////////////
 
    ClassDef(TGeoUnion, 1)              // union node
 };
 
-/*************************************************************************
- * TGeoIntersection - Boolean node representing an intersection between two 
- * components.
- *  
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// TGeoIntersection - Boolean node representing an intersection between two //
+// components.                                                              //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
 
 class TGeoIntersection : public TGeoBoolNode
 {
@@ -156,17 +157,15 @@ public:
 
    //CS specific
    virtual void      Paint(Option_t *option);
-   ///////////////////////////////////////////
-
 
    ClassDef(TGeoIntersection, 1)              // intersection node
 };
 
-/*************************************************************************
- * TGeoSubtraction - Boolean node representing a subtraction.
- * 
- *  
- *************************************************************************/
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// TGeoSubtraction - Boolean node representing a subtraction.               //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
 
 class TGeoSubtraction : public TGeoBoolNode
 {
@@ -197,8 +196,6 @@ public:
 
    //CS specific
    virtual void      Paint(Option_t *option);
-   ///////////////////////////////////////////
-
 
    ClassDef(TGeoSubtraction, 1)              // subtraction node
 };
