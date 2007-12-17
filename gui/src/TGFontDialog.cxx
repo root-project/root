@@ -105,6 +105,14 @@ static const char *gFontList2[] = {
 };
 */
 
+//_____________________________________________________________________________
+//
+// TGFontDialog
+//
+// Font selection dialog, allowing to select one in the list of available fonts
+// in the system.
+//_____________________________________________________________________________
+
 ClassImp(TGFontDialog)
 
 //________________________________________________________________________________
