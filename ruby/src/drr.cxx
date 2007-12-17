@@ -416,10 +416,12 @@ TObject* drr_grab_object(VALUE self)
     return o;
 }
 
-void drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offset=1)
+unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offset=1, unsigned int reference_map=0x0)
 {
     /* FIXME. Offset reminds me fortran code; make a better interface,
      * and change the function name to a better one. 
+     * FIXME: Brute-forcing search for call by pointer or by reference.
+     * Return numbr of T_OBJECTS
      * 
      * The boolean checks for cproto and f are vital. This function can
      * be called:
@@ -433,6 +435,8 @@ void drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offset=1)
     double *arr = NULL;
     TObject *ptr = NULL;
     VALUE v = 0;
+
+    unsigned int ntobjects = 0;
     
     /* Transform Ruby arguments to C/C++.  */
     for (int i = 0; i < nargs; i++)
@@ -473,9 +477,14 @@ void drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offset=1)
                     if (f) f->SetArg((long) ptr);
                     if (cproto) {
                         strcat(cproto, STR2CSTR(rb_iv_get (arg, "__rr_class__")));
-                        strcat(cproto, "*");
+                        if( ((reference_map>>ntobjects)&0x1) ) {
+                          strcat(cproto, "*");
+                        } else {
+                          strcat(cproto, "&");
+                        }
                     }
                   }
+                ++ntobjects;
                 break;
             default:
                 break;
@@ -483,6 +492,7 @@ void drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offset=1)
         if ((i + 1 < nargs) && (nargs != 1) && cproto)
             strcat(cproto, ",");
       }
+    return ntobjects;
 }
 
 /* FIXME. Err... enum is the correct word? :-) */
@@ -720,12 +730,24 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     
     G__CallFunc *func = new G__CallFunc();
     G__ClassInfo *klass = new G__ClassInfo (classname);
+    G__MethodInfo *minfo = 0;
 
-    if (nargs)
-        drr_map_args2 (inargs, cproto, func, 1);
+    if (nargs) {
+        /* FIXME: Brute force checkin of all combinations of * and & for
+         * T_Objects Since we cannot tell which one is needed (we get the type
+         * from the ruby objects, which don't know) we try all. 
+         */
+        for( unsigned int reference_map=0x0; reference_map < static_cast<unsigned int>( (1<<drr_map_args2 (inargs, cproto, func, 1, reference_map)) ); reference_map++) {
+            minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset)); 
+            if (minfo->InterfaceMethod())
+                break;
+            cproto[0] = static_cast<char>( 0 ); // reset cproto
+        }
+    } else {
+        minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset)); 
+    }
 
     /* FIXME: minfo is really used only for the return type.  */ 
-    G__MethodInfo *minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset)); 
     if (minfo->InterfaceMethod())
         func->SetFunc(*minfo);
     else
