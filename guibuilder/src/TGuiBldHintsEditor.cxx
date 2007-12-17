@@ -9,15 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBldHintsEditor                                                   //
-//                                                                      //
-// Editor of widget's layout hints used by the ROOT GUI builder.        //
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGuiBldHintsEditor.h"
 #include "TGuiBldHintsButton.h"
 #include "TGNumberEntry.h"
@@ -25,6 +16,13 @@
 #include "TGLabel.h"
 #include "TG3DLine.h"
 #include "TGuiBldNameFrame.h"
+
+//_____________________________________________________________________________
+//
+// TGuiBldHintsEditor
+//
+// Editor of widget's layout hints used by the ROOT GUI builder.
+//_____________________________________________________________________________
 
 ClassImp(TGuiBldHintsEditor)
 

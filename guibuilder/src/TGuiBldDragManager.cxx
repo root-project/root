@@ -51,18 +51,14 @@
 #include "TGScrollBar.h"
 #include "TGTextEntry.h"
 
-
-
 #undef DEBUG_LOCAL
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBldDragManager                                                   //
-//                                                                      //
-// Drag and drop manager used by the ROOT GUI Builder.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+//_____________________________________________________________________________
+//
+// TGuiBldDragManager
+//
+// Drag and drop manager used by the ROOT GUI Builder.
+//_____________________________________________________________________________
 
 ClassImp(TGuiBldDragManager)
 
