@@ -7,15 +7,14 @@
 #include "TPoints3DABC.h"
 #include "TMath.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPoints3DABC                                                         //
-//                                                                      //
-// Abstract class to define Arrays of 3D points                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 ClassImp(TPoints3DABC)
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>The TPoints3DABC class</h2></center>
+Abstract class to define Arrays of 3D points.
+End_Html */
+
 
 
 //______________________________________________________________________________
