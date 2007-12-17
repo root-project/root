@@ -24,8 +24,7 @@
 //  Double_t         fIsospin;          // isospin
 //  Double_t         fI3;               // i3
 //  Int_t            fStrangeness;      // flavours are defined if i3 != -1
-//  Int_t            fCharm;            // 1 or -1 for C-particles,
-//                                      // 0 for others
+//  Int_t            fCharm;            // 1 or -1 for C-particles,  0 for others
 //  Int_t            fBeauty;           //
 //  Int_t            fTop;              //
 //  Int_t            fY;                // X,Y: quantum numbers for the 4-th generation
