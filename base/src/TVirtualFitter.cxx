@@ -8,6 +8,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+
+//______________________________________________________________________________
+//
+//     Abstract Base Class for Fitting
+
 #include "TROOT.h"
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
@@ -23,7 +28,8 @@ Double_t        TVirtualFitter::fgErrorDef  = 1;
 TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
-
+   
+   
 //______________________________________________________________________________
 TVirtualFitter::TVirtualFitter()
 {
