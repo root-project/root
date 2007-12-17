@@ -211,13 +211,17 @@ void stressGraphics(Int_t verbose = 0)
    gFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
    if (gFile->IsZombie()) {
       delete gFile;
-      printf("Create $(ROOTSYS)/tutorials/hsimple.root\n");
-      gROOT->Macro("$(ROOTSYS)/tutorials/hsimple.C");
-      gFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
+      gFile = new TFile("hsimple.root");
       if (gFile->IsZombie()) {
          delete gFile;
-         printf("Could not create $(ROOTSYS)/tutorials/hsimple.root\n");
-         return;
+         printf("Create $(ROOTSYS)/tutorials/hsimple.root\n");
+         gROOT->Macro("$(ROOTSYS)/tutorials/hsimple.C");
+         gFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
+         if (gFile->IsZombie()) {
+            delete gFile;
+            printf("Could not create $(ROOTSYS)/tutorials/hsimple.root\n");
+            return;
+         }
       }
    }
    gErrorIgnoreLevel = 0;
