@@ -1,0 +1,9 @@
+This directory contains the ROOT Session Viewer classes.
+BEGIN_HTML
+ See:
+<ul>
+<li>The main session viewer class is documented in class TSessionViewer.</li>
+<li><a href="http://root.cern.ch/twiki/bin/view/ROOT/ProofGUI">The twiki page about the ROOT Session Viewer as used in Proof
+    </a></li>
+</ul>
+END_HTML
