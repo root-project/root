@@ -102,6 +102,8 @@ method <tt>GetFillStyle</tt>.
    <li>  4000 :the window is transparent.                            </li>
    <li>  4000 to 4100 the window is 100% transparent to 100% opaque. </li>
 </ul>
+      The pad transparency is visible in binary outputs files like gif, jpg, png etc ..
+      but not in vector graphics output files like PS, PDF and SVG.
 </ul>
 
 pattern_number can have any value from 1 to 25 (see table), or any
