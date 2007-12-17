@@ -9,6 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//______________________________________________________________________________
+//
+// old version of a  dynamic particle class created by event generators.
+// This class is now obsolete. Use TParticle instead.
+
 #include "TObject.h"
 #include "Rtypes.h"
 #include "TString.h"

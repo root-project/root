@@ -9,6 +9,35 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//______________________________________________________________________________
+//
+// a dynamic particle class created by event generators and used during
+// the propagation in detectors. The static attributes of a TParticle
+// are described by TParticlePDG.
+//
+//  Int_t          fPdgCode;              // PDG code of the particle
+//  Int_t          fStatusCode;           // generation status code
+//  Int_t          fMother[2];            // Indices of the mother particles
+//  Int_t          fDaughter[2];          // Indices of the daughter particles
+//  Float_t        fWeight;               // particle weight
+//
+//  Double_t       fCalcMass;             // Calculated mass
+//
+//  Double_t       fPx;                   // x component of momentum
+//  Double_t       fPy;                   // y component of momentum
+//  Double_t       fPz;                   // z component of momentum
+//  Double_t       fE;                    // Energy
+//
+//  Double_t       fVx;                   // x of production vertex
+//  Double_t       fVy;                   // y of production vertex
+//  Double_t       fVz;                   // z of production vertex
+//  Double_t       fVt;                   // t of production vertex
+//
+//  Double_t       fPolarTheta;           // Polar angle of polarisation
+//  Double_t       fPolarPhi;             // azymutal angle of polarisation
+//
+//  TParticlePDG*  fParticlePDG;          //! reference to the particle record in PDG database
+
 #include "TView.h"
 #include "TVirtualPad.h"
 #include "TPolyLine3D.h"
