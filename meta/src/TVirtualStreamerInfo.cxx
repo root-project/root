@@ -8,6 +8,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TVirtualStreamerInfo   Abstract Interface class                      //
+//                                                                      //
+// Abstract Interface describing Streamer information for one class.    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualStreamerInfo.h"

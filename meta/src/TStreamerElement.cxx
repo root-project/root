@@ -474,6 +474,7 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerBase implement the streamer of the base class               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -663,6 +664,8 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerBasicPointer implements the streamering of pointer to       //
+// fundamental types.                                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -763,6 +766,9 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerLoop implement streaming of a few construct that require    //
+// looping over the data member and are not convered by other case      //
+// (most deprecated).                                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -862,6 +868,8 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerBasicType implement streaming of fundamental types (int,    //
+// float, etc.).                                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -932,6 +940,8 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerObject implements streaming of embedded objects whose type  //
+// inherits from TObject.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -1022,6 +1032,8 @@ void TStreamerObject::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerObjectAny implement streaming of embedded object not        //
+// inheriting from TObject.                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -1108,6 +1120,8 @@ void TStreamerObjectAny::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerObjectPointer implements streaming of pointer to object     //
+// inheriting from TObject.                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -1206,6 +1220,8 @@ void TStreamerObjectPointer::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerObjectPointerAny implements streaming of pointer to object  //
+// not inheriting from TObject.                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -1296,6 +1312,7 @@ void TStreamerObjectAnyPointer::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TSreamerString implements streaming of TString.                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -1355,6 +1372,7 @@ void TStreamerString::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerSTL implements streamer of STL container.                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -1610,6 +1628,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TStreamerSTLstring implements streaming std::string.                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
