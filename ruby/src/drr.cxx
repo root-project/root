@@ -893,10 +893,6 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
 extern "C"
 void Init_libRuby() {
 
-    /* Create a new ROOT Application if it doesn't already exist.  */
-    if (!gApplication)
-    gApplication = new TApplication("ruby root app", NULL, NULL);
-
     /* In order to have the most frequently used dictionaries
      * loaded by default. THIS MUST BE REPLACED BY PORTABLE CODE  */
 #if defined(linux) || defined(sun)
@@ -911,6 +907,10 @@ void Init_libRuby() {
    dlopen( "libGeom.so",   RTLD_GLOBAL | RTLD_LAZY );
 #endif
    
+    /* Create a new ROOT Application if it doesn't already exist.  */
+    if (!gApplication)
+        gApplication = new TApplication("ruby root app", NULL, NULL);
+
     drrAbstractClass = rb_define_class("DRRAbstractClass", rb_cObject);
     rb_define_method(drrAbstractClass, "initialize", VALUEFUNC(drr_init), -1);
     rb_define_method(drrAbstractClass, "method_missing", VALUEFUNC(drr_method_missing), -1);
