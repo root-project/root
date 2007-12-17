@@ -17,6 +17,12 @@
 #include "TProofProgressDialog.h"
 #include "TProofProgressLog.h"
 
+//_____________________________________________________________________________
+//
+// TProofProgressLog
+//
+// Dialog used to display Proof session logs from the Proof progress dialog
+//_____________________________________________________________________________
 
 ClassImp(TProofProgressLog)
 

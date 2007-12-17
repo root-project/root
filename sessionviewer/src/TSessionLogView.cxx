@@ -14,6 +14,15 @@
 #include "TProof.h"
 #include "KeySymbols.h"
 
+//_____________________________________________________________________________
+//
+// TSessionLogView
+//
+// Dialog used to display session logs from the session viewer
+//_____________________________________________________________________________
+
+ClassImp(TSessionLogView)
+
 //____________________________________________________________________________
 TSessionLogView::TSessionLogView(TSessionViewer *viewer, UInt_t w, UInt_t h) :
    TGTransientFrame(gClient->GetRoot(), viewer, w, h)
