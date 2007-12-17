@@ -26,9 +26,11 @@
 #include "TColor.h"
 
 //______________________________________________________________________________
-//
-// Editor class for spider plots.
-//
+/* Begin_Html
+<center><h2>The TSpider editor class</h2></center>
+Provides the graphical user interface to the spider plots.
+End_Html */
+
 
 ClassImp(TSpiderEditor)
 

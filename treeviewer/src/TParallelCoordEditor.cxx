@@ -35,26 +35,26 @@
 
 ClassImp(TParallelCoordEditor)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TParallelCoordEditor                                                 //
-//                                                                      //
-// This is the TParallelCoord editor. It brings tools to explore datas  //
-// Using parallel coordinates. The main tools are:                      //
-//    - Dots spacing : Set the dots spacing with whichone the lines     //
-//      must be drawn. This tool is useful to reduce the image          //
-//      cluttering.                                                     //
-//    - The Selections section : Set the current edited selection and   //
-//      allows to apply it to the tree through a generated entry list.  //
-//    - The Entries section : Set how many events must be drawn.        //
-//      A weight cut can be defioned here (see TParallelCoord for a     //
-//      a description of the weight cut).                               //
-//    - The Variables tab : To define the global settings to display    //
-//      the axes. It is also possible to add a variable from its        //
-//      expression or delete a selected one (also possible using right  //
-//      click on the pad.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>The TParallelCoord editor class</h2></center>
+This is the TParallelCoord editor. It brings tools to explore datas
+Using parallel coordinates. The main tools are:
+</ul>
+<li> Dots spacing : Set the dots spacing with whichone the lines
+  must be drawn. This tool is useful to reduce the image
+  cluttering.
+<li> The Selections section : Set the current edited selection and
+  allows to apply it to the tree through a generated entry list.
+<li> The Entries section : Set how many events must be drawn.
+  A weight cut can be defioned here (see TParallelCoord for a
+  a description of the weight cut).
+<li> The Variables tab : To define the global settings to display
+  the axes. It is also possible to add a variable from its
+  expression or delete a selected one (also possible using right
+  click on the pad.
+</ul>
+End_Html */
 
 
 enum EParallelWid {
