@@ -33,6 +33,15 @@
 #include "TWin32SplashThread.h"
 #endif
 
+//_____________________________________________________________________________
+//
+// TGHtmlBrowser
+//
+// A very simple HTML browser.
+//_____________________________________________________________________________
+
+ClassImp(TGHtmlBrowser)
+
 enum EMyMessageTypes {
    M_FILE_OPEN,
    M_FILE_BROWSE,

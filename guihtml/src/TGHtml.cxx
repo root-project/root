@@ -42,6 +42,12 @@
 #include "TImage.h"
 #include "TGScrollBar.h"
 
+//_____________________________________________________________________________
+//
+// TGHtml
+//
+// The ROOT HTML widget. A derivate of TGView.
+//_____________________________________________________________________________
 
 ClassImp(TGHtml)
 
