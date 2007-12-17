@@ -2296,8 +2296,7 @@ void TH1::Draw(Option_t *option)
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (opt.Contains("same")) {
-         if (opt.Contains("same") &&
-             gPad->GetX1() == 0   && gPad->GetX2() == 1 &&
+         if (gPad->GetX1() == 0   && gPad->GetX2() == 1 &&
              gPad->GetY1() == 0   && gPad->GetY2() == 1 &&
              gPad->GetListOfPrimitives()->GetSize()==0) opt.ReplaceAll("same","");
       } else {
