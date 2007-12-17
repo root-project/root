@@ -41,6 +41,12 @@
 #include "KeySymbols.h"
 #define QTCLOSE_DESTROY_RESPOND 1
 
+//______________________________________________________________________________
+//
+// QtClientFilter provides QOject event filter to map Qt and  ROOT events 
+//   (see: http://doc.trolltech.com/4.3/qobject.html#installEventFilter )
+//______________________________________________________________________________
+
 ClassImp(TQtClientFilter)
 
 TQtClientWidget *TQtClientFilter::fgPointerGrabber=0;

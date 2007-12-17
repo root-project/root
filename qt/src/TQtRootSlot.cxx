@@ -12,7 +12,13 @@
 ** LICENSE.QPL included in the packaging of this file.
 **
 *****************************************************************************/
-///////////////////////////////////////////////////////////////////////////
+
+#include "TQtRootSlot.h"
+#include "TROOT.h"
+#include "TApplication.h"
+#include <qapplication.h>
+
+//______________________________________________________________________________
 //
 // The TQRootSlot singleton class introduces the global SLOT to invoke
 // the  ROOT command line from the GUI signals
@@ -30,12 +36,7 @@
 //  
 //  connect(qApp,SIGNAL(lastWindowClosed()),TQtRootSlot::CintSlot(),SLOT(TerminateAndQuit())
 //
-///////////////////////////////////////////////////////////////////////////
-
-#include "TQtRootSlot.h"
-#include "TROOT.h"
-#include "TApplication.h"
-#include <qapplication.h>
+//______________________________________________________________________________
 
 TQtRootSlot *TQtRootSlot::fgTQtRootSlot = 0;
 //____________________________________________________

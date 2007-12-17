@@ -31,10 +31,9 @@
 
 #include "TGClient.h"
 
-////////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 //
 //  TQtClientWidget is QFrame designed to back the ROOT GUI TGWindow class objects
-//
 //
 // TQtClientWidget  is a QFrame implementation backing  ROOT TGWindow objects
 // It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
@@ -43,7 +42,7 @@
 // against of double deleting all TQtClientWidgets are to be registered with a special
 // "guard" container
 //
-////////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 
 //______________________________________________________________________________
 TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* parent, const char* name, Qt::WFlags f ):
