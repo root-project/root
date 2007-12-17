@@ -12,6 +12,22 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// A TStreamerInfo object describes a persistent version of a class.    //
+// A ROOT file contains the list of TStreamerInfo objects for all the   //
+// class versions written to this file.                                 //
+// When reading a file, all the TStreamerInfo objects are read back in  //
+// memory and registered to the TClass list of TStreamerInfo.           //
+//                                                                      //
+// One can see the list and contents of the TStreamerInfo on a file     //
+// with, eg,                                                            //
+//    TFile f("myfile.root");                                           //
+//    f.ShowStreamerInfo();                                             //
+//                                                                      //
+// A TStreamerInfo is a list of TStreamerElement objects (one per data  //
+// member or base class).                                               //
+// When streaming an object, the system (TClass) loops on all the       //
+// TStreamerElement objects and calls teh appropriate function for each //
+// element type.                                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
