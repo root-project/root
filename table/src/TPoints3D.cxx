@@ -16,9 +16,8 @@
 #include "TPoints3D.h"
 #include "TPointsArray3D.h"
 
-ClassImp(TPoints3D)
-
 //______________________________________________________________________________
+//
 // TPoints3D is an abstract class of the array of 3-dimensional points.
 // It has 4 different constructors.
 //
@@ -54,6 +53,7 @@ ClassImp(TPoints3D)
 //                 TPoints3D pl1(150, xArray, yArray, zArray);
 //
 
+ClassImp(TPoints3D)
 
 //______________________________________________________________________________
 TPoints3D::TPoints3D(TPoints3DABC *points) : fPoints(points)

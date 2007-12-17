@@ -8,17 +8,15 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TColumnView                                                         //
-//                                                                      //
-//  It is a helper class to present TTable object view TBrowser         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
- 
+
 #include "TColumnView.h"
 #include "TVirtualPad.h"
-
+//______________________________________________________________________________
+//
+//  TColumnView
+//
+//  It is a helper class to present TTable object view TBrowser
+//______________________________________________________________________________
 ClassImp(TColumnView)
 
 //______________________________________________________________________________

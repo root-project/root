@@ -12,6 +12,11 @@
 
 #include "TResponseTable.h"
 
+//______________________________________________________________________________
+//
+// TResponseTable is an example of the custom version of the TGenericTable class
+//______________________________________________________________________________
+
 ClassImp(TResponseTable)
 TableClassStreamerImp(TResponseTable)
 

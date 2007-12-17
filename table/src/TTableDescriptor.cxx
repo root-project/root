@@ -19,6 +19,11 @@
 #include "Ttypes.h"
 #include "TInterpreter.h"
 
+//______________________________________________________________________________
+//
+// TTableDescriptor - run-time descriptor of the TTable object rows.
+//______________________________________________________________________________
+
 TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
 // TString TTableDescriptor::fgCommentsName = TTableDescriptor::SetCommentsSetName();
 TString TTableDescriptor::fgCommentsName = ".comments";

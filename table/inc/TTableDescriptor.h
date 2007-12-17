@@ -16,6 +16,11 @@
 #include "tableDescriptor.h"
 
 class TClass;
+//______________________________________________________________________________
+//
+// TTableDescriptor - run-time descriptor of the TTable object rows.
+//______________________________________________________________________________
+
 
 class TTableDescriptor : public TTable {
 protected:

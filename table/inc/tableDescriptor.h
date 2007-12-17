@@ -48,6 +48,14 @@
  *  To lift this restriction one has to provide -DNORESTRICTIONS CPP symbol and
  *  recompile code.
  */
+//______________________________________________________________________________
+//
+// Table descriptor tableDescriptor_st is internal descriptor of TTableDescriptor class 
+//
+// One should not use it directly. 
+// To access the TTable descriptor information use TTableDescriptor object instead
+//______________________________________________________________________________
+
 typedef struct tableDescriptor_st {
 #ifdef NORESTRICTIONS
     char         *fColumnName; /* The name of this data-member                                         */

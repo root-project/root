@@ -12,16 +12,12 @@
 #ifndef ROOT_TColumnView
 #define ROOT_TColumnView
  
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TColumnView                                                         //
-//                                                                      //
-//  It is a helper class to present one column of the TTable object     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
- 
 #include "TChair.h"
  
+//______________________________________________________________________________
+//
+//  TColumnView - helper class to browse the TTable objects via ROOT TBrowser
+//______________________________________________________________________________
 class TColumnView : public TChair {
 
 public:

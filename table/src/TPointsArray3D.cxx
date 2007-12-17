@@ -18,9 +18,8 @@
 #include "TROOT.h"
 #include "TMath.h"
 
-ClassImp(TPointsArray3D)
-
 //______________________________________________________________________________
+//
 // TPointsArray3D is an abstract class of the array of 3-dimensional points.
 // It has 4 different constructors.
 //
@@ -56,6 +55,7 @@ ClassImp(TPointsArray3D)
 //                 TPointsArray3D pl1(150, xArray, yArray, zArray);
 //
 
+ClassImp(TPointsArray3D)
 
 //______________________________________________________________________________
 TPointsArray3D::TPointsArray3D()
