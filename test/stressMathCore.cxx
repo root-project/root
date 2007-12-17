@@ -1473,8 +1473,12 @@ int testCompositeObj(int ngen) {
    // put path relative to LD_LIBRARY_PATH
    iret = gSystem->Load("../test/libTrackMathCoreCint");
    if (iret !=0) { 
-      std::cerr <<"Error Loading libTrackMathCoreCint" << std::endl;
-      return iret; 
+      // if not assume running from top ROOT dir (case of roottest)
+      iret = gSystem->Load("test/libTrackMathCoreCint");
+      if (iret !=0) {
+         std::cerr <<"Error Loading libTrackMathCoreCint" << std::endl;
+         return iret; 
+      }
    }
 #else
 
@@ -1487,8 +1491,12 @@ int testCompositeObj(int ngen) {
 
    iret = gSystem->Load("../test/libTrackMathCoreRflx");
    if (iret !=0) { 
-      std::cerr <<"Error Loading libTrackMathCoreRflx" << std::endl;
-      return iret; 
+      // if not assume running from top ROOT dir (case of roottest)
+      iret = gSystem->Load("test/libTrackMathCoreRflx");
+      if (iret !=0) {
+         std::cerr <<"Error Loading libTrackMathCoreRflx" << std::endl;
+         return iret; 
+      }
    }
 
 #endif
