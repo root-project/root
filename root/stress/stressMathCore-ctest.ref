@@ -5,6 +5,8 @@ Normal distribution                     		................ OK
 BreitWigner distribution                		................ OK
 F    distribution                       		................ OK
 lognormal distribution                  		................ OK
+Exponential distribution                		................ OK
+Uniform distribution                    		................ OK
 ******************************************************************************
 	Test of Physics Vector (GenVector package)
 ******************************************************************************

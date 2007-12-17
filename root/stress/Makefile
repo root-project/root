@@ -13,6 +13,9 @@ STRESSTESTS  := $(filter-out stressHepix-test,\
 ifeq ($(findstring roofit,$(shell root-config --features)),)
 STRESSTESTS  := $(filter-out stressRooFit-test,$(STRESSTESTS))
 endif
+ifeq ($(findstring mathmore,$(shell root-config --features)),)
+STRESSTESTS  := $(filter-out stressMathMore-test,$(STRESSTESTS))
+endif
 
 TEST_TARGETS += $(STRESSTESTS)
 
