@@ -42,9 +42,10 @@
 
 #include "TQtClientWidget.h"
 
+//________________________________________________________________________
 //
 //  TQtClientFilter  is Qt "eventFilter" to map Qt event to ROOT event
-//
+//________________________________________________________________________
 
 class TQtNextEventMessage;
 class TQtEventQueue;

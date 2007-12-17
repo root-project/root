@@ -29,10 +29,12 @@
   
 #include "GuiTypes.h"
 
+//________________________________________________________________________
 //
 // TQtClientWidget  is a QFrame implemantation backing  ROOT TGWindow objects
 // It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
-//
+//________________________________________________________________________
+
 
 class QCursor;
 class QCloseEvent;

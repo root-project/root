@@ -12,6 +12,7 @@
 ** LICENSE.QPL included in the packaging of this file.
 **
 *****************************************************************************/
+//________________________________________________________________________
 //
 // The TQRootSlot singleton class introduces the global SLOT to invoke
 // the  ROOT command line from the GUI signals
@@ -21,7 +22,7 @@
 // to any Qt signal
 // To execute any C++ statement from the GUI oen should connect 
 // his/her Qt signal with the Qt slot of the global instance of this class
-//
+//________________________________________________________________________
 
 #ifndef ROOT_TQRootSlot
 #define ROOT_TQRootSlot
