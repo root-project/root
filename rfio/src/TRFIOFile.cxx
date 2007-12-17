@@ -46,6 +46,7 @@
 
 #include "TRFIOFile.h"
 #include "TROOT.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifndef R__WIN32
@@ -56,50 +57,15 @@ defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) ||          \
 defined(R__MACOSX) || defined(R__HURD) || defined(R__OBSD)
 #define HAS_DIRENT
 #endif
-#else
-#define off64_t __int64
-#define fstat64 _fstati64
-#define lseek64 _lseeki64
-#define open64 open
-#define stat64 _stati64
 #endif
 
 #ifdef HAS_DIRENT
 #include <dirent.h>
-#else
-
-struct dirent {
-   ino_t d_ino;
-   off_t d_reclen;
-   unsigned short d_namlen;
-   char d_name[232];  // from Castor_limits.h
-};
 #endif
 
 #include <rfio.h>
 #include <rfio_api.h>
-
-
-#ifndef RFIO_READOPT
-#define RFIO_READOPT 1
-#endif
-
-#ifdef R__WIN32
-
-// Thread safe rfio_errno. Note, C__rfio_errno is defined in Cglobals.c rather
-// than rfio/error.c.
-#define rfio_errno (*C__rfio_errno())
-
-// Thread safe serrno. Note, C__serrno is defined in Cglobals.c rather
-// rather than serror.c.
-#define serrno (*C__serrno())
-
-#else
-
-extern int rfio_errno;
-extern int serrno;
-
-#endif
+#include <serrno.h>
 
 
 ClassImp(TRFIOFile)
