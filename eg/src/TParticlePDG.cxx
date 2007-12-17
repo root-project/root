@@ -19,16 +19,16 @@
 //  Double_t         fCharge;           // charge in units of |e|/3
 //  Double_t         fLifetime;         // proper lifetime in nanoseconds
 //  Double_t         fWidth;            // total width in GeV
-//  Int_t            fParity;
-//  Double_t         fSpin;
+//  Int_t            fParity;           // parity
+//  Double_t         fSpin;             // spin
 //  Double_t         fIsospin;          // isospin
 //  Double_t         fI3;               // i3
 //  Int_t            fStrangeness;      // flavours are defined if i3 != -1
 //  Int_t            fCharm;            // 1 or -1 for C-particles,  0 for others
-//  Int_t            fBeauty;           //
-//  Int_t            fTop;              //
+//  Int_t            fBeauty;
+//  Int_t            fTop;
 //  Int_t            fY;                // X,Y: quantum numbers for the 4-th generation
-//  Int_t            fX;                //
+//  Int_t            fX;
 //  Int_t            fStable;           // 1 if stable, 0 otherwise
 //                                        
 //  TObjArray*       fDecayList;        // array of decay channels
