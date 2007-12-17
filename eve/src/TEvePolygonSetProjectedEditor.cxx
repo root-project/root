@@ -19,6 +19,10 @@
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
 
+//______________________________________________________________________________
+//
+// GUI editor for class TEvePolygonSetProjected.
+
 ClassImp(TEvePolygonSetProjectedEditor)
 
 //______________________________________________________________________________

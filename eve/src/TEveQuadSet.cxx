@@ -127,7 +127,8 @@ void TEveQuadSet::AddQuad(Float_t verts[12])
       throw(eH + "expect free quad-type.");
 
    QFreeQuad_t* fq = (QFreeQuad_t*) NewDigit();
-   memcpy(fq->fVertices, verts, sizeof(fq->fVertices));
+   if (verts != 0)
+     memcpy(fq->fVertices, verts, sizeof(fq->fVertices));
 }
 
 //______________________________________________________________________________

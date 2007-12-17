@@ -14,8 +14,11 @@
 #include "TColor.h"
 #include "TStyle.h"
 #include "TMath.h"
+
 //______________________________________________________________________________
-// TEveRGBAPalette
+//
+// A generic, speed-optimised mapping from value to RGBA color
+// supporting different wrapping and range truncation modes.
 //
 
 ClassImp(TEveRGBAPalette)

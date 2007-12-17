@@ -245,7 +245,11 @@ Color_t* TEveUtil::FindColorVar(TObject* obj, const Text_t* varname)
 // TEveException
 /******************************************************************************/
 
-// TString .vs. string
+//______________________________________________________________________________
+// 
+// Exception class thrown by TEve classes and macros.
+
+ClassImp(TEveException)
 
 //______________________________________________________________________________
 bool operator==(const TString& t, const std::string& s)
@@ -277,6 +281,14 @@ TEveException operator+(const TEveException &s1,  const char *s2)
 // TEvePadHolder
 /******************************************************************************/
 
+//______________________________________________________________________________
+//
+// Exception safe wrapper for setting gPad.
+// Optionally calls gPad->Modified()/Update() in destructor.
+
+ClassImp(TEvePadHolder)
+
+//______________________________________________________________________________
 TEvePadHolder::TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t subpad) :
    fOldPad        (gPad),
    fModifyUpdateP (modify_update_p)
@@ -301,9 +313,18 @@ TEvePadHolder::~TEvePadHolder()
    gPad = fOldPad;
 }
 
+
 /******************************************************************************/
 // TEveGeoManagerHolder
 /******************************************************************************/
+
+//______________________________________________________________________________
+//
+// Exception safe wrapper for setting gGeoManager.
+// Functionality to lock-unlock via setting of a static lock in
+// TGeoManager should be added (new feature of TGeoManager).
+
+ClassImp(TEveGeoManagerHolder)
 
 //______________________________________________________________________________
 TEveGeoManagerHolder::TEveGeoManagerHolder(TGeoManager* new_gmgr) :
@@ -323,8 +344,23 @@ TEveGeoManagerHolder::~TEveGeoManagerHolder()
 }
 
 
+/******************************************************************************/
+// TEveRefCnt
+/******************************************************************************/
+
 //______________________________________________________________________________
+//
+// Base-class for reference-counted objects.
+// By default the object is destroyed when zero referece-count is reached.
+
+ClassImp(TEveRefCnt)
+
+
+/******************************************************************************/
 // TEveRefBackPtr
+/******************************************************************************/
+
+//______________________________________________________________________________
 //
 // Base-class for reference-counted objects with reverse references to
 // TEveElement objects.

@@ -21,6 +21,15 @@
 #include <algorithm>
 
 //______________________________________________________________________________
+//
+// Structure holding information about TGListTree and TGListTreeItem
+// that represents given TEveElement. This needed because each element
+// can appear in several list-trees as well as several times in the
+// same list-tree.
+
+ClassImp(TEveElement::TEveListTreeInfo)
+
+//______________________________________________________________________________
 // TEveElement
 //
 // Base class for TEveUtil visualization elements, providing hierarchy
