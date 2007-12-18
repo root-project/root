@@ -130,8 +130,8 @@ TTimeStamp::TTimeStamp(UInt_t date, UInt_t time,
 //______________________________________________________________________________
 TTimeStamp::TTimeStamp(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
 {
-   // Create a TTimeStamp and set it to the the time_t value returned by time().
-   // This value is the number of seconds since the EPOCH
+   // Create a TTimeStamp and set it to tloc which must be a time_t value
+   // returned by time(). This value is the number of seconds since the EPOCH
    // (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then the input
    // is a dosDate value.
 
