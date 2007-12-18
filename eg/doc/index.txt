@@ -1,0 +1,14 @@
+BEGIN_HTML
+This directory contains classes with interfaces to the Particle Data Group (PDG)
+data base, a static and dynamic particle class and a decay class framework.
+These classes are extensively used in the VMC (Virtual Monte Carlo). See also
+the following references:
+<ul>
+<li><a href="http://www.slac.stanford.edu/econf/C0303241/proc/papers/THJT006.PDF">The Virtual Monte Carlo paper
+      </A></li>
+<li><a href="http://root.cern.ch/root/vmc/VirtualMC.html">the Virtual Monte Carlo Web page
+    </a></li>
+<li><a href="http://aliceinfo.cern.ch/Offline">The ALICE Offline Project
+      </A></li>
+</ul>
+END_HTML
