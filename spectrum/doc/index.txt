@@ -1,0 +1,10 @@
+BEGIN_HTML
+<ul>
+<li><A href="ftp://root.cern.ch/root/Spectrum.doc">Processing and visualization functions.</A></li>
+<li><A href="ftp://root.cern.ch/root/SpectrumDec.ps.gz">Efficient one and two dimensional gold deconvolution and its application to gamma-ray spectra decomposition.</A></li>
+<li><A href="ftp://root.cern.ch/root/SpectrumSrc.ps.gz">Identification of peaks in multidimensional coincidence gamma-ray spectra.</A></li>
+<li><A href="ftp://root.cern.ch/root/SpectrumBck.ps.gz">Background elimination for multidimensional coincidence gamma-ray spectra.</A></li>
+<li><A href="http://www.fu.sav.sk/nph/projects/ProcFunc/Default.htm">Library of Sophisticated Processing and Visualization Functions for 1- and 2- Dimensional Nuclear Spectra.</A></li>
+<li><A href="http://www.fu.sav.sk/nph/projects/DaqProVis/Default.htm">Data Acquisition, Processing and Visualization System.</A></li>
+</ul>
+END_HTML
