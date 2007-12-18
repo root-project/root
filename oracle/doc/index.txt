@@ -1,0 +1,9 @@
+BEGIN_HTML
+This directory contains all classes for Oracle support in the ROOT.
+ See:
+<ul>
+<li> Main interface class to Oracle databases implemented in TOracleServer class </li>
+<li> Prepared sql statements implemented in TOracleStatement class </li>
+<li> Some example script for usage of sql classes can be found in $ROOTSYS/tutorials/sql directory </li>
+</ul>
+END_HTML
