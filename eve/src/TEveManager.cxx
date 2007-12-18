@@ -293,14 +293,22 @@ void TEveManager::FullRedraw3D(Bool_t resetCameras, Bool_t dropLogicals)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveManager::ElementChanged(TEveElement* element)
+void TEveManager::ElementChanged(TEveElement* element, Bool_t update_scenes, Bool_t redraw)
 {
    // Element was changed, perform framework side action.
    // Called from TEveElement::ElementChanged().
 
-   std::list<TEveElement*> scenes;
-   element->CollectSceneParents(scenes);
-   ScenesChanged(scenes);
+   if (fEditor->GetModel() == element->GetEditorObject())
+      fEditor->DisplayElement(element);
+
+   if (update_scenes) {
+      std::list<TEveElement*> scenes;
+      element->CollectSceneParents(scenes);
+      ScenesChanged(scenes);
+   }
+
+   if (redraw)
+      Redraw3D();
 }
 
 //______________________________________________________________________________
@@ -447,10 +455,6 @@ void TEveManager::ElementChecked(TEveElement* element, Bool_t state)
    // An element has been checked in the list-tree.
 
    element->SetRnrState(state);
-
-   if (fEditor->GetModel() == element->GetEditorObject())
-      fEditor->DisplayElement(element);
-
    element->ElementChanged();
 }
 

@@ -150,7 +150,7 @@ public:
    Bool_t GetKeepEmptyCont() const   { return fKeepEmptyCont; }
    void   SetKeepEmptyCont(Bool_t k) { fKeepEmptyCont = k; }
 
-   void ElementChanged(TEveElement* element);
+   void ElementChanged(TEveElement* element, Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
    void ScenesChanged(std::list<TEveElement*>& scenes);
 
    // These are more like TEveManager stuff.
