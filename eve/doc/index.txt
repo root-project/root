@@ -1,17 +1,34 @@
 BEGIN_HTML
 <center><h1>The Event Display classes</h1></center>
 <p><hr><p>
-    Eve is a ROOT module
-    based on experiment-independant part of the ALICE event display
-    developed in cooperation between ALICE offline project and ROOT
-    during the last two years. It has been used in ALICE for more than
-    a year to perform high-level event visualization, debugging of
-    simulation and reconstruction code as well as for raw-data
-    visualization.
+
+    Eve is a ROOT module based on experiment-independant part of the
+    ALICE event display developed in cooperation between ALICE offline
+    project and ROOT during the last two years. It has been used in
+    ALICE for more than a year to perform high-level event
+    visualization, debugging of simulation and reconstruction code as
+    well as for raw-data visualization.
 
     <p>
-      Eve is built on top of ROOT's GUI, GL and GED infrastructure and delivers
-      the following main features:
+    Papers describing Eve (still using the old name - Reve):
+    <ul>
+
+    <li> <a
+    href="http://indico.cern.ch/contributionDisplay.py?contribId=25&confId=13356">
+    Event Visualization Environment of the ALICE experiment</a>,
+    presented at ROOT Workshop 2007
+
+
+    <li> <a
+    href="http://indico.cern.ch/contributionDisplay.py?contribId=442&sessionId=23&confId=3580">Raw-data
+    display and visual reconstruction validation in ALICE</a>,
+    presented at CHEP 2007.
+
+    </ul>
+
+    <p>
+    Eve is built on top of ROOT's GUI, GL and GED infrastructure and
+    delivers the following main features:
 
     <ul>
 
