@@ -13,7 +13,7 @@
 //                                                                      //
 // TProofLimitsFinder                                                   //
 //                                                                      //
-// Class to find nice axis limits and synchonize them between slaves    //
+// Class to find nice axis limits and synchronize them between workers  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -26,17 +26,6 @@
 #include "TError.h"
 
 ClassImp(TProofLimitsFinder)
-
-//______________________________________________________________________________
-TProofLimitsFinder::TProofLimitsFinder()
-{
-}
-
-//______________________________________________________________________________
-TProofLimitsFinder::~TProofLimitsFinder()
-{
-}
-
 
 //______________________________________________________________________________
 void TProofLimitsFinder::AutoBinFunc(TString& key,

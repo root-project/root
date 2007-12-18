@@ -14,9 +14,9 @@
 // TProof                                                               //
 //                                                                      //
 // This class controls a Parallel ROOT Facility, PROOF, cluster.        //
-// It fires the slave servers, it keeps track of how many slaves are    //
-// running, it keeps track of the slaves running status, it broadcasts  //
-// messages to all slaves, it collects results, etc.                    //
+// It fires the worker servers, it keeps track of how many workers are  //
+// running, it keeps track of the workers running status, it broadcasts //
+// messages to all workers, it collects results, etc.                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

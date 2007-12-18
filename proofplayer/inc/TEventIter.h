@@ -17,6 +17,9 @@
 //                                                                      //
 // TEventIter                                                           //
 //                                                                      //
+// Special iterator class used in TProofPlayer to iterate over events   //
+// or objects in the packets.                                           //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TNamed

@@ -17,6 +17,9 @@
 //                                                                      //
 // TVirtualProofPlayer                                                  //
 //                                                                      //
+// Abstract interface for the PROOF player.                             //
+// See the concrete implementations under 'proofplayer' for details.    //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TObject

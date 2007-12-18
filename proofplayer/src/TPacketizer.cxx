@@ -13,7 +13,7 @@
 //                                                                      //
 // TPacketizer                                                          //
 //                                                                      //
-// This class generates packets to be processed on PROOF slave servers. //
+// This class generates packets to be processed on PROOF worker servers.//
 // A packet is an event range (begin entry and number of entries) or    //
 // object range (first object and number of objects) in a TTree         //
 // (entries) or a directory (objects) in a file.                        //
