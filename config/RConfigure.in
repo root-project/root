@@ -23,8 +23,4 @@
 #@haspthread@ R__HAS_PTHREAD    /**/
 #@hasxft@ R__HAS_XFT    /**/
 
-#ifndef __CINT__
-#define R__CONFIGUREOPTIONS   "@configoptions@"
-#endif
-
 #endif

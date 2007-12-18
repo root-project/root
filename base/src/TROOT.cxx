@@ -62,6 +62,7 @@
 
 #include "RConfig.h"
 #include "RConfigure.h"
+#include "RConfigOptions.h"
 
 #include <string>
 #include <map>

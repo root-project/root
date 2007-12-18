@@ -558,7 +558,8 @@ endif
 # Makefile is target as we need to re-parse dependencies after
 # configure is run (as RConfigure.h changed etc)
 config/Makefile.config config/Makefile.comp include/RConfigure.h \
-  etc/system.rootauthrc etc/system.rootdaemonrc etc/root.mimes $(ROOTRC) \
+  include/RConfigOptions.h etc/system.rootauthrc etc/system.rootdaemonrc \
+  etc/root.mimes $(ROOTRC) \
   bin/root-config: Makefile
 
 ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
@@ -734,8 +735,10 @@ endif
 
 distclean:: clean
 	-@mv -f include/RConfigure.h include/RConfigure.h-
+	-@mv -f include/RConfigOptions.h include/RConfigOptions.h-
 	@rm -f include/*.h $(ROOTMAP) $(CORELIB) $(COREMAP)
 	-@mv -f include/RConfigure.h- include/RConfigure.h
+	-@mv -f include/RConfigOptions.h- include/RConfigOptions.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                *.def .def

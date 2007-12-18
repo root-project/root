@@ -3,19 +3,19 @@
 
 /*  dynamic ruby-root
  *  (http://null.edunet.uoa.gr/~elathan/rr/)
- *  
- *  Elias Athanasopoulos            <elathan@phys.uoa.gr>
- *  George Tzanakos                 <tzanakos@cc.uoa.gr> 
  *
- *  University of Athens 
- *  Department of Physics  
+ *  Elias Athanasopoulos            <elathan@phys.uoa.gr>
+ *  George Tzanakos                 <tzanakos@cc.uoa.gr>
+ *
+ *  University of Athens
+ *  Department of Physics
  *  HEPA Lab
  *  (http://daedalus.phys.uoa.gr)
  *
  *  (c) 2003, 2004
 */
 
-
+#include "RConfigOptions.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TApplication.h"
@@ -53,7 +53,7 @@ VALUE rr_ary_new (TList *l)
     /* convert a TList to a Ruby array */
     VALUE arr = rb_ary_new();
     VALUE o;
-    
+
     TObject *rro;
     TIter next (l);
 
@@ -63,9 +63,9 @@ VALUE rr_ary_new (TList *l)
         rb_iv_set (o, "__rr__", Data_Wrap_Struct (cTObject, 0, 0, rro));
         rb_iv_set (o, "__rr_class__",
                 rb_str_new2(rro->ClassName()));
-        rb_ary_push (arr, o); 
+        rb_ary_push (arr, o);
       }
-   
+
     return arr;
 }
 
@@ -82,8 +82,8 @@ VALUE rr_arrayc_new (const TArrayC *a)
     VALUE arr = rb_ary_new();
 
     for (int i = 0; i < a->GetSize(); i++)
-        rb_ary_push (arr, INT2NUM(a->At(i)));        
-   
+        rb_ary_push (arr, INT2NUM(a->At(i)));
+
     return arr;
 }
 
@@ -93,8 +93,8 @@ VALUE rr_arrays_new (const TArrayS *a)
     VALUE arr = rb_ary_new();
 
     for (int i = 0; i < a->GetSize(); i++)
-        rb_ary_push (arr, INT2NUM(a->At(i)));        
-   
+        rb_ary_push (arr, INT2NUM(a->At(i)));
+
     return arr;
 }
 
@@ -104,8 +104,8 @@ VALUE rr_arrayi_new (const TArrayI *a)
     VALUE arr = rb_ary_new();
 
     for (int i = 0; i < a->GetSize(); i++)
-        rb_ary_push (arr, INT2NUM(a->At(i)));        
-   
+        rb_ary_push (arr, INT2NUM(a->At(i)));
+
     return arr;
 }
 
@@ -115,8 +115,8 @@ VALUE rr_arrayl_new (const TArrayL *a)
     VALUE arr = rb_ary_new();
 
     for (int i = 0; i < a->GetSize(); i++)
-        rb_ary_push (arr, INT2NUM(a->At(i)));        
-   
+        rb_ary_push (arr, INT2NUM(a->At(i)));
+
     return arr;
 }
 
@@ -126,8 +126,8 @@ VALUE rr_arrayf_new (const TArrayF *a)
     VALUE arr = rb_ary_new();
 
     for (int i = 0; i < a->GetSize(); i++)
-        rb_ary_push (arr, rb_float_new(a->At(i)));        
-   
+        rb_ary_push (arr, rb_float_new(a->At(i)));
+
     return arr;
 }
 
@@ -137,8 +137,8 @@ VALUE rr_arrayd_new (const TArrayD *a)
     VALUE arr = rb_ary_new();
 
     for (int i = 0; i < a->GetSize(); i++)
-        rb_ary_push (arr, rb_float_new(a->At(i)));        
-   
+        rb_ary_push (arr, rb_float_new(a->At(i)));
+
     return arr;
 }
 
@@ -147,21 +147,21 @@ VALUE rr_seqcollection_new (TSeqCollection *sc)
     /* convert a TSeqCollection to a Ruby Array */
     VALUE arr = rb_ary_new();
     VALUE o;
-    
+
     for (int i = 0; i < sc->GetSize(); i++)
       {
         RRNEW(o, cTObject);
         rb_iv_set (o, "__rr__", Data_Wrap_Struct (cTObject, 0, 0, sc->At(i)));
-        rb_ary_push (arr, o); 
+        rb_ary_push (arr, o);
       }
-    
+
     return arr;
 }
 
 void * rr_parse_void (VALUE o)
 {
     VALUE *i;
-    
+
     switch (TYPE(o))
       {
         case T_STRING:
@@ -170,7 +170,7 @@ void * rr_parse_void (VALUE o)
             return (void *) &RFLOAT(o)->value;
         case T_FIXNUM:
             /* FIXME: Memory leak until I find the correct way. Until
-             * then please use integers in TTrees with care. --elathan 
+             * then please use integers in TTrees with care. --elathan
              */
             i = (VALUE*) malloc (sizeof(int));
             *i = (int) (o>>1);
@@ -190,7 +190,7 @@ void * rr_parse_void (VALUE o)
 VALUE rr_bool (bool q)
 {
     VALUE res = Qnil;
-    
+
     q == 0 ? res = Qfalse : res = Qtrue;
 
     return res;
@@ -206,9 +206,9 @@ double rr_ctf1_fcn (double *x, double* par)
 {
     TF1 *fcn = (TF1 *)TF1::GetCurrent();
     struct rr_fcn_info *info = NULL;
-    
+
     for (int i = 0; i < rr_tf1_tblptr; i++)
-      { 
+      {
         info = rr_tf1_table[i];
         if (!strcmp(info->name, fcn->GetName()))
             break;
@@ -237,13 +237,13 @@ double rr_ctf1_fcn (double *x, double* par)
 void rr_register_ctf1_fcn (char *name, ID id)
 {
     struct rr_fcn_info *info = (struct rr_fcn_info *)malloc (sizeof *info);
-    
+
     info->name = strdup(name);
     info->id = id;
-     
+
     rr_tf1_table[rr_tf1_tblptr] = info;
     rr_tf1_tblptr++;
-    
+
 }
 
 static struct rr_fcn_info * rr_tf2_table[256];
@@ -253,9 +253,9 @@ double rr_ctf2_fcn (double *x, double* par)
 {
     TF2 *fcn = (TF2 *)TF2::GetCurrent();
     struct rr_fcn_info *info = NULL;
-    
+
     for (int i = 0; i < rr_tf2_tblptr; i++)
-      { 
+      {
         info = rr_tf2_table[i];
         if (!strcmp(info->name, fcn->GetName()))
             break;
@@ -284,13 +284,13 @@ double rr_ctf2_fcn (double *x, double* par)
 void rr_register_ctf2_fcn (char *name, ID id)
 {
     struct rr_fcn_info *info = (struct rr_fcn_info *)malloc (sizeof *info);
-    
+
     info->name = strdup(name);
     info->id = id;
-     
+
     rr_tf2_table[rr_tf2_tblptr] = info;
     rr_tf2_tblptr++;
-    
+
 }
 /* Implementation */
 
@@ -314,51 +314,51 @@ static VALUE rr_grandom (void)
     RRNEW(o, cTObject);
     rb_iv_set (o, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, gRandom));
     rb_iv_set (o, "__rr_class__", rb_str_new2("TRandom"));
-    
+
     return o;
 }
 
 static VALUE rr_gbenchmark (void)
 {
     VALUE o;
-    
+
     RRNEW(o, cTObject);
     rb_iv_set (o, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, gBenchmark));
     rb_iv_set (o, "__rr_class__", rb_str_new2("TBenchmark"));
-    
+
     return o;
 }
 
 static VALUE rr_gpad (void)
 {
     VALUE o;
-    
+
     RRNEW(o, cTObject);
     rb_iv_set (o, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, gPad));
     rb_iv_set (o, "__rr_class__", rb_str_new2("TPad"));
-    
+
     return o;
 }
 
 static VALUE rr_gstyle (void)
 {
     VALUE o;
-    
+
     RRNEW(o, cTObject);
     rb_iv_set (o, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, gStyle));
     rb_iv_set (o, "__rr_class__", rb_str_new2("TStyle"));
-    
+
     return o;
 }
 
 static VALUE rr_gdirectory (void)
 {
     VALUE o;
-    
+
     RRNEW(o, cTObject);
     rb_iv_set (o, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, gDirectory));
     rb_iv_set (o, "__rr_class__", rb_str_new2("TDirectory"));
-    
+
     return o;
 }
 
@@ -370,7 +370,7 @@ static VALUE rr_groot (void)
 
     rb_iv_set (o, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, gROOT));
     rb_iv_set (o, "__rr_class__", rb_str_new2("TROOT"));
-   
+
     return o;
 }
 
@@ -382,7 +382,7 @@ static VALUE rr_gapplication (void)
 
     rb_iv_set (o, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, gApplication));
     rb_iv_set (o, "__rr_class__", rb_str_new2("TApplication"));
-   
+
     return o;
 }
 
@@ -395,11 +395,11 @@ static VALUE via (VALUE self, VALUE ameth, VALUE bmeth, VALUE parms)
         rb_fatal ("rr-via: Please call TObject#via with sym, sym, hash.");
         return Qnil;
       }
-    
+
     VALUE keys = rb_funcall(parms, rb_intern("keys"), 0);
     for (int i = 0; i < RARRAY(keys)->len; i++)
       {
-        VALUE key = rb_ary_entry (keys, i);               
+        VALUE key = rb_ary_entry (keys, i);
         rb_funcall (self, rb_to_id (ameth), 2, key, rb_hash_aref (parms, key));
       }
     rb_funcall(self, rb_to_id(bmeth), 0);
@@ -419,10 +419,10 @@ TObject* drr_grab_object(VALUE self)
 unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offset=1, unsigned int reference_map=0x0)
 {
     /* FIXME. Offset reminds me fortran code; make a better interface,
-     * and change the function name to a better one. 
+     * and change the function name to a better one.
      * FIXME: Brute-forcing search for call by pointer or by reference.
      * Return numbr of T_OBJECTS
-     * 
+     *
      * The boolean checks for cproto and f are vital. This function can
      * be called:
      *
@@ -430,14 +430,14 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offse
      * 2. When we want to set the arguments of a CINT function
      * 3. When we want both 1 and 2
      */
-        
+
     int nargs = RARRAY(inargs)->len - offset;
     double *arr = NULL;
     TObject *ptr = NULL;
     VALUE v = 0;
 
     unsigned int ntobjects = 0;
-    
+
     /* Transform Ruby arguments to C/C++.  */
     for (int i = 0; i < nargs; i++)
       {
@@ -467,7 +467,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offse
                         arr[j] = NUM2DBL(rb_ary_entry (arg, j));
                     f->SetArg((long) arr);
                   }
-                if (cproto) strcat(cproto, "double*"); 
+                if (cproto) strcat(cproto, "double*");
                 break;
             case T_OBJECT:
                 v = rb_iv_get (arg, "__rr__");
@@ -496,7 +496,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offse
 }
 
 /* FIXME. Err... enum is the correct word? :-) */
-#define kint        0 
+#define kint        0
 #define kfloat      1
 #define kchar       2
 #define kunknown    3
@@ -509,7 +509,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offse
 
 int drr_parse_ret_type (const char *ret)
 {
-    /* 
+    /*
         0: int
         1: float
         2: char
@@ -518,7 +518,7 @@ int drr_parse_ret_type (const char *ret)
         5: Array of ints
         6: Array of floats
         7: String
-        8: ROOT Object 
+        8: ROOT Object
     */
 
     char *realtype = strdup(ret), *t = realtype;
@@ -527,7 +527,7 @@ int drr_parse_ret_type (const char *ret)
     while (*(t++)) {
         if (*t == '*')
             plevel++;
-    }   
+    }
 
     t--;
 
@@ -539,10 +539,10 @@ int drr_parse_ret_type (const char *ret)
         type = kint;
     else
     if (!strncmp(t - 6, "double", 6) ||
-        !strncmp(t - 5, "float", 5))       
+        !strncmp(t - 5, "float", 5))
         type = kfloat;
     else
-    if (!strncmp(t - 5, "char", 4))  
+    if (!strncmp(t - 5, "char", 4))
         type = kchar;
     else
     if (!strncmp(t - 4, "void", 4))
@@ -568,7 +568,7 @@ struct drr_func_cache * drr_func_cache_init(struct drr_func_entry *entry)
     struct drr_func_cache *new_cache = (struct drr_func_cache *) malloc (sizeof *new_cache);
     new_cache->next = NULL;
     new_cache->entry = entry;
-    new_cache->last = NULL; 
+    new_cache->last = NULL;
     return new_cache;
 }
 
@@ -576,11 +576,11 @@ void drr_func_cache_push (struct drr_func_cache *cache, struct drr_func_entry *e
 {
     struct drr_func_cache *n = (struct drr_func_cache *) malloc(sizeof *n);
     n->entry = entry;
-    
+
     if (cache->next)
       {
         n->next = cache->next;
-        cache->next = n; 
+        cache->next = n;
       }
     else
       {
@@ -593,7 +593,7 @@ struct drr_func_entry * drr_func_cache_find (struct drr_func_cache *cache, char 
 {
     struct drr_func_cache *iter = cache;
 
-    while (iter) 
+    while (iter)
       {
         if (!strcmp (iter->entry->name, name))
             return iter->entry;
@@ -619,7 +619,7 @@ static VALUE drr_as(VALUE self, VALUE klass)
 {
     /* Pseudo C++ casting.  */
     VALUE v;
-    
+
     /* Check if there is a ROOT dict. available.  */
     TClass *c = new TClass(STR2CSTR(klass));
     if (c)
@@ -627,17 +627,17 @@ static VALUE drr_as(VALUE self, VALUE klass)
         VALUE k;
         char *name = STR2CSTR(klass);
         if (!rb_const_defined (rb_cObject, rb_intern(name)))
-            k = rb_define_class (name, drrAbstractClass);            
+            k = rb_define_class (name, drrAbstractClass);
         else
             k = rb_path2class (name);
-        
+
         RRNEW(v, k);
         rb_iv_set (v, "__rr__", rb_iv_get(self, "__rr__"));
         rb_iv_set (v, "__rr_class__", klass);
       }
     else
         rb_fatal ("Cast to %s is not allowed. Aborting.", STR2CSTR(klass));
-    
+
     delete c;
     return v;
 }
@@ -648,24 +648,24 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
     char *classname = rb_obj_classname(self);
     char cproto[1024] = "";
     long addr = 0, offset;
-   
+
     rb_scan_args (argc, argv, "0*", &inargs);
-    
+
     //rb_warn("You tried to call: %s#%s with %d arguments", classname, classname, RARRAY(inargs)->len);
- 
+
     G__CallFunc func;
     G__ClassInfo klass(classname);
 
     /* Call the requested ctor.  */
-  
+
     if (RARRAY(inargs)->len)
         drr_map_args2 (inargs, cproto, &func, 0);
 
-    G__MethodInfo minfo(klass.GetMethod(classname, cproto, &offset)); 
+    G__MethodInfo minfo(klass.GetMethod(classname, cproto, &offset));
     if (minfo.InterfaceMethod())
         func.SetFunc(minfo);
     else
-        rb_fatal("You provided a wrong prototype (%s) for (%s#%s). Aborting.", 
+        rb_fatal("You provided a wrong prototype (%s) for (%s#%s). Aborting.",
                     cproto, classname, classname);
 
     addr = func.ExecInt((void*)((long)0 + offset));
@@ -683,9 +683,9 @@ static VALUE drr_const_missing(VALUE self, VALUE klass)
     /* Silence a silly gcc warning...  */
     if (NIL_P(self))
         return Qnil;
-    
+
     char *name = rb_id2name (rb_to_id(klass));
-   
+
     /* Check if there is a ROOT dict. available.  */
     TClass *c = new TClass(name);
     if (c && c->GetClassInfo()) {
@@ -706,9 +706,9 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     /* When a ROOT method is called, we try to resolve it here. If
      * CINT is able to resolve it then we define a Ruby method using
      * a similar generic function (drr_generic_method), so as
-     * Ruby not to use the Object#method_missing every time. 
+     * Ruby not to use the Object#method_missing every time.
      */
-        
+
     VALUE inargs;
     char *methname, *classname ;
     long offset, address = 0;
@@ -720,14 +720,14 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     methname = rb_id2name (rb_to_id(argv[0]));
     classname = STR2CSTR(rb_iv_get (self, "__rr_class__"));
     TObject *caller = drr_grab_object (self);
-   
+
     rb_scan_args (argc, argv, "0*", &inargs);
 
     nargs = RARRAY(inargs)->len - 1;
     VALUE rklass = rb_class_of (self);
 
     // rb_warn("(mm) - You tried to call: %s#%s with %d arguments", classname, methname, nargs);
-    
+
     G__CallFunc *func = new G__CallFunc();
     G__ClassInfo *klass = new G__ClassInfo (classname);
     G__MethodInfo *minfo = 0;
@@ -735,23 +735,23 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     if (nargs) {
         /* FIXME: Brute force checkin of all combinations of * and & for
          * T_Objects Since we cannot tell which one is needed (we get the type
-         * from the ruby objects, which don't know) we try all. 
+         * from the ruby objects, which don't know) we try all.
          */
         for( unsigned int reference_map=0x0; reference_map < static_cast<unsigned int>( (1<<drr_map_args2 (inargs, cproto, func, 1, reference_map)) ); reference_map++) {
-            minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset)); 
+            minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
             if (minfo->InterfaceMethod())
                 break;
             cproto[0] = static_cast<char>( 0 ); // reset cproto
         }
     } else {
-        minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset)); 
+        minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
     }
 
-    /* FIXME: minfo is really used only for the return type.  */ 
+    /* FIXME: minfo is really used only for the return type.  */
     if (minfo->InterfaceMethod())
         func->SetFunc(*minfo);
     else
-        rb_fatal("You provided a wrong prototype (%s) for %s#%s. Aborting.", 
+        rb_fatal("You provided a wrong prototype (%s) for %s#%s. Aborting.",
                         cproto, classname, methname);
 
     /* This is the first time this method is called. Create a cash entry.  */
@@ -761,21 +761,21 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     entry->name = strdup(methname);
     entry->cproto = strdup(cproto);
     entry->rtype = drr_parse_ret_type (minfo->Type()->TrueName());
-    
+
     delete minfo;
 
     struct drr_func_cache *cache;
     /* If there is no cache available, create one (per Class scope).  */
-    if (!rb_cvar_defined (rklass, rb_intern("@@__func_table__"))) 
+    if (!rb_cvar_defined (rklass, rb_intern("@@__func_table__")))
         cache = drr_func_cache_init (entry);
     else
         Data_Get_Struct(rb_cv_get(rklass, "@@__func_table__"), struct drr_func_cache, cache);
 
     /* Push the method to the cache and save it back to the Class.  */
     drr_func_cache_push (cache, entry);
-    rb_cv_set (rklass, "@@__func_table__", 
-        Data_Wrap_Struct(cTObject, 0, 0, cache));  
-      
+    rb_cv_set (rklass, "@@__func_table__",
+        Data_Wrap_Struct(cTObject, 0, 0, cache));
+
     if (entry->rtype != kfloat)
         address = func->ExecInt((void*)((long)caller + offset));
     else
@@ -806,7 +806,7 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
 
             if (!strcmp(((TObject*)(address))->ClassName(), "TList"))
                 vret = rr_ary_new((TList*)address);
-            else 
+            else
               {
                 VALUE res;
                 RRNEW(res, cTObject);
@@ -832,20 +832,20 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
     long offset = 0, address = 0;
     double dbladdr = 0;
     char cproto[1024] = "";
-    
+
     /* Grab class, method name and instance pointer.  */
     rklass = rb_class_of (self);
     char *methname = rb_id2name (rb_frame_this_func());
     TObject *caller = drr_grab_object (self);
-    
+
     rb_scan_args (argc, argv, "0*", &inargs);
 
     nargs = RARRAY(inargs)->len;
-   
+
     // rb_warn("(gm) - You tried to call: %s#%s with %d arguments", rb_obj_classname (self), methname, nargs);
-    
-    G__CallFunc *func = NULL; 
-    
+
+    G__CallFunc *func = NULL;
+
     struct drr_func_cache *cache;
     struct drr_func_entry *entry;
 
@@ -928,7 +928,7 @@ void Init_libRuby() {
    dlopen( "libGraf3d.so", RTLD_GLOBAL | RTLD_LAZY );
    dlopen( "libGeom.so",   RTLD_GLOBAL | RTLD_LAZY );
 #endif
-   
+
     /* Create a new ROOT Application if it doesn't already exist.  */
     if (!gApplication)
         gApplication = new TApplication("ruby root app", NULL, NULL);
@@ -937,12 +937,12 @@ void Init_libRuby() {
     rb_define_method(drrAbstractClass, "initialize", VALUEFUNC(drr_init), -1);
     rb_define_method(drrAbstractClass, "method_missing", VALUEFUNC(drr_method_missing), -1);
     rb_define_method (drrAbstractClass, "as", VALUEFUNC(drr_as), 1);
-    
+
     cTObject = rb_define_class("TObject", drrAbstractClass);
 
     rb_define_method (cTObject, "to_ary", VALUEFUNC(rr_to_ary), 0);
     rb_define_method (rb_cObject, "via", VALUEFUNC(via), 3);
- 	
+
     /* Save the original Object::const_missing before overriding it
        Object::__drr_orig_const_missing will be called if Cint is unable to resolve the class name */
     rb_eval_string("Object.instance_eval { alias __drr_orig_const_missing const_missing }");

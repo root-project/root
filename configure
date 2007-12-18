@@ -755,6 +755,8 @@ MAKECOMPIN=config/Makefile-comp.in
 MAKECOMPOUT=config/Makefile.comp
 CONFIGUREIN=config/RConfigure.in
 CONFIGUREOUT=include/RConfigure.h
+CONFIGOPTIN=config/RConfigOptions.in
+CONFIGOPTOUT=include/RConfigOptions.h
 RCONFIN=config/root-config.in
 RCONFOUT=bin/root-config
 ROOTRCIN=config/rootrc.in
@@ -1091,6 +1093,7 @@ fi
 ### echo %%% Some clean up
 #
 trapcmd="rm -f Makefile.tmp RConfigure.tmp RConfigure-out.tmp \
+         RConfigOptions.tmp RConfigOptions-out.tmp \
          Makefile-comp.tmp root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
          proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
@@ -1267,6 +1270,7 @@ if test "x$noact" = "xno"; then
     cp -f $MAKEIN Makefile.tmp
     cp -f $MAKECOMPIN Makefile-comp.tmp
     cp -f $CONFIGUREIN RConfigure.tmp
+    cp -f $CONFIGOPTIN RConfigOptions.tmp
     cp -f $RCONFIN root-config.tmp
     cp -f $ROOTRCIN rootrc.tmp
     cp -f $ROOTAUTHRCIN rootauthrc.tmp
@@ -4665,19 +4669,11 @@ sed \
     -e "s|@srcdir@|$srcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@setresuid@|$setresuid|"         \
-    -e "s|@configoptions@|$configoptions|" \
     -e "s|@hasmathmore@|$hasmathmore|"     \
     -e "s|@haspthread@|$haspthread|"       \
     -e "s|@hasxft@|$hasxft|"               \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
-
-if test ! "x$enable_ruby" = "xno"; then
-   echo "" >> RConfigure-out.tmp
-   ruby -rrbconfig -e 'puts Config::CONFIG["ruby_version"]' | \
-   sed 's/^\([0-9]\)\.\([0-9]\)/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
-   tr '@' '\n' >> RConfigure-out.tmp
-fi
 
 # only update $CONFIGUREOUT when different
 if test -f $CONFIGUREOUT; then
@@ -4689,6 +4685,36 @@ if test -f $CONFIGUREOUT; then
    fi
 else
    mv -f RConfigure-out.tmp $CONFIGUREOUT
+fi
+
+result "done"
+
+#---------------------------------------------------------------------
+# include/RConfigOptions.h
+#
+message "Writing $CONFIGOPTOUT"
+sed \
+    -e "s|@configoptions@|$configoptions|" \
+    < RConfigOptions.tmp > RConfigOptions-out.tmp
+rm -f RConfigOptions.tmp
+
+if test ! "x$enable_ruby" = "xno"; then
+   echo "" >> RConfigOptions-out.tmp
+   ruby -rrbconfig -e 'puts Config::CONFIG["ruby_version"]' | \
+   sed 's/^\([0-9]\)\.\([0-9]\)/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
+   tr '@' '\n' >> RConfigOptions-out.tmp
+fi
+
+# only update $CONFIGOPTOUT when different
+if test -f $CONFIGOPTOUT; then
+   diff RConfigOptions-out.tmp $CONFIGOPTOUT > /dev/null; status=$?;
+   if [ "$status" -ne "0" ]; then
+      mv -f RConfigOptions-out.tmp $CONFIGOPTOUT
+   else
+      rm -f RConfigOptions-out.tmp
+   fi
+else
+   mv -f RConfigOptions-out.tmp $CONFIGOPTOUT
 fi
 
 result "done"
