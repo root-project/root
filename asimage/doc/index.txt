@@ -1,0 +1,11 @@
+This directory contains classes interfacing to libAfterImage.
+BEGIN_HTML
+<ul>
+<li><a href="http://www.afterstep.org/afterimage/index.php">libAfterImage Imaging Library.</a></li>
+<li><a href="http://root.cern.ch/root/htmldoc/examples/rose_image.C.html">Drawing an image in a pad.</a></li>
+<li><a href="http://root.cern.ch/root/htmldoc/examples/galaxy_image.C.html">Illustration of the TASImage class and an image editor.</a></li>
+<li><a href="http://root.cern.ch/root/htmldoc/examples/img2pad.C.html">Inserting images in a pad.</a></li>
+<li><a href="http://root.cern.ch/root/htmldoc/examples/imgconv.C.html">Save an image in various formats: .png, .gif, .xpm and tiff.</a></li>
+<li><a href="http://root.cern.ch/root/htmldoc/examples/pad2png.C.html">create a canvas and save as png.</a></li>
+</ul>
+END_HTML
