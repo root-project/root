@@ -91,8 +91,8 @@ public:
    virtual void    ResetReadyMask() { fReadyMask = 0; }
    virtual void    SetReadReady() { fReadyMask |= 0x1; }
    virtual void    SetWriteReady() { fReadyMask |= 0x2; }
-   virtual Bool_t  IsReadReady() const { return (fReadyMask & 0x1); }
-   virtual Bool_t  IsWriteReady() const { return (fReadyMask & 0x2); }
+   virtual Bool_t  IsReadReady() const { return (fReadyMask & 0x1) == 0x1; }
+   virtual Bool_t  IsWriteReady() const { return (fReadyMask & 0x2) == 0x2; }
    virtual void    Add();
    virtual void    Remove();
 
