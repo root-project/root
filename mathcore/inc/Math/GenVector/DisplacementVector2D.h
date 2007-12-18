@@ -51,18 +51,19 @@ namespace ROOT {
 
 
 
-    /**
-              Class describing a generic displacement vector in 2 dimensions.
-              This class is templated on the type of Coordinate system.
-              One example is the XYVector which is a vector based on
-              double precision x,y  data members by using the
-              Cartesian2D<double> Coordinate system.
-	      The class is having also an extra template parameter, the coordinate system tag, 
-	      to be able to identify (tag) vector described in different reference coordinate system, 
-	      like global or local coordinate systems.   
-
-	      @ingroup GenVector
-    */
+//__________________________________________________________________________________________
+     /**
+        Class describing a generic displacement vector in 2 dimensions.
+        This class is templated on the type of Coordinate system.
+        One example is the XYVector which is a vector based on
+        double precision x,y  data members by using the
+        Cartesian2D<double> Coordinate system.
+        The class is having also an extra template parameter, the coordinate system tag, 
+        to be able to identify (tag) vector described in different reference coordinate system, 
+        like global or local coordinate systems.   
+        
+        @ingroup GenVector
+     */
 
      template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
      class DisplacementVector2D {

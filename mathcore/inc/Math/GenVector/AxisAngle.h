@@ -30,13 +30,14 @@ namespace ROOT {
 namespace Math {
 
 
-  /**
-     AxisAngle class describing a rotation as a direction axis and an
-     angle of rotation around that axis.
-
-     @ingroup GenVector
-
-  */
+//__________________________________________________________________________________________
+   /**
+      AxisAngle class describing rotation represented with direction axis (3D Vector) and an
+      angle of rotation around that axis.
+      
+      @ingroup GenVector
+      
+   */
 class AxisAngle {
 
 public:

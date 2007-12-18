@@ -53,12 +53,13 @@ namespace ROOT {
 namespace Math {
 
 
+//__________________________________________________________________________________________
   /**
      Rotation class with the (3D) rotation represented by
      angles describing first a rotation of 
      an angle phi (yaw) about the  Z axis, 
      followed by a rotation of an angle theta (pitch) about the new Y' axis, 
-     folowed by a third rotation of an angle psi (roll) about the final X'' axis. 
+     followed by a third rotation of an angle psi (roll) about the final X'' axis. 
      This is  sometimes referred to as the Euler 321 sequence.
      It has not to be confused with the typical Goldstein definition of the Euler Angles 
      (Z-X-Z or 313 sequence) which is used by the ROOT::Math::EulerAngles class.  

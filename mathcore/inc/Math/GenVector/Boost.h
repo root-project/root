@@ -30,6 +30,7 @@ namespace ROOT {
 
   namespace Math {
 
+//__________________________________________________________________________________________
   /**
      Lorentz boost class with the (4D) transformation represented internally
      by a 4x4 orthosymplectic matrix.
@@ -37,7 +38,7 @@ namespace ROOT {
      specialized Lorentz boosts.
      Also, the 3-D rotation classes can be considered to be special Lorentz
      transformations which do not mix space and time components.
-
+     
      @ingroup GenVector
 
   */

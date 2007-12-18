@@ -44,6 +44,7 @@ namespace ROOT {
 namespace Math {
 
 
+//__________________________________________________________________________________________
   /**
      Rotation class with the (3D) rotation represented by
      a 3x3 orthogonal matrix.

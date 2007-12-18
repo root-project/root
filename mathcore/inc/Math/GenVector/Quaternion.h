@@ -32,16 +32,18 @@ namespace ROOT {
 namespace Math {
 
 
-  /**
-     Rotation class with the (3D) rotation represented by
-     a unit quaternion (u, i, j, k).
-     This is the optimal representation for multiplication of multiple
-     rotations, and for computation of group-manifold-invariant distance
-     between two rotations.
-     See also AxisAngle, EulerAngles, and Rotation3D.
+//__________________________________________________________________________________________
+   /**
+      Rotation class with the (3D) rotation represented by
+      a unit quaternion (u, i, j, k).
+      This is the optimal representation for multiplication of multiple
+      rotations, and for computation of group-manifold-invariant distance
+      between two rotations.
+      See also AxisAngle, EulerAngles, and Rotation3D.
 
-     @ingroup GenVector
-  */
+      @ingroup GenVector
+   */
+
 class Quaternion {
 
 public:

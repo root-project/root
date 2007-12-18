@@ -38,6 +38,7 @@ namespace ROOT {
 
   namespace Math {
 
+//__________________________________________________________________________________________
   /**
      Lorentz transformation class with the (4D) transformation represented by
      a 4x4 orthosymplectic matrix.
@@ -45,9 +46,9 @@ namespace ROOT {
      specialized Lorentz transformations.
      Also, the 3-D rotation classes can be considered to be special Lorentz
      transformations which do not mix space and time components.
-
+     
      @ingroup GenVector
-
+     
   */
 
 class LorentzRotation {

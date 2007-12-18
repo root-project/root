@@ -36,6 +36,7 @@ namespace ROOT {
 
   namespace Math {
 
+//__________________________________________________________________________________________
     /**
         Class describing a generic LorentzVector in the 4D space-time,
         using the specified coordinate system for the spatial vector part.

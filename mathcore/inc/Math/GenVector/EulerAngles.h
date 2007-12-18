@@ -29,16 +29,17 @@ namespace ROOT {
 namespace Math {
 
 
-  /**
-     EulerAngles class describing rotation as three angles (Euler Angles).
-     The Euler angles definition matches that of Classical Mechanics (Goldstein).
-     It is also the same convention defined in 
-     <A HREF="http://mathworld.wolfram.com/EulerAngles.html">mathworld</A> 
-     and used in Mathematica and CLHEP. Note that the ROOT class TRotation defines 
-     a slightly different convention. 
-
-     @ingroup GenVector
-  */
+//__________________________________________________________________________________________
+   /**
+      EulerAngles class describing rotation as three angles (Euler Angles).
+      The Euler angles definition matches that of Classical Mechanics (Goldstein).
+      It is also the same convention defined in 
+      <A HREF="http://mathworld.wolfram.com/EulerAngles.html">mathworld</A> 
+      and used in Mathematica and CLHEP. Note that the ROOT class TRotation defines 
+      a slightly different convention. 
+      
+      @ingroup GenVector
+   */
 class EulerAngles {
 
 public:
