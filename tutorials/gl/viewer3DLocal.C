@@ -1,3 +1,15 @@
+// Author: Richard Maunder
+
+// As we overload TObject::Paint which is called directly from compiled
+// code, this script must also be compiled to work correctly.
+
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+   gSystem->CompileMacro("viewer3DLocal.C");
+   viewer3DLocal();
+}
+#else
+
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -7,12 +19,6 @@
 #include "TAtt3D.h"
 
 #include <vector>
-
-// As we overload TObject::Paint which is called directly from
-// compild code, this script must also be compiled to work correctly
-/*#ifdef __CINT__
-#warning "You have to compile this script. Run \".x viewer3DLocal.C+\"!"
-#endif*/
 
 // This demonstrates use of the 3D viewer architecture
 // TVirtualViewer3D and TBuffer3D in the LOCAL frame
@@ -24,7 +30,8 @@
 // not appear in viewers which don't support directly (non-OpenGL)
 // Shows that viewers can at least deal gracefully with these cases
 
-// Our abstract base shape class
+// Our abstract base shape class.
+
 class Shape : public TObject
 {
 public:
@@ -43,8 +50,7 @@ ClassImp(Shape);
 
 Shape::Shape(Int_t color, Double_t x, Double_t y, Double_t z) : 
    fX(x), fY(y), fZ(z), fColor(color) 
-{
-};
+{}
 
 class Sphere : public Shape
 {
@@ -65,8 +71,7 @@ ClassImp(Sphere);
 Sphere::Sphere(Int_t color, Double_t x, Double_t y, Double_t z, Double_t radius) : 
    Shape(color,x,y,z), 
    fRadius(radius) 
-{
-}
+{}
 
 TBuffer3D & Sphere::GetBuffer3D(UInt_t reqSections)
 {
@@ -143,8 +148,7 @@ Box::Box(Int_t color, Double_t x, Double_t y, Double_t z,
          Double_t dX, Double_t dY, Double_t dZ) : 
    Shape(color,x,y,z), 
    fDX(dX), fDY(dY), fDZ(dZ)
-{
-}
+{}
 
 TBuffer3D & Box::GetBuffer3D(UInt_t reqSections)
 {
@@ -258,8 +262,7 @@ SBPyramid::SBPyramid(Int_t color, Double_t x, Double_t y, Double_t z,
          Double_t dX, Double_t dY, Double_t dZ) : 
    Shape(color,x,y,z), 
    fDX(dX), fDY(dY), fDZ(dZ)
-{
-}
+{}
 
 TBuffer3D & SBPyramid::GetBuffer3D(UInt_t reqSections)
 {
@@ -425,9 +428,11 @@ void viewer3DLocal()
 {
    printf("\n\nviewer3DLocal: This frame demonstates local frame use of 3D viewer architecture.\n");
    printf("Creates sphere, two boxes and a square based pyramid, described in local frame.\n");
-   printf("We do not implement raaw tesselation of sphere - hence will not appear in viewers\n");
+   printf("We do not implement raw tesselation of sphere - hence will not appear in viewers\n");
    printf("which do not support in natively (non-GL viewer).\n\n");
 
    MyGeom * myGeom = new MyGeom;
-   myGeom->Draw("pad");
+   myGeom->Draw("ogl");
 }
+
+#endif

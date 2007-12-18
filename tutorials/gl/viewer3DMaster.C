@@ -1,3 +1,15 @@
+// Author: Richard Maunder
+
+// As we overload TObject::Paint which is called directly from compiled
+// code, this script must also be compiled to work correctly.
+
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+   gSystem->CompileMacro("viewer3DMaster.C");
+   viewer3DMaster();
+}
+#else
+
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -8,18 +20,13 @@
 
 #include <vector>
 
-// As we overload TObject::Paint which is called directly from
-// compild code, this script must also be compiled to work correctly
-/*#ifdef __CINT__
-#warning "You have to compile this script. Run \".x viewer3DMaster.C+\"!"
-#endif*/
-
 // This demonstrates use of the 3D viewer architecture
 // TVirtualViewer3D and TBuffer3D in the MASTER frame
 // Here each shape is described directly in a TBuffer3D
 // class, with identity translation matrix c.f. viewer3DLocal.C
 
-// Our abstract base shape class
+// Our abstract base shape class.
+
 class Shape : public TObject
 {
 public:
@@ -38,8 +45,7 @@ ClassImp(Shape);
 
 Shape::Shape(Int_t color, Double_t x, Double_t y, Double_t z) : 
    fX(x), fY(y), fZ(z), fColor(color) 
-{
-};
+{}
 
 class Box : public Shape
 {
@@ -62,8 +68,7 @@ Box::Box(Int_t color, Double_t x, Double_t y, Double_t z,
          Double_t dX, Double_t dY, Double_t dZ) : 
    Shape(color,x,y,z), 
    fDX(dX), fDY(dY), fDZ(dZ)
-{
-}
+{}
 
 TBuffer3D & Box::GetBuffer3D(UInt_t reqSections)
 {
@@ -169,8 +174,7 @@ SBPyramid::SBPyramid(Int_t color, Double_t x, Double_t y, Double_t z,
          Double_t dX, Double_t dY, Double_t dZ) : 
    Shape(color,x,y,z), 
    fDX(dX), fDY(dY), fDZ(dZ)
-{
-}
+{}
 
 TBuffer3D & SBPyramid::GetBuffer3D(UInt_t reqSections)
 {
@@ -328,5 +332,7 @@ void viewer3DMaster()
    printf("Creates two boxes and a square based pyramid, described in master frame.\n\n");
 
    MyGeom * myGeom = new MyGeom;
-   myGeom->Draw("pad");
+   myGeom->Draw("ogl");
 }
+
+#endif
