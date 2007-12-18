@@ -281,6 +281,10 @@ void TVirtualBranchBrowsable::GetScope(TString & scope) const
       fParent->GetScope(scope);
    else {
       scope=fBranch->GetName();
+      Ssiz_t pos = scope.First('[');
+      if (pos != kNPOS) {
+         scope.Remove(pos);
+      }
       if (!scope.EndsWith(".")) scope+=".";
       const TBranch* mother=fBranch;
       while (mother != mother->GetMother() && (mother=mother->GetMother())) {
