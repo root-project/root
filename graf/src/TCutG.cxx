@@ -9,55 +9,64 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCutG                                                                //
-//                                                                      //
-//  A Graphical cut.                                                    //
-//  A TCutG object defines a closed polygon in a x,y plot.              //
-//  It can be created via the graphics editor option "CutG"             //
-//  or directly by invoking its constructor.                            //
-//  To create a TCutG via the graphics editor, use the left button      //
-//  to select the points building the contour of the cut. Click on      //
-//  the right button to close the TCutG.                                //
-//  When it is created via the graphics editor, the TCutG object        //
-//  is named "CUTG". It is recommended to immediatly change the name    //
-//  by using the context menu item "SetName".                           //                                                                      //
-//   When the graphics editor is used, the names of the variables X,Y   //
-//   are automatically taken from the current pad title.                //
-//  Example:                                                            //
-//  Assume a TTree object T and:                                        //
-//     Root > T.Draw("abs(fMomemtum)%fEtot")                            //
-//  the TCutG members fVarX, fVary will be set to:                      //
-//     fVarx = fEtot                                                    //
-//     fVary = abs(fMomemtum)                                           //
-//                                                                      //
-//  A graphical cut can be used in a TTree selection expression:        //
-//    Root > T.Draw("fEtot","cutg1")                                    //
-//    where "cutg1" is the name of an existing graphical cut.           //
-//                                                                      //
-//  Note that, as shown in the example above, a graphical cut may be    //
-//  used in a selection expression when drawing TTrees expressions      //
-//  of 1-d, 2-d or 3-dimensions.                                        //
-//  The expressions used in TTree::Draw can reference the variables     //
-//  in the fVarX, fVarY of the graphical cut plus other variables.      //
-//                                                                      //
-//  When the TCutG object is created, it is added to the list of special//
-//  objects in the main TROOT object pointed by gROOT. To retrieve a    //
-//  pointer to this object from the code or command line, do:           //
-//      TCutG *mycutg;                                                  //
-//      mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG") //
-//      mycutg->SetName("mycutg");                                      //
-//                                                                      //
-//  Example of use of a TCutG in TTree::Draw:                           //
-//       tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")                  //
-//                                                                      //
-//  A Graphical cut may be drawn via TGraph::Draw.                      //
-//  It can be edited like a normal TGraph.                              //
-//                                                                      //
-//  A Graphical cut may be saved to a file via TCutG::Write.            //                                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>Graphical cut class</h2></center>
+A Graphical cut.
+<p>
+A TCutG object is a closed polygon defining a closed region in a x,y plot.
+It can be created via the graphics editor option "CutG" or directly by
+invoking its constructor. The first and last points should be the same.
+<p>
+To create a TCutG via the graphics editor, use the left button to select the
+points building the contour of the cut. Click on the right button to close the
+TCutG. When it is created via the graphics editor, the TCutG object is named
+"CUTG". It is recommended to immediatly change the name by using the context
+menu item "SetName". When the graphics editor is used, the names of the
+variables X,Y are automatically taken from the current pad title.
+<p>
+Example:
+<p>
+Assume a TTree object T and:
+<pre>
+     Root > T.Draw("abs(fMomemtum)%fEtot")
+</pre>
+the TCutG members fVarX, fVary will be set to:
+<pre>
+     fVarx = fEtot
+     fVary = abs(fMomemtum)
+</pre>
+
+A graphical cut can be used in a TTree selection expression:
+<pre>
+    Root > T.Draw("fEtot","cutg1")
+</pre>
+where "cutg1" is the name of an existing graphical cut.
+<p>
+Note that, as shown in the example above, a graphical cut may be used in a
+selection expression when drawing TTrees expressions of 1-d, 2-d or
+3-dimensions. The expressions used in TTree::Draw can reference the variables in
+the fVarX, fVarY of the graphical cut plus other variables.
+<p>
+When the TCutG object is created, it is added to the list of special objects in
+the main TROOT object pointed by gROOT. To retrieve a pointer to this object
+from the code or command line, do:
+<pre>
+    TCutG *mycutg;
+    mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG")
+    mycutg->SetName("mycutg");
+</pre>
+Example of use of a TCutG in TTree::Draw:
+<pre>
+       tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
+</pre>
+<p>
+A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
+TGraph.
+<p>
+A Graphical cut may be saved to a file via TCutG::Write.
+End_Html*/
 
 #include <string.h>
 
@@ -72,6 +81,7 @@
 
 ClassImp(TCutG)
 
+
 //______________________________________________________________________________
 TCutG::TCutG() : TGraph()
 {
@@ -81,17 +91,19 @@ TCutG::TCutG() : TGraph()
    fObjectY  = 0;
 }
 
+
 //______________________________________________________________________________
 TCutG::TCutG(const TCutG &cutg)
       :TGraph(cutg)
 {
    // TCutG copy constructor
-   
+
    fVarX    = cutg.fVarX;
    fVarY    = cutg.fVarY;
    fObjectX = cutg.fObjectX;
    fObjectY = cutg.fObjectY;
 }
+
 
 //______________________________________________________________________________
 TCutG::TCutG(const char *name, Int_t n)
@@ -105,7 +117,7 @@ TCutG::TCutG(const char *name, Int_t n)
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
 
-// Take name of cut variables from pad title if title contains ":"
+   // Take name of cut variables from pad title if title contains ":"
    if (gPad) {
       TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
@@ -129,10 +141,11 @@ TCutG::TCutG(const char *name, Int_t n)
          char *brak = strstr(vars," {");
          if (brak) *brak = 0;
          fVarX = vars;
-      }        
+      }
       delete [] vars;
    }
 }
+
 
 //______________________________________________________________________________
 TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
@@ -146,7 +159,7 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
 
-// Take name of cut variables from pad title if title contains ":"
+   // Take name of cut variables from pad title if title contains ":"
    if (gPad) {
       TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
@@ -170,10 +183,11 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
          char *brak = strstr(vars," {");
          if (brak) *brak = 0;
          fVarX = vars;
-      }        
+      }
       delete [] vars;
    }
 }
+
 
 //______________________________________________________________________________
 TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
@@ -187,7 +201,7 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
 
-// Take name of cut variables from pad title if title contains ":"
+   // Take name of cut variables from pad title if title contains ":"
    if (gPad) {
       TPaveText *ptitle = (TPaveText*)gPad->FindObject("title");
       if (!ptitle) return;
@@ -211,10 +225,11 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
          char *brak = strstr(vars," {");
          if (brak) *brak = 0;
          fVarX = vars;
-      }        
+      }
       delete [] vars;
    }
 }
+
 
 //______________________________________________________________________________
 TCutG::~TCutG()
@@ -225,6 +240,7 @@ TCutG::~TCutG()
    delete fObjectY;
    gROOT->GetListOfSpecials()->Remove(this);
 }
+
 
 //______________________________________________________________________________
 Double_t TCutG::Integral(TH2 *h, Option_t *option) const
@@ -254,7 +270,7 @@ Double_t TCutG::Integral(TH2 *h, Option_t *option) const
    Int_t nbinsx = h->GetNbinsX();
    Stat_t integral = 0;
 
-   // Loop on bins for which the bin center is in the cut 
+   // Loop on bins for which the bin center is in the cut
    TString opt = option;
    opt.ToLower();
    Bool_t width = kFALSE;
@@ -273,28 +289,27 @@ Double_t TCutG::Integral(TH2 *h, Option_t *option) const
    return integral;
 }
 
+
 //______________________________________________________________________________
 Int_t TCutG::IsInside(Double_t x, Double_t y) const
 {
-   //         Function which returns 1 if point x,y lies inside the
-   //              polygon defined by the graph points
-   //                                0 otherwise
+   // Function which returns 1 if point x,y lies inside the polygon defined by
+   // the graph points 0 otherwise. This function assumes that the first and
+   // the last point of the TCutG are the same (closed polygon).
    //
-   //     The loop is executed with the end-point coordinates of a
-   //     line segment (X1,Y1)-(X2,Y2) and the Y-coordinate of a
-   //     horizontal line.
-   //     The counter inter is incremented if the line (X1,Y1)-(X2,Y2)
-   //     intersects the horizontal line.
-   //     In this case XINT is set to the X-coordinate of the
-   //     intersection point.
-   //     If inter is an odd number, then the point x,y is within
-   //     the polygon.
+   // Algorithm:
+   // The loop is executed with the end-point coordinates of a line segment
+   // (X1,Y1)-(X2,Y2) and the Y-coordinate of a horizontal line.
+   // The counter inter is incremented if the line (X1,Y1)-(X2,Y2) intersects
+   // the horizontal line. In this case XINT is set to the X-coordinate of the
+   // intersection point. If inter is an odd number, then the point x,y is within
+   // the polygon.
    //
-   //         This routine is based on an original algorithm
-   //         developed by R.Nierhaus.
+   // This function is based on an original algorithm developed by R.Nierhaus.
 
    return (Int_t)TMath::IsInside(x,y,fNpoints,fX,fY);
 }
+
 
 //______________________________________________________________________________
 void TCutG::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
@@ -324,6 +339,7 @@ void TCutG::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       <<quote<<option<<quote<<");"<<endl;
 }
 
+
 //______________________________________________________________________________
 void TCutG::SetVarX(const char *varx)
 {
@@ -333,6 +349,7 @@ void TCutG::SetVarX(const char *varx)
    delete fObjectX;
    fObjectX = 0;
 }
+
 
 //______________________________________________________________________________
 void TCutG::SetVarY(const char *vary)
