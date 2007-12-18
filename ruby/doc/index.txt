@@ -4,5 +4,7 @@ BEGIN_HTML
 <ul>
 <li><a href="http://root.cern.ch/root/HowtoRuby.html">How to use ROOT with Ruby
     </a></li>
+<li><a href="http://www.ruby-lang.org/en/about/">Ruby a Programmer's Best Friend
+    </a></li>
 </ul>
 END_HTML
