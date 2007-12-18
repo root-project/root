@@ -5,6 +5,11 @@
 #include "TGLIncludes.h"
 #include "TGLPlotBox.h"
 
+//______________________________________________________________________________
+//
+// Implementation of a box around a histogram/function for
+// plot-painters.
+
 ClassImp(TGLPlotBox)
 
 const Int_t TGLPlotBox::fgFramePlanes[][4] =

@@ -10,6 +10,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include "TGLFaceSet.h"
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
@@ -53,6 +54,12 @@ static GLUtriangulatorObj *GetTesselator()
 
    return singleton.fTess;
 }
+
+
+//______________________________________________________________________________
+//
+// Implementss a native ROOT-GL representation of an arbitrary set of
+// polygons.
 
 ClassImp(TGLFaceSet)
 

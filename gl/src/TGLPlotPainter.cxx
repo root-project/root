@@ -27,6 +27,11 @@
 #include "TGLOutput.h"
 #include "gl2ps.h"
 
+//______________________________________________________________________________
+//
+// Base class for plot-painters that provide GL rendering of various
+// 2D and 3D histograms, functions and parametric surfaces.
+
 ClassImp(TGLPlotPainter)
 
 //______________________________________________________________________________
@@ -515,6 +520,12 @@ void TGLPlotPainter::ClearBuffers()const
    glClearColor(rgb[0], rgb[1], rgb[2], 1.);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
+
+
+//______________________________________________________________________________
+//
+// Helper class for plot-painters holding information about axis
+// ranges, numbers of bins and flags if certain axis is logartihmic.
 
 ClassImp(TGLPlotCoordinates)
 
@@ -1128,6 +1139,11 @@ namespace {
 
 }
 
+//______________________________________________________________________________
+//
+// Used by plot-painters to determine the area of the plot that
+// is cut away.
+
 ClassImp(TGLBoxCut)
 
 //______________________________________________________________________________
@@ -1367,6 +1383,11 @@ Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t 
       return kTRUE;
    return kFALSE;
 }
+
+
+//______________________________________________________________________________
+//
+// A slice of a TH3.
 
 ClassImp(TGLTH3Slice)
 

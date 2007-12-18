@@ -22,6 +22,11 @@
 #include "TClass.h"
 #include "TError.h"
 
+//______________________________________________________________________________
+//
+// Implements a native ROOT-GL sphere that can be rendered at
+// different levels of detail.
+
 ClassImp(TGLSphere)
 
 //______________________________________________________________________________

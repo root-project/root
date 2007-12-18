@@ -62,8 +62,6 @@ private:
 
 public:
    TGLBoxCut(const TGLPlotBox *plotBox);
-   //Class has ClassDef macro == virtual functions, so we need
-   //explicitly declared/defined dtor to supress warnings from g++
    virtual ~TGLBoxCut();
 
    void   TurnOnOff();

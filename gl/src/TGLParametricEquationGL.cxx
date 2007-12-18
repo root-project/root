@@ -23,9 +23,9 @@
 #include "TGLIncludes.h"
 
 //______________________________________________________________________
-// TGLParametricEquationGL
 //
-//
+// GL-renderer wrapper for TGLParametricEquation.
+// This allows rendering of parametric-equations in standard GL viewer.
 
 ClassImp(TGLParametricEquationGL)
 

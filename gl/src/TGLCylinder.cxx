@@ -10,6 +10,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include "TGLCylinder.h"
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
@@ -492,6 +493,12 @@ void TCylinderSegMesh::Draw() const
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_NORMAL_ARRAY);
 }
+
+
+//______________________________________________________________________________
+//
+// Implements a native ROOT-GL cylinder that can be rendered at
+// different levels of detail.
 
 ClassImp(TGLCylinder)
 

@@ -71,7 +71,7 @@ private:
    TGLContext(const TGLContext &);
    TGLContext &operator = (const TGLContext &);
 
-   ClassDef(TGLContext, 0)//This class controls internal gl-context resources.
+   ClassDef(TGLContext, 0) // Control internal gl-context resources.
 };
 
 

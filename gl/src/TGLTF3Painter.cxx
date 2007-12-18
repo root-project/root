@@ -13,17 +13,21 @@
 #include "TGLTF3Painter.h"
 #include "TGLIncludes.h"
 
+//______________________________________________________________________________
+//
+// Plot-painter implementing rendering of TF3 functions. 
+
 ClassImp(TGLTF3Painter)
 
 //______________________________________________________________________________
 TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera,
-                             TGLPlotCoordinates *coord, TGLPaintDevice *dev)
-                  : TGLPlotPainter(hist, camera, coord, dev, kTRUE, kTRUE, kTRUE),
-                    fStyle(kDefault),
-                    fF3(fun),
-                    fXOZSlice("XOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOZ),
-                    fYOZSlice("YOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kYOZ),
-                    fXOYSlice("XOY", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOY)
+                             TGLPlotCoordinates *coord, TGLPaintDevice *dev) :
+   TGLPlotPainter(hist, camera, coord, dev, kTRUE, kTRUE, kTRUE),
+   fStyle(kDefault),
+   fF3(fun),
+   fXOZSlice("XOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOZ),
+   fYOZSlice("YOZ", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kYOZ),
+   fXOYSlice("XOY", (TH3 *)hist, fun, coord, &fBackBox, TGLTH3Slice::kXOY)
 {
    // Constructor.
 }
@@ -417,6 +421,10 @@ void TGLTF3Painter::DrawSectionXOY()const
    fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
 }
 
+
+//______________________________________________________________________________
+//
+// Implements painting of TH3 with the "ISO" option.
 
 ClassImp(TGLIsoPainter)
 

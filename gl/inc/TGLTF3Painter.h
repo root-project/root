@@ -160,7 +160,7 @@ private:
    TGLIsoPainter(const TGLIsoPainter &);
    TGLIsoPainter &operator = (const TGLIsoPainter &);
 
-   ClassDef(TGLIsoPainter, 0) //Iso option for TH3
+   ClassDef(TGLIsoPainter, 0) // Iso option for TH3.
 };
 
 #endif

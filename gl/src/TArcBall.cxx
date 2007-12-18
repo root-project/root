@@ -15,6 +15,11 @@
 
 const Double_t Epsilon = 1.0e-5;
 
+//______________________________________________________________________________
+//
+// Implements the arc-ball rotation manipulator.
+// Used by plot-painters.
+
 ClassImp(TArcBall)
 
 //Arcball sphere constants:

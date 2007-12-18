@@ -20,11 +20,11 @@
 #include "TGLClipSetEditor.h"
 #include "TGLUtil.h"
 
+//______________________________________________________________________________
+//
+// GUI editor for TGLViewer.
+
 ClassImp(TGLViewerEditor)
-
-
-//A lot of raw pointers/naked new-expressions - good way to discredit C++ (or C++ programmer :) ) :(
-//ROOT has system to cleanup - I'll try to use it
 
 //______________________________________________________________________________
 TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back) :

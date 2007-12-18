@@ -14,8 +14,12 @@
 #include "TGLBoxPainter.h"
 #include "TGLIncludes.h"
 
-ClassImp(TGLBoxPainter)
+//______________________________________________________________________________
+//
+// Paints TH3 histograms by rendering variable-sized bozes matching the
+// bin contents.
 
+ClassImp(TGLBoxPainter)
 
 //______________________________________________________________________________
 TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, TGLPaintDevice *dev)

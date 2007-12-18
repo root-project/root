@@ -19,6 +19,10 @@
 #include "TGLOrthoCamera.h"
 #include "TGLIncludes.h"
 
+//______________________________________________________________________________
+//
+// Implements painting of TH2 with "SURF" option.
+
 ClassImp(TGLSurfacePainter)
 
 //______________________________________________________________________________

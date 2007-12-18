@@ -22,15 +22,13 @@
 #include "TClass.h"
 #include "TError.h"
 
-ClassImp(TGLPolyLine)
-
-
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>GL Polyline</h2></center>
 To draw a 3D polyline in a GL window.
 End_Html */
 
+ClassImp(TGLPolyLine)
 
 //______________________________________________________________________________
 TGLPolyLine::TGLPolyLine(const TBuffer3D & buffer) :

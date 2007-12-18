@@ -21,9 +21,9 @@
 #include "TGLViewerEditor.h"
 
 //______________________________________________________________________________
-// TGLClipSetSubEditor
 //
-//
+// GUI sub-editor for TGLClipSet.
+
 
 ClassImp(TGLClipSetSubEditor)
 
@@ -204,9 +204,8 @@ void TGLClipSetSubEditor::UpdateViewerClip()
 
 
 //______________________________________________________________________________
-// TGLClipSetEditor
 //
-//
+// GUI editor for TGLClipSet.
 
 ClassImp(TGLClipSetEditor)
 

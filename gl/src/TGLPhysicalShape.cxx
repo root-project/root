@@ -22,7 +22,11 @@
 #include "TClass.h"
 #include "TError.h"
 
+/******************************************************************************/
 // TGLPhysicalShape
+/******************************************************************************/
+
+//______________________________________________________________________________
 //
 // Concrete physical shape - a GL drawable. Physical shapes are the
 // objects the user can actually see, select, move in the viewer. It is

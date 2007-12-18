@@ -33,6 +33,11 @@
 #include "TGLFormat.h"
 #include "TGLUtil.h"
 
+//______________________________________________________________________________
+//
+// This class encapsulates window-system specific information about a
+// GL-context and alows their proper management in ROOT.
+
 ClassImp(TGLContext)
 
 //______________________________________________________________________________
@@ -385,7 +390,6 @@ TGLContext *TGLContext::GetCurrent()
 
 
 //______________________________________________________________________________
-// TGLContextIdentity
 //
 // Identifier of a shared GL-context.
 // Objects shared among GL-contexts include:

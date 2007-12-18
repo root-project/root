@@ -35,9 +35,9 @@ class TGLFormat {
 public:
    enum EFormatOptions {
       kDoubleBuffer = 1,
-      kDepth = 2,
-      kAccum = 4,
-      kStencil = 8
+      kDepth        = 2,
+      kAccum        = 4,
+      kStencil      = 8
    };
 
 private:
@@ -72,7 +72,7 @@ public:
    Bool_t IsDoubleBuffered()const;
    void   SetDoubleBuffered(Bool_t db);
 
-   ClassDef(TGLFormat, 0)//Describes gl buffer format
+   ClassDef(TGLFormat, 0) // Describes GL buffer format.
 };
 
 #endif

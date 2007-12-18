@@ -25,9 +25,9 @@
 #include "TGLIncludes.h"
 
 //______________________________________________________________________
-// TF2GL
 //
-//
+// GL renderer for TF2.
+// TGLPlotPainter is used internally.
 
 ClassImp(TF2GL)
 
