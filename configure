@@ -2334,13 +2334,13 @@ if test ! "x$enable_monalisa" = "xno"; then
     monalisalibdir=$found_dir
 
     check_header "monalisawsclient.h" "$tmpincdir" $MONALISA $MONALISA/include \
-	/usr/local/include /opt/alien/include /opt/monalisa/include \
+	/usr/local/include /opt/alien/api/include /opt/monalisa/include \
 	/usr/include
     monalisawsinc=$found_hdr
     monalisawsincdir=$found_dir
 
     check_library "libmonalisawsclient" "$enable_shared" "$tmplibdir" \
-	$MONALISA $MONALISA/lib /usr/local/lib /opt/alien/lib \
+	$MONALISA $MONALISA/lib /usr/local/lib /opt/alien/api/lib \
 	/opt/monalisa/lib /usr/lib
     monalisawslib=$found_lib
     monalisawslibdir=$found_dir
