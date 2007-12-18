@@ -88,9 +88,6 @@ TChain::TChain()
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
-
-   // Add to the global list
-   gROOT->GetListOfDataSets()->Add(this);
 }
 
 //______________________________________________________________________________
