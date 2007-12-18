@@ -14,6 +14,8 @@
 
 #include "ruby.h"
 
+ClassImp(TRuby)
+
 extern VALUE cTObject;
 
 bool TRuby::Initialize()
