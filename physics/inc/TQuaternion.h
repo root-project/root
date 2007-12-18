@@ -127,13 +127,13 @@ inline TQuaternion& TQuaternion::SetRV(Double_t r, TVector3& vect) {
 }
 
 inline void TQuaternion::GetRXYZ(Double_t *carray) const {
-   fVectorPart.GetXYZ(carray);
-   carray[3] = fRealPart;
+   fVectorPart.GetXYZ(carray+1);
+   carray[0] = fRealPart;
 }
 
 inline void TQuaternion::GetRXYZ(Float_t *carray) const {
-   fVectorPart.GetXYZ(carray);
-   carray[3] = (Float_t) fRealPart;
+   fVectorPart.GetXYZ(carray+1);
+   carray[0] = (Float_t) fRealPart;
 }
 
 inline Double_t & TQuaternion::operator[] (int i)       { return operator()(i); }
