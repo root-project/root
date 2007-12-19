@@ -19,10 +19,10 @@ cd ../..
 
 if [ "x$1" = "xlib" ]; then
    GCC_VERS=""
-   MAKELIB="geant4_vmc/lib"
+   MAKELIB="geant4_vmc/include geant4_vmc/lib"
 elif [ "x$2" = "xlib" ]; then
    GCC_VERS=$1
-   MAKELIB="geant4_vmc/lib"
+   MAKELIB="geant4_vmc/include geant4_vmc/lib"
 else
    GCC_VERS=$1
 fi
@@ -53,8 +53,10 @@ else
    EXCLUDE="--exclude .svn"
 fi
 
-$TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/"history" geant4_vmc/version_number  \
-   geant4_vmc/"include" geant4_vmc/"source" geant4_vmc/examples $MAKELIB
+$TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/LICENSE \
+   geant4_vmc/"history" geant4_vmc/Geant4VMC.html geant4_vmc/version_number  \
+   geant4_vmc/"source" geant4_vmc/examples $MAKELIB
+
 cd $CURDIR
 
 exit 0
