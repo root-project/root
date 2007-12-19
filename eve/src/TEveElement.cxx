@@ -739,7 +739,7 @@ void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
    // Call this after an element has been changed so that the state
    // can be propagated around the framework.
 
-  gEve->ElementChanged(this, update_scenes, redraw);
+   gEve->ElementChanged(this, update_scenes, redraw);
 }
 
 /******************************************************************************/
