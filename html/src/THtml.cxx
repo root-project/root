@@ -980,8 +980,10 @@ void THtml::CreateListOfClasses(const char* filter)
       }
       if (module) {
          if (!strcmp(module->GetName(), "REFLEX")
-            || !strcmp(module->GetName(), "MATHCORE")
-            || !strcmp(module->GetName(), "MATHMORE")) {
+             // take class doc from header, so ignore sources:
+             //|| !strcmp(module->GetName(), "MATHCORE")
+             //|| !strcmp(module->GetName(), "MATHMORE")
+             ) {
             TString srcFile = gSystem->BaseName(impname);
             srcFile.ReplaceAll(".h", ".cxx");
             gSystem->PrependPathName(module->GetSourceDir(), srcFile);
