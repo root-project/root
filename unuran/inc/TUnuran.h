@@ -27,11 +27,32 @@ class TUnuranEmpDist;
 
 #include <memory>
 
-////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________
 /** 
    TUnuran class. 
-   Interface to the UnuRan package for generating non uniform random 
-   numbers 
+   Interface to the UNU.RAN package for generating non uniform random 
+   numbers. This class wraps the UNU.RAN calls in C++ methods.
+   It provides methods for initializing Unuran and then to sample the 
+   desired distribution. 
+   It provides support for initializing UNU.RAN in these following way (various signatures 
+   for TUnuran::Init)
+   - with string API via TUnuran::Init passing the distribution type and the method
+   - using a one-dimensional distribution object defined by TUnuranContDist
+   - using a multi-dimensional distribution object defined by TUnuranMultiContDist  
+   - using a discrete one-dimensional distribution object defined by TUnuranDiscrDist
+   - using an empirical distribution defined by TUnuranEmpDist
+   - using pre-defined distributions. Presently only support for Poisson (TUnuran::InitPoisson) 
+     and Binomial (TUnuran::InitBinomial) are provided. Other distributions can however be generated 
+     using the previous methods (in particular via the string API) 
+
+   The sampling is provided via these methods: 
+    - TUnuran::Sample()   returns a double for all one-dimensional distribution
+    - TUnuran::SampleDiscr()  returns an integer for one-dimensional discrete distribution
+    - TUnuran::Sample(double *) sample a multi-dimensional distribution. A pointer to a vector of 
+      size as the distribution dimension must be passed
+
+   In addition is possible to set the random number generator in the constructor of the class, its seed 
+   via the TUnuran::SetSeed() method.
 */ 
 ///////////////////////////////////////////////////////////////////////
 
@@ -133,21 +154,28 @@ public:
       Initialize method for the Poisson distribution 
       Used to generate poisson numbers for a constant parameter mu of the Poisson distribution. 
       Use after the method TUnuran::SampleDiscr to generate the numbers.        
+      The flag reinit perform a fast re-initialization when only the distribution parameters 
+      are changed in the subsequent calls.
+      If the same TUnuran object is used to generate with other distributions it cannot be used. 
    */ 
-   bool InitPoisson(double mu, std::string method = "dstd");
+   bool InitPoisson(double mu, const std::string & method = "dstd");
 
    /** 
       Initialize method for the Binomial distribution 
       Used to generate poisson numbers for a constant parameters (n,p) of the Binomial distribution. 
-      Use after the method TUnuran::SampleDiscr to generate the numbers.        
+      Use after the method TUnuran::SampleDiscr to generate the numbers.      
+      The flag reinit perform a fast re-initialization when only the distribution parameters 
+      are changed in the subsequent calls.
+      If the same TUnuran object is used to generate with other distributions it cannot be used. 
    */ 
-   bool InitBinomial(unsigned int ntot, double prob, std::string method = "dstd");
+   bool InitBinomial(unsigned int ntot, double prob, const std::string & method = "dstd");
 
-
-   /**
-      reinitialize UNURAN
-    */
-   //bool ReInit(); 
+// #ifdef LATER
+//    /**
+//       reinitialize UNURAN after having changed the distribution parameters
+//     */
+//    bool ReInit(); 
+// #endif
 
    /**
       sample 1D distribution
@@ -211,14 +239,7 @@ protected:
 
    UNUR_GEN * fGen;                      //pointer to the UnuRan C generator struct
    UNUR_DISTR * fUdistr;                 //pointer to the UnuRan C distribution struct
-// TUnuranContDist         fCDist;       // for continous 1D distribution
-// TUnuranDiscrDist        fDDist;       // for discrete distribution
-// TUnuranMultiContDist    fMultiCDist;  // for multidimensional continous distribution
    std::auto_ptr<TUnuranBaseDist>         fDist;       // pointer for distribution wrapper
-//    std::auto_ptr<TUnuranDiscrDist>        fDDist;       // for discrete distribution
-//    std::auto_ptr<TUnuranEmpDist>          fEDist;       // for empirical distribution
-//    std::auto_ptr<TUnuranMultiContDist>          fMultiCDist;       // for multi-dim cont. distribution
-   //TUnuranEmpirDist        fEDist;       // for empirical 1D distribution
    TRandom * fRng;                       //pointer to random number generator
    std::string fMethod;                  //string representing the method
 

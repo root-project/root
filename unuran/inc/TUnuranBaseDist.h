@@ -67,7 +67,7 @@ public:
 //    } 
 
 
-//   ClassDef(TUnuranBaseDist,1)  //Base class for Unuran distribution wrappers
+   ClassDef(TUnuranBaseDist,1)  //Base class for Unuran distribution wrappers
 
 
 }; 

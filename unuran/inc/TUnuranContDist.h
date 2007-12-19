@@ -10,7 +10,7 @@
 
 // Header file for class TUnuranContDist
 
-//////////////////////////////////////////////////////////////////////
+//______________________________________________________________
 // 
 //   TUnuranContDistr class 
 //   wrapper class for one dimensional continuous distribution

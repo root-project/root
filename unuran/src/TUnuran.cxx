@@ -27,7 +27,6 @@
 
 #include <cassert>
 
-#include <iostream>
 
 #include <unuran.h>
 
@@ -81,7 +80,7 @@ bool  TUnuran::Init(const std::string & dist, const std::string & method)
    std::string s = dist + " & " + method; 
    fGen = unur_str2gen(s.c_str() ); 
    if (fGen == 0) { 
-      std::cerr << "ERROR: cannot create generator object" << std::endl; 
+      Error("Init","Cannot create generator object"); 
       return false; 
    } 
    SetRandomGenerator();
@@ -91,7 +90,7 @@ bool  TUnuran::Init(const std::string & dist, const std::string & method)
 
 bool TUnuran::Init(const TUnuranContDist & distr, const std::string  & method)  
 { 
-   //   initialization with a distribution and and generator
+   // initialization with a distribution and and generator
    // the distribution object is copied in and managed by this class
    // use auto_ptr to manage previously existing distribution objects
    TUnuranContDist * distNew = distr.Clone(); 
@@ -419,11 +418,23 @@ bool  TUnuran::SetLogLevel(unsigned int debugLevel)
 
 }
 
-bool TUnuran::InitPoisson(double mu, std::string method) { 
-
+bool TUnuran::InitPoisson(double mu, const std::string & method) { 
+//bool TUnuran::InitPoisson(double mu, const std::string & method, bool reinit) { 
+   // initializaton for a Poisson
    double p[1];
    p[0] = mu; 
    fUdistr = unur_distr_poisson(p,1);
+
+#ifdef LATER
+   // in case of re-init
+   if (fGen && reinit) { 
+      if (ReInit() )
+         return true; // succesfull re-init
+      else 
+         Warning("InitPoisson","re-init failed - perform full initizialization");
+   }
+#endif
+
    fMethod = method;
    if (fUdistr == 0) return false; 
    if (! SetMethodAndInit() ) return false;
@@ -431,15 +442,40 @@ bool TUnuran::InitPoisson(double mu, std::string method) {
    return true; 
 }
 
-bool TUnuran::InitBinomial(unsigned int ntot, double prob, std::string method) { 
-
+bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & method ) { 
+//bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & method, bool reinit) { 
+   // initializaton for a Binomial
    double par[2];
    par[0] = ntot; 
    par[1] = prob; 
    fUdistr = unur_distr_binomial(par,2);
+
+#ifdef LATER
+   // in case of re-init
+   if (fGen && reinit) { 
+      if (ReInit() )
+         return true; // succesfull re-init
+      else 
+         Warning("InitBinomial","re-init failed - perform full initizialization");
+   }
+#endif
+
    fMethod = method;
    if (fUdistr == 0) return false; 
    if (! SetMethodAndInit() ) return false;
    if (! SetRandomGenerator() ) return false; 
    return true; 
 }
+
+#ifdef LATER
+bool TUnuran::ReInit() { 
+   // re-initialization of UNURAN without freeing and creating a new fGen object
+   // works now only for pre-defined dist. 
+   // t.b.f. make it work in any case when a distribution is changed by the user
+   if (!fGen) return false;
+   UNUR_DISTR * d = unur_get_distr(fGen);
+   d = fUdistr; // replace with new distribution
+   int iret = unur_reinit(fGen);
+   return (!iret); 
+}
+#endif
