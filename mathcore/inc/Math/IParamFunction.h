@@ -34,10 +34,11 @@ namespace ROOT {
    namespace Math { 
 
 
+//___________________________________________________________________
 /** 
    IBaseParam interface defining the API for dealing with the function parameters
    This is used only for internal convinience, to avoid redefining the Parameter API  
-   for the 1D and the multi-dim function. 
+   for the one and the multi-dim function. 
    Concrete class should derive from ROOT::Math::IParamFunction and not from this class.  
 
    @ingroup  CppFunctions
@@ -59,22 +60,15 @@ public:
    */
    virtual const double * Parameters() const = 0;
 
-   // set params values (can user change number of params ? ) 
    /**
       Set the parameter values
       @param p vector of doubles containing the parameter values. 
+
+      to be defined:  can user change number of params ? At the moment no. 
+
    */
    virtual void SetParameters(const double * p ) = 0;
 
-//    /**
-//       Set the parameters values using an iterator 
-//     */
-//    template <class ParIterator> 
-//    bool SetParameters(ParIterator begin, ParIterator end) { 
-//       std::vector<double> p(begin.end);
-//       if (p.size()!= NPar() ) return false; 
-//       SetParameters(&p.front());
-//    }
     
    /**
       Return the number of Parameters
@@ -93,12 +87,17 @@ public:
 
 };
 
+//___________________________________________________________________
 /** 
-   IParamFunction interface describing parameteric function
-   It is a derived class from IFunction
+   IParamFunction interface (abstract class) describing multi-dimensional parameteric functions
+   It is a derived class from ROOT::Math::IBaseFunctionMultiDim and 
+   ROOT::Math::IBaseParam
+
+   Provides the interface for evaluating a function passing a coordinate vector and a parameter vector.  
+
    @ingroup  CppFunctions
 */ 
-//template<class DimensionType = MultiDim> 
+
 class IParametricFunctionMultiDim : 
          virtual public IBaseFunctionMultiDim , 
          public IBaseParam {
@@ -107,17 +106,13 @@ public:
 
    typedef IBaseFunctionMultiDim  BaseFunc; 
 
-   /// default constructor (needed to initialize parent classes)
-//    IParamFunction() : 
-//       BaseParamFunc() 
-//    {}
 
 
-   // user may re-implement this for better efficiency
-   // this method is NOT required to  change internal values of parameters. confusing ?? 
    /**
       Evaluate function at a point x and for parameters p.
-      This method mey be needed for better efficiencies when for each function evaluation the parameters are changed.
+      This method may be overloaded for better efficiencies by the users 
+      For example the method could not change the internal parameters value kept in the derived class. 
+      This behaviour is not defined and is left intentionally to the implementation of the derived classes
    */
    virtual double operator() (const double * x, const double *  p ) 
    { 
@@ -129,12 +124,16 @@ public:
    using BaseFunc::operator();
 
 }; 
+
+//___________________________________________________________________
 /** 
-   Specialized IParamFunction interface for one-dimensional function
+   Specialized IParamFunction interface (abstract class) for one-dimensional parametric functions
+   It is a derived class from ROOT::Math::IBaseFunctionOneDim and 
+   ROOT::Math::IBaseParam
 
    @ingroup  CppFunctions
 */ 
-//template<> 
+
 class IParametricFunctionOneDim : 
          virtual public IBaseFunctionOneDim, 
          public IBaseParam { 
@@ -144,18 +143,14 @@ public:
 
    typedef IBaseFunctionOneDim   BaseFunc; 
 
-   /// default constructor (needed to initialize parent classes)
-//    IParamFunction() : 
-//       BaseParamFunc() 
-//    {}
 
    using BaseFunc::operator();
 
-   // user may re-implement this for better efficiency
-   // this method is NOT required to  change internal values of parameters. confusing ?? 
    /**
       Evaluate function at a point x and for parameters p.
-      This method mey be needed for better efficiencies when for each function evaluation the parameters are changed.
+      This method may be overloaded for better efficiencies by the users 
+      For example the method could not change the internal parameters value kept in the derived class. 
+      This behaviour is not defined and is left intentionally to the implementation of the derived classes
    */
    virtual double operator() (double x, const double *  p ) 
    { 
@@ -163,7 +158,9 @@ public:
       return operator() (x); 
    }
 
-   /// multidim-like interface
+   /**
+      multidim-like interface
+   */
    virtual double operator() (const double * x, const double *  p ) 
    { 
       return operator() (*x, p); 
@@ -175,13 +172,22 @@ public:
 
 
 
-
+//_______________________________________________________________________________
 /** 
-   IParamGradFunction interface for parametric functions providing 
-   the gradient
+   Interface (abstract class) for parametric gradient multi-dimensional functions providing 
+   in addition to function evaluation and gradient with respect the coordinates 
+   also the gradient with respect to the parameters, via the method ParameterGradient. 
+
+   It is a derived class from ROOT::Math::IParametricFunctionMultiDim and 
+   ROOT::Math::IGradientFunctionMultiDim. 
+   Virtual inheritance is used since IBaseFunctionMultiDim is the common base of both 
+   ROOT::Math::IParametricFunctionMultiDim and ROOT::Math::IGradientFunctionMultiDim. 
+   The pure private virtual method DoParameterGradient must be implemented by the derived classes 
+   in addition to those inherited by the base abstract classes. 
+
    @ingroup  CppFunctions
 */ 
-//template<class DimensionType=MultiDim> 
+
 class IParametricGradFunctionMultiDim : 
          public IParametricFunctionMultiDim, 
          public IGradientFunctionMultiDim   {
@@ -192,12 +198,6 @@ public:
    typedef IGradientFunctionMultiDim                  BaseGradFunc; 
    typedef IParametricFunctionMultiDim::BaseFunc  BaseFunc; 
 
-   /// default constructor (needed to initialize parent classes)
-//    IParamGradFunction() :
-//       BaseParamFunc(),  
-//       BaseGradFunc()  
-//    {}
-
 
    /** 
       Virtual Destructor (no operations)
@@ -205,7 +205,7 @@ public:
    virtual ~IParametricGradFunctionMultiDim ()  {}  
 
 
-   //using BaseFunc::operator();
+
    using BaseParamFunc::operator();
 
    /**
@@ -220,11 +220,6 @@ public:
 private: 
 
 
-//    /**
-//       Set the parameter values
-//       @param p vector of doubles containing the parameter values. 
-//    */
-//    virtual void DoSetParameters(const double * p ) = 0;
 
    /**
       Evaluate the gradient, to be implemented by the derived classes
@@ -234,12 +229,22 @@ private:
 
 };
 
+//_______________________________________________________________________________
 /** 
-   IParamGradFunction interface for one-dimensional function
+   Interface (abstract class) for parametric one-dimensional gradient functions providing 
+   in addition to function evaluation and derivative with respect the coordinates 
+   also the gradient with respect to the parameters, via the method ParameterGradient. 
+
+   It is a derived class from ROOT::Math::IParametricFunctionOneDim and 
+   ROOT::Math::IGradientFunctionOneDim. 
+   Virtual inheritance is used since IBaseFunctionOneDim is the common base of both 
+   ROOT::Math::IParametricFunctionOneDim and ROOT::Math::IGradientFunctionOneDim. 
+   The pure private virtual method DoParameterGradient must be implemented by the derived classes 
+   in addition to those inherited by the base abstract classes. 
 
    @ingroup  CppFunctions
 */ 
-//template<> 
+
 class IParametricGradFunctionOneDim : 
          public IParametricFunctionOneDim, 
          public IGradientFunctionOneDim   {
@@ -257,7 +262,6 @@ public:
    virtual ~IParametricGradFunctionOneDim ()  {}  
 
 
-   //using BaseFunc::operator();
    using BaseParamFunc::operator();
 
    /**
@@ -268,15 +272,16 @@ public:
       return DoParameterGradient(x, grad); 
    } 
 
+   /**
+      Compatibility interface with multi-dimensional functions 
+   */
+   void ParameterGradient(double * x , double * grad ) const { 
+      return DoParameterGradient(*x, grad); 
+   } 
+
 
 private: 
 
-
-//    /**
-//       Set the parameter values
-//       @param p vector of doubles containing the parameter values. 
-//    */
-//    virtual void DoSetParameters(const double * p ) = 0;
 
    /**
       Evaluate the gradient, to be implemented by the derived classes

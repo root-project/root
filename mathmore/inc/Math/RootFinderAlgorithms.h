@@ -48,139 +48,152 @@ namespace Math {
 
   */
 
-   namespace Roots { 
+namespace Roots { 
 
+//________________________________________________________________________________________________________
      /**
 	Bisection algorithms, simplest algorithms for bracketing the roots of a function, but slowest one
-	See  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_32.html#SEC436">GSL manual</A> for more information
+	See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
 	@ingroup RootFinders
      */
 
-     class Bisection : public GSLRootFinder {
+   class Bisection : public GSLRootFinder {
        
-     public: 
+   public: 
 
-       Bisection(); 
-       virtual ~Bisection();
+      Bisection(); 
+      virtual ~Bisection();
        
-     private:
-       // usually copying is non trivial, so we make this unaccessible
+   private:
+      // usually copying is non trivial, so we make this unaccessible
 
-       Bisection(const Bisection &); 
-       Bisection & operator = (const Bisection &); 
+      Bisection(const Bisection &); 
+      Bisection & operator = (const Bisection &); 
 
-     }; 
+   }; 
 
-     /**
-	False Position algorithm based on linear interpolation. 
-	See  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_32.html#SEC436">GSL manual</A> for more information
-	@ingroup RootFinders
-     */
+//________________________________________________________________________________________________________
+   /**
+      False Position algorithm based on linear interpolation. 
+      See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
+      @ingroup RootFinders
+   */
 
-     class FalsePos : public GSLRootFinder {
+   class FalsePos : public GSLRootFinder {
        
-     public: 
+   public: 
 
-       FalsePos(); 
-       virtual ~FalsePos();
+      FalsePos(); 
+      virtual ~FalsePos();
        
-     private:
-       // usually copying is non trivial, so we make this unaccessible
-       FalsePos(const FalsePos &); 
-       FalsePos & operator = (const FalsePos &); 
+   private:
+      // usually copying is non trivial, so we make this unaccessible
+      FalsePos(const FalsePos &); 
+      FalsePos & operator = (const FalsePos &); 
 
-     }; 
+   }; 
 
 
 
-     /**
-	Brent-Dekker algorithm which combines an interpolation strategy with the bisection algorithm 
-	See  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_32.html#SEC436">GSL manual</A> for more information
-	@ingroup RootFinders
-     */
+//________________________________________________________________________________________________________
+   /**
+      Brent-Dekker algorithm which combines an interpolation strategy with the bisection algorithm 
+      See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">
+      GSL manual</A> for more information
+	
+      @ingroup RootFinders
+   */
 
-     class Brent : public GSLRootFinder {
+   class Brent : public GSLRootFinder {
        
-     public: 
+   public: 
 
-       Brent(); 
-       virtual ~Brent();
+      Brent(); 
+      virtual ~Brent();
        
-     private:
-       // usually copying is non trivial, so we make this unaccessible
-       Brent(const Brent &); 
-       Brent & operator = (const Brent &); 
+   private:
+      // usually copying is non trivial, so we make this unaccessible
+      Brent(const Brent &); 
+      Brent & operator = (const Brent &); 
 
-     }; 
+   }; 
 
      
-     //----------------------------------------------------------------------
-     // algorithm with derivatives 
-     //----------------------------------------------------------------------
+   //----------------------------------------------------------------------
+   // algorithm with derivatives 
+   //----------------------------------------------------------------------
 
-     /**
-	\a Newton algorithm, which computes the derivative at each iteration
-	See  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_32.html#SEC437">GSL manual</A> for more information
-	@ingroup RootFinders
-     */
+//________________________________________________________________________________________________________
+   /**
+      a Newton algorithm, which computes the derivative at each iteration
+      See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Finding-Algorithms-using-Derivatives.html">
+      GSL manual</A> for more information
 
-     class Newton : public GSLRootFinderDeriv {
+      @ingroup RootFinders
+   */
+
+   class Newton : public GSLRootFinderDeriv {
        
-     public: 
+   public: 
 
-       Newton(); 
-       virtual ~Newton();
+      Newton(); 
+      virtual ~Newton();
        
-     private:
-       // usually copying is non trivial, so we make this unaccessible
-       Newton(const Newton &); 
-       Newton & operator = (const Newton &); 
+   private:
+      // usually copying is non trivial, so we make this unaccessible
+      Newton(const Newton &); 
+      Newton & operator = (const Newton &); 
 
-     }; 
+   }; 
 
     
-     /**
-	\a Secant algorithm, simplified version of Newton method, which does not require the derivative at every step. 
-	See  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_32.html#SEC437">GSL manual</A> for more information
-	@ingroup RootFinders
-     */
+//________________________________________________________________________________________________________
+   /**
+      \a Secant algorithm, simplified version of Newton method, which does not require the derivative at every step. 
+      See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Finding-Algorithms-using-Derivatives.html">
+      GSL manual</A> for more information
+      @ingroup RootFinders
+   */
 
-     class Secant : public GSLRootFinderDeriv {
+   class Secant : public GSLRootFinderDeriv {
        
-     public: 
+   public: 
 
-       Secant(); 
-       virtual ~Secant();
+      Secant(); 
+      virtual ~Secant();
        
-     private:
-       // usually copying is non trivial, so we make this unaccessible
-       Secant(const Secant &); 
-       Secant & operator = (const Secant &); 
+   private:
+      // usually copying is non trivial, so we make this unaccessible
+      Secant(const Secant &); 
+      Secant & operator = (const Secant &); 
 
-     }; 
+   }; 
 
-     /**
-	\a Steffenson method, providing the fastes convergence.
-	See  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_32.html#SEC437">GSL manual</A> for more information
-	@ingroup RootFinders
-     */
+//________________________________________________________________________________________________________
+   /**
+      \a Steffenson method, providing the fastes convergence.
+      See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Finding-Algorithms-using-Derivatives.html">
+      GSL manual</A> for more information
 
-     class Steffenson : public GSLRootFinderDeriv {
+      @ingroup RootFinders
+   */
+
+   class Steffenson : public GSLRootFinderDeriv {
        
-     public: 
+   public: 
 
-       Steffenson(); 
-       virtual ~Steffenson();
+      Steffenson(); 
+      virtual ~Steffenson();
        
-     private:
-       // usually copying is non trivial, so we make this unaccessible
-       Steffenson(const Steffenson &); 
-       Steffenson & operator = (const Steffenson &); 
+   private:
+      // usually copying is non trivial, so we make this unaccessible
+      Steffenson(const Steffenson &); 
+      Steffenson & operator = (const Steffenson &); 
 
-     }; 
+   }; 
 
 
-   }
+}
 
 } // namespace Math
 } // namespace ROOT

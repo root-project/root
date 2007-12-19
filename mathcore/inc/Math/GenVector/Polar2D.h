@@ -31,15 +31,16 @@
  
 namespace ROOT { 
 
-   namespace Math { 
+namespace Math { 
 
 
-      /** 
-          Class describing a polar 2D coordinate system based on r and phi
-          Phi is restructed to be in the range [-PI,PI)
+//__________________________________________________________________________________________
+   /** 
+       Class describing a polar 2D coordinate system based on r and phi
+       Phi is restricted to be in the range [-PI,PI)
           
-          @ingroup GenVector
-      */ 
+       @ingroup GenVector
+   */ 
 
 
 template <class T> 
@@ -213,7 +214,7 @@ public:
 #endif
 
 private:
-   T fR;
+   T fR;        
    T fPhi;
 };
 

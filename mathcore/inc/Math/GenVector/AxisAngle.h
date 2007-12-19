@@ -298,8 +298,8 @@ public:
 
 private:
 
-   AxisVector  fAxis;
-   Scalar      fAngle;
+   AxisVector  fAxis;      // rotation axis (3D vector)
+   Scalar      fAngle;     // rotation angle
 
    void RectifyAngle();
 

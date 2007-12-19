@@ -45,7 +45,7 @@ namespace ROOT {
          This class is templated on the type of Coordinate system.
          One example is the XYPoint which is a vector based on
          double precision x,y data members by using the
-         Cartesian2D<double> Coordinate system.
+         ROOT::Math::Cartesian2D<double> Coordinate system.
          The class is having also an extra template parameter, the coordinate system tag, 
          to be able to identify (tag) vector described in different reference coordinate system, 
          like global or local coordinate systems.   

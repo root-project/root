@@ -39,7 +39,7 @@ namespace Math {
       This is the optimal representation for multiplication of multiple
       rotations, and for computation of group-manifold-invariant distance
       between two rotations.
-      See also AxisAngle, EulerAngles, and Rotation3D.
+      See also ROOT::Math::AxisAngle, ROOT::Math::EulerAngles, and ROOT::Math::Rotation3D.
 
       @ingroup GenVector
    */

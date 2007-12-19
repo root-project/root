@@ -30,13 +30,15 @@
  
 namespace ROOT { 
 
-  namespace Math { 
+namespace Math { 
 
 
-  /** 
-      Class describing a polar coordinate system based on r, theta and phi
-
-      @ingroup GenVector
+//__________________________________________________________________________________________
+   /** 
+       Class describing a polar coordinate system based on r, theta and phi
+       Phi is restricted to be in the range [-PI,PI)
+       
+       @ingroup GenVector
    */ 
 
 

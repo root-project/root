@@ -338,9 +338,9 @@ public:
 
 private:
 
-   double fPhi;
-   double fTheta;
-   double fPsi;
+   double fPhi;     // Z rotation angle (first)  defined in [-PI,PI]
+   double fTheta;   // X rotation angle (second) defined only [0,PI]
+   double fPsi;     // Z rotation angle (third)  defined in [-PI,PI]
 
    static double Pi() { return M_PI; }
 

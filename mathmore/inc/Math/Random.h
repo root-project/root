@@ -44,9 +44,12 @@ namespace ROOT {
 namespace Math {
 
 
+//_____________________________________________________________________________________
   /**
      User class for MathMore random numbers template on the Engine type. 
      The API of this class followed that of the class ROOT::TRandom. 
+     It must be implemented using as Engine one of the derived classes of 
+     ROOT::Math::GSLRandomEngine, like ROOT::Math::GSLRngMT
 
      @ingroup Random 
 

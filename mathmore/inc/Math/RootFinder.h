@@ -50,6 +50,7 @@ namespace ROOT {
 namespace Math {
 
 
+//_____________________________________________________________________________________
   /**
      Class to find the Root of one dimensional functions. 
      The class is templated on the type of Root solver algorithms.

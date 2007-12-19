@@ -50,21 +50,32 @@
 
 namespace ROOT { 
 
-   namespace Math { 
+namespace Math { 
 
 
-      class Plane3D; 
+   class Plane3D; 
 
 
-
+//_________________________________________________________________________________________
 /** 
     Basic 3D Transformation class describing  a rotation and then a translation
-    The internal data are a rotation data and a 3D vector data and they can be represented 
-    like a 3x4 matrix
-    The class has a template parameter the coordinate system tag of the reference system 
-    to which the transformatioon will be applied. For example for transforming from 
-    global to local coordinate systems, the transfrom3D has to be instantiated with the 
-    coordinate of the traget system
+    The internal data are a 3D rotation data (represented as a 3x3 matrix) and a 3D vector data. 
+    They are represented and held in this class like a 3x4 matrix (a simple array of 12 numbers).
+
+    The class can be constructed from any 3D rotation object 
+    (ROOT::Math::Rotation3D, ROOT::Math::AxisAngle, ROOT::Math::Quaternion, etc...) and/or 
+    a 3D Vector (ROOT::Math::DislacementVector3D or via ROOT::Math::Translation ) representing a Translation.
+    The Transformation is defined by applying first the rotation and then the translation. 
+    A transformation defined by applying first a translation and then a rotation is equivalent to the 
+    transformation obtained applying first the rotation and then a translation equivalent to the rotated vector.
+    The operator * can be used to obtain directly such transformations, in addition to combine various 
+    transformations. 
+    Keep in mind that the operator * (like in the case of rotations ) is not commutative. 
+    The operator * is used (in addition to operator() ) to apply a transformations on the vector 
+    (DisplacementVector3D and LorentzVector classes) and point (PositionVector3D)  classes. 
+    In the case of Vector objects the transformation only rotates them and does not translate them. 
+    Only Point objects are able to be both rotated and translated. 
+    
     
     @ingroup GenVector
 
@@ -73,17 +84,17 @@ namespace ROOT {
 class Transform3D { 
     
 
-  public: 
+public: 
 
-    typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >  Vector; 
-    typedef  PositionVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >      Point; 
+   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >  Vector; 
+   typedef  PositionVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag >      Point; 
 
 
-    enum ETransform3DMatrixIndex {
+   enum ETransform3DMatrixIndex {
       kXX = 0, kXY = 1, kXZ = 2, kDX = 3, 
       kYX = 4, kYY = 5, kYZ = 6, kDY = 7,
       kZX = 8, kZY = 9, kZZ =10, kDZ = 11
-    };
+   };
 
 
 
@@ -162,7 +173,10 @@ class Transform3D {
    explicit Transform3D( const Rotation3D & r) { 
       AssignFrom(r);
    } 
-   // convenience methods for the other rotations (cannot use templates for conflict with LA)
+
+   // convenience methods for constructing a Transform3D from all the 3D rotations classes
+   // (cannot use templates for conflict with LA)
+
    explicit Transform3D( const AxisAngle & r) { 
       AssignFrom(Rotation3D(r));
    } 
@@ -172,6 +186,8 @@ class Transform3D {
    explicit Transform3D( const Quaternion & r) { 
       AssignFrom(Rotation3D(r));
    } 
+
+   // Constructors from axial rotations 
    // TO DO: implement direct methods for axial rotations without going through Rotation3D
    explicit Transform3D( const RotationX & r) { 
       AssignFrom(Rotation3D(r));
@@ -420,7 +436,7 @@ class Transform3D {
 
    /**
       Transformation operation for Position Vector in Cartesian coordinate 
-      For a Position Vector first a rotatio and then a translation is applied  
+      For a Position Vector first a rotation and then a translation is applied  
    */
    Point operator() (const Point & p) const { 
       return Point ( fM[kXX]*p.X() + fM[kXY]*p.Y() + fM[kXZ]*p.Z() + fM[kDX], 
@@ -533,7 +549,8 @@ class Transform3D {
 
 
    /**
-      Equality/inequality operators
+      Equality operator. Check equality for each element
+      To do: use double tolerance
    */
    bool operator == (const Transform3D & rhs) const {
       if( fM[0] != rhs.fM[0] )  return false;
@@ -551,6 +568,10 @@ class Transform3D {
       return true;
    }
 
+   /**
+      Inequality operator. Check equality for each element
+      To do: use double tolerance
+   */
    bool operator != (const Transform3D & rhs) const {
       return ! operator==(rhs);
    }
@@ -581,7 +602,7 @@ protected:
 private: 
 
 
-   double fM[12];
+   double fM[12];    // transformation elements (3x4 matrix) 
 
 };
 
@@ -701,4 +722,4 @@ std::ostream & operator<< (std::ostream & os, const Transform3D & t);
 } // end namespace ROOT
 
 
-#endif /* MATHCORE_BASIC3DTRANSFORMATION */
+#endif /* ROOT_Math_GenVector_Transform3D */

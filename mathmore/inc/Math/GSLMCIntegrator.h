@@ -73,7 +73,7 @@ namespace Math {
    class GSLMonteFunctionWrapper;
    class GSLRngWrapper;
    
-   
+   //_________________________________________________________________________________
    /**
       
     Class for performing numerical integration of a multidimensional function.
@@ -83,6 +83,9 @@ namespace Math {
     Plain MC, MISER and VEGAS integration algorithms are supported for integration over finite (hypercubic) ranges.
     
     <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_16.html#SEC248">GSL Manual</A>.
+
+    It implements also the interface ROOT::Math::VirtualIntegratorMultiDim so it can be 
+    instantiate using the plugin manager (plugin name is "GSLMCIntegrator")
     
     @ingroup MCIntegration
 
@@ -121,7 +124,9 @@ namespace Math {
       
       
 
-      /** destructor */ 
+      /** 
+          destructor 
+      */ 
       virtual ~GSLMCIntegrator();
       
       // disable copy ctrs
@@ -163,13 +168,17 @@ public:
       
       double Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p = 0);
       
-      // to be added later    
-      //double Integral(const GSLMonteFuncPointer & f);
-        
+      
+      /**
+         evaluate the integral using the previously defined function
+       */
       double Integral(const double* a, const double* b);
 
       
-      //double Integral(GSLMonteFuncPointer f, void * p, double* a, double* b);
+      // to be added later    
+      //double Integral(const GSLMonteFuncPointer & f);
+ 
+     //double Integral(GSLMonteFuncPointer f, void * p, double* a, double* b);
   
       /**
          return the type of the integration used

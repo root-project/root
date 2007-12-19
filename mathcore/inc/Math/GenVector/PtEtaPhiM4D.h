@@ -37,16 +37,19 @@
 #endif
 
 namespace ROOT {   
+
 namespace Math { 
        
+//__________________________________________________________________________________________
 /** 
-   Class describing a 4D cylindrical coordinate system
-   using Pt , Phi, Eta and M (mass)  
-   The metric used is (-,-,-,+). 
-   Spacelike particles (M2 < 0) are described with negative mass values, 
-   but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
+    Class describing a 4D cylindrical coordinate system
+    using Pt , Phi, Eta and M (mass)  
+    The metric used is (-,-,-,+). 
+    Spacelike particles (M2 < 0) are described with negative mass values, 
+    but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
+    Phi is restricted to be in the range [-PI,PI)
 
-   @ingroup GenVector
+    @ingroup GenVector
 */ 
 
 template <class ScalarType> 

@@ -49,6 +49,9 @@
 #pragma link C++ class ROOT::Math::AdaptiveIntegratorMultiDim+;
 #pragma link C++ typedef ROOT::Math::Integrator;
 
+#pragma link C++ class ROOT::Math::BasicFitMethodFunction<ROOT::Math::IBaseFunctionMultiDim>+;
+#pragma link C++ class ROOT::Math::BasicFitMethodFunction<ROOT::Math::IGradientFunctionMultiDim>+;
+
 #pragma link C++ class ROOT::Math::Factory+;
 
 

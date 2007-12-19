@@ -320,7 +320,8 @@ public:
 #endif   
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+
+//_______________________________________________________________________________________________
 /**
    Functor class for Multidimensional functions. 
    It is used to wrap in a very simple and convenient way:  
@@ -425,12 +426,12 @@ private :
    }  
 
 
-   std::auto_ptr<Impl> fImpl; 
+   std::auto_ptr<Impl> fImpl;   // pointer to base functor handler
 
 
 }; 
 
-
+//______________________________________________________________________________________
 /**
    Functor1D class for one-dimensional functions. 
    It is used to wrap in a very simple and convenient way: 
@@ -528,12 +529,12 @@ private :
    }  
 
 
-   std::auto_ptr<Impl> fImpl; 
+   std::auto_ptr<Impl> fImpl;   // pointer to base functor handler
 
 
 }; 
 
-
+//_______________________________________________________________________________________________
 /**
    GradFunctor class for Multidimensional gradient functions. 
    It is used to wrap in a very C++ callable object to make gradient functions. 
@@ -651,12 +652,13 @@ private :
       return fImpl->Derivative(x,icoord);
    }  
 
-   std::auto_ptr<Impl> fImpl; 
+   std::auto_ptr<Impl> fImpl;    // pointer to base grad functor handler
 
 
 }; 
 
 
+//_______________________________________________________________________________________________
 /**
    GradFunctor1D class for one-dimensional gradient functions. 
    It is used to wrap in a very C++ callable object to make a 1D gradient functions. 
@@ -774,7 +776,7 @@ private :
       return fImpl->Derivative(x);
    }  
 
-   std::auto_ptr<Impl> fImpl; 
+   std::auto_ptr<Impl> fImpl;    // pointer to base gradient functor handler
 
 }; 
 

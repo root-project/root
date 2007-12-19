@@ -37,8 +37,9 @@ namespace ROOT {
 
       class GSLRandomEngine;
 
+//_____________________________________________________________________________
 /**
-   interface class for the  objetive function to be used in  
+   Interface class for the  objetive function to be used in  
    sim annealing 
    If user wants to re-implement some of the methods (like the one defining the metric) which are used by the
    the simulated annealing algorithm must build a user derived class.
@@ -91,7 +92,7 @@ public:
    }
 
    /**
-      evaluate the energy ( objective funciton value) 
+      evaluate the energy ( objective function value) 
       re-implement by derived classes if needed to be modified
     */
    virtual double Energy() const; 
@@ -149,7 +150,7 @@ private:
    
 }; 
 
-
+//_____________________________________________________
 /** 
     structure holding the simulated annealing parameters
 */
@@ -167,12 +168,10 @@ struct GSLSimAnParams {
       t_min = 2.0E-6;
    }
  
-   /// number of points to try for each step
-   int n_tries;         
-   /// number of iterations at each temperature
-   int iters_fixed_T; 
-   /// max step size used in random walk
-   double step_size; 
+
+   int n_tries;            // number of points to try for each step
+   int iters_fixed_T;      // number of iterations at each temperature
+   double step_size;       // max step size used in random walk
    /// parameters for the Boltzman distribution
    double k; 
    double t_initial; 
@@ -180,9 +179,10 @@ struct GSLSimAnParams {
    double t_min; 
 }; 
 
-
+//___________________________________________________________________________
 /** 
-   GSLSimAnnealing class for performing  a simulated annealing search of a multidimensional function
+   GSLSimAnnealing class for performing  a simulated annealing search of 
+   a multidimensional function
 
    @ingroup MultiMin
 */ 

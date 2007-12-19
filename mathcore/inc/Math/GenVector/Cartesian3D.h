@@ -37,14 +37,15 @@
 
 namespace ROOT { 
 
-  namespace Math { 
+namespace Math { 
 
+//__________________________________________________________________________________________
   /** 
       Class describing a 3D cartesian coordinate system
       (x, y, z coordinates) 
 
       @ingroup GenVector
-   */ 
+  */ 
 
 template <class T = double> 
 class Cartesian3D { 

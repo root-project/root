@@ -35,21 +35,20 @@
 
 namespace ROOT { 
 
-   namespace Math { 
+namespace Math { 
 
 
-      class Plane3D; 
+   class Plane3D; 
 
 
-
+//____________________________________________________________________________________________________
 /** 
-    Class describing 3D Translation 
-    They cab be combined with the ROtation3D  classes and TRansform3D classes to operate on points 
-    and vectors 
-    The class has a template parameter the coordinate system tag of the reference system 
-    to which the transformatioon will be applied. For example for transforming from 
-    global to local coordinate systems, the transfrom3D has to be instantiated with the 
-    coordinate of the traget system
+    Class describing a 3 dimensional translation. It can be combined (using the operator *) 
+    with the ROOT::Math::Rotation3D  classes and ROOT::Math::Transform3D to obtained combined 
+    transformations and to operate on points and vectors. 
+    Note that a the translation applied to a Vector object (DisplacementVector3D and LorentzVector classes)  
+    performes a noop, i.e. it returns the same vector. A translation can be applied only to the Point objects 
+    (PositionVector3D classes). 
     
     @ingroup GenVector
 
@@ -283,7 +282,7 @@ class Translation3D {
 
 private: 
 
-   Vector fVect;
+   Vector fVect;   // internal 3D vector representing the translation 
 
 };
 
@@ -304,4 +303,4 @@ std::ostream & operator<< (std::ostream & os, const Translation3D & t);
 } // end namespace ROOT
 
 
-#endif /* MATHCORE_BASIC3DTRANSFORMATION */
+#endif /* ROOT_Math_GenVector_Translation3D */

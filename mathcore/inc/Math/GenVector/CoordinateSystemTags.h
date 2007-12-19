@@ -22,28 +22,37 @@
 
 namespace ROOT {
 
-  namespace Math {
+namespace Math {
 
 
-    /**
-       Default tag identifying any coordinate system 
-     */
-
-    class  DefaultCoordinateSystemTag {}; 
-
-
-    /**
-       Tag for identifying vectors based on a global coordinate system
-     */
-    class  GlobalCoordinateSystemTag {}; 
-
-    /**
-       Tag for identifying vectors based on a local coordinate system
-     */
-    class   LocalCoordinateSystemTag {}; 
+//__________________________________________________________________________________________
+   /**
+      Default tag identifying any coordinate system 
+      
+      @ingroup GenVector
+   */
+   
+   class  DefaultCoordinateSystemTag {}; 
 
 
-  }  // namespace Math
+//__________________________________________________________________________________________
+   /**
+      Tag for identifying vectors based on a global coordinate system
+      
+      @ingroup GenVector
+   */
+   class  GlobalCoordinateSystemTag {}; 
+   
+//__________________________________________________________________________________________
+   /**
+      Tag for identifying vectors based on a local coordinate system
+      
+      @ingroup GenVector
+   */
+   class   LocalCoordinateSystemTag {}; 
+   
+
+}  // namespace Math
 
 }  // namespace ROOT
 

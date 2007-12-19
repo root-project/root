@@ -62,9 +62,13 @@ namespace Math {
 class GSLChebSeries; 
 class GSLFunctionWrapper; 
 
+//____________________________________________________________________________
 /**
-   Class describing a Chebyshev series which can be used to approximate a function
-   in a defined range.
+   Class describing a Chebyshev series which can be used to approximate a 
+   function in a defined range [a,b] using Chebyshev polynomials.
+   It uses the algorithm from 
+   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Chebyshev-Approximations.html">GSL</A>
+
    This class does not support copying
    @ingroup FuncApprox
  */
@@ -75,89 +79,90 @@ class Chebyshev {
 public: 
 
 
-  /**
-     Construct a Chebyshev series approximation to a Function f in range [a,b];
-     constructor based on functions of type IGenFunction
+   /**
+      Construct a Chebyshev series approximation to a Function f in range [a,b];
+      constructor based on functions of type IGenFunction
    */
 
   Chebyshev(const ROOT::Math::IGenFunction & f, double a, double b, size_t n); 
 
-  /**
-     Construct a Chebyshev series approximation to a Function f in range [a,b];
-     constructor based on free functions with gsl_function type signature
+   /**
+      Construct a Chebyshev series approximation to a Function f in range [a,b];
+      constructor based on free functions with gsl_function type signature
    */
-  Chebyshev(GSLFuncPointer f, void *p, double a, double b, size_t n); 
+   Chebyshev(GSLFuncPointer f, void *p, double a, double b, size_t n); 
 
-  virtual ~Chebyshev(); 
+   // destructor
+   virtual ~Chebyshev(); 
 
 
 private:
 
-  /**
-     construct a Chebyshev series or order n
-     The series must be initialized from a function 
+   /**
+      construct a Chebyshev series or order n
+      The series must be initialized from a function 
    */
-  Chebyshev(size_t n); 
+   Chebyshev(size_t n); 
 
 // usually copying is non trivial, so we make this unaccessible
-  Chebyshev(const Chebyshev &); 
-  Chebyshev & operator = (const Chebyshev &); 
+   Chebyshev(const Chebyshev &); 
+   Chebyshev & operator = (const Chebyshev &); 
 
 public: 
   
-  /** 
-      Evaluate the series at a given point x
-  */
-  double operator() ( double x) const;
-
-  /**
-     Evaluate the series at a given point x estimating both the series result and its absolute error. 
-     The error estimate is made from the first neglected term in the series.
-     A pair containing result and error is returned
-  */
-  std::pair<double, double>  EvalErr( double x) const; 
-
-  /**
-     Evaluate the series at a given point, to (at most) the given order n
+   /** 
+       Evaluate the series at a given point x
    */
-  double operator() ( double x, size_t n) const; 
+   double operator() ( double x) const;
 
-  /**
-     evaluate the series at a given point x to the given order n, 
-     estimating both the series result and its absolute error. 
-     The error estimate is made from the first neglected term in the series.
-     A pair containing result and error is returned
-  */
-  std::pair<double, double>  EvalErr( double x, size_t n) const; 
+   /**
+      Evaluate the series at a given point x estimating both the series result and its absolute error. 
+      The error estimate is made from the first neglected term in the series.
+      A pair containing result and error is returned
+   */
+   std::pair<double, double>  EvalErr( double x) const; 
 
-  /**
-     Compute the derivative of the series and return a pointer to a new Chebyshev series with the 
-     derivatives coefficients. The returned pointer must be managed by the user.
-  */
-  //TO DO: implement copying to return by value
-  Chebyshev * Deriv(); 
+   /**
+      Evaluate the series at a given point, to (at most) the given order n
+   */
+   double operator() ( double x, size_t n) const; 
 
-  /**
-     Compute the integral of the series and return a pointer to a new Chebyshev series with the 
-     integral coefficients. The lower limit of the integration is the left range value a.
-     The returned pointer must be managed by the user
-  */
-  //TO DO: implement copying to return by value
-  Chebyshev * Integral(); 
+   /**
+      evaluate the series at a given point x to the given order n, 
+      estimating both the series result and its absolute error. 
+      The error estimate is made from the first neglected term in the series.
+      A pair containing result and error is returned
+   */
+   std::pair<double, double>  EvalErr( double x, size_t n) const; 
+
+   /**
+      Compute the derivative of the series and return a pointer to a new Chebyshev series with the 
+      derivatives coefficients. The returned pointer must be managed by the user.
+   */
+   //TO DO: implement copying to return by value
+   Chebyshev * Deriv(); 
+
+   /**
+      Compute the integral of the series and return a pointer to a new Chebyshev series with the 
+      integral coefficients. The lower limit of the integration is the left range value a.
+      The returned pointer must be managed by the user
+   */
+   //TO DO: implement copying to return by value
+   Chebyshev * Integral(); 
 
 protected: 
 
-  /** 
-      Initialize series passing function and range
-  */
-  void Initialize( GSLFuncPointer f, void * params, double a, double b);
+   /** 
+       Initialize series passing function and range
+   */
+   void Initialize( GSLFuncPointer f, void * params, double a, double b);
 
 private: 
 
-  size_t fOrder;
+   size_t fOrder;
 
-  GSLChebSeries * fSeries;
-  GSLFunctionWrapper * fFunction; 
+   GSLChebSeries * fSeries;
+   GSLFunctionWrapper * fFunction;     // pointer to function
 
 }; 
 

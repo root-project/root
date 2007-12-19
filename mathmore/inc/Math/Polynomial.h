@@ -38,6 +38,7 @@
 namespace ROOT {
 namespace Math {
 
+//_____________________________________________________________________________________
   /**
      Parametric Function class describing polynomials of order n.
 
@@ -45,7 +46,8 @@ namespace Math {
 
      The class implements also the derivatives, \a dP(x)/dx and the \a dP(x)/dp[i].
 
-     The class provides also the method to find the roots of the polynomial. 
+     The class provides also the method to find the roots of the polynomial.
+     It uses analytical methods up to quartic polynomials. 
      
 
      @ingroup CppFunctions

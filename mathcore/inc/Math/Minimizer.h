@@ -41,9 +41,29 @@ namespace ROOT {
 
 
 
+//_______________________________________________________________________________
 /** 
-   Abstract Minimizer class, defining  interface for the various minimizer
+   Abstract Minimizer class, defining  the interface for the various minimizer
    (like Minuit2, Minuit, GSL, etc..) 
+   Plug-in's exist in ROOT to be able to instantiate the derived classes like 
+   ROOT::Math::GSLMinimizer or ROOT::Math::Minuit2Minimizer via the 
+   plug-in manager.
+
+   Provides interface for setting the function to be minimized. 
+   The function must  implemente the multi-dimensional generic interface
+   ROOT::Math::IBaseFunctionMultiDim. 
+   If the function provides gradient calculation 
+   (implements the ROOT::Math::IGradientFunctionMultiDim interface) this will be 
+   used by the Minimizer. 
+
+   It Defines also interface for setting the initial values for the function variables (which are the parameters in 
+   of the model function in case of solving for fitting) and especifying their limits. 
+
+   It defines the interface to set and retrieve basic minimization parameters 
+   (for specific Minimizer parameters one must use the derived classes). 
+
+   Then it defines the interface to retrieve the result of minimization ( minimum X values, function value, 
+   gradient, error on the mimnimum, etc...)
 
    @ingroup MultiMin
 */
@@ -254,15 +274,14 @@ protected:
 
 //private: 
 
-   // keep protected to be accessible to the derived classes 
+   // keep protected to be accessible by the derived classes 
  
-   // print level
-   int fDebug; 
-   int fStrategy; 
-   unsigned int fMaxCalls; 
-   unsigned int fMaxIter; 
-   double fTol; 
-   double fUp; 
+   int fDebug;                  // print level
+   int fStrategy;               // minimizer strategy
+   unsigned int fMaxCalls;      // max number of funciton calls 
+   unsigned int fMaxIter;       // max number or iterations used to find the minimum
+   double fTol;                 // tolerance (absolute)
+   double fUp;                  // error scale 
 
 }; 
 

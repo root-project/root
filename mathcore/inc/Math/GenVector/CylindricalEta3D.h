@@ -36,14 +36,16 @@
 
 namespace ROOT { 
 
-  namespace Math { 
+namespace Math { 
 
+//__________________________________________________________________________________________
   /** 
       Class describing a cylindrical coordinate system based on eta (pseudorapidity) instead of z.  
       The base coordinates are rho (transverse component) , eta and phi
+      Phi is restricted to be in the range [-PI,PI)
   
       @ingroup GenVector
-   */ 
+  */ 
 
 template <class T> 
 class CylindricalEta3D { 

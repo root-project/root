@@ -63,7 +63,7 @@ namespace ROOT {
               This class is templated on the type of Coordinate system.
               One example is the XYZVector which is a vector based on
               double precision x,y,z data members by using the
-              Cartesian3D<double> Coordinate system.
+              ROOT::Math::Cartesian3D<double> Coordinate system.
 	      The class is having also an extra template parameter, the coordinate system tag, 
 	      to be able to identify (tag) vector described in different reference coordinate system, 
 	      like global or local coordinate systems.   
@@ -338,7 +338,7 @@ namespace ROOT {
         return tot == 0 ? *this : DisplacementVector3D(*this) / tot;
       }
 
-      // ------ Setting individual elements present in coordinate system ------
+      // ------ Setting of individual elements present in coordinate system ------
 
       /**
          Change X - Cartesian3D coordinates only
@@ -473,6 +473,7 @@ namespace ROOT {
 
       // The following methods (v*a and v/a) could instead be free functions.
       // They were moved into the class to solve a problem on AIX.
+
       /**
         Multiply a vector by a real number
       */
@@ -486,11 +487,12 @@ namespace ROOT {
          Negative of the vector
        */
       DisplacementVector3D operator - ( ) const {
-        //DisplacementVector3D tmp(*this);
-        //tmp.Negate();
         return operator*( Scalar(-1) );
       }
 
+      /**
+         Positive of the vector, return itself
+       */
       DisplacementVector3D operator + ( ) const {return *this;}
 
       /**
@@ -503,7 +505,7 @@ namespace ROOT {
       }
 
 
-      // Limited backward name compatibility with CLHEP
+      // Methods providing limited backward name compatibility with CLHEP
 
       Scalar x()     const { return fCoordinates.X();     }
       Scalar y()     const { return fCoordinates.Y();     }
@@ -520,7 +522,7 @@ namespace ROOT {
 
     private:
 
-      CoordSystem fCoordinates;
+       CoordSystem fCoordinates;  // internal coordinate system
 
 #ifdef NOT_SURE_THIS_SHOULD_BE_FORBIDDEN
       /**
@@ -564,7 +566,6 @@ namespace ROOT {
 // ---------- DisplacementVector3D class template ends here ------------
 // ---------------------------------------------------------------------
 
-//add this
 
 
    /**

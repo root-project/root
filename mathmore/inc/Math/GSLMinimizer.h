@@ -57,34 +57,39 @@
 
 namespace ROOT { 
 
-   namespace Math { 
+namespace Math { 
 
 
-      /**
-         enumeration specifying the types of GSL minimizers
-         @ingroup Min1D
-      */
-      enum EGSLMinimizerType { 
-         kConjugateFR, 
-         kConjugatePR, 
-         kVectorBFGS, 
-         kVectorBFGS2, 
-         kSteepestDescent
-      };
+   /**
+      enumeration specifying the types of GSL minimizers
+      @ingroup Min1D
+   */
+   enum EGSLMinimizerType { 
+      kConjugateFR, 
+      kConjugatePR, 
+      kVectorBFGS, 
+      kVectorBFGS2, 
+      kSteepestDescent
+   };
 
 
-      class GSLMultiMinimizer; 
+   class GSLMultiMinimizer; 
 
-   }
+}
 
-   namespace Math { 
+namespace Math { 
 
+//_____________________________________________________________________________________
 /** 
    GSLMinimizer class
    Implementation of ROOT::Math::Minimizer based on the GSL multi-dimensional 
    minimization algorithms
    See <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Multidimensional-Minimization.html>"GSL doc</A> 
    from more info on the algorithms. 
+
+   The class implements the ROOT::Math::Minimizer interface and can be instantiated using the 
+   ROOT plugin manager (plugin name is "GSLMultiMin"). The varius mminimization algorithms 
+   can be passed as a string. 
 
    @ingroup Min1D
 */ 

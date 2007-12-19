@@ -31,19 +31,20 @@
 
 namespace ROOT { 
   
-  namespace Math { 
+namespace Math { 
     
+//__________________________________________________________________________________________
 /** 
-   Class describing a 4D coordinate system 
-   or momentum-energy vectors stored as (Px, Py, Pz, M).
-   This system is useful to describe ultra-relativistic particles 
-   (like electrons at LHC) to avoid numerical errors evaluating the mass 
-   when E >>> m
-   The metric used is (-,-,-,+)
-   Spacelike particles (M2 < 0) are described with negative mass values, 
-   but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
-
-   @ingroup GenVector
+    Class describing a 4D coordinate system 
+    or momentum-energy vectors stored as (Px, Py, Pz, M).
+    This system is useful to describe ultra-relativistic particles 
+    (like electrons at LHC) to avoid numerical errors evaluating the mass 
+    when E >>> m
+    The metric used is (-,-,-,+)
+    Spacelike particles (M2 < 0) are described with negative mass values, 
+    but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
+    
+    @ingroup GenVector
 */ 
 
 template <class ScalarType = double> 

@@ -21,12 +21,11 @@ By convention the distributions are centered around 0, so for
 example in the case of a Gaussian there is no parameter mu. The
 user must calculate the shift himself if he wishes. 
 
-MathCore provides the majority of the probability density funcitons and a sub-set of the 
-cumulative distributions. Additional distributions and all the inverses cumulative distributions 
-(quantiles) are provided by <A HREF="../../MathMore/html/group__StatFunc.html">MathMore</A> library. 
+MathCore provides the majority of the probability density functions, of the 
+cumulative distributions and of the quantiles (inverses of the cumulatives). 
+Additional distributions are also provided by the
+<A HREF="../../MathMore/html/group__StatFunc.html">MathMore</A> library. 
 
-
-@author Created by Andras Zsenei on Wed Nov 17 2004
 
 @defgroup StatFunc Statistical functions
 

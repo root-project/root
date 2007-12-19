@@ -54,13 +54,15 @@ namespace Math {
 
 class GSLDerivator; 
 
-
+//_______________________________________________________________________
 /** 
     Class for computing numerical derivative of a function. 
-    Presently this class is implemented only using the numerical derivatives algorithms provided by GSL
-    with the implementation class ROOT::Math::GSLDerivator
+    Presently this class is implemented only using the numerical derivatives 
+    algorithms provided by GSL
+    using the implementation class ROOT::Math::GSLDerivator
     
     This class does not support copying
+
     @ingroup Deriv
 */
 
@@ -196,7 +198,7 @@ public:
    */    
    static double EvalBackward(const IGenFunction & f, double x, double h = 1E-8);
 
-   // for multi-dimension funcitons
+   // Derivatives for multi-dimension functions
    /**
       Evaluate the partial derivative of a multi-dim function 
       with respect coordinate x_icoord at the point x[]

@@ -28,10 +28,10 @@
 namespace ROOT {
 namespace Math {
 
-
+//___________________________________________________________________
 /**
-   Interface for numerical integration
-   in one and many dimensions 
+   Interface (abstract class) define the common methods for the 
+   numerical integrator classes of one and multi dimensions 
 
    @ingroup  Integration
 
@@ -70,8 +70,13 @@ public:
 
 }; 
 
+//___________________________________________________________________
 /**
-   Interface class for 1D numerical integration
+   Interface (abstract) class for 1D numerical integration
+   It must be implemented by the concrate Integrator classes like
+   ROOT::Math::GSLIntegrator. 
+   Plug-in's exist in ROOT to be able to instantiate the derived classes via the 
+   plug-in manager
 
    @ingroup  Integration
 
@@ -86,7 +91,7 @@ public:
    /// evaluate integral 
    virtual double Integral(double a, double b) = 0; 
 
-   /// set integration function (flag control if funciton must be copied inside)
+   /// set integration function (flag control if function must be copied inside)
    virtual void SetFunction(const IGenFunction &, bool copy =  false) = 0; 
 
    /// evaluate un-defined  integral (between -inf, + inf)
@@ -106,8 +111,13 @@ public:
 
 };
 
+//___________________________________________________________________
 /**
-   Interface class for multi-dimensional numerical integration
+   Interface (abstract) class for multi numerical integration
+   It must be implemented by the concrete Integrator classes like
+   ROOT::Math::GSLMCIntegrator. 
+   Plug-in's exist in ROOT to be able to instantiate the derived classes via the 
+   plug-in manager
 
    @ingroup  Integration
 

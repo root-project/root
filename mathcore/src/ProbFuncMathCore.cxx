@@ -98,7 +98,7 @@ namespace Math {
          return 0.0;
          
       } else {
-         // use expm1 funciton to avoid errors at small x
+         // use expm1 function to avoid errors at small x
          return - ROOT::Math::expm1( - lambda * (x-x0) ) ;
          
       }

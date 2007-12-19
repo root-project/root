@@ -27,21 +27,22 @@
 
 namespace ROOT { 
 
-   namespace Math { 
+namespace Math { 
 
-      /** 
-          Class describing a 2D cartesian coordinate system
-          (x, y coordinates) 
-
-          @ingroup GenVector
-      */ 
+//__________________________________________________________________________________________
+   /** 
+       Class describing a 2D cartesian coordinate system
+       (x, y coordinates) 
+       
+       @ingroup GenVector
+   */ 
 
 template <class T = double> 
 class Cartesian2D { 
 
 public : 
 
-  typedef T Scalar;
+   typedef T Scalar;
 
    /**
       Default constructor  with x=y=0 

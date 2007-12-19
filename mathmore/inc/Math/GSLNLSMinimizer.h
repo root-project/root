@@ -55,9 +55,14 @@ namespace ROOT {
       class GSLMultiFit; 
 
 
-
+//________________________________________________________________________________
 /** 
-    internal class for implementing the residual of the Least square function
+    Internal class used for accessing the residuals of the Least Square function
+    and their derivates which are estimated numerically using GSL numerical derivation. 
+    The class contains a pointer to the fit method function and an index specifying 
+    the i-th residual and wraps it in a multi-dim gradient function interface
+    ROOT::Math::IGradientFunctionMultiDim. 
+    The class is used by ROOT::Math::GSLNLSMinimizer (GSL non linear least square fitter)
 
     @ingroup Min1D
 */
@@ -131,12 +136,12 @@ private:
 };
 
 
-
+//_____________________________________________________________________________________________________
 /** 
    GSLNLSMinimizer class for Non Linear Least Square fitting
-   Use Levemberg-Marquardt algorithm from 
+   It Uses the Levemberg-Marquardt algorithm from 
    <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Nonlinear-Least_002dSquares-Fitting.html">
-   GSL Non Linear Least Sqaure fitting</A>.
+   GSL Non Linear Least Square fitting</A>.
 
    @ingroup MultiMin
 */ 
@@ -250,16 +255,16 @@ private:
    // number of fit points (residuals)
    unsigned int fSize; 
 
-   ROOT::Math::GSLMultiFit * fGSLMultiFit; 
-   const Minimizer::IObjFunction * fObjFunc; 
+   ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver 
+   const Minimizer::IObjFunction * fObjFunc;      // pointer to Least square function
    
-   double fMinVal; 
-   double fLSTolerance;  // Line Search Tolerance
-   mutable std::vector<double> fValues;
+   double fMinVal;                                // minimum function value
+   double fLSTolerance;                           // Line Search Tolerance
+   mutable std::vector<double> fValues;           
    //mutable std::vector<double> fErrors;
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
-   std::vector<LSResidualFunc> fResiduals;   //! transient
+   std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
 
 }; 
 

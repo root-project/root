@@ -22,10 +22,10 @@ namespace ROOT {
 
    class Minimizer; 
    
-
+//___________________________________________________________________________
 /** 
-   Factory  structure holding static functions to create interfaces 
-   using the Plugin Manager
+   Factory  class holding static functions to create the interfaces like ROOT::Math::Minimizer
+   via the Plugin Manager
 */ 
 class Factory { 
       public: 

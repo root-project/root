@@ -43,7 +43,8 @@
 namespace ROOT {
 namespace Math {
 
-  /** 
+//_____________________________________________________________________________________
+   /** 
       Base class for 1 Dimensional Parametric Functions.
       A parameteric function is a Generic Function with parameters, so 
       it is a function object which carries a state, the parameters. 
@@ -56,7 +57,7 @@ namespace Math {
       The derived classes need to implement only the ParamFunction::operator(double x) and ParamFunction::Clone() methods. 
 
       @ingroup CppFunctions
-  */
+   */
 
 
    

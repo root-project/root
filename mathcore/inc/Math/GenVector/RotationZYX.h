@@ -72,15 +72,15 @@ class RotationZYX {
 
 public:
 
-  typedef double Scalar;
+   typedef double Scalar;
 
 
-  // ========== Constructors and Assignment =====================
+   // ========== Constructors and Assignment =====================
 
-  /**
-     Default constructor
-  */
-  RotationZYX() : fPhi(0.0), fTheta(0.0), fPsi(0.0) { }
+   /**
+      Default constructor
+   */
+   RotationZYX() : fPhi(0.0), fTheta(0.0), fPsi(0.0) { }
 
    /**
       Constructor from phi, theta and psi
@@ -320,9 +320,9 @@ public:
 
 private:
 
-   double fPhi;
-   double fTheta;
-   double fPsi;
+   double fPhi;      // Z rotation angle (yaw)    defined in (-PI,PI]
+   double fTheta;    // Y' rotation angle (pitch) defined in [-PI/2,PI/2]
+   double fPsi;      // X'' rotation angle (roll) defined in (-PI,PI]
 
    static double Pi() { return M_PI; }
 

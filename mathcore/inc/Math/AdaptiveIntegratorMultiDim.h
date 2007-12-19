@@ -24,11 +24,11 @@ namespace ROOT {
 namespace Math {
 
 
+//__________________________________________________________________________________________
 /**
    class for adaptive quadrature integration in multi-dimensions
-   Algorithm from  A.C. Genz, A.A. Malik, 
-    1.A.C. Genz and A.A. Malik, An adaptive algorithm for numerical integration over 
-    an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302.
+   Algorithm from  A.C. Genz, A.A. Malik, An adaptive algorithm for numerical integration over 
+   an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302.
 
    Converted/adapted by R.Brun to C++ from Fortran CERNLIB routine RADMUL (D120)
    The new code features many changes compared to the Fortran version.
@@ -36,24 +36,31 @@ namespace Math {
    @ingroup Integration
 
   
- */
+*/
 
 class AdaptiveIntegratorMultiDim : public VirtualIntegratorMultiDim {
 
 public:
-   // constructors
+
+   /**
+      construct given optionally tolerance (absolute and relative) and maximum size of working array 
+      The size of working array represents the number of sub-division used for calculating the integral. 
+      Higher the dimension, larger sizes are required for getting the same accuracy. 
+   */
    explicit 
    AdaptiveIntegratorMultiDim(double absTol = 1.E-6, double relTol = 1E-6, unsigned int size = 100000);
 
+   /**
+      construct with a reference to the integrand function and given optionally 
+      tolerance (absolute and relative) and maximum size of working array.
+   */
    explicit
    AdaptiveIntegratorMultiDim(const IMultiGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 100000);
 
-
+   /**
+      destructor (no operations)
+    */
    virtual ~AdaptiveIntegratorMultiDim() {}
-
-   //private:
-   //   Integrator(const Integrator &);
-   //   Integrator & operator=(const Integrator &);
 
 
    /**
@@ -84,18 +91,18 @@ public:
 
  private:
 
-   unsigned int fDim; // dimentionality of integrand
+   unsigned int fDim;     // dimentionality of integrand
 
-   double fAbsTol;
-   double fRelTol;
-   unsigned int fSize;
+   double fAbsTol;        // absolute tolerance
+   double fRelTol;        // relative tolerance
+   unsigned int fSize;    // max size of working array (explode with dimension)
 
-   double fResult;
-   double fError;
-   unsigned int  fNEval;
+   double fResult;        // last integration result 
+   double fError;         // integration error 
+   unsigned int  fNEval;  // number of function evaluation
    int fStatus;   // status of algorithm (error if not zero)
 
-   const IMultiGenFunction* fFun;
+   const IMultiGenFunction* fFun;   // pointer to integrand function 
 
 };
 

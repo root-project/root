@@ -29,14 +29,16 @@
 
 namespace ROOT { 
 
-  namespace Math { 
+namespace Math { 
 
+//__________________________________________________________________________________________
   /** 
       Class describing a cylindrical coordinate system based on rho, z and phi.   
       The base coordinates are rho (transverse component) , z and phi
+      Phi is restricted to be in the range [-PI,PI)
   
       @ingroup GenVector
-   */ 
+  */ 
 
 template <class T> 
 class Cylindrical3D { 

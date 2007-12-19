@@ -1,3 +1,4 @@
+
 // @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
@@ -40,14 +41,17 @@
 
 
 namespace ROOT {   
+
 namespace Math { 
        
+//__________________________________________________________________________________________
 /** 
-   Class describing a 4D cylindrical coordinate system
-   using Pt , Phi, Eta and E (or rho, phi, eta , T) 
-   The metric used is (-,-,-,+). 
-
-   @ingroup GenVector
+    Class describing a 4D cylindrical coordinate system
+    using Pt , Phi, Eta and E (or rho, phi, eta , T) 
+    The metric used is (-,-,-,+). 
+    Phi is restricted to be in the range [-PI,PI)
+    
+    @ingroup GenVector
 */ 
 
 template <class ScalarType> 

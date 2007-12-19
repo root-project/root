@@ -26,172 +26,170 @@ namespace ROOT {
 
   namespace Math {
 
-  /**
-     Lorentz boost class with the (4D) transformation represented internally
-     by a 4x4 orthosymplectic matrix.
-     Also, the 3-D rotation classes can be considered to be special Lorentz
-     transformations which do not mix space and time components.
+//__________________________________________________________________________________________
+   /**
+      Class representing a Lorentz Boost along the Z axis, by beta. 
+      For efficiency, gamma is held as well. 
 
-     @ingroup GenVector
-
-  */
+      @ingroup GenVector      
+   */
 
 class BoostZ {
 
 public:
 
-  typedef double Scalar;
+   typedef double Scalar;
 
-  enum ELorentzRotationMatrixIndex {
+   enum ELorentzRotationMatrixIndex {
       kLXX =  0, kLXY =  1, kLXZ =  2, kLXT =  3
     , kLYX =  4, kLYY =  5, kLYZ =  6, kLYT =  7
     , kLZX =  8, kLZY =  9, kLZZ = 10, kLZT = 11
     , kLTX = 12, kLTY = 13, kLTZ = 14, kLTT = 15
-  };
+   };
 
-  enum EBoostMatrixIndex {
+   enum EBoostMatrixIndex {
       kXX =  0, kXY =  1, kXZ =  2, kXT =  3
     	      , kYY =  4, kYZ =  5, kYT =  6
     		        , kZZ =  7, kZT =  8
     			          , kTT =  9
-  };
+   };
 
-  // ========== Constructors and Assignment =====================
+   // ========== Constructors and Assignment =====================
 
-  /**
+   /**
       Default constructor (identity transformation)
-  */
-  BoostZ();
-
-  /**
-     Construct given a Scalar beta_z
    */
-  explicit BoostZ(Scalar beta_z) { SetComponents(beta_z); }
+   BoostZ();
 
-
-  // The compiler-generated copy ctor, copy assignment, and dtor are OK.
-
-  /**
-     Re-adjust components to eliminate small deviations from a perfect
-     orthosyplectic matrix.
+   /**
+      Construct given a Scalar beta_z
    */
-  void Rectify();
-
-  // ======== Components ==============
-
-  /**
-     Set components from a Scalar beta_z
-  */
-  void
-  SetComponents (Scalar beta_z);
-
-  /**
-     Get components into a Scalar beta_z
-  */
-  void
-  GetComponents (Scalar& beta_z) const;
+   explicit BoostZ(Scalar beta_z) { SetComponents(beta_z); }
 
 
-  /** 
-      Retrieve the beta of the Boost 
+   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+
+   /**
+      Re-adjust components to eliminate small deviations from a perfect
+      orthosyplectic matrix.
+   */
+   void Rectify();
+
+   // ======== Components ==============
+
+   /**
+      Set components from a Scalar beta_z
+   */
+   void
+   SetComponents (Scalar beta_z);
+
+   /**
+      Get components into a Scalar beta_z
+   */
+   void
+   GetComponents (Scalar& beta_z) const;
+
+
+   /** 
+       Retrieve the beta of the Boost 
    */ 
-  Scalar Beta() const { return fBeta; }
+   Scalar Beta() const { return fBeta; }
 
-  /** 
-      Retrieve the gamma of the Boost 
+   /** 
+       Retrieve the gamma of the Boost 
    */ 
-  Scalar Gamma() const { return fGamma; }
+   Scalar Gamma() const { return fGamma; }
 
-  /** 
-      Set the given beta of the Boost 
+   /** 
+       Set the given beta of the Boost 
    */ 
-  void  SetBeta(Scalar beta) { SetComponents(beta); }
+   void  SetBeta(Scalar beta) { SetComponents(beta); }
    
-  /**
-     The beta vector for this boost
+   /**
+      The beta vector for this boost
    */
-  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
-  XYZVector BetaVector() const;
+   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
+   XYZVector BetaVector() const;
 
-  /**
-     Get elements of internal 4x4 symmetric representation, into a data
-     array suitable for direct use as the components of a LorentzRotation
-     Note -- 16 Scalars will be written into the array; if the array is not
-     that large, then this will lead to undefined behavior.
-  */
-  void 
-  GetLorentzRotation (Scalar r[]) const; 
+   /**
+      Get elements of internal 4x4 symmetric representation, into a data
+      array suitable for direct use as the components of a LorentzRotation
+      Note -- 16 Scalars will be written into the array; if the array is not
+      that large, then this will lead to undefined behavior.
+   */
+   void 
+   GetLorentzRotation (Scalar r[]) const; 
   
-  // =========== operations ==============
+   // =========== operations ==============
 
-  /**
-     Lorentz transformation operation on a Minkowski ('Cartesian') 
-     LorentzVector
-  */
-  LorentzVector< ROOT::Math::PxPyPzE4D<double> >
-  operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const;
+   /**
+      Lorentz transformation operation on a Minkowski ('Cartesian') 
+      LorentzVector
+   */
+   LorentzVector< ROOT::Math::PxPyPzE4D<double> >
+   operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const;
   
-  /**
-     Lorentz transformation operation on a LorentzVector in any 
-     coordinate system
+   /**
+      Lorentz transformation operation on a LorentzVector in any 
+      coordinate system
    */
-  template <class CoordSystem>
-  LorentzVector<CoordSystem>
-  operator() (const LorentzVector<CoordSystem> & v) const {
-    LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
-    return LorentzVector<CoordSystem> ( r_xyzt );
-  }
+   template <class CoordSystem>
+   LorentzVector<CoordSystem>
+   operator() (const LorentzVector<CoordSystem> & v) const {
+      LorentzVector< PxPyPzE4D<double> > xyzt(v);
+      LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+      return LorentzVector<CoordSystem> ( r_xyzt );
+   }
 
-  /**
-     Lorentz transformation operation on an arbitrary 4-vector v.
-     Preconditions:  v must implement methods x(), y(), z(), and t()
-     and the arbitrary vector type must have a constructor taking (x,y,z,t)
+   /**
+      Lorentz transformation operation on an arbitrary 4-vector v.
+      Preconditions:  v must implement methods x(), y(), z(), and t()
+      and the arbitrary vector type must have a constructor taking (x,y,z,t)
    */
-  template <class Foreign4Vector>
-  Foreign4Vector
-  operator() (const Foreign4Vector & v) const {
-    LorentzVector< PxPyPzE4D<double> > xyzt(v);
-    LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
-    return Foreign4Vector ( r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T() );
-  }
+   template <class Foreign4Vector>
+   Foreign4Vector
+   operator() (const Foreign4Vector & v) const {
+      LorentzVector< PxPyPzE4D<double> > xyzt(v);
+      LorentzVector< PxPyPzE4D<double> > r_xyzt = operator()(xyzt);
+      return Foreign4Vector ( r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T() );
+   }
 
-  /**
-     Overload operator * for boost on a vector
+   /**
+      Overload operator * for boost on a vector
    */
-  template <class A4Vector>
-  inline
-  A4Vector operator* (const A4Vector & v) const
-  {
-    return operator()(v);
-  }
+   template <class A4Vector>
+   inline
+   A4Vector operator* (const A4Vector & v) const
+   {
+      return operator()(v);
+   }
 
-  /**
+   /**
       Invert a BoostZ in place
    */
-  void Invert();
+   void Invert();
 
-  /**
+   /**
       Return inverse of  a BoostZ
    */
-  BoostZ Inverse() const;
+   BoostZ Inverse() const;
 
-  /**
-     Equality/inequality operators
+   /**
+      Equality/inequality operators
    */
-  bool operator == (const BoostZ & rhs) const {
-    if( fBeta  != rhs.fBeta  ) return false;
-    if( fGamma != rhs.fGamma ) return false;
-    return true;
-  }
-  bool operator != (const BoostZ & rhs) const {
-    return ! operator==(rhs);
-  }
+   bool operator == (const BoostZ & rhs) const {
+      if( fBeta  != rhs.fBeta  ) return false;
+      if( fGamma != rhs.fGamma ) return false;
+      return true;
+   }
+   bool operator != (const BoostZ & rhs) const {
+      return ! operator==(rhs);
+   }
 
 private:
 
-  Scalar fBeta;
-  Scalar fGamma;
+   Scalar fBeta;    // boost beta z
+   Scalar fGamma;   // boost gamma
 
 };  // BoostZ
 

@@ -21,7 +21,7 @@ namespace ROOT {
 
    namespace Math { 
 
-
+//______________________________________________________________________________________
 /** 
    FitMethodFunction class 
    Interface for objective functions (like chi2 and likelihood used in the fit)

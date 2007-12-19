@@ -53,11 +53,14 @@ namespace ROOT {
    namespace Math { 
 
 
+//_____________________________________________________________________________________
 /** 
    GSLSimAnMinimizer class for minimization using simulated annealing
    using the algorithm from 
    <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Simulated-Annealing.html">
    GSL</A>.
+   It implements the ROOT::Minimizer interface and 
+   a plug-in (name "GSLSimAn") exists to instantiate this class via the plug-in manager
 
    @ingroup Min1D
 */ 

@@ -57,7 +57,7 @@ namespace ROOT {
         This class is templated on the type of Coordinate system.
         One example is the XYVector which is a vector based on
         double precision x,y  data members by using the
-        Cartesian2D<double> Coordinate system.
+        ROOT::Math::Cartesian2D<double> Coordinate system.
         The class is having also an extra template parameter, the coordinate system tag, 
         to be able to identify (tag) vector described in different reference coordinate system, 
         like global or local coordinate systems.   
@@ -329,8 +329,9 @@ namespace ROOT {
            return *this;
         }
 
-        // The following methods (v*a and v/a) could instead be free functions.
-        // They were moved into the class to solve a problem on AIX.
+        // -- The following methods (v*a and v/a) could instead be free functions.
+        // -- They were moved into the class to solve a problem on AIX.
+
         /**
            Multiply a vector by a real number
         */
@@ -344,11 +345,12 @@ namespace ROOT {
            Negative of the vector
         */
         DisplacementVector2D operator - ( ) const {
-           //DisplacementVector2D tmp(*this);
-           //tmp.Negate();
            return operator*( Scalar(-1) );
         }
 
+        /**
+           Positive of the vector, return itself
+        */
         DisplacementVector2D operator + ( ) const {return *this;}
 
         /**
@@ -368,7 +370,7 @@ namespace ROOT {
         }
 
 
-        // Limited backward name compatibility with CLHEP
+        // Methods providing  Limited backward name compatibility with CLHEP
 
         Scalar x()     const { return fCoordinates.X();     }
         Scalar y()     const { return fCoordinates.Y();     }
@@ -380,7 +382,7 @@ namespace ROOT {
 
      private:
 
-        CoordSystem fCoordinates;
+        CoordSystem fCoordinates;    // internal coordinate system
 
 
         // the following methods should not compile

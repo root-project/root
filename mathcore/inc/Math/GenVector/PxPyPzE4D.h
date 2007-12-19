@@ -31,14 +31,15 @@
 
 namespace ROOT { 
   
-  namespace Math { 
+namespace Math { 
     
+//__________________________________________________________________________________________
 /** 
-   Class describing a 4D cartesian coordinate system (x, y, z, t coordinates)
-   or momentum-energy vectors stored as (Px, Py, Pz, E). 
-   The metric used is (-,-,-,+)
-
-   @ingroup GenVector
+    Class describing a 4D cartesian coordinate system (x, y, z, t coordinates)
+    or momentum-energy vectors stored as (Px, Py, Pz, E). 
+    The metric used is (-,-,-,+)
+    
+    @ingroup GenVector
 */ 
 
 template <class ScalarType = double> 

@@ -53,80 +53,83 @@ namespace Math {
    class GSLFunctionDerivWrapper; 
 
 
-  /**
-     Base class for GSL Root-Finding algorithms for one dimensional functions which use function derivatives. 
-     For finding the roots users should instantiate the RootFinder class with the corresponding algorithms 
-     See mathlib::RootFinder class for documentation.
-     See the GSL <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_32.html#SEC428"> online manual</A> for 
-     information on the GSL Root-Finding algorithms
+//_____________________________________________________________________________________
+   /**
+      Base class for GSL Root-Finding algorithms for one dimensional functions which use function derivatives. 
+      For finding the roots users should not use this class directly but instantiate the template 
+      ROOT::Math::RootFinder class with the corresponding algorithms. 
+      For example the ROOT::Math::RootFinder<ROOT::Math::Roots::Newton> for using the Newton algorithm.
+      See that class also for the documentation. 
+      See the GSL <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Finding-Algorithms-using-Derivatives.html"> online manual</A> for 
+      information on the GSL Root-Finding algorithms
+      
+      @ingroup RootFinders
+   */
 
-     @ingroup RootFinders
-  */
 
+class GSLRootFinderDeriv {
 
-   class GSLRootFinderDeriv {
+public: 
+   GSLRootFinderDeriv(); 
+   virtual ~GSLRootFinderDeriv(); 
 
-   public: 
-     GSLRootFinderDeriv(); 
-     virtual ~GSLRootFinderDeriv(); 
+private:
+   // usually copying is non trivial, so we make this unaccessible
+   GSLRootFinderDeriv(const GSLRootFinderDeriv &); 
+   GSLRootFinderDeriv & operator = (const GSLRootFinderDeriv &); 
 
-   private:
-     // usually copying is non trivial, so we make this unaccessible
-     GSLRootFinderDeriv(const GSLRootFinderDeriv &); 
-     GSLRootFinderDeriv & operator = (const GSLRootFinderDeriv &); 
-
-   public: 
+public: 
 
 
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)     
-      int SetFunction( const IGenFunction & , double , double ) { 
-         std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;  
-         return -1;
-      }
+   int SetFunction( const IGenFunction & , double , double ) { 
+      std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;  
+      return -1;
+   }
 #endif    
      
-     int SetFunction( const IGradFunction & f, double Root) { 
-       const void * p = &f; 
-       return SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), Root ); 
-       }
+   int SetFunction( const IGradFunction & f, double Root) { 
+      const void * p = &f; 
+      return SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), Root ); 
+   }
 
      
-     typedef double ( * GSLFuncPointer ) ( double, void *);
-     typedef void ( * GSLFdFPointer ) ( double, void *, double *, double *);
-     int SetFunction( GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer fdf, void * p, double Root );   
+   typedef double ( * GSLFuncPointer ) ( double, void *);
+   typedef void ( * GSLFdFPointer ) ( double, void *, double *, double *);
+   int SetFunction( GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer fdf, void * p, double Root );   
 
-     int Iterate(); 
+   int Iterate(); 
 
-     double Root() const; 
+   double Root() const; 
 
-     // Solve for roots
-     int Solve( int maxIter = 100, double absTol = 1E-3, double relTol = 1E-6);
+   // Solve for roots
+   int Solve( int maxIter = 100, double absTol = 1E-3, double relTol = 1E-6);
 
-     int Iterations() const {
-       return fIter; 
-     }
+   int Iterations() const {
+      return fIter; 
+   }
 
-     const char * Name() const;  
+   const char * Name() const;  
 
-   protected:
+protected:
      
-     void SetSolver (  GSLRootFdFSolver * s ); 
+   void SetSolver (  GSLRootFdFSolver * s ); 
 
-     void FreeSolver(); 
+   void FreeSolver(); 
      
-   private: 
+private: 
      
-     GSLFunctionDerivWrapper * fFunction;     
-     GSLRootFdFSolver * fS; 
+   GSLFunctionDerivWrapper * fFunction;     
+   GSLRootFdFSolver * fS; 
  
 
-     mutable double fRoot; 
-     mutable double fPrevRoot; 
-     int fIter; 
-     bool fValidPoint; 
+   mutable double fRoot; 
+   mutable double fPrevRoot; 
+   int fIter; 
+   bool fValidPoint; 
      
-   }; 
+}; 
    
 } // namespace Math
 } // namespace ROOT
