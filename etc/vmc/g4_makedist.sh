@@ -53,7 +53,7 @@ else
    EXCLUDE="--exclude .svn"
 fi
 
-$TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/"history" geant4_vmc/config  \
+$TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/"history" geant4_vmc/version_number  \
    geant4_vmc/"include" geant4_vmc/"source" geant4_vmc/examples $MAKELIB
 cd $CURDIR
 
