@@ -60,6 +60,7 @@ private:
    Bool_t           fActive;       // true if item is active
    Bool_t           fCheckBox;     // true if checkbox is visible
    Bool_t           fChecked;      // true if item is checked
+   Bool_t           fOwnsData;     // true if user data has to be deleted
    TString          fText;         // item text
    TString          fTipText;      // tooltip text
    Int_t            fY;            // y position of item
@@ -97,7 +98,7 @@ public:
    const char     *GetText() const { return fText.Data(); }
    void            SetTipText(const char *tip) { fTipText = tip; }
    const char     *GetTipText() const { return fTipText.Data(); }
-   void            SetUserData(void *userData) { fUserData = userData; }
+   void            SetUserData(void *userData, Bool_t own=kFALSE) { fUserData = userData; fOwnsData=own; }
    void           *GetUserData() const { return fUserData; }
    void            SetPictures(const TGPicture *opened, const TGPicture *closed);
    void            SetCheckBoxPictures(const TGPicture *checked, const TGPicture *unchecked);

@@ -137,6 +137,7 @@ TGListTreeItem::TGListTreeItem(TGClient *client, const char *name,
    fY =
    fHeight = 0;
 
+   fOwnsData = kFALSE;
    fUserData = 0;
 
    fHasColor = kFALSE;
@@ -149,6 +150,10 @@ TGListTreeItem::~TGListTreeItem()
 {
    // Delete list tree item.
 
+   if (fOwnsData && fUserData) {
+      TObject *obj = static_cast<TObject *>(fUserData);
+      delete dynamic_cast<TObject *>(obj);
+   }
    fClient->FreePicture(fOpenPic);
    fClient->FreePicture(fClosedPic);
    fClient->FreePicture(fCheckedPic);
@@ -751,10 +756,24 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
                if (!fBuf) fBuf = new TBufferFile(TBuffer::kWrite);
                fBuf->Reset();
                if (item->fUserData) {
-                  fDNDData.fDataType = fDNDTypeList[0];
-                  fBuf->WriteObject((TObject *)item->fUserData);
-                  fDNDData.fData = fBuf->Buffer();
-                  fDNDData.fDataLength = fBuf->Length();
+                  TObject *obj = static_cast<TObject *>(item->fUserData);
+                  if (dynamic_cast<TObject *>(obj)) {
+                     TObjString *ostr = dynamic_cast<TObjString *>(obj);
+                     if (ostr) {
+                        TString& str = ostr->String();
+                        if (str.BeginsWith("file://")) {
+                           fDNDData.fDataType = fDNDTypeList[1];
+                           fDNDData.fData = (void *)strdup(str.Data());
+                           fDNDData.fDataLength = str.Length()+1;
+                        }
+                     }
+                     else {
+                        fDNDData.fDataType = fDNDTypeList[0];
+                        fBuf->WriteObject((TObject *)item->fUserData);
+                        fDNDData.fData = fBuf->Buffer();
+                        fDNDData.fDataLength = fBuf->Length();
+                     }
+                  }
                }
                else {
                   fDNDData.fDataType = fDNDTypeList[1];

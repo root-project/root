@@ -844,11 +844,13 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
          }
       }
-      obj->Browse(fBrowser);
-      fNKeys = 0;
-      fCnt = 0;
-      fListTree->ClearViewPort();
-      return;
+      if (!obj->InheritsFrom("TObjString")) {
+         obj->Browse(fBrowser);
+         fNKeys = 0;
+         fCnt = 0;
+         fListTree->ClearViewPort();
+         return;
+      }
    }
    flags = id = size = modtime = 0;
    gSystem->GetPathInfo(dirname.Data(), &id, &size, &flags, &modtime);
@@ -902,7 +904,9 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                   itm = fListTree->AddItem(item,fname,pic,pic);
                   if (pic != fFileIcon)
                      fClient->FreePicture(pic);
-                  itm->SetUserData(0);
+                  itm->SetUserData(new TObjString(Form("file://%s/%s\r\n",
+                                   gSystem->UnixPathName(file->GetTitle()),
+                                   file->GetName())), kTRUE);
                   itm->SetDNDSource(kTRUE);
                   if (size && modtime) {
                      char *tiptext = FormatFileInfo(fname.Data(), size, modtime);
@@ -926,9 +930,17 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          rfile = (TDirectory *)gROOT->GetListOfFiles()->FindObject(obj);
          if (!rfile) {
             rfile = (TDirectory *)gROOT->ProcessLine(Form("new TFile(\"%s\")",fname.Data()));
-            item->SetUserData(rfile);
          }
          if (rfile) {
+            // replace actual user data (TObjString) by the TDirectory...
+            if (item->GetUserData()) {
+               // first delete the data to avoid memory leaks
+               TObject *obj = static_cast<TObject *>(item->GetUserData());
+               // only delete TObjString as they are the only objects
+               // created who have to be deleted
+               delete dynamic_cast<TObjString *>(obj);
+            }
+            item->SetUserData(rfile);
             fNKeys = rfile->GetListOfKeys()->GetEntries();
             fCnt = 0;
             rfile->Browse(fBrowser);
@@ -972,7 +984,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          XXExecuteDefaultAction(&f);
       }
    }
-   //gSystem->ChangeDirectory(savdir.Data());
+   gSystem->ChangeDirectory(savdir.Data());
    fListTree->ClearViewPort();
 }
 
