@@ -4363,28 +4363,47 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
          Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,-1);
          if (real_instance<fNdata[0]) {
             Ssiz_t len = strlen(decform);
-            Bool_t longer  = kFALSE;
-            Bool_t shorter = kFALSE;
+            Char_t outputSizeLevel = 1; 
             char *expo = 0;
             if (len>2) {
                switch (decform[len-2]) {
                   case 'l':
-                  case 'L': longer = kTRUE; break;
-                  case 'h': shorter = kTRUE; break;
+                  case 'L': {
+                     outputSizeLevel = 2; 
+                     if (len>3 && tolower(decform[len-3])=='l') {
+                        outputSizeLevel = 3;
+                     }
+                     break;
+                  }
+                  case 'h': outputSizeLevel = 0; break;
                }
             }
             switch(decform[len-1]) {
                case 'c':
                case 'd':
                case 'i':
-               case 'o':
+                  { 
+                     switch (outputSizeLevel) {
+                        case 0:  sprintf(value,Form("%%%s",decform),(Short_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                        case 2:  sprintf(value,Form("%%%s",decform),(Long_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                        case 3:  sprintf(value,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                        case 1:
+                        default: sprintf(value,Form("%%%s",decform),(Int_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     }
+                     break;
+                  }
+               case 'o': 
                case 'x':
                case 'X':
                case 'u':
-                  {
-                     if (shorter) sprintf(value,Form("%%%s",decform),(short)((TTreeFormula*)this)->EvalInstance(instance));
-                     else if (longer) sprintf(value,Form("%%%s",decform),(int)((TTreeFormula*)this)->EvalInstance(instance));
-                     else sprintf(value,Form("%%%s",decform),(long)((TTreeFormula*)this)->EvalInstance(instance));
+                  { 
+                     switch (outputSizeLevel) {
+                        case 0:  sprintf(value,Form("%%%s",decform),(UShort_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                        case 2:  sprintf(value,Form("%%%s",decform),(ULong_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                        case 3:  sprintf(value,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                        case 1:
+                        default: sprintf(value,Form("%%%s",decform),(UInt_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     }
                      break;
                   }
                case 'f':
@@ -4393,8 +4412,11 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                case 'g':
                case 'G':
                   {
-                     if (longer) sprintf(value,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance));
-                     else sprintf(value,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance));
+                     switch (outputSizeLevel) {
+                        case 2:  sprintf(value,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                        case 1:
+                        default: sprintf(value,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     }
                      expo = strchr(value,'e');
                      break;
                   }
