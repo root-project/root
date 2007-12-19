@@ -621,7 +621,7 @@ static VALUE drr_as(VALUE self, VALUE klass)
     VALUE v;
 
     /* Check if there is a ROOT dict. available.  */
-    TClass *c = new TClass(STR2CSTR(klass));
+    TClass *c = TClass::GetClass(STR2CSTR(klass));
     if (c)
       {
         VALUE k;
@@ -636,7 +636,7 @@ static VALUE drr_as(VALUE self, VALUE klass)
         rb_iv_set (v, "__rr_class__", klass);
       }
     else
-        rb_fatal ("Cast to %s is not allowed. Aborting.", STR2CSTR(klass));
+        rb_raise( rb_eArgError, "No TClass found for %s. Is this a Root type?", STR2CSTR(klass) );
 
     delete c;
     return v;
