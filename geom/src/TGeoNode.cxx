@@ -745,6 +745,7 @@ void TGeoNodeMatrix::SetMatrix(const TGeoMatrix *matrix)
 {
 // Matrix setter.
    fMatrix = (TGeoMatrix*)matrix;
+   if (!fMatrix) fMatrix = gGeoIdentity;
 }   
 
 /*************************************************************************

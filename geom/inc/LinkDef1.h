@@ -39,10 +39,7 @@
 #pragma link C++ class TGeoGenTrans+;
 #pragma link C++ class TGeoScale+;
 #pragma link C++ class TGeoIdentity+;
-#pragma link C++ class TGeoVoxelFinder+;
-#pragma link C++ class TGeoCylVoxels+;
-#pragma link C++ class TGeoFullVoxels+;
-#pragma link C++ class TGeoUniformVoxels+;
+#pragma link C++ class TGeoVoxelFinder-;
 #pragma link C++ class TGeoShape+;
 #pragma link C++ class TGeoHelix+;
 #pragma link C++ class TGeoHalfSpace+;
