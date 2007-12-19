@@ -2085,7 +2085,7 @@ check_explicit "$enable_qt" "$enable_qt_explicit" \
 #
 ### echo %%% RFIO Support - Third party libraries
 #
-# (See http://http://savannah.cern.ch/files/?group=castor)
+# (See http://savannah.cern.ch/files/?group=castor)
 #
 # Check for rfio_api.h of CASTOR 2 and librfio or libshift
 #
