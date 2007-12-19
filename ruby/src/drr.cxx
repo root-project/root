@@ -665,7 +665,7 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
     if (minfo.InterfaceMethod())
         func.SetFunc(minfo);
     else
-        rb_fatal("You provided a wrong prototype (%s) for (%s#%s). Aborting.",
+        rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
                     cproto, classname, classname);
 
     addr = func.ExecInt((void*)((long)0 + offset));
@@ -751,8 +751,8 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     if (minfo->InterfaceMethod())
         func->SetFunc(*minfo);
     else
-        rb_fatal("You provided a wrong prototype (%s) for %s#%s. Aborting.",
-                        cproto, classname, methname);
+        rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
+                    cproto, classname, methname);
 
     /* This is the first time this method is called. Create a cash entry.  */
     struct drr_func_entry *entry = (struct drr_func_entry *) malloc (sizeof *entry);
