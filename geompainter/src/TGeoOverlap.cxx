@@ -24,12 +24,12 @@
 #include "TGeoOverlap.h"
 
 ClassImp(TGeoOverlap)
-/*************************************************************************
- * TGeoOverlap - base class describing geometry overlaps. Overlaps apply
- *   to the nodes contained inside a volume. These should not overlap to
- *   each other nor extrude the shape of their mother volume.
- *
- *************************************************************************/
+
+//______________________________________________________________________________
+// TGeoOverlap - base class describing geometry overlaps. Overlaps apply
+//   to the nodes contained inside a volume. These should not overlap to
+//   each other nor extrude the shape of their mother volume.
+//______________________________________________________________________________
 
 //______________________________________________________________________________
 TGeoOverlap::TGeoOverlap()

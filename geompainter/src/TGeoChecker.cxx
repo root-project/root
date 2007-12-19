@@ -10,8 +10,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//   Geometry checking package.
+//______________________________________________________________________________
+//   TGeoChecker - Geometry checking package.
+//===============
 //
 // TGeoChecker class provides several geometry checking methods. There are two
 // types of tests that can be performed. One is based on random sampling or
@@ -76,6 +77,7 @@
 #include "TPolyLine3D.h"
 #include "TStopwatch.h"
 
+#include "TGeoVoxelFinder.h"
 #include "TGeoBBox.h"
 #include "TGeoPcon.h"
 #include "TGeoManager.h"

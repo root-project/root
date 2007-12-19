@@ -19,14 +19,14 @@
 #include "TVirtualGeoPainter.h"
 #include "TGeoTrack.h"
 
-/*************************************************************************
- * TGeoTrack - Class for user-defined tracks attached to a geometry.
- *             Tracks are 3D objects made of points and they store a 
- *             pointer to a TParticle. The geometry manager holds a list
- *             of all tracks that will be deleted on destruction of 
- *             gGeoManager.
- *
- *************************************************************************/
+//______________________________________________________________________________
+// TGeoTrack - Class for user-defined tracks attached to a geometry.
+//             Tracks are 3D objects made of points and they store a 
+//             pointer to a TParticle. The geometry manager holds a list
+//             of all tracks that will be deleted on destruction of 
+//             gGeoManager.
+//
+//______________________________________________________________________________
 
 ClassImp(TGeoTrack)
 

@@ -9,11 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTabManager                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+//  TGeoTabManager  - manager for all editor tabs.                                                    //
+//                                                                      
+//  TGeoTreeDialog  - Base class for dialog frames for selecting objects 
+// with a tree hierarchy. Specific implementations are:
+//     TGeoVolumeDialog -  Special tree dialog class for selecting volumes.
+//     TGeoShapeDialog  -  Special tree dialog class for selecting shapes. 
+//     TGeoMediumDialog -  Special tree dialog class for selecting media.
+//     TGeoMaterialDialog - Special tree dialog class for selecting materials.
+//     TGeoMatrixDialog -  Special tree dialog class for selecting matrices.                   
+//  TGeoTransientPanel - Special transient tab holding TGeo editors.
+//______________________________________________________________________________
 
 #include "TROOT.h"
 #include "TClass.h"

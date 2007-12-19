@@ -353,6 +353,7 @@
 #include "TGeoShapeAssembly.h"
 #include "TGeoScaledShape.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoVoxelFinder.h"
 
 ClassImp(TGeoVolume)
 
@@ -1503,6 +1504,14 @@ char *TGeoVolume::GetPointerName() const
 }
 
 //_____________________________________________________________________________
+TGeoVoxelFinder *TGeoVolume::GetVoxels() const
+{
+// Getter for optimization structure.
+   if (fVoxels && !fVoxels->IsInvalid()) return fVoxels;
+   return NULL;
+}   
+
+//_____________________________________________________________________________
 void TGeoVolume::GrabFocus()
 {
 // Move perspective view focus to this volume
@@ -1774,6 +1783,7 @@ void TGeoVolume::Streamer(TBuffer &R__b)
    // Stream an object of class TGeoVolume.
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TGeoVolume::Class(), this);
+      if (fVoxels && fVoxels->IsInvalid()) Voxelize("");
    } else {
       if (!fVoxels) {
          R__b.WriteClassBuffer(TGeoVolume::Class(), this);
@@ -1789,7 +1799,6 @@ void TGeoVolume::Streamer(TBuffer &R__b)
       }
    }
 }
-
 
 //_____________________________________________________________________________
 void TGeoVolume::SetOption(const char * /*option*/)

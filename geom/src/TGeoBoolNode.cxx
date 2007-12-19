@@ -25,7 +25,28 @@
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-// statics and globals
+//_____________________________________________________________________________
+//  TGeoBoolNode - base class for Boolean operations between two shapes.
+//===============
+// A Boolean node describes a Boolean operation between 'left' and 'right' 
+// shapes positioned with respect to an ARBITRARY reference frame. The boolean
+// node is referenced by a mother composite shape and its shape components may
+// be primitive but also composite shapes. The later situation leads to a binary
+// tree hierarchy. When the parent composite shape is used to create a volume,
+// the reference frame of the volume is chosen to match the frame in which 
+// node shape components were defined.
+//
+// The positioned shape components may or may not be disjoint. The specific 
+// implementations for Boolean nodes are:
+//
+//    TGeoUnion - representing the Boolean  union of two positioned shapes
+//
+//    TGeoSubtraction - representing the Boolean subtraction of two positioned 
+//                shapes
+// 
+//    TGeoIntersection - representing the Boolean intersection of two positioned
+//                shapes
+//_____________________________________________________________________________
 
 ClassImp(TGeoBoolNode)
 

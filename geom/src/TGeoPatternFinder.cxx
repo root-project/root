@@ -1,10 +1,27 @@
 // @(#)root/geom:$Id$
 // Author: Andrei Gheata   30/10/01
 
-/*************************************************************************
- * TGeoPatternFinder - base finder class for patterns. A pattern is specifying 
- *   a division type
- *************************************************************************/
+//_____________________________________________________________________________
+// TGeoPatternFinder - base finder class for patterns. 
+//==================
+//   A pattern is specifying a division type which applies only to a given
+// shape type. The implemented patterns are for the moment equidistant slices
+// on different axis. Implemented patterns are:
+//
+// TGeoPatternX - a X axis divison pattern
+// TGeoPatternY - a Y axis divison pattern
+// TGeoPatternZ - a Z axis divison pattern
+// TGeoPatternParaX - a X axis divison pattern for PARA shape
+// TGeoPatternParaY - a Y axis divison pattern for PARA shape
+// TGeoPatternParaZ - a Z axis divison pattern for PARA shape
+// TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
+// TGeoPatternCylR - a cylindrical R divison pattern
+// TGeoPatternCylPhi - a cylindrical phi divison pattern
+// TGeoPatternSphR - a spherical R divison pattern
+// TGeoPatternSphTheta - a spherical theta divison pattern
+// TGeoPatternSphPhi - a spherical phi divison pattern
+// TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
+//_____________________________________________________________________________
 
 #include "Riostream.h"
 #include "TObject.h"
@@ -107,10 +124,9 @@ TGeoPatternFinder *TGeoPatternFinder::MakeCopy(Bool_t)
    return NULL;
 }
 
-/*************************************************************************
- * TGeoPatternX - a X axis divison pattern
- *   
- *************************************************************************/
+//______________________________________________________________________________
+// TGeoPatternX - a X axis divison pattern
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX()
@@ -225,10 +241,9 @@ void TGeoPatternX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternY - a Y axis divison pattern
- *   
- *************************************************************************/
+//______________________________________________________________________________
+// TGeoPatternY - a Y axis divison pattern
+//______________________________________________________________________________
 
 
 //_____________________________________________________________________________
@@ -344,10 +359,9 @@ void TGeoPatternY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
-/*************************************************************************
- * TGeoPatternZ - a Z axis divison pattern
- *   
- *************************************************************************/
+//______________________________________________________________________________
+// TGeoPatternZ - a Z axis divison pattern
+//______________________________________________________________________________
 
 
 //_____________________________________________________________________________
@@ -458,11 +472,9 @@ void TGeoPatternZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternParaX - a X axis divison pattern for PARA shape
- *   
- *************************************************************************/
-
+//______________________________________________________________________________
+// TGeoPatternParaX - a X axis divison pattern for PARA shape
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX()
@@ -555,11 +567,9 @@ void TGeoPatternParaX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternParaY - a Y axis divison pattern for PARA shape
- *   
- *************************************************************************/
-
+//______________________________________________________________________________
+// TGeoPatternParaY - a Y axis divison pattern for PARA shape
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY()
@@ -656,11 +666,9 @@ void TGeoPatternParaY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternParaZ - a Z axis divison pattern for PARA shape
- *   
- *************************************************************************/
-
+//______________________________________________________________________________
+// TGeoPatternParaZ - a Z axis divison pattern for PARA shape
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ()
@@ -762,11 +770,9 @@ void TGeoPatternParaZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
- *   
- *************************************************************************/
-
+//______________________________________________________________________________
+// TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ()
@@ -874,12 +880,9 @@ void TGeoPatternTrapZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
 }
 
 
-/*************************************************************************
- * TGeoPatternCylR - a cylindrical R divison pattern
- *   
- *************************************************************************/
- 
-
+//______________________________________________________________________________
+// TGeoPatternCylR - a cylindrical R divison pattern
+//______________________________________________________________________________ 
 
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR()
@@ -956,12 +959,9 @@ void TGeoPatternCylR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternCylPhi - a cylindrical phi divison pattern
- *   
- *************************************************************************/
- 
-
+//______________________________________________________________________________
+// TGeoPatternCylPhi - a cylindrical phi divison pattern
+//______________________________________________________________________________ 
 
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi()
@@ -1072,13 +1072,9 @@ void TGeoPatternCylPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternSphR - a spherical R divison pattern
- *   
- *************************************************************************/
-
-
-
+//______________________________________________________________________________
+// TGeoPatternSphR - a spherical R divison pattern
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR()
@@ -1144,10 +1140,9 @@ void TGeoPatternSphR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternSphTheta - a spherical theta divison pattern
- *   
- *************************************************************************/
+//______________________________________________________________________________
+// TGeoPatternSphTheta - a spherical theta divison pattern
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta()
@@ -1213,10 +1208,9 @@ void TGeoPatternSphTheta::SavePrimitive(ostream &out, Option_t * /*option*/ /*= 
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternSphPhi - a spherical phi divison pattern
- *   
- *************************************************************************/
+//______________________________________________________________________________
+// TGeoPatternSphPhi - a spherical phi divison pattern
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternSphPhi::TGeoPatternSphPhi()
@@ -1282,12 +1276,9 @@ void TGeoPatternSphPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
-/*************************************************************************
- * TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
- *   
- *************************************************************************/
-
-   
+//______________________________________________________________________________
+// TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
+//______________________________________________________________________________   
 
 //_____________________________________________________________________________
 TGeoPatternHoneycomb::TGeoPatternHoneycomb()

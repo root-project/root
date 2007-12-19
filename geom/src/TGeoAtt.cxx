@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//_____________________________________________________________________________
+//   TGeoAtt - visualization and tracking attributes for volumes and nodes
+// ==========
+// The TGeoAtt class is a utility for volume/node visibility and tracking 
+// activity. By default the attributes are set to visible/active
+//_____________________________________________________________________________
+
 #include "TGeoManager.h"
 #include "TGeoAtt.h"
-
-/*************************************************************************
- * TGeoAtt - visualization and tracking attributes for volumes and nodes
- *
- *
- *
- *************************************************************************/
 
 ClassImp(TGeoAtt)
 

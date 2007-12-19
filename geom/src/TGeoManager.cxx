@@ -415,6 +415,7 @@
 #include "THashList.h"
 #include "TClass.h"
 
+#include "TGeoVoxelFinder.h"
 #include "TGeoElement.h"
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"

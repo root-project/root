@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/*************************************************************************
- * TGeoXtru - An extrusion with fixed outline shape in x-y and a sequence
- * of z extents (segments).  The overall scale of the outline scales
- * linearly between z points and the center can have an x-y offset.
- *
- * Based on the initial implementation of R. Hatcher
- *************************************************************************/
-
+//_____________________________________________________________________________
+// TGeoXtru 
+//==========
+//   An extrusion with fixed outline shape in x-y and a sequence
+// of z extents (segments).  The overall scale of the outline scales
+// linearly between z points and the center can have an x-y offset.
+//
 // Creation of TGeoXtru shape
 //=============================
 //   A TGeoXtru represents a polygonal extrusion. It is defined by the:
@@ -44,6 +43,7 @@
 // Currently navigation functionality not fully implemented (only Contains()).
 // Decomposition in concave polygons not implemented - drawing in solid mode
 // within x3d produces incorrect end-faces
+//_____________________________________________________________________________
 
 #include "Riostream.h"
 

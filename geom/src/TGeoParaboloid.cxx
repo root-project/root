@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//_____________________________________________________________________________
 // TGeoParaboloid - Paraboloid  class. A paraboloid is the solid bounded by
 //            the following surfaces:
 //            - 2 planes parallel with XY cutting the Z axis at Z=-dz and Z=+dz
@@ -21,6 +22,7 @@
 //              parabolic surface and the plane z = +dz
 //         | -dz = a*rlo*rlo + b
 //         |  dz = a*rhi*rhi + b      where: rlo != rhi, both >= 0
+//_____________________________________________________________________________
 
 #include "Riostream.h"
 #include "TGeoManager.h"

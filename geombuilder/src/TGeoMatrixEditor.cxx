@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTranslationEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+//                                                                      
+//  TGeoTranslationEditor, TGeoRotationEditor, TGeoCombiTransEditor
+//     Editors for different types of TGeo matrices.
+//______________________________________________________________________________
 
 #include "TGeoMatrixEditor.h"
 #include "TGeoTabManager.h"
@@ -355,13 +355,11 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    
    // Radio buttons group for axis selection
    TGHButtonGroup *bg1 = new TGHButtonGroup(compxyz, " Axis ");
-   fRotX = new TGRadioButton(bg1, " &X ");
-   fRotY = new TGRadioButton(bg1, " &Y ");
-   fRotZ = new TGRadioButton(bg1, " &Z ");
-   bg1->Insert(fRotX, kMATRIX_DX);
-   bg1->Insert(fRotY, kMATRIX_DY);
-   bg1->Insert(fRotZ, kMATRIX_DZ);
+   fRotX = new TGRadioButton(bg1, " &X ", kMATRIX_DX);
+   fRotY = new TGRadioButton(bg1, " &Y ", kMATRIX_DY);
+   fRotZ = new TGRadioButton(bg1, " &Z ", kMATRIX_DZ);
    bg1->SetRadioButtonExclusive();
+   bg1->Show();
    compxyz->AddFrame(bg1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
 
    compxyz->Resize(150,compxyz->GetDefaultHeight());
@@ -692,13 +690,11 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    
    // Radio buttons group for axis selection
    TGHButtonGroup *bg1 = new TGHButtonGroup(compxyz, " Axis ");
-   fRotX = new TGRadioButton(bg1, " &X ");
-   fRotY = new TGRadioButton(bg1, " &Y ");
-   fRotZ = new TGRadioButton(bg1, " &Z ");
-   bg1->Insert(fRotX, kMATRIX_DX);
-   bg1->Insert(fRotY, kMATRIX_DY);
-   bg1->Insert(fRotZ, kMATRIX_DZ);
+   fRotX = new TGRadioButton(bg1, " &X ", kMATRIX_DX);
+   fRotY = new TGRadioButton(bg1, " &Y ", kMATRIX_DY);
+   fRotZ = new TGRadioButton(bg1, " &Z ", kMATRIX_DZ);
    bg1->SetRadioButtonExclusive();
+   bg1->Show();
    compxyz->AddFrame(bg1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
 
    compxyz->Resize(150,compxyz->GetDefaultHeight());

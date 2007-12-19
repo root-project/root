@@ -32,10 +32,6 @@
 #include "TGeoPatternFinder.h"
 #endif
 
-#ifndef ROOT_TGeoVoxelFinder
-#include "TGeoVoxelFinder.h"
-#endif
-
 // forward declarations
 class TString;
 class TGeoVolume;

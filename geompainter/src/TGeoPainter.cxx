@@ -8,6 +8,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//______________________________________________________________________________
+// TGeoPainter - class implementing all draw interfaces for a generic 3D viewer
+// using TBuffer3D mechanism.
+//______________________________________________________________________________
+
 #include "TROOT.h"
 #include "TClass.h"
 #include "TColor.h"

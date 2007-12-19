@@ -273,10 +273,8 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    fBView[0] = new TGRadioButton(bg, "All");
    fBView[1] = new TGRadioButton(bg, "Leaves");
    fBView[2] = new TGRadioButton(bg, "Only");
-   bg->Insert(fBView[0]);
-   bg->Insert(fBView[1]);
-   bg->Insert(fBView[2]);
    bg->SetRadioButtonExclusive();
+   bg->Show();
    container->AddFrame(bg, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
 
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame | kDoubleBorder);

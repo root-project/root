@@ -9,6 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//______________________________________________________________________________
+// TVirtualGeoPainter
+// ==================
+// ABC for geometry painters
+//______________________________________________________________________________
+
 #include "TROOT.h"
 #include "TVirtualGeoPainter.h"
 #include "TPluginManager.h"

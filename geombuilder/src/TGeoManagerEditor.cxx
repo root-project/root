@@ -159,10 +159,9 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fExportOption[0] = new TGRadioButton(bg, ".root", kEXPORT_ROOT);
    fExportOption[1] = new TGRadioButton(bg, ".C", kEXPORT_C);
    fExportButton = new TGTextButton(f1, "Export", kEXPORT_GEOMETRY);
-   bg->Insert(fExportOption[0], kEXPORT_ROOT);
-   bg->Insert(fExportOption[1], kEXPORT_C);
    bg->SetRadioButtonExclusive();
    bg->SetButton(kEXPORT_ROOT);
+   bg->Show();
    f1->AddFrame(bg, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(fExportButton, new TGLayoutHints(kLHintsLeft, 20, 2, 22, 0));
    container->AddFrame(f1, new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2));

@@ -8,9 +8,10 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-////////////////////////////////////////////////////////////////////////////////
+
+//_____________________________________________________________________________
 // TGeoBuilder
-// --------------------
+// ============
 //
 //   Utility class for creating geometry objects.These will be associated
 //   with the current selected geometry manager object:
@@ -20,7 +21,7 @@
 //   The geometry builder is a singleton that may be used to build one or more 
 //   geometries.
 //
-////////////////////////////////////////////////////////////////////////////////
+//_____________________________________________________________________________
 
 #include "TList.h"
 #include "TObjArray.h"

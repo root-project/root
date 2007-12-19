@@ -76,6 +76,7 @@
 #include "TGeoShape.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
+#include "TGeoVoxelFinder.h"
 #include "TGeoNode.h"
 #include "TMath.h"
 #include "TStopwatch.h"

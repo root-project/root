@@ -8,14 +8,24 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-////////////////////////////////////////////////////////////////////////////////
+ 
+//_____________________________________________________________________________
 // TGeoNavigator
-// --------------------
+//===============
 //
 //   Class providing navigation API for TGeo geometries. Several instances are 
 // allowed for a single geometry.
+// A default navigator is provided for any geometry but one may add several 
+// others for parallel navigation:
+//	
+//	TGeoNavigator *navig = new TGeoNavigator(gGeoManager);
+//	Int_t inav = gGeoManager->AddNavigator(navig);
+//	gGeoManager->SetCurrentNavigator(inav);
 //
-////////////////////////////////////////////////////////////////////////////////
+//	.... and then switch back to the default navigator:
+//
+//	gGeoManager->SetCurrentNavigator(0);
+//_____________________________________________________________________________
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
