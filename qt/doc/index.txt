@@ -1,0 +1,23 @@
+This directory contains Qt-based implementation of the TVirtualX classes
+BEGIN_HTML
+<br>
+ See:
+<ul>
+<li>The user is to be interesting with TQtWidget class that 
+     to embed the TCanvas objects into the ROOT-based Qt GUI
+     applications and Qt-based ROOT applications. 
+<br>
+     All other classes in this directory are implementations of the existing 
+     ROOT abstract interfaces and should not be used directly.
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/26ROOTandQt.pdf">
+      The Chapter about ROOT/Qt Integration
+    </a></li>
+<li><a href="http://root.bnl.gov">The full-fledged collection of Qt-based 
+        implementation of the other ROOT GUI interfaces.
+    </a></li>
+    <li><a href="http://root.bnl.gov/QtRoot/QtRoot.html#publications">List of
+    the Qt and QtRoot related publications and documents </a>
+</ul>
+</ul>
+END_HTML
