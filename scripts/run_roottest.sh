@@ -108,7 +108,7 @@ rootteststatus=$na
 mkdir -p $ROOTSYS
 cd $ROOTSYS/..
 locname=`basename $ROOTSYS`
-cvs -z9 -q co -P -d $locname root > $locname/cvsupdate.log  2>&1
+svn co https://root.cern.ch/svn/root/trunk $locname > $locname/cvsupdate.log  2>&1
 result=$?
 if test $result != 0; then 
     cvsstatus=$failure
@@ -120,7 +120,9 @@ upload_log cvsupdate.log
 cd $ROOTSYS
 
 if test ! -e config.status ; then
-    configure $CONFIGURE_OPTION > configure.log 2>&1
+    ./configure $CONFIGURE_OPTION > configure.log 2>&1
+else
+    ./configure `cat config.status` > configure.log 2>&1
 fi
 
 $MAKE $ROOT_MAKEFLAGS  > gmake.log  2>&1 
@@ -177,7 +179,7 @@ echo Going to roottest at: $ROOTTESTLOC
 mkdir -p $ROOTTESTLOC
 cd $ROOTTESTLOC/..
 locname=`basename $ROOTTESTLOC`
-cvs -z9 -q co -P -d $locname roottest > $locname/gmake.log 2>&1
+svn co https://root.cern.ch/svn/roottest/trunk $locname > $locname/gmake.log 2>&1
 
 cd $ROOTTESTLOC
 $MAKE clean >> gmake.log 2>&1 
