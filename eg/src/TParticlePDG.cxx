@@ -127,6 +127,9 @@ TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t Mass,
    fDecayList     = NULL;
    if (Anti) fAntiParticle = this;
    else      fAntiParticle = 0;
+   
+   const Double_t kHbar = 6.58211889e-25; // GeV s
+   if (fWidth != 0.) fLifetime = kHbar / fWidth;
 }
 
 //______________________________________________________________________________
