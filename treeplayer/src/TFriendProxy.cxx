@@ -13,6 +13,8 @@
 //                                                                      //
 // TFriendProxy                                                         //
 //                                                                      //
+// Concrete implementation of the proxy around a Friend Tree.           //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TFriendProxy.h"

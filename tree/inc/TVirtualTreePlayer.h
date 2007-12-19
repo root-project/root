@@ -14,9 +14,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TVirtualTreePlayer                                                  //
+// TVirtualTreePlayer                                                   //
 //                                                                      //
-// Abstract base class for Histogram pplayers                           //
+// Abstract base class for Histogram p layers                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

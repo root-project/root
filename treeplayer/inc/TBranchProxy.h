@@ -296,6 +296,7 @@ namespace ROOT {
       }
    };
 
+   // Concrete Implementation of the branch proxy around the data members which are array of char
    class TArrayCharProxy : public TBranchProxy {
    public:
       void Print() {
@@ -338,6 +339,7 @@ namespace ROOT {
 
    };
 
+   // Base class for the proxy around object in TClonesArray.
    class TClaProxy : public TBranchProxy {
    public:
       void Print() {
@@ -378,6 +380,7 @@ namespace ROOT {
 
    };
 
+   // Base class for the proxy around STL containers.
    class TStlProxy : public TBranchProxy {
    public:
       void Print() {
@@ -416,6 +419,7 @@ namespace ROOT {
 
    };
 
+   // Template of the proxy around objects.
    template <class T>
    class TImpProxy : public TBranchProxy {
    public:
@@ -460,16 +464,19 @@ namespace ROOT {
    template <class T, int d = 0> struct TArrayType {
       typedef T type_t;
       typedef T array_t[d];
-   };
+   }; 
+   // Helper class for proxy around multi dimension array
    template <class T> struct TArrayType<T,0> {
       typedef T type_t;
       typedef T array_t;
    };
+   // Helper class for proxy around multi dimension array
    template <class T, int d> struct TMultiArrayType {
       typedef typename T::type_t type_t;
       typedef typename T::array_t array_t[d];
    };
 
+   // Template for concrete implementation of proxy around array of T
    template <class T>
    class TArrayProxy : public TBranchProxy {
    public:
@@ -505,6 +512,7 @@ namespace ROOT {
       const array_t &operator [](int i) { return At(i); }
    };
 
+   // Template of the Concrete Implementation of the branch proxy around TClonesArray of T
    template <class T>
    class TClaImpProxy : public TBranchProxy {
    public:
@@ -554,6 +562,7 @@ namespace ROOT {
 
    };
 
+   // Template of the Concrete Implementation of the branch proxy around an stl container of T
    template <class T>
    class TStlImpProxy : public TBranchProxy {
    public:
@@ -602,6 +611,7 @@ namespace ROOT {
 
    };
 
+   // Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
    template <class T>
    class TClaArrayProxy : public TBranchProxy {
    public:
@@ -635,6 +645,7 @@ namespace ROOT {
       /* const */ array_t *operator [](int i) { return At(i); }
    };
 
+   // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>
    class TStlArrayProxy : public TBranchProxy {
    public:
@@ -669,103 +680,102 @@ namespace ROOT {
    };
 
    //TImpProxy<TObject> d;
-   typedef TImpProxy<Double_t>   TDoubleProxy;
-   typedef TImpProxy<Double32_t> TDouble32Proxy;
-   typedef TImpProxy<Float_t>    TFloatProxy;
-   typedef TImpProxy<Float16_t>  TFloat16Proxy;
-   typedef TImpProxy<UInt_t>     TUIntProxy;
-   typedef TImpProxy<ULong_t>    TULongProxy;
-   typedef TImpProxy<ULong64_t>  TULong64Proxy;
-   typedef TImpProxy<UShort_t>   TUShortProxy;
-   typedef TImpProxy<UChar_t>    TUCharProxy;
-   typedef TImpProxy<Int_t>      TIntProxy;
-   typedef TImpProxy<Long_t>     TLongProxy;
-   typedef TImpProxy<Long64_t>   TLong64Proxy;
-   typedef TImpProxy<Short_t>    TShortProxy;
-   typedef TImpProxy<Char_t>     TCharProxy;
-   typedef TImpProxy<Bool_t>     TBoolProxy;
+   typedef TImpProxy<Double_t>   TDoubleProxy;   // Concrete Implementation of the branch proxy around the data members which are double
+   typedef TImpProxy<Double32_t> TDouble32Proxy; // Concrete Implementation of the branch proxy around the data members which are double32
+   typedef TImpProxy<Float_t>    TFloatProxy;    // Concrete Implementation of the branch proxy around the data members which are float
+   typedef TImpProxy<Float16_t>  TFloat16Proxy;  // Concrete Implementation of the branch proxy around the data members which are float16
+   typedef TImpProxy<UInt_t>     TUIntProxy;     // Concrete Implementation of the branch proxy around the data members which are unsigned int
+   typedef TImpProxy<ULong_t>    TULongProxy;    // Concrete Implementation of the branch proxy around the data members which are unsigned long
+   typedef TImpProxy<ULong64_t>  TULong64Proxy;  // Concrete Implementation of the branch proxy around the data members which are unsigned long long
+   typedef TImpProxy<UShort_t>   TUShortProxy;   // Concrete Implementation of the branch proxy around the data members which are unsigned short
+   typedef TImpProxy<UChar_t>    TUCharProxy;    // Concrete Implementation of the branch proxy around the data members which are unsigned char
+   typedef TImpProxy<Int_t>      TIntProxy;      // Concrete Implementation of the branch proxy around the data members which are int
+   typedef TImpProxy<Long_t>     TLongProxy;     // Concrete Implementation of the branch proxy around the data members which are long
+   typedef TImpProxy<Long64_t>   TLong64Proxy;   // Concrete Implementation of the branch proxy around the data members which are long long
+   typedef TImpProxy<Short_t>    TShortProxy;    // Concrete Implementation of the branch proxy around the data members which are short
+   typedef TImpProxy<Char_t>     TCharProxy;     // Concrete Implementation of the branch proxy around the data members which are char
+   typedef TImpProxy<Bool_t>     TBoolProxy;     // Concrete Implementation of the branch proxy around the data members which are bool
 
-   typedef TArrayProxy<TArrayType<Double_t> >   TArrayDoubleProxy;
-   typedef TArrayProxy<TArrayType<Double32_t> > TArrayDouble32Proxy;
-   typedef TArrayProxy<TArrayType<Float_t> >    TArrayFloatProxy;
-   typedef TArrayProxy<TArrayType<Float16_t> >  TArrayFloat16Proxy;
-   typedef TArrayProxy<TArrayType<UInt_t> >     TArrayUIntProxy;
-   typedef TArrayProxy<TArrayType<ULong_t> >    TArrayULongProxy;
-   typedef TArrayProxy<TArrayType<ULong64_t> >  TArrayULong64Proxy;
-   typedef TArrayProxy<TArrayType<UShort_t> >   TArrayUShortProxy;
-   typedef TArrayProxy<TArrayType<UChar_t> >    TArrayUCharProxy;
-   typedef TArrayProxy<TArrayType<Int_t> >      TArrayIntProxy;
-   typedef TArrayProxy<TArrayType<Long_t> >     TArrayLongProxy;
-   typedef TArrayProxy<TArrayType<Long64_t> >   TArrayLong64Proxy;
-   typedef TArrayProxy<TArrayType<UShort_t> >   TArrayShortProxy;
-   //specialized ! typedef TArrayProxy<TArrayType<Char_t> >  TArrayCharProxy;
-   typedef TArrayProxy<TArrayType<Bool_t> >     TArrayBoolProxy;
+   typedef TArrayProxy<TArrayType<Double_t> >   TArrayDoubleProxy;   // Concrete Implementation of the branch proxy around the data members which are array of double
+   typedef TArrayProxy<TArrayType<Double32_t> > TArrayDouble32Proxy; // Concrete Implementation of the branch proxy around the data members which are array of double32
+   typedef TArrayProxy<TArrayType<Float_t> >    TArrayFloatProxy;    // Concrete Implementation of the branch proxy around the data members which are array of float
+   typedef TArrayProxy<TArrayType<Float16_t> >  TArrayFloat16Proxy;  // Concrete Implementation of the branch proxy around the data members which are array of float16
+   typedef TArrayProxy<TArrayType<UInt_t> >     TArrayUIntProxy;     // Concrete Implementation of the branch proxy around the data members which are array of unsigned int
+   typedef TArrayProxy<TArrayType<ULong_t> >    TArrayULongProxy;    // Concrete Implementation of the branch proxy around the data members which are array of unsigned long
+   typedef TArrayProxy<TArrayType<ULong64_t> >  TArrayULong64Proxy;  // Concrete Implementation of the branch proxy around the data members which are array of unsigned long long
+   typedef TArrayProxy<TArrayType<UShort_t> >   TArrayUShortProxy;   // Concrete Implementation of the branch proxy around the data members which are array of unsigned short
+   typedef TArrayProxy<TArrayType<UChar_t> >    TArrayUCharProxy;    // Concrete Implementation of the branch proxy around the data members which are array of unsigned char
+   typedef TArrayProxy<TArrayType<Int_t> >      TArrayIntProxy;      // Concrete Implementation of the branch proxy around the data members which are array of int
+   typedef TArrayProxy<TArrayType<Long_t> >     TArrayLongProxy;     // Concrete Implementation of the branch proxy around the data members which are array of long
+   typedef TArrayProxy<TArrayType<Long64_t> >   TArrayLong64Proxy;   // Concrete Implementation of the branch proxy around the data members which are array of long long
+   typedef TArrayProxy<TArrayType<UShort_t> >   TArrayShortProxy;    // Concrete Implementation of the branch proxy around the data members which are array of short
+   //specialized ! typedef TArrayProxy<TArrayType<Char_t> >  TArrayCharProxy; // Concrete Implementation of the branch proxy around the data members which are array of char
+   typedef TArrayProxy<TArrayType<Bool_t> >     TArrayBoolProxy;     // Concrete Implementation of the branch proxy around the data members which are array of bool
 
-   typedef TClaImpProxy<Double_t>   TClaDoubleProxy;
-   typedef TClaImpProxy<Double32_t> TClaDouble32Proxy;
-   typedef TClaImpProxy<Float_t>    TClaFloatProxy;
-   typedef TClaImpProxy<Float16_t>  TClaFloat16Proxy;
-   typedef TClaImpProxy<UInt_t>     TClaUIntProxy;
-   typedef TClaImpProxy<ULong_t>    TClaULongProxy;
-   typedef TClaImpProxy<ULong64_t>  TClaULong64Proxy;
-   typedef TClaImpProxy<UShort_t>   TClaUShortProxy;
-   typedef TClaImpProxy<UChar_t>    TClaUCharProxy;
-   typedef TClaImpProxy<Int_t>      TClaIntProxy;
-   typedef TClaImpProxy<Long_t>     TClaLongProxy;
-   typedef TClaImpProxy<Long64_t>   TClaLong64Proxy;
-   typedef TClaImpProxy<Short_t>    TClaShortProxy;
-   typedef TClaImpProxy<Char_t>     TClaCharProxy;
-   typedef TClaImpProxy<Bool_t>     TClaBoolProxy;
+   typedef TClaImpProxy<Double_t>   TClaDoubleProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are double
+   typedef TClaImpProxy<Double32_t> TClaDouble32Proxy; // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are double32
+   typedef TClaImpProxy<Float_t>    TClaFloatProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are float
+   typedef TClaImpProxy<Float16_t>  TClaFloat16Proxy;  // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are float16
+   typedef TClaImpProxy<UInt_t>     TClaUIntProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are unsigned int
+   typedef TClaImpProxy<ULong_t>    TClaULongProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are unsigned long
+   typedef TClaImpProxy<ULong64_t>  TClaULong64Proxy;  // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are unsigned long long
+   typedef TClaImpProxy<UShort_t>   TClaUShortProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are unsigned short
+   typedef TClaImpProxy<UChar_t>    TClaUCharProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are unsigned char
+   typedef TClaImpProxy<Int_t>      TClaIntProxy;      // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are int
+   typedef TClaImpProxy<Long_t>     TClaLongProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are long
+   typedef TClaImpProxy<Long64_t>   TClaLong64Proxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are long long
+   typedef TClaImpProxy<Short_t>    TClaShortProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are short
+   typedef TClaImpProxy<Char_t>     TClaCharProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are char
+   typedef TClaImpProxy<Bool_t>     TClaBoolProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are bool
 
-   typedef TClaArrayProxy<TArrayType<Double_t> >    TClaArrayDoubleProxy;
-   typedef TClaArrayProxy<TArrayType<Double32_t> >  TClaArrayDouble32Proxy;
-   typedef TClaArrayProxy<TArrayType<Float_t> >     TClaArrayFloatProxy;
-   typedef TClaArrayProxy<TArrayType<Float16_t> >   TClaArrayFloat16Proxy;
-   typedef TClaArrayProxy<TArrayType<UInt_t> >      TClaArrayUIntProxy;
-   typedef TClaArrayProxy<TArrayType<ULong_t> >     TClaArrayULongProxy;
-   typedef TClaArrayProxy<TArrayType<ULong64_t> >   TClaArrayULong64Proxy;
-   typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayUShortProxy;
-   typedef TClaArrayProxy<TArrayType<UChar_t> >     TClaArrayUCharProxy;
-   typedef TClaArrayProxy<TArrayType<Int_t> >       TClaArrayIntProxy;
-   typedef TClaArrayProxy<TArrayType<Long_t> >      TClaArrayLongProxy;
-   typedef TClaArrayProxy<TArrayType<Long64_t> >    TClaArrayLong64Proxy;
-   typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayShortProxy;
-   typedef TClaArrayProxy<TArrayType<Char_t> >      TClaArrayCharProxy;
-   typedef TClaArrayProxy<TArrayType<Bool_t> >      TClaArrayBoolProxy;
+   typedef TClaArrayProxy<TArrayType<Double_t> >    TClaArrayDoubleProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of double
+   typedef TClaArrayProxy<TArrayType<Double32_t> >  TClaArrayDouble32Proxy; // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of double32
+   typedef TClaArrayProxy<TArrayType<Float_t> >     TClaArrayFloatProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of float
+   typedef TClaArrayProxy<TArrayType<Float16_t> >   TClaArrayFloat16Proxy;  // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of float16
+   typedef TClaArrayProxy<TArrayType<UInt_t> >      TClaArrayUIntProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned int
+   typedef TClaArrayProxy<TArrayType<ULong_t> >     TClaArrayULongProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned long
+   typedef TClaArrayProxy<TArrayType<ULong64_t> >   TClaArrayULong64Proxy;  // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned long long
+   typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayUShortProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned short
+   typedef TClaArrayProxy<TArrayType<UChar_t> >     TClaArrayUCharProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of nsigned char
+   typedef TClaArrayProxy<TArrayType<Int_t> >       TClaArrayIntProxy;      // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of int
+   typedef TClaArrayProxy<TArrayType<Long_t> >      TClaArrayLongProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of long
+   typedef TClaArrayProxy<TArrayType<Long64_t> >    TClaArrayLong64Proxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of long long
+   typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayShortProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of short
+   typedef TClaArrayProxy<TArrayType<Char_t> >      TClaArrayCharProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of char
+   typedef TClaArrayProxy<TArrayType<Bool_t> >      TClaArrayBoolProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of bool
    //specialized ! typedef TClaArrayProxy<TArrayType<Char_t> >  TClaArrayCharProxy;
 
-   typedef TStlImpProxy<Double_t>   TStlDoubleProxy;
-   typedef TStlImpProxy<Double32_t> TStlDouble32Proxy;
-   typedef TStlImpProxy<Float_t>    TStlFloatProxy;
-   typedef TStlImpProxy<Float16_t>  TStlFloat16Proxy;
-   typedef TStlImpProxy<UInt_t>     TStlUIntProxy;
-   typedef TStlImpProxy<ULong_t>    TStlULongProxy;
-   typedef TStlImpProxy<ULong64_t>  TStlULong64Proxy;
-   typedef TStlImpProxy<UShort_t>   TStlUShortProxy;
-   typedef TStlImpProxy<UChar_t>    TStlUCharProxy;
-   typedef TStlImpProxy<Int_t>      TStlIntProxy;
-   typedef TStlImpProxy<Long_t>     TStlLongProxy;
-   typedef TStlImpProxy<Long64_t>   TStlLong64Proxy;
-   typedef TStlImpProxy<Short_t>    TStlShortProxy;
-   typedef TStlImpProxy<Char_t>     TStlCharProxy;
-   typedef TStlImpProxy<Bool_t>     TStlBoolProxy;
+   typedef TStlImpProxy<Double_t>   TStlDoubleProxy;   // Concrete Implementation of the branch proxy around an stl container of double
+   typedef TStlImpProxy<Double32_t> TStlDouble32Proxy; // Concrete Implementation of the branch proxy around an stl container of double32
+   typedef TStlImpProxy<Float_t>    TStlFloatProxy;    // Concrete Implementation of the branch proxy around an stl container of float
+   typedef TStlImpProxy<Float16_t>  TStlFloat16Proxy;  // Concrete Implementation of the branch proxy around an stl container of float16_t
+   typedef TStlImpProxy<UInt_t>     TStlUIntProxy;     // Concrete Implementation of the branch proxy around an stl container of unsigned int
+   typedef TStlImpProxy<ULong_t>    TStlULongProxy;    // Concrete Implementation of the branch proxy around an stl container of unsigned long
+   typedef TStlImpProxy<ULong64_t>  TStlULong64Proxy;  // Concrete Implementation of the branch proxy around an stl container of unsigned long long
+   typedef TStlImpProxy<UShort_t>   TStlUShortProxy;   // Concrete Implementation of the branch proxy around an stl container of unsigned short
+   typedef TStlImpProxy<UChar_t>    TStlUCharProxy;    // Concrete Implementation of the branch proxy around an stl container of unsigned char
+   typedef TStlImpProxy<Int_t>      TStlIntProxy;      // Concrete Implementation of the branch proxy around an stl container of int
+   typedef TStlImpProxy<Long_t>     TStlLongProxy;     // Concrete Implementation of the branch proxy around an stl container of long
+   typedef TStlImpProxy<Long64_t>   TStlLong64Proxy;   // Concrete Implementation of the branch proxy around an stl container of long long
+   typedef TStlImpProxy<Short_t>    TStlShortProxy;    // Concrete Implementation of the branch proxy around an stl container of short
+   typedef TStlImpProxy<Char_t>     TStlCharProxy;     // Concrete Implementation of the branch proxy around an stl container of char
+   typedef TStlImpProxy<Bool_t>     TStlBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
 
-   typedef TStlArrayProxy<TArrayType<Double_t> >    TStlArrayDoubleProxy;
-   typedef TStlArrayProxy<TArrayType<Double32_t> >  TStlArrayDouble32Proxy;
-   typedef TStlArrayProxy<TArrayType<Float_t> >     TStlArrayFloatProxy;
-   typedef TStlArrayProxy<TArrayType<Float16_t> >   TStlArrayFloat16Proxy;
-   typedef TStlArrayProxy<TArrayType<UInt_t> >      TStlArrayUIntProxy;
-   typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;
-   typedef TStlArrayProxy<TArrayType<ULong64_t> >   TStlArrayULong64Proxy;
-   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayUShortProxy;
-   typedef TStlArrayProxy<TArrayType<UChar_t> >     TStlArrayUCharProxy;
-   typedef TStlArrayProxy<TArrayType<Int_t> >       TStlArrayIntProxy;
-   typedef TStlArrayProxy<TArrayType<Long_t> >      TStlArrayLongProxy;
-   typedef TStlArrayProxy<TArrayType<Long64_t> >    TStlArrayLong64Proxy;
-   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayShortProxy;
-   typedef TStlArrayProxy<TArrayType<Char_t> >      TStlArrayCharProxy;
-   typedef TStlArrayProxy<TArrayType<Bool_t> >      TStlArrayBoolProxy;
-   //specialized ! typedef TStlArrayProxy<TArrayType<Char_t> >  TStlArrayCharProxy;
+   typedef TStlArrayProxy<TArrayType<Double_t> >    TStlArrayDoubleProxy;   // Concrete Implementation of the branch proxy around an stl container of double
+   typedef TStlArrayProxy<TArrayType<Double32_t> >  TStlArrayDouble32Proxy; // Concrete Implementation of the branch proxy around an stl container of double32
+   typedef TStlArrayProxy<TArrayType<Float_t> >     TStlArrayFloatProxy;    // Concrete Implementation of the branch proxy around an stl container of float
+   typedef TStlArrayProxy<TArrayType<Float16_t> >   TStlArrayFloat16Proxy;  // Concrete Implementation of the branch proxy around an stl container of float16_t
+   typedef TStlArrayProxy<TArrayType<UInt_t> >      TStlArrayUIntProxy;     // Concrete Implementation of the branch proxy around an stl container of unsigned int
+   typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;    // Concrete Implementation of the branch proxy around an stl container of usigned long
+   typedef TStlArrayProxy<TArrayType<ULong64_t> >   TStlArrayULong64Proxy;  // Concrete Implementation of the branch proxy around an stl contained of unsigned long long
+   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayUShortProxy;   // Concrete Implementation of the branch proxy around an stl container of unisgned short
+   typedef TStlArrayProxy<TArrayType<UChar_t> >     TStlArrayUCharProxy;    // Concrete Implementation of the branch proxy around an stl container of unsingned char
+   typedef TStlArrayProxy<TArrayType<Int_t> >       TStlArrayIntProxy;      // Concrete Implementation of the branch proxy around an stl container of int
+   typedef TStlArrayProxy<TArrayType<Long_t> >      TStlArrayLongProxy;     // Concrete Implementation of the branch proxy around an stl container of long
+   typedef TStlArrayProxy<TArrayType<Long64_t> >    TStlArrayLong64Proxy;   // Concrete Implementation of the branch proxy around an stl container of long long
+   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayShortProxy;    // Concrete Implementation of the branch proxy around an stl container of UShort_t
+   typedef TStlArrayProxy<TArrayType<Char_t> >      TStlArrayCharProxy;     // Concrete Implementation of the branch proxy around an stl container of char
+   typedef TStlArrayProxy<TArrayType<Bool_t> >      TStlArrayBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
 
 } // namespace ROOT
 
