@@ -90,8 +90,7 @@ One can create the distribution class directly from a vector of data or from the
       unr.Init(dist);
          // sample N times (generate N random numbers)       
       for (int i = 0; i &lt; N; ++i)
-         double x = unr.Sample();
-  
+         double x = unr.Sample();  
   </pre>
   In the case of multi-dimension one needs to pass in addition to the iterators, the data dimension. It is assumed that the data are stored in the vector in this order : (x0,y0,...),(x1,y1,....). 
 </li>
@@ -109,6 +108,7 @@ One can create the distribution class directly from a vector of data or from the
   This is equivalent to TH1::GetRandom(), but sampling is faster, therefore, since it requires some initialization time, 
   it becomes convenient when generating a large sample of random numbers.
 </li>
+</ul>
   </li>
  
 </ul>
