@@ -12,6 +12,10 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TBranchProxy                                                         //
+//
+// Base class for all the proxy object.  It includes the imeplemtation
+// of the autoloading of branches as well as all the generic setup 
+// routine.
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +25,7 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 
+ClassImp(ROOT::TBranchProxy);
 
 ROOT::TBranchProxy::TBranchProxy() :
    fDirector(0), fInitialized(false), fBranchName(""), fParent(0),

@@ -27,6 +27,8 @@
 #include "TError.h"
 #include "TVirtualStreamerInfo.h"
 
+ClassImp(ROOT::TBranchProxyClassDescriptor);
+
 namespace ROOT {
 
    void TBranchProxyClassDescriptor::NameToSymbol() {

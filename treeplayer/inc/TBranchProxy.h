@@ -57,6 +57,8 @@ class TStreamerElement;
 
 namespace ROOT {
 
+   //_______________________________________________
+   // String builder to be used in the constructors.
    class TBranchProxyHelper {
    public:
       TString fName;
@@ -296,6 +298,7 @@ namespace ROOT {
       }
    };
 
+   //____________________________________________________________________________________________
    // Concrete Implementation of the branch proxy around the data members which are array of char
    class TArrayCharProxy : public TBranchProxy {
    public:
@@ -339,6 +342,7 @@ namespace ROOT {
 
    };
 
+   //_______________________________________________________
    // Base class for the proxy around object in TClonesArray.
    class TClaProxy : public TBranchProxy {
    public:
@@ -380,6 +384,7 @@ namespace ROOT {
 
    };
 
+   //_______________________________________________
    // Base class for the proxy around STL containers.
    class TStlProxy : public TBranchProxy {
    public:
@@ -419,6 +424,7 @@ namespace ROOT {
 
    };
 
+   //______________________________________
    // Template of the proxy around objects.
    template <class T>
    class TImpProxy : public TBranchProxy {
@@ -459,23 +465,27 @@ namespace ROOT {
 
    };
 
+   //____________________________________________
    // Helper template to be able to determine and
    // use array dimentsions.
    template <class T, int d = 0> struct TArrayType {
       typedef T type_t;
       typedef T array_t[d];
    }; 
+   //____________________________________________
    // Helper class for proxy around multi dimension array
    template <class T> struct TArrayType<T,0> {
       typedef T type_t;
       typedef T array_t;
    };
+   //____________________________________________
    // Helper class for proxy around multi dimension array
    template <class T, int d> struct TMultiArrayType {
       typedef typename T::type_t type_t;
       typedef typename T::array_t array_t[d];
    };
 
+   //____________________________________________
    // Template for concrete implementation of proxy around array of T
    template <class T>
    class TArrayProxy : public TBranchProxy {
@@ -512,6 +522,7 @@ namespace ROOT {
       const array_t &operator [](int i) { return At(i); }
    };
 
+   //_____________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around TClonesArray of T
    template <class T>
    class TClaImpProxy : public TBranchProxy {
@@ -562,6 +573,7 @@ namespace ROOT {
 
    };
 
+   //_________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of T
    template <class T>
    class TStlImpProxy : public TBranchProxy {
@@ -611,6 +623,7 @@ namespace ROOT {
 
    };
 
+   //_________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
    template <class T>
    class TClaArrayProxy : public TBranchProxy {
@@ -645,6 +658,8 @@ namespace ROOT {
       /* const */ array_t *operator [](int i) { return At(i); }
    };
 
+   
+   //__________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>
    class TStlArrayProxy : public TBranchProxy {

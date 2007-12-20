@@ -24,6 +24,8 @@
 #include "TBranchProxyDescriptor.h"
 #include "TList.h"
 
+ClassImp(ROOT::TFriendProxyDescriptor);
+
 namespace ROOT {
 
    TFriendProxyDescriptor::TFriendProxyDescriptor(const char *treename,

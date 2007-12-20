@@ -29,6 +29,8 @@
 
 namespace std {} using namespace std;
 
+ClassImp(ROOT::TBranchProxyDirectory);
+
 namespace ROOT {
 
    // Helper function to call Reset on each TBranchProxy

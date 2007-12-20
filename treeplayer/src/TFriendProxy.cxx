@@ -22,6 +22,8 @@
 #include "TList.h"
 #include "TFriendElement.h"
 
+ClassImp(ROOT::TFriendProxy);
+
 namespace ROOT {
 
    //------------------------------------------------------------------------------------
