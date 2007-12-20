@@ -1,0 +1,5 @@
+BEGIN_HTML
+This directory contains the X11 implementation of the TVirtualX abstract
+class which supports True Type Fonts (TTF).
+All X11 drawing and interaction goes via this class.
+END_HTML
