@@ -29,7 +29,7 @@
 
 namespace std {} using namespace std;
 
-ClassImp(ROOT::TBranchProxyDirectory);
+ClassImp(ROOT::TBranchProxyDirector);
 
 namespace ROOT {
 
