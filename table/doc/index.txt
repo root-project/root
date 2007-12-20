@@ -1,0 +1,16 @@
+This directory contains the generic C++ class library contributed by STAR collaboration 
+(http://www.star.bnl.gov)
+The library is to create the light and effective hierarchical organized environment 
+the kind the STAR offline framework was built with. 
+The classes are generic and are not STAR specific.
+BEGIN_HTML
+See STAR publications:
+<ul>
+<li><a href="http://chep2000.pd.infn.it/short_p/spa_a326.pdf">STAR offline framework
+    </a></li>
+<li><a href="http://www.hep.net/chep98/181.html">Steps Towards C++/OO Offline Software in STAR
+    </a></li>
+</ul>
+END_HTML
+
+
