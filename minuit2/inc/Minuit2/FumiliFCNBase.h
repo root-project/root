@@ -18,6 +18,7 @@ namespace ROOT {
    namespace Minuit2 {
 
 
+//____________________________________________________________________________________________
 /** 
  
 Extension of the FCNBase for the Fumili method. Fumili applies only to 

@@ -29,8 +29,9 @@ class MinimumState;
 class MnMachinePrecision;
 class MnFcn;
 
-
-/** API class for calculating the numerical covariance matrix 
+//_______________________________________________________________________
+/** 
+    API class for calculating the numerical covariance matrix 
     (== 2x Inverse Hessian == 2x Inverse 2nd derivative); can be used by the 
     user or Minuit itself
  */
@@ -39,48 +40,48 @@ class MnHesse {
 
 public:
 
-  /// default constructor with default strategy
-  MnHesse() : fStrategy(MnStrategy(1)) {}
+   /// default constructor with default strategy
+   MnHesse() : fStrategy(MnStrategy(1)) {}
 
-  /// constructor with user-defined strategy level
-  MnHesse(unsigned int stra) : fStrategy(MnStrategy(stra)) {}
+   /// constructor with user-defined strategy level
+   MnHesse(unsigned int stra) : fStrategy(MnStrategy(stra)) {}
 
-  /// conctructor with specific strategy
-  MnHesse(const MnStrategy& stra) : fStrategy(stra) {}
+   /// conctructor with specific strategy
+   MnHesse(const MnStrategy& stra) : fStrategy(stra) {}
 
-  ~MnHesse() {}
+   ~MnHesse() {}
 
-  ///
-  /// low-level API
-  ///
-  /// FCN + parameters + errors
-  MnUserParameterState operator()(const FCNBase&, const std::vector<double>&, const std::vector<double>&, unsigned int maxcalls=0) const;
-  /// FCN + parameters + covariance
-  MnUserParameterState operator()(const FCNBase&, const std::vector<double>&,  unsigned int nrow, const std::vector<double>&, unsigned int maxcalls = 0) const;
-  /// FCN + parameters + MnUserCovariance
-  MnUserParameterState operator()(const FCNBase&, const std::vector<double>&, const MnUserCovariance&, unsigned int maxcalls=0) const;
-  ///
-  /// high-level API
-  ///
-  /// FCN + MnUserParameters
-  MnUserParameterState operator()(const FCNBase&, const MnUserParameters&, unsigned int maxcalls=0) const;
-  /// FCN + MnUserParameters + MnUserCovariance
-  MnUserParameterState operator()(const FCNBase&, const MnUserParameters&, const MnUserCovariance&, unsigned int maxcalls=0) const;
-  /// FCN + MnUserParameterState
-  MnUserParameterState operator()(const FCNBase&, const MnUserParameterState&, unsigned int maxcalls=0) const;
-  ///
-  /// internal interface
-  ///
-  MinimumState operator()(const MnFcn&, const MinimumState&, const MnUserTransformation&, unsigned int maxcalls=0) const;
+   ///
+   /// low-level API
+   ///
+   /// FCN + parameters + errors
+   MnUserParameterState operator()(const FCNBase&, const std::vector<double>&, const std::vector<double>&, unsigned int maxcalls=0) const;
+   /// FCN + parameters + covariance
+   MnUserParameterState operator()(const FCNBase&, const std::vector<double>&,  unsigned int nrow, const std::vector<double>&, unsigned int maxcalls = 0) const;
+   /// FCN + parameters + MnUserCovariance
+   MnUserParameterState operator()(const FCNBase&, const std::vector<double>&, const MnUserCovariance&, unsigned int maxcalls=0) const;
+   ///
+   /// high-level API
+   ///
+   /// FCN + MnUserParameters
+   MnUserParameterState operator()(const FCNBase&, const MnUserParameters&, unsigned int maxcalls=0) const;
+   /// FCN + MnUserParameters + MnUserCovariance
+   MnUserParameterState operator()(const FCNBase&, const MnUserParameters&, const MnUserCovariance&, unsigned int maxcalls=0) const;
+   /// FCN + MnUserParameterState
+   MnUserParameterState operator()(const FCNBase&, const MnUserParameterState&, unsigned int maxcalls=0) const;
+   ///
+   /// internal interface
+   ///
+   MinimumState operator()(const MnFcn&, const MinimumState&, const MnUserTransformation&, unsigned int maxcalls=0) const;
 
-  /// forward interface of MnStrategy
-  unsigned int Ncycles() const {return fStrategy.HessianNCycles();}
-  double Tolerstp() const {return fStrategy.HessianStepTolerance();}
-  double TolerG2() const {return fStrategy.HessianG2Tolerance();}
+   /// forward interface of MnStrategy
+   unsigned int Ncycles() const {return fStrategy.HessianNCycles();}
+   double Tolerstp() const {return fStrategy.HessianStepTolerance();}
+   double TolerG2() const {return fStrategy.HessianG2Tolerance();}
 
 private:
 
-  MnStrategy fStrategy;
+   MnStrategy fStrategy;
 };
 
   }  // namespace Minuit2

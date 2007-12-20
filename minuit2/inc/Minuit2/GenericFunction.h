@@ -19,7 +19,7 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-
+//_____________________________________________________________________
 /** 
 
 Class from which all the other classes, representing functions,
@@ -36,21 +36,21 @@ class GenericFunction {
 
 public:
 
-  virtual ~GenericFunction() {}
+   virtual ~GenericFunction() {}
 
 
-  /**
+   /**
 
-  Evaluates the function using the vector containing the input values.
+      Evaluates the function using the vector containing the input values.
 
-  @param x vector of the coordinates (for example the x coordinate for a 
-  one-dimensional Gaussian)
+      @param x vector of the coordinates (for example the x coordinate for a 
+      one-dimensional Gaussian)
 
-  @return the result of the evaluation of the function.
+      @return the result of the evaluation of the function.
 
-  */
+   */
 
-  virtual double operator()(const std::vector<double>& x) const=0;
+   virtual double operator()(const std::vector<double>& x) const=0;
 
 
 

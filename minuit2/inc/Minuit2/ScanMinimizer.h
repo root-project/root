@@ -21,23 +21,28 @@ namespace ROOT {
 
    namespace Minuit2 {
 
+//_____________________________________________________________
+/**
+   Class implementing the required methods for a minimization using SCAN
+   API is provided in the upper ROOT::Minuit2::ModularFunctionMinimizer class
+ */
 
 class ScanMinimizer : public ModularFunctionMinimizer {
 
 public:
 
-  ScanMinimizer() : fSeedGenerator(SimplexSeedGenerator()), 
-		    fBuilder(ScanBuilder()) {}
+   ScanMinimizer() : fSeedGenerator(SimplexSeedGenerator()), 
+                     fBuilder(ScanBuilder()) {}
   
-  ~ScanMinimizer() {}
+   ~ScanMinimizer() {}
   
-  const MinimumSeedGenerator& SeedGenerator() const {return fSeedGenerator;}
-  const MinimumBuilder& Builder() const {return fBuilder;}
+   const MinimumSeedGenerator& SeedGenerator() const {return fSeedGenerator;}
+   const MinimumBuilder& Builder() const {return fBuilder;}
   
 private:
   
-  SimplexSeedGenerator fSeedGenerator;
-  ScanBuilder fBuilder;
+   SimplexSeedGenerator fSeedGenerator;
+   ScanBuilder fBuilder;
 };
 
   }  // namespace Minuit2

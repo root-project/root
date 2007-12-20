@@ -18,27 +18,31 @@ namespace ROOT {
 
    namespace Minuit2 {
 
-
-/** Combined minimizer: if migrad method fails at first attempt, a simplex
-    minimization is performed and then migrad is tried again.
- */
+//__________________________________________________________________________
+/**
+   Combined minimizer: combination of Migrad and Simplex. I
+   If the Migrad method fails at first attempt, a simplex
+   minimization is performed and then migrad is tried again.
+  
+    
+*/
 
 class CombinedMinimizer : public ModularFunctionMinimizer {
 
 public:
 
-  CombinedMinimizer() : fMinSeedGen(MnSeedGenerator()),
-			fMinBuilder(CombinedMinimumBuilder()) {}
+   CombinedMinimizer() : fMinSeedGen(MnSeedGenerator()),
+                         fMinBuilder(CombinedMinimumBuilder()) {}
   
-  ~CombinedMinimizer() {}
+   ~CombinedMinimizer() {}
 
-  const MinimumSeedGenerator& SeedGenerator() const {return fMinSeedGen;}
-  const MinimumBuilder& Builder() const {return fMinBuilder;}
+   const MinimumSeedGenerator& SeedGenerator() const {return fMinSeedGen;}
+   const MinimumBuilder& Builder() const {return fMinBuilder;}
 
 private:
 
-  MnSeedGenerator fMinSeedGen;
-  CombinedMinimumBuilder fMinBuilder;
+   MnSeedGenerator fMinSeedGen;
+   CombinedMinimumBuilder fMinBuilder;
 };
 
   }  // namespace Minuit2

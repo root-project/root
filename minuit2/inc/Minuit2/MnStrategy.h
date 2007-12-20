@@ -14,8 +14,9 @@ namespace ROOT {
 
    namespace Minuit2 {
 
-
-/** API class for defining three levels of strategies: low (0), medium (1), 
+//_________________________________________________________________________
+/** 
+    API class for defining three levels of strategies: low (0), medium (1), 
     high (>=2);
     acts on: Migrad (behavioural), 
              Minos (lowers strategy by 1 for Minos-own minimization), 
@@ -27,53 +28,53 @@ class MnStrategy {
 
 public:
 
-  //default strategy
-  MnStrategy();
+   //default strategy
+   MnStrategy();
 
-  //user defined strategy (0, 1, >=2)
-  explicit MnStrategy(unsigned int);
+   //user defined strategy (0, 1, >=2)
+   explicit MnStrategy(unsigned int);
 
-  ~MnStrategy() {}
+   ~MnStrategy() {}
 
-  unsigned int Strategy() const {return fStrategy;}
+   unsigned int Strategy() const {return fStrategy;}
 
-  unsigned int GradientNCycles() const {return fGradNCyc;}
-  double GradientStepTolerance() const {return fGradTlrStp;}
-  double GradientTolerance() const {return fGradTlr;}
+   unsigned int GradientNCycles() const {return fGradNCyc;}
+   double GradientStepTolerance() const {return fGradTlrStp;}
+   double GradientTolerance() const {return fGradTlr;}
 
-  unsigned int HessianNCycles() const {return fHessNCyc;}
-  double HessianStepTolerance() const {return fHessTlrStp;}
-  double HessianG2Tolerance() const {return fHessTlrG2;}
-  unsigned int HessianGradientNCycles() const {return fHessGradNCyc;}
+   unsigned int HessianNCycles() const {return fHessNCyc;}
+   double HessianStepTolerance() const {return fHessTlrStp;}
+   double HessianG2Tolerance() const {return fHessTlrG2;}
+   unsigned int HessianGradientNCycles() const {return fHessGradNCyc;}
   
-  bool IsLow() const {return fStrategy == 0;}
-  bool IsMedium() const {return fStrategy == 1;}
-  bool IsHigh() const {return fStrategy >= 2;}
+   bool IsLow() const {return fStrategy == 0;}
+   bool IsMedium() const {return fStrategy == 1;}
+   bool IsHigh() const {return fStrategy >= 2;}
 
-  void SetLowStrategy();
-  void SetMediumStrategy();
-  void SetHighStrategy();
+   void SetLowStrategy();
+   void SetMediumStrategy();
+   void SetHighStrategy();
   
-  void SetGradientNCycles(unsigned int n) {fGradNCyc = n;}
-  void SetGradientStepTolerance(double stp) {fGradTlrStp = stp;}
-  void SetGradientTolerance(double toler) {fGradTlr = toler;}
+   void SetGradientNCycles(unsigned int n) {fGradNCyc = n;}
+   void SetGradientStepTolerance(double stp) {fGradTlrStp = stp;}
+   void SetGradientTolerance(double toler) {fGradTlr = toler;}
 
-  void SetHessianNCycles(unsigned int n) {fHessNCyc = n;}
-  void SetHessianStepTolerance(double stp) {fHessTlrStp = stp;}
-  void SetHessianG2Tolerance(double toler) {fHessTlrG2 = toler;}
-  void SetHessianGradientNCycles(unsigned int n) {fHessGradNCyc = n;}
+   void SetHessianNCycles(unsigned int n) {fHessNCyc = n;}
+   void SetHessianStepTolerance(double stp) {fHessTlrStp = stp;}
+   void SetHessianG2Tolerance(double toler) {fHessTlrG2 = toler;}
+   void SetHessianGradientNCycles(unsigned int n) {fHessGradNCyc = n;}
   
 private:
 
-  unsigned int fStrategy;
+   unsigned int fStrategy;
 
-  unsigned int fGradNCyc;
-  double fGradTlrStp;
-  double fGradTlr;
-  unsigned int fHessNCyc;
-  double fHessTlrStp;
-  double fHessTlrG2;
-  unsigned int fHessGradNCyc;
+   unsigned int fGradNCyc;
+   double fGradTlrStp;
+   double fGradTlr;
+   unsigned int fHessNCyc;
+   double fHessTlrStp;
+   double fHessTlrG2;
+   unsigned int fHessGradNCyc;
 };
 
   }  // namespace Minuit2

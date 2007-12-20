@@ -21,23 +21,28 @@ namespace ROOT {
 
    namespace Minuit2 {
 
+//_____________________________________________________________
+/**
+   Class implementing the required methods for a minimization using Simplex.
+   API is provided in the upper ROOT::Minuit2::ModularFunctionMinimizer class
+ */
 
 class SimplexMinimizer : public ModularFunctionMinimizer {
 
 public:
 
-  SimplexMinimizer() : fSeedGenerator(SimplexSeedGenerator()), 
-		       fBuilder(SimplexBuilder()) {}
+   SimplexMinimizer() : fSeedGenerator(SimplexSeedGenerator()), 
+                        fBuilder(SimplexBuilder()) {}
 
-  ~SimplexMinimizer() {}
+   ~SimplexMinimizer() {}
 
-  const MinimumSeedGenerator& SeedGenerator() const {return fSeedGenerator;}
-  const MinimumBuilder& Builder() const {return fBuilder;}
+   const MinimumSeedGenerator& SeedGenerator() const {return fSeedGenerator;}
+   const MinimumBuilder& Builder() const {return fBuilder;}
 
 private:
 
-  SimplexSeedGenerator fSeedGenerator;
-  SimplexBuilder fBuilder;
+   SimplexSeedGenerator fSeedGenerator;
+   SimplexBuilder fBuilder;
 };
 
   }  // namespace Minuit2

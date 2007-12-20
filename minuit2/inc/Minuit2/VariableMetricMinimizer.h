@@ -19,27 +19,30 @@ namespace ROOT {
 
    namespace Minuit2 {
 
-
-/** Instantiates the SeedGenerator and MinimumBuilder for
+//______________________________________________________________________________
+/** 
+    Instantiates the SeedGenerator and MinimumBuilder for
     Variable Metric Minimization method.
+    API is provided in the upper ROOT::Minuit2::ModularFunctionMinimizer class
+ 
  */
 
 class VariableMetricMinimizer : public ModularFunctionMinimizer {
 
 public:
 
-  VariableMetricMinimizer() : fMinSeedGen(MnSeedGenerator()),
-			      fMinBuilder(VariableMetricBuilder()) {}
+   VariableMetricMinimizer() : fMinSeedGen(MnSeedGenerator()),
+                               fMinBuilder(VariableMetricBuilder()) {}
   
-  ~VariableMetricMinimizer() {}
+   ~VariableMetricMinimizer() {}
 
-  const MinimumSeedGenerator& SeedGenerator() const {return fMinSeedGen;}
-  const MinimumBuilder& Builder() const {return fMinBuilder;}
+   const MinimumSeedGenerator& SeedGenerator() const {return fMinSeedGen;}
+   const MinimumBuilder& Builder() const {return fMinBuilder;}
 
 private:
 
-  MnSeedGenerator fMinSeedGen;
-  VariableMetricBuilder fMinBuilder;
+   MnSeedGenerator fMinSeedGen;
+   VariableMetricBuilder fMinBuilder;
 };
 
   }  // namespace Minuit2
