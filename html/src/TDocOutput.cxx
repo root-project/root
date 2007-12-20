@@ -1246,7 +1246,7 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
             TString line;
             while (in) {
                if (!line.ReadLine(in)) break;
-               out << line;
+               out << line << endl;
             }
          }
       } else
