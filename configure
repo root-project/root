@@ -99,6 +99,7 @@ enable_cint7=no
 enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
+enable_pch=no
 enable_qt=no
 enable_qtgsi=no
 enable_roofit=no
