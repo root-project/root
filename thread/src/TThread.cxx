@@ -616,7 +616,7 @@ Int_t TThread::Sleep(ULong_t secs, ULong_t nanos)
    // Static method to sleep the calling thread.
 
    UInt_t ms = UInt_t(secs * 1000) + UInt_t(nanos / 1000000);
-   gSystem->Sleep(ms);
+   if (gSystem) gSystem->Sleep(ms);
    return 0;
 }
 

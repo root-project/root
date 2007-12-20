@@ -74,7 +74,7 @@ void *mhs(void *)
       // sleep for 1 ms: sleep not necessary, slows things only a bit down
       // because the threads are actually doing nothing, which is eventually
       // very fast ;-)
-      gSystem->Sleep(1);
+      TThread::Sleep(0, 1000000);
    }
    TThread::Printf("End of mhs\n");
 
@@ -112,7 +112,7 @@ void *mhs1(void *)
       total0->Fill(xs2,0.2);
       TThread::UnLock();
       // sleep for 6 ms: not necessary (see above)
-      gSystem->Sleep(6);
+      TThread::Sleep(0, 6000000);
    }
    TThread::Printf("End of mhs1\n");
 
@@ -174,7 +174,7 @@ void *mhs2(void *)
          c1->Update();
       }
       // sleep for 1 ms: not necessary
-      gSystem->Sleep(1);
+      TThread::Sleep(0, 1000000);
    }
    TThread::Printf("End of mhs2\n");
    c1->Modified();
@@ -189,7 +189,7 @@ void *top(void *)
 
    for (Int_t i = 0; ;i++) {
       TThread::Ps();
-      gSystem->Sleep(5000);
+      TThread::Sleep(5);
    }
    TThread::Printf("End of top");
    return 0;
