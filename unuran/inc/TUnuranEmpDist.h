@@ -10,12 +10,6 @@
 
 // Header file for class TUnuranEmpDist
 
-//////////////////////////////////////////////////////////////////////
-// 
-//   TUnuranEmpDistr class 
-//   wrapper class for one dimensional empirical distribution
-// 
-///////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_Math_TUnuranEmpDist
 #define ROOT_Math_TUnuranEmpDist
@@ -29,11 +23,25 @@
 
 class TH1;
 
-//////////////////////////////////////////////////////////////////////
+//_______________________________________________________________________________
 /** 
-   TUnuranEmpDist class 
-   wrapper class for empiral  distributions obtained for example from an histogram 
-   or a vector of data
+   TUnuranEmpDist class for describing empiral  distributions. It is used by TUnuran 
+   to generate double random number according to this distribution via TUnuran::Sample() or 
+   TUnuran::Sample(double *) in case of multi-dimensional empirical distributions. 
+   
+   An empirical distribution can be one or multi-dimension constructed from a set of unbinned data, 
+   (the class can be constructed from an iterator to a vector of data) or by using an histogram 
+   (with apointer to the TH1 class). If the histogram contains a buffer with the original data they are used by 
+   default to estimate the empirical distribution, othewise the bins information is used. In this binned case 
+   only one dimension is now supported.  
+
+   In the case of unbinned data the density distribution is estimated by UNURAN using kernel smoothing and 
+   then random numbers are generated. In the case of bin data (which can only be one dimension) 
+   the probability density is estimated directly from the histograms and the random numbers are generated according 
+   to the histogram (like in TH1::GetRandom). This method requires some initialization time but it is faster 
+   in generating the random numbers than TH1::GetRandom and it becomes convenient to use when generating 
+   a large amount of data. 
+
 */ 
 ///////////////////////////////////////////////////////////////////////
 

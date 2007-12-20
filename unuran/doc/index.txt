@@ -77,11 +77,14 @@ The distribution can be initialized from a TF1 or from a vector of probabilities
   </li>
  
    <li> For empirical distribution the class <strong>TUnuranEmpDist</strong> must be used. 
-  In this case one can generate random numbers from a set of data (un-binned) . 
-The parent distribution is estimated by UNU.RAN using a gaussian kernel smoothing algorithm. 
+  In this case one can generate random numbers from a set of data (un-binned)  in one or multi-dimension or 
+  from a set of binned data in one dimension (similar to TH1::GetRandom() ). 
+<ul>
+<li>
+For unbin data the parent distribution is estimated by UNU.RAN using a gaussian kernel smoothing algorithm. 
 One can create the distribution class directly from a vector of data or from the buffer of TH1.
      <pre>  
-      // create distribution from a set of data
+      // create distribution from a set of data 1D 
       // vdata is an std::vector containing the data 
       TUnuranEmpDist  dist( vdata.begin(),vdata.end());
       unr.Init(dist);
@@ -90,6 +93,22 @@ One can create the distribution class directly from a vector of data or from the
          double x = unr.Sample();
   
   </pre>
+  In the case of multi-dimension one needs to pass in addition to the iterators, the data dimension. It is assumed that the data are stored in the vector in this order : (x0,y0,...),(x1,y1,....). 
+</li>
+<li>For binned data (only one dimensional data are supported) one uses directly the histogram 
+     <pre>  
+      // create an empirical distribution from an histogram
+      // if the histogram has a buffer one must use TUnuranEmpDist(h1,false)
+      TH1 * h1 = ... // histogram pointer
+      TUnuranEmpDist  binDist( h1);
+      unr.Init(binDist);
+         // sample N times (generate N random numbers)       
+      for (int i = 0; i &lt; N; ++i)
+         double x = unr.Sample();
+  </pre>
+  This is equivalent to TH1::GetRandom(), but sampling is faster, therefore, since it requires some initialization time, 
+  it becomes convenient when generating a large sample of random numbers.
+</li>
   </li>
  
 </ul>

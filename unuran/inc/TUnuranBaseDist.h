@@ -10,12 +10,6 @@
 
 // Header file for class TUnuranBaseDist
 
-//////////////////////////////////////////////////////////////////////
-// 
-//   TUnuranBaseDistr class 
-//   wrapper class for one dimensional continous distribution
-// 
-///////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_Math_TUnuranBaseDist
 #define ROOT_Math_TUnuranBaseDist
@@ -26,10 +20,10 @@
 #endif
 
 
-//////////////////////////////////////////////////////////////////////
+//______________________________________________________________________
 /** 
-   TUnuranBaseDistr class 
-   base class for UNuran distribution wrappers
+   TUnuranBaseDist, base class for Unuran distribution classees such as 
+   TUnuranContDist (for one-dimension) or TUnuranMultiContDist (multi-dimension)
 */ 
 ///////////////////////////////////////////////////////////////////////
 class TUnuranBaseDist  {

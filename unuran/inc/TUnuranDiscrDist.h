@@ -25,8 +25,25 @@ class TF1;
 
 //____________________________________________________________________
 /** 
-   TUnuranDiscrDistr class 
-   wrapper class for one dimensional discrete distribution
+   TUnuranDiscrDist class for one dimensional discrete distribution. 
+   It is used by TUnuran to generate integer random numbers according to this distribution via 
+   TUnuran::SampleDiscr(). 
+
+   The class can be constructed from a one-dimensional function (TF1 pointer) 
+   representing the discrete distribution (probability mesh function) 
+   (for example a TF1("f","TMath::PoissonI(x,[0])") ) or from a 
+   vector of probability, used by passing an iterator specifying the begin and the end of the vector. 
+   In the latter case the domain of the distribution will be defined by the vector, while in the first case is by 
+   default (0,+inf). 
+   a Method to set the domain of the distribution ( SetDomain ) is provided and it defines the range 
+   of the generated random numbers. 
+
+   The derivatives of the pdf which are used by some UNURAN methods are estimated numerically in the 
+   Derivative() method. 
+   Some extra information (like distribution mode, cdf function, probability sum, etc..) 
+   can be set as well otherwise will be estimated internally if required. 
+
+
 */ 
 class TUnuranDiscrDist : public TUnuranBaseDist {
 

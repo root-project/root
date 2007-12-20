@@ -57,7 +57,7 @@ TUnuranEmpDist::TUnuranEmpDist (const TH1 * h1, bool useBuffer) :
 
 TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x) : 
    fData(std::vector<double>(x,x+n) ),
-   fDim(2),
+   fDim(1),
    fMin(0), fMax(0),
    fBinned(0)  
 {

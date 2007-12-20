@@ -10,12 +10,6 @@
 
 // Header file for class TUnuranContDist
 
-//______________________________________________________________
-// 
-//   TUnuranContDistr class 
-//   wrapper class for one dimensional continuous distribution
-// 
-///////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_Math_TUnuranContDist
 #define ROOT_Math_TUnuranContDist
@@ -27,10 +21,24 @@
 
 class TF1;
 
-//////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________
 /** 
-   TUnuranContDistr class 
-   wrapper class for one dimensional continous distribution
+   TUnuranContDist class describing one dimensional continous distribution. 
+   It is used by TUnuran to generate random numbers according to this distribution via 
+   TUnuran::Sample()
+   
+   The class can be constructed from a function (TF1) representing the probability density 
+   function of the distribution. Optionally the derivative of the pdf can also be passed. 
+
+   It provides a method to set the domain of the distribution ( SetDomain ) which will correspond to the range 
+   of the generated random numbers. By default the domain is (-inf, + inf), indipendently of the 
+   range set in the TF1 class used to construct the distribution. 
+
+   In addition, some UNURAN methods requires extra information (cdf function, distribution mode, 
+   area of pdf, etc...). This information can as well be set. 
+   Some methods require instead of the pdf the log of the pdf. 
+   This can also be controlled by setting a flag when constructing this class. 
 */ 
 ///////////////////////////////////////////////////////////////////////
 class TUnuranContDist : public TUnuranBaseDist {

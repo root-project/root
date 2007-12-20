@@ -23,11 +23,22 @@
 class TF1; 
 
 
-/////////////////////////////////////////////////////////////
+//___________________________________________________________________________________________
 /** 
-   TUnuranMultiContDist class 
-   Wrapper class for multi dimensional continuous distributions. 
-   The class can be constructed from a multi-dimensional function. 
+   TUnuranMultiContDist class describing multi dimensional continuous distributions. 
+   It is used by TUnuran to generate a set of random numbers according to this distribution via 
+   TUnuran::Sample(double *).  
+   The class can be constructed from a multi-dimensional function (TF1 pointer, which can be actually also a 
+   TF2 or a TF3). 
+   It provides a method to set the domain of the distribution ( SetDomain ) which will correspond to the range 
+   of the generated random numbers. By default the domain is [(-inf,-inf,...)(+inf,+inf,...)], indipendently of the 
+   range set in the TF1 class used to construct the distribution. 
+
+   The derivatives of the pdf which are used by some UNURAN methods are estimated numerically in the 
+   Derivative() method. Some extra information (like distribution mode) can be set using SetMode.   
+   Some methods require instead of the pdf the log of the pdf. 
+   This can also be controlled by setting a flag when constructing this class. 
+
 */ 
 /////////////////////////////////////////////////////////////
 class TUnuranMultiContDist : public TUnuranBaseDist {
