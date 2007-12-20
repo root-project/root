@@ -494,7 +494,9 @@ TAxis *THStack::GetXaxis() const
    //  depends on the selected Draw options.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetXaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetXaxis();
 }
 
 //______________________________________________________________________________
@@ -507,7 +509,9 @@ TAxis *THStack::GetYaxis() const
    //  depends on the selected Draw options.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetYaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetYaxis();
 }
 
 //______________________________________________________________________________
