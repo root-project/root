@@ -638,7 +638,6 @@ static VALUE drr_as(VALUE self, VALUE klass)
     else
         rb_raise( rb_eArgError, "No TClass found for %s. Is this a Root type?", STR2CSTR(klass) );
 
-    delete c;
     return v;
 }
 
