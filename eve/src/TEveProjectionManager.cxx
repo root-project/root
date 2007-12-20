@@ -140,6 +140,8 @@ void TEveProjectionManager::ImportElementsRecurse(TEveElement* rnr_el, TEveEleme
    // plain TEveElementList to parent. Call same function on rnr_el
    // children.
 
+   static const TEveException eh("TEveProjectionManager::ImportElementsRecurse ");
+
    if (ShouldImport(rnr_el))
    {
       TEveElement  *new_re = 0;
@@ -156,7 +158,7 @@ void TEveProjectionManager::ImportElementsRecurse(TEveElement* rnr_el, TEveEleme
       {
          new_re = new TEveElementList;
       }
-      TObject *tobj   = rnr_el->GetObject();
+      TObject *tobj   = rnr_el->GetObject(eh);
       new_re->SetRnrElNameTitle(Form("NLT %s", tobj->GetName()),
                                 tobj->GetTitle());
       new_re->SetRnrSelf     (rnr_el->GetRnrSelf());

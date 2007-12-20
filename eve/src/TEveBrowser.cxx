@@ -263,9 +263,11 @@ void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, Int_
    //printf("ItemClicked item %s List %d btn=%d, x=%d, y=%d\n",
    //  item->GetText(),fDisplayFrame->GetList()->GetEntries(), btn, x, y);
 
+   static const TEveException eh("TEveGListTreeEditorFrame::ItemClicked ");
+
    TEveElement* re = (TEveElement*)item->GetUserData();
    if(re == 0) return;
-   TObject* obj = re->GetObject();
+   TObject* obj = re->GetObject(eh);
 
    switch (btn)
    {
@@ -295,6 +297,8 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
 {
    // Item has been double-clicked, potentially expand the children.
 
+   static const TEveException eh("TEveGListTreeEditorFrame::ItemDblClicked ");
+
    if (btn != 1) return;
 
    TEveElement* re = (TEveElement*) item->GetUserData();
@@ -302,7 +306,7 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
 
    re->ExpandIntoListTree(fListTree, item);
 
-   TObject* obj = re->GetObject();
+   TObject* obj = re->GetObject(eh);
    if (obj)
    {
       // Browse geonodes.
@@ -333,7 +337,7 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
    // A key has been pressed for an item.
    // Only <Delete> key is handled here.
 
-   static const TEveException eH("TEveGListTreeEditorFrame::ItemKeyPress ");
+   static const TEveException eh("TEveGListTreeEditorFrame::ItemKeyPress ");
 
    // replace entry with selected!
    entry = fListTree->GetSelected();
@@ -350,7 +354,7 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
       if (entry->GetParent())
       {
          if (rnr_el->GetDenyDestroy() > 0 && rnr_el->GetNItems() == 1)
-            throw(eH + "DestroyDenied set for this item.");
+            throw(eh + "DestroyDenied set for this item.");
 
          TEveElement* parent_re = dynamic_cast<TEveElement*>
             ((TEveElement*) entry->GetParent()->GetUserData());
@@ -365,7 +369,7 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
       else
       {
          if (rnr_el->GetDenyDestroy() > 0)
-            throw(eH + "DestroyDenied set for this top-level item.");
+            throw(eh + "DestroyDenied set for this top-level item.");
          ResetSelectedTimer(entry);
          gEve->RemoveFromListTree(rnr_el, fListTree, entry);
          gEve->Redraw3D();

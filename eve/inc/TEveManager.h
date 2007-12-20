@@ -71,10 +71,12 @@ public:
    class TExceptionHandler : public TStdExceptionHandler
    {
    public:
-      TExceptionHandler() : TStdExceptionHandler() { Add();}
-      virtual ~TExceptionHandler() { Remove(); }
+      TExceptionHandler() : TStdExceptionHandler() { Add(); }
+      virtual ~TExceptionHandler()                 { Remove(); }
 
       virtual EStatus  Handle(std::exception& exc);
+
+      ClassDef(TExceptionHandler, 0); // Exception handler for Eve exceptions.
    };
 
 private:
@@ -110,6 +112,8 @@ public:
    TEveManager(UInt_t w, UInt_t h);
    virtual ~TEveManager();
 
+   TExceptionHandler* GetExcHandler() const { return fExcHandler; }
+
    TEveBrowser*      GetBrowser()   const { return fBrowser;   }
    TEveGListTreeEditorFrame* GetLTEFrame()  const { return fLTEFrame;  }
    TEveGedEditor*    GetEditor()    const { return fEditor;    }
@@ -135,13 +139,13 @@ public:
    void EditElement(TEveElement* element);
 
    void DisableRedraw() { ++fRedrawDisabled; }
-   void EnableRedraw()  { --fRedrawDisabled; if(fRedrawDisabled <= 0) Redraw3D(); }
+   void EnableRedraw()  { --fRedrawDisabled; if (fRedrawDisabled <= 0) Redraw3D(); }
 
    void Redraw3D(Bool_t resetCameras=kFALSE, Bool_t dropLogicals=kFALSE)
    {
-      if(fRedrawDisabled <= 0 && !fTimerActive) RegisterRedraw3D();
-      if(resetCameras) fResetCameras = kTRUE;
-      if(dropLogicals) fDropLogicals = kTRUE;
+      if (fRedrawDisabled <= 0 && !fTimerActive) RegisterRedraw3D();
+      if (resetCameras) fResetCameras = kTRUE;
+      if (dropLogicals) fDropLogicals = kTRUE;
    }
    void RegisterRedraw3D();
    void DoRedraw3D();

@@ -208,7 +208,7 @@ void TEvePointSet::Paint(Option_t* /*option*/)
 {
    // Paint point-set.
 
-   static const TEveException eH("TEvePointSet::Paint ");
+   static const TEveException eh("TEvePointSet::Paint ");
 
    if (fRnrSelf == kFALSE) return;
 
@@ -224,7 +224,7 @@ void TEvePointSet::Paint(Option_t* /*option*/)
 
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
    if (reqSections != TBuffer3D::kNone)
-      Error(eH, "only direct GL rendering supported.");
+      Error(eh, "only direct GL rendering supported.");
 }
 
 /******************************************************************************/
@@ -255,10 +255,10 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
    // are filled up and need to be processed.
    // Virtual from TEvePointSelectorConsumer.
 
-   static const TEveException eH("TEvePointSet::TakeAction ");
+   static const TEveException eh("TEvePointSet::TakeAction ");
 
    if(sel == 0)
-      throw(eH + "selector is <null>.");
+      throw(eh + "selector is <null>.");
 
    Int_t    n = sel->GetNfill();
    Int_t  beg = GrowFor(n);
@@ -285,7 +285,7 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
          }
          break;
       default:
-         throw(eH + "unknown tree variable type.");
+         throw(eh + "unknown tree variable type.");
    }
 
    if (fIntIds) {
@@ -293,7 +293,7 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
       for (Int_t i=0; i<fIntIdsPerPoint; ++i) {
          subarr[i] = sel->GetVal(sel->GetDimension() - fIntIdsPerPoint + i);
          if (subarr[i] == 0)
-            throw(eH + "sub-id array not available.");
+            throw(eh + "sub-id array not available.");
       }
       Int_t* ids = fIntIds->GetArray() + fIntIdsPerPoint*beg;
       n = sel->GetNfill();
@@ -371,10 +371,12 @@ void TEvePointSetArray::Paint(Option_t* option)
 {
    // Paint the subjugated TEvePointSet's.
 
+   static const TEveException eh("TEvePointSetArray::Paint ");
+
    if (fRnrSelf) {
       for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
          if ((*i)->GetRnrSelf())
-            (*i)->GetObject()->Paint(option);
+            (*i)->GetObject(eh)->Paint(option);
       }
    }
 }
@@ -407,8 +409,10 @@ void TEvePointSetArray::SetMarkerColor(Color_t tcolor)
 {
    // Set marker color, propagate to children.
 
+   static const TEveException eh("TEvePointSetArray::SetMarkerColor ");
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject());
+      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject(eh));
       if (m && m->GetMarkerColor() == fMarkerColor)
          m->SetMarkerColor(tcolor);
    }
@@ -420,8 +424,10 @@ void TEvePointSetArray::SetMarkerStyle(Style_t mstyle)
 {
    // Set marker style, propagate to children.
 
+   static const TEveException eh("TEvePointSetArray::SetMarkerStyle ");
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject());
+      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject(eh));
       if (m && m->GetMarkerStyle() == fMarkerStyle)
          m->SetMarkerStyle(mstyle);
    }
@@ -433,8 +439,10 @@ void TEvePointSetArray::SetMarkerSize(Size_t msize)
 {
    // Set marker size, propagate to children.
 
+   static const TEveException eh("TEvePointSetArray::SetMarkerSize ");
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
-      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject());
+      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject(eh));
       if (m && m->GetMarkerSize() == fMarkerSize)
          m->SetMarkerSize(msize);
    }
@@ -450,10 +458,10 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
    // are filled up and need to be processed.
    // Virtual from TEvePointSelectorConsumer.
 
-   static const TEveException eH("TEvePointSetArray::TakeAction ");
+   static const TEveException eh("TEvePointSetArray::TakeAction ");
 
    if (sel == 0)
-      throw(eH + "selector is <null>.");
+      throw(eh + "selector is <null>.");
 
    Int_t n = sel->GetNfill();
 
@@ -463,7 +471,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
    Double_t *qq = sel->GetV4();
 
    if(qq == 0)
-      throw(eH + "requires 4-d varexp.");
+      throw(eh + "requires 4-d varexp.");
 
    switch(fSourceCS) {
       case kTVT_XYZ:
@@ -479,7 +487,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
          }
          break;
       default:
-         throw(eH + "unknown tree variable type.");
+         throw(eh + "unknown tree variable type.");
    }
 }
 
@@ -492,10 +500,10 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
 {
    // Initialize internal point-sets with given binning parameters.
 
-   static const TEveException eH("TEvePointSetArray::InitBins ");
+   static const TEveException eh("TEvePointSetArray::InitBins ");
 
-   if (nbins < 1) throw(eH + "nbins < 1.");
-   if (min > max) throw(eH + "min > max.");
+   if (nbins < 1) throw(eh + "nbins < 1.");
+   if (min > max) throw(eh + "min > max.");
 
    RemoveElements();
 

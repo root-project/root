@@ -78,14 +78,14 @@ void TEveViewer::AddScene(TEveScene* scene)
 {
    // Add 'scene' to the list of scenes.
 
-   static const TEveException eH("TEveViewer::AddScene ");
+   static const TEveException eh("TEveViewer::AddScene ");
 
    TGLSceneInfo* glsi = fGLViewer->AddScene(scene->GetGLScene());
    if (glsi != 0) {
       TEveSceneInfo* si = new TEveSceneInfo(this, scene, glsi);
       gEve->AddElement(si, this);
    } else {
-      throw(eH + "scene already in the viewer.");
+      throw(eh + "scene already in the viewer.");
    }
 }
 
@@ -109,11 +109,13 @@ void TEveViewer::RemoveElementsLocal()
 }
 
 //______________________________________________________________________________
-TObject* TEveViewer::GetEditorObject() const
+TObject* TEveViewer::GetEditorObject(const TEveException& eh) const
 {
    // Object to be edited when this is selected, returns the TGLViewer.
    // Virtual from TEveElement.
 
+   if (!fGLViewer)
+      throw(eh + "fGLViewer not set.");
    return fGLViewer;
 }
 
@@ -124,14 +126,14 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
    // class TEveScene.
    // Virtual from TEveElement.
 
-   static const TEveException eH("TEveViewer::HandleElementPaste ");
+   static const TEveException eh("TEveViewer::HandleElementPaste ");
 
    TEveScene* scene = dynamic_cast<TEveScene*>(el);
    if (scene != 0) {
       AddScene(scene);
       return kTRUE;
    } else {
-      Warning(eH.Data(), "class TEveViewer only accepts TEveScene paste argument.");
+      Warning(eh.Data(), "class TEveViewer only accepts TEveScene paste argument.");
       return kFALSE;
    }
 }

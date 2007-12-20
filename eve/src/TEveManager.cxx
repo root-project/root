@@ -89,10 +89,10 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
 {
    // Constructor.
 
-   static const TEveException eH("TEveManager::TEveManager ");
+   static const TEveException eh("TEveManager::TEveManager ");
 
    if (gEve != 0)
-      throw(eH + "There can be only one!");
+      throw(eh + "There can be only one!");
 
    gEve = this;
 
@@ -246,7 +246,7 @@ void TEveManager::EditElement(TEveElement* element)
 {
    // Show element in default editor.
 
-   static const TEveException eH("TEveManager::EditElement ");
+   static const TEveException eh("TEveManager::EditElement ");
 
    fEditor->DisplayElement(element);
 }
@@ -298,7 +298,9 @@ void TEveManager::ElementChanged(TEveElement* element, Bool_t update_scenes, Boo
    // Element was changed, perform framework side action.
    // Called from TEveElement::ElementChanged().
 
-   if (fEditor->GetModel() == element->GetEditorObject())
+   static const TEveException eh("TEveElement::ElementChanged ");
+
+   if (fEditor->GetModel() == element->GetEditorObject(eh))
       fEditor->DisplayElement(element);
 
    if (update_scenes) {
@@ -351,10 +353,10 @@ void TEveManager::RemoveFromListTree(TEveElement* element,
 {
    // Remove top-level element from list-tree with specified tree-item.
 
-   static const TEveException eH("TEveManager::RemoveFromListTree ");
+   static const TEveException eh("TEveManager::RemoveFromListTree ");
 
    if (lti->GetParent())
-      throw(eH + "not a top-level item.");
+      throw(eh + "not a top-level item.");
 
    element->RemoveFromListTree(lt, 0);
 }
@@ -423,6 +425,10 @@ void TEveManager::PreDeleteElement(TEveElement* element)
 
    if (fEditor->GetEveElement() == element)
       fEditor->DisplayObject(0);
+
+   std::list<TEveElement*> scenes;
+   element->CollectSceneParents(scenes);
+   ScenesChanged(scenes);
 }
 
 /******************************************************************************/
@@ -469,11 +475,11 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
    // This is cached internally so the second time this function is
    // called with the same argument the same geo-manager is returned.
 
-   static const TEveException eH("TEveManager::GetGeometry ");
+   static const TEveException eh("TEveManager::GetGeometry ");
 
    TString exp_filename = filename;
    gSystem->ExpandPathName(exp_filename);
-   printf("%s loading: '%s' -> '%s'.\n", eH.Data(),
+   printf("%s loading: '%s' -> '%s'.\n", eh.Data(),
           filename.Data(), exp_filename.Data());
 
    std::map<TString, TGeoManager*>::iterator g = fGeometries.find(filename);
@@ -481,11 +487,11 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
       return g->second;
    } else {
       if (gSystem->AccessPathName(exp_filename, kReadPermission))
-         throw(eH + "file '" + exp_filename + "' not readable.");
+         throw(eh + "file '" + exp_filename + "' not readable.");
       gGeoManager = 0;
       TGeoManager::Import(filename);
       if (gGeoManager == 0)
-         throw(eH + "GeoManager import failed.");
+         throw(eh + "GeoManager import failed.");
       gGeoManager->GetTopVolume()->VisibleDaughters(1);
 
       // Import colors exported by Gled, if they exist.
@@ -553,7 +559,14 @@ TEveManager* TEveManager::Create()
 /******************************************************************************/
 
 //______________________________________________________________________________
-TStdExceptionHandler::EStatus TEveManager::TExceptionHandler::Handle(std::exception& exc)
+//
+// Exception handler for Eve exceptions.
+
+ClassImp(TEveManager::TExceptionHandler)
+
+//______________________________________________________________________________
+TStdExceptionHandler::EStatus
+TEveManager::TExceptionHandler::Handle(std::exception& exc)
 {
    // Handle exceptions deriving from TEveException.
 

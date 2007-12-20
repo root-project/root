@@ -68,8 +68,10 @@ void TEveGedEditor::DisplayElement(TEveElement* re)
 {
    // Show a TEveElement in editor.
 
+   static const TEveException eh("TEveGedEditor::DisplayElement ");
+
    fElement = re;
-   fObject  = fElement ? fElement->GetEditorObject() : 0;
+   fObject  = fElement ? fElement->GetEditorObject(eh) : 0;
    TGedEditor::SetModel(fPad, fObject, kButton1Down);
 }
 

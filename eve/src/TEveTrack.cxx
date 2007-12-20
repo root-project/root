@@ -105,7 +105,7 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* rs):
    fMainColorPtr = &fLineColor;
 
    TParticlePDG* pdgp = t->GetPDG();
-   if(pdgp == 0) {
+   if (pdgp == 0) {
       t->ResetPdgCode(); pdgp = t->GetPDG();
    }
    fCharge = (Int_t) TMath::Nint(pdgp->Charge()/3);
@@ -220,7 +220,7 @@ void TEveTrack::SetPathMarks(const TEveTrack& t)
    // Copy path-marks from t.
 
    const std::vector<TEvePathMark*>& refs = t.GetPathMarksRef();
-   for(std::vector<TEvePathMark*>::const_iterator i=refs.begin(); i!=refs.end(); ++i)
+   for (std::vector<TEvePathMark*>::const_iterator i=refs.begin(); i!=refs.end(); ++i)
    {
       fPathMarks.push_back(new TEvePathMark(**i));
    }
@@ -312,7 +312,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       } // loop path-marks
 
    bounds:
-      if(!decay || rTP.GetFitDecay() == kFALSE)
+      if (!decay || rTP.GetFitDecay() == kFALSE)
       {
          // printf("%s loop to bounds  \n",fName.Data() );
          fPropagator->GoToBounds(currP);
@@ -392,10 +392,10 @@ void TEveTrack::ImportClustersFromIndex()
    // Import clusters marked with same reconstructed track index as the track.
    // Uses macro "clusters_from_index.C".
 
-   static const TEveException eH("TEveTrack::ImportClustersFromIndex ");
+   static const TEveException eh("TEveTrack::ImportClustersFromIndex ");
 
    if (fIndex == kMinInt)
-      throw(eH + "index not set.");
+      throw(eh + "index not set.");
 
    TEveUtil::LoadMacro("clusters_from_index.C");
    gROOT->ProcessLine(Form("clusters_from_index(%d, (TEveElement*)%p);",
@@ -410,14 +410,14 @@ void TEveTrack::ImportKine()
    // Import kinematics of the track's label recursively.
    // Uses macro "kine_tracks.C".
 
-   static const TEveException eH("TEveTrack::ImportKine ");
+   static const TEveException eh("TEveTrack::ImportKine ");
 
    if (fLabel == kMinInt)
-      throw(eH + "label not set.");
+      throw(eh + "label not set.");
 
    Int_t label;
    if (fLabel < 0) {
-      Warning(eH, "label negative, taking absolute value.");
+      Warning(eh, "label negative, taking absolute value.");
       label = -fLabel;
    } else {
       label = fLabel;
@@ -441,14 +441,14 @@ void TEveTrack::ImportKineWithArgs(Bool_t importMother, Bool_t importDaugters,
    //   recurse          recursive import of daughters' daughters
    // Uses macro "kine_tracks.C".
 
-   static const TEveException eH("TEveTrack::ImportKineWithArgs ");
+   static const TEveException eh("TEveTrack::ImportKineWithArgs ");
 
    if (fLabel == kMinInt)
-      throw(eH + "label not set.");
+      throw(eh + "label not set.");
 
    Int_t label;
    if (fLabel < 0) {
-      Warning(eH, "label negative, taking absolute value.");
+      Warning(eh, "label negative, taking absolute value.");
       label = -fLabel;
    } else {
       label = fLabel;
@@ -467,14 +467,14 @@ void TEveTrack::PrintKineStack()
    // Print kinematics pertaining to track's label.
    // Uses macro "print_kine_from_label.C".
 
-   static const TEveException eH("TEveTrack::PrintKineStack ");
+   static const TEveException eh("TEveTrack::PrintKineStack ");
 
    if (fLabel == kMinInt)
-      throw(eH + "label not set.");
+      throw(eh + "label not set.");
 
    Int_t label;
    if (fLabel < 0) {
-      Warning(eH, "label negative, taking absolute value.");
+      Warning(eh, "label negative, taking absolute value.");
       label = -fLabel;
    } else {
       label = fLabel;
@@ -489,13 +489,13 @@ void TEveTrack::PrintPathMarks()
 {
    // Print registered path-marks.
 
-   static const TEveException eH("TEveTrack::PrintPathMarks ");
+   static const TEveException eh("TEveTrack::PrintPathMarks ");
 
    printf("TEveTrack '%s', number of path marks %d, label %d\n",
           GetName(), (Int_t)fPathMarks.size(), fLabel);
 
    TEvePathMark* pm;
-   for(vpPathMark_i i=fPathMarks.begin(); i!=fPathMarks.end(); i++)
+   for (vpPathMark_i i=fPathMarks.begin(); i!=fPathMarks.end(); i++)
    {
       pm = *i;
       printf("  %-9s  p: %8f %8f %8f Vertex: %8e %8e %8e %g \n",
@@ -877,7 +877,7 @@ void TEveTrackList::SetMarkerStyle(Style_t style, TEveElement* el)
       track = dynamic_cast<TEveTrack*>(*i);
       if (track && track->GetMarkerStyle() == fMarkerStyle)
          track->SetMarkerStyle(style);
-      if(fRecurse)
+      if (fRecurse)
          SetMarkerStyle(style, *i);
    }
 }
@@ -1225,12 +1225,14 @@ void TEveTrackCounter::DoTrackAction(TEveTrack* track)
    // sub-containers.
    // In this case one should also override RemoveElementLocal.
 
+   static const TEveException eh("TEveTrackCounter::DoTrackAction ");
+
    switch (fClickAction)
    {
 
       case kCA_PrintTrackInfo:
       {
-         printf("TEveTrack '%s'\n", track->GetObject()->GetName());
+         printf("TEveTrack '%s'\n", track->GetObject(eh)->GetName());
          TEveVector &v = track->fV, &p = track->fP;
          printf("  Vx=%f, Vy=%f, Vz=%f; Pt=%f, Pz=%f, phi=%f)\n",
                 v.fX, v.fY, v.fZ, p.Perp(), p.fZ, TMath::RadToDeg()*p.Phi());
@@ -1254,7 +1256,7 @@ void TEveTrackCounter::DoTrackAction(TEveTrack* track)
          printf("TEveTrackCounter::CountTrack All=%d, Good=%d, Bad=%d\n",
                 fAllTracks, fGoodTracks, fAllTracks-fGoodTracks);
 
-         if (gEve->GetEditor()->GetModel() == GetObject())
+         if (gEve->GetEditor()->GetModel() == GetObject(eh))
             gEve->EditElement(this);
 
          break;

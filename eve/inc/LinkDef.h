@@ -22,6 +22,8 @@
 #pragma link C++ class TEveManager+;
 #pragma link C++ global gEve;
 
+#pragma link C++ class TEveManager::TExceptionHandler+;
+
 // Basic helper classes
 #pragma link C++ class TEveException+;
 #pragma link C++ class TEvePadHolder+;
