@@ -1,6 +1,6 @@
 This directory contains the ROOT Matrix Linear Algebra package
 BEGIN_HTML
- Several documents describing the I/O classes are listed below:
+ Several documents describing the linear algebra classes are listed below:
 <ul>
 <li><a href="ftp://root.cern.ch/root/doc/14LinearAlgebra.pdf">The Chapter about the Linear Algebra classes in the Users Guide
     </a></li>
