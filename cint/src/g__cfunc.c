@@ -225,7 +225,7 @@ G__COMPLETIONLIST G__completionlist[] = {
 #if defined(floor) || !defined(G__FUNCPOINTER)
 	{"floor",NULL},
 #else
-#if _MSC_VER == 1400
+#if _MSC_VER >= 1400
 	{"floor",(void (*)())G__floor_MSVC8},
 #else
 	{"floor",(void (*)())floor},
