@@ -1725,7 +1725,7 @@ void TestSliders::DoText(const char * /*text*/)
 void TestSliders::DoSlider(Int_t pos)
 {
    // Handle slider widgets.
-printf("handling slider\n");
+
    Int_t id;
    TGFrame *frm = (TGFrame *) gTQSender;
    if (frm->IsA()->InheritsFrom(TGSlider::Class())) {
