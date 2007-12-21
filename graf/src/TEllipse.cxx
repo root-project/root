@@ -492,7 +492,7 @@ void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    TString opt = option;
    opt.ToLower();
    if (phi2-phi1 >= 360 ) {
-      if (GetFillColor()) gPad->PaintFillArea(n,x,y);
+      if (GetFillStyle()) gPad->PaintFillArea(n,x,y);
       if (GetLineStyle()) gPad->PaintPolyLine(n+1,x,y);
    } else {
       x[n+1] = gPad->XtoPad(x1);
