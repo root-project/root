@@ -684,7 +684,7 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    }
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e'));
+   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
 
    TH1D* h = new TH1D(name, title, GetAxis(xDim)->GetNbins(),
                       GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax());
@@ -705,8 +705,6 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
       if (!IsInRange(coord)) continue;
       coord[xDim] = oldCoordX;
 
-      h->AddBinContent(coord[xDim], v);
-
       if (wantErrors) {
          if (haveErrors) {
             err = GetBinError(i);
@@ -715,6 +713,9 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
          preverr = h->GetBinError(coord[xDim]);
          h->SetBinError(coord[xDim], TMath::Sqrt(preverr * preverr + err));
       }
+
+      // only _after_ error calculation, or sqrt(v) is taken into account!
+      h->AddBinContent(coord[xDim], v);
    }
 
    delete [] coord;
@@ -750,7 +751,7 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
    }
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e'));
+   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
 
    // y, x looks wrong, but it's what TH3::Project3D("xy") does
    TH2D* h = new TH2D(name, title,
@@ -782,7 +783,6 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
       coord[yDim] = oldCoordY;
 
       bin = h->GetBin(coord[yDim],coord[xDim] );
-      h->AddBinContent(bin, v);
 
       if (wantErrors) {
          if (haveErrors) {
@@ -793,6 +793,9 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
          h->SetBinError(coord[yDim], coord[xDim],
                         TMath::Sqrt(preverr * preverr + err));
       }
+
+      // only _after_ error calculation, or sqrt(v) is taken into account!
+      h->AddBinContent(bin, v);
    }
    delete [] coord;
 
@@ -832,7 +835,7 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    }
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e'));
+   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
 
    TH3D* h = new TH3D(name, title, GetAxis(xDim)->GetNbins(),
                       GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax(),
@@ -869,7 +872,6 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
       coord[zDim] = oldCoordZ;
 
       bin = h->GetBin(coord[xDim], coord[yDim], coord[zDim]);
-      h->AddBinContent(bin, v);
 
       if (wantErrors) {
          if (haveErrors) {
@@ -880,6 +882,9 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
          h->SetBinError(coord[xDim], coord[yDim], coord[zDim],
                         TMath::Sqrt(preverr * preverr + err));
       }
+
+      // only _after_ error calculation, or sqrt(v) is taken into account!
+      h->AddBinContent(bin, v);
    }
    delete [] coord;
 
@@ -924,7 +929,7 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    THnSparse* h = CloneEmpty(name.Data(), title.Data(), &newaxes, fChunkSize);
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e'));
+   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
 
    Int_t* bins  = new Int_t[ndim];
    Int_t* coord = new Int_t[fNdimensions];
@@ -947,16 +952,17 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
 
       if (!IsInRange(coord)) continue;
 
-      h->AddBinContent(bins, v);
-
       if (wantErrors) {
          if (haveErrors) {
             err = GetBinError(i);
             err *= err;
          } else err = v;
          preverr = h->GetBinError(bins);
-         h->SetBinError(bins, preverr * preverr + err);
+         h->SetBinError(bins, TMath::Sqrt(preverr * preverr + err));
       }
+
+      // only _after_ error calculation, or sqrt(v) is taken into account!
+      h->AddBinContent(bins, v);
    }
 
    delete [] bins;
@@ -1259,7 +1265,7 @@ void THnSparse::SetBinContent(const Int_t* coord, Double_t v)
    GetCompactCoord()->SetCoord(coord);
    Long_t bin = GetBinIndexForCurrentBin(kTRUE);
    THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
-   return chunk->fContent->SetAt(v, bin % fChunkSize);
+   chunk->fContent->SetAt(v, bin % fChunkSize);
 }
 
 //______________________________________________________________________________
@@ -1271,7 +1277,7 @@ void THnSparse::SetBinError(const Int_t* coord, Double_t e)
    Long_t bin = GetBinIndexForCurrentBin(kTRUE);
 
    THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
-   return chunk->fSumw2->SetAt(e*e, bin % fChunkSize);
+   chunk->fSumw2->SetAt(e*e, bin % fChunkSize);
 }
 
 //______________________________________________________________________________
@@ -1366,7 +1372,6 @@ THnSparse* THnSparse::Rebin(const Int_t* group) const
       v = GetBinContent(i, coord);
       for (Int_t d = 0; d < ndim; ++d)
          bins[d] = (coord[d] - 1) / group[d] + 1;
-      h->AddBinContent(bins, v);
 
       if (wantErrors) {
          if (haveErrors) {
@@ -1376,6 +1381,9 @@ THnSparse* THnSparse::Rebin(const Int_t* group) const
          preverr = h->GetBinError(bins);
          h->SetBinError(bins, TMath::Sqrt(preverr * preverr + err));
       }
+
+      // only _after_ error calculation, or sqrt(v) is taken into account!
+      h->AddBinContent(bins, v);
    }
 
    delete [] bins;
