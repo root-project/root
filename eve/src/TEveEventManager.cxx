@@ -12,7 +12,7 @@
 #include "TEveEventManager.h"
 
 #include "TObjString.h"
-#include "TCint.h"
+#include "TInterpreter.h"
 
 //______________________________________________________________________________
 // TEveEventManager
