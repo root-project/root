@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: L. Moneta, J. Palacios    2006  
+// Author: L. Moneta, J. Palacios    2006  
 
 #ifndef ROOT_Math_MatrixRepresentationsStatic
 #define ROOT_Math_MatrixRepresentationsStatic 1
@@ -26,8 +26,10 @@
 namespace ROOT {
    
 namespace Math {
-    
+
+   //________________________________________________________________________________    
    /**
+      MatRepStd
       Standard Matrix representation for a general D1 x D2 matrix. 
       This class is itself a template on the contained type T, the number of rows and the number of columns.
       Its data member is an array T[nrows*ncols] containing the matrix data. 
@@ -139,8 +141,9 @@ namespace Math {
       int fOff[D*D];
    };
 
-
+//_________________________________________________________________________________
    /**
+      MatRepSym
       Matrix storage representation for a symmetric matrix of dimension NxN
       This class is a template on the contained type and on the symmetric matrix size, N. 
       It has as data member an array of type T of size N*(N+1)/2, 

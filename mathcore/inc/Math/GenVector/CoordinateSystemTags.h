@@ -27,7 +27,8 @@ namespace Math {
 
 //__________________________________________________________________________________________
    /**
-      Default tag identifying any coordinate system 
+      DefaultCoordinateSystemTag
+      Default tag for identifying any coordinate system 
       
       @ingroup GenVector
    */

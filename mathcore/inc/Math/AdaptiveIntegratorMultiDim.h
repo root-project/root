@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: M. Slawinska   08/2007 
+// Author: M. Slawinska   08/2007 
 
 /**********************************************************************
  *                                                                    *
@@ -72,20 +72,25 @@ public:
    /// evaluate the integral passing a new function
    double Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax);
 
+   /// set the integration function (must implement multi-dim funciton interface: IBaseFunctionMultiDim)
    void SetFunction(const IMultiGenFunction &f);
 
    /// return result of integration 
    double Result() const { return fResult; }
 
-   // return integration error 
+   /// return integration error 
    double Error() const { return fError; } 
 
+   /// return status of integration
    int Status() const { return fStatus; }
 
-   // return number of function evaluations in calculating the integral 
+   /// return number of function evaluations in calculating the integral 
    unsigned int NEval() const { return fNEval; }
  
+   /// set relative tolerance 
    void SetRelTolerance(double relTol);
+
+   /// set absolute tolerance
    void SetAbsTolerance(double absTol);
 
 

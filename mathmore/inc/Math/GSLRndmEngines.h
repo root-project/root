@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Author: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
   *                                                                    *
@@ -47,6 +47,7 @@ namespace Math {
 
    //_________________________________________________________________
    /**
+      GSLRandomEngine
       Base class for all GSL random engines, 
       normally user instantiate the derived classes
       which creates internally the generator.

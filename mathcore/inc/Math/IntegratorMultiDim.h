@@ -39,12 +39,13 @@
 namespace ROOT {
 namespace Math {
 
-
+//___________________________________________________________________________________________
 /**
    User class for performing multidimensional integration 
 
-   By default uses adaptive multi-dimenaional integration using the algorithm from Genz Mallik
-   implemented in the class ROOT::Math::AdaptiveIntegratorMultiDim
+   By default uses adaptive multi-dimensional integration using the algorithm from Genz Mallik
+   implemented in the class ROOT::Math::AdaptiveIntegratorMultiDim otherwise it can uses via the 
+   plug-in manager the MC integration class (ROOT::Math::GSLMCIntegration) from MathMore. 
 
    @ingroup Integration
 
@@ -175,7 +176,7 @@ protected:
 
  private:
 
-   VirtualIntegratorMultiDim * fIntegrator;
+   VirtualIntegratorMultiDim * fIntegrator;     // pointer to multi-dimensional integrator base class
 
 
 };

@@ -31,17 +31,18 @@
 
 namespace ROOT { 
 
-   namespace Math { 
+namespace Math { 
 
 
 //___________________________________________________________________
 /** 
-   IBaseParam interface defining the API for dealing with the function parameters
-   This is used only for internal convinience, to avoid redefining the Parameter API  
-   for the one and the multi-dim function. 
-   Concrete class should derive from ROOT::Math::IParamFunction and not from this class.  
-
-   @ingroup  CppFunctions
+    Documentation for the abstract class IBaseParam.
+    It defines the interface for dealing with the function parameters
+    This is used only for internal convinience, to avoid redefining the Parameter API  
+    for the one and the multi-dim functions. 
+    Concrete class should derive from ROOT::Math::IParamFunction and not from this class.  
+    
+    @ingroup  CppFunctions
 */ 
 
 class IBaseParam  {

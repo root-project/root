@@ -1,9 +1,10 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005
+// Author: T. Glebe, L. Moneta, J. Palacios    2005
 
 #ifndef ROOT_Math_SMatrix
 #define ROOT_Math_SMatrix
-// ********************************************************************
+
+/*********************************************************************************
 //
 // source:
 //
@@ -35,7 +36,7 @@
 // 11 Jan 2002 (TG) added operator==(), operator!=()
 // 14 Jan 2002 (TG) added more operator==(), operator!=(), operator>(), operator<()
 //
-// ********************************************************************
+***************************************************************************/
 // for platform specific configurations
 
 #ifndef ROOT_Math_MnConfig
@@ -97,12 +98,20 @@ template <class T, unsigned int D> class SVector;
 
 struct SMatrixIdentity { };
  
-
+//__________________________________________________________________________
 /** 
     SMatrix: a generic fixed size D1 x D2 Matrix class.
-    The class is template on the scalar type and on the matrix sizes: 
-    D1 = number of rows and D2 = number of columns.
+    The class is template on the scalar type, on the matrix sizes: 
+    D1 = number of rows and D2 = number of columns 
+    amd on the representation storage type. 
+    By default the representation is MatRepStd<T,D1,D2> (standard D1xD2 of type T), 
+    but it can be of type MatRepSym<T,D> for symmetric matrices DxD, where the storage is only
+    D*(D+1)/2. 
+
     See \ref SMatrixDoc.
+
+    Original author is Thorsten Glebe
+    HERA-B Collaboration, MPI Heidelberg (Germany)
     
     @ingroup SMatrixSVector
 

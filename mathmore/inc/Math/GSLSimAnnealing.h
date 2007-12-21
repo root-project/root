@@ -39,11 +39,13 @@ namespace ROOT {
 
 //_____________________________________________________________________________
 /**
-   Interface class for the  objetive function to be used in  
-   sim annealing 
+   GSLSimAnFunc class description. 
+   Interface class for the  objetive function to be used in simulated annealing 
    If user wants to re-implement some of the methods (like the one defining the metric) which are used by the
    the simulated annealing algorithm must build a user derived class.
    NOTE: Derived classes must re-implement the assignment and copy constructor to call them of the parent class
+
+   @ingroup MultiMin
  */
 class GSLSimAnFunc { 
 public: 
@@ -153,6 +155,8 @@ private:
 //_____________________________________________________
 /** 
     structure holding the simulated annealing parameters
+
+   @ingroup MultiMin
 */
 struct GSLSimAnParams {
 

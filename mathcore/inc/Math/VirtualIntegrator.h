@@ -30,8 +30,16 @@ namespace Math {
 
 //___________________________________________________________________
 /**
-   Interface (abstract class) define the common methods for the 
+   VirtualIntegrator abstract class. 
+   Interface defining the common methods for the 
    numerical integrator classes of one and multi dimensions 
+   The derived class VirtualIntegratorOneDim defines the methods 
+   for one-dimensional integration.
+   The derived class VirtualIntegratorMultiDim defines the method for 
+   multi-dimensional integration. 
+   The concrete classes for one dimension (e.g. GSLIntegrator) or 
+   multi-dimension (e.g. GSLMCIntegrator) can be created using the 
+   plug-in manager
 
    @ingroup  Integration
 

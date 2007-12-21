@@ -1,9 +1,9 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Author: T. Glebe, L. Moneta, J. Palacios    2005  
 
 #ifndef ROOT_Math_SVector
 #define ROOT_Math_SVector
-// ********************************************************************
+/********************************************************************
 //
 // source:
 //
@@ -33,7 +33,7 @@
 // 04 Sep 2001 (TG) moved inlined functions to .icc file
 // 14 Jan 2002 (TG) added operator==(), operator!=(), operator>(), operator<()
 //
-// ********************************************************************
+********************************************************************/
 
 #ifndef ROOT_Math_MnConfig
 #include "Math/MConfig.h"
@@ -58,12 +58,14 @@ namespace Math {
 
 //     template <class A, class T, unsigned int D, unsigned int D2 = 1, class R = MatRepStd<T,D,D2> > class Expr;
 
-
+//____________________________________________________________________________________________________________
 /** 
     SVector: a generic fixed size Vector class.
     The class is template on the scalar type and on the vector size D. 
     See \ref SVectorDoc
 
+    Original author is Thorsten Glebe
+    HERA-B Collaboration, MPI Heidelberg (Germany)
 
     @ingroup SMatrixSVector
 

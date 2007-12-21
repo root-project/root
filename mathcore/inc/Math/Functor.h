@@ -323,8 +323,9 @@ public:
 
 //_______________________________________________________________________________________________
 /**
-   Functor class for Multidimensional functions. 
-   It is used to wrap in a very simple and convenient way:  
+   Documentation for class Functor class. 
+   It is used to wrap in a very simple and convenient way multi-dimensional function objects. 
+   It can wrap all the following types:
    <ul>
    <li> any C++ callable object implemention double operator()( const double *  ) 
    <li> a free C function of type double ()(double * ) 
@@ -343,10 +344,6 @@ public:
 
    typedef IBaseFunctionMultiDim Impl;   
    typedef IBaseFunctionMultiDim::BaseFunc ImplBase;   
-   //typedef MultiDim Dim;  
-//    typedef typename Impl::DimType DimType; 
-//    typedef typename Impl::CapType CapType; 
-   
 
    /** 
       Default constructor

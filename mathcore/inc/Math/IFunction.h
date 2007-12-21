@@ -38,6 +38,7 @@ namespace Math {
 
 //___________________________________________________________________________________
    /** 
+       Documentation for the abstract class IBaseFunctionMultiDim.
        Interface (abstract class) for generic functions objects of multi-dimension 
        Provides a method to evaluate the function given a vector of coordinate values, 
        by implementing operator() (const double *).

@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Author: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
   *                                                                    *
@@ -52,7 +52,8 @@ namespace Roots {
 
 //________________________________________________________________________________________________________
      /**
-	Bisection algorithms, simplest algorithms for bracketing the roots of a function, but slowest one
+        Roots::Bisection
+	Bisection algorithm, simplest algorithm for bracketing the roots of a function, but slowest one.
 	See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
 	@ingroup RootFinders
      */
