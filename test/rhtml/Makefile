@@ -13,7 +13,7 @@ include $(ROOTSYS)/test/Makefile.arch
 ifeq ($(PLATFORM),win32)
 EXTRALIBS   = "$(ROOTSYS)/lib/libGuiHtml.lib"
 LDOPT      += /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup
-ifeq ($(VC_MAJOR),14)
+ifneq (,$(findstring $(VC_MAJOR),14 15))
 MT_MANIFEST = mt -nologo -manifest $(PROGRAMS).manifest -outputresource:$(PROGRAMS)\;2
 else
 MT_MANIFEST = 
