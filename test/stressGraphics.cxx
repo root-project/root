@@ -1376,6 +1376,7 @@ void tellipse()
    pel.Draw();
    TEllipse el1(0.25,0.25,.1,.2);
    el1.Draw();
+   el1.SetFillStyle(0);
    TEllipse el2(0.25,0.6,.2,.1);
    el2.SetFillColor(6);
    el2.SetFillStyle(3008);
@@ -1426,6 +1427,7 @@ void feynman()
    t.DrawLatex(42.5,37.7,"#gamma");
    TArc *a = new TArc(70, 30, 15);
    a->Draw();
+   a->SetFillStyle(0);
    t.DrawLatex(55, 45,"#bar{q}");
    t.DrawLatex(85, 15,"q");
    TCurlyLine *gluon = new TCurlyLine(70, 45, 70, 15);
