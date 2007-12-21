@@ -10,4 +10,4 @@ Substracting two THnSparse: SUCCESS
 Dividing two THnSparse: SUCCESS
 Error calculation: SUCCESS
 Dividing two THnSparse (binomial): SUCCESS
-Binomial errors of division result: KNOWN FAILURE
+Binomial errors of division result: SUCCESS

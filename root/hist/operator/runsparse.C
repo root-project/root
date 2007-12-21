@@ -186,8 +186,7 @@ void CheckBinomial(TH3* h, THnSparse* sparse)
 
    TH3* hb31err = GetErrors(hb31);
    TH3* hsb31err = GetErrors(hsb31);
-   //Test(hsb31err, hb31err, "Binomial errors of division result");
-   cout << "Binomial errors of division result: KNOWN FAILURE" << endl;
+   Test(hsb31err, hb31err, "Binomial errors of division result");
 
    delete h31;
    delete hb31;
@@ -213,7 +212,7 @@ void runsparse()
                       nbins[1], xmin[1], xmax[1],
                       nbins[2], xmin[2], xmax[2]);
    h->Sumw2();
-   
+
    for (Int_t entries = 0; entries < 10000; ++entries) {
       Double_t x[3];
       for (Int_t d = 0; d < 3; ++d)
