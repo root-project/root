@@ -201,7 +201,7 @@ void CheckBinomial(TH3* h, THnSparse* sparse)
 
 void runsparse() 
 {
-   Int_t nbins[] = {10, 12, 14};
+   Int_t nbins[] = {10, 80, 14};
    Double_t xmin[] = {0., -1., 0.};
    Double_t xmax[] = {1., 1., 10.};
          
