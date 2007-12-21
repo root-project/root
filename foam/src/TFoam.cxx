@@ -129,7 +129,7 @@
 #include "TMethodCall.h"
 #include "TRandom.h"
 #include "TMath.h"
-#include "TCint.h"
+#include "G__ci.h"
 
 ClassImp(TFoam);
 
