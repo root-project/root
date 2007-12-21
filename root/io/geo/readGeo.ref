@@ -7,19 +7,24 @@ Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
 Info in <TGeoManager::CloseGeometry>: 8177 nodes/ 226 volume UID's in aleph.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is AMSG. Master volume is AMSG
-Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 112777 nodes/ 1002 volume UID's in ams.C
-Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is ALIC. Master volume is ALIC
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 1872000 nodes/ 2177 volume UID's in default geometry
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is AMSG. Master volume is AMSG
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 112777 nodes/ 1002 volume UID's in ams.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is ATLS. Master volume is ATLS
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 29046966 nodes/ 7143 volume UID's in atlas.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is BFAC. Master volume is BFAC
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 58110 nodes/ 607 volume UID's in babar.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
@@ -57,9 +62,19 @@ Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 145340 nodes/ 339 volume UID's in gem.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 2238 nodes/ 372 volume UID's in CBM geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is World. Master volume is World
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 18491756 nodes/ 709 volume UID's in default geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 6130066 nodes/ 181 volume UID's in phenix.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is OUTS. Master volume is OUTS
@@ -67,19 +82,20 @@ Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 749 nodes/ 350 volume UID's in phobos.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
-Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
-Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
-Info in <TGeoManager::CloseGeometry>: 15370 nodes/ 565 volume UID's in tesla.C
-Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 68776 nodes/ 2316 volume UID's in star.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CloseGeometry>: 15370 nodes/ 565 volume UID's in tesla.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
 Info: TGeoManager::Import : Reading geometry from file: aleph.root
-Info: TGeoManager::Import : Reading geometry from file: ams.root
 Info: TGeoManager::Import : Reading geometry from file: alice.root
+Info: TGeoManager::Import : Reading geometry from file: ams.root
 Info: TGeoManager::Import : Reading geometry from file: atlas.root
+Info: TGeoManager::Import : Reading geometry from file: babar.root
 Info: TGeoManager::Import : Reading geometry from file: brahms.root
 Info: TGeoManager::Import : Reading geometry from file: btev.root
 Info: TGeoManager::Import : Reading geometry from file: cdf.root
@@ -87,7 +103,9 @@ Info: TGeoManager::Import : Reading geometry from file: cms.root
 Info: TGeoManager::Import : Reading geometry from file: d0.root
 Info: TGeoManager::Import : Reading geometry from file: e907.root
 Info: TGeoManager::Import : Reading geometry from file: gem.root
+Info: TGeoManager::Import : Reading geometry from file: hades.root
 Info: TGeoManager::Import : Reading geometry from file: lhcbfull.root
+Info: TGeoManager::Import : Reading geometry from file: phenix.root
 Info: TGeoManager::Import : Reading geometry from file: phobos.root
-Info: TGeoManager::Import : Reading geometry from file: tesla.root
 Info: TGeoManager::Import : Reading geometry from file: star.root
+Info: TGeoManager::Import : Reading geometry from file: tesla.root
