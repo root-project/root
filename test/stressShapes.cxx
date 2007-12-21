@@ -312,12 +312,8 @@ TGeoMedium *med16 = new TGeoMedium("RHONEYCM",16,16,0,0,0,20,0.1000000E+11,0.212
    gBenchmark->Stop("stressShapes");
    gBenchmark->Print("stressShapes");
    Float_t ct = gBenchmark->GetCpuTime("stressShapes");
-#ifdef __CINT__
-   Float_t cp_brun = 310.47;
-#else
-   Float_t cp_brun = 6.64;
-#endif
-   Float_t rootmarks = 600*cp_brun/ct;
+   Float_t cp_brun   = 5.55;
+   Float_t rootmarks = 860*cp_brun/ct;
    printf("*******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d CP = %7.2fs\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime(),ct);
    printf("*******************************************************************\n");
