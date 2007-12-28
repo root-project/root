@@ -273,23 +273,6 @@ inline void  TTable::AddAt(TDataSet *dataset,Int_t idx)
 { TDataSet::AddAt(dataset,idx); }
 
 //________________________________________________________________________
-inline const char *TTable::GetTypeName(TTable::EColumnType type)
-{  return  fgTypeName[type]; }
-
-//________________________________________________________________________
-inline TTable::EColumnType TTable::GetTypeId(const char *typeName)
-{
-  //
-  // return the Id of the C basic type by given name
-  // return kNAN if the name provided fits no knwn basic name.
-  //
-  Int_t allTypes = sizeof(fgTypeName)/sizeof(const char *);
-  for (int i = 0; i < allTypes; i++)
-  if (!strcmp(fgTypeName[i],typeName)) return EColumnType(i);
-  return kNAN;
-}
-
-//________________________________________________________________________
 inline Bool_t TTable::BoundsOk(const char *where, Int_t at) const
 {
    return (at < 0 || at >= fN)

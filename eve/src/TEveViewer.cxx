@@ -40,6 +40,13 @@ TEveViewer::TEveViewer(const Text_t* n, const Text_t* t) :
 /******************************************************************************/
 
 //______________________________________________________________________________
+const TGPicture* TEveViewer::GetListTreeIcon() 
+{ 
+   //return eveviewer icon
+   return TEveElement::fgListTreeIcons[1]; 
+}
+
+//______________________________________________________________________________
 void TEveViewer::SetGLViewer(TGLViewer* s)
 {
    // Set TGLViewer that is represented by this object.

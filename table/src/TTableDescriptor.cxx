@@ -43,6 +43,13 @@ void TTableDescriptor::SetDescriptorPointer(TTableDescriptor *list)
    fgColDescriptors = list;
 }
 
+//___________________________________________________________________
+void TTableDescriptor::SetCommentsSetName(const char *name)
+{
+   //set comments name
+   fgCommentsName =  name;
+}
+
 
 //______________________________________________________________________________
 void TTableDescriptor::Streamer(TBuffer &R__b)

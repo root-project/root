@@ -86,6 +86,13 @@ TEvePointSet::~TEvePointSet()
 /******************************************************************************/
 
 //______________________________________________________________________________
+const TGPicture* TEvePointSet::GetListTreeIcon() 
+{ 
+   //return pointset icon
+   return TEveElement::fgListTreeIcons[3]; 
+}
+
+//______________________________________________________________________________
 void TEvePointSet::ComputeBBox()
 {
    // Override of virtual method from TAttBBox.

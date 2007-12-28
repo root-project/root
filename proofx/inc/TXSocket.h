@@ -246,13 +246,10 @@ public:
    Bool_t  fOwn;
    Int_t   fCid;
 
-   TXSockBuf(Char_t *bp=0, Int_t sz=0, Bool_t own=1)
-             { fBuf = fMem = bp; fSiz = fLen = sz; fOwn = own; fCid = -1; fgBuffMem += sz; }
-  ~TXSockBuf() {if (fOwn && fMem) { free(fMem); fgBuffMem -= fSiz; }}
+   TXSockBuf(Char_t *bp=0, Int_t sz=0, Bool_t own=1);
+  ~TXSockBuf();
 
-   void Resize(Int_t sz) { if (sz > fSiz)
-                              if ((fMem = (Char_t *)realloc(fMem, sz))) { fgBuffMem += (sz - fSiz);
-                                 fBuf = fMem; fSiz = sz; fLen = 0;}}
+   void Resize(Int_t sz);
 
    static Long64_t BuffMem();
    static Long64_t GetMemMax();

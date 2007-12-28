@@ -1787,6 +1787,43 @@ void TXSocket::InitEnvs()
    fgInitDone = kTRUE;
 }
 
+
+//_____________________________________________________________________________
+TXSockBuf::TXSockBuf(Char_t *bp, Int_t sz, Bool_t own)
+{ 
+   //constructor
+   fBuf = fMem = bp; 
+   fSiz = fLen = sz; 
+   fOwn = own; 
+   fCid = -1; 
+   fgBuffMem += sz; 
+}
+
+//_____________________________________________________________________________
+TXSockBuf::~TXSockBuf() 
+{
+   //destructor
+   if (fOwn && fMem) { 
+      free(fMem); 
+      fgBuffMem -= fSiz; 
+   }
+}
+
+//_____________________________________________________________________________
+void TXSockBuf::Resize(Int_t sz) 
+{ 
+   //resize socket buffer
+   if (sz > fSiz) {
+      if ((fMem = (Char_t *)realloc(fMem, sz))) { 
+         fgBuffMem += (sz - fSiz);
+         fBuf = fMem; 
+         fSiz = sz; 
+         fLen = 0;
+      }
+   }
+}
+
+//_____________________________________________________________________________
 //
 // TXSockBuf static methods
 //

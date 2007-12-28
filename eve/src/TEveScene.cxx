@@ -51,6 +51,13 @@ TEveScene::~TEveScene()
 /******************************************************************************/
 
 //______________________________________________________________________________
+const TGPicture* TEveScene::GetListTreeIcon() 
+{ 
+   //return evescene icon
+   return TEveElement::fgListTreeIcons[2]; 
+}
+
+//______________________________________________________________________________
 void TEveScene::CollectSceneParents(List_t& scenes)
 {
    // Virtual from TEveElement; here we simply append this scene to

@@ -51,7 +51,7 @@ public:
    virtual void SetName(const Text_t* n);
    virtual void Paint(Option_t* option = "");
 
-   virtual const TGPicture* GetListTreeIcon() { return TEveElement::fgListTreeIcons[2]; }
+   virtual const TGPicture* GetListTreeIcon();
 
    ClassDef(TEveScene, 0); // Reve representation of TGLScene.
 };

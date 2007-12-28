@@ -50,7 +50,7 @@ public:
 
    virtual Bool_t HandleElementPaste(TEveElement* el);
 
-   virtual const TGPicture* GetListTreeIcon() { return TEveElement::fgListTreeIcons[1]; }
+   virtual const TGPicture* GetListTreeIcon();
 
    ClassDef(TEveViewer, 0); // Reve representation of TGLViewer.
 };

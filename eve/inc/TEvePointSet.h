@@ -74,7 +74,7 @@ public:
    virtual void InitFill(Int_t subIdNum);
    virtual void TakeAction(TEvePointSelector*);
 
-   virtual const TGPicture* GetListTreeIcon() { return TEveElement::fgListTreeIcons[3]; }
+   virtual const TGPicture* GetListTreeIcon();
 
    virtual TClass* ProjectedClass() const;
 

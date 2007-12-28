@@ -108,6 +108,5 @@ inline  void    TTableDescriptor::SetSize(UInt_t size,Int_t column)      {((tabl
 inline  void    TTableDescriptor::SetTypeSize(UInt_t size,Int_t column)  {((tableDescriptor_st *)At(column))->fTypeSize   = size;  }
 inline  void    TTableDescriptor::SetDimensions(UInt_t dim,Int_t column) {((tableDescriptor_st *)At(column))->fDimensions = dim;   }
 inline  void    TTableDescriptor::SetColumnType(TTable::EColumnType type,Int_t column) {((tableDescriptor_st *)At(column))->fType = type;  }
-inline  void    TTableDescriptor::SetCommentsSetName(const char *name){fgCommentsName =  name;}
 
 #endif
