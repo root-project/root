@@ -458,7 +458,7 @@ public:
 
    static void Show();
    static void Terminate();
-   static TStyleManager *&GetSM() { return fgStyleManager; }
+   static TStyleManager *&GetSM();
 
    void Init();
    void Hide();

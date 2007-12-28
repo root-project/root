@@ -260,6 +260,13 @@ ClassImp(TGeoTreeDialog)
 TObject *TGeoTreeDialog::fgSelectedObj = 0;
 
 //______________________________________________________________________________
+TObject *TGeoTreeDialog::GetSelected() 
+{
+   //static; return selected object
+   return fgSelectedObj;
+}
+
+//______________________________________________________________________________
 TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, UInt_t h)
                :TGTransientFrame(main, main, w, h)
 {

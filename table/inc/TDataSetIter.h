@@ -109,7 +109,5 @@ public:
   ClassDef(TDataSetIter,0) // class-iterator to navigate TDataSet structure
 };
 
-inline TDataSet *TDataSetIter::operator *() const { return fDataSet == fgNullDataSet ? fWorkingDataSet : fDataSet; }
-inline TDataSet *TDataSetIter::GetNullSet() { return (TDataSet *)fgNullDataSet; } // return a fake pointer == -1 casted to (TDataSet *)
 #endif
 

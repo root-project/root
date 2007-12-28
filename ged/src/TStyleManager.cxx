@@ -752,6 +752,13 @@ TStyleManager::~TStyleManager()
 }
 
 //______________________________________________________________________________
+TStyleManager *&TStyleManager::GetSM()
+{
+   //static: return style manager
+   return fgStyleManager; 
+}
+
+//______________________________________________________________________________
 void TStyleManager::Init()
 {
    // Set up the interface. Called by the ctor or by the 'Show' method.

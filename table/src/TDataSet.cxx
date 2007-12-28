@@ -389,6 +389,23 @@ TDataSet *TDataSet::First() const
    if (fList) return (TDataSet *)(fList->First());
    return 0;
 }
+
+//______________________________________________________________________________
+void TDataSet::AddMain(TDataSet *set)
+{
+   //add data set to main data set
+   
+   if (fgMainSet && set) fgMainSet->AddFirst(set);
+}
+
+//______________________________________________________________________________
+TDataSet *TDataSet::GetMainSet() 
+{
+   //return pointer to the main dataset
+   
+   return fgMainSet;
+}
+
 //______________________________________________________________________________
 TObject *TDataSet::GetObject() const
 {

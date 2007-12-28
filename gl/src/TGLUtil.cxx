@@ -975,6 +975,42 @@ UInt_t TGLUtil::fgDefaultDrawQuality = 60;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
 UInt_t TGLUtil::fgColorLockCount     = 0;
 
+
+//______________________________________________________________________________
+void   TGLUtil::SetDrawQuality(UInt_t dq) 
+{ 
+   //static: set draw quality
+   fgDrawQuality = dq; 
+}
+
+//______________________________________________________________________________
+void   TGLUtil::ResetDrawQuality()               
+{ 
+   //static: reset draw quality
+   fgDrawQuality = fgDefaultDrawQuality; 
+}
+
+//______________________________________________________________________________
+UInt_t TGLUtil::GetDefaultDrawQuality()          
+{ 
+   //static: get default draw quality
+   return fgDefaultDrawQuality; 
+}
+
+//______________________________________________________________________________
+void   TGLUtil::SetDefaultDrawQuality(UInt_t dq) 
+{ 
+   //static: set default draw quality
+   fgDefaultDrawQuality = dq; 
+}
+
+//______________________________________________________________________________
+Bool_t   TGLUtil::IsColorLocked() 
+{ 
+   //static: return true if color lockcount is greater than 0
+   return fgColorLockCount != 0; 
+}
+
 //______________________________________________________________________________
 void TGLUtil::CheckError(const char * loc)
 {

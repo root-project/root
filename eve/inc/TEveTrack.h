@@ -96,7 +96,7 @@ public:
    virtual void CtrlClicked(TEveTrack*); // *SIGNAL*
    virtual void SetLineStyle(Style_t lstyle);
 
-   virtual const TGPicture* GetListTreeIcon() { return fgListTreeIcons[4]; };
+   virtual const TGPicture* GetListTreeIcon();
 
    virtual TClass* ProjectedClass() const;
 

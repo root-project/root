@@ -41,6 +41,13 @@ TGLSelectBuffer::~TGLSelectBuffer()
 }
 
 //______________________________________________________________________________
+Bool_t TGLSelectBuffer::CanGrow()
+{
+   //static: return true if current buffer is smaller than the max buffer size
+   return fBufSize < fgMaxBufSize;
+}
+
+//______________________________________________________________________________
 void TGLSelectBuffer::Grow()
 {
    // Increase size of the select buffer.

@@ -919,14 +919,14 @@ public:
    enum ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
    enum EAxesType      { kAxesNone, kAxesEdge, kAxesOrigin };
 
-   static void   SetDrawQuality(UInt_t dq)        { fgDrawQuality = dq; }
-   static void   ResetDrawQuality()               { fgDrawQuality = fgDefaultDrawQuality; }
-   static UInt_t GetDefaultDrawQuality()          { return fgDefaultDrawQuality; }
-   static void   SetDefaultDrawQuality(UInt_t dq) { fgDefaultDrawQuality = dq; }
+   static void   SetDrawQuality(UInt_t dq);
+   static void   ResetDrawQuality();
+   static UInt_t GetDefaultDrawQuality();
+   static void   SetDefaultDrawQuality(UInt_t dq);
 
    static UInt_t LockColor();
    static UInt_t UnlockColor();
-   static Bool_t IsColorLocked() { return fgColorLockCount != 0; }
+   static Bool_t IsColorLocked();
 
    static void Color(Color_t color_index, Float_t alpha=1);
    static void Color3ub(UChar_t r, UChar_t g, UChar_t b);

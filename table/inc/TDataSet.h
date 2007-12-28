@@ -105,7 +105,7 @@ public:
    virtual TSeqCollection *GetCollection() const { return (TSeqCollection *)fList; }
    TList               *GetList()   const { return (TList *)fList; }
    virtual Int_t        GetListSize() const;
-   static  TDataSet    *GetMainSet(){ return fgMainSet;}
+   static  TDataSet    *GetMainSet();
    TObject             *GetMother() const { return (TObject*)GetParent();}
    virtual TObject     *GetObject() const;
    virtual TDataSet    *GetParent() const { return fParent;}
@@ -148,7 +148,6 @@ public:
 };
 
 inline void        TDataSet::Add(TDataSet *dataset){ AddLast(dataset); }
-inline void        TDataSet::AddMain(TDataSet *set){ if (fgMainSet && set) fgMainSet->AddFirst(set);}
 inline TDataSet   *TDataSet::At(Int_t idx) const {return fList ? (TDataSet *)fList->At(idx) : 0;  }
 inline Int_t       TDataSet::GetListSize() const {return (fList) ? fList->GetSize():0;}
 inline TDataSet   *TDataSet::instance() { return new TDataSet();}

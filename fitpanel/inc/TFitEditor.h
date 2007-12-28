@@ -162,7 +162,7 @@ public:
    TFitEditor(TVirtualPad* pad, TObject *obj);
    virtual ~TFitEditor();
 
-   static TFitEditor *&GetFP() { return fgFitDialog; }
+   static TFitEditor *&GetFP();
    static  void       Open(TVirtualPad* pad, TObject *obj);
    virtual Option_t  *GetDrawOption() const;
    virtual void       Hide();

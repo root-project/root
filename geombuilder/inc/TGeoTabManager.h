@@ -117,7 +117,7 @@ public:
    TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
    virtual ~TGeoTreeDialog();
    
-   static TObject     *GetSelected() {return fgSelectedObj;}
+   static TObject     *GetSelected();
    // Slots
    virtual void        DoClose() = 0;
    virtual void        DoItemClick(TGListTreeItem *item, Int_t btn) = 0;

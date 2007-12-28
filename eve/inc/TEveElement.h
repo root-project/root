@@ -195,7 +195,7 @@ public:
    virtual TEveTrans* PtrMainHMTrans()     { return 0; }
 
    static  const TGPicture* GetCheckBoxPicture(Bool_t rnrElement, Bool_t rnrDaughter);
-   virtual const TGPicture* GetListTreeIcon() { return fgListTreeIcons[0]; }
+   virtual const TGPicture* GetListTreeIcon();
 
    ClassDef(TEveElement, 1); // Base class for TEveUtil visualization elements, providing hierarchy management, rendering control and list-tree item management.
 };

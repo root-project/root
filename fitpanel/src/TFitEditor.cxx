@@ -971,12 +971,21 @@ void TFitEditor::Show(TVirtualPad* pad, TObject *obj)
    SetCanvas(pad->GetCanvas());
    fCanvas->Selected(pad, obj, kButton1Down);
 }
+
 //______________________________________________________________________________
 void TFitEditor::CloseWindow()
 {
    // Close fit panel window.
 
    Hide();
+}
+
+//______________________________________________________________________________
+TFitEditor *&TFitEditor::GetFP()
+{
+   // Static: return main fit panel
+
+   return fgFitDialog;
 }
 
 //______________________________________________________________________________

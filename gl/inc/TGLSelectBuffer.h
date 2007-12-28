@@ -45,7 +45,7 @@ public:
    UInt_t* GetBuf()      const { return fBuf; }
    Int_t   GetNRecords() const { return fNRecords; }
 
-   Bool_t CanGrow() { return fBufSize < fgMaxBufSize; }
+   Bool_t CanGrow();
    void   Grow();
 
    void ProcessResult(Int_t glResult);

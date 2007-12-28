@@ -52,7 +52,7 @@ public:
    virtual ~TVirtualMC();
 
    // Static access method
-   static TVirtualMC* GetMC() { return fgMC; }
+   static TVirtualMC* GetMC();
 
    //
    // ------------------------------------------------

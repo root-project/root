@@ -75,8 +75,8 @@ public:
 //    ClassDefTable(TTableDescriptor,tableDescriptor_st)
 protected:                                        
    static  TTableDescriptor *fgColDescriptors;     
-   virtual TTableDescriptor *GetDescriptorPointer() const     { return fgColDescriptors;}                 
-   virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}                  
+   virtual TTableDescriptor *GetDescriptorPointer() const;
+   virtual void SetDescriptorPointer(TTableDescriptor *list);
 public:                                           
    typedef tableDescriptor_st* iterator;                   
    TTableDescriptor() : TTable("TTableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}      

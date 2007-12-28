@@ -69,8 +69,8 @@ protected:
 // define ClassDefTable(TIndexTable,int)
 protected:
    static TTableDescriptor *fgColDescriptors;
-   virtual TTableDescriptor *GetDescriptorPointer() const { return fgColDescriptors;}
-   virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}
+   virtual TTableDescriptor *GetDescriptorPointer() const;
+   virtual void SetDescriptorPointer(TTableDescriptor *list);
 public:
    TIndexTable() : TTable("TIndexTable",sizeof(int))    {SetType("int");}
    TIndexTable(const Text_t *name) : TTable(name,sizeof(int)) {SetType("int");}

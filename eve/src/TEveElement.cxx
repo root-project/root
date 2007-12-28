@@ -782,6 +782,15 @@ TEveElement::GetCheckBoxPicture(Bool_t rnrSelf, Bool_t rnrDaughters)
    return fgRnrIcons[idx];
 }
 
+//______________________________________________________________________________
+const TGPicture*
+TEveElement::GetListTreeIcon()
+{
+   // Returns pointer to first listtreeicon
+   
+   return fgListTreeIcons[0];
+}
+
 
 //______________________________________________________________________________
 // TEveElementObjectPtr

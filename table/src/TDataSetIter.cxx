@@ -92,6 +92,21 @@ TDataSetIter::~TDataSetIter()
    fDepth = 0;
 }
 
+
+//______________________________________________________________________________
+TDataSet *TDataSetIter::operator *() const 
+{ 
+   //operator *
+   return fDataSet == fgNullDataSet ? fWorkingDataSet : fDataSet; 
+}
+
+//______________________________________________________________________________
+TDataSet *TDataSetIter::GetNullSet() 
+{ 
+   // return a fake pointer == -1 casted to (TDataSet *)
+   return (TDataSet *)fgNullDataSet;  
+}
+
 //______________________________________________________________________________
 TDataSet *TDataSetIter::Add(TDataSet *set, TDataSet *dataset)
 {

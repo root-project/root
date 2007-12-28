@@ -107,6 +107,22 @@ TTableDescriptor *TIndexTable::CreateDescriptor()
 }
 
 //___________________________________________________________________
+TTableDescriptor *TIndexTable::GetDescriptorPointer() const 
+{ 
+   //return column descriptor
+   return fgColDescriptors;
+}
+
+//___________________________________________________________________
+void TIndexTable::SetDescriptorPointer(TTableDescriptor *list)  
+{ 
+   //set table descriptor
+   fgColDescriptors = list;
+}
+
+//___________________________________________________________________
+
+//___________________________________________________________________
 const TTable *TIndexTable::Table() const
 {
    //to be documented
