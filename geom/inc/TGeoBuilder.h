@@ -26,8 +26,12 @@
 
 class TGeoMaterial;
 class TGeoMatrix;
+class TGeoMedium;
 class TGeoShape;
 class TGeoVolume;
+class TGeoVolumeAssembly;
+class TGeoVolumeMulti;
+class TGeoManager;
 
 class TGeoBuilder : public TObject
 {
