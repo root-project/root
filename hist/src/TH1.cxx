@@ -5166,6 +5166,9 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       Error("Rebin", "Illegal value of ngroup=%d",ngroup);
       return 0;
    }
+   if ((nbins/ngroup)%10 !=0) {
+      Warning("Rebin", "ngroup=%d must be an exact divider of nbins=%d",ngroup,nbins);
+   }
    if (fDimension > 1 || InheritsFrom("TProfile")) {
       Error("Rebin", "Operation valid on 1-D histograms only");
       return 0;
