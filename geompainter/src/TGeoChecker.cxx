@@ -1996,7 +1996,7 @@ Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Doub
 }   
 
 //______________________________________________________________________________
-Bool_t TGeoChecker::TestVoxels(TGeoVolume */*vol*/, Int_t /*npoints*/)
+Bool_t TGeoChecker::TestVoxels(TGeoVolume * /*vol*/, Int_t /*npoints*/)
 {
 // Returns optimal voxelization type for volume vol.
 //   kFALSE - cartesian
