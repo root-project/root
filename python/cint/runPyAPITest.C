@@ -1,4 +1,4 @@
-{
+void runPyAPITest() {
    int eil = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
    gSystem->Load( "libPyROOT" );
@@ -11,6 +11,4 @@
 
    Bool_t match = ( o == TPython::ObjectProxy_AsVoidPtr( a ) );
    printf( "VPC:  should be true:  %d\n", match );
-
-   return 0;
 }

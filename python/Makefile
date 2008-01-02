@@ -8,6 +8,9 @@ endif
 
 ifeq ($(HAS_PYTHON),yes)
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+# prevent spurious printout of control characters that occur with certain
+# combinations of readline and ncurses (e.g. 5.2 and 5.6, respectively)
+export TERM=vt100
 else
 include $(ROOTTEST_HOME)/scripts/Disable.mk
 endif
