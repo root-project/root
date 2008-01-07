@@ -389,7 +389,8 @@ Bool_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback,
    pti.tagtype = 'c';
    const char* cname = scope->Fullname();
    if ( ! cname ) cname = "";
-   pti.tagname = ( std::string( cname ) + "::" + mtName ).c_str();
+   std::string tname = std::string( cname ) + "::" + mtName;
+   pti.tagname = tname.c_str();
    int tagnum = G__get_linked_tagnum( &pti );
 
 // add method and store callback
