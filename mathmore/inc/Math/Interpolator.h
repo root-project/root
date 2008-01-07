@@ -53,7 +53,7 @@ namespace Math {
       Class for performing function interpolation of points.
       The class is instantiated with an interpolation methods, passed as an enumeration in the constructor.
       See Interpolation::Type for the available interpolation algorithms, which are implemented using GSL.
-      See also the <A HREF=http://www.gnu.org/software/gsl/manual/gsl-ref_26.html#SEC391">GSL manual</A> for more information.
+      See also the <A HREF=http://www.gnu.org/software/gsl/manual/html_node/Interpolation.html">GSL manual</A> for more information.
       The class provides additional methods for computing derivatives and integrals of interpolating functions.
       
       This class does not support copying.

@@ -41,15 +41,18 @@ namespace Math {
     /**
        Enumeration defining the types of interpolation methods availables. 
        Passed as argument to instantiate mathlib::Interpolator objects. 
-       The types available are: 
+       The types available are (more information is available in the 
+       <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Interpolation-Types.html">GSL manual</A>):
        <ul>
-       <li>LINEAR interpolation
-       <li>POLYNOMIAL interpolation, to be used for small number of points since introduces large oscillations
-       <li>AKIMA, Akima spline with natural boundary conditions ( requires a minimum of 5 points)
-       <li>AKIMA_PERIODIC, Akima spline with periodic boundaries ( requires a minimum of 5 points) 
+       <li>LINEAR interpolation;
+       <li>POLYNOMIAL interpolation, to be used for small number of points since introduces large oscillations;
+       <li>CSPLINE cubic spline with natural boundary conditions;
+       <li>CSPLINE_PERIODIC cubic spline with periodic boundary conditions;
+       <li>AKIMA, Akima spline with natural boundary conditions ( requires a minimum of 5 points);
+       <li>AKIMA_PERIODIC, Akima spline with periodic boundaries ( requires a minimum of 5 points); 
        </ul>
 
-       Note: Cspline interpolations exist in GSL, but are not yet implemented here 
+
        @ingroup Interpolation
      */
 

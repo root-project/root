@@ -41,6 +41,7 @@
 #pragma link C++ class ROOT::Minuit2::MnMinimize; 
 #pragma link C++ class ROOT::Minuit2::MnFumiliMinimize; 
 #pragma link C++ class ROOT::Minuit2::MnScan; 
+#pragma link C++ class ROOT::Minuit2::MnContours; 
 #pragma link C++ class ROOT::Minuit2::MnSimplex; 
 #pragma link C++ class ROOT::Minuit2::MnPlot; 
 #pragma link C++ class ROOT::Minuit2::MnUserParameterState; 
