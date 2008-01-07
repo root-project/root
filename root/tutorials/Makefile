@@ -15,6 +15,7 @@ TUTORIALSTESTS_NONBATCH := \
   geom/geomAtlas geom/geomBrahms geom/na49geomfile geom/lego geom/na49view \
   geom/robot geom/shapes geom/tank geom/station2 geom/station1 geom/south_gate \
   gl/glViewerExercise gl/glViewerLOD gl/nucleus \
+  gl/viewer3DLocal gl/viewer3DMaster \
   gui/buttongroupState gui/buttonTest gui/calendar gui/games gui/guilabels \
   gui/QtFileDialog gui/QtMultiFileDialog gui/guiWithCINT gui/mditest \
   gui/Slider3Demo gui/textEntries \
@@ -30,7 +31,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   math/Bessel math/LegendreAssoc math/Legendre math/mathmoreIntegration \
   math/normalDist \
   math/tStudent net/authserv net/hcons net/hprod net/hserv2 net/hserv \
-  net/LDAPExample net/pserv net/spyserv \
+  net/LDAPExample net/pserv net/spyserv net/TestAuth \
   proof/getProof proof/runProof proof/ProofSimple \
   pythia/pythiaExample \
   sql/sqlcanvas \
