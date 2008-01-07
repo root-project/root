@@ -43,6 +43,8 @@
 #pragma warning (disable: 4309)
 /* check op precedence for error */
 #pragma warning (disable: 4554)
+/* qualifier applied to reference type; ignored */
+#pragma warning (disable: 4181)
 
 /* function is hidden */
 #pragma warning (3: 4266)
