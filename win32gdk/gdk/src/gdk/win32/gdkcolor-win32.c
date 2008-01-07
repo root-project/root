@@ -1318,7 +1318,7 @@ GdkColormap *gdk_colormap_new(GdkVisual * visual, gint private_cmap)
                                colormap->size, pal);
          for (i = 0; i < colormap->size; i++) {
             colormap->colors[i].pixel = i;
-            if (i >= npal) {
+            if ((guint)i >= npal) {
                colormap->colors[i].red =
                    colormap->colors[i].green =
                    colormap->colors[i].blue = 0;
@@ -1655,7 +1655,7 @@ gdk_colormap_alloc1(GdkColormap * colormap,
       ret->green = (xcolor.peGreen * 65535) / 255;
       ret->blue = (xcolor.peBlue * 65535) / 255;
 
-      if ((guint) ret->pixel < colormap->size) {
+      if ((guint)ret->pixel < (guint)colormap->size) {
          if (private->info[ret->pixel].ref_count) {	/* got a duplicate */
             /* XXX */
          } else {

@@ -1597,6 +1597,7 @@ static int unicode_classify(wchar_t wc)
       else
          return -1;
    }
+   return -1;
 }
 
 void

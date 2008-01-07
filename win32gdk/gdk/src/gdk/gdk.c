@@ -121,7 +121,7 @@ gdk_arg_context_parse(GdkArgContext * context, gint * argc, gchar *** argv)
             break;
          }
 
-         for (j = 0; j < context->tables->len; j++) {
+         for (j = 0; j < (int)context->tables->len; j++) {
             GdkArgDesc *table = context->tables->pdata[j];
             for (k = 0; table[k].name; k++) {
                switch (table[k].type) {

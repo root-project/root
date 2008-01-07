@@ -532,7 +532,7 @@ static gchar *gdk_pixmap_extract_color(gchar * buffer)
             strcat(color, " ");
          }
          strncat(color, temp, space);
-         space -= MIN(space, strlen(temp));
+         space -= MIN(space, (gint)strlen(temp));
          ptr = gdk_pixmap_skip_string(ptr);
          ptr = gdk_pixmap_skip_whitespaces(ptr);
          numnames++;
@@ -555,7 +555,7 @@ static void gdk_xpm_destroy_notify(gpointer data)
 {
    _GdkPixmapInfo *info = (_GdkPixmapInfo *) data;
    GdkColor color;
-   int i;
+   guint i;
 
    for (i = 0; i < info->ncolors; i++) {
       color.pixel = info->pixels[i];
@@ -699,7 +699,7 @@ static GdkPixmap *_gdk_pixmap_create_from_xpm(GdkWindow * window,
        * integrated into the strncpy below, perhaps. OTOH, strlen
        * is fast.
        */
-      if ((buffer == NULL) || strlen(buffer) < wbytes)
+      if ((buffer == NULL) || (gint)strlen(buffer) < wbytes)
          continue;
 
       for (n = 0, cnt = 0, xcnt = 0; n < wbytes; n += cpp, xcnt++) {
