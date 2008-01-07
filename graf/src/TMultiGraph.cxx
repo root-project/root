@@ -1049,6 +1049,8 @@ void TMultiGraph::Paint(Option_t *option)
          uxmin   = gPad->PadtoX(rwxmin);
          uxmax   = gPad->PadtoX(rwxmax);
       } else {
+         g = (TGraph*) next();
+         g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
          while ((g = (TGraph*) next())) {
             Double_t rx1,ry1,rx2,ry2;
             g->ComputeRange(rx1, ry1, rx2, ry2);
