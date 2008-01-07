@@ -1121,7 +1121,8 @@ int TSystem::CopyFile(const char *, const char *, Bool_t)
 {
    // Copy a file. If overwrite is true and file already exists the
    // file will be overwritten. Returns 0 when successful, -1 in case
-   // of failure, -2 in case the file already exists and overwrite was false.
+   // of file open failure, -2 in case the file already exists and overwrite
+   // was false and -3 in case of error during copy.
 
    AbstractMethod("CopyFile");
    return -1;

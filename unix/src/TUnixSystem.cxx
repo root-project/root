@@ -1288,17 +1288,19 @@ int TUnixSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
 {
    // Copy a file. If overwrite is true and file already exists the
    // file will be overwritten. Returns 0 when successful, -1 in case
-   // of failure, -2 in case the file already exists and overwrite was false.
+   // of file open failure, -2 in case the file already exists and overwrite
+   // was false and -3 in case of error during copy.
 
    if (!AccessPathName(t) && !overwrite)
       return -2;
 
-   FILE* from = fopen(f, "r");
+   FILE *from = fopen(f, "r");
    if (!from)
       return -1;
 
-   FILE* to   = fopen(t, "w");
-   if (!to) return -2;
+   FILE *to   = fopen(t, "w");
+   if (!to)
+      return -1;
 
    const int bufsize = 1024;
    char buf[bufsize];
