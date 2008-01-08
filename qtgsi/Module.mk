@@ -22,7 +22,10 @@ QTGSIS        := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 QTGSIO        := $(QTGSIS:.cxx=.o)
 
-QTGSIMOC      := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(QTGSIH)))
+QTGSIMOCH     := $(MODDIRI)/TQCanvasMenu.h $(MODDIRI)/TQRootApplication.h \
+                 $(MODDIRI)/TQRootCanvas.h $(MODDIRI)/TQRootDialog.h
+
+QTGSIMOC      := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(QTGSIMOCH)))
 QTGSIMOCO     := $(QTGSIMOC:.cxx=.o)
 
 QTGSIDEP      := $(QTGSIO:.o=.d) $(QTGSIDO:.o=.d) $(QTGSIMOCO:.o=.d)
