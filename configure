@@ -2631,7 +2631,7 @@ if test ! "x$enable_asimage" = "xno" ; then
        check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
           /usr/local/include /usr/include /opt/include
        asjpegincdir=$found_dir
-       check_header "png.h" "" $ASIMAGE $ASIMAGE/include \
+       check_header "png.h" "" $ASIMAGE $ASIMAGE/include $ASPNG/include \
           /usr/local/include /usr/include /usr/local/include/libpng \
           /opt/include
        aspngincdir=$found_dir
@@ -2661,7 +2661,7 @@ if test ! "x$enable_asimage" = "xno" ; then
        fi
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
-             $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib
+             $ASIMAGE $ASIMAGE/lib $ASPNG/lib /usr/local/lib /usr/lib /opt/lib
            if test "x$k" = "xlibz" ; then
                found_libz=$found_lib
                found_dirz=$found_dir
