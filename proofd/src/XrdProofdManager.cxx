@@ -755,7 +755,7 @@ XrdClientMessage *XrdProofdManager::Send(const char *url, int type,
       // Prepare request
       XPClientRequest reqhdr;
       const void *buf = 0;
-      void **vout = 0;
+      char **vout = 0;
       memset(&reqhdr, 0, sizeof(reqhdr));
       conn->SetSID(reqhdr.header.streamid);
       reqhdr.header.requestid = kXP_admin;

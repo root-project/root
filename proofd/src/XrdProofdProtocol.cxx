@@ -5316,7 +5316,7 @@ char *XrdProofdProtocol::ReadBufferRemote(const char *url, const char *file,
       reqhdr.readbuf.int1 = grep;
       reqhdr.header.dlen = strlen(file);
       const void *btmp = (const void *) file;
-      void **vout = (void **)&buf;
+      char **vout = &buf;
       // Send over
       XrdClientMessage *xrsp =
          conn->SendReq(&reqhdr, btmp, vout, "XrdProofdProtocol::ReadBufferRemote");
@@ -5372,7 +5372,7 @@ char *XrdProofdProtocol::ReadLogPaths(const char *url, const char *msg, int ises
       reqhdr.proof.sid = -1;
       reqhdr.header.dlen = strlen(msg);
       const void *btmp = (const void *) msg;
-      void **vout = (void **)&buf;
+      char **vout = &buf;
       // Send over
       XrdClientMessage *xrsp =
          conn->SendReq(&reqhdr, btmp, vout, "XrdProofdProtocol::ReadLogPaths");

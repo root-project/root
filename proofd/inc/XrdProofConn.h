@@ -114,7 +114,7 @@ private:
    XReqErrorType       LowWrite(XPClientRequest *, const void *, int);
    bool                MatchStreamID(struct ServerResponseHeader *resp);
    XrdClientMessage   *SendRecv(XPClientRequest *req,
-                                const void *reqData, void **answData);
+                                const void *reqData, char **answData);
    virtual void        SetAsync(XrdClientAbsUnsolMsgHandler *uh);
 
    void                SetInterrupt();
@@ -140,7 +140,7 @@ public:
    virtual int         ReadRaw(void *buf, int len);
    virtual XrdClientMessage *ReadMsg();
    XrdClientMessage   *SendReq(XPClientRequest *req, const void *reqData,
-                               void **answData, const char *CmdName);
+                               char **answData, const char *CmdName);
    void                SetSID(kXR_char *sid);
    virtual int         WriteRaw(const void *buf, int len);
 

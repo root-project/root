@@ -370,7 +370,7 @@ XrdClientMessage *XrdProofConn::ReadMsg()
 
 //_____________________________________________________________________________
 XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqData,
-                                         void **answData)
+                                         char **answData)
 {
    // SendRecv sends a command to the server and to get a response.
    // The header of the last response is returned as pointer to a XrdClientMessage.
@@ -430,11 +430,11 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
       if ((xst == kXR_ok) || (xst == kXR_oksofar) || (xst == kXR_authmore)) {
          if (answData && xmsg->DataLen() > 0) {
             if (needalloc) {
-               *answData = realloc(*answData, dataRecvSize + xmsg->DataLen());
+               *answData = (char *) realloc(*answData, dataRecvSize + xmsg->DataLen());
                if (!(*answData)) {
                   // Memory resources exhausted
                   TRACE(REQ, "XrdProofConn::SendRecv: reallocating "<<dataRecvSize<<" bytes");
-                  free(*answData);
+                  free((void *) *answData);
                   *answData = 0;
                   SafeDelete(xmsg);
                   return xmsg;
@@ -442,7 +442,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
             }
             // Now we copy the content of the Xmsg to the buffer where
             // the data are needed
-            memcpy(((kXR_char *)(*answData))+dataRecvSize,
+            memcpy((*answData)+dataRecvSize,
                    xmsg->GetData(), xmsg->DataLen());
             //
             // Dump the buffer *answData, if requested
@@ -482,7 +482,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
 
 //_____________________________________________________________________________
 XrdClientMessage *XrdProofConn::SendReq(XPClientRequest *req, const void *reqData,
-                                        void **answData, const char *CmdName)
+                                        char **answData, const char *CmdName)
 {
    // SendReq tries to send a single command for a number of times
    XrdClientMessage *answMex = 0;
@@ -949,7 +949,7 @@ bool XrdProofConn::Login()
       memcpy(&reqhdr, &reqsave, sizeof(XPClientRequest));
 
       XrdClientMessage *xrsp = SendReq(&reqhdr, buf,
-                                       (void **)&pltmp, "XrdProofConn::Login");
+                                       &pltmp, "XrdProofConn::Login");
 
       // If positive answer
       secp = 0;
@@ -1170,7 +1170,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
          reqhdr.header.requestid = kXP_auth;
          reqhdr.header.dlen = credentials->size;
          xrsp = SendReq(&reqhdr, credentials->buffer,
-                               (void **)&srvans, "XrdProofConn::Authenticate");
+                                 &srvans, "XrdProofConn::Authenticate");
          SafeDelete(credentials);
          status = (xrsp) ? xrsp->HeaderStatus() : kXR_error;
          dlen = (xrsp) ? xrsp->DataLen() : 0;

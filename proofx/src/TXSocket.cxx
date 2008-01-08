@@ -928,9 +928,10 @@ Bool_t TXSocket::Create()
          Info("Create", "creating session of server %s", fUrl.Data());
 
       // server response header
-      struct ServerResponseBody_Protocol *srvresp = 0;
+      char *answData = 0;
       XrdClientMessage *xrsp = fConn->SendReq(&reqhdr, buf,
-                                             (void **)&srvresp, "TXSocket::Create");
+                                              &answData, "TXSocket::Create");
+      struct ServerResponseBody_Protocol *srvresp = (struct ServerResponseBody_Protocol *)answData;
 
       // In any, the URL the data pool entry point will be stored here
       fBuffer = "";
@@ -1108,9 +1109,10 @@ Bool_t TXSocket::Ping(Bool_t)
    Request.sendrcv.dlen = 0;
 
    // Send request
-   kXR_int32 *pres = 0;
+   char *pans = 0;
    XrdClientMessage *xrsp =
-      fConn->SendReq(&Request, (const void *)0, (void **)&pres, "Ping");
+      fConn->SendReq(&Request, (const void *)0, &pans, "Ping");
+   kXR_int32 *pres = (kXR_int32 *) pans;
 
    // Get the result
    Bool_t res = kFALSE;
@@ -1507,7 +1509,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
    XPClientRequest reqhdr;
    const void *buf = 0;
    char *bout = 0;
-   void **vout = 0;
+   char **vout = 0;
    memset(&reqhdr, 0, sizeof(reqhdr));
    fConn->SetSID(reqhdr.header.streamid);
    reqhdr.header.requestid = kXP_admin;
@@ -1519,7 +1521,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
       case kQueryWorkers:
          reqhdr.proof.sid = 0;
          reqhdr.header.dlen = 0;
-         vout = (void **)&bout;
+         vout = (char **)&bout;
          break;
       case kCleanupSessions:
          reqhdr.proof.int2 = (kXR_int32) kXPD_TopMaster;
@@ -1528,7 +1530,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
          buf = (msg) ? (const void *)msg : buf;
          break;
       case kQueryLogPaths:
-         vout = (void **)&bout;
+         vout = (char **)&bout;
       case kSendMsgToUser:
       case kGroupProperties:
       case kSessionTag:
@@ -1544,7 +1546,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
       case kGetWorkers:
          reqhdr.proof.sid = fSessionID;
          reqhdr.header.dlen = 0;
-         vout = (void **)&bout;
+         vout = (char **)&bout;
          break;
       case kReadBuffer:
          reqhdr.header.requestid = kXP_readbuf;
@@ -1562,7 +1564,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
          }
          reqhdr.header.dlen = strlen(msg);
          buf = (const void *)msg;
-         vout = (void **)&bout;
+         vout = (char **)&bout;
          break;
       default:
          Info("SendCoordinator", "unknown message kind: %d", kind);
