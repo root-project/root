@@ -1794,7 +1794,9 @@ void TProfile2D::Streamer(TBuffer &R__b)
       //====process old versions before automatic schema evolution
       TH2D::Streamer(R__b);
       fBinEntries.Streamer(R__b);
-      R__b >> (Int_t&)fErrorMode;
+      Int_t errorMode;
+      R__b >> errorMode;
+      fErrorMode = (EErrorType)errorMode;
       if (R__v < 2) {
          Float_t zmin,zmax;
          R__b >> zmin; fZmin = zmin;
