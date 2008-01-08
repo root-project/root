@@ -103,7 +103,6 @@
 #include "TPluginManager.h"
 #include "TMap.h"
 #include "TObjString.h"
-#include "TAuthenticate.h"
 #include "TVirtualMutex.h"
 
 #include <string>
