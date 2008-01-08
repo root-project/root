@@ -31,6 +31,12 @@
 //Begin_Html <img src="gif/hsumDialog.gif"> End_Html                    //
 //////////////////////////////////////////////////////////////////////////
 
+
+// silence warning about some cast operations
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 2 && __GNUC_PATCHLEVEL__ >= 1
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
 #include "TROOT.h"
 #include "TContextMenu.h"
 #include "TVirtualPad.h"
