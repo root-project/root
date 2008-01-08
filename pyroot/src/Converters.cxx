@@ -870,9 +870,9 @@ Bool_t PyROOT::TVoidPtrRefConverter::SetArg( PyObject* pyobject, TParameter& par
 {
 // convert <pyobject> to C++ void*&, set arg for call
    if ( ObjectProxy_Check( pyobject ) ) {
-      para.fv = ((ObjectProxy*)pyobject)->fObject;
+      para.fv = &((ObjectProxy*)pyobject)->fObject;
       if ( func )
-         func->SetArgRef( reinterpret_cast< Long_t& >( ((ObjectProxy*)(void*)pyobject)->fObject ) );
+         func->SetArg( para.fl );       // this assumes that CINT will treat void*& as void**
       return kTRUE;
    }
 

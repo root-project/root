@@ -727,7 +727,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
          } else {
             offset = clActual->GetBaseClassOffset( klass ); 
          }
-         (Long_t&)address -= offset;
+         address = (void*)((Long_t)address - offset);
          klass = clActual;
       }
    }
