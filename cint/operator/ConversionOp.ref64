@@ -77,9 +77,9 @@ ConversionOp.h   43:1    0 public: N::B operator N::B(void);
 ConversionOp.h   45:1    0 public: A<C>* operator A<C>*(void) const;
 ConversionOp.h   46:1    0 public: const A<B>* operator const A<B>*(void) const;
 ConversionOp.h   47:1    0 public: B* operator B*(void) const;
-ConversionOp.h   49:1    0 public: const A<C> operator const A<C>&(void) const;
-ConversionOp.h   50:1    0 public: A<B> operator A<B>&(void);
-ConversionOp.h   51:1    0 public: const B operator const B&(void) const;
+ConversionOp.h   49:1    0 public: const A<C>& operator const A<C>&(void) const;
+ConversionOp.h   50:1    0 public: A<B>& operator A<B>&(void);
+ConversionOp.h   51:1    0 public: const B& operator const B&(void) const;
 ===========================================================================
 class D
  size=0x1 FILE:ConversionOp.h LINE:58
@@ -175,9 +175,9 @@ ConversionOp_h.so  -1:-1   0 public: N::B operator N::B(void);
 ConversionOp_h.so  -1:-1   0 public: A<C>* operator A<C>*(void) const;
 ConversionOp_h.so  -1:-1   0 public: const A<B>* operator const A<B>*(void) const;
 ConversionOp_h.so  -1:-1   0 public: B* operator B*(void) const;
-ConversionOp_h.so  -1:-1   0 public: const A<C> operator const A<C>&(void) const;
-ConversionOp_h.so  -1:-1   0 public: A<B> operator A<B>&(void);
-ConversionOp_h.so  -1:-1   0 public: const B operator const B&(void) const;
+ConversionOp_h.so  -1:-1   0 public: const A<C>& operator const A<C>&(void) const;
+ConversionOp_h.so  -1:-1   0 public: A<B>& operator A<B>&(void);
+ConversionOp_h.so  -1:-1   0 public: const B& operator const B&(void) const;
 ConversionOp_h.so  -1:-1   0 public: C C(const C&);
 ConversionOp_h.so  -1:-1   0 public: C& operator=(const C&);
 ===========================================================================
