@@ -81,7 +81,7 @@ namespace {
 
    void Declare_additional_CINT_typedefs() {
       // as the function name says
-      char name[256], value[512];
+      char name[4096], value[8192];
       int autoload = G__set_class_autoloading(0); // To avoid recursive loads
       for ( size_t i = 0; i < sizeof(btypes)/sizeof(char*); i ++ ) {
          //--- vector ---
