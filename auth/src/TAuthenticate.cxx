@@ -3828,7 +3828,7 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
 
 //______________________________________________________________________________
 Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n,
-                                     rsa_NUMBER &rsa_d, void **rsassl)
+                                     rsa_NUMBER &rsa_d, char **rsassl)
 {
    // Store RSA public keys from export string rsaPubExport.
 
@@ -3913,7 +3913,7 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
                          "unable to read pub key from bio");
             } else
                if (rsassl)
-                  *rsassl = (void *)rsatmp;
+                  *rsassl = (char *)rsatmp;
                else
                   ::Info("TAuthenticate::DecodeRSAPublic",
                          "no space allocated for output variable");
@@ -4028,13 +4028,14 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
    // Decode it
    rsa_NUMBER rsa_n, rsa_d;
 #ifdef R__SSL
-   RSA *RSASSLServer = 0;
+   char *tmprsa = 0;
    if (TAuthenticate::DecodeRSAPublic(serverPubKey,rsa_n,rsa_d,
-                                      (void **)&RSASSLServer) != key) {
-      if (RSASSLServer)
-         RSA_free(RSASSLServer);
+                                      &tmprsa) != key) {
+      if (tmprsa)
+         RSA_free((RSA *)tmprsa);
       return -1;
    }
+   RSA *RSASSLServer = (RSA *)tmprsa;
 #else
    if (TAuthenticate::DecodeRSAPublic(serverPubKey,rsa_n,rsa_d) != key)
       return -1;

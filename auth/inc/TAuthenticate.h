@@ -168,7 +168,7 @@ public:
 
    static Int_t       DecodeBase64(const char *in, char *out);
    static Int_t       DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n,
-                                      rsa_NUMBER &d, void **rsassl = 0);
+                                      rsa_NUMBER &d, char **rsassl = 0);
    static Int_t       EncodeBase64(const char *in, Int_t lin, TString &out);
    static TList      *GetAuthInfo();
    static const char *GetAuthMethod(Int_t idx);
