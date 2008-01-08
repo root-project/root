@@ -2342,7 +2342,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
          uxmin     = gPad->PadtoX(rwxmin);
          uxmax     = gPad->PadtoX(rwxmax);
       } else {
-
+	 
          ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
 
          if (rwxmin == rwxmax) rwxmax += 1.;
@@ -2356,18 +2356,12 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       }
       if (fMinimum != -1111) rwymin = minimum = fMinimum;
       if (fMaximum != -1111) rwymax = maximum = fMaximum;
-      if (uxmin < 0 && rwxmin >= 0) {
-         if (gPad->GetLogx()) uxmin = 0.9*rwxmin;
-         else                 uxmin = 0;
-      }
+      if (uxmin < 0 && rwxmin >= 0) uxmin = 0.9*rwxmin;
       if (uxmax > 0 && rwxmax <= 0) {
          if (gPad->GetLogx()) uxmax = 1.1*rwxmax;
          else                 uxmax = 0;
       }
-      if (minimum < 0 && rwymin >= 0) {
-         if(gPad->GetLogy()) minimum = 0.9*rwymin;
-         else                minimum = 0;
-      }
+      if (minimum < 0 && rwymin >= 0) minimum = 0.9*rwymin;
       if (maximum > 0 && rwymax <= 0) {
          //if(gPad->GetLogy()) maximum = 1.1*rwymax;
          //else                maximum = 0;
