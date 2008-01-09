@@ -490,17 +490,22 @@ namespace {
    };
 }
 
+#ifndef R__USE_MKSTEMP
+# ifdef R__GLIBC
+#  define R__USE_MKSTEMP 1
+# endif
+#endif
+
 //______________________________________________________________________________
 string R__tmpnam()
 {
    // return a unique temporary file name as defined by tmpnam
 
    static char filename[L_tmpnam+2];
-   static string tmpdir;
+   static string tmpdir = std::string(P_tmpdir) + "/";
    static list<R__tmpnamElement> tmpnamList;
 
-   if (tmpdir.length() == 0 && strlen(P_tmpdir) <= 2) {
-      // P_tmpdir will be prepended to the result of tmpnam
+   if (tmpdir.length() <= 2) {
       // if it is less that 2 character it is likely to
       // just be '/' or '\\'.
       // Let's add the temp directory.
@@ -511,24 +516,20 @@ string R__tmpnam()
       else tmpdir = ".";
       tmpdir += '/';
    }
-#if 0 && defined(R__USE_MKSTEMP)
-   else {
-      tmpdir  = P_tmpdir;
-      tmpdir += '/';
-   }
-
-   static char pattern[L_tmpnam+2];
-   const char *radix = "XXXXXX";
-   const char *appendix = "_rootcint";
-   if (tmpdir.length() + strlen(radix) + strlen(appendix) + 2) {
+#if R__USE_MKSTEMP
+   static const char *radix = "XXXXXX";
+   static const char *prefix = "rootcint_";
+   if (tmpdir.length() + strlen(radix) + strlen(prefix) + 2 > L_tmpnam + 2) {
       // too long
-
+      std::cerr << "Temporary file name too long! Trying with /tmp..." << std::endl;
+      tmpdir = "/tmp/";
    }
-   sprintf(pattern,"%s%s",tmpdir.c_str(),radix);
-   strcpy(filename,pattern);
+   strcpy(filename, tmpdir.c_str());
+   strcat(filename, prefix);
+   strcat(filename, radix);
    close(mkstemp(filename));/*mkstemp not only generate file name but also opens the file*/
    remove(filename);
-   fprintf(stderr,"pattern is %s filename is %s\n",pattern,filename);
+   tmpnamList.push_back(R__tmpnamElement(filename));
    return filename;
 
 #else
