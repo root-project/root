@@ -555,8 +555,12 @@ const char *TStreamerBase::GetInclude() const
 {
    // Return the proper include for this element.
 
-   if (GetClassPointer() && fBaseClass->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",fBaseClass->GetDeclFileName());
-   else                            sprintf(gIncludeName,"\"%s.h\"",GetName());
+   if (GetClassPointer() && fBaseClass->GetClassInfo()) {
+      sprintf(gIncludeName,"\"%s\"",fBaseClass->GetDeclFileName());
+   } else {
+      std::string shortname( TClassEdit::ShortType( GetName(), 1 ) );
+      sprintf(gIncludeName,"\"%s.h\"",shortname.c_str());
+   }
    return gIncludeName;
 }
 
@@ -990,8 +994,12 @@ const char *TStreamerObject::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
+   if (cl && cl->GetClassInfo()) {
+      sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
+   } else {
+      std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
+      sprintf(gIncludeName,"\"%s.h\"",shortname.c_str());
+   }
    return gIncludeName;
 }
 
@@ -1077,8 +1085,12 @@ const char *TStreamerObjectAny::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
+   if (cl && cl->GetClassInfo()) {
+      sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
+   } else {
+      std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
+      sprintf(gIncludeName,"\"%s.h\"",shortname.c_str());
+   }
    return gIncludeName;
 }
 
@@ -1169,10 +1181,13 @@ const char *TStreamerObjectPointer::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
-   char *star = strchr(gIncludeName,'*');
-   if (star) strcpy(star,star+1);
+   if (cl && cl->GetClassInfo()) {
+      sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
+   } else {
+      std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
+      sprintf(gIncludeName,"\"%s.h\"",shortname.c_str());
+   }
+
    return gIncludeName;
 }
 
@@ -1269,10 +1284,13 @@ const char *TStreamerObjectAnyPointer::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(gIncludeName,"\"%s.h\"",GetTypeName());
-   char *star = strchr(gIncludeName,'*');
-   if (star) strcpy(star,star+1);
+   if (cl && cl->GetClassInfo()) {
+      sprintf(gIncludeName,"\"%s\"",cl->GetDeclFileName());
+   } else {
+      std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
+      sprintf(gIncludeName,"\"%s.h\"",shortname.c_str());
+   }
+
    return gIncludeName;
 }
 
