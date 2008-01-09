@@ -13,7 +13,6 @@ int compile(const char *what)
    gSystem->SetIncludePath( work );
    TString lib( Form("lib%s",what) );
    int r = !gSystem->CompileMacro("myclass.h","k",lib);
-   gSystem->Unlink(Form("%s.rootmap",lib.Data()));
    return r;
 }
 
