@@ -357,9 +357,10 @@ Int_t TLegend::GetNRows() const
    if ( fPrimitives ) nEntries = fPrimitives->GetSize();
    if ( nEntries == 0 ) return 0;
 
-   Int_t nRows = (Int_t) TMath::Ceil(nEntries/fNColumns);
-   if(GetHeader() != NULL) nRows = 1 + (Int_t) TMath::Ceil((nEntries-1)/fNColumns);
-
+   Int_t nRows;
+   if(GetHeader() != NULL) nRows = 1 + (Int_t) TMath::Ceil((Double_t) (nEntries-1)/fNColumns);
+   else  nRows = (Int_t) TMath::Ceil((Double_t) nEntries/fNColumns);
+   
    return nRows;
 }
 
