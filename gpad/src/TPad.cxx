@@ -5654,12 +5654,15 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    TObject *oldlast = gPad->GetListOfPrimitives()->Last();
    TObject *obj = 0;
    Bool_t testlast = kFALSE;
+   Bool_t hasname = strlen(pname) > 0;
    if (strlen(pname) == 0 && strlen(emode) == 0) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
       if (gROOT->GetEditorMode() == 0) {
-         obj = FindObject(pname);
-         if (obj) return obj;
+         if (hasname) {
+            obj = FindObject(pname);
+            if (obj) return obj;
+         }
          if (testlast) {
             obj = gPad->GetListOfPrimitives()->Last();
             if (obj != oldlast) return obj;
