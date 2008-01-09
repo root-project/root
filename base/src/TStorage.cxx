@@ -352,7 +352,7 @@ void TStorage::ObjectDealloc(void *vp)
 #ifndef NOCINT
    // to handle delete with placement called via CINT
    Long_t gvp = G__getgvp();
-   if ((Long_t)vp == gvp && gvp != G__PVOID)
+   if ((Long_t)vp == gvp && gvp != (Long_t)G__PVOID)
       return;
 #endif
    ::operator delete(vp);

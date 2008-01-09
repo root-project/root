@@ -6,7 +6,7 @@ static int G__ManualTree2_126_0_132(G__value* result7, G__CONST char* funcname, 
 {
    // We need to emulate TTree::Process and properly capture the fact that we go an intepreted TSelector object.
 
-   G__ClassInfo ti( libp->para[0].tagnum );
+   G__ClassInfo ti( libp->para[0] );
    TClass *ptrClass = TClass::GetClass(ti.Name());
    TSelector *sel = (TSelector*) G__int(libp->para[0]);
 
@@ -46,7 +46,7 @@ static int G__ManualTree2_126_0_187(G__value* result7, G__CONST char* funcname, 
   // return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
 
    // Here find the class name 
-   G__ClassInfo ti( libp->para[2].tagnum );
+   G__ClassInfo ti( libp->para[2] );
    TClass *ptrClass = TClass::GetClass(ti.Name());
    const char* classname = (const char*)G__int(libp->para[1]);
    TClass *claim = TClass::GetClass(classname);
@@ -115,7 +115,7 @@ static int G__ManualTree2_126_0_188(G__value* result7, G__CONST char* funcname, 
    // We need to emulate 
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
 
-   G__ClassInfo ti( libp->para[1].tagnum );
+   G__ClassInfo ti( libp->para[1] );
    TClass *ptrClass = TClass::GetClass(ti.Name());
    TClass *actualClass = 0;
    void **addr = (void**)G__int(libp->para[1]);

@@ -4,7 +4,7 @@ static int  G__ManualBase4_101_0_97(G__value *result7,G__CONST char *funcname,st
    //    return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
 
    // Here find the class name 
-   G__ClassInfo ti( libp->para[0].tagnum );
+   G__ClassInfo ti( libp->para[0] );
 
    switch(libp->paran) {
    case 3:
@@ -23,7 +23,7 @@ static int G__ManualBase4_101_0_98(G__value *result7,G__CONST char *funcname,str
    //     ptr = (T*)GetObjectChecked(namecycle,TClass::GetClass(typeid(T)));
 
    // Here find the class name 
-   G__ClassInfo ti( libp->para[1].tagnum );
+   G__ClassInfo ti( libp->para[1] );
 
    G__setnull(result7);
    TDirectory *directory = ((TDirectory*)(G__getstructoffset()));
@@ -46,7 +46,7 @@ static int G__ManualBase4__0_211(G__value* result7, G__CONST char* funcname, str
    // We need to emulate: template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
 
    // Here find the class name 
-   G__ClassInfo ti( libp->para[1].tagnum );
+   G__ClassInfo ti( libp->para[1] );
 
    TBuffer & buf( *(TBuffer*) libp->para[0].ref );
 
@@ -68,7 +68,7 @@ static int G__ManualBase4__0_212(G__value* result7, G__CONST char* funcname, str
    // We need to emulate template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
 
    // Here find the class name 
-   G__ClassInfo ti( libp->para[1].tagnum );
+   G__ClassInfo ti( libp->para[1] );
 
    TBuffer & buf( *(TBuffer*) libp->para[0].ref );
 
