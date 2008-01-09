@@ -1135,7 +1135,8 @@ int testVector(int ngen, bool testio=false) {
    // test io vector 2
    fsize = a.testWrite(v2);  iret |= a.check(VecType<V2>::name()+" write",fsize,estSize,scale);
    ir = a.testRead(v2);      iret |= a.check(VecType<V2>::name()+" read",ir,0);
-   s2 = a.testAddition(v2);       iret |= a.check(VecType<V2>::name()+" after read",s2,sref2);
+   scale = 4; // gcc4.1.2 gives here an error for PtEtaPhiMV 
+   s2 = a.testAddition(v2);       iret |= a.check(VecType<V2>::name()+" after read",s2,sref2,scale);
 
 
    // test io of double 32 for vector 1
