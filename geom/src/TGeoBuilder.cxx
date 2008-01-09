@@ -103,11 +103,6 @@ Int_t TGeoBuilder::AddMaterial(TGeoMaterial *material)
 // Add a material to the list. Returns index of the material in list.
    if (!material) return -1;
    TList *materials = fGeometry->GetListOfMaterials();
-   if (materials->FindObject(material)) {
-      Warning("AddMaterial", "Material %s already registered at index %d", 
-              material->GetName(), material->GetIndex());
-      return material->GetIndex();
-   }   
    Int_t index = materials->GetSize();
    material->SetIndex(index);
    materials->Add(material);
@@ -121,12 +116,6 @@ Int_t TGeoBuilder::AddTransformation(TGeoMatrix *matrix)
    Int_t index = -1;
    if (!matrix) return -1;
    TObjArray *matrices = fGeometry->GetListOfMatrices();
-   index = matrices->IndexOf(matrix);
-   if (index >= 0) {
-      Warning("AddTransformation", "Matrix %s already registered at index %d", 
-              matrix->GetName(), index);
-      return index;
-   }   
    index = matrices->GetEntriesFast();
    matrices->AddAtAndExpand(matrix,index);
    return index;
@@ -140,12 +129,6 @@ Int_t TGeoBuilder::AddShape(TGeoShape *shape)
    if (!shape) return -1;
    TObjArray *shapes = fGeometry->GetListOfShapes();
    if (shape->IsRunTimeShape()) shapes =  fGeometry->GetListOfGShapes();
-   index = shapes->IndexOf(shape);
-   if (index >= 0) {
-      Warning("AddShape", "Shape %s already registered at index %d", 
-              shape->GetName(), index);
-      return index;
-   }   
    index = shapes->GetEntriesFast();
    shapes->AddAtAndExpand(shape,index);
    return index;
