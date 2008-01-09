@@ -41,6 +41,7 @@ G__ClassInfo {
   void Init();
   G__ClassInfo(const char *classname): tagnum(0), class_property(0){ Init(classname); } 
   void Init(const char *classname);
+  G__ClassInfo(const G__value &value_for_type);
   G__ClassInfo(int tagnumin): tagnum(0), class_property(0) { Init(tagnumin); } 
   void Init(int tagnumin);
 
