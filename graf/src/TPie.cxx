@@ -784,7 +784,7 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 
 
 //______________________________________________________________________________
-TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *leg_header)
 {
    // This method create a legend that explains the contents
    // of the slice for this pie-chart.
@@ -794,7 +794,7 @@ TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    //
    // The pointer of the TLegend is returned.
 
-   if (!fLegend) fLegend = new TLegend(x1,y1,x2,y2,GetName());
+   if (!fLegend) fLegend = new TLegend(x1,y1,x2,y2,leg_header);
    else fLegend->Clear();
 
    for (Int_t i=0;i<fNvals;++i) {
@@ -875,7 +875,7 @@ void TPie::Paint(Option_t *option)
       lblor = 1;
       soption.Remove(idx,1);
    }
-
+   
    // Seeks if has to paint sort the slices in increasing mode
    if ( (idx=soption.Index(">"))>=0 ) {
       SortSlices(kTRUE);
@@ -1469,12 +1469,17 @@ void TPie::MakeSlices(Bool_t force)
    }
 }
 
+
 //______________________________________________________________________________
-void TPie::SortSlices(Bool_t amode)
+void TPie::SortSlices(Bool_t amode, Float_t merge_threshold)
 {
    // This method, mainly intended for internal use, ordered the  slices accoording their values.
    // The default (amode=kTRUE) is inscreasing order, but is also possible in decreasing order (amode=kFALSE).
-
+   //
+   // If the merge_thresold>0 the slice that contains a quantity smaller than merge_thresold are merged
+   // togheter
+   
+   
    // main loop to order, bubble sort, the array
    Bool_t isDone = kFALSE;
 
@@ -1496,5 +1501,67 @@ void TPie::SortSlices(Bool_t amode)
       }  // end loop the values
    } // end main ordering loop
 
+   if (merge_threshold>0) {
+      // merge smallest slices
+      TPieSlice *merged_slice = new TPieSlice("merged","other",this);
+      merged_slice->SetRadiusOffset(0.);
+      merged_slice->SetLineColor(1);
+      merged_slice->SetLineStyle(1);
+      merged_slice->SetLineWidth(1);
+      merged_slice->SetFillColor(gStyle->GetColorPalette( (amode ? 0 : fNvals-1) ));
+      merged_slice->SetFillStyle(1001);
+
+      if (amode) {         
+         // search slices under the threshold
+         Int_t iMerged = 0;
+         for (;iMerged<fNvals&&fPieSlices[iMerged]->GetValue()<merge_threshold;++iMerged) {
+            merged_slice->SetValue( merged_slice->GetValue()+fPieSlices[iMerged]->GetValue() );
+         }
+         
+         // evaluate number of valid slices
+         if (iMerged<=1) { // no slices to merge
+            delete merged_slice; 
+         }
+         else { // write a new array with the right dimension
+            Int_t old_fNvals = fNvals;
+            fNvals = fNvals-iMerged+1;
+            TPieSlice **new_array = new TPieSlice*[fNvals];
+            new_array[0] = merged_slice;
+            for (Int_t i=0;i<old_fNvals;++i) {
+               if (i<iMerged) delete fPieSlices[i];
+               else new_array[i-iMerged+1] = fPieSlices[i];
+            }
+            delete [] fPieSlices;
+            fPieSlices = new_array;
+         }
+      }
+      else {
+         Int_t iMerged = fNvals-1;
+         for (;iMerged>=0&&fPieSlices[iMerged]->GetValue()<merge_threshold;--iMerged) {
+            merged_slice->SetValue( merged_slice->GetValue()+fPieSlices[iMerged]->GetValue() );
+         }
+
+         // evaluate number of valid slices
+         Int_t nMerged = fNvals-1-iMerged;
+         if (nMerged<=1) { // no slices to merge
+            delete merged_slice; 
+         }
+         else { // write a new array with the right dimension
+            Int_t old_fNvals = fNvals;
+            fNvals = fNvals-nMerged+1;
+            TPieSlice **new_array = new TPieSlice*[fNvals];
+            new_array[fNvals-1] = merged_slice;
+            for (Int_t i=old_fNvals-1;i>=0;--i) {
+               if (i>iMerged) delete fPieSlices[i];
+               else new_array[i-nMerged-1] = fPieSlices[i];
+            }
+            delete [] fPieSlices;
+            fPieSlices = new_array;
+         }
+
+      }
+   }
+   
    MakeSlices(kTRUE);
 }
+
