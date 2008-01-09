@@ -405,9 +405,8 @@ static int G__get_newname(char* new_name)
       //  2. f(type (*p)[4][4]) -> convert to f(type p[][4][4])
       fpos_t tmppos;
       int tmpline = G__ifile.line_number;
-      ;
       fgetpos(G__ifile.fp, &tmppos);
-      if (G__dispsource) G__disp_mask = 1;
+      if (G__dispsource) G__disp_mask = 1000;
       cin = G__fgetvarname(new_name, ")");
       if ('*' != new_name[0] || 0 == new_name[1]) goto escapehere;
       strcpy(temp, new_name + 1);
@@ -1461,37 +1460,37 @@ static int G__readpointer2function(char* new_name, char* pvar_type)
    // 'type (*func[n])(type var1,...);'
    // 'type (*ary)[n];'
    //
-   int c;
-   int n;
-   char *p;
-   fpos_t pos;
-   int line;
-   int ispointer = 0;
-   fpos_t pos2;
-   int line2;
-#ifndef G__OLDIMPLEMENTATIOn175
    int isp2memfunc = G__POINTER2FUNC;
-   char tagname[G__ONELINE];
-   tagname[0] = '\0';
-#endif // G__OLDIMPLEMENTATIOn175
+   // Flag that name started with '*'.
+   int ispointer = 0;
    if (new_name[0] == '*') {
       ispointer = 1;
    }
-   // pointer of function
-   //   type ( *funcpointer(type arg))( type var1,.....)
-   //   type ( *funcpointer[n])( type var1,.....)
-   //         ^
+   // Pointer to function.
    //
+   //   Function call returning pointer to function:
+   //
+   //        type (*funcpointer(type arg,...))(type var1,...)
+   //              ^
+   //
+   //   Array of pointers to function:
+   //
+   //        type (*funcpointer[n])(type var1,...)
+   //              ^
+   //
+   //--
    // Read variable name of function pointer.
+   fpos_t pos2;
    fgetpos(G__ifile.fp, &pos2);
-   line2 = G__ifile.line_number;
-   c = G__fgetstream(new_name, "()");
-   if ('*' != new_name[0] && !strstr(new_name, "::*")) {
+   int line2 = G__ifile.line_number;
+   int c = G__fgetstream(new_name, "()");
+   if ((new_name[0] != '*') && !strstr(new_name, "::*")) {
       fsetpos(G__ifile.fp, &pos2);
       G__ifile.line_number = line2;
-      return(G__CONSTRUCTORFUNC);
+      return G__CONSTRUCTORFUNC;
    }
-   if ('(' == c) {
+   if (c == '(') {
+      // -- We have a function call returning a pointer to function.
       fgetpos(G__ifile.fp, &pos2);
       line2 = G__ifile.line_number;
       c = G__fignorestream(")");
@@ -1500,27 +1499,31 @@ static int G__readpointer2function(char* new_name, char* pvar_type)
    else {
       line2 = 0;
    }
-   p = strstr(new_name, "::*");
-   if (p) {
-      isp2memfunc = G__POINTER2MEMFUNC;
-      // (A::*p)(...)  => new_name="p" , tagname="A::"
-      strcpy(tagname, new_name);
-      p = strstr(tagname, "::*");
-      strcpy(new_name, p + 3);
-      *(p + 2) = '\0';
+   char tagname[G__ONELINE];
+   tagname[0] = '\0';
+   {
+      char* p = strstr(new_name, "::*");
+      if (p) {
+         isp2memfunc = G__POINTER2MEMFUNC;
+         // (A::*p)(...)  => new_name="p" , tagname="A::"
+         strcpy(tagname, new_name);
+         p = strstr(tagname, "::*");
+         strcpy(new_name, p + 3);
+         *(p + 2) = '\0';
+      }
    }
-   // pointer of function
+   // pointer to function
    //   type ( *funcpointer[n])( type var1,.....)
    //                          ^
    c = G__fignorestream("([");
-   // pointer of function
+   // pointer to function
    //   type ( *funcpointer[n])( type var1,.....)
    //                           ^
    if (c == '[') {
       // -- type (*pary)[n]; pointer to array
       //                ^
       char temp[G__ONELINE];
-      n = 0;
+      int n = 0;
       while (c == '[') {
          c = G__fgetstream(temp, "]");
          G__p2arylabel[n++] = G__int(G__getexpr(temp));
@@ -1537,8 +1540,9 @@ static int G__readpointer2function(char* new_name, char* pvar_type)
       //                 ^
       // Set newtype for pointer to function.
       char temp[G__ONELINE];
-      line = G__ifile.line_number;
+      fpos_t pos;
       fgetpos(G__ifile.fp, &pos);
+      int line = G__ifile.line_number;
       if (G__dispsource) {
          G__disp_mask = 1000; // FIXME: Gross hack!
       }
@@ -1584,8 +1588,8 @@ static int G__readpointer2function(char* new_name, char* pvar_type)
       }
       if (line2) {
          // function returning pointer to function
-         //   type ( *funcpointer(type arg))( type var1,.....)
-         //                       ^ <------- ^
+         //   type (*funcpointer(type arg))(type var1,.....)
+         //                     ^ <------- ^
          fsetpos(G__ifile.fp, &pos2);
          G__ifile.line_number = line2;
          return G__FUNCRETURNP2F;
@@ -1647,7 +1651,7 @@ void G__define_var(int tagnum, int typenum)
    static int padn = 0;
    static int bitfieldwarn = 0;
    fpos_t store_fpos;
-   G__value reg;
+   G__value reg = G__null;
    char temp1[G__LONGLINE];
    char new_name[G__LONGLINE];
    char temp[G__LONGLINE];
@@ -1659,6 +1663,7 @@ void G__define_var(int tagnum, int typenum)
    G__typenum = typenum;
    store_decl = G__decl;
    G__decl = 1;
+   //fprintf(stderr, "\nG__define_var: Begin.\n");
    //
    // We have:
    //
@@ -1673,6 +1678,7 @@ void G__define_var(int tagnum, int typenum)
    // Read variable name.
    //
    cin = G__get_newname(new_name);
+   //fprintf(stderr, "G__define_var: G__getnewname returned: '%s'\n", new_name);
    G__unsigned = 0;
    if (!cin) {
       // -- long long handling, and return.
@@ -1715,6 +1721,11 @@ void G__define_var(int tagnum, int typenum)
    //  type int var1, var2;
    //                ^
    //
+   //  or:
+   //
+   //  type var1(val1), var2(val2);
+   //           ^
+   //
    while (1) {
       // -- Loop over declarator list.
       if (G__ansiheader) {
@@ -1726,6 +1737,7 @@ void G__define_var(int tagnum, int typenum)
          //                      ^    or         ^
          //  return one by one
          //
+         //fprintf(stderr, "G__define_var: Parsing an ansi function parameter: '%s'\n", new_name);
          char* pxx = strstr(new_name, "...");
          if (pxx) {
             *pxx = 0;
@@ -1754,12 +1766,17 @@ void G__define_var(int tagnum, int typenum)
          }
 #endif // G__ASM
          if (cin == '(') {
+            //fprintf(stderr, "G__define_var: func parm, I see a '(': '%s'\n", new_name);
             if ((new_name[0] == '\0') || !strcmp(new_name, "*")) {
                // pointer to function
                //   type (*funcpointer[n])(type var1, ...)
                //        ^
+               //fprintf(stderr, "G__define_var: func parm, calling G__readpointer2function.   new_name: '%s'\n", new_name);
                G__readpointer2function(new_name, &var_type);
+               //fprintf(stderr, "G__define_var: func parm, finished G__readpointer2function.  new_name: '%s' var_type: '%c'\n", new_name);
+               //fprintf(stderr, "G__define_var: func parm, ignoring up to next ',)='\n");
                cin = G__fignorestream(",)=");
+               //fprintf(stderr, "G__define_var: func parm, ignoring stopped at: '%c'\n", (char) cin);
             }
          }
          //
@@ -1950,11 +1967,13 @@ void G__define_var(int tagnum, int typenum)
          //   type obj(const,const);
          // is used to give constant parameter to constructor.
          //
+         //fprintf(stderr, "G__define_var: I see a '(': '%s'\n", new_name);
          if (!new_name[0] || !strcmp(new_name, "*")) {
             // -- Pointer to function.
             //
             //   type ( *funcpointer[n])( type var1,.....)
             //         ^
+            //fprintf(stderr, "G__define_var: Calling G__readpointer2function: '%s'\n", new_name);
             switch (G__readpointer2function(new_name, &var_type)) {
                case G__POINTER2FUNC:
                   break;
@@ -2008,23 +2027,21 @@ void G__define_var(int tagnum, int typenum)
                G__disp_mask = 1;
             }
             //
-            // If we are defining a class member, it must not be a constructor call,
-            // and if cin is not a digit, not a double quote, and not a period, then
-            // this is a function definition.
+            //  If we are declaring a class member, we must have a function declaration,
+            //  because initializers are not allowed for class members.
+            //  FIXME: Initializers are allowed for static class members of integral type.
+            //  Otherwise, if the next character could be part of a type name, do further
+            //  checking.
             //
             if (
-               G__def_struct_member &&
-               ((G__tagdefining == -1) || (G__struct.type[G__tagdefining] != 'n')) ||
                (
-                  !isdigit(cin) &&
-                  (cin != '"') &&
-                  (cin != '\'') &&
-                  (cin != '.') &&
-                  (cin != '-') &&
-                  (cin != '+') &&
-                  (cin != '*') &&
-                  (cin != '&')
-               )
+                  G__def_struct_member &&
+                  (
+                     (G__tagdefining == -1) ||
+                     (G__struct.type[G__tagdefining] != 'n')
+                  )
+               ) ||
+               !strchr("0123456789!\"%&'*+-./<=>?[]^|~", cin) // FIXME: No '(' here because then given "B f(A(3, 5), 12)" the "A" passes the typename test and we parse it as a function declaration.
             ) {
                // -- It is clear that above check is not sufficient to distinguish
                // class object instantiation and function header.  Following
@@ -2034,7 +2051,7 @@ void G__define_var(int tagnum, int typenum)
                if (G__dispsource) {
                   G__disp_mask = 1000;
                }
-               cin = G__fgetname(temp, ",)*&<=");
+               cin = G__fgetname(temp, ",)!\"%&'*+-./<=>?[]^|~"); // FIXME: No '(' here because then given "B f(A(3, 5), 12)" the "A" passes the typename test and we parse it as a function declaration.
                if (strlen(temp) && isspace(cin)) {
                   // -- There was an argument and the parsing was stopped by a white
                   // space rather than on of ",)*&<=", it is possible that
@@ -2051,7 +2068,7 @@ void G__define_var(int tagnum, int typenum)
                         (temp[strlen(temp)-1] == ':')
                      )
                   ) {
-                     cin = G__fgetname(more, ",)*&<=");
+                     cin = G__fgetname(temp, ",)!\"%&'(*+-./<=>?[]^|~");
                      strcat(temp, more);
                      namespace_tagnum = G__defined_tagname(temp, 2);
                   }
@@ -2062,15 +2079,15 @@ void G__define_var(int tagnum, int typenum)
                }
                G__ifile.line_number = store_line;
                if (
-                  !G__iscpp ||
-                  !temp[0] ||
-                  (tagnum == -1) || // this is a problem for 'int f(A* b);'
-                  G__istypename(temp) ||
-                  (!temp[0] && (cin == ')')) ||
-                  !strncmp(new_name, "operator", 8) ||
-                  ((cin == '<') && G__defined_templateclass(temp))
+                  !G__iscpp || // Not C++, cannot be function-style initializer.
+                  !temp[0] || // Empty parameter, not an initializer.
+                  G__istypename(temp) ||  // First identifier is a typename, must be declaration.
+                  (!temp[0] && (cin == ')')) || // Empty parameter list, not an initializer.
+                  !strncmp(new_name, "operator", 8) || // The syntax operator+() cannot be an initializer.
+                  ((cin == '<') && G__defined_templateclass(temp)) // First identifier is a template id, must be decl.
                ) {
                   // -- Handle a function declaration and return.
+                  //fprintf(stderr, "G__define_var: Handle a function declaration: '%s('\n", new_name);
                   G__var_type = var_type;
                   // function definition
                   //   type funcname( type var1,.....)
@@ -2108,13 +2125,14 @@ void G__define_var(int tagnum, int typenum)
                if ((cin != ',') && (cin != ';')) {
                   cin = G__fignorestream(",;");
                }
-               if (cin == '{') { /* don't know if this part is needed */
-                  while ('}' != cin) {
+               if (cin == '{') { // Don't know if this part is needed.
+                  while (cin != '}') {
                      cin = G__fignorestream(",;");
                   }
                }
                // Perform the initialization.
                G__var_type = var_type;
+               G__value reg = G__null;
                G__letvariable(new_name, reg, &G__global, G__p_local);
                // Continue scanning.
                goto readnext;

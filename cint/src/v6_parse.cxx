@@ -577,6 +577,7 @@ static int G__exec_function(char* statement, int* pc, int* piout, int* plargeste
    // Return 0 if function called, return 1 if function is *not* called.
    //
    if ((*pc == ';') || G__isoperator(*pc) || (*pc == ',') || (*pc == '.') || (*pc == '[')) {
+      //fprintf(stderr, "G__exec_function: Function call is followed by an operator.\n");
       if ((*pc != ';') && (*pc != ',')) {
          statement[(*piout)++] = *pc;
          *pc = G__fgetstream_new(statement + (*piout) , ";");
@@ -595,9 +596,11 @@ static int G__exec_function(char* statement, int* pc, int* piout, int* plargeste
       //
       // Evaluate the expression which contains the function call.
       //
+      //fprintf(stderr, "G__exec_function: Calling G__getexpr(): '%s'\n", statement);
       *presult = G__getexpr(statement);
    }
    else if (*pc == '(') {
+      //fprintf(stderr, "G__exec_function: Function call is followed by '('.\n");
       int len = strlen(statement);
       statement[len++] = *pc;
       *pc = G__fgetstream_newtemplate(statement + len, ")");
@@ -629,10 +632,12 @@ static int G__exec_function(char* statement, int* pc, int* piout, int* plargeste
       //
       // Evaluate the expression which contains the function call.
       //
+      //fprintf(stderr, "G__exec_function: Calling G__getexpr(): '%s'\n", statement);
       *presult = G__getexpr(statement);
    }
    else {
       // -- Function-style macro without ';' at the end.
+      //fprintf(stderr, "G__exec_function: We have a function-style macro call.\n");
       if (G__breaksignal) {
          int ret = G__beforelargestep(statement, piout, plargestep);
          if (ret > 1) {
@@ -5046,6 +5051,7 @@ G__value G__exec_statement(int* mparen)
    int discarded_space = 0;
    char statement[G__LONGLINE];
    G__value result = G__null;
+   //fprintf(stderr, "\nG__exec_statement: Begin.\n");
    fpos_t start_pos;
    fgetpos(G__ifile.fp, &start_pos);
    int start_line = G__ifile.line_number;
@@ -6252,11 +6258,14 @@ G__value G__exec_statement(int* mparen)
                            G__tagnum = result.tagnum;
                            int store_constvar = G__constvar;
                            G__constvar = result.obj.i; // see G__string2type
+                           int store_reftype = G__reftype;
+                           G__reftype = result.obj.reftype.reftype;
                            statement[iout] = '(';
                            statement[iout+1] = '\0';
                            G__make_ifunctable(statement);
                            G__tagnum = store_tagnum;
                            G__constvar = store_constvar;
+                           G__reftype = store_reftype;
 #ifdef G__SECURITY
                            if (!*mparen) {
                               return G__null;
@@ -6679,7 +6688,7 @@ G__value G__exec_statement(int* mparen)
             break;
 
          case '(':
-            //fprintf(stderr, "G__exec_statement: Enter left parenthesis case.\n");
+            //fprintf(stderr, "\nG__exec_statement: Enter left parenthesis case.\n");
             statement[iout++] = c;
             statement[iout] = '\0';
             if (single_quote || double_quote) {
@@ -6943,8 +6952,8 @@ G__value G__exec_statement(int* mparen)
                   //                     ^
                   c = G__fgetstream_new(statement + iout , ")");
                   iout = strlen(statement);
-                  statement[iout] = c;
-                  statement[++iout] = '\0';
+                  statement[iout++] = c;
+                  statement[iout] = '\0';
                   // Skip any following whitespace.
                   c = G__fgetspace();
                   // if 'func(xxxxxx) \n    nextexpr'   macro
@@ -6965,6 +6974,7 @@ G__value G__exec_statement(int* mparen)
                   }
                   else {
                      // -- Evaluate the expression which contains the function call.
+                     //fprintf(stderr, "G__exec_statement: Calling G__exec_function: '%s'\n", statement);
                      int notcalled = G__exec_function(statement, &c, &iout, &largestep, &result);
                      if (notcalled) {
                         return G__null;

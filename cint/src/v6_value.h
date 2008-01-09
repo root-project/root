@@ -41,11 +41,7 @@ inline T G__convertT(const G__value* buf)
    return (T) buf->obj.i;
 }
 
-template<typename T>
-inline T& G__value_ref(G__value &buf)
-{
-   return (T&)buf.obj.i;
-}
+template<typename T> T& G__value_ref(G__value &buf);
 
 template <> inline long double &G__value_ref<long double>(G__value &buf){ return buf.obj.ld; }
 template <> inline double &G__value_ref<double>(G__value &buf){ return buf.obj.d; }
@@ -66,6 +62,13 @@ template <> inline short & G__value_ref<short>(G__value  & buf){ return buf.obj.
 template <> inline int & G__value_ref<int>(G__value  & buf){ return buf.obj.in;}
 template <> inline long & G__value_ref<long>(G__value  & buf){ return buf.obj.i;}
 template <> inline long long & G__value_ref<long long>(G__value  & buf){ return buf.obj.ll;}
+
+template <> inline bool & G__value_ref<bool>(G__value  & buf)
+#ifdef G__BOOL4BYTE
+{ return (bool&)buf.obj.i; }
+#else
+{ return (bool&)buf.obj.uch; }
+#endif
 
 template <typename T>
 inline void G__setvalue(G__value* pbuf, const T& value) { pbuf->obj.i = (long) value; }

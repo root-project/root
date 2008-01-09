@@ -4988,6 +4988,34 @@
 *   template args, type in namespace, local vs. global type
 * - fix bytecode generation for switch statement
 * - fix spelling of G__SetCriticalSectionEnv()
+*
+* 5.16.28 Nov 22, 2007
+* 6.1.28 Nov 25, 2007
+* - support MacOSX 10.5 + macos64, rename macgcc to macos.
+* - from Christian Holm Christensen:
+*   new MIPS and HPPA linux architectures supported
+* - support MSVC2008
+* - fix several problems discovered in CINT's test suite and with valgrind
+* - fix autoloading of templated classes with typedefs as template argument
+* - Add dictionary for std::string::(const_)reverse_iterator and 
+*   std::string::iterator's operator ==, != also for GCC > 3.
+*
+* 5.16.29 Jan 08, 2008
+* 6.1.29 Jan 08, 2008
+* - Fix 'int n((0));' and related syntax.
+* - Fixes problem with re-using artificial source files.
+* - Add G__get_class_autoloading_table() returning the library name for a class name; used by TCint to determine whether the enclosing class's auto-load entry should be set.
+* - Fix <https://savannah.cern.ch/bugs/?32403> and "operator std::string()" by skipping "std::" and setting G__vartype for conversion functions.
+* - Add better support for indirect self reference
+* - Correct the constness in the case: Object * const &front() const; (i.e Object*const vs Object const*).
+* - Fix handling of case(1): [The issue was the missing space between case and (]
+* - Fix for passing the result of post increment directly to a function taking a parameter by reference (for example cout << c++;
+* - Add interface to set a G__ifile context: G__setfilecontext(filename, ifile). Sets G__ifile to filename (can be an artificial tag) and stores the previous one in ifile
+* - Support const T& operator()(const Key& key) const;
+* - Support obj*&operator()(int)
+* - Properly handle pragma link of operator in namespace
+* - Prevent the autoloader from destroying entries for templated classes that are defining in a namespace and/or class
+ 
 
 
 * ---------------------------------------------------------------------

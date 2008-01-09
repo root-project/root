@@ -810,6 +810,8 @@ int G__ispublicbase(int basetagnum,int derivedtagnum
   if(0>derivedtagnum) return(-1);
   if(basetagnum==derivedtagnum) return(0);
   derived = G__struct.baseclass[derivedtagnum];
+  if(derived==0) return -1;
+
   n = derived->basen;
 
   for(i=0;i<n;i++) {

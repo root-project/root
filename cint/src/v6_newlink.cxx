@@ -3375,9 +3375,11 @@ static int G__isprivateconstructorvar(int tagnum,int iscopy)
   var=G__struct.memvar[tagnum];
   while(var) {
     for(ig15=0;ig15<var->allvar;ig15++) {
-      if('u'==var->type[ig15] && -1!=(memtagnum=var->p_tagtable[ig15]) &&
-         'e'!=G__struct.type[memtagnum]
+      if('u'==var->type[ig15] 
+         && -1!=(memtagnum=var->p_tagtable[ig15]) 
+         && 'e'!=G__struct.type[memtagnum]
          && memtagnum!=tagnum
+         && var->reftype[ig15]!=G__PARAREFERENCE
          ) {
         if(G__isprivateconstructorclass(memtagnum,iscopy)) return(1);
       }
@@ -3493,9 +3495,11 @@ static int G__isprivatedestructorvar(int tagnum)
   var=G__struct.memvar[tagnum];
   while(var) {
     for(ig15=0;ig15<var->allvar;ig15++) {
-      if('u'==var->type[ig15] && -1!=(memtagnum=var->p_tagtable[ig15]) &&
-         'e'!=G__struct.type[memtagnum]
+      if('u'==var->type[ig15] 
+         && -1!=(memtagnum=var->p_tagtable[ig15]) 
+         && 'e'!=G__struct.type[memtagnum]
          && memtagnum!=tagnum
+         && var->reftype[ig15]!=G__PARAREFERENCE
          ) {
         if(G__isprivatedestructorclass(memtagnum)) return(1);
       }
@@ -3597,9 +3601,11 @@ static int G__isprivateassignoprvar(int tagnum)
   var=G__struct.memvar[tagnum];
   while(var) {
     for(ig15=0;ig15<var->allvar;ig15++) {
-      if('u'==var->type[ig15] && -1!=(memtagnum=var->p_tagtable[ig15]) &&
-         'e'!=G__struct.type[memtagnum]
+      if('u'==var->type[ig15] 
+         && -1!=(memtagnum=var->p_tagtable[ig15])
+         && 'e'!=G__struct.type[memtagnum]
          && memtagnum!=tagnum
+         && var->reftype[ig15]!=G__PARAREFERENCE
          ) {
         if(G__isprivateassignoprclass(memtagnum)) return(1);
       }

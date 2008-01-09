@@ -1075,32 +1075,32 @@ int G__defined_typename(const char *type_name)
   strcpy(temp2,type_name);
 
   /* find 'xxx::yyy' */
-  p = G__find_last_scope_operator (temp2);
+  // const ns::T - the const does not belong to the ns!
+  char* skipconst = temp2;
+  while (!strncmp(skipconst, "const ", 6))
+     skipconst += 6;
+  p = G__find_last_scope_operator(skipconst);
 
 
   /* abandon scope operator if 'zzz (xxx::yyy)www' */
-  par = strchr(temp2,'(');
+  par = strchr(skipconst,'(');
   if(par && p && par<p) p=(char*)NULL;
 
   if(p) {
     strcpy(temp,p+2);
     *p='\0';
-    if(temp2==p) env_tagnum = -1; /* global scope */
+    if(skipconst==p) env_tagnum = -1; /* global scope */
 #ifndef G__STD_NAMESPACE /* ON745 */
-    else if (strcmp (temp2, "std") == 0
+    else if (strcmp (skipconst, "std") == 0
              && G__ignore_stdnamespace
              ) env_tagnum = -1;
 #endif
     else {
-       // const ns::T - the const does not belong to the ns!
-       char* skipconst = temp2;
-       while (!strncmp(skipconst, "const ", 6))
-          skipconst += 6;
        env_tagnum = G__defined_tagname(skipconst,0);
     }
   }
   else {
-    strcpy(temp,temp2);
+    strcpy(temp,skipconst);
     env_tagnum = G__get_envtagnum();
   }
 
@@ -1119,9 +1119,9 @@ int G__defined_typename(const char *type_name)
       /* global scope */
       if(-1==G__newtype.parent_tagnum[i]
 #if !defined(G__OLDIMPLEMTATION2100)
-         && (!p || (temp2==p || strcmp("std",temp2)==0))
+         && (!p || (skipconst==p || strcmp("std",skipconst)==0))
 #elif !defined(G__OLDIMPLEMTATION1890)
-         && (!p || temp2==p)
+         && (!p || skipconst==p)
 #endif
          )
         thisflag=0x1;

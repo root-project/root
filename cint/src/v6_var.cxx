@@ -14,13 +14,13 @@
  ************************************************************************/
 
 #include "common.h"
-
+//--
 
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
+#include <sstream>
 
 extern "C" {
 
@@ -28,8 +28,8 @@ extern "C" {
 int G__filescopeaccess(int filenum, int statictype);
 static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00);
 static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_array* var, char* item, long store_struct_offset, int var_type, G__value* presult);
-
-
+//--
+//--
 
 static int G__getarraydim = 0;
 
@@ -279,6 +279,13 @@ static void G__getpointer2pointer(G__value* presult, G__var_array* var, int ig15
    switch (G__var_type) {
       case 'v':
          switch (var->reftype[ig15]) {
+            case G__PARANORMAL:
+               if (var->paran[ig15] > paran) {
+                  G__letint(presult, var->type[ig15], *((long*) presult->ref));
+               }
+               break;
+            case G__PARAREFERENCE:
+               break;
             case G__PARAP2P:
                G__letint(presult, var->type[ig15], *(long*)presult->ref);
                presult->obj.reftype.reftype = G__PARANORMAL;
@@ -286,13 +293,6 @@ static void G__getpointer2pointer(G__value* presult, G__var_array* var, int ig15
             case G__PARAP2P2P:
                G__letint(presult, var->type[ig15], *(long*)presult->ref);
                presult->obj.reftype.reftype = G__PARAP2P;
-               break;
-            case G__PARANORMAL:
-               if (var->paran[ig15] > paran) {
-                  G__letint(presult, var->type[ig15], *((long*) presult->ref));
-               }
-               break;
-            case G__PARAREFERENCE:
                break;
             default:
                G__letint(presult, var->type[ig15], *(long*)presult->ref);
@@ -349,6 +349,42 @@ static void G__getpointer2pointer(G__value* presult, G__var_array* var, int ig15
 //
 // -- Change a variable's value.
 //
+
+//--  1
+//--  2
+//--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+//--  5
 
 #define G__ASSIGN_VAR(SIZE, CASTTYPE, CONVFUNC, X) \
    switch (G__var_type) { \
@@ -509,9 +545,8 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
    G__value para[G__MAXVARDIM];
    char vv[G__BUFLEN];
    char* varname = vv;
+   //--
    G__value result = G__null;
-
-
 #ifdef G__ASM
    if (G__asm_exec) {
       ig15 = G__asm_index;
@@ -999,7 +1034,7 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
       G__ASSERT(!G__decl || (G__decl == 1));
       if (G__asm_noverflow && !G__decl_obj) {
          if ((G__var_type != 'v') || (var->type[ig15] != 'u')) {
-            // -- 
+            // --
             if (result.type) {
                // --
                G__asm_gen_stvar(G__struct_offset, ig15, paran, var, item, store_struct_offset, G__var_type, &result);
@@ -1081,10 +1116,10 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
       // Static class/struct member.
       if (
          G__struct_offset &&
-         (var->statictype[ig15] == G__LOCALSTATIC)
-         // FIXME: Need to test for G__COMPILEDGLOBAL and declaring scope is namespace here!
-
-
+         (
+            (var->statictype[ig15] == G__LOCALSTATIC)
+            // FIXME: Need to test for G__COMPILEDGLOBAL and declaring scope is namespace here!
+         )
       ) {
          G__struct_offset = 0;
       }
@@ -2746,7 +2781,7 @@ G__value G__classassign(long pdest, int tagnum, G__value result)
    if (buf2 != result7) {
       free((void*)result7);
    }
-#endif
+#endif // G__OLDIMPLEMENTATION1823
    return result;
 }
 
@@ -2934,7 +2969,7 @@ int G__fundamental_conversion_operator(int type, int tagnum, int typenum, int re
 
 extern "C++" {
 template<class CASTTYPE, class CONVFUNC>
-void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var, int ig15, G__value& result)
+inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var, int ig15, G__value& result)
 {
    if (islower(G__var_type)) {
       /* -- Not a pointer, may be an array. */
@@ -3494,7 +3529,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //    myarray v[A][B][C][D]
    //
    //  We set:
-   // 
+   //
    //    var->varlabel[varid][0] = 1 or B*C*D*a*b*c; // stride (for unspecified size array)
    //    var->varlabel[varid][1] = 0 or A*B*C*D*a*b*c; // number of elements
    //    var->varlabel[varid][2] = 0 or B;
@@ -3579,12 +3614,12 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    }
    //
    // Pointer to array reimplementation.
-   // 
+   //
    // We start with:
-   // 
+   //
    // typedef myarray int[a][b][c];
    // myarray v[A][B][C][D]
-   // 
+   //
    //   var->varlabel[var_identity][0] = 1 or B*C*D*a*b*c; // stride for unspecified final index
    //   var->varlabel[var_identity][1] = 0 or A*B*C*D*a*b*c; // number of elements
    //   var->varlabel[var_identity][2] = 0 or B;
@@ -3777,6 +3812,8 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //
    //  Accumulate G__dynconst into G__constvar and clear it.
    //
+   //
+   //
    //  Note: G__dynconst is set by G__lock_variable
    //        and by variable initialization when
    //        the initializer is a function call
@@ -3785,7 +3822,6 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //
    G__constvar |= G__dynconst;
    G__dynconst = 0;
-   //--
    //
    //  Store the constness of the variable.
    //
@@ -3796,6 +3832,123 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    var->allvar++;
    // FIXME: Why?  This is bizzare.
    var->varlabel[var->allvar][0] = var->varlabel[var->allvar-1][0] + 1;
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
    //
    //  Do special processing for an enumerator, change type code.
    //
@@ -3811,104 +3964,6 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
       // -- Enumerator.
       G__var_type = 'l';
    }
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
-   //--  9
-   //-- 10
-   //--  1
-   //--  2
-   //--  3
-   //--  4
-   //--  5
-   //--  6
-   //--  7
-   //--  8
    //
    //  If we are assigning an object of class type
    //  to this variable, and the variable is of a
@@ -4598,7 +4653,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    ) {
       G__add_refcount((void*)(*((long*) var->p[ig15])), (void**) var->p[ig15]);
    }
-#endif
+#endif // G__SECURITY
    //
    //  Do special fixups for an automatic object.
    //
@@ -4779,6 +4834,124 @@ static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_a
 //
 //  Get the value from a variable of pointer type.
 //
+
+extern "C++" {
+template<class CASTTYPE, class CONVTYPE, class CONVFUNC>
+inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, struct G__var_array* var, int ig15, long G__struct_offset, int paran, G__value para[G__MAXVARDIM], int linear_index, int secondary_linear_index, G__value* result)
+{
+   switch (G__var_type) {
+      case 'v':
+         /* -- Return the value that the pointer variable points to.  Mytype* var; MyType v = *var; */
+         switch (var->reftype[ig15]) {
+            case G__PARANORMAL:
+               /* -- Variable is a one-level pointer. */
+               result->ref = (*(long*) (G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC)));
+               if (result->ref) {
+                  (*f)(result, TYPE, (CONVTYPE) (*((CASTTYPE*) result->ref)));
+               }
+               break;
+            case G__PARAP2P:
+               if (var->paran[ig15] < paran) {
+                  long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC);
+                  result->ref = *(long*) (((CASTTYPE*) (*(long*) address)) + secondary_linear_index);
+                  if (result->ref) {
+                     (*f)(result, TYPE, (CONVTYPE) (*(CASTTYPE*) result->ref));
+                  }
+               }
+               else {
+                  result->ref = *(long*)(G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC));
+                  G__letint(result, PTYPE, *(long*)(*(long*) (G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC))));
+               }
+               break;
+         }
+         break;
+      case 'P':
+         /* -- Return a pointer to the pointer variable value.  MyType* var; MyType** v = &var; */
+         if (var->paran[ig15] == paran) {
+            G__letint(result, PTYPE, G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC));
+         }
+         else if (var->paran[ig15] < paran) {
+            long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC);
+            if (var->reftype[ig15] == G__PARANORMAL) {
+               G__letint(result, PTYPE, (long)((CASTTYPE*)(*(long*)address) + secondary_linear_index));
+            }
+            else {
+               G__letint(result, PTYPE, (long)((long*)(*(long*)address) + secondary_linear_index));
+               result->obj.reftype.reftype = G__PARAP2P;
+            }
+         }
+         else {
+            G__letint(result, PTYPE, G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC));
+         }
+         break;
+      default :
+         /* 'p' -- Return the pointer variable value.  MyType* var; MyType* v = var; */
+         if (paran == var->paran[ig15]) {
+            /* MyType* var[ddd]; MyType* v = var[xxx]; */
+            result->ref = (long)(G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC));
+            G__letint(result, PTYPE, *((long*) result->ref));
+         }
+         else if (paran > var->paran[ig15]) {
+            /* -- Pointer to array reimplementation. */
+            /* MyType* var[ddd];  v = var[xxx][yyy]; */
+            long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC);
+            if (var->reftype[ig15] == G__PARANORMAL) {
+               /* -- Variable is a single-level pointer. */
+               /* Pointer to array reimplementation. */
+               result->ref = (long)((CASTTYPE*)(*(long*)address) + secondary_linear_index);
+               (*f)(result, TYPE, (CONVTYPE)(*((CASTTYPE*)result->ref)));
+            }
+            else if ((paran - 1) == var->paran[ig15]) {
+               /* Pointer to array reimplementation. */
+               result->ref = (long)((long*)(*(long*)address) + secondary_linear_index);
+               G__letint(result, PTYPE, (long)((CASTTYPE*)(*((long*)result->ref))));
+               if (var->reftype[ig15] > G__PARAP2P) {
+                  result->obj.reftype.reftype = var->reftype[ig15] - 1;
+               }
+            }
+            else {
+               /* -- Start doing pointer arithmetic. */
+               result->ref = (long)((long*)(*(long*)address) + para[0].obj.i);
+               for (int ip = 1; ip < (paran - 1); ++ip) {
+                  result->ref = (long)((long*)(*(long*)result->ref) + para[ip].obj.i);
+               }
+               result->obj.reftype.reftype = var->reftype[ig15] - paran + var->paran[ig15];
+               /**/
+               /**/
+               /**/
+               switch (result->obj.reftype.reftype) {
+                  case G__PARANORMAL:
+                     result->ref = (long)((CASTTYPE*)(*((long*)result->ref)) + para[paran-1].obj.i);
+                     (*f)(result, TYPE, *((CASTTYPE*)result->ref));
+                     break;
+                  case 1:
+                     result->ref = (long)((long*)(*((long*)result->ref)) + para[paran-1].obj.i);
+                     G__letint(result, PTYPE, *((long*)result->ref));
+                     result->obj.reftype.reftype = G__PARANORMAL;
+                     break;
+                  default:
+                     result->ref = (long)((long*)(*((long*)result->ref)) + para[paran-1].obj.i);
+                     G__letint(result, PTYPE, *((long*)result->ref));
+                     result->obj.reftype.reftype = var->reftype[ig15] - paran + var->paran[ig15];
+                     /**/
+                     /**/
+                     /**/
+                     break;
+               }
+            }
+         }
+         else {
+            /* paran < var->paran[ig15] */
+            /* MyType* var[ddd][nnn]; MyType** v = var[xxx]; */
+            /* FIXME: This is a syntax error if (var->paran[ig15] - paran) > 1. */
+            result->ref = (long)(&var->p[ig15]);
+            G__letint(result, PTYPE, *((long*) result->ref));
+         }
+         break;
+   }
+}
+} // extern "C++"
+
 #define G__GET_PVAR(CASTTYPE, CONVFUNC, CONVTYPE, TYPE, PTYPE) \
    switch (G__var_type) { \
       case 'v': \
@@ -4793,7 +4966,7 @@ static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_a
                break; \
             case G__PARAP2P: \
                if (var->paran[ig15] < paran) { \
-                  address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC); \
+                  long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC); \
                   result.ref = *(long*) (((CASTTYPE*) (*(long*) address)) + secondary_linear_index); \
                   if (result.ref) { \
                      CONVFUNC(&result, TYPE, (CONVTYPE) (*(CASTTYPE*) result.ref)); \
@@ -4812,7 +4985,7 @@ static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_a
             G__letint(&result, PTYPE, G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC)); \
          } \
          else if (var->paran[ig15] < paran) { \
-            address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC); \
+            long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC); \
             if (var->reftype[ig15] == G__PARANORMAL) { \
                G__letint(&result, PTYPE, (long)((CASTTYPE*)(*(long*)address) + secondary_linear_index)); \
             } \
@@ -4835,7 +5008,7 @@ static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_a
          else if (paran > var->paran[ig15]) { \
             /* -- Pointer to array reimplementation. */ \
             /* MyType* var[ddd];  v = var[xxx][yyy]; */ \
-            address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC); \
+            long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC); \
             if (var->reftype[ig15] == G__PARANORMAL) { \
                /* -- Variable is a single-level pointer. */ \
                /* Pointer to array reimplementation. */ \
@@ -4906,7 +5079,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
    long G__struct_offset = 0L;
    char store_var_type = '\0';
    int varhash = 0;
-   long address = 0;
+   //--
    struct G__input_file store_ifile;
    int store_vartype = 0;
    long store_struct_offset = 0;
@@ -4936,7 +5109,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
       }
       goto G__exec_asm_getvar;
    }
-#endif
+#endif // G__ASM
    //
    //  Now do some parsing.
    //
@@ -5365,7 +5538,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
             if (G__asm_dbg) {
                G__fprinterr(G__serr, "%3x,%3x: LD_MSTR  item: '%s' index: %d paran: %d type: '%c' var: %08lx  %s:%d\n", G__asm_cp, G__asm_dt, item, ig15, paran, G__var_type, (long) var, __FILE__, __LINE__);
             }
-#endif // G__ASM_DBG 
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_MSTR;
             G__asm_inst[G__asm_cp+1] = ig15;
             G__asm_inst[G__asm_cp+2] = paran;
@@ -5486,7 +5659,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
       if (
          G__struct_offset &&
          (
-            (var->statictype[ig15] == G__LOCALSTATIC) || 
+            (var->statictype[ig15] == G__LOCALSTATIC) ||
             (
                (var->statictype[ig15] == G__COMPILEDGLOBAL) &&
                (var->tagnum == -1) || ((var->tagnum != -1) && (G__struct.type[var->tagnum] == 'n'))
@@ -5575,7 +5748,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
       G__CHECK(G__SECURE_POINTER_REFERENCE, ((isupper(var->type[ig15]) && (var->type[ig15] != 'E')) || (var->paran[ig15] > paran)), return(G__null));
       // Get bit-field value.
       if (var->bitfield[ig15] && (G__var_type == 'p')) {
-         address = G__struct_offset + var->p[ig15];
+         long address = G__struct_offset + var->p[ig15];
          int original = *((int*) address);
          int mask = (1 << var->bitfield[ig15]) - 1;
          int finalval = (original >> var->varlabel[ig15][G__MAXVARDIM-1]) & mask;
@@ -5640,81 +5813,104 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          case '1':
             // void pointer
             G__GET_PVAR(char, G__letint, long, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<char, long>(G__letint, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
 #else // G__OLDIMPLEMENTATION2191
          case 'Q':
             // void pointer
             G__GET_PVAR(char, G__letint, long, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<char, long>(G__letint, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
 #endif // G__OLDIMPLEMENTATION2191
          case 'Y':
             // void pointer
             G__GET_PVAR(char, G__letint, long, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<char, long>(G__letint, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'E':
             // FILE pointer
             G__GET_PVAR(char, G__letint, long, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<char, long>(G__letint, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'C':
             // char pointer
             G__GET_PVAR(char, G__letint, long, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<char, long>(G__letint, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'N':
             // long long pointer
             G__GET_PVAR(G__int64, G__letLonglong, G__int64, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<G__int64, G__int64>(G__letLonglong, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'M':
             // unsigned long long pointer
             G__GET_PVAR(G__uint64, G__letULonglong, G__uint64, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<G__uint64, G__uint64>(G__letULonglong, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
 #ifndef G__OLDIMPLEMENTATION2191
          case 'Q':
             // long double pointer
             G__GET_PVAR(long double, G__letLongdouble, long, tolower(var->type[ig15]), var->type[ig15])
+            //G__get_pvar<long double, long>(G__letLongdouble, (char) tolower(var->type[ig15]), (char) var->type[ig15], var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
 #endif // G__OLDIMPLEMENTATION2191
          case 'G':
             // bool pointer
             G__GET_PVAR(unsigned char, G__letint, long, 'b', 'B')
+            //G__get_pvar<unsigned char, long>(G__letint, 'b', 'B', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'B':
             // unsigned char pointer
             G__GET_PVAR(unsigned char, G__letint, long, 'b', 'B')
+            //G__get_pvar<unsigned char, long>(G__letint, 'b', 'B', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'S':
             // short int pointer
             G__GET_PVAR(short, G__letint, long, 's', 'S')
+            //G__get_pvar<short, long>(G__letint, 's', 'S', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'R':
             // unsigned short int pointer
             G__GET_PVAR(unsigned short, G__letint, long, 'r', 'R')
+            //G__get_pvar<unsigned short, long>(G__letint, 'r', 'R', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'I':
             // int pointer
             G__GET_PVAR(int, G__letint, long, 'i', 'I')
+            //G__get_pvar<int, long>(G__letint, 'i', 'I', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'H':
             // unsigned int pointer
             G__GET_PVAR(unsigned int, G__letint, long, 'h', 'H')
+            //G__get_pvar<unsigned int, long>(G__letint, 'h', 'H', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'L':
             // long int pointer
             G__GET_PVAR(long, G__letint, long, 'l', 'L')
+            //G__get_pvar<long, long>(G__letint, 'l', 'L', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'K':
             // unsigned long int pointer
             G__GET_PVAR(unsigned long, G__letint, long, 'k', 'K')
+            //G__get_pvar<unsigned long, long>(G__letint, 'k', 'K', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'F':
             // float pointer
             G__GET_PVAR(float, G__letdouble, double, 'f', 'F')
+            //G__get_pvar<float, double>(G__letdouble, 'f', 'F', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'D':
             // double pointer
             G__GET_PVAR(double, G__letdouble, double, 'd', 'D')
+            //G__get_pvar<double, double>(G__letdouble, 'd', 'D', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          case 'u':
             // class, enum, struct, union
+            //--
+            //--
+            //--
+            //--
+            //FIXME: Replace with macro!
             switch (G__var_type) {
                case 'p':
                   // return value
@@ -5725,7 +5921,6 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                   }
                   else {
                      // array, pointer
-                     //--
                      G__letint(&result, 'U', (long)(G__struct_offset + var->p[ig15] + (linear_index * G__struct.size[var->p_tagtable[ig15]])));
                      if ((var->paran[ig15] - paran) > 1) {
                         result.obj.reftype.reftype = var->paran[ig15] - paran;
@@ -5764,14 +5959,13 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                   }
                   break;
             }
-            //--
-            //--
             if (ig25 < paran) {
                G__tryindexopr(&result, para, paran, ig25);
             }
             break;
          case 'U':
             // class, enum, struct, union pointer
+            //FIXME: Put macro call back!
             switch (G__var_type) {
                case 'v': /* *var; get value */
                   // return value
@@ -5784,7 +5978,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                         break;
                      case G__PARAP2P:
                         if (var->paran[ig15] < paran) {
-                           address = G__struct_offset + var->p[ig15] + linear_index * G__LONGALLOC;
+                           long address = G__struct_offset + var->p[ig15] + linear_index * G__LONGALLOC;
                            result.ref = *(((long*)(*(long*)address)) + secondary_linear_index);
                            if (result.ref) {
                               G__letint(&result, 'u', result.ref);
@@ -5802,7 +5996,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                      G__letint(&result, 'U', G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC));
                   }
                   else if (var->paran[ig15] < paran) {
-                     address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC);
+                     long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC);
                      if (G__PARANORMAL == var->reftype[ig15]) {
                         G__letint(&result, 'U', (*(long*)address) + (secondary_linear_index * G__struct.size[var->p_tagtable[ig15]]));
                      }
@@ -5824,7 +6018,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                   }
                   else if (var->paran[ig15] < paran) {
                      // type *p[];  p[x][y];
-                     address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC);
+                     long address = G__struct_offset + var->p[ig15] + (linear_index * G__LONGALLOC);
                      if (var->reftype[ig15] == G__PARANORMAL) {
                         result.ref = (*(long*)address) + (secondary_linear_index * G__struct.size[var->p_tagtable[ig15]]);
                         G__letint(&result, 'u', result.ref);
@@ -5967,6 +6161,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          case 'T':
             // #define xxx "abc"
             G__GET_PVAR(char, G__letint, long, tolower(var->type[ig15]), 'C')
+            //G__get_pvar<char, long>(G__letint, (char) tolower(var->type[ig15]), 'C', var, ig15, G__struct_offset, paran, para, linear_index, secondary_linear_index, &result);
             break;
          default:
             // case 'X' automatic variable
@@ -6553,7 +6748,7 @@ void G__returnvartype(G__value* presult, G__var_array* var, int ig15, int paran)
                else if (pointlevel == 1) {
                   presult->type = toupper(var_type);
                   presult->obj.reftype.reftype = G__PARANORMAL;
-               } 
+               }
                else {
                   presult->type = toupper(var_type);
                   presult->obj.reftype.reftype = pointlevel;
@@ -6785,6 +6980,277 @@ int G__isfriend(int tagnum)
    return 0;
 }
 #endif // G__FRIEND
+
+//______________________________________________________________________________
+//--  1
+//--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+//--  7
+
+//______________________________________________________________________________
+//--  1
+//--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+   //-- 10
+   //--  1
+   //--  2
+   //--  3
+   //--  4
+   //--  5
+   //--  6
+   //--  7
+   //--  8
+   //--  9
+//-- 10
 
 //______________________________________________________________________________
 //
@@ -7056,7 +7522,7 @@ struct G__var_array* G__searchvariable(char* varname, int varhash, G__var_array*
 //______________________________________________________________________________
 int G__deletevariable(const char* varname)
 {
-   // Delete variable from global variable table.  Return 1 if successful.
+   // -- Delete variable from global variable table.  Return 1 if successful.
    long struct_offset = 0;
    long store_struct_offset = 0;
    int ig15 = 0;
@@ -7132,7 +7598,7 @@ int G__deletevariable(const char* varname)
                   }
                }
             }
-#endif
+#endif // G__SECURITY
             break;
       }
       if ((cpplink == G__NOLINK) && var->p[ig15]) {

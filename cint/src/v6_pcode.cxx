@@ -3962,12 +3962,12 @@ void G__ST_P10_optimize(struct G__var_array *var,int ig15,int pc,long inst)
 * array index optimization constant
 *************************************************************************/
 #define G__MAXINDEXCONST 11
-static int G__indexconst[G__MAXINDEXCONST] = {0,1,2,3,4,5,6,7,8,9,10};
+static long G__indexconst[G__MAXINDEXCONST] = {0,1,2,3,4,5,6,7,8,9,10};
 
 /*************************************************************************
 * G__LD_VAR_int_optimize()
 *************************************************************************/
-int G__LD_VAR_int_optimize(int *ppc,int *pi)
+int G__LD_VAR_int_optimize(int *ppc,long *pi)
 {
   struct G__var_array *var;
   int ig15;
@@ -4097,13 +4097,13 @@ int G__LD_VAR_int_optimize(int *ppc,int *pi)
     if(G__LD_VAR==G__asm_inst[pc+9] || G__LD_LVAR==G__asm_inst[pc+9]) {
       int flag;
       long *pi2 = &(G__asm_stack[G__asm_inst[pc+6]].obj.i);
-      int  *pix;
+      long *pix;
       if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
         if(*pi2>=G__MAXINDEXCONST||*pi2<0) return(done);
         else pix = &G__indexconst[*pi2];
       }
       else {
-        pix = (int*)pi2;
+        pix = pi2;
         if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
       }
       if(G__LD_LVAR==G__asm_inst[pc]) flag=1;
@@ -4152,13 +4152,13 @@ int G__LD_VAR_int_optimize(int *ppc,int *pi)
     else if(G__ST_VAR==G__asm_inst[pc+9] || G__ST_LVAR==G__asm_inst[pc+9]) {
       int flag;
       long *pi2 = &(G__asm_stack[G__asm_inst[pc+6]].obj.i);
-      int  *pix;
+      long *pix;
       if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
         if(*pi2>=G__MAXINDEXCONST||*pi2<0) return(done);
         else pix = &G__indexconst[*pi2];
       }
       else {
-        pix = (int*)pi2;
+        pix = pi2;
         if(sizeof(long)>sizeof(int)) *pix = (int)(*pi2);
       }
       if(G__LD_LVAR==G__asm_inst[pc]) flag=1;
@@ -4236,7 +4236,7 @@ int G__LD_VAR_int_optimize(int *ppc,int *pi)
 /*************************************************************************
 * G__LD_int_optimize()
 *************************************************************************/
-int G__LD_int_optimize(int *ppc,int *pi)
+int G__LD_int_optimize(int *ppc,long *pi)
 {
   struct G__var_array *var;
   int ig15;
@@ -4284,7 +4284,7 @@ int G__LD_int_optimize(int *ppc,int *pi)
       G__asm_inst[pc] = G__LDST_VAR_INDEX;
       G__asm_inst[pc+1] = (long)pi;
       if(sizeof(long)>sizeof(int)) { /* long to int conversion */
-        *(int*)G__asm_inst[pc+1]= (int)(*(long*)pi);
+        *(int*)G__asm_inst[pc+1]= (int)(*pi);
       }
       G__asm_inst[pc+4] = 7;
       *ppc = pc+5; /* other 2 is incremented one level up */
@@ -4334,7 +4334,7 @@ int G__LD_int_optimize(int *ppc,int *pi)
       G__asm_inst[pc] = G__LDST_VAR_INDEX;
       G__asm_inst[pc+1] = (long)pi;
       if(sizeof(long)>sizeof(int)) { /* long to int conversion */
-        *(int*)G__asm_inst[pc+1]= (int)(*(long*)pi);
+        *(int*)G__asm_inst[pc+1]= (int)(*pi);
       }
       G__asm_inst[pc+4] = 7;
       *ppc = pc+5; /* other 2 is incremented one level up */
@@ -4739,8 +4739,8 @@ int G__asm_optimize3(int *start)
          (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
         if(0==paran && 0==var->paran[ig15]) {
           if('i'==var->type[ig15]) {
-            if(0==G__LD_VAR_int_optimize(&pc,(int*)var->p[ig15]))
-              G__LD_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
+             if(0==G__LD_VAR_int_optimize(&pc,(long*)var->p[ig15]))
+                G__LD_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
           }
           else {
             G__LD_p0_optimize(var,ig15,pc,G__LDST_VAR_P);
@@ -4775,7 +4775,7 @@ int G__asm_optimize3(int *start)
 #endif // G__ASM_DBG
       // no optimize
       if('i'==G__asm_stack[G__asm_inst[pc+1]].type) {
-        G__LD_int_optimize(&pc,(int*)(&(G__asm_stack[G__asm_inst[pc+1]].obj.i)));
+         G__LD_int_optimize(&pc,&(G__asm_stack[G__asm_inst[pc+1]].obj.i));
       }
       pc+=2;
       break;
@@ -5457,7 +5457,7 @@ int G__asm_optimize3(int *start)
         else                                      inst = G__LDST_LVAR_P;
         if(0==paran && 0==var->paran[ig15]) {
           if('i'==var->type[ig15]) {
-            if(0==G__LD_VAR_int_optimize(&pc,(int*)var->p[ig15]))
+             if(0==G__LD_VAR_int_optimize(&pc,(long*)var->p[ig15]))
               G__LD_p0_optimize(var,ig15,pc,inst);
           }
           else {

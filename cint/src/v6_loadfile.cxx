@@ -2148,11 +2148,12 @@ int  G__setfilecontext(const char* filename, G__input_file* ifile)
    int found_entry = -1;
    // find G__srcfile index matching filename
    for (int i = 0; (found_entry == -1) && i < G__nfile; ++i)
-      if (G__srcfile[i].filename)
-          if (!strcmp(G__srcfile[i].filename, filename)) {
-          }
-          else if (null_entry == -1)
-             null_entry = i;
+      if (G__srcfile[i].filename) {
+          if (!strcmp(G__srcfile[i].filename, filename))
+             found_entry = i;
+      }
+      else if (null_entry == -1)
+         null_entry = i;
 
    if (found_entry == -1) {
       int fentry = null_entry;

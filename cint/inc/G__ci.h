@@ -20,10 +20,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010027
-#define G__CINTVERSIONSTR_V6  "6.1.27, Oct 25, 2007"
-#define G__CINTVERSION_V5      50160027
-#define G__CINTVERSIONSTR_V5  "5.16.27, Oct 25, 2007"
+#define G__CINTVERSION_V6      60010029
+#define G__CINTVERSIONSTR_V6  "6.1.29, Jan 08, 2008"
+#define G__CINTVERSION_V5      50160029
+#define G__CINTVERSIONSTR_V5  "5.16.29, Jan 08, 2008"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -1658,6 +1658,7 @@ extern G__EXPORT void G__set_autoloading G__P((int (*p2f) G__P((char*))));
 
 extern G__EXPORT void G__set_class_autoloading_callback G__P((int (*p2f) G__P((char*,char*))));
 extern G__EXPORT void G__set_class_autoloading_table G__P((char* classname,char* libname));
+extern G__EXPORT char* G__get_class_autoloading_table G__P((char* classname));
 extern G__EXPORT int G__set_class_autoloading G__P((int newvalue));
 
 typedef int (*G__IgnoreInclude) G__P((const char* fname,const char* expandedfname));

@@ -39,6 +39,7 @@ int G__calldtor(void* p, int tagnum, int isheap);
 int G__set_class_autoloading(int newvalue);
 void G__set_class_autoloading_callback(int (*p2f)(char*, char*));
 void G__set_class_autoloading_table(char* classname, char* libname);
+char* G__get_class_autoloading_table(char* classname);
 int G__defined_tagname(const char* tagname, int noerror);
 int G__search_tagname(const char* tagname, int type);
 
@@ -1378,6 +1379,15 @@ void G__set_class_autoloading_callback(int (*p2f)(char*, char*))
 {
    // -- FIXME: Describe this function!
    G__p_class_autoloading = p2f;
+}
+
+//______________________________________________________________________________
+char* G__get_class_autoloading_table(char* classname)
+{
+   // Return the autoload entries for the class called classname.
+   int tagnum = G__defined_tagname(classname, 3);
+   if (tagnum < 0) return 0;
+   return G__struct.libname[tagnum];
 }
 
 //______________________________________________________________________________
