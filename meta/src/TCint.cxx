@@ -71,7 +71,7 @@ extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
 
 extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
    ULong_t varp = G__getgvp();
-   G__setgvp(G__PVOID);
+   G__setgvp((Long_t)G__PVOID);
    string cls(c);
    int result =  TCint::AutoLoadCallback(cls.c_str(), l);
    G__setgvp(varp);
@@ -168,7 +168,7 @@ void TCint::EnableAutoLoading()
    // Enable the automatic loading of shared libraries when a class
    // is used that is stored in a not yet loaded library. Uses the
    // information stored in the class/library map (typically
-   // coming from the <lib>.rootmap files).
+   // $ROOTSYS/etc/system.rootmap).
 
    G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
    LoadLibraryMap();
@@ -1212,7 +1212,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                         // Only declared the namespace do not specify any library because
                         // the namespace might be spread over several libraries and we do not
                         // know (yet?) which one the user will need!
-                        G__set_class_autoloading_table((char*)base.Data(), (char*)"");
+                        G__set_class_autoloading_table((char*)base.Data(), "");
                      }
                      ++k;
                   }
@@ -1303,7 +1303,7 @@ Int_t TCint::UnloadLibraryMap(const char *library)
             }
          }
 
-         G__set_class_autoloading_table((char*)cls.Data(), (char*)"");
+         G__set_class_autoloading_table((char*)cls.Data(), "");
          G__security_recover(stderr); // Ignore any error during this setting.
          delete tokens;
       }
