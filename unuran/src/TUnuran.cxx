@@ -419,21 +419,11 @@ bool  TUnuran::SetLogLevel(unsigned int debugLevel)
 }
 
 bool TUnuran::InitPoisson(double mu, const std::string & method) { 
-//bool TUnuran::InitPoisson(double mu, const std::string & method, bool reinit) { 
    // initializaton for a Poisson
    double p[1];
    p[0] = mu; 
-   fUdistr = unur_distr_poisson(p,1);
 
-#ifdef LATER
-   // in case of re-init
-   if (fGen && reinit) { 
-      if (ReInit() )
-         return true; // succesfull re-init
-      else 
-         Warning("InitPoisson","re-init failed - perform full initizialization");
-   }
-#endif
+   fUdistr = unur_distr_poisson(p,1);
 
    fMethod = method;
    if (fUdistr == 0) return false; 
@@ -442,24 +432,14 @@ bool TUnuran::InitPoisson(double mu, const std::string & method) {
    return true; 
 }
 
+
 bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & method ) { 
-//bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & method, bool reinit) { 
    // initializaton for a Binomial
    double par[2];
    par[0] = ntot; 
    par[1] = prob; 
    fUdistr = unur_distr_binomial(par,2);
 
-#ifdef LATER
-   // in case of re-init
-   if (fGen && reinit) { 
-      if (ReInit() )
-         return true; // succesfull re-init
-      else 
-         Warning("InitBinomial","re-init failed - perform full initizialization");
-   }
-#endif
-
    fMethod = method;
    if (fUdistr == 0) return false; 
    if (! SetMethodAndInit() ) return false;
@@ -467,15 +447,15 @@ bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & m
    return true; 
 }
 
-#ifdef LATER
-bool TUnuran::ReInit() { 
+
+bool TUnuran::ReInitDiscrDist(unsigned int npar, double * par) { 
    // re-initialization of UNURAN without freeing and creating a new fGen object
-   // works now only for pre-defined dist. 
-   // t.b.f. make it work in any case when a distribution is changed by the user
-   if (!fGen) return false;
-   UNUR_DISTR * d = unur_get_distr(fGen);
-   d = fUdistr; // replace with new distribution
+   // works only for pre-defined distribution by changing their parameters 
+   if (!fGen ) return false;
+   if (!fUdistr) return false;
+   unur_distr_discr_set_pmfparams(fUdistr,par,npar);
    int iret = unur_reinit(fGen);
+   if (iret) Warning("ReInitDiscrDist","re-init failed - a full initizialization must be performed");
    return (!iret); 
 }
-#endif
+

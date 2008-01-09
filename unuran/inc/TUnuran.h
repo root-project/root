@@ -170,27 +170,26 @@ public:
    */ 
    bool InitBinomial(unsigned int ntot, double prob, const std::string & method = "dstd");
 
-// #ifdef LATER
-//    /**
-//       reinitialize UNURAN after having changed the distribution parameters
-//     */
-//    bool ReInit(); 
-// #endif
+   /**
+      Reinitialize UNURAN by changing the distribution parameters but mantaining same distribution and method
+      It is implemented now only for predefined discrete distributions like the poisson or the binomial  
+   */
+   bool ReInitDiscrDist(unsigned int npar, double * params); 
 
    /**
-      sample 1D distribution
+      Sample 1D distribution
       User is responsible for having previously correctly initialized with TUnuran::Init
    */
    double Sample();
 
    /**
-      sample multidimensional distributions
+      Sample multidimensional distributions
       User is responsible for having previously correctly initialized with TUnuran::Init
    */
    bool SampleMulti(double * x); 
 
    /**
-      sample discrete distributions
+      Sample discrete distributions
       User is responsible for having previously correctly initialized with TUnuran::Init
    */
    int SampleDiscr(); 

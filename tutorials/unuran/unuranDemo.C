@@ -287,8 +287,9 @@ void testDiscDistr() {
    TUnuranDiscrDist dist2 = TUnuranDiscrDist(f);
    TUnuran unr;
 
-   // dari method (needs also the mode)
+   // dari method (needs also the mode and pmf sum)
    dist2.SetMode(int(mu) );
+   dist2.SetProbSum(1.0);
    bool ret = unr.Init(dist2,"dari");
    if (!ret) return;
 

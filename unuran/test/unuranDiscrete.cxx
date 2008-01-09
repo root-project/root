@@ -24,8 +24,10 @@
 #endif
 
 #include "Math/DistFunc.h"
+#include "Math/Util.h"
 
 #include <iostream>
+#include <iomanip>
 
 //#define DEBUG
 #ifdef DEBUG
@@ -33,10 +35,19 @@ int n = 100;
 #else
 int n = 1000000;
 #endif
+TCanvas * c1; 
+int icanv = 1;
 
-double pmf(double * x, double * p) { 
+
+double poisson_pmf(double * x, double * p) { 
 
    double y = ROOT::Math::poisson_pdf(int(x[0]),p[0]);
+//   std::cout << x[0] << " f(x) = " << y << std::endl;
+   return y; 
+}
+double binomial_pmf(double * x, double * p) { 
+
+   double y = ROOT::Math::binomial_pdf(int(x[0]),p[1],p[0]);
 //   std::cout << x[0] << " f(x) = " << y << std::endl;
    return y; 
 }
@@ -68,7 +79,8 @@ int testUnuran(TUnuran & unr, double & time, TH1 * h1, const TH1 * href,  bool w
       prob = href->Chi2Test(h1,"WW");
    else
       prob = href->Chi2Test(h1,"UU");
-   std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
+   std::string s = "Time using Unuran  " +  unr.MethodName();
+   std::cout << std::left << std::setw(40) << s << "\t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
    if (prob < 1E-06) { 
       std::cout << "Chi2 Test failed for method " << unr.MethodName() << std::endl;
       if (weightHist) 
@@ -97,20 +109,40 @@ int testRootPoisson(double mu, double &time, TH1 * h2) {
       h2->Fill ( gRandom->Poisson(mu) );
    }
 
-   std::cout << "Time using TRandom::Poisson(" << int(mu) << ") \t=\t " << time << std::endl;
+   std::string s = "Time using TRandom::Poisson";
+   std::cout << std::left << std::setw(40) << s << "\t=\t " << time << std::endl;
    return 0;
 }
 
+int testRootBinomial(int m, double p, double &time, TH1 * h2) { 
 
-int unuranDiscrete() {
+   TStopwatch w; 
+
+   w.Start(); 
+   for (int i = 0; i < n; ++i) 
+      gRandom->Binomial(m,p);
+
+   w.Stop(); 
+   time = w.CpuTime()*1.E9/n; 
+
+   // make ref histo
+   int n2 = n/10;
+   for (int i = 0; i< n2; ++i) { 
+      h2->Fill ( gRandom->Binomial(m,p) );
+   }
+
+   std::string s = "Time using TRandom::Binomial";
+   std::cout << std::left << std::setw(40) << s << "\t=\t " << time << std::endl;
+   return 0;
+}
+
+int testProbVector() { 
 
    int iret = 0;
 
    TH1D * h0 = new TH1D("h0","reference prob",10,-0.5,9.5);
    TH1D * h1 = new TH1D("h1","UNURAN gen prob",10,-0.5,9.5);
 
-   TH1D * h2 = new TH1D("h2","reference Poisson prob",20,0,20);
-   TH1D * h3 = new TH1D("h3","UNURAN gen prob",20,0,20);
 
    double p[10] = {1.,2.,3.,5.,3.,2.,1.,0.5,0.3,0.5 };
    for (int i = 0; i< 10; ++i) { 
@@ -150,21 +182,27 @@ int unuranDiscrete() {
 
    
 
-   TCanvas * c1 = new TCanvas("c1_unuranDiscr","Discrete distribution",10,10,800,800); 
-   c1->Divide(1,2);
 
 
-   c1->cd(1);
+   c1->cd(icanv++);
    h1->Sumw2();
    h1->Scale( h0->GetSumOfWeights()/(h1->GetSumOfWeights() ) ); 
    h0->Draw();
+   h1->SetLineColor(kBlue);
    h1->Draw("Esame");
+   c1->Update();
 
+   return iret; 
+}
+
+int testPoisson() { 
    // test with a function 
+   // Poisson distribution
 
-   std::cout << "\nTest  generation with a Probability function :\n\n";
+   int iret = 0;
+   std::cout << "\nTest  generation with a Probability function (Poisson) :\n\n";
 
-   TF1 * f = new TF1("f",pmf,1,0,1);
+   TF1 * f = new TF1("f",poisson_pmf,1,0,1);
 
    // loop on mu values for Nmu times 
 
@@ -174,57 +212,86 @@ int unuranDiscrete() {
    double tU[Nmu]; 
    double tUdari[Nmu];
    double tUdsrou[Nmu];
-   
-   for (int imu = 0; imu < Nmu; ++imu) {  
+
+  TRandom3 r; 
+  r.SetSeed(0);
+
+  TUnuran unr(&r,2); 
 
 
-      const double mu = muVal[imu]; 
+  for (int imu = 0; imu < Nmu; ++imu) {  
 
-      testRootPoisson(mu,tR[imu],h2);
+     const double mu = muVal[imu]; 
 
-      // test UNURAN with standard method
-      ret = unr.InitPoisson(mu);
-      if (!ret) iret = -1;
-      testUnuran(unr,tU[imu],h3,h2);
-
-      if (imu == 0) { 
-         // test changing all the time the mu
-         TStopwatch w;
-         w.Start(); 
-         for (int i = 0; i < n/100; ++i) {
-            unr.InitPoisson(mu);
-            unr.SampleDiscr(); 
-         }
-         w.Stop(); 
-         time = w.CpuTime()*1.E9/n; 
-         std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call" << std::endl;
-      }
-
-      f->SetParameter(0,mu);
-      TUnuranDiscrDist dist2 = TUnuranDiscrDist(f);
-
-      // dari method (needs mode)
-      dist2.SetMode(int(mu) );
-      ret = unr.Init(dist2,"method=dari");
-      if (!ret) iret = -1;
-
-      iret |= testUnuran(unr,tUdari[imu],h3,h2);
-
-      // dsrou method (needs mode and sum)
-
-      dist2.SetProbSum(1);
-      ret = unr.Init(dist2,"method=dsrou");
-      if (!ret) iret = -1;
-
-      iret |= testUnuran(unr,tUdsrou[imu],h3,h2);
+     int nmax = mu*3;
+     TH1D * h2 = new TH1D("h2","reference Poisson prob",nmax,0,nmax);
+     TH1D * h3 = new TH1D("h3","UNURAN gen prob",nmax,0,nmax);
+     TH1D * h4 = new TH1D("h4","UNURAN gen prob 2",nmax,0,nmax);
 
 
-      if (imu == 0) { 
-         c1->cd(2);
-         h2->Draw();
-         h3->Draw("Esame");
-      }
-   }
+     std::cout << "\nPoisson mu = " << mu << std::endl << std::endl;
+
+     testRootPoisson(mu,tR[imu],h2);
+
+     // test UNURAN with standard method
+     bool ret = unr.InitPoisson(mu);
+     if (!ret) iret = -1;
+     testUnuran(unr,tU[imu],h3,h2);
+
+      
+     // test changing all the time the mu
+     // use re-init for a fast re-initialization 
+     TStopwatch w;
+     unr.InitPoisson(mu,"dstd");
+     double p[1]; p[0] = mu; 
+     w.Start(); 
+     for (int i = 0; i < n; ++i) {
+        unr.ReInitDiscrDist(1,p);  
+        int k = unr.SampleDiscr(); 
+        if (n % 10 == 0) h4->Fill(k);
+     }
+     w.Stop(); 
+     double time = w.CpuTime()*1.E9/n; 
+     double prob = h2->Chi2Test(h4,"UU");
+     std::string s = "Time using Unuran w/ re-init  method=" + unr.MethodName(); 
+     std::cout << std::left << std::setw(40) << s << "\t=\t " << time 
+               << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
+      
+     if (prob < 1E-06) { 
+        std::cout << "Chi2 Test failed for re-init " << std::endl;
+        iret = -2; 
+     }
+ 
+     f->SetParameter(0,mu);
+     TUnuranDiscrDist dist2 = TUnuranDiscrDist(f);
+
+     // dari method (needs mode and pdf sum)
+     dist2.SetMode(int(mu) );
+     dist2.SetProbSum(1. );
+     ret = unr.Init(dist2,"method=dari");
+     if (!ret) iret = -1;
+
+     iret |= testUnuran(unr,tUdari[imu],h3,h2);
+
+     // dsrou method (needs mode and sum)
+
+     dist2.SetProbSum(1);
+     ret = unr.Init(dist2,"method=dsrou");
+     if (!ret) iret = -1;
+
+     iret |= testUnuran(unr,tUdsrou[imu],h3,h2);
+
+
+     c1->cd(icanv++);
+     h2->DrawCopy();
+     h3->SetLineColor(kBlue);
+     h3->DrawCopy("Esame");
+     c1->Update();
+
+     delete h2; 
+     delete h3;
+     delete h4;
+  }
 
 #ifdef WRITE_OUTPUT
 
@@ -243,6 +310,127 @@ int unuranDiscrete() {
 #endif
 
    return iret; 
+}
+
+int testBinomial() { 
+   // test using binomial distribution
+   int iret = 0; 
+
+   std::cout << "\nTest  generation with a Probability function (Binomimal) :\n\n";
+
+   TF1 * f = new TF1("f",binomial_pmf,1,0,2);
+
+   // loop on binomual values
+
+   const int NBin = 3;
+   double pVal[NBin] = {0.5,0.1,0.01};
+   double NVal[NBin] = {20,100,1000}; 
+   double tR[NBin]; 
+   double tU[NBin]; 
+   double tUdari[NBin];
+   double tUdsrou[NBin];
+
+  TRandom3 r; 
+  r.SetSeed(0);
+
+  TUnuran unr(&r,2); 
+
+
+  for (int ib = 0; ib < NBin; ++ib) {  
+
+    
+     double par[2]; 
+     par[0] = NVal[ib];
+     par[1] = pVal[ib];
+
+     int nmax = par[0]*par[1]*3;
+     TH1D * h2 = new TH1D("h2","reference Binomial prob",nmax,0,nmax);
+     TH1D * h3 = new TH1D("h3","UNURAN gen prob",nmax,0,nmax);
+     TH1D * h4 = new TH1D("h4","UNURAN gen prob 2",nmax,0,nmax);
+
+
+     std::cout << "\nBinomial n = " << par[0] << "  " << par[1] << std::endl;
+
+     testRootBinomial(par[0],par[1],tR[ib],h2);
+
+
+     // test UNURAN with standard method
+     bool ret = unr.InitBinomial(par[0],par[1]);
+     if (!ret) iret = -1;
+     testUnuran(unr,tU[ib],h3,h2);
+
+      
+     // test changing all the time the mu
+     // use re-init for a fast re-initialization 
+
+     TStopwatch w;
+     unr.InitBinomial(par[0], par[1],"dstd");
+     w.Start(); 
+     for (int i = 0; i < n; ++i) {
+        unr.ReInitDiscrDist(2,par);  
+        int k = unr.SampleDiscr(); 
+        if (n % 10 == 0) h4->Fill(k);
+     }
+     w.Stop(); 
+     double time = w.CpuTime()*1.E9/n; 
+     double prob = h2->Chi2Test(h4,"UU");
+     std::string s = "Time using Unuran w/ re-init  method=" + unr.MethodName(); 
+     std::cout << std::left << std::setw(40) << s << "\t=\t " << time 
+               << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
+      
+     if (prob < 1E-06) { 
+        std::cout << "Chi2 Test failed for re-init " << std::endl;
+        iret = -2; 
+     }
+
+     // test the universal methods 
+
+     f->SetParameters(par);
+     TUnuranDiscrDist dist = TUnuranDiscrDist(f);
+
+     // dari method (needs mode and pdf sum)
+     dist.SetMode(int(par[0]*par[1]) );
+     dist.SetProbSum(1. );
+     ret = unr.Init(dist,"method=dari");
+     if (!ret) iret = -1;
+
+     iret |= testUnuran(unr,tUdari[ib],h3,h2);
+
+     // dsrou method (needs mode and sum)
+
+     ret = unr.Init(dist,"method=dsrou");
+     if (!ret) iret = -1;
+
+     iret |= testUnuran(unr,tUdsrou[ib],h3,h2);
+
+
+     c1->cd(icanv++);
+     h2->DrawCopy();
+     h3->SetLineColor(kBlue);
+     h3->DrawCopy("Esame");
+     c1->Update();
+
+     delete h2; 
+     delete h3;
+     delete h4;
+  }
+
+
+   return iret; 
+}
+
+int unuranDiscrete() {
+
+   int iret = 0; 
+
+   c1 = new TCanvas("c1_unuranDiscr_PV","Discrete distribution from PV",10,10,800,800); 
+   c1->Divide(3,3);
+
+   iret |= testProbVector(); 
+   iret |= testPoisson(); 
+   iret |= testBinomial(); 
+
+   return iret;
 }
 
 
