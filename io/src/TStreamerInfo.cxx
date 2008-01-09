@@ -60,6 +60,8 @@
 #include "TVirtualCollectionProxy.h"
 #include "TInterpreter.h"
 
+#include "TMakeProject.h"
+
 TStreamerElement *TStreamerInfo::fgElement = 0;
 Int_t   TStreamerInfo::fgCount = 0;
 
@@ -1591,37 +1593,327 @@ void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
+void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top)
+{
+   // Write the Declaration of class.
+
+   TString protoname;
+   UInt_t numberOfNamespaces = TMakeProject::GenerateClassPrefix(fp, GetName(), top, protoname, 0);
+
+   // Generate class statement with base classes.
+   TStreamerElement *element;
+   TIter next(fElements);
+   Int_t nbase = 0;
+   while ((element = (TStreamerElement*)next())) {
+      if (element->IsA() != TStreamerBase::Class()) continue;
+      nbase++;
+      const char *ename = element->GetName();
+      if (nbase == 1) fprintf(fp," : public %s",ename);
+      else            fprintf(fp," , public %s",ename);
+   }
+   fprintf(fp," {\n");
+
+   // Generate nested classes.
+   if (subClasses && subClasses->GetEntries()) {
+      fprintf(fp,"\npublic:\n");
+
+      TIter subnext(subClasses);
+      TStreamerInfo *subinfo;
+      Int_t len = strlen(GetName());
+      while ((subinfo = (TStreamerInfo*)subnext())) {
+         if (strncmp(GetName(),subinfo->GetName(),len)==0) {
+            if (subinfo->GetName()[len+1]==':' && strstr(subinfo->GetName()+len+2,":")==0) {
+               subinfo->GenerateDeclaration(fp, sfp, subClasses, kFALSE);
+            }
+         }
+      }
+   }
+
+   // Generate data members.
+   fprintf(fp,"\npublic:\n");
+
+   char *line = new char[kMaxLen];
+   char name[128];
+   char cdim[8];
+   Int_t ltype = 10;
+   Int_t ldata = 10;
+   Int_t lt;
+   Int_t ld;
+
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      for (int i=0;i < kMaxLen;i++) line[i] = ' ';
+      if (element->IsA() == TStreamerBase::Class()) continue;
+      const char *ename = element->GetName();
+
+      sprintf(name,ename);
+      for (Int_t i=0;i < element->GetArrayDim();i++) {
+         sprintf(cdim,"[%d]",element->GetMaxIndex(i));
+         strcat(name,cdim);
+      }
+      strcat(name,";");
+      ld = strlen(name);
+
+      TString enamebasic = element->GetTypeNameBasic();
+      if (element->IsA() == TStreamerSTL::Class()) {
+         // If we have a map, multimap, set or multiset,
+         // and the key is a class, we need to replace the
+         // container by a vector since we don't have the
+         // comparator function.
+         Int_t stltype = ((TStreamerSTL*)element)->GetSTLtype();
+         switch (stltype) {
+            case TStreamerElement::kSTLmap: 
+            case TStreamerElement::kSTLmultimap:
+            case TStreamerElement::kSTLset:
+            case TStreamerElement::kSTLmultiset:
+               {
+                  std::vector<std::string> inside;
+                  int nestedLoc;
+                  TClassEdit::GetSplit( enamebasic, inside, nestedLoc );
+                  Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+                  TClass *key = TClass::GetClass(inside[1].c_str());
+                  if (key) {
+                     std::string what;
+                     switch ( stlkind )  {
+                        case TClassEdit::kMap:
+                        case TClassEdit::kMultiMap: {
+                           what = "pair<";
+                           what += inside[1];
+                           what += ",";
+                           what += inside[2];
+                           what += " >";
+                           break;
+                        }
+                        case TClassEdit::kSet:
+                        case TClassEdit::kMultiSet:
+                           what = inside[1];
+                           break;
+                     }
+                     enamebasic = "vector< ";
+                     enamebasic.Append( what );
+                     enamebasic.Append( " >");
+                  }
+               }
+            default:
+               // nothing to do.
+               break;
+         }
+      } 
+
+      lt = enamebasic.Length();
+
+      strncpy(line+3,enamebasic.Data(),lt);
+      if (lt>=ltype) ltype = lt+1;
+
+      strncpy(line+3+ltype,name,ld);
+      if (element->IsaPointer() && !strchr(line,'*')) line[2+ltype] = '*';
+
+      if (ld>=ldata) ldata = ld+1;
+      sprintf(line+3+ltype+ldata,"   //%s",element->GetTitle());
+      fprintf(fp,"%s\n",line);
+   }
+
+   // Generate default functions, ClassDef and trailer.
+   fprintf(fp,"\n   %s();\n",protoname.Data());
+   fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
+
+   { 
+      // Add the implementations to the source.cxx file.
+      TString guard( TMakeProject::GetHeaderName( GetName(), kTRUE ) );
+      fprintf(sfp,"#ifndef %s_cxx\n",guard.Data());
+      fprintf(sfp,"#define %s_cxx\n",guard.Data());
+      fprintf(sfp,"%s::%s() {\n",GetName(),protoname.Data());
+      next.Reset();
+      while ((element = (TStreamerElement*)next())) {
+         if (element->GetType() == kObjectp || element->GetType() == kObjectP ||
+             element->GetType() == kAnyp || element->GetType() == kAnyP || 
+             element->GetType() == kCharStar) {
+            fprintf(sfp,"   %s = 0;\n",element->GetName());
+         }
+         if (kOffsetP <= element->GetType() && element->GetType() < kObject ) {
+            fprintf(sfp,"   %s = 0;\n",element->GetName());
+         }
+       }
+      fprintf(sfp,"}\n");
+
+      fprintf(sfp,"%s::~%s() {\n",GetName(),protoname.Data());
+      next.Reset();
+      while ((element = (TStreamerElement*)next())) {
+         if (element->GetType() == kObjectp || element->GetType() == kObjectP||
+            element->GetType() == kAnyp || element->GetType() == kAnyP
+            || element->GetType() == kAnyPnoVT) {
+               const char *ename = element->GetName();
+               const char *colon2 = strstr(ename,"::");
+               if (colon2) ename = colon2+2;
+               fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
+         }
+         if (element->GetType() == kCharStar) {
+            const char *ename = element->GetName();
+            fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
+         }
+         if (kOffsetP <= element->GetType() && element->GetType() < kObject ) { 
+            const char *ename = element->GetName();
+           if (element->HasCounter()) {
+              fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
+           } else {
+              fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
+           }
+         } 
+    }
+      fprintf(sfp,"}\n");
+      fprintf(sfp,"#endif // %s_cxx\n\n",guard.Data());
+   }
+
+   TClass *cl = gROOT->GetClass(GetName());
+   if (fClassVersion > 1 || (cl && cl->InheritsFrom(TObject::Class())) ) {
+      fprintf(fp,"   ClassDef(%s,%d); // Generated by MakeProject.\n",protoname.Data(),fClassVersion);
+   }
+   fprintf(fp,"};\n");
+
+   for(UInt_t i=0;i<numberOfNamespaces;++i) {
+      fprintf(fp,"} // namespace\n");
+   }
+
+   delete [] line;
+}
+
+//______________________________________________________________________________
+UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
+{
+   // Add to the header file, the #include need for this class
+
+   UInt_t ninc = 0;
+
+   const char *clname = GetName();
+   if (strchr(clname,'<')) {
+      // This is a template, we need to check the template parameter.
+      ninc += TMakeProject::GenerateIncludeForTemplate(fp, clname, inclist, kFALSE);
+   }
+
+   char name[128];
+   char cdim[8];
+   Int_t ltype = 10;
+   Int_t ldata = 10;
+   Int_t lt;
+   Int_t ld;
+   TIter next(fElements);
+   TStreamerElement *element;
+   Bool_t incRiostream = kFALSE;
+   while ((element = (TStreamerElement*)next())) {
+      //if (element->IsA() == TStreamerBase::Class()) continue;
+      const char *ename = element->GetName();
+      const char *colon2 = strstr(ename,"::");
+      if (colon2) ename = colon2+2;
+      sprintf(name,ename);
+      for (Int_t i=0;i < element->GetArrayDim();i++) {
+         sprintf(cdim,"[%d]",element->GetMaxIndex(i));
+         strcat(name,cdim);
+      }
+      ld = strlen(name);
+      lt = strlen(element->GetTypeName());
+      if (ltype < lt) ltype = lt;
+      if (ldata < ld) ldata = ld;
+
+      //must include Riostream.h in case of an STL container
+      if (!incRiostream && element->InheritsFrom(TStreamerSTL::Class())) {
+         incRiostream = kTRUE;
+         TMakeProject::AddInclude( fp, "Riostream.h", kFALSE, inclist);
+      }
+      
+      //get include file name if any
+      const char *include = element->GetInclude();
+      if (strlen(include) == 0) continue;
+      
+      Bool_t greater = (include[0]=='<');
+      include++;
+
+      if (strncmp(include,"include/",8)==0) {
+         include += 8;
+      } 
+      if (strncmp(include,"include\\",9)==0) {
+         include += 9;
+      }
+      if (strncmp(element->GetTypeName(),"pair<",strlen("pair<"))==0) {
+         TMakeProject::AddInclude( fp, "utility", kTRUE, inclist);
+      } else {
+         TString incName( include, strlen(include)-1 );
+         incName = TMakeProject::GetHeaderName(incName);
+         TMakeProject::AddInclude( fp, incName.Data(), greater, inclist);
+      }
+
+      if (strchr(element->GetTypeName(),'<')) {
+         // This is a template, we need to check the template parameter.
+         ninc += TMakeProject::GenerateIncludeForTemplate(fp, element->GetTypeName(), inclist, kFALSE);
+      }
+   }
+   if (inclist[0]==0) {
+      TMakeProject::AddInclude( fp, "TNamed.h", kFALSE, inclist);
+   }
+   return ninc;
+}
+
+//______________________________________________________________________________
+Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subClasses)
 {
    // Generate header file for the class described by this TStreamerInfo
    // the function is called by TFile::MakeProject for each class in the file
 
-   if (strstr(GetName(),"<")) return 0;
+   if (TClassEdit::IsSTLCont(GetName())) return 0;
+   if (strncmp(GetName(),"pair<",strlen("pair<"))==0) return 0;
+
    TClass *cl = TClass::GetClass(GetName());
    if (cl) {
       if (cl->GetClassInfo()) return 0; // skip known classes
    }
-   if (gDebug) printf("generating code for class %s\n",GetName());
-
-   //open the file
-   TString goodName = GetName();
-   const char *aname = goodName.Data();
-   const char *colon2 = strstr(aname,"::");
-   if (colon2) {
-      fName = colon2+2;
+   if (strchr(GetName(),':')) {
+      UInt_t len = strlen(GetName());
+      UInt_t nest = 0;
+      for(UInt_t i=len; i>0; --i) {
+         switch(GetName()[i]) {
+            case '>': ++nest; break;
+            case '<': --nest; break;
+            case ':': 
+               if (nest==0 && GetName()[i-1]==':') {
+                  // We have a scope
+                  TString nsname(GetName(), i-1);
+                  TClass *cl = gROOT->GetClass(nsname);
+                  if (cl && cl->Size()!=0) {
+                     // This class is actually nested.
+                     return 0;
+                  }
+               }
+               break;
+         }
+      }
    }
 
-   Int_t nch = strlen(dirname) + strlen(GetName()) + 4;
-   char *filename = new char[nch];
-   sprintf(filename,"%s/%s.h",dirname,GetName());
-   FILE *fp = fopen(filename,"w");
+   if (gDebug) printf("generating code for class %s\n",GetName());
+
+   // Open the file
+
+   TString headername( TMakeProject::GetHeaderName( GetName() ) );
+   TString filename;
+   filename.Form("%s/%s.h",dirname,headername.Data());
+
+   FILE *fp = fopen(filename.Data(),"w");
    if (!fp) {
-      printf("Cannot open output file:%s\n",filename);
-      delete [] filename;
+      Error("MakeProject","Cannot open output file:%s\n",filename.Data());
       return 0;
    }
 
-   // generate class header
+   filename.Form("%s/%sProjectHeaders.h",dirname,dirname);
+   FILE *allfp = fopen(filename.Data(),"a");
+   if (!allfp) {
+      Error("MakeProject","Cannot open output file:%s\n",filename.Data());
+      return 0;
+   }
+   fprintf(allfp,"#include \"%s.h\"\n", headername.Data());
+   fclose(allfp);
+
+   char *inclist = new char[50000];
+   inclist[0] = 0;
+
+   // Generate class header.
    TDatime td;
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
    fprintf(fp,"//   This class has been generated by TFile::MakeProject\n");
@@ -1630,149 +1922,31 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
    fprintf(fp,"\n");
    fprintf(fp,"\n");
-   fprintf(fp,"#ifndef %s_h\n",GetName());
-   fprintf(fp,"#define %s_h\n",GetName());
+   fprintf(fp,"#ifndef %s_h\n",headername.Data());
+   fprintf(fp,"#define %s_h\n",headername.Data());
+   TMakeProject::GenerateForwardDeclaration(fp, GetName(), inclist);
    fprintf(fp,"\n");
 
-   // compute longest typename and member name
-   // in the same loop, generate list of include files
-   Int_t ltype = 10;
-   Int_t ldata = 10;
-   Int_t i,lt,ld;
-
-   char *line = new char[kMaxLen];
-   char name[128];
-   char cdim[8];
-   char *inclist = new char[5000];
-   inclist[0] = 0;
-
-   TIter next(fElements);
-   TStreamerElement *element;
-   Int_t ninc = 0;
-   Bool_t incRiostream = kFALSE;
-   while ((element = (TStreamerElement*)next())) {
-      //if (element->IsA() == TStreamerBase::Class()) continue;
-      const char *ename = element->GetName();
-      colon2 = strstr(ename,"::");
-      if (colon2) ename = colon2+2;
-      sprintf(name,ename);
-      for (i=0;i < element->GetArrayDim();i++) {
-         sprintf(cdim,"[%d]",element->GetMaxIndex(i));
-         strcat(name,cdim);
+   UInt_t ninc = 0;
+   ninc += GenerateIncludes(fp, inclist);
+   if (subClasses) {
+      TIter subnext(subClasses);
+      TStreamerInfo *subinfo;
+      while ((subinfo = (TStreamerInfo*)subnext())) {
+         ninc = subinfo->GenerateIncludes(fp, inclist);
       }
-      ld = strlen(name);
-      lt = strlen(element->GetTypeName());
-      if (ltype < lt) ltype = lt;
-      if (ldata < ld) ldata = ld;
-      //must include Riostream.h in case of an STL container
-      if (!incRiostream && element->InheritsFrom(TStreamerSTL::Class())) {
-         incRiostream = kTRUE;
-         fprintf(fp,"#include \"Riostream.h\"\n");
-      }
-      //get include file name if any
-      const char *include = element->GetInclude();
-      if (strlen(include) == 0) continue;
-      colon2 = strstr(include,"::");
-      if (colon2) include = colon2+2;
-      else        include++;
-      const char *slash = strrchr(include,'/');
-      if (slash) include = slash+1;
-      const char *greater = strstr(include,">");
-      // do not generate the include if already done
-      if (strstr(inclist,include)) continue;
-      ninc++;
-      strcat(inclist,include);
-      if (strstr(include,"include/") || strstr(include,"include\\"))
-         fprintf(fp,"#include \"%s\n",include+9);
-      else {
-         if (greater) fprintf(fp,"#include <%s\n",include);
-         else         fprintf(fp,"#include \"%s\n",include);
-      }
-   }
-   ltype += 2;
-   ldata++; // to take into account the semi colon
-   if (ninc == 0) fprintf(fp,"#include \"TNamed.h\"\n");
+   }   
+   fprintf(fp,"\n");
 
-   // generate class statement with base classes
-   fprintf(fp,"\nclass %s",GetName());
-   next.Reset();
-   Int_t nbase = 0;
-   while ((element = (TStreamerElement*)next())) {
-      if (element->IsA() != TStreamerBase::Class()) continue;
-      nbase++;
-      const char *ename = element->GetName();
-      colon2 = strstr(ename,"::");
-      if (colon2) ename = colon2+2;
-      if (nbase == 1) fprintf(fp," : public %s",ename);
-      else            fprintf(fp," , public %s",ename);
-   }
-   fprintf(fp," {\n");
+   TString sourcename; sourcename.Form( "%s/%sProjectSource.cxx", dirname, dirname );
+   FILE *sfp = fopen( sourcename.Data(), "a");
+   GenerateDeclaration(fp, sfp, subClasses);
 
-   // generate data members
-   fprintf(fp,"\npublic:\n");
-   next.Reset();
-   while ((element = (TStreamerElement*)next())) {
-      for (i=0;i < kMaxLen;i++) line[i] = ' ';
-      if (element->IsA() == TStreamerBase::Class()) continue;
-      const char *ename = element->GetName();
-      colon2 = strstr(ename,"::");
-      if (colon2) ename = colon2+2;
-      sprintf(name,ename);
-      for (Int_t i=0;i < element->GetArrayDim();i++) {
-         sprintf(cdim,"[%d]",element->GetMaxIndex(i));
-         strcat(name,cdim);
-      }
-      strcat(name,";");
-      ld = strlen(name);
-      const char *enamebasic = element->GetTypeNameBasic();
-      colon2 = strstr(enamebasic,"::");
-      if (strstr(enamebasic,"<")) colon2 = 0;
-      if (colon2) enamebasic = colon2+2;
-      lt = strlen(enamebasic);
-      strncpy(line+3,enamebasic,lt);
-      strncpy(line+3+ltype,name,ld);
-      if (element->IsaPointer() && !strchr(line,'*')) line[2+ltype] = '*';
-      sprintf(line+3+ltype+ldata,"   //%s",element->GetTitle());
-      fprintf(fp,"%s\n",line);
-   }
-
-   // generate default functions, ClassDef and trailer
-   fprintf(fp,"\n   %s();\n",GetName());
-   fprintf(fp,"   virtual ~%s();\n\n",GetName());
-   fprintf(fp,"   ClassDef(%s,%d) //\n",GetName(),fClassVersion);
-   fprintf(fp,"};\n");
-
-   //generate constructor code
-   fprintf(fp,"%s::%s() {\n",GetName(),GetName());
-   next.Reset();
-   while ((element = (TStreamerElement*)next())) {
-      if (element->GetType() == kObjectp || element->GetType() == kObjectP ||
-          element->GetType() == kAnyp || element->GetType() == kAnyP) {
-         fprintf(fp,"   %s = 0;\n",element->GetName());
-      }
-   }
-   fprintf(fp,"}\n\n");
-   //generate destructor code
-   fprintf(fp,"%s::~%s() {\n",GetName(),GetName());
-   next.Reset();
-   while ((element = (TStreamerElement*)next())) {
-      if (element->GetType() == kObjectp || element->GetType() == kObjectP||
-          element->GetType() == kAnyp || element->GetType() == kAnyP
-          || element->GetType() == kAnyPnoVT) {
-         const char *ename = element->GetName();
-         colon2 = strstr(ename,"::");
-         if (colon2) ename = colon2+2;
-         fprintf(fp,"   delete %s;   %s = 0;\n",ename,ename);
-      }
-   }
-   fprintf(fp,"}\n\n");
    fprintf(fp,"#endif\n");
 
-   fclose(fp);
-   delete [] filename;
    delete [] inclist;
-   delete [] line;
-   fName = goodName;
+   fclose(fp);
+   fclose(sfp);
    return 1;
 }
 

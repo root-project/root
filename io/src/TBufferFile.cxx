@@ -3209,14 +3209,15 @@ Int_t TBufferFile::ReadClassEmulated(TClass *cl, void *object)
    //We assume that the class was written with a standard streamer
    //We attempt to recover if a version count was not written
    Version_t v = ReadVersion(&start,&count);
+   void *ptr = &object;
    if (count) {
       TStreamerInfo *sinfo = (TStreamerInfo*)cl->GetStreamerInfo(v);
-      sinfo->ReadBuffer(*this,(char**)&object,-1);
+      sinfo->ReadBuffer(*this,(char**)ptr,-1);
       if (sinfo->IsRecovered()) count=0;
       CheckByteCount(start,count,cl);
    } else {
       SetBufferOffset(start);
-      ((TStreamerInfo*)cl->GetStreamerInfo())->ReadBuffer(*this,(char**)&object,-1);
+      ((TStreamerInfo*)cl->GetStreamerInfo())->ReadBuffer(*this,(char**)ptr,-1);
    }
    return 0;
 }
@@ -3254,7 +3255,8 @@ Int_t TBufferFile::ReadClassBuffer(TClass *cl, void *pointer, Int_t version, UIn
    }
 
    //deserialize the object
-   sinfo->ReadBuffer(*this, (char**)&pointer,-1);
+   void *ptr = &pointer;
+   sinfo->ReadBuffer(*this, (char**)ptr,-1);
    if (sinfo->IsRecovered()) count=0;
 
    //check that the buffer position corresponds to the byte count
@@ -3299,7 +3301,8 @@ Int_t TBufferFile::ReadClassBuffer(TClass *cl, void *pointer)
    }
 
    //deserialize the object
-   sinfo->ReadBuffer(*this, (char**)&pointer,-1);
+   void *ptr = &pointer;
+   sinfo->ReadBuffer(*this, (char**)ptr,-1);
    if (sinfo->IsRecovered()) R__c=0;
 
    //check that the buffer position corresponds to the byte count
@@ -3341,7 +3344,8 @@ Int_t TBufferFile::WriteClassBuffer(TClass *cl, void *pointer)
    UInt_t R__c = WriteVersion(cl, kTRUE);
 
    //serialize the object
-   sinfo->WriteBufferAux(*this,(char**)&pointer,-1,1,0,0); // NOTE: expanded
+   void *ptr = &pointer;
+   sinfo->WriteBufferAux(*this,(char**)ptr,-1,1,0,0); // NOTE: expanded
 
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);

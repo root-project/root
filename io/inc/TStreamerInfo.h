@@ -87,6 +87,9 @@ private:
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 
+   UInt_t            GenerateIncludes(FILE *fp, char *inclist);
+   void              GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top = kTRUE);
+
 protected:
    TStreamerInfo(const TStreamerInfo&);
    TStreamerInfo& operator=(const TStreamerInfo&);
@@ -148,7 +151,7 @@ public:
    void                Compile();
    void                ComputeSize();
    void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);
-   Int_t               GenerateHeaderFile(const char *dirname);
+   Int_t               GenerateHeaderFile(const char *dirname, const TList *subClasses = 0);
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
    Int_t               GetClassVersion() const {return fClassVersion;}
