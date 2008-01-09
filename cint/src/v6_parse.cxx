@@ -807,6 +807,11 @@ static G__value G__exec_switch()
    int store_ifswitch = G__ifswitch;
    G__ifswitch = G__IFSWITCH;
    //
+   //
+   //
+   int store_G__prevcase = G__prevcase;
+   G__prevcase = 0;
+   //
    //  Scan the switch condition.
    //
    char condition[G__ONELINE];
@@ -827,6 +832,7 @@ static G__value G__exec_switch()
       if (ret > 1) {
          // Restore state.
          G__ifswitch = store_ifswitch;
+         G__prevcase = store_G__prevcase;
          // And return immediately.
          return G__null;
       }
@@ -870,13 +876,14 @@ static G__value G__exec_switch()
       //   fprintf(stderr, "G__exec_switch: compile whole switch block, peek ahead: '%s'\n", buf);
       //}
       // Flag that we need to generate code for case clauses.
+      int store_G__switch = G__switch;
       G__switch = 1;
       // Tell the parser to finish the switch block.
       int brace_level = 1;
       // Call the parser.
       G__exec_statement(&brace_level);
       // Restore state.
-      G__switch = 0;
+      G__switch = store_G__switch;
    }
    else {
       // -- We are going to execute the switch.
@@ -907,8 +914,10 @@ static G__value G__exec_switch()
       G__no_exec = 1;
 #endif // G__ASM
       // Tell the parser to evaluate case expressions.
+      int store_G__switch = G__switch;
       G__switch = 1;
       // Tell the parser it should return control after evaluating a case expression.
+      int store_G__switch_searching = G__switch_searching;
       G__switch_searching = 1;
       // Flag that we have not evaluated a case expression yet.
       result = G__start;
@@ -933,8 +942,8 @@ static G__value G__exec_switch()
       }
       //fprintf(stderr, "G__exec_switch: Case clause search has finished.\n");
       // Restore state.
-      G__switch = 0;
-      G__switch_searching = 0;
+      G__switch = store_G__switch;
+      G__switch_searching = store_G__switch_searching;
       G__no_exec = 0;
       G__no_exec_compile = store_no_exec_compile;
       //fprintf(stderr, "G__exec_switch: after case search: G__asm_noverflow: %d G__no_exec_compile: %d\n", G__asm_noverflow, G__no_exec_compile);
@@ -969,6 +978,7 @@ static G__value G__exec_switch()
          //  end of the block.
          //
          // Tell the parser to handle case clauses.
+         int store_G__switch = G__switch;
          G__switch = 1;
          // Tell the parser to go until the end of the switch block.
          int brace_level = 1;
@@ -978,7 +988,7 @@ static G__value G__exec_switch()
          result = G__exec_statement(&brace_level);
          //fprintf(stderr, "G__exec_switch: Case block parse has returned.\n");
          // Restore state.
-         G__switch = 0;
+         G__switch = store_G__switch;
          //
          //  Check if user requested an immediate return.
          //
@@ -986,6 +996,7 @@ static G__value G__exec_switch()
             // -- The user requested an immediate return.
             // Restore state.
             G__ifswitch = store_ifswitch;
+            G__prevcase = store_G__prevcase;
             // And return.
             return result;
          }
@@ -999,6 +1010,7 @@ static G__value G__exec_switch()
                //fprintf(stderr, "G__exec_switch: Case ended with a goto.\n");
                // Restore state.
                G__ifswitch = store_ifswitch;
+               G__prevcase = store_G__prevcase;
                // And return the goto result to the parser (our caller).
                return result;
             }
@@ -1011,6 +1023,7 @@ static G__value G__exec_switch()
             //   fprintf(stderr, "G__exec_switch: consume rest of switch block, peek ahead: '%s'\n", buf);
             //}
             int store_no_exec_compile = G__no_exec_compile;
+            int store_G__switch = G__switch;
 #ifdef G__ASM
             if (!G__asm_noverflow) {
                // Flag that we are skipping code.
@@ -1032,7 +1045,7 @@ static G__value G__exec_switch()
             // Restore state.
             G__no_exec = 0;
             G__no_exec_compile = store_no_exec_compile;
-            G__switch = 0;
+            G__switch = store_G__switch;
          }
       }
    }
@@ -1089,6 +1102,7 @@ static G__value G__exec_switch()
       //fprintf(stderr, "G__exec_switch: End.\n");
       // Restore state.
       G__ifswitch = store_ifswitch;
+      G__prevcase = store_G__prevcase;
       // All done, return null to the caller.
       return G__null;
    }
@@ -1104,6 +1118,7 @@ static G__value G__exec_switch()
          //fprintf(stderr, "G__exec_switch: End.\n");
          // Restore state.
          G__ifswitch = store_ifswitch;
+         G__prevcase = store_G__prevcase;
          // All done, consume the break return status and return null instead.
          return G__null;
       }
@@ -1118,12 +1133,14 @@ static G__value G__exec_switch()
          //fprintf(stderr, "G__exec_switch: End.\n");
          // Restore state.
          G__ifswitch = store_ifswitch;
+         G__prevcase = store_G__prevcase;
          // All done, return the continue status to our caller.
          return result;
       }
    }
    // Restore state.
    G__ifswitch = store_ifswitch;
+   G__prevcase = store_G__prevcase;
    // All done, return status of last executed command to caller.
    //fprintf(stderr, "G__exec_switch: End.\n");
    return result;
