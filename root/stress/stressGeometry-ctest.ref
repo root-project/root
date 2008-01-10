@@ -62,15 +62,25 @@ Info in <TGeoManager::CloseGeometry>: ----------------modeler ready-------------
 ******************************************************************
 * STRESS GEOMETRY
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/aleph.root
+Reference file http://root.cern.ch/files/aleph_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/alice.root
+Reference file http://root.cern.ch/files/alice_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/brahms.root
+Reference file http://root.cern.ch/files/brahms_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/cdf.root
+Reference file http://root.cern.ch/files/cdf_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/cms.root
+Reference file http://root.cern.ch/files/cms_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/hades.root
+Reference file http://root.cern.ch/files/hades_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/lhcbfull.root
+Reference file http://root.cern.ch/files/lhcbfull_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/star.root
+Reference file http://root.cern.ch/files/star_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/babar.root
+Reference file http://root.cern.ch/files/babar_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/atlas.root
+Reference file http://root.cern.ch/files/atlas_ref.root found
 ******************************************************************
 *  stressGeometry .................................. OK
 ******************************************************************

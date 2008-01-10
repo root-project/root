@@ -68,30 +68,29 @@ STRESSEXE := $(addprefix test/,$(STRESSTESTS:-test=$(ExeSuf)))
 STRESSTESTSCOMP := $(STRESSTESTS:-test=-ctest)
 
 #### disabled tests
-# ctests take too long - disable all that can be run in interpreted mode
-# Tests that cannot be run in interpreted mode:
-# stressMathCore stressRooFit stressLinear-itest stressVector-itest
-STRESSTESTSCOMP_VETO := stress-ctest stressEntryList-ctest stressFit-ctest \
-  stressGeometry-ctest stressGraphics-ctest
-STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-ctest))
-
-STRESSTESTSINTERP := $(STRESSTESTS:-test=-itest)
-# CINT cannot interpret these 
+# Run all tests in interpreted mode except for those that CINT
+# cannot interpret - these are run in compiled mode instead.
 STRESSTESTSINTERP_VETO := stressMathCore-itest stressRooFit-itest \
-  stressLinear-itest stressVector-itest
-# temporary failure:
-STRESSTESTSINTERP_VETO += stressGeometry-itest
+  stressLinear-itest stressVector-itest stressGeometry-itest
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
 
-STRESSFILES := $(filter-out %.o,\
-	$(filter-out %.$(DllSuf),\
-	$(filter-out %.log,\
-	$(filter-out %~,\
-	$(filter-out %/$(STRESSEXE),\
+# run all compiled except for that are run interpreted:
+STRESSTESTSCOMP_VETO := $(STRESSTESTSINTERP:-itest=-ctest)
+# ...and those that are known to fail: none!
+# STRESSTESTSCOMP_VETO := 
+STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-ctest))
+
+
+STRESSFILES := \
 	$(filter-out %/TrackMathCoreCint.cxx,\
-	$(wildcard $(ROOT_LOC)/test/*.*))))))) \
-	$(ROOT_LOC)/test/Makefile
-STRESSFILESHERE := $(subst $(ROOT_LOC)/,,$(STRESSFILES))
+	$(wildcard $(ROOT_LOC)/test/*.cxx) \
+	$(wildcard $(ROOT_LOC)/test/*.h) \
+	$(wildcard $(ROOT_LOC)/test/*.ref) \
+	$(wildcard $(ROOT_LOC)/test/*.root)) \
+$(ROOT_LOC)/test/Makefile.arch \
+$(ROOT_LOC)/test/Makefile
+
+	STRESSFILESHERE := $(subst $(ROOT_LOC)/,,$(STRESSFILES))
 STRESSFILESCOPIEDTAG := test/.COPIEDTAG
 
 
@@ -156,6 +155,9 @@ $(STRESSFILESHERE): test/%: $(ROOT_LOC)/test/%
 test/libEvent.$(DllSuf): $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
 
+test/libTrackMathCoreCint.$(DllSuf): $(STRESSFILESCOPIEDTAG)
+	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
+
 test/hsimple.C: $(ROOT_LOC)/tutorials/hsimple.C
 	$(CMDECHO) cp -f $< $@
 
@@ -178,6 +180,7 @@ stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is
 
 #### Extra dependencies for some tests ####
 
-stress: test/libEvent.$(DllSuf)
+test/stress$(ExeSuf): test/libEvent.$(DllSuf)
+test/stressMathCore$(ExeSuf): test/libTrackMathCoreCint.$(DllSuf)
 stressGraphics-itest.log stressGraphics-ctest.log: hsimple.root stressGraphics.ref earth.dat
 test/stressLinear$(ExeSuf): linearIO.root
