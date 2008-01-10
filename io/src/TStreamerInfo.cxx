@@ -1733,7 +1733,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
          if (kOffsetP <= element->GetType() && element->GetType() < kObject ) {
             fprintf(sfp,"   %s = 0;\n",element->GetName());
          }
-       }
+      }
       fprintf(sfp,"}\n");
 
       fprintf(sfp,"%s::~%s() {\n",GetName(),protoname.Data());
@@ -1753,13 +1753,13 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
          }
          if (kOffsetP <= element->GetType() && element->GetType() < kObject ) { 
             const char *ename = element->GetName();
-           if (element->HasCounter()) {
-              fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
-           } else {
-              fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
-           }
+            if (element->HasCounter()) {
+               fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
+            } else {
+               fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
+            }
          } 
-    }
+      }
       fprintf(sfp,"}\n");
       fprintf(sfp,"#endif // %s_cxx\n\n",guard.Data());
    }
