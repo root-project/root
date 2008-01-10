@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += EqualTest ParanTest ConversionOp
+TEST_TARGETS += EqualTest ParanTest ConversionOp dicttest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -47,3 +47,5 @@ ConversionOp.log : runConversionOp.C ConversionOp.C ConversionOp_h.$(DllSuf)
 ConversionOp: ConversionOp.log
 	$(TestDiff)
 	$(WarnFailTest) # see ConversionOp.C for the skipped, failing tests
+
+dicttest: dicttest_h.$(DllSuf)
