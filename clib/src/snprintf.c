@@ -196,7 +196,7 @@ typedef unsigned long long ULong64_t; /* Portable unsigned long integer 8 bytes 
          if (*format_char == 'o')\
             *flags |= UNSIGNED_DEC;\
          ret = length;\
-\
+         break;\
       default:\
          ret = 0;\
       }\
@@ -371,8 +371,8 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                *str = '\0';
                return -1;   /* size; */
             } else {
-               snprintf_get_directive(status, format_ptr, &flags, &width,
-                                      &precision, &format_char,
+               snprintf_get_directive(status, format_ptr, (&flags), (&width),
+                                      (&precision), (&format_char),
                                       ap);
                if (status == 0) {
                   *str = '\0';
