@@ -26,33 +26,27 @@ LOPT:=-g3
 refData : $(DATAFILES)
 
 Event.new.split0.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 0 $(action) $(tracks) >/dev/null && \
-	mv Event.root Event.new.split0.root && \
+	@./Event $(size) $(comp) 0 $(action) $(tracks) $@ >/dev/null && \
 	echo  "$@ made"
 
 Event.new.split1.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 1 $(action) $(tracks) >/dev/null  && \
-	mv Event.root Event.new.split1.root && \
+	@./Event $(size) $(comp) 1 $(action) $(tracks) $@ >/dev/null  && \
 	echo  "$@ made"
 
 Event.new.split2.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 2 $(action) $(tracks) >/dev/null  && \
-	mv Event.root Event.new.split2.root && \
+	@./Event $(size) $(comp) 2 $(action) $(tracks) $@ >/dev/null  && \
 	echo  "$@ made"
 
 Event.new.split9.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) 9 $(action) $(tracks) >/dev/null && \
-	mv Event.root Event.new.split9.root && \
+	@./Event $(size) $(comp) 9 $(action) $(tracks) $@ >/dev/null && \
 	echo  "$@ made"
 
 Event.old.streamed.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) -1 $(action) $(tracks) >/dev/null && \
-	mv Event.root Event.old.streamed.root && \
+	@./Event $(size) $(comp) -1 $(action) $(tracks) $@ >/dev/null && \
 	echo  "$@ made"
 
 Event.old.split.root : Event$(ExeSuf) libEvent.$(DllSuf)
-	@./Event $(size) $(comp) -2 $(action) $(tracks) >/dev/null && \
-	mv Event.root Event.old.split.root && \
+	@./Event $(size) $(comp) -2 $(action) $(tracks) $@ >/dev/null && \
 	echo  "$@ made"
 
 refTest: refData ./libEvent.$(DllSuf)

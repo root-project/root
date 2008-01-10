@@ -11,9 +11,9 @@
 //    - a tree
 //  Additional arguments can be passed to the program to control the flow
 //  of execution. (see comments describing the arguments in the code).
-//      Event  nevent comp split fill
+//      Event  nevent comp split fill output_filename
 //  All arguments are optional. Default is:
-//      Event  400      1    1     1
+//      Event  400      1    1     1  Event.root
 //
 //  In this example, the tree consists of one single "super branch"
 //  The statement ***tree->Branch("event", event, 64000,split);*** below
@@ -107,12 +107,14 @@ int main(int argc, char **argv)
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
    Int_t netf   = 0;
+   const char *filename = "Event.root";
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
    if (argc > 3)  split  = atoi(argv[3]);
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
+   if (argc > 6)  filename = argv[6];
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -153,7 +155,7 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
          hfile->UseCache(10);
       } else
-         hfile = new TFile("Event.root");
+         hfile = new TFile(filename);
       tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -187,7 +189,7 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
          hfile->UseCache(10);
       } else
-         hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
+         hfile = new TFile(filename,"RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
 
      // Create histogram to show write_time in function of time
