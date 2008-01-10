@@ -283,7 +283,11 @@ void THnSparseArrayChunk::Sumw2()
 // * Projections
 // The dimensionality of a THnSparse can be reduced by projecting it to
 // 1, 2, 3, or n dimensions, which can be represented by a TH1, TH2, TH3, or
-// a THnSparse. See the Projection() members.
+// a THnSparse. See the Projection() members. To only project parts of the
+// histogram, call
+//   THnSparse::GetAxis(12)->SetRange(from_bin, to_bin);
+// See the important remark in THnSparse::IsInRange() when excluding under-
+// and overflow bins!
 //
 // * Internal Representation
 // An entry for a filled bin consists of its n-dimensional coordinates and
@@ -649,15 +653,30 @@ Double_t THnSparse::GetSparseFractionMem() const {
 //______________________________________________________________________________
 Bool_t THnSparse::IsInRange(Int_t *coord) const
 {
-   // Check whether bin coord is in range - i.e. not an underflow of overflow.
+   // Check whether bin coord is in range, as defined by TAxis::SetRange().
+   // Currently, TAxis::SetRange() does not allow to select all but over- and
+   // underflow bins (it instead resets the axis to "no range selected").
+   // Instead, simply call
+   //    TAxis* axis12 = hsparse.GetAxis(12);
+   //    axis12->SetRange(1, axis12->GetNbins());
+   //    axis12->SetBit(TAxis::kAxisRange);
+   // to deselect the under- and overflow bins in the 12th dimension.
 
-   // will use whatever is set by SetRange() later...
-
-   for (Int_t i = 0; i < fNdimensions; ++i){
+   Int_t min=0;
+   Int_t max=0;
+   for (Int_t i = 0; i < fNdimensions; ++i) {
       TAxis *axis = GetAxis(i);
-      if (axis->TestBit(TAxis::kAxisRange)
-          && (coord[i] < axis->GetFirst()
-               || coord[i] > axis->GetLast()))
+      if (!axis->TestBit(TAxis::kAxisRange)) continue;
+      min = axis->GetFirst();
+      max = axis->GetLast();
+      if (min == 0 && max == 0) {
+         // special case where TAxis::SetBit(kAxisRange) and
+         // over- and underflow bins are de-selected.
+         // first and last are == 0 due to axis12->SetRange(1, axis12->GetNbins());
+         min = 1;
+         max = axis->GetNbins();      
+      }
+      if (coord[i] < min || coord[i] > max)
          return kFALSE;
    }
    return kTRUE;
