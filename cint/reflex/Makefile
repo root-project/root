@@ -61,23 +61,18 @@ endif
 	$(CMDECHO) echo '{gSystem->Load("libCintex"); gROOT->ProcessLine(".x $<+");}' | root -l -b 2>&1 | grep -v 'creating shared' > $@
 
 # We only run these tests if libCintex exists
-ifneq ($(wildcard $(ROOT_LOC)/lib/libCintex.*),)
-ifneq ($(shell grep GCCXML $(ROOT_LOC)/config/Makefile.config),GCCXML         := )
+ifneq ($(findstring cintex,$(shell root-config --features)),)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref
 	$(TestDiff)
-
-else
-$(RFLXDICTTESTS): %_rflx:
-$(TEST_TARGETS):;
-endif
-else
-$(RFLXDICTTESTS): %_rflx:
-$(TEST_TARGETS):;
-endif
 
 ReflexCintexOrder: ReflexCintexOrder.log
 	$(TestDiff)
 CintexReflexOrder: CintexReflexOrder.log
 	$(TestDiff)
+else
+$(RFLXDICTTESTS): %_rflx:
+$(TEST_TARGETS):
+	$(CMDECHO) echo "Your ROOT build does not include cintex: skipping test $@"
+endif
 
 properties_rflx: GENREFLEXFLAGS=--iocomments
