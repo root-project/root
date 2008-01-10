@@ -71,138 +71,130 @@ typedef unsigned long long ULong64_t; /* Portable unsigned long integer 8 bytes 
 /* Extract a formatting directive from str. Str must point to a '%'.
    Returns number of characters used or zero if extraction failed. */
 
-/* Cannot be a real function - passing va_list* cannot be done in a platform 
-   independent way, see AMD64 and "passing arg 6 of `snprintf_get_directive'
-   from incompatible pointer type".
-*/
-#define snprintf_get_directive(/* int "&" */ ret,\
-                               /* const char* */ str,\
-                               /* int* */ flags,\
-                               /* int* */ width,\
-                               /* int* */ precision,\
-                               /* char* */ format_char,\
-                               /* va_list "&" */ ap)\
-{\
-   int length, value;\
-   const char *orig_str = str;\
-\
-   *flags = 0;\
-   *width = 0;\
-   *precision = -1; /* Assume unspecified */\
-   *format_char = (char) 0;\
-\
-   if (*str == '%') {\
-      /* Get the flags */\
-      str++;\
-      while (*str == '-' || *str == '+' || *str == ' '\
-             || *str == '#' || *str == '0') {\
-         switch (*str) {\
-         case '-':\
-            *flags |= MINUS_FLAG;\
-            break;\
-         case '+':\
-            *flags |= PLUS_FLAG;\
-            break;\
-         case ' ':\
-            *flags |= SPACE_FLAG;\
-            break;\
-         case '#':\
-            *flags |= HASH_FLAG;\
-            break;\
-         case '0':\
-            *flags |= ZERO_PADDING;\
-            break;\
-         }\
-         str++;\
-      }\
-\
-      /* Don't pad left-justified numbers withs zeros */\
-      if ((*flags & MINUS_FLAG) && (*flags & ZERO_PADDING))\
-         *flags &= ~ZERO_PADDING;\
-\
-      /* Is width field present? */\
-      if (isdigit(*str)) {\
-         for (value = 0; *str && isdigit(*str); str++)\
-            value = 10 * value + *str - '0';\
-         *width = value;\
-      } else if (*str == '*') {\
-         *width = va_arg(ap, int);\
-         str++;\
-      }\
-\
-      /* Is the precision field present? */\
-      if (*str == '.') {\
-         str++;\
-         if (isdigit(*str)) {\
-            for (value = 0; *str && isdigit(*str); str++)\
-               value = 10 * value + *str - '0';\
-            *precision = value;\
-         } else if (*str == '*') {\
-            *precision = va_arg(ap, int);\
-            str++;\
-         } else\
-            *precision = 0;\
-      }\
-\
-      /* Get the optional type character */\
-      if (*str == 'h') {\
-         *flags |= CONV_TO_SHORT;\
-         str++;\
-      } else {\
-         if (*str == 'l') {\
-            if (*(str+1)=='l') {\
-               *flags |= IS_LONG_LONG_INT;\
-               str++;\
-            } else {\
-               *flags |= IS_LONG_INT;\
-            }\
-            str++;\
-         } else {\
-            /* Support Win32 I64 type specifier, i.e. %I64d or %I64u */\
-            if (*str == 'I' && *(str+1)=='6' && *(str+2)=='4') {\
-               *flags |= IS_LONG_LONG_INT;\
-               str += 3;\
-            } else if (*str == 'L') {\
-               *flags |= IS_LONG_DOUBLE;\
-               str++;\
-            }\
-         }\
-      }\
-\
-      /* Get and check the formatting character */\
-\
-      *format_char = *str;\
-      str++;\
-      length = str - orig_str;\
-\
-      switch (*format_char) {\
-      case 'i':\
-      case 'd':\
-      case 'o':\
-      case 'u':\
-      case 'x':\
-      case 'X':\
-      case 'f':\
-      case 'e':\
-      case 'E':\
-      case 'g':\
-      case 'G':\
-      case 'c':\
-      case 's':\
-      case 'p':\
-      case 'n':\
-         if (*format_char == 'X')\
-            *flags |= X_UPCASE;\
-         if (*format_char == 'o')\
-            *flags |= UNSIGNED_DEC;\
-         ret = length;\
-         break;\
-      default:\
-         ret = 0;\
-      }\
-   } else {\
-      ret = 0;\
-   }\
+static int snprintf_get_directive(const char *str, int *flags, int *width,
+                                  int *precision, char *format_char,
+                                  va_list *ap)
+{
+   int length, value;
+   const char *orig_str = str;
+
+   *flags = 0;
+   *width = 0;
+   *precision = -1; /* Assume unspecified */
+   *format_char = (char) 0;
+
+   if (*str == '%') {
+      /* Get the flags */
+      str++;
+      while (*str == '-' || *str == '+' || *str == ' '
+             || *str == '#' || *str == '0') {
+         switch (*str) {
+         case '-':
+            *flags |= MINUS_FLAG;
+            break;
+         case '+':
+            *flags |= PLUS_FLAG;
+            break;
+         case ' ':
+            *flags |= SPACE_FLAG;
+            break;
+         case '#':
+            *flags |= HASH_FLAG;
+            break;
+         case '0':
+            *flags |= ZERO_PADDING;
+            break;
+         }
+         str++;
+      }
+
+      /* Don't pad left-justified numbers withs zeros */
+      if ((*flags & MINUS_FLAG) && (*flags & ZERO_PADDING))
+         *flags &= ~ZERO_PADDING;
+
+      /* Is width field present? */
+      if (isdigit(*str)) {
+         for (value = 0; *str && isdigit(*str); str++)
+            value = 10 * value + *str - '0';
+         *width = value;
+      } else if (*str == '*') {
+         *width = va_arg(*ap, int);
+         str++;
+      }
+
+      /* Is the precision field present? */
+      if (*str == '.') {
+         str++;
+         if (isdigit(*str)) {
+            for (value = 0; *str && isdigit(*str); str++)
+               value = 10 * value + *str - '0';
+            *precision = value;
+         } else if (*str == '*') {
+            *precision = va_arg(*ap, int);
+            str++;
+         } else
+            *precision = 0;
+      }
+
+      /* Get the optional type character */
+      if (*str == 'h') {
+         *flags |= CONV_TO_SHORT;
+         str++;
+      } else {
+         if (*str == 'l') {
+            if (*(str+1)=='l') {
+               *flags |= IS_LONG_LONG_INT;
+               str++;
+            } else {
+               *flags |= IS_LONG_INT;
+            }
+            str++;
+         } else {
+            /* Support Win32 I64 type specifier, i.e. %I64d or %I64u */
+            if (*str == 'I' && *(str+1)=='6' && *(str+2)=='4') {
+               *flags |= IS_LONG_LONG_INT;
+               str += 3;
+            } else if (*str == 'L') {
+               *flags |= IS_LONG_DOUBLE;
+               str++;
+            }
+         }
+      }
+
+      /* Get and check the formatting character */
+
+      *format_char = *str;
+      str++;
+      length = str - orig_str;
+
+      switch (*format_char) {
+      case 'i':
+      case 'd':
+      case 'o':
+      case 'u':
+      case 'x':
+      case 'X':
+      case 'f':
+      case 'e':
+      case 'E':
+      case 'g':
+      case 'G':
+      case 'c':
+      case 's':
+      case 'p':
+      case 'n':
+         if (*format_char == 'X')
+            *flags |= X_UPCASE;
+         if (*format_char == 'o')
+            *flags |= UNSIGNED_DEC;
+         return length;
+
+      default:
+         return 0;
+      }
+   } else {
+      return 0;
+   }
 }
 
 /*
@@ -356,8 +348,8 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
    double dbl_val;
    int precision_specified = 0;
 
-   if (size <= 0 || str == NULL || format == NULL)
-      return -1;
+  if (size <= 0 || str == NULL || format == NULL)
+    return -1;
 
    flags = 0;
    while (format_ptr < format + strlen(format)) {
@@ -371,9 +363,9 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                *str = '\0';
                return -1;   /* size; */
             } else {
-               snprintf_get_directive(status, format_ptr, (&flags), (&width),
-                                      (&precision), (&format_char),
-                                      ap);
+               status = snprintf_get_directive(format_ptr, &flags, &width,
+                                               &precision, &format_char,
+                                               &ap);
                if (status == 0) {
                   *str = '\0';
                   return -2;
