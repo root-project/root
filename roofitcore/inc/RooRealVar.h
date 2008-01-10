@@ -75,9 +75,9 @@ public:
   RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) ; 
 
   // Set infinite fit range limits
-  inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity) ; }
-  inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity) ; }
-  inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity,RooNumber::infinity) ; }
+  inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity()) ; }
+  inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity()) ; }
+  inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity(),RooNumber::infinity()) ; }
  
   // Backward compatibility functions
   void setFitBins(Int_t nBins) ;

@@ -22,7 +22,6 @@
 #include "RooFit.h"
 
 #include "RooHistError.h"
-#include "RooHistError.h"
 #include "RooBrentRootFinder.h"
 #include "RooMsgService.h"
 #include "TMath.h"

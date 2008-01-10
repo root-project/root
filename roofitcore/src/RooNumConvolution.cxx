@@ -210,7 +210,7 @@ Double_t RooNumConvolution::evaluate() const
     Double_t width = _windowScale * ((RooAbsReal*)_windowParam.at(1))->getVal() ;
     _integrator->setLimits(x-center-width,x-center+width) ;
   } else {
-    _integrator->setLimits(-RooNumber::infinity,RooNumber::infinity) ;
+    _integrator->setLimits(-RooNumber::infinity(),RooNumber::infinity()) ;
   }
   
   // Calculate convolution for present x

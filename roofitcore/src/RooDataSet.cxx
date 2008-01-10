@@ -48,7 +48,7 @@ char* operator+( streampos&, char* );
 ClassImp(RooDataSet)
 ;
 
-RooDataSet::RooDataSet() {}
+RooDataSet::RooDataSet() : _wgtVar(0) {}
 
 
 RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName) :

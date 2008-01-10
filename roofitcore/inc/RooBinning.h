@@ -28,7 +28,7 @@ class RooRealVar ;
 class RooBinning : public RooAbsBinning {
 public:
 
-  RooBinning(Double_t xlo=-RooNumber::infinity, Double_t xhi=RooNumber::infinity, const char* name=0) ;
+  RooBinning(Double_t xlo=-RooNumber::infinity(), Double_t xhi=RooNumber::infinity(), const char* name=0) ;
   RooBinning(Int_t nBins, Double_t xlo, Double_t xhi, const char* name=0) ;
   RooBinning(Int_t nBins, const Double_t* boundaries, const char* name=0) ;
   RooBinning(const RooBinning& other, const char* name=0) ;

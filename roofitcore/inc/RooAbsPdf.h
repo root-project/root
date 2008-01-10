@@ -159,7 +159,7 @@ public:
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
-  inline Bool_t isSelectedComp() const { return _selectComp || _globalSelectComp ; }
+  Bool_t isSelectedComp() const ;
 
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),Bool_t force=kTRUE) ;
   virtual void fixAddCoefRange(const char* rangeName=0,Bool_t force=kTRUE) ;

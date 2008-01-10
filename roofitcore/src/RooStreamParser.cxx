@@ -360,7 +360,7 @@ Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value)
 
   // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
   if (!strcasecmp(data,"inf") || !strcasecmp(data+1,"inf")) {
-    value = (data[0]=='-') ? -RooNumber::infinity : RooNumber::infinity ;
+    value = (data[0]=='-') ? -RooNumber::infinity() : RooNumber::infinity() ;
     return kFALSE ;
   }
 

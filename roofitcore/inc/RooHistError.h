@@ -63,7 +63,7 @@ private:
       return exp(-mu)*result;
     };
     inline Double_t getMinLimit(UInt_t /*index*/) const { return 0; }
-    inline Double_t getMaxLimit(UInt_t /*index*/) const { return RooNumber::infinity; }
+    inline Double_t getMaxLimit(UInt_t /*index*/) const { return RooNumber::infinity() ; }
   private:
     Int_t _n;
   };

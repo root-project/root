@@ -36,8 +36,8 @@ RooRangeBinning::RooRangeBinning(const char* name) :
   RooAbsBinning(name)
 {
   // Constructor
-  _range[0] = -RooNumber::infinity ;
-  _range[1] = +RooNumber::infinity ;
+  _range[0] = -RooNumber::infinity() ;
+  _range[1] = +RooNumber::infinity() ;
 
 }
 

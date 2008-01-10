@@ -264,7 +264,10 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
   // Forward redirectServers call to our basis function, which is not connected to either resolution
   // model or the physics model.
 
-  if (!_basis) return kFALSE ;
+  if (!_basis) {
+    _norm = 0 ;
+    return kFALSE ; 
+  } 
 
   RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;
   if (newBasis) {

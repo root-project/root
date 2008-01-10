@@ -755,6 +755,12 @@ void RooPlot::SetNameTitle(const char *name, const char* title)
   if (_dir) _dir->GetList()->Add(this);
 }
 
+void RooPlot::SetTitle(const char* title) 
+{
+  TNamed::SetTitle(title) ;
+  _hist->SetTitle(title) ;
+}
+
 
 TAxis* RooPlot::GetXaxis() const { return _hist->GetXaxis() ; }
 TAxis* RooPlot::GetYaxis() const { return _hist->GetYaxis() ; }

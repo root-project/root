@@ -168,7 +168,7 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
 
   // Loop over X points
   deque<double>::iterator iter ;
-  Double_t last(-RooNumber::infinity) ;
+  Double_t last(-RooNumber::infinity()) ;
   for (iter=pointList.begin() ; iter!=pointList.end() ; ++iter) {
 
     if ((*iter-last)>1e-10) {      

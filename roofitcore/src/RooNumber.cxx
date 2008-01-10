@@ -17,8 +17,6 @@
 // -- CLASS DESCRIPTION [MISC] --
 
 #include "RooFit.h"
-
-#include "RooNumber.h"
 #include "RooNumber.h"
 
 ClassImp(RooNumber)
@@ -27,17 +25,22 @@ ClassImp(RooNumber)
 #ifdef HAS_NUMERIC_LIMITS
 
 #include <numeric_limits.h>
-Double_t RooNumber::infinity= numeric_limits<Double_t>::infinity();
-
+Double_t RooNumber::_Infinity= numeric_limits<Double_t>::infinity();
 #else
 
 // This assumes a well behaved IEEE-754 floating point implementation.
 // The next line may generate a compiler warning that can be ignored.
-Double_t RooNumber::infinity= 1.0e30 ;  //1./0.;
+Double_t RooNumber::_Infinity= 1.0e30 ;  //1./0.;
 
 #endif
 
+Double_t RooNumber::infinity() 
+{
+  return _Infinity ;
+}
+
 Int_t RooNumber::isInfinite(Double_t x) 
 {
-  return (x >= +infinity) ? +1 : ((x <= -infinity) ? -1 : 0);
+  return (x >= +_Infinity) ? +1 : ((x <= -_Infinity) ? -1 : 0);
 }
+

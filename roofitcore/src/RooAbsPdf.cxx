@@ -2007,6 +2007,13 @@ Bool_t RooAbsPdf::evalError()
   return _evalError ; 
 }
 
+
+Bool_t RooAbsPdf::isSelectedComp() const 
+{ 
+  return _selectComp || _globalSelectComp ; 
+}
+
+
 void RooAbsPdf::globalSelectComp(Bool_t flag) 
 { 
   _globalSelectComp = flag ; 

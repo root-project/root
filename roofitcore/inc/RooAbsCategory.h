@@ -87,6 +87,7 @@ protected:
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;
 
+  mutable UChar_t    _byteValue ; //! Transient cache for byte values from tree branches
   mutable RooCatType _value ; // Current value
   TObjArray  _types ;         // Array of allowed values
   TIterator* _typeIter ;      //!

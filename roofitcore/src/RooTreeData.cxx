@@ -1670,8 +1670,8 @@ Bool_t RooTreeData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highes
   }
 
   // Look for highest and lowest value 
-  lowest = RooNumber::infinity ;
-  highest = -RooNumber::infinity ;
+  lowest = RooNumber::infinity() ;
+  highest = -RooNumber::infinity() ;
   for (Int_t i=0 ; i<numEntries() ; i++) {
     get(i) ;
     if (varPtr->getVal()<lowest) {

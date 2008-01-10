@@ -20,6 +20,7 @@
 #include <math.h>
 #include <float.h>
 
+#include "RooNumber.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRealProxy.h"
@@ -66,9 +67,9 @@ public:
   Bool_t hasBinning(const char* name) const ;
 
   // Set infinite fit range limits
-  inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity) ; }
-  inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity) ; }
-  inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity,RooNumber::infinity) ; }
+  inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity()) ; }
+  inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity()) ; }
+  inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity(),RooNumber::infinity()) ; }
 
   using RooAbsRealLValue::operator= ;
   using RooAbsRealLValue::setVal ;

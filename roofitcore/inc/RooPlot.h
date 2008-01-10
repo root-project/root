@@ -86,6 +86,7 @@ public:
   void SetMarkerSize(Size_t msize = 1) ; 
   void SetMarkerStyle(Style_t mstyle = 1) ; 
   void SetName(const char *name) ;
+  void SetTitle(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;
   void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ; 
   void SetOption(Option_t* option = " ") ; 

@@ -215,6 +215,11 @@ protected:
   TString  _label ;         // Plot label for objects value
   Bool_t   _forceNumInt ;   // Force numerical integration if flag set
 
+  mutable Float_t _floatValue ; //! Transient cache for floating point values from tree branches 
+  mutable Int_t   _intValue   ; //! Transient cache for integer values from tree branches 
+  mutable UChar_t _byteValue  ; //! Transient cache for byte values from tree branches 
+  mutable UInt_t  _uintValue  ; //! Transient cache for unsigned integer values from tree branches 
+
   friend class RooAbsPdf ;
   friend class RooAbsAnaConvPdf ;
   friend class RooRealProxy ;
