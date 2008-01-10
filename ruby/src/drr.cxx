@@ -416,12 +416,10 @@ TObject* drr_grab_object(VALUE self)
     return o;
 }
 
-unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offset=1, unsigned int reference_map=0x0)
+unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int offset=1, unsigned int reference_map=0x0)
 {
     /* FIXME. Offset reminds me fortran code; make a better interface,
      * and change the function name to a better one.
-     * FIXME: Brute-forcing search for call by pointer or by reference.
-     * Return numbr of T_OBJECTS
      *
      * The boolean checks for cproto and f are vital. This function can
      * be called:
@@ -489,10 +487,51 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, int offse
             default:
                 break;
           }
-        if ((i + 1 < nargs) && (nargs != 1) && cproto)
+        if ((i + 1 < nargs) && (nargs != 1) && cproto) 
             strcat(cproto, ",");
       }
     return ntobjects;
+}
+
+void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inargs, char *cproto, long int offset=1 )
+{
+    /* FIXME: Brute force checkin of all combinations of * and & for
+     * T_Objects Since we cannot tell which one is needed (we get the type
+     * from the ruby objects, which don't know) we try all.
+     */
+
+    G__MethodInfo *minfo = 0;
+    long int dummy_offset = 0; // Not read out, but expected by GetMethod
+
+    // Number of T_OBJECTS in argument list initialized to more than 1
+    unsigned int nobjects = drr_map_args2 (inargs, cproto, 0, offset, 0x0);
+    // 2^nobjects == number of combinations of "*" and "&"
+    unsigned int bitmap_end = static_cast<unsigned int>( 0x1 << nobjects );
+
+    // Check if method methname with prototype cproto is present in klass
+    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &dummy_offset));
+
+    /* Loop if we have to, i.e. there are T_OBJECTS ^= TObjects and the first
+     * combination is not correct.
+     */
+    if( nobjects > 0 and !(minfo->InterfaceMethod()) ) {
+        for( unsigned int reference_map=0x1; reference_map < bitmap_end; reference_map++) {
+            cproto[0] = static_cast<char>( 0 ); // reset cproto
+            drr_map_args2 (inargs, cproto, 0, offset, reference_map);
+            minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &dummy_offset));
+            if (minfo->InterfaceMethod())
+                break;
+        }
+    } 
+
+    delete minfo;
+
+    return;
+}
+
+void drr_set_method_args( VALUE inargs, G__CallFunc *func, long int offset=1 )
+{
+    drr_map_args2( inargs, 0, func, offset );
 }
 
 /* FIXME. Err... enum is the correct word? :-) */
@@ -657,8 +696,10 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
 
     /* Call the requested ctor.  */
 
-    if (RARRAY(inargs)->len)
-        drr_map_args2 (inargs, cproto, &func, 0);
+    if (RARRAY(inargs)->len) {
+        drr_find_method_prototype (&klass, classname, inargs, cproto, 0);
+        drr_set_method_args ( inargs, &func, 0);
+    }
 
     G__MethodInfo minfo(klass.GetMethod(classname, cproto, &offset));
     if (minfo.InterfaceMethod())
@@ -692,8 +733,6 @@ static VALUE drr_const_missing(VALUE self, VALUE klass)
         delete c;
         return new_klass;
     } else {
-        /* FIXME: raise exception here.  */
-        //rb_warn ("Constant %s is not defined.", name);
         delete c;
         /* If there is no ROOT dict available, call the original Object::const_missing */
         return rb_funcall(self,rb_intern("__drr_orig_const_missing"),1,klass);
@@ -732,21 +771,12 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
     G__MethodInfo *minfo = 0;
 
     if (nargs) {
-        /* FIXME: Brute force checkin of all combinations of * and & for
-         * T_Objects Since we cannot tell which one is needed (we get the type
-         * from the ruby objects, which don't know) we try all.
-         */
-        for( unsigned int reference_map=0x0; reference_map < static_cast<unsigned int>( (1<<drr_map_args2 (inargs, cproto, func, 1, reference_map)) ); reference_map++) {
-            minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
-            if (minfo->InterfaceMethod())
-                break;
-            cproto[0] = static_cast<char>( 0 ); // reset cproto
-        }
-    } else {
-        minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
+        drr_find_method_prototype( klass, methname, inargs, cproto, 1 );
+        drr_set_method_args( inargs, func, 1 );
     }
 
     /* FIXME: minfo is really used only for the return type.  */
+    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
     if (minfo->InterfaceMethod())
         func->SetFunc(*minfo);
     else
@@ -855,13 +885,13 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
       {
         func = entry->func;
         if (nargs)
-            drr_map_args2 (inargs, cproto, NULL, 0);
+            drr_find_method_prototype (entry->klass, methname, inargs, cproto, 0);
         func->SetFuncProto (entry->klass, methname, cproto, &offset);
         /* FIXME: Why on earth CINT resets the arguments when
          * SetFuncProto() is called?
          */
         if (nargs)
-            drr_map_args2 (inargs, NULL, func, 0);
+            drr_set_method_args (inargs, func, 0);
       }
     else
         /* FIXME: This can never be happened.  */
