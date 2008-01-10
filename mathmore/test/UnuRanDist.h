@@ -44,19 +44,28 @@ public:
          
          first = false;
       }
+      else { 
+         par[0] = mu; 
+         fUnuran.ReInitDiscrDist(1,par);
+      }
       return fUnuran.SampleDiscr();
    }
 
    int Binomial(int n, double p) { 
       if (first) { 
-         std::string sn = ROOT::Math::Util::ToString(n);
-         std::string sp = ROOT::Math::Util::ToString(p);
-         std::string dist = "binomial(" + sn + "," + sp + ")";
-         std::cout << dist << std::endl;
-         if (!fUnuran.Init(dist, "method=dgt") ) {
-            assert(0);
-         }
+//          std::string sn = ROOT::Math::Util::ToString(n);
+//          std::string sp = ROOT::Math::Util::ToString(p);
+//          std::string dist = "binomial(" + sn + "," + sp + ")";
+//          std::cout << dist << std::endl;
+         if (!fUnuran.InitBinomial(n,p,"method=dstd") ) {
+             assert(0);
+          }
          first = false;
+      }
+      else { 
+         par[0] = n; 
+         par[1] = p; 
+         fUnuran.ReInitDiscrDist(2,par);
       }
       return fUnuran.SampleDiscr();
    }
@@ -66,5 +75,5 @@ public:
 private:
    TUnuran fUnuran; 
    bool  first;
-
+   double par[2]; 
 };

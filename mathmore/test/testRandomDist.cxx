@@ -11,16 +11,18 @@
 #include <iostream>
 #include <cmath>
 #include <typeinfo>
+#define HAVE_UNURAN
 #ifdef HAVE_UNURAN
 #include "UnuRanDist.h"
 #endif
 
 #ifdef HAVE_CLHEP
 #include "CLHEP/Random/RandFlat.h"
-#include "CLHEP/Random/RandPoissonQ.h"
+#include "CLHEP/Random/RandPoissonT.h"
 #include "CLHEP/Random/RandPoisson.h"
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandBinomial.h"
 #include "CLHEP/Random/JamesRandom.h"
 #endif
 
@@ -251,7 +253,7 @@ void testPoissonCLHEP( R & r, double mu,TH1D & h) {
   }
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
-  std::cout << "Poisson - mu " << mu << " \t CLHEP \tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+  std::cout << "Poisson - mu = " << mu << "\t\t" << findName(r) <<"\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
 	    << w.CpuTime()*1.0E9/NEVT 
 	    << "\t(ns/call)" << std::endl;   
   // fill histogram the second pass
@@ -443,6 +445,31 @@ void testBinomial( R & r,int ntot,double p,TH1D & h) {
 }
 
 
+template<class R> 
+void testBinomialCLHEP( R & r,int ntot,double p,TH1D & h) { 
+
+  TStopwatch w; 
+
+  int n = NEVT;
+  // estimate PI
+  w.Start();
+  //r.SetSeed(0);
+  for (int i = 0; i < n; ++i) { 
+    double x = double( r(ntot,p ) );
+    if (fillHist)
+      h.Fill( x );
+  }
+  w.Stop();
+  if (fillHist) { fillHist=false; return; }  
+  std::cout << "Binomial - ntot,p = " << ntot << " , " << p << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
+	    << w.CpuTime()*1.0E9/NEVT 
+	    << "\t(ns/call)" << std::endl;   
+  // fill histogram the second pass
+  fillHist = true; 
+  testBinomialCLHEP(r,ntot,p,h);
+}
+
+
 template <class R> 
 void testExp( R & r,TH1D & h) { 
 
@@ -614,7 +641,7 @@ int testRandomDist() {
   testPoisson(tr,mu,hp2);
   testPoisson(ur,mu,hp3);
 #ifdef HAVE_CLHEP
-  RandPoissonQ crp(eng);
+  RandPoissonT crp(eng);
   TH1D hp4("hp4","Poisson CLHEP",nch,xmin,xmax);
   testPoissonCLHEP(crp,mu,hp4);
 #endif
@@ -668,8 +695,8 @@ int testRandomDist() {
 
   // binomial
 
-  int ntot = 120;
-  double p =0.5;
+  int ntot = 100;
+  double p =0.1;
   xmin = 0;
   xmax = ntot+1;
   nch = std::min(1000,ntot+1);
@@ -681,6 +708,12 @@ int testRandomDist() {
   testBinomial(r,ntot,p,hb1);
   testBinomial(tr,ntot,p,hb2);
   testBinomial(ur,ntot,p,hb3);
+#ifdef HAVE_CLHEP
+  RandBinomial crb(eng);
+  TH1D hb4("hb4","Binomial CLHEP",nch,xmin,xmax);
+  testBinomialCLHEP(crb,ntot,p,hp4);
+#endif
+
 
   testDiff(hb1,hb2,"Binomial ROOT-GSL");
   testDiff(hb1,hb3,"Binomial ROOT-UNR");
