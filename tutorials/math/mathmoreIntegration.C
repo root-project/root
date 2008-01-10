@@ -111,7 +111,7 @@ void  DrawCumulative(double x1, double x2, int n = 100){
    }
 
    // alternative method using ROOT::Math::Functor class 
-   ROOT::Math::Functor1D<ROOT::Math::IGenFunction> f1(& TMath::BreitWigner);
+   ROOT::Math::Functor1D f1(& TMath::BreitWigner);
   
    ROOT::Math::Integrator ig(f1, ROOT::Math::IntegrationOneDim::ADAPTIVE,1.E-12,1.E-12);
  
