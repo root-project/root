@@ -1053,6 +1053,9 @@ void THistPainter::Paint(Option_t *option)
    //               content's absolute value. A sunken button is drawn for negative values
    //               a raised one for positive.
    //    "COL"    : a box is drawn for each cell with a color scale varying with contents
+   //               All the none empty bins are painted. Empty bins are not painted
+   //               unless some bins have a negative content because in that case the null
+   //               bins might be not empty.
    //    "COLZ"   : same as "COL". In addition the color palette is also drawn
    //    "CONT"   : Draw a contour plot (same as CONT0)
    //    "CONT0"  : Draw a contour plot using surface colors to distinguish contours
@@ -2517,10 +2520,16 @@ void THistPainter::PaintColorLevels(Option_t *)
 {
    // Control function to draw a table as a color plot.
    //
-   //       For each cell (i,j) a box is drawn with a color proportional
-   //       to the cell content.
-   //       The color table used is defined in the current style (gStyle).
-   //       The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
+   // For each cell (i,j) a box is drawn with a color proportional
+   // to the cell content.
+   //
+   // The color table used is defined in the current style (gStyle).
+   //
+   // The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
+   //
+   // All the none empty bins are painted. Empty bins are not painted unless
+   // some bins have a negative content because in that case the null bins
+   // might be not empty.
    //Begin_Html
    /*
    <img src="gif/PaintCol.gif">
