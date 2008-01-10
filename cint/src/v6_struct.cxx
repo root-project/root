@@ -1385,7 +1385,7 @@ void G__set_class_autoloading_callback(int (*p2f)(char*, char*))
 char* G__get_class_autoloading_table(char* classname)
 {
    // Return the autoload entries for the class called classname.
-   int tagnum = G__defined_tagname(classname, 3);
+   int tagnum = G__defined_tagname(classname, 4);
    if (tagnum < 0) return 0;
    return G__struct.libname[tagnum];
 }
@@ -1458,6 +1458,7 @@ int G__defined_tagname(const char* tagname, int noerror)
    //               no error messages if template is not found
    //         = 2   if not found just return without trying template
    //         = 3   like 2, and no autoloading
+   //         = 4   like 3, and don't look for typedef
    //
    // CAUTION:
    // If template class with constant argument is given to this function,
@@ -1638,6 +1639,10 @@ try_again:
          return i;
       }
    }
+
+   if (noerror == 4)
+      return -1;
+
    // Search for typename.
    store_var_type = G__var_type;
    i = G__defined_typename(tagname);

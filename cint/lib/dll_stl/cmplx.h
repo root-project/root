@@ -23,16 +23,17 @@ using namespace std;
 
 #pragma link C++ global G__COMPLEX_DLL;
 
+// complex of unsigned is pretty useless and generates warnings on windows
 #pragma link C++ class complex<int> ;
-#pragma link C++ class complex<unsigned int> ;
+//#pragma link C++ class complex<unsigned int> ;
 #pragma link C++ class complex<long> ;
-#pragma link C++ class complex<unsigned long> ;
+//#pragma link C++ class complex<unsigned long> ;
 #pragma link C++ class complex<float> ;
 #pragma link C++ class complex<double> ;
 
 #ifdef G__NATIVELONGLONG
 #pragma link C++ class complex<long long> ;
-#pragma link C++ class complex<unsigned long long> ;
+//#pragma link C++ class complex<unsigned long long> ;
 #pragma link C++ class complex<long double> ;
 #endif
 

@@ -1212,7 +1212,12 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                         // Only declared the namespace do not specify any library because
                         // the namespace might be spread over several libraries and we do not
                         // know (yet?) which one the user will need!
-                        G__set_class_autoloading_table((char*)base.Data(), "");
+
+                        // But what if it's not a namespace but a class?
+                        // Does CINT already know it?
+                        const char* baselib = G__get_class_autoloading_table((char*)base.Data());
+                        if ((!baselib || !baselib[0]) && !rec->FindObject(base))
+                           G__set_class_autoloading_table((char*)base.Data(), "");
                      }
                      ++k;
                   }
