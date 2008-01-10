@@ -26,7 +26,8 @@ Bool_t  TColor::fgGrayscaleMode = kFALSE;
 Bool_t  TColor::fgInitDone = kFALSE;
 TArrayI TColor::fgPalette(0);
 
-//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
 /* Begin_Html
 <center><h2>TColor: Color Creation and Management</h2></center>
  Color defined by RGB or HLS.
@@ -304,7 +305,7 @@ void TColor::InitializeColors()
       // Create the ROOT Color Wheel
       TColor::CreateColorWheel();
    }
-   // If fgPalette.fN !=0 SetPalette has been called already 
+   // If fgPalette.fN !=0 SetPalette has been called already
    // (from rootlogon.C for instance)
    if (!fgPalette.fN) SetPalette(0,0);
 }
@@ -1344,13 +1345,14 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    }
 
    // set DeepSea palette
-   if (colors == 0 && ncolors > 50) {
+   if (ncolors > 50 && colors == 0) {
+      TColor::InitializeColors();
       if (ncolors == fgPalette.fN && paletteType == 3) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-      Double_t red[nRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
+      Double_t red[nRGBs]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
       Double_t green[nRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
-      Double_t blue[nRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
+      Double_t blue[nRGBs]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
       TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, ncolors);
       paletteType = 3;
       return;
