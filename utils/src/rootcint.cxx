@@ -502,20 +502,35 @@ string R__tmpnam()
    // return a unique temporary file name as defined by tmpnam
 
    static char filename[L_tmpnam+2];
-   static string tmpdir = std::string(P_tmpdir) + "/";
+   static string tmpdir;
+   static bool initialized = false;
    static list<R__tmpnamElement> tmpnamList;
 
-   if (tmpdir.length() <= 2) {
-      // if it is less that 2 character it is likely to
-      // just be '/' or '\\'.
-      // Let's add the temp directory.
-      char *tmp;
-      if ((tmp = getenv("CINTTMPDIR"))) tmpdir = tmp;
-      else if ((tmp=getenv("TEMP")))    tmpdir = tmp;
-      else if ((tmp=getenv("TMP")))     tmpdir = tmp;
-      else tmpdir = ".";
-      tmpdir += '/';
+   
+   if (!initialized) {
+#if R__USE_MKSTEMP
+      // Unlike tmpnam mkstemp does not prepend anything
+      // to its result but must get the pattern as a 
+      // full pathname.
+      tmpdir = std::string(P_tmpdir) + "/";
+#endif
+ 
+      if (strlen(P_tmpdir) <= 2) {
+         // tmpnam (see man page) prepends the value of the
+         // P_tmpdir (defined in stdio.h) to its result.
+         // If P_tmpdir is less that 2 character it is likely to
+         // just be '/' or '\\' and we do not want to write in 
+         // the root directory, so let's add the temp directory. 
+         char *tmp;
+         if ((tmp = getenv("CINTTMPDIR"))) tmpdir = tmp;
+         else if ((tmp=getenv("TEMP")))    tmpdir = tmp;
+         else if ((tmp=getenv("TMP")))     tmpdir = tmp;
+         else tmpdir = ".";
+         tmpdir += '/';
+       }
+       initialized = true;
    }
+
 #if R__USE_MKSTEMP
    static const char *radix = "XXXXXX";
    static const char *prefix = "rootcint_";
