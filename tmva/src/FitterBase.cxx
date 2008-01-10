@@ -25,10 +25,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-//  Baseclass for TMVA fitters
-//  Also defines generalised fitting interface
+//______________________________________________________________________
+/*
+  FitterBase
+
+  Baseclass for TMVA fitters. Also defines generalised fitting interface
+*/
 //_______________________________________________________________________
 
 #include "TMVA/FitterBase.h"

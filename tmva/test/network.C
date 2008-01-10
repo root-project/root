@@ -5,6 +5,9 @@
 
 TFile* Network_GFile = 0;
 
+static Int_t c_DarkBackground = TColor::GetColor( "#6e7a85" );
+
+
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
 void network( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
@@ -46,7 +49,7 @@ void draw_network(TDirectory* d)
    // create canvas
    TStyle* TMVAStyle = gROOT->GetStyle("TMVA"); // the TMVA style
    Int_t canvasColor = TMVAStyle->GetCanvasColor(); // backup
-   TMVAStyle->SetCanvasColor( TMVAGlob::c_DarkBackground );
+   TMVAStyle->SetCanvasColor( c_DarkBackground );
 
    TCanvas* c = new TCanvas( "c", "Neural Network Layout", 100, 0, 1000, 650 );
 

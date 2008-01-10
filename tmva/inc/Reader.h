@@ -117,6 +117,10 @@ namespace TMVA {
       void DecodeVarNames( const std::string varNames );
       void DecodeVarNames( const TString varNames );
 
+      // Reads method name and title from the weightfile
+      void GetMethodNameTitle(const TString& weightfile, TString& methodName, TString& methodTitle);
+
+
       void DeclareOptions();
 
       Bool_t fVerbose;    // verbosity

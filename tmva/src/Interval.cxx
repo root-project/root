@@ -26,7 +26,11 @@
 
 //_______________________________________________________________________
 //                                                                      
-// Interval definition, continuous and discrete                          
+// Interval
+//
+// Implementation of a one-dimensional range, that can be either
+// continuous and discrete.
+//
 //_______________________________________________________________________
 
 #include "TMath.h"
@@ -63,7 +67,9 @@ TMVA::Interval::Interval( const Interval& other )
      fMin  ( other.fMin ),
      fMax  ( other.fMin ),
      fNbins( other.fNbins )
-{}
+{
+   // copy constructor
+}
 
 //_______________________________________________________________________
 TMVA::Interval::~Interval()

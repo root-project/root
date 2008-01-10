@@ -46,8 +46,8 @@
 ClassImp(TMVA::MethodRuleFit)
  
 //_______________________________________________________________________
-TMVA::MethodRuleFit::MethodRuleFit( TString jobName, TString methodTitle, DataSet& theData, 
-                                    TString theOption, TDirectory* theTargetDir )
+TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                    const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
@@ -84,7 +84,7 @@ TMVA::MethodRuleFit::MethodRuleFit( TString jobName, TString methodTitle, DataSe
 
 //_______________________________________________________________________
 TMVA::MethodRuleFit::MethodRuleFit( DataSet& theData,
-                                    TString theWeightFile,
+                                    const TString& theWeightFile,
                                     TDirectory* theTargetDir )
    : MethodBase( theData, theWeightFile, theTargetDir )
 {

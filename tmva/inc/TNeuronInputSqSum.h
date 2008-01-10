@@ -32,7 +32,11 @@
 //                                                                      //
 // TNeuron input calculator -- calculates the squared weighted sum of   //
 // inputs                                                               //
-//                                                                      //
+//
+// Begin_Latex
+// NeuronInput = #sum_{i} y_{i}^{2}
+// End_Latex
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"

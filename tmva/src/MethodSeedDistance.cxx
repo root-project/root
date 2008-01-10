@@ -23,7 +23,10 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
+/* Begin_Html
+   This method is experimental only. It does not show any improvements
+   compared to any of the traditional methods.
+End_Html */
 //_______________________________________________________________________
 
 #include "Riostream.h"
@@ -48,8 +51,8 @@
 ClassImp(TMVA::MethodSeedDistance)
 
 //_______________________________________________________________________
-TMVA::MethodSeedDistance::MethodSeedDistance( TString jobName, TString methodTitle, DataSet& theData, 
-                            TString theOption, TDirectory* theTargetDir )
+TMVA::MethodSeedDistance::MethodSeedDistance( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                            const TString& theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir ), 
      IFitterTarget()
 {
@@ -64,7 +67,7 @@ TMVA::MethodSeedDistance::MethodSeedDistance( TString jobName, TString methodTit
 
 //_______________________________________________________________________
 TMVA::MethodSeedDistance::MethodSeedDistance( DataSet& theData, 
-                            TString theWeightFile,  
+                            const TString& theWeightFile,  
                             TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
 {
@@ -138,27 +141,27 @@ void TMVA::MethodSeedDistance::ProcessOptions()
    ClearAll();
 
    // process transient strings
-//   fFormulaStringT  = fFormulaStringP;
+   //   fFormulaStringT  = fFormulaStringP;
    fSeedRangeStringT = fSeedRangeStringP;
 
    // interpret parameter string   
    fSeedRangeStringT.ReplaceAll( " ", "" );
    fNPars = fSeedRangeStringT.CountChar( ')' );
-//   fNPars = 4;
-
-//   fLogger << kINFO << "rangestring " << fSeedRangeStringT << Endl;
-//   fLogger << kINFO << "rangestring number ) " << fNPars << Endl;
-
+   //   fNPars = 4;
+   
+   //   fLogger << kINFO << "rangestring " << fSeedRangeStringT << Endl;
+   //   fLogger << kINFO << "rangestring number ) " << fNPars << Endl;
+   
    TList* parList = Tools::ParseFormatLine( fSeedRangeStringT, ";" );
-//   if (parList->GetSize()*2 != fNPars) {
-//      fLogger << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
-//              << "the number of parameters: " << fNPars << " != ranges defined: " 
-//              << parList->GetSize() << "; the format of the \"ParRanges\" string "
-//              << "must be: \"(-1.2,3.4);(-2.3,4.55);...\", "
-//              << "where the numbers in \"(a,b)\" correspond to the a=min, b=max parameter ranges; "
-//              << "each parameter defined in the function string must have a corresponding rang."
-//              << Endl;
-//   }
+   //   if (parList->GetSize()*2 != fNPars) {
+   //      fLogger << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
+   //              << "the number of parameters: " << fNPars << " != ranges defined: " 
+   //              << parList->GetSize() << "; the format of the \"ParRanges\" string "
+   //              << "must be: \"(-1.2,3.4);(-2.3,4.55);...\", "
+   //              << "where the numbers in \"(a,b)\" correspond to the a=min, b=max parameter ranges; "
+   //              << "each parameter defined in the function string must have a corresponding rang."
+   //              << Endl;
+   //   }
 
    fParRange.resize( fNPars );
    for (Int_t ipar=0; ipar<fNPars; ipar++) fParRange[ipar] = 0;

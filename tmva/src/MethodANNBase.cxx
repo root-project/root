@@ -52,8 +52,8 @@ using std::vector;
 ClassImp(TMVA::MethodANNBase)
 
 //______________________________________________________________________________
-TMVA::MethodANNBase::MethodANNBase( TString jobName, TString methodTitle, DataSet& theData, 
-                                    TString theOption, TDirectory* theTargetDir )
+TMVA::MethodANNBase::MethodANNBase( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                    const TString& theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
@@ -67,7 +67,7 @@ TMVA::MethodANNBase::MethodANNBase( TString jobName, TString methodTitle, DataSe
 
 //______________________________________________________________________________
 TMVA::MethodANNBase::MethodANNBase( DataSet & theData, 
-                                    TString theWeightFile, TDirectory* theTargetDir )
+                                    const TString& theWeightFile, TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
 {
    // construct the Method from the weight file 
@@ -349,7 +349,7 @@ void TMVA::MethodANNBase::AddPreLinks(TNeuron* neuron, TObjArray* prevLayer)
 void TMVA::MethodANNBase::InitWeights()
 {
    // initialize the synapse weights randomly
-   PrintMessage("initializing weights");
+   PrintMessage("Initializing weights");
    
    // init synapse weights
    Int_t numSynapses = fSynapses->GetEntriesFast();
@@ -364,7 +364,7 @@ void TMVA::MethodANNBase::InitWeights()
 void TMVA::MethodANNBase::ForceWeights(vector<Double_t>* weights)
 {
    // force the synapse weights
-   PrintMessage("forcing weights");
+   PrintMessage("Forcing weights");
 
    Int_t numSynapses = fSynapses->GetEntriesFast();
    TSynapse* synapse;
@@ -426,7 +426,7 @@ void TMVA::MethodANNBase::WaitForKeyboard()
 {
    // wait for keyboard input, for debugging
    string dummy;
-   fLogger << kINFO << "***Type anything to continue (q to quit): ";
+   fLogger << kINFO << "*** Type anything to continue (q to quit): ";
    getline(cin, dummy);
    if (dummy == "q" || dummy == "Q") {
       PrintMessage( "quit" );
@@ -443,7 +443,7 @@ void TMVA::MethodANNBase::PrintNetwork()
    if (!Debug()) return;
 
    fLogger << Endl;
-   PrintMessage( "printing network " );
+   PrintMessage( "Printing network " );
    fLogger << kINFO << "-------------------------------------------------------------------" << Endl;
 
    TObjArray* curLayer;
@@ -599,7 +599,7 @@ const TMVA::Ranking* TMVA::MethodANNBase::CreateRanking()
 void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
 {
    // write histograms to file
-   PrintMessage(Form("write special histos to file: %s", BaseDir()->GetPath()), kTRUE);
+   PrintMessage(Form("Write special histos to file: %s", BaseDir()->GetPath()), kTRUE);
 
    //   BaseDir()->mkdir(GetName()+GetMethodName())->cd(); 
 

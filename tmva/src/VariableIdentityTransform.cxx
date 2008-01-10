@@ -24,6 +24,11 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Identity transformation of input variables                           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include "TMVA/VariableIdentityTransform.h"
 #include <iostream>
@@ -49,6 +54,22 @@ Bool_t TMVA::VariableIdentityTransform::PrepareTransformation( TTree* inputTree)
    CalcNorm( inputTree );
 
    return kTRUE;
+}
+
+//_______________________________________________________________________
+std::vector<TString>* TMVA::VariableIdentityTransform::GetTransformationStrings( Types::ESBType ) const
+{
+   // creates string with variable transformations applied (here, just untransformed variables)
+
+   std::vector<TString>* strVec = new std::vector<TString>;
+
+   // fill vector
+   for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) {
+      TString str( Variable(ivar).GetExpression() );
+      strVec->push_back( TString("[") + str + "]" );
+   }      
+
+   return strVec;
 }
 
 //_______________________________________________________________________

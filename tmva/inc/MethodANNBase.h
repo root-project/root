@@ -61,10 +61,10 @@ namespace TMVA {
    public:
       
       // constructors dictated by subclassing off of MethodBase
-      MethodANNBase( TString jobName, TString methodTitle, DataSet& theData, 
-                     TString theOption, TDirectory* theTargetDir );
+      MethodANNBase( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                     const TString& theOption, TDirectory* theTargetDir );
       
-      MethodANNBase( DataSet& theData, TString theWeightFile, 
+      MethodANNBase( DataSet& theData, const TString& theWeightFile, 
                      TDirectory* theTargetDir );
       
       virtual ~MethodANNBase();

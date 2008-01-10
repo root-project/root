@@ -42,6 +42,28 @@
  * (http://ttmva.sourceforge.net/LICENSE)                                         *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// An interface to calculate the "SeparationGain" for different         //
+// separation critiera used in various training algorithms              //
+//                                                                      //
+// There are two things: the Separation Index, and the Separation Gain  //
+// Separation Index:                                                    //
+// Measure of the "purity" of a sample. If all elements (events) in the //
+// sample belong to the same class (e.g. signal or backgr), than the    //
+// separation index is 0 (meaning 100% purity (or 0% purity as it is    //
+// symmetric. The index becomes maximal, for perfectly mixed samples    //
+// eg. purity=50% , N_signal = N_bkg                                    //
+//                                                                      //
+// Separation Gain:                                                     //
+// the measure of how the quality of separation of the sample increases //
+// by splitting the sample e.g. into a "left-node" and a "right-node"   //
+// (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) //
+// this is then the quality crition which is optimized for when trying  //
+// to increase the information in the system (making the best selection //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TMVA/SeparationBase.h"
 
 ClassImp(TMVA::SeparationBase)

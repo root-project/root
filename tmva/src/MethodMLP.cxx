@@ -53,8 +53,8 @@ using std::vector;
 ClassImp(TMVA::MethodMLP)
 
 //______________________________________________________________________________
-TMVA::MethodMLP::MethodMLP( TString jobName, TString methodTitle, DataSet& theData, 
-                            TString theOption, TDirectory* theTargetDir )
+TMVA::MethodMLP::MethodMLP( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                            const TString& theOption, TDirectory* theTargetDir )
    : MethodANNBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
@@ -74,7 +74,7 @@ TMVA::MethodMLP::MethodMLP( TString jobName, TString methodTitle, DataSet& theDa
 }
 
 //______________________________________________________________________________
-TMVA::MethodMLP::MethodMLP( DataSet& theData, TString theWeightFile, TDirectory* theTargetDir )
+TMVA::MethodMLP::MethodMLP( DataSet& theData, const TString& theWeightFile, TDirectory* theTargetDir )
    : MethodANNBase( theData, theWeightFile, theTargetDir ) 
 {
    // construct from a weight file -- most work is done by MethodANNBase constructor
@@ -457,6 +457,7 @@ void TMVA::MethodMLP::GeneticMinimize()
 //______________________________________________________________________________
 Double_t TMVA::MethodMLP::EstimatorFunction( std::vector<Double_t>& parameters)
 {
+   // interface to the estimate
    return ComputeEstimator( parameters );
 }
 
@@ -609,7 +610,7 @@ void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* 
    if (f < minf) minf = f;
    for (Int_t ipar=0; ipar<fNumberOfWeights; ipar++) fLogger << kVERBOSE << fitPars[ipar] << " ";
    fLogger << kVERBOSE << Endl;
-   fLogger << kVERBOSE << "***** new estimator: " << f << "  min: " << minf << " --> ncalls: " << nc << Endl;
+   fLogger << kVERBOSE << "***** New estimator: " << f << "  min: " << minf << " --> ncalls: " << nc << Endl;
 }
 
 #endif
@@ -617,6 +618,7 @@ void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* 
 //_______________________________________________________________________
 void TMVA::MethodMLP::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
+   // write specific classifier response
    MethodANNBase::MakeClassSpecific(fout, className);   
 }
 

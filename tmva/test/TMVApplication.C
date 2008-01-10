@@ -20,7 +20,7 @@ Bool_t Use_CutsGA          = 1;
 Bool_t Use_Likelihood      = 1;
 Bool_t Use_LikelihoodD     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
 Bool_t Use_LikelihoodPCA   = 1; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
-Bool_t Use_PDERS           = 1;
+Bool_t Use_PDERS           = 0;
 Bool_t Use_PDERSD          = 0;
 Bool_t Use_PDERSPCA        = 0;
 Bool_t Use_KNN             = 1;
@@ -37,6 +37,7 @@ Bool_t Use_SVM_Lin         = 0;
 Bool_t Use_BDT             = 1;
 Bool_t Use_BDTD            = 0;
 Bool_t Use_RuleFit         = 1;
+Bool_t Use_Plugin          = 0;
 // ---------------------------------------------------------------
 
 #include <vector>
@@ -45,6 +46,8 @@ void TMVApplication( TString myMethodList = "" )
 {
    cout << endl;
    cout << "==> Start TMVApplication" << endl;
+   
+   TList* mlist = 0;
 
    if (myMethodList != "") {
       Use_CutsGA = Use_CutsD = Use_Cuts
@@ -55,9 +58,10 @@ void TMVApplication( TString myMethodList = "" )
          = Use_HMatrix = Use_Fisher = Use_BDTD = Use_BDT = Use_RuleFit 
          = Use_SVM_Gauss = Use_SVM_Poly = Use_SVM_Lin
          = Use_FDA_GA = Use_FDA_MT
+         = Use_Plugin
          = 0;
 
-      TList* mlist = TMVA::Tools::ParseFormatLine( myMethodList, " :," );
+      mlist = TMVA::Tools::ParseFormatLine( myMethodList, " :," );
 
       if (mlist->FindObject( "Cuts"          ) != 0) Use_Cuts          = 1; 
       if (mlist->FindObject( "CutsD"         ) != 0) Use_CutsD         = 1; 
@@ -82,8 +86,7 @@ void TMVApplication( TString myMethodList = "" )
       if (mlist->FindObject( "SVM_Lin"       ) != 0) Use_SVM_Lin       = 1; 
       if (mlist->FindObject( "FDA_MT"        ) != 0) Use_FDA_MT        = 1; 
       if (mlist->FindObject( "FDA_GA"        ) != 0) Use_FDA_GA        = 1; 
-
-      delete mlist;
+      if (mlist->FindObject( "Plugin"        ) != 0) Use_Plugin        = 1; 
    }
 
    //
@@ -130,13 +133,39 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_SVM_Lin)       reader->BookMVA( "SVM_Lin method",       dir + prefix + "_SVM_Lin.weights.txt" );
    if (Use_FDA_MT)        reader->BookMVA( "FDA_MT method",        dir + prefix + "_FDA_MT.weights.txt" );
    if (Use_FDA_GA)        reader->BookMVA( "FDA_GA method",        dir + prefix + "_FDA_GA.weights.txt" );
-  
+   
+   // example how to use your own method as plugin
+   if (Use_Plugin) {
+      // the weight file contains a line 
+      // Method         : MethodName::InstanceName
+
+      // if MethodName is not a known TMVA method, it is assumed to be
+      // a user implemented method which has to be loaded via the
+      // plugin mechanism
+      
+      // for user implemented methods the line in the weight file can be
+      // Method         : PluginName::InstanceName
+      // where PluginName can be anything
+
+      // before usage the plugin has to be defined, which can happen
+      // either through the following line in .rootrc:
+      // # plugin handler          plugin       class            library        constructor format
+      // Plugin.TMVA@@MethodBase:  PluginName   MethodClassName  UserPackage    "MethodName(DataSet&,TString)"
+      //  
+      // or by telling the global plugin manager directly
+      gPluginMgr->AddHandler("TMVA@@MethodBase", "PluginName", "MethodClassName", "UserPackage", "MethodName(DataSet&,TString)");
+      // the class is then looked for in libUserPackage.so
+
+      // now the method can be booked like any other
+      reader->BookMVA( "User method",         dir + prefix + "_User.weights.txt" );
+   }
+
    // book output histograms
    UInt_t nbin = 100;
-   TH1F *histLk, *histLkD, *histLkPCA, *histPD, *histPDD, *histPDPCA, *histKNN, *histHm, *histFi;
-   TH1F *histNn, *histNnC, *histNnT, *histBdt, *histBdtD, *histRf;
-   TH1F *histSVMG, *histSVMP, *histSVML;
-   TH1F *histFDAMT, *histFDAGA;
+   TH1F
+      *histLk(0), *histLkD(0), *histLkPCA(0), *histPD(0), *histPDD(0), *histPDPCA(0), *histKNN(0), *histHm(0), *histFi(0),
+      *histNn(0), *histNnC(0), *histNnT(0), *histBdt(0), *histBdtD(0), *histRf(0), *histSVMG(0), *histSVMP(0), *histSVML(0),
+      *histFDAMT(0), *histFDAGA(0), *histPBdt(0);
 
    if (Use_Likelihood)    histLk    = new TH1F( "MVA_Likelihood",    "MVA_Likelihood",    nbin,  0, 1 );
    if (Use_LikelihoodD)   histLkD   = new TH1F( "MVA_LikelihoodD",   "MVA_LikelihoodD",   nbin,  0.000001, 0.9999 );
@@ -158,9 +187,10 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_SVM_Lin)       histSVML  = new TH1F( "MVA_SVM_Lin",       "MVA_SVM_Lin",       nbin, 0.0, 1.0 );
    if (Use_FDA_MT)        histFDAMT = new TH1F( "MVA_FDA_MT",        "MVA_FDA_MT",        nbin, -2.0, 3.0 );
    if (Use_FDA_GA)        histFDAGA = new TH1F( "MVA_FDA_GA",        "MVA_FDA_GA",        nbin, -2.0, 3.0 );
+   if (Use_Plugin)        histPBdt  = new TH1F( "MVA_PBDT",          "MVA_BDT",           nbin, -0.8, 0.8 );
 
    // book examsple histogram for probability (the other methods are done similarly)
-   TH1F *probHistFi, *rarityHistFi;
+   TH1F *probHistFi(0), *rarityHistFi(0);
    if (Use_Fisher) {
       probHistFi   = new TH1F( "PROBA_MVA_Fisher",  "PROBA_MVA_Fisher",  nbin, 0, 1 );
       rarityHistFi = new TH1F( "RARITY_MVA_Fisher", "RARITY_MVA_Fisher", nbin, 0, 1 );
@@ -260,6 +290,7 @@ void TMVApplication( TString myMethodList = "" )
       if (Use_SVM_Lin      )   histSVML  ->Fill( reader->EvaluateMVA( "SVM_Lin method"       ) );
       if (Use_FDA_MT       )   histFDAMT ->Fill( reader->EvaluateMVA( "FDA_MT method"        ) );
       if (Use_FDA_GA       )   histFDAGA ->Fill( reader->EvaluateMVA( "FDA_GA method"        ) );
+      if (Use_Plugin       )   histPBdt  ->Fill( reader->EvaluateMVA( "P_BDT method"         ) );
 
       // retrieve probability instead of MVA output
       if (Use_Fisher       )   {
@@ -321,6 +352,7 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_SVM_Lin      )   histSVML  ->Write();
    if (Use_FDA_MT       )   histFDAMT ->Write();
    if (Use_FDA_GA       )   histFDAGA ->Write();
+   if (Use_Plugin       )   histPBdt  ->Write();
 
    // write also probability hists
    if (Use_Fisher) { probHistFi->Write(); rarityHistFi->Write(); }
@@ -328,6 +360,7 @@ void TMVApplication( TString myMethodList = "" )
 
    cout << "--- Created root file: \"TMVApp.root\" containing the MVA output histograms" << endl;
   
+   delete mlist;
    delete reader;
     
    cout << "==> TMVApplication is done!" << endl << endl;

@@ -58,7 +58,7 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
       h2->Draw("textsame");  // add text
 
       // add comment    
-      TText* t = new TText( 0.53, 0.88, "linear correlation coefficients in %" );
+      TText* t = new TText( 0.53, 0.88, "Linear correlation coefficients in %" );
       t->SetNDC();
       t->SetTextSize( 0.026 );
       t->AppendPad();    

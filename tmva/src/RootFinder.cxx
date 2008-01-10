@@ -27,6 +27,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+/*
+ Root finding using Brents algorithm (translated from CERNLIB function
+ RZERO)
+*/
+//////////////////////////////////////////////////////////////////////////
+
 #include "TMVA/RootFinder.h"
 #include "Riostream.h"
 #include "TMath.h"

@@ -99,14 +99,14 @@ namespace TMVA {
 
    public:
 
-      MethodCFMlpANN( TString jobName,
-                      TString methodTitle, 
+      MethodCFMlpANN( const TString& jobName,
+                      const TString& methodTitle, 
                       DataSet& theData,
-                      TString theOption = "3000:N-1:N-2",
+                      const TString& theOption = "3000:N-1:N-2",
                       TDirectory* theTargetDir = 0 );
 
       MethodCFMlpANN( DataSet& theData, 
-                      TString theWeightFile,  
+                      const TString& theWeightFile,  
                       TDirectory* theTargetDir = NULL );
 
       virtual ~MethodCFMlpANN( void );

@@ -196,10 +196,10 @@ namespace TMVA {
       TDirectory*                fBaseRootDir;      //! the base directory, usually the root dir of a ROOT-file
 
       // input trees
-      std::vector<TreeInfo>      fTreeCollection[2]; //! list of signal and background trees/weights
+      std::vector<TMVA::TreeInfo>      fTreeCollection[2]; //! list of signal and background trees/weights
 
       // expressions/formulas
-      std::vector<VariableInfo>  fVariables;        //! list of variable expressions/internal names
+      std::vector<TMVA::VariableInfo>  fVariables;        //! list of variable expressions/internal names
       std::vector<TString>       fVariableStrings;  //! list of variable expressions
       std::vector<TTreeFormula*> fInputVarFormulas; // local formulas of the same
       TCut                       fCutSig;           // the pretraining cut
@@ -215,7 +215,7 @@ namespace TMVA {
 
       TMatrixD*                  fDecorrMatrix[2];     //! Decorrelation matrix [signal/background]
 
-      std::map<Types::EVariableTransform,VariableTransformBase*> fVarTransforms; //! Registered variable transformations
+      std::map<Types::EVariableTransform,TMVA::VariableTransformBase*> fVarTransforms; //! Registered variable transformations
       
       // verbosity
       Bool_t                    fVerbose;           //! Verbosity

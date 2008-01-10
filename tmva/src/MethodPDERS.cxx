@@ -27,8 +27,8 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-// Begin_Html
-/*
+/* Begin_Html
+
   This is a generalization of the above Likelihood methods to <i>N</i><sub>var</sub>
   dimensions, where <i>N</i><sub>var</sub> is the number of input variables
   used in the MVA. If the multi-dimensional probability density functions 
@@ -61,8 +61,8 @@
   a user-defined range.</li>
   </ul><p></p>
   The adaptive range search is used by default.
-  // End_Html
-  */
+
+End_Html */
 //_______________________________________________________________________
 
 #include <assert.h>
@@ -87,8 +87,8 @@ TMVA::MethodPDERS* TMVA::MethodPDERS::fgThisPDERS = NULL;
 ClassImp(TMVA::MethodPDERS)
 
 //_______________________________________________________________________
-TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& theData, 
-                                TString theOption, TDirectory* theTargetDir )
+TMVA::MethodPDERS::MethodPDERS( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor for the PDERS method
@@ -107,7 +107,7 @@ TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& t
 
 //_______________________________________________________________________
 TMVA::MethodPDERS::MethodPDERS( DataSet& theData,
-                                TString theWeightFile,
+                                const TString& theWeightFile,
                                 TDirectory* theTargetDir )
    : MethodBase( theData, theWeightFile, theTargetDir )
 {

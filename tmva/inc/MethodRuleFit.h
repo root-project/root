@@ -71,14 +71,14 @@ namespace TMVA {
 
    public:
 
-      MethodRuleFit( TString jobName,
-                     TString methodTitle, 
+      MethodRuleFit( const TString& jobName,
+                     const TString& methodTitle, 
                      DataSet& theData,
-                     TString theOption = "",
+                     const TString& theOption = "",
                      TDirectory* theTargetDir = 0 );
 
       MethodRuleFit( DataSet& theData,
-                     TString theWeightFile,
+                     const TString& theWeightFile,
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodRuleFit( void );

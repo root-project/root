@@ -8,7 +8,6 @@
 //        - use of TMVA plotting TStyle
 void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 {
-   cout << "--- probas.C" << endl;
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
@@ -40,7 +39,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    TList methods;
    UInt_t nmethods = TMVAGlob::GetListOfMethods( methods );
    if (nmethods==0) {
-      cout << "No methods found!" << endl;
+      cout << "--- Probas.C: no methods found!" << endl;
       return;
    }
    TIter next(&methods);
@@ -55,7 +54,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
       TString methodName;
       TMVAGlob::GetMethodName(methodName,key);
       if (ni==0) {
-         cout << "No titles found for " << methodName << endl;
+         cout << "+++ No titles found for classifier: " << methodName << endl;
          return;
       }
       TIter nextTitle(&titles);
@@ -66,7 +65,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
          TString instName = instkey->GetName();
          TList h1hists;
          UInt_t nhists = TMVAGlob::GetListOfKeys( h1hists, "TH1", instDir );
-         if (nhists==0) cout << "No hists found!" << endl;
+         if (nhists==0) cout << "*** No histograms found!" << endl;
          TIter nextInDir(&h1hists);
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,instDir);
@@ -84,7 +83,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                bgd = (TH1*)instDir->Get( hnameB );
 
                if (sig == 0 || bgd == 0) {
-                  cout << "--- probas.C: big troubles in probas.... histogram: " << hname << " not found" << endl;
+                  cout << "*** probas.C: big troubles in probas.... histogram: " << hname << " not found" << endl;
                   return;
                }
 
@@ -100,7 +99,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                   }
                }
                if ((sigF == NULL || bkgF == NULL) &&!hname.Contains("hist") ) {
-                  cout << "--- probas.C: big troubles - did not found histogram " << hspline.Data() << " " 
+                  cout << "*** probas.C: big troubles - did not found histogram " << hspline.Data() << " " 
                        << sigF << " " << bkgF << endl;
                   return;
                }
@@ -128,8 +127,6 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             
                      // frame limits (choose judicuous x range)
                      Float_t nrms = 4;
-                     cout << "--- mean and RMS (S): " << sig->GetMean() << ", " << sig->GetRMS() << endl;
-                     cout << "--- mean and RMS (B): " << bgd->GetMean() << ", " << bgd->GetRMS() << endl;
                      Float_t xmin = TMath::Max( TMath::Min(sig->GetMean() - nrms*sig->GetRMS(), 
                                                            bgd->GetMean() - nrms*bgd->GetRMS() ),
                                                 sig->GetXaxis()->GetXmin() );
@@ -143,7 +140,7 @@ void probas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             
                      // build a frame
                      Int_t nb = 500;
-                     TH2F* frame = new TH2F( TString("frame") + sig->GetName(), sig->GetTitle(), 
+                     TH2F* frame = new TH2F( TString("frame") + sig->GetName() + "_proba", sig->GetTitle(), 
                                              nb, xmin, xmax, nb, ymin, ymax );
                      frame->GetXaxis()->SetTitle(methodTitle);
                      frame->GetYaxis()->SetTitle("Normalized");

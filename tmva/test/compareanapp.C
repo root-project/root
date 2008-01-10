@@ -86,8 +86,6 @@ void compareanapp( TString finAn = "TMVA.root", TString finApp = "TMVApp.root",
          
          // frame limits (choose judicuous x range)
          Float_t nrms = 4;
-         cout << "--- mean and RMS (S): " << sig->GetMean() << ", " << sig->GetRMS() << endl;
-         cout << "--- mean and RMS (B): " << bgd->GetMean() << ", " << bgd->GetRMS() << endl;
          Float_t xmin = TMath::Max( TMath::Min(sig->GetMean() - nrms*sig->GetRMS(), 
                                                bgd->GetMean() - nrms*bgd->GetRMS() ),
                                     sig->GetXaxis()->GetXmin() );

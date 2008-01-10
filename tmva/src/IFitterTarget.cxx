@@ -24,9 +24,12 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// interface for a fitter "target"
-// defines interface to the estimator function
+//
+// IFitterTarget
+//
+// Interface for a fitter 'target'. Defines interface to the estimator
+// function
+//
 //_______________________________________________________________________
 
 #include "TMVA/IFitterTarget.h"
@@ -38,5 +41,3 @@ TMVA::IFitterTarget::IFitterTarget()
 {
    // constructor
 }            
-
-

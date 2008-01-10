@@ -24,6 +24,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Decorrelation of input variables                                     //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #include "Riostream.h"
 #include "TVectorF.h"
 #include "TVectorD.h"
@@ -73,6 +79,30 @@ Bool_t TMVA::VariableDecorrTransform::PrepareTransformation( TTree* inputTree )
 }
 
 //_______________________________________________________________________
+std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( Types::ESBType type ) const
+{
+   // creates string with variable transformations applied
+   TMatrixD* m = type==Types::kSignal ? fDecorrMatrix[Types::kSignal] : fDecorrMatrix[Types::kBackground];
+
+   const Int_t nvar = GetNVariables();
+   std::vector<TString>* strVec = new std::vector<TString>;
+
+   // fill vector
+   for (Int_t ivar=0; ivar<nvar; ivar++) {
+      TString str( "" );
+      for (Int_t jvar=0; jvar<nvar; jvar++) {
+         if (jvar > 0) str += ((*m)(ivar,jvar) > 0) ? " + " : " - ";
+         str += Form( "%10.5g*%s", 
+                      TMath::Abs((*m)(ivar,jvar)), 
+                      (TString("[") + Variable(jvar).GetExpression() + "]").Data() );
+      }
+      strVec->push_back( str );
+   }      
+
+   return strVec;
+}
+
+//_______________________________________________________________________
 void TMVA::VariableDecorrTransform::ApplyTransformation( Types::ESBType type ) const
 {
    // apply the decorrelation transformation
@@ -80,8 +110,8 @@ void TMVA::VariableDecorrTransform::ApplyTransformation( Types::ESBType type ) c
 
    TMatrixD* m = type==Types::kSignal ? fDecorrMatrix[Types::kSignal] : fDecorrMatrix[Types::kBackground];
    if (m == 0)
-      fLogger << kFATAL << "Transformation matrix for " << (Types::kSignal?"signal":"background") << " is not defined" 
-              << Endl;
+      fLogger << kFATAL << "Transformation matrix for " << (Types::kSignal?"signal":"background") 
+              << " is not defined" << Endl;
    
    // transformation to decorrelate the variables
    const Int_t nvar = GetNVariables();

@@ -32,8 +32,7 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-// Begin_Html
-/*
+/* Begin_Html
   Fisher and Mahalanobis Discriminants (Linear Discriminant Analysis) 
   
   <p>
@@ -99,14 +98,15 @@
   </li>
   </ul>      
   The corresponding numbers are printed on standard output.
-*/
-// End_Html
+  End_Html */
 //_______________________________________________________________________
 
 #include <iomanip>
-
 #include <cassert>
+
 #include "TMath.h"
+#include "Riostream.h"
+
 #include "TMVA/MethodFisher.h"
 #include "TMVA/Tools.h"
 #include "TMatrix.h"
@@ -114,11 +114,9 @@
 
 ClassImp(TMVA::MethodFisher)
 
-using std::endl;
-
 //_______________________________________________________________________
-TMVA::MethodFisher::MethodFisher( TString jobName, TString methodTitle, DataSet& theData, 
-                                  TString theOption, TDirectory* theTargetDir )
+TMVA::MethodFisher::MethodFisher( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                  const TString& theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor for the "Fisher" 
@@ -135,7 +133,7 @@ TMVA::MethodFisher::MethodFisher( TString jobName, TString methodTitle, DataSet&
 
 //_______________________________________________________________________
 TMVA::MethodFisher::MethodFisher( DataSet& theData, 
-                                  TString theWeightFile,  
+                                  const TString& theWeightFile,  
                                   TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir )
 {
@@ -508,6 +506,10 @@ void TMVA::MethodFisher::PrintCoefficients( void )
    // display Fisher coefficients and discriminating power for each variable
    // check maximum length of variable name
    fLogger << kINFO << "Results for Fisher coefficients:" << Endl;
+   if (GetVariableTransform() != Types::kNone) {
+      fLogger << kINFO << "NOTE: The coefficients must be applied to TRANFORMED variables" << Endl;
+      fLogger << kINFO << "      Name of the transformation: \"" << GetVarTransform().GetName() << "\"" << Endl;
+   }
    std::vector<TString>  vars;
    std::vector<Double_t> coeffs;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -517,6 +519,29 @@ void TMVA::MethodFisher::PrintCoefficients( void )
    vars  .push_back( "(offset)" );
    coeffs.push_back( fF0 );
    TMVA::Tools::FormattedOutput( coeffs, vars, "Variable" , "Coefficient", fLogger );   
+
+   if (IsNormalised()) {
+      fLogger << kINFO << "NOTE: You have chosen to use the \"Normalise\" booking option. Hence, the" << Endl;
+      fLogger << kINFO << "      coefficients must be applied to NORMALISED (') variables as follows:" << Endl;
+      Int_t maxL = 0;
+      for (Int_t ivar=0; ivar<GetNvar(); ivar++) if (GetInputExp(ivar).Length() > maxL) maxL = GetInputExp(ivar).Length();
+
+      // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
+      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+         fLogger << kINFO 
+                 << setw(maxL+9) << TString("[") + GetInputExp(ivar) + "]' = 2*(" 
+                 << setw(maxL+2) << TString("[") + GetInputExp(ivar) + "]"
+                 << setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
+                 << setw(6) << TMath::Abs(GetXmin(ivar)) << setw(3) << ")/"
+                 << setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
+                 << setw(3) << " - 1"
+                 << Endl;
+      }
+      fLogger << kINFO << "The TMVA Reader will properly account for this normalisation, but if the" << Endl;
+      fLogger << kINFO << "Fisher classifier is applied outside the Reader, the transformation must be" << Endl;
+      fLogger << kINFO << "implemented -- or the \"Normalise\" option is removed and Fisher retrained." << Endl;
+      fLogger << kINFO << Endl;
+   }   
 }
   
 //_______________________________________________________________________

@@ -26,6 +26,14 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Config                                                               //
+//                                                                      //
+// Singleton class for global configuration settings used by TMVA       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TMVA/Config.h"
 
 ClassImp(TMVA::Config)
@@ -57,4 +65,3 @@ TMVA::Config::~Config()
 {
    // destructor
 }
-

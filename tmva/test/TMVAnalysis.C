@@ -4,7 +4,7 @@
  * Package   : TMVA                                                               *
  * Root Macro: TMVAnalysis                                                        *
  *                                                                                *
- * This macro provides examples for the training and testing of all the           *
+ * This macro provides examples for the training and testing of the               *
  * TMVA classifiers.                                                              *
  *                                                                                *
  * As input data is used a toy-MC sample consisting of four Gaussian-distributed  *
@@ -16,6 +16,7 @@
  *    root -l TMVAnalysis.C\(\"Fisher,Likelihood\"\)                              *
  *                                                                                *
  * (note that the backslashes are mandatory)                                      *
+ * If no method given, a default set is used.                                     *
  *                                                                                *
  * The output file "TMVA.root" can be analysed with the use of dedicated          *
  * macros (simply say: root -l <macro.C>), which can be conveniently              *
@@ -35,6 +36,7 @@
 // choose MVA methods to be trained + tested
 Bool_t Use_Cuts            = 0;
 Bool_t Use_CutsD           = 0;
+Bool_t Use_CutsPCA         = 0;
 Bool_t Use_CutsGA          = 1;
 // ---
 Bool_t Use_Likelihood      = 1;
@@ -72,6 +74,8 @@ Bool_t Use_RuleFitJF       = 0;
 Bool_t Use_SVM_Gauss       = 1;
 Bool_t Use_SVM_Poly        = 0;
 Bool_t Use_SVM_Lin         = 0;
+
+Bool_t Use_Plugin          = 0;
 // ---------------------------------------------------------------
 
 // read input data file with ascii format (otherwise ROOT) ?
@@ -87,10 +91,17 @@ void TMVAnalysis( TString myMethodList = "" )
    //
    // mylinux~> root -l TMVAnalysis.C\(\"myMethod1,myMethod2,myMethod3\"\)
    //
-   TList* mlist = TMVA::Tools::ParseFormatLine( myMethodList, " :," );
+   // if you like to use a method via the plugin mechanism, we recommend using
+   // 
+   // mylinux~> root -l TMVAnalysis.C\(\"P_myMethod\"\)
+   // (an example is given for using the BDT as plugin (see below),
+   // but of course the real application is when you write your own
+   // method based)
+   //
+   TList* mlist = 0;
 
-   if (mlist->GetSize()>0) {
-      Use_CutsGA = Use_CutsD = Use_Cuts
+   if (myMethodList != "") {
+      Use_CutsGA = Use_CutsD = Use_CutsPCA = Use_Cuts
          = Use_LikelihoodKDE = Use_LikelihoodMIX = Use_LikelihoodPCA = Use_LikelihoodD = Use_Likelihood
          = Use_PDERSPCA = Use_PDERSD = Use_PDERS = Use_PDERSkNN
          = Use_KNN
@@ -99,10 +110,14 @@ void TMVAnalysis( TString myMethodList = "" )
          = Use_RuleFit = Use_RuleFitJF
          = Use_SVM_Gauss = Use_SVM_Poly = Use_SVM_Lin 
          = Use_FDA_GA = Use_FDA_MC = Use_FDA_SA = Use_FDA_MT = Use_FDA_GAMT = Use_FDA_MCMT 
+         = Use_Plugin
          = 0;
+
+      mlist = TMVA::Tools::ParseFormatLine( myMethodList, " :," );
 
       if (mlist->FindObject( "Cuts"          ) != 0) Use_Cuts          = 1; 
       if (mlist->FindObject( "CutsD"         ) != 0) Use_CutsD         = 1; 
+      if (mlist->FindObject( "CutsPCA"       ) != 0) Use_CutsPCA       = 1; 
       if (mlist->FindObject( "CutsGA"        ) != 0) Use_CutsGA        = 1; 
       if (mlist->FindObject( "Likelihood"    ) != 0) Use_Likelihood    = 1; 
       if (mlist->FindObject( "LikelihoodD"   ) != 0) Use_LikelihoodD   = 1; 
@@ -132,8 +147,13 @@ void TMVAnalysis( TString myMethodList = "" )
       if (mlist->FindObject( "FDA_MT"        ) != 0) Use_FDA_MT        = 1; 
       if (mlist->FindObject( "FDA_GAMT"      ) != 0) Use_FDA_GAMT      = 1; 
       if (mlist->FindObject( "FDA_MCMT"      ) != 0) Use_FDA_MCMT      = 1; 
-
-      delete mlist;
+      
+      TListIter mIt(mlist);
+      TObjString *os;
+      while( (os = (TObjString*) mIt()) && !Use_Plugin ) {
+         TString s(os->GetString());
+         if(s.BeginsWith("P_")) Use_Plugin=1;
+      }
    }
   
    std::cout << "Start Test TMVAnalysis" << std::endl
@@ -247,9 +267,13 @@ void TMVAnalysis( TString myMethodList = "" )
      factory->BookMethod( TMVA::Types::kCuts, "CutsD", 
                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=Decorrelate" );
 
+   if (Use_CutsPCA) 
+     factory->BookMethod( TMVA::Types::kCuts, "CutsPCA", 
+                          "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=PCA" );
+
    if (Use_CutsGA)
      factory->BookMethod( TMVA::Types::kCuts, "CutsGA",
-                         "!H:!V:FitMethod=GA:EffSel:Steps=30:Cycles=3:PopSize=100:SC_steps=10:SC_rate=5:SC_factor=0.95:VarProp=FSmart" );
+                         "H:!V:FitMethod=GA:EffSel:Steps=30:Cycles=3:PopSize=100:SC_steps=10:SC_rate=5:SC_factor=0.95:VarProp=FSmart" );
    
    // Likelihood
    if (Use_Likelihood) 
@@ -307,7 +331,7 @@ void TMVAnalysis( TString myMethodList = "" )
    // Fisher discriminant
    if (Use_Fisher)
       factory->BookMethod( TMVA::Types::kFisher, "Fisher", 
-                           "H:!V:Normalise:CreateMVAPdfs:Fisher:NbinsMVAPdf=50:NsmoothMVAPdf=1" );    
+                           "H:!V:!Normalise:CreateMVAPdfs:Fisher:NbinsMVAPdf=50:NsmoothMVAPdf=1" );
 
    // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit or GA
    if (Use_FDA_MC) 
@@ -373,6 +397,30 @@ void TMVAnalysis( TString myMethodList = "" )
    if (Use_RuleFitJF)
       factory->BookMethod( TMVA::Types::kRuleFit, "RuleFitJF",
                            "!V:RuleFitModule=RFFriedman:Model=ModRuleLinear:GDStep=0.01:GDNSteps=10000:GDErrScale=1.1:RFNendnodes=4" );
+ 
+
+   // As an example how to use the ROOT plugin mechanism, book BDT via
+   // plugin mechanism
+   if (Use_Plugin && mlist!=0) {
+      TListIter mIt(mlist);
+      TObjString *os;
+      while( (os = (TObjString*) mIt()) ) {
+         TString s(os->GetString());
+         if(! s.BeginsWith("P_")) continue;
+         s = s(2,s.Length());
+         //
+         // first the plugin has to be defined, which can happen either through the following line in the local or global .rootrc:
+         //
+         // # plugin handler          plugin name(regexp) class to be instanciated library        constructor format
+         // Plugin.TMVA@@MethodBase:  ^BDT                TMVA::MethodBDT          TMVA.1         "MethodBDT(TString,TString,DataSet&,TString)"
+         // 
+         // or by telling the global plugin manager directly
+         gPluginMgr->AddHandler("TMVA@@MethodBase", "BDT", "TMVA::MethodBDT", "TMVA.1", "MethodBDT(TString,TString,DataSet&,TString)");
+         if(s=="BDT")
+            factory->BookMethod( TMVA::Types::kPlugins, "BDT",
+                                 "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5" );
+      }
+   }
 
    // ---- Now you can tell the factory to train, test, and evaluate the MVAs
 
@@ -393,7 +441,7 @@ void TMVAnalysis( TString myMethodList = "" )
    std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
    std::cout << "==> TMVAnalysis is done!" << std::endl;      
 
-   // Clean up
+   delete mlist;
    delete factory;
 
    // Launch the GUI for the root macros

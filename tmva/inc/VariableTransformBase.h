@@ -32,14 +32,13 @@
 //                                                                      //
 // VariableTransformBase                                                //
 //                                                                      //
-// Linear interpolation class                                           //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
 #include "TTree.h"
 #include "TH1.h"
 #include "TDirectory.h"
+#include "TString.h"
 
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
@@ -80,8 +79,12 @@ namespace TMVA {
          return *fEvent; 
       }
       TMVA::Event& GetEventRaw()      const { 
-         if (fEventRaw==0) fEventRaw = new TMVA::Event(fVariables); return *fEventRaw; 
+         if (fEventRaw==0) fEventRaw = new TMVA::Event(fVariables); 
+         return *fEventRaw; 
       }
+
+      // provides string vector describing explicit transformation
+      virtual std::vector<TString>* GetTransformationStrings( Types::ESBType type = Types::kMaxSBType ) const = 0;
 
       void SetUseSignalTransform( Bool_t e=kTRUE) { fUseSignalTransform = e; }
 

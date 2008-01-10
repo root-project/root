@@ -80,16 +80,16 @@ namespace TMVA {
       enum EWeightFileType { kROOT=0, kTEXT };
       
       // default constructur
-      MethodBase( TString jobName,
-                  TString methodTitle, 
+      MethodBase( const TString& jobName,
+                  const TString& methodTitle, 
                   DataSet& theData,
-                  TString theOption = "", 
+                  const TString& theOption = "", 
                   TDirectory* theBaseDir = 0 );
       
       // constructor used for Testing + Application of the MVA, only (no training), 
       // using given weight file
       MethodBase( DataSet& theData,
-                  TString weightFile, 
+                  const TString& weightFile, 
                   TDirectory* theBaseDir = 0 );
 
       // default destructur

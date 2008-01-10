@@ -26,6 +26,15 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Event
+//
+// Storage class for an event. It is used by all TMVA methods
+// during the training. Events are collected in Dataset
+//
+//////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TMVA_Event
 #define ROOT_TMVA_Event
 
@@ -33,9 +42,6 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-// #ifndef ROOT_TMVA_MsgLogger
-// #include "TMVA/MsgLogger.h"
-// #endif
 #ifndef ROOT_TMVA_VariableInfo
 #include "TMVA/VariableInfo.h"
 #endif

@@ -34,8 +34,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// SeedDistance                                                          //
-//                                                                      //
+// SeedDistance                                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +60,7 @@ namespace TMVA {
 
    private:
 
-      ClassDef(SeedDistance,0) // 
+      ClassDef(SeedDistance,0) // Seed and metric storage 
    };
 
 } // namespace TMVA

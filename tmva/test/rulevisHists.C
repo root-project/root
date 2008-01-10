@@ -34,7 +34,6 @@ void rulevisHists( TString fin = "TMVA.root", TMVAGlob::TypeOfPlot type = TMVAGl
    TKey *rfkey;
    while ((rfkey = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
       rfdir = (TDirectory *)rfkey->ReadObj();
-      cout << "Plotting title: " << rfdir->GetName() << endl;
       rulevisHists( rfdir, vardir, corrdir, type );
    }
 }

@@ -26,6 +26,14 @@
 #ifndef ROOT_TMVA_KNN_ModulekNN
 #define ROOT_TMVA_KNN_ModulekNN
 
+//______________________________________________________________________
+/*
+  kNN::Event describes point in input variable vector-space, with
+  additional functionality like distance between points
+*/
+//______________________________________________________________________
+
+
 // C++
 #include <cassert>
 #include <iosfwd>

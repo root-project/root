@@ -24,7 +24,8 @@
 
 //_______________________________________________________________________
 //                                                                      
-// SeedDistance
+// Class to keep a list of seeds together with a metric. The distance
+// of any given point to all seeds can be calculated.
 //
 //_______________________________________________________________________
 

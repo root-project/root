@@ -55,14 +55,14 @@ namespace TMVA
    {
    public:
 
-      MethodKNN(TString jobName, 
-                TString methodTitle, 
+      MethodKNN(const TString& jobName, 
+                const TString& methodTitle, 
                 DataSet& theData,
-                TString theOption = "KNN",
+                const TString& theOption = "KNN",
                 TDirectory* theTargetDir = NULL);
 
       MethodKNN(DataSet& theData, 
-                TString theWeightFile,  
+                const TString& theWeightFile,  
                 TDirectory* theTargetDir = NULL);
       
       virtual ~MethodKNN( void );
@@ -123,7 +123,7 @@ namespace TMVA
 
       kNN::EventVec fEvent;   // (untouched) events used for learning
 
-      ClassDef(MethodKNN,0)
+      ClassDef(MethodKNN,0) // k Nearest Neighbour classifier
    };
 
 } // namespace TMVA

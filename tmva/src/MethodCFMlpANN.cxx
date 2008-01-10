@@ -27,10 +27,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Begin_Html
-/*
+//_______________________________________________________________________                                                                      
+//
+// MethodCFMlpANN
+/* Begin_Html
   Interface to Clermond-Ferrand artificial neural network 
 
   <p>
@@ -59,8 +59,8 @@
   sigmoid.  <br>
 
   The learning method used by the CFMlpANN is only stochastic.
-*/
-// End_Html
+
+End_Html */
 //_______________________________________________________________________
 
 #include <iostream>
@@ -84,8 +84,8 @@ namespace TMVA {
 TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::fgThis = 0;
 
 //_______________________________________________________________________
-TMVA::MethodCFMlpANN::MethodCFMlpANN( TString jobName, TString methodTitle, DataSet& theData, 
-                                      TString theOption, TDirectory* theTargetDir  )
+TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                      const TString& theOption, TDirectory* theTargetDir  )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir  ),
      fNodes(0),
      fYNN(0)
@@ -159,7 +159,7 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( TString jobName, TString methodTitle, Data
 
 //_______________________________________________________________________
 TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSet & theData, 
-                                      TString theWeightFile,  
+                                      const TString& theWeightFile,  
                                       TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
    , fNodes(0)

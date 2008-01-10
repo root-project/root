@@ -36,8 +36,7 @@
 ClassImp(TMVA::MethodHMatrix)
 
 //_______________________________________________________________________
-//Begin_Html                                                                      
-/*
+/* Begin_Html                                                                      
   H-Matrix method, which is implemented as a simple comparison of      
   chi-squared estimators for signal and background, taking into        
   account the linear correlations between the input variables          
@@ -57,14 +56,14 @@ ClassImp(TMVA::MethodHMatrix)
   TMVA then uses as normalised analyser for event (<i>i</i>) the ratio:
   (<i>&chi;<sub>S</sub>(i)<sup>2</sup> &minus; &chi;<sub>B</sub><sup>2</sup>(i)</i>)
   (<i>&chi;<sub>S</sub><sup>2</sup>(i) + &chi;<sub>B</sub><sup>2</sup>(i)</i>).
-*/
-//End_Html
+
+End_Html */
 //_______________________________________________________________________
  
 
 //_______________________________________________________________________
-TMVA::MethodHMatrix::MethodHMatrix( TString jobName, TString methodTitle, DataSet& theData, 
-                                    TString theOption, TDirectory* theTargetDir )
+TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                    const TString& theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor for the H-Matrix method
@@ -76,7 +75,7 @@ TMVA::MethodHMatrix::MethodHMatrix( TString jobName, TString methodTitle, DataSe
 
 //_______________________________________________________________________
 TMVA::MethodHMatrix::MethodHMatrix( DataSet & theData, 
-                                    TString theWeightFile,  
+                                    const TString& theWeightFile,  
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
 {

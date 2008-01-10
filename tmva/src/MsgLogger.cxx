@@ -221,7 +221,7 @@ void TMVA::MsgLogger::InitMaps()
    fColorMap[kVERBOSE] = "\033[1;34m";
    fColorMap[kDEBUG]   = "\033[34m";
    fColorMap[kINFO]    = "";
-   fColorMap[kWARNING] = "\033[31m";
+   fColorMap[kWARNING] = "\033[1;31m";
    fColorMap[kERROR]   = "\033[31m";
    fColorMap[kFATAL]   = "\033[37;41;1m";
    fColorMap[kSILENT]  = "\033[30m";   

@@ -65,9 +65,9 @@ using std::vector;
 ClassImp(TMVA::MethodCommittee)
  
 //_______________________________________________________________________
-TMVA::MethodCommittee::MethodCommittee( TString jobName, TString committeeTitle, DataSet& theData, 
-                                        TString committeeOptions,
-                                        Types::EMVA method, TString methodOptions,
+TMVA::MethodCommittee::MethodCommittee( const TString& jobName, const TString& committeeTitle, DataSet& theData, 
+                                        const TString& committeeOptions,
+                                        Types::EMVA method, const TString& methodOptions,
                                         TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, committeeTitle, theData, committeeOptions, theTargetDir ),
      fMemberType( method ),
@@ -94,7 +94,7 @@ TMVA::MethodCommittee::MethodCommittee( TString jobName, TString committeeTitle,
 
 //_______________________________________________________________________
 TMVA::MethodCommittee::MethodCommittee( DataSet& theData, 
-                                        TString theWeightFile,  
+                                        const TString& theWeightFile,  
                                         TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
 {

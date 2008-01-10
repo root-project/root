@@ -29,10 +29,10 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//Begin_Html
-/*
+/* Begin_Html
   Virtual base Class for all MVA method
-  MethodBase hosts several specific evaluation methods
+
+  MethodBase hosts several specific evaluation methods.
 
   The kind of MVA that provides optimal performance in an analysis strongly
   depends on the particular application. The evaluation factory provides a
@@ -61,8 +61,8 @@
   The MVA standard output also prints the linear correlation coefficients between
   signal and background, which can be useful to eliminate variables that exhibit too
   strong correlations.
-*/
-//End_Html
+
+End_Html */
 //_______________________________________________________________________
 
 #include <iomanip>
@@ -107,10 +107,10 @@ const Int_t    NBIN_HIST_PLOT = 100;
 const Int_t    NBIN_HIST_HIGH = 10000;
 
 //_______________________________________________________________________
-TMVA::MethodBase::MethodBase( TString      jobName,
-                              TString      methodTitle,
+TMVA::MethodBase::MethodBase( const TString&      jobName,
+                              const TString&      methodTitle,
                               DataSet&     theData,
-                              TString      theOption,
+                              const TString&      theOption,
                               TDirectory*  theBaseDir)
    : IMethod(),
      Configurable               ( theOption ),
@@ -144,7 +144,7 @@ TMVA::MethodBase::MethodBase( TString      jobName,
 
 //_______________________________________________________________________
 TMVA::MethodBase::MethodBase( DataSet&     theData,
-                              TString      weightFile,
+                              const TString&      weightFile,
                               TDirectory*  theBaseDir )
    : IMethod(),
      Configurable(""),

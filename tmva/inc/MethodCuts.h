@@ -72,14 +72,14 @@ namespace TMVA {
 
    public:
 
-      MethodCuts( TString jobName,
-                  TString methodTitle,
+      MethodCuts( const TString& jobName,
+                  const TString& methodTitle, 
                   DataSet& theData,
-                  TString theOption = "MC:150:10000:",
+                  const TString& theOption = "MC:150:10000:",
                   TDirectory* theTargetFile = 0 );
 
       MethodCuts( DataSet& theData,
-                  TString theWeightFile,
+                  const TString& theWeightFile,
                   TDirectory* theTargetDir = NULL );
 
       virtual ~MethodCuts( void );
@@ -104,10 +104,10 @@ namespace TMVA {
 
       // test the method
       void Test( TTree* theTestTree );
-
+     
       // also overwrite:
       Double_t GetSeparation  ( TH1*, TH1* ) const { return 0; }
-      Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB) { } return 0; }
+      Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB); return 0; }
       Double_t GetSignificance( void )       const { return 0; }
       Double_t GetmuTransform ( TTree *)           { return 0; }
       Double_t GetEfficiency  ( TString, TTree *, Double_t& );
@@ -118,13 +118,14 @@ namespace TMVA {
 
       // accessors for Minuit
       Double_t ComputeEstimator( std::vector<Double_t> & );
-
+      
       Double_t EstimatorFunction( std::vector<Double_t> & );
 
       void SetTestSignalEfficiency( Double_t effS ) { fTestSignalEff = effS; }
-
+      
       // retrieve cut values for given signal efficiency
-      void GetCuts( Double_t effS, std::vector<Double_t>& cutMin, std::vector<Double_t>& cutMax ) const;
+      void PrintCuts( Double_t effS ) const;
+      void GetCuts  ( Double_t effS, std::vector<Double_t>& cutMin, std::vector<Double_t>& cutMax ) const;
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
@@ -150,7 +151,7 @@ namespace TMVA {
 
       // efficiency calculation method
       // - kUseEventSelection: computes efficiencies from given data sample
-      // - kUsePDFs          : creates smoothed PDFs from data samples, and
+      // - kUsePDFs          : creates smoothed PDFs from data samples, and 
       //                       uses this to compute efficiencies
       enum EEffMethod     { kUseEventSelection = 0,
                             kUsePDFs };
@@ -170,7 +171,7 @@ namespace TMVA {
       vector<EFitParameters>* fFitParams;     // vector for series of fit methods
       Double_t                fTestSignalEff; // used to test optimized signal efficiency
       Double_t                fEffSMin;       // used to test optimized signal efficiency
-      Double_t                fEffSMax;       // used to test optimized signal efficiency
+      Double_t                fEffSMax;       // used to test optimized signal efficiency      
       Double_t*               fCutRangeMin;   // minimum of allowed cut range
       Double_t*               fCutRangeMax;   // maximum of allowed cut range
       vector<Interval*>       fCutRange;      // allowed ranges for cut optimisation
@@ -204,12 +205,12 @@ namespace TMVA {
       // PDF section
       vector<TH1*>*      fVarHistS;           // reference histograms (signal)
       vector<TH1*>*      fVarHistB;           // reference histograms (background)
-      vector<TH1*>*      fVarHistS_smooth;    // smoothed reference histograms (signal)
+      vector<TH1*>*      fVarHistS_smooth;    // smoothed reference histograms (signal)        
       vector<TH1*>*      fVarHistB_smooth;    // smoothed reference histograms (background)
       vector<PDF*>*      fVarPdfS;            // reference PDFs (signal)
       vector<PDF*>*      fVarPdfB;            // reference PDFs (background)
 
-      // the definition of fit parameters can be different from the actual
+      // the definition of fit parameters can be different from the actual 
       // cut requirements; these functions provide the matching
       void     MatchParsToCuts( const std::vector<Double_t>&, Double_t*, Double_t* );
       void     MatchParsToCuts( Double_t*, Double_t*, Double_t* );
@@ -217,7 +218,7 @@ namespace TMVA {
       void     MatchCutsToPars( std::vector<Double_t>&, Double_t*, Double_t* );
       void     MatchCutsToPars( std::vector<Double_t>&, Double_t**, Double_t**, Int_t ibin );
 
-      // creates PDFs in case these are used to compute efficiencies
+      // creates PDFs in case these are used to compute efficiencies 
       // (corresponds to: EffMethod == kUsePDFs)
       void     CreateVariablePDFs( void );
 

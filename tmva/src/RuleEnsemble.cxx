@@ -682,14 +682,12 @@ Double_t TMVA::RuleEnsemble::PdfRule( Double_t & nsig, Double_t & ntot  ) const
    Double_t sump  = 0;
    Double_t sumok = 0;
    Double_t sumz  = 0;
-   Double_t ssb;
-   Double_t neve;
    //
    UInt_t nrules = fRules.size();
    for (UInt_t ir=0; ir<nrules; ir++) {
-      if (fEventRuleVal[ir]>0) {
-         ssb = fEventRuleVal[ir]*GetRulesConst(ir)->GetSSB(); // S/(S+B) is evaluated in CalcRuleSupport() using ALL training events
-         neve = GetRulesConst(ir)->GetSSBNeve(); // number of events accepted by the rule
+      if(fEventRuleVal[ir]) {
+         Double_t ssb = GetRulesConst(ir)->GetSSB(); // S/(S+B) is evaluated in CalcRuleSupport() using ALL training events
+         Double_t neve = GetRulesConst(ir)->GetSSBNeve(); // number of events accepted by the rule
          sump  += ssb*neve; // number of signal events
          sumok += neve; // total number of events passed
       } else sumz += 1.0; // all events

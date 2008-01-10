@@ -28,14 +28,6 @@
 #ifndef ROOT_TMVA_VariablePCATransform
 #define ROOT_TMVA_VariablePCATransform
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// VariablePCATransform                                                 //
-//                                                                      //
-// Linear interpolation class                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TPrincipal.h"
 
 #ifndef ROOT_TMVA_VariableTransformBase
@@ -56,6 +48,9 @@ namespace TMVA {
 
       void WriteTransformationToStream ( std::ostream& ) const;
       void ReadTransformationFromStream( std::istream& );
+
+      // provides string vector describing explicit transformation
+      std::vector<TString>* GetTransformationStrings( Types::ESBType type = Types::kMaxSBType ) const;
 
       // writer of function code
       virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part );

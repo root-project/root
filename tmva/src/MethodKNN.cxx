@@ -23,10 +23,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-// 
-// Analysis of k-nearest neighbor
-//_______________________________________________________________________
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// MethodKNN                                                            //
+//                                                                      //
+// Analysis of k-nearest neighbor                                       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 // C++
 #include <string>
@@ -46,10 +49,10 @@ ClassImp(TMVA::MethodKNN)
 using std::endl;
 
 //_______________________________________________________________________
-TMVA::MethodKNN::MethodKNN(TString jobName,
-                           TString methodTitle,
+TMVA::MethodKNN::MethodKNN(const TString& jobName,
+                           const TString& methodTitle,
                            DataSet& theData, 
-                           TString theOption,
+                           const TString& theOption,
                            TDirectory* theTargetDir)
    :TMVA::MethodBase(jobName, methodTitle, theData, theOption, theTargetDir),
     fModule(0)
@@ -65,7 +68,7 @@ TMVA::MethodKNN::MethodKNN(TString jobName,
 
 //_______________________________________________________________________
 TMVA::MethodKNN::MethodKNN(DataSet& theData, 
-                           TString theWeightFile,  
+                           const TString& theWeightFile,  
                            TDirectory* theTargetDir)
    :TMVA::MethodBase(theData, theWeightFile, theTargetDir),
     fModule(0)
@@ -80,6 +83,7 @@ TMVA::MethodKNN::MethodKNN(DataSet& theData,
 //_______________________________________________________________________
 TMVA::MethodKNN::~MethodKNN()
 {
+   // destructor
    if (fModule) delete fModule;
 }
 

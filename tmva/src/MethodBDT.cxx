@@ -113,8 +113,8 @@ using std::vector;
 ClassImp(TMVA::MethodBDT)
  
 //_______________________________________________________________________
-TMVA::MethodBDT::MethodBDT( TString jobName, TString methodTitle, DataSet& theData, 
-                            TString theOption, TDirectory* theTargetDir )
+TMVA::MethodBDT::MethodBDT( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                            const TString& theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // the standard constructor for the "boosted decision trees" 
@@ -179,7 +179,7 @@ TMVA::MethodBDT::MethodBDT( TString jobName, TString methodTitle, DataSet& theDa
 
 //_______________________________________________________________________
 TMVA::MethodBDT::MethodBDT( DataSet& theData, 
-                            TString theWeightFile,  
+                            const TString& theWeightFile,  
                             TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
 {
@@ -285,7 +285,8 @@ void TMVA::MethodBDT::InitBDT( void )
    fBoostType      = "AdaBoost";
    fNodeMinEvents  = TMath::Max( 20, int( this->Data().GetNEvtTrain() / this->GetNvar()/ this->GetNvar() / 10) );
    fNCuts          = 20; 
-   fPruneMethod    = DecisionTree::kMCC;
+   fPruneMethodS   = "CostComplexity";
+   fPruneMethod    = DecisionTree::kCostComplexityPruning;
    fPruneStrength  = 5;     // means automatic determination of the prune strength using a validation sample  
    fDeltaPruneStrength=0.1;
 

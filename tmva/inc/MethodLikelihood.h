@@ -62,14 +62,14 @@ namespace TMVA {
 
    public:
 
-      MethodLikelihood( TString jobName, 
-                        TString methodTitle, 
+      MethodLikelihood( const TString& jobName, 
+                        const TString& methodTitle, 
                         DataSet& theData,
-                        TString theOption = "",
+                        const TString& theOption = "",
                         TDirectory* theTargetDir = 0 );
   
       MethodLikelihood( DataSet& theData, 
-                        TString theWeightFile,  
+                        const TString& theWeightFile,  
                         TDirectory* theTargetDir = NULL );
 
       virtual ~MethodLikelihood( void );
@@ -153,7 +153,7 @@ namespace TMVA {
       // default initialisation called by all constructors
       void InitLik( void );
    
-      ClassDef(MethodLikelihood,0) // Likelihood analysis ("non-parametric approach") 
+      ClassDef(MethodLikelihood,0) // Likelihood analysis A ("non-parametric approach") 
    };
 
 } // namespace TMVA

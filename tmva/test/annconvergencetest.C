@@ -29,7 +29,6 @@ void annconvergencetest( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE 
    TKey *key;
    while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
       lhdir = (TDirectory *)key->ReadObj();
-      cout << "Plotting title: " << lhdir->GetName() << endl;
       annconvergencetest( lhdir );
    }
 }

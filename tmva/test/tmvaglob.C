@@ -2,12 +2,30 @@
 #ifndef TMVA_TMVAGLOB
 #define TMVA_TMVAGLOB
 
+//#if !defined( __CINT__) || defined (__MAKECINT__)
+#include <iostream>
+using std::cout;
+using std::endl;
+
+#include "TPad.h"
+#include "TCanvas.h"
+#include "TColor.h"
+#include "TSystem.h"
+#include "TImage.h"
+#include "TKey.h"
+#include "TH1.h"
+#include "TROOT.h"
+#include "TStyle.h"
+#include "TFile.h"
+#include "TDirectory.h"
+//#endif
+
 #include "RVersion.h"
 
 namespace TMVAGlob {
 
    // --------- S t y l e ---------------------------
-   const Bool_t UsePaperStyle = 0;
+   static Bool_t UsePaperStyle = 0;
    // -----------------------------------------------
 
    enum TypeOfPlot { kNormal = 0,
@@ -15,15 +33,13 @@ namespace TMVAGlob {
                      kPCA,
                      kNumOfMethods };
 
-   const Int_t c_Canvas          = TColor::GetColor( "#e9e6da" );
-   const Int_t c_FrameFill       = TColor::GetColor( "#fffffd" );
-   const Int_t c_TitleBox        = TColor::GetColor( "#dae1e6" );
-   const Int_t c_DarkBackground  = TColor::GetColor( "#6e7a85" );   
-   
-   const Int_t c_SignalLine      = TColor::GetColor( "#0000ee" );
-   const Int_t c_SignalFill      = TColor::GetColor( "#7d99d1" );
-   const Int_t c_BackgroundLine  = TColor::GetColor( "#ff0000" );
-   const Int_t c_BackgroundFill  = TColor::GetColor( "#ff0000" );
+   static Int_t c_Canvas         = TColor::GetColor( "#e9e6da" );
+   static Int_t c_FrameFill      = TColor::GetColor( "#fffffd" );
+   static Int_t c_TitleBox       = TColor::GetColor( "#dae1e6" );
+   static Int_t c_SignalLine     = TColor::GetColor( "#0000ee" );
+   static Int_t c_SignalFill     = TColor::GetColor( "#7d99d1" );
+   static Int_t c_BackgroundLine = TColor::GetColor( "#ff0000" );
+   static Int_t c_BackgroundFill = TColor::GetColor( "#ff0000" );
 
    // set the style
    void SetSignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* all = 0 ) 
@@ -37,7 +53,7 @@ namespace TMVAGlob {
       Int_t LineWidth__S = 2;
 
       // background
-      Int_t icolor = UsePaperStyle ? 2 + 100 : 2;
+      //Int_t icolor = UsePaperStyle ? 2 + 100 : 2;
       Int_t FillColor__B = c_BackgroundFill;
       Int_t FillStyle__B = 3554;
       Int_t LineColor__B = c_BackgroundLine;
@@ -49,7 +65,7 @@ namespace TMVAGlob {
          sig->SetFillStyle( FillStyle__S );
          sig->SetFillColor( FillColor__S );
       }
-    
+ 
       if (bkg != NULL) {
          bkg->SetLineColor( LineColor__B );
          bkg->SetLineWidth( LineWidth__B );
@@ -66,7 +82,7 @@ namespace TMVAGlob {
    }
 
    // set frame styles
-   SetFrameStyle( TH1* frame, Float_t scale = 1.0 )
+   void SetFrameStyle( TH1* frame, Float_t scale = 1.0 )
    {
       frame->SetLabelOffset( 0.012, "X" );// label offset on x axis
       frame->SetLabelOffset( 0.012, "Y" );// label offset on x axis
@@ -85,28 +101,8 @@ namespace TMVAGlob {
       gPad->SetBottomMargin( 0.120*scale  );
    }
 
-   // set style and remove existing canvas'
-   void Initialize( Bool_t useTMVAStyle = kTRUE )
-   {
-
-      // destroy canvas'
-      TList * loc = gROOT->GetListOfCanvases();
-      TListIter itc(loc);
-      TObject *o(0);
-      while ((o = itc())) delete o;
-
-      // set style
-      if (!useTMVAStyle) {
-         gROOT->SetStyle("Plain");
-         gStyle->SetOptStat(0);
-         return;
-      }
-
-      SetTMVAStyle();
-   }
-
    void SetTMVAStyle() {
-
+      
       TStyle *TMVAStyle = gROOT->GetStyle("TMVA");
       if(TMVAStyle!=0) {
          gROOT->SetStyle("TMVA");
@@ -115,7 +111,7 @@ namespace TMVAGlob {
 			
       TMVAStyle = new TStyle(*gROOT->GetStyle("Plain")); // our style is based on Plain
       TMVAStyle->SetName("TMVA");
-      TMVAStyle->SetTitle("TMVA style based on Plain with modifications define in tmvaglob.C");
+      TMVAStyle->SetTitle("TMVA style based on \"Plain\" with modifications defined in tmvaglob.C");
       gROOT->GetListOfStyles()->Add(TMVAStyle);
       gROOT->SetStyle("TMVA");
 			
@@ -156,7 +152,7 @@ namespace TMVAGlob {
       // use bold lines and markers
       TMVAStyle->SetMarkerStyle(21);
       TMVAStyle->SetMarkerSize(0.3);
-      TMVAStyle->SetHistLineWidth(1.85);
+      TMVAStyle->SetHistLineWidth(2);
       TMVAStyle->SetLineStyleString(2,"[12 12]"); // postscript dashes
 
       // do not display any of the standard histogram decorations
@@ -172,6 +168,27 @@ namespace TMVAGlob {
 
    }
 
+   // set style and remove existing canvas'
+   void Initialize( Bool_t useTMVAStyle = kTRUE )
+   {
+
+      // destroy canvas'
+      TList * loc = (TList*)gROOT->GetListOfCanvases();
+      TListIter itc(loc);
+      TObject *o(0);
+      while ((o = itc())) delete o;
+
+      // set style
+      if (!useTMVAStyle) {
+         gROOT->SetStyle("Plain");
+         gStyle->SetOptStat(0);
+         return;
+      }
+
+      SetTMVAStyle();
+   }
+
+
    // checks if file with name "fin" is already open, and if not opens one
    TFile* OpenFile( const TString& fin )
    {
@@ -181,7 +198,7 @@ namespace TMVAGlob {
             gROOT->cd();
             file->Close();
          }
-         cout << "Opening root file " << fin << " in read mode" << endl;
+         cout << "--- Opening root file " << fin << " in read mode" << endl;
          file = TFile::Open( fin, "READ" );
       }
       else {
@@ -197,7 +214,7 @@ namespace TMVAGlob {
    {
       // return;
       if (NULL == c) {
-         cout << "--- Error in TMVAGlob::imgconv: canvas is NULL" << endl;
+         cout << "*** Error in TMVAGlob::imgconv: canvas is NULL" << endl;
       }
       else {
          // create directory if not existing
@@ -209,12 +226,20 @@ namespace TMVAGlob {
          TString gifName = fname + ".gif";
          TString epsName = fname + ".eps";
          c->cd();
+
          // create eps (other option: c->Print( epsName ))
-         if (UsePaperStyle) c->Print(epsName);      
-         //          cout << "If you want to save the image as gif or png, please comment out "
-         //               << "the corresponding lines (line no. 142+143) in tmvaglob.C" << endl;
-         c->Print(pngName);
-         c->Print(epsName);
+         if (UsePaperStyle) {
+            c->Print(epsName);
+         } 
+         else {
+            cout << "--- --------------------------------------------------------------------" << endl;
+            cout << "--- If you want to save the image as eps, gif or png, please comment out " << endl;
+            cout << "--- the corresponding lines (line no. 238-239) in macros/tmvaglob.C" << endl;
+            cout << "--- --------------------------------------------------------------------" << endl;
+            // c->Print(epsName);
+            // c->Print(pngName);
+            // c->Print(epsName);
+         }
       }
    }
    
@@ -222,7 +247,7 @@ namespace TMVAGlob {
    {
       TImage *img = TImage::Open("../macros/tmva_logo.gif");
       if (!img) {
-         cut <<"Could not open image ../macros/tmva_logo.gif" << endl;
+         cout << "+++ Could not open image ../macros/tmva_logo.gif" << endl;
          return;
       }
       img->SetConstRatio(kFALSE);
@@ -297,7 +322,6 @@ namespace TMVAGlob {
    }
 
    TKey *NextKey( TIter & keyIter, TString className) {
-      TDirectory *dir=0;
       TKey *key=(TKey *)keyIter.Next();
       TKey *rkey=0;
       Bool_t loop=(key!=0);
@@ -385,44 +409,7 @@ namespace TMVAGlob {
             }
          }
       }
-      cout << "--- Found " << ni << " methods(s)" << endl;
-      return ni;
-   }
-
-   UInt_t GetListOfTitles( TString & methodName, TList & titles, TDirectory *dir=0 )
-   {
-      // get the list of all titles for a given method
-      // if the input dir is 0, gDirectory is used
-      // returns a list of keys
-      UInt_t ni=0;
-      if (dir==0) dir = gDirectory;
-      TDirectory* rfdir = (TDirectory*)dir->Get( methodName );
-      if (rfdir==0) {
-         cout << "Could not locate directory '" << methodName << endl;
-         return 0;
-      }
-
-      return GetListOfTitles( rfdir, titles );
-
-      TList *keys = rfdir->GetListOfKeys();
-      if (keys==0) {
-         cout << "Directory '" << methodName << "' contains no keys" << endl;
-         return 0;
-      }
-      //
-      TIter rfnext(rfdir->GetListOfKeys());
-      TKey *rfkey;
-      titles.Clear();
-      titles.SetOwner(kFALSE);
-      while ((rfkey = (TKey*)rfnext())) {
-         // make sure, that we only look at histograms
-         TClass *cl = gROOT->GetClass(rfkey->GetClassName());
-         if (cl->InheritsFrom("TDirectory")) {
-            titles.Add(rfkey);
-            ni++;
-         }
-      }
-      cout << "--- Found " << ni << " instance(s) of the method " << methodName << endl;
+      cout << "--- Found " << ni << " classifier types" << endl;
       return ni;
    }
 
@@ -433,7 +420,7 @@ namespace TMVAGlob {
       if (rfdir==0) return 0;
       TList *keys = rfdir->GetListOfKeys();
       if (keys==0) {
-         cout << "Directory '" << rfdir->GetName() << "' contains no keys" << endl;
+         cout << "+++ Directory '" << rfdir->GetName() << "' contains no keys" << endl;
          return 0;
       }
       //
@@ -453,19 +440,43 @@ namespace TMVAGlob {
       return ni;
    }
 
-   TDirectory *GetCorrelationPlotsDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 )
+   UInt_t GetListOfTitles( TString & methodName, TList & titles, TDirectory *dir=0 )
    {
-      // get the CorrelationPlots directory
-      if (dir==0) dir = GetInputVariablesDir( 0, type );
-      if (dir==0) return 0;
-      //
-      TDirectory* corrdir = (TDirectory*)dir->Get( "CorrelationPlots" );
-      if (corrdir==0) {
-         cout << "Could not CorrelationPlots directory '" << corrDirName << endl;
+      // get the list of all titles for a given method
+      // if the input dir is 0, gDirectory is used
+      // returns a list of keys
+      UInt_t ni=0;
+      if (dir==0) dir = gDirectory;
+      TDirectory* rfdir = (TDirectory*)dir->Get( methodName );
+      if (rfdir==0) {
+         cout << "+++ Could not locate directory '" << methodName << endl;
          return 0;
       }
-      return corrdir;
+
+      return GetListOfTitles( rfdir, titles );
+
+      TList *keys = rfdir->GetListOfKeys();
+      if (keys==0) {
+         cout << "+++ Directory '" << methodName << "' contains no keys" << endl;
+         return 0;
+      }
+      //
+      TIter rfnext(rfdir->GetListOfKeys());
+      TKey *rfkey;
+      titles.Clear();
+      titles.SetOwner(kFALSE);
+      while ((rfkey = (TKey*)rfnext())) {
+         // make sure, that we only look at histograms
+         TClass *cl = gROOT->GetClass(rfkey->GetClassName());
+         if (cl->InheritsFrom("TDirectory")) {
+            titles.Add(rfkey);
+            ni++;
+         }
+      }
+      cout << "--- Found " << ni << " instance(s) of the method " << methodName << endl;
+      return ni;
    }
+
 
    TDirectory *GetInputVariablesDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 )
    {
@@ -473,15 +484,31 @@ namespace TMVAGlob {
       const TString directories[TMVAGlob::kNumOfMethods] = { "InputVariables_NoTransform",
                                                              "InputVariables_DecorrTransform",
                                                              "InputVariables_PCATransform" };
-      if (dir==0) dir = gDirectory;
+      //if (dir==0) dir = gDirectory;
+
       // get top dir containing all hists of the variables
-      TDirectory* dir = (TDirectory*)gDirectory->Get( directories[type] );
+      dir = (TDirectory*)gDirectory->Get( directories[type] );
       if (dir==0) {
-         cout << "Could not locate input variable directory '" << directories[type] << endl;
+         cout << "+++ Could not locate input variable directory '" << directories[type] << endl;
          return 0;
       }
       return dir;
    }
+
+   TDirectory *GetCorrelationPlotsDir( TMVAGlob::TypeOfPlot type, TDirectory *dir=0 )
+   {
+      // get the CorrelationPlots directory
+      if (dir==0) dir = GetInputVariablesDir( type, 0 );
+      if (dir==0) return 0;
+      //
+      TDirectory* corrdir = (TDirectory*)dir->Get( "CorrelationPlots" );
+      if (corrdir==0) {
+         cout << "+++ Could not find CorrelationPlots directory 'CorrelationPlots'" << endl;
+         return 0;
+      }
+      return corrdir;
+   }
+
 }
 
 #endif

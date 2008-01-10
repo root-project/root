@@ -27,14 +27,16 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
    
-//_______________________________________________________________________
-//                                                                      
-// Node for the Decision Tree                                           
-//
-// The node specifies ONE variable out of the given set of selection variable
-// that is used to split the sample which "arrives" at the node, into a left
-// (background-enhanced) and a right (signal-enhanced) sample.
-//_______________________________________________________________________
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// DecisionTreeNode                                                     //
+//                                                                      //
+// Node for the Decision Tree. The node specifies ONE variable out of   //
+// the given set of selection variable that is used to split the        //
+// sample which "arrives" at the node, into a left                      //
+// (background-enhanced) and a right (signal-enhanced) sample           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include <algorithm>
 #include "Riostream.h"

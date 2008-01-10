@@ -87,7 +87,6 @@ TMVA::DecisionTree::DecisionTree( void )
      fSepType    (NULL),
      fMinSize    (0),
      fPruneMethod(kCostComplexityPruning),
-     fDepth (0),
      fQualityIndex(NULL)
 {
    // default constructor using the GiniIndex as separation criterion, 
@@ -105,7 +104,6 @@ TMVA::DecisionTree::DecisionTree( DecisionTreeNode* n )
      fSepType    (NULL),
      fMinSize    (0),
      fPruneMethod(kCostComplexityPruning),
-     fDepth (0),
      fQualityIndex(NULL)
 {
    // default constructor using the GiniIndex as separation criterion, 
@@ -128,7 +126,6 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize,
    fSepType    (sepType),
    fMinSize    (minSize),
    fPruneMethod(kCostComplexityPruning),
-   fDepth (0),
    fQualityIndex(qtype)
 {
    // constructor specifying the separation type, the min number of
@@ -147,7 +144,6 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d):
    fSepType    (d.fSepType),
    fMinSize    (d.fMinSize),
    fPruneMethod(d.fPruneMethod),
-   fDepth      (d.fDepth),
    fQualityIndex(d.fQualityIndex)
 {
    // copy constructor that creates a true copy, i.e. a completely independent tree 
@@ -199,7 +195,7 @@ void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n)
       }
    }
    n->SetParentTree(this);
-   if (n->GetDepth() > fDepth) fDepth = n->GetDepth();
+   if (n->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(n->GetDepth());
    return;
 }
 
@@ -266,7 +262,7 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
          // Hence natuarlly the current node is a leaf node
          if (node->GetPurity() > 0.5) node->SetNodeType(1);
          else node->SetNodeType(-1);
-         if (node->GetDepth() > fDepth) fDepth = node->GetDepth();
+         if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
       } 
       else {
          vector<TMVA::Event*> leftSample; leftSample.reserve(nevents);
@@ -318,7 +314,7 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
    else{ // it is a leaf node
       if (node->GetPurity() > 0.5) node->SetNodeType(1);
       else node->SetNodeType(-1);
-      if (node->GetDepth() > fDepth) fDepth = node->GetDepth();
+      if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
    }
    
    return fNNodes;
@@ -1322,40 +1318,3 @@ Double_t  TMVA::DecisionTree::GetVariableImportance(Int_t ivar)
    return -1;
 }
 
-//_______________________________________________________________________
-TH2D*  TMVA::DecisionTree::DrawTree(TString hname)
-{
-   // returns poiter to 2D histogram with tree drawing in it.
-
-   Double_t xmax= 2*fDepth + 0.5;
-   Double_t xmin= -xmax;
-
-
-   ULong_t nbins =1; for (UInt_t i=0; i<fDepth; i++) nbins *= 2;  //  (2^depth)
-
-   TH2D* h=new TH2D(hname,"",2*nbins+1, xmin, xmax,
-                    2*fDepth+2, -0.5, 2*fDepth+0.5);
-
-   this->DrawNode( h, (DecisionTreeNode*)this->GetRoot(), 2*fDepth, 0, Double_t(fDepth) );
-  
-   return h;
-
-}   
-      
-//_______________________________________________________________________
-void TMVA::DecisionTree::DrawNode( TH2D* h,  DecisionTreeNode *n, 
-                                   Double_t y, Double_t x, Double_t scale)
-{
-   // recursively puts an entries in the histogram for the node and its daughters
-   //
-
-   if (this->GetLeftDaughter(n) != NULL){
-      this->DrawNode( h, this->GetLeftDaughter(n), y-2, x-scale, scale/2.  );
-   }
-   if (this->GetRightDaughter(n) != NULL) {
-      this->DrawNode( h, this->GetRightDaughter(n), y-2, x+scale, scale/2.);
-   }
-   h->Fill(x,y,n->GetNEvents());
-
-   return;
-}

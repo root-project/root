@@ -32,8 +32,6 @@
 //                                                                      //
 // VariableIdentityTransform                                            //
 //                                                                      //
-// Linear interpolation class                                           //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TMVA_VariableTransformBase
@@ -56,6 +54,9 @@ namespace TMVA {
       void ReadTransformationFromStream( std::istream& ) { SetCreated(); }
 
       virtual TMVA::Event& GetEvent()  const { return GetEventRaw(); }
+
+      // provides string vector describing explicit transformation
+      std::vector<TString>* GetTransformationStrings( Types::ESBType ) const;
 
       // writer of function code
       virtual void MakeFunction(std::ostream& fout, const TString& fncName, Int_t part);

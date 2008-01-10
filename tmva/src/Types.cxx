@@ -29,6 +29,12 @@
 
 #include "TMVA/Types.h"
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Singleton class for TMVA typedefs and enums                          //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 TMVA::Types* TMVA::Types::fgTypesPtr = 0;
 
 //_______________________________________________________________________
@@ -55,6 +61,7 @@ TMVA::Types::Types()
    fStr2type["BayesClassifier"] = Types::kBayesClassifier;
    fStr2type["Committee"]       = Types::kCommittee;
    fStr2type["SeedDistance"]    = Types::kSeedDistance;
+   fStr2type["Plugins"]         = Types::kPlugins;
 }
 
 //_______________________________________________________________________
@@ -63,8 +70,8 @@ TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const
    // returns the method type (enum) for a given method (string)
    std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
    if (it == fStr2type.end()) {
-      fLogger << kFATAL << "unknown method in map: " << method << Endl;
-      return kVariable; // Inserted to get rid of GCC warning...
+      fLogger << kINFO << "unknown method " << method << Endl;
+      return kMaxMethod; // Inserted to get rid of GCC warning...
    }
    else return it->second;
 }

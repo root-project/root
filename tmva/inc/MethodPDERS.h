@@ -65,14 +65,14 @@ namespace TMVA {
 
    public:
 
-      MethodPDERS( TString jobName,
-                   TString methodTitle, 
+      MethodPDERS( const TString& jobName,
+                   const TString& methodTitle, 
                    DataSet& theData,
-                   TString theOption,
+                   const TString& theOption,
                    TDirectory* theTargetDir = 0 );
 
       MethodPDERS( DataSet& theData,
-                   TString theWeightFile,
+                   const TString& theWeightFile,
                    TDirectory* theTargetDir = NULL );
 
       virtual ~MethodPDERS( void );

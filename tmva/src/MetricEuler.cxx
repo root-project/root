@@ -24,7 +24,11 @@
 
 //_______________________________________________________________________
 //                                                                      
-// interface for a metric
+// Euler metric. The distance d between two points x and y is defined as 
+//
+// Begin_Latex
+// d = #sqrt{#sum_{i} (x_{i}-y_{i})^{2}}
+// End_Latex
 //
 //_______________________________________________________________________
 

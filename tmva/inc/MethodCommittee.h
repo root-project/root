@@ -53,17 +53,17 @@ namespace TMVA {
    public:
 
       // constructor for training and reading
-      MethodCommittee( TString jobName, 
-                       TString committeeTitle,                        
+      MethodCommittee( const TString& jobName, 
+                       const TString& committeeTitle,                        
                        DataSet& theData,
-                       TString committeeOptions,
+                       const TString& committeeOptions,
                        Types::EMVA method,
-                       TString methodOptions,
+                       const TString& methodOptions,
                        TDirectory* theTargetDir = 0 );
 
       // constructor for calculating Committee-MVA using previously generatad members
       MethodCommittee( DataSet& theData, 
-                       TString theWeightFile,  
+                       const TString& theWeightFile,  
                        TDirectory* theTargetDir = NULL );
   
       virtual ~MethodCommittee( void );

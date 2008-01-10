@@ -29,14 +29,6 @@
 #ifndef ROOT_TMVA_Config
 #define ROOT_TMVA_Config
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Config                                                               //
-//                                                                      //
-// Singleton class for global configuration settings used by TMVA       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -69,6 +61,7 @@ namespace TMVA {
 
       // publicly accessible global settings
       class VariablePlotting {
+         // data collection class to configure plotting of variables
       public:
          Float_t fTimesRMS;
          Int_t   fNbins1D;

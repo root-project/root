@@ -38,7 +38,10 @@
 
 //_______________________________________________________________________
 //                                                                      
-// Implementation of the GiniIndex as separation criterion              
+// GiniIndex
+//
+// Implementation of the GiniIndex as separation criterion for the
+// boosted decision tree
 //                                                                      
 //_______________________________________________________________________
 

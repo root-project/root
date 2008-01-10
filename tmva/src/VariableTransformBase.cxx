@@ -24,6 +24,16 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+/*
+Base class for input variable transformations. Implementations are
+
+TMVA::VariableIdentityTransform
+TMVA::VariableDecorrTransform
+TMVA::VariablePCATransform
+*/
+//////////////////////////////////////////////////////////////////////////
+
 #include "Riostream.h"
 #include "TMath.h"
 #include "TVectorD.h"
@@ -39,7 +49,8 @@
 ClassImp(TMVA::VariableTransformBase)
 
 //_______________________________________________________________________
-TMVA::VariableTransformBase::VariableTransformBase( std::vector<VariableInfo>& varinfo, Types::EVariableTransform tf )
+TMVA::VariableTransformBase::VariableTransformBase( std::vector<VariableInfo>& varinfo, 
+                                                    Types::EVariableTransform tf )
    : TObject(),
      fEvent( 0 ),
      fEventRaw( 0 ),
@@ -140,7 +151,7 @@ void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x )
 }
 
 //_______________________________________________________________________
-void TMVA::VariableTransformBase::CalcNorm( TTree * tr )
+void TMVA::VariableTransformBase::CalcNorm( TTree* tr )
 {
    // method to calculate minimum, maximum, mean, and RMS for all
    // variables used in the MVA
@@ -395,7 +406,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    }
       
    // computes ranking of input variables
-   if(fRanking) delete fRanking;
+   if (fRanking) delete fRanking;
    fRanking = new Ranking( GetName(), "Separation" );
    for (UInt_t i=0; i<nvar; i++) {   
       Double_t sep = Tools::GetSeparation( vS[i], vB[i] );

@@ -30,7 +30,6 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    TKey *key;
    while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
       lhdir = (TDirectory *)key->ReadObj();
-      cout << "Plotting title: " << lhdir->GetName() << endl;
       likelihoodrefs( lhdir );
    }
 }
@@ -92,7 +91,7 @@ void likelihoodrefs( TDirectory *lhdir ) {
             color++;
             h->Draw("e1");
             Double_t hSscale = 1.0/(h->GetSumOfWeights()*h->GetBinWidth(1));
-            //            cout << "compare: " << h->GetSumOfWeights() << " " << h->GetEntries() << endl;
+
             TLegend *legS= new TLegend( cPad->GetLeftMargin(), 
                                         1-cPad->GetTopMargin()-.14, 
                                         cPad->GetLeftMargin()+.77, 

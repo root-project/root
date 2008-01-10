@@ -26,10 +26,13 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-//  Fitter using Monte Carlo sampling of parameters 
+/*
+  MCFitter
+  
+  Fitter using Monte Carlo sampling of parameters 
+*/
 //_______________________________________________________________________
-//
+
 
 #include "TMVA/MCFitter.h"
 #include "TMVA/GeneticRange.h"

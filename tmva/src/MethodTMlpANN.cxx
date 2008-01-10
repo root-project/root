@@ -27,8 +27,8 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-// Begin_Html
-/*
+/* Begin_Html
+
   This is the TMVA TMultiLayerPerceptron interface class. It provides the 
   training and testing the ROOT internal MLP class in the TMVA framework.<be>
 
@@ -41,11 +41,11 @@
   <li>TMultiLayerPerceptron::kFletcherReeves  </li>
   <li>TMultiLayerPerceptron::kBFGS            </li>
   </ul>
-  See the 
-  <a href="http://root.cern.ch/root/html/TMultiLayerPerceptron.html>TMultiLayerPerceptron class description</a> 
-  for details on this ANN.
-*/
-// End_Html
+End_Html */
+//
+//  See the TMultiLayerPerceptron class description
+//  for details on this ANN.
+//
 //_______________________________________________________________________
 
 #include "TMVA/MethodTMlpANN.h"
@@ -74,8 +74,8 @@ const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPercept
 ClassImp(TMVA::MethodTMlpANN)
 
 //_______________________________________________________________________
-TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, TString methodTitle, DataSet& theData, 
-                                    TString theOption, TDirectory* theTargetDir)
+TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                    const TString& theOption, TDirectory* theTargetDir)
    : TMVA::MethodBase(jobName, methodTitle, theData, theOption, theTargetDir  ),
      fMLP(0)
 {
@@ -90,7 +90,7 @@ TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, TString methodTitle, DataSe
 
 //_______________________________________________________________________
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSet& theData, 
-                                    TString theWeightFile,  
+                                    const TString& theWeightFile,  
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ),
      fMLP(0)

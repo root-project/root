@@ -67,14 +67,14 @@ namespace TMVA {
    public:
 
       // standard constructors
-      MethodMLP( TString jobName, 
-                 TString  methodTitle,
+      MethodMLP( const TString& jobName, 
+                 const TString&  methodTitle,
                  DataSet& theData,
-                 TString theOption, 
+                 const TString& theOption, 
                  TDirectory* theTargetDir = 0 );
 
       MethodMLP( DataSet& theData, 
-                 TString theWeightFile, 
+                 const TString& theWeightFile, 
                  TDirectory* theTargetDir = 0 );
 
       virtual ~MethodMLP();

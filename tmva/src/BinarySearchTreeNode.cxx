@@ -27,17 +27,17 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      
-// Node for the BinarySearch or Decision Trees 
-//                        
-// for the binary search tree, it basically consists of the EVENT, and 
-// pointers to the parent and daughters
-//                                                                       
-// in case of the Decision Tree, it specifies parent and daughters, as
-// well as "which variable is used" in the selection of this node, including
-// the respective cut value.
-//______________________________________________________________________
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// BinarySearchTreeNode                                                 //
+//                                                                      //
+// Node for the BinarySearch or Decision Trees. For the binary search   //
+// tree, it basically consists of the EVENT, and pointers to the        //
+// parent and the daughters. In case of the Decision Tree, it           //
+// specifies parent and daughters, as well as "which variable is used"  //
+// in the selection of this node, including the respective cut value.   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include <stdexcept>
 

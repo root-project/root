@@ -84,15 +84,15 @@ namespace TMVA {
       //    - Bagging
 
       // constructor for training and reading
-      MethodBDT( TString jobName, 
-                 TString methodTitle, 
+      MethodBDT( const TString& jobName, 
+                 const TString& methodTitle, 
                  DataSet& theData,
-                 TString theOption = "",
+                 const TString& theOption = "",
                  TDirectory* theTargetDir = 0 );
 
       // constructor for calculating BDT-MVA using previously generatad decision trees
       MethodBDT( DataSet& theData, 
-                 TString theWeightFile,  
+                 const TString& theWeightFile,  
                  TDirectory* theTargetDir = NULL );
   
       virtual ~MethodBDT( void );

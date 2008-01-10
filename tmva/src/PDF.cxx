@@ -29,6 +29,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// PDF wrapper for histograms; uses user-defined spline interpolation   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+
 #include <iomanip>
 #include <cassert>
 
@@ -52,7 +59,7 @@ ClassImp(TMVA::PDF)
 
 //_______________________________________________________________________
 TMVA::PDF::PDF()
-   : fUseHistogram  ( kTRUE ),
+   : fUseHistogram  ( kFALSE ),
      fNsmooth       ( 0 ),
      fInterpolMethod( PDF::kSpline0 ),
      fSpline        ( 0 ),
@@ -73,7 +80,7 @@ TMVA::PDF::PDF()
 
 //_______________________________________________________________________
 TMVA::PDF::PDF( const TH1 *hist, PDF::EInterpolateMethod method, Int_t nsmooth, Bool_t checkHist )
-   : fUseHistogram  ( kTRUE ),
+   : fUseHistogram  ( kFALSE ),
      fNsmooth       ( nsmooth ),
      fInterpolMethod( method ),
      fSpline        ( 0 ),
@@ -121,7 +128,7 @@ TMVA::PDF::PDF( const TH1 *hist, PDF::EInterpolateMethod method, Int_t nsmooth, 
 //_______________________________________________________________________
 TMVA::PDF::PDF( const TH1* hist, KDEKernel::EKernelType ktype, KDEKernel::EKernelIter kiter, 
                 KDEKernel::EKernelBorder kborder, Float_t FineFactor)
-   : fUseHistogram  ( kTRUE ),
+   : fUseHistogram  ( kFALSE ),
      fNsmooth       (-1 ),
      fInterpolMethod( PDF::kSpline0 ),
      fSpline        ( 0 ),
@@ -136,7 +143,6 @@ TMVA::PDF::PDF( const TH1* hist, KDEKernel::EKernelType ktype, KDEKernel::EKerne
      fFineFactor    ( FineFactor),
      fLogger        ( this )
 {
-
    // constructor of kernel based PDF:
    // - default kernel type is Gaussian
    // - default number of iterations is 1 (i.e. nonadaptive KDE)

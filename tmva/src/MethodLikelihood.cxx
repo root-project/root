@@ -28,8 +28,8 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//Begin_Html
-/*
+/* Begin_Html
+
   Likelihood analysis ("non-parametric approach")                      
   
   <p>
@@ -98,8 +98,8 @@
   is not often the case, so that only little additional information
   may be recovered by the diagonalisation procedure. In these cases,
   non-linear methods must be applied.
-*/
-//End_Html
+
+End_Html */
 //_______________________________________________________________________
 
 #include <iomanip>
@@ -123,8 +123,8 @@ ClassImp(TMVA::MethodLikelihood)
 using std::endl;
 
 //_______________________________________________________________________
-TMVA::MethodLikelihood::MethodLikelihood( TString jobName, TString methodTitle, DataSet& theData, 
-                                          TString theOption, TDirectory* theTargetDir )
+TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                                          const TString& theOption, TDirectory* theTargetDir )
       : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
    // standard constructor
@@ -148,7 +148,7 @@ TMVA::MethodLikelihood::MethodLikelihood( TString jobName, TString methodTitle, 
 
 //_______________________________________________________________________
 TMVA::MethodLikelihood::MethodLikelihood( DataSet& theData, 
-                                          TString theWeightFile,  
+                                          const TString& theWeightFile,  
                                           TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
 {  
@@ -298,17 +298,17 @@ void TMVA::MethodLikelihood::ProcessOptions()
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
       if (     fInterpolateString[ivar] == "Spline0") fInterpolateMethod[ivar] = TMVA::PDF::kSpline0;
       else if (fInterpolateString[ivar] == "Spline1") fInterpolateMethod[ivar] = TMVA::PDF::kSpline1;
-      else if (fInterpolateString[ivar] == "" || fInterpolateString[ivar] == "Spline2") fInterpolateMethod[ivar] = TMVA::PDF::kSpline2;
+      else if (fInterpolateString[ivar] == "" || 
+               fInterpolateString[ivar] == "Spline2") fInterpolateMethod[ivar] = TMVA::PDF::kSpline2;
       else if (fInterpolateString[ivar] == "Spline3") fInterpolateMethod[ivar] = TMVA::PDF::kSpline3;
       else if (fInterpolateString[ivar] == "Spline5") fInterpolateMethod[ivar] = TMVA::PDF::kSpline5;
       else if (fInterpolateString[ivar] == "KDE"    ) fInterpolateMethod[ivar] = TMVA::PDF::kKDE;
       else {
-         fLogger << kFATAL << "unknown value \'" << fInterpolateString[ivar]
+         fLogger << kFATAL << "Unknown value \'" << fInterpolateString[ivar]
                  << "\' for reference histogram interpolation" << Form("PDFInterpol[%i]",ivar+1) << Endl;
       }
    }
    
-
    // set variable-specific options
    for (int ivar=0; ivar<GetNvar(); ivar++) {
       if (fNsmoothVarS[ivar]          == -1) fNsmoothVarS[ivar]          = fNsmooth;
@@ -320,23 +320,23 @@ void TMVA::MethodLikelihood::ProcessOptions()
    // init KDE options
    if      (fKDEtypeString == "Gauss"      ) fKDEtype = KDEKernel::kGauss;
    else // nothing more known
-      fLogger << kFATAL << "unknown setting for option 'KDEtype': " << fKDEtypeString << Endl;
+      fLogger << kFATAL << "Unknown setting for option 'KDEtype': " << fKDEtypeString << Endl;
    if      (fKDEiterString == "Nonadaptive") fKDEiter = KDEKernel::kNonadaptiveKDE;
    else if (fKDEiterString == "Adaptive"   ) fKDEiter = KDEKernel::kAdaptiveKDE;
    else // nothing more known
-      fLogger << kFATAL << "unknown setting for option 'KDEiter': " << fKDEiterString << Endl;
+      fLogger << kFATAL << "Unknown setting for option 'KDEiter': " << fKDEiterString << Endl;
    
    if       ( fBorderMethodString == "None"   ) fBorderMethod= KDEKernel::kNoTreatment;
    else if  ( fBorderMethodString == "Renorm" ) fBorderMethod= KDEKernel::kKernelRenorm;
    else if  ( fBorderMethodString == "Mirror" ) fBorderMethod= KDEKernel::kSampleMirror;
    else // nothing more known
-      fLogger << kFATAL << "unknown setting for option 'KDEborder': " << fKDEiterString << Endl;
+      fLogger << kFATAL << "Unknown setting for option 'KDEborder': " << fKDEiterString << Endl;
    
    // decorrelate option will be last option, if it is specified
    if      (GetVariableTransform() == Types::kDecorrelated)
-      fLogger << kINFO << "use decorrelated variable set" << Endl;
+      fLogger << kINFO << "Use decorrelated variable set" << Endl;
    else if (GetVariableTransform() == Types::kPCA)
-      fLogger << kINFO << "use principal component transformation" << Endl;
+      fLogger << kINFO << "Use principal component transformation" << Endl;
 
    // reference cut value to distingiush signal-like from background-like events   
    SetSignalReferenceCut( TransformLikelihoodOutput( 0.5, 0.5 ) );
@@ -350,9 +350,7 @@ void TMVA::MethodLikelihood::Train( void )
    // corresponding square-root matrices
 
    // default sanity checks
-   if (!CheckSanity()) { 
-      fLogger << kFATAL << "sanity check failed" << Endl;
-   }
+   if (!CheckSanity()) fLogger << kFATAL << "Sanity check failed" << Endl;
 
    // create reference histograms
 
@@ -379,11 +377,13 @@ void TMVA::MethodLikelihood::Train( void )
          UInt_t nbinsS = minNEvt/fAverageEvtPerBinVarS[ivar];
          UInt_t nbinsB = minNEvt/fAverageEvtPerBinVarB[ivar];
 
-         (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     nbinsS, GetXmin(ivar), GetXmax(ivar));
-         (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", nbinsB, GetXmin(ivar), GetXmax(ivar));
+         (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     
+                                       nbinsS, GetXmin(ivar), GetXmax(ivar));
+         (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", 
+                                       nbinsB, GetXmin(ivar), GetXmax(ivar));
       }
 
-      // book the fine binned histos needed for the KDE smoothing                                                      
+      // book the fine binned histos needed for the KDE smoothing
       if (fInterpolateMethod[ivar] == TMVA::PDF::kKDE) {
          UInt_t minNEvt = TMath::Min(Data().GetNEvtSigTrain(),Data().GetNEvtBkgdTrain());
          UInt_t nbinsS = minNEvt/fAverageEvtPerBinVarS[ivar];
@@ -450,7 +450,7 @@ void TMVA::MethodLikelihood::Train( void )
          } 
          else {
             if (htmp->GetNbinsX() <= 2 && nsmooth > 0) {
-               fLogger << kWARNING << "histogram \""<< htmp->GetName() 
+               fLogger << kWARNING << "Histogram \""<< htmp->GetName() 
                        << "\" has too few bins (" << htmp->GetNbinsX() << ") for smoothing" 
                        << "\n-> use histogram"
                        << "\nPlease check if the option variable \"NAvEvtPerBin\" requires "
@@ -698,7 +698,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
 void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 {
    // write histograms and PDFs to file for monitoring purposes
-   fLogger << kINFO << "write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
+   fLogger << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
   
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) { 
       (*fHistSig)[ivar]->Write();    

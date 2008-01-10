@@ -30,9 +30,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// Types                                                                //
-//                                                                      //
-// Singleton class for Global types used by TMVA                        //
+// Singleton class for TMVA typedefs and enums                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +66,9 @@ namespace TMVA {
          kBayesClassifier,
          kFDA            ,
          kCommittee      ,
-         kMaxMethod
+         kMaxMethod      ,
+         kPlugins
+
       };
 
       enum EVariableTransform {

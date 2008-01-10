@@ -9,6 +9,7 @@
 
 #pragma link C++ namespace TMVA;
 
+#pragma link C++ class TMVA::DataSet+; 
 #pragma link C++ class TMVA::Configurable+; 
 #pragma link C++ class TMVA::Event+; 
 #pragma link C++ class TMVA::kNN::Event+; 
@@ -80,9 +81,9 @@
 #pragma link C++ class TMVA::IMethod+;
 #pragma link C++ class TMVA::MsgLogger+;
 #pragma link C++ class TMVA::VariableTransformBase+;
- #pragma link C++ class TMVA::VariableIdentityTransform+;
- #pragma link C++ class TMVA::VariableDecorrTransform+;
- #pragma link C++ class TMVA::VariablePCATransform+;
+#pragma link C++ class TMVA::VariableIdentityTransform+;
+#pragma link C++ class TMVA::VariableDecorrTransform+;
+#pragma link C++ class TMVA::VariablePCATransform+;
 #pragma link C++ class TMVA::Config+;
 #pragma link C++ class TMVA::Config::VariablePlotting+;
 #pragma link C++ class TMVA::Config::IONames+;

@@ -75,7 +75,7 @@ namespace TMVA {
       Double_t           fMinTemperature;          // minimum temperature before SA quit
       Double_t           fEps;                     // relative required FCN accuracy at minimum
       
-      ClassDef(SimulatedAnnealingFitter,0) // Fitter using a Genetic Algorithm
+      ClassDef(SimulatedAnnealingFitter,0) // Fitter using a Simulated Annealing Algorithm
    };
 
 } // namespace TMVA

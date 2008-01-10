@@ -26,12 +26,22 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Event
+//
+// Storage class for an event. It is used by all TMVA methods
+// during the training. Events are collected in Dataset
+//
+//////////////////////////////////////////////////////////////////////////
+
 #include "TMVA/Event.h"
 #include "TMVA/Tools.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include <iostream>
 #include <iomanip>
+
  
 Int_t TMVA::Event::fgCount = 0;
 

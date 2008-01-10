@@ -97,6 +97,8 @@
 
 #include <fstream>
 
+#include "TPluginManager.h"
+
 #include "TMVA/Reader.h"
 #include "TMVA/Config.h"
 #include "TMVA/Methods.h"
@@ -256,38 +258,12 @@ TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& w
    }
 
    fLogger << kINFO << "Booking method tag \"" << methodTag << "\"" << Endl;
-   ifstream fin( weightfile );
-   if (!fin.good()) { // file not found --> Error
-      fLogger << kFATAL << "<BookMVA> fatal error: "
-              << "unable to open input weight file: " << weightfile << Endl;
-   }
+   TString methodName, methodTitle;
+   GetMethodNameTitle(weightfile,methodName,methodTitle);
 
-   char buf[512];
-
-   // read the method name
-   fin.getline(buf,512);
-   while (!TString(buf).BeginsWith("Method")) fin.getline(buf,512);
-   TString ls(buf);
-   Int_t idx1 = ls.First(':')+2; Int_t idx2 = ls.Index(' ',idx1)-idx1; if (idx2<0) idx2=ls.Length();
-   fin.close();  
-
-   TString fullname = ls(idx1,idx2);
-   idx1 = fullname.First(':');
-   Int_t idxtit = (idx1<0 ? fullname.Length() : idx1);
-   TString methodRealName  = fullname(0, idxtit);
-   TString methodTitle;
-   Bool_t notit;
-   if (idx1<0) {
-      methodTitle=methodRealName;
-      notit=kTRUE;
-   } 
-   else {
-      methodTitle=fullname(idxtit+2,fullname.Length()-1);
-      notit=kFALSE;
-   }
-
-   MethodBase* method = (MethodBase*)this->BookMVA( Types::Instance().GetMethodType(methodRealName), 
-                                                    weightfile );
+   TMVA::Types::EMVA typeIndex = Types::Instance().GetMethodType(methodName);
+   if( typeIndex == TMVA::Types::kMaxMethod ) typeIndex = TMVA::Types::kPlugins;
+   MethodBase* method = (MethodBase*)this->BookMVA( typeIndex, weightfile );
    method->SetMethodTitle(methodTitle);
 
    fLogger << kINFO << "Read method name  : \"" << method->GetMethodName()  << "\"" << Endl;
@@ -302,6 +278,9 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
 {
    // books MVA method from weightfile
    IMethod* method = 0;
+   TPluginManager* pluginManager(0);
+   TPluginHandler* pluginHandler(0);
+   TString methodName, methodTitle;
    switch (methodType) {
 
    case (TMVA::Types::kCuts):
@@ -360,6 +339,30 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
       method = new TMVA::MethodBayesClassifier( Data(), weightfile );
       break; 
 
+   case (TMVA::Types::kPlugins):
+      GetMethodNameTitle(weightfile, methodName, methodTitle);
+
+      fLogger << kINFO << "Searching for plugin for " << methodName << "  " << Endl;
+      pluginManager = gROOT->GetPluginManager();
+      pluginHandler = pluginManager->FindHandler("TMVA@@MethodBase",methodName ); //Has to be wrapped by analysing weighfile and extract methodtitle
+      if (pluginHandler) {
+         if (pluginHandler->LoadPlugin() == 0) {
+            method = (TMVA::MethodBase*) pluginHandler->ExecPlugin(2, &Data(), &weightfile);
+            if(method==0) {
+               fLogger << kFATAL << "Couldn't instantiate plugin for " << methodName << "." << Endl;
+            } else {
+               fLogger << kINFO << "Found plugin for " << methodName << "  " << Endl;
+            }
+         } else {
+            fLogger << kFATAL << "Couldn't load any plugin for " << methodName << "." << Endl; 
+         }
+      } else {
+         fLogger << kFATAL << "Couldn't find plugin handler for TMVA@@MethodBase and " << methodName << Endl; 
+      }
+
+      break;
+
+
    default: 
       fLogger << kFATAL << "Classifier: " << methodType << " not implemented" << Endl;
       return 0;
@@ -370,8 +373,6 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weig
 
    fLogger << kINFO << "Booked classifier " << ((MethodBase*)method)->GetMethodName()
            << " with title: \"" << ((MethodBase*)method)->GetMethodTitle() << "\"" << Endl;
-
-   
 
 #ifdef TMVA_Reader_TestIO__
    // testing the read/write procedure
@@ -529,3 +530,39 @@ void TMVA::Reader::DecodeVarNames( const TString varNames )
       }
    }
 } 
+
+//_______________________________________________________________________
+void TMVA::Reader::GetMethodNameTitle(const TString& weightfile, TString& methodName, TString& methodTitle) {
+
+   // read the header from the weight files of the different MVA methods
+
+   ifstream fin( weightfile );
+   if (!fin.good()) { // file not found --> Error
+      fLogger << kFATAL << "<BookMVA> fatal error: "
+              << "unable to open input weight file: " << weightfile << Endl;
+   }
+
+   char buf[512];
+
+   // read the method name
+   fin.getline(buf,512);
+   while (!TString(buf).BeginsWith("Method")) fin.getline(buf,512);
+   TString ls(buf);
+   Int_t idx1 = ls.First(':')+2; Int_t idx2 = ls.Index(' ',idx1)-idx1; if (idx2<0) idx2=ls.Length();
+   fin.close();  
+
+   TString fullname = ls(idx1,idx2);
+   idx1 = fullname.First(':');
+   Int_t idxtit = (idx1<0 ? fullname.Length() : idx1);
+   methodName  = fullname(0, idxtit);
+   Bool_t notit;
+   if (idx1<0) {
+      methodTitle=methodName;
+      notit=kTRUE;
+   } 
+   else {
+      methodTitle=fullname(idxtit+2,fullname.Length()-1);
+      notit=kFALSE;
+   }
+}
+

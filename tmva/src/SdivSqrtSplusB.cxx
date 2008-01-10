@@ -28,6 +28,15 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+//______________________________________________________________________
+//
+// Implementation of the statistical significance as separation criterion
+// Begin_Latex
+// Index = #frac{S}{#sqrt{S+B}}
+// End_Latex
+//______________________________________________________________________
+
+
 #include "TMath.h"
 #include "TMVA/SdivSqrtSplusB.h"
 

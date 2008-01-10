@@ -52,8 +52,8 @@
 ClassImp(TMVA::MethodFDA)
 
 //_______________________________________________________________________
-TMVA::MethodFDA::MethodFDA( TString jobName, TString methodTitle, DataSet& theData, 
-                            TString theOption, TDirectory* theTargetDir )
+TMVA::MethodFDA::MethodFDA( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                            const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir ), 
      IFitterTarget()
 {
@@ -68,7 +68,7 @@ TMVA::MethodFDA::MethodFDA( TString jobName, TString methodTitle, DataSet& theDa
 
 //_______________________________________________________________________
 TMVA::MethodFDA::MethodFDA( DataSet& theData, 
-                            TString theWeightFile,  
+                            const TString& theWeightFile,  
                             TDirectory* theTargetDir )
    : MethodBase( theData, theWeightFile, theTargetDir ) 
 {
@@ -379,7 +379,6 @@ Double_t TMVA::MethodFDA::InterpretFormula( const Event& event, std::vector<Doub
 Double_t TMVA::MethodFDA::GetMvaValue()
 {
    // returns MVA value for given event
-
    return InterpretFormula( GetEvent(), fBestPars );
 }
 

@@ -51,8 +51,8 @@ Bool_t wbug = kTRUE;
 ClassImp(TMVA::MethodSVM)
 
 //_______________________________________________________________________
-TMVA::MethodSVM::MethodSVM( TString jobName, TString methodTitle, DataSet& theData, 
-                            TString theOption, TDirectory* theTargetDir )
+TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSet& theData, 
+                            const TString& theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
    , fAlphas(0)
    , fErrorCache(0)
@@ -78,7 +78,7 @@ TMVA::MethodSVM::MethodSVM( TString jobName, TString methodTitle, DataSet& theDa
 
 //_______________________________________________________________________
 TMVA::MethodSVM::MethodSVM( DataSet& theData, 
-                            TString theWeightFile,  
+                            const TString& theWeightFile,  
                             TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
    , fAlphas(0)

@@ -50,10 +50,10 @@ namespace TMVA {
 
    public:
 
-      MethodVariable( TString jobName, 
-                      TString methodTitle, 
+      MethodVariable( const TString& jobName, 
+                      const TString& methodTitle, 
                       DataSet& theData,
-                      TString theOption = "Variable",
+                      const TString& theOption = "Variable",
                       TDirectory* theTargetDir = 0 );
   
       virtual ~MethodVariable( void );

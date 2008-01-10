@@ -1,3 +1,8 @@
+
+#include "TLegend.h"
+#include "TText.h"
+#include "TH2.h"
+
 #include "tmvaglob.C"
 
 // this macro plots the resulting MVA distributions (Signal and
@@ -20,7 +25,7 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
 
-   cout << "--- plotting type: " << htype << endl;
+   cout << "--- Plotting type: " << htype << endl;
 
    // define Canvas layout here!
    Int_t xPad = 1; // no of plots in x
@@ -35,202 +40,214 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
    Int_t countCanvas = 0;
 
    // search for the right histograms in full list of keys
-   TList methods;
-   UInt_t nm = TMVAGlob::GetListOfMethods( methods );
-   TIter next(&methods);
-   TKey *key, *hkey;   
+   TIter next(file->GetListOfKeys());
+   TKey *key(0);   
    while ((key = (TKey*)next())) {
 
-      cout << "--- Found directory: " << ((TDirectory*)key->ReadObj())->GetName() 
-           << " --> going in" << endl;
+      if (!TString(key->GetName()).BeginsWith("Method_")) continue;
+      if( ! gROOT->GetClass(key->GetClassName())->InheritsFrom("TDirectory") ) continue;
+
+      // cout << "--- Found directory: " << ((TDirectory*)key->ReadObj())->GetName() << endl;
 
       TString methodName;
       TMVAGlob::GetMethodName(methodName,key);
 
-      cout << "--- Method: " << methodName << endl;
+      // cout << "--- Method: " << methodName << endl;
 
       TDirectory* mDir = (TDirectory*)key->ReadObj();
-      TList titles;
-      UInt_t ninst = TMVAGlob::GetListOfTitles(mDir,titles);
-      TIter nextTitle(&titles);
-      TKey *titkey;
-      TDirectory *titDir;
-      while ((titkey = TMVAGlob::NextKey(nextTitle,"TDirectory"))) {
 
-         titDir = (TDirectory *)titkey->ReadObj();
+      TIter keyIt(mDir->GetListOfKeys());
+      TKey *titkey;
+      while((titkey = (TKey*)keyIt())) {
+         if( ! gROOT->GetClass(titkey->GetClassName())->InheritsFrom("TDirectory") ) continue;
+
+         // cout << "--- Found sub-directory: " << ((TDirectory*)titkey->ReadObj())->GetName() << endl;
+         TDirectory *titDir = (TDirectory *)titkey->ReadObj();
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
+
+         cout << methodName << "::" << methodTitle << ": " << flush;
          TString hname = "MVA_" + methodTitle;
          if      (htype == ProbaType  ) hname += "_Proba";
          else if (htype == RarityType ) hname += "_Rarity";
-
          TH1* sig = dynamic_cast<TH1*>(titDir->Get( hname + "_S" ));
          TH1* bgd = dynamic_cast<TH1*>(titDir->Get( hname + "_B" ));
 
-         if(sig==0 || bgd==0) continue;
+         if(sig==0 || bgd==0) {
+            if(htype == MVAType ) {
+               cout << "mva distribution not available" << endl;
+            } else if(htype == ProbaType ) {
+               cout << "probability distribution not available" << endl;
+            } else if(htype == RarityType ) {
+               cout << "rarity distribution not available" << endl;
+            } else if(htype == CompareType ) {
+               cout << "overtraining check not available" << endl;
+            } else cout << endl;
+         } else {
+            cout << endl;
+            // chop off useless stuff
+            sig->SetTitle( Form("TMVA response for classifier: %s", methodTitle.Data()) );
+            if      (htype == ProbaType) 
+               sig->SetTitle( Form("TMVA probability for classifier: %s", methodTitle.Data()) );
+            else if (htype == RarityType) 
+               sig->SetTitle( Form("TMVA Rarity for classifier: %s", methodTitle.Data()) );
+            else if (htype == CompareType) 
+               sig->SetTitle( Form("TMVA overtraining check for classifier: %s", methodTitle.Data()) );
+         
+            // create new canvas
+            TString ctitle = ((htype == MVAType) ? 
+                              Form("TMVA response %s",methodTitle.Data()) : 
+                              (htype == ProbaType) ? 
+                              Form("TMVA probability %s",methodTitle.Data()) :
+                              (htype == CompareType) ? 
+                              Form("TMVA comparison %s",methodTitle.Data()) :
+                              Form("TMVA Rarity %s",methodTitle.Data()));
+         
+            TString cname = ((htype == MVAType) ? 
+                             Form("output_%s",methodTitle.Data()) : 
+                             (htype == ProbaType) ? 
+                             Form("probability_%s",methodTitle.Data()) :
+                             (htype == CompareType) ? 
+                             Form("comparison_%s",methodTitle.Data()) :
+                             Form("rarity_%s",methodTitle.Data()));
+
+            c = new TCanvas( Form("canvas%d", countCanvas+1), ctitle, 
+                             countCanvas*50+200, countCanvas*20, width, (Int_t)width*0.78 ); 
+    
+            // set the histogram style
+            TMVAGlob::SetSignalAndBackgroundStyle( sig, bgd );
+   
+            // normalise both signal and background
+            TMVAGlob::NormalizeHists( sig, bgd );
+   
+            // frame limits (choose judicuous x range)
+            Float_t nrms = 4;
+            cout << "--- Mean and RMS (S): " << sig->GetMean() << ", " << sig->GetRMS() << endl;
+            cout << "--- Mean and RMS (B): " << bgd->GetMean() << ", " << bgd->GetRMS() << endl;
+            Float_t xmin = TMath::Max( TMath::Min(sig->GetMean() - nrms*sig->GetRMS(), 
+                                                  bgd->GetMean() - nrms*bgd->GetRMS() ),
+                                       sig->GetXaxis()->GetXmin() );
+            Float_t xmax = TMath::Min( TMath::Max(sig->GetMean() + nrms*sig->GetRMS(), 
+                                                  bgd->GetMean() + nrms*bgd->GetRMS() ),
+                                       sig->GetXaxis()->GetXmax() );
+            Float_t ymin = 0;
+            Float_t maxMult = (htype == CompareType) ? 1.3 : 1.2;
+            Float_t ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*maxMult;
+   
+            //if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") ymin = 0.01;
+   
+            // build a frame
+            Int_t nb = 500;
+            TH2F* frame = new TH2F( TString("frame") + methodTitle, sig->GetTitle(), 
+                                    nb, xmin, xmax, nb, ymin, ymax );
+            frame->GetXaxis()->SetTitle( methodTitle + ((htype == MVAType || htype == CompareType) ? " response" : "") );
+            if      (htype == ProbaType  ) frame->GetXaxis()->SetTitle( "Signal probability" );
+            else if (htype == RarityType ) frame->GetXaxis()->SetTitle( "Signal rarity" );
+            frame->GetYaxis()->SetTitle("Normalized");
+            TMVAGlob::SetFrameStyle( frame );
+   
+            // eventually: draw the frame
+            frame->Draw();  
+   
+            c->GetPad(0)->SetLeftMargin( 0.105 );
+            frame->GetYaxis()->SetTitleOffset( 1.2 );
+   
+            //if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") c->SetLogy();
+   
+            // Draw legend               
+            TLegend *legend= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin() - 0.12, 
+                                          c->GetLeftMargin() + (htype == CompareType ? 0.40 : 0.3), 1 - c->GetTopMargin() );
+            legend->SetFillStyle( 1 );
+            legend->AddEntry(sig,TString("Signal")     + ((htype == CompareType) ? " (test sample)" : ""), "F");
+            legend->AddEntry(bgd,TString("Background") + ((htype == CompareType) ? " (test sample)" : ""), "F");
+            legend->SetBorderSize(1);
+            legend->SetMargin( (htype == CompareType ? 0.2 : 0.3) );
+            legend->Draw("same");
+
+            // overlay signal and background histograms
+            sig->Draw("samehist");
+            bgd->Draw("samehist");
+   
+            if (htype == CompareType) {
+               // if overtraining check, load additional histograms
+               TH1* sigOv = 0;
+               TH1* bgdOv = 0;
+
+               TString ovname = hname += "_Train";
+               sigOv = dynamic_cast<TH1*>(titDir->Get( ovname + "_S" ));
+               bgdOv = dynamic_cast<TH1*>(titDir->Get( ovname + "_B" ));
       
-         // chop off useless stuff
-         sig->SetTitle( Form("TMVA response for classifier: %s", methodTitle.Data()) );
-         if      (htype == ProbaType) 
-            sig->SetTitle( Form("TMVA probability for classifier: %s", methodTitle.Data()) );
-         else if (htype == RarityType) 
-            sig->SetTitle( Form("TMVA Rarity for classifier: %s", methodTitle.Data()) );
-         else if (htype == CompareType) 
-            sig->SetTitle( Form("TMVA overtraining check for classifier: %s", methodTitle.Data()) );
-         
-         // create new canvas
-         TString ctitle = ((htype == MVAType) ? 
-                           Form("TMVA response %s",methodTitle.Data()) : 
-                           (htype == ProbaType) ? 
-                           Form("TMVA probability %s",methodTitle.Data()) :
-                           (htype == CompareType) ? 
-                           Form("TMVA comparison %s",methodTitle.Data()) :
-                           Form("TMVA Rarity %s",methodTitle.Data()));
+               if (sigOv == 0 || bgdOv == 0) {
+                  cout << "+++ Problem in \"mvas.C\": overtraining check histograms do not exist" << endl;
+               }
+               else {
+                  cout << "--- Found comparison histograms for overtraining check" << endl;
 
-         TString cname = ((htype == MVAType) ? 
-                          Form("output_%s",methodTitle.Data()) : 
-                          (htype == ProbaType) ? 
-                          Form("probability_%s",methodTitle.Data()) :
-                          (htype == CompareType) ? 
-                          Form("comparison_%s",methodTitle.Data()) :
-                          Form("rarity_%s",methodTitle.Data()));
+                  TLegend *legend2= new TLegend( 1 - c->GetRightMargin() - 0.42, 1 - c->GetTopMargin() - 0.12,
+                                                 1 - c->GetRightMargin(), 1 - c->GetTopMargin() );
+                  legend2->SetFillStyle( 1 );
+                  legend2->SetBorderSize(1);
+                  legend2->AddEntry(sigOv,"Signal (training sample)","P");
+                  legend2->AddEntry(bgdOv,"Background (training sample)","P");
+                  legend2->SetMargin( 0.1 );
+                  legend2->Draw("same");
+               }
+               Int_t col = sig->GetLineColor();
+               sigOv->SetMarkerColor( col );
+               sigOv->SetMarkerSize( 0.7 );
+               sigOv->SetMarkerStyle( 20 );
+               sigOv->SetLineWidth( 1 );
+               sigOv->SetLineColor( col );
+               sigOv->Draw("e1same");
+      
+               col = bgd->GetLineColor();
+               bgdOv->SetMarkerColor( col );
+               bgdOv->SetMarkerSize( 0.7 );
+               bgdOv->SetMarkerStyle( 20 );
+               bgdOv->SetLineWidth( 1 );
+               bgdOv->SetLineColor( col );
+               bgdOv->Draw("e1same");
+      
+               // for better visibility, plot thinner lines
+               sig->SetLineWidth( 1 );
+               bgd->SetLineWidth( 1 );
 
-         c = new TCanvas( Form("canvas%d", countCanvas+1), ctitle, 
-                          countCanvas*50+200, countCanvas*20, width, width*0.78 ); 
-          
-         // set the histogram style
-         TMVAGlob::SetSignalAndBackgroundStyle( sig, bgd );
-         
-         // normalise both signal and background
-         TMVAGlob::NormalizeHists( sig, bgd );
-         
-         // frame limits (choose judicuous x range)
-         Float_t nrms = 4;
-         cout << "--- mean and RMS (S): " << sig->GetMean() << ", " << sig->GetRMS() << endl;
-         cout << "--- mean and RMS (B): " << bgd->GetMean() << ", " << bgd->GetRMS() << endl;
-         Float_t xmin = TMath::Max( TMath::Min(sig->GetMean() - nrms*sig->GetRMS(), 
-                                               bgd->GetMean() - nrms*bgd->GetRMS() ),
-                                    sig->GetXaxis()->GetXmin() );
-         Float_t xmax = TMath::Min( TMath::Max(sig->GetMean() + nrms*sig->GetRMS(), 
-                                               bgd->GetMean() + nrms*bgd->GetRMS() ),
-                                    sig->GetXaxis()->GetXmax() );
-         Float_t ymin = 0;
-         Float_t maxMult = (htype == CompareType) ? 1.3 : 1.2;
-         Float_t ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*maxMult;
-         
-         if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") ymin = 0.01;
-         
-         // build a frame
-         Int_t nb = 500;
-         TH2F* frame = new TH2F( TString("frame") + methodTitle, sig->GetTitle(), 
-                                 nb, xmin, xmax, nb, ymin, ymax );
-         frame->GetXaxis()->SetTitle( methodTitle + ((htype == MVAType || htype == CompareType) ? " response" : "") );
-         if      (htype == ProbaType  ) frame->GetXaxis()->SetTitle( "Signal probability" );
-         else if (htype == RarityType ) frame->GetXaxis()->SetTitle( "Signal rarity" );
-         frame->GetYaxis()->SetTitle("Normalized");
-         TMVAGlob::SetFrameStyle( frame );
-         
-         // eventually: draw the frame
-         frame->Draw();  
-         
-         c->GetPad(0)->SetLeftMargin( 0.105 );
-         frame->GetYaxis()->SetTitleOffset( 1.2 );
-         
-         if (Draw_CFANN_Logy && mvaName[imva] == "CFANN") c->SetLogy();
-         
-         // Draw legend               
-         TLegend *legend= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin() - 0.12, 
-                                       c->GetLeftMargin() + (htype == CompareType ? 0.40 : 0.3), 1 - c->GetTopMargin() );
-         legend->SetFillStyle( 1 );
-         legend->AddEntry(sig,TString("Signal")     + ((htype == CompareType) ? " (test sample)" : ""), "F");
-         legend->AddEntry(bgd,TString("Background") + ((htype == CompareType) ? " (test sample)" : ""), "F");
-         legend->SetBorderSize(1);
-         legend->SetMargin( (htype == CompareType ? 0.2 : 0.3) );
-         legend->Draw("same");
+               // perform K-S test
+               cout << "--- Perform Kolmogorov-Smirnov tests" << endl;
+               Double_t kolS = sig->KolmogorovTest( sigOv );
+               Double_t kolB = bgd->KolmogorovTest( bgdOv );
+               cout << "--- Goodness of signal (background) consistency: " << kolS << " (" << kolB << ")" << endl;
 
-         // overlay signal and background histograms
-         sig->Draw("samehist");
-         bgd->Draw("samehist");
-         
-         if (htype == CompareType) {
-            // if overtraining check, load additional histograms
-            TH1* sigOv = 0;
-            TH1* bgdOv = 0;
-
-            TString ovname = hname += "_Train";
-            sigOv = dynamic_cast<TH1*>(titDir->Get( ovname + "_S" ));
-            bgdOv = dynamic_cast<TH1*>(titDir->Get( ovname + "_B" ));
-            
-            if (sigOv == 0 || bgdOv == 0) {
-               cout << "--- problem in \"mvas.C\": overtraining check histograms do not exist" << endl;
+               TString probatext = Form( "Kolmogorov-Smirnov test: signal (background) probability = %5.3g (%5.3g)", kolS, kolB );
+               TText* tt = new TText( 0.12, 0.74, probatext );
+               tt->SetNDC(); tt->SetTextSize( 0.032 ); tt->AppendPad(); 
             }
-            else {
-               cout << "--- Found comparison histograms for overtraining check" << endl;
 
-               TLegend *legend2= new TLegend( 1 - c->GetRightMargin() - 0.42, 1 - c->GetTopMargin() - 0.12,
-                                              1 - c->GetRightMargin(), 1 - c->GetTopMargin() );
-               legend2->SetFillStyle( 1 );
-               legend2->SetBorderSize(1);
-               legend2->AddEntry(sigOv,"Signal (training sample)","P");
-               legend2->AddEntry(bgdOv,"Background (training sample)","P");
-               legend2->SetMargin( 0.1 );
-               legend2->Draw("same");
+            // redraw axes
+            frame->Draw("sameaxis");
+   
+            // text for overflows
+            Int_t nbin = sig->GetNbinsX();
+            TString uoflow = Form( "U/O-flow (S,B): (%.1f, %.1f)% / (%.1f, %.1f)%", 
+                                   sig->GetBinContent(0)*100, bgd->GetBinContent(0)*100,
+                                   sig->GetBinContent(nbin+1)*100, bgd->GetBinContent(nbin+1)*100 );
+            TText* t = new TText( 0.975, 0.115, uoflow );
+            t->SetNDC();
+            t->SetTextSize( 0.030 );
+            t->SetTextAngle( 90 );
+            t->AppendPad();    
+   
+            // save canvas to file
+            c->Update();
+            TMVAGlob::plot_logo();
+            if (Save_Images) {
+               if      (htype == MVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s",     methodTitle.Data()) );
+               else if (htype == ProbaType)   TMVAGlob::imgconv( c, Form("plots/proba_%s",   methodTitle.Data()) ); 
+               else if (htype == CompareType) TMVAGlob::imgconv( c, Form("plots/overtrain_%s", methodTitle.Data()) ); 
+               else                           TMVAGlob::imgconv( c, Form("plots/rarity_%s",  methodTitle.Data()) ); 
             }
-            Int_t col = sig->GetLineColor();
-            sigOv->SetMarkerColor( col );
-            sigOv->SetMarkerSize( 0.7 );
-            sigOv->SetMarkerStyle( 20 );
-            sigOv->SetLineWidth( 1 );
-            sigOv->SetLineColor( col );
-            sigOv->Draw("e1same");
-            
-            col = bgd->GetLineColor();
-            bgdOv->SetMarkerColor( col );
-            bgdOv->SetMarkerSize( 0.7 );
-            bgdOv->SetMarkerStyle( 20 );
-            bgdOv->SetLineWidth( 1 );
-            bgdOv->SetLineColor( col );
-            bgdOv->Draw("e1same");
-            
-            // for better visibility, plot thinner lines
-            sig->SetLineWidth( 1 );
-            bgd->SetLineWidth( 1 );
-
-            // perform K-S test
-            cout << "--- Perform Kolmogorov-Smirnov tests" << endl;
-            Double_t kolS = sig->KolmogorovTest( sigOv );
-            Double_t kolB = bgd->KolmogorovTest( bgdOv );
-            cout << "--- Goodness of signal (background) consistency: " << kolS << " (" << kolB << ")" << endl;
-
-            TString probatext = Form( "Kolmogorov-Smirnov test: signal (background) probability = %5.3g (%5.3g)", kolS, kolB );
-            TText* tt = new TText( 0.12, 0.74, probatext );
-            tt->SetNDC(); tt->SetTextSize( 0.032 ); tt->AppendPad(); 
+            countCanvas++;
          }
-
-         // redraw axes
-         frame->Draw("sameaxis");
-         
-         // text for overflows
-         Int_t nbin = sig->GetNbinsX();
-         TString uoflow = Form( "U/O-flow (S,B): (%.1f, %.1f)% / (%.1f, %.1f)%", 
-                                sig->GetBinContent(0)*100, bgd->GetBinContent(0)*100,
-                                sig->GetBinContent(nbin+1)*100, bgd->GetBinContent(nbin+1)*100 );
-         TText* t = new TText( 0.975, 0.115, uoflow );
-         t->SetNDC();
-         t->SetTextSize( 0.030 );
-         t->SetTextAngle( 90 );
-         t->AppendPad();    
-         
-         // save canvas to file
-         c->Update();
-         TMVAGlob::plot_logo();
-         if (Save_Images) {
-            if      (htype == MVAType)     TMVAGlob::imgconv( c, Form("plots/mva_%s",     methodTitle.Data()) );
-            else if (htype == ProbaType)   TMVAGlob::imgconv( c, Form("plots/proba_%s",   methodTitle.Data()) ); 
-            else if (htype == CompareType) TMVAGlob::imgconv( c, Form("plots/overtrain_%s", methodTitle.Data()) ); 
-            else                           TMVAGlob::imgconv( c, Form("plots/rarity_%s",  methodTitle.Data()) ); 
-         }
-         countCanvas++;
       }
    }
 }

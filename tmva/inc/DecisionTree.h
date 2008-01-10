@@ -131,12 +131,6 @@ namespace TMVA {
       // 0-1 bit patterns stored in the "long-integer" together with the depth
       DecisionTreeNode* GetNode( ULong_t sequence, UInt_t depth );
 
-      TH2D* DrawTree( TString hname );
-      void DrawNode( TH2D* h,  DecisionTreeNode *n, 
-                     Double_t y, Double_t x, Double_t scale);
-
-      UInt_t GetDepth() { return fDepth; }
-
       std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityGainMap() { return fQualityGainMap; }
       std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityMap()     { return fQualityMap; }
 
@@ -200,8 +194,6 @@ namespace TMVA {
 
       std::vector< Double_t > fVariableImportance; // the relative importance of the different variables 
       
-      UInt_t     fDepth;         // maximal depth in tree reached
-
       SeparationBase *fQualityIndex;  // separation/quality criterio for CC-pruning
       std::multimap<Double_t,TMVA::DecisionTreeNode*> fQualityGainMap;  // the quality-gain of pre-leaf nodes
       std::multimap<Double_t,TMVA::DecisionTreeNode*> fQualityMap;      // the quality of leaf nodes

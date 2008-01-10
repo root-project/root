@@ -24,6 +24,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+//______________________________________________________________________
+/*
+  PCA transformation of input variables (uses Root's principal
+  component analysis TPrincipal)
+*/
+//______________________________________________________________________
+
 #include <cassert>
 
 #include "Riostream.h"
@@ -148,6 +155,33 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( TTree* tr )
       fEigenVectors[i] = const_cast<TMatrixD*>( fPCA[i]->GetEigenVectors() );
    }
    delete [] dvec;
+}
+
+//_______________________________________________________________________
+std::vector<TString>* TMVA::VariablePCATransform::GetTransformationStrings( Types::ESBType type ) const
+{
+   // creates string with variable transformations applied
+
+   const Int_t nvar = GetNVariables();
+   std::vector<TString>* strVec = new std::vector<TString>;
+
+   // index
+   const Int_t index = (type==Types::kSignal) ? 0 : 1;
+   
+   // fill vector
+   for (Int_t ivar=0; ivar<nvar; ivar++) {
+      TString str( "" );
+      for (Int_t jvar=0; jvar<nvar; jvar++) {
+         if (jvar > 0) str += " + ";
+         str += Form( "(%s", (TString("[") + Variable(jvar).GetExpression() + "]").Data() );
+         str += ((*fMeanValues[index])(jvar) > 0) ? " + " : " - ";
+         str += Form( "%10.5g)", TMath::Abs((*fMeanValues[index])(jvar)) );
+         str += Form( "*(%10.5g)", (*fEigenVectors[index])(jvar,ivar) );
+      }
+      strVec->push_back( str );
+   }      
+
+   return strVec;
 }
 
 //_______________________________________________________________________

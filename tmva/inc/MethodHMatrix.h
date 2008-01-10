@@ -61,14 +61,14 @@ namespace TMVA {
 
    public:
 
-      MethodHMatrix( TString jobName, 
-                     TString methodTitle, 
+      MethodHMatrix( const TString& jobName, 
+                     const TString& methodTitle, 
                      DataSet& theData,
-                     TString theOption = "",
+                     const TString& theOption = "",
                      TDirectory* theTargetDir = 0 );
 
       MethodHMatrix( DataSet& theData, 
-                     TString theWeightFile,  
+                     const TString& theWeightFile,  
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodHMatrix( void );

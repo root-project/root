@@ -59,13 +59,13 @@
 namespace TMVA {
    
    class BinaryTree;
-   ostream& operator<< ( ostream& os, const BinaryTree& tree);
-   istream& operator>> (istream& istr, BinaryTree& tree);
+   ostream& operator<< ( ostream& os, const BinaryTree& tree );
+   istream& operator>> ( istream& istr,     BinaryTree& tree );
    
    class BinaryTree {
       
       friend ostream& operator<< ( ostream& os, const BinaryTree& tree );
-      friend istream& operator>> ( istream& istr, BinaryTree& tree);
+      friend istream& operator>> ( istream& istr,     BinaryTree& tree );
       
    public:
       
@@ -74,7 +74,7 @@ namespace TMVA {
 
       virtual ~BinaryTree();
 
-      virtual Node * CreateNode() = 0;
+      virtual Node* CreateNode() = 0;
 
       // set the root node of the tree
       void SetRoot( Node* r ) { fRoot = r; }
@@ -88,25 +88,33 @@ namespace TMVA {
       // count the number of Nodes in the Tree by looping through the tree and updates
       // the stored number. (e.g. useful when pruning, as the number count is updated when
       // building the tree.
-      UInt_t CountNodes( Node *n = NULL );
+      UInt_t CountNodes( Node* n = NULL );
 
-      Node* GetLeftDaughter ( Node *n);    
-      Node* GetRightDaughter( Node *n);
+      UInt_t GetTotalTreeDepth() const { return fDepth; }
 
-      void Print(ostream & os) const;
-      void Read(istream & istr);
+      void SetTotalTreeDepth( Int_t depth ) { fDepth = depth;};
+
+      void SetTotalTreeDepth( Node* n = NULL );
+
+      Node* GetLeftDaughter ( Node* n);    
+      Node* GetRightDaughter( Node* n);
+
+      void Print( ostream& os ) const;
+      void Read ( istream& istr );
 
    private:
   
-      Node    *fRoot;                //the root node of the tree
+      Node*      fRoot;                //the root node of the tree
       // the tree only has it's root node, the "daughters" are taken car 
       // of by the "node" properties of the "root"
   
    protected:
+
       // delete a node (and the corresponding event if owned by the tree)
       void       DeleteNode( Node* );
 
-      Int_t      fNNodes;            //total number of nodes in the tree (counted)
+      Int_t      fNNodes;           // total number of nodes in the tree (counted)
+      UInt_t     fDepth;            // maximal depth in tree reached
 
       mutable MsgLogger  fLogger;   // message loggera    
 

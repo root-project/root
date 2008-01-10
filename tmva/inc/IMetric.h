@@ -31,9 +31,10 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// IMetric                                                               //
+// IMetric                                                              //
 //                                                                      //
-// distance between two points in parameter space                       //
+// Interface for a metric, depending on the implementation the meaning  //
+// of distance in space changes.                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

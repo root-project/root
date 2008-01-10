@@ -46,14 +46,14 @@ namespace TMVA {
 
    public:
 
-      MethodBayesClassifier( TString jobName, 
-                             TString methodTitle, 
+      MethodBayesClassifier( const TString& jobName, 
+                             const TString& methodTitle, 
                              DataSet& theData,
-                             TString theOption = "",
+                             const TString& theOption = "",
                              TDirectory* theTargetDir = 0 );
       
       MethodBayesClassifier( DataSet& theData, 
-                             TString theWeightFile,  
+                             const TString& theWeightFile,  
                              TDirectory* theTargetDir = NULL );
       
       virtual ~MethodBayesClassifier( void );

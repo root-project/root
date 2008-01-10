@@ -30,9 +30,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// VariableDecorrTransform                                              //
-//                                                                      //
-// Linear interpolation class                                           //
+// Decorrelation transformation of input variables                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +56,9 @@ namespace TMVA {
       void ReadTransformationFromStream( std::istream& );
 
       virtual void PrintTransformation( ostream & o );
+
+      // provides string vector describing explicit transformation
+      std::vector<TString>* GetTransformationStrings( Types::ESBType type ) const;
 
       // writer of function code
       virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part );
