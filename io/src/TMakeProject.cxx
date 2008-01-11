@@ -42,6 +42,7 @@ void TMakeProject::AddInclude(FILE *fp, const char *header, Bool_t system, char 
 //______________________________________________________________________________
 TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
 {
+   //Return the header name containing the description of name
    TString result;
    Int_t len = strlen(name);
    Int_t nest = 0;
@@ -259,7 +260,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
             if (isdigit(incName[0])) {
                // Not a class name, nothing to do.
             } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
-               const char *what;
+               const char *what="";
                switch(stlType)  {
                   case TClassEdit::kVector:   what = "vector"; break;
                   case TClassEdit::kList:     what = "list"; break;
