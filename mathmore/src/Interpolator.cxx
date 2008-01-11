@@ -36,13 +36,23 @@
 namespace ROOT {
 namespace Math {
 
+Interpolator::Interpolator(unsigned int ndata, Interpolation::Type type ) { 
+   // allocate GSL interpolaiton object 
+   fInterp = new GSLInterpolator(ndata, type);
+}
 
 Interpolator::Interpolator(const std::vector<double> & x, const std::vector<double> & y, Interpolation::Type type)
 {
-   // allocate GSL interpolation object
+   // allocate and initialize GSL interpolation object with data
+
+   size_t size = std::min( x.size(), y.size() );
    
-   fInterp = new GSLInterpolator(type, x, y);
+   fInterp = new GSLInterpolator(size, type);
+
+   fInterp->Init(size, &x.front(), &y.front() );
+
 }
+
 
 Interpolator::~Interpolator()
 {
@@ -61,6 +71,17 @@ Interpolator & Interpolator::operator = (const Interpolator &rhs)
    
    return *this;
 }
+
+bool Interpolator::SetData(unsigned int ndata, const double * x, const double *y) { 
+   // set the interpolation data
+   return fInterp->Init(ndata, x, y); 
+}
+bool Interpolator::SetData(const std::vector<double> & x, const std::vector<double> &y) { 
+   // set the interpolation data
+   size_t size = std::min( x.size(), y.size() );
+   return fInterp->Init(size, &x.front(), &y.front()); 
+}
+
 
 double Interpolator::Eval( double x ) const
 {
@@ -85,6 +106,10 @@ double Interpolator::Integ( double a, double b) const {
 }
 
 std::string  Interpolator::TypeGet() const {
+   // forward name request
+   return fInterp->Name();
+}
+std::string  Interpolator::Type() const {
    // forward name request
    return fInterp->Name();
 }

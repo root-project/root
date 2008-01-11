@@ -31,57 +31,71 @@
 
 #include "GSLInterpolator.h"
 
+
 #include <cassert>
 
 namespace ROOT {
 namespace Math {
 
 
-GSLInterpolator::GSLInterpolator (const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y) 
+GSLInterpolator::GSLInterpolator (unsigned int size, const Interpolation::Type type) : 
+   fAccel(0),
+   fSpline(0)
 { 
    // constructor given type and vectors of (x,y) points
-   const gsl_interp_type* interpType = 0 ;
+
    switch ( type )  
    {
       case ROOT::Math::Interpolation::LINEAR          : 
-         interpType = gsl_interp_linear; 
-         fName = "Linear";
+         fInterpType = gsl_interp_linear; 
          break ;
       case ROOT::Math::Interpolation::POLYNOMIAL       :
-         interpType = gsl_interp_polynomial; 
-         fName = "Polynomial";
+         fInterpType = gsl_interp_polynomial; 
          break ;
-         // dpened on GSL linear algebra
+         // depened on GSL linear algebra
       case ROOT::Math::Interpolation::CSPLINE         :
-         interpType = gsl_interp_cspline ;          
-         fName = "Cspline";
+         fInterpType = gsl_interp_cspline ;          
          break ;
       case ROOT::Math::Interpolation::CSPLINE_PERIODIC :
-         interpType = gsl_interp_cspline_periodic  ; 
-         fName = "Cspline_Periodic";
+         fInterpType = gsl_interp_cspline_periodic  ; 
          break ;
       case ROOT::Math::Interpolation::AKIMA            :
-         interpType = gsl_interp_akima; 
-         fName = "Akima";
+         fInterpType = gsl_interp_akima; 
          break ;
       case ROOT::Math::Interpolation::AKIMA_PERIODIC   :
-         interpType = gsl_interp_akima_periodic; 
-         fName = "Akima_Periodic";
+         fInterpType = gsl_interp_akima_periodic; 
          break ;
       default :
-         interpType = gsl_interp_cspline;   
-         // interpType = gsl_interp_akima; 
-         fName = "Akima";
+         // cspline
+         fInterpType = gsl_interp_cspline;   
          break ;
    }
-   
    // allocate objects
    
-   size_t size = std::min( x.size(), y.size() );
-   
-   fSpline = gsl_spline_alloc( interpType, size); 
-   // should check here the return Status 
-   gsl_spline_init( fSpline , &x.front() , &y.front() , size ) ;
+   if (size >= fInterpType->min_size) 
+      fSpline = gsl_spline_alloc( fInterpType, size); 
+
+}   
+
+bool  GSLInterpolator::Init(unsigned int size, const double *x, const double * y) {       
+   // initialize interpolation object with the given data 
+   // if given size is different a new interpolator object is created
+   if (fSpline == 0)   
+      fSpline = gsl_spline_alloc( fInterpType, size);
+
+   else {
+      gsl_interp * interp = fSpline->interp; 
+      if (size != interp->size) { 
+         //  free and reallocate a new object
+         gsl_spline_free(fSpline);
+         fSpline = gsl_spline_alloc( fInterpType, size);
+         
+      }
+   }
+   if (!fSpline) return false;
+
+   int iret = gsl_spline_init( fSpline , x , y , size );
+   if (iret != 0) return false; 
    
    fAccel  = gsl_interp_accel_alloc() ; 
    
@@ -89,6 +103,7 @@ GSLInterpolator::GSLInterpolator (const Interpolation::Type type, const std::vec
    //  throw std::exception();
    assert (fSpline != 0); 
    assert (fAccel != 0); 
+   return true;
 }
 
 GSLInterpolator::~GSLInterpolator() 

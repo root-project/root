@@ -33,6 +33,7 @@
 
 #include <vector>
 #include <string>
+#include <cassert>
 
 #include "Math/InterpolationTypes.h"
 
@@ -52,6 +53,9 @@ namespace Math {
    class GSLInterpolator {
       
    public: 
+
+      GSLInterpolator(unsigned int ndata, Interpolation::Type type);
+
       GSLInterpolator(const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y ); 
       virtual ~GSLInterpolator(); 
       
@@ -61,29 +65,33 @@ namespace Math {
       GSLInterpolator & operator = (const GSLInterpolator &); 
       
    public: 
+
+      bool Init(unsigned int ndata, const double *x, const double * y); 
          
-         double Eval( double x ) const
+      double Eval( double x ) const
       {
+         assert(fAccel);
          return gsl_spline_eval(fSpline, x, fAccel ); 
       }
       
       double Deriv( double x ) const 
       {
+         assert(fAccel);
          return gsl_spline_eval_deriv(fSpline, x, fAccel );  
       }
       
       double Deriv2( double x ) const {  
+         assert(fAccel);
          return gsl_spline_eval_deriv2(fSpline, x, fAccel );  
       }
       
       double Integ( double a, double b) const { 
+         assert(fAccel);
          return gsl_spline_eval_integ(fSpline, a, b, fAccel );  
       }
       
       std::string Name() { 
-         //return gsl_interp_name(fInterp); 
-         // Name not impl for gsl_spline objects
-         return fName;
+         return fInterpType->name; 
       }
       
       
@@ -92,9 +100,9 @@ namespace Math {
          
    private: 
          
-      std::string  fName;
       gsl_interp_accel * fAccel; 
       gsl_spline * fSpline; 
+      const gsl_interp_type * fInterpType;
       
    }; 
    

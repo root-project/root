@@ -63,11 +63,21 @@ namespace Math {
 class Interpolator {
 
 public:
+
+   /**
+      Constructs an interpolator class from  number of data points and with Interpolation::Type type.
+      The data can be set later on with the SetData method. 
+      In case the data size is not known, better using the default of zero or the next constructor later on. 
+      The defult interpolation type is Cubic spline
+   */
+   Interpolator(unsigned int ndata = 0, Interpolation::Type type = Interpolation::CSPLINE);
+
    /**
       Constructs an interpolator class from vector of data points \f$ (x_i, y_i )\f$ and with Interpolation::Type type.
       The method will compute a continous interpolating function \f$ y(x) \f$ such that \f$ y_i = y ( x_i )\f$.
+      The defult interpolation type is Cubic spline
    */
-   Interpolator(const std::vector<double> & x, const std::vector<double> & y, Interpolation::Type type = Interpolation::POLYNOMIAL);
+   Interpolator(const std::vector<double> & x, const std::vector<double> & y, Interpolation::Type type = Interpolation::CSPLINE);
 
    virtual ~Interpolator();
 
@@ -77,6 +87,20 @@ private:
    Interpolator & operator = (const Interpolator &);
 
 public:
+
+   /**
+      Set the data vector ( x[] and y[] )
+      To be efficient, the size of the data must be the same of the value used in the constructor (ndata)
+      If this is not  the case a new re-initialization is performed with the new data size
+    */
+   bool SetData(const std::vector<double> & x, const std::vector<double> & y); 
+
+   /**
+      Set the data vector ( x[] and y[] )
+      To be efficient, the size of the data must be the same of the value used when  constructing the class (ndata)
+      If this is not  the case a new re-initialization is performed with the new data size.
+    */
+   bool SetData(unsigned int ndata, const double * x, const double *  y); 
 
    /**
       Return the interpolated value at point x
@@ -101,6 +125,7 @@ public:
    /**
       Return the type of interpolation method
    */
+   std::string Type() const;
    std::string TypeGet() const;
 
 protected:
