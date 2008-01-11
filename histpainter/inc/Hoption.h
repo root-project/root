@@ -63,6 +63,8 @@ typedef struct Hoption_t {
    int AxisPos;     //  Axis position
    int Spec;        // TSpectrum graphics
 
+   int Zero;        // if selected with any LEGO option the empty are not drawn.
+
    // the following structure members are set to 1 if the corresponding option
    // in the current style is selected.
 

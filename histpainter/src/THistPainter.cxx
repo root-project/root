@@ -632,6 +632,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    Hoption.HighRes  = 0;
 
+   Hoption.Zero     = 0;
+
    //check for graphical cuts
    MakeCuts(chopt);
 
@@ -690,8 +692,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Lego = 1; strncpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
-      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
-      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
+      l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+      l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
    }
 
    l = strstr(chopt,"SURF");
@@ -1002,6 +1005,8 @@ void THistPainter::Paint(Option_t *option)
    //    "LEGO"   : Draw a lego plot with hidden line removal
    //    "LEGO1"  : Draw a lego plot with hidden surface removal
    //    "LEGO2"  : Draw a lego plot using colors to show the cell contents
+   //               When the option "0" is used with any LEGO option, the
+   //               empty bins are not drawn.
    //    "SURF"   : Draw a surface plot with hidden line removal
    //    "SURF1"  : Draw a surface plot with hidden surface removal
    //    "SURF2"  : Draw a surface plot using colors to show the cell contents
@@ -1394,8 +1399,11 @@ void THistPainter::Paint(Option_t *option)
    //    "LEGO1"  : Draw a lego plot with hidden surface removal
    //    "LEGO2"  : Draw a lego plot using colors to show the cell contents
    //
-   //      See TStyle::SeTPaletteAxis to change the color palette.
-   //      We suggest you use palette 1 with the call
+   //    When the option "0" is used with any LEGO option, the empty
+   //    bins are not drawn.
+   //
+   //    See TStyle::SeTPaletteAxis to change the color palette.
+   //    We suggest you use palette 1 with the call
    //        gStyle->SetColorPalette(1)
    //
    //Begin_Html
@@ -4359,20 +4367,23 @@ void THistPainter::PaintLego(Option_t *)
 {
    // Control function to draw a table as a lego plot.
    //
-   //      In a lego plot, cell contents are represented as 3-d boxes.
-   //      The height of the box is proportional to the cell content.
+   //   In a lego plot, cell contents are represented as 3-d boxes.
+   //   The height of the box is proportional to the cell content.
    //
-   //      A lego plot can be represented in several coordinate systems.
-   //      Default system is Cartesian coordinates.
-   //      Possible systems are CYL,POL,SPH,PSR.
+   //   A lego plot can be represented in several coordinate systems.
+   //   Default system is Cartesian coordinates.
+   //   Possible systems are CYL,POL,SPH,PSR.
    //
-   //      See THistPainter::Draw for the list of Lego options.
-   //      See TPainter3dAlgorithms for more examples of lego options.
+   //   "LEGO"   : Draw a lego plot with hidden line removal
+   //   "LEGO1"  : Draw a lego plot with hidden surface removal
+   //   "LEGO2"  : Draw a lego plot using colors to show the cell contents
    //
-   //      See TStyle::SeTPaletteAxis to change the color palette.
-   //      It is suggested to use palette 1 via the call
+   //   When the option "0" is used with any LEGO option, the empty
+   //   bins are not drawn.
+   //
+   //   See TStyle::SeTPaletteAxis to change the color palette.
+   //   It is suggested to use palette 1 via the call
    //      gStyle->SetColorPalette(1)
-   //
    //Begin_Html
    /*
    <img src="gif/PaintLego1.gif">
