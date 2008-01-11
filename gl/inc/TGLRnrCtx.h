@@ -89,6 +89,7 @@ protected:
    // Selection stuff
    Bool_t          fSelection;
    Bool_t          fSecSelection;
+   Int_t           fPickRadius;
    TGLRect        *fPickRectangle;
    TGLSelectBuffer*fSelectBuffer;
 

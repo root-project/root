@@ -34,14 +34,14 @@ public:
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
 
    // To support two-level selectionvirtual
    Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
 
-   virtual Bool_t ShouldCache(TGLRnrCtx & rnrCtx) const;
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   virtual void ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
 
    ClassDef(TEveStraightLineSetGL, 0); // GL-renderer for TEveStraightLineSet class.
 };

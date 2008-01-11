@@ -1124,6 +1124,235 @@ void TGLUtil::Color4fv(const Float_t* rgba)
 }
 
 /******************************************************************************/
+// Rendering of polymarkers and lines from logical-shapes.
+/******************************************************************************/
+
+void TGLUtil::BeginExtendPickRegion(Float_t scale)
+{
+   // Extend pick region for large point-sizes or line-widths.
+
+   glMatrixMode(GL_PROJECTION);
+   glPushMatrix();
+   Float_t pm[16];
+   glGetFloatv(GL_PROJECTION_MATRIX, pm);
+   for (Int_t i=0; i<=12; i+=4) {
+      pm[i] *= scale; pm[i+1] *= scale;
+   }
+   glLoadMatrixf(pm);
+   glMatrixMode(GL_MODELVIEW);
+}
+
+void TGLUtil::EndExtendPickRegion()
+{
+   // End extension of the pick region.
+
+   glMatrixMode(GL_PROJECTION);
+   glPopMatrix();
+   glMatrixMode(GL_MODELVIEW);
+}
+
+//______________________________________________________________________________
+void TGLUtil::RenderPolyMarkers(const TAttMarker& marker, Float_t* p, Int_t n,
+                                Int_t pick_radius, Bool_t selection,
+                                Bool_t sec_selection)
+{
+   // Render polymarkers at points specified by p-array.
+   // Supports point and cross-like styles.
+
+   if (n == 0) return;
+
+   glPushAttrib(GL_ENABLE_BIT | GL_POINT_BIT | GL_LINE_BIT);
+
+   glDisable(GL_LIGHTING);
+   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+   glEnable(GL_COLOR_MATERIAL);
+   TGLUtil::Color(marker.GetMarkerColor());
+
+   Int_t s = marker.GetMarkerStyle();
+   if (s == 2 || s == 3 || s == 5 || s == 28)
+      RenderCrosses(marker, p, n, sec_selection);
+   else
+      RenderPoints(marker, p, n, pick_radius, selection, sec_selection);
+
+   glPopAttrib();
+}
+
+//______________________________________________________________________________
+void TGLUtil::RenderPoints(const TAttMarker& marker, Float_t* op, Int_t n,
+                           Int_t pick_radius, Bool_t selection,
+                           Bool_t sec_selection)
+{
+   // Render markers as circular or square points.
+   // Color is never changed.
+
+   Int_t style = marker.GetMarkerStyle();
+   Float_t size = 5*marker.GetMarkerSize();
+   if (style == 4 || style == 20 || style == 24)
+   {
+      glEnable(GL_POINT_SMOOTH);
+      if (style == 4 || style == 24) {
+         glEnable(GL_BLEND);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+      }
+   }
+   else
+   {
+      glDisable(GL_POINT_SMOOTH);
+      if      (style == 1) size = 1;
+      else if (style == 6) size = 2;
+      else if (style == 7) size = 3;
+   }
+   glPointSize(size);
+
+   // During selection extend picking region for large point-sizes.
+   Bool_t changePM = kFALSE;
+   if (selection && size > pick_radius)
+   {
+      changePM = kTRUE;
+      BeginExtendPickRegion((Float_t) pick_radius / size);
+   }
+
+   Float_t* p = op;
+   if (sec_selection)
+   {
+      glPushName(0);
+      for (Int_t i=0; i<n; ++i, p+=3)
+      {
+         glLoadName(i);
+         glBegin(GL_POINTS);
+         glVertex3fv(p);
+         glEnd();
+      }
+      glPopName();
+   }
+   else
+   {
+      glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+      glVertexPointer(3, GL_FLOAT, 0, p);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      { // Circumvent bug in ATI's linux drivers.
+         Int_t nleft = n;
+         Int_t ndone = 0;
+         const Int_t maxChunk = 8192;
+         while (nleft > maxChunk)
+         {
+            glDrawArrays(GL_POINTS, ndone, maxChunk);
+            nleft -= maxChunk;
+            ndone += maxChunk;
+         }
+         glDrawArrays(GL_POINTS, ndone, nleft);
+      }
+      glPopClientAttrib();
+   }
+
+   if (changePM)
+      EndExtendPickRegion();
+}
+
+//______________________________________________________________________________
+void TGLUtil::RenderCrosses(const TAttMarker& marker, Float_t* op, Int_t n,
+                            Bool_t sec_selection)
+{
+   // Render markers as crosses.
+   // Color is never changed.
+
+   if (marker.GetMarkerStyle() == 28)
+   {
+      glEnable(GL_BLEND);
+      glEnable(GL_LINE_SMOOTH);
+      glLineWidth(2);
+   }
+   else
+   {
+      glDisable(GL_LINE_SMOOTH);
+   }
+
+   // cross dim
+   const Float_t  d = 2*marker.GetMarkerSize();
+   Float_t* p = op;
+   if (sec_selection)
+   {
+      glPushName(0);
+      for (Int_t i=0; i<n; ++i, p+=3)
+      {
+         glLoadName(i);
+         glBegin(GL_LINES);
+         glVertex3f(p[0]-d, p[1],   p[2]);   glVertex3f(p[0]+d, p[1],   p[2]);
+         glVertex3f(p[0],   p[1]-d, p[2]);   glVertex3f(p[0],   p[1]+d, p[2]);
+         glVertex3f(p[0],   p[1],   p[2]-d); glVertex3f(p[0],   p[1],   p[2]+d);
+         glEnd();
+      }
+      glPopName();
+   }
+   else
+   {
+      glBegin(GL_LINES);
+      for (Int_t i=0; i<n; ++i, p+=3)
+      {
+         glVertex3f(p[0]-d, p[1],   p[2]);   glVertex3f(p[0]+d, p[1],   p[2]);
+         glVertex3f(p[0],   p[1]-d, p[2]);   glVertex3f(p[0],   p[1]+d, p[2]);
+         glVertex3f(p[0],   p[1],   p[2]-d); glVertex3f(p[0],   p[1],   p[2]+d);
+      }
+      glEnd();
+   }
+}
+
+//______________________________________________________________________________
+void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
+                                 Int_t pick_radius, Bool_t selection)
+{
+   // Render poly-line as specified by the p-array.
+
+   if (n == 0) return;
+
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
+
+   glDisable(GL_LIGHTING);
+   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+   glEnable(GL_COLOR_MATERIAL);
+   TGLUtil::Color(aline.GetLineColor());
+   glLineWidth(aline.GetLineWidth());
+   if (aline.GetLineStyle() > 1) {
+      Int_t    fac = 1;
+      UShort_t pat = 0xffff;
+      switch (aline.GetLineStyle()) {
+         case 2:  pat = 0x3333; break;
+         case 3:  pat = 0x5555; break;
+         case 4:  pat = 0xf040; break;
+         case 5:  pat = 0xf4f4; break;
+         case 6:  pat = 0xf111; break;
+         case 7:  pat = 0xf0f0; break;
+         case 8:  pat = 0xff11; break;
+         case 9:  pat = 0x3fff; break;
+         case 10: pat = 0x08ff; fac = 2; break;
+      }
+
+      glLineStipple(1, pat);
+      glEnable(GL_LINE_STIPPLE);
+   }
+
+   // During selection extend picking region for large line-widths.
+   Bool_t changePM = kFALSE;
+   if (selection && aline.GetLineWidth() > pick_radius)
+   {
+      changePM = kTRUE;
+      BeginExtendPickRegion((Float_t) pick_radius / aline.GetLineWidth());
+   }
+
+   Float_t* tp = p;
+   glBegin(GL_LINE_STRIP);
+   for (Int_t i=0; i<n; ++i, tp+=3)
+      glVertex3fv(tp);
+   glEnd();
+
+   if (changePM)
+      EndExtendPickRegion();
+
+   glPopAttrib();
+}
+
+/******************************************************************************/
 // Rendering atoms used by TGLViewer / TGScene.
 /******************************************************************************/
 

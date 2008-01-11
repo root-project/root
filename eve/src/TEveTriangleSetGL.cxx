@@ -79,8 +79,6 @@ void TEveTriangleSetGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
 
    glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
    glEnable(GL_COLOR_MATERIAL);
-   glPolygonMode(GL_FRONT, GL_FILL);
-   glPolygonMode(GL_BACK,  GL_LINE);
    glDisable(GL_CULL_FACE);
    if (isScaled) glEnable(GL_NORMALIZE);
    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);

@@ -13,7 +13,6 @@
 #include "TEveLine.h"
 
 #include "TGLRnrCtx.h"
-#include "TEveGLUtil.h"
 #include "TGLIncludes.h"
 
 //______________________________________________________________________________
@@ -48,6 +47,17 @@ Bool_t TEveLineGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    return kFALSE;
 }
 
+//______________________________________________________________________________
+Bool_t TEveLineGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
+{
+   // Override from TGLLogicalShape.
+   // To account for large point-sizes we modify the projection matrix
+   // during selection and thus we need a direct draw.
+
+   if (rnrCtx.Selection()) return kFALSE;
+   return fDLCache;
+}
+
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -64,8 +74,10 @@ void TEveLineGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    if (q.Size() <= 0) return;
 
    if (q.fRnrPoints)
-      TEveGLUtil::RenderPolyMarkers(q, q.GetP(), q.Size());
+      TGLUtil::RenderPolyMarkers(q, q.GetP(), q.Size(),
+                                 rnrCtx.GetPickRadius(),
+                                 rnrCtx.Selection());
 
    if (q.fRnrLine)
-      TEveGLUtil::RenderLine(q, q.GetP(), q.Size());
+      TGLUtil::RenderPolyLine(q, q.GetP(), q.Size());
 }

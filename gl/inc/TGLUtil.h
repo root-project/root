@@ -23,6 +23,9 @@ class TString;
 class TGLBoundingBox;
 class TGLCamera;
 
+class TAttMarker;
+class TAttLine;
+
 #include <cmath>
 #include <vector>
 #include <cassert>
@@ -937,6 +940,20 @@ public:
    static void Color4f(Float_t r, Float_t g, Float_t b, Float_t a);
    static void Color3fv(const Float_t* rgb);
    static void Color4fv(const Float_t* rgba);
+
+   static void BeginExtendPickRegion(Float_t scale);
+   static void EndExtendPickRegion();
+
+   static void RenderPolyMarkers(const TAttMarker& marker, Float_t* p, Int_t n,
+                                 Int_t pick_radius=0, Bool_t selection=kFALSE,
+                                 Bool_t sec_selection=kFALSE);
+   static void RenderPoints(const TAttMarker& marker, Float_t* p, Int_t n,
+                            Int_t pick_radius=0, Bool_t selection=kFALSE,
+                            Bool_t sec_selection=kFALSE);
+   static void RenderCrosses(const TAttMarker& marker, Float_t* p, Int_t n,
+                             Bool_t sec_selection=kFALSE);
+   static void RenderPolyLine(const TAttLine& al, Float_t* p, Int_t n,
+                              Int_t pick_radius=0, Bool_t selection=kFALSE);
 
    // TODO: These draw routines should take LOD hints
    static void SetDrawColors(const Float_t rgba[4]);

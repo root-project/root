@@ -21,10 +21,6 @@ class TGLRnrCtx;
 
 class TPointSet3DGL : public TGLObject
 {
-protected:
-   void RenderPoints (TGLRnrCtx & rnrCtx) const;
-   void RenderCrosses(TGLRnrCtx & rnrCtx) const;
-
 public:
    TPointSet3DGL() : TGLObject() {}
 

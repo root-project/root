@@ -1,4 +1,3 @@
-// @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
 TEveStraightLineSet* lineset_test(Int_t nlines = 40, Int_t nmarkers = 4) 
@@ -20,9 +19,12 @@ TEveStraightLineSet* lineset_test(Int_t nlines = 40, Int_t nmarkers = 4)
          ls->AddMarker(i, r.Rndm());
       }
    }
-  
+
+   ls->SetMarkerSize(1.5);
+   ls->SetMarkerStyle(4);
+
    gEve->AddElement(ls);
    gEve->Redraw3D();
- 
-   return ls;  
+
+   return ls;
 }

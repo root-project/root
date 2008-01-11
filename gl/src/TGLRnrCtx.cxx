@@ -71,6 +71,7 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
 
    fSelection    (kFALSE),
    fSecSelection (kFALSE),
+   fPickRadius   (0),
    fPickRectangle(0),
    fSelectBuffer (0),
 
@@ -129,6 +130,7 @@ void TGLRnrCtx::BeginSelection(Int_t x, Int_t y, Int_t r)
 
    fSelection    = kTRUE;
    fSecSelection = kFALSE;
+   fPickRadius   = r;
    if (!fPickRectangle) fPickRectangle = new TGLRect;
    fPickRectangle->Set(x, y, r, r);
 
@@ -141,6 +143,7 @@ void TGLRnrCtx::EndSelection(Int_t glResult)
 
    fSelection    = kFALSE;
    fSecSelection = kFALSE;
+   fPickRadius   = 0;
    delete fPickRectangle; fPickRectangle = 0;
 
    if (glResult < 0)
@@ -172,10 +175,9 @@ TGLRect * TGLRnrCtx::GetPickRectangle()
 
 Int_t TGLRnrCtx::GetPickRadius()
 {
-   // Return pick radius. If selection is not set it returns the
-   // default vale.
+   // Return pick radius. If selection is not active it returns 0.
 
-   return fPickRectangle ? fPickRectangle->Width() : 3;
+   return fPickRadius;
 }
 
 /**************************************************************************/

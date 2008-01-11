@@ -35,7 +35,7 @@ public:
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
-   // To support two-level selection
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 

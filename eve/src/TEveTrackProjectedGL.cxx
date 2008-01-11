@@ -13,10 +13,9 @@
 #include "TEveTrackProjected.h"
 #include "TEveTrackPropagator.h"
 #include "TEveProjectionManager.h"
-#include "TEveGLUtil.h"
 
-#include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
+#include "TGLRnrCtx.h"
 
 //______________________________________________________________________________
 // TEveTrackProjectedGL
@@ -51,7 +50,7 @@ Bool_t TEveTrackProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
+void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
    // Draw track with GL.
 
@@ -66,8 +65,12 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
         bpi != fM->fBreakPoints.end(); ++bpi)
    {
       Int_t size = *bpi - start;
-      if (fM->fRnrLine)   TEveGLUtil::RenderLine(*fM, p, size);
-      if (fM->fRnrPoints) TEveGLUtil::RenderPolyMarkers(*fM, p, size);
+      if (fM->fRnrLine)
+         TGLUtil::RenderPolyLine(*fM, p, size);
+      if (fM->fRnrPoints)
+         TGLUtil::RenderPolyMarkers(*fM, p, size,
+                                    rnrCtx.GetPickRadius(),
+                                    rnrCtx.Selection());
       p     += 3*size;
       start +=   size;
    }
@@ -109,11 +112,15 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx & rnrCtx) const
             }
          }
       }
-      TEveGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, pntsN);
+      TGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, pntsN,
+                                 rnrCtx.GetPickRadius(),
+                                 rnrCtx.Selection());
       delete [] pnts;
    }
 
    // fist vertex
    if (rTP.GetRnrFV() && fTrack->GetLastPoint())
-      TEveGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1);
+      TGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1,
+                                 rnrCtx.GetPickRadius(),
+                                 rnrCtx.Selection());
 }

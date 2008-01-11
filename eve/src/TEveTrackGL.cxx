@@ -12,11 +12,10 @@
 #include "TEveTrackGL.h"
 #include "TEveTrack.h"
 #include "TEveTrackPropagator.h"
-#include "TEveGLUtil.h"
-
-#include "TGLSelectRecord.h"
 
 #include "TGLIncludes.h"
+#include "TGLRnrCtx.h"
+#include "TGLSelectRecord.h"
 
 //______________________________________________________________________________
 // TEveTrackGL
@@ -46,6 +45,17 @@ Bool_t TEveTrackGL::SetModel(TObject* obj, const Option_t* /*opt*/)
       return kTRUE;
    }
    return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TEveTrackGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
+{
+   // Override from TGLLogicalShape.
+   // To account for large point-sizes we modify the projection matrix
+   // during selection and thus we need a direct draw.
+
+   if (rnrCtx.Selection()) return kFALSE;
+   return fDLCache;
 }
 
 //______________________________________________________________________________
@@ -104,13 +114,17 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
             }
          }
       }
-      TEveGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, n);
+      TGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, n,
+                                 rnrCtx.GetPickRadius(),
+                                 rnrCtx.Selection());
       delete [] pnts;
    }
 
    // fist vertex
    if (rTP.GetRnrFV() && fTrack->GetLastPoint())
-      TEveGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1);
+      TGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1,
+                                 rnrCtx.GetPickRadius(),
+                                 rnrCtx.Selection());
 
    TEveLineGL::DirectDraw(rnrCtx);
 }

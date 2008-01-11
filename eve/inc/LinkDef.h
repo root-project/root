@@ -16,7 +16,6 @@
 
 // Utilities
 #pragma link C++ class TEveUtil+;
-#pragma link C++ class TEveGLUtil+;
 
 // TEveManager
 #pragma link C++ class TEveManager+;
