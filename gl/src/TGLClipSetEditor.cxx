@@ -103,8 +103,10 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
 
    fM = m;
 
-   Double_t clip[6] = {0.};
+   fTypeButtons->GetButton(fCurrentClip+1)->SetDown(kFALSE);
+   fCurrentClip = fM->GetClipType();
 
+   Double_t clip[6] = {0.};
    fM->GetClipState(fCurrentClip, clip);
 
    fApplyButton->SetState(kButtonDisabled);
