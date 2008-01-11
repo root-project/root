@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log 
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log abstract.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += CollectionSplit
@@ -25,4 +25,12 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+abstract.root: abstract_cxx.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l 'runabstract.cxx(0)' > abstract_root.log
+
+abstract.log: abstract.root
+	$(CMDECHO) root.exe -b -q -l 'runabstract.cxx(1)' > abstract.log
+
+abstract: abstract.log
+	$(TestDiff)
 
