@@ -662,8 +662,8 @@ Bool_t THnSparse::IsInRange(Int_t *coord) const
    //    axis12->SetBit(TAxis::kAxisRange);
    // to deselect the under- and overflow bins in the 12th dimension.
 
-   Int_t min=0;
-   Int_t max=0;
+   Int_t min = 0;
+   Int_t max = 0;
    for (Int_t i = 0; i < fNdimensions; ++i) {
       TAxis *axis = GetAxis(i);
       if (!axis->TestBit(TAxis::kAxisRange)) continue;
@@ -674,7 +674,7 @@ Bool_t THnSparse::IsInRange(Int_t *coord) const
          // over- and underflow bins are de-selected.
          // first and last are == 0 due to axis12->SetRange(1, axis12->GetNbins());
          min = 1;
-         max = axis->GetNbins();      
+         max = axis->GetNbins();
       }
       if (coord[i] < min || coord[i] > max)
          return kFALSE;
@@ -708,21 +708,20 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    TH1D* h = new TH1D(name, title, GetAxis(xDim)->GetNbins(),
                       GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax());
 
+   TAxis *axis = GetAxis(xDim);
+   Bool_t hadRange = axis->TestBit(TAxis::kAxisRange);
+   axis->SetBit(TAxis::kAxisRange, kFALSE);
+
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
    Double_t err = 0.;
    Double_t preverr = 0.;
    Double_t v = 0.;
-   Int_t inRangeX = GetAxis(xDim)->GetFirst(); // force it to be in-range
-   Int_t oldCoordX = 0;
 
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
 
-      oldCoordX = coord[xDim];
-      coord[xDim] = inRangeX;
       if (!IsInRange(coord)) continue;
-      coord[xDim] = oldCoordX;
 
       if (wantErrors) {
          if (haveErrors) {
@@ -740,6 +739,9 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    delete [] coord;
 
    h->SetEntries(fEntries);
+
+   // reset kAxisRange bit:
+   axis->SetBit(TAxis::kAxisRange, hadRange);
 
    return h;
 }
@@ -779,27 +781,24 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
                       GetAxis(xDim)->GetNbins(),
                       GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax());
 
+   TAxis *axisX = GetAxis(xDim);
+   Bool_t hadRangeX = axisX->TestBit(TAxis::kAxisRange);
+   axisX->SetBit(TAxis::kAxisRange, kFALSE);
+   TAxis *axisY = GetAxis(yDim);
+   Bool_t hadRangeY = axisY->TestBit(TAxis::kAxisRange);
+   axisY->SetBit(TAxis::kAxisRange, kFALSE);
+
    Int_t* coord = new Int_t[fNdimensions];
    Double_t err = 0.;
    Double_t preverr = 0.;
    Double_t v = 0.;
    Long_t bin = 0;
-   Int_t inRangeX = GetAxis(xDim)->GetFirst(); // force it to be in-range
-   Int_t inRangeY = GetAxis(yDim)->GetFirst(); // force it to be in-range
-   Int_t oldCoordX = 0;
-   Int_t oldCoordY = 0;
 
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
 
-      oldCoordX = coord[xDim];
-      oldCoordY = coord[yDim];
-      coord[xDim] = inRangeX;
-      coord[yDim] = inRangeY;
       if (!IsInRange(coord)) continue;
-      coord[xDim] = oldCoordX;
-      coord[yDim] = oldCoordY;
 
       bin = h->GetBin(coord[yDim],coord[xDim] );
 
@@ -819,6 +818,10 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
    delete [] coord;
 
    h->SetEntries(fEntries);
+
+   // reset kAxisRange bit:
+   axisX->SetBit(TAxis::kAxisRange, hadRangeX);
+   axisY->SetBit(TAxis::kAxisRange, hadRangeY);
 
    return h;
 }
@@ -863,32 +866,28 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                       GetAxis(zDim)->GetNbins(),
                       GetAxis(zDim)->GetXmin(), GetAxis(zDim)->GetXmax());
 
+
+   TAxis *axisX = GetAxis(xDim);
+   Bool_t hadRangeX = axisX->TestBit(TAxis::kAxisRange);
+   axisX->SetBit(TAxis::kAxisRange, kFALSE);
+   TAxis *axisY = GetAxis(yDim);
+   Bool_t hadRangeY = axisY->TestBit(TAxis::kAxisRange);
+   axisY->SetBit(TAxis::kAxisRange, kFALSE);
+   TAxis *axisZ = GetAxis(zDim);
+   Bool_t hadRangeZ = axisZ->TestBit(TAxis::kAxisRange);
+   axisZ->SetBit(TAxis::kAxisRange, kFALSE);
+
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
    Double_t err = 0.;
    Double_t preverr = 0.;
    Double_t v = 0.;
    Long_t bin = 0;
-   Int_t inRangeX = GetAxis(xDim)->GetFirst(); // force it to be in-range
-   Int_t inRangeY = GetAxis(yDim)->GetFirst(); // force it to be in-range
-   Int_t inRangeZ = GetAxis(zDim)->GetFirst(); // force it to be in-range
-   Int_t oldCoordX = 0;
-   Int_t oldCoordY = 0;
-   Int_t oldCoordZ = 0;
 
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
 
-      oldCoordX = coord[xDim];
-      oldCoordY = coord[yDim];
-      oldCoordZ = coord[zDim];
-      coord[xDim] = inRangeX;
-      coord[yDim] = inRangeY;
-      coord[zDim] = inRangeZ;
       if (!IsInRange(coord)) continue;
-      coord[xDim] = oldCoordX;
-      coord[yDim] = oldCoordY;
-      coord[zDim] = oldCoordZ;
 
       bin = h->GetBin(coord[xDim], coord[yDim], coord[zDim]);
 
@@ -908,6 +907,11 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    delete [] coord;
 
    h->SetEntries(fEntries);
+
+   // reset kAxisRange bit:
+   axisX->SetBit(TAxis::kAxisRange, hadRangeX);
+   axisY->SetBit(TAxis::kAxisRange, hadRangeY);
+   axisZ->SetBit(TAxis::kAxisRange, hadRangeZ);
 
    return h;
 }
@@ -947,15 +951,19 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
 
    THnSparse* h = CloneEmpty(name.Data(), title.Data(), &newaxes, fChunkSize);
 
+   Bool_t* hadRange  = new Bool_t[ndim];
+   for (Int_t d = 0; d < ndim; ++d){
+      TAxis *axis = GetAxis(dim[d]);
+      hadRange[d] = axis->TestBit(TAxis::kAxisRange);
+      axis->SetBit(TAxis::kAxisRange, kFALSE);
+   }
+
    Bool_t haveErrors = GetCalculateErrors();
    Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
 
    Int_t* bins  = new Int_t[ndim];
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
-   Int_t* inRange = new Int_t[ndim];
-   for (Int_t d = 0; d < ndim; ++d)
-      inRange[d] = GetAxis(dim[d])->GetFirst(); // force it to be in-range
 
    Double_t err = 0.;
    Double_t preverr = 0.;
@@ -966,7 +974,6 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
 
       for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = coord[dim[d]];
-         coord[dim[d]] = inRange[dim[d]];
       }
 
       if (!IsInRange(coord)) continue;
@@ -988,6 +995,12 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    delete [] coord;
 
    h->SetEntries(fEntries);
+
+   // reset kAxisRange bit:
+   for (Int_t d = 0; d < ndim; ++d)
+      GetAxis(dim[d])->SetBit(TAxis::kAxisRange, hadRange[d]);
+
+   delete [] hadRange;
 
    return h;
 }
