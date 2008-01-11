@@ -40,7 +40,8 @@ UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 500;
 TGLOrthoCamera::TGLOrthoCamera(const TGLVector3 & hAxes, const TGLVector3 & vAxes) :
    TGLCamera(hAxes, vAxes),
    fType(kZOY),
-   fEnableRotate(kFALSE), fZoomMin(0.001), fZoomDefault(0.78), fZoomMax(1000.0),
+   fEnableRotate(kFALSE), fDollyToZoom(kTRUE),
+   fZoomMin(0.001), fZoomDefault(0.78), fZoomMax(1000.0),
    fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
    fZoom(1.0)
 {
@@ -50,8 +51,8 @@ TGLOrthoCamera::TGLOrthoCamera(const TGLVector3 & hAxes, const TGLVector3 & vAxe
 
    // define camera type relative to horizontal vector
    TGLVector3 v = fCamBase.GetBaseVec(1);
-   for(Int_t i=0; i<3; i++) {
-      if(TMath::Abs(v[i]) == 1) {
+   for (Int_t i=0; i<3; i++) {
+      if (TMath::Abs(v[i]) == 1) {
          fType = (TGLOrthoCamera::EType)i;
          break;
       }
@@ -116,7 +117,21 @@ void TGLOrthoCamera::Reset()
 }
 
 //______________________________________________________________________________
-Bool_t TGLOrthoCamera::Zoom (Int_t delta, Bool_t mod1, Bool_t mod2)
+Bool_t TGLOrthoCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
+{
+   // Dolly the camera.
+   // By default the dolly is reinterpreted to zoom, but it can be
+   // changed by modifying the fDollyToZoom data-member.
+
+   if (fDollyToZoom) {
+      return Zoom(delta, mod1, mod2);
+   } else {
+      return TGLCamera::Dolly(delta, mod1, mod2);
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGLOrthoCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
 {
    // Zoom the camera - 'adjust lens focal length, retaining camera position'.
    // Arguments are:
@@ -148,9 +163,9 @@ Bool_t TGLOrthoCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mo
    // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
 
    if (fEnableRotate)
-      return kFALSE;
-   else
       return TGLCamera::Rotate(xDelta, yDelta, mod1, mod2);
+   else
+      return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -329,11 +344,13 @@ void TGLOrthoCamera::Markup(TGLCameraMarkupStyle* ms) const
    TGLUtil::DrawNumber(str, TGLVertex3(sX + txtOffX, sY + txtOffY, -1));
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //   TGLPlotPainter
 //
 /////////////////////////////////////////////////////////////////////////////
+
 //______________________________________________________________________________
 TGLOrthoCamera::TGLOrthoCamera() :
    fZoomMin(0.01), fZoomDefault(0.78), fZoomMax(1000.0),

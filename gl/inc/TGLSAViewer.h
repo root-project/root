@@ -45,8 +45,11 @@ class TGLRenderArea; // Remove - replace with TGLManager
 class TGLSAViewer : public TGLViewer
 {
 public:
-   enum EGLSACommands { kGLHelpAbout, kGLHelpViewer, kGLXOY,
-      kGLXOZ, kGLZOY, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY,
+   enum EGLSACommands {
+      kGLHelpAbout, kGLHelpViewer,
+      kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY,
+      kGLXOY, kGLXOZ, kGLZOY,
+      kGLOrthoRotate, kGLOrthoDolly,
       kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF,
       kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT,
       kGLEditObject };
@@ -111,6 +114,8 @@ public:
    TGedEditor*       GetGedEditor() const { return fGedEditor; }
 
    void ToggleEditObject();
+   void ToggleOrthoRotate();
+   void ToggleOrthoDolly();
 
    ClassDef(TGLSAViewer, 0) // Standalone GL viewer
 };

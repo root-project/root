@@ -189,6 +189,7 @@ public:
 
    // External GUI component interface
    TGLCamera & CurrentCamera() const { return *fCurrentCamera; }
+   TGLCamera & RefCamera(ECameraType camera);
    void SetCurrentCamera(ECameraType camera);
    void SetOrthoCamera(ECameraType camera, Double_t zoom, Double_t dolly,
                              Double_t center[3], Double_t hRotate, Double_t vRotate);

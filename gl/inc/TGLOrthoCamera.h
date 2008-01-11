@@ -44,6 +44,7 @@ private:
    // Fields
    EType          fType;         //! camera type
    Bool_t         fEnableRotate; //! enable rotation
+   Bool_t         fDollyToZoom;  //! zoom when dolly is requested
 
    // Limits - set in Setup()
    Double_t       fZoomMin;      //! minimum zoom factor
@@ -75,6 +76,8 @@ public:
 
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();
+
+   virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const;
@@ -84,12 +87,15 @@ public:
    // External scripting control
    //   void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
    virtual void Configure(Double_t zoom, Double_t dolly, Double_t center[3],
-                  Double_t hRotate, Double_t vRotate);
+                          Double_t hRotate, Double_t vRotate);
 
-   void   SetEnableRotate(Bool_t x){ fEnableRotate = x; }
-   Bool_t GetEnableRotate(){ return fEnableRotate; }
+   void   SetEnableRotate(Bool_t x) { fEnableRotate = x; }
+   Bool_t GetEnableRotate()   const { return fEnableRotate; }
 
-   //Stuff for TGLPlotPainter.
+   void   SetDollyToZoom(Bool_t x) { fDollyToZoom = x; }
+   Bool_t GetDollyToZoom()   const { return fDollyToZoom; }
+
+   // Stuff for TGLPlotPainter.
    void   SetViewport(TGLPaintDevice *dev);
    void   SetViewVolume(const TGLVertex3 *box);
    void   StartRotation(Int_t px, Int_t py);

@@ -903,6 +903,31 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
 /**************************************************************************/
 
 //______________________________________________________________________________
+TGLCamera& TGLViewer::RefCamera(ECameraType cameraType)
+{
+   // Return camera reference by type.
+
+   // TODO: Move these into a vector!
+   switch(cameraType) {
+      case kCameraPerspXOZ:
+         return fPerspectiveCameraXOZ;
+      case kCameraPerspYOZ:
+         return fPerspectiveCameraYOZ;
+      case kCameraPerspXOY:
+         return fPerspectiveCameraXOY;
+      case kCameraOrthoXOY:
+         return fOrthoXOYCamera;
+      case kCameraOrthoXOZ:
+         return fOrthoXOZCamera;
+      case kCameraOrthoZOY:
+         return fOrthoZOYCamera;
+      default:
+         Error("TGLViewer::SetCurrentCamera", "invalid camera type");
+         return *fCurrentCamera;
+   }
+}
+
+//______________________________________________________________________________
 void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 {
    // Set current active camera - 'cameraType' one of:
@@ -916,27 +941,27 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 
    // TODO: Move these into a vector!
    switch(cameraType) {
-      case(kCameraPerspXOZ): {
+      case kCameraPerspXOZ: {
          fCurrentCamera = &fPerspectiveCameraXOZ;
          break;
       }
-      case(kCameraPerspYOZ): {
+      case kCameraPerspYOZ: {
          fCurrentCamera = &fPerspectiveCameraYOZ;
          break;
       }
-      case(kCameraPerspXOY): {
+      case kCameraPerspXOY: {
          fCurrentCamera = &fPerspectiveCameraXOY;
          break;
       }
-      case(kCameraOrthoXOY): {
+      case kCameraOrthoXOY: {
          fCurrentCamera = &fOrthoXOYCamera;
          break;
       }
-      case(kCameraOrthoXOZ): {
+      case kCameraOrthoXOZ: {
          fCurrentCamera = &fOrthoXOZCamera;
          break;
       }
-      case(kCameraOrthoZOY): {
+      case kCameraOrthoZOY: {
          fCurrentCamera = &fOrthoZOYCamera;
          break;
       }
@@ -975,21 +1000,21 @@ void TGLViewer::SetOrthoCamera(ECameraType camera,
 
    // TODO: Move these into a vector!
    switch(camera) {
-      case(kCameraOrthoXOY): {
+      case kCameraOrthoXOY: {
          fOrthoXOYCamera.Configure(zoom, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fOrthoXOYCamera) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
          break;
       }
-      case(kCameraOrthoXOZ): {
+      case kCameraOrthoXOZ: {
          fOrthoXOZCamera.Configure(zoom, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fOrthoXOZCamera) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
          break;
       }
-      case(kCameraOrthoZOY): {
+      case kCameraOrthoZOY: {
          fOrthoZOYCamera.Configure(zoom, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fOrthoZOYCamera) {
             RequestDraw(TGLRnrCtx::kLODHigh);
@@ -1023,21 +1048,21 @@ void TGLViewer::SetPerspectiveCamera(ECameraType camera,
 
    // TODO: Move these into a vector!
    switch(camera) {
-      case(kCameraPerspXOZ): {
+      case kCameraPerspXOZ: {
          fPerspectiveCameraXOZ.Configure(fov, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fPerspectiveCameraXOZ) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
          break;
       }
-      case(kCameraPerspYOZ): {
+      case kCameraPerspYOZ: {
          fPerspectiveCameraYOZ.Configure(fov, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fPerspectiveCameraYOZ) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
          break;
       }
-      case(kCameraPerspXOY): {
+      case kCameraPerspXOY: {
          fPerspectiveCameraXOY.Configure(fov, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fPerspectiveCameraXOY) {
             RequestDraw(TGLRnrCtx::kLODHigh);
@@ -1415,14 +1440,14 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
          // Buttons 4/5 are mouse wheel
          // Note: Modifiers (ctrl/shift) disabled as fState doesn't seem to
          // have correct modifier flags with mouse wheel under Windows.
-         case(kButton5): {
+         case kButton5: {
             // Zoom out (adjust camera FOV)
             if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
             }
             break;
          }
-         case(kButton4): {
+         case kButton4: {
             // Zoom in (adjust camera FOV)
             if (CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();

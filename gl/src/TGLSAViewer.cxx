@@ -238,7 +238,6 @@ TGLSAViewer::~TGLSAViewer()
 
    fGedEditor->DisconnectFromCanvas();
 
-//   delete fGLArea;
    delete fHelpMenu;
    delete fCameraMenu;
    delete fFileSaveMenu;
@@ -285,6 +284,9 @@ void TGLSAViewer::CreateMenus()
    fCameraMenu->AddEntry("Orthographic (XOY)", kGLXOY);
    fCameraMenu->AddEntry("Orthographic (XOZ)", kGLXOZ);
    fCameraMenu->AddEntry("Orthographic (ZOY)", kGLZOY);
+   fCameraMenu->AddSeparator();
+   fCameraMenu->AddEntry("Ortho allow rotate", kGLOrthoRotate);
+   fCameraMenu->AddEntry("Ortho allow dolly",  kGLOrthoDolly);
    fCameraMenu->Associate(fFrame);
 
    fHelpMenu = new TGPopupMenu(fFrame->GetClient()->GetRoot());
@@ -425,6 +427,15 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             else
                SavePicture();
             break;
+         case kGLPerspYOZ:
+            SetCurrentCamera(TGLViewer::kCameraPerspYOZ);
+            break;
+         case kGLPerspXOZ:
+            SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
+            break;
+         case kGLPerspXOY:
+            SetCurrentCamera(TGLViewer::kCameraPerspXOY);
+            break;
          case kGLXOY:
             SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
             break;
@@ -434,14 +445,11 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLZOY:
             SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
             break;
-         case kGLPerspYOZ:
-            SetCurrentCamera(TGLViewer::kCameraPerspYOZ);
+         case kGLOrthoRotate:
+            ToggleOrthoRotate();
             break;
-         case kGLPerspXOZ:
-            SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
-            break;
-         case kGLPerspXOY:
-            SetCurrentCamera(TGLViewer::kCameraPerspXOY);
+         case kGLOrthoDolly:
+            ToggleOrthoDolly();
             break;
          case kGLSaveGIF:
             fPictureFileName = "viewer.gif";
@@ -585,11 +593,41 @@ void TGLSAViewer::SavePicture(const TString &fileName)
 //______________________________________________________________________________
 void TGLSAViewer::ToggleEditObject()
 {
-   // Toggle state of the 'Edit Object' manu entry.
+   // Toggle state of the 'Edit Object' menu entry.
 
    if (fFileMenu->IsEntryChecked(kGLEditObject))
       fFileMenu->UnCheckEntry(kGLEditObject);
    else
       fFileMenu->CheckEntry(kGLEditObject);
    SelectionChanged();
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::ToggleOrthoRotate()
+{
+   // Toggle state of the 'Ortho allow rotate' menu entry.
+
+   if (fCameraMenu->IsEntryChecked(kGLOrthoRotate))
+      fCameraMenu->UnCheckEntry(kGLOrthoRotate);
+   else
+      fCameraMenu->CheckEntry(kGLOrthoRotate);
+   Bool_t state = fCameraMenu->IsEntryChecked(kGLOrthoRotate);
+   fOrthoXOYCamera.SetEnableRotate(state);
+   fOrthoXOZCamera.SetEnableRotate(state);
+   fOrthoZOYCamera.SetEnableRotate(state);
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::ToggleOrthoDolly()
+{
+   // Toggle state of the 'Ortho allow dolly' menu entry.
+
+   if (fCameraMenu->IsEntryChecked(kGLOrthoDolly))
+      fCameraMenu->UnCheckEntry(kGLOrthoDolly);
+   else
+      fCameraMenu->CheckEntry(kGLOrthoDolly);
+   Bool_t state = ! fCameraMenu->IsEntryChecked(kGLOrthoDolly);
+   fOrthoXOYCamera.SetDollyToZoom(state);
+   fOrthoXOZCamera.SetDollyToZoom(state);
+   fOrthoZOYCamera.SetDollyToZoom(state);
 }
