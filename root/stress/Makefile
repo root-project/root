@@ -47,6 +47,8 @@ define RootsysTestDiff
 	| grep -v 'does not exist, generating it' \
 	| grep -v 'does not exist in' \
 	| grep -v 'or has wrong file extension' \
+	| grep -v 'RooFit v' \
+	| grep -v 'Copyright ' \
 	| grep -v 'MB/s' \
 	| sed 's,\([[:space:]]\?[.[:digit:]]\+e[+-]\)0\([[:digit:]]\{2\}\), \1\2,g' \
 	> $<.nomark || true
