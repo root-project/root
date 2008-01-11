@@ -2311,12 +2311,12 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
       for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
          if (!painter->IsInside(ix,iy)) continue;
          (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
+         if (nv < 2 || nv > vSize) continue;
          if (Hoption.Zero) {
-            double total_content=0;
+            Double_t total_content=0;
             for (iv = 1; iv < nv; ++iv) total_content += v[iv];
             if (total_content==0) continue;
          }
-         if (nv < 2 || nv > vSize) continue;
          icodes[0] = ix;
          icodes[1] = iy;
          for (i = 1; i <= 4; ++i) {
@@ -2514,6 +2514,11 @@ L100:
       else            { ia = iphi; ib = ir; }
       (this->*fLegoFunction)(ia, ib, nv, ab, v, tt);
       if (nv < 2 || nv > vSize) continue;
+      if (Hoption.Zero) {
+         Double_t total_content=0;
+         for (iv = 1; iv < nv; ++iv) total_content += v[iv];
+         if (total_content==0) continue;
+      }
       icodes[0] = ia;
       icodes[1] = ib;
       for (i = 1; i <= 4; ++i) {
@@ -3606,7 +3611,7 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
             xyz[i*3 - 2] = f[i*3 - 2]*sina;
             xyz[i*3 - 1] = f[i*3 - 1];
             // added EJB -->
-            double al, ab;
+            Double_t al, ab;
             if (Hoption.Proj == 1 ) {
                THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], al, ab);
                xyz[i*3 - 3] = al;
