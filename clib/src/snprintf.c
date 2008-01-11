@@ -36,6 +36,8 @@
 
 #include "RConfig.h"            /* for NEED_SNPRINTF */
 
+#if defined(NEED_SNPRINTF) || defined(SNTEST)
+
 /* to be able to test this code on machines that have snprintf */
 #ifndef NEED_SNPRINTF
 #define snprintf  r__snprintf
@@ -751,3 +753,4 @@ int main()
 }
 #endif
 
+#endif /* defined(NEED_SNPRINTF) || defined(SNTEST) */
