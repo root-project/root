@@ -11,21 +11,26 @@ include $(ROOTSYS)/config/Makefile.config
 include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
-CXXFLAGS += -g
+
 
 #CXXFLAGS += $(GSLFLAGS)
 
 
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" $(GSLLIBS)
+UNURANLIB        = "$(ROOTSYS)/lib/libUnuran.lib"
 else
 EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBDIR) $(GSLLIBS)
-endif
+UNURANLIB        = -lUnuran
+CXXFLAGS += -g
 
 ifneq ($(CLHEPBASE),)
 CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
 EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
 endif
+
+endif
+
 
 CXXFLAGS += -DHAVE_ROOTLIBS
 
@@ -138,7 +143,7 @@ testRandomDist.$(ObjSuf):       UnuRanDist.h
 
 
 $(RANDOMDIST):  $(RANDOMDISTOBJ)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) -lUnuran $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(UNURANLIB) $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(SPECFUNC):  	$(SPECFUNCOBJ)

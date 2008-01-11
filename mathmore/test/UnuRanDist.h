@@ -4,6 +4,8 @@
 #include "Math/Util.h"
 
 #include <iostream> 
+#include <cassert> 
+
 class UnuRanDist { 
 public:
 
