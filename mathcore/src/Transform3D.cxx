@@ -214,7 +214,7 @@ Plane3D Transform3D::operator() (const Plane3D & plane) const
 std::ostream & operator<< (std::ostream & os, const Transform3D & t)
 {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form needs formatiing improvements
+   //        and even the human readable form needs formatting improvements
    
    double m[12];
    t.GetComponents(m, m+12);

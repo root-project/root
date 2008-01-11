@@ -163,6 +163,13 @@ class Translation3D {
    }
 
     
+   /**
+      Set the XYZ vector components from 3 scalars  
+   */
+   void
+   SetXYZ (double  dx, double  dy, double  dz ) {
+      fVect.SetXYZ(dx,dy,dz);
+   }
 
 
    // operations on points and vectors 

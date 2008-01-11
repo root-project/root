@@ -17,6 +17,7 @@
 #include "Math/Quaternion.h"
 #include "Math/AxisAngle.h"
 #include "Math/EulerAngles.h"
+#include "Math/RotationZYX.h"
 
 #include "Math/LorentzRotation.h"
 
@@ -514,6 +515,66 @@ int testTransform3D() {
 
   Transform3D t3 =  Rotation3D(r) * Translation3D(vr); 
 
+  Rotation3D rrr;
+  XYZVector vvv;
+  t2b.GetDecomposition(rrr,vvv);
+  iret |= compare(Rotation3D(r) ==rrr, 1,"eq transf rot",1 );
+  iret |= compare( tr1.Vect() == vvv, 1,"eq transf vec",1 );
+//   if (iret) std::cout << vvv << std::endl;
+//   if (iret) std::cout << Translation3D(vr) << std::endl;
+
+  Translation3D ttt;
+  t2b.GetDecomposition(rrr,ttt);
+  iret |= compare( tr1 == ttt, 1,"eq transf trans",1 );
+//   if (iret) std::cout << ttt << std::endl;
+
+  EulerAngles err2; 
+  GlobalPolar3DVector vvv2;
+  t2b.GetDecomposition(err2,vvv2);
+  iret |= compare( r.Phi(), err2.Phi(),"transf rot phi",1 );
+  iret |= compare( r.Theta(), err2.Theta(),"transf rot theta",1 );
+  iret |= compare( r.Psi(), err2.Psi(),"transf rot psi",1 );
+
+  iret |= compare( v == vvv2, 1,"eq transf g vec",1 );
+
+  // create from other rotations
+  RotationZYX rzyx(r); 
+  Transform3D t4( rzyx);
+  iret |= compare( t4.Rotation() == Rotation3D(rzyx), 1,"eq trans rzyx",1 );
+
+  Transform3D trf2 = tr1 * r; 
+  iret |= compare( trf2 == t2b, 1,"trasl * e rot",1 );
+  Transform3D trf3 = r * Translation3D(vr); 
+  iret |= compare( trf3 == t3, 1,"e rot * transl",1 );
+
+  Transform3D t5(rzyx, v);
+  Transform3D trf5 = Translation3D(v) * rzyx; 
+  iret |= compare( trf5 == t5, 1,"trasl * rzyx",1 );
+
+  Transform3D t6(rzyx, rzyx * Translation3D(v).Vect() );
+  Transform3D trf6 = rzyx * Translation3D(v); 
+  iret |= compare( trf6 == t6, 1,"rzyx * transl",1 );
+  if (iret) std::cout << t6 << "\n---\n" << trf6 << std::endl;
+
+
+
+  Transform3D trf7 = t4 * Translation3D(v);
+  iret |= compare( trf7 == trf6, 1,"tranf * transl",1 );
+  Transform3D trf8 = Translation3D(v) * t4;
+  iret |= compare( trf8 == trf5, 1,"trans * transf",1 );
+
+  Transform3D trf9 = Transform3D(v) * rzyx;
+  iret |= compare( trf9 == trf5, 1,"tranf * rzyx",1 );
+  Transform3D trf10 = rzyx * Transform3D(v);
+  iret |= compare( trf10 == trf6, 1,"rzyx * transf",1 );
+  Transform3D trf11 = Rotation3D(rzyx) * Transform3D(v);
+  iret |= compare( trf11 == trf10, 1,"r3d * transf",1 );
+
+  RotationZYX rrr2 = trf10.Rotation<RotationZYX>(); 
+  iret |= compare( rzyx == rrr2, 1,"gen Rotaton()",1 );
+  if (iret) std::cout << rzyx << "\n---\n" << rrr2 << std::endl;
+
+
   //std::cout << t2 << std::endl; 
   //std::cout << t3 << std::endl; 
 
@@ -570,7 +631,7 @@ int testTransform3D() {
 #endif
 
 
-  if (iret == 0) std::cout << "\t\t\tOK\n"; 
+  if (iret == 0) std::cout << "\tOK\n"; 
   else std::cout << "\t\t\tFAILED\n"; 
 
   return iret; 

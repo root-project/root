@@ -38,6 +38,7 @@
 #include "Math/GenVector/AxisAnglefwd.h"
 #include "Math/GenVector/EulerAnglesfwd.h"
 #include "Math/GenVector/Quaternionfwd.h"
+#include "Math/GenVector/RotationZYXfwd.h"
 #include "Math/GenVector/RotationXfwd.h"
 #include "Math/GenVector/RotationYfwd.h"
 #include "Math/GenVector/RotationZfwd.h"
@@ -184,6 +185,9 @@ public:
       AssignFrom(Rotation3D(r));
    } 
    explicit Transform3D( const Quaternion & r) { 
+      AssignFrom(Rotation3D(r));
+   } 
+   explicit Transform3D( const RotationZYX & r) { 
       AssignFrom(Rotation3D(r));
    } 
 
@@ -387,6 +391,16 @@ public:
       zx=fM[kZX];  zy=fM[kZY];  zz=fM[kZZ];  dz=fM[kDZ];
    }
 
+
+   /**
+      Get the rotation and translation vector representing the 3D transformation
+      in any rotation and any vector (the Translation class could also be used) 
+   */    
+   template<class AnyRotation, class V> 
+   void GetDecomposition(AnyRotation &r, V &v) const { 
+      GetRotation(r);
+      GetTranslation(v);
+   }
     
 
    /**
@@ -407,11 +421,21 @@ public:
    }
 
    /**
+      Get the rotation representing the 3D transformation
+   */        
+   template <class AnyRotation>
+   AnyRotation Rotation() const { 
+      return AnyRotation(Rotation3D(fM[kXX], fM[kXY], fM[kXZ],
+                                    fM[kYX], fM[kYY], fM[kYZ],
+                                    fM[kZX], fM[kZY], fM[kZZ] ) ); 
+   }
+
+   /**
       Get the  rotation (any type) representing the 3D transformation
    */        
    template <class AnyRotation>
    void GetRotation(AnyRotation &r) const { 
-      r = Rotation();;
+      r = Rotation();
    }
 
    /**
@@ -659,10 +683,11 @@ inline Transform3D Transform3D::operator * (const Transform3D  & t) const
 
 
 
-// global functions 
+//--- global functions resulting in Transform3D -------
       
       
-// combine translation and rotation to give transform3d
+// ------ combination of a  translation (first)  and a rotation ------
+
 
 /**
    combine a translation and a rotation to give a transform3d
@@ -671,6 +696,68 @@ inline Transform3D Transform3D::operator * (const Transform3D  & t) const
 inline Transform3D operator * (const Rotation3D & r, const Translation3D & t) { 
    return Transform3D( r, r(t.Vect()) );
 }
+inline Transform3D operator * (const RotationX & r, const Translation3D & t) { 
+   Rotation3D r3(r);
+   return Transform3D( r3, r3(t.Vect()) );
+}
+inline Transform3D operator * (const RotationY & r, const Translation3D & t) { 
+   Rotation3D r3(r);
+   return Transform3D( r3, r3(t.Vect()) );
+}
+inline Transform3D operator * (const RotationZ & r, const Translation3D & t) { 
+   Rotation3D r3(r);
+   return Transform3D( r3, r3(t.Vect()) );
+}
+inline Transform3D operator * (const RotationZYX & r, const Translation3D & t) { 
+   Rotation3D r3(r);
+   return Transform3D( r3, r3(t.Vect()) );
+}
+inline Transform3D operator * (const AxisAngle & r, const Translation3D & t) { 
+   Rotation3D r3(r);
+   return Transform3D( r3, r3(t.Vect()) );
+}
+inline Transform3D operator * (const EulerAngles & r, const Translation3D & t) { 
+   Rotation3D r3(r);
+   return Transform3D( r3, r3(t.Vect()) );
+}
+inline Transform3D operator * (const Quaternion & r, const Translation3D & t) { 
+   Rotation3D r3(r);
+   return Transform3D( r3, r3(t.Vect()) );
+}
+
+// ------ combination of a  rotation (first)  and then a translation ------
+
+/**
+   combine a rotation and a translation to give a transform3d
+   First a rotation then the translation
+ */
+inline Transform3D operator * (const Translation3D & t, const Rotation3D & r) { 
+   return Transform3D( r, t.Vect());
+}
+inline Transform3D operator * (const Translation3D & t, const RotationX & r) { 
+   return Transform3D( Rotation3D(r) , t.Vect());
+}
+inline Transform3D operator * (const Translation3D & t, const RotationY & r) { 
+   return Transform3D( Rotation3D(r) , t.Vect());
+}
+inline Transform3D operator * (const Translation3D & t, const RotationZ & r) { 
+   return Transform3D( Rotation3D(r) , t.Vect());
+}
+inline Transform3D operator * (const Translation3D & t, const RotationZYX & r) { 
+   return Transform3D( Rotation3D(r) , t.Vect());
+}
+inline Transform3D operator * (const Translation3D & t, const EulerAngles & r) { 
+   return Transform3D( Rotation3D(r) , t.Vect());
+}
+inline Transform3D operator * (const Translation3D & t, const Quaternion & r) { 
+   return Transform3D( Rotation3D(r) , t.Vect());
+}
+inline Transform3D operator * (const Translation3D & t, const AxisAngle & r) { 
+   return Transform3D( Rotation3D(r) , t.Vect());
+}
+
+// ------ combination of a Transform3D and a pure translation------
+
 /**
    combine a transformation and a translation to give a transform3d
    First the translation then the transform3D
@@ -681,28 +768,46 @@ inline Transform3D operator * (const Transform3D & t, const Translation3D & d) {
 }
 
 /**
-   combine a transformation and a rotation to give a transform3d
-   First the rotation then the transform3D
- */
-inline Transform3D operator * (const Transform3D & t, const Rotation3D & r) { 
-   return Transform3D( t.Rotation()*r ,  t.Translation()  );
-}
-
-/**
-   combine a rotation and a translation to give a transform3d
-   First a rotation then the translation
- */
-inline Transform3D operator * (const Translation3D & t, const Rotation3D & r) { 
-   return Transform3D( r, t.Vect());
-}
-
-/**
    combine a translation and a transformation to give a transform3d
    First the transformation then the translation
  */
 inline Transform3D operator * (const Translation3D & d, const Transform3D & t) { 
    return Transform3D( t.Rotation(), t.Translation().Vect() + d.Vect());
 }
+
+// ------ combination of a Transform3D and any rotation------
+
+
+/**
+   combine a transformation and a rotation to give a transform3d
+   First the rotation then the transform3D
+ */
+inline Transform3D operator * (const Transform3D & t, const Rotation3D & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+inline Transform3D operator * (const Transform3D & t, const RotationX & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+inline Transform3D operator * (const Transform3D & t, const RotationY & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+inline Transform3D operator * (const Transform3D & t, const RotationZ & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+inline Transform3D operator * (const Transform3D & t, const RotationZYX & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+inline Transform3D operator * (const Transform3D & t, const EulerAngles & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+inline Transform3D operator * (const Transform3D & t, const AxisAngle & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+inline Transform3D operator * (const Transform3D & t, const Quaternion & r) { 
+   return Transform3D( t.Rotation()*r ,  t.Translation()  );
+}
+
+
 
 /**
    combine a rotation and a transformation to give a transform3d
@@ -711,9 +816,42 @@ inline Transform3D operator * (const Translation3D & d, const Transform3D & t) {
 inline Transform3D operator * (const Rotation3D & r, const Transform3D & t) { 
    return Transform3D( r * t.Rotation(), r * t.Translation().Vect() );
 }
+inline Transform3D operator * (const RotationX & r, const Transform3D & t) { 
+   Rotation3D r3d(r);
+   return Transform3D( r3d * t.Rotation(), r3d * t.Translation().Vect() );
+}
+inline Transform3D operator * (const RotationY & r, const Transform3D & t) { 
+   Rotation3D r3d(r);
+   return Transform3D( r3d * t.Rotation(), r3d * t.Translation().Vect() );
+}
+inline Transform3D operator * (const RotationZ & r, const Transform3D & t) { 
+   Rotation3D r3d(r);
+   return Transform3D( r3d * t.Rotation(), r3d * t.Translation().Vect() );
+}
+inline Transform3D operator * (const RotationZYX & r, const Transform3D & t) { 
+   Rotation3D r3d(r);
+   return Transform3D( r3d * t.Rotation(), r3d * t.Translation().Vect() );
+}
+inline Transform3D operator * (const EulerAngles & r, const Transform3D & t) { 
+   Rotation3D r3d(r);
+   return Transform3D( r3d * t.Rotation(), r3d * t.Translation().Vect() );
+}
+inline Transform3D operator * (const AxisAngle & r, const Transform3D & t) { 
+   Rotation3D r3d(r);
+   return Transform3D( r3d * t.Rotation(), r3d * t.Translation().Vect() );
+}
+inline Transform3D operator * (const Quaternion & r, const Transform3D & t) { 
+   Rotation3D r3d(r);
+   return Transform3D( r3d * t.Rotation(), r3d * t.Translation().Vect() );
+}
 
+
+//---I/O functions
 // TODO - I/O should be put in the manipulator form 
 
+/**
+   print the 12 components of the Transform3D
+ */
 std::ostream & operator<< (std::ostream & os, const Transform3D & t);
 
 
