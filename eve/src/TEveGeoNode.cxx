@@ -15,6 +15,7 @@
 
 #include "TEveGeoShapeExtract.h"
 
+#include "TROOT.h"
 #include "TPad.h"
 #include "TBuffer3D.h"
 #include "TVirtualViewer3D.h"

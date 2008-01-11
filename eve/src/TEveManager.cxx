@@ -19,14 +19,6 @@
 #include "TEveBrowser.h"
 #include "TEveGedEditor.h"
 
-#include "TGMenu.h"
-#include "TGTab.h"
-#include "TGToolBar.h"
-#include "TGLabel.h"
-#include "TGTextEntry.h"
-#include "TGSplitter.h"
-#include "TRootEmbeddedCanvas.h"
-
 #include "TGStatusBar.h"
 
 #include "TGLSAViewer.h"
@@ -35,7 +27,6 @@
 #include "TFile.h"
 #include "TMacro.h"
 #include "TFolder.h"
-#include "TStyle.h"
 #include "TBrowser.h"
 #include "TPad.h"
 #include "TCanvas.h"
@@ -43,10 +34,7 @@
 #include "TRint.h"
 #include "TVirtualX.h"
 #include "TEnv.h"
-#include "TStyle.h"
 #include "TColor.h"
-#include "TGeoShape.h"
-#include <KeySymbols.h>
 #include "TVirtualGL.h"
 #include "TPluginManager.h"
 

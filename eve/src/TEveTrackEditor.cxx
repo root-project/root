@@ -33,6 +33,7 @@
 #include "TGMsgBox.h"
 #include "TH1F.h"
 
+#include "TROOT.h"
 #include "TSystem.h" // File input/output for track-count status.
 
 //______________________________________________________________________________

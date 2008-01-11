@@ -21,6 +21,7 @@
 
 #include <Riostream.h>
 
+#include "TClass.h"
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TSystem.h"

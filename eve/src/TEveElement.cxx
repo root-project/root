@@ -13,6 +13,8 @@
 #include "TEveManager.h"
 #include "TEveGedEditor.h"
 
+#include "TClass.h"
+#include "TROOT.h"
 #include "TColor.h"
 #include "TCanvas.h"
 #include "TGListTree.h"

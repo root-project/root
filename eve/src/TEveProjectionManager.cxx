@@ -18,6 +18,8 @@
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
+#include "TClass.h"
+
 #include <list>
 
 //______________________________________________________________________________

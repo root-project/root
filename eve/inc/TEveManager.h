@@ -12,9 +12,7 @@
 #ifndef ROOT_TEveManager
 #define ROOT_TEveManager
 
-#include "TClass.h"
 #include "TGeoManager.h"
-#include "TROOT.h"
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
 #include "TVirtualPad.h"

@@ -57,15 +57,6 @@ void TEveViewer::SetGLViewer(TGLViewer* s)
    fGLViewer->SetSmartRefresh(kTRUE);
    // fGLViewer->SetResetCamerasOnUpdate(kFALSE);
    fGLViewer->SetResetCameraOnDoubleClick(kFALSE);
-
-   // Temporary fix for wrong defaults in root 5.17.04
-   fGLViewer->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   ((TGLOrthoCamera&)(fGLViewer->CurrentCamera())).SetEnableRotate(kTRUE);
-   fGLViewer->SetCurrentCamera(TGLViewer::kCameraOrthoXOZ);
-   ((TGLOrthoCamera&)(fGLViewer->CurrentCamera())).SetEnableRotate(kTRUE);
-   fGLViewer->SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
-   ((TGLOrthoCamera&)(fGLViewer->CurrentCamera())).SetEnableRotate(kTRUE);
-   fGLViewer->SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
 }
 
 //______________________________________________________________________________

@@ -17,6 +17,7 @@
 #include "TMarker.h"
 #include "TPolyMarker3D.h"
 #include "TColor.h"
+#include "TROOT.h"
 
 // Updates
 #include "TEveManager.h"

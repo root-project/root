@@ -17,6 +17,8 @@
 #include "TGCanvas.h"
 #include "TCanvas.h"
 
+#include "TClass.h"
+
 //______________________________________________________________________________
 // TEveGedEditor
 //
