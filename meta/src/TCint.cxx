@@ -414,7 +414,7 @@ void TCint::PrintIntro()
 void TCint::RecursiveRemove(TObject *obj)
 {
    // Delete object from CINT symbol table so it can not be used anymore.
-   // CINT object are always on the heap.
+   // CINT objects are always on the heap.
 
    if (obj->IsOnHeap() && fgSetOfSpecials && !((std::set<TObject*>*)fgSetOfSpecials)->empty()) {
       std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
@@ -1320,7 +1320,7 @@ Int_t TCint::UnloadLibraryMap(const char *library)
 //______________________________________________________________________________
 Int_t TCint::AutoLoad(const char *cls)
 {
-   // Load library containing specified class. Returns 0 in case of error
+   // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
 
    Int_t status = 0;
@@ -1528,7 +1528,6 @@ void TCint::UpdateClassInfoWork(const char *item, Long_t tagnum)
    if (cl) cl->ResetClassInfo(tagnum);
 }
 
-
 //______________________________________________________________________________
 void TCint::UpdateAllCanvases()
 {
@@ -1692,4 +1691,3 @@ const char *TCint::GetIncludePath()
 
    return fIncludePath;
 }
-
