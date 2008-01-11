@@ -486,12 +486,10 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
    if (g != fGeometries.end()) {
       return g->second;
    } else {
-      if (gSystem->AccessPathName(exp_filename, kReadPermission))
-         throw(eh + "file '" + exp_filename + "' not readable.");
       gGeoManager = 0;
-      TGeoManager::Import(filename);
-      if (gGeoManager == 0)
-         throw(eh + "GeoManager import failed.");
+      if (TGeoManager::Import(filename) == 0)
+         throw(eh + "GeoManager::Import() failed for '" + exp_filename + "'.");
+
       gGeoManager->GetTopVolume()->VisibleDaughters(1);
 
       // Import colors exported by Gled, if they exist.
@@ -517,6 +515,40 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
       fGeometries[filename] = gGeoManager;
       return gGeoManager;
    }
+}
+
+//______________________________________________________________________________
+TGeoManager* TEveManager::GetGeometryByAlias(const TString& alias)
+{
+   // Get geometry with given alias.
+   // The alias must be registered via RegisterGeometryAlias().
+
+   static const TEveException eh("TEveManager::GetGeometry ");
+
+   std::map<TString, TString>::iterator i = fGeometryAliases.find(alias);
+   if (i == fGeometryAliases.end())
+      throw(eh + "geometry alias '" + alias + "' not registered.");
+   return GetGeometry(i->second);
+}
+
+//______________________________________________________________________________
+TGeoManager* TEveManager::GetDefaultGeometry()
+{
+   // Get the default geometry.
+   // It should be registered via RegisterGeometryName("Default", <URL>).
+
+   return GetGeometryByAlias("Default");
+}
+
+//______________________________________________________________________________
+void TEveManager::RegisterGeometryAlias(const TString& alias, const TString& filename)
+{
+   // Register 'name' as an alias for geometry file 'filename'.
+   // The old aliases are silently overwritten.
+   // After that the geometry can be retrieved also by calling:
+   //   gEve->GetGeometryByName(name);
+
+   fGeometryAliases[alias] = filename;
 }
 
 //______________________________________________________________________________

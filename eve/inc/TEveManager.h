@@ -60,12 +60,12 @@ public:
       TRedrawDisabler(const TRedrawDisabler&);            // Not implemented
       TRedrawDisabler& operator=(const TRedrawDisabler&); // Not implemented
 
-      TEveManager* fFrame;
+      TEveManager* fMgr;
    public:
-      TRedrawDisabler(TEveManager* f) : fFrame(f)
-      { if (fFrame) fFrame->DisableRedraw(); }
+      TRedrawDisabler(TEveManager* m) : fMgr(m)
+      { if (fMgr) fMgr->DisableRedraw(); }
       ~TRedrawDisabler()
-      { if (fFrame) fFrame->EnableRedraw(); }
+      { if (fMgr) fMgr->EnableRedraw(); }
    };
 
    class TExceptionHandler : public TStdExceptionHandler
@@ -107,6 +107,7 @@ private:
 
 protected:
    std::map<TString, TGeoManager*> fGeometries;
+   std::map<TString, TString>      fGeometryAliases;
 
 public:
    TEveManager(UInt_t w, UInt_t h);
@@ -175,8 +176,11 @@ public:
    Bool_t ElementPaste(TEveElement* element);
    void   ElementChecked(TEveElement* element, Bool_t state);
 
-   // Hmmph ... geometry management?
+   // Geometry management.
    TGeoManager* GetGeometry(const TString& filename);
+   TGeoManager* GetGeometryByAlias(const TString& alias);
+   TGeoManager* GetDefaultGeometry();
+   void         RegisterGeometryAlias(const TString& alias, const TString& filename);
 
    void SetStatusLine(const char* text);
 
