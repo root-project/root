@@ -5,20 +5,22 @@
 #endif
 
 class noctor {
- private:
+private:
    noctor(const noctor&);
 };
 
 class nonconstctor {
- public:
-   nonconstctor(nonconstctor&);
- private:
-   nonconstctor(const nonconstctor&);
+public:
+   nonconstctor(nonconstctor&) {}
+private:
+#ifndef _MSC_VER
+   nonconstctor(const nonconstctor&) {}
+#endif
 };
 
 class withconstctor {
- public:
-   withconstctor(const withconstctor&);
+public:
+   withconstctor(const withconstctor&) {}
    //private: - must not be private due to dictionary:
    // p = new withconstctor(*(withconstctor*) libp->para[0].ref);
    //withconstctor(withconstctor&);
@@ -26,23 +28,27 @@ class withconstctor {
 
 
 class dicttest{
- public:
-   operator const noctor&();
-   operator const noctor*();
-   operator const noctor&() const;
-   operator const noctor*() const;
+public:
+   operator const noctor&() {return *n;}
+   operator const noctor*() {return n;}
+   operator const noctor&() const {return *n;}
+   operator const noctor*() const {return n;}
 
-   operator const withconstctor&();
-   operator const nonconstctor*();
-   //operator const nonconstctor();
-   operator const withconstctor&() const;
-   operator const nonconstctor*() const;
-   //operator const nonconstctor() const;
+   operator const withconstctor&() {return *w;}
+   operator const nonconstctor*() {return nc;}
+   //operator const nonconstctor() {}
+   operator const withconstctor&() const {return *w;}
+   operator const nonconstctor*() const {return nc;}
+   //operator const nonconstctor() const {}
 
-   operator nonconstctor&();
-   operator nonconstctor*();
-   //operator nonconstctor();
-   operator nonconstctor&() const;
-   operator nonconstctor*() const;
-   //operator nonconstctor() const;
+   operator nonconstctor&() {return *nc;}
+   operator nonconstctor*() {return nc;}
+   //operator nonconstctor() {}
+   operator nonconstctor&() const {return *nc;}
+   operator nonconstctor*() const {return nc;}
+   //operator nonconstctor() const {}
+
+   noctor* n;
+   withconstctor* w;
+   nonconstctor* nc;
 };
