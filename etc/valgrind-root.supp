@@ -68,6 +68,16 @@
    fun:deflate
 }
 
+######### CINT
+
+{
+   CINT's G__rate_parameter_match bogus report
+   Memcheck:Cond
+   fun:G__rate_parameter_match
+   fun:G__overload_match
+}
+
+
 ######### Misc
 
 {
