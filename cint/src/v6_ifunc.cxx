@@ -1458,6 +1458,21 @@ void G__make_ifunctable(char* funcheader)
                   G__p_ifunc->param[func_now][iin]->name = (char*)NULL;
                }
             }
+            iin = paranu;
+            if (iin < 0) iin = 0;
+            for (; iin < G__p_ifunc->para_nu[func_now]; ++iin) {
+               if (G__p_ifunc->param[func_now][iin]->pdefault) {
+                  if (-1 != (long)G__p_ifunc->param[func_now][iin]->pdefault)
+                     free((void*)G__p_ifunc->param[func_now][iin]->pdefault);
+                  free((void*)G__p_ifunc->param[func_now][iin]->def);
+               }
+               G__p_ifunc->param[func_now][iin]->pdefault=(G__value*)NULL;
+               G__p_ifunc->param[func_now][iin]->def=(char*)NULL;
+               if (G__p_ifunc->param[func_now][iin]->name) {
+                  free ((void*)G__p_ifunc->param[func_now][iin]->name);
+                  G__p_ifunc->param[func_now][iin]->name = (char*)NULL;
+               }
+            }
             ifunc->entry[iexist] = G__p_ifunc->entry[func_now];
             /* The copy in previous get the wrong tp2f ... let's restore it */
             ifunc->entry[iexist].tp2f = (void*)ifunc->funcname[iexist];

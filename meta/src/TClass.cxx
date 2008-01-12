@@ -413,6 +413,31 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       TRealData* rd = new TRealData(rname, offset, dm);
       if (!dm->IsBasic()) {
          rd->SetIsObject(kTRUE);
+
+         // Make sure that BuildReadData is called for any abstract
+         // bases classes involved in this object, i.e for all the
+         // classes composing this object (base classes, type of
+         // embedded object and same for their data members).
+         //
+         TClass* dmclass = TClass::GetClass(dm->GetTypeName());
+         if (!dmclass) {
+            dmclass = TClass::GetClass(dm->GetTrueTypeName());
+         }
+         if (dmclass) {
+            if (dmclass->Property()) {
+               if (dmclass->Property() & kIsAbstract) {
+                  fprintf(stderr, "TBuildRealDataRecursive::Inspect(): data member class: '%s'  is abstract.\n", dmclass->GetName());
+               }
+            }
+            if ((dmclass != cl) && !dm->IsaPointer()) {
+               if (dmclass->GetCollectionProxy()) {
+                  TClass* valcl = dmclass->GetCollectionProxy()->GetValueClass();
+                  if (valcl) valcl->BuildRealData();
+               } else {
+                  dmclass->BuildRealData(const_cast<void*>(add));
+               }
+            }
+         }
       }
       fRealDataClass->GetListOfRealData()->Add(rd);
    }
