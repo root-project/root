@@ -10,7 +10,7 @@ CLEAN_TARGETS += configtest.root
 TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
 	merging headerTest clonesATest EmbeddedTest inheritTest \
 	relationsTest suetest Jantest deepnesT baseString prova \
-	augertest
+	augertest longlong
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -138,4 +138,7 @@ prova: prova.log
 	$(TestDiff)
 
 augertest: augertest.log
+	$(TestDiff)
+
+longlong: longlong.clog
 	$(TestDiff)
