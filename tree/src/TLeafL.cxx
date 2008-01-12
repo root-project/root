@@ -39,7 +39,7 @@ TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
 //*-*                      ==============
 //*-*
 
-   fLenType = 4;
+   fLenType = sizeof(Long64_t);
    fMinimum = 0;
    fMaximum = 0;
    fValue   = 0;
