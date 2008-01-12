@@ -31,9 +31,11 @@ void fitExclude() {
    TF1 *fleft = new TF1("fleft",fline,0,2.5,2);
    fleft->SetParameters(fl->GetParameters());
    h->GetListOfFunctions()->Add(fleft);
+   gROOT->GetListOfFunctions()->Remove(fleft);
    TF1 *fright = new TF1("fright",fline,3.5,5,2);
    fright->SetParameters(fl->GetParameters());
    h->GetListOfFunctions()->Add(fright);
+   gROOT->GetListOfFunctions()->Remove(fright);
    h->Draw();
 }
    
