@@ -35,7 +35,7 @@ TLeafL::TLeafL(): TLeaf()
 TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafI*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafL*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==============
 //*-*
 
@@ -49,7 +49,7 @@ TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
 //______________________________________________________________________________
 TLeafL::~TLeafL()
 {
-//*-*-*-*-*-*Default destructor for a LeafI*-*-*-*-*-*-*-*-*-*-*-*
+//*-*-*-*-*-*Default destructor for a LeafL*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ===============================
 
    if (ResetAddress(0,kTRUE)) delete [] fValue;
