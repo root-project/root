@@ -21,7 +21,7 @@ private:
   ClassDef(RTCalib,1) // container and calculator of the RT calibrations
 };
 #ifdef __MAKECINT__
-#pragma link C++ class pair<string,T0Result*>;
-#pragma link C++ class map<string,T0Result*>;
+#pragma link C++ class pair<string,T0Result*>+;
+#pragma link C++ class map<string,T0Result*>+;
 #endif
 #endif 
