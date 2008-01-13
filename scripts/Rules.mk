@@ -448,17 +448,17 @@ endef
 
 define TestDiff
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -b $@.ref$(ROOTBITS) $< ; \
+	   diff -u -b $@.ref$(ROOTBITS) $< ; \
 	else \
-	   diff -b $@.ref $< ; \
+	   diff -u -b $@.ref $< ; \
 	fi
 endef
 
 define TestDiffW
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -b -w $@.ref$(ROOTBITS) $< ; \
+	   diff -u -b -w $@.ref$(ROOTBITS) $< ; \
 	else \
-	   diff -b -w $@.ref $< ; \
+	   diff -u -b -w $@.ref $< ; \
 	fi
 endef
 
