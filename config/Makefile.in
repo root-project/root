@@ -197,6 +197,7 @@ SRPUTILINCDIR  := $(filter-out /usr/include, @srputilincdir@)
 
 AFSLIB         := @afslib@
 AFSLIBDIR      := @afslibdir@
+AFSEXTRACFLAGS := @afsextracflags@
 
 BUILDKRB5      := @buildkrb5@
 KRB5LIB        := @krb5lib@

@@ -3558,35 +3558,90 @@ check_explicit "$enable_srp" "$enable_srp_explicit" \
 #
 # (See http://www.openafs.org)
 #
-# Check for AFS (libdes.a)
+# Check for AFS
 #
+afsextracflags=""
 if test ! "x$enable_afs" = "xno" ; then
     if test ! "x$afsdir" = "x" ; then
-	afsdir="$afsdir $afsdir/afs"
+       afsdir="$afsdir $afsdir/afs"
     fi
 
-    #
-    # Libraries
-    #
+    hasafserrormessage="no"
+    afs_shared=$enable_shared
     afslibdirs="$AFS/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib"
-    afslib=""
-    afslibdir=""
-    for i in libafsauthent libafsrpc ; do
-	check_library "$i" "no" "$afsdir" $afslibdirs
-	if test "x$found_lib" = "x" ; then
-	    afslib=""
-	    afslibdir=""
-	    enable_afs="no"
-	    break
-        fi
-	afslib="$afslib $found_lib"
-	afslibdir="$afslibdir $found_dir"
-    done
+    afslibs="libafsrpc libafsauthent"
+    if test "x$afs_shared" = "xyes" ; then
+
+       # We try to use the shared version of the libraries; however, for OpenAFS
+       # versions <= 1.4.6 these were inconsistent, some needed symbols not being
+       # exported. We need to check the symbols first
+       echo "Checking for shared AFS libs:"
+       check_library libafsrpc "$afs_shared" "$afsdir" $afslibdirs
+       if test "x$found_lib" = "x" ; then
+          afslib=""
+          afslibdir=""
+          enable_afs="no"
+          break
+       fi
+       #
+       # Check symbols
+       #
+       afssymbols="afs_add_to_error_table strcompose stolower ucstring lcstring AssertionFailed"
+       for s in $afssymbols ; do
+          check_symbol $s "$found_lib" "$found_dir"
+          if test  $found_symbol -eq 0 ; then
+             result "Checking for AFS symbols: '$s' not found"
+             afs_shared="no"
+             break
+          fi
+       done
+       #
+       # Save lib, if OK
+       if test "x$afs_shared" = "xyes" ; then
+          afslib="$found_lib"
+          afslibdir="$found_dir"
+          afslibs="libafsauthent"
+          # Check for afs_error_message, if needed
+          if test "x$hasafserrormessage" = "xno" ; then
+             check_symbol afs_error_message "$found_lib" "$found_dir"
+             if test  $found_symbol -eq 1 ; then
+                hasafserrormessage="yes"
+             fi
+          fi
+       else
+          echo "Checking for static AFS libs:"
+       fi
+    fi
+
+    if test "x$enable_afs" = "xyes" ; then
+       #
+       # Libraries
+       #
+       for i in $afslibs ; do
+          check_library "$i" "$afs_shared" "$afsdir" $afslibdirs
+          if test "x$found_lib" = "x" ; then
+             afslib=""
+             afslibdir=""
+             enable_afs="no"
+             break
+          fi
+          afslib="$found_lib $afslib"
+          afslibdir=" $found_dir $afslibdir"
+
+          # Check for afs_error_message, if needed
+          if test "x$hasafserrormessage" = "xno" ; then
+             check_symbol afs_error_message "$afslib" "$afslibdir"
+             if test  $found_symbol -eq 1 ; then
+                hasafserrormessage="yes"
+             fi
+          fi
+       done
+    fi
     #
     # header files
     #
     if test "x$enable_afs" = "xyes" ; then
-       incafs="stds.h kautils.h"
+       incafs="stds.h kautils.h com_err.h"
        for i in $incafs ; do
            check_header "afs/$i" "$found_dir" \
               /usr/include /usr/local/include /opt/include $finkdir/include
@@ -3613,6 +3668,18 @@ if test ! "x$enable_afs" = "xno" ; then
 
     if test "x$afslib" = "x" ; then
         enable_afs="no"
+    else
+        # flag for error_message prototype
+        if test "x$hasafserrormessage" = "xno" ; then
+           afsextracflags="-DR__AFSOLDCOMERR"
+        fi
+        # Warn about usage of static libs to build a shared object
+        if test "x$afs_shared" = "xno" ; then
+            echo "### WARNING: AFS enabled using static libraries: this may lead to relocation-related"
+            echo "### errors or warnings if the static libraries are not compiled with the correct options;"
+            echo "### if this happens, please re-run with --enable-shared or move to openafs >= 1.5.x"
+            echo "### or rebuild the AFS static libs with the '-fPIC' option."
+        fi
     fi
 fi
 check_explicit "$enable_afs" "$enable_afs_explicit" \
@@ -4411,6 +4478,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@afslib@|$afslib|"                    \
     -e "s|@afslibdir@|$afslibdir|"              \
     -e "s|@afsincdir@|$afsincdir|"              \
+    -e "s|@afsextracflags@|$afsextracflags|"    \
     -e "s|@alienincdir@|$alienincdir|"          \
     -e "s|@alienlib@|$alienlib|"                \
     -e "s|@alienlibdir@|$alienlibdir|"          \
