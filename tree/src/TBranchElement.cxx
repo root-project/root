@@ -396,9 +396,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             if (!clOfClones) {
                return;
             }
-            // Create a basket for the leafcount
-            TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
-            fBaskets.Add(basket2);
             fType = 3;
             // ===> create sub branches for each data member of a TClonesArray
             //check that the contained objects class name is part of the element title
@@ -449,9 +446,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                fNleaves = 1;
                fLeaves.Add(leaf);
                fTree->GetListOfLeaves()->Add(leaf);
-               // Create a basket for the master branch (the counter).
-               TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
-               fBaskets.Add(basket2);
                // Check that the contained objects class name is part of the element title.
                // This name is mandatory when reading the tree later on and
                // the parent class with the pointer to the STL container is not available.
@@ -616,9 +610,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
       fNleaves = 1;
       fLeaves.Add(leaf);
       fTree->GetListOfLeaves()->Add(leaf);
-      // Create a basket for the leafcount
-      TBasket* basket = new TBasket(name, fTree->GetName(), this);
-      fBaskets.Add(basket);
       // ===> create sub branches for each data member of a TClonesArray
       TClass* clonesClass = clones->GetClass();
       if (!clonesClass) {
@@ -751,9 +742,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
       fNleaves = 1;
       fLeaves.Add(leaf);
       fTree->GetListOfLeaves()->Add(leaf);
-      // Create a basket for the leafcount
-      TBasket* basket = new TBasket(name, fTree->GetName(), this);
-      fBaskets.Add(basket);
       // ===> create sub branches for each data member of an STL container value class
       TClass* valueClass = cont->GetValueClass();
       if (!valueClass) {
