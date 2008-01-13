@@ -166,7 +166,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \
 		fi; \
 		if [ ! "x$(SSLINCDIR)" = "x" ] ; then \
-		   xinc=`echo $(SSLINCDIR) | cut -c3-`; \
+		   xinc=`echo $(SSLINCDIR)`; \
 		   xopt="$$xopt --with-ssl-incdir=$$xinc"; \
 		fi; \
 		if [ ! "x$(SHADOWFLAGS)" = "x" ] ; then \
@@ -180,7 +180,7 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		   xopt="$$xopt --with-afs-libdir=$$xlib"; \
 		fi; \
 		if [ ! "x$(AFSINCDIR)" = "x" ] ; then \
-		   xinc=`echo $(AFSINCDIR) | cut -c3-`; \
+		   xinc=`echo $(AFSINCDIR)`; \
 		   xopt="$$xopt --with-afs-incdir=$$xinc"; \
 		fi; \
 		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon"; \
