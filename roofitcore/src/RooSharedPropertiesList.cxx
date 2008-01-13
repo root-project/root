@@ -48,7 +48,7 @@ RooSharedPropertiesList::~RooSharedPropertiesList()
 } 
 
 
-RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProperties* prop) 
+RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProperties* prop, Bool_t canDeleteIncoming) 
 {
   // Register property into list and take ownership. 
   //
@@ -79,7 +79,7 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
 // 	cout << "incoming object to be deleted is in proplist!!" << endl ;
       } else {
 // 	cout << "deleting prop object " << prop << endl ;
-	//delete prop ;
+	if (canDeleteIncoming) delete prop ;
       }
 
       // delete prop ;

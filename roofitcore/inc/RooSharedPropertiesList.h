@@ -27,7 +27,7 @@ public:
   RooSharedPropertiesList() ;
   virtual ~RooSharedPropertiesList() ;
 
-  RooSharedProperties* registerProperties(RooSharedProperties*) ;
+  RooSharedProperties* registerProperties(RooSharedProperties*, Bool_t canDeleteIncoming=kTRUE) ;
   void unregisterProperties(RooSharedProperties*) ;
 
 protected:

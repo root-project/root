@@ -20,7 +20,7 @@
  // multiplying the complex coefficients and performing the reverse Complex->Real FFT
  // to get the result in the input space. This class using the ROOT FFT Interface to
  // the (free) FFTW3 package (www.fftw.org) and requires that your ROOT installation is
- // compiled with the --enable-fftw3 option.
+ // compiled with the --enable-fftw3 option (instructions for Linux follow)
  //
  // Note that the performance in terms of speed and stability of RooFFTConvPdf is 
  // vastly superior to that of RooNumConvPdf 
@@ -58,6 +58,43 @@
  //
  // Multi-dimensional convolutions are not supported yet, but will be in the future
  // as FFTW can calculate them
+ //
+ // ---
+ // 
+ // Installing a copy of FFTW on Linux and compiling ROOT to use it
+ // 
+ // 1) Go to www.fftw.org and download the latest stable version (a .tar.gz file)
+ //
+ // If you have root access to your machine and want to make a system installation of FFTW
+ //
+ //   2) Untar fftw-XXX.tar.gz in /tmp, cd into the untarred directory 
+ //       and type './configure' followed by 'make install'. 
+ //       This will install fftw in /usr/local/bin,lib etc...
+ //
+ //   3) Start from a source installation of ROOT. If you now have a binary distribution,
+ //      first download a source tar ball from root.cern.ch for your ROOT version and untar it.
+ //      Run 'configure', following the instruction from 'configure --help' but be sure run 'configure' 
+ //      with additional flags '--enable-fftw3' and '--enable-roofit', then run 'make'
+ //         
+ // 
+ // If you do not have root access and want to make a private installation of FFTW
+ //
+ //   2) Make a private install area for FFTW, e.g. /home/myself/fftw
+ //
+ //   3) Untar fftw-XXX.tar.gz in /tmp, cd into the untarred directory
+ //       and type './configure --prefix=/home/myself/fftw' followed by 'make install'. 
+ //       Substitute /home/myself/fftw with a directory of your choice. This
+ //       procedure will install FFTW in the location designated by you
+ // 
+ //   4) Start from a source installation of ROOT. If you now have a binary distribution,
+ //      first download a source tar ball from root.cern.ch for your ROOT version and untar it.
+ //      Run 'configure', following the instruction from 'configure --help' but be sure run 'configure' 
+ //      with additional flags
+ //       '--enable-fftw3', 
+ //       '--with-fftw3-incdir=/home/myself/fftw/include', 
+ //       '--width-fftw3-libdir=/home/myself/fftw/lib' and 
+ //       '--enable-roofit' 
+ //      Then run 'make'
 
 
 #include "Riostream.h" 

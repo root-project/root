@@ -367,11 +367,13 @@ Bool_t RooWorkspace::import(RooAbsData& data, const RooCmdArg& arg1, const RooCm
     }
   }
 
-  // Now import the dataset observables
+  // Now import the dataset observables that are not already imported
   TIterator* iter = clone->get()->createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    import(*arg) ;
+    if (!_allOwnedNodes.find(arg->GetName())) {
+      import(*arg) ;
+    }
   }
   delete iter ;
     
