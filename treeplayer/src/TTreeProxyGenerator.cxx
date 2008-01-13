@@ -373,59 +373,57 @@ namespace ROOT {
       TObject *obj = fListOfHeaders.FindObject(cl->GetName());
       if (obj) return;
 
-      if (cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ) {
+      TString directive;
+
+      Int_t stlType;
+      if (cl->GetCollectionProxy() && (stlType=TClassEdit::IsSTLCont(cl->GetName()))) {
+         const char *what = "";
+         switch(stlType)  {
+            case TClassEdit::kVector:   what = "vector"; break;
+            case TClassEdit::kList:     what = "list"; break;
+            case TClassEdit::kDeque:    what = "deque"; break;
+            case TClassEdit::kMap:      what = "map"; break;
+            case TClassEdit::kMultiMap: what = "multimap"; break;
+            case TClassEdit::kSet:      what = "set"; break;
+            case TClassEdit::kMultiSet: what = "multiset"; break;
+         }
+         directive = "#include <";
+         directive.Append(what);
+         directive.Append(">\n");
+      } else if (cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ) {
          // Actually we probably should look for the file ..
          const char *filename = cl->GetDeclFileName();
 
          if (!filename) return;
 
-         TString directive;
-         Int_t len = strlen(filename);
-         if (len>4 && strcmp(filename+(len-4),".dll")==0) {
-            // We must have a cintdlls.
-            Int_t stlType = TClassEdit::IsSTLCont(cl->GetName());
-            const char *what = "";
-            switch(stlType)  {
-               case TClassEdit::kVector:   what = "vector"; break;
-               case TClassEdit::kList:     what = "list"; break;
-               case TClassEdit::kDeque:    what = "deque"; break;
-               case TClassEdit::kMap:      what = "map"; break;
-               case TClassEdit::kMultiMap: what = "multimap"; break;
-               case TClassEdit::kSet:      what = "set"; break;
-               case TClassEdit::kMultiSet: what = "multiset"; break;
-            }
-            directive = "#include <";
-            directive.Append(what);
-            directive.Append(">\n");
-         } else {
-
 #ifdef R__WIN32
-            TString inclPath("include;prec_stl"); // GetHtml()->GetIncludePath());
+         TString inclPath("include;prec_stl"); // GetHtml()->GetIncludePath());
 #else
-            TString inclPath("include:prec_stl"); // GetHtml()->GetIncludePath());
+         TString inclPath("include:prec_stl"); // GetHtml()->GetIncludePath());
 #endif
-            Ssiz_t posDelim = 0;
-            TString inclDir;
-            TString sIncl(filename);
+         Ssiz_t posDelim = 0;
+         TString inclDir;
+         TString sIncl(filename);
 #ifdef R__WIN32
-            const char* pdelim = ";";
-            static const char ddelim = '\\';
+         const char* pdelim = ";";
+         static const char ddelim = '\\';
 #else
-            const char* pdelim = ":";
-            static const char ddelim = '/';
+         const char* pdelim = ":";
+         static const char ddelim = '/';
 #endif
-            while (inclPath.Tokenize(inclDir, posDelim, pdelim))
-            {
-               if (sIncl.BeginsWith(inclDir)) {
-                  filename += inclDir.Length();
-                  if (filename[0] == ddelim || filename[0] == '/') {
-                     ++filename;
-                  }
-                  break;
+         while (inclPath.Tokenize(inclDir, posDelim, pdelim))
+         {
+            if (sIncl.BeginsWith(inclDir)) {
+               filename += inclDir.Length();
+               if (filename[0] == ddelim || filename[0] == '/') {
+                  ++filename;
                }
+               break;
             }
-            directive = Form("#include \"%s\"\n",filename);
          }
+         directive = Form("#include \"%s\"\n",filename);
+      }
+      if (directive.Length()) {
          TIter i( &fListOfHeaders );
          for(TNamed *n = (TNamed*) i(); n; n = (TNamed*)i() ) {
             if (directive == n->GetTitle()) {
@@ -1175,6 +1173,12 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                isclones = TBranchProxyClassDescriptor::kSTL;
                if (cl->GetCollectionProxy()->GetValueClass()) {
                   cl = cl->GetCollectionProxy()->GetValueClass();
+               } else {
+                  type = Form("TStlSimpleProxy<%s >", cl->GetName());
+                  AddHeader(cl);
+                  AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
+                  AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
+                  continue;
                }
             }
             if (cl) {
