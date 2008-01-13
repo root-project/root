@@ -1,13 +1,14 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h forproxy.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h forproxy.root \
+	vec.root vectorintSel.h *.rootmap
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += reducedSpill leaflist valdim3
+TEST_TARGETS += reducedSpill leaflist valdim3 vectorint
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -103,3 +104,11 @@ valdim3.log: val3dimSel_h.$(DllSuf) forproxy.root
 valdim3: valdim3.log
 	$(TestDiff)
 
+vectorintSel.h: dude.h $(CORELIBS) runvectorint_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l 'runvectorint.C+(1)' > vectorintSel_h.create.log 2>&1
+	
+vectorint.clog: vectorintSel_h.$(DllSuf) $(CORELIBS) runvectorint_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l 'runvectorint.C+(2)' > vectorint.clog 2>&1
+
+vectorint: vectorint.clog
+	$(TestDiff)

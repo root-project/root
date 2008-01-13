@@ -1,0 +1,64 @@
+#include <vector>
+#include "TFile.h"
+#include "TTree.h"
+#include "TROOT.h"
+
+#ifdef __MAKECINT__
+// #  pragma link C++ class vector<double>+;
+#endif;
+
+class Top {
+public:
+  vector<double> vals;
+};
+
+void createvec(const char *filename = "vec.root")
+{
+   gROOT->ProcessLine("#include <vector>");
+   TFile *f = TFile::Open(filename,"RECREATE");
+   TTree *t = new TTree("t","t");
+   std::vector<double> *d = new std::vector<double>;
+   d->push_back(3.0);
+   d->push_back(6.0);
+   std::vector<int> *i = new std::vector<int>;
+   i->push_back(3.0);
+   i->push_back(6.0);
+   Top *top = new Top;
+   t->Branch("myvec.",&d);
+   t->Branch("myint.someodd.name",&i);
+   t->Branch("top.",&top);
+   t->Fill();
+   f->Write();
+}
+
+void createsel(const char *filename = "vec.root")
+{
+   TFile *f = TFile::Open(filename,"READ");
+   TTree *t; f->GetObject("t",t);
+   t->MakeProxy("vectorintSel","dude.C","","");
+}
+
+void usesel(const char *filename = "vec.root")
+{
+   TFile *f = TFile::Open(filename,"READ");
+   TTree *t; f->GetObject("t",t); 
+   t->Process("vectorintSel.h+","goff");
+}
+
+int runvectorint(int mode = 0) 
+{
+   if (mode==0) {
+     createvec();
+     createsel();
+     usesel();
+   } else if (mode==1) {
+     createvec();
+     createsel();
+   } else if (mode==2) {
+     usesel();
+   }
+   return 0;
+}
+
+
+
