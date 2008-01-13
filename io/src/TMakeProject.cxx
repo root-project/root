@@ -256,11 +256,11 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
             TString incName( clname+last, i-last );
             incName = TClassEdit::ShortType(incName.Data(), 1);
             if (clname[i]=='>' && nest==1) incName.Append(">");
-            int stlType;
+            Int_t stlType;
             if (isdigit(incName[0])) {
                // Not a class name, nothing to do.
             } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
-               const char *what="";
+               const char *what = "";
                switch(stlType)  {
                   case TClassEdit::kVector:   what = "vector"; break;
                   case TClassEdit::kList:     what = "list"; break;
