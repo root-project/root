@@ -62,7 +62,7 @@ static FILE *RedirectOutput(const char *logfile, const char *loc)
 
    if (loc)
       fprintf(stderr,"%s: RedirectOutput: reopen %s\n", loc, logfile);
-   FILE *flog = freopen(logfile, "w", stdout);
+   FILE *flog = freopen(logfile, "a", stdout);
    if (!flog) {
       fprintf(stderr,"%s: RedirectOutput: could not freopen stdout\n", loc);
       return 0;
