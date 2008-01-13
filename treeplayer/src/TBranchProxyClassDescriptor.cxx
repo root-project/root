@@ -24,6 +24,7 @@
 #include "TBranchProxyClassDescriptor.h"
 
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TError.h"
 #include "TVirtualStreamerInfo.h"
 
@@ -36,7 +37,7 @@ namespace ROOT {
       // Make the typename a proper class name without having the really deal with
       // namespace and templates.
 
-      fRawSymbol = GetName();
+      fRawSymbol = TClassEdit::ShortType(GetName(),2); // Drop default allocator from the name.
       fRawSymbol.ReplaceAll(":","_");
       fRawSymbol.ReplaceAll("<","_");
       fRawSymbol.ReplaceAll(">","_");
