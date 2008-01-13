@@ -44,7 +44,7 @@ writer.log: Foo.$(DllSuf) writer.C
 	$(CMDECHO)root -b -l -q writer.C > writer.log 2>&1
 
 check: writer.log reader.log
-	$(CMDECHO) diff -bw reader.ref reader.log && diff -bw writer.ref writer.log
+	$(CMDECHO) diff -buw reader.ref reader.log && diff -ubw writer.ref writer.log
 
 #clean:
 #	$(CMDECHO)rm -f *.root *~ *.o *Dict.cxx *Dict.h *.$(DllSuf) reader writer

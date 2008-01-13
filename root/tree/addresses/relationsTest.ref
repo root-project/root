@@ -23,7 +23,7 @@ byte written for entry   #9: 62
 values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
 ******************************************************************************
 *Tree    :T         : An example of a ROOT tree                              *
-*Entries :       10 : Total =           14379 bytes  
+*Entries :       10 : Total =           13857 bytes  
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Branch  :B                                                                  *
@@ -34,7 +34,7 @@ values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :m_direct.m_entries : m_direct.m_entries_                           *
-*Entries :       10 : Total  Size=       3284 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=       3108 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :m_direct.m_entries.first : first[m_direct.m_entries_]              *
@@ -46,7 +46,7 @@ values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    4 :m_direct.m_tentries : m_direct.m_tentries_                         *
-*Entries :       10 : Total  Size=       4976 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=       4798 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    5 :m_direct.m_tentries.fUniqueID : fUniqueID[m_direct.m_tentries_]    *
@@ -66,7 +66,7 @@ values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    9 :m_direct.m_ptentries : m_direct.m_ptentries_                       *
-*Entries :       10 : Total  Size=       5010 bytes  One basket in memory    *
+*Entries :       10 : Total  Size=       4830 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   10 :m_direct.m_ptentries.fUniqueID : fUniqueID[m_direct.m_ptentries_]  *

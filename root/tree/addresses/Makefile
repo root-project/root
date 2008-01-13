@@ -25,7 +25,7 @@ inheritTest.log: runInherit.C inherit_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runInherit.C > inheritTest.log 2>&1
 
 inheritTest: inheritTest.log
-	$(CMDECHO) diff -bw inheritTest.log inheritTest.ref
+	$(CMDECHO) diff -ubw inheritTest.log inheritTest.ref
 
 header_h.$(DllSuf): header.h buildHeader.C
 
@@ -33,7 +33,7 @@ headerTest.log: runHeader.C header_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runHeader.C > headerTest.log 2>&1
 
 headerTest: headerTest.log
-	$(CMDECHO) diff -bw headerTest.log headerTest.ref
+	$(CMDECHO) diff -ubw headerTest.log headerTest.ref
 
 clonesA_Event_cxx.$(DllSuf): clonesA_Event.h clonesA_Event.cxx
 
@@ -58,7 +58,7 @@ EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l embread.C | sed -e "s/e+006/e+06/g" > EmbeddedTest.log
 
 EmbeddedTest: EmbeddedTest.log
-	$(CMDECHO) diff -bw EmbeddedTest.ref EmbeddedTest.log
+	$(CMDECHO) diff -ubw EmbeddedTest.ref EmbeddedTest.log
 
 relations_load_C.$(DllSuf) : relations.h
 
@@ -71,7 +71,7 @@ relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  rela
 	$(CMDECHO)  $(CALLROOTEXE) -q -b -l relationsRun.C | sed 's|File  Size =.*\*||g' > relationsTest.log
 
 relationsTest: relationsTest.log 
-	$(CMDECHO) diff -bw relationsTest.ref relationsTest.log
+	$(CMDECHO) diff -ubw relationsTest.ref relationsTest.log
 
 mytest:
 	$(CMDECHO) echo mytest > /dev/null

@@ -14,7 +14,7 @@ Warning in <TClass::TClass>: no dictionary for class MyClass is available
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :arr       : arr_                                                   *
-*Entries :        2 : Total  Size=       3538 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=       3392 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :arr.fUniqueID : fUniqueID[arr_]                                    *
