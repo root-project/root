@@ -23,6 +23,24 @@
 #include "RooHist.h"
 #include "RooMsgService.h"
 
+// -- CLASS DESCRIPTION [PDF] --
+//
+// Generic N-dimensional implementation of a kernel estimation p.d.f. This p.d.f. models the distribution
+// of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
+// each contributing 1/N to the total integral of the p.d.f.
+//
+// If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
+// local density of events, i.e. narrow for regions with high event density to preserve details and
+// wide for regions with log event density to promote smoothness. The details of the general algorithm
+// are described in the following paper: 
+//
+// Cranmer KS, Kernel Estimation in High-Energy Physics.  
+//             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
+// 
+// For multi-dimensional datasets, the kernels are modeled by multidimensional Gaussians. The kernels are 
+// constructed such that they reflect the correlation coefficients between the observables
+// in the input dataset.
+
 using namespace std;
 
 ClassImp(RooNDKeysPdf)
@@ -43,6 +61,25 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   _weightDep(0),
   _weights(&_weights0)
 {
+  // Construct N-dimensional kernel estimation p.d.f. in observables 'varList'
+  // from dataset 'data'. Options can be 
+  //
+  //   'a' = Use adaptive kernels (width varies with local event density)
+  //   'm' = Mirror data points over observable boundaries. Improves modeling
+  //         behavior at edges for distributions that are not close to zero
+  //         at edge
+  //   'd' = Debug flag
+  //   'v' = Verbose flag
+  // 
+  // The parameter rho (default = 1) provides an overall scale factor that can
+  // be applied to the bandwith calculated for each kernel. The nSigma parameter
+  // determines the size of the box that is used to search for contributing kernels
+  // around a given point in observable space. The nSigma parameters is used
+  // in case of non-adaptive bandwidths and for the 1st non-adaptive pass for
+  // the calculation of adaptive keys p.d.f.s.
+  //
+  // The optional weight arguments allows to specify an observable or function
+  // expression in observables that specifies the weight of each event.
 
   // Constructor
   _varItr    = _varList.createIterator() ;
@@ -85,7 +122,9 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   _weightDep(0),
   _weights(&_weights0)
 { 
-  // Constructor
+  // Backward compatibility constructor for (1-dim) RooKeysPdf. If you are a new user,
+  // please use the first constructor form.
+
   _varItr = _varList.createIterator() ;
   _weightItr = _weightParams.createIterator() ;
   
@@ -121,7 +160,9 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, R
   _weightDep(0),
   _weights(&_weights0)
 { 
-  // Constructor
+  // Backward compatibility constructor for Roo2DKeysPdf. If you are a new user,
+  // please use the first constructor form.
+
   _varItr = _varList.createIterator() ;
   _weightItr = _weightParams.createIterator() ;
 
