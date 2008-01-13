@@ -104,7 +104,13 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    //      "root://server1:port1[,server2:port2,...]/pathfile?filetype=raw"
    //   b. re-check the environment variables
    //      "root://server1:port1[,server2:port2,...]/pathfile?checkenv"
-   //
+   //   c. set the cache size (in bytes)
+   //      "root://server1:port1[,server2:port2,...]/pathfile?cachesz=20000000"
+   //   d. set the read-ahead size (in bytes)
+   //      "root://server1:port1[,server2:port2,...]/pathfile?readaheadsz=100000"
+   //   e. set the cache remove policy
+   //      "root://server1:port1[,server2:port2,...]/pathfile?rmpolicy=1"
+   // (multiple options can be set concurrently)
    TUrl urlnoanchor(url);
    // Set debug level
    EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
@@ -172,6 +178,48 @@ void TXNetFile::FormUrl(TUrl uu, TString &uus)
 }
 
 //_____________________________________________________________________________
+Int_t TXNetFile::ParseCacheOptions(const char *opts, Int_t &cachesz,
+                                   Int_t &readaheadsz, Int_t &rmpolicy)
+{
+   // Parse input options for cache parameters
+   static const char *keys[3] = { "cachesz=", "readaheadsz=", "rmpolicy=" };
+
+   Int_t fo = 0;
+   TString s(opts);
+
+   Int_t i = 0;
+   for (i = 0; i < 3; i++) {
+      Int_t j = s.Index(keys[i]);
+      if (j != kNPOS) {
+         TString val(s(j+strlen(keys[i]), s.Length()));
+         // Cut of non digits
+         Int_t k = 0;
+         while (k < val.Length())
+            if (!TString(val(k++)).IsDigit())
+               break;
+         if (k < val.Length())
+            val.Remove(--k);
+         if (val.IsDigit()) {
+            fo++;
+            if (i == 0)
+               cachesz = val.Atoi();
+            else if (i == 1)
+               readaheadsz = val.Atoi();
+            else if (i == 2)
+               rmpolicy = val.Atoi();
+         }
+      }
+   }
+
+   // Notify
+   if (gDebug > 0)
+      Info("ParseCacheOptions","found: cachesz = %d, readaheadsz = %d, rmpolicy = %d",
+                               cachesz, readaheadsz, rmpolicy);
+   // Done
+   return fo;
+}
+
+//_____________________________________________________________________________
 void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
                               Bool_t parallelopen)
 {
@@ -222,6 +270,21 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
      fClient->SetCacheParameters(0, 0, 0);
 #else
      EnvPutInt(NAME_READAHEADSIZE, 0);
+#endif
+
+#ifndef OLDXRDLOCATE
+   } else {
+      // Get cache parameters, if any
+      Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1;
+      Int_t np = ParseCacheOptions(TUrl(url).GetOptions(),
+                                   cachesz, readaheadsz, rmpolicy);
+      if (np > 0) {
+         if (gDebug > 0)
+            Info("ParseCacheOptions",
+                 "setting cachesz = %d, readaheadsz = %d, rmpolicy = %d",
+                 cachesz, readaheadsz, rmpolicy);
+         fClient->SetCacheParameters(cachesz, readaheadsz, rmpolicy);
+      }
 #endif
    }
 
