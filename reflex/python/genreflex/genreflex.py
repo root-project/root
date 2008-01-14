@@ -273,10 +273,15 @@ class genreflex:
       return s
     (inp,out,err) = os.popen3('%s %s'%(compiler,vopt))
     serr = err.read()
-    if serr :
-      print '--->> genreflex: WARNING: While trying to retrieve compiler information. Cannot invoke %s %s' % (compiler,vopt)
-      print '--->> genreflex: WARNING: %s' % serr
-      return s
+    # cl puts its version into cerr!
+    if serr:
+      if bcomp in ('cl.exe','cl'):
+        s += '\nCompiler info:\n' + serr
+        return s
+      else:
+        print '--->> genreflex: WARNING: While trying to retrieve compiler information. Cannot invoke %s %s' % (compiler,vopt)
+        print '--->> genreflex: WARNING: %s' % serr
+        return s
     s += '\nCompiler info:\n' + out.read()
     return s
 #----------------------------------------------------------------------------------
