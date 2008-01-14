@@ -179,6 +179,7 @@ earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
 stress-ctest.log: STRESSFLAGS:=-b 30
 stress-itest.log: STRESSFLAGS:="(30)"
 stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is allocated'
+stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSystem::SetDisplay>'
 
 #### Extra dependencies for some tests ####
 
