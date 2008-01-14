@@ -46,7 +46,7 @@ endif
 
 # The dictionary:
 %_rflx.cpp: %_selection.xml %.h
-	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I$(ROOTSYS)/include > $@.log
+	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" > $@.log
 
 # the driver which includes the relevant files for the library:
 %_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h
@@ -58,14 +58,18 @@ endif
 
 # and the actual test, building and "running" the library
 %_rflx.log: %_rflxdriver.C
-	$(CMDECHO) echo '{gSystem->Load("libCintex"); gROOT->ProcessLine(".x $<+");}' | root -l -b 2>&1 | grep -v 'creating shared' > $@
+	$(CMDECHO) echo '{gSystem->Load("libCintex"); gROOT->ProcessLine(".L $<+");}' > $@_tmp.C \
+	&& root -l -b -q $@_tmp.C > /dev/null 2>&1 \
+	&& echo '{gSystem->Load("libCintex"); gROOT->ProcessLine(".x $<+");}' > $@_tmp.C \
+	&& root -l -b -q $@_tmp.C | grep -v 'Processing ' > $@ \
+	&& rm -f $@_tmp.C
 
 # We only run these tests if libCintex exists and gccxml is found
 ifeq ($(findstring cintex,$(shell root-config --features)),)
 HAVEGCCXML:="nocintex"
 endif
 HAVEGCCXML?=$(shell which gccxml 2>/dev/null)
-ifeq ($(findstring gccxml,$(no-dir $(HAVEGCCXML))),gccxml)
+ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref
 	$(TestDiff)
 
