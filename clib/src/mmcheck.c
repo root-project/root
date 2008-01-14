@@ -54,6 +54,10 @@ struct hdr
     unsigned long int magic;	/* Magic number to check header integrity.  */
   };
 
+typedef void (*mmfree_fun_t) PARAMS ((PTR, PTR));
+typedef PTR (*mmalloc_fun_t) PARAMS ((PTR, size_t));
+typedef PTR (*mmrealloc_fun_t) PARAMS ((PTR, PTR, size_t));
+
 /* Check the magicword and magicbyte, and if either is corrupted then
    call the emergency abort function specified for the heap in use. */
 
@@ -82,7 +86,7 @@ mfree_check (md, ptr)
   hdr -> magic = MAGICWORDFREE;
   mdp -> mfree_hook = NULL;
   mfree (md, (PTR)hdr);
-  mdp -> mfree_hook = mfree_check;
+  mdp -> mfree_hook = (mmfree_fun_t) mfree_check;
 }
 
 static PTR
@@ -98,7 +102,7 @@ mmalloc_check (md, size)
   mdp -> mmalloc_hook = NULL;
   nbytes = sizeof (struct hdr) + size + 1;
   hdr = (struct hdr *) mmalloc (md, nbytes);
-  mdp -> mmalloc_hook = mmalloc_check;
+  mdp -> mmalloc_hook = (mmalloc_fun_t) mmalloc_check;
   if (hdr != NULL)
     {
       hdr -> size = size;
@@ -126,9 +130,9 @@ mrealloc_check (md, ptr, size)
   mdp -> mrealloc_hook = NULL;
   nbytes = sizeof (struct hdr) + size + 1;
   hdr = (struct hdr *) mrealloc (md, (PTR) hdr, nbytes);
-  mdp -> mfree_hook = mfree_check;
-  mdp -> mmalloc_hook = mmalloc_check;
-  mdp -> mrealloc_hook = mrealloc_check;
+  mdp -> mfree_hook = (mmfree_fun_t) mfree_check;
+  mdp -> mmalloc_hook = (mmalloc_fun_t) mmalloc_check;
+  mdp -> mrealloc_hook = (mmrealloc_fun_t) mrealloc_check;
   if (hdr != NULL)
     {
       hdr -> size = size;
@@ -184,9 +188,9 @@ mmcheck (md, func)
       !(mdp -> flags & MMALLOC_INITIALIZED) ||
       (mdp -> mfree_hook != NULL))
     {
-      mdp -> mfree_hook = mfree_check;
-      mdp -> mmalloc_hook = mmalloc_check;
-      mdp -> mrealloc_hook = mrealloc_check;
+      mdp -> mfree_hook = (mmfree_fun_t) mfree_check;
+      mdp -> mmalloc_hook = (mmalloc_fun_t) mmalloc_check;
+      mdp -> mrealloc_hook = (mmrealloc_fun_t) mrealloc_check;
       mdp -> flags |= MMALLOC_MMCHECK_USED;
       rtnval = 1;
     }
