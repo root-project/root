@@ -1649,6 +1649,7 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
    dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
    if (dz<1E-8) {
       ipl++;
+      if (ipl>fNz-2) return 0.;  // invalid last section
       dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
    }   
    // Check safety for current segment
