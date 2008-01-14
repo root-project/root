@@ -4615,7 +4615,7 @@ Int_t TTree::MakeSelector(const char* selector)
    // where T is the name of the Tree in file myfile.root
    // and myselect.h, myselect.C the name of the files created by this function.
    // In a ROOT session, you can do:
-   //    root > T->Process("select.C")
+   //    root > T->Process("myselect.C")
 
    return MakeClass(selector, "selector");
 }
