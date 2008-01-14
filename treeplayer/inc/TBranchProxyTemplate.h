@@ -104,7 +104,7 @@ namespace ROOT {
    template <class T>
    class TStlObjProxy  {
       TStlProxy obj;
-      typedef typename T value_t;
+      typedef T value_t;
    public:
       InjecTBranchProxyInterface();
 
