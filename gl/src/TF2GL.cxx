@@ -75,7 +75,7 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
          fCoord.SetCoordType(kGLPolar);
       else if (option.Index("cyl") != kNPOS)
          fCoord.SetCoordType(kGLCylindrical);
-      
+
       fPlotPainter->AddOption(option);
 
       fPlotPainter->InitGeometry();
@@ -115,6 +115,6 @@ void TF2GL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    const Rgl::Range_t & zr = fCoord.GetXRange();
    ap.PaintGLAxis(fBoundingBox[0].CArr(), fBoundingBox[4].CArr(),
                   zr.first, zr.second, 205);
-                  
+
    glPopAttrib();
 }

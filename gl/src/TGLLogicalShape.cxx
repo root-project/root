@@ -263,7 +263,7 @@ Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
    // a) fScene is set (Scene manages link to GL-context);
    // b) secondary selection is not in progress as different
    //    render-path is usually taken in this case.
-   // 
+   //
    // Otherwise we return internal bool.
    //
    // Override this in sub-class if different behaviour is required.

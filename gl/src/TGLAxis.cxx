@@ -80,7 +80,7 @@ void TGLAxis::PaintGLAxis(const Double_t p1[3], const Double_t p2[3],
    // wmin, wmax : Minimum and maximum values along the axis. wmin < wmax.
    // ndiv       : Number of axis divisions. It is an integer in the form
    //              "ttsspp" where "tt" is the number of tertiary divisions,
-   //              "ss" is the number of secondary divisions and "pp" the 
+   //              "ss" is the number of secondary divisions and "pp" the
    //              number of primary divisions.
    // opt        : Options.
    //              "N" - By default the number of divisions is optimized to

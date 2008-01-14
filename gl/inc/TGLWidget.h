@@ -44,7 +44,7 @@ public:
    Bool_t HandleKey(Event_t *ev);
    Bool_t HandleMotion(Event_t *ev);
    //Bool_t HandleExpose(Event_t *ev);
-   
+
    void   DoRedraw();
 
 private:

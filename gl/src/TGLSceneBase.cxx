@@ -56,6 +56,7 @@ TGLSceneBase::TGLSceneBase() :
    fClip             (0),
    fBoundingBox      (),
    fBoundingBoxValid (kFALSE),
+   fForceUpdateSI    (kFALSE),
    fDoFrustumCheck   (kTRUE),
    fDoClipCheck      (kTRUE),
    fAutoDestruct     (kTRUE)
@@ -329,7 +330,7 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
    }
 
 
-   Bool_t needUpdate = kFALSE;
+   Bool_t needUpdate = fForceUpdateSI;
 
    if (rnrCtx.GetCamera() != sInfo.LastCamera())
    {
@@ -358,6 +359,7 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
 
    if (needUpdate)
    {
+      fForceUpdateSI = kFALSE;
       UpdateSceneInfo(rnrCtx);
    }
 

@@ -67,7 +67,7 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
          fPlotPainter = new TGLSurfacePainter(fM, 0, &fCoord);
       else
          fPlotPainter = new TGLLegoPainter(fM, 0, &fCoord);
-   
+
       // Coord-system
       fCoord.SetXLog(gPad->GetLogx());
       fCoord.SetYLog(gPad->GetLogy());
@@ -79,7 +79,7 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
          fCoord.SetCoordType(kGLPolar);
       else if (option.Index("cyl") != kNPOS)
          fCoord.SetCoordType(kGLCylindrical);
-      
+
       fPlotPainter->AddOption(option);
 
       fPlotPainter->InitGeometry();
@@ -119,6 +119,6 @@ void TH2GL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    const Rgl::Range_t & zr = fCoord.GetXRange();
    ap.PaintGLAxis(fBoundingBox[0].CArr(), fBoundingBox[4].CArr(),
                   zr.first, zr.second, 205);
-                  
+
    glPopAttrib();
 }

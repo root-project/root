@@ -21,9 +21,9 @@ public:
    HDC         fHDC;
    HGLRC       fGLContext;
 
-   TGLContextPrivate() 
-      : fHWND(0), 
-        fHDC(0), 
+   TGLContextPrivate()
+      : fHWND(0),
+        fHDC(0),
         fGLContext(0)
    {
    }
@@ -49,7 +49,7 @@ public:
    GLXContext   fGLContext;
    Int_t        fWindowIndex;
    //GLXPbuffer   fPBDC;
-   
+
    TGLContextPrivate()
       : fDpy(0),
         fVisualInfo(0),
@@ -61,7 +61,7 @@ public:
    static void RegisterContext(TGLContext *ctx);
    static void RemoveContext(TGLContext *ctx);
    static TGLContext *GetCurrentContext();
-   
+
 private:
    TGLContextPrivate(const TGLContextPrivate &);
    TGLContextPrivate &operator = (const TGLContextPrivate &);

@@ -114,8 +114,9 @@ public:
    TGLVertex3   Center() const;
    TGLVector3   Extents() const;
    const  TGLVector3 & Axis(UInt_t i, Bool_t normalised = kTRUE) const;
-   Bool_t       IsEmpty() const;
-   Double_t     Volume() const { return fVolume; }
+   Bool_t       IsEmpty()  const;
+   Double_t     Volume()   const { return fVolume;   }
+   Double_t     Diagonal() const { return fDiagonal; }
    void         PlaneSet(TGLPlaneSet_t & planeSet) const;
    TGLPlane     GetNearPlane() const;
 

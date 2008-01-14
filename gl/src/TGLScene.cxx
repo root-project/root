@@ -157,6 +157,7 @@ ClassImp(TGLScene)
 TGLScene::TGLScene() :
    TGLSceneBase(),
    fGLCtxIdentity(0),
+   fUpdateTimeouted(kFALSE),
    fInSmartRefresh(kFALSE)
 {}
 
@@ -327,7 +328,15 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
 
    // Check individual physicals, build DrawElementList.
 
-   for (ShapeVec_i phys=sinfo->fDrawList.begin(); phys!=sinfo->fDrawList.end(); ++phys)
+   Int_t  checkCount = 0;
+   Bool_t timerp     = (ctx.RenderTimeout() > 0.0);
+   fUpdateTimeouted  = kFALSE;
+
+   TGLStopwatch stopwatch;
+   stopwatch.Start();
+
+   for (ShapeVec_i phys=sinfo->fDrawList.begin(); phys!=sinfo->fDrawList.end();
+        ++phys, ++checkCount)
    {
       const TGLPhysicalShape * drawShape = *phys;
 
@@ -402,7 +411,21 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
             sinfo->fOpaqueElements.push_back(de);
       }
 
+      // Terminate the traversal if over scene rendering limit.
+      // Only test every 1000 objects as this is somewhat costly.
+      if (timerp && (checkCount % 1000) == 999 &&
+          stopwatch.Lap() > ctx.RenderTimeout())
+      {
+         fUpdateTimeouted = kTRUE;
+         if (ctx.ViewerLOD() == TGLRnrCtx::kLODHigh)
+            Warning("TGLScene::UpdateSceneInfo",
+                    "Timeout %.0fms reached, not all elements processed.",
+                    ctx.RenderTimeout());
+         break;
+      }
    }
+
+   stopwatch.End();
 
    // !!! MT Transparents should be sorted by their eye z-coordinate.
    // Need combined matrices in scene-info to do this.
@@ -450,6 +473,9 @@ void TGLScene::PreRender(TGLRnrCtx & rnrCtx)
       Error("TGLScene::Render", "SceneInfo mismatch.");
       return;
    }
+
+   if (fUpdateTimeouted)
+      fForceUpdateSI = kTRUE;
 
    // Setup ctx, check if Update/Lodify needed.
    TGLSceneBase::PreRender(rnrCtx);
@@ -756,10 +782,14 @@ Double_t TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
       }
 
       // Terminate the draw if over opaque fraction timeout.
-      // Only test every 50 objects as this is somewhat costly.
-      if (timerp && (drawCount % 50) == 49 &&
+      // Only test every 500 objects as this is somewhat costly.
+      if (timerp && (drawCount % 500) == 499 &&
           stopwatch.Lap() > timeout)
       {
+         if (rnrCtx.ViewerLOD() == TGLRnrCtx::kLODHigh)
+             Warning("TGLScene::RenderElements",
+                     "Timeout %.0fms reached, not all elements rendered.",
+                     timeout);
          break;
       }
    }
@@ -1348,7 +1378,7 @@ void TGLScene::DumpMapSizes() const
 {
    // Print sizes of logical nad physical-shape maps.
 
-   printf("Scene: %u Logicals / %u Physicals ",
+   printf("Scene: %u Logicals / %u Physicals\n",
           (UInt_t) fLogicalShapes.size(), (UInt_t) fPhysicalShapes.size());
 }
 

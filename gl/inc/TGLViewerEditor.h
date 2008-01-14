@@ -41,6 +41,9 @@ private:
    TGTextButton     *fUpdateScene;
    TGTextButton     *fCameraHome;
 
+   TGNumberEntry    *fMaxSceneDrawTimeHQ;
+   TGNumberEntry    *fMaxSceneDrawTimeLQ;
+
    //"Guides" tab's controls
    TGCheckButton    *fCameraCenterExt;
    TGTextButton     *fCaptureCenter;
@@ -99,6 +102,7 @@ public:
    void DoResetCameraOnDoubleClick();
    void DoUpdateScene();
    void DoCameraHome();
+   void UpdateMaxDrawTimes();
    void DoCameraCenterExt();
    void DoCaptureCenter();
    void DoDrawCameraCenter();
@@ -110,7 +114,8 @@ public:
 
    void DetachFromPad(){fIsInPad = kFALSE;}
 
-   static TGNumberEntry* MakeLabeledNEntry(TGCompositeFrame* p, const char* name, Int_t labelw,Int_t nd=7, Int_t s=5);
+   static TGNumberEntry* MakeLabeledNEntry(TGCompositeFrame* p, const char* name,
+                                           Int_t labelw, Int_t nd=7, Int_t s=5);
 
    ClassDef(TGLViewerEditor, 0) //GUI for editing TGLViewer attributes
 };

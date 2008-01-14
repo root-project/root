@@ -37,6 +37,8 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fResetCameraOnDoubleClick(0),
    fUpdateScene(0),
    fCameraHome(0),
+   fMaxSceneDrawTimeHQ(0),
+   fMaxSceneDrawTimeLQ(0),
    fCameraCenterExt(0),
    fCaptureCenter(0),
    fCameraCenterX(0),
@@ -85,6 +87,8 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fResetCameraOnDoubleClick->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoResetCameraOnDoubleClick()");
    fUpdateScene->Connect("Pressed()", "TGLViewerEditor", this, "DoUpdateScene()");
    fCameraHome->Connect("Pressed()", "TGLViewerEditor", this, "DoCameraHome()");
+   fMaxSceneDrawTimeHQ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateMaxDrawTimes()");
+   fMaxSceneDrawTimeLQ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateMaxDrawTimes()");
    fCameraCenterExt->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraCenterExt()");
    fCaptureCenter->Connect("Clicked()", "TGLViewerEditor", this, "DoCaptureCenter()");
    fDrawCameraCenter->Connect("Clicked()", "TGLViewerEditor", this, "DoDrawCameraCenter()");
@@ -138,6 +142,8 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
    fResetCamerasOnUpdate->SetState(fViewer->GetResetCamerasOnUpdate() ? kButtonDown : kButtonUp);
    fResetCameraOnDoubleClick->SetState(fViewer->GetResetCameraOnDoubleClick() ? kButtonDown : kButtonUp);
+   fMaxSceneDrawTimeHQ->SetNumber(fViewer->GetMaxSceneDrawTimeHQ());
+   fMaxSceneDrawTimeLQ->SetNumber(fViewer->GetMaxSceneDrawTimeLQ());
    //camera look at
    TGLCamera & cam = fViewer->CurrentCamera();
    fCameraCenterExt->SetDown(cam.GetExternalCenter());
@@ -205,6 +211,15 @@ void TGLViewerEditor::DoCameraHome()
 
    fViewer->ResetCurrentCamera();
    ViewerRedraw();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::UpdateMaxDrawTimes()
+{
+   // Slot for fMaxSceneDrawTimeHQ and fMaxSceneDrawTimeLQ.
+
+   fViewer->SetMaxSceneDrawTimeHQ(fMaxSceneDrawTimeHQ->GetNumber());
+   fViewer->SetMaxSceneDrawTimeLQ(fMaxSceneDrawTimeLQ->GetNumber());
 }
 
 //______________________________________________________________________________
@@ -295,13 +310,14 @@ void TGLViewerEditor::UpdateViewerReference()
 }
 
 //______________________________________________________________________________
-TGNumberEntry*  TGLViewerEditor::MakeLabeledNEntry(TGCompositeFrame* p, const char* name, Int_t labelw,Int_t nd, Int_t style)
+TGNumberEntry* TGLViewerEditor::MakeLabeledNEntry(TGCompositeFrame* p, const char* name,
+                                                   Int_t labelw,Int_t nd, Int_t style)
 {
    // Helper function to create fixed width TGLabel and TGNumberEntry in same row.
 
    TGHorizontalFrame *rfr   = new TGHorizontalFrame(p);
    TGHorizontalFrame *labfr = new TGHorizontalFrame(rfr, labelw, 20, kFixedSize);
-   TGLabel* lab =   new TGLabel(rfr,name);
+   TGLabel           *lab   =   new TGLabel(rfr,name);
    labfr->AddFrame(lab, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0) );
    rfr->AddFrame(labfr, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0));
 
@@ -332,7 +348,11 @@ void TGLViewerEditor::CreateStyleTab()
    fUpdateScene = new TGTextButton(af, "Update Scene", 130);
    af->AddFrame(fUpdateScene, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 8, 1));
    fCameraHome = new TGTextButton(af, "Camera Home", 130);
-   af->AddFrame(fCameraHome, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 1, 1));
+   af->AddFrame(fCameraHome, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 1, 3));
+   fMaxSceneDrawTimeHQ = MakeLabeledNEntry(af, "Max HQ render time:", 120, 6, TGNumberFormat::kNESInteger);
+   fMaxSceneDrawTimeHQ->SetLimits(TGNumberFormat::kNELLimitMin, 0, 1e6);
+   fMaxSceneDrawTimeLQ = MakeLabeledNEntry(af, "Max LQ render time:", 120, 6, TGNumberFormat::kNESInteger);
+   fMaxSceneDrawTimeLQ->SetLimits(TGNumberFormat::kNELLimitMin, 0, 1e6);
 
    TGHorizontalFrame* hf = new TGHorizontalFrame(this);
    TGLabel* lab = new TGLabel(hf, "Clear Color");

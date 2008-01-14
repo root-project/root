@@ -104,7 +104,9 @@ protected:
    UInt_t               fActiveButtonID;
 
    // Redraw timer
-   TGLRedrawTimer     * fRedrawTimer; //!
+   TGLRedrawTimer     * fRedrawTimer;        //! timer for triggering redraws
+   Float_t              fMaxSceneDrawTimeHQ; //! max time for scene rendering at high LOD (in ms)
+   Float_t              fMaxSceneDrawTimeLQ; //! max time for scene rendering at high LOD (in ms)
 
    TGLRect        fViewport;       //! viewport - drawn area
    Color_t        fClearColor;     //! clear-color
@@ -208,7 +210,15 @@ public:
 
    const TGLPhysicalShape * GetSelected() const;
 
+
    // Draw and selection
+
+   // Scene rendering timeouts
+   Float_t GetMaxSceneDrawTimeHQ() const    { return fMaxSceneDrawTimeHQ; }
+   Float_t GetMaxSceneDrawTimeLQ() const    { return fMaxSceneDrawTimeLQ; }
+   void    SetMaxSceneDrawTimeHQ(Float_t t) { fMaxSceneDrawTimeHQ = t; }
+   void    SetMaxSceneDrawTimeLQ(Float_t t) { fMaxSceneDrawTimeLQ = t; }
+
    // Request methods post cross thread request via TROOT::ProcessLineFast().
    void RequestDraw(Short_t LOD = TGLRnrCtx::kLODMed); // Cross thread draw request
    virtual void PreRender();
@@ -269,7 +279,7 @@ public:
    void RequestDraw(Int_t milliSec, Short_t redrawLOD=TGLRnrCtx::kLODHigh)
    {
       if (fPending) TurnOff(); else fPending = kTRUE;
-      if (redrawLOD > fRedrawLOD) fRedrawLOD = redrawLOD;
+      if (redrawLOD < fRedrawLOD) fRedrawLOD = redrawLOD;
       TTimer::Start(milliSec, kTRUE);
    }
    virtual void Stop()
@@ -281,6 +291,7 @@ public:
       TurnOff();
       fPending = kFALSE;
       fViewer.RequestDraw(fRedrawLOD);
+      fRedrawLOD = TGLRnrCtx::kLODHigh;
       return kTRUE;
    }
 };

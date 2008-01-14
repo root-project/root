@@ -977,38 +977,38 @@ UInt_t TGLUtil::fgColorLockCount     = 0;
 
 
 //______________________________________________________________________________
-void   TGLUtil::SetDrawQuality(UInt_t dq) 
-{ 
+void   TGLUtil::SetDrawQuality(UInt_t dq)
+{
    //static: set draw quality
-   fgDrawQuality = dq; 
+   fgDrawQuality = dq;
 }
 
 //______________________________________________________________________________
-void   TGLUtil::ResetDrawQuality()               
-{ 
+void   TGLUtil::ResetDrawQuality()
+{
    //static: reset draw quality
-   fgDrawQuality = fgDefaultDrawQuality; 
+   fgDrawQuality = fgDefaultDrawQuality;
 }
 
 //______________________________________________________________________________
-UInt_t TGLUtil::GetDefaultDrawQuality()          
-{ 
+UInt_t TGLUtil::GetDefaultDrawQuality()
+{
    //static: get default draw quality
-   return fgDefaultDrawQuality; 
+   return fgDefaultDrawQuality;
 }
 
 //______________________________________________________________________________
-void   TGLUtil::SetDefaultDrawQuality(UInt_t dq) 
-{ 
+void   TGLUtil::SetDefaultDrawQuality(UInt_t dq)
+{
    //static: set default draw quality
-   fgDefaultDrawQuality = dq; 
+   fgDefaultDrawQuality = dq;
 }
 
 //______________________________________________________________________________
-Bool_t   TGLUtil::IsColorLocked() 
-{ 
+Bool_t   TGLUtil::IsColorLocked()
+{
    //static: return true if color lockcount is greater than 0
-   return fgColorLockCount != 0; 
+   return fgColorLockCount != 0;
 }
 
 //______________________________________________________________________________
@@ -1064,7 +1064,7 @@ void TGLUtil::Color(Color_t color_index, Float_t alpha)
       TColor* c = gROOT->GetColor(color_index);
       if (c)
          glColor4f(c->GetRed(), c->GetGreen(), c->GetBlue(), alpha);
-   } 
+   }
 }
 
 //______________________________________________________________________________

@@ -540,58 +540,54 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) cons
    // ii) having significant length OR volume ratio compared to this
    // interest box
    //
-   // If a box is 'of interest' returns kTRUE, kFALSE otherwise.
-   // See TGLCamera::UpdateInterest() for more details of camera interest box.
+   // If a box is 'of interest' returns kTRUE, kFALSE otherwise.  See
+   // TGLCamera::UpdateInterest() for more details of camera interest
+   // box.
    //
-   // Note: Length/volume ratios NOT dependent on the projected size of box
-   // at current camera configuration as we do not want continual changes.
-   // This is used when (re) populating the scene with objects from external
-   // client.
+   // Note: Length/volume ratios NOT dependent on the projected size
+   // of box at current camera configuration as we do not want
+   // continual changes.  This is used when (re) populating the scene
+   // with objects from external client.
    //
-   // TODO: Might be more logical to move this test out to client - and
-   // have accessor for fInterestBox instead?
+   // TODO: Might be more logical to move this test out to client -
+   // and have accessor for fInterestBox instead?
+
    Bool_t interest = kFALSE;
 
-   // *************** IMPORTANT - Bootstrapping the camera with empty scene
+   // *********** IMPORTANT - Bootstrapping the camera with empty scene
    //
-   // Initially the camera can't be Setup() (limits etc) until the scene
-   // is populated and it has a valid bounding box to pass to the camera.
-   // However the scene can't be populated without knowing if objects sent are
-   // 'of interest' - which needs a camera interest box, made from a properly
-   // setup camera frustum - catch 22.
+   // Initially the camera can't be Setup() (limits etc) until the
+   // scene is populated and it has a valid bounding box to pass to
+   // the camera.  However the scene can't be populated without
+   // knowing if objects sent are 'of interest' - which needs a camera
+   // interest box, made from a properly setup camera frustum - catch
+   // 22.
    //
-   // To overcome this we track the largest box volume seen so far and regard
-   // anything over 1% of this as 'of interest'. This enables us to get a roughly
-   // populated scene with largest objects, setup the camera, and do first draw.
-   // We then do a TGLCamera::UpdateInterest() - which always return kTRUE , and thus
-   // fires an internal rebuild to fill scene properly and finally setup camera properly.....
-   if (fInterestBox.IsEmpty()) {
-//      if (box.Volume() >= fLargestSeen * 0.01) {
-      if (box.Volume() >= fLargestSeen * 0.001) {
+   // To overcome this we track the largest box volume seen so far and
+   // regard anything over 0.001 of this as 'of interest'. This enables
+   // us to get a roughly populated scene with largest objects, setup
+   // the camera, and do first draw.  We then do a
+   // TGLCamera::UpdateInterest() - which always return kTRUE, and
+   // thus fires an internal rebuild to fill scene properly and
+   // finally setup camera properly.
 
+   if (fInterestBox.IsEmpty()) {
+      if (box.Volume() >= fLargestSeen * 0.001) {
          if (box.Volume() > fLargestSeen) {
             fLargestSeen = box.Volume();
          }
          interest = kTRUE;
       }
    } else {
-      // We have a valid interest box
-
-      // Objects are of interest if the have sufficient length or volume ratio c.f.
-      // the current interest box, and they at least partially overlap it
-      Double_t lengthRatio = box.Extents().Mag() / fInterestBox.Extents().Mag();
-
-      // Some objects have zero volume BBs - e.g. single points - skip the volume ratio
-      // test for these - no way to threshold on 0
-      Double_t volumeRatio = 1.0;
-      if (!box.IsEmpty()) {
-         volumeRatio = box.Volume() / fInterestBox.Volume();
-      }
-
-//      if ((lengthRatio > 0.001) || (volumeRatio > 0.0001)) {
-      if (ignoreSize || (lengthRatio > 0.0001) || (volumeRatio > 0.0001)) {
-
-         interest = fInterestBox.Overlap(box) != kOutside;
+      // Objects are of interest if the have length ratio c.f. the
+      // current interest box, and they at least partially overlap it.
+      // Some objects have zero volume BBs - e.g. single points - skip
+      // the test for these as there is no way to threshold on 0.
+      if (box.IsEmpty()) {
+         interest = kTRUE;
+      } else {
+         if (ignoreSize || box.Diagonal() / fInterestBox.Diagonal() > 0.0001)
+            interest = fInterestBox.Overlap(box) != kOutside;
       }
    }
 

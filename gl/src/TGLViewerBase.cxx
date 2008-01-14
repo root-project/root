@@ -228,7 +228,7 @@ void TGLViewerBase::MergeSceneBBoxes(TGLBoundingBox& bbox)
          sinfo->SetupTransformsAndBBox(); // !!! transform not done yet, no camera
          bbox.MergeAligned(sinfo->GetTransformedBBox());
       }
-   }  
+   }
 }
 
 /**************************************************************************/
@@ -256,7 +256,7 @@ void TGLViewerBase::PreRender()
       {
          if (fRnrCtx->GetGLCtxIdentity() != 0)
             Warning("TGLViewerBase::PreRender", "Switching to another GL context; maybe you should use context-sharing.");
-         fRnrCtx->SetGLCtxIdentity(cid);      
+         fRnrCtx->SetGLCtxIdentity(cid);
       }
    }
 

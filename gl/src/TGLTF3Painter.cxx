@@ -15,7 +15,7 @@
 
 //______________________________________________________________________________
 //
-// Plot-painter implementing rendering of TF3 functions. 
+// Plot-painter implementing rendering of TF3 functions.
 
 ClassImp(TGLTF3Painter)
 
