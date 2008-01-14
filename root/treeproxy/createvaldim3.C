@@ -2,10 +2,14 @@
 #include <TTree.h>
 #include <TClonesArray.h>
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-#include "Track.C+"
+#ifdef R__MACOSX
+# include "Track.C"
 #else
-#include "Track.h"
+# if defined(__CINT__) && !defined(__MAKECINT__)
+#  include "Track.C+"
+# else
+#  include "Track.h"
+# endif
 #endif
 
 void createvaldim3(bool process = false) 

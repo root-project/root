@@ -86,12 +86,18 @@ Track_C.$(DllSuf): Track.h
 
 forproxy.root: val3dimSel.h
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
-	
+
 val3dimSel.h: createvaldim3_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
 
 createvaldim3_C.$(DllSuf): createvaldim3.C Track_C.$(DllSuf)
 	$(BuildWithLib)
+ifneq ($(shell root-config --arch | grep mac),)
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+# see include file in createvaldim3.C
+endif
+endif
 
 runvaldim3_C.$(DllSuf): runvaldim3.C Track_C.$(DllSuf)
 	$(BuildWithLib)
@@ -106,7 +112,7 @@ valdim3: valdim3.log
 
 vectorintSel.h: dude.h $(CORELIBS) runvectorint_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l 'runvectorint.C+(1)' > vectorintSel_h.create.log 2>&1
-	
+
 vectorint.clog: vectorintSel_h.$(DllSuf) $(CORELIBS) runvectorint_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l 'runvectorint.C+(2)' > vectorint.clog 2>&1
 
