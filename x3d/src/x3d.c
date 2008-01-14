@@ -379,7 +379,8 @@ int x, y;
 ******************************************************************************/
 {
 int hUnit, vUnit;
-_XPoint points[512];
+   _XPoint points[512];
+   void *ptrp = points;
 
    hUnit = XTextWidth(g->font, LONGESTSTRING, strlen(LONGESTSTRING)) /
    strlen(LONGESTSTRING);
@@ -392,7 +393,7 @@ _XPoint points[512];
    points[2].x = 14 * hUnit + vUnit + x; points[2].y =  6 * vUnit + y;
    points[3].x = 14 * hUnit + x; points[3].y =  6 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 14 * hUnit + vUnit + x; points[0].y =  1 * vUnit + y;
@@ -400,7 +401,7 @@ _XPoint points[512];
    points[2].x =  9 * hUnit + x; points[2].y =  6 * vUnit + y;
    points[3].x =  9 * hUnit + vUnit + x; points[3].y =  6 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
 /* 3 */
@@ -410,7 +411,7 @@ _XPoint points[512];
    points[2].x = 23 * hUnit + x; points[2].y =  2 * vUnit + y;
    points[3].x = 18 * hUnit + x; points[3].y =  2 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 23 * hUnit - vUnit + x; points[0].y =  2 * vUnit + y;
@@ -418,7 +419,7 @@ _XPoint points[512];
    points[2].x = 23 * hUnit + x; points[2].y =  3 * vUnit + y;
    points[3].x = 23 * hUnit - vUnit + x; points[3].y =  4 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 23 * hUnit - vUnit + x; points[0].y =  3 * vUnit + y;
@@ -426,7 +427,7 @@ _XPoint points[512];
    points[2].x = 23 * hUnit + x; points[2].y =  5 * vUnit + y;
    points[3].x = 23 * hUnit - vUnit + x; points[3].y =  5 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 18 * hUnit + x; points[0].y =  5 * vUnit + y;
@@ -434,7 +435,7 @@ _XPoint points[512];
    points[2].x = 22 * hUnit + x; points[2].y =  6 * vUnit + y;
    points[3].x = 18 * hUnit + x; points[3].y =  6 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 19 * hUnit + x; points[0].y =  3 * vUnit + y;
@@ -442,7 +443,7 @@ _XPoint points[512];
    points[2].x = 23 * hUnit - vUnit + x; points[2].y =  4 * vUnit + y;
    points[3].x = 19 * hUnit + x; points[3].y =  4 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
 /* D */
@@ -452,7 +453,7 @@ _XPoint points[512];
    points[2].x = 30 * hUnit + vUnit + x; points[2].y =  2 * vUnit + y;
    points[3].x = 26 * hUnit + x; points[3].y =  2 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 26 * hUnit + x; points[0].y =  5 * vUnit + y;
@@ -460,7 +461,7 @@ _XPoint points[512];
    points[2].x = 30 * hUnit + x; points[2].y =  6 * vUnit + y;
    points[3].x = 26 * hUnit + x; points[3].y =  6 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 26 * hUnit + x; points[0].y =  1 * vUnit + y;
@@ -468,7 +469,7 @@ _XPoint points[512];
    points[2].x = 26 * hUnit + vUnit + x; points[2].y =  6 * vUnit + y;
    points[3].x = 26 * hUnit + x; points[3].y =  6 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
    points[0].x = 30 * hUnit + x; points[0].y =  2 * vUnit + y;
@@ -476,7 +477,7 @@ _XPoint points[512];
    points[2].x = 30 * hUnit + vUnit + x; points[2].y =  5 * vUnit + y;
    points[3].x = 30 * hUnit + x; points[3].y =  5 * vUnit + y;
 
-   XFillPolygon(g->dpy, g->helpWin, g->helpGc, (XPoint *) points, 4, Convex,
+   XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 }
 
@@ -2534,7 +2535,7 @@ register point  **pointPtr, **lastPointPtr;
 Drawable dest;
 
 _XPoint points[512], *XPointPtr;
-
+   void *ptrp = points;
    dest = g->dest;
    numPolys = o->numPolys;
    list     = o->list;
@@ -2564,11 +2565,11 @@ _XPoint points[512], *XPointPtr;
                }
 
             XSetForeground(g->dpy, g->gc, g->black);
-            XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+            XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
             points[npoints] = points[0];
             XSetForeground(g->dpy, g->gc, g->white);
-            XDrawLines(g->dpy, dest, g->gc, (XPoint *) points, npoints + 1,
+            XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
             CoordModeOrigin);
             }
 
@@ -2597,11 +2598,11 @@ _XPoint points[512], *XPointPtr;
                }
 
             XSetForeground(g->dpy, g->gc, g->stereoBlack);
-            XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+            XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
             points[npoints] = points[0];
             XSetForeground(g->dpy, g->gc, poly->color->stereoColor);
-            XDrawLines(g->dpy, dest, g->gc, (XPoint *) points, npoints + 1,
+            XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
             CoordModeOrigin);
             }
 
@@ -2623,11 +2624,11 @@ _XPoint points[512], *XPointPtr;
                   }
 
                XSetForeground(g->dpy, g->gc, g->stereoBlack);
-               XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+               XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
                CoordModeOrigin);
                points[npoints] = points[0];
                XSetForeground(g->dpy, g->gc, poly->color->stereoColor);
-               XDrawLines(g->dpy, dest, g->gc, (XPoint *) points, npoints + 1,
+               XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
                CoordModeOrigin);
                }
             }
@@ -2654,12 +2655,12 @@ _XPoint points[512], *XPointPtr;
                }
 
             XSetForeground(g->dpy, g->gc, g->Black);
-            XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+            XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
 
             points[npoints] = points[0];
             XSetForeground(g->dpy, g->gc, poly->color->value);
-            XDrawLines(g->dpy, dest, g->gc, (XPoint *) points, npoints + 1,
+            XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
             CoordModeOrigin);
             }
 
@@ -2687,6 +2688,7 @@ Drawable dest;
 _XPoint points[512], *XPointPtr;
 long lastColor;
 
+   void *ptrp = points;
    dest = g->dest;
    numPolys = o->numPolys;
    list     = o->list;
@@ -2719,7 +2721,7 @@ long lastColor;
                pointPtr++;
                }
 
-            XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+            XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
             }
 
@@ -2752,7 +2754,7 @@ long lastColor;
                pointPtr++;
                }
 
-            XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+            XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
             }
 
@@ -2777,7 +2779,7 @@ long lastColor;
                   pointPtr++;
                   }
 
-               XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+               XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
                CoordModeOrigin);
                }
             }
@@ -2808,7 +2810,7 @@ long lastColor;
                pointPtr++;
                }
 
-            XFillPolygon(g->dpy, dest, g->gc, (XPoint *) points, npoints, Convex,
+            XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
             }
 
