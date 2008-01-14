@@ -71,10 +71,10 @@ TMVA::PDF::PDF()
      fKDEtype       ( KDEKernel::kNone ),
      fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
      fFineFactor    ( 0 ),
-     fReadingVersion( 0 )
+     fReadingVersion( 0 ),
+     fLogger        ( this )
 {
    // default constructor needed for ROOT I/O
-   fLogger   = this;
    fgThisPDF = this;
 }
 
@@ -93,13 +93,13 @@ TMVA::PDF::PDF( const TH1 *hist, PDF::EInterpolateMethod method, Int_t nsmooth, 
      fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
      fKDEborder     ( KDEKernel::kNoTreatment ),
      fFineFactor    ( 0. ),
-     fReadingVersion( 0 )
+     fReadingVersion( 0 ),
+     fLogger        ( this )
 {  
    // constructor of spline based PDF: 
    // - default Spline method is: Spline2 (quadratic)
    // - default smoothing is none
 
-   fLogger   = this;
    fgThisPDF = this;
 
    // sanity check

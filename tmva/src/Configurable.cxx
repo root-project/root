@@ -60,10 +60,10 @@ ClassImp(TMVA::Configurable)
 TMVA::Configurable::Configurable( const TString& theOption)  
    : fOptions                    ( theOption ),
      fLooseOptionCheckingEnabled ( kTRUE ),
-     fLastDeclaredOption         ( 0 )
+     fLastDeclaredOption         ( 0 ),
+     fLogger (this)
 {
    // constructor
-   fLogger   = this;
    fLogger.SetMinType( kINFO );
    fListOfOptions.SetOwner();   
 }

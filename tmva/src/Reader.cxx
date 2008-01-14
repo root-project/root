@@ -113,10 +113,10 @@ TMVA::Reader::Reader( TString theOption, Bool_t verbose )
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE )
+     fColor( kFALSE ),
+     fLogger( this )
 {
    // constructor
-   fLogger   = this;
    DeclareOptions();
    ParseOptions();
 
@@ -128,10 +128,10 @@ TMVA::Reader::Reader( vector<TString>& inputVars, TString theOption, Bool_t verb
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE )
+     fColor( kFALSE ),
+     fLogger( this )
 {
    // constructor
-   fLogger   = this;
    DeclareOptions();
    ParseOptions();
 
@@ -148,10 +148,10 @@ TMVA::Reader::Reader( vector<string>& inputVars, TString theOption, Bool_t verbo
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE )
+     fColor( kFALSE ),
+     fLogger( this )
 {
    // constructor
-   fLogger   = this;
    DeclareOptions();
    ParseOptions();
 
@@ -168,10 +168,10 @@ TMVA::Reader::Reader( const string varNames, TString theOption, Bool_t verbose )
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE )
+     fColor( kFALSE ),
+     fLogger( this )
 {
    // constructor
-   fLogger   = this;
    DeclareOptions();
    ParseOptions();
 
@@ -186,10 +186,10 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE )
+     fColor( kFALSE ),
+     fLogger( this )
 {
    // constructor
-   fLogger   = this;
    DeclareOptions();
    ParseOptions();
 

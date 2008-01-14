@@ -52,11 +52,10 @@ TMVA::FitterBase::FitterBase( IFitterTarget& target,
      fFitterTarget( target ),
      fRanges( ranges ),
      fNpars( ranges.size() ),
-     fLogger( 0 ),
+     fLogger( this ),
      fClassName( name )
 {
    // constructor   
-   fLogger   = this;
 }
 
 //_______________________________________________________________________
