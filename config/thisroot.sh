@@ -62,6 +62,6 @@ else
    MANPATH=$ROOTSYS/man:$MANPATH; export MANPATH
 fi
 
-if [ "x`uname | grep -i cygwin`" != "x" ]; then
+if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
   ROOTSYS="`cygpath -w $ROOTSYS`"
 fi
