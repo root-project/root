@@ -106,6 +106,11 @@ const Bool_t   Use_Splines_for_Eff_      = kTRUE;
 const Int_t    NBIN_HIST_PLOT = 100;
 const Int_t    NBIN_HIST_HIGH = 10000;
 
+#ifdef _WIN32
+/*Disable warning C4355: 'this' : used in base member initializer list*/
+#pragma warning ( disable : 4355 )
+#endif
+
 //_______________________________________________________________________
 TMVA::MethodBase::MethodBase( const TString&      jobName,
                               const TString&      methodTitle,

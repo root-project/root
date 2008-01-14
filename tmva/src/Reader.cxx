@@ -108,6 +108,11 @@
 
 ClassImp(TMVA::Reader)
 
+#ifdef _WIN32
+/*Disable warning C4355: 'this' : used in base member initializer list*/
+#pragma warning ( disable : 4355 )
+#endif
+
 //_______________________________________________________________________
 TMVA::Reader::Reader( TString theOption, Bool_t verbose )
    : Configurable( theOption ),

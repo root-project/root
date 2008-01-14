@@ -57,7 +57,12 @@ TMVA::PDF*     TMVA::PDF::fgThisPDF           = 0;
 
 ClassImp(TMVA::PDF)
 
-//_______________________________________________________________________
+#ifdef _WIN32
+/*Disable warning C4355: 'this' : used in base member initializer list*/
+#pragma warning ( disable : 4355 )
+#endif
+
+   //_______________________________________________________________________
 TMVA::PDF::PDF()
    : fUseHistogram  ( kFALSE ),
      fNsmooth       ( 0 ),

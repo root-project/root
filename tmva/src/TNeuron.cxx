@@ -49,6 +49,11 @@ using std::vector;
 
 ClassImp(TMVA::TNeuron)
 
+#ifdef _WIN32
+/*Disable warning C4355: 'this' : used in base member initializer list*/
+#pragma warning ( disable : 4355 )
+#endif
+
 //______________________________________________________________________________
 TMVA::TNeuron::TNeuron()
    : fLogger( this, kDEBUG )

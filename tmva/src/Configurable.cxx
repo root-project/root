@@ -56,6 +56,11 @@ using std::endl;
 
 ClassImp(TMVA::Configurable)
 
+#ifdef _WIN32
+/*Disable warning C4355: 'this' : used in base member initializer list*/
+#pragma warning ( disable : 4355 )
+#endif
+
 //_______________________________________________________________________
 TMVA::Configurable::Configurable( const TString& theOption)  
    : fOptions                    ( theOption ),
