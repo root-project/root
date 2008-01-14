@@ -311,13 +311,13 @@ void TGLViewerEditor::UpdateViewerReference()
 
 //______________________________________________________________________________
 TGNumberEntry* TGLViewerEditor::MakeLabeledNEntry(TGCompositeFrame* p, const char* name,
-                                                   Int_t labelw,Int_t nd, Int_t style)
+                                                  Int_t labelw,Int_t nd, Int_t style)
 {
    // Helper function to create fixed width TGLabel and TGNumberEntry in same row.
 
    TGHorizontalFrame *rfr   = new TGHorizontalFrame(p);
    TGHorizontalFrame *labfr = new TGHorizontalFrame(rfr, labelw, 20, kFixedSize);
-   TGLabel           *lab   =   new TGLabel(rfr,name);
+   TGLabel           *lab   = new TGLabel(labfr, name);
    labfr->AddFrame(lab, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0) );
    rfr->AddFrame(labfr, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0));
 
