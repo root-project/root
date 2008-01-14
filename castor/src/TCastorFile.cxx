@@ -411,16 +411,18 @@ void TCastorFile::FindServerAndPath()
       opts.service_class=0;
       opts.stage_version=0;
 
-      int ret=Cglobals_get(& tStageHostKey, (void**) &auxPoint,sizeof(void*));
+      void *ptrPoint = &auxPoint;
+      void *ptrVal = &auxVal;
+      int ret=Cglobals_get(& tStageHostKey, (void**)ptrPoint,sizeof(void*));
       if(ret==0){
          opts.stage_host=*auxPoint;
       }
-      ret=Cglobals_get(& tStagePortKey, (void**) &auxVal,sizeof(int));
+      ret=Cglobals_get(& tStagePortKey, (void**)ptrVal,sizeof(int));
       if(ret==0){
          opts.stage_port=*auxVal;
       }
       opts.stage_version=2;
-      ret=Cglobals_get(& tSvcClassKey, (void**) &auxPoint,sizeof(void*));
+      ret=Cglobals_get(& tSvcClassKey, (void**)ptrPoint,sizeof(void*));
       if (ret==0){
          opts.service_class=*auxPoint;
       }
