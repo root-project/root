@@ -186,10 +186,10 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE ),
-     fLogger ( this )
+     fColor( kFALSE )
 {
    // constructor
+   fLogger   = this;
    DeclareOptions();
    ParseOptions();
 
