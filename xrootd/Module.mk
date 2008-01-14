@@ -17,7 +17,7 @@ XROOTDETAG := $(MODDIRS)/headers.d
 
 ##### Xrootd config options #####
 ifeq ($(PLATFORM),win32)
-ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+ifeq (yes,$(WINRTDEBUG))
 XRDDBG      = "Win32 Debug"
 else
 XRDDBG      = "Win32 Release"
