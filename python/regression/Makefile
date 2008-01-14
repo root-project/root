@@ -12,7 +12,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-pylib = `python -c 'import distutils.sysconfig; print (distutils.sysconfig.get_config_var("LDLIBRARY") or "libpython"),'`
+pylib = $(strip $(shell python -c 'import distutils.sysconfig; print (distutils.sysconfig.get_config_var("LDLIBRARY") or "libpython"),' ) )
 
 # special case for Scott.C: link with python library
 Scott_C.$(DllSuf): Scott.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
