@@ -33,8 +33,8 @@ else
 endif
 
 ifneq (,$(findstring $(VC_MAJOR),14 15))
-  BLDCXXFLAGS+= -EHa -W3 -wd4244
-  BLDCFLAGS  += -EHa -W3
+  BLDCXXFLAGS+= -EHsc- -W3 -wd4244
+  BLDCFLAGS  += -EHsc- -W3
   DEBUGFLAGS  = -Zi
 
   ifeq (yes,$(WINRTDEBUG))
