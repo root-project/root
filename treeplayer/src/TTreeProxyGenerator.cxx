@@ -445,7 +445,15 @@ namespace ROOT {
    {
       // Add a forward declaration request.
 
+      TIter i( &fListOfPragmas );
+      for(TObjString *n = (TObjString*) i(); n; n = (TObjString*)i() ) {
+         if (pragma_text == n->GetString()) {
+            return;
+         }
+      }
+
       fListOfPragmas.Add( new TObjString( pragma_text ) );
+
    }
 
    void TTreeProxyGenerator::AddDescriptor(TBranchProxyDescriptor *desc)
@@ -590,6 +598,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       TString middle;
       TString proxyTypeName;
       TBranchProxyClassDescriptor::ELocation isclones = TBranchProxyClassDescriptor::kOut;
+      TString containerName;
       TString subBranchPrefix;
       Bool_t skipped = false;
 
@@ -600,24 +609,30 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             container = kClones;
             middle = "Cla";
             isclones = TBranchProxyClassDescriptor::kClones;
+            containerName = "TClonesArray";
          } else if (topdesc && topdesc->IsSTL()) {
             container = kSTL;
             middle = "Stl";
             isclones = TBranchProxyClassDescriptor::kSTL;
+            containerName = topdesc->GetContainerName();
          } else if (!topdesc && branch && branch->GetBranchCount() == branch->GetMother()) {
             if ( ((TBranchElement*)(branch->GetMother()))->GetType()==3)  {
                container = kClones;
                middle = "Cla";
                isclones = TBranchProxyClassDescriptor::kClones;
+               containerName = "TClonesArray";
             } else {
                container = kSTL;
                middle = "Stl";
                isclones = TBranchProxyClassDescriptor::kSTL;
+               containerName = branch->GetMother()->GetClassName();
             }
          } else if (branch->GetType() == 3) {
             isclones = TBranchProxyClassDescriptor::kClones;
+            containerName = "TClonesArray";
          } else if (branch->GetType() == 4) {
             isclones = TBranchProxyClassDescriptor::kSTL;
+            containerName = branch->GetMother()->GetSubBranch(branch)->GetClassName();
          }
          if (topdesc) {
             subBranchPrefix = topdesc->GetSubBranchPrefix();
@@ -646,6 +661,11 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             Error("AnalyzeBranches","Ran out of branches when looking in branch %s, class %s",
                   topdesc->GetBranchName(), info->GetName());
             return lookedAt;
+         }
+
+         if (info->GetClass()->GetCollectionProxy() && strcmp(element->GetName(),"This")==0) {
+            // Skip the artifical streamer element.
+            continue;
          }
 
          TString branchname = branch->GetName();
@@ -753,8 +773,10 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                if (cl==TClonesArray::Class()) {
                   isclones = TBranchProxyClassDescriptor::kClones;
                   cname = GetContainedClassName(branch, element, ispointer);
+                  containerName = "TClonesArray";
                } else if (cl->GetCollectionProxy()) {
                   isclones = TBranchProxyClassDescriptor::kSTL;
+                  containerName = cl->GetName();
                   TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
                   if (valueClass) cname = valueClass->GetName();
                   else {
@@ -797,7 +819,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         }
                         cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
                                                                  branch->GetName(),
-                                                                 isclones, 0 /* unsplit object */);
+                                                                 isclones, 0 /* unsplit object */, 
+                                                                 containerName);
 
                         TStreamerElement *elem = 0;
 
@@ -816,7 +839,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                                  branchname,
                                                                  prefix,
-                                                                 isclones, branch->GetSplitLevel());
+                                                                 isclones, branch->GetSplitLevel(),
+                                                                 containerName);
                         lookedAt += AnalyzeBranches( level+1, cldesc, branch, objInfo);
                      }
                   } else {
@@ -836,7 +860,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                      cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                               branchname,
                                                               prefix,
-                                                              isclones, branch->GetSplitLevel());
+                                                              isclones, branch->GetSplitLevel(),
+                                                              containerName);
                      usedBranch = kFALSE;
                      lookedAt += AnalyzeBranches( level, cldesc, branches, objInfo );
                   }
@@ -861,7 +886,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         }
                         cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
                                                                  branch->GetName(),
-                                                                 isclones, 0 /* unsplit object */);
+                                                                 isclones, 0 /* unsplit object */,
+                                                                 containerName);
 
                         TStreamerElement *elem = 0;
 
@@ -880,7 +906,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                                  branch->GetName(),
                                                                  branch->GetName(),
-                                                                 isclones, branch->GetSplitLevel());
+                                                                 isclones, branch->GetSplitLevel(),
+                                                                 containerName);
                         lookedAt += AnalyzeBranches( level+1, cldesc, branch, objInfo);
                      }
                   } else {
@@ -902,7 +929,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                      cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                               branchname,
                                                               prefix,
-                                                              isclones, branch->GetSplitLevel());
+                                                              isclones, branch->GetSplitLevel(),
+                                                              containerName);
                      usedBranch = kFALSE;
                      skipped = kTRUE;
                      lookedAt += AnalyzeBranches( level, cldesc, branches, objInfo );
@@ -1140,8 +1168,10 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          TString type = "unknown";
          if (cl) {
             TBranchProxyClassDescriptor::ELocation isclones = TBranchProxyClassDescriptor::kOut;
+            TString containerName = "";
             if (cl==TClonesArray::Class()) {
                isclones = TBranchProxyClassDescriptor::kClones;
+               containerName = "TClonesArray";
                if (branch->IsA()==TBranchElement::Class()) {
                   const char *cname = ((TBranchElement*)branch)->GetClonesName();
                   TClass *ncl = TClass::GetClass(cname);
@@ -1171,6 +1201,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                }
             } else if (cl->GetCollectionProxy()) {
                isclones = TBranchProxyClassDescriptor::kSTL;
+               containerName = cl->GetName();
                if (cl->GetCollectionProxy()->GetValueClass()) {
                   cl = cl->GetCollectionProxy()->GetValueClass();
                } else {
@@ -1186,7 +1217,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                   TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
                   TVirtualStreamerInfo *info = (be && !isclones) ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
                   desc = new TBranchProxyClassDescriptor(cl->GetName(), info, branchname,
-                     isclones, branch->GetSplitLevel());
+                     isclones, branch->GetSplitLevel(),containerName);
                } else {
                   type = Form("TObjProxy<%s >",cl->GetName());
                }
@@ -1284,20 +1315,29 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       TString cname;
       TString middle;
       TBranchProxyClassDescriptor::ELocation isclones = TBranchProxyClassDescriptor::kOut;
+      TString containerName;
       EContainer container = kNone;
       if (topdesc) {
          if (topdesc->IsClones()) {
             container = kClones;
             middle = "Cla";
             isclones = TBranchProxyClassDescriptor::kClones;
+            containerName = "TClonesArray";
          } else if (topdesc->IsSTL()) {
             container = kSTL;
             middle = "Stl";
             isclones = TBranchProxyClassDescriptor::kSTL;
+            containerName = topdesc->GetContainerName();
          }
       }
 
       if (!element) return;
+
+      if (strcmp(element->GetName(),"This")==0) {
+         // Skip the artifical streamer element.
+         return;
+      }
+
       Bool_t ispointer = false;
       switch(element->GetType()) {
 
@@ -1386,6 +1426,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                cname = cl->GetName();
                if (cl==TClonesArray::Class()) {
                   isclones = TBranchProxyClassDescriptor::kClones;
+                  containerName = "TClonesArray";
 
                   Long64_t i = branch->GetTree()->GetReadEntry();
                   if (i<0) i = 0;
@@ -1426,6 +1467,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                   delete formula;
                } else if (cl->GetCollectionProxy()) {
                   isclones = TBranchProxyClassDescriptor::kSTL;
+                  containerName = cl->GetName();
                   cl = cl->GetCollectionProxy()->GetValueClass();
                }
             }
@@ -1457,7 +1499,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          if (cl && cl->CanSplit()) {
             cldesc = new TBranchProxyClassDescriptor(cl->GetName(), cl->GetStreamerInfo(),
                                                      branch->GetName(),
-                                                     isclones, 0 /* non-split object */);
+                                                     isclones, 0 /* non-split object */,
+                                                     containerName);
 
             TVirtualStreamerInfo *info = cl->GetStreamerInfo();
             TStreamerElement *elem = 0;
@@ -1500,6 +1543,43 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          opt.ReplaceAll("nohist","");
          fOptions |= kNoHist;
       }
+   }
+
+   //----------------------------------------------------------------------------------------------
+   static Bool_t R__AddPragmaForClass(TTreeProxyGenerator *gen, TClass *cl)
+   {
+      // Add the "pragma C++ class" if needed and return
+      // true if it has been added _or_ if it is known to
+      // not be needed.
+      // (I.e. return kFALSE if a container of this class
+      // can not have a "pragma C++ class" 
+      
+      if (!cl) return kFALSE;
+      if (cl->GetCollectionProxy()) {
+         TClass *valcl = cl->GetCollectionProxy()->GetValueClass();
+         if (!valcl) {
+            gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
+            return kTRUE;
+         } else if (R__AddPragmaForClass(gen, valcl)) {
+            gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
+            return kTRUE;
+         }
+      } 
+      if (cl->IsLoaded()) return kFALSE;
+      return kFALSE;
+   }
+
+   //----------------------------------------------------------------------------------------------
+   static Bool_t R__AddPragmaForClass(TTreeProxyGenerator *gen, const char *classname)
+   {
+      // Add the "pragma C++ class" if needed and return
+      // true if it has been added _or_ if it is known to
+      // not be needed.
+      // (I.e. return kFALSE if a container of this class
+      // can not have a "pragma C++ class" 
+
+      return R__AddPragmaForClass( gen, TClass::GetClass(classname) );
+
    }
 
    //----------------------------------------------------------------------------------------------
@@ -1793,6 +1873,9 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          next = &fListOfClasses;
          while ( (clp = (TBranchProxyClassDescriptor*)next()) ) {
             fprintf(hf,"#pragma link C++ class %s::%s-;\n",classname.Data(),clp->GetName());
+            if (clp->GetContainerName().Length()) {
+               R__AddPragmaForClass(this, clp->GetContainerName());
+            }
          }
          next = &fListOfPragmas;
          TObjString *prag;

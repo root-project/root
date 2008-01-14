@@ -27,6 +27,7 @@
 #include "TClassEdit.h"
 #include "TError.h"
 #include "TVirtualStreamerInfo.h"
+#include "TVirtualCollectionProxy.h"
 
 ClassImp(ROOT::TBranchProxyClassDescriptor);
 
@@ -60,9 +61,11 @@ namespace ROOT {
                                                             TVirtualStreamerInfo *info,
                                                             const char *branchname,
                                                             ELocation isclones,
-                                                            UInt_t splitlevel) :
+                                                            UInt_t splitlevel,
+                                                            const TString &containerName) :
       TNamed(type,type),
       fIsClones(isclones),
+      fContainerName(containerName),
       fIsLeafList(false),
       fSplitLevel(splitlevel),
       fBranchName(branchname),
@@ -80,6 +83,7 @@ namespace ROOT {
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *branchname) :
       TNamed(branchname,branchname),
       fIsClones(kOut),
+      fContainerName(),
       fIsLeafList(true),
       fSplitLevel(0),
       fBranchName(branchname),
@@ -96,9 +100,11 @@ namespace ROOT {
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info,
                                                             const char *branchname,
                                                             const char *branchPrefix, ELocation isclones,
-                                                            UInt_t splitlevel) :
+                                                            UInt_t splitlevel,
+                                                            const TString &containerName) :
       TNamed(type,type),
       fIsClones(isclones),
+      fContainerName(containerName),
       fIsLeafList(true),
       fSplitLevel(splitlevel),
       fBranchName(branchname),
@@ -148,6 +154,9 @@ namespace ROOT {
       // if ( fSubBranchPrefix != other->fSubBranchPrefix ) return kFALSE;
 
       if (fIsClones != other->fIsClones) return kFALSE;
+      if (fIsClones != kOut) {
+         if (fContainerName != other->fContainerName) return kFALSE;
+      }
 
       TBranchProxyDescriptor *desc;
       TBranchProxyDescriptor *othdesc;
@@ -199,8 +208,20 @@ namespace ROOT {
    Bool_t TBranchProxyClassDescriptor::IsLoaded() const
    {
       // Return true if the class needed by the branch is loaded
-      TClass *cl = TClass::GetClass(GetTitle());
-      return (cl && cl->IsLoaded());
+      return IsLoaded(GetTitle());
+   }
+      
+   Bool_t TBranchProxyClassDescriptor::IsLoaded(const char *classname)
+   {
+      // Return true if the class needed by the branch is loaded
+      TClass *cl = TClass::GetClass(classname);
+      while (cl) {
+         if (cl->IsLoaded()) return kTRUE;
+         if (!cl->GetCollectionProxy()) return kFALSE;
+         if (!cl->GetCollectionProxy()->GetValueClass()) return kTRUE; // stl container of simple type are always 'loaded'
+         cl = cl->GetCollectionProxy()->GetValueClass();
+      }
+      return kFALSE;
    }
 
    Bool_t TBranchProxyClassDescriptor::IsClones() const
@@ -219,6 +240,12 @@ namespace ROOT {
    {
       // Return whether the branch is inside, nested in or outside of a TClonesArray
       return fIsClones;
+   }
+
+   TString TBranchProxyClassDescriptor::GetContainerName() const
+   {
+      // Return the name of the container holding this class, if any.
+      return fContainerName;
    }
 
    void TBranchProxyClassDescriptor::OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */)
@@ -360,10 +387,16 @@ namespace ROOT {
             fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");
             fprintf(hf,"%-*sTClaObjProxy<%s > obj;\n", offset+3, " ", type);
          } else if ( IsSTL() ) {
-            fprintf(hf,"%-*sconst %s* operator[](int i) { return obj.At(i); }\n", offset+3," ",type);
-            fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
-            // fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",type_of_the_container);
-            fprintf(hf,"%-*sTStlObjProxy<%s > obj;\n", offset+3, " ", type);         
+            if (fContainerName.Length() && IsLoaded(fContainerName)) {
+               fprintf(hf,"%-*sconst %s& operator[](int i) { return obj.GetPtr()->at(i); }\n", offset+3," ",type);
+               fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetPtr()->size(); }\n",offset+3," ");
+               fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",fContainerName.Data(),fContainerName.Data());
+               fprintf(hf,"%-*sTObjProxy<%s > obj;\n", offset+3, " ", fContainerName.Data());
+            } else {
+               fprintf(hf,"%-*sconst %s& operator[](int i) { return obj.At(i); }\n", offset+3," ",type);
+               fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
+               fprintf(hf,"%-*sTStlObjProxy<%s > obj;\n", offset+3, " ", type);
+            }
          } else {
             fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",type);
             fprintf(hf,"%-*sTObjProxy<%s > obj;\n", offset+3, " ", type);
@@ -378,6 +411,10 @@ namespace ROOT {
 
       } else if ( IsSTL()) {
 
+         //TClass *cl = TClass::GetClass(GetTitle());
+         //if (cl->GetCollectionProxy() && cl->GetCollectionProxy()->GetValueClass()==0) {
+         //   fprintf(hf,"%-*sconst %s& operator[](int i) { return *(%s*)obj.At(i); }\n", offset+3," ",GetTitle(),GetTitle());
+         //}
          fprintf(hf,"%-*sInjecTBranchProxyInterface();\n", offset+3," ");
          fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetEntries(); }\n",offset+3," ");
          // fprintf(hf,"%-*sconst TClonesArray* operator->() { return obj.GetPtr(); }\n", offset+3," ");

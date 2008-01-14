@@ -33,8 +33,9 @@ namespace ROOT {
    private:
       TList          fListOfSubProxies;
       TList          fListOfBaseProxies;
-      ELocation      fIsClones;   // 1 for the general case, 2 when this a split clases inside a TClonesArray.
-      Bool_t         fIsLeafList; // true if the branch was constructed from a leaf list.
+      ELocation      fIsClones;      // 1 for the general case, 2 when this a split clases inside a TClonesArray, 3 when this is a split classes inside an STL container.
+      TString        fContainerName; // Name of the container if any
+      Bool_t         fIsLeafList;    // true if the branch was constructed from a leaf list.
       UInt_t         fSplitLevel;
 
       TString        fRawSymbol;
@@ -52,12 +53,12 @@ namespace ROOT {
    public:
 
       TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info, const char *branchname,
-                                  ELocation isclones, UInt_t splitlevel);
+                                  ELocation isclones, UInt_t splitlevel, const TString &containerName);
       TBranchProxyClassDescriptor(const char *branchname);
 
       TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info, const char *branchname,
                                   const char *branchPrefix, ELocation isclones,
-                                  UInt_t splitlevel);
+                                  UInt_t splitlevel, const TString &containerName);
 
       const char* GetBranchName() const;
       const char* GetSubBranchPrefix() const;
@@ -72,9 +73,11 @@ namespace ROOT {
 
       void AddDescriptor(TBranchProxyDescriptor *desc, Bool_t isBase);
       Bool_t IsLoaded() const;
+      static Bool_t IsLoaded(const char*);
       Bool_t IsClones() const;
       Bool_t IsSTL() const;
       ELocation GetIsClones() const;
+      TString GetContainerName() const;
 
       void OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */);
 

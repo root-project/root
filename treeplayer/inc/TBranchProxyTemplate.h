@@ -104,6 +104,7 @@ namespace ROOT {
    template <class T>
    class TStlObjProxy  {
       TStlProxy obj;
+      typedef typename T value_t;
    public:
       InjecTBranchProxyInterface();
 
@@ -122,22 +123,24 @@ namespace ROOT {
       TStlObjProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
          obj(director,parent, name, top, mid) {};
       ~TStlObjProxy() {};
-
-      const TVirtualCollectionProxy* GetPtr() { return obj.GetPtr(); }
+      
+      TVirtualCollectionProxy* GetCollection() { 
+         return obj.GetPtr();
+      }
 
       Int_t GetEntries() { return obj.GetEntries(); }
 
-      const T* At(int i) {
-         static T default_val;
-         if (!obj.Read()) return &default_val;
-         if (obj.GetWhere()==0) return &default_val;
+      const value_t& At(int i) {
+         static const value_t default_val;
+         if (!obj.Read()) return default_val;
+         if (obj.GetWhere()==0) return default_val;
 
-         T* temp = (T*)obj.GetStlStart(i);
-         if (temp) return temp;
-         else return &default_val;
+         value_t *temp = (value_t*)obj.GetStlStart(i);
+         if (temp) return *temp;
+         else return default_val;
       }
 
-      const T* operator [](int i) { return At(i); }
+      const value_t& operator [](int i) { return At(i); }
 
    };
 
@@ -193,7 +196,7 @@ namespace ROOT {
          else return default_val;
       }
 
-      const T* operator [](int i) { return At(i); }
+      const value_t operator [](int i) { return At(i); }
 
       T* operator->() { return ROOT::TObjProxy<T>::GetPtr(); }
       operator T*() { return ROOT::TObjProxy<T>::GetPtr(); }
