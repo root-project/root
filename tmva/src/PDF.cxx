@@ -71,10 +71,10 @@ TMVA::PDF::PDF()
      fKDEtype       ( KDEKernel::kNone ),
      fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
      fFineFactor    ( 0 ),
-     fReadingVersion( 0 ),
-     fLogger        ( this )
+     fReadingVersion( 0 )
 {
    // default constructor needed for ROOT I/O
+   fLogger   = this;
    fgThisPDF = this;
 }
 
@@ -93,13 +93,13 @@ TMVA::PDF::PDF( const TH1 *hist, PDF::EInterpolateMethod method, Int_t nsmooth, 
      fKDEiter       ( KDEKernel::kNonadaptiveKDE ),
      fKDEborder     ( KDEKernel::kNoTreatment ),
      fFineFactor    ( 0. ),
-     fReadingVersion( 0 ),
-     fLogger        ( this )
+     fReadingVersion( 0 )
 {  
    // constructor of spline based PDF: 
    // - default Spline method is: Spline2 (quadratic)
    // - default smoothing is none
 
+   fLogger   = this;
    fgThisPDF = this;
 
    // sanity check
@@ -140,13 +140,13 @@ TMVA::PDF::PDF( const TH1* hist, KDEKernel::EKernelType ktype, KDEKernel::EKerne
      fKDEtype       ( ktype ),
      fKDEiter       ( kiter ),
      fKDEborder     ( kborder ),
-     fFineFactor    ( FineFactor),
-     fLogger        ( this )
+     fFineFactor    ( FineFactor)
 {
    // constructor of kernel based PDF:
    // - default kernel type is Gaussian
    // - default number of iterations is 1 (i.e. nonadaptive KDE)
    // sanity check
+   fLogger   = this;
    if (hist == NULL) fLogger << kFATAL << "Called without valid histogram pointer!" << Endl;
 
    // histogram should be non empty

@@ -128,10 +128,10 @@ TMVA::MethodBase::MethodBase( const TString&      jobName,
      fNvar                      ( theData.GetNVariables() ),
      fBaseDir                   ( 0 ),
      fMethodBaseDir             ( theBaseDir ),
-     fWeightFile                ( "" ),
-     fLogger                    ( this )
+     fWeightFile                ( "" )
 {
-   // standard constructur
+   // standard constructor
+   fLogger   = this;
    Init();
 
    // interpretation of configuration option string
@@ -162,12 +162,12 @@ TMVA::MethodBase::MethodBase( DataSet&     theData,
      fNvar                      ( theData.GetNVariables() ),
      fBaseDir                   ( theBaseDir ),
      fMethodBaseDir             ( 0 ),
-     fWeightFile                ( weightFile ),
-     fLogger                    ( this )
+     fWeightFile                ( weightFile )
 {
    // constructor used for Testing + Application of the MVA,
    // only (no training), using given WeightFiles
 
+   fLogger   = this;
    Init();
 
    DeclareOptions();
