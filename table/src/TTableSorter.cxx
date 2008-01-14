@@ -734,7 +734,8 @@ Bool_t TTableSorter::FillIndexArray(){
    for (Int_t i=fFirstRow; i < fFirstRow+fNumberOfRows;i++,row += fParentRowSize) {
       fSortIndex[i-fFirstRow] = (char *)row;
       if ( isPreSorted) {
-         if (fCompareMethod(&sample,(const void **)&row)>0) isPreSorted = kFALSE;
+         void *ptr = &row;
+         if (fCompareMethod(&sample,(const void **)ptr)>0) isPreSorted = kFALSE;
          else sample = row;
       }
    }
