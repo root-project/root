@@ -1082,7 +1082,7 @@ Double_t TMVA::MethodCuts::GetEfficiency( TString theString, TTree* theTree, Dou
    // [1]: the value of background efficiency at which the signal efficiency 
    //      is to be returned
 
-   if (theTree == 0); // dummy 
+   if (theTree == 0) { } // dummy 
 
    // parse input string for required background efficiency
    TList* list  = TMVA::Tools::ParseFormatLine( theString, ":" );

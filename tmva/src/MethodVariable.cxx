@@ -102,7 +102,7 @@ void  TMVA::MethodVariable::WriteWeightsToStream( ostream & o ) const
 void  TMVA::MethodVariable::ReadWeightsFromStream( istream & istr )
 {
    // Read configuration from input stream
-   if (istr.eof());
+   if (istr.eof()) { }
 }
 
 //_______________________________________________________________________
