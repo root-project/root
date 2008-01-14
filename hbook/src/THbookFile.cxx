@@ -571,10 +571,12 @@ Bool_t THbookFile::IsOpen() const
 void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 {
    //Set branch address
+   Int_t *iadd = (Int_t*)add;
+   Int_t &aadd = *iadd;
 #ifndef WIN32
-   hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0,strlen(bname),4);
+   hbnam(id,PASSCHAR(bname),aadd,PASSCHAR("$SET"),0,strlen(bname),4);
 #else
-   hbnam(id,PASSCHAR(bname),(Int_t&)add,PASSCHAR("$SET"),0);
+   hbnam(id,PASSCHAR(bname),aadd,PASSCHAR("$SET"),0);
 #endif
 }
 
