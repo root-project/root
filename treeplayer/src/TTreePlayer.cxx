@@ -930,9 +930,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //    -GetSelectedRows()    // return the number of entries accepted by the
 //                          //selection expression. In case where no selection
 //                          //was specified, returns the number of entries processed.
-//    -GetV1()              //returns a pointer to the float array of V1
-//    -GetV2()              //returns a pointer to the float array of V2
-//    -GetV3()              //returns a pointer to the float array of V3
+//    -GetV1()              //returns a pointer to the double array of V1
+//    -GetV2()              //returns a pointer to the double array of V2
+//    -GetV3()              //returns a pointer to the double array of V3
 //    -GetW()               //returns a pointer to the double array of Weights
 //                          //where weight equal the result of the selection expression.
 //   where V1,V2,V3 correspond to the expressions in
