@@ -300,10 +300,11 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
    // Return value is msg length.
 
    int   mlen;
-   char *buf;
 
-   if (NetRecvAllocate((void *&)buf, mlen, kind) < 0)
+   void *tmpbuf = 0;
+   if (NetRecvAllocate(tmpbuf, mlen, kind) < 0)
       return -1;
+   char *buf = reinterpret_cast<char *> (tmpbuf);
 
    if (mlen == 0) {
       msg[0] = 0;
