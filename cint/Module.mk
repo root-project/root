@@ -277,6 +277,9 @@ $(CINTDIRS)/libstrm.o:  CINTCXXFLAGS += -I$(CINTDIRL)/stream
 $(CINTDIRS)/sun5strm.o: CINTCXXFLAGS += -I$(CINTDIRL)/sunstrm
 $(CINTDIRS)/vcstrm.o:   CINTCXXFLAGS += -I$(CINTDIRL)/vcstream
 $(CINTDIRS)/%strm.o:    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
+ifeq ($(GCC_MAJOR),4)
+$(CINTDIRS)/gcc4strm.o:  CINTCXXFLAGS += -Wno-strict-aliasing
+endif
 
 $(MAKECINTO) $(CINTALLO): $(CINTCONF)
 
