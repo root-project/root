@@ -304,7 +304,7 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
    void *tmpbuf = 0;
    if (NetRecvAllocate(tmpbuf, mlen, kind) < 0)
       return -1;
-   char *buf = reinterpret_cast<char *> (tmpbuf);
+   char *buf = static_cast<char *>(tmpbuf);
 
    if (mlen == 0) {
       msg[0] = 0;
