@@ -3761,7 +3761,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    //   branch->SetAutoDelete(kTRUE);
    //    for (Long64_t i=0;i<nentries;i++) {
    //       T.GetEntry(i);
-   //       // the objrect event has been filled at this point
+   //       // the object event has been filled at this point
    //    }
    //   In this case, at each iteration, the object event is deleted by GetEntry
    //   and a new instance of Event is created and filled.
@@ -3773,7 +3773,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    //       delete event;
    //       event = 0;  // EXTREMELY IMPORTANT
    //       T.GetEntry(i);
-   //       // the objrect event has been filled at this point
+   //       // the object event has been filled at this point
    //    }
    //
    //  It is strongly recommended to use the default option 1. It has the
