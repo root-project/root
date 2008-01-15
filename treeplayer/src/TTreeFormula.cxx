@@ -45,6 +45,7 @@
 
 #include "TEntryList.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <math.h>
 #ifdef R__SOLARIS

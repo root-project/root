@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <ctype.h>
 #include "TMakeProject.h"
 #include "TClass.h"
 #include "TClassEdit.h"
