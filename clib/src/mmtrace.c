@@ -48,6 +48,10 @@ static void (*old_mfree_hook) PARAMS ((PTR, PTR));
 static PTR (*old_mmalloc_hook) PARAMS ((PTR, size_t));
 static PTR (*old_mrealloc_hook) PARAMS ((PTR, PTR, size_t));
 
+typedef void (*mmfree_fun_t) PARAMS ((PTR, PTR));
+typedef PTR (*mmalloc_fun_t) PARAMS ((PTR, size_t));
+typedef PTR (*mmrealloc_fun_t) PARAMS ((PTR, PTR, size_t));
+
 /* This function is called when the block being alloc'd, realloc'd, or
    freed has an address matching the variable "mallwatch".  In a debugger,
    set "mallwatch" to the address of interest, then put a breakpoint on
@@ -70,9 +74,9 @@ tr_freehook (md, ptr)
   fprintf (mallstream, "- %08lx\n", (unsigned long) ptr);
   if (ptr == mallwatch)
     tr_break ();
-  mdp -> mfree_hook = old_mfree_hook;
+  mdp -> mfree_hook = (mmfree_fun_t) old_mfree_hook;
   mfree (md, ptr);
-  mdp -> mfree_hook = tr_freehook;
+  mdp -> mfree_hook = (mmfree_fun_t) tr_freehook;
 }
 
 static PTR
@@ -84,9 +88,9 @@ tr_mallochook (md, size)
   struct mdesc *mdp;
 
   mdp = MD_TO_MDP (md);
-  mdp -> mmalloc_hook = old_mmalloc_hook;
+  mdp -> mmalloc_hook = (mmalloc_fun_t) old_mmalloc_hook;
   hdr = (PTR) mmalloc (md, size);
-  mdp -> mmalloc_hook = tr_mallochook;
+  mdp -> mmalloc_hook = (mmalloc_fun_t) tr_mallochook;
 
   /* We could be printing a NULL here; that's OK.  */
   fprintf (mallstream, "+ %08lx %x\n", (unsigned long) hdr, (unsigned) size);
@@ -111,13 +115,13 @@ tr_reallochook (md, ptr, size)
   if (ptr == mallwatch)
     tr_break ();
 
-  mdp -> mfree_hook = old_mfree_hook;
-  mdp -> mmalloc_hook = old_mmalloc_hook;
-  mdp -> mrealloc_hook = old_mrealloc_hook;
+  mdp -> mfree_hook = (mmfree_fun_t) old_mfree_hook;
+  mdp -> mmalloc_hook = (mmalloc_fun_t) old_mmalloc_hook;
+  mdp -> mrealloc_hook = (mmrealloc_fun_t) old_mrealloc_hook;
   hdr = (PTR) mrealloc (md, ptr, size);
-  mdp -> mfree_hook = tr_freehook;
-  mdp -> mmalloc_hook = tr_mallochook;
-  mdp -> mrealloc_hook = tr_reallochook;
+  mdp -> mfree_hook = (mmfree_fun_t) tr_freehook;
+  mdp -> mmalloc_hook = (mmalloc_fun_t) tr_mallochook;
+  mdp -> mrealloc_hook = (mmrealloc_fun_t) tr_reallochook;
   if (hdr == NULL)
     /* Failed realloc.  */
     fprintf (mallstream, "! %08lx %x\n", (unsigned long) ptr, (unsigned) size);
@@ -154,11 +158,11 @@ mmtrace ()
 	  setbuf (mallstream, mallbuf);
 	  fprintf (mallstream, "= Start\n");
 	  old_mfree_hook = mdp -> mfree_hook;
-	  mdp -> mfree_hook = tr_freehook;
+	  mdp -> mfree_hook = (mmfree_fun_t) tr_freehook;
 	  old_mmalloc_hook = mdp -> mmalloc_hook;
-	  mdp -> mmalloc_hook = tr_mallochook;
+	  mdp -> mmalloc_hook = (mmalloc_fun_t) tr_mallochook;
 	  old_mrealloc_hook = mdp -> mrealloc_hook;
-	  mdp -> mrealloc_hook = tr_reallochook;
+	  mdp -> mrealloc_hook = (mmrealloc_fun_t) tr_reallochook;
 	}
     }
 

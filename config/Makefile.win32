@@ -43,8 +43,8 @@ ifneq (,$(findstring $(VC_MAJOR),14 15))
   endif
 else
 ifeq ($(VC_MINOR),10)
-  BLDCXXFLAGS+= -G5 -GX
-  BLDCFLAGS  += -G5 -GX
+  BLDCXXFLAGS+= -G5 -EHsc-
+  BLDCFLAGS  += -G5 -EHsc-
   BLDF77FLAGS+= -G5
 else
 ifeq ($(VC_MINOR),00)
