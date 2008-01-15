@@ -42,6 +42,7 @@
 
 #include <list>
 
+#include "XrdProofdAux.h"
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucString.hh"
 #ifdef OLDXRDOUC
@@ -55,7 +56,6 @@ class XrdProofGroupMgr;
 class XrdProofServProxy;
 class XrdProofWorker;
 class XrdSysError;
-class XrdProofdDirective;
 class XrdOucStream;
 
 class XrdProofSched
