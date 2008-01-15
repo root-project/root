@@ -1,0 +1,30 @@
+void geom_cms()
+{
+   TEveManager::Create();
+
+   gGeoManager = gEve->GetGeometry("http://root.cern.ch/files/cms.root");
+   gGeoManager->DefaultColors();
+
+   TGeoVolume* top = gGeoManager->GetTopVolume()->FindNode("CMSE_1")->GetVolume();
+
+   TEveGeoTopNode* trk = new TEveGeoTopNode(gGeoManager, top->FindNode("TRAK_1"));
+   trk->SetVisLevel(6);
+   gEve->AddGlobalElement(trk);
+
+   TEveGeoTopNode* calo = new TEveGeoTopNode(gGeoManager, top->FindNode("CALO_1"));
+   calo->SetVisLevel(3);
+   gEve->AddGlobalElement(calo);
+
+   TEveGeoTopNode* muon = new TEveGeoTopNode(gGeoManager, top->FindNode("MUON_1"));
+   muon->SetVisLevel(4);
+   gEve->AddGlobalElement(muon);
+
+   gEve->FullRedraw3D(kTRUE);
+
+   // EClipType not exported to CINT (see TGLUtil.h):
+   // 0 - no clip, 1 - clip plane, 2 - clip box
+   gEve->GetGLViewer()->GetClipSet()->SetClipType(1);
+   gEve->GetGLViewer()->SetClearColor(kBlue-10);
+   gEve->GetGLViewer()->SetGuideState(TGLUtil::kAxesEdge, kTRUE, kFALSE, 0);
+   gEve->GetGLViewer()->RefreshPadEditor(gEve->GetGLViewer());
+}
