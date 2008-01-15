@@ -87,7 +87,7 @@ namespace ROOT {
 
       Int_t GetEntries() { return obj.GetEntries(); }
 
-      const T* At(int i) {
+      const T* At(UInt_t i) {
          static T default_val;
          if (!obj.Read()) return &default_val;
          if (obj.GetWhere()==0) return &default_val;
@@ -97,7 +97,8 @@ namespace ROOT {
          else return &default_val;
       }
 
-      const T* operator [](int i) { return At(i); }
+      const T* operator [](Int_t i) { return At(i); }
+      const T* operator [](UInt_t i) { return At(i); }
 
    };
 
@@ -130,7 +131,7 @@ namespace ROOT {
 
       Int_t GetEntries() { return obj.GetEntries(); }
 
-      const value_t& At(int i) {
+      const value_t& At(UInt_t i) {
          static const value_t default_val;
          if (!obj.Read()) return default_val;
          if (obj.GetWhere()==0) return default_val;
@@ -140,7 +141,8 @@ namespace ROOT {
          else return default_val;
       }
 
-      const value_t& operator [](int i) { return At(i); }
+      const value_t& operator [](Int_t i) { return At(i); }
+      const value_t& operator [](UInt_t i) { return At(i); }
 
    };
 
@@ -184,7 +186,7 @@ namespace ROOT {
          return 0;
       }
 
-      const value_t At(int i) {
+      const value_t At(UInt_t i) {
          static value_t default_val;
          T *temp = ROOT::TObjProxy<T>::GetPtr();
          if (temp) {
@@ -196,7 +198,8 @@ namespace ROOT {
          else return default_val;
       }
 
-      const value_t operator [](int i) { return At(i); }
+      const value_t operator [](Int_t i) { return At(i); }
+      const value_t operator [](UInt_t i) { return At(i); }
 
       T* operator->() { return ROOT::TObjProxy<T>::GetPtr(); }
       operator T*() { return ROOT::TObjProxy<T>::GetPtr(); }

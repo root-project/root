@@ -192,7 +192,7 @@ namespace ROOT {
       TVirtualCollectionProxy *GetCollection() { return fCollection; }
 
       // protected:
-      virtual  void *GetStart(int /*i*/=0) {
+      virtual  void *GetStart(UInt_t /*i*/=0) {
          // return the address of the start of the object being proxied. Assumes
          // that Setup() has been called.
 
@@ -207,7 +207,7 @@ namespace ROOT {
          }
       }
 
-      virtual void *GetClaStart(int i=0) {
+      virtual void *GetClaStart(UInt_t i=0) {
          // return the address of the start of the object being proxied. Assumes
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in TClonesArray.
@@ -318,7 +318,7 @@ namespace ROOT {
          TBranchProxy(director,parent, name, top, mid) {};
       ~TArrayCharProxy() {};
 
-      unsigned char At(int i) {
+      unsigned char At(UInt_t i) {
          static unsigned char default_val;
          if (!Read()) return default_val;
          // should add out-of bound test
@@ -326,7 +326,11 @@ namespace ROOT {
          return str[i];
       }
 
-      unsigned char operator [](int i) {
+      unsigned char operator [](Int_t i) {
+         return At(i);
+      }
+
+      unsigned char operator [](UInt_t i) {
          return At(i);
       }
 
@@ -509,7 +513,7 @@ namespace ROOT {
          if (GetWhere()) cout << "value? " << *(type_t*)GetWhere() << endl;
       }
 
-      const array_t &At(int i) {
+      const array_t &At(UInt_t i) {
          static array_t default_val;
          if (!Read()) return default_val;
          // should add out-of bound test
@@ -519,7 +523,8 @@ namespace ROOT {
          else return default_val;
       }
 
-      const array_t &operator [](int i) { return At(i); }
+      const array_t &operator [](Int_t i) { return At(i); }
+      const array_t &operator [](UInt_t i) { return At(i); }
    };
 
    //_____________________________________________________________________________________
@@ -544,7 +549,7 @@ namespace ROOT {
          TBranchProxy(director,parent, name, top, mid) {};
       ~TClaImpProxy() {};
 
-      const T& At(int i) {
+      const T& At(UInt_t i) {
          static T default_val;
          if (!Read()) return default_val;
          if (fWhere==0) return default_val;
@@ -556,7 +561,8 @@ namespace ROOT {
 
       }
 
-      const T& operator [](int i) { return At(i); }
+      const T& operator [](Int_t i) { return At(i); }
+      const T& operator [](UInt_t i) { return At(i); }
 
       // Make sure that the copy methods are really private
 #ifdef private
@@ -595,7 +601,7 @@ namespace ROOT {
          TBranchProxy(director,parent, name, top, mid) {};
       ~TStlImpProxy() {};
 
-      const T& At(int i) {
+      const T& At(UInt_t i) {
          static T default_val;
          if (!Read()) return default_val;
          if (fWhere==0) return default_val;
@@ -606,7 +612,8 @@ namespace ROOT {
          else return default_val;
       }
 
-      const T& operator [](int i) { return At(i); }
+      const T& operator [](Int_t i) { return At(i); }
+      const T& operator [](UInt_t i) { return At(i); }
 
       // Make sure that the copy methods are really private
 #ifdef private
@@ -647,7 +654,7 @@ namespace ROOT {
          TBranchProxy(director,parent, name, top, mid) {};
       ~TClaArrayProxy() {};
 
-      /* const */  array_t *At(int i) {
+      /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
          if (!Read()) return &default_val;
          if (fWhere==0) return &default_val;
@@ -655,7 +662,8 @@ namespace ROOT {
          return (array_t*)GetClaStart(i);
       }
 
-      /* const */ array_t *operator [](int i) { return At(i); }
+      /* const */ array_t *operator [](Int_t i) { return At(i); }
+      /* const */ array_t *operator [](UInt_t i) { return At(i); }
    };
 
    
@@ -683,7 +691,7 @@ namespace ROOT {
          TBranchProxy(director,parent, name, top, mid) {};
       ~TStlArrayProxy() {};
 
-      /* const */  array_t *At(int i) {
+      /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
          if (!Read()) return &default_val;
          if (fWhere==0) return &default_val;
@@ -691,7 +699,8 @@ namespace ROOT {
          return (array_t*)GetStlStart(i);
       }
 
-      /* const */ array_t *operator [](int i) { return At(i); }
+      /* const */ array_t *operator [](Int_t i) { return At(i); }
+      /* const */ array_t *operator [](UInt_t i) { return At(i); }
    };
 
    //TImpProxy<TObject> d;
