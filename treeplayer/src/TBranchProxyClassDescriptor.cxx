@@ -390,7 +390,8 @@ namespace ROOT {
             if (fContainerName.Length() && IsLoaded(fContainerName)) {
                fprintf(hf,"%-*sconst %s& operator[](int i) { return obj.GetPtr()->at(i); }\n", offset+3," ",type);
                fprintf(hf,"%-*sInt_t GetEntries() { return obj.GetPtr()->size(); }\n",offset+3," ");
-               fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",fContainerName.Data(),fContainerName.Data());
+               fprintf(hf,"%-*sconst %s* operator->() { return obj.GetPtr(); }\n", offset+3," ",fContainerName.Data());
+               fprintf(hf,"%-*soperator %s*() { return obj.GetPtr(); }\n", offset+3," ",fContainerName.Data());
                fprintf(hf,"%-*sTObjProxy<%s > obj;\n", offset+3, " ", fContainerName.Data());
             } else {
                fprintf(hf,"%-*sconst %s& operator[](int i) { return obj.At(i); }\n", offset+3," ",type);
