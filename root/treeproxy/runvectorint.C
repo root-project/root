@@ -13,7 +13,7 @@ public:
 #ifdef __MAKECINT__
 #pragma link C++ class vector<vector<double> >+;
 #pragma link C++ class Track+;
-#endif;
+#endif
 
 class Top {
 public:
@@ -38,8 +38,8 @@ void createvec(const char *filename = "vec.root")
    std::vector<std::vector<double> > *dvec = new std::vector<std::vector<double> >;
    dvec->push_back(*d);
    std::vector<int> *i = new std::vector<int>;
-   i->push_back(3.0);
-   i->push_back(6.0);
+   i->push_back(3);
+   i->push_back(6);
    Top *top = new Top;
    t->Branch("myvec.",&d);
    t->Branch("myvecvec.",&dvec);
