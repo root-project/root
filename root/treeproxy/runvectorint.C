@@ -2,15 +2,30 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TROOT.h"
+#include "TClonesArray.h"
+
+class Track : public TObject {
+public:
+   int random;
+   ClassDef(Track,1);
+};
 
 #ifdef __MAKECINT__
-// #  pragma link C++ class vector<double>+;
+#pragma link C++ class vector<vector<double> >+;
+#pragma link C++ class Track+;
 #endif;
 
 class Top {
 public:
+   Top() : fTracks("Track") {
+   }
   vector<double> vals;
+  vector<vector<double> > vecvals;
+  vector<Track> tracks;
+  vector<Track*> ptrtracks;
+  TClonesArray fTracks;
 };
+
 
 void createvec(const char *filename = "vec.root")
 {
@@ -20,11 +35,14 @@ void createvec(const char *filename = "vec.root")
    std::vector<double> *d = new std::vector<double>;
    d->push_back(3.0);
    d->push_back(6.0);
+   std::vector<std::vector<double> > *dvec = new std::vector<std::vector<double> >;
+   dvec->push_back(*d);
    std::vector<int> *i = new std::vector<int>;
    i->push_back(3.0);
    i->push_back(6.0);
    Top *top = new Top;
    t->Branch("myvec.",&d);
+   t->Branch("myvecvec.",&dvec);
    t->Branch("myint.someodd.name",&i);
    t->Branch("top.",&top);
    t->Fill();
@@ -55,6 +73,13 @@ int runvectorint(int mode = 0)
      createvec();
      createsel();
    } else if (mode==2) {
+     createsel();
+     usesel();
+   } else if (mode==3) {
+     createvec();
+   } else if (mode==4) {
+     createsel();
+   } else if (mode==5) {
      usesel();
    }
    return 0;
