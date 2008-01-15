@@ -96,8 +96,8 @@ SHAPES COLOR AND MATERIAL\n\n\
    The surface SHININESS can also be modified.\n\n\
 SHAPES GEOMETRY\n\n\
    The selected shape's location and geometry can be modified in the Shapes-Geom\n\
-   tabs by entering desired values in respective number entry controls.\n\n"
-  "  SCENE CLIPPING\n\n\
+   tabs by entering desired values in respective number entry controls.\n\n\
+SCENE CLIPPING\n\n\
    In the Scene-Clipping tabs select a 'Clip Type': None, Plane, Box\n\n\
    For 'Plane' and 'Box' the lower pane shows the relevant parameters:\n\n\
 \tPlane: Equation coefficients of form aX + bY + cZ + d = 0\n\
@@ -107,8 +107,8 @@ SHAPES GEOMETRY\n\n\
    direct editing in viewer.\n\n\
 MANIPULATORS\n\n\
    A widget attached to the selected object - allowing direct manipulation\n\
-   of the object with respect to its local axes.\n\
-   There are three modes, toggled with keys:\n\
+   of the object with respect to its local axes.\n\n\
+   There are three modes, toggled with keys while manipulator is active:\n\
    \tMode\t\tWidget Component Style\t\tKey\n\
    \t----\t\t----------------------\t\t---\n\
    \tTranslation\tLocal axes with arrows\t\tv\n\

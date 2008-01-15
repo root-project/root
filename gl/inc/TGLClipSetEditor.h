@@ -47,6 +47,7 @@ protected:
    TGCheckButton    *fClipEdit;
    TGCheckButton    *fClipShow;
    TGButton         *fApplyButton;
+   TGButton         *fResetButton;
 
 public:
    TGLClipSetSubEditor(const TGWindow* p);
@@ -60,6 +61,7 @@ public:
    void ClipValueChanged();
    void ClipTypeChanged(Int_t);
    void UpdateViewerClip();
+   void ResetViewerClip();
 
    ClassDef(TGLClipSetSubEditor, 0) // Sub-editor for TGLClipSet
 };

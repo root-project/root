@@ -41,7 +41,8 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    fClipInside(0),
    fClipEdit(0),
    fClipShow(0),
-   fApplyButton(0)
+   fApplyButton(0),
+   fResetButton(0)
 {
    // Constructor.
 
@@ -81,6 +82,9 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    fApplyButton = new TGTextButton(this, "Apply");
    AddFrame(fApplyButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
 
+   fResetButton = new TGTextButton(this, "Reset");
+   AddFrame(fResetButton, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
+
    fTypeButtons->Connect("Clicked(Int_t)", "TGLClipSetSubEditor", this, "ClipTypeChanged(Int_t)");
    fClipInside->Connect("Clicked()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
    fClipEdit->Connect("Clicked()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
@@ -93,6 +97,7 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
       fBoxProp[i]->Connect("ValueSet(Long_t)", "TGLClipSetSubEditor", this, "ClipValueChanged()");
 
    fApplyButton->Connect("Pressed()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
+   fResetButton->Connect("Pressed()", "TGLClipSetSubEditor", this, "ResetViewerClip()");
 }
 
 
@@ -136,9 +141,13 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
          for (Int_t i = 0; i < 6; ++i)
             fBoxProp[i]->SetNumber(clip[i]);
       }
+
+      fResetButton->SetState(kButtonUp);
    } else {
       HideFrame(fPlanePropFrame);
       HideFrame(fBoxPropFrame);
+
+      fResetButton->SetState(kButtonDisabled);
    }
 }
 
@@ -202,6 +211,22 @@ void TGLClipSetSubEditor::UpdateViewerClip()
       fM->GetCurrentClip()->SetMode(fClipInside->IsDown() ? TGLClip::kInside : TGLClip::kOutside);
 
    Changed();
+}
+
+//______________________________________________________________________________
+void TGLClipSetSubEditor::ResetViewerClip()
+{
+   // Reset transformation of the current clip.
+
+   if (fCurrentClip != kClipNone) {
+      if (fM->GetClipType() == kClipPlane) {
+         TGLPlane plane(0.0, -1.0, 0.0, 0.0);
+         dynamic_cast<TGLClipPlane*>(fM->GetCurrentClip())->Set(plane);
+      } else if (fM->GetClipType() == kClipBox) {
+         fM->GetCurrentClip()->SetTransform(TGLMatrix());
+      }
+      Changed();
+   }
 }
 
 

@@ -1103,7 +1103,8 @@ void TGLViewer::SetGuideState(Int_t axesType, Bool_t axesDepthTest, Bool_t refer
    fAxesType    = axesType;
    fAxesDepthTest = axesDepthTest;
    fReferenceOn = referenceOn;
-   fReferencePos.Set(referencePos[0], referencePos[1], referencePos[2]);
+   if (referencePos)
+      fReferencePos.Set(referencePos[0], referencePos[1], referencePos[2]);
    if (fGLDevice != -1)
       gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
    RequestDraw();
