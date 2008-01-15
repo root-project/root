@@ -1631,9 +1631,6 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       }
    }
 
-   // check whether lib l is in the fLinkedLibs list
-   // TO BE DONE
-
    recCall++;
 
    char *path = DynamicPathName(module);
@@ -1840,7 +1837,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
             TString custom = fLinkedLibs;
             custom.ReplaceAll(LINKEDLIBS,linked);
             if (custom == fLinkedLibs) {
-               // no replacement done, let's happen linked
+               // no replacement done, let's append linked
                libs.Append(linked);
                libs.Append(" ");
             }
