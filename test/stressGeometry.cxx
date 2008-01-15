@@ -313,6 +313,7 @@ void WriteRef(Int_t kexp) {
       }
    }   
    T->AutoSave();
+   T->GetUserInfo()->Remove(&vect);
 //   T->Print();
    delete T;
 }
