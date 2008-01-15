@@ -137,7 +137,7 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
    Double_t *matr = GetCovarianceMatrix();
    if (!matr)
       return;
-   Double_t t = TMath::StudentQuantile(cl, f->GetNDF());   
+   Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());   
    Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
    Int_t igrad, ifree=0;
    for (Int_t ipoint=0; ipoint<n; ipoint++){
@@ -260,7 +260,7 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       Double_t *sum_vector = new Double_t[npar];
       Double_t *x = gr2->GetX();
       Double_t *y = gr2->GetY();
-      Double_t t = TMath::StudentQuantile(cl, f->GetNDF());   
+      Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());   
       Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
       Double_t *matr=GetCovarianceMatrix();
       Double_t c = 0;
@@ -273,6 +273,7 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
             for (Int_t icol=0; icol<npar; icol++)
                sum_vector[irow]+=matr[irow*npar+icol]*grad[icol];
          }
+         c = 0;
          for (Int_t i=0; i<npar; i++)
             c+=grad[i]*sum_vector[i];
          c=TMath::Sqrt(c);
@@ -323,10 +324,10 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       TAxis *xaxis  = hfit->GetXaxis();
       TAxis *yaxis  = hfit->GetYaxis();
       TAxis *zaxis  = hfit->GetZaxis();
-      Double_t t = TMath::StudentQuantile(cl, f->GetNDF());   
+      Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());   
       Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
       Double_t *matr=GetCovarianceMatrix();
-      Double_t c=0;
+      Double_t c=0;      
       for (Int_t binz=hzfirst; binz<=hzlast; binz++){
          x[2]=zaxis->GetBinCenter(binz);
          for (Int_t biny=hyfirst; biny<=hylast; biny++) {
@@ -339,6 +340,7 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
                   for (Int_t icol=0; icol<npar; icol++)
                      sum_vector[irow]+=matr[irow*npar+icol]*grad[icol];
                }
+               c = 0;
                for (Int_t i=0; i<npar; i++)
                   c+=grad[i]*sum_vector[i];
                c=TMath::Sqrt(c);

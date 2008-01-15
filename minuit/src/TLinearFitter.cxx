@@ -988,7 +988,7 @@ void TLinearFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *
       Double_t *sum_vector = new Double_t[fNfunctions];
       Double_t c=0;
       Int_t df = fNpoints-fNfunctions+fNfixed;
-      Double_t t = TMath::StudentQuantile(cl, df);
+      Double_t t = TMath::StudentQuantile(0.5 + cl/2, df);
       Double_t chidf = TMath::Sqrt(fChisquare/df);
 
       for (Int_t ipoint=0; ipoint<n; ipoint++){
@@ -1086,7 +1086,7 @@ void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       Double_t *sum_vector = new Double_t[fNfunctions];
       Double_t *x = gr2->GetX();
       Double_t *y = gr2->GetY();
-      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());
+      Double_t t = TMath::StudentQuantile(0.5 + cl/2, ((TF1*)(fInputFunction))->GetNDF());
       Double_t chidf = TMath::Sqrt(fChisquare/((TF1*)(fInputFunction))->GetNDF());
       Double_t c = 0;
       for (Int_t ipoint=0; ipoint<np; ipoint++){
@@ -1145,7 +1145,7 @@ void TLinearFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       TAxis *xaxis  = hfit->GetXaxis();
       TAxis *yaxis  = hfit->GetYaxis();
       TAxis *zaxis  = hfit->GetZaxis();
-      Double_t t = TMath::StudentQuantile(cl, ((TF1*)(fInputFunction))->GetNDF());
+      Double_t t = TMath::StudentQuantile(0.5 + cl/2, ((TF1*)(fInputFunction))->GetNDF());
       Double_t chidf = TMath::Sqrt(fChisquare/((TF1*)(fInputFunction))->GetNDF());
       Double_t c=0;
       for (Int_t binz=hzfirst; binz<=hzlast; binz++){
