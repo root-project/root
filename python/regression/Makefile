@@ -13,6 +13,10 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 pylib = $(strip $(shell python -c 'import distutils.sysconfig, sys; print (distutils.sysconfig.get_config_var("LDLIBRARY") or ("Python%d%d" % (sys.version_info[0],sys.version_info[1]))),' ) )
+ifeq ($(PLATFORM),win32)
+pylibpath = $(strip $(shell python -c 'import os, sys; path = os.path.join(sys.prefix, "libs"); upath = path.replace("\\","/"); print upath; ' ) )
+export LIB:=$(pylibpath);$(LIB)
+endif
 
 # special case for Scott.C: link with python library
 Scott_C.$(DllSuf): Scott.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
