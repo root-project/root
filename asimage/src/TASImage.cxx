@@ -1234,7 +1234,7 @@ void TASImage::Paint(Option_t *option)
    }
 
    Int_t   tile_x = 0, tile_y = 0;
-   ULong_t tile_tint = 0;
+   CARD32  tile_tint = 0;
    Bool_t  tile = kFALSE;
    Bool_t  expand = kFALSE;
 
