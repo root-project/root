@@ -16,11 +16,12 @@ void myfunc2(std::vector<vector<double> > &vec) {
 
 double dude() {
    myfunc(*myvec);
-   for(unsigned int i=0; i< myvec->size(); ++i) { 
+   for(unsigned i=0; i< myvec->size(); ++i) { 
       double dval = myvec[i];
       fprintf(stdout,"myvec[%d]==%g\n",i,dval);
    }
    myfunc2(*myvecvec);
+   int x = 0; x = myvecvec[x].size();
    for(unsigned int j=0; j< myvecvec->size(); ++j) {
       fprintf(stdout,"myvecvec size: %lu\n",myvecvec->size());
       for(unsigned int i=0; i< myvecvec[j].size(); ++i) {
