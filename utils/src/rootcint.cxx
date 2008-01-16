@@ -527,8 +527,8 @@ string R__tmpnam()
          else if ((tmp=getenv("TMP")))     tmpdir = tmp;
          else tmpdir = ".";
          tmpdir += '/';
-       }
-       initialized = true;
+      }
+      initialized = true;
    }
 
 #if R__USE_MKSTEMP

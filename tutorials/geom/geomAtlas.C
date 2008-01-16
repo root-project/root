@@ -7,7 +7,7 @@
    
 void geomAtlas() {
    TGeoManager::Import("http://root.cern.ch/files/atlas.root");
-   gGeoManager->DefaultColors();
+   //gGeoManager->DefaultColors();
    gGeoManager->SetMaxVisNodes(5000);
    //gGeoManager->SetVisLevel(4);
    gGeoManager->GetVolume("ATLS")->Draw("ogl");
