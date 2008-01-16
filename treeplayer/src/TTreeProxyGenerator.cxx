@@ -383,9 +383,9 @@ namespace ROOT {
             case TClassEdit::kList:     what = "list"; break;
             case TClassEdit::kDeque:    what = "deque"; break;
             case TClassEdit::kMap:      what = "map"; break;
-            case TClassEdit::kMultiMap: what = "multimap"; break;
+            case TClassEdit::kMultiMap: what = "map"; break;
             case TClassEdit::kSet:      what = "set"; break;
-            case TClassEdit::kMultiSet: what = "multiset"; break;
+            case TClassEdit::kMultiSet: what = "set"; break;
          }
          directive = "#include <";
          directive.Append(what);
@@ -1888,14 +1888,14 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"\n\n");
 
       // Write the implementations.
-      fprintf(hf,"%s::~%s() {\n",classname.Data(),classname.Data());
+      fprintf(hf,"inline %s::~%s() {\n",classname.Data(),classname.Data());
       fprintf(hf,"   // destructor. Clean up helpers.\n");
       fprintf(hf,"\n");
       fprintf(hf,"   delete fHelper;\n");
       fprintf(hf,"   delete fInput;\n");
       fprintf(hf,"}\n");
       fprintf(hf,"\n");
-      fprintf(hf,"void %s::Init(TTree *tree)\n",classname.Data());
+      fprintf(hf,"inline void %s::Init(TTree *tree)\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"//   Set branch addresses\n");
       fprintf(hf,"   if (tree == 0) return;\n");
@@ -1924,7 +1924,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
       // generate code for class member function Begin
       fprintf(hf,"\n");
-      fprintf(hf,"void %s::Begin(TTree *tree)\n",classname.Data());
+      fprintf(hf,"inline void %s::Begin(TTree *tree)\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // The Begin() function is called at the start of the query.\n");
       fprintf(hf,"   // When running with PROOF Begin() is only called on the client.\n");
@@ -1937,7 +1937,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
       // generate code for class member function SlaveBegin
       fprintf(hf,"\n");
-      fprintf(hf,"void %s::SlaveBegin(TTree *tree)\n",classname.Data());
+      fprintf(hf,"inline void %s::SlaveBegin(TTree *tree)\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // The SlaveBegin() function is called after the Begin() function.\n");
       fprintf(hf,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
@@ -1963,7 +1963,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"\n");
 
       // generate code for class member function Process
-      fprintf(hf,"Bool_t %s::Process(Long64_t entry)\n",classname.Data());
+      fprintf(hf,"inline Bool_t %s::Process(Long64_t entry)\n",classname.Data());
       fprintf(hf,"{\n");
 
       fprintf(hf,"   // The Process() function is called for each entry in the tree (or possibly\n"
@@ -2004,7 +2004,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"}\n\n");
 
       // generate code for class member function SlaveTerminate
-      fprintf(hf,"void %s::SlaveTerminate()\n",classname.Data());
+      fprintf(hf,"inline void %s::SlaveTerminate()\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // The SlaveTerminate() function is called after all entries or objects\n"
               "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
@@ -2014,7 +2014,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"}\n\n");
 
       // generate code for class member function Terminate
-      fprintf(hf,"void %s::Terminate()\n",classname.Data());
+      fprintf(hf,"inline void %s::Terminate()\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // Function called at the end of the event loop.\n");
       fprintf(hf,"   Int_t drawflag = (htemp && htemp->GetEntries()>0);\n");
