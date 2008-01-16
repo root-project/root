@@ -17,6 +17,7 @@
 #include "TMath.h"
 
 #include "TGButton.h"
+#include "TGLabel.h"
 
 //______________________________________________________________________________
 // TEveTransSubEditor
@@ -63,26 +64,44 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
 
    fEditTransFrame = new TGVerticalFrame(this);
 
+   TGFont *font = gClient->GetFont("-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1");
+   Int_t labelW = 10;
+
+   TGHorizontalFrame* hfp = new TGHorizontalFrame(fEditTransFrame);
+   TGLabel* labp = new TGLabel(hfp, "Location");
+   labp->SetTextFont(font);
+   hfp->AddFrame(labp);
+   fEditTransFrame->AddFrame(hfp,  new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,0));
    fPos = new TEveGTriVecValuator(fEditTransFrame, "Pos", 160, 20);
-   fPos->SetLabelWidth(17);
+   fPos->SetLabelWidth(labelW);
    fPos->SetNELength(6);
-   fPos->Build(kFALSE, "x", "y", "z");
+   fPos->Build(kFALSE, "x:", "y:", "z:");
    fPos->SetLimits(-1e5, 1e5, TGNumberFormat::kNESRealThree);
-   fEditTransFrame->AddFrame(fPos, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,0));
+   fEditTransFrame->AddFrame(fPos, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,2));
 
+   TGHorizontalFrame* hfr = new TGHorizontalFrame(fEditTransFrame);
+   TGLabel* labr = new TGLabel(hfr, "Rotation");
+   labr->SetTextFont(font);
+   hfr->AddFrame(labr);
+   fEditTransFrame->AddFrame(hfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,0));
    fRot = new TEveGTriVecValuator(fEditTransFrame, "Rot", 160, 20);
-   fRot->SetLabelWidth(17);
+   fRot->SetLabelWidth(labelW);
    fRot->SetNELength(6);
-   fRot->Build(kFALSE, "Rz", "RY", "Rx");
+   fRot->Build(kFALSE, "x:", "y:", "z:");
    fRot->SetLimits(-360, 360, TGNumberFormat::kNESRealOne);
-   fEditTransFrame->AddFrame(fRot, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,0));
+   fEditTransFrame->AddFrame(fRot, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,2));
 
+   TGHorizontalFrame* hfs = new TGHorizontalFrame(fEditTransFrame);
+   TGLabel* labs = new TGLabel(hfs, "Scale");
+   labs->SetTextFont(font);
+   hfs->AddFrame(labs);
+   fEditTransFrame->AddFrame(hfs, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,0));
    fScale = new TEveGTriVecValuator(fEditTransFrame, "Scale", 160, 20);
-   fScale->SetLabelWidth(17);
+   fScale->SetLabelWidth(labelW);
    fScale->SetNELength(6);
-   fScale->Build(kFALSE, "Sx", "Sy", "Sz");
+   fScale->Build(kFALSE, "x:", "y:", "z:");
    fScale->SetLimits(1e-2, 1e2, TGNumberFormat::kNESRealTwo);
-   fEditTransFrame->AddFrame(fScale, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,0));
+   fEditTransFrame->AddFrame(fScale, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,2));
 
    fPos  ->Connect("ValueSet()", "TEveTransSubEditor", this, "DoTransChanged()");
    fRot  ->Connect("ValueSet()", "TEveTransSubEditor", this, "DoTransChanged()");
@@ -94,7 +113,7 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
       fAutoUpdate = new TGCheckButton(hframe, "AutoUpdate");
       hframe->AddFrame(fAutoUpdate, new TGLayoutHints(kLHintsLeft, 1,10,1,1));
       fUpdate = new TGTextButton(hframe, "Update");
-      hframe->AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5,5,1,1));
+      hframe->AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5,3,1,1));
       fUpdate->Connect("Clicked()", "TEveTransSubEditor", this, "TransChanged()");
 
       fEditTransFrame->AddFrame(hframe, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,4,0));
