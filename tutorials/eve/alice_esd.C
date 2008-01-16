@@ -83,13 +83,12 @@ class AliESDfriend;
 class AliESDtrack;
 class AliExternalTrackParam;
 
-Bool_t alice_esd_loadlib(const char* file, const char* project);
-void   make_gui();
-void   load_event();
+Bool_t     alice_esd_loadlib(const char* file, const char* project);
+void       make_gui();
+void       load_event();
 
-void   alice_esd_read();
-
-TEveTrack* esd_make_track(TEveTrackPropagator* rnrStyle, Int_t index, AliESDtrack* at,
+void       alice_esd_read();
+TEveTrack* esd_make_track(TEveTrackPropagator* trkProp, Int_t index, AliESDtrack* at,
 			  AliExternalTrackParam* tp=0);
 Bool_t     trackIsOn(AliESDtrack* t, Int_t mask);
 void       trackGetPos(AliExternalTrackParam* tp, Double_t r[3]);
@@ -112,6 +111,8 @@ AliESDEvent  *esd        = 0;
 AliESDfriend *esd_friend = 0;
 
 Int_t esd_event_id       = 0; // Current event id.
+
+TEveTrackList *track_list = 0;
 
 
 /******************************************************************************/
@@ -216,8 +217,8 @@ void load_event()
 
    printf("Loading event %d.\n", esd_event_id);
 
-   if (gEve->GetCurrentEvent())
-      gEve->GetCurrentEvent()->DestroyElements();
+   if (track_list)
+      track_list->DestroyElements();
 
    esd_tree->GetEntry(esd_event_id);
 
@@ -321,15 +322,22 @@ void alice_esd_read()
    AliESDRun    *esdrun = (AliESDRun*)    esd->fESDObjects->FindObject("AliESDRun");
    TClonesArray *tracks = (TClonesArray*) esd->fESDObjects->FindObject("Tracks");
 
-   AliESDfriend *frnd   = (AliESDfriend*) esd->fESDObjects->FindObject("AliESDfriend");
-   printf("Friend %p, n_tracks:%d\n", frnd, frnd->fTracks.GetEntries());
+   // This needs further investigation. Clusters not shown.
+   // AliESDfriend *frnd   = (AliESDfriend*) esd->fESDObjects->FindObject("AliESDfriend");
+   // printf("Friend %p, n_tracks:%d\n", frnd, frnd->fTracks.GetEntries());
 
-   TEveTrackList* cont = new TEveTrackList("ESD Tracks"); 
-   cont->SetMainColor(Color_t(6));
-   TEveTrackPropagator* rnrStyle = cont->GetPropagator();
-   rnrStyle->SetMagField( esdrun->fMagneticField );
+   if (track_list == 0) {
+      track_list = new TEveTrackList("ESD Tracks"); 
+      track_list->SetMainColor(Color_t(6));
+      track_list->SetMarkerColor(kYellow);
+      track_list->SetMarkerStyle(4);
+      track_list->SetMarkerSize(0.5);
 
-   gEve->AddElement(cont);
+      gEve->AddElement(track_list);
+   }
+
+   TEveTrackPropagator* trkProp = track_list->GetPropagator();
+   trkProp->SetMagField( esdrun->fMagneticField );
 
    for (Int_t n=0; n<tracks->GetEntriesFast(); ++n)
    {
@@ -341,25 +349,23 @@ void alice_esd_read()
          tp = at->fIp;
       }
 
-      TEveTrack* track = esd_make_track(rnrStyle, n, at, tp);
-      track->SetAttLineAttMarker(cont);
-      gEve->AddElement(track, cont);
+      TEveTrack* track = esd_make_track(trkProp, n, at, tp);
+      track->SetAttLineAttMarker(track_list);
+      gEve->AddElement(track, track_list);
 
-      if (frnd)
-      {
-         // AliESDfriendTrack* ft = (AliESDfriendTrack*) frnd->fTracks->At(n);
-         // printf("%d friend = %p\n", ft);
-      }
+      // This needs further investigation. Clusters not shown.
+      // if (frnd)
+      // {
+      //     AliESDfriendTrack* ft = (AliESDfriendTrack*) frnd->fTracks->At(n);
+      //     printf("%d friend = %p\n", ft);
+      // }
    }
 
-   cont->MakeTracks();
-   cont->SetMarkerColor(kYellow);
-   cont->SetMarkerStyle(4);
-   cont->SetMarkerSize(0.5);
+   track_list->MakeTracks();
 }
 
 //______________________________________________________________________________
-TEveTrack* esd_make_track(TEveTrackPropagator*   rnrStyle,
+TEveTrack* esd_make_track(TEveTrackPropagator*   trkProp,
 			  Int_t                  index,
 			  AliESDtrack*           at,
 			  AliExternalTrackParam* tp)
@@ -387,7 +393,7 @@ TEveTrack* esd_make_track(TEveTrackPropagator*   rnrStyle,
 
    rt.fBeta = ep/TMath::Sqrt(ep*ep + mc*mc);
  
-   TEveTrack* track = new TEveTrack(&rt, rnrStyle);
+   TEveTrack* track = new TEveTrack(&rt, trkProp);
    track->SetName(Form("TEveTrack %d", rt.fIndex));
    track->SetStdTitle();
 
