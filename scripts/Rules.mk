@@ -129,6 +129,8 @@ endif
 clean:  $(CLEAN_TARGETS_DIR)
 	$(CMDECHO) rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)
 
+distclean: clean
+
 cleantest: test
 
 ifeq ($(MAKECMDGOALS),cleantest)
