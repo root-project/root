@@ -1424,7 +1424,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
       fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
    }
-   fprintf(fp,"\n   // Declaration of leave types\n");
+   fprintf(fp,"\n   // Declaration of leaf types\n");
    TLeaf *leafcount;
    TLeafObject *leafobj;
    TBranchElement *bre=0;
@@ -1771,7 +1771,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"   // The Init() function is called when the selector needs to initialize\n"
               "   // a new tree or chain. Typically here the branch addresses and branch\n"
               "   // pointers of the tree will be set.\n"
-              "   // It is normaly not necessary to make changes to the generated\n"
+              "   // It is normally not necessary to make changes to the generated\n"
               "   // code, but the routine can be extended by the user if needed.\n"
               "   // Init() will be called many times when running on PROOF\n"
               "   // (once per file to be processed).\n\n");
@@ -1875,7 +1875,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"{\n");
    fprintf(fp,"   // The Notify() function is called when a new file is opened. This\n"
               "   // can be either for a new TTree in a TChain or when when a new TTree\n"
-              "   // is started when using PROOF. It is normaly not necessary to make changes\n"
+              "   // is started when using PROOF. It is normally not necessary to make changes\n"
               "   // to the generated code, but the routine can be extended by the\n"
               "   // user if needed. The return value is currently not used.\n\n");
    fprintf(fp,"   return kTRUE;\n");
@@ -1958,7 +1958,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"// from the ROOT class TSelector. For more information on the TSelector\n"
                   "// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.\n\n");
       fprintf(fpc,"// The following methods are defined in this file:\n");
-      fprintf(fpc,"//    Begin():        called everytime a loop on the tree starts,\n");
+      fprintf(fpc,"//    Begin():        called every time a loop on the tree starts,\n");
       fprintf(fpc,"//                    a convenient place to create your histograms.\n");
       fprintf(fpc,"//    SlaveBegin():   called after Begin(), when on PROOF called only on the\n"
                   "//                    slave servers.\n");
