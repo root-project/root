@@ -32,6 +32,7 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
+#include <string.h>
 
 
 #include "RooAbsOptTestStatistic.h"
@@ -111,13 +112,13 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 
   
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from pdfDepSet ranges
-  if (rangeName) {
+  if (rangeName && strlen(rangeName)) {
     _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*pdfDepSet),RooFit::CutRange(rangeName)) ;  
   } else {
     _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*pdfDepSet)) ;  
   }
   
-  if (rangeName) {
+  if (rangeName && strlen(rangeName)) {
     
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing likelihood for sub-range named " << rangeName << endl ;
 
@@ -126,7 +127,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     while((arg=(RooAbsArg*)iter2->Next())) {
       RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
       if (pdfReal) {
-	if (!addCoefRangeName) {
+        if (!(addCoefRangeName && strlen(addCoefRangeName))) {
 	  pdfReal->setRange(Form("NormalizationRangeFor%s",rangeName),pdfReal->getMin(),pdfReal->getMax()) ;
 	}
 	pdfReal->setRange(pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
