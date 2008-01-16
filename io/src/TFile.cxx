@@ -2148,7 +2148,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    // create the MAKEP file by looping on all *.h files
    // delete MAKEP if it already exists
 #ifdef WIN32
-   sprintf(path,"%s/make.cmd",dirname);
+   sprintf(path,"%s/makep.cmd",dirname);
 #else
    sprintf(path,"%s/MAKEP",dirname);
 #endif
