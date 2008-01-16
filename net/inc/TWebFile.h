@@ -18,8 +18,7 @@
 // TWebFile                                                             //
 //                                                                      //
 // A TWebFile is like a normal TFile except that it reads its data      //
-// via a (slightly modified) apache web server. A TWebFile is a         //
-// read-only file.                                                      //
+// via a standard apache web server. A TWebFile is a read-only file.    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
