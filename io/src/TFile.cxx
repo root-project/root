@@ -2188,7 +2188,30 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    
    next.Reset();
    while ((info = (TStreamerInfo*)next())) {
-      if (TClassEdit::IsSTLCont(info->GetName())) continue;
+      if (TClassEdit::IsSTLCont(info->GetName())) {
+         std::vector<std::string> inside;
+         int nestedLoc;
+         TClassEdit::GetSplit( info->GetName(), inside, nestedLoc );
+         Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+         TClass *key = TClass::GetClass(inside[1].c_str());
+         if (key) {
+            std::string what;
+            switch ( stlkind )  {
+            case TClassEdit::kMap:
+            case TClassEdit::kMultiMap: 
+               {
+                  what = "pair<";
+                  what += inside[1];
+                  what += ",";
+                  what += inside[2];
+                  what += " >";
+                  fprintf(fp,"#pragma link C++ class %s+;\n",what.c_str());
+                  break;
+               }
+            }
+         }
+         continue;
+      }
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes

@@ -21,6 +21,8 @@
 #include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TError.h"
+#include "TGenCollectionStreamer.h"
+#include "TClassStreamer.h"
 
 namespace {
    const Int_t  kMapOffset = 2;
@@ -40,9 +42,10 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
    else fOffset = sizeof(TClonesArray*);
 }
 
+//________________________________________________________________________
 void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
 {
-   // Read a TClonesArray in the TBuffer b and load it into a (stl) collection
+   // Read a TClonesArray from the TBuffer b and load it into a (stl) collection
 
    TStreamerInfo *subinfo = (TStreamerInfo*)fProxy->GetValueClass()->GetStreamerInfo();
    R__ASSERT(subinfo);
@@ -87,8 +90,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
          TClass *clRef = b.ReadClass(TClonesArray::Class(), &tag);
 
          if (clRef==0) {
-            // got a reference to an already read object
-            // got a reference to an already read object
+            // Got a reference to an already read object.
             if (b.GetBufferVersion() > 0) {
                tag += b.GetBufferDisplacement();
             } else {
@@ -203,5 +205,76 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       }
       fProxy->Commit(env);
       b.CheckByteCount(start, bytecount,TClonesArray::Class());
+   }
+}
+
+//________________________________________________________________________
+TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
+                                       Bool_t isPointer, Bool_t isPrealloc) :
+   fIsPointer(isPointer),
+   fIsPrealloc(isPrealloc),
+   fSizeOf(0)
+{
+   // Constructor.
+
+   TCollectionClassStreamer *middleman = dynamic_cast<TCollectionClassStreamer*>(streamer);
+   if (middleman) {
+      fProxy = middleman->GetXYZ();
+      fCollectionStreamer = dynamic_cast<TGenCollectionStreamer*>(middleman->GetXYZ());
+
+      if (isPointer) fSizeOf = sizeof(void*);
+      else fSizeOf = fProxy->GetCollectionClass()->Size();
+
+      if (fProxy->GetValueClass()->GetStreamerInfo() == 0
+          || fProxy->GetValueClass()->GetStreamerInfo()->GetElements()->At(1) == 0 ) {
+         // We do not have enough information on the pair (or its not a pair).
+         fCollectionStreamer = 0;
+      }
+   }
+}
+
+
+
+//________________________________________________________________________
+void TConvertMapToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
+{
+   // Read a std::map or std::multimap from the TBuffer b and load it into a (stl) collection
+
+   R__ASSERT(b.IsReading());
+   R__ASSERT(fCollectionStreamer);
+
+   Bool_t needAlloc = fIsPointer && !fIsPrealloc;
+
+   R__ASSERT(!needAlloc); // not yet implemented
+
+   if (needAlloc) {
+      char *addr = (char*)pmember;
+      for(Int_t k=0; k<size; ++k, addr += fSizeOf ) {
+         if (*(void**)addr && TStreamerInfo::CanDelete()) {
+            fProxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and desctructor
+         }
+         //*(void**)addr = fProxy->New();
+         //TClonesArray *clones = (TClonesArray*)ReadObjectAny(TClonesArray::Class());
+      }
+   }
+
+   
+   char *addr = (char*)pmember;
+   if (size==0) size=1;
+   for(Int_t k=0; k<size; ++k, addr += fSizeOf) {
+
+      if (needAlloc) {
+         
+         // Read the class name.
+
+      }
+
+      void *obj;
+      if (fIsPointer) obj = *(void**)addr;
+      else obj = addr;
+
+      TVirtualCollectionProxy::TPushPop env(fProxy, obj);
+      fCollectionStreamer->StreamerAsMap(b);
+
    }
 }

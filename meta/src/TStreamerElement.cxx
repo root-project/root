@@ -1626,15 +1626,10 @@ const char *TStreamerSTL::GetInclude() const
 //______________________________________________________________________________
 void TStreamerSTL::SetStreamer(TMemberStreamer  *streamer)
 {
-   //set pointer to Streamer function for this element
-   //NOTE: we do not take ownership
+   // Set pointer to Streamer function for this element
+   // NOTE: we do not take ownership
 
-   if (fType==TVirtualStreamerInfo::kSTLp || 1) return;
    fStreamer = streamer;
-   if (streamer && !IsaPointer() ) {
-      fType = TVirtualStreamerInfo::kStreamer;
-      fNewType = fType;
-   }
 }
 
 //______________________________________________________________________________

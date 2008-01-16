@@ -28,6 +28,7 @@
 #include "TError.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 #include "Riostream.h"
 
 TGenCollectionStreamer::TGenCollectionStreamer(const TGenCollectionStreamer& copy)
@@ -171,8 +172,8 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
    fConstruct.invoke(fEnv);
    switch ( fVal->fCase ) {
    case G__BIT_ISCLASS:
-      DOLOOP( b.StreamObject(i,fVal->fType) )
-         fFeed.invoke(fEnv);
+      DOLOOP( b.StreamObject(i,fVal->fType) );
+      fFeed.invoke(fEnv);
       fDestruct.invoke(fEnv);
       break;
    case kBIT_ISSTRING:
@@ -189,8 +190,8 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
          fFeed.invoke(fEnv);
       break;
    case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
-      DOLOOP( i->read_tstring_pointer(vsn3,b) )
-         fFeed.invoke(fEnv);
+      DOLOOP( i->read_tstring_pointer(vsn3,b) );
+      fFeed.invoke(fEnv);
       break;
    }
 #undef DOLOOP
@@ -200,6 +201,131 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
    }
    if ( memory ) {
       ::operator delete(memory);
+   }
+}
+
+void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
+{
+   // Input streamer to convert a map into another collection
+
+   Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
+   size_t len = fValDiff*nElements;
+   StreamHelper* itm = 0;
+   char   buffer[8096];
+   void*  memory = 0;
+
+   TStreamerInfo *pinfo = (TStreamerInfo*)fVal->fType->GetStreamerInfo();
+   R__ASSERT(pinfo);
+   R__ASSERT(fVal->fCase == G__BIT_ISCLASS);
+   
+   int nested = 0;
+   std::vector<std::string> inside;
+   TClassEdit::GetSplit(pinfo->GetName(),inside,nested);
+   Value first(inside[1]);
+   Value second(inside[2]);
+   fValOffset = ((TStreamerElement*)pinfo->GetElements()->At(1))->GetOffset();
+
+   fEnv->size = nElements;
+   switch ( fSTL_type )  {
+      // Simple case: contiguous memory. get address of first, then jump.
+   case TClassEdit::kVector:
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
+   itm = (StreamHelper*)fResize.invoke(fEnv);
+   switch (fVal->fCase) {
+   case G__BIT_ISCLASS:
+      DOLOOP( 
+             ReadMapHelper(i, &first, vsn3, b);
+             ReadMapHelper((StreamHelper*)(((char*)i)+fValOffset), &second, vsn3, b)
+             );
+   }
+#undef DOLOOP
+   break;
+
+   // No contiguous memory, but resize is possible
+   // Hence accessing objects using At(i) should be not too much an overhead
+   case TClassEdit::kList:
+   case TClassEdit::kDeque:
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
+   fResize.invoke(fEnv);
+   switch (fVal->fCase) {
+   case G__BIT_ISCLASS:
+      DOLOOP( pinfo->ReadBuffer(b, (char**)&i, -1); );
+   }
+#undef DOLOOP
+   break;
+
+   // Rather troublesome case: Objects can only be fed into the container
+   // Once they are created. Need to take memory from stack or heap.
+   case TClassEdit::kMultiSet:
+   case TClassEdit::kSet:
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
+   fEnv->start = itm = (StreamHelper*)(len<sizeof(buffer) ? buffer : memory=::operator new(len));
+   fConstruct.invoke(fEnv);
+   switch ( fVal->fCase ) {
+   case G__BIT_ISCLASS:
+      DOLOOP( pinfo->ReadBuffer(b, (char**)&i, -1); );
+      fFeed.invoke(fEnv);
+      fDestruct.invoke(fEnv);
+      break;
+   }
+#undef DOLOOP
+   break;
+   default:
+      break;
+   }
+   if ( memory ) {
+      ::operator delete(memory);
+   }
+}
+
+
+void TGenCollectionStreamer::ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn3,  TBuffer &b)
+{
+   float f;
+
+   switch (v->fCase) {
+   case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+   case G__BIT_ISENUM:
+      switch( int(v->fKind) )   {
+      case kBool_t:    b >> i->boolean;      break;
+      case kChar_t:    b >> i->s_char;      break;
+      case kShort_t:   b >> i->s_short;     break;
+      case kInt_t:     b >> i->s_int;       break;
+      case kLong_t:    b >> i->s_long;      break;
+      case kLong64_t:  b >> i->s_longlong;  break;
+      case kFloat_t:   b >> i->flt;         break;
+      case kFloat16_t: b >> f;
+         i->flt = float(f);  break;
+      case kDouble_t:  b >> i->dbl;         break;
+      case kBOOL_t:    b >> i->boolean;     break;
+      case kUChar_t:   b >> i->u_char;      break;
+      case kUShort_t:  b >> i->u_short;     break;
+      case kUInt_t:    b >> i->u_int;       break;
+      case kULong_t:   b >> i->u_long;      break;
+      case kULong64_t: b >> i->u_longlong;  break;
+      case kDouble32_t:b >> f;
+         i->dbl = double(f);  break;
+      case kchar:
+      case kNoType_t:
+      case kOther_t:
+         Error("TGenCollectionStreamer","fType %d is not supported yet!\n",v->fKind);
+      }
+      break;
+   case G__BIT_ISCLASS:
+      b.StreamObject(i,v->fType);
+      break;
+   case kBIT_ISSTRING:
+      i->read_std_string(b);
+      break;
+   case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+      i->set(b.ReadObjectAny(v->fType));
+      break;
+   case G__BIT_ISPOINTER|kBIT_ISSTRING:
+      i->read_std_string_pointer(b);
+      break;
+   case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
+      i->read_tstring_pointer(vsn3,b);
+      break;
    }
 }
 
@@ -495,5 +621,37 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
             break;
          }
       }
+   }
+}
+
+void TGenCollectionStreamer::StreamerAsMap(TBuffer &b)
+{
+   // TClassStreamer IO overload.
+   if ( b.IsReading() ) {  //Read mode
+      int nElements = 0;
+      b >> nElements;
+      if ( fEnv->object )   {
+         TGenCollectionProxy::Clear("force");
+      }
+      if ( nElements > 0 )  {
+         switch(fSTL_type)  { 
+         case TClassEdit::kMap:
+         case TClassEdit::kMultiMap:
+            ReadMap(nElements, b);
+            break;
+         case TClassEdit::kVector:
+         case TClassEdit::kList:
+         case TClassEdit::kDeque:
+         case TClassEdit::kMultiSet:
+         case TClassEdit::kSet: {
+            ReadPairFromMap(nElements, b);
+            break;
+         }
+         default: break;
+         }
+      }
+   }
+   else {     // Write case
+      Streamer(b);
    }
 }

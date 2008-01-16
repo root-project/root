@@ -24,20 +24,28 @@
 #include "TROOT.h"
 
 //______________________________________________________________________________
+void TMakeProject::AddUniqueStatement(FILE *fp, const char *statement, char *inclist)
+{
+   // Add an include statement, if it has not already been added.
+
+   if (!strstr(inclist, statement)) {
+      strcat(inclist, statement);
+      fprintf(fp,statement);
+   }
+}
+
+//______________________________________________________________________________
 void TMakeProject::AddInclude(FILE *fp, const char *header, Bool_t system, char *inclist)
 {
    // Add an include statement, if it has not already been added.
 
    TString what;
    if (system) {
-      what.Form("<%s>", header);
+      what.Form("#include <%s>\n", header);
    } else {
-      what.Form("\"%s\"", header);
+      what.Form("#include \"%s\"\n", header);
    }
-   if (!strstr(inclist, what.Data())) {
-      strcat(inclist, what.Data());
-      fprintf(fp,"#include %s\n",what.Data());
-   }
+   AddUniqueStatement(fp, what.Data(), inclist);
 }
 
 //______________________________________________________________________________
@@ -203,6 +211,12 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          fprintf(fp, "operator int() { return 0; };\n");
       } else {
          fprintf(fp, "enum %s { kDefault_%s };\n",clname,clname);
+         // The nesting space of this class may not be #pragma declared (and without
+         // the dictionary is broken), so for now skip those
+         if (strchr(fullname,':')==0) { 
+            // yes this is too aggressive, this needs to be fixed properly by moving the #pragma out of band.
+            fprintf(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname));
+         }
          fprintf(fp, "#endif\n");
       }
    } else {
@@ -248,6 +262,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
    UInt_t nest = 0;
    UInt_t last = 0;
 
+   
    for(UInt_t i = 0; i < len; ++i) {
       switch(clname[i]) {
          case '<': ++nest; if (nest==1) last = i+1; break;
@@ -267,9 +282,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   case TClassEdit::kList:     what = "list"; break;
                   case TClassEdit::kDeque:    what = "deque"; break;
                   case TClassEdit::kMap:      what = "map"; break;
-                  case TClassEdit::kMultiMap: what = "multimap"; break;
+                  case TClassEdit::kMultiMap: what = "map"; break;
                   case TClassEdit::kSet:      what = "set"; break;
-                  case TClassEdit::kMultiSet: what = "multiset"; break;
+                  case TClassEdit::kMultiSet: what = "set"; break;
                }
                AddInclude(fp, what, kTRUE, inclist);
                fprintf(fp, "namespace std {} using namespace std;\n");
@@ -310,6 +325,32 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
          }
       }
    }
+
+   Int_t stlType = TClassEdit::IsSTLCont(clname);
+   if (stlType) {
+      std::vector<std::string> inside;
+      int nestedLoc;
+      TClassEdit::GetSplit( clname, inside, nestedLoc );
+      Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+      TClass *key = TClass::GetClass(inside[1].c_str());
+      if (key) {
+         std::string what;
+         switch ( stlkind )  {
+         case TClassEdit::kMap:
+         case TClassEdit::kMultiMap: 
+            {
+               what = "pair<";
+               what += inside[1];
+               what += ",";
+               what += inside[2];
+               what += " >";
+               AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n",what.c_str()), inclist);
+               break;
+            }
+         }
+      }     
+   }
+
    return ninc;
 }
 

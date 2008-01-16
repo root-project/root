@@ -21,7 +21,10 @@
 #ifndef ROOT_TMemberStreamer
 #include "TMemberStreamer.h"
 #endif
+
 class TVirtualCollectionProxy;
+class TGenCollectionStreamer;
+class TClassStreamer;
 
 class TConvertClonesArrayToProxy : public TMemberStreamer {
    Bool_t fIsPointer;
@@ -31,6 +34,19 @@ class TConvertClonesArrayToProxy : public TMemberStreamer {
 public:
    TConvertClonesArrayToProxy(TVirtualCollectionProxy *proxy, Bool_t isPointer, Bool_t isPrealloc);
    void operator()(TBuffer &b, void *pmember, Int_t size=0);
+};
+
+class TConvertMapToProxy : public TMemberStreamer {
+   Bool_t fIsPointer;
+   Bool_t fIsPrealloc;
+   UInt_t fSizeOf;
+   TVirtualCollectionProxy *fProxy;
+   TGenCollectionStreamer  *fCollectionStreamer;
+
+public:
+   TConvertMapToProxy(TClassStreamer *streamer, Bool_t isPointer, Bool_t isPrealloc);
+   void operator()(TBuffer &b, void *pmember, Int_t size=0);
+   Bool_t IsValid() { return fCollectionStreamer != 0; }
 };
 
 #endif

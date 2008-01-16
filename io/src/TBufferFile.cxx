@@ -1395,7 +1395,7 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
 
 //______________________________________________________________________________
 void TBufferFile::ReadFastArray(void  *start, const TClass *cl, Int_t n,
-                            TMemberStreamer *streamer)
+                                TMemberStreamer *streamer)
 {
    // Read an array of 'n' objects from the I/O buffer.
    // Stores the objects read starting at the address 'start'.
@@ -1415,7 +1415,7 @@ void TBufferFile::ReadFastArray(void  *start, const TClass *cl, Int_t n,
 
 //______________________________________________________________________________
 void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
-                            Bool_t isPreAlloc, TMemberStreamer *streamer)
+                                Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // Read an array of 'n' objects from the I/O buffer.
    // The objects read are stored starting at the address '*start'

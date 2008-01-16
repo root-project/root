@@ -867,7 +867,7 @@ namespace {
       if (oldProxy->GetValueClass() == newProxy->GetValueClass()) {
          if ((oldProxy->GetValueClass() ==0 && oldProxy->GetType() == newProxy->GetType())
              ||(oldProxy->GetValueClass() && oldProxy->HasPointers() == newProxy->HasPointers())) {
-            // We have compatibles collections (they have the same content!
+            // We have compatibles collections (they have the same content)!
             return kTRUE;
          }
       }
@@ -882,10 +882,10 @@ namespace {
       TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
       TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
 
-      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 00
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 0
           && (oldProxy->GetType() == kFloat_t || oldProxy->GetType() == kFloat16_t)
           && (newProxy->GetType() == kFloat_t || newProxy->GetType() == kFloat16_t )) {
-            // We have compatibles collections (they have the same content!
+            // We have compatibles collections (they have the same content)!
          return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
       }
       return kFALSE;
@@ -899,10 +899,10 @@ namespace {
       TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
       TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
 
-      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 00
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 0
           && (oldProxy->GetType() == kDouble_t || oldProxy->GetType() == kDouble32_t)
           && (newProxy->GetType() == kDouble_t || newProxy->GetType() == kDouble32_t )) {
-            // We have compatibles collections (they have the same content!
+            // We have compatibles collections (they have the same content)!
          return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
       }
       return kFALSE;
@@ -1159,7 +1159,7 @@ void TStreamerInfo::BuildOld()
                TVirtualCollectionProxy *cp = newClass->GetCollectionProxy();
                TConvertClonesArrayToProxy *ms = new TConvertClonesArrayToProxy(cp, element->IsaPointer(), isPrealloc);
                element->SetStreamer(ms);
-               //element->SetStreamer(new TConvertClonesArrayToProxy(newClass->GetCollectionProxy(), element->IsaPointer(), isPrealloc));
+
                // When the type is kObject, the TObject::Streamer is used instead
                // of the TStreamerElement's streamer.  So let force the usage
                // of our streamer
@@ -1175,7 +1175,40 @@ void TStreamerInfo::BuildOld()
             }
          } else if (oldClass  && oldClass->GetCollectionProxy() && newClass->GetCollectionProxy()) {
             if (CollectionMatch(oldClass, newClass)) {
-               element->Update(oldClass, newClass.GetClass());
+               Int_t oldkind = TMath::Abs(TClassEdit::IsSTLCont( oldClass->GetName() ));
+               Int_t newkind = TMath::Abs(TClassEdit::IsSTLCont( newClass->GetName() ));
+               
+               if ( (oldkind==TClassEdit::kMap || oldkind==TClassEdit::kMultiMap) &&
+                    (newkind!=TClassEdit::kMap && newkind!=TClassEdit::kMultiMap) ) {
+
+                  Int_t elemType = element->GetType();
+                  Bool_t isPrealloc = (elemType == kObjectp) || (elemType == kAnyp) || (elemType == (kObjectp + kOffsetL)) || (elemType == (kAnyp + kOffsetL));
+
+                  TClassStreamer *streamer = newClass->GetStreamer();
+                  if (streamer) {
+                     TConvertMapToProxy *ms = new TConvertMapToProxy(streamer, element->IsaPointer(), isPrealloc);
+                     if (ms && ms->IsValid()) {
+                        element->SetStreamer(ms);
+                        switch( element->GetType() ) {
+                           //case TStreamerInfo::kSTLvarp:           // Variable size array of STL containers.
+                        case TStreamerInfo::kSTLp:                // Pointer to container with no virtual table (stl) and no comment
+                        case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:     // array of pointers to container with no virtual table (stl) and no comment
+                           element->SetNewType(-2);                       
+                           break;
+                        case TStreamerInfo::kSTL:             // container with no virtual table (stl) and no comment
+                        case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL:  // array of containers with no virtual table (stl) and no comment
+                           break;
+                        }
+                     }
+                  }
+                  element->Update(oldClass, newClass.GetClass());
+
+               } else if ( (newkind==TClassEdit::kMap || newkind==TClassEdit::kMultiMap) &&
+                           (oldkind!=TClassEdit::kMap && oldkind!=TClassEdit::kMultiMap) ) {
+                  element->SetNewType(-2); 
+               } else {                                    
+                  element->Update(oldClass, newClass.GetClass());
+               }
                // Is this needed ? : element->SetSTLtype(newelement->GetSTLtype());
                if (gDebug > 0) {
                   Warning("BuildOld","element: %s::%s %s has new type %s", GetName(), element->GetTypeName(), element->GetName(), newClass->GetName());

@@ -25,17 +25,13 @@
 class TGenCollectionStreamer : public TGenCollectionProxy {
 
 protected:
-   // Stream I/O: Map input streamer
+   void ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn3,  TBuffer &b);
    void ReadMap(int nElements, TBuffer &b);
-   // Stream I/O: Object input streamer
+   void ReadPairFromMap(int nElements, TBuffer &b);
    void ReadObjects(int nElements, TBuffer &b);
-   // Stream I/O: Primitive input streamer
    void ReadPrimitives(int nElements, TBuffer &b);
-   // Stream I/O: Map output streamer
    void WriteMap(int nElements, TBuffer &b);
-   // Stream I/O: Object output streamer
    void WriteObjects(int nElements, TBuffer &b);
-   // Stream I/O: Primitive output streamer
    void WritePrimitives(int nElements, TBuffer &b);
 
 public:
@@ -54,6 +50,9 @@ public:
 
    // Streamer I/O overload
    virtual void Streamer(TBuffer &refBuffer);
+
+   // Streamer I/O overload
+   virtual void StreamerAsMap(TBuffer &refBuffer);
 
    // Streamer I/O overload
    virtual void Streamer(TBuffer &buff, void *pObj, int siz)  {

@@ -30,6 +30,7 @@
 class TMakeProject
 {
 public:
+   static void AddUniqueStatement(FILE *fp, const char *statement, char *inclist);
    static void AddInclude(FILE *fp, const char *header, Bool_t system, char *inclist);
    static TString GetHeaderName(const char *name, Bool_t includeNested = kFALSE);
    static UInt_t GenerateClassPrefix(FILE *fp, const char *clname, Bool_t top, TString &protoname, UInt_t *numberOfClasses, Bool_t implementEmptyClass = kFALSE); 
