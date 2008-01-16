@@ -1,9 +1,79 @@
 /*
-  alice_esd.C - demonstration of displaying ALICE ESD tracks and clusters
+  alice_esd.C - a simple event-display for ALICE ESD tracks and clusters
 
-  Describe the idea of this demo.
+  ------------------------------------------------------------------------
+  ------------------------------------------------------------------------
+
+  Only standard ROOT is used to process the ALICE ESD files.
+
+  No ALICE code is needed, only four simple coordinate-transformation
+  functions declared in this macro.
+
+  A simple geometry of 10KB, extracted from the full TGeo-geometry, is
+  used to outline the central detectors of ALICE.
+
+  All files are access from the web by using the "CACHEREAD" option.
+
+  ------------------------------------------------------------------------
+  ------------------------------------------------------------------------
+
+  1. Automatic building of ALICE ESD class declarations and dictionaries.
+  ------------------------------------------------------------------------
+
+  ALICE ESD is a TTree containing tracks and other event-related
+  information with one entry per event. All these classes are part of
+  the AliROOT offline framework and are not available to standard
+  ROOT.
+
+  To be able to access the event data in a natural way, by using
+  data-members of classes and object containers, the header files and
+  class dictionaries are automatically generated from the
+  TStreamerInfo classes stored in the ESD file by using the
+  TFile::MakeProject() function. The header files and a shared library
+  is created in the aliesd/ directory and can be loaded dynamically
+  into the ROOT session.
+
+  See alice_esd_loadlib().
+  
+
+  2. Creation of simple GUI for event navigation.
+  ------------------------------------------------------------------------
+
+  Most common use of the event-display is to browse through a
+  collection of events. Thus a simple GUI allowing this is created in
+  the function make_gui().
+
+  Eve uses the configurable ROOT-browser as its main window and so we
+  create an extra tab in the left working area of the browser and
+  provide backward/forward buttons.
+
+
+  3. Event-navigation functions.
+  ------------------------------------------------------------------------
+
+  As this is a simple macro, we store the information about the
+  current event in the global variable 'Int_t esd_event_id'. The
+  functions for event-navigation simply modify this variable and call
+  the load_event() function which does the following:
+  1. drop the old visualization objects;
+  2. retrieve given event from the ESD tree;
+  3. call alice_esd_read() function to create visualization objects
+     for the new event.
+
+
+  4. Reading of ALICE data and creation of visualization objects.
+  ------------------------------------------------------------------------
+
+  This is performed in alice_esd_read() function, with the following
+  steps:
+  1. create the track container object - TEveTrackList;
+  2. iterate over the ESD tracks, create TEveTrack objects and append
+     them to the container;
+  3. instruct the container to extrapolate the tracks and set their
+     visual attributes.
 
 */
+
 
 
 // Forward declarations.
@@ -125,19 +195,17 @@ Bool_t alice_esd_loadlib(const char* file, const char* project)
    // Make sure that shared library created from the auto-generated project
    // files exists and load it.
 
-   //TString lib(Form("%s/%s.so", project, project));
+   TString lib(Form("%s/%s.%s", project, project, gSystem->GetSoExt()));
 
-   if (gSystem->AccessPathName(project, kReadPermission)) {
+   if (gSystem->AccessPathName(lib, kReadPermission)) {
       TFile* f = TFile::Open(file, "CACHEREAD");
       if (f == 0)
          return kFALSE;
-      f->MakeProject(project, "*", "recreate+");
+      f->MakeProject(project, "*", "++");
       f->Close();
       delete f;
    }
-   gROOT->ProcessLine(Form(".L %s/%sProjectSource.cxx+",project,project));
-   return 1;
-   //return gSystem->Load(lib) >= 0;
+   return gSystem->Load(lib) >= 0;
 }
 
 //______________________________________________________________________________
