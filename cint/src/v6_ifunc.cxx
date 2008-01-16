@@ -6798,7 +6798,6 @@ struct G__ifunc_table* G__get_methodhandle(char* funcname, char* argtype, G__ifu
    int hash;
    int temp;
    struct G__funclist *funclist = (struct G__funclist*)NULL;
-   int match;
 
    int store_def_tagnum = G__def_tagnum;
    int store_tagdefining = G__tagdefining;
@@ -6859,14 +6858,17 @@ struct G__ifunc_table* G__get_methodhandle(char* funcname, char* argtype, G__ifu
       }
       G__funclist_delete(funclist);
 
-      for (match = G__EXACT;match <= G__STDCONV;match++) {
-         ifunc = G__get_ifunchandle_base(funcname, &para, hash, p_ifunc, pifn, poffset
-                                         , G__PUBLIC_PROTECTED_PRIVATE
-                                         , match
-                                         , withInheritance
-                                        );
-         if (ifunc) return G__get_ifunc_ref(ifunc);
-      }
+      // FIXME: Remove this code for now, we should not attempt conversions
+      //        here, we have specified an exact prototype.
+      //
+      //for (int match = G__EXACT;match <= G__STDCONV;match++) {
+      //   ifunc = G__get_ifunchandle_base(funcname, &para, hash, p_ifunc, pifn, poffset
+      //                                   , G__PUBLIC_PROTECTED_PRIVATE
+      //                                   , match
+      //                                   , withInheritance
+      //                                  );
+      //   if (ifunc) return G__get_ifunc_ref(ifunc);
+      //}
    }
 
    return G__get_ifunc_ref(ifunc);
@@ -6881,7 +6883,6 @@ struct G__ifunc_table* G__get_methodhandle2(char* funcname, G__param* libp, G__i
    int hash;
    int temp;
    struct G__funclist* funclist = 0;
-   int match;
    int store_def_tagnum = G__def_tagnum;
    int store_tagdefining = G__tagdefining;
    G__def_tagnum = p_ifunc->tagnum;
@@ -6939,7 +6940,10 @@ struct G__ifunc_table* G__get_methodhandle2(char* funcname, G__param* libp, G__i
       }
       G__funclist_delete(funclist);
 
-      for (match = G__EXACT;match <= G__STDCONV;match++) {
+      //
+      // Now see if we can call it using the standard type conversions.
+      //
+      for (int match = G__EXACT;match <= G__STDCONV;match++) {
          ifunc = G__get_ifunchandle_base(funcname, libp, hash, p_ifunc, pifn, poffset
                                          , G__PUBLIC_PROTECTED_PRIVATE
                                          , match
