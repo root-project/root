@@ -76,8 +76,8 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    // CASE 2: T->GetEntry(entry) is called, TF has a TreeIndex
    //         the expressions given in major/minorname of TF are used
    //         to compute the value pair major,minor with the data in T.
-   //         TF->GetEntry(major,minor) is then called (tricky case!)
-   // CASE 3: T->GetEntry(major,minor) is called.
+   //         TF->GetEntryWithIndex(major,minor) is then called (tricky case!)
+   // CASE 3: T->GetEntryWithIndex(major,minor) is called.
    //         It is assumed that both T and TF have a TreeIndex built using
    //         the same major and minor name.
    //
