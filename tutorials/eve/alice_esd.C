@@ -125,17 +125,19 @@ Bool_t alice_esd_loadlib(const char* file, const char* project)
    // Make sure that shared library created from the auto-generated project
    // files exists and load it.
 
-   TString lib(Form("%s/%s.so", project, project));
+   //TString lib(Form("%s/%s.so", project, project));
 
-   if (gSystem->AccessPathName(lib, kReadPermission)) {
+   if (gSystem->AccessPathName(project, kReadPermission)) {
       TFile* f = TFile::Open(file, "CACHEREAD");
       if (f == 0)
          return kFALSE;
-      f->MakeProject(project, "*", "+");
+      f->MakeProject(project, "*", "recreate+");
       f->Close();
       delete f;
    }
-   return gSystem->Load(lib) >= 0;
+   gROOT->ProcessLine(Form(".L %s/%sProjectSource.cxx+",project,project));
+   return 1;
+   //return gSystem->Load(lib) >= 0;
 }
 
 //______________________________________________________________________________

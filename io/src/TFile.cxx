@@ -100,6 +100,7 @@
 #include "TMathBase.h"
 #include "TObjString.h"
 #include "TStopwatch.h"
+#include "compiledata.h"
 #include <cmath>
 
 TFile *gFile;                 //Pointer to current file
@@ -2112,6 +2113,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    FILE *sfp = fopen(spath.Data(),"w");
    fprintf(sfp, "#include \"%sProjectHeaders.h\"\n\n",dirname );
    fprintf(sfp, "#include \"%sLinkDef.h\"\n\n",dirname );
+   fprintf(sfp, "#include \"%sProjectDict.cxx\"\n\n",dirname );
    fclose( sfp );
 
    // loop on all TStreamerInfo classes
@@ -2202,11 +2204,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    TString sdirname(dirname);
 
    TString cmd = gSystem->GetMakeSharedLib();
-   TString sources( sdirname+"ProjectDict.cxx " );
-   sources.Append( sdirname+"ProjectSource.cxx ");
+   TString sources( sdirname+"ProjectSource.cxx ");
    cmd.ReplaceAll("$SourceFiles",sources.Data());
-   TString object( sdirname+"ProjectDict."+gSystem->GetObjExt() );
-   object.Append( " " + sdirname + "ProjectSource." );
+   TString object( sdirname + "ProjectSource." );
    object.Append( gSystem->GetObjExt() );
    cmd.ReplaceAll("$ObjectFiles", object.Data());
    cmd.ReplaceAll("$IncludePath",TString(gSystem->GetIncludePath()) + " -I" + dirname);
@@ -2214,6 +2214,14 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    cmd.ReplaceAll("$LinkedLibs",gSystem->GetLibraries("","SDL"));
    cmd.ReplaceAll("$LibName",sdirname);
    cmd.ReplaceAll("$BuildDir",".");
+   TString sOpt;
+   TString rootbuild = ROOTBUILD;
+   if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
+      sOpt = gSystem->GetFlagsOpt();
+   } else {
+      sOpt = gSystem->GetFlagsDebug();
+   }
+   cmd.ReplaceAll("$Opt", sOpt);
 
    fprintf(fpMAKE,"%s\n",cmd.Data());
 
