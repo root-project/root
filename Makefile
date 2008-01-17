@@ -722,7 +722,7 @@ rootdrpm:
 	fi
 
 clean::
-	@rm -f __compiledata *~ core $(PCHFILE)
+	@rm -f __compiledata *~ core include/precompile.*
 
 ifeq ($(CXX),KCC)
 clean::
