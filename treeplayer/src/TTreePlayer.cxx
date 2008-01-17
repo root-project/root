@@ -388,7 +388,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentrie
    nentries = GetEntriesToProcess(firstentry, nentries);
 
    // Compile selection expression if there is one
-   TTreeFormula *select = 0; // no need to interfer with fSelect since we
+   TTreeFormula *select = 0; // no need to interfere with fSelect since we
                              // handle the loop explicitly below and can call
                              // UpdateFormulaLeaves ourselves.
    if (strlen(selection)) {
@@ -458,7 +458,7 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
    // If the branch name can not be used a proper C++ symbol name,
    // it will be modified as follow:
    //    - white spaces are removed
-   //    - if the leadind character is not a letter, an underscore is inserted
+   //    - if the leading character is not a letter, an underscore is inserted
    //    - < and > are replace by underscores
    //    - * is replaced by st
    //    - & is replaced by rf
@@ -556,7 +556,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  Examples:
 //      selection1 = "x<y && sqrt(z)>3.2"
 //      selection2 = "(x+y)*(sqrt(z)>3.2"
-//  selection1 returns a weigth = 0 or 1
+//  selection1 returns a weight = 0 or 1
 //  selection2 returns a weight = x+y if sqrt(z)>3.2
 //             returns a weight = 0 otherwise.
 //
@@ -771,7 +771,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  Length$(formula): return the total number of element of the formula given as a
 //                    parameter.
 //  Sum$(formula): return the sum of the value of the elements of the formula given
-//                    as a parameter.  For eaxmple the mean for all the elements in
+//                    as a parameter.  For example the mean for all the elements in
 //                    one entry can be calculated with:
 //                Sum$(formula)/Length$(formula)
 //
@@ -787,7 +787,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
 //                 will draw the sum arr3 for the index 0 to 2 only if the
 //                 actual_size_of_arr3 is greater or equal to 3.
-//                 Note that the array in 'primary' is flatened/linearilized thus using
+//                 Note that the array in 'primary' is flattened/linearized thus using
 //                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
 //                 to yield the expected results.  To visualize a bit more what elements
 //                 would be matched by TTree::Draw, TTree::Scan can be used:
@@ -833,14 +833,14 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //     Making a Profile histogram
 //     ==========================
 //  In case of a 2-Dim expression, one can generate a TProfile histogram
-//  instead of a TH2F histogram by specyfying option=prof or option=profs.
+//  instead of a TH2F histogram by specifying option=prof or option=profs.
 //  The option=prof is automatically selected in case of y:x>>pf
 //  where pf is an existing TProfile histogram.
 //
 //     Making a 2D Profile histogram
 //     ==========================
 //  In case of a 3-Dim expression, one can generate a TProfile2D histogram
-//  instead of a TH3F histogram by specyfying option=prof or option=profs.
+//  instead of a TH3F histogram by specifying option=prof or option=profs.
 //  The option=prof is automatically selected in case of z:y:x>>pf
 //  where pf is an existing TProfile2D histogram.
 //
@@ -1140,7 +1140,7 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
 //   =============
 // The function returns the status of the histogram fit (see TH1::Fit)
 // If no entries were selected, the function returns -1;
-//   (ie fitResult is null is the fit is OK)
+//   (i.e. fitResult is null if the fit is OK)
 
    Int_t nch = strlen(option) + 10;
    char *opt = new char[nch];
@@ -2077,7 +2077,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 // and anal.C the name of the file created by this function.
 //
 // NOTE: Since the implementation of this function, a new and better
-//       function TTree::MakeClass() has been developped.
+//       function TTree::MakeClass() has been developed.
 
 // Connect output file
    TString tfile;
@@ -2315,7 +2315,7 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
    //    nohist : indicates that the generated ProcessFill should not
    //             fill the histogram.
    //
-   // 'maxUnrolling' controls how deep in the class hierachy does the
+   // 'maxUnrolling' controls how deep in the class hierarchy does the
    // system 'unroll' class that are not split.  'unrolling' a class
    // will allow direct access to its data members a class (this
    // emulates the behavior of TTreeFormula).
@@ -2330,7 +2330,7 @@ Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
    // For example with Event.root, if
    //    Double_t somepx = fTracks.fPx[2];
    // is executed by one of the method of the skeleton,
-   // somepx will updated with the current value of fPx of the 3rd track.
+   // somepx will be updated with the current value of fPx of the 3rd track.
    //
    // Both macrofilename and the optional cutfilename are expected to be
    // the name of source files which contain at least a free standing
@@ -2442,7 +2442,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //   If option "p" and "d" print results of analysis
 //   If option "p" and "h" generate standard histograms
 //   If option "p" and "c" generate code of conversion functions
-//   return a pointer to the TPrincipal object. It is the user responsability
+//   return a pointer to the TPrincipal object. It is the user responsibility
 //   to delete this object.
 //   The option default value is "np"
 //
@@ -2587,7 +2587,7 @@ Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t ne
    // filename must contain a valid class implementation derived from TSelector,
    // where TSelector has the following member functions:
    //
-   //    Begin():        called everytime a loop on the tree starts,
+   //    Begin():        called every time a loop on the tree starts,
    //                    a convenient place to create your histograms.
    //    SlaveBegin():   called after Begin(), when on PROOF called only on the
    //                    slave servers.
@@ -2664,7 +2664,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    //
    //   The TSelector class has the following member functions:
    //
-   //    Begin():        called everytime a loop on the tree starts,
+   //    Begin():        called every time a loop on the tree starts,
    //                    a convenient place to create your histograms.
    //    SlaveBegin():   called after Begin(), when on PROOF called only on the
    //                    slave servers.
@@ -2687,8 +2687,8 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
 
    selector->SetOption(option);
 
-   selector->Begin(fTree);       //<===call user initialisation function
-   selector->SlaveBegin(fTree);  //<===call user initialisation function
+   selector->Begin(fTree);       //<===call user initialization function
+   selector->SlaveBegin(fTree);  //<===call user initialization function
    if (selector->Version() >= 2)
       selector->Init(fTree);
    selector->Notify();
@@ -2821,8 +2821,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    // *        x *        6 * arr1[3][0]*           *
    // *        x *        7 * arr1[3][1]*           *
    //
-   // However, if there is a selection criterium which is an array, then
-   // all the formulas will be synchronized with the selection criterium
+   // However, if there is a selection criterion which is an array, then
+   // all the formulas will be synchronized with the selection criterion
    // (see TTreePlayer::DrawSelect for more information).
    //
    // The options string can contains the following parameters:
@@ -3464,7 +3464,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return 0; }
 
    // Spin through the data to select out the events of interest
-   // Make sure that the arrays V1,etc are created large enough to accomodate
+   // Make sure that the arrays V1,etc are created large enough to accommodate
    // all entries
    Long64_t oldEstimate = fTree->GetEstimate();
    Long64_t nent = fTree->GetEntriesFriend();
@@ -3498,7 +3498,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 
    TString opt = option;
    opt.ToLower();
-   // Some initialisations
+   // Some initializations
    if (!opt.Contains("v")) {
       arglist[0] = -1;
       tFitter->ExecuteCommand("SET PRINT", arglist,1);
