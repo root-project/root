@@ -1,10 +1,9 @@
 void runPyClassTest() {
+// The higher warning ignore level is to suppress warnings about
+// classes already being in the class table (on Mac).
    int eil = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
-   gSystem->Load( "libPyROOT" );
-   TPython::Exec( "import sys" );
    TPython::LoadMacro( "MyPyClass.py" );
-   gErrorIgnoreLevel = eil;
 
    MyPyClass m;
    printf( "string (aap): %s\n", (char*)m.gime( "aap" ) );

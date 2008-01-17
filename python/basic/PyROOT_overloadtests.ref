@@ -1,8 +1,9 @@
 Test functions overloaded on different ROOT clases ... ok
-Test functions overloaded on void* and non-existing classes. ... ok
+Test functions overloaded on void* and non-existing classes ... ok
+Test that unknown* is preferred over unknown& ... ok
 Test functions overloaded on different arrays ... ok
 Test overloads using TMath::Mean(), TMath::Median ... ok
-Test overloads on int/doubles. ... ok
+Test overloads on int/doubles ... ok
 
 ----------------------------------------------------------------------
 

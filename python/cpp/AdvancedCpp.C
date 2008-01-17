@@ -1,3 +1,10 @@
+/*
+  File: roottest/python/cpp/AdvancedCpp.C
+  Author: WLavrijsen@lbl.gov
+  Created: 06/04/05
+  Last: 01/03/08
+*/
+
 class A {
 public:
    A() { m_a = 1; m_da = 1.1; }
@@ -69,3 +76,14 @@ namespace {
 void SetIntThroughRef( Int_t& i, Int_t val ) { i = val; }
 void SetLongThroughRef( Long_t& l, Long_t val ) { l = val; }
 void SetDoubleThroughRef( Double_t& d, Double_t val ) { d = val; }
+
+// abstract class should not be instantiatable
+class MyAbstractClass {
+public:
+   virtual void MyVirtualMethod() = 0;
+};
+
+class MyConcreteClass : public MyAbstractClass {
+public:
+   virtual void MyVirtualMethod() {}
+};

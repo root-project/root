@@ -1,8 +1,8 @@
 void runPyAPITest() {
+// The higher warning ignore level is to suppress warnings about
+// classes already being in the class table (on Mac).
    int eil = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
-   gSystem->Load( "libPyROOT" );
-   gErrorIgnoreLevel = eil;
 
    TObject* o = new TObject;
    void* a = TPython::ObjectProxy_FromVoidPtr( o, "TObject" );

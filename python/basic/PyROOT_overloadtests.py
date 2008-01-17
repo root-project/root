@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 03/09/05
+# Last: 01/03/08
 
 """Overload unit tests for PyROOT package."""
 
@@ -28,7 +28,7 @@ class Overloads1ClassArrayTestCase( unittest.TestCase ):
       self.assertEqual( MyD().GetInt( MyB() ), 13 )
 
    def test2ClassOverloads( self ):
-      """Test functions overloaded on void* and non-existing classes."""
+      """Test functions overloaded on void* and non-existing classes"""
 
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
@@ -39,7 +39,17 @@ class Overloads1ClassArrayTestCase( unittest.TestCase ):
       self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
       ROOT.gErrorIgnoreLevel = oldval
 
-   def test3ArrayOverloads( self ):
+   def test3ClassOverloadsAmongUnknowns( self ):
+      """Test that unknown* is preferred over unknown&"""
+
+      import ROOT
+      oldval = ROOT.gErrorIgnoreLevel
+      ROOT.gErrorIgnoreLevel = 3000
+      self.assertEqual( MyOverloads2().call( BB() ), "BBptr" )
+      self.assertEqual( MyOverloads2().call( DD(), 1 ), "DDptr" )
+      ROOT.gErrorIgnoreLevel = oldval
+
+   def test4ArrayOverloads( self ):
       """Test functions overloaded on different arrays"""
 
       ai = array( 'i', [ 525252 ] )
@@ -84,7 +94,7 @@ class Overloads2TMathTestCase( unittest.TestCase ):
       self.assertRaises( TypeError, TMath.Mean, len(aL), aL )
 
    def test2DoubleIntOverloads( self ):
-      """Test overloads on int/doubles."""
+      """Test overloads on int/doubles"""
 
       self.assertEqual( MyOverloads().call( 1 ), "int" )
       self.assertEqual( MyOverloads().call( 1. ), "double" )

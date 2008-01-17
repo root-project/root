@@ -1,3 +1,12 @@
+/*
+  File: roottest/python/basic/Operators.C
+  Author: WLavrijsen@lbl.gov
+  Created: 04/15/05
+  Last: 01/07/08
+*/
+
+#include <iostream>
+
 class Number  {
 public:
    Number() { m_int = 0; }
@@ -17,12 +26,16 @@ public:
    Number& operator/=( const Number& n ) { m_int /= n.m_int; return *this; }
    Number& operator%=( const Number& n ) { m_int %= n.m_int; return *this; }
 
+   Number operator-() { return Number( -m_int ); }
+
    bool operator<( const Number& n ) const { return m_int < n.m_int; }
    bool operator>( const Number& n ) const { return m_int > n.m_int; }
    bool operator<=( const Number& n ) const { return m_int <= n.m_int; }
    bool operator>=( const Number& n ) const { return m_int >= n.m_int; }
    bool operator!=( const Number& n ) const { return m_int != n.m_int; }
    bool operator==( const Number& n ) const { return m_int == n.m_int; }
+
+   operator bool() { return m_int != 0; }
 
    Number operator&( const Number& n ) const { return Number( m_int & n.m_int ); }
    Number operator|( const Number& n ) const { return Number( m_int | n.m_int ); }

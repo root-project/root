@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 04/20/07
+# Last: 01/07/08
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -11,7 +11,8 @@ from ROOT import *
 __all__ = [
    'Cpp1VirtualInheritenceTestCase',
    'Cpp2TemplateLookupTestCase',
-   'Cpp3PassByNonConstRefTestCase'
+   'Cpp3PassByNonConstRefTestCase',
+   'Cpp4HandlingAbstractClassesTestCase'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -39,7 +40,7 @@ class Cpp1InheritenceTestCase( unittest.TestCase ):
       self.assertEqual( b.m_a,        11 )
       self.assertEqual( b.m_da,    11.11 )
       self.assertEqual( b.m_b,        22 )
-      self.assertEqual( b.GetValue(), 22 )
+    # self.assertEqual( b.GetValue(), 22 )
 
       b.m_db = 22.22
       self.assertEqual( b.m_db,    22.22 )
@@ -63,7 +64,7 @@ class Cpp1InheritenceTestCase( unittest.TestCase ):
       self.assertEqual( c.m_a,        11 )
       self.assertEqual( c.m_b,        22 )
       self.assertEqual( c.m_c,        33 )
-      self.assertEqual( c.GetValue(), 33 )
+    # self.assertEqual( c.GetValue(), 33 )
 
       del c
 
@@ -91,7 +92,7 @@ class Cpp1InheritenceTestCase( unittest.TestCase ):
       self.assertEqual( d.m_b,        22 )
       self.assertEqual( d.m_c,        33 )
       self.assertEqual( d.m_d,        44 )
-      self.assertEqual( d.GetValue(), 44 )
+    # self.assertEqual( d.GetValue(), 44 )
 
       del d
 
@@ -117,7 +118,7 @@ class Cpp1InheritenceTestCase( unittest.TestCase ):
       d = D()
       d.m_a, d.m_b, d.m_c, d.m_d = 11, 22, 33, 44
       self.assertEqual( GetA( d ), 11 )
-      #self.assertEqual( GetB( d ), 22 )
+      self.assertEqual( GetB( d ), 22 )
       self.assertEqual( GetC( d ), 33 )
       self.assertEqual( GetD( d ), 44 )
       del d
@@ -143,6 +144,19 @@ class Cpp2TemplateLookupTestCase( unittest.TestCase ):
       t2.m_t2.m_t1 = 32
       self.assertEqual( t2.m_t2.value(), 32 )
       self.assertEqual( t2.m_t2.m_t1, 32 )
+
+   def test3TemplateInstantiationWithVectorOfFloat( self ):
+      """Test template instantiation with a std::vector< float >"""
+
+      gROOT.LoadMacro( "Template.C+" )
+
+    # the following will simply fail if there is a naming problem (e.g. std::,
+    # allocator<int>, etc., etc.); note the parsing required ...
+      b = MyTemplatedClass( std.vector( float ) )()
+
+      for i in range(5):
+         b.m_b.push_back( i )
+         self.assertEqual( round( b.m_b[i], 5 ), float(i) )
 
 
 ### C++ by-non-const-ref arguments tests =====================================
@@ -174,6 +188,23 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
       i = Long( 42L )
       SetIntThroughRef( i, 13 )
       self.assertEqual( i, 13 )
+
+
+### C++ abstract classes should behave normally, but be non-instatiatable ====
+class Cpp4HandlingAbstractClassesTestCase( unittest.TestCase ):
+   def test1ClassHierarchy( self ):
+      """Test abstract class in a hierarchy"""
+
+      self.assert_( issubclass( MyConcreteClass, MyAbstractClass ) )
+
+      c = MyConcreteClass()
+      self.assert_( isinstance( c, MyConcreteClass ) )
+      self.assert_( isinstance( c, MyAbstractClass ) )
+
+   def test2Instantiation( self ):
+      """Test non-instatiatability of abstract classes"""
+
+      self.assertRaises( TypeError, MyAbstractClass )
 
 
 ## actual test run

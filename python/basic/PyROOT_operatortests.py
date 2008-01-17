@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_operatortests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 06/04/05
+# Last: 01/07/08
 
 """C++ operators interface unit tests for PyROOT package."""
 
@@ -38,7 +38,10 @@ class Cpp1OperatorsTestCase( unittest.TestCase ):
       n -= Number(10)
       n *= Number(10)
       n /= Number(2)
-      self.failUnlessEqual(n ,Number(100) )
+      self.failUnlessEqual( n ,Number(100) )
+
+      nn = -n;
+      self.failUnlessEqual( nn, Number( -100 ) )
 
    def test3ComparisonOperators( self ):
       """Test overloading of comparison operators"""
@@ -49,6 +52,15 @@ class Cpp1OperatorsTestCase( unittest.TestCase ):
       self.failUnlessEqual( Number(20) <= Number(10), 0 )
       self.failUnlessEqual( Number(20) != Number(10), 1 )
       self.failUnlessEqual( Number(20) == Number(10), 0 )
+
+   def test4BooleanOperator( self ):
+      """Test implementation of operator bool"""
+
+      n = Number(20)
+      self.assert_( n )
+
+      n = Number( 0 )
+      self.assert_( not n )
 
 
 ## actual test run

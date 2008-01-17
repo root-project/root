@@ -2,7 +2,7 @@
   File: roottest/python/basic/Overloads.C
   Author: WLavrijsen@lbl.gov
   Created: 04/15/05
-  Last: 03/08/06
+  Last: 01/03/08
 */
 
 #include "TError.h"
@@ -57,4 +57,14 @@ public:
    std::string call( int ) { return "int"; }
    std::string call1( int ) { return "int"; }
    std::string call1( double ) { return "double"; }
+};
+
+class MyOverloads2 {
+public:
+   MyOverloads2() {}
+   std::string call( const BB& ) { return "BBref"; }
+   std::string call( const BB* ) { return "BBptr"; }
+
+   std::string call( const DD*, int ) { return "DDptr"; }
+   std::string call( const DD&, int ) { return "DDref"; }
 };

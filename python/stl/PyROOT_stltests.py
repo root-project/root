@@ -60,6 +60,13 @@ class STL1VectorTestCase( unittest.TestCase ):
 
       self.assertEqual( len(a), self.N )
 
+   def test4EmptyVectorType( self ):
+      """Test behavior of empty vector<int> (part of cintdlls)"""
+
+      a = std.vector( int )()
+      for arg in a:
+         pass
+
 
 ### STL list test case =======================================================
 class STL2ListTestCase( unittest.TestCase ):
@@ -78,6 +85,16 @@ class STL2ListTestCase( unittest.TestCase ):
       ll = list(a)
       for i in range(self.N):
          self.assertEqual( ll[i], i )
+
+      for val in a:
+         self.assertEqual( ll[ ll.index(val) ], val )
+
+   def test2EmptyListType( self ):
+      """Test behavior of empty list<int> (part of cintdlls)"""
+
+      a = std.list( int )()
+      for arg in a:
+         pass
 
 
 ### STL map test case ========================================================
@@ -119,6 +136,13 @@ class STL3MapTestCase( unittest.TestCase ):
          self.assertEqual( a[str(i)], i )
 
       self.assertEqual( len(a), self.N )
+
+   def test3EmptyMapType( self ):
+      """Test behavior of empty map<int,int> (part of cintdlls)"""
+
+      m = std.map( int, int )()
+      for key, value in m:
+         pass
 
 
 ### Protocol mapping for an STL like class ===================================
