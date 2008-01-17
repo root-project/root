@@ -119,6 +119,13 @@ template< class T, class M >
 PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
+// do not allow instantiation of abstract classes
+   if ( this->GetClass().IsAbstract() ) {
+      PyErr_Format( PyExc_TypeError,
+         "%s is abstract and can not be instantiated", this->GetClass().Name().c_str() );
+      return 0;
+   }
+
 // setup as necessary
    if ( ! this->Initialize() )
       return 0;                              // important: 0, not Py_None

@@ -244,7 +244,8 @@ PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name )
 std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
 {
 // Return name of type described by fClass
-   if ( ! fClass.GetClass() ) {
+   if ( ! fClass.GetClass() || ! fClass->Property() ) {
+   // fundamental types have no class, and unknown classes have no property
       std::string name = fName;
 
       if ( ! ( mod & ( ROOT::Reflex::QUALIFIED | ROOT::Reflex::Q ) ) )
@@ -258,6 +259,10 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
 
    if ( mod & ( ROOT::Reflex::FINAL | ROOT::Reflex::F ) ) {
       G__ClassInfo* clInfo = fClass->GetClassInfo();
+      if ( mod & ( ROOT::Reflex::SCOPED | ROOT::Reflex::S ) )
+         return clInfo ? clInfo->Fullname() : fClass->GetName();
+
+   // unscoped name ...
       std::string actual = clInfo ? clInfo->Name() : fClass->GetName();
 
    // in case of missing dictionaries, the scope won't have been stripped
@@ -270,6 +275,7 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
       }
 
       return actual;
+
    } else if ( ! ( mod & ( ROOT::Reflex::SCOPED | ROOT::Reflex::S ) ) ) {
       G__ClassInfo* clInfo = fClass->GetClassInfo();
       return clInfo ? clInfo->Name() : fClass->GetName();
@@ -381,6 +387,16 @@ Bool_t PyROOT::TScopeAdapter::IsNamespace() const
 // test if this scope represents a namespace
    if ( fClass.GetClass() )
       return fClass->Property() & G__BIT_ISNAMESPACE;
+
+   return kFALSE;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::TScopeAdapter::IsAbstract() const
+{
+// test if this scope represents an abstract class
+   if ( fClass.GetClass() )
+      return fClass->Property() & kIsAbstract;   // assume set only for classes
 
    return kFALSE;
 }

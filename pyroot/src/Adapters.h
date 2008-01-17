@@ -131,6 +131,9 @@ public:
    Bool_t IsStruct() const;
    Bool_t IsNamespace() const;
 
+// note: in Reflex, part of Type, not Scope
+   Bool_t IsAbstract() const;
+
    void* Id() const { return fClass.GetClass(); }
 
 private:

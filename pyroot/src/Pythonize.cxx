@@ -128,7 +128,6 @@ namespace {
 //____________________________________________________________________________
    PyObject* PyStyleIndex( PyObject* self, PyObject* index )
    {
-   // TODO: verify and perhaps fix this to use PyInt_AsSsize_t
       Py_ssize_t idx = PyInt_AsSsize_t( index );
       if ( idx == (Py_ssize_t)-1 && PyErr_Occurred() )
          return 0;
@@ -780,16 +779,8 @@ namespace {
       PyObject* iter = CallPySelfMethod( args, "begin", "O" );
       if ( iter ) {
          PyObject* end = CallPySelfMethod( args, "end", "O" );
-         if ( end ) {
-            if ( *(void**)((ObjectProxy*)end)->fObject == *(void**)((ObjectProxy*)iter)->fObject ) {
-            // no iter if there are no entries
-               Py_DECREF( iter );
-               iter = 0;
-               PyErr_SetString( PyExc_StopIteration, "" );
-            } else {
-               PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
-            }
-         }
+         if ( end )
+            PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
          Py_XDECREF( end );
       }
       return iter;
@@ -925,26 +916,31 @@ namespace {
          return 0;
 
       PyObject* next = 0;
-
       PyObject* last = PyObject_GetAttrString( self, const_cast< char* >( "end" ) );
+
       if ( last != 0 ) {
-         PyObject* dummy = PyInt_FromLong( 1l );
-         PyObject* iter = CallPyObjMethod( self, "__postinc__", dummy );
-         Py_DECREF( dummy );
-         if ( iter != 0 ) {
-            if ( *(void**)((ObjectProxy*)last)->fObject == *(void**)((ObjectProxy*)iter)->fObject )
-               PyErr_SetString( PyExc_StopIteration, "" );
-            else
-               next = CallPyObjMethod( iter, "__deref__" );
-         } else {
+      // handle special case of empty container (i.e. self is end)
+         if ( *(void**)((ObjectProxy*)last)->fObject == *(void**)((ObjectProxy*)self)->fObject ) {
             PyErr_SetString( PyExc_StopIteration, "" );
+         } else {
+            PyObject* dummy = PyInt_FromLong( 1l );
+            PyObject* iter = CallPyObjMethod( self, "__postinc__", dummy );
+            Py_DECREF( dummy );
+            if ( iter != 0 ) {
+               if ( *(void**)((ObjectProxy*)last)->fObject == *(void**)((ObjectProxy*)iter)->fObject )
+                  PyErr_SetString( PyExc_StopIteration, "" );
+               else
+                  next = CallPyObjMethod( iter, "__deref__" );
+            } else {
+               PyErr_SetString( PyExc_StopIteration, "" );
+            }
+            Py_XDECREF( iter );
          }
-         Py_XDECREF( iter );
       } else {
          PyErr_SetString( PyExc_StopIteration, "" );
       }
-      Py_XDECREF( last );
 
+      Py_XDECREF( last );
       return next;
    }
 
@@ -1286,32 +1282,24 @@ namespace {
       PyObject* result = 0;
 
    // retrieve function information
-      G__ifunc_table* ifunc = 0;
-      long index = 0;
+      Long_t npar = 0;
+      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( res->tagnum, &npar );
+      if ( ! pyfunc )
+         return 0;
 
-   // from cint/src/common.h
-#define G__RECMEMFUNCENV      (long)0x7fff0036
-      G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
+   // prepare arguments and call
+      PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
+         (double*)G__int(libp->para[0]), 4 );
 
-      G__MethodInfo mi; mi.Init((long)ifunc, index, 0);
-      CallInfo_t* ci = (CallInfo_t*)mi.GetUserParam();
+      if ( npar != 0 ) {
+         PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
+            (double*)G__int(libp->para[1]), npar );
+         result = PyObject_CallFunction( pyfunc, (char*)"OO", arg1, arg2 );
+         Py_DECREF( arg2 );
+      } else
+         result = PyObject_CallFunction( pyfunc, (char*)"O", arg1 );
 
-      if ( ci->first != 0 ) {
-      // prepare arguments and call
-         PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
-            (double*)G__int(libp->para[0]), 4 );
-
-         if ( ci->second != 0 ) {
-            PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
-               (double*)G__int(libp->para[1]), ci->second );
-
-            result = PyObject_CallFunction( ci->first, (char*)"OO", arg1, arg2 );
-            Py_DECREF( arg2 );
-         } else
-            result = PyObject_CallFunction( ci->first, (char*)"O", arg1 );
-
-         Py_DECREF( arg1 );
-      }
+      Py_DECREF( arg1 );
 
    // translate result, throw if an error has occurred
       double d = 0.;
@@ -1469,28 +1457,14 @@ namespace {
          if ( PyErr_Occurred() )
             return 0;
 
-      // build placeholder, get CINT info
-         G__MethodInfo m = Register( (void*)TFNPyCallback, name, "double*, double*", "D" );
- 
       // verify/setup the callback parameters
-         int npar = 0;             // default value if not given
+         Long_t npar = 0;             // default value if not given
          if ( argc == reqNArgs+1 )
             npar = PyInt_AsLong( PyTuple_GET_ITEM( args, reqNArgs ) );
 
-         if ( ! m.GetUserParam() ) {
-         // no func yet, install current one
-            Py_INCREF( pyfunc );
-            m.SetUserParam((void*)new pairPyObjInt_t( pyfunc, npar ));
-         } else {
-         // old func: flip if different, keep if same
-            pairPyObjInt_t* oldp = (pairPyObjInt_t*)m.GetUserParam();
-            if ( oldp->first != pyfunc ) {
-               Py_INCREF( pyfunc ); Py_DECREF( oldp->first );
-               oldp->first = pyfunc;
-            }
-
-            oldp->second = npar;             // setting is quicker than checking
-         }
+      // registration with CINT
+         Long_t fid = Utility::InstallMethod(
+            0, pyfunc, name, "double*, double*", (void*)TFNPyCallback, 2, npar );
 
       // get constructor
          MethodProxy* method =
@@ -1505,8 +1479,7 @@ namespace {
                Py_INCREF( item );
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
-               PyTuple_SET_ITEM( newArgs, iarg,
-                  PyCObject_FromVoidPtr( (void*)m.PointerToFunc(), NULL ) );
+               PyTuple_SET_ITEM( newArgs, iarg, PyCObject_FromVoidPtr( (void*)fid, NULL ) );
             }
          }
 

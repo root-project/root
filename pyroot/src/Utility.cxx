@@ -22,6 +22,7 @@
 #include <string.h>
 #include <algorithm>
 #include <list>
+#include <utility>
 
 
 //- data _____________________________________________________________________
@@ -45,9 +46,10 @@ namespace {
          // gC2POperatorMapping[ "[]" ]  = "__getitem__";   // depends on return type
          // gC2POperatorMapping[ "[]" ]  = "__setitem__";   // id.
          // gC2POperatorMapping[ "()" ]  = "__call__";      // depends on return type
-         gC2POperatorMapping[ "+" ]   = "__add__";
-         gC2POperatorMapping[ "-" ]   = "__sub__";
+         // gC2POperatorMapping[ "+" ]   = "__add__";       // depends on # of args (see __pos__)
+         // gC2POperatorMapping[ "-" ]   = "__sub__";       // id. (eq. __neg__)
          // gC2POperatorMapping[ "*" ]   = "__mul__";       // double meaning in C++
+
          gC2POperatorMapping[ "/" ]   = "__div__";
          gC2POperatorMapping[ "%" ]   = "__mod__";
          gC2POperatorMapping[ "**" ]  = "__pow__";
@@ -56,11 +58,12 @@ namespace {
          gC2POperatorMapping[ "&" ]   = "__and__";
          gC2POperatorMapping[ "|" ]   = "__or__";
          gC2POperatorMapping[ "^" ]   = "__xor__";
+         gC2POperatorMapping[ "~" ]   = "__inv__";
          gC2POperatorMapping[ "+=" ]  = "__iadd__";
          gC2POperatorMapping[ "-=" ]  = "__isub__";
          gC2POperatorMapping[ "*=" ]  = "__imul__";
          gC2POperatorMapping[ "/=" ]  = "__idiv__";
-         gC2POperatorMapping[ "/=" ]  = "__imod__";
+         gC2POperatorMapping[ "%=" ]  = "__imod__";
          gC2POperatorMapping[ "**=" ] = "__ipow__";
          gC2POperatorMapping[ "<<=" ] = "__ilshift__";
          gC2POperatorMapping[ ">>=" ] = "__irshift__";
@@ -73,11 +76,14 @@ namespace {
          gC2POperatorMapping[ "<" ]   = "__lt__";
          gC2POperatorMapping[ ">=" ]  = "__ge__";
          gC2POperatorMapping[ "<=" ]  = "__le__";
+
+         gC2POperatorMapping[ "bool" ] = "__nonzero__";
       }
    } initOperatorMapping_;
 
 // for keeping track of callbacks for CINT-installed methods into python:
-   std::map< int, PyObject* > s_PyObjectCallbacks;
+   typedef std::pair< PyObject*, Long_t > CallInfo_t;
+   std::map< int, CallInfo_t > s_PyObjectCallbacks;
 
 } // unnamed namespace
 
@@ -375,38 +381,63 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
 
 
 //____________________________________________________________________________
-Bool_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback, 
-         const std::string& mtName, const char* signature, void* func )
+Long_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback, 
+   const std::string& mtName, const char* signature, void* func, Int_t npar, Long_t extra )
 {
+   static Long_t s_fid = 1;
+   ++s_fid;
+
 // Install a python callable method so that CINT can call it
 
-   if ( ! ( scope && PyCallable_Check( callback ) ) )
-      return kFALSE;
+   if ( ! PyCallable_Check( callback ) )
+      return 0;
 
 // create a return type (typically masked/wrapped by a TPyReturn) for the method
    G__linked_taginfo pti;
    pti.tagnum = -1;
    pti.tagtype = 'c';
-   const char* cname = scope->Fullname();
-   if ( ! cname ) cname = "";
-   std::string tname = std::string( cname ) + "::" + mtName;
+   const char* cname = scope ? scope->Fullname() : 0;
+   std::string tname = cname ? std::string( cname ) + "::" + mtName : mtName;
    pti.tagname = tname.c_str();
-   int tagnum = G__get_linked_tagnum( &pti );
+   int tagnum = G__get_linked_tagnum( &pti );     // creates entry for new names
 
-// add method and store callback
-   scope->AddMethod( pti.tagname, mtName.c_str(), signature, 0, 0, func );
+   if ( scope ) {   // add method to existing scope
+      G__MethodInfo meth = scope->AddMethod( pti.tagname, mtName.c_str(), signature, 0, 0, func );
+   } else {         // for free functions, add to global scope and add lookup through tp2f
+   // setup a connection between the pointer and the name (only the interface method will be
+   // called in the end, the tp2f must only be consistent: s_fid is chosen to allow the same
+   // C++ callback to serve multiple python objects)
+      Long_t hash = 0, len = 0;
+      G__hash( mtName.c_str(), hash, len );
+      G__lastifuncposition();
+      G__memfunc_setup( mtName.c_str(), hash,
+        (G__InterfaceMethod)func, tagnum, tagnum, tagnum, 0, npar, 0, 1, 0, "", (char*)0, (void*)s_fid, 0 );
+      G__resetifuncposition();
+
+   // setup a name in the global namespace (does not result in calls, but makes subsequent
+   // GetMethod() calls work)
+      G__MethodInfo meth = G__ClassInfo().AddMethod( mtName.c_str(), mtName.c_str(), signature, 1, 0, func );
+   }
+
+// and store callback
    Py_INCREF( callback );
-   PyObject* oldp = s_PyObjectCallbacks[ tagnum ];
+   std::map< int, CallInfo_t >::iterator old = s_PyObjectCallbacks.find( tagnum );
+   if ( old != s_PyObjectCallbacks.end() ) {
+      PyObject* oldp = old->second.first;
       Py_XDECREF( oldp );
-   s_PyObjectCallbacks[ tagnum ] = callback;
+   }
+   s_PyObjectCallbacks[ tagnum ] = std::make_pair( callback, extra );
 
 // hard to check result ... assume ok
-   return kTRUE;
+   return s_fid;
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::Utility::GetInstalledMethod( int tagnum )
+PyObject* PyROOT::Utility::GetInstalledMethod( int tagnum, Long_t* extra )
 {
 // Return the CINT-installed python callable, if any
-   return s_PyObjectCallbacks[ tagnum ];
+   CallInfo_t cinfo = s_PyObjectCallbacks[ tagnum ];
+   if ( extra )
+      *extra = cinfo.second;
+   return cinfo.first;
 }

@@ -182,7 +182,7 @@ void TPython::LoadMacro( const char* name )
                fullname += '.';
                fullname += PyString_AS_STRING( pyClName );
 
-            // force class creation
+            // force class creation (this will eventually call TPyClassGenerator)
                TClass::GetClass( fullname.c_str() );
             }
 

@@ -17,7 +17,6 @@
 #include "TClass.h"
 #include "TString.h"
 #include "TFunction.h"
-#include "TMethodArg.h"
 #include "TClassEdit.h"
 #include "TVirtualMutex.h"
 #include "TException.h"
@@ -380,11 +379,16 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
 
    // the following numbers are made up and may cause problems in specific
    // situations: use <obj>.<meth>.disp() for choice of exact dispatch
-      if ( ! (bool)arg )
+      if ( ! (bool)arg ) {
          priority -= 10000;   // class is gibberish
-      else if ( (arg.IsClass() || arg.IsStruct()) && ! arg.IsComplete() )
-         priority -= 1000;    // class is known, but no dictionary available
-      else {
+      } else if ( (arg.IsClass() || arg.IsStruct()) && ! arg.IsComplete() ) {
+      // class is known, but no dictionary available, 2 more cases: * and &
+         const std::string aname = arg.Name( ROOT::Reflex::Q );
+         if ( aname[ aname.size() - 1 ] == '&' )
+            priority -= 3000;
+         else
+            priority -= 1000; // prefer pointer passing over reference
+      } else {
          const std::string aname = arg.Name( ROOT::Reflex::F | ROOT::Reflex::Q );
          if ( aname == "void*" )
             priority -= 100;  // void* shouldn't be too greedy

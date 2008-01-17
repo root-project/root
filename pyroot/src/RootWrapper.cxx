@@ -22,7 +22,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMethod.h"
-#include "TMethodArg.h"
+#include "TDataMember.h"
 #include "TBaseClass.h"
 #include "TInterpreter.h"
 #include "TGlobal.h"
@@ -223,6 +223,12 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
       if ( 8 < mtName.size() && mtName.substr( 0, 8 ) == "operator" ) {
          std::string op = mtName.substr( 8, std::string::npos );
 
+      // stripping ...
+         std::string::size_type start = 0, end = op.size();
+         while ( start < end && isspace( op[ start ] ) ) ++start;
+         while ( start < end && isspace( op[ end-1 ] ) ) --end;
+         op = op.substr( start, end - start );
+
       // filter assignment operator for later use
          if ( op == "=" ) {
             continue;
@@ -241,25 +247,26 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
             if ( cpd[ cpd.size() - 1 ] == '&' )
                setupSetItem = kTRUE;
          } else if ( op == "*" ) {
-            if ( method.FunctionParameterSize() == 0 )   // dereference
-               mtName = "__deref__";
-            else                                         // multiplier (is python equivalent)
-               mtName = "__mul__";
+         // dereference v.s. multiplication of two instances
+            mtName = method.FunctionParameterSize() ? "__mul__" : "__deref__";
+         } else if ( op == "+" ) {
+         // unary positive v.s. addition of two instances
+            mtName = method.FunctionParameterSize() ? "__add__" : "__pos__";
+         } else if ( op == "-" ) {
+         // unary negative v.s. subtraction of two instances
+            mtName = method.FunctionParameterSize() ? "__sub__" : "__neg__";
          } else if ( op == "++" ) {
-            if ( method.FunctionParameterSize() == 0 )   // prefix increment
-               mtName = "__preinc__"; 
-            else                                         // postfix increment
-               mtName = "__postinc__";
+         // prefix v.s. postfix increment
+            mtName = method.FunctionParameterSize() ? "__postinc__" : "__preinc__";
          } else if ( op == "--" ) {
-            if ( method.FunctionParameterSize() == 0 )   // prefix decrement
-               mtName = "__predec__";
-            else                                         // postfix decrement
-               mtName = "__postdec__";
+         // prefix v.s. postfix decrement
+            mtName = method.FunctionParameterSize() ? "__postdec__" : "__predec__";
          } else if ( op == "->" ) {                      // class member access
              mtName = "__follow__";
          } else {
             continue;                                    // not handled (new, delete, etc.)
          }
+
       }
 
    // decide on method type: member or static (which includes globals)
@@ -573,7 +580,8 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       PyObject* pybases = BuildRootClassBases< T, B, M >( klass );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
-         pyclass = CreateNewROOTPythonClass( klass.Name( ROOT::Reflex::SCOPED ), pybases );
+         pyclass = CreateNewROOTPythonClass(
+            klass.Name( ROOT::Reflex::FINAL | ROOT::Reflex::SCOPED ), pybases );
          Py_DECREF( pybases );
       }
 
