@@ -271,7 +271,7 @@ class genreflex:
     else :
       print '--->> genreflex: WARNING: While trying to retrieve compiler version, found unknown compiler %s' % compiler
       return s
-    (inp,out,err) = os.popen3('%s %s'%(compiler,vopt))
+    (inp,out,err) = os.popen3('"%s" %s'%(compiler,vopt))
     serr = err.read()
     # cl puts its version into cerr!
     if serr:
