@@ -111,7 +111,7 @@ public:
    EEnvLevel   GetLevel() const { return fLevel; }
    ULong_t     Hash() const { return fName.Hash(); }
 
-   ClassDef(TEnvRec,1)  // Individual TEnv records
+   ClassDef(TEnvRec,2)  // Individual TEnv records
 };
 
 //////////////////////////////////////////////////////////////////////////
