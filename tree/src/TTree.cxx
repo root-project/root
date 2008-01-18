@@ -1140,10 +1140,10 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
 {
    // -- Create a new TTree Branch.
    //
-   //     This Branch constructor is provided to support non-objects in
-   //     a Tree. The variables described in leaflist may be simple variables
-   //     or structures.
-   //    See the two following constructors for writing objects in a Tree.
+   //    This Branch constructor is provided to support non-objects in
+   //    a Tree. The variables described in leaflist may be simple
+   //    variables or structures.  // See the two following
+   //    constructors for writing objects in a Tree.
    //
    //    By default the branch buffers are stored in the same file as the Tree.
    //    use TBranch::SetFile to specify a different file
@@ -1179,6 +1179,10 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //             Y/I       : variable Y, type Int_t
    //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
    //
+   //    Note that the TTree will assume that all the item are contiguous in memory.
+   //    On some platform, this is not always true of the member of a struct or a class,
+   //    due to padding and alignment.  Sorting your data member in order of decreasing
+   //    sizeof usually leads to their being contiguous in memory.
    //
    //       * bufsize is the buffer size in bytes for this branch
    //         The default value is 32000 bytes and should be ok for most cases.
