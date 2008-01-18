@@ -351,6 +351,8 @@ class genDictionary(object) :
     # Filter STL implementation specific classes
     classes =  filter( lambda c: self.genTypeName(c['id'])[:6] != 'std::_' ,classes)
     classes =  filter( lambda c: c['name'][:2] != '._' ,classes)  # unamed structs and unions
+    # Filter internal GCC classes
+    classes =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1 ,classes)
     return self.autosel( classes )
  #----------------------------------------------------------------------------------
   def autosel(self, classes):
