@@ -304,6 +304,10 @@ namespace ROOT
       }; // class DictionaryGenerator
 
 
+      /** stream operator */
+      std::ostream & operator << ( std::ostream & s,
+                                   const DictionaryGenerator & obj );
+
    } // namespace Reflex
 } // namespace ROOT
 

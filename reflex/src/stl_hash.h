@@ -125,4 +125,44 @@ namespace std {
 
 #endif // __GNUC__
 
+
+
+#if defined(__SUNPRO_CC)
+
+namespace __gnu_cxx {
+
+  template<> struct less<const char *> {
+     typedef const char* Key;
+     bool operator() (Key& k1, Key& k2) const { return strcmp(k1, k2) < 0; }
+  };
+
+  template<> struct less<const std::string *> {
+     typedef const std::string* Key;
+     bool operator() (Key& k1, Key& k2) const { return *k1 < *k2; }
+  };
+
+} // namespace __gnu_cxx  
+
+#endif // __SUNPRO_CC
+
+
+
+#if defined(_AIX)
+
+namespace __gnu_cxx {
+
+  template<> struct less<const char *> {
+     typedef const char* Key;
+     bool operator() (Key k1, Key k2) const { return strcmp(k1, k2) < 0; }
+  };
+
+  template<> struct less<const std::string *> {
+     typedef const std::string* Key;
+     bool operator() (Key k1, Key k2) const { return *k1 < *k2; }
+  };
+
+} // namespace __gnu_cxx  
+
+#endif // _AIX
+
 #endif // __GNU_CXX_HASH_H

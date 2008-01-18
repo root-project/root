@@ -46,6 +46,7 @@ class ReflexBuilderUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( freefunctionbuilder );
   CPPUNIT_TEST( freevariablebuilder );
   CPPUNIT_TEST( demangler );
+  CPPUNIT_TEST( normalizer );
   CPPUNIT_TEST( forwarddeclarations );
   CPPUNIT_TEST( subscopebuilder );
   CPPUNIT_TEST( type_equivalence );
@@ -72,6 +73,7 @@ public:
   void freefunctionbuilder();
   void freevariablebuilder();
   void demangler();
+  void normalizer();
   void forwarddeclarations();
   void subscopebuilder();
   void offset();
@@ -132,6 +134,55 @@ void ReflexBuilderUnitTest::demangler()
   CPPUNIT_ASSERT_EQUAL(string("a::b"), Tools::Demangle(typeid(a::b)));
   CPPUNIT_ASSERT_EQUAL(string("std::vector<bar,std::allocator<bar> >"), 
                               Tools::Demangle(typeid(vector<bar>)));
+}
+
+//==============================================================================================
+// Normalize test
+//==============================================================================================
+void ReflexBuilderUnitTest::normalizer()
+{
+   CPPUNIT_ASSERT_EQUAL(string(""), Tools::NormalizeName(""));
+   CPPUNIT_ASSERT_EQUAL(string(""), Tools::NormalizeName(" "));
+   CPPUNIT_ASSERT_EQUAL(string(""), Tools::NormalizeName("  "));
+   CPPUNIT_ASSERT_EQUAL(string("x"), Tools::NormalizeName("x"));
+   CPPUNIT_ASSERT_EQUAL(string("x"), Tools::NormalizeName(" x"));
+   CPPUNIT_ASSERT_EQUAL(string("int"), Tools::NormalizeName("int"));
+   CPPUNIT_ASSERT_EQUAL(string("int"), Tools::NormalizeName("   int"));
+   CPPUNIT_ASSERT_EQUAL(string("int"), Tools::NormalizeName("int  "));
+   CPPUNIT_ASSERT_EQUAL(string("int*"), Tools::NormalizeName("int *"));
+   CPPUNIT_ASSERT_EQUAL(string("int**"), Tools::NormalizeName("int **"));
+   CPPUNIT_ASSERT_EQUAL(string("int**"), Tools::NormalizeName("int **  "));
+   CPPUNIT_ASSERT_EQUAL(string("int*&"), Tools::NormalizeName("int *&"));
+   CPPUNIT_ASSERT_EQUAL(string("float (int)"), Tools::NormalizeName("float (int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float* (int)"), Tools::NormalizeName("float *(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float* (int)"), Tools::NormalizeName("float * (int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float* (int)"), Tools::NormalizeName("float*(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float** (int)"), Tools::NormalizeName("float **(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float*& (int)"), Tools::NormalizeName("float *&(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float*& (int)"), Tools::NormalizeName("float * & (int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float*& (int)"), Tools::NormalizeName("float  *  &  (int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float**& (int)"), Tools::NormalizeName("float **&(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float (*)(int)"), Tools::NormalizeName("float (*)(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float (*)(int)"), Tools::NormalizeName("float(*)(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float (*)(int)"), Tools::NormalizeName("  float  (  *  )  (  int  )  "));
+   CPPUNIT_ASSERT_EQUAL(string("float& (*)(int)"), Tools::NormalizeName("float& (*)(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float**& (*)(int)"), Tools::NormalizeName("float**& (*)(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("a::b"), Tools::NormalizeName("a::b"));
+   CPPUNIT_ASSERT_EQUAL(string("std::vector<bar,std::allocator<bar> >"), Tools::NormalizeName("std::vector<bar,std::allocator<bar> >"));
+   CPPUNIT_ASSERT_EQUAL(string("std::vector<bar,std::allocator<bar> >"), Tools::NormalizeName("std::vector<bar, std::allocator<bar>>"));
+   CPPUNIT_ASSERT_EQUAL(string("std::vector<bar,std::vector<bar,std::allocator<bar> > >"), Tools::NormalizeName("std::vector<bar, std::vector<bar, std::allocator<bar>>>"));
+   CPPUNIT_ASSERT_EQUAL(string("float ()(int)"), Tools::NormalizeName("float ()(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float ()(int)"), Tools::NormalizeName("float ( )( int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float ()(int)"), Tools::NormalizeName("float (  )( int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float* ()(int)"), Tools::NormalizeName("float* ()(int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float* ()(int)"), Tools::NormalizeName("float * () (int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float* ()(int)"), Tools::NormalizeName("float* ( ) (int)"));
+   CPPUNIT_ASSERT_EQUAL(string("float* ()(int)"), Tools::NormalizeName("float * (   )   (   int   )"));
+   CPPUNIT_ASSERT_EQUAL(string("unsigned int"), Tools::NormalizeName("unsigned int"));
+   CPPUNIT_ASSERT_EQUAL(string("unsigned int"), Tools::NormalizeName("unsigned    int"));
+   CPPUNIT_ASSERT_EQUAL(string("unsigned int"), Tools::NormalizeName("   unsigned    int  "));
+   CPPUNIT_ASSERT_EQUAL(string("const char*"), Tools::NormalizeName("   const  char   *"));
+   CPPUNIT_ASSERT_EQUAL(string("volatile const char*"), Tools::NormalizeName(" volatile   const  char   *"));
 }
 
 //==============================================================================================

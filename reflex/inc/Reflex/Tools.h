@@ -165,6 +165,9 @@ namespace ROOT {
 
          RFLX_API std::string NormalizeName( const std::string & name );
 
+
+         RFLX_API std::string NormalizeName( const char * name );
+
    
          /**
           * MakeVector is a utility function to create and initialize a std::vector of
