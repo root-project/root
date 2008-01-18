@@ -4365,7 +4365,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    // is not on the screen, set batch mode
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
-   char *copen, *cclose, *copenb, *ccloseb;
+   char *copen=0, *cclose=0, *copenb=0, *ccloseb=0;
    if (image) {
       // In case of image the parenthesis mechanism does not aply.
       copen = cclose = copenb = ccloseb =0;
