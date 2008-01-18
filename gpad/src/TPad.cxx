@@ -4168,8 +4168,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //    }// end loop
    //    c1.Print("file.ps]");   // No actual print, just close.
    //
-   // It is possible to print a pad into an animated GIF file by specifying the 
-   // file name as "myfile.gif+" or "myfile.gif+NN", where NN*10ms is delay 
+   // It is possible to print a pad into an animated GIF file by specifying the
+   // file name as "myfile.gif+" or "myfile.gif+NN", where NN*10ms is delay
    // between the subimages' display. If NN is ommitted the delay between
    // subimages is zero. Each picture is added in the animation thanks to a loop
    // similar to the following one:
@@ -4224,7 +4224,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
-   if (!gPad->IsBatch() && fCanvas) 
+   if (!gPad->IsBatch() && fCanvas)
       gVirtualX->SelectWindow(GetCanvasID());
 
    // Save pad/canvas in alternative formats
@@ -4365,10 +4365,16 @@ void TPad::Print(const char *filenam, Option_t *option)
    // is not on the screen, set batch mode
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
-   char *copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
-   char *cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
-   char *copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
-   char *ccloseb = (char*)strstr(psname.Data(),"]"); if (ccloseb) *ccloseb = 0;
+   char *copen, *cclose, *copenb, *ccloseb;
+   if (image) {
+      // In case of image the parenthesis mechanism does not aply.
+      copen = cclose = copenb = ccloseb =0;
+   } else {
+      char *copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
+      char *cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
+      char *copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
+      char *ccloseb = (char*)strstr(psname.Data(),"]"); if (ccloseb) *ccloseb = 0;
+   }
    gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
    if (copen  || copenb)  mustClose = kFALSE;
