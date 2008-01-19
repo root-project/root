@@ -84,7 +84,8 @@ namespace {
             arg = PyInt_FromLong( (Long_t)G__Mint(libp->para[i]) );
             break;
          case 'h':
-            arg = PyLong_FromUnsignedLong( (UInt_t)G__Muint(libp->para[i]) );
+            //arg = PyLong_FromUnsignedLong( (UInt_t)G__Muint(libp->para[i]) );
+            arg = PyLong_FromUnsignedLong( *(ULong_t*)((void*)G__Mlong(libp->para[i])) );
             break;
          case 's':
             arg = PyInt_FromLong( (Long_t)G__Mshort(libp->para[i]) );
