@@ -1356,8 +1356,6 @@ namespace {
 
 //____________________________________________________________________________
    class TPretendInterpreted: public PyCallable {
-      static int fgCount;
-
    public:
       TPretendInterpreted( int nArgs ) : fNArgs( nArgs ) {}
 
@@ -1380,8 +1378,6 @@ namespace {
    private:
       Int_t fNArgs;
    };
-
-   int TPretendInterpreted::fgCount = 0;
 
 //____________________________________________________________________________
    class TF1InitWithPyFunc : public TPretendInterpreted {
