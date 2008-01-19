@@ -319,6 +319,8 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
 
 void TGenCollectionStreamer::ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn3,  TBuffer &b)
 {
+   // helper class to read std::map
+   
    float f;
 
    switch (v->fCase) {
