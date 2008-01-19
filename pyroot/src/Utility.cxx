@@ -411,11 +411,11 @@ Long_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback,
       G__hash( mtName.c_str(), hash, len );
       G__lastifuncposition();
       G__memfunc_setup( mtName.c_str(), hash,
-        (G__InterfaceMethod)func, tagnum, tagnum, tagnum, 0, npar, 0, 1, 0, "", (char*)0, (void*)s_fid, 0 );
+        (G__InterfaceMethod)func, tagnum, tagnum, tagnum, 0, npar, 0, 1, 0, signature, (char*)0, (void*)s_fid, 0 );
       G__resetifuncposition();
 
-   // setup a name in the global namespace (does not result in calls, but makes subsequent
-   // GetMethod() calls work)
+   // setup a name in the global namespace (does not result in calls, so the signature does
+   // not matter; but it makes subsequent GetMethod() calls work)
       G__MethodInfo meth = G__ClassInfo().AddMethod( mtName.c_str(), mtName.c_str(), signature, 1, 0, func );
    }
 
