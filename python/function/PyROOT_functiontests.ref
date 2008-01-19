@@ -3,6 +3,7 @@ Test calling of a python callable object ... ok
 Test fitting with a python global function ... ok
 Test calling of a C++ global function. ... ok
 Test installing and calling global C++ function as python method ... ok
+Test minuit callback and fit ... ok
 
 ----------------------------------------------------------------------
 

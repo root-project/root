@@ -1,7 +1,7 @@
 # File: roottest/python/function/PyROOT_functiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/24/04
-# Last: 07/03/07
+# Last: 01/18/08
 
 """Unit tests for PyROOT python/TF1 function interactions."""
 
@@ -13,7 +13,8 @@ __all__ = [
    'Func1CallFunctionTestCase',
    'Func2FitFunctionTestCase',
    'Func3GlobalCppFunctionTestCase',
-   'Func4GlobalCppFunctionAsMethodTestCase'
+   'Func4GlobalCppFunctionAsMethodTestCase',
+   'Func5MinuitTestCase'
 ]
 
 # needs to be early to prevent "ifunc_table overflow!"
@@ -21,7 +22,7 @@ gROOT.LoadMacro( "InstallableFunction.C+" )
 
 
 
-### helpers ------------------------------------------------------------------
+### helpers for general test cases -------------------------------------------
 def identity( x ):
    return x[0]
 
@@ -43,6 +44,38 @@ def pygaus( x, par ):
     else:
         gauss = 0.
     return gauss
+
+
+### fit function and helper for minuit test case -----------------------------
+def fcn( npar, gin, f, par, iflag ):
+   global ncount
+   nbins = 5
+
+ # calculate chisquare
+   chisq, delta = 0., 0.
+   for i in range(nbins):
+      delta  = (z[i]-func(x[i],y[i],par))/errorz[i]
+      chisq += delta*delta
+
+   f[0] = chisq
+   ncount += 1
+
+def func( x, y, par ):
+   value = ( (par[0]*par[0])/(x*x) -1 ) / ( par[1]+par[2]*y-par[3]*y*y)
+   return value
+
+
+### data for minuit test -----------------------------------------------------
+from array import array
+
+Error = 0;
+z = array( 'f', ( 1., 0.96, 0.89, 0.85, 0.78 ) )
+errorz = array( 'f', 5*[0.01] )
+
+x = array( 'f', ( 1.5751, 1.5825,  1.6069,  1.6339,   1.6706  ) )
+y = array( 'f', ( 1.0642, 0.97685, 1.13168, 1.128654, 1.44016 ) )
+
+ncount = 0
 
 
 ### basic function test cases ================================================
@@ -109,6 +142,68 @@ class Func4GlobalCppFunctionAsMethodTestCase( unittest.TestCase ):
 
       a = FuncLess( 1234 )
       self.assertEqual( a.m_int, a.InstallableFunc().m_int );
+
+
+### test minuit callback functionality and fit results =======================
+class Func5MinuitTestCase( unittest.TestCase ):
+   def test1MinuitFit( self ):
+      """Test minuit callback and fit"""
+
+    # setup minuit and callback
+      gMinuit = TMinuit(5)
+      gMinuit.SetPrintLevel( -1 )            # quiet
+      gMinuit.SetGraphicsMode( kFALSE )
+      gMinuit.SetFCN( fcn )
+
+      arglist = array( 'd', 10*[0.] )
+      ierflg = Long()
+
+      arglist[0] = 1
+      gMinuit.mnexcm( "SET ERR", arglist, 1, ierflg )
+
+    # set starting values and step sizes for parameters
+      vstart = array( 'd', ( 3,  1,  0.1,  0.01  ) )
+      step   = array( 'd', ( 0.1, 0.1, 0.01, 0.001 ) )
+      gMinuit.mnparm( 0, "a1", vstart[0], step[0], 0, 0, ierflg )
+      gMinuit.mnparm( 1, "a2", vstart[1], step[1], 0, 0, ierflg )
+      gMinuit.mnparm( 2, "a3", vstart[2], step[2], 0, 0, ierflg )
+      gMinuit.mnparm( 3, "a4", vstart[3], step[3], 0, 0, ierflg )
+
+    # now ready for minimization step
+      arglist[0] = 500
+      arglist[1] = 1.
+      gMinuit.mnexcm( "MIGRAD", arglist, 2, ierflg )
+
+    # verify results
+      amin, edm, errdef = Double(), Double(), Double()
+      nvpar, nparx, icstat = Long(), Long(), Long()
+      gMinuit.mnstat( amin, edm, errdef, nvpar, nparx, icstat )
+    # gMinuit.mnprin( 3, amin )
+
+      self.assertEqual( nvpar, 4 )
+      self.assertEqual( nparx, 4 )
+
+    # success means that full covariance matrix is available (icstat==3)
+      self.assertEqual( icstat, 3 )
+
+    # check results (somewhat debatable ... )
+      par, err = Double(), Double()
+
+      gMinuit.GetParameter( 0, par, err )
+      self.assertEqual( round( par - 2.15, 2 ), 0. )
+      self.assertEqual( round( err - 0.10, 2 ), 0. )
+
+      gMinuit.GetParameter( 1, par, err )
+      self.assertEqual( round( par - 0.81, 2 ), 0. )
+      self.assertEqual( round( err - 0.25, 2 ), 0. )
+
+      gMinuit.GetParameter( 2, par, err )
+      self.assertEqual( round( par - 0.17, 2 ), 0. )
+      self.assertEqual( round( err - 0.40, 2 ), 0. )
+
+      gMinuit.GetParameter( 3, par, err )
+      self.assertEqual( round( par - 0.10, 2 ), 0. )
+      self.assertEqual( round( err - 0.16, 2 ), 0. )
 
 
 ## actual test run
