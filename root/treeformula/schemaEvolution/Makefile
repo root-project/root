@@ -51,13 +51,13 @@ $(LOGFILES) : %.log : %.C $(EVENT2SO) $(EVENTSO) Event.root schemaRun.ref
 	> $@
 
 $(LOGFILES_TEST) : %.test : %.log
-	$(CMDECHO) diff -b schemaRun.ref $^
+	$(CMDECHO) diff --strip-trailing-cr -b schemaRun.ref $^
 
 schemaTest: Event.root $(LOGFILES_TEST)
-	$(CMDECHO) diff -b schemaRun.ref schemaRun1.log && \
-	diff -b schemaRun.ref schemaRun2.log && \
-	diff -b schemaRun.ref schemaRun3.log && \
-	diff -b schemaRun.ref schemaRun4.log
+	$(CMDECHO) diff --strip-trailing-cr -b schemaRun.ref schemaRun1.log && \
+	diff --strip-trailing-cr -b schemaRun.ref schemaRun2.log && \
+	diff --strip-trailing-cr -b schemaRun.ref schemaRun3.log && \
+	diff --strip-trailing-cr -b schemaRun.ref schemaRun4.log
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
