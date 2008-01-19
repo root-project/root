@@ -25,7 +25,7 @@ inheritTest.log: runInherit.C inherit_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runInherit.C > inheritTest.log 2>&1
 
 inheritTest: inheritTest.log
-	$(CMDECHO) diff -ubw inheritTest.log inheritTest.ref
+	$(CMDECHO) diff --strip-trailing-cr -ubw inheritTest.log inheritTest.ref
 
 header_h.$(DllSuf): header.h buildHeader.C
 
@@ -33,7 +33,7 @@ headerTest.log: runHeader.C header_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runHeader.C > headerTest.log 2>&1
 
 headerTest: headerTest.log
-	$(CMDECHO) diff -ubw headerTest.log headerTest.ref
+	$(CMDECHO) diff --strip-trailing-cr -ubw headerTest.log headerTest.ref
 
 clonesA_Event_cxx.$(DllSuf): clonesA_Event.h clonesA_Event.cxx
 
@@ -58,7 +58,7 @@ EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l embread.C | sed -e "s/e+006/e+06/g" > EmbeddedTest.log
 
 EmbeddedTest: EmbeddedTest.log
-	$(CMDECHO) diff -ubw EmbeddedTest.ref EmbeddedTest.log
+	$(CMDECHO) diff --strip-trailing-cr -ubw EmbeddedTest.ref EmbeddedTest.log
 
 relations_load_C.$(DllSuf) : relations.h
 
@@ -71,7 +71,7 @@ relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  rela
 	$(CMDECHO)  $(CALLROOTEXE) -q -b -l relationsRun.C | sed 's|File  Size =.*\*||g' > relationsTest.log
 
 relationsTest: relationsTest.log 
-	$(CMDECHO) diff -ubw relationsTest.ref relationsTest.log
+	$(CMDECHO) diff --strip-trailing-cr -ubw relationsTest.ref relationsTest.log
 
 mytest:
 	$(CMDECHO) echo mytest > /dev/null
@@ -85,60 +85,60 @@ endif
 merging.log: merging.C
 
 merging: merging.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 iobug.log : iobug_C.$(DllSuf)
 
 iobug: iobug.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 treeBranch.log: userClass_C.$(DllSuf) treeBranch_C.$(DllSuf)
 
 treeBranch: treeBranch.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 inheritAndOwn.log: test_Persistency0_C.$(DllSuf)  test_Persistency3_C.$(DllSuf)
 
 inheritAndOwn: inheritAndOwn.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 BadBaseAddresses.log: test_Persistency1_C.$(DllSuf)
 
 BadBaseAddresses: BadBaseAddresses.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 ursula: ursula.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 ConfigRecord_cxx.$(DllSuf): ConfigRecord.cxx ConfigRecord.h sueloader_C.$(DllSuf)
 	$(BuildWithLib)	
 
 configtest.root: ConfigRecord_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l suetestwrt.C > configtest.log 2>&1
-	$(CMDECHO) diff -b configtest.ref configtest.log
+	$(CMDECHO) diff --strip-trailing-cr -b configtest.ref configtest.log
 
 suetest.log: configtest.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l suetestrd.C > suetest.log 2>&1
 
 suetest: suetest.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 Jantest.log: JansEvent_C.$(DllSuf)
 
 Jantest: Jantest.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 deepnest: deepnest.clog
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 baseString: baseString.clog
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 prova: prova.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 augertest: augertest.log
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
 
 longlong: longlong.clog
-	$(TestDiff)
+	$(Testdiff --strip-trailing-cr)
