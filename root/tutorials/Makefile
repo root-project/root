@@ -59,6 +59,8 @@ endif
 TUTORIALSTESTS_VETOCINT := hist/hbars unuran/unuranDemo unuran/unuranFoamTest
 TUTORIALSTESTS_VETOCINT := $(shell echo Failing because of CINT: $(TUTORIALSTESTS_VETOCINT))
 TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_VETOCINT)
+# exlude rose_image until we know how to set the iconpath in batch
+TUTORIALSTESTS_VETO += image/rose_image
 
 ifeq ($(GUI),)
   TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_NONBATCH)
