@@ -34,15 +34,7 @@ valgrind: scripts/analyze_valgrind
 
 # doing gmake FAIL=true runs the test that are known to fail
 
-# doing gmake TIME=true times the test output, suppressing 
 # doing gmake TIME=true times the test output
-
-ifneq ($(TIME),)
-TESTTIMINGFILE := roottesttiming.out
-TESTTIMEPRE := export TIMEFORMAT="roottesttiming %S"; ( time
-TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' > $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
-TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && rm -f $(TESTTIMINGFILE); fi
-endif
 
 SUBDIRS := $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
@@ -94,6 +86,23 @@ endif
 
 endif
 
+ifneq ($(TIME),)
+ifeq ($(ROOTTEST_RUNID),)
+   export ROOTTEST_RUNID := $(shell touch $(ROOTTEST_LOC)runid )
+   export ROOTTEST_RUNID := $(shell echo  $$((`cat $(ROOTTEST_LOC)runid`+1)) > $(ROOTTEST_LOC)runid )
+   export ROOTTEST_RUNID := $(shell cat $(ROOTTEST_LOC)runid )
+   ROOTTEST_TESTID := $(shell echo 0 > $(ROOTTEST_LOC)testid)
+   ROOTTEST_TESTID := 0
+else
+   ROOTTEST_TESTID := $(shell echo $$((`cat $(ROOTTEST_LOC)testid`+1)) > $(ROOTTEST_LOC)testid )
+   ROOTTEST_TESTID := $(shell cat $(ROOTTEST_LOC)testid )
+endif
+TESTTIMINGFILE := roottesttiming.out
+TESTTIMEPRE := export TIMEFORMAT="roottesttiming %S"; ( time
+TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' > $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
+TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && root.exe -q -b -l '$(ROOTTEST_HOME)/scripts/recordtiming.cc+("$(ROOTTEST_HOME)",$(ROOTTEST_RUNID),$(ROOTTEST_TESTID),"$(PWD)/$*","$(TESTTIMINGFILE)")' > /dev/null && rm -f $(TESTTIMINGFILE); fi
+endif
+
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
 	$(CMDECHO) (cd $(EVENTDIR); $(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL); )
@@ -130,6 +139,7 @@ clean:  $(CLEAN_TARGETS_DIR)
 	$(CMDECHO) rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)
 
 distclean: clean
+	$(CMDECHO) rm -rf $(ROOTTEST_LOC)roottiming.root $(ROOTTEST_LOC)runid
 
 cleantest: test
 
@@ -350,10 +360,13 @@ ROOTCORELIBS_LIST = Core Cint Tree Hist TreePlayer
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(DllSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
-UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf)
+UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf)
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1
+
+$(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
