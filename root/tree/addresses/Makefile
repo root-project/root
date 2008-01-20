@@ -85,30 +85,30 @@ endif
 merging.log: merging.C
 
 merging: merging.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 iobug.log : iobug_C.$(DllSuf)
 
 iobug: iobug.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 treeBranch.log: userClass_C.$(DllSuf) treeBranch_C.$(DllSuf)
 
 treeBranch: treeBranch.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 inheritAndOwn.log: test_Persistency0_C.$(DllSuf)  test_Persistency3_C.$(DllSuf)
 
 inheritAndOwn: inheritAndOwn.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 BadBaseAddresses.log: test_Persistency1_C.$(DllSuf)
 
 BadBaseAddresses: BadBaseAddresses.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 ursula: ursula.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 ConfigRecord_cxx.$(DllSuf): ConfigRecord.cxx ConfigRecord.h sueloader_C.$(DllSuf)
 	$(BuildWithLib)	
@@ -121,24 +121,24 @@ suetest.log: configtest.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l suetestrd.C > suetest.log 2>&1
 
 suetest: suetest.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 Jantest.log: JansEvent_C.$(DllSuf)
 
 Jantest: Jantest.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 deepnest: deepnest.clog
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 baseString: baseString.clog
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 prova: prova.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 augertest: augertest.log
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
 
 longlong: longlong.clog
-	$(Testdiff --strip-trailing-cr)
+	$(Testdiff)
