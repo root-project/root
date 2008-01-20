@@ -100,7 +100,7 @@ endif
 TESTTIMINGFILE := roottesttiming.out
 TESTTIMEPRE := export TIMEFORMAT="roottesttiming %S"; ( time
 TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  cat $(TESTTIMINGFILE).tmp | grep roottesttiming | sed -e 's,^roottesttiming ,,g' > $(TESTTIMINGFILE) && rm $(TESTTIMINGFILE).tmp
-TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && root.exe -q -b -l '$(ROOTTEST_HOME)/scripts/recordtiming.cc+("$(ROOTTEST_HOME)",$(ROOTTEST_RUNID),$(ROOTTEST_TESTID),"$(PWD)/$*","$(TESTTIMINGFILE)")' > /dev/null && rm -f $(TESTTIMINGFILE); fi
+TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && root.exe -q -b -l -n '$(ROOTTEST_HOME)/scripts/recordtiming.cc+("$(ROOTTEST_HOME)",$(ROOTTEST_RUNID),$(ROOTTEST_TESTID),"$(PWD)/$*","$(TESTTIMINGFILE)")' > /dev/null && rm -f $(TESTTIMINGFILE); fi
 endif
 
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event
