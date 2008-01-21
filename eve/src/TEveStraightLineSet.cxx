@@ -179,12 +179,12 @@ void TEveStraightLineSetProjected::UpdateProjection()
    orig.RefHMTrans().GetScale(s1, s2, s3);
    TEveTrans mx; mx.Scale(s1, s2, s3);
    Double_t x, y, z;
-   orig.RefHMTrans().GetPos(x, y,z);
+   orig.RefHMTrans().GetPos(x, y, z);
    while (li.next())
    {
       Line_t* l = (Line_t*) li();
-      p1[0] = l->fV1[0];  p1[1] = l->fV1[1]; p1[2] = l->fV1[2];
-      p2[0] = l->fV2[0];  p2[1] = l->fV2[1]; p2[2] = l->fV2[2];
+      p1[0] = l->fV1[0]; p1[1] = l->fV1[1]; p1[2] = l->fV1[2];
+      p2[0] = l->fV2[0]; p2[1] = l->fV2[1]; p2[2] = l->fV2[2];
       mx.MultiplyIP(p1);
       mx.MultiplyIP(p2);
       p1[0] += x; p1[1] += y; p1[2] += z;

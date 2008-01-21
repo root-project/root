@@ -141,7 +141,7 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
    MakeTitle("RenderStyle");
    fRSSubEditor = new TEveTrackPropagatorSubEditor(this);
    fRSSubEditor->Connect("Changed()", "TEveTrackListEditor", this, "Update()");
-   AddFrame(fRSSubEditor, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0,0,0));
+   AddFrame(fRSSubEditor, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,0));
    CreateRefsTab();
 }
 

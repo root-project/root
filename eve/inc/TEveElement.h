@@ -237,6 +237,10 @@ public:
 class TEveElementList : public TEveElement,
                         public TNamed
 {
+private:
+   TEveElementList(const TEveElementList&);            // Not implemented
+   TEveElementList& operator=(const TEveElementList&); // Not implemented
+
 protected:
    Color_t   fColor;       // Color of the object.
    Bool_t    fDoColor;     // Should serve fColor as the main color of the object.

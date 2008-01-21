@@ -94,6 +94,9 @@ private:
    TVirtualPad *fOldPad;
    Bool_t       fModifyUpdateP;
 
+   TEvePadHolder(const TEvePadHolder&);            // Not implemented
+   TEvePadHolder& operator=(const TEvePadHolder&); // Not implemented
+
 public:
    TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad=0, Int_t subpad=0);
    virtual ~TEvePadHolder();

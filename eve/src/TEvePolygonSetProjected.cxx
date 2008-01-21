@@ -197,7 +197,7 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
 
    // dimension of bbox
    Float_t bbox[] = { 1e6, -1e6, 1e6, -1e6, 1e6, -1e6 };
-   for (std::list<Int_t>::iterator u = pp.begin(); u!= pp.end(); u++)
+   for (std::list<Int_t>::iterator u = pp.begin(); u!= pp.end(); ++u)
    {
       Int_t idx = *u;
       if (fPnts[idx].fX < bbox[0]) bbox[0] = fPnts[idx].fX;
@@ -210,7 +210,7 @@ void TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& pols
    if ((bbox[1]-bbox[0]) < eps || (bbox[3]-bbox[2]) < eps) return;
 
    // duplication
-   for (vpPolygon_i poi = pols.begin(); poi != pols.end(); poi++)
+   for (vpPolygon_i poi = pols.begin(); poi != pols.end(); ++poi)
    {
       Polygon_t& refP = *poi;
       if ((Int_t)pp.size() != refP.fNPnts)
@@ -457,7 +457,7 @@ void TEvePolygonSetProjected::DumpPolys() const
    {
       Int_t nPnts = (*i).fNPnts;
       printf("Points of polygon %d:\n", nPnts);
-      for (Int_t vi = 0; vi<nPnts; vi++) {
+      for (Int_t vi = 0; vi<nPnts; ++vi) {
          Int_t pi = (*i).fPnts[vi];
          printf("(%f, %f, %f)", fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
       }
@@ -472,10 +472,10 @@ void TEvePolygonSetProjected::DumpBuffer3D()
 
    Int_t* bpols = fBuff->fPols;
 
-   for(UInt_t pi = 0; pi< fBuff->NbPols(); ++pi)
+   for (UInt_t pi = 0; pi< fBuff->NbPols(); ++pi)
    {
       UInt_t segN = bpols[1];
-      printf("%d polygon of %d has %d segments \n", pi,fBuff->NbPols(),segN);
+      printf("%d polygon of %d has %d segments \n", pi, fBuff->NbPols(), segN);
 
       Int_t* seg =  &bpols[2];
       for (UInt_t a=0; a<segN; ++a)

@@ -65,10 +65,8 @@ public:
       Float_t fSin,  fCos;  // current sin, cos
       Float_t fXoff, fYoff; // offset for fitting daughters
 
-      Helix_t() :
-         fLam  (0), fR    (0), fPhiStep (0), fTimeStep (0) ,
-         fSin  (0), fCos  (0),
-         fXoff (0), fYoff (0)
+      Helix_t() : fA(0), fLam(0), fR(0), fPhiStep(0), fTimeStep(0),
+                  fSin(0), fCos(0), fXoff (0), fYoff (0)
       {}
 
       void Step(Vertex4D_t& v, TEveVector& p);

@@ -118,7 +118,7 @@ public:
 
    virtual void    SetFillColor(Color_t c)   { fFillColor = c; }
    virtual void    SetLineColor(Color_t c)   { fLineColor = c; }
-   virtual void    SetLineWidth(Double_t lw) {fLineWidth = lw;}
+   virtual void    SetLineWidth(Double_t lw) { fLineWidth = lw;}
 
    ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
 
