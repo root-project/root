@@ -205,8 +205,8 @@ DllSuf        = dll
 LibSuf        = lib
 OutPutOpt     = -out:
 CXX           = cl
-CXXOPT        = -O2
-#CXXOPT        = -Z7
+#CXXOPT        = -O2
+CXXOPT        = -Z7
 #CXXFLAGS      = $(CXXOPT) -G5 -GR -MD -DWIN32 -D_WINDOWS -nologo \
 #                -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
 ifeq ($(RCONFIG_INC),)
@@ -344,6 +344,7 @@ ROOTV=$(ROOTTEST_LOC)/root_version
 ROOTVFILE=$(ROOTTEST_HOME)/root_version
 ifeq ($(ROOTTEST_CHECKED_VERSION),)
    export ROOTTEST_CHECKED_VERSION:=$(shell (echo "$(ROOTSYS)" | diff - "$(ROOTVFILE)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTVFILE); echo "New ROOT version ($(ROOTSYS))" >&2))
+   export ROOTTEST_ARCH_FILE := $(shell grep -e 'model name' -e cpu /proc/cpuinfo | sort -u | sed -e 's/ //' -e 's/ *:/:/' > $(ROOTTEST_LOC)roottest.arch )
 endif
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf) .cc .cxx .C .cpp
