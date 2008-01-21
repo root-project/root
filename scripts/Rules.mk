@@ -144,7 +144,7 @@ distclean: clean
 cleantest: test
 
 logs.tar.gz:	
-	$(CMDECHO) find . -name '*log' | xargs tar cfz log.tar.gz  
+	$(CMDECHO) find . -name '*log' | xargs tar cfz logs.tar.gz  
 
 ifeq ($(MAKECMDGOALS),cleantest)
   ifeq ($(VERBOSE),) 
