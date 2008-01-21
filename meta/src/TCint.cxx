@@ -1217,7 +1217,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                         // Does CINT already know it?
                         const char* baselib = G__get_class_autoloading_table((char*)base.Data());
                         if ((!baselib || !baselib[0]) && !rec->FindObject(base))
-                           G__set_class_autoloading_table((char*)base.Data(), "");
+                           G__set_class_autoloading_table((char*)base.Data(), (char*)"");
                      }
                      ++k;
                   }
@@ -1308,7 +1308,7 @@ Int_t TCint::UnloadLibraryMap(const char *library)
             }
          }
 
-         G__set_class_autoloading_table((char*)cls.Data(), "");
+         G__set_class_autoloading_table((char*)cls.Data(), (char*)"");
          G__security_recover(stderr); // Ignore any error during this setting.
          delete tokens;
       }
