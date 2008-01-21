@@ -90,8 +90,8 @@ TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
    // the loop will iterate through. At each call of the timer, the current
    // number of counts is provided by the user, so that the timer can obtain
    // the due time from linearly interpolating the spent time.
-   if (prefix == "") fPrefix = Timer::fgClassName;
-   else              fPrefix = prefix;
+   if (!strcmp(prefix, "")) fPrefix = Timer::fgClassName;
+   else                     fPrefix = prefix;
 
    fLogger = new MsgLogger( fPrefix.Data() );
 
