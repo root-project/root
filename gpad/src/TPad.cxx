@@ -4366,14 +4366,12 @@ void TPad::Print(const char *filenam, Option_t *option)
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
    char *copen=0, *cclose=0, *copenb=0, *ccloseb=0;
-   if (image) {
-      // In case of image the parenthesis mechanism does not aply.
-      copen = cclose = copenb = ccloseb =0;
-   } else {
-      char *copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
-      char *cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
-      char *copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
-      char *ccloseb = (char*)strstr(psname.Data(),"]"); if (ccloseb) *ccloseb = 0;
+   if (!image) {
+      // The parenthesis mechanism is only valid for PS files.
+      copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
+      cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
+      copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
+      ccloseb = (char*)strstr(psname.Data(),"]"); if (ccloseb) *ccloseb = 0;
    }
    gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
