@@ -66,7 +66,7 @@ A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
 TGraph.
 <p>
 A Graphical cut may be saved to a file via TCutG::Write.
-End_Html*/
+End_Html */
 
 #include <string.h>
 
