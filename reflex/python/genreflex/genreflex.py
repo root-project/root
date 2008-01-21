@@ -275,7 +275,7 @@ class genreflex:
     serr = err.read()
     # cl puts its version into cerr!
     if serr:
-      if bcomp in ('cl.exe','cl'):
+      if bcomp in ('cl.exe','cl') and serr.find('is not recognized') == -1:
         s += '\nCompiler info:\n' + serr
         return s
       else:
