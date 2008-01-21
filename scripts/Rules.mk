@@ -143,6 +143,9 @@ distclean: clean
 
 cleantest: test
 
+logs.tar.gz:	
+	$(CMDECHO) find . -name '*log' | xargs tar cfz log.tar.gz  
+
 ifeq ($(MAKECMDGOALS),cleantest)
   ifeq ($(VERBOSE),) 
      ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS) )
