@@ -73,8 +73,8 @@ public:
    TEveSceneList(const Text_t* n="TEveSceneList", const Text_t* t="");
    virtual ~TEveSceneList() {}
 
-   void RepaintChangedScenes();
-   void RepaintAllScenes();
+   void RepaintChangedScenes(Bool_t dropLogicals);
+   void RepaintAllScenes(Bool_t dropLogicals);
 
    ClassDef(TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
 };

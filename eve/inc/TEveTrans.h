@@ -36,8 +36,10 @@ protected:
    mutable Bool_t        fAsOK; //!
 
    // TEveUtil
-   Bool_t                fUseTrans;
-   Bool_t                fEditTrans;
+   Bool_t                fUseTrans;       // use transformation matrix
+   Bool_t                fEditTrans;      // edit transformation in TGedFrame
+   Bool_t                fEditRotation;   // edit rotation
+   Bool_t                fEditScale;      // edit scale
 
    Double_t Norm3Column(Int_t col);
    Double_t Orto3Column(Int_t col, Int_t ref);
@@ -131,9 +133,13 @@ public:
    // Scaling
 
    void     Scale(Double_t sx, Double_t sy, Double_t sz);
-   void     GetScale(Double_t& sx, Double_t& sy, Double_t& sz) const;
-   void     Unscale(Double_t& sx, Double_t& sy, Double_t& sz);
    Double_t Unscale();
+   void     Unscale(Double_t& sx, Double_t& sy, Double_t& sz);
+   void     GetScale(Double_t& sx, Double_t& sy, Double_t& sz) const;
+   void     SetScale(Double_t  sx, Double_t  sy, Double_t  sz);
+   void     SetScaleX(Double_t sx);
+   void     SetScaleY(Double_t sy);
+   void     SetScaleZ(Double_t sz);
 
    // Operations on vectors
 
@@ -156,6 +162,12 @@ public:
 
    Bool_t GetUseTrans()  const { return fUseTrans; }
    void SetUseTrans(Bool_t v)  { fUseTrans = v;    }
+
+   void SetEditRotation(Bool_t x){ fEditRotation = x; }
+   void SetEditScale(Bool_t x)   { fEditScale = x; }
+   Bool_t GetEditRotation()      { return fEditRotation; }
+   Bool_t GetEditScale()         { return fEditScale; }
+
    Bool_t GetEditTrans() const { return fEditTrans; }
    void SetEditTrans(Bool_t v) { fEditTrans = v;    }
 

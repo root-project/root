@@ -38,8 +38,8 @@ class TEvePointSet : public TEveElement,
    friend class TEvePointSetArray;
 
 private:
-  TEvePointSet(const TEvePointSet&);            // Not implemented
-  TEvePointSet& operator=(const TEvePointSet&); // Not implemented
+   TEvePointSet(const TEvePointSet&);            // Not implemented
+   TEvePointSet& operator=(const TEvePointSet&); // Not implemented
 
 protected:
    TString  fTitle;           // Title/tooltip of the TEvePointSet.

@@ -69,7 +69,9 @@ TEveTrans::TEveTrans() :
    TObject(),
    fA1(0), fA2(0), fA3(0), fAsOK(kFALSE),
    fUseTrans (kTRUE),
-   fEditTrans(kFALSE)
+   fEditTrans(kFALSE),
+   fEditRotation(kTRUE),
+   fEditScale(kTRUE)
 {
    // Default constructor.
 
@@ -571,13 +573,13 @@ void TEveTrans::Scale(Double_t sx, Double_t sy, Double_t sz)
 }
 
 //______________________________________________________________________________
-void TEveTrans::GetScale(Double_t& sx, Double_t& sy, Double_t& sz) const
+Double_t TEveTrans::Unscale()
 {
-   // Deduce scales from sizes of base vectors.
+   // Remove scaling, make all base vectors of unit length.
 
-   sx = TMath::Sqrt( fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20] );
-   sy = TMath::Sqrt( fM[F01]*fM[F01] + fM[F11]*fM[F11] + fM[F21]*fM[F21] );
-   sz = TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
+   Double_t sx, sy, sz;
+   Unscale(sx, sy, sz);
+   return (sx + sy + sz)/3;
 }
 
 //______________________________________________________________________________
@@ -592,14 +594,56 @@ void TEveTrans::Unscale(Double_t& sx, Double_t& sy, Double_t& sz)
 }
 
 //______________________________________________________________________________
-Double_t TEveTrans::Unscale()
+void TEveTrans::GetScale(Double_t& sx, Double_t& sy, Double_t& sz) const
 {
-   // Remove scaling, make all base vectors of unit length.
+   // Deduce scales from sizes of base vectors.
 
-   Double_t sx, sy, sz;
-   Unscale(sx, sy, sz);
-   return (sx + sy + sz)/3;
+   sx = TMath::Sqrt( fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20] );
+   sy = TMath::Sqrt( fM[F01]*fM[F01] + fM[F11]*fM[F11] + fM[F21]*fM[F21] );
+   sz = TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
 }
+
+//______________________________________________________________________________
+void TEveTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
+{
+   // Set scaling.
+
+   sx /= TMath::Sqrt( fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20] );
+   sy /= TMath::Sqrt( fM[F01]*fM[F01] + fM[F11]*fM[F11] + fM[F21]*fM[F21] );
+   sz /= TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
+
+   fM[F00] *= sx; fM[F10] *= sx; fM[F20] *= sx;
+   fM[F01] *= sy; fM[F11] *= sy; fM[F21] *= sy;
+   fM[F02] *= sz; fM[F12] *= sz; fM[F22] *= sz;
+}
+
+//______________________________________________________________________________
+void TEveTrans::SetScaleX(Double_t sx)
+{
+   // Change x scaling.
+
+   sx /= TMath::Sqrt( fM[F00]*fM[F00] + fM[F10]*fM[F10] + fM[F20]*fM[F20] );
+   fM[F00] *= sx; fM[F10] *= sx; fM[F20] *= sx;
+}
+
+//______________________________________________________________________________
+void TEveTrans::SetScaleY(Double_t sy)
+{
+   // Change y scaling.
+
+   sy /= TMath::Sqrt( fM[F01]*fM[F01] + fM[F11]*fM[F11] + fM[F21]*fM[F21] );
+   fM[F01] *= sy; fM[F11] *= sy; fM[F21] *= sy;
+}
+
+//______________________________________________________________________________
+void TEveTrans::SetScaleZ(Double_t sz)
+{
+   // Change z scaling.
+
+   sz /= TMath::Sqrt( fM[F02]*fM[F02] + fM[F12]*fM[F12] + fM[F22]*fM[F22] );
+   fM[F02] *= sz; fM[F12] *= sz; fM[F22] *= sz;
+}
+
 
 /******************************************************************************/
 // Operations on vectors

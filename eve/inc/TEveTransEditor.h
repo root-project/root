@@ -57,6 +57,10 @@ public:
    void DoEditTrans();
    void DoTransChanged();
 
+   TEveGTriVecValuator*  GetPosValuator(){ return fPos;}
+   TEveGTriVecValuator*  GetRotValuator(){ return fRot;}
+   TEveGTriVecValuator*  GetScaleValuator(){ return fScale;}
+
    ClassDef(TEveTransSubEditor, 0); // Sub-editor for TEveTrans class.
 };
 

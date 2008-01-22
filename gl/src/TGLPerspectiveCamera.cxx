@@ -210,17 +210,22 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   // Load up any picking rect
+
+   // vi) Load up any picking rect and reset the perspective using the
+   // correct near/far clips distances
    if (pickRect)
    {
       TGLRect rect(*pickRect);
       WindowToViewport(rect);
       gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
                     (Int_t*) fViewport.CArr());
+      gluPerspective(fFOV, fViewport.Aspect(), fNearClip, fFarClip);
    }
-   // vi) reset the perspective using the correct near/far clips distances
-   // and restore modelview mode
-   gluPerspective(fFOV, fViewport.Aspect(), fNearClip, fFarClip);
+   else 
+   {
+      gluPerspective(fFOV, fViewport.Aspect(), fNearClip, fFarClip);
+      glGetDoublev(GL_PROJECTION_MATRIX, fLastNoPickProjM.Arr());
+   }
 
    glMatrixMode(GL_MODELVIEW);
 

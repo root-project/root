@@ -146,6 +146,7 @@ protected:
    // Internal cached matrices and frustum planes
    mutable Bool_t    fCacheDirty;                      //! cached items dirty?
    mutable UInt_t    fTimeStamp;                       //! timestamp
+   mutable TGLMatrix fLastNoPickProjM;                 //! no-pick projection matrix (cached)
    mutable TGLMatrix fProjM;                           //! projection matrix        (cached)
    mutable TGLMatrix fModVM;                           //! modelView matrix         (cached)
    mutable TGLMatrix fClipM;                           //! object space clip matrix (cached)
@@ -204,6 +205,8 @@ public:
 
    const TGLMatrix& GetCamBase()  const { return fCamBase;  }
    const TGLMatrix& GetCamTrans() const { return fCamTrans; }
+
+   TGLMatrix& RefLastNoPickProjM() const { return fLastNoPickProjM; }
 
    // Current orientation and frustum
    TGLVertex3 EyePoint() const;

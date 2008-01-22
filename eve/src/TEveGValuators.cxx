@@ -100,10 +100,10 @@ void TEveGValuator::Build(Bool_t connect)
    {
       TGLayoutHints *labh, *labfrh;
       if(fAlignRight) {
-         labh   = new TGLayoutHints(kLHintsRight | kLHintsBottom, 4,0,0,0);
+         labh   = new TGLayoutHints(kLHintsRight | kLHintsBottom, 0,0,0,0);
          labfrh = new TGLayoutHints(kLHintsRight);
       } else {
-         labh   = new TGLayoutHints(kLHintsLeft  | kLHintsBottom, 0,4,0,0);
+         labh   = new TGLayoutHints(kLHintsLeft  | kLHintsBottom, 0,0,0,0);
          labfrh = new TGLayoutHints(kLHintsLeft);
       }
       TGCompositeFrame *labfr =
@@ -281,10 +281,10 @@ void TEveGDoubleValuator::Build(Bool_t connect)
       SetLayoutManager(new TGVerticalLayout(this));
       hf1 = new TGHorizontalFrame(this);
       hf1->SetLayoutManager(new TGHorizontalLayout(hf1));
-      AddFrame(hf1, new TGLayoutHints(kLHintsTop, 0,0,0,0));
+      AddFrame(hf1, new TGLayoutHints(kLHintsTop));
       hfs = new TGHorizontalFrame(this);
       hfs->SetLayoutManager(new TGHorizontalLayout(hfs));
-      AddFrame(hfs, new TGLayoutHints(kLHintsTop, 0,0,0,0));
+      AddFrame(hfs, new TGLayoutHints(kLHintsTop));
    } else {
       hf1 = this;
       hfs = this;
@@ -399,7 +399,6 @@ void TEveGDoubleValuator::SliderCallback()
 
    Float_t minp, maxp;
    fSlider->GetPosition(minp, maxp);
-   //printf("TEveGDoubleValuator::SliderCallback %f %f\n", minp, maxp);
    fMinEntry->SetNumber(minp);
    fMaxEntry->SetNumber(maxp);
    ValueSet();

@@ -69,3 +69,13 @@ $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%)
 else
 $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%)
 endif
+
+eve/src/TEveTextGL.o: \
+                $(FREETYPEDEP)
+eve/src/TEveTextGL.o: \
+                CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)
+
+eve/src/TEveText.o: \
+                $(FREETYPEDEP)
+eve/src/TEveText.o: \
+                CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)

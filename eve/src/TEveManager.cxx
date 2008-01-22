@@ -260,7 +260,7 @@ void TEveManager::DoRedraw3D()
 
    // printf("TEveManager::DoRedraw3D redraw triggered\n");
 
-   fScenes ->RepaintChangedScenes();
+   fScenes ->RepaintChangedScenes (fDropLogicals);
    fViewers->RepaintChangedViewers(fResetCameras, fDropLogicals);
 
    fResetCameras = kFALSE;
@@ -274,7 +274,7 @@ void TEveManager::FullRedraw3D(Bool_t resetCameras, Bool_t dropLogicals)
 {
    // Perform 3D redraw of all scenes and viewers.
 
-   fScenes ->RepaintAllScenes();
+   fScenes ->RepaintAllScenes (fDropLogicals);
    fViewers->RepaintAllViewers(resetCameras, dropLogicals);
 }
 

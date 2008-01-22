@@ -125,11 +125,11 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
       AddFrame(f);
    }
 
-   fMinMax = new TEveGDoubleValuator(this,"Main range:", 200, 0);
+   fMinMax = new TEveGDoubleValuator(this,"Main range:", 130, 0);
    fMinMax->SetNELength(5);
    fMinMax->SetLabelWidth(74);
    fMinMax->Build();
-   fMinMax->GetSlider()->SetWidth(224);
+   fMinMax->GetSlider()->SetWidth(190);
    fMinMax->SetLimits(0, 1023, TGNumberFormat::kNESInteger);
    fMinMax->Connect("ValueSet()",
                     "TEveRGBAPaletteSubEditor", this, "DoMinMax()");

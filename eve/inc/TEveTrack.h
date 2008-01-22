@@ -31,6 +31,9 @@ class TEveTrack : public TEveLine
    friend class TEveTrackCounter;
    friend class TEveTrackGL;
 
+private:
+   TEveTrack& operator=(const TEveTrack&); // Not implemented
+
 public:
    typedef std::vector<TEvePathMark*>           vpPathMark_t;
    typedef std::vector<TEvePathMark*>::iterator vpPathMark_i;

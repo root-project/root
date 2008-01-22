@@ -119,6 +119,12 @@
 #pragma link C++ class TEveTrackCounter+;
 #pragma link C++ class TEveTrackCounterEditor+;
 
+
+// TEveText
+#pragma link C++ class TEveText+;
+#pragma link C++ class TEveTextGL+;
+#pragma link C++ class TEveTextEditor+;
+
 // TEvePointSet
 #pragma link C++ class TEvePointSet+;
 #pragma link C++ class TEvePointSetArray+;

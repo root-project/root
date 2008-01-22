@@ -224,6 +224,8 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
            -halfRangeY, halfRangeY,
             fNearClip,  fFarClip);
 
+   if (!pickRect) glGetDoublev(GL_PROJECTION_MATRIX, fLastNoPickProjM.Arr());
+
    // ii) setup modelview
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();

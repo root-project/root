@@ -65,7 +65,6 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fEditTransFrame = new TGVerticalFrame(this);
 
    TGFont *font = gClient->GetFont("-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1");
-   Int_t labelW = 10;
 
    TGHorizontalFrame* hfp = new TGHorizontalFrame(fEditTransFrame);
    TGLabel* labp = new TGLabel(hfp, "Location");
@@ -73,11 +72,13 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    hfp->AddFrame(labp);
    fEditTransFrame->AddFrame(hfp,  new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,0));
    fPos = new TEveGTriVecValuator(fEditTransFrame, "Pos", 160, 20);
-   fPos->SetLabelWidth(labelW);
    fPos->SetNELength(6);
-   fPos->Build(kFALSE, "x:", "y:", "z:");
+   fPos->Build(kFALSE, "", "", "");
    fPos->SetLimits(-1e5, 1e5, TGNumberFormat::kNESRealThree);
-   fEditTransFrame->AddFrame(fPos, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,2));
+   fPos->GetValuator(0)->SetToolTip("X coordinate");   
+   fPos->GetValuator(1)->SetToolTip("Y coordinate");
+   fPos->GetValuator(2)->SetToolTip("Z coordinate");
+   fEditTransFrame->AddFrame(fPos, new TGLayoutHints(kLHintsTop , 0,0,0,0));
 
    TGHorizontalFrame* hfr = new TGHorizontalFrame(fEditTransFrame);
    TGLabel* labr = new TGLabel(hfr, "Rotation");
@@ -85,11 +86,13 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    hfr->AddFrame(labr);
    fEditTransFrame->AddFrame(hfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,0));
    fRot = new TEveGTriVecValuator(fEditTransFrame, "Rot", 160, 20);
-   fRot->SetLabelWidth(labelW);
    fRot->SetNELength(6);
-   fRot->Build(kFALSE, "x:", "y:", "z:");
+   fRot->Build(kFALSE, "", "", "");
    fRot->SetLimits(-360, 360, TGNumberFormat::kNESRealOne);
-   fEditTransFrame->AddFrame(fRot, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,2));
+   fRot->GetValuator(0)->SetToolTip("X coordinate");   
+   fRot->GetValuator(1)->SetToolTip("Y coordinate");
+   fRot->GetValuator(2)->SetToolTip("Z coordinate");
+   fEditTransFrame->AddFrame(fRot, new TGLayoutHints(kLHintsTop , 0,0, 0, 0));
 
    TGHorizontalFrame* hfs = new TGHorizontalFrame(fEditTransFrame);
    TGLabel* labs = new TGLabel(hfs, "Scale");
@@ -97,26 +100,27 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    hfs->AddFrame(labs);
    fEditTransFrame->AddFrame(hfs, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,2,0));
    fScale = new TEveGTriVecValuator(fEditTransFrame, "Scale", 160, 20);
-   fScale->SetLabelWidth(labelW);
    fScale->SetNELength(6);
-   fScale->Build(kFALSE, "x:", "y:", "z:");
+   fScale->Build(kFALSE, "", "", "");
    fScale->SetLimits(1e-2, 1e2, TGNumberFormat::kNESRealTwo);
-   fEditTransFrame->AddFrame(fScale, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,0,2));
+   fScale->GetValuator(0)->SetToolTip("X coordinate");   
+   fScale->GetValuator(1)->SetToolTip("Y coordinate");
+   fScale->GetValuator(2)->SetToolTip("Z coordinate");
+   fEditTransFrame->AddFrame(fScale, new TGLayoutHints(kLHintsTop , 0,0,0, 2));
 
    fPos  ->Connect("ValueSet()", "TEveTransSubEditor", this, "DoTransChanged()");
    fRot  ->Connect("ValueSet()", "TEveTransSubEditor", this, "DoTransChanged()");
    fScale->Connect("ValueSet()", "TEveTransSubEditor", this, "DoTransChanged()");
 
    {
-      TGHorizontalFrame* hframe = new TGHorizontalFrame(fEditTransFrame);
+     TGHorizontalFrame* hframe = new TGHorizontalFrame(fEditTransFrame);
+     fAutoUpdate = new TGCheckButton(hframe, "AutoUpdate");
+     hframe->AddFrame(fAutoUpdate, new TGLayoutHints(kLHintsLeft, 1,1,1,1));
+     fUpdate = new TGTextButton(hframe, "Update");
+     hframe->AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft, 0,0,1,1));
+     fUpdate->Connect("Clicked()", "TEveTransSubEditor", this, "TransChanged()");
 
-      fAutoUpdate = new TGCheckButton(hframe, "AutoUpdate");
-      hframe->AddFrame(fAutoUpdate, new TGLayoutHints(kLHintsLeft, 1,10,1,1));
-      fUpdate = new TGTextButton(hframe, "Update");
-      hframe->AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 5,3,1,1));
-      fUpdate->Connect("Clicked()", "TEveTransSubEditor", this, "TransChanged()");
-
-      fEditTransFrame->AddFrame(hframe, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,4,0));
+     fEditTransFrame->AddFrame(hframe, new TGLayoutHints(kLHintsTop , 0,0,4,0));
    }
 
    AddFrame(fEditTransFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,1,2));
@@ -134,7 +138,34 @@ void TEveTransSubEditor::SetModel(TEveTrans* t)
    fUseTrans ->SetState(fTrans->fUseTrans  ? kButtonDown : kButtonUp);
    fEditTrans->SetState(fTrans->fEditTrans ? kButtonDown : kButtonUp);
    if (fTrans->fEditTrans)
-      fEditTransFrame->MapWindow();
+   {
+     fEditTransFrame->MapWindow();
+
+     // rotation
+     if (fTrans->GetEditRotation() == kFALSE)
+     {
+       fRot->GetValuator(0)->GetEntry()->SetState(kFALSE);
+       fRot->GetValuator(1)->GetEntry()->SetState(kFALSE);
+       fRot->GetValuator(2)->GetEntry()->SetState(kFALSE);
+     }
+     else {
+       fRot->GetValuator(0)->GetEntry()->SetState(kTRUE);
+       fRot->GetValuator(1)->GetEntry()->SetState(kTRUE);
+       fRot->GetValuator(2)->GetEntry()->SetState(kTRUE);
+     }
+     // scale
+     if (fTrans->GetEditScale() == kFALSE)
+     {
+       fScale->GetValuator(0)->GetEntry()->SetState(kFALSE);
+       fScale->GetValuator(1)->GetEntry()->SetState(kFALSE);
+       fScale->GetValuator(2)->GetEntry()->SetState(kFALSE);
+     }
+     else {
+       fScale->GetValuator(0)->GetEntry()->SetState(kTRUE);
+       fScale->GetValuator(1)->GetEntry()->SetState(kTRUE);
+       fScale->GetValuator(2)->GetEntry()->SetState(kTRUE);
+     }
+   }
    else
       fEditTransFrame->UnmapWindow();
    ((TGMainFrame*)fEditTransFrame->GetMainFrame())->Layout();

@@ -28,6 +28,7 @@ class TGLContextPrivate;
 class TGLPaintDevice;
 //class TGLPBuffer;
 class TGLWidget;
+class TFTGLManager;
 
 class TGLContext {
    friend class TGLContextPrivate;
@@ -78,9 +79,12 @@ private:
 //______________________________________________________________________________
 
 class TGLContextIdentity {
+protected:
+   TFTGLManager*      fFontManager;  // FreeType font manager.
+
 public:
-   TGLContextIdentity() : fCnt(0), fClientCnt(0) {}
-   virtual ~TGLContextIdentity() {}
+   TGLContextIdentity();
+   virtual ~TGLContextIdentity();
 
    void AddRef(TGLContext* ctx);
    void Release(TGLContext* ctx);
@@ -100,6 +104,8 @@ public:
 
    static TGLContextIdentity *GetDefaultIdentity();
    static TGLContext         *GetDefaultContextAny();
+
+   TFTGLManager*              GetFontManager();
 
 private:
    Int_t fCnt;

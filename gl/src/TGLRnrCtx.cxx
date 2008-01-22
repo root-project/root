@@ -18,6 +18,8 @@
 #include "TGLSelectBuffer.h"
 #include "TGLIncludes.h"
 #include "TGLUtil.h"
+#include "TFTGLManager.h"
+#include "TGLContext.h"
 
 #include <TError.h>
 #include <TMathBase.h>
@@ -123,6 +125,7 @@ TGLSceneBase & TGLRnrCtx::RefScene()
 
 /**************************************************************************/
 
+//______________________________________________________________________________
 void TGLRnrCtx::BeginSelection(Int_t x, Int_t y, Int_t r)
 {
    // Setup context for running selection.
@@ -137,6 +140,7 @@ void TGLRnrCtx::BeginSelection(Int_t x, Int_t y, Int_t r)
    glSelectBuffer(fSelectBuffer->GetBufSize(), fSelectBuffer->GetBuf());
 }
 
+//______________________________________________________________________________
 void TGLRnrCtx::EndSelection(Int_t glResult)
 {
    // End selection.
@@ -165,6 +169,7 @@ void TGLRnrCtx::EndSelection(Int_t glResult)
    fSelectBuffer->ProcessResult(glResult);
 }
 
+//______________________________________________________________________________
 TGLRect * TGLRnrCtx::GetPickRectangle()
 {
    // Return current pick rectangle. This is *zero* when
@@ -173,6 +178,7 @@ TGLRect * TGLRnrCtx::GetPickRectangle()
    return fPickRectangle;
 }
 
+//______________________________________________________________________________
 Int_t TGLRnrCtx::GetPickRadius()
 {
    // Return pick radius. If selection is not active it returns 0.
@@ -181,6 +187,22 @@ Int_t TGLRnrCtx::GetPickRadius()
 }
 
 /**************************************************************************/
+
+//______________________________________________________________________
+FTFont* TGLRnrCtx::GetFont(Int_t size, Int_t file, Int_t mode)
+{
+   // Get font in the GL rendering context.
+
+   return fGLCtxIdentity->GetFontManager()->GetFont(size, file, (TFTGLManager::EMode)mode);
+}
+
+//______________________________________________________________________
+Bool_t TGLRnrCtx::ReleaseFont(Int_t size, Int_t file, Int_t mode)
+{
+   // Release font in the GL rendering context.
+
+   return fGLCtxIdentity->GetFontManager()->ReleaseFont(size, file, (TFTGLManager::EMode)mode);
+}
 
 //______________________________________________________________________
 Bool_t TGLRnrCtx::IsDrawPassFilled() const

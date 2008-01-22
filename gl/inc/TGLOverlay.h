@@ -51,7 +51,7 @@ protected:
    std::list<TGLOverlayElement*> fElements;
 
 public:
-   TGLOverlayList() {}
+   TGLOverlayList() : fElements() {}
    virtual ~TGLOverlayList() {}
 
    // void AddElement(TGLOverlayElement* element);

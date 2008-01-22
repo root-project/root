@@ -38,6 +38,7 @@ TEveScene::TEveScene(const Text_t* n, const Text_t* t) :
    fGLScene = new TGLScenePad(fPad);
    fGLScene->SetName(n);
    fGLScene->SetAutoDestruct(kFALSE);
+   fGLScene->SetSmartRefresh(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -120,7 +121,7 @@ TEveSceneList::TEveSceneList(const Text_t* n, const Text_t* t) :
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveSceneList::RepaintChangedScenes()
+void TEveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
 {
    // Repaint scenes that are tagged as changed.
 
@@ -128,18 +129,24 @@ void TEveSceneList::RepaintChangedScenes()
    {
       TEveScene* s = (TEveScene*) *i;
       if (s->IsChanged())
+      {
+         if (dropLogicals) s->GetGLScene()->SetSmartRefresh(kFALSE);
          s->Repaint();
+         if (dropLogicals) s->GetGLScene()->SetSmartRefresh(kTRUE);
+      }
    }
 }
 
 //______________________________________________________________________________
-void TEveSceneList::RepaintAllScenes()
+void TEveSceneList::RepaintAllScenes(Bool_t dropLogicals)
 {
    // Repaint all scenes.
 
    for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TEveScene* s = (TEveScene*) *i;
+      if (dropLogicals) s->GetGLScene()->SetSmartRefresh(kFALSE);
       s->Repaint();
+      if (dropLogicals) s->GetGLScene()->SetSmartRefresh(kTRUE);
    }
 }
