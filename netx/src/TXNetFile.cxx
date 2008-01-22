@@ -225,6 +225,8 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
 {
    // The real creation work is done here.
 
+   Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1, np = 0;
+
    fClient = 0;
 
    // Set the timeout (default 999999999 secs, i.e. far, far in the future)
@@ -264,29 +266,26 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
       goto zombie;
    }
 
+#ifndef OLDXRDLOCATE
+   // Get cache parameters, if any
+   if ((np = ParseCacheOptions(TUrl(url).GetOptions(),
+                                 cachesz, readaheadsz, rmpolicy)) > 0) {
+      if (gDebug > 0)
+         Info("ParseCacheOptions",
+               "setting cachesz = %d, readaheadsz = %d, rmpolicy = %d",
+               cachesz, readaheadsz, rmpolicy);
+      fClient->SetCacheParameters(cachesz, readaheadsz, rmpolicy);
+   } else {
+      // Set cache and readahead off for raw files
+      if (IsRaw())
+         fClient->SetCacheParameters(0, 0, 0);
+   }
+#else
    if (IsRaw()) {
      // Set cache and readahead off for raw files
-#ifndef OLDXRDLOCATE
-     fClient->SetCacheParameters(0, 0, 0);
-#else
      EnvPutInt(NAME_READAHEADSIZE, 0);
-#endif
-
-#ifndef OLDXRDLOCATE
-   } else {
-      // Get cache parameters, if any
-      Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1;
-      Int_t np = ParseCacheOptions(TUrl(url).GetOptions(),
-                                   cachesz, readaheadsz, rmpolicy);
-      if (np > 0) {
-         if (gDebug > 0)
-            Info("ParseCacheOptions",
-                 "setting cachesz = %d, readaheadsz = %d, rmpolicy = %d",
-                 cachesz, readaheadsz, rmpolicy);
-         fClient->SetCacheParameters(cachesz, readaheadsz, rmpolicy);
-      }
-#endif
    }
+#endif
 
    //
    // Now try opening the file
