@@ -347,8 +347,14 @@ export CALLROOTEXE
 ROOTV=$(ROOTTEST_LOC)/root_version
 ROOTVFILE=$(ROOTTEST_HOME)/root_version
 ifeq ($(ROOTTEST_CHECKED_VERSION),)
-   export ROOTTEST_CHECKED_VERSION:=$(shell (echo "$(ROOTSYS)" | diff - "$(ROOTVFILE)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTVFILE); echo "New ROOT version ($(ROOTSYS))" >&2))
-   export ROOTTEST_ARCH_FILE := $(shell grep -e 'model name' -e cpu /proc/cpuinfo | sort -u | sed -e 's/ //' -e 's/ *:/:/' > $(ROOTTEST_LOC)roottest.arch )
+   export ROOTTEST_CHECKED_VERSION:= $(shell echo $(ROOTSYS) && (echo "$(ROOTSYS)" | diff - "$(ROOTVFILE)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTVFILE); echo "New ROOT version ($(ROOTSYS))" >&2))
+
+ifneq ($(TIME),)
+   CPUFILE=/proc/cpuinfo
+   ROOTTEST_ARCH=$(ROOTTEST_LOC)roottest.arch
+   export ROOTTEST_ARCH_FILE := $(shell if [ -e $(CPUFILE) ] ; then grep -e 'model name' -e cpu $(CPUFILE) | sort -u | sed -e 's/ //' -e 's/ *:/:/' > $(ROOTTEST_ARCH) ; else echo "Information Not Available" > $(ROOTTEST_ARCH); fi; )
+endif
+
 endif
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf) .cc .cxx .C .cpp
@@ -368,10 +374,10 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf)
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || cat $(ROOTTEST_LOC)scripts/utils_cc.build.log 
 
 $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 || cat $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
@@ -419,19 +425,19 @@ endif
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
 
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || cat $*_cpp.build.log
 
 %_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || cat $*_C.build.log 
 
 %_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || cat $*_cxx.build.log 
 
 %_cc.$(DllSuf) : %.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || cat $*_cc.build.log 
 
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || cat $*_h.build.log 
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1
@@ -451,13 +457,13 @@ endif
 ifneq ($(ARCH),macosx)
 
 define BuildWithLib
-	$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log 
 endef
 
 else
 
 define BuildWithLib
-        $(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.dylib,$^)\",\"\")" > $*.build.log 2>&1
+        $(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.dylib,$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
 endef
 
 endif
@@ -485,7 +491,7 @@ endef
 
 define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
-	root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$<\")" > $@.build.log 2>&1 && \
+	(root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$<\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
 	rm -f dummy$$$$.C dummy$$$$_C.* \
 )
@@ -493,7 +499,7 @@ endef
 
 define BuildFromObjs
 $(CMDECHO) ( touch dummy$$$$.C && \
-	root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 && \
+	(root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"\",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
 	rm dummy$$$$.C \
 )
