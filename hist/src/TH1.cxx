@@ -2308,7 +2308,7 @@ void TH1::Draw(Option_t *option)
    } else {
       if (opt.Contains("same")) opt.ReplaceAll("same","");
    }
-   AppendPad(opt.Data());
+   AppendPad(option);
 }
 
 //______________________________________________________________________________
@@ -7693,7 +7693,7 @@ TH1 *TH1C::DrawCopy(Option_t *option) const
    TH1C *newth1 = (TH1C*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(opt.Data());
+   newth1->AppendPad(option);
    return newth1;
 }
 
@@ -7932,7 +7932,7 @@ TH1 *TH1S::DrawCopy(Option_t *option) const
    TH1S *newth1 = (TH1S*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(opt.Data());
+   newth1->AppendPad(option);
    return newth1;
 }
 
@@ -8169,7 +8169,7 @@ TH1 *TH1I::DrawCopy(Option_t *option) const
    TH1I *newth1 = (TH1I*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(opt.Data());
+   newth1->AppendPad(option);
    return newth1;
 }
 
@@ -8403,7 +8403,7 @@ TH1 *TH1F::DrawCopy(Option_t *option) const
    TH1F *newth1 = (TH1F*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(opt.Data());
+   newth1->AppendPad(option);
    return newth1;
 }
 
@@ -8638,7 +8638,7 @@ TH1 *TH1D::DrawCopy(Option_t *option) const
    TH1D *newth1 = (TH1D*)Clone();
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
-   newth1->AppendPad(opt.Data());
+   newth1->AppendPad(option);
    return newth1;
 }
 
