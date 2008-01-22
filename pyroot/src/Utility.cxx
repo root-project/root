@@ -300,7 +300,7 @@ void PyROOT::Utility::ErrMsgCallback( char* msg )
       return;
 
 // get file name and line number
-   char* errFile = G__stripfilename( G__get_ifile()->name );
+   char* errFile = (char*)G__stripfilename( G__get_ifile()->name );
    int errLine = G__get_ifile()->line_number;
 
 // ignore ROOT-style FILE/LINE messages
