@@ -76,9 +76,14 @@ public:
       Int_t             fAtomsToGo;
 
       iterator(TEveChunkManager* p) :
-         fPlex(p),  fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
+         fPlex(p), fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
       iterator(TEveChunkManager& p) :
          fPlex(&p), fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
+      iterator(const iterator& i) :
+         fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex), fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo) {}
+
+      iterator& operator=(const iterator& i)
+      { fPlex = i.fPlex; fCurrent = i.fCurrent; fAtomIndex = i.fAtomIndex; fNextChunk = i.fNextChunk; fAtomsToGo = i.fAtomsToGo; return *this; }
 
       Bool_t  next();
       void    reset() { fCurrent = 0; fNextChunk = fAtomsToGo = 0; }

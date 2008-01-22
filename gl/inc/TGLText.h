@@ -20,6 +20,9 @@ class FTFont;
 
 class TGLText : public TAttText {
 private:
+   TGLText(const TGLText&);            // Not implemented
+   TGLText& operator=(const TGLText&); // Not implemented
+
    Double_t fX; // X position
    Double_t fY; // Y position
    Double_t fZ; // Z position
