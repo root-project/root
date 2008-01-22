@@ -72,7 +72,7 @@ $(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"
 
-$(NETXDS):      $(NETXH1) $(NETXL) $(ROOTCINTTMPEXE) $(XROOTDETAG)
+$(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDETAG) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 

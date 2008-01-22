@@ -44,7 +44,7 @@ $(VMCLIB):      $(VMCO) $(VMCDO) $(ORDER_) $(MAINLIBS) $(VMCLIBDEP)
 		   "$(SOFLAGS)" libVMC.$(SOEXT) $@ "$(VMCO) $(VMCDO)" \
 		   "$(VMCLIBEXTRA)"
 
-$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPEXE)
+$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(VMCH1) $(VMCL)
 

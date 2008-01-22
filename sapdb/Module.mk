@@ -43,7 +43,7 @@ $(SAPDBLIB):    $(SAPDBO) $(SAPDBDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libSapDB.$(SOEXT) $@ "$(SAPDBO) $(SAPDBDO)" \
 		   "$(SAPDBLIBEXTRA) $(SAPDBLIBDIR) $(SAPDBCLILIB)"
 
-$(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPEXE)
+$(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SAPDBH) $(SAPDBL)
 

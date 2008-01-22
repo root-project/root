@@ -43,7 +43,7 @@ $(SQLLIB):      $(SQLO) $(SQLDO) $(ORDER_) $(MAINLIBS) $(SQLLIBDEP)
 		   "$(SOFLAGS)" libSQL.$(SOEXT) $@ "$(SQLO) $(SQLDO)" \
 		   "$(SQLLIBEXTRA)"
 
-$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPEXE)
+$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SQLH) $(SQLL)
 

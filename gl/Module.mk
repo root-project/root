@@ -68,7 +68,7 @@ $(GLLIB):       $(GLO) $(GLO1) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP)
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLLIBS)"
 
-$(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPEXE)
+$(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GLH2) $(GLL)
 

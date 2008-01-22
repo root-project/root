@@ -43,7 +43,7 @@ $(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libRIO.$(SOEXT) $@ "$(IOO) $(IODO)" \
 		   "$(IOLIBEXTRA)"
 
-$(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPEXE)
+$(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(IOH) $(IOL)
 

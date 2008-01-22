@@ -413,6 +413,9 @@ ifneq ($(BUILTINZLIB),yes)
 CORELIBEXTRA += $(ZLIBCLILIB)
 endif
 
+##### Dependencies for all dictionaries
+ROOTCINTTMPDEP = $(ROOTCINTTMPO) $(ORDER_) $(ROOTCINTTMPEXE)
+
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
 
 ifeq ($(EXPLICITLINK),yes)

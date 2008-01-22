@@ -48,7 +48,7 @@ $(G3DLIB):      $(G3DO) $(G3DDO) $(ORDER_) $(MAINLIBS) $(G3DLIBDEP)
 		   "$(SOFLAGS)" libGraf3d.$(SOEXT) $@ "$(G3DO) $(G3DDO)" \
 		   "$(G3DLIBEXTRA)"
 
-$(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPEXE)
+$(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(G3DH1) $(G3DL)
 

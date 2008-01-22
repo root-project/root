@@ -43,7 +43,7 @@ $(SPLOTLIB):    $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
 		   "$(SOFLAGS)" libSPlot.$(SOEXT) $@ "$(SPLOTO) $(SPLOTDO)" \
 		   "$(SPLOTLIBEXTRA)"
 
-$(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPEXE)
+$(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(SPLOTH) $(SPLOTL)
 

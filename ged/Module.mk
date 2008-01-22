@@ -43,7 +43,7 @@ $(GEDLIB):      $(GEDO) $(GEDDO) $(ORDER_) $(MAINLIBS) $(GEDLIBDEP)
 		   "$(SOFLAGS)" libGed.$(SOEXT) $@ "$(GEDO) $(GEDDO)" \
 		   "$(GEDLIBEXTRA)"
 
-$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPEXE)
+$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GEDH) $(GEDL)
 

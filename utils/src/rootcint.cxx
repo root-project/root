@@ -163,6 +163,7 @@
 #include "RConfig.h"
 #include "Shadow.h"
 #include <iostream>
+#include "cintdictversion.h"
 
 #ifdef fgets // in G__ci.h
 #  undef fgets

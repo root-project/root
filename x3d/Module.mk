@@ -46,7 +46,7 @@ $(X3DLIB):      $(X3DO) $(X3DDO) $(ORDER_) $(MAINLIBS) $(X3DLIBDEP)
 		   "$(SOFLAGS)" libX3d.$(SOEXT) $@ "$(X3DO) $(X3DDO)" \
 		   "$(X3DLIBEXTRA) $(XLIBS)"
 
-$(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPEXE)
+$(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X3DH1) $(X3DL)
 

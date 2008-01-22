@@ -43,7 +43,7 @@ $(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP)
 		   "$(SOFLAGS)" libRAliEn.$(SOEXT) $@ "$(ALIENO) $(ALIENDO)" \
 		   "$(ALIENLIBEXTRA) $(ALIENLIBDIR) $(ALIENCLILIB)"
 
-$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPEXE)
+$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ALIENH) $(ALIENL)
 

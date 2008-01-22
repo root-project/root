@@ -50,7 +50,7 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 		   "$(SOFLAGS)" libTree.$(SOEXT) $@ "$(TREEO) $(TREEDO)" \
 		   "$(TREELIBEXTRA)"
 
-$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPEXE)
+$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEH) $(TREEL)
 

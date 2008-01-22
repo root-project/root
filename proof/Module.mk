@@ -43,7 +43,7 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(ORDER_) $(MAINLIBS) $(PROOFLIBDEP)
 		   "$(SOFLAGS)" libProof.$(SOEXT) $@ "$(PROOFO) $(PROOFDO)" \
 		   "$(PROOFLIBEXTRA)"
 
-$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPEXE)
+$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
 

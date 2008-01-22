@@ -43,7 +43,7 @@ $(FFTWLIB):     $(FFTWO) $(FFTWDO) $(ORDER_) $(MAINLIBS) $(FFTWLIBDEP)
 		   "$(SOFLAGS)" libFFTW.$(SOEXT) $@ "$(FFTWO) $(FFTWDO)" \
 		   "$(FFTWLIBEXTRA) $(FFTW3LIBDIR) $(FFTW3LIB)"
 
-$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPEXE)
+$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(FFTWH) $(FFTWL)
 

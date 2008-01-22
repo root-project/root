@@ -43,7 +43,7 @@ $(PGSQLLIB):    $(PGSQLO) $(PGSQLDO) $(ORDER_) $(MAINLIBS) $(PGSQLLIBDEP)
 		   "$(SOFLAGS)" libPgSQL.$(SOEXT) $@ "$(PGSQLO) $(PGSQLDO)" \
 		   "$(PGSQLLIBEXTRA) $(PGSQLLIBDIR) $(PGSQLCLILIB)"
 
-$(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPEXE)
+$(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PGSQLH) $(PGSQLL)
 

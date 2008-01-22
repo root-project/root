@@ -144,17 +144,17 @@ metautils/src/stlLoader_%.o: metautils/src/stlLoader_%.cc
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
-$(CINTDIRDLLSTL)/G__cpp_%.cxx: $(CINTTMP) $(IOSENUM)
+$(CINTDIRDLLSTL)/G__cpp_%.cxx: $(ORDER_) $(CINTTMP) $(IOSENUM) 
 	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
 	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
-$(CINTDIRDLLINC)/G__cpp_%.cxx: $(CINTTMP) $(IOSENUM)
+$(CINTDIRDLLINC)/G__cpp_%.cxx: $(ORDER_) $(CINTTMP) $(IOSENUM)
 	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
 	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
 	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
-$(CINTDIRL)/G__c_%.c: $(CINTTMP) $(IOSENUM)
+$(CINTDIRL)/G__c_%.c: $(ORDER_) $(CINTTMP) $(IOSENUM)
 	$(CINTTMP) -K -w1 -z$(notdir $*) -n$@ -D__MAKECINT__ -DG__MAKECINT \
 	   $(MACOSX_UNIX03) -c-2 -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
@@ -190,7 +190,7 @@ $(CINTDIRDLLS)/sys/ipc.dll: $(CINTDIRL)/G__c_ipc.o
 ##### ipc special treatment - END
 
 ##### dictionaries
-$(CINTDIRDLLSTL)/rootcint_%.cxx: $(ROOTCINTTMPEXE)
+$(CINTDIRDLLSTL)/rootcint_%.cxx: $(ROOTCINTTMPDEP)
 	$(ROOTCINTTMP) -f $@ -c \
 	   $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) $(subst multi,,${*:2=}) \
 	   metautils/src/${*:2=}Linkdef.h

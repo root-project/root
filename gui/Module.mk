@@ -80,13 +80,13 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 		   "$(SOFLAGS)" libGui.$(SOEXT) $@ "$(GUIO) $(GUIDO)" \
 		   "$(GUILIBEXTRA)"
 
-$(GUIDS1):      $(GUIH1) $(GUIL1) $(ROOTCINTTMPEXE)
+$(GUIDS1):      $(GUIH1) $(GUIL1) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH1) $(GUIL1)
-$(GUIDS2):      $(GUIH2) $(GUIL2) $(ROOTCINTTMPEXE)
+$(GUIDS2):      $(GUIH2) $(GUIL2) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH2) $(GUIL2)
-$(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMPEXE)
+$(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
 

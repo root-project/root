@@ -43,7 +43,7 @@ $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)" \
 		   "$(XMLLIBEXTRA)"
 
-$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPEXE)
+$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(XMLH) $(XMLL)
 
