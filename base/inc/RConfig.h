@@ -248,45 +248,45 @@
 #endif
 
 /*
-    Note, that there are really 3 APIs: 
-    
-    mips, mipsel: 
-      O32 ABI, ILP32, "long long" in a "aligned" even-odd register 
-      pair, 4 argument registers 
+    Note, that there are really 3 APIs:
 
-    mipsn32, mipsn32el   
-      N32 ABI, ILP32, but with 64 bit wide registers, and "long long" 
+    mips, mipsel:
+      O32 ABI, ILP32, "long long" in a "aligned" even-odd register
+      pair, 4 argument registers
+
+    mipsn32, mipsn32el
+      N32 ABI, ILP32, but with 64 bit wide registers, and "long long"
       in a single register, 8 argument registers
- 
-    mips64, mips64el    
+
+    mips64, mips64el
       N64 ABI, LP64, 8 argument registers
 
-    where O32, N32, and N64 are the ABI names.  ILP32 means that 
-    (I)int, (L)long, (P)pointer are 32bit long. LP64 means that 
-    long and pointer are 64bit long.  "el" denotes if the ABI is 
+    where O32, N32, and N64 are the ABI names.  ILP32 means that
+    (I)int, (L)long, (P)pointer are 32bit long. LP64 means that
+    long and pointer are 64bit long.  "el" denotes if the ABI is
     little endian.
 
     N32 is different from 032, in the calling convention.  Arguments
     passed as 64bit (long long) reference, and there are 8 of those.
-    O32 is the one closest to "normal" GNU/Linux on i386. 
+    O32 is the one closest to "normal" GNU/Linux on i386.
 
-    It's a bit more complex. MIPS spans probably the largest 
-    performance range of any CPU family, from a 32bit 20 MHz 
-    Microcontroller (made by Microchip) up to a 64bit monster with 
-    over 5000 CPUs (made by SiCortex).  Obviously, only the 64bit 
+    It's a bit more complex. MIPS spans probably the largest
+    performance range of any CPU family, from a 32bit 20 MHz
+    Microcontroller (made by Microchip) up to a 64bit monster with
+    over 5000 CPUs (made by SiCortex).  Obviously, only the 64bit
     CPUs can run 64bit code, but 32bit code runs on all of them.
 
     The use cases for the different ABIs are:
     - O32: Most compatible, runs everywhere
-    - N32: Best performance on 64 bit if a large address space isn't 
-           needed.  It is faster than O32 due to improved calling 
-           conventions, and it is faster than N64 due to reduced 
+    - N32: Best performance on 64 bit if a large address space isn't
+           needed.  It is faster than O32 due to improved calling
+           conventions, and it is faster than N64 due to reduced
            pointer size.
     - N64: Huge address space.
 
     Currently (end 2007) Debian GNU/Linux only supports O32
 
-    Thanks to Thiemo Seufer <ths@networkno.de> of Debian 
+    Thanks to Thiemo Seufer <ths@networkno.de> of Debian
 */
 #if defined(__linux) && defined(__mips__)
 #   define R__LINUX
@@ -297,10 +297,10 @@
 #   endif
 #   if defined(__MIPSEL__) /* Little endian */
 #      define R__BYTESWAP
-#   endif 
+#   endif
 #endif
 
-#if defined(linux) && defined(__hppa) 
+#if defined(linux) && defined(__hppa)
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
@@ -475,6 +475,10 @@
 #endif
 
 #ifdef _MSC_VER
+#   ifndef ROOT_w32pragma
+      /* needed for compatibility with ROOT's STL usage */
+#     error Missing #include of %ROOTSYS%\\include\\w32pragma.h!
+#   endif
 #   define R__VISUAL_CPLUSPLUS
 #   define NEED_STRING
 #   define NEED_STRCASECMP
