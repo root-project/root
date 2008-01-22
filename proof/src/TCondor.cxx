@@ -97,7 +97,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
    Int_t port = 0;
 
    TString claimCmd = Form("condor_cod request -name %s -timeout 10 2>>%s/condor.proof.%d",
-                           gSystem->TempDirectory(), vm, gSystem->GetUid() );
+                           vm, gSystem->TempDirectory(), gSystem->GetUid() );
 
    PDB(kCondor,2) Info("ClaimVM","command: %s", claimCmd.Data());
    FILE  *pipe = gSystem->OpenPipe(claimCmd, "r");
