@@ -771,7 +771,7 @@ int G__createtemplateclass(const char *new_name,G__Templatearg *targ
   int env_tagnum = G__get_envtagnum();
 
   struct G__Templatearg *spec_arg=(struct G__Templatearg*)NULL;
-  char *spec = strchr(new_name,'<');
+  char *spec = (char*)strchr(new_name,'<');
   if(spec) {
     *spec = 0;
     spec_arg = G__read_specializationarg(spec+1);
@@ -3217,7 +3217,7 @@ int G__templatefunc(G__value *result,const char *funcname,G__param *libp
   else
     baseclass = (struct G__inheritance*)NULL;
 
-  if(/* 0==libp->paran && */ (pexplicitarg=strchr(funcname,'<'))) {
+  if(/* 0==libp->paran && */ (pexplicitarg=(char*)strchr(funcname,'<'))) {
     /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
     int tmp=0;
     *pexplicitarg = 0;
