@@ -99,7 +99,8 @@ Double_t   trackGetP(AliExternalTrackParam* tp);
 // Configuration and global variables.
 
 const char* esd_file_name         = "http://root.cern.ch/files/alice_ESDs.root";
-const char* esd_friends_file_name = "http://root.cern.ch/files/alice_ESDfriends.root";
+//const char* esd_friends_file_name = "http://root.cern.ch/files/alice_ESDfriends.root";
+const char* esd_friends_file_name = "http://root.cern.ch/files/AliESDfriends.root";
 const char* esd_geom_file_name    = "http://root.cern.ch/files/alice_ESDgeometry.root";
 
 TFile *esd_file          = 0;
@@ -149,7 +150,8 @@ void alice_esd()
       return;
 
    esd_tree = (TTree*) esd_file->Get("esdTree");
-
+   esd_tree->GetBranch("ESDfriend.")->SetFile(esd_friends_file);
+   
    esd = (AliESDEvent*) esd_tree->GetUserInfo()->FindObject("AliESDEvent");
 
    // Set the branch addresses.
@@ -221,6 +223,7 @@ void load_event()
       track_list->DestroyElements();
 
    esd_tree->GetEntry(esd_event_id);
+//   esd_tree->Show();
 
    alice_esd_read();
 
@@ -323,8 +326,8 @@ void alice_esd_read()
    TClonesArray *tracks = (TClonesArray*) esd->fESDObjects->FindObject("Tracks");
 
    // This needs further investigation. Clusters not shown.
-   // AliESDfriend *frnd   = (AliESDfriend*) esd->fESDObjects->FindObject("AliESDfriend");
-   // printf("Friend %p, n_tracks:%d\n", frnd, frnd->fTracks.GetEntries());
+    AliESDfriend *frnd   = (AliESDfriend*) esd->fESDObjects->FindObject("AliESDfriend");
+    printf("Friend %p, n_tracks:%d\n", frnd, frnd->fTracks.GetEntries());
 
    if (track_list == 0) {
       track_list = new TEveTrackList("ESD Tracks"); 

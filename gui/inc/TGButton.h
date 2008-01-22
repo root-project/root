@@ -379,6 +379,9 @@ class TGSplitButton : public TGTextButton {
 friend class TGPopupMenu;
 
 private:
+   TGSplitButton(const TGSplitButton&);            // Not implemented
+   TGSplitButton& operator=(const TGSplitButton&); // Not implemented
+
    void CalcSize();
    void DrawTriangle(const GContext_t gc, Int_t x, Int_t y);
    Bool_t HandleSButton(Event_t *event);

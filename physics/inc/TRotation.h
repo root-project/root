@@ -26,6 +26,8 @@ public:
 class TRotationRow {
 public:
    inline TRotationRow(const TRotation &, int);
+   inline TRotationRow(const TRotationRow &);
+   inline TRotationRow & operator=(const TRotationRow &);
    inline Double_t operator [] (int) const;
 private:
    const TRotation * fRR;
@@ -199,6 +201,15 @@ inline Double_t TRotation::ZZ() const { return fzz; }
 
 inline TRotation::TRotationRow::TRotationRow
 (const TRotation & r, int i) : fRR(&r), fII(i) {}
+
+inline TRotation::TRotationRow::TRotationRow
+(const TRotationRow & rr) : fRR(rr.fRR), fII(rr.fII) {}
+
+inline TRotation::TRotationRow & TRotation::TRotationRow::operator = (const TRotation::TRotationRow & rr) {
+   fRR = rr.fRR;
+   fII = rr.fII;
+   return *this;
+}
 
 inline Double_t TRotation::TRotationRow::operator [] (int jj) const {
    return fRR->operator()(fII,jj);
