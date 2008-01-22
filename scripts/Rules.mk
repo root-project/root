@@ -55,7 +55,7 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log
 
-.PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check
+.PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz
 
 include $(ROOTTEST_HOME)/scripts/Common.mk
 
@@ -143,6 +143,7 @@ distclean: clean
 
 cleantest: test
 
+# For now logs.tar.gz is a phony target
 logs.tar.gz:	
 	$(CMDECHO) find . -name '*log' | xargs tar cfz logs.tar.gz  
 
