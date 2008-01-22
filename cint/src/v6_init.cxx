@@ -509,7 +509,7 @@ int G__main(int argc, char** argv)
    long G__argpointer[G__MAXARG];
    char dumpfile[G__MAXFILENAME];
    G__value result;
-   char* linkfilename = 0;
+   const char* linkfilename = 0;
    int linkflag = 0;
    char* dllid = 0;
    struct G__dictposition stubbegin;
@@ -2250,10 +2250,10 @@ void G__set_stdio_handle(FILE *sout, FILE *serr, FILE *sin)
 }
 
 //______________________________________________________________________________
-char *G__cint_version()
+const char *G__cint_version()
 {
    if (G__cintv6) return(G__CINTVERSIONSTR_V6);
-   else          return(G__CINTVERSIONSTR_V5);
+   else           return(G__CINTVERSIONSTR_V5);
    /* return "5.14.34, Mar 10 2000"; */
 }
 

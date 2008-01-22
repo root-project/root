@@ -168,7 +168,7 @@ static long G__getstaticobject()
 }
 
 //______________________________________________________________________________
-long G__malloc(int n, int bsize, char* item)
+long G__malloc(int n, int bsize, const char* item)
 {
    // -- Allocate memory.
 #ifdef G__MEMTEST

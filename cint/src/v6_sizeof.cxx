@@ -97,7 +97,7 @@ int G__sizeof(G__value *object)
 * int G__Loffsetof()
 *
 ******************************************************************/
-int G__Loffsetof(char *tagname,char *memname)
+int G__Loffsetof(const char *tagname,const char *memname)
 {
   int tagnum;
   struct G__var_array *var;
@@ -131,7 +131,7 @@ int G__Loffsetof(char *tagname,char *memname)
 *   G__special_func()
 *
 ******************************************************************/
-int G__Lsizeof(char *type_name)
+int G__Lsizeof(const char *type_name)
 {
   int hash;
   int ig15;
@@ -389,7 +389,7 @@ int G__Lsizeof(char *type_name)
 *   G__special_func()
 *
 ******************************************************************/
-long *G__typeid(char *typenamein)
+long *G__typeid(const char *typenamein)
 {
   G__value buf;
   int c;
@@ -709,7 +709,7 @@ void G__getcomment(char *buf,G__comment_info *pcomment,int tagnum)
       p = strchr(buf,'\r');
       if(p) *p = '\0';
       if(G__rootCcomment) {
-        p = G__strrstr(buf,"*/");
+        p = (char*)G__strrstr(buf,"*/");
         if(p) *p = '\0';
       }
 
@@ -802,7 +802,7 @@ void G__getcommenttypedef(char *buf,G__comment_info *pcomment,int typenum)
 *   G__special_func()
 *
 ******************************************************************/
-long G__get_classinfo(char *item,int tagnum)
+long G__get_classinfo(const char *item,int tagnum)
 {
   char *buf;
   int tag_string_buf;
@@ -905,7 +905,7 @@ long G__get_classinfo(char *item,int tagnum)
 *   G__special_func()
 *
 ******************************************************************/
-long G__get_variableinfo(char *item,long *phandle,long *pindex,int tagnum)
+long G__get_variableinfo(const char *item,long *phandle,long *pindex,int tagnum)
 {
   char *buf;
   int tag_string_buf;
@@ -1012,7 +1012,7 @@ long G__get_variableinfo(char *item,long *phandle,long *pindex,int tagnum)
 *   G__special_func()
 *
 ******************************************************************/
-long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
+long G__get_functioninfo(const char *item,long *phandle,long *pindex,int tagnum)
 {
   char *buf;
   int tag_string_buf;

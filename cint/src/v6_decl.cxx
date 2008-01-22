@@ -912,7 +912,7 @@ static int G__initary(char* new_name)
    struct G__var_array* var = 0;
    int varid = 0;
    {
-      char* p = G__strrstr(name, "::");
+      char* p = (char*)G__strrstr(name, "::");
       if (p && G__prerun && (G__func_now == -1)) {
          // -- Qualified name, in prerun, not in a function, do the lookup in the specified context.
          // Separate the qualifier from the name.

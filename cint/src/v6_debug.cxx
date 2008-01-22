@@ -20,21 +20,21 @@ extern "C" {
 static int G__tempfilenum = G__MAXFILE - 1;
 
 // Static functions.
-static int G__findfuncposition(char* func, int* pline, int* pfnum);
+static int G__findfuncposition(const char* func, int* pline, int* pfnum);
 static G__value G__exec_tempfile_core(const char* file, FILE* fp);
 
 // Externally visible functions.
-int G__findposition(char* string, G__input_file view, int* pline, int* pfnum);
-int G__display_proto(FILE* fp, char* func);
-int G__display_proto_pretty(FILE* fp, char* func, char friendlyStyle);
+int G__findposition(const char* string, G__input_file view, int* pline, int* pfnum);
+int G__display_proto(FILE* fp, const char* func);
+int G__display_proto_pretty(FILE* fp, const char* func, const char friendlyStyle);
 int G__beforelargestep(char* statement, int* piout, int* plargestep);
 void G__afterlargestep(int* plargestep);
 void G__EOFfgetc();
 void G__BREAKfgetc();
 void G__DISPNfgetc();
 void G__DISPfgetc(int c);
-int G__lock_variable(char* varname);
-int G__unlock_variable(char* varname);
+int G__lock_variable(const char* varname);
+int G__unlock_variable(const char* varname);
 G__value G__interactivereturn();
 void G__set_tracemode(char* name);
 void G__del_tracemode(char* name);
@@ -50,7 +50,7 @@ G__value G__exec_tempfile(const char* file);
 G__value G__exec_text(const char* unnamedmacro);
 char* G__exec_text_str(const char* unnamedmacro, char* result);
 char* G__load_text(const char* namedmacro);
-int G__setbreakpoint(char* breakline, char* breakfile);
+int G__setbreakpoint(const char* breakline, const char* breakfile);
 
 //______________________________________________________________________________
 //
@@ -58,7 +58,7 @@ int G__setbreakpoint(char* breakline, char* breakfile);
 //
 
 //______________________________________________________________________________
-static int G__findfuncposition(char* func, int* pline, int* pfnum)
+static int G__findfuncposition(const char* func, int* pline, int* pfnum)
 {
    // -- FIXME: Describe this function!
    char funcname[G__ONELINE];
@@ -316,7 +316,7 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
 //
 
 //______________________________________________________________________________
-int G__findposition(char* string, G__input_file view, int* pline, int* pfnum)
+int G__findposition(const char* string, G__input_file view, int* pline, int* pfnum)
 {
    // -- FIXME: Describe this function!
    //
@@ -365,14 +365,14 @@ int G__findposition(char* string, G__input_file view, int* pline, int* pfnum)
 }
 
 //______________________________________________________________________________
-int G__display_proto(FILE* fp, char* func)
+int G__display_proto(FILE* fp, const char* func)
 {
    // -- FIXME: Describe this function!
    return G__display_proto_pretty(fp, func, 0);
 }
 
 //______________________________________________________________________________
-int G__display_proto_pretty(FILE* fp, char* func, char friendlyStyle)
+int G__display_proto_pretty(FILE* fp, const char* func, const char friendlyStyle)
 {
    // -- FIXME: Describe this function!
    char funcname[G__LONGLINE];
@@ -556,7 +556,7 @@ void G__DISPfgetc(int c)
 }
 
 //______________________________________________________________________________
-int G__lock_variable(char* varname)
+int G__lock_variable(const char* varname)
 {
    // -- FIXME: Describe this function!
    int hash, ig15;
@@ -584,7 +584,7 @@ int G__lock_variable(char* varname)
 }
 
 //______________________________________________________________________________
-int G__unlock_variable(char* varname)
+int G__unlock_variable(const char* varname)
 {
    // -- FIXME: Describe this function!
    int hash, ig15;
@@ -983,7 +983,7 @@ char* G__load_text(const char* namedmacro)
 #endif
 
 //______________________________________________________________________________
-int G__setbreakpoint(char* breakline, char* breakfile)
+int G__setbreakpoint(const char* breakline, const char* breakfile)
 {
    // -- FIXME: Describe this function!
    int ii;

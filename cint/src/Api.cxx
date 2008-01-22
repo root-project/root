@@ -72,7 +72,7 @@ extern "C" G__value G__APIGetSpecialValue_layer1(char *item,void **pptr
 void Cint::G__InitGetSpecialValue(G__pMethodSpecialValue pmethod) 
 {
   G__GetSpecialObject
-	=(G__value (*)(char*,void**,void**))G__APIGetSpecialValue_layer1;
+	=(G__value (*)(const char*,void**,void**))G__APIGetSpecialValue_layer1;
   G__UserSpecificGetSpecialValue = pmethod;
 }
 
@@ -126,7 +126,7 @@ void Cint::G__InitGetSpecialObject(G__pMethodSpecialObject pmethod)
   G__LockCriticalSection();
   if (pmethod) {
      G__GetSpecialObject
-        =(G__value (*)(char*,void**,void**))G__APIGetSpecialObject_layer1;
+        =(G__value (*)(const char*,void**,void**))G__APIGetSpecialObject_layer1;
   } else G__GetSpecialObject = 0;
   G__UserSpecificGetSpecialObject = pmethod;
   G__UnlockCriticalSection();

@@ -855,7 +855,7 @@ extern struct G__input_file G__ifile;
 
 int G__compiled_func(result7,funcname,libp,hash)
 G__value *result7;
-char *funcname;
+const char *funcname;
 struct G__param *libp;
 int hash;
 {

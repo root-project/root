@@ -76,7 +76,7 @@ static G__value G__exec_do();
 static G__value G__exec_for();
 static G__value G__exec_while();
 static G__value G__exec_loop(char* forinit, char* condition, int naction, char** foraction);
-static G__value G__return_value(char* statement);
+static G__value G__return_value(const char* statement);
 static int G__search_gotolabel(char* label, fpos_t* pfpos, int line, int* pmparen);
 static int G__label_access_scope(char* statement, int* piout, int* pspaceflag, int mparen);
 static int G__IsFundamentalDecl();
@@ -92,8 +92,8 @@ static int G__defined_type(char* type_name, int len);
 // externally visible
 G__value G__alloc_exceptionbuffer(int tagnum);
 int G__free_exceptionbuffer();
-void G__display_tempobject(char* action);
-int G__defined_macro(char* macro);
+void G__display_tempobject(const char* action);
+int G__defined_macro(const char* macro);
 int G__pp_command();
 void G__pp_skip(int elifskip);
 int G__pp_if();
@@ -3267,7 +3267,7 @@ static G__value G__exec_loop(char* forinit, char* condition, int naction, char**
 //
 
 //______________________________________________________________________________
-static G__value G__return_value(char* statement)
+static G__value G__return_value(const char* statement)
 {
    // -- Handle the return statement.
    G__value buf;
@@ -4487,7 +4487,7 @@ int G__free_exceptionbuffer()
 }
 
 //______________________________________________________________________________
-void G__display_tempobject(char* action)
+void G__display_tempobject(const char* action)
 {
    // -- FIXME: Describe this function!
    struct G__tempobject_list *ptempbuf = G__p_tempbuf;
@@ -4510,7 +4510,7 @@ void G__display_tempobject(char* action)
 }
 
 //______________________________________________________________________________
-int G__defined_macro(char* macro)
+int G__defined_macro(const char* macro)
 {
    // -- Check if a macro is defined.
    int hash = 0;

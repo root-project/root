@@ -498,7 +498,7 @@ char *G__valuemonitor(G__value buf,char *temp)
 * G__access2string()
 *
 ****************************************************************/
-char *G__access2string(int caccess)
+const char *G__access2string(int caccess)
 {
   switch(caccess) {
   case G__PRIVATE: return("private:");
@@ -512,7 +512,7 @@ char *G__access2string(int caccess)
 * G__tagtype2string()
 *
 ****************************************************************/
-char *G__tagtype2string(int tagtype)
+const char *G__tagtype2string(int tagtype)
 {
   switch(tagtype) {
   case 'c': return("class");
@@ -1100,7 +1100,7 @@ int G__getdigit(unsigned int number)
 *   G__getitem()
 *
 ******************************************************************/
-G__value G__checkBase(char *string,int *known4)
+G__value G__checkBase(const char *string,int *known4)
 {
   G__value result4;
   int n=0,nchar,base=0;
@@ -1384,7 +1384,7 @@ G__value G__checkBase(char *string,int *known4)
 *   G__getitem()
 *
 ******************************************************************/
-int G__isfloat(char *string,int *type)
+int G__isfloat(const char *string,int *type)
 {
   int ig17=0;
   int c;
@@ -1590,7 +1590,7 @@ int G__isoperator(int c)
 *   G__getexpr()    to identify power and operator
 *
 ******************************************************************/
-int G__isexponent(char *expression4,int lenexpr)
+int G__isexponent(const char *expression4,int lenexpr)
 {
 
 
@@ -1632,7 +1632,7 @@ int G__isexponent(char *expression4,int lenexpr)
 *   G__strip_quotation()   To identify char pointer and string
 *
 ******************************************************************/
-int G__isvalue(char *temp)
+int G__isvalue(const char *temp)
 {
   if  ( (isdigit(temp[0])) ||((temp[0]=='-')&&(isdigit(temp[1])))) {
     return(1);

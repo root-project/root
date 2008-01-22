@@ -2595,7 +2595,7 @@ int G__asm_putint(int i)
 /**************************************************************************
 * G__value G__getreserved()
 **************************************************************************/
-G__value G__getreserved(char *item ,void ** /* ptr */,void ** /* ppdict */)
+G__value G__getreserved(const char *item ,void ** /* ptr */,void ** /* ppdict */)
 {
   G__value buf;
   int i;

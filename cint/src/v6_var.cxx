@@ -1689,7 +1689,7 @@ G__value G__letvariable(char* item, G__value expression, G__var_array* varglobal
 #undef G__ASSIGN_PVAR
 
 //______________________________________________________________________________
-void G__letpointer2memfunc(G__var_array* var, int paran, int ig15, char* item, int linear_index, G__value* presult, long G__struct_offset)
+void G__letpointer2memfunc(G__var_array* var, int paran, int ig15, const char* item, int linear_index, G__value* presult, long G__struct_offset)
 {
    // -- FIXME: Describe me!
    switch (G__var_type) {
@@ -1952,7 +1952,7 @@ G__value G__letstructmem(int store_var_type, char* varname, char* membername, ch
 }
 
 //______________________________________________________________________________
-void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig15, char* item, int paran, long G__struct_offset)
+void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig15, const char* item, int paran, long G__struct_offset)
 {
    // -- FIXME: Describe me!
    // Note:
@@ -2343,7 +2343,7 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
 }
 
 //______________________________________________________________________________
-void G__letstructp(G__value result, long G__struct_offset, int ig15, int linear_index, G__var_array* var, int paran, char* item, G__value* para, int secondary_linear_index)
+void G__letstructp(G__value result, long G__struct_offset, int ig15, int linear_index, G__var_array* var, int paran, const char* item, G__value* para, int secondary_linear_index)
 {
    // -- FIXME: Describe me!
    int baseoffset = 0;
@@ -6630,7 +6630,7 @@ G__value G__getstructmem(int store_var_type, char* varname, char* membername, ch
 }
 
 //______________________________________________________________________________
-int G__getthis(G__value* result7, char* varname, char* item)
+int G__getthis(G__value* result7, const char* varname, const char* item)
 {
    // -- FIXME: Describe me!
    if (G__exec_memberfunc && !strcmp(varname, "this")) {
@@ -6763,7 +6763,7 @@ void G__returnvartype(G__value* presult, G__var_array* var, int ig15, int paran)
 }
 
 //______________________________________________________________________________
-struct G__var_array* G__getvarentry(char* varname, int varhash, int* pi, G__var_array* varglobal, G__var_array* varlocal)
+struct G__var_array* G__getvarentry(const char* varname, int varhash, int* pi, G__var_array* varglobal, G__var_array* varlocal)
 {
    // -- FIXME: Describe me!
    struct G__var_array* var = 0;

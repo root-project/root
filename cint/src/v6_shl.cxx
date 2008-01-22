@@ -116,8 +116,8 @@ int G__get_sym_underscore() { return(G__sym_underscore); }
 
 
 #ifndef __CINT__
-G__SHLHANDLE G__dlopen G__P((char *path));
-void *G__shl_findsym G__P((G__SHLHANDLE *phandle,char *sym,short type));
+G__SHLHANDLE G__dlopen G__P((const char *path));
+void *G__shl_findsym G__P((G__SHLHANDLE *phandle,const char *sym,short type));
 int G__dlclose G__P((G__SHLHANDLE handle));
 #endif
 
@@ -216,7 +216,7 @@ void G__Set_RTLD_LAZY() {
 * G__dlopen()
 *
 ***********************************************************************/
-G__SHLHANDLE G__dlopen(char *path)
+G__SHLHANDLE G__dlopen(const char *path)
 {
   G__SHLHANDLE handle;
 #ifdef G__SHAREDLIB
@@ -305,9 +305,9 @@ TYPE_PROCEDURE);
 *
 ***********************************************************************/
 #if defined(__hpux) || defined(_HIUX_SOURCE)
-void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short type)
+void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short type)
 #else
-void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short /* type */)
+void *G__shl_findsym(G__SHLHANDLE *phandle,const char *sym,short /* type */)
 #endif
 {
   void *func = (void*)NULL;
@@ -579,7 +579,7 @@ extern int G__call_setup_funcs();
 /**************************************************************************
  * G__show_dllrev
  **************************************************************************/
-void G__show_dllrev(char *shlfile,int (*sharedlib_func)())
+void G__show_dllrev(const char *shlfile,int (*sharedlib_func)())
 {
   G__fprinterr(G__serr,"%s:DLLREV=%d\n",shlfile,(*sharedlib_func)());
   G__fprinterr(G__serr,"  This cint accepts DLLREV=%d~%d and creates %d\n"
@@ -637,7 +637,7 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 * G__SetCIntApiPointers
 *
 **************************************************************************/
-void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,char *fname)
+void G__SetCintApiPointers(G__SHLHANDLE *pslhandle,const char *fname)
 {
   G__SetCintApiPointers_t SetCintApi;
   SetCintApi = (G__SetCintApiPointers_t)
@@ -1339,7 +1339,7 @@ int G__getp2ftype(struct G__ifunc_table_internal *ifunc,int ifn)
 *  Used to return pointer to function. Cint handles pointer to
 * function as pointer to char which contains function name.
 ******************************************************************/
-char *G__search_func(char *funcname,G__value *buf)
+char *G__search_func(const char *funcname,G__value *buf)
 {
   int i=0;
   struct G__ifunc_table_internal *ifunc;
@@ -1427,7 +1427,7 @@ char *G__search_func(char *funcname,G__value *buf)
 * Search variable and function name within the scope
 *******************************************************************/
 
-char *G__search_next_member(char *text,int state)
+char *G__search_next_member(const char *text,int state)
 {
   static int list_index,len,index_item  /* ,cbp */;
   static char completionbuf[G__ONELINE];
@@ -1459,8 +1459,8 @@ char *G__search_next_member(char *text,int state)
      *************************************************************/
     strcpy(completionbuf,text);
     dot=strrchr(completionbuf,'.');
-    point=G__strrstr(completionbuf,"->");
-    scope=G__strrstr(completionbuf,"::");
+    point=(char*)G__strrstr(completionbuf,"->");
+    scope=(char*)G__strrstr(completionbuf,"::");
 
     /*************************************************************
      * struct member

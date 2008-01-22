@@ -223,7 +223,7 @@ int G__is_operator_newdelete;  // Flag to check for presence of global operator 
 // $xxx user specific scope object
 //
 #ifdef G__ANSI
-G__value (*G__GetSpecialObject)(char *name, void** pptr, void** ppdict);
+G__value (*G__GetSpecialObject)(const char *name, void** pptr, void** ppdict);
 #else
 G__value (*G__GetSpecialObject)();
 #endif

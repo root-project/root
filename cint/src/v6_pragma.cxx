@@ -47,7 +47,7 @@ void G__addpragma(char *comname, void (*p2f) G__P((char*)))
 /**************************************************************************
 * G__execpragma()
 **************************************************************************/
-int G__execpragma(char *comname,char *args)
+int G__execpragma(const char *comname,char *args)
 {
   struct G__AppPragma *paddpragma;
   void (*p2f) G__P((char*));
@@ -755,7 +755,7 @@ int G__isautoccupdate()
 * G__getsecuritycode()
 *
 **************************************************************************/
-G__UINT32 G__getsecuritycode(char *string)
+G__UINT32 G__getsecuritycode(const char *string)
 {
   G__UINT32 code;
   int level;

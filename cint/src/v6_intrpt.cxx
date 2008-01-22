@@ -138,7 +138,7 @@ void G__killproc(int signame)
 /******************************************************************
 * G__errorprompt()
 ******************************************************************/
-int G__errorprompt(char *nameoferror)
+int G__errorprompt(const char *nameoferror)
 {
    // --
 #ifdef G__EH_SIGNAL

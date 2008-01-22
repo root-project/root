@@ -22,24 +22,24 @@ int G__CodingSystem(int c);
 #endif // G__MULTIBYTE
 
 static int G__isstoragekeyword(char* buf);
-int G__fgetname_template(char* string, char* endmark);
-int G__fgetstream_newtemplate(char* string, char* endmark);
-int G__fgetstream_template(char* string, char* endmark);
-int G__getstream_template(char* source, int* isrc, char* string, char* endmark);
+int G__fgetname_template(char* string, const char* endmark);
+int G__fgetstream_newtemplate(char* string, const char* endmark);
+int G__fgetstream_template(char* string, const char* endmark);
+int G__getstream_template(const char* source, int* isrc, char* string, const char* endmark);
 int G__fgetspace();
 int G__fgetspace_peek();
-int G__fgetvarname(char* string, char* endmark);
-int G__fgetname(char* string, char* endmark);
-int G__getname(char* source, int* isrc, char* string, char* endmark);
+int G__fgetvarname(char* string, const char* endmark);
+int G__fgetname(char* string, const char* endmark);
+int G__getname(const char* source, int* isrc, char* string, const char* endmark);
 int G__getfullpath(char* string, char* pbegin, int i);
-int G__fdumpstream(char* string, char* endmark);
-int G__fgetstream(char* string, char* endmark);
+int G__fdumpstream(char* string, const char* endmark);
+int G__fgetstream(char* string, const char* endmark);
 void G__fgetstream_peek(char* string, int nchars);
-int G__fgetstream_new(char* string, char* endmark);
-int G__fgetstream_spaces(char* string, char* endmark);
-int G__getstream(char* source, int* isrc, char* string, char* endmark);
-int G__fignorestream(char* endmark);
-int G__ignorestream(char* source, int* isrc, char* endmark);
+int G__fgetstream_new(char* string, const char* endmark);
+int G__fgetstream_spaces(char* string, const char* endmark);
+int G__getstream(const char* source, int* isrc, char* string, const char* endmark);
+int G__fignorestream(const char* endmark);
+int G__ignorestream(const char* source, int* isrc, const char* endmark);
 void G__fignoreline();
 void G__fignoreline_peek();
 int G__fgetline(char* string);
@@ -102,7 +102,7 @@ static int G__isstoragekeyword(char* buf)
 }
 
 //______________________________________________________________________________
-int G__fgetname_template(char* string, char* endmark)
+int G__fgetname_template(char* string, const char* endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -361,7 +361,7 @@ backtoreadtemplate:
 }
 
 //______________________________________________________________________________
-int G__fgetstream_newtemplate(char* string, char* endmark)
+int G__fgetstream_newtemplate(char* string, const char* endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -572,7 +572,7 @@ int G__fgetstream_newtemplate(char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__fgetstream_template(char* string, char* endmark)
+int G__fgetstream_template(char* string, const char* endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -791,7 +791,7 @@ int G__fgetstream_template(char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__getstream_template(char* source, int* isrc, char* string, char* endmark)
+int G__getstream_template(const char* source, int* isrc, char* string, const char* endmark)
 {
    //  char *source;      : source string. If NULL, read from input file
    //  int *isrc;         : char position of the *source if source!=NULL
@@ -1075,7 +1075,7 @@ int G__fgetspace_peek()
 }
 
 //______________________________________________________________________________
-int G__fgetvarname(char* string, char* endmark)
+int G__fgetvarname(char* string, const char* endmark)
 {
    short i = 0, l;
    int c, prev;
@@ -1261,7 +1261,7 @@ int G__fgetvarname(char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__fgetname(char* string, char* endmark)
+int G__fgetname(char* string, const char* endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -1402,7 +1402,7 @@ int G__fgetname(char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__getname(char* source, int* isrc, char* string, char* endmark)
+int G__getname(const char* source, int* isrc, char* string, const char* endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -1561,7 +1561,7 @@ int G__getfullpath(char* string, char* pbegin, int i)
 }
 
 //______________________________________________________________________________
-int G__fdumpstream(char* string, char* endmark)
+int G__fdumpstream(char* string, const char* endmark)
 {
    //  char *string       : string until the endmark appears
    //  char *endmark      : specify endmark characters
@@ -1740,7 +1740,7 @@ int G__fdumpstream(char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__fgetstream(char* string, char* endmark)
+int G__fgetstream(char* string, const char* endmark)
 {
    // -- Read source file until specified endmark char appears.
    //
@@ -1928,7 +1928,7 @@ void G__fgetstream_peek(char* string, int nchars)
 }
 
 //______________________________________________________________________________
-int G__fgetstream_new(char* string, char* endmark)
+int G__fgetstream_new(char* string, const char* endmark)
 {
    // -- Read source file until specified endmark char appears, keep space after 'new' and 'const' keywords.
    //
@@ -2105,7 +2105,7 @@ int G__fgetstream_new(char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__fgetstream_spaces(char* string, char* endmark)
+int G__fgetstream_spaces(char* string, const char* endmark)
 {
    // -- Read source file until specified endmark char appears, retain whitespace (trimmed and collapsed).
    //
@@ -2251,7 +2251,7 @@ int G__fgetstream_spaces(char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__getstream(char* source, int* isrc, char* string, char* endmark)
+int G__getstream(const char* source, int* isrc, char* string, const char* endmark)
 {
    // -- Get substring of source, until one of endmark char is found.
    //
@@ -2364,7 +2364,7 @@ int G__getstream(char* source, int* isrc, char* string, char* endmark)
 }
 
 //______________________________________________________________________________
-int G__fignorestream(char* endmark)
+int G__fignorestream(const char* endmark)
 {
    // -- Skip source file until specified endmark char appears.
    //
@@ -2490,7 +2490,7 @@ int G__fignorestream(char* endmark)
 }
 
 //______________________________________________________________________________
-int G__ignorestream(char* source, int* isrc, char* endmark)
+int G__ignorestream(const char* source, int* isrc, const char* endmark)
 {
    //  char *endmark      : specify endmark characters
    // 

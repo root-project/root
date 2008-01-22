@@ -153,7 +153,7 @@ void G__input_history(int *state,char *string)
 *
 *  command input frontend
 *************************************************************/
-char *G__input(char *prompt)
+char *G__input(const char *prompt)
 {
   static char line[G__LONGLINE];
   char *pchar;
@@ -296,9 +296,9 @@ int G__init_readline()
 
 
 
-char *G__strrstr(char *string1,char *string2)
+const char *G__strrstr(const char *string1,const char *string2)
 {
-  char *p=NULL,*s,*result=NULL;
+  const char *p=NULL,*s,*result=NULL;
   s=string1;
   while((p=strstr(s,string2))) {
     result=p;

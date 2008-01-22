@@ -29,13 +29,15 @@ void G__set_alloclockfunc(void (*foo)()) { G__AllocMutexLock = foo; }
 void G__set_allocunlockfunc(void (*foo)()) { G__AllocMutexUnLock = foo; }
 
 //______________________________________________________________________________
-G__value G__new_operator(char* expression)
+G__value G__new_operator(const char* express)
 {
    // -- FIXME: Describe this function!
    // new type
    // new type[10]
    // new type(53)
    // new (arena)type
+   char expression[G__LONGLINE];
+   strcpy (expression,express);
    char arena[G__ONELINE];
    long memarena = 0;
    int arenaflag = 0;
@@ -685,7 +687,7 @@ G__value G__new_operator(char* expression)
 }
 
 //______________________________________________________________________________
-int G__getarrayindex(char* indexlist)
+int G__getarrayindex(const char* indexlist)
 {
    // FIXME: Describe this function!
    // [x][y][z]     get x*y*z

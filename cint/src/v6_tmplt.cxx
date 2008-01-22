@@ -159,7 +159,7 @@ void G__instantiate_templatememfunclater(G__Definedtemplateclass *deftmpclass
   int store_def_tagnum=G__def_tagnum;
   int store_tagdefining=G__tagdefining;
   int store_def_struct_member=G__def_struct_member;
-
+  char cnull[1]; cnull[0]=0;
   while(ilist) {
     G__ASSERT(0<=ilist->i);
     if (G__struct.name[ilist->i]==0) {
@@ -174,7 +174,7 @@ void G__instantiate_templatememfunclater(G__Definedtemplateclass *deftmpclass
       ++arg;
     }
     else {
-      arg = "";
+      arg = cnull;
     }
     call_para.string=(char*)NULL;
     call_para.next = (struct G__Charlist*)NULL;
@@ -214,7 +214,7 @@ void G__instantiate_templatememfunclater(G__Definedtemplateclass *deftmpclass
 * G__settemplatealias()
 *
 ***********************************************************************/
-int G__settemplatealias(char *tagnamein,char *tagname,int tagnum
+int G__settemplatealias(const char *tagnamein,char *tagname,int tagnum
                         ,G__Charlist *charlist,G__Templatearg *defpara,int encscope)
 {
   char *p;
@@ -309,7 +309,7 @@ int G__cattemplatearg(char *tagname,G__Charlist *charlist)
 *
 *  "B<int"   "double"   "5>"     =>    "B<int,double,5>"
 ***********************************************************************/
-char *G__catparam(G__param *libp,int catn,char *connect)
+char *G__catparam(G__param *libp,int catn,const char *connect)
 {
   int i;
   char *p;
@@ -569,7 +569,7 @@ static void G__delete_string(char *str,char *del)
 * Remove the last occurence of 'del' (if any)
 *
 **************************************************************************/
-static void G__delete_end_string(char *str,char *del)
+static void G__delete_end_string(char *str,const char *del)
 {
   char *e;
   char *p = strstr(str,del);
@@ -713,7 +713,7 @@ static struct G__Definedtemplateclass *G__resolve_specialization(char *arg
 *  template<class T,class E,int S> type A<T,E,S>::f() { .... }
 *                                         ^
 **************************************************************************/
-int G__createtemplatememfunc(char *new_name)
+int G__createtemplatememfunc(const char *new_name)
 {
   /* int c; */
   struct G__Definedtemplateclass *deftmpclass;
@@ -761,7 +761,7 @@ int G__createtemplatememfunc(char *new_name)
 *  template<class T,class E,int S> class A { .... };
 *                                 ^
 **************************************************************************/
-int G__createtemplateclass(char *new_name,G__Templatearg *targ
+int G__createtemplateclass(const char *new_name,G__Templatearg *targ
                           ,int isforwarddecl
                           )
 {
@@ -918,7 +918,7 @@ int G__getobjecttagnum(char *name)
   char *p1;
   char *p2;
   p1 = strrchr(name,'.');
-  p2 = G__strrstr(name,"->");
+  p2 = (char*)G__strrstr(name,"->");
 
   if(!p1 && !p2) {
     struct G__var_array *var;
@@ -974,7 +974,7 @@ int G__getobjecttagnum(char *name)
 * a.f().Handle<int>();
 *
 ***********************************************************************/
-struct G__Definetemplatefunc *G__defined_templatememfunc(char *name)
+struct G__Definetemplatefunc *G__defined_templatememfunc(const char *name)
 {
   char *p;
   char *p1;
@@ -986,7 +986,7 @@ struct G__Definetemplatefunc *G__defined_templatememfunc(char *name)
   /* separate "t" and "Handle" */
   strcpy(atom_name,name);
   p1 = strrchr(atom_name,'.');
-  p2 = G__strrstr(atom_name,"->");
+  p2 = (char*)G__strrstr(atom_name,"->");
   if(!p1 && !p2) return(result);
 
   if(p1>p2 || !p2) {
@@ -1042,7 +1042,7 @@ struct G__Definetemplatefunc *G__defined_templatememfunc(char *name)
 *
 * Check if the template function is declared
 ***********************************************************************/
-struct G__Definetemplatefunc *G__defined_templatefunc(char *name)
+struct G__Definetemplatefunc *G__defined_templatefunc(const char *name)
 {
   struct G__Definetemplatefunc *deftmplt;
   int hash,temp;
@@ -1129,7 +1129,7 @@ struct G__Definetemplatefunc *G__defined_templatefunc(char *name)
 * Check if the template class is declared
 *  but maybe in future I might need this to handle case 4,5
 ***********************************************************************/
-struct G__Definedtemplateclass *G__defined_templateclass(char *name)
+struct G__Definedtemplateclass *G__defined_templateclass(const char *name)
 {
   struct G__Definedtemplateclass *deftmplt;
   int hash,temp;
@@ -1760,7 +1760,7 @@ static void G__templatemaptypename(char *string)
 **************************************************************************/
 char* G__expand_def_template_arg (char *str_in, G__Templatearg *def_para,G__Charlist * charlist)
 {
-  char *punctuation=" \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
+  const char *punctuation=" \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
   int siz_out = strlen (str_in) * 2;
   char* str_out;
   char* temp;
@@ -1860,7 +1860,7 @@ char* G__expand_def_template_arg (char *str_in, G__Templatearg *def_para,G__Char
 *
 * separate and evaluate template argument list
 **************************************************************************/
-int G__gettemplatearglist(char *paralist,G__Charlist *charlist_in
+int G__gettemplatearglist(const char *paralist,G__Charlist *charlist_in
                           ,G__Templatearg *def_para_in,int *pnpara
                           ,int parent_tagnum
                           )
@@ -2008,7 +2008,7 @@ int G__gettemplatearglist(char *paralist,G__Charlist *charlist_in
 *                no error messages if template is not found
 *
 ***********************************************************************/
-int G__instantiate_templateclass(char *tagnamein, int noerror)
+int G__instantiate_templateclass(const char *tagnamein, int noerror)
 {
   int typenum;
   int tagnum;
@@ -2055,12 +2055,13 @@ int G__instantiate_templateclass(char *tagnamein, int noerror)
   /* separate template name and argument into templatename and arg  */
   strcpy(templatename,tagname);
   arg = strchr(templatename,'<');
+  char cnull[1]; cnull[0]=0;
   if(arg) {
     *arg='\0';
     ++arg;
   }
   else {
-    arg = "";
+    arg = cnull;
   }
 
   /* prepare for using directive scope resolution */
@@ -2328,7 +2329,7 @@ int G__instantiate_templateclass(char *tagnamein, int noerror)
 * Replace template string and prerun
 *
 **************************************************************************/
-void G__replacetemplate(char *templatename,char *tagname,G__Charlist *callpara
+void G__replacetemplate(char *templatename,const char *tagname,G__Charlist *callpara
                         ,FILE *def_fp,int line,int filenum,fpos_t *pdef_pos
                         ,G__Templatearg *def_para,int isclasstemplate
                         ,int npara
@@ -2342,7 +2343,7 @@ void G__replacetemplate(char *templatename,char *tagname,G__Charlist *callpara
   int c,c2;
   int mparen;
   char symbol[G__LONGLINE];
-  char *punctuation=" \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
+  const char *punctuation=" \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
   int double_quote=0,single_quote=0;
   struct G__input_file store_ifile;
   int store_prerun;
@@ -2744,8 +2745,8 @@ void G__replacetemplate(char *templatename,char *tagname,G__Charlist *callpara
 *
 **************************************************************************/
 int G__templatesubstitute(char *symbol,G__Charlist *callpara
-                          ,G__Templatearg *defpara,char *templatename
-                          ,char *tagname,int c,int npara
+                          ,G__Templatearg *defpara,const char *templatename
+                          ,const char *tagname,int c,int npara
                           ,int isnew
                          )
 {
@@ -3198,7 +3199,7 @@ void G__freetemplatefunc(G__Definetemplatefunc *deftmpfunc)
 * Search matching template function, search by name then parameter.
 * If match found, expand template, parse as pre-run and execute it.
 ***********************************************************************/
-int G__templatefunc(G__value *result,char *funcname,G__param *libp
+int G__templatefunc(G__value *result,const char *funcname,G__param *libp
                     ,int hash,int funcmatch)
 {
   struct G__Definetemplatefunc *deftmpfunc;
@@ -3274,6 +3275,7 @@ int G__templatefunc(G__value *result,char *funcname,G__param *libp
                               );
       }
 
+      char clnull[1]; clnull[0]=0;
       if(pexplicitarg) {
         int tmp=0;
         char *p = pexplicitarg-1;
@@ -3283,7 +3285,7 @@ int G__templatefunc(G__value *result,char *funcname,G__param *libp
         G__hash(funcname,hash,tmp);
       }
       else {
-        pexplicitarg = "";
+        pexplicitarg = clnull;
       }
 
       /* matches funcname and parameter,
@@ -3388,11 +3390,11 @@ int G__createtemplatefunc(char *funcname,G__Templatearg *targ
     char *p;
     deftmpfunc->name=(char*)malloc(strlen(funcname)+1);
     strcpy(deftmpfunc->name,funcname);
-    p = G__strrstr(deftmpfunc->name,"::");
+    p = (char*)G__strrstr(deftmpfunc->name,"::");
     if(p) {
       *p = 0;
       deftmpfunc->parent_tagnum = G__defined_tagname(deftmpfunc->name,0);
-      p = G__strrstr(funcname,"::");
+      p = (char*)G__strrstr(funcname,"::");
       strcpy(deftmpfunc->name,p+2);
       G__hash(deftmpfunc->name,deftmpfunc->hash,tmp);
     }

@@ -21,15 +21,15 @@ extern "C" {
 static int G__handle_as_typedef(char* oldtype, char* newtype);
 static void G__createmacro(char* new_name, char* initvalue);
 static int G__createfuncmacro(char* new_name);
-static int G__replacefuncmacro(char* item, G__Callfuncmacro* callfuncmacro, G__Charlist* callpara, G__Charlist* defpara, FILE* def_fp, fpos_t def_pos, int nobraces, int nosemic);
-static int G__transfuncmacro(char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, fpos_t call_pos, char* p, int nobraces, int nosemic);
+static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro, G__Charlist* callpara, G__Charlist* defpara, FILE* def_fp, fpos_t def_pos, int nobraces, int nosemic);
+static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, fpos_t call_pos, char* p, int nobraces, int nosemic);
 static int G__argsubstitute(char* symbol, G__Charlist* callpara, G__Charlist* defpara);
 static int G__getparameterlist(char* paralist, G__Charlist* charlist);
 
 // External Functions.
 void G__define();
-G__value G__execfuncmacro(char* item, int* done);
-int G__execfuncmacro_noexec(char* macroname);
+G__value G__execfuncmacro(const char* item, int* done);
+int G__execfuncmacro_noexec(const char* macroname);
 int G__maybe_finish_macro();
 int G__freedeffuncmacro(G__Deffuncmacro* deffuncmacro);
 int G__freecharlist(G__Charlist* charlist);
@@ -319,7 +319,7 @@ static int G__createfuncmacro(char* new_name)
 }
 
 //______________________________________________________________________________
-static int G__replacefuncmacro(char* item, G__Callfuncmacro* callfuncmacro, G__Charlist* callpara, G__Charlist* defpara, FILE* def_fp, fpos_t def_pos, int nobraces, int nosemic)
+static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro, G__Charlist* callpara, G__Charlist* defpara, FILE* def_fp, fpos_t def_pos, int nobraces, int nosemic)
 {
    // -- Replace function macro parameter at the first execution of func macro.
    fpos_t pos;
@@ -431,7 +431,7 @@ static int G__replacefuncmacro(char* item, G__Callfuncmacro* callfuncmacro, G__C
 }
 
 //______________________________________________________________________________
-static int G__transfuncmacro(char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, fpos_t call_pos, char* p, int nobraces, int nosemic)
+static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, fpos_t call_pos, char* p, int nobraces, int nosemic)
 {
    // -- Translate function macro parameter at the first execution of func macro.
    struct G__Charlist call_para;
@@ -673,7 +673,7 @@ void G__define()
 }
 
 //______________________________________________________________________________
-G__value G__execfuncmacro(char* item, int* done)
+G__value G__execfuncmacro(const char* item, int* done)
 {
    // -- Execute function macro, balanced braces are required.
    //
@@ -792,7 +792,7 @@ G__value G__execfuncmacro(char* item, int* done)
 }
 
 //______________________________________________________________________________
-int G__execfuncmacro_noexec(char* macroname)
+int G__execfuncmacro_noexec(const char* macroname)
 {
    // -- Execute function macro with possibly unbalanced braces.
    //

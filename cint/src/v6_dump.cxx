@@ -59,7 +59,7 @@ int G__popdumpinput()
 *
 *  Write readline string to a dump file.
 ****************************************************************/
-int G__dumpinput(char *line)
+int G__dumpinput(const char *line)
 {
   if(G__dumpreadline[0]!=NULL) {
     fprintf(G__dumpreadline[0],"%s\n",line);
@@ -72,7 +72,7 @@ int G__dumpinput(char *line)
 *
 *  Read readline string from a dump file.
 ****************************************************************/
-char *G__xdumpinput(char *prompt)
+char *G__xdumpinput(const char *prompt)
 {
   static char line[G__LONGLINE];
   char *null_fgets;

@@ -282,7 +282,7 @@ int G__more_pause(FILE *fp,int len)
 /***********************************************************************
 * G__more()
 ***********************************************************************/
-int G__more(FILE *fp,char *msg)
+int G__more(FILE *fp,const char *msg)
 {
 #ifndef G__OLDIMPLEMENTATION1485
   if(fp==G__serr) G__fprinterr(G__serr,"%s",msg);
@@ -326,7 +326,7 @@ int G__display_friend(FILE *fp,G__friendtag*friendtag)
 /***********************************************************************
 * void G__listfunc
 ***********************************************************************/
-int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
+int G__listfunc(FILE *fp,int access,const char *fname,G__ifunc_table *ifunc)
 {
    return G__listfunc_pretty(fp,access,fname,ifunc,0);
 }
@@ -334,7 +334,7 @@ int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
 /***********************************************************************
 * void G__listfunc_pretty
 ***********************************************************************/
-int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *iref, char friendlyStyle)
+int G__listfunc_pretty(FILE *fp,int access,const char *fname,G__ifunc_table *iref, char friendlyStyle)
 {
   int i,n;
   char temp[G__ONELINE];
@@ -629,7 +629,7 @@ struct G__dictposition* G__get_dictpos(char *fname)
 * G__display_newtypes()
 *
 **************************************************************************/
-int G__display_newtypes(FILE *fout,char *fname)
+int G__display_newtypes(FILE *fout,const char *fname)
 {
   struct G__dictposition *dict = (struct G__dictposition*)NULL;
   int i;
@@ -689,7 +689,7 @@ int G__display_string(FILE *fout)
 * G__display_classinheritance()
 *
 ****************************************************************/
-static int G__display_classinheritance(FILE *fout,int tagnum,char *space)
+static int G__display_classinheritance(FILE *fout,int tagnum,const char *space)
 {
   int i;
   struct G__inheritance *baseclass;
@@ -810,11 +810,13 @@ extern int G__class_autoloading G__P((int tagnum));
 * G__display_class()
 *
 ****************************************************************/
-int G__display_class(FILE *fout,char *name,int base,int start)
+int G__display_class(FILE *fout, const char *aname,int base,int start)
 {
   int tagnum;
   int i,j;
   struct G__inheritance *baseclass;
+  char name[G__ONELINE];
+  strcpy(name,aname);
   char temp[G__ONELINE];
   char msg[G__LONGLINE];
   char *p;
@@ -1022,7 +1024,7 @@ int G__display_class(FILE *fout,char *name,int base,int start)
 * G__display_typedef()
 *
 ****************************************************************/
-int G__display_typedef(FILE *fout,char *name,int startin)
+int G__display_typedef(FILE *fout,const char *name,int startin)
 {
   int i,j;
   int start,stop;
@@ -1317,7 +1319,7 @@ int G__display_eachtemplatefunc(FILE *fout, G__Definetemplatefunc *deftmpfunc)
 * G__display_template()
 *
 ****************************************************************/
-int G__display_template(FILE *fout,char *name)
+int G__display_template(FILE *fout,const char *name)
 {
   int i /* ,j */;
   struct G__Definedtemplateclass *deftmplt;
@@ -1372,7 +1374,7 @@ int G__display_includepath(FILE *fout)
 * G__display_macro()
 *
 ****************************************************************/
-int G__display_macro(FILE *fout,char *name)
+int G__display_macro(FILE *fout,const char *name)
 {
   struct G__Deffuncmacro *deffuncmacro;
   struct G__Charlist *charlist;
@@ -1642,7 +1644,7 @@ int G__dump_tracecoverage(FILE *fout)
 * void G__objectmonitor()
 *
 ******************************************************************/
-int G__objectmonitor(FILE *fout,long pobject,int tagnum,char *addspace)
+int G__objectmonitor(FILE *fout,long pobject,int tagnum,const char *addspace)
 {
   struct G__inheritance *baseclass;
   char space[G__ONELINE];
@@ -1708,7 +1710,7 @@ int G__objectmonitor(FILE *fout,long pobject,int tagnum,char *addspace)
 * void G__varmonitor()
 *
 ******************************************************************/
-int G__varmonitor(FILE *fout,G__var_array *var,char *index,char *addspace,long offset)
+int G__varmonitor(FILE *fout,G__var_array *var,const char *index,const char *addspace,long offset)
 {
   int imon1;
   long addr;
@@ -2088,7 +2090,7 @@ void* G__get_errmsgcallback()
 * in G__ci.h
 **************************************************************************/
 #if defined(G__ANSI) || defined(G__WIN32) || defined(G__FIX1) || defined(__sun)
-int G__fprinterr(FILE* fp,char* fmt,...)
+int G__fprinterr(FILE* fp,const char* fmt,...)
 #elif defined(__GNUC__)
 int G__fprinterr(fp,fmt)
 FILE* fp;

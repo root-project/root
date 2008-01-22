@@ -41,7 +41,7 @@ extern void G__setcopyflag G__P((int flag));
 #define G__NUM_STDBOTH 3
 
 
-static void G__unredirectoutput(FILE **sout,FILE **serr,FILE **sin,char *keyword,char *pipefile);
+static void G__unredirectoutput(FILE **sout,FILE **serr,FILE **sin,const char *keyword,const char *pipefile);
 
 #ifdef G__BORLANDCC5
 void G__decrement_undo_index(int *pi);
@@ -51,7 +51,7 @@ void G__show_undo_position(int index);
 void G__init_undo(void);
 int G__clearfilebusy(int ifn);
 void G__storerewindposition(void);
-static void G__display_keyword(FILE *fout,char *keyword,FILE *keyfile);
+static void G__display_keyword(FILE *fout,const char *keyword,FILE *keyfile);
 void G__rewinddictionary(void);
 void G__UnlockCriticalSection(void);
 void G__LockCriticalSection(void); 
@@ -249,7 +249,7 @@ int G__autoloading(char *com)
       classname[j] = 0;
    }
    if (classname[0] && -1 == G__defined_tagname(classname, 2)) {
-      char *dllpost = G__getmakeinfo1("DLLPOST");
+      const char *dllpost = G__getmakeinfo1("DLLPOST");
       char fname[G__MAXFILENAME];
       char prompt[G__ONELINE];
       FILE *fp;
@@ -632,7 +632,7 @@ static void G__display_tempobj(FILE *fout)
 *  display keyword for '/[keyword]' debugger command
 *
 ************************************************************************/
-static void G__display_keyword(FILE* fout, char* keyword, FILE* keyfile)
+static void G__display_keyword(FILE* fout, const char* keyword, FILE* keyfile)
 {
    char line[G__LONGLINE];
    char *null_fgets;
@@ -733,7 +733,7 @@ int G__reloadfile(char *filename)
 /************************************************************************
 * G__display_classkeyword()
 ************************************************************************/
-void G__display_classkeyword(FILE *fout, char *classnamein, char *keyword, int base)
+void G__display_classkeyword(FILE *fout, const char *classnamein, const char *keyword, int base)
 {
    // --
 #ifndef G__OLDIMPLEMENTATION1823
@@ -1052,7 +1052,7 @@ static void G__redirectoutput(char *com
    char *paren;
    char *blacket;
    /* int issemicolumn; */
-   char *openmode;
+   const char *openmode;
    char filename[G__MAXFILENAME];
    int i = 0;
    int j = 1;
@@ -1266,7 +1266,7 @@ static void G__redirectoutput(char *com
 /******************************************************************
 * G__unredirectoutput
 ******************************************************************/
-static void G__unredirectoutput(FILE **sout, FILE **serr, FILE **sin, char *keyword, char *pipefile)
+static void G__unredirectoutput(FILE **sout, FILE **serr, FILE **sin, const char *keyword, const char *pipefile)
 {
    // --
 #ifdef G__REDIRECTIO
@@ -1430,7 +1430,7 @@ int G__ReadInputMode()
 {
   static int inputmodeflag=0;
   if(inputmodeflag==0) {
-    char *inputmodebuf;
+    const char *inputmodebuf;
     inputmodeflag=1;
     inputmodebuf=G__getmakeinfo1("INPUTMODE");
     if(inputmodebuf && inputmodebuf[0]) {

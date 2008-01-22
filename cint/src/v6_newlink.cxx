@@ -310,7 +310,7 @@ void G__incsetup_memfunc(int tagnum);
 *
 *  Verify CINT and DLL version
 **************************************************************************/
-extern char *G__cint_version();
+extern const char *G__cint_version();
 
 void G__check_setup_version(int version,const char *func)
 {
@@ -357,7 +357,8 @@ static void G__fileerror(char *fname)
 char* G__fulltypename(int typenum)
 {
   static char buf[G__LONGLINE];
-  if(-1==typenum) return("");
+  buf[0] = 0;
+  if(-1==typenum) return (buf);
   if(-1==G__newtype.parent_tagnum[typenum]) return(G__newtype.name[typenum]);
   else {
     strcpy(buf,G__fulltagname(G__newtype.parent_tagnum[typenum],0));
@@ -1076,7 +1077,7 @@ void G__cpplink_header(FILE *fp)
 /**************************************************************************
 * G__map_cpp_name()
 **************************************************************************/
-char *G__map_cpp_name(char *in)
+char *G__map_cpp_name(const char *in)
 {
   static char out[G__MAXNAME*6];
   int i=0,j=0,c;
@@ -1124,10 +1125,10 @@ char *G__map_cpp_name(char *in)
 * function name. This routine handles mapping of function and operator
 * overloading in linked C++ object.
 **************************************************************************/
-char *G__map_cpp_funcname(int tagnum,char * /* funcname */,int ifn,int page)
+char *G__map_cpp_funcname(int tagnum,const char * /* funcname */,int ifn,int page)
 {
   static char mapped_name[G__MAXNAME];
-  char *dllid;
+  const char *dllid;
 
   if(G__DLLID[0]) dllid=G__DLLID;
   else if(G__PROJNAME[0]) dllid=G__PROJNAME;
@@ -1663,7 +1664,7 @@ static void G__write_windef_header()
 *
 *
 **************************************************************************/
-void G__set_globalcomp(char *mode,char *linkfilename,char *dllid)
+void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dllid)
 {
   FILE *fp;
   char buf[G__LONGLINE];
@@ -1831,7 +1832,7 @@ static void G__gen_headermessage(FILE *fp,char *fname)
 * G__gen_linksystem()
 *
 **************************************************************************/
-int G__gen_linksystem(char *headerfile)
+int G__gen_linksystem(const char *headerfile)
 {
   FILE *fp;
 
@@ -2293,7 +2294,7 @@ int G__isnonpublicnew(int tagnum)
 {
   int i;
   int hash;
-  char *namenew = "operator new";
+  const char *namenew = "operator new";
   struct G__ifunc_table_internal *ifunc;
 
   G__hash(namenew,hash,i);
@@ -8135,7 +8136,7 @@ void G__specify_link(int link_stub)
       return;
     }
 
-    p = G__strrstr(buf,"::");
+    p = (char*)G__strrstr(buf,"::");
     if(p) {
       int ixx=0;
       if(-1==x_ifunc->tagnum) {

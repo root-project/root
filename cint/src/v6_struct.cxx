@@ -28,8 +28,8 @@ int G__using_namespace();
 int G__get_envtagnum();
 int G__isenclosingclass(int enclosingtagnum, int env_tagnum);
 int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum);
-char* G__find_first_scope_operator(char* name);
-char* G__find_last_scope_operator(char* name);
+char* G__find_first_scope_operator(const char* name);
+char* G__find_last_scope_operator(const char* name);
 int G__class_autoloading(int tagnum);
 void G__define_struct(char type);
 int G__callfunc0(G__value* result, G__ifunc_table* iref, int ifn, G__param* libp, void* p, int funcmatch);
@@ -382,11 +382,11 @@ int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum)
 }
 
 //______________________________________________________________________________
-char* G__find_first_scope_operator(char* name)
+char* G__find_first_scope_operator(const char* name)
 {
    // -- Return a pointer to the first scope operator in name.
    // Only those at the outermost level of template nesting are considered.
-   char* p = name;
+   const char* p = name;
    int single_quote = 0;
    int double_quote = 0;
    int nest = 0;
@@ -400,7 +400,7 @@ char* G__find_first_scope_operator(char* name)
             --nest;
          }
          else if (!nest && (c == ':') && (*(p + 1) == ':')) {
-            return p;
+            return (char*)p;
          }
       }
       if ((c == '\'') && !double_quote) {
@@ -415,11 +415,11 @@ char* G__find_first_scope_operator(char* name)
 }
 
 //______________________________________________________________________________
-char* G__find_last_scope_operator(char* name)
+char* G__find_last_scope_operator(const char* name)
 {
    // -- Return a pointer to the last scope operator in name.
    // Only those at the outermost level of template nesting are considered.
-   char* p = name + strlen(name) - 1;
+   char* p = (char*)name + strlen(name) - 1;
    int single_quote = 0;
    int double_quote = 0;
    int nest = 0;
@@ -1717,10 +1717,10 @@ int G__search_tagname(const char* tagname, int type)
       atom_tagname = (char*) malloc(strlen(tagname) + 10);
    }
 #endif // G__OLDIMPLEMENTATION1823
-   p = G__strrstr((char*) tagname, "::");
+   p = (char*)G__strrstr( tagname, "::");
    if (p && !strchr(p, '>')) {
       strcpy(atom_tagname, tagname);
-      p = G__strrstr(atom_tagname, "::");
+      p = (char*)G__strrstr(atom_tagname, "::");
       *p = 0;
       envtagnum = G__defined_tagname(atom_tagname, 1);
    }

@@ -33,7 +33,7 @@ int getopt(int argc, char **argv, char *optlist);
 #endif
 
 #ifndef __CINT__
-void G__display_tempobject G__P((char* action));
+void G__display_tempobject G__P((const char* action));
 #endif
 
 /* not ready yet
@@ -155,7 +155,7 @@ int G__lasterror_linenum()
 /******************************************************************
  * G__checkscanfarg()
  ******************************************************************/
-int G__checkscanfarg(char *fname, G__param *libp, int n)
+int G__checkscanfarg(const char *fname, G__param *libp, int n)
 {
    int result = 0;
    while (n < libp->paran) {
@@ -661,7 +661,7 @@ G__value G__pointer2memberfunction(char *parameter0, char *parameter1, int *know
    char expr[G__LONGLINE];
    char* mem;
    G__value res;
-   char* opx;
+   const char* opx;
 
    strcpy(buf, parameter0);
 
@@ -902,7 +902,7 @@ char* G__rename_templatefunc(char *funcname, int isrealloc)
  *
  *
  ******************************************************************/
-G__value G__operatorfunction(G__value *presult, char *item, int *known3, char *result7, char *funcname)
+G__value G__operatorfunction(G__value *presult, const char *item, int *known3, char *result7, const char *funcname)
 {
    G__value result3 = G__null;
    struct G__param fpara;
@@ -1111,7 +1111,7 @@ G__value G__operatorfunction(G__value *presult, char *item, int *known3, char *r
 /******************************************************************
  * G__value G__getfunction_libp
  ******************************************************************/
-G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
+G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
 {
    G__value result3;
    char result7[G__LONGLINE];
@@ -1883,7 +1883,7 @@ G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, int* kn
 /******************************************************************
  * G__value G__getfunction(item,known3,memfunc_flag)
  ******************************************************************/
-G__value G__getfunction(char* item, int* known3, int memfunc_flag)
+G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 {
    G__value result3 = G__null;
    char funcname[G__LONGLINE];

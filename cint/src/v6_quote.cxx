@@ -84,7 +84,7 @@ char* G__saveconststring(char* string)
 * the string type value.
 *
 ******************************************************************/
-G__value G__strip_quotation(char *string)
+G__value G__strip_quotation(const char *string)
 {
   int itemp,itemp2=0,hash;
   int templen = G__LONGLINE;

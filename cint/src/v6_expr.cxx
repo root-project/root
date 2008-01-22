@@ -20,8 +20,8 @@ extern "C" {
 
 // Static functions.
 static void G__getiparseobject(G__value* result, char* item);
-static G__value G__conditionaloperator(G__value defined, char* expression, int ig1, char* ebuf);
-static int G__iscastexpr_body(char* ebuf, int lenbuf);
+static G__value G__conditionaloperator(G__value defined, const char* expression, int ig1, char* ebuf);
+static int G__iscastexpr_body(const char* ebuf, int lenbuf);
 #ifdef G__PTR2MEMFUNC
 static int G__getpointer2memberfunc(char* item, G__value* presult);
 #endif // G__PTR2MEMFUNC
@@ -29,12 +29,12 @@ static int G__getoperator(int newoperator, int oldoperator);
 
 // External functions.
 char* G__setiparseobject(G__value* result, char* str);
-G__value G__calc_internal(char* exprwithspace);
-G__value G__getexpr(char* expression);
+G__value G__calc_internal(const char* exprwithspace);
+G__value G__getexpr(const char* expression);
 G__value G__getprod(char* expression1);
-G__value G__getpower(char* expression2);
+G__value G__getpower(const char* expression2);
 G__value G__getitem(char* item);
-int G__test(char* expr);
+int G__test(const char* expr);
 int G__btest(int operator2, G__value lresult, G__value rresult);
 
 // Functions in the C interface.
@@ -551,7 +551,7 @@ static void G__getiparseobject(G__value* result, char* item)
 }
 
 //______________________________________________________________________________
-static G__value G__conditionaloperator(G__value defined, char* expression, int ig1, char* ebuf)
+static G__value G__conditionaloperator(G__value defined, const char* expression, int ig1, char* ebuf)
 {
    // -- Evaluate a?b:c operator.
    int tempop = 0;
@@ -649,7 +649,7 @@ static G__value G__conditionaloperator(G__value defined, char* expression, int i
 }
 
 //______________________________________________________________________________
-static int G__iscastexpr_body(char* ebuf, int lenbuf)
+static int G__iscastexpr_body(const char* ebuf, int lenbuf)
 {
    // --
    int result;
@@ -947,7 +947,7 @@ char* G__setiparseobject(G__value* result, char* str)
 }
 
 //______________________________________________________________________________
-G__value G__calc_internal(char* exprwithspace)
+G__value G__calc_internal(const char* exprwithspace)
 {
    // -- Grand entry for C/C++ expression evaluator.
    //
@@ -1084,7 +1084,7 @@ G__value G__calc_internal(char* exprwithspace)
 }
 
 //______________________________________________________________________________
-G__value G__getexpr(char* expression)
+G__value G__getexpr(const char* expression)
 {
    // -- Grand entry for C/C++ expression evaluator. Space chars must be removed.
    //printf("Begin G__getexpr('%s') ...\n", expression);
@@ -1610,7 +1610,7 @@ G__value G__getprod(char* expression1)
 }
 
 //______________________________________________________________________________
-G__value G__getpower(char* expression2)
+G__value G__getpower(const char* expression2)
 {
    // --
    G__value defined2, reg;
@@ -1872,7 +1872,10 @@ G__value G__getitem(char* item)
       // --
       case '_':
          if ('$' == item[1]) {
-            G__getiparseobject(&result3, item);
+            char tmp[G__ONELINE];
+            strcpy(tmp,item);
+            //G__getiparseobject(&result3, item);
+            G__getiparseobject(&result3, tmp);
             return result3;
          }
       // --
@@ -1970,7 +1973,7 @@ G__value G__getitem(char* item)
 }
 
 //______________________________________________________________________________
-int G__test(char* expr)
+int G__test(const char* expr)
 {
    G__value result = G__getexpr(expr);
    if (result.type == 'u') {

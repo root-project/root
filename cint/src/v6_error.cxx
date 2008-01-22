@@ -23,7 +23,7 @@ int G__const_noerror = 0;
 // Static functions.
 #ifndef G__OLDIMPELMENTATION1174
 #ifndef G__OLDIMPELMENTATION1186
-static char* G__findrpos(char* s1, char* s2);
+static const char* G__findrpos(const char* s1, const char* s2);
 #endif // G__OLDIMPELMENTATION1186
 #endif // G__OLDIMPELMENTATION1174
 #ifndef G__OLDIMPELMENTATION1174
@@ -31,31 +31,31 @@ static int G__splitmessage(char* item);
 #endif // G__OLDIMPELMENTATION1174
 
 // External functions.
-void G__nosupport(char* name);
-void G__malloc_error(char* varname);
-void G__arrayindexerror(int varid, struct G__var_array* var, char* name, int index);
+void G__nosupport(const char* name);
+void G__malloc_error(const char* varname);
+void G__arrayindexerror(int varid, struct G__var_array* var, const char* name, int index);
 #ifdef G__ASM
-int G__asm_execerr(char* message, int num);
+int G__asm_execerr(const char* message, int num);
 #endif // G__ASM
-int G__assign_error(char* item, G__value* pbuf);
-int G__reference_error(char* item);
-int G__warnundefined(char* item);
-int G__unexpectedEOF(char* message);
-int G__shl_load_error(char* shlname, char* message);
-int G__getvariable_error(char* item);
-int G__referencetypeerror(char* new_name);
-int G__syntaxerror(char* expr);
-int G__parenthesiserror(char* expression, char* funcname);
+int G__assign_error(const char* item, G__value* pbuf);
+int G__reference_error(const char* item);
+int G__warnundefined(const char* item);
+int G__unexpectedEOF(const char* message);
+int G__shl_load_error(const char* shlname, const char* message);
+int G__getvariable_error(const char* item);
+int G__referencetypeerror(const char* new_name);
+int G__syntaxerror(const char* expr);
+int G__parenthesiserror(const char* expression, const char* funcname);
 int G__commenterror();
-int G__changeconsterror(char* item, char* categ);
+int G__changeconsterror(const char* item, const char* categ);
 int G__pounderror();
-int G__missingsemicolumn(char* item);
-void G__printerror(char* funcname, int ipara, int paran);
+int G__missingsemicolumn(const char* item);
+void G__printerror(const char* funcname, int ipara, int paran);
 #ifdef G__SECURITY
-int G__check_drange(int p, double low, double up, double d, G__value* result7, char* funcname);
-int G__check_lrange(int p, long low, long up, long l, G__value* result7, char* funcname);
-int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, char* funcname);
-int G__check_nonull(int p, int t, G__value* para, G__value* result7, char* funcname);
+int G__check_drange(int p, double low, double up, double d, G__value* result7, const char* funcname);
+int G__check_lrange(int p, long low, long up, long l, G__value* result7, const char* funcname);
+int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, const char* funcname);
+int G__check_nonull(int p, int t, G__value* para, G__value* result7, const char* funcname);
 #endif // G__SECURITY
 
 // Functions in the C interface.
@@ -74,7 +74,7 @@ int G__genericerror(const char* message);
 #ifndef G__OLDIMPELMENTATION1174
 #ifndef G__OLDIMPELMENTATION1186
 //______________________________________________________________________________
-static char* G__findrpos(char* s1, char* s2)
+static const char* G__findrpos(const char* s1, const char* s2)
 {
    if (!s1 || !s2) {
       return 0;
@@ -125,8 +125,8 @@ static int G__splitmessage(char* item)
    char* buf = (char*) malloc(strlen(item) + 1);
    strcpy(buf, item);
 #ifndef G__OLDIMPELMENTATION1186
-   dot = G__findrpos(buf, ".");
-   point = G__findrpos(buf, "->");
+   dot = (char*)G__findrpos(buf, ".");
+   point = (char*)G__findrpos(buf, "->");
 #else // G__OLDIMPELMENTATION1186
    dot = strrchr(buf, '.');
    point = G__strrstr(buf, "->");
@@ -165,7 +165,7 @@ static int G__splitmessage(char* item)
 //
 
 //______________________________________________________________________________
-void G__nosupport(char* name)
+void G__nosupport(const char* name)
 {
    // -- Print out error message for unsupported capability.
    G__fprinterr(G__serr, "Limitation: %s is not supported", name);
@@ -174,7 +174,7 @@ void G__nosupport(char* name)
 }
 
 //______________________________________________________________________________
-void G__malloc_error(char* varname)
+void G__malloc_error(const char* varname)
 {
    G__fprinterr(G__serr, "Internal Error: malloc failed for %s", varname);
    G__printlinenum();
@@ -186,7 +186,7 @@ void G__malloc_error(char* varname)
 }
 
 //______________________________________________________________________________
-void G__arrayindexerror(int varid, struct G__var_array* var, char* name, int index)
+void G__arrayindexerror(int varid, struct G__var_array* var, const char* name, int index)
 {
    G__fprinterr(G__serr, "Error: Array index out of range %s -> [%d] ", name, index);
    G__fprinterr(G__serr, " valid upto %s", var->varnamebuf[varid]);
@@ -209,7 +209,7 @@ void G__arrayindexerror(int varid, struct G__var_array* var, char* name, int ind
 
 #ifdef G__ASM
 //______________________________________________________________________________
-int G__asm_execerr(char* message, int num)
+int G__asm_execerr(const char* message, int num)
 {
    G__fprinterr(G__serr, "Loop Compile Internal Error: %s %d ", message, num);
    G__genericerror(0);
@@ -219,7 +219,7 @@ int G__asm_execerr(char* message, int num)
 #endif // G__ASM
 
 //______________________________________________________________________________
-int G__assign_error(char* item, G__value* pbuf)
+int G__assign_error(const char* item, G__value* pbuf)
 {
    if (!G__prerun) {
       if (pbuf->type) {
@@ -237,7 +237,7 @@ int G__assign_error(char* item, G__value* pbuf)
 }
 
 //______________________________________________________________________________
-int G__reference_error(char* item)
+int G__reference_error(const char* item)
 {
    G__fprinterr(G__serr, "Error: Incorrect referencing of %s ", item);
    G__genericerror(0);
@@ -248,7 +248,7 @@ int G__reference_error(char* item)
 }
 
 //______________________________________________________________________________
-int G__warnundefined(char* item)
+int G__warnundefined(const char* item)
 {
    if (G__prerun && G__static_alloc && G__func_now >= 0) return 0;
    if (G__no_exec_compile && 0 == G__asm_noverflow) return 0;
@@ -260,16 +260,19 @@ int G__warnundefined(char* item)
       G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
    }
    else {
+      char tmp[G__ONELINE];
+      strcpy(tmp, item);
       if (0 == G__const_noerror
 #ifndef G__OLDIMPELMENTATION1174
-            && !G__splitmessage(item)
+            && !G__splitmessage(tmp)
 #endif // G__OLDIMPELMENTATION1174
          ) {
-         char *p = strchr(item, '(');
+         //char *p = strchr(item, '(');
+         char *p = strchr(tmp, '(');
          if (p) {
-            char tmp[G__ONELINE];
-            strcpy(tmp, item);
-            p = G__strrstr(tmp, "::");
+            //char tmp[G__ONELINE];
+            //strcpy(tmp, item);
+            p = (char*)G__strrstr(tmp, "::");
             if (p) {
                *p = 0;
                p += 2;
@@ -283,8 +286,8 @@ int G__warnundefined(char* item)
             }
          }
          else {
-            char tmp[G__ONELINE];
-            strcpy(tmp, item);
+            //char tmp[G__ONELINE];
+            //strcpy(tmp, item);
             if (p) {
                *p = 0;
                p += 2;
@@ -306,7 +309,7 @@ int G__warnundefined(char* item)
 }
 
 //______________________________________________________________________________
-int G__unexpectedEOF(char* message)
+int G__unexpectedEOF(const char* message)
 {
    G__eof = 2;
    G__fprinterr(G__serr, "Error: Unexpected end of file (%s)", message);
@@ -321,7 +324,7 @@ int G__unexpectedEOF(char* message)
 }
 
 //______________________________________________________________________________
-int G__shl_load_error(char* shlname, char* message)
+int G__shl_load_error(const char* shlname, const char* message)
 {
    G__fprinterr(G__serr, "%s: Failed to load Dynamic link library %s\n", message, shlname);
    G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
@@ -332,7 +335,7 @@ int G__shl_load_error(char* shlname, char* message)
 }
 
 //______________________________________________________________________________
-int G__getvariable_error(char* item)
+int G__getvariable_error(const char* item)
 {
    G__fprinterr(G__serr, "Error: G__getvariable: expression %s", item);
    G__printlinenum();
@@ -344,7 +347,7 @@ int G__getvariable_error(char* item)
 }
 
 //______________________________________________________________________________
-int G__referencetypeerror(char* new_name)
+int G__referencetypeerror(const char* new_name)
 {
    G__fprinterr(G__serr, "Error: Can't take address for reference type %s", new_name);
    G__printlinenum();
@@ -356,7 +359,7 @@ int G__referencetypeerror(char* new_name)
 }
 
 //______________________________________________________________________________
-int G__syntaxerror(char* expr)
+int G__syntaxerror(const char* expr)
 {
    G__fprinterr(G__serr, "Syntax Error: %s", expr);
    G__genericerror(0);
@@ -367,7 +370,7 @@ int G__syntaxerror(char* expr)
 }
 
 //______________________________________________________________________________
-int G__parenthesiserror(char* expression, char* funcname)
+int G__parenthesiserror(const char* expression, const char* funcname)
 {
    G__fprinterr(G__serr, "Syntax error: %s: Parenthesis or quotation unmatch %s"
                 , funcname , expression);
@@ -392,7 +395,7 @@ int G__commenterror()
 }
 
 //______________________________________________________________________________
-int G__changeconsterror(char* item, char* categ)
+int G__changeconsterror(const char* item, const char* categ)
 {
    if (G__dispmsg >= G__DISPWARN) {
       G__fprinterr(G__serr, "Warning: Re-initialization %s %s", categ, item);
@@ -427,7 +430,7 @@ int G__pounderror()
 }
 
 //______________________________________________________________________________
-int G__missingsemicolumn(char* item)
+int G__missingsemicolumn(const char* item)
 {
    G__fprinterr(G__serr, "Syntax Error: %s Maybe missing ';'", item);
    G__genericerror(0);
@@ -435,7 +438,7 @@ int G__missingsemicolumn(char* item)
 }
 
 //______________________________________________________________________________
-void G__printerror(char* funcname, int ipara, int paran)
+void G__printerror(const char* funcname, int ipara, int paran)
 {
    if (G__dispmsg >= G__DISPWARN) {
       G__fprinterr(G__serr
@@ -452,7 +455,7 @@ void G__printerror(char* funcname, int ipara, int paran)
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-int G__check_drange(int p, double low, double up, double d, G__value* result7, char* funcname)
+int G__check_drange(int p, double low, double up, double d, G__value* result7, const char* funcname)
 {
    // -- Check for double.
    if (d < low || up < d) {
@@ -467,7 +470,7 @@ int G__check_drange(int p, double low, double up, double d, G__value* result7, c
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-int G__check_lrange(int p, long low, long up, long l, G__value* result7, char* funcname)
+int G__check_lrange(int p, long low, long up, long l, G__value* result7, const char* funcname)
 {
    // -- Check for long.
    if (l < low || up < l) {
@@ -483,7 +486,7 @@ int G__check_lrange(int p, long low, long up, long l, G__value* result7, char* f
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, char* funcname)
+int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, const char* funcname)
 {
    // -- Check for ???
    if (para->type != t1 && para->type != t2) {
@@ -498,7 +501,7 @@ int G__check_type(int p, int t1, int t2, G__value* para, G__value* result7, char
 
 #ifdef G__SECURITY
 //______________________________________________________________________________
-int G__check_nonull(int p, int t, G__value* para, G__value* result7, char* funcname)
+int G__check_nonull(int p, int t, G__value* para, G__value* result7, const char* funcname)
 {
    // -- Check for nil pointer.
    long l;
@@ -550,7 +553,7 @@ int G__const_whatnoerror()
 //______________________________________________________________________________
 int G__printlinenum()
 {
-   char* format = " FILE:%s LINE:%d\n";
+   const char* format = " FILE:%s LINE:%d\n";
 #ifdef VISUAL_CPLUSPLUS
    // make error msg Visual Studio compatible
    format = " %s(%d)\n";
