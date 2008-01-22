@@ -463,7 +463,7 @@ endef
 else
 
 define BuildWithLib
-        $(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.dylib,$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
+        $(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
 endef
 
 endif
