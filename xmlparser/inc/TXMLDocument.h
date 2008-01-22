@@ -37,6 +37,9 @@ class TXMLNode;
 class TXMLDocument : public TObject {
 
 private:
+   TXMLDocument(const TXMLDocument&);            // Not implemented
+   TXMLDocument& operator=(const TXMLDocument&); // Not implemented
+
    _xmlDoc  *fXMLDoc;           // libxml xml doc
    TXMLNode *fRootNode;         // the root node 
 

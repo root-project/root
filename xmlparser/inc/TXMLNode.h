@@ -40,6 +40,9 @@ struct _xmlNode;
 class TXMLNode : public TObject {
 
 private:
+   TXMLNode(const TXMLNode&);            // Not implemented
+   TXMLNode& operator=(const TXMLNode&); // Not implemented
+
    _xmlNode *fXMLNode;        // libxml node
 
    TXMLNode *fParent;         // Parent node

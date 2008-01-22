@@ -65,9 +65,13 @@ public:
 //_____________________________________________________________________________
 
 class TDNDData : public TObject {
+private:
+   TDNDData(const TDNDData&);            // Not implemented
+   TDNDData& operator=(const TDNDData&); // Not implemented
+
 public:
-   TDNDData(Atom_t dt = kNone, void *d = 0, Int_t len = 0, Atom_t act = kNone)
-           { fDataType = dt; fData = d; fDataLength = len; fAction = act; }
+   TDNDData(Atom_t dt = kNone, void *d = 0, Int_t len = 0, Atom_t act = kNone) :
+      fDataType(dt), fAction(act), fData(d), fDataLength(len) {}
    ~TDNDData() {}
 
    Atom_t    fDataType;       // Data type description
@@ -81,6 +85,10 @@ public:
 //----------------------------------------------------------------------
 
 class TGDNDManager : public TObject {
+
+private:
+   TGDNDManager(const TGDNDManager&);            // Not implemented
+   TGDNDManager& operator=(const TGDNDManager&); // Not implemented
 
 protected:
    TGFrame       *fMain;                         // pointer on TGMainFrame

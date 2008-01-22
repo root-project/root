@@ -89,6 +89,26 @@ struct FontAttributes_t {
       fSlant     (kFontSlantRoman),
       fUnderline (0),
       fOverstrike(0) { }
+
+   FontAttributes_t(const FontAttributes_t& f): // copy constructor
+      fFamily    (f.fFamily),
+      fPointsize (f.fPointsize),
+      fWeight    (f.fWeight),
+      fSlant     (f.fSlant),
+      fUnderline (f.fUnderline),
+      fOverstrike(f.fOverstrike) { }
+
+   FontAttributes_t& operator=(const FontAttributes_t& f) // assignment operator
+   {
+      fFamily     = f.fFamily;
+      fPointsize  = f.fPointsize;
+      fWeight     = f.fWeight;
+      fSlant      = f.fSlant;
+      fUnderline  = f.fUnderline;
+      fOverstrike = f.fOverstrike;
+      return *this;
+   }
+
 };
 
 

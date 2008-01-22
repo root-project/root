@@ -45,6 +45,10 @@ struct   _xmlParserCtxt;
 
 class TXMLParser : public TObject, public TQObject {
 
+private:
+   TXMLParser(const TXMLParser&);            // Not implemented
+   TXMLParser& operator=(const TXMLParser&); // Not implemented
+
 protected:
    _xmlParserCtxt     *fContext;          // parse the xml file
    Bool_t              fValidate;         // to validate the parse context
