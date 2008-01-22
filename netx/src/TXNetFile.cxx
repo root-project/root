@@ -1219,7 +1219,7 @@ void TXNetFile::SetEnv()
    if (pxybits.Length() > 0)
       gSystem->Setenv("XrdSecGSIPROXYKEYBITS",pxybits.Data());
 
-   TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","2");
+   TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","1");
    if (crlcheck.Length() > 0)
       gSystem->Setenv("XrdSecGSICRLCHECK",crlcheck.Data());
 
