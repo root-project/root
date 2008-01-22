@@ -640,6 +640,7 @@ class genDictionary(object) :
     if (gccxmlinfo) : c += '/*\n%s*/\n\n' % gccxmlinfo
     c += '#ifdef _WIN32\n'
     c += '#pragma warning ( disable : 4786 )\n'
+    c += '#pragma warning ( disable : 4345 )\n'
     c += '#endif\n'
     c += '#include "%s"\n' % self.hfile
     c += '#include "Reflex/Builder/ReflexBuilder.h"\n'
