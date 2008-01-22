@@ -11,8 +11,6 @@
 
 #include "TEveText.h"
 
-#include "FTFont.h"
-
 #include "TFTGLManager.h"
 #include "TString.h"
 #include "TBuffer3D.h"
