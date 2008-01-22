@@ -2229,7 +2229,7 @@ int G__preprocessor(      char *outname,const char *inname,int cppflag
   char *post;
 
   inlen = strlen(inname);
-  post = strrchr(inname,'.');
+  post = (char*)strrchr(inname,'.');
 
   if(post && inlen>2) {
     if(0==strcmp(inname+strlen(inname)-2,".c")) {
