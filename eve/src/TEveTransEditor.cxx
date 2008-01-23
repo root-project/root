@@ -24,26 +24,21 @@
 //
 // Sub-editor for TEveTrans class.
 
-ClassImp(TEveTransSubEditor)
+ClassImp(TEveTransSubEditor);
 
 //______________________________________________________________________________
 TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
-   TGVerticalFrame(p),
-   fTrans  (0),
-
-   fTopHorFrame(0),
-
-   fUseTrans(0),
-   fEditTrans(0),
-
-   fEditTransFrame(0),
-
-   fPos(0),
-   fRot(0),
-   fScale(0),
-
-   fAutoUpdate(0),
-   fUpdate(0)
+   TGVerticalFrame (p),
+   fTrans          (0),
+   fTopHorFrame    (0),
+   fUseTrans       (0),
+   fEditTrans      (0),
+   fEditTransFrame (0),
+   fPos            (0),
+   fRot            (0),
+   fScale          (0),
+   fAutoUpdate     (0),
+   fUpdate         (0)
 {
    // Constructor.
 
@@ -113,14 +108,14 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fScale->Connect("ValueSet()", "TEveTransSubEditor", this, "DoTransChanged()");
 
    {
-     TGHorizontalFrame* hframe = new TGHorizontalFrame(fEditTransFrame);
-     fAutoUpdate = new TGCheckButton(hframe, "AutoUpdate");
-     hframe->AddFrame(fAutoUpdate, new TGLayoutHints(kLHintsLeft, 1,1,1,1));
-     fUpdate = new TGTextButton(hframe, "Update");
-     hframe->AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft, 0,0,1,1));
-     fUpdate->Connect("Clicked()", "TEveTransSubEditor", this, "TransChanged()");
+      TGHorizontalFrame* hframe = new TGHorizontalFrame(fEditTransFrame);
+      fAutoUpdate = new TGCheckButton(hframe, "AutoUpdate");
+      hframe->AddFrame(fAutoUpdate, new TGLayoutHints(kLHintsLeft, 1,1,1,1));
+      fUpdate = new TGTextButton(hframe, "Update");
+      hframe->AddFrame(fUpdate, new TGLayoutHints(kLHintsLeft, 0,0,1,1));
+      fUpdate->Connect("Clicked()", "TEveTransSubEditor", this, "TransChanged()");
 
-     fEditTransFrame->AddFrame(hframe, new TGLayoutHints(kLHintsTop , 0,0,4,0));
+      fEditTransFrame->AddFrame(hframe, new TGLayoutHints(kLHintsTop , 0,0,4,0));
    }
 
    AddFrame(fEditTransFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0,0,1,2));
@@ -139,35 +134,19 @@ void TEveTransSubEditor::SetModel(TEveTrans* t)
    fEditTrans->SetState(fTrans->fEditTrans ? kButtonDown : kButtonUp);
    if (fTrans->fEditTrans)
    {
-     fEditTransFrame->MapWindow();
+      fEditTransFrame->MapWindow();
 
-     // rotation
-     if (fTrans->GetEditRotation() == kFALSE)
-     {
-       fRot->GetValuator(0)->GetEntry()->SetState(kFALSE);
-       fRot->GetValuator(1)->GetEntry()->SetState(kFALSE);
-       fRot->GetValuator(2)->GetEntry()->SetState(kFALSE);
-     }
-     else {
-       fRot->GetValuator(0)->GetEntry()->SetState(kTRUE);
-       fRot->GetValuator(1)->GetEntry()->SetState(kTRUE);
-       fRot->GetValuator(2)->GetEntry()->SetState(kTRUE);
-     }
-     // scale
-     if (fTrans->GetEditScale() == kFALSE)
-     {
-       fScale->GetValuator(0)->GetEntry()->SetState(kFALSE);
-       fScale->GetValuator(1)->GetEntry()->SetState(kFALSE);
-       fScale->GetValuator(2)->GetEntry()->SetState(kFALSE);
-     }
-     else {
-       fScale->GetValuator(0)->GetEntry()->SetState(kTRUE);
-       fScale->GetValuator(1)->GetEntry()->SetState(kTRUE);
-       fScale->GetValuator(2)->GetEntry()->SetState(kTRUE);
-     }
+      for (Int_t i=0; i<3; ++i)
+      {
+         fRot  ->GetValuator(i)->GetEntry()->SetState(fTrans->GetEditRotation());
+         fScale->GetValuator(i)->GetEntry()->SetState(fTrans->GetEditScale());
+      }
    }
    else
+   {
       fEditTransFrame->UnmapWindow();
+   }
+
    ((TGMainFrame*)fEditTransFrame->GetMainFrame())->Layout();
 
    fPos->SetValues(fTrans->ArrT());
@@ -255,7 +234,7 @@ void TEveTransSubEditor::DoTransChanged()
 //
 // Editor for TEveTrans class.
 
-ClassImp(TEveTransEditor)
+ClassImp(TEveTransEditor);
 
 //______________________________________________________________________________
 TEveTransEditor::TEveTransEditor(const TGWindow *p, Int_t width, Int_t height,

@@ -490,10 +490,11 @@ TGLContext* TGLContextIdentity::GetDefaultContextAny()
 //______________________________________________________________________________
 TFTGLManager* TGLContextIdentity::GetFontManager()
 {
+   //Get the free-type font-manager associated with this context-identity.
    if(!fFontManager) fFontManager = new TFTGLManager();
-
    return fFontManager;
 }
+
 //______________________________________________________________________________
 void TGLContextIdentity::CheckDestroy()
 {
