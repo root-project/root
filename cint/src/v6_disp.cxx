@@ -2270,7 +2270,7 @@ int G__FreeConsole()
 /**************************************************************************
 * G__printf()
 **************************************************************************/
-int G__printf(char *fmt,...)
+int G__printf(const char *fmt,...)
 {
   int result;
   va_list argptr;
@@ -2287,7 +2287,7 @@ int G__printf(char *fmt,...)
 /**************************************************************************
 * G__fprintf()
 **************************************************************************/
-int G__fprintf(FILE *fp,char *fmt,...)
+int G__fprintf(FILE *fp,const char *fmt,...)
 {
   int result;
   va_list argptr;
