@@ -81,8 +81,8 @@ endif
 else
 ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
 F77          := gfortran
-F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
-F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT))
+F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
 endif
 endif
 endif
