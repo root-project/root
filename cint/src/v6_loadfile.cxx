@@ -421,7 +421,7 @@ void G__SetUseCINTSYSDIR(int UseCINTSYSDIR)
 ******************************************************************/
 int G__getcintsysdir()
 {
-  char *env;
+  const char *env;
   if('*'==G__cintsysdir[0]) {
 #if defined(G__ROOT)
 # ifdef ROOTBUILD
