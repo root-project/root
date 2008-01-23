@@ -67,7 +67,7 @@ public:
 };
 
 namespace stdext {
-  template<class T> static inline size_t __gnu_cxx_hash_obj(const T& __o) {
+  template<class T>  inline size_t __gnu_cxx_hash_obj(const T& __o) {
     unsigned long __h = 0;
     const char* s = (const char*)&__o;
     for (size_t i=0; i<sizeof(T); ++s, ++i)
