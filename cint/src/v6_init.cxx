@@ -512,6 +512,7 @@ int G__main(int argc, char** argv)
    const char* linkfilename = 0;
    int linkflag = 0;
    char* dllid = 0;
+   char clnull[1]; clnull[0]=0;
    struct G__dictposition stubbegin;
    char* icom = 0;
    stubbegin.ptype = (char*) G__PVOID;
@@ -636,7 +637,9 @@ int G__main(int argc, char** argv)
    /*************************************************************
     * Get command options
     *************************************************************/
-   while ((c = getopt(argc, argv, "a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:-:@+:")) != EOF) {
+   char magicchars[100];
+   strcpy(magicchars,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:-:@+:");
+   while ((c = getopt(argc, argv, magicchars)) != EOF) {
       switch (c) {
 #ifndef G__OLDIMPLEMENTATION2226
          case '+':
@@ -913,7 +916,7 @@ int G__main(int argc, char** argv)
                }
             }
             if (!dllid) {
-               dllid = "";
+               dllid = clnull;
             }
             G__set_globalcomp(optarg, linkfilename, dllid);
             break;
@@ -1786,7 +1789,8 @@ int G__init_globals()
 
    /* The first entry in the const string is a blank string
     * which is never used */
-   G__conststringlist.string = "";
+   char clnull[1]; clnull[0]=0;
+   G__conststringlist.string = clnull;
    G__conststringlist.hash = 0;
    G__conststringlist.prev = 0;
    G__plastconststring = &G__conststringlist;

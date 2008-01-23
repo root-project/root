@@ -964,8 +964,8 @@ const char* G__load_text(const char* namedmacro)
 
    switch (fentry) {
       case G__LOADFILE_SUCCESS:
-         if (!istmpnam) result = "(tmpfile)";
-         else           result = tname;
+         if (!istmpnam) strcpy(tname,"(tmpfile)");
+         result = tname;
          break;
       case G__LOADFILE_DUPLICATE:
       case G__LOADFILE_FAILURE:

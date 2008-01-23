@@ -23,7 +23,7 @@ static void G__getiparseobject(G__value* result, char* item);
 static G__value G__conditionaloperator(G__value defined, const char* expression, int ig1, char* ebuf);
 static int G__iscastexpr_body(const char* ebuf, int lenbuf);
 #ifdef G__PTR2MEMFUNC
-static int G__getpointer2memberfunc(char* item, G__value* presult);
+static int G__getpointer2memberfunc(const char* item, G__value* presult);
 #endif // G__PTR2MEMFUNC
 static int G__getoperator(int newoperator, int oldoperator);
 
@@ -33,7 +33,7 @@ G__value G__calc_internal(const char* exprwithspace);
 G__value G__getexpr(const char* expression);
 G__value G__getprod(char* expression1);
 G__value G__getpower(const char* expression2);
-G__value G__getitem(char* item);
+G__value G__getitem(const char* item);
 int G__test(const char* expr);
 int G__btest(int operator2, G__value lresult, G__value rresult);
 
@@ -669,18 +669,20 @@ static int G__iscastexpr_body(const char* ebuf, int lenbuf)
 
 #ifdef G__PTR2MEMFUNC
 //______________________________________________________________________________
-static int G__getpointer2memberfunc(char* item, G__value* presult)
+static int G__getpointer2memberfunc(const char* item, G__value* presult)
 {
    int hash = 0;
    long scope_struct_offset = 0;
    int scope_tagnum = -1;
    int ifn;
    struct G__ifunc_table_internal *memfunc;
-   char *p = strstr(item, "::");
+   const char *p = strstr(item, "::");
 
    if (!p) return(0);
 
-   G__scopeoperator(item, &hash, &scope_struct_offset, &scope_tagnum);
+   char item2[G__LONGLINE];
+   strcpy(item2,item);
+   G__scopeoperator(item2, &hash, &scope_struct_offset, &scope_tagnum);
    if (scope_tagnum < 0 || scope_tagnum >= G__struct.alltag) return(0);
 
    G__incsetup_memfunc(scope_tagnum);
@@ -1719,7 +1721,7 @@ G__value G__getpower(const char* expression2)
 }
 
 //______________________________________________________________________________
-G__value G__getitem(char* item)
+G__value G__getitem(const char* item)
 {
    // --
    int known;
@@ -1820,7 +1822,9 @@ G__value G__getitem(char* item)
 #endif // G__ASM
          break;
       case '\'':
-         result3 = G__strip_singlequotation(item);
+         char tmp[G__ONELINE];
+         strcpy(tmp,item);
+         result3 = G__strip_singlequotation(tmp);
          result3.tagnum = -1;
          result3.typenum = -1;
          result3.ref = 0;
@@ -1884,7 +1888,8 @@ G__value G__getitem(char* item)
          known = 0;
          G__var_type = 'p';
          // variable
-         result3 = G__getvariable(item, &known, &G__global, G__p_local);
+         strcpy(tmp,item);
+         result3 = G__getvariable(tmp, &known, &G__global, G__p_local);
          if (!known && (result3.tagnum != -1) && !result3.obj.i) {
             // this is "a.b", we know "a", but it has no "b" - there is no use
             // in looking at other places.

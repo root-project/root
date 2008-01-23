@@ -139,7 +139,7 @@ G__value G__calc_internal(const char *exprwithspace);
 G__value G__getexpr(const char *expression);
 G__value G__getprod(char *expression1);
 G__value G__getpower(const char *expression2);
-G__value G__getitem(char *item);
+G__value G__getitem(const char *item);
 int G__testandor(int lresult,const char *rexpression,int operator2);
 int G__test(const char *expression2);
 int G__btest(int operator2,G__value lresult,G__value rresult);

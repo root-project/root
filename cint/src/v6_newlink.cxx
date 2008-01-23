@@ -280,7 +280,7 @@ int G__isnonpublicnew(int tagnum);
 void  G__if_ary_union_reset(int ifn,struct G__ifunc_table *ifunc);
 static int G__isprotecteddestructoronelevel(int tagnum);
 void  G__if_ary_union(FILE *fp,int ifn,struct G__ifunc_table *ifunc);
-char *G__mark_linked_tagnum(int tagnum);
+const char *G__mark_linked_tagnum(int tagnum);
 static int G__isprivateconstructorifunc(int tagnum,int iscopy);
 static int G__isprivateconstructorvar(int tagnum,int iscopy);
 static int G__isprivatedestructorifunc(int tagnum);
@@ -658,7 +658,7 @@ void G__cpp_initialize(FILE *fp)
   }
   fprintf(fp,"class G__cpp_setup_init%s {\n",G__DLLID);
   fprintf(fp,"  public:\n");
-  if (G__DLLID && G__DLLID[0]) {
+  if (G__DLLID[0]) {
     fprintf(fp,"    G__cpp_setup_init%s() { G__add_setup_func(\"%s\",(G__incsetup)(&G__cpp_setup%s)); G__call_setup_funcs(); }\n",G__DLLID,G__DLLID,G__DLLID);
     fprintf(fp,"   ~G__cpp_setup_init%s() { G__remove_setup_func(\"%s\"); }\n",G__DLLID,G__DLLID);
   } else {
@@ -1467,7 +1467,7 @@ char *G__get_link_tagname(int tagnum)
 *
 *  Setup and return tagnum
 **************************************************************************/
-char *G__mark_linked_tagnum(int tagnum)
+const char *G__mark_linked_tagnum(int tagnum)
 {
   int tagnumorig = tagnum;
   if(tagnum<0) {
