@@ -141,6 +141,13 @@ ifneq ($(subst win,,$(ARCH)),$(ARCH))
 	@rm -f $(@:.dll=.lib) $(@:.dll=.exp) # remove import libs
 endif
 
+$(CINTDIRDLLS)/stdcxxfunc.dll: $(CINTDIRL)/G__cpp_stdcxxfunc.o
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
+	$(CINTDLLSOEXTCMD)
+ifneq ($(subst win,,$(ARCH)),$(ARCH))
+	@rm -f $(@:.dll=.lib) $(@:.dll=.exp) # remove import libs
+endif
+
 $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
 	$(CINTDLLSOEXTCMD)
@@ -157,9 +164,9 @@ $(CINTDIRDLLSTL)/G__cpp_%.cxx:
 	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
 	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
-$(CINTDIRDLLINC)/G__cpp_%.cxx:
+$(CINTDIRL)/G__cpp_%.cxx:
 	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
-	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
+	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRL) \
 	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
 $(CINTDIRL)/G__c_%.c:
