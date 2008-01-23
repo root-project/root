@@ -1876,7 +1876,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
    char* pparen;
    re_try_after_std:
    // search for pattern "::"
-   pc = G__find_first_scope_operator(name);
+   pc = (char*)G__find_first_scope_operator(name);
    // no scope operator, return
    pparen = strchr(name, '(');
    if (NULL == pc || strncmp(name, "operator ", 9) == 0 || (pparen && pparen < pc)) {
@@ -1894,7 +1894,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
       G__hash(name, (*phash), i)
       /* If we do no have anymore scope operator, we know the request of
          for the global name space */
-      pc = G__find_first_scope_operator(name);
+      pc = (char*)G__find_first_scope_operator(name);
       if (pc == 0) return(G__GLOBALSCOPE);
    }
 #ifndef G__STD_NAMESPACE
@@ -1947,7 +1947,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
 
       scope = member;
    }
-   while ((pc = G__find_first_scope_operator(scope)));
+   while ((pc = (char*)G__find_first_scope_operator(scope)));
    *pstruct_offset += offset_sum;
 #ifdef G__ASM
    if (G__asm_noverflow) {

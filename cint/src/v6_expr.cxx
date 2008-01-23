@@ -680,9 +680,7 @@ static int G__getpointer2memberfunc(const char* item, G__value* presult)
 
    if (!p) return(0);
 
-   char item2[G__LONGLINE];
-   strcpy(item2,item);
-   G__scopeoperator(item2, &hash, &scope_struct_offset, &scope_tagnum);
+   G__scopeoperator((char*)item, &hash, &scope_struct_offset, &scope_tagnum);
    if (scope_tagnum < 0 || scope_tagnum >= G__struct.alltag) return(0);
 
    G__incsetup_memfunc(scope_tagnum);
@@ -1822,9 +1820,7 @@ G__value G__getitem(const char* item)
 #endif // G__ASM
          break;
       case '\'':
-         char tmp[G__ONELINE];
-         strcpy(tmp,item);
-         result3 = G__strip_singlequotation(tmp);
+         result3 = G__strip_singlequotation((char*)item);
          result3.tagnum = -1;
          result3.typenum = -1;
          result3.ref = 0;
@@ -1876,10 +1872,7 @@ G__value G__getitem(const char* item)
       // --
       case '_':
          if ('$' == item[1]) {
-            char tmp[G__ONELINE];
-            strcpy(tmp,item);
-            //G__getiparseobject(&result3, item);
-            G__getiparseobject(&result3, tmp);
+            G__getiparseobject(&result3, (char*)item);
             return result3;
          }
       // --
@@ -1888,8 +1881,7 @@ G__value G__getitem(const char* item)
          known = 0;
          G__var_type = 'p';
          // variable
-         strcpy(tmp,item);
-         result3 = G__getvariable(tmp, &known, &G__global, G__p_local);
+         result3 = G__getvariable((char*)item, &known, &G__global, G__p_local);
          if (!known && (result3.tagnum != -1) && !result3.obj.i) {
             // this is "a.b", we know "a", but it has no "b" - there is no use
             // in looking at other places.

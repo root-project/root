@@ -2076,7 +2076,7 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
    char *p;
    strcpy(atom_name,templatename);
    patom = atom_name;
-   while( (p=G__find_first_scope_operator(patom)) ) patom = p+2;
+   while( (p=(char*)G__find_first_scope_operator(patom)) ) patom = p+2;
    if(patom==atom_name) {
      scope_tagnum = -1;
      G__hash(atom_name,hash,temp)

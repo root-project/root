@@ -1909,7 +1909,7 @@ extern G__EXPORT int G__scratch_upto G__P((struct G__dictposition *dictpos));
 extern G__EXPORT void G__store_dictposition G__P((struct G__dictposition* dictpos));
 extern G__EXPORT int G__printf (const char* fmt,...);
 extern G__EXPORT void G__free_tempobject G__P((void));
-extern G__EXPORT int G__display_class(FILE *fout,const char *name,int base,int start);
+extern G__EXPORT int G__display_class(FILE *fout,char *name,int base,int start);
 extern G__EXPORT int G__display_includepath(FILE *fout);
 extern G__EXPORT void G__set_alloclockfunc(void(*)());
 extern G__EXPORT void G__set_allocunlockfunc(void(*)());

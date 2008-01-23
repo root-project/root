@@ -29,15 +29,15 @@ void G__set_alloclockfunc(void (*foo)()) { G__AllocMutexLock = foo; }
 void G__set_allocunlockfunc(void (*foo)()) { G__AllocMutexUnLock = foo; }
 
 //______________________________________________________________________________
-G__value G__new_operator(const char* express)
+G__value G__new_operator(const char* expression)
 {
    // -- FIXME: Describe this function!
    // new type
    // new type[10]
    // new type(53)
    // new (arena)type
-   char expression[G__LONGLINE];
-   strcpy (expression,express);
+   //char expression[G__LONGLINE];
+   //strcpy (expression,express);
    char arena[G__ONELINE];
    long memarena = 0;
    int arenaflag = 0;
@@ -95,7 +95,7 @@ G__value G__new_operator(const char* express)
    //
    //  Get initializer, arrayindex, type, pinc and size.
    //
-   type = expression + p;
+   type = (char*)expression + p;
    initializer = strchr(type, '(');
    arrayindex = strchr(type, '[');
    // The initializer and arrayindex are exclusive.

@@ -810,13 +810,11 @@ extern int G__class_autoloading G__P((int tagnum));
 * G__display_class()
 *
 ****************************************************************/
-int G__display_class(FILE *fout, const char *aname,int base,int start)
+int G__display_class(FILE *fout, char *name,int base,int start)
 {
   int tagnum;
   int i,j;
   struct G__inheritance *baseclass;
-  char name[G__ONELINE];
-  strcpy(name,aname);
   char temp[G__ONELINE];
   char msg[G__LONGLINE];
   char *p;

@@ -28,8 +28,8 @@ int G__using_namespace();
 int G__get_envtagnum();
 int G__isenclosingclass(int enclosingtagnum, int env_tagnum);
 int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum);
-char* G__find_first_scope_operator(const char* name);
-char* G__find_last_scope_operator(const char* name);
+const char* G__find_first_scope_operator(const char* name);
+const char* G__find_last_scope_operator(const char* name);
 int G__class_autoloading(int tagnum);
 void G__define_struct(char type);
 int G__callfunc0(G__value* result, G__ifunc_table* iref, int ifn, G__param* libp, void* p, int funcmatch);
@@ -382,7 +382,7 @@ int G__isenclosingclassbase(int enclosingtagnum, int env_tagnum)
 }
 
 //______________________________________________________________________________
-char* G__find_first_scope_operator(const char* name)
+const char* G__find_first_scope_operator(const char* name)
 {
    // -- Return a pointer to the first scope operator in name.
    // Only those at the outermost level of template nesting are considered.
@@ -400,7 +400,7 @@ char* G__find_first_scope_operator(const char* name)
             --nest;
          }
          else if (!nest && (c == ':') && (*(p + 1) == ':')) {
-            return (char*)p;
+            return p;
          }
       }
       if ((c == '\'') && !double_quote) {
@@ -415,11 +415,11 @@ char* G__find_first_scope_operator(const char* name)
 }
 
 //______________________________________________________________________________
-char* G__find_last_scope_operator(const char* name)
+const char* G__find_last_scope_operator(const char* name)
 {
    // -- Return a pointer to the last scope operator in name.
    // Only those at the outermost level of template nesting are considered.
-   char* p = (char*)name + strlen(name) - 1;
+   const char* p = name + strlen(name) - 1;
    int single_quote = 0;
    int double_quote = 0;
    int nest = 0;
@@ -1540,7 +1540,7 @@ int G__defined_tagname(const char* tagname, int noerror)
    else {
       strcpy(temp, tagname);
    }
-   p = G__find_last_scope_operator(temp);
+   p = (char*)G__find_last_scope_operator(temp);
    if (p) {
       strcpy(atom_tagname, p + 2);
       *p = '\0';
@@ -1740,7 +1740,7 @@ int G__search_tagname(const char* tagname, int type)
          return -1;
       }
       strcpy(temp, tagname);
-      p = G__find_last_scope_operator(temp);
+      p = (char*)G__find_last_scope_operator(temp);
       if (p) {
          strcpy(atom_tagname, p + 2);
          *p = '\0';

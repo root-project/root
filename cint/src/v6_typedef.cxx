@@ -48,7 +48,7 @@ static int G__defined_typename_exact(char *type_name)
   strcpy(temp2,type_name);
 
   /* find 'xxx::yyy' */
-  p = G__find_last_scope_operator (temp2);
+  p = (char*)G__find_last_scope_operator (temp2);
 
   /* abandon scope operator if 'zzz (xxx::yyy)www' */
   par = strchr(temp2,'(');
@@ -1079,7 +1079,7 @@ int G__defined_typename(const char *type_name)
   char* skipconst = temp2;
   while (!strncmp(skipconst, "const ", 6))
      skipconst += 6;
-  p = G__find_last_scope_operator(skipconst);
+  p = (char*)G__find_last_scope_operator(skipconst);
 
 
   /* abandon scope operator if 'zzz (xxx::yyy)www' */

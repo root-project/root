@@ -260,18 +260,15 @@ int G__warnundefined(const char* item)
       G__CHECK(G__SECURE_EXIT_AT_ERROR, 1, G__return = G__RETURN_EXIT1);
    }
    else {
-      char tmp[G__ONELINE];
-      strcpy(tmp, item);
       if (0 == G__const_noerror
 #ifndef G__OLDIMPELMENTATION1174
-            && !G__splitmessage(tmp)
+            && !G__splitmessage((char*)item)
 #endif // G__OLDIMPELMENTATION1174
          ) {
-         //char *p = strchr(item, '(');
-         char *p = strchr(tmp, '(');
+         char *p = strchr(item, '(');
          if (p) {
-            //char tmp[G__ONELINE];
-            //strcpy(tmp, item);
+            char tmp[G__ONELINE];
+            strcpy(tmp, item);
             p = (char*)G__strrstr(tmp, "::");
             if (p) {
                *p = 0;
@@ -286,8 +283,8 @@ int G__warnundefined(const char* item)
             }
          }
          else {
-            //char tmp[G__ONELINE];
-            //strcpy(tmp, item);
+            char tmp[G__ONELINE];
+            strcpy(tmp, item);
             if (p) {
                *p = 0;
                p += 2;

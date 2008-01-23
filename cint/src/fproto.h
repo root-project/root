@@ -399,8 +399,8 @@ long G__get_functioninfo(const char *item,long *phandle,long *pindex,int tagnum)
 int G__get_envtagnum(void);
 int G__isenclosingclass(int enclosingtagnum,int env_tagnum);
 int G__isenclosingclassbase(int enclosingtagnum,int env_tagnum);
-char* G__find_first_scope_operator(const char* name);
-char* G__find_last_scope_operator(const char* name);
+const char* G__find_first_scope_operator(const char* name);
+const char* G__find_last_scope_operator(const char* name);
 int G__checkset_charlist(char *tname,struct G__Charlist *pcall_para,int narg,int ftype);
 void G__define_struct(char type);
 G__value G__classassign(long pdest,int tagnum,G__value result);
