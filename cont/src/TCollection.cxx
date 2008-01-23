@@ -242,15 +242,12 @@ void TCollection::ls(Option_t *option) const
    // Wildcarding supported, eg option="xxx*" lists only objects
    // with names xxx*.
 
-   TObject::ls(option);
-
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
    char *star = 0;
    if (option) star = (char*)strchr(option,'*');
 
-   TROOT::IncreaseDirLevel();
    while ((object = next())) {
       if (star) {
          TString s = object->GetName();
@@ -258,7 +255,6 @@ void TCollection::ls(Option_t *option) const
       }
       object->ls(option);
    }
-   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________
@@ -276,8 +272,6 @@ void TCollection::Print(Option_t *wildcard) const
    // Wildcarding is supported, e.g. wildcard="xxx*" prints only objects
    // with names matching xxx*.
 
-   TObject::Print(wildcard);
-
    if (!wildcard) wildcard = "";
    TRegexp re(wildcard, kTRUE);
    Int_t nch = strlen(wildcard);
@@ -287,7 +281,7 @@ void TCollection::Print(Option_t *wildcard) const
    while ((object = next())) {
       TString s = object->GetName();
       if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
-      object->Print(wildcard);
+      object->Print();
    }
 }
 
