@@ -1867,7 +1867,7 @@ extern G__EXPORT int G__lasterror_linenum G__P((void));
 extern void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
 
 #ifndef G__OLDIMPLEMENTATION1546
-extern G__EXPORT char* G__load_text G__P((G__CONST char *namedmacro));
+extern G__EXPORT const char* G__load_text G__P((G__CONST char *namedmacro));
 extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
 #endif
 #ifndef G__OLDIMPLEMENTATION1485

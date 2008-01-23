@@ -554,7 +554,7 @@ struct G__Templatearg *G__read_specializationarg(char *source)
 * G__delete_string
 *
 **************************************************************************/
-static void G__delete_string(char *str,char *del)
+static void G__delete_string(char *str,const char *del)
 {
   char *e;
   char *p = strstr(str,del);

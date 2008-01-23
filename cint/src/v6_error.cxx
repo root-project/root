@@ -129,7 +129,7 @@ static int G__splitmessage(char* item)
    point = (char*)G__findrpos(buf, "->");
 #else // G__OLDIMPELMENTATION1186
    dot = strrchr(buf, '.');
-   point = G__strrstr(buf, "->");
+   point = (char*)G__strrstr(buf, "->");
 #endif // G__OLDIMPELMENTATION1186
    if (dot || point) {
       G__value result;

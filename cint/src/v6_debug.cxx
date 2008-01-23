@@ -49,7 +49,7 @@ G__value G__exec_tempfile_fp(FILE* fp);
 G__value G__exec_tempfile(const char* file);
 G__value G__exec_text(const char* unnamedmacro);
 char* G__exec_text_str(const char* unnamedmacro, char* result);
-char* G__load_text(const char* namedmacro);
+const char* G__load_text(const char* namedmacro);
 int G__setbreakpoint(const char* breakline, const char* breakfile);
 
 //______________________________________________________________________________
@@ -929,7 +929,7 @@ char* G__exec_text_str(const char* unnamedmacro, char* result)
 
 #ifndef G__OLDIMPLEMENTATION1546
 //______________________________________________________________________________
-char* G__load_text(const char* namedmacro)
+const char* G__load_text(const char* namedmacro)
 {
    // -- FIXME: Describe this function!
    int fentry;
@@ -965,13 +965,13 @@ char* G__load_text(const char* namedmacro)
    switch (fentry) {
       case G__LOADFILE_SUCCESS:
          if (!istmpnam) result = "(tmpfile)";
-         else          result = tname;
+         else           result = tname;
          break;
       case G__LOADFILE_DUPLICATE:
       case G__LOADFILE_FAILURE:
       case G__LOADFILE_FATAL:
          if (!istmpnam) fclose(fp);
-         else          remove(tname);
+         else           remove(tname);
          result = (char*)NULL;
          break;
       default:

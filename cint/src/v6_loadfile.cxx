@@ -476,10 +476,10 @@ int G__getcintsysdir()
 #ifdef G__WIN32
       HMODULE hmodule=0;
       if(GetModuleFileName(hmodule,G__cintsysdir,G__MAXFILENAME)) {
-        char *p = G__strrstr(G__cintsysdir,(char*)G__psep);
+        char *p = (char*)G__strrstr(G__cintsysdir,(char*)G__psep);
         if(p) *p = 0;
 # ifdef G__ROOT
-        p = G__strrstr(G__cintsysdir,(char*)G__psep);
+        p = (char*)G__strrstr(G__cintsysdir,(char*)G__psep);
         if(p) *p = 0;
         strcat(G__cintsysdir,G__psep);
         strcat(G__cintsysdir,"cint");
@@ -583,9 +583,9 @@ int G__matchfilename(int i1,const char *filename)
 
   char *filenamebase;
   if((strcmp(G__srcfile[i1].filename,filename)==0)) return(1);
-  filenamebase = G__strrstr(G__srcfile[i1].filename,"./");
+  filenamebase = (char*)G__strrstr(G__srcfile[i1].filename,"./");
   if(filenamebase) {
-    char *parentdir = G__strrstr(G__srcfile[i1].filename,"../");
+    char *parentdir = (char*)G__strrstr(G__srcfile[i1].filename,"../");
     if(!parentdir && strcmp(filename,filenamebase+2)==0) {
       char buf[G__ONELINE];
 #if defined(G__WIN32)

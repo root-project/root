@@ -326,7 +326,7 @@ static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro
    int c;
    int semicolumn;
    char symbol[G__ONELINE];
-   char *punctuation = " \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
+   const char *punctuation = " \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
    int double_quote = 0, single_quote = 0;
    fpos_t backup_pos;
    if (!G__mfp) {
