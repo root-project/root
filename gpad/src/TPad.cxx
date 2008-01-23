@@ -4942,10 +4942,10 @@ void TPad::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out<<"   "<<cname<<"->SetGridy();"<<endl;
    }
    if (GetTickx()) {
-      out<<"   "<<cname<<"->SetTickx();"<<endl;
+      out<<"   "<<cname<<"->SetTickx("<<GetTickx()<<");"<<endl;
    }
    if (GetTicky()) {
-      out<<"   "<<cname<<"->SetTicky();"<<endl;
+      out<<"   "<<cname<<"->SetTicky("<<GetTicky()<<");"<<endl;
    }
    if (GetTheta() != 30) {
       out<<"   "<<cname<<"->SetTheta("<<GetTheta()<<");"<<endl;
