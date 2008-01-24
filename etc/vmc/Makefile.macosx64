@@ -63,7 +63,7 @@ SOFLAGS       = -m64 -dynamiclib -undefined dynamic_lookup -single_module
 ifeq (g95,$(findstring g95,$(ROOTBUILD)))
 SHLIB += -L$(shell g95 --print-search-dirs | sed -n -e 's/install: //p') -lf95
 else
-SHLIB := $(shell gfortran -print-file-name=libgfortran.dylib)
-SHLIB += $(shell gfortran -print-file-name=libgfortranbegin.a)
+SHLIB := $(shell gfortran -m64 -print-file-name=libgfortran.dylib)
+SHLIB += $(shell gfortran -m64 -print-file-name=libgfortranbegin.a)
 SHLIB += -ldl
 endif
