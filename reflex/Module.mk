@@ -160,7 +160,6 @@ $(REFLEXDICTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(REFLEXL)
 all-reflex:     $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXDICTMAP) $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 
 clean-genreflex:
-		@rm -f bin/genreflex*
 		@rm -rf lib/python/genreflex
 
 clean-check-reflex:
