@@ -5061,6 +5061,8 @@ if test "x$enable_reflex" = "xyes"; then
         chmod a+x $GENREFLEXROOTCINTBATOUT
         result "done"
     fi
+else
+    rm -f bin/genreflex*
 fi
 
 #---------------------------------------------------------------------
