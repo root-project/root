@@ -32,7 +32,12 @@ EXTRA=$8
 rm -f $LIB
 
 if [ $PLATFORM = "macosx" ]; then
-   soext="dylib"
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   if [ $macosx_minor -ge 5 ]; then
+      soext="so"
+   else
+      soext="dylib"
+   fi
 elif [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
    soext="a"
 else
@@ -96,7 +101,6 @@ elif [ $PLATFORM = "fbsd" ] || [ $PLATFORM = "obsd" ]; then
    echo $cmd
    $cmd
 elif [ $PLATFORM = "macosx" ]; then
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    export DYLD_LIBRARY_PATH=`pwd`/lib:$DYLD_LIBRARY_PATH
@@ -114,8 +118,8 @@ elif [ $PLATFORM = "macosx" ]; then
    # Add versioning information to shared library if available
    if [ "x$MAJOR" != "x" ]; then
       VERSION="-compatibility_version ${MAJOR} -current_version ${MAJOR}.${MINOR}.${REVIS}"
-      SONAME=`echo $SONAME | sed "s/\(.*\)\.dylib/\1.${MAJOR}.dylib/"`
-      LIB=`echo $LIB | sed "s/\(\/*.*\/.*\)\.dylib/\1.${MAJOR}.${MINOR}.dylib/"`
+      SONAME=`echo $SONAME | sed "s/\(.*\)\.$soext/\1.${MAJOR}.$soext/"`
+      LIB=`echo $LIB | sed "s/\(\/*.*\/.*\)\.$soext/\1.${MAJOR}.${MINOR}.$soext/"`
       LIBVERS=$LIB
    fi
    if [ $macosx_minor -ge 4 ]; then

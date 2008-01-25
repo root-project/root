@@ -79,7 +79,11 @@ ifeq ($(subst $(MACOSX_MINOR),,123),123)
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 endif
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+SOEXT         = so
+else
 SOEXT         = dylib
+endif
 
 # System libraries:
 SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(OSTHREADLIBDIR) \

@@ -1873,7 +1873,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    } else
       fListLibs = libs;
 
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)
    if (so2dylib) {
       TString libs = fListLibs;
       TString maclibs;

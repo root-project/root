@@ -61,7 +61,11 @@ SOFLAGS       = $(OPT) -m64 -dynamiclib -single_module \
                 -undefined suppress -install_name $(LIBDIR)/
 endif
 endif
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+SOEXT         = so
+else
 SOEXT         = dylib
+endif
 
 # System libraries:
 SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \

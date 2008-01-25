@@ -76,7 +76,11 @@ CINTCXXFLAGS += -Wno-long-double
 CINTCFLAGS   += -Wno-long-double
 endif
 endif
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+SOEXT         = so
+else
 SOEXT         = dylib
+endif
 
 # System libraries:
 SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) $(OSTHREADLIBDIR) \

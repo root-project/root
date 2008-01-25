@@ -399,22 +399,21 @@ ifeq ($(ARCH),macosx)
 # MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5)
-MACOSX_MINOR  = 4
-endif
 CXX           = c++
 CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
 LD            = $(MACOSXTARGET) c++
 LDFLAGS       = $(OPT2) -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+DllSuf        = so
+else
 DllSuf        = dylib
+endif
 UNDEFOPT      = dynamic_lookup
-ifneq ($(MACOSX_MINOR),4)
-ifneq ($(MACOSX_MINOR),3)
+ifneq ($(subst $(MACOSX_MINOR),,12),12)
 UNDEFOPT      = suppress
 LD            = c++
-endif
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 endif
@@ -423,16 +422,17 @@ ifeq ($(ARCH),macosxicc)
 # MacOS X with Intel icc compiler
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5)
-MACOSX_MINOR  = 4
-endif
 CXX           = icc
 CXXFLAGS      = $(OPT) -fPIC -wd1476
 LD            = $(MACOSXTARGET) icpc
 LDFLAGS       = $(OPT)
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+DllSuf        = so
+else
 DllSuf        = dylib
+endif
 SOFLAGS       = -dynamiclib -single_module -undefined dynamic_lookup
 endif
 
@@ -441,16 +441,17 @@ ifeq ($(ARCH),macosx64)
 # Only specific option (-m64) comes from root-config
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5)
-MACOSX_MINOR  = 4
-endif
 CXX           = c++
 CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
 LD            = $(MACOSXTARGET) c++ -m64
 LDFLAGS       = $(OPT2) -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+DllSuf        = so
+else
 DllSuf        = dylib
+endif
 SOFLAGS       = -m64 -dynamiclib -single_module -undefined dynamic_lookup
 endif
 
@@ -458,9 +459,6 @@ ifeq ($(ARCH),macosxxlc)
 # MacOS X with IBM xlC compiler
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5)
-MACOSX_MINOR  = 4
-endif
 CXX           = xlC
 CXXFLAGS      = $(OPT)
 LD            = $(MACOSXTARGET) xlC
@@ -469,11 +467,9 @@ LDFLAGS       = $(OPT) -Wl,-bind_at_load
 # the .so will be created separately
 DllSuf        = dylib
 UNDEFOPT      = dynamic_lookup
-ifneq ($(MACOSX_MINOR),4)
-ifneq ($(MACOSX_MINOR),3)
+ifneq ($(subst $(MACOSX_MINOR),,12),12)
 UNDEFOPT      = suppress
 LD            = xlC
-endif
 endif
 SOFLAGS       = -qmkshrobj -single_module -undefined $(UNDEFOPT)
 endif
