@@ -205,7 +205,7 @@ Bool_t TGeoNodeCache::CdDown(Int_t index)
    TGeoMatrix  *local = newnode->GetMatrix();
    TGeoHMatrix *newmat = fMPB[fLevel];
    if (!local->IsIdentity()) {
-      *newmat = fMatrix;
+      newmat->CopyFrom(fMatrix);
       newmat->Multiply(local);
       fMatrix = newmat;
    }

@@ -220,8 +220,9 @@ TGeoMatrix& TGeoMatrix::operator = (const TGeoMatrix &matrix)
 {
 // Assignment operator
    if (&matrix == this) return *this;
+   Bool_t registered = TestBit(kGeoRegistered);
    TNamed::operator=(matrix);
-   ResetBit(kGeoRegistered);
+   SetBit(kGeoRegistered,registered);
    return *this;
 }   
 
@@ -2063,6 +2064,17 @@ TGeoHMatrix &TGeoHMatrix::operator=(const TGeoMatrix &matrix)
    }   
    return *this;
 }
+
+//_____________________________________________________________________________
+void TGeoHMatrix::CopyFrom(const TGeoMatrix *other)
+{
+// Fast copy method.
+   SetBit(kGeoTranslation, other->IsTranslation());
+   SetBit(kGeoRotation, other->IsRotation());
+   SetBit(kGeoReflection, other->IsReflection());
+   memcpy(fTranslation,other->GetTranslation(),kN3);
+   memcpy(fRotationMatrix,other->GetRotationMatrix(),kN9);
+}   
 
 //_____________________________________________________________________________
 void TGeoHMatrix::Clear(Option_t *)

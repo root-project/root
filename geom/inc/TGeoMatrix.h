@@ -417,6 +417,7 @@ public :
    TGeoHMatrix& operator*=(const TGeoMatrix &matrix) {Multiply(&matrix);return(*this);}
 
    void                 Clear(Option_t *option ="");
+   void                 CopyFrom(const TGeoMatrix *other);
    Double_t             Determinant() const;
    virtual TGeoMatrix&  Inverse() const;
    virtual TGeoMatrix  *MakeClone() const;
