@@ -745,7 +745,9 @@ distclean:: clean
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                *.def .def
-ifeq ($(PLATFORM),macosx)
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+	@rm -f lib/*.dylib
+else
 	@rm -f lib/*.so
 endif
 	-@mv -f tutorials/gallery.root tutorials/gallery.root-
