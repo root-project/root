@@ -49,6 +49,7 @@
 #if PY_VERSION_HEX < 0x02050000
 typedef int Py_ssize_t;
 #define PyInt_AsSsize_t PyInt_AsLong
+#define PyInt_FromSsize_t PyInt_FromLong
 # define PY_SSIZE_T_FORMAT "%d"
 # if !defined(PY_SSIZE_T_MIN)
 #  define PY_SSIZE_T_MAX INT_MAX
