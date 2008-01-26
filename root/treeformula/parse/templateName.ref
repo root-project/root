@@ -2,51 +2,51 @@
 Processing runtemplateName.C...
 ******************************************************************************
 *Tree    :mytree    : Icecube                                                *
-*Entries :      100 : Total =           14263 bytes  File  Size =          0 *
+*Entries :      100 : Total =           14391 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Branch  :my_c                                                               *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
 *Br    0 :i         :                                                        *
-*Entries :      100 : Total  Size=       1010 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :j         :                                                        *
-*Entries :      100 : Total  Size=       1010 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :my_c2                                                              *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
 *Br    2 :i         :                                                        *
-*Entries :      100 : Total  Size=       1010 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    3 :j         :                                                        *
-*Entries :      100 : Total  Size=       1010 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1018 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :plot_my_i.                                                         *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
 *Br    4 :plot_my_i.B<void>.i :                                              *
-*Entries :      100 : Total  Size=       1118 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1126 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    5 :plot_my_i.j :                                                      *
-*Entries :      100 : Total  Size=       1070 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1078 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :against_my_i.                                                      *
 *Entries :      100 : BranchElement (see below)                              *
 *............................................................................*
 *Br    6 :against_my_i.B<void>.i :                                           *
-*Entries :      100 : Total  Size=       1136 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1144 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    7 :against_my_i.j :                                                   *
-*Entries :      100 : Total  Size=       1088 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1096 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 Warning in <TTreeProxyGenerator>: The branch name "baseB<void>" is duplicated. Only the first instance 
@@ -86,21 +86,21 @@ Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
 ************************************
 ******************************************************************************
 *Tree    :mytreemk  : foo                                                    *
-*Entries :        1 : Total =            2989 bytes  File  Size =          0 *
+*Entries :        1 : Total =            3021 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Branch  :my_c                                                               *
 *Entries :        1 : BranchElement (see below)                              *
 *............................................................................*
 *Br    0 :i         :                                                        *
-*Entries :        1 : Total  Size=        618 bytes  One basket in memory    *
+*Entries :        1 : Total  Size=        626 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Branch  :other_c.                                                           *
 *Entries :        1 : BranchElement (see below)                              *
 *............................................................................*
 *Br    1 :other_c.i :                                                        *
-*Entries :        1 : Total  Size=        666 bytes  One basket in memory    *
+*Entries :        1 : Total  Size=        674 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 Info in <TTreePlayer::MakeClass>: Files: cmakeclass.h and cmakeclass.C generated from TTree: mytreemk
