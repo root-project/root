@@ -333,14 +333,14 @@ int main(int argc, char **argv)
   //testing STL vector of pointers to THit
   timer.Start();
   TSTLhitStar *STLhitStar = new TSTLhitStar(nhits);
-  STLhitStar->MakeTree(0,nevents,0,0,cx);
+  STLhitStar->MakeTree(0,nevents,0,25500,cx);
   timer.Stop();
   Double_t rt4 = timer.RealTime();
   Double_t cp4 = timer.CpuTime();
   cptot += cp4;
   printf("1 vector*   : RT=%6.2f s  Cpu=%6.2f s\n",rt4,cp4);
   timer.Start(kTRUE);
-  Int_t nbytes5 = STLhitStar->MakeTree(1,nevents,0,99,cx);
+  Int_t nbytes5 = STLhitStar->MakeTree(1,nevents,0,25599,cx);
   timer.Stop();
   Double_t rt5w = timer.RealTime();
   Double_t cp5w = timer.CpuTime();
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
   printf("3 vector*  r: RT=%6.2f s  Cpu=%6.2f s\n",rt5r,cp5r);
   timer.Start(kTRUE);
   Float_t cx6;
-  Int_t nbytes6 = STLhitStar->MakeTree(1,nevents,1,99,cx6);
+  Int_t nbytes6 = STLhitStar->MakeTree(1,nevents,1,25599,cx6);
   timer.Stop();
   Double_t rt6w = timer.RealTime();
   Double_t cp6w = timer.CpuTime();
@@ -380,7 +380,7 @@ int main(int argc, char **argv)
   cptot += cp1LS;
   printf("1 list*     : RT=%6.2f s  Cpu=%6.2f s\n",rt1LS,cp1LS);
   timer.Start(kTRUE);
-  Int_t nbytes1LS = STLhit_liststar->MakeTree(1,nevents,0,99,cx);
+  Int_t nbytes1LS = STLhit_liststar->MakeTree(1,nevents,0,25599,cx);
   timer.Stop();
   Double_t rt2wLS = timer.RealTime();
   Double_t cp2wLS = timer.CpuTime();
@@ -395,7 +395,7 @@ int main(int argc, char **argv)
   printf("3 list*    r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rLS,cp2rLS);
   timer.Start(kTRUE);
   Float_t cx3LS;
-  Int_t nbytes3LS = STLhit_liststar->MakeTree(1,nevents,1,99,cx3LS);
+  Int_t nbytes3LS = STLhit_liststar->MakeTree(1,nevents,1,25599,cx3LS);
   timer.Stop();
   Double_t rt3wLS = timer.RealTime();
   Double_t cp3wLS = timer.CpuTime();
@@ -420,7 +420,7 @@ int main(int argc, char **argv)
   cptot += cp1DS;
   printf("1 deque*    : RT=%6.2f s  Cpu=%6.2f s\n",rt1DS,cp1DS);
   timer.Start(kTRUE);
-  Int_t nbytes1DS = STLhit_dequestar->MakeTree(1,nevents,0,99,cx);
+  Int_t nbytes1DS = STLhit_dequestar->MakeTree(1,nevents,0,25599,cx);
   timer.Stop();
   Double_t rt2wDS = timer.RealTime();
   Double_t cp2wDS = timer.CpuTime();
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
   printf("3 deque*   r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rDS,cp2rDS);
   timer.Start(kTRUE);
   Float_t cx3DS;
-  Int_t nbytes3DS = STLhit_dequestar->MakeTree(1,nevents,1,99,cx3DS);
+  Int_t nbytes3DS = STLhit_dequestar->MakeTree(1,nevents,1,25599,cx3DS);
   timer.Stop();
   Double_t rt3wDS = timer.RealTime();
   Double_t cp3wDS = timer.CpuTime();
@@ -460,7 +460,7 @@ int main(int argc, char **argv)
   cptot += cp1SS;
   printf("1 set*      : RT=%6.2f s  Cpu=%6.2f s\n",rt1SS,cp1SS);
   timer.Start(kTRUE);
-  Int_t nbytes1SS = STLhit_setstar->MakeTree(1,nevents,0,99,cx);
+  Int_t nbytes1SS = STLhit_setstar->MakeTree(1,nevents,0,25599,cx);
   timer.Stop();
   Double_t rt2wSS = timer.RealTime();
   Double_t cp2wSS = timer.CpuTime();
@@ -475,7 +475,7 @@ int main(int argc, char **argv)
   printf("3 set*     r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rSS,cp2rSS);
   timer.Start(kTRUE);
   Float_t cx3SS;
-  Int_t nbytes3SS = STLhit_setstar->MakeTree(1,nevents,1,99,cx3SS);
+  Int_t nbytes3SS = STLhit_setstar->MakeTree(1,nevents,1,25599,cx3SS);
   timer.Stop();
   Double_t cp3wSS = timer.CpuTime();
   cptot += cp3wSS;
@@ -499,7 +499,7 @@ int main(int argc, char **argv)
   cptot += cp1MS;
   printf("1 multiset* : RT=%6.2f s  Cpu=%6.2f s\n",rt1MS,cp1MS);
   timer.Start(kTRUE);
-  Int_t nbytes1MS = STLhit_multisetstar->MakeTree(1,nevents,0,99,cx);
+  Int_t nbytes1MS = STLhit_multisetstar->MakeTree(1,nevents,0,25599,cx);
   timer.Stop();
   Double_t rt2wMS = timer.RealTime();
   Double_t cp2wMS = timer.CpuTime();
@@ -514,7 +514,7 @@ int main(int argc, char **argv)
   printf("3 multiset*r: RT=%6.2f s  Cpu=%6.2f s\n",rt2rMS,cp2rMS);
   timer.Start(kTRUE);
   Float_t cx3MS;
-  Int_t nbytes3MS = STLhit_multisetstar->MakeTree(1,nevents,1,99,cx3MS);
+  Int_t nbytes3MS = STLhit_multisetstar->MakeTree(1,nevents,1,25599,cx3MS);
   timer.Stop();
   Double_t cp3wMS = timer.CpuTime();
   cptot += cp3wMS;
