@@ -44,7 +44,7 @@ namespace PyROOT {
 #define PYROOT_DECLARE_BASIC_CONVERTER( name )                                \
    class T##name##Converter : public TConverter {                             \
    public:                                                                    \
-      virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0 );       \
+      virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0 );      \
       virtual PyObject* FromMemory( void* );                                  \
       virtual Bool_t ToMemory( PyObject*, void* );                            \
    }
@@ -59,8 +59,8 @@ namespace PyROOT {
 #define PYROOT_DECLARE_ARRAY_CONVERTER( name )                                \
    class T##name##Converter : public TConverter {                             \
    public:                                                                    \
-      T##name##Converter( int size = -1 ) { fSize = size; }                   \
-      virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0 );       \
+      T##name##Converter( Py_ssize_t size = -1 ) { fSize = size; }            \
+      virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0 );      \
       virtual PyObject* FromMemory( void* );                                  \
       virtual Bool_t ToMemory( PyObject*, void* );                            \
    private:                                                                   \

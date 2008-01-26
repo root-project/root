@@ -453,8 +453,7 @@ namespace {
          Py_DECREF( found );
       }
 
-   // TODO: verify and perhaps fix this to use PyInt_FromSsize_t
-      return PyLong_FromLong( (Long_t)count );
+      return PyInt_FromSsize_t( count );
    }
 
 
@@ -528,11 +527,10 @@ namespace {
             oseq->RemoveAt( (Int_t)i );
          }
 
-      // TODO: verify and perhaps fix this to use Py_ssize_t in the loop
          for ( Py_ssize_t i = 0; i < PySequence_Size( obj ); ++i ) {
             ObjectProxy* item = (ObjectProxy*)PySequence_GetItem( obj, i );
             item->Release();
-            oseq->AddAt( (TObject*) item->GetObject(), i + start );
+            oseq->AddAt( (TObject*) item->GetObject(), (Int_t)(i + start) );
             Py_DECREF( item );
          }
 
@@ -616,8 +614,7 @@ namespace {
 
          args = PyTuple_New( 2 );
          PyTuple_SET_ITEM( args, 0, self );
-      // TODO: verify and perhaps fix to use PyInt_FromSsize_t
-         PyTuple_SET_ITEM( args, 1, PyLong_FromLong( (Long_t)PySequence_Size( self ) - 1 ) );
+         PyTuple_SET_ITEM( args, 1, PyInt_FromSsize_t( PySequence_Size( self ) - 1 ) );
       }
 
       return callSelfIndex( args, "RemoveAt" );
@@ -760,8 +757,7 @@ namespace {
          Py_ssize_t start, stop, step;
          PySlice_GetIndices( index, PyObject_Length( (PyObject*)self ), &start, &stop, &step );
          for ( Py_ssize_t i = start; i < stop; i += step ) {
-         // TODO: verify and perhaps fix to use PyInt_FromSsize_t
-            PyObject* pyidx = PyInt_FromLong( (Long_t)i );
+            PyObject* pyidx = PyInt_FromSsize_t( i );
             CallPyObjMethod( nseq, "push_back", CallPyObjMethod( (PyObject*)self, "_vector__at", pyidx ) );
             Py_DECREF( pyidx );
          }
@@ -863,8 +859,7 @@ namespace {
       PyObject* data = CallPyObjMethod( PyTuple_GET_ITEM( args, 0 ), "GetName" );
       Py_ssize_t size = PySequence_Size( data );
       Py_DECREF( data );
-   // TODO: verify and perhaps fix to use PyInt_FromSsize_t
-      return PyInt_FromLong( (Long_t)size );
+      return PyInt_FromSsize_t( size );
    }
 
 
