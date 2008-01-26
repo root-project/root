@@ -91,7 +91,7 @@ namespace {
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
-//= PyROOT method proxy function behaviour ===================================
+//= PyROOT method proxy function behavior ====================================
    PyObject* mp_call( MethodProxy* meth, PyObject* args, PyObject* kwds )
    {
    // get local handles to proxy internals
@@ -187,7 +187,7 @@ namespace {
 //____________________________________________________________________________
    MethodProxy* mp_descrget( MethodProxy* pymeth, ObjectProxy* pyobj, PyObject* )
    {
-   // create and use a new one method proxy (language requirement)
+   // create and use a new method proxy (language requirement)
       MethodProxy* newPyMeth = (MethodProxy*)MethodProxy_Type.tp_alloc( &MethodProxy_Type, 0 );
 
    // method info is shared, as it contains the collected overload knowledge

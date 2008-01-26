@@ -6,6 +6,7 @@
 #include "PyRootType.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
+#include "TemplateProxy.h"
 #include "PropertyProxy.h"
 #include "RootWrapper.h"
 #include "Pythonize.h"
@@ -271,6 +272,17 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 
    // decide on method type: member or static (which includes globals)
       Bool_t isStatic = isNamespace || method.IsStatic();
+
+   // template members; handled by adding a dispatcher to the class
+      if ( ! isStatic && mtName[mtName.size()-1] == '>' ) {
+         std::string tmplname = mtName.substr( 0, mtName.find('<') );
+         TemplateProxy* pytmpl = TemplateProxy_New( tmplname, pyclass );
+         PyObject_SetAttrString(
+            pyclass, const_cast< char* >( tmplname.c_str() ), (PyObject*)pytmpl );
+         Py_DECREF( pytmpl );
+
+      // note: need to continue here to actually add the method ...
+      }
 
    // public methods are normally visible, private methods are mangled python-wise
    // note the overload implications which are name based, and note that rootcint
