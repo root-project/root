@@ -715,24 +715,33 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
    // Make a check to prevent problem with some corrupted files (missing TStreamerInfo).
    if (leaf && leaf->IsA()==TLeafElement::Class()) {
-      TBranchElement *br = ((TBranchElement*)branch);
+      TBranchElement *br = 0;
+      if( branch->IsA() ==  TBranchElement::Class() )
+      {
+         br = ((TBranchElement*)branch);
 
-      if ( br->GetInfo() == 0 ) {
-         Error("DefinedVariable","Missing StreamerInfo for %s.  We will be unable to read!",
-               name.Data());
-         return -2;
-      }
-      TBranchElement *mom = (TBranchElement*)br->GetMother();
-      if (mom!=br) {
-         if (mom->GetInfo()==0) {
-            Error("DefinedVariable","Missing StreamerInfo for %s."
-                  "  We will be unable to read!",
-                  mom->GetName());
+         if ( br->GetInfo() == 0 ) {
+            Error("DefinedVariable","Missing StreamerInfo for %s.  We will be unable to read!",
+                  name.Data());
             return -2;
          }
-         if ((mom->GetType()) < 0 && !mom->GetAddress()) {
-            Error("DefinedVariable", "Address not set when the type of the branch is negative for for %s.  We will be unable to read!", mom->GetName());
-            return -2;
+      }
+
+      TBranch *bmom = branch->GetMother();
+      if( bmom->IsA() == TBranchElement::Class() )
+      {
+         TBranchElement *mom = (TBranchElement*)br->GetMother();
+         if (mom!=br) {
+            if (mom->GetInfo()==0) {
+               Error("DefinedVariable","Missing StreamerInfo for %s."
+                     "  We will be unable to read!",
+                     mom->GetName());
+               return -2;
+            }
+            if ((mom->GetType()) < 0 && !mom->GetAddress()) {
+               Error("DefinedVariable", "Address not set when the type of the branch is negative for for %s.  We will be unable to read!", mom->GetName());
+               return -2;
+            }
          }
       }
    }
