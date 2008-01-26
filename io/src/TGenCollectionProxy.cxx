@@ -51,7 +51,7 @@ class TGenVectorProxy : public TGenCollectionProxy {
 public:
    // Standard Destructor
    TGenVectorProxy(const TGenCollectionProxy& c) : TGenCollectionProxy(c)
-{
+   {
    }
    // Standard Destructor
    virtual ~TGenVectorProxy()
@@ -485,6 +485,10 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
 {
    // Virtual copy constructor
    if ( !fValue ) Initialize();
+
+   if( fPointers )
+      return new TGenCollectionProxy(*this);
+
    switch(fSTL_type) {
    case TClassEdit::kVector:
       return new TGenVectorProxy(*this);
@@ -622,6 +626,10 @@ UInt_t TGenCollectionProxy::Sizeof() const
 Bool_t TGenCollectionProxy::HasPointers() const
 {
    // Return true if the content is of type 'pointer to'
+
+   // Initialize proxy in case it hasn't been initialized yet
+   if( !fValue )
+      Initialize();
 
    // The content of a map and multimap is always a 'pair' and hence
    // fPointers means "Flag to indicate if containee has pointers (key or value)"

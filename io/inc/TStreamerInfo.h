@@ -25,6 +25,8 @@
 #include "TVirtualStreamerInfo.h"
 #endif
 
+#include "TVirtualCollectionProxy.h"
+
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
     (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR<=3) || \
     (defined(R__MACOSX) && defined(__xlC__))
@@ -38,7 +40,6 @@ class TDataMember;
 class TMemberStreamer;
 class TStreamerElement;
 class TStreamerBasicType;
-class TVirtualCollectionProxy;
 class TClassStreamer;
 namespace ROOT { class TCollectionProxyInfo; }
 
@@ -59,6 +60,25 @@ public:
       TCompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
       ~TCompInfo() {};
       void Update(const TClass *oldcl, TClass *newcl);
+   };
+
+protected:
+   //---------------------------------------------------------------------------
+   // Adatper class used to handle streaming collection of pointers
+   //---------------------------------------------------------------------------
+   class TPointerCollectionAdapter
+   {
+   public:
+      TPointerCollectionAdapter( TVirtualCollectionProxy *proxy ):
+         fProxy( proxy ) {}
+
+      char* operator[]( UInt_t idx ) const
+      {
+	char **el = (char**)fProxy->At(idx);
+	return *el;
+      }
+   private:
+     TVirtualCollectionProxy *fProxy;
    };
 
 private:
@@ -93,6 +113,8 @@ private:
 protected:
    TStreamerInfo(const TStreamerInfo&);
    TStreamerInfo& operator=(const TStreamerInfo&);
+
+
 
 public:
 
@@ -175,6 +197,7 @@ public:
    Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
    Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
    Double_t            GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
+   Double_t            GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
    Bool_t              IsBuilt() const { return fIsBuilt; }
    Bool_t              IsOptimized() const {return fOptimized;}
    Int_t               IsRecovered() const {return TestBit(kRecovered);}
@@ -206,14 +229,16 @@ public:
 #endif
 
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
-   Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset);
+   Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
+   Int_t               ReadBufferSTLPtrs(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
    void                TagFile(TFile *fFile);
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
-   Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc, Int_t first, Int_t eoffset);
+   Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc, Int_t first, Int_t eoffset );
+   Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
    virtual void        Update(const TClass *oldClass, TClass *newClass);
 
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name);

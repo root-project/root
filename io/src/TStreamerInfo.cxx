@@ -2330,6 +2330,22 @@ Double_t TStreamerInfo::GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_
 }
 
 //______________________________________________________________________________
+Double_t TStreamerInfo::GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, int k, Int_t eoffset) const
+{
+   //  return value of element i in object number j in a TClonesArray and eventually
+   // element k in a sub-array.
+   Int_t nc = cont->Size();
+
+   if (j >= nc) return 0;
+
+   char **ptr = (char**)cont->At(j);
+   char *pointer = *ptr;
+
+   char *ladd    = pointer + eoffset + fOffset[i];
+   return GetValueAux(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
+}
+
+//______________________________________________________________________________
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables

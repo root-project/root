@@ -1483,6 +1483,18 @@ Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
 }
 
 //______________________________________________________________________________
+Int_t TStreamerInfo::ReadBufferSTLPtrs(TBuffer &b,
+                                       TVirtualCollectionProxy *cont,
+                                       Int_t nc, Int_t first, Int_t eoffset )
+{
+   //  The STL vector/list is deserialized from the buffer b
+
+   if (!nc) return 0;
+   int ret = ReadBuffer(b, TPointerCollectionAdapter(cont), first,nc,eoffset,1);
+   return ret;
+}
+
+//______________________________________________________________________________
 Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones,
                                       Int_t nc, Int_t first, Int_t eoffset)
 {
