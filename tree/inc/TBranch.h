@@ -67,6 +67,7 @@ protected:
    Int_t       fReadBasket;      //! Current basket number when reading
    Long64_t    fReadEntry;       //! Current entry number when reading
    Long64_t    fEntries;         //  Number of entries
+   Long64_t    fFirstEntry;      //  Number of the first entry in this branch
    Long64_t    fTotBytes;        //  Total number of bytes in all leaves before compression
    Long64_t    fZipBytes;        //  Total number of bytes in all leaves after compression
    TObjArray   fBranches;        //-> List of Branches of this branch
@@ -135,6 +136,7 @@ public:
            Long64_t  GetTotBytes(Option_t *option="")    const;
            Long64_t  GetZipBytes(Option_t *option="")    const;
            Long64_t  GetEntryNumber() const {return fEntryNumber;}
+	   Long64_t  GetFirstEntry() const { return fFirstEntry; }
          TObjArray  *GetListOfBaskets()  {return &fBaskets;}
          TObjArray  *GetListOfBranches() {return &fBranches;}
          TObjArray  *GetListOfLeaves()   {return &fLeaves;}
@@ -164,6 +166,7 @@ public:
    virtual void      SetCompressionLevel(Int_t level=1);
    virtual void      SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}
    virtual void      SetEntries(Long64_t entries);
+   virtual void      SetFirstEntry( Long64_t entry );
    virtual void      SetFile(TFile *file=0);
    virtual void      SetFile(const char *filename);
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
@@ -173,7 +176,7 @@ public:
 
    static  void      ResetCount();
 
-   ClassDef(TBranch,10);  //Branch descriptor
+   ClassDef(TBranch,11);  //Branch descriptor
 };
 
 #endif

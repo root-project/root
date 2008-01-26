@@ -88,6 +88,16 @@
 //         this function will create one subbranch for each data member of
 //         the object TTrack.
 //
+//  ==> Case D
+//      ======
+//     TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel );
+//         STLcollection is the address of a pointer to std::vector, std::list,
+//         std::deque, std::set or std::multiset containing pointers to objects.
+//         If the splitlevel is a value bigger than 100 then the collection
+//         will be written in split mode. Ie. if it contains objects of any
+//         types deriving from TTrack this function will sort the objects
+//         basing on their type and store them in separate branches in split
+//         mode.
 //
 //  ==> branch->SetAddress(Void *address)
 //      In case of dynamic structures changing with each entry for example, one must
@@ -299,6 +309,7 @@
 #include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
 #include "TVirtualPad.h"
+#include "TBranchSTL.h"
 
 #include <cstddef>
 #include <fstream>
@@ -1668,7 +1679,15 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
             }
          }
       }
-      TBranchElement* branch = new TBranchElement(this, name, collProxy, bufsize, splitlevel);
+      //-------------------------------------------------------------------------
+      // If the splitting switch is enabled, the split level is big enough and
+      // the collection contains pointers we can split it
+      //-------------------------------------------------------------------------
+      TBranch *branch;
+      if( splitlevel > 100 && collProxy->HasPointers() )
+         branch = new TBranchSTL( this, name, collProxy, bufsize, splitlevel );
+      else
+         branch = new TBranchElement(this, name, collProxy, bufsize, splitlevel);
       fBranches.Add(branch);
       branch->SetAddress(add);
       return branch;
@@ -1697,7 +1716,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
       // The streamer info is not rebuilt unoptimized.
       // No dummy top-level branch is created.
       // No splitting is attempted.
-      TBranchElement* branch = new TBranchElement(this, name, (TClonesArray*) *ppointer, bufsize, splitlevel);
+      TBranchElement* branch = new TBranchElement(this, name, (TClonesArray*) *ppointer, bufsize, splitlevel%100);
       fBranches.Add(branch);
       branch->SetAddress(add);
       return branch;
@@ -1721,6 +1740,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
    //
 
    if ((splitlevel > 0) && !cl->CanSplit()) {
+      // FIXME: this doesn't make sense
       splitlevel = 0;
       if (splitlevel != 99) {
          Warning("Bronch", "%s cannot be split, resetting splitlevel to 0", cl->GetName());
@@ -1770,7 +1790,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
    // Do splitting, if requested.
    //
 
-   if (splitlevel > 0) {
+   if (splitlevel%100 > 0) {
       // Loop on all public data members of the class and its base classes and create branches for each one.
       TObjArray* blist = branch->GetListOfBranches();
       TIter next(sinfo->GetElements());
@@ -1827,9 +1847,20 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
             //       being the name of the base class.
             bname.Form("%s", element->GetFullName());
          }
-         TBranchElement* bre = new TBranchElement(branch, bname, sinfo, id, pointer, bufsize, splitlevel - 1);
-         bre->SetParentClass(cl);
-         blist->Add(bre);
+
+         if( splitlevel > 100 && element->GetClass() &&
+             element->GetClass()->GetCollectionProxy() &&
+             element->GetClass()->GetCollectionProxy()->HasPointers() )
+         {
+            TBranchSTL* brSTL = new TBranchSTL( branch, bname, element->GetClass()->GetCollectionProxy(), bufsize, splitlevel-1, sinfo, id );
+            blist->Add(brSTL);
+         }
+         else
+         {
+            TBranchElement* bre = new TBranchElement(branch, bname, sinfo, id, pointer, bufsize, splitlevel - 1);
+            bre->SetParentClass(cl);
+            blist->Add(bre);
+         }
       }
    }
 

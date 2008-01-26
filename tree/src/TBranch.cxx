@@ -79,6 +79,7 @@ TBranch::TBranch()
 , fReadBasket(0)
 , fReadEntry(-1)
 , fEntries(0)
+, fFirstEntry(0)
 , fTotBytes(0)
 , fZipBytes(0)
 , fBranches()
@@ -122,6 +123,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fReadBasket(0)
 , fReadEntry(-1)
 , fEntries(0)
+, fFirstEntry(0)
 , fTotBytes(0)
 , fZipBytes(0)
 , fBranches()
@@ -203,6 +205,7 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fReadBasket(0)
 , fReadEntry(-1)
 , fEntries(0)
+, fFirstEntry(0)
 , fTotBytes(0)
 , fZipBytes(0)
 , fBranches()
@@ -1018,7 +1021,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    if (TestBit(kDoNotProcess) && !getall) {
       return 0;
    }
-   if ((entry < 0) || (entry >= fEntryNumber)) {
+   if ((entry < fFirstEntry) || (entry >= fEntryNumber)) {
       return 0;
    }
    Int_t nbytes = 0;
@@ -1960,3 +1963,14 @@ void TBranch::WriteBasket(TBasket* basket)
    fBasketEntry[fWriteBasket] = fEntryNumber;
 }
 
+//------------------------------------------------------------------------------
+void TBranch :: SetFirstEntry( Long64_t entry )
+{
+   fFirstEntry = entry;
+   fEntries = 0;
+   fEntryNumber = entry;
+   if( fBasketEntry )
+      fBasketEntry[0] = entry;
+   for( Int_t i = 0; i < fBranches.GetEntriesFast(); ++i )
+      ((TBranch*)fBranches[i])->SetFirstEntry( entry );
+}
