@@ -434,6 +434,35 @@ TSpline3::TSpline3(const char *title,
 
 
 //______________________________________________________________________________
+TSpline3::TSpline3(const TH1 *h, const char *opt,
+                   Double_t valbeg, Double_t valend) :
+  TSpline(h->GetTitle(),-1,0,0,h->GetNbinsX(),kFALSE),
+  fValBeg(valbeg), fValEnd(valend),
+  fBegCond(0), fEndCond(0)
+{
+   // Third spline creator given a TH1 
+
+   fName=h->GetName();
+
+   // Set endpoint conditions
+   if(opt) SetCond(opt);
+
+   // Create the plynomial terms and fill
+   // them with node information
+   fPoly = new TSplinePoly3[fNp];
+   for (Int_t i=0; i<fNp; ++i) {
+      fPoly[i].X()=h->GetXaxis()->GetBinCenter(i+1);
+      fPoly[i].Y()=h->GetBinContent(i+1);
+   }
+   fXmin = fPoly[0].X();
+   fXmax = fPoly[fNp-1].X();
+
+   // Build the spline coefficients
+   BuildCoeff();
+}
+
+
+//______________________________________________________________________________
 TSpline3::TSpline3(const TSpline3& sp3) :
   TSpline(sp3),
   fPoly(sp3.fPoly),
@@ -1213,6 +1242,39 @@ TSpline5::TSpline5(const char *title,
       g->GetPoint(i,xx,yy);
       fPoly[i+beg].X()=xx;
       fPoly[i+beg].Y()=yy;
+   }
+
+   // Set the double knots at boundaries
+   SetBoundaries(b1,e1,b2,e2,cb1,ce1,cb2,ce2);
+   fXmin = fPoly[0].X();
+   fXmax = fPoly[fNp-1].X();
+
+   // Build the spline coefficients
+   BuildCoeff();
+}
+
+
+//______________________________________________________________________________
+TSpline5::TSpline5(const TH1 *h,
+                   const char *opt, Double_t b1, Double_t e1,
+                   Double_t b2, Double_t e2) :
+  TSpline(h->GetTitle(),-1,0,0,h->GetNbinsX(),kFALSE)
+{
+   // Quintic natural spline creator given a TH1
+
+   Int_t beg, end;
+   const char *cb1, *ce1, *cb2, *ce2;
+   fName=h->GetName();
+
+   // Check endpoint conditions
+   BoundaryConditions(opt,beg,end,cb1,ce1,cb2,ce2);
+
+   // Create the plynomial terms and fill
+   // them with node information
+   fPoly = new TSplinePoly5[fNp];
+   for (Int_t i=0; i<fNp-beg; ++i) {
+      fPoly[i+beg].X()=h->GetXaxis()->GetBinCenter(i+1);
+      fPoly[i+beg].Y()=h->GetBinContent(i+1);
    }
 
    // Set the double knots at boundaries

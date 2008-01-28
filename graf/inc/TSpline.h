@@ -190,6 +190,8 @@ public:
    TSpline3(const char *title,
             const TGraph *g, const char *opt=0,
             Double_t valbeg=0, Double_t valend=0);
+   TSpline3(const TH1 *h, const char *opt=0,
+            Double_t valbeg=0, Double_t valend=0);
    Int_t    FindX(Double_t x) const;
    Double_t Eval(Double_t x) const;
    Double_t Derivative(Double_t x) const;
@@ -245,6 +247,9 @@ public:
             Double_t b2=0, Double_t e2=0);
    TSpline5(const char *title,
             const TGraph *g,
+            const char *opt=0, Double_t b1=0, Double_t e1=0,
+            Double_t b2=0, Double_t e2=0);
+   TSpline5(const TH1 *h,
             const char *opt=0, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
    Int_t    FindX(Double_t x) const;
