@@ -58,8 +58,6 @@ public:
    void    SetFontFile(const char* name);
    void    SetFontMode(Int_t mode);
 
-   Int_t   GetValidFontSize(Float_t val);
-
    const   Text_t* GetText() const  { return fText.Data(); }
    void    SetText(const Text_t* t) { fText = t; }
 
