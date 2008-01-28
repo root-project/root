@@ -44,22 +44,22 @@ class TBranchSTL: public TBranch {
    private:
 
 #ifndef __CINT__
-      struct ElementBranchHelper
+      struct ElementBranchHelper_t
       {
-         ElementBranchHelper():
-            branch( 0 ), pointers( 0 ), id( 0 ),
-            baseOffset( 0 ), position( 0 ) {}
+         ElementBranchHelper_t():
+            fBranch( 0 ), fPointers( 0 ), fId( 0 ),
+            fBaseOffset( 0 ), fPosition( 0 ) {}
 
-         TBranchElement*     branch;
-         std::vector<void*>* pointers;
-         UChar_t             id;
-         UInt_t              baseOffset;
-         Int_t               position;
+         TBranchElement*     fBranch;
+         std::vector<void*>* fPointers;
+         UChar_t             fId;
+         UInt_t              fBaseOffset;
+         Int_t               fPosition;
       };
 
-      typedef std::map<TClass*, ElementBranchHelper> BranchMap_t;
+      typedef std::map<TClass*, ElementBranchHelper_t> BranchMap_t;
       BranchMap_t fBranchMap;                         //! Branch map
-      std::vector<ElementBranchHelper> fBranchVector; //! Branch vector
+      std::vector<ElementBranchHelper_t> fBranchVector; //! Branch vector
 #endif // __CINT__
 
       TVirtualCollectionProxy* fCollProxy;    //! Collection proxy

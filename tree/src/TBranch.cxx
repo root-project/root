@@ -1966,6 +1966,7 @@ void TBranch::WriteBasket(TBasket* basket)
 //------------------------------------------------------------------------------
 void TBranch :: SetFirstEntry( Long64_t entry )
 {
+   //set the first entry number (case of TBranchSTL)
    fFirstEntry = entry;
    fEntries = 0;
    fEntryNumber = entry;

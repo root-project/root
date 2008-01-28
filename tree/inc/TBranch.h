@@ -136,7 +136,7 @@ public:
            Long64_t  GetTotBytes(Option_t *option="")    const;
            Long64_t  GetZipBytes(Option_t *option="")    const;
            Long64_t  GetEntryNumber() const {return fEntryNumber;}
-	   Long64_t  GetFirstEntry() const { return fFirstEntry; }
+           Long64_t  GetFirstEntry()  const {return fFirstEntry; }
          TObjArray  *GetListOfBaskets()  {return &fBaskets;}
          TObjArray  *GetListOfBranches() {return &fBranches;}
          TObjArray  *GetListOfLeaves()   {return &fLeaves;}

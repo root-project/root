@@ -136,8 +136,8 @@ TBranchSTL::~TBranchSTL()
    //destructor
    BranchMap_t::iterator brIter;
    for( brIter = fBranchMap.begin(); brIter != fBranchMap.end(); ++brIter ) {
-      (*brIter).second.pointers->clear();
-      delete (*brIter).second.pointers;
+      (*brIter).second.fPointers->clear();
+      delete (*brIter).second.fPointers;
    }
 }
 
@@ -149,7 +149,7 @@ Int_t TBranchSTL::Fill()
    //---------------------------------------------------------------------------
    BranchMap_t::iterator brIter;
    for( brIter = fBranchMap.begin(); brIter != fBranchMap.end(); ++brIter )
-      (*brIter).second.pointers->clear();
+      (*brIter).second.fPointers->clear();
 
    //---------------------------------------------------------------------------
    // Check if we're dealing with the null pointer here
@@ -216,7 +216,7 @@ Int_t TBranchSTL::Fill()
    UInt_t                elOffset   = 0;
    UChar_t               maxID      = fBranches.GetEntriesFast()+1;
    UChar_t               elID;
-   ElementBranchHelper   bHelper;
+   ElementBranchHelper_t bHelper;
    Int_t                 totalBytes = 0;
    Int_t                 bytes      = 0;
    TString               brName;
@@ -262,22 +262,22 @@ Int_t TBranchSTL::Fill()
 
          fBranches.Add( elBranch );
 
-         bHelper.id         = elID;
-         bHelper.branch     = elBranch;
-         bHelper.pointers   = elPointers;
-         bHelper.baseOffset = actClass->GetBaseClassOffset( cl );
+         bHelper.fId         = elID;
+         bHelper.fBranch     = elBranch;
+         bHelper.fPointers   = elPointers;
+         bHelper.fBaseOffset = actClass->GetBaseClassOffset( cl );
 
          brIter = fBranchMap.insert(std::make_pair(actClass, bHelper ) ).first;
-         elBranch->SetAddress( &((*brIter).second.pointers) );
+         elBranch->SetAddress( &((*brIter).second.fPointers) );
       }
       //------------------------------------------------------------------------
       // The branch for this type already exists - set up the pointers
       //------------------------------------------------------------------------
       else {
-         elPointers = (*brIter).second.pointers;
-         elBranch   = (*brIter).second.branch;
-         elID       = (*brIter).second.id;
-         elOffset   = (*brIter).second.baseOffset;
+         elPointers = (*brIter).second.fPointers;
+         elBranch   = (*brIter).second.fBranch;
+         elID       = (*brIter).second.fId;
+         elOffset   = (*brIter).second.fBaseOffset;
       }
 
       //-------------------------------------------------------------------------
@@ -414,42 +414,42 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
       // Load unloaded branch
       //------------------------------------------------------------------------
       index--;
-      elemVect = fBranchVector[index].pointers;
+      elemVect = fBranchVector[index].fPointers;
       if( !elemVect ) {
          elemBranch = (TBranchElement *)fBranches.UncheckedAt(index);
-         elemBranch->SetAddress( &(fBranchVector[index].pointers) );
+         elemBranch->SetAddress( &(fBranchVector[index].fPointers) );
 
          bytes = elemBranch->GetEntry( entry, getall );
       
          if( bytes == 0 ) {
             Error( "GetEntry", "No entry for index %d, setting pointer to 0", index );
             *element = 0;
-            fBranchVector[index].position++;
+            fBranchVector[index].fPosition++;
             continue;
          }
 
          if( bytes <= 0 ) {
             Error( "GetEntry", "I/O error while getting entry for index %d, setting pointer to 0", index );
             *element = 0;
-            fBranchVector[index].position++;
+            fBranchVector[index].fPosition++;
             continue;
          }
          totalBytes += bytes;
-         elemVect = fBranchVector[index].pointers;
+         elemVect = fBranchVector[index].fPointers;
 
          //---------------------------------------------------------------------
          // Calculate the base class offset
          //---------------------------------------------------------------------
          tmpClass = elemBranch->GetCollectionProxy()->GetValueClass();
-         fBranchVector[index].baseOffset = tmpClass->GetBaseClassOffset( elClass );
-         fBranchVector[index].position = 0;
+         fBranchVector[index].fBaseOffset = tmpClass->GetBaseClassOffset( elClass );
+         fBranchVector[index].fPosition = 0;
       }
 
       //------------------------------------------------------------------------
       // Set up the element
       //------------------------------------------------------------------------
-      *element =  ((char*)(*elemVect)[fBranchVector[index].position++])
-        - fBranchVector[index].baseOffset;
+      *element =  ((char*)(*elemVect)[fBranchVector[index].fPosition++])
+        - fBranchVector[index].fBaseOffset;
 
    }
 
@@ -457,8 +457,8 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
    // Cleanup
    //---------------------------------------------------------------------------
    for( UInt_t i = 0; i < fBranchVector.size(); ++i ) {
-      delete fBranchVector[i].pointers;
-      fBranchVector[i].pointers = 0;
+      delete fBranchVector[i].fPointers;
+      fBranchVector[i].fPointers = 0;
    }
 
    return totalBytes;
