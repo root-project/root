@@ -3728,6 +3728,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
    // Paint polyline in CurrentPad NDC coordinates.
 
    TPoint *pxy;
+   Int_t i;
 
    // Create temporary array to store array in pixel coordinates
    if (n <=0) return;
@@ -3736,7 +3737,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
       if (n <kPXY) pxy = &gPXY[0];
       else         pxy = new TPoint[n+1]; if (!pxy) return;
       // convert points from world to pixel coordinates
-      for (Int_t i=0;i<n;i++) {
+      for (i=0; i<n; i++) {
          pxy[i].fX = UtoPixel(x[i]);
          pxy[i].fY = VtoPixel(y[i]);
       }
@@ -3746,7 +3747,15 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
    }
 
    if (gVirtualPS) {
-      gVirtualPS->DrawPS(n, x, y);
+      Double_t *xw = new Double_t[n];
+      Double_t *yw = new Double_t[n];
+      for (i=0; i<n; i++) {
+         xw[i] = fX1 + x[i]*(fX2 - fX1);
+         yw[i] = fY1 + y[i]*(fY2 - fY1);
+      }
+      gVirtualPS->DrawPS(n, xw, yw);
+      delete [] xw;
+      delete [] yw;
    }
    Modified();
 }
