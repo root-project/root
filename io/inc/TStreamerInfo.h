@@ -74,8 +74,8 @@ protected:
 
       char* operator[]( UInt_t idx ) const
       {
-	char **el = (char**)fProxy->At(idx);
-	return *el;
+         char **el = (char**)fProxy->At(idx);
+         return *el;
       }
    private:
      TVirtualCollectionProxy *fProxy;
