@@ -13,6 +13,7 @@
 #include "TEveManager.h"
 #include "TEveProjectionBases.h"
 
+#include "TAttBBox.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualPad.h"
@@ -37,16 +38,7 @@ ClassImp(TEveProjectionManager)
 //______________________________________________________________________________
 TEveProjectionManager::TEveProjectionManager():
    TEveElementList("TEveProjectionManager",""),
-
    fProjection (0),
-
-   fDrawCenter(kFALSE),
-   fDrawOrigin(kFALSE),
-
-   fSplitInfoMode(0),
-   fSplitInfoLevel(1),
-   fAxisColor(0),
-
    fCurrentDepth(0)
 {
    // Constructor.
@@ -59,8 +51,29 @@ TEveProjectionManager::TEveProjectionManager():
 TEveProjectionManager::~TEveProjectionManager()
 {
    // Destructor.
+   // Destroys also dependent elements.
 
-   if(fProjection) delete fProjection;
+   if (fProjection) delete fProjection;
+   while ( ! fDependentEls.empty())
+   {
+      fDependentEls.front()->Destroy();
+   }
+}
+
+//______________________________________________________________________________
+void TEveProjectionManager::AddDependent(TEveElement* el)
+{
+   // Add el as dependent element.
+
+   fDependentEls.push_back(el);
+}
+
+//______________________________________________________________________________
+void TEveProjectionManager::RemoveDependent(TEveElement* el)
+{
+   // Remove el as dependent element.
+
+   fDependentEls.remove(el);
 }
 
 //______________________________________________________________________________
@@ -191,11 +204,20 @@ void TEveProjectionManager::ProjectChildrenRecurse(TEveElement* rnr_el)
    {
       pted->UpdateProjection();
       TAttBBox* bb = dynamic_cast<TAttBBox*>(pted);
-      if(bb)
+      if (bb)
       {
-         Float_t* b = bb->AssertBBox();
-         BBoxCheckPoint(b[0], b[2], b[4]);
-         BBoxCheckPoint(b[1], b[3], b[5]);
+         Float_t x, y, z, *b = bb->AssertBBox();
+         //         Float_t x, y, z;
+         x = b[0]; y = b[2]; z = b[4]; 
+         if (x < fBBox[0]) fBBox[0] = x;   if (x > fBBox[1]) fBBox[1] = x;
+         if (y < fBBox[2]) fBBox[2] = y;   if (y > fBBox[3]) fBBox[3] = y;
+         if (z < fBBox[4]) fBBox[4] = z;   if (z > fBBox[5]) fBBox[5] = z;
+
+         x = b[1]; y = b[3]; z = b[5]; 
+         if (x < fBBox[0]) fBBox[0] = x;   if (x > fBBox[1]) fBBox[1] = x;
+         if (y < fBBox[2]) fBBox[2] = y;   if (y > fBBox[3]) fBBox[3] = y;
+         if (z < fBBox[4]) fBBox[4] = z;   if (z > fBBox[5]) fBBox[5] = z;
+
       }
       rnr_el->ElementChanged(kFALSE);
    }
@@ -210,52 +232,13 @@ void TEveProjectionManager::ProjectChildren()
    // Project children recursevly, update BBox and notify ReveManger
    // the scenes have chenged.
 
-   BBoxZero();
-   ProjectChildrenRecurse(this);
-   AssertBBoxExtents(0.1);
-   {
-      using namespace TMath;
-      fBBox[0] = 10.0f * Floor(fBBox[0]/10.0f);
-      fBBox[1] = 10.0f * Ceil (fBBox[1]/10.0f);
-      fBBox[2] = 10.0f * Floor(fBBox[2]/10.0f);
-      fBBox[3] = 10.0f * Ceil (fBBox[3]/10.0f);
+   for (Int_t i = 0; i<6; i++) {
+      fBBox[i] = 0.f;
    }
+
+   ProjectChildrenRecurse(this);
 
    List_t scenes;
    CollectSceneParentsFromChildren(scenes, 0);
    gEve->ScenesChanged(scenes);
-}
-
-//______________________________________________________________________________
-void TEveProjectionManager::Paint(Option_t* /*option*/)
-{
-   // Paint this object. Only direct rendering is supported.
-
-   static const TEveException eH("TEveProjectionManager::Paint ");
-   TBuffer3D buff(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buff.fID           = this;
-   buff.fColor        = fAxisColor;
-   buff.fTransparency = 0;
-   buff.SetSectionsValid(TBuffer3D::kCore);
-
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
-   if (reqSections != TBuffer3D::kNone)
-      Error(eH, "only direct GL rendering supported.");
-}
-
-//______________________________________________________________________________
-void TEveProjectionManager::ComputeBBox()
-{
-   // Virtual from TAttBBox; fill bounding-box information.
-
-   static const TEveException eH("TEveProjectionManager::ComputeBBox ");
-
-   if(GetNChildren() == 0) {
-      BBoxZero();
-      return;
-   }
-
-   BBoxInit();
 }

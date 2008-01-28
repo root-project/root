@@ -36,9 +36,10 @@ protected:
    TGComboBox          *fSize;
    TGComboBox          *fFile;
    TGComboBox          *fMode;
+   TEveGValuator       *fExtrude;
 
    TGCheckButton       *fLighting;
-   TEveGValuator       *fExtrude;
+   TGCheckButton       *fAutoBehave;
 
 public:
    TEveTextEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -48,9 +49,13 @@ public:
    virtual void SetModel(TObject* obj);
 
    void DoText(const Text_t*);
-   void DoFont();
+
+   void DoFontSize();
+   void DoFontFile();
+   void DoFontMode();
   
    void DoLighting();
+   void DoAutoBehave();
    void DoExtrude();
    
    ClassDef(TEveTextEditor, 0); // GUI editor for TEveText.

@@ -29,26 +29,17 @@ private:
    TEveProjectionManagerEditor& operator=(const TEveProjectionManagerEditor&); // Not implemented
 
 protected:
-   TEveProjectionManager    *fM; // Model object.
+   TEveProjectionManager    *fM;   // Model object.
 
-   // projection
    TGComboBox      *fType;         // TEveProjection type widget
    TEveGValuator   *fDistortion;   // TEveProjection distortion widget
    TEveGValuator   *fFixedRadius;  // TEveProjection fixed-radius widget
    TEveGValuator   *fCurrentDepth; // TEveProjection z-coordinate widget
 
-   // center
-   TGVerticalFrame *fCenterFrame;  // Parent frame for Center tab.
-   TGCheckButton   *fDrawCenter;   // draw center widget
-   TGCheckButton   *fDrawOrigin;   // draw origin widget
+   TGVerticalFrame *fCenterFrame;  // parent frame for distortion center
    TEveGValuator   *fCenterX;      // center x value widget
    TEveGValuator   *fCenterY;      // center y value widget
    TEveGValuator   *fCenterZ;      // center z value widget
-
-   // axis
-   TGColorSelect   *fAxisColor;  // color of axis widget
-   TGComboBox      *fSIMode;     // tick-mark positioning widget 
-   TGNumberEntry   *fSILevel;    // tick-mark density widget
 
 public:
    TEveProjectionManagerEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
@@ -58,16 +49,10 @@ public:
 
    // Declare callback/slot methods
 
-   void DoSplitInfoMode(Int_t type);
-   void DoSplitInfoLevel();
-   void DoAxisColor(Pixel_t pixel);
-
    void DoType(Int_t type);
    void DoDistortion();
    void DoFixedRadius();
    void DoCurrentDepth();
-   void DoDrawCenter();
-   void DoDrawOrigin();
    void DoCenter();
 
    ClassDef(TEveProjectionManagerEditor, 0); // Editor for TEveProjectionManager class.

@@ -61,6 +61,22 @@ void TEveTextGL::SetBBox()
 }
 
 //______________________________________________________________________________
+void TEveTextGL::SetModelFont(TEveText* model, TGLRnrCtx & rnrCtx) const
+{
+  if (fSize != model->GetSize() || fFile != model->GetFile() || fMode != model->GetMode())
+   {
+      if (fFont)
+         rnrCtx.ReleaseFont(fSize, fFile, fMode);
+
+      fSize = model->GetSize();
+      fFile = model->GetFile();
+      fMode = model->GetMode();
+      fFont = rnrCtx.GetFont(fSize, fFile, fMode);
+   }
+}
+
+/******************************************************************************/
+//______________________________________________________________________________
 void TEveTextGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Actual rendering code.
@@ -68,24 +84,14 @@ void TEveTextGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    static const TEveException eH("TEveTextGL::DirectDraw ");
 
-   if (fSize != fM->GetSize() || fFile != fM->GetFile() || fMode != fM->GetMode())
-   {
-      if (fFont)
-         rnrCtx.ReleaseFont(fSize, fFile, fMode);
-
-      fSize = fM->GetSize();
-      fFile = fM->GetFile();
-      fMode = fM->GetMode();
-      fFont = rnrCtx.GetFont(fSize, fFile, fMode);
-   }
+   SetModelFont(fM, rnrCtx);
 
    //  bbox initialisation
-   if (fBoundingBox.IsEmpty() &&
-       fMode != TFTGLManager::kBitmap && fMode != TFTGLManager::kPixmap)
+   if (fBoundingBox.IsEmpty() && fMode > TFTGLManager::kPixmap)
    {
       Float_t bbox[6];
       fFont->BBox(fM->GetText(), bbox[0], bbox[1], bbox[2],
-                                 bbox[3], bbox[4], bbox[5]);
+                  bbox[3], bbox[4], bbox[5]);
 
       if (fMode == TFTGLManager::kExtrude) {
          // Depth goes, the other z-way, swap.
@@ -105,16 +111,15 @@ void TEveTextGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       ncthis->UpdateBoundingBoxesOfPhysicals();
    }
 
-   // rendering
-   TGLCapabilitySwitch lights(GL_LIGHTING, fM->GetLighting());
+   // rendering  
+   TFTGLManager::PreRender(fMode);
+   TGLCapabilitySwitch lights(GL_LIGHTING, fM->GetAutoBehave() ? (fMode > TFTGLManager::kOutline) : (fM->GetLighting()));
    switch(fMode)
    {
       case TFTGLManager::kBitmap:
       case TFTGLManager::kPixmap:
-      {
-         if (rnrCtx.Selection())
-         {
-            // calculate coordinates in 3D
+         if (rnrCtx.Selection()) {
+            // calculate 3D coordinates for picking
             const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
             GLdouble mm[16];
             GLint    vp[4];
@@ -138,60 +143,28 @@ void TEveTextGL::DirectDraw(TGLRnrCtx & rnrCtx) const
             glVertex3dv(fX[2]);
             glVertex3dv(fX[3]);
             glEnd();
-         }
-         else
-         {
-            TGLCapabilitySwitch blending(GL_BLEND, kTRUE);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            glAlphaFunc(GL_GEQUAL, 0.0625);
-            glEnable(GL_ALPHA_TEST);
-
+         } else {
             glRasterPos3i(0, 0, 0);
             fFont->Render(fM->GetText());
          }
          break;
-      }
       case TFTGLManager::kOutline:
       case TFTGLManager::kExtrude:
       case TFTGLManager::kPolygon:
-      {
-         TGLCapabilitySwitch normalize(GL_NORMALIZE, kTRUE);
-         glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-         TGLCapabilitySwitch col(GL_COLOR_MATERIAL, kTRUE);
-         TGLCapabilitySwitch cull(GL_CULL_FACE, kFALSE);
-         if (fM->GetExtrude() != 1.0)
-         {
+         if (fM->GetExtrude() != 1.0) {
             glPushMatrix();
             glScalef(1.0f, 1.0f, fM->GetExtrude());
             fFont->Render(fM->GetText());
             glPopMatrix();
-         }
-         else
-         {
+         } else {
             fFont->Render(fM->GetText());
          }
          break;
-      }
       case TFTGLManager::kTexture:
-      {
-         TGLCapabilitySwitch alpha(GL_ALPHA_TEST, kTRUE);
-         TGLCapabilitySwitch blending(GL_BLEND, kTRUE);
-         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-         glAlphaFunc(GL_GEQUAL, 0.0625);
-         glEnable(GL_ALPHA_TEST);
-
-         glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
-         TGLCapabilitySwitch texture(GL_TEXTURE_2D, kTRUE);
-         TGLCapabilitySwitch col(GL_COLOR_MATERIAL, kTRUE);
          fFont->Render(fM->GetText());
-         glPopAttrib();
          break;
-      }
       default:
-      {
          throw(eH + "unsupported FTGL-type.");
-      }
    }
+   TFTGLManager::PostRender(fMode);
 }

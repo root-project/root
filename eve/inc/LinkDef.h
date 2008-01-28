@@ -180,7 +180,9 @@
 
 #pragma link C++ class TEveProjectionManager+;
 #pragma link C++ class TEveProjectionManagerEditor+;
-#pragma link C++ class TEveProjectionManagerGL+;
+#pragma link C++ class TEveProjectionAxes+;
+#pragma link C++ class TEveProjectionAxesEditor+;
+#pragma link C++ class TEveProjectionAxesGL+;
 
 #pragma link C++ class TEveTrackProjected+;
 #pragma link C++ class TEveTrackProjectedGL+;

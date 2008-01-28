@@ -23,16 +23,17 @@ private:
    TEveTextGL(const TEveTextGL&);            // Not implemented
    TEveTextGL& operator=(const TEveTextGL&); // Not implemented
 
+protected:
    mutable Int_t         fSize;     // current font size
    mutable Int_t         fFile;     // current font file
    mutable Int_t         fMode;     // current FTGL class
 
    mutable FTFont       *fFont;     // FTGL font object
 
-protected:
    TEveText             *fM;        // model object.
    mutable Double_t      fX[4][3];  // 3D position of font
 
+   void    SetModelFont( TEveText* model, TGLRnrCtx & rnrCtx) const;
 public:
    TEveTextGL();
    virtual ~TEveTextGL() {}

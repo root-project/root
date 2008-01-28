@@ -79,3 +79,8 @@ eve/src/TEveText.o: \
                 $(FREETYPEDEP)
 eve/src/TEveText.o: \
                 CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)
+
+eve/src/TEveProjectionAxesGL.o: \
+                $(FREETYPEDEP)
+eve/src/TEveProjectionAxesGL.o: \
+                CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)

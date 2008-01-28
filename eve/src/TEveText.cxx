@@ -12,11 +12,14 @@
 #include "TEveText.h"
 
 #include "TFTGLManager.h"
+#include "TObjArray.h"
+#include "TObjString.h"
 #include "TString.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
+#include "TMath.h"
 
 //______________________________________________________________________________
 // TEveText
@@ -28,43 +31,83 @@
 ClassImp(TEveText);
 
 //______________________________________________________________________________
-TEveText::TEveText(const Text_t* text) :
+TEveText::TEveText(const Text_t* txt) :
    TEveElement(fTextColor),
-   TNamed("TEveText","TEveText"),
+   TNamed("TEveText", ""),
    TAtt3D(),
    TAttBBox(),
-   fText(text),
+   fText(txt),
    fTextColor(0),
 
    fSize(12),
    fFile(4),
-   fMode(TFTGLManager::kPixmap),
+   fMode(-1),
+   fExtrude(1.0f),
 
+   fAutoBehave(kTRUE),
    fLighting(kFALSE),
-   fExtrude(1.0f)
+   fHMTrans()
 {
    // Constructor.
+
+   SetFontMode(TFTGLManager::kPixmap);
+}
+
+/******************************************************************************/
+
+//______________________________________________________________________________
+const TGPicture* TEveText::GetListTreeIcon() 
+{ 
+   //return pointset icon.
+
+   return TEveElement::fgListTreeIcons[5]; 
 }
 
 //______________________________________________________________________________
-void TEveText::SetFont(Int_t size, Int_t file, Int_t mode)
+void TEveText::SetFontSize(Int_t val, Bool_t validate)
+{
+   // Set valid font size.
+
+   if (validate) {
+      Int_t* fsp = &TFTGLManager::GetFontSizeArray()->front();
+      Int_t  ns  = TFTGLManager::GetFontSizeArray()->size();
+      Int_t  idx = TMath::BinarySearch(ns, fsp, val);
+      fSize = fsp[idx];
+   } else {
+      fSize = val;
+   }
+}
+
+//______________________________________________________________________________
+void TEveText::SetFontFile(const char* name)
+{
+   // Set font file regarding to staticTFTGLManager fgFontFileArray.
+
+   TObjArray* fa =TFTGLManager::GetFontFileArray();
+   TIter  next_base(fa);
+   TObjString* os;
+   Int_t idx = 0;
+   while ((os = (TObjString*) next_base()) != 0) {
+      if (os->GetString() == name) {
+         SetFontFile(idx);
+         return;
+      }
+      idx++;
+   }
+}
+
+//______________________________________________________________________________
+void TEveText::SetFontMode( Int_t mode)
 {
    // Set current font attributes.
 
-   fSize = size;
-   fFile = file;
-   if (fMode != mode)
-   {
-      fMode = mode;
-      if (fMode == TFTGLManager::kBitmap || fMode == TFTGLManager::kPixmap) {
-         fHMTrans.SetEditRotation(kFALSE);
-         fHMTrans.SetEditScale(kFALSE);
-      } else {
-         fHMTrans.SetEditRotation(kTRUE);
-         fHMTrans.SetEditScale(kTRUE);
-      }
-   }
+   fMode = mode;
+
+   Bool_t edit = (fMode > TFTGLManager::kPixmap);
+   fHMTrans.SetEditRotation(edit);
+   fHMTrans.SetEditScale(edit);
 }
+
 
 //______________________________________________________________________________
 void TEveText::Paint(Option_t* )

@@ -24,8 +24,9 @@
 
 ClassImp(TFTGLManager)
 
-TObjArray TFTGLManager::fgFontArray;
-Bool_t    TFTGLManager::fgStaticInitDone = kFALSE;
+TObjArray   TFTGLManager::fgFontFileArray;
+TFTGLManager::FontSizeVec_t TFTGLManager::fgFontSizeArray;
+Bool_t  TFTGLManager::fgStaticInitDone = kFALSE;
 
 TFTGLManager::~TFTGLManager()
 {
@@ -47,7 +48,7 @@ FTFont* TFTGLManager::GetFont(Int_t size, Int_t file, EMode mode)
 {
    // Provide font with given size, file and FTGL class.
 
-   if (fgStaticInitDone == kFALSE) InitFontArray();
+   if (fgStaticInitDone == kFALSE) InitStatics();
 
    Font_t key = Font_t(size, file, mode);
    std::set<Font_t>::iterator it = fFontSet.find(key);
@@ -59,7 +60,7 @@ FTFont* TFTGLManager::GetFont(Int_t size, Int_t file, EMode mode)
 # else
       ttpath = gEnv->GetValue("Root.TTFontPath", "$(ROOTSYS)/fonts");
 # endif
-      TObjString* name = (TObjString*)fgFontArray[file];
+      TObjString* name = (TObjString*)fgFontFileArray[file];
       const char *file = gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data()));
 
       FTFont* ftfont = 0;
@@ -122,18 +123,27 @@ Bool_t TFTGLManager::ReleaseFont(Int_t size, Int_t file, EMode mode)
 }
 
 //______________________________________________________________________________
-TObjArray* TFTGLManager::GetFontArray()
+TObjArray* TFTGLManager::GetFontFileArray()
 {
    // Get id to file name map.
 
-   if (fgStaticInitDone == kFALSE) InitFontArray();
-   return &fgFontArray;
+   if (fgStaticInitDone == kFALSE) InitStatics();
+   return &fgFontFileArray;
 }
 
 //______________________________________________________________________________
-void TFTGLManager::InitFontArray()
+TFTGLManager::FontSizeVec_t* TFTGLManager::GetFontSizeArray()
 {
-   // Create a list of available font files.
+   // Get valid font size vector.
+
+   if (fgStaticInitDone == kFALSE) InitStatics();
+   return &fgFontSizeArray;
+}
+
+//______________________________________________________________________________
+void TFTGLManager::InitStatics()
+{
+   // Create a list of available font files and allowed font sizes.
 
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 # ifdef TTFFONTDIR
@@ -149,11 +159,77 @@ void TFTGLManager::InitFontArray()
       s = name;
       if (s.EndsWith(".ttf")) {
          s.Resize(s.Sizeof() -5);
-         fgFontArray.Add(new TObjString(s.Data()));
+         fgFontFileArray.Add(new TObjString(s.Data()));
       }
    }
-   fgFontArray.Sort();
+   fgFontFileArray.Sort();
    gSystem->FreeDirectory(dir);
 
+
+   // font sizes
+   for (Int_t i = 8; i <= 20; i+=2)
+      fgFontSizeArray.push_back(i);
+   for (Int_t i = 24; i <= 64; i+=4)
+      fgFontSizeArray.push_back(i);
+
    fgStaticInitDone = kTRUE;
+}
+
+//______________________________________________________________________________
+void TFTGLManager::PreRender(Int_t mode)
+{
+   // Set-up GL state before FTFont rendering.
+
+   switch(mode) {
+      case kBitmap:
+      case kPixmap:
+         glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT);
+         glEnable(GL_ALPHA_TEST);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         glAlphaFunc(GL_GEQUAL, 0.0625);
+         break;
+      case kTexture:
+         glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
+         glEnable(GL_TEXTURE_2D);
+         glEnable(GL_COLOR_MATERIAL);
+         glDisable(GL_CULL_FACE);
+         glEnable(GL_ALPHA_TEST);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         glAlphaFunc(GL_GEQUAL, 0.0625);
+         break;
+      case kExtrude:
+      case kPolygon:
+      case kOutline:
+         glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
+         glEnable(GL_NORMALIZE);
+         glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+         glEnable(GL_COLOR_MATERIAL);
+         glDisable(GL_CULL_FACE);
+         break;
+      default:
+         break;
+   }
+}
+
+//______________________________________________________________________________
+void TFTGLManager::PostRender(Int_t mode)
+{
+   // Set-up GL state after FTFont rendering.
+
+   switch(mode) {
+      case kBitmap:
+      case kPixmap:
+         glPopAttrib();
+         break;
+      case kTexture:
+         glPopAttrib();
+         break;
+      case kExtrude:
+      case kPolygon:
+      case kOutline:
+         glPopAttrib();
+         break;
+      default:
+         break;
+      }
 }

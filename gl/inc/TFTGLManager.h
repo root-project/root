@@ -3,6 +3,7 @@
 
 #include "TObjArray.h"
 #include <set>
+#include <vector>
 
 class FTFont;
 class TRefCount;
@@ -10,18 +11,22 @@ class TRefCount;
 class TFTGLManager
 {
 public:
-   enum EMode { kBitmap, kPixmap, kOutline, kPolygon, kExtrude, kTexture }; // FTGL class
+   enum EMode { kBitmap, kPixmap, kTexture, kOutline, kPolygon, kExtrude}; // FTGL class
 
-private:
+   typedef std::vector<Int_t> FontSizeVec_t;
+
    struct Font_t
    {
-   public:
       Int_t      fSize;   // face size
       Int_t      fFile;   // file name
       EMode      fMode;   // FTGL class id
 
       FTFont*    fFont;   // FTGL font
       TRefCnt    fRefCnt; // FTGL font reference count
+
+
+
+      Font_t(): fSize(0), fFile(0), fMode(kPixmap), fFont(0), fRefCnt() {}
 
       Font_t(Int_t size, Int_t font,  EMode mode):
          fSize(size), fFile(font), fMode(mode), fFont(0), fRefCnt() {}
@@ -59,6 +64,11 @@ private:
 
    std::set<Font_t>  fFontSet;          // Set of created fonts.
 
+   static TObjArray     fgFontFileArray;       // Map font-id to ttf-font-file.
+   static FontSizeVec_t fgFontSizeArray;
+   static Bool_t        fgStaticInitDone;  // Global initialization flag.
+   static void          InitStatics();
+
 public:
    TFTGLManager(){}
    virtual ~TFTGLManager();
@@ -66,10 +76,11 @@ public:
    FTFont*  GetFont(Int_t size, Int_t file, EMode mode);
    Bool_t   ReleaseFont(Int_t size, Int_t file, EMode mode);
 
-   static Bool_t     fgStaticInitDone;  // Global initialization flag.
-   static TObjArray  fgFontArray;       // Map font-id to ttf-font-file.
-   static TObjArray* GetFontArray();
-   static void       InitFontArray();
+
+   static TObjArray*        GetFontFileArray();
+   static FontSizeVec_t*    GetFontSizeArray();
+   static void              PreRender(Int_t mode);
+   static void              PostRender(Int_t mode);
 
    ClassDef(TFTGLManager, 0); // A FreeType GL font manager.
 };

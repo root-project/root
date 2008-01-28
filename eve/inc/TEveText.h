@@ -35,13 +35,15 @@ protected:
    Int_t             fSize;         // face size
    Int_t             fFile;         // font file name
    Int_t             fMode;         // FTGL class
-
-   Bool_t            fLighting;     // enable GL lighting
    Float_t           fExtrude;      // extrude depth
+
+   Bool_t            fAutoBehave;   // use defaults
+   Bool_t            fLighting;     // enable GL lighting
+
    TEveTrans         fHMTrans;      // overall transformation
 
 public:
-   TEveText(const Text_t* txt);
+   TEveText(const Text_t* txt="");
    virtual ~TEveText() {}
 
    virtual Bool_t CanEditMainColor() { return kTRUE; }
@@ -51,7 +53,12 @@ public:
    Int_t   GetSize() const { return fSize; }
    Int_t   GetFile() const { return fFile; }
    Int_t   GetMode() const { return fMode; }
-   void    SetFont(Int_t size, Int_t file, Int_t mode);
+   void    SetFontSize(Int_t size, Bool_t validate = kTRUE);
+   void    SetFontFile(Int_t file){ fFile = file; }
+   void    SetFontFile(const char* name);
+   void    SetFontMode(Int_t mode);
+
+   Int_t   GetValidFontSize(Float_t val);
 
    const   Text_t* GetText() const  { return fText.Data(); }
    void    SetText(const Text_t* t) { fText = t; }
@@ -59,11 +66,16 @@ public:
    Bool_t  GetLighting() const      { return fLighting; }
    void    SetLighting(Bool_t isOn) { fLighting = isOn; }
 
+   Bool_t  GetAutoBehave() const      { return fAutoBehave; }
+   void    SetAutoBehave(Bool_t isOn) { fAutoBehave = isOn; }
+
    Float_t GetExtrude() const    { return fExtrude; }
    void    SetExtrude(Float_t x) { fExtrude = x;    }
 
    virtual Bool_t     CanEditMainHMTrans() { return kTRUE; }
    virtual TEveTrans* PtrMainHMTrans()     { return &fHMTrans; }
+
+   virtual const TGPicture* GetListTreeIcon();
 
    ClassDef(TEveText, 0); // Class for visualisation of text with FTGL font.
 };

@@ -8,7 +8,7 @@ TEveText* text_test()
    marker->SetName("Origin marker");
    marker->SetMarkerColor(6);
    marker->SetMarkerStyle(3);
-   Float_t a = 10; 
+   Float_t a = 10;
    marker->SetPoint(0, a,  +a, +a);
    marker->SetPoint(1, a,  -a, +a);
    marker->SetPoint(2, -a, -a, +a);
@@ -22,8 +22,7 @@ TEveText* text_test()
    TEveText* t = new TEveText("DADA");
    t->PtrMainHMTrans()->RotateLF(1, 3, TMath::PiOver2());
    t->SetMainColor((Color_t)(kOrange-2));
-   // t->SetFont(64, 4, TFTGLManager::kPixmap);
-   t->SetFont(64, 4, TFTGLManager::kExtrude);
+   t->SetFontSize(64);
    t->SetLighting(kTRUE);
    gEve->AddElement(t);
 
