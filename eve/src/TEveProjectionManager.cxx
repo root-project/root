@@ -238,6 +238,12 @@ void TEveProjectionManager::ProjectChildren()
 
    ProjectChildrenRecurse(this);
 
+   for (List_i i=fDependentEls.begin(); i!=fDependentEls.end(); ++i) {
+      TAttBBox* bbox = dynamic_cast<TAttBBox*>(*i);
+      if (bbox)
+         bbox->ComputeBBox();
+   }
+
    List_t scenes;
    CollectSceneParentsFromChildren(scenes, 0);
    gEve->ScenesChanged(scenes);
