@@ -47,6 +47,12 @@ else
 CLIBDEFS      = $(CLIBDEFS_TMP) -DCERNLIB_PPC
 endif
 
+ifeq (g95,$(findstring g95,$(ROOTBUILD)))
+CLIBDEFS     += -DCERNLIB_G95
+else
+CLIBDEFS     += -DCERNLIB_GFORTRAN
+endif
+
 CLIBCXXOPTS   = $(CLIBDEFS)
 CLIBCOPT      = $(CLIBDEFS)
 CLIBFOPT      = $(CLIBDEFS)
