@@ -31,9 +31,9 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11TTFH))
 ALLLIBS     += $(X11TTFLIB)
 ALLMAPS     += $(X11TTFMAP)
 
-#ifeq ($(XFTLIB),yes)
+ifeq ($(XFTLIB),yes)
 XLIBS       += $(X11LIBDIR) -lXft
-#endif
+endif
 
 # include all dependency files
 INCLUDEFILES += $(X11TTFDEP)
