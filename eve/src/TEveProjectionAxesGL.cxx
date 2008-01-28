@@ -79,21 +79,20 @@ void TEveProjectionAxesGL::SetBBox()
 //______________________________________________________________________________
 const char* TEveProjectionAxesGL::GetText(Float_t x) const
 {
-   // Get formatted text.
+   // Returns formatted text suitable for display of value 'x' on an
+   // axis tick-mark.
 
-   using  namespace TMath;
-   if (Abs(x) > 1000) {
-      Float_t v = 10*TMath::Nint(x/10.0f);
-      return Form("%.0f", v);
-   } else if(Abs(x) > 100) {
-      Float_t v = TMath::Nint(x);
-      return Form("%.0f", v);
-   } else if (Abs(x) > 10)
+   using namespace TMath;
+
+   if (Abs(x) > 1000)
+      return Form("%d", (Int_t) 10*Nint(x/10.0f));
+   if (Abs(x) > 100)
+      return Form("%d", (Int_t) Nint(x));
+   if (Abs(x) > 10)
       return Form("%.1f", x);
-   else if ( Abs(x) > 1 )
+   if (Abs(x) >= 0.01 )
       return Form("%.2f", x);
-   else // zero
-      return Form("%.1f", x);
+   return "0";
 }
 
 //______________________________________________________________________________
