@@ -49,6 +49,9 @@ protected:
    TPolyLine& operator=(const TPolyLine&);
 
 public:
+   // TPolyLine status bits
+   enum { kPolyLineNDC = BIT(14) };
+
    TPolyLine();
    TPolyLine(Int_t n, Option_t *option="");
    TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
@@ -73,6 +76,7 @@ public:
    virtual void    PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual void    Print(Option_t *option="") const;
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SetNDC(Bool_t isNDC=kTRUE);
    virtual Int_t   SetNextPoint(Double_t x, Double_t y); // *MENU*
    virtual void    SetOption(Option_t *option="") {fOption = option;}
    virtual void    SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*

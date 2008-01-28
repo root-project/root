@@ -127,7 +127,7 @@ TPolyLine& TPolyLine::operator=(const TPolyLine& pl)
       fX=pl.fX;
       fY=pl.fY;
       fOption=pl.fOption;
-   } 
+   }
    return *this;
 }
 
@@ -479,8 +479,13 @@ void TPolyLine::Paint(Option_t *option)
 {
    // Paint this polyline with its current attributes.
 
-   if (strlen(option) > 0) PaintPolyLine(fLastPoint+1, fX, fY, option);
-   else                    PaintPolyLine(fLastPoint+1, fX, fY, fOption.Data());
+   if (TestBit(kPolyLineNDC)) {
+      if (strlen(option) > 0) PaintPolyLineNDC(fLastPoint+1, fX, fY, option);
+      else                    PaintPolyLineNDC(fLastPoint+1, fX, fY, fOption.Data());
+   } else {
+      if (strlen(option) > 0) PaintPolyLine(fLastPoint+1, fX, fY, option);
+      else                    PaintPolyLine(fLastPoint+1, fX, fY, fOption.Data());
+   }
 }
 
 
@@ -559,6 +564,16 @@ void TPolyLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
 
 //______________________________________________________________________________
+void TPolyLine::SetNDC(Bool_t isNDC)
+{
+   // Set NDC mode on if isNDC = kTRUE, off otherwise
+
+   ResetBit(kPolyLineNDC);
+   if (isNDC) SetBit(kPolyLineNDC);
+}
+
+
+//______________________________________________________________________________
 Int_t TPolyLine::SetNextPoint(Double_t x, Double_t y)
 {
    // Set point following LastPoint to x, y.
@@ -607,7 +622,7 @@ void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
 void TPolyLine::SetPolyLine(Int_t n)
 {
    // if n <= 0 the current arrays of points are deleted.
-   
+
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
@@ -631,7 +646,7 @@ void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    // Set new values for this polyline.
    //
    // if n <= 0 the current arrays of points are deleted.
-   
+
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
@@ -660,7 +675,7 @@ void TPolyLine::SetPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    // Set new values for this polyline.
    //
    // if n <= 0 the current arrays of points are deleted.
-   
+
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
