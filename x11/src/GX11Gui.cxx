@@ -172,7 +172,7 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
       ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
                err->resourceid, err->request_code);
       int *kil = (int*)1;
-      delete kil; 
+      delete kil;
       return 0;
    }
 
@@ -809,9 +809,13 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
    // initializes the TGX11 class via Init(). Called from TGClient ctor.
 
 #ifdef _REENTRANT
-   // very first call before any X-call !!
-   if (!XInitThreads())
-      Warning("OpenDisplay", "system has no X11 thread support");
+   // In some cases there can be problems due to XInitThreads, like when
+   // using Qt, so we allow for it to be turned off
+   if (gEnv->GetValue("X11.XInitThread", 1)) {
+      // Must be very first call before any X11 call !!
+      if (!XInitThreads())
+         Warning("OpenDisplay", "system has no X11 thread support");
+   }
 #endif
 
    Display *dpy;
@@ -2654,8 +2658,8 @@ UInt_t TGX11::ScreenWidthMM() const
 //______________________________________________________________________________
 void TGX11::DeleteProperty(Window_t win, Atom_t& prop)
 {
-   // Deletes the specified property only if the property was defined on the 
-   // specified window and causes the X server to generate a PropertyNotify 
+   // Deletes the specified property only if the property was defined on the
+   // specified window and causes the X server to generate a PropertyNotify
    // event on the window unless the property does not exist.
 
    XDeleteProperty(fDisplay, win, prop);
@@ -2667,9 +2671,9 @@ Int_t TGX11::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t length
                          Int_t *act_format, ULong_t *nitems, ULong_t *bytes,
                          unsigned char **prop_list)
 {
-   // Returns the actual type of the property; the actual format of the property; 
-   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of 
-   // bytes remaining to be read in the property; and a pointer to the data 
+   // Returns the actual type of the property; the actual format of the property;
+   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of
+   // bytes remaining to be read in the property; and a pointer to the data
    // actually returned.
 
    return XGetWindowProperty(fDisplay, win, prop, offset, length, del, req_type,
@@ -2679,9 +2683,9 @@ Int_t TGX11::GetProperty(Window_t win, Atom_t prop, Long_t offset, Long_t length
 //______________________________________________________________________________
 void TGX11::ChangeActivePointerGrab(Window_t /*win*/, UInt_t mask, Cursor_t cur)
 {
-   // Changes the specified dynamic parameters if the pointer is actively 
+   // Changes the specified dynamic parameters if the pointer is actively
    // grabbed by the client.
-   
+
    UInt_t xevmask;
    MapEventMask(mask, xevmask);
    if (cur == kNone)
@@ -2694,7 +2698,7 @@ void TGX11::ChangeActivePointerGrab(Window_t /*win*/, UInt_t mask, Cursor_t cur)
 void TGX11::ConvertSelection(Window_t win, Atom_t &sel, Atom_t &target,
                              Atom_t &prop, Time_t &stamp)
 {
-   // Requests that the specified selection be converted to the specified 
+   // Requests that the specified selection be converted to the specified
    // target type.
 
    XConvertSelection(fDisplay, sel, target, prop, win, stamp);
@@ -2725,7 +2729,7 @@ void TGX11::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
 //______________________________________________________________________________
 void TGX11::SetDNDAware(Window_t win, Atom_t *typelist)
 {
-   // Add XdndAware property and the list of drag and drop types to the 
+   // Add XdndAware property and the list of drag and drop types to the
    // Window win.
 
    unsigned char version = 4;
@@ -2854,5 +2858,3 @@ Bool_t TGX11::IsDNDAware(Window_t win, Atom_t *typelist)
    XFree(data);
    return result;
 }
-
-

@@ -64,6 +64,7 @@ Root.ErrorIgnoreLevel:   Print
 X11.Sync:                no
 X11.FindBestVisual:      yes
 X11.UseXft:              no
+X11.XInitThread:         yes
 
 # Settings for Win32 behavior.
 Win32.UseSysPointers:    no
