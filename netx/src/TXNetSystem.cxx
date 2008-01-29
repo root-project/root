@@ -259,6 +259,8 @@ void TXNetSystem::FreeDirectory(void *dirp)
       fDir = "";
       fDirp = 0;
       fDirListValid = kFALSE;
+      fDirEntry = "";
+      fDirList.Clear();
       return;
    }
 
@@ -318,8 +320,10 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
       }
 
       // Return entries one by one with each call of method
-      if (fDirList.GetSize() > 0)
-         return fDirList.Pop_back().c_str();
+      if (fDirList.GetSize() > 0) {
+         fDirEntry = fDirList.Pop_front().c_str();
+         return fDirEntry.Data();
+      }
       return 0;   // until all of them have been returned
    }
 

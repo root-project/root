@@ -73,6 +73,7 @@ private:
    void           *fDirp;         // Directory pointer
    vecString       fDirList;      // Buffer for directory content
    Bool_t          fDirListValid; // fDirList content valid ?
+   TString         fDirEntry;     // Last dir entry 
    TString         fUrl;          // Initial url
 
    static Bool_t   fgInitDone;    // Avoid initializing more than once
