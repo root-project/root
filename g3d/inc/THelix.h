@@ -40,9 +40,9 @@ enum EHelixRangeType {
 class THelix : public TPolyLine3D {
 
 protected:
-   Double_t     fX0;       //Initial X position
-   Double_t     fY0;       //Initial Y position
-   Double_t     fZ0;       //Initial Z position
+   Double_t     fX0;       //Pivot's x position (see parametrization in class doc)
+   Double_t     fY0;       //Pivot's y position (see parametrization in class doc)
+   Double_t     fZ0;       //Pivot's z position (see parametrization in class doc)
    Double_t     fVt;       //Transverse velocity (constant of motion)
    Double_t     fPhi0;     //Initial phase, so vx0 = fVt*cos(fPhi0)
    Double_t     fVz;       //Z velocity (constant of motion)

@@ -10,56 +10,57 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-// Helix is, hmmm, well, a helix.  It has 3 different constructors.
-//
-// Comments/suggestions/etc on this class should be sent to the author:
-//             pyeh@cdfsga.fnal.gov (Ping Yeh)
+// THelix has two different constructors.
 //
 //   If a particle with charge q passes through a point (x,y,z)
 //   with momentum (px,py,pz) with magnetic field B along an axis (nx,ny,nz),
 //   this helix can be constrcuted like
 //
-//      THelix p(x0,y0,z0, px,py,pz, q*B, nx,ny,nz);
+//      THelix p(x,y,z, px,py,pz, q*B, nx,ny,nz);
 //
 //     (nx,ny,nz) defaults to (0,0,1).
 //
-//   A helix in its own frame can be defined with initial position
-//   (x0,y0,z0) and "velocity" (vx0,vy0,vz0), both 3-vectors, and
-//   an angular frequency w.  The parametric equation of the helix is
+//   A helix in its own frame can be defined with a pivotal point
+//   (x0,y0,z0), the velocity at that point (vx0,vy0,vz0), and
+//   an angular frequency w.  Combining vx0 and vy0 to a transverse 
+//   velocity vt0 one can parametrize the helix as
 //
-//    x = x0 - vt / w * sin(-w * t + phi0)
-//    y = y0 + vt / w * cos(-w * t + phi0)
-//    z = z0 + vz * t
+//    x(t) = x0 - vt0 / w * sin(-w * t + phi0)
+//    y(t) = y0 + vt0 / w * cos(-w * t + phi0)
+//    z(t) = z0 + vz0 * t
 //
 //
-//   The 'normal constructor' has 6 parameters,
+//   The second constructor has 6 parameters,
 //
 //       Example:
-//                 THelix pl1(xyz0, v0, w, range, rtype, axis);
+//                 THelix pl1(xyz, v, w, range, rtype, axis);
 //
 //         where:
-//             xyz0  : array of initial position
-//             v0    : array of initial velocity
-//             w     : angular frequency
-//             range : helix range
-//             rtype : kHelixZ specifies allowed drawing range in helix Z direction, i.e., along B field.
-//                     kLabZ specifies drawing range in lab frame.
-//                     kHelixX, kHelixY, kLabX, kLabY, kUnchanged ... etc can also be specified
-//             axis  : helix axis
+//             xyz  : array of initial position
+//             v    : array of initial velocity
+//             w    : angular frequency
+//             range: helix range
+//             rtype: kHelixZ specifies allowed drawing range in helix Z direction, i.e., along B field.
+//                    kLabZ specifies drawing range in lab frame.
+//                    kHelixX, kHelixY, kLabX, kLabY, kUnchanged ... etc can also be specified
+//             axis : helix axis
 //
 //
 //
-// A Third constructor uses several default values:
+// Example constructing a helix with several default values and drawing it:
 //
-//       Example:
-//   c1 = new TCanvas("c1");
+// BEGIN_MACRO(source)
+// {
+//   TCanvas* helix_example_c1 = new TCanvas("helix_example_c1");
 //   TView *view = TView::CreateView(1);
 //   view->SetRange(-1,-1,-1,1,1,1);
-//   THelix *helix = new THelix(0.0, 0.0, 0.0, 1.0, 0.0, 0.3, 10.0);
+//   THelix *helix = new THelix(0., 0., 0., 1., 0., 0.3, 10.);
 //   helix->Draw();
+// }
+// END_MACRO
 //
-// will initializes a helix with its axis in Z direction (rtype=kHelixZ).
-// range[0] = 0 and range[1] = 1
+// This initializes a helix with its axis in Z direction (rtype=kHelixZ).
+//
 
 
 #include "Riostream.h"
