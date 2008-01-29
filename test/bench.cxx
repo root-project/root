@@ -48,8 +48,8 @@ int main(int argc, char **argv)
   TStopwatch timer;
 
   //delete temp file used for the benchmark
-  gSystem->Exec("rm -f /tmp/bench.root");
-  
+  gSystem->Unlink(Form("%s/bench.root",gSystem->TempDirectory()));
+
   /// STL VECTOR
   timer.Start();
   TSTLhit *STLhit = new TSTLhit(nhits);
