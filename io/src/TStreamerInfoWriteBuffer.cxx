@@ -756,6 +756,13 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TVirtualCollectionProxy &a
                                           fNdata,fType,fgElement,fComp);
 }
 
+Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TPointerCollectionAdapter &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
+{
+  return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
+                                          fMethod,fElem,fLength,fClass,fOffset,fNewType,
+                                          fNdata,fType,fgElement,fComp);
+}
+
 #endif
 
 //______________________________________________________________________________

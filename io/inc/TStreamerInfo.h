@@ -219,6 +219,9 @@ public:
    Int_t               ReadBuffer(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    Int_t               ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBuffer(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
+   Int_t               ReadBufferSkip(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferConv(TBuffer &b, const TPointerCollectionAdapter &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
 #else
    template <class T>
    Int_t               ReadBuffer(TBuffer &b, const T &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
@@ -253,6 +256,7 @@ public:
    // Support for non standard compilers
    Int_t               WriteBufferAux      (TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
    Int_t               WriteBufferAux      (TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
+   Int_t               WriteBufferAux      (TBuffer &b, const TPointerCollectionAdapter &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 #else
    template <class T>
    Int_t               WriteBufferAux      (TBuffer &b, const T &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
