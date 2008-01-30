@@ -19,7 +19,6 @@
 //                                                                      //
 // Class defining interface to TAlien GRID services.                    //
 //                                                                      //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TGrid

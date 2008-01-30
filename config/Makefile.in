@@ -135,6 +135,11 @@ G4LIBDIR       := @g4libdir@
 G4INCDIR       := $(filter-out /usr/include, @g4incdir@)
 CLHEPINCDIR    := $(filter-out /usr/include, @clhepincdir@)
 
+BUILDGLITE     := @buildglite@
+GLITELIBDIR    := @glitelibdir@
+GAWLIB         := @glitelib@
+GAW_CPPFLAGS   := $(filter-out /usr/include, @gaw_cppflags@)
+
 BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@
 CHIRPCLILIB    := @chirplib@

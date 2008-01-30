@@ -50,6 +50,7 @@ options="                    \
    enable_gdml               \
    enable_gfal               \
    enable_g4root             \
+   enable_glite              \
    enable_globus             \
    enable_krb5               \
    enable_ldap               \
@@ -143,6 +144,7 @@ ALIEN            \
 ASIMAGE          \
 LDAP             \
 GLOBUS_LOCATION  \
+GLITE            \
 MONALISA         \
 SRP              \
 SSL              \
@@ -885,6 +887,7 @@ enable/disable options, prefix with either --enable- or --disable-
   gfal               GFAL support, requires libgfal
   g4root             GEANT4 navigator based on TGeo, requires GEANT4 installed
   globus             Globus authentication support, requires Globus toolkit
+  glite	             gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   mathcore           Build the new libMathCore math library
@@ -2565,6 +2568,28 @@ if test ! "x$enable_chirp" = "xno" ; then
 fi
 check_explicit "$enable_chirp" "$enable_chirp_explicit" \
      "Explicitly required Chirp dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% gLite Support - Third party libraries
+#
+# (See https://subversion.gsi.de/trac/dgrid/wiki)
+#
+# Check for libglite-api-wrapper
+#
+if test ! "x$enable_glite" = "xno" ; then
+    check_library "libglite-api-wrapper" "$enable_shared" "$glitelibdir" \
+      $GAW_LOCATION $GLITE $GLITE/lib ~/GAW/lib /usr/local/lib /usr/lib
+    glitelib=$found_lib
+    glitelibdir=$found_dir
+    gaw_cppflags="${GAW_CPPFLAGS}"
+
+    if  test "x$glitelib" = "x"; then
+        enable_glite="no"
+    fi
+fi
+check_explicit "$enable_glite" "$enable_glite_explicit" \
+     "Explicitly required gLite dependencies not fulfilled"
 
 ######################################################################
 #
@@ -4557,6 +4582,9 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@g4libdir@|$g4libdir|"                \
     -e "s|@clhepincdir@|$clhepincdir|"          \
     -e "s|@enable_xft@|$enable_xft|"            \
+    -e "s|@glitelib@|$glitelib|"                \
+    -e "s|@glitelibdir@|$glitelibdir|"          \
+    -e "s|@gaw_cppflags@|$gaw_cppflags|"        \
         < Makefile.tmp > Makefile.tmpp
 mv Makefile.tmpp Makefile.tmp
 
@@ -4690,6 +4718,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildxrdgsi@|$buildxrdgsi|"          \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
+    -e "s|@buildglite@|$enable_glite|"          \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 

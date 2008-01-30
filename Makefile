@@ -120,6 +120,9 @@ endif
 ifeq ($(BUILDG4ROOT),yes)
 MODULES      += g4root
 endif
+ifeq ($(BUILDGLITE),yes)
+MODULES      += glite
+endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += chirp
 endif
@@ -230,7 +233,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofitcore roofit \
-                minuit2 monalisa fftw odbc unuran gdml eve g4root cint7
+                minuit2 monalisa fftw odbc unuran gdml eve g4root cint7 glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
