@@ -33,7 +33,7 @@ class TSynapse : public TObject {
  public:
    TSynapse();
    TSynapse(TNeuron*, TNeuron*, Double_t w = 1);
-   virtual ~ TSynapse() {}
+   virtual ~TSynapse() {}
    void SetPre(TNeuron* pre);
    void SetPost(TNeuron* post);
    inline TNeuron* GetPre()  const { return fpre; }
