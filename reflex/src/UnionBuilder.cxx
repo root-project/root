@@ -22,7 +22,7 @@
 #include "Union.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
+Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
                                                   size_t size,
                                                   const std::type_info & ti,
                                                   unsigned int modifiers ) {
@@ -33,7 +33,7 @@ ROOT::Reflex::UnionBuilderImpl::UnionBuilderImpl( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
+void Reflex::UnionBuilderImpl::AddItem( const char * nam,
                                               const Type & typ ) {
 //-------------------------------------------------------------------------------
 // Add a union info to this union.
@@ -46,7 +46,7 @@ void ROOT::Reflex::UnionBuilderImpl::AddItem( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
+void Reflex::UnionBuilderImpl::AddProperty( const char * key,
                                                   Any value ) {
 //-------------------------------------------------------------------------------
 // Attach property to this union as Any object.
@@ -56,7 +56,7 @@ void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
+void Reflex::UnionBuilderImpl::AddProperty( const char * key,
                                                   const char * value ) {
 //-------------------------------------------------------------------------------
 // Attach property to this union as string.
@@ -65,7 +65,7 @@ void ROOT::Reflex::UnionBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::UnionBuilderImpl::ToType() {
+Reflex::Type Reflex::UnionBuilderImpl::ToType() {
 //-------------------------------------------------------------------------------
 // Return the type currently being built.
    return fUnion->ThisType();

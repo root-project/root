@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_ReflexBuilder
-#define ROOT_Reflex_ReflexBuilder
+#ifndef Reflex_ReflexBuilder
+#define Reflex_ReflexBuilder
 
 /** \defgroup RefBld ReflexBuilder */
 
@@ -26,4 +26,4 @@
 #include "Reflex/Builder/DictSelection.h"
 #include "Reflex/Builder/NewDelFunctions.h"
 
-#endif // ROOT_Reflex_ReflexBuilder
+#endif // Reflex_ReflexBuilder

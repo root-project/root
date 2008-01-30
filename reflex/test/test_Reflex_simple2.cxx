@@ -228,7 +228,7 @@ public:
   void testCommentsEtc();
 
   void unloadLibrary();
-  void shutdown() { Reflex::Shutdown(); }
+  void shutdown() {}
   void tearDown() {}
 
 private:

@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_NameLookup
-#define ROOT_Reflex_NameLookup
+#ifndef Reflex_NameLookup
+#define Reflex_NameLookup
 
 // Include files
 #include <string>
@@ -18,63 +18,61 @@
 #include <set>
 #include "Reflex/Scope.h"
 
-namespace ROOT {
-   namespace Reflex {
-    
-      // forward declarations
-      class Type;
-      class Member;
-      
-      /*
-       * point of declaration (3.3.1 [basic.scope.pdecl]) is not taken into account 
-       */
+namespace Reflex {
 
-      class NameLookup {
-      public:
+   // forward declarations
+   class Type;
+   class Member;
 
-         // 1. Lookup
-         static Type LookupType( const std::string & nam,
-                                 const Scope & current );
+   /*
+   * point of declaration (3.3.1 [basic.scope.pdecl]) is not taken into account 
+   */
 
-         static Scope LookupScope( const std::string & nam,
-                                   const Scope & current );
+   class NameLookup {
+   public:
 
-         static Member LookupMember( const std::string & nam,
-                                     const Scope & current );
+      // 1. Lookup
+      static Type LookupType( const std::string & nam,
+         const Scope & current );
 
-         static Member LookupMemberUnqualified( const std::string & nam,
-                                                const Scope & current );
+      static Scope LookupScope( const std::string & nam,
+         const Scope & current );
 
-         static Member LookupMemberQualified( const std::string & nam );
+      static Member LookupMember( const std::string & nam,
+         const Scope & current );
 
-         // 2. OverloadResolution
-         static Member OverloadResultion( const std::string & nam,
-                                          const std::vector< Member > & funcs );
-         
+      static Member LookupMemberUnqualified( const std::string & nam,
+         const Scope & current );
 
-         // 3. AccessControl
-         static Type AccessControl( const Type & typ,
-                                    const Scope & current );
+      static Member LookupMemberQualified( const std::string & nam );
 
-      private:
-         NameLookup(const std::string& name, const Scope& current);
-
-         template <class T> T Lookup();
-         template <class T> T LookupInScope();
-         template <class T> T LookupInUnknownScope();
-
-         void FindNextScopePos();
-
-         Scope fCurrentScope; // scope where lookup is carried out
-         const std::string fLookupName; // we're looking for a type / member of this name
-         bool fPartialSuccess; // found part of the qualified name
-         std::set<Scope> fLookedAtUsingDir; // already checked these using directives
-         size_t fPosNamePart; // start position in fLookupName of name part to look up
-         size_t fPosNamePartLen; // length of name part to look up
-      }; // struct  NameLookup
-
-   } //namespace Reflex
-} //namespace ROOT
+      // 2. OverloadResolution
+      static Member OverloadResultion( const std::string & nam,
+         const std::vector< Member > & funcs );
 
 
-#endif // ROOT_Reflex_NameLookup
+      // 3. AccessControl
+      static Type AccessControl( const Type & typ,
+         const Scope & current );
+
+   private:
+      NameLookup(const std::string& name, const Scope& current);
+
+      template <class T> T Lookup();
+      template <class T> T LookupInScope();
+      template <class T> T LookupInUnknownScope();
+
+      void FindNextScopePos();
+
+      Scope fCurrentScope; // scope where lookup is carried out
+      const std::string fLookupName; // we're looking for a type / member of this name
+      bool fPartialSuccess; // found part of the qualified name
+      std::set<Scope> fLookedAtUsingDir; // already checked these using directives
+      size_t fPosNamePart; // start position in fLookupName of name part to look up
+      size_t fPosNamePartLen; // length of name part to look up
+   }; // struct  NameLookup
+
+} //namespace Reflex
+
+
+#endif // Reflex_NameLookup

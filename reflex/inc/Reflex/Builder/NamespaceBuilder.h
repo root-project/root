@@ -9,55 +9,54 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_NamespaceBuilder
-#define ROOT_Reflex_NamespaceBuilder
+#ifndef Reflex_NamespaceBuilder
+#define Reflex_NamespaceBuilder
 
 // Include files
 #include "Reflex/Scope.h"
 
-namespace ROOT{
-   namespace Reflex{
 
-      /** 
-       * @class NamespaceBuilder NamespaceBuilder.h Reflex/Builder/NamespaceBuilder.h
-       * @author Stefan Roiser
-       * @ingroup RefBld
-       * @date 30/3/2004
-       */
-      class RFLX_API NamespaceBuilder  {
+namespace Reflex{
 
-      public:            
+   /** 
+   * @class NamespaceBuilder NamespaceBuilder.h Reflex/Builder/NamespaceBuilder.h
+   * @author Stefan Roiser
+   * @ingroup RefBld
+   * @date 30/3/2004
+   */
+   class RFLX_API NamespaceBuilder  {
 
-         /** constructor */
-         NamespaceBuilder( const char * nam );
+   public:            
 
-
-         /** destructor */
-         virtual ~NamespaceBuilder() {}
-
-         /** AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
-          * @return a reference to the building class
-          */
-         NamespaceBuilder & AddProperty( const char * key, Any value );
-         NamespaceBuilder & AddProperty( const char * key, const char * value );
-
-         /**
-          * ToScope will return the currently being built namespace
-          * @return namespace currently being built
-          */
-         Scope ToScope();
-
-      private:
-
-         /** the namespace */
-         Scope fNamespace;
-
-      }; // class NamespaceBuilder
-
-   } // namespace Reflex
-} // namespace ROOT
+      /** constructor */
+      NamespaceBuilder( const char * nam );
 
 
-#endif // ROOT_Reflex_NamespaceBuilder
+      /** destructor */
+      virtual ~NamespaceBuilder() {}
+
+      /** AddProperty will add a PropertyNth 
+      * @param  key the PropertyNth key
+      * @param  value the value of the PropertyNth
+      * @return a reference to the building class
+      */
+      NamespaceBuilder & AddProperty( const char * key, Any value );
+      NamespaceBuilder & AddProperty( const char * key, const char * value );
+
+      /**
+      * ToScope will return the currently being built namespace
+      * @return namespace currently being built
+      */
+      Scope ToScope();
+
+   private:
+
+      /** the namespace */
+      Scope fNamespace;
+
+   }; // class NamespaceBuilder
+
+} // namespace Reflex
+
+
+#endif // Reflex_NamespaceBuilder

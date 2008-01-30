@@ -27,7 +27,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member::Member( const MemberBase * memberBase )
+Reflex::Member::Member( const MemberBase * memberBase )
 //-------------------------------------------------------------------------------
    : fMemberBase( const_cast<MemberBase*>(memberBase) ) {
    // Construct a member, attaching it to MemberBase.
@@ -36,7 +36,7 @@ ROOT::Reflex::Member::Member( const MemberBase * memberBase )
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member::Member( const Member & rh )
+Reflex::Member::Member( const Member & rh )
 //-------------------------------------------------------------------------------
    : fMemberBase( rh.fMemberBase ) {
    // Member copy constructor.
@@ -44,14 +44,14 @@ ROOT::Reflex::Member::Member( const Member & rh )
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member::~Member() {
+Reflex::Member::~Member() {
 //-------------------------------------------------------------------------------
 // Member desructor.
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object ROOT::Reflex::Member::Get() const {
+Reflex::Object Reflex::Member::Get() const {
 //-------------------------------------------------------------------------------
 // Get the value of a static member.
    if ( fMemberBase ) return fMemberBase->Get( Object());
@@ -60,7 +60,7 @@ ROOT::Reflex::Object ROOT::Reflex::Member::Get() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object ROOT::Reflex::Member::Get( const Object & obj) const {
+Reflex::Object Reflex::Member::Get( const Object & obj) const {
 //-------------------------------------------------------------------------------
 // Get the value of a non static data member.
    if ( fMemberBase ) return fMemberBase->Get( obj );
@@ -69,8 +69,8 @@ ROOT::Reflex::Object ROOT::Reflex::Member::Get( const Object & obj) const {
 
 
 /*//-------------------------------------------------------------------------------
-  ROOT::Reflex::Object 
-  ROOT::Reflex::Member::Invoke( const Object & obj,
+  Reflex::Object 
+  Reflex::Member::Invoke( const Object & obj,
   const std::vector < Object > & paramList ) const {
 //-------------------------------------------------------------------------------
   if ( fMemberBase ) return fMemberBase->Invoke( obj, paramList );
@@ -80,8 +80,8 @@ ROOT::Reflex::Object ROOT::Reflex::Member::Get( const Object & obj) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object 
-ROOT::Reflex::Member::Invoke( const Object & obj,
+Reflex::Object 
+Reflex::Member::Invoke( const Object & obj,
                               const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
 // Invoke a non static data member.
@@ -91,8 +91,8 @@ ROOT::Reflex::Member::Invoke( const Object & obj,
 
 
 /*/-------------------------------------------------------------------------------
-  ROOT::Reflex::Object 
-  ROOT::Reflex::Member::Invoke( const std::vector < Object > & paramList ) const {
+  Reflex::Object 
+  Reflex::Member::Invoke( const std::vector < Object > & paramList ) const {
 //-------------------------------------------------------------------------------
   if ( fMemberBase ) return fMemberBase->Invoke( paramList );
   return Object();
@@ -101,8 +101,8 @@ ROOT::Reflex::Member::Invoke( const Object & obj,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object 
-ROOT::Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
+Reflex::Object 
+Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
 // Invoke a static data member.
    if ( fMemberBase ) return fMemberBase->Invoke( paramList );
@@ -111,7 +111,7 @@ ROOT::Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
 
 
 /*/-------------------------------------------------------------------------------
-  void ROOT::Reflex::Member::Set( const Object & instance,
+  void Reflex::Member::Set( const Object & instance,
   const Object & value ) const {
 //--------------------------------------------------------------------------------
   if (fMemberBase ) fMemberBase->Set( instance, value );
@@ -120,7 +120,7 @@ ROOT::Reflex::Member::Invoke( const std::vector < void * > & paramList ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Member::Set( const Object & instance,
+void Reflex::Member::Set( const Object & instance,
                                 const void * value ) const {
 //-------------------------------------------------------------------------------
 // Set a non static data member.
@@ -129,23 +129,23 @@ void ROOT::Reflex::Member::Set( const Object & instance,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Member::GenerateDict( DictionaryGenerator & generator) const {
+void Reflex::Member::GenerateDict( DictionaryGenerator & generator) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
    if ( * this ) fMemberBase->GenerateDict( generator );
 }
                            
 #ifdef REFLEX_CINT_MERGE
-bool ROOT::Reflex::Member::operator&&(const Scope &right) const
+bool Reflex::Member::operator&&(const Scope &right) const
 { return operator bool() && (bool)right; }
-bool ROOT::Reflex::Member::operator&&(const Type &right) const 
+bool Reflex::Member::operator&&(const Type &right) const 
 { return operator bool() && (bool)right; }
-bool ROOT::Reflex::Member::operator&&(const Member &right) const 
+bool Reflex::Member::operator&&(const Member &right) const 
 { return operator bool() && (bool)right; }
-bool ROOT::Reflex::Member::operator||(const Scope &right) const 
+bool Reflex::Member::operator||(const Scope &right) const 
 { return operator bool() && (bool)right; }
-bool ROOT::Reflex::Member::operator||(const Type &right) const 
+bool Reflex::Member::operator||(const Type &right) const 
 { return operator bool() && (bool)right; }
-bool ROOT::Reflex::Member::operator||(const Member &right) const 
+bool Reflex::Member::operator||(const Member &right) const 
 { return operator bool() && (bool)right; }
 #endif

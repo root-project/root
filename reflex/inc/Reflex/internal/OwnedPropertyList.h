@@ -9,46 +9,43 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_OwnedPropertyList
-#define ROOT_Reflex_OwnedPropertyList
+#ifndef Reflex_OwnedPropertyList
+#define Reflex_OwnedPropertyList
 
 // Include files
 #include "Reflex/Kernel.h"
 #include "Reflex/PropertyList.h"
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
-      // forward declarations
-      class PropertyListImpl;
+   // forward declarations
+   class PropertyListImpl;
 
-      /**
-       * @class OwnedPropertyList OwnedPropertyList.h OwnedPropertyList.h
-       * @author Stefan Roiser
-       * @date 21/07/2006
-       * @ingroup Ref
-       */
-      class RFLX_API OwnedPropertyList : public PropertyList {
+   /**
+   * @class OwnedPropertyList OwnedPropertyList.h OwnedPropertyList.h
+   * @author Stefan Roiser
+   * @date 21/07/2006
+   * @ingroup Ref
+   */
+   class RFLX_API OwnedPropertyList : public PropertyList {
 
-      public:
+   public:
 
-         /** constructor */
-         OwnedPropertyList( PropertyListImpl * propertyListImpl = 0 )
-            : PropertyList( propertyListImpl ) {}
+      /** constructor */
+      OwnedPropertyList( PropertyListImpl * propertyListImpl = 0 )
+         : PropertyList( propertyListImpl ) {}
 
-         
-         /** delete */
-         void Delete() {
-            if ( fPropertyListImpl ) {
-               delete fPropertyListImpl;
-               fPropertyListImpl = 0;
-            }
+
+      /** delete */
+      void Delete() {
+         if ( fPropertyListImpl ) {
+            delete fPropertyListImpl;
+            fPropertyListImpl = 0;
          }
+      }
 
-      }; // class OwnedPropertyList
-   
-   } // namespace Reflex
-} // namespace ROOT
+   }; // class OwnedPropertyList
 
+} // namespace Reflex
 
-#endif // ROOT_Reflex_OwnedPropertyList
+#endif // Reflex_OwnedPropertyList

@@ -26,7 +26,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::DataMember::DataMember( const char *  nam,
+Reflex::DataMember::DataMember( const char *  nam,
                                       const Type &  typ,
                                       size_t        offs,
                                       unsigned int  modifiers )
@@ -37,13 +37,13 @@ ROOT::Reflex::DataMember::DataMember( const char *  nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::DataMember::~DataMember() {
+Reflex::DataMember::~DataMember() {
 //-------------------------------------------------------------------------------
 // Data member destructor.
 }
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::DataMember::Name( unsigned int mod ) const {
+std::string Reflex::DataMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the scoped and qualified (if requested with mod) name of the data member
    std::string s = "";
@@ -75,7 +75,7 @@ std::string ROOT::Reflex::DataMember::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object ROOT::Reflex::DataMember::Get( const Object & obj ) const {
+Reflex::Object Reflex::DataMember::Get( const Object & obj ) const {
 //-------------------------------------------------------------------------------
 // Get the value of this data member as stored in object obj.
    if (DeclaringScope().ScopeType() == ENUM ) {
@@ -90,7 +90,7 @@ ROOT::Reflex::Object ROOT::Reflex::DataMember::Get( const Object & obj ) const {
 
 
 /*/-------------------------------------------------------------------------------
-  void ROOT::Reflex::DataMember::Set( const Object & instance,
+  void Reflex::DataMember::Set( const Object & instance,
   const Object & value ) const {
 //-------------------------------------------------------------------------------
   void * mem = CalculateBaseObject( instance );
@@ -107,7 +107,7 @@ ROOT::Reflex::Object ROOT::Reflex::DataMember::Get( const Object & obj ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::DataMember::Set( const Object & instance,
+void Reflex::DataMember::Set( const Object & instance,
                                     const void * value ) const {
 //-------------------------------------------------------------------------------
 // Set the data member value in object instance.
@@ -124,7 +124,7 @@ void ROOT::Reflex::DataMember::Set( const Object & instance,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::DataMember::GenerateDict( DictionaryGenerator & generator ) const {
+void Reflex::DataMember::GenerateDict( DictionaryGenerator & generator ) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
 

@@ -34,7 +34,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reflex::Reflex() {
+Reflex::Instance::Instance() {
 //-------------------------------------------------------------------------------
 // Initialisation of Reflex.Setup of global scope, fundamental types.
 
@@ -184,7 +184,7 @@ ROOT::Reflex::Reflex::Reflex() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Reflex::Shutdown() {
+void Reflex::Instance::Shutdown() {
 //-------------------------------------------------------------------------------
    // function to be called at tear down of Reflex, removes all memory allocations
    MemberTemplateName::CleanUp();
@@ -196,14 +196,17 @@ void ROOT::Reflex::Reflex::Shutdown() {
 
 //-------------------------------------------------------------------------------
 
-ROOT::Reflex::Reflex::~Reflex() {
+Reflex::Instance::~Instance() {
 //-------------------------------------------------------------------------------
    // Destructor
+
+   // Uncomment this once Unload work:
+   // Shutdown;
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::StdStringCont() {
+const Reflex::StdString_Cont_Type_t & Reflex::Dummy::StdStringCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of std strings.
    return Get< StdString_Cont_Type_t >();
@@ -211,7 +214,7 @@ const ROOT::Reflex::StdString_Cont_Type_t & ROOT::Reflex::Dummy::StdStringCont()
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::TypeCont() {
+const Reflex::Type_Cont_Type_t & Reflex::Dummy::TypeCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of Types.
    return Get< Type_Cont_Type_t >();
@@ -219,7 +222,7 @@ const ROOT::Reflex::Type_Cont_Type_t & ROOT::Reflex::Dummy::TypeCont() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::BaseCont() {
+const Reflex::Base_Cont_Type_t & Reflex::Dummy::BaseCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of Bases.
    return Get< Base_Cont_Type_t >();
@@ -227,7 +230,7 @@ const ROOT::Reflex::Base_Cont_Type_t & ROOT::Reflex::Dummy::BaseCont() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::ScopeCont() {
+const Reflex::Scope_Cont_Type_t & Reflex::Dummy::ScopeCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of Scopes.
    return Get< Scope_Cont_Type_t >();
@@ -235,7 +238,7 @@ const ROOT::Reflex::Scope_Cont_Type_t & ROOT::Reflex::Dummy::ScopeCont() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::ObjectCont() {
+const Reflex::Object_Cont_Type_t & Reflex::Dummy::ObjectCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of Objects.
    return Get< Object_Cont_Type_t >();
@@ -243,7 +246,7 @@ const ROOT::Reflex::Object_Cont_Type_t & ROOT::Reflex::Dummy::ObjectCont() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::MemberCont() {
+const Reflex::Member_Cont_Type_t & Reflex::Dummy::MemberCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of Members.
    return Get< Member_Cont_Type_t >();
@@ -251,7 +254,7 @@ const ROOT::Reflex::Member_Cont_Type_t & ROOT::Reflex::Dummy::MemberCont() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::TypeTemplateCont() {
+const Reflex::TypeTemplate_Cont_Type_t & Reflex::Dummy::TypeTemplateCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of TypeTemplates.
    return Get< TypeTemplate_Cont_Type_t >();
@@ -259,7 +262,7 @@ const ROOT::Reflex::TypeTemplate_Cont_Type_t & ROOT::Reflex::Dummy::TypeTemplate
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::MemberTemplateCont() {
+const Reflex::MemberTemplate_Cont_Type_t & Reflex::Dummy::MemberTemplateCont() {
 //-------------------------------------------------------------------------------
 // static wrapper for an empty container of MemberTemplates.
    return Get< MemberTemplate_Cont_Type_t >();
@@ -267,81 +270,81 @@ const ROOT::Reflex::MemberTemplate_Cont_Type_t & ROOT::Reflex::Dummy::MemberTemp
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Any & ROOT::Reflex::Dummy::Any() {
+Reflex::Any & Reflex::Dummy::Any() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty Any object 
-   static ROOT::Reflex::Any i;
+   static Reflex::Any i;
    if ( i ) i.Clear();
    return i;
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Object & ROOT::Reflex::Dummy::Object() {
+const Reflex::Object & Reflex::Dummy::Object() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty Object 
-   return Get< ROOT::Reflex::Object >();
+   return Get< Reflex::Object >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::Dummy::Type() {
+const Reflex::Type & Reflex::Dummy::Type() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty Type 
-   return Get< ROOT::Reflex::Type >();
+   return Get< Reflex::Type >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Dummy::TypeTemplate() {
+const Reflex::TypeTemplate & Reflex::Dummy::TypeTemplate() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty TypeTemplate 
-   return Get< ROOT::Reflex::TypeTemplate >();
+   return Get< Reflex::TypeTemplate >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Base & ROOT::Reflex::Dummy::Base() {
+const Reflex::Base & Reflex::Dummy::Base() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty Base 
-   return Get< ROOT::Reflex::Base >();
+   return Get< Reflex::Base >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::PropertyList & ROOT::Reflex::Dummy::PropertyList() {
+const Reflex::PropertyList & Reflex::Dummy::PropertyList() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty PropertyList 
-   return Get< ROOT::Reflex::PropertyList >();
+   return Get< Reflex::PropertyList >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::Dummy::Member() {
+const Reflex::Member & Reflex::Dummy::Member() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty Member 
-   return Get< ROOT::Reflex::Member >();
+   return Get< Reflex::Member >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Dummy::MemberTemplate() {
+const Reflex::MemberTemplate & Reflex::Dummy::MemberTemplate() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty MemberTemplate 
-   return Get< ROOT::Reflex::MemberTemplate >();
+   return Get< Reflex::MemberTemplate >();
 }
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope & ROOT::Reflex::Dummy::Scope() {
+const Reflex::Scope & Reflex::Dummy::Scope() {
 //-------------------------------------------------------------------------------
    // static wrapper for an empty Scope 
-   return Get< ROOT::Reflex::Scope >();
+   return Get< Reflex::Scope >();
 }
 
 
 //-------------------------------------------------------------------------------
-const std::string & ROOT::Reflex::Reflex::Argv0() {
+const std::string & Reflex::Argv0() {
 //-------------------------------------------------------------------------------
 // Return the name of the package.
    static std::string str = "REFLEX";
@@ -351,7 +354,7 @@ const std::string & ROOT::Reflex::Reflex::Argv0() {
 
 //-------------------------------------------------------------------------------
 namespace {
-   ROOT::Reflex::Reflex initialise;
+   Reflex::Instance initialise;
 }
 //-------------------------------------------------------------------------------
 

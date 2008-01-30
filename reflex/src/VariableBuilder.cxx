@@ -22,7 +22,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
+Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
                                                         const Type & typ,
                                                         size_t offs,
                                                         unsigned int modifiers ) 
@@ -53,7 +53,7 @@ ROOT::Reflex::VariableBuilderImpl::VariableBuilderImpl( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
+Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
 //-------------------------------------------------------------------------------
 // Destructor.
    FireFunctionCallback( fDataMember );
@@ -61,7 +61,7 @@ ROOT::Reflex::VariableBuilderImpl::~VariableBuilderImpl() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key, 
+void Reflex::VariableBuilderImpl::AddProperty( const char * key, 
                                                      const char * value ) {
 //-------------------------------------------------------------------------------
 // Attach a property to this variable as string.
@@ -70,7 +70,7 @@ void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key, 
+void Reflex::VariableBuilderImpl::AddProperty( const char * key, 
                                                      Any value ) {
 //-------------------------------------------------------------------------------
 // Attach a property to this variable as Any object.
@@ -79,7 +79,7 @@ void ROOT::Reflex::VariableBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::VariableBuilderImpl::ToMember() {
+Reflex::Member Reflex::VariableBuilderImpl::ToMember() {
 //-------------------------------------------------------------------------------
 // Return the member currently being built.
    return fDataMember;
@@ -87,7 +87,7 @@ ROOT::Reflex::Member ROOT::Reflex::VariableBuilderImpl::ToMember() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilder::VariableBuilder( const char * nam, 
+Reflex::VariableBuilder::VariableBuilder( const char * nam, 
                                                 const Type & typ,
                                                 size_t offs,
                                                 unsigned int modifiers) 
@@ -115,7 +115,7 @@ ROOT::Reflex::VariableBuilder::VariableBuilder( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilder::~VariableBuilder() {
+Reflex::VariableBuilder::~VariableBuilder() {
 //-------------------------------------------------------------------------------
 // Destructor.  
    FireFunctionCallback( fDataMember );
@@ -123,8 +123,8 @@ ROOT::Reflex::VariableBuilder::~VariableBuilder() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilder & 
-ROOT::Reflex::VariableBuilder::AddProperty( const char * key, 
+Reflex::VariableBuilder & 
+Reflex::VariableBuilder::AddProperty( const char * key, 
                                             const char * value ) {
 //-------------------------------------------------------------------------------
 // Attach a property to this variable as a string.
@@ -134,8 +134,8 @@ ROOT::Reflex::VariableBuilder::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::VariableBuilder & 
-ROOT::Reflex::VariableBuilder::AddProperty( const char * key, 
+Reflex::VariableBuilder & 
+Reflex::VariableBuilder::AddProperty( const char * key, 
                                             Any value ) {
 //-------------------------------------------------------------------------------
 // Attach a property to this variable as Any object.
@@ -145,7 +145,7 @@ ROOT::Reflex::VariableBuilder::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::VariableBuilder::ToMember() {
+Reflex::Member Reflex::VariableBuilder::ToMember() {
 //-------------------------------------------------------------------------------
 // Return the member currently being built.
    return fDataMember;

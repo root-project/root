@@ -19,7 +19,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Function::Function( const Type & retType,
+Reflex::Function::Function( const Type & retType,
                                   const std::vector< Type > & parameters,
                                   const std::type_info & ti,
                                   TYPE functionType) 
@@ -32,7 +32,7 @@ ROOT::Reflex::Function::Function( const Type & retType,
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Function::Name( unsigned int mod ) const {
+std::string Reflex::Function::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the function type.
    return BuildTypeName( fReturnType, fParameters, mod );
@@ -40,7 +40,7 @@ std::string ROOT::Reflex::Function::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Function::BuildTypeName( const Type & ret, 
+std::string Reflex::Function::BuildTypeName( const Type & ret, 
                                                    const std::vector< Type > & pars,
                                                    unsigned int mod ) {
 //-------------------------------------------------------------------------------

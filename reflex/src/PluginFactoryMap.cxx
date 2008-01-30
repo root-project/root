@@ -22,7 +22,6 @@
 #include <map>
 #include <set>
 
-using namespace ROOT::Reflex;
 using namespace std;
 
 #include "dir_manip.h"
@@ -86,10 +85,10 @@ bool ConflictingDirective(const Directive_t& lhs, const Directive_t& rhs) {
 }
 
 
-int ROOT::Reflex::PluginFactoryMap::fgDebugLevel = 0;
+int Reflex::PluginFactoryMap::fgDebugLevel = 0;
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
+Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
 //-------------------------------------------------------------------------------
 // Constructor.
    vector<char*> tokens;
@@ -118,14 +117,14 @@ ROOT::Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PluginFactoryMap::~PluginFactoryMap() {
+Reflex::PluginFactoryMap::~PluginFactoryMap() {
 //-------------------------------------------------------------------------------
 // Destructor.
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
+void Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
 //-------------------------------------------------------------------------------
 // Fill the map from the content of the map files.
    fstream file;
@@ -153,7 +152,7 @@ void ROOT::Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
          if (iPreviousDirective != sMap().end()) {
             if (ConflictingDirective(libs, iPreviousDirective->second)) {
                if (Debug()) {
-                  cerr << "ROOT::Reflex::PluginFactoryMap::FillMap() - WARNING: "
+                  cerr << "Reflex::PluginFactoryMap::FillMap() - WARNING: "
                        << "conflicting directives for " << cname << endl
                        << "  Previous: \"";
                   DumpFactoryDirective(cerr, iPreviousDirective->second);
@@ -186,7 +185,7 @@ void ROOT::Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
         
 
 //-------------------------------------------------------------------------------
-std::list<std::string> ROOT::Reflex::PluginFactoryMap::GetLibraries(const std::string& name) const {
+std::list<std::string> Reflex::PluginFactoryMap::GetLibraries(const std::string& name) const {
 //-------------------------------------------------------------------------------
 // Return all libs currently present.
    return sMap()[name];
@@ -194,7 +193,7 @@ std::list<std::string> ROOT::Reflex::PluginFactoryMap::GetLibraries(const std::s
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::PluginFactoryMap::SetDebug(int l) {
+void Reflex::PluginFactoryMap::SetDebug(int l) {
 //-------------------------------------------------------------------------------
 // Set debug level.
    fgDebugLevel = l;
@@ -202,7 +201,7 @@ void ROOT::Reflex::PluginFactoryMap::SetDebug(int l) {
 
 
 //-------------------------------------------------------------------------------
-int ROOT::Reflex::PluginFactoryMap::Debug() {
+int Reflex::PluginFactoryMap::Debug() {
 //-------------------------------------------------------------------------------
 // Get debug level.
    return fgDebugLevel;

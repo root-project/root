@@ -94,7 +94,7 @@ public:
   void object_value();
   void sharedlibrary();
 
-  void shutdown() { Reflex::Shutdown(); }
+  void shutdown() {}
   void tearDown() {}
 };
 

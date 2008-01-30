@@ -17,7 +17,7 @@
 #include "Class.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Base::Base( const Type &    baseType,
+Reflex::Base::Base( const Type &    baseType,
                           OffsetFunction  offsetfp,
                           unsigned int    modifiers )
    : fOffsetFP( offsetfp ),
@@ -32,7 +32,7 @@ ROOT::Reflex::Base::Base( const Type &    baseType,
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Class * ROOT::Reflex::Base::BaseClass() const {
+const Reflex::Class * Reflex::Base::BaseClass() const {
 //-------------------------------------------------------------------------------
 // Return the pointer to the base class. Set on first access.
    if ( fBaseClass ) return fBaseClass;
@@ -45,7 +45,7 @@ const ROOT::Reflex::Class * ROOT::Reflex::Base::BaseClass() const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Base::Name( unsigned int mod ) const {
+std::string Reflex::Base::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Construct the name of the base. Qualify if requested.
    std::string s = "";

@@ -28,7 +28,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBuilder( const char * n, 
+Reflex::Type Reflex::TypeBuilder( const char * n, 
                                               unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
 // Construct the type information for a type.
@@ -44,7 +44,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBuilder( const char * n,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ConstBuilder(const Type & t) {
+Reflex::Type Reflex::ConstBuilder(const Type & t) {
 //-------------------------------------------------------------------------------
 // Construct a const qualified type.
    unsigned int mod = CONST;
@@ -53,7 +53,7 @@ ROOT::Reflex::Type ROOT::Reflex::ConstBuilder(const Type & t) {
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::VolatileBuilder(const Type & t) {
+Reflex::Type Reflex::VolatileBuilder(const Type & t) {
 //-------------------------------------------------------------------------------
 // Construct a volatile qualified type.
    unsigned int mod = VOLATILE;
@@ -63,7 +63,7 @@ ROOT::Reflex::Type ROOT::Reflex::VolatileBuilder(const Type & t) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::PointerBuilder( const Type & t,
+Reflex::Type Reflex::PointerBuilder( const Type & t,
                                                  const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Construct a pointer type.
@@ -74,7 +74,7 @@ ROOT::Reflex::Type ROOT::Reflex::PointerBuilder( const Type & t,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::PointerToMemberBuilder( const Type & t,
+Reflex::Type Reflex::PointerToMemberBuilder( const Type & t,
                                                          const Scope & s,
                                                          const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ ROOT::Reflex::Type ROOT::Reflex::PointerToMemberBuilder( const Type & t,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ReferenceBuilder(const Type & t) {
+Reflex::Type Reflex::ReferenceBuilder(const Type & t) {
 //-------------------------------------------------------------------------------
 // Construct a "reference qualified" type.
    unsigned int mod = REFERENCE;
@@ -97,7 +97,7 @@ ROOT::Reflex::Type ROOT::Reflex::ReferenceBuilder(const Type & t) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ArrayBuilder( const Type & t, 
+Reflex::Type Reflex::ArrayBuilder( const Type & t, 
                                                size_t n,
                                                const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ ROOT::Reflex::Type ROOT::Reflex::ArrayBuilder( const Type & t,
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::EnumTypeBuilder( const char * nam, 
+Reflex::Type Reflex::EnumTypeBuilder( const char * nam, 
                                                   const char * values,
                                                   const std::type_info & ti,
                                                   unsigned int modifiers ) {
@@ -140,7 +140,7 @@ ROOT::Reflex::Type ROOT::Reflex::EnumTypeBuilder( const char * nam,
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * nam, 
+Reflex::Type Reflex::TypedefTypeBuilder(const char * nam, 
                                                     const Type & t) {
 //-------------------------------------------------------------------------------
 // Construct a typedef type.
@@ -157,7 +157,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder( const Type & r,
+Reflex::Type Reflex::FunctionTypeBuilder( const Type & r,
                                                       const std::vector<Type> & p,
                                                       const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
@@ -167,7 +167,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder( const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r) {
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
    std::vector< Type > v;
@@ -178,7 +178,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0) {
 //-------------------------------------------------------------------------------
 // Construct a function type.
@@ -190,7 +190,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1) {
 //-------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2) {
@@ -217,7 +217,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -232,7 +232,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -248,7 +248,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
  
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -265,7 +265,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -283,7 +283,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -302,7 +302,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -322,7 +322,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -343,7 +343,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
  
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -365,7 +365,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -388,7 +388,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
  
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -412,7 +412,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
  
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -437,7 +437,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -463,7 +463,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
  
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -490,7 +490,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -519,7 +519,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -549,7 +549,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -580,7 +580,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -612,7 +612,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -645,7 +645,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -679,7 +679,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -714,7 +714,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -750,7 +750,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -787,7 +787,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -825,7 +825,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -864,7 +864,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -904,7 +904,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -945,7 +945,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -987,7 +987,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,
@@ -1031,7 +1031,7 @@ ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionTypeBuilder(const Type & r, 
+Reflex::Type Reflex::FunctionTypeBuilder(const Type & r, 
                                                      const Type & t0, 
                                                      const Type & t1,
                                                      const Type & t2,

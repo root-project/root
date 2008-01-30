@@ -35,7 +35,7 @@ Keys_t & sKeys() {
 
 
 //-------------------------------------------------------------------------------
-std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
+std::ostream & Reflex::operator<<( std::ostream & s,
                                          const PropertyListImpl & p ) {
 //-------------------------------------------------------------------------------
 // Operator to put properties on the ostream.
@@ -50,7 +50,7 @@ std::ostream & ROOT::Reflex::operator<<( std::ostream & s,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::PropertyListImpl::ClearProperties() {
+void Reflex::PropertyListImpl::ClearProperties() {
 //-------------------------------------------------------------------------------
 // Clear, remove all properties.
    if ( fProperties ) delete fProperties;
@@ -59,7 +59,7 @@ void ROOT::Reflex::PropertyListImpl::ClearProperties() {
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::PropertyListImpl::HasProperty( const std::string & key ) const {
+bool Reflex::PropertyListImpl::HasProperty( const std::string & key ) const {
 //-------------------------------------------------------------------------------
    // Return true if property has key.
    size_t i = KeyByName(key);
@@ -69,7 +69,7 @@ bool ROOT::Reflex::PropertyListImpl::HasProperty( const std::string & key ) cons
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::PropertyListImpl::HasProperty( size_t key ) const {
+bool Reflex::PropertyListImpl::HasProperty( size_t key ) const {
 //-------------------------------------------------------------------------------
    // Return true if property has key.
    return PropertyValue( key );
@@ -77,7 +77,7 @@ bool ROOT::Reflex::PropertyListImpl::HasProperty( size_t key ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_Begin() {
+Reflex::StdString_Iterator Reflex::PropertyListImpl::Key_Begin() {
 //-------------------------------------------------------------------------------
    // Return begin iterator of key container
    return sKeys().begin();
@@ -85,7 +85,7 @@ ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_Begin() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_End() {
+Reflex::StdString_Iterator Reflex::PropertyListImpl::Key_End() {
 //-------------------------------------------------------------------------------
    // Return end iterator of key container
    return sKeys().end();
@@ -93,7 +93,7 @@ ROOT::Reflex::StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_End() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_RBegin() {
+Reflex::Reverse_StdString_Iterator Reflex::PropertyListImpl::Key_RBegin() {
 //-------------------------------------------------------------------------------
    // Return rbegin iterator of key container
    return ((const std::vector<std::string>&)sKeys()).rbegin();
@@ -101,7 +101,7 @@ ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_RBe
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_REnd() {
+Reflex::Reverse_StdString_Iterator Reflex::PropertyListImpl::Key_REnd() {
 //-------------------------------------------------------------------------------
    // Return rend iterator of key container
    return ((const std::vector<std::string>&)sKeys()).rend();
@@ -109,7 +109,7 @@ ROOT::Reflex::Reverse_StdString_Iterator ROOT::Reflex::PropertyListImpl::Key_REn
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::PropertyListImpl::KeysAsString() {
+std::string Reflex::PropertyListImpl::KeysAsString() {
 //-------------------------------------------------------------------------------
 // Return a string containing all property keys.
    return Tools::StringVec2String(sKeys());
@@ -117,7 +117,7 @@ std::string ROOT::Reflex::PropertyListImpl::KeysAsString() {
 
 
 //-------------------------------------------------------------------------------
-const std::string & ROOT::Reflex::PropertyListImpl::KeyAt( size_t nth ) {
+const std::string & Reflex::PropertyListImpl::KeyAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return the nth property key.
    return sKeys().at( nth );
@@ -125,7 +125,7 @@ const std::string & ROOT::Reflex::PropertyListImpl::KeyAt( size_t nth ) {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::PropertyListImpl::KeyByName( const std::string & key,
+size_t Reflex::PropertyListImpl::KeyByName( const std::string & key,
                                                   bool allocateNew ) {
 //-------------------------------------------------------------------------------
 // Return a key by it's name.
@@ -142,7 +142,7 @@ size_t ROOT::Reflex::PropertyListImpl::KeyByName( const std::string & key,
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::PropertyListImpl::KeySize() {
+size_t Reflex::PropertyListImpl::KeySize() {
 //-------------------------------------------------------------------------------
    // Return number of all allocated keys.
    return sKeys().size();
@@ -151,7 +151,7 @@ size_t ROOT::Reflex::PropertyListImpl::KeySize() {
 
 //-------------------------------------------------------------------------------
 std::string 
-ROOT::Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) const {
+Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) const {
 //-------------------------------------------------------------------------------
 // Return a property as a string.
    return PropertyAsString( PropertyKey( key ));
@@ -161,7 +161,7 @@ ROOT::Reflex::PropertyListImpl::PropertyAsString( const std::string & key ) cons
 
 //-------------------------------------------------------------------------------
 std::string 
-ROOT::Reflex::PropertyListImpl::PropertyAsString( size_t key ) const {
+Reflex::PropertyListImpl::PropertyAsString( size_t key ) const {
 //-------------------------------------------------------------------------------
    // Return a string representation of the property with key.
    Any & a = PropertyValue( key );
@@ -176,7 +176,7 @@ ROOT::Reflex::PropertyListImpl::PropertyAsString( size_t key ) const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::PropertyListImpl::PropertyKey( const std::string & key,
+size_t Reflex::PropertyListImpl::PropertyKey( const std::string & key,
                                                     bool allocateNew ) const {
 //-------------------------------------------------------------------------------
    // return the index of property key, allocate a new one if allocateNew = true
@@ -185,7 +185,7 @@ size_t ROOT::Reflex::PropertyListImpl::PropertyKey( const std::string & key,
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::PropertyListImpl::PropertyKeys() const {
+std::string Reflex::PropertyListImpl::PropertyKeys() const {
 //-------------------------------------------------------------------------------
 // Return a string containing all property keys.
    std::vector<std::string> kv;
@@ -197,7 +197,7 @@ std::string ROOT::Reflex::PropertyListImpl::PropertyKeys() const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::PropertyListImpl::PropertyCount() const {
+size_t Reflex::PropertyListImpl::PropertyCount() const {
 //-------------------------------------------------------------------------------
 // Returns the number of properties attached to this item. Don't use the output
 // for iteration. Use KeySize() instead.
@@ -212,8 +212,8 @@ size_t ROOT::Reflex::PropertyListImpl::PropertyCount() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Any &
-ROOT::Reflex::PropertyListImpl::PropertyValue( const std::string & key ) const {
+Reflex::Any &
+Reflex::PropertyListImpl::PropertyValue( const std::string & key ) const {
 //-------------------------------------------------------------------------------
 // Return a property as an Any object.
    return PropertyValue( PropertyKey( key ));
@@ -221,8 +221,8 @@ ROOT::Reflex::PropertyListImpl::PropertyValue( const std::string & key ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Any &
-ROOT::Reflex::PropertyListImpl::PropertyValue( size_t key ) const {
+Reflex::Any &
+Reflex::PropertyListImpl::PropertyValue( size_t key ) const {
 //-------------------------------------------------------------------------------
    // Return property as Any object
    if ( fProperties && key < fProperties->size()) return (*fProperties)[ key ];

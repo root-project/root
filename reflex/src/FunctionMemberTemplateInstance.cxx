@@ -24,7 +24,7 @@
 #include <iostream>
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionMemberTemplateInstance::
+Reflex::FunctionMemberTemplateInstance::
 FunctionMemberTemplateInstance( const char * nam,
                                 const Type & typ,
                                 StubFunction stubFP,
@@ -77,7 +77,7 @@ FunctionMemberTemplateInstance( const char * nam,
 
 //-------------------------------------------------------------------------------
 std::string 
-ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
+Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the function member.
    return FunctionMember::Name( mod );
@@ -86,7 +86,7 @@ ROOT::Reflex::FunctionMemberTemplateInstance::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::FunctionMemberTemplateInstance::TemplateArgumentAt( size_t nth ) const {
+Reflex::Type Reflex::FunctionMemberTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return nth template argument of this function member.
    return TemplateInstance::TemplateArgumentAt( nth );

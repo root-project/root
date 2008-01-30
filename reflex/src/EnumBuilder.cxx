@@ -21,7 +21,7 @@
 #include "Enum.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::EnumBuilder::EnumBuilder( const char * nam,
+Reflex::EnumBuilder::EnumBuilder( const char * nam,
                                         const std::type_info & ti,
                                         unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ ROOT::Reflex::EnumBuilder::EnumBuilder( const char * nam,
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::EnumBuilder::~EnumBuilder() {
+Reflex::EnumBuilder::~EnumBuilder() {
 //-------------------------------------------------------------------------------
 // Destructor of enum builder. Used for call back functions.
    FireClassCallback( *fEnum );
@@ -38,7 +38,7 @@ ROOT::Reflex::EnumBuilder::~EnumBuilder() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddItem( const char * nam,
+Reflex::EnumBuilder & Reflex::EnumBuilder::AddItem( const char * nam,
                                                                 long value ) {  
 //-------------------------------------------------------------------------------
 // Add an item (as data member) to this enum scope.
@@ -51,7 +51,7 @@ ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddItem( const char * nam
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddProperty( const char * key,
+Reflex::EnumBuilder & Reflex::EnumBuilder::AddProperty( const char * key,
                                                                     Any value ) {
 //-------------------------------------------------------------------------------
 // Add a property info to this enum as any object.
@@ -62,7 +62,7 @@ ROOT::Reflex::EnumBuilder & ROOT::Reflex::EnumBuilder::AddProperty( const char *
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::EnumBuilder &  ROOT::Reflex::EnumBuilder::AddProperty( const char * key,
+Reflex::EnumBuilder &  Reflex::EnumBuilder::AddProperty( const char * key,
                                                                      const char * value ) {
 //-------------------------------------------------------------------------------
 // Add a property info to this enum as string.
@@ -72,7 +72,7 @@ ROOT::Reflex::EnumBuilder &  ROOT::Reflex::EnumBuilder::AddProperty( const char 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::EnumBuilder::ToType() {
+Reflex::Type Reflex::EnumBuilder::ToType() {
 //-------------------------------------------------------------------------------
 // Return the type currently being built.
    return fEnum->ThisType();

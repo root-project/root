@@ -19,7 +19,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Typedef::Typedef( const char * typ,
+Reflex::Typedef::Typedef( const char * typ,
                                 const Type & typedefType,
                                 TYPE typeTyp,
                                 const Type & finalType )
@@ -35,7 +35,7 @@ ROOT::Reflex::Typedef::Typedef( const char * typ,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Typedef::~Typedef() {
+Reflex::Typedef::~Typedef() {
 //-------------------------------------------------------------------------------
 // Destructor.
 }

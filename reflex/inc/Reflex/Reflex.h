@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Reflex
-#define ROOT_Reflex_Reflex
+#ifndef Reflex_Reflex
+#define Reflex_Reflex
 
 #include "Reflex/Base.h"
 #include "Reflex/Member.h"
@@ -29,4 +29,4 @@
 
 /** \defgroup Ref Reflex */
 
-#endif // ROOT_Reflex_Reflex
+#endif // Reflex_Reflex

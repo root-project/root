@@ -12,42 +12,44 @@
 
 // Include Files
 
-namespace ROOT {
+#ifndef Reflex_InternalTools
+#define Reflex_InternalTools
 
-   namespace Reflex {
+namespace Reflex {
 
-      namespace OTools {
+   namespace OTools {
 
-         template< typename TO > class ToIter {
-            
-         public:
+      template< typename TO > class ToIter {
 
-            template < typename CONT > 
-               static typename std::vector<TO>::iterator Begin( const CONT & cont ) {
-               if ( ! cont.size()) return End<CONT>(cont);
-               else                return typename std::vector<TO>::iterator((TO*)&cont[0]);
-            }
+      public:
 
-            template < typename CONT >
-               static typename std::vector<TO>::iterator End( const CONT & cont ) {
-               typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]);
-               return it++;
-            }
+         template < typename CONT > 
+         static typename std::vector<TO>::iterator Begin( const CONT & cont ) {
+            if ( ! cont.size()) return End<CONT>(cont);
+            else                return typename std::vector<TO>::iterator((TO*)&cont[0]);
+         }
 
-            template < typename CONT > 
-               static typename std::vector<TO>::const_reverse_iterator RBegin( const CONT & cont ) {
-               if ( ! cont.size()) return REnd<CONT>(cont);
-               else                return typename std::vector<TO>::const_reverse_iterator(typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]));
-            }
+         template < typename CONT >
+         static typename std::vector<TO>::iterator End( const CONT & cont ) {
+            typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]);
+            return it++;
+         }
 
-            template < typename CONT >
-               static typename std::vector<TO>::const_reverse_iterator REnd( const CONT & cont ) {
-               typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[0]);
-               return typename std::vector<TO>::const_reverse_iterator(it--);
-            }
+         template < typename CONT > 
+         static typename std::vector<TO>::const_reverse_iterator RBegin( const CONT & cont ) {
+            if ( ! cont.size()) return REnd<CONT>(cont);
+            else                return typename std::vector<TO>::const_reverse_iterator(typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]));
+         }
 
-         };
+         template < typename CONT >
+         static typename std::vector<TO>::const_reverse_iterator REnd( const CONT & cont ) {
+            typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[0]);
+            return typename std::vector<TO>::const_reverse_iterator(it--);
+         }
 
-      } // namespace OTools
-   } // namespace Reflex
-} // namespace ROOT
+      };
+
+   } // namespace OTools
+} // namespace Reflex
+
+#endif // Reflex_InternalTools

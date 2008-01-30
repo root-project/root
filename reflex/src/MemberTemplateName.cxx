@@ -24,8 +24,8 @@
 #include <vector>
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_multimap < const std::string *, ROOT::Reflex::MemberTemplate > Name2MemberTemplate_t;
-typedef std::vector< ROOT::Reflex::MemberTemplate > MemberTemplateVec_t;
+typedef __gnu_cxx::hash_multimap < const std::string *, Reflex::MemberTemplate > Name2MemberTemplate_t;
+typedef std::vector< Reflex::MemberTemplate > MemberTemplateVec_t;
 
 
 //-------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ static MemberTemplateVec_t & sMemberTemplateVec() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplateName::MemberTemplateName( const char * name,
+Reflex::MemberTemplateName::MemberTemplateName( const char * name,
                                                       MemberTemplateImpl * memberTemplateImpl )
 //-------------------------------------------------------------------------------
    : fName( name ),
@@ -60,14 +60,14 @@ ROOT::Reflex::MemberTemplateName::MemberTemplateName( const char * name,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplateName::~MemberTemplateName() {
+Reflex::MemberTemplateName::~MemberTemplateName() {
 //-------------------------------------------------------------------------------
    // Destructor.
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::ByName( const std::string & name,
+Reflex::MemberTemplate Reflex::MemberTemplateName::ByName( const std::string & name,
                                                                        size_t nTemplateParams ) {
 //-------------------------------------------------------------------------------
    // Lookup a member template by its name.
@@ -89,7 +89,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::ByName( const std
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::MemberTemplateName::CleanUp() {
+void Reflex::MemberTemplateName::CleanUp() {
 //-------------------------------------------------------------------------------
    // Do the final cleanup for the member templates.  
    for ( MemberTemplateVec_t::iterator it = sMemberTemplateVec().begin(); it != sMemberTemplateVec().end(); ++it ) {
@@ -103,7 +103,7 @@ void ROOT::Reflex::MemberTemplateName::CleanUp() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::MemberTemplateName::DeleteMemberTemplate() const {
+void Reflex::MemberTemplateName::DeleteMemberTemplate() const {
 //-------------------------------------------------------------------------------
    // Remove a member template dictionary information.
    delete fMemberTemplateImpl;
@@ -112,7 +112,7 @@ void ROOT::Reflex::MemberTemplateName::DeleteMemberTemplate() const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::MemberTemplateName::Name( unsigned int mod ) const {
+std::string Reflex::MemberTemplateName::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
    // Print the name of this member template.
    if ( 0 != ( mod & ( SCOPED | S ))) return fName;
@@ -121,7 +121,7 @@ std::string ROOT::Reflex::MemberTemplateName::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::ThisMemberTemplate() const {
+Reflex::MemberTemplate Reflex::MemberTemplateName::ThisMemberTemplate() const {
 //-------------------------------------------------------------------------------
    // Return the member template corresponding to this member template name.
    return * fThisMemberTemplate;
@@ -129,7 +129,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::ThisMemberTemplat
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::MemberTemplateAt( size_t nth ) {
+Reflex::MemberTemplate Reflex::MemberTemplateName::MemberTemplateAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return teh nth member template.
    if ( nth < sMemberTemplateVec().size()) return sMemberTemplateVec()[nth];
@@ -138,7 +138,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::MemberTemplateAt(
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::MemberTemplateName::MemberTemplateSize() {
+size_t Reflex::MemberTemplateName::MemberTemplateSize() {
 //-------------------------------------------------------------------------------
    // Return the number of member templates declared.
    return sMemberTemplateVec().size();
@@ -146,7 +146,7 @@ size_t ROOT::Reflex::MemberTemplateName::MemberTemplateSize() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTemplate_Begin() {
+Reflex::MemberTemplate_Iterator Reflex::MemberTemplateName::MemberTemplate_Begin() {
 //-------------------------------------------------------------------------------
    // Return the begin iterator of the member template collection
    return sMemberTemplateVec().begin();
@@ -154,7 +154,7 @@ ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTe
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTemplate_End() {
+Reflex::MemberTemplate_Iterator Reflex::MemberTemplateName::MemberTemplate_End() {
 //-------------------------------------------------------------------------------
    // Return the end iterator of the member template collection
    return sMemberTemplateVec().end();
@@ -162,7 +162,7 @@ ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTe
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTemplate_RBegin() {
+Reflex::Reverse_MemberTemplate_Iterator Reflex::MemberTemplateName::MemberTemplate_RBegin() {
 //-------------------------------------------------------------------------------
    // Return the RBegin iterator of the member template collection
    return ((const std::vector<MemberTemplate>&)sMemberTemplateVec()).rbegin();
@@ -170,7 +170,7 @@ ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplateName::MemberTemplate_REnd() {
+Reflex::Reverse_MemberTemplate_Iterator Reflex::MemberTemplateName::MemberTemplate_REnd() {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the member template collection
    return ((const std::vector<MemberTemplate>&)sMemberTemplateVec()).rend();

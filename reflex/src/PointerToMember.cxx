@@ -18,7 +18,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType,
+Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType,
                                                 const Scope & pointerToMemberScope,
                                                 const std::type_info & ti ) 
 //------------------------------------------------------------------------------- 
@@ -30,7 +30,7 @@ ROOT::Reflex::PointerToMember::PointerToMember( const Type & pointerToMemberType
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::PointerToMember::Name( unsigned int mod ) const { 
+std::string Reflex::PointerToMember::Name( unsigned int mod ) const { 
 //-------------------------------------------------------------------------------
 // Return the name of the pointer to member type.
    return BuildTypeName( fPointerToMemberType, fPointerToMemberScope, mod );
@@ -38,7 +38,7 @@ std::string ROOT::Reflex::PointerToMember::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::PointerToMember::BuildTypeName( const Type & pointerToMemberType,
+std::string Reflex::PointerToMember::BuildTypeName( const Type & pointerToMemberType,
                                                           const Scope & pointerToMemberScope,
                                                           unsigned int mod ) {
 //-------------------------------------------------------------------------------

@@ -22,7 +22,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * typ,
+Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * typ,
                                                       const Type & typedefType ) {
 //-------------------------------------------------------------------------------
 // Construct typedef info.
@@ -31,7 +31,7 @@ ROOT::Reflex::TypedefBuilderImpl::TypedefBuilderImpl( const char * typ,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
+void Reflex::TypedefBuilderImpl::AddProperty( const char * key,
                                                     Any value ) {
 //-------------------------------------------------------------------------------
 // Attach a property to this typedef as Any object.
@@ -40,7 +40,7 @@ void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
+void Reflex::TypedefBuilderImpl::AddProperty( const char * key,
                                                     const char * value ) {
 //-------------------------------------------------------------------------------
 // Attach a property to this typedef as string.
@@ -49,7 +49,7 @@ void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypedefBuilderImpl::ToType() {
+Reflex::Type Reflex::TypedefBuilderImpl::ToType() {
 //-------------------------------------------------------------------------------
 // Return the type currently being built.
    return fTypedef;

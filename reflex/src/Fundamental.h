@@ -9,36 +9,34 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Fundamental
-#define ROOT_Reflex_Fundamental
+#ifndef Reflex_Fundamental
+#define Reflex_Fundamental
 
 // Include files
 #include "Reflex/internal/TypeBase.h"
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
 
-      /**
-       * @class Fundamental Fundamental.h Reflex/Fundamental.h
-       *  @author Stefan Roiser
-       *  @date 24/11/2003
-       */
-      class Fundamental : public TypeBase {
-      public:
+   /**
+   * @class Fundamental Fundamental.h Reflex/Fundamental.h
+   *  @author Stefan Roiser
+   *  @date 24/11/2003
+   */
+   class Fundamental : public TypeBase {
+   public:
 
-         /** default constructor */
-         Fundamental( const char * typ,
-                      size_t size,
-                      const std::type_info & ti ) ;
+      /** default constructor */
+      Fundamental( const char * typ,
+         size_t size,
+         const std::type_info & ti ) ;
 
 
-         /** destructor */
-         virtual ~Fundamental() {}
+      /** destructor */
+      virtual ~Fundamental() {}
 
-      }; // class Fundamental
-   } //namespace Reflex
-} //namespace ROOT
+   }; // class Fundamental
+} //namespace Reflex
 
-#endif // ROOT_Reflex_Fundamental
+#endif // Reflex_Fundamental
 

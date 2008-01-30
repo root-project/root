@@ -9,15 +9,14 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Union
-#define ROOT_Reflex_Union
+#ifndef Reflex_Union
+#define Reflex_Union
 
 // Include Files
 #include "Reflex/internal/TypeBase.h"
 #include "Reflex/internal/ScopeBase.h"
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
     
       /**
@@ -172,110 +171,109 @@ namespace ROOT {
       }; // class Union
 
    } // namespace Reflex
-} // namespace ROOT
 
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Union::operator ROOT::Reflex::Scope () const {
+inline Reflex::Union::operator Reflex::Scope () const {
 //-------------------------------------------------------------------------------
    return ScopeBase::operator Scope ();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Union::operator ROOT::Reflex::Type () const {
+inline Reflex::Union::operator Reflex::Type () const {
 //-------------------------------------------------------------------------------
    return TypeBase::operator Type ();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Union::DataMember_Begin() const {
+inline Reflex::Member_Iterator Reflex::Union::DataMember_Begin() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMember_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Union::DataMember_End() const {
+inline Reflex::Member_Iterator Reflex::Union::DataMember_End() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMember_End();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_RBegin() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Union::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMember_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::DataMember_REnd() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Union::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMember_REnd();
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::Union::IsPrivate() const {
+inline bool Reflex::Union::IsPrivate() const {
 //-------------------------------------------------------------------------------
    return 0 != ( fModifiers & PRIVATE );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::Union::IsProtected() const {
+inline bool Reflex::Union::IsProtected() const {
 //-------------------------------------------------------------------------------
    return 0 != ( fModifiers & PROTECTED );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::Union::IsPublic() const {
+inline bool Reflex::Union::IsPublic() const {
 //-------------------------------------------------------------------------------
    return 0 != ( fModifiers & PUBLIC );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Union::Member_Begin() const {
+inline Reflex::Member_Iterator Reflex::Union::Member_Begin() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Member_Begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::Union::Member_End() const {
+inline Reflex::Member_Iterator Reflex::Union::Member_End() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Member_End();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::Member_RBegin() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Union::Member_RBegin() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Member_RBegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Union::Member_REnd() const {
+inline Reflex::Reverse_Member_Iterator Reflex::Union::Member_REnd() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Member_REnd();  
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::Union::AddDataMember( const Member & dm ) const {
+inline void Reflex::Union::AddDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
    ScopeBase::AddDataMember( dm );
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::Union::AddDataMember( const char * nam,
+inline void Reflex::Union::AddDataMember( const char * nam,
                                                 const Type & typ,
                                                 size_t offs,
                                                 unsigned int modifiers ) const {
@@ -285,35 +283,35 @@ inline void ROOT::Reflex::Union::AddDataMember( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberAt( size_t nth ) const {
+inline Reflex::Member Reflex::Union::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::DataMemberByName( const std::string & nam ) const {
+inline Reflex::Member Reflex::Union::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberByName( nam );
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::Union::DataMemberSize() const {
+inline size_t Reflex::Union::DataMemberSize() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberSize();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope ROOT::Reflex::Union::DeclaringScope() const {
+inline Reflex::Scope Reflex::Union::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DeclaringScope();
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::Union::HideName() const {
+inline void Reflex::Union::HideName() const {
 //-------------------------------------------------------------------------------
    TypeBase::HideName();
    ScopeBase::HideName();
@@ -321,7 +319,7 @@ inline void ROOT::Reflex::Union::HideName() const {
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::MemberByName( const std::string & nam,
+inline Reflex::Member Reflex::Union::MemberByName( const std::string & nam,
                                                                const Type & signature ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberByName( nam, signature );
@@ -329,17 +327,17 @@ inline ROOT::Reflex::Member ROOT::Reflex::Union::MemberByName( const std::string
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::Union::MemberSize() const {
+inline size_t Reflex::Union::MemberSize() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberSize();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::PropertyList ROOT::Reflex::Union::Properties() const {
+inline Reflex::PropertyList Reflex::Union::Properties() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Properties();
 }
 
-#endif // ROOT_Reflex_Union
+#endif // Reflex_Union
 

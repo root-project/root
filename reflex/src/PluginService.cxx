@@ -13,6 +13,10 @@
 #define REFLEX_BUILD
 #endif
 
+#ifndef REFLEX_BUILD
+#define REFLEX_BUILD
+#endif
+
 #include "Reflex/PluginService.h"
 #include "Reflex/SharedLibrary.h"
 #include "Reflex/Reflex.h"
@@ -20,7 +24,7 @@
 
 #include <vector>
 
-using namespace ROOT::Reflex;
+using namespace Reflex;
 using namespace std;
 
 //_______________________________________________________________________________
@@ -89,7 +93,7 @@ using namespace std;
 
 
 //-------------------------------------------------------------------------------
-void* ROOT::Reflex::PluginService::Create( const string & name, 
+void* Reflex::PluginService::Create( const string & name, 
                                        const Type & ret, 
                                        const vector<ValueObject> & arg) {
 //-------------------------------------------------------------------------------
@@ -136,7 +140,7 @@ void* ROOT::Reflex::PluginService::Create( const string & name,
 
 
 //-------------------------------------------------------------------------------
-void* ROOT::Reflex::PluginService::CreateWithId(const Any& id,  
+void* Reflex::PluginService::CreateWithId(const Any& id,  
                                                 std::string (*str)(const Any&),  
                                                 bool(*cmp)(const Any&, const Any&), 
                                                 const Type& ret, 
@@ -199,7 +203,7 @@ void* ROOT::Reflex::PluginService::CreateWithId(const Any& id,
 
 
 //-------------------------------------------------------------------------------
-string ROOT::Reflex::PluginService::FactoryName(const string& name) {
+string Reflex::PluginService::FactoryName(const string& name) {
 //-------------------------------------------------------------------------------
 // Create a factory name out of the parameter given.
    static string chars(":<> *&, ");
@@ -214,7 +218,7 @@ string ROOT::Reflex::PluginService::FactoryName(const string& name) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PluginService::PluginService() : fDebugLevel(0) {
+Reflex::PluginService::PluginService() : fDebugLevel(0) {
 //-------------------------------------------------------------------------------
 // Constructor.
    NamespaceBuilder(PLUGINSVC_FACTORY_NS);
@@ -224,7 +228,7 @@ ROOT::Reflex::PluginService::PluginService() : fDebugLevel(0) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PluginService::~PluginService() {
+Reflex::PluginService::~PluginService() {
 //-------------------------------------------------------------------------------
 // Destructor.
    delete fFactoryMap;
@@ -232,7 +236,7 @@ ROOT::Reflex::PluginService::~PluginService() {
 
 
 //-------------------------------------------------------------------------------
-PluginService& ROOT::Reflex::PluginService::Instance() {
+PluginService& Reflex::PluginService::Instance() {
 //-------------------------------------------------------------------------------
 // Get singleton.
    static PluginService s_instance;
@@ -241,7 +245,7 @@ PluginService& ROOT::Reflex::PluginService::Instance() {
 
 
 //-------------------------------------------------------------------------------
-int ROOT::Reflex::PluginService::Debug() {
+int Reflex::PluginService::Debug() {
 //-------------------------------------------------------------------------------
 // Get debug level.
    return Instance().fDebugLevel;
@@ -249,7 +253,7 @@ int ROOT::Reflex::PluginService::Debug() {
  
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::PluginService::SetDebug(int l) {
+void Reflex::PluginService::SetDebug(int l) {
 //-------------------------------------------------------------------------------
 // Set debug level.
    PluginFactoryMap::SetDebug(l);
@@ -258,7 +262,7 @@ void ROOT::Reflex::PluginService::SetDebug(int l) {
     
  
 //-------------------------------------------------------------------------------
-int ROOT::Reflex::PluginService::LoadFactoryLib(const string& name) {
+int Reflex::PluginService::LoadFactoryLib(const string& name) {
 //-------------------------------------------------------------------------------
 // Load libraries needed for a plugin to instantiate. 
    list<string> libs = Instance().fFactoryMap->GetLibraries(name);

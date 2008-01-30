@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_FuncHandler
-#define ROOT_Reflex_FuncHandler
+#ifndef Reflex_FuncHandler
+#define Reflex_FuncHandler
 
 
 // Include files
@@ -18,91 +18,89 @@
 #include <string>
 
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
 
-      class FuncHandler {
+   class FuncHandler {
 
-      public:
+   public:
 
-         template < class R, class C >
-            static const std::string DemangleFunRetType(R(C::*)());
+      template < class R, class C >
+      static const std::string DemangleFunRetType(R(C::*)());
 
-         template < class R, class C, class T0>
-            static const std::string DemangleFunRetType(R(C::*)(T0));
+      template < class R, class C, class T0>
+      static const std::string DemangleFunRetType(R(C::*)(T0));
 
-         template < class R, class C, class T0, class T1 >
-            static const std::string DemangleFunRetType(R(C::*)(T0,T1));
+      template < class R, class C, class T0, class T1 >
+      static const std::string DemangleFunRetType(R(C::*)(T0,T1));
 
-         template < class R, class C, class T0, class T1, class T2 >
-            static const std::string DemangleFunRetType(R(C::*)(T0,T1,T2));
+      template < class R, class C, class T0, class T1, class T2 >
+      static const std::string DemangleFunRetType(R(C::*)(T0,T1,T2));
 
-         template < class R, class C, class T0, class T1, class T2, class T3 >
-            static const std::string DemangleFunRetType(R(C::*)(T0,T1,T2,T3));
+      template < class R, class C, class T0, class T1, class T2, class T3 >
+      static const std::string DemangleFunRetType(R(C::*)(T0,T1,T2,T3));
 
-         template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
-            static const std::string DemangleFunRetType(R(C::*)(T0,T1,T2,T3,T4));
-
-
-         template < class R, class C >
-            static const std::string DemangleFunParTypes(R(C::*)());
-
-         template < class R, class C, class T0>
-            static const std::string DemangleFunParTypes(R(C::*)(T0));
-
-         template < class R, class C, class T0, class T1 >
-            static const std::string DemangleFunParTypes(R(C::*)(T0,T1));
-
-         template < class R, class C, class T0, class T1, class T2 >
-            static const std::string DemangleFunParTypes(R(C::*)(T0,T1,T2));
-
-         template < class R, class C, class T0, class T1, class T2, class T3 >
-            static const std::string DemangleFunParTypes(R(C::*)(T0,T1,T2,T3));
-
-         template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
-            static const std::string DemangleFunParTypes(R(C::*)(T0,T1,T2,T3,T4));
+      template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
+      static const std::string DemangleFunRetType(R(C::*)(T0,T1,T2,T3,T4));
 
 
-         template < class R >
-            static const std::string DemangleFunRetType(R(*)());
+      template < class R, class C >
+      static const std::string DemangleFunParTypes(R(C::*)());
 
-         template < class R, class T0>
-            static const std::string DemangleFunRetType(R(*)(T0));
+      template < class R, class C, class T0>
+      static const std::string DemangleFunParTypes(R(C::*)(T0));
 
-         template < class R, class T0, class T1 >
-            static const std::string DemangleFunRetType(R(*)(T0,T1));
+      template < class R, class C, class T0, class T1 >
+      static const std::string DemangleFunParTypes(R(C::*)(T0,T1));
 
-         template < class R, class T0, class T1, class T2 >
-            static const std::string DemangleFunRetType(R(*)(T0,T1,T2));
+      template < class R, class C, class T0, class T1, class T2 >
+      static const std::string DemangleFunParTypes(R(C::*)(T0,T1,T2));
 
-         template < class R, class T0, class T1, class T2, class T3 >
-            static const std::string DemangleFunRetType(R(*)(T0,T1,T2,T3));
+      template < class R, class C, class T0, class T1, class T2, class T3 >
+      static const std::string DemangleFunParTypes(R(C::*)(T0,T1,T2,T3));
 
-         template < class R, class T0, class T1, class T2, class T3, class T4 >
-            static const std::string DemangleFunRetType(R(*)(T0,T1,T2,T3,T4));
+      template < class R, class C, class T0, class T1, class T2, class T3, class T4 >
+      static const std::string DemangleFunParTypes(R(C::*)(T0,T1,T2,T3,T4));
 
- 
-         template < class R >
-            static const std::string DemangleFunParTypes(R(*)());
 
-         template < class R, class T0>
-            static const std::string DemangleFunParTypes(R(*)(T0));
+      template < class R >
+      static const std::string DemangleFunRetType(R(*)());
 
-         template < class R, class T0, class T1 >
-            static const std::string DemangleFunParTypes(R(*)(T0,T1));
+      template < class R, class T0>
+      static const std::string DemangleFunRetType(R(*)(T0));
 
-         template < class R, class T0, class T1, class T2 >
-            static const std::string DemangleFunParTypes(R(*)(T0,T1,T2));
+      template < class R, class T0, class T1 >
+      static const std::string DemangleFunRetType(R(*)(T0,T1));
 
-         template < class R, class T0, class T1, class T2, class T3 >
-            static const std::string DemangleFunParTypes(R(*)(T0,T1,T2,T3));
+      template < class R, class T0, class T1, class T2 >
+      static const std::string DemangleFunRetType(R(*)(T0,T1,T2));
 
-         template < class R, class T0, class T1, class T2, class T3, class T4 >
-            static const std::string DemangleFunParTypes(R(*)(T0,T1,T2,T3,T4));
+      template < class R, class T0, class T1, class T2, class T3 >
+      static const std::string DemangleFunRetType(R(*)(T0,T1,T2,T3));
 
-      }; // class FuncHandler
-   } // namespace Reflex
-} // namespace ROOT
+      template < class R, class T0, class T1, class T2, class T3, class T4 >
+      static const std::string DemangleFunRetType(R(*)(T0,T1,T2,T3,T4));
 
-#endif // ROOT_Reflex_FuncHandler
+
+      template < class R >
+      static const std::string DemangleFunParTypes(R(*)());
+
+      template < class R, class T0>
+      static const std::string DemangleFunParTypes(R(*)(T0));
+
+      template < class R, class T0, class T1 >
+      static const std::string DemangleFunParTypes(R(*)(T0,T1));
+
+      template < class R, class T0, class T1, class T2 >
+      static const std::string DemangleFunParTypes(R(*)(T0,T1,T2));
+
+      template < class R, class T0, class T1, class T2, class T3 >
+      static const std::string DemangleFunParTypes(R(*)(T0,T1,T2,T3));
+
+      template < class R, class T0, class T1, class T2, class T3, class T4 >
+      static const std::string DemangleFunParTypes(R(*)(T0,T1,T2,T3,T4));
+
+   }; // class FuncHandler
+} // namespace Reflex
+
+#endif // Reflex_FuncHandler

@@ -9,51 +9,49 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_OwnedMember
-#define ROOT_Reflex_OwnedMember
+#ifndef Reflex_OwnedMember
+#define Reflex_OwnedMember
 
 // Include files
 #include "Reflex/Kernel.h"
 #include "Reflex/Member.h"
 #include <vector>
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
-      // forward declarations
-      class MemberBase;
+   // forward declarations
+   class MemberBase;
 
-      /**
-       * @class OwnedMember OwnedMember.h OwnedMember.h
-       * @author Stefan Roiser
-       * @date 21/07/2006
-       * @ingroup Ref
-       */
-      class RFLX_API OwnedMember : public Member {
+   /**
+   * @class OwnedMember OwnedMember.h OwnedMember.h
+   * @author Stefan Roiser
+   * @date 21/07/2006
+   * @ingroup Ref
+   */
+   class RFLX_API OwnedMember : public Member {
 
-      public:
+   public:
 
-         /** constructor */
-         OwnedMember( const MemberBase * memberBase = 0 ) 
-            : Member ( memberBase ) {
-         }
+      /** constructor */
+      OwnedMember( const MemberBase * memberBase = 0 ) 
+         : Member ( memberBase ) {
+      }
 
-         /** take ownership */
-         OwnedMember( const Member & rh ) 
-            : Member ( rh ) {}
-
-         
-         /** delete info */
-         void Delete() {
-           Member::Delete();
-/*             delete fMemberBase; */
-/*             fMemberBase = 0; */
-         }
-
-      }; // class OwnedMember
-
-   } // namespace Reflex
-} // namespace ROOT
+      /** take ownership */
+      OwnedMember( const Member & rh ) 
+         : Member ( rh ) {}
 
 
-#endif // ROOT_Reflex_OwnedMember
+      /** delete info */
+      void Delete() {
+         Member::Delete();
+         /*             delete fMemberBase; */
+         /*             fMemberBase = 0; */
+      }
+
+   }; // class OwnedMember
+
+} // namespace Reflex
+
+
+#endif // Reflex_OwnedMember

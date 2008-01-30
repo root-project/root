@@ -39,8 +39,8 @@
 using namespace std;
 
 //-------------------------------------------------------------------------------
-std::ostream & ROOT::Reflex::operator << ( std::ostream & s,
-                                           const ROOT::Reflex::DictionaryGenerator & obj ) {
+std::ostream & Reflex::operator << ( std::ostream & s,
+                                           const Reflex::DictionaryGenerator & obj ) {
 //-------------------------------------------------------------------------------
 
    time_t rawtime;
@@ -49,7 +49,7 @@ std::ostream & ROOT::Reflex::operator << ( std::ostream & s,
    s << "//Generated at " << ctime(&rawtime) << "//Do not modify." << endl << endl;
    s << "#include \"Reflex/Builder/ReflexBuilder.h\"" << endl;
    s << "#include <typeinfo>" << endl;
-   s << "using namespace ROOT::Reflex;" << endl << endl;
+   s << "using namespace Reflex;" << endl << endl;
    s << obj.fStr_header.str();
    
    s <<"namespace {" << endl;
@@ -90,7 +90,7 @@ std::ostream & ROOT::Reflex::operator << ( std::ostream & s,
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::DictionaryGenerator::Replace_colon(std::string scoped_name) {
+std::string Reflex::DictionaryGenerator::Replace_colon(std::string scoped_name) {
 //-------------------------------------------------------------------------------
 // Replaces :: with __ , in a string
    std::string lname = scoped_name;
@@ -117,7 +117,7 @@ std::string ROOT::Reflex::DictionaryGenerator::Replace_colon(std::string scoped_
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
+bool Reflex::DictionaryGenerator::Use_selection(const std::string & filename) {
 //-------------------------------------------------------------------------------
 // User defined selection file for classes to include
    std::ifstream infile;
@@ -145,7 +145,7 @@ bool ROOT::Reflex::DictionaryGenerator::Use_selection(const std::string & filena
             std::cout << "searching for class " << line << "\n";
          }
 
-         // <class pattern="ROOT::Reflex::*"/>
+         // <class pattern="Reflex::*"/>
          if (line.find("class pattern") != std::string::npos) {
 
             unsigned start = line.find("=");
@@ -215,7 +215,7 @@ bool ROOT::Reflex::DictionaryGenerator::Use_selection(const std::string & filena
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::DictionaryGenerator::Use_recursive(bool recursive) {
+bool Reflex::DictionaryGenerator::Use_recursive(bool recursive) {
 //-------------------------------------------------------------------------------
 // Set the usage of recursive selection
 
@@ -232,7 +232,7 @@ bool ROOT::Reflex::DictionaryGenerator::Use_recursive(bool recursive) {
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::DictionaryGenerator::Use_recursive() {
+bool Reflex::DictionaryGenerator::Use_recursive() {
 //-------------------------------------------------------------------------------
 // Returns, if selected recursive selection
 
@@ -242,7 +242,7 @@ bool ROOT::Reflex::DictionaryGenerator::Use_recursive() {
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::DictionaryGenerator::IsNewType2(const Type & searchtype) {
+bool Reflex::DictionaryGenerator::IsNewType2(const Type & searchtype) {
 //-------------------------------------------------------------------------------
 // An optimized IsNewType, TESTING
 /*   std::list < mydata >::iterator i =
@@ -269,14 +269,14 @@ bool ROOT::Reflex::DictionaryGenerator::IsNewType2(const Type & searchtype) {
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::DictionaryGenerator::IsNewType(const Type & searchtype) {
+bool Reflex::DictionaryGenerator::IsNewType(const Type & searchtype) {
 //-------------------------------------------------------------------------------
 // Is the type already used somewhere
 // This is used by GetTypeNumber
 
-   /*  std::vector<ROOT::Reflex::Type>::iterator start = fTypes.begin();
-       std::vector<ROOT::Reflex::Type>::iterator end = fTypes.end();
-       std::vector<ROOT::Reflex::Type>::iterator iter;
+   /*  std::vector<Reflex::Type>::iterator start = fTypes.begin();
+       std::vector<Reflex::Type>::iterator end = fTypes.end();
+       std::vector<Reflex::Type>::iterator iter;
 
 
        // pred is a comparing function used, IsEqual
@@ -311,7 +311,7 @@ bool ROOT::Reflex::DictionaryGenerator::IsNewType(const Type & searchtype) {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::DictionaryGenerator::GetParams(const Type & membertype) {
+std::string Reflex::DictionaryGenerator::GetParams(const Type & membertype) {
 //-------------------------------------------------------------------------------
 // Get params for the functions
    // Recursive, if it's a reference or a pointer
@@ -344,7 +344,7 @@ std::string ROOT::Reflex::DictionaryGenerator::GetParams(const Type & membertype
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::DictionaryGenerator::GetTypeNumber(const Type & membertype) {
+std::string Reflex::DictionaryGenerator::GetTypeNumber(const Type & membertype) {
 //-------------------------------------------------------------------------------
 // If a type is registered (eg.used) before,
 // it has an unique ID-number returned as a string
@@ -382,7 +382,7 @@ std::string ROOT::Reflex::DictionaryGenerator::GetTypeNumber(const Type & member
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::DictionaryGenerator::AddIntoNS( const std::string & typenumber,
+void Reflex::DictionaryGenerator::AddIntoNS( const std::string & typenumber,
                                                    const Type & membertype ) {
 //-------------------------------------------------------------------------------
 // Namespaces field of the generated file
@@ -463,7 +463,7 @@ void ROOT::Reflex::DictionaryGenerator::AddIntoNS( const std::string & typenumbe
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::DictionaryGenerator::Print(const std::string & filename) {
+void Reflex::DictionaryGenerator::Print(const std::string & filename) {
 //-------------------------------------------------------------------------------
 // Outputs the results into standard stream / file
 

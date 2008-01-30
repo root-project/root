@@ -25,7 +25,7 @@
 #include <demangle.h>
 #endif
 
-using namespace ROOT::Reflex;
+using namespace Reflex;
 
 namespace FTypes {
    static const std::type_info & Char()       { static const std::type_info & t = Type::ByName("char").TypeInfo();               return t; }
@@ -160,28 +160,103 @@ std::vector<std::string> Tools::GenTemplateArgVec( const std::string & Name ) {
 
 
 //-------------------------------------------------------------------------------
-size_t Tools::GetBasePosition( const std::string & name ) {
-//------------------------------------------------------------------------------
-// Get the position of the base part of a scoped name.
-   // remove the template part of the name <...>
+size_t Tools::GetBasePosition(const std::string& name) {
+//-------------------------------------------------------------------------------
+// -- Get the position of the base part of a scoped name.
+   //
+   // Remove the template part of the name <...>,
+   // but we must be careful of:
+   //
+   //       operator<,   operator>,
+   //       operator<=,  operator>=,
+   //       operator<<,  operator>>,
+   //       operator<<=, operator>>=
+   //       operator->,  operator->*,
+   //       operator()
+   //
    int ab = 0;
    int rb = 0;
-   int i = 0;
    size_t pos = 0;
-   for ( i = name.size()-1; i >= 0; --i) {
+   for (int i = name.size() - 1; (i >= 0) && !pos; --i) {
       switch (name[i]) {
-      case '>' : ab++; break;
-      case '<' : ab--; break;
-      case ')' : rb++; break;
-      case '(' : rb--; break;
-      case ':' : 
-         if ( ab == 0 && rb == 0 && name[i-1] == ':' ) {
-            pos = i + 1;
-            break; 
-         }
-      default: continue;
+         case '>':
+            {
+              int j = i - 1;
+              if (j > -1) {
+                 if ((name[j] == '-') || (name[j] == '>')) {
+                    --j;
+                 }
+              }
+              for (; (j > -1) && (name[j] == ' '); --j);
+              if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                 // -- We may have an operator name.
+                 if (name.substr(j - 7, 8) == "operator") {
+                    i = j - 8;
+                    break;
+                 }
+              }
+              ab++;
+            }
+            break;
+         case '<':
+            {
+              int j = i - 1;
+              if (j > -1) {
+                 if (name[j] == '<') {
+                    --j;
+                 }
+              }
+              for (; (j > -1) && (name[j] == ' '); --j);
+              if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                 // -- We may have an operator name.
+                 if (name.substr(j - 7, 8) == "operator") {
+                    i = j - 8;
+                    break;
+                 }
+              }
+            }
+            ab--;
+            break;
+         case ')':
+            {
+              int j = i - 1;
+              for (; (j > -1) && (name[j] == ' '); --j);
+              if (j > -1) {
+                 if (name[j] == '(') {
+                    --j;
+                    for (; (j > -1) && (name[j] == ' '); --j);
+                    if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                       // -- We may have an operator name.
+                       if (name.substr(j - 7, 8) == "operator") {
+                          i = j - 8;
+                          break;
+                       }
+                    }
+                 }
+              }
+            }
+            rb++;
+            break;
+         case '(':
+            {
+              int j = i - 1;
+              for (; (j > -1) && (name[j] == ' '); --j);
+              if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                 // -- We may have an operator name.
+                 if (name.substr(j - 7, 8) == "operator") {
+                    i = j - 8;
+                    break;
+                 }
+              }
+            }
+            rb--;
+            break;
+         case ':':
+            if (!ab && !rb && i && (name[i-1] == ':')) {
+               pos = i + 1;
+            }
+            break;
       }
-      if ( pos ) break;
    }
    return pos;
 }

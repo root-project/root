@@ -18,7 +18,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Pointer::Pointer( const Type & pointerType,
+Reflex::Pointer::Pointer( const Type & pointerType,
                                 const std::type_info & ti )
 //-------------------------------------------------------------------------------
    : TypeBase( BuildTypeName(pointerType).c_str(), sizeof(void*), POINTER, ti ), 
@@ -28,7 +28,7 @@ ROOT::Reflex::Pointer::Pointer( const Type & pointerType,
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Pointer::Name( unsigned int mod ) const {
+std::string Reflex::Pointer::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the pointer type.
    return BuildTypeName( fPointerType, mod );
@@ -36,7 +36,7 @@ std::string ROOT::Reflex::Pointer::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Pointer::BuildTypeName( const Type & pointerType,
+std::string Reflex::Pointer::BuildTypeName( const Type & pointerType,
                                                   unsigned int mod ) {
 //-------------------------------------------------------------------------------
 // Build the pointer type name.
@@ -53,7 +53,7 @@ std::string ROOT::Reflex::Pointer::BuildTypeName( const Type & pointerType,
          for ( Type_Iterator ti = pointerType.FunctionParameter_Begin();
                ti != pend; ) {
             s += ti->Name( mod );
-            if ( ++ti != pend ) s += ", ";
+            if ( ++ti != pend ) s += ",";
          }
       }
       else s += "void";

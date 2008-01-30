@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_SharedLibrary 
-#define ROOT_Reflex_SharedLibrary
+#ifndef Reflex_SharedLibrary 
+#define Reflex_SharedLibrary
 
 // Include files
 #ifdef _WIN32
@@ -20,55 +20,54 @@
 #include <errno.h>
 #endif
 
-namespace ROOT {
-   namespace Reflex {
+
+namespace Reflex {
 
 
-      /**
-       * @class SharedLibrary SharedLibrary.h Reflex/SharedLibrary.h
-       * @author Stefan Roiser
-       * @date 24/11/2006
-       * @ingroup Ref
-       * Parts of this implementation are copyied from SEAL (http://cern.ch/seal)
-       */
-      class SharedLibrary {
-         
-      public:
-         
-         SharedLibrary( const std::string & libname );
-         
-         bool Load();
-         
-         bool Unload();
-         
-         bool Symbol( const std::string & symname, void * & sym );
-         
-         const std::string Error();
+   /**
+   * @class SharedLibrary SharedLibrary.h Reflex/SharedLibrary.h
+   * @author Stefan Roiser
+   * @date 24/11/2006
+   * @ingroup Ref
+   * Parts of this implementation are copyied from SEAL (http://cern.ch/seal)
+   */
+   class SharedLibrary {
 
-      private:
-         
-         /** a handle to the loaded library */
+   public:
+
+      SharedLibrary( const std::string & libname );
+
+      bool Load();
+
+      bool Unload();
+
+      bool Symbol( const std::string & symname, void * & sym );
+
+      const std::string Error();
+
+   private:
+
+      /** a handle to the loaded library */
 #ifdef _WIN32
-         HMODULE fHandle;
+      HMODULE fHandle;
 #else
-         void* fHandle;
+      void* fHandle;
 #endif
-         /** the name of the shared library to handle */
-         std::string fLibName;
-      };
+      /** the name of the shared library to handle */
+      std::string fLibName;
+   };
 
-   } // namespace Reflex
-} // namespace ROOT
+} // namespace Reflex
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::SharedLibrary::SharedLibrary( const std::string & libname ) :
+inline Reflex::SharedLibrary::SharedLibrary( const std::string & libname ) :
 //-------------------------------------------------------------------------------
    fHandle(0), fLibName(libname) {}
 
 
 //-------------------------------------------------------------------------------
-inline const std::string ROOT::Reflex::SharedLibrary::Error() {
+inline const std::string Reflex::SharedLibrary::Error() {
 //-------------------------------------------------------------------------------
   std::string errString =  "";
 #ifdef _WIN32
@@ -93,7 +92,7 @@ inline const std::string ROOT::Reflex::SharedLibrary::Error() {
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::SharedLibrary::Load() {
+inline bool Reflex::SharedLibrary::Load() {
 //-------------------------------------------------------------------------------
 
 #ifdef _WIN32 
@@ -109,7 +108,7 @@ inline bool ROOT::Reflex::SharedLibrary::Load() {
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::SharedLibrary::Symbol( const std::string & symname, 
+inline bool Reflex::SharedLibrary::Symbol( const std::string & symname, 
                                                  void * & sym ) {
 //-------------------------------------------------------------------------------
 
@@ -126,7 +125,7 @@ inline bool ROOT::Reflex::SharedLibrary::Symbol( const std::string & symname,
 
    
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::SharedLibrary::Unload() {
+inline bool Reflex::SharedLibrary::Unload() {
 //-------------------------------------------------------------------------------
 
 #ifdef _WIN32
@@ -138,4 +137,4 @@ inline bool ROOT::Reflex::SharedLibrary::Unload() {
 }
 
 
-#endif // ROOT_Reflex_SharedLibrary
+#endif // Reflex_SharedLibrary

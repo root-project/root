@@ -24,8 +24,8 @@
 #include <vector>
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_multimap < const std::string *, ROOT::Reflex::TypeTemplate > Name2TypeTemplate_t;
-typedef std::vector< ROOT::Reflex::TypeTemplate > TypeTemplateVec_t;
+typedef __gnu_cxx::hash_multimap < const std::string *, Reflex::TypeTemplate > Name2TypeTemplate_t;
+typedef std::vector< Reflex::TypeTemplate > TypeTemplateVec_t;
 
 
 //-------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ static TypeTemplateVec_t & sTypeTemplateVec() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplateName::TypeTemplateName( const char * name,
+Reflex::TypeTemplateName::TypeTemplateName( const char * name,
                                                       TypeTemplateImpl * typeTemplateImpl )
 //-------------------------------------------------------------------------------
    : fName( name ),
@@ -60,14 +60,14 @@ ROOT::Reflex::TypeTemplateName::TypeTemplateName( const char * name,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplateName::~TypeTemplateName() {
+Reflex::TypeTemplateName::~TypeTemplateName() {
 //-------------------------------------------------------------------------------
    // Destructor.
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::ByName( const std::string & name,
+Reflex::TypeTemplate Reflex::TypeTemplateName::ByName( const std::string & name,
                                                                    size_t nTemplateParams ) {
 //-------------------------------------------------------------------------------
    // Lookup a type template by its name.
@@ -89,7 +89,7 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::ByName( const std::st
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeTemplateName::CleanUp() {
+void Reflex::TypeTemplateName::CleanUp() {
 //-------------------------------------------------------------------------------
    // Do the final cleanup for the type templates.  
    for ( TypeTemplateVec_t::iterator it = sTypeTemplateVec().begin(); it != sTypeTemplateVec().end(); ++it ) {
@@ -103,7 +103,7 @@ void ROOT::Reflex::TypeTemplateName::CleanUp() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeTemplateName::DeleteTypeTemplate() const {
+void Reflex::TypeTemplateName::DeleteTypeTemplate() const {
 //-------------------------------------------------------------------------------
    // Remove a type template dictionary information.
    delete fTypeTemplateImpl;
@@ -112,7 +112,7 @@ void ROOT::Reflex::TypeTemplateName::DeleteTypeTemplate() const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::TypeTemplateName::Name( unsigned int mod ) const {
+std::string Reflex::TypeTemplateName::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
    // Return the name of this type template.
    if ( 0 != ( mod & ( SCOPED | S ))) return fName;
@@ -121,7 +121,7 @@ std::string ROOT::Reflex::TypeTemplateName::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::ThisTypeTemplate() const {
+Reflex::TypeTemplate Reflex::TypeTemplateName::ThisTypeTemplate() const {
 //-------------------------------------------------------------------------------
    // Return the type template corresponding to this type template name.
    return * fThisTypeTemplate;
@@ -129,7 +129,7 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::ThisTypeTemplate() co
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::TypeTemplateAt( size_t nth ) {
+Reflex::TypeTemplate Reflex::TypeTemplateName::TypeTemplateAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return teh nth type template.
    if ( nth < sTypeTemplateVec().size()) return sTypeTemplateVec()[nth];
@@ -138,7 +138,7 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::TypeTemplateAt( size_
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::TypeTemplateName::TypeTemplateSize() {
+size_t Reflex::TypeTemplateName::TypeTemplateSize() {
 //-------------------------------------------------------------------------------
    // Return the number of type templates declared.
    return sTypeTemplateVec().size();
@@ -146,7 +146,7 @@ size_t ROOT::Reflex::TypeTemplateName::TypeTemplateSize() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate_Begin() {
+Reflex::TypeTemplate_Iterator Reflex::TypeTemplateName::TypeTemplate_Begin() {
 //-------------------------------------------------------------------------------
    // Return the begin iterator of the type template collection
    return sTypeTemplateVec().begin();
@@ -154,7 +154,7 @@ ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate_End() {
+Reflex::TypeTemplate_Iterator Reflex::TypeTemplateName::TypeTemplate_End() {
 //-------------------------------------------------------------------------------
    // Return the end iterator of the type template collection
    return sTypeTemplateVec().end();
@@ -162,7 +162,7 @@ ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate_RBegin() {
+Reflex::Reverse_TypeTemplate_Iterator Reflex::TypeTemplateName::TypeTemplate_RBegin() {
 //-------------------------------------------------------------------------------
    // Return the RBegin iterator of the type template collection
    return ((const std::vector<TypeTemplate>&)sTypeTemplateVec()).rbegin();
@@ -170,7 +170,7 @@ ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::Type
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeTemplateName::TypeTemplate_REnd() {
+Reflex::Reverse_TypeTemplate_Iterator Reflex::TypeTemplateName::TypeTemplate_REnd() {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the type template collection
    return ((const std::vector<TypeTemplate>&)sTypeTemplateVec()).rend();

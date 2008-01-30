@@ -1,4 +1,4 @@
 <lcgdict>
-  <class pattern="ROOT::Reflex::*"/>
-  <enum  pattern="ROOT::Reflex::*"/>
+  <class pattern="Reflex::*"/>
+  <enum  pattern="Reflex::*"/>
 </lcgdict>

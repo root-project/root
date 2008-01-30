@@ -9,126 +9,124 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_TypedefBuilder
-#define ROOT_Reflex_TypedefBuilder
+#ifndef Reflex_TypedefBuilder
+#define Reflex_TypedefBuilder
 
 // Include files
 #include "Reflex/Builder/TypeBuilder.h"
 #include "Reflex/Type.h"
 
-namespace ROOT{
-   namespace Reflex{
+namespace Reflex{
 
-      // forward declarations
+   // forward declarations
 
-      /**
-       * @class TypedefBuilderImpl TypedefBuilder.h Reflex/Builder/TypedefBuilderImpl.h
-       * @author Stefan Roiser
-       * @date 14/3/2005
-       * @ingroup RefBld
-       */
-      class RFLX_API TypedefBuilderImpl {
-      
-      public:
-      
-         /** constructor */
-         TypedefBuilderImpl( const char * typ,
-                             const Type & typedefType );
+   /**
+   * @class TypedefBuilderImpl TypedefBuilder.h Reflex/Builder/TypedefBuilderImpl.h
+   * @author Stefan Roiser
+   * @date 14/3/2005
+   * @ingroup RefBld
+   */
+   class RFLX_API TypedefBuilderImpl {
 
+   public:
 
-         /** destructor */
-         virtual ~TypedefBuilderImpl() {}
-
-      
-         /** 
-          * AddProperty will add a property to the typedef currently being built
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
-          */
-         void AddProperty( const char * key,
-                           Any value );
+      /** constructor */
+      TypedefBuilderImpl( const char * typ,
+         const Type & typedefType );
 
 
-         /** 
-          * AddProperty will add a property to the typedef currently being built
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
-          */
-         void AddProperty( const char * key,
-                           const char * value );
-
-
-         /*
-          * ToType will return the currently produced Type (class)
-          * @return the type currently being built
-          */
-         Type ToType();
-
-      private:
-
-         /** the typedef currently being built */
-         Type fTypedef;
-
-      }; // class TypdefBuilderImpl
+      /** destructor */
+      virtual ~TypedefBuilderImpl() {}
 
 
       /** 
-       * @class TypedefBuilder TypedefBuilder.h Reflex/Builder/TypedefBuilder.h
-       * @author Stefan Roiser
-       * @date 30/3/2004
-       * @ingroup RefBld
-       */
-      template < typename T >
-         class TypedefBuilder  {
-
-         public:            
-
-         /** constructor */
-         TypedefBuilder(const char * nam);
+      * AddProperty will add a property to the typedef currently being built
+      * @param  key the PropertyNth key
+      * @param  value the value of the PropertyNth
+      */
+      void AddProperty( const char * key,
+         Any value );
 
 
-         /** destructor */
-         virtual ~TypedefBuilder() {}
+      /** 
+      * AddProperty will add a property to the typedef currently being built
+      * @param  key the PropertyNth key
+      * @param  value the value of the PropertyNth
+      */
+      void AddProperty( const char * key,
+         const char * value );
 
 
-         /** 
-          * AddProperty will add a property to the typedef currently being built
-          * @param  key the property key
-          * @param  value the value of the property
-          * @return a reference to the building class
-          */
-         template < typename P >
-            TypedefBuilder & AddProperty( const char * key, 
-                                          P value );
+      /*
+      * ToType will return the currently produced Type (class)
+      * @return the type currently being built
+      */
+      Type ToType();
+
+   private:
+
+      /** the typedef currently being built */
+      Type fTypedef;
+
+   }; // class TypdefBuilderImpl
 
 
-         /*
-          * ToType will return the currently produced Type (class)
-          * @return the type currently being built
-          */
-         Type ToType();
-         
-         private:
+   /** 
+   * @class TypedefBuilder TypedefBuilder.h Reflex/Builder/TypedefBuilder.h
+   * @author Stefan Roiser
+   * @date 30/3/2004
+   * @ingroup RefBld
+   */
+   template < typename T >
+   class TypedefBuilder  {
 
-         /** the type of the typedef */
-         TypedefBuilderImpl fTypedefBuilderImpl;
+   public:            
 
-      }; // class TypedefBuilder
+      /** constructor */
+      TypedefBuilder(const char * nam);
 
-   } // namespace Reflex
-} // namespace ROOT
+
+      /** destructor */
+      virtual ~TypedefBuilder() {}
+
+
+      /** 
+      * AddProperty will add a property to the typedef currently being built
+      * @param  key the property key
+      * @param  value the value of the property
+      * @return a reference to the building class
+      */
+      template < typename P >
+      TypedefBuilder & AddProperty( const char * key, 
+         P value );
+
+
+      /*
+      * ToType will return the currently produced Type (class)
+      * @return the type currently being built
+      */
+      Type ToType();
+
+   private:
+
+      /** the type of the typedef */
+      TypedefBuilderImpl fTypedefBuilderImpl;
+
+   }; // class TypedefBuilder
+
+} // namespace Reflex
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::TypedefBuilder<T>::TypedefBuilder( const char * nam ) 
+inline Reflex::TypedefBuilder<T>::TypedefBuilder( const char * nam ) 
 //-------------------------------------------------------------------------------
    : fTypedefBuilderImpl( nam, TypeDistiller<T>::Get()) {}
 
 
 //-------------------------------------------------------------------------------
 template < typename T > template < typename P >
-inline ROOT::Reflex::TypedefBuilder<T> & 
-ROOT::Reflex::TypedefBuilder<T>::AddProperty( const char * key, 
+inline Reflex::TypedefBuilder<T> & 
+Reflex::TypedefBuilder<T>::AddProperty( const char * key, 
                                               P value ) {
 //-------------------------------------------------------------------------------
    fTypedefBuilderImpl.AddProperty( key, value );
@@ -137,11 +135,11 @@ ROOT::Reflex::TypedefBuilder<T>::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-template < typename T > inline ROOT::Reflex::Type 
-ROOT::Reflex::TypedefBuilder<T>::ToType() {
+template < typename T > inline Reflex::Type 
+Reflex::TypedefBuilder<T>::ToType() {
 //-------------------------------------------------------------------------------
    return fTypedefBuilderImpl.ToType();
 }
 
-#endif // ROOT_Reflex_TypedefBuilder
+#endif // Reflex_TypedefBuilder
 

@@ -21,8 +21,8 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object 
-ROOT::Reflex::Object::Get( const std::string & dm ) const {
+Reflex::Object 
+Reflex::Object::Get( const std::string & dm ) const {
 //-------------------------------------------------------------------------------
 // Get a data member value of this object.
    Member m = TypeOf().MemberByName( dm );
@@ -33,8 +33,8 @@ ROOT::Reflex::Object::Get( const std::string & dm ) const {
 
 
 /*/-------------------------------------------------------------------------------
-  ROOT::Reflex::Object
-  ROOT::Reflex::Object::Invoke( const std::string & fm,
+  Reflex::Object
+  Reflex::Object::Invoke( const std::string & fm,
   std::vector< Object > args ) const {
 //-------------------------------------------------------------------------------
   Member m = TypeOf().FunctionMemberAt( fm );
@@ -49,8 +49,8 @@ ROOT::Reflex::Object::Get( const std::string & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object
-ROOT::Reflex::Object::Invoke( const std::string & fm,
+Reflex::Object
+Reflex::Object::Invoke( const std::string & fm,
                               std::vector < void * > args ) const {
 //-------------------------------------------------------------------------------
 // Invoke a data member of this object.
@@ -68,8 +68,8 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object
-ROOT::Reflex::Object::Invoke( const std::string & fm,
+Reflex::Object
+Reflex::Object::Invoke( const std::string & fm,
                               const Type & sign,
                               std::vector < void * > args ) const {
 //-------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 
 
 //-------------------------------------------------------------------------------
-//void ROOT::Reflex::Object::Set( const std::string & dm,
+//void Reflex::Object::Set( const std::string & dm,
 //                                const Object & value ) const {
 //-------------------------------------------------------------------------------
 //  Member m = TypeOf().MemberAt( dm );
@@ -95,7 +95,7 @@ ROOT::Reflex::Object::Invoke( const std::string & fm,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Object::Set2( const std::string & dm,
+void Reflex::Object::Set2( const std::string & dm,
                                  const void * value ) const {
 //-------------------------------------------------------------------------------
 // Internal set method. Wrapped from Set methods.

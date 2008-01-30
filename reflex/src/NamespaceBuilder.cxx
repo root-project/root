@@ -23,7 +23,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::NamespaceBuilder::NamespaceBuilder( const char * nam ) {
+Reflex::NamespaceBuilder::NamespaceBuilder( const char * nam ) {
 //-------------------------------------------------------------------------------
 // Create dictionary info for a namespace.
    Scope sc = Scope::ByName( nam );
@@ -37,8 +37,8 @@ ROOT::Reflex::NamespaceBuilder::NamespaceBuilder( const char * nam ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::NamespaceBuilder & 
-ROOT::Reflex::NamespaceBuilder::AddProperty( const char * key, 
+Reflex::NamespaceBuilder & 
+Reflex::NamespaceBuilder::AddProperty( const char * key, 
                                              const char * value ) {
 //-------------------------------------------------------------------------------
 // Add property to this namespace as string.
@@ -48,8 +48,8 @@ ROOT::Reflex::NamespaceBuilder::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::NamespaceBuilder & 
-ROOT::Reflex::NamespaceBuilder::AddProperty( const char * key, 
+Reflex::NamespaceBuilder & 
+Reflex::NamespaceBuilder::AddProperty( const char * key, 
                                              Any value ) {
 //-------------------------------------------------------------------------------
 // Add property to this namespace as Any object.
@@ -59,7 +59,7 @@ ROOT::Reflex::NamespaceBuilder::AddProperty( const char * key,
     
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::NamespaceBuilder::ToScope() {
+Reflex::Scope Reflex::NamespaceBuilder::ToScope() {
 //-------------------------------------------------------------------------------
 // Return the scope currently being built.
    return fNamespace;

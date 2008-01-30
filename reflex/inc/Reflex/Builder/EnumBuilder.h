@@ -9,151 +9,148 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_EnumBuilder
-#define ROOT_Reflex_EnumBuilder
+#ifndef Reflex_EnumBuilder
+#define Reflex_EnumBuilder
 
 // Include files
 #include "Reflex/Builder/TypeBuilder.h"
 #include "Reflex/Member.h"
 
-namespace ROOT{
-   namespace Reflex{
+namespace Reflex{
 
-      // forward declarations
-      class Enum;
+   // forward declarations
+   class Enum;
 
-      /**
-       * @class EnumBuilder EnumBuilder.h Reflex/Builder/EnumBuilder.h
-       * @author Stefan Roiser
-       * @date 14/3/2005
-       * @ingroup RefBld
-       */
-      class RFLX_API EnumBuilder {
+   /**
+   * @class EnumBuilder EnumBuilder.h Reflex/Builder/EnumBuilder.h
+   * @author Stefan Roiser
+   * @date 14/3/2005
+   * @ingroup RefBld
+   */
+   class RFLX_API EnumBuilder {
 
-      public:
-      
-         /** constructor */
-         EnumBuilder( const char * name,
-                      const std::type_info & ti,
-                      unsigned int modifiers = 0 );
+   public:
 
-
-         /** destructor */
-        virtual ~EnumBuilder();
+      /** constructor */
+      EnumBuilder( const char * name,
+         const std::type_info & ti,
+         unsigned int modifiers = 0 );
 
 
-         /** 
-          * AddProperty will add a PropertyNth to the PropertyNth stack
-          * which will be emptied with the next enum / item build
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
-          * @return a reference to the building class
-          */
-         EnumBuilder &  AddItem ( const char * nam,
-                                  long value );
-
-
-         /** 
-          * AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
-          */
-         EnumBuilder & AddProperty( const char * key,
-                            Any value );
-
-
-         /** 
-          * AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
-          */
-         EnumBuilder &  AddProperty( const char * key,
-                                     const char * value );
-
-
-         /*
-          * ToType will return the currently produced Type (class)
-          * @return the type currently being built
-          */
-         Type ToType();
-      
-      private:
-
-         /** current enum being built */
-         Enum * fEnum;
-
-         /** last added enum item */
-         Member fLastMember;
-
-      }; // class EnumBuilder
+      /** destructor */
+      virtual ~EnumBuilder();
 
 
       /** 
-       * @class EnumBuilder EnumBuilder.h Reflex/Builder/EnumBuilder.h
-       * @author Stefan Roiser
-       * @ingroup RefBld
-       * @date 30/3/2004
-       */
-      template < typename T >
-         class EnumBuilderT  {
-
-         public:            
-
-         /** constructor */
-         EnumBuilderT( unsigned int modifiers = 0 );
+      * AddProperty will add a PropertyNth to the PropertyNth stack
+      * which will be emptied with the next enum / item build
+      * @param  key the PropertyNth key
+      * @param  value the value of the PropertyNth
+      * @return a reference to the building class
+      */
+      EnumBuilder &  AddItem ( const char * nam,
+         long value );
 
 
-         /** constructor */
-         EnumBuilderT( const char * nam, 
-                       unsigned int modifiers = 0 );
+      /** 
+      * AddProperty will add a PropertyNth 
+      * @param  key the PropertyNth key
+      * @param  value the value of the PropertyNth
+      */
+      EnumBuilder & AddProperty( const char * key,
+         Any value );
 
 
-         /** destructor */
-         virtual ~EnumBuilderT() {}
+      /** 
+      * AddProperty will add a PropertyNth 
+      * @param  key the PropertyNth key
+      * @param  value the value of the PropertyNth
+      */
+      EnumBuilder &  AddProperty( const char * key,
+         const char * value );
 
 
-         /** 
-          * AddItem add a new item in the enum
-          * @param  Name item Name
-          * @param  value the value of the item
-          * @return a reference to the building class
-          */
-         EnumBuilderT & AddItem( const char * nam, 
-                                 long value );
+      /*
+      * ToType will return the currently produced Type (class)
+      * @return the type currently being built
+      */
+      Type ToType();
+
+   private:
+
+      /** current enum being built */
+      Enum * fEnum;
+
+      /** last added enum item */
+      Member fLastMember;
+
+   }; // class EnumBuilder
 
 
-         /** 
-          * AddProperty will add a PropertyNth to the PropertyNth stack
-          * which will be emptied with the next enum / item build
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
-          * @return a reference to the building class
-          */
-         template  < typename P >
-            EnumBuilderT & AddProperty( const char * key, 
-                                        P value );
+   /** 
+   * @class EnumBuilder EnumBuilder.h Reflex/Builder/EnumBuilder.h
+   * @author Stefan Roiser
+   * @ingroup RefBld
+   * @date 30/3/2004
+   */
+   template < typename T >
+   class EnumBuilderT  {
+
+   public:            
+
+      /** constructor */
+      EnumBuilderT( unsigned int modifiers = 0 );
 
 
-         /*
-          * ToType will return the currently produced Type (class)
-          * @return the type currently being built
-          */
-         Type ToType();
-      
-         private:
+      /** constructor */
+      EnumBuilderT( const char * nam, 
+         unsigned int modifiers = 0 );
 
-         /** the enums and values */
-         EnumBuilder fEnumBuilderImpl;
 
-      }; // class EnumBuilder
+      /** destructor */
+      virtual ~EnumBuilderT() {}
 
-   } // namespace Reflex
-} // namespace ROOT
 
+      /** 
+      * AddItem add a new item in the enum
+      * @param  Name item Name
+      * @param  value the value of the item
+      * @return a reference to the building class
+      */
+      EnumBuilderT & AddItem( const char * nam, 
+         long value );
+
+
+      /** 
+      * AddProperty will add a PropertyNth to the PropertyNth stack
+      * which will be emptied with the next enum / item build
+      * @param  key the PropertyNth key
+      * @param  value the value of the PropertyNth
+      * @return a reference to the building class
+      */
+      template  < typename P >
+      EnumBuilderT & AddProperty( const char * key, 
+         P value );
+
+
+      /*
+      * ToType will return the currently produced Type (class)
+      * @return the type currently being built
+      */
+      Type ToType();
+
+   private:
+
+      /** the enums and values */
+      EnumBuilder fEnumBuilderImpl;
+
+   }; // class EnumBuilder
+
+} // namespace Reflex
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::EnumBuilderT<T>::EnumBuilderT( unsigned int modifiers ) 
+inline Reflex::EnumBuilderT<T>::EnumBuilderT( unsigned int modifiers ) 
 //-------------------------------------------------------------------------------
    : fEnumBuilderImpl( Tools::Demangle( typeid(T) ).c_str(), 
                        typeid(T),
@@ -162,7 +159,7 @@ inline ROOT::Reflex::EnumBuilderT<T>::EnumBuilderT( unsigned int modifiers )
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::EnumBuilderT<T>::EnumBuilderT( const char * nam, 
+inline Reflex::EnumBuilderT<T>::EnumBuilderT( const char * nam, 
                                                     unsigned int modifiers )
 //-------------------------------------------------------------------------------
    : fEnumBuilderImpl( nam, 
@@ -172,8 +169,8 @@ inline ROOT::Reflex::EnumBuilderT<T>::EnumBuilderT( const char * nam,
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::EnumBuilderT<T> & 
-ROOT::Reflex::EnumBuilderT<T>::AddItem( const char * nam, 
+inline Reflex::EnumBuilderT<T> & 
+Reflex::EnumBuilderT<T>::AddItem( const char * nam, 
                                         long value ) {
 //-------------------------------------------------------------------------------
    fEnumBuilderImpl.AddItem( nam, value );
@@ -183,8 +180,8 @@ ROOT::Reflex::EnumBuilderT<T>::AddItem( const char * nam,
 
 //-------------------------------------------------------------------------------
 template < typename T > template < typename P >
-inline ROOT::Reflex::EnumBuilderT<T> & 
-ROOT::Reflex::EnumBuilderT<T>::AddProperty( const char * key, 
+inline Reflex::EnumBuilderT<T> & 
+Reflex::EnumBuilderT<T>::AddProperty( const char * key, 
                                             P value ) {
 //-------------------------------------------------------------------------------
    fEnumBuilderImpl.AddProperty( key, value );
@@ -193,12 +190,12 @@ ROOT::Reflex::EnumBuilderT<T>::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-template < typename T > inline ROOT::Reflex::Type
-ROOT::Reflex::EnumBuilderT<T>::ToType() {
+template < typename T > inline Reflex::Type
+Reflex::EnumBuilderT<T>::ToType() {
 //-------------------------------------------------------------------------------
    return fEnumBuilderImpl.ToType();
 }
    
 
 
-#endif // ROOT_Reflex_EnumBuilder
+#endif // Reflex_EnumBuilder

@@ -25,7 +25,7 @@
 #include <sstream>
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassTemplateInstance::
+Reflex::ClassTemplateInstance::
 ClassTemplateInstance( const char * typ, 
                        size_t size, 
                        const std::type_info & ti, 
@@ -72,7 +72,7 @@ ClassTemplateInstance( const char * typ,
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::ClassTemplateInstance::Name( unsigned int mod ) const {
+std::string Reflex::ClassTemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the template class.
    return Class::Name( mod );
@@ -80,7 +80,7 @@ std::string ROOT::Reflex::ClassTemplateInstance::Name( unsigned int mod ) const 
 
 
 //-------------------------------------------------------------------------------
-const std::string& ROOT::Reflex::ClassTemplateInstance::SimpleName( size_t & pos, 
+const std::string& Reflex::ClassTemplateInstance::SimpleName( size_t & pos, 
                                                                     unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the template class.
@@ -89,7 +89,7 @@ const std::string& ROOT::Reflex::ClassTemplateInstance::SimpleName( size_t & pos
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ClassTemplateInstance::TemplateArgumentAt( size_t nth ) const {
+Reflex::Type Reflex::ClassTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template argument type.
    return TemplateInstance::TemplateArgumentAt( nth );

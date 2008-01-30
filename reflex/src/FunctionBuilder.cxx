@@ -28,7 +28,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilder::~FunctionBuilder() {
+Reflex::FunctionBuilder::~FunctionBuilder() {
 //-------------------------------------------------------------------------------
 // Functionbuilder destructor used for call backs.
    FireFunctionCallback( fFunction );
@@ -36,8 +36,8 @@ ROOT::Reflex::FunctionBuilder::~FunctionBuilder() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilder & 
-ROOT::Reflex::FunctionBuilder::AddProperty( const char * key, 
+Reflex::FunctionBuilder & 
+Reflex::FunctionBuilder::AddProperty( const char * key, 
                                             const char * value ) {
 //-------------------------------------------------------------------------------
 // Add property info to this function as string.
@@ -47,8 +47,8 @@ ROOT::Reflex::FunctionBuilder::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilder & 
-ROOT::Reflex::FunctionBuilder::AddProperty( const char * key, 
+Reflex::FunctionBuilder & 
+Reflex::FunctionBuilder::AddProperty( const char * key, 
                                             Any value ) {
 //-------------------------------------------------------------------------------
 // Add property info to this function as Any object.
@@ -58,7 +58,7 @@ ROOT::Reflex::FunctionBuilder::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::FunctionBuilder::ToMember() {
+Reflex::Member Reflex::FunctionBuilder::ToMember() {
 //-------------------------------------------------------------------------------
    // Return the function currently being built.
    return fFunction;
@@ -66,7 +66,7 @@ ROOT::Reflex::Member ROOT::Reflex::FunctionBuilder::ToMember() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam, 
+Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam, 
                                                         const Type & typ,
                                                         StubFunction stubFP,
                                                         void * stubCtx,
@@ -115,7 +115,7 @@ ROOT::Reflex::FunctionBuilderImpl::FunctionBuilderImpl( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilderImpl::~FunctionBuilderImpl() {
+Reflex::FunctionBuilderImpl::~FunctionBuilderImpl() {
 //-------------------------------------------------------------------------------
 // FunctionBuilder destructor.
    FireFunctionCallback( fFunction );
@@ -123,7 +123,7 @@ ROOT::Reflex::FunctionBuilderImpl::~FunctionBuilderImpl() {
  
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
+void Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
                                                      const char * value ) {
 //-------------------------------------------------------------------------------
 // Add property info to this function type.
@@ -132,7 +132,7 @@ void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
+void Reflex::FunctionBuilderImpl::AddProperty( const char * key, 
                                                      Any value ) {
 //-------------------------------------------------------------------------------
 // Add property info to this function type.
@@ -141,7 +141,7 @@ void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::FunctionBuilderImpl::ToMember() {
+Reflex::Member Reflex::FunctionBuilderImpl::ToMember() {
 //-------------------------------------------------------------------------------
    // Return the function member currently being built.
    return fFunction;
@@ -149,7 +149,7 @@ ROOT::Reflex::Member ROOT::Reflex::FunctionBuilderImpl::ToMember() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionBuilder::FunctionBuilder( const Type & typ,
+Reflex::FunctionBuilder::FunctionBuilder( const Type & typ,
                                                 const char * nam, 
                                                 StubFunction stubFP,
                                                 void * stubCtx,

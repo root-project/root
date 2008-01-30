@@ -42,7 +42,7 @@
 #include "Reflex/Builder/TypeBuilder.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeBase::TypeBase( const char * nam, 
+Reflex::TypeBase::TypeBase( const char * nam, 
                                   size_t size,
                                   TYPE typeTyp, 
                                   const std::type_info & ti,
@@ -82,7 +82,7 @@ ROOT::Reflex::TypeBase::TypeBase( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeBase::~TypeBase( ) {
+Reflex::TypeBase::~TypeBase( ) {
 //-------------------------------------------------------------------------------
 // Destructor.
    fPropertyList.Delete();
@@ -93,7 +93,7 @@ ROOT::Reflex::TypeBase::~TypeBase( ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeBase::operator ROOT::Reflex::Scope () const {
+Reflex::TypeBase::operator Reflex::Scope () const {
 //-------------------------------------------------------------------------------
 // Conversion operator to Scope.
    switch ( fTypeType ) {
@@ -112,7 +112,7 @@ ROOT::Reflex::TypeBase::operator ROOT::Reflex::Scope () const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeBase::operator ROOT::Reflex::Type () const {
+Reflex::TypeBase::operator Reflex::Type () const {
 //-------------------------------------------------------------------------------
 // Converison operator to Type.
    return ThisType();
@@ -120,7 +120,7 @@ ROOT::Reflex::TypeBase::operator ROOT::Reflex::Type () const {
 
 
 //-------------------------------------------------------------------------------
-void * ROOT::Reflex::TypeBase::Allocate() const {
+void * Reflex::TypeBase::Allocate() const {
 //-------------------------------------------------------------------------------
 // Allocate memory for this type.
    return malloc( fSize );
@@ -128,7 +128,7 @@ void * ROOT::Reflex::TypeBase::Allocate() const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::TypeBase::ArrayLength() const {
+size_t Reflex::TypeBase::ArrayLength() const {
 //-------------------------------------------------------------------------------
 // Return the length of the array type.
    return 0;
@@ -136,7 +136,7 @@ size_t ROOT::Reflex::TypeBase::ArrayLength() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Base ROOT::Reflex::TypeBase::BaseAt( size_t /* nth */ ) const {
+Reflex::Base Reflex::TypeBase::BaseAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth base info.
    throw RuntimeError("Type does not represent a Class/Struct");
@@ -145,7 +145,7 @@ ROOT::Reflex::Base ROOT::Reflex::TypeBase::BaseAt( size_t /* nth */ ) const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::TypeBase::BaseSize() const {
+size_t Reflex::TypeBase::BaseSize() const {
 //-------------------------------------------------------------------------------
 // Return number of bases.
    throw RuntimeError("Type does not represent a Class/Struct");
@@ -154,7 +154,7 @@ size_t ROOT::Reflex::TypeBase::BaseSize() const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeBase::Deallocate( void * instance ) const {
+void Reflex::TypeBase::Deallocate( void * instance ) const {
 //-------------------------------------------------------------------------------
 // Deallocate the memory for this type from instance.
    free( instance );
@@ -162,7 +162,7 @@ void ROOT::Reflex::TypeBase::Deallocate( void * instance ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::TypeBase::DeclaringScope() const {
+Reflex::Scope Reflex::TypeBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
 // Return the declaring scope of this type.
    return fScope;
@@ -170,7 +170,7 @@ ROOT::Reflex::Scope ROOT::Reflex::TypeBase::DeclaringScope() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object ROOT::Reflex::TypeBase::CastObject( const Type & /* to */,
+Reflex::Object Reflex::TypeBase::CastObject( const Type & /* to */,
                                                          const Object & /* obj */ ) const {
 //-------------------------------------------------------------------------------
 // Cast this type into "to" using object "obj"
@@ -180,8 +180,8 @@ ROOT::Reflex::Object ROOT::Reflex::TypeBase::CastObject( const Type & /* to */,
 
 
 //-------------------------------------------------------------------------------
-//const ROOT::Reflex::Object & 
-//ROOT::Reflex::TypeBase::Construct( const Type &  /*signature*/,
+//const Reflex::Object & 
+//Reflex::TypeBase::Construct( const Type &  /*signature*/,
 //                                   const std::vector < Object > & /*values*/, 
 //                                   void * /*mem*/ ) const {
 //-------------------------------------------------------------------------------
@@ -190,8 +190,8 @@ ROOT::Reflex::Object ROOT::Reflex::TypeBase::CastObject( const Type & /* to */,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object
-ROOT::Reflex::TypeBase::Construct( const Type &  /*signature*/,
+Reflex::Object
+Reflex::TypeBase::Construct( const Type &  /*signature*/,
                                    const std::vector < void * > & /*values*/, 
                                    void * /*mem*/ ) const {
 //-------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ ROOT::Reflex::TypeBase::Construct( const Type &  /*signature*/,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::TypeBase::DataMemberAt( size_t /* nth */ ) const {
+Reflex::Member Reflex::TypeBase::DataMemberAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth data member.
    return Dummy::Member();
@@ -209,7 +209,7 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::DataMemberAt( size_t /* nth */ ) co
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::TypeBase::DataMemberByName( const std::string & /* nam */ ) const {
+Reflex::Member Reflex::TypeBase::DataMemberByName( const std::string & /* nam */ ) const {
 //-------------------------------------------------------------------------------
 // Return data member by name.
    return Dummy::Member();
@@ -217,7 +217,7 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::DataMemberByName( const std::string
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeBase::Destruct( void * instance, 
+void Reflex::TypeBase::Destruct( void * instance, 
                                        bool dealloc ) const {
 //-------------------------------------------------------------------------------
 // Destruct this type.
@@ -226,7 +226,7 @@ void ROOT::Reflex::TypeBase::Destruct( void * instance,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::DynamicType( const Object & /* obj */ ) const {
+Reflex::Type Reflex::TypeBase::DynamicType( const Object & /* obj */ ) const {
 //-------------------------------------------------------------------------------
 // Return the dynamic type info of this type.
    throw RuntimeError("Type::DynamicType can only be called on Class/Struct");
@@ -235,43 +235,64 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::DynamicType( const Object & /* obj */
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::FinalType() const {
+Reflex::Type Reflex::TypeBase::FinalType() const {
 //-------------------------------------------------------------------------------
 // Return the type without typedefs information.
    if ( fFinalType ) return *fFinalType;
 
-   Type tmpType = ThisType();
-   while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
-
-   Type retType = tmpType;
-
-   while ( true ) {
-
-      while ( tmpType.TypeType() == TYPEDEF ) tmpType = tmpType.ToType();
-
-      switch ( tmpType.TypeType()) {
-
-      case POINTER:
-         tmpType = PointerBuilder(tmpType.ToType(),tmpType.TypeInfo()).ToType();
-         break;
-      case POINTERTOMEMBER:
-         tmpType = PointerToMemberBuilder(tmpType.ToType(), tmpType.PointerToMemberScope(), tmpType.TypeInfo()).ToType();
-         break;
-      case ARRAY:
-         tmpType = ArrayBuilder(tmpType.ToType(), tmpType.ArrayLength(), tmpType.TypeInfo()).ToType();
-         break;
-      case UNRESOLVED:
-         return Dummy::Type();
-      default:
-         fFinalType = new Type(retType);
-         return *fFinalType;
-      }
-   }
+   fFinalType = new Type(DetermineFinalType(ThisType()));
+   return *fFinalType;
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberAt( size_t /* nth */ ) const {
+Reflex::Type Reflex::TypeBase::DetermineFinalType(const Type& t) const {
+//-------------------------------------------------------------------------------
+// Return the type t without typedefs information.
+   
+   Type retType(t);
+
+   switch ( t.TypeType()) {
+   case TYPEDEF:
+      retType = t.ToType().FinalType();
+      break;
+   case POINTER:
+      retType = PointerBuilder(t.ToType().FinalType(), t.TypeInfo());
+      break;
+   case POINTERTOMEMBER:
+      retType = PointerToMemberBuilder(t.ToType().FinalType(), t.PointerToMemberScope(), t.TypeInfo());
+      break;
+   case ARRAY:
+      retType = ArrayBuilder(t.ToType().FinalType(), t.ArrayLength(), t.TypeInfo());
+      break;
+   case FUNCTION:
+      {
+         std::vector<Type> vecParFinal(t.FunctionParameterSize());
+         for (size_t iPar = 0; iPar < t.FunctionParameterSize(); ++iPar)
+            vecParFinal[iPar] = t.FunctionParameterAt(iPar).FinalType();
+         retType = FunctionTypeBuilder(t.ReturnType().FinalType(), vecParFinal, t.TypeInfo());
+         break;
+      }
+   case UNRESOLVED:
+      return Dummy::Type();
+   default:
+      return t;
+   }
+
+   // copy fModifiers
+   if (t.IsConst())
+      retType = ConstBuilder(retType);
+   if (t.IsReference())
+      retType = ReferenceBuilder(retType);
+   if (t.IsVolatile())
+      retType = VolatileBuilder(retType);
+
+   return retType;
+}
+
+
+//-------------------------------------------------------------------------------
+Reflex::Member Reflex::TypeBase::FunctionMemberAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth function member.
    return Dummy::Member();
@@ -279,8 +300,9 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberAt( size_t /* nth */ 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberByName( const std::string & /* nam */,
-                                                                           const Type & /* signature */ ) const {
+Reflex::Member Reflex::TypeBase::FunctionMemberByName( const std::string & /* nam */,
+                                                       const Type & /* signature */,
+                                                       unsigned int /*modifiers_mask = 0*/) const {
 //-------------------------------------------------------------------------------
 // Return a function member by name.
    return Dummy::Member();
@@ -288,7 +310,7 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberByName( const std::st
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::TypeBase::HasBase( const Type & /* cl */ ) const {
+bool Reflex::TypeBase::HasBase( const Type & /* cl */ ) const {
 //-------------------------------------------------------------------------------
    // Return base info if type has base cl.
    return false;
@@ -296,7 +318,7 @@ bool ROOT::Reflex::TypeBase::HasBase( const Type & /* cl */ ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeBase::HideName() const {
+void Reflex::TypeBase::HideName() const {
 //-------------------------------------------------------------------------------
 // Append the string " @HIDDEN@" to a type name.
    fTypeName->HideName();
@@ -304,7 +326,7 @@ void ROOT::Reflex::TypeBase::HideName() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::TypeBase::MemberByName( const std::string & /* nam */,
+Reflex::Member Reflex::TypeBase::MemberByName( const std::string & /* nam */,
                                                            const Type & /* signature */) const {
 //-------------------------------------------------------------------------------
 // Return a member by name.
@@ -313,7 +335,7 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::MemberByName( const std::string & /
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::TypeBase::MemberAt( size_t /* nth */ ) const {
+Reflex::Member Reflex::TypeBase::MemberAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member.
    return Dummy::Member();
@@ -321,7 +343,7 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::MemberAt( size_t /* nth */ ) const 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::TypeBase::MemberTemplateAt( size_t /* nth */ ) const {
+Reflex::MemberTemplate Reflex::TypeBase::MemberTemplateAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member template.
    return Dummy::MemberTemplate();
@@ -329,7 +351,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::TypeBase::MemberTemplateAt( size_t /*
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::TypeBase::Name( unsigned int mod ) const {
+std::string Reflex::TypeBase::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the type.
    if ( 0 != ( mod & ( SCOPED | S ))) return fTypeName->Name();
@@ -338,7 +360,7 @@ std::string ROOT::Reflex::TypeBase::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-const std::string & ROOT::Reflex::TypeBase::SimpleName( size_t & pos, 
+const std::string & Reflex::TypeBase::SimpleName( size_t & pos, 
                                                         unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the type.
@@ -352,7 +374,7 @@ const std::string & ROOT::Reflex::TypeBase::SimpleName( size_t & pos,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::FunctionParameterAt( size_t /* nth */ ) const {
+Reflex::Type Reflex::TypeBase::FunctionParameterAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth function parameter type.
    return Dummy::Type();
@@ -360,7 +382,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::FunctionParameterAt( size_t /* nth */
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::TypeBase::FunctionParameterSize() const {
+size_t Reflex::TypeBase::FunctionParameterSize() const {
 //-------------------------------------------------------------------------------
 // Return the number of function parameters.
    return 0;
@@ -368,7 +390,7 @@ size_t ROOT::Reflex::TypeBase::FunctionParameterSize() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::TypeBase::PointerToMemberScope() const {
+Reflex::Scope Reflex::TypeBase::PointerToMemberScope() const {
 //-------------------------------------------------------------------------------
 // Return the scope of a pointer to member type.
    return Dummy::Scope();
@@ -376,7 +398,7 @@ ROOT::Reflex::Scope ROOT::Reflex::TypeBase::PointerToMemberScope() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PropertyList ROOT::Reflex::TypeBase::Properties() const {
+Reflex::PropertyList Reflex::TypeBase::Properties() const {
 //-------------------------------------------------------------------------------
 // Return the property list attached to this type.
    return fPropertyList;
@@ -384,7 +406,7 @@ ROOT::Reflex::PropertyList ROOT::Reflex::TypeBase::Properties() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::RawType() const {
+Reflex::Type Reflex::TypeBase::RawType() const {
 //-------------------------------------------------------------------------------
 // Return the raw type of this type, removing all info of pointers, arrays, typedefs.
    if ( fRawType ) return *fRawType;
@@ -412,7 +434,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::RawType() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::ReturnType() const {
+Reflex::Type Reflex::TypeBase::ReturnType() const {
 //-------------------------------------------------------------------------------
 // Return the function return type.
    return Dummy::Type();
@@ -420,7 +442,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::ReturnType() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::TypeBase::SubScopeAt( size_t /* nth */ ) const {
+Reflex::Scope Reflex::TypeBase::SubScopeAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub scope.
    return Dummy::Scope();
@@ -428,7 +450,7 @@ ROOT::Reflex::Scope ROOT::Reflex::TypeBase::SubScopeAt( size_t /* nth */ ) const
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::SubTypeAt( size_t /* nth */ ) const {
+Reflex::Type Reflex::TypeBase::SubTypeAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub type.
    return Dummy::Type();
@@ -436,7 +458,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::SubTypeAt( size_t /* nth */ ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::TemplateArgumentAt( size_t /* nth */ ) const {
+Reflex::Type Reflex::TypeBase::TemplateArgumentAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template argument.
    return Dummy::Type();
@@ -444,7 +466,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::TemplateArgumentAt( size_t /* nth */ 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::ToType() const {
+Reflex::Type Reflex::TypeBase::ToType() const {
 //-------------------------------------------------------------------------------
 // Return the underlying type.
    return Dummy::Type();
@@ -452,7 +474,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::ToType() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeBase::ThisType() const {
+Reflex::Type Reflex::TypeBase::ThisType() const {
 //-------------------------------------------------------------------------------
 // Return the Type object pointing to this TypeBase.
    return fTypeName->ThisType();
@@ -460,7 +482,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeBase::ThisType() const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::TypeBase::TypeTypeAsString() const {
+std::string Reflex::TypeBase::TypeTypeAsString() const {
 //-------------------------------------------------------------------------------
 // Return the kind of type as a string.
    switch ( fTypeType ) {
@@ -507,7 +529,7 @@ std::string ROOT::Reflex::TypeBase::TypeTypeAsString() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeBase::SubTypeTemplateAt( size_t /* nth */ ) const {
+Reflex::TypeTemplate Reflex::TypeBase::SubTypeTemplateAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return teh nth sub type template.
    return Dummy::TypeTemplate();
@@ -515,14 +537,14 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeBase::SubTypeTemplateAt( size_t /* 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TYPE ROOT::Reflex::TypeBase::TypeType() const {
+Reflex::TYPE Reflex::TypeBase::TypeType() const {
 //-------------------------------------------------------------------------------
 // Return the kind of type as an enum.
    return fTypeType;
 }
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeBase::GenerateDict( DictionaryGenerator & /* generator */ ) const {
+void Reflex::TypeBase::GenerateDict( DictionaryGenerator & /* generator */ ) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
 }

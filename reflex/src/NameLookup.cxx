@@ -21,7 +21,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current):
+Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current):
    fCurrentScope(current), fLookupName(name), fPartialSuccess(false), 
    fPosNamePart(0), fPosNamePartLen(std::string::npos) {
    // Initialize a NameLookup object used internally to keep track of lookup
@@ -30,8 +30,8 @@ ROOT::Reflex::NameLookup::NameLookup(const std::string& name, const Scope& curre
 //-------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
-ROOT::Reflex::NameLookup::LookupType( const std::string & nam, 
+Reflex::Type
+Reflex::NameLookup::LookupType( const std::string & nam, 
                                       const Scope & current ) {
 //-------------------------------------------------------------------------------
 // Lookup up a (possibly scoped) type name appearing in the scope context 
@@ -42,8 +42,8 @@ ROOT::Reflex::NameLookup::LookupType( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope 
-ROOT::Reflex::NameLookup::LookupScope( const std::string & nam,
+Reflex::Scope 
+Reflex::NameLookup::LookupScope( const std::string & nam,
                                          const Scope & current ) {
 //-------------------------------------------------------------------------------
 // Lookup up a (possibly scoped) scope name appearing in the scope context 
@@ -54,7 +54,7 @@ ROOT::Reflex::NameLookup::LookupScope( const std::string & nam,
 
 /*
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member LookupMember( const std::string & nam,
+Reflex::Member LookupMember( const std::string & nam,
                                    const Scope & current ) {
 //-------------------------------------------------------------------------------
 // Lookup up a (possibly scoped) member name appearing in the scope context 
@@ -69,7 +69,7 @@ ROOT::Reflex::Member LookupMember( const std::string & nam,
 
 //-------------------------------------------------------------------------------
 template< class T > T
-ROOT::Reflex::NameLookup::Lookup() {
+Reflex::NameLookup::Lookup() {
 //-------------------------------------------------------------------------------
 // Lookup a type using fLookupName, fCurrentScope.
    fPartialSuccess = false;
@@ -90,7 +90,7 @@ ROOT::Reflex::NameLookup::Lookup() {
 
 //-------------------------------------------------------------------------------
 template< class T > T
-ROOT::Reflex::NameLookup::LookupInScope() {
+Reflex::NameLookup::LookupInScope() {
 //-------------------------------------------------------------------------------
 // Lookup a type in fCurrentScope.
 // Checks sub-types, sub-scopes, using directives, and base classes for
@@ -201,7 +201,7 @@ ROOT::Reflex::NameLookup::LookupInScope() {
 
 //-------------------------------------------------------------------------------
 template< class T > T
-ROOT::Reflex::NameLookup::LookupInUnknownScope() {
+Reflex::NameLookup::LookupInUnknownScope() {
 //-------------------------------------------------------------------------------
 // Lookup a type in fCurrentScope and its declaring scopes.
    for (fPartialSuccess = false; !fPartialSuccess && fCurrentScope; fCurrentScope = fCurrentScope.DeclaringScope()) {
@@ -215,8 +215,8 @@ ROOT::Reflex::NameLookup::LookupInUnknownScope() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member
-ROOT::Reflex::NameLookup::LookupMember( const std::string & nam, 
+Reflex::Member
+Reflex::NameLookup::LookupMember( const std::string & nam, 
                                         const Scope & current ) {
 //-------------------------------------------------------------------------------
 // Lookup a member.
@@ -227,8 +227,8 @@ ROOT::Reflex::NameLookup::LookupMember( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member
-ROOT::Reflex::NameLookup::LookupMemberQualified( const std::string & nam ) {
+Reflex::Member
+Reflex::NameLookup::LookupMemberQualified( const std::string & nam ) {
 //-------------------------------------------------------------------------------
 // Lookup of a qualified member.
    Scope bscope = Scope::ByName(Tools::GetScopeName(nam));
@@ -244,8 +244,8 @@ ROOT::Reflex::NameLookup::LookupMemberQualified( const std::string & nam ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member
-ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
+Reflex::Member
+Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
                                                    const Scope & current ) {
 //-------------------------------------------------------------------------------
 // Lookup of an unqualified member.
@@ -271,7 +271,7 @@ ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::NameLookup::AccessControl( const Type & typ,
+Reflex::Type Reflex::NameLookup::AccessControl( const Type & typ,
                                                             const Scope & /* current */ ) {
 //-------------------------------------------------------------------------------
 // Check access .
@@ -285,7 +285,7 @@ ROOT::Reflex::Type ROOT::Reflex::NameLookup::AccessControl( const Type & typ,
 }
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::NameLookup::FindNextScopePos() {
+void Reflex::NameLookup::FindNextScopePos() {
 //-------------------------------------------------------------------------------
 // Move fPosNamePart to point to the next scope in fLookupName, updating 
 // fPosNamePartLen. If fPosNamePartLen == std::string::npos, initialize

@@ -9,96 +9,94 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Array
-#define ROOT_Reflex_Array
+#ifndef Reflex_Array
+#define Reflex_Array
 
 // Include files
 #include "Reflex/internal/TypeBase.h"
 #include "Reflex/Type.h"
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
-      // forward declarations
+   // forward declarations
+
+   /**
+   * @class Array Array.h Reflex/Array.h
+   * @author Stefan Roiser
+   * @date 24/11/2003
+   * @ingroup Ref
+   */
+   class Array : public TypeBase {
+
+   public:
+
+      /** default constructor */
+      Array( const Type & arrayType,
+         size_t len,
+         const std::type_info & typeinfo );
+
+
+      /** destructor */
+      virtual ~Array() {}
+
 
       /**
-       * @class Array Array.h Reflex/Array.h
-       * @author Stefan Roiser
-       * @date 24/11/2003
-       * @ingroup Ref
-       */
-      class Array : public TypeBase {
-
-      public:
-
-         /** default constructor */
-         Array( const Type & arrayType,
-                size_t len,
-                const std::type_info & typeinfo );
+      * Name will return the string representation of the array At
+      * @param  typedefexp expand typedefs or not
+      * @return string representation of At
+      */
+      std::string Name( unsigned int mod = 0 ) const;
 
 
-         /** destructor */
-         virtual ~Array() {}
+      /**
+      * size returns the size of the array
+      * @return size of array
+      */
+      size_t ArrayLength() const;
 
 
-         /**
-          * Name will return the string representation of the array At
-          * @param  typedefexp expand typedefs or not
-          * @return string representation of At
-          */
-         std::string Name( unsigned int mod = 0 ) const;
+      /**
+      * arrayType will return a pointer to the At of the array.
+      * @return pointer to Type of MemberAt et. al.
+      */
+      Type ToType() const;
 
 
-         /**
-          * size returns the size of the array
-          * @return size of array
-          */
-         size_t ArrayLength() const;
+      /** static funtion that composes the At Name */
+      static std::string BuildTypeName( const Type & typ, 
+         size_t len,
+         unsigned int mod = SCOPED | QUALIFIED );
+
+   private:
+
+      /**
+      * Type of the array
+      * @label array type
+      * @link aggregation
+      * @supplierCardinality 1
+      * @clientCardinality 1
+      */
+      Type fArrayType;
 
 
-         /**
-          * arrayType will return a pointer to the At of the array.
-          * @return pointer to Type of MemberAt et. al.
-          */
-         Type ToType() const;
+      /** the Length of the array */
+      size_t fLength;
 
-
-         /** static funtion that composes the At Name */
-         static std::string BuildTypeName( const Type & typ, 
-                                           size_t len,
-                                           unsigned int mod = SCOPED | QUALIFIED );
-
-      private:
-
-         /**
-          * Type of the array
-          * @label array type
-          * @link aggregation
-          * @supplierCardinality 1
-          * @clientCardinality 1
-          */
-         Type fArrayType;
-
-
-         /** the Length of the array */
-         size_t fLength;
-
-      }; // class Array
-   } //namespace Reflex
-} //namespace ROOT
+   }; // class Array
+} //namespace Reflex
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::Array::ArrayLength() const { 
+inline size_t Reflex::Array::ArrayLength() const { 
 //-------------------------------------------------------------------------------
    return fLength; 
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Array::ToType() const {
+inline Reflex::Type Reflex::Array::ToType() const {
 //-------------------------------------------------------------------------------
    return fArrayType;
 }
 
-#endif // ROOT_Reflex_Array
+#endif // Reflex_Array

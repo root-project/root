@@ -9,75 +9,73 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Pointer
-#define ROOT_Reflex_Pointer
+#ifndef Reflex_Pointer
+#define Reflex_Pointer
 
 // Include files
 #include "Reflex/internal/TypeBase.h"
 #include "Reflex/Type.h"
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
-      // forward declarations
+   // forward declarations
+
+   /**
+   * @class Pointer Pointer.h Reflex/Pointer.h
+   * @author Stefan Roiser
+   * @date 24/11/2003
+   * @ingroup Ref
+   */
+   class Pointer : public TypeBase {
+   public:
+
+      /** default constructor */
+      Pointer( const Type & pointerType, 
+         const std::type_info & ti );
+
+      /** destructor */
+      virtual ~Pointer() {}
+
 
       /**
-       * @class Pointer Pointer.h Reflex/Pointer.h
-       * @author Stefan Roiser
-       * @date 24/11/2003
-       * @ingroup Ref
-       */
-      class Pointer : public TypeBase {
-      public:
-
-         /** default constructor */
-         Pointer( const Type & pointerType, 
-                  const std::type_info & ti );
-
-         /** destructor */
-         virtual ~Pointer() {}
+      * Name will return the fully qualified Name of the pointer At
+      * @param  typedefexp expand typedefs or not
+      * @return fully qualified Name of pointer At
+      */
+      std::string Name( unsigned int mod = 0 ) const;
 
 
-         /**
-          * Name will return the fully qualified Name of the pointer At
-          * @param  typedefexp expand typedefs or not
-          * @return fully qualified Name of pointer At
-          */
-         std::string Name( unsigned int mod = 0 ) const;
+      /**
+      * ToType will return a pointer to the type the pointer points to.
+      * @return pointer to Type of MemberAt et. al.
+      */
+      Type ToType() const;
 
 
-         /**
-          * ToType will return a pointer to the type the pointer points to.
-          * @return pointer to Type of MemberAt et. al.
-          */
-         Type ToType() const;
+      /** static funtion that composes the typename */
+      static std::string BuildTypeName( const Type & pointerType,
+         unsigned int mod = SCOPED | QUALIFIED );
 
+   private:
 
-         /** static funtion that composes the typename */
-         static std::string BuildTypeName( const Type & pointerType,
-                                           unsigned int mod = SCOPED | QUALIFIED );
+      /**
+      * The Type the Pointer points to
+      * @label pointer type
+      * @link aggregation
+      * @supplierCardinality 1
+      * @clientCardinality 1
+      */
+      Type fPointerType;
 
-      private:
-
-         /**
-          * The Type the Pointer points to
-          * @label pointer type
-          * @link aggregation
-          * @supplierCardinality 1
-          * @clientCardinality 1
-          */
-         Type fPointerType;
-
-      }; // class Pointer
-   } //namespace Reflex
-} //namespace ROOT
+   }; // class Pointer
+} //namespace Reflex
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type ROOT::Reflex::Pointer::ToType() const {
+inline Reflex::Type Reflex::Pointer::ToType() const {
 //-------------------------------------------------------------------------------
    return fPointerType;
 }
 
-#endif // ROOT_Reflex_Pointer
+#endif // Reflex_Pointer
 

@@ -35,7 +35,7 @@
 #include "NameLookup.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase::ScopeBase( const char * scope, 
+Reflex::ScopeBase::ScopeBase( const char * scope, 
                                     TYPE scopeType )
    : fMembers( OMembers() ),
      fDataMembers( Members() ),
@@ -85,7 +85,7 @@ ROOT::Reflex::ScopeBase::ScopeBase( const char * scope,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase::ScopeBase() 
+Reflex::ScopeBase::ScopeBase() 
    : fMembers( OMembers()),
      fDataMembers( Members()),
      fFunctionMembers( Members()),
@@ -106,14 +106,14 @@ ROOT::Reflex::ScopeBase::ScopeBase()
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase::ScopeBase( const ScopeBase & ) {
+Reflex::ScopeBase::ScopeBase( const ScopeBase & ) {
 //-------------------------------------------------------------------------------
    // No copying allowed.
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase & ROOT::Reflex::ScopeBase::operator = ( const ScopeBase & ) { 
+Reflex::ScopeBase & Reflex::ScopeBase::operator = ( const ScopeBase & ) { 
 //-------------------------------------------------------------------------------
    // No assignment allowed.
    return *this; 
@@ -121,7 +121,7 @@ ROOT::Reflex::ScopeBase & ROOT::Reflex::ScopeBase::operator = ( const ScopeBase 
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase::~ScopeBase( ) {
+Reflex::ScopeBase::~ScopeBase( ) {
 //-------------------------------------------------------------------------------
    // Destructor.
 
@@ -142,7 +142,7 @@ ROOT::Reflex::ScopeBase::~ScopeBase( ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase::operator ROOT::Reflex::Scope () const {
+Reflex::ScopeBase::operator Reflex::Scope () const {
 //-------------------------------------------------------------------------------
    // Conversion operator to Scope.
    return ThisScope();
@@ -150,7 +150,7 @@ ROOT::Reflex::ScopeBase::operator ROOT::Reflex::Scope () const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeBase::operator ROOT::Reflex::Type () const {
+Reflex::ScopeBase::operator Reflex::Type () const {
 //-------------------------------------------------------------------------------
    // Conversion operator to Type.
    switch ( fScopeType ) {
@@ -167,7 +167,7 @@ ROOT::Reflex::ScopeBase::operator ROOT::Reflex::Type () const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Base ROOT::Reflex::ScopeBase::BaseAt( size_t /* nth */ ) const {
+Reflex::Base Reflex::ScopeBase::BaseAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
    // Return nth base info.
    return Dummy::Base();
@@ -175,8 +175,8 @@ ROOT::Reflex::Base ROOT::Reflex::ScopeBase::BaseAt( size_t /* nth */ ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member
-ROOT::Reflex::ScopeBase::DataMemberAt( size_t nth ) const {
+Reflex::Member
+Reflex::ScopeBase::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    // Return nth data member info.
    if ( nth < fDataMembers.size() ) return fDataMembers[ nth ];
@@ -185,8 +185,8 @@ ROOT::Reflex::ScopeBase::DataMemberAt( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member
-ROOT::Reflex::ScopeBase::DataMemberByName( const std::string & nam ) const {
+Reflex::Member
+Reflex::ScopeBase::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    // Return data member info by name.
    for ( Members::const_iterator it = fDataMembers.begin(); it != fDataMembers.end(); ++it) {
@@ -197,7 +197,7 @@ ROOT::Reflex::ScopeBase::DataMemberByName( const std::string & nam ) const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeBase::DataMemberSize() const {
+size_t Reflex::ScopeBase::DataMemberSize() const {
 //-------------------------------------------------------------------------------
    // Return number of data members.
    return fDataMembers.size();
@@ -205,8 +205,8 @@ size_t ROOT::Reflex::ScopeBase::DataMemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member
-ROOT::Reflex::ScopeBase::FunctionMemberAt( size_t nth ) const { 
+Reflex::Member
+Reflex::ScopeBase::FunctionMemberAt( size_t nth ) const { 
 //-------------------------------------------------------------------------------
    // Return nth function member.
    if ( nth < fFunctionMembers.size() ) return fFunctionMembers[ nth ];
@@ -215,15 +215,16 @@ ROOT::Reflex::ScopeBase::FunctionMemberAt( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member
-ROOT::Reflex::ScopeBase::FunctionMemberByName( const std::string & name,
-                                               const Type & signature ) const {
+Reflex::Member
+Reflex::ScopeBase::FunctionMemberByName( const std::string & name,
+                                               const Type & signature,
+                                               unsigned int modifiers_mask) const {
 //-------------------------------------------------------------------------------
    // Return function member by name and signature.
    for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
       if (it->Name() == name) {
          if (signature) {
-            if (signature.IsEquivalentTo(it->TypeOf())) return (*it);
+            if (signature.IsEquivalentTo(it->TypeOf(),modifiers_mask)) return (*it);
          }
          else {
             return (*it);
@@ -235,7 +236,7 @@ ROOT::Reflex::ScopeBase::FunctionMemberByName( const std::string & name,
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeBase::FunctionMemberSize() const {
+size_t Reflex::ScopeBase::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
    // Return number of function members.
    return fFunctionMembers.size();
@@ -244,7 +245,7 @@ size_t ROOT::Reflex::ScopeBase::FunctionMemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::GlobalScope() {
+Reflex::Scope Reflex::ScopeBase::GlobalScope() {
 //-------------------------------------------------------------------------------
    // Return a ref to the global scope.
    return Namespace::GlobalScope();
@@ -252,7 +253,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::GlobalScope() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::HideName() const {
+void Reflex::ScopeBase::HideName() const {
 //-------------------------------------------------------------------------------
 // Append the string " @HIDDEN@" to a scope name.
    fScopeName->HideName();
@@ -260,7 +261,7 @@ void ROOT::Reflex::ScopeBase::HideName() const {
 
 
 //-------------------------------------------------------------------------------
-bool ROOT::Reflex::ScopeBase::IsTopScope() const {
+bool Reflex::ScopeBase::IsTopScope() const {
 //-------------------------------------------------------------------------------
    // Check if this scope is the top scope.
    if ( fDeclaringScope == Scope::__NIRVANA__() ) return true;
@@ -269,8 +270,8 @@ bool ROOT::Reflex::ScopeBase::IsTopScope() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member 
-ROOT::Reflex::ScopeBase::LookupMember( const std::string & nam,
+Reflex::Member 
+Reflex::ScopeBase::LookupMember( const std::string & nam,
                                        const Scope & current ) const {
 //------------------------------------------------------------------------------- 
    // Lookup a member name from this scope.
@@ -279,8 +280,8 @@ ROOT::Reflex::ScopeBase::LookupMember( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
-ROOT::Reflex::ScopeBase::LookupType( const std::string & nam,
+Reflex::Type
+Reflex::ScopeBase::LookupType( const std::string & nam,
                                      const Scope & current ) const {
 //-------------------------------------------------------------------------------
    // Lookup a type name from this scope.
@@ -289,8 +290,8 @@ ROOT::Reflex::ScopeBase::LookupType( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope
-ROOT::Reflex::ScopeBase::LookupScope( const std::string & nam,
+Reflex::Scope
+Reflex::ScopeBase::LookupScope( const std::string & nam,
                                       const Scope & current ) const {
 //-------------------------------------------------------------------------------
    // Lookup a scope name from this scope.
@@ -299,7 +300,7 @@ ROOT::Reflex::ScopeBase::LookupScope( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_Begin() const {
+Reflex::Member_Iterator Reflex::ScopeBase::Member_Begin() const {
 //-------------------------------------------------------------------------------
    // Return the begin iterator for members.
    return OTools::ToIter<Member>::Begin(fMembers);
@@ -307,7 +308,7 @@ ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_Begin() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_End() const {
+Reflex::Member_Iterator Reflex::ScopeBase::Member_End() const {
 //-------------------------------------------------------------------------------
    // Return the end iterator for members.
    return OTools::ToIter<Member>::End(fMembers);
@@ -315,7 +316,7 @@ ROOT::Reflex::Member_Iterator ROOT::Reflex::ScopeBase::Member_End() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_RBegin() const {
+Reflex::Reverse_Member_Iterator Reflex::ScopeBase::Member_RBegin() const {
 //-------------------------------------------------------------------------------
    // Return the rbegin iterator for members.
    return OTools::ToIter<Member>::RBegin(fMembers);
@@ -323,7 +324,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_RBegin() c
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_REnd() const {
+Reflex::Reverse_Member_Iterator Reflex::ScopeBase::Member_REnd() const {
 //-------------------------------------------------------------------------------
    // Return the rend iterator for members.
    return OTools::ToIter<Member>::REnd(fMembers);
@@ -331,7 +332,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::ScopeBase::Member_REnd() con
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::ScopeBase::MemberAt( size_t nth ) const {
+Reflex::Member Reflex::ScopeBase::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    // Return the nth member of this scope.
    if ( nth < fMembers.size() ) { return fMembers[ nth ]; };
@@ -340,7 +341,7 @@ ROOT::Reflex::Member ROOT::Reflex::ScopeBase::MemberAt( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeBase::MemberSize() const {
+size_t Reflex::ScopeBase::MemberSize() const {
 //-------------------------------------------------------------------------------
    // Return the number of members.
    return fMembers.size();
@@ -348,12 +349,12 @@ size_t ROOT::Reflex::ScopeBase::MemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member 
-ROOT::Reflex::ScopeBase::MemberByName( const std::string & name,
+Reflex::Member 
+Reflex::ScopeBase::MemberByName( const std::string & name,
                                        const Type & signature ) const {
 //-------------------------------------------------------------------------------
    // Return member by name and signature.
-   if (signature) return FunctionMemberByName(name, signature);
+   if (signature) return FunctionMemberByName(name, signature, 0);
    for ( size_t i = 0; i < fMembers.size() ; i++ ) {
       if ( fMembers[i].Name() == name ) return fMembers[i];
    }
@@ -362,7 +363,7 @@ ROOT::Reflex::ScopeBase::MemberByName( const std::string & name,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_Begin() const {
+Reflex::MemberTemplate_Iterator Reflex::ScopeBase::MemberTemplate_Begin() const {
 //-------------------------------------------------------------------------------
    // Return the begin iterator of the member template container.
    return OTools::ToIter<MemberTemplate>::Begin(fMemberTemplates);
@@ -370,7 +371,7 @@ ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_Be
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_End() const {
+Reflex::MemberTemplate_Iterator Reflex::ScopeBase::MemberTemplate_End() const {
 //-------------------------------------------------------------------------------
    // Return the end iterator of the member template container.
    return OTools::ToIter<MemberTemplate>::End(fMemberTemplates);
@@ -378,7 +379,7 @@ ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_En
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_RBegin() const {
+Reflex::Reverse_MemberTemplate_Iterator Reflex::ScopeBase::MemberTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
    // Return the rbegin iterator of the member template container.
    return OTools::ToIter<MemberTemplate>::RBegin(fMemberTemplates);
@@ -386,7 +387,7 @@ ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTem
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTemplate_REnd() const {
+Reflex::Reverse_MemberTemplate_Iterator Reflex::ScopeBase::MemberTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the member template container.
    return OTools::ToIter<MemberTemplate>::REnd(fMemberTemplates);
@@ -394,7 +395,7 @@ ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::ScopeBase::MemberTem
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::ScopeBase::MemberTemplateAt( size_t nth ) const {
+Reflex::MemberTemplate Reflex::ScopeBase::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    // Return nth member template of this scope.
    if ( nth < fMemberTemplates.size() ) { return fMemberTemplates[ nth ]; }
@@ -403,7 +404,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::ScopeBase::MemberTemplateAt( size_t n
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeBase::MemberTemplateSize() const {
+size_t Reflex::ScopeBase::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
    // Return number of member templates.
    return fMemberTemplates.size();
@@ -411,7 +412,7 @@ size_t ROOT::Reflex::ScopeBase::MemberTemplateSize() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::ScopeBase::MemberTemplateByName( const std::string & nam ) const {
+Reflex::MemberTemplate Reflex::ScopeBase::MemberTemplateByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    // Lookup a member template by name and return it.
    for ( size_t i = 0; i < fMemberTemplates.size(); ++i ) {
@@ -422,7 +423,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::ScopeBase::MemberTemplateByName( cons
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::ScopeBase::Name( unsigned int mod ) const {
+std::string Reflex::ScopeBase::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
    // Return name of this scope.
    if ( 0 != ( mod & ( SCOPED | S ))) return fScopeName->Name();
@@ -431,7 +432,7 @@ std::string ROOT::Reflex::ScopeBase::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-const std::string& ROOT::Reflex::ScopeBase::SimpleName( size_t & pos, 
+const std::string& Reflex::ScopeBase::SimpleName( size_t & pos, 
                                                         unsigned int mod ) const {
 //-------------------------------------------------------------------------------
    // Return name of this scope.
@@ -445,7 +446,7 @@ const std::string& ROOT::Reflex::ScopeBase::SimpleName( size_t & pos,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PropertyList ROOT::Reflex::ScopeBase::Properties() const {
+Reflex::PropertyList Reflex::ScopeBase::Properties() const {
 //-------------------------------------------------------------------------------
    // Return property list attached to this scope.
    return fPropertyList;
@@ -453,7 +454,7 @@ ROOT::Reflex::PropertyList ROOT::Reflex::ScopeBase::Properties() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::ThisScope() const {
+Reflex::Scope Reflex::ScopeBase::ThisScope() const {
 //-------------------------------------------------------------------------------
    // Return the scope of this scope base.
    return fScopeName->ThisScope();
@@ -461,7 +462,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::ThisScope() const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::ScopeBase::ScopeTypeAsString() const {
+std::string Reflex::ScopeBase::ScopeTypeAsString() const {
 //-------------------------------------------------------------------------------
    // Return the type of the scope as a string.
    switch ( fScopeType ) {
@@ -493,7 +494,7 @@ std::string ROOT::Reflex::ScopeBase::ScopeTypeAsString() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ScopeBase::SubTypeAt( size_t nth ) const {
+Reflex::Type Reflex::ScopeBase::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    // Return the nth sub type of this scope.
    if ( nth < fSubTypes.size() ) { return fSubTypes[ nth ]; }
@@ -502,7 +503,7 @@ ROOT::Reflex::Type ROOT::Reflex::ScopeBase::SubTypeAt( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeBase::SubTypeSize() const {
+size_t Reflex::ScopeBase::SubTypeSize() const {
 //-------------------------------------------------------------------------------
    // Return the number of sub types.
    return fSubTypes.size();
@@ -510,7 +511,7 @@ size_t ROOT::Reflex::ScopeBase::SubTypeSize() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ScopeBase::SubTypeByName( const std::string & nam ) const {
+Reflex::Type Reflex::ScopeBase::SubTypeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    // Lookup a sub type by name and return it.
    if ( Tools::GetBasePosition(nam)) return Type::ByName(Name(SCOPED)+"::"+nam);
@@ -522,7 +523,7 @@ ROOT::Reflex::Type ROOT::Reflex::ScopeBase::SubTypeByName( const std::string & n
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ScopeBase::TemplateArgumentAt( size_t /* nth */ ) const {
+Reflex::Type Reflex::ScopeBase::TemplateArgumentAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
    // Return the nth template argument.
    return Dummy::Type();
@@ -530,7 +531,7 @@ ROOT::Reflex::Type ROOT::Reflex::ScopeBase::TemplateArgumentAt( size_t /* nth */
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::ScopeBase::SubTypeTemplateAt( size_t nth ) const {
+Reflex::TypeTemplate Reflex::ScopeBase::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    // Return the nth sub type template.
    if ( nth < fTypeTemplates.size() ) { return fTypeTemplates[ nth ]; }
@@ -539,7 +540,7 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::ScopeBase::SubTypeTemplateAt( size_t nt
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::ScopeBase::TemplateFamily() const {
+Reflex::TypeTemplate Reflex::ScopeBase::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    // Return the template family corresponding to this scope.
    return Dummy::TypeTemplate();
@@ -547,7 +548,7 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::ScopeBase::TemplateFamily() const {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeBase::SubTypeTemplateSize() const {
+size_t Reflex::ScopeBase::SubTypeTemplateSize() const {
 //-------------------------------------------------------------------------------
    // Return the number of sub type templates.
    return fTypeTemplates.size();
@@ -555,7 +556,7 @@ size_t ROOT::Reflex::ScopeBase::SubTypeTemplateSize() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeTemplate ROOT::Reflex::ScopeBase::SubTypeTemplateByName( const std::string & nam ) const {
+Reflex::TypeTemplate Reflex::ScopeBase::SubTypeTemplateByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    // Lookup a type template in this scope by name and return it.
    for ( size_t i = 0; i < fTypeTemplates.size(); ++i ) {
@@ -566,7 +567,7 @@ ROOT::Reflex::TypeTemplate ROOT::Reflex::ScopeBase::SubTypeTemplateByName( const
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::SubScopeByName( const std::string & nam ) const {
+Reflex::Scope Reflex::ScopeBase::SubScopeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    // Lookup a sub scope of this scope by name and return it.
    if (Tools::GetBasePosition(nam)) return Scope::ByName(Name(SCOPED)+"::"+nam);
@@ -578,7 +579,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::SubScopeByName( const std::string &
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeBase::SubScopeLevel() const {
+size_t Reflex::ScopeBase::SubScopeLevel() const {
 //-------------------------------------------------------------------------------
    size_t level = 0;
    Scope tmp = ThisScope();
@@ -591,7 +592,7 @@ size_t ROOT::Reflex::ScopeBase::SubScopeLevel() const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
+void Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
    // Add data member dm to this scope.
    dm.SetScope( ThisScope() );
@@ -601,7 +602,7 @@ void ROOT::Reflex::ScopeBase::AddDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddDataMember( const char * name,
+void Reflex::ScopeBase::AddDataMember( const char * name,
                                              const Type & type,
                                              size_t offset,
                                              unsigned int modifiers ) const {
@@ -612,7 +613,7 @@ void ROOT::Reflex::ScopeBase::AddDataMember( const char * name,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
+void Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
    // Remove data member dm from this scope.
    std::vector< Member >::iterator it;
@@ -627,7 +628,7 @@ void ROOT::Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddFunctionMember( const Member & fm ) const {
+void Reflex::ScopeBase::AddFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
    // Add function member fm to this scope.
    fm.SetScope( ThisScope());
@@ -637,7 +638,7 @@ void ROOT::Reflex::ScopeBase::AddFunctionMember( const Member & fm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddFunctionMember( const char * name,
+void Reflex::ScopeBase::AddFunctionMember( const char * name,
                                                  const Type & type,
                                                  StubFunction stubFP,
                                                  void * stubCtx,
@@ -650,7 +651,7 @@ void ROOT::Reflex::ScopeBase::AddFunctionMember( const char * name,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::RemoveFunctionMember( const Member & fm ) const {
+void Reflex::ScopeBase::RemoveFunctionMember( const Member & fm ) const {
 //-------------------------------------------------------------------------------
    // Remove function member fm from this scope.
    std::vector< Member >::iterator it;
@@ -665,7 +666,7 @@ void ROOT::Reflex::ScopeBase::RemoveFunctionMember( const Member & fm ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddMemberTemplate( const MemberTemplate & mt ) const {
+void Reflex::ScopeBase::AddMemberTemplate( const MemberTemplate & mt ) const {
 //-------------------------------------------------------------------------------
    // Add member template mt to this scope.
    fMemberTemplates.push_back( mt );
@@ -673,7 +674,7 @@ void ROOT::Reflex::ScopeBase::AddMemberTemplate( const MemberTemplate & mt ) con
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::RemoveMemberTemplate( const MemberTemplate & mt ) const {
+void Reflex::ScopeBase::RemoveMemberTemplate( const MemberTemplate & mt ) const {
 //-------------------------------------------------------------------------------
    // Remove member template mt from this scope.
    std::vector< OwnedMemberTemplate >::iterator it;
@@ -684,7 +685,7 @@ void ROOT::Reflex::ScopeBase::RemoveMemberTemplate( const MemberTemplate & mt ) 
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddSubScope( const Scope & subscope ) const {
+void Reflex::ScopeBase::AddSubScope( const Scope & subscope ) const {
 //-------------------------------------------------------------------------------
    // Add sub scope to this scope.
    RemoveSubScope(subscope);
@@ -693,7 +694,7 @@ void ROOT::Reflex::ScopeBase::AddSubScope( const Scope & subscope ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddSubScope( const char * scope,
+void Reflex::ScopeBase::AddSubScope( const char * scope,
                                            TYPE scopeType ) const {
 //-------------------------------------------------------------------------------
    // Add sub scope to this scope.
@@ -702,7 +703,7 @@ void ROOT::Reflex::ScopeBase::AddSubScope( const char * scope,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::RemoveSubScope( const Scope & subscope ) const {
+void Reflex::ScopeBase::RemoveSubScope( const Scope & subscope ) const {
 //-------------------------------------------------------------------------------
    // Remove sub scope from this scope.
    std::vector< Scope >::iterator it;
@@ -715,7 +716,7 @@ void ROOT::Reflex::ScopeBase::RemoveSubScope( const Scope & subscope ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddSubType( const Type & ty ) const {
+void Reflex::ScopeBase::AddSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
    // Add sub type ty to this scope.
    RemoveSubType(ty);
@@ -724,7 +725,7 @@ void ROOT::Reflex::ScopeBase::AddSubType( const Type & ty ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddSubType( const char * type,
+void Reflex::ScopeBase::AddSubType( const char * type,
                                           size_t size,
                                           TYPE typeType,
                                           const std::type_info & ti,
@@ -765,7 +766,7 @@ void ROOT::Reflex::ScopeBase::AddSubType( const char * type,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::RemoveSubType( const Type & ty ) const {
+void Reflex::ScopeBase::RemoveSubType( const Type & ty ) const {
 //-------------------------------------------------------------------------------
    // Remove sub type ty from this scope.
    std::vector< Type >::iterator it;
@@ -778,7 +779,7 @@ void ROOT::Reflex::ScopeBase::RemoveSubType( const Type & ty ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddSubTypeTemplate( const TypeTemplate & tt ) const {
+void Reflex::ScopeBase::AddSubTypeTemplate( const TypeTemplate & tt ) const {
 //-------------------------------------------------------------------------------
    // Add sub type template to this scope.
    fTypeTemplates.push_back( tt );
@@ -786,7 +787,7 @@ void ROOT::Reflex::ScopeBase::AddSubTypeTemplate( const TypeTemplate & tt ) cons
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::RemoveSubTypeTemplate( const TypeTemplate & tt ) const {
+void Reflex::ScopeBase::RemoveSubTypeTemplate( const TypeTemplate & tt ) const {
 //-------------------------------------------------------------------------------
    // Remove sub type template tt from this scope.
    std::vector< TypeTemplate >::iterator it;
@@ -799,7 +800,7 @@ void ROOT::Reflex::ScopeBase::RemoveSubTypeTemplate( const TypeTemplate & tt ) c
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::AddUsingDirective( const Scope & ud ) const {
+void Reflex::ScopeBase::AddUsingDirective( const Scope & ud ) const {
 //-------------------------------------------------------------------------------
    // Add using directive ud to this scope.
    fUsingDirectives.push_back( ud );
@@ -807,7 +808,7 @@ void ROOT::Reflex::ScopeBase::AddUsingDirective( const Scope & ud ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::RemoveUsingDirective( const Scope & ud ) const {
+void Reflex::ScopeBase::RemoveUsingDirective( const Scope & ud ) const {
 //-------------------------------------------------------------------------------
    // Remove using directive ud from this scope.
    for ( Scope_Cont_Type_t::iterator it = fUsingDirectives.begin(); it != fUsingDirectives.end(); ++ it ) {
@@ -820,7 +821,7 @@ void ROOT::Reflex::ScopeBase::RemoveUsingDirective( const Scope & ud ) const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeBase::GenerateDict( DictionaryGenerator & generator) const {
+void Reflex::ScopeBase::GenerateDict( DictionaryGenerator & generator) const {
 //-------------------------------------------------------------------------------
    // Generate Dictionary information about itself.
 

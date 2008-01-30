@@ -18,7 +18,7 @@
 #include "Reflex/Tools.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Union::Union( const char * unionType,
+Reflex::Union::Union( const char * unionType,
                             size_t size,
                             const std::type_info & ti,
                             unsigned int modifiers ) 
@@ -31,14 +31,14 @@ ROOT::Reflex::Union::Union( const char * unionType,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Union::~Union() {
+Reflex::Union::~Union() {
 //-------------------------------------------------------------------------------
 // Destructor.
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member ROOT::Reflex::Union::MemberAt( size_t nth ) const {
+inline Reflex::Member Reflex::Union::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return nth member of this union.
    return ScopeBase::MemberAt( nth );

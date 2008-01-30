@@ -125,8 +125,6 @@ int main() {
   if (ret == -1) std::cout << "Unload of dictionary library failed." << std::endl << "Reason: " << dlerror() << std::endl;
 #endif
 
-  Reflex::Shutdown();
-
   return 0;
 }
 

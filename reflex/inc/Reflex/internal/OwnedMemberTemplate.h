@@ -9,48 +9,45 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_OwnedMemberTemplate
-#define ROOT_Reflex_OwnedMemberTemplate
+#ifndef Reflex_OwnedMemberTemplate
+#define Reflex_OwnedMemberTemplate
 
 // Include files
 #include "Reflex/Kernel.h"
 #include "Reflex/MemberTemplate.h"
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
-      // forward declarations
-      class MemberTemplateImpl;
+   // forward declarations
+   class MemberTemplateImpl;
 
-      /**
-       * @class OwnedMemberTemplate OwnedMemberTemplate.h OwnedMemberTemplate.h
-       * @author Stefan Roiser
-       * @date 21/07/2006
-       * @ingroup Ref
-       */
-      class RFLX_API OwnedMemberTemplate : public MemberTemplate {
+   /**
+   * @class OwnedMemberTemplate OwnedMemberTemplate.h OwnedMemberTemplate.h
+   * @author Stefan Roiser
+   * @date 21/07/2006
+   * @ingroup Ref
+   */
+   class RFLX_API OwnedMemberTemplate : public MemberTemplate {
 
-      public:
+   public:
 
-         /** constructor */
-         OwnedMemberTemplate( const MemberTemplateName * memberTemplateName )
-            : MemberTemplate( memberTemplateName ) {}
-
-
-         /** take ownership */
-         OwnedMemberTemplate( const MemberTemplate & rh )
-            : MemberTemplate( rh ) {}
-
-         
-         /** delete info */
-         void Delete() {
-            fMemberTemplateName->DeleteMemberTemplate();
-         }
-
-      }; // class OwnedMemberTemplate
-   
-   } // namespace Reflex
-} // namespace ROOT
+      /** constructor */
+      OwnedMemberTemplate( const MemberTemplateName * memberTemplateName )
+         : MemberTemplate( memberTemplateName ) {}
 
 
-#endif // ROOT_Reflex_OwnedMemberTemplate
+      /** take ownership */
+      OwnedMemberTemplate( const MemberTemplate & rh )
+         : MemberTemplate( rh ) {}
+
+
+      /** delete info */
+      void Delete() {
+         fMemberTemplateName->DeleteMemberTemplate();
+      }
+
+   }; // class OwnedMemberTemplate
+
+} // namespace Reflex
+
+#endif // Reflex_OwnedMemberTemplate

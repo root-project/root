@@ -10,8 +10,8 @@
 // This software is provided "as is" without express or implied warranty.
 
 
-#ifndef ROOT_Reflex_dir_manip
-#define ROOT_Reflex_dir_manip
+#ifndef Reflex_dir_manip
+#define Reflex_dir_manip
 
 #include <climits>
 #include <sys/types.h>
@@ -122,4 +122,4 @@ inline const char* basenameEx(const std::string& path) {
 
 #endif  // _WIN32
 
-#endif // ROOT_Reflex_dir_manip
+#endif // Reflex_dir_manip

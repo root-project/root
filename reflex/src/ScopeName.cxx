@@ -27,8 +27,8 @@
 
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_map < const std::string *, ROOT::Reflex::Scope > Name2Scope_t;
-typedef std::vector< ROOT::Reflex::Scope > ScopeVec_t;
+typedef __gnu_cxx::hash_map < const std::string *, Reflex::Scope > Name2Scope_t;
+typedef std::vector< Reflex::Scope > ScopeVec_t;
 
 //-------------------------------------------------------------------------------
 static Name2Scope_t & sScopes() {
@@ -49,7 +49,7 @@ static ScopeVec_t & sScopeVec() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeName::ScopeName( const char * name,
+Reflex::ScopeName::ScopeName( const char * name,
                                     ScopeBase * scopeBase ) 
    : fName(name),
      fScopeBase(scopeBase) {
@@ -67,14 +67,14 @@ ROOT::Reflex::ScopeName::ScopeName( const char * name,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ScopeName::~ScopeName() {
+Reflex::ScopeName::~ScopeName() {
 //-------------------------------------------------------------------------------
 // Destructor.
 }
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
+Reflex::Scope Reflex::ScopeName::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
 // Lookup a scope by fully qualified name.
    size_t pos =  name.substr(0,2) == "::" ?  2 : 0;
@@ -95,7 +95,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) 
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeName::CleanUp() {
+void Reflex::ScopeName::CleanUp() {
 //-------------------------------------------------------------------------------
    // Cleanup memory allocations for scopes.
    ScopeVec_t::iterator it;
@@ -111,7 +111,7 @@ void ROOT::Reflex::ScopeName::CleanUp() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeName::DeleteScope() const {
+void Reflex::ScopeName::DeleteScope() const {
 //-------------------------------------------------------------------------------
 // Delete the scope base information.
    delete fScopeBase;
@@ -120,7 +120,7 @@ void ROOT::Reflex::ScopeName::DeleteScope() const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ScopeName::HideName() {
+void Reflex::ScopeName::HideName() {
 //-------------------------------------------------------------------------------
 // Append the string " @HIDDEN@" to a scope name.
    if ( fName.length() == 0 || fName[fName.length()-1] != '@' ) {
@@ -132,7 +132,7 @@ void ROOT::Reflex::ScopeName::HideName() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ThisScope() const {
+Reflex::Scope Reflex::ScopeName::ThisScope() const {
 //-------------------------------------------------------------------------------
 // Return the scope corresponding to this scope.
    return *fThisScope;
@@ -140,7 +140,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ThisScope() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ScopeAt( size_t nth ) {
+Reflex::Scope Reflex::ScopeName::ScopeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return the nth scope defined in Reflex.
    if ( nth < sScopeVec().size()) return sScopeVec()[nth];
@@ -149,7 +149,7 @@ ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ScopeAt( size_t nth ) {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::ScopeName::ScopeSize() {
+size_t Reflex::ScopeName::ScopeSize() {
 //-------------------------------------------------------------------------------
 // Return the number of scopes defined in Reflex.
    return sScopeVec().size();
@@ -157,7 +157,7 @@ size_t ROOT::Reflex::ScopeName::ScopeSize() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_Begin() {
+Reflex::Scope_Iterator Reflex::ScopeName::Scope_Begin() {
 //-------------------------------------------------------------------------------
 // Return the begin iterator of the scope collection.
    return sScopeVec().begin();
@@ -165,7 +165,7 @@ ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_Begin() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_End() {
+Reflex::Scope_Iterator Reflex::ScopeName::Scope_End() {
 //-------------------------------------------------------------------------------
 // Return the end iterator of the scope collection.
    return sScopeVec().end();
@@ -173,7 +173,7 @@ ROOT::Reflex::Scope_Iterator ROOT::Reflex::ScopeName::Scope_End() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_RBegin() {
+Reflex::Reverse_Scope_Iterator Reflex::ScopeName::Scope_RBegin() {
 //-------------------------------------------------------------------------------
 // Return the rbegin iterator of the scope collection.
    return ((const std::vector<Scope>&)sScopeVec()).rbegin();
@@ -181,7 +181,7 @@ ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_RBegin() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::ScopeName::Scope_REnd() {
+Reflex::Reverse_Scope_Iterator Reflex::ScopeName::Scope_REnd() {
 //-------------------------------------------------------------------------------
 // Return the rend iterator of the scope collection.
    return ((const std::vector<Scope>&)sScopeVec()).rend();

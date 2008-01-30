@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_TypeBase
-#define ROOT_Reflex_TypeBase
+#ifndef Reflex_TypeBase
+#define Reflex_TypeBase
 
 // Include files
 #include "Reflex/Kernel.h"
@@ -19,919 +19,924 @@
 #include <vector>
 #include <typeinfo>
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
-      // forward declarations
-      class Member;
-      class Base;
-      class Type;
-      class Object;
-      class MemberTemplate;
-      class TypeTemplate;
-      class Fundamental;
-      class Function;
-      class Array;
-      class Class;
-      class Enum;
-      class Typedef;
-      class Pointer;
-      class ClassTemplateInstance;
-      class FunctionMemberTemplateInstance;
-      class TypeName;
-      class DictionaryGenerator;
-      
+   // forward declarations
+   class Member;
+   class Base;
+   class Type;
+   class Object;
+   class MemberTemplate;
+   class TypeTemplate;
+   class Fundamental;
+   class Function;
+   class Array;
+   class Class;
+   class Enum;
+   class Typedef;
+   class Pointer;
+   class ClassTemplateInstance;
+   class FunctionMemberTemplateInstance;
+   class TypeName;
+   class DictionaryGenerator;
+
+   /**
+   * @class TypeBase TypeBase.h Reflex/TypeBase.h
+   * @author Stefan Roiser
+   * @date 24/11/2003
+   * @ingroup Ref
+   */
+   class RFLX_API TypeBase {
+
+   public:
+
+      /** default constructor */
+      TypeBase( const char *           nam, 
+         size_t                 size, 
+         TYPE                   typeTyp,
+         const std::type_info & ti,
+         const Type &           finalType = Dummy::Type());
+
+
+      /** destructor */
+      virtual ~TypeBase();
+
+
       /**
-       * @class TypeBase TypeBase.h Reflex/TypeBase.h
-       * @author Stefan Roiser
-       * @date 24/11/2003
-       * @ingroup Ref
-       */
-      class RFLX_API TypeBase {
-
-      public:
-
-         /** default constructor */
-         TypeBase( const char *           nam, 
-                   size_t                 size, 
-                   TYPE                   typeTyp,
-                   const std::type_info & ti,
-                   const Type &           finalType = Dummy::Type());
-
-
-         /** destructor */
-         virtual ~TypeBase();
-	 
-
-         /**
-          * operator Scope will return the corresponding scope of this type if
-          * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
-          */                                       
-         operator Scope () const;
-
-
-         /**
-          * operator Type will return the corresponding Type object
-          * @return Type corresponding to this TypeBase
-          */
-         operator Type () const;
-
-
-         /**
-          * Allocate will reserve memory for the size of the object
-          * @return pointer to allocated memory
-          */
-         void * Allocate() const;
-
-
-         /**
-          * nthBase will return the nth BaseAt class information
-          * @param  nth nth BaseAt class
-          * @return pointer to BaseAt class information
-          */
-         virtual Base BaseAt( size_t nth ) const;
-
-
-         /**
-          * BaseSize will return the number of base classes
-          * @return number of base classes
-          */
-         virtual size_t BaseSize() const;
-
-
-         virtual Base_Iterator Base_Begin() const;
-         virtual Base_Iterator Base_End() const;
-         virtual Reverse_Base_Iterator Base_RBegin() const;
-         virtual Reverse_Base_Iterator Base_REnd() const;
-
-
-         /**
-          * CastObject an object from this class At to another one
-          * @param  to is the class At to cast into
-          * @param  obj the memory AddressGet of the object to be casted
-          */
-         virtual Object CastObject( const Type & to, 
-                                    const Object & obj ) const;
-
-
-         /**
-          * Construct will call the constructor of a given At and Allocate the
-          * memory for it
-          * @param  signature of the constructor
-          * @param  values for parameters of the constructor
-          * @param  mem place in memory for implicit construction
-          * @return pointer to new instance
-          */
-         /*
-           virtual Object Construct( const Type & signature,
-                                     const std::vector < Object > & values,
-                                     void * mem ) const;*/
-         virtual Object Construct( const Type & signature,
-                                   const std::vector < void * > & values,
-                                   void * mem) const;
-      
-
-         /**
-          * DataMemberAt will return the nth data MemberAt of the At
-          * @param  nth data MemberAt
-          * @return pointer to data MemberAt
-          */
-         virtual Member DataMemberAt( size_t nth ) const;
-
-
-         /**
-          * DataMemberByName will return the MemberAt with Name
-          * @param  Name of data MemberAt
-          * @return data MemberAt
-          */
-         virtual Member DataMemberByName( const std::string & nam ) const;
-
-
-         /**
-          * DataMemberSize will return the number of data members of this At
-          * @return number of data members
-          */
-         virtual size_t DataMemberSize() const;
-
-
-         virtual Member_Iterator DataMember_Begin() const;
-         virtual Member_Iterator DataMember_End() const;
-         virtual Reverse_Member_Iterator DataMember_RBegin() const;
-         virtual Reverse_Member_Iterator DataMember_REnd() const;
+      * operator Scope will return the corresponding scope of this type if
+      * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
+      */                                       
+      operator Scope () const;
 
-
-         /**
-          * Deallocate will Deallocate the memory for a given object
-          * @param  instance of the At in memory
-          */
-         void Deallocate( void * instance ) const;
+
+      /**
+      * operator Type will return the corresponding Type object
+      * @return Type corresponding to this TypeBase
+      */
+      operator Type () const;
+
+
+      /**
+      * Allocate will reserve memory for the size of the object
+      * @return pointer to allocated memory
+      */
+      void * Allocate() const;
+
+
+      /**
+      * nthBase will return the nth BaseAt class information
+      * @param  nth nth BaseAt class
+      * @return pointer to BaseAt class information
+      */
+      virtual Base BaseAt( size_t nth ) const;
+
+
+      /**
+      * BaseSize will return the number of base classes
+      * @return number of base classes
+      */
+      virtual size_t BaseSize() const;
+
+
+      virtual Base_Iterator Base_Begin() const;
+      virtual Base_Iterator Base_End() const;
+      virtual Reverse_Base_Iterator Base_RBegin() const;
+      virtual Reverse_Base_Iterator Base_REnd() const;
 
 
-         /**
-          * Destruct will call the destructor of a At and remove its memory
-          * allocation if desired
-          * @param  instance of the At in memory
-          * @param  dealloc for also deallacoting the memory
-          */
-         virtual void Destruct( void * instance, 
-                                bool dealloc = true ) const;
-
-
-         /**
-          * DeclaringScope will return a pointer to the At of this one
-          * @return pointer to declaring At
-          */
-         virtual Scope DeclaringScope() const;
+      /**
+      * CastObject an object from this class At to another one
+      * @param  to is the class At to cast into
+      * @param  obj the memory AddressGet of the object to be casted
+      */
+      virtual Object CastObject( const Type & to, 
+         const Object & obj ) const;
 
-
-         /**
-          * DynamicType is used to discover whether an object represents the
-          * current class At or not
-          * @param  mem is the memory AddressGet of the object to checked
-          * @return the actual class of the object
-          */
-         virtual Type DynamicType( const Object & obj ) const;
+
+      /**
+      * Construct will call the constructor of a given At and Allocate the
+      * memory for it
+      * @param  signature of the constructor
+      * @param  values for parameters of the constructor
+      * @param  mem place in memory for implicit construction
+      * @return pointer to new instance
+      */
+      /*
+      virtual Object Construct( const Type & signature,
+      const std::vector < Object > & values,
+      void * mem ) const;*/
+      virtual Object Construct( const Type & signature,
+         const std::vector < void * > & values,
+         void * mem) const;
+
+
+      /**
+      * DataMemberAt will return the nth data MemberAt of the At
+      * @param  nth data MemberAt
+      * @return pointer to data MemberAt
+      */
+      virtual Member DataMemberAt( size_t nth ) const;
+
+
+      /**
+      * DataMemberByName will return the MemberAt with Name
+      * @param  Name of data MemberAt
+      * @return data MemberAt
+      */
+      virtual Member DataMemberByName( const std::string & nam ) const;
+
+
+      /**
+      * DataMemberSize will return the number of data members of this At
+      * @return number of data members
+      */
+      virtual size_t DataMemberSize() const;
 
+
+      virtual Member_Iterator DataMember_Begin() const;
+      virtual Member_Iterator DataMember_End() const;
+      virtual Reverse_Member_Iterator DataMember_RBegin() const;
+      virtual Reverse_Member_Iterator DataMember_REnd() const;
 
 
-         /**
-          * FinalType will return the type without typedefs 
-          * @return type with all typedef info removed
-          */
-         Type FinalType() const;
+      /**
+      * Deallocate will Deallocate the memory for a given object
+      * @param  instance of the At in memory
+      */
+      void Deallocate( void * instance ) const;
 
 
-         /**
-          * FunctionMemberAt will return the nth function MemberAt of the At
-          * @param  nth function MemberAt
-          * @return pointer to function MemberAt
-          */
-         virtual Member FunctionMemberAt( size_t nth ) const;
+      /**
+      * Destruct will call the destructor of a At and remove its memory
+      * allocation if desired
+      * @param  instance of the At in memory
+      * @param  dealloc for also deallacoting the memory
+      */
+      virtual void Destruct( void * instance, 
+         bool dealloc = true ) const;
 
 
-         /**
-          * FunctionMemberByName will return the MemberAt with the Name, 
-          * optionally the signature of the function may be given
-          * @param  Name of function MemberAt
-          * @param  signature of the MemberAt function 
-          * @return function MemberAt
-          */
-         virtual Member FunctionMemberByName( const std::string & nam,
-                                              const Type & signature ) const;
+      /**
+      * DeclaringScope will return a pointer to the At of this one
+      * @return pointer to declaring At
+      */
+      virtual Scope DeclaringScope() const;
 
 
-         /**
-          * FunctionMemberSize will return the number of function members of
-          * this At
-          * @return number of function members
-          */
-         virtual size_t FunctionMemberSize() const;
+      /**
+      * DynamicType is used to discover whether an object represents the
+      * current class At or not
+      * @param  mem is the memory AddressGet of the object to checked
+      * @return the actual class of the object
+      */
+      virtual Type DynamicType( const Object & obj ) const;
 
 
-         virtual Member_Iterator FunctionMember_Begin() const;
-         virtual Member_Iterator FunctionMember_End() const;
-         virtual Reverse_Member_Iterator FunctionMember_RBegin() const;
-         virtual Reverse_Member_Iterator FunctionMember_REnd() const;
 
+      /**
+      * FinalType will return the type without typedefs 
+      * @return type with all typedef info removed
+      */
+      Type FinalType() const;
 
-         /**
-          * GenerateDict will produce the dictionary information of this type
-          * @param generator a reference to the dictionary generator instance
-          */
-         virtual void GenerateDict(DictionaryGenerator &generator) const;
-	  
-      
-         /**
-          * HasBase will check whether this class has a BaseAt class given
-          * as argument
-          * @param  cl the BaseAt-class to check for
-          * @return the Base info if it is found, an empty base otherwise (can be tested for bool)
-          */
-         virtual bool HasBase( const Type & cl ) const;
 
+      /**
+      * FunctionMemberAt will return the nth function MemberAt of the At
+      * @param  nth function MemberAt
+      * @return pointer to function MemberAt
+      */
+      virtual Member FunctionMemberAt( size_t nth ) const;
 
-         /**
-          * IsAbstract will return true if the the class is abstract
-          * @return true if the class is abstract
-          */
-         virtual bool IsAbstract() const;
 
+      /**
+      * FunctionMemberByName will return the MemberAt with the Name, 
+      * optionally the signature of the function may be given
+      * @param  Name of function MemberAt
+      * @param  signature of the MemberAt function 
+      * @return function MemberAt
+      */
+      virtual Member FunctionMemberByName( const std::string & nam,
+         const Type & signature,
+         unsigned int modifiers_mask = 0) const;
 
-         /** 
-          * IsArray returns true if the At represents a Array
-          * @return true if At represents a Array
-          */
-         bool IsArray() const;
 
+      /**
+      * FunctionMemberSize will return the number of function members of
+      * this At
+      * @return number of function members
+      */
+      virtual size_t FunctionMemberSize() const;
 
-         /** 
-          * IsClass returns true if the At represents a Class
-          * @return true if At represents a Class
-          */
-         bool IsClass() const;
 
+      virtual Member_Iterator FunctionMember_Begin() const;
+      virtual Member_Iterator FunctionMember_End() const;
+      virtual Reverse_Member_Iterator FunctionMember_RBegin() const;
+      virtual Reverse_Member_Iterator FunctionMember_REnd() const;
 
-         /** 
-          * IsComplete will return true if all classes and BaseAt classes of this 
-          * class are resolved and fully known in the system
-          */
-         virtual bool IsComplete() const;
 
+      /**
+      * GenerateDict will produce the dictionary information of this type
+      * @param generator a reference to the dictionary generator instance
+      */
+      virtual void GenerateDict(DictionaryGenerator &generator) const;
 
-         /** 
-          * IsEnum returns true if the At represents a Enum
-          * @return true if At represents a Enum
-          */
-         bool IsEnum() const;
 
+      /**
+      * HasBase will check whether this class has a BaseAt class given
+      * as argument
+      * @param  cl the BaseAt-class to check for
+      * @return the Base info if it is found, an empty base otherwise (can be tested for bool)
+      */
+      virtual bool HasBase( const Type & cl ) const;
 
-         /** 
-          * IsFunction returns true if the At represents a Function
-          * @return true if At represents a Function
-          */
-         bool IsFunction() const;
 
+      /**
+      * IsAbstract will return true if the the class is abstract
+      * @return true if the class is abstract
+      */
+      virtual bool IsAbstract() const;
 
-         /** 
-          * IsFundamental returns true if the At represents a Fundamental
-          * @return true if At represents a Fundamental
-          */
-         bool IsFundamental() const;
 
+      /** 
+      * IsArray returns true if the At represents a Array
+      * @return true if At represents a Array
+      */
+      bool IsArray() const;
 
-         /** 
-          * IsPointer returns true if the At represents a Pointer
-          * @return true if At represents a Pointer
-          */
-         bool IsPointer() const;
 
+      /** 
+      * IsClass returns true if the At represents a Class
+      * @return true if At represents a Class
+      */
+      bool IsClass() const;
 
-         /** 
-          * IsPointerToMember returns true if the At represents a PointerToMember
-          * @return true if At represents a PointerToMember
-          */
-         bool IsPointerToMember() const;
 
+      /** 
+      * IsComplete will return true if all classes and BaseAt classes of this 
+      * class are resolved and fully known in the system
+      */
+      virtual bool IsComplete() const;
 
-         /** 
-          * IsPrivate will check if the scope access is private
-          * @return true if scope access is private
-          */
-         virtual bool IsPrivate() const;
 
+      /** 
+      * IsEnum returns true if the At represents a Enum
+      * @return true if At represents a Enum
+      */
+      bool IsEnum() const;
 
-         /** 
-          * IsProtected will check if the scope access is protected
-          * @return true if scope access is protected
-          */
-         virtual bool IsProtected() const;
 
+      /** 
+      * IsFunction returns true if the At represents a Function
+      * @return true if At represents a Function
+      */
+      bool IsFunction() const;
 
-         /** 
-          * IsPublic will check if the scope access is public
-          * @return true if scope access is public
-          */
-         virtual bool IsPublic() const;
 
+      /** 
+      * IsFundamental returns true if the At represents a Fundamental
+      * @return true if At represents a Fundamental
+      */
+      bool IsFundamental() const;
 
-         /**
-          * IsStruct will return true if the At represents a struct (not a class)
-          * @return true if At represents a struct
-          */
-         bool IsStruct() const;
 
+      /** 
+      * IsPointer returns true if the At represents a Pointer
+      * @return true if At represents a Pointer
+      */
+      bool IsPointer() const;
 
-         /**
-          * IsTemplateInstance will return true if the the class is templated
-          * @return true if the class is templated
-          */
-         bool IsTemplateInstance() const;
 
+      /** 
+      * IsPointerToMember returns true if the At represents a PointerToMember
+      * @return true if At represents a PointerToMember
+      */
+      bool IsPointerToMember() const;
 
-         /** 
-          * IsTypedef returns true if the At represents a Typedef
-          * @return true if At represents a Typedef
-          */
-         bool IsTypedef() const;
 
+      /** 
+      * IsPrivate will check if the scope access is private
+      * @return true if scope access is private
+      */
+      virtual bool IsPrivate() const;
 
-         /** 
-          * IsUnion returns true if the At represents a Union
-          * @return true if At represents a 
-          */
-         bool IsUnion() const;
 
+      /** 
+      * IsProtected will check if the scope access is protected
+      * @return true if scope access is protected
+      */
+      virtual bool IsProtected() const;
 
-         /**
-          * IsVirtual will return true if the class contains a virtual table
-          * @return true if the class contains a virtual table
-          */
-         virtual bool IsVirtual() const;
 
+      /** 
+      * IsPublic will check if the scope access is public
+      * @return true if scope access is public
+      */
+      virtual bool IsPublic() const;
 
-         /** Array
-          * size returns the size of the array
-          * @return size of array
-          */
-         virtual size_t ArrayLength() const;
 
-      
-         /**
-          * MemberByName will return the first MemberAt with a given Name
-          * @param  MemberAt Name
-          * @return pointer to MemberAt
-          */
-         virtual Member MemberByName( const std::string & nam,
-                                      const Type & signature ) const;
+      /**
+      * IsStruct will return true if the At represents a struct (not a class)
+      * @return true if At represents a struct
+      */
+      bool IsStruct() const;
 
 
-         /**
-          * MemberAt will return the nth MemberAt of the At
-          * @param  nth MemberAt
-          * @return pointer to nth MemberAt
-          */
-         virtual Member MemberAt( size_t nth ) const;
+      /**
+      * IsTemplateInstance will return true if the the class is templated
+      * @return true if the class is templated
+      */
+      bool IsTemplateInstance() const;
 
 
-         /**
-          * MemberSize will return the number of members
-          * @return number of members
-          */
-         virtual size_t MemberSize() const;
+      /** 
+      * IsTypedef returns true if the At represents a Typedef
+      * @return true if At represents a Typedef
+      */
+      bool IsTypedef() const;
 
 
-         virtual Member_Iterator Member_Begin() const;
-         virtual Member_Iterator Member_End() const;
-         virtual Reverse_Member_Iterator Member_RBegin() const;
-         virtual Reverse_Member_Iterator Member_REnd() const;
+      /** 
+      * IsUnion returns true if the At represents a Union
+      * @return true if At represents a 
+      */
+      bool IsUnion() const;
 
 
-         /** 
-          * MemberTemplateAt will return the nth MemberAt template of this At
-          * @param nth MemberAt template
-          * @return nth MemberAt template
-          */
-         virtual MemberTemplate MemberTemplateAt( size_t nth ) const;
+      /**
+      * IsVirtual will return true if the class contains a virtual table
+      * @return true if the class contains a virtual table
+      */
+      virtual bool IsVirtual() const;
 
 
-         /** 
-          * MemberTemplateSize will return the number of MemberAt templates in this socpe
-          * @return number of defined MemberAt templates
-          */
-         virtual size_t MemberTemplateSize() const;
+      /** Array
+      * size returns the size of the array
+      * @return size of array
+      */
+      virtual size_t ArrayLength() const;
 
 
-         virtual MemberTemplate_Iterator MemberTemplate_Begin() const;
-         virtual MemberTemplate_Iterator MemberTemplate_End() const;
-         virtual Reverse_MemberTemplate_Iterator MemberTemplate_RBegin() const;
-         virtual Reverse_MemberTemplate_Iterator MemberTemplate_REnd() const;
+      /**
+      * MemberByName will return the first MemberAt with a given Name
+      * @param  MemberAt Name
+      * @return pointer to MemberAt
+      */
+      virtual Member MemberByName( const std::string & nam,
+         const Type & signature ) const;
 
 
-         /**
-          * Name returns the name of the type
-          * @return name of type
-          */
-         virtual std::string Name( unsigned int mod = 0 ) const;
+      /**
+      * MemberAt will return the nth MemberAt of the At
+      * @param  nth MemberAt
+      * @return pointer to nth MemberAt
+      */
+      virtual Member MemberAt( size_t nth ) const;
 
 
-         /**
-          * SimpleName returns the name of the type as a reference. It provides a 
-          * simplified but faster generation of a type name. Attention currently it
-          * is not guaranteed that Name() and SimpleName() return the same character 
-          * layout of a name (ie. spacing, commas, etc. )
-          * @param pos will indicate where in the returned reference the requested name starts
-          * @param mod The only 'mod' support is SCOPED
-          * @return name of type
-          */
-         virtual const std::string & SimpleName( size_t & pos, 
-                                                 unsigned int mod = 0 ) const;
+      /**
+      * MemberSize will return the number of members
+      * @return number of members
+      */
+      virtual size_t MemberSize() const;
 
- 
-         /**
-          * FunctionParameterAt returns the nth FunctionParameterAt
-          * @param  nth nth FunctionParameterAt
-          * @return pointer to nth FunctionParameterAt At
-          */
-         virtual Type FunctionParameterAt( size_t nth ) const;
 
+      virtual Member_Iterator Member_Begin() const;
+      virtual Member_Iterator Member_End() const;
+      virtual Reverse_Member_Iterator Member_RBegin() const;
+      virtual Reverse_Member_Iterator Member_REnd() const;
 
-         /**
-          * FunctionParameterSize will return the number of parameters of this function
-          * @return number of parameters
-          */
-         virtual size_t FunctionParameterSize() const;
 
+      /** 
+      * MemberTemplateAt will return the nth MemberAt template of this At
+      * @param nth MemberAt template
+      * @return nth MemberAt template
+      */
+      virtual MemberTemplate MemberTemplateAt( size_t nth ) const;
 
-         virtual Type_Iterator FunctionParameter_Begin() const;
-         virtual Type_Iterator FunctionParameter_End() const;
-         virtual Reverse_Type_Iterator FunctionParameter_RBegin() const;
-         virtual Reverse_Type_Iterator FunctionParameter_REnd() const;
 
- 
-         /**
-          * PointerToMemberScope will return the scope of the pointer to member type
-          * @return scope of the pointer to member type
-          */
-         virtual Scope PointerToMemberScope() const;
+      /** 
+      * MemberTemplateSize will return the number of MemberAt templates in this socpe
+      * @return number of defined MemberAt templates
+      */
+      virtual size_t MemberTemplateSize() const;
 
 
-         /**
-          * Properties will return a pointer to the PropertyNth list attached
-          * to this item
-          * @return pointer to PropertyNth list
-          */
-         virtual PropertyList Properties() const;
+      virtual MemberTemplate_Iterator MemberTemplate_Begin() const;
+      virtual MemberTemplate_Iterator MemberTemplate_End() const;
+      virtual Reverse_MemberTemplate_Iterator MemberTemplate_RBegin() const;
+      virtual Reverse_MemberTemplate_Iterator MemberTemplate_REnd() const;
 
 
-         /**
-          * RawType will return the underlying type of a type removing all information
-          * of pointers, arrays, typedefs
-          * @return the raw type representation
-          */
-         Type RawType() const;
+      /**
+      * Name returns the name of the type
+      * @return name of type
+      */
+      virtual std::string Name( unsigned int mod = 0 ) const;
 
 
-         /**
-          * ReturnType will return a pointer to the At of the return At.
-          * @return pointer to Type of return At
-          */
-         virtual Type ReturnType() const;
-      
+      /**
+      * SimpleName returns the name of the type as a reference. It provides a 
+      * simplified but faster generation of a type name. Attention currently it
+      * is not guaranteed that Name() and SimpleName() return the same character 
+      * layout of a name (ie. spacing, commas, etc. )
+      * @param pos will indicate where in the returned reference the requested name starts
+      * @param mod The only 'mod' support is SCOPED
+      * @return name of type
+      */
+      virtual const std::string & SimpleName( size_t & pos, 
+         unsigned int mod = 0 ) const;
 
-         /**
-          * sizeof will return the size of the At
-          * @return size of the At as int
-          */
-         size_t SizeOf() const;
 
+      /**
+      * FunctionParameterAt returns the nth FunctionParameterAt
+      * @param  nth nth FunctionParameterAt
+      * @return pointer to nth FunctionParameterAt At
+      */
+      virtual Type FunctionParameterAt( size_t nth ) const;
 
-         /**
-          * SubScopeAt will return a pointer to a sub-scopes
-          * @param  nth sub-At
-          * @return pointer to nth sub-At
-          */
-         virtual Scope SubScopeAt( size_t nth ) const;
 
+      /**
+      * FunctionParameterSize will return the number of parameters of this function
+      * @return number of parameters
+      */
+      virtual size_t FunctionParameterSize() const;
 
-         /**
-          * ScopeSize will return the number of sub-scopes
-          * @return number of sub-scopes
-          */
-         virtual size_t SubScopeSize() const;
 
+      virtual Type_Iterator FunctionParameter_Begin() const;
+      virtual Type_Iterator FunctionParameter_End() const;
+      virtual Reverse_Type_Iterator FunctionParameter_RBegin() const;
+      virtual Reverse_Type_Iterator FunctionParameter_REnd() const;
 
-         virtual Scope_Iterator SubScope_Begin() const;
-         virtual Scope_Iterator SubScope_End() const;
-         virtual Reverse_Scope_Iterator SubScope_RBegin() const;
-         virtual Reverse_Scope_Iterator SubScope_REnd() const;
 
+      /**
+      * PointerToMemberScope will return the scope of the pointer to member type
+      * @return scope of the pointer to member type
+      */
+      virtual Scope PointerToMemberScope() const;
 
-         /**
-          * nthType will return a pointer to the nth sub-At
-          * @param  nth sub-At
-          * @return pointer to nth sub-At
-          */
-         virtual Type SubTypeAt( size_t nth ) const;
 
+      /**
+      * Properties will return a pointer to the PropertyNth list attached
+      * to this item
+      * @return pointer to PropertyNth list
+      */
+      virtual PropertyList Properties() const;
 
-         /**
-          * TypeSize will returnt he number of sub-types
-          * @return number of sub-types
-          */
-         virtual size_t SubTypeSize() const;
 
+      /**
+      * RawType will return the underlying type of a type removing all information
+      * of pointers, arrays, typedefs
+      * @return the raw type representation
+      */
+      Type RawType() const;
 
-         virtual Type_Iterator SubType_Begin() const;
-         virtual Type_Iterator SubType_End() const;
-         virtual Reverse_Type_Iterator SubType_RBegin() const;
-         virtual Reverse_Type_Iterator SubType_REnd() const;
 
+      /**
+      * ReturnType will return a pointer to the At of the return At.
+      * @return pointer to Type of return At
+      */
+      virtual Type ReturnType() const;
 
-         /**
-          * TemplateArgumentAt will return a pointer to the nth template argument
-          * @param  nth nth template argument
-          * @return pointer to nth template argument
-          */
-         virtual Type TemplateArgumentAt( size_t nth ) const;
 
+      /**
+      * sizeof will return the size of the At
+      * @return size of the At as int
+      */
+      size_t SizeOf() const;
 
-         /**
-          * templateArgSize will return the number of template arguments
-          * @return number of template arguments
-          */
-         virtual size_t TemplateArgumentSize() const;
 
+      /**
+      * SubScopeAt will return a pointer to a sub-scopes
+      * @param  nth sub-At
+      * @return pointer to nth sub-At
+      */
+      virtual Scope SubScopeAt( size_t nth ) const;
 
-         virtual Type_Iterator TemplateArgument_Begin() const;
-         virtual Type_Iterator TemplateArgument_End() const;
-         virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
-         virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
 
+      /**
+      * ScopeSize will return the number of sub-scopes
+      * @return number of sub-scopes
+      */
+      virtual size_t SubScopeSize() const;
 
-         /**
-          * TemplateFamily returns the corresponding TypeTemplate if any
-          * @return corresponding TypeTemplate
-          */
-         virtual TypeTemplate TemplateFamily() const;
 
+      virtual Scope_Iterator SubScope_Begin() const;
+      virtual Scope_Iterator SubScope_End() const;
+      virtual Reverse_Scope_Iterator SubScope_RBegin() const;
+      virtual Reverse_Scope_Iterator SubScope_REnd() const;
 
-         /**
-          * arrayType will return a pointer to the At of the array.
-          * @return pointer to Type of MemberAt et. al.
-          */
-         virtual Type ToType() const;
 
+      /**
+      * nthType will return a pointer to the nth sub-At
+      * @param  nth sub-At
+      * @return pointer to nth sub-At
+      */
+      virtual Type SubTypeAt( size_t nth ) const;
 
-         /** 
-          * At returns the corresponding unqualified Type object
-          * @return corresponding At object
-          */
-         Type ThisType() const;
 
+      /**
+      * TypeSize will returnt he number of sub-types
+      * @return number of sub-types
+      */
+      virtual size_t SubTypeSize() const;
 
-         /** 
-          * SubTypeTemplateAt will return the nth At template of this At
-          * @param nth At template
-          * @return nth At template
-          */
-         virtual TypeTemplate SubTypeTemplateAt( size_t nth ) const;
 
+      virtual Type_Iterator SubType_Begin() const;
+      virtual Type_Iterator SubType_End() const;
+      virtual Reverse_Type_Iterator SubType_RBegin() const;
+      virtual Reverse_Type_Iterator SubType_REnd() const;
 
-         /** 
-          * SubTypeTemplateSize will return the number of At templates in this socpe
-          * @return number of defined At templates
-          */
-         virtual size_t SubTypeTemplateSize() const;
 
+      /**
+      * TemplateArgumentAt will return a pointer to the nth template argument
+      * @param  nth nth template argument
+      * @return pointer to nth template argument
+      */
+      virtual Type TemplateArgumentAt( size_t nth ) const;
 
-         virtual TypeTemplate_Iterator SubTypeTemplate_Begin() const;
-         virtual TypeTemplate_Iterator SubTypeTemplate_End() const;
-         virtual Reverse_TypeTemplate_Iterator SubTypeTemplate_RBegin() const;
-         virtual Reverse_TypeTemplate_Iterator SubTypeTemplate_REnd() const;
 
+      /**
+      * templateArgSize will return the number of template arguments
+      * @return number of template arguments
+      */
+      virtual size_t TemplateArgumentSize() const;
 
-         /**
-          * TypeInfo will return the c++ type_info object of the At
-          * @return type_info object of At
-          */
-         virtual const std::type_info & TypeInfo() const;
 
+      virtual Type_Iterator TemplateArgument_Begin() const;
+      virtual Type_Iterator TemplateArgument_End() const;
+      virtual Reverse_Type_Iterator TemplateArgument_RBegin() const;
+      virtual Reverse_Type_Iterator TemplateArgument_REnd() const;
 
-         /**
-          * TypeType will return the real At
-          * @return real At
-          */
-         TYPE TypeType() const;
 
+      /**
+      * TemplateFamily returns the corresponding TypeTemplate if any
+      * @return corresponding TypeTemplate
+      */
+      virtual TypeTemplate TemplateFamily() const;
 
-         /**
-          * TypeTypeAsString will return the string representation of the TYPE At
-          * @return string representation of TYPE At
-          */
-         std::string TypeTypeAsString() const;
 
+      /**
+      * arrayType will return a pointer to the At of the array.
+      * @return pointer to Type of MemberAt et. al.
+      */
+      virtual Type ToType() const;
 
-         /** 
-          * UpdateMembers2 will update the list of Function/Data/Members with all
-          * MemberAt of BaseAt classes currently availabe in the system
-          */
-         virtual void UpdateMembers() const;
 
-      public:
+      /** 
+      * At returns the corresponding unqualified Type object
+      * @return corresponding At object
+      */
+      Type ThisType() const;
 
-         /**
-          * AddDataMember will add the information about a data MemberAt
-          * @param dm pointer to data MemberAt
-          */
-         virtual void AddDataMember( const Member & dm ) const;
-         virtual void AddDataMember( const char * nam,
-                                     const Type & typ,
-                                     size_t offs,
-                                     unsigned int modifiers = 0 ) const;
 
+      /** 
+      * SubTypeTemplateAt will return the nth At template of this At
+      * @param nth At template
+      * @return nth At template
+      */
+      virtual TypeTemplate SubTypeTemplateAt( size_t nth ) const;
 
-         /**
-          * AddFunctionMember will add the information about a function MemberAt
-          * @param fm pointer to function MemberAt
-          */
-         virtual void AddFunctionMember( const Member & fm ) const;
-         virtual void AddFunctionMember( const char * nam,
-                                         const Type & typ,
-                                         StubFunction stubFP,
-                                         void * stubCtx = 0,
-                                         const char * params = 0,
-                                         unsigned int modifiers = 0 ) const;
 
+      /** 
+      * SubTypeTemplateSize will return the number of At templates in this socpe
+      * @return number of defined At templates
+      */
+      virtual size_t SubTypeTemplateSize() const;
 
-         /**
-          * AddSubScope will add a sub-At to this one
-          * @param sc pointer to Scope
-          */
-         virtual void AddSubScope( const Scope & sc ) const;
-         virtual void AddSubScope( const char * scop,
-                                   TYPE scopeTyp ) const;
 
+      virtual TypeTemplate_Iterator SubTypeTemplate_Begin() const;
+      virtual TypeTemplate_Iterator SubTypeTemplate_End() const;
+      virtual Reverse_TypeTemplate_Iterator SubTypeTemplate_RBegin() const;
+      virtual Reverse_TypeTemplate_Iterator SubTypeTemplate_REnd() const;
 
-         /**
-          * AddSubType will add a sub-At to this At
-          * @param sc pointer to Type
-          */
-         virtual void AddSubType( const Type & ty ) const;
-         virtual void AddSubType( const char * typ,
-                                  size_t size,
-                                  TYPE typeTyp,
-                                  const std::type_info & ti,
-                                  unsigned int modifiers ) const;
 
+      /**
+      * TypeInfo will return the c++ type_info object of the At
+      * @return type_info object of At
+      */
+      virtual const std::type_info & TypeInfo() const;
 
-         /**
-          * RemoveDataMember will remove the information about a data MemberAt
-          * @param dm pointer to data MemberAt
-          */
-         virtual void RemoveDataMember( const Member & dm ) const;
 
+      /**
+      * TypeType will return the real At
+      * @return real At
+      */
+      TYPE TypeType() const;
 
-         /**
-          * RemoveFunctionMember will remove the information about a function MemberAt
-          * @param fm pointer to function MemberAt
-          */
-         virtual void RemoveFunctionMember( const Member & fm ) const;
 
+      /**
+      * TypeTypeAsString will return the string representation of the TYPE At
+      * @return string representation of TYPE At
+      */
+      std::string TypeTypeAsString() const;
 
-         /**
-          * RemoveSubScope will remove a sub-At to this one
-          * @param sc pointer to Scope
-          */
-         virtual void RemoveSubScope( const Scope & sc ) const;
 
+      /** 
+      * UpdateMembers2 will update the list of Function/Data/Members with all
+      * MemberAt of BaseAt classes currently availabe in the system
+      */
+      virtual void UpdateMembers() const;
 
-         /**
-          * RemoveSubType will remove a sub-At to this At
-          * @param sc pointer to Type
-          */
-         virtual void RemoveSubType( const Type & ty ) const;     
+   public:
 
-         
-         /**
-          * SetSize will set the size of the type. This function shall
-          * be used with care. It will change the reflection information
-          * of this type.
-          */
-         void SetSize( size_t s ) const;
+      /**
+      * AddDataMember will add the information about a data MemberAt
+      * @param dm pointer to data MemberAt
+      */
+      virtual void AddDataMember( const Member & dm ) const;
+      virtual void AddDataMember( const char * nam,
+         const Type & typ,
+         size_t offs,
+         unsigned int modifiers = 0 ) const;
 
 
-         /**
-          * SetTypeInfo will set the type_info object of this type.
-          * Attention: This will change the reflection information
-          * of this type.
-          */
-         void SetTypeInfo( const std::type_info & ti ) const;
+      /**
+      * AddFunctionMember will add the information about a function MemberAt
+      * @param fm pointer to function MemberAt
+      */
+      virtual void AddFunctionMember( const Member & fm ) const;
+      virtual void AddFunctionMember( const char * nam,
+         const Type & typ,
+         StubFunction stubFP,
+         void * stubCtx = 0,
+         const char * params = 0,
+         unsigned int modifiers = 0 ) const;
 
 
-         virtual void HideName() const;
+      /**
+      * AddSubScope will add a sub-At to this one
+      * @param sc pointer to Scope
+      */
+      virtual void AddSubScope( const Scope & sc ) const;
+      virtual void AddSubScope( const char * scop,
+         TYPE scopeTyp ) const;
 
-      protected:
 
-         /**
-          * Pointer to the TypeName 
-          * @label At Name
-          * @ling aggregation
-          * @link aggregation
-          * @supplierCardinality 1
-          * @clientCardinality 1
-          */
-         TypeName * fTypeName;
+      /**
+      * AddSubType will add a sub-At to this At
+      * @param sc pointer to Type
+      */
+      virtual void AddSubType( const Type & ty ) const;
+      virtual void AddSubType( const char * typ,
+         size_t size,
+         TYPE typeTyp,
+         const std::type_info & ti,
+         unsigned int modifiers ) const;
 
 
-         /** C++ type_info object */
-         mutable
-            const std::type_info * fTypeInfo;
+      /**
+      * RemoveDataMember will remove the information about a data MemberAt
+      * @param dm pointer to data MemberAt
+      */
+      virtual void RemoveDataMember( const Member & dm ) const;
 
-      private:
 
-         /**
-          * The Scope of the Type
-          * @label type scope
-          * @link aggregation
-          * @clientCardinality 1
-          * @supplierCardinality 1
-          */
-         Scope fScope;
+      /**
+      * RemoveFunctionMember will remove the information about a function MemberAt
+      * @param fm pointer to function MemberAt
+      */
+      virtual void RemoveFunctionMember( const Member & fm ) const;
 
 
-         /** size of the type in int */
-         mutable
-            size_t fSize;
+      /**
+      * RemoveSubScope will remove a sub-At to this one
+      * @param sc pointer to Scope
+      */
+      virtual void RemoveSubScope( const Scope & sc ) const;
 
 
-         /**
-          * TYPE (kind) of the Type
-          * @link aggregation
-          * @label type type
-          * @clientCardinality 1
-          * @supplierCardinality 1
-          */
-         TYPE fTypeType;
+      /**
+      * RemoveSubType will remove a sub-At to this At
+      * @param sc pointer to Type
+      */
+      virtual void RemoveSubType( const Type & ty ) const;     
 
 
-         /**
-          * Property list attached to this type
-          * @label propertylist
-          * @link aggregationByValue
-          * @clientCardinality 1
-          * @supplierCardinality 1
-          */
-         OwnedPropertyList fPropertyList;
+      /**
+      * SetSize will set the size of the type. This function shall
+      * be used with care. It will change the reflection information
+      * of this type.
+      */
+      void SetSize( size_t s ) const;
 
 
-         /**
-          * The position where the unscoped Name starts in the typename
-          */
-         size_t fBasePosition;
+      /**
+      * SetTypeInfo will set the type_info object of this type.
+      * Attention: This will change the reflection information
+      * of this type.
+      */
+      void SetTypeInfo( const std::type_info & ti ) const;
 
 
-         /**
-          * the final type excluding typedefs
-          * @label final typedef type
-          * @link aggregation
-          * @supplierCardinality 0..1
-          * @clientCardinality 1
-          */
-         mutable
-            Type * fFinalType;
+      virtual void HideName() const;
 
+   protected:
 
-         /**
-          * the raw type excluding pointers, typedefs and arrays
-          * @label raw type
-          * @link aggregation
-          * @supplierCardinality 0..1
-          * @clientCardinality 1
-          */
-         mutable
-            Type * fRawType;
+      /**
+      * DetermineFinalType will return the t without typedefs 
+      * @return type with all typedef info removed
+      */
+      Type DetermineFinalType(const Type& t) const;
 
-      }; // class TypeBase
-   } //namespace Reflex
-} //namespace ROOT
+      /**
+      * Pointer to the TypeName 
+      * @label At Name
+      * @ling aggregation
+      * @link aggregation
+      * @supplierCardinality 1
+      * @clientCardinality 1
+      */
+      TypeName * fTypeName;
+
+
+      /** C++ type_info object */
+      mutable
+         const std::type_info * fTypeInfo;
+
+   private:
+
+      /**
+      * The Scope of the Type
+      * @label type scope
+      * @link aggregation
+      * @clientCardinality 1
+      * @supplierCardinality 1
+      */
+      Scope fScope;
+
+
+      /** size of the type in int */
+      mutable
+         size_t fSize;
+
+
+      /**
+      * TYPE (kind) of the Type
+      * @link aggregation
+      * @label type type
+      * @clientCardinality 1
+      * @supplierCardinality 1
+      */
+      TYPE fTypeType;
+
+
+      /**
+      * Property list attached to this type
+      * @label propertylist
+      * @link aggregationByValue
+      * @clientCardinality 1
+      * @supplierCardinality 1
+      */
+      OwnedPropertyList fPropertyList;
+
+
+      /**
+      * The position where the unscoped Name starts in the typename
+      */
+      size_t fBasePosition;
+
+
+      /**
+      * the final type excluding typedefs
+      * @label final typedef type
+      * @link aggregation
+      * @supplierCardinality 0..1
+      * @clientCardinality 1
+      */
+      mutable
+         Type * fFinalType;
+
+
+      /**
+      * the raw type excluding pointers, typedefs and arrays
+      * @label raw type
+      * @link aggregation
+      * @supplierCardinality 0..1
+      * @clientCardinality 1
+      */
+      mutable
+         Type * fRawType;
+
+   }; // class TypeBase
+} //namespace Reflex
 
 #include "Reflex/TypeTemplate.h"
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Base_Iterator ROOT::Reflex::TypeBase::Base_Begin() const {
+inline Reflex::Base_Iterator Reflex::TypeBase::Base_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::BaseCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Base_Iterator ROOT::Reflex::TypeBase::Base_End() const {
+inline Reflex::Base_Iterator Reflex::TypeBase::Base_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::BaseCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::TypeBase::Base_RBegin() const {
+inline Reflex::Reverse_Base_Iterator Reflex::TypeBase::Base_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::BaseCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::TypeBase::Base_REnd() const {
+inline Reflex::Reverse_Base_Iterator Reflex::TypeBase::Base_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::BaseCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::DataMemberSize() const {
+inline size_t Reflex::TypeBase::DataMemberSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::DataMember_Begin() const {
+inline Reflex::Member_Iterator Reflex::TypeBase::DataMember_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::DataMember_End() const {
+inline Reflex::Member_Iterator Reflex::TypeBase::DataMember_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::DataMember_RBegin() const {
+inline Reflex::Reverse_Member_Iterator Reflex::TypeBase::DataMember_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::DataMember_REnd() const {
+inline Reflex::Reverse_Member_Iterator Reflex::TypeBase::DataMember_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::FunctionMemberSize() const {
+inline size_t Reflex::TypeBase::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_Begin() const {
+inline Reflex::Member_Iterator Reflex::TypeBase::FunctionMember_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_End() const {
+inline Reflex::Member_Iterator Reflex::TypeBase::FunctionMember_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_RBegin() const {
+inline Reflex::Reverse_Member_Iterator Reflex::TypeBase::FunctionMember_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::FunctionMember_REnd() const {
+inline Reflex::Reverse_Member_Iterator Reflex::TypeBase::FunctionMember_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsAbstract() const {
+inline bool Reflex::TypeBase::IsAbstract() const {
 //-------------------------------------------------------------------------------
    return false;
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsArray() const {
+inline bool Reflex::TypeBase::IsArray() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == ARRAY );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsClass() const {
+inline bool Reflex::TypeBase::IsClass() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == CLASS || 
             fTypeType == TYPETEMPLATEINSTANCE || 
@@ -940,56 +945,56 @@ inline bool ROOT::Reflex::TypeBase::IsClass() const {
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsComplete() const {
+inline bool Reflex::TypeBase::IsComplete() const {
 //-------------------------------------------------------------------------------
    return true;
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsEnum() const {
+inline bool Reflex::TypeBase::IsEnum() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == ENUM );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsFunction() const {
+inline bool Reflex::TypeBase::IsFunction() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == FUNCTION );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsFundamental() const {
+inline bool Reflex::TypeBase::IsFundamental() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == FUNDAMENTAL );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsPointer() const {
+inline bool Reflex::TypeBase::IsPointer() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == POINTER );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsStruct() const {
+inline bool Reflex::TypeBase::IsStruct() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == STRUCT );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsPointerToMember() const {
+inline bool Reflex::TypeBase::IsPointerToMember() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == POINTERTOMEMBER );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsTemplateInstance() const {
+inline bool Reflex::TypeBase::IsTemplateInstance() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == TYPETEMPLATEINSTANCE || 
             fTypeType == MEMBERTEMPLATEINSTANCE );
@@ -997,322 +1002,322 @@ inline bool ROOT::Reflex::TypeBase::IsTemplateInstance() const {
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsTypedef() const {
+inline bool Reflex::TypeBase::IsTypedef() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == TYPEDEF );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsUnion() const {
+inline bool Reflex::TypeBase::IsUnion() const {
 //-------------------------------------------------------------------------------
    return ( fTypeType == UNION );
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsPrivate() const {
+inline bool Reflex::TypeBase::IsPrivate() const {
 //-------------------------------------------------------------------------------
    return false;
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsProtected() const {
+inline bool Reflex::TypeBase::IsProtected() const {
 //-------------------------------------------------------------------------------
    return false;
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsPublic() const {
+inline bool Reflex::TypeBase::IsPublic() const {
 //-------------------------------------------------------------------------------
    return false;
 }
 
 
 //-------------------------------------------------------------------------------
-inline bool ROOT::Reflex::TypeBase::IsVirtual() const {
+inline bool Reflex::TypeBase::IsVirtual() const {
 //-------------------------------------------------------------------------------
    return false;
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::MemberSize() const {
+inline size_t Reflex::TypeBase::MemberSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::Member_Begin() const {
+inline Reflex::Member_Iterator Reflex::TypeBase::Member_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Member_Iterator ROOT::Reflex::TypeBase::Member_End() const {
+inline Reflex::Member_Iterator Reflex::TypeBase::Member_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::Member_RBegin() const {
+inline Reflex::Reverse_Member_Iterator Reflex::TypeBase::Member_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::TypeBase::Member_REnd() const {
+inline Reflex::Reverse_Member_Iterator Reflex::TypeBase::Member_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberCont().rend();  
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::MemberTemplateSize() const {
+inline size_t Reflex::TypeBase::MemberTemplateSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_Begin() const {
+inline Reflex::MemberTemplate_Iterator Reflex::TypeBase::MemberTemplate_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberTemplateCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_End() const {
+inline Reflex::MemberTemplate_Iterator Reflex::TypeBase::MemberTemplate_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberTemplateCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_RBegin() const {
+inline Reflex::Reverse_MemberTemplate_Iterator Reflex::TypeBase::MemberTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberTemplateCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::TypeBase::MemberTemplate_REnd() const {
+inline Reflex::Reverse_MemberTemplate_Iterator Reflex::TypeBase::MemberTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberTemplateCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_Begin() const {
+inline Reflex::Type_Iterator Reflex::TypeBase::FunctionParameter_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_End() const {
+inline Reflex::Type_Iterator Reflex::TypeBase::FunctionParameter_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_RBegin() const {
+inline Reflex::Reverse_Type_Iterator Reflex::TypeBase::FunctionParameter_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::FunctionParameter_REnd() const {
+inline Reflex::Reverse_Type_Iterator Reflex::TypeBase::FunctionParameter_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::SizeOf() const { 
+inline size_t Reflex::TypeBase::SizeOf() const { 
 //-------------------------------------------------------------------------------
    return fSize; 
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::SubScopeSize() const {
+inline size_t Reflex::TypeBase::SubScopeSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::TypeBase::SubScope_Begin() const {
+inline Reflex::Scope_Iterator Reflex::TypeBase::SubScope_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::ScopeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Scope_Iterator ROOT::Reflex::TypeBase::SubScope_End() const {
+inline Reflex::Scope_Iterator Reflex::TypeBase::SubScope_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::ScopeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::TypeBase::SubScope_RBegin() const {
+inline Reflex::Reverse_Scope_Iterator Reflex::TypeBase::SubScope_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::ScopeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::TypeBase::SubScope_REnd() const {
+inline Reflex::Reverse_Scope_Iterator Reflex::TypeBase::SubScope_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::ScopeCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::SubTypeSize() const {
+inline size_t Reflex::TypeBase::SubTypeSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::SubType_Begin() const {
+inline Reflex::Type_Iterator Reflex::TypeBase::SubType_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::SubType_End() const {
+inline Reflex::Type_Iterator Reflex::TypeBase::SubType_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::SubType_RBegin() const {
+inline Reflex::Reverse_Type_Iterator Reflex::TypeBase::SubType_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::SubType_REnd() const {
+inline Reflex::Reverse_Type_Iterator Reflex::TypeBase::SubType_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::TemplateArgumentSize() const {
+inline size_t Reflex::TypeBase::TemplateArgumentSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_Begin() const {
+inline Reflex::Type_Iterator Reflex::TypeBase::TemplateArgument_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_End() const {
+inline Reflex::Type_Iterator Reflex::TypeBase::TemplateArgument_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_RBegin() const {
+inline Reflex::Reverse_Type_Iterator Reflex::TypeBase::TemplateArgument_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::TemplateArgument_REnd() const {
+inline Reflex::Reverse_Type_Iterator Reflex::TypeBase::TemplateArgument_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeBase::TemplateFamily() const {
+inline Reflex::TypeTemplate Reflex::TypeBase::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
-inline const std::type_info & ROOT::Reflex::TypeBase::TypeInfo() const {
+inline const std::type_info & Reflex::TypeBase::TypeInfo() const {
 //-------------------------------------------------------------------------------
    return *fTypeInfo;
 }
 
 
 //-------------------------------------------------------------------------------
-inline size_t ROOT::Reflex::TypeBase::SubTypeTemplateSize() const {
+inline size_t Reflex::TypeBase::SubTypeTemplateSize() const {
 //-------------------------------------------------------------------------------
    return 0;
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_Begin() const {
+inline Reflex::TypeTemplate_Iterator Reflex::TypeBase::SubTypeTemplate_Begin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeTemplateCont().begin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_End() const {
+inline Reflex::TypeTemplate_Iterator Reflex::TypeBase::SubTypeTemplate_End() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeTemplateCont().end();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_RBegin() const {
+inline Reflex::Reverse_TypeTemplate_Iterator Reflex::TypeBase::SubTypeTemplate_RBegin() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeTemplateCont().rbegin();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Reverse_TypeTemplate_Iterator ROOT::Reflex::TypeBase::SubTypeTemplate_REnd() const {
+inline Reflex::Reverse_TypeTemplate_Iterator Reflex::TypeBase::SubTypeTemplate_REnd() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeTemplateCont().rend();
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::UpdateMembers() const {
+inline void Reflex::TypeBase::UpdateMembers() const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function UpdateMembers can only be called on Class/Struct");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddDataMember( const Member & /* dm */ ) const {
+inline void Reflex::TypeBase::AddDataMember( const Member & /* dm */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function AddDataMember  not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddDataMember( const char * /* nam */,
+inline void Reflex::TypeBase::AddDataMember( const char * /* nam */,
                                                    const Type & /* typ */,
                                                    size_t /* offs */,
                                                    unsigned int /* modifiers */ ) const {
@@ -1322,14 +1327,14 @@ inline void ROOT::Reflex::TypeBase::AddDataMember( const char * /* nam */,
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddFunctionMember( const Member & /* fm */ ) const {
+inline void Reflex::TypeBase::AddFunctionMember( const Member & /* fm */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function AddFunctionMember not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddFunctionMember( const char * /* nam */,
+inline void Reflex::TypeBase::AddFunctionMember( const char * /* nam */,
                                                        const Type & /* typ */,
                                                        StubFunction /* stubFP */,
                                                        void * /* stubCtx */,
@@ -1341,14 +1346,14 @@ inline void ROOT::Reflex::TypeBase::AddFunctionMember( const char * /* nam */,
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddSubScope( const Scope & /* sc */ ) const {
+inline void Reflex::TypeBase::AddSubScope( const Scope & /* sc */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function AddSubScope not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddSubScope( const char * /* scop */,
+inline void Reflex::TypeBase::AddSubScope( const char * /* scop */,
                                                  TYPE /* scopeTyp */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function AddSubScope not callable on this object");
@@ -1356,14 +1361,14 @@ inline void ROOT::Reflex::TypeBase::AddSubScope( const char * /* scop */,
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddSubType( const Type & /* ty */ ) const {
+inline void Reflex::TypeBase::AddSubType( const Type & /* ty */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function AddSubType not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::AddSubType( const char * /* typ */,
+inline void Reflex::TypeBase::AddSubType( const char * /* typ */,
                                                 size_t /* size */,
                                                 TYPE /* typeTyp */,
                                                 const std::type_info & /* ti */,
@@ -1374,47 +1379,47 @@ inline void ROOT::Reflex::TypeBase::AddSubType( const char * /* typ */,
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::RemoveDataMember( const Member & /* dm */ ) const {
+inline void Reflex::TypeBase::RemoveDataMember( const Member & /* dm */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function RemoveDataMember not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::RemoveFunctionMember( const Member & /* fm */ ) const {
+inline void Reflex::TypeBase::RemoveFunctionMember( const Member & /* fm */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function RemoveFunctionMember not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::RemoveSubScope( const Scope & /* sc */ ) const {
+inline void Reflex::TypeBase::RemoveSubScope( const Scope & /* sc */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function RemoveSubScope not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::RemoveSubType( const Type & /* ty */ ) const {
+inline void Reflex::TypeBase::RemoveSubType( const Type & /* ty */ ) const {
 //-------------------------------------------------------------------------------
    throw RuntimeError("Function RemoveSubType not callable on this object");
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::SetSize( size_t s ) const {
+inline void Reflex::TypeBase::SetSize( size_t s ) const {
 //-------------------------------------------------------------------------------
    fSize = s;
 }
 
 
 //-------------------------------------------------------------------------------
-inline void ROOT::Reflex::TypeBase::SetTypeInfo( const std::type_info & ti ) const {
+inline void Reflex::TypeBase::SetTypeInfo( const std::type_info & ti ) const {
 //-------------------------------------------------------------------------------
    fTypeInfo = &ti;
 }
 
-#endif // ROOT_Reflex_TypeBase
+#endif // Reflex_TypeBase
 
 
 

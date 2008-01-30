@@ -9,166 +9,164 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_FunctionBuilder
-#define ROOT_Reflex_FunctionBuilder
+#ifndef Reflex_FunctionBuilder
+#define Reflex_FunctionBuilder
 
 // Include files
 #include "Reflex/Reflex.h"
 
-namespace ROOT {
-   namespace Reflex {
-  
-      // forward declarations
-      class FunctionMember;
-      class Type;
+namespace Reflex {
 
-      /** 
-       * @class FunctionBuilder FunctionBuilder.h Reflex/Builder/FunctionBuilder.h
-       * @author Pere Mato
-       * @date 1/8/2004
-       * @ingroup RefBld
-       */
-      class RFLX_API FunctionBuilder {
+   // forward declarations
+   class FunctionMember;
+   class Type;
 
-      public:    
+   /** 
+   * @class FunctionBuilder FunctionBuilder.h Reflex/Builder/FunctionBuilder.h
+   * @author Pere Mato
+   * @date 1/8/2004
+   * @ingroup RefBld
+   */
+   class RFLX_API FunctionBuilder {
 
-         /** constructor */
-         FunctionBuilder( const Type & typ,
-                          const char * nam,
-                          StubFunction stubFP,
-                          void * stubCtx,
-                          const char * params, 
-                          unsigned char modifiers );
-      
+   public:    
 
-         /** destructor */
-         virtual ~FunctionBuilder();
+      /** constructor */
+      FunctionBuilder( const Type & typ,
+         const char * nam,
+         StubFunction stubFP,
+         void * stubCtx,
+         const char * params, 
+         unsigned char modifiers );
 
 
-         /** AddProperty will add a property
-          * @param  key the property key
-          * @param  value the value of the property
-          * @return a reference to the building class
-          */
-         FunctionBuilder & AddProperty( const char * key, 
-                                        Any value );
-         FunctionBuilder & AddProperty( const char * key,
-                                        const char * value );
+      /** destructor */
+      virtual ~FunctionBuilder();
 
 
-         /**
-          * ToMember will return the member currently being built
-          * @return member currently being built
-          */
-         Member ToMember();
-
-      private:
-
-         /** function member */
-         Member fFunction;
-
-      }; // class FunctionBuilder
-    
-
-      /** 
-       * @class FunctionBuilderImpl FunctionBuilder.h Reflex/Builder/FunctionBuilder.h
-       * @author Pere Mato
-       * @date 3/8/2004
-       * @ingroup RefBld
-       */
-      class RFLX_API FunctionBuilderImpl {
-    
-      public:
-      
-         /** constructor */
-         FunctionBuilderImpl( const char * nam, 
-                              const Type & typ,
-                              StubFunction stubFP,
-                              void * stubCtx,
-                              const char * params, 
-                              unsigned char modifiers = 0 );
-                          
-
-         /** destructor */
-         ~FunctionBuilderImpl();
+      /** AddProperty will add a property
+      * @param  key the property key
+      * @param  value the value of the property
+      * @return a reference to the building class
+      */
+      FunctionBuilder & AddProperty( const char * key, 
+         Any value );
+      FunctionBuilder & AddProperty( const char * key,
+         const char * value );
 
 
-         /** AddProperty will add a property 
-          * @param  key the property key
-          * @param  value the value of the property
-          * @return a reference to the building class
-          */
-         void AddProperty( const char * key, 
-                           Any value );
-         void AddProperty( const char * key, 
-                           const char * value );
+      /**
+      * ToMember will return the member currently being built
+      * @return member currently being built
+      */
+      Member ToMember();
+
+   private:
+
+      /** function member */
+      Member fFunction;
+
+   }; // class FunctionBuilder
 
 
-         /**
-          * ToMember will return the member currently being built
-          * @return member currently being built
-          */
-         Member ToMember();
+   /** 
+   * @class FunctionBuilderImpl FunctionBuilder.h Reflex/Builder/FunctionBuilder.h
+   * @author Pere Mato
+   * @date 3/8/2004
+   * @ingroup RefBld
+   */
+   class RFLX_API FunctionBuilderImpl {
 
-      private:
+   public:
 
-         /** function member being built */
-         Member fFunction;
-
-      }; // class FunctionBuilderImpl
-
-
-      /** 
-       * @class FunctionBuilderT FunctionBuilder.h Reflex/Builder/FunctionBuilder.h
-       * @author Pere Mato
-       * @date 1/8/2004
-       * @ingroup RefBld
-       */
-      template < typename F > class FunctionBuilderT {
-
-      public:    
-
-         /** constructor */
-         FunctionBuilderT( const char * nam,
-                           StubFunction stubFP,
-                           void * stubCtx,
-                           const char * params, 
-                           unsigned char modifiers );
-      
-         /** destructor */
-         virtual ~FunctionBuilderT() {}
-
-      
-         /** AddProperty will add a property
-          * @param  key the property key
-          * @param  value the value of the property
-          * @return a reference to the building class
-          */
-         template < typename P >
-            FunctionBuilderT & AddProperty( const char * key, P value );
+      /** constructor */
+      FunctionBuilderImpl( const char * nam, 
+         const Type & typ,
+         StubFunction stubFP,
+         void * stubCtx,
+         const char * params, 
+         unsigned char modifiers = 0 );
 
 
-         /**
-          * ToMember will return the member currently being built
-          * @return member currently being built
-          */
-         Member ToMember();
+      /** destructor */
+      ~FunctionBuilderImpl();
 
-      private:
 
-         /** function builder implemenation */
-         FunctionBuilderImpl fFunctionBuilderImpl;
+      /** AddProperty will add a property 
+      * @param  key the property key
+      * @param  value the value of the property
+      * @return a reference to the building class
+      */
+      void AddProperty( const char * key, 
+         Any value );
+      void AddProperty( const char * key, 
+         const char * value );
 
-      }; //class FunctionBuilderT
 
-   } // namespace Reflex
-} // namespace ROOT
+      /**
+      * ToMember will return the member currently being built
+      * @return member currently being built
+      */
+      Member ToMember();
+
+   private:
+
+      /** function member being built */
+      Member fFunction;
+
+   }; // class FunctionBuilderImpl
+
+
+   /** 
+   * @class FunctionBuilderT FunctionBuilder.h Reflex/Builder/FunctionBuilder.h
+   * @author Pere Mato
+   * @date 1/8/2004
+   * @ingroup RefBld
+   */
+   template < typename F > class FunctionBuilderT {
+
+   public:    
+
+      /** constructor */
+      FunctionBuilderT( const char * nam,
+         StubFunction stubFP,
+         void * stubCtx,
+         const char * params, 
+         unsigned char modifiers );
+
+      /** destructor */
+      virtual ~FunctionBuilderT() {}
+
+
+      /** AddProperty will add a property
+      * @param  key the property key
+      * @param  value the value of the property
+      * @return a reference to the building class
+      */
+      template < typename P >
+      FunctionBuilderT & AddProperty( const char * key, P value );
+
+
+      /**
+      * ToMember will return the member currently being built
+      * @return member currently being built
+      */
+      Member ToMember();
+
+   private:
+
+      /** function builder implemenation */
+      FunctionBuilderImpl fFunctionBuilderImpl;
+
+   }; //class FunctionBuilderT
+
+} // namespace Reflex
 
 #include "Reflex/Builder/TypeBuilder.h"
 
 //-------------------------------------------------------------------------------
 template < typename  F > 
-inline ROOT::Reflex::FunctionBuilderT<F>::FunctionBuilderT( const char * nam, 
+inline Reflex::FunctionBuilderT<F>::FunctionBuilderT( const char * nam, 
                                                             StubFunction stubFP,
                                                             void * stubCtx,
                                                             const char * params, 
@@ -184,8 +182,8 @@ inline ROOT::Reflex::FunctionBuilderT<F>::FunctionBuilderT( const char * nam,
 
 //-------------------------------------------------------------------------------
 template <  typename F > template < typename P >
-inline ROOT::Reflex::FunctionBuilderT<F> & 
-ROOT::Reflex::FunctionBuilderT<F>::AddProperty( const char * key, 
+inline Reflex::FunctionBuilderT<F> & 
+Reflex::FunctionBuilderT<F>::AddProperty( const char * key, 
                                                 P value )
 //-------------------------------------------------------------------------------
 { 
@@ -195,10 +193,10 @@ ROOT::Reflex::FunctionBuilderT<F>::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-template < typename F > inline ROOT::Reflex::Member
-ROOT::Reflex::FunctionBuilderT<F>::ToMember() {
+template < typename F > inline Reflex::Member
+Reflex::FunctionBuilderT<F>::ToMember() {
 //-------------------------------------------------------------------------------
    return fFunctionBuilderImpl.ToMember();
 }
 
-#endif // ROOT_Reflex_FunctionBuilder
+#endif // Reflex_FunctionBuilder

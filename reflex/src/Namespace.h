@@ -9,58 +9,56 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Namespace
-#define ROOT_Reflex_Namespace
+#ifndef Reflex_Namespace
+#define Reflex_Namespace
 
 // Include files
 #include "Reflex/Scope.h"
 
-namespace ROOT {
-   namespace Reflex {
+namespace Reflex {
 
-      // forward declarations
-      class Member;
-      class Scope;
-      class DictionaryGenerator;
+   // forward declarations
+   class Member;
+   class Scope;
+   class DictionaryGenerator;
+
+
+   /**
+   * @class Namespace Namespace.h Reflex/Namespace.h
+   * @author Stefan Roiser
+   * @date 24/11/2003
+   * @ingroup Ref
+   */
+   class Namespace : public ScopeBase {
+
+   public:
+
+      /** default constructor */
+      Namespace( const char * scop );
+
+
+      /** destructor */
+      virtual ~Namespace() {}
 
 
       /**
-       * @class Namespace Namespace.h Reflex/Namespace.h
-       * @author Stefan Roiser
-       * @date 24/11/2003
-       * @ingroup Ref
-       */
-      class Namespace : public ScopeBase {
-
-      public:
-
-         /** default constructor */
-         Namespace( const char * scop );
+      * GenerateDict will produce the dictionary information of this type
+      * @param generator a reference to the dictionary generator instance
+      */
+      virtual void GenerateDict(DictionaryGenerator &generator) const;
 
 
-         /** destructor */
-         virtual ~Namespace() {}
+      /**
+      * function for initialisation of the global namespace
+      */
+      static const Scope & GlobalScope();
 
-	 
-         /**
-          * GenerateDict will produce the dictionary information of this type
-          * @param generator a reference to the dictionary generator instance
-          */
-         virtual void GenerateDict(DictionaryGenerator &generator) const;
-	  
-	 
-         /**
-          * function for initialisation of the global namespace
-          */
-         static const Scope & GlobalScope();
+   private:
 
-      private:
+      /** constructor for initialisation of the global namespace */
+      Namespace();
 
-         /** constructor for initialisation of the global namespace */
-         Namespace();
+   }; // class Namespace
+} //namespace Reflex
 
-      }; // class Namespace
-   } //namespace Reflex
-} //namespace ROOT
-
-#endif // ROOT_Reflex_Namespace
+#endif // Reflex_Namespace

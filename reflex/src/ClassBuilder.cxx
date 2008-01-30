@@ -28,7 +28,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilder::ClassBuilder( const char * nam, 
+Reflex::ClassBuilder::ClassBuilder( const char * nam, 
                                           const std::type_info & ti,
                                           size_t size,
                                           unsigned int modifiers, 
@@ -39,8 +39,8 @@ ROOT::Reflex::ClassBuilder::ClassBuilder( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddBase( const Type & bas,
+Reflex::ClassBuilder & 
+Reflex::ClassBuilder::AddBase( const Type & bas,
                                      OffsetFunction offsFP, 
                                      unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
@@ -53,8 +53,8 @@ ROOT::Reflex::ClassBuilder::AddBase( const Type & bas,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddDataMember( const Type &  typ,
+Reflex::ClassBuilder & 
+Reflex::ClassBuilder::AddDataMember( const Type &  typ,
                                            const char *  nam,
                                            size_t        offs,
                                            unsigned int modifiers ) {
@@ -69,8 +69,8 @@ ROOT::Reflex::ClassBuilder::AddDataMember( const Type &  typ,
     
     
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddFunctionMember( const Type & typ,
+Reflex::ClassBuilder & 
+Reflex::ClassBuilder::AddFunctionMember( const Type & typ,
                                                const char * nam,
                                                StubFunction stubFP,
                                                void * stubCtx,
@@ -89,8 +89,8 @@ ROOT::Reflex::ClassBuilder::AddFunctionMember( const Type & typ,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddTypedef( const char * typ,
+Reflex::ClassBuilder & 
+Reflex::ClassBuilder::AddTypedef( const char * typ,
                                         const char * def ) {
 //-------------------------------------------------------------------------------
 // Add typedef info to this class.
@@ -101,8 +101,8 @@ ROOT::Reflex::ClassBuilder::AddTypedef( const char * typ,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilder & 
-ROOT::Reflex::ClassBuilder::AddTypedef( const Type & typ,
+Reflex::ClassBuilder & 
+Reflex::ClassBuilder::AddTypedef( const Type & typ,
                                         const char * def ) {
 //-------------------------------------------------------------------------------
 // Add typedef info to this class.
@@ -113,8 +113,8 @@ ROOT::Reflex::ClassBuilder::AddTypedef( const Type & typ,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilder &
-ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
+Reflex::ClassBuilder &
+Reflex::ClassBuilder::AddEnum( const char * nam,
                                      const char * values,
                                      const std::type_info * ti,
                                      unsigned int modifiers ) {
@@ -129,8 +129,8 @@ ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
 
 
 /*/-------------------------------------------------------------------------------
-  ROOT::Reflex::ClassBuilder &
-  ROOT::Reflex::ClassBuilder::addUnion( const char * nam,
+  Reflex::ClassBuilder &
+  Reflex::ClassBuilder::addUnion( const char * nam,
   const char * values,
   unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
@@ -139,9 +139,16 @@ ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
   }
 */
 
+//-------------------------------------------------------------------------------
+Reflex::ClassBuilder & 
+Reflex::ClassBuilder::SetSizeOf(size_t size) {
+//-------------------------------------------------------------------------------
+   fClassBuilderImpl.SetSizeOf(size);
+   return *this;
+}
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ClassBuilder::ToType() {
+Reflex::Type Reflex::ClassBuilder::ToType() {
 //-------------------------------------------------------------------------------
 // Return the type currently being built.
    return fClassBuilderImpl.ToType();
@@ -149,7 +156,7 @@ ROOT::Reflex::Type ROOT::Reflex::ClassBuilder::ToType() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam, 
+Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam, 
                                                   const std::type_info & ti, 
                                                   size_t size, 
                                                   unsigned int modifiers, 
@@ -183,7 +190,7 @@ ROOT::Reflex::ClassBuilderImpl::ClassBuilderImpl( const char * nam,
 
     
 //-------------------------------------------------------------------------------
-ROOT::Reflex::ClassBuilderImpl::~ClassBuilderImpl() {
+Reflex::ClassBuilderImpl::~ClassBuilderImpl() {
 //-------------------------------------------------------------------------------
 // ClassBuilderImpl destructor. Used for call back functions (e.g. Cintex).
    FireClassCallback( fClass->ThisType() );
@@ -191,7 +198,7 @@ ROOT::Reflex::ClassBuilderImpl::~ClassBuilderImpl() {
 
     
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddBase( const Type & bas,
+void Reflex::ClassBuilderImpl::AddBase( const Type & bas,
                                               OffsetFunction offsFP,
                                               unsigned int modifiers ) {
 //-------------------------------------------------------------------------------
@@ -201,7 +208,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddBase( const Type & bas,
     
     
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddDataMember( const char * nam,
+void Reflex::ClassBuilderImpl::AddDataMember( const char * nam,
                                                     const Type & typ,
                                                     size_t offs,
                                                     unsigned int modifiers ) {
@@ -213,7 +220,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddDataMember( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddFunctionMember( const char * nam,
+void Reflex::ClassBuilderImpl::AddFunctionMember( const char * nam,
                                                         const Type & typ,
                                                         StubFunction stubFP,
                                                         void*        stubCtx,
@@ -241,7 +248,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddFunctionMember( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
+void Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
                                                  const char * def ) {
 //-------------------------------------------------------------------------------
 // Add typedef info (internal).
@@ -258,7 +265,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
+void Reflex::ClassBuilderImpl::AddEnum( const char * nam,
                                               const char * values,
                                               const std::type_info * ti,
                                               unsigned int modifiers ) {
@@ -289,7 +296,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key, 
+void Reflex::ClassBuilderImpl::AddProperty( const char * key, 
                                                   const char * value ) {
 //-------------------------------------------------------------------------------
 // Add property info (internal).
@@ -298,7 +305,7 @@ void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key,
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key, 
+void Reflex::ClassBuilderImpl::AddProperty( const char * key, 
                                                   Any value ) {
 //-------------------------------------------------------------------------------
 // Add property info (internal).
@@ -306,9 +313,15 @@ void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key,
    else               fClass->Properties().AddProperty(key, value); 
 }
 
+//-------------------------------------------------------------------------------
+void Reflex::ClassBuilderImpl::SetSizeOf( size_t size) {
+//-------------------------------------------------------------------------------
+// Set the size of the class (internal).
+   fClass->SetSize(size);
+}
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::ClassBuilderImpl::ToType() {
+Reflex::Type Reflex::ClassBuilderImpl::ToType() {
 //-------------------------------------------------------------------------------
 // Return the type currently being built.
    return fClass->ThisType();

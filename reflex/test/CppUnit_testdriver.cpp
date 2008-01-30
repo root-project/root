@@ -25,7 +25,7 @@ int main( int /*argc*/, char /* **argv */)
 
    // Change the default outputter to a compiler error format outputter 
    // uncomment the following line if you need a compiler outputter.
-       runner.setOutputter(new CppUnit::CompilerOutputter( &runner.result(),
+   runner.setOutputter(new CppUnit::CompilerOutputter( &runner.result(),
                                                             std::cout ) );
 
    // Change the default outputter to a xml error format outputter 
@@ -37,11 +37,12 @@ int main( int /*argc*/, char /* **argv */)
    //  bool wasSuccessful = runner.run();
    // If you want to avoid the CppUnit typical output change the line above 
    // by the following one: 
-       bool wasSuccessful = runner.run2("",false,true,false);
+   bool wasSuccessful = runner.run("",false,true,false);
 
    // Return error code 1 if the one of test failed.
    // Uncomment the next line if you want to integrate CppUnit with Oval
-       if(!wasSuccessful !=0) std::cerr <<"Error: CppUnit Failures"<<std::endl;
-       std::cout <<"[OVAL] Cppunit-result ="<<!wasSuccessful<<std::endl;
-     return 0;
+   if(!wasSuccessful) std::cerr <<"Error: CppUnit Failures"<<std::endl;
+   std::cout <<"[OVAL] Cppunit-result ="<<!wasSuccessful<<std::endl;
+
+   return wasSuccessful ? 0 : 1;
  }

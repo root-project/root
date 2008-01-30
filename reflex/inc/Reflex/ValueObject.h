@@ -9,8 +9,8 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_ValueObject
-#define ROOT_Reflex_ValueObject
+#ifndef Reflex_ValueObject
+#define Reflex_ValueObject
 
 // Include files
 #include "Reflex/Any.h"
@@ -18,54 +18,52 @@
 #include "Reflex/Builder/TypeBuilder.h"
 
 
-namespace ROOT {
-   namespace Reflex {
-      
-      /** 
-       * @class ValueObject ValueObject.h Reflex/ValueObject.h
-       * @author Pere Mato
-       * @date 01/09/2006
-       * @ingroup Ref
-       */
-      class RFLX_API ValueObject : public Object {
-      
-      public:
+namespace Reflex {
 
-         /** constructor */
-         ValueObject();
+   /** 
+   * @class ValueObject ValueObject.h Reflex/ValueObject.h
+   * @author Pere Mato
+   * @date 01/09/2006
+   * @ingroup Ref
+   */
+   class RFLX_API ValueObject : public Object {
 
-         /** constructor */
-         template <typename T> explicit ValueObject( T& v);
-         
-         /** constructor */
-         ValueObject( const ValueObject& o);
-         
-         /** destructor */
-         ~ValueObject();
+   public:
 
-         /** get the actual value */
-         template<typename T> const T& Value();
+      /** constructor */
+      ValueObject();
 
-         template<typename T> ValueObject& operator =(const T&);
+      /** constructor */
+      template <typename T> explicit ValueObject( T& v);
 
-      private:
+      /** constructor */
+      ValueObject( const ValueObject& o);
 
-         /** the value of the generic object by value */
-         Any fValue;
+      /** destructor */
+      ~ValueObject();
 
-      }; // class ValueObject
-   } // namespace Reflex
-} // namespace ROOT
+      /** get the actual value */
+      template<typename T> const T& Value();
+
+      template<typename T> ValueObject& operator =(const T&);
+
+   private:
+
+      /** the value of the generic object by value */
+      Any fValue;
+
+   }; // class ValueObject
+} // namespace Reflex
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::ValueObject::ValueObject() {
+inline Reflex::ValueObject::ValueObject() {
 //-------------------------------------------------------------------------------
 }
 
 //-------------------------------------------------------------------------------
 template <typename T> 
-inline ROOT::Reflex::ValueObject::ValueObject( T& v) 
+inline Reflex::ValueObject::ValueObject( T& v) 
    : Object( GetType<T>(), 0 ), 
      fValue(v)  {
 //-------------------------------------------------------------------------------
@@ -75,7 +73,7 @@ inline ROOT::Reflex::ValueObject::ValueObject( T& v)
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::ValueObject::ValueObject( const ValueObject& o) 
+inline Reflex::ValueObject::ValueObject( const ValueObject& o) 
    : Object( o.TypeOf(), 0 ), 
      fValue(o.fValue)  {
 //-------------------------------------------------------------------------------
@@ -85,7 +83,7 @@ inline ROOT::Reflex::ValueObject::ValueObject( const ValueObject& o)
 
 //-------------------------------------------------------------------------------
 template < typename T >
-inline ROOT::Reflex::ValueObject& ROOT::Reflex::ValueObject::operator=( const T& v)  {
+inline Reflex::ValueObject& Reflex::ValueObject::operator=( const T& v)  {
 //-------------------------------------------------------------------------------
   fValue = Any(v);
   fType = GetType<T>();
@@ -96,17 +94,17 @@ inline ROOT::Reflex::ValueObject& ROOT::Reflex::ValueObject::operator=( const T&
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::ValueObject::~ValueObject() {
+inline Reflex::ValueObject::~ValueObject() {
 //-------------------------------------------------------------------------------
 }
 
 
 //-------------------------------------------------------------------------------
 template<typename T> 
-inline const T& ROOT::Reflex::ValueObject::Value() { 
+inline const T& Reflex::ValueObject::Value() { 
 //-------------------------------------------------------------------------------
    return *(T*)fAddress; 
 }
 
 
-#endif // ROOT_Reflex_ValueObject
+#endif // Reflex_ValueObject

@@ -21,7 +21,7 @@
 #include <sstream>
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Array::Array( const Type & arrayType,
+Reflex::Array::Array( const Type & arrayType,
                             size_t len,
                             const std::type_info & typeinfo ) 
 //-------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ ROOT::Reflex::Array::Array( const Type & arrayType,
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Array::Name( unsigned int mod ) const {
+std::string Reflex::Array::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the array type.
    return BuildTypeName( fArrayType, fLength, mod );
@@ -41,7 +41,7 @@ std::string ROOT::Reflex::Array::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::Array::BuildTypeName( const Type & typ, 
+std::string Reflex::Array::BuildTypeName( const Type & typ, 
                                                 size_t len,
                                                 unsigned int mod ) {
 //-------------------------------------------------------------------------------

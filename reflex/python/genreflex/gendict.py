@@ -46,7 +46,7 @@ class genDictionary(object) :
     self.iocomments     = opts.get('iocomments', False)
     self.no_membertypedefs  = opts.get('no_membertypedefs', False)
     self.generated_shadow_classes = []
-    self.selectionname      = 'ROOT::Reflex::Selection'
+    self.selectionname      = 'Reflex::Selection'
     self.unnamedNamespaces = []
     self.globalNamespaceID = ''
     # The next is to avoid a known problem with gccxml that it generates a
@@ -645,7 +645,7 @@ class genDictionary(object) :
     c += '#include "%s"\n' % self.hfile
     c += '#include "Reflex/Builder/ReflexBuilder.h"\n'
     c += '#include <typeinfo>\n'
-    c += 'using namespace ROOT::Reflex;\n\n'
+    c += 'using namespace ::Reflex;\n\n'
     return c
 #----------------------------------------------------------------------------------
   def genInstantiateDict( self, selclasses, selfunctions, selenums, selvariables) :
@@ -861,11 +861,11 @@ class genDictionary(object) :
     values = values[:-1]
     mod = self.genModifier(attrs, None)
     if self.isUnnamedType(name) :
-      s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnnamedEnum), %s)' % (name[name.rfind('::')+3:], values, mod) 
+      s += '  .AddEnum("%s", "%s", &typeid(::Reflex::UnnamedEnum), %s)' % (name[name.rfind('::')+3:], values, mod) 
     else :
       if attrs.get('access') in ('protected','private'):
         if not self.interpreter:
-          s += '  .AddEnum("%s", "%s", &typeid(ROOT::Reflex::UnknownType), %s)' % (name, values, mod)        
+          s += '  .AddEnum("%s", "%s", &typeid(::Reflex::UnknownType), %s)' % (name, values, mod)        
       else:
         s += '  .AddEnum("%s", "%s", &typeid(%s), %s)' % (name, values, name, mod)
     return s 
@@ -1533,7 +1533,7 @@ class genDictionary(object) :
     clt      = string.translate(str(cl), self.transtable)
     t        = getTemplateArgs(cl)[0]
     s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
-    s += '  return ROOT::Reflex::Proxy< %s >::Generate();\n' % (cl,)
+    s += '  return ::Reflex::Proxy< %s >::Generate();\n' % (cl,)
     s += '}\n'
     return s
 #----BasesMap stuff--------------------------------------------------------
@@ -1547,14 +1547,14 @@ class genDictionary(object) :
     cl       = self.genTypeName(cid, colon=True)
     clt      = string.translate(str(cl), self.transtable)
     s  = 'static void* method%s( void*, const std::vector<void*>&, void*)\n{\n' %( attrs['id'], )
-    s += '  static std::vector<std::pair<ROOT::Reflex::Base, int> > s_bases;\n'
+    s += '  static std::vector<std::pair< ::Reflex::Base, int> > s_bases;\n'
     s += '  if ( !s_bases.size() ) {\n'
     bases = []
     self.getAllBases( cid, bases ) 
     for b in bases :
       bname = self.genTypeName(b[0],colon=True)
       bname2 = self.genTypeName(b[0])
-      s += '    s_bases.push_back(std::make_pair(ROOT::Reflex::Base( ROOT::Reflex::TypeBuilder("%s"), ROOT::Reflex::BaseOffset< %s,%s >::Get(),%s), %d));\n' % (bname2, cl, bname, b[1], b[2])
+      s += '    s_bases.push_back(std::make_pair(::Reflex::Base( ::Reflex::TypeBuilder("%s"), ::Reflex::BaseOffset< %s,%s >::Get(),%s), %d));\n' % (bname2, cl, bname, b[1], b[2])
     s += '  }\n  return &s_bases;\n' 
     s += '}\n'
     return s

@@ -25,7 +25,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::FunctionMember::FunctionMember( const char *  nam,
+Reflex::FunctionMember::FunctionMember( const char *  nam,
                                               const Type &  typ,
                                               StubFunction  stubFP,
                                               void*         stubCtx,
@@ -40,35 +40,12 @@ ROOT::Reflex::FunctionMember::FunctionMember( const char *  nam,
      fParameterDefaults( std::vector<std::string>()),
      fReqParameters( 0 )
 {
-   // Obtain the names and default values of the function parameters
-   // The "real" number of parameters is obtained from the function type
-   size_t numDefaultParams = 0;
-   size_t type_npar = typ.FunctionParameterSize();
-   std::vector<std::string> params;
-   if ( parameters ) Tools::StringSplit(params, parameters, ";");
-   size_t npar = std::min(type_npar,params.size());
-   for ( size_t i = 0; i < npar ; ++i ) {
-      size_t pos = params[i].find( "=" );
-      fParameterNames.push_back(params[i].substr(0,pos));
-      if ( pos != std::string::npos ) {
-         fParameterDefaults.push_back(params[i].substr(pos+1));
-         ++numDefaultParams;
-      }
-      else {
-         fParameterDefaults.push_back("");
-      }
-   }
-   // padding with blanks
-   for ( size_t i = npar; i < type_npar; ++i ) {
-      fParameterNames.push_back("");
-      fParameterDefaults.push_back("");
-   }
-   fReqParameters = type_npar - numDefaultParams;
+   UpdateFunctionParameterNames(parameters);
 }
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::FunctionMember::Name( unsigned int mod ) const {
+std::string Reflex::FunctionMember::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Construct the qualified (if requested) name of the function member.
    std::string s = "";
@@ -91,8 +68,8 @@ std::string ROOT::Reflex::FunctionMember::Name( unsigned int mod ) const {
 
 
 /*/-------------------------------------------------------------------------------
-  ROOT::Reflex::Object
-  ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
+  Reflex::Object
+  Reflex::FunctionMember::Invoke( const Object & obj,
   const std::vector < Object > & paramList ) const {
 //-----------------------------------------------------------------------------
   if ( paramList.size() < FunctionParameterSize(true)) {
@@ -110,8 +87,8 @@ std::string ROOT::Reflex::FunctionMember::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object
-ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
+Reflex::Object
+Reflex::FunctionMember::Invoke( const Object & obj,
                                       const std::vector < void * > & paramList ) const {
 //-----------------------------------------------------------------------------
 // Invoke this function member with object obj. 
@@ -126,8 +103,8 @@ ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
 
 
 /*/-------------------------------------------------------------------------------
-  ROOT::Reflex::Object
-  ROOT::Reflex::FunctionMember::Invoke( const std::vector < Object > & paramList ) const {
+  Reflex::Object
+  Reflex::FunctionMember::Invoke( const std::vector < Object > & paramList ) const {
 //-------------------------------------------------------------------------------
   std::vector < void * > paramValues;
   // needs more checking FIXME
@@ -139,8 +116,8 @@ ROOT::Reflex::FunctionMember::Invoke( const Object & obj,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Object
-ROOT::Reflex::FunctionMember::Invoke( const std::vector < void * > & paramList ) const {
+Reflex::Object
+Reflex::FunctionMember::Invoke( const std::vector < void * > & paramList ) const {
 //-------------------------------------------------------------------------------
 // Call static function 
    // parameters need more checking FIXME
@@ -149,7 +126,7 @@ ROOT::Reflex::FunctionMember::Invoke( const std::vector < void * > & paramList )
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::FunctionMember::FunctionParameterSize( bool required ) const {
+size_t Reflex::FunctionMember::FunctionParameterSize( bool required ) const {
 //-------------------------------------------------------------------------------
 // Return number of function parameters. If required = true return number without default params.
    if ( required ) return fReqParameters;
@@ -159,7 +136,7 @@ size_t ROOT::Reflex::FunctionMember::FunctionParameterSize( bool required ) cons
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::FunctionMember::GenerateDict( DictionaryGenerator & generator ) const {
+void Reflex::FunctionMember::GenerateDict( DictionaryGenerator & generator ) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.   
 
@@ -468,4 +445,43 @@ void ROOT::Reflex::FunctionMember::GenerateDict( DictionaryGenerator & generator
    }
 }
 
+//-------------------------------------------------------------------------------
+void Reflex::FunctionMember::UpdateFunctionParameterNames(const char* parameters)
+//-------------------------------------------------------------------------------
+{
+   // Obtain the names and default values of the function parameters
+   // The "real" number of parameters is obtained from the function type
+
+   fParameterNames.clear();
+   bool hadDefaultValues = !fParameterDefaults.empty();
+   size_t numDefaultParams = 0;
+   size_t type_npar = MemberBase::TypeOf().FunctionParameterSize();
+   std::vector<std::string> params;
+   if ( parameters ) Tools::StringSplit(params, parameters, ";");
+   size_t npar = std::min(type_npar,params.size());
+   for ( size_t i = 0; i < npar ; ++i ) {
+      size_t pos = params[i].find( "=" );
+      fParameterNames.push_back(params[i].substr(0,pos));
+      if ( pos != std::string::npos ) {
+         if (hadDefaultValues)
+            throw RuntimeError("Attempt to redefine default values of parameters!");
+         else {
+            fParameterDefaults.push_back(params[i].substr(pos+1));
+            ++numDefaultParams;
+         }
+      }
+      else if (!hadDefaultValues){
+         fParameterDefaults.push_back("");
+      }
+   }
+   // padding with blanks
+   for ( size_t i = npar; i < type_npar; ++i ) {
+      fParameterNames.push_back("");
+      if (!hadDefaultValues)
+         fParameterDefaults.push_back("");
+   }
+
+   if (!hadDefaultValues)
+      fReqParameters = type_npar - numDefaultParams;
+}
 

@@ -9,45 +9,43 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_PluginFactoryMap
-#define ROOT_Reflex_PluginFactoryMap
+#ifndef Reflex_PluginFactoryMap
+#define Reflex_PluginFactoryMap
 
 #include <string>
 #include <list>
 #include <map>
 
-namespace ROOT {
-   namespace Reflex {  
+namespace Reflex {  
 
-      /** 
-       * @class PluginFactoryMap PluginFactoryMap.h PluginFactoryMap.h
-       * @author Pere Mato
-       * @date 01/09/2006
-       * @ingroup Ref
-       */
-      class PluginFactoryMap {
+   /** 
+   * @class PluginFactoryMap PluginFactoryMap.h PluginFactoryMap.h
+   * @author Pere Mato
+   * @date 01/09/2006
+   * @ingroup Ref
+   */
+   class PluginFactoryMap {
 
-      public:
+   public:
 
-        PluginFactoryMap(const std::string& path = "");
+      PluginFactoryMap(const std::string& path = "");
 
-        ~PluginFactoryMap();
+      ~PluginFactoryMap();
 
-        std::list<std::string> GetLibraries(const std::string& name) const;
+      std::list<std::string> GetLibraries(const std::string& name) const;
 
-        void FillMap(const std::string& filename);
+      void FillMap(const std::string& filename);
 
-        static void SetDebug( int );
+      static void SetDebug( int );
 
-        static int Debug();
+      static int Debug();
 
-      private:
+   private:
 
-        static int fgDebugLevel;
+      static int fgDebugLevel;
 
-      }; // class PluginFactoryMap
+   }; // class PluginFactoryMap
 
-   }  // namespace Reflex
-}  // namespace ROOT
+}  // namespace Reflex
 
-#endif // ROOT_Reflex_PluginFactoryMap
+#endif // Reflex_PluginFactoryMap

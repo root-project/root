@@ -1,4 +1,4 @@
-//$Id: genmap.cpp,v 1.3 2006/11/27 17:36:29 mato Exp $	//
+// @(#)root/reflex:$Id: Class.cxx 20883 2007-11-19 11:52:08Z rdm $
 
 // Include files----------------------------------------------------------------
 #include "Reflex/Reflex.h"

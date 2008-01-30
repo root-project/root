@@ -20,12 +20,12 @@
 
 
 //-------------------------------------------------------------------------------
-//ROOT::Reflex::TemplateInstance::~TemplateInstance() {}
+//Reflex::TemplateInstance::~TemplateInstance() {}
 //-------------------------------------------------------------------------------
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TemplateInstance::TemplateInstance( const std::string & templateArguments ) {
+Reflex::TemplateInstance::TemplateInstance( const std::string & templateArguments ) {
 //-------------------------------------------------------------------------------
 // Create the dictionary info for a template instance.
    std::vector<std::string> templArgStrVec = Tools::GenTemplateArgVec(templateArguments);
@@ -37,7 +37,7 @@ ROOT::Reflex::TemplateInstance::TemplateInstance( const std::string & templateAr
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::TemplateInstance::Name( unsigned int mod ) const {
+std::string Reflex::TemplateInstance::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the template instance.
    std::string s = "<";

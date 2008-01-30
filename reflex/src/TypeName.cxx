@@ -23,9 +23,9 @@
 
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_map<const std::string *, ROOT::Reflex::TypeName * > Name2Type_t;
-typedef __gnu_cxx::hash_map<const char *, ROOT::Reflex::TypeName * > TypeId2Type_t;
-typedef std::vector< ROOT::Reflex::Type > TypeVec_t;
+typedef __gnu_cxx::hash_map<const std::string *, Reflex::TypeName * > Name2Type_t;
+typedef __gnu_cxx::hash_map<const char *, Reflex::TypeName * > TypeId2Type_t;
+typedef std::vector< Reflex::Type > TypeVec_t;
 
 
 //-------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ static TypeVec_t & sTypeVec() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeName::TypeName( const char * nam,
+Reflex::TypeName::TypeName( const char * nam,
                                   TypeBase * typeBas,
                                   const std::type_info * ti )
    : fName( nam ),
@@ -71,14 +71,14 @@ ROOT::Reflex::TypeName::TypeName( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::TypeName::~TypeName() {
+Reflex::TypeName::~TypeName() {
 //-------------------------------------------------------------------------------
 // Destructor.
 }
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeName::CleanUp() {
+void Reflex::TypeName::CleanUp() {
 //-------------------------------------------------------------------------------
    // Cleanup memory allocations for types.
    for ( TypeVec_t::iterator it = sTypeVec().begin(); it != sTypeVec().end(); ++it ) {
@@ -92,7 +92,7 @@ void ROOT::Reflex::TypeName::CleanUp() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeName::DeleteType() const {
+void Reflex::TypeName::DeleteType() const {
 //-------------------------------------------------------------------------------
 // Delete the type base information.
    delete fTypeBase;
@@ -101,7 +101,7 @@ void ROOT::Reflex::TypeName::DeleteType() const {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeName::SetTypeId( const std::type_info & ti ) const {
+void Reflex::TypeName::SetTypeId( const std::type_info & ti ) const {
 //-------------------------------------------------------------------------------
 // Add a type_info to the map.
    sTypeInfos() [ ti.name() ] = const_cast<TypeName*>(this);
@@ -109,8 +109,8 @@ void ROOT::Reflex::TypeName::SetTypeId( const std::type_info & ti ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
-ROOT::Reflex::TypeName::ByName( const std::string & key ) {
+Reflex::Type
+Reflex::TypeName::ByName( const std::string & key ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by name.
    size_t pos =  key.substr(0,2) == "::" ?  2 : 0;
@@ -122,8 +122,8 @@ ROOT::Reflex::TypeName::ByName( const std::string & key ) {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type
-ROOT::Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
+Reflex::Type
+Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by type_info.
    TypeId2Type_t::iterator it = sTypeInfos().find(ti.name());
@@ -133,7 +133,7 @@ ROOT::Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::TypeName::HideName() {
+void Reflex::TypeName::HideName() {
 //-------------------------------------------------------------------------------
 // Append the string " @HIDDEN@" to a type name.
    if ( fName.length() == 0 || fName[fName.length()-1] != '@' ) {
@@ -145,7 +145,7 @@ void ROOT::Reflex::TypeName::HideName() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeName::ThisType() const {
+Reflex::Type Reflex::TypeName::ThisType() const {
 //-------------------------------------------------------------------------------
 // Return Type of this TypeName.
    return *fThisType;
@@ -153,7 +153,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeName::ThisType() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeAt( size_t nth ) {
+Reflex::Type Reflex::TypeName::TypeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return nth type in Reflex.
    if ( nth < sTypeVec().size()) return sTypeVec()[nth];
@@ -162,7 +162,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeAt( size_t nth ) {
 
 
 //-------------------------------------------------------------------------------
-size_t ROOT::Reflex::TypeName::TypeSize() {
+size_t Reflex::TypeName::TypeSize() {
 //-------------------------------------------------------------------------------
 // Return number of types in Reflex.
    return sTypeVec().size();
@@ -170,7 +170,7 @@ size_t ROOT::Reflex::TypeName::TypeSize() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_Begin() {
+Reflex::Type_Iterator Reflex::TypeName::Type_Begin() {
 //-------------------------------------------------------------------------------
 // Return begin iterator of the type container.
    return sTypeVec().begin();
@@ -178,7 +178,7 @@ ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_Begin() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_End() {
+Reflex::Type_Iterator Reflex::TypeName::Type_End() {
 //-------------------------------------------------------------------------------
 // Return end iterator of the type container.
    return sTypeVec().end();
@@ -186,7 +186,7 @@ ROOT::Reflex::Type_Iterator ROOT::Reflex::TypeName::Type_End() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_RBegin() {
+Reflex::Reverse_Type_Iterator Reflex::TypeName::Type_RBegin() {
 //-------------------------------------------------------------------------------
 // Return rbegin iterator of the type container.
    return ((const std::vector<Type>&)sTypeVec()).rbegin();
@@ -194,7 +194,7 @@ ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_RBegin() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeName::Type_REnd() {
+Reflex::Reverse_Type_Iterator Reflex::TypeName::Type_REnd() {
 //-------------------------------------------------------------------------------
 // Return rend iterator of the type container.
    return ((const std::vector<Type>&)sTypeVec()).rend();

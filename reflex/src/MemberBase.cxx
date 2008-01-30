@@ -27,12 +27,12 @@
 #include "Class.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberBase::MemberBase( const char *  name,
+Reflex::MemberBase::MemberBase( const char *  name,
                                       const Type &  type,
                                       TYPE          memberType,
                                       unsigned int  modifiers )
 //-------------------------------------------------------------------------------
-   : fType( type, modifiers & ( CONST | VOLATILE | REFERENCE ), true ),
+   : fType( type, modifiers & ( CONST | VOLATILE | REFERENCE ) , Type::APPEND ),
      fModifiers( modifiers ),
      fName( name ),
      fScope( Scope() ),
@@ -44,7 +44,7 @@ ROOT::Reflex::MemberBase::MemberBase( const char *  name,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberBase::~MemberBase() {
+Reflex::MemberBase::~MemberBase() {
 //-------------------------------------------------------------------------------
 // Destructor.
    delete fThisMember;
@@ -53,7 +53,7 @@ ROOT::Reflex::MemberBase::~MemberBase() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberBase::operator ROOT::Reflex::Member () const {
+Reflex::MemberBase::operator Reflex::Member () const {
 //-------------------------------------------------------------------------------
 // Conversion operator to Member.
    return *fThisMember;
@@ -61,7 +61,7 @@ ROOT::Reflex::MemberBase::operator ROOT::Reflex::Member () const {
 
 
 //-------------------------------------------------------------------------------
-void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const {
+void * Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const {
 //-------------------------------------------------------------------------------
 // Return the object address a member lives in.
    char * mem = (char*)obj.Address();
@@ -95,7 +95,7 @@ void * ROOT::Reflex::MemberBase::CalculateBaseObject( const Object & obj ) const
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope ROOT::Reflex::MemberBase::DeclaringScope() const {
+Reflex::Scope Reflex::MemberBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
 // Return the scope the member lives in.
    return fScope;
@@ -103,7 +103,7 @@ ROOT::Reflex::Scope ROOT::Reflex::MemberBase::DeclaringScope() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::MemberBase::DeclaringType() const {
+Reflex::Type Reflex::MemberBase::DeclaringType() const {
 //-------------------------------------------------------------------------------
 // Return the type the member lives in.
    return DeclaringScope();
@@ -111,7 +111,7 @@ ROOT::Reflex::Type ROOT::Reflex::MemberBase::DeclaringType() const {
 
 
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::MemberBase::MemberTypeAsString() const {
+std::string Reflex::MemberBase::MemberTypeAsString() const {
 //-------------------------------------------------------------------------------
 // Remember type of the member as a string.
    switch ( fMemberType ) {
@@ -128,7 +128,7 @@ std::string ROOT::Reflex::MemberBase::MemberTypeAsString() const {
 }
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::PropertyList ROOT::Reflex::MemberBase::Properties() const {
+Reflex::PropertyList Reflex::MemberBase::Properties() const {
 //-------------------------------------------------------------------------------
 // Return the property list attached to this member.
    return fPropertyList;
@@ -136,7 +136,7 @@ ROOT::Reflex::PropertyList ROOT::Reflex::MemberBase::Properties() const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Type ROOT::Reflex::MemberBase::TemplateArgumentAt( size_t /* nth */ ) const {
+Reflex::Type Reflex::MemberBase::TemplateArgumentAt( size_t /* nth */ ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template argument (in FunMemTemplInstance)
    return Dummy::Type();
@@ -145,10 +145,7 @@ ROOT::Reflex::Type ROOT::Reflex::MemberBase::TemplateArgumentAt( size_t /* nth *
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::MemberBase::GenerateDict( DictionaryGenerator & /* generator */) const {
+void Reflex::MemberBase::GenerateDict( DictionaryGenerator & /* generator */) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
 }
-
-   
-

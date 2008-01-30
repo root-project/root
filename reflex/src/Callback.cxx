@@ -17,11 +17,11 @@
 #include "Reflex/Callback.h"
 #include <list>
 
-// typedef std::list<ROOT::Reflex::ICallback*> CbList;
+// typedef std::list<Reflex::ICallback*> CbList;
 // On RH7.3 the callback list is destructed before clients Get
 // the chance to uninstall their callbacks. So, let's build some
 // protection. 
-class  CbList : public std::list<ROOT::Reflex::ICallback*> 
+class  CbList : public std::list<Reflex::ICallback*> 
 {
 public:
    CbList() : fAlive(true) {}
@@ -41,14 +41,14 @@ static CbList & sClassCallbacks() {
 }
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::InstallClassCallback( ROOT::Reflex::ICallback * cb ) {
+void Reflex::InstallClassCallback( Reflex::ICallback * cb ) {
 //-------------------------------------------------------------------------------
 // Install a class callback.
    sClassCallbacks().push_back( cb );
 }
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::UninstallClassCallback( ROOT::Reflex::ICallback * cb ) {
+void Reflex::UninstallClassCallback( Reflex::ICallback * cb ) {
 //-------------------------------------------------------------------------------
 // Uninstall a class callback.
    if( sClassCallbacks().IsAlive() ) {
@@ -57,7 +57,7 @@ void ROOT::Reflex::UninstallClassCallback( ROOT::Reflex::ICallback * cb ) {
 }
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::FireClassCallback( const ROOT::Reflex::Type & ty ) {
+void Reflex::FireClassCallback( const Reflex::Type & ty ) {
 //-------------------------------------------------------------------------------
 // Activate a class callback.
    for ( CbList::const_iterator i = sClassCallbacks().begin(); 
@@ -67,7 +67,7 @@ void ROOT::Reflex::FireClassCallback( const ROOT::Reflex::Type & ty ) {
 }
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::FireFunctionCallback( const ROOT::Reflex::Member & mem ) {
+void Reflex::FireFunctionCallback( const Reflex::Member & mem ) {
 //-------------------------------------------------------------------------------
 // Activate a function callback.
    for ( CbList::const_iterator i = sClassCallbacks().begin(); 

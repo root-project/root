@@ -19,7 +19,7 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Fundamental::Fundamental( const char * typ,
+Reflex::Fundamental::Fundamental( const char * typ,
                                         size_t size,
                                         const std::type_info & ti ) 
 //-------------------------------------------------------------------------------

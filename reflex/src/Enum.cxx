@@ -22,7 +22,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Enum::Enum( const char * enumType,
+Reflex::Enum::Enum( const char * enumType,
                           const std::type_info & ti,
                           unsigned int modifiers )
 //-------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ ROOT::Reflex::Enum::Enum( const char * enumType,
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Enum::~Enum() {
+Reflex::Enum::~Enum() {
 //-------------------------------------------------------------------------------
 // Destructor for enum dictionary information.
 }
@@ -42,7 +42,7 @@ ROOT::Reflex::Enum::~Enum() {
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::Enum::GenerateDict( DictionaryGenerator & generator ) const {
+void Reflex::Enum::GenerateDict( DictionaryGenerator & generator ) const {
 //-------------------------------------------------------------------------------
 // Generate Dictionary information about itself.
          
@@ -59,8 +59,8 @@ void ROOT::Reflex::Enum::GenerateDict( DictionaryGenerator & generator ) const {
 
       generator.AddIntoFree("\",");
       if      ( IsPublic())    generator.AddIntoFree("typeid(" + Name(SCOPED) + "), PUBLIC)");
-      else if ( IsProtected()) generator.AddIntoFree("typeid(ROOT::Reflex::ProtectedEnum), PROTECTED)");
-      else if ( IsPrivate())   generator.AddIntoFree("typeid(ROOT::Reflex::PrivateEnum), PRIVATE)");
+      else if ( IsProtected()) generator.AddIntoFree("typeid(Reflex::ProtectedEnum), PROTECTED)");
+      else if ( IsPrivate())   generator.AddIntoFree("typeid(Reflex::PrivateEnum), PRIVATE)");
    }
    else {
 

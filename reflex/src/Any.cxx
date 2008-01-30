@@ -17,10 +17,8 @@
 #include <string>
 #include <iostream>
 
-using namespace ROOT::Reflex;
-
 //-------------------------------------------------------------------------------
-std::ostream & ROOT::Reflex::operator << ( std::ostream& o, 
+std::ostream & Reflex::operator << ( std::ostream& o, 
                                            const Any& any) {
 //-------------------------------------------------------------------------------
 // Puts the different any objects on the ostream.

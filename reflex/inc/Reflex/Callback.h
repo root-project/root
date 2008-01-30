@@ -9,52 +9,49 @@
 //
 // This software is provided "as is" without express or implied warranty.
 
-#ifndef ROOT_Reflex_Callback
-#define ROOT_Reflex_Callback
+#ifndef Reflex_Callback
+#define Reflex_Callback
 
 // Include files
 #include "Reflex/Kernel.h"
 
-namespace ROOT {
-   namespace Reflex {
 
-      // forward declarations
-      class Type;
-      class Member;
+namespace Reflex {
 
-      /** 
-       * @class Callback Callback.h Reflex/Callback.h
-       * @author Pere Mato
-       * @date 12/11/2004
-       * @ingroup Ref
-       */
-      class RFLX_API ICallback {
-      
-      public:
+   // forward declarations
+   class Type;
+   class Member;
 
-         /** constructor */
-         ICallback() {}
+   /** 
+   * @class Callback Callback.h Reflex/Callback.h
+   * @author Pere Mato
+   * @date 12/11/2004
+   * @ingroup Ref
+   */
+   class RFLX_API ICallback {
 
-         /** destructor */
-         virtual ~ICallback() {}
+   public:
 
-         /**
-          * operator call (virtual)
-          */
-         virtual void operator () ( const Type & ) = 0;
-         virtual void operator () ( const Member & ) = 0;
+      /** constructor */
+      ICallback() {}
 
-      }; // class ICallback
-    
-    
-      RFLX_API void InstallClassCallback( ICallback * cb );
-      RFLX_API void UninstallClassCallback( ICallback * cb );
-      RFLX_API void FireClassCallback( const Type & );
-      RFLX_API void FireFunctionCallback( const Member & );
-    
-   } // namespace Reflex
-} // namespace ROOT
+      /** destructor */
+      virtual ~ICallback() {}
+
+      /**
+      * operator call (virtual)
+      */
+      virtual void operator () ( const Type & ) = 0;
+      virtual void operator () ( const Member & ) = 0;
+
+   }; // class ICallback
 
 
+   RFLX_API void InstallClassCallback( ICallback * cb );
+   RFLX_API void UninstallClassCallback( ICallback * cb );
+   RFLX_API void FireClassCallback( const Type & );
+   RFLX_API void FireFunctionCallback( const Member & );
 
-#endif // ROOT_Reflex_Callback
+} // namespace Reflex
+
+#endif // Reflex_Callback

@@ -6,9 +6,8 @@ enum XYZ { X, Y, Z };
 
 int foosq (int i) { return i*i; }
 
-namespace ROOT {
-  namespace Reflex {
-    namespace Selection {
+namespace Reflex {
+   namespace Selection {
 
       void * m_foo;
 
@@ -19,8 +18,7 @@ namespace ROOT {
       class ClassA {
         TRANSIENT fA;
       };
-    }
-  }
+   }
 }
 
 #include <vector>
@@ -62,9 +60,8 @@ namespace ns {
 
 
 
-namespace ROOT {
-  namespace Reflex {
-    namespace Selection {
+namespace Reflex {
+   namespace Selection {
 
       namespace ns {
 
@@ -90,8 +87,7 @@ namespace ROOT {
         };
       }
 
-    }
-  }
+   }
 }
 
 
@@ -99,10 +95,10 @@ namespace {
 
   struct _Instantiations {
 
-    ROOT::Reflex::Selection::ns::TestTemplatedSelectionClass<int,int>      fI4;
-    ROOT::Reflex::Selection::ns::TestTemplatedSelectionClass<float,float>  fI5;
-    ROOT::Reflex::Selection::ns::TestTemplatedSelectionClass<int,int,bool> fI6;
-    ROOT::Reflex::Selection::ns::TestTemplatedSelectionClass<int,int,char> fI7;
+    Reflex::Selection::ns::TestTemplatedSelectionClass<int,int>      fI4;
+    Reflex::Selection::ns::TestTemplatedSelectionClass<float,float>  fI5;
+    Reflex::Selection::ns::TestTemplatedSelectionClass<int,int,bool> fI6;
+    Reflex::Selection::ns::TestTemplatedSelectionClass<int,int,char> fI7;
 
   };
 

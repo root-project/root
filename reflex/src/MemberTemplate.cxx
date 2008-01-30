@@ -19,7 +19,7 @@
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplate::ByName( const std::string & name,
+Reflex::MemberTemplate Reflex::MemberTemplate::ByName( const std::string & name,
                                                                    size_t nTemplateParams ) {
 //-------------------------------------------------------------------------------
    // Return a member template by name.
@@ -28,7 +28,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplate::ByName( const std::st
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplate::MemberTemplateAt( size_t nth ) {
+Reflex::MemberTemplate Reflex::MemberTemplate::MemberTemplateAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return the nth member template defined.
    return MemberTemplateName::MemberTemplateAt( nth );
@@ -36,7 +36,7 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplate::MemberTemplateAt( siz
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::MemberTemplate_Begin() {
+Reflex::MemberTemplate_Iterator Reflex::MemberTemplate::MemberTemplate_Begin() {
 //-------------------------------------------------------------------------------
    // Return the begin iterator of the member template container.
    return MemberTemplateName::MemberTemplate_Begin();
@@ -44,7 +44,7 @@ ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::MemberTempla
  
                                              
 //-------------------------------------------------------------------------------
-ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::MemberTemplate_End() {
+Reflex::MemberTemplate_Iterator Reflex::MemberTemplate::MemberTemplate_End() {
 //-------------------------------------------------------------------------------
    // Return the end iterator of the member template container.
    return MemberTemplateName::MemberTemplate_End();
@@ -52,7 +52,7 @@ ROOT::Reflex::MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::MemberTempla
  
                                              
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::MemberTemplate_RBegin() {
+Reflex::Reverse_MemberTemplate_Iterator Reflex::MemberTemplate::MemberTemplate_RBegin() {
 //-------------------------------------------------------------------------------
    // Return the rbegin iterator of the member template container.
    return MemberTemplateName::MemberTemplate_RBegin();
@@ -60,7 +60,7 @@ ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::Memb
  
                                              
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::MemberTemplate_REnd() {
+Reflex::Reverse_MemberTemplate_Iterator Reflex::MemberTemplate::MemberTemplate_REnd() {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the member template container.
    return MemberTemplateName::MemberTemplate_REnd();
@@ -68,7 +68,7 @@ ROOT::Reflex::Reverse_MemberTemplate_Iterator ROOT::Reflex::MemberTemplate::Memb
  
                                              
 //-------------------------------------------------------------------------------
-std::string ROOT::Reflex::MemberTemplate::Name( unsigned int mod ) const {
+std::string Reflex::MemberTemplate::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
    // Return the name of the member template.
    if ( fMemberTemplateName ) return fMemberTemplateName->Name( mod );
@@ -77,7 +77,7 @@ std::string ROOT::Reflex::MemberTemplate::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInstance_Begin() const {
+Reflex::Member_Iterator Reflex::MemberTemplate::TemplateInstance_Begin() const {
 //-------------------------------------------------------------------------------
    // Return the begin iterator of the instance container of this member template.
    if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateInstance_Begin();
@@ -86,7 +86,7 @@ ROOT::Reflex::Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInstance_Beg
 
                                              
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInstance_End() const {
+Reflex::Member_Iterator Reflex::MemberTemplate::TemplateInstance_End() const {
 //-------------------------------------------------------------------------------
    // Return the end iterator of the instance container of this member template.
    if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateInstance_End();
@@ -95,7 +95,7 @@ ROOT::Reflex::Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInstance_End
 
                                              
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInstance_RBegin() const {
+Reflex::Reverse_Member_Iterator Reflex::MemberTemplate::TemplateInstance_RBegin() const {
 //-------------------------------------------------------------------------------
    // Return the rbegin iterator of the instance container of this member template.
    if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateInstance_RBegin();
@@ -104,7 +104,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInst
 
                                              
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInstance_REnd() const {
+Reflex::Reverse_Member_Iterator Reflex::MemberTemplate::TemplateInstance_REnd() const {
 //-------------------------------------------------------------------------------
    // Return the rend iterator of the instance container of this member template.
    if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateInstance_REnd();
@@ -113,7 +113,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInst
 
                                              
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Member ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
+Reflex::Member Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this family.
    if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateInstanceAt( nth );
@@ -122,7 +122,7 @@ ROOT::Reflex::Member ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nt
 
 
 //-------------------------------------------------------------------------------
-void ROOT::Reflex::MemberTemplate::AddTemplateInstance( const Member & templateInstance ) const {
+void Reflex::MemberTemplate::AddTemplateInstance( const Member & templateInstance ) const {
 //-------------------------------------------------------------------------------
 // Add member templateInstance to this template family.
    if ( * this ) fMemberTemplateName->fMemberTemplateImpl->AddTemplateInstance( templateInstance );
