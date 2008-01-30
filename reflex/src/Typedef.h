@@ -140,8 +140,9 @@ namespace Reflex {
       * @param  signature of the MemberAt function 
       * @return function MemberAt
       */
-      virtual Member FunctionMemberByName( const std::string & Name,
-         const Type & signature = Type() ) const;
+      virtual Member FunctionMemberByName( const std::string & nam,
+         const Type & signature,
+         unsigned int modifiers_mask = 0) const;
 
 
       /**
@@ -536,9 +537,10 @@ inline Reflex::Member Reflex::Typedef::FunctionMemberAt( size_t nth ) const {
 
 //-------------------------------------------------------------------------------
 inline Reflex::Member Reflex::Typedef::FunctionMemberByName( const std::string & name,
-                                                                                 const Type & signature ) const {
+                                                             const Type & signature,
+                                                             unsigned int modifiers_mask ) const {
 //-------------------------------------------------------------------------------
-   if ( ForwardStruct()) return fTypedefType.FunctionMemberByName( name, signature );
+   if ( ForwardStruct()) return fTypedefType.FunctionMemberByName( name, signature, modifiers_mask );
    return Dummy::Member();
 }
 

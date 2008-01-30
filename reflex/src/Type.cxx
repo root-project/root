@@ -143,10 +143,11 @@ Reflex::Member Reflex::Type::FunctionMemberAt( size_t nth ) const {
 
 //-------------------------------------------------------------------------------
 Reflex::Member Reflex::Type::FunctionMemberByName( const std::string & nam,
-                                                                       const Type & signature ) const {
+						   const Type & signature,
+						   unsigned int modifiers_mask /*= 0*/) const {
 //-------------------------------------------------------------------------------
 // Return a function member by name. Signature can be used for overloaded functions.
-   if ( * this ) return fTypeName->fTypeBase->FunctionMemberByName( nam, signature );
+   if ( * this ) return fTypeName->fTypeBase->FunctionMemberByName( nam, signature, modifiers_mask );
    return Dummy::Member();
 }
 

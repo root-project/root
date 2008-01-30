@@ -769,7 +769,7 @@ inline Reflex::Type Reflex::MemberBase::TypeOf() const {
 
 
 //-------------------------------------------------------------------------------
-inline void Reflex::MemberBase::UpdateFunctionParameterNames(const char* parameters) {}
+inline void Reflex::MemberBase::UpdateFunctionParameterNames(const char* /*parameters*/) {}
 //-------------------------------------------------------------------------------
 
 

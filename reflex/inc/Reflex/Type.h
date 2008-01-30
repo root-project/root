@@ -350,7 +350,8 @@ namespace Reflex {
       * @return reflection information of the function member
       */
       Member FunctionMemberByName( const std::string & nam,
-         const Type & signature = Type(0,0) ) const;
+                                   const Type & signature = Type(0,0),
+                                   unsigned int modifiers_mask = 0 ) const;
 
 
       /**
