@@ -165,6 +165,8 @@ bool test_ReadTransientData() {
   return true;
 }
 
+using namespace ROOT::Cintex;
+
 void test_Persistency()
 {
   //gSystem->Load("libReflex");

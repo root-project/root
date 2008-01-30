@@ -323,6 +323,7 @@ bool test_Variables() {
   return true;
 }
 
+using namespace ROOT::Cintex;
 
 void test_Cintex()
 {
