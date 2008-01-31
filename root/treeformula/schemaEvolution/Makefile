@@ -34,7 +34,7 @@ EVENT2LIB     = libEvent_2.$(LibSuf)
 
 schemaRun.ref: schemaRun1.C Event.root 
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
-	| grep -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
 	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g' \
 	> schemaRun.ref
 
