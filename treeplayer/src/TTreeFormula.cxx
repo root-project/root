@@ -2013,6 +2013,10 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 
    // Later on we will need to read one entry, let's make sure
    // it is a real entry.
+   if (fTree->GetTree()==0) {
+      fTree->LoadTree(0);
+      if (fTree->GetTree()==0) return -1;
+   }
    Long64_t readentry = fTree->GetTree()->GetReadEntry();
    if (readentry==-1) readentry=0;
    const char *cname = expression;
