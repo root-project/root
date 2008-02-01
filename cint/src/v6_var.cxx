@@ -27,7 +27,7 @@ extern "C" {
 
 int G__filescopeaccess(int filenum, int statictype);
 static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00);
-static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_array* var, char* item, long store_struct_offset, int var_type, G__value* presult);
+static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_array* var, const char* item, long store_struct_offset, int var_type, G__value* presult);
 //--
 //--
 
@@ -4685,7 +4685,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
 #undef G__ALLOC_VAR_REF
 
 //______________________________________________________________________________
-static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_array* var, char* item, long store_struct_offset, int var_type, G__value* /*presult*/)
+static int G__asm_gen_stvar(long G__struct_offset, int ig15, int paran, G__var_array* var, const char* item, long store_struct_offset, int var_type, G__value* /*presult*/)
 {
    // -- FIXME: Describe me!
    //

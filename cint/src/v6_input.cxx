@@ -36,8 +36,8 @@ void G__set_history_size(int s)
 }
 
 #ifdef G__GNUREADLINE
-extern char *readline G__P((char* prompt));
-extern int add_history G__P((char* str));
+extern char *readline(const char* prompt);
+extern int add_history(const char* str);
 
 /************************************************************
 * G__input_history()
@@ -258,9 +258,9 @@ char *G__input(const char *prompt)
 * complete on compiled function names (if this is the first word in 
 * the line, or on filenames if not.) */
 
-char **completion_matches(char *text,char *(*entry_function) (char*,int));
+char **completion_matches(const char *text,char *(*entry_function) (const char*,int));
 
-char **G__funcname_completion(char *text,int /* start */,int /* end */)
+char **G__funcname_completion(const char *text,int /* start */,int /* end */)
 {
   char **matchs;
   matchs = (char **)NULL;
@@ -278,7 +278,7 @@ char **G__funcname_completion(char *text,int /* start */,int /* end */)
 
 
 #ifdef G__GNUREADLINE
-extern char **(*rl_attempted_completion_function)(char*,int,int);
+extern char **(*rl_attempted_completion_function)(const char*,int,int);
 extern char *rl_basic_word_break_characters;
 
 int G__init_readline()
