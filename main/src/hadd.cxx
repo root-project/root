@@ -294,9 +294,27 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
             MergeRootfile( newdir, sourcelist,1);
 
          } else {
-            // object is of no type that we know or can handle
-            cout << "Unknown object type, name: " 
+            // object is of no type that we can merge 
+            cout << "Cannot merge object type, name: " 
                  << obj->GetName() << " title: " << obj->GetTitle() << endl;
+
+            // loop over all source files and write similar objects directly to the output file
+            TFile *nextsource = (TFile*)sourcelist->After( first_source );
+            while ( nextsource ) {
+               // make sure we are at the correct directory level by cd'ing to path
+               TDirectory *ndir = nextsource->GetDirectory(path);
+               if (ndir) {
+                  ndir->cd();
+                  TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
+                  if (key2) {
+                     TObject *nobj = key2->ReadObj();
+                     nobj->ResetBit(kMustCleanup);
+                     target->WriteTObject(nobj, key2->GetName(), "SingleKey" );
+                     delete nobj;
+                  }
+               }
+               nextsource = (TFile*)sourcelist->After( nextsource );
+            }
          }
 
          // now write the merged histogram (which is "in" obj) to the target file
@@ -317,7 +335,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
                   delete globChain;
                }
             } else {
-               obj->Write( key->GetName() );
+               obj->Write( key->GetName(), TObject::kSingleKey );
             }
          }
          oldkey = key;
