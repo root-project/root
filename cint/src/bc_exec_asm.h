@@ -13,7 +13,6 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 {
    // -- Execute the bytecode which was compiled on-the-fly by the interpreter.
    char clnull[1]; clnull[0] = 0;
-   int i; /* misc counter */
    int pc; /* instruction program counter */
    int sp; /* data stack pointer */
    int strosp = 0; /* struct offset stack pointer */
@@ -581,18 +580,18 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ld_func:
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               if (G__asm_inst[pc+1] < G__MAXSTRUCT)
-                  G__fprinterr(G__serr, "%3x,%d: LD_FUNC %s paran=%d\n" , pc, sp
-                               , "compiled", G__asm_inst[pc+3]);
-               else
-                  G__fprinterr(G__serr, "%3x,%d: LD_FUNC %s paran=%d\n" , pc, sp
-                               , (char *)G__asm_inst[pc+1], G__asm_inst[pc+3]);
+               if (G__asm_inst[pc+1] < G__MAXSTRUCT) {
+                  G__fprinterr(G__serr, "%3x,%3x: LD_FUNC '%s' paran: %d  %s:%d\n", pc, sp, "compiled", G__asm_inst[pc+3], __FILE__, __LINE__);
+               }
+               else {
+                  G__fprinterr(G__serr, "%3x,%3x: LD_FUNC '%s' paran: %d  %s:%d\n", pc, sp, (char*) G__asm_inst[pc+1], G__asm_inst[pc+3], __FILE__, __LINE__);
+               }
             }
-#endif
+#endif // G__ASM_DBG
             funcname = (char *)G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+3];
             pfunc = (G__InterfaceMethod) G__asm_inst[pc+4];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
                if (!fpara.para[i].ref) {
                   switch (fpara.para[i].type) {
@@ -607,6 +606,13 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                         break;
                   }
                }
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
             result = &G__asm_stack[sp];
@@ -913,21 +919,31 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%d: LD_VAR index: %d paran: %d type: '%c' var: '%s' %08lx", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], ((struct G__var_array*) G__asm_inst[pc+4])->varnamebuf[G__asm_inst[pc+1]],(long) G__asm_inst[pc+4]);
+               G__fprinterr(G__serr, "%3x,%3x: LD_VAR index: %d paran: %d type: '%c' var: '%s' %08lx  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], ((struct G__var_array*) G__asm_inst[pc+4])->varnamebuf[G__asm_inst[pc+1]],(long) G__asm_inst[pc+4], __FILE__, __LINE__);
             }
 #endif
             G__asm_index = G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
-            G__asm_stack[sp] = G__getvariable(clnull, &i, (struct G__var_array*) G__asm_inst[pc+4], 0);
+            {
+               int known = 0;
+               G__asm_stack[sp] = G__getvariable(clnull, &known, (struct G__var_array*) G__asm_inst[pc+4], 0);
+            }
             pc += 5;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, " return=%d,%g\n", G__int(G__asm_stack[sp]), G__double(G__asm_stack[sp]));
+               G__fprinterr(G__serr, "       : return: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp]), G__int(G__asm_stack[sp]), G__double(G__asm_stack[sp]), __FILE__, __LINE__);
             }
 #endif
             ++sp;
@@ -953,18 +969,29 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: ST_VAR index=%d paran=%d point %c", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3]);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: ST_VAR index: %d paran: %d point '%c'  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_index = G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "  value=%g\n", G__double(G__asm_stack[sp-1]));
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "       : value: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]), G__double(G__asm_stack[sp-1]), __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__letvariable(clnull, G__asm_stack[sp-1], (struct G__var_array*) G__asm_inst[pc+4], 0);
             pc += 5;
 #ifdef G__ASM_DBG
@@ -989,20 +1016,34 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: LD_MSTR index=%d paran=%d 0x%lx", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__store_struct_offset);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: LD_MSTR index: %d paran: %d 0x%lx  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__store_struct_offset, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_index = G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
-            G__asm_stack[sp] = G__getvariable(clnull, &i, (struct G__var_array *) G__asm_inst[pc+4], &G__global);
+            {
+               int known = 0;
+               G__asm_stack[sp] = G__getvariable(clnull, &known, (struct G__var_array *) G__asm_inst[pc+4], &G__global);
+            }
             pc += 5;
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, " return=%g , 0x%lx\n", G__double(G__asm_stack[sp]), G__int(G__asm_stack[sp]));
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "       : return: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp]), G__int(G__asm_stack[sp]), G__double(G__asm_stack[sp]), __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             ++sp;
 #ifdef G__ASM_DBG
             break;
@@ -1026,20 +1067,29 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: ST_MSTR index=%d paran=%d 0x%lx", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__store_struct_offset);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: ST_MSTR index: %d paran: %d 0x%lx  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__store_struct_offset, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_index = G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "  value=%g,%d\n", G__double(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]));
+               G__fprinterr(G__serr, "       : value: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]),G__double(G__asm_stack[sp-1]), __FILE__, __LINE__);
             }
-#endif
+#endif // G__ASM_DBG
             G__letvariable(clnull, G__asm_stack[sp-1], (struct G__var_array *) G__asm_inst[pc+4], &G__global);
             pc += 5;
 #ifdef G__ASM_DBG
@@ -1066,24 +1116,34 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%d: LD_LVAR index=%d paran=%d point %c", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3]);
+               G__fprinterr(G__serr, "%3x,%3x: LD_LVAR index: %d paran: %d point '%c'  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], __FILE__, __LINE__);
             }
 #endif
             G__asm_index = G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
             store_struct_offset_localmem = G__store_struct_offset;
             G__store_struct_offset = (long) localmem;
-            G__asm_stack[sp] = G__getvariable(clnull, &i, (struct G__var_array*) G__asm_inst[pc+4], &G__global);
+            {
+               int known = 0;
+               G__asm_stack[sp] = G__getvariable(clnull, &known, (struct G__var_array*) G__asm_inst[pc+4], &G__global);
+            }
             G__store_struct_offset = store_struct_offset_localmem;
             pc += 5;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, " return=%g\n", G__double(G__asm_stack[sp]));
+               G__fprinterr(G__serr, "       : return: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp]), G__int(G__asm_stack[sp]), G__double(G__asm_stack[sp]), __FILE__, __LINE__);
             }
 #endif
             ++sp;
@@ -1110,19 +1170,26 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: ST_LVAR index: %d paran: %d type: '%c' var: %08x ", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], G__asm_inst[pc+4]);
+               G__fprinterr(G__serr, "%3x,%3x: ST_LVAR index: %d paran: %d type: '%c' var: %08x  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], G__asm_inst[pc+4], __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
             G__asm_index = G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "value: %ld\n", G__int(G__asm_stack[sp-1]));
+               G__fprinterr(G__serr, "       : value: 0x%08lx,%ld,%g  %s:%d\n", G__int(G__asm_stack[sp-1]), G__int(G__asm_stack[sp-1]), G__double(G__asm_stack[sp-1]), __FILE__, __LINE__);
             }
 #endif // G__ASM_DBG
             //
@@ -1367,8 +1434,10 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: LD_IFUNC %s paran=%d\n", pc, sp, (char *) G__asm_inst[pc+1], G__asm_inst[pc+3]);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: LD_IFUNC '%s' paran: %d  %s:%d\n", pc, sp, (char*) G__asm_inst[pc+1], G__asm_inst[pc+3], __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_index = G__asm_inst[pc+7];
             ifunc = (struct G__ifunc_table_internal*) G__asm_inst[pc+4];
             if (G__cintv6 && G__LD_IFUNC_optimize(ifunc, G__asm_index, G__asm_inst, pc)) {
@@ -1381,8 +1450,10 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                !ifunc->isvirtual[G__asm_index]
             ) {
 #ifdef G__ASM_DBG
-               if (G__asm_dbg) G__fprinterr(G__serr, "call G__exec_bytecode optimized\n");
-#endif
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "call G__exec_bytecode optimized  %s:%d\n", __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
                G__asm_inst[pc] = G__LD_FUNC;
                G__asm_inst[pc+1] = (long) (ifunc->pentry[G__asm_index]->bytecode);
                G__asm_inst[pc+4] = (long) G__exec_bytecode;
@@ -1398,8 +1469,15 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             strcpy(funcnamebuf, (char*) G__asm_inst[pc+1]);
             fpara.paran = G__asm_inst[pc+3];
             pfunc = (G__InterfaceMethod) G__asm_inst[pc+4];
-            for (i = 0; i < fpara.paran; ++i) {
+            for (int i = 0; i < fpara.paran; ++i) {
                fpara.para[i] = G__asm_stack[sp-fpara.paran+i];
+#ifdef G__ASM_DBG
+               if (G__asm_dbg) {
+                  char tmp[G__ONELINE];
+                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
+               // --
             }
             sp -= fpara.paran;
             store_exec_memberfunc = G__exec_memberfunc;
@@ -1691,12 +1769,12 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 #endif
             /* x y z w */
             Nreorder = G__asm_inst[pc+1] - G__asm_inst[pc+2];
-            for (i = 0;i < Nreorder;i++) G__asm_stack[sp+i] = G__asm_stack[sp+i-Nreorder];
+            for (int i = 0;i < Nreorder;i++) G__asm_stack[sp+i] = G__asm_stack[sp+i-Nreorder];
             /* x y z w z w */
-            for (i = 0;i < G__asm_inst[pc+2];i++)
+            for (int i = 0;i < G__asm_inst[pc+2];i++)
                G__asm_stack[sp-i-1] = G__asm_stack[sp-i-Nreorder-1];
             /* x y x y z w */
-            for (i = 0;i < Nreorder;i++)
+            for (int i = 0;i < Nreorder;i++)
                G__asm_stack[sp-G__asm_inst[pc+1] + i] = G__asm_stack[sp+Nreorder-1-i];
             /* w z x y z w */
             pc += 3;
@@ -1868,7 +1946,7 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             if (G__asm_inst[pc+2]) pinc = G__free_newarraylist(G__store_struct_offset);
             else pinc = 1;
             G__asm_exec = 0;
-            for (i = pinc - 1;i >= 0;--i) {
+            for (int i = pinc - 1;i >= 0;--i) {
                G__basedestructor();
                G__store_struct_offset += size;
             }
@@ -2353,10 +2431,12 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                G__fprinterr(G__serr, "%3x,%d: PUTAUTOOBJ\n", pc, sp);
 #endif
             var = (struct G__var_array*)G__asm_inst[pc+1];
-            i = (int)G__asm_inst[pc+2];
-            G__push_autoobjectstack((void*)(localmem + var->p[i])
+            {
+               int i = (int)G__asm_inst[pc+2];
+               G__push_autoobjectstack((void*)(localmem + var->p[i])
                                     , var->p_tagtable[i], var->varlabel[i][1]
                                     , G__scopelevel, 0);
+            }
             pc += 3;
 #ifdef G__ASM_DBG
             break;
@@ -2435,7 +2515,6 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                                             , G__asm_inst[pc+1], G__asm_inst[pc+2]);
 #endif
             {
-               int i;
                int n = G__asm_inst[pc+2];
                long plong;
                switch (G__asm_inst[pc+1]) {
@@ -2452,7 +2531,7 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                      plong = 0;
                      break;
                }
-               for (i = 0;i < n;++i) {
+               for (int i = 0;i < n;++i) {
 #ifdef G__ASM_DBG
                   if (G__asm_dbg) G__fprinterr(G__serr, "  %ld %ld\n"
                                                   , G__asm_inst[pc+3+i*2]

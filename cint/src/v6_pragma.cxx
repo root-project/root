@@ -621,9 +621,6 @@ int G__autocc()
 {
   char temp[G__LONGLINE];
   char ansi[10],cpp[10];
-#if defined(G__VISUAL)
-  FILE *fp;
-#endif
 
   fclose(G__fpautocc);
   G__fpautocc=(FILE*)NULL;
@@ -662,7 +659,7 @@ int G__autocc()
             ,G__autocc_mak,G__autocc_h);
     if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp);
     system(temp);
-    fp = fopen(G__autocc_sl,"r");
+    FILE *fp = fopen(G__autocc_sl,"r");
     if(fp) {
       fclose(fp);
       sprintf(temp,"del %s",G__autocc_sl);

@@ -13,7 +13,7 @@
  *
  ************************************************************************/
 
-#ifdef G__CPPLINK_ON
+#ifdef G__CXXLINK_ON
 void G__cpp_setup();
 #endif
 #ifdef G__CLINK_ON
@@ -21,7 +21,7 @@ void G__c_setup();
 #endif
 
 int G__globalsetup() {
-#ifdef G__CPPLINK_ON
+#ifdef G__CXXLINK_ON
   G__cpp_setup();
 #endif
 #ifdef G__CLINK_ON
