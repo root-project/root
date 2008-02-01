@@ -32,7 +32,31 @@ EVENT         = Event$(ExeSuf)
 EVENTLIB      = libEvent.$(LibSuf)
 EVENT2LIB     = libEvent_2.$(LibSuf)
 
+
+schemaRun.ref: CMDECHO:=
 schemaRun.ref: schemaRun1.C Event.root 
+	$(CMDECHO) which grep > schemaRun.ref.0
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C \
+	> schemaRun.ref.1 2>&1 || true
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
+	| grep -a -v fType \
+	> schemaRun.ref.2 || true
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
+	| grep -a -v fType | grep -v 'no dictionary for class' \
+	> schemaRun.ref.3 || true
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
+	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing \
+	> schemaRun.ref.4 || true
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
+	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray \
+	> schemaRun.ref.5 || true
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
+	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	> schemaRun.ref.6 || true
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
+	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g' \
+	> schemaRun.ref.7 || true
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l schemaRun1.C 2>&1 \
 	| grep -a -v fType | grep -v 'no dictionary for class' | grep -v Processing | grep -v TRefArray | grep -v TH1F \
 	| sed -e 's/\([0-9]\.[0-9][0-9][0-9][0-9]\)[0-9]*/\1/g' \
