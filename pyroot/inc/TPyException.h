@@ -2,7 +2,7 @@
 // Author: Scott Snyder, Apr 2004
 
 #ifndef ROOT_TPyException
-#define ROOT_TPyExecption
+#define ROOT_TPyException
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //

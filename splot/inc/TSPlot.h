@@ -7,7 +7,7 @@
  *                                                                    *
  **********************************************************************/
 
-#ifndef ROOT_TSPLot
+#ifndef ROOT_TSPlot
 #define ROOT_TSPlot
 
 #include "TObjArray.h"
@@ -35,9 +35,9 @@ protected:
    TTree    *fTree;          //!
    TString* fTreename;       //The name of the data tree
    TString* fVarexp;         //Variables used for splot
-   TString* fSelection;      //Selection on the tree 
+   TString* fSelection;      //Selection on the tree
 
-  
+
    Int_t    fNx;             //Number of control variables
    Int_t    fNy;             //Number of discriminating variables
    Int_t    fNSpecies;       //Number of species
@@ -89,6 +89,5 @@ public:
 
    ClassDef(TSPlot, 1)  //class to disentangle signal from background
 };
- 
-#endif
 
+#endif
