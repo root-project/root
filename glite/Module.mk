@@ -43,7 +43,7 @@ $(GLITELIB):    $(GLITEO) $(GLITEDO) $(ORDER_) $(MAINLIBS) $(GLITELIBDEP)
 		   "$(SOFLAGS)" libRgLite.$(SOEXT) $@ "$(GLITEO) $(GLITEDO)" \
 		   "$(GLITELIBEXTRA) $(GLITELIBDIR) $(GAWLIB)"
 
-$(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPEXE)
+$(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GLITEH) $(GLITEL)
 
