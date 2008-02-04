@@ -73,14 +73,19 @@ void TEveProjectionAxes::ComputeBBox()
 }
 
 //______________________________________________________________________________
-void TEveProjectionAxes::SetSplitMode( EMode mode) 
-{ 
+void TEveProjectionAxes::SetSplitMode(EMode mode) 
+{
+   // Set axis-splitting mode:
+   //   kPosition - split equidistantly on screen;
+   //   kValue    - split by equal value steps.
+
    fSplitMode = mode;
 }
 
 //______________________________________________________________________________
 const TGPicture* TEveProjectionAxes::GetListTreeIcon() 
 { 
-   //return pointset icon
+   // Return icon for this class.
+
    return TEveElement::fgListTreeIcons[6]; 
 }
