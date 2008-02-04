@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include <list>
+#include <typeinfo>
 
 extern std::list<G__DLLINIT>* G__initpermanentsl;
 
@@ -2133,14 +2134,14 @@ void G__platformMacro()
 
    // setup size_t, ssize_t
    int size_t_type = 0;
-   if (sizeof(size_t) == G__INTALLOC)
+   if (typeid(size_t) == typeid(unsigned int))
       size_t_type = 'i';
-   else if (sizeof(size_t) == G__LONGALLOC)
+   else if (typeid(size_t) == typeid(unsigned long))
       size_t_type = 'l';
-   else if (sizeof(size_t) == G__LONGLONGALLOC)
+   else if (typeid(size_t) == typeid(unsigned long long))
       size_t_type = 'n';
-   else G__fprinterr(G__serr, "On your platform, size_t has a weird size of %d which is not handled yet!\n",
-                        sizeof(size_t));
+   else G__fprinterr(G__serr, "On your platform, size_t has a weird typeid of %s which is not handled yet!\n",
+                        typeid(size_t).name());
 
    G__search_typename2("size_t", size_t_type - 1, -1, 0, -1);
    G__setnewtype(-1, NULL, 0);
