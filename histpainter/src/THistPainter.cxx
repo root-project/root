@@ -2361,8 +2361,8 @@ void THistPainter::PaintBoxes(Option_t *)
          return;
       }
    } else {
-      zmin = 0;
       zmax = TMath::Max(TMath::Abs(zmin),TMath::Abs(zmax));
+      zmin = 0;
    }
 
    // In case of option SAME, zmin and zmax values are taken from the
