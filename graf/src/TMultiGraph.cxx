@@ -1127,9 +1127,10 @@ void TMultiGraph::Paint(Option_t *option)
       fHistogram->Paint("0");
    }
 
+   TGraph *gfit = 0;
    if (fGraphs) {
       TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-      TObject *obj;
+      TObject *obj = 0;
 
       while (lnk) {
          obj = lnk->GetObject();
@@ -1137,19 +1138,24 @@ void TMultiGraph::Paint(Option_t *option)
          else                          obj->Paint(chopt);
          lnk = (TObjOptLink*)lnk->Next();
       }
+      gfit = (TGraph*)obj; // pick one TGraph in the list to paint the fit parameters.
    }
 
    TObject *f;
+   TF1 *fit = 0;
    if (fFunctions) {
       TIter   next(fFunctions);
       while ((f = (TObject*) next())) {
          if (f->InheritsFrom(TF1::Class())) {
             if (f->TestBit(TF1::kNotDraw) == 0) f->Paint("lsame");
+            fit = (TF1*)f;
          } else  {
             f->Paint();
          }
       }
    }
+
+   if (fit) gfit->PaintFit(fit);
 }
 
 
