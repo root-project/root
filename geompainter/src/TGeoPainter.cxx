@@ -1480,6 +1480,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Double_t cop[3]; 
    for (i=0; i<3; i++) cop[i] = cov[i] - dir[i]*dview;
    fGeoManager->InitTrack(cop, dir);
+   Bool_t outside = fGeoManager->IsOutside();
    fGeoManager->DoBackupState();
    if (fClippingShape) inclipst = inclip = fClippingShape->Contains(cop);
    Int_t px, py;
@@ -1530,6 +1531,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          local[2] = dproj/modloc;
          LocalToMasterVect(local,dir);
          fGeoManager->DoRestoreState();
+         fGeoManager->SetOutside(outside);
          fGeoManager->SetCurrentPoint(cop);
          fGeoManager->SetCurrentDirection(dir);
 //         fGeoManager->InitTrack(cop,dir);
