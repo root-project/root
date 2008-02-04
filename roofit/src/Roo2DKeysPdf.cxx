@@ -435,8 +435,8 @@ Int_t Roo2DKeysPdf::getBandWidthType() const
 
 Double_t Roo2DKeysPdf::getMean(const char * axis) const
 {
-  if((axis == x.GetName()) || (axis == "x") || (axis == "X"))      return _xMean;
-  else if((axis == y.GetName()) || (axis == "y") || (axis == "Y")) return _yMean;
+  if(!strcmp(axis,x.GetName()) || !strcmp(axis,"x") || !strcmp(axis,"X"))      return _xMean;
+  else if(!strcmp(axis,y.GetName()) || !strcmp(axis,"y") || !strcmp(axis,"Y")) return _yMean;
   else 
   {
     cout << "Roo2DKeysPdf::getMean unknown axis "<<axis<<endl;
@@ -446,8 +446,8 @@ Double_t Roo2DKeysPdf::getMean(const char * axis) const
 
 Double_t Roo2DKeysPdf::getSigma(const char * axis) const
 {
-  if((axis == x.GetName()) || (axis == "x") || (axis == "X"))      return _xSigma;
-  else if((axis == y.GetName()) || (axis == "y") || (axis == "Y")) return _ySigma;
+  if(!strcmp(axis,x.GetName()) || !strcmp(axis,"x") || !strcmp(axis,"X"))      return _xSigma;
+  else if(!strcmp(axis,y.GetName()) || !strcmp(axis,"y") || !strcmp(axis,"Y")) return _ySigma;
   else 
   {
     cout << "Roo2DKeysPdf::getSigma unknown axis "<<axis<<endl;
@@ -523,8 +523,8 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   //name the TBranches the same as the RooAbsReal's
   const char * xname = xArg.GetName();
   const char * yname = yArg.GetName();
-  if(xname == "") xname = "x";
-  if(yname == "") yname = "y";
+  if (!strcmp(xname,"")) xname = "x";
+  if (!strcmp(yname,"")) yname = "y";
 
   _theTree->Branch(xname, &theX, " x/D");
   _theTree->Branch(yname, &theY, " y/D");

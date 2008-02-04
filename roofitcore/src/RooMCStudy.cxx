@@ -365,7 +365,8 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
       // Actual generation of events
       _genSample = _genContext->generate(nEvt) ;
       
-    } else if (asciiFilePat && &asciiFilePat) {
+    //} else if (asciiFilePat && &asciiFilePat) { //warning: the address of 'asciiFilePat' will always evaluate as 'true'
+    } else if (asciiFilePat) {
 
       // Load sample from ASCII file
       char asciiFile[1024] ;
