@@ -2107,6 +2107,7 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
 void TGSplitButton::Init()
 {
    // Common initialization used by the different ctors.
+
    Int_t hotchar;
 
    fTMode       = kTextCenterX | kTextCenterY;
@@ -2188,7 +2189,9 @@ void TGSplitButton::CalcSize()
 //______________________________________________________________________________
 Bool_t TGSplitButton::HandleSButton(Event_t *event)
 {                    
-   //Handle mouse button event in case the button is split.
+   // Handle mouse button event in case the button is split.
+
+   if (fState == kButtonDisabled) return kFALSE;
 
    Bool_t activate = kFALSE;
    Bool_t bclick = kFALSE;
@@ -2361,6 +2364,8 @@ Bool_t TGSplitButton::HandleSKey(Event_t *event)
 {
    // Handle key event. This function will be called when the hotkey is hit.
 
+   if (fState == kButtonDisabled) return kFALSE;
+
    Bool_t click = kFALSE;
 
    if (event->fType == kGKeyPress) {
@@ -2405,7 +2410,7 @@ Bool_t TGSplitButton::HandleSKey(Event_t *event)
 //______________________________________________________________________________
 void TGSplitButton::SetMenuState(Bool_t state) 
 {
-   // Popup the attached menu and 
+   // Popup the attached menu. 
 
    if (state) {
       Int_t    ax, ay;
@@ -2451,6 +2456,9 @@ void TGSplitButton::DoRedraw()
    int x, y;
    TGFrame::DoRedraw();
    
+   if (fState == kButtonDisabled) fMBState = kButtonDisabled;
+   else if (fMBState == kButtonDisabled) fMBState = kButtonUp;
+
    if (fTMode & kTextLeft) {
       x = fMLeft + 4;
    } else if (fTMode & kTextRight) {
@@ -2758,6 +2766,9 @@ void TGSplitButton::SetSplit(Bool_t split)
 Bool_t TGSplitButton::HandleButton(Event_t *event)
 {                    
    // Handle button events.
+
+   if (fState == kButtonDisabled) return kFALSE;
+
    if (fSplit) return HandleSButton(event);
 
    Bool_t in = (event->fX >= 0) && (event->fY >= 0) &&
