@@ -48,6 +48,7 @@ public:
 
    void DoExit() ;
    void DoSplit(Bool_t split) ;
+   void DoEnable(Bool_t on) ;
    void HandleMenu(Int_t id) ;
 
    ClassDef(SplitButtonTest, 0)
@@ -93,6 +94,14 @@ SplitButtonTest::SplitButtonTest(const TGWindow *p, UInt_t w, UInt_t h)
    // Add frames to their parent for layout.
    fHL->AddFrame(fCButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 
                                              0, 10, 0, 0)) ;        
+   TGCheckButton *fEButton = new TGCheckButton(fHL, new TGHotString("Enable"), 
+                                               IDs.GetUnID());
+   fEButton->SetState(kButtonDown);
+   fEButton->Connect("Toggled(Bool_t)", "SplitButtonTest", this, "DoEnable(Bool_t)");
+
+   // Add frames to their parent for layout.
+   fHL->AddFrame(fEButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 
+                                             0, 10, 0, 0)) ;        
    fHL->AddFrame(fMButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
    fVL->AddFrame(fHL, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY)) ;
    AddFrame(fVL, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY)) ;
@@ -124,6 +133,14 @@ void SplitButtonTest::DoExit()
 void SplitButtonTest::DoSplit(Bool_t split)
 {
    fMButton->SetSplit(split);
+}
+
+void SplitButtonTest::DoEnable(Bool_t on)
+{
+   if (on)
+      fMButton->SetState(kButtonUp);
+   else
+      fMButton->SetState(kButtonDisabled);
 }
 
 void SplitButtonTest::HandleMenu(Int_t id) 
