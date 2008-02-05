@@ -446,7 +446,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
       TIter next(&argArr);
       TObjString *objstr;
       while ( (objstr=(TObjString*)next()) ) {
-         Analyze(objstr->String(),err,offset);
+         Analyze(objstr->String(),err,offset); if (err) return kFALSE;
       }
       if (nargs!=prim->fNArguments) {
          Error("Compile",        "%s requires %d arguments",
@@ -838,7 +838,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,ou-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
 
             fExpr[fNoper] = "|| checkpoint";
             actionCode = kBoolOptimize;
@@ -847,7 +847,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             Int_t optloc = fNoper++;
 
             ctemp = chaine(ou+1,lchain-ou-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "||";
             actionCode = kOr;
             SetAction(fNoper,actionCode, 0);
@@ -862,7 +862,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,et-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
 
             fExpr[fNoper] = "&& checkpoint";
             actionCode = kBoolOptimize;
@@ -872,7 +872,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             Int_t optloc = fNoper++;
 
             ctemp = chaine(et+1,lchain-et-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "&&";
             actionCode = kAnd;
             SetAction(fNoper,actionCode,0);
@@ -887,9 +887,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,oux-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(oux,lchain-oux);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "|";
             actionCode = kBitOr;
             SetAction(fNoper,actionCode,actionParam);
@@ -902,9 +902,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,etx-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(etx,lchain-etx);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "&";
             actionCode = kBitAnd;
             SetAction(fNoper,actionCode,actionParam);
@@ -917,9 +917,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,petit-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(petit,lchain-petit);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "<";
             actionCode = kLess;
             SetAction(fNoper,actionCode,actionParam);
@@ -932,9 +932,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,grand-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(grand,lchain-grand);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = ">";
             actionCode = kGreater;
             SetAction(fNoper,actionCode,actionParam);
@@ -947,9 +947,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,peteg-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(peteg+1,lchain-peteg-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "<=";
             actionCode = kLessThan;
             SetAction(fNoper,actionCode,actionParam);
@@ -962,9 +962,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,grdeg-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(grdeg+1,lchain-grdeg-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = ">=";
             actionCode = kGreaterThan;
             SetAction(fNoper,actionCode,actionParam);
@@ -977,9 +977,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,egal-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(egal+1,lchain-egal-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "==";
             actionCode = kEqual;
             SetAction(fNoper,actionCode,actionParam);
@@ -992,9 +992,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,diff-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(diff+1,lchain-diff-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "!=";
             actionCode = kNotEqual;
             SetAction(fNoper,actionCode,actionParam);
@@ -1007,9 +1007,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          else {
             ctemp = chaine(0,plus-1);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             ctemp = chaine(plus,lchain-plus);
-            Analyze(ctemp.Data(),err,offset);
+            Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "+";
             actionCode = kAdd;
             SetAction(fNoper,actionCode,actionParam);
@@ -1019,7 +1019,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          if (moins != 0) {
             if (moins == 1) {
                ctemp = chaine(moins,lchain-moins);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                fExpr[fNoper] = "-";
                actionCode = kSignInv;
                SetAction(fNoper,actionCode,actionParam);
@@ -1030,9 +1030,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   chaine_error = "-";
                } else {
                   ctemp = chaine(0,moins-1);
-                  Analyze(ctemp.Data(),err,offset);
+                  Analyze(ctemp.Data(),err,offset); if (err) return;
                   ctemp = chaine(moins,lchain-moins);
-                  Analyze(ctemp.Data(),err,offset);
+                  Analyze(ctemp.Data(),err,offset); if (err) return;
                   fExpr[fNoper] = "-";
                   actionCode = kSubstract;
                   SetAction(fNoper,actionCode,actionParam);
@@ -1045,9 +1045,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                chaine_error="%";
             } else {
                ctemp = chaine(0,modulo-1);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                ctemp = chaine(modulo,lchain-modulo);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                fExpr[fNoper] = "%";
                actionCode = kModulo;
                SetAction(fNoper,actionCode,actionParam);
@@ -1059,9 +1059,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                chaine_error=">>";
             } else {
                ctemp = chaine(0,rshift-1);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                ctemp = chaine(rshift+1,lchain-rshift-1);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                fExpr[fNoper] = ">>";
                actionCode = kRightShift;
                SetAction(fNoper,actionCode,actionParam);
@@ -1073,9 +1073,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                chaine_error=">>";
             } else {
                ctemp = chaine(0,lshift-1);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                ctemp = chaine(lshift+1,lchain-lshift-1);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                fExpr[fNoper] = ">>";
                actionCode = kLeftShift;
                SetAction(fNoper,actionCode,actionParam);
@@ -1089,9 +1089,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             }
             else {
                ctemp = chaine(0,multi-1);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                ctemp = chaine(multi,lchain-multi);
-               Analyze(ctemp.Data(),err,offset);
+               Analyze(ctemp.Data(),err,offset); if (err) return;
                fExpr[fNoper] = "*";
                actionCode = kMultiply;
                SetAction(fNoper,actionCode,actionParam);
@@ -1105,9 +1105,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                }
                else {
                   ctemp = chaine(0,divi-1);
-                  Analyze(ctemp.Data(),err,offset);
+                  Analyze(ctemp.Data(),err,offset); if (err) return;
                   ctemp = chaine(divi,lchain-divi);
-                  Analyze(ctemp.Data(),err,offset);
+                  Analyze(ctemp.Data(),err,offset); if (err) return;
                   fExpr[fNoper] = "/";
                   actionCode = kDivide;
                   SetAction(fNoper,actionCode,actionParam);
@@ -1122,12 +1122,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   else {
                      if (chaine(lchain-2,2) == "^2") {
                         ctemp = "sq(" + chaine(0,lchain-2) + ")";
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                      } else {
                         ctemp = chaine(0,puiss-1);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         ctemp = chaine(puiss,lchain-puiss);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "^";
                         actionCode = kpow;
                         SetAction(fNoper,actionCode,actionParam);
@@ -1205,7 +1205,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
                         Int_t nprior = fNpar;
-                        Analyze(oldformula->GetExpFormula(),err,fNpar); // changes fNpar
+                        Analyze(oldformula->GetExpFormula(),err,fNpar); if (err) return; // changes fNpar
                         fNpar = nprior;
                         find=1;
                         if (!err) {
@@ -1243,7 +1243,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         fNoper++;
                      } else if (chaine(0,1) == "!") {
                         ctemp = chaine(1,lchain-1);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "!";
                         actionCode = kNot;
                         SetAction(fNoper,actionCode,actionParam);
@@ -1256,133 +1256,133 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         fNoper++;
                      } else if (chaine(0,4) == "cos(") {
                         ctemp = chaine(3,lchain-3);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "cos";
                         actionCode = kcos;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;
                      } else if (chaine(0,4) == "sin(") {
                         ctemp = chaine(3,lchain-3);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "sin";
                         actionCode = ksin;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;
                      } else if (chaine(0,4) == "tan(") {
                         ctemp = chaine(3,lchain-3);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "tan";
                         actionCode = ktan;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;
                      } else if (chaine(0,5) == "acos(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "acos";
                         actionCode = kacos;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;
                      } else if (chaine(0,5) == "asin(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "asin";
                         actionCode = kasin;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;
                      } else if (chaine(0,5) == "atan(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "atan";
                         actionCode = katan;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;
                      } else if (chaine(0,5) == "cosh(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "cosh";
                         actionCode = kcosh;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;
                      } else if (chaine(0,5) == "sinh(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "sinh";
                         actionCode = ksinh;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,5) == "tanh(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "tanh";
                         actionCode = ktanh;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,6) == "acosh(") {
                         ctemp = chaine(5,lchain-5);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "acosh";
                         actionCode = kacosh;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,6) == "asinh(") {
                         ctemp = chaine(5,lchain-5);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "asinh";
                         actionCode = kasinh;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,6) == "atanh(") {
                         ctemp = chaine(5,lchain-5);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "atanh";
                         actionCode = katanh;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,3) == "sq(") {
                         ctemp = chaine(2,lchain-2);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "sq";
                         actionCode = ksq;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,4) == "log(") {
                         ctemp = chaine(3,lchain-3);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "log";
                         actionCode = klog;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,6) == "log10(") {
                         ctemp = chaine(5,lchain-5);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "log10";
                         actionCode = klog10;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,4) == "exp(") {
                         ctemp = chaine(3,lchain-3);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "exp";
                         actionCode = kexp;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,4) == "abs(") {
                         ctemp = chaine(3,lchain-3);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "abs";
                         actionCode = kabs;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,5) == "sign(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "sign";
                         actionCode = ksign;
                         SetAction(fNoper,actionCode,actionParam);
                         fNoper++;;
                      } else if (chaine(0,4) == "int(") {
                         ctemp = chaine(3,lchain-3);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "int";
                         actionCode = kint;
                         SetAction(fNoper,actionCode,actionParam);
@@ -1394,7 +1394,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         fNoper++;;
                      } else if (chaine(0,5) == "sqrt(") {
                         ctemp = chaine(4,lchain-4);
-                        Analyze(ctemp.Data(),err,offset);
+                        Analyze(ctemp.Data(),err,offset); if (err) return;
                         fExpr[fNoper] = "sqrt";
                         actionCode = ksqrt;
                         SetAction(fNoper,actionCode,actionParam);
@@ -1735,9 +1735,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
                         else {
                            ctemp = chaine(4,virgule-5);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            ctemp = chaine(virgule,lchain-virgule-1);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            fExpr[fNoper] = "^";
                            actionCode = kpow;
                            SetAction(fNoper,actionCode,actionParam);
@@ -1762,9 +1762,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (nomb != 1) err = 28; // There are plus or minus than 2 arguments for strstr
                         else {
                            ctemp = chaine(7,virgule-8);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            ctemp = chaine(virgule,lchain-virgule-1);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            fExpr[fNoper] = "strstr";
                            actionCode = kstrstr;
                            SetAction(fNoper,actionCode,actionParam);
@@ -1784,9 +1784,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
                         else {
                            ctemp = chaine(4,virgule-5);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            ctemp = chaine(virgule,lchain-virgule-1);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            fExpr[fNoper] = "min";
                            actionCode = kmin;
                            SetAction(fNoper,actionCode,actionParam);
@@ -1806,9 +1806,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
                         else {
                            ctemp = chaine(4,virgule-5);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            ctemp = chaine(virgule,lchain-virgule-1);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            fExpr[fNoper] = "max";
                            actionCode = kmax;
                            SetAction(fNoper,actionCode,actionParam);
@@ -1829,9 +1829,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
                         else {
                            ctemp = chaine(6,virgule-7);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            ctemp = chaine(virgule,lchain-virgule-1);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            fExpr[fNoper] = "atan2";
                            actionCode = katan2;
                            SetAction(fNoper,actionCode,actionParam);
@@ -1851,9 +1851,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for fmod
                         else {
                            ctemp = chaine(5,virgule-6);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            ctemp = chaine(virgule,lchain-virgule-1);
-                           Analyze(ctemp.Data(),err,offset);
+                           Analyze(ctemp.Data(),err,offset); if (err) return;
                            fExpr[fNoper] = "fmod";
                            actionCode = kfmod;
                            SetAction(fNoper,actionCode,actionParam);
