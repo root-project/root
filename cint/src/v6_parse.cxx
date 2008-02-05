@@ -2718,7 +2718,9 @@ static G__value G__exec_loop(char* forinit, char* condition, int naction, char**
    //
    //  Allow a single bytecode error message.
    //
+#ifdef G__ASM_DBG
    int dispstat = 0;
+#endif
    //
    //  Remember old if/switch state, change to dowhile state.
    //
