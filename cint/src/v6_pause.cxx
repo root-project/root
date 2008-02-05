@@ -2525,7 +2525,8 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
          G__cintrevision(G__temp);
          G__list_sut(G__temp);
          /* compiled and interpreterd objects */
-         G__display_class(G__temp, "", 0, 0);
+         static char emptystring[1] = {0};
+         G__display_class(G__temp, emptystring, 0, 0);
          G__display_typedef(G__temp, "", 0);
          G__display_string(G__temp);
          G__display_template(G__temp, " ");

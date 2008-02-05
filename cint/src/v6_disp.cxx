@@ -644,7 +644,8 @@ int G__display_newtypes(FILE *fout,const char *fname)
 
   if(dict) {
     /* listup new class/struct/enum/union */
-    if(G__display_class(fout,"",0,dict->tagnum)) return(1);
+    static char emptystring[1] = {0};
+    if(G__display_class(fout,emptystring,0,dict->tagnum)) return(1);
     /* listup new typedef */
     if(G__display_typedef(fout,"",dict->typenum)) return(1);
     return(0);
