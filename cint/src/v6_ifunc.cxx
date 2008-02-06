@@ -2175,48 +2175,55 @@ int G__matchpointlevel(int param_reftype, int formal_reftype)
 int G__param_match(char formal_type, int formal_tagnum, G__value* default_parameter, char param_type, int param_tagnum, G__value* param, char* parameter, int funcmatch, int rewind_arg, int formal_reftype, int formal_isconst)
 {
    // -- FIXME: Describe this function!
-   int match;
-   static int recursive = 0;
-   long store_struct_offset; /* used to be int */
-   int store_tagnum;
-   char conv[G__ONELINE], arg1[G__ONELINE];
-   int baseoffset;
-   G__value reg;
-   int store_oprovld;
+   static int recursive = 0; // FIXME: This is not thread-safe!
+   int match = 0;
    int rewindflag = 0;
+   G__value reg;
+   char conv[G__ONELINE];
+   char arg1[G__ONELINE];
 
-   if (default_parameter && param_type == '\0') {
-      return(2);
+   if (default_parameter && (param_type == '\0')) {
+      return 2;
    }
 
    if (funcmatch >= G__EXACT) {
-      if (param_type == formal_type && 0 == recursive) {
-
-         if (tolower(param_type) == 'u') {
-            /* If struct,class,union, check tagnum */
-            if (formal_tagnum != param_tagnum) { /* unmatch */
-               match = 0;
-            }
-            else {  /* match */
-               match = 1;
-            }
-         }
-         else { /* match */
-            match = 1;
-         }
-
-      }
-      else if ('I' == param_type && 'U' == formal_type && param_tagnum == formal_tagnum &&
-               -1 != formal_tagnum && 'e' == G__struct.type[formal_tagnum]
-              ) {
+      if (
+         !recursive && // Not recursive, and
+         (param_tagnum == formal_tagnum) && // Argument tagnum matches formal parameter tagnum, and
+         (
+            (param_type == formal_type) || // Argument type code matches formal parameter typecode, or
+            // FIXME: We do not handle references or multi-level pointers correctly here!
+            (
+               (param_type == 'I') && // Argument type is int*, and
+               (formal_type == 'U') && // Formal parameter type is pointer to struct, and
+               (formal_tagnum != -1) && // Formal parameter rawtype is valid, and
+               (G__struct.type[formal_tagnum] == 'e') // Formal parameter rawtype is an enum
+            ) || // or,
+            (
+               (param_type == 'U') && // Argument type is pointer to struct, and
+               (formal_type == 'I') && // Formal parameter type is int*, and
+               (param_tagnum != -1) && // Argument rawtype is valid, and
+               (G__struct.type[param_tagnum] == 'e') // Argument rawtype is an enum
+            ) || // or,
+            (
+               (param_type == 'i') &&  // Argument type is int, and
+               (formal_type == 'u') && // Formal parameter type is struct, and
+               (formal_tagnum != -1) && // Formal parameter rawtype is valid, and
+               (G__struct.type[formal_tagnum] == 'e') // Formal parameter rawtype is an enum
+            ) || // or,
+            (
+               (param_type == 'u') &&  // Argument type is struct, and
+               (formal_type == 'i') && // Formal parameter type is int, and
+               (param_tagnum != -1) && // Argument rawtype is valid, and
+               (G__struct.type[param_tagnum] == 'e') // Argument rawtype is an enum
+            )
+         )
+      ) {
          match = 1;
-      }
-      else {  /* unmatch */
-         match = 0;
       }
    }
 
-   if (match == 0 && funcmatch >= G__PROMOTION) {
+   if (!match && (funcmatch >= G__PROMOTION)) {
       switch (formal_type) {
          case 'd':
          case 'f':
@@ -2374,7 +2381,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
       }
    }
 
-   if (match == 0 && funcmatch >= G__STDCONV) {
+   if (!match && (funcmatch >= G__STDCONV)) {
       switch (formal_type) {
          case 'b':
          case 'c':
@@ -2446,20 +2453,19 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             /* Added condition for formal_reftype and recursive, then things
              * are working 1999/12/5 */
          case 'u':
-            if (G__PARAREFERENCE == formal_reftype && recursive) {
+            if ((formal_reftype == G__PARAREFERENCE) && recursive) {
                switch (param_type) {
                   case 'u':
-                     /* reference to derived class can be converted to reference to base
-                      * class. add offset, modify char *parameter and G__value *param */
-                     if (-1 != (baseoffset = G__ispublicbase(formal_tagnum, param_tagnum
-                                                             , param->obj.i))) {
-                        param->tagnum = formal_tagnum;
-                        param->obj.i += baseoffset;
-                        param->ref += baseoffset;
-                        match = 1;
-                     }
-                     else {
-                        match = 0;
+                     {
+                        /* reference to derived class can be converted to reference to base
+                         * class. add offset, modify char *parameter and G__value *param */
+                        int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i);
+                        if (baseoffset != -1) {
+                           param->tagnum = formal_tagnum;
+                           param->obj.i += baseoffset;
+                           param->ref += baseoffset;
+                           match = 1;
+                        }
                      }
                      break;
                }
@@ -2469,33 +2475,34 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
          case 'U':
             switch (param_type) {
                case 'U':
-                  /* Pointer to derived class can be converted to
-                   * pointer to base class.
-                   * add offset, modify char *parameter and
-                   * G__value *param
-                   */
-                  if (
+                  {
+                     /* Pointer to derived class can be converted to
+                      * pointer to base class.
+                      * add offset, modify char *parameter and
+                      * G__value *param
+                      */
 #ifdef G__VIRTUALBASE
-                     - 1 != (baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i))
-#else
-                     - 1 != (baseoffset = G__ispublicbase(formal_tagnum, param_tagnum))
-#endif
-                  ) {
-                     param->tagnum = formal_tagnum;
-                     param->obj.i += baseoffset;
-                     param->ref = 0;
-                     match = 1;
-                  }
-                  else {
-                     match = 0;
+                     int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i);
+#else // G__VIRTUALBASE
+                     int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum);
+#endif // G__VIRTUALBASE
+                     if (baseoffset != -1) {
+                        param->tagnum = formal_tagnum;
+                        param->obj.i += baseoffset;
+                        param->ref = 0;
+                        match = 1;
+                     }
+                     else {
+                        match = 0;
+                     }
                   }
                   break;
                case 'Y':
 #ifndef G__OLDIMPLEMENTATION2191
-               case '1': /* questionable */
-#else
-               case 'Q': /* questionable */
-#endif
+               case '1': // questionable
+#else // G__OLDIMPLEMENTATION2191
+               case 'Q': // questionable
+#endif // G__OLDIMPLEMENTATION2191
                   match = 1;
                   break;
                case 'i':
@@ -2532,7 +2539,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
       }
    }
 
-   if (match == 0 && funcmatch >= G__USERCONV) {
+   if (!match && (funcmatch >= G__USERCONV)) {
       if (formal_type == 'u' && 0 == recursive) {
          /* create temp object buffer */
          if (G__CPPLINK != G__struct.iscpplink[formal_tagnum]) {
@@ -2573,28 +2580,29 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
                          , conv, G__templevel);
          }
 
-         store_struct_offset = G__store_struct_offset;
+         long store_struct_offset = G__store_struct_offset;
          G__store_struct_offset = G__p_tempbuf->obj.obj.i;
 
-         store_tagnum = G__tagnum;
+         int store_tagnum = G__tagnum;
          G__tagnum = formal_tagnum;
 
          /* avoid duplicated argument evaluation in p-code stack */
-         store_oprovld = G__oprovld;
+         int store_oprovld = G__oprovld;
          G__oprovld = 1;
 
 #ifdef G__ASM
          if (G__asm_noverflow && rewind_arg) {
             rewindflag = 1;
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x: REWINDSTACK %d\n"
-                                            , G__asm_cp, rewind_arg);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: REWINDSTACK %d  %s:%d\n", G__asm_cp, G__asm_dt, rewind_arg, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__REWINDSTACK;
             G__asm_inst[G__asm_cp+1] = rewind_arg;
             G__inc_cp_asm(2, 0);
          }
-#endif
+#endif // G__ASM
 
          ++recursive;
          if (G__CPPLINK == G__struct.iscpplink[formal_tagnum]) {
@@ -2664,18 +2672,16 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
          /* if no constructor, try converting to base class */
 
 
-         if (match == 0) {
-            if ('u' == param_type &&
+         if (!match) {
+            // --
 #ifdef G__VIRTUALBASE
-                  - 1 != (baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i))
-#else
-                  - 1 != (baseoffset = G__ispublicbase(formal_tagnum, param_tagnum))
-#endif
-               ) {
+            int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i);
+#else // G__VIRTUALBASE
+            int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum);
+#endif // G__VIRTUALBASE
+            if ((param_type == 'u') && (baseoffset != -1)) {
                if (G__dispsource) {
-                  G__fprinterr(G__serr, "!!!Implicit conversion from %s to base %s\n"
-                               , G__struct.name[param_tagnum]
-                               , G__struct.name[formal_tagnum]);
+                  G__fprinterr(G__serr, "!!!Implicit conversion from %s to base %s\n", G__struct.name[param_tagnum], G__struct.name[formal_tagnum]);
                }
                param->typenum = -1;
                param->tagnum = formal_tagnum;
@@ -2683,10 +2689,12 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
                param->ref += baseoffset;
 #ifdef G__ASM
                if (G__asm_noverflow) {
+                  // --
 #ifdef G__ASM_DBG
-                  if (G__asm_dbg) G__fprinterr(G__serr, "%3x: BASECONV %d %d\n"
-                                                  , G__asm_cp, formal_tagnum, baseoffset);
-#endif
+                  if (G__asm_dbg) {
+                     G__fprinterr(G__serr, "%3x,%3x: BASECONV %d %d  %s:%d\n", G__asm_cp, G__asm_dt, formal_tagnum, baseoffset, __FILE__, __LINE__);
+                  }
+#endif // G__ASM_DBG
                   G__asm_inst[G__asm_cp] = G__BASECONV;
                   G__asm_inst[G__asm_cp+1] = formal_tagnum;
                   G__asm_inst[G__asm_cp+2] = baseoffset;
@@ -2694,94 +2702,91 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
                   if (rewind_arg) {
                      rewindflag = 1;
 #ifdef G__ASM_DBG
-                     if (G__asm_dbg) G__fprinterr(G__serr, "%3x: REWINDSTACK %d\n"
-                                                     , G__asm_cp, -rewind_arg);
-#endif
+                     if (G__asm_dbg) {
+                        G__fprinterr(G__serr, "%3x,%3x: REWINDSTACK %d  %s:%d\n", G__asm_cp, G__asm_dt, -rewind_arg, __FILE__, __LINE__);
+                     }
+#endif // G__ASM_DBG
                      G__asm_inst[G__asm_cp] = G__REWINDSTACK;
                      G__asm_inst[G__asm_cp+1] = -rewind_arg;
                      G__inc_cp_asm(2, 0);
                   }
-#endif
-                  if (param->obj.i < 0)
-                     sprintf(parameter, "(%s)(%ld)", G__struct.name[formal_tagnum]
-                             , param->obj.i);
-                  else
-                     sprintf(parameter, "(%s)%ld", G__struct.name[formal_tagnum]
-                             , param->obj.i);
+#endif // G__ASM
+                  if (param->obj.i < 0) {
+                     sprintf(parameter, "(%s)(%ld)", G__struct.name[formal_tagnum], param->obj.i);
+                  }
+                  else {
+                     sprintf(parameter, "(%s)%ld", G__struct.name[formal_tagnum], param->obj.i);
+                  }
                }
                match = 1;
                G__pop_tempobject();
             }
-            else { /* all conversion failed */
+            else { // All conversions failed.
                if (G__dispsource) {
-                  G__fprinterr(G__serr,
-                               "!!!Implicit conversion %s,%d tried, but failed\n"
-                               , conv, G__templevel);
+                  G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv, G__templevel);
                }
                G__pop_tempobject();
 #ifdef G__ASM
                if (rewindflag) {
+                  // --
 #ifdef G__ASM_DBG
-                  if (G__asm_dbg) G__fprinterr(G__serr, "REWINDSTACK cancelled\n");
-#endif
+                  if (G__asm_dbg) {
+                     G__fprinterr(G__serr, "REWINDSTACK cancelled.  %s:%d\n", __FILE__, __LINE__);
+                  }
+#endif // G__ASM_DBG
                   G__inc_cp_asm(-2, 0);
                }
             }
-
-#else /* ON181 */
-
-               /* all conversion failed */
-               if (G__dispsource) {
-                  G__fprinterr(G__serr,
-                               "!!!Implicit conversion %s,%d tried, but failed\n"
-                               , conv, G__templevel);
-               }
-               G__pop_tempobject();
+#else // ON181
+            // All conversions failed.
+            if (G__dispsource) {
+               G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv, G__templevel);
+            }
+            G__pop_tempobject();
 #ifdef G__ASM
-               if (rewindflag) {
+            if (rewindflag) {
+               // --
 #ifdef G__ASM_DBG
-                  if (G__asm_dbg) G__fprinterr(G__serr, "REWINDSTACK cancelled\n");
-#endif
-                  G__inc_cp_asm(-2, 0);
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "REWINDSTACK cancelled.  %s:%d\n", __FILE__, __LINE__);
                }
-#endif
-
-#endif /* ON181 */
+#endif // G__ASM_DBG
+               G__inc_cp_asm(-2, 0);
+            }
+#endif //  G__ASM
+#endif // ON181
+            // --
          }
          else { /* match==1, conversion successful */
             if (G__dispsource) {
-               if (G__p_tempbuf->obj.obj.i < 0)
-                  G__fprinterr(G__serr,
-                               "!!!Create temp object (%s)(%ld),%d for implicit conversion\n"
-                               , conv , G__p_tempbuf->obj.obj.i , G__templevel);
-               else
-                  G__fprinterr(G__serr,
-                               "!!!Create temp object (%s)%ld,%d for implicit conversion\n"
-                               , conv , G__p_tempbuf->obj.obj.i , G__templevel);
+               if (G__p_tempbuf->obj.obj.i < 0) {
+                  G__fprinterr(G__serr, "!!!Create temp object (%s)(%ld),%d for implicit conversion\n", conv, G__p_tempbuf->obj.obj.i, G__templevel);
+               }
+               else {
+                  G__fprinterr(G__serr, "!!!Create temp object (%s)%ld,%d for implicit conversion\n", conv, G__p_tempbuf->obj.obj.i, G__templevel);
+               }
             }
 #ifdef G__ASM
             if (G__asm_noverflow && rewind_arg) {
                rewindflag = 1;
 #ifdef G__ASM_DBG
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3x: REWINDSTACK %d\n"
-                                               , G__asm_cp, -rewind_arg);
-#endif
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "%3x,%3x: REWINDSTACK %d  %s:%d\n", G__asm_cp, G__asm_dt, -rewind_arg, __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
                G__asm_inst[G__asm_cp] = G__REWINDSTACK;
                G__asm_inst[G__asm_cp+1] = -rewind_arg;
                G__inc_cp_asm(2, 0);
             }
-#endif
+#endif // G__ASM
             *param = G__p_tempbuf->obj;
-            sprintf(parameter, "(%s)%ld" , G__struct.name[formal_tagnum]
-                    , G__p_tempbuf->obj.obj.i);
-         } /* end of if(match==0) */
-
+            sprintf(parameter, "(%s)%ld" , G__struct.name[formal_tagnum], G__p_tempbuf->obj.obj.i);
+         }
       }
       else if (-1 != param->tagnum) {
          long store_struct_offset = G__store_struct_offset;
          int store_tagnum = G__tagnum;
-         sprintf(conv, "operator %s()"
-                 , G__type2string(formal_type, formal_tagnum, -1, 0, 0));
+         sprintf(conv, "operator %s()", G__type2string(formal_type, formal_tagnum, -1, 0, 0));
          G__store_struct_offset = param->obj.i;
          G__tagnum = param->tagnum;
 #ifdef G__ASM
@@ -2789,9 +2794,10 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             if (rewind_arg) {
                rewindflag = 1;
 #ifdef G__ASM_DBG
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3x: REWINDSTACK %d\n"
-                                               , G__asm_cp, rewind_arg);
-#endif
+               if (G__asm_dbg) {
+                  G__fprinterr(G__serr, "%3x,%3x: REWINDSTACK %d  %s:%d\n", G__asm_cp, G__asm_dt, rewind_arg, __FILE__, __LINE__);
+               }
+#endif // G__ASM_DBG
                G__asm_inst[G__asm_cp] = G__REWINDSTACK;
                G__asm_inst[G__asm_cp+1] = rewind_arg;
                G__inc_cp_asm(2, 0);
@@ -2801,18 +2807,16 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             G__inc_cp_asm(2, 0);
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x: PUSHSTROS\n", G__asm_cp - 2);
-               G__fprinterr(G__serr, "%3x: SETSTROS\n", G__asm_cp - 1);
+               G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp - 2, G__asm_dt, __FILE__, __LINE__);
+               G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp - 1, G__asm_dt, __FILE__, __LINE__);
             }
-#endif
+#endif // G__ASM_DBG
+            // --
          }
-#endif
+#endif // G__ASM
          reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
-         if (!match
-               && 0 != formal_isconst
-            ) {
-            sprintf(conv, "operator const %s()"
-                    , G__type2string(formal_type, formal_tagnum, -1, 0, 0));
+         if (!match && formal_isconst) {
+            sprintf(conv, "operator const %s()", G__type2string(formal_type, formal_tagnum, -1, 0, 0));
             G__store_struct_offset = param->obj.i;
             G__tagnum = param->tagnum;
             reg = G__getfunction(conv, &match, G__TRYMEMFUNC);
@@ -2824,9 +2828,8 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             if (rewind_arg) {
                rewindflag = 1;
 #ifdef G__ASM_DBG
-               if (G__asm_dbg) G__fprinterr(G__serr, "%3x: REWINDSTACK %d\n"
-                                               , G__asm_cp, -rewind_arg);
-#endif
+               if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: REWINDSTACK %d  %s:%d\n", G__asm_cp, G__asm_dt, -rewind_arg, __FILE__, __LINE__);
+#endif // G__ASM_DBG
                G__asm_inst[G__asm_cp] = G__REWINDSTACK;
                G__asm_inst[G__asm_cp+1] = -rewind_arg;
                G__inc_cp_asm(2, 0);
@@ -2834,35 +2837,43 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
             G__asm_inst[G__asm_cp] = G__POPSTROS;
             G__inc_cp_asm(1, 0);
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x: POPSTROS\n", G__asm_cp - 1);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp - 1, G__asm_dt, __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
+            // --
          }
-#endif
-         /* fixing 'cout<<x' fundamental conversion opr with opr overloading
-         * Not 100% sure if this is OK. */
-         if (match) *param = reg;
+#endif // G__ASM
+         // fixing 'cout<<x' fundamental conversion opr with opr overloading
+         // Not 100% sure if this is OK.
+         if (match) {
+            *param = reg;
+         }
          else if (rewindflag) {
+            // --
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "REWINDSTACK~ cancelled\n");
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "REWINDSTACK~ cancelled.  %s:%d\n", __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__inc_cp_asm(-7, 0);
          }
          else {
+            // --
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "PUSHSTROS~ cancelled\n");
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(G__serr, "PUSHSTROS~ cancelled.  %s:%d\n", __FILE__, __LINE__);
+            }
+#endif // G__ASM_DBG
             G__inc_cp_asm(-3, 0);
          }
       }
       else {
          match = 0;
-         /* #ifdef G__DEBUG */
          if (recursive && G__dispsource) {
             G__valuemonitor(*param, arg1);
-            G__fprinterr(G__serr, "!!!Recursive implicit conversion %s(%s) rejected\n"
-                         , G__struct.name[formal_tagnum], arg1);
+            G__fprinterr(G__serr, "!!!Recursive implicit conversion %s(%s) rejected\n", G__struct.name[formal_tagnum], arg1);
          }
-         /* #endif */
       }
    }
 
@@ -2877,7 +2888,7 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
       match = G__matchpointlevel(param->obj.reftype.reftype, formal_reftype);
    }
 
-   return(match);
+   return match;
 }
 
 //______________________________________________________________________________
