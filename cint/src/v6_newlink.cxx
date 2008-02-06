@@ -1742,6 +1742,13 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
     fprintf(fp,"#endif\n");
     fprintf(fp,"\n");
 
+#ifdef __GNUC__
+    fprintf(fp,"#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)\n");
+    fprintf(fp,"#pragma GCC diagnostic ignored \"-Wstrict-aliasing\"\n");
+    fprintf(fp,"#endif\n");
+    fprintf(fp,"\n");
+#endif
+
     fprintf(fp,"extern \"C\" void G__cpp_reset_tagtable%s();\n",G__DLLID);
 
     fprintf(fp,"\nextern \"C\" void G__set_cpp_environment%s() {\n",G__DLLID);

@@ -4,10 +4,6 @@
 # Author: Axel Naumann, 2006-09-14
 
 .PHONY: cintdlls distclean-cintdlls clean-cintdlls
-.PRECIOUS: metautils/src/stlLoader_% \
-	$(CINTDIRDLLSTL)/G__cpp_% \
-	$(CINTDIRL)/G__cpp_% $(CINTDIRL)/G__c_% \
-	$(CINTDIRDLLSTL)/rootcint_%.cxx
 
 # no: iterator pair
 # already in libCore (base/inc/Linkdef2.h): string 
@@ -25,6 +21,18 @@ CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDIRSTL)/,$(CINTSTLDLLNAMES)) \
                             $(addprefix $(CINTDIRDLLS)/,$(CINTINCDLLNAMES)))
 
 CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
+
+.PRECIOUS: \
+	$(addsuffix .cc ,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .cxx,$(addprefix $(CINTDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix $(CINTDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .cxx,$(addprefix $(CINTDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix $(CINTDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .cxx,$(addprefix $(CINTDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix $(CINTDIRL)/G__cpp_,$(CINTINCDLLNAMES))) \
+	$(addsuffix .c  ,$(addprefix $(CINTDIRL)/G__c_,$(CINTINCDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix $(CINTDIRL)/G__c_,$(CINTINCDLLNAMES)))
 
 # these need dictionaries
 CINTDICTDLLS =
