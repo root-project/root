@@ -65,7 +65,7 @@ char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
 //______________________________________________________________________________
 Bool_t TGLBoxPainter::InitGeometry()
 {
-   //Set ranges, find min and max bin content.
+  //Set ranges, find min and max bin content.
 
    fCoord->SetZLog(kFALSE);
    fCoord->SetYLog(kFALSE);
@@ -78,15 +78,16 @@ Bool_t TGLBoxPainter::InitGeometry()
    if(fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
 
    fMinMaxVal.second  = fHist->GetBinContent(fCoord->GetFirstXBin(), fCoord->GetFirstYBin(), fCoord->GetFirstZBin());
-   fMinMaxVal.first = 0.;
-
-   for (Int_t ir = fCoord->GetFirstXBin(); ir <= fCoord->GetLastXBin(); ++ir)
-      for (Int_t jr = fCoord->GetFirstYBin(); jr <= fCoord->GetLastYBin(); ++jr)
-         for (Int_t kr = fCoord->GetFirstZBin();  kr <= fCoord->GetLastZBin(); ++kr)
+   fMinMaxVal.first = fMinMaxVal.second;
+   //Bad. You can up-date some bin value and get wrong picture.
+   for (Int_t ir = fCoord->GetFirstXBin(); ir <= fCoord->GetLastXBin(); ++ir) {
+      for (Int_t jr = fCoord->GetFirstYBin(); jr <= fCoord->GetLastYBin(); ++jr) {
+         for (Int_t kr = fCoord->GetFirstZBin();  kr <= fCoord->GetLastZBin(); ++kr) {
             fMinMaxVal.second = TMath::Max(fMinMaxVal.second, fHist->GetBinContent(ir, jr, kr));
-
-   if (!fMinMaxVal.second)
-      fMinMaxVal.second = 1.;
+            fMinMaxVal.first = TMath::Min(fMinMaxVal.first, fHist->GetBinContent(ir, jr, kr));
+         }
+      }
+   }
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
@@ -194,6 +195,87 @@ void TGLBoxPainter::InitGL()const
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
 
+namespace {
+
+   //______________________________________________________________________________
+   void DrawMinusSigns(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
+                      Double_t zMin, Double_t zMax, Int_t fp, Bool_t onSphere)
+   {
+      //
+      TGLDisableGuard depthTest(GL_DEPTH_TEST);
+      TGLDisableGuard cullFace(GL_CULL_FACE);
+
+      const Double_t ratio  = onSphere ? 0.4 : 0.15;
+      const Double_t leftX = xMin + ratio * (xMax - xMin), rightX = xMax - ratio * (xMax - xMin);
+      const Double_t leftY = yMin + ratio * (yMax - yMin), rightY = yMax - ratio * (yMax - yMin);
+      const Double_t lowZ = zMin / 2. + zMax / 2. - 0.1 * (zMax - zMin);
+      const Double_t upZ = zMin / 2. + zMax / 2. + 0.1 * (zMax - zMin);
+      
+
+      const Double_t minusVerts[][3] = {{xMin, leftY, lowZ}, {xMin, leftY, upZ}, {xMin, rightY, upZ}, {xMin, rightY, lowZ}, 
+                                        {leftX, yMin, lowZ}, {rightX, yMin, lowZ}, {rightX, yMin, upZ}, {leftX, yMin, upZ}, 
+                                        {xMax, leftY, lowZ}, {xMax, rightY, lowZ}, {xMax, rightY, upZ}, {xMax, leftY, upZ}, 
+                                        {rightX, yMax, lowZ}, {leftX, yMax, lowZ}, {leftX, yMax, upZ}, {rightX, yMax, upZ}};
+      const Int_t minusQuads[][4] = {{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}, {12, 13, 14, 15}};
+
+
+      TGLDisableGuard light(GL_LIGHTING);
+      glColor3d(1., 0., 0.);
+
+      const Int_t    frontPlanes[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0}};//Code duplication again :(
+      const Int_t *verts = minusQuads[frontPlanes[fp][0]];
+
+      glBegin(GL_POLYGON);
+      glVertex3dv(minusVerts[verts[0]]);
+      glVertex3dv(minusVerts[verts[1]]);
+      glVertex3dv(minusVerts[verts[2]]);
+      glVertex3dv(minusVerts[verts[3]]);
+      glEnd();
+
+      verts = minusQuads[frontPlanes[fp][1]];
+
+      glBegin(GL_POLYGON);
+      glVertex3dv(minusVerts[verts[0]]);
+      glVertex3dv(minusVerts[verts[1]]);
+      glVertex3dv(minusVerts[verts[2]]);
+      glVertex3dv(minusVerts[verts[3]]);
+      glEnd();      
+
+      const Float_t nullEmission[] = {0.f, 0.f, 0.f, 1.f};
+      glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, nullEmission);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, nullEmission);
+
+      glColor4d(0., 0., 0., 0.25);
+      glPolygonMode(GL_FRONT, GL_LINE);
+
+      const TGLEnableGuard blendGuard(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      const TGLEnableGuard smoothGuard(GL_LINE_SMOOTH);
+      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+      verts = minusQuads[frontPlanes[fp][0]];
+
+      glBegin(GL_POLYGON);
+      glVertex3dv(minusVerts[verts[0]]);
+      glVertex3dv(minusVerts[verts[1]]);
+      glVertex3dv(minusVerts[verts[2]]);
+      glVertex3dv(minusVerts[verts[3]]);
+      glEnd();
+
+      verts = minusQuads[frontPlanes[fp][1]];
+
+      glBegin(GL_POLYGON);
+      glVertex3dv(minusVerts[verts[0]]);
+      glVertex3dv(minusVerts[verts[1]]);
+      glVertex3dv(minusVerts[verts[2]]);
+      glVertex3dv(minusVerts[verts[3]]);
+      glEnd();      
+
+      glPolygonMode(GL_FRONT, GL_FILL);
+   }
+
+}
+
 //______________________________________________________________________________
 void TGLBoxPainter::DrawPlot()const
 {
@@ -239,10 +321,15 @@ void TGLBoxPainter::DrawPlot()const
    if (fSelectionPass && fHighColor)
       Rgl::ObjectIDToColor(fSelectionBase, fHighColor);//base + 1 == 7
 
+   Double_t maxContent = TMath::Max(TMath::Abs(fMinMaxVal.first), TMath::Abs(fMinMaxVal.second));   
+   if(!maxContent)//bad, find better way to check zero.
+      maxContent = 1.;
+
    for(Int_t ir = irInit, i = iInit; addI > 0 ? i < nX : i >= 0; ir += addI, i += addI) {
       for(Int_t jr = jrInit, j = jInit; addJ > 0 ? j < nY : j >= 0; jr += addJ, j += addJ) {
          for(Int_t kr = krInit, k = kInit; addK > 0 ? k < nZ : k >= 0; kr += addK, k += addK) {
-            Double_t w = fHist->GetBinContent(ir, jr, kr) / fMinMaxVal.second;
+            const Double_t binContent = fHist->GetBinContent(ir, jr, kr);
+            const Double_t w = TMath::Abs(binContent) / maxContent;
             if (!w)
                continue;
 
@@ -263,10 +350,14 @@ void TGLBoxPainter::DrawPlot()const
             else if(!fHighColor && fSelectedPart == binID)
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
-            if (fType == kBox)
+            if (fType == kBox) {
                Rgl::DrawBoxFront(xMin, xMax, yMin, yMax, zMin, zMax, frontPoint);
-            else
+            } else {
                Rgl::DrawSphere(&fQuadric, xMin, xMax, yMin, yMax, zMin, zMax);
+            }
+
+            if (binContent < 0. && !fSelectionPass)
+               DrawMinusSigns(xMin, xMax, yMin, yMax, zMin, zMax, frontPoint, fType != kBox);
 
             if (!fSelectionPass && !fHighColor && fSelectedPart == binID)
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
@@ -291,7 +382,7 @@ void TGLBoxPainter::DrawPlot()const
       for(Int_t ir = irInit, i = iInit; addI > 0 ? i < nX : i >= 0; ir += addI, i += addI) {
          for(Int_t jr = jrInit, j = jInit; addJ > 0 ? j < nY : j >= 0; jr += addJ, j += addJ) {
             for(Int_t kr = krInit, k = kInit; addK > 0 ? k < nZ : k >= 0; kr += addK, k += addK) {
-               Double_t w = fHist->GetBinContent(ir, jr, kr) / fMinMaxVal.second;
+               const Double_t w = TMath::Abs(fHist->GetBinContent(ir, jr, kr)) / maxContent;
                if (!w)
                   continue;
 

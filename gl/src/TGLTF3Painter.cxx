@@ -769,11 +769,9 @@ void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
    const Double_t zMin      = fZAxis->GetBinCenter(fZAxis->GetFirst());
    const Double_t zStep     = (fZAxis->GetBinCenter(fZAxis->GetLast()) - zMin) / (nZ - 1);
    const Int_t    sliceSize = (nY + 2) * (nZ + 2);
-   std::vector<Range_t> &boxRanges = m.fBoxRanges;
+   std::vector<Range_t> boxRanges((nX + 2) * (nY + 2) * (nZ + 2), Range_t());
    std::vector<TriFace_t> &mesh = m.fMesh;
-
-   boxRanges.assign((nX + 2) * (nY + 2) * (nZ + 2), Range_t());
-
+   mesh.clear();
    //First, calculate full mesh and define "box ranges" - which
    //part of the full mesh is in current box.
    //Find flat normals.
