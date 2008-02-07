@@ -122,9 +122,18 @@ public:
 
            TMatrixTSparse<Element> &Use   (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
                                            Int_t *pRowIndex,Int_t *pColIndex,Element *pData);
+   const   TMatrixTSparse<Element> &Use   (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
+                                           const Int_t *pRowIndex,const Int_t *pColIndex,const Element *pData) const
+                                            { return (const TMatrixTSparse<Element>&)
+                                                     (((TMatrixTSparse<Element> *)this)->Use(row_lwb,row_upb,col_lwb,col_upb,nr_nonzeros,
+                                                                                             (Int_t *)pRowIndex,(Int_t *)pColIndex,(Element *)pData)); }
            TMatrixTSparse<Element> &Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
                                            Int_t *pRowIndex,Int_t *pColIndex,Element *pData);
+   const   TMatrixTSparse<Element> &Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
+                                           const Int_t *pRowIndex,const Int_t *pColIndex,const Element *pData) const;
            TMatrixTSparse<Element> &Use   (TMatrixTSparse<Element> &a);
+   const   TMatrixTSparse<Element> &Use   (const TMatrixTSparse<Element> &a) const;
+
    virtual TMatrixTBase<Element>   &GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                             TMatrixTBase<Element> &target,Option_t *option="S") const;
            TMatrixTSparse<Element>  GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
@@ -192,23 +201,34 @@ template <class Element> inline const Int_t   *TMatrixTSparse<Element>::GetColIn
 template <class Element> inline       Int_t   *TMatrixTSparse<Element>::GetColIndexArray()       { return fColIndex; }
 
 template <class Element>
-inline TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
-                                                                Int_t *pRowIndex,Int_t *pColIndex,Element *pData)
-                                                                  { return Use(0,nrows-1,0,ncols-1,nr_nonzeros,pRowIndex,pColIndex,pData); }
+inline       TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
+                                                                      Int_t *pRowIndex,Int_t *pColIndex,Element *pData)
+                                                                        { return Use(0,nrows-1,0,ncols-1,nr_nonzeros,pRowIndex,pColIndex,pData); }
 template <class Element>
-inline TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (TMatrixTSparse<Element> &a)
-                                                                  { R__ASSERT(a.IsValid());
-                                                                     return Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),
-                                                                                a.GetNoElements(),a.GetRowIndexArray(),
-                                                                                a.GetColIndexArray(),a.GetMatrixArray()); }
+inline const TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
+                                                                      const Int_t *pRowIndex,const Int_t *pColIndex,const Element *pData) const
+                                                                        { return Use(0,nrows-1,0,ncols-1,nr_nonzeros,pRowIndex,pColIndex,pData); }
 template <class Element>
-inline TMatrixTSparse<Element>  TMatrixTSparse<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                                                Option_t *option) const
-                                                                  {
-                                                                    TMatrixTSparse<Element> tmp;
-                                                                    this->GetSub(row_lwb,row_upb,col_lwb,col_upb,tmp,option);
-                                                                    return tmp;
-                                                                  }
+inline       TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (TMatrixTSparse<Element> &a)
+                                                                        { R__ASSERT(a.IsValid());
+                                                                           return Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),
+                                                                                      a.GetNoElements(),a.GetRowIndexArray(),
+                                                                                      a.GetColIndexArray(),a.GetMatrixArray()); }
+template <class Element>
+inline const TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use   (const TMatrixTSparse<Element> &a) const
+                                                                        { R__ASSERT(a.IsValid());
+                                                                           return Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),
+                                                                                      a.GetNoElements(),a.GetRowIndexArray(),
+                                                                                      a.GetColIndexArray(),a.GetMatrixArray()); }
+
+template <class Element>
+inline       TMatrixTSparse<Element>  TMatrixTSparse<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                                                                      Option_t *option) const
+                                                                        {
+                                                                          TMatrixTSparse<Element> tmp;
+                                                                          this->GetSub(row_lwb,row_upb,col_lwb,col_upb,tmp,option);
+                                                                          return tmp;
+                                                                        }
 
 template <class Element> TMatrixTSparse<Element>  operator+ (const TMatrixTSparse<Element> &source1,const TMatrixTSparse<Element> &source2);
 template <class Element> TMatrixTSparse<Element>  operator+ (const TMatrixTSparse<Element> &source1,const TMatrixT<Element>       &source2);

@@ -105,6 +105,8 @@ Bool_t TDecompChol::Decompose()
 // Matrix A is decomposed in component U so that A = U^T*U^T
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
+   if (TestBit(kDecomposed)) return kTRUE;
+
    if ( !TestBit(kMatrixSet) ) {
       Error("Decompose()","Matrix has not been set");
       return kFALSE;

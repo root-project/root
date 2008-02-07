@@ -125,6 +125,8 @@ Bool_t TDecompBK::Decompose()
 // Matrix A is decomposed in components U and D so that A = U*D*U^T
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
+   if (TestBit(kDecomposed)) return kTRUE;
+
    if ( !TestBit(kMatrixSet) ) {
       Error("Decompose()","Matrix has not been set");
       return kFALSE;

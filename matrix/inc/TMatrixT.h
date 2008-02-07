@@ -119,8 +119,13 @@ public:
                                                    else fElements = 0;  this->fNelems = 0; }
 
            TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Element *data);
+   const   TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,const Element *data) const
+                                            { return (const TMatrixT<Element>&)
+                                                     (((TMatrixT<Element> *)this)->Use(row_lwb,row_upb,col_lwb,col_upb,(Element *)data)); }
            TMatrixT    <Element> &Use     (Int_t nrows,Int_t ncols,Element *data);
+   const   TMatrixT    <Element> &Use     (Int_t nrows,Int_t ncols,const Element *data) const;
            TMatrixT    <Element> &Use     (TMatrixT<Element> &a);
+   const   TMatrixT    <Element> &Use     (const TMatrixT<Element> &a) const;
 
    virtual TMatrixTBase<Element> &GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                            TMatrixTBase<Element> &target,Option_t *option="S") const;
@@ -201,7 +206,10 @@ public:
 
 template <class Element> inline const Element           *TMatrixT<Element>::GetMatrixArray() const { return fElements; }
 template <class Element> inline       Element           *TMatrixT<Element>::GetMatrixArray()       { return fElements; }
+
 template <class Element> inline       TMatrixT<Element> &TMatrixT<Element>::Use           (Int_t nrows,Int_t ncols,Element *data)
+                                                                                          { return Use(0,nrows-1,0,ncols-1,data); }
+template <class Element> inline const TMatrixT<Element> &TMatrixT<Element>::Use           (Int_t nrows,Int_t ncols,const Element *data) const
                                                                                           { return Use(0,nrows-1,0,ncols-1,data); }
 template <class Element> inline       TMatrixT<Element> &TMatrixT<Element>::Use           (TMatrixT &a)
                                                                                           {
@@ -209,6 +217,13 @@ template <class Element> inline       TMatrixT<Element> &TMatrixT<Element>::Use 
                                                                                             return Use(a.GetRowLwb(),a.GetRowUpb(),
                                                                                                        a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray());
                                                                                           }
+template <class Element> inline const TMatrixT<Element> &TMatrixT<Element>::Use           (const TMatrixT &a) const
+                                                                                          {
+                                                                                            R__ASSERT(a.IsValid());
+                                                                                            return Use(a.GetRowLwb(),a.GetRowUpb(),
+                                                                                                       a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray());
+                                                                                          }
+
 template <class Element> inline       TMatrixT<Element>  TMatrixT<Element>::GetSub        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                                                            Option_t *option) const
                                                                                           {

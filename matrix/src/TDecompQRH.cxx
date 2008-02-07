@@ -138,6 +138,8 @@ Bool_t TDecompQRH::Decompose()
 //  "Householder betas".
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
+   if (TestBit(kDecomposed)) return kTRUE;
+
    if ( !TestBit(kMatrixSet) ) {
       Error("Decompose()","Matrix has not been set");
       return kFALSE;

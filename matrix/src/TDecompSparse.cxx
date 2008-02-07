@@ -226,6 +226,8 @@ Bool_t TDecompSparse::Decompose()
 // Decomposition engine .
 // If the decomposition succeeds, bit kDecomposed is set .
 
+   if (TestBit(kDecomposed)) return kTRUE;
+
    if ( !TestBit(kMatrixSet) ) {
       Error("Decompose()","Matrix has not been set");
       return kFALSE;

@@ -95,9 +95,14 @@ public:
    inline TVectorT<Element> &ResizeTo  (Int_t n)                    { return ResizeTo(0,n-1); }
    inline TVectorT<Element> &ResizeTo  (const TVectorT<Element> &v) { return ResizeTo(v.GetLwb(),v.GetUpb()); }
 
-          TVectorT<Element> &Use       (Int_t n,Element *data);
           TVectorT<Element> &Use       (Int_t lwb,Int_t upb,Element *data);
+   const  TVectorT<Element> &Use       (Int_t lwb,Int_t upb,const Element *data) const
+					 { return (const TVectorT<Element>&)(((TVectorT<Element> *)this)->Use(lwb,upb,(Element *)data)); }
+          TVectorT<Element> &Use       (Int_t n,Element *data);
+   const  TVectorT<Element> &Use       (Int_t n,const Element *data) const ;
           TVectorT<Element> &Use       (TVectorT<Element> &v);
+   const  TVectorT<Element> &Use       (const TVectorT<Element> &v) const ;
+
           TVectorT<Element> &GetSub    (Int_t row_lwb,Int_t row_upb,TVectorT<Element> &target,Option_t *option="S") const;
           TVectorT<Element>  GetSub    (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
           TVectorT<Element> &SetSub    (Int_t row_lwb,const TVectorT<Element> &source);
@@ -180,18 +185,24 @@ public:
    ClassDef(TVectorT,4)  // Template of Vector class
 };
 
-template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use           (Int_t n,Element *data) { return Use(0,n-1,data); }
-template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use           (TVectorT &v)
-                                                                                         {
-                                                                                           R__ASSERT(v.IsValid());
-                                                                                           return Use(v.GetLwb(),v.GetUpb(),v.GetMatrixArray());
-                                                                                         }
-template<class Element> inline       TVectorT<Element>  TVectorT<Element>::GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option) const
-                                                                                         {
-                                                                                           TVectorT tmp;
-                                                                                           this->GetSub(row_lwb,row_upb,tmp,option);
-                                                                                           return tmp;
-                                                                                         }
+template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,Element *data) { return Use(0,n-1,data); }
+template<class Element> inline const TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,const Element *data) const { return Use(0,n-1,data); }
+template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use     (TVectorT &v)
+                                                                                   {
+                                                                                     R__ASSERT(v.IsValid());
+                                                                                     return Use(v.GetLwb(),v.GetUpb(),v.GetMatrixArray());
+                                                                                   }
+template<class Element> inline const TVectorT<Element> &TVectorT<Element>::Use     (const TVectorT &v) const
+                                                                                   {
+                                                                                     R__ASSERT(v.IsValid());
+                                                                                     return Use(v.GetLwb(),v.GetUpb(),v.GetMatrixArray());
+                                                                                   }
+template<class Element> inline       TVectorT<Element>  TVectorT<Element>::GetSub  (Int_t row_lwb,Int_t row_upb,Option_t *option) const
+                                                                                   {
+                                                                                     TVectorT tmp;
+                                                                                     this->GetSub(row_lwb,row_upb,tmp,option);
+                                                                                     return tmp;
+                                                                                   }
 
 template<class Element> inline const Element           &TVectorT<Element>::operator()(Int_t ind) const
 {

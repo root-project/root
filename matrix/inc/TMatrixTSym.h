@@ -97,9 +97,14 @@ public:
                                                            else fElements = 0; this->fNelems = 0; }
    virtual Bool_t IsSymmetric() const { return kTRUE; }
 
-           TMatrixTSym <Element> &Use           (Int_t nrows,Element *data);
            TMatrixTSym <Element> &Use           (Int_t row_lwb,Int_t row_upb,Element *data);
+   const   TMatrixTSym <Element> &Use           (Int_t row_lwb,Int_t row_upb,const Element *data) const
+                                                  { return (const TMatrixTSym<Element>&)
+                                                           (((TMatrixTSym<Element> *)this)->Use(row_lwb,row_upb,(Element *)data)); }
+           TMatrixTSym <Element> &Use           (Int_t nrows,Element *data);
+   const   TMatrixTSym <Element> &Use           (Int_t nrows,const Element *data) const;
            TMatrixTSym <Element> &Use           (TMatrixTSym<Element> &a);
+   const   TMatrixTSym <Element> &Use           (const TMatrixTSym<Element> &a) const;
 
            TMatrixTSym <Element> &GetSub        (Int_t row_lwb,Int_t row_upb,TMatrixTSym<Element> &target,Option_t *option="S") const;
    virtual TMatrixTBase<Element> &GetSub        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
@@ -176,9 +181,15 @@ public:
 
 template <class Element> inline const Element               *TMatrixTSym<Element>::GetMatrixArray() const { return fElements; }
 template <class Element> inline       Element               *TMatrixTSym<Element>::GetMatrixArray()       { return fElements; }
+
 template <class Element> inline       TMatrixTSym<Element>  &TMatrixTSym<Element>::Use           (Int_t nrows,Element *data) { return Use(0,nrows-1,data); }
+template <class Element> inline const TMatrixTSym<Element>  &TMatrixTSym<Element>::Use           (Int_t nrows,const Element *data) const
+                                                                                                   { return Use(0,nrows-1,data); }
 template <class Element> inline       TMatrixTSym<Element>  &TMatrixTSym<Element>::Use           (TMatrixTSym<Element> &a)
                                                                                                  { return Use(a.GetRowLwb(),a.GetRowUpb(),a.GetMatrixArray()); }
+template <class Element> inline const TMatrixTSym<Element>  &TMatrixTSym<Element>::Use           (const TMatrixTSym<Element> &a) const
+                                                                                                 { return Use(a.GetRowLwb(),a.GetRowUpb(),a.GetMatrixArray()); }
+
 template <class Element> inline       TMatrixTSym<Element>   TMatrixTSym<Element>::GetSub        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                                                                   Option_t *option) const
                                                                                                  {

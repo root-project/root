@@ -120,8 +120,12 @@ Bool_t TDecompSVD::Decompose()
 // SVD decomposition of matrix
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
-   if ( !TestBit(kMatrixSet) )
+   if (TestBit(kDecomposed)) return kTRUE;
+
+   if ( !TestBit(kMatrixSet) ) {
+      Error("Decompose()","Matrix has not been set");
       return kFALSE;
+   }
 
    const Int_t nCol   = this->GetNcols();
    const Int_t rowLwb = this->GetRowLwb();
