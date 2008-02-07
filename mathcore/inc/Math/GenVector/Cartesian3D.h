@@ -120,8 +120,8 @@ public :
    Scalar Rho()   const { return std::sqrt( Perp2());}
    Scalar R()     const { return std::sqrt( Mag2());}
    Scalar Theta() const { return (fX==0 && fY==0 && fZ==0) ? 
-                             0.0 : atan2(Rho(),Z());}
-   Scalar Phi()   const { return (fX==0 && fY==0) ? 0.0 : atan2(fY,fX);}
+                             0 : atan2(Rho(),Z());}
+   Scalar Phi()   const { return (fX==0 && fY==0) ? 0 : atan2(fY,fX);}
  
    // pseudorapidity
    Scalar Eta() const { 

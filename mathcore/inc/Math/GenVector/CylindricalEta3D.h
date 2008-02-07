@@ -74,7 +74,7 @@ public :
     	fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )  
   {  
     static Scalar bigEta = 
-    			-.3 *std::log(std::numeric_limits<Scalar>::epsilon());
+    			-.3f *std::log(std::numeric_limits<Scalar>::epsilon());
     if ( std::fabs(fEta) > bigEta ) {
        fRho *= v.Z()/Z(); // This gives a small absolute adjustment in rho,
        // which, for large eta, results in a significant
@@ -126,7 +126,7 @@ public :
    {rho=fRho; eta=fEta; phi=fPhi;}  				
 
 private:
-   inline static double pi() { return M_PI; } 
+   inline static Scalar pi() { return M_PI; } 
    inline void Restrict() {
       if ( fPhi <= -pi() || fPhi > pi() ) 
          fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
@@ -152,8 +152,7 @@ public:
    T Mag2()  const { return R()*R();              }
    T Perp2() const { return fRho*fRho;            }
    T Theta() const { return  fRho >  0 ? 2* std::atan( std::exp( - fEta ) ) :
-      (fEta >= 0 ? 0 :
-       pi() );  }
+         (fEta >= 0 ? 0 : pi() );  }
  
    // setters (only for data members) 
 
@@ -210,7 +209,7 @@ public:
       negate the vector
    */ 
    void Negate ( ) { 
-      fPhi = ( fPhi > 0 ? fPhi - pi() : fPhi + pi() );
+      fPhi = ( fPhi > 0 ? fPhi - pi() : fPhi + pi()  );
       fEta = -fEta;
    }
 

@@ -452,7 +452,7 @@ SVector<T,D>& SVector<T,D>::operator/=(const T& rhs) {
 //==============================================================================
 template <class T, unsigned int D>
 SVector<T,D>& SVector<T,D>::Unit() {
-   const double len = Mag(*this);
+   const T len = Mag(*this);
    for(unsigned int i=0; i<D; ++i) {
       fArray[i] /= len;
    }

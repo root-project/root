@@ -241,7 +241,7 @@ public :
       polar angle
    */
    Scalar Theta() const {
-      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0.0 : std::atan2(Pt(),fZ);
+      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : std::atan2(Pt(),fZ);
    }
 
    /** 

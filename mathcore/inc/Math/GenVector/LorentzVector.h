@@ -476,7 +476,7 @@ namespace ROOT {
           //        We should then move the code to a .cpp file.
           Scalar e = E();
           Scalar pz = Pz();
-          return .5* std::log( (e+pz)/(e-pz) );
+          return .5f* std::log( (e+pz)/(e-pz) );
        }
 
        /**
@@ -487,7 +487,7 @@ namespace ROOT {
           //        mechanism or at least load a NAN if not.
           Scalar e = E();
           Scalar p = P();
-          return .5* std::log( (e+p)/(e-p) );
+          return .5f* std::log( (e+p)/(e-p) );
        }
 
        /**

@@ -72,7 +72,7 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
   
   /* Parameter adjustments */
   //  a -= idim + 1;
-  static int arrayOffset = -(idim+1);
+  static int arrayOffset = - int(idim+1);
   /* Function Body */
   
   // fact.inc
@@ -120,8 +120,8 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
       return false;
     }
 #endif
-
-    rhs[jj + arrayOffset] = 1. / rhs[jj + arrayOffset];
+    // using 1.0f removes a warning on Windows (1.0f is still the same  as 1.0)
+    rhs[jj + arrayOffset] = 1.0f / rhs[jj + arrayOffset];
     if (j == n) {
       continue;
     }

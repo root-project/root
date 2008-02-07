@@ -204,7 +204,8 @@ bool Inverter<4>::Dinv(MatrixRep & rhs) {
     return false;
   }
 
-  const Scalar oneOverDet = 1.0/det;
+  // use 1.0f to remove warning C4244 on Windows when using float
+  const Scalar oneOverDet = 1.0f / det;
   const Scalar mn1OverDet = - oneOverDet;
 
   rhs[F00] =  det3_123_123 * oneOverDet;
@@ -421,7 +422,7 @@ bool Inverter<5>::Dinv(MatrixRep & rhs) {
     return false;
   }
 
-  const Scalar oneOverDet = 1.0/det;
+  const Scalar oneOverDet = 1.0f / det;
   const Scalar mn1OverDet = - oneOverDet;
 
   rhs[M00] =  det4_1234_1234 * oneOverDet;

@@ -177,7 +177,7 @@ bool Inverter<4>::Dinv(MatRepSym<T,4> & rhs) {
   if ( det == 0 )
     return false;
 
-  const Scalar oneOverDet = 1.0/det;
+  const Scalar oneOverDet = 1.0f / det;
   const Scalar mn1OverDet = - oneOverDet;
 
   rhs[SF00] =  mDet3_123_123 * oneOverDet;
@@ -346,7 +346,7 @@ bool Inverter<5>::Dinv(MatRepSym<T,5> & rhs) {
   if ( det == 0 )
     return false;
 
-  const Scalar oneOverDet = 1.0/det;
+  const Scalar oneOverDet = 1.0f / det;
   const Scalar mn1OverDet = - oneOverDet;
 
   rhs[SM00] = mDet4_1234_1234 * oneOverDet;

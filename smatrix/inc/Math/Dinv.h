@@ -209,7 +209,9 @@ public:
     
     if (det == 0.) { return false; }
 
-    typename MatrixRep::value_type s = 1. / det;
+    // use 1.0f to remove warning on Windows
+    typename MatrixRep::value_type s = 1.0f / det; 
+
     typename MatrixRep::value_type c11 = s * rhs[3];
 
 
@@ -233,7 +235,7 @@ public:
     
     if (det == 0.) { return false; }
 
-    T s = 1. / det;
+    T s = 1.0f / det;
     T c11 = s * rhs[2];
 
     rhs[1] = -s * rhs[1];

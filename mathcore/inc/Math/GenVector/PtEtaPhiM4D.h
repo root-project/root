@@ -249,7 +249,7 @@ public :
    }
 
 private:
-   inline static double pi() { return M_PI; } 
+   inline static Scalar pi() { return M_PI; } 
    inline void RestrictPhi() {
       if ( fPhi <= -pi() || fPhi > pi() ) 
          fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();

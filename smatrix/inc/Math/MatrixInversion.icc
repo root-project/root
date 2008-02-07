@@ -102,7 +102,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		  return;
 		}
 	      s=1;
-	      *mjj = 1./ *mjj;
+	      *mjj = 1.0f / *mjj;
 	    }
 	  else
 	    {
@@ -140,25 +140,25 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		      ifail=1;
 		      return;
 		    }
-		  temp2 = *mjj = 1./ *mjj; // invert D(j,j)
+		  temp2 = *mjj = 1.0f/ *mjj; // invert D(j,j)
 		  
 		  // update A(j+1:n, j+1,n)
 		  for (i=j+1; i <= nrow; i++)
 		    {
-		      temp1 = *(rhs.Array() + i*(i-1)/2 + j-1) * temp2;
-		      ip = rhs.Array()+i*(i-1)/2+j;
-		      for (k=j+1; k<=i; k++)
-			{
-			  *ip -= temp1 * *(rhs.Array() + k*(k-1)/2 + j-1);
-			  if (std::abs(*ip) <= epsilon)
-			    *ip=0;
-			  ip++;
-			}
+                       temp1 = *(rhs.Array() + i*(i-1)/2 + j-1) * temp2;
+                       ip = rhs.Array()+i*(i-1)/2+j;
+                       for (k=j+1; k<=i; k++)
+                       {
+                          *ip -= static_cast<T> ( temp1 * *(rhs.Array() + k*(k-1)/2 + j-1) );
+                          if (std::abs(*ip) <= epsilon)
+                             *ip=0;
+                          ip++;
+                       }
 		    }
 		  // update L 
 		  ip = rhs.Array() + (j+1)*j/2 + j-1; 
 		  for (i=j+1; i <= nrow; ip += i++)
-		    *ip *= temp2;
+                     *ip *= static_cast<T> ( temp2 );
 		}
 	      else if (s==1) // 1x1 pivot 
 		{
@@ -169,20 +169,20 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		  ip = rhs.Array() + pivrow*(pivrow-1)/2 + j;
 		  for (i=j+1; i < pivrow; i++, ip++)
 		    {
-		      temp1 = *(rhs.Array() + i*(i-1)/2 + j-1);
-		      *(rhs.Array() + i*(i-1)/2 + j-1)= *ip;
-		      *ip = temp1;
+                       temp1 = *(rhs.Array() + i*(i-1)/2 + j-1);
+                       *(rhs.Array() + i*(i-1)/2 + j-1)= *ip;
+                       *ip = static_cast<T> ( temp1 );
 		    }
 		  temp1 = *mjj;
 		  *mjj = *(rhs.Array()+pivrow*(pivrow-1)/2+pivrow-1);
-		  *(rhs.Array()+pivrow*(pivrow-1)/2+pivrow-1) = temp1;
+		  *(rhs.Array()+pivrow*(pivrow-1)/2+pivrow-1) = static_cast<T> (temp1 );
 		  ip = rhs.Array() + (pivrow+1)*pivrow/2 + j-1;
 		  iq = ip + pivrow-j;
 		  for (i = pivrow+1; i <= nrow; ip += i, iq += i++)
 		    {
-		      temp1 = *iq;
-		      *iq = *ip;
-		      *ip = temp1;
+                       temp1 = *iq;
+                       *iq = *ip;
+                       *ip = static_cast<T>( temp1 );
 		    }
 		  
 		  if (*mjj == 0)
@@ -190,7 +190,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		      ifail = 1;
 		      return;
 		    }
-		  temp2 = *mjj = 1./ *mjj; // invert D(j,j)
+		  temp2 = *mjj = 1.0f / *mjj; // invert D(j,j)
 		  
 		  // update A(j+1:n, j+1:n)
 		  for (i = j+1; i <= nrow; i++)
@@ -199,16 +199,16 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		      ip = rhs.Array()+i*(i-1)/2+j;
 		      for (k=j+1; k<=i; k++)
 			{
-			  *ip -= temp1 * *(rhs.Array() + k*(k-1)/2 + j-1);
-			  if (std::abs(*ip) <= epsilon)
-			    *ip=0;
-			  ip++;
+                           *ip -= static_cast<T> (temp1 * *(rhs.Array() + k*(k-1)/2 + j-1) );
+                           if (std::abs(*ip) <= epsilon)
+                              *ip=0;
+                           ip++;
 			}
 		    }
 		  // update L
 		  ip = rhs.Array() + (j+1)*j/2 + j-1;
 		  for (i=j+1; i<=nrow; ip += i++)
-		    *ip *= temp2;
+                     *ip *= static_cast<T>( temp2 );
 		}
 	      else // s=2, ie use a 2x2 pivot
 		{
@@ -224,22 +224,22 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			{
 			  temp1 = *(rhs.Array() + i*(i-1)/2 + j);
 			  *(rhs.Array() + i*(i-1)/2 + j) = *ip;
-			  *ip = temp1;
+			  *ip = static_cast<T>( temp1 );
 			}
 		      temp1 = *(mjj + j + 1);
 		      *(mjj + j + 1) = 
 			*(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1);
-		      *(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1) = temp1;
+		      *(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1) = static_cast<T>( temp1 );
 		      temp1 = *(mjj + j);
 		      *(mjj + j) = *(rhs.Array() + pivrow*(pivrow-1)/2 + j-1);
-		      *(rhs.Array() + pivrow*(pivrow-1)/2 + j-1) = temp1;
+		      *(rhs.Array() + pivrow*(pivrow-1)/2 + j-1) = static_cast<T>( temp1 );
 		      ip = rhs.Array() + (pivrow+1)*pivrow/2 + j;
 		      iq = ip + pivrow-(j+1);
 		      for (i = pivrow+1; i <= nrow; ip += i, iq += i++)
 			{
 			  temp1 = *iq;
 			  *iq = *ip;
-			  *ip = temp1;
+			  *ip = static_cast<T>( temp1 );
 			}
 		    } 
 		  // invert D(j:j+1,j:j+1)
@@ -252,9 +252,9 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 		  // this quotient is guaranteed to exist by the choice 
 		  // of the pivot
 		  temp1 = *mjj;
-		  *mjj = *(mjj + j + 1) * temp2;
-		  *(mjj + j + 1) = temp1 * temp2;
-		  *(mjj + j) = - *(mjj + j) * temp2;
+		  *mjj = static_cast<T>( *(mjj + j + 1) * temp2 );
+		  *(mjj + j + 1) = static_cast<T>( temp1 * temp2 );
+		  *(mjj + j) = static_cast<T>( - *(mjj + j) * temp2 );
 		  
 		  if (j < nrow-1) // otherwise do nothing
 		    {
@@ -272,7 +272,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			    {
 			      ip = rhs.Array() + i*(i-1)/2 + k-1;
 			      iq = rhs.Array() + k*(k-1)/2 + j-1;
-			      *ip -= temp1 * *iq + temp2 * *(iq+1);
+			      *ip -= static_cast<T>( temp1 * *iq + temp2 * *(iq+1) );
 			      if (std::abs(*ip) <= epsilon)
 				*ip = 0;
 			    }
@@ -288,7 +288,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			    + *(ip+1) * *(mjj + j + 1);
 			  if (std::abs(*(ip+1)) <= epsilon)
 			    *(ip+1) = 0;
-			  *ip = temp1;
+			  *ip = static_cast<T>( temp1 );
 			}
 		    }
 		}
@@ -304,7 +304,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 	      return;
 	    }
 	  else
-	    *mjj = 1. / *mjj;
+	    *mjj = 1.0f  / *mjj;
   } // end of last pivot code
 
   // computing the inverse from the factorization
@@ -328,13 +328,13 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			temp2 += *ip++ * x[k];
 		      for (ip += i-1; k < nrow-j; ip += 1+j+k++) 
 			temp2 += *ip * x[k];
-		      *(rhs.Array()+ i*(i-1)/2 + j-1) = -temp2;
+		      *(rhs.Array()+ i*(i-1)/2 + j-1) = static_cast<T>( -temp2 );
 		    }
 		  temp2 = 0;
 		  ip = rhs.Array() + (j+1)*j/2 + j-1;
 		  for (k=0; k < nrow-j; ip += 1+j+k++)
 		    temp2 += x[k] * *ip;
-		  *mjj -= temp2;
+		  *mjj -= static_cast<T>( temp2 );
 		}
 	    }
 	  else //2x2 pivot, compute columns j and j-1 of the inverse
@@ -355,18 +355,18 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			temp2 += *ip++ * x[k];
 		      for (ip += i-1; k < nrow-j; ip += 1+j+k++)
 			temp2 += *ip * x[k];
-		      *(rhs.Array()+ i*(i-1)/2 + j-1) = -temp2;
+		      *(rhs.Array()+ i*(i-1)/2 + j-1) = static_cast<T>( -temp2 );
 		    }    
 		  temp2 = 0;
 		  ip = rhs.Array() + (j+1)*j/2 + j-1;
 		  for (k=0; k < nrow-j; ip += 1+j+k++)
 		    temp2 += x[k] * *ip;
-		  *mjj -= temp2;
+		  *mjj -= static_cast<T>( temp2 );
 		  temp2 = 0;
 		  ip = rhs.Array() + (j+1)*j/2 + j-2;
 		  for (i=j+1; i <= nrow; ip += i++)
 		    temp2 += *ip * *(ip+1);
-		  *(mjj-1) -= temp2;
+		  *(mjj-1) -= static_cast<T>( temp2 );
 		  ip = rhs.Array() + (j+1)*j/2 + j-2;
 		  for (i=0; i < nrow-j; ip += 1+j+i++)
 		    x[i] = *ip;
@@ -378,13 +378,13 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 			temp2 += *ip++ * x[k];
 		      for (ip += i-1; k < nrow-j; ip += 1+j+k++)
 			temp2 += *ip * x[k];
-		      *(rhs.Array()+ i*(i-1)/2 + j-2)= -temp2;
+		      *(rhs.Array()+ i*(i-1)/2 + j-2)= static_cast<T>( -temp2 );
 		    }
 		  temp2 = 0;
 		  ip = rhs.Array() + (j+1)*j/2 + j-2;
 		  for (k=0; k < nrow-j; ip += 1+j+k++)
 		    temp2 += x[k] * *ip;
-		  *(mjj-j) -= temp2;
+		  *(mjj-j) -= static_cast<T>( temp2 );
 		}
 	    }  
 	  
@@ -397,25 +397,25 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 	    {
 	      temp1 = *(rhs.Array() + i*(i-1)/2 + j-1);
 	      *(rhs.Array() + i*(i-1)/2 + j-1) = *ip;
-	      *ip = temp1;
+	      *ip = static_cast<T>( temp1 );
 	    }
 	  temp1 = *mjj;
 	  *mjj = *(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1);
-	  *(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1) = temp1;
+	  *(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1) = static_cast<T>( temp1 );
 	  if (s==2)
 	    {
 	      temp1 = *(mjj-1);
 	      *(mjj-1) = *( rhs.Array() + pivrow*(pivrow-1)/2 + j-2);
-	      *( rhs.Array() + pivrow*(pivrow-1)/2 + j-2) = temp1;
+	      *( rhs.Array() + pivrow*(pivrow-1)/2 + j-2) = static_cast<T>( temp1 );
 	    }
 	  
 	  ip = rhs.Array() + (pivrow+1)*pivrow/2 + j-1;  // &A(i,j)
 	  iq = ip + pivrow-j;
 	  for (i = pivrow+1; i <= nrow; ip += i, iq += i++)
 	    {
-	      temp1 = *iq;
-	      *iq = *ip;
-	      *ip = temp1;
+               temp1 = *iq;
+               *iq = *ip;
+               *ip = static_cast<T>(temp1);
 	    } 
   } // end of loop over columns (in computing inverse from factorization)
 
@@ -488,7 +488,7 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
       for (unsigned int l=1;l<=n;l++) {
         tf = *mjl;
         *(mjl++) = *mkl;
-        *(mkl++) = tf;
+        *(mkl++) = static_cast<T>(tf);
       }
       nxch = nxch + 1;  // this makes the determinant change its sign
       ir[nxch] = (((j)<<12)+(k));
@@ -501,7 +501,7 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
       }
     }
     det *= *mjj;
-    *mjj = 1.0 / *mjj;
+    *mjj = 1.0f / *mjj;
     t = (std::abs(det));
     if (t < g1) {
       det = 0.0;
@@ -529,8 +529,9 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
 	    mijp += n;
 	  }
 	}
-	*(mjk++) = -s11 * (*mjj);
-	*(mkjp) = -(((*(mjj+1)))*((*(mkjp-1)))+(s12));
+        // cast to avoid warnings from double to float conversions
+	*(mjk++) = static_cast<T>( - s11 * (*mjj) );
+	*(mkjp) = static_cast<T> ( -(((*(mjj+1)))*((*(mkjp-1)))+(s12)) );
 	mk += n;
 	mkjp += n;
       }
@@ -595,8 +596,8 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
 	  mkj += n;
 	  mkpi += n;
 	}
-	*mij = -(*mii) * (((*(mij-n)))*( (*(mii-1)))+(s31));
-	*mji = -s32;
+	*mij = static_cast<T>( -(*mii) * (((*(mij-n)))*( (*(mii-1)))+(s31)) );
+	*mji = static_cast<T> ( -s32 );
 	mj += n;
 	mji += n;
 	mij++;
@@ -623,7 +624,7 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
 	s33 += (*mikj) * (*(miik++));
 	mikj += n;
       }
-      *(mij++) = s33;
+      *(mij++) = static_cast<T> ( s33 );
     }
     for (unsigned j=1;j<=ni;j++) {
       s34 = 0.0;
@@ -650,7 +651,7 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
     for (k=1; k<=n;k++) {
       // 2/24/05 David Sachs fix of improper swap bug that was present
       // for many years:
-      double ti = *mki; // 2/24/05
+      T ti = *mki; // 2/24/05
       *mki = *mkj;
       *mkj = ti;	// 2/24/05
       mki += n;
