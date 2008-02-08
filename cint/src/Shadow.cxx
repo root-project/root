@@ -87,9 +87,10 @@ int Cint::G__ShadowMaker::WriteNamespaceHeader(G__ClassInfo &cl)
   //    cl.Fullname(),namespace_obj.Fullname());
   if (namespace_obj.Property() & G__BIT_ISNAMESPACE) {
      closing_brackets = WriteNamespaceHeader(namespace_obj);
-	 for (int indent=0; indent<closing_brackets; ++indent)
-		 fOut << "   ";
-	 fOut << "      namespace " << namespace_obj.Name() << " {" << std::endl;
+     for (int indent=0; indent<closing_brackets; ++indent) {
+        fOut << "   ";
+     }
+     fOut << "      namespace " << namespace_obj.Name() << " {" << std::endl;
      closing_brackets++;
   }
 
@@ -509,17 +510,31 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
 
                size_t posTemplArg = typenameOriginal.find('<');
                while (posTemplArg != std::string::npos) {
-                  std::string arg = typenameOriginal.substr(posTemplArg+1);
-                  size_t posArgEnd = arg.find_first_of("<,>");
-                  char endChar=0;
-                  if (posArgEnd != std::string::npos) {
-                     endChar = arg[posArgEnd];
-                     arg.erase(posArgEnd);
-                  } else { 
+                  int level = 0;
+                  size_t posArgEnd = posTemplArg;
+                  do {
+                    posArgEnd = typenameOriginal.find_first_of("<,>",posArgEnd + 1);
+                    if(posArgEnd !=  std::string::npos) {
+                      if(typenameOriginal[posArgEnd] == '<') 
+                        ++level; 
+                      if(typenameOriginal[posArgEnd] == '>') {
+                        --level;
+                        if(level == -1) break;
+                      }
+                      if(typenameOriginal[posArgEnd] == ',' && level == 0)
+                        break;
+                    }
+                  } while(posArgEnd != std::string::npos);
+                  
+                  if(posArgEnd == std::string::npos) {
                      printf("WARNING: error extracting template aruments for %s!", 
                         typenameOriginal.c_str());
                      break;
                   }
+
+                  char endChar = typenameOriginal[posArgEnd];
+                  
+                  std::string arg = typenameOriginal.substr(posTemplArg+1,posArgEnd - posTemplArg - 1);
                   std::string::size_type posRef=std::string::npos;
                   while ((posRef = arg.find_first_of(" *&"))!=std::string::npos)
                      arg.erase(posRef, 1);
@@ -527,10 +542,13 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   // and if we don't have a real shadoew for it, use the
                   // global scope's type.
                   int tagname = G__defined_tagname(arg.c_str(), 1);
+
                   if (tagname != -1) {
                      G__ClassInfo ciArg(tagname);
-                     if (endChar == '<' 
-                         || fCacheNeedShadow[tagname] != 1 
+                     // templates or function without shadow
+                     // need to have explicit namespace
+                     if (arg.find('<')!= std::string::npos ||
+                         fCacheNeedShadow[tagname] != 1 
                          && ((ciArg.Property() & G__BIT_ISCLASS)
                              || (ciArg.Property() & G__BIT_ISSTRUCT))) {
                         // replace "pair" by "std::pair"
@@ -538,6 +556,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                         // we don't have a (full) shadow for this guy
                         // need space before "::" to prevent "<:"
                         typenameOriginal.insert(posTemplArg+1, " ::");
+                        posArgEnd += 3;
                      }
                   }
                   posTemplArg = typenameOriginal.find_first_of("<,", posTemplArg+1);
