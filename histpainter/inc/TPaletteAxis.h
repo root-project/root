@@ -60,6 +60,8 @@ public:
    virtual void  SetLabelSize(Float_t labelsize) {fAxis.SetLabelSize(labelsize);} // *MENU*
    virtual void  SetTitleOffset(Float_t titleoffset=1) {fAxis.SetTitleOffset(titleoffset);} // *MENU*
    virtual void  SetTitleSize(Float_t titlesize) {fAxis.SetTitleSize(titlesize);} // *MENU*
+   virtual void  SetLineColor(Color_t linecolor) {fAxis.SetLineColor(linecolor);} // *MENU*
+   virtual void  SetLineWidth(Width_t linewidth) {fAxis.SetLineWidth(linewidth);} // *MENU*
    virtual void  UnZoom();  // *MENU*
 
    ClassDef(TPaletteAxis,2)  //class used to display a color palette axis for 2-d plots
