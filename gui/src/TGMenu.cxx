@@ -1248,7 +1248,7 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
       // deactivate the entry
       fCurrent->fStatus &= ~kMenuActiveMask;
 
-      if (fCurrent->fType == kMenuPopup) {
+      if ((fCurrent->fType == kMenuPopup) && fCurrent->fPopup) {
          id = fCurrent->fPopup->EndMenu(userData);
       } else {
          // return the ID if the entry is enabled, otherwise -1
