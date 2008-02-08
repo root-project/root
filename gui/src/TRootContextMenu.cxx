@@ -88,6 +88,7 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 
    // delete menu items releated to previous object and reset menu size
    if (fEntryList) fEntryList->Delete();
+   fCurrent = 0;
    if (fTrash)   fTrash->Delete();
    fMenuHeight = 6;
    fMenuWidth  = 8;
@@ -115,6 +116,102 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 }
 
 //______________________________________________________________________________
+TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString & last_component)
+{
+  // Decodes the Hierarchy="Level0/Level1/Level2/..." statement from the comment field
+  // and returns the - if needed - created sub menu "Level0/Level1"
+  // Returns the last component in last_component.
+
+   TString cmd(commentstring);
+   TString option;
+   TString token;
+   TString hierarchy;
+   TGPopupMenu *currentMenu = 0;
+
+   // search for arguments to the MENU statement
+   // strcpy(cmd,commentstring);		
+   Ssiz_t opt_ptr;
+   if ((opt_ptr=cmd.Index("*MENU={"))   != kNPOS ||
+       (opt_ptr=cmd.Index("*SUBMENU={"))!= kNPOS ||
+       (opt_ptr=cmd.Index("*TOGGLE={")) != kNPOS ) {
+
+      Ssiz_t start = cmd.Index("{",opt_ptr) + 1;
+      Ssiz_t end = cmd.Index("}",start);
+      TString option = cmd(start,end - start);
+
+      // Look for Hierarchy token
+      TObjArray * array = option.Tokenize(";");
+      TIter iter(array);
+      TObject *obj;
+      while((obj = iter())) {
+         TString token(obj->GetName());
+         if (token.Index("Hierarchy=\"") != kNPOS) {
+            Ssiz_t tstart = token.Index("\"") + 1;
+            Ssiz_t tend = token.Index("\"",tstart+1);
+            if (tend == kNPOS) continue;
+            hierarchy = token(tstart,tend - tstart);
+         }				  
+      }
+      delete array;
+   }
+
+   // Build Hierarchy
+   currentMenu = this;
+   TObjArray * array = hierarchy.Tokenize("/");
+   TIter iter(array);
+   TObject *obj = iter();
+   while(obj) {
+      last_component = obj->GetName();
+      obj = iter();
+      if (obj) {
+         TGMenuEntry *ptr;
+         TIter next(currentMenu->GetListOfEntries());
+         // Search for popup with corresponding name
+         while ((ptr = (TGMenuEntry *) next()) &&				    
+                (ptr->GetType() != kMenuPopup || 
+                last_component.CompareTo(ptr->GetName())));
+         if (ptr) 
+            currentMenu = ptr->GetPopup();
+         else {
+            TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
+            // Alphabetical ordering
+            TGMenuEntry *ptr2;
+            TIter next(currentMenu->GetListOfEntries());
+            // Search for popup with corresponding name
+            while ((ptr2 = (TGMenuEntry *) next()) &&				    
+                   (ptr2->GetType() != kMenuPopup  ||
+                   last_component.CompareTo(ptr2->GetName()) > 0 ));
+	
+            currentMenu->AddPopup(last_component, r,ptr2);
+            currentMenu = r;
+            fTrash->Add(r);
+            last_component = obj->GetName();
+         }
+      }
+   }
+  
+   delete array;
+   return currentMenu;
+}
+
+//______________________________________________________________________________
+void TRootContextMenu::AddEntrySorted(TGPopupMenu *currentMenu, const char *s, Int_t id, void *ud,
+				      const TGPicture *p , Bool_t sorted )
+{
+   // Add a entry to current menu with alphabetical ordering.
+   
+   TGMenuEntry *ptr2 = 0;
+   if (sorted) {
+      TIter next(currentMenu->GetListOfEntries());
+      // Search for popup with corresponding name
+      while ((ptr2 = (TGMenuEntry *) next()) &&				    
+             (ptr2->GetType() != kMenuEntry || 
+             strcmp(ptr2->GetName(), s)<0 ));
+   }
+   currentMenu->AddEntry(s,id,ud,p,ptr2);
+}
+
+//______________________________________________________________________________
 void TRootContextMenu::CreateMenu(TObject *object)
 {
    // Create the context menu depending on the selected object.
@@ -137,8 +234,12 @@ void TRootContextMenu::CreateMenu(TObject *object)
    while ((menuItem = (TClassMenuItem*) nextItem())) {
       switch (menuItem->GetType()) {
          case TClassMenuItem::kPopupSeparator:
-            AddSeparator();
+            {
+            TGMenuEntry *last = (TGMenuEntry *)GetListOfEntries()->Last();
+            if (last && last->GetType() != kMenuSeparator)
+               AddSeparator();
             break;
+            }
          case TClassMenuItem::kPopupStandardList:
             {
                // Standard list of class methods. Rebuild from scratch.
@@ -150,43 +251,68 @@ void TRootContextMenu::CreateMenu(TObject *object)
                TMethod *method;
                TClass  *classPtr = 0;
                TIter next(methodList);
+               Bool_t needSep = kFALSE;
 
                while ((method = (TMethod*) next())) {
                   if (classPtr != method->GetClass()) {
-                     AddSeparator();
+                     needSep = kTRUE;
                      classPtr = method->GetClass();
                   }
 
                   TDataMember *m;
                   EMenuItemKind menuKind = method->IsMenuItem();
+                  TGPopupMenu *currentMenu = 0;
+                  TString last_component;
+		  
                   switch (menuKind) {
                      case kMenuDialog:
-                        AddEntry(method->GetName(), entry++, method);
+                        // search for arguments to the MENU statement
+                        currentMenu = FindHierarchy(method->GetCommentString(),last_component);
+                        if (needSep && currentMenu == this) {
+                           AddSeparator();
+                           needSep = kFALSE;
+                        }
+                        AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), entry++, method,0,currentMenu != this);
                         break;
                      case kMenuSubMenu:
                         if ((m = method->FindDataMember())) {
+			  
+                           // search for arguments to the MENU statement
+                           currentMenu = FindHierarchy(method->GetCommentString(),last_component);
+
                            if (m->GetterMethod()) {
                               TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
-                              AddPopup(method->GetName(), r);
+                              if (needSep && currentMenu == this) {
+                                 AddSeparator();
+                                 needSep = kFALSE;
+                              }
+                              if (last_component.Length()) {
+                                 currentMenu->AddPopup(last_component, r);
+                              } else {
+                                 currentMenu->AddPopup(method->GetName(), r);
+                              }
                               fTrash->Add(r);
                               TIter nxt(m->GetOptions());
                               TOptionListItem *it;
                               while ((it = (TOptionListItem*) nxt())) {
-                                 char  *name  = it->fOptName;
-                                 Long_t val   = it->fValue;
+                                 char *name = it->fOptName;
+                                 Long_t val = it->fValue;
 
                                  TToggle *t = new TToggle;
                                  t->SetToggledObject(object, method);
                                  t->SetOnValue(val);
                                  fTrash->Add(t);
-
-                                 r->AddSeparator();
+			      
                                  r->AddEntry(name, togglelist++, t);
-                                 if (t->GetState()) r->CheckEntry(togglelist-1);
-
+                                 if (t->GetState()) 
+                                    r->CheckEntry(togglelist-1);
                               }
                            } else {
-                              AddEntry(method->GetName(), entry++, method);
+                              if (needSep && currentMenu == this) {
+                                 AddSeparator();
+                                 needSep = kFALSE;
+                              }
+                              AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), entry++, method,0,currentMenu != this);
                            }
                         }
                         break;
@@ -197,8 +323,14 @@ void TRootContextMenu::CreateMenu(TObject *object)
                            t->SetToggledObject(object, method);
                            t->SetOnValue(1);
                            fTrash->Add(t);
-                           AddEntry(method->GetName(), toggle++, t);
-                           if (t->GetState()) CheckEntry(toggle-1);
+                           // search for arguments to the MENU statement
+                           currentMenu = FindHierarchy(method->GetCommentString(),last_component);
+                           if (needSep && currentMenu == this) {
+                              AddSeparator();
+                              needSep = kFALSE;
+                           }
+                           AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), toggle++, t,0,currentMenu != this);
+                           if (t->GetState()) currentMenu->CheckEntry(toggle-1);
                         }
                         break;
 
@@ -369,7 +501,12 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
             char val[256] = "";
             const char *tval = argument->GetDefault();
-            if (tval) strncpy(val, tval, 255);
+            if (tval && strlen(tval)) {
+               // Remove leading and trailing quotes
+               strncpy(val, tval + (tval[0] == '"' ? 1 : 0), 255);
+               if (val[strlen(val)-1] == '"')		
+                  val[strlen(val)-1]= 0;
+            }
             fDialog->Add(argname, val, type);
          }
       }

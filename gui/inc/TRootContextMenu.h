@@ -54,6 +54,11 @@ public:
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
+protected:
+   TGPopupMenu * FindHierarchy(const char *commentstring, TString &last_component);
+   void AddEntrySorted(TGPopupMenu *current, const char *s, Int_t id, void *ud = 0,
+                       const TGPicture *p = 0, Bool_t sorted = kTRUE);
+
    ClassDef(TRootContextMenu,0)  //ROOT native GUI context sensitive popup menu
 };
 
