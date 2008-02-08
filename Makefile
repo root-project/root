@@ -132,6 +132,9 @@ endif
 ifeq ($(BUILDFPYTHIA6),yes)
 MODULES      += pythia6
 endif
+ifeq ($(BUILDFPYTHIA8),yes)
+MODULES      += pythia8
+endif
 ifeq ($(BUILDFFTW3),yes)
 MODULES      += fftw
 endif

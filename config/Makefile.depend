@@ -40,6 +40,7 @@ EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB)
 VMCLIBDEPM             = $(EGLIB) $(GEOMLIB)
 PHYSICSLIBDEPM         = $(MATRIXLIB)
 PYTHIA6LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
+PYTHIA8LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
 TABLELIBDEPM           = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
                          $(IOLIB)
 MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
@@ -134,6 +135,7 @@ EGLIBDEP               = $(EGLIBDEPM)
 VMCLIBDEP              = $(VMCLIBDEPM)
 PHYSICSLIBDEP          = $(PHYSICSLIBDEPM)
 PYTHIA6LIBDEP          = $(PYTHIA6LIBDEPM)
+PYTHIA8LIBDEP          = $(PYTHIA8LIBDEPM)
 TABLELIBDEP            = $(TABLELIBDEPM)
 MLPLIBDEP              = $(MLPLIBDEPM)
 SPECTRUMLIBDEP         = $(SPECTRUMLIBDEPM)
@@ -224,6 +226,8 @@ EGLIBEXTRA              = lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib
 VMCLIBEXTRA             = lib/libEG.lib lib/libGeom.lib
 PHYSICSLIBEXTRA         = lib/libMatrix.lib
 PYTHIA6LIBEXTRA         = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib \
+                          lib/libPhysics.lib
+PYTHIA8LIBEXTRA         = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib \
                           lib/libPhysics.lib
 TABLELIBEXTRA           = lib/libTree.lib lib/libGpad.lib lib/libRIO.lib \
                           lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
@@ -321,6 +325,8 @@ VMCLIBEXTRA             = -Llib -lEG -lGeom
 PHYSICSLIBEXTRA         = -Llib -lMatrix
 PYTHIA6LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) \
                           $(FPYTHIA6LIB)
+PYTHIA8LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA8LIBDIR) \
+                          $(FPYTHIA8LIB)
 X11TTFLIBEXTRA          = -Llib -lGX11 -lGraf
 TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO
 GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed

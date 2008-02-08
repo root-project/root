@@ -65,6 +65,7 @@ options="                    \
    enable_peac               \
    enable_pgsql              \
    enable_pythia6            \
+   enable_pythia8            \
    enable_python             \
    enable_qt                 \
    enable_qtgsi              \
@@ -136,6 +137,7 @@ G4ROOT           \
 GSL              \
 CERNLIB          \
 PYTHIA6          \
+PYTHIA8          \
 FFTW3            \
 PYTHONDIR        \
 DCACHE           \
@@ -902,6 +904,7 @@ enable/disable options, prefix with either --enable- or --disable-
   peac               PEAC, PROOF Enabled Analysis Center, requires Clarens
   pgsql              PostgreSQL support, requires libpq
   pythia6            Pythia6 EG support, requires libPythia6
+  pythia8            Pythia8 EG support, requires libPythia8
   python             Python ROOT bindings, requires python >= 2.2
   qt                 Qt graphics backend, requires libqt >= 3
   qtgsi              GSI's Qt integration, requires libqt >= 3
@@ -970,6 +973,8 @@ with options, prefix with --with-, enables corresponding support
   pgsql-incdir       PostgreSQL support, location of libpq-fe.h
   pgsql-libdir       PostgreSQL support, location of libpq
   pythia6-libdir     PYHTIA6 support, location of libPythia6
+  pythia8-incdir     PYHTIA8 support, location of Pythia8 includes
+  pythia8-libdir     PYHTIA8 support, location of libpythia8.so
   python-incdir      Python support, location of Python.h
   python-libdir      Python support, location of libpython
   qt-incdir          Qt support, location of qt.h
@@ -1173,6 +1178,8 @@ if test $# -gt 0 ; then
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
       --with-pythia6-uscore=*) pythia6uscore=$optarg ; enable_pythia6="yes" ;;
+      --with-pythia8-incdir=*) pythia8incdir=$optarg ; enable_pythia8="yes" ;;
+      --with-pythia8-libdir=*) pythia8libdir=$optarg ; enable_pythia8="yes" ;;
       --with-python-incdir=*)  pythonincdir=$optarg  ; enable_python="yes"  ;;
       --with-python-libdir=*)  pythonlibdir=$optarg  ; enable_python="yes"  ;;
       --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"; enable_qtgsi="yes" ;;
@@ -2502,6 +2509,38 @@ if test ! "x$enable_pythia6" = "xno" ; then
 fi
 check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
      "Explicitly required Pythia6 dependencies not fulfilled"
+
+
+
+######################################################################
+#
+### echo %%% Pythia8  Usage - Third party libraries
+#
+# (See http://root.cern.ch and Lund)
+#
+# Check for libpythia8
+#
+
+if test "x$enable_pythia8" = "xyes" || test ! "x$PYTHIA8" = "x" ; then
+    # Check for PYTHIA8 include and library
+    check_header "Pythia.h" "$pythia8incdir" $PYTHIA8 $PYTHIA8/include
+    pythia8incdir=$found_dir
+    enable_pythia8=yes
+    result "yes"
+    check_library "libpythia8" "$enable_shared" "$pythia8libdir" \
+	    $PYTHIA8/lib /opt/pythia8 \
+	    /usr/local/lib/pythia8 /usr/lib/pythia8 \
+	    /usr/local/lib/pythia8 /usr/lib /usr/local/lib
+    pythia8lib=$found_lib
+    pythia8libdir=$found_dir
+
+    if test "x$pythia8lib" = "x" ; then
+       enable_pythia8=no
+       result "no"
+    fi
+fi
+check_explicit "$enable_pythia8" "$enable_pythia8_explicit" \
+     "Explicitly required Pythia8 dependencies not fulfilled"
 
 
 ######################################################################
@@ -4643,6 +4682,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@pythia6lib@|$pythia6lib|"            \
     -e "s|@pythia6libdir@|$pythia6libdir|"      \
     -e "s|@pythia6cppflags@|$pythia6cppflags|"  \
+    -e "s|@pythia8lib@|$pythia8lib|"            \
+    -e "s|@pythia8incdir@|$pythia8incdir|"      \
+    -e "s|@pythia8libdir@|$pythia8libdir|"      \
     -e "s|@pythonlib@|$pythonlib|"              \
     -e "s|@pythonlibdir@|$pythonlibdir|"        \
     -e "s|@pythonincdir@|$pythonincdir|"        \
@@ -4714,6 +4756,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@buildpythia6@|$enable_pythia6|"      \
+    -e "s|@buildpythia8@|$enable_pythia8|"      \
     -e "s|@buildpython@|$enable_python|"        \
     -e "s|@buildruby@|$enable_ruby|"            \
     -e "s|@buildxml@|$enable_xml|"              \

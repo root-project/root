@@ -167,6 +167,11 @@ FPYTHIA6LIBDIR   := @pythia6libdir@
 FPYTHIA6LIB      := @pythia6lib@
 FPYTHIA6CPPFLAGS := @pythia6cppflags@
 
+BUILDFPYTHIA8    := @buildpythia8@
+FPYTHIA8INCDIR   := @pythia8incdir@
+FPYTHIA8LIBDIR   := @pythia8libdir@
+FPYTHIA8LIB      := @pythia8lib@
+
 BUILDFFTW3     := @buildfftw3@
 FFTW3LIBDIR    := @fftw3libdir@
 FFTW3LIB       := @fftw3lib@
