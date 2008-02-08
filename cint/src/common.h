@@ -831,7 +831,7 @@ struct G__funclist {
 * variable length string buffer
 *********************************************************************/
 /* #define G__BUFLEN 34 */
-#define G__BUFLEN 80
+#define G__BUFLEN 180
 
 /*********************************************************************
 * cintv6, flags
