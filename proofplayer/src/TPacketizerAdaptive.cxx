@@ -435,9 +435,19 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fCumProcTime = 0;
    fMaxPerfIdx = 1;
 
-   Long_t maxSlaveCnt = 0;
-   if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
-      fgMaxSlaveCnt = (Int_t) maxSlaveCnt;
+   Int_t maxSlaveCnt = 0;
+   if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0)
+      if (maxSlaveCnt < 1) {
+         Info("Process",
+              "The value of PROOF_MaxSlavesPerNode must be grater than 0");
+         maxSlaveCnt = 0;
+      }
+   if (!maxSlaveCnt)
+      maxSlaveCnt = gEnv->GetValue("Packetizer.MaxWorkersPerNode", 0);
+   if (maxSlaveCnt > 0) {
+      fgMaxSlaveCnt = maxSlaveCnt;
+      Info("Process", "Setting max number of workers per node to %d",
+           fgMaxSlaveCnt);
    } else {
       // Use number of CPUs as default
       SysInfo_t si;
@@ -452,7 +462,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    // longer jobs processing times.
    // To process successfully the session must have workers with all the data!
    fForceLocal = kFALSE;
-   Long_t forceLocal = 0;
+   Int_t forceLocal = 0;
    if (TProof::GetParameter(input, "PROOF_ForceLocal", forceLocal) == 0) {
       if (forceLocal == 1)
          fForceLocal = kTRUE;
@@ -467,11 +477,11 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    // packet time is (expected job proc. time) / fPacketSizeAsAFraction.
    // It substitutes 20 in the old formula to calculate the fPacketSize:
    // fPacketSize = fTotalEntries / (20 * nslaves)
-   Long_t packetAsAFraction = 0;
+   Int_t packetAsAFraction = 0;
    if (TProof::GetParameter(input, "PROOF_PacketAsAFraction",
                             packetAsAFraction) == 0) {
       if (packetAsAFraction > 0) {
-         fgPacketAsAFraction = (Int_t)packetAsAFraction;
+         fgPacketAsAFraction = packetAsAFraction;
          Info("Process",
               "using alternate fraction of query time as a packet size: %ld",
               packetAsAFraction);
