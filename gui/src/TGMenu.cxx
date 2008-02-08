@@ -1372,7 +1372,8 @@ void TGPopupMenu::Activate(TGMenuEntry *entry)
    if (fCurrent != 0) {
       void *ud;
       if (entry == 0 && fCurrent->fType == kMenuPopup) return;
-      if (fCurrent->fType == kMenuPopup) fCurrent->fPopup->EndMenu(ud);
+      if ((fCurrent->fType == kMenuPopup) && fCurrent->fPopup) 
+         fCurrent->fPopup->EndMenu(ud);
       fCurrent->fStatus &= ~kMenuActiveMask;
       DrawEntry(fCurrent);
    }
@@ -1407,7 +1408,7 @@ Bool_t TGPopupMenu::HandleTimer(TTimer *)
    // still the current entry).
 
    if (fCurrent != 0) {
-      if (fCurrent->fType == kMenuPopup) {
+      if ((fCurrent->fType == kMenuPopup) && fCurrent->fPopup) {
          Int_t    ax, ay;
          Window_t wdummy;
 
