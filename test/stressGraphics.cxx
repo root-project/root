@@ -320,7 +320,7 @@ void stressGraphics(Int_t verbose = 0)
    zoomtf1      ();
    zoomfit      ();
    parallelcoord();
-//////clonepad     ();
+///clonepad     ();
    if (!gOptionR) {
       cout << "**********************************************************************" <<endl;
 
@@ -2436,6 +2436,7 @@ void waves()
    TestReport1(C, "TGraph, TArc, TPalette and TColor");
 ///DoCcode(C);
 ///TestReport2();
+   if (gOptionR) printf("\n");
 }
 
 
