@@ -2758,6 +2758,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
       if (!strcmp(fn, cls)) {
          // variadic constructor case, not yet supported
          printf("G__x8664_vararg: variadic constructors not yet supported\n");
+         return;
       } else {
          // write return type
          char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
