@@ -540,7 +540,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                      break;
                   }
 
-                  char endChar = typenameOriginal[posArgEnd];
+                  //char endChar = typenameOriginal[posArgEnd];
 
                   std::string arg = typenameOriginal.substr(posTemplArg + 1, posArgEnd - posTemplArg - 1);
                   std::string::size_type posRef = std::string::npos;
