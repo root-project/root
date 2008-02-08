@@ -98,13 +98,6 @@ private:
 protected:
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
    //-- used by friend TThread class
-   void Constructor();
-   void Constructor(const char *name, const char *title, Int_t form);
-   void Constructor(const char *name, const char *title, Int_t ww, Int_t wh);
-   void Constructor(const char *name, const char *title,
-           Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
-   void Destructor();
-   //-- used by friend TThread class
    void Init();
 
 public:
@@ -127,6 +120,14 @@ public:
            Int_t ww, Int_t wh);
    TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid);
    virtual ~TCanvas();
+   
+   //-- used by friend TThread class
+   void Constructor();
+   void Constructor(const char *name, const char *title, Int_t form);
+   void Constructor(const char *name, const char *title, Int_t ww, Int_t wh);
+   void Constructor(const char *name, const char *title,
+           Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
+   void Destructor();
 
    TVirtualPad      *cd(Int_t subpadnumber=0);
    virtual void      Browse(TBrowser *b);
