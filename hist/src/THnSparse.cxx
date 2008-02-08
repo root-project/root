@@ -13,7 +13,6 @@
 
 #include "TArrayI.h"
 #include "TAxis.h"
-#include "TCanvas.h"
 #include "TClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
