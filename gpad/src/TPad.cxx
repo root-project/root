@@ -1564,6 +1564,8 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 
    Int_t newcode = gROOT->GetEditorMode();
+   if (newcode)
+      pA = pB = pC = pD = pTop = pL = pR = pBot = pINSIDE = kFALSE;
    switch (newcode) {
       case kPad:
          TCreatePrimitives::Pad(event,px,py,0);
