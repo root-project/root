@@ -2,7 +2,7 @@
 #define ROOT_TBENCH
    
 #include "TClonesArray.h"
-namespace stdext {};
+namespace stdext {}
 #include <vector>
 #include <deque>
 #include <list>
