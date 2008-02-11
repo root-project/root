@@ -81,6 +81,7 @@ public:
    const char    *GetLabelFormat() { return fLabelFormat.Data(); }
    Float_t        GetLabelsOffset() { return fLabelsOffset; }
    TLegend       *GetLegend();
+   Int_t          GetEntries() { return fNvals; }
    const char    *GetPercentFormat() { return fPercentFormat.Data(); }
    Double_t       GetRadius() { return fRadius;}
    TPieSlice     *GetSlice(Int_t i);
