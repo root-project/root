@@ -20,6 +20,7 @@
 #include <map>
 #include <vector>
 
+class TObject;
 class TGLCamera;
 class TGLLogicalShape;
 class TGLPhysicalShape;
