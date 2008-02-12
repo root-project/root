@@ -1474,7 +1474,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {
-         HandleKey(event);
+         OpenProject(event);
       }
    }
 
@@ -1561,7 +1561,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
                    Form("file (%s) must have extension .C", fname.Data()),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
       if (retval == kMBRetry) {
-         HandleKey(event);
+         SaveProject(event);
       }
       SwitchToolbarButton();
    }
