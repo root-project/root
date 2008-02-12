@@ -2898,7 +2898,7 @@ void TGMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    out << endl << "   // main frame" << endl;
    out << "   TGMainFrame *";
-   out << GetName() << " = new TGMainFrame(0,10,10,"   // layout alg.
+   out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
        << GetOptionString() << ");" <<endl;
 
    // setting layout manager if it differs from the main frame type
@@ -3379,7 +3379,7 @@ void TGTransientFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    out << endl << "   // transient frame" << endl;
    out << "   TGTransientFrame *";
-   out << GetName()<<" = new TGTransientFrame(0,0"
+   out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
 
    // setting layout manager if it differs from transient frame type
