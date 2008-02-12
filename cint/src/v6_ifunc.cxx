@@ -5078,7 +5078,13 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
       if (!G__templatefunc(result7, funcname, libp, hash, funcmatch)) {
          if (funcmatch == G__USERCONV) {
             *result7 = G__null;
-            G__fprinterr(G__serr, "Error: %s() header declared but not defined", funcname);
+            bool isCompiled = (p_ifunc->pentry[ifn]->size == -1);
+            if (p_ifunc->isvirtual[ifn] && p_ifunc->tagnum >= 0 && isCompiled && G__method_inbase(ifn, p_ifunc))
+               G__fprinterr(G__serr, "Error: %s() declared but no dictionary for the base class", funcname);
+            else if (isCompiled)
+               G__fprinterr(G__serr, "Error: no dictionary for function %s()", funcname);
+            else
+               G__fprinterr(G__serr, "Error: %s() declared but not defined", funcname);
             G__genericerror(0);
             return 1;
          }

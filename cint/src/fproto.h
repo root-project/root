@@ -173,6 +173,7 @@ int G__readansiproto(struct G__ifunc_table_internal *ifunc,int func_now);
 int G__interpret_func(G__value *result7,const char *funcname,struct G__param *libp,int hash,struct G__ifunc_table_internal *p_ifunc,int funcmatch,int memfunc_flag);
 struct G__ifunc_table_internal *G__ifunc_exist(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int mask);
 struct G__ifunc_table_internal *G__ifunc_ambiguous(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int derivedtagnum);
+int G__method_inbase(int ifn, struct G__ifunc_table_internal *ifunc);
 void G__inheritclass(int to_tagnum,int from_tagnum,char baseaccess);
 int G__baseconstructorwp(void);
 int G__baseconstructor(int n,struct G__baseparam *pbaseparam);
