@@ -671,7 +671,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    cont->SetBackgroundColor(TColor::Number2Pixel(18));
 
    TGuiBldAction *act = new TGuiBldAction("TGMainFrame", "Main Frame", kGuiBldProj);
-   act->fAct = "new TGMainFrame(0, 300, 300)";
+   act->fAct = "new TGMainFrame(gClient->GetRoot(), 300, 300)";
    act->fPic = "bld_mainframe.xpm";
    AddAction(act, "Projects");
 
@@ -1372,7 +1372,7 @@ public:
    void SetList(TList *li) { fList = li; }
 };
 
-static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
+static const char *gSaveMacroTypes[] = { "Macro files", "*.[C|c]*",
                                          "All files",   "*",
                                          0,             0 };
 
@@ -1464,13 +1464,14 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    overwr = fi.fOverwrite;
    fname  = fi.fFilename;
 
-   if (fname.EndsWith(".C")) {
+   if (fname.EndsWith(".C", TString::kIgnoreCase) || fname.EndsWith(".cxx") ||
+       fname.EndsWith(".cpp") || fname.EndsWith(".cc")) {
       NewProject();        // create new project
       gROOT->Macro(fname.Data()); // put content of the macro as child frame
    } else {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                   Form("file (%s) must have extension .C", fname.Data()),
+                   Form("file (%s) must have source extension (.C, .c, .cxx, .cpp, .cc)", fname.Data()),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
 
       if (retval == kMBRetry) {
@@ -1529,7 +1530,8 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    overwr = fi.fOverwrite;
    fname = gSystem->UnixPathName(fi.fFilename);
 
-   if (fname.EndsWith(".C")) {
+   if (fname.EndsWith(".C", TString::kIgnoreCase) || fname.EndsWith(".cxx") ||
+       fname.EndsWith(".cpp") || fname.EndsWith(".cc")) {
       TGuiBldSaveFrame *main = new TGuiBldSaveFrame(fClient->GetDefaultRoot(),
                                                     savfr->GetWidth(),
                                                     savfr->GetHeight());
@@ -1558,7 +1560,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    } else {
       Int_t retval;
       new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                   Form("file (%s) must have extension .C", fname.Data()),
+                   Form("file (%s) must have source extension (.C, .c, .cxx, .cpp, .cc)", fname.Data()),
                    kMBIconExclamation, kMBRetry | kMBCancel, &retval);
       if (retval == kMBRetry) {
          SaveProject(event);
