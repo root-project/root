@@ -196,7 +196,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
 
 //______________________________________________________________________________
 void TRootContextMenu::AddEntrySorted(TGPopupMenu *currentMenu, const char *s, Int_t id, void *ud,
-				      const TGPicture *p , Bool_t sorted )
+                                         const TGPicture *p , Bool_t sorted)
 {
    // Add a entry to current menu with alphabetical ordering.
    
