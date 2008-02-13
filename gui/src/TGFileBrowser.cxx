@@ -1123,18 +1123,15 @@ void TGFileBrowser::GotoDir(const char *path)
    // Go to the directory "path" and open all the parent list tree items.
 
    TGListTreeItem *item, *itm;
-   char *token;
-   static const char seps[] = "/\\";
-   // Establish string and get the first token:
-   token = strtok(strdup(path), seps);
-   // Note: strtok is deprecated; consider using strtok_s instead
+   TString sPath(gSystem->UnixPathName(path));
    item = fRootDir;
    if (item == 0) return;
    fListTree->HighlightItem(item);
    fListTree->OpenItem(item);
    DoubleClicked(item, 1);
-   while (token) {
-      // while there are tokens in path
+   TObjArray *tokens = sPath.Tokenize("/");
+   for (Int_t i = 0; i < tokens->GetEntriesFast(); ++i) {
+      const char *token = ((TObjString*)tokens->At(i))->GetName();
       itm = fListTree->FindChildByName(item, token);
       if (itm) {
          item = itm;
@@ -1142,9 +1139,8 @@ void TGFileBrowser::GotoDir(const char *path)
          fListTree->OpenItem(item);
          DoubleClicked(item, 1);
       }
-      // get next token:
-      token = strtok( NULL, seps );
    }
+   delete tokens;
    fListTree->ClearViewPort();
    fListTree->AdjustPosition(item);
 }
