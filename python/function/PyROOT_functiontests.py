@@ -69,11 +69,11 @@ def func( x, y, par ):
 from array import array
 
 Error = 0;
-z = array( 'f', ( 1., 0.96, 0.89, 0.85, 0.78 ) )
+z = array( 'f', [ 1., 0.96, 0.89, 0.85, 0.78 ] )
 errorz = array( 'f', 5*[0.01] )
 
-x = array( 'f', ( 1.5751, 1.5825,  1.6069,  1.6339,   1.6706  ) )
-y = array( 'f', ( 1.0642, 0.97685, 1.13168, 1.128654, 1.44016 ) )
+x = array( 'f', [ 1.5751, 1.5825,  1.6069,  1.6339,   1.6706  ] )
+y = array( 'f', [ 1.0642, 0.97685, 1.13168, 1.128654, 1.44016 ] )
 
 ncount = 0
 
@@ -162,8 +162,8 @@ class Func5MinuitTestCase( unittest.TestCase ):
       gMinuit.mnexcm( "SET ERR", arglist, 1, ierflg )
 
     # set starting values and step sizes for parameters
-      vstart = array( 'd', ( 3,  1,  0.1,  0.01  ) )
-      step   = array( 'd', ( 0.1, 0.1, 0.01, 0.001 ) )
+      vstart = array( 'd', [ 3,  1,  0.1,  0.01  ] )
+      step   = array( 'd', [ 0.1, 0.1, 0.01, 0.001 ] )
       gMinuit.mnparm( 0, "a1", vstart[0], step[0], 0, 0, ierflg )
       gMinuit.mnparm( 1, "a2", vstart[1], step[1], 0, 0, ierflg )
       gMinuit.mnparm( 2, "a3", vstart[2], step[2], 0, 0, ierflg )
