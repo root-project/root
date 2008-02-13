@@ -1674,7 +1674,7 @@ void TPostScript::Initialize()
    PrintFast(15," .25 .25 scale ");
    if (fMode != 3) SaveRestore(1);
 
-   if (fMode != 3) PrintStr("%%Page: (number 1)@");
+   if (fMode != 3) PrintStr("%%Page: 1 1@");
    if (fMode != 3) SaveRestore(1);  //required
 
    //Check is user has defined a special header in the current style
@@ -2556,9 +2556,9 @@ void TPostScript::Zone()
          PrintStr("@showpage");
          SaveRestore(-1);
          fNpages++;
-         PrintStr("@%%Page: (number");
+         PrintStr("@%%Page:");
          WriteInteger(fNpages);
-         PrintStr(")");
+         WriteInteger(fNpages);
          PrintStr("@");
       } else {
          PrintFast(9," showpage");
