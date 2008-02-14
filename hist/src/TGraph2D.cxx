@@ -373,7 +373,7 @@ TGraph2D::~TGraph2D()
 
 
 //______________________________________________________________________________
-TGraph2D TGraph2D::operator=(const TGraph2D &g)
+TGraph2D& TGraph2D::operator=(const TGraph2D &g)
 {
    // Graph2D operator "="
 
@@ -387,7 +387,7 @@ TGraph2D TGraph2D::operator=(const TGraph2D &g)
       fY[n] = g.fY[n];
       fZ[n] = g.fZ[n];
    }
-   return g;
+   return *this;
 }
 
 

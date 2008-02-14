@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed 
-#include "TNamed.h"  
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TVirtualHistPainter
 #include "TVirtualHistPainter.h"
@@ -65,7 +65,7 @@ protected:
    TH2D       *fHistogram;   //!2D histogram of z values linearly interpolated
    TDirectory *fDirectory;   //!Pointer to directory holding this 2D graph
    TVirtualHistPainter *fPainter;  //!pointer to histogram painter
-   
+
    void     Build(Int_t n);
 
 private:
@@ -86,7 +86,7 @@ public:
 
    virtual ~TGraph2D();
 
-   TGraph2D operator=(const TGraph2D &);
+   TGraph2D& operator=(const TGraph2D &);
 
    Int_t            DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
