@@ -2107,7 +2107,7 @@ void AssignAndDelete(TString& target, char *tobedeleted) {
 }
 
 //______________________________________________________________________________
-int TSystem::CompileMacro(const char *filename, Option_t * opt,
+int TSystem::CompileMacro(const char *filename, Option_t *opt,
                           const char *library_specified,
                           const char *build_dir)
 {
@@ -2119,7 +2119,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    //     f : force recompilation.
    //     g : compile with debug symbol
    //     O : optimized the code (ignore if 'g' is specified)
-   //     c : compile only, do not attempt to the load the library.
+   //     c : compile only, do not attempt to load the library.
    //
    // If library_specified is specified, CompileMacro generates the file
    // "library_specified".soext where soext is the shared library extension for
