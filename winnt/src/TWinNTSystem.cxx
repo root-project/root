@@ -327,6 +327,11 @@ namespace {
          dynpath += ";"; dynpath += gRootDir; dynpath += "/lib";
       }
 #endif
+#ifdef CINTINCDIR
+         dynpath += ";"; dynpath += CINTINCDIR; dynpath += "/stl";
+#else
+         dynpath += ";"; dynpath += gRootDir; dynpath += "/cint/stl";
+#endif
       return dynpath;
    }
 

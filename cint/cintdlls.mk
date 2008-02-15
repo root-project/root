@@ -73,10 +73,13 @@ CINTDICTDLLS += lib/libvalarrayDict.$(SOEXT)
 $(CINTDIRSTL)/valarray.dll: metautils/src/stlLoader_valarray.o
 endif
 
+CINTDICTMAPS = $(CINTDICTDLLS:.$(SOEXT)=.rootmap)
+
 ALLCINTDLLS = $(CINTDLLS) $(CINTDICTDLLS)
 
 # used in the main Makefile
 ALLLIBS    += $(ALLCINTDLLS)
+ALLMAPS    += $(CINTDICTMAPS)
 
 INCLUDEFILES += $(addsuffix .d,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLLNAMES)))\
    $(CINTDIRL)/posix/mktypes.d $(CINTDIRL)/posix/exten.d
@@ -168,12 +171,12 @@ metautils/src/stlLoader_%.o: metautils/src/stlLoader_%.cc
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
 $(CINTDIRDLLSTL)/G__cpp_%.cxx:
-	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
+	$(CINTTMP) -w1 -z$(notdir $*) -n$@ \
 	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRDLLSTL) -I$(CINTDIRL) \
 	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
 $(CINTDIRL)/G__cpp_%.cxx:
-	$(CINTTMP) -w1 -z$(notdir $*) -n$@ $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) \
+	$(CINTTMP) -w1 -z$(notdir $*) -n$@ \
 	   -D__MAKECINT__ -DG__MAKECINT -I$(CINTDIRL) \
 	   -c-1 -A -Z0 $(filter-out $(IOSENUM),$(filter %.h,$^))
 
@@ -213,13 +216,17 @@ $(CINTDIRDLLS)/sys/ipc.dll: $(CINTDIRL)/G__c_ipc.o
 ##### ipc special treatment - END
 
 ##### dictionaries
-$(CINTDIRDLLSTL)/rootcint_%.cxx:
+$(CINTDIRDLLSTL)/rootcint_%.cxx: metautils/src/%Linkdef.h $(ROOTCINTTMPDEP)
 	$(ROOTCINTTMP) -f $@ -c \
-	   $(subst $*,,$(patsubst %map2,-DG__MAP2,$*)) $(subst multi,,${*:2=}) \
-	   metautils/src/${*:2=}Linkdef.h
+	   $(subst multi,,${*:2=}) \
+	   metautils/src/$*Linkdef.h
 
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.cxx,$(CINTDICTDLLS)): $(ROOTCINTTMPDEP)
+
+$(CINTDICTMAPS): lib/lib%Dict.rootmap: $(RLIBMAP) $(MAKEFILEDEP)
+	$(RLIBMAP) -o $@ -l $(notdir $(@:.rootmap=.$(SOEXT))) \
+		   -d $*.dll -c metautils/src/$*Linkdef.h
 
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDIRDLLSTL)/rootcint_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $(filter-out $(MAINLIBS),$^)

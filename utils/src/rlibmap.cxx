@@ -254,10 +254,15 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
       char pragma[1024];
       if ((lfp = fopen(linkdef, "r"))) {
          while (fgets(pragma, 1024, lfp)) {
-            if (!strcmp(strtok(pragma, " "), "#pragma") &&
-                !strcmp(strtok(0,      " "), "link")    &&
-                !strcmp(strtok(0,      " "), "C++")) {
-               char *type = strtok(0, " ");
+            if (strcmp(strtok(pragma, " "), "#pragma")) continue;
+            const char* linkOrCreate = strtok(0, " ");
+            bool pragmaLink = (!strcmp(linkOrCreate, "link") &&
+                               !strcmp(strtok(0, " "), "C++"));
+            bool pragmaCreate = (!strcmp(linkOrCreate, "create") &&
+                                 !strcmp(strtok(0," "), "TClass"));
+
+            if (pragmaLink || pragmaCreate) {
+               const char *type = pragmaLink ? strtok(0, " ") : "class";
                if (!strncmp(type, "option=", 7) || !strncmp(type, "options=", 8)) {
                   if (strstr(type, "nomap"))
                      continue;
