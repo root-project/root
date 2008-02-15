@@ -345,13 +345,13 @@ Double_t TMath::Factorial(Int_t n)
 {
    // Compute factorial(n).
 
-   if(n <= 0) return 1.;
+   if (n <= 0) return 1.;
    Double_t x = 1;
    Int_t b = 0;
    do {
       b++;
       x *= b;
-   } while(b!=n);
+   } while (b != n);
    return x;
 }
 
@@ -461,11 +461,11 @@ Double_t TMath::Gamma(Double_t a,Double_t x)
    // Handbook of Mathematical Functions by Abramowitz and Stegun, formula 6.5.1 on page 260 .
    // Its normalization is such that TMath::Gamma(a,+infinity) = 1 .
    //
-   //  Begin_Latex 
-   //  P(a, x) = #frac{1}{#Gamma(a) } #int_{0}^{x} t^{a-1} e^{-t} dt 
+   //  Begin_Latex
+   //  P(a, x) = #frac{1}{#Gamma(a) } #int_{0}^{x} t^{a-1} e^{-t} dt
    //   End_Latex
-   // 
-   // 
+   //
+   //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
    if (a <= 0 || x <= 0) return 0;
@@ -965,9 +965,9 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 //  -----------------------------------------------------------
 //   The nuts-and-bolts of the TMath::KolmogorovTest() algorithm is a for-loop
 //   over the two sorted arrays a and b representing empirical distribution
-//   functions. The for-loop handles 3 cases: when the next points to be 
+//   functions. The for-loop handles 3 cases: when the next points to be
 //   evaluated satisfy a>b, a<b, or a=b:
-//    
+//
 //      for (Int_t i=0;i<na+nb;i++) {
 //         if (a[ia-1] < b[ib-1]) {
 //            rdiff -= sa;
@@ -986,7 +986,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 //        }
 //         rdmax = TMath::Max(rdmax,TMath::Abs(rdiff));
 //      }
-//    
+//
 //   For the last case, a=b, the algorithm advances each array by one index in an
 //   attempt to move through the equality. However, this is incorrect when one or
 //   the other of a or b (or both) have a repeated value, call it x. For the KS
@@ -996,10 +996,10 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 //   old CERNLIB method is wrong is that it implies that the function defined as the
 //   difference between a and b is multi-valued at x -- besides being ugly, this
 //   would invalidate Kolmogorov's theorem).
-//    
+//
 //   The solution is to just add while-loops into the equality-case handling to
 //   perform the tally:
-//    
+//
 //         } else {
 //            double x = a[ia-1];
 //            while(a[ia-1] == x && ia <= na) {
