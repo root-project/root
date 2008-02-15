@@ -116,28 +116,37 @@ THashTable *TASImage::fgPlugList = new THashTable(50);
 static char *gIconPaths[7] = {0, 0, 0, 0, 0, 0, 0};
 
 ///////////////////////////// alphablending macros ///////////////////////////////
+#ifdef R__BYTESWAP
 typedef struct {
    unsigned char b;
    unsigned char g;
    unsigned char r;
    unsigned char a;
 } __argb32__;
+#else
+typedef struct {
+   unsigned char a;
+   unsigned char r;
+   unsigned char g;
+   unsigned char b;
+} __argb32__;
+#endif
 
 
 //______________________________________________________________________________
-#define _alphaBlend(bot, top) do {\
+#define _alphaBlend(bot, top) {\
    __argb32__ *t = (__argb32__*)(top);\
    __argb32__ *b = (__argb32__*)(bot);\
    int aa = 255-t->a;\
    if (!aa) {\
-      *b = *t;\
-      break;\
+      *bot = *top;\
+   } else { \
+      b->a = (b->a*aa)>>8 + t->a;\
+      b->r = (b->r*aa + t->r*t->a)>>8;\
+      b->g = (b->g*aa + t->g*t->a)>>8;\
+      b->b = (b->b*aa + t->b*t->a)>>8;\
    }\
-   b->a = (b->a*aa)>>8 + t->a;\
-   b->r = (b->r*aa + t->r*t->a)>>8;\
-   b->g = (b->g*aa + t->g*t->a)>>8;\
-   b->b = (b->b*aa + t->b*t->a)>>8;\
-} while (0)
+}\
 
 
 ClassImp(TASImage)
@@ -1354,7 +1363,7 @@ void TASImage::Paint(Option_t *option)
          if (!fScaledImage) {
             fScaledImage = (TASImage*)TImage::Create();
 
-            if (fZoomWidth && fZoomHeight && 
+            if (fZoomWidth && fZoomHeight &&
                 ((fImage->width != fZoomWidth) || (fImage->height != fZoomHeight))) {
                // zoom and scale image
                ASImage *tmpImage = 0;
@@ -2005,7 +2014,7 @@ Bool_t TASImage::InitVisual()
    Bool_t noX = gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32");
 
    // was in batch, but switched to gui
-   if (inbatch && !noX) { 
+   if (inbatch && !noX) {
       destroy_asvisual(fgVisual, kFALSE);
       fgVisual = 0;
    }
@@ -2286,7 +2295,7 @@ Double_t *TASImage::GetVecArray()
 //______________________________________________________________________________
 TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
 {
-   // In case of vectorized image return an associated array of doubles 
+   // In case of vectorized image return an associated array of doubles
    // otherwise this method creates and returns a 2D array of doubles corresponding to palette.
    // If palette is ZERO a color converted to double value [0, 1] according to formula
    //   Double_t((r << 16) + (g << 8) + b)/0xFFFFFF
@@ -5344,7 +5353,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
    FreeStorage(SLLBlock.next);
 }
 
-//_____________________________________________________________________________
+//______________________________________________________________________________
 static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
                                      int x_to, CARD32)
 {
@@ -5372,7 +5381,7 @@ static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
    }
 }
 
-//_____________________________________________________________________________
+//______________________________________________________________________________
 static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
 {
    // Apply tool point argb32.
@@ -5388,7 +5397,7 @@ static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, 
    }
 }
 
-//_____________________________________________________________________________
+//______________________________________________________________________________
 static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
 {
    // Apply tool 2D argb32.
@@ -5440,7 +5449,7 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
    }
 }
 
-//_____________________________________________________________________________
+//______________________________________________________________________________
 static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 {
    // Create draw context
@@ -5463,7 +5472,7 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
    return ctx;
 }
 
-//_____________________________________________________________________________
+//______________________________________________________________________________
 static void destroy_asdraw_context32( ASDrawContext *ctx )
 {
    // Destroy asdraw context32.
@@ -5770,7 +5779,7 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
 }
 
 /////////////////////////////////////////////////////////////////////////
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
 {
    // Returns in-memory buffer compressed according image type
@@ -5799,7 +5808,7 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
    }
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
 {
    // create image from  compressed buffer
@@ -5870,7 +5879,7 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
    return kTRUE;
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::CreateThumbnail()
 {
    // creates image thumbnail
@@ -5954,7 +5963,7 @@ void TASImage::CreateThumbnail()
    destroy_asimage(&padimg);
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::Streamer(TBuffer &b)
 {
    // streamer for ROOT I/O
@@ -6046,7 +6055,7 @@ void TASImage::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::Browse(TBrowser *)
 {
    // browse image
@@ -6059,7 +6068,7 @@ void TASImage::Browse(TBrowser *)
    CreateThumbnail();
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 const char *TASImage::GetTitle() const
 {
    // title is used to keep 32x32 xpm image's thumbnail
@@ -6077,7 +6086,7 @@ const char *TASImage::GetTitle() const
    return fTitle.Data();
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::SetTitle(const char *title)
 {
    // set a title for an image
@@ -6098,7 +6107,7 @@ void TASImage::SetTitle(const char *title)
    }
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                              Int_t x3, Int_t y3, const char *col, UInt_t thick)
 {
@@ -6138,7 +6147,7 @@ void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
    destroy_asdraw_context32(ctx);
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
                                   const char *col, Int_t thick)
 {
@@ -6177,7 +6186,7 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
    destroy_asdraw_context32(ctx);
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thick)
 {
    // Draw circle. If thick < 0 - draw filled circle
@@ -6215,7 +6224,7 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
    destroy_asdraw_context32(ctx);
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
@@ -6254,7 +6263,7 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
    destroy_asdraw_context32(ctx);
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
@@ -6293,7 +6302,7 @@ void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
    destroy_asdraw_context32(ctx);
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/,
                          const char * /*minc*/, const char * /*maxc*/)
 {
@@ -6302,7 +6311,7 @@ void TASImage::FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/,
 
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::Gray(Bool_t on)
 {
    // Converts RGB image to Gray image and vice versa.
@@ -6415,7 +6424,7 @@ void TASImage::Gray(Bool_t on)
    fIsGray = kTRUE;
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // creates an image(screenshot) from  specified window
@@ -6464,7 +6473,7 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::SetPaletteEnabled(Bool_t on)
 {
    // switch on/off image palette. That also invokes calling vectorizasion of image
@@ -6493,7 +6502,7 @@ void TASImage::SetPaletteEnabled(Bool_t on)
 
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save a primitive as a C++ statement(s) on output stream "out"
@@ -6509,7 +6518,7 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       Double_t scale = 500./GetWidth();
       h = TMath::Nint(GetHeight()*scale);
       Scale(w, h);
-   }   
+   }
 
    GetImageBuffer(&buf, &sz, TImage::kXpm);
 
@@ -6531,7 +6540,7 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << "   " << name << "->Draw();" << endl;
 }
 
-//_______________________________________________________________________
+//______________________________________________________________________________
 Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
 {
    // Sets an image printing resolution in Dots Per Inch units.
