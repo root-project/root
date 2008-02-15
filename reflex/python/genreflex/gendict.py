@@ -370,8 +370,10 @@ class genDictionary(object) :
     self.selector = sel  # remember the selector
     if self.selector :
       for f in self.functions :
-        funcname = self.genTypeName(f['id'])
-        if self.selector.selfunction( funcname ) and not self.selector.excfunction( funcname ) :
+        id = f['id']
+        funcname = self.genTypeName(id)
+        args = self.xref[id]['subelems']
+        if self.selector.selfunction( funcname, args ) and not self.selector.excfunction( funcname, args ) :
           selec.append(f)
         elif 'extra' in f and f['extra'].get('autoselect') and f not in selec:
           selec.append(f)
@@ -550,7 +552,7 @@ class genDictionary(object) :
         if elem in ('Constructor',) : return 0
     #----Filter using the exclusion list in the selection file
     if self.selector and 'name' in attrs and  elem in ('Constructor','Destructor','Method','OperatorMethod','Converter') :
-      if self.selector.excmethod(self.genTypeName(attrs['context']), attrs['name'] ) : return 0
+      if self.selector.excmethod(self.genTypeName(attrs['context']), attrs['name'], args ) : return 0
     return 1
 #----------------------------------------------------------------------------------
   def tmplclasses(self, local):

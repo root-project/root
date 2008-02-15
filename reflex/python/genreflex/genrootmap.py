@@ -40,6 +40,7 @@ def genRootMap(mapfile, dicfile, libfile, cnames, classes) :
   if libfile.rfind('/') != -1 : libfile =  libfile[libfile.rfind('/')+1:]
   for c in cnames :
     nc = string.translate(str(c), transtable)
+    nc = re.sub(r"\bstd@@basic_string<char>", 'string', nc)
     nc = re.sub(r"\bstd@@", '', nc)
     nc = nc.replace(' ','')
     new_lines += '%-45s %s\n' % ('Library.' + nc + ':', libfile )
