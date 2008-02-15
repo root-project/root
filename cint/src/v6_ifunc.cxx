@@ -453,12 +453,17 @@ int G__istypename(char* temp)
       strcmp(temp, "float") == 0 ||
       strcmp(temp, "double") == 0 ||
       (strncmp(temp, "unsigned", 8) == 0 &&
-       (strcmp(temp, "unsigned") == 0 ||
-        strcmp(temp, "unsignedchar") == 0 ||
-        strcmp(temp, "unsignedshort") == 0 ||
-        strcmp(temp, "unsignedint") == 0 ||
-        strcmp(temp, "unsignedlong") == 0)) ||
-      strcmp(temp, "signed") == 0 ||
+       (!temp[8] ||
+        strcmp(temp+8, "char") == 0 ||
+        strcmp(temp+8, "short") == 0 ||
+        strcmp(temp+8, "int") == 0 ||
+        strcmp(temp+8, "long") == 0)) ||
+      (strncmp(temp, "signed", 6) == 0 &&
+       (!temp[6] ||
+        strcmp(temp+6, "char") == 0 ||
+        strcmp(temp+6, "short") == 0 ||
+        strcmp(temp+6, "int") == 0 ||
+        strcmp(temp+6, "long") == 0)) ||
       strcmp(temp, "const") == 0 ||
       strcmp(temp, "void") == 0 ||
       strcmp(temp, "FILE") == 0 ||
