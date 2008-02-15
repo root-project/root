@@ -164,7 +164,7 @@ clean-genreflex:
 		@rm -rf lib/python/genreflex
 
 clean-check-reflex:
-		rm -f $(RFLX_TESTLIB) $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
+		@rm -f $(RFLX_TESTLIB) $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
 
 clean-reflex: clean-genreflex clean-check-reflex
 		@rm -f $(RFLX_GENMAPX)
