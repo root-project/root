@@ -234,15 +234,18 @@ public:
    virtual Int_t      ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
    virtual void       FixParameter(Int_t ipar);
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
+   virtual void       GetAtbVector(TVectorD &v);
    virtual Double_t   GetChisquare();
    virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
    virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);
    virtual Double_t*  GetCovarianceMatrix() const;
    virtual void       GetCovarianceMatrix(TMatrixD &matr);
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const {return fParCovar(i, j);}
+   virtual void       GetDesignMatrix(TMatrixD &matr); 
    virtual void       GetErrors(TVectorD &vpar);
    virtual Int_t      GetNumberTotalParameters() const {return fNfunctions;}
    virtual Int_t      GetNumberFreeParameters() const {return fNfunctions-fNfixed;}
+   virtual Int_t      GetNpoints() { return fNpoints; }
    virtual void       GetParameters(TVectorD &vpar);
    virtual Double_t   GetParameter(Int_t ipar) const {return fParams(ipar);}
    virtual Int_t      GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const;
