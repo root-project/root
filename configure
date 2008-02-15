@@ -2458,7 +2458,6 @@ check_explicit "$enable_cern" "$enable_cern_explicit" \
 #
 # Check for libPythia6
 #
-
 if test ! "x$enable_pythia6" = "xno" ; then
     if test "x$pythia6uscore" = "xDOUBLE" || \
        test "x$pythia6uscore" = "xSINGLE" || \
@@ -2510,8 +2509,6 @@ fi
 check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
      "Explicitly required Pythia6 dependencies not fulfilled"
 
-
-
 ######################################################################
 #
 ### echo %%% Pythia8  Usage - Third party libraries
@@ -2520,28 +2517,23 @@ check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
 #
 # Check for libpythia8
 #
-
-if test "x$enable_pythia8" = "xyes" || test ! "x$PYTHIA8" = "x" ; then
+if test ! "x$enable_pythia8" = "xno" ; then
     # Check for PYTHIA8 include and library
-    check_header "Pythia.h" "$pythia8incdir" $PYTHIA8 $PYTHIA8/include
+    check_header "Pythia.h" "$pythia8incdir" $PYTHIA8 $PYTHIA8/include \
+        /opt/pythia8/include /usr/local/include /usr/include
     pythia8incdir=$found_dir
-    enable_pythia8=yes
-    result "yes"
+    
     check_library "libpythia8" "$enable_shared" "$pythia8libdir" \
-	    $PYTHIA8/lib /opt/pythia8 \
-	    /usr/local/lib/pythia8 /usr/lib/pythia8 \
-	    /usr/local/lib/pythia8 /usr/lib /usr/local/lib
+       $PYTHIA8 $PYTHIA8/lib /opt/pythia8/lib /usr/local/lib /usr/lib
     pythia8lib=$found_lib
     pythia8libdir=$found_dir
 
-    if test "x$pythia8lib" = "x" ; then
+    if test "x$pythia8incdir" = "x" || test "x$pythia8lib" = "x"; then
        enable_pythia8=no
-       result "no"
     fi
 fi
 check_explicit "$enable_pythia8" "$enable_pythia8_explicit" \
      "Explicitly required Pythia8 dependencies not fulfilled"
-
 
 ######################################################################
 #
