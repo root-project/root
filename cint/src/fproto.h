@@ -402,6 +402,7 @@ int G__isenclosingclassbase(int enclosingtagnum,int env_tagnum);
 char* G__find_first_scope_operator(char* name);
 char* G__find_last_scope_operator(char* name);
 int G__checkset_charlist(char *tname,struct G__Charlist *pcall_para,int narg,int ftype);
+int G__class_autoloading(int* tagnum);
 void G__define_struct(char type);
 G__value G__classassign(long pdest,int tagnum,G__value result);
 int G__cattemplatearg(char *tagname,struct G__Charlist *charlist);

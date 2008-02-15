@@ -4383,8 +4383,6 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
 #endif // G__SMALLOBJECT
 }
 
-int G__class_autoloading(int tagnum);
-
 /**************************************************************************
 * G__cppif_returntype()
 *
@@ -4526,7 +4524,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, char 
     case 'u':
       switch (G__struct.type[tagnum]) {
         case 'a':
-           G__class_autoloading(tagnum);
+           G__class_autoloading(&tagnum);
 	case 'c':
 	case 's':
 	case 'u':

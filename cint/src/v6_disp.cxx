@@ -804,7 +804,6 @@ static int G__display_memberfunction(FILE *fout,int tagnum,int access,int base)
   return(0);
 }
   
-extern int G__class_autoloading G__P((int tagnum));
 
 /****************************************************************
 * G__display_class()
@@ -954,7 +953,7 @@ int G__display_class(FILE *fout,char *name,int base,int start)
   /* no such class,struct */
   if(-1==tagnum||G__struct.alltag<=tagnum) return(0); 
 
-      G__class_autoloading(tagnum);
+      G__class_autoloading(&tagnum);
 
   G__more(fout,"===========================================================================\n");
   sprintf(msg,"%s ",G__tagtype2string(G__struct.type[tagnum]));
