@@ -7,7 +7,6 @@ using namespace std;
 #pragma create TClass vector<bool>;
 #pragma create TClass vector<char>;
 #pragma create TClass vector<short>;
-#pragma create TClass vector<int>;
 #pragma create TClass vector<long>;
 #pragma create TClass vector<unsigned char>;
 #pragma create TClass vector<unsigned short>;
