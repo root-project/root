@@ -33,7 +33,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   math/tStudent net/authserv net/hcons net/hprod net/hserv2 net/hserv \
   net/LDAPExample net/pserv net/spyserv net/TestAuth \
   proof/getProof proof/runProof proof/ProofSimple \
-  pythia/pythiaExample \
+  pythia/pythiaExample pythia/pythia8 \
   sql/sqlcanvas \
   sql/sqlcreatedb sql/sqlfilldb sql/sqlselect \
   tree/hsimpleProxy tree/tree0 tree/tree2a tree/tree4 \
