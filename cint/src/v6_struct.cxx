@@ -482,7 +482,11 @@ int G__class_autoloading(int* ptagnum)
       strcpy(copyLibname, libname);
       if (G__p_class_autoloading) {
          G__enable_autoloading = 0;
+         int store_prerun = G__prerun;
+         // prevent "file already loaded"
+         G__prerun = 1;
          int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
+         G__prerun = store_prerun;
          if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
             if (strstr(G__struct.name[tagnum],"<") != 0) {
                // Kill this entry.
