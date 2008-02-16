@@ -19,6 +19,13 @@ ifneq ($(OSTHREADLIB),)
 MTOPT         = -mt
 endif
 
+CC_MINOR_VER := $(shell CC -V 2>&1 | sed 's,^.*5\.\([^[:space:]]*\).*$$,\1,')
+
+CCPTR := -ptr$(ROOTSYS)
+ifeq ($(findstring $(CC_MINOR_VER),0 1 2 3 4),)
+# newer than 5.4
+CCPTR :=
+endif
 
 # Compiler:
 # used in cint/Module.mk
@@ -27,11 +34,11 @@ SUNCC5        = true
 #CC            = /opt/WS5.0/bin/cc
 CXX           = CC
 CC            = cc
-CXXFLAGS      = -KPIC -I/usr/openwin/include -ptr$(ROOTSYS) $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = -KPIC -I/usr/openwin/include $(CCPTR) $(EXTRA_CXXFLAGS) \
                 $(MTOPT)
 CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CXXFLAGS) \
-                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -ptr$(ROOTSYS) $(MTOPT)
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(CCPTR) $(MTOPT)
 CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(MTOPT)
 CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
@@ -39,7 +46,7 @@ CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
 # Linker:
 LD            = $(CXX)
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -G -ptr$(ROOTSYS)
+SOFLAGS       = -G $(CCPTR)
 SOEXT         = so
 
 # System libraries:
