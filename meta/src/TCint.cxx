@@ -1610,16 +1610,19 @@ const char* TCint::GetSharedLibs()
       Int_t len = strlen(filename);
       const char *end = filename+len;
       Bool_t needToSkip = kFALSE;
-      if ( len>5 && (strcmp(end-4,".dll") == 0 ) ) {
+      if ( len>5 && ( (strcmp(end-4,".dll") == 0 ) || (strcmp(end-3,".so")==0 && strstr(filename,"Dict")!=0) ) ) {
          // Filter out the cintdlls
          static const char *excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","ipc.dll","posix.dll"
             "string.dll","vector.dll","vectorbool.dll","list.dll","deque.dll",
             "map.dll", "map2.dll","set.dll","multimap.dll","multimap2.dll",
             "multiset.dll","stack.dll","queue.dll","valarray.dll",
+            "libvectorDict.so","libvectorboolDict.so","liblistDict.so","libdequeDict.so",
+            "libmapDict.so", "libmap2Dict.so","libsetDict.so","libmultimapDict.so","libmultimap2Dict.so",
+            "libmultisetDict.so","libstackDict.so","libqueueDict.so","libvalarrayDict.so",
             "exception.dll","stdexcept.dll","complex.dll","climits.dll"};
          for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
-            if (strcmp(filename,excludelist[i])==0) { needToSkip = kTRUE; break; }
+            if (strcmp(gSystem->BaseName(filename),excludelist[i])==0) { needToSkip = kTRUE; break; }
          }
       }
       if (!needToSkip &&
