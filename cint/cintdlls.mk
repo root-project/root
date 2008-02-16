@@ -52,7 +52,7 @@ ifneq ($(findstring map,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libmapDict.$(SOEXT)
 CINTDICTDLLS += lib/libmap2Dict.$(SOEXT)
 $(CINTDIRSTL)/map.dll: metautils/src/stlLoader_map.o
-$(CINTDIRSTL)/map.dll: metautils/src/stlLoader_map2.o
+$(CINTDIRSTL)/map2.dll: metautils/src/stlLoader_map2.o
 endif
 ifneq ($(findstring set,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libsetDict.$(SOEXT)
@@ -62,7 +62,7 @@ ifneq ($(findstring multimap,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libmultimapDict.$(SOEXT)
 CINTDICTDLLS += lib/libmultimap2Dict.$(SOEXT)
 $(CINTDIRSTL)/multimap.dll: metautils/src/stlLoader_multimap.o
-$(CINTDIRSTL)/multimap.dll: metautils/src/stlLoader_multimap2.o
+$(CINTDIRSTL)/multimap2.dll: metautils/src/stlLoader_multimap2.o
 endif
 ifneq ($(findstring multiset,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libmultisetDict.$(SOEXT)
@@ -225,8 +225,8 @@ $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)):
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.cxx,$(CINTDICTDLLS)): $(ROOTCINTTMPDEP)
 
 $(CINTDICTMAPS): lib/lib%Dict.rootmap: $(RLIBMAP) $(MAKEFILEDEP)
-	$(RLIBMAP) -o $@ -l $(notdir $(@:.rootmap=.$(SOEXT))) \
-		   -d $*.dll -c metautils/src/$*Linkdef.h
+	$(RLIBMAP) -o $@ -l \
+		    $*.dll -c metautils/src/$*Linkdef.h
 
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDIRDLLSTL)/rootcint_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $(filter-out $(MAINLIBS),$^)
