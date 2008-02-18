@@ -169,36 +169,36 @@ class selClass :
           if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return m
     return None
 #----------------------------------------------------------------------------------
-  def excmethod(self, clname, method, arguments ) :
+  def excmethod(self, clname, method, demangled ) :
     clname = clname.replace(' ','')
     for c in self.exc_classes :
       for m in c['methods'] :
         if ('name' in m and m['name'] == method ) \
-               or ('pattern' in m and matchpattern(method, m['pattern'])) \
-               or ('proto_name' in m and m['proto_name'] == method + '(' + arguments + ')' ) \
-               or ('proto_pattern' in m and matchpattern(method + '(' + arguments + ')', m['proto_pattern'])) :
+           or ('pattern' in m and matchpattern(method, m['pattern'])) \
+           or ('proto_name' in m and m['proto_name'] == demangled ) \
+           or('proto_pattern' in m and matchpattern(demangled, m['proto_pattern'])) :
           attrs = c['attrs']
           if 'n_name' in attrs and attrs['n_name'] == clname : return m
           if 'n_pattern' in attrs and matchpattern(clname, attrs['n_pattern']) : return m
     return None
 #----------------------------------------------------------------------------------
-  def selfunction(self, funcname, arguments ) :
+  def selfunction(self, funcname, demangled ) :
     for f in self.sel_functions :
       attrs = f['attrs']
       if ('name' in attrs and attrs['name'] == funcname ) \
              or ('pattern' in attrs and matchpattern(funcname, attrs['pattern'])) \
-             or ('proto_name' in attrs and attrs['proto_name'] == funcname + '(' + arguments + ')' ) \
-             or ('proto_pattern' in attrs and matchpattern(funcname + '(' + arguments + ')', attrs['proto_pattern'])) :
+             or ('proto_name' in attrs and attrs['proto_name'] == demangled ) \
+             or ('proto_pattern' in attrs and matchpattern(demangled, attrs['proto_pattern'])) :
         return attrs
     return None
 #----------------------------------------------------------------------------------
-  def excfunction(self, funcname, arguments ) :
+  def excfunction(self, funcname, demangled ) :
     for f in self.exc_functions :
       attrs = f['attrs']
       if ('name' in attrs and attrs['name'] == funcname ) \
              or ('pattern' in attrs and matchpattern(funcname, attrs['pattern'])) \
-             or ('proto_name' in attrs and attrs['proto_name'] == funcname + '(' + arguments + ')' ) \
-             or ('proto_pattern' in attrs and matchpattern(funcname + '(' + arguments + ')', attrs['proto_pattern'])) :
+             or ('proto_name' in attrs and attrs['proto_name'] == demangled ) \
+             or ('proto_pattern' in attrs and matchpattern(demangled, attrs['proto_pattern'])) :
         return attrs
     return None
 #----------------------------------------------------------------------------------
