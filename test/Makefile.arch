@@ -499,7 +499,8 @@ CXXOPT        = -O2
 LDOPT         = -opt:ref
 endif
 endif
-CXXFLAGS      = $(CXXOPT) -nologo -I$(shell $(ROOTCONFIG) --incdir) -FIw32pragma.h
+ROOTINCDIR   := -I$(shell cygpath -m `$(ROOTCONFIG) --incdir`)
+CXXFLAGS      = $(CXXOPT) -nologo $(ROOTINCDIR) -FIw32pragma.h
 LD            = link
 LDFLAGS       = $(LDOPT) -nologo
 SOFLAGS       = -DLL
