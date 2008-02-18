@@ -19,5 +19,10 @@ endif
 
 PyROOT_stltests.log: StlTypes_C.$(DllSuf)
 
-PyROOT_stltests: PyROOT_stltests.log
+ifeq ($(FAIL),)
+PyROOT_stltests:
+	$(WarnFailTest)
+else
+	PyROOT_stltests: PyROOT_stltests.log
 	$(TestDiff)
+endif
