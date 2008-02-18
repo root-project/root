@@ -781,8 +781,8 @@ class genDictionary(object) :
         for b in bases :
           if b.get('virtual','') == '1' : acc = 'virtual ' + b['access']
           else                          : acc = b['access']
-	  bname = self.genTypeName(b['type'],colon=True)
-	  if self.xref[b['type']]['attrs'].get('access') in ('private','protected'):
+          bname = self.genTypeName(b['type'],colon=True)
+          if self.xref[b['type']]['attrs'].get('access') in ('private','protected'):
             bname = string.translate(str(bname),self.transtable)
             if not inner: c = self.genClassShadow(self.xref[b['type']]['attrs']) + c
           c += indent + '%s %s' % ( acc , bname )
@@ -794,6 +794,7 @@ class genDictionary(object) :
           c += indent + '  virtual ~%s() throw();\n' % ( clt )
       members = attrs.get('members','')
       memList = members.split()
+      # Inner class/struct/union/enum.
       for m in memList :
         member = self.xref[m]
         if member['elem'] in ('Class','Struct','Union','Enumeration') \
@@ -803,6 +804,23 @@ class genDictionary(object) :
           if cmem != cls and cmem not in inner_shadows :
             inner_shadows[cmem] = string.translate(str(cmem), self.transtable)
             c += self.genClassShadow(member['attrs'], inner + 1)
+      # Virtual methods.
+      # Shadow classes inherit from the same bases as the shadowed class; if a
+      # base is virtually inherited from at least two bases and it defines
+      # virtual methods then these virtual methods must be declared in the
+      # shadow class or the compiler will complain about ambiguous inheritance.
+      # Also, if the shadowed class defines a virtual method (that's not in the base)
+      # add our own virtual table by adding that method.
+      for m in memList :
+        member = self.xref[m]
+        if member['elem'] in ('Method','OperatorMethod') \
+               and member['attrs'].get('virtual') == '1':
+          # Remove the class name and the scope operator from the demangled method name.
+          currentClassName = attrs['demangled']
+          demangledMethod = member['attrs'].get('demangled')[len(currentClassName) + 2:]
+          cmem = '  virtual %s %s;' % (self.genTypeName(member['attrs'].get('returns')), demangledMethod)
+          c += indent + cmem + '\n'
+      # Data members.
       for m in memList :
         member = self.xref[m]
         if member['elem'] in ('Field',) :
