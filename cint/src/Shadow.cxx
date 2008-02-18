@@ -543,9 +543,35 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   //char endChar = typenameOriginal[posArgEnd];
 
                   std::string arg = typenameOriginal.substr(posTemplArg + 1, posArgEnd - posTemplArg - 1);
-                  std::string::size_type posRef = std::string::npos;
-                  while ((posRef = arg.find_first_of(" *&")) != std::string::npos)
-                     arg.erase(posRef, 1);
+                  std::string::size_type posRef = 0;
+                  int templateLevel = 0;
+                  for (; arg[posRef]; ++posRef) {
+                     switch (arg[posRef]) {
+                     case '<':
+                        if (arg[posRef + 1] != '<') ++templateLevel;
+                        else ++posRef;
+                        break;
+                     case '>':
+                        if (arg[posRef + 1] != '>') ++templateLevel;
+                        else if (posRef > 8) {
+                           std::string::size_type posOp = posRef - 1;
+                           while (posOp && isspace(arg[posOp])) --posOp;
+                           if (posOp > 8 && !arg.compare(posOp - 8, 8, "operator"))
+                              // it's the operator >>
+                              ++posRef; 
+                           else ++templateLevel;
+                        } else ++templateLevel;
+                        break;
+                     case '*':
+                     case '&':
+                        if (!templateLevel) {
+                           arg.erase(posRef, 1);
+                           --posRef;
+                        }
+                        break;
+                     }
+                  }
+
                   // if the type is not defined (i.e. it's fundamental)
                   // and if we don't have a real shadoew for it, use the
                   // global scope's type.
