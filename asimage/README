@@ -1,0 +1,32 @@
+The package libAfterImage has been imported from its official repository using the command:
+
+   cvs -d :pserver:anonymous@cvs.aftercode.net:/home/cvsroot checkout afterstep-stable/libAfterImage
+
+This command download the source in:
+
+   afterstep-stable/libAfterImage
+
+To get the updates for this package it is enough to do "cvs update" from this directory.
+
+To import libAfterImage into the ROOT svn repository as a compressed tar file we use the
+following command script:
+
+   cd /tmp
+   cp -rf  ~/afterstep-stable/libAfterImage .
+   cd libAfterImage
+   rm -rf apps aftershow config.h
+   rm -rf ./libpng/CVS ./CVS ./win32/CVS ./libungif/CVS ./libjpeg/CVS ./zlib/CVS
+   cd ..
+   tar cvf libAfterImage.tar libAfterImage
+   gzip libAfterImage.tar
+   cp -f libAfterImage.tar.gz $ROOTSYS/asimage/src
+   cd /tmp
+   rm -r libAfterImage libAfterImage.tar.gz
+
+Some files have been modified compare to the official libAfterImage version:
+
+   config.h.in         // To use freetype from the ROOT repository
+
+   libjpeg/jcmainct.c  //
+   libjpeg/jdmainct.c  // To avoid compilation warnings.
+   libjpeg/jmorecfg.h  //
