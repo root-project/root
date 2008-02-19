@@ -434,6 +434,8 @@ void TGTextButton::Init()
                                       &fTWidth, &fTHeight);
 
    Resize();
+   fWidth = fTWidth;
+   fHeight = fTHeight;
 
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
