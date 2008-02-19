@@ -1690,7 +1690,7 @@ void TProfile2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 }
 
 //______________________________________________________________________________
-void TProfile2D::Scale(Double_t c1)
+void TProfile2D::Scale(Double_t c1, Option_t *)
 {
 //*-*-*-*-*Multiply this profile2D by a constant c1*-*-*-*-*-*-*-*-*
 //*-*      ========================================

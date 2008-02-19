@@ -275,7 +275,7 @@ public:
    virtual void     RecursiveRemove(TObject *obj);
    virtual void     Reset(Option_t *option="");
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void     Scale(Double_t c1=1);
+   virtual void     Scale(Double_t c1=1, Option_t *option="");
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="X");
    virtual void     SetBarOffset(Float_t offset=0.25) {fBarOffset = Short_t(1000*offset);}

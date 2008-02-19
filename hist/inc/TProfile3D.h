@@ -105,7 +105,7 @@ public:
    virtual void      Reset(Option_t *option="");
    virtual void      RebinAxis(Double_t x, TAxis *axis);
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void      Scale(Double_t c1=1);
+   virtual void      Scale(Double_t c1=1, Option_t *option="");
    virtual void      SetBinEntries(Int_t bin, Double_t w);
    void              SetBins(Int_t, Double_t, Double_t)
                        { MayNotUse("SetBins(Int_t, Double_t, Double_t"); }

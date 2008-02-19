@@ -1737,7 +1737,7 @@ void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 }
 
 //______________________________________________________________________________
-void TProfile::Scale(Double_t c1)
+void TProfile::Scale(Double_t c1, Option_t *)
 {
 //*-*-*-*-*Multiply this profile by a constant c1*-*-*-*-*-*-*-*-*
 //*-*      ======================================

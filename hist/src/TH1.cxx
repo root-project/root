@@ -947,6 +947,8 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       return;
    }
 
+   Bool_t normWidth = kFALSE;
+   if (h1 == h2 && c2 < 0) {c2 = 0; normWidth = kTRUE;}
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbinsz = GetNbinsZ();
@@ -1005,8 +1007,11 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    Int_t bin, binx, biny, binz;
    Double_t cu;
    for (binz=0;binz<=nbinsz+1;binz++) {
+      Double_t wz = h1->GetZaxis()->GetBinWidth(binz);
       for (biny=0;biny<=nbinsy+1;biny++) {
+         Double_t wy = h1->GetYaxis()->GetBinWidth(binz);
          for (binx=0;binx<=nbinsx+1;binx++) {
+            Double_t wx = h1->GetXaxis()->GetBinWidth(binz);
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             //special case where histograms have the kIsAverage bit set
             if (h1->TestBit(kIsAverage) && h2->TestBit(kIsAverage)) {
@@ -1020,12 +1025,22 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
                SetBinContent(bin, (w1*y1 + w2*y2)/(w1 + w2));
                if (fSumw2.fN) fSumw2.fArray[bin] = 1./(w1 + w2);
             } else {
-               cu  = c1*h1->GetBinContent(bin)+ c2*h2->GetBinContent(bin);
-               SetBinContent(bin,cu);
-               if (fSumw2.fN) {
-                  Double_t e1 = h1->GetBinError(bin);
-                  Double_t e2 = h2->GetBinError(bin);
-                  fSumw2.fArray[bin] = c1*c1*e1*e1 + c2*c2*e2*e2;
+               if (normWidth) {
+                  Double_t w = wx*wy*wz;
+                  cu  = c1*h1->GetBinContent(bin)/w;
+                  SetBinContent(bin,cu);
+                  if (fSumw2.fN) {
+                     Double_t e1 = h1->GetBinError(bin)/w;
+                     fSumw2.fArray[bin] = c1*c1*e1*e1;
+                  }
+               } else {
+                  cu  = c1*h1->GetBinContent(bin)+ c2*h2->GetBinContent(bin);
+                  SetBinContent(bin,cu);
+                  if (fSumw2.fN) {
+                     Double_t e1 = h1->GetBinError(bin);
+                     Double_t e2 = h2->GetBinError(bin);
+                     fSumw2.fArray[bin] = c1*c1*e1*e1 + c2*c2*e2*e2;
+                  }
                }
             }
          }
@@ -5400,7 +5415,7 @@ void TH1::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TH1::Scale(Double_t c1)
+void TH1::Scale(Double_t c1, Option_t *option)
 {
    //   -*-*-*Multiply this histogram by a constant c1*-*-*-*-*-*-*-*-*
    //         ========================================
@@ -5417,9 +5432,15 @@ void TH1::Scale(Double_t c1)
    // One can scale an histogram such that the bins integral is equal to
    // the normalization parameter via TH1::Scale(Double_t norm), where norm
    // is the desired normalization divided by the integral of the histogram.
-
+   //
+   // If option contains "width" the bin contents and errors are divided
+   // by the bin width.
+   
+   TString opt = option;
+   opt.ToLower();
    Double_t ent = fEntries;
-   Add(this,this,c1,0);
+   if (opt.Contains("width")) Add(this,this,c1,-1);
+   else                       Add(this,this,c1,0);
    fEntries = ent;
 
    //if contours set, must also scale contours
