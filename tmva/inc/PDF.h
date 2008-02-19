@@ -41,7 +41,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TH1.h"
 #include "TObject.h"
 
 #ifndef ROOT_TMVA_MsgLogger
@@ -54,6 +53,7 @@
 class TSpline;
 class TGraph;
 class TF1;
+class TH1;
 
 namespace TMVA {
 
