@@ -25,8 +25,13 @@ following command script:
 
 Some files have been modified compare to the official libAfterImage version:
 
-   config.h.in         // To use freetype from the ROOT repository
+   config.h.in has been modified in order to use freetype from the ROOT 
+   repository.
 
-   libjpeg/jcmainct.c  //
-   libjpeg/jdmainct.c  // To avoid compilation warnings.
-   libjpeg/jmorecfg.h  //
+   libjpeg/jcmainct.c libjpeg/jdmainct.c have been modified to avoid a 
+   compilation warning. These two pieces of code contain a variable called
+   "main" (some compiler do not like this). This variable name has been
+   changed to "mainptr".
+
+   libjpeg/jmorecfg.h generated a warning on Windows: "a benign redifinition".
+   This warning has been disabled.
