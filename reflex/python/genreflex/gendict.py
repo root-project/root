@@ -818,7 +818,7 @@ class genDictionary(object) :
           # Remove the class name and the scope operator from the demangled method name.
           currentClassName = attrs['demangled']
           demangledMethod = member['attrs'].get('demangled')[len(currentClassName) + 2:]
-          cmem = '  virtual %s %s;' % (self.genTypeName(member['attrs'].get('returns')), demangledMethod)
+          cmem = '  virtual %s %s throw();' % (self.genTypeName(member['attrs'].get('returns')), demangledMethod)
           c += indent + cmem + '\n'
       # Data members.
       for m in memList :
