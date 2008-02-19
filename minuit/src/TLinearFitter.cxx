@@ -961,6 +961,8 @@ void TLinearFitter::ReleaseParameter(Int_t ipar)
 //______________________________________________________________________________
 void TLinearFitter::GetAtbVector(TVectorD &v)
 {
+   //Get the Atb vector - a vector, used for internal computations
+   
    if (v.GetNoElements()!=fAtb.GetNoElements())
       v.ResizeTo(fAtb.GetNoElements());
    v = fAtb;
