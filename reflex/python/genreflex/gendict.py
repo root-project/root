@@ -368,8 +368,18 @@ class genDictionary(object) :
     self.selector = sel  # remember the selector
     if self.selector :
       for f in self.functions :
-        funcname = self.genTypeName(f['id'])
-        if self.selector.selfunction( funcname ) and not self.selector.excfunction( funcname ) :
+        id = f['id']
+        funcname = self.genTypeName(id)
+        attrs = self.xref[id]['attrs']
+        context = self.genTypeName(attrs['context'])
+        demangled = attrs.get('demangled')
+        if demangled and len(demangled) :
+          lencontext = len(context)
+          if lencontext > 2:
+            demangled = demangled[lencontext + 2:]
+        else :
+          demangled = ""
+        if self.selector.selfunction( funcname, demangled ) and not self.selector.excfunction( funcname, demangled ) :
           selec.append(f)
         elif 'extra' in f and f['extra'].get('autoselect') and f not in selec:
           selec.append(f)
@@ -548,7 +558,10 @@ class genDictionary(object) :
         if elem in ('Constructor',) : return 0
     #----Filter using the exclusion list in the selection file
     if self.selector and 'name' in attrs and  elem in ('Constructor','Destructor','Method','OperatorMethod','Converter') :
-      if self.selector.excmethod(self.genTypeName(attrs['context']), attrs['name'] ) : return 0
+      context = self.genTypeName(attrs['context'])
+      demangledMethod = attrs.get('demangled')
+      if demangledMethod: demangledMethod = demangledMethod[len(context) + 2:]
+      if self.selector.excmethod(self.genTypeName(attrs['context']), attrs['name'], demangledMethod ) : return 0
     return 1
 #----------------------------------------------------------------------------------
   def tmplclasses(self, local):
@@ -1058,7 +1071,10 @@ class genDictionary(object) :
       self.genTypeID(id)
       args = self.xref[id]['subelems']
       returns  = self.genTypeName(f['returns'], enum=True, const=True)
-      if not self.quiet : print  'function '+ name
+      demangled = self.xref[id]['attrs'].get('demangled')
+      if not demangled or not len(demangled):
+        demangled = name
+      if not self.quiet : print  'function '+ demangled
       s += 'static void* '
       if len(args) :
         s +=  'function%s( void*, const std::vector<void*>& arg, void*)\n{\n' % id 
