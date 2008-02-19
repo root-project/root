@@ -561,7 +561,8 @@ class genDictionary(object) :
     #----Filter using the exclusion list in the selection file
     if self.selector and 'name' in attrs and  elem in ('Constructor','Destructor','Method','OperatorMethod','Converter') :
       context = self.genTypeName(attrs['context'])
-      demangledMethod = attrs.get('demangled')[len(context) + 2:]
+      demangledMethod = attrs.get('demangled')
+      if demangledMethod: demangledMethod = demangledMethod[len(context) + 2:]
       if self.selector.excmethod(self.genTypeName(attrs['context']), attrs['name'], demangledMethod ) : return 0
     return 1
 #----------------------------------------------------------------------------------
