@@ -993,6 +993,8 @@ void THistPainter::Paint(Option_t *option)
    //               together with the required option (eg "hist same c").
    //               The "HIST" option can also be used to plot only the histogram
    //               and not the associated function(s).
+   //    "FUNC"   : When an histogram has a fitted function, this option allows
+   //               to draw the fit result only. 
    //    "SAME"   : Superimpose on previous picture in the same pad
    //    "CYL"    : Use Cylindrical coordinates. The X coordinate is mapped on
    //               the angle and the Y coordinate on the cylinder length.
