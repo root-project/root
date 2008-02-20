@@ -505,6 +505,7 @@ G__value G__letVvalue(G__value *p,G__value result)
      */
     if(isupper(p->type)) p->type='L';
     else                 p->type=toupper(p->type);
+    p->obj.reftype.reftype = 0;
     return(G__letvalue(p,result));
   }
 
@@ -617,13 +618,13 @@ G__value G__letvalue(G__value *p,G__value result)
     memcpy((void*)p->obj.i,(void*)result.obj.i,size);
     return(result);
   }
-  switch(p->obj.reftype.reftype) {
-  case G__PARAP2P:
-  case G__PARAP2P2P:
-    if(isupper(p->type)) {
-      *(long *)(p->obj.i)=(long)G__int(result);
-      return(result);
-    }
+  if(isupper(p->type)) {
+     switch(p->obj.reftype.reftype) {
+     case G__PARAP2P:
+     case G__PARAP2P2P:
+         *(long *)(p->obj.i)=(long)G__int(result);
+          return(result);
+     }
   }
   switch(p->type) {
   case 'G':
