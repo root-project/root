@@ -19,6 +19,7 @@
 #include "TChain.h"
 #include "TTreeFormula.h"
 #include "TTreeIndex.h"
+#include "TFile.h"
 #include "TError.h"
 
 ClassImp(TChainIndex)
@@ -69,6 +70,15 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       TChainIndexEntry entry;
       entry.fTreeIndex = 0;
 
+      //if an index already exists, we must check if major/minorname correspond
+      //to the major/minor names in this function call
+      if (index) {
+         if (strcmp(majorname,index->GetMajorName()) || strcmp(minorname,index->GetMinorName())) {
+            MakeZombie();
+            Error("TChainIndex","Tree in file %s has an index built with majorname=%s and minorname=%s",chain->GetTree()->GetCurrentFile()->GetName(),index->GetMajorName(),index->GetMinorName());
+            return;
+         }
+      }
       if (!index) {
          chain->GetTree()->BuildIndex(majorname, minorname);
          index = chain->GetTree()->GetTreeIndex();
