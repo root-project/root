@@ -1826,6 +1826,7 @@ def normalizeFragment(name,alltempl=False) :
   name = name.strip()
   if name.find('<') == -1  : 
     nor =  name
+    if nor.find('int') == -1: return nor
     for e in [ ['long long unsigned int', 'unsigned long long'],
              ['long long int',          'long long'],
              ['unsigned short int',     'unsigned short'],
