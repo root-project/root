@@ -429,9 +429,20 @@ class genDictionary(object) :
         types.append(attrs['id'])
         if 'members' in attrs :
           for m in attrs['members'].split() :
-            if self.xref[m]['elem'] == 'Field' :
-              type = self.xref[m]['attrs']['type']
+            xref = self.xref[m]
+            if xref['elem'] in ['Field','Typedef'] and xref['attrs']['access']=="public":
+              type = xref['attrs']['type']
               self.getdependent(type, types)
+	    elif xref['elem'] in ['Method','OperatorMethod','Constructor'] \
+                     and self.isMethodReallyPublic(m):
+              if 'returns' in xref['attrs']:
+                type = xref['attrs']['returns']
+                self.getdependent(type, types)
+	      for arg in  xref['subelems']:
+		  type = arg['type']
+		  self.getdependent(type, types)
+	    else:
+	      pass #print "Doing nothing for element:", self.xref[m]['elem']
         if 'bases' in attrs :
           for b in attrs['bases'].split() :
             if b[:10] == 'protected:' : b = b[10:]
@@ -558,6 +569,11 @@ class genDictionary(object) :
     if 'context' in attrs :
       if 'abstract' in self.xref[attrs['context']]['attrs'] : 
         if elem in ('Constructor',) : return 0
+
+    if elem in ['Method', 'Constructor', 'OperatorMethod']:
+      if self.hasNonPublicArgs(args):
+        print "censoring method:",attrs['name']
+        return 0
     #----Filter using the exclusion list in the selection file
     if self.selector and 'name' in attrs and  elem in ('Constructor','Destructor','Method','OperatorMethod','Converter') :
       context = self.genTypeName(attrs['context'])
@@ -565,6 +581,45 @@ class genDictionary(object) :
       if demangledMethod: demangledMethod = demangledMethod[len(context) + 2:]
       if self.selector.excmethod(self.genTypeName(attrs['context']), attrs['name'], demangledMethod ) : return 0
     return 1
+#----------------------------------------------------------------------------------
+  def isMethodReallyPublic(self,id):
+    """isMethodReallyPublic checks the accessibility of the method as well as the accessibility of the types
+    of arguments and return value. This is needed because C++ allows methods in a public section to be defined
+    from types defined in a private/protected section.
+    """
+    xref = self.xref[id]
+    attrs = xref['attrs']
+    return (attrs['access'] == "public"
+            and
+            (not self.hasNonPublicArgs(xref['subelems'])) 
+            and
+            (not 'returns' in attrs or self.isTypePublic(attrs['returns'])))
+#----------------------------------------------------------------------------------
+  def hasNonPublicArgs(self,args):
+    """hasNonPublicArgs will process a list of method arguments to check that all the referenced arguments in there are publically available (i.e not defined using protected or private types)."""
+    for arg in args:
+      type = arg["type"]
+      public = self.isTypePublic(type)
+      if public == 0:
+        return 1
+    return 0
+#----------------------------------------------------------------------------------
+  def isTypePublic(self, id):
+    type_dict = self.xref[id]
+
+    if type_dict['elem'] in ['PointerType','Typedef', 'ReferenceType', 'CvQualifiedType']:
+      return self.isTypePublic(type_dict['attrs']['type'])
+    elif type_dict['elem'] in ['FundamentalType']:
+      return 1
+    elif type_dict['elem'] in ['Class','Struct']:
+      access=type_dict['attrs'].get('access')
+      if access and access != 'public':
+        return 0
+      else:
+        return 1
+    else:
+      return 1
+      #raise "Unknown type category in isTypePublic",type_dict['elem']
 #----------------------------------------------------------------------------------
   def tmplclasses(self, local):
     result = []
@@ -815,7 +870,9 @@ class genDictionary(object) :
       for m in memList :
         member = self.xref[m]
         if member['elem'] in ('Method','OperatorMethod') \
-               and member['attrs'].get('virtual') == '1':
+               and member['attrs'].get('virtual') == '1' \
+               and self.isTypePublic(member['attrs']['returns']) \
+               and not self.hasNonPublicArgs(member['subelems']):
           # Remove the class name and the scope operator from the demangled method name.
           currentClassName = attrs['demangled']
           demangledMethod = member['attrs'].get('demangled')[len(currentClassName) + 2:]
