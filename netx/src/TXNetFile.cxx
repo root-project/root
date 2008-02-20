@@ -1001,10 +1001,6 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
 
    // Return file stat information. The interface and return value is
    // identical to TSystem::GetPathInfo().
-
-   //
-   // Flush via the remote xrootd
-   fClient->Sync();
    struct XrdClientStatInfo stinfo;
    if (fClient->Stat(&stinfo)) {
       *id = (Long_t)(stinfo.id);
