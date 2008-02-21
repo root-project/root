@@ -2004,9 +2004,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    //
    // In the generated classes, map, multimap when the first template parameter is a class
    // are replaced by a vector of pair. set and multiset when the tempalte parameter
-   // is a class are replaced by a vector. This is required since we do not have the 
+   // is a class are replaced by a vector. This is required since we do not have the
    // code needed to order and/or compare the object of the classes.
-   // 
+   //
    // If option = "new" (default) a new directory dirname is created.
    //                   If dirname already exist, an error message is printed
    //                   and the function returns.
@@ -2138,10 +2138,10 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    printf("MakeProject has generated %d classes in %s\n",ngener,dirname);
 
    // generate the shared lib
-   if (!opt.Contains("+")) { 
+   if (!opt.Contains("+")) {
       list->Delete();
       delete list;
-      delete [] path; 
+      delete [] path;
       return;
    }
 
@@ -2185,7 +2185,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    }
    fprintf(fp,"#ifdef __CINT__\n");
    fprintf(fp,"\n");
-   
+
    next.Reset();
    while ((info = (TStreamerInfo*)next())) {
       if (TClassEdit::IsSTLCont(info->GetName())) {
@@ -2198,7 +2198,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             std::string what;
             switch ( stlkind )  {
             case TClassEdit::kMap:
-            case TClassEdit::kMultiMap: 
+            case TClassEdit::kMultiMap:
                {
                   what = "pair<";
                   what += inside[1];
@@ -2215,7 +2215,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes
-      }      
+      }
       fprintf(fp,"#pragma link C++ class %s+;\n",info->GetName());
    }
    fprintf(fp,"#endif\n");
@@ -2535,8 +2535,13 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
                   ropt += "&filetype=raw";
                   rurl.SetOptions(ropt);
 
+                  Bool_t forcedcache = fgCacheFileForce;
+                  fgCacheFileForce = kFALSE;
+
                   TFile *cachefile = TFile::Open(cfurl, "READ");
                   TFile *remotfile = TFile::Open(rurl.GetUrl(), "READ");
+
+                  fgCacheFileForce = forcedcache;
 
                   cachefile->Seek(0);
                   remotfile->Seek(0);
