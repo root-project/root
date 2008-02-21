@@ -2535,8 +2535,13 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
                   ropt += "&filetype=raw";
                   rurl.SetOptions(ropt);
 
+                  Bool_t forcedcache = fgCacheFileForce;
+                  fgCacheFileForce = kFALSE;
+
                   TFile *cachefile = TFile::Open(cfurl, "READ");
                   TFile *remotfile = TFile::Open(rurl.GetUrl(), "READ");
+
+                  fgCacheFileForce = forcedcache;
 
                   cachefile->Seek(0);
                   remotfile->Seek(0);
@@ -3444,6 +3449,7 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    // Allows to copy file from src to dst URL. Returns kTRUE in case of success,
    // kFALSE otherwise.
 
+   Bool_t rmdestiferror = kFALSE;
    TStopwatch watch;
    Bool_t success = kFALSE;
 
@@ -3453,20 +3459,24 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    TString oopt = "RECREATE";
    TString ourl = dURL.GetUrl();
 
+   // Files will be open in RAW mode
    TString raw = "filetype=raw";
 
+   // Set optimization options for the source file
    TString opt = sURL.GetOptions();
-   if (opt == "")
-      opt = raw;
-   else
-      opt += "&" + raw;
+   if (opt != "") opt += "&";
+   opt += raw;
+   // Netx-related options:
+   //    cachesz = 2*buffersize   -> 2 buffers as peak mem usage
+   //    readaheadsz = buffersize -> Keep buffersize bytes outstanding
+   //    rmpolicy = 1             -> Remove from the cache the blk with the least offset
+   opt += Form("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 2*buffersize, buffersize);
    sURL.SetOptions(opt);
 
+   // Set optimization options for the destination file
    opt = dURL.GetOptions();
-   if (opt == "")
-      opt = raw;
-   else
-      opt += "&" + raw;
+   if (opt != "") opt += "&";
+   opt += raw;
    dURL.SetOptions(opt);
 
    char *copybuffer = 0;
@@ -3474,9 +3484,8 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    TFile *sfile = 0;
    TFile *dfile = 0;
 
-   sfile = TFile::Open(sURL.GetUrl(), "READ");
-
-   if (!sfile) {
+   // Open source file
+   if (!(sfile = TFile::Open(sURL.GetUrl(), "READ"))) {
       ::Error("TFile::Cp", "cannot open source file %s", src);
       goto copyout;
    }
@@ -3491,12 +3500,15 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
          dURL.SetOptions(opt);
       }
 
-   dfile = TFile::Open(dURL.GetUrl(), oopt);
-
-   if (!dfile) {
+   // Open destination file
+   if (!(dfile = TFile::Open(dURL.GetUrl(), oopt))) {
       ::Error("TFile::Cp", "cannot open destination file %s", dst);
       goto copyout;
    }
+
+   // Probably we created a new file
+   // We have to remove it in case of errors
+   rmdestiferror = kTRUE;
 
    sfile->Seek(0);
    dfile->Seek(0);
@@ -3532,19 +3544,22 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
          readsize = filesize - b1;
       }
 
+      if (readsize == 0) break;
+
       Long64_t b0 = sfile->GetBytesRead();
       sfile->Seek(totalread,TFile::kBeg);
       readop = sfile->ReadBuffer(copybuffer, (Int_t)readsize);
       read   = sfile->GetBytesRead() - b0;
-      if (read < 0) {
-         ::Error("TFile::Cp", "cannot read from source file %s", src);
+      if ((read <= 0) || readop) {
+         ::Error("TFile::Cp", "cannot read from source file %s. readsize=%lld read=%lld readop=%d",
+                              src, readsize, read, readop);
          goto copyout;
       }
 
       Long64_t w0 = dfile->GetBytesWritten();
       writeop = dfile->WriteBuffer(copybuffer, (Int_t)read);
       written = dfile->GetBytesWritten() - w0;
-      if (written != read) {
+      if ((written != read) || writeop) {
          ::Error("TFile::Cp", "cannot write %d bytes to destination file %s", read, dst);
          goto copyout;
       }
@@ -3558,6 +3573,12 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
 
    success = kTRUE;
 
+   if (sfile->GetBytesRead() != dfile->GetBytesWritten()) {
+      ::Error("TFile::Cp", "read and written bytes differ (%lld != %lld)",
+                           sfile->GetBytesRead(), dfile->GetBytesWritten());
+      success = kFALSE;
+   }
+
 copyout:
    if (sfile) sfile->Close();
    if (dfile) dfile->Close();
@@ -3565,6 +3586,9 @@ copyout:
    if (sfile) delete sfile;
    if (dfile) delete dfile;
    if (copybuffer) delete[] copybuffer;
+
+   if (rmdestiferror && (success != kTRUE))
+     gSystem->Unlink(dst);
 
    watch.Stop();
    watch.Reset();
