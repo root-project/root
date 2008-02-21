@@ -26,7 +26,7 @@ TUTORIALSTESTS_NONBATCH := \
 
 TUTORIALSTESTS_VETO := htmlex  rootalias \
   fft/FFT \
-  fit/fit1_C  fit/TwoHistoFit2D\
+  fit/fit1_C  fit/TwoHistoFit2D fit/line3Dfit\
   foam/foam_demo foam/foam_demopers \
   math/Bessel math/LegendreAssoc math/Legendre math/mathmoreIntegration \
   math/normalDist \
