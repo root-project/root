@@ -5670,6 +5670,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    if (gROOT->GetEditorMode() == 0 && strlen(pname) > 2) gROOT->SetEditorMode(&pname[1]);
 
    if (!fPrimitives) fPrimitives = new TList;
+   gSystem->ProcessEvents();
    TObject *oldlast = gPad->GetListOfPrimitives()->Last();
    TObject *obj = 0;
    Bool_t testlast = kFALSE;
