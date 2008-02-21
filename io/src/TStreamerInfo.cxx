@@ -2190,6 +2190,9 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
 {
    // Get the value from inside a collection.
 
+   if (type>=kConv && type<kSTL) {
+      type -= kConv;
+   }
    switch (type) {
       // basic types
       case kBool:              {Bool_t *val   = (Bool_t*)ladd;   return Double_t(*val);}
