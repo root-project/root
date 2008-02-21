@@ -27,6 +27,7 @@ public:
         fHostMhz(mhz) {
       fHostName = gSystem->HostName();
    }
+   virtual ~TTestResult() {}
    TDatime    fDate;     //||
    UInt_t     fRunId;
    UInt_t     fTestId;
@@ -36,7 +37,7 @@ public:
    TString    fHostModel;
    Double32_t fHostMhz;
 
-   ClassDef(TTestResult,3);
+   ClassDef(TTestResult,4);
 };
 
 void recordtiming(const char *roottesthome, UInt_t runid, UInt_t testid, const char *testdir, double duration) 
@@ -73,7 +74,7 @@ void recordtiming(const char *roottesthome, UInt_t runid, UInt_t testid, const c
 
    t->SetBranchAddress("test",&res);
    t->Fill();
-   f->Write();
+   f->Write("",TObject::kOverwrite);
 }
 
 void recordtiming(const char *roottesthome,UInt_t runid, UInt_t testid, const char *testdir, const char *timingfile) 
