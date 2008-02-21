@@ -1740,11 +1740,10 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
    //
 
    if ((splitlevel > 0) && !cl->CanSplit()) {
-      // FIXME: this doesn't make sense
-      splitlevel = 0;
       if (splitlevel != 99) {
          Warning("Bronch", "%s cannot be split, resetting splitlevel to 0", cl->GetName());
       }
+      splitlevel = 0;
    }
 
    //
