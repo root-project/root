@@ -352,7 +352,7 @@ ifeq ($(ROOTTEST_CHECKED_VERSION),)
 ifneq ($(TIME),)
    CPUFILE=/proc/cpuinfo
    ROOTTEST_ARCH=$(ROOTTEST_LOC)roottest.arch
-   export ROOTTEST_ARCH_FILE := $(shell if [ -e $(CPUFILE) ] ; then grep -e 'model name' -e cpu $(CPUFILE) | sort -u | sed -e 's/ //' -e 's/ *:/:/' > $(ROOTTEST_ARCH) ; else echo "Information Not Available" > $(ROOTTEST_ARCH); fi; )
+   export ROOTTEST_ARCH_FILE := $(shell if [ -e $(CPUFILE) ] ; then grep -e 'model name' -e cpu $(CPUFILE) | sort -u | sed -e 's/ //' -e 's/[ \t]*:/:/' > $(ROOTTEST_ARCH) ; else echo "Information Not Available" > $(ROOTTEST_ARCH); fi; )
 endif
 
 endif
