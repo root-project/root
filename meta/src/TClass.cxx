@@ -1421,8 +1421,8 @@ Bool_t TClass::CanSplit() const
    if (InheritsFrom("TRef"))      return kFALSE;
    if (InheritsFrom("TRefArray")) return kFALSE;
    if (InheritsFrom("TArray"))    return kFALSE;
-   if (fName.Contains("TVector")) return kFALSE;
-   if (fName.Contains("TMatrix")) return kFALSE;
+   if (fName.BeginsWith("TVectorT<")) return kFALSE;
+   if (fName.BeginsWith("TMatrixT<")) return kFALSE;
    if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) return kFALSE;
 
    // If we do not have a showMembers and we have a streamer,
