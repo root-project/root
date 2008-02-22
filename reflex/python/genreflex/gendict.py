@@ -335,6 +335,11 @@ class genDictionary(object) :
               c['extra'] = match[0]
               if c not in selec : selec.append(c)
               if n == 'name' : self.genFakeTypedef(c['id'], match[0]['o_name'])
+      # Filter STL implementation specific classes
+      selec =  filter( lambda c: self.genTypeName(c['id'])[:6] != 'std::_' ,selec)
+      selec =  filter( lambda c: c['name'][:2] != '._' ,selec)  # unamed structs and unions
+      # Filter internal GCC classes
+      selec =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1 ,selec)
       return self.autosel (selec)
     else : self.selector = None
     local = filter(self.filefilter, self.classes)
@@ -860,24 +865,67 @@ class genDictionary(object) :
           if cmem != cls and cmem not in inner_shadows :
             inner_shadows[cmem] = string.translate(str(cmem), self.transtable)
             c += self.genClassShadow(member['attrs'], inner + 1)
+            
+      #
+      # Is any of this really needed? We never instantiate the shadows,
+      # so which compiler complains about ambiguous overloads? See
+      # https://savannah.cern.ch/bugs/index.php?32874
+      #
+      
       # Virtual methods.
       # Shadow classes inherit from the same bases as the shadowed class; if a
-      # base is virtually inherited from at least two bases and it defines
-      # virtual methods then these virtual methods must be declared in the
-      # shadow class or the compiler will complain about ambiguous inheritance.
-      # Also, if the shadowed class defines a virtual method (that's not in the base)
-      # add our own virtual table by adding that method.
-      for m in memList :
-        member = self.xref[m]
-        if member['elem'] in ('Method','OperatorMethod') \
-               and member['attrs'].get('virtual') == '1' \
-               and self.isTypePublic(member['attrs']['returns']) \
-               and not self.hasNonPublicArgs(member['subelems']):
-          # Remove the class name and the scope operator from the demangled method name.
-          currentClassName = attrs['demangled']
-          demangledMethod = member['attrs'].get('demangled')[len(currentClassName) + 2:]
-          cmem = '  virtual %s %s throw();' % (self.genTypeName(member['attrs'].get('returns')), demangledMethod)
-          c += indent + cmem + '\n'
+      # shadowed class is inherited from at least two bases and it defines
+      # virtual methods of at least two bases then these virtual methods must
+      # be declared in the shadow class or the compiler will complain about
+      # ambiguous inheritance.
+#       allbases = []
+#       self.getAllBases(attrs['id'], allbases)
+#       if len(allbases) > 1 :
+#         allBasesMethods = {}
+#         # count method occurrences collected over all bases
+#         for b in allbases:
+#           baseattrs = self.xref[b[0]]['attrs']
+#           currentBaseName = baseattrs['demangled']
+#           basemem = baseattrs.get('members','')
+#           basememList = members.split()
+#           for bm in basememList:
+#             basemember = self.xref[bm]
+#             if basemember['elem'] in ('Method','OperatorMethod') \
+#                  and basemember['attrs'].get('virtual') == '1' \
+#                  and self.isTypePublic(basemember['attrs']['returns']) \
+#                  and not self.hasNonPublicArgs(basemember['subelems']):
+#               # This method is virtual and publicly accessible.
+#               # Remove the class name and the scope operator from the demangled method name.
+#               demangledBaseMethod = basemember['attrs'].get('demangled')[len(currentBaseName) + 2:]
+#               found = 0
+#               if demangledBaseMethod in allBasesMethods.keys():
+#                 # the method exists in another base.
+#                 # getAllBases collects the bases along each line of inheritance,
+#                 # i.e. either the method we found is in a derived class of b
+#                 # or it's in a different line and we have to write it out
+#                 # to prevent ambiguous inheritance.
+#                 for foundbases in allBasesMethods[demangledBaseMethod]['bases']:
+#                   if b in foundbases:
+#                     found = 1
+#                     break
+#                 if found == 0: found = 2
+#               if found != 1:
+#                 allbasebases = []
+#                 self.getAllBases(baseattrs['id'], allbasebases)
+#                 if found == 0:
+#                   allBasesMethods[demangledBaseMethod] = { 'bases': ( allbasebases ), 'returns': basemember['attrs'].get('returns') }
+#                 else:
+#                   allBasesMethods[demangledBaseMethod]['bases'].append( allbasebases )
+#                   allBasesMethods[demangledBaseMethod]['returns'] = basemember['attrs'].get('returns')
+#         # write out ambiguous methods
+#         for demangledMethod in allBasesMethods.keys() :
+#           member = allBasesMethods[demangledMethod]
+#           if len(member['bases']) > 1:
+#             ret = self.genTypeName(member['returns'])
+#             if not '(' in ret:
+#               # skip functions returning functions; we don't get the prototype right easily:
+#               cmem = '  virtual %s %s throw();' % (ret, demangledMethod)
+#               c += indent + cmem + '\n'
       # Data members.
       for m in memList :
         member = self.xref[m]
