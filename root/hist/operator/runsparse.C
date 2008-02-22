@@ -103,16 +103,16 @@ void CheckClone(TH3* h, THnSparse* sparse)
    delete projclone;
 }
 
-void CheckSubstract(TH3* h, THnSparse* sparse)
+void CheckSubtract(TH3* h, THnSparse* sparse)
 {
-   // Check substracting THnSparse from THnSparse
+   // Check subtracting THnSparse from THnSparse
    TH3* h42 = (TH3*)h->Clone("h42");
    h42->Scale(.42);
    THnSparse* clone = (THnSparse*)sparse->Clone("clone");
    clone->Scale(1.42);
    clone->Add(sparse, -1.);
    TH3* proj = clone->Projection(0, 1, 2);
-   Test(h42, proj, "Substracting two THnSparse");
+   Test(h42, proj, "Subtracting two THnSparse");
    delete proj;
    delete clone;
    delete h42;
@@ -227,7 +227,7 @@ void runsparse()
    CheckProjection2(h, sparse);
    CheckScale(h, sparse);
    CheckClone(h, sparse);
-   CheckSubstract(h, sparse);
+   CheckSubtract(h, sparse);
    CheckDivide(h, sparse);
    CheckErrors(h, sparse);
    CheckBinomial(h, sparse);
