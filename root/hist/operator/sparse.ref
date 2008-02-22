@@ -6,7 +6,7 @@ Projecting a THnSparse to a TH1 (TH3::ProjectZ): SUCCESS
 Projecting a THnSparse to a TH2: SUCCESS
 Scaling of THnSparse: SUCCESS
 Cloning of THnSparse: SUCCESS
-Substracting two THnSparse: SUCCESS
+Subtracting two THnSparse: SUCCESS
 Dividing two THnSparse: SUCCESS
 Error calculation: SUCCESS
 Dividing two THnSparse (binomial): SUCCESS
