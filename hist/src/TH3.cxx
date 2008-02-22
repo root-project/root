@@ -1499,6 +1499,8 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    }
    h1->SetName(pname);
 
+   if (pname != name) delete [] pname;
+
    GetXaxis()->SetRange(0,0);
    GetYaxis()->SetRange(0,0);
 

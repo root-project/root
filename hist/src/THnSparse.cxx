@@ -320,6 +320,7 @@ THnSparse::THnSparse():
    fTsumw(0), fTsumw2(-1.), fCompactCoord(0), fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct an empty THnSparse.
+   fBinContent.SetOwner();
 }
 
 //______________________________________________________________________________
@@ -348,6 +349,7 @@ THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
    fAxes.SetOwner();
 
    fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
+   fBinContent.SetOwner();
 }
 
 //______________________________________________________________________________
