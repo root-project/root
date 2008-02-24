@@ -22,13 +22,14 @@
 
 #include <stdlib.h>
 #include "TUrl.h"
+#include "THashList.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TEnv.h"
 #include "TSystem.h"
 
-TObjArray *TUrl::fgSpecialProtocols;
-
+TObjArray *TUrl::fgSpecialProtocols = 0;
+THashList *TUrl::fgHostFQDNs = 0;
 
 ClassImp(TUrl)
 
@@ -413,13 +414,25 @@ const char *TUrl::GetHostFQDN() const
    // resolved or not valid return the host name as originally specified.
 
    if (fHostFQ == "") {
-      TInetAddress adr(gSystem->GetHostByName(fHost));
-      if (adr.IsValid()) {
-         fHostFQ = adr.GetHostName();
-         if (fHostFQ == "UnNamedHost")
-            fHostFQ = adr.GetHostAddress();
-      } else
-         fHostFQ = "-";
+      // Check if we already resolved it
+      TNamed *fqdn = fgHostFQDNs ? (TNamed *) fgHostFQDNs->FindObject(fHost) : 0;
+      if (!fqdn) {
+         TInetAddress adr(gSystem->GetHostByName(fHost));
+         if (adr.IsValid()) {
+            fHostFQ = adr.GetHostName();
+            if (fHostFQ == "UnNamedHost")
+               fHostFQ = adr.GetHostAddress();
+         } else
+            fHostFQ = "-";
+         if (!fgHostFQDNs) {
+            fgHostFQDNs = new THashList;
+            fgHostFQDNs->SetOwner();
+         }
+         if (fgHostFQDNs)
+            fgHostFQDNs->Add(new TNamed(fHost,fHostFQ));
+      } else {
+         fHostFQ = fqdn->GetTitle();
+      }
    }
    if (fHostFQ == "-")
       return fHost;

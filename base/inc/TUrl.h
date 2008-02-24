@@ -31,6 +31,7 @@
 #include "TString.h"
 #endif
 
+class THashList;
 
 class TUrl : public TObject {
 
@@ -48,6 +49,7 @@ private:
    Int_t   fPort;           // port through which to contact remote server
 
    static TObjArray  *fgSpecialProtocols;  // list of special protocols
+   static THashList  *fgHostFQDNs;         // list of resolved host FQDNs
 
    void FindFile(char *u, Bool_t stripDoubleSlash = kTRUE);
 
