@@ -68,6 +68,7 @@ MODULES       = build cint metautils pcre utils base cont meta io net math \
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
+MODULES      := $(filter-out newdelete,$(MODULES))
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
