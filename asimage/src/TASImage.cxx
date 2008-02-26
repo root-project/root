@@ -4783,6 +4783,14 @@ void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h
    h = ysrc + h > fImage->height ? fImage->height - ysrc : h;
    UInt_t yy = (ysrc + y)*fImage->width;
 
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+   if (!out->alt.argb32) {
+      dst->BeginPaint();
+      out = ((TASImage*)dst)->GetImage();
+   }
+
    if (fImage->alt.argb32 && out->alt.argb32) {
       for (y = 0; y < (int)h; y++) {
          for (x = 0; x < (int)w; x++) {
