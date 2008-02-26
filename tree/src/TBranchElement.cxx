@@ -2253,8 +2253,13 @@ void TBranchElement::InitializeOffsets()
                // -- No parent class, fix it.
                // FIXME: This is probably wrong!
                // Assume parent class is our parent branch's clones class or value class.
-               if (GetClonesName() && (strlen(GetClonesName()) != 0)) {
+               if (GetClonesName() && strlen(GetClonesName())) {
                   pClass = TClass::GetClass(GetClonesName());
+                  if (!pClass) {
+                     Warning("InitializeOffsets", "subBranch: '%s' has no parent class, and cannot get class for clones class: '%s'!", subBranch->GetName(), GetClonesName());
+                     fInitOffsets = kTRUE;
+                     return;
+                  }
                   Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass->GetName());
                }
                if (fBranchCount && fBranchCount->fCollProxy && fBranchCount->fCollProxy->GetValueClass()) {
@@ -3145,7 +3150,7 @@ void TBranchElement::SetAddress(void* add)
 
    if (fType == 3) {
       // split TClonesArray, counter/master branch.
-      TClass* clm = TClass::GetClass(fClonesName.Data());
+      TClass* clm = TClass::GetClass(GetClonesName());
       if (clm) {
          // In case clm derives from an abstract class.
          clm->BuildRealData();
@@ -3162,7 +3167,7 @@ void TBranchElement::SetAddress(void* add)
             if (clm == content) {
                matched = kTRUE;
             } else {
-               Warning("SetAddress", "The type of %s was changed from TClonesArray to %s but the content do not match (was %s)!", GetName(), newType->GetName(), fClonesName.Data());
+               Warning("SetAddress", "The type of %s was changed from TClonesArray to %s but the content do not match (was %s)!", GetName(), newType->GetName(), GetClonesName());
             }
          } else {
             Warning("SetAddress", "The type of the %s was changed from TClonesArray to %s but we do not have a TVirtualCollectionProxy for that container type!", GetName(), newType->GetName());
@@ -3222,7 +3227,7 @@ void TBranchElement::SetAddress(void* add)
                fClonesName = oldProxy->GetValueClass()->GetName();
                delete fCollProxy;
                fCollProxy = 0;
-               TClass* clm = TClass::GetClass(fClonesName);
+               TClass* clm = TClass::GetClass(GetClonesName());
                if (clm) {
                   clm->BuildRealData(); //just in case clm derives from an abstract class
                   clm->GetStreamerInfo();
@@ -3263,7 +3268,7 @@ void TBranchElement::SetAddress(void* add)
             // Check if it has already been properly built.
             TClonesArray* clones = (TClonesArray*) fObject;
             if (!clones->GetClass()) {
-               new(fObject) TClonesArray(fClonesName.Data());
+               new(fObject) TClonesArray(GetClonesName());
             }
          } else {
             // -- We are either a top-level branch or we are a subbranch which is a pointer to a TClonesArray.
@@ -3277,7 +3282,7 @@ void TBranchElement::SetAddress(void* add)
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
                   SetBit(kDeleteObject);
-                  *pp = new TClonesArray(fClonesName.Data());
+                  *pp = new TClonesArray(GetClonesName());
                }
                fObject = (char*) *pp;
             } else {
@@ -3287,7 +3292,7 @@ void TBranchElement::SetAddress(void* add)
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
                   SetBit(kDeleteObject);
-                  *pp = new TClonesArray(fClonesName.Data());
+                  *pp = new TClonesArray(GetClonesName());
                }
                fObject = (char*) *pp;
             }
@@ -3309,7 +3314,7 @@ void TBranchElement::SetAddress(void* add)
                // -- We are a top-level branch.
                // FIXME: Consider making a zero address not allocate.
                SetBit(kDeleteObject);
-               fObject = (char*) new TClonesArray(fClonesName.Data());
+               fObject = (char*) new TClonesArray(GetClonesName());
                fAddress = (char*) &fObject;
             } else {
                // -- We are a sub-branch which is a pointer to a TClonesArray.
@@ -3573,16 +3578,13 @@ void TBranchElement::SetupAddresses()
 void TBranchElement::Streamer(TBuffer& R__b)
 {
    // -- Stream an object of class TBranchElement.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TBranchElement::Class(), this);
       fParentClass.SetName(fParentName);
       fBranchClass.SetName(fClassName);
-
       // The fAddress and fObject data members are not persistent,
       // therefore we do not own anything.
       ResetBit(kDeleteObject);
-
       // Fixup a case where the TLeafElement was missing
       if ((fType == 0) && (fLeaves.GetEntriesFast() == 0)) {
          TLeaf* leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);
@@ -3591,31 +3593,79 @@ void TBranchElement::Streamer(TBuffer& R__b)
          fLeaves.Add(leaf);
          fTree->GetListOfLeaves()->Add(leaf);
       }
-   } else {
-      TDirectory *dirsav = fDirectory;
+   }
+   else {
+      TDirectory* dirsav = fDirectory;
       fDirectory = 0;  // to avoid recursive calls
-
-      // Record only positive 'version number'
-      Int_t classVersion = fClassVersion;
-      if (fClassVersion < 0) fClassVersion = -fClassVersion;
-
-      // FIXME: Should we clear the kDeleteObject bit before writing?
-      //        If we did we would have to remember to old value and
-      //        put it back, we wouldn't want to forget that we owned
-      //        something just because we got written to disk.
-      R__b.WriteClassBuffer(TBranchElement::Class(), this);
-      
-      fClassVersion = classVersion;
-
-      // make sure that all TVirtualStreamerInfo objects referenced by
-      // this class are written to the file
-      if (GetInfo()) {
-         GetInfo()->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
+      {
+         // Save class version.
+         Int_t classVersion = fClassVersion;
+         // Record only positive 'version number'
+         if (fClassVersion < 0) {
+            fClassVersion = -fClassVersion;
+         }
+         // TODO: Should we clear the kDeleteObject bit before writing?
+         //       If we did we would have to remember the old value and
+         //       put it back, we wouldn't want to forget that we owned
+         //       something just because we got written to disk.
+         R__b.WriteClassBuffer(TBranchElement::Class(), this);
+         // Restore class version.
+         fClassVersion = classVersion;
       }
-
-      // if branch is in a separate file save this branch
-      // as an independent key
+      //
+      //  Mark all streamer infos used by this branch element
+      //  to be written to our output file.
+      //
+      {
+         TStreamerInfo* si = GetInfo();
+         if (si) {
+            si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
+         }
+      }
+      //
+      //  If we are a clones array master branch, or an
+      //  STL container master branch, we must also mark
+      //  the streamer infos used by the value class to
+      //  be written to our output file.
+      //
+      if (fType == 3) {
+         // -- TClonesArray, counter/master branch
+         //
+         //  We must mark the streamer info for the
+         //  value class to be written to the file.
+         //
+         const char* nm = GetClonesName();
+         if (nm && strlen(nm)) {
+            TClass* cl = TClass::GetClass(nm);
+            if (cl) {
+               TVirtualStreamerInfo* si = cl->GetStreamerInfo();
+               if (si) {
+                  si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
+               }
+            }
+         }
+      }
+      else if (fType == 4) {
+         // -- STL container, counter/master branch
+         //
+         //  We must mark the streamer info for the
+         //  value class to be written to the file.
+         //
+         TVirtualCollectionProxy* cp = GetCollectionProxy();
+         if (cp) {
+            TClass* cl = cp->GetValueClass();
+            if (cl) {
+               TVirtualStreamerInfo* si = cl->GetStreamerInfo();
+               if (si) {
+                  si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
+               }
+            }
+         }
+      }
+      // If we are in a separate file, then save
+      // ourselves as an independent key.
       if (!dirsav) {
+         // Note: No need to restore fDirectory, it was already zero.
          return;
       }
       if (!dirsav->IsWritable()) {
