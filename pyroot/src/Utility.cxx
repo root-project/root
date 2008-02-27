@@ -265,8 +265,19 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
          } else if ( (int)(buflen / (*(seqmeths->sq_length))( pyobject )) == size ) {
          // this is a gamble ... may or may not be ok, but that's for the user
             PyErr_Clear();
-         } else
+         } else {
             buf = 0;                      // not compatible
+
+         // clarify error message
+            PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
+            PyErr_Fetch( &pytype, &pyvalue, &pytrace );
+            PyObject* pyvalue2 = PyString_FromFormat(
+               (char*)"%s and given element size (%d) does not match needed (%d)",
+               PyString_AS_STRING( pyvalue ),
+               (int)(buflen / (*(seqmeths->sq_length))( pyobject )), size );
+            Py_DECREF( pyvalue );
+            PyErr_Restore( pytype, pyvalue2, pytrace );
+         }
       }
 
       return buflen;
