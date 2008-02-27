@@ -194,6 +194,18 @@ class Regression8UseNamespaceProperlyInPythonize( unittest.TestCase ):
       self.assert_( ns.MyClass )
 
 
+### enum type conversions (used to fail exact match in CINT) =================
+class Regression9CheckEnumExactMatch( unittest.TestCase ):
+   def test1CheckEnumCalls( self ):
+      """Be able to pass enums as function arguments"""
+
+      gROOT.LoadMacro( "Till.C+" )
+      a = Monkey()
+      self.assertEqual( fish, a.testEnum1( fish ) )
+      self.assertEqual( cow,  a.testEnum2( cow ) )
+      self.assertEqual( bird, a.testEnum3( bird ) )
+
+
 ## actual test run
 if __name__ == '__main__':
    sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
