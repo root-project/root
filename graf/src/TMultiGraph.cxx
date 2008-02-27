@@ -166,7 +166,7 @@ void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
    TGraph *gr;
    gr = (TGraph*)graphlist->First();
    fGraphs->Add(gr,chopt);
-   for(Int_t i = 0; i < graphlist->GetSize(); i++){
+   for(Int_t i = 1; i < graphlist->GetSize(); i++){
       gr = (TGraph*)graphlist->After(gr);
       fGraphs->Add(gr,chopt);
    }
