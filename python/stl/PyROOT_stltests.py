@@ -152,6 +152,9 @@ class STL3MapTestCase( unittest.TestCase ):
       self.assertEqual( mui[ 'one' ], 1 )
       self.assertRaises( ValueError, mui.__setitem__, 'minus one', -1 )
 
+      mui[ 'maxint' ] = sys.maxint + 3
+      self.assertEqual( mui[ 'maxint' ], sys.maxint + 3 )
+
       mul = std.map( str, 'unsigned long' )()
       mul[ 'two' ] = 2
       self.assertEqual( mul[ 'two' ], 2 )
