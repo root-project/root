@@ -341,7 +341,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 
    // enums (static enums are the defined values, non-static are data members, i.e. properties)
       if ( mb.TypeOf().IsEnum() && mb.IsStatic() ) {
-         PyObject* val = PyInt_FromLong( *((Long_t*)GetDataMemberAddress( klass, mb ) ) );
+         PyObject* val = PyInt_FromLong( *((Int_t*)GetDataMemberAddress( klass, mb ) ) );
          PyObject_SetAttrString( pyclass, const_cast<char*>(mb.Name().c_str()), val );
          Py_DECREF( val );
 
