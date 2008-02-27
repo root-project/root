@@ -6,6 +6,7 @@
 */
 
 #include <list>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -56,6 +57,14 @@ using namespace std;  // instead of std:: to make cint7 happy
 #pragma link C++ class list< JustAClass* >-;
 #pragma link C++ class list< JustAClass* >::iterator-;
 #pragma link C++ class list< JustAClass* >::const_iterator-;
+#pragma link C++ class map< std::string, unsigned int >-;
+#pragma link C++ class map< std::string, unsigned int >::iterator-;
+#pragma link C++ class map< std::string, unsigned int >::const_iterator-;
+#pragma link C++ class pair< std::string, unsigned int >-;
+#pragma link C++ class map< std::string, unsigned long >-;
+#pragma link C++ class map< std::string, unsigned long >::iterator-;
+#pragma link C++ class map< std::string, unsigned long >::const_iterator-;
+#pragma link C++ class pair< std::string, unsigned long >-;
 #ifdef G__WIN32
 #pragma link C++ class _Ranit<JustAClass,long,JustAClass*,JustAClass&>-;
 #pragma link C++ class iterator<random_access_iterator_tag,JustAClass,long,JustAClass*,JustAClass&>-;

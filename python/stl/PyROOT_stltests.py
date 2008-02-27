@@ -144,6 +144,19 @@ class STL3MapTestCase( unittest.TestCase ):
       for key, value in m:
          pass
 
+   def test4UnsignedvalueTypeMapTypes( self ):
+      """Test assignability of maps with unsigned value types (not part of cintdlls)"""
+
+      mui = std.map( str, 'unsigned int' )()
+      mui[ 'one' ] = 1
+      self.assertEqual( mui[ 'one' ], 1 )
+      self.assertRaises( ValueError, mui.__setitem__, 'minus one', -1 )
+
+      mul = std.map( str, 'unsigned long' )()
+      mul[ 'two' ] = 2
+      self.assertEqual( mul[ 'two' ], 2 )
+      self.assertRaises( ValueError, mul.__setitem__, 'minus two', -2 )
+
 
 ### Protocol mapping for an STL like class ===================================
 class STL4STLLikeClassTestCase( unittest.TestCase ):
