@@ -215,32 +215,10 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( UShort, UShort_t, Long_t, PyInt_FromLong,  PyI
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Int,    Int_t,    Long_t, PyInt_FromLong,  PyInt_AsLong )
 
 //____________________________________________________________________________
-namespace {
-
-   ULong_t ConvertULong( PyObject* pyobject )
-   {
-   // convert <pybject> to C++ unsigned long, with bounds checking, allow int -> ulong
-      ULong_t ul = PyLong_AsUnsignedLong( pyobject );
-      if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
-         PyErr_Clear();
-         Long_t i = PyInt_AS_LONG( pyobject );
-         if ( 0 <= i ) {
-            ul = (ULong_t)i;
-         } else {
-            PyErr_SetString( PyExc_ValueError,
-               "can\'t convert negative value to unsigned long" );
-         }
-      }
-
-      return ul;
-   }
-
-} // unnamed namespace
-
 Bool_t PyROOT::TULongConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ unsigned long, set arg for call
-   para.ful = ConvertULong( pyobject );
+   para.ful = PyLongOrInt_AsULong( pyobject );
    if ( PyErr_Occurred() )
       return kFALSE;
    else if ( func )
@@ -257,7 +235,7 @@ PyObject* PyROOT::TULongConverter::FromMemory( void* address )
 Bool_t PyROOT::TULongConverter::ToMemory( PyObject* value, void* address )
 {
 // convert <value> to C++ unsigned long, write it at <address>
-   ULong_t u = ConvertULong( value );
+   ULong_t u = PyLongOrInt_AsULong( value );
    if ( PyErr_Occurred() )
       return kFALSE;
    *((ULong_t*)address) = u;
@@ -274,7 +252,7 @@ PyObject* PyROOT::TUIntConverter::FromMemory( void* address )
 Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
 {
 // convert <value> to C++ unsigned int, write it at <address>
-   ULong_t u = ConvertULong( value );
+   ULong_t u = PyLongOrInt_AsULong( value );
    if ( PyErr_Occurred() )
       return kFALSE;
 
@@ -413,32 +391,10 @@ Bool_t PyROOT::TLongLongConverter::ToMemory( PyObject* value, void* address )
 }
 
 //____________________________________________________________________________
-namespace {
-
-   ULong64_t ConvertULongLong( PyObject* pyobject )
-   {
-   // convert <pyobject> to C++ unsigned long long, with bounds checking
-      ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
-      if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
-         PyErr_Clear();
-         Long_t i = PyInt_AS_LONG( pyobject );
-         if ( 0 <= i ) {
-            ull = (ULong64_t)i;
-         } else {
-            PyErr_SetString( PyExc_ValueError,
-               "can\'t convert negative value to unsigned long long" );
-         }
-      }
-
-      return ull;
-   }
-
-} // unnamed namespace
-
 Bool_t PyROOT::TULongLongConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ unsigned long long, set arg for call
-   para.full = ConvertULongLong( pyobject );
+   para.full = PyLongOrInt_AsULong64( pyobject );
    if ( PyErr_Occurred() )
       return kFALSE;
    else if ( func )
@@ -455,7 +411,7 @@ PyObject* PyROOT::TULongLongConverter::FromMemory( void* address )
 Bool_t PyROOT::TULongLongConverter::ToMemory( PyObject* value, void* address )
 {
 // convert <value> to C++ unsigned long long, write it at <address>
-   Long64_t ull = ConvertULongLong( value );
+   Long64_t ull = PyLongOrInt_AsULong64( value );
    if ( PyErr_Occurred() )
       return kFALSE;
    *((ULong64_t*)address) = ull;

@@ -62,7 +62,7 @@ $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
 		  "$(PYROOTO) $(PYROOTDO)" \
 		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) \
 		   $(PYTHONLIBDIR) $(PYTHONLIB) \
-		   $(OSTHREADLIBDIR) $(OSTHREADLIB)" "$(PYTHONLIBFLAGS)"
+		   $(PYTHONLIBFLAGS)"
 ifeq ($(ARCH),win32)
 		cp -f bin/$(notdir $@) $(PYROOTPYD)
 endif

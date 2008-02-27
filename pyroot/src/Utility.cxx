@@ -89,6 +89,44 @@ namespace {
 
 
 //- public functions ---------------------------------------------------------
+ULong_t PyROOT::PyLongOrInt_AsULong( PyObject* pyobject )
+{
+// convert <pybject> to C++ unsigned long, with bounds checking, allow int -> ulong
+   ULong_t ul = PyLong_AsUnsignedLong( pyobject );
+   if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
+      PyErr_Clear();
+      Long_t i = PyInt_AS_LONG( pyobject );
+      if ( 0 <= i ) {
+         ul = (ULong_t)i;
+      } else {
+         PyErr_SetString( PyExc_ValueError,
+            "can\'t convert negative value to unsigned long" );
+      }
+   }
+
+   return ul;
+}
+
+//____________________________________________________________________________
+ULong64_t PyROOT::PyLongOrInt_AsULong64( PyObject* pyobject )
+{
+// convert <pyobject> to C++ unsigned long long, with bounds checking
+   ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
+   if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
+      PyErr_Clear();
+      Long_t i = PyInt_AS_LONG( pyobject );
+      if ( 0 <= i ) {
+         ull = (ULong64_t)i;
+      } else {
+         PyErr_SetString( PyExc_ValueError,
+            "can\'t convert negative value to unsigned long long" );
+      }
+   }
+
+   return ull;
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::Utility::SetMemoryPolicy( EMemoryPolicy e )
 {
    if ( kHeuristics <= e && e <= kStrict ) {

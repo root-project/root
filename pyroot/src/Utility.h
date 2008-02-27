@@ -35,6 +35,10 @@ namespace PyROOT {
       void*       fv;
    };
 
+// additional converter functions
+   ULong_t PyLongOrInt_AsULong( PyObject* pyobject );
+   ULong64_t PyLongOrInt_AsULong64( PyObject* pyobject );
+
    namespace Utility {
 
    // convenience functions for adding methods to classes
