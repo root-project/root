@@ -21,7 +21,9 @@ ROOTEXE      := bin/root_exe.exe
 else
 ROOTEXE      := bin/root.exe
 endif
+ifneq ($(PLATFORM),win32)
 ROOTNEXE     := bin/rootn.exe
+endif
 ifeq ($(PLATFORM),win32)
 ROOTICON     := icons/RootIcon.obj
 endif
@@ -127,9 +129,11 @@ $(ROOTEXE):     $(ROOTEXEO) $(BOOTLIBSDEP) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
 		   $(RPATH) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
 
+ifneq ($(PLATFORM),win32)
 $(ROOTNEXE):    $(ROOTEXEO) $(NEWLIB) $(BOOTLIBSDEP) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
 		   $(RPATH) $(NEWLIBS) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
+endif
 
 $(PROOFSERVEXE): $(PROOFSERVO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) $(BOOTULIBS) \
