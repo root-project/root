@@ -106,7 +106,9 @@ PyObject* PyROOT::T##name##RefExecutor::Execute( G__CallFunc* func, void* self )
 }
 
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Int,    Int_t,    Long_t,   PyInt_FromLong,     PyLong_AsLong,    ExecInt )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UInt,   UInt_t,   ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong, ExecInt )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Long,   Long_t,   Long_t,   PyLong_FromLong,    PyLong_AsLong,    ExecInt )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong, ExecInt )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble, ExecDouble )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble, ExecDouble )
 
@@ -305,7 +307,9 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( Char )
    PYROOT_EXECUTOR_FACTORY( Int )
    PYROOT_EXECUTOR_FACTORY( IntRef )
+   PYROOT_EXECUTOR_FACTORY( UIntRef )
    PYROOT_EXECUTOR_FACTORY( ULong )
+   PYROOT_EXECUTOR_FACTORY( ULongRef )
    PYROOT_EXECUTOR_FACTORY( Long )
    PYROOT_EXECUTOR_FACTORY( LongRef )
    PYROOT_EXECUTOR_FACTORY( FloatRef )
@@ -342,10 +346,12 @@ namespace {
       NFp_t( "int",                &CreateIntExecutor                 ),
       NFp_t( "int&",               &CreateIntRefExecutor              ),
       NFp_t( "unsigned int",       &CreateULongExecutor               ),
+      NFp_t( "unsigned int&",      &CreateUIntRefExecutor             ),
       NFp_t( "UInt_t", /* enum */  &CreateULongExecutor               ),
       NFp_t( "long",               &CreateLongExecutor                ),
       NFp_t( "long&",              &CreateLongRefExecutor             ),
       NFp_t( "unsigned long",      &CreateULongExecutor               ),
+      NFp_t( "unsigned long&",     &CreateULongRefExecutor            ),
       NFp_t( "long long",          &CreateLongLongExecutor            ),
       NFp_t( "unsigned long long", &CreateULongLongExecutor           ),
       NFp_t( "float",              &CreateDoubleExecutor              ),
