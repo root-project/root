@@ -1399,45 +1399,65 @@ void TStreamerInfo::ComputeSize()
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::ForceWriteInfo(TFile *file, Bool_t force)
+void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
 {
-   // will force this TStreamerInfo to the file and also
+   // -- Recursively mark streamer infos for writing to a file.
+   //
+   // Will force this TStreamerInfo to the file and also
    // all the dependencies.
+   //
+   // If argument force > 0 the loop on class dependencies is forced.
+   //
    // This function is called when streaming a class that contains
    // a null pointer. In this case, the TStreamerInfo for the class
-   // with the null pointer must be written to the file and also all the
-   // TStreamerInfo of all the classes referenced by the class.
+   // with the null pointer must be written to the file and also all
+   // the TStreamerInfo of all the classes referenced by the class.
    //
-   // if argument force > 0 the loop on class dependencies is forced
-
-   // flag this class
-   if (!file) return;
-   TArrayC *cindex = file->GetClassIndex();
+   //--
+   // We must be given a file to write to.
+   if (!file) {
+      return;
+   }
+   // Get the given file's list of streamer infos marked for writing.
+   TArrayC* cindex = file->GetClassIndex();
    //the test below testing fArray[fNumber]>1 is to avoid a recursivity
    //problem in some cases like:
    //        class aProblemChild: public TNamed {
    //        aProblemChild *canBeNull;
    //        };
-   if ((cindex->fArray[fNumber] && !force) || cindex->fArray[fNumber]>1) return;
+   if ( // -- Done if already marked, and we are not forcing, or forcing is blocked.
+      (cindex->fArray[fNumber] && !force) || // Streamer info is already marked, and not forcing, or
+      (cindex->fArray[fNumber] > 1) // == 2 means ignore forcing to prevent infinite recursion.
+   ) {
+      return;
+   }
+   // We do not want to write streamer info to the file
+   // for std::string.
+   static TClassRef string_classref("string");
+   if (fClass == string_classref) { // We are std::string.
+      return;
+   }
+   // We do not want to write streamer info to the file
+   // for STL containers.
+   if (fClass->GetCollectionProxy()) { // We are an STL collection.
+      return;
+   }
+   // Mark ourselves for output, and block
+   // forcing to prevent infinite recursion.
    cindex->fArray[fNumber] = 2;
+   // Signal the file that the marked streamer info list has changed.
    cindex->fArray[0] = 1;
-
-   // flag all its dependencies
+   // Recursively mark the streamer infos for
+   // all of our elements.
    TIter next(fElements);
-   TStreamerElement *element;
-   while ((element = (TStreamerElement*)next())) {
-      TClass *cl = element->GetClassPointer();
+   TStreamerElement* element = (TStreamerElement*) next();
+   for (; element; element = (TStreamerElement*) next()) {
+      TClass* cl = element->GetClassPointer();
       if (cl) {
-         const char *name = cl->GetName();
-         static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-         if (!strcmp(name, "string")||!strcmp(name,full_string_name)) continue; //reject string
-         if (strstr(name, "vector<")   || strstr(name, "list<") ||
-             strstr(name, "set<")      || strstr(name, "map<")  ||
-             strstr(name, "deque<")    || strstr(name, "multimap<") ||
-             strstr(name, "multiset<") || strstr(name, "::"))
-            continue; //reject STL containers
-
-         cl->GetStreamerInfo()->ForceWriteInfo(file, force);
+         TStreamerInfo* si = cl->GetStreamerInfo();
+         if (si) {
+            si->ForceWriteInfo(file, force);
+         }
       }
    }
 }

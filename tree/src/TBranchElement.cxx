@@ -1997,8 +1997,13 @@ void TBranchElement::InitializeOffsets()
                // -- No parent class, fix it.
                // FIXME: This is probably wrong!
                // Assume parent class is our parent branch's clones class or value class.
-               if (GetClonesName() && (strlen(GetClonesName()) != 0)) {
+	       if (GetClonesName() && (strlen(GetClonesName()) != 0)) {
                   pClass = gROOT->GetClass(GetClonesName());
+                  if (!pClass) {
+                     Warning("InitializeOffsets", "subBranch: '%s' has no parent class, and cannot get class for clones class: '%s'!", subBranch->GetName(), GetClonesName());
+                     fInitOffsets = kTRUE;
+                     return;
+                  }
                   Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass->GetName());
                }
                if (fBranchCount && fBranchCount->fCollProxy && fBranchCount->fCollProxy->GetValueClass()) {
@@ -2832,7 +2837,7 @@ void TBranchElement::SetAddress(void* add)
 
    if (fType == 3) {
       // split TClonesArray, counter/master branch.
-      TClass* clm = gROOT->GetClass(fClonesName.Data());
+      TClass* clm = gROOT->GetClass(GetClonesName());
       if (clm) {
          // In case clm derives from an abstract class.
          clm->BuildRealData();
@@ -2849,7 +2854,7 @@ void TBranchElement::SetAddress(void* add)
             if (clm == content) {
                matched = kTRUE;
             } else {
-               Warning("SetAddress", "The type of %s was changed from TClonesArray to %s but the content do not match (was %s)!", GetName(), newType->GetName(), fClonesName.Data());
+               Warning("SetAddress", "The type of %s was changed from TClonesArray to %s but the content do not match (was %s)!", GetName(), newType->GetName(), GetClonesName());
             }
          } else {
             Warning("SetAddress", "The type of the %s was changed from TClonesArray to %s but we do not have a TVirtualCollectionProxy for that container type!", GetName(), newType->GetName());
@@ -2909,7 +2914,7 @@ void TBranchElement::SetAddress(void* add)
                fClonesName = oldProxy->GetValueClass()->GetName();
                delete fCollProxy;
                fCollProxy = 0;
-               TClass* clm = gROOT->GetClass(fClonesName);
+               TClass* clm = gROOT->GetClass(GetClonesName());
                if (clm) {
                   clm->BuildRealData(); //just in case clm derives from an abstract class
                   clm->GetStreamerInfo();
@@ -2950,7 +2955,7 @@ void TBranchElement::SetAddress(void* add)
             // Check if it has already been properly built.
             TClonesArray* clones = (TClonesArray*) fObject;
             if (!clones->GetClass()) {
-               new(fObject) TClonesArray(fClonesName.Data());
+               new(fObject) TClonesArray(GetClonesName());
             }
          } else {
             // -- We are either a top-level branch or we are a subbranch which is a pointer to a TClonesArray.
@@ -2964,7 +2969,7 @@ void TBranchElement::SetAddress(void* add)
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
                   SetBit(kDeleteObject);
-                  *pp = new TClonesArray(fClonesName.Data());
+                  *pp = new TClonesArray(GetClonesName());
                }
                fObject = (char*) *pp;
             } else {
@@ -2974,7 +2979,7 @@ void TBranchElement::SetAddress(void* add)
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
                   SetBit(kDeleteObject);
-                  *pp = new TClonesArray(fClonesName.Data());
+                  *pp = new TClonesArray(GetClonesName());
                }
                fObject = (char*) *pp;
             }
@@ -2996,7 +3001,7 @@ void TBranchElement::SetAddress(void* add)
                // -- We are a top-level branch.
                // FIXME: Consider making a zero address not allocate.
                SetBit(kDeleteObject);
-               fObject = (char*) new TClonesArray(fClonesName.Data());
+               fObject = (char*) new TClonesArray(GetClonesName());
                fAddress = (char*) &fObject;
             } else {
                // -- We are a sub-branch which is a pointer to a TClonesArray.
@@ -3270,6 +3275,46 @@ void TBranchElement::Streamer(TBuffer& R__b)
       // this class are written to the file
       if (GetInfo()) {
          GetInfo()->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
+      }
+      //
+      //  If we are a clones array master branch, or an
+      //  STL container master branch, we must also mark
+      //  the streamer infos used by the value class to
+      //  be written to our output file.
+      //
+      if (fType == 3) {
+         // -- TClonesArray, counter/master branch
+         //
+         //  We must mark the streamer info for the
+         //  value class to be written to the file.
+         //
+         const char* nm = GetClonesName();
+         if (nm && strlen(nm)) {
+            TClass* cl = TClass::GetClass(nm);
+            if (cl) {
+               TStreamerInfo* si = cl->GetStreamerInfo();
+               if (si) {
+                  si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
+               }
+            }
+         }
+      }
+      else if (fType == 4) {
+         // -- STL container, counter/master branch
+         //
+         //  We must mark the streamer info for the
+         //  value class to be written to the file.
+         //
+         TVirtualCollectionProxy* cp = GetCollectionProxy();
+         if (cp) {
+            TClass* cl = cp->GetValueClass();
+            if (cl) {
+               TStreamerInfo* si = cl->GetStreamerInfo();
+               if (si) {
+                   si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
+               }
+            }
+         }
       }
 
       // if branch is in a separate file save this branch
