@@ -2007,6 +2007,11 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       WriteReal(XtoPDF(x));
       WriteReal(YtoPDF(y));
       PrintStr(" Tm");
+   } else if (fTextAngle == 270) {
+      PrintStr(" 0 -1 1 0");
+      WriteReal(XtoPDF(x));
+      WriteReal(YtoPDF(y));
+      PrintStr(" Tm");
    } else {
       WriteReal(TMath::Cos(kDEGRAD*fTextAngle));
       WriteReal(TMath::Sin(kDEGRAD*fTextAngle));
