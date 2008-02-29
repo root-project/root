@@ -123,8 +123,13 @@ TView3D::TView3D() :TView()
       fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
    }
 
-   fLongitude = -90 - gPad->GetPhi();
-   fLatitude  =  90 - gPad->GetTheta();
+   if (gPad) {
+      fLongitude = -90 - gPad->GetPhi();
+      fLatitude  =  90 - gPad->GetTheta();
+   } else {
+      fLongitude = 0;
+      fLatitude  = 0;
+   }
    Int_t irep = 1;
    ResetView(fLongitude, fLatitude, fPsi, irep);
 }
@@ -175,8 +180,13 @@ TView3D::TView3D(Int_t system, const Double_t *rmin, const Double_t *rmax) : TVi
       fX1[i] = fX2[i] = fY1[i] = fY2[i] = fZ1[i] = fZ2[i] = 0;
    }
 
-   fLongitude = -90 - gPad->GetPhi();
-   fLatitude  =  90 - gPad->GetTheta();
+   if (gPad) {
+      fLongitude = -90 - gPad->GetPhi();
+      fLatitude  =  90 - gPad->GetTheta();
+   } else {
+      fLongitude = 0;
+      fLatitude  = 0;
+   }
    ResetView(fLongitude, fLatitude, fPsi, irep);
 
    if (gPad) gPad->SetView(this);
