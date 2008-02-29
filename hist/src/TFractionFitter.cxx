@@ -848,7 +848,7 @@ void TFractionFitter::ComputeChisquareLambda()
             for(Int_t j = 0; j < fNpar; j++) {
                Double_t aji = ((TH1*)fMCs.At(j))->GetBinContent(x, y, z);
                Double_t bji = ((TH1*)fAji.At(j))->GetBinContent(x, y, z);
-               if(bji != 0) logLyn += aji * TMath::Log(bji) - aji;
+               if(bji != 0) logLyn += aji * TMath::Log(bji) - bji;
                if(aji != 0) logLmn += aji * TMath::Log(aji) - aji;
             }
          }
