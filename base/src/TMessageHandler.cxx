@@ -94,6 +94,7 @@ void TMessageHandler::Add()
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Add(this);
+   Added();  // emit Added() signal
 }
 
 //______________________________________________________________________________
@@ -184,6 +185,7 @@ Bool_t TMessageHandler::Notify()
    Int_t uid = Int_t(fMessObj->IsA()->GetUniqueID());
    fMessId += 10000*uid;
    fMessId = -fMessId;
+   Notified();  // emit Notified() signal
    return kFALSE;
 }
 
@@ -229,4 +231,5 @@ void TMessageHandler::Remove()
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Remove(this);
+   Removed();  // emit Removed() signal
 }

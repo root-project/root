@@ -31,8 +31,11 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
 
-class TMessageHandler : public TNamed {
+class TMessageHandler : public TNamed, public TQObject {
 
 protected:
    const TClass   *fClass;      // class for which message has to be handled
@@ -43,12 +46,12 @@ protected:
    Int_t          *fMessIds;    // message ids
    Bool_t          fDerived;    // if true handle messages also for derived classes
 
+   void  *GetSender() { return this; }  //used to set gTQSender
+
 public:
    TMessageHandler(const TClass *cl, Bool_t derived = kTRUE);
    TMessageHandler(const char *cl, Bool_t derived = kTRUE);
    virtual ~TMessageHandler();
-
-   virtual void    Add();
 
    Int_t           GetSize() const { return fSize; }
    virtual Int_t   GetMessageCount(Int_t messId) const;
@@ -56,10 +59,15 @@ public:
    Bool_t          HandleDerived() const { return fDerived; }
    virtual void    HandleMessage(Int_t id, const TObject *obj);
 
+   virtual void    Print(Option_t *option= "") const;
+
+   virtual void    Add();
+   virtual void    Remove();
    virtual Bool_t  Notify();
 
-   virtual void    Print(Option_t *option= "") const;
-   virtual void    Remove();
+   virtual void    Added()    { Emit("Added()"); }       //*SIGNAL*
+   virtual void    Removed()  { Emit("Removed()"); }     //*SIGNAL*
+   virtual void    Notified() { Emit("Notified()"); }    //*SIGNAL*
 
    ClassDef(TMessageHandler,0)  // Generic message handler
 };
