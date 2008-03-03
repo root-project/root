@@ -54,6 +54,10 @@ enum EOverlapType {
    kGeoOverlap    = BIT(14),
    kGeoExtrusion  = BIT(15)
 };
+
+private:
+   TGeoOverlap(const TGeoOverlap&); // Not implemented
+   TGeoOverlap& operator=(const TGeoOverlap&); // Not implemented
    
 protected:
    Double_t         fOverlap;     // overlap distance

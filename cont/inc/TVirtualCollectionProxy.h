@@ -28,6 +28,10 @@
 class TClass;
 
 class TVirtualCollectionProxy {
+private:
+   TVirtualCollectionProxy(const TVirtualCollectionProxy&); // Not implemented
+   TVirtualCollectionProxy& operator=(const TVirtualCollectionProxy&); // Not implemented
+
 protected:
    TClassRef fClass;
    virtual void SetValueClass(TClass *newcl) = 0;

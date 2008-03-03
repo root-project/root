@@ -29,6 +29,9 @@
 class TXMLAttr : public TObject {
 
 private:
+   TXMLAttr(const TXMLAttr&); // Not implemented
+   TXMLAttr& operator=(const TXMLAttr&); // Not implemented
+
    const char *fKey;        // XML attribute key
    const char *fValue;      // XML attribute value
 

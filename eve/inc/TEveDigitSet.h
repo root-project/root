@@ -48,6 +48,7 @@ protected:
       TRef  fId;    // external object reference
 
       DigitBase_t(Int_t v=0) : fValue(v), fId() {}
+      virtual ~DigitBase_t() {}
    };
 
    Int_t             fDefaultValue;   // Default signal value.

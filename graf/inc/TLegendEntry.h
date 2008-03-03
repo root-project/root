@@ -64,6 +64,9 @@ protected:
    TString       fLabel;    // Text associated with the entry, will become latex
    TString       fOption;   // Options associated with this entry
 
+private:
+   TLegendEntry& operator=(const TLegendEntry&); // Not implemented
+
    ClassDef(TLegendEntry,1) // Storage class for one entry of a TLegend
 };
 

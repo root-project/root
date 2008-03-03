@@ -84,6 +84,9 @@ class TNeuron : public TNamed {
    void AddPost(TSynapse*);
 
  private:
+   TNeuron(const TNeuron&); // Not implemented
+   TNeuron& operator=(const TNeuron&); // Not implemented
+
    TObjArray fpre;        // pointers to the previous level in a network
    TObjArray fpost;       // pointers to the next level in a network
    TObjArray flayer;      // pointers to the current level in a network (neurons, not synapses)

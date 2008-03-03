@@ -117,7 +117,7 @@ private:
 
 protected:
    TGeoPNEntry(const TGeoPNEntry& pne) 
-     : TNamed(pne), fNode(pne.fNode), fMatrix(NULL) { }
+     : TNamed(pne), fNode(pne.fNode), fMatrix(NULL), fGlobalOrig(NULL) { }
    TGeoPNEntry& operator=(const TGeoPNEntry& pne)
      {if(this!=&pne) {TNamed::operator=(pne); fNode=pne.fNode; fMatrix=pne.fMatrix;}
      return *this;}

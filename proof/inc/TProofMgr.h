@@ -46,6 +46,9 @@ public:
    enum EServType { kProofd = 0, kXProofd = 1 };
 
 private:
+   TProofMgr(const TProofMgr&); // Not implemented
+   TProofMgr& operator=(const TProofMgr&); // Not implemented
+
    static TProofMgr_t fgTXProofMgrHook; // Constructor hooks for TXProofMgr
    static TProofMgr_t GetXProofMgrHook();
 
@@ -109,6 +112,9 @@ public:
    enum EStatus { kUnknown = -1, kIdle = 0, kRunning =1, kShutdown = 2};
 
 private:
+   TProofDesc(const TProofDesc&); // Not implemented
+   TProofDesc& operator=(const TProofDesc&); // Not implemented
+
    Int_t          fLocalId;  // ID in the local list
    Int_t          fStatus;   // Session status (see EStatus)
    TProof *fProof;    // Related instance of TProof
@@ -119,7 +125,7 @@ public:
    TProofDesc(const char *tag = 0, const char *alias = 0, const char *url = 0,
                      Int_t id = -1, Int_t remid = -1, Int_t status = kIdle, TProof *p = 0)
                     : TNamed(tag, alias),
-                      fLocalId(id), fProof(p), fRemoteId(remid), fUrl(url) { SetStatus(status); }
+     fLocalId(id), fStatus(0), fProof(p), fRemoteId(remid), fUrl(url) { SetStatus(status); }
    virtual ~TProofDesc() { }
 
    Int_t          GetLocalId() const { return fLocalId; }

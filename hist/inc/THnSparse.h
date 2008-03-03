@@ -56,6 +56,11 @@ class TH2D;
 class TH3D;
 
 class THnSparseArrayChunk: public TObject {
+ private:
+
+   THnSparseArrayChunk(const THnSparseArrayChunk&); // Not implemented
+   THnSparseArrayChunk& operator=(const THnSparseArrayChunk&); // Not implemented
+
  public:
    THnSparseArrayChunk():
       fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0),
@@ -111,6 +116,9 @@ class THnSparse: public TNamed {
       kValidInt,
       kInvalidInt
    } fIntegralStatus;        //! status of integral
+
+   THnSparse(const THnSparse&); // Not implemented
+   THnSparse& operator=(const THnSparse&); // Not implemented
 
  protected:
    Int_t GetChunkSize() const { return fChunkSize; }

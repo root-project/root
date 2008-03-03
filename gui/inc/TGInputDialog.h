@@ -37,6 +37,9 @@ private:
    TGTextButton     *fCancel;  // cancel button
    char             *fRetStr;  // address to store return string
 
+   TGInputDialog(const TGInputDialog&);  // Not implemented
+   TGInputDialog &operator= (const TGInputDialog&); // Not implemented
+
 public:
    TGInputDialog(const TGWindow *p = 0, const TGWindow *main = 0,
                  const char *prompt =0, const char *defval = 0, 

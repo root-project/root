@@ -44,7 +44,7 @@ public :
 
    enum {kWorkMax = 100}; // size of work array
 
-   TMatrixDSymEigen() {};
+   TMatrixDSymEigen() : fEigenVectors(), fEigenValues() {};
    TMatrixDSymEigen(const TMatrixDSym      &a);
    TMatrixDSymEigen(const TMatrixDSymEigen &another);
    virtual ~TMatrixDSymEigen() {}

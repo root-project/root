@@ -35,7 +35,7 @@ protected :
 
 public :
 
-   TDecompChol() {}
+   TDecompChol() : fU() {}
    explicit TDecompChol(Int_t nrows);
    TDecompChol(Int_t row_lwb,Int_t row_upb);
    TDecompChol(const TMatrixDSym &a,Double_t tol = 0.0);

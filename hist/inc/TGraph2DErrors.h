@@ -27,6 +27,11 @@
 
 class TGraph2DErrors : public TGraph2D {
 
+private:
+
+   TGraph2DErrors(const TGraph2DErrors&); // Not implemented
+   TGraph2DErrors& operator=(const TGraph2DErrors&); // Not implemented
+ 
 protected:
    Double_t *fEX; //[fNpoints] array of X errors
    Double_t *fEY; //[fNpoints] array of Y errors

@@ -139,6 +139,8 @@ class TMultiLayerPerceptron : public TObject {
    Double_t GetSumSquareError() const;
 
  private:
+   TMultiLayerPerceptron(const TMultiLayerPerceptron&); // Not implemented
+   TMultiLayerPerceptron& operator=(const TMultiLayerPerceptron&); // Not implemented
    void ExpandStructure();
    void BuildFirstLayer(TString&);
    void BuildHiddenLayers(TString&);
