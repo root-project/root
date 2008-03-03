@@ -30,6 +30,7 @@
 #ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
 #endif
+#include <stdlib.h>
 
 //----- file sort mode
 enum EFSSortMode {

@@ -31,8 +31,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-// C++
+// C/C++
 #include <string>
+#include <stdlib.h>
 
 // ROOT
 #include "TFile.h"
@@ -450,10 +451,10 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          
          if (vstring.empty()) fLogger << kFATAL << "Failed to parse string" << Endl;
          
-         if      (vcount == 0) ievent = std::atoi(vstring.c_str());
-         else if (vcount == 1) type = std::atoi(vstring.c_str());
-         else if (vcount == 2) weight = std::atof(vstring.c_str());
-         else if (vcount - 3 < vvec.size()) vvec[vcount - 3] = std::atof(vstring.c_str());
+         if      (vcount == 0) ievent = atoi(vstring.c_str());
+         else if (vcount == 1) type = atoi(vstring.c_str());
+         else if (vcount == 2) weight = atof(vstring.c_str());
+         else if (vcount - 3 < vvec.size()) vvec[vcount - 3] = atof(vstring.c_str());
          else fLogger << kFATAL << "Wrong variable count" << Endl;
          
          prev = ipos + 1;

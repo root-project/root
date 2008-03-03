@@ -24,6 +24,7 @@
 #include "Reflex/Tools.h"
 #include "Class.h"
 
+#include <string.h>
 
 //-------------------------------------------------------------------------------
 Reflex::DataMember::DataMember( const char *  nam,

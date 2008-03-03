@@ -28,6 +28,7 @@
 #include <list>
 #include <set>
 #include <sstream>
+#include <stdlib.h>
 
 namespace {
 

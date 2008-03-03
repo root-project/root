@@ -65,6 +65,7 @@ End_Html */
 
 #include <iostream>
 #include <string>
+#include <stdlib.h>
 
 #include "Riostream.h"
 #include "TMath.h"

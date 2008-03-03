@@ -49,6 +49,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <stdlib.h>
 #ifndef R__WIN32
 #include <unistd.h>
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) ||         \

@@ -26,6 +26,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "snprintf.h"
 #include "Varargs.h"
 #include "Riostream.h"
@@ -109,7 +110,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 }
 
 //______________________________________________________________________________
-void DefaultErrorHandler(Int_t level, Bool_t abort, const char *location, const char *msg)
+void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    // The default error handler function. It prints the message on stderr and
    // if abort is set it aborts the application.
@@ -165,14 +166,14 @@ void DefaultErrorHandler(Int_t level, Bool_t abort, const char *location, const 
       DebugPrint("%s in <%s>: %s\n", type, location, msg);
 
    fflush(stderr);
-   if (abort) {
+   if (abort_bool) {
       DebugPrint("aborting\n");
       fflush(stderr);
       if (gSystem) {
          gSystem->StackTrace();
          gSystem->Abort();
       } else
-         ::abort();
+         abort();
    }
 }
 

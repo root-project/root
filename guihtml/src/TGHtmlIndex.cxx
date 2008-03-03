@@ -35,6 +35,7 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "TGHtml.h"
 

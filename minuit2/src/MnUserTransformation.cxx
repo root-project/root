@@ -11,6 +11,7 @@
 #include "Minuit2/MnUserCovariance.h"
 
 #include <algorithm>
+#include <stdio.h>
 
 namespace ROOT {
 
@@ -47,7 +48,7 @@ MnUserTransformation::MnUserTransformation(const std::vector<double>& par, const
    p[0] = 'p';
    p[4] = '\0';
    for(unsigned int i = 0; i < par.size(); i++) {
-      std::sprintf(p+1,"%i",i);
+      sprintf(p+1,"%i",i);
       Add(p, par[i], err[i]);
    }
 }

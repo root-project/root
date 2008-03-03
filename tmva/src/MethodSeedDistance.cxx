@@ -48,6 +48,8 @@ End_Html */
 #include "TMVA/MetricManhattan.h"
 #include "TMVA/SeedDistance.h"
 
+#include <stdlib.h>
+
 ClassImp(TMVA::MethodSeedDistance)
 
 //_______________________________________________________________________

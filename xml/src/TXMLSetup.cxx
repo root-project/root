@@ -38,6 +38,7 @@
 #include "TStreamerElement.h"
 
 #include "Riostream.h"
+#include <stdlib.h>
 
 ClassImp(TXMLSetup);
 

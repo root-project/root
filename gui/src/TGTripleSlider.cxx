@@ -66,6 +66,7 @@
 #include "TGPicture.h"
 #include "Riostream.h"
 #include "TSystem.h"
+#include <stdlib.h>
 
 ClassImp(TGTripleVSlider)
 ClassImp(TGTripleHSlider)

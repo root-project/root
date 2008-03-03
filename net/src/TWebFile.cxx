@@ -22,6 +22,7 @@
 #include "TROOT.h"
 #include "TSocket.h"
 #include "Bytes.h"
+#include <stdlib.h>
 
 static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.0";
 

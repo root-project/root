@@ -18,6 +18,7 @@
 #include "TVirtualMutex.h"
 #include <fstream>
 #include <sstream>
+#include <stdlib.h>
 
 //______________________________________________________________________________
 //

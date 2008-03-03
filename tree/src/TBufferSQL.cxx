@@ -25,6 +25,7 @@
 #include "TBufferSQL.h"
 #include "TSQLResult.h"
 #include "TSQLRow.h"
+#include <stdlib.h>
 
 ClassImp(TBufferSQL);
 

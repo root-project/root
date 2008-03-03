@@ -49,6 +49,8 @@
 #include "TMVA/MinuitFitter.h"
 #include "TMVA/MCFitter.h"
 
+#include <stdlib.h>
+
 ClassImp(TMVA::MethodFDA)
 
 //_______________________________________________________________________

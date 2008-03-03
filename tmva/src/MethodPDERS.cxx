@@ -66,6 +66,7 @@ End_Html */
 //_______________________________________________________________________
 
 #include <assert.h>
+#include <algorithm>
 
 #include "TFile.h"
 #include "TObjString.h"

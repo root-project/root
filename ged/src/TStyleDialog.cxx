@@ -32,6 +32,7 @@
 #include <TStyle.h>
 #include <TVirtualPad.h>
 #include <TVirtualMutex.h>
+#include <stdlib.h>
 
 ClassImp(TStyleDialog)
 

@@ -41,6 +41,7 @@
 #include "TClass.h"
 
 #include <ctype.h>
+#include <iostream>
 
 #define F00  0
 #define F01  4

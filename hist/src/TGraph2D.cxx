@@ -20,6 +20,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
 #include "TClass.h"
+#include <stdlib.h>
 
 ClassImp(TGraph2D)
 

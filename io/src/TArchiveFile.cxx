@@ -25,6 +25,7 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TUrl.h"
+#include <stdlib.h>
 
 
 ClassImp(TArchiveFile)

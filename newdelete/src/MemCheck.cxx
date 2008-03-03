@@ -57,6 +57,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
+#include <stdlib.h>
 #include "MemCheck.h"
 #include "TSystem.h"
 #include "TEnv.h"

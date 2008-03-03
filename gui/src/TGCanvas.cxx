@@ -68,6 +68,7 @@
 #include "TKeyMapFile.h"
 #include "TGDNDManager.h"
 #include "Riostream.h"
+#include <stdlib.h>
 
 
 TGGC *TGContainer::fgLineGC = 0;

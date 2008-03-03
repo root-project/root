@@ -19,6 +19,7 @@
 #include "TRandom1.h"
 #include "TRandom3.h"
 #include "TMath.h"
+#include <stdlib.h>
 
 // Number of instances with automatic seed selection
 int TRandom1::fgNumEngines = 0;

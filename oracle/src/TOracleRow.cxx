@@ -11,6 +11,7 @@
 
 #include "TOracleRow.h"
 #include "Riostream.h"
+#include <string.h>
 
 using namespace std;
 

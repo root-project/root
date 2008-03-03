@@ -242,6 +242,7 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TLine.h"
 #include "TText.h"
 #include "TObjString.h"
+#include <stdlib.h>
 
 ClassImp(TMultiLayerPerceptron)
 

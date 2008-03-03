@@ -45,6 +45,7 @@
 #include "TGResourcePool.h"
 #include "TSystem.h"
 #include "Riostream.h"
+#include <stdlib.h>
 
 
 const TGFont *TGTextLBEntry::fgDefaultFont = 0;

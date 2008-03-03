@@ -23,6 +23,7 @@
 
 #include "Riostream.h"
 #include "TString.h"
+#include <stdlib.h>
 
 ClassImp(TXMLEngine);
 

@@ -89,6 +89,8 @@
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
+#include <stdlib.h>
+
 // statics and globals
 
 ClassImp(TGeoChecker)

@@ -26,6 +26,7 @@
 #include "TAuthenticate.h"
 #include "TSocket.h"
 #include "TUrl.h"
+#include <stdlib.h>
 
 
 ClassImp(THostAuth)

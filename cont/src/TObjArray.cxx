@@ -28,6 +28,7 @@
 #include "TObjArray.h"
 #include "TError.h"
 #include "TROOT.h"
+#include <stdlib.h>
 
 ClassImp(TObjArray)
 

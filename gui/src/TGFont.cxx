@@ -40,6 +40,8 @@
 #include "TObjString.h"
 #include "TGWidget.h"
 #include <errno.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include "Riostream.h"
 #include "TROOT.h"

@@ -16,6 +16,7 @@
 #include "TColor.h"
 #include "TClass.h"
 #include "TMathBase.h"
+#include <stdlib.h>
 
 ClassImp(TAttAxis)
 

@@ -11,6 +11,8 @@
 
 #include <deque>
 #include <map>
+#include <stdlib.h>
+#include <string.h>
 
 #include "TVirtualViewer3D.h"
 #include "TVirtualX.h"
@@ -521,7 +523,7 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
          char *dest = ctx.fXImage->data;
          const UChar_t *src = &ctx.fBUBuffer[ctx.fW * 4 * (ctx.fH - 1)];
          for (UInt_t i = 0, e = ctx.fH; i < e; ++i) {
-            std::memcpy(dest, src, ctx.fW * 4);
+            memcpy(dest, src, ctx.fW * 4);
             dest += ctx.fW * 4;
             src -= ctx.fW * 4;
          }

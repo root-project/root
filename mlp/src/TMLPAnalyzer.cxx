@@ -38,6 +38,7 @@
 #include "TRegexp.h"
 #include "TMath.h"
 #include "Riostream.h"
+#include <stdlib.h>
 
 ClassImp(TMLPAnalyzer)
 

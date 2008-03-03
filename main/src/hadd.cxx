@@ -68,6 +68,7 @@
 #include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
+#include <stdlib.h>
 
 TList *FileList;
 TFile *Target, *Source;

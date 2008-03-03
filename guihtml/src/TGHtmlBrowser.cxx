@@ -33,6 +33,8 @@
 #include "TWin32SplashThread.h"
 #endif
 
+#include <stdlib.h>
+
 //_____________________________________________________________________________
 //
 // TGHtmlBrowser

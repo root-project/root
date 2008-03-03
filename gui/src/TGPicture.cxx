@@ -38,6 +38,7 @@
 #include "TGWindow.h"
 #include "TVirtualX.h"
 #include "TImage.h"
+#include <stdlib.h>
 
 TGGC *TGSelectedPicture::fgSelectedGC = 0;
 

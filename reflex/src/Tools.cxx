@@ -24,6 +24,7 @@
 #elif defined(__SUNPRO_CC)
 #include <demangle.h>
 #endif
+#include <string.h>
 
 using namespace Reflex;
 

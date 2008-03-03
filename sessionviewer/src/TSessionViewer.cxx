@@ -66,6 +66,7 @@
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
+#include <stdlib.h>
 
 TSessionViewer *gSessionViewer = 0;
 

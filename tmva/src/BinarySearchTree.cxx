@@ -50,6 +50,7 @@
 #include "TTree.h"
 #include "Riostream.h"
 #include <stdexcept>
+#include <algorithm>
 
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
@@ -339,7 +340,7 @@ void TMVA::BinarySearchTree::NormalizeTree ( std::vector< pair<Double_t, TMVA::E
       i->first = i->second->GetVal( actDim );
    }
    
-   std::sort( leftBound, rightBound );
+   sort( leftBound, rightBound );
    
    std::vector< pair<Double_t, TMVA::Event*> >::iterator leftTemp  = leftBound;
    std::vector< pair<Double_t, TMVA::Event*> >::iterator rightTemp = rightBound;

@@ -23,6 +23,7 @@
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
+#include <stdlib.h>
 
 class TList;
 class TStreamerElement;

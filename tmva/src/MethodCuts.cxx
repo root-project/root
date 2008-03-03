@@ -93,6 +93,7 @@ End_Html */
 #include <iostream>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "time.h"
 #include "Riostream.h"
 #include "TH1F.h"

@@ -30,6 +30,7 @@
 #   include <unistd.h>
 #endif
 #include <vector>
+#include <stdlib.h>
 
 #include "RConfigure.h"
 #include "Riostream.h"

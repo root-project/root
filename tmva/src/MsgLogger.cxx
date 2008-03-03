@@ -31,6 +31,8 @@
 #include <iostream>
 #include <string>
 
+#include <stdlib.h>
+
 using std::string;
 using std::cout;
 using std::endl;

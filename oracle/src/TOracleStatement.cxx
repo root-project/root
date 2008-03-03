@@ -20,6 +20,7 @@
 
 #include "TOracleStatement.h"
 #include "TDataType.h"
+#include <stdlib.h>
 
 ClassImp(TOracleStatement)
 

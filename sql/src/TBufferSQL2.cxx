@@ -37,6 +37,7 @@
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "Riostream.h"
+#include <stdlib.h>
 
 #include "TSQLServer.h"
 #include "TSQLResult.h"

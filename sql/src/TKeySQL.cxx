@@ -28,6 +28,7 @@
 #include "TBufferSQL2.h"
 #include "TSQLStructure.h"
 #include "TSQLFile.h"
+#include <stdlib.h>
 
 ClassImp(TKeySQL);
 

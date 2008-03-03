@@ -58,6 +58,7 @@
 //_______________________________________________________________________
 
 #include <iostream>
+#include <stdlib.h>
 
 #include "TMVA/MethodCFMlpANN_Utils.h"
 #include "TMVA/Timer.h"

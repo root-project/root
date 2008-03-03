@@ -17,6 +17,7 @@
 #include "TDatabasePDG.h"
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"
+#include <stdlib.h>
 
 
 ////////////////////////////////////////////////////////////////////////

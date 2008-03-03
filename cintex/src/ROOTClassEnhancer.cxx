@@ -32,6 +32,7 @@
 #undef  G__DICTIONARY
 
 #include <sstream>
+#include <memory>
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
 #include "TVirtualIsAProxy.h"
@@ -378,7 +379,7 @@ namespace ROOT { namespace Cintex {
       if ( 0 != root_class )   {
          root_class->Size();
          if ( ! typ.IsVirtual() ) root_class->SetGlobalIsA(accessType);
-         std::auto_ptr<TClassStreamer> str;
+         auto_ptr<TClassStreamer> str;
          switch(kind)  {
          case TClassEdit::kVector:
          case TClassEdit::kList:

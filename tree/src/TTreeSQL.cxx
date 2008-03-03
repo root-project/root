@@ -20,6 +20,7 @@
 #include <Riostream.h>
 #include <vector>
 #include <map>
+#include <stdlib.h>
 
 #include "TString.h"
 #include "TROOT.h"

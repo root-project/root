@@ -207,6 +207,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TMath.h"
+#include <limits.h>
 
 Int_t gMatrixCheck = 1;
 

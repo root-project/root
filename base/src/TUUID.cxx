@@ -112,6 +112,7 @@
 #include "TMD5.h"
 #include "Bytes.h"
 #include <string.h>
+#include <stdlib.h>
 #ifdef R__WIN32
 #include "Windows4Root.h"
 #include <Iphlpapi.h>

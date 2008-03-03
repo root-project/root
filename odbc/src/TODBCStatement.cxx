@@ -25,6 +25,7 @@
 #include "Riostream.h"
 
 #include <sqlext.h>
+#include <stdlib.h>
 
 #define kSqlTime      123781
 #define kSqlDate      123782

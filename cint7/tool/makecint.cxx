@@ -32,6 +32,8 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <string.h>
+#include <stdlib.h>
 
 std::string G__DLLID;
 std::string G__MACRO;

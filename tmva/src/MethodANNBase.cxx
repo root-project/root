@@ -47,6 +47,8 @@
 #include "TMVA/TNeuronInputChooser.h"
 #include "TMVA/Ranking.h"
 
+#include <stdlib.h>
+
 using std::vector;
 
 ClassImp(TMVA::MethodANNBase)

@@ -33,6 +33,7 @@
 
 // need to be included later
 #include <time.h>
+#include <stdlib.h>
 #include <cassert>
 
 #include "gsl/gsl_rng.h"
@@ -118,9 +119,9 @@ namespace Math {
          if (ct != fCurTime) { 
             fCurTime = ct; 
             // set the seed for rand
-            std::srand(ct); 
+            srand(ct); 
          }
-         seed = std::rand();
+         seed = rand();
       } 
 
       assert(fRng);

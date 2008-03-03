@@ -33,6 +33,7 @@
 #include "TBrowser.h"
 #include "TClass.h"
 #include "TSystem.h"
+#include <stdlib.h>
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 

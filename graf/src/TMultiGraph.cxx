@@ -18,6 +18,7 @@
 #include "TVirtualFitter.h"
 #include "TClass.h"
 #include "TMath.h"
+#include <stdlib.h>
 
 #include <ctype.h>
 
