@@ -611,7 +611,7 @@ void TTimeStamp::Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
    // no standard routine exists and we'll have to use our homegrown routine,
    // if values are given in local time then use "mktime"
    // which also normalizes the tm struct as a byproduct
-   time_t utc_sec = (isUTC) ? MktimeFromUTC(&localtm) : mktime(&localtm);
+   time_t utc_sec = (isUTC && dosDate) ? MktimeFromUTC(&localtm) : mktime(&localtm);
 
    if (utc_sec == bad_time_t)
       Error("TTimeStamp::Set","mktime returned -1");
@@ -801,13 +801,13 @@ void TTimeStamp::DumpTMStruct(const tm_t &tmstruct)
           tmstruct.tm_wday,
           tmstruct.tm_yday,
           tmstruct.tm_isdst);
-#if defined(linux) && !defined(R__WINGCC)
-   printf(",\n      tm_gmtoff %7ld,  tm_zone \"%s\"",
-#ifdef __USE_BSD
-          tmstruct.tm_gmtoff,tmstruct.tm_zone);
+#if (defined(linux) && !defined(R__WINGCC)) || defined(R__MACOSX)
+   printf(",\n      tm_gmtoff %6ld, tm_zone \"%s\"",
+#if defined(__USE_BSD) || defined(R__MACOSX)
+          tmstruct.tm_gmtoff, tmstruct.tm_zone);
 #else
-          tmstruct.__tm_gmtoff,tmstruct.__tm_zone);
+          tmstruct.__tm_gmtoff, tmstruct.__tm_zone);
 #endif
 #endif
-   printf("}\n");
+   printf(" }\n");
 }
