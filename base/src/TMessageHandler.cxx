@@ -50,8 +50,10 @@ TMessageHandler::TMessageHandler(const TClass *cl, Bool_t derived)
    fMessIds = 0;
    fDerived = derived;
 
-   if (fClass) SetName(fClass->GetName());
-   else        SetName("DefaultMessageHandler");
+   if (fClass)
+      SetName(fClass->GetName());
+   else
+      SetName("DefaultMessageHandler");
 
    Add();
 }
@@ -94,7 +96,12 @@ void TMessageHandler::Add()
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Add(this);
-   Added();  // emit Added() signal
+   if (fClass) {
+      // don't emit signal when the default message handler is added
+      // as this happens in the TROOT ctor and the TQObject stuff is
+      // not yet properly initialized on some platforms
+      Added();  // emit Added() signal
+   }
 }
 
 //______________________________________________________________________________
@@ -103,7 +110,7 @@ Int_t TMessageHandler::GetMessageCount(Int_t messId) const
    // Return counter for message with ID=messid.
 
    if (fSize <= 0) return 0;
-   for (Int_t i=0;i<fSize;i++) {
+   for (Int_t i = 0; i < fSize; i++) {
       if (fMessIds[i] == messId) return fCnts[i];
    }
    return 0;
@@ -116,7 +123,7 @@ Int_t TMessageHandler::GetTotalMessageCount() const
 
    if (fSize <= 0) return 0;
    Int_t count = 0;
-   for (Int_t i=0;i<fSize;i++) {
+   for (Int_t i = 0; i < fSize; i++) {
       count += fCnts[i];
    }
    return count;
@@ -144,13 +151,13 @@ void TMessageHandler::HandleMessage(Int_t id, const TObject *obj)
    // increment statistics
    Int_t i;
    // first message
-   if (fSize <=0) {
+   if (fSize <= 0) {
       fSize    = 1;
       fCnts    = new Int_t[fSize];
       fMessIds = new Int_t[fSize];
    } else {
       // already existing message
-      for (i=0;i<fSize;i++) {
+      for (i = 0; i < fSize; i++) {
          if (fMessIds[i] == fMessId) {
             fCnts[i]++;
             return;
@@ -160,7 +167,7 @@ void TMessageHandler::HandleMessage(Int_t id, const TObject *obj)
       fSize++;
       Int_t *newCnts    = new Int_t[fSize];
       Int_t *newMessIds = new Int_t[fSize];
-      for (i=0;i<fSize-1;i++) {
+      for (i = 0; i < fSize-1; i++) {
          newCnts[i]    = fCnts[i];
          newMessIds[i] = fMessIds[i];
       }
@@ -199,7 +206,7 @@ void TMessageHandler::Print(Option_t *) const
    Int_t id, uid;
    const TClass *cl;
    TIter next(gROOT->GetListOfClasses());
-   for (Int_t i=0;i<fSize;i++) {
+   for (Int_t i = 0; i < fSize; i++) {
       id = fMessIds[i];
       cl = fClass;
       if (id < 0) {
@@ -207,7 +214,7 @@ void TMessageHandler::Print(Option_t *) const
          uid = id/10000;
          id = id%10000;
          next.Reset();
-         while ((cl=(TClass*)next())) {
+         while ((cl = (TClass*)next())) {
             if (cl->GetUniqueID() == UInt_t(uid)) break;
          }
       }
