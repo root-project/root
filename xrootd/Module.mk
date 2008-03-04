@@ -6,14 +6,11 @@
 MODDIR     := xrootd
 MODDIRS    := $(MODDIR)/src
 
-#XROOTDVERS := xrootd-20071116-0000
 XROOTDDIR  := $(MODDIR)
 XROOTDDIRS := $(MODDIRS)
 XROOTDDIRD := $(MODDIRS)/xrootd
 XROOTDDIRI := $(MODDIRS)/xrootd/src
 XROOTDDIRL := $(MODDIRS)/xrootd/lib
-#XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
-#XROOTDETAG := $(MODDIRS)/headers.d
 XROOTDMAKE := $(XROOTDDIRD)/GNUmakefile
 
 ##### Xrootd config options #####
