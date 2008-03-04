@@ -15,12 +15,13 @@ const char *XrdSecProtocolunixCVSID = "$Id$";
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <iostream.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <grp.h>
 #include <pwd.h>
 #include <sys/types.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdSys/XrdSysPthread.hh"

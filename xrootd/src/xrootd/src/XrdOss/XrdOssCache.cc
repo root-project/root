@@ -15,11 +15,12 @@ const char *XrdOssCacheCVSID = "$Id$";
 #include <unistd.h>
 #include <errno.h>
 #include <strings.h>
-#include <iostream.h>
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssCache.hh"

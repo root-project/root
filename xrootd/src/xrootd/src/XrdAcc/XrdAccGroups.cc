@@ -15,7 +15,6 @@ const char *XrdAccGroupsCVSID = "$Id$";
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <iostream.h>
 #include <limits.h>
 #include <netdb.h>
 #include <pwd.h>
@@ -23,6 +22,8 @@ const char *XrdAccGroupsCVSID = "$Id$";
 #include <strings.h>
 #include <sys/param.h>
 #include <sys/types.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdAcc/XrdAccCapability.hh"
 #include "XrdAcc/XrdAccGroups.hh"

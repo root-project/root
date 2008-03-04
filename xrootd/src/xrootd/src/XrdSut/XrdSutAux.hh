@@ -11,9 +11,7 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-#ifndef WIN32
-#include <iostream.h>
-#endif
+#include <iostream>
 #ifndef __XPROTOCOL_H
 #include <XProtocol/XProtocol.hh>
 #endif

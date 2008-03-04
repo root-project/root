@@ -16,7 +16,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream.h>
+#include <iostream>
 
 #define QTRACE(act) (cryptoTrace && (cryptoTrace->What & cryptoTRACE_ ## act))
 #define PRINT(y)    {if (cryptoTrace) {cryptoTrace->Beg(epname); \

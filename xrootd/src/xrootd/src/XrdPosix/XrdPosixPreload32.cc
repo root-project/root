@@ -21,7 +21,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdPosix/XrdPosixExtern.hh"
 #include "XrdPosix/XrdPosixLinkage.hh"

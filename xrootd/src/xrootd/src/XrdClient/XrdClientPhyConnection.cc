@@ -220,14 +220,14 @@ void XrdClientPhyConnection::StartReader() {
 	 Error("PhyConnection",
 	       "Can't create reader thread: out of system resources");
 // HELP: what do we do here
-         std::exit(-1);
+         ::exit(-1);
       }
 
       if (fReaderthreadhandler[i]->Run(this)) {
          Error("PhyConnection",
                "Can't run reader thread: out of system resources. Critical error.");
 // HELP: what do we do here
-         std::exit(-1);
+         ::exit(-1);
       }
 
       if (fReaderthreadhandler[i]->Detach())

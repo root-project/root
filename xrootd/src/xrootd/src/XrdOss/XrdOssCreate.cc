@@ -19,7 +19,6 @@ const char *XrdOssCreateCVSID = "$Id$";
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <strings.h>
 #include <stdio.h>
 #include <sys/file.h>
@@ -28,6 +27,8 @@ const char *XrdOssCreateCVSID = "$Id$";
 #if defined(__solaris__) || defined(AIX)
 #include <sys/vnode.h>
 #endif
+#include <iostream>
+using namespace std;
 
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssConfig.hh"

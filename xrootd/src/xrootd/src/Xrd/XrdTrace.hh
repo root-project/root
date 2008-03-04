@@ -26,7 +26,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream.h>
+#include <iostream>
 #include "XrdOuc/XrdOucTrace.hh"
 
 #ifndef XRD_TRACE

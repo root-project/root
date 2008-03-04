@@ -24,8 +24,9 @@ const char *XrdNetDNSCVSID = "$Id$";
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <iostream.h>
 #endif
+#include <iostream>
+using namespace std;
 
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdSys/XrdSysPlatform.hh"

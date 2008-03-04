@@ -12,12 +12,8 @@
 
 //         $Id$
 
-#ifndef WIN32
-#include <iostream.h>
-#else
 #include <iostream>
 using namespace std;
-#endif
 
 #include "XrdSys/XrdSysError.hh"
 

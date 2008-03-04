@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <iostream.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <stdio.h>
@@ -22,6 +21,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/times.h>
+#include <iostream>
+using namespace std;
 
 // AFS support
 #ifdef R__AFS

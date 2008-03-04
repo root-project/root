@@ -14,7 +14,7 @@
 
 #include <sys/types.h>
 #include <errno.h>
-#include <iostream.h>
+#include <iostream>
 
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssCache.hh"

@@ -21,7 +21,6 @@ const char *XrdConfigCVSID = "$Id$";
   
 #include <unistd.h>
 #include <ctype.h>
-#include <iostream.h>
 #include <pwd.h>
 #include <string.h>
 #include <stdio.h>
@@ -29,7 +28,8 @@ const char *XrdConfigCVSID = "$Id$";
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
+#include <iostream>
+using namespace std;
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdConfig.hh"
 #include "Xrd/XrdInet.hh"

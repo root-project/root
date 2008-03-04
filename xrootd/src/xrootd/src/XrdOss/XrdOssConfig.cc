@@ -27,13 +27,14 @@ const char *XrdOssConfigCVSID = "$Id$";
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssConfig.hh"

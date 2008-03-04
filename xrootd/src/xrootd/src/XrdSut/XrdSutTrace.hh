@@ -19,7 +19,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream.h>
+#include <iostream>
 
 #define QTRACE(act) (sutTrace && (sutTrace->What & sutTRACE_ ## act))
 #define PRINT(y)    {if (sutTrace) {sutTrace->Beg(epname); \

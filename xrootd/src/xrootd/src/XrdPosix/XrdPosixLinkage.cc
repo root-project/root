@@ -25,7 +25,8 @@
 #if !defined(__macos__) && !defined(__CYGWIN__)
 #include <link.h>
 #endif
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 #include <errno.h>
 #include "XrdPosix/XrdPosixLinkage.hh"

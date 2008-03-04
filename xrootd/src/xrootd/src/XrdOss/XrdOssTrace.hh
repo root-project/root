@@ -24,7 +24,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream.h>
+#include <iostream>
 
 #define QTRACE(act) OssTrace.What & TRACE_ ## act
 

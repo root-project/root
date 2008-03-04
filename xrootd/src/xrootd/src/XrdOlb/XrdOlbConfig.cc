@@ -25,7 +25,6 @@ const char *XrdOlbConfigCVSID = "$Id$";
 #include <unistd.h>
 #include <ctype.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
@@ -34,6 +33,8 @@ const char *XrdOlbConfigCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/un.h>
 #include <dirent.h>
+#include <iostream>
+using namespace std;
 
 #include "../XrdVersion.hh"
 #include "Xrd/XrdJob.hh"

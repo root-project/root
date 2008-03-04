@@ -16,7 +16,7 @@
 
 #ifndef NODEBUG
 
-#include <iostream.h>
+#include <iostream>
 
 #define QTRACE(act) SecTrace->What & TRACE_ ## act
 

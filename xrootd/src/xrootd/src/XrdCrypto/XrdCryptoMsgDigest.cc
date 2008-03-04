@@ -18,6 +18,7 @@
 /* ************************************************************************** */
 
 #include <string.h>
+using namespace std;
 
 #include <XrdCrypto/XrdCryptoAux.hh>
 #include <XrdCrypto/XrdCryptoMsgDigest.hh>

@@ -32,12 +32,11 @@ const char *XrdSysPluginCVSID = "$Id$";
 #include <strings.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <iostream.h>
 #else
 #include "XrdSys/XrdWin32.hh"
+#endif
 #include <iostream>
 using namespace std;
-#endif
   
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPlugin.hh"

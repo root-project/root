@@ -19,7 +19,6 @@ const char *XrdPssCVSID = "$Id$";
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <signal.h>
 #include <strings.h>
 #include <stdio.h>
@@ -29,6 +28,8 @@ const char *XrdPssCVSID = "$Id$";
 #ifdef __solaris__
 #include <sys/vnode.h>
 #endif
+#include <iostream>
+using namespace std;
 
 #include "XrdVersion.hh"
 

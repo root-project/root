@@ -35,13 +35,14 @@ const char *XrdOfsCVSID = "$Id$";
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include <iostream.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdVersion.hh"
 

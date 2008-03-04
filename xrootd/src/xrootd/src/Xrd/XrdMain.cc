@@ -46,13 +46,14 @@ Where:
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <iostream.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
+#include <iostream>
+using namespace std;
 
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdConfig.hh"

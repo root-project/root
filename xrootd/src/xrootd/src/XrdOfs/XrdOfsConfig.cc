@@ -26,13 +26,14 @@ const char *XrdOfsConfigCVSID = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <stdio.h>
 #include <netinet/in.h>
 #include <sys/param.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOfs/XrdOfs.hh"
 #include "XrdOfs/XrdOfsConfig.hh"

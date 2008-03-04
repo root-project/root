@@ -26,7 +26,7 @@
 #define XRDOLBTRACETYPE .
 #endif
 
-#include <iostream.h>
+#include <iostream>
 #include "XrdOuc/XrdOucTrace.hh"
 
 #define DEBUG(y) if (Trace XRDOLBTRACETYPE What & TRACE_Debug) TRACEX(y)

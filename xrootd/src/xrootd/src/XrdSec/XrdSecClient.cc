@@ -15,7 +15,6 @@ const char *XrdSecClientCVSID = "$Id$";
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <iostream.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -25,6 +24,8 @@ const char *XrdSecClientCVSID = "$Id$";
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdSys/XrdSysPthread.hh"

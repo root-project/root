@@ -16,12 +16,13 @@ const char *XrdSecServerCVSID = "$Id$";
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"

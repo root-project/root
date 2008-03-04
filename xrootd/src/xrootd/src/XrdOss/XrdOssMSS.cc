@@ -16,7 +16,6 @@ const char *XrdOssMSSCVSID = "$Id$";
 #include <unistd.h>
 #include <errno.h>
 #include <strings.h>
-#include <iostream.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
@@ -29,6 +28,8 @@ const char *XrdOssMSSCVSID = "$Id$";
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdNet/XrdNetOpts.hh"
 #include "XrdNet/XrdNetSocket.hh"

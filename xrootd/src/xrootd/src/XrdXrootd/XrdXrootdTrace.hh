@@ -28,7 +28,7 @@
  
 #ifndef NODEBUG
 
-#include <iostream.h>
+#include <iostream>
 #include "XrdOuc/XrdOucTrace.hh"
 
 #define TRACE(act, x) \

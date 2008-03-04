@@ -18,7 +18,8 @@ const char *XrdPosixCVSID = "$Id$";
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/uio.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdPosix/XrdPosixLinkage.hh"
 #include "XrdPosix/XrdPosixXrootd.hh"

@@ -14,7 +14,6 @@ const char *XrdPssConfigCVSID = "$Id$";
 
 #include <unistd.h>
 #include <ctype.h>
-#include <iostream.h>
 #include <strings.h>
 #include <stdio.h>
 #include <sys/param.h>
@@ -23,6 +22,8 @@ const char *XrdPssConfigCVSID = "$Id$";
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <fcntl.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdPss/XrdPss.hh"
 #include "XrdOuc/XrdOuca2x.hh"

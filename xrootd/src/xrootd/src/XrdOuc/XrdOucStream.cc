@@ -19,7 +19,6 @@ const char *XrdOucStreamCVSID = "$Id$";
 #include <string.h>
 #include <stdio.h>
 #ifndef WIN32
-#include <iostream.h>
 #include <unistd.h>
 #include <strings.h>
 #if !defined(__linux__) && !defined(__CYGWIN__)
@@ -35,9 +34,9 @@ const char *XrdOucStreamCVSID = "$Id$";
 #else // WIN32
 #include "XrdSys/XrdWin32.hh"
 #include <process.h>
+#endif // WIN32
 #include <iostream>
 using namespace std;
-#endif // WIN32
 
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"

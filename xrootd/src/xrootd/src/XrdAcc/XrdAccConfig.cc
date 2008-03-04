@@ -23,13 +23,14 @@ const char *XrdAccConfigCVSID = "$Id$";
 #include <unistd.h>
 #include <ctype.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <strings.h>
 #include <stdio.h>
 #include <time.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOuc/XrdOucLock.hh"
 #include "XrdOuc/XrdOucEnv.hh"

@@ -25,13 +25,14 @@ const char *XrdOssStageCVSID = "$Id$";
 #include <unistd.h>
 #include <errno.h>
 #include <strings.h>
-#include <iostream.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssCache.hh"

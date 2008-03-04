@@ -15,13 +15,14 @@ const char *XrdXrootdConfigCVSID = "$Id$";
 #include <unistd.h>
 #include <ctype.h>
 #include <fcntl.h>
-#include <iostream.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
+#include <iostream>
+using namespace std;
 
 #include "XrdVersion.hh"
 
