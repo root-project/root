@@ -453,6 +453,7 @@ TGeoManager *gGeoManager = 0;
 ClassImp(TGeoManager)
 
 Bool_t TGeoManager::fgLock = kFALSE;
+Int_t  TGeoManager::fgVerboseLevel = 1;
 
 //_____________________________________________________________________________
 TGeoManager::TGeoManager()
@@ -1969,7 +1970,8 @@ void TGeoManager::SetClippingShape(TGeoShape *shape)
 void TGeoManager::SetMaxVisNodes(Int_t maxnodes) {
 // set the maximum number of visible nodes.
    fMaxVisNodes = maxnodes;
-   if (maxnodes>0) Info("SetMaxVisNodes","Automatic visible depth for %d visible nodes", maxnodes);
+   if (maxnodes>0 && fgVerboseLevel>0)
+      Info("SetMaxVisNodes","Automatic visible depth for %d visible nodes", maxnodes);
    if (!fPainter) return;
    fPainter->CountVisibleNodes();
    Int_t level = fPainter->GetVisLevel();
@@ -2016,7 +2018,8 @@ void TGeoManager::SetVisLevel(Int_t level) {
    if (level>0) {
       fVisLevel = level;
       fMaxVisNodes = 0;
-      Info("SetVisLevel","Automatic visible depth disabled");
+      if (fgVerboseLevel>0)
+         Info("SetVisLevel","Automatic visible depth disabled");
       if (fPainter) fPainter->CountVisibleNodes();
    } else {
       SetMaxVisNodes();
@@ -3390,6 +3393,22 @@ Bool_t TGeoManager::IsLocked()
 {
 // Check lock state.
    return fgLock;
+}
+
+//______________________________________________________________________________
+Int_t TGeoManager::GetVerboseLevel()
+{
+// Set verbosity level (static function).
+// 0 - suppress messages related to geom-painter visibility level
+// 1 - default value
+   return fgVerboseLevel;
+}
+
+//______________________________________________________________________________
+void TGeoManager::SetVerboseLevel(Int_t vl)
+{
+// Return current verbosity level (static function).
+   fgVerboseLevel = vl;
 }
 
 //______________________________________________________________________________

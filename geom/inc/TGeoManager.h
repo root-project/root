@@ -46,6 +46,7 @@ class TGeoManager : public TNamed
 {
 protected:
    static Bool_t         fgLock;            //! Lock preventing a second geometry to be loaded
+   static Int_t          fgVerboseLevel;    //! Verbosity level for Info messages (no IO).
 
    TGeoManager(const TGeoManager&); 
    TGeoManager& operator=(const TGeoManager&); 
@@ -410,6 +411,8 @@ public:
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");
    static  void           LockGeometry();
    static  void           UnlockGeometry();
+   static  Int_t          GetVerboseLevel();
+   static  void           SetVerboseLevel(Int_t vl);
    static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
    static Bool_t          IsLocked();
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
