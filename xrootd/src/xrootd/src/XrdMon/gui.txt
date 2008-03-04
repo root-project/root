@@ -1,0 +1,158 @@
+/*****************************************************************************/
+/*                                                                           */
+/*                                  gui.txt                                  */
+/*                                                                           */
+/* (c) 2005 by the Board of Trustees of the Leland Stanford, Jr., University */
+/*                            All Rights Reserved                            */
+/*       Produced by Jacek Becla for Stanford University under contract      */
+/*              DE-AC02-76SF00515 with the Department of Energy              */
+/*****************************************************************************/
+ 
+// $Id$
+
+
+// This is a dump of ideas what information to present to users 
+// via web interface. 
+//
+// "now"         means current snapshot
+// "time window" user can choose time period:
+//               1h, 8h, 24,, 1week, 1month, 6months, 1year, all
+
+
+
+One page with global summary for all hosts, all users:
+======================================================
+
+show current number of
+   - unique users
+   - unique open files
+   - non-unique open files
+   - jobs (open sessions) 
+   - unique client hosts 
+   - unique server hosts
+
+Plot in specified time window:
+   - # unique users
+   - # unique closed files
+   - # unique jobs
+   - volume read
+   - volume written
+   - total duration of all jobs
+
+Tables
+======
+[For all tables: allow to choose how many to show: top 5? 10?
+Sortable by column when makes sense]
+
+ now:
+   - users: { userName, #jobs/user, #uniqueFiles } 
+   - files: { filePath, #sessionsUsingIt, #uniqueUsersUsingIt }
+   - skims: { skimName, #uniqueFiles, #jobs, #users }
+   - servers: {serverName, #users, #client hosts, #accessed files} 
+ time window:
+   - users: { userName, #jobs/user, readVolume/user, writeVolume/user }
+   - files: { filePath, #sessionsUsingIt, #uniqueUsersUsingIt, readVolume }
+   - skims: { skimName, uniqueFiles, #jobs, #users, volumeRead }
+   - servers: {serverName, #users, #client hosts, #accessed files} 
+
+
+Buttons
+=======
+ now:
+   - show all users
+   - show all server machines
+   - show all client machines
+   - show all skims 
+   - show all files 
+     for all of the above: in a table, each name is a link
+ time window:
+   -
+
+
+
+Custom pages (one per user, one per file, one per skim, one per server...
+========================================================================
+
+Page about one user:
+
+[allow to choose what to show from the list below]
+ now:
+   - # opened files
+   - # opened sessions
+   - # client hosts 
+   - list opened files
+   - list opened  sessions
+   - list client hosts 
+ time window:
+   - # accessed (closed) files
+   - # closed sessions
+   - total duration of all jobs
+   - peak # simulteneous jobs
+   - volume read
+   - volume written
+
+
+Page about one server host:
+
+[allow to choose what to show from the list below]
+
+ now:
+   - current # opened unique files
+   - current # opened sessions
+   - current # client hosts 
+   - current # users 
+ time window:
+   - total # users served
+   - total # jobs served
+   - total # unique files served
+   - total # non-unique files served
+   - volume read
+   - volume written
+
+
+Page about client host:
+
+[allow to choose what to show from the list below]
+
+ now:
+   - current # opened sessions (jobs)
+   - current # of accessed files
+   - list of files currently accessed
+   - list of server hosts currently serving this client host
+   - list of current users
+ time window
+   - sessions
+   - # of accessed files 
+   - # of users 
+
+Page about skim:
+
+[allow to choose what to show from the list below]
+
+ now:
+   - current # unique opened files
+   - current # opened sessions
+   - current # unique users 
+   - current list of users 
+ time window:
+   - volume read
+   - volume written
+   - #jobs that used given skim
+   - #users that used given skim
+   - list users that used given skim
+
+Page about file: 
+[allow to choose what to show from the list below] 
+
+ now: 
+   - current # opened sessions 
+   - current # unique users 
+   - current # server hosts 
+   - current list of users 
+   - current list of server hosts 
+ time window: 
+   - volume read 
+   - volume written 
+   - #jobs that used the file 
+   - #users that used the file 
+   - list users that used the file 

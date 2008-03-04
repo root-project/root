@@ -1,0 +1,157 @@
+#
+# $Id: xrootd.cf.example,v 1.2 2004/08/17 15:02:53 elmer Exp $
+#
+# The following is a sample xrootd configuration. The relevant prefixes are:
+#
+# acc    - Access Control
+# odc    - Open Distributed Cache
+# ofs    - Open File    System
+# oss    - Open Storage System
+# sec    - Security
+# xrd    - Extended Request Daemon
+# xrootd - Xrootd Service
+
+#-----------------------------------------------
+
+# The Open Distributed Cache Section
+#
+
+# Tell xrootd who is the redirection manager
+#
+odc.manager kanolb-a+ 3121
+
+#-----------------------------------------------
+
+# The Open File System Section
+#
+
+# Identify which machines will be redirecting clients
+#
+ofs.redirect  remote if kanolb-a+
+
+# Identify which machines clients will be redirected to (need not be inclusive)
+#
+ofs.redirect  target if kan0*
+
+#-----------------------------------------------
+
+# The Open Storage System Section
+#
+
+# Indicate where we hace mounted filesystems that can be used for space
+# The cache directive will also be used by the olb. So, we need not repeat it.
+#
+oss.cache public /kanga/cache*
+
+# While we highly recommend that you avoid path prefixing, here we indicate
+# the actual way files are physically name (i.e., the lfn to pfn mapping). The
+# localroot is how we name this on the data server while remoteroot tells the
+# system the corresponding name in the Mass Storage System.
+#
+oss.localroot /kanga
+oss.remoteroot /kanga
+
+# Since we are using a Mass Storage System we need to indicate how MSS meta-data
+# information is retrieved (mssgwcmd) and how files are retrieved (stagecmd).
+# The xfr directive will limit the sumber of simultaneous stages to eight.
+#
+oss.mssgwcmd /usr/etc/ooss/pudc -f -c /usr/etc/ooss/rxhpss.cf
+oss.stagecmd /usr/etc/ooss/ooss_Stage
+oss.xfr 8
+
+# Finally, we need to indicate, by path, which ones are migratable. This will
+# indicate which logical paths (i.e., lfn's) should exist in the MSS.
+#
+oss.path /store nodread mig
+
+#-----------------------------------------------
+
+# The XRD Section
+#
+# Generally, xrd defaults are fine. So, no need to change them.
+#
+
+#-----------------------------------------------
+
+# The Xrootd Section
+#
+# Here we load the extended file system support for xrootd
+#
+xrootd.fslib /opt/xrootd/lib/cur/libXrdOfs.so
+
+#-----------------------------------------------
+
+#-----------------------------------------------
+
+# The Open Load Balancer Section
+#
+# For managers, use the allow, port, and sched, and wait directives.
+# For Servers,  use the path, perf, port, and subscribe directives.
+#
+# Indicate which hosts are allowed to connect to the olb (even if localhost)
+#
+olb.allow host kan*.slac.stanford.edu
+olb.allow host bbr-olb*.slac.stanford.edu
+
+# Tell the olb what port to use (server and manager)
+#
+olb.port 3121
+
+# To use load based scheduling, specify a load formula using sched
+#
+olb.sched cpu 100 
+
+# Tell each data server what paths to export
+#
+olb.path s /store
+
+# Tell each data server who to ubscrive to (i.e., the managers)
+#
+olb.subscribe kanolb-a+ 3121
+
+# Tell each olb server to wait for the corresponding xrootd server
+#
+olb.wait
+
+# To effect load based scheduling, we must start a performance monitor
+#
+olb.perf int 180 pgm /opt/olbd/bin/cur/XrdOlbMonPerf 120
+
+#-----------------------------------------------
+
+#-----------------------------------------------
+
+# The MPS Section
+#
+# Here code the relevant dorectives to control migration, purge, and staging
+# Most of the defaults are likely wrong. The typical ones to specify are:
+#
+# Where error messages go via mail and how often they should go
+#
+mps.adminuser = sys-hpss
+
+# For migration, how long to wait between runs, how long a failure is to be
+# recognized (after which the operation is retried). how often purge should
+# run, and the high/low purge thesholds.
+#
+mps.migr.rmfail_time = 129600
+mps.migr.waittime = 600
+mps.purg.waittime = 3600
+mps.purg.lousedpct = 80
+mps.purg.hiusedpct = 80
+
+# For pre-stage, we generally want to indicate the maximum number allowed
+# at one time and the command to use to transfer data from the mss
+#
+mps.pstg.max_pstg_proc = 3
+mps.pstg.pstgcmd = /opt/xrootd/utils/mps_Stage -i
+
+# Generally, for all component, we need to indicate who the MSS transfer user
+# is, the target host and port. Usually, we limit retries to two.
+#
+mps.xfrhost = babarmss
+mps.xfruser = objysrv
+mps.xfrport = 2021
+mps.stage.max_retry = 2
+
+#-----------------------------------------------

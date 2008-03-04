@@ -1,0 +1,114 @@
+#              $Id: GNUmakefile,v 1.9.6.1 2007/11/20 09:54:44 ganis Exp $
+
+#------------------------------------------------------------------------------#
+#                       C o m m o n   V a r i a b l e s                        #
+#------------------------------------------------------------------------------#
+  
+include ../GNUmake.env
+
+#------------------------------------------------------------------------------#
+#                             C o m p o n e n t s                              #
+#------------------------------------------------------------------------------#
+  
+SOURCES = \
+        XrdNet.cc            \
+        XrdNetBuffer.cc      \
+        XrdNetConnect.cc     \
+        XrdNetDNS.cc         \
+        XrdNetLink.cc        \
+        XrdNetSecurity.cc    \
+        XrdNetSocket.cc      \
+        XrdNetWork.cc
+  
+OBJECTS = \
+        $(OBJDIR)/XrdNet.o             \
+        $(OBJDIR)/XrdNetBuffer.o       \
+        $(OBJDIR)/XrdNetConnect.o      \
+        $(OBJDIR)/XrdNetDNS.o          \
+        $(OBJDIR)/XrdNetLink.o         \
+        $(OBJDIR)/XrdNetSecurity.o     \
+        $(OBJDIR)/XrdNetSocket.o       \
+        $(OBJDIR)/XrdNetWork.o
+
+LIBRARY = $(LIBDIR)/libXrdNet.a
+
+TARGETS = $(LIBRARY)
+
+#------------------------------------------------------------------------------#
+#                           S e a r c h   P a t h s                            #
+#------------------------------------------------------------------------------#
+
+vpath XrdOuc% ../XrdOuc
+vpath XrdNet% ../XrdNet
+vpath XrdSys% ../XrdSys
+
+#------------------------------------------------------------------------------#
+#                          I n i t i a l   R u l e s                           #
+#------------------------------------------------------------------------------#
+ 
+include ../GNUmake.options
+
+anything: $(TARGETS)
+	@echo Make XrdNet done.
+
+#------------------------------------------------------------------------------#
+#                           D e p e n d e n c i e s                            #
+#------------------------------------------------------------------------------#
+
+$(TARGETS): $(OBJECTS)
+	@echo Creating archive $(LIBRARY) 
+	$(ECHO)rm -f $(LIBRARY)
+	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
+	          if [ "x$(SUNCACHE)" != "x" ]; then \
+	             $(CC) -xar -o $(LIBRARY) $(OBJDIR)$(SUNCACHE)/*/*.o; \
+		  else \
+	             $(CC) -xar -o $(LIBRARY) $(OBJECTS); \
+		  fi; \
+	       else \
+	          ar -rc $(LIBRARY) $(OBJECTS); \
+	          ranlib $(LIBRARY); \
+               fi
+
+$(OBJDIR)/XrdNet.o: XrdNet.cc       XrdNet.hh         XrdNetBuffer.hh \
+                    XrdNetDNS.hh    XrdNetOpts.hh     XrdNetSecurity.hh \
+                    XrdNetSocket.hh XrdSysPlatform.hh XrdSysError.hh
+	@echo Compiling XrdNet.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNet.cc -o $(OBJDIR)/XrdNet.o
+
+$(OBJDIR)/XrdNetBuffer.o: XrdNetBuffer.cc XrdNetBuffer.hh \
+                          XrdOucChain.hh  XrdSysPlatform.hh  XrdSysPthread.hh
+	@echo Compiling XrdNetBuffer.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetBuffer.cc -o $(OBJDIR)/XrdNetBuffer.o
+
+$(OBJDIR)/XrdNetConnect.o: XrdNetConnect.cc XrdNetConnect.hh XrdSysPlatform.hh
+	@echo Compiling XrdNetConnect.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetConnect.cc -o $(OBJDIR)/XrdNetConnect.o
+
+$(OBJDIR)/XrdNetDNS.o: XrdNetDNS.cc XrdNetDNS.hh XrdSysPlatform.hh XrdSysPthread.hh
+	@echo Compiling XrdNetDNS.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(CFGETHBYXR) $(CFNAMEINFO) $(CFPROTOR) $(INCLUDE) XrdNetDNS.cc -o $(OBJDIR)/XrdNetDNS.o
+
+$(OBJDIR)/XrdNetLink.o: XrdNetLink.cc XrdNetLink.hh          XrdNet.hh \
+                        XrdNetBuffer.hh   XrdNetDNS.hh       XrdNetPeer.hh \
+                        XrdOucChain.hh    XrdSysError.hh     XrdSysPthread.hh \
+                        XrdSysPlatform.hh XrdOucStream.hh    XrdOucTokenizer.hh
+	@echo Compiling XrdNetLink.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetLink.cc -o $(OBJDIR)/XrdNetLink.o
+
+$(OBJDIR)/XrdNetSecurity.o: XrdNetSecurity.cc XrdNetSecurity.hh \
+                            XrdOucHash.hh     XrdOucHash.icc \
+                            XrdOucNList.hh    XrdSysPthread.hh XrdOucTrace.hh
+	@echo Compiling XrdNetSecurity.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetSecurity.cc -o $(OBJDIR)/XrdNetSecurity.o
+
+$(OBJDIR)/XrdNetSocket.o: XrdNetSocket.cc  XrdNetSocket.hh \
+                          XrdNetConnect.hh XrdNetDNS.hh        XrdNetOpts.hh \
+                          XrdSysError.hh   XrdOucUtils.hh XrdSysPlatform.hh
+	@echo Compiling XrdNetSocket.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetSocket.cc -o $(OBJDIR)/XrdNetSocket.o
+
+$(OBJDIR)/XrdNetWork.o: XrdNetWork.cc     XrdNetWork.hh     XrdNetBuffer.hh \
+                        XrdNetLink.hh     XrdNetOpts.hh     XrdNetPeer.hh   \
+                        XrdNet.hh         XrdSysError.hh
+	@echo Compiling XrdNetWork.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdNetWork.cc -o $(OBJDIR)/XrdNetWork.o

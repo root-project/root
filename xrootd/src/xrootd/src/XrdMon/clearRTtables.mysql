@@ -1,0 +1,6 @@
+USE xrdmon_kan;
+
+DELETE FROM rtClosedFiles;
+DELETE FROM rtClosedSessions;
+DELETE FROM rtOpenedFiles;
+DELETE FROM rtOpenedSessions;

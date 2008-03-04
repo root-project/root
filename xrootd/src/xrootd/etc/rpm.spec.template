@@ -1,0 +1,125 @@
+Summary: An eXtended Root Daemon (xrootd)
+Name: xrootd
+Version: XRD-MAJORVER-XRD
+Release: XRD-MINORVER-XRD
+Prefix: /opt/xrootd
+URL: http://xrootd.slac.stanford.edu/
+Copyright: SLAC/Stanford University
+Group: Applications/File
+Source: XRD-TARBALL-XRD
+BuildRoot: XRD-BUILDROOT-XRD
+AutoReqProv: no
+
+%description
+The xrootd server provides performant, secure and fault-tolerant access to
+root files. An optional load balancer is also included. 
+
+%prep
+%setup -q -n xrootd
+
+%build
+./configure.classic --enable-perlint --with-perl=/usr/local/bin/perl5.8 XRD-DEBUGOPT-XRD
+gmake clean
+gmake
+
+%install
+mkdir -p $RPM_BUILD_ROOT/opt/xrootd/bin
+mkdir -p $RPM_BUILD_ROOT/opt/xrootd/lib
+mkdir -p $RPM_BUILD_ROOT/opt/xrootd/etc
+mkdir -p $RPM_BUILD_ROOT/opt/xrootd/utils
+
+install -m 755 bin/XRD-SYSNAME-XRD/xrootd $RPM_BUILD_ROOT/opt/xrootd/bin/xrootd
+install -m 755 bin/XRD-SYSNAME-XRD/olbd $RPM_BUILD_ROOT/opt/xrootd/bin/olbd
+install -m 755 bin/XRD-SYSNAME-XRD/xrdcp $RPM_BUILD_ROOT/opt/xrootd/bin/xrdcp
+install -m 755 bin/XRD-SYSNAME-XRD/xrd $RPM_BUILD_ROOT/opt/xrootd/bin/xrd
+install -m 755 bin/XRD-SYSNAME-XRD/xrdmonCollector $RPM_BUILD_ROOT/opt/xrootd/bin/xrdmonCollector
+install -m 755 bin/XRD-SYSNAME-XRD/xrdmonAdmin $RPM_BUILD_ROOT/opt/xrootd/bin/xrdmonAdmin
+install -m 755 bin/XRD-SYSNAME-XRD/xrdgsiproxy $RPM_BUILD_ROOT/opt/xrootd/bin/xrdgsiproxy
+install -m 755 bin/XRD-SYSNAME-XRD/xrdpwdadmin $RPM_BUILD_ROOT/opt/xrootd/bin/xrdpwdadmin
+install -m 755 lib/XRD-SYSNAME-XRD/XrdClientAdmin.pm $RPM_BUILD_ROOT/opt/xrootd/lib/XrdClientAdmin.pm
+install -m 755 lib/XRD-SYSNAME-XRD/XrdClientAdmin.so $RPM_BUILD_ROOT/opt/xrootd/lib/XrdClientAdmin.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdPosix.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdPosix.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdOfs.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdOfs.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdRootd.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdRootd.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdSec.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdSec.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdSeckrb4.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdSeckrb4.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdSeckrb5.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdSeckrb5.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdCrypto.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdCrypto.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdCryptossl.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdCryptossl.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdSut.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdSut.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdSecgsi.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdSecgsi.so
+install -m 755 lib/XRD-SYSNAME-XRD/libXrdSecpwd.so $RPM_BUILD_ROOT/opt/xrootd/lib/libXrdSecpwd.so
+install -m 755 etc/StartOLB $RPM_BUILD_ROOT/opt/xrootd/etc/StartOLB
+install -m 644 etc/StartOLB.cf.example $RPM_BUILD_ROOT/opt/xrootd/etc/StartOLB.cf.example
+install -m 755 etc/StartXRD $RPM_BUILD_ROOT/opt/xrootd/etc/StartXRD
+install -m 644 etc/StartXRD.cf.example $RPM_BUILD_ROOT/opt/xrootd/etc/StartXRD.cf.example
+install -m 755 etc/StopOLB $RPM_BUILD_ROOT/opt/xrootd/etc/StopOLB
+install -m 755 etc/StopXRD $RPM_BUILD_ROOT/opt/xrootd/etc/StopXRD
+install -m 755 etc/XrdOlbMonPerf $RPM_BUILD_ROOT/opt/xrootd/etc/XrdOlbMonPerf
+install -m 755 etc/xrootd.cf.example $RPM_BUILD_ROOT/opt/xrootd/etc/xrootd.cf.example
+install -m 644 etc/README $RPM_BUILD_ROOT/opt/xrootd/etc/README
+install -m 755 utils/mps_MigrPurg $RPM_BUILD_ROOT/opt/xrootd/utils/mps_MigrPurg
+install -m 755 utils/mps_PreStage $RPM_BUILD_ROOT/opt/xrootd/utils/mps_PreStage
+install -m 755 utils/mps_Stage $RPM_BUILD_ROOT/opt/xrootd/utils/mps_Stage
+install -m 755 utils/mps_Xeq $RPM_BUILD_ROOT/opt/xrootd/utils/mps_Xeq
+install -m 755 utils/mps_prep $RPM_BUILD_ROOT/opt/xrootd/utils/mps_prep
+install -m 644 utils/ooss_CAlloc.pm $RPM_BUILD_ROOT/opt/xrootd/utils/ooss_CAlloc.pm
+install -m 644 utils/ooss_Lock.pm $RPM_BUILD_ROOT/opt/xrootd/utils/ooss_Lock.pm
+install -m 644 utils/ooss_MonP.pm $RPM_BUILD_ROOT/opt/xrootd/utils/ooss_MonP.pm
+install -m 644 utils/ooss_name2name.pm $RPM_BUILD_ROOT/opt/xrootd/utils/ooss_name2name.pm
+install -m 755 utils/fs_stat $RPM_BUILD_ROOT/opt/xrootd/utils/fs_stat
+install -m 755 utils/XrdOlbNotify.pm $RPM_BUILD_ROOT/opt/xrootd/utils/XrdOlbNotify.pm
+
+
+%clean
+
+%files
+%defattr(-, root, root)
+/opt/xrootd/bin/xrootd
+/opt/xrootd/bin/olbd
+/opt/xrootd/bin/xrdcp
+/opt/xrootd/bin/xrd
+/opt/xrootd/bin/xrdmonCollector
+/opt/xrootd/bin/xrdmonAdmin
+/opt/xrootd/bin/xrdgsiproxy
+/opt/xrootd/bin/xrdpwdadmin
+/opt/xrootd/lib/XrdClientAdmin.pm
+/opt/xrootd/lib/XrdClientAdmin.so
+/opt/xrootd/lib/libXrdPosix.so
+/opt/xrootd/lib/libXrdOfs.so
+/opt/xrootd/lib/libXrdRootd.so
+/opt/xrootd/lib/libXrdSec.so
+/opt/xrootd/lib/libXrdSeckrb4.so
+/opt/xrootd/lib/libXrdSeckrb5.so
+/opt/xrootd/lib/libXrdCrypto.so
+/opt/xrootd/lib/libXrdCryptossl.so
+/opt/xrootd/lib/libXrdSut.so
+/opt/xrootd/lib/libXrdSecgsi.so
+/opt/xrootd/lib/libXrdSecpwd.so
+/opt/xrootd/etc/StartOLB
+/opt/xrootd/etc/StartOLB.cf.example
+/opt/xrootd/etc/StartXRD
+/opt/xrootd/etc/StartXRD.cf.example
+/opt/xrootd/etc/StopOLB
+/opt/xrootd/etc/StopXRD
+/opt/xrootd/etc/XrdOlbMonPerf
+/opt/xrootd/etc/xrootd.cf.example
+/opt/xrootd/etc/README
+/opt/xrootd/utils/mps_MigrPurg
+/opt/xrootd/utils/mps_PreStage
+/opt/xrootd/utils/mps_Stage
+/opt/xrootd/utils/mps_Xeq
+/opt/xrootd/utils/mps_prep
+/opt/xrootd/utils/ooss_CAlloc.pm
+/opt/xrootd/utils/ooss_Lock.pm
+/opt/xrootd/utils/ooss_MonP.pm
+/opt/xrootd/utils/ooss_name2name.pm
+/opt/xrootd/utils/fs_stat
+/opt/xrootd/utils/XrdOlbNotify.pm
+
+
+%changelog
+* XRD-CHANGE1-XRD
+- XRD-CHANGE2-XRD
+
+

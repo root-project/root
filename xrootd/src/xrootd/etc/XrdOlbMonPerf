@@ -1,0 +1,208 @@
+#!/usr/local/bin/perl
+
+## $Id: XrdOlbMonPerf,v 1.9 2007/02/27 17:29:38 wilko Exp $
+## this script collects the informations on the server activity like:
+## CPU, network I/O, memory usage ...
+## modified to get rid of rperf.
+## J-Y Nief - CCIN2P3 - 24/05/04
+## modified to accept additional options and drop multi-home uf's.
+#  Andy Hanushevsky - SLAC - 15/07/04
+#
+# Usage: XrdOlbMonPerf [-I netintf] [-n netspeed] [-m <shmkey>] [<interval>]
+# WARNING: if you are running this script on a Linux RH7.x server, 
+#          the network metric is disabled as the netstat output is screwed, 
+#          this info is useless. no problem for RH9 and RHEL3.
+
+# get the name of the server + platform
+undef($shmid);
+$shmkey = '';
+$rhost  = `/bin/uname -n`; chomp($rhost);
+$enBps  = 131072000;
+$systype= `/bin/uname`; chomp($systype);
+$repval = 0;
+$netif  = '';
+$netmax = 0; # bits / s
+$monint = 60;
+$| = 1;                      # unbuffer STDOUT
+
+# Get options
+#
+  while(($argval = shift) && (substr($argval,0,1) eq '-'))
+       {   if ($argval eq '-I')
+              {Log("Network interface not specified.") if !($netif=shift);}
+        elsif ($argval eq '-n')
+              {Log("Network spedd not specified.") if !($netmax=shift);}
+        elsif ($argval eq '-m')
+              {Log("Shared segment not specified.") if !($shmkey=shift);
+               $shmid = shmget($shmkey, 4096, 0744) if (shmkey ne '.');
+               Log("Unable to attach shared memory; $!") if !defined($shmid);
+              }
+       else   {Log("Unknown option, $argval, ignored", 1);}
+      }
+
+# Get the interval
+#
+if ($argval) 
+   {$monint = $argval;
+    Log("Invalid interval, '$monint'") if !($monint =~ /^\d+$/);
+   }
+
+# get the number of CPUs on this server
+if ( $systype eq 'Linux' ) {
+  $numCPU = `grep -c cpu /proc/stat` - 1;
+}
+
+if ( $systype eq 'SunOS' ) {
+  $resp = `uname -X | grep NumCPU`;
+  chomp($resp);
+  @answer = split('= ', $resp);
+  $numCPU = $answer[1];
+}
+
+# get the total memory of the server
+if ($systype eq 'Linux') {
+  $resp = `grep MemTotal /proc/meminfo`;
+  @answer = split('\s+', $resp);
+  $TotMem = $answer[1]*1024;
+}
+
+if ($systype eq 'SunOS') {
+  $resp = `/etc/prtconf | grep Memory`;
+  ($TotMem) = $resp =~ /.+:\s*(\d+)/s;
+  $TotMem *= 1024*1024;
+}
+
+# if it is a Linux, retrieve the distrib version.
+# necessary for netstat which does not give the same output on RH 7.x, RH 9, 
+# RHEL...
+# netstat usable on RH 9 and RHEL 3 ==> distrib = "RH_OK", else "RH_WRONG"
+if ($systype eq 'Linux') {
+  $distrib = "RH_OK";
+  $resp = `cat /etc/redhat-release`;
+  if ( $resp =~ /release 7./ ) { $distrib = "RH_WRONG"; }
+}
+
+# determine the column where the idle time and the free mem
+# can be found in the 'vmstat' output.
+# depends on the platform and on the 'vmstat' version, sigh... 
+$ind_idle = 0;
+$ind_free = 0;
+@output = `vmstat`;
+chomp($output[1]);
+@answer = split('\s+', $output[1]);
+foreach $type(@answer) {
+  last if ( $type eq 'id' );
+  $ind_idle++;
+}
+foreach $type(@answer) {
+  last if ( $type eq 'free' );
+  $ind_free++;
+}
+
+# in the netstat output, the number of input and output packets is not in the 
+# same columns whether it is a Linux or SunOS platform
+if ( $systype eq 'SunOS' ) {
+  $ind_net1 = 5;
+  $ind_net2 = 7;
+} else {
+  $ind_net1 = 3;
+  $ind_net2 = 7;
+}
+$indx_net = 0;
+
+# check the number of network interface on the server and their 
+# capability (ethernet or gigabit)
+$mtu = 1500;
+if (!$netmax)
+   {@com = `netstat -i`;
+    foreach $line(@com) {
+       if ( $line !~ /Kernel Interface/ && $line !~ /MTU/ ) {
+          ( $line =~ /eth/ ) && ( $netmax = 1e8 );
+          ( $line =~ /ge/ || $line =~ /ce/ ) && ( $netmax = 1e9 );
+          }
+      }
+    if (!$netmax) {$netmax = 1e8;}
+   }
+
+# Start up the netstat command which will give the pace for the monitoring
+#
+Log("Unable to start netstat; $!")
+  if !defined(open(CMDFD, "netstat -i $monint |"));
+
+# Discard the first three lines of output
+#
+for ($i = 0; $i < 3; $i++) {$resp = <CMDFD>;}
+
+$ipio_old = 0;
+while($resp = <CMDFD>) {
+  if ( $distrib eq 'RH_WRONG' ) { sleep $monint; }
+
+  # what's the CPU utilization ?
+  @respCPU = `vmstat 1 2`;
+  chomp $respCPU[3];
+  @resp_vmstat = split('\s+',$respCPU[3]);
+  if ( ($resp_vmstat[$ind_idle] > 100) || ($resp_vmstat[$ind_idle] < 0) ) {
+    $cpu = 0;
+  } else {
+    $cpu = $resp_vmstat[$ind_idle-2] + $resp_vmstat[$ind_idle-1];
+  }
+
+  # what's the runq load ?
+  chomp($respLoad = `uptime`);
+  @respSplit = split(',',$respLoad);
+  $load = int($respSplit[4]*25/$numCPU);
+  $load = 100 if $load > 100;
+
+  # what's the network I/O activity?
+  if ( ( $resp !~ /lo/ && $resp !~ /Iface/ && $systype eq 'Linux' && $distrib ne 'RH_WRONG' )
+       || ( $systype eq 'SunOS' ) ) {
+       	@respSplit = split('\s+',$resp);
+	if ( $systype eq 'SunOS' ) {
+	  $net_activity = ($respSplit[$ind_net1] + $respSplit[$ind_net2]) * $mtu * 8 / $monint;
+	  $ipio = int ( $net_activity / $netmax * 100 );
+	}
+	else {
+	  $net[$indx_net] = $respSplit[$ind_net1] + $respSplit[$ind_net2];
+	  if ( $indx_net ) {
+	    $net_activity = ($measure[1] - $measure[0]) * $mtu * 8 / $monint;
+	    $ipio = int ( $net_activity / $netmax * 100 );
+	  }
+	  $indx_net = $indx_net ^ 1;
+	}
+	$ipio_old = $ipio;
+  } else {
+	$ipio = $ipio_old;
+  }
+  $ipio = 100 if $ipio > 100;
+  $ipio_old = $ipio;
+
+  # what's the memory load ?
+  $used = $TotMem - $resp_vmstat[$ind_free]*1024;
+  $mem = int($used/$TotMem*100);
+  $mem = 100 if $mem > 100;
+  #
+  $repval++;
+
+  # what's the paging I/O activity ?
+  # useless as this metric is highly correlated with some of the others above.
+  # being kept for backward compatibility with the load balancer.
+  $pgio = 0;
+
+  if (!defined($shmid)) {
+    print "$load $cpu $mem $pgio $ipio\n";
+  }
+  else {
+    $resp = pack('LLLLL',$load,$cpu,$mem,$pgio,$ipio);
+    Log("Unable to write into shared memory; $!")
+      if !shmwrite($shmid, $resp, 0, length($resp));
+  }
+}
+
+
+sub Log {
+  my($msg, $ret) = @_;
+  print STDERR "XrdOlbMonPerf: $msg\n";
+  system('/bin/logger', '-p', 'daemon.notice', "XrdOlbMonPerf: $msg");
+  return 0 if $ret;
+  exit(1);
+}

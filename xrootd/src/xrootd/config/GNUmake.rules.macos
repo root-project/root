@@ -1,0 +1,44 @@
+#              $Id: GNUmake.rules.macos,v 1.12.2.1 2008/01/27 13:08:38 ganis Exp $
+
+#------------------------------------------------------------------------------#
+#                 R u l e s   f o r   g e n e r i c   g c c                    #
+#------------------------------------------------------------------------------#
+
+TYPECC     = g++
+TYPELD     = g++
+
+GCC_MAJOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+
+#TYPEMISC   = -D_POSIX_SOURCE -D_REENTRANT -D_GNU_SOURCE -Wall
+TYPEMISC   = -D_REENTRANT -D_GNU_SOURCE -Wall -D__macos__ $(CFTRACE)
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+TYPEMISC  += -D__DARWIN_UNIX03=1
+endif
+ifeq ($(subst $(MACOSX_MINOR),,123),123)
+TYPEMISC  += -fvisibility-inlines-hidden
+endif
+TYPECF32   =
+TYPECF64   = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+TYPELINK   = -undefined dynamic_lookup -multiply_defined suppress 
+TYPEOPT    = $(TYPEMISC) $(TYPELINK) -O2
+TYPEDBG    = $(TYPEMISC) $(TYPELINK) -g
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+TYPELDSO   = $(TYPELINK) -dynamiclib -single_module
+TYPELDDY   = $(TYPELINK) -dynamiclib -single_module
+TYPESHLIB  = so
+TYPEDYLIB  = so
+else
+TYPELDSO   = $(TYPELINK) -bundle
+TYPELDDY   = $(TYPELINK) -dynamiclib -single_module
+TYPESHLIB  = so
+TYPEDYLIB  = dylib
+endif
+
+# In MacOSx the threading functions should come libc.
+#TYPELIBS   =  $(PTHREAD) -ldl -lc 
+TYPELIBS   =  -ldl -lc
+
+ifeq ($(GCC_MAJOR),4)
+TYPEMISC  += -Wno-deprecated
+endif

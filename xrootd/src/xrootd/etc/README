@@ -1,0 +1,27 @@
+
+  $Id: README,v 1.3 2004/08/17 15:02:53 elmer Exp $
+
+This directory contains start and stop scripts for the olbd and xrootd, as well
+as a monitoring script for the olbd when you wish to use load based balancing.
+
+The documentation for each script is contained within the script itself. Please
+read the header comments in each script before using the script!
+
+The StartOLB script starts the olbd and must have a StartOLB.cf file installed
+in the same directory as the start script. This distribution includes a
+StartOLB.cf.example file to guide you through setting the various variables
+to the appropriate values. Please create your own StartOLB.cf file from this
+example file.
+
+The StartXRD script starts the xrootd and must have a StartXRD.cf file installed
+in the same directory as the start script. This distribution includes a
+StartXRD.cf.example file to guide you through setting the various variables
+to the appropriate values. Please create your own StartXRD.cf file from this
+example file.
+
+You need not use the provided start/stop scripts. However, they are provided
+here as a helpful aid in managing the servers.
+
+Don't forget to modify your init scripts to start the servers at boot time!
+
+Full documentation can be found at http://xrootd.slac.stanford.edu/

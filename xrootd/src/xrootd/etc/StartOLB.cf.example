@@ -1,0 +1,101 @@
+#!/bin/sh
+#
+#  $Id: StartOLB.cf.example,v 1.3 2005/03/25 08:19:32 abh Exp $
+#
+
+# Set 'time' to be number of seconds to wait for a required file to appear
+# This is only meaningful for files in AFS or NFS
+#
+time=60
+
+# Set 'count to be the maximum number of times to wait for a required file
+# This is only meaningful for files in AFS or NFS
+#
+count=30
+
+# Set OLBUSER to be the username to "su" to if the script is run as root
+#
+OLBUSER=`/usr/etc/ooss/ooss_user`
+
+# Set OLBBASE to be the base directory where olbd version directories have been
+# installed. They all must be in the same base directory.
+#
+OLBBASE=/opt/xrootd
+
+# Set OLBVER to be the name of the default version directory. This directory
+# must be installed in the OLBBASE directory. It contains bin, etc, and lib.
+#
+OLBVER=prod
+
+# Set OLBPROG to be the name of the executable in the "bin" directory. The
+# start script uses '$OLBBASE/$OLBVER/bin/$OLBPROG' as the executable.
+#
+OLBPROG=olbd
+
+# Set OLBCONFIG the default config file name. Normally, this would be
+# '$OLBBASE/$OLBVER/etc/xrootd.cf'.
+#
+if [ "$OLBUSER" = "objysrv" ]; then
+OLBCONFIGFN=/usr/etc/ooss/amshpss.cf
+else
+OLBCONFIGFN=$OLBBASE/$OLBVER/etc/xrootd.cf
+fi
+
+# Set 'OLBHOMEDIR' to be the working directory when olbd is started
+#
+OLBHOMEDIR=/var/adm/olbd/core
+
+# Set 'OLBLOGDIR' to be the directory where log files are placed and
+# Set 'OLBLOGFN'  to be the base log file name.
+#
+OLBLOGDIR=/var/adm/olbd/logs
+OLBLOGFN=olbdlog
+
+# Set 'OLBPIDFILE' to be where the pid file goes (it is check for w-access)
+#
+OLBPIDFILE=/tmp/olbd.pid
+
+# The following code determines whether the olbd will run as manager mode or
+# in data server mode. Use whatever code is necessary to set the default.
+# The OLB can also run in supervisor mode. This is usually accomplished either
+# by default or by overiding the default by specifying '-m -s' on the command
+# line allowing one to run a server and a supervisor olbd on the same machine.
+# Set OLBMODE to -m (for manager) or -s (for server).
+# Set OLBTYPE to be the word to appear in messages (e.g., manager or server)
+#
+OLBMODE='-s'
+OLBTYPE='server'
+RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*manager'`
+if [ $? -eq 0 ]; then
+OLBMODE='-m'
+OLBTYPE='manager'
+fi
+RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*super'`
+if [ $? -eq 0 ]; then
+OLBMODE='-m -s'
+OLBTYPE='supervisor'
+fi
+
+#-#-#-#-#-#-#-#-#   E N D   O F   C O N F I G U R A T I O N   #-#-#-#-#-#-#-#-#
+
+# The following logic tries to set variables as follows:
+
+# MYOS    - the current os name
+# MAXFD   - the file descriptor limit
+# MYNAME  - the current username
+# PROGRAM - the name of the start script
+#
+MYOS=`/bin/uname | /bin/awk '{print $1}'`
+if [ "$MYOS" = "SunOS" ]; then
+MAXFD=`ulimit -H -n`
+MYNAME=`/usr/ucb/whoami`
+else
+MAXFD=`ulimit -H -n | /bin/grep files | /bin/awk '{print $3}'`
+if [ "$MAXFD" = "" ]; then
+MAXFD=`ulimit -H -n`
+fi
+MYNAME=`/usr/bin/whoami`
+fi
+
+############################################
+PROGRAM=`echo $0 | /bin/awk '{n=split($0,x,"/"); print x[n]}'`

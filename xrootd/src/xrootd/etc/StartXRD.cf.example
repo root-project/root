@@ -1,0 +1,97 @@
+#!/bin/sh
+#
+#  $Id: StartXRD.cf.example,v 1.2 2005/03/25 08:19:33 abh Exp $
+#
+
+# Set 'time' to be number of seconds to wait for a required file to appear
+# This is only meaningful for files in AFS or NFS
+#
+time=60
+
+# Set 'count' to be the maximum number of times to wait for a required file
+# This is only meaningful for files in AFS or NFS
+#
+count=30
+
+# Set XRDUSER to be the username to "su" to if the script is run as root
+#
+XRDUSER=bbdatsrv
+
+# Set XRDBASE to be the base directory where xrootd version directories have
+# been installed. They all must be in the same base directory.
+#
+XRDBASE=/opt/xrootd
+
+# Set XRDVER to be the name of the default version directory. This directory
+# must be installed in the XRDBASE directory. It contains bin, etc, and lib.
+#
+XRDVER=prod
+
+# Set XRDPROG to be the name of the executable in the "bin" directory. The
+# start script uses '$XRDBASE/$XRDVER/bin/$XRDPROG' as the executable.
+#
+XRDPROG=xrootd
+
+# Set XRDCONFIG the default config file name. The start script uses
+# '$XRDBASE/$XRDVER/etc/$XRDCONFIGN' as the configuration file.
+#
+XRDCONFIG=xrootd.cf
+
+# Set 'XRDHOMEDIR' to be the working directory when xrootd is started
+#
+XRDHOMEDIR=/var/adm/xrootd/core
+
+# Set 'XRDLOGDIR' to be the directory where log files are placed and
+# Set 'XRDLOGFN'  to be the base log file name.
+#
+XRDLOGDIR=/var/adm/xrootd/logs
+XRDLOGFN=xrdlog
+
+#  The following logic tries to determine whether or not xrootd is to run
+#  in redirecting mode. Use whatever logic you need to use. Set
+#  XRDMODE - '-r'    for manager    redirecting  mode.
+#  XRDMODE - '-t'    for server     target       mode.
+#  XRDMODE - '-r -t' for supervisor redirecting  mode.
+#  XRDTYPE = the mode word to appear in messages (e.g., 'redirecting' if '-r')
+#
+XRDMODE=
+XRDTYPE=
+RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*super'`
+if [ $? -eq 0 ]; then
+XRDMODE='-r -t'
+XRDTYPE='supervisor'
+fi
+RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*server'`
+if [ $? -eq 0 ]; then
+XRDMODE='-t'
+XRDTYPE='target'
+fi
+RESP=`/usr/local/bin/taylor -q opts | grep '^olbd=.*manager'`
+if [ $? -eq 0 ]; then
+XRDMODE='-r'
+XRDTYPE='manager'
+fi
+
+#-#-#-#-#-#-#-#-#   E N D   O F   C O N F I G U R A T I O N   #-#-#-#-#-#-#-#-#
+
+# The following logic tries to set variables as follows:
+
+# MYOS    - the current os name
+# MAXFD   - the file descriptor limit
+# MYNAME  - the current username
+# PROGRAM - the name of the start script
+#
+MYOS=`/bin/uname | /bin/awk '{print $1}'`
+if [ "$MYOS" = "SunOS" ]; then
+MAXFD=`ulimit -H -n`
+MYNAME=`/usr/ucb/whoami`
+else
+MAXFD=`ulimit -H -n | /bin/grep files | /bin/awk '{print $3}'`
+if [ "$MAXFD" = "" ]; then
+MAXFD=`ulimit -H -n`
+fi
+MYNAME=`/usr/bin/whoami`
+fi
+
+############################################
+PROGRAM=`echo $0 | /bin/awk '{n=split($0,x,"/"); print x[n]}'`
