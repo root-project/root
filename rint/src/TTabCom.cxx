@@ -555,14 +555,19 @@ const TSeqCollection *TTabCom::GetListOfFilesInPath(const char path[])
 //______________________________________________________________________________
 const TSeqCollection *TTabCom::GetListOfEnvVars()
 {
-   // calls "/bin/env"
+   // Uses "env" (Unix) or "set" (Windows) to get list of environment variables.
 
    if (!fpEnvVars) {
       const char *tmpfilename = tmpnam(0);
       TString cmd;
 
 #ifndef WIN32
-      cmd = "/bin/env > ";
+      char *env = gSystem->Which(gSystem->Getenv("PATH"), "env", kExecutePermission);
+      if (!env)
+         return 0;
+      cmd = env;
+      cmd += " > ";
+      delete [] env;
 #else
       cmd = "set > ";
 #endif
@@ -2649,4 +2654,3 @@ int TTabCom::ParseReverse(const char *var_str, int start)
 
    return end;
 }
-
