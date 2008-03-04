@@ -637,16 +637,22 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
       fStatus= 2;
       return (TObject *)0;
    }
-   Int_t    error;
+   Int_t    npfound;
    Double_t *xcoor = new Double_t[npoints+1];
    Double_t *ycoor = new Double_t[npoints+1];
-   mncont(pa1,pa2,npoints,xcoor,ycoor,error);
-   if (error!=npoints) {
+   mncont(pa1,pa2,npoints,xcoor,ycoor,npfound);
+   if (npfound<4) {
       // mncont did go wrong
-      fStatus= (error==0 ? 1 : error);
+      Warning("Contour","Cannot find more than 4 points, no TGraph returned");
+      fStatus= (npfound==0 ? 1 : npfound);
       delete [] xcoor;
       delete [] ycoor;
       return (TObject *)0;
+   }
+   if (npfound!=npoints) {
+      // mncont did go wrong
+      Warning("Contour","Returning a TGraph with %d points only",npfound);
+      npoints = npfound;
    }
    fStatus=0;
    // create graph via the  PluginManager
