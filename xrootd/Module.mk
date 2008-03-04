@@ -6,14 +6,15 @@
 MODDIR     := xrootd
 MODDIRS    := $(MODDIR)/src
 
-XROOTDVERS := xrootd-20071116-0000
+#XROOTDVERS := xrootd-20071116-0000
 XROOTDDIR  := $(MODDIR)
 XROOTDDIRS := $(MODDIRS)
 XROOTDDIRD := $(MODDIRS)/xrootd
 XROOTDDIRI := $(MODDIRS)/xrootd/src
 XROOTDDIRL := $(MODDIRS)/xrootd/lib
-XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
-XROOTDETAG := $(MODDIRS)/headers.d
+#XROOTDSRCS := $(MODDIRS)/$(XROOTDVERS).src.tgz
+#XROOTDETAG := $(MODDIRS)/headers.d
+XROOTDMAKE := $(XROOTDDIRD)/GNUmakefile
 
 ##### Xrootd config options #####
 ifeq ($(PLATFORM),win32)
@@ -67,69 +68,8 @@ ALLLIBS    += $(XRDPLUGINS)
 ALLEXECS   += $(XRDEXECS)
 
 ##### local rules #####
-$(XROOTDETAG): $(XROOTDSRCS)
-		@(if [ -d $(XROOTDDIRD) ]; then \
-		   rm -rf $(XROOTDDIRD); \
-		fi; \
-		cd $(XROOTDDIRS); \
-		if [ ! -d xrootd ]; then \
-		   echo "*** Extracting xrootd source ..."; \
-		   gunzip -c $(XROOTDVERS).src.tgz | tar xf -; \
-		   etag=`basename $(XROOTDETAG)` ; \
-		   touch $$etag ; \
-		fi)
-ifeq ($(PLATFORM),win32)
-		@(if [ -d $(XROOTDDIRD)/pthreads-win32 ]; then \
-		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.dll "bin" ; \
-		    cp $(XROOTDDIRD)/pthreads-win32/lib/*.lib "lib" ; \
-		    cp $(XROOTDDIRD)/pthreads-win32/include/*.h "include" ; \
-		  fi)
-endif
-
 ifneq ($(PLATFORM),win32)
-$(XRDPLUGINS): $(XRDPLUGINSA)
-		@(if [ -d $(XROOTDDIRL) ]; then \
-		    lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
-		    lsplug="$$lsplug `find $(XROOTDDIRL) -name "libXrd*.dylib"`" ;\
-		    for i in $$lsplug ; do \
-		       echo "Copying $$i ..." ; \
-		       if [ "x$(ARCH)" = "xwin32gcc" ] ; then \
-		          cp $$i bin ; \
-		          lname=`basename $$i` ; \
-		          ln -sf bin/$$lname $(LPATH)/$$lname ; \
-		          ln -sf bin/$$lname "$(LPATH)/$$lname.a" ; \
-		       else \
-		          if [ "x$(PLATFORM)" = "xmacosx" ] ; then \
-		             lname=`basename $$i` ; \
-		             install_name_tool -id $(LIBDIR)/$$lname $$i ; \
-		          fi ; \
-		          cp $$i $(LPATH)/ ; \
-		       fi ; \
-		    done ; \
-		  fi)
-endif
-
-ifneq ($(PLATFORM),win32)
-$(XRDEXECS): $(XRDPLUGINSA)
-		@(for i in $(XRDEXEC); do \
-		     fopt="" ; \
-		     if [ -f bin/$$i ] ; then \
-		        fopt="-newer bin/$$i" ; \
-		     fi ; \
-		     bexe=`find $(XROOTDDIRD)/bin $$fopt -name $$i 2>/dev/null` ; \
-		     if test "x$$bexe" != "x" ; then \
-		        echo "Copying $$bexe executables ..." ; \
-		        cp $$bexe bin/$$i ; \
-		     fi ; \
-		  done)
-else
-$(XRDEXECS): $(XRDPLUGINSA)
-		@(echo "Copying xrootd executables ..." ; \
-		cp $(XROOTDDIRD)/bin/*.exe "bin" ;)
-endif
-
-ifneq ($(PLATFORM),win32)
-$(XRDPLUGINSA): $(XROOTDETAG)
+$(XROOTDMAKE):
 		@(cd $(XROOTDDIRS); \
 		RELE=`uname -r`; \
 		CHIP=`uname -m | tr '[A-Z]' '[a-z]'`; \
@@ -188,15 +128,69 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		echo "Options to Xrootd-configure: $$xopt $(XRDDBG)"; \
 		GNUMAKE=$(MAKE) ./configure.classic $$xopt $(XRDDBG); \
 		rc=$$? ; \
-		if [ $$rc = "0" ] ; then \
-		   echo "*** Building xrootd ..." ; \
-		   $(MAKE); \
-		else \
+		if [ $$rc != "0" ] ; then \
 		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):" \
-			" building only the client ... " ; \
+	 	   exit 1; \
 		fi)
 else
-$(XRDPLUGINSA): $(XROOTDETAG)
+$(XROOTDMAKE):
+		@(if [ -d $(XROOTDDIRD)/pthreads-win32 ]; then \
+    		   cp $(XROOTDDIRD)/pthreads-win32/lib/*.dll "bin" ; \
+		   cp $(XROOTDDIRD)/pthreads-win32/lib/*.lib "lib" ; \
+		   cp $(XROOTDDIRD)/pthreads-win32/include/*.h "include" ; \
+		fi)
+		@touch $(XROOTDMAKE)
+endif
+
+ifneq ($(PLATFORM),win32)
+$(XRDPLUGINS): $(XRDPLUGINSA)
+		@(if [ -d $(XROOTDDIRL) ]; then \
+		    lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
+		    lsplug="$$lsplug `find $(XROOTDDIRL) -name "libXrd*.dylib"`" ;\
+		    for i in $$lsplug ; do \
+		       echo "Copying $$i ..." ; \
+		       if [ "x$(ARCH)" = "xwin32gcc" ] ; then \
+		          cp $$i bin ; \
+		          lname=`basename $$i` ; \
+		          ln -sf bin/$$lname $(LPATH)/$$lname ; \
+		          ln -sf bin/$$lname "$(LPATH)/$$lname.a" ; \
+		       else \
+		          if [ "x$(PLATFORM)" = "xmacosx" ] ; then \
+		             lname=`basename $$i` ; \
+		             install_name_tool -id $(LIBDIR)/$$lname $$i ; \
+		          fi ; \
+		          cp $$i $(LPATH)/ ; \
+		       fi ; \
+		    done ; \
+		  fi)
+endif
+
+ifneq ($(PLATFORM),win32)
+$(XRDEXECS): $(XRDPLUGINSA)
+		@(for i in $(XRDEXEC); do \
+		     fopt="" ; \
+		     if [ -f bin/$$i ] ; then \
+		        fopt="-newer bin/$$i" ; \
+		     fi ; \
+		     bexe=`find $(XROOTDDIRD)/bin $$fopt -name $$i 2>/dev/null` ; \
+		     if test "x$$bexe" != "x" ; then \
+		        echo "Copying $$bexe executables ..." ; \
+		        cp $$bexe bin/$$i ; \
+		     fi ; \
+		  done)
+else
+$(XRDEXECS): $(XRDPLUGINSA)
+		@(echo "Copying xrootd executables ..." ; \
+		cp $(XROOTDDIRD)/bin/*.exe "bin" ;)
+endif
+
+ifneq ($(PLATFORM),win32)
+$(XRDPLUGINSA): $(XROOTDMAKE)
+		@(cd $(XROOTDDIRD); \
+	   	echo "*** Building xrootd ..." ; \
+		$(MAKE))
+else
+$(XRDPLUGINSA): $(XROOTMAKE)
 		@(cd $(XROOTDDIRD); \
 		echo "*** Building xrootd..."; \
 		unset MAKEFLAGS; \
@@ -207,21 +201,32 @@ all-xrootd:   $(XRDPLUGINS) $(XRDEXECS)
 
 clean-xrootd:
 ifneq ($(PLATFORM),win32)
-		-@(if [ -d $(XROOTDDIRD)/config ]; then \
-			cd $(XROOTDDIRD); \
-			$(MAKE) clean; \
+		@(if [ -f $(XROOTDMAKE) ]; then \
+		   cd $(XROOTDDIRD); \
+		   $(MAKE) clean; \
 		fi)
 else
-		@(if [ -d $(XROOTDDIRD) ]; then \
-		   rm -rf $(XROOTDDIRD); \
-		fi;)
-		@rm -f $(XROOTDETAG)
+		@(if [ -f $(XROOTDMAKE) ]; then \
+   		   cd $(XROOTDDIRD); \
+		   nmake -f Makefile.msc clean; \
+		fi)
 endif
 
 clean::         clean-xrootd
 
 distclean-xrootd: clean-xrootd
-		@rm -rf $(XRDEXECS) $(XROOTDDIRD) $(XROOTDETAG) \
-			$(LPATH)/libXrd* bin/libXrd*
+		@rm -rf $(XRDEXECS) $(LPATH)/libXrd* bin/libXrd*
+ifneq ($(PLATFORM),win32)
+		@(if [ -f $(XROOTDMAKE) ]; then \
+		   cd $(XROOTDDIRD); \
+		   $(MAKE) distclean; \
+		fi)
+else
+		@(if [ -f $(XROOTDMAKE) ]; then \
+		   cd $(XROOTDDIRD); \
+		   nmake -f Makefile.msc distclean; \
+		   rm -f GNUmakefile; \
+		fi)
+endif
 
 distclean::     distclean-xrootd
