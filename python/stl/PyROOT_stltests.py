@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 12/12/07
+# Last: 03/04/08
 
 """STL unit tests for PyROOT package."""
 
@@ -147,17 +147,24 @@ class STL3MapTestCase( unittest.TestCase ):
    def test4UnsignedvalueTypeMapTypes( self ):
       """Test assignability of maps with unsigned value types (not part of cintdlls)"""
 
+      import math
+
       mui = std.map( str, 'unsigned int' )()
       mui[ 'one' ] = 1
       self.assertEqual( mui[ 'one' ], 1 )
       self.assertRaises( ValueError, mui.__setitem__, 'minus one', -1 )
 
-      mui[ 'maxint' ] = sys.maxint + 3
-      self.assertEqual( mui[ 'maxint' ], sys.maxint + 3 )
+    # UInt_t is always 32b, sys.maxint follows system int
+      maxint32 = int(math.pow(2,31)-1)
+      mui[ 'maxint' ] = maxint32 + 3
+      self.assertEqual( mui[ 'maxint' ], maxint32 + 3 )
 
       mul = std.map( str, 'unsigned long' )()
       mul[ 'two' ] = 2
       self.assertEqual( mul[ 'two' ], 2 )
+      mul[ 'maxint' ] = sys.maxint + 3
+      self.assertEqual( mul[ 'maxint' ], sys.maxint + 3 )
+
       self.assertRaises( ValueError, mul.__setitem__, 'minus two', -2 )
 
 
