@@ -326,8 +326,8 @@ bool XrdClientAdmin::ExistFiles(vecString &vs, vecBool &vb)
    joinStrings(buf, vs);
 
    kXR_char *Info;
-   Info = (kXR_char*) malloc(vs.GetSize()+1);
-   memset((void *)Info, 0, vs.GetSize()+1);
+   Info = (kXR_char*) malloc(vs.GetSize()+10);
+   memset((void *)Info, 0, vs.GetSize()+10);
   
    ret = this->SysStatX(buf.c_str(), Info);
 
@@ -355,8 +355,8 @@ bool XrdClientAdmin::ExistDirs(vecString &vs, vecBool &vb)
    joinStrings(buf, vs);
 
    kXR_char *Info;
-   Info = (kXR_char*) malloc(vs.GetSize()+1);
-   memset((void *)Info, 0, vs.GetSize()+1);
+   Info = (kXR_char*) malloc(vs.GetSize()+10);
+   memset((void *)Info, 0, vs.GetSize()+10);
   
    ret = this->SysStatX(buf.c_str(), Info);
   
@@ -386,8 +386,8 @@ bool XrdClientAdmin::IsFileOnline(vecString &vs, vecBool &vb)
    joinStrings(buf, vs);
 
    kXR_char *Info;
-   Info = (kXR_char*) malloc(vs.GetSize()+1);
-   memset((void *)Info, 0, vs.GetSize()+1);
+   Info = (kXR_char*) malloc(vs.GetSize()+10);
+   memset((void *)Info, 0, vs.GetSize()+10);
   
    ret = this->SysStatX(buf.c_str(), Info);
   

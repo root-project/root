@@ -357,8 +357,25 @@ int XrdClient::Read(void *buf, long long offset, int len) {
 	return 0;
     }
 
+    int cachesize = 0;
+    long long cachebytessubmitted = 0;
+    long long cachebyteshit = 0;
+    long long cachemisscount = 0;
+    float cachemissrate = 0.0;
+    long long cachereadreqcnt = 0;
+    float cachebytesusefulness = 0.0;
+    bool cachegood = fConnModule->GetCacheInfo(cachesize, cachebytessubmitted,
+                                               cachebyteshit, cachemisscount,
+                                               cachemissrate, cachereadreqcnt,
+                                               cachebytesusefulness);
+
+
     // Note: old servers do not support unsolicited responses for reads
-    if (!fUseCache || (fConnModule->GetServerProtocol() < 0x00000270) ) {
+    // We also use the plain sync reading if the size of the block is excessive
+    // or no cache at all is used
+    if (!fUseCache || !cachegood ||
+        (cachesize < len) ||
+        (fConnModule->GetServerProtocol() < 0x00000270) ) {
 	// Without caching
 
 	// Prepare a request header 
@@ -1378,9 +1395,17 @@ XReqErrorType XrdClient::Read_Async(long long offset, int len) {
 	    
 	    readFileRequest.read.offset = c->offset;
 	    readFileRequest.read.rlen = c->len;
-	    readFileRequest.read.dlen = sizeof(read_args);
-	    ok = fConnModule->WriteToServer_Async(&readFileRequest, &args,
-						  0);
+
+            if (args.pathid != 0) {
+              readFileRequest.read.dlen = sizeof(read_args);
+              ok = fConnModule->WriteToServer_Async(&readFileRequest, &args,
+                                                    0);
+            }
+            else {
+              readFileRequest.read.dlen = 0;
+              ok = fConnModule->WriteToServer_Async(&readFileRequest, 0,
+                                                    0);
+            }
 
 	    if (ok != kOK) break;
 	}
