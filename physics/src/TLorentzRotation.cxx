@@ -58,7 +58,7 @@ initialized as identity</TT>
 
 <P><TT>&nbsp;| 1+gamma'*bx*bx&nbsp; gamma'*bx*by&nbsp;&nbsp; gamma'*bx*bz&nbsp;
 gamma*bx |</TT>
-<BR><TT>&nbsp;|&nbsp; gamma'*bx*bz&nbsp; 1+gamma'*by*by&nbsp; gamma'*by*by&nbsp;
+<BR><TT>&nbsp;|&nbsp; gamma'*by*bx&nbsp; 1+gamma'*by*by&nbsp; gamma'*by*bz&nbsp;
 gamma*by |</TT>
 <BR><TT>&nbsp;|&nbsp; gamma'*bz*bx&nbsp;&nbsp; gamma'*bz*by&nbsp; 1+gamma'*bz*bz
 gamma*bz |</TT>
