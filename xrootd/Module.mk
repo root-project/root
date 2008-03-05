@@ -187,7 +187,7 @@ $(XRDPLUGINSA): $(XROOTDMAKE)
 	   	echo "*** Building xrootd ..." ; \
 		$(MAKE))
 else
-$(XRDPLUGINSA): $(XROOTMAKE)
+$(XRDPLUGINSA): $(XROOTDMAKE)
 		@(cd $(XROOTDDIRD); \
 		echo "*** Building xrootd..."; \
 		unset MAKEFLAGS; \
