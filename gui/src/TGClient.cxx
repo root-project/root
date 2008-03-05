@@ -644,8 +644,11 @@ void TGClient::WaitFor(TGWindow *w)
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kDestroyNotify;
 
-   while (fWaitForWindow != kNone)
+   while (fWaitForWindow != kNone) {
+      if (esave == kUnmapNotify)
+         wsave = kNone;
       gSystem->InnerLoop();
+   }
 
    fWaitForWindow = wsave;
    fWaitForEvent  = esave;
