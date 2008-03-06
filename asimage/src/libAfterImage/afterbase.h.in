@@ -1,0 +1,41 @@
+#ifndef AFTERBASE_H_HEADER_INCLUDED
+#define AFTERBASE_H_HEADER_INCLUDED
+
+#define HAVE_AFTERBASE_FLAG @HAVE_AFTERBASE_FLAG@
+
+#if @HAVE_AFTERBASE_FLAG@
+# if @USE_DEFAULT_AFTERBASE@
+#include <libAfterBase/astypes.h>
+#include <libAfterBase/audit.h>
+#include <libAfterBase/output.h>
+#include <libAfterBase/safemalloc.h>
+#include <libAfterBase/mystring.h>
+#include <libAfterBase/fs.h>
+#include <libAfterBase/parse.h>
+#include <libAfterBase/selfdiag.h>
+#include <libAfterBase/sleep.h>
+#include <libAfterBase/socket.h>
+#include <libAfterBase/trace.h>
+#include <libAfterBase/xml.h>
+# else
+#include "@AFTERBASE_INCS_PATH@libAfterBase/astypes.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/audit.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/output.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/safemalloc.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/mystring.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/fs.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/parse.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/selfdiag.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/sleep.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/socket.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/trace.h"
+#include "@AFTERBASE_INCS_PATH@libAfterBase/xml.h"
+# endif
+#else
+
+# include "asim_afterbase.h"
+
+#endif /* HAVE_AFTERBASE */
+
+#endif /* AFTERBASE_H_HEADER_INCLUDED */
+

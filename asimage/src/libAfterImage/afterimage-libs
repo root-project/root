@@ -1,0 +1,27 @@
+#! /bin/sh
+#
+
+AFTERIMAGE_LIBS="-L/usr/local/lib -lAfterImage  -lAfterBase -lfreetype -lz -Wl,--export-dynamic -lrsvg-2 -lgdk_pixbuf-2.0 -lm -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0 -ltiff -lX11 -L/usr/X11R6/lib -lSM -lICE -lXext -ljpeg -lpng -lz -lm"
+AFTERIMAGE_LIBS_EXTERNAL="-lfreetype -lz -Wl,--export-dynamic -lrsvg-2 -lgdk_pixbuf-2.0 -lm -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0   -ltiff -lX11  -L/usr/X11R6/lib   -lSM -lICE -lXext -ljpeg -lpng -lz -lm"
+HAVE_AFTERBASE="yes"
+AFTERIMAGE_PREF_FORMAT="png"
+
+export AFTERIMAGE_LIBS
+export AFTERIMAGE_LIBS_EXTERNAL
+export HAVE_AFTERBASE
+export AFTERIMAGE_PREF_FORMAT
+
+if test "x$1" = "x--external-only" ; then
+	echo $AFTERIMAGE_LIBS_EXTERNAL
+else
+  if test "x$1" = "x--have-afterbase" ; then
+	echo $HAVE_AFTERBASE
+  else
+        if test "x$1" = "x--preferred-image-format" ; then
+                echo $AFTERIMAGE_PREF_FORMAT
+        else
+                echo $AFTERIMAGE_LIBS
+        fi
+  fi
+fi
+exit 0
