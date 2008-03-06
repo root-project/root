@@ -465,13 +465,18 @@ TSpline3::TSpline3(const TH1 *h, const char *opt,
 //______________________________________________________________________________
 TSpline3::TSpline3(const TSpline3& sp3) :
   TSpline(sp3),
-  fPoly(sp3.fPoly),
+  fPoly(0),
   fValBeg(sp3.fValBeg),
   fValEnd(sp3.fValEnd),
   fBegCond(sp3.fBegCond),
   fEndCond(sp3.fEndCond)
 {
    //copy constructor
+   if (fNp > 0) fPoly = new TSplinePoly3[fNp];
+   for (Int_t i=0; i<fNp; ++i) {
+      fPoly[i].X()= sp3.fPoly[i].X();
+      fPoly[i].Y()= sp3.fPoly[i].Y();
+   }
 }
 
 
@@ -481,7 +486,12 @@ TSpline3& TSpline3::operator=(const TSpline3& sp3)
    //assignment operator
    if(this!=&sp3) {
       TSpline::operator=(sp3);
-      fPoly=sp3.fPoly;
+      fPoly= 0;
+      if (fNp > 0) fPoly = new TSplinePoly3[fNp];
+      for (Int_t i=0; i<fNp; ++i) {
+         fPoly[i].X()= sp3.fPoly[i].X();
+         fPoly[i].Y()= sp3.fPoly[i].Y();
+      }
       fValBeg=sp3.fValBeg;
       fValEnd=sp3.fValEnd;
       fBegCond=sp3.fBegCond;
@@ -1290,9 +1300,17 @@ TSpline5::TSpline5(const TH1 *h,
 //______________________________________________________________________________
 TSpline5::TSpline5(const TSpline5& sp5) :
   TSpline(sp5),
-  fPoly(sp5.fPoly)
+  fPoly(0)
 {
    //copy constructor
+   if (fNp > 0) fPoly = new TSplinePoly5[fNp];
+   for (Int_t i=0; i<fNp; ++i) {
+      fPoly[i].B()= sp5.fPoly[i].B();
+      fPoly[i].C()= sp5.fPoly[i].C();
+      fPoly[i].D()= sp5.fPoly[i].D();
+      fPoly[i].E()= sp5.fPoly[i].E();
+      fPoly[i].F()= sp5.fPoly[i].F();
+   }
 }
 
 
@@ -1302,7 +1320,15 @@ TSpline5& TSpline5::operator=(const TSpline5& sp5)
    //assignment operator
    if(this!=&sp5) {
       TSpline::operator=(sp5);
-      fPoly=sp5.fPoly;
+      fPoly=0;
+      if (fNp > 0) fPoly = new TSplinePoly5[fNp];
+      for (Int_t i=0; i<fNp; ++i) {
+         fPoly[i].B()= sp5.fPoly[i].B();
+         fPoly[i].C()= sp5.fPoly[i].C();
+         fPoly[i].D()= sp5.fPoly[i].D();
+         fPoly[i].E()= sp5.fPoly[i].E();
+         fPoly[i].F()= sp5.fPoly[i].F();
+      }
    }
    return *this;
 }

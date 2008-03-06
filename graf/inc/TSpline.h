@@ -166,10 +166,6 @@ private:
    void BuildCoeff();
    void SetCond(const char *opt);
 
-protected:
-   TSpline3(const TSpline3&);
-   TSpline3& operator=(const TSpline3&);
-
 public:
    TSpline3() : fPoly(0), fValBeg(0), fValEnd(0),
       fBegCond(-1), fEndCond(-1) {}
@@ -192,6 +188,8 @@ public:
             Double_t valbeg=0, Double_t valend=0);
    TSpline3(const TH1 *h, const char *opt=0,
             Double_t valbeg=0, Double_t valend=0);
+   TSpline3(const TSpline3&);
+   TSpline3& operator=(const TSpline3&);
    Int_t    FindX(Double_t x) const;
    Double_t Eval(Double_t x) const;
    Double_t Derivative(Double_t x) const;
@@ -221,10 +219,6 @@ private:
    void SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
                       const char *cb1, const char *ce1, const char *cb2,
                       const char *ce2);
-protected:
-   TSpline5(const TSpline5&);
-   TSpline5& operator=(const TSpline5&);
-
 public:
    TSpline5() : fPoly(0) {}
    TSpline5(const char *title,
@@ -252,6 +246,8 @@ public:
    TSpline5(const TH1 *h,
             const char *opt=0, Double_t b1=0, Double_t e1=0,
             Double_t b2=0, Double_t e2=0);
+   TSpline5(const TSpline5&);
+   TSpline5& operator=(const TSpline5&);
    Int_t    FindX(Double_t x) const;
    Double_t Eval(Double_t x) const;
    Double_t Derivative(Double_t x) const;
