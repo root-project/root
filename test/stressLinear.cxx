@@ -88,6 +88,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <stdlib.h>
 #include <Riostream.h>
 #include <TSystem.h>
 #include <TFile.h>

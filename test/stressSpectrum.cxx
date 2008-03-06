@@ -43,6 +43,7 @@
 //*  ROOTMARKS = 810.9   *  Root5.09/01   20051216/1229
 //****************************************************************************
 
+#include <stdlib.h>
 #include "TApplication.h"
 #include "TBenchmark.h"
 #include "TCanvas.h"

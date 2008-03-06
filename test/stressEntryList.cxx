@@ -35,6 +35,7 @@
 // *******************Deleting the data files****************************
 // **********************************************************************
 
+#include <stdlib.h>
 #include "TApplication.h"
 #include "TEntryList.h"
 #include "TEventList.h"

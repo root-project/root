@@ -24,6 +24,7 @@
 
 #ifndef __CINT__
 
+#include <stdlib.h>
 #include <Riostream.h>
 #include <time.h>
 #include <TString.h>

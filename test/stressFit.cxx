@@ -53,6 +53,7 @@
 //                                                                           //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
+#include <stdlib.h>
 #include "TVirtualFitter.h"
 #include "TSystem.h"
 #include "TROOT.h"
