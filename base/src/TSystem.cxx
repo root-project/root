@@ -2254,6 +2254,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (! IsAbsoluteFileName(library) ) {
       AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
    }
+   { // Remove multiple '/' characters, rootcint treats them as comments.
+      Ssiz_t pos = 0;
+      while ((pos = library.Index("//", 2, pos, TString::kExact)) != kNPOS) {
+         library.Remove(pos, 1);
+      }
+   }
    TString filename_fullpath = library;
 
    TString file_dirname = DirName( filename_fullpath );
