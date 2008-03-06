@@ -162,8 +162,8 @@ $(XRDPLUGINS): $(XRDPLUGINSA)
 		  fi)
 endif
 
-ifneq ($(PLATFORM),win32)
 $(XRDEXECS): $(XRDPLUGINSA)
+ifneq ($(PLATFORM),win32)
 		@(for i in $(XRDEXEC); do \
 		     fopt="" ; \
 		     if [ -f bin/$$i ] ; then \
@@ -176,18 +176,16 @@ $(XRDEXECS): $(XRDPLUGINSA)
 		     fi ; \
 		  done)
 else
-$(XRDEXECS): $(XRDPLUGINSA)
 		@(echo "Copying xrootd executables ..." ; \
 		cp $(XROOTDDIRD)/bin/*.exe "bin" ;)
 endif
 
-ifneq ($(PLATFORM),win32)
 $(XRDPLUGINSA): $(XROOTDMAKE)
+ifneq ($(PLATFORM),win32)
 		@(cd $(XROOTDDIRD); \
 	   	echo "*** Building xrootd ..." ; \
 		$(MAKE))
 else
-$(XRDPLUGINSA): $(XROOTDMAKE)
 		@(cd $(XROOTDDIRD); \
 		echo "*** Building xrootd..."; \
 		unset MAKEFLAGS; \
