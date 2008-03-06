@@ -259,11 +259,12 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    else
       SetWritable(kFALSE);
 
-   if (create)
+   if (create) {
       if (xmlsetup)
          ReadSetupFromStr(option);
       else
          ReadSetupFromStr(TXMLSetup::DefaultXmlSetup());
+   }
 
    InitXmlFile(create);
 

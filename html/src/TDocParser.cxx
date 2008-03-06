@@ -227,8 +227,8 @@ void TDocParser::AddClassMethodsRecursively(TBaseClass* bc)
           !strcmp(method->GetName(), "DeclFileLine") ||
           !strcmp(method->GetName(), "ImplFileName") ||
           !strcmp(method->GetName(), "ImplFileLine") ||
-          bc && (method->GetName()[0] == '~' // d'tor
-             || !strcmp(method->GetName(), method->GetReturnTypeName())) // c'tor
+          (bc && (method->GetName()[0] == '~' // d'tor
+             || !strcmp(method->GetName(), method->GetReturnTypeName()))) // c'tor
           )
          continue;
 
@@ -503,17 +503,17 @@ void TDocParser::DecorateKeywords(TString& line)
          EParseContext context = Context();
          Bool_t closeString = context == kString
             && (  line[i] == '"' 
-               || line[i] == '\'' 
-                  && (  i > 1 && line[i - 2] == '\'' 
-                     || i > 3 && line[i - 2] == '\\' && line[i - 3] == '\'')
+               || (line[i] == '\'' 
+                   && (  (i > 1 && line[i - 2] == '\'') 
+                      || (i > 3 && line[i - 2] == '\\' && line[i - 3] == '\'')))
                || haveHtmlEscapedChar)
             && (i == 0 || line[i - 1] != '\\'); // but not "foo \"str...
          if (context == kCode || context == kComment) {
-            if (line[i] == '"' || line[i] == '\'' && (
+            if (line[i] == '"' || (line[i] == '\'' && (
                   // 'a'
-                  line.Length() > i + 2 && line[i + 2] == '\'' ||
+                  (line.Length() > i + 2 && line[i + 2] == '\'') ||
                   // '\a'
-                  line.Length() > i + 3 && line[i + 1] == '\'' && line[i + 3] == '\'')) {
+                  (line.Length() > i + 3 && line[i + 1] == '\'' && line[i + 3] == '\'')))) {
 
                fDocOutput->DecorateEntityBegin(line, i, kString);
                fParseContext.push_back(kString);
@@ -580,7 +580,7 @@ void TDocParser::DecorateKeywords(TString& line)
       TString word(line(i, endWord - i));
 
       // '"' escapes handling of "Begin_..."/"End_..."
-      if ((i == 0 || i > 0 && line[i - 1] != '"')
+      if ((i == 0 || (i > 0 && line[i - 1] != '"'))
          && HandleDirective(line, i, word, copiedToCommentUpTo)) {
          // something special happened; the currentType is gone.
          currentType.back() = 0;
@@ -871,7 +871,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
                      waitForClosing.push_back('\'');
                   break;
                case '(':
-                  if (waitForClosing.empty() || waitForClosing.back() != '"' && waitForClosing.back() != '\'')
+                  if (waitForClosing.empty() || (waitForClosing.back() != '"' && waitForClosing.back() != '\''))
                      waitForClosing.push_back(')');
                   break;
                case '\\':
@@ -1005,8 +1005,8 @@ UInt_t TDocParser::InContext(Int_t context) const
 
    for (std::list<UInt_t>::const_reverse_iterator iPC = fParseContext.rbegin();
       iPC != fParseContext.rend(); ++iPC)
-      if (!lowerContext || (lowerContext && ((*iPC & kParseContextMask) == lowerContext))
-         && (!contextFlag || contextFlag && (*iPC & contextFlag)))
+      if (!lowerContext || ((lowerContext && ((*iPC & kParseContextMask) == lowerContext))
+         && (!contextFlag || (contextFlag && (*iPC & contextFlag)))))
          return *iPC;
 
    return 0;
@@ -1725,10 +1725,10 @@ Bool_t TDocParser::ProcessComment()
    if (!fCommentAtBOL) 
       posComment = commentLine.Index("<span class=\"comment\">", 0, TString::kIgnoreCase);
    Ssiz_t posSpanEnd = commentLine.Index("</span>", posComment == kNPOS?0:posComment, TString::kIgnoreCase);
-   while (mustDealWithCommentAtBOL && posSpanEnd != kNPOS || posComment != kNPOS) {
+   while ((mustDealWithCommentAtBOL && posSpanEnd != kNPOS) || posComment != kNPOS) {
       Int_t spanLevel = 1;
       Ssiz_t posSpan = commentLine.Index("<span", posComment + 1, TString::kIgnoreCase);
-      while (spanLevel > 1 || posSpan != kNPOS && posSpan < posSpanEnd) {
+      while (spanLevel > 1 || (posSpan != kNPOS && posSpan < posSpanEnd)) {
          // another span was opened, take the next </span>
          if (posSpan != kNPOS && posSpan < posSpanEnd) {
             ++spanLevel;
@@ -1893,13 +1893,14 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    TIter nextMethod(fCurrentClass->GetListOfMethods());
    while ((method = (TMethod *) nextMethod()))
       if (name == method->GetName()
-          && method->GetListOfMethodArgs()->GetSize() == nparams)
+          && method->GetListOfMethodArgs()->GetSize() == nparams) {
          if (guessedMethod) {
             // not unique, don't try to solve overload
             guessedMethod = 0;
             break;
          } else
             guessedMethod = method;
+      }
 
    dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteMethod(out, ret, name, params, filename, anchor,
                                                            fComment, codeOneLiner, guessedMethod);

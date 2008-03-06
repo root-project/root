@@ -948,12 +948,13 @@ void THtml::CreateListOfClasses(const char* filter)
             modulename.Remove(pos, modulename.Length());
          modulename.ToUpper();
       }
-      if (!modulename.Length())
+      if (!modulename.Length()) {
          if (strstr(cname, "::SMatrix<") || strstr(cname, "::SVector<"))
             modulename = "SMATRIX";
          else if (strstr(cname, "::TArrayProxy<") || strstr(cname, "::TClaArrayProxy<")
                   || strstr(cname, "::TImpProxy<") || strstr(cname, "::TClaImpProxy<"))
             modulename = "TREEPLAYER";
+      }
       if (!modulename.Length())
          modulename = "USER";
       
@@ -1305,12 +1306,13 @@ const TString& THtml::GetOutputDir(Bool_t createDir /*= kTRUE*/) const
       Long64_t sSize;
       Long_t sId, sFlags, sModtime;
       Int_t st = gSystem->GetPathInfo(fOutputDir, &sId, &sSize, &sFlags, &sModtime);
-      if (st || !(sFlags & 2))
+      if (st || !(sFlags & 2)) {
          if (st == 0)
             Error("GetOutputDir", "output directory %s is an existing file",
                   fOutputDir.Data());
          else if (gSystem->MakeDirectory(fOutputDir) == -1)
             Error("GetOutputDir", "output directory %s does not exist and can't create it", fOutputDir.Data());
+      }
    }
    return fOutputDir;
 }

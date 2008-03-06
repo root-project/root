@@ -1536,7 +1536,7 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
    }
 
    if (erc > -1)
-      if (gDebug > 0 || forceprint)
+      if (gDebug > 0 || forceprint) {
          if (gRootdErrStr[erc])
             ::Error(Form("TAuthenticate::%s", where), "%s %s",
                     gRootdErrStr[erc], lasterr.Data());
@@ -1544,6 +1544,7 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
             ::Error(Form("TAuthenticate::%s", where),
                     "unknown error code: server must be running a newer ROOT version %s",
                     lasterr.Data());
+      }
 
    // Update last error code
    fgLastError = err;

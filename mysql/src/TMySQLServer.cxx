@@ -387,11 +387,12 @@ TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
       Int_t data_scale = -1;   // second argument in declaration
       Int_t data_sign = -1; // signed type or not
 
-      if (IS_NUM(fields[nfield].type))
+      if (IS_NUM(fields[nfield].type)) {
          if (fields[nfield].flags & UNSIGNED_FLAG)
             data_sign = 0;
          else
             data_sign = 1;
+      }
 
       Bool_t nullable = (fields[nfield].flags & NOT_NULL_FLAG) == 0;
 

@@ -593,11 +593,12 @@ void TGLLegoPainter::DrawLegoPolar()const
 
    Double_t points[4][2] = {};
 
-   if (fLegoType == kColorLevel && !fSelectionPass)
+   if (fLegoType == kColorLevel && !fSelectionPass) {
       if (!PreparePalette())
          fLegoType = kColorSimple;
       else
          fPalette.EnableTexture(GL_MODULATE);
+   }
 
    if (fHighColor && fSelectionPass)
       Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
@@ -690,11 +691,12 @@ void TGLLegoPainter::DrawLegoCylindrical()const
    const Double_t sc = (1 - legoR) * fCoord->GetXScale();
    legoR *= fCoord->GetXScale();
 
-   if (fLegoType == kColorLevel && !fSelectionPass)
+   if (fLegoType == kColorLevel && !fSelectionPass) {
       if (!PreparePalette())
          fLegoType = kColorSimple;
       else
          fPalette.EnableTexture(GL_MODULATE);
+   }
 
    if (fHighColor && fSelectionPass)
       Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
@@ -791,11 +793,12 @@ void TGLLegoPainter::DrawLegoSpherical()const
    Double_t points[8][3] = {};
    const Double_t sc = 1 - legoR;
 
-   if (fLegoType == kColorLevel && !fSelectionPass)
+   if (fLegoType == kColorLevel && !fSelectionPass) {
       if (!PreparePalette())
          fLegoType = kColorSimple;
       else
          fPalette.EnableTexture(GL_MODULATE);
+   }
 
    if (fSelectionPass && fHighColor)
       Rgl::ObjectIDToColor(fSelectionBase, kTRUE);

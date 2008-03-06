@@ -1955,17 +1955,19 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
           (elem->GetArrayLength()<=f->GetArrayLimit()))
          return kColSimpleArray;
 
-   if (typ==TStreamerInfo::kTObject)
+   if (typ==TStreamerInfo::kTObject) {
       if (elem->InheritsFrom(TStreamerBase::Class()))
          return kColParent;
       else
          return kColObject;
+   }
 
-   if (typ==TStreamerInfo::kTNamed)
+   if (typ==TStreamerInfo::kTNamed) {
       if (elem->InheritsFrom(TStreamerBase::Class()))
          return kColParent;
       else
          return kColObject;
+   }
 
    if (typ==TStreamerInfo::kTString) return kColTString;
 
@@ -1978,36 +1980,50 @@ Int_t TSQLStructure::DefineElementColumnType(TStreamerElement* elem, TSQLFile* f
    // this is workaround
    // these two tags stored with WriteFastArray, but read with cl->Streamer()
    if ((typ==TStreamerInfo::kObject)  ||
-       (typ==TStreamerInfo::kAny))
-      if (elem->GetArrayLength()==0) return kColObject; else
-         if (elem->GetStreamer()==0) return kColObjectArray;
+       (typ==TStreamerInfo::kAny)) {
+      if (elem->GetArrayLength()==0)
+         return kColObject;
+      else
+         if (elem->GetStreamer()==0)
+            return kColObjectArray;
+   }
 
    if ((typ==TStreamerInfo::kObject)  ||
        (typ==TStreamerInfo::kAny) ||
        (typ==TStreamerInfo::kAnyp) ||
        (typ==TStreamerInfo::kObjectp) ||
        (typ==TStreamerInfo::kAnyP) ||
-       (typ==TStreamerInfo::kObjectP))
+       (typ==TStreamerInfo::kObjectP)) {
       if ((elem->GetArrayLength()==0) ||
-         (elem->GetStreamer()!=0)) return kColNormObject;
-                              else return kColNormObjectArray;
+         (elem->GetStreamer()!=0))
+         return kColNormObject;
+      else
+         return kColNormObjectArray;
+   }
 
    if ((typ==TStreamerInfo::kObject + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kAny + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kAnyp + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kObjectp + TStreamerInfo::kOffsetL) ||
        (typ==TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL) ||
-       (typ==TStreamerInfo::kObjectP + TStreamerInfo::kOffsetL))
-      if (elem->GetStreamer()!=0) return kColNormObject;
-      else                        return kColNormObjectArray;
+       (typ==TStreamerInfo::kObjectP + TStreamerInfo::kOffsetL)) {
+      if (elem->GetStreamer()!=0)
+         return kColNormObject;
+      else
+         return kColNormObjectArray;
+   }
 
    if ((typ==TStreamerInfo::kObject) ||
        (typ==TStreamerInfo::kAny) ||
        (typ==TStreamerInfo::kAnyp) ||
        (typ==TStreamerInfo::kObjectp) ||
-       (typ==TStreamerInfo::kSTL))
-      if (elem->GetArrayLength()==0) return kColObject; else
-         if (elem->GetStreamer()==0) return kColObjectArray;
+       (typ==TStreamerInfo::kSTL)) {
+      if (elem->GetArrayLength()==0)
+         return kColObject;
+      else
+         if (elem->GetStreamer()==0)
+            return kColObjectArray;
+   }
 
    if (((typ==TStreamerInfo::kAnyP) ||
         (typ==TStreamerInfo::kObjectP)) &&

@@ -225,13 +225,14 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
    }
    // Notify
-   if (gDebug > 3)
+   if (gDebug > 3) {
       if (gotPrincipal)
          Info("Krb5Authenticate",
               "user requested principal: %s", principal.Data());
       else
          Info("Krb5Authenticate",
               "default principal: %s", principal.Data());
+   }
 
    if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
 

@@ -1409,7 +1409,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   if (TMath::Abs(a) > 0.00000001
                        && fFitTaylor == kFitTaylorOrderSecond) {
                      d = d * TMath::Abs(yw - f) / (2 * a * ywm);
-                     if ((a + d) <= 0 && a >= 0 || (a + d) >= 0 && a <= 0)
+                     if (((a + d) <= 0 && a >= 0) || ((a + d) >= 0 && a <= 0))
                         d = 0;
                   }
                   
@@ -1447,7 +1447,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                if (TMath::Abs(a) > 0.00000001
                     && fFitTaylor == kFitTaylorOrderSecond) {
                   d = d * TMath::Abs(yw - f) / (2 * a * ywm);
-                  if ((a + d) <= 0 && a >= 0 || (a + d) >= 0 && a <= 0)
+                  if (((a + d) <= 0 && a >= 0) || ((a + d) >= 0 && a <= 0))
                      d = 0;
                }
                
@@ -1705,10 +1705,10 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                         chi2 += (yw - f) * (yw - f) / ywm;
                   }
                }
-               if (chi2 < chi_min
-                    && fStatisticType != kFitOptimMaxLikelihood
-                    || chi2 > chi_min
-                    && fStatisticType == kFitOptimMaxLikelihood) {
+               if ((chi2 < chi_min
+                    && fStatisticType != kFitOptimMaxLikelihood)
+                    || (chi2 > chi_min
+                    && fStatisticType == kFitOptimMaxLikelihood)) {
                   pmin = pi, chi_min = chi2;
                }
                
@@ -1873,10 +1873,10 @@ pm-&gt;SetMarkerSize(1);   </span></p>
             alpha = alpha / 10.0;
          iter += 1;
          regul_cycle += 1;
-      } while ((chi > chi_opt
-                 && fStatisticType != kFitOptimMaxLikelihood
-                 || chi < chi_opt
-                 && fStatisticType == kFitOptimMaxLikelihood)
+      } while (((chi > chi_opt
+                 && fStatisticType != kFitOptimMaxLikelihood)
+                 || (chi < chi_opt
+                 && fStatisticType == kFitOptimMaxLikelihood))
                 && regul_cycle < kFitNumRegulCycles);
       for (j = 0; j < rozmer; j++) {
          working_space[4 * shift + j] = 0;        //temp_xk[j]
@@ -2762,10 +2762,10 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
                         chi2 += (yw - f) * (yw - f) / ywm;
                   }
                }
-               if (chi2 < chi_min
-                    && fStatisticType != kFitOptimMaxLikelihood
-                    || chi2 > chi_min
-                    && fStatisticType == kFitOptimMaxLikelihood) {
+               if ((chi2 < chi_min
+                    && fStatisticType != kFitOptimMaxLikelihood)
+                    || (chi2 > chi_min
+                    && fStatisticType == kFitOptimMaxLikelihood)) {
                   pmin = pi, chi_min = chi2;
                }
                
@@ -2930,10 +2930,10 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
             alpha = alpha / 10.0;
          iter += 1;
          regul_cycle += 1;
-      } while ((chi > chi_opt
-                 && fStatisticType != kFitOptimMaxLikelihood
-                 || chi < chi_opt
-                 && fStatisticType == kFitOptimMaxLikelihood)
+      } while (((chi > chi_opt
+                 && fStatisticType != kFitOptimMaxLikelihood)
+                 || (chi < chi_opt
+                 && fStatisticType == kFitOptimMaxLikelihood))
                 && regul_cycle < kFitNumRegulCycles);
       for (j = 0; j < rozmer; j++) {
          working_space[4 * shift + j] = 0;        //temp_xk[j]

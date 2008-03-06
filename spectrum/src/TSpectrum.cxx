@@ -1463,7 +1463,7 @@ source[i]=h-&gt;GetBinContent(i + 1);   </p>
             i+=1;
          else if(direction == kBackDecreasingWindow)
             i-=1;
-      }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
+      }while((direction == kBackIncreasingWindow && i <= numberIterations) || (direction == kBackDecreasingWindow && i >= 1));
    }
 
    else if (filterOrder == kBackOrder4) {
@@ -1562,7 +1562,7 @@ source[i]=h-&gt;GetBinContent(i + 1);   </p>
             i+=1;
          else if(direction == kBackDecreasingWindow)
             i-=1;
-      }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
+      }while((direction == kBackIncreasingWindow && i <= numberIterations) || (direction == kBackDecreasingWindow && i >= 1));
    }
 
    else if (filterOrder == kBackOrder6) {
@@ -1723,7 +1723,7 @@ source[i]=h-&gt;GetBinContent(i + 1);   </p>
             i+=1;
          else if(direction == kBackDecreasingWindow)
             i-=1;
-      }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);
+      }while((direction == kBackIncreasingWindow && i <= numberIterations) || (direction == kBackDecreasingWindow && i >= 1));
    }
 
    else if (filterOrder == kBackOrder8) {
@@ -1964,7 +1964,7 @@ source[i]=h-&gt;GetBinContent(i + 1);   </p>
             i += 1;
          else if(direction == kBackDecreasingWindow)
             i -= 1;
-      }while(direction == kBackIncreasingWindow && i <= numberIterations || direction == kBackDecreasingWindow && i >= 1);               
+      }while((direction == kBackIncreasingWindow && i <= numberIterations) || (direction == kBackDecreasingWindow && i >= 1));               
    }
 
    if (compton == kTRUE) {

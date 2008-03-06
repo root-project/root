@@ -1550,7 +1550,7 @@ Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
 
    // note, if zero pointers given, use internal pdf
    // sanity check first
-   if (!pdfS && pdfB || pdfS && !pdfB)
+   if ((!pdfS && pdfB) || (pdfS && !pdfB))
       fLogger << kFATAL << "<GetSeparation> Mismatch in pdfs" << Endl;
    if (!pdfS) pdfS = fSplS;
    if (!pdfB) pdfB = fSplB;

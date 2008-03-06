@@ -1092,12 +1092,13 @@ int main(int argc, char **argv)
       if (NetOpen(gInetdFlag, gService) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         if ((gMaster = RpdInitSession(gService, gUser, gRemPid)) < 0)
+         if ((gMaster = RpdInitSession(gService, gUser, gRemPid)) < 0) {
             if (gMaster == -1)
                Error(ErrFatal, -1, "proofd: failure initializing session");
             else if (gMaster == -2)
                // special session (eg. cleanup): just exit
                exit(0);
+         }
 
          ProofdExec();     // child processes client's requests
          NetClose();       // then we are done

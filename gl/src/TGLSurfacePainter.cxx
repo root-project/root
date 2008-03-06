@@ -925,18 +925,15 @@ void TGLSurfacePainter::DrawSectionXOY()const
 
          if (zMin < fXOYSectionPos && zMax > fXOYSectionPos) {
             Int_t np = 0;
-            if (v1.Z() > fXOYSectionPos && v2.Z() < fXOYSectionPos || v2.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos)
-            {
+            if ((v1.Z() > fXOYSectionPos && v2.Z() < fXOYSectionPos) || (v2.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos)) {
                TGLLine3 line(v1, v2);
                intersection[np++] = Intersection(profilePlane, line, kFALSE).second;
             }
-            if (v2.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos || v3.Z() > fXOYSectionPos && v2.Z() < fXOYSectionPos)
-            {
+            if ((v2.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos) || (v3.Z() > fXOYSectionPos && v2.Z() < fXOYSectionPos)) {
                TGLLine3 line(v2, v3);
                intersection[np++] = Intersection(profilePlane, line, kFALSE).second;
             }
-            if (np < 2 && v1.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos || v3.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos)
-            {
+            if ((np < 2 && v1.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos) || (v3.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos)) {
                TGLLine3 line(v1, v3);
                intersection[np++] = Intersection(profilePlane, line, kFALSE).second;
             }
@@ -956,18 +953,15 @@ void TGLSurfacePainter::DrawSectionXOY()const
          zMax = TMath::Max(v4.Z(), zMax);
          if (zMin < fXOYSectionPos && zMax > fXOYSectionPos) {
             Int_t np = 0;
-            if (v3.Z() > fXOYSectionPos && v4.Z() < fXOYSectionPos || v4.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos)
-            {
+            if ((v3.Z() > fXOYSectionPos && v4.Z() < fXOYSectionPos) || (v4.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos)) {
                TGLLine3 line(v3, v4);
                intersection[np++] = Intersection(profilePlane, line, kFALSE).second;
             }
-            if (v4.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos || v1.Z() > fXOYSectionPos && v4.Z() < fXOYSectionPos)
-            {
+            if ((v4.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos) || (v1.Z() > fXOYSectionPos && v4.Z() < fXOYSectionPos)) {
                TGLLine3 line(v4, v1);
                intersection[np++] = Intersection(profilePlane, line, kFALSE).second;
             }
-            if (np < 2 && v3.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos || v1.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos)
-            {
+            if ((np < 2 && v3.Z() > fXOYSectionPos && v1.Z() < fXOYSectionPos) || (v1.Z() > fXOYSectionPos && v3.Z() < fXOYSectionPos)) {
                TGLLine3 line(v3, v1);
                intersection[np++] = Intersection(profilePlane, line, kFALSE).second;
             }

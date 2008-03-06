@@ -388,25 +388,28 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
       Info("SqlReadObject","Starting objid = %lld column=%s", objid, fCurrentData->GetLocatedField());
 
    if (!fCurrentData->IsBlobData() ||
-       fCurrentData->VerifyDataType(sqlio::ObjectPtr,kFALSE))
+       fCurrentData->VerifyDataType(sqlio::ObjectPtr,kFALSE)) {
       if (objid==0) {
          obj = 0;
          findptr = kTRUE;
-      } else
-      if (objid==-1) {
-         findptr = kTRUE; 
-      } else 
-      if ((fObjMap!=0) && (objid>=fFirstObjId)) {
-         void* obj1 = (void*) fObjMap->GetValue((Long_t) objid - fFirstObjId);
-         if (obj1!=0) {
-            obj = obj1;
-            findptr = kTRUE;
-            TString clname;
-            Version_t version;
-            if ((cl!=0) && SqlObjectInfo(objid, clname, version))
-              *cl = TClass::GetClass(clname);
+      } else {
+         if (objid==-1) {
+            findptr = kTRUE; 
+         } else {
+            if ((fObjMap!=0) && (objid>=fFirstObjId)) {
+               void* obj1 = (void*) fObjMap->GetValue((Long_t) objid - fFirstObjId);
+               if (obj1!=0) {
+                  obj = obj1;
+                  findptr = kTRUE;
+                  TString clname;
+                  Version_t version;
+                  if ((cl!=0) && SqlObjectInfo(objid, clname, version))
+                     *cl = TClass::GetClass(clname);
+               }
+            } 
          }
       }
+   }
 
    if ((gDebug>3) && findptr)
       cout << "    Found pointer " << (obj ? obj : 0)

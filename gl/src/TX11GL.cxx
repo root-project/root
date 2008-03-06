@@ -445,7 +445,7 @@ Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
    // Create a new pixmap and a new XImage if needed.
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
-   if (ctx.fPixmapIndex != -1)
+   if (ctx.fPixmapIndex != -1) {
       if (TMath::Abs(Int_t(w) - Int_t(ctx.fW)) > 1 || TMath::Abs(Int_t(h) - Int_t(ctx.fH)) > 1) {
          TGLContext_t newCtx;
          newCtx.fWindowIndex = ctx.fWindowIndex;
@@ -463,8 +463,7 @@ Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
             ctx.fXImage = newCtx.fXImage;
             ctx.fBUBuffer.swap(newCtx.fBUBuffer);
 #ifdef R__MACOSX
-            if (w > fPimpl->fGLWindows[ctx.fWindowIndex].fW || h > fPimpl->fGLWindows[ctx.fWindowIndex].fH)
-            {
+            if (w > fPimpl->fGLWindows[ctx.fWindowIndex].fW || h > fPimpl->fGLWindows[ctx.fWindowIndex].fH) {
                XResizeWindow(fPimpl->fDpy, fPimpl->fGLWindows[ctx.fWindowIndex].fGLWin, w, h);
                fPimpl->fGLWindows[ctx.fWindowIndex].fW = w;
                fPimpl->fGLWindows[ctx.fWindowIndex].fH = h;
@@ -477,6 +476,7 @@ Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
          ctx.fX = x;
          ctx.fY = y;
       }
+   }
 
    return kFALSE;
 }

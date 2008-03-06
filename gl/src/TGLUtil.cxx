@@ -429,7 +429,7 @@ std::pair<Bool_t, TGLVertex3> Intersection(const TGLPlane & plane, const TGLLine
    Double_t factor = num/denom;
 
    // If not extending (projecting) line is length from start enough to reach plane?
-   if (!extend && factor < 0.0 || factor > 1.0) {
+   if (!extend && (factor < 0.0 || factor > 1.0)) {
       return std::make_pair(kFALSE, TGLVertex3(0.0, 0.0, 0.0));
    }
 

@@ -97,12 +97,12 @@ public:
 
    void OutputCurrent()
    {
-      if (fCurrent!=fBuf) 
+      if (fCurrent!=fBuf) {
          if (fOut!=0)
             fOut->write(fBuf, fCurrent-fBuf);
-         else
-         if (fOutStr!=0) 
+         else if (fOutStr!=0) 
             fOutStr->Append(fBuf, fCurrent-fBuf);
+      }
       fCurrent = fBuf;
    }
    

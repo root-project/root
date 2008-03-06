@@ -888,7 +888,7 @@ l1:
       fx  = x-x1;
       fy  = fy1*fx/fx1;
       y   = (Int_t)(y1+fy);
-      if ((x<=x2)&&(x1<x2) || (x>=x2)&&(x1>x2)) goto l1;
+      if (((x<=x2)&&(x1<x2)) || ((x>=x2)&&(x1>x2))) goto l1;
    }
    return;
 }
@@ -976,7 +976,7 @@ l1:
       fx  = x-x1;
       fy  = fy1*fx/fx1;
       y   = (Int_t)(y1+fy);
-      if ((x<=x2)&&(x1<x2) || (x>=x2)&&(x1>x2)) goto l1;
+      if (((x<=x2)&&(x1<x2)) || ((x>=x2)&&(x1>x2))) goto l1;
    }
    return;
 }
@@ -2899,12 +2899,12 @@ l2:
                      }
                   }
                } else {
-                  if ((flag==0)&&(smer==0)||(flag!=0)&&(smer!=0)) {
+                  if (((flag==0)&&(smer==0))||((flag!=0)&&(smer!=0))) {
                      s1 = q1;
                      t1 = (Int_t)TMath::Max(q2-1,0);
                      s2 = q1;
                      t2 = (Int_t)TMath::Min(q2+2,w2);
-                  } else if ((flag!=0)&&(smer==0)||(flag==0)&&(smer!=0)) {
+                  } else if (((flag!=0)&&(smer==0))||((flag==0)&&(smer!=0))) {
                      s1 = (Int_t)TMath::Max(q1-1,0);
                      t1 = q2;
                      s2 = (Int_t)TMath::Min(q1+2,w1);
@@ -3110,11 +3110,11 @@ l2:
                         i1   += 1;
                         ekv   = 0;
                         stvor = 0;
-                        if (z2<=fZ&&fZ<z1||z2<fZ&&fZ<=z1) {
+                        if ((z2<=fZ&&fZ<z1)||(z2<fZ&&fZ<=z1)) {
                            xb = (fZ-z2)*(dx1-dx2)/(z1-z2)+dx2;
                            goto ekvi1;
                         }
-                        if (z1<=fZ&&fZ<z2||z1<fZ&&fZ<=z2) {
+                        if ((z1<=fZ&&fZ<z2)||(z1<fZ&&fZ<=z2)) {
                            xb = (fZ-z1)*(dx2-dx1)/(z2-z1)+dx1;
                            goto ekvi1;
                         }
@@ -3127,11 +3127,11 @@ ekvi1:
                            y5     = yb;
                            stvor += 1;
                         }
-                        if (z1<=fZ&&fZ<z4||z1<fZ&&fZ<=z4) {
+                        if ((z1<=fZ&&fZ<z4)||(z1<fZ&&fZ<=z4)) {
                            ya = (fZ-z1)*(dy4-dy1)/(z4-z1)+dy1;
                            goto ekvi2;
                         }
-                        if (z4<=fZ&&fZ<z1||z4<fZ&&fZ<=z1) {
+                        if ((z4<=fZ&&fZ<z1)||(z4<fZ&&fZ<=z1)) {
                            ya = (fZ-z4)*(dy1-dy4)/(z1-z4)+dy4;
                            goto ekvi2;
                         }
@@ -3147,11 +3147,11 @@ ekvi2:
                            yb  = ya;
                            ekv = 1;
                         }
-                        if (z3<=fZ&&fZ<z4||z3<fZ&&fZ<=z4) {
+                        if ((z3<=fZ&&fZ<z4)||(z3<fZ&&fZ<=z4)) {
                            xa = (fZ-z3)*(dx4-dx3)/(z4-z3)+dx3;
                            goto ekvi3;
                         }
-                        if (z4<=fZ&&fZ<z3||z4<fZ&&fZ<=z3) {
+                        if ((z4<=fZ&&fZ<z3)||(z4<fZ&&fZ<=z3)) {
                            xa = (fZ-z4)*(dx3-dx4)/(z3-z4)+dx4;
                            goto ekvi3;
                         }
@@ -3167,11 +3167,11 @@ ekvi3:
                            yb  = ya;
                            ekv = 1;
                         }
-                        if (z2<=fZ&&fZ<z3||z2<fZ&&fZ<=z3) {
+                        if ((z2<=fZ&&fZ<z3)||(z2<fZ&&fZ<=z3)) {
                            ya = (fZ-z2)*(dy3-dy2)/(z3-z2)+dy2;
                            goto ekvi4;
                         }
-                        if (z3<=fZ&&fZ<z2||z3<fZ&&fZ<=z2) {
+                        if ((z3<=fZ&&fZ<z2)||(z3<fZ&&fZ<=z2)) {
                            ya = (fZ-z3)*(dy2-dy3)/(z2-z3)+dy3;
                            goto ekvi4;
                         }
@@ -3663,7 +3663,7 @@ eqend:
                      }
                      line->PaintLine(gPad->PixeltoX(fXs),gPad->PixeltoY(fYs)+1,gPad->PixeltoX(fXe),gPad->PixeltoY(fYe)+1);
                   }
-               } else if ((fDisplayMode==kDisplayModeBarsY)&&((flag!=0)&&(smer==0)||(flag==0)&&(smer!=0))) {
+               } else if ((fDisplayMode==kDisplayModeBarsY)&&(((flag!=0)&&(smer==0))||((flag==0)&&(smer!=0)))) {
                   EnvelopeBars(ix5,iy5,x6,y6);
                   if (fLine!=0) {
                      if (fLine==1) {
@@ -3707,7 +3707,7 @@ eqend:
                   if (fModeGroup!=kModeGroupSimple) {
                      line->SetLineColor(uip);
                   }
-               } else if ((fDisplayMode==kDisplayModeBarsX)&&((flag==0)&&(smer==0)||(flag!=0)&&(smer!=0))) {
+               } else if ((fDisplayMode==kDisplayModeBarsX)&&(((flag==0)&&(smer==0))||((flag!=0)&&(smer!=0)))) {
                   EnvelopeBars(x7,y7,x6,y6);
                   if (fLine!=0) {
                      if (fLine==1) {
@@ -3755,7 +3755,7 @@ eqend:
                break;
             case kDisplayModeLinesX:
                if (fModeGroup==kModeGroupSimple) {
-                  if ((flag==0)&&(smer==0)||(flag!=0)&&(smer!=0)) {
+                  if (((flag==0)&&(smer==0))||((flag!=0)&&(smer!=0))) {
                      if (fBezier==kNoBezierInterpol) {
                         Envelope(x1,y1,x2,y2);
                         if (fLine!=0) {
@@ -4388,7 +4388,7 @@ eqend:
                break;
             case kDisplayModeLinesY:
                if (fModeGroup==kModeGroupSimple) {
-                  if ((flag!=0)&&(smer==0)||(flag==0)&&(smer!=0)) {
+                  if (((flag!=0)&&(smer==0))||((flag==0)&&(smer!=0))) {
                      if (fBezier==kNoBezierInterpol) {
                         Envelope(x1,y1,x2,y2);
                         if (fLine!=0) {
@@ -6572,8 +6572,8 @@ eqend:
             x1d = x2d;
             y1d = y2d;
          }
-      } while ((q1!=qv||q2!=(qv-1) && q2!=w2||smer!=0||flag!=1) &&
-               (q1!=(qv-1) && q1!=w1||q2!=qv||smer!=1||flag!=1) &&
+      } while ((q1!=qv||(q2!=(qv-1) && q2!=w2)||smer!=0||flag!=1) &&
+               ((q1!=(qv-1) && q1!=w1)||q2!=qv||smer!=1||flag!=1) &&
                 uhl!=1);
       if (qv<=w2&&qv<=w1) {
          if (uhl==0) {
@@ -6727,8 +6727,8 @@ lc2:
                x1d = x2d;
                y1d = y2d;
             }
-         } while ((q1!=qv||q2!=(qv-1)&&q2!=w2||smer!=0||flag!=1) &&
-                  (q1!=(qv-1)&&q1!=w1||q2!=qv||smer!=1||flag!=1) &&
+         } while ((q1!=qv||(q2!=(qv-1)&&q2!=w2)||smer!=0||flag!=1) &&
+                  ((q1!=(qv-1)&&q1!=w1)||q2!=qv||smer!=1||flag!=1) &&
                    uhl!=1);
          if (qv<=w2&&qv<=w1) {
             if (uhl==0) {

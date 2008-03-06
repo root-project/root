@@ -810,8 +810,8 @@ void TH1Editor::SetModel(TObject* obj)
       HideFrame(f7);
       HideFrame(f8);
    }
-   if (str.Contains("BAR") || (fAddBar->GetState()==kButtonDown) && 
-       (fDim->GetState()==kButtonDown)) {
+   if (str.Contains("BAR") || ((fAddBar->GetState()==kButtonDown) && 
+       (fDim->GetState()==kButtonDown))) {
       ShowFrame(f10);
       ShowFrame(f11);
       ShowFrame(f12);

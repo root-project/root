@@ -2922,11 +2922,12 @@ const char* TBufferXML::XmlReadValue(const char* name)
    Bool_t trysimple = fCanUseCompact;
    fCanUseCompact = kFALSE;
 
-   if (trysimple)
+   if (trysimple) {
       if (fXML->HasAttr(Stack(1)->fNode,xmlio::v))
          fValueBuf = fXML->GetAttr(Stack(1)->fNode, xmlio::v);
       else
          trysimple = kFALSE;
+   }
 
    if (!trysimple) {
       if (!VerifyItemNode(name, "XmlReadValue")) return 0;

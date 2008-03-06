@@ -986,7 +986,7 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
       if (gDebug>4)
         cout << "  Reading keyid = " << keyid << " name = " << keyname << endl;
 
-      if ((keyid>=sqlio::Ids_FirstKey) || (keyid==specialkeyid))
+      if ((keyid>=sqlio::Ids_FirstKey) || (keyid==specialkeyid)) {
          if (doupdate) {
             TKeySQL* key = FindSQLKey(dir, keyid);
 
@@ -1006,7 +1006,7 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
             else
                dir->GetListOfKeys()->Add(key);
          }
-
+      }
       delete row;
    }
 

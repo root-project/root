@@ -141,7 +141,7 @@ typedef struct {
    if (!aa) {\
       *bot = *top;\
    } else { \
-      b->a = (b->a*aa)>>8 + t->a;\
+      b->a = ((b->a*aa)>>8) + t->a;\
       b->r = (b->r*aa + t->r*t->a)>>8;\
       b->g = (b->g*aa + t->g*t->a)>>8;\
       b->b = (b->b*aa + t->b*t->a)>>8;\

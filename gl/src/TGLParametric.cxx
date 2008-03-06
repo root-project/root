@@ -81,7 +81,7 @@ namespace
             if (c == 'u' || c == 'v') {
                //1. This 'u' or 'v' is the last symbol in a string or
                //2. After this 'u' or 'v' symbol, which cannot be part of longer name.
-               if (i == len || !isalpha(equation[i]) && !isdigit(equation[i]) && equation[i] != '_') {
+               if (i == len || (!isalpha(equation[i]) && !isdigit(equation[i]) && equation[i] != '_')) {
                   //Replace 'u' with 'x' or 'v' with 'y'.
                   equation[i - 1] = c == 'u' ? 'x' : (++vFound, 'y');
                } else {

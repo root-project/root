@@ -159,11 +159,12 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
          if (method->GetClass() != fCurrentClass)
             classFile << "inh";
          classFile << "\"><td class=\"funcret\">";
-         if (kIsVirtual & method->Property())
+         if (kIsVirtual & method->Property()) {
             if (!isdtor)
                classFile << "virtual ";
             else
                classFile << " virtual";
+         }
 
          if (kIsStatic & method->Property())
             classFile << "static ";

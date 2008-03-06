@@ -82,13 +82,14 @@ namespace {
                && !strncasecmp(checkNext->c_str(), cursor->c_str(), selectionChar));
 
             // if the previous matching one is closer but not previous section start, take it!
-            if (checkPrev != prevSection->fStart)
+            if (checkPrev != prevSection->fStart) {
                if ((cursor - checkPrev) <= (checkNext - cursor))
                   addWhichOne = ++checkPrev;
                else if (checkNext != end
                   && (size_t)(checkNext - cursor) < maxPerSection) {
                   addWhichOne = checkNext;
                }
+            }
          }
          if (addWhichOne == prevSection->fStart)
             addWhichOne = cursor;
@@ -1464,7 +1465,7 @@ Bool_t TDocOutput::ReferenceIsRelative(const char* reference) const
 
    return !reference || 
       strncmp(reference, "http", 4) ||
-      strncmp(reference + 4, "://", 3) && strncmp(reference + 4, "s://", 4);
+      (strncmp(reference + 4, "://", 3) && strncmp(reference + 4, "s://", 4));
 }
 
 //______________________________________________________________________________
@@ -1754,11 +1755,12 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char* /*dir*/,
 
       for (Int_t siTag = 0; siTag < (Int_t) TDocParser::kNumSourceInfos; ++siTag) {
          Ssiz_t siPos = line.Index(templateSITags[siTag]);
-         if (siPos != kNPOS)
+         if (siPos != kNPOS) {
             if (siValues[siTag] && siValues[siTag][0])
                line.Replace(siPos, strlen(templateSITags[siTag]), siValues[siTag]);
             else
                line = ""; // skip e.g. %AUTHOR% lines if no author is set
+         }
       }
 
       out << line << std::endl;

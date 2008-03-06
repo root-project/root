@@ -8,7 +8,7 @@ static const char *what = WHAT;
 static int stlLoader()
 {
    G__ClassInfo cl("TSystem");
-   if (cl.IsValid()&strlen(WHAT)<1000) {
+   if (cl.IsValid() && strlen(WHAT)<1000) {
       char buf[1024];
       sprintf(buf,"\"lib%sDict\"",what);
 

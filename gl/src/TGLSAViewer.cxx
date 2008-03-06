@@ -488,13 +488,14 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
 
                if (!fPictureFileName.EndsWith(".eps")  && !fPictureFileName.EndsWith(".pdf")  &&
                    !fPictureFileName.EndsWith(".jpg")  && !fPictureFileName.EndsWith(".gif")  &&
-                   !fPictureFileName.EndsWith(".png"))
+                   !fPictureFileName.EndsWith(".png")) {
                   if (ft.Index(".") != kNPOS)
                      fPictureFileName += ft(ft.Index("."), ft.Length());
                   else {
                      Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
                      return kTRUE;
                   }
+               }
 
                if (!gVirtualX->IsCmdThread())
                   gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
