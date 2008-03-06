@@ -1310,6 +1310,8 @@ TSpline5::TSpline5(const TSpline5& sp5) :
       fPoly[i].D()= sp5.fPoly[i].D();
       fPoly[i].E()= sp5.fPoly[i].E();
       fPoly[i].F()= sp5.fPoly[i].F();
+      fPoly[i].X()= sp5.fPoly[i].X();
+      fPoly[i].Y()= sp5.fPoly[i].Y();
    }
 }
 
@@ -1328,6 +1330,8 @@ TSpline5& TSpline5::operator=(const TSpline5& sp5)
          fPoly[i].D()= sp5.fPoly[i].D();
          fPoly[i].E()= sp5.fPoly[i].E();
          fPoly[i].F()= sp5.fPoly[i].F();
+         fPoly[i].X()= sp5.fPoly[i].X();
+         fPoly[i].Y()= sp5.fPoly[i].Y();
       }
    }
    return *this;
