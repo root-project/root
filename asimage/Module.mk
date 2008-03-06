@@ -12,11 +12,10 @@ ASIMAGEDIRS  := $(ASIMAGEDIR)/src
 ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
 ASTEPVERS    := libAfterImage
-ASTEPSRCS    := $(MODDIRS)/$(ASTEPVERS).tar.gz
 ifeq ($(BUILTINASIMAGE),yes)
 ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
 ASTEPDIRI    := -I$(MODDIRS)/$(ASTEPVERS)
-ASTEPETAG    := $(MODDIRS)/headers.d
+ASTEPMAKE    := $(ASTEPDIRS)/Makefile
 else
 ASTEPDIRS    :=
 ASTEPDIRI    := $(ASINCDIR:%=-I%)
@@ -93,7 +92,7 @@ ALLMAPS     += $(ASIMAGEMAP) $(ASIMAGEGUIMAP)
 INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP)
 
 ##### local rules #####
-include/%.h:    $(ASIMAGEDIRI)/%.h $(ASTEPETAG)
+include/%.h:    $(ASIMAGEDIRI)/%.h
 		cp $< $@
 
 ifeq ($(BUILTINASIMAGE),yes)
@@ -103,25 +102,9 @@ $(ASTEPLIB):    $(ASTEPLIBA)
 			ranlib $@; \
 		fi)
 
-$(ASTEPETAG):   $(ASTEPSRCS)
-		@(if [ -d $(ASTEPDIRS) ]; then \
-		   rm -rf $(ASTEPDIRS); \
-		fi; \
-		echo "*** Extracting libAfterimage source ..."; \
-		cd $(ASIMAGEDIRS); \
-		if [ ! -d $(ASTEPVERS) ]; then \
-		   gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
-		   etag=`basename $(ASTEPETAG)` ; \
-		   touch $$etag ; \
-		fi)
-
-$(ASTEPLIBA):   $(ASTEPETAG)
+$(ASTEPMAKE):
 ifeq ($(PLATFORM),win32)
-		@(cd $(ASTEPDIRS); \
-		unset MAKEFLAGS; \
-		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) \
-                -nologo -f libAfterImage.mak \
-		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I../../../build/win -FIw32pragma.h")
+		@touch $(ASTEPMAKE)
 else
 		@(cd $(ASTEPDIRS); \
 		ACC=$(CC); \
@@ -179,7 +162,20 @@ else
 		$$JPEGINCDIR \
 		--with-png \
 		$$PNGINCDIR \
-		$$TIFFINCDIR; \
+		$$TIFFINCDIR)
+endif
+
+$(ASTEPLIBA):   $(ASTEPMAKE)
+ifeq ($(PLATFORM),win32)
+		@(cd $(ASTEPDIRS); \
+		echo "*** Building libAfterImage ..." ; \
+		unset MAKEFLAGS; \
+		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) \
+                -nologo -f libAfterImage.mak \
+		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I../../../build/win -FIw32pragma.h")
+else
+		@(cd $(ASTEPDIRS); \
+		echo "*** Building libAfterImage ..." ; \
 		$(MAKE))
 endif
 endif
@@ -221,20 +217,20 @@ $(ASIMAGEGUIMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ASIMAGEGUIL)
 		   -d $(ASIMAGEGUILIBDEPM) -c $(ASIMAGEGUIL)
 
 all-asimage:    $(ASIMAGELIB) $(ASIMAGEGUILIB) \
-		$(ASIMAGEMAP) $(ASIMAGEGUIMAP)
+$(ASIMAGEMAP) $(ASIMAGEGUIMAP)
 
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO)
 ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
-		-@(if [ -d $(ASTEPDIRS) ]; then \
+		@(if [ -f $(ASTEPMAKE) ]; then \
 			cd $(ASTEPDIRS); \
 			unset MAKEFLAGS; \
 			nmake -nologo -f libAfterImage.mak clean \
 			CFG=$(ASTEPBLD); \
 		fi)
 else
-		-@(if [ -d $(ASTEPDIRS) ]; then \
+		@(if [ -f $(ASTEPMAKE) ]; then \
 			cd $(ASTEPDIRS); \
 			$(MAKE) clean; \
 		fi)
@@ -249,8 +245,20 @@ distclean-asimage: clean-asimage
 		   $(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) \
 		   $(ASIMAGEGUILIB) $(ASIMAGEGUIMAP)
 ifeq ($(BUILTINASIMAGE),yes)
-		@rm -f $(ASTEPLIB) $(ASTEPETAG)
-		@rm -rf $(ASIMAGEDIRS)/$(ASTEPVERS)
+		@rm -f $(ASTEPLIB)
+ifeq ($(PLATFORM),win32)
+		@(if [ -f $(ASTEPMAKE) ]; then \
+			cd $(ASTEPDIRS); \
+			unset MAKEFLAGS; \
+			nmake -nologo -f libAfterImage.mak distclean \
+			CFG=$(ASTEPBLD); \
+		fi)
+else
+		@(if [ -f $(ASTEPMAKE) ]; then \
+			cd $(ASTEPDIRS); \
+			$(MAKE) distclean; \
+		fi)
+endif
 endif
 
 distclean::     distclean-asimage
