@@ -33,6 +33,7 @@ FITROOTMARKS=n/a
 
 SHOW_TOP=yes
 UPLOAD_LOCATION=flxi02:/afs/.fnal.gov/files/expwww/root/html/roottest/
+SVN_HOST=http://root.cern.ch
 export CVSROOT=:pserver:cvs@root.cern.ch:/user/cvs 
 
 # The config is expected to set ROOTLOC,
@@ -76,25 +77,54 @@ upload_log() {
     scp $1 $UPLOAD_LOCATION/$target_name > scp.log 2>&1 
 }
 
+upload_datafile() {
+    target_name=$host.`basename $1`
+    scp $1 $UPLOAD_LOCATION/$target_name > scp.log 2>&1 
+}
+
+one_line() {
+   ref=$1
+   status=$2
+
+   sline="<td style=\"width: 100px; background:lime; text-align: center;\" >"
+   nline="<td style=\"width: 100px; background:gray; text-align: center;\" >"
+   fline="<td style=\"width: 100px; background:orange; text-align: center;\" >"
+   rline="</td>"
+
+   if test "x$status" = "x$success"; then
+      line="$sline <a href="$ref">$status</a>           $rline"
+   elif test "x$status" = "x$na"; then
+      line="$nline <a href="$ref">$status</a>           $rline"
+   else
+      line="$fline <a href="$ref">$status</a>           $rline"
+   fi
+   echo $line
+}
+
 write_summary() {
    lline="<td style=\"width: 100px; text-align: center;\" >"
    rline="</td>"
          osline="$lline $OSNAME $rline"
-        cvsline="$lline <a href="cvsupdate.log.$host">$cvsstatus</a>           $rline"
-      gmakeline="$lline <a href="gmake.log.$host">$mainstatus</a></td>         $rline"
-       testline="$lline <a href="test_gmake.log.$host">$teststatus</a>         $rline"
-     stressline="$lline <a href="speedresult.log.$host">$teststatus</a>        $rline"
-   roottestline="$lline <a href="roottest_gmake.log.$host">$rootteststatus</a> $rline"
+        cvsline=`one_line cvsupdate.log.$host $cvsstatus`
+      gmakeline=`one_line gmake.log.$host $mainstatus`
+       testline=`one_line test_gmake.log.$host $teststatus`
+     stressline=`one_line speedresult.log.$host  $teststatus`
+   roottestline=`one_line roottest_gmake.log.$host $rootteststatus`
+ roottimingline=`one_line $host.roottesttiming.root $rootteststatus`
+ logsbundleline=`one_line $host.logs.tar.gz $rootteststatus`
+
    date=`date +"%b %d %Y"`
    dateline="$lline $date $rline"
    
-   echo $osline       >  $ROOTSYS/summary.log
-   echo $cvsline      >> $ROOTSYS/summary.log
-   echo $gmakeline    >> $ROOTSYS/summary.log
-   echo $testline     >> $ROOTSYS/summary.log
-   echo $stressline   >> $ROOTSYS/summary.log
-   echo $roottestline >> $ROOTSYS/summary.log
-   echo $dateline     >> $ROOTSYS/summary.log
+   echo $osline         >  $ROOTSYS/summary.log
+   echo $cvsline        >> $ROOTSYS/summary.log
+   echo $gmakeline      >> $ROOTSYS/summary.log
+   echo $testline       >> $ROOTSYS/summary.log
+   echo $stressline     >> $ROOTSYS/summary.log
+   echo $roottestline   >> $ROOTSYS/summary.log
+   echo $roottimingline >> $ROOTSYS/summary.log
+   echo $logsbundleline >> $ROOTSYS/summary.log
+   echo $dateline       >> $ROOTSYS/summary.log
 }
 
 na="N/A"
@@ -108,13 +138,14 @@ rootteststatus=$na
 mkdir -p $ROOTSYS
 cd $ROOTSYS/..
 locname=`basename $ROOTSYS`
-svn co https://root.cern.ch/svn/root/trunk $locname > $locname/cvsupdate.log  2>&1
+svn co $SVN_HOST/svn/root/trunk $locname > $locname/cvsupdate.log  2>&1
 result=$?
 if test $result != 0; then 
     cvsstatus=$failure
 else
     cvsstatus=$success
 fi
+cd $locname
 upload_log cvsupdate.log
 
 cd $ROOTSYS
@@ -179,13 +210,18 @@ echo Going to roottest at: $ROOTTESTLOC
 mkdir -p $ROOTTESTLOC
 cd $ROOTTESTLOC/..
 locname=`basename $ROOTTESTLOC`
-svn co https://root.cern.ch/svn/roottest/trunk $locname > $locname/gmake.log 2>&1
+svn co $SVN_HOST/svn/roottest/trunk $locname > $locname/gmake.log 2>&1
 
 cd $ROOTTESTLOC
 $MAKE clean >> gmake.log 2>&1 
 $MAKE -k >> gmake.log 2>&1 
 result=$?
 upload_log gmake.log roottest_
+
+gmake logs.tar.gz >> gmake.log 2>&1
+
+upload_datafile roottesttiming.root
+upload_datafile logs.tar.gz
 
 grep FAIL $PWD/gmake.log
 tail $PWD/gmake.log
@@ -196,7 +232,9 @@ if test $result != 0; then
 fi
 rootteststatus=$success
 
+
 cd $ROOTSYS
 write_summary
 upload_log summary.log
 
+ssh -x flxi02 bin/flush_webarea
