@@ -514,6 +514,152 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
 }
 
 //______________________________________________________________________________
+Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
+                                             const char *openphasename,
+                                             Bool_t forcesend)
+{
+   // Send the fileopen progress to MonaLisa.
+   // if openphases=0 it means that the information is to be stored
+   //  in a temp space, since there is not yet an object where to attach it
+   //  This is typical in the static Open calls
+   // The temp phases are put into a FileOpenProgressRepo as soon as one
+   //  is specified
+   //
+   // if thisopenphasename=0 it means that the stored phases (temp and object)
+   //  have to be cleared
+
+   if (!fInitialized) {
+      Error("SendFileOpenProgress",
+            "Monitoring is not properly initialized!");
+      return kFALSE;
+   }
+
+   // Create the list, if not yet done
+   if (!fTmpOpenPhases && !openphases) {
+      fTmpOpenPhases = new TList;
+      fTmpOpenPhases->SetOwner();
+   }
+
+   if (!openphasename) {
+      // This means "reset my phases"
+      fTmpOpenPhases->Clear();
+      return kTRUE;
+   }
+
+#if 0
+   // The stopwatch could have been already started
+   fStopwatch.Start(kFALSE);
+
+   FileOpenProgressInfo nfo;
+   nfo.t = fStopwatch.RealTime();
+
+   strncpy(nfo.phasename, thisopenphasename, sizeof(nfo.phasename));
+   nfo.phasename[sizeof(nfo.phasename)-1] = '\0';
+
+   if (!openphases) tmpopenphases.push_back(nfo);
+   else {
+     openphases->push_back(nfo);
+     openphases->insert(openphases->begin(), tmpopenphases.begin(), tmpopenphases.end());
+     tmpopenphases.clear();
+   }
+
+   fStopwatch.Continue();
+#else
+
+   // Take a measurement
+   fStopwatch.Start(kFALSE);
+   TParameter<Double_t> *nfo = new TParameter<Double_t>(openphasename, fStopwatch.RealTime());
+   fStopwatch.Continue();
+
+   if (!openphases) {
+      fTmpOpenPhases->Add(nfo);
+   } else {
+      // Move info temporarly saved to object list
+      TIter nxt(fTmpOpenPhases);
+      TParameter<Double_t> *nf = 0;
+      while ((nf = (TParameter<Double_t> *)nxt()))
+         openphases->Add(nf);
+      // Add this measurement
+      openphases->Add(nfo);
+      // Reset the temporary list
+      fTmpOpenPhases->SetOwner(0);
+      fTmpOpenPhases->Clear();
+   }
+
+#endif
+
+
+   if (!forcesend) return kTRUE;
+   if (!file) return kTRUE;
+
+#if 0
+   FileOpenProgressRepo *op = openphases;
+   if (!op) op = &tmpopenphases;
+#else
+   TList *op = openphases ? openphases : fTmpOpenPhases;
+#endif
+
+   Bool_t success = kFALSE;
+
+
+   TList *valuelist = new TList();
+   valuelist->SetOwner(kTRUE);
+
+   // create a monitor text object
+
+   TMonaLisaText *valhost = new TMonaLisaText("hostname",fHostname);
+   valuelist->Add(valhost);
+   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId.Data());
+   valuelist->Add(valsid);
+   TMonaLisaText *valdest = new TMonaLisaText("destname", file->GetEndpointUrl()->GetHost());
+   valuelist->Add(valdest);
+
+   TMonaLisaValue *valfid = new TMonaLisaValue("fileid", file->GetFileCounter());
+   valuelist->Add(valfid);
+   TString strfid = Form("%lld", file->GetFileCounter());
+   TMonaLisaText *valstrfid = new TMonaLisaText("fileid_str", strfid.Data());
+   valuelist->Add(valstrfid);
+
+#if 0
+   // Now add the timings for all the phases
+   for (UInt_t kk=1; kk < op->size(); kk++) {
+     TString s("openphase");
+     s += kk;
+     s += "_";
+     s += (*op)[kk-1].phasename;
+     TMonaLisaValue *v = new TMonaLisaValue(s.Data(),
+                                            (*op)[kk].t - (*op)[kk-1].t );
+     valuelist->Add(v);
+   }
+#else
+   Int_t kk = 1;
+   TIter nxt(op);
+   TParameter<Double_t> *nf1 = 0;
+   TParameter<Double_t> *nf0 = (TParameter<Double_t> *)nxt();
+   while ((nf1 = (TParameter<Double_t> *)nxt())) {
+      TString s = Form("openphase%d_%s", kk, nf0->GetName());
+      TMonaLisaValue *v = new TMonaLisaValue(s.Data(), nf1->GetVal() - nf0->GetVal());
+      valuelist->Add(v);
+      // Go to next
+      nf0 = nf1;
+      kk++;
+   }
+
+#endif
+
+   // Now send how much time was elapsed in total
+   nf0 = (TParameter<Double_t> *)op->First();
+   nf1 = (TParameter<Double_t> *)op->Last();
+   TMonaLisaValue *valtottime =
+      new TMonaLisaValue("total_open_time", nf1->GetVal() - nf0->GetVal());
+   valuelist->Add(valtottime);
+
+   // send it to monalisa
+   success = SendParameters(valuelist);
+   delete valuelist;
+   return success;
+}
+//______________________________________________________________________________
 Bool_t TMonaLisaWriter::SendFileReadProgress(TFile *file, Bool_t force)
 {
    // Send the fileread progress to MonaLisa.

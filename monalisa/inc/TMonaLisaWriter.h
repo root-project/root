@@ -112,6 +112,13 @@ public:
    Bool_t SendInfoUser(const char *user = 0);
    Bool_t SendInfoDescription(const char *jobtag);
    Bool_t SendInfoStatus(const char *status);
+
+   // An Open might have several phases, and the timings might be interesting
+   // to report
+   // The info is only gathered, and sent when forcesend=kTRUE
+   Bool_t SendFileOpenProgress(TFile *file, TList *openphases, const char *openphasename,
+                               Bool_t forcesend = kFALSE);
+
    Bool_t SendFileReadProgress(TFile *file, Bool_t force=kFALSE);
    Bool_t SendProcessingStatus(const char *status, Bool_t restarttimer=kFALSE);
    Bool_t SendProcessingProgress(Double_t nevent, Double_t nbytes, Bool_t force=kFALSE);

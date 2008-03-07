@@ -38,6 +38,7 @@
 #include "TString.h"
 #include "Rtypes.h"
 #include "TSystem.h"
+#include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
 #include "TProcessUUID.h"
 #include "TUrl.h"
@@ -98,6 +99,10 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
       return 0;
    }
    TUrl lUrl(url);
+
+   // Report this open phase as a temp one, since we have no object yet
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendFileOpenProgress(0, 0, "alienopen", kFALSE);
 
    TString name(TString("alien://") + TString(lUrl.GetFile()));
    TString fAName = name;
@@ -196,11 +201,21 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
       // no TAlien existing ....
       ::Error("TAlienFile::Open", "no active GRID connection found");
       fAUrl = "";
+
+      // Reset the temp monitoring info
+      if (gMonitoringWriter)
+         gMonitoringWriter->SendFileOpenProgress(0, 0, 0, kFALSE);
+
       return 0;
    } else {
       if ((strcmp(gGrid->GetGrid(), "alien"))) {
          ::Error("TAlienFile::Open", "you don't have an active <alien> grid!");
          fAUrl = "";
+
+         // Reset the temp monitoring info
+         if (gMonitoringWriter)
+            gMonitoringWriter->SendFileOpenProgress(0, 0, 0, kFALSE);
+
          return 0;
       }
    }
@@ -273,6 +288,11 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
          if (result) {
             delete result;
          }
+
+         // Reset the temp monitoring info
+         if (gMonitoringWriter)
+            gMonitoringWriter->SendFileOpenProgress(0, 0, 0, kFALSE);
+
          return 0;
       }
 
@@ -331,6 +351,11 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
             // if the service signals eof, it makes no sense to check more replicas
             ::Error("TAlienFile::Open",
                     "No more images to try - giving up");
+
+            // Reset the temp monitoring info
+            if (gMonitoringWriter)
+               gMonitoringWriter->SendFileOpenProgress(0, 0, 0, kFALSE);
+
             return 0;
          }
       }
@@ -410,6 +435,11 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
 
       if (TString(fAUrl.GetUrl()) == "") {
          // error in file opening occured
+
+          // Reset the temp monitoring info
+         if (gMonitoringWriter)
+            gMonitoringWriter->SendFileOpenProgress(0, 0, 0, kFALSE);
+
          return 0;
       }
 
@@ -449,6 +479,10 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
       ::Error("TAlienFile::Open",
               "Couldn't open any of the file images of %s", lUrl.GetUrl());
    }
+
+   // Reset the temp monitoring info
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendFileOpenProgress(0, 0, 0, kFALSE);
 
    return 0;
 }

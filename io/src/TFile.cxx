@@ -143,6 +143,8 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
    fCacheWrite      = 0;
    fArchiveOffset   = 0;
    fReadCalls       = 0;
+   fInfoCache       = 0;
+   fOpenPhases      = 0;
    fNoAnchorInName  = kFALSE;
    fIsRootFile      = kTRUE;
    fIsArchive       = kFALSE;
@@ -158,7 +160,7 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
 
 //_____________________________________________________________________________
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectoryFile(), fUrl(fname1,kTRUE), fInfoCache(0)
+           : TDirectoryFile(), fUrl(fname1,kTRUE), fInfoCache(0), fOpenPhases(0)
 {
    // Opens or creates a local ROOT file whose name is fname1. It is
    // recommended to specify fname1 as "<file>.root". The suffix ".root"
@@ -459,6 +461,7 @@ TFile::~TFile()
    SafeDelete(fFree);
    SafeDelete(fArchive);
    SafeDelete(fInfoCache);
+   SafeDelete(fOpenPhases);
    SafeDelete(fAsyncHandle);
    SafeDelete(fCacheRead);
    SafeDelete(fCacheWrite);
