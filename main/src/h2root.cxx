@@ -33,7 +33,6 @@
 #include "TProfile.h"
 #include "TGraph.h"
 #include "TMath.h"
-int Error;   //to be removed soon
 
 //  Define the names of the Fortran common blocks for the different OSs
 
