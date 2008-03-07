@@ -112,6 +112,8 @@ public:
       return (*fFunc)( x, p );
    }
 
+   using IParamMultiFunction::BaseFunc::operator();
+
 private: 
    
    /// evaluate the function

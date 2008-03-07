@@ -333,6 +333,7 @@ namespace Math {
          for (unsigned int icoord  = 0; icoord < ndim; ++icoord) 
             grad[icoord] = BaseGrad::Derivative(x,icoord); 
       }
+
       using  BaseFunc::NDim;
 
  

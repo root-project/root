@@ -66,6 +66,11 @@ public:
     */
    virtual Type GetType() const { return kUndefined; }
 
+   /**
+      return the total number of function calls (overrided if needed)
+    */
+   virtual unsigned int NCalls() const { return 0; }
+
 public: 
 
 

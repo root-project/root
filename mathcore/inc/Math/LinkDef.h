@@ -13,6 +13,12 @@
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
 
+// for automatic loading
+#ifdef MAKE_MAPS
+#pragma link C++ class TMath;
+//#pragma link C++ class ROOT::Math;
+#endif
+
 
 #pragma link C++ typedef ROOT::Math::IGenFunction;
 #pragma link C++ typedef ROOT::Math::IMultiGenFunction;
@@ -54,8 +60,15 @@
 
 #pragma link C++ class ROOT::Math::Factory+;
 
+#pragma link C++ class ROOT::Math::GaussIntegratorOneDim+;
+#pragma link C++ class ROOT::Math::GaussLegendreIntegrator+;
+#pragma link C++ class ROOT::Math::RichardsonDerivator+;
+
+#pragma link C++ class ROOT::Math::RootFinder+;
+#pragma link C++ class ROOT::Math::IRootFinderMethod+;
+#pragma link C++ class ROOT::Math::BrentRootFinder+;
+#pragma link C++ class ROOT::Math::BrentMinimizer1D+;
 
 #include "LinkDef_Func.h" 
-#include "LinkDef_GenVector.h" 
 
 #endif

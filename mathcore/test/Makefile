@@ -11,9 +11,10 @@ include $(ROOTSYS)/test/Makefile.arch
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = -include:_G__cpp_setupG__MathCore -include:_G__cpp_setupG__MathCore32 "$(ROOTSYS)/lib/libMathCore.lib"
+EXTRALIBS        = -include:_G__cpp_setupG__MathCore  "$(ROOTSYS)/lib/libMathCore.lib" \
+"$(ROOTSYS)/lib/libMathMore.lib"
 else
-EXTRALIBS        = -lMathCore
+EXTRALIBS        = -lMathCore -lMathMore
 CXXFLAGS += -g
 endif
 
@@ -31,17 +32,6 @@ CXXFLAGS += -DUSE_ROOT
 endif
 
 
-# use reflex
-#useReflex=yes
-ifneq ($(USE_REFLEX),)
-GCCXML=yes
-CXXFLAGS += -DUSE_REFLEX
-ifeq ($(PLATFORM),win32)
-EXTRAIOLIBS = "$(ROOTSYS)/lib/libReflex.lib"  "$(ROOTSYS)/lib/libCintex.lib"  
-else
-EXTRAIOLIBS = -lReflex -lCintex
-endif
-endif
 
 
 # if have clhep
@@ -56,102 +46,119 @@ endif
 endif
 
 
-COORDINATES3DOBJ     = coordinates3D.$(ObjSuf)
-COORDINATES3DSRC     = coordinates3D.$(SrcSuf)
-COORDINATES3D        = coordinates3D$(ExeSuf)
+TESTTMATHOBJ     = testTMath.$(ObjSuf)
+TESTTMATHSRC     = testTMath.$(SrcSuf)
+TESTTMATH        = testTMath$(ExeSuf)
 
-COORDINATES4DOBJ     = coordinates4D.$(ObjSuf)
-COORDINATES4DSRC     = coordinates4D.$(SrcSuf)
-COORDINATES4D        = coordinates4D$(ExeSuf)
+BSEARCHTIMEOBJ     = binarySearchTime.$(ObjSuf)
+BSEARCHTIMESRC     = binarySearchTime.$(SrcSuf)
+BSEARCHTIME        = binarySearchTime$(ExeSuf)
 
-ROTATIONOBJ     = rotationApplication.$(ObjSuf)
-ROTATIONSRC     = rotationApplication.$(SrcSuf)
-ROTATION        = rotationApplication$(ExeSuf)
+TESTBSEARCHOBJ     = testBinarySearch.$(ObjSuf)
+TESTBSEARCHSRC     = testBinarySearch.$(SrcSuf)
+TESTBSEARCH        = testBinarySearch$(ExeSuf)
 
-BOOSTOBJ     = testBoost.$(ObjSuf)
-BOOSTSRC     = testBoost.$(SrcSuf)
-BOOST        = testBoost$(ExeSuf)
+TESTSORTOBJ     = stdsort.$(ObjSuf)
+TESTSORTSRC     = stdsort.$(SrcSuf)
+TESTSORT        = stdsort$(ExeSuf)
 
-ITERATOROBJ     = testIterator.$(ObjSuf)
-ITERATORSRC     = testIterator.$(SrcSuf)
-ITERATOR        = testIterator$(ExeSuf)
+TESTSORTORDEROBJ     = testSortOrder.$(ObjSuf)
+TESTSORTORDERSRC     = testSortOrder.$(SrcSuf)
+TESTSORTORDER        = testSortOrder$(ExeSuf)
 
-GENVECTOROBJ     = testGenVector.$(ObjSuf)
-GENVECTORSRC     = testGenVector.$(SrcSuf)
-GENVECTOR        = testGenVector$(ExeSuf)
+SPECFUNERFOBJ     = testSpecFuncErf.$(ObjSuf)
+SPECFUNERFSRC     = testSpecFuncErf.$(SrcSuf)
+SPECFUNERF        = testSpecFuncErf$(ExeSuf)
 
-VECTORIOOBJ     = testVectorIO.$(ObjSuf)
-VECTORIOSRC     = testVectorIO.$(SrcSuf)
-VECTORIO        = testVectorIO$(ExeSuf)
+SPECFUNGAMMAOBJ     = testSpecFuncGamma.$(ObjSuf)
+SPECFUNGAMMASRC     = testSpecFuncGamma.$(SrcSuf)
+SPECFUNGAMMA        = testSpecFuncGamma$(ExeSuf)
 
-STRESS3DOBJ     = stress3D.$(ObjSuf)
-STRESS3DSRC     = stress3D.$(SrcSuf)
-STRESS3D        = stress3D$(ExeSuf)
+SPECFUNBETAOBJ     = testSpecFuncBeta.$(ObjSuf)
+SPECFUNBETASRC     = testSpecFuncBeta.$(SrcSuf)
+SPECFUNBETA        = testSpecFuncBeta$(ExeSuf)
 
-STRESS2DOBJ     = stress2D.$(ObjSuf)
-STRESS2DSRC     = stress2D.$(SrcSuf)
-STRESS2D        = stress2D$(ExeSuf)
+SPECFUNBETAIOBJ     = testSpecFuncBetaI.$(ObjSuf)
+SPECFUNBETAISRC     = testSpecFuncBetaI.$(SrcSuf)
+SPECFUNBETAI        = testSpecFuncBetaI$(ExeSuf)
 
-VECTOROPOBJ     = vectorOperation.$(ObjSuf)
-VECTOROPSRC     = vectorOperation.$(SrcSuf)
-VECTOROP        = vectorOperation$(ExeSuf)
+STRESSTMATHOBJ     = stressTMath.$(ObjSuf)
+STRESSTMATHSRC     = stressTMath.$(SrcSuf)
+STRESSTMATH        = stressTMath$(ExeSuf)
 
-#VECTORSCALEOBJ     = testVectorScale.$(ObjSuf)
-#VECTORSCALESRC     = testVectorScale.$(SrcSuf)
-#VECTORSCALE        = testVectorScale$(ExeSuf)
+
+STRESSTF1OBJ     = stressTF1.$(ObjSuf)
+STRESSTF1SRC     = stressTF1.$(SrcSuf)
+STRESSTF1        = stressTF1$(ExeSuf)
+
 
 INTEGRATIONOBJ      = testIntegration.$(ObjSuf)
 INTEGRATIONSRC      = testIntegration.$(SrcSuf)
 INTEGRATION         = testIntegration$(ExeSuf)
 
+INTEGRATIONMULTIOBJ = testIntegrationMultiDim.$(ObjSuf)
+INTEGRATIONMULTISRC = testIntegrationMultiDim.$(SrcSuf)
+INTEGRATIONMULTI    = testIntegrationMultiDim$(ExeSuf)
+
+ROOTFINDEROBJ      = testRootFinder.$(ObjSuf)
+ROOTFINDERSRC      = testRootFinder.$(SrcSuf)
+ROOTFINDER         = testRootFinder$(ExeSuf)
+
+OBJS          = $(SPECFUNBETAOBJ) $(SPECFUNBETAIOBJ) $(SPECFUNGAMMAOBJ) $(SPECFUNERFOBJ) $(TESTTMATHOBJ) $(BSEARCHTIMEOBJ)  $(TESTBSEARCHOBJ)  $(TESTSORTOBJ) $(TESTSORTORDEROBJ) $(STRESSTMATHOBJ) $(STRESSTF1OBJ)  $(INTEGRATIONOBJ) $(INTEGRATIONMULTIOBJ) $(ROOTFINDEROBJ)
 
 
-OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ) $(VECTORIOOBJ) $(STRESS3DOBJ) $(STRESS2DOBJ) $(ITERATOROBJ) $(VECTOROPOBJ) $(INTEGRATIONOBJ)
-
-
-PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR) $(VECTORIO) $(STRESS3D) $(STRESS2D) $(ITERATOR) $(VECTOROP) $(INTEGRATION)
+PROGRAMS      =$(SPECFUNBETA) $(SPECFUNBETAI)  $(SPECFUNGAMMA) $(SPECFUNERF) $(TESTTMATH) $(BSEARCHTIME) $(TESTBSEARCH) $(TESTSORT) $(TESTSORTORDER) $(STRESSTMATH) $(STRESSTF1) $(ITERATOR)  $(INTEGRATION) $(INTEGRATIONMULTI) $(ROOTFINDER)
 
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
 
-all:            $(PROGRAMS) libTrackDict.$(DllSuf)
+all:            $(PROGRAMS) 
 
 
-$(COORDINATES3D):   $(COORDINATES3DOBJ)
+
+$(STRESSTF1):      $(STRESSTF1OBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(COORDINATES4D):   $(COORDINATES4DOBJ)
+$(STRESSTMATH):     $(STRESSTMATHOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(ROTATION):        $(ROTATIONOBJ)
+$(TESTTMATH):      $(TESTTMATHOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(BOOST):           $(BOOSTOBJ)
+$(BSEARCHTIME):      $(BSEARCHTIMEOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(GENVECTOR):     $(GENVECTOROBJ)
+$(TESTBSEARCH):      $(TESTBSEARCHOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(VECTORIO):   	  $(VECTORIOOBJ) libTrackDict.$(DllSuf)
-		    $(LD) $(LDFLAGS) $(VECTORIOOBJ) $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
-		    @echo "$@ done"
-
-$(STRESS3D):      $(STRESS3DOBJ)
+$(TESTSORT):      $(TESTSORTOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(STRESS2D):      $(STRESS2DOBJ)
+$(TESTSORTORDER):      $(TESTSORTORDEROBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(ITERATOR):           $(ITERATOROBJ)
+$(SPECFUNERF):      $(SPECFUNERFOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(SPECFUNGAMMA):    $(SPECFUNGAMMAOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(SPECFUNBETA):    $(SPECFUNBETAOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(SPECFUNBETAI):    $(SPECFUNBETAIOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
@@ -159,65 +166,24 @@ $(INTEGRATION): $(INTEGRATIONOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
+$(INTEGRATIONMULTI): $(INTEGRATIONMULTIOBJ)
+			$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+			@echo "$@ done"
 
-$(VECTOROP):   	$(VECTOROPOBJ)
-		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
-		    @echo "$@ done"
-
-# $(VECTORSCALE):   	$(VECTORSCALEOBJ)
-# 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
-# 		    @echo "$@ done"
-
-
-ifneq ($(USE_REFLEX),)
-TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
-			@echo "Generating dictionary $@ using gccxml ..."
-			genreflex Track.h --selection_file=TrackDict.xml -o TrackDict.cxx -I$(ROOTSYS)/include
-else
-TrackDict.$(SrcSuf): 	Track.h TrackLinkDef.h
-			@echo "Generating dictionary $@ using rootcint ..."
-			rootcint -f $@ -c $^	
-endif
+$(ROOTFINDER): $(ROOTFINDEROBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
 
 
-libTrackDict.$(DllSuf): 	TrackDict.$(ObjSuf) 
-ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
-else
-ifeq ($(PLATFORM),macosx)
-# We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
-ifeq ($(MACOSX_MINOR),4)
-		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
-endif
-else
-ifeq ($(PLATFORM),win32)
-		bindexplib libTrackDict $^ > libTrackDict.def
-		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
-		   $(OutPutOpt)libTrackDict.lib
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ libTrackDict.exp $(LIBS) \
-		   $(OutPutOpt)$@
-else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^  $(OutPutOpt)$@
-endif
-endif
-endif
-endif
 
 
 
 
 clean:
-		@rm -f $(OBJS) core
+		@rm -f $(OBJS) core TrackDict.$(SrcSuf) TrackDict.h
 
 distclean:      clean
-		@rm -f $(PROGRAMS) 
+		@rm -f $(PROGRAMS) libTrackDict.*
 
 
 .SUFFIXES: .$(SrcSuf)

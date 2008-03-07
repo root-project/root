@@ -15,7 +15,7 @@
 
 #include "Math/AdaptiveIntegratorMultiDim.h"
 
-
+#include "Math/GaussIntegrator.h"
 
 #include "Math/OneDimFunctionAdapter.h"
 
@@ -59,6 +59,9 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
 
    VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::Type type , double absTol, double relTol, unsigned int size, int rule) { 
    // create the concrete class for one-dimensional integration. Use the plug-in manager if needed 
+
+   if (type == IntegrationOneDim::GAUSS)
+      return new GaussIntegratorOneDim();
 
    VirtualIntegratorOneDim * ig = 0; 
 

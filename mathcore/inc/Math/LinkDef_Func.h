@@ -88,6 +88,11 @@
 #pragma link C++ function ROOT::Math::uniform_quantile_c(double,double,double);
 #pragma link C++ function ROOT::Math::uniform_quantile(double,double,double);
 
+// Brent Functions
+#pragma link C++ function ROOT::Math::MinimStep(const IGenFunction*,int,double,double,double);
+#pragma link C++ function ROOT::Math::MinimBrent(const IGenFunction*,int,double,double,double,double,bool);
+
+
 // #ifndef R__HAS_MATHMORE
 // #pragma link C++ function ROOT::Math::chisquared_quantile(double,double);
 // #pragma link C++ function ROOT::Math::gamma_quantile(double,double,double);

@@ -309,8 +309,8 @@ L160: //to divide or not
          fStatus = 1;
    }
    //..and accuracy appropriare
-   //! if (relerr < eps && ifncls >= minpts) fStatus = 0;
-   if (relerr < eps* aresult && abserr < eps && ifncls >= minpts) fStatus = 0;
+   if (relerr < eps && ifncls >= minpts) fStatus = 0;  // We do not use the absolute error.
+   //if (relerr < eps* aresult && abserr < eps && ifncls >= minpts) fStatus = 0;
    if (fStatus == 3) {
       ldv = kTRUE;
       isbrgn  = irgnst;
@@ -329,6 +329,7 @@ L160: //to divide or not
    nfnevl = ifncls;       //number of function evaluations performed.
    fResult = result;
    fError = abserr;//wk[isbrgn-1];
+   fRelError = relerr;
    fNEval = nfnevl;
    delete [] wk;
   

@@ -39,7 +39,7 @@ namespace Math {
 	 </ul>
 	 @ingroup Integration
     */
-     enum Type {ADAPTIVE, ADAPTIVESINGULAR, NONADAPTIVE};
+     enum Type {GAUSS, ADAPTIVE, ADAPTIVESINGULAR, NONADAPTIVE};
 
   }
 

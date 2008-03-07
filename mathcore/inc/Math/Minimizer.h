@@ -80,6 +80,7 @@ public:
       Default constructor
    */ 
    Minimizer () : 
+      fValidError(false),
 #ifndef DEBUG
       fDebug(0), 
 #else
@@ -250,6 +251,9 @@ public:
    /// is typically 1 for Chi2 minimizetion and 0.5 for likelihood's
    double ErrorUp() const { return fUp; } 
 
+   ///return true if Minimizer has performed a detailed error validation (e.g. run Hesse for Minuit)
+   bool IsValidError() const { return fValidError; }
+
    /// set print level
    void SetPrintLevel(int level) { fDebug = level; }
 
@@ -268,6 +272,10 @@ public:
    /// set scale for calculating the errors
    void SetErrorUp(double up) { fUp = up; }
 
+   /// flag to check if minimizer needs to perform accurate error analysis (e.g. run Hesse for Minuit)
+   void SetValidError(bool on) { fValidError = on; } 
+
+
 
 
 protected: 
@@ -275,8 +283,11 @@ protected:
 
 //private: 
 
+
    // keep protected to be accessible by the derived classes 
  
+
+   bool fValidError;            // flag to control if errors have been validated (Hesse has been run in case of Minuit)
    int fDebug;                  // print level
    int fStrategy;               // minimizer strategy
    unsigned int fMaxCalls;      // max number of funciton calls 

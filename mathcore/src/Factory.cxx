@@ -24,6 +24,7 @@
 
 #else 
 // all the minimizer implementation classes 
+#define HAS_MINUIT2
 #ifdef HAS_MINUIT2
 #include "Minuit2/Minuit2Minimizer.h"
 #endif
@@ -64,18 +65,29 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       minim = s1.c_str();
       algo =  s2.c_str();
    }
+   if (minimizerType == "TMinuit") { 
+      s1 = "Minuit"; 
+      minim = s1.c_str();
+   }
 
    // create Minimizer using the PM
    TPluginHandler *h; 
    //gDebug = 3; 
    if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::Minimizer",minim ))) {
-      if (h->LoadPlugin() == -1)
+      if (h->LoadPlugin() == -1)  {
+#ifdef DEBUG
+      std::cout << "Error Loading ROOT::Math::Minimizer " << minim << std::endl;
+#endif
          return 0;
+      }
 
       // create plug-in with required algorithm
       ROOT::Math::Minimizer * min = reinterpret_cast<ROOT::Math::Minimizer *>( h->ExecPlugin(1,algo ) ); 
 #ifdef DEBUG
-      std::cout << "Loaded Minimizer " << minimizerType << "  " << algoType << "  " << algo << std::endl;
+      if (min != 0) 
+         std::cout << "Loaded Minimizer " << minimizerType << "  " << algoType << std::endl;
+      else 
+         std::cout << "Error creating Minimizer " << minimizerType << "  " << algoType << std::endl;
 #endif
 
       return min; 

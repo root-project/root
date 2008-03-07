@@ -18,7 +18,7 @@
 // TMath                                                                //
 //                                                                      //
 // Encapsulate most frequently used Math functions.                     //
-// NB. The basic functions Min, Max, Abs, Sign and Range are defined    //
+// NB. The basic functions Min, Max, Abs and Sign are defined           //
 // in TMathBase.                                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -29,6 +29,9 @@
 #ifndef ROOT_TMathBase
 #include "TMathBase.h"
 #endif
+
+#include "TError.h"
+#include <algorithm>
 
 namespace TMath {
 
@@ -155,137 +158,57 @@ namespace TMath {
    Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
 
    // Min, Max of an array
-   Short_t   MinElement(Long64_t n, const Short_t *a);
-   Int_t     MinElement(Long64_t n, const Int_t *a);
-   Float_t   MinElement(Long64_t n, const Float_t *a);
-   Double_t  MinElement(Long64_t n, const Double_t *a);
-   Long_t    MinElement(Long64_t n, const Long_t *a);
-   Long64_t  MinElement(Long64_t n, const Long64_t *a);
-   Short_t   MaxElement(Long64_t n, const Short_t *a);
-   Int_t     MaxElement(Long64_t n, const Int_t *a);
-   Float_t   MaxElement(Long64_t n, const Float_t *a);
-   Double_t  MaxElement(Long64_t n, const Double_t *a);
-   Long_t    MaxElement(Long64_t n, const Long_t *a);
-   Long64_t  MaxElement(Long64_t n, const Long64_t *a);
+   template <typename T> T MinElement(Long64_t n, const T *a);
+   template <typename T> T MaxElement(Long64_t n, const T *a);
 
    // Locate Min, Max element number in an array
-   Long64_t  LocMin(Long64_t n, const Short_t *a);
-   Long64_t  LocMin(Long64_t n, const Int_t *a);
-   Long64_t  LocMin(Long64_t n, const Float_t *a);
-   Long64_t  LocMin(Long64_t n, const Double_t *a);
-   Long64_t  LocMin(Long64_t n, const Long_t *a);
-   Long64_t  LocMin(Long64_t n, const Long64_t *a);
-   Long64_t  LocMax(Long64_t n, const Short_t *a);
-   Long64_t  LocMax(Long64_t n, const Int_t *a);
-   Long64_t  LocMax(Long64_t n, const Float_t *a);
-   Long64_t  LocMax(Long64_t n, const Double_t *a);
-   Long64_t  LocMax(Long64_t n, const Long_t *a);
-   Long64_t  LocMax(Long64_t n, const Long64_t *a);
+   template <typename T> Long64_t  LocMin(Long64_t n, const T *a);
+   template <typename T> Long64_t  LocMax(Long64_t n, const T *a);
 
    //Mean, Geometric Mean, Median, RMS
-   Double_t  Mean(Long64_t n, const Short_t *a, const Double_t *w=0);
-   Double_t  Mean(Long64_t n, const Int_t *a,   const Double_t *w=0);
-   Double_t  Mean(Long64_t n, const Float_t *a, const Double_t *w=0);
-   Double_t  Mean(Long64_t n, const Double_t *a,const Double_t *w=0);
-   Double_t  Mean(Long64_t n, const Long_t *a,  const Double_t *w=0);
-   Double_t  Mean(Long64_t n, const Long64_t *a,const Double_t *w=0);
-   Double_t  GeomMean(Long64_t n, const Short_t *a);
-   Double_t  GeomMean(Long64_t n, const Int_t *a);
-   Double_t  GeomMean(Long64_t n, const Float_t *a);
-   Double_t  GeomMean(Long64_t n, const Double_t *a);
-   Double_t  GeomMean(Long64_t n, const Long_t *a);
-   Double_t  GeomMean(Long64_t n, const Long64_t *a);
 
-   Double_t  RMS(Long64_t n, const Short_t *a);
-   Double_t  RMS(Long64_t n, const Int_t *a);
-   Double_t  RMS(Long64_t n, const Float_t *a);
-   Double_t  RMS(Long64_t n, const Double_t *a);
-   Double_t  RMS(Long64_t n, const Long_t *a);
-   Double_t  RMS(Long64_t n, const Long64_t *a);
+   template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=0);
+   template <typename T> Double_t GeomMean(Long64_t n, const T *a);
+   template <typename T> Double_t RMS(Long64_t n, const T *a);
 
    template <class Element, class Index, class Size>  Double_t MedianImp(Size n, const Element *a, const Double_t *w=0, Index *work=0);
-   Double_t  Median(Long64_t n, const Short_t *a,  const Double_t *w=0, Long64_t *work=0);
-   Double_t  Median(Long64_t n, const Int_t *a,    const Double_t *w=0, Long64_t *work=0);
-   Double_t  Median(Long64_t n, const Float_t *a,  const Double_t *w=0, Long64_t *work=0);
-   Double_t  Median(Long64_t n, const Double_t *a, const Double_t *w=0, Long64_t *work=0);
-   Double_t  Median(Long64_t n, const Long_t *a,   const Double_t *w=0, Long64_t *work=0);
-   Double_t  Median(Long64_t n, const Long64_t *a, const Double_t *w=0, Long64_t *work=0);
+   template <typename T> Double_t  Median(Long64_t n, const T *a,  const Double_t *w=0, Long64_t *work=0);
 
    //k-th order statistic
-   template <class Element, class Index, class Size>  Element KOrdStatImp(Size n, const Element *a, Size k, Index *work = 0);
-   Short_t   KOrdStat(Long64_t n, const Short_t *a,  Long64_t k, Long64_t *work=0);
-   Int_t     KOrdStat(Long64_t n, const Int_t *a,    Long64_t k, Long64_t *work=0);
-   Float_t   KOrdStat(Long64_t n, const Float_t *a,  Long64_t k, Long64_t *work=0);
-   Double_t  KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Long64_t *work=0);
-   Double_t  KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Int_t *work);
-   Long64_t  KOrdStat(Long64_t n, const Long_t *a,   Long64_t k, Long64_t *work=0);
-   Long64_t  KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *work=0);
+   template <class Element, typename Size> Element KOrdStat(Size n, const Element *a, Size k, Size *work = 0);
 
    //Sample quantiles
-   void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob, Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
-
-   // Range
-   inline Short_t   Range(Short_t lb, Short_t ub, Short_t x);
-   inline Int_t     Range(Int_t lb, Int_t ub, Int_t x);
-   inline Long_t    Range(Long_t lb, Long_t ub, Long_t x);
-   inline ULong_t   Range(ULong_t lb, ULong_t ub, ULong_t x);
-   inline Double_t  Range(Double_t lb, Double_t ub, Double_t x);
+   void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob, 
+                       Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
 
    // Binary search
-   Long64_t BinarySearch(Long64_t n, const Short_t *array,   Short_t value);
-   Long64_t BinarySearch(Long64_t n, const Short_t **array,  Short_t value);
-   Long64_t BinarySearch(Long64_t n, const Int_t *array,     Int_t value);
-   Long64_t BinarySearch(Long64_t n, const Int_t **array,    Int_t value);
-   Long64_t BinarySearch(Long64_t n, const Float_t *array,   Float_t value);
-   Long64_t BinarySearch(Long64_t n, const Float_t **array,  Float_t value);
-   Long64_t BinarySearch(Long64_t n, const Double_t *array,  Double_t value);
-   Long64_t BinarySearch(Long64_t n, const Double_t **array, Double_t value);
-   Long64_t BinarySearch(Long64_t n, const Long_t   *array,  Long_t value);
-   Long64_t BinarySearch(Long64_t n, const Long_t   **array, Long_t value);
-   Long64_t BinarySearch(Long64_t n, const Long64_t *array,  Long64_t value);
-   Long64_t BinarySearch(Long64_t n, const Long64_t **array, Long64_t value);
+   template <typename T> Long64_t BinarySearch(Long64_t n, const T  *array, T value);
+   template <typename T> Long64_t BinarySearch(Long64_t n, const T **array, T value);
 
    // Hashing
    ULong_t Hash(const void *txt, Int_t ntxt);
    ULong_t Hash(const char *str);
 
    // IsInside
-   Bool_t IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y);
-   Bool_t IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y);
-   Bool_t IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t *y);
+   template <typename T> Bool_t IsInside(T xp, T yp, Int_t np, T *x, T *y);
 
    // Sorting
    template <class Element, class Index, class Size>  void SortImp(Size n, const Element*, Index* index, Bool_t down=kTRUE);
-   void Sort(Int_t n,    const Short_t *a,  Int_t *index,    Bool_t down=kTRUE);
-   void Sort(Int_t n,    const Int_t *a,    Int_t *index,    Bool_t down=kTRUE);
-   void Sort(Int_t n,    const Float_t *a,  Int_t *index,    Bool_t down=kTRUE);
-   void Sort(Int_t n,    const Double_t *a, Int_t *index,    Bool_t down=kTRUE);
-   void Sort(Int_t n,    const Long_t *a,   Int_t *index,    Bool_t down=kTRUE);
-   void Sort(Int_t n,    const Long64_t *a, Int_t *index,    Bool_t down=kTRUE);
-   void Sort(Long64_t n, const Short_t *a,  Long64_t *index, Bool_t down=kTRUE);
-   void Sort(Long64_t n, const Int_t *a,    Long64_t *index, Bool_t down=kTRUE);
-   void Sort(Long64_t n, const Float_t *a,  Long64_t *index, Bool_t down=kTRUE);
-   void Sort(Long64_t n, const Double_t *a, Long64_t *index, Bool_t down=kTRUE);
-   void Sort(Long64_t n, const Long_t *a,   Long64_t *index, Bool_t down=kTRUE);
-   void Sort(Long64_t n, const Long64_t *a, Long64_t *index, Bool_t down=kTRUE);
+   template <typename Element, typename Index, typename Size>  void Sort(Size n, const Element* a, Index* index, Bool_t down=kTRUE);
    void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
    void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
 
    // Advanced
-          Float_t  *Cross(const Float_t v1[3],const Float_t v2[3],Float_t out[3]);    // Calculate the Cross Product of two vectors
-          Double_t *Cross(const Double_t v1[3],const Double_t v2[3],Double_t out[3]); // Calculate the Cross Product of two vectors
-          Float_t   Normalize(Float_t v[3]);                              // Normalize a vector
-          Double_t  Normalize(Double_t v[3]);                             // Normalize a vector
-   inline Float_t   NormCross(const Float_t v1[3],const Float_t v2[3],Float_t out[3]);    // Calculate the Normalized Cross Product of two vectors
-   inline Double_t  NormCross(const Double_t v1[3],const Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
-          Float_t  *Normal2Plane(const Float_t v1[3],const Float_t v2[3],const Float_t v3[3], Float_t normal[3]);     // Calculate a normal vector of a plane
-          Double_t *Normal2Plane(const Double_t v1[3],const Double_t v2[3],const Double_t v3[3], Double_t normal[3]); // Calculate a normal vector of a plane
-          Bool_t    RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
-
-          Double_t  BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
-          Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
-          Double_t  Landau(Double_t x, Double_t mpv=0, Double_t sigma=1, Bool_t norm=kFALSE);
-          Double_t  Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R = 4);
+   template <typename T> T *Cross(const T v1[3],const T v2[3], T out[3]); // Calculate the Cross Product of two vectors
+   Float_t   Normalize(Float_t v[3]);                              // Normalize a vector
+   Double_t  Normalize(Double_t v[3]);                             // Normalize a vector
+   template <typename T> inline T NormCross(const T v1[3],const T v2[3],T out[3]); //Calculate the Normalized Cross Product of two vectors
+   template <typename T> T *Normal2Plane(const T v1[3],const T v2[3],const T v3[3], T normal[3]); // Calculate a normal vector of a plane
+   Bool_t    RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
+   Double_t  BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
+   Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
+   Double_t  Landau(Double_t x, Double_t mpv=0, Double_t sigma=1, Bool_t norm=kFALSE);
+   Double_t  Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R = 4);
 
    // Bessel functions
           Double_t BesselI(Int_t n,Double_t x);  // integer order modified Bessel function I_n(x)
@@ -488,16 +411,43 @@ inline Int_t TMath::IsNaN(Double_t x)
 
 //-------- Advanced -------------
 
-inline Float_t TMath::NormCross(const Float_t v1[3],const Float_t v2[3],Float_t out[3])
+template <typename T> inline T TMath::NormCross(const T v1[3],const T v2[3],T out[3])
 {
    // Calculate the Normalized Cross Product of two vectors
    return Normalize(Cross(v1,v2,out));
 }
 
-inline Double_t TMath::NormCross(const Double_t v1[3],const Double_t v2[3],Double_t out[3])
-{
-   // Calculate the Normalized Cross Product of two vectors
-   return Normalize(Cross(v1,v2,out));
+// Min, Max of an array
+template <typename T> 
+T TMath::MinElement(Long64_t n, const T *a) {
+   // Return minimum of array a of length n.
+
+   return *std::min_element(a,a+n);
 }
+
+template <typename T>
+T TMath::MaxElement(Long64_t n, const T *a) { 
+   // Return maximum of array a of length n.
+
+   return *std::max_element(a,a+n); 
+}
+
+template <typename T>
+Long64_t TMath::LocMin(Long64_t n, const T *a) {
+   // Return index of array with the minimum element.
+   // If more than one element is minimum returns first found.
+
+   return (Long64_t) (std::min_element(a, a+n) - a);
+}
+
+template <typename T>
+Long64_t TMath::LocMax(Long64_t n, const T *a) {
+   // Return index of array with the maximum element.
+   // If more than one element is maximum returns first found.
+
+   return (Long64_t) (std::max_element(a, a+n) - a);
+}
+
+#include <TMathImp.h>
 
 #endif

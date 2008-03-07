@@ -13,41 +13,15 @@ MATHCOREDIRI := $(MATHCOREDIR)/inc
 
 ##### libMathCore #####
 MATHCOREL    := $(MODDIRI)/Math/LinkDef.h
-MATHCOREL32  := $(MODDIRI)/Math/LinkDef_GenVector32.h
-MATHCORELINC := $(MODDIRI)/Math/LinkDef_Func.h \
-                $(MODDIRI)/Math/LinkDef_GenVector.h \
-                $(MODDIRI)/Math/LinkDef_Point3D.h \
-                $(MODDIRI)/Math/LinkDef_Vector3D.h \
-                $(MODDIRI)/Math/LinkDef_Vector4D.h \
-                $(MODDIRI)/Math/LinkDef_Rotation.h
+MATHCORELINC := $(MODDIRI)/Math/LinkDef_Func.h 
+
 MATHCOREDS   := $(MODDIRS)/G__MathCore.cxx
-MATHCOREDS32 := $(MODDIRS)/G__MathCore32.cxx
+
 MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
-MATHCOREDO32 := $(MATHCOREDS32:.cxx=.o)
+
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
-MATHCOREDH1  :=  $(MODDIRI)/Math/Vector2D.h \
-                 $(MODDIRI)/Math/Point2D.h \
-                 $(MODDIRI)/Math/Vector3D.h \
-                 $(MODDIRI)/Math/Point3D.h \
-                 $(MODDIRI)/Math/Vector4D.h \
-                 $(MODDIRI)/Math/Rotation3D.h \
-                 $(MODDIRI)/Math/RotationZYX.h \
-                 $(MODDIRI)/Math/RotationX.h \
-                 $(MODDIRI)/Math/RotationY.h \
-                 $(MODDIRI)/Math/RotationZ.h \
-                 $(MODDIRI)/Math/LorentzRotation.h \
-                 $(MODDIRI)/Math/Boost.h    \
-                 $(MODDIRI)/Math/BoostX.h    \
-                 $(MODDIRI)/Math/BoostY.h    \
-                 $(MODDIRI)/Math/BoostZ.h    \
-                 $(MODDIRI)/Math/EulerAngles.h \
-                 $(MODDIRI)/Math/AxisAngle.h \
-                 $(MODDIRI)/Math/Quaternion.h \
-                 $(MODDIRI)/Math/Transform3D.h \
-                 $(MODDIRI)/Math/Translation3D.h \
-                 $(MODDIRI)/Math/Plane3D.h \
-                 $(MODDIRI)/Math/VectorUtil_Cint.h  \
+MATHCOREDH1  :=   \
                  $(MODDIRI)/Math/SpecFuncMathCore.h \
                  $(MODDIRI)/Math/DistFuncMathCore.h \
                  $(MODDIRI)/Math/IParamFunction.h \
@@ -60,24 +34,25 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector2D.h \
                  $(MODDIRI)/Math/AdaptiveIntegratorMultiDim.h \
                  $(MODDIRI)/Math/IntegratorMultiDim.h \
                  $(MODDIRI)/Math/Factory.h \
-                 $(MODDIRI)/Math/FitMethodFunction.h 
+                 $(MODDIRI)/Math/FitMethodFunction.h \
+                 $(MODDIRI)/Math/GaussIntegrator.h \
+                 $(MODDIRI)/Math/GaussLegendreIntegrator.h \
+                 $(MODDIRI)/Math/RootFinder.h \
+                 $(MODDIRI)/Math/IRootFinderMethod.h \
+                 $(MODDIRI)/Math/RichardsonDerivator.h \
+                 $(MODDIRI)/Math/BrentMethods.h \
+                 $(MODDIRI)/Math/BrentMinimizer1D.h \
+                 $(MODDIRI)/Math/BrentRootFinder.h 
 
 
-MATHCOREDH132:=  $(MODDIRI)/Math/Vector2D.h \
-	         $(MODDIRI)/Math/Point2D.h \
-	         $(MODDIRI)/Math/Vector3D.h \
-                 $(MODDIRI)/Math/Point3D.h \
-                 $(MODDIRI)/Math/Vector4D.h \
 
 
+MATHCOREH   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.h))
 
-MATHCOREAH   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.h))
-MATHCOREGVH  := $(filter-out $(MODDIRI)/Math/GenVector/LinkDef%, $(wildcard $(MODDIRI)/Math/GenVector/*.h))
-MATHCOREH    := $(MATHCOREAH) $(MATHCOREGVH)
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHCOREO    := $(MATHCORES:.cxx=.o)
 
-MATHCOREDEP  := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d) $(MATHCOREDO32:.o=.d)
+MATHCOREDEP  := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d) 
 
 MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 MATHCOREMAP  := $(MATHCORELIB:.$(SOEXT)=.rootmap)
@@ -90,17 +65,21 @@ ALLMAPS      += $(MATHCOREMAP)
 # include all dependency files
 INCLUDEFILES += $(MATHCOREDEP)
 
+#all link def used for libMathCore
+ALLMATHCOREL := $(MATHCOREL) $(MATHCORELINC) $(MATHL) $(FITL)
+
+
 ##### local rules #####
 include/Math/%.h: $(MATHCOREDIRI)/Math/%.h
-		@(if [ ! -d "include/Math/GenVector" ]; then   \
-		   mkdir -p include/Math/GenVector;       \
+		@(if [ ! -d "include/Math" ]; then   \
+		   mkdir -p include/Math;       \
 		fi)
 		cp $< $@
-
-$(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO) $(MATHCOREDO32) $(ORDER_) $(MAINLIBS)
+# build lib mathcore: use also obj  from math and fit directory 
+$(MATHCORELIB): $(MATHCOREO) $(MATHCOREDO)  $(MATHO) $(MATHDO) $(FITO) $(FITDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libMathCore.$(SOEXT) $@     \
-		   "$(MATHCOREO) $(MATHCOREDO) $(MATHCOREDO32)"    \
+		   "$(MATHCOREO) $(MATHCOREDO)  $(MATHO) $(MATHDO) $(FITO) $(FITDO)"    \
 		   "$(MATHCORELIBEXTRA)"
 
 $(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(MATHCORELINC) $(ROOTCINTTMPDEP)
@@ -109,14 +88,10 @@ $(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(MATHCORELINC) $(ROOTCINTTMPDEP)
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH1) $(MATHCOREL)
 #		genreflex $(MATHCOREDIRS)/MathCoreDict.h  --selection_file=$(MATHCOREDIRS)/selection_MathCore.xml -o $(MATHCOREDIRS)/G__MathCore.cxx -I$(MATHCOREDIRI)
 
-$(MATHCOREDS32):$(MATHCOREDH132) $(MATHCOREL) $(MATHCORELINC) $(ROOTCINTTMPDEP)
-		@echo "Generating dictionary $@..."
-		@echo "for files $(MATHCOREDH132)"
-		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH132) $(MATHCOREL32)
 
-$(MATHCOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(MATHCOREL) $(MATHCORELINC) $(MATHCOREL32)
+$(MATHCOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ALLMATHCOREL) 
 		$(RLIBMAP) -o $(MATHCOREMAP) -l $(MATHCORELIB) \
-		   -d $(MATHCORELIBDEPM) -c $(MATHCOREL) $(MATHCORELINC) $(MATHCOREL32)
+		   -d $(MATHCORELIBDEPM) -c $(ALLMATHCOREL) 
 
 all-mathcore:   $(MATHCORELIB) $(MATHCOREMAP)
 
@@ -126,7 +101,7 @@ clean-mathcore:
 clean::         clean-mathcore
 
 distclean-mathcore: clean-mathcore
-		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDS32) $(MATHCOREDH) \
+		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDH) \
 		   $(MATHCORELIB) $(MATHCOREMAP)
 		@rm -rf include/Math
 

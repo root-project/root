@@ -210,12 +210,22 @@ public:
    using BaseParamFunc::operator();
 
    /**
-      Evaluate the derivatives of the function with respect to the parameters at a point x.
-      It is optional to be implemented by the derived classes 
+      Evaluate the all the derivatives (gradient vector) of the function with respect to the parameters at a point x.
+      It is optional to be implemented by the derived classes for better efficiency
    */
-   void ParameterGradient(const double * x , double * grad ) const { 
-      return DoParameterGradient(x, grad); 
+   virtual void ParameterGradient(const double * x , double * grad ) const { 
+      unsigned int npar = NPar(); 
+      for (unsigned int ipar  = 0; ipar < npar; ++ipar) 
+         grad[ipar] = DoParameterDerivative(x,ipar); 
    } 
+
+   /**
+      Evaluate the partial derivative w.r.t a parameter ipar
+    */
+   double ParameterDerivative(const double * x, unsigned int ipar = 0) const { 
+      return DoParameterDerivative(x, ipar); 
+   }  
+
 
 
 private: 
@@ -223,9 +233,9 @@ private:
 
 
    /**
-      Evaluate the gradient, to be implemented by the derived classes
+      Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
     */
-   virtual void DoParameterGradient(const double * x, double * grad) const = 0;  
+   virtual double DoParameterDerivative(const double * x, unsigned int ipar) const = 0;  
 
 
 };
@@ -267,18 +277,36 @@ public:
 
    /**
       Evaluate the derivatives of the function with respect to the parameters at a point x.
-      It is optional to be implemented by the derived classes 
+      It is optional to be implemented by the derived classes for better efficiency if needed
    */
-   void ParameterGradient(double x , double * grad ) const { 
-      return DoParameterGradient(x, grad); 
+   virtual void ParameterGradient(double x , double * grad ) const { 
+      unsigned int npar = NPar(); 
+      for (unsigned int ipar  = 0; ipar < npar; ++ipar) 
+         grad[ipar] = DoParameterDerivative(x,ipar); 
    } 
 
    /**
       Compatibility interface with multi-dimensional functions 
    */
-   void ParameterGradient(double * x , double * grad ) const { 
-      return DoParameterGradient(*x, grad); 
+   void ParameterGradient(const double * x , double * grad ) const { 
+      ParameterGradient(*x, grad); 
    } 
+
+   /**
+      Partial derivative with respect a parameter
+    */
+   double ParameterDerivative(double x, unsigned int ipar = 0) const { 
+      return DoParameterDerivative(x, ipar); 
+   }
+
+   /**
+      Partial derivative with respect a parameter
+      Compatibility interface with multi-dimensional functions 
+   */
+   double ParameterDerivative(const double * x, unsigned int ipar = 0) const { 
+      return DoParameterDerivative(*x, ipar); 
+   }
+
 
 
 private: 
@@ -287,7 +315,7 @@ private:
    /**
       Evaluate the gradient, to be implemented by the derived classes
     */
-   virtual void DoParameterGradient(double x, double * grad) const = 0;  
+   virtual double DoParameterDerivative(double x, unsigned int ipar ) const = 0;  
 
 
 };

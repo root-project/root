@@ -32,7 +32,7 @@ namespace Math {
    one dimensional one. 
    Given a f(x1,x2,x3,....xn) transforms in a f( x_i) given the coordinate intex i and the vector x[]
    of the coordinates. 
-   It provides the possibility to copy the data or to maintain internally a pointer to an external array 
+   It provides the possibility to copy and own the data array of the coordinates or to maintain internally a pointer to an external array 
    for being more efficient. In this last case the user must garantee the life of the given passed pointer 
 
    @ingroup  CppFunctions
@@ -76,7 +76,7 @@ public:
    /** 
       Destructor (no operations)
    */ 
-   virtual ~OneDimMultiFunctionAdapter ()  { if (fOwn) delete fX; }  
+   virtual ~OneDimMultiFunctionAdapter ()  { if (fOwn) delete [] fX; }  
 
    /**
       clone

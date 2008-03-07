@@ -81,6 +81,9 @@ public:
    /// return integration error 
    double Error() const { return fError; } 
 
+   /// return relative error
+   double RelError() const { return fRelError; }
+
    /// return status of integration
    int Status() const { return fStatus; }
 
@@ -104,6 +107,7 @@ public:
 
    double fResult;        // last integration result 
    double fError;         // integration error 
+   double fRelError;      // Relative error
    unsigned int  fNEval;  // number of function evaluation
    int fStatus;   // status of algorithm (error if not zero)
 
