@@ -6697,6 +6697,12 @@ int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char 
   if(0!=G__struct.size[tagnum]
      && 'n'!=G__struct.type[tagnum]
      ) {
+     if (G__struct.filenum[tagnum]!=-1 &&
+	!G__struct.incsetup_memvar[tagnum]->empty() &&
+	strcmp(G__srcfile[G__struct.filenum[tagnum]].filename,"{CINTEX dictionary translator}")==0) {
+        // Something was already registered by Cintex, let's not add more
+        return 0;
+     }
 #ifndef G__OLDIMPLEMENTATION1656
 
      char found = G__incsetup_exist(G__struct.incsetup_memvar[tagnum],setup_memvar);
