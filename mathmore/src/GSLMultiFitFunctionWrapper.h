@@ -71,13 +71,13 @@ public:
 
 
    /// Fill gsl function structure from a C++ function iterator and size and number of residuals
-   template<class FuncIter> 
-   void SetFunction(FuncIter f, unsigned int nres, unsigned int npar  ) { 
+   template<class FuncVector> 
+   void SetFunction(const FuncVector & f, unsigned int nres, unsigned int npar  ) { 
       const void * p = &f;
       assert (p != 0); 
-      fFunc.f   = &GSLMultiFitFunctionAdapter<FuncIter >::F;
-      fFunc.df  = &GSLMultiFitFunctionAdapter<FuncIter >::Df;
-      fFunc.fdf = &GSLMultiFitFunctionAdapter<FuncIter >::FDf;
+      fFunc.f   = &GSLMultiFitFunctionAdapter<FuncVector >::F;
+      fFunc.df  = &GSLMultiFitFunctionAdapter<FuncVector >::Df;
+      fFunc.fdf = &GSLMultiFitFunctionAdapter<FuncVector >::FDf;
       fFunc.n = nres; 
       fFunc.p = npar; 
       fFunc.params =  const_cast<void *>(p); 

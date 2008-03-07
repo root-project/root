@@ -1,5 +1,5 @@
 #include "Math/Polynomial.h"
-#include "Math/Minimizer1D.h"
+#include "Math/GSLMinimizer1D.h"
 #include "Math/Functor.h"
 //#include "TF1.h"
 #include <iostream>
@@ -23,7 +23,7 @@ void testMinimization1D() {
 
   { 
      // default (Brent) 
-     ROOT::Math::Minimizer1D min;
+     ROOT::Math::GSLMinimizer1D min;
      min.SetFunction(func,1,-10,10); 
      int status = min.Minimize(100,0.01,0.01); 
      std::cout << "test Min1D " << min.Name() << "  Return code " << status << std::endl; 
@@ -35,7 +35,7 @@ void testMinimization1D() {
   }
   {
      // Golden Section
-     ROOT::Math::Minimizer1D min(ROOT::Math::Minim1D::GOLDENSECTION);
+     ROOT::Math::GSLMinimizer1D min(ROOT::Math::Minim1D::GOLDENSECTION);
      min.SetFunction(func,1,-10,10); 
      int status = min.Minimize(100,0.01,0.01); 
      std::cout << "test Min1D " << min.Name() << "  Return code " << status << std::endl; 

@@ -58,7 +58,7 @@ GSLRootFinderDeriv::~GSLRootFinderDeriv()
    if (fFunction) delete fFunction;
 }
 
-GSLRootFinderDeriv::GSLRootFinderDeriv(const GSLRootFinderDeriv &) 
+GSLRootFinderDeriv::GSLRootFinderDeriv(const GSLRootFinderDeriv &) : IRootFinderMethod()
 {
 }
 

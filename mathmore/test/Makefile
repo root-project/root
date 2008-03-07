@@ -13,11 +13,12 @@ include $(ROOTSYS)/test/Makefile.arch
 #------------------------------------------------------------------------------
 
 
-#CXXFLAGS += $(GSLFLAGS)
+CXXFLAGS += $(GSLFLAGS)
 
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" $(GSLLIBS)
+EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib"  $(GSLLIBS)
+UNURANLIB        = "$(ROOTSYS)/lib/libUnuran.lib"
 UNURANLIB        = "$(ROOTSYS)/lib/libUnuran.lib"
 else
 EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBDIR) $(GSLLIBS)
@@ -42,6 +43,10 @@ CXXFLAGS += -DHAVE_ROOTLIBS
 CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)
 CHEBYSHEVSRC      = testChebyshev.$(SrcSuf)
 CHEBYSHEV         = testChebyshev$(ExeSuf)
+
+TESTPERMUTEOBJ     = testPermute.$(ObjSuf)
+TESTPERMUTESRC     = testPermute.$(SrcSuf)
+TESTPERMUTE        = testPermute$(ExeSuf)
 
 DERIVATIONOBJ      = testDerivation.$(ObjSuf)
 DERIVATIONSRC      = testDerivation.$(SrcSuf)
@@ -95,11 +100,11 @@ SIMANTSP         = simanTSP$(ExeSuf)
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(INTEGRATIONMDOBJ) $(ROOTFINDEROBJ) \
                   $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) \
-	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ) $(SIMANTSPOBJ)
+	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ) $(TESTPERMUTEOBJ) $(SIMANTSPOBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(INTEGRATIONMD) $(ROOTFINDER) \
                   $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)  \
-	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR) $(SIMANTSP)
+	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR) $(TESTPERMUTE) $(SIMANTSP)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -159,6 +164,10 @@ $(STATFUNC):  	$(STATFUNCOBJ)
 $(TESTFUNCTOR): $(TESTFUNCTOROBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
+
+$(TESTPERMUTE):      $(TESTPERMUTEOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
 
 $(SIMANTSP):  	$(SIMANTSPOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@

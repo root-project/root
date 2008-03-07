@@ -21,14 +21,14 @@
   *                                                                    *
   **********************************************************************/
 
-// Header file for class GSL1DMinimizer
+// Header file for class GSL1DMinimizerWrapper
 // 
 // Created by: moneta  at Wed Dec  1 17:25:44 2004
 // 
 // Last update: Wed Dec  1 17:25:44 2004
 // 
-#ifndef ROOT_Math_GSL1DMinimizer
-#define ROOT_Math_GSL1DMinimizer
+#ifndef ROOT_Math_GSL1DMinimizerWrapper
+#define ROOT_Math_GSL1DMinimizerWrapper
 
 #include "gsl/gsl_min.h"
 
@@ -41,21 +41,21 @@ namespace Math {
    wrapper class for gsl_min_fminimizer structure
    @ingroup Min1D
 */
-class GSL1DMinimizer {
+class GSL1DMinimizerWrapper {
 
 public: 
-   GSL1DMinimizer( const gsl_min_fminimizer_type * T) 
+   GSL1DMinimizerWrapper( const gsl_min_fminimizer_type * T) 
    {
       fMinimizer = gsl_min_fminimizer_alloc(T); 
    }
-   virtual ~GSL1DMinimizer() { 
+   virtual ~GSL1DMinimizerWrapper() { 
       gsl_min_fminimizer_free(fMinimizer);
    }
 
 private:
 // usually copying is non trivial, so we make this unaccessible
-   GSL1DMinimizer(const GSL1DMinimizer &); 
-   GSL1DMinimizer & operator = (const GSL1DMinimizer &); 
+   GSL1DMinimizerWrapper(const GSL1DMinimizerWrapper &); 
+   GSL1DMinimizerWrapper & operator = (const GSL1DMinimizerWrapper &); 
 
 public: 
 
@@ -73,4 +73,4 @@ private:
 } // end namespace Math
 } // end namespace ROOT
 
-#endif /* ROOT_Math_GSL1DMinimizer */
+#endif /* ROOT_Math_GSL1DMinimizerWrapper */

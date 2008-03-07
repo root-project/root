@@ -21,16 +21,17 @@
   *                                                                    *
   **********************************************************************/
 
-// Header file for class Minimizer1D
+// Header file for class GSLMinimizer1D
 // 
 // Created by: moneta  at Wed Dec  1 15:04:51 2004
 // 
 // Last update: Wed Dec  1 15:04:51 2004
 // 
 
-#ifndef ROOT_Math_Minimizer1D
-#define ROOT_Math_Minimizer1D
+#ifndef ROOT_Math_GSLMinimizer1D
+#define ROOT_Math_GSLMinimizer1D
 
+#include "Math/IMinimizer1D.h"
 #include "Math/GSLFunctionAdapter.h"
 
 /**
@@ -63,7 +64,7 @@ namespace Math {
       };
    }
    
-   class GSL1DMinimizer; 
+   class GSL1DMinimizerWrapper; 
    class GSLFunctionWrapper;
 
 //______________________________________________________________________________________
@@ -83,7 +84,7 @@ This class does not support copying
 @ingroup Min1D
 */
 
-   class Minimizer1D {
+   class GSLMinimizer1D: public IMinimizer1D {
 
    public: 
 
@@ -91,17 +92,17 @@ This class does not support copying
          Construct the minimizer passing the minimizer type using the Minim1D::Algorithm enumeration
       */
       
-      explicit Minimizer1D(Minim1D::Type type=Minim1D::BRENT);
+      explicit GSLMinimizer1D(Minim1D::Type type=Minim1D::BRENT);
  
       /**
          Destructor: free allocated resources
       */
-      virtual ~Minimizer1D(); 
+      virtual ~GSLMinimizer1D(); 
 
    private:
       // usually copying is non trivial, so we make this unaccessible
-      Minimizer1D(const Minimizer1D &); 
-      Minimizer1D & operator = (const Minimizer1D &); 
+      GSLMinimizer1D(const GSLMinimizer1D &); 
+      GSLMinimizer1D & operator = (const GSLMinimizer1D &); 
     
    public: 
       
@@ -210,7 +211,7 @@ This class does not support copying
       bool fIsSet; 
 
 
-      GSL1DMinimizer * fMinimizer; 
+      GSL1DMinimizerWrapper * fMinimizer; 
       GSLFunctionWrapper * fFunction;  
 
    }; 
@@ -220,4 +221,4 @@ This class does not support copying
 } // end namespace ROOT
 
 
-#endif /* ROOT_Math_Minimizer1D */
+#endif /* ROOT_Math_GSLMinimizer1D */

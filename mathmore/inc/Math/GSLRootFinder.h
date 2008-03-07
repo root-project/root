@@ -40,6 +40,10 @@
 #include "Math/IFunctionfwd.h"
 #endif
 
+#ifndef ROOT_Math_IRootFinderMethod
+#include "Math/IRootFinderMethod.h"
+#endif
+
 #include <iostream>
 
 namespace ROOT {
@@ -64,7 +68,7 @@ namespace Math {
   */
 
 
-   class GSLRootFinder {
+   class GSLRootFinder: public IRootFinderMethod {
      
    public: 
      GSLRootFinder(); 
@@ -89,6 +93,8 @@ namespace Math {
 
      typedef double ( * GSLFuncPointer ) ( double, void *);
      int SetFunction( GSLFuncPointer  f, void * params, double xlow, double xup); 
+
+     using IRootFinderMethod::SetFunction;
 
      int Iterate(); 
 

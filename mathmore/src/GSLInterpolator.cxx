@@ -38,7 +38,7 @@ namespace ROOT {
 namespace Math {
 
 
-GSLInterpolator::GSLInterpolator (unsigned int size, const Interpolation::Type type) : 
+GSLInterpolator::GSLInterpolator (unsigned int size, Interpolation::Type type) : 
    fAccel(0),
    fSpline(0)
 { 

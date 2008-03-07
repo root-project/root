@@ -140,13 +140,9 @@ double  Polynomial::DoDerivative(double x) const{
 
 }
 
-void Polynomial::DoParameterGradient (double x, double * grad) const { 
+double Polynomial::DoParameterDerivative (double x, unsigned int ipar) const { 
 
-   unsigned int npar = NPar(); 
-   for (unsigned int i = 0; i < npar; ++i) 
-      grad[i] = gsl_pow_int(x, i); 
-      // return fParGradient; 
-
+      return gsl_pow_int(x, ipar); 
 }
 
 

@@ -162,7 +162,8 @@ void TestTime(const Func & f) {
    double s=0;
    for (int ipass = 0; ipass <NLOOP; ++ipass) {  
       for (int i = 0; i < Ntimes-1; ++i) { 
-         double y = f(&x[i]); 
+         const double * xx = &x[i];
+         double y = f(xx); 
          s+= y; 
       }
    }
@@ -402,8 +403,10 @@ void testMore() {
 
    ROOT::Math::WrappedMultiTF1 f7b(tf1);
    TestTime(f7b);
+   TestTimePF(f7b);
 
    ROOT::Math::WrappedParamFunction<> wf7(&freeRootFunc2D,2,0,0);
+   TestTime(wf7);
    TestTimePF(wf7);
 
    // use the fact that TF1 implements operator(double *, double *) 

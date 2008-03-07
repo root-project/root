@@ -40,7 +40,7 @@
 #pragma link C++ class ROOT::Math::GSLIntegrator+;
 
 #pragma link C++ namespace ROOT::Math::Minim1D;
-#pragma link C++ class ROOT::Math::Minimizer1D+;
+#pragma link C++ class ROOT::Math::GSLMinimizer1D+;
 
 #pragma link C++ class ROOT::Math::Interpolator+;
 

@@ -106,9 +106,9 @@ public:
       if (npts == 0) return -1; 
 
       unsigned int npar = funcVec[0].NDim(); 
-      typedef typename std::vector<Func>::const_iterator FuncIt; 
-      FuncIt funcIter = funcVec.begin(); 
-      fFunc.SetFunction(funcIter, npts, npar); 
+      typedef typename std::vector<Func>  FuncVec; 
+      //FuncIt funcIter = funcVec.begin(); 
+      fFunc.SetFunction(funcVec, npts, npar); 
       // create solver object 
       CreateSolver( npts, npar ); 
       // set initial values 

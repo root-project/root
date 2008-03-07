@@ -142,7 +142,7 @@ private:
 
    double DoDerivative (double x) const ; 
 
-   void DoParameterGradient(double x, double * g) const; 
+   double DoParameterDerivative(double x, unsigned int ipar) const; 
    
 
    // cache order = number of params - 1)

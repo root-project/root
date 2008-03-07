@@ -39,6 +39,8 @@
 
 #include <cassert>
 
+#include <iostream>
+
 namespace ROOT {
 namespace Math {
 
@@ -63,7 +65,7 @@ namespace Math {
   */ 
      
 
-template<class FuncIterator> 
+template<class FuncVector> 
 class GSLMultiFitFunctionAdapter {
 
 public: 
@@ -72,11 +74,10 @@ public:
       // p is a pointer to an iterator of functions
       unsigned int n = f->size;
       // need to copy iterator otherwise next time the function is called it wont work 
-      FuncIterator  funcIter = *( reinterpret_cast< FuncIterator *> (p) );
+      FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
       if (n == 0) return -1; 
       for (unsigned int i = 0; i < n ; ++i) { 
-         gsl_vector_set(f, i, funcIter->operator()(x->data) );
-         funcIter++;
+         gsl_vector_set(f, i, (funcVec[i])(x->data) );
       }
       return 0; 
    }
@@ -89,17 +90,17 @@ public:
       unsigned int npar = h->size2;
       if (n == 0) return -1; 
       if (npar == 0) return -2; 
-      FuncIterator   funcIter = *(reinterpret_cast< FuncIterator *> (p) );
+      FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
       for (unsigned int i = 0; i < n ; ++i) { 
          double * g = (h->data)+i*npar;   //pointer to start  of i-th row
-         assert ( npar == funcIter->NDim() );
-         funcIter->Gradient(x->data, g); 
+         assert ( npar == (funcVec[i]).NDim() );
+         (funcVec[i]).Gradient(x->data, g); 
 //          for (unsigned int k = 0; k < npar;  ++k) { 
 //             double grad = funcIter->Derivative(x->data, k); 
 //             gsl_matrix_set(h, i, k, grad  );
 //          }
          
-         funcIter++;
+//         funcIter++;
       }
       return 0; 
    }
@@ -112,21 +113,26 @@ public:
       unsigned int npar = h->size2;
       if (n == 0) return -1; 
       if (npar == 0) return -2; 
-      FuncIterator  funcIter = *( reinterpret_cast< FuncIterator *> (p) ); 
+      FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
+//       FuncIterator * pFuncIter = reinterpret_cast< FuncIterator *> (p); 
+//       FuncIterator  & funcIter = *( pFuncIter ); 
       assert( f->size == n); 
       for (unsigned int i = 0; i < n ; ++i) { 
-         gsl_vector_set(f, i, funcIter->operator()(x->data) );
-         assert ( npar == funcIter->NDim() );
+//         std::cout << i << "typeid of pointed function iterator " << typeid(*funcIter).name() << std::endl;
+         const double * xdata = x->data; 
+         double fval = (funcVec[i])(xdata); 
+         gsl_vector_set(f, i, fval  );
+         assert ( npar == (funcVec[i]).NDim() );
 
          double * g = (h->data)+i*npar;   //pointer to start  of i-th row
-         assert ( npar == funcIter->NDim() );
-         funcIter->Gradient(x->data, g); 
+//         assert ( npar == (funVec[i]).NDim() );
+         (funcVec[i]).Gradient(x->data, g); 
 //          for (unsigned int k = 0; k < npar;  ++k) { 
 //             double grad = funcIter->Derivative(x->data, k); 
 //             gsl_matrix_set(h, i, k, grad  );
 //          }
          
-         funcIter++;
+//         funcIter++;
       }
       return 0; 
    }
