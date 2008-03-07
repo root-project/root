@@ -123,11 +123,27 @@ template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T  *array, 
    // If match is found, function returns position of element.
    // If no match found, function gives nearest element smaller than value.
 
+
+#ifdef USE_NEW_STD_IMPL
    const T* pind;
    pind = std::lower_bound(array, array + n, value);
    Long64_t index = ((*pind == value)? (pind - array): ( pind - array - 1));
 
    return index;
+#else
+
+   Long64_t nabove, nbelow, middle;
+   nabove = n+1;
+   nbelow = 0;
+   while(nabove-nbelow > 1) {
+      middle = (nabove+nbelow)/2;
+      if (value == array[middle-1]) return middle-1;
+      if (value  < array[middle-1]) nabove = middle;
+      else                          nbelow = middle;
+   }
+   return nbelow-1;
+
+#endif
 }
 
 template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T **array, T value)
@@ -138,11 +154,25 @@ template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T **array, 
    // If match is found, function returns position of element.
    // If no match found, function gives nearest element smaller than value.
 
+#ifdef USE_NEW_STD_IMPL
    const T* pind;
    pind = std::lower_bound(*array, *array + n, value);
    Long64_t index = ((*pind == value)? (pind - *array): ( pind - *array - 1));
 
    return index;
+#else
+   Long64_t nabove, nbelow, middle;
+   nabove = n+1;
+   nbelow = 0;
+   while(nabove-nbelow > 1) {
+      middle = (nabove+nbelow)/2;
+      if (value == *array[middle-1]) return middle-1;
+      if (value  < *array[middle-1]) nabove = middle;
+      else                           nbelow = middle;
+   }
+   return nbelow-1;
+#endif
+
 }
 
 template <typename Element, typename Index, typename Size> void TMath::Sort(Size n, const Element* a, Index* index, Bool_t down)
