@@ -931,8 +931,8 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
       integral = ComputeIntegral();
       if (integral == 0 || fIntegral == 0) return;
    }
-   Float_t r1 = gRandom->Rndm();
-   Int_t ibin = TMath::BinarySearch(nbins,fIntegral,r1);
+   Double_t r1 = gRandom->Rndm();
+   Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
    Int_t binz = ibin/nxy;
    Int_t biny = (ibin - nxy*binz)/nbinsx;
    Int_t binx = ibin - nbinsx*(biny + nbinsy*binz);

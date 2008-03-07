@@ -204,6 +204,7 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    // for using TF1 as a callable object (functor)
+   virtual Double_t operator()(Double_t x, Double_t y=0, Double_t z = 0, Double_t t = 0) const { return Eval(x,y,z,t); }
    virtual Double_t operator()(const Double_t *x, const Double_t *params=0) { return EvalPar(x,params); }
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
@@ -246,12 +247,10 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=1e-12);
    virtual Double_t IntegralError(Double_t a, Double_t b, Double_t epsilon=1e-12);
    //virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
-   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params=0);
+   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=1e-12);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t epsilon, Double_t &relerr,Int_t &nfnevl, Int_t &ifail);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
    virtual Bool_t   IsInside(const Double_t *x) const;
-   Double_t         MinimBrent(Int_t type, Double_t &xmin, Double_t &xmax, Double_t xmiddle, Double_t fy, Bool_t &ok) const;
-   Double_t         MinimStep(Int_t type, Double_t &xmin, Double_t &xmax, Double_t fy) const;
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
    virtual void     ReleaseParameter(Int_t ipar);

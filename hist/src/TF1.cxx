@@ -24,6 +24,15 @@
 #include "TClass.h"
 #include "TMethodCall.h"
 #include "TF1Helper.h"
+#include "Math/WrappedFunction.h"
+#include "Math/WrappedTF1.h"
+#include "Math/RootFinder.h"
+#include "Math/BrentMinimizer1D.h"
+#include "Math/BrentMethods.h"
+#include "Math/GaussIntegrator.h"
+#include "Math/GaussLegendreIntegrator.h"
+#include "Math/AdaptiveIntegratorMultiDim.h"
+#include "Math/RichardsonDerivator.h"
 
 //#include <iostream>
 
@@ -34,6 +43,24 @@ static Double_t gErrorTF1 = 0;
 
 ClassImp(TF1)
 
+class GFunc {
+   const TF1* fFunction;
+   const double fY0;
+public:
+   GFunc(const TF1* function , double y ):fFunction(function), fY0(y) {}
+   double operator()(double x) const {
+      return fFunction->Eval(x) - fY0;
+   }
+};
+
+class GInverseFunc {
+   const TF1* fFunction;
+public:
+   GInverseFunc(const TF1* function):fFunction(function) {}
+   double operator()(double x) const {
+      return - fFunction->Eval(x);
+   }
+};
 
 //______________________________________________________________________________
 /* Begin_Html
@@ -1095,33 +1122,19 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   const Double_t kC1 = 1e-15;
+   // I didn't do it! To change EvalPar to const!!! or remove const from
+   // this method!
+   ROOT::Math::WrappedTF1 wf1(*( const_cast<TF1 *> (this) )); 
+   if ( params )
+      wf1.SetParameters( params );
 
-   if(eps< 1e-10 || eps > 1e-2) {
-      Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1e-2], reset to 0.001",eps);
-      eps = 0.001;
-   }
-   Double_t xmin, xmax;
+   ROOT::Math::RichardsonDerivator rd;
+   double xmin, xmax;
    GetRange(xmin, xmax);
-   Double_t h = eps*(xmax-xmin);
+   rd.SetFunction(wf1, xmin, xmax);
+   rd.SetRelTolerance(eps);
+   return rd.Derivative1(x);
 
-   Double_t xx[1];
-   TF1 *func = (TF1*)this;
-   func->InitArgs(xx, params);
-   xx[0] = x+h;     Double_t f1 = func->EvalPar(xx, params);
-   xx[0] = x;       Double_t fx = func->EvalPar(xx, params);
-   xx[0] = x-h;     Double_t f2 = func->EvalPar(xx, params);
-
-   xx[0] = x+h/2;   Double_t g1 = func->EvalPar(xx, params);
-   xx[0] = x-h/2;   Double_t g2 = func->EvalPar(xx, params);
-
-   //compute the central differences
-   Double_t h2    = 1/(2.*h);
-   Double_t d0    = f1 - f2;
-   Double_t d2    = 2*(g1 - g2);
-   gErrorTF1       = kC1*h2*fx;  //compute the error
-   Double_t deriv = h2*(4*d2 - d0)/3.;
-   return deriv;
 }
 
 
@@ -1159,33 +1172,18 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   const Double_t kC1 = 2*1e-15;
+   // I didn't do it! To change EvalPar to const!!! or remove const from
+   // this method!
+   ROOT::Math::WrappedTF1 wf1(*( const_cast<TF1 *> (this) )); 
+   if ( params )
+      wf1.SetParameters( params );
 
-   if(eps< 1e-6 || eps > 1e-2) {
-      Warning("Derivative2","parameter esp=%g out of allowed range[1e-6,1e-2], reset to 0.001",eps);
-      eps = 0.001;
-   }
-   Double_t xmin, xmax;
+   ROOT::Math::RichardsonDerivator rd;
+   double xmin, xmax;
    GetRange(xmin, xmax);
-   Double_t h = eps*(xmax-xmin);
-
-   Double_t xx[1];
-   TF1 *func = (TF1*)this;
-   func->InitArgs(xx, params);
-   xx[0] = x+h;     Double_t f1 = func->EvalPar(xx, params);
-   xx[0] = x;       Double_t f2 = func->EvalPar(xx, params);
-   xx[0] = x-h;     Double_t f3 = func->EvalPar(xx, params);
-
-   xx[0] = x+h/2;   Double_t g1 = func->EvalPar(xx, params);
-   xx[0] = x-h/2;   Double_t g3 = func->EvalPar(xx, params);
-
-   //compute the central differences
-   Double_t hh    = 1/(h*h);
-   Double_t d0    = f3 - 2*f2 + f1;
-   Double_t d2    = 4*g3 - 8*f2 +4*g1;
-   gErrorTF1       = kC1*hh*f2;  //compute the error
-   Double_t deriv = hh*(4*d2 - d0)/3.;
-   return deriv;
+   rd.SetFunction(wf1, xmin, xmax);
+   rd.SetRelTolerance(eps);
+   return rd.Derivative2(x);
 }
 
 
@@ -1223,35 +1221,18 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   //const Double_t C1 = (1e-16)*TMath::Sqrt(5./2.)*TMath::Sqrt(16*64 + 1.)/3;
-   const Double_t kC1 = 1e-15;
+   // I didn't do it! To change EvalPar to const!!! or remove const from
+   // this method!
+   ROOT::Math::WrappedTF1 wf1(*( const_cast<TF1 *> (this) )); 
+   if ( params )
+      wf1.SetParameters( params );
 
-   if(eps< 1e-4 || eps > 1e-2) {
-      Warning("Derivative3","parameter esp=%g out of allowed range[1e-4,1e-2], reset to 0.001",eps);
-      eps = 0.001;
-   }
-   Double_t xmin, xmax;
+   ROOT::Math::RichardsonDerivator rd;
+   double xmin, xmax;
    GetRange(xmin, xmax);
-   Double_t h = eps*(xmax-xmin);
-
-   Double_t xx[1];
-   TF1 *func = (TF1*)this;
-   func->InitArgs(xx, params);
-   xx[0] = x+2*h;   Double_t f1 = func->EvalPar(xx, params);
-   xx[0] = x+h;     Double_t f2 = func->EvalPar(xx, params);
-   xx[0] = x-h;     Double_t f3 = func->EvalPar(xx, params);
-   xx[0] = x-2*h;   Double_t f4 = func->EvalPar(xx, params);
-   xx[0] = x;       Double_t fx = func->EvalPar(xx, params);
-   xx[0] = x+h/2;   Double_t g2 = func->EvalPar(xx, params);
-   xx[0] = x-h/2;   Double_t g3 = func->EvalPar(xx, params);
-
-   //compute the central differences
-   Double_t hhh  = 1/(h*h*h);
-   Double_t d0   = 0.5*f1 - f2 +f3 - 0.5*f4;
-   Double_t d2   = 4*f2 - 8*g2 +8*g3 - 4*f3;
-   gErrorTF1      = kC1*hhh*fx;   //compute the error
-   Double_t deriv = hhh*(4*d2 - d0)/3.;
-   return deriv;
+   rd.SetFunction(wf1, xmin, xmax);
+   rd.SetRelTolerance(eps);
+   return rd.Derivative3(x);
 }
 
 
@@ -1540,21 +1521,14 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
-   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+   ROOT::Math::BrentMinimizer1D bm;
+   GInverseFunc g(this);
+   ROOT::Math::WrappedFunction<GInverseFunc> wf1(g);
+   bm.SetFunction( wf1, xmin, xmax );
+   bm.Minimize(10, 0, 0 );
    Double_t x;
-   Int_t niter=0;
-   x = MinimStep(3, xmin, xmax, 0);
-   Bool_t ok = kTRUE;
-   x = MinimBrent(3, xmin, xmax, x, 0, ok);
-   while (!ok){
-      if (niter>10){
-         Error("GetMaximum", "maximum search didn't converge");
-         break;
-      }
-      x=MinimStep(3, xmin, xmax,0);
-      x = MinimBrent(3, xmin, xmax, x, 0, ok);
-      niter++;
-   }
+   x = - bm.FValMinimum();
+
    return x;
 }
 
@@ -1571,21 +1545,14 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
-   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+   ROOT::Math::BrentMinimizer1D bm;
+   GInverseFunc g(this);
+   ROOT::Math::WrappedFunction<GInverseFunc> wf1(g);
+   bm.SetFunction( wf1, xmin, xmax );
+   bm.Minimize(10, 0, 0 );
    Double_t x;
-   Int_t niter=0;
-   x = MinimStep(2, xmin, xmax, 0);
-   Bool_t ok = kTRUE;
-   x = MinimBrent(2, xmin, xmax, x, 0, ok);
-   while (!ok){
-      if (niter>10){
-         Error("GetMaximumX", "maximum search didn't converge");
-         break;
-      }
-      x=MinimStep(2, xmin, xmax, 0);
-      x = MinimBrent(2, xmin, xmax, x, 0, ok);
-      niter++;
-   }
+   x = bm.XMinimum();
+
    return x;
 }
 
@@ -1602,21 +1569,13 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
-   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+   ROOT::Math::BrentMinimizer1D bm;
+   ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
+   bm.SetFunction( wf1, xmin, xmax );
+   bm.Minimize(10, 0, 0 );
    Double_t x;
-   Int_t niter=0;
-   x = MinimStep(1, xmin, xmax, 0);
-   Bool_t ok = kTRUE;
-   x = MinimBrent(1, xmin, xmax, x, 0, ok);
-   while (!ok){
-      if (niter>10){
-         Error("GetMinimum", "minimum search didn't converge");
-         break;
-      }
-      x=MinimStep(1, xmin, xmax,0);
-      x = MinimBrent(1, xmin, xmax, x, 0, ok);
-      niter++;
-   }
+   x = bm.FValMinimum();
+
    return x;
 }
 
@@ -1634,22 +1593,13 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
 
-   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
-   Int_t niter=0;
+   ROOT::Math::BrentMinimizer1D bm;
+   ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
+   bm.SetFunction( wf1, xmin, xmax );
+   bm.Minimize(10, 0, 0 );
    Double_t x;
+   x = bm.XMinimum();
 
-   x = MinimStep(0, xmin, xmax, 0);
-   Bool_t ok = kTRUE;
-   x = MinimBrent(0, xmin, xmax, x, 0, ok);
-   while (!ok){
-      if (niter>10){
-         Error("GetMinimumX", "minimum search didn't converge");
-         break;
-      }
-      x=MinimStep(0, xmin, xmax,0);
-      x = MinimBrent(0, xmin, xmax, x, 0, ok);
-      niter++;
-   }
    return x;
 }
 
@@ -1665,171 +1615,15 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+   
+   GFunc g(this, fy);
+   ROOT::Math::WrappedFunction<GFunc> wf1(g);
+   ROOT::Math::RootFinder brf(ROOT::Math::RootFinder::BRENT);
+   brf.SetFunction(wf1,xmin,xmax);
+   brf.Solve();
+   return brf.Root();
 
-   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
-   Int_t niter=0;
-   Double_t x;
-   x = MinimStep(4, xmin, xmax, fy);
-   Bool_t ok = kTRUE;
-   x = MinimBrent(4, xmin, xmax, x, fy, ok);
-   while (!ok){
-      if (niter>10){
-         Error("GetX", "Search didn't converge");
-         break;
-      }
-      x=MinimStep(4, xmin, xmax, fy);
-      x = MinimBrent(4, xmin, xmax, x, fy, ok);
-      niter++;
-   }
-   return x;
 }
-
-
-//______________________________________________________________________________
-Double_t TF1::MinimStep(Int_t type, Double_t &xmin, Double_t &xmax, Double_t fy) const
-{
-   //   Grid search implementation, used to bracket the minimum and later
-   //   use Brent's method with the bracketed interval
-   //   The step of the search is set to (xmax-xmin)/fNpx
-   //   type: 0-returns MinimumX
-   //         1-returns Minimum
-   //         2-returns MaximumX
-   //         3-returns Maximum
-   //         4-returns X corresponding to fy
-
-   Double_t x,y, dx;
-   dx = (xmax-xmin)/(fNpx-1);
-   Double_t xxmin = xmin;
-   Double_t yymin;
-   if (type < 2)
-      yymin = Eval(xmin);
-   else if (type < 4)
-      yymin = -Eval(xmin);
-   else
-      yymin = TMath::Abs(Eval(xmin)-fy);
-
-   for (Int_t i=1; i<=fNpx-1; i++) {
-      x = xmin + i*dx;
-      if (type < 2)
-         y = Eval(x);
-      else if (type < 4)
-         y = -Eval(x);
-      else
-         y = TMath::Abs(Eval(x)-fy);
-      if (y < yymin) {xxmin = x; yymin = y;}
-   }
-
-   xmin = TMath::Max(xmin,xxmin-dx);
-   xmax = TMath::Min(xmax,xxmin+dx);
-
-   return TMath::Min(xxmin, xmax);
-}
-
-
-//______________________________________________________________________________
-Double_t TF1::MinimBrent(Int_t type, Double_t &xmin, Double_t &xmax, Double_t xmiddle, Double_t fy, Bool_t &ok) const
-{
-   //Finds a minimum of a function, if the function is unimodal  between xmin and xmax
-   //This method uses a combination of golden section search and parabolic interpolation
-   //Details about convergence and properties of this algorithm can be
-   //found in the book by R.P.Brent "Algorithms for Minimization Without Derivatives"
-   //or in the "Numerical Recipes", chapter 10.2
-   //
-   //type: 0-returns MinimumX
-   //      1-returns Minimum
-   //      2-returns MaximumX
-   //      3-returns Maximum
-   //      4-returns X corresponding to fy
-   //if ok=true the method has converged
-
-   Double_t eps = 1e-10;
-   Double_t t = 1e-8;
-   Int_t itermax = 100;
-
-   Double_t c = (3.-TMath::Sqrt(5.))/2.; //comes from golden section
-   Double_t u, v, w, x, fv, fu, fw, fx, e, p, q, r, t2, d=0, m, tol;
-   v = w = x = xmiddle;
-   e=0;
-
-   Double_t a=xmin;
-   Double_t b=xmax;
-   if (type < 2)
-      fv = fw = fx = Eval(x);
-   else if (type < 4)
-      fv = fw = fx = -Eval(x);
-   else
-      fv = fw = fx = TMath::Abs(Eval(x)-fy);
-
-   for (Int_t i=0; i<itermax; i++){
-      m=0.5*(a + b);
-      tol = eps*(TMath::Abs(x))+t;
-      t2 = 2*tol;
-      if (TMath::Abs(x-m) <= (t2-0.5*(b-a))) {
-         //converged, return x
-         ok=kTRUE;
-         if (type==1)
-            return fx;
-         else if (type==3)
-            return -fx;
-         else
-            return x;
-      }
-
-      if (TMath::Abs(e)>tol){
-         //fit parabola
-         r = (x-w)*(fx-fv);
-         q = (x-v)*(fx-fw);
-         p = (x-v)*q - (x-w)*r;
-         q = 2*(q-r);
-         if (q>0) p=-p;
-         else q=-q;
-         r=e;
-         e=d;
-
-         if (TMath::Abs(p) < TMath::Abs(0.5*q*r) || p < q*(a-x) || p < q*(b-x)) {
-            //a parabolic interpolation step
-            d = p/q;
-            u = x+d;
-            if (u-a < t2 || b-u < t2)
-               d=TMath::Sign(tol, m-x);
-         } else {
-            e=(x>=m ? a-x : b-x);
-            d = c*e;
-         }
-      } else {
-         e=(x>=m ? a-x : b-x);
-         d = c*e;
-      }
-      u = (TMath::Abs(d)>=tol ? x+d : x+TMath::Sign(tol, d));
-      if (type < 2)
-         fu = Eval(u);
-      else if (type < 4)
-         fu = -Eval(u);
-      else
-         fu = TMath::Abs(Eval(u)-fy);
-      //update a, b, v, w and x
-      if (fu<=fx){
-         if (u<x) b=x;
-         else a=x;
-         v=w; fv=fw; w=x; fw=fx; x=u; fx=fu;
-      } else {
-         if (u<x) a=u;
-         else b=u;
-         if (fu<=fw || w==x){
-            v=w; fv=fw; w=u; fw=fu;
-         }
-         else if (fu<=fv || v==x || v==w){
-            v=u; fv=fu;
-         }
-      }
-   }
-   //didn't converge
-   ok = kFALSE;
-   xmin = a;
-   xmax = b;
-   return x;
-}
-
 
 //______________________________________________________________________________
 Int_t TF1::GetNDF() const
@@ -2516,71 +2310,15 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    //      g->IntegralFast(n,x,w,0,10000) = 1.25331
    //      g->IntegralFast(n,x,w,0,100000)= 1.253
 
-   const Double_t kHF = 0.5;
-   const Double_t kCST = 5./1000;
+   ROOT::Math::WrappedTF1 wf1(*this);
+   if ( params )
+      wf1.SetParameters( params );
 
-   Double_t x[12] = { 0.96028985649753623,  0.79666647741362674,
-                      0.52553240991632899,  0.18343464249564980,
-                      0.98940093499164993,  0.94457502307323258,
-                      0.86563120238783174,  0.75540440835500303,
-                      0.61787624440264375,  0.45801677765722739,
-                      0.28160355077925891,  0.09501250983763744};
+   ROOT::Math::GaussIntegratorOneDim giod;
+   giod.SetFunction(wf1);
+   giod.SetRelTolerance(epsilon);
 
-   Double_t w[12] = { 0.10122853629037626,  0.22238103445337447,
-                      0.31370664587788729,  0.36268378337836198,
-                      0.02715245941175409,  0.06225352393864789,
-                      0.09515851168249278,  0.12462897125553387,
-                      0.14959598881657673,  0.16915651939500254,
-                      0.18260341504492359,  0.18945061045506850};
-
-   Double_t h, aconst, bb, aa, c1, c2, u, s8, s16, f1, f2;
-   Double_t xx[1];
-   Int_t i;
-
-   InitArgs(xx,params);
-
-   h = 0;
-   if (b == a) return h;
-   aconst = kCST/TMath::Abs(b-a);
-   bb = a;
-CASE1:
-   aa = bb;
-   bb = b;
-CASE2:
-   c1 = kHF*(bb+aa);
-   c2 = kHF*(bb-aa);
-   s8 = 0;
-   for (i=0;i<4;i++) {
-      u     = c2*x[i];
-      xx[0] = c1+u;
-      f1    = EvalPar(xx,params);
-      if (fgAbsValue) f1 = TMath::Abs(f1);
-      xx[0] = c1-u;
-      f2    = EvalPar(xx,params);
-      if (fgAbsValue) f2 = TMath::Abs(f2);
-      s8   += w[i]*(f1 + f2);
-   }
-   s16 = 0;
-   for (i=4;i<12;i++) {
-      u     = c2*x[i];
-      xx[0] = c1+u;
-      f1    = EvalPar(xx,params);
-      if (fgAbsValue) f1 = TMath::Abs(f1);
-      xx[0] = c1-u;
-      f2    = EvalPar(xx,params);
-      if (fgAbsValue) f2 = TMath::Abs(f2);
-      s16  += w[i]*(f1 + f2);
-   }
-   s16 = c2*s16;
-   if (TMath::Abs(s16-c2*s8) <= epsilon*(1. + TMath::Abs(s16))) {
-      h += s16;
-      if(bb != b) goto CASE1;
-   } else {
-      bb = c1;
-      if(1. + aconst*TMath::Abs(c2) != 1) goto CASE2;
-      h = s8;  //this is a crude approximation (cernlib function returned 0 !)
-   }
-   return h;
+   return giod.Integral(a, b);
 }
 
 
@@ -2628,27 +2366,19 @@ Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *pa
 
 
 //______________________________________________________________________________
-Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params)
+Double_t TF1::IntegralFast(Int_t num, Double_t * /* x */, Double_t * /* w */, Double_t a, Double_t b, Double_t *params, Double_t epsilon)
 {
    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
 
-   if (num<=0 || x == 0 || w == 0)
-      return 0;
+   // Now x and w are not used!
 
-   const Double_t a0 = (b + a)/2;
-   const Double_t b0 = (b - a)/2;
+   ROOT::Math::WrappedTF1 wf1(*this);
+   if ( params )
+      wf1.SetParameters( params );
+   ROOT::Math::GaussLegendreIntegrator gli(num,epsilon);
+   gli.SetFunction( wf1 );
+   return gli.Integral(a, b);
 
-   Double_t xx[1];
-   InitArgs(xx, params);
-
-   Double_t result = 0.0;
-   for (int i=0; i<num; i++)
-   {
-      xx[0] = a0 + b0*x[i];
-      result += w[i] * EvalPar(xx, params);
-   }
-
-   return result*b0;
 }
 
 
@@ -2670,7 +2400,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 
 
 //______________________________________________________________________________
-Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t eps, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t eps, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
 {
    //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
    //  Rectangular Regions
@@ -2735,245 +2465,15 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    //   2.A. van Doren and L. de Ridder, An adaptive algorithm for numerical
    //     integration over an n-dimensional cube, J.Comput. Appl. Math. 2 (1976) 207-217.
 
-   Double_t ctr[15], wth[15], wthl[15], z[15];
+   ROOT::Math::WrappedMultiFunction<TF1&> wf1(*this, n);
 
-   const Double_t xl2 = 0.358568582800318073;
-   const Double_t xl4 = 0.948683298050513796;
-   const Double_t xl5 = 0.688247201611685289;
-   const Double_t w2  = 980./6561;
-   const Double_t w4  = 200./19683;
-   const Double_t wp2 = 245./486;
-   const Double_t wp4 = 25./729;
+   ROOT::Math::AdaptiveIntegratorMultiDim aimd(wf1, eps, eps, maxpts);
+   double result = aimd.Integral(a,b);
+   relerr = aimd.RelError();
+   nfnevl = aimd.NEval();
+   ifail = 0;
 
-   Double_t wn1[14] = {     -0.193872885230909911, -0.555606360818980835,
-     -0.876695625666819078, -1.15714067977442459,  -1.39694152314179743,
-     -1.59609815576893754,  -1.75461057765584494,  -1.87247878880251983,
-     -1.94970278920896201,  -1.98628257887517146,  -1.98221815780114818,
-     -1.93750952598689219,  -1.85215668343240347,  -1.72615963013768225};
-
-   Double_t wn3[14] = {     0.0518213686937966768,  0.0314992633236803330,
-     0.0111771579535639891,-0.00914494741655235473,-0.0294670527866686986,
-    -0.0497891581567850424,-0.0701112635269013768, -0.0904333688970177241,
-    -0.110755474267134071, -0.131077579637250419,  -0.151399685007366752,
-    -0.171721790377483099, -0.192043895747599447,  -0.212366001117715794};
-
-   Double_t wn5[14] = {         0.871183254585174982e-01,  0.435591627292587508e-01,
-     0.217795813646293754e-01,  0.108897906823146873e-01,  0.544489534115734364e-02,
-     0.272244767057867193e-02,  0.136122383528933596e-02,  0.680611917644667955e-03,
-     0.340305958822333977e-03,  0.170152979411166995e-03,  0.850764897055834977e-04,
-     0.425382448527917472e-04,  0.212691224263958736e-04,  0.106345612131979372e-04};
-
-   Double_t wpn1[14] = {   -1.33196159122085045, -2.29218106995884763,
-     -3.11522633744855959, -3.80109739368998611, -4.34979423868312742,
-     -4.76131687242798352, -5.03566529492455417, -5.17283950617283939,
-     -5.17283950617283939, -5.03566529492455417, -4.76131687242798352,
-     -4.34979423868312742, -3.80109739368998611, -3.11522633744855959};
-
-   Double_t wpn3[14] = {     0.0445816186556927292, -0.0240054869684499309,
-    -0.0925925925925925875, -0.161179698216735251,  -0.229766803840877915,
-    -0.298353909465020564,  -0.366941015089163228,  -0.435528120713305891,
-    -0.504115226337448555,  -0.572702331961591218,  -0.641289437585733882,
-    -0.709876543209876532,  -0.778463648834019195,  -0.847050754458161859};
-
-   Double_t result = 0;
-   Double_t abserr = 0;
-   ifail  = 3;
-   nfnevl = 0;
-   relerr = 0;
-   if (n < 2 || n > 15) return 0;
-
-   Double_t twondm = TMath::Power(2,n);
-   Int_t ifncls = 0;
-   Bool_t ldv   = kFALSE;
-   Int_t irgnst = 2*n+3;
-   Int_t irlcls = Int_t(twondm) +2*n*(n+1)+1;
-   Int_t isbrgn = irgnst;
-   Int_t isbrgs = irgnst;
-
-   if (minpts < 1)      minpts = irlcls;
-   if (maxpts < minpts) maxpts = 10*minpts;
-
-   // The original agorithm expected a working space array WK of length IWK
-   // with IWK Length ( >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2).
-   // Here, this array is allocated dynamically
-
-   Int_t iwk = irgnst*(1 +maxpts/irlcls)/2;
-   Double_t *wk = new Double_t[iwk+10];
-   Int_t j;
-   for (j=0;j<n;j++) {
-      ctr[j] = (b[j] + a[j])*0.5;
-      wth[j] = (b[j] - a[j])*0.5;
-   }
-
-   Double_t rgnvol, sum1, sum2, sum3, sum4, sum5, difmax, f2, f3, dif, aresult;
-   Double_t rgncmp=0, rgnval, rgnerr;
-   Int_t j1, k, l, m, idvaxn=0, idvax0=0, isbtmp, isbtpp;
-
-   InitArgs(z,fParams);
-
-L20:
-   rgnvol = twondm;
-   for (j=0;j<n;j++) {
-      rgnvol *= wth[j];
-      z[j]    = ctr[j];
-   }
-   sum1 = EvalPar(z,fParams); //evaluate function
-
-   difmax = 0;
-   sum2   = 0;
-   sum3   = 0;
-   for (j=0;j<n;j++) {
-      z[j]    = ctr[j] - xl2*wth[j];
-      if (fgAbsValue) f2 = TMath::Abs(EvalPar(z,fParams));
-      else            f2 = EvalPar(z,fParams);
-      z[j]    = ctr[j] + xl2*wth[j];
-      if (fgAbsValue) f2 += TMath::Abs(EvalPar(z,fParams));
-      else            f2 += EvalPar(z,fParams);
-      wthl[j] = xl4*wth[j];
-      z[j]    = ctr[j] - wthl[j];
-      if (fgAbsValue) f3 = TMath::Abs(EvalPar(z,fParams));
-      else            f3 = EvalPar(z,fParams);
-      z[j]    = ctr[j] + wthl[j];
-      if (fgAbsValue) f3 += TMath::Abs(EvalPar(z,fParams));
-      else            f3 += EvalPar(z,fParams);
-      sum2   += f2;
-      sum3   += f3;
-      dif     = TMath::Abs(7*f2-f3-12*sum1);
-      if (dif >= difmax) {
-         difmax=dif;
-         idvaxn=j+1;
-      }
-      z[j]    = ctr[j];
-   }
-
-   sum4 = 0;
-   for (j=1;j<n;j++) {
-      j1 = j-1;
-      for (k=j;k<n;k++) {
-         for (l=0;l<2;l++) {
-            wthl[j1] = -wthl[j1];
-            z[j1]    = ctr[j1] + wthl[j1];
-            for (m=0;m<2;m++) {
-               wthl[k] = -wthl[k];
-               z[k]    = ctr[k] + wthl[k];
-               if (fgAbsValue) sum4 += TMath::Abs(EvalPar(z,fParams));
-               else            sum4 += EvalPar(z,fParams);
-            }
-         }
-         z[k] = ctr[k];
-      }
-      z[j1] = ctr[j1];
-   }
-
-   sum5 = 0;
-   for (j=0;j<n;j++) {
-      wthl[j] = -xl5*wth[j];
-      z[j] = ctr[j] + wthl[j];
-   }
-L90:
-   if (fgAbsValue) sum5 += TMath::Abs(EvalPar(z,fParams));
-   else            sum5 += EvalPar(z,fParams);
-   for (j=0;j<n;j++) {
-      wthl[j] = -wthl[j];
-      z[j] = ctr[j] + wthl[j];
-      if (wthl[j] > 0) goto L90;
-   }
-
-   rgncmp  = rgnvol*(wpn1[n-2]*sum1+wp2*sum2+wpn3[n-2]*sum3+wp4*sum4);
-   rgnval  = wn1[n-2]*sum1+w2*sum2+wn3[n-2]*sum3+w4*sum4+wn5[n-2]*sum5;
-   rgnval *= rgnvol;
-   // avoid difference of too small numbers
-   //rgnval = 1.0E-30;
-   //rgnerr  = TMath::Max( TMath::Abs(rgnval-rgncmp), TMath::Max(TMath::Abs(rgncmp), TMath::Abs(rgnval) )*4.0E-16 );
-   rgnerr  = TMath::Abs(rgnval-rgncmp);
-
-   result += rgnval;
-   abserr += rgnerr;
-   ifncls += irlcls;
-   aresult = TMath::Abs(result);
-   //if (result > 0 && aresult< 1e-100) {
-   //   delete [] wk;
-   //   ifail = 0;  //function is probably symmetric ==> integral is null: not an error
-   //   return result;
-   //}
-
-   if (ldv) {
-L110:
-      isbtmp = 2*isbrgn;
-      if (isbtmp > isbrgs) goto L160;
-      if (isbtmp < isbrgs) {
-         isbtpp = isbtmp + irgnst;
-         if (wk[isbtmp-1] < wk[isbtpp-1]) isbtmp = isbtpp;
-      }
-      if (rgnerr >= wk[isbtmp-1]) goto L160;
-      for (k=0;k<irgnst;k++) {
-         wk[isbrgn-k-1] = wk[isbtmp-k-1];
-      }
-      isbrgn = isbtmp;
-      goto L110;
-   }
-L140:
-   isbtmp = (isbrgn/(2*irgnst))*irgnst;
-   if (isbtmp >= irgnst && rgnerr > wk[isbtmp-1]) {
-      for (k=0;k<irgnst;k++) {
-         wk[isbrgn-k-1] = wk[isbtmp-k-1];
-      }
-      isbrgn = isbtmp;
-      goto L140;
-   }
-
-L160:
-   wk[isbrgn-1] = rgnerr;
-   wk[isbrgn-2] = rgnval;
-   wk[isbrgn-3] = Double_t(idvaxn);
-   for (j=0;j<n;j++) {
-      isbtmp = isbrgn-2*j-4;
-      wk[isbtmp]   = ctr[j];
-      wk[isbtmp-1] = wth[j];
-   }
-   if (ldv) {
-      ldv = kFALSE;
-      ctr[idvax0-1] += 2*wth[idvax0-1];
-      isbrgs += irgnst;
-      isbrgn  = isbrgs;
-      goto L20;
-   }
-
-   relerr = abserr;
-   if (aresult != 0)  relerr = abserr/aresult;
-
-
-   if (relerr < 1e-1 && aresult < 1e-20) ifail = 0;
-   if (relerr < 1e-3 && aresult < 1e-10) ifail = 0;
-   if (relerr < 1e-5 && aresult < 1e-5)  ifail = 0;
-   if (isbrgs+irgnst > iwk) ifail = 2;
-   if (ifncls+2*irlcls > maxpts) {
-      if (sum1==0 && sum2==0 && sum3==0 && sum4==0 && sum5==0){
-         ifail = 0;
-         result = 0;
-      }
-      else
-         ifail = 1;
-   }
-   if (relerr < eps && ifncls >= minpts) ifail = 0;
-   if (ifail == 3) {
-      ldv = kTRUE;
-      isbrgn  = irgnst;
-      abserr -= wk[isbrgn-1];
-      result -= wk[isbrgn-2];
-      idvax0  = Int_t(wk[isbrgn-3]);
-      for (j=0;j<n;j++) {
-         isbtmp = isbrgn-2*j-4;
-         ctr[j] = wk[isbtmp];
-         wth[j] = wk[isbtmp-1];
-      }
-      wth[idvax0-1]  = 0.5*wth[idvax0-1];
-      ctr[idvax0-1] -= wth[idvax0-1];
-      goto L20;
-   }
-   delete [] wk;
-   nfnevl = ifncls;       //number of function evaluations performed.
-   return result;         //an approximate value of the integral
+   return result;
 }
 
 
@@ -3687,47 +3187,10 @@ void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, D
    //
    // Reference: Numerical Recipes in C, Second Edition
 
-   if (num<=0 || eps<=0)
-      return;
+   // This function is just kept like this for backward compatibility!
 
-   // The roots of symmetric is the interval, so we only have to find half of them
-   const UInt_t m = (num+1)/2;
+   ROOT::Math::GaussLegendreIntegrator gli(num,eps);
+   gli.GetWeightVectors(x, w);
 
-   Double_t z, pp, p1,p2, p3;
 
-   // Loop over the disired roots
-   for (UInt_t i=0; i<m; i++) {
-      z = TMath::Cos(TMath::Pi()*(i+0.75)/(num+0.5));
-
-      // Starting with the above approximation to the i-th root, we enter
-      // the main loop of refinement by Newton's method
-      do {
-         p1=1.0;
-         p2=0.0;
-
-         // Loop up the recurrence relation to get the Legendre
-         // polynomial evaluated at z
-         for (int j=0; j<num; j++)
-         {
-            p3 = p2;
-            p2 = p1;
-            p1 = ((2.0*j+1.0)*z*p2-j*p3)/(j+1.0);
-         }
-         // p1 is now the desired Legendre polynomial. We next compute pp, its
-         // derivative, by a standard relation involving also p2, the polynomial
-         // of one lower order
-         pp = num*(z*p1-p2)/(z*z-1.0);
-         // Newton's method
-         z -= p1/pp;
-
-      } while (TMath::Abs(p1/pp) > eps);
-
-      // Put root and its symmetric counterpart
-      x[i]       = -z;
-      x[num-i-1] =  z;
-
-      // Compute the weight and put its symmetric counterpart
-      w[i]       = 2.0/((1.0-z*z)*pp*pp);
-      w[num-i-1] = w[i];
-   }
 }

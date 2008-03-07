@@ -18,6 +18,10 @@ HISTDO       := $(HISTDS:.cxx=.o)
 HISTDH       := $(HISTDS:.cxx=.h)
 
 HISTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+HISTHMAT     := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
+#HISTHMAT     += mathcore/inc/Math/WrappedFunction.h
+HISTHH       := $(HISTH) $(HISTHMAT) 
+
 HISTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTO        := $(HISTS:.cxx=.o)
 
@@ -27,7 +31,8 @@ HISTLIB      := $(LPATH)/libHist.$(SOEXT)
 HISTMAP      := $(HISTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HISTH))
+ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HISTHH))
+#ALLHDRS     += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(HISTHH))
 ALLLIBS     += $(HISTLIB)
 ALLMAPS     += $(HISTMAP)
 
@@ -35,17 +40,26 @@ ALLMAPS     += $(HISTMAP)
 INCLUDEFILES += $(HISTDEP)
 
 ##### local rules #####
+
+
+include/Math/%.h: $(HISTDIRI)/Math/%.h
+		@(if [ ! -d "include/Math" ]; then     \
+		   mkdir -p include/Math;              \
+		fi)
+		cp $< $@
+
 include/%.h:    $(HISTDIRI)/%.h
 		cp $< $@
+
 
 $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHist.$(SOEXT) $@ "$(HISTO) $(HISTDO)" \
 		   "$(HISTLIBEXTRA)"
 
-$(HISTDS):      $(HISTH) $(HISTL) $(ROOTCINTTMPDEP)
+$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(HISTH) $(HISTL)
+		$(ROOTCINTTMP) -f $@ -c $(HISTH) $(HISTHMAT) $(HISTL)
 
 $(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
 		$(RLIBMAP) -o $(HISTMAP) -l $(HISTLIB) \
