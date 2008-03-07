@@ -59,9 +59,9 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build cint metautils pcre utils base cont meta io \
-                math fit mathcore net \
-                zip clib matrix newdelete hist tree freetype graf gpad \
-                g3d gui minuit histpainter treeplayer ged treeviewer physics \
+                math fit mathcore net zip clib matrix newdelete \
+                hist tree freetype graf gpad g3d gui minuit \
+                histpainter treeplayer ged treeviewer physics \
                 postscript rint thread html eg geom geompainter vmc fumili \
                 mlp quadp auth guibuilder xml foam splot smatrix sql tmva \
                 geombuilder spectrum spectrumpainter fitpanel proof \
@@ -237,7 +237,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 rootx rootd proofd dcache chirp hbook asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
-                xmlparser mathcore mathmore reflex cintex roofitcore roofit \
+                xmlparser mathmore reflex cintex roofitcore roofit \
                 minuit2 monalisa fftw odbc unuran gdml eve g4root cint7 glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
@@ -269,7 +269,8 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
-                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib $(LPATH)/libMathcore.lib
+                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib \
+                $(LPATH)/libMathcore.lib
 BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib

@@ -4048,6 +4048,8 @@ else
     enable_genvector=""
     result "no"
 fi
+check_explicit "$enable_genvector" "$enable_genvector_explicit" \
+      "Explicitly required GenVector dependencies not fulfilled"
 
 ######################################################################
 #
