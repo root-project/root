@@ -10,6 +10,7 @@
 
 #include "Math/GaussLegendreIntegrator.h"
 #include <cmath>
+#include <string.h>
 
 namespace ROOT {
 namespace Math {
