@@ -2,75 +2,77 @@
 #
 # Makefile containing library dependencies
 
-NETLIBDEPM             = $(IOLIB)
-HISTLIBDEPM            = $(MATRIXLIB)
-GRAFLIBDEPM            = $(HISTLIB) $(MATRIXLIB) $(IOLIB)
+NETLIBDEPM             = $(IOLIB) $(MATHCORELIB)
+MATRIXLIBDEPM          = $(MATHCORELIB)
+HISTLIBDEPM            = $(MATRIXLIB) $(MATHCORELIB)
+GRAFLIBDEPM            = $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(IOLIB)
 GPADLIBDEPM            = $(GRAFLIB) $(HISTLIB)
-G3DLIBDEPM             = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
+G3DLIBDEPM             = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(MATHCORELIB)
 WIN32GDKLIBDEPM        = $(GRAFLIB)
-ASIMAGELIBDEPM         = $(GRAFLIB)
+ASIMAGELIBDEPM         = $(GRAFLIB) $(MATHCORELIB)
 ASIMAGEGUILIBDEPM      = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB) $(IOLIB)
 ASIMAGEGSLIBDEPM       = $(GRAFLIB) $(ASIMAGELIB)
 GEDLIBDEPM             = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                          $(TREEPLAYERLIB)
 POSTSCRIPTLIBDEPM      = $(GRAFLIB)
-GUILIBDEPM             = $(GPADLIB) $(GRAFLIB) $(IOLIB)
+GUILIBDEPM             = $(GPADLIB) $(GRAFLIB) $(IOLIB) $(MATHCORELIB)
 GUIHTMLLIBDEPM         = $(GUILIB) $(GRAFLIB) $(NETLIB)
-HISTPAINTERLIBDEPM     = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(GPADLIB)
+HISTPAINTERLIBDEPM     = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(GPADLIB)
 SPECTRUMPAINTERLIBDEPM = $(GRAFLIB) $(HISTLIB)
 HTMLLIBDEPM            = $(GRAFLIB) $(THREADLIB)
-MINUITLIBDEPM          = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
-MINUIT2LIBDEPM         = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
-FUMILILIBDEPM          = $(GRAFLIB) $(HISTLIB)
+MINUITLIBDEPM          = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB)
+MINUIT2LIBDEPM         = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB)
+FUMILILIBDEPM          = $(GRAFLIB) $(HISTLIB) $(MATHCORELIB)
 TREELIBDEPM            = $(NETLIB) $(IOLIB)
 TREEPLAYERLIBDEPM      = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
-                         $(IOLIB)
+                         $(IOLIB) $(MATHCORELIB)
 TREEVIEWERLIBDEPM      = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB) \
-                         $(TREEPLAYERLIB) $(GEDLIB) $(IOLIB)
-PROOFLIBDEPM           = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB)
+                         $(TREEPLAYERLIB) $(GEDLIB) $(IOLIB) $(MATHCORELIB)
+PROOFLIBDEPM           = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB) $(MATHCORELIB)
 PROOFPLAYERLIBDEPM     = $(PROOFLIB) $(HISTLIB) $(IOLIB) $(TREELIB) $(NETLIB) \
-                         $(THREADLIB)
+                         $(THREADLIB) $(MATHCORELIB)
 PROOFDRAWLIBDEPM       = $(TREEPLAYERLIB) $(G3DLIB) $(GRAFLIB) $(GPADLIB) \
                          $(PROOFPLAYERLIB) $(HISTLIB) $(TREELIB) $(PROOFLIB)
 PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
-SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
+SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) \
+                         $(TREELIB) $(MATHCORELIB)
 PEACLIBDEPM            = $(PROOFLIB) $(CLARENSLIB)
 PEACGUILIBDEPM         = $(GUILIB)
-EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB)
-VMCLIBDEPM             = $(EGLIB) $(GEOMLIB)
-PHYSICSLIBDEPM         = $(MATRIXLIB)
+EGLIBDEPM              = $(G3DLIB) $(GRAFLIB) $(GPADLIB) $(MATHCORELIB)
+VMCLIBDEPM             = $(EGLIB) $(GEOMLIB) $(MATHCORELIB)
+PHYSICSLIBDEPM         = $(MATRIXLIB) $(MATHCORELIB)
 PYTHIA6LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
 PYTHIA8LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
 TABLELIBDEPM           = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
-                         $(IOLIB)
+                         $(IOLIB) $(MATHCORELIB)
 MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
-                         $(GPADLIB) $(TREEPLAYERLIB)
+                         $(GPADLIB) $(TREEPLAYERLIB) $(MATHCORELIB)
 SPECTRUMLIBDEPM        = $(HISTLIB) $(MATRIXLIB)
 TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
                          $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
-                         $(MINUITLIB)
+                         $(MINUITLIB) $(MATHCORELIB)
 SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(G3DLIB) $(GRAFLIB)
-QUADPLIBDEPM           = $(MATRIXLIB)
+QUADPLIBDEPM           = $(MATRIXLIB) 
 GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB) \
-                         $(FTGLLIB)
+                         $(FTGLLIB) $(MATHCORELIB)
 HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(TREEPLAYERLIB) $(IOLIB)
-GEOMLIBDEPM            = $(IOLIB)
-GEOMPAINTERLIBDEPM     = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
+GEOMLIBDEPM            = $(IOLIB) $(MATHCORELIB)
+GEOMPAINTERLIBDEPM     = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB) $(IOLIB) $(MATHCORELIB)
 GEOMBUILDERLIBDEPM     = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
                          $(GEDLIB)
 QTROOTLIBDEPM          = $(GUILIB) $(GQTLIB)
 GQTLIBDEPM             = $(GUILIB) $(GPADLIB) $(GRAFLIB) $(RINTLIB)
 RUBYLIBDEPM            = $(HISTLIB)
-GUIBLDLIBDEPM          = $(GUILIB) $(GRAFLIB)
+GUIBLDLIBDEPM          = $(GUILIB) $(GRAFLIB) $(MATHCORELIB)
 XMLLIBDEPM             = $(IOLIB)
 FOAMLIBDEPM            = $(HISTLIB)
 ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFPLAYERLIB) \
                          $(NETLIB) $(IOLIB)
 ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
-                         $(MINUITLIB) $(IOLIB)
-ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB)
+                         $(MINUITLIB) $(IOLIB) $(MATHCORELIB)
+ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) $(MATHCORELIB)
 CINT7LIBDEPM           = $(REFLEXLIB)
 CINTEXLIBDEPM          = $(REFLEXLIB)
 REFLEXDICTLIBDEPM      = $(REFLEXLIB)
@@ -78,7 +80,8 @@ RAUTHLIBDEPM           = $(NETLIB) $(IOLIB)
 KRB5AUTHLIBDEPM        = $(RAUTHLIB) $(NETLIB)
 SRVAUTHLIBDEPM         = $(NETLIB)
 QTGSILIBDEPM           = $(GUILIB) $(GPADLIB)
-FITPANELLIBDEPM        = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
+FITPANELLIBDEPM        = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB) \
+			 $(MATHCORELIB)
 RFIOLIBDEPM            = $(IOLIB)
 SQLLIBDEPM             = $(NETLIB) $(IOLIB)
 ODBCLIBDEPM            = $(NETLIB) $(IOLIB)
@@ -88,7 +91,7 @@ CASTORLIBDEPM          = $(NETLIB) $(IOLIB)
 PGSQLLIBDEPM           = $(NETLIB) $(IOLIB)
 MYSQLLIBDEPM           = $(NETLIB) $(IOLIB)
 GDMLLIBDEPM            = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
-UNURANLIBDEPM          = $(HISTLIB)
+UNURANLIBDEPM          = $(HISTLIB) $(MATHCORELIB)
 WIN32GDKLIBDEPM        = $(GRAFLIB)
 X11TTFLIBDEPM          = $(X11LIB) $(GRAFLIB)
 X3DLIBDEPM             = $(G3DLIB) $(GUILIB)
@@ -97,12 +100,13 @@ THREADLIBDEPM          = $(IOLIB)
 EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
-                         $(GLLIB) $(FTGLLIB) $(IOLIB) $(RINTLIB)
+                         $(GLLIB) $(FTGLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
 
 
 ifeq ($(EXPLICITLINK),yes)
 
 NETLIBDEP              = $(NETLIBDEPM)
+MATRIXLIBDEP           = $(MATRIXLIBDEPM)
 HISTLIBDEP             = $(HISTLIBDEPM)
 GRAFLIBDEP             = $(GRAFLIBDEPM)
 GPADLIBDEP             = $(GPADLIBDEPM)
@@ -183,85 +187,99 @@ EVELIBDEP              = $(EVELIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
-NETLIBEXTRA             = lib/libRIO.lib
-HISTLIBEXTRA            = lib/libMatrix.lib
-GRAFLIBEXTRA            = lib/libHist.lib lib/libMatrix.lib lib/libRIO.lib
+NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
+MATRIXLIBEXTRA          = lib/libMathCore.lib
+HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
+GRAFLIBEXTRA            = lib/libHist.lib lib/libMatrix.lib lib/libRIO.lib \
+                          lib/libMathCore.lib
 GPADLIBEXTRA            = lib/libGraf.lib lib/libHist.lib
-G3DLIBEXTRA             = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib
+G3DLIBEXTRA             = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib \
+                          lib/libMathCore.lib
 WIN32GDKLIBEXTRA        = lib/libGraf.lib
-ASIMAGELIBEXTRA         = lib/libGraf.lib
+ASIMAGELIBEXTRA         = lib/libGraf.lib lib/libMathCore.lib
 ASIMAGEGUILIBEXTRA      = lib/libGraf.lib lib/libHist.lib lib/libGui.lib \
-                          lib/libASImage.lib lib/libRIO.lib
+                          lib/libASImage.lib lib/libRIO.lib 
 ASIMAGEGSLIBEXTRA       = lib/libGraf.lib lib/libASImage.lib
 GEDLIBEXTRA             = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libTree.lib lib/libTreePlayer.lib lib/libGui.lib
 POSTSCRIPTLIBEXTRA      = lib/libGraf.lib
-GUILIBEXTRA             = lib/libGpad.lib lib/libGraf.lib lib/libRIO.lib
+GUILIBEXTRA             = lib/libGpad.lib lib/libGraf.lib lib/libRIO.lib \
+                          lib/libMathCore.lib
 HISTPAINTERLIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
-                          lib/libGpad.lib
+                          lib/libGpad.lib lib/libMathCore.lib
 SPECTRUMPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib
 HTMLLIBEXTRA            = lib/libGraf.lib lib/libThread.lib
-MINUITLIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib
-MINUIT2LIBEXTRA         = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib
-FUMILILIBEXTRA          = lib/libGraf.lib lib/libHist.lib
+MINUITLIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
+                          lib/libMathCore.lib
+MINUIT2LIBEXTRA         = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
+                          lib/libMathCore.lib
+FUMILILIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMathCore.lib
 TREELIBEXTRA            = lib/libNet.lib lib/libRIO.lib
 TREEPLAYERLIBEXTRA      = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
-                          lib/libGraf.lib lib/libHist.lib lib/libRIO.lib
+                          lib/libGraf.lib lib/libHist.lib lib/libRIO.lib \
+                          lib/libMathCore.lib
 TREEVIEWERLIBEXTRA      = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libHist.lib lib/libGui.lib lib/libTreePlayer.lib \
-                          lib/libGed.lib lib/libRIO.lib
+                          lib/libGed.lib lib/libRIO.lib lib/libMathCore.lib
 PROOFLIBEXTRA           = lib/libNet.lib lib/libTree.lib lib/libRIO.lib \
-                          lib/libThread.lib
+                          lib/libThread.lib lib/libMathCore.lib
 PROOFPLAYERLIBEXTRA     = lib/libProof.lib lib/libHist.lib lib/libTree.lib \
-                          lib/libRIO.lib lib/libNet.lib lib/libThread.lib
+                          lib/libRIO.lib lib/libNet.lib lib/libThread.lib \
+                          lib/libMathCore.lib
 PROOFDRAWLIBEXTRA       = lib/libTreePlayer.lib lib/libGraf3d.lib \
                           lib/libGraf.lib lib/libGpad.lib lib/libProofPlayer.lib \
                           lib/libHist.lib lib/libTree.lib lib/libProof.lib
 PROOFXLIBEXTRA          = lib/libNet.lib lib/libProof.lib lib/libThread.lib
 SESSIONVIEWERLIBEXTRA   = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
-                          lib/libGraf.lib lib/libTree.lib
+                          lib/libGraf.lib lib/libTree.lib lib/libMathCore.lib
 PEACLIBEXTRA            = lib/libProof.lib lib/libClarens.lib
 PEACGUILIBEXTRA         = lib/libGui.lib
-EGLIBEXTRA              = lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib
-VMCLIBEXTRA             = lib/libEG.lib lib/libGeom.lib
-PHYSICSLIBEXTRA         = lib/libMatrix.lib
+EGLIBEXTRA              = lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib \
+                          lib/libMathCore.lib
+VMCLIBEXTRA             = lib/libEG.lib lib/libGeom.lib lib/libMathCore.lib
+PHYSICSLIBEXTRA         = lib/libMatrix.lib lib/libMathCore.lib
 PYTHIA6LIBEXTRA         = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib \
                           lib/libPhysics.lib
 PYTHIA8LIBEXTRA         = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib \
                           lib/libPhysics.lib
 TABLELIBEXTRA           = lib/libTree.lib lib/libGpad.lib lib/libRIO.lib \
-                          lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
+                          lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib \
+                          lib/libMathCore.lib
 MLPLIBEXTRA             = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
-                          lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib
+                          lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib \
+                          lib/libMathCore.lib
 SPECTRUMLIBEXTRA        = lib/libHist.lib lib/libMatrix.lib
 TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
-                          lib/libTreePlayer.lib lib/libMLP.lib lib/libMinuit.lib
+                          lib/libTreePlayer.lib lib/libMLP.lib \
+                          lib/libMinuit.lib lib/libMathCore.lib
 SPLOTLIBEXTRA           = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libGraf3d.lib lib/libGraf.lib
-QUADPLIBEXTRA           = lib/libMatrix.lib
+QUADPLIBEXTRA           = lib/libMatrix.lib 
 GLLIBEXTRA              = lib/libGraf3d.lib lib/libGui.lib lib/libGraf.lib \
-                          lib/libHist.lib lib/libGed.lib
+                          lib/libHist.lib lib/libGed.lib lib/libMathCore.lib
 HBOOKLIBEXTRA           = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                           lib/libGraf.lib lib/libTreePlayer.lib lib/libRIO.lib
-GEOMLIBEXTRA            = lib/libRIO.lib
+GEOMLIBEXTRA            = lib/libRIO.lib lib/libMathCore.lib
 GEOMPAINTERLIBEXTRA     = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
-                          lib/libHist.lib lib/libGpad.lib lib/libRIO.lib
+                          lib/libHist.lib lib/libGpad.lib lib/libRIO.lib \
+                          lib/libMathCore.lib
 GEOMBUILDERLIBEXTRA     = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libGui.lib lib/libGed.lib
 QTROOTLIBEXTRA          = lib/libGui.lib lib/libGQt.lib
 GQTLIBEXTRA             = lib/libGui.lib libGpad.lib lib/libGraf.lib \
                           lib/libRint.lib
 RUBYLIBEXTRA            = lib/libHist.lib
-GUIBLDLIBEXTRA          = lib/libGui.lib lib/libGraf.lib
+GUIBLDLIBEXTRA          = lib/libGui.lib lib/libGraf.lib lib/libMathCore.lib
 GUIHTMLLIBEXTRA         = lib/libGui.lib lib/libGraf.lib lib/libNet.lib
 XMLLIBEXTRA             = lib/libRIO.lib
 FOAMLIBEXTRA            = lib/libHist.lib
 ALIENLIBEXTRA           = lib/libXMLIO.lib lib/libNetx.lib lib/libTree.lib \
                           lib/libProofPlayer.lib lib/libNet.lib lib/RIO.lib
 ROOFITCORELIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
-                          lib/libTree.lib lib/libMinuit.lib lib/libRIO.lib
-ROOFITLIBEXTRA          = lib/libRooFitCore.lib lib/libTree.lib lib/libRIO.lib lib/libMatrix.lib
+                          lib/libTree.lib lib/libMinuit.lib lib/libRIO.lib \
+                          lib/libMathCore.lib
+ROOFITLIBEXTRA          = lib/libRooFitCore.lib lib/libTree.lib lib/libRIO.lib  lib/libMatrix.lib lib/libMathCore.lib
 CINT7LIBEXTRA           = lib/libReflex.lib
 CINTEXLIBEXTRA          = lib/libReflex.lib
 REFLEXDICTLIBEXTRA      = lib/libReflex.lib
@@ -270,7 +288,7 @@ KRB5AUTHLIBEXTRA        = lib/libRootAuth.lib lib/libNet.lib
 SRVAUTHLIBEXTRA         = lib/libNet.lib
 QTGSILIBEXTRA           = lib/libGui.lib lib/libGpad.lib
 FITPANELLIBEXTRA        = lib/libGui.lib lib/libGpad.lib lib/libHist.lib \
-                          lib/libGraf.lib lib/libTree.lib
+                          lib/libGraf.lib lib/libTree.lib lib/libMathCore.lib
 RFIOLIBEXTRA            = lib/libRIO.lib
 SQLLIBEXTRA             = lib/libNet.lib lib/libRIO.lib
 ODBCLIBEXTRA            = lib/libNet.lib lib/libRIO.lib
@@ -281,7 +299,7 @@ PGSQLLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
 MYSQLLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
 GDMLLIBEXTRA            = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
                           lib/libRIO.lib
-UNURANLIBEXTRA          = lib/libHist.lib
+UNURANLIBEXTRA          = lib/libHist.lib lib/libMathCore.lib
 MONALISALIBEXTRA        = lib/libNet.lib lib/libRIO.lib
 THREADLIBEXTRA          = lib/libRIO.lib
 EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
@@ -289,71 +307,72 @@ EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libPhysics.lib \
                           lib/libGed.lib lib/libEG.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libRGL.lib lib/libRIO.lib \
-                          lib/libRint.lib
+                          lib/libRint.lib lib/libMathCore.lib
 
 else
 
-NETLIBEXTRA             = -Llib -lRIO
-HISTLIBEXTRA            = -Llib -lMatrix
-GRAFLIBEXTRA            = -Llib -lHist -lMatrix -lRIO
+NETLIBEXTRA             = -Llib -lRIO -lMathCore
+MATRIXLIBEXTRA          = -Llib -lMathCore
+HISTLIBEXTRA            = -Llib -lMatrix -lMathCore
+GRAFLIBEXTRA            = -Llib -lHist -lMatrix -lRIO -lMathCore
 GPADLIBEXTRA            = -Llib -lGraf -lHist
-G3DLIBEXTRA             = -Llib -lGraf -lHist -lGpad
+G3DLIBEXTRA             = -Llib -lGraf -lHist -lGpad -lMathCore
 GEDLIBEXTRA             = -Llib -lHist -lGpad -lGraf -lGui -lTree -lTreePlayer
 POSTSCRIPTLIBEXTRA      = -Llib -lGraf
-GUILIBEXTRA             = -Llib -lGpad -lGraf -lRIO
-HISTPAINTERLIBEXTRA     = -Llib -lGraf -lHist -lMatrix -lGpad
+GUILIBEXTRA             = -Llib -lGpad -lGraf -lRIO -lMathCore
+HISTPAINTERLIBEXTRA     = -Llib -lGraf -lHist -lMatrix -lGpad -lMathCore
 SPECTRUMPAINTERLIBEXTRA = -Llib -lGraf -lHist
 HTMLLIBEXTRA            = -Llib -lGraf -lThread
-MINUITLIBEXTRA          = -Llib -lGraf -lHist -lMatrix
-MINUIT2LIBEXTRA         = -Llib -lGraf -lHist -lMatrix
-FUMILILIBEXTRA          = -Llib -lGraf -lHist
+MINUITLIBEXTRA          = -Llib -lGraf -lHist -lMatrix -lMathCore
+MINUIT2LIBEXTRA         = -Llib -lGraf -lHist -lMatrix -lMathCore
+FUMILILIBEXTRA          = -Llib -lGraf -lHist -lMathCore
 TREELIBEXTRA            = -Llib -lNet -lRIO
-TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
+TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO -lMathCore
 TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui -lTreePlayer \
-                          -lGed -lRIO
-PROOFLIBEXTRA           = -Llib -lNet -lTree -lThread -lRIO
-PROOFPLAYERLIBEXTRA     = -Llib -lProof -lHist -lTree -lRIO -lNet -lThread
+                          -lGed -lRIO -lMathCore
+PROOFLIBEXTRA           = -Llib -lNet -lTree -lThread -lRIO -lMathCore
+PROOFPLAYERLIBEXTRA     = -Llib -lProof -lHist -lTree -lRIO -lNet -lThread -lMathCore
 PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad -lProofPlayer \
                           -lHist -lTree -lProof
 PROOFXLIBEXTRA          = -Llib -lNet -lProof -lThread
-SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lGpad -lGraf -lTree
+SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lGpad -lGraf -lTree -lMathCore
 PEACLIBEXTRA            = -Llib -lProof -lClarens
 PEACGUILIBEXTRA         = -Llib -lGui
 X3DLIBEXTRA             = -Llib -lGraf3d -lGui
-EGLIBEXTRA              = -Llib -lGraf3d -lGraf -lGpad
-VMCLIBEXTRA             = -Llib -lEG -lGeom
-PHYSICSLIBEXTRA         = -Llib -lMatrix
+EGLIBEXTRA              = -Llib -lGraf3d -lGraf -lGpad -lMathCore
+VMCLIBEXTRA             = -Llib -lEG -lGeom -lMathCore
+PHYSICSLIBEXTRA         = -Llib -lMatrix -lMathCore
 PYTHIA6LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) \
                           $(FPYTHIA6LIB)
 PYTHIA8LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA8LIBDIR) \
                           $(FPYTHIA8LIB)
 X11TTFLIBEXTRA          = -Llib -lGX11 -lGraf
-TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO
-GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed
+TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO -lMathCore
+GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed -lMathCore
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer -lRIO
-GEOMLIBEXTRA            = -Llib -lRIO
-GEOMPAINTERLIBEXTRA     = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad -lRIO
+GEOMLIBEXTRA            = -Llib -lRIO -lMathCore
+GEOMPAINTERLIBEXTRA     = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad -lRIO -lMathCore
 GEOMBUILDERLIBEXTRA     = -Llib -lGeom -lGraf3d -lGpad -lGraf -lGui -lGed
-ASIMAGELIBEXTRA         = -Llib -lGraf
+ASIMAGELIBEXTRA         = -Llib -lGraf -lMathCore
 ASIMAGEGUILIBEXTRA      = -Llib -lGraf -lHist -lGui -lASImage -lRIO
 ASIMAGEGSLIBEXTRA       = -Llib -lGraf -lASImage
 MLPLIBEXTRA             = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
-                          -lTreePlayer
+                          -lTreePlayer -lMathCore
 SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
 TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
-                          -lTreePlayer -lMLP -lMinuit
+                          -lTreePlayer -lMLP -lMinuit -lMathCore
 SPLOTLIBEXTRA           = -Llib -lMatrix -lHist -lTree -lTreePlayer -lGraf3d -lGraf
 QTROOTLIBEXTRA          = -Llib -lGui -lGQt
 GQTLIBEXTRA             = -Llib -lGui -lGpad -lGraf -lRint
 QUADPLIBEXTRA           = -Llib -lMatrix
 RUBYLIBEXTRA            = -Llib -lHist
-GUIBLDLIBEXTRA          = -Llib -lGui -lGraf
+GUIBLDLIBEXTRA          = -Llib -lGui -lGraf -lMathCore
 GUIHTMLLIBEXTRA         = -Llib -lGui -lGraf -lNet
 XMLLIBEXTRA             = -Llib -lRIO
 FOAMLIBEXTRA            = -Llib -lHist
 ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProofPlayer -lNet -lRIO
-ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO
-ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix
+ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO -lMathCore
+ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
 CINT7LIBEXTRA           = -Llib -lReflex
 CINTEXLIBEXTRA          = -Llib -lReflex
 REFLEXDICTLIBEXTRA      = -Llib -lReflex
@@ -361,7 +380,7 @@ RAUTHLIBEXTRA           = -Llib -lNet -lRIO
 KRB5AUTHLIBEXTRA        = -Llib -lRootAuth -lNet
 SRVAUTHLIBEXTRA         = -Llib -lNet
 QTGSILIBEXTRA           = -Llib -lGui -lGpad
-FITPANELLIBEXTRA        = -Llib -lGui -lGpad -lHist -lGraf -lTree
+FITPANELLIBEXTRA        = -Llib -lGui -lGpad -lHist -lGraf -lTree -lMathCore
 RFIOLIBEXTRA            = -Llib -lRIO
 SQLLIBEXTRA             = -Llib -lNet -lRIO
 ODBCLIBEXTRA            = -Llib -lNet -lRIO
@@ -371,12 +390,12 @@ CASTORLIBEXTRA          = -Llib -lNet -lRIO
 PGSQLLIBEXTRA           = -Llib -lNet -lRIO
 MYSQLLIBEXTRA           = -Llib -lNet -lRIO
 GDMLLIBEXTRA            = -Llib -lGeom -lXMLIO -lHist -lRIO
-UNURANLIBEXTRA          = -Llib -lHist
+UNURANLIBEXTRA          = -Llib -lHist -lMathCore
 MONALISALIBEXTRA        = -Llib -lNet -lRIO
 THREADLIBEXTRA          = -Llib -lRIO
 EVELIBEXTRA             = -Llib -lGeom -lGeomPainter -lGraf3d -lGui -lGpad \
                           -lGraf -lHist -lPhysics -lGed -lEG -lTree \
-                          -lTreePlayer -lRGL -lRIO -lRint
+                          -lTreePlayer -lRGL -lRIO -lRint -lMathCore
 
 endif
 

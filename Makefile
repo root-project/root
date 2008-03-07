@@ -58,13 +58,14 @@ include $(MAKEFILEDEP)
 
 ##### Modules to build #####
 
-MODULES       = build cint metautils pcre utils base cont meta io net math \
+MODULES       = build cint metautils pcre utils base cont meta io \
+                math fit mathcore net \
                 zip clib matrix newdelete hist tree freetype graf gpad \
                 g3d gui minuit histpainter treeplayer ged treeviewer physics \
                 postscript rint thread html eg geom geompainter vmc fumili \
                 mlp quadp auth guibuilder xml foam splot smatrix sql tmva \
                 geombuilder spectrum spectrumpainter fitpanel proof \
-                proofplayer sessionviewer guihtml
+                proofplayer sessionviewer guihtml 
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
@@ -154,8 +155,8 @@ endif
 ifeq ($(BUILDQTGSI),yes)
 MODULES      += qtgsi
 endif
-ifeq ($(BUILDMATHCORE),yes)
-MODULES      += mathcore
+ifeq ($(BUILDGENVECTOR),yes)
+MODULES      += genvector
 endif
 ifeq ($(BUILDMATHMORE),yes)
 MODULES      += mathmore
@@ -253,7 +254,7 @@ CINTLIBS     := -lCint
 CINT7LIBS    := -lCint7 -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
-                -lTree -lMatrix
+                -lTree -lMatrix -lMathCore
 BOOTLIBS     := -lCore -lCint
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
@@ -268,7 +269,7 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
-                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
+                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib $(LPATH)/libMathcore.lib
 BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
@@ -408,11 +409,11 @@ ROOTMAP       = etc/system.rootmap
 ##### libCore #####
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL) $(MATHL)
+                $(SYSTEML) $(CLIBL) $(METAUTILSL) 
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO) $(MATHO)
+                $(METAUTILSO) 
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(SYSTEMDO) $(CLIBDO) \
-                $(METAUTILSDO) $(MATHDO)
+                $(METAUTILSDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)

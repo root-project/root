@@ -54,7 +54,7 @@ options="                    \
    enable_globus             \
    enable_krb5               \
    enable_ldap               \
-   enable_mathcore           \
+   enable_genvector          \
    enable_mathmore           \
    enable_monalisa           \
    enable_mysql              \
@@ -892,7 +892,7 @@ enable/disable options, prefix with either --enable- or --disable-
   glite	             gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
-  mathcore           Build the new libMathCore math library
+  genvector          Build the new libGenVector library
   mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
@@ -4038,18 +4038,16 @@ check_explicit "$enable_mathmore" "$enable_mathmore_explicit" \
 
 ######################################################################
 #
-### echo %%% MathCore Library - Contributed library
+### echo %%% GenVector Library - Contributed library
 #
-message "Checking whether to build libMathCore"
-if test ! "x$enable_mathcore" = "xno"; then
-    enable_mathcore="yes"
+message "Checking whether to build libGenVector"
+if test ! "x$enable_genvector" = "xno"; then
+    enable_genvector="yes"
     result "yes"
 else
-    enable_mathcore=""
+    enable_genvector=""
     result "no"
 fi
-check_explicit "$enable_mathmore" "$enable_mathmore_explicit" \
-     "Explicitly required MathMore dependencies not fulfilled"
 
 ######################################################################
 #
@@ -4586,7 +4584,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@dicttype@|$dicttype|"                \
     -e "s|@docdir@|$docdir|"                    \
     -e "s|@elispdir@|$elispdir|"                \
-    -e "s|@buildmathcore@|$enable_mathcore|"    \
+    -e "s|@buildgenvector@|$enable_genvector|"  \
     -e "s|@buildmathmore@|$enable_mathmore|"    \
     -e "s|@ftglincdir@|$ftglincdir|"            \
     -e "s|@ftgllibdir@|$ftgllibdir|"            \

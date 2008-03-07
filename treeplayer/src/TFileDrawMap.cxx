@@ -211,7 +211,7 @@ void  TFileDrawMap::AnimateTree(const char *branches)
       for (Int_t ib=0;ib<nbranches;ib++) {
          branch = (TBranch*)list.At(ib);
          Int_t nbaskets = branch->GetListOfBaskets()->GetSize();
-         Int_t basket = TMath::BinarySearch(nbaskets,branch->GetBasketEntry(),entry);
+         Int_t basket = TMath::BinarySearch(nbaskets,branch->GetBasketEntry(), (Long64_t) entry);
          Int_t nbytes = branch->GetBasketBytes()[basket];
          Int_t bseek  = branch->GetBasketSeek(basket);
          Int_t entry0 = branch->GetBasketEntry()[basket];
