@@ -319,7 +319,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                   fKind = (EDataType)kBOOL_t;
                }
                fSize = ti.Size();
-               R__ASSERT(fKind>0 && fKind<0x16 || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
+               R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
             }
             else if ( prop&G__BIT_ISENUM ) {
                fSize = sizeof(int);

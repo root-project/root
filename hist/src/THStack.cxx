@@ -141,17 +141,18 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
 
    if (!fName.Length())
       fName=Form("%s_stack%s", hist->GetName(), axis);
-   if (!fTitle.Length())
+   if (!fTitle.Length()) {
       if (hist->GetTitle() && strlen(hist->GetTitle()))
          fTitle=Form("%s, stack of %s projections", hist->GetTitle(), axis);
       else
          fTitle=Form("stack of %s projections", axis);
+   }
 
    if (isTH2) {
       TH2* hist2=(TH2*) hist;
       Bool_t useX=(strchr(axis,'x')) || (strchr(axis,'X'));
       Bool_t useY=(strchr(axis,'y')) || (strchr(axis,'Y'));
-      if (!useX && !useY || (useX && useY)) {
+      if ((!useX && !useY) || (useX && useY)) {
          Warning("THStack", "Need parameter axis=\"x\" or \"y\" for a TH2, not none or both.");
          return;
       }

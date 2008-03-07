@@ -32,7 +32,9 @@ Boston, MA 02111-1307, USA.  */
 extern char *getenv ();
 #endif
 
+#if 0
 static FILE *mallstream;
+#endif
 
 #if 0	/* FIXME:  Disabled for now. */
 static char mallenv[] = "MALLOC_TRACE";
@@ -40,13 +42,17 @@ static char mallbuf[BUFSIZ];	/* Buffer for the output.  */
 #endif
 
 /* Address to breakpoint on accesses to... */
+#if 0
 static PTR mallwatch;
+#endif
 
 /* Old hook values.  */
 
+#if 0
 static void (*old_mfree_hook) PARAMS ((PTR, PTR));
 static PTR (*old_mmalloc_hook) PARAMS ((PTR, size_t));
 static PTR (*old_mrealloc_hook) PARAMS ((PTR, PTR, size_t));
+#endif
 
 typedef void (*mmfree_fun_t) PARAMS ((PTR, PTR));
 typedef PTR (*mmalloc_fun_t) PARAMS ((PTR, size_t));
@@ -57,6 +63,7 @@ typedef PTR (*mmrealloc_fun_t) PARAMS ((PTR, PTR, size_t));
    set "mallwatch" to the address of interest, then put a breakpoint on
    tr_break.  */
 
+#if 0
 static void
 tr_break ()
 {
@@ -134,6 +141,7 @@ tr_reallochook (md, ptr, size)
 
   return hdr;
 }
+#endif
 
 /* We enable tracing if either the environment variable MALLOC_TRACE
    is set, or if the variable mallwatch has been patched to an address

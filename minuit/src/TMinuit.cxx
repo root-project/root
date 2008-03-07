@@ -2859,7 +2859,7 @@ L400:
    return;
 //*-*-                                       . . . . . . . . . . minos
 L500:
-   nsuper = fNfcn + (fNpar + 1 << 1)*fNfcnmx;
+   nsuper = fNfcn + ((fNpar + 1) << 1)*fNfcnmx;
 //*-*-         possible loop over new minima
    fEpsi = fUp*.1;
 L510:
@@ -4889,8 +4889,12 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
             if (slam > xvmin + slamax) slam = xvmin + slamax;
             if (slam < xvmin - slamax) slam = xvmin - slamax;
          }
-         if (slam > 0) if (slam > overal) slam = overal;
-         else          if (slam < undral) slam = undral;
+         if (slam > 0) {
+            if (slam > overal)
+               slam = overal;
+            else if (slam < undral)
+               slam = undral;
+         }
 
 //*-*-              come here if step was cut below
          do {
@@ -5276,7 +5280,7 @@ L81:
    }
 //*-*-                           print information about this iteration
    ++iter;
-   if (iswtr >= 3 || iswtr == 2 && iter % 10 == 1) {
+   if (iswtr >= 3 || (iswtr == 2 && iter % 10 == 1)) {
       mnwerr();
       mnprin(3, fAmin);
    }
@@ -6573,7 +6577,7 @@ void TMinuit::mnpsdf()
       if (fPstar[ip-1] > pmax) pmax = fPstar[ip-1];
    }
    pmax = TMath::Max(TMath::Abs(pmax),Double_t(1));
-   if (pmin <= 0 && fLwarn || fISW[4] >= 2) {
+   if ((pmin <= 0 && fLwarn) || fISW[4] >= 2) {
       Printf(" EIGENVALUES OF SECOND-DERIVATIVE MATRIX:");
       ctemp = "       ";
       for (ip = 1; ip <= fNpar; ++ip) {

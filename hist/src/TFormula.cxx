@@ -2861,8 +2861,8 @@ TString TFormula::GetExpFormula(Option_t *option) const
             offset = -1;
          }
 
-         if(optype>15 && optype<20 ||
-            optype>22 && optype<26) {
+         if((optype>15 && optype<20) ||
+            (optype>22 && optype<26)) {
             //Functions with the format func(x,y)
             offset = -2;
          }

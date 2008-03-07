@@ -306,10 +306,11 @@ void TVirtualBranchBrowsable::GetScope(TString & scope) const
       scope+=(GetName()+1);
    else
       scope+=GetName();
-   if (fClass && !scope.EndsWith(".")) // otherwise we're a leaf, and no delimiter is appended
+   if (fClass && !scope.EndsWith(".")) { // otherwise we're a leaf, and no delimiter is appended
       if (fTypeIsPointer)
          scope+="->";
       else scope+=".";
+   }
 }
 
 
@@ -764,7 +765,7 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
    Ssiz_t lastDot=scope.Last('.');
    Ssiz_t lastArrow=scope.Last('>'); // assuming there's no branch name containing ">"...
    Ssiz_t lastPart=lastDot;
-   if (lastPart==kNPOS || lastArrow!=kNPOS && lastPart<lastArrow)
+   if (lastPart==kNPOS || (lastArrow!=kNPOS && lastPart<lastArrow))
       lastPart=lastArrow;
    if (lastPart==kNPOS) lastPart=0;
    else lastPart++;

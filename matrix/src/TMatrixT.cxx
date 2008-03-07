@@ -1765,8 +1765,8 @@ TMatrixT<Element> &TMatrixT<Element>::operator=(const TMatrixTSparse<Element> &s
 {
 // Assignment operator
 
-   if (gMatrixCheck &&
-        this->GetNrows()  != source.GetNrows()  || this->GetNcols()  != source.GetNcols() ||
+   if ((gMatrixCheck &&
+        this->GetNrows()  != source.GetNrows())  || this->GetNcols()  != source.GetNcols() ||
         this->GetRowLwb() != source.GetRowLwb() || this->GetColLwb() != source.GetColLwb()) {
       Error("operator=(const TMatrixTSparse &","matrices not compatible");
       return *this;

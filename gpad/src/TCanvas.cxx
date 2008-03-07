@@ -168,7 +168,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
 
    Init();
 
-   fUseGL = name && strstr(name, "gl") || gStyle->GetCanvasPreferGL()? kTRUE : kFALSE;
+   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    fCanvasID     = winid;
    fWindowTopX   = 0;
@@ -197,7 +197,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad()
    //  form = 3    500x500 at 30,30
    //  form = 4    500x500 at 40,40
    //  form = 5    500x500 at 50,50
-   fUseGL = name && strstr(name, "gl") || gStyle->GetCanvasPreferGL()? kTRUE : kFALSE;
+   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    Constructor(name, title, form);
 }
@@ -276,7 +276,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
    //  ww is the canvas size in pixels along X
    //      (if ww < 0  the menubar is not shown)
    //  wh is the canvas size in pixels along Y
-   fUseGL = name && strstr(name, "gl") || gStyle->GetCanvasPreferGL()? kTRUE : kFALSE;
+   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    Constructor(name, title, ww, wh);
 }
@@ -341,7 +341,7 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
    //  the canvas (if wtopx < 0) the menubar is not shown)
    //  ww is the canvas size in pixels along X
    //  wh is the canvas size in pixels along Y
-   fUseGL = name && strstr(name, "gl") || gStyle->GetCanvasPreferGL()? kTRUE : kFALSE;
+   fUseGL = (name && strstr(name, "gl")) || gStyle->GetCanvasPreferGL() ? kTRUE : kFALSE;
 
    Constructor(name, title, wtopx, wtopy, ww, wh);
 }

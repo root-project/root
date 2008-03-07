@@ -2796,9 +2796,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    Int_t dictResult = gSystem->Exec(rcint);
-   if (dictResult)
+   if (dictResult) {
       if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
       else ::Error("ACLiC","Dictionary generation failed!");
+   }
 
    Bool_t result = !dictResult;
 

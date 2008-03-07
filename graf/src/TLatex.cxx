@@ -550,7 +550,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             if (opSquareCurly==-1 && nBrackets==0 && nCroch==0) opSquareCurly=i;
       }
       // detect other operators
-      if (text[i]=='\\' || text[i]=='#' && !opFound && nBrackets==0 && nCroch==0) {
+      if (text[i]=='\\' || (text[i]=='#' && !opFound && nBrackets==0 && nCroch==0)) {
 
          if (length>i+10 ) {
             Char_t buf[10];

@@ -1545,9 +1545,9 @@ Int_t TFile::Recover()
       char *classname = 0;
       if (nwhc <= 0 || nwhc > 100) break;
       classname = new char[nwhc+1];
-      int i;
+      int i, nwhci = nwhc;
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
-      classname[nwhc] = '\0';
+      classname[nwhci] = '\0';
       TDatime::GetDateTime(datime, date, time);
       if (seekpdir == fSeekDir && strcmp(classname,"TFile") && strcmp(classname,"TBasket")) {
          key = new TKey(this);
@@ -3375,11 +3375,12 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(TFileOpenHandle *handle)
 {
    // Get status of the async open request related to 'handle'.
 
-   if (handle && handle->fFile)
+   if (handle && handle->fFile) {
       if (!handle->fFile->IsZombie())
          return handle->fFile->GetAsyncOpenStatus();
       else
          return TFile::kAOSFailure;
+   }
 
    // Default is synchronous mode
    return TFile::kAOSNotAsync;

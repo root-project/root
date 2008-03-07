@@ -105,8 +105,11 @@ void TSQLColumnInfo::Print(Option_t*) const
    if (fSize>=0) cout << " size:" << fSize;
    if (fLength>=0) cout << " len:" << fLength;
    if (fScale>=0) cout << " scale:" << fScale;
-   if (fSigned>=0) 
-     if (fSigned==0) cout << " unsigned";
-                else cout << " signed";
+   if (fSigned>=0) { 
+      if (fSigned==0)
+         cout << " unsigned";
+      else
+         cout << " signed";
+   }
    cout << endl;
 }

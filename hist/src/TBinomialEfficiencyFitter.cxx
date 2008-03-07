@@ -394,16 +394,18 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
             }
 
             // binomial formula (forgetting about the factorials)
-            if (nNum != 0.)
+            if (nNum != 0.) {
                if (mu > 0.)
                   f -= nNum * TMath::Log(mu*nDen/nNum);
                else
                   f -= nmax * -1E30; // crossing our fingers
-            if (nDen - nNum != 0.)
+            }
+            if (nDen - nNum != 0.) {
                if (1. - mu > 0.)
                   f -= (nDen - nNum) * TMath::Log((1. - mu)*nDen/(nDen-nNum));
                else 
                   f -= nmax * -1E30; // crossing our fingers
+            }
          }
       }
    }

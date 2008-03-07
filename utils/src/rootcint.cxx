@@ -4218,13 +4218,14 @@ int main(int argc, char **argv)
    string libfilename;
    const char *env_dict_type=getenv("ROOTDICTTYPE");
 
-   if (env_dict_type)
+   if (env_dict_type) {
       if (!strcmp(env_dict_type, "cint"))
          dict_type=kDictTypeCint;
       else if (!strcmp(env_dict_type, "reflex"))
          dict_type=kDictTypeReflex;
       else if (!strcmp(env_dict_type, "gccxml"))
          dict_type=kDictTypeGCCXML;
+   }
 
    sprintf(autold, autoldtmpl, getpid());
 

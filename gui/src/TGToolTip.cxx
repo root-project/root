@@ -284,11 +284,12 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
    if (x + fWidth > screenW)
       x = screenW - fWidth;
 
-   if (y+4 + GetHeight() > screenH)
+   if (y+4 + GetHeight() > screenH) {
       if (fWindow)
          y -= GetHeight() + fWindow->GetHeight() + 2*4;
       else
          y -= GetHeight() + py1-py2 + 2*4;
+   }
 
    Show(x, y+4);
 

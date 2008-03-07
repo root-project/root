@@ -885,7 +885,7 @@ void TView3D::FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iph
    phi2 = kRad*(aphi[iphi[1]] + aphi[iphi[1] + 1]) / (float)2.;
    z1 = fTN[8]*TMath::Cos(phi1) + fTN[9]*TMath::Sin(phi1);
    z2 = fTN[8]*TMath::Cos(phi2) + fTN[9]*TMath::Sin(phi2);
-   if (z1 <= z2 && iopt == 1 || z1 > z2 && iopt == 2) {
+   if ((z1 <= z2 && iopt == 1) || (z1 > z2 && iopt == 2)) {
       iphi1 = iphi[0];
       iphi2 = iphi[1];
    } else {
@@ -951,7 +951,7 @@ void TView3D::FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *a
    th2    = kRad*(ath[ith[1]] + ath[ith[1] + 1]) / (float)2.;
    z1     = tncons*TMath::Sin(th1) + fTN[10]*TMath::Cos(th1);
    z2     = tncons*TMath::Sin(th2) + fTN[10]*TMath::Cos(th2);
-   if (z1 <= z2 && iopt == 1 || z1 > z2 && iopt == 2) {
+   if ((z1 <= z2 && iopt == 1) || (z1 > z2 && iopt == 2)) {
       ith1 = ith[0];
       ith2 = ith[1];
    } else {

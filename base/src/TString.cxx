@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 // silence warning about gNullRef cast
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 2 && __GNUC_PATCHLEVEL__ >= 1
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 1
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
 

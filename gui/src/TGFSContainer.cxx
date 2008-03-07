@@ -110,11 +110,12 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
                        f2->GetItemName()->GetString());
 
       case kSortByOwner:
-         if ( f1->GetUid() != f2->GetUid() )
-            if ( f1->GetUid() < f2->GetUid() )
+         if (f1->GetUid() != f2->GetUid()) {
+            if (f1->GetUid() < f2->GetUid())
                return -1;
             else
                return +1;
+         }
 
          // else sort by name
          type1 = f1->GetType();
@@ -133,11 +134,12 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
                        f2->GetItemName()->GetString());
 
       case kSortByGroup:
-         if ( f1->GetGid() != f2->GetGid() )
-            if ( f1->GetGid() < f2->GetGid() )
+         if (f1->GetGid() != f2->GetGid()) {
+            if (f1->GetGid() < f2->GetGid())
                return -1;
             else
                return +1;
+         }
 
          // else sort by name
          type1 = f1->GetType();

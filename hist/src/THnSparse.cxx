@@ -704,7 +704,7 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    }
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
+   Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
 
    TH1D* h = new TH1D(name, title, GetAxis(xDim)->GetNbins(),
                       GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax());
@@ -773,7 +773,7 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
    }
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
+   Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
 
    // y, x looks wrong, but it's what TH3::Project3D("xy") does
    TH2D* h = new TH2D(name, title,
@@ -858,7 +858,7 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    }
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
+   Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
 
    TH3D* h = new TH3D(name, title, GetAxis(xDim)->GetNbins(),
                       GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax(),
@@ -960,7 +960,7 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    }
 
    Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = option && (strchr(option, 'E') || strchr(option, 'e')) || haveErrors;
+   Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
 
    Int_t* bins  = new Int_t[ndim];
    Int_t* coord = new Int_t[fNdimensions];

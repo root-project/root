@@ -1878,7 +1878,7 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
       for (i = 1; i <= 3; ++i) {
          i1 = ia + incrx[i - 1];
          i2 = ib + incry[j - 1];
-         SurfaceFunction(i1, i2, &f[((i + j*3 << 2) + 1)*3 - 51], &t[1]);
+         SurfaceFunction(i1, i2, &f[(((i + j*3) << 2) + 1)*3 - 51], &t[1]);
       }
    }
 
@@ -1894,43 +1894,43 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
       for (i = 1; i <= 3; ++i) {
          for (k = 1; k <= 4; ++k) {
             if (Hoption.System == kPOLAR) {
-               phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-               r = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52];
-               x[k + (i + j*3 << 2) - 17] = r * TMath::Cos(phi);
-               y[k + (i + j*3 << 2) - 17] = r * TMath::Sin(phi);
-               z[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 49];
+               phi = f[iphi + (k + ((i + j*3) << 2))*3 - 52]*rad;
+               r = f[3 - iphi + (k + ((i + j*3) << 2))*3 - 52];
+               x[k + ((i + j*3) << 2) - 17] = r * TMath::Cos(phi);
+               y[k + ((i + j*3) << 2) - 17] = r * TMath::Sin(phi);
+               z[k + ((i + j*3) << 2) - 17] = f[(k + ((i + j*3) << 2))*3 - 49];
             } else if (Hoption.System == kCYLINDRICAL) {
-               phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-               r = f[(k + (i + j*3 << 2))*3 - 49];
-               x[k + (i + j*3 << 2) - 17] = r*TMath::Cos(phi);
-               y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(phi);
-               z[k + (i + j*3 << 2) - 17] = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52];
+               phi = f[iphi + (k + ((i + j*3) << 2))*3 - 52]*rad;
+               r = f[(k + ((i + j*3) << 2))*3 - 49];
+               x[k + ((i + j*3) << 2) - 17] = r*TMath::Cos(phi);
+               y[k + ((i + j*3) << 2) - 17] = r*TMath::Sin(phi);
+               z[k + ((i + j*3) << 2) - 17] = f[3 - iphi + (k + ((i + j*3) << 2))*3 - 52];
             } else if (Hoption.System == kSPHERICAL) {
-               phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-               th = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-               r = f[(k + (i + j*3 << 2))*3 - 49];
-               x[k + (i + j*3 << 2) - 17] = r*TMath::Sin(th)*TMath::Cos(phi);
-               y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(th)*TMath::Sin(phi);
-               z[k + (i + j*3 << 2) - 17] = r*TMath::Cos(th);
+               phi = f[iphi + (k + ((i + j*3) << 2))*3 - 52]*rad;
+               th = f[3 - iphi + (k + ((i + j*3) << 2))*3 - 52]*rad;
+               r = f[(k + ((i + j*3) << 2))*3 - 49];
+               x[k + ((i + j*3) << 2) - 17] = r*TMath::Sin(th)*TMath::Cos(phi);
+               y[k + ((i + j*3) << 2) - 17] = r*TMath::Sin(th)*TMath::Sin(phi);
+               z[k + ((i + j*3) << 2) - 17] = r*TMath::Cos(th);
             } else if (Hoption.System == kRAPIDITY) {
-               phi = f[iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-               th = f[3 - iphi + (k + (i + j*3 << 2))*3 - 52]*rad;
-               r = f[(k + (i + j*3 << 2))*3 - 49];
-               x[k + (i + j*3 << 2) - 17] = r*TMath::Cos(phi);
-               y[k + (i + j*3 << 2) - 17] = r*TMath::Sin(phi);
-               z[k + (i + j*3 << 2) - 17] = r*TMath::Cos(th) / TMath::Sin(th);
+               phi = f[iphi + (k + ((i + j*3) << 2))*3 - 52]*rad;
+               th = f[3 - iphi + (k + ((i + j*3) << 2))*3 - 52]*rad;
+               r = f[(k + ((i + j*3) << 2))*3 - 49];
+               x[k + ((i + j*3) << 2) - 17] = r*TMath::Cos(phi);
+               y[k + ((i + j*3) << 2) - 17] = r*TMath::Sin(phi);
+               z[k + ((i + j*3) << 2) - 17] = r*TMath::Cos(th) / TMath::Sin(th);
             } else {
-               x[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 51];
-               y[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 50];
-               z[k + (i + j*3 << 2) - 17] = f[(k + (i + j*3 << 2))*3 - 49];
+               x[k + ((i + j*3) << 2) - 17] = f[(k + ((i + j*3) << 2))*3 - 51];
+               y[k + ((i + j*3) << 2) - 17] = f[(k + ((i + j*3) << 2))*3 - 50];
+               z[k + ((i + j*3) << 2) - 17] = f[(k + ((i + j*3) << 2))*3 - 49];
             }
          }
-         x1 = x[(i + j*3 << 2) - 14] - x[(i + j*3 << 2) - 16];
-         x2 = x[(i + j*3 << 2) - 13] - x[(i + j*3 << 2) - 15];
-         y1 = y[(i + j*3 << 2) - 14] - y[(i + j*3 << 2) - 16];
-         y2 = y[(i + j*3 << 2) - 13] - y[(i + j*3 << 2) - 15];
-         z1 = z[(i + j*3 << 2) - 14] - z[(i + j*3 << 2) - 16];
-         z2 = z[(i + j*3 << 2) - 13] - z[(i + j*3 << 2) - 15];
+         x1 = x[((i + j*3) << 2) - 14] - x[((i + j*3) << 2) - 16];
+         x2 = x[((i + j*3) << 2) - 13] - x[((i + j*3) << 2) - 15];
+         y1 = y[((i + j*3) << 2) - 14] - y[((i + j*3) << 2) - 16];
+         y2 = y[((i + j*3) << 2) - 13] - y[((i + j*3) << 2) - 15];
+         z1 = z[((i + j*3) << 2) - 14] - z[((i + j*3) << 2) - 16];
+         z2 = z[((i + j*3) << 2) - 13] - z[((i + j*3) << 2) - 15];
          an[(i + j*3)*3 - 12] = y1*z2 - y2*z1;
          an[(i + j*3)*3 - 11] = z1*x2 - z2*x1;
          an[(i + j*3)*3 - 10] = x1*y2 - x2*y1;
@@ -2345,8 +2345,8 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
                iface[3] = k1 + 4;
                tface[0] = tt[k1 + (iv << 2) - 5];
                tface[1] = tt[k2 + (iv << 2) - 5];
-               tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-               tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+               tface[2] = tt[k2 + ((iv + 1) << 2) - 5];
+               tface[3] = tt[k1 + ((iv + 1) << 2) - 5];
                (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
             }
          }
@@ -2551,8 +2551,8 @@ L100:
             iface[3] = k1 + 4;
             tface[0] = tt[k1 + (iv << 2) - 5];
             tface[1] = tt[k2 + (iv << 2) - 5];
-            tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-            tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+            tface[2] = tt[k2 + ((iv + 1) << 2) - 5];
+            tface[3] = tt[k1 + ((iv + 1) << 2) - 5];
             icodes[3] = i;
             (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
          }
@@ -2724,7 +2724,7 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
    incrz = 1;
    iz1 = 1;
    view->FindNormal(0, 0, 1, z);
-   if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
+   if ((z <= 0 && iopt == 1) || (z > 0 && iopt == 2)) {
       incrz = -1;
       iz1 = nz;
    }
@@ -2775,8 +2775,8 @@ L100:
             iface[3] = k1 + 4;
             tface[0] = tt[k1 + (iv << 2) - 5];
             tface[1] = tt[k2 + (iv << 2) - 5];
-            tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-            tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+            tface[2] = tt[k2 + ((iv + 1) << 2) - 5];
+            tface[3] = tt[k1 + ((iv + 1) << 2) - 5];
             icodes[3] = i;
             (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
          }
@@ -3043,8 +3043,8 @@ L200:
          iface[3] = k1 + 4;
          tface[0] = tt[k1 + (iv << 2) - 5];
          tface[1] = tt[k2 + (iv << 2) - 5];
-         tface[2] = tt[k2 + (iv + 1 << 2) - 5];
-         tface[3] = tt[k1 + (iv + 1 << 2) - 5];
+         tface[2] = tt[k2 + ((iv + 1) << 2) - 5];
+         tface[3] = tt[k1 + ((iv + 1) << 2) - 5];
          icodes[3] = i;
          (this->*fDrawFace)(icodes, xyz, 4, iface, tface);
       }
@@ -3468,7 +3468,7 @@ void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Doubl
    view->FindNormal(TMath::Cos(phi), TMath::Sin(phi), 0, zn);
    if (zn > 0) k += 8;
    if (zn < 0) k += 2;
-   if (zn <= 0 && iopt == 1 || zn > 0 && iopt == 2) ++k;
+   if ((zn <= 0 && iopt == 1) || (zn > 0 && iopt == 2)) ++k;
    val = Double_t(k);
 }
 
@@ -3851,7 +3851,7 @@ L100:
    view->FindNormal(TMath::Cos(phi), TMath::Sin(phi), 0, z);
    incrr = 1;
    ir1 = 1;
-   if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
+   if ((z <= 0 && iopt == 1) || (z > 0 && iopt == 2)) {
       incrr = -1;
       ir1 = nr;
    }
@@ -3986,7 +3986,7 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
    incrz = 1;
    iz1 = 1;
    view->FindNormal(0, 0, 1, z);
-   if (z <= 0 && iopt == 1 || z > 0 && iopt == 2) {
+   if ((z <= 0 && iopt == 1) || (z > 0 && iopt == 2)) {
       incrz = -1;
       iz1 = nz;
    }
