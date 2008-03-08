@@ -81,7 +81,7 @@ TEveTrackPropagator::TEveTrackPropagator() :
    fMinAng  (45),
    fDelta   (0.1),
 
-   fEditPathMarks(kFALSE),
+   fEditPathMarks (kTRUE),
    fFitDaughters  (kTRUE),
    fFitReferences (kTRUE),
    fFitDecay      (kTRUE),
@@ -105,8 +105,8 @@ TEveTrackPropagator::TEveTrackPropagator() :
 //______________________________________________________________________________
 void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p,
                                     Float_t beta,  Int_t charge)
-{ 
-   // Initializae internal data-members for given particle parameters.
+{
+   // Initialize internal data-members for given particle parameters.
 
    fV.fX = v.fX;
    fV.fY = v.fY;
@@ -116,28 +116,7 @@ void TEveTrackPropagator::InitTrack(TEveVector &v, TEveVector &p,
 
    fVelocity = TMath::C()*beta;
    fCharge = charge;
-   if (fCharge)
-   {
-      // initialise helix
-      using namespace TMath;
-      Float_t pT = p.Perp();
-      fH.fA      = fgkB2C * fMagField * charge;
-      fH.fLam    = p.fZ / pT;
-      fH.fR      = pT   / fH.fA;
-
-      fH.fPhiStep = fMinAng * DegToRad();
-      if (fDelta < Abs(fH.fR))
-      {
-         Float_t ang  = 2*ACos(1 - fDelta/Abs(fH.fR));
-         if (ang < fH.fPhiStep) fH.fPhiStep = ang;
-      }
-      if (fH.fA < 0) fH.fPhiStep *= -1;
-      //printf("PHI STEP %f \n", fH.fPhiStep);
-
-      fH.fTimeStep = 0.01* Abs(fH.fR*fH.fPhiStep)*Sqrt(1+(fH.fLam*fH.fLam))/fVelocity;//cm->m
-      fH.fSin = Sin(fH.fPhiStep);
-      fH.fCos = Cos(fH.fPhiStep);
-   }
+   InitHelix(p);
 }
 
 //______________________________________________________________________________
@@ -146,7 +125,7 @@ void TEveTrackPropagator::ResetTrack()
    // Reset cache holding particle trajectory.
 
    fPoints.clear();
-   fN     = 0; 
+   fN     = 0;
    fNLast = 0;
 }
 
@@ -175,13 +154,43 @@ void TEveTrackPropagator::GoToBounds(TEveVector& p)
 }
 
 //______________________________________________________________________________
+void TEveTrackPropagator::InitHelix(const TEveVector& p)
+{
+   // Initialize helix parameters for given momentum.
+
+   if (fCharge)
+   {
+      // initialise helix
+      using namespace TMath;
+      Float_t pT = p.Perp();
+      fH.fA      = fgkB2C * fMagField * fCharge;
+      fH.fLam    = p.fZ / pT;
+      fH.fR      = pT   / fH.fA;
+
+      fH.fPhiStep = fMinAng * DegToRad();
+      if (fDelta < Abs(fH.fR))
+      {
+         Float_t ang  = 2*ACos(1 - fDelta/Abs(fH.fR));
+         if (ang < fH.fPhiStep) fH.fPhiStep = ang;
+      }
+      if (fH.fA < 0) fH.fPhiStep *= -1;
+      //printf("PHI STEP %f \n", fH.fPhiStep);
+
+      fH.fTimeStep = 0.01 * Abs(fH.fR*fH.fPhiStep)*Sqrt(1+(fH.fLam*fH.fLam))/fVelocity;//cm->m
+      fH.fSin = Sin(fH.fPhiStep);
+      fH.fCos = Cos(fH.fPhiStep);
+   }
+}
+
+//______________________________________________________________________________
 void TEveTrackPropagator::SetNumOfSteps()
 {
-   // Calculate number of steps needed to achieve desired precision.
+   // Calculate number of steps needed to get to R/Z bounds.
 
    using namespace TMath;
+
    // max orbits
-   fNLast = Int_t(fMaxOrbs*TwoPi()/Abs(fH.fPhiStep));
+   Int_t newCount = Int_t(fMaxOrbs*TwoPi()/Abs(fH.fPhiStep));
    // Z boundaries
    Float_t nz;
    if (fH.fLam > 0) {
@@ -189,7 +198,9 @@ void TEveTrackPropagator::SetNumOfSteps()
    } else {
       nz = (-fMaxZ - fV.fZ) / (fH.fLam*Abs(fH.fR*fH.fPhiStep));
    }
-   if (nz < fNLast) fNLast = Int_t(nz + 1);
+   if (nz < newCount) newCount = Int_t(nz + 1);
+
+   fNLast = fN + newCount;
    // printf("end steps in helix line %d \n", fNLast);
 }
 
@@ -199,9 +210,10 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
 {
    // Propagate charged particle with momentum p to bounds.
 
-   // printf("HelixToBounds\n");
+   InitHelix(p);
    SetNumOfSteps();
-   if (fNLast > 0)
+
+   if (fN < fNLast)
    {
       Bool_t crosR = kFALSE;
       if (fV.Perp() < fMaxR + TMath::Abs(fH.fR))
@@ -216,17 +228,19 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
          {
             Float_t t = (fMaxR - fV.R()) / (forw.R() - fV.R());
             assert(t >= 0 && t <= 1);
-            fPoints.push_back(fV + (forw-fV)*t);fN++;
+            fPoints.push_back(fV + (forw-fV)*t);
+            ++fN;
             return;
          }
          if (TMath::Abs(forw.fZ) > fMaxZ)
          {
             Float_t t = (fMaxZ - TMath::Abs(fV.fZ)) / TMath::Abs((forw.fZ - fV.fZ));
             assert(t >= 0 && t <= 1);
-            fPoints.push_back(fV + (forw-fV)*t); fN++;
+            fPoints.push_back(fV + (forw-fV)*t);
+            ++fN;
             return;
          }
-         fH.Step(fV, p); fPoints.push_back(fV); fN++;
+         fH.Step(fV, p); fPoints.push_back(fV); ++fN;
       }
       return;
    }
@@ -237,6 +251,9 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
 {
    // Propagate charged particle with momentum p to vertex v.
 
+   InitHelix(p);
+   SetNumOfSteps();
+
    Float_t p0x = p.fX, p0y = p.fY;
    Float_t zs  = fH.fLam*TMath::Abs(fH.fR*fH.fPhiStep);
    Float_t maxrsq  = fMaxR * fMaxR;
@@ -246,7 +263,7 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
    Float_t cosf = TMath::Cos(fnsteps*fH.fPhiStep); // final cos
 
    // check max orbits
-   nsteps = TMath::Min(nsteps, fNLast -fN);
+   nsteps = TMath::Min(nsteps, fNLast - fN);
    {
       if (nsteps > 0)
       {
@@ -261,7 +278,8 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
             fH.StepVertex(fV, p, forw);
             if (fV.Perp2() > maxrsq || TMath::Abs(fV.fZ) > fMaxZ)
                return kFALSE;
-            fH.Step(fV, p); fPoints.push_back(fV); fN++;
+            fH.Step(fV, p); fPoints.push_back(fV);
+            ++fN;
          }
       }
       // set time to the end point
@@ -269,7 +287,8 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
                            (fV.fY-v.fY)*(fV.fY-v.fY) +
                            (fV.fZ-v.fZ)*(fV.fZ-v.fZ)) / fVelocity;
       fV.fX = v.fX; fV.fY = v.fY; fV.fZ = v.fZ;
-      fPoints.push_back(fV); fN++;
+      fPoints.push_back(fV);
+      ++fN;
    }
    { // rotate momentum for residuum
       Float_t cosr = TMath::Cos((fnsteps-nsteps)*fH.fPhiStep);

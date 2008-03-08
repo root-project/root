@@ -33,7 +33,7 @@
 #include "TGLFormat.h"
 #include "TGLUtil.h"
 
-#include "TFTGLManager.h"
+#include "TGLFontManager.h"
 
 //______________________________________________________________________________
 //
@@ -488,10 +488,10 @@ TGLContext* TGLContextIdentity::GetDefaultContextAny()
 }
 
 //______________________________________________________________________________
-TFTGLManager* TGLContextIdentity::GetFontManager()
+TGLFontManager* TGLContextIdentity::GetFontManager()
 {
    //Get the free-type font-manager associated with this context-identity.
-   if(!fFontManager) fFontManager = new TFTGLManager();
+   if(!fFontManager) fFontManager = new TGLFontManager();
    return fFontManager;
 }
 

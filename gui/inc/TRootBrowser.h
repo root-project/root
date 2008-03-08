@@ -108,6 +108,7 @@ public:
    void              CloseWindow();
    void              DoTab(Int_t id);
    TGFrame          *GetActFrame() const { return (TGFrame *)fEditFrame; }
+   TGFrame          *GetToolbarFrame() const { return (TGFrame *)fToolbarFrame; }
    TGStatusBar      *GetStatusBar() const { return fStatusBar; }
    TGTab            *GetTabLeft() const { return fTabLeft; }
    TGTab            *GetTabRight() const { return fTabRight; }
@@ -143,7 +144,7 @@ public:
    virtual Bool_t    HandleKey(Event_t *event);
 
    // overridden from TGMainFrame
-   void              ReallyDelete();
+   virtual void      ReallyDelete();
 
    static TBrowserImp *NewBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt="");
    static TBrowserImp *NewBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt="");

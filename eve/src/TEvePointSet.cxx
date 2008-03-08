@@ -25,8 +25,12 @@
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEvePointSet
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // TEvePointSet is a render-element holding a collection of 3D points with
 // optional per-point TRef and an arbitrary number of integer ids (to
@@ -42,7 +46,7 @@
 // TEvePointSet is a TEveProjectable: it can be projected by using the
 // TEveProjectionManager class.
 
-ClassImp(TEvePointSet)
+ClassImp(TEvePointSet);
 
 //______________________________________________________________________________
 TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
@@ -57,6 +61,9 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
    // Constructor.
 
    fMarkerStyle = 20;
+
+   // Override from TEveElement.
+   fPickable = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -73,6 +80,9 @@ TEvePointSet::TEvePointSet(const Text_t* name, Int_t n_points, ETreeVarType_e tv
 
    fMarkerStyle = 20;
    SetName(name);
+
+   // Override from TEveElement.
+   fPickable = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -86,10 +96,11 @@ TEvePointSet::~TEvePointSet()
 /******************************************************************************/
 
 //______________________________________________________________________________
-const TGPicture* TEvePointSet::GetListTreeIcon() 
-{ 
-   //return pointset icon
-   return TEveElement::fgListTreeIcons[3]; 
+const TGPicture* TEvePointSet::GetListTreeIcon(Bool_t)
+{
+   // Return pointset icon.
+
+   return TEveElement::fgListTreeIcons[3];
 }
 
 //______________________________________________________________________________
@@ -110,7 +121,7 @@ void TEvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
 
    delete [] fP; fP = 0;
    fN = n_points;
-   if(fN) fP = new Float_t [3*fN];
+   if (fN) fP = new Float_t [3*fN];
    memset(fP, 0, 3*fN*sizeof(Float_t));
    fLastPoint = -1;
    ClearIds();
@@ -199,18 +210,6 @@ void TEvePointSet::SetPointIntIds(Int_t n, Int_t* ids)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEvePointSet::SetRnrElNameTitle(const Text_t* name, const Text_t* title)
-{
-   // Set name and title of point-set.
-   // Virtual in TEveElement.
-
-   SetName(name);
-   SetTitle(title);
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
 void TEvePointSet::Paint(Option_t* /*option*/)
 {
    // Paint point-set.
@@ -225,8 +224,8 @@ void TEvePointSet::Paint(Option_t* /*option*/)
    buff.fID           = this;
    buff.fColor        = GetMainColor();
    buff.fTransparency = GetMainTransparency();
-   if (PtrMainHMTrans())
-      PtrMainHMTrans()->SetBuffer3D(buff);
+   if (HasMainTrans())
+      RefMainTrans().SetBuffer3D(buff);
    buff.SetSectionsValid(TBuffer3D::kCore);
 
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
@@ -325,12 +324,22 @@ TClass* TEvePointSet::ProjectedClass() const
    return TEvePointSetProjected::Class();
 }
 
+//______________________________________________________________________________
+void TEvePointSet::PointSelected(Int_t id)
+{
+   // Virtual method of base class TPointSet3D. The fuction call is invoked with secondary selection
+   // in TPointSet3DGL.
 
-/******************************************************************************/
-/******************************************************************************/
+   Emit("PointSelected(Int_t)", id);
+}
+
+
+//==============================================================================
+//==============================================================================
+// TEvePointSetArray
+//==============================================================================
 
 //______________________________________________________________________________
-// TEvePointSetArray
 //
 // An array of point-sets with each point-set playing a role of a bin
 // in a histogram. When a new point is added to a TEvePointSetArray, an
@@ -347,7 +356,7 @@ TClass* TEvePointSet::ProjectedClass() const
 // actually shown.
 //
 
-ClassImp(TEvePointSetArray)
+ClassImp(TEvePointSetArray);
 
 //______________________________________________________________________________
 TEvePointSetArray::TEvePointSetArray(const Text_t* name,
@@ -502,8 +511,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
 
 //______________________________________________________________________________
 void TEvePointSetArray::InitBins(const Text_t* quant_name,
-                                 Int_t nbins, Double_t min, Double_t max,
-                                 Bool_t addRe)
+                                 Int_t nbins, Double_t min, Double_t max)
 {
    // Initialize internal point-sets with given binning parameters.
 
@@ -529,10 +537,7 @@ void TEvePointSetArray::InitBins(const Text_t* quant_name,
       fBins[i]->SetMarkerColor(fMarkerColor);
       fBins[i]->SetMarkerStyle(fMarkerStyle);
       fBins[i]->SetMarkerSize(fMarkerSize);
-      if (addRe)
-         gEve->AddElement(fBins[i], this);
-      else
-         AddElement(fBins[i]);
+      AddElement(fBins[i]);
    }
 }
 
@@ -568,8 +573,9 @@ void TEvePointSetArray::CloseBins()
    for (Int_t i=0; i<fNBins; ++i) {
       if (fBins[i] != 0) {
          // HACK! PolyMarker3D does half-management of array size.
-         // In fact, the error is mine, in pointset3d(gl) i use fN instead of Size().
-         // Fixed in my root, but not elsewhere.
+         // !!!! In fact, the error is mine, in pointset3d(gl) i use
+         // fN instead of Size(). Fixed in my root, but not
+         // elsewhere.
          fBins[i]->fN = fBins[i]->fLastPoint;
 
          fBins[i]->ComputeBBox();
@@ -612,15 +618,16 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 }
 
 
-/******************************************************************************/
-/******************************************************************************/
+//==============================================================================
+//==============================================================================
+// TEvePointSetProjected
+//==============================================================================
 
 //______________________________________________________________________________
-// TEvePointSetProjected
 //
 // Projected copy of a TEvePointSet.
 
-ClassImp(TEvePointSetProjected)
+ClassImp(TEvePointSetProjected);
 
 //______________________________________________________________________________
 TEvePointSetProjected::TEvePointSetProjected() :
@@ -642,16 +649,30 @@ void TEvePointSetProjected::SetProjection(TEveProjectionManager* proj,
 }
 
 //______________________________________________________________________________
+void TEvePointSetProjected::SetDepth(Float_t d)
+{
+   // Set depth (z-coordinate) of the projected points.
+
+   SetDepthCommon(d, this, fBBox);
+
+   Int_t    n = Size();
+   Float_t *p = GetP();
+   for (Int_t i = 0; i < n; ++i, p+=3)
+      p[2] = fDepth;
+}
+
+//______________________________________________________________________________
 void TEvePointSetProjected::UpdateProjection()
 {
-   // Reapply the projection.
+   // Re-apply the projection.
    // Virtual from TEveProjected.
 
-   TEveProjection& proj = * fProjector->GetProjection();
-   TEvePointSet     & ps   = * dynamic_cast<TEvePointSet*>(fProjectable);
+   TEveProjection& proj = * fManager->GetProjection();
+   TEvePointSet  & ps   = * dynamic_cast<TEvePointSet*>(fProjectable);
 
-   Int_t n = ps.GetN();
+   Int_t n = ps.Size();
    Reset(n);
+   fLastPoint = n - 1;
    Float_t *o = ps.GetP(), *p = GetP();
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
    {
@@ -659,5 +680,4 @@ void TEvePointSetProjected::UpdateProjection()
       proj.ProjectPoint(p[0], p[1], p[2]);
       p[2] = fDepth;
    }
-   fLastPoint = n - 1;
 }

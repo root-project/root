@@ -30,20 +30,25 @@
 #endif
 
 class TGLWidget;
+class TGEventHandler;
 
 class TGLWidgetContainer : public TGCompositeFrame {
 private:
    TGLWidget *fOwner;
+   TGEventHandler *fEventHandler;
 
 public:
    TGLWidgetContainer(TGLWidget *owner, Window_t id, const TGWindow *parent);
 
+   TGEventHandler  *GetEventHandler() const { return fEventHandler; }
+   void             SetEventHandler(TGEventHandler *eh) { fEventHandler = eh; }
    Bool_t HandleButton(Event_t *ev);
    Bool_t HandleDoubleClick(Event_t *ev);
    Bool_t HandleConfigureNotify(Event_t *ev);
    Bool_t HandleKey(Event_t *ev);
    Bool_t HandleMotion(Event_t *ev);
-   //Bool_t HandleExpose(Event_t *ev);
+   Bool_t HandleFocusChange(Event_t *);
+   Bool_t HandleCrossing(Event_t *);
 
    void   DoRedraw();
 
@@ -71,6 +76,8 @@ private:
    Bool_t                            fFromCtor;
 
    std::set<TGLContext *>            fValidContexts;
+
+   TGEventHandler                   *fEventHandler;
 
 public:
    TGLWidget(const TGWindow &parent, Bool_t selectInput,
@@ -101,15 +108,6 @@ public:
    void              SwapBuffers();
    const TGLContext *GetContext()const;
 
-   //Signals. Names can be changed (for example PaintSignal, DoubleClickSignal etc.)
-   Bool_t            HandleButton(Event_t *event);         //*SIGNAL*
-   Bool_t            HandleDoubleClick(Event_t *event);    //*SIGNAL*
-   Bool_t            HandleConfigureNotify(Event_t *event);//*SIGNAL*
-   Bool_t            HandleKey(Event_t *event);            //*SIGNAL*
-   Bool_t            HandleMotion(Event_t *event);         //*SIGNAL*
-//   Bool_t            HandleExpose(Event_t *event);         //*SIGNAL*
-   void              Repaint();                           //*SIGNAL*
-
    Int_t             GetWindowIndex()const;
    const  TGLFormat *GetPixelFormat()const;
    Int_t             GetContId()const;
@@ -119,6 +117,9 @@ public:
    void              SetFormat();
    //To repaint gl-widget without GUI events.
    void              ExtractViewport(Int_t *vp)const;
+
+   TGEventHandler   *GetEventHandler() const { return fEventHandler; }
+   void              SetEventHandler(TGEventHandler *eh);
 
 private:
    TGLWidget(const TGLWidget &);

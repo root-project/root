@@ -884,6 +884,9 @@ public:
   virtual void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
   virtual Bool_t ItemLayout();
 
+  Bool_t         HandleHtmlInput(TGHtmlInput *pr, Event_t *event);
+  Bool_t         HandleRadioButton(TGHtmlInput *p);
+
 public:   // user commands
 
   int  ParseText(char *text, const char *index = 0);
@@ -958,6 +961,7 @@ public:
   int GetMarginWidth() { return margins.fL + margins.fR; }
   int GetMarginHeight() { return margins.fT + margins.fB; }
 
+  TGHtmlInput *GetInputElement(int x, int y);
   const char *GetHref(int x, int y, const char **target = 0);
   
   TGHtmlImage *GetImage(TGHtmlImageMarkup *p);
@@ -1108,6 +1112,10 @@ public:
 
   virtual void MouseOver(const char *uri) { Emit("MouseOver(const char *)",uri); } // *SIGNAL*
   virtual void MouseDown(const char *uri)  { Emit("MouseDown(const char *)",uri); } // *SIGNAL*
+  virtual void ButtonClicked(const char *name, const char *val); // *SIGNAL*
+  virtual void SubmitClicked(const char *val); // *SIGNAL*
+  virtual void CheckToggled(const char *name, Bool_t on, const char *val); // *SIGNAL*
+  virtual void RadioChanged(const char *name, const char *val); // *SIGNAL*
 
 protected:
   virtual void UpdateBackgroundStart();

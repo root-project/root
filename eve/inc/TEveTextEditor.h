@@ -39,7 +39,7 @@ protected:
    TEveGValuator       *fExtrude;
 
    TGCheckButton       *fLighting;
-   TGCheckButton       *fAutoBehave;
+   TGCheckButton       *fAutoLighting;
 
 public:
    TEveTextEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -53,11 +53,11 @@ public:
    void DoFontSize();
    void DoFontFile();
    void DoFontMode();
-  
+
    void DoLighting();
-   void DoAutoBehave();
+   void DoAutoLighting();
    void DoExtrude();
-   
+
    ClassDef(TEveTextEditor, 0); // GUI editor for TEveText.
 };
 

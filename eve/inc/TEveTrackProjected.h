@@ -39,14 +39,16 @@ public:
    TEveTrackProjected();
    virtual ~TEveTrackProjected() {}
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
+   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
+
+   virtual void SetDepth(Float_t d);
 
    virtual void UpdateProjection();
    virtual void MakeTrack(Bool_t recurse=kTRUE);
 
    void         PrintLineSegments();
 
-   virtual void CtrlClicked(TEveTrack*); // marked as signal in TEveTrack
+   virtual void SecSelected(TEveTrack*); // marked as signal in TEveTrack
 
    ClassDef(TEveTrackProjected, 1); // Projected copy of a TEveTrack.
 };
@@ -68,7 +70,10 @@ public:
    virtual ~TEveTrackListProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void UpdateProjection(){};
+   virtual void SetDepth(Float_t d);
+   virtual void UpdateProjection()  {}
+
+   virtual void SetDepth(Float_t d, TEveElement* el);
 
    ClassDef(TEveTrackListProjected, 1); // Specialization of TEveTrackList for holding TEveTrackProjected objects.
 };

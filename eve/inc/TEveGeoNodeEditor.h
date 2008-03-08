@@ -52,7 +52,7 @@ public:
 
    void DoTransparency();
 
-   ClassDef(TEveGeoNodeEditor, 1); // Editor for TEveGeoNode class.
+   ClassDef(TEveGeoNodeEditor, 0); // Editor for TEveGeoNode class.
 };
 
 /******************************************************************************/
@@ -67,6 +67,7 @@ protected:
 
    TEveGValuator*  fVisOption;
    TEveGValuator*  fVisLevel;
+   TEveGValuator*  fMaxVisNodes;
 
 public:
    TEveGeoTopNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -77,8 +78,9 @@ public:
 
    void DoVisOption();
    void DoVisLevel();
+   void DoMaxVisNodes();
 
-   ClassDef(TEveGeoTopNodeEditor, 1); // Editor for TEveGeoTopNode class.
+   ClassDef(TEveGeoTopNodeEditor, 0); // Editor for TEveGeoTopNode class.
 };
 
 #endif

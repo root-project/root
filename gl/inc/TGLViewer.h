@@ -25,8 +25,10 @@
 #include "TTimer.h"
 #include "TPoint.h"
 
+#include "TGEventHandler.h"
+
 #include "GuiTypes.h"
-#include "RQ_OBJECT.h"
+#include "TQObject.h"
 
 #include <vector>
 
@@ -39,16 +41,18 @@ class TGLClipSet;
 class TGLManipSet;
 class TGLCameraMarkupStyle;
 class TGLContextIdentity;
+class TTimer;
 
 class TContextMenu;
 
 
 class TGLViewer : public TVirtualViewer3D,
-                  public TGLViewerBase
+                  public TGLViewerBase,
+                  public TQObject
 
 {
-   RQ_OBJECT("TGLViewer")
    friend class TGLOutput;
+   friend class TGLEventHandler;
 public:
 
    enum ECameraType { kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY,
@@ -90,6 +94,8 @@ protected:
    TGLOverlayElement  * fCurrentOvlElm;        //! current overlay element
    TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
 
+   TGEventHandler      *fEventHandler;
+
    // Mouse ineraction
 public:
    enum EPushAction   { kPushStd,
@@ -100,8 +106,6 @@ public:
 protected:
    EPushAction          fPushAction;
    EDragAction          fAction;
-   TPoint               fLastPos;
-   UInt_t               fActiveButtonID;
 
    // Redraw timer
    TGLRedrawTimer     * fRedrawTimer;        //! timer for triggering redraws
@@ -249,16 +253,18 @@ public:
 
    virtual void SelectionChanged();    // *SIGNAL*
    virtual void OverlayDragFinished(); // *SIGNAL*
+   virtual void MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t); // *SIGNAL*
+   virtual void MouseOver(TGLPhysicalShape*); // *SIGNAL*
+   virtual void MouseOver(TGLPhysicalShape*, UInt_t state); // *SIGNAL*
+   virtual void Activated() { Emit("Activated()"); } // *SIGNAL*
+   virtual void Clicked(TObject *obj); //*SIGNAL*
+   virtual void Clicked(TObject *obj, UInt_t button, UInt_t state); //*SIGNAL*
+   virtual void DoubleClicked() { Emit("DoubleClicked()"); } // *SIGNAL*
 
-   // Interaction - events to ExecuteEvent are passed on to these
-   Bool_t HandleEvent(Event_t *ev);
-   Bool_t HandleButton(Event_t *ev);
-   Bool_t HandleDoubleClick(Event_t *ev);
-   Bool_t HandleConfigureNotify(Event_t *ev);
-   Bool_t HandleKey(Event_t *ev);
-   Bool_t HandleMotion(Event_t *ev);
-   Bool_t HandleExpose(Event_t *ev);
-   void   Repaint();
+   TGEventHandler *GetEventHandler() const { return fEventHandler; }
+   virtual void    SetEventHandler(TGEventHandler *handler) { fEventHandler = handler; }
+
+//   Bool_t HandleTimer(TTimer *t);
 
    ClassDef(TGLViewer,0) // Standard ROOT GL viewer.
 };

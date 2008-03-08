@@ -10,17 +10,28 @@
  *************************************************************************/
 
 #include "TEveElement.h"
+#include "TEveTrans.h"
 #include "TEveManager.h"
-#include "TEveGedEditor.h"
+#include "TEveSelection.h"
+#include "TEveProjectionBases.h"
+
+#include "TGeoMatrix.h"
 
 #include "TClass.h"
+#include "TPRegexp.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TCanvas.h"
+#include "TEveBrowser.h"
 #include "TGListTree.h"
 #include "TGPicture.h"
 
 #include <algorithm>
+
+//==============================================================================
+//==============================================================================
+// TEveElement::TEveListTreeInfo
+//==============================================================================
 
 //______________________________________________________________________________
 //
@@ -29,44 +40,69 @@
 // can appear in several list-trees as well as several times in the
 // same list-tree.
 
-ClassImp(TEveElement::TEveListTreeInfo)
+ClassImp(TEveElement::TEveListTreeInfo);
+
+
+//==============================================================================
+//==============================================================================
+// TEveElement
+//==============================================================================
 
 //______________________________________________________________________________
-// TEveElement
 //
 // Base class for TEveUtil visualization elements, providing hierarchy
 // management, rendering control and list-tree item management.
 
-ClassImp(TEveElement)
+ClassImp(TEveElement);
 
 //______________________________________________________________________________
-const TGPicture* TEveElement::fgRnrIcons[4] = { 0 };
+const TGPicture* TEveElement::fgRnrIcons[4]      = { 0 };
 const TGPicture* TEveElement::fgListTreeIcons[8] = { 0 };
 
 //______________________________________________________________________________
 TEveElement::TEveElement() :
-   fRnrSelf             (kTRUE),
-   fRnrChildren         (kTRUE),
-   fMainColorPtr        (0),
-   fItems               (),
    fParents             (),
+   fChildren            (),
    fDestroyOnZeroRefCnt (kTRUE),
    fDenyDestroy         (0),
-   fChildren            ()
+   fRnrSelf             (kTRUE),
+   fRnrChildren         (kTRUE),
+   fCanEditMainTrans    (kFALSE),
+   fMainColorPtr        (0),
+   fMainTrans           (0),
+   fItems               (),
+   fUserData            (0),
+   fPickable            (kFALSE),
+   fSelected            (kFALSE),
+   fHighlighted         (kFALSE),
+   fImpliedSelected     (0),
+   fImpliedHighlighted  (0),
+   fChangeBits          (0),
+   fDestructing         (kFALSE)
 {
    // Default contructor.
 }
 
 //______________________________________________________________________________
 TEveElement::TEveElement(Color_t& main_color) :
-   fRnrSelf             (kTRUE),
-   fRnrChildren         (kTRUE),
-   fMainColorPtr        (&main_color),
-   fItems               (),
    fParents             (),
+   fChildren            (),
    fDestroyOnZeroRefCnt (kTRUE),
    fDenyDestroy         (0),
-   fChildren            ()
+   fRnrSelf             (kTRUE),
+   fRnrChildren         (kTRUE),
+   fCanEditMainTrans    (kFALSE),
+   fMainColorPtr        (&main_color),
+   fMainTrans           (0),
+   fItems               (),
+   fUserData            (0),
+   fPickable            (kFALSE),
+   fSelected            (kFALSE),
+   fHighlighted         (kFALSE),
+   fImpliedSelected     (0),
+   fImpliedHighlighted  (0),
+   fChangeBits          (0),
+   fDestructing         (kFALSE)
 {
    // Constructor.
 }
@@ -75,6 +111,8 @@ TEveElement::TEveElement(Color_t& main_color) :
 TEveElement::~TEveElement()
 {
    // Destructor.
+
+   fDestructing = kTRUE;
 
    RemoveElementsInternal();
 
@@ -87,48 +125,78 @@ TEveElement::~TEveElement()
 
    for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
       i->fTree->DeleteItem(i->fItem);
+
+   delete fMainTrans;
 }
 
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveElement::SetRnrElNameTitle(const Text_t* name, const Text_t* title)
+const Text_t* TEveElement::GetElementName() const
 {
-   // Virtual function for setting of name and title of render element.
-   // Here we attempt to cast the assigned object into TNamed and call
-   // SetNameTitle() there.
-
-   static const TEveException eh("TEveElement::SetRnrElNameTitle ");
-
-   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
-   if (named)
-      named->SetNameTitle(name, title);
-}
-
-//______________________________________________________________________________
-const Text_t* TEveElement::GetRnrElName() const
-{
-   // Virtual function for retrieveing name of the render-element.
+   // Virtual function for retrieveing name of the element.
    // Here we attempt to cast the assigned object into TNamed and call
    // GetName() there.
 
-   static const TEveException eh("TEveElement::GetRnrElName ");
+   static const TEveException eh("TEveElement::GetElementName ");
 
-   TObject* named = dynamic_cast<TObject*>(GetObject(eh));
+   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
    return named ? named->GetName() : "<no-name>";
 }
 
 //______________________________________________________________________________
-const Text_t*  TEveElement::GetRnrElTitle() const
+const Text_t*  TEveElement::GetElementTitle() const
 {
    // Virtual function for retrieveing title of the render-element.
    // Here we attempt to cast the assigned object into TNamed and call
    // GetTitle() there.
 
-   static const TEveException eh("TEveElement::GetRnrElTitle ");
+   static const TEveException eh("TEveElement::GetElementTitle ");
 
-   TObject* named = dynamic_cast<TObject*>(GetObject(eh));
+   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
    return named ? named->GetTitle() : "<no-title>";
+}
+
+//______________________________________________________________________________
+void TEveElement::SetElementName(const Text_t* name)
+{
+   // Virtual function for setting of name of an element.
+   // Here we attempt to cast the assigned object into TNamed and call
+   // SetName() there.
+
+   static const TEveException eh("TEveElement::SetElementName ");
+
+   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
+   if (named)
+      named->SetName(name);
+}
+
+//______________________________________________________________________________
+void TEveElement::SetElementTitle(const Text_t* title)
+{
+   // Virtual function for setting of title of an element.
+   // Here we attempt to cast the assigned object into TNamed and call
+   // SetTitle() there.
+
+   static const TEveException eh("TEveElement::SetElementTitle ");
+
+   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
+   if (named)
+      named->SetTitle(title);
+}
+
+//______________________________________________________________________________
+void TEveElement::SetElementNameTitle(const Text_t* name, const Text_t* title)
+{
+   // Virtual function for setting of name and title of render element.
+   // Here we attempt to cast the assigned object into TNamed and call
+   // SetNameTitle() there.
+
+   static const TEveException eh("TEveElement::SetElementNameTitle ");
+
+   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
+   if (named)
+      named->SetNameTitle(name, title);
 }
 
 /******************************************************************************/
@@ -164,11 +232,23 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    // Check external references to this and eventually auto-destruct
    // the render-element.
 
-   if(fParents.empty()   &&  fItems.empty()         &&
-      fDenyDestroy <= 0  &&  fDestroyOnZeroRefCnt)
+   UInt_t parent_cnt = 0, item_cnt = 0;
+   if (fSelected)
+   {
+      ++parent_cnt;
+      item_cnt += gEve->GetSelection()->GetNItems();
+   }
+   if (fHighlighted)
+   {
+      ++parent_cnt;
+      item_cnt += gEve->GetHighlight()->GetNItems();
+   }
+
+   if(fParents.size() <= parent_cnt && fItems.size() <= item_cnt &&
+      fDenyDestroy    <= 0          && fDestroyOnZeroRefCnt)
    {
       if (gDebug > 0)
-         Info(eh, Form("auto-destructing '%s' on zero reference count.", GetRnrElName()));
+         Info(eh, Form("auto-destructing '%s' on zero reference count.", GetElementName()));
 
       gEve->PreDeleteElement(this);
       delete this;
@@ -188,7 +268,8 @@ void TEveElement::CollectSceneParents(List_t& scenes)
 }
 
 //______________________________________________________________________________
-void TEveElement::CollectSceneParentsFromChildren(List_t& scenes, TEveElement* parent)
+void TEveElement::CollectSceneParentsFromChildren(List_t&      scenes,
+                                                  TEveElement* parent)
 {
    // Collect scene-parents from all children. This is needed to
    // automatically detect which scenes need to be updated during/after
@@ -220,7 +301,7 @@ void TEveElement::ExpandIntoListTree(TGListTree* ltree,
    // Returns number of inserted elements.
    // If parent already has children, it does nothing.
    //
-   // RnrEl can be inserted in a list-tree several times, thus we can not
+   // Element can be inserted in a list-tree several times, thus we can not
    // search through fItems to get parent here.
    // Anyhow, it is probably known as it must have been selected by the user.
 
@@ -255,17 +336,8 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
 
    static const TEveException eh("TEveElement::AddIntoListTree ");
 
-   TObject* tobj = GetObject(eh);
-   TGListTreeItem* item = ltree->AddItem(parent_lti, tobj->GetName(), this,
-                                         0, 0, kTRUE);
-   item->SetCheckBoxPictures(GetCheckBoxPicture(1, fRnrChildren),
-                             GetCheckBoxPicture(0, fRnrChildren));
-
-   item->SetPictures(GetListTreeIcon(),GetListTreeIcon());
-   item->CheckItem(fRnrSelf);
-
-   if (fMainColorPtr != 0) item->SetColor(GetMainColor());
-   item->SetTipText(tobj->GetTitle());
+   TGListTreeItem* item = new TEveListTreeItem(this);
+   ltree->AddItem(parent_lti, item);
 
    fItems.insert(TEveListTreeInfo(ltree, item));
    ltree->ClearViewPort();
@@ -418,15 +490,8 @@ void TEveElement::UpdateItems()
 
    static const TEveException eh("TEveElement::UpdateItems ");
 
-   TObject* tobj = GetObject(eh);
-
-   for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i) {
-      i->fItem->Rename(tobj->GetName());
-      i->fItem->SetTipText(tobj->GetTitle());
-      i->fItem->CheckItem(fRnrSelf);
-      if (fMainColorPtr != 0) i->fItem->SetColor(GetMainColor());
+   for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
       i->fTree->ClearViewPort();
-   }
 }
 
 /******************************************************************************/
@@ -474,7 +539,7 @@ void TEveElement::PadPaint(Option_t* option)
    static const TEveException eh("TEveElement::PadPaint ");
 
    TObject* obj = 0;
-   if (GetRnrSelf() && (obj = GetObject(eh)))
+   if (GetRnrSelf() && (obj = GetRenderObject(eh)))
       obj->Paint(option);
 
 
@@ -493,19 +558,16 @@ void TEveElement::SetRnrSelf(Bool_t rnr)
    // Set render state of this element, i.e. if it will be published
    // on next scene update pass.
 
+   if (SingleRnrState())
+   {
+      SetRnrState(rnr);
+      return;
+   }
+
    if (rnr != fRnrSelf)
    {
       fRnrSelf = rnr;
-
-      for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
-      {
-         if (i->fItem->IsChecked() != rnr) {
-            i->fItem->SetCheckBoxPictures(GetCheckBoxPicture(1, fRnrChildren),
-                                          GetCheckBoxPicture(0, fRnrChildren));
-            i->fItem->CheckItem(fRnrSelf);
-            i->fTree->ClearViewPort();
-         }
-      }
+      UpdateItems();
    }
 }
 
@@ -515,16 +577,16 @@ void TEveElement::SetRnrChildren(Bool_t rnr)
    // Set render state of this element's children, i.e. if they will
    // be published on next scene update pass.
 
+   if (SingleRnrState())
+   {
+      SetRnrState(rnr);
+      return;
+   }
+
    if (rnr != fRnrChildren)
    {
       fRnrChildren = rnr;
-
-      for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
-      {
-         i->fItem->SetCheckBoxPictures(GetCheckBoxPicture(fRnrSelf, fRnrChildren),
-                                       GetCheckBoxPicture(fRnrSelf, fRnrChildren));
-         i->fTree->ClearViewPort();
-      }
+      UpdateItems();
    }
 }
 
@@ -537,13 +599,7 @@ void TEveElement::SetRnrState(Bool_t rnr)
    if (fRnrSelf != rnr || fRnrChildren != rnr)
    {
       fRnrSelf = fRnrChildren = rnr;
-
-      for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
-      {
-         i->fItem->SetCheckBoxPictures(GetCheckBoxPicture(1,1), GetCheckBoxPicture(0,0));
-         i->fItem->CheckItem(fRnrSelf);
-         i->fTree->ClearViewPort();
-      }
+      UpdateItems();
    }
 }
 
@@ -552,22 +608,19 @@ void TEveElement::SetRnrState(Bool_t rnr)
 //______________________________________________________________________________
 void TEveElement::SetMainColor(Color_t color)
 {
-   // Set main color of the render-element.
+   // Set main color of the element.
    // List-tree-items are updated.
 
    Color_t oldcol = GetMainColor();
+
+   // !!!!! WTF is this? At least should be moved somewhere else ...
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       if ((*i)->GetMainColor() == oldcol) (*i)->SetMainColor(color);
    }
 
    if (fMainColorPtr) {
       *fMainColorPtr = color;
-      for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i) {
-         if (i->fItem->GetColor() != color) {
-            i->fItem->SetColor(GetMainColor());
-            i->fTree->ClearViewPort();
-         }
-      }
+      StampColorSelection();
    }
 }
 
@@ -582,7 +635,86 @@ void TEveElement::SetMainColor(Pixel_t pixel)
 /******************************************************************************/
 
 //______________________________________________________________________________
-TGListTreeItem* TEveElement::AddElement(TEveElement* el)
+TEveTrans* TEveElement::PtrMainTrans()
+{
+   // Return pointer to main transformation. It is created if not yet
+   // existing.
+
+   if (!fMainTrans)
+      InitMainTrans();
+
+   return fMainTrans;
+}
+
+//______________________________________________________________________________
+TEveTrans& TEveElement::RefMainTrans()
+{
+   // Return reference to main transformation. It is created if not yet
+   // existing.
+
+   if (!fMainTrans)
+      InitMainTrans();
+
+   return *fMainTrans;
+}
+
+//______________________________________________________________________________
+void TEveElement::InitMainTrans(Bool_t can_edit)
+{
+   // Initialize the main transformation to identity matrix.
+   // If can_edit is true (default), the user will be able to edit the
+   // transformation parameters via TEveElementEditor.
+
+   if (fMainTrans)
+      fMainTrans->UnitTrans();
+   else
+      fMainTrans = new TEveTrans;
+   fCanEditMainTrans = can_edit;
+}
+
+//______________________________________________________________________________
+void TEveElement::DestroyMainTrans()
+{
+   // Destroy the main transformation matrix, it will always be taken
+   // as identity. Editing of transformation parameters is disabled.
+
+   delete fMainTrans;
+   fMainTrans = 0;
+   fCanEditMainTrans = kFALSE;
+}
+
+//______________________________________________________________________________
+void TEveElement::SetTransMatrix(Double_t* carr)
+{
+   // Set transformation matrix from colum-major array.
+
+   RefMainTrans().SetFrom(carr);
+}
+
+//______________________________________________________________________________
+void TEveElement::SetTransMatrix(const TGeoMatrix& mat)
+{
+   // Set transformation matrix from TGeo's matrix.
+
+   RefMainTrans().SetFrom(mat);
+}
+
+
+/******************************************************************************/
+
+//______________________________________________________________________________
+Bool_t TEveElement::AcceptElement(TEveElement* el)
+{
+   // Check if el can be added to this element.
+   //
+   // In the base-class version we only make sure the new child is not
+   // equal to this.
+
+   return el != this;
+}
+
+//______________________________________________________________________________
+void TEveElement::AddElement(TEveElement* el)
 {
    // Add el to the list of children.
 
@@ -590,13 +722,12 @@ TGListTreeItem* TEveElement::AddElement(TEveElement* el)
 
    if ( ! AcceptElement(el))
       throw(eh + Form("parent '%s' rejects '%s'.",
-                      GetRnrElName(), el->GetRnrElName()));
+                      GetElementName(), el->GetElementName()));
 
    el->AddParent(this);
    fChildren.push_back(el);
-   TGListTreeItem* ret = el->AddIntoListTrees(this);
+   el->AddIntoListTrees(this);
    ElementChanged();
-   return ret;
 }
 
 //______________________________________________________________________________
@@ -647,12 +778,15 @@ void TEveElement::RemoveElementsInternal()
 //______________________________________________________________________________
 void TEveElement::RemoveElements()
 {
-   // Remove all elements. This assumes removing of all elements can be
-   // done more efficiently then looping over them and removing one by
-   // one.
+   // Remove all elements. This assumes removing of all elements can
+   // be done more efficiently then looping over them and removing
+   // them one by one.
 
-   RemoveElementsInternal();
-   ElementChanged();
+   if ( ! fChildren.empty())
+   {
+      RemoveElementsInternal();
+      ElementChanged();
+   }
 }
 
 //______________________________________________________________________________
@@ -660,6 +794,102 @@ void TEveElement::RemoveElementsLocal()
 {
    // Perform additional local removal of all elements.
    // See comment to RemoveelementLocal(TEveElement*).
+}
+
+/******************************************************************************/
+
+//______________________________________________________________________________
+Bool_t TEveElement::HasChild(TEveElement* el)
+{
+   // Check if element el is a child of this element.
+
+   return (std::find(fChildren.begin(), fChildren.end(), el) != fChildren.end());
+}
+
+//______________________________________________________________________________
+TEveElement* TEveElement::FindChild(const TString&  name, const TClass* cls)
+{
+   // Find the first child with given name.  If cls is specified (non
+   // 0), it is also checked.
+   //
+   // Returns 0 if not found.
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if (name.CompareTo((*i)->GetElementName()) == 0)
+      {
+         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
+            return *i;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TEveElement* TEveElement::FindChild(TPRegexp& regexp, const TClass* cls)
+{
+   // Find the first child whose name matches regexp. If cls is
+   // specified (non 0), it is also checked.
+   //
+   // Returns 0 if not found.
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if (regexp.MatchB((*i)->GetElementName()))
+      {
+         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
+            return *i;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TEveElement::FindChildren(List_t& matches,
+                                const TString& name, const TClass* cls)
+{
+   // Find all children with given name and append them to matches
+   // list. If class is specified (non 0), it is also checked.
+   //
+   // Returns number of elements added to the list.
+
+   Int_t count = 0;
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if (name.CompareTo((*i)->GetElementName()) == 0)
+      {
+         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
+         {
+            matches.push_back(*i);
+            ++count;
+         }
+      }
+   }
+   return count;
+}
+
+//______________________________________________________________________________
+Int_t TEveElement::FindChildren(List_t& matches,
+                                TPRegexp& regexp, const TClass* cls)
+{
+   // Find all children whose name matches regexp and append them to
+   // matches list.
+   //
+   // Returns number of elements added to the list.
+
+   Int_t count = 0;
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if (regexp.MatchB((*i)->GetElementName()))
+      {
+         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
+         {
+            matches.push_back(*i);
+            ++count;
+         }
+      }
+   }
+   return count;
 }
 
 /******************************************************************************/
@@ -707,7 +937,7 @@ void TEveElement::Destroy()
    static const TEveException eh("TEveElement::Destroy ");
 
    if (fDenyDestroy > 0)
-      throw(eh + "this element '%s' is protected against destruction.", GetRnrElName());
+      throw(eh + "this element '%s' is protected against destruction.", GetElementName());
 
    gEve->PreDeleteElement(this);
    delete this;
@@ -736,13 +966,13 @@ void TEveElement::DestroyElements()
       else
       {
          if (gDebug > 0)
-            Info(eh, Form("element '%s' is protected agains destruction, removin locally.", c->GetRnrElName()));
-
+            Info(eh, Form("element '%s' is protected agains destruction, removing locally.",
+			  c->GetElementName()));
          RemoveElement(c);
       }
    }
 
-   ElementChanged(kTRUE, kTRUE);
+   gEve->Redraw3D();
 }
 
 /******************************************************************************/
@@ -767,39 +997,154 @@ void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 }
 
 /******************************************************************************/
-// Statics
+// Select/hilite
 /******************************************************************************/
 
 //______________________________________________________________________________
-const TGPicture*
-TEveElement::GetCheckBoxPicture(Bool_t rnrSelf, Bool_t rnrDaughters)
+void TEveElement::SelectElement(Bool_t state)
+{
+   // Set element's selection state. Stamp appropriately.
+
+   if (fSelected != state) {
+      fSelected = state;
+      StampColorSelection();
+   }
+}
+
+//______________________________________________________________________________
+void TEveElement::IncImpliedSelected()
+{
+   // Increase element's implied-selection count. Stamp appropriately.
+
+   if (fImpliedSelected++ == 0)
+      StampColorSelection();
+}
+
+//______________________________________________________________________________
+void TEveElement::DecImpliedSelected()
+{
+   // Decrease element's implied-selection count. Stamp appropriately.
+
+   if (--fImpliedSelected == 0)
+      StampColorSelection();
+}
+
+//______________________________________________________________________________
+void TEveElement::HighlightElement(Bool_t state)
+{
+   // Set element's highlight state. Stamp appropriately.
+
+   if (fHighlighted != state) {
+      fHighlighted = state;
+      StampColorSelection();
+   }
+}
+
+//______________________________________________________________________________
+void TEveElement::IncImpliedHighlighted()
+{
+   // Increase element's implied-highlight count. Stamp appropriately.
+
+   if (fImpliedHighlighted++ == 0)
+      StampColorSelection();
+}
+
+//______________________________________________________________________________
+void TEveElement::DecImpliedHighlighted()
+{
+   // Decrease element's implied-highlight count. Stamp appropriately.
+
+   if (--fImpliedHighlighted == 0)
+      StampColorSelection();
+}
+
+//______________________________________________________________________________
+void TEveElement::FillImpliedSelectedSet(Set_t& impSelSet)
+{
+   // Populate set impSelSet with derived / dependant elements.
+
+   TEveProjectable* p = dynamic_cast<TEveProjectable*>(this);
+   if (p)
+   {
+      p->AddProjectedsToSet(impSelSet);
+   }
+}
+
+//______________________________________________________________________________
+UChar_t TEveElement::GetSelectedLevel() const
+{
+   // Get selection level, needed for rendering selection and
+   // highlight feedback.
+   // This should go to TAtt3D.
+
+   if (fSelected)               return 1;
+   if (fImpliedSelected > 0)    return 2;
+   if (fHighlighted)            return 3;
+   if (fImpliedHighlighted > 0) return 4;
+   return 0;
+}
+
+/******************************************************************************/
+// Stamping
+/******************************************************************************/
+
+//______________________________________________________________________________
+void TEveElement::SetStamp(UChar_t bits)
+{
+   // Set fChangeBits to bits.
+   // Register this element to gEve as stamped.
+
+   fChangeBits = bits;
+   if (!fDestructing) gEve->ElementStamped(this);
+}
+
+//______________________________________________________________________________
+void TEveElement::AddStamp(UChar_t bits)
+{
+   // Add (bitwise or) given stamps to fChangeBits.
+   // Register this element to gEve as stamped.
+
+   fChangeBits |= bits;
+   if (!fDestructing) gEve->ElementStamped(this);
+}
+
+/******************************************************************************/
+// List-tree icons
+/******************************************************************************/
+
+//______________________________________________________________________________
+const TGPicture* TEveElement::GetListTreeIcon(Bool_t open)
+{
+   // Returns pointer to first listtreeicon
+
+   // Need better solution for icon-loading/ids !!!!
+   return fgListTreeIcons[open ? 7 : 0];
+}
+
+//______________________________________________________________________________
+const TGPicture* TEveElement::GetListTreeCheckBoxIcon()
 {
    // Returns list-tree-item check-box picture appropriate for given
    // rendering state.
 
    Int_t idx = 0;
-   if (rnrSelf)       idx = 2;
-   if (rnrDaughters ) idx++;
+   if (fRnrSelf)      idx = 2;
+   if (fRnrChildren ) idx++;
 
    return fgRnrIcons[idx];
 }
 
-//______________________________________________________________________________
-const TGPicture*
-TEveElement::GetListTreeIcon()
-{
-   // Returns pointer to first listtreeicon
-   
-   return fgListTreeIcons[0];
-}
 
-
-//______________________________________________________________________________
+/******************************************************************************/
+/******************************************************************************/
 // TEveElementObjectPtr
+/******************************************************************************/
+
+//______________________________________________________________________________
 //
 // TEveElement with external TObject as a holder of visualization data.
 
-ClassImp(TEveElementObjectPtr)
+ClassImp(TEveElementObjectPtr);
 
 //______________________________________________________________________________
 TEveElementObjectPtr::TEveElementObjectPtr(TObject* obj, Bool_t own) :
@@ -855,9 +1200,10 @@ TEveElementObjectPtr::~TEveElementObjectPtr()
 
 /******************************************************************************/
 /******************************************************************************/
+// TEveElementList
+/******************************************************************************/
 
 //______________________________________________________________________________
-// TEveElementList
 //
 // A list of TEveElements.
 //
@@ -868,7 +1214,7 @@ TEveElementObjectPtr::~TEveElementObjectPtr()
 // !!! should have two ctors (like in TEveElement), one with Color_t&
 // and set fDoColor automatically, based on which ctor is called.
 
-ClassImp(TEveElementList)
+ClassImp(TEveElementList);
 
 //______________________________________________________________________________
 TEveElementList::TEveElementList(const Text_t* n, const Text_t* t, Bool_t doColor) :

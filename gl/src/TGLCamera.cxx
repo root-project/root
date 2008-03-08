@@ -425,14 +425,17 @@ TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
 {
    // Convert a '3D' viewport vertex to 3D world one. The X()/Y() components
    // of viewportVertex are the horizontal/vertical pixel position.
-   // The Z() component is the viewport depth value - for a default depth range this
-   // is 0.0 (at near clip plane) to 1.0 (at far clip plane). Without Z() the viewport
-   // position corresponds to a line in 3D world space - see
-   //    TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) const
+
+   // The Z() component is the viewport depth value - for a default
+   // depth range this is 0.0 (at near clip plane) to 1.0 (at far clip
+   // plane). Without Z() the viewport position corresponds to a line
+   // in 3D world space - see:
+   // TGLLine3 TGLCamera::ViewportToWorld(Double_t viewportX, Double_t viewportY) const
    //
-   // See also OpenGL gluUnProject & glDepth documentation
+   // See also OpenGL gluUnProject & glDepth documentation.
    //
-   // Camera must have valid frustum cache - call Apply() after last modifcation, before using
+   // Camera must have valid frustum cache - call Apply() after last
+   // modifcation, before using.
 
    if (fCacheDirty) {
       Error("TGLCamera::ViewportToWorld()", "cache dirty - must call Apply()");
@@ -720,7 +723,7 @@ Bool_t TGLCamera::AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
 }
 
 //______________________________________________________________________________
-Double_t TGLCamera::AdjustDelta(Int_t screenShift, Double_t deltaFactor,
+Double_t TGLCamera::AdjustDelta(Double_t screenShift, Double_t deltaFactor,
                                 Bool_t mod1, Bool_t mod2) const
 {
    // Adjust a passed screen value and apply modifiers.
@@ -821,22 +824,6 @@ void TGLCamera::SetCenterVec(Double_t x, Double_t y, Double_t z)
    fCamTrans = binv * bt;
 
    IncTimeStamp();
-}
-
-//______________________________________________________________________________
-Bool_t TGLCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
-{
-   // Truck the camera - 'move camera parallel to film plane'.
-   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
-
-   Double_t xstep = AdjustDelta(xDelta, 0.2*fDollyDistance, mod1, mod2);
-   fCamTrans.MoveLF(2, -xstep);
-
-   Double_t ystep = AdjustDelta(yDelta, 0.2*fDollyDistance, mod1, mod2);
-   fCamTrans.MoveLF(3, -ystep);
-
-   IncTimeStamp();
-   return kTRUE;
 }
 
 //______________________________________________________________________________

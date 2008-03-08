@@ -14,12 +14,16 @@
 #include "TEveProjectionManager.h"
 #include "TEveVSDStructs.h"
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveTrackProjected
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Projected copy of a TEveTrack.
 
-ClassImp(TEveTrackProjected)
+ClassImp(TEveTrackProjected);
 
 //______________________________________________________________________________
 TEveTrackProjected::TEveTrackProjected() :
@@ -33,11 +37,11 @@ TEveTrackProjected::TEveTrackProjected() :
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveTrackProjected::SetProjection(TEveProjectionManager* proj, TEveProjectable* model)
+void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
 {
    // This is virtual method from base-class TEveProjected.
-  
-   TEveProjected::SetProjection(proj, model);
+
+   TEveProjected::SetProjection(mng, model);
    TEveTrack* origTrack = dynamic_cast<TEveTrack*>(fProjectable);
 
    SetTrackParams(*origTrack);
@@ -47,11 +51,26 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* proj, TEveProjecta
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEveTrackProjected::SetDepth(Float_t d)
+{
+   // Set depth (z-coordinate) of the projected points.
+
+   SetDepthCommon(d, this, fBBox);
+
+   Int_t    n = Size();
+   Float_t *p = GetP();
+   for (Int_t i = 0; i < n; ++i, p+=3)
+      p[2] = fDepth;
+
+   // !!!! Missing path-marks move. But they are not projected anyway
+}
+
+//______________________________________________________________________________
 void TEveTrackProjected::UpdateProjection()
 {
    // This is virtual method from base-class TEveProjected.
 
-   fProjection = fProjector->GetProjection();
+   fProjection = fManager->GetProjection();
    MakeTrack(kFALSE); // TEveProjectionManager makes recursive calls
 }
 
@@ -125,15 +144,14 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
    // Call base-class, project, find break-points and insert points
    // required for full representation.
 
-   TEveTrack::MakeTrack(recurse);
-
    fBreakPoints.clear();
+   TEveTrack::MakeTrack(recurse);
    if(Size() == 0) return; // All points can be outside of MaxR / MaxZ limits.
 
    // Project points, store originals (needed for break-points).
    Float_t *p = GetP();
    fOrigPnts  = new TEveVector[Size()];
-   for(Int_t i = 0; i < Size(); ++i, p+=3)
+   for (Int_t i = 0; i < Size(); ++i, p+=3)
    {
       fOrigPnts[i].Set(p);
       fProjection->ProjectPoint(p[0], p[1], p[2]);
@@ -198,27 +216,30 @@ void TEveTrackProjected::PrintLineSegments()
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveTrackProjected::CtrlClicked(TEveTrack* /*track*/)
+void TEveTrackProjected::SecSelected(TEveTrack* /*track*/)
 {
     // Virtual method from from base-class TEveTrack.
 
    TEveTrack* t = dynamic_cast<TEveTrack*>(fProjectable);
    if (t)
-      t->CtrlClicked(t);
+      t->SecSelected(t);
 }
 
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveTrackListProjected
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Specialization of TEveTrackList for holding TEveTrackProjected objects.
 
-//______________________________________________________________________________
-ClassImp(TEveTrackListProjected)
+ClassImp(TEveTrackListProjected);
 
 //______________________________________________________________________________
 TEveTrackListProjected::TEveTrackListProjected() :
-   TEveTrackList    (),
+   TEveTrackList (),
    TEveProjected ()
 {
    // Default constructor.
@@ -233,15 +254,39 @@ void TEveTrackListProjected::SetProjection(TEveProjectionManager* proj, TEveProj
 
    TEveProjected::SetProjection(proj, model);
 
-   TEveTrackList& tl   = * dynamic_cast<TEveTrackList*>(model);
+   TEveTrackList& tl = * dynamic_cast<TEveTrackList*>(model);
    SetLineColor(tl.GetLineColor());
    SetLineStyle(tl.GetLineStyle());
    SetLineWidth(tl.GetLineWidth());
    SetMarkerColor(tl.GetMarkerColor());
    SetMarkerStyle(tl.GetMarkerStyle());
-   SetMarkerSize(tl.GetMarkerSize());
-   SetRnrLine(tl.GetRnrLine());
+   SetMarkerSize (tl.GetMarkerSize());
+   SetRnrLine  (tl.GetRnrLine());
    SetRnrPoints(tl.GetRnrPoints());
 
    SetPropagator(tl.GetPropagator());
+}
+
+//______________________________________________________________________________
+void TEveTrackListProjected::SetDepth(Float_t d)
+{
+   // Set depth of all children inheriting from TEveTrackProjected.
+
+   SetDepth(d, this);
+}
+
+//______________________________________________________________________________
+void TEveTrackListProjected::SetDepth(Float_t d, TEveElement* el)
+{
+   // Set depth of all children of el inheriting from TEveTrackProjected.
+
+   TEveTrackProjected* ptrack;
+   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
+   {
+      ptrack = dynamic_cast<TEveTrackProjected*>(*i);
+      if (ptrack)
+         ptrack->SetDepth(d);
+      if (fRecurse)
+         SetDepth(d, *i);
+   }
 }

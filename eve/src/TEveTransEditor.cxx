@@ -70,7 +70,7 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fPos->SetNELength(6);
    fPos->Build(kFALSE, "", "", "");
    fPos->SetLimits(-1e5, 1e5, TGNumberFormat::kNESRealThree);
-   fPos->GetValuator(0)->SetToolTip("X coordinate");   
+   fPos->GetValuator(0)->SetToolTip("X coordinate");
    fPos->GetValuator(1)->SetToolTip("Y coordinate");
    fPos->GetValuator(2)->SetToolTip("Z coordinate");
    fEditTransFrame->AddFrame(fPos, new TGLayoutHints(kLHintsTop , 0,0,0,0));
@@ -84,7 +84,7 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fRot->SetNELength(6);
    fRot->Build(kFALSE, "", "", "");
    fRot->SetLimits(-360, 360, TGNumberFormat::kNESRealOne);
-   fRot->GetValuator(0)->SetToolTip("X coordinate");   
+   fRot->GetValuator(0)->SetToolTip("X coordinate");
    fRot->GetValuator(1)->SetToolTip("Y coordinate");
    fRot->GetValuator(2)->SetToolTip("Z coordinate");
    fEditTransFrame->AddFrame(fRot, new TGLayoutHints(kLHintsTop , 0,0, 0, 0));
@@ -98,7 +98,7 @@ TEveTransSubEditor::TEveTransSubEditor(TGWindow* p) :
    fScale->SetNELength(6);
    fScale->Build(kFALSE, "", "", "");
    fScale->SetLimits(1e-2, 1e2, TGNumberFormat::kNESRealTwo);
-   fScale->GetValuator(0)->SetToolTip("X coordinate");   
+   fScale->GetValuator(0)->SetToolTip("X coordinate");
    fScale->GetValuator(1)->SetToolTip("Y coordinate");
    fScale->GetValuator(2)->SetToolTip("Z coordinate");
    fEditTransFrame->AddFrame(fScale, new TGLayoutHints(kLHintsTop , 0,0,0, 2));

@@ -33,7 +33,6 @@ class TEveTriangleSet : public TEveElement,
    TEveTriangleSet& operator=(const TEveTriangleSet&); // Not implemented
 
 protected:
-
    // Vertex data
    Int_t    fNVerts;
    Float_t* fVerts;        //[3*fNVerts]
@@ -48,14 +47,12 @@ protected:
 
    Color_t  fColor;
    UShort_t fTransp;
-   TEveTrans   fHMTrans;
 
 public:
-
-   TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms=false, Bool_t cols=false);
+   TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms=kFALSE, Bool_t cols=kFALSE);
    ~TEveTriangleSet();
 
-   virtual Bool_t CanEditMainColor() { return kTRUE; }
+   virtual Bool_t CanEditMainColor() const { return kTRUE; }
 
    Float_t* Vertex(Int_t i)         { return &(fVerts[3*i]);      }
    Int_t*   Triangle(Int_t i)       { return &(fTrings[3*i]);     }
@@ -82,10 +79,6 @@ public:
 
    UShort_t GetTransparency() const { return fTransp; }
    void SetTransparency(UShort_t tr) { fTransp = tr; } // *MENU*
-
-   TEveTrans& RefHMTrans() { return fHMTrans; }
-   void SetTransMatrix(Double_t* carr)        { fHMTrans.SetFrom(carr); }
-   void SetTransMatrix(const TGeoMatrix& mat) { fHMTrans.SetFrom(mat);  }
 
    static TEveTriangleSet* ReadTrivialFile(const char* file);
 

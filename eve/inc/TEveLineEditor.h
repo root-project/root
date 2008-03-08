@@ -31,6 +31,7 @@ protected:
 
    TGCheckButton     *fRnrLine;    // Checkbox for line-rendering.
    TGCheckButton     *fRnrPoints;  // Checkbox for point-rendering.
+   TGCheckButton     *fSmooth;     // Checkbox for line smoothing.
 
 public:
    TEveLineEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
@@ -40,8 +41,9 @@ public:
 
    void DoRnrLine();
    void DoRnrPoints();
+   void DoSmooth();
 
-   ClassDef(TEveLineEditor, 1); // Editor for TEveLine class.
+   ClassDef(TEveLineEditor, 0); // Editor for TEveLine class.
 };
 
 #endif

@@ -14,18 +14,25 @@
 #include "TEveSceneInfo.h"
 
 #include "TEveManager.h"
+#include "TEveSelection.h"
 
 #include "TGLSAViewer.h"
 #include "TGLScenePad.h"
 
-#include "TGLOrthoCamera.h" // For fixing defaults in root 5.17.4
+#include "TGLPhysicalShape.h" // For handling OnMouseIdle signal
+#include "TGLLogicalShape.h"  // For handling OnMouseIdle signal
+
+
+//==============================================================================
+//==============================================================================
+// TEveViewer
+//==============================================================================
 
 //______________________________________________________________________________
-// TEveViewer
 //
 // Reve representation of TGLViewer.
 
-ClassImp(TEveViewer)
+ClassImp(TEveViewer);
 
 //______________________________________________________________________________
 TEveViewer::TEveViewer(const Text_t* n, const Text_t* t) :
@@ -40,10 +47,10 @@ TEveViewer::TEveViewer(const Text_t* n, const Text_t* t) :
 /******************************************************************************/
 
 //______________________________________________________________________________
-const TGPicture* TEveViewer::GetListTreeIcon() 
-{ 
+const TGPicture* TEveViewer::GetListTreeIcon(Bool_t)
+{
    //return eveviewer icon
-   return TEveElement::fgListTreeIcons[1]; 
+   return TEveElement::fgListTreeIcons[1];
 }
 
 //______________________________________________________________________________
@@ -55,7 +62,6 @@ void TEveViewer::SetGLViewer(TGLViewer* s)
    fGLViewer = s;
 
    fGLViewer->SetSmartRefresh(kTRUE);
-   // fGLViewer->SetResetCamerasOnUpdate(kFALSE);
    fGLViewer->SetResetCameraOnDoubleClick(kFALSE);
 }
 
@@ -67,6 +73,15 @@ void TEveViewer::SpawnGLViewer(const TGWindow* parent, TGedEditor* ged)
    TGLSAViewer* v = new TGLSAViewer(parent, 0, ged);
    v->ToggleEditObject();
    SetGLViewer(v);
+}
+
+//______________________________________________________________________________
+void TEveViewer::Redraw(Bool_t resetCameras)
+{
+   // Redraw viewer immediately.
+
+   if (resetCameras) fGLViewer->PostSceneBuildSetup(kTRUE);
+   fGLViewer->RequestDraw(TGLRnrCtx::kLODHigh);
 }
 
 /******************************************************************************/
@@ -81,7 +96,7 @@ void TEveViewer::AddScene(TEveScene* scene)
    TGLSceneInfo* glsi = fGLViewer->AddScene(scene->GetGLScene());
    if (glsi != 0) {
       TEveSceneInfo* si = new TEveSceneInfo(this, scene, glsi);
-      gEve->AddElement(si, this);
+      AddElement(si);
    } else {
       throw(eh + "scene already in the viewer.");
    }
@@ -136,16 +151,17 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
    }
 }
 
+
 /******************************************************************************/
 /******************************************************************************/
+// TEveViewerList
 /******************************************************************************/
 
 //______________________________________________________________________________
-// TEveViewerList
 //
 // List of Viewers providing common operations on TEveViewer collections.
 
-ClassImp(TEveViewerList)
+ClassImp(TEveViewerList);
 
 //______________________________________________________________________________
 TEveViewerList::TEveViewerList(const Text_t* n, const Text_t* t) :
@@ -154,6 +170,17 @@ TEveViewerList::TEveViewerList(const Text_t* n, const Text_t* t) :
    // Constructor.
 
    SetChildClass(TEveViewer::Class());
+}
+
+//______________________________________________________________________________
+void TEveViewerList::Connect()
+{
+   // Connect to TGLViewer class-signals.
+
+   TQObject::Connect("TGLViewer", "MouseOver(TGLPhysicalShape*,UInt_t)",
+                     "TEveViewerList", this, "OnMouseOver(TGLPhysicalShape*,UInt_t)");
+   TQObject::Connect("TGLViewer", "Clicked(TObject*,UInt_t,UInt_t)",
+                     "TEveViewerList", this, "OnClicked(TObject*,UInt_t,UInt_t)");
 }
 
 /******************************************************************************/
@@ -170,7 +197,7 @@ void TEveViewerList::RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogic
       {
          // printf(" TEveViewer '%s' changed ... reqesting draw.\n", (*i)->GetObject()->GetName());
 
-         if (resetCameras)        glv->PostSceneBuildSetup(kTRUE);
+         if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
          if (dropLogicals) glv->SetSmartRefresh(kFALSE);
 
          glv->RequestDraw(TGLRnrCtx::kLODHigh);
@@ -220,4 +247,43 @@ void TEveViewerList::SceneDestructing(TEveScene* scene)
             gEve->RemoveElement(sinfo, viewer);
       }
    }
+}
+
+
+/******************************************************************************/
+// Processing of events from TGLViewers.
+/******************************************************************************/
+
+
+//______________________________________________________________________________
+void TEveViewerList::OnMouseOver(TGLPhysicalShape *pshape, UInt_t state)
+{
+   if (state & kKeyShiftMask || state & kKeyMod1Mask)
+      return;
+
+   TObject     *obj = 0;
+   TEveElement *el  = 0;
+
+   if (pshape)
+   {
+      TGLLogicalShape* lshape = const_cast<TGLLogicalShape*>(pshape->GetLogical());
+      obj = lshape->GetExternal();
+      el  = dynamic_cast<TEveElement*>(obj);
+   }
+
+   if (el && !el->IsPickable())
+      el = 0;
+   gEve->GetHighlight()->UserPickedElement(el, kFALSE);
+}
+
+//______________________________________________________________________________
+void TEveViewerList::OnClicked(TObject *obj, UInt_t button, UInt_t state)
+{
+   if (button != kButton1 || state & kKeyShiftMask || state & kKeyMod1Mask)
+      return;
+
+   TEveElement* el = dynamic_cast<TEveElement*>(obj);
+   if (el && !el->IsPickable())
+      el = 0;
+   gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
 }

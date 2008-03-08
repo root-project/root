@@ -1164,8 +1164,6 @@ void TGLUtil::RenderPolyMarkers(const TAttMarker& marker, Float_t* p, Int_t n,
    glPushAttrib(GL_ENABLE_BIT | GL_POINT_BIT | GL_LINE_BIT);
 
    glDisable(GL_LIGHTING);
-   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-   glEnable(GL_COLOR_MATERIAL);
    TGLUtil::Color(marker.GetMarkerColor());
 
    Int_t s = marker.GetMarkerStyle();
@@ -1185,8 +1183,8 @@ void TGLUtil::RenderPoints(const TAttMarker& marker, Float_t* op, Int_t n,
    // Render markers as circular or square points.
    // Color is never changed.
 
-   Int_t style = marker.GetMarkerStyle();
-   Float_t size = 5*marker.GetMarkerSize();
+   Int_t   style = marker.GetMarkerStyle();
+   Float_t size  = 5*marker.GetMarkerSize();
    if (style == 4 || style == 20 || style == 24)
    {
       glEnable(GL_POINT_SMOOTH);
@@ -1206,12 +1204,9 @@ void TGLUtil::RenderPoints(const TAttMarker& marker, Float_t* op, Int_t n,
    glPointSize(size);
 
    // During selection extend picking region for large point-sizes.
-   Bool_t changePM = kFALSE;
-   if (selection && size > pick_radius)
-   {
-      changePM = kTRUE;
+   Bool_t changePM = selection && size > pick_radius;
+   if (changePM)
       BeginExtendPickRegion((Float_t) pick_radius / size);
-   }
 
    Float_t* p = op;
    if (sec_selection)
@@ -1269,7 +1264,7 @@ void TGLUtil::RenderCrosses(const TAttMarker& marker, Float_t* op, Int_t n,
    }
 
    // cross dim
-   const Float_t  d = 2*marker.GetMarkerSize();
+   const Float_t d = 2*marker.GetMarkerSize();
    Float_t* p = op;
    if (sec_selection)
    {
@@ -1309,8 +1304,6 @@ void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
 
    glDisable(GL_LIGHTING);
-   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-   glEnable(GL_COLOR_MATERIAL);
    TGLUtil::Color(aline.GetLineColor());
    glLineWidth(aline.GetLineWidth());
    if (aline.GetLineStyle() > 1) {
@@ -1333,12 +1326,9 @@ void TGLUtil::RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
    }
 
    // During selection extend picking region for large line-widths.
-   Bool_t changePM = kFALSE;
-   if (selection && aline.GetLineWidth() > pick_radius)
-   {
-      changePM = kTRUE;
+   Bool_t changePM = selection && aline.GetLineWidth() > pick_radius;
+   if (changePM)
       BeginExtendPickRegion((Float_t) pick_radius / aline.GetLineWidth());
-   }
 
    Float_t* tp = p;
    glBegin(GL_LINE_STRIP);

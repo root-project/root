@@ -43,19 +43,20 @@ public:
 
    virtual const Text_t* GetName()  const;
    virtual const Text_t* GetTitle() const;
+   virtual const Text_t* GetElementName()  const;
+   virtual const Text_t* GetElementTitle() const;
 
    TGeoNode* GetNode() const { return fNode; }
 
    virtual void   ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
 
-   virtual Bool_t CanEditRnrElement() { return false; }
-   virtual void SetRnrSelf(Bool_t rnr);
-   virtual void SetRnrChildren(Bool_t rnr);
-   virtual void SetRnrState(Bool_t rnr);
+   virtual Bool_t CanEditElement() const { return kFALSE; }
+   virtual void   SetRnrSelf(Bool_t rnr);
+   virtual void   SetRnrChildren(Bool_t rnr);
+   virtual void   SetRnrState(Bool_t rnr);
 
-   virtual Bool_t CanEditMainColor()  { return true; }
+   virtual Bool_t CanEditMainColor() const { return kTRUE; }
    virtual void   SetMainColor(Color_t color);
-   virtual void   SetMainColor(Pixel_t pixel);
 
    void UpdateNode(TGeoNode* node);
    void UpdateVolume(TGeoVolume* volume);
@@ -76,28 +77,29 @@ class TEveGeoTopNode : public TEveGeoNode
 
 protected:
    TGeoManager* fManager;
-   TEveTrans    fGlobalTrans;
    Int_t        fVisOption;
    Int_t        fVisLevel;
+   Int_t        fMaxVisNodes;
 
 public:
-   TEveGeoTopNode(TGeoManager* manager, TGeoNode* node, Int_t visopt=1, Int_t vislvl=3);
+   TEveGeoTopNode(TGeoManager* manager, TGeoNode* node, Int_t visopt=1,
+                  Int_t vislvl=3, Int_t maxvisnds=10000);
    virtual ~TEveGeoTopNode() {}
 
-   virtual Bool_t     CanEditMainHMTrans() { return  kTRUE; }
-   virtual TEveTrans* PtrMainHMTrans()     { return &fGlobalTrans; }
-
-   TEveTrans&   RefGlobalTrans() { return fGlobalTrans; }
-   void         SetGlobalTrans(const TGeoHMatrix* m);
    void         UseNodeTrans();
 
-   Int_t GetVisOption() const { return fVisOption; }
-   void  SetVisOption(Int_t visopt);
-   Int_t GetVisLevel()  const { return fVisLevel; }
-   void  SetVisLevel(Int_t vislvl);
+   Int_t GetVisOption()      const { return fVisOption; }
+   void  SetVisOption(Int_t vo)    { fVisOption = vo;   }
+   Int_t GetVisLevel()       const { return fVisLevel;  }
+   void  SetVisLevel(Int_t vl)     { fVisLevel = vl;    }
+   Int_t GetMaxVisNodes()    const { return fMaxVisNodes; }
+   void  SetMaxVisNodes(Int_t mvn) { fMaxVisNodes = mvn;  }
 
-   virtual Bool_t CanEditRnrElement() { return true; }
-   virtual void SetRnrSelf(Bool_t rnr);
+   virtual Bool_t CanEditElement() const { return kTRUE; }
+   virtual Bool_t SingleRnrState() const { return kTRUE; }
+   virtual void   SetRnrSelf(Bool_t rnr);
+   virtual void   SetRnrChildren(Bool_t rnr);
+   virtual void   SetRnrState(Bool_t rnr);
 
    virtual void Draw(Option_t* option="");
    virtual void Paint(Option_t* option="");
@@ -124,7 +126,6 @@ class TEveGeoShape : public TEveElement,
    TEveGeoShape& operator=(const TEveGeoShape&); // Not implemented
 
 protected:
-   TEveTrans         fHMTrans;
    Color_t           fColor;
    UChar_t           fTransparency;
    TGeoShape*        fShape;
@@ -136,30 +137,23 @@ public:
    TEveGeoShape(const Text_t* name="TEveGeoShape", const Text_t* title=0);
    virtual ~TEveGeoShape();
 
-   virtual Bool_t CanEditMainColor() { return kTRUE; }
+   virtual Bool_t CanEditMainColor() const { return kTRUE; }
 
-   virtual Bool_t  CanEditMainTransparency()      { return kTRUE; }
-   virtual UChar_t GetMainTransparency() const    { return fTransparency; }
-   virtual void    SetMainTransparency(UChar_t t) { fTransparency = t; }
+   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
+   virtual UChar_t GetMainTransparency()     const { return fTransparency; }
+   virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
 
-   virtual Bool_t     CanEditMainHMTrans() { return  kTRUE; }
-   virtual TEveTrans* PtrMainHMTrans()     { return &fHMTrans; }
-
-   TEveTrans& RefHMTrans() { return fHMTrans; }
-   void SetTransMatrix(Double_t* carr)        { fHMTrans.SetFrom(carr); }
-   void SetTransMatrix(const TGeoMatrix& mat) { fHMTrans.SetFrom(mat);  }
-
-   Color_t     GetColor()        { return fColor; }
+   Color_t     GetColor() const  { return fColor; }
    TGeoShape*  GetShape()        { return fShape; }
 
    virtual void Paint(Option_t* option="");
 
    void Save(const char* file, const char* name="Extract");
-   static TEveGeoShape*        ImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
+   static TEveGeoShape* ImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent=0);
 
    // GeoProjectable
-   virtual TBuffer3D*           MakeBuffer3D();
-   virtual TClass*              ProjectedClass() const;
+   virtual TBuffer3D*   MakeBuffer3D();
+   virtual TClass*      ProjectedClass() const;
 
    ClassDef(TEveGeoShape, 1); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };

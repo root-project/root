@@ -29,13 +29,14 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
    fDrawCenter(kFALSE),
    fDrawOrigin(kFALSE),
 
-   fSplitMode(kPosition),
-   fSplitLevel(1)
+   fStepMode(kPosition),
+   fNumTickMarks(7)
 {
    // Constructor.
 
    SetName("ProjectionAxes");
    fText = "Axes Title";
+   fCanEditMainTrans = kFALSE;
 
    fManager->AddDependent(this);
 }
@@ -73,19 +74,9 @@ void TEveProjectionAxes::ComputeBBox()
 }
 
 //______________________________________________________________________________
-void TEveProjectionAxes::SetSplitMode(EMode mode) 
+const TGPicture* TEveProjectionAxes::GetListTreeIcon(Bool_t)
 {
-   // Set axis-splitting mode:
-   //   kPosition - split equidistantly on screen;
-   //   kValue    - split by equal value steps.
+   // Return TEveProjectionAxes icon.
 
-   fSplitMode = mode;
-}
-
-//______________________________________________________________________________
-const TGPicture* TEveProjectionAxes::GetListTreeIcon() 
-{ 
-   // Return icon for this class.
-
-   return TEveElement::fgListTreeIcons[6]; 
+   return TEveElement::fgListTreeIcons[6];
 }

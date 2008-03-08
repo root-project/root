@@ -19,11 +19,16 @@
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
 
+//==============================================================================
+//==============================================================================
+// TEvePolygonSetProjectedEditor
+//==============================================================================
+
 //______________________________________________________________________________
 //
 // GUI editor for class TEvePolygonSetProjected.
 
-ClassImp(TEvePolygonSetProjectedEditor)
+ClassImp(TEvePolygonSetProjectedEditor);
 
 //______________________________________________________________________________
 TEvePolygonSetProjectedEditor::TEvePolygonSetProjectedEditor(const TGWindow *p,
@@ -42,15 +47,15 @@ TEvePolygonSetProjectedEditor::TEvePolygonSetProjectedEditor(const TGWindow *p,
       TGCompositeFrame *f = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
 
       TGLabel *l = new TGLabel(f, "LineColor:");
-      f->AddFrame(l, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 25, 2, 1, 1));
+      f->AddFrame(l, new TGLayoutHints(kLHintsLeft, 2, 2, 1, 1));
       fLineColor = new TGColorSelect(f, 0, -1);
       fLineColor->Connect("ColorSelected(Pixel_t)", "TEvePolygonSetProjectedEditor", this, "DoLineColor(Pixel_t)");
       f->AddFrame(fLineColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
 
-      fLineWidth = new TGNumberEntry(f, 0., 6, -1,
+      fLineWidth = new TGNumberEntry(f, 0., 4, -1,
                                      TGNumberFormat::kNESRealOne, TGNumberFormat::kNEAPositive,
-                                     TGNumberFormat::kNELLimitMinMax, 0.1, 2000.0);
-      fLineWidth->GetNumberEntry()->SetToolTipText("TEveLine witdth of outline.");
+                                     TGNumberFormat::kNELLimitMinMax, 0.1, 20.0);
+      fLineWidth->GetNumberEntry()->SetToolTipText("Line width of outline.");
       fLineWidth->Connect("ValueSet(Long_t)", "TEvePolygonSetProjectedEditor", this, "DoLineWidth()");
       f->AddFrame(fLineWidth, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
 

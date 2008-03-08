@@ -69,7 +69,7 @@ void TEveTriangleSetGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    // Low-level GL rendering.
 
    TEveTriangleSet& refTS = *fM;
-   Bool_t isScaled = refTS.fHMTrans.IsScale();
+   Bool_t isScaled = refTS.RefMainTrans().IsScale();
 
    GLint ex_shade_model;
    glGetIntegerv(GL_SHADE_MODEL, &ex_shade_model);

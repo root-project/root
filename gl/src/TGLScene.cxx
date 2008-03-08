@@ -888,10 +888,13 @@ void TGLScene::AdoptLogical(TGLLogicalShape & shape)
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::DestroyLogical(TObject* logid)
+Bool_t TGLScene::DestroyLogical(TObject* logid, Bool_t mustFind)
 {
    // Destroy logical shape defined by unique 'ID'.
    // Returns kTRUE if found/destroyed - kFALSE otherwise.
+   //
+   // If mustFind is true, an error is reported if the logical is not
+   // found.
 
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyLogical", "expected ModifyLock");
@@ -901,7 +904,8 @@ Bool_t TGLScene::DestroyLogical(TObject* logid)
    LogicalShapeMapIt_t lit = fLogicalShapes.find(logid);
 
    if (lit == fLogicalShapes.end()) {
-      Error("TGLScene::DestroyLogical", "logical not found in map.");
+      if (mustFind)
+         Error("TGLScene::DestroyLogical", "logical not found in map.");
       return kFALSE;
    }
 
@@ -1029,7 +1033,6 @@ Bool_t TGLScene::DestroyPhysical(UInt_t phid)
    DestroyPhysicalInternal(pit);
 
    InvalidateBoundingBox();
-   IncTimeStamp();
 
    return kTRUE;
 }
@@ -1118,14 +1121,28 @@ Bool_t TGLScene::BeginUpdate()
 }
 
 //______________________________________________________________________________
-void TGLScene::EndUpdate()
+void TGLScene::EndUpdate(Bool_t sceneChanged, Bool_t updateViewers)
 {
-   // Exit scene update mode, eventually notify scene consumers.
+   // Exit scene update mode.
+   //
+   // If sceneChanged is true (default), the scene timestamp is
+   // increased and draw-lists etc will be rebuild on next draw
+   // request. If you only changed colors or some other visual
+   // parameters that do not affect object bounding-box or
+   // transformation matrix, you can set it to false.
+   //
+   // If updateViewers is true (default), the viewers using this scene
+   // will be tagged as changed. If sceneChanged is true the
+   // updateViewers should be true as well, unless you take care of
+   // the viewers elsewhere or in some other way.
 
-   IncTimeStamp();
+   if (sceneChanged)
+      IncTimeStamp();
+
    ReleaseLock(kModifyLock);
 
-   TagViewersChanged();
+   if (updateViewers)
+      TagViewersChanged();
 }
 
 //______________________________________________________________________________
@@ -1148,7 +1165,6 @@ void TGLScene::UpdateLogical(TObject* logid)
 
    log->DLCacheClear();
    log->UpdateBoundingBox();
-   IncTimeStamp();
 }
 
 //______________________________________________________________________________
@@ -1217,8 +1233,7 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col
    }
 
    if (log->Ref() != 1) {
-      Error("TGLScene::UpdatePhysioLogical", "expecting a single physical (%d).", log->Ref());
-      return;
+      Warning("TGLScene::UpdatePhysioLogical", "expecting a single physical (%d).", log->Ref());
    }
 
    TGLPhysicalShape* phys = log->fFirstPhysical;
@@ -1245,8 +1260,7 @@ void TGLScene::UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx
    }
 
    if (log->Ref() != 1) {
-      Error("TGLScene::UpdatePhysioLogical", "expecting a single physical (%d).", log->Ref());
-      return;
+      Warning("TGLScene::UpdatePhysioLogical", "expecting a single physical (%d).", log->Ref());
    }
 
    TGLPhysicalShape* phys = log->fFirstPhysical;
@@ -1325,9 +1339,7 @@ TGLLogicalShape * TGLScene::FindLogicalSmartRefresh(TObject* ID) const
       LogicalShapeMap_t* lsm = const_cast<LogicalShapeMap_t*>(&fLogicalShapes);
       lsm->insert(LogicalShapeMapValueType_t(l_shape->ID(), l_shape));
       l_shape->DLCacheClear();
-      TGLObject* globj = dynamic_cast<TGLObject*>(l_shape);
-      if (globj)
-        globj->SetBBox();
+      l_shape->UpdateBoundingBox();
       return l_shape;
    } else {
       return 0;

@@ -40,10 +40,11 @@ TEveTriangleSet::TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms, Bool_t cols) 
    TNamed("TEveTriangleSet", 0),
    fNVerts  (nv), fVerts(0),
    fNTrings (nt), fTrings(0), fTringNorms(0), fTringCols(0),
-   fColor   (2),  fTransp(0),
-   fHMTrans ()
+   fColor   (2),  fTransp(0)
 {
    // Constructor.
+
+   InitMainTrans();
 
    fVerts  = new Float_t[3*fNVerts];
    fTrings = new Int_t  [3*fNTrings];
@@ -156,7 +157,7 @@ void TEveTriangleSet::Paint(Option_t* )
    buffer.fID           = this;
    buffer.fColor        = fColor;
    buffer.fTransparency = fTransp;
-   fHMTrans.SetBuffer3D(buffer);
+   RefMainTrans().SetBuffer3D(buffer);
    buffer.SetSectionsValid(TBuffer3D::kCore);
 
    // We fill kCore on first pass and try with viewer

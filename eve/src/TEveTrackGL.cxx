@@ -71,7 +71,7 @@ void TEveTrackGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec
    for (Int_t j=0; j<rec.GetN(); ++j) printf ("%d ", rec.GetItem(j));
    printf("\n");
 
-   ((TEveTrack*)fM)->CtrlClicked((TEveTrack*)fM);
+   ((TEveTrack*)fM)->SecSelected((TEveTrack*)fM);
 }
 
 //______________________________________________________________________________
@@ -80,18 +80,20 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // GL rendering code.
    // Virtual from TGLLogicalShape.
 
+   TEveLineGL::DirectDraw(rnrCtx);
+
    // path-marks
-   std::vector<TEvePathMark*>& pm = fTrack->fPathMarks;
+   const TEveTrack::vPathMark_t& pms = fTrack->RefPathMarks();
    TEveTrackPropagator& rTP = *fTrack->GetPropagator();
-   if (pm.size())
+   if (pms.size())
    {
-      Float_t* pnts = new Float_t[3*pm.size()]; // maximum
+      Float_t* pnts = new Float_t[3*pms.size()]; // maximum
       Int_t n = 0;
       Bool_t accept;
-      for (std::vector<TEvePathMark*>::iterator i=pm.begin(); i!=pm.end(); ++i)
+      for (TEveTrack::vPathMark_ci pm = pms.begin(); pm != pms.end(); ++pm)
       {
          accept = kFALSE;
-         switch ((*i)->fType)
+         switch (pm->fType)
          {
             case TEvePathMark::kDaughter:
                if (rTP.GetRnrDaughters()) accept = kTRUE;
@@ -105,11 +107,11 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          }
          if (accept)
          {
-            if ((TMath::Abs((*i)->fV.fZ) < rTP.GetMaxZ()) && ((*i)->fV.Perp() < rTP.GetMaxR()))
+            if ((TMath::Abs(pm->fV.fZ) < rTP.GetMaxZ()) && (pm->fV.Perp() < rTP.GetMaxR()))
             {
-               pnts[3*n  ] =(*i)->fV.fX;
-               pnts[3*n+1] =(*i)->fV.fY;
-               pnts[3*n+2] =(*i)->fV.fZ;
+               pnts[3*n  ] = pm->fV.fX;
+               pnts[3*n+1] = pm->fV.fY;
+               pnts[3*n+2] = pm->fV.fZ;
                ++n;
             }
          }
@@ -125,6 +127,4 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       TGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1,
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
-
-   TEveLineGL::DirectDraw(rnrCtx);
 }

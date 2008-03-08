@@ -17,6 +17,7 @@
 class TGWindow;
 class TGedEditor;
 class TGLViewer;
+class TGLPhysicalShape;
 
 class TEveScene;
 
@@ -40,6 +41,7 @@ public:
    TGLViewer* GetGLViewer() const { return fGLViewer; }
    void SetGLViewer(TGLViewer* s);
    void SpawnGLViewer(const TGWindow* parent, TGedEditor* ged);
+   void Redraw(Bool_t resetCameras=kFALSE);
 
    virtual void AddScene(TEveScene* scene);
 
@@ -50,7 +52,7 @@ public:
 
    virtual Bool_t HandleElementPaste(TEveElement* el);
 
-   virtual const TGPicture* GetListTreeIcon();
+   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
    ClassDef(TEveViewer, 0); // Reve representation of TGLViewer.
 };
@@ -66,16 +68,21 @@ private:
    TEveViewerList(const TEveViewerList&);            // Not implemented
    TEveViewerList& operator=(const TEveViewerList&); // Not implemented
 
-protected:
-
 public:
    TEveViewerList(const Text_t* n="TEveViewerList", const Text_t* t="");
    virtual ~TEveViewerList() {}
+
+   virtual void Connect();
 
    void RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogicals);
    void RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals);
 
    void SceneDestructing(TEveScene* scene);
+
+   // --------------------------------
+
+   void OnMouseOver(TGLPhysicalShape* shape, UInt_t state);
+   void OnClicked(TObject *obj, UInt_t button, UInt_t state);
 
    ClassDef(TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.
 };

@@ -87,6 +87,7 @@
 #include "TGSplitter.h"
 #include "TGDNDManager.h"
 #include "TImage.h"
+#include "TObjectSpy.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -410,6 +411,8 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
    if (gDragManager && !fClient->IsEditDisabled() &&
        gDragManager->HandleEvent(event)) return kTRUE;
 
+   TObjectSpy deleteCheck(this);
+
    switch (event->fType) {
 
       case kExpose:
@@ -519,7 +522,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
          break;
    }
 
-   if (TestBit(kNotDeleted))
+   if (deleteCheck.GetObject())
       ProcessedEvent(event);  // emit signal
 
    return kTRUE;

@@ -145,7 +145,7 @@ void TEveQuadSet::AddQuad(Float_t a, Float_t b, Float_t c)
 {
    // Add a quad with a, b and c coordinates. Defaults are applied
    // for sizes.
- 
+
    AddQuad(a, b, c, fDefWidth, fDefHeight);
 }
 

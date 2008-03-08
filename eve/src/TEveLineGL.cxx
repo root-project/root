@@ -15,12 +15,16 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveLineGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GL-renderer for TEveLine class.
 
-ClassImp(TEveLineGL)
+ClassImp(TEveLineGL);
 
 //______________________________________________________________________________
 TEveLineGL::TEveLineGL() : TPointSet3DGL(), fM(0)
@@ -73,11 +77,15 @@ void TEveLineGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    TEveLine& q = *fM;
    if (q.Size() <= 0) return;
 
+   TGLUtil::LockColor(); // Keep color from TGLPhysicalShape.
+   if (q.fRnrLine) {
+      TGLCapabilitySwitch sw_smooth(GL_LINE_SMOOTH, q.fSmooth);
+      TGLCapabilitySwitch sw_blend(GL_BLEND, q.fSmooth);
+      TGLUtil::RenderPolyLine(q, q.GetP(), q.Size());
+   }
+   TGLUtil::UnlockColor();
    if (q.fRnrPoints)
       TGLUtil::RenderPolyMarkers(q, q.GetP(), q.Size(),
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
-
-   if (q.fRnrLine)
-      TGLUtil::RenderPolyLine(q, q.GetP(), q.Size());
 }

@@ -103,6 +103,7 @@
 #pragma link C++ class TString-!;
 #pragma link C++ class TStringRef-!;
 #pragma link C++ class TStringLong-;
+#pragma link C++ class TStringToken;
 #pragma link C++ class TSubString;
 #pragma link C++ class TSysEvtHandler;
 #pragma link C++ class TSystem+;

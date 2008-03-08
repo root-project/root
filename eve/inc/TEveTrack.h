@@ -35,8 +35,9 @@ private:
    TEveTrack& operator=(const TEveTrack&); // Not implemented
 
 public:
-   typedef std::vector<TEvePathMark*>           vpPathMark_t;
-   typedef std::vector<TEvePathMark*>::iterator vpPathMark_i;
+   typedef std::vector<TEvePathMark>    vPathMark_t;
+   typedef vPathMark_t::iterator        vPathMark_i;
+   typedef vPathMark_t::const_iterator  vPathMark_ci;
 
 protected:
    TEveVector         fV;          // Starting vertex
@@ -46,7 +47,7 @@ protected:
    Int_t              fCharge;     // Charge in units of e0
    Int_t              fLabel;      // Simulation label
    Int_t              fIndex;      // Reconstruction index
-   vpPathMark_t       fPathMarks;  // TEveVector of known points along the track
+   vPathMark_t        fPathMarks;  // TEveVector of known points along the track
 
    TEveTrackPropagator *fPropagator;   // Pointer to shared render-style
 
@@ -69,6 +70,9 @@ public:
    void SetPropagator(TEveTrackPropagator* rs);
    void SetAttLineAttMarker(TEveTrackList* tl);
 
+   const TEveVector& GetVertex()   const { return fV; }
+   const TEveVector& GetMomentum() const { return fP; }
+
    Int_t GetPdg()    const   { return fPdg;   }
    void SetPdg(Int_t pdg)    { fPdg = pdg;    }
    Int_t GetCharge() const   { return fCharge; }
@@ -78,10 +82,10 @@ public:
    Int_t GetIndex()  const   { return fIndex; }
    void  SetIndex(Int_t idx) { fIndex = idx;  }
 
-   void          AddPathMark(TEvePathMark* pm) { fPathMarks.push_back(pm); }
-   vpPathMark_t& GetPathMarksRef()               { return fPathMarks; }
-   const vpPathMark_t& GetPathMarksRef() const   { return fPathMarks; }
-   void          SortPathMarksByTime();
+   void  AddPathMark(const TEvePathMark& pm) { fPathMarks.push_back(pm); }
+   void  SortPathMarksByTime();
+         vPathMark_t& RefPathMarks()       { return fPathMarks; }
+   const vPathMark_t& RefPathMarks() const { return fPathMarks; }
 
    //--------------------------------
 
@@ -96,10 +100,10 @@ public:
 
    //--------------------------------
 
-   virtual void CtrlClicked(TEveTrack*); // *SIGNAL*
+   virtual void SecSelected(TEveTrack*); // *SIGNAL*
    virtual void SetLineStyle(Style_t lstyle);
 
-   virtual const TGPicture* GetListTreeIcon();
+   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
    virtual TClass* ProjectedClass() const;
 
@@ -121,10 +125,10 @@ private:
    TEveTrackList(const TEveTrackList&);            // Not implemented
    TEveTrackList& operator=(const TEveTrackList&); // Not implemented
 
-   Bool_t               fRecurse;    // Recurse when propagating marker/line attributes to tracks.
-
 protected:
    TEveTrackPropagator* fPropagator;   // Basic track rendering parameters, not enforced to elements.
+
+   Bool_t               fRecurse;    // Recurse when propagating marker/line/etc attributes to tracks.
 
    Bool_t               fRnrLine;    // Render track as line.
    Bool_t               fRnrPoints;  // Render track as points.
@@ -147,12 +151,12 @@ public:
    void  FindMomentumLimits(TEveElement* el, Bool_t recurse);
 
    void  SetPropagator(TEveTrackPropagator* rs);
-   TEveTrackPropagator*  GetPropagator(){return fPropagator;}
+   TEveTrackPropagator* GetPropagator() { return fPropagator; }
 
    //--------------------------------
 
    virtual void   SetMainColor(Color_t c);
-   virtual void   SetLineColor(Color_t c){SetMainColor(c);}
+   virtual void   SetLineColor(Color_t c) { SetMainColor(c); }
    virtual void   SetLineColor(Color_t c, TEveElement* el);
    virtual void   SetLineWidth(Width_t w);
    virtual void   SetLineWidth(Width_t w, TEveElement* el);

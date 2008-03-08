@@ -41,6 +41,7 @@
 #include "TGIdleHandler.h"
 #include "TImage.h"
 #include "TGScrollBar.h"
+#include "TGTextEntry.h"
 
 //_____________________________________________________________________________
 //
@@ -1111,6 +1112,178 @@ Bool_t TGHtml::HandleFocusChange(Event_t *event)
 }
 
 //______________________________________________________________________________
+TGHtmlInput *TGHtml::GetInputElement(int x, int y)
+{
+   // This routine searchs for a hyperlink beneath the coordinates x,y
+   // and returns a pointer to the HREF for that hyperlink. The text
+   // is held in one of the markup argv[] fields of the <a> markup.
+
+   TGHtmlInput *p;     // For looping over all controls
+   int vx, vy, vw, vh;    // Part of the virtual canvas that is visible
+   int cnt = 0;       // Number of visible controls
+
+   vx = fVisible.fX;
+   vy = fVisible.fY;
+   vw = fCanvas->GetWidth();
+   vh = fCanvas->GetHeight();
+   for (p = firstInput; p; p = p->iNext) {
+      if (p->frame == 0) continue;
+      if (p->y < vy + vh && p->y + p->h > vy &&
+          p->x < vx + vw && p->x + p->w > vx) {
+         if ((x > p->x) && (y > p->y) && (x < (p->x + p->w)) &&
+             (y < (p->y + p->h)) ) {
+            return p;         
+         }
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TGHtml::HandleHtmlInput(TGHtmlInput *pr, Event_t *event)
+{
+
+   Window_t childdum;
+   Event_t eventSt;
+   eventSt.fType      = event->fType;
+   eventSt.fWindow    = event->fWindow;
+   eventSt.fTime      = event->fTime;
+   eventSt.fX         = 2;
+   eventSt.fY         = 2;
+   eventSt.fXRoot     = event->fXRoot;
+   eventSt.fYRoot     = event->fYRoot;
+   eventSt.fCode      = event->fCode;
+   eventSt.fState     = event->fState;
+   eventSt.fWidth     = event->fWidth;
+   eventSt.fHeight    = event->fHeight;
+   eventSt.fCount     = event->fCount;
+   eventSt.fSendEvent = event->fSendEvent;
+   eventSt.fHandle    = event->fHandle;
+   eventSt.fFormat    = event->fFormat;
+   eventSt.fUser[0]   = event->fUser[0];
+   eventSt.fUser[1]   = event->fUser[1];
+   eventSt.fUser[2]   = event->fUser[2];
+   eventSt.fUser[3]   = event->fUser[3];
+   eventSt.fUser[4]   = event->fUser[4];
+   gVirtualX->TranslateCoordinates(GetId(), pr->frame->GetId(),
+                                   event->fX, event->fY, eventSt.fX, 
+                                   eventSt.fY, childdum);
+
+   const char *name = pr->MarkupArg("name", 0);
+   const char *val = pr->MarkupArg("value", 0);
+   switch (pr->itype) {
+      case INPUT_TYPE_Submit:
+      case INPUT_TYPE_Button: {
+         TGButton *b = (TGButton *) pr->frame;
+         Bool_t was = !b->IsDown();
+         b->HandleButton(&eventSt);
+         Bool_t now = !b->IsDown();
+         if (!was && now) {
+            if (pr->itype == INPUT_TYPE_Submit)
+               SubmitClicked(val);   // emit SubmitClicked
+            else
+               ButtonClicked(name, val);   // emit ButtonClicked
+         }
+         break;
+      }
+      case INPUT_TYPE_Radio: {
+         TGRadioButton *rb = (TGRadioButton *) pr->frame;
+         Bool_t was = !rb->IsDown();
+         rb->HandleButton(&eventSt);
+         Bool_t now = !rb->IsDown();
+         if ((!was && now) || (was && !now)) {
+            HandleRadioButton(pr);
+            RadioChanged(name, val);      // emit RadioChanged
+         }
+         break;
+      }
+      case INPUT_TYPE_Checkbox: {
+         TGCheckButton *cb = (TGCheckButton *) pr->frame;
+         Bool_t was = !cb->IsDown();
+         cb->HandleButton(&eventSt);
+         Bool_t now = !cb->IsDown();
+         if ((!was && now) || (was && !now))
+            CheckToggled(name, !now, val);   // emit CheckToggled
+         break;
+      }
+      case INPUT_TYPE_Text:
+      case INPUT_TYPE_Password: {
+         TGTextEntry *te = (TGTextEntry *) pr->frame;
+         te->SetFocus();
+         break;
+      }
+      default:
+         break;
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGHtml::HandleRadioButton(TGHtmlInput *p)
+{
+
+   TGHtmlInput *pr;
+   for (pr = firstInput; pr; pr = pr->iNext) {
+      if ((pr->pForm == p->pForm) && (pr->itype == INPUT_TYPE_Radio)) {
+         if (pr != p) {
+            if (strcmp(pr->MarkupArg("name", ""), p->MarkupArg("name", "")) == 0) {
+               ((TGRadioButton *)pr->frame)->SetState(kButtonUp);
+            }
+         }
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGHtml::ButtonClicked(const char *name, const char *val)
+{
+   // Emit ButtonClicked() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)name;
+   args[1] = (Long_t)val;
+
+   Emit("ButtonClicked(char*,char*)", args);
+}
+
+//______________________________________________________________________________
+void TGHtml::CheckToggled(const char *name, Bool_t on, const char *val)
+{
+   // Emit CheckToggled() signal.
+
+   Long_t args[3];
+
+   args[0] = (Long_t)name;
+   args[1] = on;
+   args[2] = (Long_t)val;
+
+   Emit("CheckToggled(char*,Bool_t,char*)", args);
+}
+
+//______________________________________________________________________________
+void TGHtml::RadioChanged(const char *name, const char *val)
+{
+   // Emit RadioChanged() signal.
+
+   Long_t args[2];
+
+   args[0] = (Long_t)name;
+   args[1] = (Long_t)val;
+
+   Emit("RadioChanged(char*,char*)", args);
+}
+
+//______________________________________________________________________________
+void TGHtml::SubmitClicked(const char *val)
+{
+   // Emit SubmitClicked() signal.
+
+   Emit("SubmitClicked(char*)", val);
+}
+
+//______________________________________________________________________________
 Bool_t TGHtml::HandleButton(Event_t *event)
 {
    //
@@ -1119,6 +1292,13 @@ Bool_t TGHtml::HandleButton(Event_t *event)
 
    ch = fCanvas->GetHeight();
    amount = fScrollVal.fY * TMath::Max(ch/6, 1);
+
+   int ix = event->fX + fVisible.fX;
+   int iy = event->fY + fVisible.fY;
+   TGHtmlInput *pr = GetInputElement(ix, iy);
+   if (pr) {
+      HandleHtmlInput(pr, event);
+   }
    if ((event->fType == kButtonPress) && (event->fCode == kButton1)) {
       int x = event->fX + fVisible.fX;
       int y = event->fY + fVisible.fY;

@@ -11,13 +11,12 @@
 
 #include "TEveProjectionAxesEditor.h"
 #include "TEveProjectionAxes.h"
+#include "TEveGValuators.h"
 
-#include "TGNumberEntry.h"
 #include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGLabel.h"
 #include "TG3DLine.h"
-#include "TGNumberEntry.h"
 
 //______________________________________________________________________________
 // GUI editor for TEveProjectionAxes.
@@ -31,8 +30,8 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
 
-   fSplitMode(0),
-   fSplitLevel(0),
+   fStepMode(0),
+   fNumTickMarks(0),
 
    fCenterFrame(0),
    fDrawCenter(0),
@@ -41,34 +40,28 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
    // Constructor.
 
    MakeTitle("TEveProjectionAxis");
-   {
-      TGHorizontalFrame* f = new TGHorizontalFrame(this);
-      TGLabel* lab = new TGLabel(f, "StepMode");
-      f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 6, 1, 2));
-      fSplitMode = new TGComboBox(f, "Position");
-      fSplitMode->AddEntry("Value", 1);
-      fSplitMode->AddEntry("Position", 0);
-      fSplitMode->GetTextEntry()->SetToolTipText("Set tick-marks on equidistant values/screen position.");
-      TGListBox* lb = fSplitMode->GetListBox();
-      lb->Resize(lb->GetWidth(), 2*18);
-      fSplitMode->Resize(80, 20);
-      fSplitMode->Connect("Selected(Int_t)", "TEveProjectionAxesEditor",
-                       this, "DoSplitMode(Int_t)");
-      f->AddFrame(fSplitMode, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-      AddFrame(f);
-   }
-   {
-      TGHorizontalFrame* f = new TGHorizontalFrame(this);
-      TGLabel* lab = new TGLabel(f, "SplitLevel");
-      f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 8, 1, 2));
 
-      fSplitLevel = new TGNumberEntry(f, 0, 3, -1,TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
-                                   TGNumberFormat::kNELLimitMinMax, 0, 7);
-      fSplitLevel->GetNumberEntry()->SetToolTipText("Number of tick-marks TMath::Power(2, level).");
-      fSplitLevel->Connect("ValueSet(Long_t)", "TEveProjectionAxesEditor", this, "DoSplitLevel()");
-      f->AddFrame(fSplitLevel, new TGLayoutHints(kLHintsTop, 1, 1, 1, 2));
-      AddFrame(f, new TGLayoutHints(kLHintsTop, 0, 0, 0, 3) );
-   }
+   TGHorizontalFrame* f = new TGHorizontalFrame(this);
+   TGLabel* lab = new TGLabel(f, "TickMark Step:");
+   f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 3, 1, 2));
+   fStepMode = new TGComboBox(f, "Position");
+   fStepMode->AddEntry("Value", 1);
+   fStepMode->AddEntry("Position", 0);
+   fStepMode->GetTextEntry()->SetToolTipText("Set tick-marks on equidistant values/screen position.");
+   TGListBox* lb = fStepMode->GetListBox();
+   lb->Resize(lb->GetWidth(), 2*18);
+   fStepMode->Resize(80, 20);
+   fStepMode->Connect("Selected(Int_t)", "TEveProjectionAxesEditor", this, "DoStepMode(Int_t)");
+   f->AddFrame(fStepMode, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   AddFrame(f);
+
+   fNumTickMarks = new TEveGValuator(this, "TickMark Num:", 90, 0);
+   fNumTickMarks->SetLabelWidth(87);
+   fNumTickMarks->SetNELength(4);
+   fNumTickMarks->Build();
+   fNumTickMarks->SetLimits(3, 50);
+   fNumTickMarks->Connect("ValueSet(Double_t)", "TEveProjectionAxesEditor", this, "DoNumTickMarks()");
+   AddFrame(fNumTickMarks, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
    /**************************************************************************/
    // center tab
@@ -113,8 +106,8 @@ void TEveProjectionAxesEditor::SetModel(TObject* obj)
 
    fM = dynamic_cast<TEveProjectionAxes*>(obj);
 
-   fSplitMode->Select(fM->GetSplitMode(), kFALSE);
-   fSplitLevel->SetNumber(fM->GetSplitLevel());
+   fStepMode->Select(fM->GetStepMode(), kFALSE);
+   fNumTickMarks->SetValue(fM->GetNumTickMarks());
 
    fDrawCenter->SetState(fM->GetDrawCenter()  ? kButtonDown : kButtonUp);
    fDrawOrigin->SetState(fM->GetDrawOrigin()  ? kButtonDown : kButtonUp);
@@ -140,21 +133,20 @@ void TEveProjectionAxesEditor::DoDrawCenter()
 }
 
 //______________________________________________________________________________
-void TEveProjectionAxesEditor::DoSplitMode(Int_t mode)
+void TEveProjectionAxesEditor::DoStepMode(Int_t mode)
 {
-   // Slot for setting split info mode.
+   // Slot for setting tick-mark step mode.
 
    TEveProjectionAxes::EMode em = (TEveProjectionAxes::EMode ) mode;
-   fM->SetSplitMode(em);
+   fM->SetStepMode(em);
    Update();
 }
 
 //______________________________________________________________________________
-void TEveProjectionAxesEditor::DoSplitLevel()
+void TEveProjectionAxesEditor::DoNumTickMarks()
 {
-   // Slot for setting tick-mark density.
-
-   fM->SetSplitLevel((Int_t)fSplitLevel->GetNumber());
+   // Slot for setting number of tick-marks.
+   fM->SetNumTickMarks((Int_t)fNumTickMarks->GetValue());
    Update();
 }
 

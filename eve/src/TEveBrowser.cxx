@@ -14,6 +14,7 @@
 #include "TEveUtil.h"
 #include "TEveElement.h"
 #include "TEveManager.h"
+#include "TEveSelection.h"
 #include "TEveGedEditor.h"
 
 #include "TGFileBrowser.h"
@@ -53,23 +54,84 @@
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 
+
+//==============================================================================
+//==============================================================================
+// TEveListTreeItem
+//==============================================================================
+
 //______________________________________________________________________________
+//
+// Special list-tree-item for Eve.
+//
+// Most state is picked directly from TEveElement, no need to store it
+// locally nor to manage its consistency.
+//
+// Handles also selected/highlighted colors and, in the future,
+// drag-n-drop.
+
+ClassImp(TEveListTreeItem);
+
+//______________________________________________________________________________
+void TEveListTreeItem::NotSupported(const char* func) const
+{
+   // Warn about access to function members that should never be called.
+   // TGListTree calls them in cases that are not used by Eve.
+
+   Warning(Form("TEveListTreeItem::%s()", func), "not supported.");
+}
+
+//______________________________________________________________________________
+Pixel_t TEveListTreeItem::GetActiveColor() const
+{
+   // Return highlight color corresponding to current state of TEveElement.
+
+   switch (fElement->GetSelectedLevel())
+   {
+      case 1: return TColor::Number2Pixel(kBlue - 2);
+      case 2: return TColor::Number2Pixel(kBlue - 6);
+      case 3: return TColor::Number2Pixel(kCyan - 2);
+      case 4: return TColor::Number2Pixel(kCyan - 6);
+   }
+   return TGFrame::GetDefaultSelectedBackground();
+}
+
+//______________________________________________________________________________
+void TEveListTreeItem::Toggle()
+{
+   // Item's check-box state has been toggled ... forward to element's
+   // render-state.
+
+   fElement->SetRnrState(!IsChecked());
+   fElement->ElementChanged(kTRUE, kTRUE);
+}
+
+
+//==============================================================================
+//==============================================================================
 // TEveGListTreeEditorFrame
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
 //
 
-ClassImp(TEveGListTreeEditorFrame)
+ClassImp(TEveGListTreeEditorFrame);
 
 //______________________________________________________________________________
-TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const Text_t* name, Int_t width, Int_t height) :
-   TGMainFrame(gClient->GetRoot(), width, height),
-   fCtxMenu     (0),
-   fNewSelected (0)
+TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t width, Int_t height) :
+   TGMainFrame (p ? p : gClient->GetRoot(), width, height),
+   fFrame      (0),
+   fLTFrame    (0),
+   fListTree   (0),
+   fSplitter   (0),
+   fEditor     (0),
+   fCtxMenu    (0),
+   fSignalsConnected (kFALSE)
 {
    // Constructor.
 
-   SetWindowName(name);
    SetCleanup(kNoCleanup);
 
    fFrame = new TGCompositeFrame(this, width, height, kVerticalFrame);
@@ -82,6 +144,7 @@ TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const Text_t* name, Int_t wid
    fListTree->Associate(fFrame);
    fListTree->SetColorMode(TGListTree::EColorMarkupMode(TGListTree::kColorUnderline | TGListTree::kColorBox));
    fListTree->SetAutoCheckBoxPic(kFALSE);
+   fListTree->SetUserControl(kTRUE);
    fLTCanvas->SetContainer(fListTree);
    fLTFrame->AddFrame(fLTCanvas, new TGLayoutHints
                       (kLHintsNormal | kLHintsExpandX | kLHintsExpandY, 1, 1, 1, 1));
@@ -119,15 +182,6 @@ TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const Text_t* name, Int_t wid
 
    fCtxMenu = new TContextMenu("", "");
 
-   fListTree->Connect("Checked(TObject*,Bool_t)", "TEveGListTreeEditorFrame",
-                      this, "ItemChecked(TObject*, Bool_t)");
-   fListTree->Connect("Clicked(TGListTreeItem*, Int_t, Int_t, Int_t)", "TEveGListTreeEditorFrame",
-                      this, "ItemClicked(TGListTreeItem*, Int_t, Int_t, Int_t)");
-   fListTree->Connect("DoubleClicked(TGListTreeItem*, Int_t)", "TEveGListTreeEditorFrame",
-                      this, "ItemDblClicked(TGListTreeItem*, Int_t)");
-   fListTree->Connect("KeyPressed(TGListTreeItem*, ULong_t, ULong_t)", "TEveGListTreeEditorFrame",
-                      this, "ItemKeyPress(TGListTreeItem*, UInt_t, UInt_t)");
-
    Layout();
    MapSubwindows();
    MapWindow();
@@ -137,6 +191,8 @@ TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const Text_t* name, Int_t wid
 TEveGListTreeEditorFrame::~TEveGListTreeEditorFrame()
 {
    // Destructor.
+
+   DisconnectSignals();
 
    delete fCtxMenu;
 
@@ -148,6 +204,42 @@ TEveGListTreeEditorFrame::~TEveGListTreeEditorFrame()
    delete fLTCanvas;
    delete fLTFrame;
    delete fFrame;
+}
+
+//______________________________________________________________________________
+void TEveGListTreeEditorFrame::ConnectSignals()
+{
+   // Connect list-tree signals.
+
+   fListTree->Connect("MouseOver(TGListTreeItem*, UInt_t)", "TEveGListTreeEditorFrame",
+                      this, "ItemBelowMouse(TGListTreeItem*, UInt_t)");
+   fListTree->Connect("Clicked(TGListTreeItem*, Int_t, UInt_t, Int_t, Int_t)", "TEveGListTreeEditorFrame",
+                      this, "ItemClicked(TGListTreeItem*, Int_t, UInt_t, Int_t, Int_t)");
+   fListTree->Connect("DoubleClicked(TGListTreeItem*, Int_t)", "TEveGListTreeEditorFrame",
+                      this, "ItemDblClicked(TGListTreeItem*, Int_t)");
+   fListTree->Connect("KeyPressed(TGListTreeItem*, ULong_t, ULong_t)", "TEveGListTreeEditorFrame",
+                      this, "ItemKeyPress(TGListTreeItem*, UInt_t, UInt_t)");
+
+   fSignalsConnected = kTRUE;
+}
+
+//______________________________________________________________________________
+void TEveGListTreeEditorFrame::DisconnectSignals()
+{
+   // Disconnect list-tree signals.
+
+   if (!fSignalsConnected) return;
+
+   fListTree->Disconnect("MouseOver(TGListTreeItem*, UInt_t)",
+                      this, "ItemBelowMouse(TGListTreeItem*, UInt_t)");
+   fListTree->Disconnect("Clicked(TGListTreeItem*, Int_t, UInt_t, Int_t, Int_t)",
+                      this, "ItemClicked(TGListTreeItem*, Int_t, UInt_t, Int_t, Int_t)");
+   fListTree->Disconnect("DoubleClicked(TGListTreeItem*, Int_t)",
+                      this, "ItemDblClicked(TGListTreeItem*, Int_t)");
+   fListTree->Disconnect("KeyPressed(TGListTreeItem*, ULong_t, ULong_t)",
+                      this, "ItemKeyPress(TGListTreeItem*, UInt_t, UInt_t)");
+
+   fSignalsConnected = kFALSE;
 }
 
 /******************************************************************************/
@@ -241,20 +333,16 @@ void TEveGListTreeEditorFrame::ReconfToVertical()
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveGListTreeEditorFrame::ItemChecked(TObject* obj, Bool_t state)
+void TEveGListTreeEditorFrame::ItemBelowMouse(TGListTreeItem *entry, UInt_t /*mask*/)
 {
-   // Item has been checked, propagate state change and redraw.
+   // Different item is below mouse.
 
-   // Item's user-data was blindly casted into TObject in the caller.
-   // We recast it blindly back into the TEveElement.
-
-   TEveElement* rnrEl = (TEveElement*) obj;
-   gEve->ElementChecked(rnrEl, state);
-   gEve->Redraw3D();
+   TEveElement* el = entry ? (TEveElement*) entry->GetUserData() : 0;
+   gEve->GetHighlight()->UserPickedElement(el, kFALSE);
 }
 
 //______________________________________________________________________________
-void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
+void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, UInt_t mask, Int_t x, Int_t y)
 {
    // Item has been clicked, based on mouse button do:
    // M1 - select, show in editor;
@@ -266,18 +354,18 @@ void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, Int_
 
    static const TEveException eh("TEveGListTreeEditorFrame::ItemClicked ");
 
-   TEveElement* re = (TEveElement*)item->GetUserData();
-   if(re == 0) return;
-   TObject* obj = re->GetObject(eh);
+   TEveElement* el = (TEveElement*) item->GetUserData();
+   if (el == 0) return;
+   TObject* obj = el->GetObject(eh);
 
    switch (btn)
    {
       case 1:
-         gEve->ElementSelect(re);
+         gEve->GetSelection()->UserPickedElement(el, mask & kKeyControlMask);
          break;
 
       case 2:
-         if (gEve->ElementPaste(re))
+         if (gEve->ElementPaste(el))
             gEve->Redraw3D();
          break;
 
@@ -285,6 +373,7 @@ void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, Int_
          // If control pressed, show menu for render-element itself.
          // event->fState & kKeyControlMask
          // ??? how do i get current event?
+         // !!!!! Have this now ... fix.
          if (obj) fCtxMenu->Popup(x, y, obj);
          break;
 
@@ -302,12 +391,12 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
 
    if (btn != 1) return;
 
-   TEveElement* re = (TEveElement*) item->GetUserData();
-   if (re == 0) return;
+   TEveElement* el = (TEveElement*) item->GetUserData();
+   if (el == 0) return;
 
-   re->ExpandIntoListTree(fListTree, item);
+   el->ExpandIntoListTree(fListTree, item);
 
-   TObject* obj = re->GetObject(eh);
+   TObject* obj = el->GetObject(eh);
    if (obj)
    {
       // Browse geonodes.
@@ -324,7 +413,7 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
                           n->GetDaughter(i)->GetVolume()->GetName(),
                           n->GetDaughter(i)->GetNdaughters());
 
-               TGListTreeItem* child = fListTree->AddItem( item, title.Data());
+               TGListTreeItem* child = fListTree->AddItem(item, title.Data());
                child->SetUserData(n->GetDaughter(i));
             }
          }
@@ -333,85 +422,75 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
 }
 
 //______________________________________________________________________________
-void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym, UInt_t /*mask*/)
+void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
 {
    // A key has been pressed for an item.
-   // Only <Delete> key is handled here.
+   //
+   // Only <Delete>, <Enter> and <Return> keys are handled here,
+   // otherwise the control is passed back to TGListTree.
 
    static const TEveException eh("TEveGListTreeEditorFrame::ItemKeyPress ");
 
-   // replace entry with selected!
-   entry = fListTree->GetSelected();
+   entry = fListTree->GetCurrent();
    if (entry == 0) return;
 
-   // !!! This is overly complex because TGListTree takes too much initiative.
-   if (keysym == kKey_Delete)
+   TEveElement* el = (TEveElement*) entry->GetUserData();
+
+   fListTree->SetEventHandled(); // Reset back to false in default case.
+
+   switch (keysym)
    {
-      TEveElement* rnr_el = dynamic_cast<TEveElement*>
-         ((TEveElement*) entry->GetUserData());
-      if (rnr_el == 0)
-         return;
-
-      if (entry->GetParent())
+      case kKey_Delete:
       {
-         if (rnr_el->GetDenyDestroy() > 0 && rnr_el->GetNItems() == 1)
-            throw(eh + "DestroyDenied set for this item.");
-
-         TEveElement* parent_re = dynamic_cast<TEveElement*>
-            ((TEveElement*) entry->GetParent()->GetUserData());
-
-         if (parent_re)
+         if (entry->GetParent())
          {
-            ResetSelectedTimer(entry);
-            gEve->RemoveElement(rnr_el, parent_re);
+            if (el->GetDenyDestroy() > 0 && el->GetNItems() == 1)
+               throw(eh + "DestroyDenied set for this item.");
+
+            TEveElement* parent = (TEveElement*) entry->GetParent()->GetUserData();
+
+            if (parent)
+            {
+               gEve->RemoveElement(el, parent);
+               gEve->Redraw3D();
+            }
+         }
+         else
+         {
+            if (el->GetDenyDestroy() > 0)
+               throw(eh + "DestroyDenied set for this top-level item.");
+            gEve->RemoveFromListTree(el, fListTree, entry);
             gEve->Redraw3D();
          }
+         break;
       }
-      else
+
+      case kKey_Enter:
+      case kKey_Return:
       {
-         if (rnr_el->GetDenyDestroy() > 0)
-            throw(eh + "DestroyDenied set for this top-level item.");
-         ResetSelectedTimer(entry);
-         gEve->RemoveFromListTree(rnr_el, fListTree, entry);
-         gEve->Redraw3D();
+         gEve->GetSelection()->UserPickedElement(el, mask & kKeyControlMask);
+         break;
+      }
+
+      default:
+      {
+         fListTree->SetEventHandled(kFALSE);
+         break;
       }
    }
 }
 
-//______________________________________________________________________________
-void TEveGListTreeEditorFrame::ResetSelectedTimer(TGListTreeItem* lti)
-{
-   // Reset timer needed for proper re-selection after deletion of an
-   // item.
 
-   fNewSelected = lti->GetPrevSibling();
-   if (! fNewSelected) {
-      fNewSelected = lti->GetNextSibling();
-      if (! fNewSelected)
-         fNewSelected = lti->GetParent();
-   }
-
-   TTimer::SingleShot(0, IsA()->GetName(), this, "ResetSelected()");
-}
-
-//______________________________________________________________________________
-void TEveGListTreeEditorFrame::ResetSelected()
-{
-   // Callback for timer needed for proper re-selection after deletion
-   // of an item.
-
-   fListTree->HighlightItem(fNewSelected);
-   fListTree->SetSelected(fNewSelected);
-   fNewSelected = 0;
-}
-
-
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveBrowser
-//
-// Specialization of TRootBrowser for Reve.
+//==============================================================================
 
-ClassImp(TEveBrowser)
+//______________________________________________________________________________
+//
+// Specialization of TRootBrowser for Eve.
+
+ClassImp(TEveBrowser);
 
 //______________________________________________________________________________
 void TEveBrowser::SetupCintExport(TClass* cl)
@@ -442,40 +521,70 @@ void TEveBrowser::CalculateReparentXY(TGObject* parent, Int_t& x, Int_t& y)
 
 namespace
 {
-enum EReveMenu_e {
+enum EEveMenu_e {
    kNewViewer,  kNewScene,  kNewProjector,
    kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
-   kVerticalBrowser
+   kVerticalBrowser,
+   kSel_PS_Ignore, kSel_PS_Element, kSel_PS_Projectable, kSel_PS_Compound,
+   kHil_PS_Ignore, kHil_PS_Element, kHil_PS_Projectable, kHil_PS_Compound,
 };
+
 }
 
 //______________________________________________________________________________
 TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    TRootBrowser(0, "Eve Main Window", w, h, "", kFALSE),
-   fFileBrowser(0)
+   fFileBrowser(0),
+   fEvePopup   (0),
+   fSelPopup   (0),
+   fHilPopup   (0)
 {
    // Constructor.
 
    // Construct Eve menu.
 
-   fRevePopup = new TGPopupMenu(gClient->GetRoot());
-   fRevePopup->AddEntry("New &Viewer",      kNewViewer);
-   fRevePopup->AddEntry("New &Scene",       kNewScene);
-   fRevePopup->AddEntry("New &Projector",   kNewProjector);
-   fRevePopup->AddSeparator();
-   fRevePopup->AddEntry("New &Browser",     kNewBrowser);
-   fRevePopup->AddEntry("New &Canvas",      kNewCanvas);
-   fRevePopup->AddEntry("New Canvas Ext",   kNewCanvasExt);
-   fRevePopup->AddEntry("New Text Editor",  kNewTextEditor);
-   // fRevePopup->AddEntry("New HTML Browser", kNewHtmlBrowser);
-   fRevePopup->AddSeparator();
-   fRevePopup->AddEntry("Vertical browser", kVerticalBrowser);
-   fRevePopup->CheckEntry(kVerticalBrowser);
+   fEvePopup = new TGPopupMenu(gClient->GetRoot());
+   fEvePopup->AddEntry("New &Viewer",      kNewViewer);
+   fEvePopup->AddEntry("New &Scene",       kNewScene);
+   fEvePopup->AddEntry("New &Projector",   kNewProjector);
+   fEvePopup->AddSeparator();
+   fEvePopup->AddEntry("New &Browser",     kNewBrowser);
+   fEvePopup->AddEntry("New &Canvas",      kNewCanvas);
+   fEvePopup->AddEntry("New Canvas Ext",   kNewCanvasExt);
+   fEvePopup->AddEntry("New Text Editor",  kNewTextEditor);
+   // fEvePopup->AddEntry("New HTML Browser", kNewHtmlBrowser);
+   fEvePopup->AddSeparator();
 
-   fRevePopup->Connect("Activated(Int_t)", "TEveBrowser",
-                       this, "ReveMenu(Int_t)");
+   {
+      fSelPopup = new TGPopupMenu(gClient->GetRoot());
+      fSelPopup->AddEntry("Ignore",      kSel_PS_Ignore);
+      fSelPopup->AddEntry("Element",     kSel_PS_Element);
+      fSelPopup->AddEntry("Projectable", kSel_PS_Projectable);
+      fSelPopup->AddEntry("Compound",    kSel_PS_Compound);
+      fSelPopup->RCheckEntry(kSel_PS_Ignore + gEve->GetSelection()->GetPickToSelect(),
+                             kSel_PS_Ignore, kSel_PS_Compound);
+      fEvePopup->AddPopup("Selection", fSelPopup);
+   }
+   {
+      fHilPopup = new TGPopupMenu(gClient->GetRoot());
+      fHilPopup->AddEntry("Ignore",      kHil_PS_Ignore);
+      fHilPopup->AddEntry("Element",     kHil_PS_Element);
+      fHilPopup->AddEntry("Projectable", kHil_PS_Projectable);
+      fHilPopup->AddEntry("Compound",    kHil_PS_Compound);
+      fHilPopup->RCheckEntry(kHil_PS_Ignore + gEve->GetHighlight()->GetPickToSelect(),
+                             kHil_PS_Ignore, kHil_PS_Compound);
+      fEvePopup->AddPopup("Highlight", fHilPopup);
+   }
 
-   fMenuBar->AddPopup("&Eve", fRevePopup, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
+   fEvePopup->AddSeparator();
+   fEvePopup->AddEntry("Vertical browser", kVerticalBrowser);
+   fEvePopup->CheckEntry(kVerticalBrowser);
+
+
+   fEvePopup->Connect("Activated(Int_t)", "TEveBrowser",
+                       this, "EveMenu(Int_t)");
+
+   fMenuBar->AddPopup("&Eve", fEvePopup, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
 
    fPreMenuFrame->ChangeOptions(fPreMenuFrame->GetOptions() | kRaisedFrame);
    fTopMenuFrame->Layout();
@@ -485,7 +594,7 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveBrowser::ReveMenu(Int_t id)
+void TEveBrowser::EveMenu(Int_t id)
 {
    // Handle events from Eve menu.
 
@@ -501,7 +610,7 @@ void TEveBrowser::ReveMenu(Int_t id)
 
       case kNewProjector: {
          TEveElement* pr = (TEveElement*) (gROOT->GetClass("TEveProjectionManager")->New());
-         pr->SetRnrElNameTitle("Projector", "User-created projector.");
+         pr->SetElementNameTitle("Projector", "User-created projector.");
          gEve->AddToListTree(pr, kTRUE);
          break;
       }
@@ -539,15 +648,35 @@ void TEveBrowser::ReveMenu(Int_t id)
          }
          break;
 
+      case kSel_PS_Ignore:
+      case kSel_PS_Element:
+      case kSel_PS_Projectable:
+      case kSel_PS_Compound:
+         gEve->GetSelection()->SetPickToSelect(id - kSel_PS_Ignore);
+         fSelPopup->RCheckEntry(kSel_PS_Ignore + gEve->GetSelection()->GetPickToSelect(),
+                                kSel_PS_Ignore, kSel_PS_Compound);
+         break;
+
+      case kHil_PS_Ignore:
+      case kHil_PS_Element:
+      case kHil_PS_Projectable:
+      case kHil_PS_Compound:
+         gEve->GetHighlight()->SetPickToSelect(id - kHil_PS_Ignore);
+         fHilPopup->RCheckEntry(kHil_PS_Ignore + gEve->GetHighlight()->GetPickToSelect(),
+                                kHil_PS_Ignore, kHil_PS_Compound);
+         break;
+
       case kVerticalBrowser:
-         if (fRevePopup->IsEntryChecked(kVerticalBrowser)) {
+         if (fEvePopup->IsEntryChecked(kVerticalBrowser)) {
             gEve->GetLTEFrame()->ReconfToHorizontal();
-            fRevePopup->UnCheckEntry(kVerticalBrowser);
+            fEvePopup->UnCheckEntry(kVerticalBrowser);
          } else {
             gEve->GetLTEFrame()->ReconfToVertical();
-            fRevePopup->CheckEntry(kVerticalBrowser);
+            fEvePopup->CheckEntry(kVerticalBrowser);
          }
          break;
+
+
 
       default:
          break;
@@ -628,8 +757,17 @@ TGFileBrowser* TEveBrowser::MakeFileBrowser()
    TBrowserImp    imp;
    TBrowser      *tb = new TBrowser("Pipi", "Strel", &imp);
    TGFileBrowser *fb = new TGFileBrowser(gClient->GetRoot(), tb, 200, 500);
-   tb->SetBrowserImp((TBrowserImp *)fb);
+//   tb->SetBrowserImp((TBrowserImp *)fb);
+   tb->SetBrowserImp((TBrowserImp *)this);
    fb->SetBrowser(tb);
    fb->SetNewBrowser(this);
+   gROOT->GetListOfBrowsers()->Remove(tb);
    return fb;
+}
+//______________________________________________________________________________
+void TEveBrowser::ReallyDelete()
+{
+   // Really delete the browser and the this GUI.
+
+   delete this;    // will in turn delete this object
 }

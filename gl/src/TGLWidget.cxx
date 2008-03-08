@@ -25,6 +25,8 @@
 #include "TGLIncludes.h"
 #include "TGLUtil.h"
 
+#include "TGLEventHandler.h"
+
 /******************************************************************************/
 //TGLWidgetContainer
 /******************************************************************************/
@@ -42,60 +44,117 @@ ClassImp(TGLWidgetContainer)
 //______________________________________________________________________________
 TGLWidgetContainer::TGLWidgetContainer(TGLWidget *owner, Window_t id, const TGWindow *parent)
                      : TGCompositeFrame(gClient, id, parent),
-                       fOwner(owner)
+                       fOwner(owner), fEventHandler(0)
 {
    //Constructor.
+}
+
+//______________________________________________________________________________
+Bool_t TGLWidgetContainer::HandleCrossing(Event_t *ev)
+{
+   // Handle mouse crossing event.
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->HandleCrossing((Event_t *)0x%lx)", this, ev));
+      return kTRUE;
+   }
+   if ((ev->fType == kEnterNotify) &&
+       (!gVirtualX->InheritsFrom("TGX11")) &&
+       (gVirtualX->GetInputFocus() != GetId())) {
+      gVirtualX->SetInputFocus(GetId());
+   }
+   if (fEventHandler)
+      return fEventHandler->HandleCrossing(ev);
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TGLWidgetContainer::HandleButton(Event_t *ev)
 {
    //Delegate call to the owner.
-   return fOwner->HandleButton(ev);
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->HandleButton((Event_t *)0x%lx)", this, ev));
+      return kTRUE;
+   }
+   if (fEventHandler)
+      return fEventHandler->HandleButton(ev);
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TGLWidgetContainer::HandleDoubleClick(Event_t *ev)
 {
    //Delegate call to the owner.
-   return fOwner->HandleDoubleClick(ev);
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->HandleDoubleClick((Event_t *)0x%lx)", this, ev));
+      return kTRUE;
+   }
+   if (fEventHandler)
+      return fEventHandler->HandleDoubleClick(ev);
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TGLWidgetContainer::HandleConfigureNotify(Event_t *ev)
 {
    //Delegate call to the owner.
-   return fOwner->HandleConfigureNotify(ev);
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->HandleConfigureNotify((Event_t *)0x%lx)", this, ev));
+      return kTRUE;
+   }
+   if (fEventHandler)
+      return fEventHandler->HandleConfigureNotify(ev);
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLWidgetContainer::HandleFocusChange(Event_t *ev)
+{
+   //Delegate call to the owner.
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->HandleFocusChange((Event_t *)0x%lx)", this, ev));
+      return kTRUE;
+   }
+   if (fEventHandler)
+      return fEventHandler->HandleFocusChange(ev);
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TGLWidgetContainer::HandleKey(Event_t *ev)
 {
    //Delegate call to the owner.
-   return fOwner->HandleKey(ev);
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->HandleKey((Event_t *)0x%lx)", this, ev));
+      return kTRUE;
+   }
+   if (fEventHandler)
+      return fEventHandler->HandleKey(ev);
+   return kFALSE;
 }
 
 //______________________________________________________________________________
 Bool_t TGLWidgetContainer::HandleMotion(Event_t *ev)
 {
    //Delegate call to the owner.
-   return fOwner->HandleMotion(ev);
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->HandleMotion((Event_t *)0x%lx)", this, ev));
+      return kTRUE;
+   }
+   if (fEventHandler)
+      return fEventHandler->HandleMotion(ev);
+   return kFALSE;
 }
-
-/*
-//______________________________________________________________________________
-Bool_t TGLWidgetContainer::HandleExpose(Event_t *ev)
-{
-   //Delegate call to the owner.
-   return fOwner->HandleExpose(ev);
-}
-*/
 
 //______________________________________________________________________________
 void TGLWidgetContainer::DoRedraw()
 {
    //Delegate call to the owner.
-   return fOwner->Repaint();
+//   if (!gVirtualX->IsCmdThread()) {
+//      gROOT->ProcessLineFast(Form("((TGLWidgetContainer *)0x%lx)->DoRedraw()", this));
+//      return;
+//   }
+   if (fEventHandler)
+      return fEventHandler->Repaint();
 }
 
 
@@ -159,6 +218,7 @@ TGLWidget::TGLWidget(const TGWindow &p, Bool_t select,
       gVirtualX->SelectInput(
                              fContainer->GetId(), kKeyPressMask | kExposureMask | kPointerMotionMask
                              | kStructureNotifyMask | kFocusChangeMask
+                             | kEnterWindowMask | kLeaveWindowMask
                             );
       gVirtualX->SetInputFocus(fContainer->GetId());
    }
@@ -186,6 +246,7 @@ TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select,
       gVirtualX->SelectInput(
                              fContainer->GetId(), kKeyPressMask | kExposureMask | kPointerMotionMask
                              | kStructureNotifyMask | kFocusChangeMask
+                             | kEnterWindowMask | kLeaveWindowMask
                             );
       gVirtualX->SetInputFocus(fContainer->GetId());
    }
@@ -211,6 +272,7 @@ TGLWidget::TGLWidget(const TGWindow &p, Bool_t select,
       gVirtualX->SelectInput(
                              fContainer->GetId(), kKeyPressMask | kExposureMask | kPointerMotionMask
                              | kStructureNotifyMask | kFocusChangeMask
+                             | kEnterWindowMask | kLeaveWindowMask
                             );
       gVirtualX->SetInputFocus(fContainer->GetId());
    }
@@ -237,6 +299,7 @@ TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select,
       gVirtualX->SelectInput(
                              fContainer->GetId(), kKeyPressMask | kExposureMask | kPointerMotionMask
                              | kStructureNotifyMask | kFocusChangeMask
+                             | kEnterWindowMask | kLeaveWindowMask
                             );
       gVirtualX->SetInputFocus(fContainer->GetId());
    }
@@ -296,103 +359,6 @@ const TGLContext *TGLWidget::GetContext()const
    //Get gl context.
    return fGLContext.get();
 }
-
-//______________________________________________________________________________
-Bool_t TGLWidget::HandleButton(Event_t *ev)
-{
-   //Signal. Under Win32 I have to switch between
-   //threads to let direct usage of gl code.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleButton((Event_t *)0x%lx)", this, ev));
-      return kTRUE;
-   }
-
-   Emit("HandleButton(Event_t*)", (Long_t)ev);
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLWidget::HandleDoubleClick(Event_t *ev)
-{
-   //Signal. Under Win32 I have to switch between
-   //threads to let direct usage of gl code.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleDoubleClick((Event_t *)0x%lx)", this, ev));
-      return kTRUE;
-   }
-
-   Emit("HandleDoubleClick(Event_t*)", (Long_t)ev);
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLWidget::HandleConfigureNotify(Event_t *ev)
-{
-   //Signal. Under Win32 I have to switch between
-   //threads to let direct usage of gl code.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleConfigureNotify((Event_t *)0x%lx)", this, ev));
-      return kTRUE;
-   }
-
-   Emit("HandleConfigureNotify(Event_t*)", (Long_t)ev);
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLWidget::HandleKey(Event_t *ev)
-{
-   //Signal. Under Win32 I have to switch between
-   //threads to let direct usage of gl code.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleKey((Event_t *)0x%lx)", this, ev));
-      return kTRUE;
-   }
-
-   Emit("HandleKey(Event_t*)", (Long_t)ev);
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLWidget::HandleMotion(Event_t *ev)
-{
-   //Signal. Under Win32 I have to switch between
-   //threads to let direct usage of gl code.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleMotion((Event_t *)0x%lx)", this, ev));
-      return kTRUE;
-   }
-
-   Emit("HandleMotion(Event_t*)", (Long_t)ev);
-
-   return kTRUE;
-}
-
-/*
-//______________________________________________________________________________
-Bool_t TGLWidget::HandleExpose(Event_t *ev)
-{
-   //Signal. Under Win32 I have to switch between
-   //threads to let direct usage of gl code.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleExpose((Event_t *)0x%lx)", this, ev));
-      return kTRUE;
-   }
-
-   MakeCurrent();
-   InitGL();
-   PaintGL();
-   SwapBuffers();
-
-   Emit("HandleExpose(Event_t*)", (Long_t)ev);
-
-   return kTRUE;
-}
-*/
 
 //______________________________________________________________________________
 Int_t TGLWidget::GetWindowIndex()const
@@ -716,23 +682,6 @@ void TGLWidget::SetFormat()
 #endif
 
 //______________________________________________________________________________
-void TGLWidget::Repaint()
-{
-   //Forse re-drawing of gl-widget.
-/*   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->Repaint()", this));
-      return;
-   }
-
-   MakeCurrent();
-   InitGL();
-   PaintGL();
-   SwapBuffers();*/
-
-   Emit("Repaint()");
-}
-
-//______________________________________________________________________________
 void TGLWidget::AddContext(TGLContext *ctx)
 {
    //Register gl-context created for this window.
@@ -756,4 +705,11 @@ void TGLWidget::ExtractViewport(Int_t *vp)const
    vp[1] = 0;
    vp[2] = GetWidth();
    vp[3] = GetHeight();
+}
+
+//______________________________________________________________________________
+void TGLWidget::SetEventHandler(TGEventHandler *eh)
+{ 
+   fEventHandler = eh; 
+   fContainer->SetEventHandler(eh);
 }

@@ -166,6 +166,7 @@ public:
    virtual void DecRefCount(TEveElement* re);
 
    virtual void UpdateBackPtrItems();
+   virtual void StampBackPtrElements(UChar_t stamps);
 
    ClassDef(TEveRefBackPtr, 0); // Base-class for reference-counted objects with reverse references to TEveElement objects.
 };

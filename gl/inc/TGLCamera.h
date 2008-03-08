@@ -162,8 +162,8 @@ protected:
    Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
                                 Int_t screenShift, Int_t screenShiftRange,
                                 Bool_t mod1, Bool_t mod2) const;
-   Double_t   AdjustDelta(Int_t screenShift, Double_t deltaFactor,
-                                Bool_t mod1, Bool_t mod2) const;
+   Double_t   AdjustDelta(Double_t screenShift, Double_t deltaFactor,
+                          Bool_t mod1, Bool_t mod2) const;
 
    // Internal cache update - const as the actual camera configuration is unaffected
    void       UpdateCache() const;
@@ -187,7 +187,7 @@ public:
 
    virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2) = 0;
-   virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
+   virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2) = 0;
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t RotateRad(Double_t hRotate, Double_t vRotate);
 
@@ -241,7 +241,7 @@ public:
    void    SetVAxisMinAngle(Float_t x){fVAxisMinAngle = x;}
 
    virtual void Configure(Double_t zoom, Double_t dolly, Double_t center[3],
-                  Double_t hRotate, Double_t vRotate) = 0;
+                          Double_t hRotate, Double_t vRotate) = 0;
    // Cameras expanded-frustum interest box
    Bool_t OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) const;
    Bool_t UpdateInterest(Bool_t force);
@@ -250,7 +250,7 @@ public:
    // Debuging - draw frustum and interest boxes
    void  DrawDebugAids() const;
 
-   ClassDef(TGLCamera,0); // abstract camera base class
+   ClassDef(TGLCamera,0); // Camera abstract base class.
 };
 
 inline const TGLPlane & TGLCamera::FrustumPlane(EFrustumPlane plane) const

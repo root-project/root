@@ -21,7 +21,7 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
    }
    q->RefitPlex();
 
-   TEveTrans& t = q->RefHMTrans();
+   TEveTrans& t = q->RefMainTrans();
    t.SetPos(x, y, z);
 
    if (register)
@@ -54,7 +54,7 @@ TEveQuadSet* quad_test_emc(Float_t x=0, Float_t y=0, Float_t z=0,
    }
    q->RefitPlex();
 
-   TEveTrans& t = q->RefHMTrans();
+   TEveTrans& t = q->RefMainTrans();
    t.SetPos(x, y, z);
 
    gEve->AddElement(q);
@@ -82,7 +82,7 @@ TEveQuadSet* quad_test_circ()
    }
    q->RefitPlex();
 
-   TEveTrans& t = q->RefHMTrans();
+   TEveTrans& t = q->RefMainTrans();
    t.SetPos(0, 0, 300);
 
    gEve->AddElement(q);
@@ -109,7 +109,7 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
       }
       q->RefitPlex();
 
-      TEveTrans& t = q->RefHMTrans();
+      TEveTrans& t = q->RefMainTrans();
       t.SetPos(x, y, z);
 
       if (register)
@@ -129,7 +129,7 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
       }
       q->RefitPlex();
 
-      TEveTrans& t = q->RefHMTrans();
+      TEveTrans& t = q->RefMainTrans();
       t.SetPos(x, y, z);
 
       if (register)
@@ -162,7 +162,7 @@ TEveQuadSet* quad_test_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
       }
       q->RefitPlex();
 
-      TEveTrans& t = q->RefHMTrans();
+      TEveTrans& t = q->RefMainTrans();
       t.SetPos(x, y, z);
 
       if (register)

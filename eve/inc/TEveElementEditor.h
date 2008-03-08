@@ -17,6 +17,7 @@
 class TGCheckButton;
 class TGNumberEntry;
 class TGColorSelect;
+class TGLabel;
 
 class TEveElement;
 class TEveTransSubEditor;
@@ -30,11 +31,13 @@ protected:
    TEveElement         *fRE; // Model object.
 
    TGHorizontalFrame   *fHFrame;
+   TGLabel             *fPreLabel;
    TGCheckButton       *fRnrSelf;
    TGCheckButton       *fRnrChildren;
+   TGCheckButton       *fRnrState;
    TGColorSelect       *fMainColor;
    TGNumberEntry       *fTransparency;
-   TEveTransSubEditor  *fHMTrans;
+   TEveTransSubEditor  *fTrans;
 
 public:
    TEveElementEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -45,6 +48,7 @@ public:
 
    void DoRnrSelf();
    void DoRnrChildren();
+   void DoRnrState();
    void DoMainColor(Pixel_t color);
    void DoTransparency();
 

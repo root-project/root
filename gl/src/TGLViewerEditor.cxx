@@ -365,7 +365,7 @@ void TGLViewerEditor::CreateStyleTab()
 
    // LightSet
    fLightSet = new TGLLightSetSubEditor(this);
-   fLightSet->Connect("Changed", "TGLViewerEditor", this, "ViewerRedraw()");
+   fLightSet->Connect("Changed()", "TGLViewerEditor", this, "ViewerRedraw()");
    AddFrame(fLightSet, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
 }
 
@@ -435,7 +435,7 @@ void TGLViewerEditor::CreateClippingTab()
    fClipFrame = CreateEditorTabSubFrame("Clipping");
 
    fClipSet = new TGLClipSetSubEditor(fClipFrame);
-   fClipSet->Connect("Changed", "TGLViewerEditor", this, "ViewerRedraw()");
+   fClipSet->Connect("Changed()", "TGLViewerEditor", this, "ViewerRedraw()");
    fClipFrame->AddFrame(fClipSet, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
 }
 

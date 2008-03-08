@@ -679,7 +679,7 @@ class TGWin32RefreshTimer : public TTimer {
 
 public:
    TGWin32RefreshTimer() : TTimer(100, kTRUE) { if (gSystem) gSystem->AddTimer(this); }
-   ~TGWin32RefreshTimer() {}
+   ~TGWin32RefreshTimer() { if (gSystem) gSystem->RemoveTimer(this); }
    Bool_t Notify()
    {
       Reset();
@@ -5715,8 +5715,6 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          xev.button.x_root = ev.fXRoot;
          xev.button.y_root = ev.fYRoot;
          MapModifierState(ev.fState, xev.button.state, kTRUE); // button mask
-         if (ev.fType == kButtonRelease)
-            xev.button.state |= GDK_RELEASE_MASK;
          xev.button.button = ev.fCode; // button code
       }
       if (ev.fType == kSelectionNotify) {
@@ -5899,9 +5897,6 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fXRoot = xev.button.x_root;
          ev.fYRoot = xev.button.y_root;
          MapModifierState(ev.fState, xev.button.state, kFALSE);   // button mask
-         if (ev.fType == kButtonRelease) {
-            ev.fState |= kButtonReleaseMask;
-         }
          ev.fCode = xev.button.button; // button code
          POINT tpoint;
          tpoint.x = xev.button.x;

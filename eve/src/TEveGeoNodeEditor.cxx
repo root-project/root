@@ -176,15 +176,16 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
                                            UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
 
-   fTopNodeRE (0),
-   fVisOption (0),
-   fVisLevel  (0)
+   fTopNodeRE   (0),
+   fVisOption   (0),
+   fVisLevel    (0),
+   fMaxVisNodes (0)
 {
    // Constructor.
 
    MakeTitle("GeoTopNode");
 
-   Int_t labelW = 58;
+   Int_t labelW = 64;
 
    fVisOption = new TEveGValuator(this, "VisOption:", 90, 0);
    fVisOption->SetLabelWidth(labelW);
@@ -202,9 +203,19 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
    fVisLevel->SetNELength(4);
    fVisLevel->Build();
    fVisLevel->SetLimits(0, 10, 10, TGNumberFormat::kNESInteger);
-   fVisLevel->SetToolTip("Level (depth) to which the geometry is traversed.");
+   fVisLevel->SetToolTip("Level (depth) to which the geometry is traversed.\nWhen zero, maximum number of nodes to draw can be specified.");
    fVisLevel->Connect("ValueSet(Double_t)", "TEveGeoTopNodeEditor", this, "DoVisLevel()");
    AddFrame(fVisLevel, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+
+   fMaxVisNodes = new TEveGValuator(this, "MaxNodes:", 90, 0);
+   fMaxVisNodes->SetLabelWidth(labelW);
+   fMaxVisNodes->SetShowSlider(kFALSE);
+   fMaxVisNodes->SetNELength(6);
+   fMaxVisNodes->Build();
+   fMaxVisNodes->SetLimits(100, 999999, 0, TGNumberFormat::kNESInteger);
+   fMaxVisNodes->SetToolTip("Maximum number of nodes to draw.");
+   fMaxVisNodes->Connect("ValueSet(Double_t)", "TEveGeoTopNodeEditor", this, "DoMaxVisNodes()");
+   AddFrame(fMaxVisNodes, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
 /******************************************************************************/
@@ -216,8 +227,13 @@ void TEveGeoTopNodeEditor::SetModel(TObject* obj)
 
    fTopNodeRE = dynamic_cast<TEveGeoTopNode*>(obj);
 
-   fVisOption->SetValue(fTopNodeRE->GetVisOption());
-   fVisLevel ->SetValue(fTopNodeRE->GetVisLevel());
+   fVisOption  ->SetValue(fTopNodeRE->GetVisOption());
+   fVisLevel   ->SetValue(fTopNodeRE->GetVisLevel());
+   fMaxVisNodes->SetValue(fTopNodeRE->GetMaxVisNodes());
+   if (fTopNodeRE->GetVisLevel() > 0)
+      fMaxVisNodes->UnmapWindow();
+   else
+      fMaxVisNodes->MapWindow();
 }
 
 /******************************************************************************/
@@ -237,5 +253,14 @@ void TEveGeoTopNodeEditor::DoVisLevel()
    // Slot for VisLevel.
 
    fTopNodeRE->SetVisLevel(Int_t(fVisLevel->GetValue()));
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveGeoTopNodeEditor::DoMaxVisNodes()
+{
+   // Slot for MaxVisNodes.
+
+   fTopNodeRE->SetMaxVisNodes(Int_t(fMaxVisNodes->GetValue()));
    Update();
 }

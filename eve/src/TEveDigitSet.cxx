@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include "TEveDigitSet.h"
-
 #include "TEveManager.h"
+#include "TEveTrans.h"
+
 
 #include "TColor.h"
 
@@ -58,10 +59,11 @@ TEveDigitSet::TEveDigitSet(const Text_t* n, const Text_t* t) :
    fRenderMode     (kRM_Fill),
    fDisableLigting (kTRUE),
    fEmitSignals    (kFALSE),
-   fHistoButtons   (kTRUE),
-   fHMTrans        ()
+   fHistoButtons   (kTRUE)
 {
    // Constructor.
+
+   InitMainTrans();
 }
 
 //______________________________________________________________________________
@@ -114,9 +116,8 @@ void TEveDigitSet::SetMainColor(Color_t color)
 
    if (fFrame) {
       fFrame->SetFrameColor(color);
-      fFrame->UpdateBackPtrItems();
+      fFrame->StampBackPtrElements(kCBColorSelection);
    }
-   gEve->Redraw3D();
 }
 
 /******************************************************************************/
@@ -217,7 +218,7 @@ void TEveDigitSet::Paint(Option_t* /*option*/)
    buff.fID           = this;
    buff.fColor        = fFrame ? fFrame->GetFrameColor() : 1;
    buff.fTransparency = 0;
-   fHMTrans.SetBuffer3D(buff);
+   RefMainTrans().SetBuffer3D(buff);
    buff.SetSectionsValid(TBuffer3D::kCore);
 
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
@@ -231,7 +232,7 @@ void TEveDigitSet::DigitSelected(Int_t idx)
    // Called from renderer when a digit with index idx is selected.
 
    if (fEmitSignals) {
-      CtrlClicked(this, idx);
+      SecSelected(this, idx);
    } else {
       DigitBase_t* qb = GetDigit(idx);
       TObject* obj = qb->fId.GetObject();
@@ -243,15 +244,15 @@ void TEveDigitSet::DigitSelected(Int_t idx)
 }
 
 //______________________________________________________________________________
-void TEveDigitSet::CtrlClicked(TEveDigitSet* qs, Int_t idx)
+void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
 {
-   // Emit a CtrlClicked signal.
+   // Emit a SecSelected signal.
 
    Long_t args[2];
    args[0] = (Long_t) qs;
    args[1] = (Long_t) idx;
 
-   Emit("CtrlClicked(TEveDigitSet*, Int_t)", args);
+   Emit("SecSelected(TEveDigitSet*, Int_t)", args);
 }
 
 /******************************************************************************/

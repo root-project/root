@@ -359,8 +359,10 @@ Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
       if (nrMatch == PCRE_ERROR_NOMATCH) {
          nrMatch = 0;
          break;
-      } else if (nrMatch <= 0)
+      } else if (nrMatch <= 0) {
          Error("Substitute", "pcre_exec error = %d", nrMatch);
+         break;
+      }
 
       // append anything previously unmatched, but not substituted
       if (last <= offVec[0]) {
@@ -467,4 +469,68 @@ TSubString TString::operator()(TPRegexp& r) const
    // Return the substring found by applying the regexp.
 
    return (*this)(r, 0);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TStringToken                                                         //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+//
+// Provides iteration through tokens of a given string:
+//
+// - fFullStr     stores the string to be split. It is never modified.
+// - fSplitRe     is the perl-re that is used to separete the tokens.
+// - fReturnVoid  if true, empty strings will be returned.
+//
+// Current token is stored in the TString base-class.
+// During construction no match is done, use NextToken() to get the first
+// and all subsequent tokens.
+//
+
+ClassImp(TStringToken)
+
+//______________________________________________________________________________
+TStringToken::TStringToken(const TString& fullStr, const TString& splitRe, Bool_t retVoid) :
+   fFullStr    (fullStr),
+   fSplitRe    (splitRe),
+   fReturnVoid (retVoid),
+   fPos        (0)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+Bool_t TStringToken::NextToken()
+{
+   // Get the next token, it is stored in this TString.
+   // Returns true if new token is available, false otherwise.
+
+   TArrayI x;
+   while (fPos < fFullStr.Length())
+   {
+      if (fSplitRe.Match(fFullStr, "", fPos, 2, &x))
+      {
+         TString::operator=(fFullStr(fPos, x[0] - fPos));
+         fPos = x[1];
+      } else {
+         TString::operator=(fFullStr(fPos, fFullStr.Length() - fPos));
+         fPos = fFullStr.Length() + 1;
+      }
+      if (Length() || fReturnVoid)
+         return kTRUE;
+   }
+
+   // Special case: void-strings are requested and the full-string
+   // ends with the separator. Thus we return another empty string.
+   if (fPos == fFullStr.Length() && fReturnVoid) {
+      TString::operator=("");
+      fPos = fFullStr.Length() + 1;
+      return kTRUE;
+   }
+
+   return kFALSE;
 }

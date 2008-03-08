@@ -27,7 +27,7 @@ private:
    TEveFrameBox& operator=(const TEveFrameBox&); // Not implemented
 
 protected:
-   EFrameType_e  fFrameType;
+   EFrameType_e fFrameType;
    Int_t        fFrameSize;
    Float_t     *fFramePoints;  //[fFrameSize]
 
@@ -54,7 +54,7 @@ public:
 
    // ----------------------------------------------------------------
 
-   EFrameType_e  GetFrameType()   const { return fFrameType; }
+   EFrameType_e GetFrameType()   const { return fFrameType; }
    Int_t        GetFrameSize()   const { return fFrameSize; }
    Float_t*     GetFramePoints() const { return fFramePoints; }
 

@@ -50,6 +50,7 @@
 #include "TGLSAViewer.h"
 #include "TGLSAFrame.h"
 #include "TGLOutput.h"
+#include "TGLEventHandler.h"
 
 const char * TGLSAViewer::fgHelpText1 = "\
 DIRECT SCENE INTERACTIONS\n\n\
@@ -72,7 +73,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    MOVE a selected shape using Shift+Mid mouse drag.\n\n\
    Invoke the CONTEXT menu with Shift+Right mouse click.\n\n\
    Secondary selection and direct render object interaction is initiated\n\
-   by Control+Left mouse click. Only few classes support this option.\n\n\
+   by Alt+Left mouse click (Mod1, actually). Only few classes support this option.\n\n\
 CAMERA\n\n\
    The \"Camera\" menu is used to select the different projections from \n\
    the 3D world onto the 2D viewport. There are three perspective cameras:\n\n\
@@ -238,6 +239,10 @@ TGLSAViewer::~TGLSAViewer()
 
    fGedEditor->DisconnectFromCanvas();
 
+   if (fEventHandler) {
+      fGLWindow->SetEventHandler(0);
+      delete fEventHandler;
+   }
    delete fHelpMenu;
    delete fCameraMenu;
    delete fFileSaveMenu;
@@ -338,16 +343,9 @@ void TGLSAViewer::CreateFrames()
 
    fGLWindow = new TGLWidget(*rightVerticalFrame, kTRUE, 10, 10, 0);
    // Direct events from the TGWindow directly to the base viewer
-   Bool_t ok = kTRUE;
-   //Execute event commented now
-   //   ok = ok && fGLWindow->Connect("ExecuteEvent(Int_t, Int_t, Int_t)", "TGLViewer", this, "ExecuteEvent(Int_t, Int_t, Int_t)");
-   ok = ok && fGLWindow->Connect("HandleButton(Event_t*)", "TGLViewer", this, "HandleButton(Event_t*)");
-   ok = ok && fGLWindow->Connect("HandleDoubleClick(Event_t*)", "TGLViewer", this, "HandleDoubleClick(Event_t*)");
-   ok = ok && fGLWindow->Connect("HandleKey(Event_t*)", "TGLViewer", this, "HandleKey(Event_t*)");
-   ok = ok && fGLWindow->Connect("HandleMotion(Event_t*)", "TGLViewer", this, "HandleMotion(Event_t*)");
-   //   ok = ok && fGLWindow->Connect("HandleExpose(Event_t*)", "TGLViewer", this, "HandleExpose(Event_t*)");
-   ok = ok && fGLWindow->Connect("Repaint()", "TGLViewer", this, "Repaint()");
-   ok = ok && fGLWindow->Connect("HandleConfigureNotify(Event_t*)", "TGLViewer", this, "HandleConfigureNotify(Event_t*)");
+
+   fEventHandler = new TGLEventHandler("Default", fGLWindow, this);
+   fGLWindow->SetEventHandler(fEventHandler);
 
    rightVerticalFrame->AddFrame(fGLWindow, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 }

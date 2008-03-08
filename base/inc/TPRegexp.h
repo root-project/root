@@ -82,4 +82,23 @@ public:
    ClassDef(TPRegexp,0)  // Perl Compatible Regular Expression Class
 };
 
+
+class TStringToken : public TString
+{
+protected:
+   const TString fFullStr;
+   TPRegexp      fSplitRe;
+   Bool_t        fReturnVoid;
+   Int_t         fPos;
+
+public:
+   TStringToken(const TString& fullStr, const TString& splitRe, Bool_t retVoid=kFALSE);
+   virtual ~TStringToken() {}
+
+   Bool_t NextToken();
+   Bool_t AtEnd() const { return fPos >= fFullStr.Length(); }
+
+   ClassDef(TStringToken,0) // String tokenizer using PCRE for finding next tokens.
+};
+
 #endif

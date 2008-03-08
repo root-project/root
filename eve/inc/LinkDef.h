@@ -81,6 +81,14 @@
 #pragma link C++ typedef TEveElement::List_t;
 #pragma link C++ typedef TEveElement::List_i;
 
+#pragma link C++ class std::set<TEveElement*>;
+#pragma link C++ class std::set<TEveElement*>::iterator;
+#pragma link C++ typedef TEveElement::Set_t;
+#pragma link C++ typedef TEveElement::Set_i;
+
+// TEveSelection
+#pragma link C++ class TEveSelection+;
+
 // GL-interface
 #pragma link C++ class TEveScene+;
 #pragma link C++ class TEveSceneList+;
@@ -92,6 +100,7 @@
 #pragma link C++ class TEvePad+;
 
 // TEveBrowser
+#pragma link C++ class TEveListTreeItem+;
 #pragma link C++ class TEveGListTreeEditorFrame+;
 #pragma link C++ class TEveBrowser+;
 
@@ -176,7 +185,7 @@
 #pragma link C++ class TEveProjected+;
 #pragma link C++ class TEveProjection+;
 #pragma link C++ class TEveRhoZProjection+;
-#pragma link C++ class TEveCircularFishEyeProjection+;
+#pragma link C++ class TEveRPhiProjection+;
 
 #pragma link C++ class TEveProjectionManager+;
 #pragma link C++ class TEveProjectionManagerEditor+;
@@ -184,6 +193,8 @@
 #pragma link C++ class TEveProjectionAxesEditor+;
 #pragma link C++ class TEveProjectionAxesGL+;
 
+#pragma link C++ class TEvePointSetProjected+;
+#pragma link C++ class TEveLineProjected+;
 #pragma link C++ class TEveTrackProjected+;
 #pragma link C++ class TEveTrackProjectedGL+;
 #pragma link C++ class TEveTrackListProjected+;
@@ -192,5 +203,19 @@
 #pragma link C++ class TEvePolygonSetProjectedEditor+;
 #pragma link C++ class TEvePolygonSetProjectedGL+;
 
-#pragma link C++ class TEvePointSetProjected+;
-#pragma link C++ class TEvePointSetProjectedGL+;
+// Generic calorimeter representation
+#pragma link C++ class TEveCaloData+;
+#pragma link C++ class TEveCaloDataHist+;
+#pragma link C++ class TEveCaloViz+;
+#pragma link C++ class TEveCaloVizEditor+;
+#pragma link C++ class TEveCalo3D+;
+#pragma link C++ class TEveCalo3DGL+;
+#pragma link C++ class TEveCalo2D+;
+#pragma link C++ class TEveCalo2DGL+;
+
+// Generic configuration
+#pragma link C++ class TEveParamList;
+#pragma link C++ class TEveParamList::FloatConfig_t+;
+#pragma link C++ class TEveParamList::IntConfig_t+;
+#pragma link C++ class TEveParamList::BoolConfig_t+;
+#pragma link C++ class TEveParamListEditor+;

@@ -75,10 +75,12 @@ void TPointSet3DGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    TPointSet3D& q = * (TPointSet3D*) fExternalObj;
 
+   TGLUtil::LockColor(); // Keep color from TGLPhysicalShape.
    TGLUtil::RenderPolyMarkers(q, q.GetP(), q.Size(),
                               rnrCtx.GetPickRadius(),
                               rnrCtx.Selection(),
                               rnrCtx.SecSelection());
+   TGLUtil::UnlockColor();
 }
 
 //______________________________________________________________________________

@@ -33,9 +33,12 @@ typedef std::list<Seg_t>           LSeg_t;
 typedef std::list<Seg_t>::iterator LSegIt_t;
 }
 
+//==============================================================================
+//==============================================================================
+// TEvePolygonSetProjected
+//==============================================================================
 
 //______________________________________________________________________________
-// TEvePolygonSetProjected
 //
 // A set of projected polygons.
 // Used for storage of projected geometrical shapes.
@@ -43,7 +46,7 @@ typedef std::list<Seg_t>::iterator LSegIt_t;
 // Internal struct Polygon_t holds only indices into the master vertex
 // array in TEvePolygonSetProjected.
 
-ClassImp(TEvePolygonSetProjected)
+ClassImp(TEvePolygonSetProjected);
 
 //______________________________________________________________________________
 TEvePolygonSetProjected::TEvePolygonSetProjected(const Text_t* n, const Text_t* t) :
@@ -94,12 +97,12 @@ void TEvePolygonSetProjected::ClearPolygonSet()
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* proj,
+void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* mng,
                                             TEveProjectable* model)
 {
    // This is virtual method from base-class TEveProjected.
 
-   TEveProjected::SetProjection(proj, model);
+   TEveProjected::SetProjection(mng, model);
    TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(model);
 
    fBuff = gre->MakeBuffer3D();
@@ -107,9 +110,21 @@ void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* proj,
    {
       Color_t color = gre->GetMainColor();
       SetMainColor(color);
-      SetLineColor((Color_t)TColor::GetColorBright(color));
+      SetLineColor(color);
+      // SetLineColor((Color_t)TColor::GetColorBright(color));
       SetMainTransparency(gre->GetMainTransparency());
    }
+}
+
+//______________________________________________________________________________
+void TEvePolygonSetProjected::SetDepth(Float_t d)
+{
+   // Set depth (z-coordinate) of the projected points.
+
+   SetDepthCommon(d, this, fBBox);
+
+   for (Int_t i = 0; i < fNPnts; ++i)
+      fPnts[i].fZ = fDepth;
 }
 
 //______________________________________________________________________________
@@ -120,8 +135,8 @@ void TEvePolygonSetProjected::UpdateProjection()
    if (fBuff == 0) return;
 
    // drop polygons, and projected/reduced points
-   ClearPolygonSet(); 
-   fPnts  = 0; 
+   ClearPolygonSet();
+   fPnts  = 0;
    fNPnts = 0;
    fSurf  = 0;
    ProjectBuffer3D();
@@ -143,14 +158,15 @@ void TEvePolygonSetProjected::ProjectAndReducePoints()
 {
    // Project and reduce buffer points.
 
-   TEveProjection* projection = fProjector->GetProjection();
+   TEveProjection* projection = fManager->GetProjection();
 
    Int_t buffN = fBuff->NbPnts();
    TEveVector*  pnts  = new TEveVector[buffN];
    for (Int_t i = 0; i<buffN; ++i)
    {
       pnts[i].Set(fBuff->fPnts[3*i],fBuff->fPnts[3*i+1], fBuff->fPnts[3*i+2]);
-      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, TEveProjection::kPP_Plane);
+      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ,
+                               TEveProjection::kPP_Plane);
    }
    fIdxMap   = new Int_t[buffN];
    Int_t* ra = new Int_t[buffN];  // list of reduced vertices
@@ -179,7 +195,9 @@ void TEvePolygonSetProjected::ProjectAndReducePoints()
    for (Int_t idx = 0; idx < fNPnts; ++idx)
    {
       Int_t i = ra[idx];
-      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, TEveProjection::kPP_Distort);
+      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ,
+                               TEveProjection::kPP_Distort);
+      pnts[i].fZ = fDepth;
       fPnts[idx].Set(pnts[i]);
    }
    delete [] ra;
@@ -245,7 +263,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBP()
 {
    // Build polygons from list of buffer polygons.
 
-   TEveProjection* projection = fProjector->GetProjection();
+   TEveProjection* projection = fManager->GetProjection();
    Int_t* bpols = fBuff->fPols;
    for (UInt_t pi = 0; pi< fBuff->NbPols(); pi++)
    {
@@ -304,7 +322,7 @@ void TEvePolygonSetProjected::MakePolygonsFromBS()
 
    LSeg_t segs;
    LSegIt_t it;
-   TEveProjection* projection = fProjector->GetProjection();
+   TEveProjection* projection = fManager->GetProjection();
    for (UInt_t s = 0; s < fBuff->NbSegs(); ++s)
    {
       Bool_t duplicate = kFALSE;
@@ -370,7 +388,7 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
    // Project current buffer.
 
    ProjectAndReducePoints();
-   TEveProjection::EGeoMode_e mode = fProjector->GetProjection()->GetGeoMode();
+   TEveProjection::EGeoMode_e mode = fManager->GetProjection()->GetGeoMode();
 
    switch (mode)
    {
@@ -388,12 +406,14 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
       }
       case TEveProjection::kGM_Unknown:
       {
+         MakePolygonsFromBP();
          Float_t surfBP = fSurf;
          fSurf = 0;
          MakePolygonsFromBS();
-         if(fSurf < surfBP)
+         if (fSurf < surfBP)
          {
             fPolsBP.swap(fPols);
+            fSurf = surfBP;
             fPolsBS.clear();
          }
          else
@@ -406,7 +426,7 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
          break;
    }
 
-   delete []  fIdxMap;
+   delete [] fIdxMap;
    ResetBBox();
 }
 
@@ -453,10 +473,11 @@ void TEvePolygonSetProjected::DumpPolys() const
    // Dump information about built polygons.
 
    printf("TEvePolygonSetProjected %d polygons\n", (Int_t)fPols.size());
+   Int_t cnt = 0;
    for (vpPolygon_ci i = fPols.begin(); i!= fPols.end(); i++)
    {
       Int_t nPnts = (*i).fNPnts;
-      printf("Points of polygon %d:\n", nPnts);
+      printf("Points of polygon %d [Np = %d]:\n", ++cnt, nPnts);
       for (Int_t vi = 0; vi<nPnts; ++vi) {
          Int_t pi = (*i).fPnts[vi];
          printf("(%f, %f, %f)", fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);

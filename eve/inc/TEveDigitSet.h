@@ -22,7 +22,6 @@
 #include "TEveFrameBox.h"
 #include "TEveRGBAPalette.h"
 #include "TEveChunkManager.h"
-#include "TEveTrans.h"
 
 #include "TObject.h"
 
@@ -63,7 +62,6 @@ protected:
    Bool_t            fDisableLigting; // Disable lighting for rendering.
    Bool_t            fEmitSignals;    // Emit signals on secondary-select.
    Bool_t            fHistoButtons;   // Show histogram buttons in object editor.
-   TEveTrans         fHMTrans;        // Overall transformation of whole collection.
 
    DigitBase_t* NewDigit();
    void       ReleaseIds();
@@ -72,7 +70,7 @@ public:
    TEveDigitSet(const Text_t* n="TEveDigitSet", const Text_t* t="");
    virtual ~TEveDigitSet();
 
-   virtual Bool_t CanEditMainColor() { return kTRUE; }
+   virtual Bool_t CanEditMainColor() const { return kTRUE; }
    virtual void   SetMainColor(Color_t color);
 
    // Implemented in sub-classes:
@@ -104,7 +102,7 @@ public:
    virtual void Paint(Option_t* option="");
 
    virtual void DigitSelected(Int_t idx);
-   virtual void CtrlClicked(TEveDigitSet* qs, Int_t idx); // *SIGNAL*
+   virtual void SecSelected(TEveDigitSet* qs, Int_t idx); // *SIGNAL*
 
    // --------------------------------
 
@@ -127,10 +125,6 @@ public:
 
    Bool_t GetHistoButtons() const   { return fHistoButtons; }
    void   SetHistoButtons(Bool_t f) { fHistoButtons = f; }
-
-   TEveTrans& RefHMTrans()                    { return fHMTrans; }
-   void SetTransMatrix(Double_t* carr)        { fHMTrans.SetFrom(carr); }
-   void SetTransMatrix(const TGeoMatrix& mat) { fHMTrans.SetFrom(mat);  }
 
    ClassDef(TEveDigitSet, 1); // Base-class for storage of digit collections; provides transformation matrix (TEveTrans), signal to color mapping (TEveRGBAPalette) and visual grouping (TEveFrameBox).
 };

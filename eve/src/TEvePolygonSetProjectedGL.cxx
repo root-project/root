@@ -16,12 +16,17 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
+
+//==============================================================================
+//==============================================================================
 // TEvePolygonSetProjectedGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GL-renderer for TEvePolygonSetProjected class.
 
-ClassImp(TEvePolygonSetProjectedGL)
+ClassImp(TEvePolygonSetProjectedGL);
 
 //______________________________________________________________________________
 TEvePolygonSetProjectedGL::TEvePolygonSetProjectedGL() : TGLObject()
@@ -94,7 +99,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    // Do GL rendering.
 
    TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
-   if(refPS.fPols.size() == 0) return;
+   if (refPS.fPols.size() == 0) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
 
@@ -110,7 +115,8 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    GLUtriangulatorObj *tessObj = GetTesselator();
 
    TEveVector* pnts = refPS.fPnts;
-   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin(); i!= refPS.fPols.end(); i++)
+   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin();
+        i != refPS.fPols.end(); ++i)
    {
       Int_t vi; //current vertex index of curent polygon
       Int_t pntsN = (*i).fNPnts; // number of points in current polygon
@@ -143,9 +149,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    glDisable(GL_POLYGON_OFFSET_FILL);
 
    // outline
-   UChar_t lcol[4];
-   TEveUtil::ColorFromIdx(refPS.fLineColor, lcol);
-   TGLUtil::Color4ubv(lcol);
+   TGLUtil::Color(refPS.fLineColor);
    glEnable(GL_LINE_SMOOTH);
 
    glLineWidth(refPS.fLineWidth);

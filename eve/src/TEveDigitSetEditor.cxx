@@ -13,7 +13,7 @@
 #include "TEveDigitSet.h"
 
 #include "TEveGValuators.h"
-#include "TEveTransEditor.h"
+//#include "TEveTransEditor.h"
 #include "TEveRGBAPaletteEditor.h"
 #include "TEveGedEditor.h"
 
@@ -40,28 +40,19 @@ ClassImp(TEveDigitSetEditor)
 TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fHMTrans   (0),
-   fPalette   (0),
+   fM       (0),
+   fPalette (0),
 
    fHistoButtFrame(0),
    fInfoFrame(0)
 {
    // Constructor.
 
-   MakeTitle("Transformation matrix");
-
-   fHMTrans = new TEveTransSubEditor(this);
-   AddFrame(fHMTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
-   fHMTrans->Connect("UseTrans()",     "TEveDigitSetEditor", this, "Update()");
-   fHMTrans->Connect("TransChanged()", "TEveDigitSetEditor", this, "Update()");
-
-
    MakeTitle("Palette controls");
 
    fPalette = new TEveRGBAPaletteSubEditor(this);
    AddFrame(fPalette, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
-   fPalette->Connect("Changed", "TEveDigitSetEditor", this, "Update()");
+   fPalette->Connect("Changed()", "TEveDigitSetEditor", this, "Update()");
 
    CreateInfoTab();
 }
@@ -110,8 +101,6 @@ void TEveDigitSetEditor::SetModel(TObject* obj)
    // Set model object.
 
    fM = dynamic_cast<TEveDigitSet*>(obj);
-
-   fHMTrans->SetModel(&fM->fHMTrans);
 
    if (fM->fValueIsColor || fM->fPalette == 0) {
       fPalette->UnmapWindow();

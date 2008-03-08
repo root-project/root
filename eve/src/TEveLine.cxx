@@ -10,19 +10,27 @@
  *************************************************************************/
 
 #include "TEveLine.h"
+#include "TEveProjectionManager.h"
+
+//==============================================================================
+//==============================================================================
+// TEveLine
+//==============================================================================
 
 //______________________________________________________________________________
-// TEveLine
 //
 // An arbitrary polyline with fixed line and marker attributes.
 
-ClassImp(TEveLine)
+ClassImp(TEveLine);
+
+Bool_t TEveLine::fgDefaultSmooth = kFALSE;
 
 //______________________________________________________________________________
 TEveLine::TEveLine(Int_t n_points, ETreeVarType_e tv_type) :
-   TEvePointSet(n_points, tv_type),
+   TEvePointSet("Line", n_points, tv_type),
    fRnrLine   (kTRUE),
-   fRnrPoints (kFALSE)
+   fRnrPoints (kFALSE),
+   fSmooth    (fgDefaultSmooth)
 {
    // Constructor.
 
@@ -33,9 +41,83 @@ TEveLine::TEveLine(Int_t n_points, ETreeVarType_e tv_type) :
 TEveLine::TEveLine(const Text_t* name, Int_t n_points, ETreeVarType_e tv_type) :
    TEvePointSet(name, n_points, tv_type),
    fRnrLine   (kTRUE),
-   fRnrPoints (kFALSE)
+   fRnrPoints (kFALSE),
+   fSmooth    (fgDefaultSmooth)
 {
    // Constructor.
 
    fMainColorPtr = &fLineColor;
+}
+
+//______________________________________________________________________________
+TClass* TEveLine::ProjectedClass() const
+{
+   // Virtual from TEveProjectable, returns TEvePointSetProjected class.
+
+   return TEveLineProjected::Class();
+}
+
+//==============================================================================
+//==============================================================================
+// TEveLineProjected
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Projected copy of a TEvePointSet.
+
+ClassImp(TEveLineProjected);
+
+//______________________________________________________________________________
+TEveLineProjected::TEveLineProjected() :
+   TEveLine      (),
+   TEveProjected ()
+{
+   // Default constructor.
+}
+
+//______________________________________________________________________________
+void TEveLineProjected::SetProjection(TEveProjectionManager* mng,
+                                      TEveProjectable* model)
+{
+   // Set projection manager and projection model.
+   // Virtual from TEveProjected.
+
+   TEveProjected::SetProjection(mng, model);
+   * (TAttMarker*)this = * dynamic_cast<TAttMarker*>(fProjectable);
+   * (TAttLine*)  this = * dynamic_cast<TAttLine*>  (fProjectable);
+}
+
+//______________________________________________________________________________
+void TEveLineProjected::SetDepth(Float_t d)
+{
+   // Set depth (z-coordinate) of the projected points.
+
+   SetDepthCommon(d, this, fBBox);
+
+   Int_t    n = Size();
+   Float_t *p = GetP();
+   for (Int_t i = 0; i < n; ++i, p+=3)
+      p[2] = fDepth;
+}
+
+//______________________________________________________________________________
+void TEveLineProjected::UpdateProjection()
+{
+   // Re-apply the projection.
+   // Virtual from TEveProjected.
+
+   TEveProjection& proj = * fManager->GetProjection();
+   TEveLine      & ls   = * dynamic_cast<TEveLine*>(fProjectable);
+
+   Int_t n = ls.Size();
+   Reset(n);
+   fLastPoint = n - 1;
+   Float_t *o = ls.GetP(), *p = GetP();
+   for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
+   {
+      p[0] = o[0]; p[1] = o[1]; p[2] = o[2];
+      proj.ProjectPoint(p[0], p[1], p[2]);
+      p[2] = fDepth;
+   }
 }

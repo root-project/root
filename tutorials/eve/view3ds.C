@@ -568,7 +568,7 @@ void view3ds(const char *fname = "nasashuttle.3ds")
       for (i=0;i<nummodels;i++) {
          if (ts[i]) {
             ts[i]->GenerateTriangleNormals();
-            ts[i]->RefHMTrans().RotateLF(1, 2, TMath::Pi());
+            ts[i]->RefMainTrans().RotateLF(1, 2, TMath::Pi());
             gEve->AddElement(ts[i], parent);
          }
       }

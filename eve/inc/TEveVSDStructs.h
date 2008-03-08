@@ -45,8 +45,17 @@ public:
    Float_t fX, fY, fZ; // Components of the vector.
 
    TEveVector() : fX(0), fY(0), fZ(0) {}
+   TEveVector(const Float_t* v)  : fX(v[0]), fY(v[1]), fZ(v[2]) {}
+   TEveVector(const Double_t* v) : fX(v[0]), fY(v[1]), fZ(v[2]) {}
    TEveVector(Float_t x, Float_t y, Float_t z) : fX(x), fY(y), fZ(z) {}
    virtual ~TEveVector() {}
+
+   operator const Float_t*() const { return &fX; }
+   operator       Float_t*()       { return &fX; }
+
+   TEveVector& operator *=(Float_t s)           { fX *= s;    fY *= s;    fZ *= s;    return *this; }
+   TEveVector& operator +=(const TEveVector& v) { fX += v.fX; fY += v.fY; fZ += v.fZ; return *this; }
+   TEveVector& operator -=(const TEveVector& v) { fX -= v.fX; fY -= v.fY; fZ -= v.fZ; return *this; }
 
    TEveVector operator + (const TEveVector &);
    TEveVector operator - (const TEveVector &);
@@ -58,8 +67,8 @@ public:
    const Float_t* Arr() const { return &fX; }
          Float_t* Arr()       { return &fX; }
 
-   void Set(Float_t*  v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
-   void Set(Double_t* v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
+   void Set(const Float_t*  v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
+   void Set(const Double_t* v) { fX = v[0]; fY = v[1]; fZ = v[2]; }
    void Set(Float_t  x, Float_t  y, Float_t  z) { fX = x; fY = y; fZ = z; }
    void Set(Double_t x, Double_t y, Double_t z) { fX = x; fY = y; fZ = z; }
    void Set(const TVector3& v)   { fX = v.x(); fY = v.y(); fZ = v.z(); }
@@ -133,12 +142,15 @@ class TEvePathMark
 public:
    enum EType_e   { kReference, kDaughter, kDecay };
 
+   EType_e     fType; // Mark-type.
    TEveVector  fV;    // Vertex.
    TEveVector  fP;    // Momentum.
    Float_t     fTime; // Time.
-   EType_e     fType; // Mark-type.
 
-   TEvePathMark(EType_e t=kReference) : fV(), fP(), fTime(0), fType(t) {}
+   TEvePathMark(EType_e type=kReference) : fType(type), fV(), fP(), fTime(0) {}
+   TEvePathMark(EType_e type, const TEveVector& v, const TEveVector& p, Float_t time=0) :
+      fType(type), fV(v), fP(p), fTime(time) {}
+
    virtual ~TEvePathMark() {}
 
    const char* TypeName();

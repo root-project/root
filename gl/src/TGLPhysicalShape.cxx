@@ -18,6 +18,9 @@
 
 #include "TGLScene.h"
 
+#include "TColor.h"
+#include "TROOT.h"
+
 // For debug tracing
 #include "TClass.h"
 #include "TError.h"
@@ -63,7 +66,7 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    fFirstPSRef   (0),
    fID           (id),
    fTransform    (transform),
-   fSelected     (kFALSE),
+   fSelected     (0),
    fInvertedWind (invertedWind),
    fModified     (kFALSE),
    fManip        (kManipAll)
@@ -91,7 +94,7 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    fFirstPSRef   (0),
    fID           (id),
    fTransform    (transform),
-   fSelected     (kFALSE),
+   fSelected     (0),
    fInvertedWind (invertedWind),
    fModified     (kFALSE),
    fManip        (kManipAll)
@@ -264,6 +267,23 @@ void TGLPhysicalShape::SetDiffuseColor(const UChar_t rgba[4])
 }
 
 //______________________________________________________________________________
+void TGLPhysicalShape::SetDiffuseColor(Color_t ci, UChar_t transparency)
+{
+   // Set color from standard ROOT representation, that is color index
+   // + transparency in range [0, 100].
+
+   if (ci < 0) ci = 1;
+   TColor* c = gROOT->GetColor(ci);
+   if (c) {
+      fColor[0] = c->GetRed();
+      fColor[1] = c->GetGreen();
+      fColor[2] = c->GetBlue();
+      fColor[3] = 1.0f - 0.01*transparency;
+   }
+   Modified();
+}
+
+//______________________________________________________________________________
 void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) const
 {
    // Setup colors - avoid setting things not required
@@ -352,7 +372,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    glPushMatrix();
    glMultMatrixd(fTransform.CArr());
    if (fInvertedWind)  glFrontFace(GL_CW);
-   if (fSelected)
+   if (fSelected && !rnrCtx.Selection())
    {
       const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
       Int_t inner[5][2] = { {0,-1}, {1,0}, {0,1}, {-1,0}, {0,0} };
@@ -360,11 +380,11 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
 
       // TGLCapabilitySwitch bs(GL_BLEND, kTRUE), lss(GL_LINE_SMOOTH, kTRUE);
 
-      SetupGLColors(rnrCtx, selColor);
       TGLUtil::LockColor();
       for (int i = 0; i < 8; ++i)
       {
          glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
+         glColor4ubv(rnrCtx.GetSSLColor(fSelected));
          fLogicalShape->DirectDraw(rnrCtx);
       }
       TGLUtil::UnlockColor();
@@ -374,6 +394,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       for (int i = 0; i < 5; ++i)
       {
          glViewport(vp.X() + inner[i][0], vp.Y() + inner[i][1], vp.Width(), vp.Height());
+         glColor4fv(fColor);
          fLogicalShape->Draw(rnrCtx);
       }
       glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());

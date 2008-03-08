@@ -16,12 +16,16 @@
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveStraightLineSetGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GL-renderer for TEveStraightLineSet class.
 
-ClassImp(TEveStraightLineSetGL)
+ClassImp(TEveStraightLineSetGL);
 
 //______________________________________________________________________________
 TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(0)
@@ -83,11 +87,6 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       glPushAttrib(GL_LINE_BIT | GL_ENABLE_BIT);
 
       glDisable(GL_LIGHTING);
-      glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-      glEnable(GL_COLOR_MATERIAL);
-      UChar_t color[4];
-      TEveUtil::ColorFromIdx(mL.GetLineColor(), color);
-      TGLUtil::Color4ubv(color);
       glLineWidth(mL.GetLineWidth());
       if (mL.GetLineStyle() > 1) {
          Int_t    fac = 1;
@@ -108,12 +107,9 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       }
 
       // During selection extend picking region for large line-widths.
-      Bool_t changePM = kFALSE;
-      if (rnrCtx.Selection() && mL.GetLineWidth() > rnrCtx.GetPickRadius())
-      {
-         changePM = kTRUE;
+      Bool_t changePM = rnrCtx.Selection() && mL.GetLineWidth() > rnrCtx.GetPickRadius();
+      if (changePM)
          TGLUtil::BeginExtendPickRegion((Float_t) rnrCtx.GetPickRadius() / mL.GetLineWidth());
-      }
 
       TEveChunkManager::iterator li(mL.GetLinePlex());
       if (rnrCtx.SecSelection())

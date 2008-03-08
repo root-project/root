@@ -183,6 +183,7 @@ void alice_esd()
       TEveGeoShape* gsre = TEveGeoShape::ImportShapeExtract(gse, 0);
       geom->Close();
       delete geom;
+      gEve->AddGlobalElement(gsre);
    }
 
    make_gui();
@@ -340,7 +341,7 @@ void alice_esd_read()
    }
 
    TEveTrackPropagator* trkProp = track_list->GetPropagator();
-   trkProp->SetMagField( esdrun->fMagneticField );
+   trkProp->SetMagField( 0.1 * esdrun->fMagneticField ); // kGaus to Tesla
 
    for (Int_t n=0; n<tracks->GetEntriesFast(); ++n)
    {

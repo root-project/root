@@ -13,10 +13,13 @@
 #define ROOT_TEveProjectionManager
 
 #include "TEveElement.h"
+#include "TAttBBox.h"
 #include "TEveProjections.h"
 #include "TEveVSDStructs.h"
 
-class TEveProjectionManager : public TEveElementList
+
+class TEveProjectionManager : public TEveElementList,
+                              public TAttBBox
 {
 private:
    TEveProjectionManager(const TEveProjectionManager&);            // Not implemented
@@ -27,11 +30,10 @@ protected:
    TEveVector      fCenter;         // center of distortion
    Float_t         fCurrentDepth;   // z depth of object being projected
 
-   Float_t         fBBox[6];        // projected children bounding box
-
    List_t          fDependentEls;   // elements that depend on manager and need to be destroyed with it
 
-   virtual Bool_t  ShouldImport(TEveElement* rnr_el);
+   virtual Bool_t  ShouldImport(TEveElement* el);
+   virtual void    UpdateDependentElsAndScenes(TEveElement* root);
 
 public:
    TEveProjectionManager();
@@ -46,18 +48,22 @@ public:
    virtual void    UpdateName();
 
    void            SetCenter(Float_t x, Float_t y, Float_t z);
-   TEveVector&     GetCenter(){return fCenter;}
+   TEveVector&     GetCenter() {return fCenter;}
 
    void            SetCurrentDepth(Float_t d) { fCurrentDepth = d;      }
    Float_t         GetCurrentDepth()    const { return fCurrentDepth;   }
 
    virtual Bool_t  HandleElementPaste(TEveElement* el);
-   virtual void    ImportElementsRecurse(TEveElement* rnr_el, TEveElement* parent);
-   virtual void    ImportElements(TEveElement* rnr_el);
-   virtual void    ProjectChildren();
-   virtual void    ProjectChildrenRecurse(TEveElement* rnr_el);
 
-   Float_t*        GetBBox() { return &fBBox[0]; }
+   virtual TEveElement* ImportElementsRecurse(TEveElement* el,
+                                              TEveElement* parent);
+   virtual TEveElement* ImportElements(TEveElement* el,
+                                       TEveElement* ext_list=0);
+
+   virtual void    ProjectChildren();
+   virtual void    ProjectChildrenRecurse(TEveElement* el);
+
+   virtual void    ComputeBBox();
 
    ClassDef(TEveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
 };

@@ -34,16 +34,16 @@ TEveTriangleSetEditor::TEveTriangleSetEditor(const TGWindow *p, Int_t width, Int
                                              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
-   fHMTrans(0)
+   fTrans(0)
 {
    // Constructor.
 
    MakeTitle("TEveTriangleSet");
 
-   fHMTrans = new TEveTransSubEditor(this);
-   AddFrame(fHMTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
-   fHMTrans->Connect("UseTrans()",     "TEveTriangleSetEditor", this, "Update()");
-   fHMTrans->Connect("TransChanged()", "TEveTriangleSetEditor", this, "Update()");
+   fTrans = new TEveTransSubEditor(this);
+   AddFrame(fTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
+   fTrans->Connect("UseTrans()",     "TEveTriangleSetEditor", this, "Update()");
+   fTrans->Connect("TransChanged()", "TEveTriangleSetEditor", this, "Update()");
 }
 
 /******************************************************************************/
@@ -54,5 +54,5 @@ void TEveTriangleSetEditor::SetModel(TObject* obj)
    // Set model object.
 
    fM = dynamic_cast<TEveTriangleSet*>(obj);
-   fHMTrans->SetModel(&fM->fHMTrans);
+   fTrans->SetModel(fM->PtrMainTrans());
 }

@@ -30,13 +30,17 @@
 #include <functional>
 #include <iostream>
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveTrack
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Visual representation of a track.
 //
 
-ClassImp(TEveTrack)
+ClassImp(TEveTrack);
 
 //______________________________________________________________________________
 TEveTrack::TEveTrack() :
@@ -170,17 +174,14 @@ TEveTrack::~TEveTrack()
    // Destructor.
 
    SetPropagator(0);
-   for (vpPathMark_i i=fPathMarks.begin(); i!=fPathMarks.end(); ++i)
-      delete *i;
 }
 
 
 //______________________________________________________________________________
-const TGPicture*
-TEveTrack::GetListTreeIcon()
+const TGPicture* TEveTrack::GetListTreeIcon(Bool_t)
 {
-   // Returns pointer to listtree track icon
-   
+   // Returns list-tree icon for TEveTrack.
+
    return fgListTreeIcons[4];
 }
 
@@ -231,11 +232,9 @@ void TEveTrack::SetPathMarks(const TEveTrack& t)
 {
    // Copy path-marks from t.
 
-   const std::vector<TEvePathMark*>& refs = t.GetPathMarksRef();
-   for (std::vector<TEvePathMark*>::const_iterator i=refs.begin(); i!=refs.end(); ++i)
-   {
-      fPathMarks.push_back(new TEvePathMark(**i));
-   }
+   const vPathMark_t& tpms = t.RefPathMarks();
+   std::copy(t.RefPathMarks().begin(), t.RefPathMarks().end(),
+             std::back_insert_iterator<vPathMark_t>(fPathMarks));
 }
 
 /******************************************************************************/
@@ -290,9 +289,8 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       TEveVector currP = fP;
       Bool_t decay = kFALSE;
       fPropagator->InitTrack(fV, fP, fBeta, fCharge);
-      for (std::vector<TEvePathMark*>::iterator i=fPathMarks.begin(); i!=fPathMarks.end(); ++i)
+      for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
       {
-         TEvePathMark* pm = *i;
          if (rTP.GetFitReferences() && pm->fType == TEvePathMark::kReference)
          {
             if (TMath::Abs(pm->fV.fZ) > rTP.GetMaxZ() ||
@@ -362,8 +360,8 @@ namespace {
 
 struct Cmp_pathmark_t
 {
-   bool operator()(TEvePathMark* const & a, TEvePathMark* const & b)
-   { return a->fTime < b->fTime; }
+   bool operator()(TEvePathMark const & a, TEvePathMark const & b)
+   { return a.fTime < b.fTime; }
 };
 
 }
@@ -508,10 +506,8 @@ void TEveTrack::PrintPathMarks()
    printf("TEveTrack '%s', number of path marks %d, label %d\n",
           GetName(), (Int_t)fPathMarks.size(), fLabel);
 
-   TEvePathMark* pm;
-   for (vpPathMark_i i=fPathMarks.begin(); i!=fPathMarks.end(); i++)
+   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
    {
-      pm = *i;
       printf("  %-9s  p: %8f %8f %8f Vertex: %8e %8e %8e %g \n",
              pm->TypeName(),
              pm->fP.fX,  pm->fP.fY, pm->fP.fZ,
@@ -523,12 +519,12 @@ void TEveTrack::PrintPathMarks()
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveTrack::CtrlClicked(TEveTrack* track)
+void TEveTrack::SecSelected(TEveTrack* track)
 {
-   // Emits "CtrlClicked(TEveTrack*)" signal.
+   // Emits "SecSelected(TEveTrack*)" signal.
    // Called from TEveTrackGL on secondary-selection.
 
-   Emit("CtrlClicked(TEveTrack*)", (Long_t)track);
+   Emit("SecSelected(TEveTrack*)", (Long_t)track);
 }
 
 //______________________________________________________________________________
@@ -552,15 +548,17 @@ void TEveTrack::SetLineStyle(Style_t lstyle)
 }
 
 
-/******************************************************************************/
-/******************************************************************************/
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveTrackList
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // A list of tracks supporting change of common attributes and
 // selection based on track parameters.
 
-ClassImp(TEveTrackList)
+ClassImp(TEveTrackList);
 
 //______________________________________________________________________________
 TEveTrackList::TEveTrackList(TEveTrackPropagator* rs) :
@@ -568,8 +566,8 @@ TEveTrackList::TEveTrackList(TEveTrackPropagator* rs) :
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 
-   fRecurse(kTRUE),
    fPropagator(0),
+   fRecurse(kTRUE),
    fRnrLine(kTRUE),
    fRnrPoints(kFALSE),
 
@@ -592,8 +590,8 @@ TEveTrackList::TEveTrackList(const Text_t* name, TEveTrackPropagator* rs) :
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 
-   fRecurse(kTRUE),
    fPropagator(0),
+   fRecurse(kTRUE),
    fRnrLine(kTRUE),
    fRnrPoints(kFALSE),
 
@@ -658,8 +656,6 @@ void TEveTrackList::MakeTracks(Bool_t recurse)
    fLimP  = RoundMomentumLimit(fLimP);
    if (fMaxPt == 0) fMaxPt = fLimPt;
    if (fMaxP  == 0) fMaxP  = fLimP;
-
-   gEve->Redraw3D();
 }
 
 //______________________________________________________________________________
@@ -1131,13 +1127,14 @@ TClass* TEveTrackList::ProjectedClass() const
 }
 
 
-/******************************************************************************/
-/******************************************************************************/
+//==============================================================================
+//==============================================================================
+// TEveTrackCounter
+//==============================================================================
 
 #include "TEveGedEditor.h"
 
 //______________________________________________________________________________
-// TEveTrackCounter
 //
 // Provides event-based method for tagging of good / bad (or primary /
 // secondary) tracks. A report can be written into a text file.
@@ -1148,7 +1145,7 @@ TClass* TEveTrackList::ProjectedClass() const
 // Some of the functionality is implemented in TEveTrackCounterEditor
 // class.
 
-ClassImp(TEveTrackCounter)
+ClassImp(TEveTrackCounter);
 
 //______________________________________________________________________________
 TEveTrackCounter* TEveTrackCounter::fgInstance = 0;
@@ -1165,10 +1162,10 @@ TEveTrackCounter::TEveTrackCounter(const Text_t* name, const Text_t* title) :
    fTrackLists   ()
 {
    // Constructor.
-   // Connects to global signal "TEveTrack", "CtrlClicked(TEveTrack*)".
+   // Connects to global signal "TEveTrack", "SecSelected(TEveTrack*)".
 
    if (fgInstance == 0) fgInstance = this;
-   TQObject::Connect("TEveTrack", "CtrlClicked(TEveTrack*)",
+   TQObject::Connect("TEveTrack", "SecSelected(TEveTrack*)",
                      "TEveTrackCounter", this, "DoTrackAction(TEveTrack*)");
 }
 

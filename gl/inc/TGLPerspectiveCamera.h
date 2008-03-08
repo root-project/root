@@ -37,6 +37,7 @@ private:
 
    static   Double_t fgFOVMin, fgFOVDefault, fgFOVMax;
    static   UInt_t   fgFOVDeltaSens;
+
 public:
    TGLPerspectiveCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLPerspectiveCamera();
@@ -44,13 +45,14 @@ public:
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
+   virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual void   Apply(const TGLBoundingBox & box, const TGLRect * pickRect = 0) const;
 
    // External scripting control
    virtual void Configure(Double_t fov, Double_t dolly, Double_t center[3],
                           Double_t hRotate, Double_t vRotate);
 
-   ClassDef(TGLPerspectiveCamera,0) // a perspective view camera
+   ClassDef(TGLPerspectiveCamera,0) // Camera for perspective view.
 };
 
 #endif // ROOT_TGLPerspectiveCamera

@@ -29,6 +29,7 @@ class TGLSAFrame;
 class TGedEditor;
 class TGLPShapeObj;
 class TGLRenderArea; // Remove - replace with TGLManager
+class TGLEventHandler;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

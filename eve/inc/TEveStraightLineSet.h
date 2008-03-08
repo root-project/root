@@ -50,7 +50,8 @@ public:
       Float_t        fV2[3];
       TRef           fRef;
 
-      Line_t(Float_t x1, Float_t y1, Float_t z1,Float_t x2, Float_t y2, Float_t z2)
+      Line_t(Float_t x1, Float_t y1, Float_t z1,
+             Float_t x2, Float_t y2, Float_t z2)
       {
          fV1[0] = x1, fV1[1] = y1, fV1[2] = z1;
          fV2[0] = x2, fV2[1] = y2, fV2[2] = z2;
@@ -70,27 +71,17 @@ protected:
    TEveChunkManager  fLinePlex;
    TEveChunkManager  fMarkerPlex;
 
-   Bool_t            fOwnLinesIds;       //Flag specifying if id-objects are owned by the TEveQuadSet
-   Bool_t            fOwnMarkersIds;     //Flag specifying if id-objects are owned by the TEveQuadSet
+   Bool_t            fOwnLinesIds;    // Flag specifying if id-objects are owned by the TEveQuadSet
+   Bool_t            fOwnMarkersIds;  // Flag specifying if id-objects are owned by the TEveQuadSet
 
    Bool_t            fRnrMarkers;
    Bool_t            fRnrLines;
 
    Line_t*           fLastLine; //!
 
-   Bool_t            fTrans;
-   TEveTrans         fHMTrans;
-
 public:
-   TEveStraightLineSet(const Text_t* n="StraightLine", const Text_t* t="");
+   TEveStraightLineSet(const Text_t* n="StraightLineSet", const Text_t* t="");
    virtual ~TEveStraightLineSet() {}
-
-   virtual Bool_t  CanEditMainHMTrans() { return  kTRUE; }
-   virtual TEveTrans* PtrMainHMTrans()  { return &fHMTrans; }
-
-   TEveTrans& RefHMTrans() { return fHMTrans; }
-   void SetTransMatrix(Double_t* carr)        { fHMTrans.SetFrom(carr); }
-   void SetTransMatrix(const TGeoMatrix& mat) { fHMTrans.SetFrom(mat);  }
 
    virtual void SetLineColor(Color_t col) { SetMainColor(col); }
 
@@ -128,10 +119,8 @@ public:
    TEveStraightLineSetProjected();
    virtual ~TEveStraightLineSetProjected() {}
 
-   virtual Bool_t  CanEditMainHMTrans() { return  kFALSE; }
-
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-
+   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
+   virtual void SetDepth(Float_t d);
    virtual void UpdateProjection();
 
    ClassDef(TEveStraightLineSetProjected, 1); // Projected copy of a TEveStraightLineSet.

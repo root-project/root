@@ -15,7 +15,6 @@
 #include "TEveTextGL.h"
 #include <list>
 
-class FTFont;
 class TEveProjectionAxes;
 class TEveProjection;
 
@@ -31,21 +30,19 @@ private:
    const   Float_t    fTMSize;    // tick-mark size
 
    typedef std::pair<Float_t, Float_t>  TM_t;
-   typedef std::list<TM_t>              TMList_t; 
+   typedef std::list<TM_t>              TMList_t;
 
    mutable TMList_t   fTMList;    // list of tick-mark position-value pairs
 
+   const Text_t*      GetText(Float_t) const;
+   void               RenderText(const char* txt, Float_t x, Float_t y) const;
    void               DrawTickMarks(Float_t tms) const;
    void               DrawHInfo() const;
    void               DrawVInfo() const;
-   const char*        GetText(Float_t) const;
 
-   void               SplitInterval(Int_t axis) const;
-   void               SplitIntervalByPos(Float_t min, Float_t max, Int_t axis, Int_t level)const;
-   void               SplitIntervalByVal(Float_t min, Float_t max, Int_t axis, Int_t level)const;
-
-   void               SetRange(Float_t val, Int_t axis) const;
-   void               RenderText(const char* txt, Float_t x, Float_t y) const;
+   void               SplitInterval(Float_t x1, Float_t x2, Int_t axis) const;
+   void               SplitIntervalByPos(Float_t min, Float_t max, Int_t axis)const;
+   void               SplitIntervalByVal(Float_t min, Float_t max, Int_t axis)const;
 
 protected:
    TEveProjectionAxes     *fAxesModel;  // model object.

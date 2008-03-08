@@ -19,17 +19,22 @@
 #include "TRandom.h"
 #include "TEveProjectionManager.h"
 
-//______________________________________________________________________________
+
+//==============================================================================
+//==============================================================================
 // TEveStraightLineSet
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Set of straight lines with optional markers along the lines.
 
-ClassImp(TEveStraightLineSet)
+ClassImp(TEveStraightLineSet);
 
 //______________________________________________________________________________
 TEveStraightLineSet::TEveStraightLineSet(const Text_t* n, const Text_t* t):
    TEveElement (),
-   TNamed        (n, t),
+   TNamed      (n, t),
 
    fLinePlex      (sizeof(Line_t), 4),
    fMarkerPlex    (sizeof(Marker_t), 8),
@@ -37,11 +42,12 @@ TEveStraightLineSet::TEveStraightLineSet(const Text_t* n, const Text_t* t):
    fOwnMarkersIds (kFALSE),
    fRnrMarkers    (kTRUE),
    fRnrLines      (kTRUE),
-   fLastLine      (0),
-   fTrans         (kFALSE),
-   fHMTrans       ()
+   fLastLine      (0)
 {
    // Constructor.
+
+   InitMainTrans();
+   fPickable = kTRUE;
 
    fMainColorPtr = &fLineColor;
    fLineColor    = 4;
@@ -109,7 +115,7 @@ void TEveStraightLineSet::Paint(Option_t* /*option*/)
    buff.fColor        = fLineColor;
    buff.fTransparency = 0;
    buff.fLocalFrame   = kFALSE;
-   fHMTrans.SetBuffer3D(buff);
+   RefMainTrans().SetBuffer3D(buff);
    buff.SetSectionsValid(TBuffer3D::kCore);
 
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
@@ -129,12 +135,16 @@ TClass* TEveStraightLineSet::ProjectedClass() const
 }
 
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveStraightLineSetProjected
-//
-// Projected copy of a TEveStraightLineSet.
+//==============================================================================
 
-ClassImp(TEveStraightLineSetProjected)
+//______________________________________________________________________________
+//
+// Projected replica of a TEveStraightLineSet.
+
+ClassImp(TEveStraightLineSetProjected);
 
 //______________________________________________________________________________
 TEveStraightLineSetProjected::TEveStraightLineSetProjected() :
@@ -146,19 +156,33 @@ TEveStraightLineSetProjected::TEveStraightLineSetProjected() :
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* proj,
+void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* mng,
                                                  TEveProjectable* model)
 {
    // Set projection manager and model object.
 
-   TEveProjected::SetProjection(proj, model);
+   TEveProjected::SetProjection(mng, model);
 
    // copy line and marker attributes
    * (TAttMarker*)this = * dynamic_cast<TAttMarker*>(fProjectable);
    * (TAttLine*)  this = * dynamic_cast<TAttLine*>(fProjectable);
 }
 
-/******************************************************************************/
+//______________________________________________________________________________
+void TEveStraightLineSetProjected::SetDepth(Float_t d)
+{
+   // Set depth (z-coordinate) of the projected points.
+
+   SetDepthCommon(d, this, fBBox);
+
+   TEveChunkManager::iterator li(fLinePlex);
+   while (li.next())
+   {
+      TEveStraightLineSet::Line_t& l = * (TEveStraightLineSet::Line_t*) li();
+      l.fV1[2] = fDepth;
+      l.fV2[2] = fDepth;
+   }
+}
 
 //______________________________________________________________________________
 void TEveStraightLineSetProjected::UpdateProjection()
@@ -166,8 +190,8 @@ void TEveStraightLineSetProjected::UpdateProjection()
    // Callback that actually performs the projection.
    // Called when projection parameters have been updated.
 
-   TEveProjection&      proj  = * fProjector->GetProjection();
-   TEveStraightLineSet& orig  = * dynamic_cast<TEveStraightLineSet*>(fProjectable);
+   TEveProjection&      proj = * fManager->GetProjection();
+   TEveStraightLineSet& orig = * dynamic_cast<TEveStraightLineSet*>(fProjectable);
 
    // Lines
    fLinePlex.Reset(sizeof(Line_t), orig.GetLinePlex().Size());
@@ -175,11 +199,14 @@ void TEveStraightLineSetProjected::UpdateProjection()
    Float_t p2[3];
    TEveChunkManager::iterator li(orig.GetLinePlex());
 
+   TEveTrans& origTrans = orig.RefMainTrans();
    Double_t s1, s2, s3;
-   orig.RefHMTrans().GetScale(s1, s2, s3);
-   TEveTrans mx; mx.Scale(s1, s2, s3);
    Double_t x, y, z;
-   orig.RefHMTrans().GetPos(x, y, z);
+   origTrans.GetScale(s1, s2, s3);
+   origTrans.GetPos(x, y, z);
+
+   TEveTrans mx;
+   mx.Scale(s1, s2, s3);
    while (li.next())
    {
       Line_t* l = (Line_t*) li();
@@ -191,7 +218,7 @@ void TEveStraightLineSetProjected::UpdateProjection()
       p2[0] += x; p2[1] += y; p2[2] += z;
       proj.ProjectPointFv(p1);
       proj.ProjectPointFv(p2);
-      AddLine(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
+      AddLine(p1[0], p1[1], fDepth, p2[0], p2[1], fDepth);
    }
 
    // Markers
@@ -199,7 +226,16 @@ void TEveStraightLineSetProjected::UpdateProjection()
    TEveChunkManager::iterator mi(orig.GetMarkerPlex());
    while (mi.next())
    {
-      Marker_t* m = (Marker_t*) mi();
-      AddMarker(m->fLineID, m->fPos);
+      Marker_t *m = (Marker_t*) mi();
+      Line_t  *lo = (Line_t*) orig.GetLinePlex().Atom(m->fLineID);
+      Line_t  *lp = (Line_t*) fLinePlex.Atom(m->fLineID);
+
+      TEveVector t1, d, x;
+
+      t1.Set(lo->fV1); x.Set(lo->fV2); x -= t1; x *= m->fPos; x += t1;
+      proj.ProjectVector(x);
+      t1.Set(lp->fV1); d.Set(lp->fV2); d -= t1; x -= t1;
+
+      AddMarker(m->fLineID, d.Dot(x) / d.Mag2());
    }
 }

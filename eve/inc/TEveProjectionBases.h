@@ -18,12 +18,14 @@
 
 class TBuffer3D;
 
+class TEveElement;
+
 class TEveProjected;
 class TEveProjectionManager;
 
 ////////////////////////////////////////////////////////////////
 //                                                            //
-// TEveProjectable                                             //
+// TEveProjectable                                            //
 //                                                            //
 // Abstract base class for non-linear projectable objects.    //
 //                                                            //
@@ -36,7 +38,10 @@ private:
    TEveProjectable& operator=(const TEveProjectable&); // Not implemented
 
 protected:
-   std::list<TEveProjected*> fProjectedList; // references to projected instances.
+   typedef std::list<TEveProjected*>            ProjList_t;
+   typedef std::list<TEveProjected*>::iterator  ProjList_i;
+
+   ProjList_t       fProjectedList; // references to projected instances.
 
 public:
    TEveProjectable();
@@ -47,13 +52,15 @@ public:
    virtual void AddProjected(TEveProjected* p)    { fProjectedList.push_back(p); }
    virtual void RemoveProjected(TEveProjected* p) { fProjectedList.remove(p); }
 
+   virtual void AddProjectedsToSet(std::set<TEveElement*>& set);
+
    ClassDef(TEveProjectable, 0); // Abstract base class for classes that can be transformed with non-linear projections.
 };
 
 
 ////////////////////////////////////////////////////////////////
 //                                                            //
-// TEveProjected                                               //
+// TEveProjected                                              //
 //                                                            //
 // Abstract base class for non-linear projected objects.      //
 //                                                            //
@@ -66,7 +73,7 @@ private:
    TEveProjected& operator=(const TEveProjected&); // Not implemented
 
 protected:
-   TEveProjectionManager *fProjector;     // manager
+   TEveProjectionManager *fManager;       // manager
    TEveProjectable       *fProjectable;   // link to original object
    Float_t                fDepth;         // z coordinate
 
@@ -74,12 +81,16 @@ public:
    TEveProjected();
    virtual ~TEveProjected();
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
+   TEveProjectable* GetProjectable() const { return fProjectable; }
+
+   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UnRefProjectable(TEveProjectable* assumed_parent);
 
-   virtual void SetDepth(Float_t d) { fDepth = d; }
+   virtual void SetDepth(Float_t d) = 0;
 
    virtual void UpdateProjection() = 0;
+
+   void SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox);
 
    ClassDef(TEveProjected, 0); // Abstract base class for classes that hold results of a non-linear projection transformation.
 };

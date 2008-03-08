@@ -22,7 +22,7 @@ class TGLCamera;
 class TGLSceneBase;
 class TGLSceneInfo;
 
-class FTFont;
+class TGLFont;
 class TGLContextIdentity;
 
 class TGLClip;
@@ -32,6 +32,7 @@ class TGLRect;
 
 class GLUquadric;
 
+
 /**************************************************************************/
 // TGLRnrCtx
 /**************************************************************************/
@@ -39,7 +40,8 @@ class GLUquadric;
 class TGLRnrCtx
 {
 public:
-   enum EStyle {
+   enum EStyle
+   {
       kStyleUndef     =  -1,
       kFill,
       kOutline,
@@ -47,19 +49,32 @@ public:
    };
    static const char* StyleName(Short_t style);
 
-   enum EPass {
+   enum EPass
+   {
       kPassUndef      =  -1,
       kPassFill,
       kPassOutlineFill,
       kPassOutlineLine,
       kPassWireFrame
    };
-   enum ELODPresets {
+
+   enum ELODPresets
+   {
       kLODUndef       =  -1,
       kLODPixel       =   0, // Projected size pixel or less
       kLODLow         =  20,
       kLODMed         =  50,
       kLODHigh        = 100
+   };
+
+   enum EShapeSelectionLevel
+   {
+      kSSLNotSelected,
+      kSSLSelected,
+      kSSLImpliedSelected,
+      kSSLHighlighted,
+      kSSLImpliedHighlighted,
+      kSSLEnd
    };
 
 private:
@@ -93,6 +108,9 @@ protected:
    Int_t           fPickRadius;
    TGLRect        *fPickRectangle;
    TGLSelectBuffer*fSelectBuffer;
+
+   // Colors for shape-selection-levels
+   UChar_t         fSSLColor[5][4];
 
    UInt_t          fEventKeySym;
 
@@ -136,9 +154,6 @@ public:
    Short_t SceneStyle()  const         { return fSceneStyle; }
    void    SetSceneStyle(Short_t sty)  { fSceneStyle = sty;  }
 
-   FTFont*  GetFont(Int_t size, Int_t file, Int_t mode);
-   Bool_t   ReleaseFont(Int_t size, Int_t file, Int_t mode);
-
    TGLClip* ViewerClip()         const { return fViewerClip; }
    void     SetViewerClip(TGLClip *p)  { fViewerClip = p;    }
    TGLClip* SceneClip()          const { return fSceneClip;  }
@@ -168,6 +183,10 @@ public:
    void      BeginSelection(Int_t x, Int_t y, Int_t r=3);
    void      EndSelection  (Int_t glResult);
 
+   UChar_t* GetSSLColor(Int_t level) { return fSSLColor[level]; }
+   void SetSSLColor(Int_t level, UChar_t r, UChar_t g, UChar_t b, UChar_t a=1);
+   void SetSSLColor(Int_t level, UChar_t rgba[4]);
+
    UInt_t GetEventKeySym()   const { return fEventKeySym; }
    void   SetEventKeySym(UInt_t k) { fEventKeySym = k; }
 
@@ -178,10 +197,13 @@ public:
    TGLContextIdentity* GetGLCtxIdentity()   const { return fGLCtxIdentity; }
    void SetGLCtxIdentity(TGLContextIdentity* cid) { fGLCtxIdentity = cid; }
 
-   GLUquadric * GetGluQuadric() { return fQuadric; }
+   const TGLFont& GetFont(Int_t size, Int_t file, Int_t mode);
+   Bool_t   ReleaseFont(const TGLFont& font);
 
-   ClassDef(TGLRnrCtx, 0) // Collection of objects and data passes along all rendering calls.
-}; // endclass TGLRnrCtx
+   GLUquadric* GetGluQuadric() { return fQuadric; }
+
+   ClassDef(TGLRnrCtx, 0); // Collection of objects and data passes along all rendering calls.
+};
 
 
 #endif

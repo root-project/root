@@ -94,7 +94,8 @@ public:
    TEvePolygonSetProjected(const Text_t* n="TEvePolygonSetProjected", const Text_t* t="");
    virtual ~TEvePolygonSetProjected();
 
-   virtual void    SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
+   virtual void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
+   virtual void    SetDepth(Float_t d);
    virtual void    UpdateProjection();
 
    void            ProjectBuffer3D();
@@ -106,12 +107,12 @@ public:
    void            DumpBuffer3D();
 
    //rendering
-   virtual Bool_t  CanEditMainColor()   { return kTRUE; }
-   virtual Color_t GetLineColor() const { return fLineColor; }
+   virtual Bool_t  CanEditMainColor() const { return kTRUE; }
+   virtual Color_t GetLineColor()     const { return fLineColor; }
 
-   virtual Bool_t  CanEditMainTransparency()      { return kTRUE; }
-   virtual UChar_t GetMainTransparency() const    { return fTransparency; }
-   virtual void    SetMainTransparency(UChar_t t) { fTransparency = t; }
+   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
+   virtual UChar_t GetMainTransparency()     const { return fTransparency; }
+   virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
 
    virtual void    SetFillColor(Pixel_t pixel) { fFillColor = Color_t(TColor::GetColor(pixel));}
    virtual void    SetLineColor(Pixel_t pixel) { fLineColor = Color_t(TColor::GetColor(pixel));}

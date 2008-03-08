@@ -31,19 +31,21 @@
 
 class TObjectSpy : public TObject {
 
+private:
+   TObjectSpy(const TObjectSpy& s); // Not implemented. : TObject(), fObj(s.fObj), fFixMustCleanupBit(s.fFixMustCleanupBit) { }
+   TObjectSpy& operator=(const TObjectSpy& s); // Not implemented. { fObj = s.fObj; fFixMustCleanupBit = s.fFixMustCleanupBit; return *this; }
+
 protected:
-   TObject  *fObj;   // object being spied
+   TObject  *fObj;                 // object being spied
+   Bool_t    fResetMustCleanupBit; // flag saying that kMustCleanup needs to be reset in dtor
 
 public:
-   TObjectSpy(TObject *obj = 0);
-   TObjectSpy(const TObjectSpy& s) : TObject(), fObj(s.fObj) { }
+   TObjectSpy(TObject *obj = 0, Bool_t fixMustCleanupBit=kTRUE);
    virtual ~TObjectSpy();
-
-   TObjectSpy& operator=(const TObjectSpy& s) { fObj = s.fObj; return *this; }
 
    virtual void  RecursiveRemove(TObject *obj);
    TObject      *GetObject() const { return fObj; }
-   void          SetObject(TObject *obj);
+   void          SetObject(TObject *obj, Bool_t fixMustCleanupBit=kTRUE);
 
    ClassDef(TObjectSpy, 0);  // Spy object pointer for deletion
 };
@@ -51,15 +53,17 @@ public:
 
 class TObjectRefSpy : public TObject {
 
+private:
+   TObjectRefSpy(const TObjectRefSpy& s); // Not implemented.  : TObject(), fObj(s.fObj), fFixMustCleanupBit(s.fFixMustCleanupBit) { }
+   TObjectRefSpy& operator=(const TObjectRefSpy& s);  // Not implemented. { fObj = s.fObj; fFixMustCleanupBit = s.fFixMustCleanupBit; return *this; }
+   
 protected:
-   TObject  *&fObj;   // object being spied
+   TObject  *&fObj;                // object being spied
+   Bool_t    fResetMustCleanupBit; // flag saying that kMustCleanup needs to be reset in dtor
 
 public:
-   TObjectRefSpy(TObject *&obj);
-   TObjectRefSpy(const TObjectRefSpy& s) : TObject(), fObj(s.fObj) { }
+   TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit=kTRUE);
    virtual ~TObjectRefSpy();
-
-   TObjectRefSpy& operator=(const TObjectRefSpy& s) { fObj = s.fObj; return *this; }
 
    virtual void  RecursiveRemove(TObject *obj);
    TObject      *GetObject() const { return fObj; }

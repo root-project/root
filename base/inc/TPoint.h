@@ -50,6 +50,20 @@ public:
    SCoord_t    GetY() const { return (SCoord_t)fY; }
    void        SetX(SCoord_t x) { fX = x; }
    void        SetY(SCoord_t y) { fY = y; }
+
+   TPoint& operator=(const TPoint& p) { fX = p.fX; fY = p.fY; return *this; }
+   friend bool operator==(const TPoint& p1, const TPoint& p2);
+   friend bool operator!=(const TPoint& p1, const TPoint& p2);
 };
+
+inline bool operator==(const TPoint& p1, const TPoint& p2)
+{
+   return p1.fX == p2.fX && p1.fY == p2.fY;
+}
+
+inline bool operator!=(const TPoint& p1, const TPoint& p2)
+{
+   return p1.fX != p2.fX || p1.fY != p2.fY;
+}
 
 #endif

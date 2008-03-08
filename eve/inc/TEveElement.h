@@ -22,6 +22,7 @@ class TGListTreeItem;
 class TGPicture;
 
 class TEveTrans;
+class TGeoMatrix;
 
 /******************************************************************************/
 // TEveElement
@@ -67,20 +68,28 @@ public:
    typedef std::list<TEveElement*>              List_t;
    typedef std::list<TEveElement*>::iterator    List_i;
 
+   typedef std::set<TEveElement*>               Set_t;
+   typedef std::set<TEveElement*>::iterator     Set_i;
+
 protected:
    // TRef     fSource;
 
-   Bool_t   fRnrSelf;              // Render this element.
-   Bool_t   fRnrChildren;          // Render children of this element.
-   Color_t* fMainColorPtr;         // Pointer to main-color variable.
+   List_t     fParents;              //  List of parents.
+   List_t     fChildren;             //  List of children.
 
-   sLTI_t   fItems;                // Set of list-tree-items.
-   List_t   fParents;              // List of parents.
+   Bool_t     fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
+   Int_t      fDenyDestroy;          //  Deny-destroy count.
 
-   Bool_t   fDestroyOnZeroRefCnt;  // Auto-destruct when ref-count reaches zero.
-   Int_t    fDenyDestroy;          // Deny-destroy count.
+   Bool_t     fRnrSelf;              //  Render this element.
+   Bool_t     fRnrChildren;          //  Render children of this element.
+   Bool_t     fCanEditMainTrans;     //  Allow editing of main transformation.
 
-   List_t   fChildren;             // List of children.
+   Color_t   *fMainColorPtr;         //  Pointer to main-color variable.
+   TEveTrans *fMainTrans;            //  Pointer to main transformation matrix.
+
+   sLTI_t     fItems;                //! Set of list-tree-items.
+
+   void      *fUserData;             //! Externally assigned and controlled user data.
 
    virtual void RemoveElementsInternal();
 
@@ -89,15 +98,18 @@ public:
    TEveElement(Color_t& main_color);
    virtual ~TEveElement();
 
-   virtual void SetRnrElNameTitle(const Text_t* name, const Text_t* title);
-   virtual const Text_t* GetRnrElName()  const;
-   virtual const Text_t* GetRnrElTitle() const;
+   virtual const Text_t* GetElementName()  const;
+   virtual const Text_t* GetElementTitle() const;
+   virtual void SetElementName (const Text_t* name);
+   virtual void SetElementTitle(const Text_t* title);
+   virtual void SetElementNameTitle(const Text_t* name, const Text_t* title);
 
    virtual void AddParent(TEveElement* re);
    virtual void RemoveParent(TEveElement* re);
    virtual void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ");
    virtual void CollectSceneParents(List_t& scenes);
-   virtual void CollectSceneParentsFromChildren(List_t& scenes, TEveElement* parent);
+   virtual void CollectSceneParentsFromChildren(List_t& scenes,
+                                                TEveElement* parent);
 
    List_i BeginParents() { return fParents.begin(); }
    List_i EndParents()   { return fParents.end();   }
@@ -106,6 +118,12 @@ public:
    List_i BeginChildren() { return fChildren.begin(); }
    List_i EndChildren()   { return fChildren.end();   }
    Int_t  GetNChildren() const { return fChildren.size(); }
+
+   Bool_t       HasChild(TEveElement* el);
+   TEveElement* FindChild(const TString& name, const TClass* cls=0);
+   TEveElement* FindChild(TPRegexp& regexp, const TClass* cls=0);
+   Int_t        FindChildren(List_t& matches, const TString&  name, const TClass* cls=0);
+   Int_t        FindChildren(List_t& matches, TPRegexp& regexp, const TClass* cls=0);
 
    void EnableListElements (Bool_t rnr_self=kTRUE,  Bool_t rnr_children=kTRUE);  // *MENU*
    void DisableListElements(Bool_t rnr_self=kFALSE, Bool_t rnr_children=kFALSE); // *MENU*
@@ -121,6 +139,8 @@ public:
 
    virtual TObject* GetObject      (const TEveException& eh="TEveElement::GetObject ") const;
    virtual TObject* GetEditorObject(const TEveException& eh="TEveElement::GetEditorObject ") const { return GetObject(eh); }
+   virtual TObject* GetRenderObject(const TEveException& eh="TEveElement::GetRenderObject ") const { return GetObject(eh); }
+
    /*
      TRef&    GetSource() { return fSource; }
      TObject* GetSourceObject() const { return fSource.GetObject(); }
@@ -158,9 +178,9 @@ public:
    void SpawnEditor();                          // *MENU*
    virtual void ExportToCINT(Text_t* var_name); // *MENU*
 
-   virtual Bool_t AcceptElement(TEveElement* /*el*/) { return kTRUE; }
+   virtual Bool_t AcceptElement(TEveElement* el);
 
-   virtual TGListTreeItem* AddElement(TEveElement* el);
+   virtual void AddElement(TEveElement* el);
    virtual void RemoveElement(TEveElement* el);
    virtual void RemoveElementLocal(TEveElement* el);
    virtual void RemoveElements();
@@ -172,32 +192,107 @@ public:
    virtual Bool_t HandleElementPaste(TEveElement* el);
    virtual void   ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
 
-   virtual Bool_t CanEditRnrElement()    { return kTRUE; }
+   virtual Bool_t CanEditElement() const { return kTRUE; }
+   virtual Bool_t SingleRnrState() const { return kFALSE; }
    virtual Bool_t GetRnrSelf()     const { return fRnrSelf; }
    virtual Bool_t GetRnrChildren() const { return fRnrChildren; }
+   virtual Bool_t GetRnrState()    const { return fRnrSelf && fRnrChildren; }
    virtual void   SetRnrSelf(Bool_t rnr);
    virtual void   SetRnrChildren(Bool_t rnr);
    virtual void   SetRnrState(Bool_t rnr);
 
-   virtual Bool_t CanEditMainColor()        { return kFALSE; }
+   virtual Bool_t CanEditMainColor() const  { return kFALSE; }
    Color_t* GetMainColorPtr()               { return fMainColorPtr; }
    void     SetMainColorPtr(Color_t* color) { fMainColorPtr = color; }
 
+   virtual Bool_t  HasMainColor() const { return fMainColorPtr != 0; }
    virtual Color_t GetMainColor() const { return fMainColorPtr ? *fMainColorPtr : 0; }
    virtual void    SetMainColor(Color_t color);
-   void    SetMainColor(Pixel_t pixel);
+   void            SetMainColor(Pixel_t pixel);
 
-   virtual Bool_t  CanEditMainTransparency()    { return kFALSE; }
-   virtual UChar_t GetMainTransparency() const  { return 0; }
+   virtual Bool_t  CanEditMainTransparency() const { return kFALSE; }
+   virtual UChar_t GetMainTransparency()     const { return 0; }
    virtual void    SetMainTransparency(UChar_t) {}
 
-   virtual Bool_t  CanEditMainHMTrans() { return kFALSE; }
-   virtual TEveTrans* PtrMainHMTrans()     { return 0; }
+   virtual Bool_t     CanEditMainTrans() const { return fCanEditMainTrans; }
+   virtual Bool_t     HasMainTrans()     const { return fMainTrans != 0;   }
+   virtual TEveTrans* PtrMainTrans();
+   virtual TEveTrans& RefMainTrans();
+   virtual void       InitMainTrans(Bool_t can_edit=kTRUE);
+   virtual void       DestroyMainTrans();
 
-   static  const TGPicture* GetCheckBoxPicture(Bool_t rnrElement, Bool_t rnrDaughter);
-   virtual const TGPicture* GetListTreeIcon();
+   virtual void SetTransMatrix(Double_t* carr);
+   virtual void SetTransMatrix(const TGeoMatrix& mat);
 
-   ClassDef(TEveElement, 1); // Base class for TEveUtil visualization elements, providing hierarchy management, rendering control and list-tree item management.
+   void* GetUserData() const { return fUserData; }
+   void  SetUserData(void* ud) { fUserData = ud; }
+
+   // Selection state and management
+   //--------------------------------
+protected:
+   Bool_t  fPickable;
+   Bool_t  fSelected;             //!
+   Bool_t  fHighlighted;          //!
+   Short_t fImpliedSelected;      //!
+   Short_t fImpliedHighlighted;   //!
+
+public:
+   typedef void (TEveElement::* Select_foo)      (Bool_t);
+   typedef void (TEveElement::* ImplySelect_foo) ();
+
+   Bool_t IsPickable()    const { return fPickable; }
+   void   SetPickable(Bool_t p) { fPickable = p; }
+
+   void SelectElement(Bool_t state);
+   void IncImpliedSelected();
+   void DecImpliedSelected();
+
+   void HighlightElement(Bool_t state);
+   void IncImpliedHighlighted();
+   void DecImpliedHighlighted();
+
+   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
+
+   virtual UChar_t GetSelectedLevel() const;
+
+   // Change-stamping and change bits
+   //---------------------------------
+
+   enum EChangeBits
+   {
+      kCBColorSelection =  1, // Main color or select/hilite state changed.
+      kCBTransBBox      =  2, // Transformation matrix or bounding-box changed.
+      kCBObjProps       =  4  // Object changed, requires dropping its display-lists.
+      // kCBElementAdded   =  8, // Element was added to a new parent.
+      // kCBElementRemoved = 16  // Element was removed from a parent.
+
+      // Deletions are handled in a special way in TEveManager::PreDeleteElement().
+   };
+
+protected:
+   UChar_t      fChangeBits;
+   Bool_t       fDestructing;
+
+public:
+   void StampColorSelection() { AddStamp(kCBColorSelection); }
+   void StampTransBBox()      { AddStamp(kCBTransBBox); }
+   void StampObjProps()       { AddStamp(kCBObjProps); }
+   // void StampElementAdded()   { AddStamp(kCBElementAdded); }
+   // void StampElementRemoved() { AddStamp(kCBElementRemoved); }
+   void ClearStamps()         { fChangeBits = 0; }
+   void SetStamp(UChar_t bits);
+   void AddStamp(UChar_t bits);
+
+   UChar_t GetChangeBits() const { return fChangeBits; }
+
+
+   // List-tree icons
+   //-----------------
+
+   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
+   virtual const TGPicture* GetListTreeCheckBoxIcon();
+
+   ClassDef(TEveElement, 0); // Base class for TEveUtil visualization elements, providing hierarchy management, rendering control and list-tree item management.
 };
 
 
@@ -226,7 +321,7 @@ public:
    Bool_t GetOwnObject() const   { return fOwnObject; }
    void   SetOwnObject(Bool_t o) { fOwnObject = o; }
 
-   ClassDef(TEveElementObjectPtr, 1); // TEveElement with external TObject as a holder of visualization data.
+   ClassDef(TEveElementObjectPtr, 0); // TEveElement with external TObject as a holder of visualization data.
 };
 
 
@@ -251,14 +346,21 @@ public:
                    Bool_t doColor=kFALSE);
    virtual ~TEveElementList() {}
 
-   virtual Bool_t CanEditMainColor()  { return fDoColor; }
+   virtual const Text_t* GetElementName()  const { return TNamed::GetName(); }
+   virtual const Text_t* GetElementTitle() const { return TNamed::GetTitle(); }
+   virtual void SetElementName (const Text_t* name)  { TNamed::SetName(name); }
+   virtual void SetElementTitle(const Text_t* title) { TNamed::SetTitle(title); }
+   virtual void SetElementNameTitle(const Text_t* name, const Text_t* title)
+   { TNamed::SetNameTitle(name, title); }
+
+   virtual Bool_t CanEditMainColor() const { return fDoColor; }
 
    TClass* GetChildClass() const { return fChildClass; }
    void SetChildClass(TClass* c) { fChildClass = c; }
 
    virtual Bool_t AcceptElement(TEveElement* el);
 
-   ClassDef(TEveElementList, 1); // List of TEveElement objects with a possibility to limit the class of accepted elements.
+   ClassDef(TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
 };
 
 #endif

@@ -58,8 +58,13 @@ public:
    void  Reset(Int_t n_points=0, Int_t n_int_ids=0);
    Int_t GrowFor(Int_t n_points);
 
-   virtual const Text_t* GetTitle() const          { return fTitle; }
-   virtual void          SetTitle(const Text_t* t) { fTitle = t; }
+   virtual const Text_t* GetElementName()   const { return TPointSet3D::GetName(); }
+   virtual const Text_t* GetElementTitle()  const { return fTitle; }
+   virtual void  SetElementName (const Text_t* n) { fName  = n; }
+   virtual void  SetTitle(const Text_t* t)        { fTitle = t; }
+   virtual void  SetElementTitle(const Text_t* t) { fTitle = t; }
+   virtual void  SetElementNameTitle(const Text_t* n, const Text_t* t)
+   { fName = n; fTitle = t; }
 
    Int_t  GetIntIdsPerPoint() const { return fIntIdsPerPoint; }
    Int_t* GetPointIntIds(Int_t p) const;
@@ -68,17 +73,16 @@ public:
    void   SetPointIntIds(Int_t* ids);
    void   SetPointIntIds(Int_t n, Int_t* ids);
 
-   virtual void SetRnrElNameTitle(const Text_t* name, const Text_t* title);
-
-   virtual void SetMarkerColor(Color_t col)
-   { SetMainColor(col); }
+   virtual void SetMarkerColor(Color_t col) { SetMainColor(col); }
 
    virtual void Paint(Option_t* option="");
 
    virtual void InitFill(Int_t subIdNum);
    virtual void TakeAction(TEvePointSelector*);
 
-   virtual const TGPicture* GetListTreeIcon();
+   virtual void PointSelected(Int_t id); // *SIGNAL*
+
+   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
    virtual TClass* ProjectedClass() const;
 
@@ -126,8 +130,7 @@ public:
    virtual void TakeAction(TEvePointSelector*);
 
 
-   void InitBins(const Text_t* quant_name, Int_t nbins, Double_t min, Double_t max,
-                 Bool_t addRe=kTRUE);
+   void InitBins(const Text_t* quant_name, Int_t nbins, Double_t min, Double_t max);
    void Fill(Double_t x, Double_t y, Double_t z, Double_t quant);
    void SetPointId(TObject* id);
    void CloseBins();
@@ -167,7 +170,7 @@ public:
    virtual ~TEvePointSetProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-
+   virtual void SetDepth(Float_t d);
    virtual void UpdateProjection();
 
    ClassDef(TEvePointSetProjected, 1); // Projected copy of a TEvePointSet.

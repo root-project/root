@@ -79,6 +79,7 @@ public:
 
    virtual Bool_t Dolly(Int_t delta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
+   virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const;
 
@@ -112,7 +113,7 @@ public:
    Int_t  GetWidth()const;
    Int_t  GetHeight()const;
 
-   ClassDef(TGLOrthoCamera,0) // an orthogonal view camera
+   ClassDef(TGLOrthoCamera,0) // Camera for orthographic view.
 };
 
 #endif // ROOT_TGLOrthoCamera

@@ -227,12 +227,13 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    TEveBoxSet& mB = * fM;
    // printf("TEveBoxSetGL::DirectDraw N boxes %d\n", mB.fPlex.Size());
+
+   // !!!! Missing frame rendering (wire-frame, of course).
+
    if(mB.fPlex.Size() == 0)
       return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-   glEnable(GL_COLOR_MATERIAL);
 
    if (mB.fRenderMode == TEveDigitSet::kRM_Fill)
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

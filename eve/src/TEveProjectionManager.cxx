@@ -23,8 +23,12 @@
 
 #include <list>
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveProjectionManager
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Manager class for steering of projections and managing projected
 // objects.
@@ -33,17 +37,18 @@
 // scene.  It enables to interactivly set TEveProjection parameters
 // and updates projected scene accordingly.
 
-ClassImp(TEveProjectionManager)
+ClassImp(TEveProjectionManager);
 
 //______________________________________________________________________________
 TEveProjectionManager::TEveProjectionManager():
    TEveElementList("TEveProjectionManager",""),
-   fProjection (0),
+   TAttBBox(),
+   fProjection  (0),
    fCurrentDepth(0)
 {
    // Constructor.
 
-   fProjection  = new TEveCircularFishEyeProjection(fCenter);
+   fProjection = new TEveRPhiProjection(fCenter);
    UpdateName();
 }
 
@@ -97,9 +102,9 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type, Float_t
 
    switch (type)
    {
-      case TEveProjection::kPT_CFishEye:
+      case TEveProjection::kPT_RPhi:
       {
-         fProjection  = new TEveCircularFishEyeProjection(fCenter);
+         fProjection  = new TEveRPhiProjection(fCenter);
          break;
       }
       case TEveProjection::kPT_RhoZ:
@@ -114,6 +119,7 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type, Float_t
    fProjection->SetDistortion(distort);
    UpdateName();
 }
+
 //______________________________________________________________________________
 void TEveProjectionManager::SetCenter(Float_t x, Float_t y, Float_t z)
 {
@@ -136,115 +142,161 @@ Bool_t TEveProjectionManager::HandleElementPaste(TEveElement* el)
 }
 
 //______________________________________________________________________________
-Bool_t TEveProjectionManager::ShouldImport(TEveElement* rnr_el)
+Bool_t TEveProjectionManager::ShouldImport(TEveElement* el)
 {
-   // Returns true if rnr_el or any of its children is NTLProjectable.
+   // Returns true if el or any of its children is NTLProjectable.
 
-   if (rnr_el->IsA()->InheritsFrom(TEveProjectable::Class()))
+   if (el->IsA()->InheritsFrom(TEveProjectable::Class()))
       return kTRUE;
-   for (List_i i=rnr_el->BeginChildren(); i!=rnr_el->EndChildren(); ++i)
+   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
       if (ShouldImport(*i))
          return kTRUE;
    return kFALSE;
 }
 
 //______________________________________________________________________________
-void TEveProjectionManager::ImportElementsRecurse(TEveElement* rnr_el, TEveElement* parent)
+void TEveProjectionManager::UpdateDependentElsAndScenes(TEveElement* root)
 {
-   // If rnr_el is TEveProjectable add projected instance else add
-   // plain TEveElementList to parent. Call same function on rnr_el
-   // children.
+   // Update dependent elements' vounding box and mark scenes
+   // cointaining element root or its children as requiring a repaint.
 
-   static const TEveException eh("TEveProjectionManager::ImportElementsRecurse ");
-
-   if (ShouldImport(rnr_el))
+   for (List_i i=fDependentEls.begin(); i!=fDependentEls.end(); ++i)
    {
-      TEveElement  *new_re = 0;
-      TEveProjected   *new_pr = 0;
-      TEveProjectable *pble   = dynamic_cast<TEveProjectable*>(rnr_el);
-      if (pble)
-      {
-         new_re = (TEveElement*) pble->ProjectedClass()->New();
-         new_pr = dynamic_cast<TEveProjected*>(new_re);
-         new_pr->SetProjection(this, pble);
-         new_pr->SetDepth(fCurrentDepth);
-      }
-      else
-      {
-         new_re = new TEveElementList;
-      }
-      TObject *tobj   = rnr_el->GetObject(eh);
-      new_re->SetRnrElNameTitle(Form("NLT %s", tobj->GetName()),
-                                tobj->GetTitle());
-      new_re->SetRnrSelf     (rnr_el->GetRnrSelf());
-      new_re->SetRnrChildren(rnr_el->GetRnrChildren());
-      gEve->AddElement(new_re, parent);
-
-      for (List_i i=rnr_el->BeginChildren(); i!=rnr_el->EndChildren(); ++i)
-         ImportElementsRecurse(*i, new_re);
-   }
-}
-
-//______________________________________________________________________________
-void TEveProjectionManager::ImportElements(TEveElement* rnr_el)
-{
-   // Recursively import elements and update projection on the projected objects.
-
-   ImportElementsRecurse(rnr_el, this);
-   ProjectChildren();
-}
-
-//______________________________________________________________________________
-void TEveProjectionManager::ProjectChildrenRecurse(TEveElement* rnr_el)
-{
-   // Go recursively through rnr_el tree and call UpdateProjection() on TEveProjected.
-
-   TEveProjected* pted = dynamic_cast<TEveProjected*>(rnr_el);
-   if (pted)
-   {
-      pted->UpdateProjection();
-      TAttBBox* bb = dynamic_cast<TAttBBox*>(pted);
-      if (bb)
-      {
-         Float_t x, y, z, *b = bb->AssertBBox();
-         //         Float_t x, y, z;
-         x = b[0]; y = b[2]; z = b[4]; 
-         if (x < fBBox[0]) fBBox[0] = x;   if (x > fBBox[1]) fBBox[1] = x;
-         if (y < fBBox[2]) fBBox[2] = y;   if (y > fBBox[3]) fBBox[3] = y;
-         if (z < fBBox[4]) fBBox[4] = z;   if (z > fBBox[5]) fBBox[5] = z;
-
-         x = b[1]; y = b[3]; z = b[5]; 
-         if (x < fBBox[0]) fBBox[0] = x;   if (x > fBBox[1]) fBBox[1] = x;
-         if (y < fBBox[2]) fBBox[2] = y;   if (y > fBBox[3]) fBBox[3] = y;
-         if (z < fBBox[4]) fBBox[4] = z;   if (z > fBBox[5]) fBBox[5] = z;
-
-      }
-      rnr_el->ElementChanged(kFALSE);
-   }
-
-   for (List_i i=rnr_el->BeginChildren(); i!=rnr_el->EndChildren(); ++i)
-      ProjectChildrenRecurse(*i);
-}
-
-//______________________________________________________________________________
-void TEveProjectionManager::ProjectChildren()
-{
-   // Project children recursevly, update BBox and notify ReveManger
-   // the scenes have chenged.
-
-   for (Int_t i = 0; i<6; i++) {
-      fBBox[i] = 0.f;
-   }
-
-   ProjectChildrenRecurse(this);
-
-   for (List_i i=fDependentEls.begin(); i!=fDependentEls.end(); ++i) {
       TAttBBox* bbox = dynamic_cast<TAttBBox*>(*i);
       if (bbox)
          bbox->ComputeBBox();
    }
 
    List_t scenes;
-   CollectSceneParentsFromChildren(scenes, 0);
+   root->CollectSceneParentsFromChildren(scenes, 0);
    gEve->ScenesChanged(scenes);
+}
+
+//______________________________________________________________________________
+TEveElement* TEveProjectionManager::ImportElementsRecurse(TEveElement* el,
+                                                          TEveElement* parent)
+{
+   // If el is TEveProjectable add projected instance else add plain
+   // TEveElementList to parent. Call the same function on el's
+   // children.
+   //
+   // Returns the projected replica of el. Can be 0, if el and none of
+   // its children are projectable.
+
+   static const TEveException eh("TEveProjectionManager::ImportElementsRecurse ");
+
+   TEveElement *new_el = 0;
+
+   if (ShouldImport(el))
+   {
+      TEveProjected   *new_pr = 0;
+      TEveProjectable *pble   = dynamic_cast<TEveProjectable*>(el);
+      if (pble)
+      {
+         new_el = (TEveElement*) pble->ProjectedClass()->New();
+         new_pr = dynamic_cast<TEveProjected*>(new_el);
+         new_pr->SetProjection(this, pble);
+         new_pr->SetDepth(fCurrentDepth);
+      }
+      else
+      {
+         new_el = new TEveElementList;
+      }
+      new_el->SetElementName (Form("%s [P]", el->GetElementName()));
+      new_el->SetElementTitle(Form("Projected replica.\n%s", el->GetElementTitle()));
+      new_el->SetRnrSelf     (el->GetRnrSelf());
+      new_el->SetRnrChildren (el->GetRnrChildren());
+      new_el->SetPickable    (el->IsPickable());
+      parent->AddElement(new_el);
+
+      for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
+         ImportElementsRecurse(*i, new_el);
+   }
+
+   return new_el;
+}
+
+//______________________________________________________________________________
+TEveElement* TEveProjectionManager::ImportElements(TEveElement* el,
+                                                   TEveElement* ext_list)
+{
+   // Recursively import elements and apply projection to the newly
+   // imported objects.
+   //
+   // If ext_list is not 0 the new element is also added to the list.
+   // This simplifies construction of complex views where projected
+   // elements are distributed into several scenes for optimization of
+   // updates and rendering.
+   //
+   // Returns the projected replica of el. Can be 0, if el and none of
+   // its children are projectable.
+
+   TEveElement* new_el = ImportElementsRecurse(el, this);
+   if (new_el)
+   {
+      AssertBBox();
+      ProjectChildrenRecurse(new_el);
+      AssertBBoxExtents(0.1);
+      UpdateDependentElsAndScenes(new_el);
+      if (ext_list)
+         ext_list->AddElement(new_el);
+   }
+   return new_el;
+}
+
+//______________________________________________________________________________
+void TEveProjectionManager::ProjectChildrenRecurse(TEveElement* el)
+{
+   // Project el (via TEveProjected::UpdateProjection()) and recurse
+   // through el's children.
+   // Bounding-box is updated along the recursion.
+
+   TEveProjected* pted = dynamic_cast<TEveProjected*>(el);
+   if (pted)
+   {
+      pted->UpdateProjection();
+      TAttBBox* bb = dynamic_cast<TAttBBox*>(pted);
+      if (bb)
+      {
+         Float_t* b = bb->AssertBBox();
+         BBoxCheckPoint(b[0], b[2], b[4]);
+         BBoxCheckPoint(b[1], b[3], b[5]);
+      }
+      el->ElementChanged(kFALSE);
+   }
+
+   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
+      ProjectChildrenRecurse(*i);
+}
+
+//______________________________________________________________________________
+void TEveProjectionManager::ProjectChildren()
+{
+   // Project all children recursively, update bounding-box and notify
+   // TEveManger about the scenes that have been changed.
+
+   BBoxInit();
+   ProjectChildrenRecurse(this);
+   AssertBBoxExtents(0.1);
+
+   UpdateDependentElsAndScenes(this);
+}
+
+//______________________________________________________________________________
+void TEveProjectionManager::ComputeBBox()
+{
+   // Virtual from TAttBBox; fill bounding-box information.
+   //
+   // The bounding-box information is kept coherent during addition of
+   // projected elements and projection parameter updates. This is
+   // called only in case the manager has not been populated at all.
+
+   static const TEveException eH("TEveProjectionManager::ComputeBBox ");
+
+   if (GetNChildren() == 0) {
+      BBoxZero();
+      return;
+   }
+
+   BBoxInit();
 }

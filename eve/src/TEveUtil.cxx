@@ -104,6 +104,7 @@ void TEveUtil::SetupGUI()
    TEveElement::fgListTreeIcons[4] = gClient->GetPicture(fld + "eve_track.xpm");
    TEveElement::fgListTreeIcons[5] = gClient->GetPicture(fld + "eve_text.gif");
    TEveElement::fgListTreeIcons[6] = gClient->GetPicture(fld + "eve_axes.xpm");
+   TEveElement::fgListTreeIcons[7] = gClient->GetPicture("ofolder_t.xpm");
 
 
    gClient->GetMimeTypeList()->AddType("root/tmacro", "TEveMacro",
@@ -249,7 +250,7 @@ Color_t* TEveUtil::FindColorVar(TObject* obj, const Text_t* varname)
 /******************************************************************************/
 
 //______________________________________________________________________________
-// 
+//
 // Exception class thrown by TEve classes and macros.
 
 ClassImp(TEveException)
@@ -445,6 +446,19 @@ void TEveRefBackPtr::UpdateBackPtrItems()
    while (i != fBackRefs.end())
    {
       (*i)->UpdateItems();
+      ++i;
+   }
+}
+
+//______________________________________________________________________________
+void TEveRefBackPtr::StampBackPtrElements(UChar_t stamps)
+{
+   // Add givem stamps to elements in the list of reverse references.
+
+   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   while (i != fBackRefs.end())
+   {
+      (*i)->AddStamp(stamps);
       ++i;
    }
 }

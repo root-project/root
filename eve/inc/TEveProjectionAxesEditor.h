@@ -16,7 +16,7 @@
 
 class TGCheckButton;
 class TGComboBox;
-class TGNumberEntry;
+class TEveGValuator;
 
 class TEveProjectionAxes;
 
@@ -28,9 +28,9 @@ private:
 
 protected:
    TEveProjectionAxes   *fM;       // Model object.
-  
-   TGComboBox      *fSplitMode;    // tick-mark positioning widget 
-   TGNumberEntry   *fSplitLevel;   // tick-mark density widget
+
+   TGComboBox      *fStepMode;     // tick-mark positioning widget
+   TEveGValuator   *fNumTickMarks; // tick-mark number widget
 
    TGVerticalFrame *fCenterFrame;  // Parent frame for Center tab.
    TGCheckButton   *fDrawCenter;   // draw center widget
@@ -45,8 +45,8 @@ public:
 
    // Declare callback/slot methods
 
-   void DoSplitMode(Int_t type);
-   void DoSplitLevel();
+   void DoStepMode(Int_t type);
+   void DoNumTickMarks();
    void DoDrawCenter();
    void DoDrawOrigin();
 

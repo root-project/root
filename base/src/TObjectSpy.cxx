@@ -29,15 +29,22 @@ ClassImp(TObjectSpy)
 ClassImp(TObjectRefSpy)
 
 //______________________________________________________________________________
-TObjectSpy::TObjectSpy(TObject *obj) : fObj(obj)
+TObjectSpy::TObjectSpy(TObject *obj, Bool_t fixMustCleanupBit) :
+   TObject(), fObj(obj), fResetMustCleanupBit(kFALSE)
 {
    // Register the object that must be spied. The object must have the
    // kMustCleanup bit set. If the object has been deleted during a
    // RecusiveRemove() operation, GetObject() will return 0.
 
    gROOT->GetListOfCleanups()->Add(this);
-   if (fObj && !fObj->TestBit(kMustCleanup))
-      Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
+   if (fObj && !fObj->TestBit(kMustCleanup)) {
+      if (fixMustCleanupBit) {
+         fResetMustCleanupBit = kTRUE;
+         SetBit(kMustCleanup, kTRUE);
+      } else {
+         Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -45,6 +52,8 @@ TObjectSpy::~TObjectSpy()
 {
    // Cleanup.
 
+   if (fObj && fResetMustCleanupBit)
+      fObj->SetBit(kMustCleanup, kFALSE);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
@@ -54,30 +63,51 @@ void TObjectSpy::RecursiveRemove(TObject *obj)
    // Sets the object pointer to zero if the object is deleted in the
    // RecursiveRemove() operation.
 
-   if (obj == fObj) fObj = 0;
+   if (obj == fObj) {
+      fObj = 0;
+      fResetMustCleanupBit = kFALSE;
+   }
 }
 
 //______________________________________________________________________________
-void TObjectSpy::SetObject(TObject *obj)
+void TObjectSpy::SetObject(TObject *obj, Bool_t fixMustCleanupBit)
 {
    // Set obj as the spy target.
 
+   if (fObj && fResetMustCleanupBit)
+      fObj->SetBit(kMustCleanup, kFALSE);
+   fResetMustCleanupBit = kFALSE;
+
    fObj = obj;
-   if (fObj && !fObj->TestBit(kMustCleanup))
-      Error("TObjectRefSpy", "spied object must have the kMustCleanup bit set");
+
+   if (fObj && !fObj->TestBit(kMustCleanup)) {
+      if (fixMustCleanupBit) {
+         fResetMustCleanupBit = kTRUE;
+         SetBit(kMustCleanup, kTRUE);
+      } else {
+         Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
+      }
+   }
 }
 
 
 //______________________________________________________________________________
-TObjectRefSpy::TObjectRefSpy(TObject *&obj) : fObj(obj)
+TObjectRefSpy::TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit) :
+   fObj(obj), fResetMustCleanupBit(kFALSE)
 {
    // Register the object that must be spied. The object must have the
    // kMustCleanup bit set. If the object has been deleted during a
    // RecusiveRemove() operation, GetObject() will return 0.
 
    gROOT->GetListOfCleanups()->Add(this);
-   if (fObj && !fObj->TestBit(kMustCleanup))
-      Error("TObjectRefSpy", "spied object must have the kMustCleanup bit set");
+   if (fObj && !fObj->TestBit(kMustCleanup)) {
+      if (fixMustCleanupBit) {
+         fResetMustCleanupBit = kTRUE;
+         SetBit(kMustCleanup, kTRUE);
+      } else {
+         Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -85,6 +115,8 @@ TObjectRefSpy::~TObjectRefSpy()
 {
    // Cleanup.
 
+   if (fObj && fResetMustCleanupBit)
+      fObj->SetBit(kMustCleanup, kFALSE);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
@@ -94,5 +126,8 @@ void TObjectRefSpy::RecursiveRemove(TObject *obj)
    // Sets the object pointer to zero if the object is deleted in the
    // RecursiveRemove() operation.
 
-   if (obj == fObj) fObj = 0;
+   if (obj == fObj) {
+      fObj = 0;
+      fResetMustCleanupBit = kFALSE;
+   }
 }

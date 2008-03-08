@@ -60,7 +60,7 @@ private:
    TGLMatrix               fTransform;    //! transform (placement) of physical instance
    TGLBoundingBox          fBoundingBox;  //! bounding box of the physical (transformed)
    Float_t                 fColor[17];    //! GL color array
-   Bool_t                  fSelected;     //! selected state
+   UChar_t                 fSelected;     //! selected state
    Bool_t                  fInvertedWind; //! face winding TODO: can get directly from fTransform?
    Bool_t                  fModified;     //! has been modified - retain across scene rebuilds
    EManip                  fManip;        //! permitted manipulation bitflags - see EManip
@@ -102,8 +102,9 @@ public:
    Bool_t  IsModified() const      { return fModified; }
 
    // Selection
-   Bool_t  IsSelected() const      { return fSelected;   }
-   void    Select(Bool_t select)   { fSelected = select; }
+   Bool_t  IsSelected()  const    { return fSelected != 0; }
+   UChar_t GetSelected() const    { return fSelected; }
+   void    Select(UChar_t select) { fSelected = select; }
 
    // Color
    const Float_t  * Color() const                      { return fColor; }
@@ -113,6 +114,7 @@ public:
    void             SetColorOnFamily(const Float_t rgba[17]);
    void             SetDiffuseColor(const Float_t rgba[4]);
    void             SetDiffuseColor(const UChar_t rgba[4]);
+   void             SetDiffuseColor(Color_t ci, UChar_t transparency);
 
    // Geometry
    TGLVector3       GetScale() const;

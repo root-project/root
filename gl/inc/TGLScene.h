@@ -20,7 +20,7 @@
 #include <map>
 #include <vector>
 
-class TObject;
+class TGLObject;
 class TGLCamera;
 class TGLLogicalShape;
 class TGLPhysicalShape;
@@ -33,28 +33,20 @@ private:
    TGLScene(const TGLScene&);            // Not implemented
    TGLScene& operator=(const TGLScene&); // Not implemented
 
-protected:
+public:
    // Logical shapes
    typedef std::map<TObject*, TGLLogicalShape *>   LogicalShapeMap_t;
    typedef LogicalShapeMap_t::value_type           LogicalShapeMapValueType_t;
    typedef LogicalShapeMap_t::iterator             LogicalShapeMapIt_t;
    typedef LogicalShapeMap_t::const_iterator       LogicalShapeMapCIt_t;
-   LogicalShapeMap_t                               fLogicalShapes; //!
 
    // Physical Shapes
    typedef std::map<UInt_t, TGLPhysicalShape *>    PhysicalShapeMap_t;
    typedef PhysicalShapeMap_t::value_type          PhysicalShapeMapValueType_t;
    typedef PhysicalShapeMap_t::iterator            PhysicalShapeMapIt_t;
    typedef PhysicalShapeMap_t::const_iterator      PhysicalShapeMapCIt_t;
-   PhysicalShapeMap_t                              fPhysicalShapes; //!
 
-   // Compare physical-shape volumes -- for draw list sorting
-   static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1,
-                                        const TGLPhysicalShape * shape2);
 
-   virtual void DestroyPhysicalInternal(PhysicalShapeMapIt_t pit);
-
-public:
    struct DrawElement_t
    {
       const TGLPhysicalShape* fPhysical; // Physical shape.
@@ -99,7 +91,18 @@ public:
    };
    friend class TSceneInfo; // for solaris cc
 
+
 protected:
+   LogicalShapeMap_t      fLogicalShapes;  //!
+   PhysicalShapeMap_t     fPhysicalShapes; //!
+
+   // Compare physical-shape volumes -- for draw list sorting
+   static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1,
+                                        const TGLPhysicalShape * shape2);
+
+   virtual void DestroyPhysicalInternal(PhysicalShapeMapIt_t pit);
+
+
    // GLcontext
    TGLContextIdentity * fGLCtxIdentity;
    void ReleaseGLCtxIdentity();
@@ -148,7 +151,7 @@ public:
 
    // Basic logical shape management
    virtual void              AdoptLogical(TGLLogicalShape & shape);
-   virtual Bool_t            DestroyLogical(TObject* logid);
+   virtual Bool_t            DestroyLogical(TObject* logid, Bool_t mustFind=kTRUE);
    virtual Int_t             DestroyLogicals();
    virtual TGLLogicalShape*  FindLogical(TObject* logid)  const;
 
@@ -164,7 +167,7 @@ public:
    // Updates / removals of logical and physical shapes
 
    virtual Bool_t BeginUpdate();
-   virtual void   EndUpdate();
+   virtual void   EndUpdate(Bool_t sceneChanged=kTRUE, Bool_t updateViewers=kTRUE);
 
    virtual void UpdateLogical(TObject* logid);
 
@@ -174,7 +177,9 @@ public:
    virtual void UpdatePhysioLogical(TObject* logid, Double_t* trans, UChar_t* col);
    virtual void UpdatePhysioLogical(TObject* logid, Double_t* trans, Color_t cidx=-1, UChar_t transp=0);
 
-   TGLContextIdentity * GetGLCtxIdentity() const { return fGLCtxIdentity; }
+   // Temporary export for setting selected-state of physical shapes.
+   LogicalShapeMap_t& RefLogicalShapes() { return fLogicalShapes; }
+
 
    // ----------------------------------------------------------------
    // SmartRefresh
@@ -182,6 +187,12 @@ public:
    UInt_t            BeginSmartRefresh();
    void              EndSmartRefresh();
    TGLLogicalShape*  FindLogicalSmartRefresh(TObject* ID) const;
+
+
+   // ----------------------------------------------------------------
+   // GL-context holding display-list definitions
+
+   TGLContextIdentity * GetGLCtxIdentity() const { return fGLCtxIdentity; }
 
 
    // ----------------------------------------------------------------

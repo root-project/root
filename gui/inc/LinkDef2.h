@@ -73,6 +73,7 @@
 #pragma link C++ class TGToolTip;
 #pragma link C++ class TGToolBar;
 #pragma link C++ class TGListTreeItem;
+#pragma link C++ class TGListTreeItemStd;
 #pragma link C++ class TGListTree;
 #pragma link C++ class TGSplitter;
 #pragma link C++ class TGVSplitter;

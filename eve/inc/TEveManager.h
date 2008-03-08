@@ -12,6 +12,8 @@
 #ifndef ROOT_TEveManager
 #define ROOT_TEveManager
 
+#include "TEveElement.h"
+
 #include "TGeoManager.h"
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
@@ -33,11 +35,11 @@ class TGWindow;
 
 class TGLViewer;
 
+class TEveSelection;
 class TEveGListTreeEditorFrame;
 class TEveBrowser;
 class TEveGedEditor;
 
-class TEveElement;
 class PadPrimitive;
 
 class TEveViewer; class TEveViewerList;
@@ -104,6 +106,14 @@ private:
    TTimer                    fRedrawTimer;
 
 protected:
+   // Fine grained scene updates.
+   TEveElement::Set_t        fStampedElements;
+
+   // Selection / hihglight elements
+   TEveSelection            *fSelection;
+   TEveSelection            *fHighlight;
+
+   // TGeo multiple geometry management
    std::map<TString, TGeoManager*> fGeometries;
    std::map<TString, TString>      fGeometryAliases;
 
@@ -112,6 +122,9 @@ public:
    virtual ~TEveManager();
 
    TExceptionHandler* GetExcHandler() const { return fExcHandler; }
+
+   TEveSelection*     GetSelection() const { return fSelection; }
+   TEveSelection*     GetHighlight() const { return fHighlight; }
 
    TEveBrowser*      GetBrowser()   const { return fBrowser;   }
    TEveGListTreeEditorFrame* GetLTEFrame()  const { return fLTEFrame;  }
@@ -154,7 +167,10 @@ public:
    void   SetKeepEmptyCont(Bool_t k) { fKeepEmptyCont = k; }
 
    void ElementChanged(TEveElement* element, Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
-   void ScenesChanged(std::list<TEveElement*>& scenes);
+   void ScenesChanged(TEveElement::List_t& scenes);
+
+   // Fine grained updates via stamping.
+   void ElementStamped(TEveElement* element) { fStampedElements.insert(element); }
 
    // These are more like TEveManager stuff.
    TGListTree*     GetListTree() const;
@@ -162,17 +178,15 @@ public:
    void            RemoveFromListTree(TEveElement* element, TGListTree* lt, TGListTreeItem* lti);
 
    TGListTreeItem* AddEvent(TEveEventManager* event);
-   TGListTreeItem* AddElement(TEveElement* element,
-                              TEveElement* parent=0);
-   TGListTreeItem* AddGlobalElement(TEveElement* element,
-                                    TEveElement* parent=0);
+
+   void AddElement(TEveElement* element, TEveElement* parent=0);
+   void AddGlobalElement(TEveElement* element, TEveElement* parent=0);
 
    void RemoveElement(TEveElement* element, TEveElement* parent);
    void PreDeleteElement(TEveElement* element);
 
    void   ElementSelect(TEveElement* element);
    Bool_t ElementPaste(TEveElement* element);
-   void   ElementChecked(TEveElement* element, Bool_t state);
 
    // Geometry management.
    TGeoManager* GetGeometry(const TString& filename);

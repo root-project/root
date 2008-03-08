@@ -121,7 +121,6 @@ void TEveGValuator::Build(Bool_t connect)
    fEntry->GetNumberEntry()->SetToolTipText("Enter Slider Value");
    hf1->AddFrame(fEntry, elh);
 
-   fEntry->Associate(this);
    if (connect)
       fEntry->Connect("ValueSet(Long_t)",
                       "TEveGValuator", this, "EntryCallback()");
@@ -131,7 +130,6 @@ void TEveGValuator::Build(Bool_t connect)
       fSlider = new TGHSlider(hfs, GetWidth(), kSlider1 | kScaleBoth);
       hfs->AddFrame(fSlider, new TGLayoutHints(kLHintsLeft|kLHintsTop, 1,1,0,0));
 
-      fSlider->Associate(this);
       if (connect)
          fSlider->Connect("PositionChanged(Int_t)",
                           "TEveGValuator", this, "SliderCallback()");
@@ -318,7 +316,6 @@ void TEveGDoubleValuator::Build(Bool_t connect)
    if (connect)
       fMinEntry->Connect("ValueSet(Long_t)",
                          "TEveGDoubleValuator", this, "MinEntryCallback()");
-   fMinEntry->Associate(this);
 
    fMaxEntry = new TGNumberEntry(hf1, 0, fNELength);
    fMaxEntry->SetHeight(fNEHeight);
@@ -327,13 +324,11 @@ void TEveGDoubleValuator::Build(Bool_t connect)
    if (connect)
       fMaxEntry->Connect("ValueSet(Long_t)",
                          "TEveGDoubleValuator", this, "MaxEntryCallback()");
-   fMaxEntry->Associate(this);
 
    // slider
    if(fShowSlider) {
       fSlider = new TGDoubleHSlider(hfs, GetWidth(), kDoubleScaleBoth);
       hfs->AddFrame(fSlider, new TGLayoutHints(kLHintsTop|kLHintsLeft, 0,0,1,0));
-      fSlider->Associate(this);
       if (connect)
          fSlider->Connect("PositionChanged()",
                           "TEveGDoubleValuator", this, "SliderCallback()");
@@ -447,7 +442,7 @@ TEveGTriVecValuator::TEveGTriVecValuator(const TGWindow *p, const char* name,
    fNEHeight   (20)
 {
    // Constructor.
-   
+
    SetName(name);
 }
 

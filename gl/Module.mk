@@ -103,12 +103,7 @@ gl/src/TGLText.o: \
 gl/src/TGLText.o: \
                 CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)
 
-gl/src/TGLContext.o: \
+gl/src/TGLFontManager.o: \
                 $(FREETYPEDEP)
-gl/src/TGLContext.o: \
-                CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)
-
-gl/src/TFTGLManager.o: \
-                $(FREETYPEDEP)
-gl/src/TFTGLManager.o: \
+gl/src/TGLFontManager.o: \
                 CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)

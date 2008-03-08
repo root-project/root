@@ -157,6 +157,25 @@ Bool_t TGLOrthoCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
 }
 
 //______________________________________________________________________________
+Bool_t TGLOrthoCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
+{
+   // Truck the camera - 'move camera parallel to film plane'.
+   // Returns kTRUE is redraw required (camera change), kFALSE otherwise.
+
+   Double_t xstep = 2.0 * xDelta / fProjM[0] / fViewport.Width();
+   Double_t ystep = 2.0 * yDelta / fProjM[5] / fViewport.Height();
+
+   xstep = AdjustDelta(xstep, 1.0, mod1, mod2);
+   ystep = AdjustDelta(ystep, 1.0, mod1, mod2);
+
+   fCamTrans.MoveLF(2, -xstep);
+   fCamTrans.MoveLF(3, -ystep);
+
+   IncTimeStamp();
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TGLOrthoCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
    // Rotate the camera - 'swivel round the view volume center'.

@@ -23,7 +23,7 @@
 class TEveProjection
 {
 public:
-   enum EPType_e   { kPT_Unknown, kPT_CFishEye, kPT_RhoZ };     // type
+   enum EPType_e   { kPT_Unknown, kPT_RPhi, kPT_RhoZ };         // type
    enum EPProc_e   { kPP_Plane, kPP_Distort, kPP_Full };        // procedure
    enum EGeoMode_e { kGM_Unknown, kGM_Polygons, kGM_Segments }; // reconstruction of geometry
 
@@ -37,16 +37,17 @@ protected:
 
    Float_t             fDistortion;    // distortion
    Float_t             fFixedRadius;   // projected radius independent of distortion
+
    Float_t             fScale;         // scale factor to keep projected radius fixed
-   TEveVector          fUpLimit;       // convergence of point +infinity
-   TEveVector          fLowLimit;      // convergence of point -infinity
+   TEveVector          fLowLimit;      // convergence of point +infinity
+   TEveVector          fUpLimit;       // convergence of point -infinity
 
 public:
    TEveProjection(TEveVector& center);
    virtual ~TEveProjection(){}
 
    virtual   void      ProjectPoint(Float_t&, Float_t&, Float_t&, EPProc_e p = kPP_Full ) = 0;
-   virtual   void      ProjectPointFv(Float_t* v){ ProjectPoint(v[0], v[1], v[2]); }
+   virtual   void      ProjectPointFv(Float_t* v) { ProjectPoint(v[0], v[1], v[2]); }
    virtual   void      ProjectVector(TEveVector& v);
 
    const     char*     GetName() { return fName.Data(); }
@@ -93,7 +94,7 @@ private:
    TEveVector   fProjectedCenter; // projected center of distortion.
 
 public:
-   TEveRhoZProjection(TEveVector& center) : TEveProjection(center) { fType = kPT_RhoZ; fName="RhoZ"; }
+   TEveRhoZProjection(TEveVector& center);
    virtual ~TEveRhoZProjection() {}
 
    virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance);
@@ -109,19 +110,19 @@ public:
 
 ////////////////////////////////////////////////////////////////
 //                                                            //
-// TEveCircularFishEyeProjection                              //
+// TEveRPhiProjection                                         //
 //                                                            //
 ////////////////////////////////////////////////////////////////
 
-class TEveCircularFishEyeProjection : public TEveProjection
+class TEveRPhiProjection : public TEveProjection
 {
 public:
-   TEveCircularFishEyeProjection(TEveVector& center):TEveProjection(center) { fType = kPT_CFishEye; fGeoMode = kGM_Polygons; fName="CircularFishEye"; }
-   virtual ~TEveCircularFishEyeProjection() {}
+   TEveRPhiProjection(TEveVector& center);
+   virtual ~TEveRPhiProjection() {}
 
    virtual void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = kPP_Full);
 
-   ClassDef(TEveCircularFishEyeProjection, 0); // XY non-linear projection.
+   ClassDef(TEveRPhiProjection, 0); // XY non-linear projection.
 };
 
 #endif

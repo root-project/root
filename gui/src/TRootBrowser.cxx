@@ -461,6 +461,7 @@ void TRootBrowser::CloseWindow()
       }
    }
    fPlugins.Delete();
+   Emit("CloseWindow()");
    DeleteWindow();
 }
 
