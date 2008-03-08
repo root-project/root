@@ -83,8 +83,8 @@ ClassImp(TGListTree)
 //______________________________________________________________________________
 TGListTreeItem::TGListTreeItem(TGClient *client) :
    fClient(client),
-   fParent    (0), fFirstchild(0), fPrevsibling(0), fNextsibling(0),
-   fLastchild (0), fOpen (kFALSE), fDNDState   (0),
+   fParent    (0), fFirstchild(0), fLastchild (0), fPrevsibling(0), 
+   fNextsibling(0),fOpen (kFALSE), fDNDState  (0),
    fY         (0), fXtext     (0), fYtext(0), fHeight(0)
 {
    // Constructor.
