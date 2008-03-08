@@ -52,14 +52,14 @@ struct ExceptionContext_t {
 
 #define RETRY \
    { \
-      ExceptionContext_t R__curr, *R__old = gException; \
+      static ExceptionContext_t R__curr, *R__old = gException; \
       int R__code; \
       gException = &R__curr; \
       R__code = SETJMP(gException->fBuf); if (R__code) { }; {
 
 #define TRY \
    { \
-      ExceptionContext_t R__curr, *R__old = gException; \
+      static ExceptionContext_t R__curr, *R__old = gException; \
       int R__code; \
       gException = &R__curr; \
       if ((R__code = SETJMP(gException->fBuf)) == 0) {
