@@ -135,7 +135,7 @@ Double_t TGLStopwatch::WaitForTick(void)  const
    start = GetClock();
 
    // Next tick
-   while ((current = GetClock()) == start);
+   while ((current = GetClock()) == start) { }
 
    return current;
 }
@@ -158,7 +158,7 @@ void TGLStopwatch::InitOverhead(void) const
    start = GetClock();
 
    // Next tick
-   while ((finish = GetClock()) == start);
+   while ((finish = GetClock()) == start) { }
 
    // Test on 100 ticks range to 0.1 sec - 0.5 sec
    runTime = 100.0 * (finish - start);

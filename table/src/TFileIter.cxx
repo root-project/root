@@ -349,7 +349,7 @@ void TFileIter::SetCursorPosition(const char *keyNameToFind)
 {
    // Find the key by the name provided
    Reset();
-   while( (*this != keyNameToFind) && SkipObjects() );
+   while( (*this != keyNameToFind) && SkipObjects() ) { }
 }
 //__________________________________________________________________________
 TObject *TFileIter::SkipObjects(Int_t  nSkip)

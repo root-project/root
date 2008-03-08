@@ -75,11 +75,11 @@ namespace {
             ++selectionChar) {
             SectionStart_t checkPrev = cursor;
             while (--checkPrev != prevSection->fStart 
-               && !strncasecmp(checkPrev->c_str(), cursor->c_str(), selectionChar));
+               && !strncasecmp(checkPrev->c_str(), cursor->c_str(), selectionChar)) { }
 
             SectionStart_t checkNext = cursor;
             while (++checkNext != end
-               && !strncasecmp(checkNext->c_str(), cursor->c_str(), selectionChar));
+               && !strncasecmp(checkNext->c_str(), cursor->c_str(), selectionChar)) { }
 
             // if the previous matching one is closer but not previous section start, take it!
             if (checkPrev != prevSection->fStart) {

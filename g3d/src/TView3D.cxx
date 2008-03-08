@@ -1067,7 +1067,7 @@ void TView3D::GetRange(Float_t *min, Float_t *max)
 {
    // Get Range function.
 
-   for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
+   for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++) { }
 }
 
 
@@ -1076,7 +1076,7 @@ void TView3D::GetRange(Double_t *min, Double_t *max)
 {
    // Get Range function.
 
-   for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
+   for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++) { }
 }
 
 
@@ -1374,7 +1374,7 @@ void TView3D::SetRange(const Double_t *min, const Double_t *max)
    // Set Range function.
 
    Int_t irep;
-   for (Int_t i = 0; i < 3; fRmax[i] = max[i], fRmin[i] = min[i], i++);
+   for (Int_t i = 0; i < 3; fRmax[i] = max[i], fRmin[i] = min[i], i++) { }
    if (IsPerspective()) SetDefaultWindow();
    ResetView(fLongitude, fLatitude, fPsi, irep);
    if(irep < 0)

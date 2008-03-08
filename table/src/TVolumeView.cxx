@@ -666,7 +666,7 @@ TVolumePosition *TVolumeView::Local2Master(const TVolumeView *localNode,const TV
    if (masterNode && localNode) {
       TVolumeViewIter transform((TVolumeView *)masterNode,0);
       TVolumeView *nextNode = 0;
-      while ((nextNode = (TVolumeView *)transform()) && nextNode != localNode);
+      while ((nextNode = (TVolumeView *)transform()) && nextNode != localNode) { }
       if (nextNode) position = transform[0];
    }
    return position;
@@ -717,7 +717,7 @@ Float_t *TVolumeView::Local2Master(const Float_t *local, Float_t *master,
    if (masterNode && localNode) {
       TVolumeViewIter transform((TVolumeView *)masterNode,0);
       TVolumeView *nextNode = 0;
-      while ((nextNode = (TVolumeView *)transform()) && nextNode != localNode);
+      while ((nextNode = (TVolumeView *)transform()) && nextNode != localNode) { }
       if (nextNode && (position = (TVolumePosition *) transform.GetPosition()) )
          trans = position->Local2Master(local,master,nVector);
    }

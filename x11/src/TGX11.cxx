@@ -1624,7 +1624,7 @@ Int_t TGX11::RequestString(int x, int y, char *text)
    }
    if (cursor != 0)
       XDefineCursor(fDisplay, gCws->fWindow, cursor);
-   for (nt = len_text; nt > 0 && text[nt-1] == ' '; nt--);
+   for (nt = len_text; nt > 0 && text[nt-1] == ' '; nt--) { }
       pt = nt;
    XGetInputFocus(fDisplay, &focuswindow, &focusrevert);
    XSetInputFocus(fDisplay, gCws->fWindow, focusrevert, CurrentTime);

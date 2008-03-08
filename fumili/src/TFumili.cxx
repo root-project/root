@@ -667,7 +667,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
          Int_t l = 0,nn=0,nnn=0;
          for (i=0;i<fNpar;i++) if(fPL0[i]>0.) nn++;
          for (i=0;i<nn;i++) {
-            for(;fPL0[nnn]<=0.;nnn++);
+            for(;fPL0[nnn]<=0.;nnn++) { }
             printf("%5s: ",fANames[nnn++].Data());
             for (Int_t j=0;j<=i;j++) 
                printf("%11.2E",fZ[l++]);

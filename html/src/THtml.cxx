@@ -642,7 +642,7 @@ TClassDocInfo *THtml::GetNextClass()
 
    TClassDocInfo* classinfo = 0;
    while ((classinfo = (TClassDocInfo*)(*fThreadedClassIter)())
-          && !classinfo->IsSelected());
+          && !classinfo->IsSelected()) { }
 
    if (!classinfo) {
       delete fThreadedClassIter;

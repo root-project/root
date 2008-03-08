@@ -71,7 +71,7 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
             }
         }
 
-        const GlyphIndex find( CharacterCode c)
+        GlyphIndex find( CharacterCode c)
         {
             if( !this->Indices)
             {

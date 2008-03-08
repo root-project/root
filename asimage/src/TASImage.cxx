@@ -2824,22 +2824,22 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
       gradient.type = GRADIENT_BottomLeft2TopRight;
    }
 
-   for (p = (char*)colors; isspace((int)*p); p++);
+   for (p = (char*)colors; isspace((int)*p); p++) { }
 
    for (npoints1 = 0; *p; npoints1++) {
       if (*p) {
-         for ( ; *p && !isspace((int)*p); p++);
+         for ( ; *p && !isspace((int)*p); p++) { }
       }
-      for ( ; isspace((int)*p); p++);
+      for ( ; isspace((int)*p); p++) { }
    }
    if (offsets) {
-      for (p = (char*)offsets; isspace((int)*p); p++);
+      for (p = (char*)offsets; isspace((int)*p); p++) { }
 
       for (npoints2 = 0; *p; npoints2++) {
          if (*p) {
-            for ( ; *p && !isspace((int)*p); p++);
+            for ( ; *p && !isspace((int)*p); p++) { }
          }
-         for ( ; isspace((int)*p); p++);
+         for ( ; isspace((int)*p); p++) { }
       }
    }
    if (npoints1 > 1) {
@@ -2856,15 +2856,15 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
       gradient.color = new ARGB32[npoints1];
       gradient.offset = new double[npoints1];
 
-      for (p = (char*)colors; isspace((int)*p); p++);
+      for (p = (char*)colors; isspace((int)*p); p++) { }
 
       for (npoints1 = 0; *p; ) {
          pb = p;
 
          if (*p) {
-            for ( ; *p && !isspace((int)*p); p++);
+            for ( ; *p && !isspace((int)*p); p++) { }
          }
-         for ( ; isspace((int)*p); p++);
+         for ( ; isspace((int)*p); p++) { }
 
          col = str(pb - colors, p - pb);
 
@@ -2876,20 +2876,20 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
       }
 
       if (offsets) {
-         for (p = (char*)offsets; isspace((int)*p); p++);
+         for (p = (char*)offsets; isspace((int)*p); p++) { }
 
          for (npoints2 = 0; *p; ) {
             pb = p;
 
             if (*p) {
-               for ( ; *p && !isspace((int)*p); p++);
+               for ( ; *p && !isspace((int)*p); p++) { }
             }
             ch = *p; *p = '\0';
             gradient.offset[npoints2] = strtod(pb, &pb);
 
             if (pb == p) npoints2++;
             *p = ch;
-            for ( ; isspace((int)*p); p++);
+            for ( ; isspace((int)*p); p++) { }
          }
       } else {
          for (npoints2 = 0; npoints2 < npoints1; npoints2++) {

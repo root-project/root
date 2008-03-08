@@ -572,7 +572,7 @@ TH1::~TH1()
       // have been added to the list of functions of several histograms
       //and may have been already deleted.
       while ((obj  = fFunctions->First())) {
-         while(fFunctions->Remove(obj));
+         while(fFunctions->Remove(obj)) { }
          if (!obj->TestBit(kNotDeleted)) {
             break;
          }
@@ -5936,7 +5936,7 @@ void TH1::Reset(Option_t *option)
    //drawing modes
    TObject *obj;
    while ((obj  = fFunctions->First())) {
-      while(fFunctions->Remove(obj));
+      while(fFunctions->Remove(obj)) { }
       delete obj;
    }
    if(stats) fFunctions->Add(stats);

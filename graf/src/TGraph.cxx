@@ -394,7 +394,7 @@ TGraph::~TGraph()
       //drawing modes
       TObject *obj;
       while ((obj  = fFunctions->First())) {
-         while(fFunctions->Remove(obj));
+         while(fFunctions->Remove(obj)) { }
          delete obj;
       }
       delete fFunctions;

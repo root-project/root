@@ -2740,7 +2740,7 @@ void TGX11::SetDNDAware(Window_t win, Atom_t *typelist)
    if (typelist) {
       int n;
 
-      for (n = 0; typelist[n]; n++);
+      for (n = 0; typelist[n]; n++) { }
       if (n > 0) {
          XChangeProperty(fDisplay, win, dndaware, XA_ATOM, 32, PropModeAppend,
                          (unsigned char *) typelist, n);
@@ -2755,7 +2755,7 @@ void TGX11::SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist)
 
    if (typelist) {
       int n;
-      for (n = 0; typelist[n]; n++);
+      for (n = 0; typelist[n]; n++) { }
       if (n > 0) {
          XChangeProperty(fDisplay, win, prop, XA_ATOM, 32, PropModeAppend,
                          (unsigned char *) typelist, n);

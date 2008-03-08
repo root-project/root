@@ -169,7 +169,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
          // Search for popup with corresponding name
          while ((ptr = (TGMenuEntry *) next()) &&				    
                 (ptr->GetType() != kMenuPopup || 
-                last_component.CompareTo(ptr->GetName())));
+                last_component.CompareTo(ptr->GetName()))) { }
          if (ptr) 
             currentMenu = ptr->GetPopup();
          else {
@@ -180,7 +180,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
             // Search for popup with corresponding name
             while ((ptr2 = (TGMenuEntry *) next()) &&				    
                    (ptr2->GetType() != kMenuPopup  ||
-                   last_component.CompareTo(ptr2->GetName()) > 0 ));
+                   last_component.CompareTo(ptr2->GetName()) > 0 )) { }
 	
             currentMenu->AddPopup(last_component, r,ptr2);
             currentMenu = r;
@@ -206,7 +206,7 @@ void TRootContextMenu::AddEntrySorted(TGPopupMenu *currentMenu, const char *s, I
       // Search for popup with corresponding name
       while ((ptr2 = (TGMenuEntry *) next()) &&				    
              (ptr2->GetType() != kMenuEntry || 
-             strcmp(ptr2->GetName(), s)<0 ));
+             strcmp(ptr2->GetName(), s)<0 )) { }
    }
    currentMenu->AddEntry(s,id,ud,p,ptr2);
 }

@@ -324,7 +324,7 @@ static int ArrayLength(Atom_t *a)
 
    int n;
 
-   for (n = 0; a[n]; n++);
+   for (n = 0; a[n]; n++) { }
    return n;
 }
 
