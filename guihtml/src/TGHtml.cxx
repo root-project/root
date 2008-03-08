@@ -1120,7 +1120,6 @@ TGHtmlInput *TGHtml::GetInputElement(int x, int y)
 
    TGHtmlInput *p;     // For looping over all controls
    int vx, vy, vw, vh;    // Part of the virtual canvas that is visible
-   int cnt = 0;       // Number of visible controls
 
    vx = fVisible.fX;
    vy = fVisible.fY;
