@@ -232,7 +232,6 @@ void TEveTrack::SetPathMarks(const TEveTrack& t)
 {
    // Copy path-marks from t.
 
-   const vPathMark_t& tpms = t.RefPathMarks();
    std::copy(t.RefPathMarks().begin(), t.RefPathMarks().end(),
              std::back_insert_iterator<vPathMark_t>(fPathMarks));
 }
