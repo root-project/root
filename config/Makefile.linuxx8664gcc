@@ -20,14 +20,18 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -Wall -m64 -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -m64 -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -m64 -fPIC $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = -pipe -m64 -Wall -W -Woverloaded-virtual \
+                -fPIC $(EXTRA_CXXFLAGS)
+CFLAGS        = -pipe -m64 -Wall -W -fPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -m64 -Wall -W -Woverloaded-virtual \
+                -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
-CINTCFLAGS    = -pipe -Wall -m64 -fPIC $(EXTRA_CFLAGS) \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                -DG__STD_EXCEPTION -DG__64BIT
+CINTCFLAGS    = -pipe -m64 -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                -DG__STD_EXCEPTION -DG__64BIT
 COMPILER      = gnu
 
 # Linker:
