@@ -38,7 +38,7 @@ INCLUDEFILES += $(MATRIXDEP)
 include/%.h:    $(MATRIXDIRI)/%.h
 		cp $< $@
 
-$(MATRIXLIB):   $(MATRIXO) $(MATRIXDO) $(ORDER_) $(MAINLIBS)
+$(MATRIXLIB):   $(MATRIXO) $(MATRIXDO) $(ORDER_) $(MAINLIBS) $(MATRIXLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libMatrix.$(SOEXT) $@ "$(MATRIXO) $(MATRIXDO)" \
 		   "$(MATRIXLIBEXTRA)"
