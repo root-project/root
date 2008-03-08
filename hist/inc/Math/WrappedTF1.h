@@ -18,8 +18,9 @@
 #include "Math/IParamFunction.h"
 #endif
 
-
+#ifndef ROOT_TF1
 #include "TF1.h"
+#endif
 #include <cmath>
 
 namespace ROOT { 
