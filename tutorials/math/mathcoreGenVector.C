@@ -101,7 +101,8 @@ int testVector3D() {
 	    << " Vector 3D Test" 
 	    << "\n************************************************************************\n";
 
-
+  //CINT cannot autoload classes known only via a typedef (here XYZVector)
+  gSystem->Load("libGenVector");
 
   XYZVector v1(0.01, 0.02, 16);
   //XYZVector v1(1.0, 2.0, 3.0);
