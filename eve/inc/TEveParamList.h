@@ -67,7 +67,7 @@ public:
    typedef std::vector<BoolConfig_t>       BoolConfigVec_t;
    typedef BoolConfigVec_t::iterator       BoolConfigVec_i;
    typedef BoolConfigVec_t::const_iterator BoolConfigVec_ci;
- 
+
 private:
    TEveParamList(const TEveParamList&);            // Not implemented
    TEveParamList& operator=(const TEveParamList&); // Not implemented

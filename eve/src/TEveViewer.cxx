@@ -258,6 +258,15 @@ void TEveViewerList::SceneDestructing(TEveScene* scene)
 //______________________________________________________________________________
 void TEveViewerList::OnMouseOver(TGLPhysicalShape *pshape, UInt_t state)
 {
+   // Slot for global TGLViewer::MouseOver() signal.
+   //
+   // The attempt is made to determine the TEveElement being
+   // represented by the physical shape and global higlight is updated
+   // accordingly.
+   //
+   // If TEveElement::IsPickable() returns false, the element is not
+   // highlighted.
+
    if (state & kKeyShiftMask || state & kKeyMod1Mask)
       return;
 
@@ -279,6 +288,14 @@ void TEveViewerList::OnMouseOver(TGLPhysicalShape *pshape, UInt_t state)
 //______________________________________________________________________________
 void TEveViewerList::OnClicked(TObject *obj, UInt_t button, UInt_t state)
 {
+   // Slot for global TGLViewer::Clicked().
+   //
+   // The obj is dyn-casted to the TEveElement and global selection is
+   // updated accordingly.
+   //
+   // If TEveElement::IsPickable() returns false, the element is not
+   // selected.
+
    if (button != kButton1 || state & kKeyShiftMask || state & kKeyMod1Mask)
       return;
 

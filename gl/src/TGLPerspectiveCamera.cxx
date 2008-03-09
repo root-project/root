@@ -242,7 +242,7 @@ void TGLPerspectiveCamera::Apply(const TGLBoundingBox & sceneBox,
                     (Int_t*) fViewport.CArr());
       gluPerspective(fFOV, fViewport.Aspect(), fNearClip, fFarClip);
    }
-   else 
+   else
    {
       gluPerspective(fFOV, fViewport.Aspect(), fNearClip, fFarClip);
       glGetDoublev(GL_PROJECTION_MATRIX, fLastNoPickProjM.Arr());

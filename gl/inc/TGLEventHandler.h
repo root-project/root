@@ -56,9 +56,8 @@ public:
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   Repaint();
 
-   ClassDef(TGLEventHandler, 0)
+   ClassDef(TGLEventHandler, 0); // Base-class and default implementation of event-handler for TGLViewer.
 };
-
 
 #endif
 

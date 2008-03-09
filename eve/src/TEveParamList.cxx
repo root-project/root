@@ -46,6 +46,8 @@ TEveParamList::TEveParamList(const Text_t* n, const Text_t* t, Bool_t doColor) :
 //______________________________________________________________________________
 TEveParamList::FloatConfig_t TEveParamList::GetFloatParameter(const TString& name)
 {
+   // Get config-struct for float parameter 'name'.
+
    static const TEveException eh("TEveParamList::GetFloatParameter ");
 
    for (FloatConfigVec_ci itr = fFloatParameters.begin(); itr != fFloatParameters.end(); ++itr)
@@ -57,6 +59,8 @@ TEveParamList::FloatConfig_t TEveParamList::GetFloatParameter(const TString& nam
 //______________________________________________________________________________
 TEveParamList::IntConfig_t TEveParamList::GetIntParameter(const TString& name)
 {
+   // Get config-struct for int parameter 'name'.
+
    static const TEveException eh("TEveParamList::GetIntParameter ");
 
    for (IntConfigVec_ci itr = fIntParameters.begin(); itr != fIntParameters.end(); ++itr)
@@ -68,6 +72,8 @@ TEveParamList::IntConfig_t TEveParamList::GetIntParameter(const TString& name)
 //______________________________________________________________________________
 Bool_t TEveParamList::GetBoolParameter(const TString& name)
 {
+   // Get value for bool parameter 'name'.
+
    static const TEveException eh("TEveParamList::GetBoolParameter ");
 
    for (BoolConfigVec_ci itr = fBoolParameters.begin(); itr != fBoolParameters.end(); ++itr)
@@ -95,7 +101,7 @@ void TEveParamList::ParamChanged(const char* name)
 // Slot methods from this object do not call Update, instead they call
 // their model's ParamChanged(const char* name) function which emits a
 // corresponding signal.
-// 
+//
 // This helps in handling of parameter changes as they are probably
 // related to displayed objects in a more complicated way. Further,
 // the TGCheckButton::HandleButton() emits more signal after the
@@ -141,7 +147,7 @@ void TEveParamListEditor::InitModel(TObject* obj)
       // number entry widget
       TGNumberEntry* widget = new TGNumberEntry
          (frame, fM->fIntParameters[i].fValue,
-          5,                                 // number of digits 
+          5,                                 // number of digits
           i,                                 // widget ID
           TGNumberFormat::kNESInteger,       // style
           TGNumberFormat::kNEAAnyNumber,     // input value filter
@@ -159,7 +165,7 @@ void TEveParamListEditor::InitModel(TObject* obj)
       fParamFrame->AddFrame(frame, new TGLayoutHints(kLHintsTop));
    }
 
-   
+
    // floats
    fFloatParameters.clear();
    for (UInt_t i = 0; i < fM->fFloatParameters.size(); ++i)
@@ -169,7 +175,7 @@ void TEveParamListEditor::InitModel(TObject* obj)
       // number entry widget
       TGNumberEntry* widget = new TGNumberEntry
          (frame, fM->fFloatParameters[i].fValue,
-          5,                                // number of digits 
+          5,                                // number of digits
           i,                                // widget ID
           TGNumberFormat::kNESReal,         // style
           TGNumberFormat::kNEAAnyNumber,    // input value filter
@@ -212,13 +218,13 @@ void TEveParamListEditor::SetModel(TObject* obj)
    InitModel(obj);
 
    for (UInt_t i = 0; i < fIntParameters.size(); ++i)
-     fIntParameters[i]->GetNumberEntry()->SetIntNumber(fM->fIntParameters[i].fValue);
-   
+      fIntParameters[i]->GetNumberEntry()->SetIntNumber(fM->fIntParameters[i].fValue);
+
    for (UInt_t i = 0; i < fFloatParameters.size(); ++i)
-     fFloatParameters[i]->GetNumberEntry()->SetNumber(fM->fFloatParameters[i].fValue);
-   
+      fFloatParameters[i]->GetNumberEntry()->SetNumber(fM->fFloatParameters[i].fValue);
+
    for (UInt_t i = 0; i < fBoolParameters.size(); ++i)
-     fBoolParameters[i]->SetState( fM->fBoolParameters[i].fValue ? kButtonDown : kButtonUp);
+      fBoolParameters[i]->SetState( fM->fBoolParameters[i].fValue ? kButtonDown : kButtonUp);
 }
 
 /******************************************************************************/
@@ -227,7 +233,7 @@ void TEveParamListEditor::SetModel(TObject* obj)
 void TEveParamListEditor::DoIntUpdate()
 {
    // Slot for integer parameter update.
-   
+
    TGNumberEntry *widget = (TGNumberEntry*) gTQSender;
    Int_t id = widget->WidgetId();
    if (id < 0 || id >= (int) fM->fIntParameters.size()) return;

@@ -63,7 +63,7 @@ void TGLEmbeddedViewer::CreateFrames()
    fEventHandler = new TGLEventHandler("Default", fGLWindow, this);
    fGLWindow->SetEventHandler(fEventHandler);
 
-   fFrame->AddFrame(fGLWindow, new TGLayoutHints(kLHintsExpandX | 
+   fFrame->AddFrame(fGLWindow, new TGLayoutHints(kLHintsExpandX |
                     kLHintsExpandY, 2, 2, 2, 2));
 }
 

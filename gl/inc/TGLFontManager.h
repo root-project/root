@@ -36,8 +36,8 @@ public:
 
    TGLFont& operator=(const TGLFont& o);
 
-   Int_t GetSize() const { return fSize;} 
-   Int_t GetFile() const { return fFile;} 
+   Int_t GetSize() const { return fSize;}
+   Int_t GetFile() const { return fFile;}
    EMode GetMode() const { return fMode;}
 
    const FTFont* GetFont() const { return fFont; }

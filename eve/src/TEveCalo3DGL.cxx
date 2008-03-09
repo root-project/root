@@ -71,7 +71,7 @@ inline void TEveCalo3DGL::CrossProduct(const Float_t a[3], const Float_t b[3],
 //______________________________________________________________________________
 void TEveCalo3DGL::RenderBox(const Float_t pnts[8]) const
 {
-   // Render a calo box given by vertices in pnts.
+   // Render box with given points.
 
    const Float_t *p = pnts;
    Float_t cross[3];
@@ -135,11 +135,9 @@ void TEveCalo3DGL::RenderBox(const Float_t pnts[8]) const
 //______________________________________________________________________________
 Float_t TEveCalo3DGL::RenderBarrelCell(const TEveCaloData::CellData_t &cellData, Float_t towerH, Float_t offset ) const
 {
-   // Render a barrel cell.
+   // Render barrel cell.
 
    using namespace TMath;
-
-   //   printf("RenderBarrel "); cellData.Dump();
 
    Float_t r1 = fM->GetBarrelRadius() + offset;
    Float_t r2 = r1 + towerH*Sin(cellData.ThetaMin());
@@ -219,8 +217,6 @@ Float_t TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellData_t &cellData,
    // Render an endcap cell.
 
    using namespace TMath;
-
-   //   printf("render endcap %f, %f ", z1, z2); cellData.Dump();
 
    Float_t z1, r1In, r1Out, z2, r2In, r2Out;
    if (cellData.ZSideSign() == 1)
@@ -304,7 +300,6 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 {
    // GL rendering.
 
-   // printf("TEveCalo3D::DirectDraw\n");
    fM->AssertPalette();
 
    if (fM->fCacheOK == kFALSE)

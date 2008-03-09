@@ -210,11 +210,11 @@ namespace {
       const Double_t leftY = yMin + ratio * (yMax - yMin), rightY = yMax - ratio * (yMax - yMin);
       const Double_t lowZ = zMin / 2. + zMax / 2. - 0.1 * (zMax - zMin);
       const Double_t upZ = zMin / 2. + zMax / 2. + 0.1 * (zMax - zMin);
-      
 
-      const Double_t minusVerts[][3] = {{xMin, leftY, lowZ}, {xMin, leftY, upZ}, {xMin, rightY, upZ}, {xMin, rightY, lowZ}, 
-                                        {leftX, yMin, lowZ}, {rightX, yMin, lowZ}, {rightX, yMin, upZ}, {leftX, yMin, upZ}, 
-                                        {xMax, leftY, lowZ}, {xMax, rightY, lowZ}, {xMax, rightY, upZ}, {xMax, leftY, upZ}, 
+
+      const Double_t minusVerts[][3] = {{xMin, leftY, lowZ}, {xMin, leftY, upZ}, {xMin, rightY, upZ}, {xMin, rightY, lowZ},
+                                        {leftX, yMin, lowZ}, {rightX, yMin, lowZ}, {rightX, yMin, upZ}, {leftX, yMin, upZ},
+                                        {xMax, leftY, lowZ}, {xMax, rightY, lowZ}, {xMax, rightY, upZ}, {xMax, leftY, upZ},
                                         {rightX, yMax, lowZ}, {leftX, yMax, lowZ}, {leftX, yMax, upZ}, {rightX, yMax, upZ}};
       const Int_t minusQuads[][4] = {{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}, {12, 13, 14, 15}};
 
@@ -239,7 +239,7 @@ namespace {
       glVertex3dv(minusVerts[verts[1]]);
       glVertex3dv(minusVerts[verts[2]]);
       glVertex3dv(minusVerts[verts[3]]);
-      glEnd();      
+      glEnd();
 
       const Float_t nullEmission[] = {0.f, 0.f, 0.f, 1.f};
       glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, nullEmission);
@@ -269,7 +269,7 @@ namespace {
       glVertex3dv(minusVerts[verts[1]]);
       glVertex3dv(minusVerts[verts[2]]);
       glVertex3dv(minusVerts[verts[3]]);
-      glEnd();      
+      glEnd();
 
       glPolygonMode(GL_FRONT, GL_FILL);
    }
@@ -321,7 +321,7 @@ void TGLBoxPainter::DrawPlot()const
    if (fSelectionPass && fHighColor)
       Rgl::ObjectIDToColor(fSelectionBase, fHighColor);//base + 1 == 7
 
-   Double_t maxContent = TMath::Max(TMath::Abs(fMinMaxVal.first), TMath::Abs(fMinMaxVal.second));   
+   Double_t maxContent = TMath::Max(TMath::Abs(fMinMaxVal.first), TMath::Abs(fMinMaxVal.second));
    if(!maxContent)//bad, find better way to check zero.
       maxContent = 1.;
 

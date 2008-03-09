@@ -71,7 +71,7 @@ void TGLFont::Render(const char* txt) const
 
    if (scaleDepth) {
       glPushMatrix();
-      // !!! 0.2*fSize is hard-coded in TGLFontManager::GetFont(), too. 
+      // !!! 0.2*fSize is hard-coded in TGLFontManager::GetFont(), too.
       glTranslatef(0.0f, 0.0f, 0.5f*fDepth * 0.2f*fSize);
       glScalef(1.0f, 1.0f, fDepth);
    }
@@ -112,7 +112,7 @@ void TGLFont::PreRender(Bool_t autoLight, Bool_t lightOn) const
          glPushAttrib(GL_POLYGON_BIT | GL_ENABLE_BIT);
          glEnable(GL_NORMALIZE);
          glDisable(GL_CULL_FACE);
-         break;         
+         break;
       default:
          Warning("TGLFont::PreRender", "Font mode undefined.");
          glPushAttrib(GL_LIGHTING_BIT);
@@ -157,7 +157,7 @@ TGLFontManager::~TGLFontManager()
       delete it->first.GetFont();
       it++;
    }
-   fFontMap.clear(); 
+   fFontMap.clear();
 }
 
 //______________________________________________________________________________
@@ -207,7 +207,7 @@ const TGLFont& TGLFontManager::GetFont(Int_t size, Int_t fileID, TGLFont::EMode 
       }
       ftfont->FaceSize(size);
       return fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont), 1)).first->first;
-   } 
+   }
    else
    {
       it->second = it->second;

@@ -38,6 +38,12 @@ TEveSelection::TEveSelection(const Text_t* n, const Text_t* t) :
 
 void TEveSelection::SetHighlightMode()
 {
+   // Set to 'highlight' mode.
+
+   // Most importantly, this sets the pointers-to-function-members in
+   // TEveElement that are used to mark elements as (un)selected and
+   // implied-(un)selected.
+
    fPickToSelect = kPS_Projectable;
    fIsMaster     = kFALSE;
 
@@ -54,6 +60,9 @@ void TEveSelection::SetHighlightMode()
 //______________________________________________________________________________
 void TEveSelection::DoElementSelect(TEveSelection::SelMap_i entry)
 {
+   // Select element indicated by the entry and fill its
+   // implied-selected set.
+
    TEveElement *el  = entry->first;
    Set_t       &set = entry->second;
 
@@ -66,6 +75,9 @@ void TEveSelection::DoElementSelect(TEveSelection::SelMap_i entry)
 //______________________________________________________________________________
 void TEveSelection::DoElementUnselect(TEveSelection::SelMap_i entry)
 {
+   // Deselect element indicated by the entry and clear its
+   // implied-selected set.
+
    TEveElement *el  = entry->first;
    Set_t       &set = entry->second;
 
@@ -190,6 +202,8 @@ void TEveSelection::SelectionCleared()
 //______________________________________________________________________________
 void TEveSelection::ActivateSelection()
 {
+   // Activate this selection.
+
    for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
       DoElementSelect(i);
    fActive = kTRUE;
@@ -198,6 +212,8 @@ void TEveSelection::ActivateSelection()
 //______________________________________________________________________________
 void TEveSelection::DeactivateSelection()
 {
+   // Deactivate this selection.
+
    fActive = kFALSE;
    for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
       DoElementUnselect(i);
@@ -211,6 +227,10 @@ void TEveSelection::DeactivateSelection()
 //______________________________________________________________________________
 TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
 {
+   // Given element el that was picked or clicked by the user, find
+   // the parent/ancestor element that should actually become the main
+   // selected element according to current selection mode.
+
    switch (fPickToSelect)
    {
       case kPS_Ignore:
@@ -243,6 +263,11 @@ TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
 //______________________________________________________________________________
 void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
 {
+   // Called when user picks/clicks on an element. If multi is true,
+   // the user is requiring a multiple selection (usually this is
+   // associated with control-key being pressed at the time of pick
+   // event).
+
    el = MapPickedToSelected(el);
 
    if (el || GetNChildren() > 0)

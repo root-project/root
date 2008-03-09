@@ -25,6 +25,8 @@ class TEveCaloData: public TEveRefCnt
 public:
    struct CellId_t
    {
+     // Cell ID inner structure.
+
       Int_t fTower;
       Int_t fSlice;
 
@@ -33,6 +35,8 @@ public:
 
    struct CellData_t
    {
+     // Cell geometry inner structure.
+
       Float_t fValue;
       Float_t fPhiMin;
       Float_t fPhiMax;
@@ -97,7 +101,8 @@ private:
    TEveCaloDataHist& operator=(const TEveCaloDataHist&); // Not implemented
 
 protected:
-   TObjArray*    fHStack;
+  TObjArray*    fHStack; // stack of TH2F objects
+
 public:
    TEveCaloDataHist();
    virtual ~TEveCaloDataHist();
@@ -120,7 +125,7 @@ public:
    const TAxis* GetEtaBins();
    const TAxis* GetPhiBins();
 
-   ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data. 
+   ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.
 };
 
 #endif

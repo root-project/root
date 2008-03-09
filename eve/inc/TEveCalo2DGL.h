@@ -28,7 +28,7 @@ private:
    TEveCalo2DGL& operator=(const TEveCalo2DGL&); // Not implemented
 
 protected:
-   TEveCalo2D             *fM;  // Model object.
+   TEveCalo2D   *fM;  // Model object.
 
    Float_t   MakeRhoZBarrelCell(Float_t thetaMin, Float_t thetaMax, Bool_t phiPlus, Float_t height, Float_t offset) const;
    Float_t   MakeRhoZEndCapCell(Float_t thetaMin, Float_t thetaMax, Bool_t phiPlus, Float_t height, Float_t offset) const;

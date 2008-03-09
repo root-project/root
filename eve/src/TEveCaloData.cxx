@@ -20,7 +20,7 @@
 //______________________________________________________________________________
 //
 //  A central manager for calorimeter event data. It provides a list of
-//  cells within requested phi and etha rng. 
+//  cells within requested phi and etha rng.
 //
 
 ClassImp(TEveCaloData);
@@ -60,7 +60,7 @@ Float_t TEveCaloData::CellData_t::ThetaMin(Bool_t sig) const
 Float_t TEveCaloData::CellData_t::ThetaMax(Bool_t sig) const
 {
    // Get maximum theta in radians. By default returns value calculated from
-   // absolute vale of eta.
+   // absolute value of eta.
 
    if (sig && fZSideSign == -1 ) return TMath::Pi() - fThetaMax;
    return fThetaMax;
@@ -69,6 +69,8 @@ Float_t TEveCaloData::CellData_t::ThetaMax(Bool_t sig) const
 //______________________________________________________________________________
 void TEveCaloData::CellData_t::Dump() const
 {
+  // Print member data.
+
    printf(">> theta %2.1f phi %2.1f val %2.2f \n",
           Theta(kTRUE)*TMath::RadToDeg(),
           Phi()*TMath::RadToDeg(), Value());
@@ -77,7 +79,7 @@ void TEveCaloData::CellData_t::Dump() const
 //______________________________________________________________________________
 //
 // A central manager for calorimeter data of an event written in TH2F.
-// X axis present eta bin, Y axis phi bin.
+// X axis present eta bin, Y axis present phi bin.
 //
 
 ClassImp(TEveCaloDataHist);
@@ -103,6 +105,8 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
                                     Float_t threshold, TEveCaloData::vCellId_t &out)
 
 {
+  // Get list of cell IDs in given eta and phi range.
+
    using namespace TMath;
 
    etaD *= 1.01f;
@@ -121,19 +125,16 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
       pr[1] =  Pi();
       pr[2] =  -Pi();
       pr[3] =  -TwoPi()+phi2;
-      //printf("more than +++Pi \n");
    }
    else if (phi1<-TMath::Pi() && phi2<=Pi()) {
       pr[0] = -Pi();
       pr[1] =  phi2;
       pr[2] =  TwoPi()+phi1;
       pr[3] =  Pi();
-      // printf("less  than ---Pi \n");
    }
    else {
       pr[0] = pr[2] = phi1;
       pr[1] = pr[3] = phi2;
-      // printf("natural \n");
    }
 
    TH2F *hist0 = (TH2F*)fHStack->At(0);
@@ -143,7 +144,6 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
 
    for (Int_t ieta=0; ieta<ay->GetNbins(); ieta++) {
       for (Int_t iphi=0; iphi<ax->GetNbins(); iphi++)  {
-         //printf("compare eta (%f, %f) (%f, %f)\n", ax->GetBinLowEdge(ieta),ax->GetBinUpEdge(ieta), etaMin,etaMax );
          if (   ax->GetBinLowEdge(ieta)   >= etaMin
                 && ax->GetBinUpEdge(ieta) <  etaMax
                 && ((ay->GetBinLowEdge(iphi)>=pr[0] && ay->GetBinUpEdge(iphi)<pr[1])
@@ -154,7 +154,6 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
             TIter next(fHStack);
             Int_t slice = 0;
             while ((hist = (TH2F*) next()) != 0) {
-               // printf("add cell %d %d \n",bin, slice);
                if (hist->GetBinContent(bin) > threshold)
                   out.push_back(TEveCaloData::CellId_t(bin, slice));
                slice++;
@@ -168,6 +167,8 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
 //______________________________________________________________________________
 void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& cellData)
 {
+  // Get cell geometry and value from cell ID.
+
    TH2F* hist  = (TH2F*) (fHStack->At(id.fSlice));
 
    Int_t x, y, z;
@@ -177,15 +178,12 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloDat
                       hist->GetXaxis()->GetBinUpEdge(x),
                       hist->GetYaxis()->GetBinLowEdge(y),
                       hist->GetYaxis()->GetBinUpEdge(y));
-
-   // printf("GetCellData eta %d, phi%d ", hist->GetYaxis()->GetBinLowEdge(y), hist->GetXaxis()->GetBinLowEdge(x));
-   //   cellData.Dump();
 }
 
 //______________________________________________________________________________
 void TEveCaloDataHist::AddHistogram(TH2F* h)
 {
-   // Add  ne slice to calo tower.
+   // Add  new slice to calo tower.
 
    fHStack->Add(h);
 }

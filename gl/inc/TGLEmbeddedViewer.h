@@ -47,7 +47,7 @@ public:
    TGLOrthoCamera     *GetOrthoXOYCamera() { return &fOrthoXOYCamera; }
    TGLOrthoCamera     *GetOrthoXOZCamera() { return &fOrthoXOZCamera; }
    TGLOrthoCamera     *GetOrthoZOYCamera() { return &fOrthoZOYCamera; }
-   
+
    ClassDef(TGLEmbeddedViewer, 0) // Embedded GL viewer
 };
 

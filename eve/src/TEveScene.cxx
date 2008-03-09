@@ -222,6 +222,14 @@ void TEveSceneList::DestroyElementRenderers(TEveElement* element)
 //______________________________________________________________________________
 void TEveSceneList::ProcessSceneChanges(Bool_t dropLogicals, Set_t& stampSet)
 {
+   // Loop over all scenes and update them accordingly:
+   //   a) if scene is marked as changed, it is repainted;
+   //   b) otherwise iteration is done over the set of stamped elements and
+   //      their physical/logical shapes are updated accordingly.
+   //
+   // This allows much finer update granularity without resetting of
+   // complex GL-viewer and GL-scene state.
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TEveScene* s = (TEveScene*) *i;

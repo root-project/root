@@ -36,25 +36,25 @@ private:
    TEveCaloViz& operator=(const TEveCaloViz&); // Not implemented
 
 protected:
-   TEveCaloData* fData;
+   TEveCaloData* fData;  // event data reference
 
-   Float_t      fEtaMin;
-   Float_t      fEtaMax;
-   Float_t      fPhi;
-   Float_t      fPhiRng;
+   Float_t      fEtaMin; // eta min angle
+   Float_t      fEtaMax; // eta max angle
+   Float_t      fPhi;    // phi angle
+   Float_t      fPhiRng; // phi +/- offset
 
-   Float_t      fThreshold;
+   Float_t      fThreshold;  // cell value threshold
 
-   Float_t      fBarrelRadius;
-   Float_t      fEndCapPos;
+   Float_t      fBarrelRadius;  // barrel raidus in cm
+   Float_t      fEndCapPos;     // end cap z coordinate in cm
 
-   Float_t      fTowerHeight;
+   Float_t      fTowerHeight;   // height of tower
 
    Int_t             fDefaultValue;   // Default signal value.
    Bool_t            fValueIsColor;   // Interpret signal value as RGBA color.
    TEveRGBAPalette*  fPalette;        // Pointer to signal-color palette.
 
-   Bool_t            fCacheOK;
+   Bool_t            fCacheOK;        // is list of list of cell ids valid
 
    void AssignCaloVizParameters(TEveCaloViz* cv);
 
@@ -133,7 +133,7 @@ private:
    TEveCalo2D& operator=(const TEveCalo2D&); // Not implemented
 
    TEveProjection::EPType_e  fOldProjectionType;
-protected: 
+protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellLists;
 
 public:

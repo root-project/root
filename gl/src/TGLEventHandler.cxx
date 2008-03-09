@@ -32,11 +32,23 @@
 #include "TContextMenu.h"
 #include "KeySymbols.h"
 
-ClassImp(TGLEventHandler)
+//______________________________________________________________________________
+//
+// Base-class and default implementation of event-handler for TGLViewer.
+//
+// This allows for complete disentanglement of GL-viewer from GUI
+// event handling. Further, alternative event-handlers can easily be
+// designed and set at run-time.
+//
+// The signals about object being selected or hovered above are
+// emitted via the TGLViewer itself.
+//
+// This class is still under development.
 
+ClassImp(TGLEventHandler);
 
 //______________________________________________________________________________
-TGLEventHandler::TGLEventHandler(const char *name, TGWindow *w, TObject *obj, 
+TGLEventHandler::TGLEventHandler(const char *name, TGWindow *w, TObject *obj,
                                  const char *title) :
    TGEventHandler(name, w, obj, title),
    fGLViewer           ((TGLViewer *)obj),
@@ -281,7 +293,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
 
    if (fGLViewer->IsLocked()) {
       if (gDebug>2) {
-         Info("TGLEventHandler::HandleButton", "ignored - viewer is %s", 
+         Info("TGLEventHandler::HandleButton", "ignored - viewer is %s",
             fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
@@ -411,7 +423,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
          if (fGLViewer->RequestOverlaySelect(event->fX, event->fY))
             fGLViewer->RequestDraw();
       }
-      else if (fGLViewer->fAction >= TGLViewer::kDragCameraRotate && 
+      else if (fGLViewer->fAction >= TGLViewer::kDragCameraRotate &&
                fGLViewer->fAction <= TGLViewer::kDragCameraDolly)
       {
          fGLViewer->RequestDraw(TGLRnrCtx::kLODHigh);
@@ -473,7 +485,7 @@ Bool_t TGLEventHandler::HandleDoubleClick(Event_t *event)
 
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
-         Info("TGLEventHandler::HandleDoubleClick", "ignored - viewer is %s", 
+         Info("TGLEventHandler::HandleDoubleClick", "ignored - viewer is %s",
             fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
@@ -499,7 +511,7 @@ Bool_t TGLEventHandler::HandleConfigureNotify(Event_t *event)
 
    if (fGLViewer->IsLocked()) {
       if (gDebug > 0) {
-         Info("TGLEventHandler::HandleConfigureNotify", "ignored - viewer is %s", 
+         Info("TGLEventHandler::HandleConfigureNotify", "ignored - viewer is %s",
             fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
@@ -521,7 +533,7 @@ Bool_t TGLEventHandler::HandleExpose(Event_t * event)
 
    if (fGLViewer->IsLocked()) {
       if (gDebug > 0) {
-         Info("TGLViewer::HandleExpose", "ignored - viewer is %s", 
+         Info("TGLViewer::HandleExpose", "ignored - viewer is %s",
             fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
@@ -541,7 +553,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
    fGLViewer->MouseIdle(0, 0, 0);
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
-         Info("TGLEventHandler::HandleKey", "ignored - viewer is %s", 
+         Info("TGLEventHandler::HandleKey", "ignored - viewer is %s",
             fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
@@ -557,7 +569,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
    fGLViewer->fRnrCtx->SetEventKeySym(keysym);
 
    Bool_t redraw = kFALSE;
-   if (fGLViewer->fCurrentOvlElm && 
+   if (fGLViewer->fCurrentOvlElm &&
        fGLViewer->fCurrentOvlElm->Handle(*fGLViewer->fRnrCtx, fGLViewer->fOvlSelRec, event))
    {
       redraw = kTRUE;
@@ -739,7 +751,7 @@ void TGLEventHandler::Repaint()
 
    if (fGLViewer->IsLocked()) {
       if (gDebug > 0) {
-         Info("TGLViewer::HandleExpose", "ignored - viewer is %s", 
+         Info("TGLViewer::HandleExpose", "ignored - viewer is %s",
             fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return;

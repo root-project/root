@@ -80,9 +80,11 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
 //______________________________________________________________________________
 void TEveCaloVizEditor::CreateTowerTab()
 {
+   // Create second tab in the editor.
+
    fTower = CreateEditorTabSubFrame("Tower");
 
-   TGHorizontalFrame *title1 = new TGHorizontalFrame(fTower, 145, 10, 
+   TGHorizontalFrame *title1 = new TGHorizontalFrame(fTower, 145, 10,
                                                      kLHintsExpandX | kFixedWidth);
    title1->AddFrame(new TGLabel(title1, "Tower"),
                     new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
@@ -136,6 +138,8 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TEveCaloVizEditor::DoEtaRange()
 {
+   // Slot for setting eta range.
+
    fM->fEtaMin = fEtaRng->GetMin();
    fM->fEtaMax = fEtaRng->GetMax();
    fM->fCacheOK = kFALSE;
@@ -145,6 +149,8 @@ void TEveCaloVizEditor::DoEtaRange()
 //______________________________________________________________________________
 void TEveCaloVizEditor::DoPhi()
 {
+  // Slot for setting phi range.
+
    fM->fPhi    = fPhi->GetValue()*TMath::DegToRad();
    fM->fPhiRng = fPhiRng->GetValue()*TMath::DegToRad();
    fM->fCacheOK = kFALSE;
@@ -155,6 +161,8 @@ void TEveCaloVizEditor::DoPhi()
 //______________________________________________________________________________
 void TEveCaloVizEditor::DoTowerHeight()
 {
+  // Slot for setting tower height.
+
    fM->SetTowerHeight(fTowerHeight->GetValue());
    Update();
 }
@@ -162,6 +170,8 @@ void TEveCaloVizEditor::DoTowerHeight()
 //______________________________________________________________________________
 void TEveCaloVizEditor::DoPalette()
 {
+   // Slot for palette changed.
+
    fM->fCacheOK = kFALSE;
    Update();
 }

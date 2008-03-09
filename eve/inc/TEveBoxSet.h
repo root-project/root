@@ -37,7 +37,7 @@ protected:
 
    struct BFreeBox_t       : public DigitBase_t { Float_t fVertices[24]; };
 
-   struct BOrigin_t        : public DigitBase_t { 
+   struct BOrigin_t        : public DigitBase_t {
      virtual ~BOrigin_t() {} ; Float_t fA, fB, fC; };
 
    struct BAABox_t         : public BOrigin_t   { Float_t fW, fH, fD; };
