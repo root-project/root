@@ -61,7 +61,9 @@ TUTORIALSTESTS_VETOCINT := $(shell echo Failing because of CINT: $(TUTORIALSTEST
 TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_VETOCINT)
 # exlude rose_image until we know how to set the iconpath in batch
 TUTORIALSTESTS_VETO += image/rose_image
+# exlude some eve tutorials
 TUTORIALSTESTS_VETO += eve/text_test
+TUTORIALSTESTS_VETO += eve/test_paramlist
 
 ifeq ($(GUI),)
   TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_NONBATCH)
