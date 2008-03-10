@@ -3,41 +3,41 @@
 #
 # Author: Rene Brun, 07/05/2003
 
-MODDIR        := fit
-MODDIRS       := $(MODDIR)/src
-MODDIRI       := $(MODDIR)/inc
+MODDIR    := fit
+MODDIRS   := $(MODDIR)/src
+MODDIRI   := $(MODDIR)/inc
 
 FITDIR    := $(MODDIR)
 FITDIRS   := $(FITDIR)/src
 FITDIRI   := $(FITDIR)/inc
 
 ##### libFit #####
-FITL     := $(MODDIRI)/LinkDef.h
-FITDS    := $(MODDIRS)/G__Fit.cxx
-FITDO    := $(FITDS:.cxx=.o)
-FITDH    := $(FITDS:.cxx=.h)
+FITL      := $(MODDIRI)/LinkDef.h
+FITDS     := $(MODDIRS)/G__Fit.cxx
+FITDO     := $(FITDS:.cxx=.o)
+FITDH     := $(FITDS:.cxx=.h)
 
 #FITAH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-FITH    := $(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))
+FITH      := $(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))
 #FITBH    := $(MODDIR)/../mathmore/inc/Math/WrappedTF1.h \
 #	    $(MODDIR)/../mathmore/inc/Math/WrappedMultiTF1.h  
-# FITBH    := $(MODDIRI)/Fit/BinPoint.h \
+# FITBH   := $(MODDIRI)/Fit/BinPoint.h \
 # 	    $(MODDIRI)/Fit/DataRange.h \
 # 	    $(MODDIRI)/Fit/DataOptions.h \
 # 	    $(MODDIRI)/Fit/DataVector.h  \
 # 	    $(MODDIRI)/Fit/WrappedTF1.h   
 
 #FITH     := $(FITAH) $(FITBH)
-FITS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-FITO     := $(FITS:.cxx=.o)
+FITS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+FITO      := $(FITS:.cxx=.o)
 
-FITDEP   := $(FITO:.o=.d) $(FITDO:.o=.d)
+FITDEP    := $(FITO:.o=.d) $(FITDO:.o=.d)
 
-FITLIB   := $(LPATH)/libFit.$(SOEXT)
+FITLIB    := $(LPATH)/libFit.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FITH))
-#ALLLIBS      += $(FITLIB)
+ALLHDRS   += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FITH))
+#ALLLIBS  += $(FITLIB)
 
 # include all dependency files
 INCLUDEFILES += $(FITDEP)
