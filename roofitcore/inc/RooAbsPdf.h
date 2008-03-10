@@ -228,6 +228,8 @@ protected:
     RooAbsReal* _norm ;
   } ;
   mutable RooObjCacheManager _normMgr ; // The cache manager
+
+  friend class CacheElem ; // Cache needs to be able to clear _norm pointer
   
   virtual Bool_t redirectServersHook(const RooAbsCollection&, Bool_t, Bool_t, Bool_t) { 
     _norm = 0 ;
