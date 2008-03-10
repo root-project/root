@@ -195,10 +195,10 @@ public:
    int TestDerivative(); 
 
    // test root finding algorithm for finding inverse of cdf 
-   int TestInverse1(RootFinder::Type algotype); 
+   int TestInverse1(RootFinder::EType algotype); 
 
    // test root finding algorithm for finding inverse of cdf using drivatives
-   int TestInverse2(RootFinder::Type algotype); 
+   int TestInverse2(RootFinder::EType algotype); 
 
    
    void SetScaleIg(double s) { fScaleIg = s; }  
@@ -336,7 +336,7 @@ struct InvFunc {
 };
 
 
-int StatFunction::TestInverse1(RootFinder::Type algoType) {
+int StatFunction::TestInverse1(RootFinder::EType algoType) {
 
    int iret = 0; 
    int maxitr = 2000;
@@ -379,7 +379,7 @@ int StatFunction::TestInverse1(RootFinder::Type algoType) {
 
 }
 
-int StatFunction::TestInverse2(RootFinder::Type algoType) {
+int StatFunction::TestInverse2(RootFinder::EType algoType) {
 
    int iret = 0; 
    int maxitr = 2000;
@@ -463,12 +463,12 @@ int testGammaFunction(int n = 100) {
       iret |= ret;
 
       PrintTest("\t test inverse with Brent method");
-      ret = dist.TestInverse1(RootFinder::GSL_BRENT);
+      ret = dist.TestInverse1(RootFinder::kGSL_BRENT);
       PrintStatus(ret);
       iret |= ret;
 
       PrintTest("\t test inverse with Steffenson algo");
-      ret = dist.TestInverse2(RootFinder::GSL_STEFFENSON);
+      ret = dist.TestInverse2(RootFinder::kGSL_STEFFENSON);
       PrintStatus(ret);
       iret |= ret;
    }
@@ -511,13 +511,13 @@ int testBetaFunction(int n = 100) {
       iret |= ret;
 
       PrintTest("\t test inverse with Brent method");
-      ret = dist.TestInverse1(RootFinder::GSL_BRENT);
+      ret = dist.TestInverse1(RootFinder::kGSL_BRENT);
       PrintStatus(ret);
       iret |= ret;
 
       if (i < 5) {  // test failed for k=5
          PrintTest("\t test inverse with Steffenson algo");
-         ret = dist.TestInverse2(RootFinder::GSL_STEFFENSON);
+         ret = dist.TestInverse2(RootFinder::kGSL_STEFFENSON);
          PrintStatus(ret);
          iret |= ret;
       }
