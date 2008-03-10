@@ -1346,6 +1346,44 @@ Int_t TLinearFitter::Merge(TCollection *list)
    }
    return 0;   
 }
+//______________________________________________________________________________
+void TLinearFitter::SetBasisFunctions(TObjArray * functions)
+{
+   //set the basis functions in case the fitting function is not 
+   // set directly
+   fFunctions = *(functions);
+   int size = fFunctions.GetEntries();
+
+   fNfunctions=size;
+   //change the size of design matrix
+   fDesign.ResizeTo(size, size);
+   fAtb.ResizeTo(size);
+   fDesignTemp.ResizeTo(size, size);
+   fDesignTemp2.ResizeTo(size, size);
+   fDesignTemp3.ResizeTo(size, size);
+   fAtbTemp.ResizeTo(size);
+   fAtbTemp2.ResizeTo(size);
+   fAtbTemp3.ResizeTo(size);
+   if (fFixedParams)
+      delete [] fFixedParams;
+   fFixedParams=new Bool_t[size];
+   fDesign.Zero();
+   fAtb.Zero();
+   fDesignTemp.Zero();
+   fDesignTemp2.Zero();
+   fDesignTemp3.Zero();
+   fAtbTemp.Zero();
+   fAtbTemp2.Zero();
+   fAtbTemp3.Zero();
+   fY2Temp=0;
+   fY2=0;
+   for (int i=0; i<size; i++)
+      fFixedParams[i]=0;
+   fIsSet=kFALSE;
+   fChisquare=0;
+
+}
+   
 
 //______________________________________________________________________________
 void TLinearFitter::SetDim(Int_t ndim)

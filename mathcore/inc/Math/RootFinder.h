@@ -80,15 +80,15 @@ namespace ROOT {
          
       public: 
          
-         enum Type { BRENT,                                   // Methods from MathCore
-                     GSL_BISECTION, GSL_FALSE_POS, GSL_BRENT, // GSL Normal
-                     GSL_NEWTON, GSL_SECANT, GSL_STEFFENSON   // GSL Derivatives
+         enum EType { kBRENT,                                   // Methods from MathCore
+                     kGSL_BISECTION, kGSL_FALSE_POS, kGSL_BRENT, // GSL Normal
+                     kGSL_NEWTON, kGSL_SECANT, kGSL_STEFFENSON   // GSL Derivatives
          }; 
          
          /**
             Construct a Root-Finder algorithm
          */
-         RootFinder(RootFinder::Type type = RootFinder::BRENT);
+         RootFinder(RootFinder::EType type = RootFinder::kBRENT);
          virtual ~RootFinder();
          
       private:
@@ -102,7 +102,7 @@ namespace ROOT {
          
       public: 
          
-         int SetMethod(RootFinder::Type type = RootFinder::BRENT);
+         int SetMethod(RootFinder::EType type = RootFinder::kBRENT);
 
          /**
             Provide to the solver the function and the initial search interval [xlow, xup] 

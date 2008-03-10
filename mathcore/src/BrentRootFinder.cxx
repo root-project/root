@@ -20,9 +20,10 @@ namespace ROOT {
 namespace Math {
 
 
-BrentRootFinder::BrentRootFinder()
+BrentRootFinder::BrentRootFinder() : 
+      fFunction(0)
 {
-   fFunction = 0;
+   // default constructor (no op)
 }
 
 BrentRootFinder::~BrentRootFinder() {}
@@ -54,6 +55,7 @@ const char* BrentRootFinder::Name() const
 
 double BrentRootFinder::Root() const
 {
+   // return root value. Need to call first Solve()
    return fRoot;
 }
 

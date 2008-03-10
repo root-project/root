@@ -19,7 +19,7 @@ EXTRALIBS= "$(ROOTSYS)/lib/libMathMore.lib"
 ROOFITLIBS= "$(ROOTSYS)/lib/libMinuit.lib" "$(ROOTSYS)/lib/libThread.lib" "$(ROOTSYS)/lib/libRooFit.lib" "$(ROOTSYS)/lib/libRooFitCore.lib" "$(ROOTSYS)/lib/libHtml.lib"
 else
 EXTRALIBS=  
-ROOFITLIBS= -lMinuit  -lThread -lRooFit -lRooFitCore -lHtml
+ROOFITLIBS= -lMathMore -lMinuit  -lThread -lRooFit -lRooFitCore -lHtml
 CXXFLAGS += -g
 endif
 
@@ -28,18 +28,24 @@ TESTFITOBJ      = testFit.$(ObjSuf)
 TESTFITSRC      = testFit.$(SrcSuf)
 TESTFIT         = testFit$(ExeSuf)
 
-TESTPERFOBJ      = testFitPerf.$(ObjSuf)
-TESTPERFSRC      = testFitPerf.$(SrcSuf)
-TESTPERF         = testFitPerf$(ExeSuf)
 
 TESTMINIMOBJ      = testMinim.$(ObjSuf)
 TESTMINIMSRC      = testMinim.$(SrcSuf)
 TESTMINIM         = testMinim$(ExeSuf)
 
+ifeq ($(shell $(ROOTCONFIG) --has-mathmore),yes)
+ifeq ($(shell $(ROOTCONFIG) --has-roofit),yes)
+
+TESTPERFOBJ      = testFitPerf.$(ObjSuf)
+TESTPERFSRC      = testFitPerf.$(SrcSuf)
+TESTPERF         = testFitPerf$(ExeSuf)
+
 TESTROOFITOBJ      = testRooFit.$(ObjSuf)
 TESTROOFITSRC      = testRooFit.$(SrcSuf)
 TESTROOFIT         = testRooFit$(ExeSuf)
 
+endif
+endif
 
 
 
@@ -73,7 +79,6 @@ $(TESTMINIM): $(TESTMINIMOBJ)
 $(TESTROOFIT): $(TESTROOFITOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(ROOFITLIBS) $(OutPutOpt)$@
 		@echo "$@ done"
-
 
 
 clean:

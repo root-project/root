@@ -33,6 +33,7 @@ GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps)
 
 GaussLegendreIntegrator::~GaussLegendreIntegrator()
 {
+   // destructor
    if ( fFunction != 0 && fFunctionCopied )
       delete fFunction;
 

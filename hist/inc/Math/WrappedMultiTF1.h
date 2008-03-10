@@ -18,9 +18,8 @@
 #include "Math/IParamFunction.h"
 #endif
 
-#ifndef ROOT_TF1
+
 #include "TF1.h"
-#endif
 
 namespace ROOT { 
 
@@ -30,9 +29,9 @@ namespace ROOT {
 /** 
    Class to Wrap a ROOT Function class (like TF1)  in a IParamMultiFunction interface
    of multi-dimensions to be used in the ROOT::Math numerical algorithm
-   The parameter are stored in the WrappedFunction so we don't rely on the TF1 state values. 
-   This allows for the copy of the wrapper function without the need to copy the TF1
-   The wrapper does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime
+   The parameter are stored in this wrapper class, so the TF1 parameter values are not used for evaluating the function. 
+   This allows for the copy of the wrapper function without the need to copy the TF1. 
+   This wrapper class does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime. 
 
    @ingroup CppFunctions
 */ 
@@ -50,12 +49,8 @@ public:
    */ 
    WrappedMultiTF1 (TF1 & f )  : 
       fFunc(&f),
-      fParams(f.GetParameters(),f.GetParameters()+f.GetNpar()),
-      fX(std::vector<double>(f.GetNdim() ) )
-   {
-      // init the args
-      fFunc->InitArgs(&fX.front(), &fParams.front() );
-   }
+      fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
+   { }
 
    /** 
       Destructor (no operations). Function pointer is not owned
@@ -69,12 +64,8 @@ public:
       BaseFunc(),
       BaseParamFunc(),
       fFunc(rhs.fFunc),
-      fParams(rhs.fParams), 
-      fX(rhs.fX)
-   {
-      // init the args
-      fFunc->InitArgs(&fX.front(), &fParams.front() );
-   }
+      fParams(rhs.fParams)
+   {}
 
    /** 
       Assignment operator
@@ -83,7 +74,6 @@ public:
       if (this == &rhs) return *this;  // time saving self-test
       fFunc = rhs.fFunc; 
       fParams = rhs.fParams;
-      fX = rhs.fX; 
       return *this;
    } 
 
@@ -106,13 +96,12 @@ public:
 
    /** @name interface inherited from IParamFunction */     
 
-   /// access the parameter values
+   /// get the parameter values (return values cachen inside, those inside TF1 might be different) 
    const double * Parameters() const {
       return &fParams.front();   
-      //return fFunc->GetParameters();   
    }
 
-   /// set parameter values
+   /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
    void SetParameters(const double * p) { 
       std::copy(p,p+fParams.size(),fParams.begin());
    } 
@@ -120,7 +109,6 @@ public:
    /// return number of parameters 
    unsigned int NPar() const {
       return fParams.size();
-      // return static_cast<unsigned int>(fFunc->GetNpar() );
    }
 
    /// return parameter name (from TF1)
@@ -130,12 +118,10 @@ public:
 
    /// evaluate function passing coordinates x and vector of parameters
    double operator() (const double * x, const double * p ) { 
-      fFunc->InitArgs(x,p);  // needed for interpreted functions 
+      if (fFunc->GetMethodCall() )  fFunc->InitArgs(x,p);  // needed for interpreted functions 
       return fFunc->EvalPar(x,p); 
    }
 
-   /// evaluate integral between x1   and x2 
-   //double Integral(double * x1, double * x2) const;
 
    using BaseFunc::operator();
 
@@ -144,29 +130,15 @@ public:
 private: 
 
 
-   /// evaluate function using parameter values cached in the TF1 
+   /// evaluate function using the cached parameter values of this class (not of TF1)
    double DoEval (const double * x) const { 
-      int n = fX.size(); 
-      std::copy(x,x+n,fX.begin() );
-      return fFunc->EvalPar(&fX.front(),&fParams.front()); 
+      if (fFunc->GetMethodCall() ) fFunc->InitArgs(x, &fParams.front() );
+      return fFunc->EvalPar(x,&fParams.front()); 
    }
 
-//    /// return the function derivatives w.r.t. x 
-//    double DoDerivative(const double * x, unsigned int icoord   ) const { 
-//       std::cerr << "WrappedMultiTF1:: gradient for multidim functions not implemented" << std::endl;
-//    }
 
-//    /// evaluate the derivative of the function with respect to the parameters
-//    void  DoParameterGradient(const double * x, double * grad ) const { 
-//       static const double kEps = 0.001;
-//       fFunc->GradientPar(x,grad,kEps); 
-//    }
-
-
-   // pointer to ROOT function
-   TF1 * fFunc; 
-   std::vector<double> fParams;
-   mutable std::vector<double> fX;
+   TF1 * fFunc;                   // pointer to ROOT function
+   std::vector<double> fParams;   // cached vector with parameter values
 
 }; 
 

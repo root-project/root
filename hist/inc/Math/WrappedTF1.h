@@ -18,9 +18,8 @@
 #include "Math/IParamFunction.h"
 #endif
 
-#ifndef ROOT_TF1
+
 #include "TF1.h"
-#endif
 #include <cmath>
 
 namespace ROOT { 
@@ -31,8 +30,8 @@ namespace ROOT {
 /** 
    Class to Wrap a ROOT Function class (like TF1)  in a IParamFunction interface
    of one dimensions to be used in the ROOT::Math numerical algorithms
-   The parameter are stored in the WrappedFunction so we don't rely on the TF1 state values. 
-   We use TF1 only for the function evaluation
+   The parameter are stored in this wrapper class, so  the TF1 parameter values are not used for evaluating the function. 
+   We use TF1 only for the function evaluation. 
    This allows for the copy of the wrapper function without the need to copy the TF1. 
    The wrapper does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime
 
@@ -58,7 +57,7 @@ public:
 
    {
       // init the pointers for CINT
-      fFunc->InitArgs(fX, &fParams.front() );
+      if (fFunc->GetMethodCall() )  fFunc->InitArgs(fX, &fParams.front() );
       // distinguish case of polynomial functions and linear functions
       if (fFunc->GetNumber() >= 300 && fFunc->GetNumber() < 310) { 
          fLinear = true; 
@@ -121,39 +120,32 @@ public:
 
    /** @name interface inherited from IParamFunction */     
 
-   /// access the parameter values
+   /// get the parameter values (return values cachen inside, those inside TF1 might be different) 
    const double * Parameters() const {
       return &fParams.front(); 
-      //return fFunc->GetParameters();   
    }
 
-   /// set parameter values
+   /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
    void SetParameters(const double * p) { 
       std::copy(p,p+fParams.size(),fParams.begin());
-//       fFunc->SetParameters(p); 
-//       // need to re-initialize it
-//       fFunc->InitArgs(fX, p );
    } 
 
    /// return number of parameters 
    unsigned int NPar() const { 
       return fParams.size();
-      //return static_cast<unsigned int>(fFunc->GetNpar() );
    }
 
-   /// return parameter name (from TF1)
+   /// return parameter name (this is stored in TF1)
    std::string ParameterName(unsigned int i) const { 
       return std::string(fFunc->GetParName(i)); 
    } 
 
    /// evaluate function passing coordinates x and vector of parameters
    double operator() (const double * x, const double * p ) { 
-      fFunc->InitArgs(x,p);  // needed for interpreted functions 
+      if (fFunc->GetMethodCall() ) fFunc->InitArgs(x,p);  // needed for interpreted functions 
       return fFunc->EvalPar(x,p); 
    }
 
-   /// evaluate integral between x1   and x2 
-   //double Integral(double * x1, double * x2) const;
 
    using BaseGradFunc::operator();
 
@@ -175,12 +167,12 @@ public:
 private: 
 
 
-   /// evaluate function using parameter values cached in the TF1 
+   /// evaluate function using the cached parameter values of this class (not of TF1)
    double DoEval (double x) const { 
-      // no need to InitArg (done in ctor)
+      // no need to call InitArg for interpreted functions (done in ctor)
+      // use EvalPar since it is much more efficient than Eval
       fX[0] = x; 
       return fFunc->EvalPar(fX,&fParams.front()); 
-      //return fFunc->EvalPar(fX,0); 
    }
 
    /// return the function derivatives w.r.t. x 
@@ -208,18 +200,18 @@ private:
          const TFormula * df = dynamic_cast<const TFormula*>( fFunc->GetLinearPart(ipar) );
          assert(df != 0); 
          fX[0] = x; 
-         // hack since evalpar is not const
+         // hack since TFormula::EvalPar is not const
          return (const_cast<TFormula*> ( df) )->EvalPar( fX ) ; // derivatives should not depend on parameters since func is linear 
       }
    }
 
 
-   // pointer to ROOT function
-   bool fLinear;      // linear function 
-   bool fPolynomial;    // polynomial function
-   TF1 * fFunc; 
-   mutable double fX[1]; 
-   std::vector<double> fParams;
+
+   bool fLinear;                 // flag for linear functions 
+   bool fPolynomial;             // flag for polynomial functions 
+   TF1 * fFunc;                  // pointer to ROOT function
+   mutable double fX[1];         // cached vector for x value (needed for TF1::EvalPar signature) 
+   std::vector<double> fParams;  // cached vector with parameter values
 }; 
 
    } // end namespace Fit

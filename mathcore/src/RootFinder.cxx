@@ -33,15 +33,17 @@ namespace ROOT {
 namespace Math {
 
 
-RootFinder::RootFinder(RootFinder::Type type)
+RootFinder::RootFinder(RootFinder::EType type)
 {
+   // constructor passing type (default is kBRENT)
    fSolver = 0;
    SetMethod(type);
 }
 
-int RootFinder::SetMethod(RootFinder::Type type)
+int RootFinder::SetMethod(RootFinder::EType type)
 {
-   if ( type == RootFinder::BRENT )
+   // set method - Use the plug-in manager if method is implemented in MathMore
+   if ( type == RootFinder::kBRENT )
    {
       fSolver = new BrentRootFinder();
       return 0;
@@ -52,22 +54,22 @@ int RootFinder::SetMethod(RootFinder::Type type)
 
    switch(type) {
 
-   case GSL_BISECTION:
+   case kGSL_BISECTION:
       fSolver = new ROOT::Math::Roots::Bisection();
       break;
-   case GSL_FALSE_POS:
+   case kGSL_FALSE_POS:
       fSolver = new ROOT::Math::Roots::FalsePos();
       break;
-   case GSL_BRENT:
+   case kGSL_BRENT:
       fSolver = new ROOT::Math::Roots::Brent();
       break;
-   case GSL_NEWTON: 
+   case kGSL_NEWTON: 
       fSolver = new ROOT::Math::Roots::Newton();
       break;
-   case GSL_SECANT: 
+   case kGSL_SECANT: 
       fSolver = new ROOT::Math::Roots::Secant();
       break;
-   case GSL_STEFFENSON:
+   case kGSL_STEFFENSON:
       fSolver = new ROOT::Math::Roots::Steffenson();
       break;
    default:
@@ -88,28 +90,22 @@ int RootFinder::SetMethod(RootFinder::Type type)
 
    switch(type) {
       
-   case GSL_BISECTION:
-      //fSolver = new ROOT::Math::Roots::Bisection();
+   case kGSL_BISECTION:
       stype = "Bisection";
       break;
-   case GSL_FALSE_POS:
-      //fSolver = new ROOT::Math::Roots::FalsePos();
+   case kGSL_FALSE_POS:
       stype = "FalsePos";
       break;
-   case GSL_BRENT:
-      //fSolver = new ROOT::Math::Roots::Brent();
+   case kGSL_BRENT:
       stype = "Brent";
       break;
-   case GSL_NEWTON: 
-      //fSolver = new ROOT::Math::Roots::Newton();
+   case kGSL_NEWTON: 
       stype = "Newton";
       break;
-   case GSL_SECANT: 
-      //fSolver = new ROOT::Math::Roots::Secant();
+   case kGSL_SECANT: 
       stype = "Secant";
       break;
-   case GSL_STEFFENSON:
-      //fSolver = new ROOT::Math::Roots::Steffenson();
+   case kGSL_STEFFENSON:
       stype = "Steffenson";
       break;
    default:
@@ -138,43 +134,10 @@ int RootFinder::SetMethod(RootFinder::Type type)
    return 0;
 }
 
-// int RootFinder::SetMethod(RootFinder::Type type)
-// {
-//    if ( fSolver )
-//       delete fSolver;
-
-//    switch(type) {
-
-//    case GSL_BISECTION:
-//       fSolver = new ROOT::Math::Roots::Bisection();
-//       break;
-//    case GSL_FALSE_POS:
-//       fSolver = new ROOT::Math::Roots::FalsePos();
-//       break;
-//    case GSL_BRENT:
-//       fSolver = new ROOT::Math::Roots::Brent();
-//       break;
-//    case GSL_NEWTON: 
-//       fSolver = new ROOT::Math::Roots::Newton();
-//       break;
-//    case GSL_SECANT: 
-//       fSolver = new ROOT::Math::Roots::Secant();
-//       break;
-//    case GSL_STEFFENSON:
-//       fSolver = new ROOT::Math::Roots::Steffenson();
-//       break;
-
-//    case RootFinder::BRENT:
-//    default:
-//       fSolver = new BrentRootFinder();
-//       break;
-//    };
-
-//    return 0;
-// }
 
 RootFinder::~RootFinder()
 {
+   // destructor
    delete fSolver;
 }
 

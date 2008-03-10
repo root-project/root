@@ -258,6 +258,7 @@ public:
    virtual Int_t      Merge(TCollection *list);
    virtual void       PrintResults(Int_t level, Double_t amin=0) const;
    virtual void       ReleaseParameter(Int_t ipar);
+   virtual void       SetBasisFunctions(TObjArray * functions); 
    virtual void       SetDim(Int_t n);
    virtual void       SetFormula(const char* formula);
    virtual void       SetFormula(TFormula *function);

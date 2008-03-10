@@ -1618,7 +1618,7 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
    
    GFunc g(this, fy);
    ROOT::Math::WrappedFunction<GFunc> wf1(g);
-   ROOT::Math::RootFinder brf(ROOT::Math::RootFinder::BRENT);
+   ROOT::Math::RootFinder brf(ROOT::Math::RootFinder::kBRENT);
    brf.SetFunction(wf1,xmin,xmax);
    brf.Solve();
    return brf.Root();
