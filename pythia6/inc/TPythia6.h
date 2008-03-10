@@ -109,7 +109,6 @@ protected:
    Pyint7_t*  fPyint7;
    Pyint8_t*  fPyint8;
    Pyint9_t*  fPyint9;
-   //Pyuppr_t*  fPyuppr;
    Pymssm_t*  fPymssm;
    Pyssmt_t*  fPyssmt;
    Pyints_t*  fPyints;
@@ -270,7 +269,6 @@ public:
    Pyint7_t*   GetPyint7() { return fPyint7; }
    Pyint8_t*   GetPyint8() { return fPyint8; }
    Pyint9_t*   GetPyint9() { return fPyint9; }
-   //Pyuppr_t*   GetPyuppr() { return fPyuppr; }
 
    // ****** /PYMSSM/ - indexing in FORTRAN starts
    // from 0!

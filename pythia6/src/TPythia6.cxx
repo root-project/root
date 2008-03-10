@@ -218,7 +218,6 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
    fPyint7 = (Pyint7_t*) pythia6_common_address("PYINT7");
    fPyint8 = (Pyint8_t*) pythia6_common_address("PYINT8");
    fPyint9 = (Pyint9_t*) pythia6_common_address("PYINT9");
-   //fPyuppr = (Pyuppr_t*) pythia6_common_address("PYUPPR");
    fPymssm = (Pymssm_t*) pythia6_common_address("PYMSSM");
    fPyssmt = (Pyssmt_t*) pythia6_common_address("PYSSMT");
    fPyints = (Pyints_t*) pythia6_common_address("PYINTS");
@@ -245,7 +244,6 @@ TPythia6::TPythia6(const TPythia6& p6) :
   fPyint7(p6.fPyint7),
   fPyint8(p6.fPyint8),
   fPyint9(p6.fPyint9),
-  //fPyuppr(p6.fPyuppr),
   fPymssm(p6.fPymssm),
   fPyssmt(p6.fPyssmt),
   fPyints(p6.fPyints),
