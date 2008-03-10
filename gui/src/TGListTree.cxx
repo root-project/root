@@ -485,6 +485,8 @@ TGListTree::~TGListTree()
 //______________________________________________________________________________
 Int_t TGListTree::FontHeight()
 {
+   // Returns height of currently used font.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->TextHeight();
@@ -493,6 +495,8 @@ Int_t TGListTree::FontHeight()
 //______________________________________________________________________________
 Int_t TGListTree::FontAscent()
 {
+   // Returns ascent of currently used font.
+
    FontMetrics_t m;
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
@@ -503,6 +507,8 @@ Int_t TGListTree::FontAscent()
 //______________________________________________________________________________
 Int_t TGListTree::TextWidth(const char *c)
 {
+   // Returns text width relative to currently used font.
+
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->TextWidth(c);
@@ -1946,6 +1952,7 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
       fSelected = 0;
    }
    if (fCurrent == item) {
+      DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
       fCurrent = item->GetPrevSibling();
       if (! fCurrent) {
          fCurrent = item->GetNextSibling();
@@ -1954,6 +1961,7 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
       }
    }
    if (fBelowMouse == item) {
+      DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
       fBelowMouse = 0;
       MouseOver(0);
       MouseOver(0,fLastEventState);
@@ -2025,6 +2033,13 @@ Int_t TGListTree::DeleteChildren(TGListTreeItem *item)
 {
    // Delete children of item from list.
 
+   if (!fUserControlled) {
+      if (fCurrent)
+         DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
+      if (fBelowMouse)
+         DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
+      fCurrent = fBelowMouse = 0;
+   }
    if (item->fFirstchild) {
       PDeleteChildren(item->fFirstchild);
    }
@@ -2456,6 +2471,8 @@ const TGGC &TGListTree::GetColorGC()
 //______________________________________________________________________________
 const TGPicture *TGListTree::GetOpenPic()
 {
+   // Returns the icon used by items in open state.
+
    if (!fgOpenPic)
       fgOpenPic = gClient->GetPicture("ofolder_t.xpm");
    ((TGPicture *)fgOpenPic)->AddReference();
@@ -2465,6 +2482,8 @@ const TGPicture *TGListTree::GetOpenPic()
 //______________________________________________________________________________
 const TGPicture *TGListTree::GetClosedPic()
 {
+   // Returns the icon used by items in closed state.
+
    if (!fgClosedPic)
       fgClosedPic = gClient->GetPicture("folder_t.xpm");
    ((TGPicture *)fgClosedPic)->AddReference();
@@ -2474,6 +2493,8 @@ const TGPicture *TGListTree::GetClosedPic()
 //______________________________________________________________________________
 const TGPicture *TGListTree::GetCheckedPic()
 {
+   // Returns the icon used for checked checkbox.
+
    if (!fgCheckedPic)
       fgCheckedPic = gClient->GetPicture("checked_t.xpm");
    ((TGPicture *)fgCheckedPic)->AddReference();
@@ -2483,6 +2504,8 @@ const TGPicture *TGListTree::GetCheckedPic()
 //______________________________________________________________________________
 const TGPicture *TGListTree::GetUncheckedPic()
 {
+   // Returns the icon used for unchecked checkbox.
+
    if (!fgUncheckedPic)
       fgUncheckedPic = gClient->GetPicture("unchecked_t.xpm");
    ((TGPicture *)fgUncheckedPic)->AddReference();

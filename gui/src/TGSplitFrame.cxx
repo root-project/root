@@ -38,6 +38,8 @@ TGSplitFrame::~TGSplitFrame()
 //______________________________________________________________________________
 void TGSplitFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
 {
+   // Add a frame in the split frame using layout hints l.
+
    TGCompositeFrame::AddFrame(f, l);
    fFrame = f;
 }
