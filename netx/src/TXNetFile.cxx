@@ -132,6 +132,16 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    // Init mutex used in the asynchronous open machinery
    fInitMtx = new XrdSysRecMutex();
 
+   if (gMonitoringWriter) {
+      // Init the monitoring system
+      if (!fOpenPhases) {
+         fOpenPhases = new TList;
+         fOpenPhases->SetOwner();
+      }
+      // Should not be null instead of "xrdopen" to init the thing ?
+      gMonitoringWriter->SendFileOpenProgress(this, fOpenPhases, "xrdopen", kFALSE);
+   }
+
    // Create an instance
    CreateXClient(urlnoanchor.GetUrl(), option, netopt, parallelopen);
 }
@@ -843,12 +853,22 @@ void TXNetFile::Init(Bool_t create)
       // To safely perform the Init() we must make sure that
       // the file is successfully open; this call may block
       if (fClient->IsOpen_wait()) {
+
+         // Notify the monitoring system
+         if (gMonitoringWriter)
+            gMonitoringWriter->SendFileOpenProgress(this, fOpenPhases, "rootinit", kFALSE);
+
          // Avoid big transfers at this level
          bool usecachesave = fClient->UseCache(0);
          // Note that Init will trigger recursive calls
          TFile::Init(create);
          // Restore requested behaviour
          fClient->UseCache(usecachesave);
+
+            // Notify the monitoring system
+         if (gMonitoringWriter)
+            gMonitoringWriter->SendFileOpenProgress(this, fOpenPhases, "endopen", kTRUE);
+
          // Set the Endpoint Url we are now connected to
          fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
          // Check equivalence of initial and end-point Url to see whether we have

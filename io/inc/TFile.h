@@ -86,6 +86,7 @@ protected:
    TUrl             fUrl;            //!URL of file
 
    TList           *fInfoCache;      //!Cached list of the streamer infos in this file
+   TList           *fOpenPhases;     //!Time info about open phases
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 

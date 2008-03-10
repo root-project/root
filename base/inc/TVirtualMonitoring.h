@@ -24,24 +24,30 @@
 #include "TNamed.h"
 #endif
 
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 #ifndef ROOT_TMap
 #include "TMap.h"
 #endif
 
 class TFile;
 
-
 class TVirtualMonitoringWriter : public TNamed {
 
 private:
    Double_t fValue;  // double monitor value
 
+protected:
+   TList     *fTmpOpenPhases;       // To store open phases when there is not yet an object
+
 public:
-   TVirtualMonitoringWriter() : TNamed(), fValue(0) { }
+   TVirtualMonitoringWriter() : TNamed(), fValue(0), fTmpOpenPhases(0) { }
    TVirtualMonitoringWriter(const char *name, Double_t value)
       : TNamed(name, ""), fValue(value) { }
 
-   virtual ~TVirtualMonitoringWriter() { }
+   virtual ~TVirtualMonitoringWriter() { if (fTmpOpenPhases) delete fTmpOpenPhases; }
+
    virtual Bool_t SendFileReadProgress(TFile * /*file*/, Bool_t /*force*/ =kFALSE)
       { MayNotUse("SendFileReadProgress"); return kFALSE; }
    virtual Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = 0)
@@ -50,9 +56,18 @@ public:
    virtual Bool_t SendInfoUser(const char * /*user*/ = 0) { MayNotUse("SendInfoUser"); return kFALSE; }
    virtual Bool_t SendInfoDescription(const char * /*jobtag*/) { MayNotUse("SendInfoDescription"); return kFALSE; }
    virtual Bool_t SendInfoStatus(const char * /*status*/) { MayNotUse("SendInfoStatus"); return kFALSE; }
-   virtual Bool_t SendProcessingStatus(const char * /*status*/, Bool_t /*restarttimer*/ =kFALSE)
+
+   // An Open might have several phases, and the timings might be interesting
+   // to report
+   // The info is only gathered into openphasestime, and sent when forcesend=kTRUE
+   virtual Bool_t SendFileOpenProgress(TFile * /*file*/, TList * /*openphases*/,
+                                       const char * /*openphasename*/,
+                                       Bool_t /*forcesend*/ = kFALSE )
+      { MayNotUse("SendFileOpenProgress"); return kFALSE; }
+
+   virtual Bool_t SendProcessingStatus(const char * /*status*/, Bool_t /*restarttimer*/ = kFALSE)
       { MayNotUse("SendProcessingStatus"); return kFALSE; }
-   virtual Bool_t SendProcessingProgress(Double_t /*nevent*/, Double_t /*nbytes*/, Bool_t /*force*/ =kFALSE)
+   virtual Bool_t SendProcessingProgress(Double_t /*nevent*/, Double_t /*nbytes*/, Bool_t /*force*/ = kFALSE)
       { MayNotUse("SendProcessingProgress"); return kFALSE; }
    virtual void   SetLogLevel(const char * /*loglevel*/ = "WARNING")
       { MayNotUse("SetLogLevel"); };
@@ -71,7 +86,7 @@ public:
    virtual void   DumpResult() { MayNotUse("DumpResult"); }
    virtual void   GetValues(const char * /*farmName*/, const char * /*clusterName*/,
                             const char * /*nodeName*/, const char * /*paramName*/,
-                            Long_t /*min*/, Long_t /*max*/, Bool_t /*debug*/ =kFALSE)
+                            Long_t /*min*/, Long_t /*max*/, Bool_t /*debug*/ = kFALSE)
       { MayNotUse("GetValues"); }
    virtual void   GetLastValues(const char * /*farmName*/, const char * /*clusterName*/,
                                 const char * /*nodeName*/, const char * /*paramName*/,
