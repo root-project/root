@@ -52,7 +52,7 @@ TGLEventHandler::TGLEventHandler(const char *name, TGWindow *w, TObject *obj,
                                  const char *title) :
    TGEventHandler(name, w, obj, title),
    fGLViewer           ((TGLViewer *)obj),
-   fMouseTimer         (new TTimer(this, 250)),
+   fMouseTimer         (0),
    fLastPos            (-1, -1),
    fLastMouseOverPos   (-1, -1),
    fLastMouseOverShape (0),
@@ -60,6 +60,8 @@ TGLEventHandler::TGLEventHandler(const char *name, TGWindow *w, TObject *obj,
    fLastEventState     (0)
 {
    // Constructor.
+
+   fMouseTimer = new TTimer(this, 250);
 }
 
 //______________________________________________________________________________
