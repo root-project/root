@@ -213,7 +213,9 @@ public:
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
   inline OperMode operMode() const { return _operMode ; }
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
-	
+
+  static UInt_t crc32(const char* data) ;
+
   protected:
 
   void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
@@ -313,7 +315,6 @@ public:
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
   virtual void fillTreeBranch(TTree& t) = 0 ;
   TString cleanBranchName() const ;
-  UInt_t crc32(const char* data) const ;
 
   // Global   
   friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  

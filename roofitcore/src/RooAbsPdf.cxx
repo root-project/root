@@ -1968,6 +1968,14 @@ Int_t RooAbsPdf::verboseEval()
 
 RooAbsPdf::CacheElem::~CacheElem() 
 { 
+  // Zero _norm pointer in RooAbsPdf if it is points to our cache payload
+  if (_owner) {
+    RooAbsPdf* pdfOwner = static_cast<RooAbsPdf*>(_owner) ;
+    if (pdfOwner->_norm == _norm) {
+      pdfOwner->_norm = 0 ;
+    }
+  }
+
   delete _norm ; 
 } 
 

@@ -199,8 +199,6 @@ Double_t RooRealSumPdf::evaluate() const
 {
   // Calculate the current value
 
-  const RooArgSet* nset = _funcList.nset() ;
-
   Double_t value(0) ;
 
   // Do running sum of coef/func pairs, calculate lastCoef.
@@ -213,17 +211,17 @@ Double_t RooRealSumPdf::evaluate() const
   Double_t lastCoef(1) ;
   while((coef=(RooAbsReal*)_coefIter->Next())) {
     func = (RooAbsReal*)_funcIter->Next() ;
-    Double_t coefVal = coef->getVal(nset) ;
+    Double_t coefVal = coef->getVal() ;
     if (coefVal) {
-      value += func->getVal(nset)*coefVal ;
-      lastCoef -= coef->getVal(nset) ;
+      value += func->getVal()*coefVal ;
+      lastCoef -= coef->getVal() ;
     }
   }
   
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
     func = (RooAbsReal*) _funcIter->Next() ;
-    value += func->getVal(nset)*lastCoef ;
+    value += func->getVal()*lastCoef ;
     
     // Warn about coefficient degeneration
     if (lastCoef<0 || lastCoef>1) {

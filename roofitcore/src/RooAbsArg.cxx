@@ -100,6 +100,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
   RooTrace::create(this) ;
+
 }
 
 RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
@@ -1508,12 +1509,12 @@ TString RooAbsArg::cleanBranchName() const
 
 
 
-UInt_t RooAbsArg::crc32(const char* data) const
+UInt_t RooAbsArg::crc32(const char* data)
 {
   // Calculate and extract length of string
   Int_t len = strlen(data) ;
   if (len<4) {
-    coutE(InputArguments) << "RooAbsReal::crc32 cannot calculate checksum of less than 4 bytes of data" << endl ;
+    oocoutE((RooAbsArg*)0,InputArguments) << "RooAbsReal::crc32 cannot calculate checksum of less than 4 bytes of data" << endl ;
     return 0 ;
   }
 

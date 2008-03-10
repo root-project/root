@@ -120,6 +120,7 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 void RooObjCacheManager::insertObjectHook(RooAbsCacheElement& obj) 
 {
   //cout << "RooObjCacheManager::insertObjectHook(owner = " << _owner->GetName() << ")" << endl ;
+  obj.setOwner(_owner) ;
 
   // If value caching mode optimization has happened, process it now on object being inserted
   if (_optCacheModeSeen) {
