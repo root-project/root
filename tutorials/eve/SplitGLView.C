@@ -615,7 +615,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    // Main frame constructor.
 
    TGSplitFrame *frm;
-   TEveScene *s;
+   TEveScene *s = 0;
    TGHorizontalFrame *hfrm;
    TGPictureButton *button;
 
@@ -723,13 +723,12 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
       fViewer[0]->AddScene(gEve->GetGlobalScene());
       fViewer[0]->AddScene(gEve->GetEventScene());
       gEve->AddElement(fViewer[0], gEve->GetViewers());
+      s = gEve->SpawnNewScene("Rho-Z Projection");
+      // projections
+      fRhoZMgr = new TEveProjectionManager();
+      gEve->AddElement(fRhoZMgr, (TEveElement *)s);
+      gEve->AddToListTree(fRhoZMgr, kTRUE);
    }
-
-   s = gEve->SpawnNewScene("Rho-Z Projection");
-   // projections
-   fRhoZMgr = new TEveProjectionManager();
-   gEve->AddElement(fRhoZMgr, (TEveElement *)s);
-   gEve->AddToListTree(fRhoZMgr, kTRUE);
 
    // get bottom left split frame
    frm = fSplitFrame->GetSecond()->GetFirst();
@@ -767,14 +766,14 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
       fRhoZMgr->SetProjection(TEveProjection::kPT_RhoZ);
       fViewer[1]->AddScene(s);
       gEve->AddElement(fViewer[1], gEve->GetViewers());
-   }
-   gRhoZMgr = fRhoZMgr;
+      gRhoZMgr = fRhoZMgr;
 
-   s = gEve->SpawnNewScene("R-Phi Projection");
-   // projections
-   fRPhiMgr = new TEveProjectionManager();
-   gEve->AddElement(fRPhiMgr, (TEveElement *)s);
-   gEve->AddToListTree(fRPhiMgr, kTRUE);
+      s = gEve->SpawnNewScene("R-Phi Projection");
+      // projections
+      fRPhiMgr = new TEveProjectionManager();
+      gEve->AddElement(fRPhiMgr, (TEveElement *)s);
+      gEve->AddToListTree(fRPhiMgr, kTRUE);
+   }
 
    // get bottom center split frame
    frm = fSplitFrame->GetSecond()->GetSecond()->GetFirst();
@@ -812,8 +811,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
       fRPhiMgr->SetProjection(TEveProjection::kPT_RPhi);
       fViewer[2]->AddScene(s);
       gEve->AddElement(fViewer[2], gEve->GetViewers());
+      gRPhiMgr = fRPhiMgr;
    }
-   gRPhiMgr = fRPhiMgr;
 
    // get bottom right split frame
    frm = fSplitFrame->GetSecond()->GetSecond()->GetSecond();
@@ -1234,15 +1233,17 @@ void SplitGLView::LoadConfig(const char *fname)
    Int_t top_height = env->GetValue("Right.Tab.Height", 0);
    Int_t bottom_height = env->GetValue("Bottom.Tab.Height", 0);
 
-   Int_t sel = env->GetValue("Eve.Selection", gEve->GetSelection()->GetPickToSelect());
-   Int_t hi = env->GetValue("Eve.Highlight", gEve->GetHighlight()->GetPickToSelect());
-   gEve->GetBrowser()->EveMenu(9+sel);
-   gEve->GetBrowser()->EveMenu(13+hi);
+   if (fIsEmbedded && gEve) {
+      Int_t sel = env->GetValue("Eve.Selection", gEve->GetSelection()->GetPickToSelect());
+      Int_t hi = env->GetValue("Eve.Highlight", gEve->GetHighlight()->GetPickToSelect());
+      gEve->GetBrowser()->EveMenu(9+sel);
+      gEve->GetBrowser()->EveMenu(13+hi);
 
-   width  = env->GetValue("Eve.Width", (Int_t)gEve->GetBrowser()->GetWidth());
-   height = env->GetValue("Eve.Height", (Int_t)gEve->GetBrowser()->GetHeight());
-   gEve->GetBrowser()->Resize(width, height);
-      
+      width  = env->GetValue("Eve.Width", (Int_t)gEve->GetBrowser()->GetWidth());
+      height = env->GetValue("Eve.Height", (Int_t)gEve->GetBrowser()->GetHeight());
+      gEve->GetBrowser()->Resize(width, height);
+   }
+
    // top (main) split frame
    width = fSplitFrame->GetFirst()->GetWidth();
    fSplitFrame->GetFirst()->Resize(width, mainheight);
@@ -1258,10 +1259,12 @@ void SplitGLView::LoadConfig(const char *fname)
 
    fSplitFrame->Layout();
 
-   width = ((TGCompositeFrame *)gEve->GetBrowser()->GetTabBottom()->GetParent())->GetWidth();
-   ((TGCompositeFrame *)gEve->GetBrowser()->GetTabBottom()->GetParent())->Resize(width, bottom_height);
-   width = ((TGCompositeFrame *)gEve->GetBrowser()->GetTabRight()->GetParent())->GetWidth();
-   ((TGCompositeFrame *)gEve->GetBrowser()->GetTabRight()->GetParent())->Resize(width, top_height);
+   if (fIsEmbedded && gEve) {
+      width = ((TGCompositeFrame *)gEve->GetBrowser()->GetTabBottom()->GetParent())->GetWidth();
+      ((TGCompositeFrame *)gEve->GetBrowser()->GetTabBottom()->GetParent())->Resize(width, bottom_height);
+      width = ((TGCompositeFrame *)gEve->GetBrowser()->GetTabRight()->GetParent())->GetWidth();
+      ((TGCompositeFrame *)gEve->GetBrowser()->GetTabRight()->GetParent())->Resize(width, top_height);
+   }
 }
 
 //______________________________________________________________________________
@@ -1273,8 +1276,10 @@ void SplitGLView::SaveConfig(const char *fname)
    TGSplitFrame *frm;
    TEnv *env = new TEnv(fname);
 
-   env->SetValue("Eve.Width", (Int_t)gEve->GetBrowser()->GetWidth());
-   env->SetValue("Eve.Height", (Int_t)gEve->GetBrowser()->GetHeight());
+   if (fIsEmbedded && gEve) {
+      env->SetValue("Eve.Width", (Int_t)gEve->GetBrowser()->GetWidth());
+      env->SetValue("Eve.Height", (Int_t)gEve->GetBrowser()->GetHeight());
+   }
    // get top (main) split frame
    frm = fSplitFrame->GetFirst();
    env->SetValue("MainView.Height", (Int_t)frm->GetHeight());
@@ -1287,13 +1292,15 @@ void SplitGLView::SaveConfig(const char *fname)
    // get bottom right split frame
    frm = fSplitFrame->GetSecond()->GetSecond()->GetSecond();
    env->SetValue("Bottom.Right.Width", (Int_t)frm->GetWidth());
-   top_height = (Int_t)((TGCompositeFrame *)gEve->GetBrowser()->GetTabRight()->GetParent())->GetHeight();
-   env->SetValue("Right.Tab.Height", top_height);
-   bottom_height = (Int_t)((TGCompositeFrame *)gEve->GetBrowser()->GetTabBottom()->GetParent())->GetHeight();
-   env->SetValue("Bottom.Tab.Height", bottom_height);
+   if (fIsEmbedded && gEve) {
+      top_height = (Int_t)((TGCompositeFrame *)gEve->GetBrowser()->GetTabRight()->GetParent())->GetHeight();
+      env->SetValue("Right.Tab.Height", top_height);
+      bottom_height = (Int_t)((TGCompositeFrame *)gEve->GetBrowser()->GetTabBottom()->GetParent())->GetHeight();
+      env->SetValue("Bottom.Tab.Height", bottom_height);
 
-   env->SetValue("Eve.Selection", gEve->GetSelection()->GetPickToSelect());
-   env->SetValue("Eve.Highlight", gEve->GetHighlight()->GetPickToSelect());
+      env->SetValue("Eve.Selection", gEve->GetSelection()->GetPickToSelect());
+      env->SetValue("Eve.Highlight", gEve->GetHighlight()->GetPickToSelect());
+   }
 
    env->SaveLevel(kEnvLocal);
 #ifdef R__WIN32
@@ -1330,7 +1337,7 @@ void SplitGLView::UpdateSummary()
    Int_t k;
    TEveElement *el;
    HtmlObjTable *table;
-   TEveEventManager *mgr = gEve->GetCurrentEvent();
+   TEveEventManager *mgr = gEve ? gEve->GetCurrentEvent() : 0;
    if (mgr) {
       fgHtmlSummary->Clear("D");
       for (i=mgr->BeginChildren(); i!=mgr->EndChildren(); ++i) {
