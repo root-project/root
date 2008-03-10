@@ -35,7 +35,7 @@ ClassImp(TFileCollection)
 
 //______________________________________________________________________________
 TFileCollection::TFileCollection(const char *name, const char *title,
-                                 const char *textfile)
+                                 const char *textfile, Int_t nfiles, Int_t firstfile)
    : TNamed(name, title), fList(0), fMetaDataList(0),
      fTotalSize(0), fStagedPercentage(0)
 {
@@ -49,7 +49,7 @@ TFileCollection::TFileCollection(const char *name, const char *title,
    fMetaDataList = new TList;
    fMetaDataList->SetOwner();
 
-   AddFromFile(textfile);
+   AddFromFile(textfile, nfiles, firstfile);
 }
 
 //______________________________________________________________________________
@@ -70,19 +70,31 @@ void TFileCollection::Add(TFileInfo *info)
 }
 
 //______________________________________________________________________________
-void TFileCollection::AddFromFile(const char *textfile)
+void TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t firstfile)
 {
-   // Add all file names contained in the specified text file.
+   // Add file names contained in the specified text file.
+   // The file should contain one url per line; empty lines or lines starting with '#'
+   // (commented lines) are ignored.
+   // If nfiles > 0 only nfiles files are added, starting from file 'firstfile' (>= 1).
 
    if (textfile && *textfile) {
       ifstream f;
       f.open(gSystem->ExpandPathName(textfile), ifstream::out);
       if (f.is_open()) {
-         while (f.good()) {
+         Bool_t all = (nfiles <= 0) ? kTRUE : kFALSE;
+         Int_t ff = (!all && (firstfile < 1)) ? 1 : firstfile;
+         Int_t nn = 0, nf = 0;
+         while (f.good() && (all || nf < nfiles)) {
             TString line;
             line.ReadToDelim(f);
-            if (!line.IsWhitespace())
-               fList->Add(new TFileInfo(line));
+            // Skip commented or empty lines
+            if (!line.IsWhitespace() && !line.BeginsWith("#")) {
+               nn++;
+               if (all || nn >= ff) {
+                  fList->Add(new TFileInfo(line));
+                  nf++;
+               }
+            }
          }
          f.close();
          Update();

@@ -45,11 +45,12 @@ private:
    TFileCollection& operator=(const TFileCollection&);  // not implemented
 
 public:
-   TFileCollection(const char *name = 0, const char *title = 0, const char *file = 0);
+   TFileCollection(const char *name = 0, const char *title = 0,
+                   const char *file = 0, Int_t nfiles = -1, Int_t firstfile = 1);
    virtual ~TFileCollection();
 
    void            Add(TFileInfo *info);
-   void            AddFromFile(const char *file);
+   void            AddFromFile(const char *file, Int_t nfiles = -1, Int_t firstfile = 1);
    void            AddFromDirectory(const char *dir);
    TList          *GetList() { return (TList*) fList; }
 
