@@ -677,3 +677,9 @@ TrackMathCoreRflx.$(SrcSuf): 	TrackMathCore.h TrackMathCoreRflx.xml
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX)  $(CXXFLAGS) -c $<
+
+ifeq ($(GCC_MAJOR),4)
+ifeq ($(GCC_MINOR),1)
+TBenchDict.o: CXXFLAGS += -Wno-strict-aliasing
+endif
+endif
