@@ -42,4 +42,9 @@
 #pragma link C++ class TPolyLine-;
 #pragma link C++ class TWbox+;
 
+#pragma link C++ namespace ROOT::Fit; 
+#pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph *,  TF1 * );
+#pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TMultiGraph *,  TF1 * );
+
+
 #endif
