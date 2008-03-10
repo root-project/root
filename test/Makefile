@@ -87,7 +87,6 @@ TRACKMATHSRC = TrackMathCoreRflx.$(SrcSuf)
 TRACKMATHOBJ = TrackMathCoreRflx.$(ObjSuf)
 TRACKMATHLIB = libTrackMathCoreRflx.$(DllSuf)
 
-
 else 
 
 ifeq ($(PLATFORM),win32)
@@ -96,15 +95,13 @@ else
 STRESSMATHLIBS = -lGenVector
 endif
 
-TRACKMATHSRC = TrackMathCoreCint.$(SrcSuf)
-TRACKMATHOBJ = TrackMathCoreCint.$(ObjSuf)
-TRACKMATHLIB = libTrackMathCoreCint.$(DllSuf)
+TRACKMATHSRC = TrackMathCoreDict.$(SrcSuf)
+TRACKMATHOBJ = TrackMathCoreDict.$(ObjSuf)
+TRACKMATHLIB = libTrackMathCoreDict.$(DllSuf)
  
 endif
 
 STRESSMATH    = stressMathCore$(ExeSuf)
-
-
 
 endif
 
@@ -614,7 +611,6 @@ endif
 endif
 endif
 
-
 clean:
 		@rm -f $(OBJS) $(TRACKMATHSRC) core
 
@@ -665,7 +661,7 @@ guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 	@rootcint -f $@ -c $^
 
 stressMathCore.$(ObjSuf): 	TrackMathCore.h
-TrackMathCoreCint.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
+TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
 	@echo "Generating dictionary $@ using rootcint ..."
 	@rootcint -f $@ -c $^	
 

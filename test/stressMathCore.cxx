@@ -30,8 +30,8 @@
 //    > ./stressMathMore
 //
 // to run inside ROOT using ACliC
-//  for using CINT you need first to have the library libTrackMathCoreCint.so 
-//   (type:  make libTrackMathCoreCint.so to make it)
+//  for using CINT you need first to have the library libTrackMathCoreDict.so 
+//   (type:  make libTrackMathCoreDict.so to make it)
 //  
 //   root> gSystem->Load("libMathCore");
 //   root> gSystem->Load("libTree");
@@ -1472,12 +1472,12 @@ int testCompositeObj(int ngen) {
    std::cout << "Test Using CINT library\n\n"; 
 
    // put path relative to LD_LIBRARY_PATH
-   iret = gSystem->Load("../test/libTrackMathCoreCint");
+   iret = gSystem->Load("../test/libTrackMathCoreDict");
    if (iret !=0) { 
       // if not assume running from top ROOT dir (case of roottest)
-      iret = gSystem->Load("test/libTrackMathCoreCint");
+      iret = gSystem->Load("test/libTrackMathCoreDict");
       if (iret !=0) {
-         std::cerr <<"Error Loading libTrackMathCoreCint" << std::endl;
+         std::cerr <<"Error Loading libTrackMathCoreDict" << std::endl;
          return iret; 
       }
    }
