@@ -160,14 +160,14 @@ struct Pyint9_t {
   double VXPDGM[13];
 };
 
-struct Pyuppr_t {
-  int    NUP;
-  int    KUP[7][20];
-  int    NFUP;
-  int    IFUP[2][10];
-  double PUP[5][20];
-  double Q2UP[11];
-};
+//struct Pyuppr_t {
+//  int    NUP;
+//  int    KUP[7][20];
+//  int    NFUP;
+//  int    IFUP[2][10];
+//  double PUP[5][20];
+//  double Q2UP[11];
+//};
 
 struct Pymssm_t {
   int    IMSS[100];
@@ -181,6 +181,9 @@ struct Pyssmt_t {
   double SMZ[4];
   double SMW[2];
   double SFMIX[4][16];
+  double ZMIXI[4][4];
+  double UMIXI[2][2];
+  double VMIXI[2][2];
 };
 
 struct Pyints_t {
