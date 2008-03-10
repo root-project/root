@@ -104,10 +104,13 @@ ROOT::Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
    for(vector<char*>::iterator i=tokens.begin();i != tokens.end(); ++i) {
       if ( 0 != (dir=::opendir(*i)) )  {
          while ( 0 != (e=::readdir(dir)) )  {
-            if ( strstr(::directoryname(e),"rootmap") != 0 )  {
+           // Check that the filename ends with .rootmap
+            const char* f = ::directoryname(e);
+            const char* s = ".rootmap";
+            if ( strlen(f) >= strlen(s) && strcmp(f+strlen(f)-strlen(s), s) == 0 ) {
                std::string fn = *i;
                fn += "/";
-               fn += ::directoryname(e);
+               fn += f;
                FillMap(fn);
             }
          }
