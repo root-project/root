@@ -27,6 +27,10 @@ altcxx=
 altf77=
 altld=
 
+deprecated_options="         \
+   enable_mathcore           \
+"
+
 options="                    \
    enable_afs                \
    enable_alien              \
@@ -87,6 +91,7 @@ options="                    \
    enable_xft                \
    enable_xml                \
    enable_xrootd             \
+   $deprecated_options       \
 "
 
 #
@@ -94,7 +99,7 @@ options="                    \
 # on per default explictly afterwards.
 #
 for c in $options ; do eval ${c}="yes" ; done
-for c in $options ; do eval ${c}_explicit="no" ; done
+for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_afs=no
 enable_cint7=no
@@ -675,7 +680,7 @@ check_explicit()
     emsg=$1 ; shift
 
     if test "x$fail_on_missing" = "xno" ; then return 0 ; fi
-    if test "x$expl" = "xno" ; then return 0 ; fi
+    if test ! "x$expl" = "xyes" ; then return 0 ; fi
     if test ! "x$feat" = "xyes" ; then
 	result $emsg
 	exit 1
@@ -1216,6 +1221,17 @@ if test $# -gt 0 ; then
       #
       --enable-*)
         f=`echo $1 | sed -e 's/--//' -e 's/-/_/g'`
+        eval prev='$'`echo ${f}`
+        eval prev_expl='$'`echo ${f}_explicit`
+        if test "${prev}:${prev_expl}" = "yes:"; then
+            echo "INFO: $1: already enabled by default."
+        fi
+        if test ! "x`echo ${deprecated_options} | grep ${f}`" = "x"; then
+            echo "WARNING: option $1 is deprecated and ignored"'!'
+        fi
+        if test "x${prev_expl}" = "xno"; then
+            echo "WARNING: conflicting --disable / $1, $1 wins"
+        fi
         eval ${f}=yes
         eval ${f}_explicit=yes
         for c in $options ; do
@@ -1229,6 +1245,14 @@ if test $# -gt 0 ; then
         ;;
       --disable-*)
         f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g'`
+        eval prev='$'`echo ${f}`
+        eval prev_expl='$'`echo ${f}_explicit`
+        if test "${prev}:${prev_expl}" = "xno:"; then
+            echo "INFO: $1: already disabled by default."
+        fi
+        if test "x${prev_expl}" = "xyes"; then
+            echo "WARNING: conflicting --enable / $1, $1 wins"
+        fi
         eval ${f}=no
         eval ${f}_explicit=no
         for c in $options ; do
