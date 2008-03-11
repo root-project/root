@@ -235,7 +235,9 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
 {
    // The real creation work is done here.
 
+#ifndef OLDXRDLOCATE
    Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1, np = 0;
+#endif
 
    fClient = 0;
 

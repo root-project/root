@@ -208,9 +208,9 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy *xps)
    std::list<XrdProofWorker *>::iterator iter;
    for (iter = wrks->begin(); iter != wrks->end(); ++iter) {
       TRACE(DBG, "GetNumWorkers: "<< (*iter)->fImage<<
-                 " : # act: "<<(*iter)->GetNActiveSessions());
+                 " : # act: "<<(*iter)->fProofServs.size());
       if ((*iter)->fType != 'M'
-         && (*iter)->GetNActiveSessions() < fOptWrksPerUnit)
+         && (*iter)->fProofServs.size() < fOptWrksPerUnit)
          nFreeCPUs++;
    }
 

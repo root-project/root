@@ -1,4 +1,12 @@
-void SavePerfInfo(const Char_t *filename) {
+#include <iostream>
+#include "TFile.h"
+#include "TIterator.h"
+#include "TRegexp.h"
+#include "TProof.h"
+
+
+void SavePerfInfo(const Char_t *filename)
+{
    // Save PROOF timing information from TPerfStats to file 'filename' 
 
    if (!gProof) {
