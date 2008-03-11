@@ -2752,9 +2752,13 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
                f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
             else
                f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
-         } else
-            // just try to open it locally
-            f = new TFile(name.Data(), option, ftitle, compress);
+         } else {
+            // Just try to open it locally but via TFile::Open, so that we pick-up the correct
+            // plug-in in the case file name contains information about a special backend (e.g.
+            // "srm://srm.cern.ch//castor/cern.ch/grid/..." should be considered a castor file
+            // /castor/cern.ch/grid/...").
+            f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
+         }
       }
 
       if (f && f->IsZombie()) {
