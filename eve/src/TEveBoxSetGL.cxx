@@ -18,13 +18,17 @@
 #include "TGLSelectRecord.h"
 #include "TGLContext.h"
 
-//______________________________________________________________________________
+//==============================================================================
+//==============================================================================
 // TEveBoxSetGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // A GL rendering class for TEveBoxSet.
 //
 
-ClassImp(TEveBoxSetGL)
+ClassImp(TEveBoxSetGL);
 
 //______________________________________________________________________________
 TEveBoxSetGL::TEveBoxSetGL() : fM(0), fBoxDL(0)
@@ -232,6 +236,10 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if(mB.fPlex.Size() == 0)
       return;
+   if ( ! mB.fValueIsColor && mB.fPalette == 0)
+   {
+      mB.AssertPalette();
+   }
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
 
