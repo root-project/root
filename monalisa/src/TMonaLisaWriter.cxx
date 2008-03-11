@@ -522,8 +522,7 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
    // If openphases=0 it means that the information is to be stored
    // in a temp space, since there is not yet an object where to attach it to.
    // This is typical in the static Open calls.
-   // The temp openphases are put into a FileOpenProgressRepo as soon as one
-   // is specified.
+   // The temp openphases are put into a list as soon as one is specified.
    //
    // If thisopenphasename=0 it means that the stored phases (temp and object)
    // have to be cleared.
@@ -546,26 +545,6 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
       return kTRUE;
    }
 
-#if 0
-   // The stopwatch could have been already started
-   fStopwatch.Start(kFALSE);
-
-   FileOpenProgressInfo nfo;
-   nfo.t = fStopwatch.RealTime();
-
-   strncpy(nfo.phasename, thisopenphasename, sizeof(nfo.phasename));
-   nfo.phasename[sizeof(nfo.phasename)-1] = '\0';
-
-   if (!openphases) tmpopenphases.push_back(nfo);
-   else {
-     openphases->push_back(nfo);
-     openphases->insert(openphases->begin(), tmpopenphases.begin(), tmpopenphases.end());
-     tmpopenphases.clear();
-   }
-
-   fStopwatch.Continue();
-#else
-
    // Take a measurement
    fStopwatch.Start(kFALSE);
    TParameter<Double_t> *nfo = new TParameter<Double_t>(openphasename, fStopwatch.RealTime());
@@ -586,18 +565,10 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
       fTmpOpenPhases->Clear();
    }
 
-#endif
-
-
    if (!forcesend) return kTRUE;
    if (!file) return kTRUE;
 
-#if 0
-   FileOpenProgressRepo *op = openphases;
-   if (!op) op = &tmpopenphases;
-#else
    TList *op = openphases ? openphases : fTmpOpenPhases;
-#endif
 
    Bool_t success = kFALSE;
 
@@ -620,18 +591,6 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
    TMonaLisaText *valstrfid = new TMonaLisaText("fileid_str", strfid.Data());
    valuelist->Add(valstrfid);
 
-#if 0
-   // Now add the timings for all the phases
-   for (UInt_t kk=1; kk < op->size(); kk++) {
-     TString s("openphase");
-     s += kk;
-     s += "_";
-     s += (*op)[kk-1].phasename;
-     TMonaLisaValue *v = new TMonaLisaValue(s.Data(),
-                                            (*op)[kk].t - (*op)[kk-1].t );
-     valuelist->Add(v);
-   }
-#else
    Int_t kk = 1;
    TIter nxt(op);
    TParameter<Double_t> *nf1 = 0;
@@ -644,8 +603,6 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
       nf0 = nf1;
       kk++;
    }
-
-#endif
 
    // Now send how much time was elapsed in total
    nf0 = (TParameter<Double_t> *)op->First();
