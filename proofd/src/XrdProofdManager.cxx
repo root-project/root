@@ -191,6 +191,7 @@ void XrdProofdManager::RegisterConfigDirectives()
    fConfigDirectives.Add("image", new XrdProofdDirective("image", (void *)&fImage, &DoDirectiveString));
    fConfigDirectives.Add("workdir", new XrdProofdDirective("workdir", (void *)&fWorkDir, &DoDirectiveString));
    fConfigDirectives.Add("datasetdir", new XrdProofdDirective("datasetdir", (void *)&fDataSetDir, &DoDirectiveString));
+   fConfigDirectives.Add("proofplugin", new XrdProofdDirective("proofplugin", (void *)&fProofPlugin, &DoDirectiveString));
    // Register config directives for ints
    fConfigDirectives.Add("localwrks", new XrdProofdDirective("localwrks", (void *)&fNumLocalWrks, &DoDirectiveInt));
 }
@@ -222,6 +223,8 @@ void XrdProofdManager::RegisterReConfigDirectives()
    fReConfigDirectives.Add("workdir", new XrdProofdDirective("workdir", (void *)&fWorkDir, &DoDirectiveString));
    fReConfigDirectives.Add("datasetdir",
                            new XrdProofdDirective("datasetdir", (void *)&fDataSetDir, &DoDirectiveString));
+   fReConfigDirectives.Add("proofplugin",
+                           new XrdProofdDirective("proofplugin", (void *)&fProofPlugin, &DoDirectiveString));
    // Register config directives for ints
    fReConfigDirectives.Add("localwrks",
                            new XrdProofdDirective("localwrks", (void *)&fNumLocalWrks, &DoDirectiveInt));

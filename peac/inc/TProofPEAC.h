@@ -50,7 +50,8 @@ protected:
 
 public:
    TProofPEAC(const char *masterurl, const char *sessionid = 0,
-              const char *confdir = 0, Int_t loglevel = 0);
+              const char *confdir = 0, Int_t loglevel = 0,
+              const char *alias = 0, TProofMgr *mgr = 0);
    virtual ~TProofPEAC();
 
    virtual Bool_t IsDataReady(Long64_t &totalbytes, Long64_t &bytesready);

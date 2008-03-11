@@ -116,6 +116,7 @@ class XrdProofdManager {
    int               SrvType() const { return fSrvType; }
    const char       *TMPdir() const { return fTMPdir.c_str(); }
    const char       *WorkDir() const { return fWorkDir.c_str(); }
+   const char       *ProofPlugin() const { return fProofPlugin.c_str(); }
 
    // Services
    XrdSecService    *CIA() const { return fCIA; }
@@ -162,6 +163,7 @@ class XrdProofdManager {
    int               fNumLocalWrks;   // Number of workers to be started locally
    int               fResourceType;   // resource type
    XrdProofdFile     fPROOFcfg;       // PROOF static configuration
+   XrdOucString      fProofPlugin;    // String identifying the plug-in to be loaded, e.g. "condor:"
 
    XrdOucString      fBareLibPath;    // LIBPATH cleaned from ROOT dists
    XrdOucString      fTMPdir;         // directory for temporary files

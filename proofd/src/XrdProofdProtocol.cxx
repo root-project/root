@@ -2556,9 +2556,13 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
       // User defined
       fprintf(frc, "ProofServ.ProofConfFile: %s\n", cfg);
    } else {
-      fprintf(frc,"# Config file\n");
-      if (fgMgr.IsSuperMst())
+      if (fgMgr.IsSuperMst()) {
+         fprintf(frc,"# Config file\n");
          fprintf(frc, "ProofServ.ProofConfFile: sm:\n");
+      } else if (fgMgr.ProofPlugin() && strlen(fgMgr.ProofPlugin())) {
+         fprintf(frc,"# Config file\n");
+         fprintf(frc, "ProofServ.ProofConfFile: %s\n", fgMgr.ProofPlugin());
+      }
    }
 
    // Additional rootrcs (xpd.putrc directive)

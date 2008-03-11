@@ -38,10 +38,14 @@ ClassImp(TProofPEAC)
 
 //______________________________________________________________________________
 TProofPEAC::TProofPEAC(const char *masterurl, const char *sessionid,
-                       const char *confdir, Int_t loglevel)
+                       const char *confdir, Int_t loglevel,
+                       const char *, TProofMgr *mgr)
    : fCondor(0), fTimer(0)
 {
    // Start PEAC proof session
+
+   // This may be needed during init
+   fManager = mgr;
 
    if (!strncasecmp(sessionid, "peac:", 5))
       sessionid+=5;
