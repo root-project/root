@@ -1810,7 +1810,7 @@ namespace Rgl {
       axisPainter.Paint();
 
       gPad->SetLogx(logX);
-      gPad->SetLogy(logX);
+      gPad->SetLogy(logY);
    }
 
 }
