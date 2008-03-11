@@ -210,7 +210,7 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy *xps)
       TRACE(DBG, "GetNumWorkers: "<< (*iter)->fImage<<
                  " : # act: "<<(*iter)->fProofServs.size());
       if ((*iter)->fType != 'M'
-         && (*iter)->fProofServs.size() < fOptWrksPerUnit)
+         && (int)((*iter)->fProofServs.size()) < fOptWrksPerUnit)
          nFreeCPUs++;
    }
 
