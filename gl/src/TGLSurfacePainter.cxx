@@ -3,14 +3,16 @@
 #include <cstdlib>
 #include <cctype>
 
+#include "TVirtualPad.h"
 #include "KeySymbols.h"
 #include "TVirtualGL.h"
 #include "TVirtualX.h"
 #include "Buttons.h"
-#include "TROOT.h"
 #include "TString.h"
 #include "TStyle.h"
+#include "TGaxis.h"
 #include "TColor.h"
+#include "TROOT.h"
 #include "TMath.h"
 #include "TAxis.h"
 #include "TH1.h"
@@ -149,6 +151,8 @@ void TGLSurfacePainter::AddOption(const TString &option)
       }
    } else
       fType = kSurf;
+
+   option.Index("z") == kNPOS ? fDrawPalette = kFALSE : fDrawPalette = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -294,8 +298,10 @@ void TGLSurfacePainter::DrawPlot()const
    }
 
    if (Textured() && !fSelectionPass) {
-      if (!PreparePalette())
+      if (!PreparePalette()) {
          fType = kSurf;
+         fDrawPalette = kFALSE;
+      }
       else if (fType != kSurf3)
          fPalette.EnableTexture(GL_MODULATE);
    }
@@ -360,6 +366,9 @@ void TGLSurfacePainter::DrawPlot()const
    if (fBoxCut.IsActive())
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 
+   if (Textured() && !fSelectionPass)
+      fPalette.DisableTexture();
+
    //Draw outlines here
    if (!fSelectionPass) {
       const TGLEnableGuard  blendGuard(GL_BLEND);
@@ -417,6 +426,9 @@ void TGLSurfacePainter::DrawPlot()const
       glEnd();
       glLineWidth(1.f);
    }
+
+   if (!fSelectionPass && fDrawPalette)
+      DrawPalette();
 }
 
 //______________________________________________________________________________
@@ -460,7 +472,7 @@ Bool_t TGLSurfacePainter::InitGeometryCartesian()
 
       for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
          for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
-            Double_t val = fHist->GetBinContent(i, j);
+            const Double_t val = fHist->GetBinContent(i, j);
             fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
             fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
          }
@@ -541,7 +553,7 @@ Bool_t TGLSurfacePainter::InitGeometryPolar()
 
       for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
          for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
-            Double_t val = fHist->GetBinContent(i, j);
+            const Double_t val = fHist->GetBinContent(i, j);
             fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
             fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
          }
@@ -612,7 +624,7 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
 
       for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
          for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
-            Double_t val = fHist->GetBinContent(i, j);
+            const Double_t val = fHist->GetBinContent(i, j);
             fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
             fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
          }
@@ -691,7 +703,7 @@ Bool_t TGLSurfacePainter::InitGeometrySpherical()
 
       for (Int_t i = fCoord->GetFirstXBin(), e = fCoord->GetLastXBin(); i <= e; ++i) {
          for (Int_t j = fCoord->GetFirstYBin(), e1 = fCoord->GetLastYBin(); j <= e1; ++j) {
-            Double_t val = fHist->GetBinContent(i, j);
+            const Double_t val = fHist->GetBinContent(i, j);
             fMinMaxVal.first  = TMath::Min(fMinMaxVal.first, val);
             fMinMaxVal.second = TMath::Max(fMinMaxVal.second, val);
          }
@@ -1064,7 +1076,7 @@ char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
 
    return (char *)fObjectInfo.Data();
 }
-#include <iostream>
+
 //______________________________________________________________________________
 Bool_t TGLSurfacePainter::PreparePalette()const
 {
@@ -1075,28 +1087,20 @@ Bool_t TGLSurfacePainter::PreparePalette()const
    if(fMinMaxVal.first == fMinMaxVal.second)
       return kFALSE;//must be std::abs(fMinMaxVal.second - fMinMaxVal.first) < ...
 
-   UInt_t paletteSize = fHist->GetContour();
-   if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
+   //User-defined contours are disabled. To be fixed.
+   if (fHist->TestBit(TH1::kUserContour))
+      fHist->ResetBit(TH1::kUserContour);
+
+   UInt_t paletteSize = gStyle->GetNumberContours();
+   if (!paletteSize)
       paletteSize = 20;
 
    Bool_t rez = fPalette.GeneratePalette(paletteSize, fMinMaxVal);
 
-   if (rez && fHist->TestBit(TH1::kUserContour)) {
-
-      fColorLevels.resize(paletteSize);
-
-      for (UInt_t i = 0; i < paletteSize; ++i) {
-         fColorLevels[i] = fHist->GetContourLevelPad(i);
-         ClampZ(fColorLevels[i]);
-      }
-
-      fPalette.SetContours(&fColorLevels);
-   }
-
-   if (rez && fUpdateTexMap)
+   if (rez && fUpdateTexMap) {
       GenTexMap();
-
-   fUpdateTexMap = kFALSE;
+      fUpdateTexMap = kFALSE;
+   }
 
    return rez;
 }
@@ -1168,4 +1172,24 @@ Bool_t TGLSurfacePainter::HasProjections()const
 {
    //Any projection exists.
    return fXOZProj.size() || fYOZProj.size() || fXOYProj.size();
+}
+
+//______________________________________________________________________________
+void TGLSurfacePainter::DrawPalette()const
+{
+   //Draw. Palette.
+   Rgl::DrawPalette(fCamera, fPalette);
+
+   glFinish();   
+
+   fCamera->SetCamera();
+   fCamera->Apply();
+}
+
+//______________________________________________________________________________
+void TGLSurfacePainter::DrawPaletteAxis()const
+{
+   //Draw. Palette. Axis.
+   gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
+   Rgl::DrawPaletteAxis(fCamera, fMinMaxVal, fCoord->GetCoordType() == kGLCartesian ? fCoord->GetZLog() : kFALSE);
 }

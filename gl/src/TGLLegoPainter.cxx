@@ -434,6 +434,8 @@ void TGLLegoPainter::AddOption(const TString &option)
    if (ePos == legoPos + 1)
       ePos = option.Index("e", legoPos + 4);
    fDrawErrors = ePos != kNPOS ? kTRUE : kFALSE;
+
+   option.Index("z") == kNPOS ? fDrawPalette = kFALSE : fDrawPalette = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -499,9 +501,10 @@ void TGLLegoPainter::DrawLegoCartesian()const
    const Int_t addJ = frontPoint == 2 || frontPoint == 3 ? 1 : (jInit = nY - 1, jrInit = fCoord->GetLastYBin(), -1);
 
    if (fLegoType == kColorLevel && !fSelectionPass) {
-      if (!PreparePalette())
+      if (!PreparePalette()) {
          fLegoType = kColorSimple;
-      else
+         fDrawPalette = kFALSE;
+      } else
          fPalette.EnableTexture(GL_MODULATE);
    }
 
@@ -576,6 +579,9 @@ void TGLLegoPainter::DrawLegoCartesian()const
 
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
+
+   if(!fSelectionPass && fDrawPalette)
+      DrawPalette();
 }
 
 //______________________________________________________________________________
@@ -594,9 +600,10 @@ void TGLLegoPainter::DrawLegoPolar()const
    Double_t points[4][2] = {};
 
    if (fLegoType == kColorLevel && !fSelectionPass) {
-      if (!PreparePalette())
+      if (!PreparePalette()) {
          fLegoType = kColorSimple;
-      else
+         fDrawPalette = kFALSE;
+      } else
          fPalette.EnableTexture(GL_MODULATE);
    }
 
@@ -668,6 +675,9 @@ void TGLLegoPainter::DrawLegoPolar()const
 
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
+
+   if(!fSelectionPass && fDrawPalette)
+      DrawPalette();
 }
 
 //______________________________________________________________________________
@@ -692,9 +702,10 @@ void TGLLegoPainter::DrawLegoCylindrical()const
    legoR *= fCoord->GetXScale();
 
    if (fLegoType == kColorLevel && !fSelectionPass) {
-      if (!PreparePalette())
+      if (!PreparePalette()) {
          fLegoType = kColorSimple;
-      else
+         fDrawPalette = kFALSE;
+      } else
          fPalette.EnableTexture(GL_MODULATE);
    }
 
@@ -771,6 +782,9 @@ void TGLLegoPainter::DrawLegoCylindrical()const
 
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
+
+   if(!fSelectionPass && fDrawPalette)
+      DrawPalette();
 }
 
 //______________________________________________________________________________
@@ -794,9 +808,10 @@ void TGLLegoPainter::DrawLegoSpherical()const
    const Double_t sc = 1 - legoR;
 
    if (fLegoType == kColorLevel && !fSelectionPass) {
-      if (!PreparePalette())
+      if (!PreparePalette()) {
          fLegoType = kColorSimple;
-      else
+         fDrawPalette = kFALSE;
+      } else
          fPalette.EnableTexture(GL_MODULATE);
    }
 
@@ -903,6 +918,9 @@ void TGLLegoPainter::DrawLegoSpherical()const
 
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
+
+   if(!fSelectionPass && fDrawPalette)
+      DrawPalette();
 }
 
 //______________________________________________________________________________
@@ -1045,23 +1063,34 @@ Bool_t TGLLegoPainter::PreparePalette()const
    //Initialize color palette.
    if(fMinMaxVal.first == fMinMaxVal.second)
       return kFALSE;//must be std::abs(fMinMaxVal.second - fMinMaxVal.first) < ...
-   UInt_t paletteSize = fHist->GetContour();
-   if (!paletteSize && !(paletteSize = gStyle->GetNumberContours()))
+
+   //User-defined contours are disabled, to be fixed in a future.
+   if (fHist->TestBit(TH1::kUserContour))
+      fHist->ResetBit(TH1::kUserContour);
+
+   UInt_t paletteSize = gStyle->GetNumberContours();
+   if (!paletteSize)
       paletteSize = 20;
 
-   Bool_t rez = fPalette.GeneratePalette(paletteSize, fMinMaxVal);
+   return fPalette.GeneratePalette(paletteSize, Rgl::Range_t(fMinZ, fMinMaxVal.second));
+}
 
-   if (!rez || !fHist->TestBit(TH1::kUserContour))
-      return rez;
+//______________________________________________________________________________
+void TGLLegoPainter::DrawPalette()const
+{
+   //Draw. Palette.
+   Rgl::DrawPalette(fCamera, fPalette);
 
-   fColorLevels.resize(paletteSize);
+   glFinish();   
 
-   for (UInt_t i = 0; i < paletteSize; ++i) {
-      fColorLevels[i] = fHist->GetContourLevelPad(i);
-      ClampZ(fColorLevels[i]);
-   }
+   fCamera->SetCamera();
+   fCamera->Apply();
+}
 
-   fPalette.SetContours(&fColorLevels);
-
-   return kTRUE;
+//______________________________________________________________________________
+void TGLLegoPainter::DrawPaletteAxis()const
+{
+   //Draw. Palette. Axis.
+   gVirtualX->SetDrawMode(TVirtualX::kCopy);//TCanvas by default sets in kInverse
+   Rgl::DrawPaletteAxis(fCamera, fMinMaxVal, fCoord->GetCoordType() == kGLCartesian ? fCoord->GetZLog() : kFALSE);
 }

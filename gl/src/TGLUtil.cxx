@@ -2642,8 +2642,6 @@ namespace Rgl {
                                              * gPad->GetWh() + vp[1]));
       Draw2DAxis(zAxis, xLeft, yLeft, xUp, yUp, coord->GetZRange().first,
                  coord->GetZRange().second, coord->GetZLog(), kTRUE);
-
-      gVirtualX->SelectWindow(gPad->GetPixmapID());
    }
 
    void SetZLevels(TAxis *zAxis, Double_t zMin, Double_t zMax,
@@ -3049,8 +3047,8 @@ void TGLLevelPalette::EnableTexture(Int_t mode)const
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
    glBindTexture(GL_TEXTURE_1D, fTexture);
    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, fTexels.size() / 4, 0,
                 GL_RGBA, GL_UNSIGNED_BYTE, &fTexels[0]);
    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GLint(mode));
@@ -3065,12 +3063,21 @@ void TGLLevelPalette::DisableTexture()const
 }
 
 //______________________________________________________________________________
+Int_t TGLLevelPalette::GetPaletteSize()const
+{
+   //Get. Palette. Size.
+   return Int_t(fPaletteSize);
+}
+
+//______________________________________________________________________________
 Double_t TGLLevelPalette::GetTexCoord(Double_t z)const
 {
    //Get tex coordinate
    if (!fContours)
       return (z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize / (fTexels.size() / 4);
 
+   /*
+   //This part is wrong. To be fixed.
    std::vector<Double_t>::size_type i = 0, e = fContours->size();
 
    if (!e)
@@ -3080,6 +3087,7 @@ Double_t TGLLevelPalette::GetTexCoord(Double_t z)const
       if (z >= (*fContours)[i] && z <= (*fContours)[i + 1])
          return i / Double_t(fTexels.size() / 4);
    }
+   */
 
    return 1.;
 }

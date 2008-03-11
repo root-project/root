@@ -94,6 +94,9 @@ private:
    Bool_t HasSections()const;
    Bool_t HasProjections()const;
 
+   void   DrawPalette()const;
+   void   DrawPaletteAxis()const;
+
    ClassDef(TGLSurfacePainter, 0)//Surface painter.
 };
 

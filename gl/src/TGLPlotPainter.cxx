@@ -10,7 +10,10 @@
  *************************************************************************/
 #include <cstdio>
 
+#include "TVirtualPad.h"
 #include "TVirtualPS.h"
+#include "TVirtualX.h"
+#include "TGaxis.h"
 #include "TStyle.h"
 #include "TError.h"
 #include "TColor.h"
@@ -55,7 +58,8 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordin
                     fBackBox(xoy, xoz, yoz),
                     fBoxCut(&fBackBox),
                     fHighColor(kFALSE),
-                    fSelectionBase(kTrueColorSelectionBase)
+                    fSelectionBase(kTrueColorSelectionBase),
+                    fDrawPalette(kFALSE)
 {
    //TGLPlotPainter's ctor.
    if (MakeGLContextCurrent())
@@ -82,68 +86,14 @@ TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, TGLPaintDevice *dev)
                     fBackBox(kFALSE, kFALSE, kFALSE),
                     fBoxCut(&fBackBox),
                     fHighColor(kFALSE),
-                    fSelectionBase(kTrueColorSelectionBase)
+                    fSelectionBase(kTrueColorSelectionBase),
+                    fDrawPalette(kFALSE)
 {
    //TGLPlotPainter's ctor.
    if (MakeGLContextCurrent())
       fCamera->SetViewport(fGLDevice);
 }
 
-
-/*
-//______________________________________________________________________________
-TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord,
-                               Int_t context, Bool_t xoy, Bool_t xoz, Bool_t yoz)
-                  : fGLContext(context),
-                    fPadColor(0),
-                    fHist(hist),
-                    fXAxis(hist->GetXaxis()),
-                    fYAxis(hist->GetYaxis()),
-                    fZAxis(hist->GetZaxis()),
-                    fCoord(coord),
-                    fCamera(camera),
-                    fUpdateSelection(kTRUE),
-                    fSelectionPass(kFALSE),
-                    fSelectedPart(0),
-                    fXOZSectionPos(0.),
-                    fYOZSectionPos(0.),
-                    fXOYSectionPos(0.),
-                    fBackBox(xoy, xoz, yoz),
-                    fBoxCut(&fBackBox),
-                    fHighColor(kFALSE),
-                    fSelectionBase(kTrueColorSelectionBase)
-{
-   //TGLPlotPainter's ctor.
-   if (MakeGLContextCurrent())
-      fCamera->SetViewport(GetGLContext());
-}
-
-//______________________________________________________________________________
-TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, Int_t context)
-                  : fGLContext(context),
-                    fPadColor(0),
-                    fHist(0),
-                    fXAxis(0),
-                    fYAxis(0),
-                    fZAxis(0),
-                    fCoord(0),
-                    fCamera(camera),
-                    fUpdateSelection(kTRUE),
-                    fSelectionPass(kFALSE),
-                    fSelectedPart(0),
-                    fXOZSectionPos(0.),
-                    fYOZSectionPos(0.),
-                    fXOYSectionPos(0.),
-                    fBackBox(kFALSE, kFALSE, kFALSE),
-                    fBoxCut(&fBackBox),
-                    fHighColor(kFALSE),
-                    fSelectionBase(kTrueColorSelectionBase)
-{
-   //TGLPlotPainter's ctor.
-   if (MakeGLContextCurrent())
-      fCamera->SetViewport(GetGLContext());
-}
-*/
 //______________________________________________________________________________
 void TGLPlotPainter::Paint()
 {
@@ -176,7 +126,6 @@ void TGLPlotPainter::Paint()
    DrawPlot();
    //Restore material properties from stack.
    glPopAttrib();
-//   glFlush();
    glFinish();
    //LegoPainter work is now finished, axes are drawn by axis painter.
    //Here changes are possible in future, if we have real 3d axis painter.
@@ -189,6 +138,13 @@ void TGLPlotPainter::Paint()
          //Draw axes into pixmap/DIB
          Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
          Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
+         if (fDrawPalette)
+            DrawPaletteAxis();
+         gVirtualX->SelectWindow(gPad->GetPixmapID());         
+      } else if(fDrawPalette) {
+         glAdapter->SelectOffScreenDevice();
+         DrawPaletteAxis();
+         gVirtualX->SelectWindow(gPad->GetPixmapID());
       }
    }
 
@@ -521,6 +477,11 @@ void TGLPlotPainter::ClearBuffers()const
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+//______________________________________________________________________________
+void TGLPlotPainter::DrawPaletteAxis()const
+{
+   //Draw. Palette. Axis.
+}
 
 //______________________________________________________________________________
 //
@@ -1477,10 +1438,10 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
 }
 
 //______________________________________________________________________________
-void TGLTH3Slice::FindMinMax(Int_t low, Int_t up)const
+void TGLTH3Slice::FindMinMax(Int_t /*low*/, Int_t /*up*/)const
 {
    // Find minimum and maximum for slice.
-   fMinMax.first = 0.;
+  /* fMinMax.first = 0.;
 
    switch (fAxisType) {
    case kXOZ:
@@ -1525,7 +1486,7 @@ void TGLTH3Slice::FindMinMax(Int_t low, Int_t up)const
          }
       }
       break;
-   }
+   }*/
 }
 
 //______________________________________________________________________________
@@ -1764,4 +1725,92 @@ void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
                      fAxis->GetBinUpEdge(up - 1) * fCoord->GetZScale());
       break;
    }
+}
+
+namespace Rgl {
+
+   namespace
+   {
+      const Double_t lr = 0.85;
+      const Double_t rr = 0.9;
+   }
+
+   //______________________________________________________________________________
+   void DrawPalette(const TGLOrthoCamera * camera, const TGLLevelPalette & palette)
+   {
+      //Draw. Palette.
+      const TGLDisableGuard light(GL_LIGHTING);
+      const TGLDisableGuard depth(GL_DEPTH_TEST);
+      const TGLEnableGuard blend(GL_BLEND);
+
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glOrtho(0, camera->GetWidth(), 0, camera->GetHeight(), -1., 1.);
+
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+
+      const Double_t leftX = camera->GetWidth() * lr;   
+      const Double_t rightX = camera->GetWidth() * rr;
+      const Double_t margin = 0.1 * camera->GetHeight();
+      const Double_t h = (camera->GetHeight() * 0.8) / palette.GetPaletteSize();
+
+      for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
+         glBegin(GL_POLYGON);
+         const UChar_t * color = palette.GetColour(i);
+         glColor4ub(color[0], color[1], color[2], 150);
+         glVertex2d(leftX, margin + i * h);
+         glVertex2d(rightX, margin + i * h);
+         glVertex2d(rightX, margin + (i + 1) * h);
+         glVertex2d(leftX, margin + (i + 1) * h);
+         glEnd();
+      }
+
+      const TGLEnableGuard  smoothGuard(GL_LINE_SMOOTH);
+      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+      glColor4d(0., 0., 0., 0.5);
+
+      for (Int_t i = 0, e = palette.GetPaletteSize(); i < e; ++i) {
+         glBegin(GL_LINE_LOOP);
+         glVertex2d(leftX, margin + i * h);
+         glVertex2d(rightX, margin + i * h);
+         glVertex2d(rightX, margin + (i + 1) * h);
+         glVertex2d(leftX, margin + (i + 1) * h);
+         glEnd();
+      }   
+
+   }
+
+   void DrawPaletteAxis(const TGLOrthoCamera * camera, const Range_t & minMax, Bool_t logZ)
+   {
+      const Double_t x = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() + rr * camera->GetWidth()));
+      const Double_t yMin = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.1
+                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
+                                              * gPad->GetWh() + camera->GetY()));
+      const Double_t yMax = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.9
+                                              + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
+                                              * gPad->GetWh() + camera->GetY()));
+      Double_t zMin = minMax.first;
+      Double_t zMax = minMax.second;
+
+      if (logZ) {
+         zMin = TMath::Power(10, zMin);
+         zMax = TMath::Power(10, zMax);
+      }
+
+      //Now, some stupid magic, to force ROOT's painting machine work as I want, not as it wants.
+      const Bool_t logX = gPad->GetLogx();
+      gPad->SetLogx(kFALSE);
+      const Bool_t logY = gPad->GetLogy();
+      gPad->SetLogy(kFALSE);
+
+      TGaxis axisPainter(x, yMin, x, yMax, zMin, zMax, 510, logZ ? "G" : "");
+      axisPainter.Paint();
+
+      gPad->SetLogx(logX);
+      gPad->SetLogy(logX);
+   }
+
 }

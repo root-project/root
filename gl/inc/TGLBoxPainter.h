@@ -60,6 +60,9 @@ private:
    void    DrawSectionYOZ()const;
    void    DrawSectionXOY()const;
 
+   void    DrawPalette()const;
+   void    DrawPaletteAxis()const;
+
    Bool_t  HasSections()const;
 
    ClassDef(TGLBoxPainter, 0)//Box painter

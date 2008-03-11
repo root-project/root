@@ -97,6 +97,9 @@ private:
    Bool_t       ClampZ(Double_t &zVal)const;
    Bool_t       PreparePalette()const;
 
+   void         DrawPalette()const;
+   void         DrawPaletteAxis()const;
+
    ClassDef(TGLLegoPainter, 0)//Lego painter
 };
 

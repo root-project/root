@@ -126,6 +126,10 @@ public:
       fMinMax = newRange;
    }
 
+   const TGLLevelPalette & GetPalette()const
+   {
+      return fPalette;
+   }
 
 private:
    void   PrepareTexCoords(Double_t pos, Int_t sliceBegin, Int_t sliceEnd)const;
@@ -176,6 +180,7 @@ protected:
    };
 
    ESelectionBase        fSelectionBase;
+   mutable Bool_t        fDrawPalette;
 
 public:
 /*   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context,
@@ -230,6 +235,8 @@ protected:
    virtual void     DrawSectionXOZ()const = 0;
    virtual void     DrawSectionYOZ()const = 0;
    virtual void     DrawSectionXOY()const = 0;
+
+   virtual void     DrawPaletteAxis()const;
 
    virtual void     ClearBuffers()const;
 
@@ -335,5 +342,14 @@ private:
 
    ClassDef(TGLPlotCoordinates, 0)//Auxilary class, holds plot dimensions.
 };
+
+class TGLLevelPalette;
+
+namespace Rgl {
+
+   void DrawPalette(const TGLOrthoCamera * camera, const TGLLevelPalette & palette);
+   void DrawPaletteAxis(const TGLOrthoCamera * camera, const Range_t & minMax, Bool_t logZ);
+
+}
 
 #endif

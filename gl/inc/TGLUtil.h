@@ -1250,6 +1250,8 @@ public:
    void   EnableTexture(Int_t mode)const;
    void   DisableTexture()const;
 
+   Int_t  GetPaletteSize()const;
+
    Double_t       GetTexCoord(Double_t z)const;
 
    const UChar_t *GetColour(Double_t z)const;
