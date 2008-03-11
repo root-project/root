@@ -25,6 +25,8 @@ TGSplitFrame::TGSplitFrame(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Default constructor.
 
+   fHRatio = fWRatio = 0.0;
+   AddInput(kStructureNotifyMask);
 }
 
 //______________________________________________________________________________
@@ -63,6 +65,44 @@ void TGSplitFrame::Cleanup()
       delete fSplitter;
       fSplitter = 0;
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGSplitFrame::HandleConfigureNotify(Event_t *)
+{
+   // Handles resize events for this frame.
+   // This is needed to keep as much as possible the sizes ratio between
+   // all subframes.
+
+   if (!fFirst) {
+      // case of resizing a frame with the splitter (and not from parent)
+      TGWindow *w = (TGWindow *)GetParent();
+      TGSplitFrame *p = dynamic_cast<TGSplitFrame *>(w);
+      if (p) {
+         if (p->GetFirst()) {
+            // set the correct ratio for this child
+            Float_t hratio = (Float_t)p->GetFirst()->GetHeight() / (Float_t)p->GetHeight();
+            Float_t wratio = (Float_t)p->GetFirst()->GetWidth() / (Float_t)p->GetWidth();
+            p->SetHRatio(hratio);
+            p->SetWRatio(wratio);
+         }
+      }
+      return kTRUE;
+   }
+   // case of resize event comes from the parent (i.e. by rezing TGMainFrame)
+   if ((fHRatio > 0.0) && (fWRatio > 0.0)) {
+      Float_t h = fHRatio * (Float_t)GetHeight();
+      fFirst->SetHeight((UInt_t)h);
+      Float_t w = fWRatio * (Float_t)GetWidth();
+      fFirst->SetWidth((UInt_t)w);
+   }
+   // memorize the actual ratio for next resize event
+   fHRatio = (Float_t)fFirst->GetHeight() / (Float_t)GetHeight();
+   fWRatio = (Float_t)fFirst->GetWidth() / (Float_t)GetWidth();
+   fClient->NeedRedraw(this);
+   if (!gVirtualX->InheritsFrom("TGX11"))
+      Layout();
+   return kTRUE;
 }
 
 //______________________________________________________________________________

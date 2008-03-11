@@ -29,6 +29,8 @@ protected:
    TGSplitter     *fSplitter;    // Pointer to the (H/V) Splitter (if any)
    TGSplitFrame   *fFirst;       // Pointer to the first child (if any)
    TGSplitFrame   *fSecond;      // Pointer to the second child (if any)
+   Float_t         fWRatio;      // Width ratio between the first child and this
+   Float_t         fHRatio;      // Height ratio between the first child and this
 
 public:
    TGSplitFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
@@ -39,10 +41,15 @@ public:
    virtual void   HSplit(UInt_t h = 0);
    virtual void   VSplit(UInt_t w = 0);
    virtual void   Cleanup();
+   virtual Bool_t HandleConfigureNotify(Event_t *);
    TGSplitFrame  *GetFirst() const { return fFirst; }
    TGFrame       *GetFrame() const { return fFrame; }
    TGSplitFrame  *GetSecond() const { return fSecond; }
    TGSplitter    *GetSplitter() const { return fSplitter; }
+   Float_t        GetHRatio() const { return fHRatio; }
+   Float_t        GetWRatio() const { return fWRatio; }
+   void           SetHRatio(Float_t r) { fHRatio = r; }
+   void           SetWRatio(Float_t r) { fWRatio = r; }
 
    static  void   SwitchFrames(TGFrame *frame, TGCompositeFrame *dest,
                                TGFrame *prev);
