@@ -526,7 +526,7 @@ enum EEveMenu_e {
    kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
    kVerticalBrowser,
    kSel_PS_Ignore, kSel_PS_Element, kSel_PS_Projectable, kSel_PS_Compound,
-   kHil_PS_Ignore, kHil_PS_Element, kHil_PS_Projectable, kHil_PS_Compound,
+   kHil_PS_Ignore, kHil_PS_Element, kHil_PS_Projectable, kHil_PS_Compound
 };
 
 }
