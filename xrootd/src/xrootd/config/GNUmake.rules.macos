@@ -15,9 +15,6 @@ TYPEMISC   = -D_REENTRANT -D_GNU_SOURCE -Wall -D__macos__ $(CFTRACE)
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 TYPEMISC  += -D__DARWIN_UNIX03=1
 endif
-ifeq ($(subst $(MACOSX_MINOR),,123),123)
-TYPEMISC  += -fvisibility-inlines-hidden
-endif
 TYPECF32   =
 TYPECF64   = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 TYPELINK   = -undefined dynamic_lookup -multiply_defined suppress 
