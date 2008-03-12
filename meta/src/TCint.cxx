@@ -1610,20 +1610,26 @@ const char* TCint::GetSharedLibs()
       Int_t len = strlen(filename);
       const char *end = filename+len;
       Bool_t needToSkip = kFALSE;
-      if ( len>5 && ( (strcmp(end-4,".dll") == 0 ) || (strcmp(end-3,".so")==0 && strstr(filename,"Dict")!=0) ) ) {
+      if ( len>5 && ( (strcmp(end-4,".dll") == 0 ) || (strstr(filename,"Dict.")!=0) ) ) {
          // Filter out the cintdlls
          static const char *excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","ipc.dll","posix.dll"
             "string.dll","vector.dll","vectorbool.dll","list.dll","deque.dll",
             "map.dll", "map2.dll","set.dll","multimap.dll","multimap2.dll",
             "multiset.dll","stack.dll","queue.dll","valarray.dll",
-            "libvectorDict.so","libvectorboolDict.so","liblistDict.so","libdequeDict.so",
-            "libmapDict.so", "libmap2Dict.so","libsetDict.so","libmultimapDict.so","libmultimap2Dict.so",
-            "libmultisetDict.so","libstackDict.so","libqueueDict.so","libvalarrayDict.so",
-            "exception.dll","stdexcept.dll","complex.dll","climits.dll"};
-         for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
-            if (strcmp(gSystem->BaseName(filename),excludelist[i])==0) { needToSkip = kTRUE; break; }
+            "exception.dll","stdexcept.dll","complex.dll","climits.dll",
+            "libvectorDict.","libvectorboolDict.","liblistDict.","libdequeDict.",
+            "libmapDict.", "libmap2Dict.","libsetDict.","libmultimapDict.","libmultimap2Dict.",
+            "libmultisetDict.","libstackDict.","libqueueDict.","libvalarrayDict."};
+         static const unsigned int excludelistsize = sizeof(excludelist)/sizeof(excludelist[0]);
+         static int excludelen[excludelistsize] = {-1};
+         if (excludelen[0] == -1) {
+            for (unsigned int i = 0; i < excludelistsize; ++i)
+               excludelen[i] = strlen(excludelist[i]);
          }
+         const char* basename = gSystem->BaseName(filename);
+         for (unsigned int i = 0; !needToSkip && i < excludelistsize; ++i)
+            needToSkip = (!strncmp(basename, excludelist[i], excludelen[i]));
       }
       if (!needToSkip &&
            ((len>3 && strcmp(end-2,".a") == 0)    ||
