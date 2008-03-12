@@ -46,6 +46,9 @@ public:
       inline TPushPop(TVirtualCollectionProxy *proxy, 
          void *objectstart) : fProxy(proxy) { fProxy->PushProxy(objectstart); }
       inline ~TPushPop() { fProxy->PopProxy(); }
+   private:
+      TPushPop(const TPushPop&); // Not implemented
+      TPushPop& operator=(const TPushPop&); // Not implemented
    };
 
    TVirtualCollectionProxy() : fClass() {};
