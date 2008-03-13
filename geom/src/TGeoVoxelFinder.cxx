@@ -861,7 +861,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
   		     if (fSlices[2]<-1 || fSlices[2]>fIbz-2) break; // outside range
                      if (fZb[fSlices[2]+1]>=xptnew) break;
                   } else {
-  		     if (fSlices[2]<0 || fSlices[2]>fIbz-1) break; // outside range
+                     if (fSlices[2]<0 || fSlices[2]>fIbz-1) break; // outside range
                      if (fZb[fSlices[2]]<= xptnew) break;
                   }
                }          
