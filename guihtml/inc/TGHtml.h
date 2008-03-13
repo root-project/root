@@ -508,7 +508,7 @@ class TGHtmlImageMarkup;
 
 class TGHtmlImage : public TObject {
 public:
-  TGHtmlImage(TGHtml *h, const char *url, const char *width,
+  TGHtmlImage(TGHtml *htm, const char *url, const char *width,
              const char *height);
   virtual ~TGHtmlImage();
 

@@ -44,12 +44,12 @@
 #include "TSystem.h"
 
 //______________________________________________________________________________
-TGHtmlImage::TGHtmlImage(TGHtml *h, const char *url, const char *width,
+TGHtmlImage::TGHtmlImage(TGHtml *htm, const char *url, const char *width,
                        const char *height)
 {
    // ctor.
 
-   _html = h;
+   _html = htm;
    zUrl = StrDup(url);
    zWidth = StrDup(width);
    zHeight = StrDup(height);
