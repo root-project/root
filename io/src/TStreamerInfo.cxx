@@ -541,7 +541,9 @@ void TStreamerInfo::BuildCheck()
 //       }
 
       if (!searchOnChecksum) {
-         info = (TStreamerInfo*) array->At(fClassVersion);
+         if (fClassVersion < array->GetEntriesFast()) {
+            info = (TStreamerInfo*) array->At(fClassVersion);
+         }
       } else {
          Int_t ninfos = array->GetEntriesFast() - 1;
          for (Int_t i = -1; i < ninfos; ++i) {
@@ -1695,7 +1697,9 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 
    next.Reset();
    while ((element = (TStreamerElement*)next())) {
-      for (int i=0;i < kMaxLen;i++) line[i] = ' ';
+      for (int i=0;i < kMaxLen;++i) line[i] = ' ';
+      line[kMaxLen-1] = '\0';
+
       if (element->IsA() == TStreamerBase::Class()) continue;
       const char *ename = element->GetName();
 

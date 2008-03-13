@@ -2131,7 +2131,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       Int_t len = strlen(info->GetName());
       while ((subinfo = (TStreamerInfo*)subnext())) {
          if (strncmp(info->GetName(),subinfo->GetName(),len)==0) {
-            if (subinfo->GetName()[len+1]==':') {
+            const Int_t sublen = strlen(subinfo->GetName());
+            if ( (sublen > len) && subinfo->GetName()[len+1]==':') {
                subClasses.Add(subinfo);
             }
          }
@@ -2259,11 +2260,12 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    gSystem->ChangeDirectory(dirname);
 #ifndef WIN32
    gSystem->Exec("chmod +x MAKEP");
+   int res = !gSystem->Exec("./MAKEP");
 #else
    // not really needed for Windows but it would work both both Unix and NT
-   chmod("make.cmd",00700);
-#endif
+   chmod("makep.cmd",00700);
    int res = !gSystem->Exec("MAKEP");
+#endif
    gSystem->ChangeDirectory(path);
    sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
    if (res) printf("Shared lib %s has been generated\n",path);
