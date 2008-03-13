@@ -263,7 +263,33 @@ void TGShutter::SetSelectedItem(TGShutterItem *item)
    // Set item to be the currently open shutter item.
 
    fSelectedItem = item;
+   fSelectedItem->Selected(); // emit signale
    Layout();
+}
+
+//______________________________________________________________________________
+void TGShutter::SetSelectedItem(const char *name)
+{
+   // Set item to be the currently open shutter item.
+
+   TGShutterItem *item = GetItem(name);
+   if (!item) {
+      return;
+   }
+   SetSelectedItem(item);
+}
+
+//______________________________________________________________________________
+void TGShutter::EnableItem(const char *name, Bool_t on)
+{
+   // disable/enbale shutter item
+
+   TGShutterItem *item = GetItem(name);
+   if (!item) {
+      return;
+   }
+
+   item->GetButton()->SetEnabled(on);
 }
 
 //______________________________________________________________________________

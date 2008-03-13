@@ -102,6 +102,9 @@ public:
    TGShutterItem *GetSelectedItem() const { return fSelectedItem; }
    TGShutterItem *GetItem(const char *name);
    virtual void   SetSelectedItem(TGShutterItem *item);
+   virtual void   SetSelectedItem(const char *name);
+   virtual void   EnableItem(const char *name, Bool_t on = kTRUE);
+
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
    virtual Bool_t ProcessMessage(Long_t cmd, Long_t parm1, Long_t parm2);
