@@ -40,7 +40,7 @@ TObjectSpy::TObjectSpy(TObject *obj, Bool_t fixMustCleanupBit) :
    if (fObj && !fObj->TestBit(kMustCleanup)) {
       if (fixMustCleanupBit) {
          fResetMustCleanupBit = kTRUE;
-         SetBit(kMustCleanup, kTRUE);
+         fObj->SetBit(kMustCleanup, kTRUE);
       } else {
          Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
       }
@@ -83,7 +83,7 @@ void TObjectSpy::SetObject(TObject *obj, Bool_t fixMustCleanupBit)
    if (fObj && !fObj->TestBit(kMustCleanup)) {
       if (fixMustCleanupBit) {
          fResetMustCleanupBit = kTRUE;
-         SetBit(kMustCleanup, kTRUE);
+         fObj->SetBit(kMustCleanup, kTRUE);
       } else {
          Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
       }
@@ -103,7 +103,7 @@ TObjectRefSpy::TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit) :
    if (fObj && !fObj->TestBit(kMustCleanup)) {
       if (fixMustCleanupBit) {
          fResetMustCleanupBit = kTRUE;
-         SetBit(kMustCleanup, kTRUE);
+         fObj->SetBit(kMustCleanup, kTRUE);
       } else {
          Error("TObjectSpy", "spied object must have the kMustCleanup bit set");
       }

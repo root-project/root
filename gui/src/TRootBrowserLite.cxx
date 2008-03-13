@@ -1276,6 +1276,8 @@ void TRootBrowserLite::Add(TObject *obj, const char *name, Int_t check)
 
    if (!obj)
       return;
+   if (obj->InheritsFrom("TObjectSpy"))
+      return;
    if (!name) name = obj->GetName();
 
    AddToBox(obj, name);
