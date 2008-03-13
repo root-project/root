@@ -64,8 +64,8 @@ MODULES       = build cint metautils pcre utils base cont meta io \
                 histpainter treeplayer ged treeviewer physics \
                 postscript rint thread html eg geom geompainter vmc fumili \
                 mlp quadp auth guibuilder xml foam splot smatrix sql tmva \
-                geombuilder spectrum spectrumpainter fitpanel proof \
-                proofplayer sessionviewer guihtml 
+                geombuilder spectrum spectrumpainter fitpanel proof/proof \
+                proof/proofplayer sessionviewer guihtml
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
@@ -214,19 +214,19 @@ ifeq ($(BUILDALIEN),yes)
 MODULES      += alien
 endif
 ifeq ($(BUILDCLARENS),yes)
-MODULES      += clarens
+MODULES      += proof/clarens
 endif
 ifeq ($(BUILDPEAC),yes)
-MODULES      += peac
+MODULES      += proof/peac
 endif
 ifneq ($(ARCH),win32)
-MODULES      += rpdutils rootd proofd
+MODULES      += rpdutils rootd proof/proofd
 endif
 ifeq ($(BUILDXRD),yes)
 ifeq ($(ARCH),win32)
-MODULES      += proofd
+MODULES      += proof/proofd
 endif
-MODULES      += proofx
+MODULES      += proof/proofx
 endif
 
 -include MyModules.mk   # allow local modules
@@ -234,10 +234,11 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 pythia6 table mysql pgsql sapdb srputils x3d \
-                rootx rootd proofd dcache chirp hbook asimage \
+                rootx rootd dcache chirp hbook asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
-                qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
-                xmlparser mathmore reflex cintex roofitcore roofit \
+                qt qtroot qtgsi xrootd netx alien \
+                proof/proofd proof/proofx proof/clarens proof/peac \
+                oracle xmlparser mathmore reflex cintex roofitcore roofit \
                 minuit2 monalisa fftw odbc unuran gdml eve g4root cint7 glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
@@ -415,9 +416,9 @@ ROOTMAP       = etc/system.rootmap
 ##### libCore #####
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL) 
+                $(SYSTEML) $(CLIBL) $(METAUTILSL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO) 
+                $(METAUTILSO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(SYSTEMDO) $(CLIBDO) \
                 $(METAUTILSDO)
 

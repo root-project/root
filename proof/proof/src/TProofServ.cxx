@@ -4507,7 +4507,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          (*mess) >> package;
 
-         // By first forwarding the load command to the master and workers
+         // By first forwarding the load command to the workers
          // and only then loading locally we load/build in parallel
          if (IsMaster())
             fProof->Load(package);
@@ -4516,7 +4516,8 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          // the binaries) are already in the cache
          CopyFromCache(package);
 
-         {  TProofServLogHandlerGuard hg(fLogFile, fSocket);
+         {
+            TProofServLogHandlerGuard hg(fLogFile, fSocket);
             PDB(kGlobal, 1) Info("HandleCache:kLoadMacro", "enter");
             // Load the macro
             gROOT->ProcessLine(Form(".L %s", package.Data()));
@@ -4525,9 +4526,9 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          // Cache binaries, if any new
          CopyToCache(package, 1);
 
-         // Wait forworkers to be done
+         // Wait for workers to be done
          if (IsMaster())
-            fProof->Collect(TProof::kAllUnique);
+            fProof->Collect();
 
          break;
       default:

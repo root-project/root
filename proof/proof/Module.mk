@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := proof
+MODDIR       := proof/proof
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +35,8 @@ ALLMAPS     += $(PROOFMAP)
 INCLUDEFILES += $(PROOFDEP)
 
 ##### local rules #####
+.PHONY:         all-proof map-proof clean-proof distclean-proof
+
 include/%.h:    $(PROOFDIRI)/%.h
 		cp $< $@
 

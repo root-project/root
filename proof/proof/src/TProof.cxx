@@ -3344,7 +3344,7 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
       fPlayer->StopProcess(abort, timeout);
 
    // Stop any blocking 'Collect' request; on masters we do this only if
-   // aborting; when stopping, we still need to receive the results 
+   // aborting; when stopping, we still need to receive the results
    if (!IsMaster() || abort)
       InterruptCurrentMonitor();
 
@@ -5083,7 +5083,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
       // Macro names must have a standard format
       Int_t dot = implname.Last('.');
       if (dot == kNPOS) {
-         Info("Load", "macro '%s' does not contain a '.': do nothing", macro);
+         Error("Load", "macro '%s' does not contain a proper C++ file extension", macro);
          return -1;
       }
 
@@ -5107,20 +5107,20 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
       // Send files now; the md5 check is run here; see SendFile for more
       // details.
       if (SendFile(implname) == -1) {
-         Info("Load", "problems sending implementation file %s", implname.Data());
+         Error("Load", "problems sending implementation file %s", implname.Data());
          return -1;
       }
       if (hasHeader)
          if (SendFile(headname) == -1) {
-            Info("Load", "problems sending header file %s", headname.Data());
+            Error("Load", "problems sending header file %s", headname.Data());
             return -1;
          }
 
-      // The files are now on the workers: now we send the loading request
+      // The files are now on the master: now we send the loading request
       TString basemacro = gSystem->BaseName(macro);
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kLoadMacro) << basemacro;
-      Broadcast(mess, kUnique);
+      Broadcast(mess);
 
       // Load locally, if required
       if (!notOnClient)
@@ -5129,18 +5129,18 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
          gROOT->ProcessLine(Form(".L %s", macro));
 
       // Wait for master and workers to be done
-      Collect(kAllUnique);
+      Collect();
 
    } else {
       // On master
 
       // The files are now on the workers: now we send the loading request
       // On the master we do not wait here for the results, but after the local
-      // load
+      // load in TProofServ
       TString basemacro = gSystem->BaseName(macro);
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kLoadMacro) << basemacro;
-      Broadcast(mess, kUnique);
+      Broadcast(mess);
    }
 
    // Done

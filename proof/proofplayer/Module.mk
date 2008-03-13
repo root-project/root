@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 16/3/2007
 
-MODDIR       := proofplayer
+MODDIR       := proof/proofplayer
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -53,6 +53,9 @@ ALLMAPS       += $(PROOFPLAYERMAP) $(PROOFDRAWMAP)
 INCLUDEFILES += $(PROOFPLAYERDEP) $(PROOFDRAWDEP)
 
 ##### local rules #####
+.PHONY:         all-proofplayer map-proofplayer clean-proofplayer \
+                distclean-proofplayer
+
 include/%.h:    $(PROOFPLAYERDIRI)/%.h
 		cp $< $@
 

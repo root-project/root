@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := proofd
+MODDIR       := proof/proofd
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -49,6 +49,8 @@ ALLLIBS      += $(XPDLIB)
 INCLUDEFILES += $(XPDDEP)
 
 ##### local rules #####
+.PHONY:         all-proofd map-proofd clean-proofd distclean-proofd
+
 include/%.h:    $(PROOFDDIRI)/%.h
 		cp $< $@
 

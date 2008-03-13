@@ -3,7 +3,7 @@
 #
 # Author: Maarten Ballintijn 18/10/2004
 
-MODDIR       := clarens
+MODDIR       := proof/clarens
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +35,8 @@ ALLMAPS     += $(CLARENSMAP)
 INCLUDEFILES += $(CLARENSDEP)
 
 ##### local rules #####
+.PHONY:         all-clarens map-clarens clean-clarens distclean-clarens
+
 include/%.h:    $(CLARENSDIRI)/%.h
 		cp $< $@
 

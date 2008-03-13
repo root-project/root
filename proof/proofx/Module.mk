@@ -3,7 +3,7 @@
 #
 # Author: Gerardo Ganis  12/12/2005
 
-MODDIR       := proofx
+MODDIR       := proof/proofx
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -71,6 +71,8 @@ PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet \
 endif
 
 ##### local rules #####
+.PHONY:         all-proofx map-proofx clean-proofx distclean-proofx
+
 include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 

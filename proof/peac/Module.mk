@@ -3,7 +3,7 @@
 #
 # Author: Maarten Ballintijn 18/10/2004
 
-MODDIR       := peac
+MODDIR       := proof/peac
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -57,6 +57,8 @@ ALLMAPS     += $(PEACMAP) $(PEACGUIMAP)
 INCLUDEFILES += $(PEACDEP) $(PEACGUIDEP)
 
 ##### local rules #####
+.PHONY:         all-peac map-peac clean-peac distclean-peac
+
 include/%.h:    $(PEACDIRI)/%.h
 		cp $< $@
 

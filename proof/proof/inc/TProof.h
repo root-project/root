@@ -390,7 +390,7 @@ private:
 
    Bool_t          fIdle;            //on clients, true if no PROOF jobs running
    Bool_t          fSync;            //true if type of currently processed query is sync
-   ERunStatus      fRunStatus;       //run status 
+   ERunStatus      fRunStatus;       //run status
 
    Bool_t          fRedirLog;        //redirect received log info
    TString         fLogFileName;     //name of the temp file for redirected logs
