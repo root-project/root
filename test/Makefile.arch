@@ -399,9 +399,9 @@ ifeq ($(ARCH),macosx)
 # MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-CXX           = c++
+CXX           = g++
 CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
-LD            = $(MACOSXTARGET) c++
+LD            = $(MACOSXTARGET) g++
 LDFLAGS       = $(OPT2) -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
@@ -413,7 +413,7 @@ endif
 UNDEFOPT      = dynamic_lookup
 ifneq ($(subst $(MACOSX_MINOR),,12),12)
 UNDEFOPT      = suppress
-LD            = c++
+LD            = g++
 endif
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 endif
@@ -444,9 +444,9 @@ ifeq ($(ARCH),macosx64)
 # Only specific option (-m64) comes from root-config
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-CXX           = c++
+CXX           = g++
 CXXFLAGS      = $(OPT2) -pipe -Wall -W -Woverloaded-virtual
-LD            = $(MACOSXTARGET) c++ -m64
+LD            = $(MACOSXTARGET) g++ -m64
 LDFLAGS       = $(OPT2) -bind_at_load
 # The SOFLAGS will be used to create the .dylib,
 # the .so will be created separately
@@ -548,4 +548,9 @@ ifneq ($(ALTF77),)
 endif
 ifneq ($(ALTLD),)
    LD  = $(ALTLD)
+endif
+
+ifneq ($(findstring g++, $(CXX)),)
+GCC_MAJOR := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
+GCC_MINOR := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f2)
 endif
