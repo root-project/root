@@ -1988,9 +1988,14 @@ if test ! "x$enable_qt" = "xno" || \
    test ! "x$enable_qtgsi" = "xno"; then
     # Check for Qt include and library
     # Check for Qt 4 first
-    check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
+    if test ! "x$QTDIR" = "x"; then
+      # The user asked for a specific "QTDIR" ... search ONLY in there
+      check_header "Qt/qglobal.h" "$qtincdir" $QTDIR $QTDIR/include
+    else
+      check_header "Qt/qglobal.h" "$qtincdir" $QTDIR/include \
         /usr/local/include/  /usr/local/qt/include  \
         /usr/include /usr/include/qt4
+    fi
     qtvers=0
     if ! test "x$found_hdr" = "x"; then
 	qtvers=4
@@ -2046,9 +2051,15 @@ if test ! "x$enable_qt" = "xno" || \
 
     if test $qtvers -eq 0 ; then
 	logmsg "No Qt4 was found, let's try to find Qt3 instead"
-	check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
+        if test ! "x$QTDIR" = "x"; then
+        # The user asked for a specific "QTDIR" ... search ONLY in there
+          check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include
+        else
+        # Try to search in all system default subdirectories ...
+	  check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
             /usr/local/include  /usr/local/qt/include /usr/include \
             /usr/include/qt /usr/include/qt3
+        fi
 	qtinc=$found_hdr
 	qtincdir=$found_dir
 	if ! test "x$found_hdr" = "x" ; then
