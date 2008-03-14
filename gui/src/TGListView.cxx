@@ -1310,7 +1310,10 @@ void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
 
    for (int i = 0; i < fNColumns; ++i) {
       if ( fSplitHeader[i] == splitter ) {
-         UInt_t w = fColHeader[i]->GetDefaultWidth() + 20;
+         TString dt = fColHeader[i]->GetString();
+         UInt_t bsize = gVirtualX->TextWidth(fColHeader[i]->GetFontStruct(),
+                                             dt.Data(), dt.Length());
+         UInt_t w = TMath::Max(fColHeader[i]->GetDefaultWidth(), bsize + 20);
          if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
          if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
          fColHeader[i]->Resize(w, fColHeader[i]->GetHeight());
