@@ -2109,7 +2109,8 @@ int main(int argc,const char *argv[])
   Int_t dryRun    = kFALSE ;
 
   string refFileName = "http://root.cern.ch/files/stressRooFit_ref.root" ;
-
+  if (gROOT->GetVersionInt() > 51900)
+     refFileName = "http://root.cern.ch/files/stressRooFit_ref_2.root" ;
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {
     string arg = argv[i] ;
