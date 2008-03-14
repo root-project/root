@@ -138,7 +138,7 @@ void TVirtualStreamerInfo::Optimize(Bool_t opt)
 }
 
 //______________________________________________________________________________
-TVirtualStreamerInfo *TVirtualStreamerInfo::Factory(TClass *cl)
+TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
 {
    // Static function returning a pointer to a new TVirtualStreamerInfo object.
    // If the Info factory does not exist, it is created via the plugin manager.
@@ -157,7 +157,7 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory(TClass *cl)
       }
    }
 
-   if (fgInfoFactory) return fgInfoFactory->NewInfo(cl);
+   if (fgInfoFactory) return fgInfoFactory;
    return 0;
 }
 

@@ -144,7 +144,7 @@ public:
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name) = 0;
    virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
    virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
-   static TVirtualStreamerInfo *Factory(TClass *cl);
+   static TVirtualStreamerInfo *Factory();
 
    //WARNING this class version must be the same as TStreamerInfo
    ClassDef(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class

@@ -936,10 +936,10 @@ void TClass::Init(const char *name, Version_t cversion,
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
-      fCollectionProxy = TVirtualStreamerInfo::Factory(this)->GenEmulatedProxy( GetName() );
+      fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName() );
       fSizeof = fCollectionProxy->Sizeof();
       if (fStreamer==0) {
-         fStreamer =  TVirtualStreamerInfo::Factory(this)->GenEmulatedClassStreamer( GetName() );
+         fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName() );
       }
    }
 
@@ -2885,7 +2885,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
    }
    if (!sinfo) {
       // We just were not able to find a streamer info, we have to make a new one.
-      sinfo = TVirtualStreamerInfo::Factory(const_cast<TClass*>(this));
+      sinfo = TVirtualStreamerInfo::Factory()->NewInfo(const_cast<TClass*>(this));
       fStreamerInfo->AddAtAndExpand(sinfo, fClassVersion);
       if (gDebug > 0) {
          printf("Creating StreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
@@ -3905,14 +3905,14 @@ void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
 
    delete fCollectionProxy;
 
-   // We can not use GetStreamerInfo() instead of TVirtualStreamerInfo::Factory(this)
+   // We can not use GetStreamerInfo() instead of TVirtualStreamerInfo::Factory()
    // because GetStreamerInfo call TStreamerInfo::Build which need to have fCollectionProxy
    // set correctly.
 
-   TVirtualCollectionProxy *p = TVirtualStreamerInfo::Factory(this)->GenExplicitProxy(info,this);
+   TVirtualCollectionProxy *p = TVirtualStreamerInfo::Factory()->GenExplicitProxy(info,this);
    fCollectionProxy = p;
 
-   AdoptStreamer(TVirtualStreamerInfo::Factory(this)->GenExplicitClassStreamer(info,this));
+   AdoptStreamer(TVirtualStreamerInfo::Factory()->GenExplicitClassStreamer(info,this));
 }
 
 //______________________________________________________________________________
