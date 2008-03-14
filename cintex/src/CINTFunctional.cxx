@@ -228,14 +228,14 @@ namespace ROOT { namespace Cintex {
                obj = context->fNewdelfuncs->fNewArray(nary, 0);
             }
             else {
-               obj = ::operator new( nary * size);
+               obj = new char[size];
                long p = (long)obj; 
                for( long i = 0; i < nary; ++i, p += size )
                   (*context->fStub)((void*)p, context->fParam, 0);
             }
          }
          else {
-            obj = ::operator new( size );
+            obj = new char[size];
             (*context->fStub)(obj, context->fParam, 0);
          }
       }
@@ -244,12 +244,12 @@ namespace ROOT { namespace Cintex {
          errtxt += e.what();
          errtxt += " (C++ exception)";
          G__genericerror(errtxt.c_str());
-         ::operator delete (obj);
+         delete [] (char *)(obj);
          obj = 0; 
       } 
       catch (...) {
          G__genericerror("Exception: Unknown C++ exception");
-         ::operator delete (obj);
+         delete [] (char *)(obj);
          obj = 0; 
       }
      
@@ -280,7 +280,7 @@ namespace ROOT { namespace Cintex {
             size_t size = context->fClass.SizeOf();
             for(int i = G__getaryconstruct()-1; i>=0 ; i--)
                (*context->fStub)((char*)obj + size*i, context->fParam, 0);
-            ::operator delete (obj);
+            ::operator delete [] (obj);
          }
       }
       else {
@@ -289,7 +289,7 @@ namespace ROOT { namespace Cintex {
          (*context->fStub)(obj, context->fParam, 0);
          G__setgvp(g__Xtmp);
          if( !(long(obj) == G__getgvp() && G__PVOID != G__getgvp()) )  {
-            ::operator delete (obj); //G__operator_delete(obj);
+            ::operator delete [] (obj); //G__operator_delete(obj);
          }
       }
       G__setnull(result);
