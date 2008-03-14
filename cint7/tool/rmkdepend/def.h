@@ -45,9 +45,9 @@ in this Software without prior written authorization from the X Consortium.
 #define WIN32
 #endif
 
-#define MAXDEFINES	512
+#define MAXDEFINES	4096	/* MAXDEFINES IS NOWHERE USED!!! */
 #define MAXFILES	4096
-#define MAXDIRS		256
+#define MAXDIRS		4096
 #define SYMTABINC	10	/* must be > 1 for define() to work right */
 #define	TRUE		1
 #define	FALSE		0
