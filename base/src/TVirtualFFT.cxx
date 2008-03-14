@@ -109,7 +109,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
 //Parameters:
 // -ndim : number of transform dimensions
 // -n    : sizes of each dimension (an array at least ndim long)
-// -option : consists of 2 parts - flag option and an option to create a new TVirtualFFT
+// -option : consists of 3 parts - flag option and an option to create a new TVirtualFFT
 //         1) transform type option: 
 //           Available transform types are:
 //           C2CForward, C2CBackward, C2R, R2C, R2HC, HC2R, DHT
