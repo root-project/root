@@ -261,7 +261,7 @@ Int_t TRefTable::FindPIDGUID(const char *guid) const
 }
 
 //______________________________________________________________________________
-TObject *TRefTable::GetParent(Int_t uid, TProcessID *context /* =0 */ ) const
+TObject *TRefTable::GetParent(Int_t uid, TProcessID *context /* =0 */ ) const 
 {
    // Return object corresponding to uid.
    if (!fParents) return 0;
@@ -279,16 +279,16 @@ TObject *TRefTable::GetParent(Int_t uid, TProcessID *context /* =0 */ ) const
 }
 
 //______________________________________________________________________________
-Int_t TRefTable::GetInternalIdxForPID(TProcessID *procid) const
+Int_t TRefTable::GetInternalIdxForPID(TProcessID *procid) const 
 {
    // Get the index for fProcessIDs, fAllocSize, etc given a PID.
-   // Uses fMapPIDtoInternal and the pid's GUID / fProcessGUID
+   // Uses fMapPIDtoInternal and the pid's GUID / fProcessGUID 
 
    return const_cast <TRefTable*>(this)->AddInternalIdxForPID(procid);
 }
 
 //______________________________________________________________________________
-Int_t TRefTable::GetInternalIdxForPID(Int_t pid) const
+Int_t TRefTable::GetInternalIdxForPID(Int_t pid) const 
 {
    // Get the index for fProcessIDs, fAllocSize, etc given a PID.
    // Uses fMapPIDtoInternal and the pid's GUID / fProcessGUID
@@ -364,7 +364,7 @@ void TRefTable::Reset(Option_t * /*option*/ )
 }
 
 //______________________________________________________________________________
-Int_t TRefTable::SetParent(const TObject* parent, Int_t branchID)
+Int_t TRefTable::SetParent(const TObject* parent, const Int_t branchID)
 {
    // -- Set current parent object, typically a branch of a tree.
    //

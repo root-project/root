@@ -190,7 +190,7 @@ void TBranchRef::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t TBranchRef::SetParent(const TObject* object, Int_t branchID)
+Int_t TBranchRef::SetParent(const TObject* object, const Int_t branchID)
 {
    // -- Set the current parent branch.
    //
@@ -204,3 +204,4 @@ Int_t TBranchRef::SetParent(const TObject* object, Int_t branchID)
    TRefTable::SetRefTable(fRefTable);
    return fRefTable->SetParent(object, branchID);
 }
+
