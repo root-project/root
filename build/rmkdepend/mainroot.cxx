@@ -63,12 +63,14 @@ void ROOT_flush()
       fwrite(")\n", 2, 1, stdout); // closing "$(wildcard"
       openWildcard = 0;
    }
+   /* now done via "XYZ.d XYZ.o: $(wildcard dependencies)"
    if (!currentFileBase.empty()) {
       currentFileBase += "o";
       fwrite(currentFileBase.c_str(), currentFileBase.length(), 1, stdout);
       currentDependencies += '\n';
       fwrite(currentDependencies.c_str(), currentDependencies.length(), 1, stdout);
    }
+   */
    currentFileBase.clear();
    currentDependencies.clear();
 }
@@ -107,12 +109,14 @@ else
    buf[0] = ' ';
    if (isDict) {
       posColon[1]=0;
-      char s = posColon[4]; // sove char that will be overwritten by \0 of "cxx"
+      char s = posColon[4]; // save char that will be overwritten by \0 of "cxx"
       strcat(posColon, "cxx");
       fwrite(buf, (posColon - buf)+4, 1, stdout); // .cxx
       posColon[4] = s;
    }
 
+   posColon[1]='o';
+   fwrite(buf, (posColon - buf)+2, 1, stdout); // .o
    posColon[1]='d';
    fwrite(buf, (posColon - buf)+2, 1, stdout); // .d
 
