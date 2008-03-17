@@ -84,7 +84,7 @@ public:
    virtual Bool_t     Notify();
    virtual void       ReadBuffer(TBuffer &b);
    virtual void       Reset(Option_t * /* option */ ="");
-   virtual Int_t      SetParent(const TObject* parent, const Int_t branchID);
+   virtual Int_t      SetParent(const TObject* parent, Int_t branchID);
    static  void       SetRefTable(TRefTable *table);
    virtual void       SetUID(UInt_t uid, TProcessID* context = 0) {fUID=uid; fUIDContext = context;}
 

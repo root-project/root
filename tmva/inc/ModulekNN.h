@@ -14,8 +14,8 @@
  *      Rustem Ospanov <rustem@fnal.gov> - U. of Texas at Austin, USA             *
  *                                                                                *
  * Copyright (c) 2007:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Texas at Austin, USA                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -57,7 +57,7 @@ namespace TMVA
    {
       typedef Float_t VarType;
       typedef std::vector<VarType> VarVec;
-      
+
       class Event
       {
       public:
@@ -65,7 +65,7 @@ namespace TMVA
          Event();
          Event(const VarVec &vec, Double_t weight, Short_t type);
          ~Event();
-      
+
          Double_t GetWeight() const;
 
          VarType GetVar(UInt_t i) const;
@@ -84,7 +84,7 @@ namespace TMVA
       private:
 
          VarVec fVar;
- 
+
          Double_t fWeight;
          Short_t fType;
       };
@@ -114,7 +114,7 @@ namespace TMVA
 
          Bool_t Find(Event event, UInt_t nfind = 100) const;
          Bool_t Find(UInt_t nfind, const std::string &option) const;
-      
+
          const EventVec& GetEventVec() const;
 
          const List& GetkNNList() const;
@@ -123,7 +123,7 @@ namespace TMVA
          const VarMap& GetVarMap() const;
 
          const std::map<Int_t, Double_t>& GetMetric() const;
-      
+
          void Print() const;
          void Print(std::ostream &os) const;
 
@@ -157,7 +157,7 @@ namespace TMVA
       //
       // inlined functions for Event class
       //
-      inline VarType Event::GetDist(const VarType var1, const UInt_t ivar) const
+      inline VarType Event::GetDist(const VarType var1, UInt_t ivar) const
       {
          const VarType var2 = GetVar(ivar);
          return (var1 - var2) * (var1 - var2);
@@ -166,7 +166,7 @@ namespace TMVA
       {
          return fWeight;
       }
-      inline VarType Event::GetVar(const UInt_t i) const
+      inline VarType Event::GetVar(UInt_t i) const
       {
          assert(i < GetNVar());
          return fVar[i];
@@ -208,4 +208,3 @@ namespace TMVA
 } // end of TMVA namespace
 
 #endif
-

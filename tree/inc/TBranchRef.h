@@ -47,9 +47,9 @@ public:
    virtual void    Print(Option_t *option="") const;
    virtual void    ReadLeaves(TBuffer &b);
    virtual void    Reset(Option_t *option="");
-   virtual Int_t   SetParent(const TObject* obj, const Int_t branchID);
+   virtual Int_t   SetParent(const TObject* obj, Int_t branchID);
    virtual void    SetReadEntry(Long64_t entry) {fReadEntry = entry;}
-   
+
    ClassDef(TBranchRef,1);  //to support referenced objects on other branches
 };
 
