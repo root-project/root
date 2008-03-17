@@ -80,10 +80,10 @@ const char *exps[10] = {"aleph",      // 0
                         "brahms",     // 2
                         "cdf",        // 3
                         "cms",        // 4
-                        "hades",      // 5
+                        "hades2",     // 5
                         "lhcbfull",   // 6
                         "star",       // 7
-                        "babar",      // 8
+                        "babar2",     // 8
                         "atlas"       // 10
 };
 // The timings below are on my machine PIV 3GHz
