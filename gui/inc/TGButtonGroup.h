@@ -85,7 +85,7 @@ public:
 
    virtual void SetExclusive(Bool_t flag = kTRUE);
    virtual void SetRadioButtonExclusive(Bool_t flag = kTRUE);
-   virtual void SetState(const Bool_t state = kTRUE);
+   virtual void SetState(state = kTRUE);
    virtual void SetBorderDrawn(Bool_t enable = kTRUE);
    virtual void SetButton(Int_t id, Bool_t down = kTRUE);
    virtual void SetTitle(TGString *title);
