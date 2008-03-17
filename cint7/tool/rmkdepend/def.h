@@ -45,24 +45,23 @@ in this Software without prior written authorization from the X Consortium.
 #define WIN32
 #endif
 
-#define MAXDEFINES	4096	/* MAXDEFINES IS NOWHERE USED!!! */
 #define MAXFILES	4096
-#define MAXDIRS		4096
+#define MAXDIRS	4096
 #define SYMTABINC	10	/* must be > 1 for define() to work right */
-#define	TRUE		1
-#define	FALSE		0
+#define TRUE      1
+#define FALSE     0
 
 /* the following must match the directives table in main.c */
-#define	IF		0
-#define	IFDEF		1
-#define	IFNDEF		2
-#define	ELSE		3
-#define	ENDIF		4
-#define	DEFINE		5
-#define	UNDEF		6
-#define	INCLUDE		7
-#define	LINE		8
-#define	PRAGMA		9
+#define IF              0
+#define IFDEF           1
+#define IFNDEF          2
+#define ELSE            3
+#define ENDIF           4
+#define DEFINE          5
+#define UNDEF           6
+#define INCLUDE         7
+#define LINE            8
+#define PRAGMA          9
 #define ERROR           10
 #define IDENT           11
 #define SCCS            12
