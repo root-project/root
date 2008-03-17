@@ -3,7 +3,7 @@
 #
 # Author: Olivier Couet, 27/11/2006
 
-MODDIR       := spectrumpainter
+MODDIR       := hist/spectrumpainter
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +35,9 @@ ALLMAPS       += $(SPECTRUMPAINTERMAP)
 INCLUDEFILES += $(SPECTRUMPAINTERDEP)
 
 ##### local rules #####
+.PHONY:         all-spectrumpainter map-spectrumpainter clean-spectrumpainter \
+                distclean-spectrumpainter
+
 include/%.h:    $(SPECTRUMPAINTERDIRI)/%.h
 		cp $< $@
 

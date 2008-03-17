@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := histpainter
+MODDIR       := hist/histpainter
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -36,6 +36,9 @@ ALLMAPS       += $(HISTPAINTERMAP)
 INCLUDEFILES += $(HISTPAINTERDEP)
 
 ##### local rules #####
+.PHONY:         all-histpainter map-histpainter clean-histpainter \
+                distclean-histpainter
+
 include/%.h:    $(HISTPAINTERDIRI)/%.h
 		cp $< $@
 

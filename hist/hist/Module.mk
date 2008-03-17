@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := hist
+MODDIR       := hist/hist
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -40,6 +40,8 @@ ALLMAPS     += $(HISTMAP)
 INCLUDEFILES += $(HISTDEP)
 
 ##### local rules #####
+.PHONY:         all-hist map-hist clean-hist distclean-hist
+
 include/Math/%.h: $(HISTDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then     \
 		   mkdir -p include/Math;              \

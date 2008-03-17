@@ -3,7 +3,7 @@
 #
 # Author: Rene Brun, 28/09/2006
 
-MODDIR       := spectrum
+MODDIR       := hist/spectrum
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +35,8 @@ ALLMAPS      += $(SPECTRUMMAP)
 INCLUDEFILES += $(SPECTRUMDEP)
 
 ##### local rules #####
+.PHONY:         all-spectrum map-spectrum clean-spectrum distclean-spectrum
+
 include/%.h:    $(SPECTRUMDIRI)/%.h
 		cp $< $@
 
