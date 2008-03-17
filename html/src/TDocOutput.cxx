@@ -47,8 +47,8 @@ namespace {
    typedef std::list<TSectionInfo> SectionStarts_t;
 
    static void Sections_BuildIndex(SectionStarts_t& sectionStarts,
-      SectionStart_t begin, SectionStart_t end, 
-      size_t maxPerSection) 
+      SectionStart_t begin, SectionStart_t end,
+      size_t maxPerSection)
    {
       // for each assumed section border, check that previous entry's
       // char[selectionChar] differs, else move section start forward
@@ -71,10 +71,10 @@ namespace {
          SectionStart_t addWhichOne = prevSection->fStart;
 
          size_t selectionChar=1;
-         for (; selectionChar <= cursor->length() && addWhichOne == prevSection->fStart; 
+         for (; selectionChar <= cursor->length() && addWhichOne == prevSection->fStart;
             ++selectionChar) {
             SectionStart_t checkPrev = cursor;
-            while (--checkPrev != prevSection->fStart 
+            while (--checkPrev != prevSection->fStart
                && !strncasecmp(checkPrev->c_str(), cursor->c_str(), selectionChar)) { }
 
             SectionStart_t checkNext = cursor;
@@ -95,8 +95,8 @@ namespace {
             addWhichOne = cursor;
 
          selectionChar = 1;
-         while (selectionChar <= prevSection->fStart->length() 
-            && selectionChar <= addWhichOne->length() 
+         while (selectionChar <= prevSection->fStart->length()
+            && selectionChar <= addWhichOne->length()
             && !strncasecmp(prevSection->fStart->c_str(), addWhichOne->c_str(), selectionChar))
             ++selectionChar;
 
@@ -136,12 +136,12 @@ namespace {
       }
    }
 
-   static void GetIndexChars(const Words_t& words, UInt_t numSectionsIn, 
+   static void GetIndexChars(const Words_t& words, UInt_t numSectionsIn,
       std::vector<std::string> &sectionMarkersOut)
    {
       // Given a list of words (class names, in this case), this function builds an
-      // optimal set of about numSectionIn sections (even if almost all words start 
-      // with a "T"...), and returns the significant characters for each section start 
+      // optimal set of about numSectionIn sections (even if almost all words start
+      // with a "T"...), and returns the significant characters for each section start
       // in sectionMarkersOut.
 
       const size_t maxPerSection = (words.size() + numSectionsIn - 1)/ numSectionsIn;
@@ -156,11 +156,11 @@ namespace {
       size_t idx = 0;
       for (SectionStarts_t::iterator iSectionStart = sectionStarts.begin();
          iSectionStart != sectionStarts.end(); ++iSectionStart)
-         sectionMarkersOut[idx++] = 
+         sectionMarkersOut[idx++] =
             iSectionStart->fStart->substr(0, iSectionStart->fChars);
    }
 
-   static void GetIndexChars(const std::list<std::string>& wordsIn, UInt_t numSectionsIn, 
+   static void GetIndexChars(const std::list<std::string>& wordsIn, UInt_t numSectionsIn,
       std::vector<std::string> &sectionMarkersOut)
    {
       // initialize word vector
@@ -237,7 +237,7 @@ namespace {
 // It invokes AT&T's GraphViz tool (dot) if available; charts benefit a lot
 // from it.
 //
-// TDocOutput also writes all pages' header and footer, which can be customized 
+// TDocOutput also writes all pages' header and footer, which can be customized
 // by calling THtml::SetHeader(), THtml::SetFooter().
 //______________________________________________________________________________
 
@@ -515,7 +515,7 @@ void TDocOutput::CreateClassIndex()
 
       indexFile << "<li class=\"idxl" << (i++)%2 << "\">";
       if (currentIndexEntry < indexChars.size()
-         && !strncmp(indexChars[currentIndexEntry].c_str(), cdi->GetName(), 
+         && !strncmp(indexChars[currentIndexEntry].c_str(), cdi->GetName(),
                      indexChars[currentIndexEntry].length()))
          indexFile << "<a name=\"idx" << currentIndexEntry++ << "\"></a>";
 
@@ -547,8 +547,8 @@ void TDocOutput::CreateClassIndex()
 //______________________________________________________________________________
 void TDocOutput::CreateModuleIndex()
 {
-   // Create the class index for each module, picking up documentation from the 
-   // module's TModuleDocInfo::GetSourceDir() plus the (possibly relative) 
+   // Create the class index for each module, picking up documentation from the
+   // module's TModuleDocInfo::GetSourceDir() plus the (possibly relative)
    // THtml::GetModuleDocPath(). Also creates the library dependency plot if dot
    // exists, see THtml::HaveDot().
 
@@ -628,7 +628,7 @@ void TDocOutput::CreateModuleIndex()
                continue;
 
             // allocate entry, even if no dependencies
-            TLibraryDocInfo *libdeps = 
+            TLibraryDocInfo *libdeps =
                (TLibraryDocInfo*)fHtml->GetLibraryDependencies()->FindObject(thisLib);
             if (!libdeps) {
                libdeps = new TLibraryDocInfo(thisLib);
@@ -646,7 +646,7 @@ void TDocOutput::CreateModuleIndex()
                         libdeps->AddDependency(lib);
                      }
                      lib.erase();
-                  } else 
+                  } else
                      lib += libs[pos];
                }
                if (lib.length() && thisLib.Length()) {
@@ -692,7 +692,7 @@ void TDocOutput::CreateModuleIndex()
          // write a classname to an index file
          outputFile << "<li class=\"idxl" << (count++)%2 << "\">";
          if (currentIndexEntry < indexChars.size()
-            && !strncmp(indexChars[currentIndexEntry].c_str(), cdi->GetName(), 
+            && !strncmp(indexChars[currentIndexEntry].c_str(), cdi->GetName(),
                         indexChars[currentIndexEntry].length()))
             outputFile << "<a name=\"idx" << currentIndexEntry++ << "\"></a>";
 
@@ -748,7 +748,7 @@ void TDocOutput::CreateModuleIndex()
          for (std::set<std::string>::const_iterator iDep2 = deps.begin();
               !already_indirect && iDep2 != deps.end(); ++iDep2) {
             if (iDep == iDep2) continue;
-            TLibraryDocInfo* libinfo2 = (TLibraryDocInfo*) 
+            TLibraryDocInfo* libinfo2 = (TLibraryDocInfo*)
                fHtml->GetLibraryDependencies()->FindObject(iDep2->c_str());
             if (!libinfo2) continue;
             const std::set<std::string>& deps2 = libinfo2->GetDependencies();
@@ -779,15 +779,15 @@ void TDocOutput::CreateModuleIndex()
          const std::set<std::string>& modules = libinfo->GetModules();
          for (std::set<std::string>::const_iterator iModule = modules.begin();
               iModule != modules.end(); ++iModule) {
-            sstrCluster << "\"" << *iModule << "\" [style=filled,color=white,URL=\"" 
+            sstrCluster << "\"" << *iModule << "\" [style=filled,color=white,URL=\""
                         << *iModule << "_Index.html\"];" << endl;
          }
-         sstrCluster << endl 
+         sstrCluster << endl
                      << "}" << endl;
       } else {
          // only one module
-         sstrCluster << "\"" << *modules.begin() 
-                     << "\" [label=\"" << libinfo->GetName() 
+         sstrCluster << "\"" << *modules.begin()
+                     << "\" [label=\"" << libinfo->GetName()
                      << "\",style=filled,color=lightgray,shape=box,URL=\""
                      << *modules.begin() << "_Index.html\"];" << endl;
       }
@@ -938,12 +938,12 @@ void TDocOutput::CreateTypeIndex()
    int idx = 0;
    UInt_t currentIndexEntry = 0;
 
-   for (std::list<std::string>::iterator iTypeName = typeNames.begin(); 
+   for (std::list<std::string>::iterator iTypeName = typeNames.begin();
       iTypeName != typeNames.end(); ++iTypeName) {
       TDataType* type = gROOT->GetType(iTypeName->c_str(), kFALSE);
       typesList << "<li class=\"idxl" << idx%2 << "\">";
       if (currentIndexEntry < indexChars.size()
-         && !strncmp(indexChars[currentIndexEntry].c_str(), iTypeName->c_str(), 
+         && !strncmp(indexChars[currentIndexEntry].c_str(), iTypeName->c_str(),
                      indexChars[currentIndexEntry].length()))
          typesList << "<a name=\"idx" << currentIndexEntry++ << "\"></a>" << endl;
       typesList << "<a name=\"";
@@ -1203,18 +1203,18 @@ void TDocOutput::NameSpace2FileName(TString& name)
    // Replace "<", ">", " ", ",", "~", "=" in name by "_"
    const char* replaceWhat = ":<> ,~=";
    for (Ssiz_t i=0; i < name.Length(); ++i)
-      if (strchr(replaceWhat, name[i])) 
+      if (strchr(replaceWhat, name[i]))
          name[i] = '_';
 }
 
 //______________________________________________________________________________
-void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir, 
+void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
                                  const char* outdir, const char* linkdir)
 {
    // Write links to files indir/*.txt, indir/*.html (non-recursive) to out.
    // If one of the files is called "index.{html,txt}" it will be
-   // included in out (instead of copying it to outdir and generating a link 
-   // to linkdir). txt files are passed through Convert(). 
+   // included in out (instead of copying it to outdir and generating a link
+   // to linkdir). txt files are passed through Convert().
    // The files' links are sorted alphabetically.
 
    R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
@@ -1260,7 +1260,7 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
    for (std::list<std::string>::const_iterator iFile = files.begin();
       iFile != files.end(); ++iFile) {
       TString filename(iFile->c_str());
-      if (!filename.EndsWith(".txt", TString::kIgnoreCase) 
+      if (!filename.EndsWith(".txt", TString::kIgnoreCase)
          && !filename.EndsWith(".html", TString::kIgnoreCase))
          continue;
 
@@ -1463,13 +1463,13 @@ Bool_t TDocOutput::ReferenceIsRelative(const char* reference) const
    // be prependen by relative paths. For HTML, check that it doesn't start
    // with "http://" or "https://"
 
-   return !reference || 
+   return !reference ||
       strncmp(reference, "http", 4) ||
       (strncmp(reference + 4, "://", 3) && strncmp(reference + 4, "s://", 4));
 }
 
 //______________________________________________________________________________
-const char* TDocOutput::ReplaceSpecialChars(const char c)
+const char* TDocOutput::ReplaceSpecialChars(char c)
 {
 // Replace ampersand, less-than and greater-than character, writing to out.
 // If 0 is returned, no replacement needs to be done.
@@ -1500,7 +1500,7 @@ void TDocOutput::ReplaceSpecialChars(TString& text, Ssiz_t &pos)
 //
 //
 // Input: text - text where replacement will happen,
-//        pos  - index of char to be replaced; will point to next char to be 
+//        pos  - index of char to be replaced; will point to next char to be
 //               replaced when function returns
 //
 
@@ -1546,12 +1546,12 @@ void TDocOutput::ReplaceSpecialChars(std::ostream& out, const char *string)
 }
 
 //______________________________________________________________________________
-Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */, 
+Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */,
                           EGraphvizTool gvwhat /*= kDot*/) {
 // Run filename".dot", creating filename".gif", and - if outMap is !=0,
 // filename".map", which gets then included literally into outMap.
 
-   if (!fHtml->HaveDot()) 
+   if (!fHtml->HaveDot())
       return kFALSE;
 
    TString runDot;
@@ -1585,7 +1585,7 @@ Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */,
       std::string line;
       std::getline(inmap, line);
       if (inmap && !inmap.eof()) {
-         *outMap << "<map name=\"Map" << gSystem->BaseName(filename) 
+         *outMap << "<map name=\"Map" << gSystem->BaseName(filename)
             << "\" id=\"Map" << gSystem->BaseName(filename) << "\">" << endl;
          while (inmap && !inmap.eof()) {
             if (line.compare(0, 6, "<area ") == 0) {
@@ -1614,7 +1614,7 @@ Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */,
 
 
 //______________________________________________________________________________
-void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial, 
+void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial,
                             const char* dir /*=""*/, TClass *cls /*=0*/,
                             const char* header)
 {
@@ -1668,7 +1668,7 @@ void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial,
 }
 
 //______________________________________________________________________________
-void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *title, 
+void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *title,
                             const char* dir /*=""*/, TClass *cls/*=0*/)
 {
 // Write HTML header
@@ -1677,17 +1677,17 @@ void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *title,
 // Input: out   - output file stream
 //        title - title for the HTML page
 //        cls   - current class
-//        dir   - relative directory to reach the top 
+//        dir   - relative directory to reach the top
 //                ("" for html doc, "../" for src/*cxx.html etc)
 //
 // evaluates the Root.Html.Header setting:
 // * if not set, the standard header is written. (ROOT)
-// * if set, and ends with a "+", the standard header is written and this file 
+// * if set, and ends with a "+", the standard header is written and this file
 //   included afterwards. (ROOT, USER)
-// * if set but doesn't end on "+" the file specified will be written instead 
+// * if set but doesn't end on "+" the file specified will be written instead
 //   of the standard header (USER)
 //
-// Any occurrence of "%TITLE%" (without the quotation marks) in the user 
+// Any occurrence of "%TITLE%" (without the quotation marks) in the user
 // provided header file will be replaced by the value of this method's
 // parameter "title" before written to the output file. %CLASS% is replaced by
 // the class name, %INCFILE% by the header file name as given by
@@ -1784,11 +1784,11 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char *dir,
 //        author     - author's name
 //        copyright  - copyright note
 //
-// Allows optional user provided footer to be written. Root.Html.Footer holds 
+// Allows optional user provided footer to be written. Root.Html.Footer holds
 // the file name for this footer. For details see THtml::WriteHtmlHeader (here,
-// the "+" means the user's footer is written in front of Root's!) Occurences 
-// of %AUTHOR%, %UPDATE%, and %COPYRIGHT% in the user's file are replaced by 
-// their corresponding values (author, lastUpdate, and copyright) before 
+// the "+" means the user's footer is written in front of Root's!) Occurences
+// of %AUTHOR%, %UPDATE%, and %COPYRIGHT% in the user's file are replaced by
+// their corresponding values (author, lastUpdate, and copyright) before
 // written to out.
 // If no author is set (author == "", e.g. for ClassIndex.html") skip the whole
 // line of the footer template containing %AUTHOR%. Accordingly for %COPYRIGHT%.
@@ -1823,7 +1823,7 @@ void TDocOutput::WriteModuleLinks(std::ostream& out)
       TModuleDocInfo* module = 0;
       while ((module = (TModuleDocInfo*) iModule()))
          if (module->IsSelected())
-            out << "<a href=\"" << module->GetName() << "_Index.html\">" 
+            out << "<a href=\"" << module->GetName() << "_Index.html\">"
                       << module->GetName() << "</a>" << endl;
       out<< "</div><br />" << endl;
    }

@@ -54,7 +54,7 @@ protected:
    void           AddLink(TSubString& str, TString& link, const char* comment);
    void           ProcessDocInDir(std::ostream& out, const char* indir, const char* outdir, const char* linkdir);
    Bool_t         RunDot(const char* filename, std::ostream* outMap = 0, EGraphvizTool gvwhat = kDot);
-   void           WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial, 
+   void           WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial,
                                   const char* dir /*=""*/, TClass *cls /*=0*/,
                                   const char* header);
    void           WriteHtmlFooter(std::ostream& out, const char *dir,
@@ -94,7 +94,7 @@ public:
    virtual void   ReferenceEntity(TSubString& str, TMethod* entity, const char* comment = 0);
    virtual Bool_t ReferenceIsRelative(const char* reference) const;
 
-   virtual const char* ReplaceSpecialChars(const char c);
+   virtual const char* ReplaceSpecialChars(char c);
    void           ReplaceSpecialChars(std::ostream &out, const char *string);
    void           ReplaceSpecialChars(TString& text);
    void           ReplaceSpecialChars(TString& text, Ssiz_t &pos);
