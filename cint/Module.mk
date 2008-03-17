@@ -155,10 +155,14 @@ endif
 ifeq ($(CXXCMD),icc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
+ifneq ($(ICC_GE_101),)
+CINTS2       += $(MODDIRS)/gcc4strm.cxx
+else
 ifneq ($(ICC_GE_9),)
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
 else
 CINTS2       += $(MODDIRS)/iccstrm.cxx
+endif
 endif
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif
