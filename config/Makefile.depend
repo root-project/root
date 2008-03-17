@@ -64,7 +64,7 @@ GEOMBUILDERLIBDEPM     = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
                          $(GEDLIB)
 QTROOTLIBDEPM          = $(GUILIB) $(GQTLIB)
 GQTLIBDEPM             = $(GUILIB) $(GPADLIB) $(GRAFLIB) $(RINTLIB)
-RUBYLIBDEPM            = $(HISTLIB)
+RUBYLIBDEPM            = $(HISTLIB) $(MATHCORELIB)
 GUIBLDLIBDEPM          = $(GUILIB) $(GRAFLIB) $(MATHCORELIB)
 XMLLIBDEPM             = $(IOLIB)
 FOAMLIBDEPM            = $(HISTLIB)
@@ -269,7 +269,7 @@ GEOMBUILDERLIBEXTRA     = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
 QTROOTLIBEXTRA          = lib/libGui.lib lib/libGQt.lib
 GQTLIBEXTRA             = lib/libGui.lib libGpad.lib lib/libGraf.lib \
                           lib/libRint.lib
-RUBYLIBEXTRA            = lib/libHist.lib
+RUBYLIBEXTRA            = lib/libHist.lib lib/libMathCore.lib
 GUIBLDLIBEXTRA          = lib/libGui.lib lib/libGraf.lib lib/libMathCore.lib
 GUIHTMLLIBEXTRA         = lib/libGui.lib lib/libGraf.lib lib/libNet.lib
 XMLLIBEXTRA             = lib/libRIO.lib
@@ -365,7 +365,7 @@ SPLOTLIBEXTRA           = -Llib -lMatrix -lHist -lTree -lTreePlayer -lGraf3d -lG
 QTROOTLIBEXTRA          = -Llib -lGui -lGQt
 GQTLIBEXTRA             = -Llib -lGui -lGpad -lGraf -lRint
 QUADPLIBEXTRA           = -Llib -lMatrix
-RUBYLIBEXTRA            = -Llib -lHist
+RUBYLIBEXTRA            = -Llib -lHist -lMathCore
 GUIBLDLIBEXTRA          = -Llib -lGui -lGraf -lMathCore
 GUIHTMLLIBEXTRA         = -Llib -lGui -lGraf -lNet
 XMLLIBEXTRA             = -Llib -lRIO
