@@ -29,7 +29,7 @@ Info in <TGeoManager::SetTopVolume>: Top volume is OCMS. Master volume is OCMS
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 1166318 nodes/ 1537 volume UID's in cms.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/hades.root [./files/hades.root]
+Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/hades2.root [./files/hades2.root]
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
@@ -47,7 +47,7 @@ Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
 Info in <TGeoManager::CloseGeometry>: 68776 nodes/ 2316 volume UID's in star.C
 Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
-Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/babar.root [./files/babar.root]
+Info in <TFile::OpenFromCache>: using local cache copy of http://root.cern.ch/files/babar2.root [./files/babar2.root]
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is BFAC. Master volume is BFAC
 Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
@@ -71,14 +71,14 @@ Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/file
 Reference file http://root.cern.ch/files/cdf_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/cms.root
 Reference file http://root.cern.ch/files/cms_ref.root found
-Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/hades.root
-Reference file http://root.cern.ch/files/hades_ref.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/hades2.root
+Reference file http://root.cern.ch/files/hades2_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/lhcbfull.root
 Reference file http://root.cern.ch/files/lhcbfull_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/star.root
 Reference file http://root.cern.ch/files/star_ref.root found
-Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/babar.root
-Reference file http://root.cern.ch/files/babar_ref.root found
+Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/babar2.root
+Reference file http://root.cern.ch/files/babar2_ref.root found
 Info: TGeoManager::Import : Reading geometry from file: http://root.cern.ch/files/atlas.root
 Reference file http://root.cern.ch/files/atlas_ref.root found
 ******************************************************************
