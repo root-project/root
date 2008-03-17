@@ -132,26 +132,32 @@ else
 
 int main(int argc, char **argv)
 {
+   isDict = false;
    if (argc<3 || (strcmp(argv[1], "-R") && strncmp(argv[1], "-R=", 3)))
       return main_orig(argc, argv);
 
    rootBuild = 1;
-   int skip = 2;
-   const char* outname = argv[2]+skip;
-   while (outname[0] == ' ') outname = argv[2] + (++skip);
-   if (outname) {
-      const char* dicttag = "/G__%.d";
-      if (argv[1][2] == '=')
-         dicttag = argv[1] + 3;
-      std::string sDictTag(dicttag);
-      std::string sDictExt;
-      size_t posExt = sDictTag.find('%');
-      if (posExt != std::string::npos) {
-         sDictExt = sDictTag.substr(posExt + 1);
-         sDictTag.erase(posExt);
+   const char* outname = argv[2]+2;
+   while (*outname == ' ') ++outname;
+   if (*outname) {
+      if (argv[1][2] == '=') {
+         // dictionary tag passed after -R=
+         std::string sDictTag(argv[1] + 1);
+         size_t posExt = sDictTag.find('%');
+         if (posExt != std::string::npos && posExt < sDictTag.length() - 1) {
+            std::string sDictExt = sDictTag.substr(posExt + 1);
+            sDictTag.erase(posExt);
+            isDict = (strstr(outname, sDictTag.c_str()))
+               && !(strcmp(outname + strlen(outname) - sDictExt.length(),
+                           sDictExt.c_str()));
+         } else {
+            isDict = (strstr(outname, sDictTag.c_str()) != 0);
+         }
+      } else {
+         // no = after "-R", thus "/G__%.d";
+         isDict = (strstr(outname, "/G__"))
+            && (!strcmp(outname + strlen(outname) - 2, ".d"));
       }
-      isDict = (strstr(outname, sDictTag.c_str()) != 0 
-         && (!sDictExt.length() || strstr(outname, sDictExt.c_str())));
    }
 
    argv[1] = argv[0]; // keep program name

@@ -582,14 +582,14 @@ char *rgetline(filep)
 	lineno = filep->f_line;
 
 	for(bol = p--; ++p < eof; ) {
-		if (*p == '/' && *(p+1) == '/') { /* consume C++ comments */
+		if (*p == '/') {
+                   if (*(p+1) == '/') { /* consume C++ comments */
 			*p++ = ' ', *p++ = ' ';
 			while (*p && *p != '\n')
 				*p++ = ' ';
                         p--;
 			continue;
-		}
-		else if (*p == '/' && *(p+1) == '*') { /* consume comments */
+                   } else if (*(p+1) == '*') { /* consume C comments */
 			*p++ = ' ', *p++ = ' ';
 			while (*p) {
 				if (*p == '*' && *(p+1) == '/') {
@@ -601,16 +601,8 @@ char *rgetline(filep)
 				*p++ = ' ';
 			}
 			continue;
+                   }
 		}
-#if defined(WIN32) || defined(__EMX__)
-		else if (*p == '/' && *(p+1) == '/') { /* consume comments */
-			*p++ = ' ', *p++ = ' ';
-			while (*p && *p != '\n')
-				*p++ = ' ';
-			lineno++;
-			continue;
-		}
-#endif
 		else if (*p == '\\') {
 			if (*(p+1) == '\n') {
 				*p = ' ';
@@ -626,7 +618,7 @@ char *rgetline(filep)
 				*p++ = '\0';
 				/* punt lines with just # (yacc generated) */
 				for (cp = bol+1;
-				     *cp && (*cp == ' ' || *cp == '\t'); cp++);
+				     (*cp == ' ' || *cp == '\t'); cp++) {};
 				if (*cp) goto done;
 			}
 			bol = p+1;
