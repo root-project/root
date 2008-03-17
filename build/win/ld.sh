@@ -34,7 +34,8 @@ if [ "$dll" != "bin/rmkdepend.exe" -a \
   args="$args base/src/precompile.o"
 fi
 
-link $args || exit $?
+WHICHLINK="`which cl.exe|sed 's,cl\.exe$,link.exe,'`"
+"${WHICHLINK}" $args || exit $?
 if [ "$dll" != "" -a -f $dll.manifest ]; then
    if [ "${dll%.dll}" == "$dll" ]
        then resourceID=1; # .exe
