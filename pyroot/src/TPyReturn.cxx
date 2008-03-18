@@ -162,3 +162,14 @@ TPyReturn::operator void*() const
    else 
       return fPyObject;
 }
+
+//____________________________________________________________________________
+TPyReturn::operator PyObject*() const
+{
+// Direct return of the held PyObject; note the new reference.
+   if ( fPyObject == Py_None )
+      return 0;
+
+   Py_INCREF( fPyObject );
+   return fPyObject;
+}

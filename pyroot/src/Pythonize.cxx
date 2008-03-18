@@ -1268,6 +1268,19 @@ namespace {
 // for convenience
    using namespace PyROOT;
 
+//- TPySelector bahaviour ----------------------------------------------------
+   PyObject* TPySelectorInit( PyObject*, PyObject* args )
+   {
+   // do nothing here, so that a NULL object is created (the address is later
+   // filled by the TPySelector/ProofPlayer interaction)
+      ObjectProxy* self = (ObjectProxy*)PyTuple_GET_ITEM( args, 0 );
+      self->Set( (void*)0, TClass::GetClass( "TPySelector" ) );
+
+      Py_INCREF( Py_None );
+      return Py_None;                        // by definition
+   }
+
+
 //- TFN behaviour ------------------------------------------------------------
    int TFNPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
@@ -1776,6 +1789,13 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       PyObject_SetAttrString(
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
+
+      return kTRUE;
+   }
+
+   if ( name == "TPySelector" ) {
+   // handicap the constructor to allow later injection of the earlier instantiation
+      Utility::AddToClass( pyclass, "__init__", (PyCFunction) TPySelectorInit );
 
       return kTRUE;
    }

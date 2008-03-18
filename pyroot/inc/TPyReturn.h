@@ -49,6 +49,9 @@ public:
 // used for both TObject and PyObject conversions
    operator void*() const;
 
+// used strictly for PyObject conversions
+   operator PyObject*() const;
+
    ClassDef(TPyReturn,1)   //Python morphing return object
 
 private:

@@ -451,6 +451,18 @@ def cleanup():
  # destroy facade
    del sys.modules[ __name__ ], facade
 
+ # run the gROOT shutdown sequence ... running it here ensures that it
+ # is done before any ROOT libraries are off-loaded, with unspecified
+ # order of static object destruction 
+   gROOT = sys.modules[ 'libPyROOT' ].gROOT
+   if gROOT.GetListOfFiles():
+      gROOT.GetListOfFiles().Delete( 'slow' )
+   if gROOT.GetListOfSockets():
+      gROOT.GetListOfSockets().Delete()
+   if gROOT.GetListOfMappedFiles():
+      gROOT.GetListOfMappedFiles().Delete( 'slow' )
+   del gROOT
+
  # destroy ROOT extension module
    del sys.modules[ 'libPyROOT' ]
 
