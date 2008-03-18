@@ -77,6 +77,8 @@ public:
       fX(0), fY(0) {}
    TSplinePoly(Double_t x, Double_t y) :
       fX(x), fY(y) {}
+   TSplinePoly(TSplinePoly const &other);
+   TSplinePoly &operator=(TSplinePoly const &other);
 
    Double_t &X() {return fX;}
    Double_t &Y() {return fY;}
@@ -84,8 +86,18 @@ public:
 
    virtual Double_t Eval(Double_t) const {return fY;}
 
-   ClassDef(TSplinePoly,1) // Spline polynomial terms
+   private:
+   void CopyPoly(TSplinePoly const &other);
+   
+   ClassDef(TSplinePoly,2) // Spline polynomial terms
 };
+
+inline TSplinePoly::TSplinePoly(TSplinePoly const &other)
+:
+  TObject(other)
+{
+  CopyPoly(other);
+}
 
 
 //______________________________________________________________________________
@@ -101,6 +113,8 @@ public:
       fB(0), fC(0), fD(0) {}
    TSplinePoly3(Double_t x, Double_t y, Double_t b, Double_t c, Double_t d) :
       TSplinePoly(x,y), fB(b), fC(c), fD(d) {}
+   TSplinePoly3(TSplinePoly3 const &other);
+   TSplinePoly3 &operator=(TSplinePoly3 const &other);
 
    Double_t &B() {return fB;}
    Double_t &C() {return fC;}
@@ -114,9 +128,18 @@ public:
       return (fB+2*fC*dx+3*fD*dx*dx);
    }
 
+private:
+   void CopyPoly(TSplinePoly3 const &other);
+   
    ClassDef(TSplinePoly3,1)  // Third spline polynomial terms
 };
 
+inline TSplinePoly3::TSplinePoly3(TSplinePoly3 const &other)
+:
+  TSplinePoly(other)
+{
+  CopyPoly(other);
+}
 
 //______________________________________________________________________________
 class TSplinePoly5 : public TSplinePoly
@@ -134,6 +157,8 @@ public:
    TSplinePoly5(Double_t x, Double_t y, Double_t b, Double_t c,
       Double_t d, Double_t e, Double_t f) :
       TSplinePoly(x,y), fB(b), fC(c), fD(d), fE(e), fF(f) {}
+   TSplinePoly5(TSplinePoly5 const &other);
+   TSplinePoly5 &operator=(TSplinePoly5 const &other);
 
    Double_t &B() {return fB;}
    Double_t &C() {return fC;}
@@ -149,8 +174,18 @@ public:
       return (fB+2*fC*dx+3*fD*dx*dx+4*fE*dx*dx*dx+5*fF*dx*dx*dx*dx);
    }
 
+private:
+   void CopyPoly(TSplinePoly5 const &other);
+
    ClassDef(TSplinePoly5,1)  // Quintic spline polynomial terms
 };
+
+inline TSplinePoly5::TSplinePoly5(TSplinePoly5 const &other)
+:
+  TSplinePoly(other)
+{
+  CopyPoly(other);
+}
 
 
 //______________________________________________________________________________
@@ -167,7 +202,7 @@ private:
    void SetCond(const char *opt);
 
 public:
-   TSpline3() : fPoly(0), fValBeg(0), fValEnd(0),
+   TSpline3() : TSpline() , fPoly(0), fValBeg(0), fValEnd(0),
       fBegCond(-1), fEndCond(-1) {}
    TSpline3(const char *title,
             Double_t x[], Double_t y[], Int_t n, const char *opt=0,
@@ -220,7 +255,7 @@ private:
                       const char *cb1, const char *ce1, const char *cb2,
                       const char *ce2);
 public:
-   TSpline5() : fPoly(0) {}
+   TSpline5() : TSpline() , fPoly(0) {}
    TSpline5(const char *title,
             Double_t x[], Double_t y[], Int_t n,
             const char *opt=0, Double_t b1=0, Double_t e1=0,
@@ -251,7 +286,7 @@ public:
    Int_t    FindX(Double_t x) const;
    Double_t Eval(Double_t x) const;
    Double_t Derivative(Double_t x) const;
-   ~TSpline5() {if (fPoly) delete [] fPoly;}
+   virtual ~TSpline5() {if (fPoly) delete [] fPoly;}
    void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
                  Double_t &c, Double_t &d, Double_t &e, Double_t &f)
       {x=fPoly[i].X();y=fPoly[i].Y();b=fPoly[i].B();

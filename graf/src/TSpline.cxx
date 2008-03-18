@@ -46,8 +46,8 @@ TSpline::TSpline(const TSpline &sp) :
   fXmax(sp.fXmax),
   fNp(sp.fNp),
   fKstep(sp.fKstep),
-  fHistogram(sp.fHistogram),
-  fGraph(sp.fGraph),
+  fHistogram(0),
+  fGraph(0),
   fNpx(sp.fNpx)
 {
    //copy constructor
@@ -77,8 +77,8 @@ TSpline& TSpline::operator=(const TSpline &sp)
       fXmax=sp.fXmax;
       fNp=sp.fNp;
       fKstep=sp.fKstep;
-      fHistogram=sp.fHistogram;
-      fGraph=sp.fGraph;
+      fHistogram=0;
+      fGraph=0;
       fNpx=sp.fNpx;
    }
    return *this;
@@ -268,6 +268,93 @@ void TSpline::Streamer(TBuffer &R__b)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
+// TSplinePoly                                                          //
+//                                                                      //
+// Base class for TSpline knot                                          //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+
+//______________________________________________________________________________
+TSplinePoly &TSplinePoly::operator=(TSplinePoly const &other)
+{
+   //assignment operator
+   if(this != &other) {
+      TObject::operator=(other);
+      CopyPoly(other);
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+void TSplinePoly::CopyPoly(TSplinePoly const &other)
+{
+  fX = other.fX;
+  fY = other.fY;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TSplinePoly3                                                         //
+//                                                                      //
+// Class for TSpline3 knot                                              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+
+//______________________________________________________________________________
+TSplinePoly3 &TSplinePoly3::operator=(TSplinePoly3 const &other)
+{
+   //assignment operator
+   if(this != &other) {
+      TSplinePoly::operator=(other);
+      CopyPoly(other);
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+void TSplinePoly3::CopyPoly(TSplinePoly3 const &other)
+{
+  fB = other.fB;
+  fC = other.fC;
+  fD = other.fD;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TSplinePoly5                                                         //
+//                                                                      //
+// Class for TSpline5 knot                                              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+
+//______________________________________________________________________________
+TSplinePoly5 &TSplinePoly5::operator=(TSplinePoly5 const &other)
+{
+   //assignment operator
+   if(this != &other) {
+      TSplinePoly::operator=(other);
+      CopyPoly(other);
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+void TSplinePoly5::CopyPoly(TSplinePoly5 const &other)
+{
+  fB = other.fB;
+  fC = other.fC;
+  fD = other.fD;
+  fE = other.fE;
+  fF = other.fF;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
 // TSpline3                                                             //
 //                                                                      //
 // Class to create third splines to interpolate knots                   //
@@ -304,7 +391,6 @@ TSpline3::TSpline3(const char *title,
    // Build the spline coefficients
    BuildCoeff();
 }
-
 
 //______________________________________________________________________________
 TSpline3::TSpline3(const char *title,
@@ -473,10 +559,8 @@ TSpline3::TSpline3(const TSpline3& sp3) :
 {
    //copy constructor
    if (fNp > 0) fPoly = new TSplinePoly3[fNp];
-   for (Int_t i=0; i<fNp; ++i) {
-      fPoly[i].X()= sp3.fPoly[i].X();
-      fPoly[i].Y()= sp3.fPoly[i].Y();
-   }
+   for (Int_t i=0; i<fNp; ++i) 
+      fPoly[i] = sp3.fPoly[i];
 }
 
 
@@ -488,10 +572,9 @@ TSpline3& TSpline3::operator=(const TSpline3& sp3)
       TSpline::operator=(sp3);
       fPoly= 0;
       if (fNp > 0) fPoly = new TSplinePoly3[fNp];
-      for (Int_t i=0; i<fNp; ++i) {
-         fPoly[i].X()= sp3.fPoly[i].X();
-         fPoly[i].Y()= sp3.fPoly[i].Y();
-      }
+      for (Int_t i=0; i<fNp; ++i) 
+         fPoly[i] = sp3.fPoly[i];
+      
       fValBeg=sp3.fValBeg;
       fValEnd=sp3.fValEnd;
       fBegCond=sp3.fBegCond;
@@ -1305,13 +1388,7 @@ TSpline5::TSpline5(const TSpline5& sp5) :
    //copy constructor
    if (fNp > 0) fPoly = new TSplinePoly5[fNp];
    for (Int_t i=0; i<fNp; ++i) {
-      fPoly[i].B()= sp5.fPoly[i].B();
-      fPoly[i].C()= sp5.fPoly[i].C();
-      fPoly[i].D()= sp5.fPoly[i].D();
-      fPoly[i].E()= sp5.fPoly[i].E();
-      fPoly[i].F()= sp5.fPoly[i].F();
-      fPoly[i].X()= sp5.fPoly[i].X();
-      fPoly[i].Y()= sp5.fPoly[i].Y();
+      fPoly[i] = sp5.fPoly[i];
    }
 }
 
@@ -1325,13 +1402,7 @@ TSpline5& TSpline5::operator=(const TSpline5& sp5)
       fPoly=0;
       if (fNp > 0) fPoly = new TSplinePoly5[fNp];
       for (Int_t i=0; i<fNp; ++i) {
-         fPoly[i].B()= sp5.fPoly[i].B();
-         fPoly[i].C()= sp5.fPoly[i].C();
-         fPoly[i].D()= sp5.fPoly[i].D();
-         fPoly[i].E()= sp5.fPoly[i].E();
-         fPoly[i].F()= sp5.fPoly[i].F();
-         fPoly[i].X()= sp5.fPoly[i].X();
-         fPoly[i].Y()= sp5.fPoly[i].Y();
+         fPoly[i] = sp5.fPoly[i];
       }
    }
    return *this;
