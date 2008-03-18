@@ -29,7 +29,8 @@ OutPutOpt     = -out:
 CC            = $(cc)
 CXX           = $(cc)
 CXXFLAGS      = $(cvarsdll) -EHsc -nologo -GR -DWIN32 \
-                -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include
+                -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include \
+                -FIw32pragma.h
 LD            = $(link)
 
 !IF  "$(CFG)" == "Release"
@@ -63,7 +64,8 @@ ROOTLIBS      = $(ROOTSYS)/lib/libCore.lib \
                 $(ROOTSYS)/lib/libGpad.lib $(ROOTSYS)/lib/libTree.lib \
                 $(ROOTSYS)/lib/libRint.lib $(ROOTSYS)/lib/libPostscript.lib \
                 $(ROOTSYS)/lib/libMatrix.lib $(ROOTSYS)/lib/libPhysics.lib \
-                $(ROOTSYS)/lib/libNet.lib $(ROOTSYS)/lib/libRIO.lib
+                $(ROOTSYS)/lib/libNet.lib $(ROOTSYS)/lib/libRIO.lib \
+                $(ROOTSYS)/lib/libMathCore.lib
 LIBS          = $(ROOTLIBS)
 GLIBS         = $(LIBS) $(ROOTSYS)/lib/libGui.lib $(ROOTSYS)/lib/libGraf.lib \
                 $(ROOTSYS)/lib/libGpad.lib
@@ -132,7 +134,6 @@ STRESSVEC    = stressVector$(ExeSuf)
 
 STRESSMATHO   = stressMathCore.$(ObjSuf) 
 STRESSMATHS   = stressMathCore.$(SrcSuf) 
-STRESSMATHLIBS = $(ROOTSYS)/lib/libMathCore.lib
 
 TRACKMATHOBJ = TrackMathCoreCint.$(ObjSuf)
 TRACKMATHLIB = libTrackMathCoreCint.$(DllSuf)
@@ -140,7 +141,6 @@ STRESSMATH    = stressMathCore$(ExeSuf)
 
 STRESSMATHMOREO   = stressMathMore.$(ObjSuf) 
 STRESSMATHMORES   = stressMathMore.$(SrcSuf)  
-STRESSMATHMORELIBS = $(ROOTSYS)/lib/libMathCore.lib $(ROOTSYS)/lib/libMathMore.lib
 STRESSMATHMORE    = stressMathMore$(ExeSuf)
 
 VLAZYO        = vlazy.$(ObjSuf)
@@ -322,22 +322,22 @@ $(STRESSSP):    $(STRESSSPO)
                 @echo "$@ done"
 
 $(STRESSVEC):   $(STRESSVECO)
-                $(LD) $(LDFLAGS) $(STRESSVECO) $(LIBS) ../lib/libMathCore.lib $(OutPutOpt)$@
+                $(LD) $(LDFLAGS) $(STRESSVECO) $(LIBS) ../lib/libGenVector.lib $(OutPutOpt)$@
                 $(MT_EXE)
                 @echo "$@ done"
 
 $(TRACKMATHLIB):  $(TRACKMATHOBJ)
-                  $(LD) $(SOFLAGS) $(LDFLAGS) $(TRACKMATHOBJ) $(LIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
+                  $(LD) $(SOFLAGS) $(LDFLAGS) $(TRACKMATHOBJ) $(LIBS) ../lib/libGenVector.lib $(OutPutOpt)$@
                   $(MT_DLL)
                   @echo "$@ done"
 
 $(STRESSMATH):    $(STRESSMATHO) $(TRACKMATHLIB)
-                  $(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
+                  $(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) ../lib/libGenVector.lib $(OutPutOpt)$@
                   $(MT_EXE)
                   @echo "$@ done"
 
 $(STRESSMATHMORE): $(STRESSMATHMOREO)
-                   $(LD) $(LDFLAGS) $(STRESSMATHMOREO) $(LIBS) $(STRESSMATHMORELIBS)  $(OutPutOpt)$@
+                   $(LD) $(LDFLAGS) $(STRESSMATHMOREO) $(LIBS) ../lib/libMathMore.lib  $(OutPutOpt)$@
                    $(MT_EXE)
                    @echo "$@ done"
 
