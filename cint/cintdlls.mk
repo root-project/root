@@ -122,6 +122,9 @@ CINTDLLINCDIRS := -I. -I$(CINTDIRDLLSTL) $(FAVOR_SYSINC)
 ifeq ($(GCC_MAJOR),4)
   CINTDLLINCDIRS := -iquote. -iquote$(CINTDIRDLLSTL)
 endif
+ifeq ($(ICC_MAJOR),10)
+  CINTDLLINCDIRS := -iquote. -iquote$(CINTDIRDLLSTL)
+endif
 $(CINTDLLS): CINTCXXFLAGS += $(CINTDLLINCDIRS)
 
 ##### all cintdlls end on .dll
