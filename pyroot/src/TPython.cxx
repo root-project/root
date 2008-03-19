@@ -260,23 +260,26 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
 }
 
 //____________________________________________________________________________
-void TPython::Exec( const char* cmd )
+Bool_t TPython::Exec( const char* cmd )
 {
 // Execute a python statement (e.g. "import ROOT").
 
 // setup
    if ( ! Initialize() )
-      return;
+      return kFALSE;
 
 // execute the command
    PyObject* result =
       PyRun_String( const_cast< char* >( cmd ), Py_file_input, gMainDict, gMainDict );
 
 // test for error
-   if ( result )
+   if ( result ) {
       Py_DECREF( result );
-   else
+      return kTRUE;
+   } else {
       PyErr_Print();
+      return kFALSE;
+   }
 }
 
 

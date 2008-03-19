@@ -35,7 +35,7 @@ public:
    static void ExecScript( const char* name, int argc = 0, const char** argv = 0 );
 
 // execute a python statement (e.g. "import ROOT" )
-   static void Exec( const char* cmd );
+   static Bool_t Exec( const char* cmd );
 
 // evaluate a python expression (e.g. "1+1")
    static const TPyReturn Eval( const char* expr );

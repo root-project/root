@@ -26,14 +26,18 @@ namespace PyROOT {
       void Set( void** address, TClass* klass, EFlags flags = kNone )
       {
          fObject = (void*) address;
-         fClass  = klass;
+      // destructor + placement new instead of assignment saves a temporary
+         fClass.~TClassRef();
+         new (&fClass) TClassRef( (TClass*)klass );
          fFlags  = flags | kIsReference;
       }
  
       void Set( void* object, TClass* klass, EFlags flags = kNone )
       {
          fObject = object;
-         fClass  = klass;
+      // destructor + placement new instead of assignment saves a temporary
+         fClass.~TClassRef();
+         new (&fClass) TClassRef( (TClass*)klass );
          fFlags  = flags & ~kIsReference;
       }
 
