@@ -240,7 +240,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 qt qtroot qtgsi xrootd netx alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 oracle xmlparser mathmore cint/reflex cintex roofitcore roofit \
-                minuit2 monalisa fftw odbc unuran gdml eve g4root cint/cint7 glite
+                minuit2 monalisa fftw odbc unuran gdml eve g4root lite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
