@@ -131,6 +131,9 @@ TFitterMinuit::~TFitterMinuit() {
 #endif
    if (fMinuitFCN) delete fMinuitFCN; 
    if (fMinimizer) delete fMinimizer; 
+   // delete minuit2 pointer from TROOT
+   gROOT->GetListOfSpecials()->Remove(this);
+   if (gMinuit2 == this) gMinuit2 = 0;
    
 }
 

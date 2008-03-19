@@ -30,7 +30,7 @@ public:
 
    TFitterFumili(Int_t maxpar);
 
-   virtual ~TFitterFumili() { } 
+   virtual ~TFitterFumili(); 
 
 public:
 

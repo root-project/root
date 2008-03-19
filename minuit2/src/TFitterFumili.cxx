@@ -63,6 +63,15 @@ TFitterFumili::TFitterFumili(Int_t /* maxpar */) {
 }
 
 
+TFitterFumili::~TFitterFumili() { 
+// destructor - deletes the minimizer 
+
+   // delete pointer from TROOT
+   gROOT->GetListOfSpecials()->Remove(this);
+   if (gFumili2 == this) gFumili2 = 0;
+   
+}
+
  
 void TFitterFumili::CreateMinimizer(EMinimizerType ) { 
    // Create the minimizer engine and register the plugin in ROOT
