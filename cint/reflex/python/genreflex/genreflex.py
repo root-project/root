@@ -298,9 +298,17 @@ class genreflex:
       else :
         dicfile = os.path.join(self.outputDir,name+file_extension)
       #---------------Parse the header file with GCC_XML
-      cmd  = '%s %s "%s" -fxml=%s %s -D__REFLEX__' %(self.gccxml, self.gccxmlopt, source, xmlfile, self.cppopt)
+      if sys.platform == 'win32' :
+        cmd  = '"%s" %s "%s" -fxml=%s %s -D__REFLEX__' %(self.gccxml, self.gccxmlopt, source, xmlfile, self.cppopt)
+      else :
+        cmd  = '%s %s "%s" -fxml=%s %s -D__REFLEX__' %(self.gccxml, self.gccxmlopt, source, xmlfile, self.cppopt)
       if 'debug' in self.opts : print '--->> genreflex: INFO: invoking ', cmd
       if not self.quiet : print '--->> genreflex: INFO: Parsing file %s with GCC_XML' % source,
+      if sys.platform == 'win32' :
+        # bug http://bugs.python.org/issue1524: os.system fails if the
+        # command is quoted and something else in the command is quoted.
+        # Workaround: prepend "call ":
+        cmd = "call " + cmd
       status = os.system(cmd)
       if status :
         print '\n--->> genreflex: ERROR: processing file with gccxml. genreflex command failed.'
