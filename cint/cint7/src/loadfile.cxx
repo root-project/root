@@ -410,10 +410,6 @@ extern "C" void G__SetUseCINTSYSDIR(int UseCINTSYSDIR)
 *
 *  print out error message for unsupported capability.
 ******************************************************************/
-#ifndef G__ROOT
-#define CINTINCDIR G__CFG_DATADIRCINT
-#endif
-
 int Cint::Internal::G__getcintsysdir()
 {
   char *env;
