@@ -36,8 +36,7 @@ EXPORTS=(ARCH COREVERSION CC CFLAGS CMACROS COMP CPP COUT COUTEXE INCP CXX CXXFL
     LD LDFLAGS LDOUT LIBP LIBL SOFLAGS SOOUT OBJEXT EXEEXT \
     SOEXT LIBEXT IMPLIBEXT DEBUG DEFAULTLIBS \
     MANGLEPATHS STREAMDIR PLATFORMO EXPLLINK \
-    READLINELIB CURSESLIB LINK_READLINELIB LINK_CURSESLIB READLINELIB4SHLIB CURSESLIB4SHLIB RM MV PREFIX \
-    EPREFIX BINDIR LIBDIR INCLUDEDIR INCLUDEDIRCINT DATADIR DATADIRCINT \
+    READLINELIB CURSESLIB LINK_READLINELIB LINK_CURSESLIB READLINELIB4SHLIB CURSESLIB4SHLIB RM MV WITHPREFIX \
     INPUTMODE INPUTMODELOCK AR EXTRACTSYMBOLS MAKEIMPLIB )
 unset ${EXPORTS[*]}
 
@@ -331,6 +330,7 @@ function add_opt {
 add_opt "--help -h" 'Show this help.'
 add_opt "--arch=" "Architecture, one of ${ARCHS[*]}"
 add_opt "--coreversion=" "CINT core version, one of old, new"
+add_opt "--with-prefix" 'Prefix-based build (instead of using CINTSYSDIR)'
 add_opt "--prefix=" 'Topdir for architecture-independent files [/usr/local]'
 add_opt "--exec-prefix=" 'Topdir for architecture-dependent files [$PREFIX]'
 add_opt "--bindir=" 'where to put user executables [$EPREFIX/bin]'
@@ -472,6 +472,13 @@ function pathtoabs {
     if [ "${1:0:1}" != "/" ]; then
         ABSPATH="`dirname $0`/`dirname $1`"
         ABSPATH="`cd ABSPATH; pwd`/`basename $1`"
+    fi
+}
+
+function processflag_with_prefix {
+    WITHPREFIX=1
+    if [ "x$PREFIX" = "x" ]; then
+        PREFIX="/usr/local"
     fi
 }
 
@@ -649,12 +656,16 @@ EXPORTS=(${EXPORTS[*]} HAVE_CONFIG)
 # now set the default values of the installation directories, if
 # they were not set explicitely by the user
 
-[ "$PREFIX" = "" ]  && PREFIX=/usr/local
-[ "$EPREFIX" = "" ] && EPREFIX=$PREFIX
-[ "$BINDIR" = "" ]  && BINDIR=$EPREFIX/bin
-[ "$LIBDIR" = "" ]  && LIBDIR=$EPREFIX/lib
-[ "$INCLUDEDIR" = "" ] && INCLUDEDIR=$PREFIX/include && INCLUDEDIRCINT=$PREFIX/include/cint
-[ "$DATADIR" = "" ] && DATADIR=$PREFIX/share && DATADIRCINT=$PREFIX/share/cint
+if [ "x$PREFIX" != "x" ]; then
+  # prefix based build
+    [ "$EPREFIX" = "" ] && EPREFIX=$PREFIX
+    [ "$BINDIR" = "" ]  && BINDIR=$EPREFIX/bin
+    [ "$LIBDIR" = "" ]  && LIBDIR=$EPREFIX/lib
+    [ "$INCLUDEDIR" = "" ] && INCLUDEDIR=$PREFIX/include && INCLUDEDIRCINT=$PREFIX/include/cint
+    [ "$DATADIR" = "" ] && DATADIR=$PREFIX/share && DATADIRCINT=$PREFIX/share/cint
+    EXPORTS=(${EXPORTS[*]} PREFIX EPREFIX BINDIR LIBDIR \
+        INCLUDEDIR INCLUDEDIRCINT DATADIR DATADIRCINT)
+fi
 
 echo ""
 echo Creating build dirs...
@@ -701,6 +712,10 @@ CINTVERSION=`grep '#define *'${CINTVERSIONTAG}' ' ${COREVERSION}/inc/G__ci.h | s
 
 $RM bin/cint-config
 echo Writing bin/cint-config...
+[ "x$INCLUDEDIR" = "x" ] && INCLUDEDIR='$CINTSYSDIR/include'
+[ "x$LIBDIR" = "x" ] && LIBDIR='$CINTSYSDIR/lib'
+[ "x$DATADIR" = "x" ] && DATADIR='$CINTSYSDIR/'${COREVERSION}'/'
+
 cat >> bin/cint-config << ___EOF
 
 printhelp() {
