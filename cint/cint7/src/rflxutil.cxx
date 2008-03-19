@@ -1767,9 +1767,27 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
             }
          case 'u':
             // -- Union.
-            G__genericerror("Union member functions are not yet supported by Reflex");
-            //G__get_properties(G__p_ifunc)->builder.Union().AddFunctionMember(ftype, name.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
-            //m = G__p_ifunc.FunctionMemberByName(name, ftype);
+            //
+            //  Do special processing for a constructor/destructor.
+            //
+            if (name[0] == '~') {
+               modifiers |= ::Reflex::DESTRUCTOR;
+            }
+            else if (name == G__p_ifunc.Name()) { // FIXME: Is this correct for templated classes?
+               modifiers |= ::Reflex::CONSTRUCTOR;
+               if (ftype.FunctionParameterSize() == 1) {
+                  // Get the type without any modifiers
+                  // (i.e., reference and const) nor any typedefs.
+                  Reflex::Type argtype(ftype.FunctionParameterAt(0).FinalType().ToTypeBase()->ThisType());
+                  if (argtype == (Reflex::Type) G__p_ifunc) {
+                     modifiers |= ::Reflex::COPYCONSTRUCTOR;
+                  }
+               }
+            }
+            G__get_properties(G__p_ifunc)->builder.Union().AddFunctionMember(ftype, name.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
+            modftype = ::Reflex::Type(ftype, modifiers);
+            m = G__p_ifunc.FunctionMemberByName(name, modftype, modifiers_mask);
+            //fprintf(stderr, "G__BuilderInfo::Build: added member function '%s'.\n", m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
             break;
          default:
             // -- Assume this means we want it in the global namespace.
@@ -1782,7 +1800,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       //::Reflex::FunctionBuilder funcBuilder(ftype, fullname.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
       //m = funcBuilder.ToMember();
       if (!m) {
-         fprintf(stderr, "G__BuilderInfo::Build: Something went creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
+         fprintf(stderr, "G__BuilderInfo::Build: Something went wrong creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
          G__dumpreflex_function(G__p_ifunc, 1);
          return m;
       }

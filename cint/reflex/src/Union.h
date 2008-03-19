@@ -13,331 +13,248 @@
 #define Reflex_Union
 
 // Include Files
+#include "Reflex/Member.h"
 #include "Reflex/internal/TypeBase.h"
 #include "Reflex/internal/ScopeBase.h"
 
-namespace Reflex {
+namespace Reflex
+{
 
-    
-      /**
-       * @class Union Union.h Reflex/Union.h
-       * @author Stefan Roiser
-       * @date 24/11/2003
-       * @ingroup Ref
-       */
-      class Union : public TypeBase, public ScopeBase {
+/**
+ * @class Union Union.h Reflex/Union.h
+ * @author Stefan Roiser
+ * @date 24/11/2003
+ * @ingroup Ref
+ */
+class Union : public TypeBase, public ScopeBase
+{
 
-      public:
+public:
 
-         /** constructor */
-         Union( const char * unionType,
-                size_t size,
-                const std::type_info & ti,
-                unsigned int modifiers ) ;
+   /** constructor */
+   Union(const char* typ, size_t size, const std::type_info& ti, unsigned int modifiers, TYPE unionType = UNION);
 
+   /** destructor */
+   virtual ~Union();
 
-         /** destructor */
-         virtual ~Union();
+   /**
+    * operator Scope will return the corresponding scope of this type if
+    * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
+    */
+   operator Scope() const;
 
- 
-         /**
-          * operator Scope will return the corresponding scope of this type if
-          * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
-          */                                       
-         operator Scope () const;
+   /**
+    * operator Type will return the corresponding Type object
+    * @return Type corresponding to this TypeBase
+    */
+   operator Type() const;
 
+   virtual void HideName() const;
 
-         /**
-          * operator Type will return the corresponding Type object
-          * @return Type corresponding to this TypeBase
-          */
-         operator Type () const;
+   /**
+    * DataMemberAt will return the nth data MemberAt of the At
+    * @param  nth data MemberAt
+    * @return pointer to data MemberAt
+    */
+   virtual Member DataMemberAt(size_t nth) const;
 
+   /**
+    * DataMemberByName will return the MemberAt with Name
+    * @param  Name of data MemberAt
+    * @return data MemberAt
+    */
+   virtual Member DataMemberByName(const std::string& nam) const;
 
-         /**
-          * AddDataMember will add the information about a data MemberAt
-          * @param dm pointer to data MemberAt
-          */
-         virtual void AddDataMember( const Member & dm ) const;
-         virtual void AddDataMember( const char * nam,
-                                     const Type & typ,
-                                     size_t offs,
-                                     unsigned int modifiers = 0 ) const;
+   /**
+    * DataMemberSize will return the number of data members of this At
+    * @return number of data members
+    */
+   virtual size_t DataMemberSize() const;
 
+   virtual Member_Iterator DataMember_Begin() const;
+   virtual Member_Iterator DataMember_End() const;
 
-         /**
-          * DataMemberAt will return the nth data MemberAt of the At
-          * @param  nth data MemberAt
-          * @return pointer to data MemberAt
-          */
-         virtual Member DataMemberAt( size_t nth ) const;
+   virtual Reverse_Member_Iterator DataMember_RBegin() const;
+   virtual Reverse_Member_Iterator DataMember_REnd() const;
 
+   /**
+    * DeclaringScope will return a pointer to the At of this one
+    * @return pointer to declaring At
+    */
+   virtual Scope DeclaringScope() const;
 
-         /**
-          * DataMemberByName will return the MemberAt with Name
-          * @param  Name of data MemberAt
-          * @return data MemberAt
-          */
-         virtual Member DataMemberByName( const std::string & nam ) const;
+   /**
+   * nthFunctionMember will return the nth function MemberAt of the At
+   * @param  nth function MemberAt
+   * @return pointer to function MemberAt
+   */
+   virtual Member FunctionMemberAt(size_t nth) const; 
 
+   /**
+   * FunctionMemberByName will return the MemberAt with the Name,
+   * optionally the signature of the function may be given
+   * @param  Name of function MemberAt
+   * @param  signature of the MemberAt function
+   * @modifers_mask When matching, do not compare the listed modifiers
+   * @return function MemberAt
+   */
+   virtual Member FunctionMemberByName(const std::string& nam, const Type& signature, unsigned int modifiers_mask = 0) const; 
 
-         /**
-          * DataMemberSize will return the number of data members of this At
-          * @return number of data members
-          */
-         virtual size_t DataMemberSize() const;
+   /**
+   * FunctionMemberSize will return the number of function members of
+   * this At
+   * @return number of function members
+   */
+   virtual size_t FunctionMemberSize() const;
 
+   virtual Member_Iterator FunctionMember_Begin() const;
+   virtual Member_Iterator FunctionMember_End() const;
 
-         virtual Member_Iterator DataMember_Begin() const;
-         virtual Member_Iterator DataMember_End() const;
-         virtual Reverse_Member_Iterator DataMember_RBegin() const;
-         virtual Reverse_Member_Iterator DataMember_REnd() const;
+   virtual Reverse_Member_Iterator FunctionMember_RBegin() const;
+   virtual Reverse_Member_Iterator FunctionMember_REnd() const;
 
+   /**
+   * IsComplete will return true if all classes and BaseAt classes of this
+   * class are resolved and fully known in the system
+   */
+   virtual bool IsComplete() const;
 
-         /**
-          * DeclaringScope will return a pointer to the At of this one
-          * @return pointer to declaring At
-          */
-         virtual Scope DeclaringScope() const;
+   /**
+    * IsPrivate will check if the scope access is private
+    * @return true if scope access is private
+    */
+   virtual bool IsPrivate() const;
 
+   /**
+    * IsProtected will check if the scope access is protected
+    * @return true if scope access is protected
+    */
+   virtual bool IsProtected() const;
 
-         virtual void HideName() const;
-	  
-      
-         /** 
-          * IsPrivate will check if the scope access is private
-          * @return true if scope access is private
-          */
-         virtual bool IsPrivate() const;
+   /**
+    * IsPublic will check if the scope access is public
+    * @return true if scope access is public
+    */
+   virtual bool IsPublic() const;
 
+   /**
+    * MemberByName will return the first MemberAt with a given Name
+    * @param  MemberAt Name
+    * @return pointer to MemberAt
+    */
+   virtual Member MemberByName(const std::string& nam, const Type& signature) const;
 
-         /** 
-          * IsProtected will check if the scope access is protected
-          * @return true if scope access is protected
-          */
-         virtual bool IsProtected() const;
+   /**
+    * MemberAt will return the nth MemberAt of the At
+    * @param  nth MemberAt
+    * @return pointer to nth MemberAt
+    */
+   virtual Member MemberAt(size_t nth) const;
 
+   /**
+    * MemberSize will return the number of members
+    * @return number of members
+    */
+   virtual size_t MemberSize() const;
 
-         /** 
-          * IsPublic will check if the scope access is public
-          * @return true if scope access is public
-          */
-         virtual bool IsPublic() const;
+   virtual Member_Iterator Member_Begin() const;
+   virtual Member_Iterator Member_End() const;
 
+   virtual Reverse_Member_Iterator Member_RBegin() const;
+   virtual Reverse_Member_Iterator Member_REnd() const;
 
-         /**
-          * MemberAt will return the nth MemberAt of the At
-          * @param  nth MemberAt
-          * @return pointer to nth MemberAt
-          */
-         virtual Member MemberAt( size_t nth ) const;
+   /**
+   * Name will return the Name of the union
+   * @return Name of union
+   */
+   virtual std::string Name(unsigned int mod = 0) const;
 
+   /**
+   * SimpleName returns the name of the type as a reference. It provides a
+   * simplified but faster generation of a type name. Attention currently it
+   * is not guaranteed that Name() and SimpleName() return the same character
+   * layout of a name (ie. spacing, commas, etc. )
+   * @param pos will indicate where in the returned reference the requested name starts
+   * @param mod The only 'mod' support is SCOPED
+   * @return name of type
+   */
+   virtual const std::string& SimpleName(size_t& pos, unsigned int mod = 0) const;
 
-         /**
-          * MemberByName will return the first MemberAt with a given Name
-          * @param  MemberAt Name
-          * @return pointer to MemberAt
-          */
-         virtual Member MemberByName( const std::string & nam,
-                                      const Type & signature ) const;
+   /**
+    * Properties will return a pointer to the PropertyNth list attached
+    * to this item
+    * @return pointer to PropertyNth list
+    */
+   virtual PropertyList Properties() const;
 
-         /**
-          * MemberSize will return the number of members
-          * @return number of members
-          */
-         virtual size_t MemberSize() const;
+public:
 
+   /**
+    * AddDataMember will add the information about a data MemberAt
+    * @param dm pointer to data MemberAt
+    */
+   virtual void AddDataMember(const Member& dm) const;
+   virtual void AddDataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers = 0) const;
 
-         virtual Member_Iterator Member_Begin() const;
-         virtual Member_Iterator Member_End() const;
-         virtual Reverse_Member_Iterator Member_RBegin() const;
-         virtual Reverse_Member_Iterator Member_REnd() const;
+   /**
+   * AddFunctionMember will add the information about a function MemberAt
+   * @param fm pointer to function MemberAt
+   */
+   virtual void AddFunctionMember(const Member& fm) const;
+   virtual void AddFunctionMember(const char* nam, const Type& typ, StubFunction stubFP, void* stubCtx = 0, const char* params = 0, unsigned int modifiers = 0) const;
 
+   /**
+   * RemoveDataMember will remove the information about a data MemberAt
+   * @param dm pointer to data MemberAt
+   */
+   virtual void RemoveDataMember(const Member& dm) const;
 
-         /**
-          * Properties will return a pointer to the PropertyNth list attached
-          * to this item
-          * @return pointer to PropertyNth list
-          */
-         virtual PropertyList Properties() const;
+   /**
+   * RemoveFunctionMember will remove the information about a function MemberAt
+   * @param fm pointer to function MemberAt
+   */
+   virtual void RemoveFunctionMember(const Member& fm) const;
 
-      private:
+public:
 
-         /**
-          * Modifiers of this union 
-          */
-         unsigned int fModifiers;
+   /**
+   * return the type name
+   */
+   TypeName* TypeNameGet() const;
 
-      }; // class Union
+private:
 
-   } // namespace Reflex
+   /**
+    * Modifiers of this union
+    */
+   unsigned int fModifiers;
+
+   /** boolean is true if the whole object is resolved */
+   mutable bool fCompleteType;
+
+   /**
+   * short cut to constructors
+   * @label constructors
+   * @link aggregation
+   * @clientCardinality 1
+   * @supplierCardinality 1..*
+   */
+   mutable std::vector<Member> fConstructors;
+
+   /**
+   * short cut to destructor
+   * @label destructor
+   * @link aggregation
+   * @clientCardinality 1
+   * @supplierCardinality 1
+   */
+   mutable Member fDestructor;
+
+}; // class Union
+
+} // namespace Reflex
 
 #include "Reflex/internal/OwnedMember.h"
-
-//-------------------------------------------------------------------------------
-inline Reflex::Union::operator Reflex::Scope () const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::operator Scope ();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Union::operator Reflex::Type () const {
-//-------------------------------------------------------------------------------
-   return TypeBase::operator Type ();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Union::DataMember_Begin() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DataMember_Begin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Union::DataMember_End() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DataMember_End();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Union::DataMember_RBegin() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DataMember_RBegin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Union::DataMember_REnd() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DataMember_REnd();
-}
-
-
-//-------------------------------------------------------------------------------
-inline bool Reflex::Union::IsPrivate() const {
-//-------------------------------------------------------------------------------
-   return 0 != ( fModifiers & PRIVATE );
-}
-
-
-//-------------------------------------------------------------------------------
-inline bool Reflex::Union::IsProtected() const {
-//-------------------------------------------------------------------------------
-   return 0 != ( fModifiers & PROTECTED );
-}
-
-
-//-------------------------------------------------------------------------------
-inline bool Reflex::Union::IsPublic() const {
-//-------------------------------------------------------------------------------
-   return 0 != ( fModifiers & PUBLIC );
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Union::Member_Begin() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::Member_Begin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Member_Iterator Reflex::Union::Member_End() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::Member_End();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Union::Member_RBegin() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::Member_RBegin();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Reverse_Member_Iterator Reflex::Union::Member_REnd() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::Member_REnd();  
-}
-
-
-//-------------------------------------------------------------------------------
-inline void Reflex::Union::AddDataMember( const Member & dm ) const {
-//-------------------------------------------------------------------------------
-   ScopeBase::AddDataMember( dm );
-}
-
-
-//-------------------------------------------------------------------------------
-inline void Reflex::Union::AddDataMember( const char * nam,
-                                                const Type & typ,
-                                                size_t offs,
-                                                unsigned int modifiers ) const {
-//-------------------------------------------------------------------------------
-   ScopeBase::AddDataMember(nam, typ, offs, modifiers );
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Member Reflex::Union::DataMemberAt( size_t nth ) const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DataMemberAt( nth );
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Member Reflex::Union::DataMemberByName( const std::string & nam ) const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DataMemberByName( nam );
-}
-
-
-//-------------------------------------------------------------------------------
-inline size_t Reflex::Union::DataMemberSize() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DataMemberSize();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Scope Reflex::Union::DeclaringScope() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::DeclaringScope();
-}
-
-
-//-------------------------------------------------------------------------------
-inline void Reflex::Union::HideName() const {
-//-------------------------------------------------------------------------------
-   TypeBase::HideName();
-   ScopeBase::HideName();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::Member Reflex::Union::MemberByName( const std::string & nam,
-                                                               const Type & signature ) const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::MemberByName( nam, signature );
-}
-
-
-//-------------------------------------------------------------------------------
-inline size_t Reflex::Union::MemberSize() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::MemberSize();
-}
-
-
-//-------------------------------------------------------------------------------
-inline Reflex::PropertyList Reflex::Union::Properties() const {
-//-------------------------------------------------------------------------------
-   return ScopeBase::Properties();
-}
 
 #endif // Reflex_Union
 

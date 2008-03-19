@@ -1042,8 +1042,8 @@ extern "C" int G__search_tagname(const char *tagname, int type)
                   // Note: We must have the space after the '<' here because
                   // '<:' is the alternative token for '[', see ISO/IEC 14882 (1998) [lex.digraph].
                {
-                  ::Reflex::UnionBuilder< ::Reflex::UnknownType > *b = new Reflex::UnionBuilder< ::Reflex::UnknownType >(fullname.c_str());
-                  cl =  b->ToType();
+                  ::Reflex::UnionBuilder* b = new ::Reflex::UnionBuilder(fullname.c_str(), typeid(::Reflex::UnknownType), 0, ::Reflex::UNION);
+                  cl = b->ToType();
                   G__get_properties(cl)->builder.Set(b);
                   break;
                }

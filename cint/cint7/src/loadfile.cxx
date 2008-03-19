@@ -2412,7 +2412,7 @@ int Cint::Internal::G__preprocessor(char *outname,char *inname,int cppflag
       corecintsysdir += "/";
       corecintsysdir += G__CFG_COREVERSION;
       corecintsysdir += "/";
-      sprintf(temp,"%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/%s/stl -I%s/%s/lib %s > %s"
+      sprintf(temp,"%s %s %s -I. %s %s -D__CINT__ -I%s/include -I%s/stl -I%s/lib %s > %s"
               ,G__ccom ,macros,undeflist,ppopt ,includepath
               ,corecintsysdir.c_str(),corecintsysdir.c_str(),corecintsysdir.c_str(),tmpfilen,outname);
     }

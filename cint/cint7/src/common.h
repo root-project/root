@@ -1285,10 +1285,10 @@ public:
 
 class BuilderHolder {
    union {
-      Reflex::UnionBuilder< ::Reflex::UnknownType > *u;
-      Reflex::ClassBuilder *c;
-      Reflex::EnumBuilder *e;
-      Reflex::NamespaceBuilder *n;
+      Reflex::UnionBuilder* u;
+      Reflex::ClassBuilder* c;
+      Reflex::EnumBuilder* e;
+      Reflex::NamespaceBuilder* n;
    };
    char tagtype;
 public:
@@ -1303,14 +1303,14 @@ public:
          case 'n': delete n; break;
       }
    }
-   Reflex::UnionBuilder< ::Reflex::UnknownType > &Union() { return *u; }
-   Reflex::ClassBuilder &Class() { return *c; }
-   Reflex::EnumBuilder  &Enum()  { return *e; }
-   Reflex::NamespaceBuilder &Namespace() { return *n; }
-   void Set(Reflex::UnionBuilder< ::Reflex::UnknownType > *b) { u = b; tagtype = 'u'; };
-   void Set(Reflex::ClassBuilder *b) { c = b; tagtype = 'c'; };
-   void Set(Reflex::EnumBuilder *b)  { e = b; tagtype = 'e'; };
-   void Set(Reflex::NamespaceBuilder *b)  { n = b; tagtype = 'n'; };
+   Reflex::UnionBuilder& Union() { return *u; }
+   Reflex::ClassBuilder& Class() { return *c; }
+   Reflex::EnumBuilder& Enum()  { return *e; }
+   Reflex::NamespaceBuilder& Namespace() { return *n; }
+   void Set(Reflex::UnionBuilder* b) { u = b; tagtype = 'u'; };
+   void Set(Reflex::ClassBuilder* b) { c = b; tagtype = 'c'; };
+   void Set(Reflex::EnumBuilder* b)  { e = b; tagtype = 'e'; };
+   void Set(Reflex::NamespaceBuilder* b)  { n = b; tagtype = 'n'; };
    char Tagtype() { return tagtype; }
 };
    
