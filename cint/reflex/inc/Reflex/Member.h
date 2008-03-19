@@ -531,7 +531,8 @@ inline bool Reflex::Member::operator == ( const Member & rh ) const {
 //-------------------------------------------------------------------------------
    if ( (*this) && rh ) 
       return ( TypeOf() == rh.TypeOf() && Name() == rh.Name() );
-   return false;
+   // both invalid is equal, too
+   return (!(*this)) && (!rh);
 }
 
 
