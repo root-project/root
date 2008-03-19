@@ -74,7 +74,7 @@ TFoamCell::~TFoamCell()
 }
 
 //___________________________________________________________________________________
-TFoamCell& TFoamCell::operator=(TFoamCell &From)
+TFoamCell& TFoamCell::operator=(const TFoamCell &From)
 {
 // Substitution operator = (never used)
 

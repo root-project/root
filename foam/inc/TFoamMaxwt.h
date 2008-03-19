@@ -32,7 +32,7 @@ public:
    TFoamMaxwt(TFoamMaxwt &From);            // Copy constructor
    virtual ~TFoamMaxwt();                   // Destructor
    void Reset();                            // Reset
-   TFoamMaxwt& operator =(TFoamMaxwt &);    // operator =
+   TFoamMaxwt& operator=(const TFoamMaxwt &);    // operator =
    void Fill(Double_t);
    void Make(Double_t, Double_t&);
    void GetMCeff(Double_t, Double_t&, Double_t&);  // get MC efficiency= <w>/wmax

@@ -74,7 +74,7 @@ void TFoamMaxwt::Reset()
 }
 
 //_______________________________________________________________________________
-TFoamMaxwt& TFoamMaxwt::operator =(TFoamMaxwt &From)
+TFoamMaxwt& TFoamMaxwt::operator=(const TFoamMaxwt &From)
 {
 // substitution =
    if (&From == this) return *this;

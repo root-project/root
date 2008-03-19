@@ -49,7 +49,7 @@ public:
    TFoamCell(TFoamCell &);               // Copy Constructor
    virtual ~TFoamCell();                 // Destructor
    void  Fill(Int_t, TFoamCell*, TFoamCell*, TFoamCell*);    // Assigns values of attributes
-   TFoamCell&  operator=(TFoamCell&);       // Substitution operator (never used)
+   TFoamCell&  operator=(const TFoamCell&);       // Substitution operator (never used)
    //--------------- Geometry ----------------------------------
    Double_t  GetXdiv() const { return fXdiv;}          // Pointer to Xdiv
    Int_t     GetBest() const { return fBest;}          // Pointer to Best
