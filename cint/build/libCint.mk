@@ -26,7 +26,7 @@ CXXAPIH    = $(addsuffix .h,$(addprefix $(G__CFG_COREVERSION)/inc/,\
 	      Api Class BaseCls Type DataMbr Method MethodAr \
               CallFunc Typedf Token Shadow))
 
-ifeq ($(G__CFG_COREVERSION),core)
+ifeq ($(G__CFG_COREVERSION),cint7)
 CXXAPIO   += $(addsuffix $(G__CFG_OBJEXT),$(addprefix $(G__CFG_COREVERSION)/src/,\
 	      Dict))
 CXXAPIH   += $(addsuffix .h,$(addprefix $(G__CFG_COREVERSION)/src/,\
