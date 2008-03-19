@@ -257,7 +257,7 @@ distclean-cintdlls: clean-cintdlls
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.* \
 	  $(CINTDIRL)/G__c_$${cintdll}.* \
 	  metautils/src/stlLoader_$${cintdll}.*; done)
-	@rm -f $(ALLCINTDLLS) \
+	@rm -f $(ALLCINTDLLS) $(CINTDICTMAPS) \
 	  $(CINTDIRL)/posix/mktypes$(EXEEXT)
 ifeq ($(PLATFORM),macosx)
 	@rm -f  $(CINTDIRSTL)/*.so
