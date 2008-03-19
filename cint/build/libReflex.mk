@@ -18,9 +18,9 @@
 REFLEXIPATH  = $(G__CFG_INCP)reflex/inc
 REFLEXSRCDIR = reflex/src
 REFLEXLIB_OBJ= $(subst .cxx,$(G__CFG_OBJEXT),$(wildcard $(REFLEXSRCDIR)/*.cxx))
-REFLEXLIB    = libReflex_static$(G__CFG_LIBEXT)
-REFLEXSO     = libReflex$(G__CFG_SOEXT)
-REFLEXIMPLIB = libReflex$(G__CFG_IMPLIBEXT)
+REFLEXLIB    = lib/libReflex_static$(G__CFG_LIBEXT)
+REFLEXSO     = lib/libReflex$(G__CFG_SOEXT)
+REFLEXIMPLIB = lib/libReflex$(G__CFG_IMPLIBEXT)
 
 ifeq ($(G__CFG_COREVERSION),cint7)
 ifeq ($(LINKSTATIC),yes)
