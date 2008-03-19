@@ -36,6 +36,10 @@ class TFile;
 class TVirtualMonitoringWriter : public TNamed {
 
 private:
+
+   TVirtualMonitoringWriter(const TVirtualMonitoringWriter&); // Not implemented
+   TVirtualMonitoringWriter& operator=(const TVirtualMonitoringWriter&); // Not implemented
+
    Double_t fValue;  // double monitor value
 
 protected:
@@ -44,7 +48,7 @@ protected:
 public:
    TVirtualMonitoringWriter() : TNamed(), fValue(0), fTmpOpenPhases(0) { }
    TVirtualMonitoringWriter(const char *name, Double_t value)
-      : TNamed(name, ""), fValue(value) { }
+     : TNamed(name, ""), fValue(value), fTmpOpenPhases(0) { }
 
    virtual ~TVirtualMonitoringWriter() { if (fTmpOpenPhases) delete fTmpOpenPhases; }
 

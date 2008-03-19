@@ -33,6 +33,10 @@ class TGWindow;
 class TGEventHandler : public TNamed, public TQObject {
 
 private:
+  
+   TGEventHandler(const TGEventHandler&); // Not implemented
+   TGEventHandler& operator=(const TGEventHandler&); // Not implemented
+
    Bool_t   fIsActive;    // kTRUE if handler is active, kFALSE if not active
    TGWindow *fWindow;
    TObject  *fObject;
