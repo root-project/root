@@ -336,8 +336,7 @@ class genDictionary(object) :
               if c not in selec : selec.append(c)
               if n == 'name' : self.genFakeTypedef(c['id'], match[0]['o_name'])
       # Filter STL implementation specific classes
-      selec =  filter( lambda c: self.genTypeName(c['id'])[:6] != 'std::_' ,selec)
-      selec =  filter( lambda c: c['name'][:2] != '._' ,selec)  # unamed structs and unions
+      selec =  filter( lambda c: c.has_key('name') ,selec)  # unamed structs and unions
       # Filter internal GCC classes
       selec =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1 ,selec)
       return self.autosel (selec)
@@ -355,7 +354,7 @@ class genDictionary(object) :
       classes =  clean( local + typed + templ )
     # Filter STL implementation specific classes
     classes =  filter( lambda c: self.genTypeName(c['id'])[:6] != 'std::_' ,classes)
-    classes =  filter( lambda c: c['name'][:2] != '._' ,classes)  # unamed structs and unions
+    classes =  filter( lambda c: c.has_key('name') ,selec)  # unamed structs and unions
     # Filter internal GCC classes
     classes =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1 ,classes)
     return self.autosel( classes )
