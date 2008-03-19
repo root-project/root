@@ -184,7 +184,7 @@ distclean::     distclean-reflex
 ifeq ($(PLATFORM),win32)
 RFLX_EXPORTTESTPATH := "$(RFLX_TESTDL):`pwd`/bin:$(CPPUNIT)/lib:$(PATH)"
 else
-RFLX_EXPORTTESTPATH := export LD_LIBRARY_PATH=$(RFLX_TESTDL):`pwd`/lib:$(CPPUNIT)/lib
+RFLX_EXPORTTESTPATH := export LD_LIBRARY_PATH=$(RFLX_TESTDL):`pwd`/lib:$(CPPUNIT)/lib:$$LD_LIBRARY_PATH
 endif
 
 check-reflex-run%: $(RFLX_TESTD)/% $(REFLEXLIB) $(RFLX_TESTLIB)
@@ -200,13 +200,13 @@ $(RFLX_TESTDL)/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
 		$(CXX) $(OPT) $(CXXFLAGS) -c $< $(CXXOUT)$@
 
 $(RFLX_TESTLIBS1) : $(REFLEXDIRI)/Reflex/Reflex.h $(RFLX_TESTLIBD1)/selection.xml
-		cd $(RFLX_TESTD); ../../bin/genreflex testDict1/Reflex.h -s testDict1/selection.xml -I../../include
+		cd $(RFLX_TESTD); ../../../bin/genreflex testDict1/Reflex.h -s testDict1/selection.xml -I../../../include
 
 $(RFLX_TESTLIBS2) : $(RFLX_TESTLIBD2)/Class2Dict.h $(RFLX_TESTLIBD2)/selection.xml $(wildcard $(RFLX_TESTLIBD2)/*.h)
-		cd $(RFLX_TESTD); ../../bin/genreflex testDict2/Class2Dict.h -s testDict2/selection.xml -I../../include --iocomments
+		cd $(RFLX_TESTD); ../../../bin/genreflex testDict2/Class2Dict.h -s testDict2/selection.xml -I../../../include --iocomments
 
 $(RFLX_UNITTESTO) : $(RFLX_TESTD)/test_Reflex%.o : $(RFLX_TESTD)/test_Reflex%.cxx $(RFLX_TESTD)/CppUnit_testdriver.cpp
-		$(CXX) $(OPT) $(CXXFLAGS) -I$(RFLX_TESTD) -Ireflex -I$(RFLX_CPPUNITI) -c $< $(CXXOUT)$@
+		$(CXX) $(OPT) $(CXXFLAGS) -I$(RFLX_TESTD) -Icint/reflex -I$(RFLX_CPPUNITI) -c $< $(CXXOUT)$@
 
 $(RFLX_UNITTESTX) : $(RFLX_TESTD)/test_Reflex% : $(RFLX_TESTD)/test_Reflex%.o
 		$(LD) $(LDFLAGS) -o $@ $< $(RFLX_CPPUNITLL) $(RFLX_REFLEXLL)
