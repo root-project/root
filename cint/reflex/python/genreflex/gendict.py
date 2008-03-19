@@ -626,14 +626,16 @@ class genDictionary(object) :
       #raise "Unknown type category in isTypePublic",type_dict['elem']
 #----------------------------------------------------------------------------------
   def tmplclasses(self, local):
+    import re
     result = []
+    lc_patterns = map(lambda lc: re.compile("\\b%s\\b" % lc['name']) , local)
     for c in self.classes :
       if not 'name' in c: continue
       name = c['name']
       if name.find('<') == -1 : continue
       temp = name[name.find('<')+1:name.rfind('>')]
-      for lc in local :
-        if temp.find(lc['name']) != -1 : result.append(c)
+      for lc_pattern in lc_patterns :
+        if lc_pattern.match(temp) : result.append(c)
     return result
 #----------------------------------------------------------------------------------
   def typedefclasses(self):
