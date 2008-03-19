@@ -633,37 +633,37 @@ MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 Tetris.$(ObjSuf): Tetris.h
 TetrisDict.$(SrcSuf): Tetris.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 TBench.$(ObjSuf): TBench.h
 TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 guiviewer.$(ObjSuf): guiviewer.h
 guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	$(ROOTCINT) -f $@ -c $^
 
 stressMathCore.$(ObjSuf): 	TrackMathCore.h
 TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
 	@echo "Generating dictionary $@ using rootcint ..."
-	@rootcint -f $@ -c $^	
+	$(ROOTCINT) -f $@ -c $^	
 
 TrackMathCoreRflx.$(SrcSuf): 	TrackMathCore.h TrackMathCoreRflx.xml
 			@echo "Generating dictionary $@ using gccxml ..."

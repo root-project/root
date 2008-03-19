@@ -1,0 +1,128 @@
+/**********************************************************************
+* The WILDC++ interpreter demonstration
+*  Experimental program
+*
+*  wildc question.c
+*
+**********************************************************************/
+class Q_yesno {
+ public:
+
+  Q_yesno(char *qin) {
+    question = new char[strlen(qin)+1];
+    strcpy(question,qin);
+    answer="unknown";
+    next = NULL;
+  }
+
+  ~Q_yesno() {
+    if(next) delete next;
+    delete question;
+  }
+
+  void add(char *qin) {
+    Q_yesno *q;
+    q = this;
+    while(q->next) q=q->next;
+    q->next = new Q_yesno(qin);
+  }
+
+  void questionare() {
+    current=this;
+    #pragma   tcl     interp question
+    message .q -width 8c -justify left -relief flat -text $question
+    frame .bf
+    pack .q .bf
+    button .bf.yes -text "YES" -borderwidth 1m -bg gray -fg white -padx 1m
+    bind .bf.yes <Button-1>   {ceval Q_yesno::current->yes()}
+    button .bf.no -text "NO" -borderwidth 1m -bg gray -fg white -padx 2m
+    bind .bf.no <Button-1>    {ceval Q_yesno::current->no()}
+    button .bf.abort -text "abort" -borderwidth 1m -bg gray -fg white
+    bind .bf.abort <Button-1>    {exit}
+    pack .bf.yes .bf.no .bf.abort -side left -fill y
+    #pragma endtcl
+  }
+
+  void destroy() {
+    #pragma tcl interp
+    destroy .q
+    destroy .bf
+    #pragma endtcl
+  }
+
+  void yes() {
+    // printf("%s  yes\n",question);
+    answer = "yes";
+    destroy();
+    if(next) next->questionare();
+    else sendresult();
+  }
+
+  void no() {
+    // printf("%s  no\n",question);
+    answer = "no";
+    destroy();
+    if(next) next->questionare();
+    else sendresult();
+  }
+
+  void showresult() {
+    // printf("%s %s\n",question,answer);
+    #pragma tcl interp question answer i
+    message .msg$i -width 10c -justify left -relief raised -bg gray -fg white -border 1m -text "$question : $answer" -anchor w
+    pack .msg$i -fill x
+    #pragma endtcl
+    ++i;
+  }
+
+  static void sendresult() {
+    #pragma tcl interp
+    label .l -text "Your answers are"
+    pack .l -fill x
+    frame .bf
+    button .bf.yes -text "Yes"
+    button .bf.no -text "No"
+    #pragma endtcl
+    Q_yesno *ql = &qlist;
+    i=0;
+    while(ql) {
+      ql->showresult();
+      ++i;
+      ql=ql->next;
+    }
+    #pragma tcl interp
+    frame .bf1
+    pack .bf1
+    button .bf1.ok -text "OK" -borderwidth 1m -bg gray -fg white -padx 2m
+    button .bf1.abort -text "abort" -borderwidth 1m -bg gray -fg white
+    bind .bf1.ok <Button-1> {ceval Q_yesno::Exit()}
+    bind .bf1.abort <Button-1> { exit }
+    pack .bf1.ok .bf1.abort -side left -fill y
+    #pragma endtcl
+    WildCard_MainLoop();
+  }
+
+  static void Exit() {
+#pragma tcl interp
+     destroy .bf .l
+#pragma endtcl
+     WildCard_Exit();
+  }
+
+  static Q_yesno *current;
+ private:
+  static int i=0;
+  char *question;
+  char *answer;
+  Q_yesno *next;
+
+};
+
+Q_yesno qlist("Did you like the WildCard interpreter?");
+int main() {
+  qlist.add("Do you write C/C++ script?");
+  qlist.add("Do you write Tcl/Tk script?");
+  qlist.questionare();
+  WildCard_MainLoop();
+  return(0);
+}

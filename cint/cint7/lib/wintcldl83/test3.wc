@@ -1,0 +1,44 @@
+/**********************************************************************
+* The WILDC++ interpreter demonstration
+*  Experimental program
+*
+*  wildc test3.c 
+*
+**********************************************************************/
+
+// Call back function is C/C++
+void topbutton() {
+  printf("top\n");
+}
+
+void bottombutton() {
+  printf("bottom\n");
+}
+
+void entry(const char *name) {
+  printf("%s entered\n",name);
+}
+
+main() {
+  char *title = "Button";
+  //      keyword  p2interp  linkvars
+  #pragma   tcl     interp    title
+
+  # create buttons and entry
+  button .top -text "This is only an example" -bg gray -fg white -borderwidth 1m
+  button .bottom -text $title -bg gray -fg white -borderwidth 1m
+  entry .entry -width 15 -relief sunken -bd 2 -textvariable name -borderwidth 1m -bg gray
+  button .exitb -text "EXIT button" -bg gray -fg white -borderwidth 1m
+  pack .top .bottom .entry .exitb -fill x
+
+  # Bind callback C/C++ function
+  bind .top <Button-1>       {ceval topbutton() }
+  bind .bottom <Button-1>    {ceval bottombutton() }
+  bind .entry <Return>       {ceval entry(\"$name\"); set name "" }
+  bind .exitb <Button-1>     {ceval WildCard_Exit();}
+
+  #pragma endtcl
+
+  WildCard_MainLoop();
+}
+

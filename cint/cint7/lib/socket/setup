@@ -1,0 +1,22 @@
+# --builddir $CINTSYSDIR option added to makecint everywhere; D. Barna
+# CINTSYSDIR should be set to the actual build directory (done by the upmost Makefile)
+
+if [ "$CINTSYSDIR" = "" ] ; then
+  echo CINTSYSDIR should be set to the actual build directory during the compilation of cint
+  exit 1
+fi
+
+cp $CINTSYSDIR/MAKEINFO Makefile
+echo 'mksockh : mksockh.c' >> Makefile
+echo '	$(CC) $(SYSMACRO) -o mksockh mksockh.c' >> Makefile
+make -f Makefile
+./mksockh
+rm mksockh
+rm mksockh.exe
+
+makecint --builddir $CINTSYSDIR -mk Makefile -dl $CINTSYSDIR/include/cintsock.dll -h cintsock.h -C cintsock.c -cint -Z0
+make -f Makefile
+rm G__* Makefile
+rm *.o
+
+

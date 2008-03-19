@@ -165,6 +165,12 @@
 #include <iostream>
 #include "cintdictversion.h"
 
+#if defined (G__NOSTUBS) && !defined(ROOTBUILD)
+#ifdef __APPLE__
+#include <libgen.h> // Needed for basename
+#endif
+#endif
+
 #ifdef fgets // in G__ci.h
 #  undef fgets
 #  undef printf
@@ -185,6 +191,9 @@ extern "C" {
    int   G__main(int argc, char **argv);
    void  G__exit(int rtn);
    struct G__includepath *G__getipathentry();
+#ifdef G__NOSTUBS
+   void  G__setisfilebundled(int isfilebundled);
+#endif
 }
 const char *ShortTypeName(const char *typeDesc);
 
@@ -705,7 +714,7 @@ void EnableAutoLoading() {
 }
 
 //______________________________________________________________________________
-bool CheckInputOperator(G__ClassInfo &cl)
+bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
 {
    // Check if the operator>> has been properly declared if the user has
    // resquested a custom version.
@@ -733,11 +742,15 @@ bool CheckInputOperator(G__ClassInfo &cl)
         strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
         strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
-      Error(0,
-            "in this version of ROOT, the option '!' used in a linkdef file\n"
-            "       implies the actual existence of customized operators.\n"
-            "       The following declaration is now required:\n"
-            "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
+     if (dicttype==0||dicttype==1){
+     // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
+	 Error(0,
+	       "in this version of ROOT, the option '!' used in a linkdef file\n"
+	       "       implies the actual existence of customized operators.\n"
+	       "       The following declaration is now required:\n"
+	       "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
+
+     }
 
       has_input_error = true;
    } else {
@@ -755,11 +768,13 @@ bool CheckInputOperator(G__ClassInfo &cl)
         strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
         strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
+     if (dicttype==0||dicttype==1){
       Error(0,
             "in this version of ROOT, the option '!' used in a linkdef file\n"
             "       implies the actual existence of customized operator.\n"
             "       The following declaration is now required:\n"
             "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
+     }
 
       has_input_error = true;
    } else {
@@ -4217,6 +4232,10 @@ int main(int argc, char **argv)
    string dictpathname;
    string libfilename;
    const char *env_dict_type=getenv("ROOTDICTTYPE");
+   int dicttype = 0; // 09-07-07 -- 0 for dict, 1 for ShowMembers
+#ifdef G__NOSTUBS
+   G__setisfilebundled(0);
+#endif
 
    if (env_dict_type) {
       if (!strcmp(env_dict_type, "cint"))
@@ -4292,7 +4311,6 @@ int main(int argc, char **argv)
       }
    }
 
-
    if (!strcmp(argv[ic], "-f")) {
       force = 1;
       ic++;
@@ -4310,6 +4328,7 @@ int main(int argc, char **argv)
       force = 0;
    }
 
+   string header("");
    if (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
        strstr(argv[ic],".cc") || strstr(argv[ic],".c++")) {
@@ -4321,7 +4340,8 @@ int main(int argc, char **argv)
             return 1;
          }
       }
-      string header( argv[ic] );
+      //string header( argv[ic] );
+      header = argv[ic];
       int loc = strrchr(argv[ic],'.') - argv[ic];
       header[loc+1] = 'h';
       header[loc+2] = '\0';
@@ -4438,6 +4458,43 @@ int main(int argc, char **argv)
          strncpy(argvv[argcc], dictname, s-dictname); argcc++;
 
          while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
+            // 09-07-07
+            // We want to separate the generation of the dictionary
+            // source.
+            // We need one that will be the real dictionary and
+            // another one with ShowMembers etc.
+            //
+            // If we see the parameter -S then we want the ShowMembers
+            // part, if not we only want the dict (without ShowMembers)
+            if (!strcmp(argv[ic], "-.")) {
+               ++ic;
+               argvv[argcc++] = (char*)"-.";
+               dicttype = atoi(argv[ic]);
+               argvv[argcc++] = argv[ic]; 
+               ++ic;
+               continue;
+            }
+
+            // 03-07-07
+            // We need the library path in the dictionary generation
+            // the easiest way is to get it as a parameter
+            if (!strcmp(argv[ic], "-L") ||  !strcmp(argv[ic], "--symbols-file")) {
+               ++ic;
+	       
+	       FILE *fpsym = fopen(argv[ic],"r");
+	       if (fpsym) // File exists
+		 fclose(fpsym);
+	       else{ // File doesn't exist
+		 Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
+		 return 1;
+	       }
+
+               argvv[argcc++] = (char*)"-L";
+               argvv[argcc++] = argv[ic]; 
+               ++ic;
+               continue;
+            }
+
             if (strcmp("+P", argv[ic]) == 0 ||
                 strcmp("+V", argv[ic]) == 0 ||
                 strcmp("+STUB", argv[ic]) == 0) {
@@ -4560,7 +4617,42 @@ int main(int argc, char **argv)
          return 1;
       }
    }
+   else{
+      // 09-07-07
+      // We want to separate the generation of the dictionary
+      // source.
+      // We need one that will be the real dictionary and
+      // another one with ShowMembers etc.
+      //
+      // If we see the parameter -S then we want the ShowMembers
+      // part, if not we only want the dict (without ShowMembers)
+      if (!strcmp(argv[ic], "-.")) {
+         ++ic;
+         argvv[argcc++] = (char*)"-.";
+         dicttype = atoi(argv[ic]);
+         argvv[argcc++] = argv[ic]; 
+         ++ic;
+      }
 
+      // 03-07-07
+      // We need the library path in the dictionary generation
+      // the easiest way is to get it as a parameter
+      if (!strcmp(argv[ic], "-L") ||  !strcmp(argv[ic], "--symbols-file")) {
+
+	FILE *fpsym = fopen(argv[ic],"r");
+	if (fpsym) // File exists
+	  fclose(fpsym);
+	else{ // File doesn't exist
+	  Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
+	  return 1;
+	}
+
+         ++ic;
+         argvv[argcc++] = (char*)"-L";
+         argvv[argcc++] = argv[ic]; 
+         ++ic;
+      }
+   }
    iv = 0;
    il = 0;
 
@@ -4577,6 +4669,30 @@ int main(int argc, char **argv)
                  argv[0], bundlename.c_str());
          use_preprocessor = 0;
       } else {
+#if defined (G__NOSTUBS) && !defined(ROOTBUILD)
+         char *header_c = (char*) header.c_str(); // basename shouldnt change the content (it looks safe)
+         const char *basen = basename(header_c);
+         string headerb(basen);
+         string::size_type idx = headerb.rfind("Tmp");
+         
+         int l;
+         if(idx != string::npos) {
+            l = idx;
+            headerb[l] = '\0';   
+         }
+         else{
+            idx = headerb.rfind(".");
+            if(idx != string::npos) {
+               l = idx;
+               headerb[l] = '\0';   
+            }
+         }
+
+         // 12-11-07
+         // put protection against multiple includes of dictionaries' .h
+         fprintf(bundle,"#ifndef G__includes_dict_%s\n", headerb.c_str());
+         fprintf(bundle,"#define G__includes_dict_%s\n", headerb.c_str());
+#endif
          fprintf(bundle,"#include \"TObject.h\"\n");
          fprintf(bundle,"#include \"TMemberInspector.h\"\n");
       }
@@ -4620,6 +4736,9 @@ int main(int argc, char **argv)
       }
    }
    if (use_preprocessor) {
+#if defined (G__NOSTUBS) && !defined(ROOTBUILD)
+      fprintf(bundle,"#endif\n");
+#endif
       fclose(bundle);
    }
 
@@ -4649,6 +4768,11 @@ int main(int argc, char **argv)
 
       argvv[argcc++] = autold;
    }
+   
+#ifdef G__NOSTUBS
+   if(insertedBundle) G__setisfilebundled(1);
+#endif
+
    G__ShadowMaker::VetoShadow(); // we create them ourselves
    G__setothermain(2);
    G__set_ioctortype_handler( (int (*)(const char*))AddConstructorType );
@@ -4670,7 +4794,7 @@ int main(int argc, char **argv)
          fclose(fpd);
       }
    }
-   G__setglobalcomp(0);  // G__NOLINK
+   G__setglobalcomp(0); // G__NOLINK
 #endif
 
    // We ran cint to load the in-memory database,
@@ -4757,7 +4881,7 @@ int main(int argc, char **argv)
        << "// Do NOT change. Changes will be lost next time file is generated" << std::endl
        << "//" << std::endl << std::endl
 
-       << "#include \"RConfig.h\"" << std::endl
+       << "#include \"RConfig.h\" //rootcint 4834" << std::endl
        << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
        << "//Break the privacy of classes -- Disabled for the moment" << std::endl
        << "#define private public" << std::endl
@@ -4799,221 +4923,255 @@ int main(int argc, char **argv)
       (*dictSrcOut) << std::endl;
    }
 
+//    if(dicttype==3){ 
+//      G__ClassInfo cl;
+//      cl.Init();
+//      bool has_input_error = false;
+//      while (cl.Next()) {
+//        if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+// 	 if (!cl.IsLoaded()) {
+// 	   continue;
+// 	 }
+// 	 if (cl.HasMethod("Streamer")) {
+// 	   if ((cl.RootFlag() & G__NOINPUTOPERATOR)) {
+// 	     int version = GetClassVersion(cl);
+// 	     if (version!=0) {
+// 	       // Only Check for input operator is the object is I/O has
+// 	       // been requested.
+// 	       has_input_error |= CheckInputOperator(cl,dicttype);
+// 	     }
+// 	   }
+// 	   has_input_error |= !CheckClassDef(cl);
+// 	 }
+//        }
+//      }
 
-   //
-   // We will loop over all the classes several times.
-   // In order we will call
-   //
-   //     WriteShadowClass
-   //     WriteClassInit (code to create the TGenericClassInfo)
-   //     check for constructor and operator input
-   //     WriteClassFunctions (declared in ClassDef)
-   //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
-   //
-
-   //
-   // Loop over all classes and write the Shadow class if needed
-   //
-
-   // Open LinkDef file for reading, so that we can process classes
-   // in order of appearence in this file (STK)
-   FILE *fpld = 0;
-   if (!il) {
-      // Open auto-generated file
-      fpld = fopen(autold, "r");
-   } else {
-      // Open file specified on command line
-      const char* filename=Which(argv[il]);
-      if (!filename) {
-         Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
-         CleanupOnExit(1);
-         return 1;
-      }
-      fpld = fopen(filename, "r");
-   }
-   if (!fpld) {
-      Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
-      CleanupOnExit(1);
-      return 1;
-   }
-
-   // Read LinkDef file and process the #pragma link C++ ioctortype
-   char consline[256];
-   while (fgets(consline, 256, fpld)) {
-      bool constype = false;
-      if ((strcmp(strtok(consline, " "), "#pragma") == 0) &&
-          (strcmp(strtok(0, " "), "link") == 0) &&
-          (strcmp(strtok(0, " "), "C++") == 0) &&
-          (strcmp(strtok(0, " " ), "ioctortype") == 0)) {
-
-         constype = true;
-      }
-
-      if (constype) {
-
-         char *request = strtok(0, "-!+;");
-         // just in case remove trailing space and tab
-         while (*request == ' ') request++;
-         int len = strlen(request)-1;
-         while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
-         request = Compress(request); //no space between tmpl arguments allowed
-         AddConstructorType(request);
-
-      }
-   }
-   rewind(fpld);
-   AddConstructorType("TRootIOCtor");
-   AddConstructorType("");
-
-   const char* shadowNSName="ROOT";
-   if (dict_type != kDictTypeCint)
-      shadowNSName = "ROOT::Reflex";
-   G__ShadowMaker myShadowMaker((*dictSrcOut), shadowNSName, NeedShadowClass,
-      dict_type==kDictTypeCint ? NeedTypedefShadowClass : 0);
-   shadowMaker = &myShadowMaker;
-
-   G__ShadowMaker::VetoShadow(false);
-   shadowMaker->WriteAllShadowClasses();
-
-   //
-   // Loop over all classes and create Streamer() & Showmembers() methods
-   //
+//      if (has_input_error) {
+//        // Be a little bit makefile friendly and remove the dictionary in case of error.
+//        // We could add an option -k to keep the file even in case of error.
+//        CleanupOnExit(1);
+//        exit(1);
+//      }     
+//    }
 
    G__ClassInfo cl;
    cl.Init();
-   while (cl.Next()) {
-      if (cl.Linkage() == G__CPPLINK && !cl.IsLoaded()) {
-         Error(0,"A dictionary has been requested for %s but there is no declaration!\n",cl.Name());
-         continue;
-      }
-      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-
-         // Write Code for initialization object (except for STL containers)
-         if ( TClassEdit::IsSTLCont(cl.Name()) ) {
-            RStl::inst().GenerateTClassFor( cl.Name() );
-         } else {
-            WriteClassInit(cl);
-         }
-      } else if (((cl.Property() & (G__BIT_ISNAMESPACE)) && cl.Linkage() == G__CPPLINK)) {
-         WriteNamespaceInit(cl);
-      }
-   }
-
-   cl.Init();
    bool has_input_error = false;
    while (cl.Next()) {
-      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-         if (!cl.IsLoaded()) {
-            continue;
-         }
-         if (cl.HasMethod("Streamer")) {
-            if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
-               // We do not write out the input operator anymore, it is a template
+     if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+       if (!cl.IsLoaded()) {
+	 continue;
+       }
+       if (cl.HasMethod("Streamer")) {
+	 if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
+	   // We do not write out the input operator anymore, it is a template
 #if defined R__CONCRETE_INPUT_OPERATOR
-               WriteInputOperator(cl);
+	   WriteInputOperator(cl);
 #endif
-            } else {
-               int version = GetClassVersion(cl);
-               if (version!=0) {
-                  // Only Check for input operator is the object is I/O has
-                  // been requested.
-                  has_input_error |= CheckInputOperator(cl);
-               }
-            }
-         }
-         bool res = CheckConstructor(cl);
-         if (!res) {
-            // has_input_error = true;
-         }
-         has_input_error |= !CheckClassDef(cl);
-      }
+	 } else {
+	   int version = GetClassVersion(cl);
+	   if (version!=0) {
+	     // Only Check for input operator is the object is I/O has
+	     // been requested.
+	     has_input_error |= CheckInputOperator(cl,dicttype);
+	   }
+	 }
+       }
+       bool res = CheckConstructor(cl);
+       if (!res) {
+	 // has_input_error = true;
+       }
+       has_input_error |= !CheckClassDef(cl);
+     }
    }
 
    if (has_input_error) {
-      // Be a little bit makefile friendly and remove the dictionary in case of error.
-      // We could add an option -k to keep the file even in case of error.
-      CleanupOnExit(1);
-      exit(1);
+     // Be a little bit makefile friendly and remove the dictionary in case of error.
+     // We could add an option -k to keep the file even in case of error.
+     CleanupOnExit(1);
+     exit(1);
    }
 
-   //
-   // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
-   // first to allow template specialisation to occur before template
-   // instantiation (STK)
-   //
-   cl.Init();
-   while (cl.Next()) {
-      if (!cl.IsLoaded()) {
-         continue;
+   // 26-07-07
+   // dont generate the showmembers if we only want 
+   // all the memfunc_setup stuff (stub-less calls)
+   if(dicttype==0 || dicttype==1) {   
+      //
+      // We will loop over all the classes several times.
+      // In order we will call
+      //
+      //     WriteShadowClass
+      //     WriteClassInit (code to create the TGenericClassInfo)
+      //     check for constructor and operator input
+      //     WriteClassFunctions (declared in ClassDef)
+      //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
+      //
+
+      //
+      // Loop over all classes and write the Shadow class if needed
+      //
+      // Open LinkDef file for reading, so that we can process classes
+      // in order of appearence in this file (STK)
+      FILE *fpld = 0;
+      if (!il) {
+         // Open auto-generated file
+         fpld = fopen(autold, "r");
+      } else {
+         // Open file specified on command line
+         const char* filename=Which(argv[il]);
+         if (!filename) {
+            Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
+            CleanupOnExit(1);
+            return 1;
+         }
+         fpld = fopen(filename, "r");
       }
-      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-         // Write Code for Class_Name() and static variable
-         if (cl.HasMethod("Class_Name")) {
-            WriteClassFunctions(cl, cl.IsTmplt());
+      if (!fpld) {
+         Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
+         CleanupOnExit(1);
+         return 1;
+      }
+
+      // Read LinkDef file and process the #pragma link C++ ioctortype
+      char consline[256];
+      while (fgets(consline, 256, fpld)) {
+         bool constype = false;
+         if ((strcmp(strtok(consline, " "), "#pragma") == 0) &&
+             (strcmp(strtok(0, " "), "link") == 0) &&
+             (strcmp(strtok(0, " "), "C++") == 0) &&
+             (strcmp(strtok(0, " " ), "ioctortype") == 0)) {
+
+            constype = true;
+         }
+
+         if (constype) {
+
+            char *request = strtok(0, "-!+;");
+            // just in case remove trailing space and tab
+            while (*request == ' ') request++;
+            int len = strlen(request)-1;
+            while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
+            request = Compress(request); //no space between tmpl arguments allowed
+            AddConstructorType(request);
+
          }
       }
-   }
+      rewind(fpld);
+      AddConstructorType("TRootIOCtor");
+      AddConstructorType("");
 
-   // Keep track of classes processed by reading Linkdef file.
-   // When all classes in LinkDef are done, loop over all classes known
-   // to CINT output the ones that were not in the LinkDef. This can happen
-   // in case "#pragma link C++ defined_in" is used.
-   //const int kMaxClasses = 2000;
-   //char *clProcessed[kMaxClasses];
-   vector<string> clProcessed;
-   int   ncls = 0;
+      const char* shadowNSName="ROOT";
+      if (dict_type != kDictTypeCint)
+         shadowNSName = "ROOT::Reflex";
+      G__ShadowMaker myShadowMaker((*dictSrcOut), shadowNSName, NeedShadowClass,
+                                   dict_type==kDictTypeCint ? NeedTypedefShadowClass : 0);
+      shadowMaker = &myShadowMaker;
 
-   // Read LinkDef file and process valid entries (STK)
-   char line[256];
-   char cline[256];
-   char nline[256];
-   while (fgets(line, 256, fpld)) {
+      G__ShadowMaker::VetoShadow(false);
+      shadowMaker->WriteAllShadowClasses();
 
-      bool skip = true;
-      bool force = false;
-      strcpy(cline,line);
-      strcpy(nline,line);
-      int len = strlen(line);
+      //
+      // Loop over all classes and create Streamer() & Showmembers() methods
+      //
 
-      // Check if the line contains a "#pragma link C++ class" specification,
-      // if so, process the class (STK)
-      if ((strcmp(strtok(line, " "), "#pragma") == 0) &&
-          (strcmp(strtok(0, " "), "link") == 0) &&
-          (strcmp(strtok(0, " "), "C++") == 0) &&
-          (strcmp(strtok(0, " " ), "class") == 0)) {
+      G__ClassInfo cl;
+      cl.Init();
+      while (cl.Next()) {
+         if (cl.Linkage() == G__CPPLINK && !cl.IsLoaded()) {
+            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",cl.Name());
+            continue;
+         }
+         if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
 
-         skip = false;
-         force = false;
-
-      } else if ((strcmp(strtok(cline, " "), "#pragma") == 0) &&
-                 (strcmp(strtok(0, " "), "create") == 0) &&
-                 (strcmp(strtok(0, " "), "TClass") == 0)) {
-
-         skip = false;
-         force = true;
-
-      } else if ((strcmp(strtok(nline, " "), "#pragma") == 0) &&
-          (strcmp(strtok(0, " "), "link") == 0) &&
-          (strcmp(strtok(0, " "), "C++") == 0) &&
-          (strcmp(strtok(0, " " ), "namespace") == 0)) {
-
-         skip = false;
-         force = false;
-
+            // Write Code for initialization object (except for STL containers)
+            if ( TClassEdit::IsSTLCont(cl.Name()) ) {
+               RStl::inst().GenerateTClassFor( cl.Name() );
+            } else {
+               WriteClassInit(cl);
+            }
+         } else if (((cl.Property() & (G__BIT_ISNAMESPACE)) && cl.Linkage() == G__CPPLINK)) {
+            WriteNamespaceInit(cl);
+         }
       }
 
-      if (!skip) {
+      //
+      // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
+      // first to allow template specialisation to occur before template
+      // instantiation (STK)
+      //
+      cl.Init();
+      while (cl.Next()) {
+         if (!cl.IsLoaded()) {
+            continue;
+         }
+         if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+            // Write Code for Class_Name() and static variable
+            if (cl.HasMethod("Class_Name")) {
+               WriteClassFunctions(cl, cl.IsTmplt());
+            }
+         }
+      }
 
-         // Create G__ClassInfo object for this class and process. Be
-         // careful with the hardcoded string of trailing options in case
-         // these change (STK)
+      // Keep track of classes processed by reading Linkdef file.
+      // When all classes in LinkDef are done, loop over all classes known
+      // to CINT output the ones that were not in the LinkDef. This can happen
+      // in case "#pragma link C++ defined_in" is used.
+      //const int kMaxClasses = 2000;
+      //char *clProcessed[kMaxClasses];
+      vector<string> clProcessed;
+      int   ncls = 0;
 
-         int extraRootflag = 0;
-         if (force && len>2) {
-            char *endreq = line+len-2;
-            bool ending = false;
-            while (!ending) {
-               switch ( (*endreq) ) {
+      // Read LinkDef file and process valid entries (STK)
+      char line[256];
+      char cline[256];
+      char nline[256];
+      while (fgets(line, 256, fpld)) {
+
+         bool skip = true;
+         bool force = false;
+         strcpy(cline,line);
+         strcpy(nline,line);
+         int len = strlen(line);
+
+         // Check if the line contains a "#pragma link C++ class" specification,
+         // if so, process the class (STK)
+         if ((strcmp(strtok(line, " "), "#pragma") == 0) &&
+             (strcmp(strtok(0, " "), "link") == 0) &&
+             (strcmp(strtok(0, " "), "C++") == 0) &&
+             (strcmp(strtok(0, " " ), "class") == 0)) {
+
+            skip = false;
+            force = false;
+
+         } else if ((strcmp(strtok(cline, " "), "#pragma") == 0) &&
+                    (strcmp(strtok(0, " "), "create") == 0) &&
+                    (strcmp(strtok(0, " "), "TClass") == 0)) {
+
+            skip = false;
+            force = true;
+
+         } else if ((strcmp(strtok(nline, " "), "#pragma") == 0) &&
+                    (strcmp(strtok(0, " "), "link") == 0) &&
+                    (strcmp(strtok(0, " "), "C++") == 0) &&
+                    (strcmp(strtok(0, " " ), "namespace") == 0)) {
+
+            skip = false;
+            force = false;
+
+         }
+
+         if (!skip) {
+
+            // Create G__ClassInfo object for this class and process. Be
+            // careful with the hardcoded string of trailing options in case
+            // these change (STK)
+
+            int extraRootflag = 0;
+            if (force && len>2) {
+               char *endreq = line+len-2;
+               bool ending = false;
+               while (!ending) {
+                  switch ( (*endreq) ) {
                   case ';': break;
                   case '+': extraRootflag |= G__USEBYTECOUNT; break;
                   case '!': extraRootflag |= G__NOINPUTOPERATOR; break;
@@ -5022,38 +5180,79 @@ int main(int argc, char **argv)
                   case '\t': break;
                   default:
                      ending = true;
+                  }
+                  --endreq;
                }
-               --endreq;
+               if ( extraRootflag & (G__USEBYTECOUNT | G__NOSTREAMER) ) {
+                  Warning(line,"option + mutual exclusive with -, + prevails\n");
+                  extraRootflag &= ~G__NOSTREAMER;
+               }
             }
-            if ( extraRootflag & (G__USEBYTECOUNT | G__NOSTREAMER) ) {
-               Warning(line,"option + mutual exclusive with -, + prevails\n");
-               extraRootflag &= ~G__NOSTREAMER;
+
+            char *request = strtok(0, "-!+;");
+            // just in case remove trailing space and tab
+            while (*request == ' ') request++;
+            int len = strlen(request)-1;
+            while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
+            request = Compress(request); //no space between tmpl arguments allowed
+            G__ClassInfo cl(request);
+
+            string fullname;
+            if (cl.IsValid())
+               fullname = cl.Fullname();
+            else {
+               fullname = request;
             }
-         }
-
-         char *request = strtok(0, "-!+;");
-         // just in case remove trailing space and tab
-         while (*request == ' ') request++;
-         int len = strlen(request)-1;
-         while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
-         request = Compress(request); //no space between tmpl arguments allowed
-         G__ClassInfo cl(request);
-
-         string fullname;
-         if (cl.IsValid())
-            fullname = cl.Fullname();
-         else {
-            fullname = request;
-         }
-         // In order to upgrade the pragma create TClass we would need a new function in
-         // CINT's G__ClassInfo.
-         // if (force && extraRootflag) cl.SetRootFlag(extraRootflag);
+            // In order to upgrade the pragma create TClass we would need a new function in
+            // CINT's G__ClassInfo.
+            // if (force && extraRootflag) cl.SetRootFlag(extraRootflag);
 //          fprintf(stderr,"DEBUG: request==%s processed==%s rootflag==%d\n",request,fullname.c_str(),extraRootflag);
-         delete [] request;
+            delete [] request;
 
-         // Avoid requesting the creation of a class infrastructure twice.
-         // This could happen if one of the request link C++ class XXX is actually a typedef.
+            // Avoid requesting the creation of a class infrastructure twice.
+            // This could happen if one of the request link C++ class XXX is actually a typedef.
+            int nxt = 0;
+            for (i = 0; i < ncls; i++) {
+               if ( clProcessed[i] == fullname ) {
+                  nxt++;
+                  break;
+               }
+            }
+            if (nxt) continue;
+
+            clProcessed.push_back( fullname );
+            ncls++;
+
+            if (force) {
+               if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() != G__CPPLINK) {
+                  if (NeedShadowClass(cl)) {
+                     (*dictSrcOut) << "namespace ROOT {" << std::endl
+                                   << "   namespace Shadow {" << std::endl;
+                     shadowMaker->WriteShadowClass(cl);
+                     (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
+                                   << "} // Of namespace ROOT" << std::endl << std::endl;
+                  }
+                  if (G__ShadowMaker::IsSTLCont(cl.Name()) == 0 ) {
+                     WriteClassInit(cl);
+                  }
+               }
+            }
+            WriteClassCode(cl, force);
+         }
+      }
+
+      // Loop over all classes and create Streamer() & ShowMembers() methods
+      // for classes not in clProcessed list (exported via
+      // "#pragma link C++ defined_in")
+      cl.Init();
+
+      while (cl.Next()) {
          int nxt = 0;
+         // skip utility class defined in ClassImp
+         if (!strncmp(cl.Fullname(), "R__Init", 7) ||
+             strstr(cl.Fullname(), "::R__Init"))
+            continue;
+         string fullname( cl.Fullname() );
          for (i = 0; i < ncls; i++) {
             if ( clProcessed[i] == fullname ) {
                nxt++;
@@ -5062,57 +5261,18 @@ int main(int argc, char **argv)
          }
          if (nxt) continue;
 
-         clProcessed.push_back( fullname );
-         ncls++;
-
-         if (force) {
-            if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() != G__CPPLINK) {
-               if (NeedShadowClass(cl)) {
-                  (*dictSrcOut) << "namespace ROOT {" << std::endl
-                      << "   namespace Shadow {" << std::endl;
-                  shadowMaker->WriteShadowClass(cl);
-                  (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
-                      << "} // Of namespace ROOT" << std::endl << std::endl;
-               }
-               if (G__ShadowMaker::IsSTLCont(cl.Name()) == 0 ) {
-                  WriteClassInit(cl);
-               }
-            }
-         }
-         WriteClassCode(cl, force);
+         WriteClassCode(cl);
       }
-   }
 
-   // Loop over all classes and create Streamer() & ShowMembers() methods
-   // for classes not in clProcessed list (exported via
-   // "#pragma link C++ defined_in")
-   cl.Init();
+      //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
+      RStl::inst().WriteClassInit(0);
 
-   while (cl.Next()) {
-      int nxt = 0;
-      // skip utility class defined in ClassImp
-      if (!strncmp(cl.Fullname(), "R__Init", 7) ||
-           strstr(cl.Fullname(), "::R__Init"))
-         continue;
-      string fullname( cl.Fullname() );
-      for (i = 0; i < ncls; i++) {
-         if ( clProcessed[i] == fullname ) {
-            nxt++;
-            break;
-         }
-      }
-      if (nxt) continue;
+      fclose(fpld);
 
-      WriteClassCode(cl);
-   }
-
-   //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
-   RStl::inst().WriteClassInit(0);
-
-   fclose(fpld);
-
-   if (!il) remove(autold);
-   if (use_preprocessor) remove(bundlename.c_str());
+      if (!il) remove(autold);
+      if (use_preprocessor) remove(bundlename.c_str());
+   
+   } // (stub-less calls)
 
    // Append CINT dictionary to file containing Streamers and ShowMembers
    if (ifl) {
@@ -5136,9 +5296,16 @@ int main(int argc, char **argv)
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
          int  nl = 0;
          char inclf[kMaxLen];
+         
+         // 07-11-07
+         // Include the temporaries here to get one file with everything
+         char inclfTmp1[kMaxLen];
+         char inclfTmp2[kMaxLen];
          char *s = strrchr(dictname, '.');
          if (s) *s = 0;
          sprintf(inclf, "%s.h", dictname);
+         sprintf(inclfTmp1, "%sTmp1.cxx", dictname);
+         sprintf(inclfTmp2, "%sTmp2.cxx", dictname);
          if (s) *s = '.';
 
          // during copy put dict include on top and remove later reference
@@ -5146,6 +5313,8 @@ int main(int argc, char **argv)
             if (!strncmp(line, "#include", 8) && strstr(line, inclf))
                continue;
             fprintf(fpd, "%s", line);
+            
+
             // 'linesToSkip' is because we want to put it after #defined private/protected
             if (++nl == linesToSkip && icc) {
                switch (dict_type) {
@@ -5162,6 +5331,19 @@ int main(int argc, char **argv)
                } else {
                   fprintf(fpd, "#include \"%s\"\n", inclf);
                }
+
+               // 07-11-07
+               // Put the includes to temporary files when generating the third dictionary
+               if(dicttype==3){
+                 if (longheadername && dictpathname.length() ) {
+                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp1);
+                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp2);
+                 } else {
+                   fprintf(fpd, "#include \"%s\"\n", inclfTmp1);
+                   fprintf(fpd, "#include \"%s\"\n", inclfTmp2);
+                 }
+               }
+
                if (gNeedCollectionProxy) {
                   fprintf(fpd, "\n#include \"TCollectionProxyInfo.h\"");
                }

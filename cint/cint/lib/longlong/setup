@@ -1,0 +1,4 @@
+makecint -mk Makefile -I../../.. -dl ../../include/long.dll -H longlong.h longdbl.h -cint -Z0
+make -f Makefile
+rm G__* Makefile 
+

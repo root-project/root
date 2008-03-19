@@ -19,12 +19,14 @@
 #define ROOT_DllImport
 
 #ifndef __CINT__
-#if defined(WIN32)
+# if defined(WIN32)
 #  define R__DllImport  __declspec( dllimport )
-#else
+# else
 #  define R__DllImport
-#endif
+# endif
 #  define R__EXTERN       R__DllImport extern
+#else
+# define R__EXTERN extern
 #endif
 
 

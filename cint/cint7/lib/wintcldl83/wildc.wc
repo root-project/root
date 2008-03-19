@@ -1,0 +1,123 @@
+/********************************************************************
+* WildC.wc
+*  WildC++ script source file entry dialog box
+*  Copyright(c) 1996-1997  Masaharu Goto
+********************************************************************/
+
+// filename extension
+char *ext=".wc";
+
+void G__AddFile(char *addedfile,int isstart) {
+  if(strcmp(addedfile,"..")==0) {
+    #pragma tcl interp
+      cd ..
+    #pragma endtcl
+    G__ListFiles();
+  }
+  else if(strlen(addedfile)>0&&addedfile[strlen(addedfile)-1]=='/') {
+    #pragma tcl interp addedfile
+      cd $addedfile
+    #pragma endtcl
+    G__ListFiles();
+  }
+  else {
+    #pragma tcl interp addedfile
+      set filenames "$addedfile"
+    #pragma endtcl
+    if(isstart) {
+      #pragma tcl interp
+      ceval G__StartWildC(\"$filenames\",$debug)
+      #pragma endtcl
+    }
+  }
+}
+
+void G__StartWildC(char *args,int debug){
+  if(args[0]=='\0') return;
+  #pragma tcl interp args
+    destroy .dialog
+  #pragma endtcl
+  G__loadfile(args);
+  if(debug) {
+    printf("Debug commands:\n");
+    printf("  S : step over\n");
+    printf("  s : step into\n");
+    printf("  c : continue\n");
+    printf("  T : toggle trace mode\n");
+    printf("  t : show stack\n");
+    printf("  v : show source\n");
+    printf("  V[n] : show source in stack\n");
+    printf("  h : show help information\n");
+    printf("\n Use 's' command to step into main()\n");
+    G__stepmode(debug);
+  }
+  G__calc("main()");
+}
+
+void G__ListFiles() {
+  #pragma tcl interp ext
+    .dialog.filebox.files delete 0 end
+    .dialog.filebox.files insert end \.\.
+    foreach i [lsort [glob */ *$ext]] {
+      .dialog.filebox.files insert end $i
+    }
+  #pragma endtcl
+}
+
+void Edit(char *filename) {
+  char comm[300];
+  char *editor = getenv("EDITOR");
+  if(NULL==editor||0==editor[0]) editor = "notepad";
+  sprintf(comm,"%s %s",editor,filename);
+  system(comm);
+}
+
+#pragma tcl interp ext
+  set exten $ext
+  set debug 0
+  # cd ..\\EXAMPLE
+
+  # top level frame
+  frame .dialog
+  pack .dialog
+
+  # label and entry
+  label .dialog.lbl1 -text "WildC++ interpreter" -relief raised -bg gray -borderwidth 2
+  label .dialog.lbl2 -text "click source file and RUN" -bg gray -borderwidth 2
+  frame .dialog.filebox
+  entry .dialog.entry -textvariable filenames -bg gray -borderwidth 2 -width 20
+  frame .dialog.buttons
+  frame .dialog.develop
+  frame .dialog.extension
+  label .dialog.extension.lext -text "file extension" -relief raised -bg gray -borderwidth 2
+  entry .dialog.extension.ext -textvariable exten -bg gray -borderwidth 2 -width 10
+  pack .dialog.lbl1 .dialog.lbl2 .dialog.extension .dialog.filebox .dialog.entry .dialog.buttons .dialog.develop -side top -fill x
+  pack .dialog.extension.lext .dialog.extension.ext -side left -fill y
+
+  # file browser
+  listbox .dialog.filebox.files -relief raised -borderwidth 2 -yscrollcommand ".dialog.filebox.scroll set" -bg gray -borderwidth 2
+  pack .dialog.filebox.files -side left
+  scrollbar .dialog.filebox.scroll -command ".dialog.filebox.files yview" -bg gray
+  pack .dialog.filebox.scroll -side right -fill y
+  .dialog.filebox.files insert end \.\.
+  foreach i [lsort [glob */ *$ext]] {
+    .dialog.filebox.files insert end $i
+  }
+
+  # buttons
+  button .dialog.buttons.ok -text RUN -command {ceval G__StartWildC(\"$filenames\",$debug)} -bg gray -borderwidth 2
+  button .dialog.buttons.abort -text Abort -command {ceval WildCard_Exit()} -bg gray -borderwidth 2
+  button .dialog.buttons.edit -text Edit -command {ceval Edit(\"$filenames\")} -bg gray -borderwidth 2
+  checkbutton .dialog.develop.debug -text Debug -variable debug -bg gray
+
+  pack .dialog.buttons.ok .dialog.buttons.edit .dialog.buttons.abort -side left
+  pack .dialog.develop.debug -side left
+
+  # bindings
+  bind .dialog.filebox.files <ButtonRelease> {ceval G__AddFile(\"[selection get]\",0)}
+  bind .dialog.filebox.files <Double-Button> {ceval G__AddFile(\"[selection get]\",1)}
+  bind .dialog.entry <Return> {ceval G__StartWildC(\"$filenames\",$debug)}
+  bind .dialog.extension.ext <Any-KeyRelease> {ceval strcpy(ext,\"$exten\")}
+# #pragma endtcl
+
+

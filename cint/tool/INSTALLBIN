@@ -1,0 +1,159 @@
+#! /bin/sh
+#####################################################################
+# INSTALLBIN [OPTIONS], try --help for usage information
+# Installs Cint on a system
+#   by  Richard Kreckel (Richard.Kreckel@Uni-Mainz.DE)  2001/Mar
+#####################################################################
+
+# Better turn on paranoia switch, so errors do not go unnoticed:
+set -e
+
+#####################################################################
+
+me=`echo "$0" | sed -e 's,.*/,,'`
+
+usage="\
+Usage: $0 [OPTIONS]
+
+Installs a compiled Cint on a system.
+Options:
+  -h, --help         print this help, then exit
+  --bindir=DIR       executables in DIR (required)
+  --libdir=DIR       Cint system files in DIR (required)
+                     (this should correspond to the value of \`\$CINTSYSDIR')
+  --mandir=DIR       man documentation in DIR (optional)
+  --docdir=DIR       text documentation in DIR (optional)
+Example:
+$me --bindir=/usr/bin --libdir=/usr/lib/cint --mandir=/usr/share/man
+
+Report bugs and patches to <gotom@hanno.jp>."
+
+#####################################################################
+
+while test $# -gt 0 ; do
+  case "$1" in
+    --*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+    *) optarg= ;;
+  esac
+  case "$1" in
+    --help | -h )
+       echo "$usage"; exit 0 ;;
+    --bindir=* )
+       BINDIR="$optarg"; shift ;;
+    --libdir=* )
+       LIBDIR="$optarg"; shift ;;
+    --mandir=* )
+       MANDIR="$optarg"; shift ;;
+    --docdir=* )
+       DOCDIR="$optarg"; shift ;;
+    -* )
+       echo "$me: invalid option $1" >&2
+       exit 1 ;;
+    * )
+       break ;;
+  esac
+done
+if test -z "$BINDIR"; then
+  echo "BINDIR must be specified; use --help to show usage"
+  exit 1
+fi
+if test -z "$LIBDIR"; then 
+  echo "LIBDIR must be specified; use --help to show usage"
+  exit 1
+fi
+
+#####################################################################
+# Print an informative list of the specified installation directories
+#####################################################################
+
+echo "Where do the files go to?  Summary:"
+echo "Installing binary files to:              $BINDIR"
+echo "           Cint system files to:         $LIBDIR"
+if ! test "${MANDIR}x" == "x"; then
+  echo "           manual pages to:              $MANDIR"
+else
+  echo "           manual pages are not installed"
+fi
+if ! test "${DOCDIR}x" == "x"; then
+  echo "           additional documentation to:  $DOCDIR"
+else
+  echo "           additional documentation is not installed"
+fi
+echo
+
+#####################################################################
+# Copy executables
+#####################################################################
+mkdir -p $BINDIR
+
+for i in cint makecint;
+do
+  echo -n "$i ";
+  cp $i $BINDIR/$i
+done
+echo -e "\n  ... successfully installed in $BINDIR\n"
+
+#####################################################################
+# Copy lib files
+#####################################################################
+for i in include/*; do
+  if test -d $i; then mkdir -p $LIBDIR/$i; fi
+done
+mkdir -p $LIBDIR/lib/prec_stl
+mkdir -p $LIBDIR/lib/longlong
+mkdir -p $LIBDIR/stl
+mkdir -p $LIBDIR/inc
+mkdir -p $LIBDIR/main
+
+# Copy lib files
+FILELIST="include/* include/*/* stl/* lib/prec_stl/* lib/longlong/longlong.h inc/* main/*"
+# Add either shared or static library to $FILELIST
+if test -f libcint.so; then
+  FILELIST="$FILELIST libcint.so"
+else
+  FILELIST="$FILELIST src/G__ci.a";
+fi
+for i in $FILELIST; do
+  case $i in
+  include/make*|include/Make*|*/setup*|*/CVS|*/CVS/*)
+    ;;
+  *)
+    if ! test -d $i; then echo -n "$i "; cp $i $LIBDIR/$i; fi
+    ;;
+  esac
+done
+echo -e "\n  ... successfully installed in $LIBDIR\n"
+
+#####################################################################
+# Optionally copy man files
+#####################################################################
+if ! test "${MANDIR}x" == "x"; then
+  mkdir -p $MANDIR/man1
+  
+  # Copy manpages in section 1
+  (cd doc/man1;
+  for i in *.1;
+  do
+    echo -n "$i "
+    cp $i $MANDIR/man1/$i
+  done
+  echo -e "\n  ... successfully installed in $MANDIR\n")
+fi
+
+#####################################################################
+# Optionally copy additional text documentation
+#####################################################################
+if ! test "${DOCDIR}x" == "x"; then
+  mkdir -p $DOCDIR
+  
+  # Copy text files in doc/
+  (cd doc;
+  for i in *.txt;
+  do
+    echo -n "$i "
+    cp $i $DOCDIR/$i
+  done
+  echo -e "\n  ... successfully installed in $DOCDIR\n")
+fi
+
+echo "Installation succeeded."

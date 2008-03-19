@@ -2779,7 +2779,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    mapfileStream.close();
 
    // ======= Generate the rootcint command line
-   TString rcint = "rootcint --lib-list-prefix=";
+   TString rcint;
+#ifdef G__NOSTUBS
+   rcint = "rootcint_nostubs.sh --lib-list-prefix=";
+#else
+   rcint = "rootcint --lib-list-prefix=";
+#endif
    rcint += mapfile;
    rcint += " -f ";
    rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");

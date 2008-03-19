@@ -58,7 +58,7 @@ include $(MAKEFILEDEP)
 
 ##### Modules to build #####
 
-MODULES       = build cint metautils pcre utils base cont meta io \
+MODULES       = build cint/cint metautils pcre utils base cont meta io \
                 math fit mathcore net zip clib matrix newdelete \
                 hist/hist tree freetype graf gpad g3d gui minuit \
                 hist/histpainter treeplayer ged treeviewer physics \
@@ -162,7 +162,8 @@ ifeq ($(BUILDMATHMORE),yes)
 MODULES      += mathmore
 endif
 ifeq ($(BUILDREFLEX),yes)
-MODULES      += reflex
+# put reflex right in front of CINT; CINT needs it 
+MODULES      := $(subst cint/cint,cint/reflex cint/cint,$(MODULES))
 endif
 ifeq ($(BUILDMINUIT2),yes)
 MODULES      += minuit2
@@ -171,7 +172,7 @@ ifeq ($(BUILDUNURAN),yes)
 MODULES      += unuran
 endif
 ifeq ($(BUILDCINT7),yes)
-MODULES      += cint7
+MODULES      := $(subst cint/cint,cint/cint7,$(MODULES))
 endif
 ifeq ($(BUILDCINTEX),yes)
 MODULES      += cintex
@@ -238,8 +239,8 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
-                oracle xmlparser mathmore reflex cintex roofitcore roofit \
-                minuit2 monalisa fftw odbc unuran gdml eve g4root cint7 glite
+                oracle xmlparser mathmore cint/reflex cintex roofitcore roofit \
+                minuit2 monalisa fftw odbc unuran gdml eve g4root cint/cint7 glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -252,7 +253,7 @@ LPATH         = lib
 ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
-CINT7LIBS    := -lCint7 -lReflex
+CINT7LIBS    := -lCint -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
                 -lTree -lMatrix -lMathCore
@@ -264,7 +265,7 @@ endif
 RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
-CINT7LIBS    := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
+CINT7LIBS    := $(LPATH)/libCint.lib $(LPATH)/libReflex.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
@@ -340,6 +341,18 @@ GCC_PATCH     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f3)
 GCC_VERS      := gcc-$(GCC_MAJOR).$(GCC_MINOR)
 GCC_VERS_FULL := gcc-$(GCC_MAJOR).$(GCC_MINOR).$(GCC_PATCH)
 
+##### CINT Stub Functions Generation #####
+ifeq ($(NOSTUBS),yes)
+ROOTCINTTMP   = export CXXFLAGS="$(CXXFLAGS)"; utils/src/rootcint_nostubs_tmp.sh -$(ROOTDICTTYPE)
+CXXFLAGS     += -DG__NOSTUBS
+CINTCXXFLAGS += -DG__NOSTUBS
+ifeq ($(NOSTUBSTEST),yes)
+CXXFLAGS     += -DG__NOSTUBSTEST
+CINTCXXFLAGS += -DG__NOSTUBSTEST
+endif
+endif
+
+
 # Precompiled headers for gcc
 ifeq ($(GCC_MAJOR),4)
 PCHSUPPORTED  := $(ENABLEPCH)
@@ -388,13 +401,12 @@ endif
 
 ##### Utilities #####
 
-ROOTCINTTMP   = $(ROOTCINTTMPEXE) $(addprefix -,$(ROOTDICTTYPE))
+ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 MAKEDEP       = $(RMKDEP)
 MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      = build/unix/makedist.sh
 MAKEDISTSRC   = build/unix/makedistsrc.sh
 MAKEVERSION   = build/unix/makeversion.sh
-IMPORTCINT    = build/unix/importcint.sh
 MAKECOMPDATA  = build/unix/compiledata.sh
 MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
@@ -476,14 +488,6 @@ cint/%.o: cint/%.c
 	$(MAKEDEP) -R -fcint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
-cint7/%.o: cint7/%.cxx
-	$(MAKEDEP) -R -fcint7/$*.d -Y -w 1000 -- $(CINT7CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINT7CXXFLAGS) $(CXXOUT)$@ -c $<
-
-cint7/%.o: cint7/%.c
-	$(MAKEDEP) -R -fcint7/$*.d -Y -w 1000 -- $(CINT7CFLAGS) -- $<
-	$(CC) $(OPT) $(CINT7CFLAGS) $(CXXOUT)$@ -c $<
-
 build/%.o: build/%.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
 
@@ -508,7 +512,7 @@ endif
 
 ##### TARGETS #####
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
-                clean distclean maintainer-clean compiledata importcint \
+                clean distclean maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
                 static map debian redhat skip postbin \
                 $(patsubst %,all-%,$(MODULES)) \
@@ -528,12 +532,12 @@ skip:
 		@true;
 
 include $(patsubst %,%/Module.mk,$(MODULES))
-include cint/cintdlls.mk
+include cint/ROOT/cintdlls.mk
 
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
-      distsrc version importcint importcint7 install uninstall showbuild \
+      distsrc version install uninstall showbuild \
       changelog html debian redhat),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
@@ -806,12 +810,6 @@ version: $(CINTTMP)
 static: rootlibs
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
 	   "$(XLIBS)" "$(SYSLIBS)"
-
-importcint: distclean-cint
-	@$(IMPORTCINT)
-
-importcint7: distclean-cint7
-	@$(IMPORTCINT) cint7
 
 changelog:
 	@$(MAKECHANGELOG)
@@ -1110,7 +1108,6 @@ showbuild:
 	@echo "MAKEDIST           = $(MAKEDIST)"
 	@echo "MAKEDISTSRC        = $(MAKEDISTSRC)"
 	@echo "MAKEVERSION        = $(MAKEVERSION)"
-	@echo "IMPORTCINT         = $(IMPORTCINT)"
 	@echo ""
 	@echo "The list of modules to be built:"
 	@echo "--------------------------------"

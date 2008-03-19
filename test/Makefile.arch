@@ -15,7 +15,7 @@ ALTCXX       := $(shell $(ROOTCONFIG) --cxx)
 ALTF77       := $(shell $(ROOTCONFIG) --f77)
 ALTLD        := $(shell $(ROOTCONFIG) --ld)
 
-CXX           =
+#CXX           =
 ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
@@ -40,6 +40,14 @@ ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs)
 ROOTGLIBS    := $(shell $(ROOTCONFIG) --glibs)
 HASTHREAD    := $(shell $(ROOTCONFIG) --has-thread)
+ROOTDICTTYPE := $(shell $(ROOTCONFIG) --dicttype)
+NOSTUBS      := $(shell $(ROOTCONFIG) --nostubs)
+ROOTCINT     := rootcint
+
+# Stub Functions Generation
+ifeq ($(NOSTUBS),yes)
+	ROOTCINT = export CXXFLAGS="$(CXXFLAGS)"; $(ROOTSYS)/utils/src/rootcint_nostubs.sh -$(ROOTDICTTYPE)
+endif
 
 ifeq ($(ARCH),hpuxacc)
 # HP-UX 10.x with aCC

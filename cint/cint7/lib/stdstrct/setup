@@ -1,0 +1,38 @@
+
+# --builddir $CINTSYSDIR option added to makecint everywhere; D. Barna
+# CINTSYSDIR should be set to the actual build directory (done by the upmost Makefile)
+
+if [ "$CINTSYSDIR" = "" ] ; then
+  echo CINTSYSDIR should be set to the actual build directory during the compilation of cint
+  exit 1
+fi
+
+#modifications begin here
+#rm ../../include/stdfunc.dll     
+rm -f ../../include/stdfunc.dll
+#modifications end here
+
+makecint --builddir $CINTSYSDIR -mk Makestdfunc -dl stdfunc.dll -h stdfunc.h -cint -Z0
+make -f Makestdfunc
+mv stdfunc.dll ../../include/stdfunc.dll
+case $1 in
+debug) ;;
+*) make -f Makestdfunc clean
+   rm Makestdfunc
+   ;;
+esac
+
+#modifications begin here
+#rm ../../include/stdcxxfunc.dll
+rm -f ../../include/stdcxxfunc.dll
+#modifications end here
+
+makecint --builddir $CINTSYSDIR -mk Makestdcxxfunc -dl stdcxxfunc.dll -H stdcxxfunc.h -cint -Z0
+make -f Makestdcxxfunc
+mv stdcxxfunc.dll ../../include/stdcxxfunc.dll
+case $1 in
+debug) ;;
+*) make -f Makestdcxxfunc clean
+   rm Makestdcxxfunc
+   ;;
+esac

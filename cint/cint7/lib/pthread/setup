@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# --builddir $CINTSYSDIR option added to makecint everywhere; D. Barna
+# CINTSYSDIR should be set to the actual build directory (done by the upmost Makefile)
+
+if [ "$CINTSYSDIR" = "" ] ; then
+  echo CINTSYSDIR should be set to the actual build directory during the compilation of cint
+  exit 1
+fi
+
+
+os=`uname -s`        # HP-UX,Linux,sunOS,FreeBSD,etc
+rev=`uname -r`       # 7.x,B.08.00,A.09.01,4.1.2,1.1.0,etc
+
+case $os in
+FreeBSD)
+  # Use following line for FreeBSD
+  makecint --builddir $CINTSYSDIR -mk Makefile -dl pthread.dll -H pthd.h -D_THREAD_SAFE -D_POSIX_C_SOURCE=199506L -l -pthread  -cint -Z0
+  ;;
+OpenBSD)
+  # Use following line for OpenBSD
+  makecint --builddir $CINTSYSDIR -mk Makefile -dl pthread.dll -H pthd.h -D_THREAD_SAFE -D_POSIX_C_SOURCE=199506L -l -pthread  -cint -Z0
+  ;;
+QNX)
+  # Use following line for QNX
+  makecint --builddir $CINTSYSDIR -mk Makefile -dl pthread.dll -H pthd.h -D_POSIX_C_SOURCE=199506L -l -cint -Z0
+  ;;
+*)
+  # Use this line for Linux, HP-UX, etc...
+  makecint --builddir $CINTSYSDIR -mk Makefile -dl pthread.dll -H pthd.h -D_POSIX_C_SOURCE=199506L -l -lpthread  -cint -Z0
+  ;;
+esac
+
+make
+mv pthread.dll ../../include/pthread.dll
+make clean
