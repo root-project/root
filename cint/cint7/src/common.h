@@ -636,7 +636,7 @@ struct G__Definetemplatefunc {
 
 #endif /* G__SHAREDLIB */
 
-#define G__MAX_SL 150
+#define G__MAX_SL 1024
 
 /*********************************************************************
 * debugging flag
