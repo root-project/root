@@ -104,7 +104,7 @@ class genreflex:
       --debug
          Print extra debug information while processing. Keep intermediate files\n
       --quiet
-         No not print informational messages\n
+         Do not print informational messages\n
       -h, --help
          Print this help\n
      """ 
@@ -286,6 +286,7 @@ class genreflex:
     return s
 #----------------------------------------------------------------------------------
   def process_files(self):
+    total_errors = 0
     total_warnings = 0
     file_extension = '_rflx.cpp'
     #----------Loop oover all the input files--------------
@@ -312,7 +313,8 @@ class genreflex:
       status = os.system(cmd)
       if status :
         print '\n--->> genreflex: ERROR: processing file with gccxml. genreflex command failed.'
-        sys.exit(1)
+        total_errors += 1
+        continue
       else: 
         if not self.quiet : print 'OK'
       gccxmlinfo = self.genGccxmlInfo()
@@ -325,6 +327,8 @@ class genreflex:
       enums     = dg.selenums(self.selector)
       variables = dg.selvariables(self.selector)
       cnames, warnings, errors = dg.generate(dicfile, classes, functions, enums, variables, gccxmlinfo )
+      if errors or (warnings and self.opts.get('fail_on_warnings', False)): os.remove(dicfile)
+      total_errors += errors
       total_warnings += warnings
     #------------Produce Seal Capabilities source file------
       if self.capabilities :
@@ -341,15 +345,18 @@ class genreflex:
           mapfile = os.path.join(self.outputDir, self.rootmap)
         if not self.rootmaplib :  self.rootmaplib = 'lib'+name+'.so'
         genrootmap.genRootMap(mapfile, name,  self.rootmaplib, cnames, classes)
+    #------------Delete intermediate files------------------
+      if 'debug' not in self.opts :
+         os.remove(xmlfile)
     #------------Report unused class selections in selection
     if self.selector : 
-      warnings += self.selector.reportUnusedClasses()
-    #------------Delete intermediate files------------------
-    if 'debug' not in self.opts :
-       os.remove(xmlfile)
+      total_warnings += self.selector.reportUnusedClasses()
+    #------------Exit with status if errors ----------------
+    if total_errors:
+      sys.exit(1)
     #------------Exit with status if warnings --------------
-    if warnings and self.opts.get('fail_on_warnings',False) : 
-      print '--->> genreflex: ERROR: Exiting with error due to %d warnings ( --fail_on_warnings enabled )' % warnings
+    if total_warnings and self.opts.get('fail_on_warnings',False) : 
+      print '--->> genreflex: ERROR: Exiting with error due to %d warnings ( --fail_on_warnings enabled )' % total_warnings
       sys.exit(1)
 #---------------------------------------------------------------------
   def which(self, name) :
