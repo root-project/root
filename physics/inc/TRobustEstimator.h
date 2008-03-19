@@ -13,6 +13,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TRobustEstimator
+#define ROOT_TRobustEstimator
+
 #include "TArrayI.h"
 #include "TMatrixDSym.h"
 #include "TMatrixDSymEigen.h"
@@ -105,4 +108,6 @@ public:
  
 };
 
+
+#endif
 
