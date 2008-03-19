@@ -289,8 +289,9 @@ TSplinePoly &TSplinePoly::operator=(TSplinePoly const &other)
 //______________________________________________________________________________
 void TSplinePoly::CopyPoly(TSplinePoly const &other)
 {
-  fX = other.fX;
-  fY = other.fY;
+   //utility called by the copy constructors and = operator
+   fX = other.fX;
+   fY = other.fY;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -316,9 +317,10 @@ TSplinePoly3 &TSplinePoly3::operator=(TSplinePoly3 const &other)
 //______________________________________________________________________________
 void TSplinePoly3::CopyPoly(TSplinePoly3 const &other)
 {
-  fB = other.fB;
-  fC = other.fC;
-  fD = other.fD;
+   //utility called by the copy constructors and = operator
+   fB = other.fB;
+   fC = other.fC;
+   fD = other.fD;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -344,11 +346,12 @@ TSplinePoly5 &TSplinePoly5::operator=(TSplinePoly5 const &other)
 //______________________________________________________________________________
 void TSplinePoly5::CopyPoly(TSplinePoly5 const &other)
 {
-  fB = other.fB;
-  fC = other.fC;
-  fD = other.fD;
-  fE = other.fE;
-  fF = other.fF;
+   //utility called by the copy constructors and = operator
+   fB = other.fB;
+   fC = other.fC;
+   fD = other.fD;
+   fE = other.fE;
+   fF = other.fF;
 }
 
 
