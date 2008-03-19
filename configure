@@ -4286,16 +4286,19 @@ if test "x$no_stubs" = "xyes" || test "x$no_stubs_test" = "xyes"; then
         gccminor="`gcc -dumpversion 2>&1 | cut -d'.' -f2`"
         gccminorOK="`echo 234 | grep ${gccminor}`"
         if test ! "x$gccmajor" = "x3" || test ! "x$gccminorOK" = "x234"; then
-            echo "WARNING: symbol-based calls are not supported with your compiler version"'!'
             no_stubs="no"
-            no_stubs_test="no"            
+            no_stubs_test="no"
+            result "$no_stubs"
+            echo "WARNING: symbol-based calls are not supported with your compiler version"'!'
+        else
+            result "$no_stubs"
         fi
     else
-        echo "WARNING: symbol-based calls are not supported on ${arch}"'!'
         no_stubs="no"
         no_stubs_test="no"
+        result "$no_stubs"
+        echo "WARNING: symbol-based calls are not supported on ${arch}"'!'
     fi
-    result "$no_stubs"
 fi
 
 
