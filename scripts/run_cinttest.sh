@@ -34,9 +34,8 @@ dir=`dirname $0`
 # and CONFIG_PLATFORM if necessary
 . $dir/run_cinttest.$host.config
 
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:.
-export PATH=${CINTSYSDIR}:${CINTSYSDIR}/test:${PATH}
-export CVS_RSH=ssh
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:.:${CINTSYSDIR}/lib
+export PATH=${CINTSYSDIR}/bin:${CINTSYSDIR}/test:${PATH}
 
 error_handling() {
     cd $CINTSYSDIR
@@ -98,7 +97,7 @@ cd `dirname $CINTSYSDIR`
 echo "Will build CINT in $host:$PWD"
 
 #cvs -z9 -q update -dAP > cvsupdate.log
-svn co http://root.cern.ch/svn/cint/trunk $CINTSYSDIR
+svn co http://root.cern.ch/svn/root/trunk/cint $CINTSYSDIR > cvsupdate.log
 result=$?
 if test $result != 0; then 
     cvsstatus=$failure
