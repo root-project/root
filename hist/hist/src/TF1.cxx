@@ -2314,7 +2314,7 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    if ( params )
       wf1.SetParameters( params );
 
-   ROOT::Math::GaussIntegratorOneDim giod;
+   ROOT::Math::GaussIntegrator giod;
    giod.SetFunction(wf1);
    giod.SetRelTolerance(epsilon);
 

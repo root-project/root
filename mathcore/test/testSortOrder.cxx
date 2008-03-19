@@ -15,7 +15,7 @@ const int maxsize = 500;
 const int increment = 10;
 const int arraysize = (maxsize-minsize)/10 + 1;
 
-#ifndef __TMATHIMP__
+#ifndef ROOT_TMath
 
 template<typename T> 
 struct CompareDesc { 

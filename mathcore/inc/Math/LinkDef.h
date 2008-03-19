@@ -60,7 +60,7 @@
 
 #pragma link C++ class ROOT::Math::Factory+;
 
-#pragma link C++ class ROOT::Math::GaussIntegratorOneDim+;
+#pragma link C++ class ROOT::Math::GaussIntegrator+;
 #pragma link C++ class ROOT::Math::GaussLegendreIntegrator+;
 #pragma link C++ class ROOT::Math::RichardsonDerivator+;
 

@@ -8,6 +8,7 @@ using namespace std;
 
 const int n = 20;
 const int maxint = 10;
+const int except = 8;
 
 template <typename T> void testBinarySearch()
 {
@@ -15,7 +16,10 @@ template <typename T> void testBinarySearch()
 
    TRandom2 r( time( 0 ) );
    for ( Int_t i = 0; i < n; i++) {
-      k[i] = (T) r.Integer( maxint ); 
+      T number = (T) r.Integer( maxint );
+      while ( number == except )
+         number = (T) r.Integer( maxint );
+      k[i] = number;
    }
 
    std::sort(k, k+n);
@@ -26,7 +30,7 @@ template <typename T> void testBinarySearch()
    cout << endl;
 
 
-   for ( T elem = 0; elem < maxint; ++elem ) {
+   for ( T elem = -1; elem <= maxint; ++elem ) {
       Long_t index = TMath::BinarySearch((Long_t) 20, k, elem);
       
       T* pind;

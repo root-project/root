@@ -30,7 +30,7 @@ void testIntegration1D() {
    val = ig3.Integral(0,1);
    std::cout << "integral result is " << val << std::endl;
 
-   //ROOT::Math::GaussIntegratorOneDim ig4;
+   //ROOT::Math::GaussIntegrator ig4;
    ROOT::Math::Integrator ig4(ROOT::Math::IntegrationOneDim::GAUSS); 
    ig4.SetFunction(wf);
    val = ig4.Integral(0,1);

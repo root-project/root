@@ -14,12 +14,10 @@
 namespace ROOT {
 namespace Math {
 
-bool GaussIntegratorOneDim::fgAbsValue = false;
+bool GaussIntegrator::fgAbsValue = false;
 
-GaussIntegratorOneDim::GaussIntegratorOneDim()
+GaussIntegrator::GaussIntegrator()
 {
-   // Default Constructor.
-
    fEpsilon = 1e-12;
    fLastResult = fLastError = 0;
    fUsedOnce = false;
@@ -27,102 +25,17 @@ GaussIntegratorOneDim::GaussIntegratorOneDim()
    fFunction = 0;
 }
 
-GaussIntegratorOneDim::~GaussIntegratorOneDim()
+GaussIntegrator::~GaussIntegrator()
 {
-   // Deletes the function if it was previously copied.
-
    if ( fFunctionCopied && fFunction != 0   )
       delete fFunction;
 }
 
-void GaussIntegratorOneDim::AbsValue(bool flag)
-{
-   // Static function: set the fgAbsValue flag.
-   // By default TF1::Integral uses the original function value to compute the integral
-   // However, TF1::Moment, CentralMoment require to compute the integral
-   // using the absolute value of the function.
-   
-   fgAbsValue = flag;
-}
+void GaussIntegrator::AbsValue(bool flag)
+{   fgAbsValue = flag;  }
 
-double GaussIntegratorOneDim::Integral(double a, double b)
+double GaussIntegrator::Integral(double a, double b)
 {
-   // Return Integral of function between a and b.
-   //
-   //   based on original CERNLIB routine DGAUSS by Sigfried Kolbig
-   //   converted to C++ by Rene Brun
-   //
-   // This function computes, to an attempted specified accuracy, the value
-   // of the integral.
-   //Begin_Latex
-   //   I = #int^{B}_{A} f(x)dx
-   //End_Latex
-   // Usage:
-   //   In any arithmetic expression, this function has the approximate value
-   //   of the integral I.
-   //   - A, B: End-points of integration interval. Note that B may be less
-   //           than A.
-   //   - params: Array of function parameters. If 0, use current parameters.
-   //   - epsilon: Accuracy parameter (see Accuracy).
-   //
-   //Method:
-   //   For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
-   //   and 16-point Gaussian quadrature approximations to
-   //Begin_Latex
-   //   I = #int^{b}_{a} f(x)dx
-   //End_Latex
-   //   and define
-   //Begin_Latex
-   //   r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
-   //End_Latex
-   //   Then,
-   //Begin_Latex
-   //   G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
-   //End_Latex
-   //   where, starting with x0 = A and finishing with xk = B,
-   //   the subdivision points xi(i=1,2,...) are given by
-   //Begin_Latex
-   //   x_{i} = x_{i-1} + #lambda(B-x_{i-1})
-   //End_Latex
-   //   Begin_Latex #lambdaEnd_Latex is equal to the first member of the
-   //   sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
-   //   If, at any stage in the process of subdivision, the ratio
-   //Begin_Latex
-   //   q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
-   //End_Latex
-   //   is so small that 1+0.005q is indistinguishable from 1 to
-   //   machine accuracy, an error exit occurs with the function value
-   //   set equal to zero.
-   //
-   // Accuracy:
-   //   Unless there is severe cancellation of positive and negative values of
-   //   f(x) over the interval [A,B], the relative error may be considered as
-   //   specifying a bound on the <I>relative</I> error of I in the case
-   //   |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
-   //   precisely, if k is the number of sub-intervals contributing to the
-   //   approximation (see Method), and if
-   //Begin_Latex
-   //   I_{abs} = #int^{B}_{A} #||{f(x)}dx
-   //End_Latex
-   //   then the relation
-   //Begin_Latex
-   //   #frac{#||{G-I}}{I_{abs}+k} < EPS
-   //End_Latex
-   //   will nearly always be true, provided the routine terminates without
-   //   printing an error message. For functions f having no singularities in
-   //   the closed interval [A,B] the accuracy will usually be much higher than
-   //   this.
-   //
-   // Error handling:
-   //   The requested accuracy cannot be obtained (see Method).
-   //   The function value is set equal to zero.
-   //
-   // Note 1:
-   //   Values of the function f(x) at the interval end-points A and B are not
-   //   required. The subprogram may therefore be used when these values are
-   //   undefined.
-   //
-
    const double kHF = 0.5;
    const double kCST = 5./1000;
 
@@ -200,48 +113,28 @@ CASE2:
 }
    
 
-void GaussIntegratorOneDim::SetRelTolerance (double eps)
+void GaussIntegrator::SetRelTolerance (double eps)
+{   fEpsilon = eps;  }
+
+void GaussIntegrator::SetAbsTolerance (double)
+{   MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "There is no Absolute Tolerance!");  }
+
+double GaussIntegrator::Result () const
 {
-   // Set the desired relative Error
-
-   fEpsilon = eps;
-}
-
-void GaussIntegratorOneDim::SetAbsTolerance (double)
-{
-   // This method is not implemented.
-
-   MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "There is no Absolute Tolerance!");
-}
-
-double GaussIntegratorOneDim::Result () const
-{
-   // Return  the Result of the last Integral calculation.
-
    if (!fUsedOnce)
       MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "You must calculate the result at least once!");
 
    return fLastResult;
 }
 
-double GaussIntegratorOneDim::Error() const
+double GaussIntegrator::Error() const
+{   return fLastError;  }
+
+int GaussIntegrator::Status() const
+{   return 0;  }
+
+void GaussIntegrator::SetFunction (const IGenFunction & function, bool copy)
 {
-   // Return the estimate of the absolute Error of the last Integral calculation.
-
-   return fLastError;
-}
-
-int GaussIntegratorOneDim::Status() const
-{
-   // This method is not implemented.
-
-   return 0;
-}
-
-void GaussIntegratorOneDim::SetFunction (const IGenFunction & function, bool copy)
-{
-   // Set integration function (flag control if function must be copied inside)
-
    if ( copy )
       fFunction = function.Clone();
    else
@@ -251,41 +144,21 @@ void GaussIntegratorOneDim::SetFunction (const IGenFunction & function, bool cop
 }
 
 
-double GaussIntegratorOneDim::Integral ()
-{
-   // This method is not implemented.
+double GaussIntegrator::Integral ()
+{   return 0.0;  }
 
-   return 0.0;
-}
+double GaussIntegrator::IntegralUp (double /*a*/)
+{   return 0.0;  }
 
-double GaussIntegratorOneDim::IntegralUp (double /*a*/)
-{
-   // This method is not implemented.
+double GaussIntegrator::IntegralLow (double /*b*/)
+{   return 0.0;  }
 
-   return 0.0;
-}
+double GaussIntegrator::Integral (const std::vector< double > &/*pts*/)
+{   return 0.0;  }
 
-double GaussIntegratorOneDim::IntegralLow (double /*b*/)
-{
-   // This method is not implemented.
+double GaussIntegrator::IntegralCauchy (double /*a*/, double /*b*/, double /*c*/)
+{   return 0.0;  }
 
-   return 0.0;
-}
-
-double GaussIntegratorOneDim::Integral (const std::vector< double > &/*pts*/)
-{
-   // This method is not implemented.
-
-   return 0.0;
-}
-
-double GaussIntegratorOneDim::IntegralCauchy (double /*a*/, double /*b*/, double /*c*/)
-{
-   // This method is not implemented.
-
-   return 0.0;
-}
-
-
-}
-}
+} // end namespace Math
+   
+} // end namespace ROOT

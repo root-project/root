@@ -20,18 +20,12 @@ namespace ROOT {
 namespace Math {
 
 
-BrentRootFinder::BrentRootFinder() : 
-      fFunction(0)
-{
-   // default constructor (no op)
-}
+BrentRootFinder::BrentRootFinder() : fFunction(0) {}
 
 BrentRootFinder::~BrentRootFinder() {}
 
 int BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
 {
-   // Set function to solve and the interval in where to look for the root
-
    fFunction = &f;
 
    if (xlow >= xup) 
@@ -47,29 +41,13 @@ int BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow,
 }
 
 const char* BrentRootFinder::Name() const
-{
-   // Return name of root finder algorithm
-
-   return "BrentRootFinder";
-}
+{   return "BrentRootFinder";  }
 
 double BrentRootFinder::Root() const
-{
-   // return root value. Need to call first Solve()
-   return fRoot;
-}
+{   return fRoot;  }
 
-int BrentRootFinder::Solve(int, double, double /*double xmin, double xmax*/)
+int BrentRootFinder::Solve(int, double /*absTol*/, double /*relTol*/)
 {
-   // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
-   // Method:
-   //  First, the grid search is used to bracket the maximum
-   //  with the step size = (xmax-xmin)/fNpx. This way, the step size
-   //  can be controlled via the SetNpx() function. If the function is
-   //  unimodal or if its extrema are far apart, setting the fNpx to
-   //  a small value speeds the algorithm up many times.
-   //  Then, Brent's method is applied on the bracketed interval
-
    double fy = 0; // To find the root
 
    double xmin = fXMin;
@@ -94,5 +72,5 @@ int BrentRootFinder::Solve(int, double, double /*double xmin, double xmax*/)
    return 1;
 }
 
-}
-}
+} // namespace Math
+} // namespace ROOT

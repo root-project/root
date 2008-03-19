@@ -37,6 +37,14 @@
 namespace ROOT { 
 namespace Math { 
 
+//___________________________________________________________________________________________
+/**
+   Interface for performing function minimization in one dimension.
+
+   @ingroup Minimization
+  
+ */
+
    class IMinimizer1D {
       
    public: 

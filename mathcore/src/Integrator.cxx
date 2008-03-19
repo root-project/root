@@ -61,7 +61,7 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
    // create the concrete class for one-dimensional integration. Use the plug-in manager if needed 
 
    if (type == IntegrationOneDim::GAUSS)
-      return new GaussIntegratorOneDim();
+      return new GaussIntegrator();
 
    VirtualIntegratorOneDim * ig = 0; 
 

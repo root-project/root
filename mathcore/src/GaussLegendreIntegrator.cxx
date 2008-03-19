@@ -17,8 +17,6 @@ namespace Math {
 
 GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps)
 {
-   // Basic contructor of GaussLegendreIntegrator.
-
    fEpsilon = eps;
    fNum = num;
    fX = 0;
@@ -33,7 +31,6 @@ GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps)
 
 GaussLegendreIntegrator::~GaussLegendreIntegrator()
 {
-   // destructor
    if ( fFunction != 0 && fFunctionCopied )
       delete fFunction;
 
@@ -43,20 +40,12 @@ GaussLegendreIntegrator::~GaussLegendreIntegrator()
 
 void GaussLegendreIntegrator::SetNumberPoints(int num)
 {
-   // Set the number of points used in the calculation of the
-   // integral
    fNum = num;
    CalcGaussLegendreSamplingPoints();
 }
 
 void GaussLegendreIntegrator::GetWeightVectors(double *x, double *w)
 {
-   // Returns the arrays x and w containing the abscissa and weight of
-   // the Gauss-Legendre n-point quadrature formula.
-   //
-   // Gauss-Legendre: W(x)=1 -1<x<1 
-   //                 (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
-
    memcpy(x, fX, fNum);
    memcpy(w, fW, fNum);
 }
@@ -64,8 +53,6 @@ void GaussLegendreIntegrator::GetWeightVectors(double *x, double *w)
 
 double GaussLegendreIntegrator::Integral(double a, double b)
 {
-   // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
-
    if (fNum<=0 || fX == 0 || fW == 0)
       return 0;
 
@@ -88,23 +75,15 @@ double GaussLegendreIntegrator::Integral(double a, double b)
 
 void GaussLegendreIntegrator::SetRelTolerance (double eps)
 {
-   // Set the desired relative Error
-
    fEpsilon = eps;
    CalcGaussLegendreSamplingPoints();
 }
 
 void GaussLegendreIntegrator::SetAbsTolerance (double)
-{
-   // Absolute Tolerance is not used in this class.
-
-   MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "There is no Absolute Tolerance!");
-}
+{ MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "There is no Absolute Tolerance!"); }
 
 double GaussLegendreIntegrator::Result () const
 {
-   // Returns the result of the last Integral calculation
-
    if (!fUsedOnce)
       MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "You must calculate the result at least once!");
 
@@ -112,26 +91,16 @@ double GaussLegendreIntegrator::Result () const
 }
 
 double GaussLegendreIntegrator::Error() const
-{
-   // This method is not implemented.
-
-   return fLastError;
-   // TODO
-}
+{ return fLastError; }
 
 int GaussLegendreIntegrator::Status() const
 {
-   // This method is not implemented.
-
    return 0;
    // TODO
 }
 
 void GaussLegendreIntegrator::SetFunction (const IGenFunction & function, bool copy)
 {
-   // Set integration function (flag control if function must be
-   // copied inside)
-
    if ( copy )
       fFunction = function.Clone();
    else
@@ -142,54 +111,22 @@ void GaussLegendreIntegrator::SetFunction (const IGenFunction & function, bool c
 
 
 double GaussLegendreIntegrator::Integral ()
-{
-   // This method is not implemented.
-   return 0.0;
-}
+{ return 0.0; }
 
 double GaussLegendreIntegrator::IntegralUp (double /*a*/)
-{
-   // This method is not implemented.
-   return 0.0;
-}
+{ return 0.0; }
 
 double GaussLegendreIntegrator::IntegralLow (double /*b*/)
-{
-   // This method is not implemented.
-   return 0.0;
-}
+{ return 0.0; }
 
 double GaussLegendreIntegrator::Integral (const std::vector< double > &/*pts*/)
-{
-   // This method is not implemented.
-   return 0.0;
-}
+{ return 0.0; }
 
 double GaussLegendreIntegrator::IntegralCauchy (double /*a*/, double /*b*/, double /*c*/)
-{
-   // This method is not implemented.
-   return 0.0;
-}
+{ return 0.0; }
 
 void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
 {
-   // Type: unsafe but fast interface filling the arrays x and w (static method)
-   //
-   // Given the number of sampling points this routine fills the arrays x and w
-   // of length num, containing the abscissa and weight of the Gauss-Legendre
-   // n-point quadrature formula.
-   //
-   // Gauss-Legendre: W(x)=1  -1<x<1
-   //                 (j+1)P_{j+1} = (2j+1)xP_j-jP_{j-1}
-   //
-   // num is the number of sampling points (>0)
-   // x and w are arrays of size num
-   // eps is the relative precision
-   //
-   // If num<=0 or eps<=0 no action is done.
-   //
-   // Reference: Numerical Recipes in C, Second Edition
-
    if (fNum<=0 || fEpsilon<=0)
       return;
 
@@ -244,6 +181,6 @@ void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
    }
 }
 
-
-}
-}
+} // end namespace Math
+   
+} // end namespace ROOT

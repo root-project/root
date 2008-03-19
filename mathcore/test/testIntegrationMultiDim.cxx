@@ -33,6 +33,8 @@
 
 const int n = 3; //default dimensionality
 
+bool showGraphics = true;
+
 Double_t Sum( const double* x, const double *p)
 {
   double sum = 0.;
@@ -183,9 +185,33 @@ void performance()
 
 int main(int argc, char **argv)
 {
-  TApplication theApp("App",&argc,argv);
-  performance();
-  //  char ch;
-  //std::cin >>ch;
-  theApp.Run();
+   if ( argc > 1 && argc != 2 )
+   {
+      std::cerr << "Usage: " << argv[0] << " [-ng]\n";
+      std::cerr << "  where:\n";
+      std::cerr << "     -ng : no graphics mode";
+      std::cerr << std::endl;
+      exit(1);
+   }
+
+   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
+   {
+      std::cout << "No graphics mode!" << std::endl;
+      showGraphics = false;
+   }
+
+   TApplication* theApp = 0;
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
+   performance();
+   
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
+
+   return 0;
 }
