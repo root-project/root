@@ -6763,19 +6763,18 @@ extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMeth
    /* parse parameter setup information */
    builder.ParseParameterLink(paras);
 
-   builder.Build(funcname);
+   Reflex::Member newfunc = builder.Build(funcname);
 
-#if 0 // FIXME 
-     /* Stub Pointer Adjustement */
-  G__p_ifunc->entry[G__func_now].ptradjust = 0;
+   /* Stub Pointer Adjustement */
+   builder.prop.entry.ptradjust = 0;
    
-  // Stub Pointer initialisation.
-  // If funcp parameter is null. It means that the stub is in a base class.
-  // We have to look for the stub pointer in the base classes.
-  if (!funcp&&(G__p_ifunc->isvirtual[G__func_now])&&(G__p_ifunc->access[G__func_now]==G__PUBLIC)){
+   // Stub Pointer initialisation.
+   // If funcp parameter is null. It means that the stub is in a base class.
+   // We have to look for the stub pointer in the base classes.
+   if (!funcp && (builder.isvirtual)&&(builder.access==G__PUBLIC)){
 
      // tagnum's Base Classes structure
-     G__inheritance* cbases = G__struct.baseclass[G__p_ifunc->tagnum];
+     G__inheritance* cbases = G__struct.baseclass[G__get_tagnum(G__p_ifunc)];
      
      // If there's any base class
      if (cbases){
@@ -6790,11 +6789,11 @@ extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMeth
         for (int idx=0; (idx < cbases->basen)&&(!basefuncp); ++idx){
 
            // Current tagnum
-           int basetagnum = cbases->herit[idx]->basetagnum;
+           int basetagnum = cbases->basetagnum[idx];
 
            // Warning: Global G__p_ifunc is modified in G__incsetup_memfunc
            // We save and later we restore the G__p_ifunc's value
-           G__ifunc_table_internal* store_ifunc = G__p_ifunc;
+	   Reflex::Scope store_ifunc = G__p_ifunc;
 
            // We force memfunc_setup for the base classes
            G__incsetup_memfunc(basetagnum);
@@ -6802,37 +6801,38 @@ extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMeth
            // Restore G__p_ifunc
            G__p_ifunc = store_ifunc;
 
-           // Current Base Class ifunc table
-           G__ifunc_table_internal* ifunct = G__struct.memfunc[basetagnum];
+	   Reflex::Type base( G__Dict::GetDict().GetType(basetagnum) );
 
            // Look for the method in the base class
-           G__ifunc_table_internal* found = G__ifunc_exist(G__p_ifunc, G__func_now, ifunct, &base, 0xffff); 
+	   // FIXME: Should we be looking in ALL bases classes instead of just one level?
+           ::Reflex::Member found = G__ifunc_exist(newfunc, base, true); // FIXME: Should we really match the return type?
 
            // Method found
-           if((base!=-1)&&found){
+           if(found) {
 
-              // Method's stub pointer
-              basefuncp = found->entry[base].p;
+	      // Method's stub pointer
+	      G__RflxFuncProperties* found_prop = G__get_funcproperties(found);
+	      G__RflxFuncProperties* newfunc_prop = G__get_funcproperties(newfunc);
+
+	      basefuncp = found_prop->entry.p;
 
               G__value ptr;
+	      G__value_typenum(ptr) = Reflex::Type(newfunc.DeclaringScope());
 
-              ptr.tagnum = G__p_ifunc->tagnum;
-              ptr.type = 'C';
-              ptr.typenum = -1;
-              ptr.obj.i = 0;
-
-              ptr = G__castvalue_bc(G__fulltagname(found->tagnum, 0),ptr, 0);
+              ptr = G__castvalue((char*)found.DeclaringScope().Name(Reflex::SCOPED).c_str(), ptr);
 	   
               // Pointer Adjustement
-              G__p_ifunc->entry[G__func_now].ptradjust = found->entry[base].ptradjust + ptr.obj.i;
+              newfunc_prop->entry.ptradjust = found_prop->entry.ptradjust + ptr.obj.i;
 
               // Method's stub pointer found.
               // We update the current method stub pointer
-              G__p_ifunc->entry[G__func_now].p= (void *) basefuncp;
+              newfunc_prop->entry.p= (void *) basefuncp;
 
-               if(truep2f)    
-                  G__p_ifunc->entry[G__func_now].tp2f=truep2f;
-               else G__p_ifunc->entry[G__func_now].tp2f=(void*) basefuncp;
+	      if(truep2f) {
+		 newfunc_prop->entry.tp2f=truep2f;
+              } else {
+		 newfunc_prop->entry.tp2f=(void*) basefuncp;
+	      }
 
            }
 
@@ -6841,7 +6841,8 @@ extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMeth
      }
      
   }
-#endif // FIXME
+
+
    return(0);
 }
 
