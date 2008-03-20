@@ -20,7 +20,7 @@
 #  define GCC_HASCLASSVISIBILITY
 #endif
 
-#if !defined(REFLEX_DLL_VETO) && !defined(REFLEX_DLL)
+#if !defined(REFLEX_DLL_VETO) && !defined(REFLEX_DLL) && !defined(__CINT__)
 // we build Reflex as DLL by default, #define REFLEX_DLL_VETO to hide visibility / dllim/export code
 #  define REFLEX_DLL
 #endif
@@ -48,7 +48,7 @@
 #  ifdef REFLEX_BUILD
 #    define RFLX_API RFLX_EXPORT
 #  else
-#    define RFLX_API  RFLX_IMPORT
+#    define RFLX_API RFLX_IMPORT
 #  endif // REFLEX_BUILD
 #else
 #  define RFLX_API
