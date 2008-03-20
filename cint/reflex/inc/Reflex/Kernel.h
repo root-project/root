@@ -20,7 +20,12 @@
 #  define GCC_HASCLASSVISIBILITY
 #endif
 
-#ifdef WIN32
+#if !defined(REFLEX_DLL_VETO) && !defined(REFLEX_DLL)
+// we build Reflex as DLL by default, #define REFLEX_DLL_VETO to hide visibility / dllim/export code
+#  define REFLEX_DLL
+#endif
+
+#ifdef _WIN32
 #  define RFLX_IMPORT __declspec(dllimport)
 #  define RFLX_EXPORT __declspec(dllexport)
 #  define RFLX_DLLLOCAL
@@ -50,7 +55,7 @@
 #endif // REFLEX_DLL
 
 // Throwable classes must always be visible on GCC in all binaries
-#ifdef WIN32
+#ifdef _WIN32
 #  define RFLX_EXCEPTIONAPI(api) api
 #elif defined(GCC_HASCLASSVISIBILITY)
 #  define RFLX_EXCEPTIONAPI(api) RFLX_EXPORT

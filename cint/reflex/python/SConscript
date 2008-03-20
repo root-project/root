@@ -29,7 +29,7 @@ def build_genreflex_exe(target, source, env):
   f = open(target[0].get_abspath(),'w')
   if platform == 'win32' :
     f.write('@echo off\n')
-    f.write('python %s\lib\python\genreflex\genreflex.py \%*\n' % env['prefix'])
+    f.write('python %s\lib\python\genreflex\genreflex.py %%*\n' % env['prefix'])
   else :
     f.write('#!/bin/sh\n')
     f.write('eval "python %s/lib/python/genreflex/genreflex.py $*"\n' % env['prefix'])
@@ -55,7 +55,9 @@ py_files = []
 for root,d,f in walk('.') : py_files += glob(root+sep+'*.py')
 
 # remove not necessary files from the list
-py_files.remove('./genreflex/genreflex-rootcint.py')
+for f in py_files:
+  if f.find('genreflex-rootcint.py') >= 0 : py_files.remove(f)
+  if f.find('06.py')                 >= 0 : py_files.remove(f)
 
 # install all python files found 
 map( lambda x: env.Install(dest_dir+sep+dirname(x), x), py_files)
