@@ -41,7 +41,7 @@ class TFile;
 R__EXTERN TDirectory *gDirectory;
 
 class TDirectory : public TNamed {
-public: 
+public:
    /** @class Context
      *
      *  Small helper to keep current directory context.
@@ -85,14 +85,14 @@ public:
    };
 
 protected:
-   
+
    TObject      *fMother;          //pointer to mother of the directory
    TList        *fList;            //List of objects in memory
    TUUID         fUUID;            //Unique identifier
-   TString       fPathBuffer;      //!Buffer for GetPath() function   
+   TString       fPathBuffer;      //!Buffer for GetPath() function
    TContext     *fContext;         //!Pointer to a list of TContext object pointing to this TDirectory
    static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
-   
+
           Bool_t  cd1(const char *path);
    static Bool_t  Cd1(const char *path);
 
@@ -174,7 +174,7 @@ public:
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        rmdir(const char *name);
    virtual void        Save() {}
-   virtual Int_t       SaveObjectAs(const TObject * /*obj*/, const char * /*filename*/="", Option_t * /*option*/="");
+   virtual Int_t       SaveObjectAs(const TObject * /*obj*/, const char * /*filename*/="", Option_t * /*option*/="") const;
    virtual void        SaveSelf(Bool_t /*force*/ = kFALSE) {}
    virtual void        SetBufferSize(Int_t /* bufsize */) {}
    virtual void        SetModified() {}
@@ -204,4 +204,3 @@ public:
 };
 
 #endif
-

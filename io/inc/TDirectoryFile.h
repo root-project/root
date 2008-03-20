@@ -108,7 +108,7 @@ public:
    virtual void        rmdir(const char *name);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
-   virtual Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="");
+   virtual Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="") const;
    virtual void        SetBufferSize(Int_t bufsize);
    void                SetModified() {fModified = kTRUE;}
    void                SetSeekDir(Long64_t v) { fSeekDir = v; }
@@ -127,4 +127,3 @@ public:
 };
 
 #endif
-

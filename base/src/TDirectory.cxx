@@ -939,7 +939,7 @@ void TDirectory::rmdir(const char *name)
 }
 
 //______________________________________________________________________________
-Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option)
+Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
 {
    // Save object in filename,
    // if filename is 0 or "", a file with "objectname.root" is created.
