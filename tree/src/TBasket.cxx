@@ -265,8 +265,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // The function returns 0 in case of success, 1 in case of error
 
    Int_t badread= 0;
-   TDirectory::TContext ctxt(0);
-   fBranch->GetDirectory()->cd();
 
    if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
 

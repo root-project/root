@@ -3684,8 +3684,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
          motherFileName = mother->GetFileName();
       }
       if ((fFileName.Length() > 0) && strcmp(motherFileName, fFileName.Data())) {
-         TDirectory::TContext ctxt(dirsav);
-         Write();
+         dirsav->WriteTObject(this);
       }
       fDirectory = dirsav;
    }

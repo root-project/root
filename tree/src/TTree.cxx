@@ -877,14 +877,13 @@ Long64_t TTree::AutoSave(Option_t* option)
    TString opt = option;
    opt.ToLower();
    fSavedBytes = fTotBytes;
-   TDirectory *dirsav = gDirectory;
-   fDirectory->cd();
+
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
    Long64_t nbytes;
    if (opt.Contains("overwrite")) {
-      nbytes = Write("",TObject::kOverwrite);
+      nbytes = fDirectory->WriteTObject(this,"","",TObject::kOverwrite);
    } else {
-      nbytes = Write(); //nbytes will be 0 if Write failed (disk space exceeded)
+      nbytes = fDirectory->WriteTObject(this); //nbytes will be 0 if Write failed (disk space exceeded)
       if (nbytes && key) {
          key->Delete();
          delete key;
@@ -896,7 +895,6 @@ Long64_t TTree::AutoSave(Option_t* option)
 
    if (opt.Contains("saveself")) fDirectory->SaveSelf();
 
-   dirsav->cd();
    return nbytes;
 }
 
@@ -6041,7 +6039,7 @@ void TTree::Streamer(TBuffer& b)
             fEstimate = 1000000;
          }
          fSavedBytes = fTotBytes;
-         gDirectory->Append(this);
+         fDirectory->Append(this);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -6064,7 +6062,7 @@ void TTree::Streamer(TBuffer& b)
       fLeaves.Streamer(b);
       fSavedBytes = fTotBytes;
       fDirectory = gDirectory;
-      gDirectory->Append(this);
+      fDirectory->Append(this);
       if (R__v > 1) fIndexValues.Streamer(b);
       if (R__v > 2) fIndex.Streamer(b);
       if (R__v > 3) {

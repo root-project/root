@@ -193,9 +193,9 @@ TFile *TFriendElement::GetFile()
 
    if (fFile || IsZombie()) return fFile;
 
-   TDirectory::TContext ctxt(gDirectory, 0);
 
    if (strlen(GetTitle())) {
+      TDirectory::TContext ctxt(gDirectory, 0);
       fFile = TFile::Open(GetTitle());
       fOwnFile = kTRUE;
    } else {

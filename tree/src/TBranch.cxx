@@ -929,7 +929,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    if (basket) return basket;
 
      // create/decode basket parameters from buffer
-   TDirectory::TContext ctxt(0);
    TFile *file = GetFile(0);
    basket = new TBasket(file);
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
@@ -1188,8 +1187,11 @@ TFile* TBranch::GetFile(Int_t mode)
    delete [] bname;
 
    // Open file (new file if mode = 1)
-   if (mode) file = TFile::Open(bFileName, "recreate");
-   else      file = TFile::Open(bFileName);
+   { 
+      TDirectory::TContext ctxt(0);
+      if (mode) file = TFile::Open(bFileName, "recreate");
+      else      file = TFile::Open(bFileName);
+   }
    if (!file) return 0;
    if (file->IsZombie()) {delete file; return 0;}
    fDirectory = (TDirectory*)file;

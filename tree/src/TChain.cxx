@@ -383,7 +383,6 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //      }
    
 
-   TDirectory::TContext ctxt(0);
    const char *treename = GetName();
    if (tname && strlen(tname) > 0) treename = tname;
    char *dot = (char*)strstr(name,".root");
@@ -421,7 +420,11 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    // Open the file to get the number of entries.
    Int_t pksize = 0;
    if (nentries <= 0) {
-      TFile* file = TFile::Open(filename);
+      TFile* file;
+      {
+         TDirectory::TContext ctxt(0);
+         file = TFile::Open(filename);
+      }
       if (!file || file->IsZombie()) {
          delete file;
          file = 0;
@@ -1266,8 +1269,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
       }
    }
 
-   TDirectory::TContext ctxt(0);
-
    TChainElement* element = (TChainElement*) fFiles->At(treenum);
    if (!element) {
       if (treeReadEntry) {
@@ -1282,7 +1283,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // FIXME: We leak memory here, we've just lost the open file
    //        if we did not delete it above.
-   fFile = TFile::Open(element->GetTitle());
+   {
+      TDirectory::TContext ctxt(0);
+      fFile = TFile::Open(element->GetTitle());
+   }
 
    // ----- Begin of modifications by MvL
    Int_t returnCode = 0;
@@ -1490,7 +1494,10 @@ void TChain::Lookup(Bool_t force)
       TString eurl(elemurl.GetUrl());
       if (!stg || !stg->Matches(eurl)) {
          SafeDelete(stg);
-         stg = TFileStager::Open(eurl);
+         {
+            TDirectory::TContext ctxt(0);
+            stg = TFileStager::Open(eurl);
+         }
          if (!stg) {
             Error("Lookup", "TFileStager instance cannot be instantiated");
             break;
@@ -1606,7 +1613,7 @@ Long64_t TChain::Merge(const char* name, Option_t* option)
    //      ch.Merge(file);
    //
 
-   TFile* file = TFile::Open(name, "recreate", "chain files", 1);
+   TFile *file = TFile::Open(name, "recreate", "chain files", 1);
    return Merge(file, 0, option);
 }
 
