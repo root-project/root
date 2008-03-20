@@ -162,6 +162,4 @@
 
 #pragma link C++ class TVirtualFFT;
 
-#pragma link C++ namespace TMath;
-
 #endif
