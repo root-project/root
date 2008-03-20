@@ -28,7 +28,7 @@ void TPySelector::SetupPySelf()
    if ( fPySelf && fPySelf != Py_None )
       return;                      // already created ...
 
-   TString impst = TString::Format( "import %s", (const char*)GetOption() );
+   TString impst = TString::Format( "import %s", GetOption() );
 
 // use TPython to ensure that the interpreter is initialized
    if ( ! TPython::Exec( (const char*)impst ) ) {
@@ -42,7 +42,7 @@ void TPySelector::SetupPySelf()
       const_cast< char* >( "TPySelector" ) );
 
 // get handle to the module
-   PyObject* pymod = PyImport_AddModule( const_cast< char* >( (const char*)GetOption() ) );
+   PyObject* pymod = PyImport_AddModule( const_cast< char* >( GetOption() ) );
 
 // get the module dictionary to loop over
    PyObject* dict = PyModule_GetDict( pymod );
