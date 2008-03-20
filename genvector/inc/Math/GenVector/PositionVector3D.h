@@ -182,23 +182,24 @@ namespace ROOT {
       /**
          Set internal data based on a C-style array of 3 Scalar numbers
        */
-      void SetCoordinates( const Scalar src[] )
-                            { fCoordinates.SetCoordinates(src);  }
+      PositionVector3D<CoordSystem, Tag>& SetCoordinates( const Scalar src[] )
+       { fCoordinates.SetCoordinates(src); return *this;  }
 
       /**
          Set internal data based on 3 Scalar numbers
        */
-      void SetCoordinates( Scalar a, Scalar b, Scalar c )
-                            { fCoordinates.SetCoordinates(a, b, c);  }
+      PositionVector3D<CoordSystem, Tag>& SetCoordinates( Scalar a, Scalar b, Scalar c )
+       { fCoordinates.SetCoordinates(a, b, c); return *this; }
 
       /**
          Set internal data based on 3 Scalars at *begin to *end
        */
       template <class IT>
-      void SetCoordinates( IT begin, IT end ) 
+      PositionVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT end ) 
       { IT a = begin; IT b = ++begin; IT c = ++begin;
         assert (++begin==end);
         SetCoordinates (*a,*b,*c);
+        return *this;
       }
 
       /**
@@ -240,8 +241,9 @@ namespace ROOT {
          (if the vector is held in polar or cylindrical eta coordinates,
          then (x, y, z) are converted to that form)
        */
-      void SetXYZ (Scalar x, Scalar y, Scalar z) {
+      PositionVector3D<CoordSystem, Tag>& SetXYZ (Scalar x, Scalar y, Scalar z) {
             fCoordinates.SetXYZ(x,y,z);
+            return *this;
       }
 
       // ------------------- Equality -----------------
@@ -318,42 +320,42 @@ namespace ROOT {
       /**
          Change X - Cartesian3D coordinates only
       */
-      void SetX (Scalar x) { fCoordinates.SetX(x); }
+       PositionVector3D<CoordSystem, Tag>& SetX (Scalar x) { fCoordinates.SetX(x); return *this;}
 
       /**
          Change Y - Cartesian3D coordinates only
       */
-      void SetY (Scalar y) { fCoordinates.SetY(y); }
+       PositionVector3D<CoordSystem, Tag>& SetY (Scalar y) { fCoordinates.SetY(y); return *this;}
 
       /**
          Change Z - Cartesian3D coordinates only
       */
-      void SetZ (Scalar z) { fCoordinates.SetZ(z); }
+       PositionVector3D<CoordSystem, Tag>& SetZ (Scalar z) { fCoordinates.SetZ(z); return *this;}
 
       /**
          Change R - Polar3D coordinates only
       */
-      void SetR (Scalar r) { fCoordinates.SetR(r); }
+       PositionVector3D<CoordSystem, Tag>& SetR (Scalar r) { fCoordinates.SetR(r); return *this;}
 
       /**
          Change Theta - Polar3D coordinates only
       */
-      void SetTheta (Scalar theta) { fCoordinates.SetTheta(theta); }
+       PositionVector3D<CoordSystem, Tag>& SetTheta (Scalar theta) { fCoordinates.SetTheta(theta); return *this;}
 
       /**
          Change Phi - Polar3D or CylindricalEta3D coordinates
       */
-      void SetPhi (Scalar phi) { fCoordinates.SetPhi(phi); }
+       PositionVector3D<CoordSystem, Tag>& SetPhi (Scalar phi) { fCoordinates.SetPhi(phi); return *this;}
 
       /**
          Change Rho - CylindricalEta3D coordinates only
       */
-      void SetRho (Scalar rho) { fCoordinates.SetRho(rho); }
+       PositionVector3D<CoordSystem, Tag>& SetRho (Scalar rho) { fCoordinates.SetRho(rho); return *this;}
 
       /**
          Change Eta - CylindricalEta3D coordinates only
       */
-      void SetEta (Scalar eta) { fCoordinates.SetEta(eta); }
+       PositionVector3D<CoordSystem, Tag>& SetEta (Scalar eta) { fCoordinates.SetEta(eta); return *this;}
 
       // ------ Operations combining two vectors ------
       // need to specialize to exclude those with a different tags 
