@@ -37,10 +37,12 @@ void TPySelector::SetupPySelf()
    }
 
 // get the TPySelector python class
-   PyObject* tpysel = PyObject_GetAttrString( PyImport_AddModule( "libPyROOT" ), "TPySelector" );
+   PyObject* tpysel = PyObject_GetAttrString(
+      PyImport_AddModule( const_cast< char* >( "libPyROOT" ) ),
+      const_cast< char* >( "TPySelector" ) );
 
 // get handle to the module
-   PyObject* pymod = PyImport_AddModule( (const char*)GetOption() );
+   PyObject* pymod = PyImport_AddModule( const_cast< char* >( (const char*)GetOption() ) );
 
 // get the module dictionary to loop over
    PyObject* dict = PyModule_GetDict( pymod );
@@ -102,7 +104,8 @@ void TPySelector::CallSelf( const char* method )
    if ( ! fPySelf || fPySelf == Py_None )
       return;
 
-   PyObject* result = PyObject_CallMethod( fPySelf, (char*)method, (char*)"" );
+   PyObject* result = PyObject_CallMethod(
+      fPySelf, const_cast< char* >( method ), const_cast< char* >( "" ) );
    if ( ! result )
       Abort( 0 );
 
@@ -181,10 +184,12 @@ void TPySelector::SlaveBegin( TTree* tree )
    PyObject* result = 0;
    if ( tree ) {
       PyObject* pyobject = PyROOT::BindRootObject( (void*)tree, tree->IsA() );
-      result = PyObject_CallMethod( fPySelf, (char*)"SlaveBegin", (char*)"O", pyobject );
+      result = PyObject_CallMethod( fPySelf,
+         const_cast< char* >( "SlaveBegin" ), const_cast< char* >( "O" ), pyobject );
       Py_DECREF( pyobject );
    } else {
-      result = PyObject_CallMethod( fPySelf, (char*)"SlaveBegin", (char*)"O", Py_None );
+      result = PyObject_CallMethod( fPySelf,
+         const_cast< char* >( "SlaveBegin" ), const_cast< char* >( "O" ), Py_None );
    }
 
    if ( ! result )
@@ -206,7 +211,8 @@ Bool_t TPySelector::Process( Long64_t entry )
       return kFALSE;
    }
 
-   PyObject* result = PyObject_CallMethod( fPySelf, (char*)"Process", (char*)"L", entry );
+   PyObject* result = PyObject_CallMethod( fPySelf,
+      const_cast< char* >( "Process" ), const_cast< char* >( "L" ), entry );
    if ( ! result ) {
       Abort( 0 );
       return kFALSE;
