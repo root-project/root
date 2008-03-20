@@ -881,7 +881,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       // See similar adjustments in ReadObj
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
-      if (cl == TDirectoryFile::Class()) {
+      if (cl->InheritsFrom(TDirectoryFile::Class())) {
          TDirectory *dir = dynamic_cast<TDirectoryFile*>(tobj);
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
