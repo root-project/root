@@ -32,7 +32,7 @@ namespace Reflex {
    class RFLX_API PropertyList {
 
       friend class OwnedPropertyList;
-      friend std::ostream & operator << ( std::ostream & s,
+      friend RFLX_API std::ostream & operator << ( std::ostream & s,
          const PropertyList & p );
 
    public:
@@ -296,7 +296,7 @@ namespace Reflex {
    * @param s the reference to the stream
    * @return the stream
    */
-   std::ostream & operator << ( std::ostream & s,
+   RFLX_API std::ostream & operator << ( std::ostream & s,
       const PropertyList & p );
 
 } //namespace Reflex

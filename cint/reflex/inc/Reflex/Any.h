@@ -34,7 +34,7 @@ namespace Reflex {
    */
    class RFLX_API Any {
 
-      friend std::ostream& operator << ( std::ostream&, 
+      friend RFLX_API std::ostream& operator << ( std::ostream&, 
          const Any& );
 
    public: 
@@ -211,7 +211,7 @@ namespace Reflex {
    }
 
    /** stream operator */
-   std::ostream& operator << ( std::ostream&, 
+   RFLX_API std::ostream& operator << ( std::ostream&, 
       const Any& );
 
 } // namespace Reflex

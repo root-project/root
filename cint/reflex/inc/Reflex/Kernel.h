@@ -199,7 +199,7 @@ namespace Reflex {
       RFLX_API const Member & Member();
       RFLX_API const MemberTemplate & MemberTemplate();
       RFLX_API const Scope & Scope();
-      template< class T > RFLX_API const T & Get() {
+      template< class T > inline const T & Get() {
          static T t;
          return t;
       }
@@ -222,7 +222,7 @@ namespace Reflex {
    }; // struct Reflex
 
    /** the Name of the package - used for messages */
-   const std::string & Argv0(); // returns "Reflex";
+   RFLX_API const std::string & Argv0(); // returns "Reflex";
 
    // these defines are used for the modifiers they are used in the following
    // classes
