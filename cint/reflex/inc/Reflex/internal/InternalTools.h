@@ -25,22 +25,26 @@ namespace Reflex {
 
          template < typename CONT > 
          static typename std::vector<TO>::iterator Begin( const CONT & cont ) {
-            return reinterpret_cast<typename std::vector<TO>::iterator &>(const_cast<CONT &>(cont).begin());
+            if ( ! cont.size()) return End<CONT>(cont);
+            else                return typename std::vector<TO>::iterator((TO*)&cont[0]);
          }
 
          template < typename CONT >
          static typename std::vector<TO>::iterator End( const CONT & cont ) {
-            return reinterpret_cast<typename std::vector<TO>::iterator &>(const_cast<CONT &>(cont).end());
+            typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]);
+            return it++;
          }
 
          template < typename CONT > 
          static typename std::vector<TO>::const_reverse_iterator RBegin( const CONT & cont ) {
-            return reinterpret_cast<typename std::vector<TO>::const_reverse_iterator &>(cont.rbegin());
+            if ( ! cont.size()) return REnd<CONT>(cont);
+            else                return typename std::vector<TO>::const_reverse_iterator(typename std::vector<TO>::iterator((TO*)&cont[cont.size()-1]));
          }
 
          template < typename CONT >
          static typename std::vector<TO>::const_reverse_iterator REnd( const CONT & cont ) {
-            return reinterpret_cast<typename std::vector<TO>::const_reverse_iterator &>(cont.rend());
+            typename std::vector<TO>::iterator it = typename std::vector<TO>::iterator((TO*)&cont[0]);
+            return typename std::vector<TO>::const_reverse_iterator(it--);
          }
 
       };
