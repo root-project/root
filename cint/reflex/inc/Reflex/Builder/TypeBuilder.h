@@ -19,9 +19,9 @@
 #include <vector>
 
 #if defined(__ICC)
-#define OffsetOf(c1,mem) (int(&(((c1*)0)->mem)))
+#define OffsetOf(c1,mem) (int(&((char&)(((c1*)0)->mem))))
 #else
-#define OffsetOf(c1,mem) ((size_t)(&((c1*)64)->mem)-64)
+#define OffsetOf(c1,mem) ((size_t)(&((char&)(((c1*)64)->mem))-64))
 #endif
 
 namespace Reflex{
@@ -338,7 +338,7 @@ namespace Reflex{
    */
    template < typename C, typename M >
    size_t offsetOf( M C::* member )  {
-      return (size_t) & (((C*)0)->*member); 
+      return (size_t) &((char&)(((C*)0)->*member));
    }
 
 
