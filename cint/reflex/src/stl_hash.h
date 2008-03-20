@@ -124,7 +124,7 @@ namespace std {
 
 #endif // __GNUC__
 
-#if (__INTEL_COMPILER<=800)
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER<=800)
 
 namespace __gnu_cxx {
 
