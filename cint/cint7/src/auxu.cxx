@@ -21,30 +21,6 @@ using namespace Cint::Internal;
 // Static functions.
 // None.
 
-// External functions.
-int Cint::Internal::G__readsimpleline(FILE* fp, char* line);
-#ifndef G__SMALLOBJECT
-int Cint::Internal::G__cmparray(short array1[], short array2[], int num, short mask);
-void Cint::Internal::G__setarray(short array[], int num, short mask, char* mode);
-int Cint::Internal::G__graph(double* xdata, double* ydata, int ndata, char* title, int mode);
-#ifndef G__NSTOREOBJECT
-int Cint::Internal::G__storeobject(G__value* buf1, G__value* buf2);
-int Cint::Internal::G__scanobject(G__value* buf);
-int Cint::Internal::G__dumpobject(char* file, void* buf, int size);
-int Cint::Internal::G__loadobject(char* file, void* buf, int size);
-#endif // G__NSTOREOBJECT
-#ifndef G__NSEARCHMEMBER
-long Cint::Internal::G__what_type(char* name, char* type, char* tagname, char* type_name);
-#endif // G__NSEARCHMEMBER
-#endif // G__SMALLOBJECT
-int Cint::Internal::G__textprocessing(FILE* fp);
-#ifdef G__REGEXP
-int Cint::Internal::G__matchregex(char* pattern, char* string);
-#endif // G__REGEXP
-#ifdef G__REGEXP1
-int Cint::Internal::G__matchregex(char* pattern, char* string);
-#endif // G__REGEXP1
-
 // Functions in the C interface.
 extern "C" int G__readline(FILE* fp, char* line, char* argbuf, int* argn, char* arg[]);
 extern "C" int G__split(char* line, char* sstring, int* argc, char* argv[]);

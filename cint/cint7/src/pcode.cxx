@@ -34,8 +34,6 @@ using namespace Cint::Internal;
    int G__get_ST_Rp0_p2f(int type,long *pinst);
 #endif // G__BORLANDCC5
 
-int Cint::Internal::G__asm_optimize3(int *start);
-
 #ifdef G__ASM
 
 #ifdef G__ASM_DBG
