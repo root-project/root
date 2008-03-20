@@ -1,3 +1,21 @@
+simple01.cxx 
+simple10.cxx 
+simple11.cxx 
+simple11.cxx  -Dmakecint
+simple12.cxx 
+simple13.cxx 
+simple14.cxx 
+simple15.cxx 
+simple16.cxx 
+simple17.cxx 
+simple18.cxx 
+simple19.cxx 
+simple20.cxx 
+simple21.cxx 
+simple22.cxx 
+simple23.cxx 
+simple24.cxx 
+simple25.cxx  -Dmakecint
 cpp0.cxx 
 cpp1.cxx 
 cpp2.cxx 
@@ -97,6 +115,10 @@ vbase.cxx
 vbase.cxx  -Dmakecint
 vbase1.cxx 
 vbase1.cxx  -Dmakecint
+t674.cxx  -Dmakecint
+t648.cxx 
+t977.cxx  -Dmakecint
+t980.cxx 
 t215.cxx 
 t358.cxx 
 t488.cxx 
@@ -184,14 +206,6 @@ t1027.cxx
 t1032.cxx 
 t1032.cxx 
 t1034.cxx 
-t1034.cxx t1034.old:
-   5: sizeof(long double)=8
-t1034.cxx interpreted:
-   5: sizeof(long double)=12
-t1034.cxx t1034.old:
-  16: sizeof(long double)=8
-t1034.cxx interpreted:
-  16: sizeof(long double)=12
 t1035.cxx 
 t1035.cxx  -Dmakecint
 t1036.cxx 
@@ -202,30 +216,7 @@ t1046.cxx  -Dmakecint
 t1047.cxx 
 t1047.cxx  -Dmakecint
 t1048.cxx 
-t1157.cxx 
-t1158.cxx 
-t1160.cxx 
-aryinit0.cxx 
-aryinit1.cxx 
-t1164.cxx 
-t1165.cxx 
-t1178.cxx 
-t1187.cxx  -Dmakecint
-t1192.cxx 
-t1193.cxx  -Dmakecint
-t1203.cxx 
-t1205.cxx 
-t1205.cxx  -Dmakecint
-t1213.cxx 
-t1214.cxx 
-t1215.cxx 
-t1215.cxx  -Dmakecint
-t1221.cxx 
-t1222.cxx 
-t1223.cxx 
-t1224.cxx 
-t1228.cxx 
-t1048.cxx -I.. -I../src -Dmakecint
+t1048.cxx -I.. -I../../inc -I../../src -I../../reflex/inc -Dmakecint
 t1049.cxx 
 t1054.cxx 
 t1055.cxx 
@@ -267,15 +258,34 @@ t1144.cxx
 t1144.cxx 
 t1144.cxx 
 t1148.cxx 
+t1157.cxx 
+t1158.cxx 
+t1160.cxx 
+aryinit0.cxx 
+aryinit1.cxx 
+t1164.cxx 
+t1165.cxx 
+t1178.cxx 
+t1187.cxx  -Dmakecint
+t1192.cxx 
+t1193.cxx  -Dmakecint
+t1203.cxx 
+t1205.cxx 
+t1205.cxx  -Dmakecint
+t1213.cxx 
+t1214.cxx 
+t1215.cxx 
+t1215.cxx  -Dmakecint
+t1221.cxx 
+t1222.cxx 
+t1223.cxx 
+t1224.cxx 
+t1228.cxx 
 t1247.cxx  -Dmakecint2
 t1247.cxx compiled:
    1: Success
 t1276.cxx  -Dmakecint
 t1277.cxx  -Dmakecint
-t674.cxx  -Dmakecint
-t648.cxx 
-t977.cxx  -Dmakecint
-t980.cxx 
 t1278.cxx 
 t1279.cxx 
 t1280.cxx 
@@ -285,4 +295,7 @@ t1283.cxx
 t1284.cxx 
 postinc.cxx 
 selfreference.cxx  -Dmakecint
+abstract.cxx 
+TException.cxx 
+enums.cxx  -Dmakecint
 classinfo.cxx 
