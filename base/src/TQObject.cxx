@@ -85,6 +85,8 @@ void *gTQSender; // A pointer to the object that sent the last signal.
                  // Getting access to the sender might be practical
                  // when many signals are connected to a single slot.
 
+Bool_t TQObject::fgAllSignalsBlocked = kFALSE;
+
 
 ClassImpQ(TQObject)
 ClassImpQ(TQObjSender)
@@ -647,7 +649,7 @@ void TQObject::Emit(const char *signal_name)
    // Example:
    //          theButton->Emit("Clicked()");
 
-   if (fSignalsBlocked) return;
+   if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
    CollectClassSignalLists(classSigLists, IsA());
@@ -702,7 +704,7 @@ void TQObject::EmitVA(const char *signal_name, Int_t nargs, va_list ap)
    // Activate signal with variable argument list.
    // For internal use and for var arg EmitVA() in RQ_OBJECT.h.
 
-   if (fSignalsBlocked) return;
+   if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
    CollectClassSignalLists(classSigLists, IsA());
@@ -743,7 +745,7 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    // Example:
    //          theButton->Emit("Clicked(int)",id)
 
-   if (fSignalsBlocked) return;
+   if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
    CollectClassSignalLists(classSigLists, IsA());
@@ -784,7 +786,7 @@ void TQObject::Emit(const char *signal_name, Long64_t param)
    // Example:
    //          theButton->Emit("Progress(Long64_t)",processed)
 
-   if (fSignalsBlocked) return;
+   if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
    CollectClassSignalLists(classSigLists, IsA());
@@ -825,7 +827,7 @@ void TQObject::Emit(const char *signal_name, Double_t param)
    // Example:
    //          theButton->Emit("Scale(float)",factor)
 
-   if (fSignalsBlocked) return;
+   if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
    CollectClassSignalLists(classSigLists, IsA());
@@ -866,7 +868,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
    // Example:
    //          myObject->Emit("Error(char*)","Fatal error");
 
-   if (fSignalsBlocked) return;
+   if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
    CollectClassSignalLists(classSigLists, IsA());
@@ -919,7 +921,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
    //
    //    processor->Emit("Evaluated(Float_t,Float_t)",args);
 
-   if (fSignalsBlocked) return;
+   if (fSignalsBlocked || fgAllSignalsBlocked) return;
 
    TList classSigLists;
    CollectClassSignalLists(classSigLists, IsA());
@@ -1430,6 +1432,24 @@ void TQObject::Streamer(TBuffer &R__b)
    } else {
       // nothing to write
    }
+}
+
+//______________________________________________________________________________
+Bool_t TQObject::AreAllSignalsBlocked()
+{
+   // Returns true if all signals are blocked.
+
+   return fgAllSignalsBlocked;
+}
+
+//______________________________________________________________________________
+Bool_t TQObject::BlockAllSignals(Bool_t b)
+{
+   // Block or unblock all signals. Returns the previous block status.
+
+   Bool_t ret = fgAllSignalsBlocked;
+   fgAllSignalsBlocked = b;
+   return ret;
 }
 
 //______________________________________________________________________________

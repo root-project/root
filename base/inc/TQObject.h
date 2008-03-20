@@ -55,6 +55,8 @@ protected:
    TList   *fListOfConnections;    //! list of connections to this object
    Bool_t   fSignalsBlocked;       //! flag used for suppression of signals
 
+   static Bool_t fgAllSignalsBlocked;  // flag used for suppression of all signals
+
    virtual void       *GetSender() { return this; }
    virtual const char *GetSenderClassName() const { return ""; }
 
@@ -170,6 +172,9 @@ public:
                              const char *signal,
                              void *receiver = 0,
                              const char *slot = 0);
+
+   static Bool_t  AreAllSignalsBlocked();
+   static Bool_t  BlockAllSignals(Bool_t b);
 
    static void    LoadRQ_OBJECT();
 
