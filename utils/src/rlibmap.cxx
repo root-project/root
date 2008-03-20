@@ -316,7 +316,8 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
    if (!fullpath) {
       if ((libbase = strrchr(libbase, '/')))
          libbase++;
-      else libbase = solib.c_str();
+      else
+         libbase = solib.c_str();
    }
 
    vector<string>::const_iterator it;
@@ -330,7 +331,8 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
             if (!fullpath) {
                if ((deplib = strrchr(deplib, '/')))
                   deplib++;
-               else deplib = depit->c_str();
+               else
+                  deplib = depit->c_str();
             }
             fprintf(fp, " %s", deplib);
          }
