@@ -187,7 +187,7 @@ void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
 }
 
 //______________________________________________________________________________
-void TDirectory::CleanTargets() 
+void TDirectory::CleanTargets()
 {
    // Clean the pointers to this object (gDirectory, TContext, etc.)
 
@@ -207,7 +207,7 @@ void TDirectory::CleanTargets()
             gROOT->cd();
          }
       }
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -221,7 +221,7 @@ TObject *TDirectory::CloneObject(const TObject *obj)
    TObject *newobj = (TObject *)obj->IsA()->New();
    if (!newobj) return 0;
 
-   //create a buffer where the object will be streamed 
+   //create a buffer where the object will be streamed
    //We are forced to go via the I/O package (ie TBufferFile).
    //Invoking TBufferFile via CINT will automatically load the I/O library
    TBuffer *buffer = (TBuffer*)gROOT->ProcessLine(Form("new TBufferFile(%d,10000);",TBuffer::kWrite));
@@ -930,9 +930,9 @@ void TDirectory::rmdir(const char *name)
    // When diredctory is deleted, all keys in all subdirectories will be
    // read first and deleted from file (if exists)
    // Equivalent call is Delete("name;*");
-   
+
    if ((name==0) || (*name==0)) return;
-   
+
    TString mask(name);
    mask+=";*";
    Delete(mask);
@@ -941,13 +941,13 @@ void TDirectory::rmdir(const char *name)
 //______________________________________________________________________________
 Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option)
 {
-   // Save object in filename (static function)
-   // if filename is null or "", a file with "objectname.root" is created.
+   // Save object in filename,
+   // if filename is 0 or "", a file with "objectname.root" is created.
    // The name of the key is the object name.
    // If the operation is successful, it returns the number of bytes written to the file
    // otherwise it returns 0.
    // By default a message is printed. Use option "q" to not print the message.
-   
+
    if (!obj) return 0;
    if (!gDirectory) return 0;
    TDirectory *dirsav = gDirectory;
@@ -973,12 +973,12 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
 void TDirectory::SetName(const char* newname)
 {
    // Set the name for directory
-   // If the directory name is changed after the directory was written once, 
-   // ROOT currently would NOT change the name of correspondent key in the 
+   // If the directory name is changed after the directory was written once,
+   // ROOT currently would NOT change the name of correspondent key in the
    // mother directory.
    // DO NOT use this method to 'rename a directory'.
    // Renaming a directory is currently NOT supported.
-   
+
    TNamed::SetName(newname);
 }
 
@@ -1018,7 +1018,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle)
 }
 
 //______________________________________________________________________________
-void TDirectory::RegisterContext(TContext *ctxt) { 
+void TDirectory::RegisterContext(TContext *ctxt) {
    // Register a TContext pointing to this TDirectory object
 
    if (fContext) {
@@ -1034,19 +1034,19 @@ void TDirectory::RegisterContext(TContext *ctxt) {
 }
 
 //______________________________________________________________________________
-Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/) 
+Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/)
 {
    // See TDirectoryFile::WriteTObject for details
 
    const char *objname = "no name specified";
    if (name) objname = name;
    else if (obj) objname = obj->GetName();
-   Error("WriteTObject","The current directory (%s) is not associated with a file. The object (%s) has not been written.",GetName(),objname);      
+   Error("WriteTObject","The current directory (%s) is not associated with a file. The object (%s) has not been written.",GetName(),objname);
    return 0;
 }
 
 //______________________________________________________________________________
-void TDirectory::UnregisterContext(TContext *ctxt) { 
+void TDirectory::UnregisterContext(TContext *ctxt) {
    // UnRegister a TContext pointing to this TDirectory object
 
    if (ctxt==fContext) {
@@ -1070,4 +1070,3 @@ void TDirectory::TContext::CdNull()
 
    gDirectory = 0;
 }
-

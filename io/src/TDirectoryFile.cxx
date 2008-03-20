@@ -1277,8 +1277,8 @@ void TDirectoryFile::Save()
 //______________________________________________________________________________
 Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option)
 {
-   // Save object in filename (static function)
-   // if filename is null or "", a file with "objectname.root" is created.
+   // Save object in filename,
+   // if filename is 0 or "", a file with "objectname.root" is created.
    // The name of the key is the object name.
    // If the operation is successful, it returns the number of bytes written to the file
    // otherwise it returns 0.
