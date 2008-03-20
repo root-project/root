@@ -81,15 +81,16 @@ Reflex::Scope Reflex::ScopeName::ByName( const std::string & name ) {
    const std::string & k = name.substr(pos);
    Name2Scope_t::iterator it = sScopes().find(&k);
    if (it != sScopes().end() ) return it->second;
-   //else                        return Dummy::Scope();
-   // HERE STARTS AN UGLY HACK WHICH HAS TO BE UNDONE ASAP
-   // (also remove inlcude Reflex/Type.h)
-   Type t = Type::ByName(name);
-   if ( t && t.IsTypedef()) {
-      while ( t.IsTypedef()) t = t.ToType();
-      if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return t.operator Scope ();
+   else {
+      // HERE STARTS AN UGLY HACK WHICH HAS TO BE UNDONE ASAP
+      // (also remove inlcude Reflex/Type.h)
+      Type t = Type::ByName(name);
+      if ( t && t.IsTypedef()) {
+         while ( t.IsTypedef()) t = t.ToType();
+         if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return t.operator Scope ();
+      }
+      return Dummy::Scope();
    }
-   return Dummy::Scope();
    // END OF UGLY HACK
 }
 

@@ -89,7 +89,6 @@ namespace __gnu_cxx {
 
 
 #if defined (__GNUC__)
-
 namespace __gnu_cxx {
    
    template<> struct hash<const std::string *> {
@@ -125,6 +124,36 @@ namespace std {
 
 #endif // __GNUC__
 
+#if (__INTEL_COMPILER<=800)
+
+namespace __gnu_cxx {
+
+   template<> class hash_compare< const char *> {
+      typedef const char* Key;
+   public:
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      size_t operator( )( const Key& k ) const { return hash_value(k);}
+      bool operator( )( const Key& k1, const Key& k2 ) const { return strcmp(k1 ,k2) < 0; }
+   };
+
+   template<> class hash_compare< const std::string *> {
+      typedef const std::string * Key;
+   public:
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      size_t operator( )( const Key& k ) const { return hash_value(*k);}
+      bool operator( )( const Key& k1, const Key& k2 ) const { return *k1 < *k2; }
+   };
+
+   template<> struct less<const std::string *> {
+     typedef const std::string* const Key;
+     bool operator() (Key& k1, Key& k2) const { return *k1 < *k2; }
+  };
+
+} // namespace __gnu_cxx  
+
+#endif // __INTEL_COMPILER
 
 
 #if defined(__SUNPRO_CC)
