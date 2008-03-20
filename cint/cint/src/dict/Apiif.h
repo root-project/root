@@ -28,7 +28,6 @@ extern void G__set_cpp_environmentG__API();
 
 
 #include "Api.h"
-#include "Shadow.h"
 
 #ifndef G__MEMFUNCBODY
 #endif
@@ -58,8 +57,5 @@ extern G__linked_taginfo G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenType;
 extern G__linked_taginfo G__G__APILN_CintcLcLG__TokenInfocLcLG__TokenProperty;
 extern G__linked_taginfo G__G__APILN_CintcLcLG__SourceFileInfo;
 extern G__linked_taginfo G__G__APILN_CintcLcLG__IncludePathInfo;
-extern G__linked_taginfo G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR;
-extern G__linked_taginfo G__G__APILN_string;
-extern G__linked_taginfo G__G__APILN_CintcLcLG__ShadowMaker;
 
 /* STUB derived class for protected member access */

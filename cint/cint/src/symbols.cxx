@@ -35,6 +35,7 @@
 #include <set>
 #include <string>
 #include <map>
+#include <algorithm>
 using namespace std;
 
 static int gDebug = 0;
