@@ -466,6 +466,9 @@ TROOT::~TROOT()
 //      SafeDelete(fGlobalFunctions);
 //      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
 
+      // Stop emitting signals
+      TQObject::BlockAllSignals(kTRUE);
+
       // Remove shared libraries produced by the TSystem::CompileMacro() call
       gSystem->CleanCompiledMacros();
 
