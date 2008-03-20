@@ -1424,10 +1424,7 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
    //if not set, read the process uid from file
    char pidname[32];
    sprintf(pidname,"ProcessID%d",pidf);
-   TDirectory *dirsav = gDirectory;
-   this->cd();
    pid = (TProcessID *)Get(pidname);
-   if (dirsav) dirsav->cd();
    if (gDebug > 0) {
       printf("ReadProcessID, name=%s, file=%s, pid=%lx\n",pidname,GetName(),(Long_t)pid);
    }
@@ -2364,19 +2361,16 @@ UShort_t TFile::WriteProcessID(TProcessID *pidd)
       if (pids->At(i) == pid) return (UShort_t)i;
    }
 
-   TDirectory *dirsav = gDirectory;
-   this->cd();
    this->SetBit(TFile::kHasReferences);
    pids->AddAtAndExpand(pid,npids);
    pid->IncrementCount();
    char name[32];
    sprintf(name,"ProcessID%d",npids);
-   pid->Write(name);
+   this->WriteTObject(pid,name);
    this->IncrementProcessIDs();
    if (gDebug > 0) {
       printf("WriteProcessID, name=%s, file=%s\n",name,GetName());
    }
-   if (dirsav) dirsav->cd();
    return (UShort_t)npids;
 }
 
@@ -2413,10 +2407,6 @@ void TFile::WriteStreamerInfo()
    // always write with compression on
    Int_t compress = fCompress;
    fCompress = 1;
-   TFile * fileSave = gFile;
-   TDirectory *dirSave = gDirectory;
-   gFile = this;
-   gDirectory = this;
 
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
@@ -2429,8 +2419,6 @@ void TFile::WriteStreamerInfo()
    key.WriteFile(0);
 
    fClassIndex->fArray[0] = 0;
-   gFile = fileSave;
-   gDirectory = dirSave;
    fCompress = compress;
 }
 
