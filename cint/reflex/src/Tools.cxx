@@ -18,6 +18,7 @@
 #include "Reflex/Kernel.h"
 #include "Reflex/Type.h"
 #include "Reflex/internal/OwnedMember.h"
+#include <cstring>
 
 #if defined(__GNUC__)
 #include <cxxabi.h>

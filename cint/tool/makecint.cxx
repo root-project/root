@@ -309,7 +309,7 @@ void G__readargument(int argc, char **argv)
       size_t pos_backslash = G__object.rfind('\\');
       size_t posfile=pos_slash;
       if (posfile == std::string::npos
-          || pos_backslash != std::string::npos && pos_backslash > pos_slash)
+          || (pos_backslash != std::string::npos && pos_backslash > pos_slash))
         posfile = pos_backslash;
 
       if (posfile == std::string::npos) posfile=0;
@@ -336,7 +336,7 @@ void G__readargument(int argc, char **argv)
       size_t pos_backslash = G__object.rfind('\\');
       size_t posfile=pos_slash;
       if (posfile == std::string::npos
-          || pos_backslash != std::string::npos && pos_backslash > pos_slash)
+          || (pos_backslash != std::string::npos && pos_backslash > pos_slash))
         posfile = pos_backslash;
 
       if (posfile == std::string::npos) posfile=0;

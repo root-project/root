@@ -15,6 +15,7 @@
 
 #include "PluginFactoryMap.h"
 
+#include <cstring>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
