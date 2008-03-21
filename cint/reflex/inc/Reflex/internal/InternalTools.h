@@ -35,12 +35,12 @@ namespace Reflex {
 
          template < typename CONT > 
          static typename std::vector<TO>::const_reverse_iterator RBegin( const CONT & cont ) {
-            return ((typename std::vector<TO> &)cont).rbegin();
+            return ((const typename std::vector<TO> &)cont).rbegin();
          }
 
          template < typename CONT >
          static typename std::vector<TO>::const_reverse_iterator REnd( const CONT & cont ) {
-            return ((typename std::vector<TO> &)cont).rend();
+            return ((const typename std::vector<TO> &)cont).rend();
          }
 
       };
