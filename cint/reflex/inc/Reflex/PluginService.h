@@ -32,7 +32,7 @@ namespace Reflex {
    * @date 01/09/2006
    * @ingroup Ref
    */
-   class PluginService {
+   class RFLX_API PluginService {
    public:
 
       template < typename R > 
