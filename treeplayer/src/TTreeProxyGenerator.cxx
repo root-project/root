@@ -668,6 +668,11 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             continue;
          }
 
+         if (element->GetType()==-1) {
+            // This is an ignored TObject base class.
+            continue;
+         }
+
          TString branchname = branch->GetName();
          TString branchEndname;
          {
@@ -1337,6 +1342,12 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          // Skip the artifical streamer element.
          return;
       }
+
+      if (element->GetType()==-1) {
+         // This is an ignored TObject base class.
+         return;
+      }
+
 
       Bool_t ispointer = false;
       switch(element->GetType()) {
