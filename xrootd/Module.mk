@@ -120,6 +120,10 @@ $(XROOTDMAKE):
 		   xinc=`echo $(AFSINCDIR)`; \
 		   xopt="$$xopt --with-afs-incdir=$$xinc"; \
 		fi; \
+		if [ ! "x$(XRDADDOPTS)" = "x" ] ; then \
+		   xaddopts=`echo $(XRDADDOPTS)`; \
+		   xopt="$$xopt $$xaddopts"; \
+		fi; \
 		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
 		echo "Options to Xrootd-configure: $$xopt $(XRDDBG)"; \

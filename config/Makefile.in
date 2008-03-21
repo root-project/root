@@ -197,6 +197,7 @@ XMLINCDIR      := $(filter-out /usr/include, @xmlincdir@)
 
 BUILDXRD       := @buildxrd@
 XROOTDDIR      := @xrootddir@
+XRDADDOPTS     := @xrdaddopts@
 EXTRA_XRDFLAGS := @extraxrdflags@
 
 SRPLIBDIR      := @srplibdir@
