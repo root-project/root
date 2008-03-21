@@ -1596,8 +1596,17 @@ void TROOT::Reset(Option_t *option)
    // If option="a" is set reset to startup context (i.e. unload also
    // all loaded files, classes, structs, typedefs, etc.).
    //
-   // This function is typically used at the beginning (or end) of a macro
+   // This function is typically used at the beginning (or end) of an unnamed macro
    // to clean the environment.
+   // 
+   // IMPORTANT WARNING:
+   // Do not use this call from within any function (neither compiled nor
+   // interpreted.  This should only be used from a unnamed macro 
+   // (which starts with a { (curly braces)  ).  For example, using TROOT::Reset 
+   // from within an interpreted function will lead to the unloading of the 
+   // dictionary and source file, including the one defining the function being 
+   // executed.
+   // 
 
    if (IsExecutingMacro()) return;  //True when TMacro::Exec runs
    if (fInterpreter) {
