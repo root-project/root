@@ -50,7 +50,7 @@ protected:
    static Bool_t ParseUrl(const char *url, TString &archive, TString &member);
 
 public:
-   TArchiveFile() : fMemberIndex(-1), fFile(0), fMembers(0), fCurMember(0) { }
+   TArchiveFile() : fArchiveName(""), fMemberName(""), fMemberIndex(-1), fFile(0), fMembers(0), fCurMember(0) { }
    TArchiveFile(const char *archive, const char *member, TFile *file);
    virtual ~TArchiveFile();
 
