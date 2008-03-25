@@ -1082,12 +1082,6 @@ hpuxia64acc)
    checkhpux64="yes" ;;
 esac
 
-# check for (g)make
-case $platform in
-win32|linux|macosx) gnumake="make"  ;;
-*)                  gnumake="gmake" ;;
-esac
-
 # check for which
 case $platform in
 macosx) cwhich="type -path" ;;
@@ -1354,6 +1348,35 @@ fi
 
 ######################################################################
 #
+### echo %%% check for GNU make >= 3.80 - Mandatory version of make
+#
+# Mandatory test, must succeed
+# Check for GNU make >= 3.80
+#
+message "Checking for GNU Make version >= 3.80"
+gnumake="make"
+gnu=`$gnumake -v | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
+if test ! "x$gnu" = "xGNU" ; then
+    gnumake="gmake"
+    gnu=`$gnumake -v | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
+    if test ! "x$gnu" = "xGNU" ; then
+        gnumake=""
+    fi
+fi
+if test ! "x$gnumake" = "x" ; then
+    gnuv=`$gnumake -v | tr '.' ' ' | awk 'BEGIN { FS=" "} { if (NR==1) printf "%d", $3*100+$4 }'`
+    if test $gnuv -lt 380 ; then
+        result "`basename $0`: GNU Make >= 3.80 MUST be installed, current version $gnuv is too old"
+        exit 1
+    fi
+    result "ok"
+else
+    result "`basename $0`: GNU Make >= 3.80 MUST be installed"
+    exit 1
+fi
+
+######################################################################
+#
 ### echo %%% X11 and XPM Library - Mandatory lib on Unix
 #
 # Mandatory test, must succeed
@@ -1412,7 +1435,6 @@ if test ! "$platform" = "win32"; then
         enable_xft="no"
     fi
 fi
-
 
 ######################################################################
 #
@@ -1971,7 +1993,7 @@ check_qtvers()
     if test $? -eq 0 ; then
 	logmsg " Got Qt version $qtverstr"
 	qtgot=`echo $qtverstr | \
-	    awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`;
+	    awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`
 	qtneed=`echo $qtverneed | \
 	    awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
 	qtnew=`echo $qttoonew | \
@@ -1985,7 +2007,7 @@ check_qtvers()
 	    res="no"
 	else
 	    res="$qtverstr"
-	    qtvers=`echo $qtverstr | awk 'BEGIN{FS="."}{print $1}'`
+	    qtvers=`echo $qtverstr | awk 'BEGIN {FS="."} {print $1}'`
 	fi
     else
 	res="no"
