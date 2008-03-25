@@ -69,44 +69,48 @@ protected:
    Double_t     fMaximum;    //Maximum value for plotting
    Double_t     fMinimum;    //Minimum value for plotting
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
-   void *       fCintFunc;              //! pointer to interpreted function class
+   void        *fCintFunc;              //! pointer to interpreted function class
    ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
+
    static Bool_t fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
    static TF1   *fgCurrent;   //pointer to current function being processed
 
-         
+   void CreateFromFunctor(const char *name, Int_t npar);
+   void CreateFromCintClass(const char *name, void * ptr, Double_t xmin, Double_t xmax, Int_t npar, char * cname, char * fname);
+
 public:
     // TF1 status bits
     enum {
        kNotDraw     = BIT(9)  // don't draw the function when in a TH1
     };
+
    TF1();
    TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1);
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar);
-   TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar); 
+   TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar);
 #ifndef __CINT__
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
    TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
 #endif
 
    // Constructors using functors (compiled mode only)
-   TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0);  
+   TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0);
 
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
-   // and returning a double.    
-   // The class name is not needed when using compile code, while it is required when using 
-   // interpreted code via the specialized constructor with void *. 
-   // An instance of the C++ function class or its pointer can both be used. The former is reccomended when using 
-   // C++ compiled code, but if CINT compatibility is needed, then a pointer to the function class must be used. 
-   // xmin and xmax specify the plotting range,  npar is the number of parameters. 
+   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
+   // and returning a double.
+   // The class name is not needed when using compile code, while it is required when using
+   // interpreted code via the specialized constructor with void *.
+   // An instance of the C++ function class or its pointer can both be used. The former is reccomended when using
+   // C++ compiled code, but if CINT compatibility is needed, then a pointer to the function class must be used.
+   // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
-   template <typename Func> 
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, char * = 0  ) : 
-      TFormula(), 
-      TAttLine(), 
-      TAttFill(), 
-      TAttMarker(), 
+   template <typename Func>
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, char * = 0  ) :
+      TFormula(),
+      TAttLine(),
+      TAttFill(),
+      TAttMarker(),
       fXmin      ( xmin ),
       fXmax      ( xmax ),
       fNpx       ( 100 ),
@@ -127,27 +131,27 @@ public:
       fHistogram ( 0 ),
       fMaximum   ( -1111 ),
       fMinimum   ( -1111 ),
-      fMethodCall ( 0), 
+      fMethodCall ( 0),
       fCintFunc  ( 0 ),
       fFunctor( ROOT::Math::ParamFunctor(f) )
-   { 
-      CreateFromFunctor(name, npar); 
+   {
+      CreateFromFunctor(name, npar);
    }
 
-   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type 
-   // MemFn. 
-   // The member function must have the signature of  (double * , double *) and returning a double. 
-   // The class name and the method name are not needed when using compile code 
-   // (the member function pointer is used in this case), while they are required when using interpreted 
-   // code via the specialized constructor with void *. 
-   // xmin and xmax specify the plotting range,  npar is the number of parameters. 
+   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
+   // MemFn.
+   // The member function must have the signature of  (double * , double *) and returning a double.
+   // The class name and the method name are not needed when using compile code
+   // (the member function pointer is used in this case), while they are required when using interpreted
+   // code via the specialized constructor with void *.
+   // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <class PtrObj, typename MemFn>
-   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, char * = 0, char * = 0) : 
-      TFormula(), 
-      TAttLine(), 
-      TAttFill(), 
-      TAttMarker(), 
+   TF1(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, char * = 0, char * = 0) :
+      TFormula(),
+      TAttLine(),
+      TAttFill(),
+      TAttMarker(),
       fXmin      ( xmin ),
       fXmax      ( xmax ),
       fNpx       ( 100 ),
@@ -168,23 +172,16 @@ public:
       fHistogram ( 0 ),
       fMaximum   ( -1111 ),
       fMinimum   ( -1111 ),
-      fMethodCall( 0 ), 
-      fCintFunc  ( 0 ), 
-      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) ) 
-   { 
-      CreateFromFunctor(name, npar); 
+      fMethodCall( 0 ),
+      fCintFunc  ( 0 ),
+      fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) )
+   {
+      CreateFromFunctor(name, npar);
    }
 
-   // constructor used by CINT 
-   TF1(const char *name, void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char *className ); 
-   TF1(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Int_t npar, char *className, char *methodName = 0); 
-
-
-protected: 
-   void CreateFromFunctor(const char *name, Int_t npar);   
-   void CreateFromCintClass(const char *name, void * ptr, Double_t xmin, Double_t xmax, Int_t npar, char * cname, char * fname);   
-public:
-
+   // constructor used by CINT
+   TF1(const char *name, void *ptr, Double_t xmin, Double_t xmax, Int_t npar, char *className );
+   TF1(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Int_t npar, char *className, char *methodName = 0);
 
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);
@@ -225,7 +222,7 @@ public:
    virtual Double_t *GetParErrors() const {return fParErrors;}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const;
    virtual Double_t GetProb() const;
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum); 
+   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum);
    virtual Double_t GetRandom();
    virtual Double_t GetRandom(Double_t xmin, Double_t xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) const;
@@ -290,7 +287,7 @@ public:
    //static  void     CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps=3.0e-11);
    //static  TGraph  *CalcGaussLegendreSamplingPoints(Int_t num=21, Double_t eps=3.0e-11);
    static  void     CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps=3.0e-11);
-        
+
    ClassDef(TF1,7)  //The Parametric 1-D function
 };
 
