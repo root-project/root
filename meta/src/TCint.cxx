@@ -389,7 +389,7 @@ Long_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
 
    if (gApplication) {
       if (gApplication->IsCmdThread())
