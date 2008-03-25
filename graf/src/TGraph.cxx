@@ -2343,7 +2343,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
          uxmin     = gPad->PadtoX(rwxmin);
          uxmax     = gPad->PadtoX(rwxmax);
       } else {
-	 
+
          ComputeRange(rwxmin, rwymin, rwxmax, rwymax);  //this is redefined in TGraphErrors
 
          if (rwxmin == rwxmax) rwxmax += 1.;
@@ -3575,7 +3575,11 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    // For each graph points a shifted points is computed to build up
    // the second part of the filled area. First and last points are
    // treated as special cases, outside of the loop.
-   a = TMath::ATan((yf[1]-yf[0])/(xf[1]-xf[0]));
+   if (xf[1]==xf[0]) {
+      a = TMath::PiOver2();
+   } else {
+      a = TMath::ATan((yf[1]-yf[0])/(xf[1]-xf[0]));
+   }
    if (xf[0]<=xf[1]) {
       xt[0] = xf[0]-w*TMath::Sin(a);
       yt[0] = yf[0]+w*TMath::Cos(a);
@@ -3584,7 +3588,11 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       yt[0] = yf[0]-w*TMath::Cos(a);
    }
 
-   a = TMath::ATan((yf[nf]-yf[nf-1])/(xf[nf]-xf[nf-1]));
+   if (xf[nf]==xf[nf-1]) {
+      a = TMath::PiOver2();
+   } else {
+      a = TMath::ATan((yf[nf]-yf[nf-1])/(xf[nf]-xf[nf-1]));
+   }
    if (xf[nf]>=xf[nf-1]) {
       xt[nf] = xf[nf]-w*TMath::Sin(a);
       yt[nf] = yf[nf]+w*TMath::Cos(a);
@@ -3601,9 +3609,17 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       yi1 = yf[i+1];
       xi2 = xf[i-1];
       yi2 = yf[i-1];
-      a1  = TMath::ATan((yi1-yi0)/(xi1-xi0));
+      if (xi1==xi0) {
+         a1 = TMath::PiOver2();
+      } else {
+         a1  = TMath::ATan((yi1-yi0)/(xi1-xi0));
+      }
       if (xi1<xi0) a1 = a1+3.14159;
-      a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
+      if (xi2==xi0) {
+         a2 = TMath::PiOver2();
+      } else {
+         a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
+      }
       if (xi0<xi2) a2 = a2+3.14159;
       x1 = xi0-w*TMath::Sin(a1);
       y1 = yi0+w*TMath::Cos(a1);
@@ -3611,7 +3627,11 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
       y2 = yi0+w*TMath::Cos(a2);
       xm = (x1+x2)*0.5;
       ym = (y1+y2)*0.5;
-      a3 = TMath::ATan((ym-yi0)/(xm-xi0));
+      if (xm==xi0) {
+         a3 = TMath::PiOver2();
+      } else {
+         a3 = TMath::ATan((ym-yi0)/(xm-xi0));
+      }
       x3 = xi0-w*TMath::Sin(a3+1.57079);
       y3 = yi0+w*TMath::Cos(a3+1.57079);
       // Rotate (x3,y3) by PI around (xi0,yi0) if it is not on the (xm,ym) side.
@@ -3631,7 +3651,11 @@ void TGraph::PaintPolyLineHatches(Int_t n, const Double_t *x, const Double_t *y)
    if (xf[nf]==xf[0] && yf[nf]==yf[0]) {
       xm = (xt[nf]+xt[0])*0.5;
       ym = (yt[nf]+yt[0])*0.5;
-      a3 = TMath::ATan((ym-yf[0])/(xm-xf[0]));
+      if (xm==xf[0]) {
+         a3 = TMath::PiOver2();
+      } else {
+         a3 = TMath::ATan((ym-yf[0])/(xm-xf[0]));
+      }
       x3 = xf[0]+w*TMath::Sin(a3+1.57079);
       y3 = yf[0]-w*TMath::Cos(a3+1.57079);
       if ((xm-xf[0])*(x3-xf[0])<0 && (ym-yf[0])*(y3-yf[0])<0) {
