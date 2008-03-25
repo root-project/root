@@ -270,7 +270,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 
    char *path = new char[nch+1]; path[0] = 0;
    if (nch) strcpy(path,apath);
-   char *s = (char*)strchr(path, ':');
+   char *s = (char*)strrchr(path, ':');
    if (s) {
       *s = '\0';
       R__LOCKGUARD2(gROOTMutex);
