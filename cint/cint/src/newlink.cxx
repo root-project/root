@@ -1698,11 +1698,19 @@ int G__stub_method_asm(G__ifunc_table_internal *ifunc, int ifn, void* this_ptr, 
       //int parama = *paramref;
       long res=0;
       __asm__ __volatile__("call *%1" : "=a" (res): "g" (vaddress));
-      result7->obj.i = (long)res;
 
       if(!isupper(type)) {
-         result7->ref = result7->obj.i;
-         result7->obj.reftype.reftype = G__PARAREFERENCE;
+         result7->ref = (long) (res);
+         if(type=='u') {
+            result7->obj.i = (long) (res);
+         }
+         else {
+            G__letint(result7, result7->type, (*(long*)(res)));
+         }
+      }
+      else {
+         G__letint(result7, result7->type, res);
+	 result7->obj.reftype.reftype = reftype;
       }
    }
 
@@ -2076,7 +2084,14 @@ int G__stub_method_calling(G__value *result7, G__param *libp,
                   parfunc = parfunc->next;
                }
                new_ifunc = G__struct.memfunc[tagnum];
-               new_ifunc = G__get_methodhandle4(ifunc->funcname[ifn], &fpara, new_ifunc, &pifn, &poffset, 1, 1, 0);
+
+	       char funcname[G__MAXNAME];
+	       if(ifunc->funcname[ifn][0]=='~')
+                  sprintf(funcname, "~%s", G__struct.name[new_ifunc->tagnum]);
+	       else
+                  sprintf(funcname, "%s", ifunc->funcname[ifn]);
+
+               new_ifunc = G__get_methodhandle4(funcname, &fpara, new_ifunc, &pifn, &poffset, 1, 1, 0);
             }
         
             if(new_ifunc && (ifunc!=new_ifunc)){
