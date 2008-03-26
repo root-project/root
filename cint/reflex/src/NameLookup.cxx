@@ -21,12 +21,9 @@
 #include "Reflex/internal/OwnedMember.h"
 
 //______________________________________________________________________________
-Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current)
-: fLookupName(name)
-, fPosNamePart(0)
-, fPosNamePartLen(std::string::npos)
-, fCurrentScope(current)
-, fPartialSuccess(false)
+Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current):
+   fLookupName(name), fPosNamePart(0), fPosNamePartLen(std::string::npos),
+   fCurrentScope(current), fPartialSuccess(false)
 {
    // Initialize a NameLookup object used internally to keep track of lookup
    // states.
