@@ -504,16 +504,16 @@ void G__outputmakefile(int argc,char **argv)
       << "CINTINCDIRU := " << G__CFG_INCLUDEDIRCINT << std::endl
       << "CINTINCDIRW := " << G__CFG_INCLUDEDIRCINT << std::endl
 #else
-      << "CINTINCDIRU := $(CINTSYSDIRU)/" << G__CFG_COREVERSION << "/inc" << std::endl
-      << "CINTINCDIRW := $(CINTSYSDIRW)/" << G__CFG_COREVERSION << "/inc" << std::endl
+      << "CINTINCDIRU := $(CINTSYSDIRU)cint/" << G__CFG_COREVERSION << "/inc" << std::endl
+      << "CINTINCDIRW := $(CINTSYSDIRW)cint/" << G__CFG_COREVERSION << "/inc" << std::endl
 #endif
 #ifdef G__CFG_LIBDIR
-      << "CINTLIB     := " << G__CFG_LIBDIR << "/libcint" << G__CFG_SOEXT << std::endl;
+      << "CINTLIB     := " << G__CFG_LIBDIR << "/libCint" << G__CFG_SOEXT << std::endl;
 #else
-      << "CINTLIB     := $(CINTSYSDIRU)/lib/libcint" << G__CFG_SOEXT << std::endl;
+      << "CINTLIB     := $(CINTSYSDIRU)/lib/libCint" << G__CFG_SOEXT << std::endl;
 #endif
   if (!strcmp(G__CFG_COREVERSION,"cint7"))
-    out << "CINTLIB     := $(CINTLIB) $(subst libcint,libReflex,$(CINTLIB))" << std::endl;
+    out << "CINTLIB     := $(CINTLIB) $(subst libCint,libReflex,$(CINTLIB))" << std::endl;
   out << "IPATH       := " << G__IPATH;
   out << std::endl;
 
@@ -556,7 +556,7 @@ void G__outputmakefile(int argc,char **argv)
   out << std::endl;
 
   out << "LIBS        := ";
-  out << G__CFG_LIBP << "$(CINTSYSDIRW)/lib $(subst @imp@,cint," << G__CFG_LIBL << ") ";
+  out << G__CFG_LIBP << "$(CINTSYSDIRW)/lib $(subst @imp@,Cint," << G__CFG_LIBL << ") ";
   if (!strcmp(G__CFG_COREVERSION,"cint7"))
     out << " $(subst @imp@,Reflex," << G__CFG_LIBL << ") ";
   out << G__CFG_DEFAULTLIBS << " " << G__LIB << " " << std::endl
