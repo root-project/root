@@ -1525,14 +1525,6 @@ inline Reflex::Reverse_TypeTemplate_Iterator Reflex::Scope::SubTypeTemplate_REnd
 }
 
 
-
-//-------------------------------------------------------------------------------
-inline void Reflex::Scope::Unload() const {
-//-------------------------------------------------------------------------------
-  if ( * this ) delete fScopeName->fScopeBase;
-}
-
-
 //-------------------------------------------------------------------------------
 inline Reflex::Scope Reflex::Scope::UsingDirectiveAt( size_t nth ) const {
 //-------------------------------------------------------------------------------

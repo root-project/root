@@ -285,13 +285,6 @@ inline Reflex::PropertyListImpl::PropertyListImpl( const PropertyListImpl & pl )
 
   
 //-------------------------------------------------------------------------------
-inline Reflex::PropertyListImpl::~PropertyListImpl() {
-//-------------------------------------------------------------------------------
-   if ( fProperties ) delete fProperties;
-}
-
-
-//-------------------------------------------------------------------------------
 inline size_t Reflex::PropertyListImpl::AddProperty( const std::string & key,
                                                            const Any & value ) {
 //-------------------------------------------------------------------------------

@@ -512,11 +512,6 @@ namespace Reflex {
 #include "Reflex/MemberTemplate.h"
 
 
-inline void Reflex::Member::Delete() {
-  delete fMemberBase;
-  fMemberBase = 0;
-}
-
 //-------------------------------------------------------------------------------
 inline bool Reflex::Member::operator < ( const Member & rh ) const {
 //-------------------------------------------------------------------------------

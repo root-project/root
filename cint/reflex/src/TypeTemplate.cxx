@@ -127,3 +127,10 @@ void Reflex::TypeTemplate::AddTemplateInstance( const Type & templateInstance ) 
    // Add template instance to this template family.
    if ( * this ) fTypeTemplateName->fTypeTemplateImpl->AddTemplateInstance( templateInstance );
 }
+
+
+//-------------------------------------------------------------------------------
+void Reflex::TypeTemplate::Unload() const {
+//-------------------------------------------------------------------------------
+  if ( * this ) delete fTypeTemplateName->fTypeTemplateImpl;
+}

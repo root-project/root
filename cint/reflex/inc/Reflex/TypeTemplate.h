@@ -422,11 +422,4 @@ inline size_t Reflex::TypeTemplate::TypeTemplateSize() {
 }
 
 
-//-------------------------------------------------------------------------------
-inline void Reflex::TypeTemplate::Unload() const {
-//-------------------------------------------------------------------------------
-  if ( * this ) delete fTypeTemplateName->fTypeTemplateImpl;
-}
-
-
 #endif // Reflex_TypeTemplate

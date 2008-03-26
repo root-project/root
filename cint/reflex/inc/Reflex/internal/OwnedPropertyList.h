@@ -37,12 +37,7 @@ namespace Reflex {
 
 
       /** delete */
-      void Delete() {
-         if ( fPropertyListImpl ) {
-            delete fPropertyListImpl;
-            fPropertyListImpl = 0;
-         }
-      }
+      void Delete();
 
    }; // class OwnedPropertyList
 

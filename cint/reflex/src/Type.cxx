@@ -367,6 +367,13 @@ void Reflex::Type::GenerateDict( DictionaryGenerator & generator) const {
    if ( * this ) fTypeName->fTypeBase->GenerateDict( generator );
 }
 
+
+//-------------------------------------------------------------------------------
+void Reflex::Type::Unload() const {
+//-------------------------------------------------------------------------------
+  if ( * this ) delete fTypeName->fTypeBase;
+}
+
 #ifdef REFLEX_CINT_MERGE
 bool Reflex::Type::operator&&(const Scope &right) const
 { return operator bool() && (bool)right; }

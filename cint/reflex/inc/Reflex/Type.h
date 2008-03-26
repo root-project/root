@@ -2022,13 +2022,6 @@ inline const Reflex::TypeBase * Reflex::Type::ToTypeBase() const {
 
 
 //-------------------------------------------------------------------------------
-inline void Reflex::Type::Unload() const {
-//-------------------------------------------------------------------------------
-  if ( * this ) delete fTypeName->fTypeBase;
-}
-
-
-//-------------------------------------------------------------------------------
 inline void Reflex::Type::AddDataMember( const Member & dm ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) fTypeName->fTypeBase->AddDataMember( dm );
