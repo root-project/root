@@ -335,6 +335,10 @@ void Tools::StringSplit( std::vector < std::string > & splitValues,
                          const std::string & delim ) {
 //-------------------------------------------------------------------------------
 // Split a string by a delimiter and return it's vector of strings.
+   if (!str.size()) {
+      return;
+   }
+
    std::string str2 = str;
   
    size_t pos = 0;

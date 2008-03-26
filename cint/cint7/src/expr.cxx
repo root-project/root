@@ -1919,6 +1919,7 @@ G__value Cint::Internal::G__getitem(char* item)
          known = 0;
          G__var_type = 'p';
          /* variable */
+         //fprintf(stderr, "G__get_item: Lookup up variable '%s' in scope '%s'\n", item, G__p_local.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
          result3 = G__getvariable(item, &known,::Reflex::Scope::GlobalScope(), G__p_local);
          if (!known && G__get_tagnum(G__value_typenum(result3)) != -1 && result3.obj.i == 0) {
             // this is "a.b", we know "a", but it has no "b" - there is no use

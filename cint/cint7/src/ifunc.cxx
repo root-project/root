@@ -976,6 +976,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       builder.prop.entry.line_number = -1;
       builder.ispurevirtual = 1;
       if (G__tagdefining) {
+         //fprintf(stderr, "G__make_ifunctable: Incrementing abstract count of class '%s' cnt: %d  for: '%s'\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], funcheader);
          ++G__struct.isabstract[G__get_tagnum(G__tagdefining)];
       }
       if (funcname.c_str()[0] == '~') {

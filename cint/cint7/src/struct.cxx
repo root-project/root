@@ -1033,6 +1033,7 @@ extern "C" int G__search_tagname(const char *tagname, int type)
                   // -- Enum.
                {
                   //::Reflex::EnumBuilder *b = new ::Reflex::EnumBuilder( fullname.c_str() );
+                  //fprintf(stderr, "G__search_tagname: Building enum '%s'\n", fullname.c_str());
                   cl = ::Reflex::EnumTypeBuilder(fullname.c_str());
                   //G__get_properties(cl)->builder.Set(b);
                   break;
@@ -1236,7 +1237,7 @@ extern "C" int G__search_tagname(const char *tagname, int type)
       };
    }
    // Mutable and Register are ignored
-   if (var_statictype != G__AUTO && var_statictype != G__AUTOARYDISCRETEOBJ && var_statictype != G__COMPILEDGLOBAL) {
+   if (var_statictype == G__LOCALSTATIC) {
       modifiers |= ::Reflex::STATIC;
    }
 
@@ -1245,6 +1246,7 @@ extern "C" int G__search_tagname(const char *tagname, int type)
 
    G__get_offset(d) = offset;
    G__get_properties(d)->isCompiledGlobal = (var_statictype == G__COMPILEDGLOBAL);
+   G__get_properties(d)->statictype = var_statictype; // We need this to distinguish file-static variables.
 
    return d;
 }
@@ -1313,6 +1315,7 @@ static void G__add_anonymousunion(const ::Reflex::Type &uniontype, int def_struc
 * [struct|union|enum] tagname { member }      ;
 *
 ******************************************************************/
+void G__dumpreflex_atlevel(const ::Reflex::Scope& scope, int level);
 void Cint::Internal::G__define_struct(char type)
 {
    //fprintf(stderr, "G__define_struct: Begin.\n");
@@ -1500,7 +1503,9 @@ void Cint::Internal::G__define_struct(char type)
       case ':':
       case ';':
          // 0x100: define struct if not found
+         //fprintf(stderr, "G__define_struct: Creating scope '%s'\n", tagname);
          G__tagnum = G__Dict::GetDict().GetScope(G__search_tagname(tagname, type + 0x100));
+         //G__dumpreflex_atlevel(G__tagnum, 0);
          break;
       default:
          G__tagnum = G__Dict::GetDict().GetScope(G__search_tagname(tagname, type));
@@ -1858,6 +1863,7 @@ void Cint::Internal::G__define_struct(char type)
          }
 
       }
+      //fprintf(stderr, "G__define_struct: Setting abstract cnt for '%s' to: %d\n", G__tagnum.Name(Reflex::SCOPED).c_str(), purecount);
       G__struct.isabstract[G__get_tagnum(G__tagnum)] = purecount;
    }
 
@@ -1948,7 +1954,9 @@ void Cint::Internal::G__define_struct(char type)
                   store_decl = G__decl;
                   G__decl = 1;
                }
+               //fprintf(stderr, "G__define_struct: Setting enum '%-32s' member '%-16s' to value %d\n", G__p_local.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str(), memname, enumval.obj.i);
                G__letvariable(memname, enumval,::Reflex::Scope::GlobalScope() , G__p_local);
+               //G__dumpreflex_atlevel(G__p_local, 0);
                if (store_tagnum && !store_tagnum.IsTopScope()) {
                   G__def_struct_member = store_def_struct_member;
                   G__static_alloc = 0;

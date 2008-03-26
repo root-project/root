@@ -654,41 +654,42 @@ void G__setmemtestbreak(int n,int m);
 void G__clear_errordictpos();
 void G__setcopyflag(int flag);
 
-int G__get_type(const ::Reflex::Type& in);
+void G__get_cint5_type_tuple(const ::Reflex::Type in_type, char* out_type, int* out_tagnum, int* out_typenum, int* out_reftype, int* out_constvar);
+int G__get_type(const ::Reflex::Type in);
 int G__get_type(const G__value& in);
-int G__get_tagtype(const ::Reflex::Type& in);
-int G__get_tagtype(const ::Reflex::Scope& in);
-int G__get_reftype(const ::Reflex::Type& in);
-G__SIGNEDCHAR_T G__get_isconst(const ::Reflex::Type& in);
-int G__get_tagnum(const ::Reflex::Type& in);
-int G__get_tagnum(const ::Reflex::Scope& in);
-int G__get_typenum(const ::Reflex::Type& in);
-int G__get_nindex(const ::Reflex::Type& in);
-std::vector<int> G__get_index(const ::Reflex::Type& in);
-int G__get_varlabel(const ::Reflex::Type& in, int idx);
-int G__get_varlabel(const ::Reflex::Member& in, int idx);
-bool G__is_localstaticbody(const Reflex::Member& var);
-int G__get_paran(const Reflex::Member& var);
+int G__get_tagtype(const ::Reflex::Type in);
+int G__get_tagtype(const ::Reflex::Scope in);
+int G__get_reftype(const ::Reflex::Type in);
+G__SIGNEDCHAR_T G__get_isconst(const ::Reflex::Type in);
+int G__get_tagnum(const ::Reflex::Type in);
+int G__get_tagnum(const ::Reflex::Scope in);
+int G__get_typenum(const ::Reflex::Type in);
+int G__get_nindex(const ::Reflex::Type in);
+std::vector<int> G__get_index(const ::Reflex::Type in);
+int G__get_varlabel(const ::Reflex::Type in, int idx);
+int G__get_varlabel(const ::Reflex::Member in, int idx);
+bool G__is_localstaticbody(const Reflex::Member var);
+int G__get_paran(const Reflex::Member var);
 
 void G__get_stack_varname(std::string &output,const char *varname,const ::Reflex::Member &m,int tagnum);
 
-::G__RflxProperties *G__get_properties(const ::Reflex::Type& in);
-::G__RflxProperties *G__get_properties(const ::Reflex::Scope& in);
-::G__RflxVarProperties *G__get_properties(const ::Reflex::Member& in);
-::G__RflxFuncProperties *G__get_funcproperties(const ::Reflex::Member& in);
+::G__RflxProperties* G__get_properties(const ::Reflex::Type in);
+::G__RflxProperties* G__get_properties(const ::Reflex::Scope in);
+::G__RflxVarProperties* G__get_properties(const ::Reflex::Member in);
+::G__RflxFuncProperties* G__get_funcproperties(const ::Reflex::Member in);
 size_t GetReflexPropertyID();
 template< class T, class Prop >
 void G__set_properties(const T& in, const Prop& rp) {
    in.Properties().AddProperty(GetReflexPropertyID(), rp);
 }
-size_t G__get_bitfield_width(const ::Reflex::Member &in);
-size_t G__get_bitfield_start(const ::Reflex::Member &in);
+size_t G__get_bitfield_width(const ::Reflex::Member in);
+size_t G__get_bitfield_start(const ::Reflex::Member in);
 
 int G__sizeof_deref(const G__value*);
-::Reflex::Type G__strip_array(const ::Reflex::Type &typein);
-::Reflex::Type G__strip_one_array(const Reflex::Type &typein);
-::Reflex::Type G__deref(const ::Reflex::Type &typein);
-::Reflex::Type G__modify_type(const ::Reflex::Type& typein
+::Reflex::Type G__strip_array(const ::Reflex::Type typein);
+::Reflex::Type G__strip_one_array(const Reflex::Type typein);
+::Reflex::Type G__deref(const ::Reflex::Type typein);
+::Reflex::Type G__modify_type(const ::Reflex::Type typein
                                     ,bool ispointer
                                     ,int reftype,int isconst
                                     ,int nindex, int *index);
@@ -696,7 +697,7 @@ int G__sizeof_deref(const G__value*);
 ::Reflex::Type G__get_from_type(int type, int createpointer, int isconst = 0);
 ::Reflex::Type G__find_type(const char *type_name, int errorflag, int templateflag);
 ::Reflex::Type G__find_typedef(const char*);
-::Reflex::Type G__findInScope(const ::Reflex::Scope& scope, const char* name);
+::Reflex::Type G__findInScope(const ::Reflex::Scope scope, const char* name);
 ::Reflex::Type G__declare_typedef(const char *typenamein,
                                         int typein,int tagnum,int reftype,
                                         int isconst, int globalcomp,
@@ -711,18 +712,19 @@ int G__sizeof_deref(const G__value*);
                                   ,int isdecl);
 ::Reflex::Type G__get_Type(int type, int tagnum, int typenum, int isconst);
 
-bool G__test_access(const ::Reflex::Member &var, int access);
-bool G__is_cppmacro(const ::Reflex::Member &var);
-bool G__test_static(const ::Reflex::Member &var, int what_static, int filenum = -1);
-bool G__test_const(const ::Reflex::Member &var, int what_const);
-bool G__test_const(const ::Reflex::Type &type, int what_const);
-int G__get_access(const ::Reflex::Member &mem);
-int G__get_static(const ::Reflex::Member &mem);
-char*& G__get_offset(const ::Reflex::Member& var);
-Reflex::Type G__replace_rawtype(const Reflex::Type& target, const Reflex::Type& raw);
+bool G__test_access(const ::Reflex::Member var, int access);
+bool G__is_cppmacro(const ::Reflex::Member var);
+bool G__filescopeaccess(int filenum, int statictype);
+bool G__test_static(const ::Reflex::Member var, int what_static, int filenum = -1);
+bool G__test_const(const ::Reflex::Member var, int what_const);
+bool G__test_const(const ::Reflex::Type type, int what_const);
+int G__get_access(const ::Reflex::Member mem);
+int G__get_static(const ::Reflex::Member mem);
+char*& G__get_offset(const ::Reflex::Member var);
+Reflex::Type G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw);
 
-void G__set_G__tagnum(const ::Reflex::Scope&);
-void G__set_G__tagnum(const ::Reflex::Type&);
+void G__set_G__tagnum(const ::Reflex::Scope);
+void G__set_G__tagnum(const ::Reflex::Type);
 void G__set_G__tagnum(const G__value&);
 
 void G__dumpreflex();

@@ -4015,7 +4015,7 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //
    if (var_type.IsAbstract()) {
       // -- Do *not* create abstract class variable!
-      G__fprinterr(G__serr, "Error: abstract class object '%s %s' declared", G__tagnum.Name().c_str(), item);
+      G__fprinterr(G__serr, "Error: 4018: abstract class object '%s %s' declared", G__tagnum.Name().c_str(), item);
       G__genericerror(0);
       G__display_purevirtualfunc(G__get_tagnum(G__tagnum));
       return result;
@@ -4388,8 +4388,9 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
             (G__reftype == G__PARANORMAL) &&
             ((G__globalcomp != G__CPPLINK) || (G__tagdefining != G__tagnum))
          ) {
-            G__fprinterr(G__serr, "Error: abstract class object '%s %s' declared", G__tagnum.Name().c_str(), item);
+            G__fprinterr(G__serr, "Error: Attempt to allocate memory for data member of an abstract class: '%s::%s'  %s:%d", G__tagnum.Name(Reflex::SCOPED).c_str(), item, __FILE__, __LINE__);
             G__genericerror(0);
+            G__fprinterr(G__serr, "Error: Pure virtual functions are:  %s:%d\n", __FILE__, __LINE__);
             G__display_purevirtualfunc(G__get_tagnum(G__tagnum));
             // --
          }
@@ -6416,6 +6417,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
 G__value Cint::Internal::G__getstructmem(int store_var_type, char* varname, char* membername, char* tagname, int* known2, const ::Reflex::Scope& varglobal, int objptr /* 1 : object, 2 : pointer */)
 {
    // -- FIXME: Describe me!
+   fprintf(stderr, "G__getstructmem: varname: '%s' membername: '%s' tagname: '%s' objptr: %d\n", varname, membername, tagname, objptr);
    ::Reflex::Scope store_tagnum;
    char* store_struct_offset = 0;
    int flag = 0;
@@ -7310,6 +7312,8 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
          next_base:
          ig15 = 0;
          for (::Reflex::Member_Iterator iter = var.DataMember_Begin(); iter != var.DataMember_End(); ++iter, ++ig15) {
+            // --
+/*
             if (
                *iter && // member has a name, and
                !strcmp(iter->Name().c_str(), varname.c_str()) && // Names match, and FIXME: need to use strcmp because varname.c_str() was manipulated directly (G__scopeoperator)
@@ -7325,6 +7329,20 @@ void Cint::Internal::G__get_stack_varname(std::string& output, const char* varna
                return *iter;
             }
             //--
+*/
+            if (*iter && !strcmp(iter->Name().c_str(), varname.c_str())) {
+               if (
+                  (G__get_properties(*iter)->statictype < 0) || // Not file scope, or
+                  G__filescopeaccess(G__ifile.filenum, G__get_properties(*iter)->filenum) // File scope access match.
+               ) {
+                  if (G__test_access(*iter, accesslimit)) { // Access limit match.
+                     if (pig15) {
+                        *pig15 = ig15;
+                     }
+                     return *iter;
+                  }
+               }
+            }
          }
          // Next base class if searching for class member.
          if (

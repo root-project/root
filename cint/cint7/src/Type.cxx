@@ -168,9 +168,13 @@ const char* Cint::G__TypeInfo::Name()
 #else
 #pragma message(FIXME("Get rid of static G__buf by proper lookup"))
 #endif
-
-  strcpy(G__buf,G__type2string(G__get_type(typenum),(int)tagnum,G__get_typenum(typenum),
-                               G__get_reftype(typenum),G__get_isconst(typenum)));
+  char type = '\0';
+  int cint5_tagnum = -1;
+  int cint5_typenum = -1;
+  int reftype = 0;
+  int constvar = 0;
+  G__get_cint5_type_tuple(typenum, &type, &cint5_tagnum, &cint5_typenum, &reftype, &constvar);
+  strcpy(G__buf, G__type2string(type, cint5_tagnum, cint5_typenum, reftype, constvar));
   return G__buf;
 }
 

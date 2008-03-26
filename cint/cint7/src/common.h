@@ -1332,6 +1332,7 @@ public:
    BuilderHolder builder;
    void* vtable;
    bool isBytecodeArena;
+   int statictype;
 };
 
 class G__RflxVarProperties: public G__RflxProperties {

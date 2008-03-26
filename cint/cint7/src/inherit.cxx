@@ -83,6 +83,7 @@ void Cint::Internal::G__inheritclass(int to_tagnum,int from_tagnum,char baseacce
 #endif
   }
 
+  //fprintf(stderr, "G__inheritclass: Incrementing abstract count for '%s' by: %d because of '%s'\n", G__Dict::GetDict().GetScope(to_tagnum).Name(Reflex::SCOPED).c_str(), G__struct.isabstract[from_tagnum], G__Dict::GetDict().GetScope(from_tagnum).Name(Reflex::SCOPED).c_str());
   G__struct.isabstract[to_tagnum]+=G__struct.isabstract[from_tagnum];
   G__struct.funcs[to_tagnum] |= (G__struct.funcs[from_tagnum]&0xf0);
 

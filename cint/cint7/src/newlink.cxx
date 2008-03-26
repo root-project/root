@@ -2418,8 +2418,9 @@ static void G__if_ary_union_reset(const ::Reflex::Member& ifunc)
 
    for (k = 0; k < m; ++k) {
       if (ifunc.FunctionParameterNameAt(k).c_str()[0]) {
-         p = strchr((char*)ifunc.FunctionParameterNameAt(k).c_str(), '[');
+         p = strchr(ifunc.FunctionParameterNameAt(k).c_str(), '[');
          if (p) {
+            fprintf(stderr, "G__if_ary_union_reset: idx: %d  name: '%s'\n", k, ifunc.FunctionParameterNameAt(k).c_str());
             assert(0);
             //int pointlevel = 1;
             //*p = 0;
@@ -4411,21 +4412,21 @@ int Cint::Internal::G__cppif_returntype(FILE* fp, const ::Reflex::Member& ifunc,
 //______________________________________________________________________________
 void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, int k)
 {
-   // -- FIXME: Describe this function!
+   // TODO: Describe this function!
 #ifndef G__SMALLOBJECT
    ::Reflex::Type param_type(ifunc.TypeOf().FunctionParameterAt(k));
    std::string param_name(ifunc.FunctionParameterNameAt(k));
-   int type = G__get_type(param_type);
-   int tagnum = G__get_tagnum(param_type.RawType());
-   int typenum = G__get_typenum(param_type);
-   int reftype = G__get_reftype(param_type);
-   int isconst = G__get_isconst(param_type);
+   char type = '\0';
+   int tagnum = -1;
+   int typenum = -1;
+   int reftype = 0;
+   int isconst = 0;
+   G__get_cint5_type_tuple(param_type, &type, &tagnum, &typenum, &reftype, &isconst);
    // Promote link-off typedef to link-on if used in function.
    if (
-      typenum &&
-      G__get_properties(param_type) &&
-      G__get_properties(param_type)->globalcomp == G__NOLINK &&
-      G__get_properties(param_type)->iscpplink == G__NOLINK
+      (typenum != -1) &&
+      (G__get_properties(param_type)->globalcomp == G__NOLINK) &&
+      (G__get_properties(param_type)->iscpplink == G__NOLINK)
    ) {
       G__get_properties(param_type)->globalcomp = G__globalcomp;
    }
@@ -4435,8 +4436,8 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
    if (k) {
       fprintf(fp, ", ");
    }
-   if (param_name.c_str()[0]) {
-      char* p = strchr((char*) param_name.c_str(), '[');
+   if (param_name.size()) {
+      char* p = strchr(param_name.c_str(), '[');
       if (p) {
          fprintf(fp, "G__Ap%d->a", k);
          return;
@@ -4451,37 +4452,19 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
 #endif // G__OLDIMPLEMENTATION2191
       // --
    ) {
-      std::string castname;
       switch (reftype) {
          case G__PARANORMAL:
-            if (!param_type.IsTypedef()) {
+            if ((typenum != -1) && param_type.IsTypedef() && param_type.ToType().IsReference()) {
+               reftype = G__PARAREFERENCE;
+               typenum = -1;
+            }
+            else {
                break;
             }
-            if (G__get_reftype(param_type.ToType()) != G__PARAREFERENCE) {
-               break;
-            }
-            reftype = G__PARAREFERENCE;
-            typenum = -1;
             // Note: Intentionally fall through here!
          case G__PARAREFERENCE: 
             {
-               // NOTE: It would be better if we could keep the constness ...
-               // using the unqualified name remove both the 'reference' and the 'constness'
-               if (param_type.IsReference()) {
-                  castname = param_type.Name(Reflex::SCOPED); // Want unqualified name
-               } else {
-                  Reflex::Type current = param_type.ToType();
-                  while( current.IsTypedef() ) current = current.ToType();
-                  castname = current.Name(Reflex::SCOPED);
-               }
-               //if (param_type.FinalType().IsReference()) {
-               //   // In cint5, there was only one level of typedef (recorded in the database)
-               //   // and the ref type was always in the tuple directly.  This is not true
-               //   // for Reflex and hence the trick of not passing reftype to G__type2string is
-               //   // not sufficient, we also need to make sure we strip it explicitly from the
-               //   // type. 
-               //   castname = param_type.FinalType().Name(); // Want unqualified name
-               //}
+               std::string castname(G__type2string(type, tagnum, typenum, 0, 0));
                if (islower(type)) {
                   switch (type) {
                      case 'u':
@@ -4489,192 +4472,164 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
                         break;
 #ifndef G__OLDIMPLEMENTATION1167
                      case 'd':
-                        fprintf(fp, "*(%s*) G__Doubleref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__Doubleref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'l':
-                        fprintf(fp, "*(%s*) G__Longref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__Longref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'i':
-                        if (tagnum == -1) /* int */
-                           fprintf(fp, "*(%s*) G__Intref(&libp->para[%d])"
-                           , castname.c_str(), k);
-                        else /* enum type */
-                           fprintf(fp, "*(%s*) libp->para[%d].ref"
-                           , castname.c_str() , k);
+                        if (tagnum == -1) { // int
+                           fprintf(fp, "*(%s*) G__Intref(&libp->para[%d])", castname.c_str(), k);
+                        }
+                        else { // enum type
+                           fprintf(fp, "*(%s*) libp->para[%d].ref", castname.c_str() , k);
+                        }
                         break;
                      case 's':
-                        fprintf(fp, "*(%s*) G__Shortref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__Shortref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'c':
-                        fprintf(fp, "*(%s*) G__Charref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__Charref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'h':
-                        fprintf(fp, "*(%s*) G__UIntref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__UIntref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'r':
-                        fprintf(fp, "*(%s*) G__UShortref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__UShortref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'b':
-                        fprintf(fp, "*(%s*) G__UCharref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__UCharref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'k':
-                        fprintf(fp, "*(%s*) G__ULongref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__ULongref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'n':
-                        fprintf(fp, "*(%s*) G__Longlongref(&libp->para[%d])"
+                        fprintf(fp, "*(%s*) G__Longlongref(&libp->para[%d])",
 #if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
-                           , "__int64", k);
+                           "__int64",
 #else // _MSC_VER && (_MSC_VER < 1310)
-                           , castname.c_str(), k);
+                           castname.c_str(),
 #endif // _MSC_VER && (_MSC_VER < 1310)
+                        k);
                         break;
                      case 'm':
-                        fprintf(fp, "*(%s*) G__ULonglongref(&libp->para[%d])"
+                        fprintf(fp, "*(%s*) G__ULonglongref(&libp->para[%d])",
 #if defined(_MSC_VER) && (_MSC_VER < 1310) /*vc6 and vc7.0*/
-                           , "unsigned __int64", k);
+                           "unsigned __int64",
 #else // _MSC_VER && (_MSC_VER < 1310)
-                           , castname.c_str(), k);
+                           castname.c_str(),
 #endif // _MSC_VER && (_MSC_VER < 1310)
+                        k);
                         break;
                      case 'q':
-                        fprintf(fp, "*(%s*) G__Longdoubleref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__Longdoubleref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'g':
-                        fprintf(fp, "*(%s*) G__Boolref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__Boolref(&libp->para[%d])", castname.c_str(), k);
                         break;
                      case 'f':
-                        fprintf(fp, "*(%s*) G__Floatref(&libp->para[%d])"
-                           , castname.c_str(), k);
+                        fprintf(fp, "*(%s*) G__Floatref(&libp->para[%d])", castname.c_str(), k);
                         break;
 #else // G__OLDIMPLEMENTATION1167
                      case 'd':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mdouble(libp->para[%d])"
-                           , k, castname.c_str() , k, k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mdouble(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'l':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlong(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlong(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'i':
-                        if (-1 == tagnum) /* int */
-                           fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mint(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
-                        else /* enum type */
-                           fprintf(fp, "*(%s*) libp->para[%d].ref"
-                           , castname.c_str() , k);
+                        if (-1 == tagnum) { // int
+                           fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mint(libp->para[%d])", k, castname.c_str(), k, k);
+                        }
+                        else { // enum type
+                           fprintf(fp, "*(%s*) libp->para[%d].ref", castname.c_str(), k);
+                        }
                         break;
                      case 's':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mshort(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mshort(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'c':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mchar(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mchar(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'h':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Muint(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Muint(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'r':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mushort(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mushort(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'b':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Muchar(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Muchar(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'k':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mulong(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mulong(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'n':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlonglong(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlonglong(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'm':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mulonglong(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mulonglong(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'q':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlongdouble(libp->para[%d])"
-                           , k, castname.c_str() , k , k);
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mlongdouble(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
                      case 'g':
                         // --
 #ifdef G__BOOL4BYTE
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mint(libp->para[%d])"
-                           , k, castname.c_str() , k , k
-                           );
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mint(libp->para[%d])", k, castname.c_str(), k, k);
 #else // G__BOOL4BYTE
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Muchar(libp->para[%d])"
-                           , k, castname.c_str() , k , k
-                           );
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Muchar(libp->para[%d])", k, castname.c_str(), k, k);
 #endif // G__BOOL4BYTE
                         break;
                      case 'f':
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mfloat(libp->para[%d])"
-                           , k, castname.c_str() , k , k
-                           );
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : G__Mfloat(libp->para[%d])", k, castname.c_str(), k, k);
                         break;
 #endif // G__OLDIMPLEMENTATION1167
                         // --
                      default:
-                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : (%s) G__int(libp->para[%d])"
-                           , k, castname.c_str()
-                           , k, castname.c_str()
-                           , k
-                           );
+                        fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : (%s) G__int(libp->para[%d])", k, castname.c_str(), k, castname.c_str(), k);
                         break;
                   }
                }
                else {
-                  fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
-                     , k, castname.c_str()
-                     , k, castname.c_str()
-                     , k);
-
-               //   if (param_type.IsTypedef() && param_type.ToType().FinalType().IsPointer()) {
-               //      /* This part is not perfect. Cint data structure bug.
-               //      * typedef char* value_type;
-               //      * void f(value_type& x);  // OK
-               //      * void f(value_type x);   // OK
-               //      * void f(value_type* x);  // OK
-               //      * void f(value_type*& x); // bad
-               //      *  reference and pointer to pointer can not happen at once */
-               //      fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
-               //         , k, G__type2string(type, tagnum, typenum, 0, isconst & G__CONSTVAR)
-               //         , k, G__type2string(type, tagnum, typenum, 0, isconst & G__CONSTVAR)
-               //         , k);
-               //      /* above is , in fact, not good. G__type2string returns pointer to
-               //      * static buffer. This relies on the fact that the 2 calls are
-               //      * identical */
-               //   }
-               //   else {
-               //      fprintf(fp, "libp->para[%d].ref ? *(%s) libp->para[%d].ref : *(%s) (&G__Mlong(libp->para[%d]))"
-               //         , k, G__type2string(type, tagnum, typenum, 2, isconst & G__CONSTVAR)
-               //         , k, G__type2string(type, tagnum, typenum, 2, isconst & G__CONSTVAR)
-               //         , k);
-               //      /* above is , in fact, not good. G__type2string returns pointer to
-               //      * static buffer. This relies on the fact that the 2 calls are
-               //      * identical */
-               //   }
+                  if ((typenum != -1) && param_type.IsTypedef() && isupper(G__get_type(param_type.ToType()))) {
+                     // This part is not perfect. Cint data structure bug.
+                     // typedef char* value_type;
+                     // void f(value_type& x);  // OK
+                     // void f(value_type x);   // OK
+                     // void f(value_type* x);  // OK
+                     // void f(value_type*& x); // bad
+                     //  reference and pointer to pointer can not happen at once
+                     fprintf(
+                          fp
+                        , "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
+                        , k
+                        , G__type2string(type, tagnum, typenum, 0, isconst & G__CONSTVAR)
+                        , k
+                        , G__type2string(type, tagnum, typenum, 0, isconst & G__CONSTVAR)
+                        , k
+                     );
+                  }
+                  else {
+                     fprintf(
+                          fp
+                        , "libp->para[%d].ref ? *(%s) libp->para[%d].ref : *(%s) (&G__Mlong(libp->para[%d]))"
+                        , k
+                        , G__type2string(type, tagnum, typenum, 2, isconst&G__CONSTVAR)
+                        , k
+                        , G__type2string(type, tagnum, typenum, 2, isconst&G__CONSTVAR)
+                        , k
+                     );
+                     // above is , in fact, not good. G__type2string returns pointer to
+                     // static buffer. This relies on the fact that the 2 calls are
+                     // identical
+                  }
                }
                return;
             }
          case G__PARAREFP2P:
          case G__PARAREFP2P2P:
             reftype = G__PLVL(reftype);
-            if (param_type.IsTypedef() && param_type.ToType().RawType().IsPointer()) {
+            if ((typenum != -1) && param_type.IsTypedef() && isupper(G__get_type(param_type.ToType()))) {
                fprintf(fp, "libp->para[%d].ref ? *(%s*) libp->para[%d].ref : *(%s*) (&G__Mlong(libp->para[%d]))"
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst)
                        , k, G__type2string(type, tagnum, typenum, reftype, isconst), k
@@ -4742,7 +4697,7 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
          fprintf(fp, "(%s) G__double(libp->para[%d])", G__type2string(type, tagnum, typenum, 0, isconst), k);
          break;
       case 'u':
-         if ('e' == G__struct.type[tagnum]) {
+         if (G__struct.type[tagnum] == 'e') {
             fprintf(fp, "(%s) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, 0, isconst), k);
          }
          else {

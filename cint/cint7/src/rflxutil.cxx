@@ -37,13 +37,140 @@ size_t Cint::Internal::GetReflexPropertyID()
 }
 
 //______________________________________________________________________________
+void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char* out_type, int* out_tagnum, int* out_typenum, int* out_reftype, int* out_constvar)
+{
+   // Return the cint5 type tuple for a reflex type.
+   //
+   // Note: Some C++ types cannot be represented by a cint5 type tuple.
+   //
+   //--
+   //
+   //  Get the type part.
+   //
+   *out_type = G__get_type(in_type);
+   //
+   //  Get the tagnum part.
+   //
+   {
+      *out_tagnum = -1;
+      for (::Reflex::Type current = in_type; current; current = current.ToType()) {
+         if (current.IsClass() || current.IsUnion() || current.IsEnum()) {
+            *out_tagnum = G__get_properties(current)->tagnum;
+            break;
+         }
+      }
+   }
+   //
+   //  Get the typenum part.
+   //
+   //  Note: This is not right because cint5 can only have certain type nodes
+   //        above a typedef, but this is good enough for now.
+   //
+   {
+      *out_typenum = -1;
+      for (::Reflex::Type current = in_type; current; current = current.ToType()) {
+         if (current.IsTypedef()) {
+            *out_typenum = G__get_properties(current)->typenum;
+            break;
+         }
+      }
+   }
+   //
+   // Get CINT reftype for a type (PARANORMAL, PARAREFERENCE, etc.).
+   //
+   // Given this:
+   //
+   //      typedef char& cref;
+   //      void f(cref a);
+   //
+   // cint v5 does not consider function parameter "a" to be a reference.
+   //
+   // Type in cint v5 is a five-tuple (type, tagnum, typenum, reftype=(ref,ptr-level), const)
+   // and here it would be: ('c', -1, ('c', -1, -1, (ref, 0), 0), (notref,0), 0).
+   //
+   // Given this:
+   //
+   //      typedef char* ch;
+   //      void f(ch**& a);
+   //
+   // cint v5 considers "a" to be: ('C', -1, ('C', -1, -1, (notref, 0), 0), (ref, 2), 0)
+   //
+   // Given this:
+   //
+   //      typedef char* cp;
+   //      typedef cp*   cpp;
+   //      void f(cpp**& a);
+   //
+   // cint v5 considers "a" to be: ('C', -1, ('C', -1, -1, (notref, 2), 0), (ref, 2), 0)
+   //
+   // Note that cint v5 cannot remember more than one level of typedef deep.
+   //
+   {
+      bool isref = in_type.IsReference();
+      ::Reflex::Type current = in_type; 
+      for (; !isref && current && current.IsTypedef();) {
+         current = current.ToType();
+         isref = current.IsReference();
+      }
+      // Count pointer levels.
+      int pointers = 0;
+      for (; current && current.IsPointer(); current = current.ToType()) {
+         ++pointers;
+      }
+      *out_reftype = G__PARANORMAL;
+      if (pointers > 1) {
+         *out_reftype = (isref * G__PARAREF) + pointers;
+      } else if (isref) {
+         *out_reftype = G__PARAREFERENCE;
+      }
+   }
+   //
+   //  Now get the constvar part.
+   //
+   //  Note: This is not right, the correct setting of G__PCONSTVAR depends
+   //        on where the space characters were in the declaration in the
+   //        source code.  We do not have that information available.
+   //
+   {
+      *out_constvar = 0;
+      if (in_type.IsFunction()) {
+         if (in_type.IsConst()) {
+            *out_constvar |= G__CONSTFUNC;
+         }
+         if (in_type.ReturnType().IsConst()) {
+            *out_constvar |= G__CONSTVAR;
+         }
+      }
+      else {
+         bool ptr_or_ref_seen = false;
+         bool accumulated_const = false;
+         for (::Reflex::Type current = in_type; current; current = current.ToType()) {
+            accumulated_const = accumulated_const || current.IsConst();
+            if (current.IsPointer() || current.IsReference()) {
+               accumulated_const = false;
+               if (!ptr_or_ref_seen) {
+                  ptr_or_ref_seen = true;
+                  if (current.IsConst()) {
+                     *out_constvar |= G__PCONSTVAR;
+                  }
+               }
+            }
+         }
+         if (accumulated_const) {
+            *out_constvar |= G__CONSTVAR;
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 extern "C" int G__value_get_type(G__value *buf)
 {
    return Cint::Internal::G__get_type(*buf);
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_type(const ::Reflex::Type& in)
+int Cint::Internal::G__get_type(const ::Reflex::Type in)
 {
    // -- Get CINT type code for data type.
    // Note: Structures are all 'u'.
@@ -141,7 +268,7 @@ int Cint::Internal::G__get_type(const G__value& in)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_tagtype(const ::Reflex::Type& in)
+int Cint::Internal::G__get_tagtype(const ::Reflex::Type in)
 {
    // -- Get CINT type code for a structure (c,s,e,u).
    switch (in.RawType().TypeType()) {
@@ -155,7 +282,7 @@ int Cint::Internal::G__get_tagtype(const ::Reflex::Type& in)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_tagtype(const ::Reflex::Scope& in)
+int Cint::Internal::G__get_tagtype(const ::Reflex::Scope in)
 {
    // -- Get CINT type code for a structure (c,s,e,u).
    
@@ -171,7 +298,7 @@ int Cint::Internal::G__get_tagtype(const ::Reflex::Scope& in)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_reftype(const ::Reflex::Type& in)
+int Cint::Internal::G__get_reftype(const ::Reflex::Type in)
 {
    // -- Get CINT reftype for a type (PARANORMAL, PARAREFERENCE, etc.).
    //
@@ -229,7 +356,7 @@ int Cint::Internal::G__get_reftype(const ::Reflex::Type& in)
 }
 
 //______________________________________________________________________________
-G__RflxProperties *Cint::Internal::G__get_properties(const ::Reflex::Type& in)
+G__RflxProperties* Cint::Internal::G__get_properties(const ::Reflex::Type in)
 {
    // -- Get REFLEX property list from a data type.
    if (!in) {
@@ -243,7 +370,7 @@ G__RflxProperties *Cint::Internal::G__get_properties(const ::Reflex::Type& in)
 }
 
 //______________________________________________________________________________
-G__RflxProperties *Cint::Internal::G__get_properties(const ::Reflex::Scope& in)
+G__RflxProperties* Cint::Internal::G__get_properties(const ::Reflex::Scope in)
 {
    // -- Get REFLEX property list from a scope.
    if (!in) {
@@ -257,7 +384,7 @@ G__RflxProperties *Cint::Internal::G__get_properties(const ::Reflex::Scope& in)
 }
 
 //______________________________________________________________________________
-G__RflxVarProperties *Cint::Internal::G__get_properties(const ::Reflex::Member& in)
+G__RflxVarProperties* Cint::Internal::G__get_properties(const ::Reflex::Member in)
 {
    // -- Get REFLEX property list from a class member.
    if (!in || !in.IsDataMember()) {
@@ -272,7 +399,7 @@ G__RflxVarProperties *Cint::Internal::G__get_properties(const ::Reflex::Member& 
 }
 
 //______________________________________________________________________________
-G__RflxFuncProperties *Cint::Internal::G__get_funcproperties(const ::Reflex::Member& in)
+G__RflxFuncProperties* Cint::Internal::G__get_funcproperties(const ::Reflex::Member in)
 {
    // -- Get REFLEX property list from a class member function.
    if (!in || !(in.IsFunctionMember() || in.IsTemplateInstance())) {
@@ -288,7 +415,7 @@ G__RflxFuncProperties *Cint::Internal::G__get_funcproperties(const ::Reflex::Mem
 }
 
 //______________________________________________________________________________
-G__SIGNEDCHAR_T Cint::Internal::G__get_isconst(const ::Reflex::Type& in)
+G__SIGNEDCHAR_T Cint::Internal::G__get_isconst(const ::Reflex::Type in)
 {
    // -- Is data type const qualified?
    ::Reflex::Type current = in; // .FinalType(); is currently buggy
@@ -318,7 +445,7 @@ G__SIGNEDCHAR_T Cint::Internal::G__get_isconst(const ::Reflex::Type& in)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_nindex(const ::Reflex::Type& passed_type)
+int Cint::Internal::G__get_nindex(const ::Reflex::Type passed_type)
 {
    // -- Get dimensionality of a data type.
 
@@ -341,7 +468,7 @@ int Cint::Internal::G__get_nindex(const ::Reflex::Type& passed_type)
 }
 
 //______________________________________________________________________________
-std::vector<int> Cint::Internal::G__get_index(const ::Reflex::Type& passed_var)
+std::vector<int> Cint::Internal::G__get_index(const ::Reflex::Type passed_var)
 {
    // -- Get CINT array maximum dimensions as a std::vector<int> for a data type.
    //
@@ -509,14 +636,14 @@ std::vector<int> Cint::Internal::G__get_varlabel_as_vector(const ::Reflex::Type&
 #endif
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_varlabel(const Reflex::Member& var, int idx)
+int Cint::Internal::G__get_varlabel(const Reflex::Member var, int idx)
 {
    // -- Get CINT varlabel for a class member.
    return G__get_varlabel(var.TypeOf(), idx);
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_varlabel(const Reflex::Type& passed_var, int idx)
+int Cint::Internal::G__get_varlabel(const Reflex::Type passed_var, int idx)
 {
    // -- Get CINT varlabel for a data type.
    //
@@ -638,7 +765,7 @@ int Cint::Internal::G__get_varlabel(const Reflex::Type& passed_var, int idx)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_typenum(const ::Reflex::Type& in)
+int Cint::Internal::G__get_typenum(const ::Reflex::Type in)
 {
    // -- Get CINT typenum for a given typedef type.
    if (!in.IsTypedef()) {
@@ -652,7 +779,7 @@ int Cint::Internal::G__get_typenum(const ::Reflex::Type& in)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_tagnum(const ::Reflex::Type& in)
+int Cint::Internal::G__get_tagnum(const ::Reflex::Type in)
 {
    // -- Get CINT tagnum for a given type.
    // Note: Only class types have a tagnum.
@@ -664,7 +791,7 @@ int Cint::Internal::G__get_tagnum(const ::Reflex::Type& in)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_tagnum(const ::Reflex::Scope& in)
+int Cint::Internal::G__get_tagnum(const ::Reflex::Scope in)
 {
    // -- Get CINT tagnum for a given scope.
    // Note: Only class scopes have a tagnum.
@@ -733,7 +860,7 @@ const ::Reflex::Type& Cint::Internal::G__value_typenum(const G__value& gv)
        *   z : switchDefault
        *   Z : codeBreak (continue, break, goto)
        ****************************************************/
-   case 'a': return ::Reflex::Type::ByName("switchStart$");
+   //case 'a': return ::Reflex::Type::ByName("switchStart$");
    case 'z': return ::Reflex::Type::ByName("switchDefault$");
    case 'Z': return ::Reflex::Type::ByName("codeBreak$");
    case 'p': return ::Reflex::Type::ByName("macroInt$");
@@ -801,7 +928,7 @@ const ::Reflex::Type& Cint::Internal::G__value_typenum(const G__value& gv)
 }
 
 //______________________________________________________________________________
-bool Cint::Internal::G__is_localstaticbody(const Reflex::Member& var)
+bool Cint::Internal::G__is_localstaticbody(const Reflex::Member var)
 {
    // -- Is var is a static variable in an interpreted function body?
 
@@ -810,7 +937,7 @@ bool Cint::Internal::G__is_localstaticbody(const Reflex::Member& var)
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__get_paran(const Reflex::Member& var) {
+int Cint::Internal::G__get_paran(const Reflex::Member var) {
    // -- Get the CINT paran for a REFLEX class member.
    // Note: This is zero if the member is not an array,
    //       otherwise it is the number of array dimensions.
@@ -818,25 +945,25 @@ int Cint::Internal::G__get_paran(const Reflex::Member& var) {
 }
 
 //______________________________________________________________________________
-size_t Cint::Internal::G__get_bitfield_width(const Reflex::Member& var)
+size_t Cint::Internal::G__get_bitfield_width(const Reflex::Member var)
 {
    return G__get_properties(var)->bitfield_width;
 }
 
 //______________________________________________________________________________
-size_t Cint::Internal::G__get_bitfield_start(const Reflex::Member& var)
+size_t Cint::Internal::G__get_bitfield_start(const Reflex::Member var)
 {
    return G__get_properties(var)->bitfield_start;
 }
 
 //______________________________________________________________________________
-char*& Cint::Internal::G__get_offset(const ::Reflex::Member& var) 
+char*& Cint::Internal::G__get_offset(const ::Reflex::Member var) 
 {
    return G__get_properties(var)->addressOffset;
 }
 
 //______________________________________________________________________________
-Reflex::Type Cint::Internal::G__strip_array(const Reflex::Type &typein)
+Reflex::Type Cint::Internal::G__strip_array(const Reflex::Type typein)
 {
    // Return the type obtains after stripping all array dimensions.
 
@@ -853,7 +980,7 @@ Reflex::Type Cint::Internal::G__strip_array(const Reflex::Type &typein)
 }
 
 //______________________________________________________________________________
-Reflex::Type Cint::Internal::G__strip_one_array(const Reflex::Type &typein)
+Reflex::Type Cint::Internal::G__strip_one_array(const Reflex::Type typein)
 {
    // Remove one array node from the type.
 
@@ -868,7 +995,7 @@ Reflex::Type Cint::Internal::G__strip_one_array(const Reflex::Type &typein)
 }
 
 //______________________________________________________________________________
-Reflex::Type Cint::Internal::G__deref(const Reflex::Type &typein)
+Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
 {
    // Return the type equivalent to the return type of the default unary operator*
    // of the type 'typein' (aka for float* returns float).
@@ -884,7 +1011,7 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type &typein)
 }
 
 //______________________________________________________________________________
-::Reflex::Type Cint::Internal::G__modify_type(const ::Reflex::Type& typein, bool ispointer, int reftype, int isconst, int nindex, int* index)
+::Reflex::Type Cint::Internal::G__modify_type(const ::Reflex::Type typein, bool ispointer, int reftype, int isconst, int nindex, int* index)
 {
    // -- Construct a new REFLEX Type based on a given type.
    int ref = G__REF(reftype);
@@ -955,39 +1082,48 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type &typein)
 }
 
 //______________________________________________________________________________
-static void G__dumpreflex(const ::Reflex::Scope& scope, int level)
+void G__dumpreflex_atlevel(const ::Reflex::Scope scope, int level)
 {
+   for (
+      ::Reflex::Member_Iterator m = scope.DataMember_Begin();
+      m != scope.DataMember_End();
+      ++m
+   ) {
+         for (int i=0; i<level; ++i)
+            fprintf(stderr, " ");
+         fprintf(stderr, "data member: '%s'\n", m->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+   }
    for (::Reflex::Scope_Iterator iscope = scope.SubScope_Begin();
       iscope != scope.SubScope_End(); ++iscope) {
          for (int i=0; i<level; ++i)
-            printf(" ");
-         printf("%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name().c_str());
-         G__dumpreflex(*iscope, level+1);
+            fprintf(stderr, " ");
+         fprintf(stderr, "%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+         G__dumpreflex_atlevel(*iscope, level+1);
    }
    for (::Reflex::Type_Iterator itype = scope.SubType_Begin();
       itype != scope.SubType_End(); ++itype) {
          if (itype->IsClass()) continue;
          for (int i=0; i<level; ++i)
-            printf(" ");
-         printf("%s %s\n", itype->TypeTypeAsString().c_str(), itype->Name().c_str());
+            fprintf(stderr, " ");
+         fprintf(stderr, "%s %s\n", itype->TypeTypeAsString().c_str(), itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    }
 }
 
 //______________________________________________________________________________
-static void G__dumpreflex_function(const ::Reflex::Scope& scope, int level)
+void G__dumpreflex_function(const ::Reflex::Scope scope, int level)
 {
    for (::Reflex::Scope_Iterator iscope = scope.SubScope_Begin();
       iscope != scope.SubScope_End(); ++iscope) {
          for (int i=0; i<level; ++i)
-            printf(" ");
-         printf("%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name().c_str());
+            fprintf(stderr, " ");
+         fprintf(stderr, "%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
          G__dumpreflex_function(*iscope, level+1);
    }
    for (::Reflex::Member_Iterator itype = scope.FunctionMember_Begin();
       itype != scope.FunctionMember_End(); ++itype) {
          for (int i=0; i<level; ++i)
-            printf(" ");
-         printf("%s\n", itype->Name().c_str());
+            fprintf(stderr, " ");
+         fprintf(stderr, "%s\n", itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    }
 }
 
@@ -995,11 +1131,11 @@ static void G__dumpreflex_function(const ::Reflex::Scope& scope, int level)
 void Cint::Internal::G__dumpreflex()
 {
    return;
-   ::G__dumpreflex(::Reflex::Scope::GlobalScope(), 0);
+   ::G__dumpreflex_atlevel(::Reflex::Scope::GlobalScope(), 0);
 }
 
 //______________________________________________________________________________
-::Reflex::Type Cint::Internal::G__findInScope(const ::Reflex::Scope& scope, const char* name)
+::Reflex::Type Cint::Internal::G__findInScope(const ::Reflex::Scope scope, const char* name)
 {
    // -- Find a REFLEX Type in a REFLEX Scope by name.
    ::Reflex::Type cl;
@@ -1021,7 +1157,7 @@ void Cint::Internal::G__dumpreflex()
 }
 
 //______________________________________________________________________________
-bool Cint::Internal::G__test_access(const ::Reflex::Member &var, int access)
+bool Cint::Internal::G__test_access(const ::Reflex::Member var, int access)
 {
    // Return true if the member (var or function) is accessible
    // with the access level described by 'access'
@@ -1037,41 +1173,38 @@ bool Cint::Internal::G__test_access(const ::Reflex::Member &var, int access)
 }
 
 //______________________________________________________________________________
-bool Cint::Internal::G__is_cppmacro(const ::Reflex::Member &var)
+bool Cint::Internal::G__is_cppmacro(const ::Reflex::Member var)
 {
    return (var.TypeOf().RawType().Name() == "$MACRO$");
 }
 
 //______________________________________________________________________________
-bool Cint::Internal::G__test_const(const ::Reflex::Type &type, int what_const)
+bool Cint::Internal::G__test_const(const ::Reflex::Type type, int what_const)
 {
-   switch(what_const){
-      case G__VARIABLE:
-         {
-            G__SIGNEDCHAR_T what = G__get_isconst( type );
-            return what == what_const;
-         }
+   switch (what_const) {
+      case G__VARIABLE: {
+         G__SIGNEDCHAR_T what = G__get_isconst(type);
+         return what == what_const;
+      }
       case G__CONSTVAR:
       case G__PCONSTVAR:
       case G__PCONSTCONSTVAR:
-      case G__CONSTFUNC:
-         {
-            G__SIGNEDCHAR_T what = G__get_isconst( type );
-            return what & what_const;
-         }
-      case G__STATICCONST:
-         {
-            assert(0); // return var.IsStatic() && var.TypeOf().IsConst();
-         }
+      case G__CONSTFUNC: {
+         G__SIGNEDCHAR_T what = G__get_isconst(type);
+         return what & what_const;
+      }
+      case G__STATICCONST: {
+         assert(0); // return var.IsStatic() && var.TypeOf().IsConst();
+      }
       case G__LOCKVAR:
          // case G__DYNCONST: aliased to something else!
-         assert (0); // return G__get_properties(var)->lock;
+         assert(0);  // return G__get_properties(var)->lock;
    }
-   return false; 
+   return false;
 }
 
 //______________________________________________________________________________
-bool Cint::Internal::G__test_const(const ::Reflex::Member &var, int what_const)
+bool Cint::Internal::G__test_const(const ::Reflex::Member var, int what_const)
 {
    switch(what_const){
    case G__VARIABLE:
@@ -1099,38 +1232,78 @@ bool Cint::Internal::G__test_const(const ::Reflex::Member &var, int what_const)
 }
 
 //______________________________________________________________________________
-bool Cint::Internal::G__test_static(const ::Reflex::Member &var, int what_static, int filenum)
+bool Cint::Internal::G__filescopeaccess(int filenum, int statictype)
 {
-   switch(what_static) {
-   case G__AUTO:
-      return !var.IsStatic() && !G__get_properties(var)->isCompiledGlobal;
-   case G__LOCALSTATIC:
-      return var.IsStatic();
-      // was: break;
-   case G__LOCALSTATICBODY:
-      if (var.IsStatic()) {
-         ::Reflex::Scope d( var.DeclaringScope() );
-         if (! (d.IsClass() || d.IsEnum() || d.IsUnion() || d.IsNamespace() ) ) {
-            assert ( (d.Name()[d.Name().length()-1]=='$') );
-            // The declaring scope is a block or function scope
+   int store_filenum = filenum;
+   int store_statictype = statictype;
+
+   // Return true if filenum describe a file including the file defining
+   // the static variable.
+   if (filenum == statictype) {
+      return true;
+   }
+
+   while (statictype >= 0) {
+      statictype = G__srcfile[statictype].included_from;
+      if (filenum == statictype) {
+         return true;
+      }
+   }
+
+   // Return true if the static variable is defined in any of the
+   // file including the file describe by 'filenum'
+   statictype = store_statictype;
+   while (statictype >= 0) {
+      filenum = store_filenum;
+      if (filenum == statictype) {
+         return true;
+      }
+      statictype = G__srcfile[statictype].included_from;
+      while (filenum >= 0) {
+         if (filenum == statictype) {
             return true;
          }
+         filenum = G__srcfile[filenum].included_from;
       }
-      return false;
-      break;
-   case G__AUTOARYDISCRETEOBJ:
-      return !var.IsStatic() && var.TypeOf().FinalType().IsArray();
-      break;
-   case G__COMPILEDGLOBAL:
-      return G__get_properties(var)->isCompiledGlobal;
+   }
+   return false;
+}
+
+//______________________________________________________________________________
+bool Cint::Internal::G__test_static(const ::Reflex::Member var, int what_static, int filenum)
+{
+   switch (what_static) {
+      case G__AUTO:
+         return !var.IsStatic() && !G__get_properties(var)->isCompiledGlobal;
+      case G__LOCALSTATIC:
+         return var.IsStatic();
+      case G__LOCALSTATICBODY:
+         if (var.IsStatic()) {
+            ::Reflex::Scope d(var.DeclaringScope());
+            if (!(d.IsClass() || d.IsEnum() || d.IsUnion() || d.IsNamespace())) {
+               assert((d.Name()[d.Name().length()-1] == '$'));
+               // The declaring scope is a block or function scope
+               return true;
+            }
+         }
+         return false;
+      case G__AUTOARYDISCRETEOBJ:
+         return !var.IsStatic() && var.TypeOf().FinalType().IsArray();
+      case G__COMPILEDGLOBAL:
+         return G__get_properties(var)->isCompiledGlobal;
    }
 
 
-   if (what_static == 0) {
+   if (!what_static) {
       // Need to return true if any of the case above are true!
 
-      if (!var.IsStatic()) return true;
-      if (var.DeclaringScope().IsClass()) return true;
+      if (!var.IsStatic()) {
+         return true;
+      }
+
+      if (var.DeclaringScope().IsClass()) {
+         return true;
+      }
 
       int statictype = G__get_properties(var)->filenum;
       int store_filenum = filenum;
@@ -1138,32 +1311,40 @@ bool Cint::Internal::G__test_static(const ::Reflex::Member &var, int what_static
 
       // Return true if filenum describe a file including the file defining
       // the static variable.
-      if(filenum==statictype) return true;
-      while(statictype>=0) {
+      if (filenum == statictype) {
+         return true;
+      }
+
+      while (statictype >= 0) {
          statictype = G__srcfile[statictype].included_from;
-         if(filenum==statictype) return true;
+         if (filenum == statictype) {
+            return true;
+         }
       }
 
       // Return true if the static variable is defined in any of the
       // file including the file describe by 'filenum'
       statictype = store_statictype;
-      while(statictype>=0) {
+      while (statictype >= 0) {
          filenum = store_filenum;
-         if(filenum==statictype) return true;
+         if (filenum == statictype) {
+            return true;
+         }
          statictype = G__srcfile[statictype].included_from;
-         while(filenum>=0) {
-            if(filenum==statictype) return true;
+         while (filenum >= 0) {
+            if (filenum == statictype) {
+               return true;
+            }
             filenum = G__srcfile[filenum].included_from;
          }
       }
-      return false;
    }
 
    return false;
 }
 
 //______________________________________________________________________________
-Reflex::Type Cint::Internal::G__replace_rawtype(const Reflex::Type& target, const Reflex::Type& raw)
+Reflex::Type Cint::Internal::G__replace_rawtype(const Reflex::Type target, const Reflex::Type raw)
 {
    // copy with modifiers
    if (target.FinalType().ToType() != target.FinalType()) {
@@ -1194,7 +1375,7 @@ Reflex::Type Cint::Internal::G__replace_rawtype(const Reflex::Type& target, cons
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__set_G__tagnum(const ::Reflex::Scope& scope)
+void Cint::Internal::G__set_G__tagnum(const ::Reflex::Scope scope)
 {
    if (scope) {
       G__tagnum = scope;
@@ -1205,7 +1386,7 @@ void Cint::Internal::G__set_G__tagnum(const ::Reflex::Scope& scope)
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__set_G__tagnum(const ::Reflex::Type& type)
+void Cint::Internal::G__set_G__tagnum(const ::Reflex::Type type)
 {
    ::Reflex::Scope s = type.RawType();
    G__set_G__tagnum(s);
@@ -1263,7 +1444,7 @@ void Cint::Internal::G__set_G__tagnum(const G__value& result)
 }
 
 //______________________________________________________________________________
-int ::Cint::Internal::G__get_access(const ::Reflex::Member& mem) 
+int ::Cint::Internal::G__get_access(const ::Reflex::Member mem) 
 {
    if (mem.IsPublic()) return G__PUBLIC;
    else if(mem.IsProtected()) return G__PROTECTED;
@@ -1272,7 +1453,7 @@ int ::Cint::Internal::G__get_access(const ::Reflex::Member& mem)
 }
 
 //______________________________________________________________________________
-int ::Cint::Internal::G__get_static(const ::Reflex::Member& mem) 
+int ::Cint::Internal::G__get_static(const ::Reflex::Member mem) 
 {
    if (mem.IsDataMember() && G__get_properties(mem)->isCompiledGlobal) {
       return G__COMPILEDGLOBAL;
@@ -1520,12 +1701,15 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    //        add the created function type as a member of any Reflex::Scope.
    //
    ::Reflex::Type ftype = Reflex::FunctionTypeBuilder(returnType, params_type, typeid(::Reflex::UnknownType));
+   //if (!G__tagdefining.Name().compare("TMatrixT<double>")) {
+   //   fprintf(stderr, "G__BuilderInfo::Build: Abstract count for '%s' count: %d  for: '%s'\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_properties(G__tagdefining)->tagnum], name.c_str());
+   //}
    //fprintf(stderr, "G__BuilderInfo::Build: processing function '%s' type '%s'.\n", name.c_str(), ftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    //fprintf(stderr, "G__Builderinfo::Build: isconst: %d\n", isconst);
    //fprintf(stderr, "G__Builderinfo::Build: isexplicit: %d\n", isexplicit);
    //fprintf(stderr, "G__Builderinfo::Build: staticalloc: %d\n", (int) staticalloc);
    //fprintf(stderr, "G__Builderinfo::Build: isvirtual: %d\n", isvirtual);
-   //fprintf(stderr, "G__Builderinfo::Build: ispurvirtual: %d\n", ispurevirtual);
+   //fprintf(stderr, "G__Builderinfo::Build: ispurevirtual: %d\n", ispurevirtual);
    for (
       std::vector<Reflex::Type>::iterator iter = params_type.begin();
       iter != params_type.end();
@@ -1578,11 +1762,9 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    //  Check if we should be virtual because we
    //  are declared virtual in a base class.
    //
-   if ( // not previously declared, and is not virtual, and is a member function
-      !m && // not previous declared, and
-      !isvirtual && // is not virtual, and
-      (G__tagdefining && !G__tagdefining.IsTopScope()) // is a member function
-      // TODO: Add: && (G__tagdefining && !G__tagdefining.IsNamespace()) if we can call for non-class members.
+   if ( // is a member function, and not previously declared
+      (G__tagdefining && G__tagdefining.IsClass()) && // is a member function, and
+      !m // not previous declared
    ) {
       struct G__inheritance* baseclass = G__struct.baseclass[G__get_tagnum(G__tagdefining)];
       for (int basen = 0; basen < baseclass->basen; ++basen) {
@@ -1592,6 +1774,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
          if (base_m) {
             int tagnum_tagdefining  = G__get_tagnum(G__tagdefining);
             if (base_m.IsAbstract() && G__struct.isabstract[tagnum_tagdefining]) {
+               //fprintf(stderr, "G__BuilderInfo::Build: Decrement abstract count for '%s' count: %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[tagnum_tagdefining]);
                --G__struct.isabstract[tagnum_tagdefining]; // We now have one less pure virtual member function.
             }
             if (base_m.IsVirtual()) {
@@ -1650,6 +1833,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
          // if (m.IsConst() != isconst)
          if (ispurevirtual & !m.IsAbstract()) {
             if (G__tagdefining) {
+               //fprintf(stderr, "G__BuilderInfo::Build: 2 Decrement abstract count for '%s' count: %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)]);
                --G__struct.isabstract[G__get_tagnum(G__tagdefining)];
             }
          }
@@ -1674,6 +1858,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       }
       else {
          if (ispurevirtual && G__tagdefining) {
+            //fprintf(stderr, "G__BuilderInfo::Build: 3 Decrement abstract count for '%s' count: %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)]);
             --G__struct.isabstract[G__get_tagnum(G__tagdefining)];
          }
       }
@@ -1800,7 +1985,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       //::Reflex::FunctionBuilder funcBuilder(ftype, fullname.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
       //m = funcBuilder.ToMember();
       if (!m) {
-         fprintf(stderr, "G__BuilderInfo::Build: Something went wrong creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
+         //fprintf(stderr, "G__BuilderInfo::Build: Something went wrong creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
          G__dumpreflex_function(G__p_ifunc, 1);
          return m;
       }
