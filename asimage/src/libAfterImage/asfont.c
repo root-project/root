@@ -59,15 +59,18 @@
 #endif
 
 #ifdef HAVE_FREETYPE
-#ifdef HAVE_FT2BUILD_H
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#endif
-#ifdef HAVE_FREETYPE_FREETYPE
-#include <freetype/freetype.h>
-#else
-#include <freetype.h>
-#endif
+# ifdef HAVE_FT2BUILD_H
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+# endif
+# ifdef HAVE_FREETYPE_FREETYPE
+#  include <freetype/freetype.h>
+# else
+#  include <freetype.h>
+# endif
+# if (FREETYPE_MAJOR == 2) && ((FREETYPE_MINOR == 0) || ((FREETYPE_MINOR == 1) && (FREETYPE_PATCH < 3)))
+#  define FT_KERNING_DEFAULT ft_kerning_default
+# endif
 #endif
 
 #define INCLUDE_ASFONT_PRIVATE
