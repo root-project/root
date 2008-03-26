@@ -40,6 +40,7 @@ namespace ROOT {
    namespace Fit { 
 
 
+//___________________________________________________________________________________
 /** 
    LogLikelihoodFCN class 
    for likelihood fits 

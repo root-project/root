@@ -47,6 +47,7 @@ namespace ROOT {
 
    namespace Fit { 
 
+//___________________________________________________________________________________
 /** 
    Fitter class. 
    Fits are performed using the generic ROOT::Fit::Fitter::Fit method. 
@@ -67,8 +68,6 @@ public:
    typedef ROOT::Math::IParamFunction            IModel1DFunction; 
    typedef ROOT::Math::IParamGradFunction        IGradModel1DFunction; 
 
-//    typedef IModelFunction::BaseFunc BaseFunc; 
-//    typedef IGradModelFunction::BaseGradFunc BaseGradFunc; 
    typedef ROOT::Math::IMultiGenFunction BaseFunc; 
    typedef ROOT::Math::IMultiGradFunction BaseGradFunc; 
 
@@ -176,18 +175,20 @@ public:
     */
    void  SetFunction(const IGradModel1DFunction & func); 
 
-//    /** 
-//        Set the fitted function from a generic callable object
-//    */ 
-//    void  SetFunction(const BinData * data); 
 
-   /// get fit result
+   /**
+      get fit result
+   */
    const FitResult & Result() const { return fResult; } 
 
-   /// access to the configuration (const method)
+   /**
+      access to the fit configuration (const method)
+   */
    const FitConfig & Config() const { return fConfig; } 
 
-   /// access to the configuration (non const method)
+   /**
+      access to the configuration (non const method)
+   */
    FitConfig & Config() { return fConfig; } 
 
 
@@ -209,20 +210,13 @@ protected:
 
 private: 
 
-   ///flag to indicate if using gradient or not
-   bool fUseGradient;
+   bool fUseGradient;       // flag to indicate if using gradient or not
 
-   /// copy of the fitted  function which will contain on output the fit result
-   IModelFunction * fFunc; 
+   IModelFunction * fFunc;  // copy of the fitted  function containing on output the fit result
 
-   /// object containing the result of the fit
-   FitResult fResult; 
+   FitResult fResult;       // object containing the result of the fit
 
-
-   /// fitter configuration (options and parameter settings
-   FitConfig fConfig; 
-
-   
+   FitConfig fConfig;       // fitter configuration (options and parameter settings)
 
 }; 
 

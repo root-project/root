@@ -41,6 +41,7 @@ namespace ROOT {
    namespace Fit { 
 
 
+//___________________________________________________________________________________
 /** 
    class evaluating the log likelihood  
    for binned Poisson likelihood fits 

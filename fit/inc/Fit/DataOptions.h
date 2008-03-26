@@ -19,6 +19,7 @@ namespace ROOT {
    namespace Fit { 
 
 
+//___________________________________________________________________________________
 /** 
    DataOptions : simple structure holding the options on how the data are filled 
 */ 
@@ -26,7 +27,7 @@ struct DataOptions {
 
 
    /** 
-      Default constructor: have default options
+      Default constructor: use the default options
    */ 
    DataOptions () : 
       fIntegral(false), 
@@ -38,12 +39,12 @@ struct DataOptions {
    {}
 
 
-   bool fIntegral; 
-   bool fUseEmpty; 
-   bool fUseRange; 
-   bool fErrors1;      // use all errors equal to 1 (fit without errors)
-   bool fCoordErrors; // use errors on the coordinates when available 
-   bool fAsymErrors;  // use asymmetric errors in the value when available (depending on sign of residual)
+   bool fIntegral;    // use integral of bin content instead of bin center (default is false)
+   bool fUseEmpty;    // use empty bins (default is false) with a fixed error of 1
+   bool fUseRange;    // use the function range when creating the fit data (default is false)
+   bool fErrors1;     // use all errors equal to 1, i.e. fit without errors (default is false) 
+   bool fCoordErrors; // use errors on the coordinates when available (default is false)
+   bool fAsymErrors;  // use asymmetric errors in the value when available, selecting them according to the on sign of residual (default is false)
 
 
 }; 

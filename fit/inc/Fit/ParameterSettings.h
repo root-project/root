@@ -20,6 +20,7 @@ namespace ROOT {
    namespace Fit { 
 
 
+//___________________________________________________________________________________
 /** 
    ParameterSettings class, describing value, limits and step size of the parameters 
    Provides functionality also to set/retrieve values, step sizes, limits and fix the 
@@ -171,15 +172,15 @@ protected:
 
 private: 
 
-   double fValue; 
-   double fStepSize;  
-   bool fFix;
-   double fLowerLimit; 
-   double fUpperLimit; 
-   bool fHasLowerLimit; 
-   bool fHasUpperLimit;
+   double fValue;        // parameter value
+   double fStepSize;     // parameter step size (used by minimizer)
+   bool fFix;            // flag to control if parameter is fixed 
+   double fLowerLimit;   // lower parameter limit
+   double fUpperLimit;   // upper parameter limit
+   bool fHasLowerLimit;  // flag to control lower parameter limit
+   bool fHasUpperLimit;  // flag to control upper parameter limit
 
-   std::string fName; 
+   std::string fName;    // parameter name
 
 }; 
 

@@ -34,6 +34,7 @@ namespace ROOT {
 
    class FitConfig; 
 
+//___________________________________________________________________________________
 /** 
    FitResult class containg the result of the fit.  
    Contains a reference to the fitted function. 
@@ -55,44 +56,30 @@ public:
     */
    FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction & f, bool isValid, unsigned int sizeOfData = 0, const ROOT::Math::IMultiGenFunction * chi2func = 0, bool minosErr = false, unsigned int ncalls = 0);
 
+  // use default copy constructor and assignment operator
+
    /** 
       Destructor (no operations)
    */ 
    ~FitResult ()  {}  
 
-// leave to default ??
-// private:
-//    // usually copying is non trivial, so we make this unaccessible
-
-//    /** 
-//       Copy constructor
-//    */ 
-//    FitResult(const FitResult &) {} 
-
-//    /** 
-//       Assignment operator
-//    */ 
-//    FitResult & operator = (const FitResult & rhs)  {
-//       if (this == &rhs) return *this;  // time saving self-test
-//       return *this;
-// }
 
 public: 
 
    ///normalize errors using chi2/ndf for chi2 fits
    void NormalizeErrors();
 
-   /// flag tp chek if errors are normalized
+   /// flag to chek if errors are normalized
    bool NormalizedErrors() { return fNormalized; }
 
    /// True if fit successful, otherwise false.
    bool IsValid() const { return fValid; }
 
 
-   /// Function with fitted parameter values.
-   ///IModelFunction &FittedFunction() const;
+   /// Return pointer to model (fit) function with fitted parameter values.
+   const IModelFunction * FittedFunction() const { return fFitFunc; }
 
-   /// value of the objective function (chi2 or likelihood) used in the fit
+   /// Return value of the objective function (chi2 or likelihood) used in the fit
    double MinFcnValue() const { return fVal; } 
 
    /// Chi2 fit value
@@ -102,10 +89,10 @@ public:
    /// Number of degree of freedom
    unsigned int Ndf() const { return fNdf; } 
 
-   /// p value of the fit chi2 
-   double Prob() const { return 0; } // to be done 
+   /// p value of the fit (chi2 probability)
+   double Prob() const;  
 
-   /// covariance matrix
+   /// retrieve covariance matrix element 
    double CovMatrix (unsigned int i, unsigned int j) const { 
       if ( i >= fErrors.size() || j >= fErrors.size() ) return 0; 
       if (fCovMatrix.size() == 0) return 0; // nomatrix available in case of non-valid fits

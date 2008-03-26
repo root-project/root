@@ -20,6 +20,7 @@ namespace ROOT {
    namespace Fit { 
 
 
+//___________________________________________________________________________________
 /** 
    class describing the range in the coordinates 
    it supports  multiple range in a coordinate. 
@@ -105,7 +106,6 @@ public:
    ~DataRange ()  {}  
 
 
-   // use default copy-ctrs 
 
    /**
       add a range [xmin,xmax] for the new coordinate icoord 
@@ -132,7 +132,7 @@ protected:
 
 private: 
 
-   RangeIntervals fRanges; 
+   RangeIntervals fRanges;  // list of all ranges
 
 
 }; 

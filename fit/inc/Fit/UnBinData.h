@@ -25,6 +25,7 @@ namespace ROOT {
    namespace Fit { 
 
 
+//___________________________________________________________________________________
 /** 
    UnBinData : class describing the unbinned data (just x coordinates values) of any dimensions
 
@@ -159,6 +160,9 @@ public:
    } 
 #endif
 
+   /**
+      destructor, delete pointer to internal data or external data wrapper
+    */
    virtual ~UnBinData() {
       if (fDataVector) delete fDataVector; 
       if (fDataWrapper) delete fDataWrapper; 
@@ -176,18 +180,24 @@ public:
          fDataVector = new DataVector( dim * maxpoints);
    }
 
-      
+   
+   /**
+      return fit point size (for unbin data is equivalent to coordinate dimension)
+    */
    unsigned int PointSize() const { 
       return fDim; 
    }
 
+   /**
+      return size of internal data vector (is 0 for external data) 
+    */
    unsigned int DataSize() const { 
       return fDataVector->Size();
    }
    
-      /**
-         add one dim data
-      */
+   /**
+      add one dim coordinate data
+   */
    void Add(double x) { 
       int index = fNPoints*PointSize(); 
       assert(fDataVector != 0);
@@ -197,8 +207,10 @@ public:
 
       fNPoints++;
    }
-   //for multi dim data
 
+   /**
+      add multi-dim coordinate data
+   */
    void Add(double *x) { 
       int index = fNPoints*PointSize(); 
 
@@ -213,7 +225,10 @@ public:
       fNPoints++;
    }
 
-   virtual   const double * Coords(unsigned int ipoint) const { 
+   /**
+      return pointer to coordinate data
+    */
+   const double * Coords(unsigned int ipoint) const { 
       if (fDataVector) 
          return &( (fDataVector->Data()) [ ipoint*PointSize() ] );
       else 
@@ -232,6 +247,9 @@ public:
    }
 
 
+   /**
+      return number of contained points 
+    */ 
    unsigned int NPoints() const { return fNPoints; } 
 
    /**
@@ -239,6 +257,9 @@ public:
     */ 
    unsigned int Size() const { return fNPoints; }
 
+   /**
+      return coordinate data dimension
+    */ 
    unsigned int NDim() const { return fDim; } 
 
 protected: 
@@ -247,11 +268,11 @@ protected:
 
 private: 
 
-   unsigned int fDim; 
-   unsigned int fNPoints; 
+   unsigned int fDim;         // coordinate data dimension
+   unsigned int fNPoints;     // numer of fit points
    
-   DataVector * fDataVector; 
-   DataWrapper * fDataWrapper; 
+   DataVector * fDataVector;     // pointer to internal data vector (null for external data)
+   DataWrapper * fDataWrapper;   // pointer to structure wrapping external data (null when data are copied in)
 
 }; 
 

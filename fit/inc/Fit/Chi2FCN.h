@@ -61,6 +61,7 @@ struct ModelFunctionTrait<ROOT::Math::IMultiGradFunction>  {
 
 
 
+//___________________________________________________________________________________
 /** 
    Chi2FCN class for binnned fits using the least square methods 
 

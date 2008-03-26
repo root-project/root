@@ -33,6 +33,7 @@ namespace ROOT {
 
 
 
+//___________________________________________________________________________________
 /** 
    BinData : class describing the binned data : 
               vectors of  x coordinates, y values and optionally error on y values and error on coordinates 
@@ -114,14 +115,20 @@ public :
     */
    BinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, const double * val, const double * ex , const double * ey , const double * ez , const double * eval   );
 
-   /// copy constructor  
+   /**
+      copy constructor  
+   */
    BinData(const BinData &);
 
-   /// assignment operator  (private) 
+   /** 
+       assignment operator 
+   */ 
    BinData & operator= (const BinData &);
 
 
-   /// destructor
+   /**
+      destructor
+   */
    ~BinData(); 
 
    /**
@@ -130,28 +137,35 @@ public :
     */
    void Initialize(unsigned int maxpoints, unsigned int dim = 1, ErrorType err = kValueError ); 
 
-//    /**
-//       re-initialize adding some additional set of points keeping the previous ones
-//     */
-//    void ReInitialize(unsigned int nexpoints) { 
-//       if (!fDataVector) return; 
-//       (fDataVector->Data()).resize( fDataVector->Size() + nexpoints * fPointSize );      
-//    }
-      
+
+   /**
+      return the size of a fit point (is the coordinate dimension + 1 for the value and eventually 
+      the number of all errors
+    */
    unsigned int PointSize() const { 
       return fPointSize; 
    }
 
+   /**
+      return the size of internal data  (number of fit points)
+      if data are not copied in but used externally the size is 0
+    */
    unsigned int DataSize() const { 
       if (fDataVector) return fDataVector->Size(); 
       return 0; 
    }
 
+   /**
+      flag to control if data provides error on the coordinates
+    */
    bool HaveCoordErrors() const { 
       if (fPointSize > fDim +2) return true; 
       return false;
    }
 
+   /**
+      flag to control if data provides asymmetric errors on the value
+    */
    bool HaveAsymErrors() const { 
       if (fPointSize > 2 * fDim +2) return true; 
       return false;
@@ -164,38 +178,41 @@ public :
    void Add(double x, double y ); 
 
    /**
-      add one dim data with no error in x
-      in this case store the inverse of the error in y
+      add one dim data with no error in the coordinate (x)
+      in this case store the inverse of the error in the value (y)
    */
    void Add(double x, double y, double ey);
 
    /**
-      add one dim data with  error in x
-      in this case store the y error and not the inverse 
+      add one dim data with  error in the coordinate (x)
+      in this case store the value (y)  error and not the inverse 
    */
    void Add(double x, double y, double ex, double ey);
 
    /**
-      add one dim data with  error in x and asymmetric errors in y
+      add one dim data with  error in the coordinate (x) and asymmetric errors in the value (y)
       in this case store the y errors and not the inverse 
    */
    void Add(double x, double y, double ex, double eyl , double eyh);
 
    /**
-      add multi dim data with only value (no errors)
+      add multi-dim coordinate data with only value (no errors)
    */
    void Add(const double *x, double val); 
 
    /**
-      add multi dim data with only error in value 
+      add multi-dim coordinate data with only error in value 
    */
    void Add(const double *x, double val, double  eval); 
 
    /**
-      add multi dim data with error in coordinates and value 
+      add multi-dim coordinate data with both error in coordinates and value 
    */
    void Add(const double *x, double val, const double * ex, double  eval); 
 
+   /**
+      return a pointer to the coordinates data for the given fit point 
+    */
    const double * Coords(unsigned int ipoint) const { 
       if (fDataVector) 
          return &((fDataVector->Data())[ ipoint*fPointSize ] );
@@ -203,6 +220,9 @@ public :
       return fDataWrapper->Coords(ipoint);
    }
 
+   /**
+      return the value for the given fit point
+    */
    double Value(unsigned int ipoint) const { 
       if (fDataVector)       
          return (fDataVector->Data())[ ipoint*fPointSize + fDim ];
@@ -210,10 +230,10 @@ public :
       return fDataWrapper->Value(ipoint);
    }
 
-//#ifdef LATER
+
    /**
-      return error on the value
-      safe (but slower) method returning correctly the error on the value 
+      return error on the value for the given fit point
+      Safe (but slower) method returning correctly the error on the value 
       in case of asymm errors return the average 0.5(eu + el)
     */ 
    double Error(unsigned int ipoint) const { 
@@ -235,7 +255,7 @@ public :
    } 
 
    /**
-      return the inverse of error on the value 
+      Return the inverse of error on the value for the given fit point
       useful when error in the coordinates are not stored and then this is used directly this as the weight in 
       the least square function
     */
@@ -253,10 +273,10 @@ public :
       double eval = fDataWrapper->Error(ipoint);
       return eval != 0 ? 1.0/eval : 0; 
    }
-//#endif
+
 
    /**
-      return a pointer to the errors in the coordinates
+      Return a pointer to the errors in the coordinates for the given fit point
     */
    const double * CoordErrors(unsigned int ipoint) const {
       if (fDataVector) { 
@@ -267,7 +287,10 @@ public :
       return fDataWrapper->CoordErrors(ipoint);
    }
 
-
+   /**
+      retrieve at the same time a  pointer to the coordinate data and the fit value
+      More efficient than calling Coords(i) and Value(i)
+    */
    const double * GetPoint(unsigned int ipoint, double & value) const {
       if (fDataVector) { 
          unsigned int j = ipoint*fPointSize;
@@ -280,7 +303,11 @@ public :
       return fDataWrapper->Coords(ipoint);
    }
 
-   // get coordinate value and error. To be used only when type is kValueError otherwise inverse error is returned
+   /**
+      retrieve in a single call a pointer to the coordinate data, value and inverse error for 
+      the given fit point. 
+      To be used only when type is kValueError otherwise the error is returned and not the inverse
+   */
    const double * GetPoint(unsigned int ipoint, double & value, double & invError) const {
       if (fDataVector) { 
          assert(fPointSize == fDim +2); // value error
@@ -297,9 +324,12 @@ public :
       return fDataWrapper->Coords(ipoint);
    }
 
-   /// Get errors on the point (coordinate and value) 
+   /**
+      Retrieve the errors on the point (coordinate and value) for the given fit point
+      It must be called only when the coordinate errors are stored otherwise it will produce an 
+      assert.
+   */
    const double * GetPointError(unsigned int ipoint, double & errvalue) const {
-// to be called only when coord errors are stored
       if (fDataVector) { 
          assert(fPointSize > fDim + 2); 
          unsigned int j = ipoint*fPointSize;
@@ -312,9 +342,13 @@ public :
       return fDataWrapper->CoordErrors(ipoint);
    }
 
-   /// Get errors on the point (coordinates and value with  the asymmetric errors) 
+   /**
+      Get errors on the point (coordinate errors and asymmetric value errors) for the 
+      given fit point. 
+      It must be called only when the coordinate errors and asymmetric errors are stored 
+      otherwise it will produce an assert.
+   */
    const double * GetPointError(unsigned int ipoint, double & errlow, double & errhigh) const {
-// to be called only when coord errors are stored
       // external data is not supported for asymmetric errors
       assert(fDataVector); 
 
@@ -387,17 +421,22 @@ public :
       (fDataVector->Data()).resize(PointSize() *npoints);
    }
 
-
+   /**
+      return number of fit points
+    */
    unsigned int NPoints() const { return fNPoints; } 
 
    /**
-      return number of contained points 
-      in case of integral option size is npoints -1 
+      return number of fit points 
+      In case of integral option size is npoints -1 
     */ 
    unsigned int Size() const { 
       return (Opt().fIntegral) ? fNPoints-1 : fNPoints; 
    }
 
+   /**
+      return coordinate data dimension
+    */
    unsigned int NDim() const { return fDim; } 
 
    /**
@@ -420,8 +459,8 @@ private:
    unsigned int fPointSize; // total point size including value and errors (= fDim + 2 for error in only Y ) 
    unsigned int fNPoints;   // number of contained points in the data set (can be different than size of vector)
 
-   DataVector * fDataVector; 
-   DataWrapper * fDataWrapper;
+   DataVector * fDataVector;  // pointer to the copied in data vector
+   DataWrapper * fDataWrapper;  // pointer to the external data wrapper structure
 
 #ifdef USE_BINPOINT_CLASS
    mutable BinPoint fPoint; 

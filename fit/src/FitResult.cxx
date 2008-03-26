@@ -18,6 +18,8 @@
 
 #include "Math/IParamFunction.h"
 
+#include "Math/DistFunc.h"
+
 #include <cassert>
 #include <cmath>
 
@@ -99,6 +101,11 @@ void FitResult::NormalizeErrors() {
 
    fNormalized = true; 
 } 
+
+double FitResult::Prob() const { 
+   // fit probability
+   return ROOT::Math::chisquared_cdf_c(fChi2, static_cast<double>(fNdf) ); 
+}
 
 int FitResult::Index(const std::string & name) const { 
    // find index for given parameter name

@@ -37,28 +37,33 @@ template <typename T> void testBinarySearch(const int n, double* tTMath, double*
 
    std::sort(k.begin(), k.end());
 
+   int s = 0; 
    t.Start(); 
    for (int j = 0; j < npass; ++j) { 
       for ( T elem = 0; elem < maxint; ++elem ) {
-         /*Long_t index = */TMath::BinarySearch((Long_t) n, &k[0], elem);
+         Long_t index = TMath::BinarySearch((Long_t) n, &k[0], elem);
+         s += index; 
       }
    }
    t.Stop(); 
    *tTMath = t.RealTime();
    cout << "TMath::BinarySearch time :\t " << t.RealTime() << endl;
+   cout << "sum " << s << endl;
 
-
+   s = 0;
    t.Start(); 
    for (int j = 0; j < npass; ++j) { 
       for ( T elem = 0; elem < maxint; ++elem ) {
          T* pind;
          pind = std::lower_bound(&k[0], &k[n], elem);
-         //Long_t index2 = ((*pind == elem)? (pind - &k[0]): ( pind - &k[0] - 1));
+         Long_t index2 = ((*pind == elem)? (pind - &k[0]): ( pind - &k[0] - 1));
+         s+= index2;
       }
    }
    t.Stop(); 
    *tStd = t.RealTime();
    std::cout << "std::binary_search time:\t " << t.RealTime() << '\n' << std::endl;
+   cout << "sum " << s << endl;
 
 }
 
