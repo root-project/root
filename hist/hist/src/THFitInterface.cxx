@@ -32,7 +32,10 @@
 
 namespace ROOT { 
 
-   namespace Fit { 
+namespace Fit { 
+
+// add a namespace to distinguish from the Graph functions 
+namespace HInterface { 
 
 
 bool IsPointOutOfRange(const TF1 * func, const double * x) { 
@@ -53,6 +56,8 @@ bool AdjustError(const DataOptions & option, double & error) {
    }
    return true; 
 }
+
+} // end namespace HInterface
 
 void FillData(BinData & dv, const TH1 * hfit, TF1 * func) 
 {
@@ -175,18 +180,18 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
                      x[2] = zaxis->GetBinLowEdge(binz);
                   else
                      x[2] = zaxis->GetBinCenter(binz);
-                  if (fitOpt.fUseRange && IsPointOutOfRange(func,&x.front()) ) continue;
+                  if (fitOpt.fUseRange && HInterface::IsPointOutOfRange(func,&x.front()) ) continue;
                   double error =  hfit->GetBinError(binx, biny, binz); 
-                  if (!AdjustError(fitOpt,error) ) continue; 
+                  if (!HInterface::AdjustError(fitOpt,error) ) continue; 
                   //dv.Add(BinPoint(  x,  hfit->GetBinContent(binx, biny, binz), error ) );
                   dv.Add(   &x.front(),  hfit->GetBinContent(binx, biny, binz), error  );
                }  // end loop on z bins
             }
             else if (ndim == 2) { 
                // for dim == 2
-               if (fitOpt.fUseRange && IsPointOutOfRange(func,&x.front()) ) continue;
+               if (fitOpt.fUseRange && HInterface::IsPointOutOfRange(func,&x.front()) ) continue;
                double error =  hfit->GetBinError(binx, biny); 
-               if (!AdjustError(fitOpt,error) ) continue; 
+               if (!HInterface::AdjustError(fitOpt,error) ) continue; 
                dv.Add( &x.front(), hfit->GetBinContent(binx, biny), error  );
             }   
             
@@ -198,9 +203,9 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
          std::cout << "bin " << binx << " add point " << x[0] << "  " << hfit->GetBinContent(binx) << std::endl;
 #endif
          // for 1D 
-         if (fitOpt.fUseRange && IsPointOutOfRange(func,&x.front()) ) continue;
+         if (fitOpt.fUseRange && HInterface::IsPointOutOfRange(func,&x.front()) ) continue;
          double error =  hfit->GetBinError(binx); 
-         if (!AdjustError(fitOpt,error) ) continue; 
+         if (!HInterface::AdjustError(fitOpt,error) ) continue; 
          dv.Add( x.front(),  hfit->GetBinContent(binx), error  );
       }
       
@@ -252,7 +257,7 @@ void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func ) {
       if (!func->IsInside( x ) ) continue;
       // neglect error in x and y (it is a different chi2) 
       double error = gr->GetErrorZ(i); 
-      if (!AdjustError(fitOpt,error) ) continue; 
+      if (!HInterface::AdjustError(fitOpt,error) ) continue; 
       dv.Add( x, gz[i], error );      
    }
 
