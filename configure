@@ -1353,25 +1353,25 @@ fi
 # Mandatory test, must succeed
 # Check for GNU make >= 3.80
 #
-message "Checking for GNU Make version >= 3.80"
+message "Checking for GNU Make version >= 3.79.1"
 gnumake="make"
-gnu=`$gnumake -v | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
+gnu=`$gnumake -v 2>&1 | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
 if test ! "x$gnu" = "xGNU" ; then
     gnumake="gmake"
-    gnu=`$gnumake -v | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
+    gnu=`$gnumake -v 2>&1 | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
     if test ! "x$gnu" = "xGNU" ; then
         gnumake=""
     fi
 fi
 if test ! "x$gnumake" = "x" ; then
-    gnuv=`$gnumake -v | tr '.' ' ' | awk 'BEGIN { FS=" "} { if (NR==1) printf "%d", $3*100+$4 }'`
-    if test $gnuv -lt 380 ; then
-        result "`basename $0`: GNU Make >= 3.80 MUST be installed, current version $gnuv is too old"
+    gnuv=`$gnumake -v | tr '.' ' ' | awk 'BEGIN { FS=" "} { if (NR==1) printf "%d", ($3*1000)+($4*10)+$5 }'`
+    if test $gnuv -lt 3791 ; then
+        result "`basename $0`: GNU Make >= 3.79.1 MUST be installed, current version $gnuv is too old"
         exit 1
     fi
     result "ok"
 else
-    result "`basename $0`: GNU Make >= 3.80 MUST be installed"
+    result "`basename $0`: GNU Make >= 3.79.1 MUST be installed"
     exit 1
 fi
 
