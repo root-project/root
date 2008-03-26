@@ -737,24 +737,24 @@ bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
    args.Next(); args.Next();
    if (!methodinfo.IsValid() ||
        !args.IsValid() ||
-        args.Type()==0 ||
-        args.Type()->Tagnum() != cl.Tagnum() ||
-        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
-        strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
+       args.Type()==0 ||
+       args.Type()->Tagnum() != cl.Tagnum() ||
+       strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
+       strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
-     if (dicttype==0||dicttype==1){
-     // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
-	 Error(0,
-	       "in this version of ROOT, the option '!' used in a linkdef file\n"
-	       "       implies the actual existence of customized operators.\n"
-	       "       The following declaration is now required:\n"
-	       "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
+      if (dicttype==0||dicttype==1){
+         // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
+         Error(0,
+               "in this version of ROOT, the option '!' used in a linkdef file\n"
+               "       implies the actual existence of customized operators.\n"
+               "       The following declaration is now required:\n"
+               "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
 
-     }
+      }
 
       has_input_error = true;
    } else {
-    // Warning(0, "TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
+      // Warning(0, "TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
    }
    // fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
 
@@ -763,18 +763,18 @@ bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
    args.Next(); args.Next();
    if (!methodinfo.IsValid() ||
        !args.IsValid() ||
-        args.Type()==0 ||
-        args.Type()->Tagnum() != cl.Tagnum() ||
-        strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
-        strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
+       args.Type()==0 ||
+       args.Type()->Tagnum() != cl.Tagnum() ||
+       strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
+       strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
-     if (dicttype==0||dicttype==1){
-      Error(0,
-            "in this version of ROOT, the option '!' used in a linkdef file\n"
-            "       implies the actual existence of customized operator.\n"
-            "       The following declaration is now required:\n"
-            "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
-     }
+      if (dicttype==0||dicttype==1){
+         Error(0,
+               "in this version of ROOT, the option '!' used in a linkdef file\n"
+               "       implies the actual existence of customized operator.\n"
+               "       The following declaration is now required:\n"
+               "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
+      }
 
       has_input_error = true;
    } else {
@@ -868,15 +868,15 @@ bool CheckClassDef(G__ClassInfo &cl)
    bool hasClassDef = cl.HasMethod("Class_Version");
 
    /*
-      The following could be use to detect whether one of the
-      class' parent class has a ClassDef
+     The following could be use to detect whether one of the
+     class' parent class has a ClassDef
 
-   long offset;
-   const char *proto = "";
-   const char *name = "IsA";
+     long offset;
+     const char *proto = "";
+     const char *name = "IsA";
 
-   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
-   bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+     G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
+     bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
    */
 
    bool inheritsFromTObject = cl.IsBase("TObject");
@@ -1146,7 +1146,7 @@ bool CheckConstructor(G__MethodInfo &methodinfo, int argRequested)
    // Return true if the method is a valid, public constructor.
 
    if (    methodinfo.NArg()==(argRequested+methodinfo.NDefaultArg())
-      && (methodinfo.Property() & G__BIT_ISPUBLIC)) {
+           && (methodinfo.Property() & G__BIT_ISPUBLIC)) {
       if (argRequested) {
          if (methodinfo.ifunc()) {
             // filter out constructor taking a void* or char*
@@ -1249,7 +1249,7 @@ bool NeedConstructor(G__ClassInfo& cl)
 
    bool res= ((GetClassVersion(cl)>0
                || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-                  && strncmp(cl.FileName(),"prec_stl",8)!=0 )
+                   && strncmp(cl.FileName(),"prec_stl",8)!=0 )
                ) && !(cl.Property() & G__BIT_ISABSTRACT));
    return res;
 }
@@ -1280,7 +1280,7 @@ bool CheckConstructor(G__ClassInfo& cl)
       //      "\tand a custom operator new has been defined.\n"
       //      "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
       Warning(cl.Fullname(), "I/O has been requested but is missing an explicit default constructor.\n"
-               "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
+              "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
    }
 
    return result;
@@ -1439,7 +1439,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
 
-//    if (k) printf(" %s==%d\n",type.c_str(),k);
+   //    if (k) printf(" %s==%d\n",type.c_str(),k);
 
    return k;
 }
@@ -1454,7 +1454,7 @@ int IsSTLContainer(G__BaseClassInfo &m)
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
-//   if (k) printf(" %s==%d\n",type.c_str(),k);
+   //   if (k) printf(" %s==%d\n",type.c_str(),k);
    return k;
 }
 
@@ -1467,8 +1467,8 @@ int IsStreamable(G__DataMemberInfo &m)
 
 
    if ((m.Property() & G__BIT_ISSTATIC) ||
-         strncmp(m.Title(), "!", 1) == 0        ||
-         strcmp(m.Name(), "G__virtualinfo") == 0) return 0;
+       strncmp(m.Title(), "!", 1) == 0        ||
+       strcmp(m.Name(), "G__virtualinfo") == 0) return 0;
 
    if (((m.Type())->Property() & G__BIT_ISFUNDAMENTAL) ||
        ((m.Type())->Property() & G__BIT_ISENUM)) return 0;
@@ -1602,15 +1602,15 @@ void WriteAuxFunctions(G__ClassInfo &cl)
    if (HasDefaultConstructor(cl,&args)) {
       // write the constructor wrapper only for concrete classes
       (*dictSrcOut) << "   // Wrappers around operator new" << std::endl
-          << "   static void *new_" << mappedname.c_str() << "(void *p) {" << std::endl
-          << "      return  p ? ";
+                    << "   static void *new_" << mappedname.c_str() << "(void *p) {" << std::endl
+                    << "      return  p ? ";
       if (HasCustomOperatorNewPlacement(cl)) {
          (*dictSrcOut) << "new(p) " << classname.c_str() << args << " : ";
       } else {
          (*dictSrcOut) << "::new((::ROOT::TOperatorNewHelper*)p) " << classname.c_str() << args << " : ";
       }
       (*dictSrcOut) << "new " << classname.c_str() << args << ";" << std::endl
-          << "   }" << std::endl;
+                    << "   }" << std::endl;
 
       if (args.size()==0 && NeedDestructor(cl)) {
          // Can not can newArray if the destructor is not public.
@@ -1628,18 +1628,18 @@ void WriteAuxFunctions(G__ClassInfo &cl)
 
    if (NeedDestructor(cl)) {
       (*dictSrcOut) << "   // Wrapper around operator delete" << std::endl
-          << "   static void delete_" << mappedname.c_str() << "(void *p) {" << std::endl
-          << "      delete ((" << classname.c_str() << "*)p);" << std::endl
-          << "   }" << std::endl
+                    << "   static void delete_" << mappedname.c_str() << "(void *p) {" << std::endl
+                    << "      delete ((" << classname.c_str() << "*)p);" << std::endl
+                    << "   }" << std::endl
 
-          << "   static void deleteArray_" << mappedname.c_str() << "(void *p) {" << std::endl
-          << "      delete [] ((" << classname.c_str() << "*)p);" << std::endl
-          << "   }" << std::endl
+                    << "   static void deleteArray_" << mappedname.c_str() << "(void *p) {" << std::endl
+                    << "      delete [] ((" << classname.c_str() << "*)p);" << std::endl
+                    << "   }" << std::endl
 
-          << "   static void destruct_" << mappedname.c_str() << "(void *p) {" << std::endl
-          << "      typedef " << classname.c_str() << " current_t;" << std::endl
-          << "      ((current_t*)p)->~current_t();" << std::endl
-          << "   }" << std::endl;
+                    << "   static void destruct_" << mappedname.c_str() << "(void *p) {" << std::endl
+                    << "      typedef " << classname.c_str() << " current_t;" << std::endl
+                    << "      ((current_t*)p)->~current_t();" << std::endl
+                    << "   }" << std::endl;
    }
 
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
@@ -1698,127 +1698,127 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
    if (strcmp("string*",tiName)==0) kase |= kBIT_ISSTRING;
    if (isStre)                      kase |= R__BIT_HASSTREAMER;
 
-//    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
+   //    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
 
    if (rwmode == 0) {  //Read mode
 
       if (R__t) (*dictSrcOut) << "            " << tiName << " " << R__t << ";" << std::endl;
       switch (kase) {
 
-         case G__BIT_ISFUNDAMENTAL:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            R__b >> " << R__t << ";" << std::endl;
-            break;
+      case G__BIT_ISFUNDAMENTAL:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            R__b >> " << R__t << ";" << std::endl;
+         break;
 
-         case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
-            if (!R__t)  return 1;
-            (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");"  << std::endl;
-            break;
+      case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
+         if (!R__t)  return 1;
+         (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");"  << std::endl;
+         break;
 
-         case G__BIT_ISENUM:
-            if (!R__t)  return 0;
-            //             fprintf(fp, "            R__b >> (Int_t&)%s;\n",R__t);
-            // On some platforms enums and not 'Int_t' and casting to a reference to Int_t
-            // induces the silent creation of a temporary which is 'filled' __instead of__
-            // the desired enum.  So we need to take it one step at a time.
-            (*dictSrcOut) << "            Int_t readtemp;" << std::endl
-                << "            R__b >> readtemp;" << std::endl
-                << "            " << R__t << " = static_cast<" << tiName << ">(readtemp);" << std::endl;
-            break;
+      case G__BIT_ISENUM:
+         if (!R__t)  return 0;
+         //             fprintf(fp, "            R__b >> (Int_t&)%s;\n",R__t);
+         // On some platforms enums and not 'Int_t' and casting to a reference to Int_t
+         // induces the silent creation of a temporary which is 'filled' __instead of__
+         // the desired enum.  So we need to take it one step at a time.
+         (*dictSrcOut) << "            Int_t readtemp;" << std::endl
+                       << "            R__b >> readtemp;" << std::endl
+                       << "            " << R__t << " = static_cast<" << tiName << ">(readtemp);" << std::endl;
+         break;
 
-         case R__BIT_HASSTREAMER:
-         case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            " << R__t << ".Streamer(R__b);" << std::endl;
-            break;
+      case R__BIT_HASSTREAMER:
+      case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            " << R__t << ".Streamer(R__b);" << std::endl;
+         break;
 
-         case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
-            if (!R__t)  return 1;
-            //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
-            (*dictSrcOut) << "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {" << std::endl;
-            if (ti.Property() & G__BIT_ISABSTRACT) {
-               (*dictSrcOut) << "               R__ASSERT(0);// " << objType << " is abstract. We assume that older file could not be produced using this streaming method." << std::endl;
-            } else {
-               (*dictSrcOut) << "               " << R__t << " = new " << objType << ";" << std::endl
-                   << "               " << R__t << "->Streamer(R__b);" << std::endl;
-            }
-            (*dictSrcOut) << "            } else {" << std::endl
-                << "               " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");" << std::endl
-                << "            }" << std::endl;
-            break;
+      case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
+         if (!R__t)  return 1;
+         //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
+         (*dictSrcOut) << "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {" << std::endl;
+         if (ti.Property() & G__BIT_ISABSTRACT) {
+            (*dictSrcOut) << "               R__ASSERT(0);// " << objType << " is abstract. We assume that older file could not be produced using this streaming method." << std::endl;
+         } else {
+            (*dictSrcOut) << "               " << R__t << " = new " << objType << ";" << std::endl
+                          << "               " << R__t << "->Streamer(R__b);" << std::endl;
+         }
+         (*dictSrcOut) << "            } else {" << std::endl
+                       << "               " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");" << std::endl
+                       << "            }" << std::endl;
+         break;
 
-         case kBIT_ISSTRING:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            {TString R__str;" << std::endl
-                << "             R__str.Streamer(R__b);" << std::endl
-                << "             " << R__t << " = R__str.Data();}" << std::endl;
-            break;
+      case kBIT_ISSTRING:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            {TString R__str;" << std::endl
+                       << "             R__str.Streamer(R__b);" << std::endl
+                       << "             " << R__t << " = R__str.Data();}" << std::endl;
+         break;
 
-         case kBIT_ISSTRING|G__BIT_ISPOINTER:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            {TString R__str;"  << std::endl
-                << "             R__str.Streamer(R__b);" << std::endl
-                << "             " << R__t << " = new string(R__str.Data());}" << std::endl;
-            break;
+      case kBIT_ISSTRING|G__BIT_ISPOINTER:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            {TString R__str;"  << std::endl
+                       << "             R__str.Streamer(R__b);" << std::endl
+                       << "             " << R__t << " = new string(R__str.Data());}" << std::endl;
+         break;
 
-         case G__BIT_ISPOINTER:
-            if (!R__t)  return 1;
-            (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");" << std::endl;
-            break;
+      case G__BIT_ISPOINTER:
+         if (!R__t)  return 1;
+         (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");" << std::endl;
+         break;
 
-         default:
-            if (!R__t) return 1;
-            (*dictSrcOut) << "            R__b.StreamObject(&" << R__t << "," << tcl << ");" << std::endl;
-            break;
+      default:
+         if (!R__t) return 1;
+         (*dictSrcOut) << "            R__b.StreamObject(&" << R__t << "," << tcl << ");" << std::endl;
+         break;
       }
 
    } else {     //Write case
 
       switch (kase) {
 
-         case G__BIT_ISFUNDAMENTAL:
-         case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            R__b << " << R__t << ";" << std::endl;
-            break;
+      case G__BIT_ISFUNDAMENTAL:
+      case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            R__b << " << R__t << ";" << std::endl;
+         break;
 
-         case G__BIT_ISENUM:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            R__b << (Int_t&)" << R__t << ";" << std::endl;
-            break;
+      case G__BIT_ISENUM:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            R__b << (Int_t&)" << R__t << ";" << std::endl;
+         break;
 
-         case R__BIT_HASSTREAMER:
-         case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            ((" << objType << "&)" << R__t << ").Streamer(R__b);" << std::endl;
-            break;
+      case R__BIT_HASSTREAMER:
+      case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            ((" << objType << "&)" << R__t << ").Streamer(R__b);" << std::endl;
+         break;
 
-         case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
-            if (!R__t)  return 1;
-            (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl << ");" << std::endl;
-            break;
+      case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
+         if (!R__t)  return 1;
+         (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl << ");" << std::endl;
+         break;
 
-         case kBIT_ISSTRING:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            {TString R__str(" << R__t << ".c_str());" << std::endl
-                << "             R__str.Streamer(R__b);};" << std::endl;
-            break;
+      case kBIT_ISSTRING:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            {TString R__str(" << R__t << ".c_str());" << std::endl
+                       << "             R__str.Streamer(R__b);};" << std::endl;
+         break;
 
-         case kBIT_ISSTRING|G__BIT_ISPOINTER:
-            if (!R__t)  return 0;
-            (*dictSrcOut) << "            {TString R__str(" << R__t << "->c_str());" << std::endl
-                << "             R__str.Streamer(R__b);}" << std::endl;
-            break;
+      case kBIT_ISSTRING|G__BIT_ISPOINTER:
+         if (!R__t)  return 0;
+         (*dictSrcOut) << "            {TString R__str(" << R__t << "->c_str());" << std::endl
+                       << "             R__str.Streamer(R__b);}" << std::endl;
+         break;
 
-         case G__BIT_ISPOINTER:
-            if (!R__t)  return 1;
-            (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl <<");" << std::endl;
-            break;
+      case G__BIT_ISPOINTER:
+         if (!R__t)  return 1;
+         (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl <<");" << std::endl;
+         break;
 
-         default:
-            if (!R__t)  return 1;
-            (*dictSrcOut) << "            R__b.StreamObject((" << objType << "*)&" << R__t << "," << tcl << ");" << std::endl;
-            break;
+      default:
+         if (!R__t)  return 1;
+         (*dictSrcOut) << "            R__b.StreamObject((" << objType << "*)&" << R__t << "," << tcl << ");" << std::endl;
+         break;
       }
    }
    return 0;
@@ -1832,8 +1832,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
    int stltype = abs(IsSTLContainer(m));
    if (stltype!=0) {
-//        fprintf(stderr,"Add %s (%d) which is also %s\n",
-//                m.Type()->Name(), stltype, m.Type()->TrueName() );
+      //        fprintf(stderr,"Add %s (%d) which is also %s\n",
+      //                m.Type()->Name(), stltype, m.Type()->TrueName() );
       RStl::inst().GenerateTClassFor( m.Type()->Name() );
    }
    if (!m.Type()->IsTmplt() || stltype<=0) return 0;
@@ -1846,9 +1846,9 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    }
 
    // string stlType( RStl::DropDefaultArg( m.Type()->Name() ) );
-//    string stlType( TClassEdit::ShortType(m.Type()->Name(),
-//                                          TClassEdit::kDropTrailStar|
-//                                          TClassEdit::kDropStlDefault) );
+   //    string stlType( TClassEdit::ShortType(m.Type()->Name(),
+   //                                          TClassEdit::kDropTrailStar|
+   //                                          TClassEdit::kDropStlDefault) );
    string stlType( ShortTypeName(m.Type()->Name()) );
    string stlName;
    stlName = ShortTypeName(m.Name());
@@ -1894,45 +1894,45 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       }
 
       switch (pa) {
-         case 0:         //No pointer && No array
-            (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
-            break;
-         case 1:         //No pointer && array
-            (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
-            break;
-         case 2:         //pointer && No array
-            (*dictSrcOut) << "         delete *" << stlName.c_str() << ";"<< std::endl
-                << "         *" << stlName.c_str() << " = new " << stlType.c_str() << ";" << std::endl
-                << "         " << stlType.c_str() << " &R__stl = **" << stlName.c_str() << ";" << std::endl;
-            break;
-         case 3:         //pointer && array
-            (*dictSrcOut) << "         delete " << stlName.c_str() << "[R__l];" << std::endl
-                << "         " << stlName.c_str() << "[R__l] = new " << stlType.c_str() << ";" << std::endl
-                << "         " << stlType.c_str() << " &R__stl = *" << stlName.c_str() << "[R__l];" << std::endl;
-            break;
+      case 0:         //No pointer && No array
+         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
+         break;
+      case 1:         //No pointer && array
+         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
+         break;
+      case 2:         //pointer && No array
+         (*dictSrcOut) << "         delete *" << stlName.c_str() << ";"<< std::endl
+                       << "         *" << stlName.c_str() << " = new " << stlType.c_str() << ";" << std::endl
+                       << "         " << stlType.c_str() << " &R__stl = **" << stlName.c_str() << ";" << std::endl;
+         break;
+      case 3:         //pointer && array
+         (*dictSrcOut) << "         delete " << stlName.c_str() << "[R__l];" << std::endl
+                       << "         " << stlName.c_str() << "[R__l] = new " << stlType.c_str() << ";" << std::endl
+                       << "         " << stlType.c_str() << " &R__stl = *" << stlName.c_str() << "[R__l];" << std::endl;
+         break;
       }
 
       (*dictSrcOut) << "         R__stl.clear();" << std::endl;
 
       if (tcl1) {
          (*dictSrcOut) << "         TClass *R__tcl1 = TBuffer::GetClass(typeid(" << fulName1.c_str() << "));" << std::endl
-             << "         if (R__tcl1==0) {" << std::endl
-             << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
-             << fulName1.c_str() << "!\");"  << std::endl
-             << "            return;" << std::endl
-             << "         }" << std::endl;
+                       << "         if (R__tcl1==0) {" << std::endl
+                       << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
+                       << fulName1.c_str() << "!\");"  << std::endl
+                       << "            return;" << std::endl
+                       << "         }" << std::endl;
       }
       if (tcl2) {
          (*dictSrcOut) << "         TClass *R__tcl2 = TBuffer::GetClass(typeid(" << fulName2.c_str() << "));" << std::endl
-             << "         if (R__tcl2==0) {" << std::endl
-             << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
-             << fulName2.c_str() <<"!\");" << std::endl
-             << "            return;" << std::endl
-             << "         }" << std::endl;
+                       << "         if (R__tcl2==0) {" << std::endl
+                       << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
+                       << fulName2.c_str() <<"!\");" << std::endl
+                       << "            return;" << std::endl
+                       << "         }" << std::endl;
       }
 
       (*dictSrcOut) << "         int R__i, R__n;" << std::endl
-          << "         R__b >> R__n;" << std::endl;
+                    << "         R__b >> R__n;" << std::endl;
 
       if (stltype==kVector) {
          (*dictSrcOut) << "         R__stl.reserve(R__n);" << std::endl;
@@ -1956,30 +1956,30 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       */
       switch (stltype) {
 
-         case kMap:
-         case kMultiMap: {
-            std::string keyName( TemplateArg(m).Name() );
-            (*dictSrcOut) << "            typedef " << keyName << " Value_t;" << std::endl
-                << "            std::pair<Value_t const, " << TemplateArg(m,1).Name() << " > R__t3(R__t,R__t2);" << std::endl
-                << "            R__stl.insert(R__t3);" << std::endl;
-          //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
-            break;
-         }
-         case kSet:
-         case kMultiSet:
-            (*dictSrcOut) << "            R__stl.insert(R__t);" << std::endl;
-            break;
-         case kVector:
-         case kList:
-         case kDeque:
-            (*dictSrcOut) << "            R__stl.push_back(R__t);" << std::endl;
-            break;
+      case kMap:
+      case kMultiMap: {
+         std::string keyName( TemplateArg(m).Name() );
+         (*dictSrcOut) << "            typedef " << keyName << " Value_t;" << std::endl
+                       << "            std::pair<Value_t const, " << TemplateArg(m,1).Name() << " > R__t3(R__t,R__t2);" << std::endl
+                       << "            R__stl.insert(R__t3);" << std::endl;
+         //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
+         break;
+      }
+      case kSet:
+      case kMultiSet:
+         (*dictSrcOut) << "            R__stl.insert(R__t);" << std::endl;
+         break;
+      case kVector:
+      case kList:
+      case kDeque:
+         (*dictSrcOut) << "            R__stl.push_back(R__t);" << std::endl;
+         break;
 
-         default:
-            assert(0);
+      default:
+         assert(0);
       }
       (*dictSrcOut) << "         }" << std::endl
-          << "      }" << std::endl;
+                    << "      }" << std::endl;
       if (isArr) (*dictSrcOut) << "    }" << std::endl;
 
    } else {
@@ -1990,42 +1990,42 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       }
       (*dictSrcOut) << "      {" << std::endl;
       switch (pa) {
-         case 0:         //No pointer && No array
-            (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
-            break;
-         case 1:         //No pointer && array
-            (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
-            break;
-         case 2:         //pointer && No array
-            (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl = **" << stlName.c_str() << ";" << std::endl;
-            break;
-         case 3:         //pointer && array
-            (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl = *" << stlName.c_str() << "[R__l];" << std::endl;
-            break;
+      case 0:         //No pointer && No array
+         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
+         break;
+      case 1:         //No pointer && array
+         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
+         break;
+      case 2:         //pointer && No array
+         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl = **" << stlName.c_str() << ";" << std::endl;
+         break;
+      case 3:         //pointer && array
+         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl = *" << stlName.c_str() << "[R__l];" << std::endl;
+         break;
       }
 
       (*dictSrcOut) << "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;" << std::endl
-          << "         R__b << R__n;" << std::endl
-          << "         if(R__n) {" << std::endl;
+                    << "         R__b << R__n;" << std::endl
+                    << "         if(R__n) {" << std::endl;
 
       if (tcl1) {
          (*dictSrcOut) << "         TClass *R__tcl1 = TBuffer::GetClass(typeid(" << fulName1.c_str() << "));" << std::endl
-             << "         if (R__tcl1==0) {" << std::endl
-             << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
-             << fulName1.c_str() << "!\");" << std::endl
-             << "            return;" << std::endl
-             << "         }" << std::endl;
+                       << "         if (R__tcl1==0) {" << std::endl
+                       << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
+                       << fulName1.c_str() << "!\");" << std::endl
+                       << "            return;" << std::endl
+                       << "         }" << std::endl;
       }
       if (tcl2) {
          (*dictSrcOut) << "         TClass *R__tcl2 = TBuffer::GetClass(typeid(" << fulName2.c_str() << "));" << std::endl
-             << "         if (R__tcl2==0) {" << std::endl
-             << "            Error(\"" << stlName.c_str() << "streamer\",\"Missing the TClass object for " << fulName2.c_str() << "!\");" << std::endl
-             << "            return;" << std::endl
-             << "         }" << std::endl;
+                       << "         if (R__tcl2==0) {" << std::endl
+                       << "            Error(\"" << stlName.c_str() << "streamer\",\"Missing the TClass object for " << fulName2.c_str() << "!\");" << std::endl
+                       << "            return;" << std::endl
+                       << "         }" << std::endl;
       }
 
       (*dictSrcOut) << "            " << stlType.c_str() << "::iterator R__k;" << std::endl
-          << "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {" << std::endl;
+                    << "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {" << std::endl;
       if (stltype == kMap || stltype == kMultiMap) {
          ElementStreamer(TemplateArg(m,0), "((*R__k).first )",rwmode,tcl1);
          ElementStreamer(TemplateArg(m,1), "((*R__k).second)",rwmode,tcl2);
@@ -2034,8 +2034,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       }
 
       (*dictSrcOut) << "            }" << std::endl
-          << "         }" << std::endl
-          << "      }" << std::endl;
+                    << "         }" << std::endl
+                    << "      }" << std::endl;
       if (isArr) (*dictSrcOut) << "    }" << std::endl;
    }
    return 1;
@@ -2059,16 +2059,16 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
             std::stringstream fullIdx;
             for (int dim = 0; dim < m.ArrayDim(); ++dim) {
                (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
-                  << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
+                             << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
                fullIdx << "[R__i" << dim << "]";
             }
             (*dictSrcOut) << "         { TString R__str; R__str.Streamer(R__b); "
-               << m.Name() << fullIdx.str() << " = R__str.Data();}" << std::endl;
+                          << m.Name() << fullIdx.str() << " = R__str.Data();}" << std::endl;
          } else {
             (*dictSrcOut) << "      { TString R__str; R__str.Streamer(R__b); ";
             if (m.Property() & G__BIT_ISPOINTER)
                (*dictSrcOut) << "if (*" << m.Name() << ") delete *" << m.Name() << "; (*"
-                   << m.Name() << " = new string(R__str.Data())); }" << std::endl;
+                             << m.Name() << " = new string(R__str.Data())); }" << std::endl;
             else
                (*dictSrcOut) << m.Name() << " = R__str.Data(); }" << std::endl;
          }
@@ -2076,12 +2076,12 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
          // create write mode
          if (m.Property() & G__BIT_ISPOINTER)
             (*dictSrcOut) << "      { TString R__str; if (*" << m.Name() << ") R__str = (*"
-                << m.Name() << ")->c_str(); R__str.Streamer(R__b);}" << std::endl;
+                          << m.Name() << ")->c_str(); R__str.Streamer(R__b);}" << std::endl;
          else if (m.Property() & G__BIT_ISARRAY) {
             std::stringstream fullIdx;
             for (int dim = 0; dim < m.ArrayDim(); ++dim) {
                (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
-                  << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
+                             << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
                fullIdx << "[R__i" << dim << "]";
             }
             (*dictSrcOut) << "         { TString R__str(" << m.Name() << fullIdx.str() << ".c_str()); R__str.Streamer(R__b);}" << std::endl;
@@ -2093,212 +2093,6 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
    return 0;
 }
 
-//______________________________________________________________________________
-#ifdef OLDSTREAMER
-int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
-{
-   // Create Streamer code for an STL base class. Returns 1 if base class
-   // was an STL container and if Streamer code has been created, 0 otherwise.
-
-   int stltype = abs(IsSTLContainer(m));
-   if (m.IsTmplt() && stltype>0) {
-      char ss[kMaxLen];strcpy(ss,TemplateArg(m).Name());char *s=ss;
-
-      if (rwmode == 0) {
-         // create read code
-         (*dictSrcOut) << "      {" << std::endl;
-         char tmparg[kMaxLen];
-         strcpy(tmparg,m.Name());
-         int lenarg = strlen(tmparg);
-         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
-         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
-         if (!strncmp(s, "const ", 6)) s += 6;
-         (*dictSrcOut) << "         clear();" << std::endl
-             << "         int R__i, R__n;" << std::endl
-             << "         R__b >> R__n;" << std::endl
-             << "         for (R__i = 0; R__i < R__n; R__i++) {" << std::endl
-             << "            " << s << " R__t;" << std::endl;
-         if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
-             (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
-             (TemplateArg(m).Property() & G__BIT_ISENUM)) {
-            if (TemplateArg(m).Property() & G__BIT_ISENUM)
-               (*dictSrcOut) << "            R__b >> (Int_t&)R__t;" << std::endl;
-            else {
-               if (stltype == kMap || stltype == kMultiMap) {
-                  (*dictSrcOut) << "            R__b >> R__t;" << std::endl;
-                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
-                     (*dictSrcOut) << "            " << TemplateArg(m,1).Name() << " R__t2;" << std::endl
-                         << "            R__b >> R__t2;" << std::endl;
-                  } else {
-                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        (*dictSrcOut) << "            TString R__str;" << std::endl
-                            << "            R__str.Streamer(R__b);" << std::endl
-                            << "            string R__t2 = R__str.Data();" << std::endl;
-                     } else {
-                        (*dictSrcOut) << "            " << TemplateArg(m,1).Name() << " R__t2;" << std::endl
-                            << "            R__t2.Streamer(R__b);" << std::endl;
-                     }
-                  }
-               } else if (stltype == kSet || stltype == kMultiSet) {
-                  (*dictSrcOut) << "            R__b >> R__t;" << std::endl;
-               } else {
-                  if (strcmp(s,"string*") == 0) {
-                     (*dictSrcOut) << "            TString R__str;" << std::endl
-                         << "            R__str.Streamer(R__b);" << std::endl
-                         << "            R__t = new string(R__str.Data());" << std::endl;
-                  } else {
-                     (*dictSrcOut) << "            R__b >> R__t;" << std::endl;
-                  }
-               }
-            }
-         } else {
-            if (TemplateArg(m).HasMethod("Streamer")) {
-               if (stltype == kMap || stltype == kMultiMap) {
-                  (*dictSrcOut) << "            R__t.Streamer(R__b);" << std::endl;
-                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                      (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                      (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
-                     (*dictSrcOut) << "            " << TemplateArg(m,1).Name() << " R__t2;" << std::endl;
-                         << "            R__b >> R__t2;" << std::endl;
-                  } else {
-                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        (*dictSrcOut) << "            TString R__str;" << std::endl
-                            << "            R__str.Streamer(R__b); << std::endl"
-                            << "            string R__t2 = R__str.Data();" << std::endl;
-                     } else {
-                        (*dictSrcOut) << "            " << TemplateArg(m,1).Name() << " R__t2;" << std::endl
-                            << "            R__t2.Streamer(R__b);" << std::endl;
-                     }
-                  }
-               } else {
-                  (*dictSrcOut) << "            R__t.Streamer(R__b);" << std::endl;
-               }
-            } else {
-               if (strcmp(s,"string") == 0) {
-                  (*dictSrcOut) << "            TString R__str;" << std::endl
-                      << "            R__str.Streamer(R__b);" << std::endl;
-                      << "            R__t = R__str.Data();" << std::endl;
-               } else {
-                  (*dictSrcOut) << "R__b.StreamObject(&R__t,typeid(" << s << "));" << std::endl;
-//VP                 Error(0, "*** Baseclass %s: template arg %s has no Streamer()"
-//VP                          " method (need manual intervention)\n",
-//VP                          m.Name(), TemplateArg(m).Name());
-//VP                 (*dictSrcOut) << "            //R__t.Streamer(R__b);" << std::endl;
-               }
-            }
-         }
-         if (m.Property() & G__BIT_ISPOINTER) {
-            if (stltype == kMap || stltype == kMultiMap) {
-               (*dictSrcOut) << "            insert(make_pair(R__t,R__t2));" << std::endl;
-            } else if (stltype == kSet || stltype == kMultiSet) {
-               (*dictSrcOut) << "            insert(R__t);" << std::endl;
-            } else {
-               (*dictSrcOut) << "            push_back(R__t);" << std::endl;
-            }
-         } else {
-            if (stltype == kMap || stltype == kMultiMap) {
-               (*dictSrcOut) << "            insert(make_pair(R__t,R__t2));");
-            } else if (stltype == kSet || stltype == kMultiSet) {
-               fprintf(fp, "            insert(R__t);\n");
-            } else {
-               fprintf(fp, "            push_back(R__t);\n");
-            }
-         }
-         fprintf(fp, "         }\n");
-         fprintf(fp, "      }\n");
-      } else {
-         // create write code
-         fprintf(fp, "      {\n");
-         fprintf(fp, "         R__b << int(size());\n");
-         char tmparg[kMaxLen];
-         strcpy(tmparg,m.Name());
-         int lenarg = strlen(tmparg);
-         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
-         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
-         fprintf(fp, "         %s::iterator R__k;\n", tmparg);
-         fprintf(fp, "         for (R__k = begin(); R__k != end(); ++R__k) {\n");
-         if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
-             (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
-             (TemplateArg(m).Property() & G__BIT_ISENUM)) {
-            if (TemplateArg(m).Property() & G__BIT_ISENUM)
-               fprintf(fp, "            R__b << (Int_t)*R__k;\n");
-            else {
-               if (stltype == kMap || stltype == kMultiMap) {
-                  fprintf(fp, "            R__b << (*R__k).first;\n");
-                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                  (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
-                     fprintf(fp, "            R__b << (*R__k).second;\n");
-                  } else {
-                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        fprintf(fp, "            TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
-                        fprintf(fp, "            R__str.Streamer(R__b);\n");
-                     } else {
-                        fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
-                     }
-                  }
-               } else if (stltype == kSet || stltype == kMultiSet) {
-                  fprintf(fp, "            R__b << *R__k;\n");
-               } else {
-                  if (strcmp(TemplateArg(m).Name(),"string*") == 0) {
-                     fprintf(fp,"            TString R__str = (*R__k)->c_str();\n");
-                     fprintf(fp,"            R__str.Streamer(R__b);\n");
-                  } else {
-                     if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-                        Error(0, "cannot process template argument1 %s\n",tmparg);
-                        fprintf(fp, "            //R__b << *R__k;\n");
-                     } else {
-                        fprintf(fp, "            R__b << *R__k;\n");
-                     }
-                  }
-               }
-            }
-         } else {
-            if (TemplateArg(m).HasMethod("Streamer")) {
-               if (stltype == kMap || stltype == kMultiMap) {
-                  fprintf(fp, "            ((%s&)((*R__k).first)).Streamer(R__b);\n",TemplateArg(m).Name());
-                  if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
-                      (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
-                      (TemplateArg(m,1).Property() & G__BIT_ISENUM)) {
-                     fprintf(fp, "            R__b << (*R__k).second;\n");
-                  } else {
-                     if (strcmp(TemplateArg(m,1).Name(),"string") == 0) {
-                        fprintf(fp, "            TString R__str = ((%s&)((*R__k).second)).c_str();\n",TemplateArg(m,1).Name());
-                        fprintf(fp, "            R__str.Streamer(R__b);\n");
-                     } else {
-                        fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
-                     }
-                  }
-               } else if (stltype == kSet || stltype == kMultiSet) {
-                  fprintf(fp, "            (*R__k).Streamer(R__b);\n");
-               } else {
-                  fprintf(fp, "            (*R__k).Streamer(R__b);\n");
-               }
-            } else {
-               if (strcmp(TemplateArg(m).Name(),"string") == 0) {
-                  fprintf(fp,"            TString R__str = (*R__k).c_str();\n");
-                  fprintf(fp,"            R__str.Streamer(R__b);\n");
-               } else {
-                  if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
-                     Error(0, "cannot process template argument2 %s\n",tmparg);
-                     fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
-                  } else {
-                     fprintf(fp, "R__b.StreamObject(R__k,typeid(%s));\n",s);               //R__t.Streamer(R__b);\n");
-                     //VP                    fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
-                  }
-               }
-            }
-         }
-         fprintf(fp, "         }\n");
-         fprintf(fp, "      }\n");
-      }
-      return 1;
-   }
-   return 0;
-}
-#endif
 //______________________________________________________________________________
 int PointerToPointer(G__DataMemberInfo &m)
 {
@@ -2320,7 +2114,7 @@ void WriteInputOperator(G__ClassInfo &cl)
       return;
 
    (*dictSrcOut) << "//_______________________________________"
-       << "_______________________________________" << std::endl;
+                 << "_______________________________________" << std::endl;
 
    char space_prefix[kMaxLen] = "";
 #ifdef WIN32
@@ -2332,23 +2126,23 @@ void WriteInputOperator(G__ClassInfo &cl)
    if (cl.IsTmplt()) {
       // Produce specialisation for templates:
       (*dictSrcOut) << "template<> TBuffer &operator>>"
-          << "(TBuffer &buf, " << cl.Fullname() << " *&obj)" << std::endl
-          << "{" << std::endl;
+                    << "(TBuffer &buf, " << cl.Fullname() << " *&obj)" << std::endl
+                    << "{" << std::endl;
    } else {
       (*dictSrcOut) << "template<> TBuffer &" << space_prefix << "operator>>(TBuffer &buf, "
-          << cl.Fullname() << " *&obj)" << std::endl
-          << "{" << std::endl;
+                    << cl.Fullname() << " *&obj)" << std::endl
+                    << "{" << std::endl;
    }
    (*dictSrcOut) << "   // Read a pointer to an object of class " << cl.Fullname() << "."
-       << std::endl << std::endl;
+                 << std::endl << std::endl;
 
    if (cl.IsBase("TObject") || !strcmp(cl.Fullname(), "TObject")) {
       (*dictSrcOut) << "   obj = (" << cl.Fullname() << " *) buf.ReadObjectAny("
-          << cl.Fullname() << "::Class());" << std::endl;
+                    << cl.Fullname() << "::Class());" << std::endl;
    } else {
       (*dictSrcOut) << "   ::Error(\"" << cl.Fullname() << "::operator>>\", \"objects not inheriting"
-                  " from TObject need a specialized operator>>"
-                  " function\"); if (obj) { }" << std::endl;
+         " from TObject need a specialized operator>>"
+         " function\"); if (obj) { }" << std::endl;
    }
    (*dictSrcOut) << "   return buf;" << std::endl << "}" << std::endl << std::endl;
 }
@@ -2375,45 +2169,45 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
    }
 
    (*dictSrcOut) << "//_______________________________________"
-       << "_______________________________________" << std::endl;
+                 << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "TClass *" << clsname.c_str() << "::fgIsA = 0;  // static to hold class pointer" << std::endl
-       << std::endl
+                 << std::endl
 
-       << "//_______________________________________"
-       << "_______________________________________" << std::endl;
+                 << "//_______________________________________"
+                 << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "const char *" << clsname.c_str() << "::Class_Name()" << std::endl << "{" << std::endl
-       << "   return \"" << cl.Fullname() << "\";"  << std::endl <<"}" << std::endl << std::endl;
+                 << "   return \"" << cl.Fullname() << "\";"  << std::endl <<"}" << std::endl << std::endl;
 
    if (1 || !cl.IsTmplt()) {
       // If the class is not templated and has a ClassDef,
       // a ClassImp is required and already defines those function:
 
       (*dictSrcOut) << "//_______________________________________"
-          << "_______________________________________" << std::endl;
+                    << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
-          << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
-          << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
+                    << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                    << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
-          << "//_______________________________________"
-          << "_______________________________________" << std::endl;
+                    << "//_______________________________________"
+                    << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) <<"template <> ";
       (*dictSrcOut) << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
-          << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
-          << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
+                    << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                    << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
-          << "//_______________________________________"
-          << "_______________________________________" << std::endl;
+                    << "//_______________________________________"
+                    << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl
-          << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
-          << "*)0x0)->GetClass();" << std::endl
-          << "}" << std::endl << std::endl
+                    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                    << "*)0x0)->GetClass();" << std::endl
+                    << "}" << std::endl << std::endl
 
-          << "//_______________________________________"
-          << "_______________________________________" << std::endl;
+                    << "//_______________________________________"
+                    << "_______________________________________" << std::endl;
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
       (*dictSrcOut) << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
@@ -2423,8 +2217,8 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
    }
 
    while (enclSpaceNesting) {
-     (*dictSrcOut) << "} // namespace " << nsname << std::endl;
-     --enclSpaceNesting;
+      (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+      --enclSpaceNesting;
    }
 }
 
@@ -2449,8 +2243,8 @@ void WriteClassInit(G__ClassInfo &cl)
    int stl = TClassEdit::IsSTLCont(classname.c_str());
 
    (*dictSrcOut) << "namespace ROOT {" << std::endl
-       << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent);"
-       << std::endl;
+                 << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent);"
+                 << std::endl;
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
       (*dictSrcOut) << "   static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
@@ -2463,12 +2257,12 @@ void WriteClassInit(G__ClassInfo &cl)
    }
    if (NeedDestructor(cl)) {
       (*dictSrcOut) << "   static void delete_" << mappedname.c_str() << "(void *p);" << std::endl
-          << "   static void deleteArray_" << mappedname.c_str() << "(void *p);" << std::endl
-          << "   static void destruct_" << mappedname.c_str() << "(void *p);" << std::endl;
+                    << "   static void deleteArray_" << mappedname.c_str() << "(void *p);" << std::endl
+                    << "   static void destruct_" << mappedname.c_str() << "(void *p);" << std::endl;
    }
    (*dictSrcOut) << std::endl
 
-       << "   // Function generating the singleton type initializer" << std::endl;
+                 << "   // Function generating the singleton type initializer" << std::endl;
 
 #if 0
    fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
@@ -2482,7 +2276,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
 
    (*dictSrcOut) << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl
-                    << "   {" << std::endl;
+                 << "   {" << std::endl;
 
    if (NeedShadowClass(cl)) {
       (*dictSrcOut) << "      // Make sure the shadow class has the right sizeof" << std::endl;
@@ -2494,7 +2288,7 @@ void WriteClassInit(G__ClassInfo &cl)
          std::string clfullname;
          shadowMaker->GetFullShadowName(cl, clfullname);
          (*dictSrcOut) << "      R__ASSERT(sizeof(" << csymbol.c_str() << ")"
-             << " == sizeof(" << clfullname.c_str() << "));" << std::endl;
+                       << " == sizeof(" << clfullname.c_str() << "));" << std::endl;
       }
    }
 
@@ -2503,15 +2297,15 @@ void WriteClassInit(G__ClassInfo &cl)
    //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
    if ( cl.HasMethod("IsA") ) {
       (*dictSrcOut) << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "
-          << csymbol.c_str() << " >(0);" << std::endl;
+                    << csymbol.c_str() << " >(0);" << std::endl;
    }
    else {
       (*dictSrcOut) << "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid("
-          << csymbol.c_str() << "),0);" << std::endl;
+                    << csymbol.c_str() << "),0);" << std::endl;
    }
    (*dictSrcOut) << "      static ::ROOT::TGenericClassInfo " << std::endl
 
-       << "         instance(\"" << classname.c_str() << "\", ";
+                 << "         instance(\"" << classname.c_str() << "\", ";
 
    if (cl.HasMethod("Class_Version")) {
       (*dictSrcOut) << csymbol.c_str() << "::Class_Version(), ";
@@ -2532,8 +2326,8 @@ void WriteClassInit(G__ClassInfo &cl)
       delete [] proto;
 
       if (methodinfo.IsValid() &&
-         //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
-         strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
+          //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
+          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
 
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
@@ -2551,9 +2345,9 @@ void WriteClassInit(G__ClassInfo &cl)
       }
    }
    (*dictSrcOut) << "\"" << filename << "\", " << cl.LineNumber() << "," << std::endl
-       << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
-   //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
-       << "                  ";
+                 << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
+      //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
+                 << "                  ";
    delete [] filename;
    if (!NeedShadowClass(cl)) {
       if (!cl.HasMethod("ShowMembers")) (*dictSrcOut) << "0, ";
@@ -2569,7 +2363,7 @@ void WriteClassInit(G__ClassInfo &cl)
    }
 
    (*dictSrcOut) << "isa_proxy, " << cl.RootFlag() << "," << std::endl
-       << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
+                 << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;
       if (args.size()==0 && NeedDestructor(cl))
@@ -2577,27 +2371,27 @@ void WriteClassInit(G__ClassInfo &cl)
    }
    if (NeedDestructor(cl)) {
       (*dictSrcOut) << "      instance.SetDelete(&delete_" << mappedname.c_str() << ");" << std::endl
-          << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << std::endl
-          << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << std::endl;
+                    << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << std::endl
+                    << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << std::endl;
    }
    if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
       int idx = classname.find("<");
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
       const char* methodTCP=0;
       switch(stlType)  {
-         case TClassEdit::kVector:
-         case TClassEdit::kList:
-         case TClassEdit::kDeque:
-            methodTCP="Pushback";
-            break;
-         case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
-            methodTCP="MapInsert";
-            break;
-         case TClassEdit::kSet:
-         case TClassEdit::kMultiSet:
-            methodTCP="Insert";
-            break;
+      case TClassEdit::kVector:
+      case TClassEdit::kList:
+      case TClassEdit::kDeque:
+         methodTCP="Pushback";
+         break;
+      case TClassEdit::kMap:
+      case TClassEdit::kMultiMap:
+         methodTCP="MapInsert";
+         break;
+      case TClassEdit::kSet:
+      case TClassEdit::kMultiSet:
+         methodTCP="Insert";
+         break;
       }
       (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
                     << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
@@ -2675,19 +2469,19 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    (*dictSrcOut) << std::endl
 
-       << "      // Function generating the singleton type initializer" << std::endl
+                 << "      // Function generating the singleton type initializer" << std::endl
 
 #if !defined(R__SGI) && !defined(R__AIX)
-       << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
-       << "      {" << std::endl
+                 << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
+                 << "      {" << std::endl
 #else
-       << "      ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
-       << "      {" << std::endl
+                 << "      ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
+                 << "      {" << std::endl
 #endif
 
-       << "         static ::ROOT::TGenericClassInfo " << std::endl
+                 << "         static ::ROOT::TGenericClassInfo " << std::endl
 
-       << "            instance(\"" << classname.c_str() << "\", ";
+                 << "            instance(\"" << classname.c_str() << "\", ";
 
    if (cl.HasMethod("Class_Version")) {
       (*dictSrcOut) << "::" << classname.c_str() << "::Class_Version(), ";
@@ -2718,8 +2512,8 @@ void WriteNamespaceInit(G__ClassInfo &cl)
       if (filename[i]=='\\') filename[i]='/';
    }
    (*dictSrcOut) << "\"" << filename << "\", " << cl.LineNumber() << "," << std::endl
-       << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
-       << "                     ";
+                 << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
+                 << "                     ";
 
    if (cl.HasMethod("Dictionary") && !cl.IsTmplt()) {
       (*dictSrcOut) << "&::" << classname.c_str() << "::Dictionary, ";
@@ -2729,18 +2523,18 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    (*dictSrcOut) << cl.RootFlag() << ");" << std::endl
 
-       << "         return &instance;" << std::endl
-       << "      }" << std::endl
-       << "      // Static variable to force the class initialization" << std::endl
-   // must be one long line otherwise R__UseDummy does not work
-       << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
-       << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
+                 << "         return &instance;" << std::endl
+                 << "      }" << std::endl
+                 << "      // Static variable to force the class initialization" << std::endl
+      // must be one long line otherwise R__UseDummy does not work
+                 << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
+                 << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       (*dictSrcOut) <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
-          << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
-          << "         GenerateInitInstance()->GetClass();" << std::endl
-          << "      }" << std::endl << std::endl;
+                    << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
+                    << "         GenerateInitInstance()->GetClass();" << std::endl
+                    << "      }" << std::endl << std::endl;
    }
 
    (*dictSrcOut) << "   }" << std::endl;
@@ -2797,28 +2591,28 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
    if (index==0 && printError) {
       const char *errorstring;
       switch (error) {
-         case G__DataMemberInfo::NOT_INT:
-            errorstring = "is not an integer";
-            break;
-         case G__DataMemberInfo::NOT_DEF:
-            errorstring = "has not been defined before the array";
-            break;
-         case G__DataMemberInfo::IS_PRIVATE:
-            errorstring = "is a private member of a parent class";
-            break;
-         case G__DataMemberInfo::UNKNOWN:
-            errorstring = "is not known";
-            break;
-         default:
-            errorstring = "UNKNOWN ERROR!!!!";
+      case G__DataMemberInfo::NOT_INT:
+         errorstring = "is not an integer";
+         break;
+      case G__DataMemberInfo::NOT_DEF:
+         errorstring = "has not been defined before the array";
+         break;
+      case G__DataMemberInfo::IS_PRIVATE:
+         errorstring = "is a private member of a parent class";
+         break;
+      case G__DataMemberInfo::UNKNOWN:
+         errorstring = "is not known";
+         break;
+      default:
+         errorstring = "UNKNOWN ERROR!!!!";
       }
 
       if (where==0) {
          Error(0, "*** Datamember %s::%s: no size indication!\n",
-                     member.MemberOf()->Name(), member.Name());
+               member.MemberOf()->Name(), member.Name());
       } else {
          Error(0,"*** Datamember %s::%s: size of array (%s) %s!\n",
-                  member.MemberOf()->Name(), member.Name(), where, errorstring);
+               member.MemberOf()->Name(), member.Name(), where, errorstring);
       }
    }
    return index;
@@ -2844,10 +2638,10 @@ void WriteStreamer(G__ClassInfo &cl)
    }
 
    (*dictSrcOut) << "//_______________________________________"
-       << "_______________________________________" << std::endl;
+                 << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "void " << clsname << "::Streamer(TBuffer &R__b)"  << std::endl << "{" << std::endl
-       << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl;
+                 << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl;
 
    // In case of VersionID<=0 write dummy streamer only calling
    // its base class Streamer(s). If no base class(es) let Streamer
@@ -2862,8 +2656,8 @@ void WriteStreamer(G__ClassInfo &cl)
             if (strstr(b.Fullname(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
                (*dictSrcOut) << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
-                   << "   typedef " << b.Fullname() << " baseClass" << basestreamer << ";" << std::endl
-                   << "   baseClass" << basestreamer << "::Streamer(R__b);" << std::endl;
+                             << "   typedef " << b.Fullname() << " baseClass" << basestreamer << ";" << std::endl
+                             << "   baseClass" << basestreamer << "::Streamer(R__b);" << std::endl;
             }
             else
                (*dictSrcOut) << "   " << b.Fullname() << "::Streamer(R__b);" << std::endl;
@@ -2871,7 +2665,7 @@ void WriteStreamer(G__ClassInfo &cl)
          }
       if (!basestreamer) {
          (*dictSrcOut) << "   ::Error(\"" << cl.Fullname() << "::Streamer\", \"version id <=0 in ClassDef,"
-                 " dummy Streamer() called\"); if (R__b.IsReading()) { }" << std::endl;
+            " dummy Streamer() called\"); if (R__b.IsReading()) { }" << std::endl;
       }
       (*dictSrcOut) << "}" << std::endl << std::endl;
       while (enclSpaceNesting) {
@@ -2891,7 +2685,7 @@ void WriteStreamer(G__ClassInfo &cl)
    if (strstr(cl.Fullname(),"::")) {
       // there is a namespace involved, trigger MS VC bug workaround
       (*dictSrcOut) << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
-          << "   typedef ::" << cl.Fullname() << " thisClass;" << std::endl;
+                    << "   typedef ::" << cl.Fullname() << " thisClass;" << std::endl;
       classname = "thisClass";
    }
    for (int i = 0; i < 2; i++) {
@@ -2923,8 +2717,8 @@ void WriteStreamer(G__ClassInfo &cl)
             if (strstr(b.Fullname(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
                (*dictSrcOut) << "      //This works around a msvc bug and should be harmless on other platforms" << std::endl
-                   << "      typedef " << b.Fullname() << " baseClass" << base << ";" << std::endl
-                   << "      baseClass" << base << "::Streamer(R__b);" << std::endl;
+                             << "      typedef " << b.Fullname() << " baseClass" << base << ";" << std::endl
+                             << "      baseClass" << base << "::Streamer(R__b);" << std::endl;
                ++base;
             }
             else
@@ -2984,28 +2778,28 @@ void WriteStreamer(G__ClassInfo &cl)
                   } else {
                      if (i == 0) {
                         (*dictSrcOut) << "      delete [] " << m.Name() << ";" << std::endl
-                            << "      " << GetNonConstMemberName(m) << " = new "
-                            << ShortTypeName(m.Type()->Name()) << "[" << indexvar << "];" << std::endl;
+                                      << "      " << GetNonConstMemberName(m) << " = new "
+                                      << ShortTypeName(m.Type()->Name()) << "[" << indexvar << "];" << std::endl;
                         if (isFloat16) {
                            (*dictSrcOut) << "      R__b.ReadFastArrayFloat16(" <<  GetNonConstMemberName(m)
-                               << "," << indexvar << ");" << std::endl;
+                                         << "," << indexvar << ");" << std::endl;
                         } else if (isDouble32) {
                            (*dictSrcOut) << "      R__b.ReadFastArrayDouble32(" <<  GetNonConstMemberName(m)
-                               << "," << indexvar << ");" << std::endl;
+                                         << "," << indexvar << ");" << std::endl;
                         } else {
                            (*dictSrcOut) << "      R__b.ReadFastArray(" << GetNonConstMemberName(m)
-                               << "," << indexvar << ");" << std::endl;
+                                         << "," << indexvar << ");" << std::endl;
                         }
                      } else {
                         if (isFloat16) {
                            (*dictSrcOut) << "      R__b.WriteFastArrayFloat16("
-                               << m.Name() << "," << indexvar << ");" << std::endl;
+                                         << m.Name() << "," << indexvar << ");" << std::endl;
                         } else if (isDouble32) {
                            (*dictSrcOut) << "      R__b.WriteFastArrayDouble32("
-                               << m.Name() << "," << indexvar << ");" << std::endl;
+                                         << m.Name() << "," << indexvar << ");" << std::endl;
                         } else {
                            (*dictSrcOut) << "      R__b.WriteFastArray("
-                              << m.Name() << "," << indexvar << ");" << std::endl;
+                                         << m.Name() << "," << indexvar << ");" << std::endl;
                         }
                      }
                   }
@@ -3017,13 +2811,13 @@ void WriteStreamer(G__ClassInfo &cl)
                         else
                            if (isFloat16) {
                               (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << m.Type()->TrueName()
-                                  << "*)" << m.Name() << ");" << std::endl;
+                                            << "*)" << m.Name() << ");" << std::endl;
                            } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << m.Type()->TrueName()
-                                  << "*)" << m.Name() << ");" << std::endl;
+                                            << "*)" << m.Name() << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.ReadStaticArray((" << m.Type()->TrueName()
-                                  << "*)" << m.Name() << ");" << std::endl;
+                                            << "*)" << m.Name() << ");" << std::endl;
                            }
                      } else {
                         if ((m.Type())->Property() & G__BIT_ISENUM)
@@ -3035,7 +2829,7 @@ void WriteStreamer(G__ClassInfo &cl)
                               (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << m.Name() << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.ReadStaticArray((" << m.Type()->TrueName()
-                                  << "*)" << m.Name() << ");" << std::endl;
+                                            << "*)" << m.Name() << ");" << std::endl;
                            }
                      }
                   } else {
@@ -3045,17 +2839,17 @@ void WriteStreamer(G__ClassInfo &cl)
                      if (m.ArrayDim() > 1) {
                         if ((m.Type())->Property() & G__BIT_ISENUM)
                            (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << m.Name() << ", "
-                               << s << ");" << std::endl;
+                                         << s << ");" << std::endl;
                         else
                            if (isFloat16) {
                               (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << m.Type()->TrueName()
-                                  << "*)" << m.Name() << ", " << s << ");" << std::endl;
+                                            << "*)" << m.Name() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << m.Type()->TrueName()
-                                  << "*)" << m.Name() << ", " << s << ");" << std::endl;
+                                            << "*)" << m.Name() << ", " << s << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.WriteArray((" << m.Type()->TrueName()
-                                  << "*)" << m.Name() << ", " << s << ");" << std::endl;
+                                            << "*)" << m.Name() << ", " << s << ");" << std::endl;
                            }
                      } else {
                         if ((m.Type())->Property() & G__BIT_ISENUM)
@@ -3079,13 +2873,13 @@ void WriteStreamer(G__ClassInfo &cl)
                   if (isFloat16) {
                      if (i == 0)
                         (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(m)
-                            << "=Float16_t(R_Dummy);}" << std::endl;
+                                      << "=Float16_t(R_Dummy);}" << std::endl;
                      else
                         (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(m) << ");" << std::endl;
                   } else if (isDouble32) {
                      if (i == 0)
                         (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(m)
-                            << "=Double32_t(R_Dummy);}" << std::endl;
+                                      << "=Double32_t(R_Dummy);}" << std::endl;
                      else
                         (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(m) << ");" << std::endl;
                   } else {
@@ -3188,11 +2982,11 @@ void WriteStreamer(G__ClassInfo &cl)
                      (*dictSrcOut) << "      " << GetNonConstMemberName(m) << ".Streamer(R__b);" << std::endl;
                   else {
                      (*dictSrcOut) << "      R__b.StreamObject(&(" << m.Name() << "),typeid("
-                         << m.Type()->Name() << "));" << std::endl;               //R__t.Streamer(R__b);\n");
-//VP                     if (i == 0)
-//VP                        Error(0, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
-//VP                                  cl.Fullname(), m.Name());
-//VP                     fprintf(fp, "      //%s.Streamer(R__b);\n", m.Name());
+                                   << m.Type()->Name() << "));" << std::endl;               //R__t.Streamer(R__b);\n");
+                     //VP                     if (i == 0)
+                     //VP                        Error(0, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
+                     //VP                                  cl.Fullname(), m.Name());
+                     //VP                     fprintf(fp, "      //%s.Streamer(R__b);\n", m.Name());
                   }
                }
             }
@@ -3201,11 +2995,11 @@ void WriteStreamer(G__ClassInfo &cl)
    }
    if (ubc) (*dictSrcOut) << "      R__b.SetByteCount(R__c, kTRUE);" << std::endl;
    (*dictSrcOut) << "   }" << std::endl
-       << "}" << std::endl << std::endl;
+                 << "}" << std::endl << std::endl;
 
    while (enclSpaceNesting) {
-     (*dictSrcOut) << "} // namespace " << nsname.c_str() << std::endl;
-     --enclSpaceNesting;
+      (*dictSrcOut) << "} // namespace " << nsname.c_str() << std::endl;
+      --enclSpaceNesting;
    }
 }
 
@@ -3239,21 +3033,21 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    }
 
    (*dictSrcOut) << "//_______________________________________"
-       << "_______________________________________" << std::endl;
+                 << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "void " << clsname << "::Streamer(TBuffer &R__b)" << std::endl
-       << "{" << std::endl
-       << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl
-       << "   if (R__b.IsReading()) {" << std::endl
-       << "      R__b.ReadClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
-       << "   } else {" << std::endl
-       << "      R__b.WriteClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
-       << "   }" << std::endl
-       << "}" << std::endl << std::endl;
+                 << "{" << std::endl
+                 << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl
+                 << "   if (R__b.IsReading()) {" << std::endl
+                 << "      R__b.ReadClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
+                 << "   } else {" << std::endl
+                 << "      R__b.WriteClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
+                 << "   }" << std::endl
+                 << "}" << std::endl << std::endl;
 
    while (enclSpaceNesting) {
-     (*dictSrcOut) << "} // namespace " << nsname << std::endl;
-     --enclSpaceNesting;
+      (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+      --enclSpaceNesting;
    }
 }
 
@@ -3263,12 +3057,12 @@ void WriteStreamerBases(G__ClassInfo &cl)
    // Write Streamer() method for base classes of cl (unused)
 
    (*dictSrcOut) << "//_______________________________________"
-       << "_______________________________________" << std::endl
-       << "void " << cl.Fullname() << "_StreamerBases(TBuffer &R__b, void *pointer)" << std::endl
-       << "{" << std::endl
-       << "   // Stream base classes of class " << cl.Fullname() << "." << std::endl << std::endl
-       << "   " << cl.Fullname() << " *obj = (" << cl.Fullname() << "*)pointer;" << std::endl
-       << "   if (R__b.IsReading()) {" << std::endl;
+                 << "_______________________________________" << std::endl
+                 << "void " << cl.Fullname() << "_StreamerBases(TBuffer &R__b, void *pointer)" << std::endl
+                 << "{" << std::endl
+                 << "   // Stream base classes of class " << cl.Fullname() << "." << std::endl << std::endl
+                 << "   " << cl.Fullname() << " *obj = (" << cl.Fullname() << "*)pointer;" << std::endl
+                 << "   if (R__b.IsReading()) {" << std::endl;
    G__BaseClassInfo br(cl);
    while (br.Next())
       if (br.HasMethod("Streamer")) {
@@ -3281,7 +3075,7 @@ void WriteStreamerBases(G__ClassInfo &cl)
          (*dictSrcOut) << "      obj->" << bw.Name() << "::Streamer(R__b);" << std::endl;
       }
    (*dictSrcOut) << "   }" << std::endl
-       << "}" << std::endl << std::endl;
+                 << "}" << std::endl << std::endl;
 }
 
 //______________________________________________________________________________
@@ -3340,8 +3134,8 @@ void WritePointersSTL(G__ClassInfo &cl)
 
       int k = IsSTLContainer(m);
       if (k!=0) {
-//          fprintf(stderr,"Add %s which is also",m.Type()->Name());
-//          fprintf(stderr," %s\n",m.Type()->TrueName() );
+         //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
+         //          fprintf(stderr," %s\n",m.Type()->TrueName() );
          RStl::inst().GenerateTClassFor( m.Type()->Name() );
       }
       if (k<0) continue;
@@ -3361,13 +3155,13 @@ void WritePointersSTL(G__ClassInfo &cl)
       }
 
       (*dictSrcOut) << "//_______________________________________"
-          << "_______________________________________" << std::endl
-          << "void R__" << clName << "_" << m.Name() << "(TBuffer &R__b, void *R__p, int";
+                    << "_______________________________________" << std::endl
+                    << "void R__" << clName << "_" << m.Name() << "(TBuffer &R__b, void *R__p, int";
       if (pCounter) {
          (*dictSrcOut) << " R__n";
       }
       (*dictSrcOut) << ")" << std::endl
-          << "{" << std::endl;
+                    << "{" << std::endl;
       // remove all 'const' keyword.
       string mTypeName = G__ShadowMaker::GetNonConstTypeName(m);
       // Define a variable for easy access to the data member.
@@ -3398,26 +3192,26 @@ void WritePointersSTL(G__ClassInfo &cl)
             if (m.Property() & G__BIT_ISPOINTER) {
                if (pCounter == 2) {
                   (*dictSrcOut) << "      delete [] *" << m.Name() << ";" << std::endl
-                      << "      if (!R__n) return;" << std::endl
-                      << "      *" << m.Name() << " = new " << a << "*[R__n];" << std::endl
-                      << "      " << a << "** R__s = *" << m.Name() << ";" << std::endl
-                      << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                      << "         R__s[R__l] = new " << a << "();" << std::endl
-                      << "         R__s[R__l]->Streamer(R__b);" << std::endl
-                      << "      }" << std::endl;
+                                << "      if (!R__n) return;" << std::endl
+                                << "      *" << m.Name() << " = new " << a << "*[R__n];" << std::endl
+                                << "      " << a << "** R__s = *" << m.Name() << ";" << std::endl
+                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
+                                << "         R__s[R__l] = new " << a << "();" << std::endl
+                                << "         R__s[R__l]->Streamer(R__b);" << std::endl
+                                << "      }" << std::endl;
                } else if (pCounter == 1) {
                   (*dictSrcOut) << "      delete [] *" << m.Name() << ";" << std::endl
-                      << "      if (!R__n) return;"  << std::endl
-                      << "      *" << m.Name() << " = new " << a << "[R__n];" << std::endl
-                      << "      " << a << "* R__s = *" << m.Name() << ";" << std::endl
-                      << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                      << "         R__s[R__l].Streamer(R__b);" << std::endl
-                      << "      }" << std::endl;
+                                << "      if (!R__n) return;"  << std::endl
+                                << "      *" << m.Name() << " = new " << a << "[R__n];" << std::endl
+                                << "      " << a << "* R__s = *" << m.Name() << ";" << std::endl
+                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
+                                << "         R__s[R__l].Streamer(R__b);" << std::endl
+                                << "      }" << std::endl;
                } else {
                   if (strncmp(m.Title(),"->",2) == 0)
-                      (*dictSrcOut) << "      (*" << m.Name() << ")->Streamer(R__b);" << std::endl;
+                     (*dictSrcOut) << "      (*" << m.Name() << ")->Streamer(R__b);" << std::endl;
                   else
-                      (*dictSrcOut) << "      R__b >> *" << m.Name() << ";" << std::endl;
+                     (*dictSrcOut) << "      R__b >> *" << m.Name() << ";" << std::endl;
                }
             } else {
                (*dictSrcOut) << "      " << m.Name() << ".Streamer(R__b);" << std::endl;
@@ -3438,21 +3232,21 @@ void WritePointersSTL(G__ClassInfo &cl)
                else
                   (*dictSrcOut) << "         R__b << " << m.Name() << "[R__l];" << std::endl;
             } else {
-                (*dictSrcOut) << "         " << m.Name() << "[R__l].Streamer(R__b);" << std::endl;
+               (*dictSrcOut) << "         " << m.Name() << "[R__l].Streamer(R__b);" << std::endl;
             }
             (*dictSrcOut) << "      }" << std::endl;
          } else {
             if (m.Property() & G__BIT_ISPOINTER) {
                if (pCounter == 2) {
                   (*dictSrcOut) << "      " << a << "** R__s = *" << m.Name() << ";" << std::endl
-                      << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                      << "         R__s[R__l]->Streamer(R__b);" << std::endl
-                      << "      }" << std::endl;
+                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
+                                << "         R__s[R__l]->Streamer(R__b);" << std::endl
+                                << "      }" << std::endl;
                } else if(pCounter == 1) {
                   (*dictSrcOut) << "      " << a << "* R__s = *" << m.Name() << ";" << std::endl
-                      << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
-                      << "         R__s[R__l].Streamer(R__b);" << std::endl
-                      << "      }" << std::endl;
+                                << "      for (Int_t R__l = 0; R__l < R__n; R__l++) {" << std::endl
+                                << "         R__s[R__l].Streamer(R__b);" << std::endl
+                                << "      }" << std::endl;
                } else {
                   if (strncmp(m.Title(),"->",2) == 0)
                      (*dictSrcOut) << "      (*" << m.Name() << ")->Streamer(R__b);" << std::endl;
@@ -3469,7 +3263,7 @@ void WritePointersSTL(G__ClassInfo &cl)
          }
       }
       (*dictSrcOut) << "   }" << std::endl
-          << "}" << std::endl << std::endl;
+                    << "}" << std::endl << std::endl;
    }
 }
 
@@ -3494,8 +3288,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    shadowMaker->GetFullShadowName(cl, clfullname);
    if (outside) {
       (*dictSrcOut) << "      typedef " << clfullname.c_str() << " ShadowClass;" << std::endl
-          << "      ShadowClass *sobj = (ShadowClass*)obj;" << std::endl
-          << "      if (sobj) { } // Dummy usage just in case there is no datamember." << std::endl << std::endl;
+                    << "      ShadowClass *sobj = (ShadowClass*)obj;" << std::endl
+                    << "      if (sobj) { } // Dummy usage just in case there is no datamember." << std::endl << std::endl;
       prefix = "sobj->";
    }
 
@@ -3508,7 +3302,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       if (strstr(csymbol.c_str(),"::")) {
          // there is a namespace involved, trigger MS VC bug workaround
          (*dictSrcOut) << "      typedef " << csymbol.c_str() << " msvc_bug_workaround;" << std::endl
-             << "      TClass *R__cl = msvc_bug_workaround::IsA();" << std::endl;
+                       << "      TClass *R__cl = msvc_bug_workaround::IsA();" << std::endl;
       } else
          (*dictSrcOut) << "      TClass *R__cl = " << csymbol.c_str() << "::IsA();" << std::endl;
 #else
@@ -3518,7 +3312,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       (*dictSrcOut) << "      TClass *R__cl  = ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str() << "*)0x0)->GetClass();" << std::endl;
    }
    (*dictSrcOut) << "      Int_t R__ncp = strlen(R__parent);" << std::endl
-       << "      if (R__ncp || R__cl || R__insp.IsA()) { }" << std::endl;
+                 << "      if (R__ncp || R__cl || R__insp.IsA()) { }" << std::endl;
 
    // Inspect data members
    G__DataMemberInfo m(cl);
@@ -3553,10 +3347,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   strcat(cvar, cdim);
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", &"
-                   << prefix << m.Name() << ");" << std::endl;
+                             << prefix << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISPOINTER) {
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"*" << m.Name() << "\", &"
-                   << prefix << m.Name() << ");" << std::endl;
+                             << prefix << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISARRAY) {
                strcpy(cvar, m.Name());
                bool vardim = false;
@@ -3572,15 +3366,15 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                }
                if (vardim) {
                   (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", &"
-                      << prefix << m.Name() << ");" << std::endl;
+                                << prefix << m.Name() << ");" << std::endl;
                } else {
                   (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", "
-                      << prefix << m.Name() << ");" << std::endl;
+                                << prefix << m.Name() << ");" << std::endl;
                }
 
             } else {
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name() << "\", &"
-                   << prefix << m.Name() << ");" << std::endl;
+                             << prefix << m.Name() << ");" << std::endl;
             }
          } else {
             // we have an object
@@ -3594,15 +3388,15 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   strcat(cvar, cdim);
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", &"
-                   << prefix << m.Name() << ");" << std::endl;
+                             << prefix << m.Name() << ");" << std::endl;
                if (clflag && IsStreamable(m) && GetFun(fun))
                   (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
-                      << clName << "_" << m.Name() << ");" << std::endl;
+                                << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISPOINTER) {
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"*" << m.Name() << "\", &" << prefix << m.Name() << ");" << std::endl;
                if (clflag && IsStreamable(m) && GetFun(fun))
                   (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"*" << m.Name() << "\",R__"
-                      << clName << "_" << m.Name() << ");" << std::endl;
+                                << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISARRAY) {
                strcpy(cvar, m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
@@ -3610,28 +3404,28 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   strcat(cvar, cdim);
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << cvar << "\", "
-                   << prefix << m.Name() << ");" << std::endl;
+                             << prefix << m.Name() << ");" << std::endl;
                if (clflag && IsStreamable(m) && GetFun(fun))
                   (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
-                      << clName << "_" << m.Name() << ");"  << std::endl;
+                                << clName << "_" << m.Name() << ");"  << std::endl;
             } else if (m.Property() & G__BIT_ISREFERENCE) {
                // For reference we do not know what do not ... let's do nothing (hopefully the referenced objects is saved somewhere else!
 
             } else {
                if ((m.Type())->HasMethod("ShowMembers")) {
                   (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name() << "\", &"
-                      << prefix << m.Name() << ");" << std::endl;
+                                << prefix << m.Name() << ");" << std::endl;
                   (*dictSrcOut) << "      " << GetNonConstMemberName(m,prefix)
-                      << ".ShowMembers(R__insp, strcat(R__parent,\""
-                      << m.Name() << ".\")); R__parent[R__ncp] = 0;"  << std::endl;
+                                << ".ShowMembers(R__insp, strcat(R__parent,\""
+                                << m.Name() << ".\")); R__parent[R__ncp] = 0;"  << std::endl;
                   if (clflag && IsStreamable(m) && GetFun(fun))
                      //fprintf(fp, "      R__cl->SetMemberStreamer(strcat(R__parent,\"%s\"),R__%s_%s); R__parent[R__ncp] = 0;\n", m.Name(), clName, m.Name());
                      (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                         << clName << "_" << m.Name() << ");" << std::endl;
+                                   << clName << "_" << m.Name() << ");" << std::endl;
                } else {
                   // NOTE: something to be added here!
                   (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name()
-                      << "\", (void*)&" << prefix << m.Name() << ");" << std::endl;
+                                << "\", (void*)&" << prefix << m.Name() << ");" << std::endl;
                   /* if (can call ShowStreamer) */
 
                   char compareName[G__LONGLINE];
@@ -3647,14 +3441,14 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                      string typeName( GetLong64_Name( m.Type()->Name() ) );
 
                      (*dictSrcOut) << "      ::ROOT::GenericShowMembers(\"" << typeName << "\", (void*)&"
-                         << prefix << m.Name() << ", R__insp, strcat(R__parent,\""
-                         << m.Name() << ".\")," << (!strncmp(m.Title(), "!", 1)?"true":"false")
-                         <<  ");" << std::endl
-                         << "      R__parent[R__ncp] = 0;" << std::endl;
+                                   << prefix << m.Name() << ", R__insp, strcat(R__parent,\""
+                                   << m.Name() << ".\")," << (!strncmp(m.Title(), "!", 1)?"true":"false")
+                                   <<  ");" << std::endl
+                                   << "      R__parent[R__ncp] = 0;" << std::endl;
                   }
                   if (clflag && IsStreamable(m) && GetFun(fun))
                      (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                         << clName << "_" << m.Name() << ");" << std::endl;
+                                   << clName << "_" << m.Name() << ");" << std::endl;
                }
             }
          }
@@ -3674,8 +3468,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
             if (strstr(b.Fullname(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
                (*dictSrcOut) << "      //This works around a msvc bug and should be harmless on other platforms" << std::endl
-                   << "      typedef " << b.Fullname() << " baseClass" << base << ";" << std::endl
-                   << "      baseClass" << base << "::ShowMembers(R__insp, R__parent);" << std::endl;
+                             << "      typedef " << b.Fullname() << " baseClass" << base << ";" << std::endl
+                             << "      baseClass" << base << "::ShowMembers(R__insp, R__parent);" << std::endl;
             } else {
                (*dictSrcOut) << "      " << b.Fullname() << "::ShowMembers(R__insp, R__parent);" << std::endl;
             }
@@ -3694,10 +3488,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          //                                                          TClassEdit::kRemoveDefaultAlloc) );
          if (outside) {
             (*dictSrcOut) << "      ::ROOT::GenericShowMembers(\"" << baseclass.c_str() << "\", ( ::" << baseclass.c_str()
-                << " * )( (::" << cl.Fullname() << "*) obj ), R__insp, R__parent, false);" << std::endl;
+                          << " * )( (::" << cl.Fullname() << "*) obj ), R__insp, R__parent, false);" << std::endl;
          } else {
             (*dictSrcOut) << "      ::ROOT::GenericShowMembers(\"" << baseclass.c_str() << "\", ( ::" << baseclass.c_str()
-                << " *) (this ), R__insp, R__parent, false);" << std::endl;
+                          << " *) (this ), R__insp, R__parent, false);" << std::endl;
          }
       }
    }
@@ -3716,8 +3510,8 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
    if (outside || cl.IsTmplt()) {
       (*dictSrcOut) << "namespace ROOT {" << std::endl
 
-          << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent)"
-          << std::endl << "   {" << std::endl;
+                    << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp, char *R__parent)"
+                    << std::endl << "   {" << std::endl;
       WriteBodyShowMembers(cl, outside || cl.IsTmplt());
       (*dictSrcOut) << "   }" << std::endl << std::endl;
       (*dictSrcOut) << "}" << std::endl << std::endl;
@@ -3739,7 +3533,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
       }
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp, char *R__parent)"
-          << std::endl << "{" << std::endl;
+                    << std::endl << "{" << std::endl;
       if (!cl.IsTmplt()) {
          WriteBodyShowMembers(cl, outside);
       } else {
@@ -3944,7 +3738,7 @@ const char *CopyArg(const char *original)
 
 #ifdef ROOTBUILD
    if ((strstr(original,"LinkDef") || strstr(original,"Linkdef") ||
-      strstr(original,"linkdef")) && strstr(original,".h")) {
+        strstr(original,"linkdef")) && strstr(original,".h")) {
       return original;
    }
    const char *slash = (char *)strchr(original,'\\');
@@ -3953,11 +3747,11 @@ const char *CopyArg(const char *original)
    }
    if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 &&
        ( slash[4]=='/' || slash[4]=='\\') )
-   {
-      return slash+5;
-   } else {
-      return original;
-   }
+      {
+         return slash+5;
+      } else {
+         return original;
+      }
 #else
    return original;
 #endif
@@ -4024,11 +3818,11 @@ void ReplaceFile(const char *tmpdictname, const char *dictname)
    }
    if (!success)
       Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict() after %d tries (error is %d)\n",
-               tmpdictname, dictname, tries, errno);
+            tmpdictname, dictname, tries, errno);
 #else
    if (unlink(dictname) == -1 || rename(tmpdictname, dictname) == -1)
       Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
-               tmpdictname, dictname);
+            tmpdictname, dictname);
 #endif
 
 }
@@ -4047,7 +3841,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    FILE *fpd = fopen(dictname, "r");
    if (!fpd) {
       Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-               dictname);
+            dictname);
       return;
    }
 
@@ -4056,7 +3850,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    FILE *tmpdict = fopen(tmpdictname, "w");
    if (!tmpdict) {
       Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-               tmpdictname);
+            tmpdictname);
       fclose(fpd);
       return;
    }
@@ -4075,7 +3869,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
             FILE *fb = fopen(bundlename.c_str(), "r");
             if (!fb) {
                Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-                        bundlename.c_str());
+                     bundlename.c_str());
                fclose(fpd);
                fclose(tmpdict);
                remove(tmpdictname);
@@ -4126,13 +3920,13 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    fpd = fopen(dictnameh, "r");
    if (!fpd) {
       Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-              dictnameh);
+            dictnameh);
       return;
    }
    tmpdict = fopen(tmpdictname, "w");
    if (!tmpdict) {
       Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-               tmpdictname);
+            tmpdictname);
       fclose(fpd);
       return;
    }
@@ -4218,7 +4012,7 @@ int main(int argc, char **argv)
 
    if (argc < 2) {
       fprintf(stderr,
-       "Usage: %s [-v][-v0-4] [-cint|-reflex|-gccxml] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+              "Usage: %s [-v][-v0-4] [-cint|-reflex|-gccxml] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -4318,10 +4112,10 @@ int main(int argc, char **argv)
       fprintf(stderr, "%s\n", help);
       return 1;
    } else if (!strncmp(argv[ic], "-",1)) {
-       fprintf(stderr,"Usage: %s [-v][-v0-4] [-reflex] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+      fprintf(stderr,"Usage: %s [-v][-v0-4] [-reflex] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
-                     "and must be before the -f flags\n");
+              "and must be before the -f flags\n");
       fprintf(stderr,"For more extensive help type: %s -h\n", argv[0]);
       return 1;
    } else {
@@ -4480,14 +4274,14 @@ int main(int argc, char **argv)
             // the easiest way is to get it as a parameter
             if (!strcmp(argv[ic], "-L") ||  !strcmp(argv[ic], "--symbols-file")) {
                ++ic;
-	       
-	       FILE *fpsym = fopen(argv[ic],"r");
-	       if (fpsym) // File exists
-		 fclose(fpsym);
-	       else{ // File doesn't exist
-		 Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
-		 return 1;
-	       }
+               
+               FILE *fpsym = fopen(argv[ic],"r");
+               if (fpsym) // File exists
+                  fclose(fpsym);
+               else{ // File doesn't exist
+                  Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
+                  return 1;
+               }
 
                argvv[argcc++] = (char*)"-L";
                argvv[argcc++] = argv[ic]; 
@@ -4501,12 +4295,12 @@ int main(int argc, char **argv)
                // break when we see positional options
                break;
             }
-	    if (strcmp("-pipe", argv[ic])!=0) {
-	       // filter out undesirable options
-	       argvv[argcc++] = argv[ic++];
-	    } else {
-	       ic++;
-	    }
+            if (strcmp("-pipe", argv[ic])!=0) {
+               // filter out undesirable options
+               argvv[argcc++] = argv[ic++];
+            } else {
+               ic++;
+            }
          }
 
          for (i = 0; path[i][0]; i++)
@@ -4516,13 +4310,13 @@ int main(int argc, char **argv)
          argvv[argcc++] = (char *)"-I/usr/include/X11R5";
 #endif
          switch (gErrorIgnoreLevel) {
-            case kInfo:     argvv[argcc++] = (char *)"-J4"; break;
-            case kNote:     argvv[argcc++] = (char *)"-J3"; break;
-            case kWarning:  argvv[argcc++] = (char *)"-J2"; break;
-            case kError:    argvv[argcc++] = (char *)"-J1"; break;
-            case kSysError:
-            case kFatal:    argvv[argcc++] = (char *)"-J0"; break;
-            default:        argvv[argcc++] = (char *)"-J1"; break;
+         case kInfo:     argvv[argcc++] = (char *)"-J4"; break;
+         case kNote:     argvv[argcc++] = (char *)"-J3"; break;
+         case kWarning:  argvv[argcc++] = (char *)"-J2"; break;
+         case kError:    argvv[argcc++] = (char *)"-J1"; break;
+         case kSysError:
+         case kFatal:    argvv[argcc++] = (char *)"-J0"; break;
+         default:        argvv[argcc++] = (char *)"-J1"; break;
          }
 
          if (!use_preprocessor) {
@@ -4639,13 +4433,13 @@ int main(int argc, char **argv)
       // the easiest way is to get it as a parameter
       if (!strcmp(argv[ic], "-L") ||  !strcmp(argv[ic], "--symbols-file")) {
 
-	FILE *fpsym = fopen(argv[ic],"r");
-	if (fpsym) // File exists
-	  fclose(fpsym);
-	else{ // File doesn't exist
-	  Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
-	  return 1;
-	}
+         FILE *fpsym = fopen(argv[ic],"r");
+         if (fpsym) // File exists
+            fclose(fpsym);
+         else{ // File doesn't exist
+            Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
+            return 1;
+         }
 
          ++ic;
          argvv[argcc++] = (char*)"-L";
@@ -4666,7 +4460,7 @@ int main(int argc, char **argv)
       bundle = fopen(bundlename.c_str(), "w");
       if (!bundle) {
          Error(0, "%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
-                 argv[0], bundlename.c_str());
+               argv[0], bundlename.c_str());
          use_preprocessor = 0;
       } else {
 #if defined (G__NOSTUBS) && !defined(ROOTBUILD)
@@ -4729,10 +4523,10 @@ int main(int argc, char **argv)
          }
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
-	   // filter out undesirable options
-	   argvv[argcc++] = (char*)calloc(strlen(argv[i])+1,1);
-	   StrcpyArg(argvv[argcc-1],argv[i]);
-	 }
+            // filter out undesirable options
+            argvv[argcc++] = (char*)calloc(strlen(argv[i])+1,1);
+            StrcpyArg(argvv[argcc-1],argv[i]);
+         }
       }
    }
    if (use_preprocessor) {
@@ -4877,38 +4671,38 @@ int main(int argc, char **argv)
 
    time_t t = time(0);
    (*dictSrcOut) << "//"  << std::endl
-       << "// File generated by " << argv[0] << " at " << ctime(&t) << std::endl
-       << "// Do NOT change. Changes will be lost next time file is generated" << std::endl
-       << "//" << std::endl << std::endl
+                 << "// File generated by " << argv[0] << " at " << ctime(&t) << std::endl
+                 << "// Do NOT change. Changes will be lost next time file is generated" << std::endl
+                 << "//" << std::endl << std::endl
 
-       << "#include \"RConfig.h\" //rootcint 4834" << std::endl
-       << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
-       << "//Break the privacy of classes -- Disabled for the moment" << std::endl
-       << "#define private public" << std::endl
-       << "#define protected public" << std::endl
-       << "#endif" << std::endl
-       << std::endl;
+                 << "#include \"RConfig.h\" //rootcint 4834" << std::endl
+                 << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
+                 << "//Break the privacy of classes -- Disabled for the moment" << std::endl
+                 << "#define private public" << std::endl
+                 << "#define protected public" << std::endl
+                 << "#endif" << std::endl
+                 << std::endl;
 #ifndef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
-       << "namespace std {} using namespace std;" << std::endl << std::endl;
+                 << "namespace std {} using namespace std;" << std::endl << std::endl;
    int linesToSkip = 15; // number of lines up to here.
 #else
    int linesToSkip = 12; // number of lines up to here.
 #endif
 
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
-       << "#include \"TBuffer.h\"" << std::endl
-       << "#include \"TMemberInspector.h\"" << std::endl
-       << "#include \"TError.h\"" << std::endl << std::endl
-       << "#ifndef G__ROOT" << std::endl
-       << "#define G__ROOT" << std::endl
-       << "#endif" << std::endl << std::endl
-       << "#include \"RtypesImp.h\"" << std::endl
-       << "#include \"TIsAProxy.h\"" << std::endl;
+                 << "#include \"TBuffer.h\"" << std::endl
+                 << "#include \"TMemberInspector.h\"" << std::endl
+                 << "#include \"TError.h\"" << std::endl << std::endl
+                 << "#ifndef G__ROOT" << std::endl
+                 << "#define G__ROOT" << std::endl
+                 << "#endif" << std::endl << std::endl
+                 << "#include \"RtypesImp.h\"" << std::endl
+                 << "#include \"TIsAProxy.h\"" << std::endl;
    (*dictSrcOut) << std::endl;
 #ifdef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
-       << "namespace std {} using namespace std;" << std::endl << std::endl;
+                 << "namespace std {} using namespace std;" << std::endl << std::endl;
 #endif
 
    // Loop over all command line arguments and write include statements.
@@ -4923,73 +4717,73 @@ int main(int argc, char **argv)
       (*dictSrcOut) << std::endl;
    }
 
-//    if(dicttype==3){ 
-//      G__ClassInfo cl;
-//      cl.Init();
-//      bool has_input_error = false;
-//      while (cl.Next()) {
-//        if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-// 	 if (!cl.IsLoaded()) {
-// 	   continue;
-// 	 }
-// 	 if (cl.HasMethod("Streamer")) {
-// 	   if ((cl.RootFlag() & G__NOINPUTOPERATOR)) {
-// 	     int version = GetClassVersion(cl);
-// 	     if (version!=0) {
-// 	       // Only Check for input operator is the object is I/O has
-// 	       // been requested.
-// 	       has_input_error |= CheckInputOperator(cl,dicttype);
-// 	     }
-// 	   }
-// 	   has_input_error |= !CheckClassDef(cl);
-// 	 }
-//        }
-//      }
+   //    if(dicttype==3){ 
+   //      G__ClassInfo cl;
+   //      cl.Init();
+   //      bool has_input_error = false;
+   //      while (cl.Next()) {
+   //        if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+   //       if (!cl.IsLoaded()) {
+   //         continue;
+   //       }
+   //       if (cl.HasMethod("Streamer")) {
+   //         if ((cl.RootFlag() & G__NOINPUTOPERATOR)) {
+   //           int version = GetClassVersion(cl);
+   //           if (version!=0) {
+   //             // Only Check for input operator is the object is I/O has
+   //             // been requested.
+   //             has_input_error |= CheckInputOperator(cl,dicttype);
+   //           }
+   //         }
+   //         has_input_error |= !CheckClassDef(cl);
+   //       }
+   //        }
+   //      }
 
-//      if (has_input_error) {
-//        // Be a little bit makefile friendly and remove the dictionary in case of error.
-//        // We could add an option -k to keep the file even in case of error.
-//        CleanupOnExit(1);
-//        exit(1);
-//      }     
-//    }
+   //      if (has_input_error) {
+   //        // Be a little bit makefile friendly and remove the dictionary in case of error.
+   //        // We could add an option -k to keep the file even in case of error.
+   //        CleanupOnExit(1);
+   //        exit(1);
+   //      }     
+   //    }
 
    G__ClassInfo cl;
    cl.Init();
    bool has_input_error = false;
    while (cl.Next()) {
-     if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-       if (!cl.IsLoaded()) {
-	 continue;
-       }
-       if (cl.HasMethod("Streamer")) {
-	 if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
-	   // We do not write out the input operator anymore, it is a template
+      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+         if (!cl.IsLoaded()) {
+            continue;
+         }
+         if (cl.HasMethod("Streamer")) {
+            if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
+               // We do not write out the input operator anymore, it is a template
 #if defined R__CONCRETE_INPUT_OPERATOR
-	   WriteInputOperator(cl);
+               WriteInputOperator(cl);
 #endif
-	 } else {
-	   int version = GetClassVersion(cl);
-	   if (version!=0) {
-	     // Only Check for input operator is the object is I/O has
-	     // been requested.
-	     has_input_error |= CheckInputOperator(cl,dicttype);
-	   }
-	 }
-       }
-       bool res = CheckConstructor(cl);
-       if (!res) {
-	 // has_input_error = true;
-       }
-       has_input_error |= !CheckClassDef(cl);
-     }
+            } else {
+               int version = GetClassVersion(cl);
+               if (version!=0) {
+                  // Only Check for input operator is the object is I/O has
+                  // been requested.
+                  has_input_error |= CheckInputOperator(cl,dicttype);
+               }
+            }
+         }
+         bool res = CheckConstructor(cl);
+         if (!res) {
+            // has_input_error = true;
+         }
+         has_input_error |= !CheckClassDef(cl);
+      }
    }
 
    if (has_input_error) {
-     // Be a little bit makefile friendly and remove the dictionary in case of error.
-     // We could add an option -k to keep the file even in case of error.
-     CleanupOnExit(1);
-     exit(1);
+      // Be a little bit makefile friendly and remove the dictionary in case of error.
+      // We could add an option -k to keep the file even in case of error.
+      CleanupOnExit(1);
+      exit(1);
    }
 
    // 26-07-07
@@ -5206,7 +5000,7 @@ int main(int argc, char **argv)
             // In order to upgrade the pragma create TClass we would need a new function in
             // CINT's G__ClassInfo.
             // if (force && extraRootflag) cl.SetRootFlag(extraRootflag);
-//          fprintf(stderr,"DEBUG: request==%s processed==%s rootflag==%d\n",request,fullname.c_str(),extraRootflag);
+            //          fprintf(stderr,"DEBUG: request==%s processed==%s rootflag==%d\n",request,fullname.c_str(),extraRootflag);
             delete [] request;
 
             // Avoid requesting the creation of a class infrastructure twice.
@@ -5318,13 +5112,13 @@ int main(int argc, char **argv)
             // 'linesToSkip' is because we want to put it after #defined private/protected
             if (++nl == linesToSkip && icc) {
                switch (dict_type) {
-                  case kDictTypeGCCXML:
-                     fprintf(fpd, "#define G__DICTIONARY gccxml\n");
-                     break;
-                  case kDictTypeReflex:
-                     fprintf(fpd, "#define G__DICTIONARY reflex\n");
-                     break;
-                  default:;
+               case kDictTypeGCCXML:
+                  fprintf(fpd, "#define G__DICTIONARY gccxml\n");
+                  break;
+               case kDictTypeReflex:
+                  fprintf(fpd, "#define G__DICTIONARY reflex\n");
+                  break;
+               default:;
                }
                if (longheadername && dictpathname.length() ) {
                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf);
@@ -5335,13 +5129,13 @@ int main(int argc, char **argv)
                // 07-11-07
                // Put the includes to temporary files when generating the third dictionary
                if(dicttype==3){
-                 if (longheadername && dictpathname.length() ) {
-                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp1);
-                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp2);
-                 } else {
-                   fprintf(fpd, "#include \"%s\"\n", inclfTmp1);
-                   fprintf(fpd, "#include \"%s\"\n", inclfTmp2);
-                 }
+                  if (longheadername && dictpathname.length() ) {
+                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp1);
+                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp2);
+                  } else {
+                     fprintf(fpd, "#include \"%s\"\n", inclfTmp1);
+                     fprintf(fpd, "#include \"%s\"\n", inclfTmp2);
+                  }
                }
 
                if (gNeedCollectionProxy) {
@@ -5361,8 +5155,8 @@ int main(int argc, char **argv)
 
       ofstream outputfile( liblist_filename.c_str(), ios::out );
       if (!outputfile) {
-        Error(0,"%s: Unable to open output lib file %s\n",
-              argv[0], liblist_filename.c_str());
+         Error(0,"%s: Unable to open output lib file %s\n",
+               argv[0], liblist_filename.c_str());
       } else outputfile << gLibsNeeded << endl;
    }
 
