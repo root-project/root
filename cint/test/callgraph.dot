@@ -1,9 +1,0 @@
-digraph "callgraph" {
-  F99b0d0 [label="malloc\n 19 743 280"];
-  F9fde00 [label="std::string::_Rep::_S_create\n 18 352 432"];
-  Fa0db20 [label="operator new\n 19 541 795"];
-  Ff3baf0 [label="_int_malloc\n 10 909 516"];
-  F99b0d0 -> Ff3baf0 [weight=2,label=" 10 909 516"];
-  F9fde00 -> Fa0db20 [weight=2,label=" 18 352 432"];
-  Fa0db20 -> F99b0d0 [weight=2,label=" 19 541 795"];
-}
