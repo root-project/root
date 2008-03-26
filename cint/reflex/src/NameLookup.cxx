@@ -22,11 +22,11 @@
 
 //______________________________________________________________________________
 Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current)
-: fCurrentScope(current)
-, fLookupName(name)
-, fPartialSuccess(false)
+: fLookupName(name)
 , fPosNamePart(0)
 , fPosNamePartLen(std::string::npos)
+, fCurrentScope(current)
+, fPartialSuccess(false)
 {
    // Initialize a NameLookup object used internally to keep track of lookup
    // states.
