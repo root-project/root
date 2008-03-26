@@ -17,7 +17,7 @@
 //  $ cint testall.cxx
 
 #include <stdio.h>
-#include "../inc/configcint.h"
+#include "../../include/configcint.h"
 
 #ifndef G__VISUAL // ??? fprintf crashes if stdfunc.dll is loaded ???
 #include <stdlib.h>
