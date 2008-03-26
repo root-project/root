@@ -337,9 +337,9 @@ class genDictionary(object) :
               if c not in selec : selec.append(c)
               if n == 'name' : self.genFakeTypedef(c['id'], match[0]['o_name'])
       # Filter STL implementation specific classes
-      selec =  filter( lambda c: c.has_key('name') ,selec)  # unamed structs and unions
+      selec =  filter( lambda c: c.has_key('name'), selec)  # unamed structs and unions
       # Filter internal GCC classes
-      selec =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1 ,selec)
+      selec =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1, selec)
       return self.autosel (selec)
     else : self.selector = None
     local = filter(self.filefilter, self.classes)
@@ -354,10 +354,10 @@ class genDictionary(object) :
     else :
       classes =  clean( local + typed + templ )
     # Filter STL implementation specific classes
-    classes =  filter( lambda c: self.genTypeName(c['id'])[:6] != 'std::_' ,classes)
-    classes =  filter( lambda c: c.has_key('name') ,selec)  # unamed structs and unions
+    classes =  filter( lambda c: self.genTypeName(c['id'])[:6] != 'std::_', classes)
+    classes =  filter( lambda c: c.has_key('name'), classes)  # unamed structs and unions
     # Filter internal GCC classes
-    classes =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1 ,classes)
+    classes =  filter( lambda c: c['name'].find('_type_info_pseudo') == -1, classes)
     return self.autosel( classes )
  #----------------------------------------------------------------------------------
   def autosel(self, classes):
@@ -1185,7 +1185,7 @@ class genDictionary(object) :
       if 'incomplete' not in c : used_context.append(c['context'])
     idx = 0
     for ns in self.namespaces :
-      if ns['id'] in used_context and ns['name'] != '::' :
+      if ns['id'] in used_context and 'name' in ns and  ns['name'] != '::' :
         s += '  NamespaceBuilder nsb%d( "%s" );\n' % (idx, self.genTypeName(ns['id']))
         idx += 1
     return s
