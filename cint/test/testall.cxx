@@ -48,8 +48,15 @@ bool debugMode = true;
 
 const char *shellSeparator = "&&";
 
+#ifdef G__ROOT
+// ROOT disable the autoloading of the standard header from the compiled
+// dictionary (see G__autoload_stdheader) however the cint test requires it
+std::string mkcintoption = " -Z1 ";
+std::string cintoption = " -Z1";
+#else
 std::string mkcintoption = "";
 std::string cintoption = "";
+#endif // G__ROOT
 std::string compileroption = "";
 std::string prefixcmd = "";
 
