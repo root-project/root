@@ -126,7 +126,9 @@ clean::         clean-mathcore
 distclean-mathcore: clean-mathcore
 		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDH) \
 		   $(MATHCORELIB) $(MATHCOREMAP)
-		@rm -rf include/Math
+		@rm -rf include/Math include/Fit
+		@cd $(MATHCOREDIR)/test; make distclean
+		@cd $(MATHCOREDIR)/test/fit; make distclean
 
 distclean::     distclean-mathcore
 
