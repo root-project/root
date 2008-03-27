@@ -181,9 +181,10 @@ Int_t TCint::InitializeDictionaries()
 //______________________________________________________________________________
 void TCint::EnableWrappers(bool value)
 {
+   // Enable call wrappers (also known as stubs) if value is true;
+   // disable if value is false.
 
    G__enable_wrappers((int) value);
-
 }
 
 //______________________________________________________________________________
