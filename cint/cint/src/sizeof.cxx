@@ -252,23 +252,17 @@ int G__Lsizeof(const char *type_name)
      )
     return(sizeof(double));
   if(strcmp(type_name,"longdouble")==0) {
-    int tagnum,typenum;
-    G__loadlonglong(&tagnum,&typenum,G__LONGDOUBLE);
-    return(G__struct.size[tagnum]);
+     return(sizeof(long double));
   }
   if(strcmp(type_name,"longlong")==0
      || strcmp(type_name,"longlongint")==0
      ) {
-    int tagnum,typenum;
-    G__loadlonglong(&tagnum,&typenum,G__LONGLONG);
-    return(G__struct.size[tagnum]);
+     return(sizeof(G__int64));
   }
   if(strcmp(type_name,"unsignedlonglong")==0
      || strcmp(type_name,"unsignedlonglongint")==0
      ) {
-    int tagnum,typenum;
-    G__loadlonglong(&tagnum,&typenum,G__ULONGLONG);
-    return(G__struct.size[tagnum]);
+     return(sizeof(G__uint64));
   }
   if(strcmp(type_name,"void")==0)
     return(sizeof(void*));
