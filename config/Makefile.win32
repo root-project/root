@@ -65,6 +65,10 @@ LDOPT         =
 F77OPT        = -optimize:0 -nopdbfile -recursive 
 endif
 
+ifeq (yes,$(WINRTDEBUG))
+  LDOPT      += -nodefaultlib:msvcrt.lib
+endif
+
 NOOPT         =
 
 # Compiler:

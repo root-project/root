@@ -4011,12 +4011,6 @@ if test ! "x$enable_mathmore" = "xno"; then
 	    gslincdir=$found_dir
 	    gslflags=-I$gslincdir
 	    gslversion=$gsl_version
-	    gsllibflags=
-	    if test "x$platform" = "xwin32"; then
-	       if test "x$enable_winrtdebug" = "xyes"; then
-	           gsllibflags="-nodefaultlib:msvcrt.lib"
-	       fi
-	    fi
 	fi
     fi
 
@@ -4699,7 +4693,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@gsllibdir@|$gsllibdir|"              \
     -e "s|@gsllibs@|$gsllibs|"                  \
     -e "s|@gslversion@|$gslversion|"            \
-    -e "s|@gsllibflags@|$gsllibflags|"          \
     -e "s|@builtinzlib@|$enable_builtin_zlib|"  \
     -e "s|@zlibincdir@|$zlibincdir|"            \
     -e "s|@zliblib@|$zliblib|"                  \
