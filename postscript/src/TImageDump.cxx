@@ -58,7 +58,6 @@ TImageDump::TImageDump() : TVirtualPS()
 
    fStream = 0;
    fImage  = 0;
-   fCanvas = kFALSE;
    gVirtualPS = this;
 }
 
@@ -86,7 +85,6 @@ void TImageDump::Open(const char *fname, Int_t type)
    fStream = 0;
    fImage  = TImage::Create();
    fType   = type;
-   fCanvas = kFALSE;
    SetName(fname);
 }
 
@@ -612,7 +610,6 @@ void TImageDump::NewPage()
       UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC());
       UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC());
       fImage->DrawRectangle(0, 0, w, h, "#ffffffff");
-      fCanvas = (gPad == gPad->GetMother());
    }
    return;
 }
@@ -736,7 +733,7 @@ Int_t TImageDump::XtoPixel(Double_t x)
 {
    // x to pixel
 
-   return fCanvas ? gPad->XtoAbsPixel(x) : gPad->XtoPixel(x);
+   return  gPad->XtoAbsPixel(x);
 }
 
 //______________________________________________________________________________
@@ -744,5 +741,5 @@ Int_t TImageDump::YtoPixel(Double_t y)
 {
    // y to pixel
 
-   return fCanvas ? gPad->YtoAbsPixel(y) : gPad->YtoPixel(y);
+   return  gPad->YtoAbsPixel(y);
 }

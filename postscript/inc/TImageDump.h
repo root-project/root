@@ -34,7 +34,6 @@ class TImageDump : public TVirtualPS {
 protected:
    TImage           *fImage;     // image
    Int_t             fType;      // PostScript workstation type
-   Bool_t            fCanvas;    // kTRUE - if canvas is saved,  kFALSE - for TPad 
 
    Int_t  XtoPixel(Double_t x);
    Int_t  YtoPixel(Double_t y);

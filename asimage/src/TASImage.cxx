@@ -983,8 +983,14 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
       TASImage *itmp = (TASImage*)gVirtualPS->GetStream();
 
-      if (itmp && itmp->fImage) itmp->BeginPaint();
+      if (itmp && itmp->fImage) {
+         itmp->BeginPaint();
+      }
+
+      TVirtualPad *sav = gPad;
+      gPad = pad;
       pad->Paint();
+      gPad = sav;
 
       if (itmp && itmp->fImage && (itmp != this)) {
          fImage = clone_asimage(itmp->fImage, SCL_DO_ALL);
