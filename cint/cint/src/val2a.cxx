@@ -1791,6 +1791,10 @@ G__value G__string2type_body(const char *typenamin,int noerror)
       result.type='h';
       break;
     }
+    if(strcmp(typenam,"long double")==0) {
+      result.type='q';
+      break;
+    }
     break;
   case 12:
     if(strcmp(typenam,"unsignedchar")==0) {

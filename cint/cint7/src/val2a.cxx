@@ -1682,6 +1682,7 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
          if (strcmp(typenam.c_str(), "unsignedint") == 0) {
             typenam = "unsigned int";
          }
+         break;
       case 12:
          if (strcmp(typenam.c_str(), "unsignedchar") == 0) {
             typenam = "unsigned char";
