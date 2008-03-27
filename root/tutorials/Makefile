@@ -3,7 +3,7 @@
 
 # Set the list of files to be deleted by clean
 CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
-  *.root *.gif *.png *.pdf *.ps *.svg *.py *.C *.xml *.dtd files htmldoc
+  *.root *.gif *.png *.pdf *.ps *.svg *.py *.C *.xml *.dtd files htmldoc aliesd
 
 # Set the list of target to make while testing.
 
