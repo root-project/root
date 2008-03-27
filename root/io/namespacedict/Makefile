@@ -7,7 +7,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 tests: dicto
 
-CLEAN_TARGETS += *.build.log
+CLEAN_TARGETS += *.build.log TeleDictTmp* MyClassDictTmp*
 
 MyClassDict.C: Header.h Linkdef.h $(ROOTCINT)
 	$(CMDECHO) rootcint -f MyClassDict.C -c Header.h Linkdef.h
