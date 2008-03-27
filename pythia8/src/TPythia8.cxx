@@ -119,7 +119,7 @@ void TPythia8::GenerateEvent()
 {
    // Generate the next event
    fPythia->next();
-   fNumberOfParticles  = fPythia->event.size();
+   fNumberOfParticles  = fPythia->event.size() - 1;
    ImportParticles();
 }
 
@@ -138,10 +138,10 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
             new(clonesParticles[nparts]) TParticle(
                 fPythia->event[i].id(),
                 fPythia->event[i].isFinal(),
-                fPythia->event[i].mother1(),
-                fPythia->event[i].mother2(),
-                fPythia->event[i].daughter1(),
-                fPythia->event[i].daughter2(),
+                fPythia->event[i].mother1() - 1,
+                fPythia->event[i].mother2() - 1,
+                fPythia->event[i].daughter1() - 1, 
+                fPythia->event[i].daughter2() - 1,
                 fPythia->event[i].px(),     // [GeV/c]
                 fPythia->event[i].py(),     // [GeV/c]
                 fPythia->event[i].pz(),     // [GeV/c]
@@ -158,10 +158,10 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
 	    new(clonesParticles[nparts]) TParticle(
 		fPythia->event[i].id(),
 		fPythia->event[i].isFinal(),
-		fPythia->event[i].mother1(),
-		fPythia->event[i].mother2(),
-		fPythia->event[i].daughter1(),
-		fPythia->event[i].daughter2(),
+		fPythia->event[i].mother1() - 1,
+		fPythia->event[i].mother2() - 1,
+		fPythia->event[i].daughter1() - 1,
+		fPythia->event[i].daughter2() - 1,
 		fPythia->event[i].px(),       // [GeV/c]
 		fPythia->event[i].py(),       // [GeV/c]
 		fPythia->event[i].pz(),       // [GeV/c]
@@ -181,16 +181,16 @@ TObjArray* TPythia8::ImportParticles(Option_t* /* option */)
 {
    // Import particles from Pythia stack
    fParticles->Clear();
-   Int_t numpart   = fPythia->event.size();
+   Int_t numpart   = fPythia->event.size() - 1;
    TClonesArray &a = *((TClonesArray*)fParticles);
-   for (Int_t i = 0; i<numpart; i++) {
+   for (Int_t i = 1; i <= numpart; i++) {
       new(a[i]) TParticle(
          fPythia->event[i].id(),
          fPythia->event[i].isFinal(),
-         fPythia->event[i].mother1(),
-         fPythia->event[i].mother2(),
-         fPythia->event[i].daughter1(),
-         fPythia->event[i].daughter2(),
+         fPythia->event[i].mother1()  - 1,
+         fPythia->event[i].mother2()  - 1,
+         fPythia->event[i].daughter1() - 1,
+         fPythia->event[i].daughter2() - 1,
          fPythia->event[i].px(),       // [GeV/c]
          fPythia->event[i].py(),       // [GeV/c]
          fPythia->event[i].pz(),       // [GeV/c]
@@ -207,7 +207,7 @@ TObjArray* TPythia8::ImportParticles(Option_t* /* option */)
 Int_t TPythia8::GetN() const
 {
    // Initialization
-   return (fPythia->event.size());
+   return (fPythia->event.size() - 1);
 }
 
 //___________________________________________________________________________
