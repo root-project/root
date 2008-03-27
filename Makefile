@@ -59,7 +59,7 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build cint/cint metautils pcre utils base cont meta io \
-                fit mathcore net zip clib matrix newdelete \
+                mathcore net zip clib matrix newdelete \
                 hist/hist tree freetype graf gpad g3d gui minuit \
                 hist/histpainter treeplayer ged treeviewer physics \
                 postscript rint thread html eg geom geompainter vmc fumili \

@@ -1,4 +1,4 @@
-// @(#)root/fit:$Id$
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Thu Sep 21 16:21:29 2006
 
 /**********************************************************************
@@ -120,7 +120,7 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
       std::string minim2 = "Minuit2";
       if (fMinimizerType != minim2 ) {
          std::string msg = "Could not create Minimizer " + fMinimizerType + " trying using minimizer " + minim2; 
-         MATH_WARN_MSG("FitConfig::CreateMinimizer",msg);
+         MATH_WARN_MSG("FitConfig::CreateMinimizer",msg.c_str());
          min = ROOT::Math::Factory::CreateMinimizer(minim2); 
          if (min == 0) { 
             MATH_ERROR_MSG("FitConfig::CreateMinimizer","Could not create the Minuit2 minimizer");
@@ -129,7 +129,7 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
       }
       else {
          std::string msg = "Could not create the Minimizer " + fMinimizerType; 
-         MATH_ERROR_MSG("FitConfig::CreateMinimizer",msg);
+         MATH_ERROR_MSG("FitConfig::CreateMinimizer",msg.c_str());
          return 0;
       }
    } 

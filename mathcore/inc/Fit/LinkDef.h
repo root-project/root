@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Id$
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -7,7 +7,6 @@
  *                                                                    *
  **********************************************************************/
 
-
 #ifdef __CINT__
 
 #pragma link off all globals;
@@ -15,8 +14,6 @@
 #pragma link off all functions;
 
 #pragma link C++ namespace ROOT::Fit;
-
-
 
 #pragma link C++ class ROOT::Fit::DataRange;
 #pragma link C++ class ROOT::Fit::DataOptions;
@@ -38,10 +35,6 @@
 // #pragma link C++ class ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>-;
 // #endif
 
-
-
-//#pragma extra_include "Math/IParamFunction.h"
-
 //fitter template functions
 #pragma link C++ function ROOT::Fit::Fitter::Fit(const ROOT::Fit::BinData &, const ROOT::Math::IParametricFunctionMultiDim&);
 #pragma link C++ function ROOT::Fit::Fitter::Fit(const ROOT::Fit::UnBinData &,const ROOT::Math::IParametricFunctionMultiDim &);
@@ -49,9 +42,5 @@
 #pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::UnBinData &,const ROOT::Math::IParametricFunctionMultiDim&);
 #pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::BinData &);
 #pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::UnBinData &);
-
-
-
-
 
 #endif

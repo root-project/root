@@ -1,5 +1,5 @@
-// @(#)root/fit:$Id$
-// Author: L. Moneta Fri Sep  1 16:09:42 2006
+// @(#)root/mathcore:$Id$
+// Author: L. Moneta Wed Aug 30 11:15:23 2006
 
 /**********************************************************************
  *                                                                    *
@@ -8,31 +8,17 @@
  *                                                                    *
  **********************************************************************/
 
-// forward decalaration for the DataVector classes 
+// Implementation file for class DataVector
 
-#ifndef ROOT_Fit_DataVectorfwd
-#define ROOT_Fit_DataVectorfwd
+#include "Fit/DataVector.h"
 
 
 namespace ROOT { 
 
    namespace Fit { 
-      
-
-      //template <class Point> class DataVector; 
-      //class DataVector; 
-
-      //class BinPoint; 
-      //class UnBinPoint; 
-
-      class BinData; 
-      class UnBinData; 
-
 
 
    } // end namespace Fit
 
 } // end namespace ROOT
 
-
-#endif /* ROOT_Fit_DataVectorfwd */
