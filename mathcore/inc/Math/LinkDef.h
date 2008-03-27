@@ -1,5 +1,12 @@
 // @(#)root/mathcore:$Id$
 
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifdef __CINT__
 
@@ -19,13 +26,11 @@
 //#pragma link C++ class ROOT::Math;
 #endif
 
-
+// ROOT::Math namespace
 #pragma link C++ typedef ROOT::Math::IGenFunction;
 #pragma link C++ typedef ROOT::Math::IMultiGenFunction;
 #pragma link C++ typedef ROOT::Math::IGradFunction;
 #pragma link C++ typedef ROOT::Math::IMultiGradFunction;
-
-
 
 #pragma link C++ class ROOT::Math::IBaseFunctionOneDim+;
 #pragma link C++ class ROOT::Math::IGradientOneDim+;
@@ -69,6 +74,6 @@
 #pragma link C++ class ROOT::Math::BrentRootFinder+;
 #pragma link C++ class ROOT::Math::BrentMinimizer1D+;
 
-#include "LinkDef_Func.h" 
+#include "LinkDef_Func.h"
 
 #endif

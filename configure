@@ -4503,6 +4503,7 @@ rm -f lib/libRXML* bin/libRXML* bin/xproofd etc/system.rootmap
 rm -f lib/libProofGui* bin/libProofGui* bin/xrdgsiproxy
 rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
 rm -f lib/libASPluginGS.*
+rm -f mathcore/src/G__MathCore32.*
 rm -f xrootd/src/headers.d asimage/src/headers.d
 
 ######################################################################

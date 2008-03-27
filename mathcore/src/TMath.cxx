@@ -1,4 +1,4 @@
-// @(#)root/math:$Id$
+// @(#)root/mathcore:$Id$
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/math:$Id$ */
+/* @(#)root/mathcore:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -10,16 +10,22 @@
 
 #ifdef __CINT__
 
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
-
-// from base/inc/LinkDef1.h
-#pragma link C++ global gRandom;
-
-// from base/inc/LinkDef2.h
 #pragma link C++ namespace TMath;
 
+#pragma link C++ global gRandom;
+
+#pragma link C++ class TComplex+;
+#pragma link C++ class TRandom+;
+#pragma link C++ class TRandom1+;
+#pragma link C++ class TRandom2+;
+#pragma link C++ class TRandom3-;
 
 #pragma link C++ function operator*(Double_t, const TComplex&);
 #pragma link C++ function operator+(Double_t, const TComplex&);
@@ -27,12 +33,6 @@
 #pragma link C++ function operator-(Double_t, const TComplex&);
 #pragma link C++ function operator>>(istream&,TComplex&);
 #pragma link C++ function operator<<(ostream&,const TComplex&);
-
-#pragma link C++ class TComplex+;
-#pragma link C++ class TRandom+;
-#pragma link C++ class TRandom1+;
-#pragma link C++ class TRandom2+;
-#pragma link C++ class TRandom3-;
 
 #pragma link C++ function TMath::MinElement(Long64_t, const Short_t*);
 #pragma link C++ function TMath::MinElement(Long64_t, const Int_t*);
@@ -131,8 +131,8 @@
 #pragma link C++ function TMath::Cross(const Float_t*,const Float_t*, Float_t*);
 #pragma link C++ function TMath::Cross(const Double_t*,const Double_t*, Double_t*);
 
-#pragma link C++ function TMath::NormCross(const Float_t*,const Float_t*,Float_t*); 
-#pragma link C++ function TMath::NormCross(const Double_t*,const Double_t*,Double_t*); 
+#pragma link C++ function TMath::NormCross(const Float_t*,const Float_t*,Float_t*);
+#pragma link C++ function TMath::NormCross(const Double_t*,const Double_t*,Double_t*);
 
 #pragma link C++ function TMath::Normal2Plane(const Float_t*,const Float_t*,const Float_t*, Float_t*);
 #pragma link C++ function TMath::Normal2Plane(const Double_t*,const Double_t*,const Double_t*, Double_t*);
