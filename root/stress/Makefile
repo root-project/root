@@ -84,7 +84,7 @@ STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-cte
 
 
 STRESSFILES := \
-	$(filter-out %/TrackMathCoreCint.cxx,\
+	$(filter-out %/TrackMathCoreDict.cxx,\
 	$(wildcard $(ROOT_LOC)/test/*.cxx) \
 	$(wildcard $(ROOT_LOC)/test/*.h) \
 	$(wildcard $(ROOT_LOC)/test/*.ref) \
@@ -157,7 +157,7 @@ $(STRESSFILESHERE): test/%: $(ROOT_LOC)/test/%
 test/libEvent.$(DllSuf): $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
 
-test/libTrackMathCoreCint.$(DllSuf): $(STRESSFILESCOPIEDTAG)
+test/libTrackMathCoreDict.$(DllSuf): $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
 
 test/hsimple.C: $(ROOT_LOC)/tutorials/hsimple.C
@@ -184,6 +184,6 @@ stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSyste
 #### Extra dependencies for some tests ####
 
 test/stress$(ExeSuf): test/libEvent.$(DllSuf)
-test/stressMathCore$(ExeSuf): test/libTrackMathCoreCint.$(DllSuf)
+test/stressMathCore$(ExeSuf): test/libTrackMathCoreDict.$(DllSuf)
 stressGraphics-itest.log stressGraphics-ctest.log: hsimple.root stressGraphics.ref earth.dat
 test/stressLinear$(ExeSuf): linearIO.root
