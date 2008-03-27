@@ -3350,7 +3350,7 @@ Int_t TBufferFile::WriteClassBuffer(TClass *cl, void *pointer)
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
 
-   if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),R__c);
+   if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
    return 0;
 }
 
