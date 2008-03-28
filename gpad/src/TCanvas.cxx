@@ -1997,6 +1997,8 @@ void TCanvas::Update()
       if ((*gThreadXAR)("CUPD", 2, arr, 0)) return;
    }
 
+   if (!fCanvasImp) return;
+   
    if (!gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
