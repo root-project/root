@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 20/6/2005
 
-MODDIR       := smatrix
+MODNAME      := smatrix
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -51,6 +52,9 @@ ALLMAPS      += $(SMATRIXMAP)
 INCLUDEFILES += $(SMATRIXDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
+                test-$(MODNAME) check-$(MODNAME)
+
 include/Math/%.h: $(SMATRIXDIRI)/%.h
 		@(if [ ! -d "include/Math" ]; then     \
 		   mkdir -p include/Math;              \
@@ -93,23 +97,23 @@ $(SMATRIXDO):   CXXFLAGS += -I$(SMATRIXDIRI)
 $(SMATRIXDO32): CXXFLAGS += -I$(SMATRIXDIRI)
 endif
 
-all-smatrix:   $(SMATRIXLIB) $(SMATRIXMAP)
+all-$(MODNAME): $(SMATRIXLIB) $(SMATRIXMAP)
 
-clean-smatrix:
+clean-$(MODNAME):
 		@rm -f $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32)
 
-clean::         clean-smatrix
+clean::         clean-$(MODNAME)
 
-distclean-smatrix: clean-smatrix
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDS32) $(SMATRIXDH) \
 		   $(SMATRIXDH32) $(SMATRIXLIB) $(SMATRIXMAP)
 		@rm -rf include/Math
 		-@cd $(SMATRIXDIR)/test && $(MAKE) distclean
 
-distclean::     distclean-smatrix
+distclean::     distclean-$(MODNAME)
 
-test-smatrix: 	all-smatrix
+test-$(MODNAME): all-$(MODNAME)
 		@cd $(SMATRIXDIR)/test && $(MAKE)
 
-check-smatrix: 	test-smatrix
+check-$(MODNAME): test-$(MODNAME)
 		@cd $(SMATRIXDIR)/test && $(MAKE)

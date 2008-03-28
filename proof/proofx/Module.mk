@@ -71,7 +71,7 @@ PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet \
 endif
 
 ##### local rules #####
-.PHONY:         all-proofx map-proofx clean-proofx distclean-proofx
+.PHONY:         all-proofx clean-proofx distclean-proofx
 
 include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@

@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := foam
+MODDIR       := math/foam
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +35,8 @@ ALLMAPS     += $(FOAMMAP)
 INCLUDEFILES += $(FOAMDEP)
 
 ##### local rules #####
+.PHONY:         all-foam clean-foam distclean-foam
+
 include/%.h:    $(FOAMDIRI)/%.h
 		cp $< $@
 

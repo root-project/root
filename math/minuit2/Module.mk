@@ -3,7 +3,8 @@
 #
 # Author: Rene Brun, 07/05/2003
 
-MODDIR        := minuit2
+MODNAME       := minuit2
+MODDIR        := math/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -63,6 +64,9 @@ ALLMAPS      += $(MINUIT2MAP)
 INCLUDEFILES += $(MINUIT2DEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
+                test-$(MODNAME)
+
 include/Minuit2/%.h: $(MINUIT2DIRI)/Minuit2/%.h
 		@(if [ ! -d "include/Minuit2" ]; then     \
 		   mkdir -p include/Minuit2;              \
@@ -86,21 +90,22 @@ $(MINUIT2MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(MINUIT2L)
 		$(RLIBMAP) -o $(MINUIT2MAP) -l $(MINUIT2LIB) \
 		   -d $(MINUIT2LIBDEPM) -c $(MINUIT2L)
 
-all-minuit2:    $(MINUIT2LIB) $(MINUIT2MAP)
+all-$(MODNAME):  $(MINUIT2LIB) $(MINUIT2MAP)
 
-test-minuit2: 	$(MINUIT2LIB)
+test-$(MODNAME): $(MINUIT2LIB)
 		cd $(MINUIT2DIR)/test; make
 
-clean-minuit2:
+clean-$(MODNAME):
 		@rm -f $(MINUIT2O) $(MINUIT2DO)
 
-clean::         clean-minuit2
+clean::         clean-$(MODNAME)
 
-distclean-minuit2: clean-minuit2
-		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB) $(MINUIT2MAP)
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB) \
+		   $(MINUIT2MAP)
 		@rm -rf include/Minuit2
 
-distclean::     distclean-minuit2
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(MINUIT2O): CXXFLAGS += -DWARNINGMSG -DUSE_ROOT_ERROR

@@ -3,7 +3,8 @@
 #
 # Author: Rene Brun, 07/05/2003
 
-MODDIR       := fumili
+MODNAME      := fumili
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(FUMILIMAP)
 INCLUDEFILES += $(FUMILIDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(FUMILIDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(FUMILIMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(FUMILIL)
 		$(RLIBMAP) -o $(FUMILIMAP) -l $(FUMILILIB) \
 		   -d $(FUMILILIBDEPM) -c $(FUMILIL)
 
-all-fumili:     $(FUMILILIB) $(FUMILIMAP)
+all-$(MODNAME): $(FUMILILIB) $(FUMILIMAP)
 
-clean-fumili:
+clean-$(MODNAME):
 		@rm -f $(FUMILIO) $(FUMILIDO)
 
-clean::         clean-fumili
+clean::         clean-$(MODNAME)
 
-distclean-fumili: clean-fumili
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(FUMILIDEP) $(FUMILIDS) $(FUMILIDH) $(FUMILILIB) $(FUMILIMAP)
 
-distclean::     distclean-fumili
+distclean::     distclean-$(MODNAME)

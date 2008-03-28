@@ -3,7 +3,8 @@
 #
 # Author: Rene Brun, 27/8/2003
 
-MODDIR      := splot
+MODNAME     := splot
+MODDIR      := math/$(MODNAME)
 MODDIRS     := $(MODDIR)/src
 MODDIRI     := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(SPLOTMAP)
 INCLUDEFILES += $(SPLOTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(SPLOTDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(SPLOTMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SPLOTL)
 		$(RLIBMAP) -o $(SPLOTMAP) -l $(SPLOTLIB) \
 		   -d $(SPLOTLIBDEPM) -c $(SPLOTL)
 
-all-splot:     $(SPLOTLIB) $(SPLOTMAP)
+all-$(MODNAME): $(SPLOTLIB) $(SPLOTMAP)
 
-clean-splot:
+clean-$(MODNAME):
 		@rm -f $(SPLOTO) $(SPLOTDO)
 
-clean::         clean-splot
+clean::         clean-$(MODNAME)
 
-distclean-splot: clean-splot
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SPLOTDEP) $(SPLOTDS) $(SPLOTDH) $(SPLOTLIB) $(SPLOTMAP)
 
-distclean::     distclean-splot
+distclean::     distclean-$(MODNAME)

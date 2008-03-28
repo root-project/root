@@ -35,7 +35,7 @@ ALLMAPS       += $(SPECTRUMPAINTERMAP)
 INCLUDEFILES += $(SPECTRUMPAINTERDEP)
 
 ##### local rules #####
-.PHONY:         all-spectrumpainter map-spectrumpainter clean-spectrumpainter \
+.PHONY:         all-spectrumpainter clean-spectrumpainter \
                 distclean-spectrumpainter
 
 include/%.h:    $(SPECTRUMPAINTERDIRI)/%.h

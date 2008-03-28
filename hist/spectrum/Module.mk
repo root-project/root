@@ -35,7 +35,7 @@ ALLMAPS      += $(SPECTRUMMAP)
 INCLUDEFILES += $(SPECTRUMDEP)
 
 ##### local rules #####
-.PHONY:         all-spectrum map-spectrum clean-spectrum distclean-spectrum
+.PHONY:         all-spectrum clean-spectrum distclean-spectrum
 
 include/%.h:    $(SPECTRUMDIRI)/%.h
 		cp $< $@

@@ -40,7 +40,7 @@ ALLMAPS     += $(HISTMAP)
 INCLUDEFILES += $(HISTDEP)
 
 ##### local rules #####
-.PHONY:         all-hist map-hist clean-hist distclean-hist
+.PHONY:         all-hist clean-hist distclean-hist
 
 include/Math/%.h: $(HISTDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then     \

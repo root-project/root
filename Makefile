@@ -59,11 +59,12 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build cint/cint metautils pcre utils base cont meta io \
-                mathcore net zip clib matrix newdelete \
-                hist/hist tree freetype graf gpad g3d gui minuit \
-                hist/histpainter treeplayer ged treeviewer physics \
-                postscript rint thread html eg geom geompainter vmc fumili \
-                mlp quadp auth guibuilder xml foam splot smatrix sql tmva \
+                math/mathcore net zip clib math/matrix newdelete \
+                hist/hist tree freetype graf gpad g3d gui math/minuit \
+                hist/histpainter treeplayer ged treeviewer math/physics \
+                postscript rint thread html eg geom geompainter vmc \
+                math/fumili math/mlp math/quadp auth guibuilder xml \
+                math/foam math/splot math/smatrix sql tmva \
                 geombuilder hist/spectrum hist/spectrumpainter \
                 fitpanel proof/proof proof/proofplayer sessionviewer guihtml
 
@@ -138,7 +139,7 @@ ifeq ($(BUILDFPYTHIA8),yes)
 MODULES      += pythia8
 endif
 ifeq ($(BUILDFFTW3),yes)
-MODULES      += fftw
+MODULES      += math/fftw
 endif
 ifeq ($(BUILDPYTHON),yes)
 MODULES      += pyroot
@@ -156,20 +157,20 @@ ifeq ($(BUILDQTGSI),yes)
 MODULES      += qtgsi
 endif
 ifeq ($(BUILDGENVECTOR),yes)
-MODULES      += genvector
+MODULES      += math/genvector
 endif
 ifeq ($(BUILDMATHMORE),yes)
-MODULES      += mathmore
+MODULES      += math/mathmore
 endif
 ifeq ($(BUILDREFLEX),yes)
 # put reflex right in front of CINT; CINT needs it 
 MODULES      := $(subst cint/cint,cint/reflex cint/cint,$(MODULES))
 endif
 ifeq ($(BUILDMINUIT2),yes)
-MODULES      += minuit2
+MODULES      += math/minuit2
 endif
 ifeq ($(BUILDUNURAN),yes)
-MODULES      += unuran
+MODULES      += math/unuran
 endif
 ifeq ($(BUILDCINT7),yes)
 MODULES      := $(subst cint/cint,cint/cint7,$(MODULES))
@@ -236,11 +237,13 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 pythia6 table mysql pgsql sapdb srputils x3d \
                 rootx rootd dcache chirp hbook asimage \
-                ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
+                ldap krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
-                oracle xmlparser mathmore cint/reflex cintex roofitcore roofit \
-                minuit2 monalisa fftw odbc unuran gdml eve g4root glite
+                oracle xmlparser math/mathmore cint/reflex cintex \
+                roofitcore roofit \
+                math/minuit2 monalisa math/fftw odbc math/unuran \
+                gdml eve g4root glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -516,7 +519,6 @@ endif
                 version html changelog install uninstall showbuild \
                 static map debian redhat skip postbin \
                 $(patsubst %,all-%,$(MODULES)) \
-                $(patsubst %,map-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
 

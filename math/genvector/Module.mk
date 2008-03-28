@@ -3,9 +3,10 @@
 #
 # Author: Fons Rademakers, 20/6/2005
 
-MODDIR       := genvector
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+MODNAME       := genvector
+MODDIR        := math/$(MODNAME)
+MODDIRS       := $(MODDIR)/src
+MODDIRI       := $(MODDIR)/inc
 
 GENVECTORDIR  := $(MODDIR)
 GENVECTORDIRS := $(GENVECTORDIR)/src
@@ -77,6 +78,9 @@ ALLMAPS      += $(GENVECTORMAP)
 INCLUDEFILES += $(GENVECTORDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
+                test-$(MODNAME)
+
 include/Math/%.h: $(GENVECTORDIRI)/Math/%.h
 		@(if [ ! -d "include/Math/GenVector" ]; then   \
 		   mkdir -p include/Math/GenVector;       \
@@ -104,21 +108,21 @@ $(GENVECTORMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GENVECTORL) $(GENVECTORLINC) $(GENV
 		$(RLIBMAP) -o $(GENVECTORMAP) -l $(GENVECTORLIB) \
 		   -d $(GENVECTORLIBDEPM) -c $(GENVECTORL) $(GENVECTORLINC) $(GENVECTORL32)
 
-all-genvector:   $(GENVECTORLIB) $(GENVECTORMAP)
+all-$(MODNAME):   $(GENVECTORLIB) $(GENVECTORMAP)
 
-clean-genvector:
+clean-$(MODNAME):
 		@rm -f $(GENVECTORO) $(GENVECTORDO)
 
-clean::         clean-genvector
+clean::         clean-$(MODNAME)
 
-distclean-genvector: clean-genvector
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GENVECTORDEP) $(GENVECTORDS) $(GENVECTORDS32) $(GENVECTORDH) \
 		   $(GENVECTORLIB) $(GENVECTORMAP)
 		@rm -rf include/Math
 
-distclean::     distclean-genvector
+distclean::     distclean-$(MODNAME)
 
-test-genvector:	all-genvector
+test-$(MODNAME): all-$(MODNAME)
 		@cd $(GENVECTORDIR)/test; make
 
 ##### extra rules ######

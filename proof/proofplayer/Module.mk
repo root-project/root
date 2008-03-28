@@ -53,8 +53,7 @@ ALLMAPS       += $(PROOFPLAYERMAP) $(PROOFDRAWMAP)
 INCLUDEFILES += $(PROOFPLAYERDEP) $(PROOFDRAWDEP)
 
 ##### local rules #####
-.PHONY:         all-proofplayer map-proofplayer clean-proofplayer \
-                distclean-proofplayer
+.PHONY:         all-proofplayer clean-proofplayer distclean-proofplayer
 
 include/%.h:    $(PROOFPLAYERDIRI)/%.h
 		cp $< $@

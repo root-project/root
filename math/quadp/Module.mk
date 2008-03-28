@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, Eddy Offermann, 21/05/2003
 
-MODDIR       := quadp
+MODNAME      := quadp
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(QUADPMAP)
 INCLUDEFILES += $(QUADPDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(QUADPDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(QUADPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QUADPL)
 		$(RLIBMAP) -o $(QUADPMAP) -l $(QUADPLIB) \
 		   -d $(QUADPLIBDEPM) -c $(QUADPL)
 
-all-quadp:      $(QUADPLIB) $(QUADPMAP)
+all-$(MODNAME): $(QUADPLIB) $(QUADPMAP)
 
-clean-quadp:
+clean-$(MODNAME):
 		@rm -f $(QUADPO) $(QUADPDO)
 
-clean::         clean-quadp
+clean::         clean-$(MODNAME)
 
-distclean-quadp: clean-quadp
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(QUADPDEP) $(QUADPDS) $(QUADPDH) $(QUADPLIB) $(QUADPMAP)
 
-distclean::     distclean-quadp
+distclean::     distclean-$(MODNAME)

@@ -36,8 +36,7 @@ ALLMAPS       += $(HISTPAINTERMAP)
 INCLUDEFILES += $(HISTPAINTERDEP)
 
 ##### local rules #####
-.PHONY:         all-histpainter map-histpainter clean-histpainter \
-                distclean-histpainter
+.PHONY:         all-histpainter clean-histpainter distclean-histpainter
 
 include/%.h:    $(HISTPAINTERDIRI)/%.h
 		cp $< $@

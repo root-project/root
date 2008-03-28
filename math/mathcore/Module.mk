@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 20/6/2005
 
-MODDIR       := mathcore
+MODDIR       := math/mathcore
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -79,6 +79,8 @@ ALLMAPS      += $(MATHCOREMAP)
 INCLUDEFILES += $(MATHCOREDEP)
 
 ##### local rules #####
+.PHONY:         all-mathcore clean-mathcore distclean-mathcore test-mathcore
+
 include/Math/%.h: $(MATHCOREDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then    \
 		   mkdir -p include/Math;             \

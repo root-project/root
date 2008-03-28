@@ -49,7 +49,7 @@ ALLLIBS      += $(XPDLIB)
 INCLUDEFILES += $(XPDDEP)
 
 ##### local rules #####
-.PHONY:         all-proofd map-proofd clean-proofd distclean-proofd
+.PHONY:         all-proofd clean-proofd distclean-proofd
 
 include/%.h:    $(PROOFDDIRI)/%.h
 		cp $< $@

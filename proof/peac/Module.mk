@@ -57,7 +57,7 @@ ALLMAPS     += $(PEACMAP) $(PEACGUIMAP)
 INCLUDEFILES += $(PEACDEP) $(PEACGUIDEP)
 
 ##### local rules #####
-.PHONY:         all-peac map-peac clean-peac distclean-peac
+.PHONY:         all-peac clean-peac distclean-peac
 
 include/%.h:    $(PEACDIRI)/%.h
 		cp $< $@

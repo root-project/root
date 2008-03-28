@@ -35,7 +35,7 @@ ALLMAPS     += $(CLARENSMAP)
 INCLUDEFILES += $(CLARENSDEP)
 
 ##### local rules #####
-.PHONY:         all-clarens map-clarens clean-clarens distclean-clarens
+.PHONY:         all-clarens clean-clarens distclean-clarens
 
 include/%.h:    $(CLARENSDIRI)/%.h
 		cp $< $@

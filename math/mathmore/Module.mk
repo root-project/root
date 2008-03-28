@@ -3,14 +3,14 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := mathmore
+MODNAME      := mathmore
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
 MATHMOREDIR  := $(MODDIR)
 MATHMOREDIRS := $(MATHMOREDIR)/src
 MATHMOREDIRI := $(MATHMOREDIR)/inc
-
 
 ###pre-compiled GSL DLL require Mathmore to be compiled with -DGSL_DLL
 #ifeq ($(PLATFORM),win32)
@@ -64,6 +64,8 @@ ALLMAPS      += $(MATHMOREMAP)
 INCLUDEFILES += $(MATHMOREDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/Math/%.h: $(MATHMOREDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then     \
 		   mkdir -p include/Math;              \
@@ -84,19 +86,19 @@ $(MATHMOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(MATHMOREL) $(MATHMORELINC)
 		$(RLIBMAP) -o $(MATHMOREMAP) -l $(MATHMORELIB) \
 		   -d $(MATHMORELIBDEPM) -c $(MATHMOREL) $(MATHMORELINC)
 
-all-mathmore:   $(MATHMORELIB) $(MATHMOREMAP)
+all-$(MODNAME): $(MATHMORELIB) $(MATHMOREMAP)
 
-clean-mathmore:
+clean-$(MODNAME):
 		@rm -f $(MATHMOREO) $(MATHMOREDO)
 
-clean::         clean-mathmore
+clean::         clean-$(MODNAME)
 
-distclean-mathmore: clean-mathmore
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MATHMOREDEP) $(MATHMOREDS) $(MATHMOREDH) \
 		   $(MATHMORELIB) $(MATHMOREMAP)
 		@rm -rf include/Math
 
-distclean::     distclean-mathmore
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(MATHMOREO): CXXFLAGS += $(GSLFLAGS) -DGSL_VERSION=$(GSLVERSION) -DUSE_ROOT_ERROR

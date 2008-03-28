@@ -35,7 +35,7 @@ ALLMAPS     += $(PROOFMAP)
 INCLUDEFILES += $(PROOFDEP)
 
 ##### local rules #####
-.PHONY:         all-proof map-proof clean-proof distclean-proof
+.PHONY:         all-proof clean-proof distclean-proof
 
 include/%.h:    $(PROOFDIRI)/%.h
 		cp $< $@

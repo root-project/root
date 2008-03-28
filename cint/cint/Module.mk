@@ -216,6 +216,8 @@ CINTCXXFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY -I$(CINTDIRS) -I$
 INCLUDEFILES += $(CINTDEP) $(CINTEXEDEP)
 
 ##### local rules #####
+.PHONY:         all-cint clean-cint distclean-cint
+
 include/%.h:    $(CINTDIRI)/%.h
 		cp $< $@
 

@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := unuran
+MODNAME      := unuran
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -65,6 +66,8 @@ ALLMAPS      += $(UNURANMAP)
 INCLUDEFILES += $(UNURANDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
 		cp $< $@
 
@@ -128,25 +131,24 @@ $(UNURANMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(UNURANL) $(UNURANLINC)
 		$(RLIBMAP) -o $(UNURANMAP) -l $(UNURANLIB) \
 		   -d $(UNURANLIBDEPM) -c $(UNURANL) $(UNURANLINC)
 
-all-unuran:     $(UNURANLIB) $(UNURANMAP)
+all-$(MODNAME): $(UNURANLIB) $(UNURANMAP)
 
-clean-unuran:
+clean-$(MODNAME):
 		@rm -f $(UNURANO) $(UNURANDO)
 		-@(if [ -d $(UNRDIRS) ]; then \
 			cd $(UNRDIRS); \
 			$(MAKE) clean; \
 		fi)
 
+clean::         clean-$(MODNAME)
 
-clean::         clean-unuran
-
-distclean-unuran: clean-unuran
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(UNURANETAG) $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
 		@mv $(UNRSRCS) $(UNURANDIRS)/-$(UNRVERS).tar.gz
 		@rm -rf $(UNURANDIRS)/$(UNRVERS)
 		@mv $(UNURANDIRS)/-$(UNRVERS).tar.gz $(UNRSRCS)
 
-distclean::     distclean-unuran
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 
@@ -160,4 +162,3 @@ endif
 ifeq ($(CC),icc)
 $(UNRO): CFLAGS += -mp
 endif
-

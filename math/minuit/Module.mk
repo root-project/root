@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := minuit
+MODNAME      := minuit
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(MINUITMAP)
 INCLUDEFILES += $(MINUITDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(MINUITDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(MINUITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(MINUITL)
 		$(RLIBMAP) -o $(MINUITMAP) -l $(MINUITLIB) \
 		   -d $(MINUITLIBDEPM) -c $(MINUITL)
 
-all-minuit:     $(MINUITLIB) $(MINUITMAP)
+all-$(MODNAME): $(MINUITLIB) $(MINUITMAP)
 
-clean-minuit:
+clean-$(MODNAME):
 		@rm -f $(MINUITO) $(MINUITDO)
 
-clean::         clean-minuit
+clean::         clean-$(MODNAME)
 
-distclean-minuit: clean-minuit
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MINUITDEP) $(MINUITDS) $(MINUITDH) $(MINUITLIB) $(MINUITMAP)
 
-distclean::     distclean-minuit
+distclean::     distclean-$(MODNAME)

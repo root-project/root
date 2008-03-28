@@ -105,6 +105,9 @@ RFLX_GENMAPX   = bin/genmap$(EXEEXT)
 ALLEXECS += $(RFLX_GENMAPX)
 
 ##### local rules #####
+.PHONY:         all-reflex clean-reflex distclean-reflex clean-genreflex \
+                clean-check-reflex check-reflex
+
 POSTBIN += $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h

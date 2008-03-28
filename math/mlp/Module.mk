@@ -3,7 +3,8 @@
 #
 # Author: Rene Brun, 27/8/2003
 
-MODDIR       := mlp
+MODNAME      := mlp
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(MLPMAP)
 INCLUDEFILES += $(MLPDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(MLPDIRI)/%.h
 		cp $< $@
 
@@ -50,14 +53,14 @@ $(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP)
 $(MLPMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(MLPL)
 		$(RLIBMAP) -o $(MLPMAP) -l $(MLPLIB) -d $(MLPLIBDEPM) -c $(MLPL)
 
-all-mlp:        $(MLPLIB) $(MLPMAP)
+all-$(MODNAME): $(MLPLIB) $(MLPMAP)
 
-clean-mlp:
+clean-$(MODNAME):
 		@rm -f $(MLPO) $(MLPDO)
 
-clean::         clean-mlp
+clean::         clean-$(MODNAME)
 
-distclean-mlp:  clean-mlp
+distclean-$(MODNAME):  clean-$(MODNAME)
 		@rm -f $(MLPDEP) $(MLPDS) $(MLPDH) $(MLPLIB) $(MLPMAP)
 
-distclean::     distclean-mlp
+distclean::     distclean-$(MODNAME)

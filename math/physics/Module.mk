@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := physics
+MODNAME      := physics
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(PHYSICSMAP)
 INCLUDEFILES += $(PHYSICSDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(PHYSICSDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(PHYSICSMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PHYSICSL)
 		$(RLIBMAP) -o $(PHYSICSMAP) -l $(PHYSICSLIB) \
 		   -d $(PHYSICSLIBDEPM) -c $(PHYSICSL)
 
-all-physics:    $(PHYSICSLIB) $(PHYSICSMAP)
+all-$(MODNAME): $(PHYSICSLIB) $(PHYSICSMAP)
 
-clean-physics:
+clean-$(MODNAME):
 		@rm -f $(PHYSICSO) $(PHYSICSDO)
 
-clean::         clean-physics
+clean::         clean-$(MODNAME)
 
-distclean-physics: clean-physics
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PHYSICSDEP) $(PHYSICSDS) $(PHYSICSDH) $(PHYSICSLIB) $(PHYSICSMAP)
 
-distclean::     distclean-physics
+distclean::     distclean-$(MODNAME)

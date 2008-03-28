@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := matrix
+MODNAME      := matrix
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(MATRIXMAP)
 INCLUDEFILES += $(MATRIXDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(MATRIXDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(MATRIXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(MATRIXL)
 		$(RLIBMAP) -o $(MATRIXMAP) -l $(MATRIXLIB) \
 		   -d $(MATRIXLIBDEPM) -c $(MATRIXL)
 
-all-matrix:     $(MATRIXLIB) $(MATRIXMAP)
+all-$(MODNAME): $(MATRIXLIB) $(MATRIXMAP)
 
-clean-matrix:
+clean-$(MODNAME):
 		@rm -f $(MATRIXO) $(MATRIXDO)
 
-clean::         clean-matrix
+clean::         clean-$(MODNAME)
 
-distclean-matrix: clean-matrix
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MATRIXDEP) $(MATRIXDS) $(MATRIXDH) $(MATRIXLIB) $(MATRIXMAP)
 
-distclean::     distclean-matrix
+distclean::     distclean-$(MODNAME)
