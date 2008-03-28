@@ -25,8 +25,9 @@ GENVECTORDS32 := $(MODDIRS)/G__GenVector32.cxx
 GENVECTORDO   := $(GENVECTORDS:.cxx=.o)
 GENVECTORDO32 := $(GENVECTORDS32:.cxx=.o)
 GENVECTORDH   := $(GENVECTORDS:.cxx=.h)
+GENVECTORDH32 := $(GENVECTORDS32:.cxx=.h)
 
-GENVECTORDH1  :=  $(MODDIRI)/Math/Vector2D.h \
+GENVECTORDH1  := $(MODDIRI)/Math/Vector2D.h \
                  $(MODDIRI)/Math/Point2D.h \
                  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \
@@ -50,7 +51,7 @@ GENVECTORDH1  :=  $(MODDIRI)/Math/Vector2D.h \
                  $(MODDIRI)/Math/VectorUtil_Cint.h  
 
 
-GENVECTORDH132:=  $(MODDIRI)/Math/Vector2D.h \
+GENVECTORDH132:= $(MODDIRI)/Math/Vector2D.h \
 	         $(MODDIRI)/Math/Point2D.h \
 	         $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \
@@ -86,6 +87,7 @@ include/Math/%.h: $(GENVECTORDIRI)/Math/%.h
 		   mkdir -p include/Math/GenVector;       \
 		fi)
 		cp $< $@
+
 # build lib genvector: use also obj  from math and fit directory 
 $(GENVECTORLIB): $(GENVECTORO) $(GENVECTORDO) $(GENVECTORDO32) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
@@ -95,20 +97,17 @@ $(GENVECTORLIB): $(GENVECTORO) $(GENVECTORDO) $(GENVECTORDO32) $(ORDER_) $(MAINL
 
 $(GENVECTORDS):  $(GENVECTORDH1) $(GENVECTORL) $(GENVECTORLINC) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		@echo "for files $(GENVECTORDH1)"
 		$(ROOTCINTTMP) -f $@ -c $(GENVECTORDH1) $(GENVECTORL)
-#		genreflex $(GENVECTORDIRS)/GenvectorDict.h  --selection_file=$(GENVECTORDIRS)/selection_Genvector.xml -o $(GENVECTORDIRS)/G__Genvector.cxx -I$(GENVECTORDIRI)
 
-$(GENVECTORDS32):$(GENVECTORDH132) $(GENVECTORL) $(GENVECTORLINC) $(ROOTCINTTMPDEP)
+$(GENVECTORDS32): $(GENVECTORDH132) $(GENVECTORL32) $(GENVECTORLINC) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		@echo "for files $(GENVECTORDH132)"
 		$(ROOTCINTTMP) -f $@ -c $(GENVECTORDH132) $(GENVECTORL32)
 
 $(GENVECTORMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GENVECTORL) $(GENVECTORLINC) $(GENVECTORL32)
 		$(RLIBMAP) -o $(GENVECTORMAP) -l $(GENVECTORLIB) \
 		   -d $(GENVECTORLIBDEPM) -c $(GENVECTORL) $(GENVECTORLINC) $(GENVECTORL32)
 
-all-$(MODNAME):   $(GENVECTORLIB) $(GENVECTORMAP)
+all-$(MODNAME): $(GENVECTORLIB) $(GENVECTORMAP)
 
 clean-$(MODNAME):
 		@rm -f $(GENVECTORO) $(GENVECTORDO)
@@ -116,7 +115,8 @@ clean-$(MODNAME):
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(GENVECTORDEP) $(GENVECTORDS) $(GENVECTORDS32) $(GENVECTORDH) \
+		@rm -f $(GENVECTORDEP) $(GENVECTORDS) $(GENVECTORDS32) \
+		   $(GENVECTORDH) $(GENVECTORDH32) \
 		   $(GENVECTORLIB) $(GENVECTORMAP)
 		@rm -rf include/Math
 
