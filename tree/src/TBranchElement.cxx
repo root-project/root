@@ -267,11 +267,12 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
 
    if (id < 0) {
       // -- We are a top-level branch.  Don't split a top-level branch, TTree::Bronch will do that work.
-      // FIXME: It probably shouldn't.
-      // FIXME: fBranchClass.GetClass() could return a null pointer.
-      // FIXME: Change this to a dynamic cast.
-      if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
-        SetBit(kBranchObject);
+      if (fBranchClass.GetClass()) {
+         if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
+            SetBit(kBranchObject);
+         } else {
+            SetBit(kBranchAny);
+         }
       }
    } else {
       // -- We are a sub-branch of a split object.
@@ -281,10 +282,12 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
          // -- If we are an object data member which inherits from TObject,
          // flag it so that later during i/o we will register the object
          // with the buffer so that pointers are handled correctly.
-         // FIXME: fBranchClass::operator TClass*() could return a null pointer.
-         // FIXME: Change this to a dynamic cast.
-         if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
-            SetBit(kBranchObject);
+         if (fBranchClass.GetClass()) {
+            if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
+               SetBit(kBranchObject);
+            } else {
+               SetBit(kBranchAny);
+            }
          }
       }
       if (element->IsA() == TStreamerBasicPointer::Class()) {
@@ -1100,22 +1103,16 @@ void TBranchElement::FillLeaves(TBuffer& b)
    //
    // Remember tobjects written to the buffer so that
    // pointers are handled correctly later.
-   // FIXME: Does this mean that pointers to objects which do not
-   //        inherit from tobject are not handled correctly?
-   //
 
-   if ((fType <= 2)) {
-      // We are not a TClonesArray master/sub nor an STL container master/sub,
-      // so we are either a top-level branch, a base class branch, a split class
-      // branch, or a data member branch.
-      // FIXME: We should probably only map data member branches.
-      // FIXME: We should only map addresses we actually do i/o on.
-      // FIXME: We should map fAddress instead for MakeClass() trees.
+   if (fType <=2) {
       if (TestBit(kBranchObject)) {
          b.MapObject((TObject*) fObject);
-      } else {
+      } else if (TestBit(kBranchAny)) {
          b.MapObject(fObject, fBranchClass);
       }
+   } else {
+      // Case 3 and 4 nothing to do
+      // Case 31 and 41, we should register the mother's fObject
    }
 
    //
@@ -1997,6 +1994,14 @@ void TBranchElement::InitializeOffsets()
             return;
          }
          Int_t localOffset = subBranchElement->GetOffset();
+
+         {
+            Int_t streamerType = subBranchElement->GetType();
+            if (streamerType > TStreamerInfo::kObject && aSubBranch->GetListOfBranches()->GetEntries()==0) {
+               aSubBranch->SetBit(kBranchAny);
+            }
+         }
+
          // Note: This call is expensive, do it only once.
          TBranch* mother = GetMother();
          if (!mother) {
@@ -2705,15 +2710,16 @@ void TBranchElement::ReadLeaves(TBuffer& b)
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
    // handled properly.
-   // FIXME: Does this mean that pointers to objects which
-   //        do not inherit from tobject are not handled correctly?
 
-   if ((fType <= 2) && fBranchClass->IsLoaded()) {
+   if (fType <=2) {
       if (TestBit(kBranchObject)) {
          b.MapObject((TObject*) fObject);
-      } else {
+      } else if (TestBit(kBranchAny)) {
          b.MapObject(fObject, fBranchClass);
       }
+   } else {
+      // Case 3 and 4 nothing to do
+      // Case 31 and 41, we should register the mother's fObject
    }
 
    if (fType == 4) {
