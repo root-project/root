@@ -862,11 +862,11 @@ install: all
 	   $(INSTALLDATA) include/*             $(DESTDIR)$(INCDIR); \
 	   echo "Installing main/src/rmain.cxx in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDATA) main/src/rmain.cxx    $(DESTDIR)$(INCDIR); \
-	   echo "Installing cint/include cint/lib and cint/stl in $(DESTDIR)$(CINTINCDIR)"; \
+	   echo "Installing cint/cint/include cint/cint/lib and cint/cint/stl in $(DESTDIR)$(CINTINCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(CINTINCDIR); \
-	   $(INSTALLDATA) cint/include          $(DESTDIR)$(CINTINCDIR); \
-	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
-	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
+	   $(INSTALLDATA) cint/cint/include     $(DESTDIR)$(CINTINCDIR); \
+	   $(INSTALLDATA) cint/cint/lib         $(DESTDIR)$(CINTINCDIR); \
+	   $(INSTALLDATA) cint/cint/stl         $(DESTDIR)$(CINTINCDIR); \
 	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   find $(DESTDIR)$(CINTINCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
@@ -918,7 +918,7 @@ install: all
 	   $(INSTALLDIR)                          $(DESTDIR)$(ELISPDIR); \
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
-	   $(INSTALLDATA) gdml/*.py               $(DESTDIR)$(LIBDIR); \
+	   $(INSTALLDATA) geom/gdml/*.py          $(DESTDIR)$(LIBDIR); \
 	   find $(DESTDIR)$(DATADIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   find $(DESTDIR)$(DATADIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	fi
