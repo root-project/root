@@ -255,6 +255,7 @@ distclean-cintdlls: clean-cintdlls
 	@(for cintdll in $(CINTDLLNAMES); do \
 	  rm -f $(CINTDIRDLLSTL)/rootcint_$${cintdll}.* \
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.* \
+	  $(CINTDIRL)/G__cpp_$${cintdll}.* \
 	  $(CINTDIRL)/G__c_$${cintdll}.* \
 	  metautils/src/stlLoader_$${cintdll}.*; done)
 	@rm -f $(ALLCINTDLLS) $(CINTDICTMAPS) \
