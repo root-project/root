@@ -60,8 +60,9 @@ include $(MAKEFILEDEP)
 
 MODULES       = build cint/cint metautils pcre utils base cont meta io \
                 math/mathcore net zip clib math/matrix newdelete \
-                hist/hist tree freetype graf gpad g3d gui math/minuit \
-                hist/histpainter treeplayer ged treeviewer math/physics \
+                hist/hist tree/tree freetype graf gpad g3d gui math/minuit \
+                hist/histpainter tree/treeplayer ged tree/treeviewer \
+                math/physics \
                 postscript rint thread html eg geom geompainter vmc \
                 math/fumili math/mlp math/quadp auth guibuilder xml \
                 math/foam math/splot math/smatrix sql tmva \

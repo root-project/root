@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := treeviewer
+MODNAME      := treeviewer
+MODDIR       := tree/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -48,6 +49,8 @@ ALLMAPS       += $(TREEVIEWERMAP)
 INCLUDEFILES += $(TREEVIEWERDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(TREEVIEWERDIRI)/%.h
 		cp $< $@
 
@@ -66,15 +69,15 @@ $(TREEVIEWERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(TREEVIEWERL)
 		$(RLIBMAP) -o $(TREEVIEWERMAP) -l $(TREEVIEWERLIB) \
 		   -d $(TREEVIEWERLIBDEPM) -c $(TREEVIEWERL)
 
-all-treeviewer: $(TREEVIEWERLIB) $(TREEVIEWERMAP)
+all-$(MODNAME): $(TREEVIEWERLIB) $(TREEVIEWERMAP)
 
-clean-treeviewer:
+clean-$(MODNAME):
 		@rm -f $(TREEVIEWERO) $(TREEVIEWERDO)
 
-clean::         clean-treeviewer
+clean::         clean-$(MODNAME)
 
-distclean-treeviewer: clean-treeviewer
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(TREEVIEWERDEP) $(TREEVIEWERDS) $(TREEVIEWERDH) \
 		   $(TREEVIEWERLIB) $(TREEVIEWERMAP)
 
-distclean::     distclean-treeviewer
+distclean::     distclean-$(MODNAME)

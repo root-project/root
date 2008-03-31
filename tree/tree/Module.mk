@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := tree
+MODNAME      := tree
+MODDIR       := tree/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -42,6 +43,8 @@ ALLMAPS     += $(TREEMAP)
 INCLUDEFILES += $(TREEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(TREEDIRI)/%.h
 		cp $< $@
 
@@ -64,14 +67,14 @@ $(TREEMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TREEL)
 		$(RLIBMAP) -o $(TREEMAP) -l $(TREELIB) \
 		   -d $(TREELIBDEPM) -c $(TREEL)
 
-all-tree:       $(TREELIB) $(TREEMAP)
+all-$(MODNAME): $(TREELIB) $(TREEMAP)
 
-clean-tree:
+clean-$(MODNAME):
 		@rm -f $(TREEO) $(TREEDO)
 
-clean::         clean-tree
+clean::         clean-$(MODNAME)
 
-distclean-tree: clean-tree
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(TREEDEP) $(TREEDS) $(TREEDH) $(TREELIB) $(TREEMAP)
 
-distclean::     distclean-tree
+distclean::     distclean-$(MODNAME)

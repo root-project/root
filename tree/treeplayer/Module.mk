@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := treeplayer
+MODNAME      := treeplayer
+MODDIR       := tree/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS       += $(TREEPLAYERMAP)
 INCLUDEFILES += $(TREEPLAYERDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(TREEPLAYERDIRI)/%.h
 		cp $< $@
 
@@ -53,18 +56,18 @@ $(TREEPLAYERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(TREEPLAYERL)
 		$(RLIBMAP) -o $(TREEPLAYERMAP) -l $(TREEPLAYERLIB) \
 		   -d $(TREEPLAYERLIBDEPM) -c $(TREEPLAYERL)
 
-all-treeplayer: $(TREEPLAYERLIB) $(TREEPLAYERMAP)
+all-$(MODNAME): $(TREEPLAYERLIB) $(TREEPLAYERMAP)
 
-clean-treeplayer:
+clean-$(MODNAME):
 		@rm -f $(TREEPLAYERO) $(TREEPLAYERDO)
 
-clean::         clean-treeplayer
+clean::         clean-$(MODNAME)
 
-distclean-treeplayer: clean-treeplayer
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(TREEPLAYERDEP) $(TREEPLAYERDS) $(TREEPLAYERDH) \
 		   $(TREEPLAYERLIB) $(TREEPLAYERMAP)
 
-distclean::     distclean-treeplayer
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(PLATFORM),macosx)
