@@ -63,7 +63,6 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    if (nbinsy <= 0) nbinsy = 1;
    fYaxis.Set(nbinsy,ylow,yup);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -78,7 +77,6 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    if (nbinsy <= 0) nbinsy = 1;
    fYaxis.Set(nbinsy,ylow,yup);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -94,7 +92,6 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -110,7 +107,6 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -126,7 +122,6 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor.
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2234,6 +2229,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
@@ -2246,6 +2242,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2256,6 +2253,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2266,6 +2264,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2276,6 +2275,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    // Constructor.
 
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2497,6 +2497,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayS::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
@@ -2509,6 +2510,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayS::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2519,6 +2521,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayS::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2529,6 +2532,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayS::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2539,6 +2543,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    // Constructor.
 
    TArrayS::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2760,6 +2765,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
@@ -2772,6 +2778,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2782,6 +2789,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2792,6 +2800,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2802,6 +2811,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    // Constructor.
 
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2989,6 +2999,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
@@ -3001,6 +3012,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3011,6 +3023,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3021,6 +3034,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3031,6 +3045,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    // Constructor.
 
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3261,6 +3276,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
@@ -3273,6 +3289,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3283,6 +3300,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    // Constructor.
 
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3293,6 +3311,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    // Constructor.
 
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3303,6 +3322,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    // Constructor.
 
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________

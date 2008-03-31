@@ -51,7 +51,6 @@ TH3::TH3()
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
    SetBinsLength(27);
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -72,7 +71,6 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -94,7 +92,6 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -116,7 +113,6 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2364,6 +2360,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    //*-*              ==================================================
 
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
@@ -2377,6 +2374,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2388,6 +2386,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayC::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2637,6 +2636,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
    TH3S::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
@@ -2650,6 +2650,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TH3S::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2661,6 +2662,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TH3S::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2882,6 +2884,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
    TH3I::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
@@ -2895,6 +2898,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2906,6 +2910,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3095,6 +3100,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
@@ -3108,6 +3114,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3119,6 +3126,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayF::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3319,6 +3327,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 
    //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
@@ -3332,6 +3341,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3343,6 +3353,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
    TArrayD::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
