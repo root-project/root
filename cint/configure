@@ -593,7 +593,7 @@ CMACROS="$CMACROS -DG__HAVE_CONFIG -DG__NOMAKEINFO"
 CXXMACROS="$CXXMACROS -DG__HAVE_CONFIG -DG__NOMAKEINFO"
 
 if [ "$READLINELIB" = "" ]; then
-    for ext in AXELDEBUG$IMPLIBEXT $SOEXT; do
+    for ext in $IMPLIBEXT $SOEXT; do
         for d in $EXTRA_LIB_DIR /usr/local/lib /usr/lib /sw/lib; do 
             if [ -f ${d}/libreadline$ext ]; then
                 READLINELIB=${d}/libreadline$ext
