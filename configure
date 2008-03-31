@@ -4968,11 +4968,13 @@ prefix2=$prefix
 bindir2=$bindir
 libdir2=$libdir
 incdir2=$incdir
+mandir2=$mandir
 if test "$prefix2" = "\$(ROOTSYS)" ; then
     prefix2=\$ROOTSYS
     bindir2=\$ROOTSYS/bin
     libdir2=\$ROOTSYS/lib
     incdir2=\$ROOTSYS/include
+    mandir2=\$ROOTSYS/man/man1
 fi
 
 features=""
@@ -5164,10 +5166,16 @@ result done
 # bin/thisroot.sh and bin/thisroot.csh
 #
 message "Writing $THISROOTSHOUT"
-cp -f $THISROOTSHIN $THISROOTSHOUT
+sed -e "s|@bindir@|$bindir2|"           \
+    -e "s|@libdir@|$libdir2|"           \
+    -e "s|@mandir@|$mandir2|"           \
+    < $THISROOTSHIN > $THISROOTSHOUT
 result "done"
 message "Writing $THISROOTCSHOUT"
-cp -f $THISROOTCSHIN $THISROOTCSHOUT
+sed -e "s|@bindir@|$bindir2|"           \
+    -e "s|@libdir@|$libdir2|"           \
+    -e "s|@mandir@|$mandir2|"           \
+    < $THISROOTCSHIN > $THISROOTCSHOUT
 result "done"
 if test "$platform" = "win32"; then
     message "Writing $THISROOTBATOUT"

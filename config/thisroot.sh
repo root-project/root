@@ -21,45 +21,45 @@ else
 fi
 
 if [ -z "${PATH}" ]; then
-   PATH=$ROOTSYS/bin; export PATH
+   PATH=@bindir@; export PATH
 else
-   PATH=$ROOTSYS/bin:$PATH; export PATH
+   PATH=@bindir@:$PATH; export PATH
 fi
 
 if [ -z "${LD_LIBRARY_PATH}" ]; then
-   LD_LIBRARY_PATH=$ROOTSYS/lib; export LD_LIBRARY_PATH       # Linux, ELF HP-UX
+   LD_LIBRARY_PATH=@libdir@; export LD_LIBRARY_PATH       # Linux, ELF HP-UX
 else
-   LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH
+   LD_LIBRARY_PATH=@libdir@:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH
 fi
 
 if [ -z "${DYLD_LIBRARY_PATH}" ]; then
-   DYLD_LIBRARY_PATH=$ROOTSYS/lib; export DYLD_LIBRARY_PATH   # Mac OS X
+   DYLD_LIBRARY_PATH=@libdir@; export DYLD_LIBRARY_PATH   # Mac OS X
 else
-   DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH; export DYLD_LIBRARY_PATH
+   DYLD_LIBRARY_PATH=@libdir@:$DYLD_LIBRARY_PATH; export DYLD_LIBRARY_PATH
 fi
 
 if [ -z "${SHLIB_PATH}" ]; then
-   SHLIB_PATH=$ROOTSYS/lib; export SHLIB_PATH                 # legacy HP-UX
+   SHLIB_PATH=@libdir@; export SHLIB_PATH                 # legacy HP-UX
 else
-   SHLIB_PATH=$ROOTSYS/lib:$SHLIB_PATH; export SHLIB_PATH
+   SHLIB_PATH=@libdir@:$SHLIB_PATH; export SHLIB_PATH
 fi
 
 if [ -z "${LIBPATH}" ]; then
-   LIBPATH=$ROOTSYS/lib; export LIBPATH                       # AIX
+   LIBPATH=@libdir@; export LIBPATH                       # AIX
 else
-   LIBPATH=$ROOTSYS/lib:$LIBPATH; export LIBPATH
+   LIBPATH=@libdir@:$LIBPATH; export LIBPATH
 fi
 
 if [ -z "${PYTHONPATH}" ]; then
-   PYTHONPATH=$ROOTSYS/lib; export PYTHONPATH
+   PYTHONPATH=@libdir@; export PYTHONPATH
 else
-   PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH; export PYTHONPATH
+   PYTHONPATH=@libdir@:$PYTHONPATH; export PYTHONPATH
 fi
 
 if [ -z "${MANPATH}" ]; then
-   MANPATH=$ROOTSYS/man; export MANPATH
+   MANPATH=`dirname @mandir@`; export MANPATH
 else
-   MANPATH=$ROOTSYS/man:$MANPATH; export MANPATH
+   MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
 fi
 
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then

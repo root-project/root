@@ -12,40 +12,40 @@ set ARGS=($_)
 set THIS="`dirname ${ARGS[2]}`"
 setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
 
-set path = ($ROOTSYS/bin $path)
+set path = (@bindir@ $path)
 
 if ($?LD_LIBRARY_PATH) then
-   setenv LD_LIBRARY_PATH $ROOTSYS/lib:$LD_LIBRARY_PATH      # Linux, ELF HP-UX
+   setenv LD_LIBRARY_PATH @libdir@:$LD_LIBRARY_PATH      # Linux, ELF HP-UX
 else
-   setenv LD_LIBRARY_PATH $ROOTSYS/lib
+   setenv LD_LIBRARY_PATH @libdir@
 endif
 
 if ($?DYLD_LIBRARY_PATH) then
-   setenv DYLD_LIBRARY_PATH $ROOTSYS/lib:$DYLD_LIBRARY_PATH  # Mac OS X
+   setenv DYLD_LIBRARY_PATH @libdir@:$DYLD_LIBRARY_PATH  # Mac OS X
 else
-   setenv DYLD_LIBRARY_PATH $ROOTSYS/lib
+   setenv DYLD_LIBRARY_PATH @libdir@
 endif
 
 if ($?SHLIB_PATH) then
-   setenv SHLIB_PATH $ROOTSYS/lib:$SHLIB_PATH                # legacy HP-UX
+   setenv SHLIB_PATH @libdir@:$SHLIB_PATH                # legacy HP-UX
 else
-   setenv SHLIB_PATH $ROOTSYS/lib
+   setenv SHLIB_PATH @libdir@
 endif
 
 if ($?LIBPATH) then
-   setenv LIBPATH $ROOTSYS/lib:$LIBPATH                      # AIX
+   setenv LIBPATH @libdir@:$LIBPATH                      # AIX
 else
-   setenv LIBPATH $ROOTSYS/lib
+   setenv LIBPATH @libdir@
 endif
 
 if ($?PYTHONPATH) then
-   setenv PYTHONPATH $ROOTSYS/lib:$PYTHONPATH
+   setenv PYTHONPATH @libdir@:$PYTHONPATH
 else
-   setenv PYTHONPATH $ROOTSYS/lib
+   setenv PYTHONPATH @libdir@
 endif
 
 if ($?MANPATH) then
-   setenv MANPATH $ROOTSYS/man:$MANPATH
+   setenv MANPATH `dirname @mandir@`:$MANPATH
 else
-   setenv MANPATH $ROOTSYS/man
+   setenv MANPATH `dirname @mandir@`
 endif
