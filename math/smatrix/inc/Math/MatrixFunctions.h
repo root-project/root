@@ -896,7 +896,7 @@ inline Expr<TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2>  >, T, D1, D2 >
 }
 
 #endif
-#ifdef _WIN32  
+#ifdef _WIN32 
 /// case of WINDOWS - problem using Expression (  C1001: INTERNAL COMPILER ERROR )
 
 //==============================================================================
@@ -905,9 +905,10 @@ inline Expr<TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2>  >, T, D1, D2 >
 template <class T, unsigned int D1, unsigned int D2>
 inline SMatrix<T,D1,D2>  TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2>& rhs) {
   SMatrix<T,D1,D2> tmp;
-  for (unsigned int i=0; i< D1; ++i)
-    for (unsigned int j=0; i< D2; ++j)
+  for (unsigned int i=0; i< D1; ++i) 
+    for (unsigned int j=0; j< D2; ++j) {
       tmp(i,j) = lhs[i]*rhs[j];
+    }
 
   return tmp;
 }
@@ -918,8 +919,8 @@ inline SMatrix<T,D1,D2>  TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2
 inline SMatrix<T,D1,D2>  TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,D2>& rhs) {
   SMatrix<T,D1,D2> tmp;
   for (unsigned int i=0; i< D1; ++i)
-    for (unsigned int j=0; i< D2; ++j)
-      tmp(i,j) = rhs.apply(j)*lhs.apply(i);
+    for (unsigned int j=0; j< D2; ++j)
+      tmp(i,j) = lhs.apply(i) * rhs.apply(j);
 
   return tmp;
 }
@@ -930,8 +931,8 @@ inline SMatrix<T,D1,D2>  TensorProd(const VecExpr<A,T,D1>& lhs, const SVector<T,
 inline SMatrix<T,D1,D2> TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D2>& rhs) {
   SMatrix<T,D1,D2> tmp;
   for (unsigned int i=0; i< D1; ++i)
-    for (unsigned int j=0; i< D2; ++j)
-      tmp(i,j) = lhs.apply(i)*rhs.apply(j);
+    for (unsigned int j=0; j< D2; ++j)
+      tmp(i,j) = lhs.apply(i) * rhs.apply(j);
 
   return tmp;
 }
@@ -944,8 +945,8 @@ inline SMatrix<T,D1,D2> TensorProd(const SVector<T,D1>& lhs, const VecExpr<A,T,D
 inline SMatrix<T,D1,D2  > TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B,T,D2>& rhs) {
   SMatrix<T,D1,D2> tmp;
   for (unsigned int i=0; i< D1; ++i)
-    for (unsigned int j=0; i< D2; ++j)
-      tmp(i,j) = lhs.apply(i)*rhs.apply(j);
+    for (unsigned int j=0; j< D2; ++j)
+      tmp(i,j) = lhs.apply(i) * rhs.apply(j);
 
   return tmp;
 }
