@@ -18,10 +18,10 @@
 
 #include <iostream>
 
-//#ifdef USE_REFLEX
+#ifdef USE_REFLEX
 #include "Cintex/Cintex.h"
 #include "Reflex/Reflex.h"
-//#endif
+#endif
 
 #include "Track.h"
 
