@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR           := geombuilder
+MODNAME          := geombuilder
+MODDIR           := geom/$(MODNAME)
 MODDIRS          := $(MODDIR)/src
 MODDIRI          := $(MODDIR)/inc
 
@@ -42,6 +43,8 @@ ALLMAPS          += $(GEOMBUILDERMAP)
 INCLUDEFILES     += $(GEOMBUILDERDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GEOMBUILDERDIRI)/%.h
 		cp $< $@
 
@@ -60,15 +63,15 @@ $(GEOMBUILDERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GEOMBUILDERL)
 		$(RLIBMAP) -o $(GEOMBUILDERMAP) -l $(GEOMBUILDERLIB) \
 		   -d $(GEOMBUILDERLIBDEPM) -c $(GEOMBUILDERL)
 
-all-geombuilder: $(GEOMBUILDERLIB) $(GEOMBUILDERMAP)
+all-$(MODNAME): $(GEOMBUILDERLIB) $(GEOMBUILDERMAP)
 
-clean-geombuilder:
+clean-$(MODNAME):
 		@rm -f $(GEOMBUILDERO) $(GEOMBUILDERDO)
 
-clean::         clean-geombuilder
+clean::         clean-$(MODNAME)
 
-distclean-geombuilder: clean-geombuilder
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GEOMBUILDERDEP) $(GEOMBUILDERDS) $(GEOMBUILDERDH) \
 		   $(GEOMBUILDERLIB) $(GEOMBUILDERMAP)
 
-distclean::     distclean-geombuilder
+distclean::     distclean-$(MODNAME)

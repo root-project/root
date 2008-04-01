@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := geompainter
+MODNAME      := geompainter
+MODDIR       := geom/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -36,6 +37,8 @@ ALLMAPS       += $(GEOMPAINTERMAP)
 INCLUDEFILES += $(GEOMPAINTERDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GEOMPAINTERDIRI)/%.h
 		cp $< $@
 
@@ -54,15 +57,15 @@ $(GEOMPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(GEOMPAINTERL)
 		$(RLIBMAP) -o $(GEOMPAINTERMAP) -l $(GEOMPAINTERLIB) \
 		   -d $(GEOMPAINTERLIBDEPM) -c $(GEOMPAINTERL)
 
-all-geompainter: $(GEOMPAINTERLIB) $(GEOMPAINTERMAP)
+all-$(MODNAME): $(GEOMPAINTERLIB) $(GEOMPAINTERMAP)
 
-clean-geompainter:
+clean-$(MODNAME):
 		@rm -f $(GEOMPAINTERO) $(GEOMPAINTERDO)
 
-clean::         clean-geompainter
+clean::         clean-$(MODNAME)
 
-distclean-geompainter: clean-geompainter
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GEOMPAINTERDEP) $(GEOMPAINTERDS) $(GEOMPAINTERDH) \
 		   $(GEOMPAINTERLIB) $(GEOMPAINTERMAP)
 
-distclean::     distclean-geompainter
+distclean::     distclean-$(MODNAME)

@@ -3,7 +3,8 @@
 #
 # Author: Ben Lloyd 09/11/06
 
-MODDIR       := gdml
+MODNAME      := gdml
+MODDIR       := geom/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(GDMLMAP)
 INCLUDEFILES += $(GDMLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GDMLDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(GDMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GDMLL)
 		$(RLIBMAP) -o $(GDMLMAP) -l $(GDMLLIB) \
 		   -d $(GDMLLIBDEPM) -c $(GDMLL)
 
-all-gdml:       $(GDMLLIB) $(GDMLMAP)
+all-$(MODNAME): $(GDMLLIB) $(GDMLMAP)
 
-clean-gdml:
+clean-$(MODNAME):
 		@rm -f $(GDMLO) $(GDMLDO)
 
-clean::         clean-gdml
+clean::         clean-$(MODNAME)
 
-distclean-gdml: clean-gdml
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GDMLDEP) $(GDMLDS) $(GDMLDH) $(GDMLLIB) $(GDMLMAP)
 
-distclean::     distclean-gdml
+distclean::     distclean-$(MODNAME)

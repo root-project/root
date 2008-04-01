@@ -63,10 +63,10 @@ MODULES       = build cint/cint metautils pcre utils base cont meta io \
                 hist/hist tree/tree freetype graf gpad g3d gui math/minuit \
                 hist/histpainter tree/treeplayer ged tree/treeviewer \
                 math/physics \
-                postscript rint thread html eg geom geompainter vmc \
+                postscript rint thread html eg geom/geom geom/geompainter vmc \
                 math/fumili math/mlp math/quadp auth guibuilder xml \
                 math/foam math/splot math/smatrix sql tmva \
-                geombuilder hist/spectrum hist/spectrumpainter \
+                geom/geombuilder hist/spectrum hist/spectrumpainter \
                 fitpanel proof/proof proof/proofplayer sessionviewer guihtml
 
 ifeq ($(ARCH),win32)
@@ -183,7 +183,7 @@ ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofitcore roofit
 endif
 ifeq ($(BUILDGDML),yes)
-MODULES      += gdml
+MODULES      += geom/gdml
 endif
 ifeq ($(BUILDTABLE),yes)
 MODULES      += table
@@ -244,7 +244,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 oracle xmlparser math/mathmore cint/reflex cintex \
                 roofitcore roofit \
                 math/minuit2 monalisa math/fftw odbc math/unuran \
-                gdml eve g4root glite
+                geom/gdml eve g4root glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
