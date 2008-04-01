@@ -1193,6 +1193,26 @@ int test20() {
   m1 *= m1 * m2;
   iret |= compare(m1==m3,true); 
 
+  // test operation involving 2 expressions
+  // (check bug 35076)
+  SMatrix<double,2>    m4;
+  SMatrix<double,2>    m5;
+  m4 = (m1*m2) + (m1*m3);
+  m5 = m1*m2;
+  m5 += m1*m3;
+  iret |= compare(m4==m5,true); 
+
+  m4 = (m1*m2) - (m1*m3);
+  m5 = m1*m2;
+  m5 -= m1*m3;
+  iret |= compare(m4==m5,true); 
+
+  m4 = (m1+m2) * (m1-m3);
+  m5 = m1+m2;
+  m5 = m5 * (m1-m3);
+  iret |= compare(m4==m5,true); 
+
+
   // test with vectors 
   SVector<double,4>    v1(d1,4);
   SVector<double,4 >   v2(d2,4);
