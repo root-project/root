@@ -32,7 +32,6 @@ endif
 
 ifneq ($(PLATFORM),win32) 
 LIBM = -lm
-CXXFLAGS += -g
 endif
 
 ifneq ($(USE_REFLEX),)
