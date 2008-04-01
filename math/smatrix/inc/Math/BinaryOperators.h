@@ -208,7 +208,7 @@ inline Expr<BinaryOp<AddOp<T>, SMatrix<T,D,D2,R1>, Expr<A,T,D,D2,R2>, T>, T, D, 
 //==============================================================================
 template <class A, class B, class T, unsigned int D, unsigned int D2, class R1, class R2>
 inline Expr<BinaryOp<AddOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D2, typename AddPolicy<T,D,D2,R1,R2>::RepType >
- operator+(const Expr<A,T,D,D2,R1>& lhs, const Expr<B,T,D,D2,R1>& rhs) {
+ operator+(const Expr<A,T,D,D2,R1>& lhs, const Expr<B,T,D,D2,R2>& rhs) {
   typedef BinaryOp<AddOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T> AddOpBinOp;
 
   return Expr<AddOpBinOp,T,D,D2,typename AddPolicy<T,D,D2,R1,R2>::RepType>(AddOpBinOp(AddOp<T>(),lhs,rhs));
