@@ -30,14 +30,37 @@
 #include "TQtRConfig.h"
 
 #if QT_VERSION < 0x40000
-#include <qiconset.h>
+#  include <qiconset.h>
+#  include <qfiledialog.h>
 #else /* QT_VERSION */
-#include <qicon.h>
+#  include <QIcon>
+#  include <QFileIconProvider>
 #endif /* QT_VERSION */
 #include <qpixmap.h>
 #include <qfileinfo.h>
 
 ClassImp(TQMimeTypes)
+QFileIconProvider  *TQMimeTypes::fgDefaultProvider = 0; // Default provider of the system icons;
+//______________________________________________________________________________
+#if QT_VERSION < 0x40000
+   const QPixmap&  
+#else
+   QIcon  
+#endif 
+TQMimeTypes::IconProvider(const QFileInfo &info)
+{
+    if (!fgDefaultProvider) {
+      fgDefaultProvider = new QFileIconProvider;
+    }
+#if QT_VERSION < 0x40000
+    const QPixmap *px = fgDefaultProvider-> pixmap(info);
+    static QPixmap empty;
+    return px ? *px : empty;
+#else
+    return fgDefaultProvider->icon(info);
+#endif 
+}
+
 //______________________________________________________________________________
 TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
 {
@@ -208,8 +231,12 @@ const QIcon *TQMimeTypes::AddType(const TSystemFile *filename)
    //
 
    QFileInfo info(filename->GetName());
-   const QPixmap *icon = fDefaultProvider.pixmap(info);
-   if (!icon) return 0;
+#if QT_VERSION < 0x40000
+   const QPixmap &icon = IconProvider(info);
+#else
+   const QIcon    icon = IconProvider(info);
+#endif
+   if (icon.isNull()) return 0;
 
    // Add an artificial mime type to the list of mime types from the default system
    TQMime *mime = new TQMime;
@@ -218,9 +245,9 @@ const QIcon *TQMimeTypes::AddType(const TSystemFile *filename)
    mime->fPattern += (const char *)info.extension(FALSE);
    mime->fIcon  = 0;
 #if QT_VERSION < 0x40000
-   mime->fIcon  = new QIconSet( QPixmap(*icon) ) ;
+   mime->fIcon  = new QIconSet( QPixmap(icon) ) ;
 #else /* QT_VERSION */
-   mime->fIcon  = new QIcon( QPixmap(*icon) ) ;
+   mime->fIcon  = new QIcon(icon) ;
 #endif /* QT_VERSION */
 #ifdef R__QTWIN32
    mime->fAction  = "!%s";

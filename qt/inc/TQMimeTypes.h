@@ -30,18 +30,13 @@
 #include "TString.h"
 #ifndef __CINT__
 #  include "qglobal.h"
-#  if QT_VERSION < 0x40000
-#    include <qfiledialog.h>
-#  else /* QT_VERSION */
-#    include <q3filedialog.h>
-#  endif /* QT_VERSION */
-#else
-  class QFileIconProvider;  // Qt3 class to be deleted
-  class Q3FileIconProvider;
 #endif
 
+class QFileIconProvider;
 class TOrdCollection;
 class TRegexp;
+class QFileInfo;
+class QPixmap;
 
 #if (QT_VERSION > 0x39999)
    class QIcon;
@@ -80,19 +75,17 @@ protected:
    TString          fFilename;   // file name of mime type file
    Bool_t           fChanged;    // true if file has changed
    TOrdCollection  *fList;       // list of mime types
-#if (QT_VERSION > 0x39999)
-   Q3FileIconProvider fDefaultProvider; // Default provider of the system icons;
-#else /* QT_VERSION */
-   QFileIconProvider fDefaultProvider; // Default provider of the system icons;
-#endif /* QT_VERSION */
+
+   static QFileIconProvider  *fgDefaultProvider; // Default provider of the system icons;
 
    TQMime    *Find(const char *filename) const;
 #if (QT_VERSION > 0x39999)
    const QIcon *AddType(const TSystemFile *filename);
+   static QIcon  IconProvider(const QFileInfo &);
 #else /* QT_VERSION */
    const QIconSet *AddType(const TSystemFile *filename);
+   static const QPixmap  &IconProvider(const QFileInfo &);
 #endif /* QT_VERSION */
-
 public:
    TQMimeTypes(const char *iconPath, const char *file);
    virtual ~TQMimeTypes();
