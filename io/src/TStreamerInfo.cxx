@@ -1660,7 +1660,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    TIter next(fElements);
    Int_t nbase = 0;
    while ((element = (TStreamerElement*)next())) {
-      if (element->IsA() != TStreamerBase::Class()) continue;
+      if (!element->IsBase()) continue;
       nbase++;
       const char *ename = element->GetName();
       if (nbase == 1) fprintf(fp," : public %s",ename);
@@ -1700,7 +1700,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       for (int i=0;i < kMaxLen;++i) line[i] = ' ';
       line[kMaxLen-1] = '\0';
 
-      if (element->IsA() == TStreamerBase::Class()) continue;
+      if (element->IsBase()) continue;
       const char *ename = element->GetName();
 
       sprintf(name,ename);
