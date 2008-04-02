@@ -2034,10 +2034,10 @@ Int_t TGListTree::DeleteChildren(TGListTreeItem *item)
    // Delete children of item from list.
 
    if (!fUserControlled) {
-      if (fCurrent)
-         DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
-      if (fBelowMouse)
-         DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
+      //if (fCurrent)
+      //   DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
+      //if (fBelowMouse)
+      //   DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
       fCurrent = fBelowMouse = 0;
    }
    if (item->fFirstchild) {
