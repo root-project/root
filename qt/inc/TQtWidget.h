@@ -49,6 +49,7 @@
   class QString;
   class QEvent;
   class QSizePolicy;
+  class QContextMenuEvent;
 #endif
   class TApplication;
 //
@@ -155,6 +156,7 @@ protected:
 #else   
    virtual void customEvent      ( QCustomEvent *);
 #endif   
+   virtual void contextMenuEvent ( QContextMenuEvent *);
    virtual void focusInEvent     ( QFocusEvent * );
    virtual void focusOutEvent    ( QFocusEvent * );
    virtual void leaveEvent       ( QEvent *      );

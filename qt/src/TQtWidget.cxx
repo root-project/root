@@ -164,15 +164,18 @@ void TQtWidget::Init()
   setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
     if (!gApplication) InitRint();
-    Bool_t batch = gROOT->IsBatch();
+    int minw = 10;
+    int minh = 10;
+    setMinimumSize(minw,minh);
+     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     TGQt::RegisterWid(this);
-    fCanvas = new TCanvas(name(), 4, 4, TGQt::RegisterWid(this));
+    fCanvas = new TCanvas(name(),minw,minh, TGQt::RegisterWid(this));
     // fprintf(stderr,"TQtWidget::TQtWidget %p fEditable %d\n", fCanvas, fCanvas->IsEditable());
     gROOT->SetBatch(batch);
   }
   fSizeHint = QWidget::sizeHint();
-  setSizePolicy (QSizePolicy::Expanding ,QSizePolicy::Expanding );
+  setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding));
 #ifdef R__QTWIN32
    // Set the application icon for all ROOT widgets
    static HICON rootIcon = 0;
@@ -281,6 +284,9 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
        }
        TString guiFactory(gEnv->GetValue("Gui.Factory", "native"));
        guiFactory.ToLower();
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,16,0)
+       TApplication::NeedGraphicsLibs() ;
+#endif
        if (!guiFactory.BeginsWith("qt",TString::kIgnoreCase )){
          // Check for the extention
          char *extLib = gSystem->DynamicPathName("libQtGui",kTRUE);
@@ -435,6 +441,20 @@ TQtWidget::customEvent(QCustomEvent *e)
       }
    };
 }
+ //_____________________________________________________________________________
+void TQtWidget::contextMenuEvent(QContextMenuEvent *e)
+{
+   TCanvas *c = Canvas();
+   if (e && c) {
+#if (QT_VERSION >= 0x040000)
+       if (e->reason() != QContextMenuEvent::Mouse) {
+          // the mouse click has been processed by mouseEvent handler
+         c->HandleInput(kButton3Down, e->x(), e->y());
+         e->accept();
+      }
+#endif
+   }
+}
 //_____________________________________________________________________________
 void TQtWidget::focusInEvent ( QFocusEvent *e )
 {
@@ -477,7 +497,7 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
       };
       if (rootButton != kNoEvent) {
          c->HandleInput(rootButton, e->x(), e->y());
-         e->accept();
+         e->accept(); 
          EmitSignal(kMousePressEvent);
          if (!( IsDoubleBuffered() || IsShadow()) ) {
             if (GetShadow() && ! GetShadow()->isVisible() ) {
@@ -506,7 +526,7 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
       e->accept();
       EmitSignal(kMouseMoveEvent);
       if ( IsDoubleBuffered() && IsShadow()) {
-//        fprintf(stderr,"TQtWidget::mouseMoveEvent this=%lx, shadow=%d updates=%d\n", this, IsShadow(), updatesEnabled());
+//        fprintf(stderr,"TQtWidget::mouseMoveEvent this=%x, shadow=%d updates=%d\n", this, IsShadow(), updatesEnabled());
 //        update(rect());
         repaint(rect());
       }
@@ -523,11 +543,11 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
    //  Map the Qt mouse button release event to the ROOT TCanvas events
    //   kButton1Up     = 11, kButton2Up     = 12, kButton3Up     = 13
 
-   if ( IsDoubleBuffered() && IsShadow())
-   {
+   if ( IsDoubleBuffered() && IsShadow()) 
+   { 
       hide();
-//      fprintf(stderr,"TQtWidget::mouseReleaseEvent this=%lx, shadow=%d\n", this, IsShadow());
-   }
+//      fprintf(stderr,"TQtWidget::mouseReleaseEvent this=%x, shadow=%d\n", this, IsShadow());
+   }   
    EEventType rootButton = kNoEvent;
    TCanvas *c = Canvas();
    if (c || !fWrapper){
@@ -548,7 +568,6 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
       e->ignore();
    }
    QWidget::mouseReleaseEvent(e);
-
 }
 
 //_____________________________________________________________________________
