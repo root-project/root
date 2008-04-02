@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcintrule.pri,v 1.18 2006/09/09 20:44:53 fine Exp $
+# $Id: rootcintrule.pri,v 1.19 2008/02/15 23:43:42 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -107,7 +107,7 @@ exists ($$includeFile){
   win32:  rootcint.commands    +=$(ROOTSYS)\bin\rootcint.exe
   unix:   rootcint.commands    +=$(ROOTSYS)/bin/rootcint
 
-  rootcint.commands    +=  -f $$rootcint.target  -c $$DICTDEFINES $(INCPATH) $$CREATE_ROOT_DICT_FOR_CLASSES
+  rootcint.commands    +=  -f $$rootcint.target  -c -p $$DICTDEFINES $(INCPATH) $$CREATE_ROOT_DICT_FOR_CLASSES
   rootcint.depends      = $$CREATE_ROOT_DICT_FOR_CLASSES
   
   rootcintecho.commands = @echo "Generating dictionary $$rootcint.target for $$CREATE_ROOT_DICT_FOR_CLASSES classes"

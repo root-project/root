@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootlibs.pri,v 1.26 2007/08/21 21:56:17 fine Exp $
+# $Id: rootlibs.pri,v 1.27 2008/02/18 20:47:43 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -62,9 +62,9 @@ win32 {
       -include:_G__cpp_setupG__Hist       -include:_G__cpp_setupG__Graf1  -include:_G__cpp_setupG__G3D     \
       -include:_G__cpp_setupG__GPad       -include:_G__cpp_setupG__Tree   -include:_G__cpp_setupG__Rint    \
       -include:_G__cpp_setupG__PostScript -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics \
-      -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1  
+      -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1 
     
-   exists( $(ROOTSYS)/lib/lib/libRIO.lib ) {
+   exists( $(ROOTSYS)/lib/libRIO.lib ) {
       LIBS	+= -include:_G__cpp_setupG__IO
    }   
 
@@ -84,7 +84,7 @@ win32 {
     "$(ROOTSYS)/lib/libGeom.lib"   "$(ROOTSYS)/lib/libTable.lib"                                         \
     "$(ROOTSYS)/lib/libGQt.lib"   
     
-   exists( $(ROOTSYS)/lib/lib/libRIO.lib ) {
+   exists( $(ROOTSYS)/lib/libRIO.lib ) {
       LIBS	+= "$(ROOTSYS)/lib/libRIO.lib" 
    }   
 
