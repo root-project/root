@@ -699,10 +699,17 @@ Bool_t TGListTree::HandleCrossing(Event_t *event)
 {
    // Handle mouse crossing event.
 
-   if (fTip) {
-      if (event->fType == kLeaveNotify) {
+   if (event->fType == kLeaveNotify) {
+      if (fTip) {
          fTip->Hide();
          fTipItem = 0;
+      }
+      if (!fUserControlled) {
+         if (fCurrent)
+            DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
+         if (fBelowMouse)
+            DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
+         fCurrent = fBelowMouse = 0;
       }
    }
    return kTRUE;
