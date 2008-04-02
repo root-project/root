@@ -12,26 +12,33 @@
 // Note that the way greek symbols, super/subscripts are obtained
 // illustrate the current limitations of Root in this area.
 //
-  const Int_t NMAX = 20;
-  Int_t NLOOP;
-  Float_t Z[NMAX], HZ[NMAX], PT[NMAX], INVSIG[NMAX];
+
+#include "TCanvas.h"
+#include "TPad.h"
+#include "TPaveLabel.h"
+#include "TLatex.h"
+#include "TGraph.h"
+#include "TFrame.h"
+
+const Int_t NMAX = 20;
+Int_t NLOOP;
+Float_t Z[NMAX], HZ[NMAX], PT[NMAX], INVSIG[NMAX];
+
+void hz_calc(Float_t, Float_t, Float_t, Float_t, Float_t, Float_t);
 
 //______________________________________________________________________________
 void zdemo()
 {
 
-  Float_t energ;
-  Float_t dens;
-  Float_t tgrad;
-  Float_t ptmin;
-  Float_t ptmax;
-  Float_t delp;
+   Float_t energ;
+   Float_t dens;
+   Float_t tgrad;
+   Float_t ptmin;
+   Float_t ptmax;
+   Float_t delp;
 
-  char text[12];
-  char *symbol[];
-
-  // Create a new canvas.
-   c1 = new TCanvas("zdemo","Monte Carlo Study of Z scaling",10,40,800,600);
+   // Create a new canvas.
+   TCanvas *c1 = new TCanvas("zdemo","Monte Carlo Study of Z scaling",10,40,800,600);
    c1->Range(0,0,25,18);
    c1->SetFillColor(40);
 
@@ -49,8 +56,8 @@ void zdemo()
    t->DrawLatex(3.1,15.5,"M.Tokarev, E.Potrebenikova ");
    t->DrawLatex(14.,15.5,"JINR preprint E2-98-64, Dubna, 1998 ");
 
-   pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.48,0.83,33);
-   pad2 = new TPad("pad2","This is pad2",0.52,0.02,0.98,0.83,33);
+   TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.48,0.83,33);
+   TPad *pad2 = new TPad("pad2","This is pad2",0.52,0.02,0.98,0.83,33);
 
    pad1->Draw();
    pad2->Draw();
@@ -73,7 +80,7 @@ void zdemo()
    // create a 2-d histogram to define the range
    pad1->DrawFrame(1,1e-18,110,1e-8);
    pad1->GetFrame()->SetFillColor(19);
-   TLatex *t = new TLatex();
+   t = new TLatex();
    t->SetNDC();
    t->SetTextFont(62);
    t->SetTextColor(36);
@@ -100,7 +107,7 @@ void zdemo()
    t->SetTextColor(1);
    t->DrawLatex(0.6,0.06,"q_{T} (Gev/c)");
 
-   gr1 = new TGraph(NLOOP,PT,INVSIG);
+   TGraph *gr1 = new TGraph(NLOOP,PT,INVSIG);
 
    gr1->SetLineColor(38);
    gr1->SetMarkerColor(kBlue);
@@ -120,7 +127,7 @@ void zdemo()
    delp  = 6.;
    hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
 
-   gr2 = new TGraph(NLOOP,PT,INVSIG);
+   TGraph *gr2 = new TGraph(NLOOP,PT,INVSIG);
    gr2->SetLineColor(38);
    gr2->SetMarkerColor(kRed);
    gr2->SetMarkerStyle(29);
@@ -138,7 +145,7 @@ void zdemo()
    delp  = 10.;
    hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
 
-   gr3 = new TGraph(NLOOP,PT,INVSIG);
+   TGraph *gr3 = new TGraph(NLOOP,PT,INVSIG);
 
    gr3->SetLineColor(38);
    gr3->SetMarkerColor(6);
@@ -151,21 +158,21 @@ void zdemo()
    graph->SetMarkerColor(kBlue);
    graph->SetMarkerStyle(21);
    graph->SetMarkerSize(1.1);
-   graph->SetPoint(0,1.7,1.e-16.);
+   graph->SetPoint(0,1.7,1.e-16);
    graph->Draw("LP");
 
-   TGraph *graph = new TGraph(1,dum,dum);
+   graph = new TGraph(1,dum,dum);
    graph->SetMarkerColor(kRed);
    graph->SetMarkerStyle(29);
    graph->SetMarkerSize(1.5);
-   graph->SetPoint(0,1.7,2.e-17.);
+   graph->SetPoint(0,1.7,2.e-17);
    graph->Draw("LP");
 
-   TGraph *graph = new TGraph(1,dum,dum);
+   graph = new TGraph(1,dum,dum);
    graph->SetMarkerColor(6);
    graph->SetMarkerStyle(8);
    graph->SetMarkerSize(1.1);
-   graph->SetPoint(0,1.7,4.e-18.);
+   graph->SetPoint(0,1.7,4.e-18);
    graph->Draw("LP");
 
    pad2->cd();
@@ -176,7 +183,7 @@ void zdemo()
    pad2->DrawFrame(1,1e-22,3100,1e-8);
    pad2->GetFrame()->SetFillColor(19);
 
-   gr = new TGraph(NLOOP,Z,HZ);
+   TGraph *gr = new TGraph(NLOOP,Z,HZ);
    gr->SetTitle("HZ vs Z");
    gr->SetFillColor(19);
    gr->SetLineColor(9);
@@ -185,7 +192,7 @@ void zdemo()
    gr->SetMarkerSize(1.5);
    gr->Draw("LP");
 
-   TLatex *t = new TLatex();
+   t = new TLatex();
    t->SetNDC();
    t->SetTextFont(62);
    t->SetTextColor(36);
@@ -219,7 +226,6 @@ void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t 
 {
   Int_t I;
 
-  Float_t CSEFT= 1.;
   Float_t GM1  = 0.00001;
   Float_t GM2  = 0.00001;
   Float_t A1   = 1.;
@@ -238,10 +244,10 @@ void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t 
   Float_t P1P2, P1P3, P2P3;
   Float_t Y1, Y2, S, SMIN,  SX1,  SX2, SX1X2, DELM;
   Float_t Y1X1,  Y1X2,   Y2X1,   Y2X2,   Y2X1X2,   Y1X1X2;
-  Float_t KX1, KX2,  ZX1, ZX2, KX1X2, ZX1X2;
-  Float_t H1, H2;
+  Float_t KX1, KX2,  ZX1, ZX2;
+  Float_t H1;
 
-  Float_t PTOT, THET, ETOT, X1, X2, ZZX1X2, ZX1ZX2;
+  Float_t PTOT, THET, ETOT, X1, X2;
 
   //   printf("ENR=  %f DENS= %f PTMIN= %f PTMAX= %f DELP= %f \n",ENERG,DENS,PTMIN,PTMAX, DELP);
 
