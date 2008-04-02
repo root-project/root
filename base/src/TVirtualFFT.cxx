@@ -203,7 +203,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
                if (opt.Contains("HC2R")) kind[0] = 11;
                if (opt.Contains("DHT")) kind[0] = 12;
             }
-            fft->Init(flag, sign, kind);
+            if (fft) fft->Init(flag, sign, kind);
             if (!opt.Contains("K")) {
                fgFFT = fft;
             }
