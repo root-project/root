@@ -60,7 +60,7 @@ namespace ROOT {
       void*               object;
       void*               start;
       void*               temp;
-      Bool_t              delete_temp;
+      Bool_t              use_temp;
       int                 refCount;
       size_t              space;
       T& iter() { return *(T*)buff; }

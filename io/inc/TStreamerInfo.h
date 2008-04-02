@@ -263,7 +263,7 @@ public:
 #endif
 
    //WARNING this class version must be the same as TVirtualStreamerInfo
-   ClassDef(TStreamerInfo,6)  //Streamer information for one class version
+   ClassDef(TStreamerInfo,7)  //Streamer information for one class version
 };
 
 

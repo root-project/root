@@ -24,6 +24,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGenCollectionProxy.h"
+#include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TClassEdit.h"
 #include "Property.h"
@@ -150,7 +151,7 @@ public:
    void* At(UInt_t idx)
 {
       if ( fEnv && fEnv->object ) {
-         if ( fEnv->temp ) {
+         if ( fEnv->use_temp ) {
             return (((char*)fEnv->temp)+idx*fValDiff);
          }
          switch( idx ) {
@@ -576,6 +577,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
             nam = "pair<"+inside[1]+","+inside[2];
             nam += (nam[nam.length()-1]=='>') ? " >" : ">";
             fValue = new Value(nam);
+
             fVal   = new Value(inside[2]);
             fKey   = new Value(inside[1]);
             fPointers = fPointers || (0 != (fKey->fCase&G__BIT_ISPOINTER));
@@ -591,6 +593,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
             break;
          default:
             fValue = new Value(inside[1]);
+
             fVal   = new Value(*fValue);
             if ( 0 == fValDiff ) {
                fValDiff = fVal->fSize;
@@ -598,6 +601,15 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
             }
             break;
          }
+
+         // Optimizing does not work with member wise streaming
+         if (TVirtualStreamerInfo::GetStreamMemberWise() && fValue->fType.GetClass()) {
+            Bool_t optim = TVirtualStreamerInfo::CanOptimize();
+            TVirtualStreamerInfo::Optimize(kFALSE);
+            fValue->fType.GetClass()->GetStreamerInfo()->Compile();
+            TVirtualStreamerInfo::Optimize(optim);
+         }
+
          fPointers = fPointers || (0 != (fVal->fCase&G__BIT_ISPOINTER));
          fClass = cl;
          return this;
@@ -683,7 +695,7 @@ void* TGenCollectionProxy::At(UInt_t idx)
       case TClassEdit::kMultiSet:
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
-         if ( fEnv->temp ) {
+         if ( fEnv->use_temp ) {
             return (((char*)fEnv->temp)+idx*fValDiff);
          }
       default:
@@ -773,6 +785,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
             fEnv->temp = fEnv->temp ? ::realloc(fEnv->temp,fValDiff*n) : ::malloc(fValDiff*n);
             fEnv->space = fValDiff*n;
          }
+         fEnv->use_temp = kTRUE;
          fEnv->start = fEnv->temp;
          fConstruct.invoke(fEnv);
          return fEnv;
@@ -840,6 +853,7 @@ void TGenCollectionProxy::PushProxy(void *objstart)
       e = new Env_t();
       e->space = 0;
       e->temp  = 0;
+      e->use_temp = kFALSE;
    }
    else {
       e = fProxyKept.back();
@@ -864,6 +878,7 @@ void TGenCollectionProxy::PopProxy()
       Env_t* e = fProxyList.back();
       if ( --e->refCount <= 0 ) {
          fProxyKept.push_back(e);
+         e->use_temp = kFALSE;
       }
       fProxyList.pop_back();
    }

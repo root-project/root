@@ -488,9 +488,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                      for(int j=0;j<fLength[i];++j) {
                         char *cont = contp[j];
                         TVirtualCollectionProxy::TPushPop helper( proxy, cont );
-                        Int_t nobjects = proxy->Size();
+                        Int_t nobjects = cont ? proxy->Size() : 0;
                         b << nobjects;
-                        subinfo->WriteBufferAux(b,*(proxy),-1,nobjects,0,1);
+                        subinfo->WriteBufferSTL(b,proxy,nobjects,-1,0);
                      }
                   }
                   b.SetByteCount(pos,kTRUE);
@@ -533,7 +533,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                         TVirtualCollectionProxy::TPushPop helper( proxy, obj );
                         Int_t nobjects = proxy->Size();
                         b << nobjects;
-                        subinfo->WriteBufferAux(b,*(proxy),-1,nobjects,0,1);
+                        subinfo->WriteBufferSTL(b,proxy,nobjects,-1,0);
                      }
                   }
                   b.SetByteCount(pos,kTRUE);

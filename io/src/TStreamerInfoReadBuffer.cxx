@@ -984,7 +984,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         Int_t nobjects;
                         b >> nobjects;
                         env = proxy->Allocate(nobjects,true);
-                        subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                        if (vers<7) {
+                           subinfo->ReadBuffer(b,*proxy,-1,nobjects,0,1);
+                        } else {
+                           subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                        }
                         proxy->Commit(env);
                      }
                   }
@@ -1036,7 +1040,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         Int_t nobjects;
                         b >> nobjects;
                         void* env = proxy->Allocate(nobjects,true);
-                        subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                        if (vers<7) {
+                           subinfo->ReadBuffer(b,*proxy,-1,nobjects,0,1);
+                        } else {
+                           subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                        }
                         proxy->Commit(env);
                      }
                   }
