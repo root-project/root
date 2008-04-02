@@ -1966,6 +1966,7 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
       MouseOver(0);
       MouseOver(0,fLastEventState);
    }
+   fCurrent = fBelowMouse = 0;
 
    delete item;
    fClient->NeedRedraw(this);
