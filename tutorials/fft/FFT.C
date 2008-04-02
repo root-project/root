@@ -143,6 +143,7 @@ void FFT()
    hb->GetXaxis()->SetLabelSize(0.05);
    hb->GetYaxis()->SetLabelSize(0.05);
    delete fft_back;
+   fft_back=0;
 
 //********* Data array - same transform ********//
 
@@ -207,5 +208,8 @@ void FFT()
    fft_own->GetPointComplex(n/2+1, re_2, im_2);
    printf("2nd transform: Nyquist harmonic: %f\n", re_2);
    delete fft_own;
+   delete [] in;
+   delete [] re_full;
+   delete [] im_full;
 }
 
