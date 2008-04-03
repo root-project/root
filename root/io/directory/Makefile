@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog runcd*.root TDirGetObj.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += getobj cd 
+TEST_TARGETS += getobj cd withautoadd
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -65,4 +65,10 @@ cd: cd.log
 	$(TestDiff)
 
 getobj: getobj.log
+	$(TestDiff)
+
+withautoadd.log: withautoadd_C.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l withautoadd.C+ > withautoadd.log 2>&1
+
+withautoadd: withautoadd.log
 	$(TestDiff)
