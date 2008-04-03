@@ -1421,7 +1421,12 @@ Double_t TGeoNavigator::Safety(Bool_t inside)
       }
       if (fNmany && !inside) SafetyOverlaps();
       return fSafety;
-   }
+   } else {
+      if (voxels->NeedRebuild()) {
+         voxels->Voxelize();
+         vol->FindOverlaps();
+      }
+   }      
 
    //---> check fast unsafe voxels
    Double_t *boxes = voxels->GetBoxes();
