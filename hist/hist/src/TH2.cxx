@@ -2181,6 +2181,84 @@ Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 
 
 //______________________________________________________________________________
+void TH2::Smooth(Int_t , Option_t *)
+{
+   // Smooth bin contents of this histogram.
+   // Bin contents are replaced by their smooth values.
+   // Errors (if any) are not modified.
+   // implementation by David McKee (dmckee@bama.ua.edu)
+   
+   const Int_t ksize_x=5; 
+   const Int_t ksize_y=5; 
+   Double_t kernel[5][5] =  { { 0, 0, 1, 0, 0 }, 
+                              { 0, 2, 2, 2, 0 }, 
+                              { 1, 2, 5, 2, 1 }, 
+                              { 0, 2, 2, 2, 0 }, 
+                              { 0, 0, 1, 0, 0 } }; 
+
+   // Determine the size of the bin buffer(s) needed 
+   Int_t lowest_bin=GetBin(0,0); 
+   Int_t nx = GetNbinsX();
+   Int_t ny = GetNbinsY();
+   Int_t highest_bin=GetBin(nx+1,ny+1); 
+   Int_t bufSize  = highest_bin-lowest_bin+1; 
+   Double_t *buf  = new Double_t[bufSize]; 
+   Double_t *ebuf = 0;
+   if (fSumw2.fN) ebuf = new Double_t[bufSize]; 
+
+   // Copy all the data to the temporry buffers 
+   Int_t i,j,bin;
+   for (i=0; i<=nx; i++){ 
+      for (j=0; j<=ny; j++){ 
+         bin = GetBin(i,j); 
+         buf[bin] =GetBinContent(bin); 
+         if (ebuf) ebuf[bin]=GetBinError(bin); 
+      } 
+   } 
+
+   // Kernel tail sizes (kernel sizes must be odd for this to work!) 
+   Int_t x_push = (ksize_x-1)/2; 
+   Int_t y_push = (ksize_y-1)/2; 
+
+   // main work loop 
+   for (i=1; i<=nx; i++) { 
+      for (j=1; j<=ny; j++) { 
+         Double_t content = 0.0; 
+         Double_t error = 0.0; 
+         Double_t norm = 0.0; 
+
+         for (Int_t n=0; n<ksize_x; n++) { 
+            for (Int_t m=0; m<ksize_y; m++) { 
+               Int_t xb = i+(n-x_push); 
+               Int_t yb = j+(m-y_push); 
+               if ( (xb >= 1) && (xb <= nx) && (yb >= 1) && (yb <= ny) ) { 
+                  bin = GetBin(xb,yb); 
+                  Double_t k = kernel[n][m]; 
+                  if ( (k != 0.0 ) && (buf[bin] != 0.0) ) { // General version probably does not want the second condition 
+                     norm    += k; 
+                     content += k*buf[bin]; 
+                     if (ebuf) error   += k*k*buf[bin]*buf[bin]; 
+                  } 
+               } 
+            } 
+         } 
+
+         content /= norm; 
+         if ( content != 0.0 ) { // General version probably does not want this condition 
+            SetBinContent(i,j,content); 
+            if (ebuf) {
+               error /= (norm*norm); 
+               SetBinError(i,j,sqrt(error)); 
+            } 
+         } 
+      } 
+   } 
+
+   delete [] buf; 
+   delete [] ebuf; 
+}
+
+//______________________________________________________________________________
 void TH2::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH2.

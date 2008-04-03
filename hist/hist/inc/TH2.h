@@ -97,6 +97,7 @@ public:
    virtual void     SetShowProjectionY(Int_t nbins);  // *MENU*
    virtual TH1     *ShowBackground(Int_t niter=20, Option_t *option="same");
    virtual Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05); // *MENU*
+   virtual void     Smooth(Int_t ntimes=1, Option_t *option=""); // *MENU*
            
    ClassDef(TH2,4)  //2-Dim histogram base class
 };

@@ -5694,23 +5694,27 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
 
 
 // ------------------------------------------------------------------------
-void  TH1::Smooth(Int_t ntimes, Int_t firstbin, Int_t lastbin)
+void  TH1::Smooth(Int_t ntimes, Option_t *option)
 {
-   // Smooth bin contents of this histogram between firstbin and lastbin.
-   // (if firstbin=1 and lastbin=-1 (default) all bins except for over- and
-   // undeflow are smoothed.
+   // Smooth bin contents of this histogram.
+   // if option contains "R" smoothing is applied only to the bins
+   // defined in the X axis range (default is to smooth all bins)
    // Bin contents are replaced by their smooth values.
    // Errors (if any) are not modified.
-   // The algorithm can only be applied to 1-d histograms
-
+   // the smoothing procedure is repeated ntimes (default=1)
+   
    if (fDimension != 1) {
       Error("Smooth","Smooth only supported for 1-d histograms");
       return;
    }
    Int_t nbins = fXaxis.GetNbins();
-   if (firstbin < 0) firstbin = 1;
-   if (lastbin  < 0) lastbin  = nbins;
-   if (lastbin  > nbins+1) lastbin  = nbins;
+   Int_t firstbin = 1, lastbin = nbins;
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("r")) {
+      firstbin= fXaxis.GetFirst();
+      lastbin  = fXaxis.GetLast();
+   }
    nbins = lastbin - firstbin + 1;
    Double_t *xx = new Double_t[nbins];
    Double_t nent = fEntries;
