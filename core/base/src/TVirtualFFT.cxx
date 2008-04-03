@@ -197,6 +197,10 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
                return 0;
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
+            if (!fft) {
+               printf("plugin failed to created TVirtualFFT object\n");
+               return 0;
+            }
             Int_t *kind = new Int_t[1];
             if (pluginname=="fftwr2r") { 
                if (opt.Contains("R2HC")) kind[0] = 10;

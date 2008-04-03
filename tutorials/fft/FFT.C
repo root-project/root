@@ -169,6 +169,7 @@ void FFT()
    //-to create a new TVirtualFFT object (option "K") or use the global (default)
    Int_t n_size = n+1;
    TVirtualFFT *fft_own = TVirtualFFT::FFT(1, &n_size, "R2C ES K");
+   if (!fft_own) return;
    fft_own->SetPoints(in);
    fft_own->Transform();
 
