@@ -60,7 +60,7 @@ ifeq ($(PLATFORM),win32)
 		cd $(PCREVERS)/win32; \
 		unset MAKEFLAGS; \
 		nmake -nologo -f Makefile.msc CFG=$(PCREBLD) \
-		NMCXXFLAGS="$(BLDCXXFLAGS) -I../../../../build/win -FIw32pragma.h")
+		NMCXXFLAGS="$(BLDCXXFLAGS) -I../../../../../build/win -FIw32pragma.h")
 else
 		@(if [ -d $(PCREDIRS)/$(PCREVERS) ]; then \
 			rm -rf $(PCREDIRS)/$(PCREVERS); \
