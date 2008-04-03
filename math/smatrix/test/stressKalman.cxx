@@ -183,7 +183,7 @@ void fillRandomSym(TRandom & r, M  & m, unsigned int first, unsigned int start =
 void printTime(TStopwatch & time, std::string s) { 
   int pr = std::cout.precision(8);
   std::cout << s << "\t" << " time = " << time.RealTime() << "\t(sec)\t" 
-    //    << time.CpuTime() 
+	    << time.CpuTime() << "\t(CPU)"  
 	    << std::endl;
   std::cout.precision(pr);
 }
@@ -298,6 +298,16 @@ class TimeReport {
     gSystem->Load("libSmatrix");
 
     for (ResultTable::iterator itr = fResult1.begin(); itr != fResult1.end(); ++itr) { 
+      int ret = file.WriteObject(&(itr->second),(itr->first).c_str() ); 
+      if (ret ==0) std::cerr << "==> Error saving results in ROOT file " << fileName << std::endl;  
+    }
+    file.Close();
+
+    std::string fileName2 = "CPU_" + fileName; 
+    TFile file2(fileName2.c_str(),"RECREATE"); 
+    gSystem->Load("libSmatrix");
+
+    for (ResultTable::iterator itr = fResult2.begin(); itr != fResult2.end(); ++itr) { 
       int ret = file.WriteObject(&(itr->second),(itr->first).c_str() ); 
       if (ret ==0) std::cerr << "==> Error saving results in ROOT file " << fileName << std::endl;  
     }

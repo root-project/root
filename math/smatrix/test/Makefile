@@ -159,7 +159,7 @@ check: 	all
 	done; 
 
 clean:
-		@rm -f $(OBJS) $(PROGRAMS) core 
+		@rm -f $(OBJS) $(PROGRAMS) libTrackDict.* TrackDict.$(ObjSuf) TrackDict.$(SrcSuf) TrackDict.h core 
 
 distclean:      clean
 		@rm -f $(PROGRAMS) kalman.root stressOperations.root 
