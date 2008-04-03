@@ -112,6 +112,7 @@ private:
    ROOT::DelFunc_t    fDelete;          //pointer to a function deleting one object.
    ROOT::DelArrFunc_t fDeleteArray;     //pointer to a function deleting an array of objects.
    ROOT::DesFunc_t    fDestructor;      //pointer to a function call an object's destructor.
+   ROOT::DirAutoAdd_t fDirAutoAdd;//pointer which implements the Directory Auto Add feature for this class.
    Int_t              fSizeof;          //Sizeof the class.
 
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
@@ -236,6 +237,7 @@ public:
    TClass            *GetBaseClass(const TClass *base);
    Int_t              GetBaseClassOffset(const TClass *base);
    TClass            *GetBaseDataMember(const char *datamember);
+   ROOT::DirAutoAdd_t GetDirectoryAutoAdd() const;
    UInt_t             GetInstanceCount() const { return fInstanceCount; }
    UInt_t             GetHeapInstanceCount() const { return fOnHeap; }
    void               GetMenuItems(TList *listitems);
@@ -287,6 +289,7 @@ public:
    void               SetDeclFile(const char *name, int line) { fDeclFileName = name; fDeclFileLine = line; }
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
    void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);
+   void               SetDirectoryAutoAdd(ROOT::DirAutoAdd_t dirAutoAddFunc);
    void               SetDestructor(ROOT::DesFunc_t destructorFunc);
    void               SetImplFileName(const char *implFileName) { fImplFileName = implFileName; }
    void               SetNew(ROOT::NewFunc_t newFunc);

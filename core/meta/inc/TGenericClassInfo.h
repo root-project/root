@@ -41,6 +41,7 @@ namespace ROOT {
       DelFunc_t                fDelete;
       DelArrFunc_t             fDeleteArray;
       DesFunc_t                fDestructor;
+      DirAutoAdd_t             fDirAutoAdd;
       TClassStreamer          *fStreamer;
       TVirtualCollectionProxy *fCollectionProxy;
       Int_t                    fSizeof;
@@ -84,6 +85,7 @@ namespace ROOT {
       DelFunc_t             GetDelete() const;
       DelArrFunc_t          GetDeleteArray() const;
       DesFunc_t             GetDestructor() const;
+      DirAutoAdd_t          GetDirectoryAutoAdd() const;
       const char           *GetImplFileName();
       Int_t                 GetImplFileLine();
       const type_info      &GetInfo() const;
@@ -103,6 +105,7 @@ namespace ROOT {
       void                  SetDelete(DelFunc_t deleteFunc);
       void                  SetDeleteArray(DelArrFunc_t deleteArrayFunc);
       void                  SetDestructor(DesFunc_t destructorFunc);
+      void                  SetDirectoryAutoAdd(DirAutoAdd_t dirAutoAdd);
       void                  SetFromTemplate();
       Int_t                 SetImplFile(const char *file, Int_t line);
       void                  SetNew(NewFunc_t newFunc);

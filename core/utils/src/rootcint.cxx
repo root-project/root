@@ -895,6 +895,25 @@ bool CheckClassDef(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
+bool HasDirectoryAutoAdd(G__ClassInfo &cl)
+{
+   // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
+
+   // Detect if the class has a DirectoryAutoAdd
+   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
+
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   long offset;
+   const char *proto = "TDirectory*";
+   const char *name = "DirectoryAutoAdd";
+
+   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
+   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+
+   return hasMethodWithSignature;
+}
+
+//______________________________________________________________________________
 int GetClassVersion(G__ClassInfo &cl)
 {
    // Return the version number of the class or -1
@@ -1642,6 +1661,14 @@ void WriteAuxFunctions(G__ClassInfo &cl)
                     << "   }" << std::endl;
    }
 
+   if (HasDirectoryAutoAdd(cl)) {
+       (*dictSrcOut) << "   // Wrapper around the directory auto add." << std::endl
+                     << "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *p, TDirectory *dir) {" << std::endl
+                     << "      ((" << classname.c_str() << "*)p)->DirectoryAutoAdd(dir);" << std::endl
+                     << "   }" << std::endl;
+   }
+     
+
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
 }
 
@@ -2260,6 +2287,10 @@ void WriteClassInit(G__ClassInfo &cl)
                     << "   static void deleteArray_" << mappedname.c_str() << "(void *p);" << std::endl
                     << "   static void destruct_" << mappedname.c_str() << "(void *p);" << std::endl;
    }
+   if (HasDirectoryAutoAdd(cl)) {
+      (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *p, TDirectory *dir);" << std::endl;
+   }
+      
    (*dictSrcOut) << std::endl
 
                  << "   // Function generating the singleton type initializer" << std::endl;
@@ -2373,6 +2404,9 @@ void WriteClassInit(G__ClassInfo &cl)
       (*dictSrcOut) << "      instance.SetDelete(&delete_" << mappedname.c_str() << ");" << std::endl
                     << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << std::endl
                     << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasDirectoryAutoAdd(cl)) {
+      (*dictSrcOut) << "      instance.SetDirectoryAutoAdd(&directoryAutoAdd_" << mappedname.c_str() << ");" << std::endl;
    }
    if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
       int idx = classname.find("<");
@@ -3747,11 +3781,26 @@ const char *CopyArg(const char *original)
    }
    if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 &&
        ( slash[4]=='/' || slash[4]=='\\') )
-      {
-         return slash+5;
-      } else {
-         return original;
-      }
+   {
+      return slash+5;
+
+   } else {
+
+      if (slash) {
+         const char *middle = slash + 1;
+
+         slash = (char *)strchr(middle,'\\');
+         if (slash==0) {
+            slash = (char *)strchr(middle,'/');
+         }
+         if (slash && strlen(slash+1)>4 && strncmp(slash+1,"inc",3)==0 &&
+             ( slash[4]=='/' || slash[4]=='\\') )
+         {
+            return slash+5;
+         }
+      }   
+      return original;
+   }
 #else
    return original;
 #endif

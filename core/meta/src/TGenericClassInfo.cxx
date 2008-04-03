@@ -217,6 +217,7 @@ namespace ROOT {
          fClass->SetDelete(fDelete);
          fClass->SetDeleteArray(fDeleteArray);
          fClass->SetDestructor(fDestructor);
+         fClass->SetDirectoryAutoAdd(fDirAutoAdd);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
          // If IsZombie is true, something went wront and we will not be
          // able to properly copy the collection proxy
@@ -450,6 +451,12 @@ namespace ROOT {
 
       fDestructor = destructorFunc;
       if (fClass) fClass->SetDestructor(fDestructor);
+   }
+
+   void TGenericClassInfo::SetDirectoryAutoAdd(DirAutoAdd_t func)
+   {
+      fDirAutoAdd = func;
+      if (fClass) fClass->SetDirectoryAutoAdd(fDirAutoAdd);
    }
 
    NewFunc_t TGenericClassInfo::GetNew() const

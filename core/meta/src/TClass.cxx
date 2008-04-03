@@ -601,7 +601,7 @@ ClassImp(TClass)
 
 //______________________________________________________________________________
 TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
-                   fDeleteArray(0), fDestructor(0), fSizeof(-1),
+                   fDeleteArray(0), fDestructor(0), fDirAutoAdd(0), fSizeof(-1),
                    fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
                    fCurrentInfo(0), fRefStart(0), fRefProxy(0)
 {
@@ -636,6 +636,7 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
 //______________________________________________________________________________
 TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
                                    fDelete(0), fDeleteArray(0), fDestructor(0),
+                                   fDirAutoAdd(0),
                                    fSizeof(-1), fVersionUsed(kFALSE),
                                    fOffsetStreamer(0), fStreamerType(kNone),
                                    fCurrentInfo(0), fRefStart(0), fRefProxy(0)
@@ -701,7 +702,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-     fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
+     fDestructor(0), fDirAutoAdd(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
      fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -717,7 +718,7 @@ TClass::TClass(const char *name, Version_t cversion,
                ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
    : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
-     fDestructor(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
+     fDestructor(0), fDirAutoAdd(0), fSizeof(-1), fVersionUsed(kFALSE), fOffsetStreamer(0),
      fStreamerType(kNone), fCurrentInfo(0), fRefStart(0), fRefProxy(0)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -979,6 +980,7 @@ TClass::TClass(const TClass& cl) :
   fDelete(cl.fDelete),
   fDeleteArray(cl.fDeleteArray),
   fDestructor(cl.fDestructor),
+  fDirAutoAdd(cl.fDirAutoAdd),
   fSizeof(cl.fSizeof),
   fVersionUsed(cl.fVersionUsed),
   fProperty(cl.fProperty),
@@ -1028,6 +1030,7 @@ TClass& TClass::operator=(const TClass& cl)
       fDelete=cl.fDelete;
       fDeleteArray=cl.fDeleteArray;
       fDestructor=cl.fDestructor;
+      fDirAutoAdd=cl.fDirAutoAdd;
       fSizeof=cl.fSizeof;
       fVersionUsed=cl.fVersionUsed;
       fProperty=cl.fProperty;
@@ -4417,6 +4420,14 @@ void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
 }
 
 //______________________________________________________________________________
+void TClass::SetDirectoryAutoAdd(ROOT::DirAutoAdd_t autoAddFunc)
+{
+   // Install a new wrapper around the directory auto add function..
+
+   fDirAutoAdd = autoAddFunc;
+}
+
+//______________________________________________________________________________
 TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
@@ -4485,5 +4496,13 @@ ROOT::DesFunc_t TClass::GetDestructor() const
    // Return the wrapper around the destructor
 
    return fDestructor;
+}
+
+//______________________________________________________________________________
+ROOT::DirAutoAdd_t TClass::GetDirectoryAutoAdd() const
+{
+   // Return the wrapper around the directory auto add function.
+
+   return fDirAutoAdd;
 }
 

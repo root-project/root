@@ -38,6 +38,7 @@
 
 class TClass;
 class TBuffer;
+class TDirectory;
 class TMemberInspector;
 class TObject;
 class TNamed;
@@ -179,6 +180,7 @@ namespace ROOT {
    typedef void  (*DelFunc_t)(void *);
    typedef void  (*DelArrFunc_t)(void *);
    typedef void  (*DesFunc_t)(void *);
+   typedef void  (*DirAutoAdd_t)(void *, TDirectory*);
 
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 
