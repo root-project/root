@@ -23,6 +23,8 @@ extern "C" void G__exec_alloc_unlock();
 
 extern "C" {
 
+static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now);
+
 static int G__calldepth = 0;
 
 //______________________________________________________________________________
@@ -1695,429 +1697,540 @@ void G__make_ifunctable(char* funcheader)
    return;
 }
 
-/***********************************************************************
-* G__readansiproto()
-*
-*  func(type , type* , ...)
-*       ^
-***********************************************************************/
 //______________________________________________________________________________
-int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
+static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
 {
-   // -- FIXME: Describe this function!
-   char paraname[G__LONGLINE];
-   char name[G__LONGLINE];
-   int c = 0, iin = 0;
-   int tagnum, typenum, type = 0, pointlevel, reftype;
-   int isunsigned, isdefault;
-   int ip, itemp;
-   int store_var_type;
-   int store_tagnum_default = 0, store_def_struct_member_default = 0;
-   int store_exec_memberfunc = 0;
-   int arydim;
-
+   //  func(type , type* , ...)
+   //       ^
    ifunc->ansi[func_now] = 1;
-   while (')' != c) {
-      if (G__MAXFUNCPARA == iin) {
+   int iin = 0;
+   int c = 0;
+   for (; c != ')'; ++iin) {
+      if (iin == G__MAXFUNCPARA) {
          G__fprinterr(G__serr, "Limitation: cint can not accept more than %d function arguments", G__MAXFUNCPARA);
          G__printlinenum();
          G__fignorestream(")");
          return 1;
       }
-      arydim = 0;
-      pointlevel = 0;
-      reftype = 0; /* this reftype has different meaning from G__reftype */
-      typenum = -1;
-      tagnum = -1;
-      isunsigned = 0;
-      isdefault = 0;
-      name[0] = '\0';
-      G__paramfunc *param = ifunc->param[func_now][iin];
+      G__paramfunc* param = ifunc->param[func_now][iin];
       param->isconst = G__VARIABLE;
-
-      /* read typename */
-      c = G__fgetname_template(paraname, ",)&*[(=");
-      if (strlen(paraname) && isspace(c)) {
-         /* There was an argument and the parsing was stopped by a white
-          * space rather than on of ",)*&<=", it is possible that
-          * we have a namespace followed by '::' in which case we have
-          * to grab more before stopping! */
-         int namespace_tagnum;
-         char more[G__LONGLINE];
-
-         namespace_tagnum = G__defined_tagname(paraname, 2);
-         while ((((namespace_tagnum != -1)
-                  && (G__struct.type[namespace_tagnum] == 'n'))
-                 || (strcmp("std", paraname) == 0)
-                 || (paraname[strlen(paraname)-1] == ':'))
-                && isspace(c)) {
-            c = G__fgetname(more, ",)&*[(=");
-            strcat(paraname, more);
-            namespace_tagnum = G__defined_tagname(paraname, 2);
+      char buf[G__LONGLINE]; // Parsing I/O buffer.
+      buf[0] = '\0';
+      // Get first keyword, id, or separator of the type specification.
+      c = G__fgetname_template(buf, "&*[(=,)");
+      if (strlen(buf) && isspace(c)) {
+         // -- There was an argument and the parsing stopped at white space.
+         // It is possible that we have a qualified name, check.
+         // FIXME: A classname should be allowed here as well, the parameter type could be a nested type.
+         int namespace_tagnum = G__defined_tagname(buf, 2);
+         while (
+            isspace(c) &&
+            (
+               (buf[strlen(buf)-1] == ':') ||
+               ((namespace_tagnum != -1) && (G__struct.type[namespace_tagnum] == 'n')) ||
+               !strcmp("std", buf)
+            )
+         ) {
+            char more[G__LONGLINE];
+            c = G__fgetname(more, "&*[(=,)");
+            strcat(buf, more);
+            namespace_tagnum = G__defined_tagname(buf, 2);
          }
       }
-
-      /* check const and unsigned keyword */
-      if (strcmp(paraname, "...") == 0) {
+      //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+      // Check if we have reached an ellipsis (must be at end).
+      if (!strcmp(buf, "...")) {
          ifunc->ansi[func_now] = 2;
          break;
       }
-      while (strcmp(paraname, "const") == 0 || strcmp(paraname, "register") == 0 ||
-             strcmp(paraname, "auto") == 0 || strcmp(paraname, "volatile") == 0
-             || (G__iscpp && strcmp(paraname, "typename") == 0)
-            ) {
-         if (strcmp(paraname, "const") == 0)
+      // Check for and consume const, volatile, auto, register and typename qualifiers.
+      while (
+         !strcmp(buf, "const") ||
+         !strcmp(buf, "volatile") ||
+         !strcmp(buf, "auto") ||
+         !strcmp(buf, "register") ||
+         (G__iscpp && !strcmp(buf, "typename"))
+      ) {
+         if (!strcmp(buf, "const")) {
             ifunc->param[func_now][iin]->isconst |= G__CONSTVAR;
-         c = G__fgetname_template(paraname, ",)&*[(=");
-      }
-      if (strcmp(paraname, "unsigned") == 0 || strcmp(paraname, "signed") == 0) {
-         if ('u' == paraname[0]) isunsigned = -1;
-         else isunsigned = 0;
-         switch (c) {
-            case ',':
-            case ')':
-            case '&':
-            case '[':
-            case '(':
-            case '=':
-            case '*':
-               strcpy(paraname, "int");
-               break;
-            default:
-               if (isspace(c)) {
-                  c = G__fgetname(paraname, ",)&*[(=");
-               }
-               else {
-                  fpos_t pos;
-                  int store_line = G__ifile.line_number;
-                  fgetpos(G__ifile.fp, &pos);
-                  c = G__fgetname(paraname, ",)&*[(=");
-                  if (strcmp(paraname, "int") != 0 && strcmp(paraname, "long") != 0 &&
-                        strcmp(paraname, "short") != 0) {
-                     G__ifile.line_number = store_line;
-                     fsetpos(G__ifile.fp, &pos);
-                     strcpy(paraname, "int");
-                     c = ' ';
-                  }
-               }
-               break;
          }
+         c = G__fgetname_template(buf, "&*[(=,)");
+         //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
       }
-
-      /* determine type */
-      if (strcmp(paraname, "struct") == 0) {
-         c = G__fgetname_template(paraname, ",)&*[(=");
-         tagnum = G__search_tagname(paraname, 's');
-         type = 'u';
-      }
-      else if (strcmp(paraname, "class") == 0) {
-         c = G__fgetname_template(paraname, ",)&*[(=");
-         tagnum = G__search_tagname(paraname, 'c');
-         type = 'u';
-      }
-      else if (strcmp(paraname, "union") == 0) {
-         c = G__fgetname_template(paraname, ",)&*[(=");
-         tagnum = G__search_tagname(paraname, 'u');
-         type = 'u';
-      }
-      else if (strcmp(paraname, "enum") == 0) {
-         c = G__fgetname_template(paraname, ",)&*[(=");
-         tagnum = G__search_tagname(paraname, 'e');
-         type = 'i';
-      }
-      else if (strcmp(paraname, "int") == 0) type = 'i' + isunsigned;
-      else if (strcmp(paraname, "char") == 0) type = 'c' + isunsigned;
-      else if (strcmp(paraname, "short") == 0) type = 's' + isunsigned;
-      else if (strcmp(paraname, "long") == 0) {
-         if (',' != c && ')' != c
-               && '(' != c
-            ) {
-            fpos_t pos;
-            int store_line = G__ifile.line_number;
-            int store_c = c;
-            fgetpos(G__ifile.fp, &pos);
-            c = G__fgetname(paraname, ",)&*[(=");
-            if (strcmp(paraname, "long") == 0 || strcmp(paraname, "double") == 0) {
-               if (strcmp(paraname, "long") == 0) {
-                  tagnum = -1;
-                  typenum = -1;
-                  if (isunsigned) {
-                     type = 'm';
-                  }
-                  else {
-                     type = 'n';
-                  }
-               }
-               else {
-                  type = 'q';
-               }
-            }
-            else if (strcmp(paraname, "int") == 0) {
-               type = 'l' + isunsigned;
+      //
+      //  Determine type.
+      //
+      char type = '\0';
+      int tagnum = -1;
+      int typenum = -1;
+      int ptrcnt = 0; // number of pointers seen (pointer count)
+      int isunsigned = 0; // unsigned seen flag and offset for type code
+      //
+      //  Process first keyword of type specifier
+      //  (most type specifiers have only one keyword).
+      //
+      {
+         // Partially handle unsigned and sigend keywords here.  Also do some integral promotions.
+         if (!strcmp(buf, "unsigned") || !strcmp(buf, "signed")) {
+            if (buf[0] == 'u') {
+               isunsigned = -1;
             }
             else {
-               G__ifile.line_number = store_line;
-               fsetpos(G__ifile.fp, &pos);
-               c = store_c;
+               isunsigned = 0;
+            }
+            switch (c) {
+               case ',':
+               case ')':
+               case '&':
+               case '[':
+               case '(':
+               case '=':
+               case '*':
+                  strcpy(buf, "int");
+                  //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+                  break;
+               default:
+                  if (isspace(c)) {
+                     c = G__fgetname(buf, ",)&*[(="); // FIXME: Change to G__getname_template???
+                     //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+                  }
+                  else {
+                     fpos_t pos;
+                     fgetpos(G__ifile.fp, &pos);
+                     int store_line = G__ifile.line_number;
+                     c = G__fgetname(buf, ",)&*[(=");
+                     //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+                     if (strcmp(buf, "short") && strcmp(buf, "int") && strcmp(buf, "long")) {
+                        G__ifile.line_number = store_line;
+                        fsetpos(G__ifile.fp, &pos);
+                        strcpy(buf, "int");
+                        //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+                        c = ' ';
+                     }
+                  }
+                  break;
+            }
+         }
+         if (!strcmp(buf, "class")) {
+            c = G__fgetname_template(buf, ",)&*[(=");
+            //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+            tagnum = G__search_tagname(buf, 'c');
+            type = 'u';
+         }
+         else if (!strcmp(buf, "struct")) {
+            c = G__fgetname_template(buf, ",)&*[(=");
+            //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+            tagnum = G__search_tagname(buf, 's');
+            type = 'u';
+         }
+         else if (!strcmp(buf, "union")) {
+            c = G__fgetname_template(buf, ",)&*[(=");
+            //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+            tagnum = G__search_tagname(buf, 'u');
+            type = 'u';
+         }
+         else if (!strcmp(buf, "enum")) {
+            c = G__fgetname_template(buf, ",)&*[(=");
+            //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+            tagnum = G__search_tagname(buf, 'e');
+            type = 'i';
+         }
+         else if (!strcmp(buf, "int")) {
+            type = 'i' + isunsigned;
+         }
+         else if (!strcmp(buf, "char")) {
+            type = 'c' + isunsigned;
+         }
+         else if (!strcmp(buf, "short")) {
+            type = 's' + isunsigned;
+         }
+         else if (!strcmp(buf, "long")) {
+            if ((c != ',') && (c != ')') && (c != '(')) {
+               fpos_t pos;
+               fgetpos(G__ifile.fp, &pos);
+               int store_line = G__ifile.line_number;
+               int store_c = c;
+               c = G__fgetname(buf, ",)&*[(="); // FIXME: Change to G__fgetname_template???
+               //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+               if (!strcmp(buf, "long") || !strcmp(buf, "double")) {
+                  if (!strcmp(buf, "long")) {
+                     if (isunsigned) {
+                        type = 'm';
+                     }
+                     else {
+                        type = 'n';
+                     }
+                  }
+                  else {
+                     type = 'q';
+                  }
+               }
+               else if (!strcmp(buf, "int")) {
+                  type = 'l' + isunsigned;
+               }
+               else {
+                  G__ifile.line_number = store_line;
+                  fsetpos(G__ifile.fp, &pos);
+                  c = store_c;
+                  type = 'l' + isunsigned;
+               }
+            }
+            else {
                type = 'l' + isunsigned;
             }
          }
+         else if (!strcmp(buf, "float")) {
+            type = 'f' + isunsigned;
+         }
+         else if (!strcmp(buf, "double")) {
+            type = 'd' + isunsigned;
+         }
+         else if (!strcmp(buf, "bool")) {
+            type = 'g';
+         }
+         else if (!strcmp(buf, "void")) {
+            type = 'y';
+         }
+         else if (!strcmp(buf, "FILE")) {
+            type = 'e';
+         }
          else {
-            type = 'l' + isunsigned;
-         }
-      }
-      else if (strcmp(paraname, "float") == 0) type = 'f' + isunsigned;
-      else if (strcmp(paraname, "double") == 0) type = 'd' + isunsigned;
-      else if (strcmp(paraname, "bool") == 0) type = 'g';
-      else if (strcmp(paraname, "void") == 0) type = 'y';
-      else if (strcmp(paraname, "FILE") == 0) type = 'e';
-      else {
-         int store_tagdefining = G__tagdefining;
-         int store_def_tagnum = G__def_tagnum;
-         if (-1 != G__friendtagnum) {
-            G__tagdefining = G__friendtagnum;
-            G__def_tagnum = G__friendtagnum;
-         }
-         typenum = G__defined_typename(paraname);
-         if (-1 == typenum) {
-            tagnum = G__defined_tagname(paraname, 1);
-            if (-1 == tagnum) {
-               if (G__fpundeftype) {
-                  tagnum = G__search_tagname(paraname, 'c');
-                  fprintf(G__fpundeftype, "class %s; /* %s %d */\n", paraname
-                          , G__ifile.name, G__ifile.line_number);
-                  fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", paraname);
-                  G__struct.globalcomp[tagnum] = G__NOLINK;
-                  type = 'u';
+            int store_tagdefining = G__tagdefining;
+            int store_def_tagnum = G__def_tagnum;
+            if (G__friendtagnum != -1) {
+               G__tagdefining = G__friendtagnum;
+               G__def_tagnum = G__friendtagnum;
+            }
+            typenum = G__defined_typename(buf);
+            if (typenum != -1) {
+               tagnum = G__newtype.tagnum[typenum];
+               type = G__newtype.type[typenum];
+               ptrcnt += G__newtype.nindex[typenum];
+               ifunc->param[func_now][iin]->isconst |= G__newtype.isconst[typenum];
+            }
+            else {
+               tagnum = G__defined_tagname(buf, 1);
+               if (tagnum != -1) {
+                  if (G__struct.type[tagnum] == 'e') {
+                     type = 'i';
+                  }
+                  else {
+                     // re-evaluate typedef name in case of template class
+                     if (strchr(buf, '<')) {
+                        typenum = G__defined_typename(buf);
+                     }
+                     type = 'u';
+                  }
                }
                else {
-                  /* In case of f(unsigned x,signed y) */
-                  type = 'i' + isunsigned;
-                  if (!isdigit(paraname[0]) && 0 == isunsigned) {
-                     if (G__dispmsg >= G__DISPWARN) {
-                        G__fprinterr(G__serr,
-                                     "Warning: Unknown type '%s' in function argument handled as int"
-                                     , paraname);
-                        G__printlinenum();
+                  //fprintf(stderr, "G__readansiproto: failed to find tagname: '%s' ... \n", buf);
+                  if (G__fpundeftype) {
+                     tagnum = G__search_tagname(buf, 'c');
+                     fprintf(G__fpundeftype, "class %s; /* %s %d */\n", buf, G__ifile.name, G__ifile.line_number);
+                     fprintf(G__fpundeftype, "#pragma link off class %s;\n\n", buf);
+                     G__struct.globalcomp[tagnum] = G__NOLINK;
+                     type = 'u';
+                  }
+                  else {
+                     // In case of f(unsigned x,signed y)
+                     type = 'i' + isunsigned;
+                     if (!isdigit(buf[0]) && !isunsigned) {
+                        if (G__dispmsg >= G__DISPWARN) {
+                           G__fprinterr(G__serr, "Warning: Unknown type '%s' in function argument handled as int", buf);
+                           G__printlinenum();
+                        }
                      }
                   }
                }
             }
-            else if ('e' == G__struct.type[tagnum]) {
-               type = 'i';
-            }
-            else {
-               /* re-evaluate typedef name in case of template class */
-               if (strchr(paraname, '<')) typenum = G__defined_typename(paraname);
-               type = 'u';
-            }
+            G__tagdefining = store_tagdefining;
+            G__def_tagnum = store_def_tagnum;
          }
-         else {
-            tagnum = G__newtype.tagnum[typenum];
-            type = G__newtype.type[typenum];
-            pointlevel += G__newtype.nindex[typenum];
-            ifunc->param[func_now][iin]->isconst |= G__newtype.isconst[typenum];
-         }
-         G__tagdefining = store_tagdefining;
-         G__def_tagnum = store_def_tagnum;
       }
-
-      /* determine pointer level */
-      while (',' != c && ')' != c) {
-         switch (c) {
-            case '&':
-               ++reftype;
-               c = G__fgetspace();
-               break;
-            case '[':
-               ++arydim;
-               if (G__NOLINK > G__globalcomp && (0 == name[0] || '[' == name[0])) {
-                  fpos_t tmp_pos;
-                  int tmp_line;
-                  int len = strlen(name);
-                  name[len++] = c;
-                  name[len++] = ']';
-                  c = G__fignorestream("],)"); /* <<< */
-                  /* read 'f(double [][30])' or 'f(double [])' */
-                  G__disp_mask = 1000;
-                  fgetpos(G__ifile.fp, &tmp_pos);
-                  tmp_line = G__ifile.line_number;
-                  c = G__fgetstream(name + len, "[=,)");
-                  fsetpos(G__ifile.fp, &tmp_pos);
-                  G__ifile.line_number = tmp_line;
-                  G__disp_mask = 0;
-                  if ('[' == c) {
-                     c = G__fgetstream(name + len, "=,)");
-                     pointlevel = 0;
-                     break;
+      //
+      //  Process the rest of the type specifier and the parameter name.
+      //
+      int is_a_reference = 0;
+      int has_a_default = 0;
+      char param_name[G__LONGLINE]; // Parameter name.
+      param_name[0] = '\0';
+      {
+         int arydim = 0; // Track which array bound we are processing, so we can handle an unspecified length array.
+         while ((c != ',') && (c != ')')) {
+            switch (c) {
+               case EOF: // end-of-file
+                  // -- Error, unexpected end of file, exit.
+                  return 1;
+               case ' ':
+               case '\f':
+               case '\n':
+               case '\r':
+               case '\t':
+               case '\v':
+                  // -- Whitespace, skip it.
+                  c = G__fgetspace();
+                  break;
+               case '.': // ellipses
+                  // -- We have reached an ellipses (must be at end), flag it and we are done.
+                  ifunc->ansi[func_now] = 2;
+                  c = G__fignorestream(",)");
+                  // Note: The enclosing loop will terminate after we break.
+                  break;
+               case '&': // reference
+                  ++is_a_reference;
+                  c = G__fgetspace();
+                  break;
+               case '*': // pointer
+                  ++ptrcnt;
+                  c = G__fgetspace();
+                  break;
+               case '[': // array bound
+                  ++arydim;
+                  if (
+                     (G__globalcomp < G__NOLINK) &&
+                     (
+                        !param_name[0] || // No parameter name given, first array bound.
+                        (param_name[0] == '[') // We are processing a second or greater array bound.
+                     )
+                  ) {
+                     // read 'MyFunc(int [][30])' or 'MyFunc(int [])'
+                     int len = strlen(param_name);
+                     param_name[len++] = c;
+                     param_name[len++] = ']';
+                     // Ignore the given array bound value.
+                     c = G__fignorestream("],)"); // <<<
+                     //
+                     //  Peek ahead looking for another array bound.
+                     //
+                     {
+                        G__disp_mask = 1000;
+                        fpos_t tmp_pos;
+                        fgetpos(G__ifile.fp, &tmp_pos);
+                        int tmp_line = G__ifile.line_number;
+                        c = G__fgetstream(param_name + len, "[=,)");
+                        fsetpos(G__ifile.fp, &tmp_pos);
+                        G__ifile.line_number = tmp_line;
+                        G__disp_mask = 0;
+                     }
+                     if (c == '[') {
+                        // Collect all the rest of the array bounds.
+                        c = G__fgetstream(param_name + len, "=,)");
+                        ptrcnt = 0; // FIXME: This erases all pointers (int* ary[d][d] is broken!)
+                        break;
+                     }
+                     else {
+                        // G__fignorestream("],)") already called above <<<
+                        param_name[0] = 0;
+                     }
                   }
                   else {
-                     /* G__fignorestream("],)") already called above <<< */
-                     name[0] = 0;
+                     c = G__fignorestream("],)");
                   }
-               }
-               else {
-                  c = G__fignorestream("],)");
-               }
-            case '*':
-               ++pointlevel;
-               c = G__fgetspace();
-               break;
-            case '(': /* func(type (*)(type,...)) */
-               if ((-1 != typenum && -1 != G__newtype.parent_tagnum[typenum]) ||
-                     (-1 != tagnum  && -1 != G__struct.parent_tagnum[tagnum])) {
-                  char *px = strrchr(paraname, ' ');
-                  if (px) ++px;
-                  else px = paraname;
-                  strcpy(px, G__type2string(0, tagnum, typenum, 0, 0));
-               }
-               ip = strlen(paraname);
-               if (reftype) paraname[ip++] = '&';
-               reftype = 0;
-               paraname[ip++] = ' ';
-               for (itemp = 0;itemp < pointlevel;itemp++) paraname[ip++] = '*';
-               pointlevel = 0;
-               paraname[ip++] = '(';
-               c = G__fgetstream(paraname + ip, "*)");
-               if ('*' == c) {
-                  int ixx;
-                  paraname[ip++] = c;
-                  c = G__fgetstream(name, ")");
-                  ixx = 0;
-                  while ('*' == name[ixx]) {
-                     paraname[ip++] = '*';
-                     ++ixx;
+                  ++ptrcnt;
+                  c = G__fgetspace();
+                  break;
+               case '=': // default value
+                  // -- Parameter has a default value, collect it, and we are done.
+                  // Collect the rest of the parameter specification as the default text.
+                  has_a_default = 1;
+                  c = G__fgetstream_template(buf, ",)");
+                  // Note: The enclosing loop will terminate after we break.
+                  break;
+               case '(': // Assume a function pointer type, e.g., MyFunc(int, int (*fp)(int, ...), int, ...)
+                  // -- We have a function pointer type.
+                  //
+                  //  If the return type is a typedef or a class, struct, union, or enum,
+                  //  then normalize the typename.
+                  //
+                  if (
+                     ((typenum != -1) && (G__newtype.parent_tagnum[typenum] != -1)) ||
+                     ((tagnum != -1) && (G__struct.parent_tagnum[tagnum] != -1))
+                  ) {
+                     char* p = strrchr(buf, ' ');
+                     if (p) {
+                        ++p;
+                     }
+                     else {
+                        p = buf;
+                     }
+                     strcpy(p, G__type2string(0, tagnum, typenum, 0, 0));
                   }
-                  if (ixx) {
-                     int ixxx = 0;
-                     while (name[ixx]) name[ixxx++] = name[ixx++];
-                     name[ixxx] = 0;
+                  //
+                  //  Normalize the rest of the parameter specification,
+                  //  up to any default value, and collect the parameter name.
+                  //
+                  {
+                     // Handle any ref part of the return type.
+                     // FIXME: This is wrong, cannot have a pointer to a reference!
+                     int i = strlen(buf);
+                     if (is_a_reference) {
+                        buf[i++] = '&';
+                     }
+                     is_a_reference = 0;
+                     buf[i++] = ' ';
+                     // Handle any pointer part of the return type.
+                     // FIXME: This is wrong, cannot have a pointer to a reference!
+                     for (int j = 0; j < ptrcnt; ++j) {
+                        buf[i++] = '*';
+                     }
+                     ptrcnt = 0;
+                     // Start constructing the parameter name part.
+                     buf[i++] = '(';
+                     c = G__fgetstream(buf + i, "*)");
+                     if (c == '*') {
+                        buf[i++] = c;
+                        c = G__fgetstream(param_name, ")");
+                        int j = 0;
+                        for (; param_name[j] == '*'; ++j) {
+                           buf[i++] = '*';
+                        }
+                        if (j) {
+                           int k = 0;
+                           while (param_name[j]) {
+                              param_name[k++] = param_name[j++];
+                           }
+                           param_name[k] = 0;
+                        }
+                     }
+                     if (c == ')') {
+                        buf[i++] = ')';
+                     }
+                     // Copy out the rest of the parameter specification (up to a default value, if any).
+                     c = G__fdumpstream(buf + i, ",)=");
                   }
-               }
-               if (')' == c) paraname[ip++] = ')';
-               c = G__fdumpstream(paraname + ip, ",)=");
-               ip = strlen(paraname);
-               paraname[ip++] = '\0';
+                  buf[strlen(buf)] = '\0';
+                  //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
 #ifndef G__OLDIMPLEMENTATION2191
-               typenum = G__search_typename(paraname, '1', -1, 0);
-               type = '1';
-#else
-               typenum = G__search_typename(paraname, 'Q', -1, 0);
-               type = 'Q';
-#endif
-               tagnum = -1;
-               break;
-            case '=':
-               isdefault = 1;
-               c = G__fgetstream_template(paraname, ",)");
-               break;
-            case '.':
-               ifunc->ansi[func_now] = 2;
-               c = G__fignorestream(",)");
-               break;
-            case EOF:
-               return(1);
-            default:
-               if (isspace(c)) c = G__fgetspace();
-               else {
-                  if (strcmp(name, "long") == 0 && strcmp(paraname, "long") == 0) {
+                  typenum = G__search_typename(buf, '1', -1, 0);
+                  type = '1';
+#else // G__OLDIMPLEMENTATION2191
+                  typenum = G__search_typename(buf, 'Q', -1, 0);
+                  type = 'Q';
+#endif // G__OLDIMPLEMENTATION2191
+                  tagnum = -1;
+                  break;
+               default: // Consume "long long", "const", "const*", array bounds, param name (with def val)
+                  // -- Not whitespace or separator.
+                  if (!strcmp(param_name, "long") && !strcmp(buf, "long")) { // Process "long long" type.
                      type = 'n';
                      tagnum = -1;
                      typenum = -1;
                   }
-                  name[0] = c;
-                  c = G__fgetstream(name + 1, "[=,)& \t");
-                  if (strcmp(name, "const") == 0) {
-                     ifunc->param[func_now][iin]->isconst |= G__PCONSTVAR;
-                     name[0] = 0;
+                  // Collect next keyword or id into param_name.
+                  param_name[0] = c;
+                  c = G__fgetstream(param_name + 1, "[=,)& \t");
+                  if (!strcmp(param_name, "const")) { // handle const keyword
+                     ifunc->param[func_now][iin]->isconst |= G__PCONSTVAR; // FIXME: This is intentionally wrong!  Fix the code that depends on this!
+                     param_name[0] = 0;
                   }
-                  if (strcmp(name, "const*") == 0) {
-                     ifunc->param[func_now][iin]->isconst |= G__CONSTVAR;
-                     ++pointlevel;
-                     name[0] = 0;
+                  if (!strcmp(param_name, "const*")) { // handle const keyword and a single pointer spec
+                     ifunc->param[func_now][iin]->isconst |= G__CONSTVAR; // FIXME: This is intentionally wrong!  Fix the code that depends on this!
+                     ++ptrcnt;
+                     param_name[0] = 0;
                   }
-                  else {
-                     while ('[' == c || ']' == c) {
-                        if ('[' == c) {
-                           ++pointlevel;
+                  else { // Process any array bounds and possible default value.
+                     while ((c == '[') || (c == ']')) { // We have array bounds.
+                        if (c == '[') { // Consume an array bound, converting it into a pointer.
+                           ++ptrcnt;
                            ++arydim;
-                           if (G__NOLINK > G__globalcomp && 2 == arydim) {
-                              int len = strlen(name);
-                              if (']' == name[0]) len = 0;
-                              strcpy(name + len, "[]");
-                              pointlevel -= 2;
-                              len = strlen(name);
+                           if ((G__globalcomp < G__NOLINK) && (arydim == 2)) { // We are generating dictionaries and this is the second array bound.
+                              // -- We are generating dictionaries and have just seen the beginning of the second array bound.
+                              int len = strlen(param_name);
+                              if (param_name[0] == ']') {
+                                 len = 0;
+                              }
+                              strcpy(param_name + len, "[]");
+                              ptrcnt -= 2;
+                              len = strlen(param_name);
                               fseek(G__ifile.fp, -1, SEEK_CUR);
-                              if (G__dispsource) G__disp_mask = 1;
-                              c = G__fgetstream(name + len, "=,)");
+                              if (G__dispsource) {
+                                 G__disp_mask = 1;
+                              }
+                              c = G__fgetstream(param_name + len, "=,)");
+                              // Note: Either we next process a default value, or enclosing loop terminates.
                               break;
                            }
                         }
+                        // Skip till next array bound, default value, or end of parameter.
                         c = G__fignorestream("[=,)");
                      }
-                     if ('=' == c) {
-                        c = G__fgetstream_template(paraname, ",)");
-                        isdefault = 1;
+                     if (c == '=') { // We have a default value.
+                        has_a_default = 1;
+                        c = G__fgetstream_template(buf, ",)");
+                        //fprintf(stderr, "G__readansiproto: buf: '%s'\n", buf);
+                        // Note: Enclosing loop will terminate after we break.
                      }
                   }
-               }
-               break;
+                  break;
+            }
          }
       }
       ifunc->param[func_now][iin]->p_tagtable = tagnum;
       ifunc->param[func_now][iin]->p_typetable = typenum;
-      if (isdefault) {
+      if (!has_a_default) {
+         // -- No default text or value.
+         ifunc->param[func_now][iin]->pdefault = 0;
+         ifunc->param[func_now][iin]->def = 0;
+      } else {
+         // -- Remember the default text, and then evaluate it.
+         ifunc->param[func_now][iin]->pdefault = (G__value*) malloc(sizeof(G__value));
+         ifunc->param[func_now][iin]->def = (char*) malloc(strlen(buf) + 1);
+         strcpy(ifunc->param[func_now][iin]->def, buf);
+         if (buf[0] == '(') {
+            int len = strlen(buf);
+            if (
+               (len > 5) &&
+               (buf[len-4] != '*') &&
+               !strcmp(")()", buf + len - 3) &&
+               strchr(buf, '<')
+            ) {
+               int i = 1;
+               for (; i < len - 3; ++i) {
+                  buf[i-1] = buf[i];
+               }
+               strcpy(buf + i - 1, "()");
+            }
+         }
          int store_def_tagnum = G__def_tagnum;
          int store_tagdefining = G__tagdefining;
          int store_prerun = G__prerun;
          int store_decl = G__decl;
-         ifunc->param[func_now][iin]->def =
-            (char*)malloc(strlen(paraname) + 1);
-         strcpy(ifunc->param[func_now][iin]->def, paraname);
-         ifunc->param[func_now][iin]->pdefault = (G__value*)malloc(sizeof(G__value));
-         store_var_type = G__var_type;
+         int store_var_type = G__var_type;
          G__var_type = 'p';
-         if (-1 != G__def_tagnum) {
+         int store_tagnum_default = 0;
+         int store_def_struct_member_default = 0;
+         int store_exec_memberfunc = 0;
+         if (G__def_tagnum != -1) {
             store_tagnum_default = G__tagnum;
-            store_def_struct_member_default = G__def_struct_member;
             store_exec_memberfunc = G__exec_memberfunc;
+            store_def_struct_member_default = G__def_struct_member;
             G__tagnum = G__def_tagnum;
             G__exec_memberfunc = 1;
             G__def_struct_member = 0;
          }
-         if ('(' == paraname[0]) {
-            int paranamelen = strlen(paraname);
-            if (paranamelen > 5 && strcmp(")()", paraname + paranamelen - 3) == 0 &&
-                  strchr(paraname, '<')
-                  && '*' != paraname[paranamelen-4]
-               ) {
-               int ix;
-               for (ix = 1;ix < paranamelen - 3;ix++) paraname[ix-1] = paraname[ix];
-               strcpy(paraname + ix - 1, "()");
-            }
-         }
-         if (G__NOLINK == G__globalcomp) {
+         if (G__globalcomp == G__NOLINK) {
             G__prerun = 0;
             G__decl = 1;
          }
          {
-            G__value *tmpx;
-            struct G__ifunc_table_internal *store_pifunc = G__p_ifunc;
+            struct G__ifunc_table_internal* store_pifunc = G__p_ifunc;
             G__p_ifunc = &G__ifunc;
-            if ((G__CPPLINK == G__globalcomp || R__CPPLINK == G__globalcomp) && G__decl && G__prerun)
+            if (G__decl && G__prerun && ((G__globalcomp == G__CPPLINK) || (G__globalcomp == R__CPPLINK))) {
                G__noerr_defined = 1;
-            *ifunc->param[func_now][iin]->pdefault = G__getexpr(paraname);
-            if ((G__CPPLINK == G__globalcomp || R__CPPLINK == G__globalcomp) && G__decl && G__prerun)
+            }
+            *ifunc->param[func_now][iin]->pdefault = G__getexpr(buf);
+            if (G__decl && G__prerun && ((G__globalcomp == G__CPPLINK) || (G__globalcomp == R__CPPLINK))) {
                G__noerr_defined = 0;
-            tmpx = ifunc->param[func_now][iin]->pdefault;
-            if (reftype && (toupper(tmpx->type) != toupper(type) ||
-                            tmpx->tagnum != tagnum) &&
-                  0 == pointlevel) {
-               char tmpy[G__ONELINE];
-               sprintf(tmpy, "%s(%s)"
-                       , G__type2string(type, tagnum, -1, 0, 0), paraname);
-               *tmpx = G__getexpr(tmpy);
-               if ('u' == tmpx->type) tmpx->ref = tmpx->obj.i;
+            }
+            G__value* val = ifunc->param[func_now][iin]->pdefault;
+            if (is_a_reference && !ptrcnt && ((toupper(val->type) != toupper(type)) || (val->tagnum != tagnum))) {
+               // -- If binding a reference to default rvalue and the types do not match, do a cast.
+               char tmp[G__ONELINE];
+               sprintf(tmp, "%s(%s)", G__type2string(type, tagnum, -1, 0, 0), buf);
+               *val = G__getexpr(tmp);
+               if (val->type == 'u') {
+                  val->ref = val->obj.i;
+               }
             }
             G__p_ifunc = store_pifunc;
          }
@@ -2125,88 +2238,77 @@ int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
          G__decl = store_decl;
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
-         if (-1 != G__def_tagnum) {
+         if (G__def_tagnum != -1) {
             G__tagnum = store_tagnum_default;
             G__exec_memberfunc = store_exec_memberfunc;
             G__def_struct_member = store_def_struct_member_default;
          }
          G__var_type = store_var_type;
       }
-      else { /* !isdefault */
-         ifunc->param[func_now][iin]->pdefault = (G__value*)NULL;
-         ifunc->param[func_now][iin]->def = (char*)NULL;
+      if (isupper(type) && ptrcnt) {
+         // Note: This can only happen if the type was a typedef to an array of pointers.
+         ++ptrcnt;
       }
-      if (reftype) {
-         if (isupper(type) && pointlevel) pointlevel++;
-         if (-1 != typenum && G__newtype.reftype[typenum] >= G__PARAP2P) {
-            pointlevel += G__newtype.reftype[typenum] - G__PARAP2P + 2;
-            type = tolower(type);
-         }
-         switch (pointlevel) {
-            case 0:
-               ifunc->param[func_now][iin]->type = type;
+      if ((typenum != -1) && (G__newtype.reftype[typenum] >= G__PARAP2P)) {
+         ptrcnt += G__newtype.reftype[typenum] - G__PARAP2P + 2;
+         type = tolower(type);
+      }
+      switch (ptrcnt) {
+         case 0:
+            ifunc->param[func_now][iin]->type = type;
+            if (!is_a_reference) {
+               ifunc->param[func_now][iin]->reftype = G__PARANORMAL;
+            }
+            else {
                ifunc->param[func_now][iin]->reftype = G__PARAREFERENCE;
-               break;
-            case 1:
-               ifunc->param[func_now][iin]->type = toupper(type);
+            }
+            break;
+         case 1:
+            ifunc->param[func_now][iin]->type = toupper(type);
+            if (!is_a_reference) {
+               ifunc->param[func_now][iin]->reftype = G__PARANORMAL;
+            }
+            else {
                ifunc->param[func_now][iin]->reftype = G__PARAREFERENCE;
-               break;
-            default:
-               ifunc->param[func_now][iin]->type = toupper(type);
-               ifunc->param[func_now][iin]->reftype = pointlevel - 2 + G__PARAREFP2P;
-               break;
-         }
+            }
+            break;
+         default:
+            ifunc->param[func_now][iin]->type = toupper(type);
+            if (!is_a_reference) {
+               ifunc->param[func_now][iin]->reftype = ptrcnt - 2 + G__PARAP2P;
+            }
+            else {
+               ifunc->param[func_now][iin]->reftype = ptrcnt - 2 + G__PARAREFP2P;
+            }
+            break;
+      }
+      // Remember the parameter name.
+      if (!param_name[0]) {
+         ifunc->param[func_now][iin]->name = 0;
       }
       else {
-         if (isupper(type) && pointlevel) pointlevel++;
-         if (-1 != typenum && G__newtype.reftype[typenum] >= G__PARAP2P) {
-            pointlevel += G__newtype.reftype[typenum] - G__PARAP2P + 2;
-            type = tolower(type);
-         }
-         switch (pointlevel) {
-            case 0:
-               ifunc->param[func_now][iin]->type = type;
-               ifunc->param[func_now][iin]->reftype = G__PARANORMAL;
-               break;
-            case 1:
-               ifunc->param[func_now][iin]->type = toupper(type);
-               ifunc->param[func_now][iin]->reftype = G__PARANORMAL;
-               break;
-            default:
-               ifunc->param[func_now][iin]->type = toupper(type);
-               ifunc->param[func_now][iin]->reftype = pointlevel - 2 + G__PARAP2P;
-         }
+         ifunc->param[func_now][iin]->name = (char*) malloc(strlen(param_name) + 1);
+         strcpy(ifunc->param[func_now][iin]->name, param_name);
       }
-
-      /* paranemter name omitted */
-      if (name[0]) {
-         ifunc->param[func_now][iin]->name = (char*)malloc(strlen(name) + 1);
-         strcpy(ifunc->param[func_now][iin]->name, name);
-      }
-      else {
-         ifunc->param[func_now][iin]->name = (char*)NULL;
-      }
-      ++iin;
-   } /* while(')'!=c) */
-
+   }
    ifunc->para_nu[func_now] = iin;
-   return(0);
+   return 0;
 }
 
 //______________________________________________________________________________
 int G__matchpointlevel(int param_reftype, int formal_reftype)
 {
-   // -- FIXME: Describe this function!
-   switch (param_reftype) {
-      case G__PARANORMAL:
-      case G__PARAREFERENCE:
-         if (G__PARANORMAL == formal_reftype || G__PARAREFERENCE == formal_reftype)
-            return(1);
-         else
-            return(0);
-      default:
-         return(formal_reftype == param_reftype);
-   }
+// -- FIXME: Describe this function!
+switch (param_reftype) {
+   case G__PARANORMAL:
+   case G__PARAREFERENCE:
+      if (G__PARANORMAL == formal_reftype || G__PARAREFERENCE == formal_reftype)
+         return(1);
+      else
+         return(0);
+   default:
+      return(formal_reftype == param_reftype);
+}
 }
 
 //______________________________________________________________________________
@@ -2493,48 +2595,46 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
          case 'u':
             if ((formal_reftype == G__PARAREFERENCE) && recursive) {
                switch (param_type) {
-                  case 'u':
-                     {
-                        /* reference to derived class can be converted to reference to base
-                         * class. add offset, modify char *parameter and G__value *param */
-                        int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i);
-                        if (baseoffset != -1) {
-                           param->tagnum = formal_tagnum;
-                           param->obj.i += baseoffset;
-                           param->ref += baseoffset;
-                           match = 1;
-                        }
+                  case 'u': {
+                     /* reference to derived class can be converted to reference to base
+                      * class. add offset, modify char *parameter and G__value *param */
+                     int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i);
+                     if (baseoffset != -1) {
+                        param->tagnum = formal_tagnum;
+                        param->obj.i += baseoffset;
+                        param->ref += baseoffset;
+                        match = 1;
                      }
-                     break;
+                  }
+                  break;
                }
             }
             break;
 #endif
          case 'U':
             switch (param_type) {
-               case 'U':
-                  {
-                     /* Pointer to derived class can be converted to
-                      * pointer to base class.
-                      * add offset, modify char *parameter and
-                      * G__value *param
-                      */
+               case 'U': {
+                  /* Pointer to derived class can be converted to
+                   * pointer to base class.
+                   * add offset, modify char *parameter and
+                   * G__value *param
+                   */
 #ifdef G__VIRTUALBASE
-                     int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i);
+                  int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum, param->obj.i);
 #else // G__VIRTUALBASE
-                     int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum);
+                  int baseoffset = G__ispublicbase(formal_tagnum, param_tagnum);
 #endif // G__VIRTUALBASE
-                     if (baseoffset != -1) {
-                        param->tagnum = formal_tagnum;
-                        param->obj.i += baseoffset;
-                        param->ref = 0;
-                        match = 1;
-                     }
-                     else {
-                        match = 0;
-                     }
+                  if (baseoffset != -1) {
+                     param->tagnum = formal_tagnum;
+                     param->obj.i += baseoffset;
+                     param->ref = 0;
+                     match = 1;
                   }
-                  break;
+                  else {
+                     match = 0;
+                  }
+               }
+               break;
                case 'Y':
 #ifndef G__OLDIMPLEMENTATION2191
                case '1': // questionable
@@ -2776,21 +2876,21 @@ int G__param_match(char formal_type, int formal_tagnum, G__value* default_parame
                }
             }
 #else // ON181
-            // All conversions failed.
-            if (G__dispsource) {
-               G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv, G__templevel);
-            }
-            G__pop_tempobject();
-#ifdef G__ASM
-            if (rewindflag) {
-               // --
-#ifdef G__ASM_DBG
-               if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "REWINDSTACK cancelled.  %s:%d\n", __FILE__, __LINE__);
+               // All conversions failed.
+               if (G__dispsource) {
+                  G__fprinterr(G__serr, "!!!Implicit conversion %s,%d tried, but failed\n", conv, G__templevel);
                }
+               G__pop_tempobject();
+#ifdef G__ASM
+               if (rewindflag) {
+                  // --
+#ifdef G__ASM_DBG
+                  if (G__asm_dbg) {
+                     G__fprinterr(G__serr, "REWINDSTACK cancelled.  %s:%d\n", __FILE__, __LINE__);
+                  }
 #endif // G__ASM_DBG
-               G__inc_cp_asm(-2, 0);
-            }
+                  G__inc_cp_asm(-2, 0);
+               }
 #endif //  G__ASM
 #endif // ON181
             // --

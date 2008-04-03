@@ -2164,7 +2164,7 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
             ) {
                if ((tolower(G__var_type) != 'c') && strchr(temp, ',')) {
                   reg = G__null;
-                  G__genericerror("Error: Syntax error");
+                  G__genericerror("Error: G__define_var:2167 Syntax error");
                }
                else {
                   reg = G__getexpr(temp);

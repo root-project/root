@@ -52,11 +52,8 @@ typedef struct _tagSOME_STRUCT
 #pragma link C typedef SOME_STRUCT3;
 #pragma link C typedef PSOME_STRUCT3; 
 
-#if G__CINTVERSION < 70000000
-#pragma link C union SOME_STRUCT::; 
-#else
-#pragma link C union _tagSOME_STRUCT::*;
-#endif
+//#pragma link C union SOME_STRUCT::*; 
+#pragma link C union _tagSOME_STRUCT::*; 
 
 
 #endif

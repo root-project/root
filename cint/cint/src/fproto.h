@@ -169,7 +169,6 @@ char* G__savestring(char** pbuf,char* name);
 struct G__ifunc_table* G__get_ifunc_ref(struct G__ifunc_table_internal*);
 void G__reset_ifunc_refs_for_tagnum(int tagnum);
 void G__make_ifunctable(char *funcheader);
-int G__readansiproto(struct G__ifunc_table_internal *ifunc,int func_now);
 int G__interpret_func(G__value *result7,const char *funcname,struct G__param *libp,int hash,struct G__ifunc_table_internal *p_ifunc,int funcmatch,int memfunc_flag);
 struct G__ifunc_table_internal *G__ifunc_exist(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int mask);
 struct G__ifunc_table_internal *G__ifunc_ambiguous(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int derivedtagnum);
@@ -330,6 +329,7 @@ struct G__ifunc_table_internal *G__get_methodhandle4(char *funcname
                                            ,int withInheritance,int isconst);
 #endif //G__NOSTUBS
 
+void G__setnewtype_settypeum(int typenum);
 int G__separate_parameter(char *original,int *pos,char *param);
 int G__parse_parameter_link(char *paras);
 int G__cppif_p2memfunc(FILE *fp);

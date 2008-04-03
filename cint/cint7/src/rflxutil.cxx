@@ -52,11 +52,18 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
    //  Get the tagnum part.
    //
    {
+      //for (::Reflex::Type current = in_type; current; current = current.ToType()) {
+      //   if (current.IsClass() || current.IsUnion() || current.IsEnum()) {
+      //      *out_tagnum = G__get_properties(current)->tagnum;
+      //      break;
+      //   }
+      //}
       *out_tagnum = -1;
-      for (::Reflex::Type current = in_type; current; current = current.ToType()) {
-         if (current.IsClass() || current.IsUnion() || current.IsEnum()) {
-            *out_tagnum = G__get_properties(current)->tagnum;
-            break;
+      ::Reflex::Type ty = in_type.RawType();
+      if (ty) {
+         G__RflxProperties* prop = G__get_properties(ty);
+         if (prop) {
+            *out_tagnum = prop->tagnum;
          }
       }
    }
@@ -70,7 +77,10 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
       *out_typenum = -1;
       for (::Reflex::Type current = in_type; current; current = current.ToType()) {
          if (current.IsTypedef()) {
-            *out_typenum = G__get_properties(current)->typenum;
+            G__RflxProperties* prop = G__get_properties(current);
+            if (prop) {
+               *out_typenum = prop->typenum;
+            }
             break;
          }
       }
@@ -108,10 +118,10 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
    {
       bool isref = in_type.IsReference();
       ::Reflex::Type current = in_type; 
-      for (; !isref && current && current.IsTypedef();) {
-         current = current.ToType();
-         isref = current.IsReference();
-      }
+      //for (; !isref && current && current.IsTypedef();) {
+      //   current = current.ToType();
+      //   isref = current.IsReference();
+      //}
       // Count pointer levels.
       int pointers = 0;
       for (; current && current.IsPointer(); current = current.ToType()) {
@@ -142,21 +152,27 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
          }
       }
       else {
-         bool ptr_or_ref_seen = false;
-         bool accumulated_const = false;
-         for (::Reflex::Type current = in_type; current; current = current.ToType()) {
-            accumulated_const = accumulated_const || current.IsConst();
-            if (current.IsPointer() || current.IsReference()) {
-               accumulated_const = false;
-               if (!ptr_or_ref_seen) {
-                  ptr_or_ref_seen = true;
-                  if (current.IsConst()) {
-                     *out_constvar |= G__PCONSTVAR;
-                  }
-               }
-            }
+         //bool ptr_or_ref_seen = false;
+         //bool accumulated_const = false;
+         //for (::Reflex::Type current = in_type; current; current = current.ToType()) {
+         //   accumulated_const = accumulated_const || current.IsConst();
+         //   if (current.IsPointer() || current.IsReference()) {
+         //      accumulated_const = false;
+         //      if (!ptr_or_ref_seen) {
+         //         ptr_or_ref_seen = true;
+         //         if (current.IsConst()) {
+         //            *out_constvar |= G__PCONSTVAR;
+         //         }
+         //      }
+         //   }
+         //}
+         //if (accumulated_const) {
+         //   *out_constvar |= G__CONSTVAR;
+         //}
+         if (in_type.IsConst() && in_type.IsPointer()) {
+            *out_constvar |= G__PCONSTVAR;
          }
-         if (accumulated_const) {
+         if (in_type.RawType().IsConst()) {
             *out_constvar |= G__CONSTVAR;
          }
       }

@@ -597,48 +597,52 @@ extern "C" char* G__fulltagname(int tagnum, int mask_dollar)
 extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftype, int isconst)
 {
    static char stringbuf[G__LONGLINE];
-   char *string;
-   int len;
-   int i;
+   char* string = stringbuf;
    int ref = G__REF(reftype);
    reftype = G__PLVL(reftype);
+   int len;
+   int i;
    ::Reflex::Type typenum = G__Dict::GetDict().GetTypedef(typenum_in);
-   string = stringbuf;
-   if (isconst&G__CONSTVAR && (!typenum || !(isconst&G__get_isconst(typenum)))) {
+   if ((isconst & G__CONSTVAR) && (!typenum || !(isconst & G__get_isconst(typenum.ToType())))) {
       strcpy(string, "const ");
       string += 6;
    }
-   if (!typenum && tagnum > 0) {
-      char *ss = G__struct.name[tagnum];
-      if (strcmp(ss, "G__longlong") == 0 && !G__defined_macro("G__LONGLONGTMP")) {
+   // Handle G__longlong, G__ulonglong, and G__longdouble early
+   if (!typenum && (tagnum != -1)) {
+      char* ss = G__struct.name[tagnum];
+      if (!strcmp(ss, "G__longlong") && !G__defined_macro("G__LONGLONGTMP")) {
          strcpy(stringbuf, "long long");
-         return(stringbuf);
+         return stringbuf;
       }
-      if (strcmp(ss, "G__ulonglong") == 0 && !G__defined_macro("G__LONGLONGTMP")) {
+      if (!strcmp(ss, "G__ulonglong") && !G__defined_macro("G__LONGLONGTMP")) {
          strcpy(stringbuf, "unsigned long long");
-         return(stringbuf);
+         return stringbuf;
       }
-      if (strcmp(ss, "G__longdouble") == 0 && !G__defined_macro("G__LONGLONGTMP")) {
+      if (!strcmp(ss, "G__longdouble") && !G__defined_macro("G__LONGLONGTMP")) {
          strcpy(stringbuf, "long double");
-         return(stringbuf);
+         return stringbuf;
       }
    }
 #ifndef G__OLDIMPLEMENTATION1503
    if (
-      -1 == typenum &&
-      tagnum > 0 &&
-      G__struct.defaulttypenum[tagnum] &&
-      'u' == G__get_type(G__struct.defaulttypenum[tagnum])
+      !typenum &&
+      (tagnum != 0) &&
+      (G__struct.defaulttypenum[tagnum] != -1) &&
+      (G__get_type(G__Dict::GetDict().GetTypedef(G__struct.defaulttypenum[tagnum])) == 'u')
    ) {
-      typenum = G__struct.defaulttypenum[tagnum];
+      typenum = G__Dict::GetDict().GetTypedef(G__struct.defaulttypenum[tagnum]);
    }
-#endif
-   if (typenum) {
-      sprintf(string, "%s", typenum.Name(::Reflex::SCOPED).c_str());
-#ifndef G__OLDIMPLEMENTATION1329
-      if (typenum.IsArray()) {
+#endif // G__OLDIMPLEMENTATION1503
+   //
+   //  Handle base type.
+   //
+   if (typenum) { // typedef
+      strcpy(string, typenum.Name(::Reflex::SCOPED).c_str());
+      if (G__get_nindex(typenum)) { // We have array bounds.
          int pointlevel = 0;
-         if (isupper(type)) pointlevel = 1;
+         if (isupper(type)) {
+            pointlevel = 1;
+         }
          switch (reftype) {
             case G__PARANORMAL:
             case G__PARAREFERENCE:
@@ -651,23 +655,25 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
          switch (pointlevel) {
             case 0:
                type = tolower(type);
-               if (G__PARAREFERENCE != reftype) reftype = G__PARANORMAL;
+               if (reftype != G__PARAREFERENCE) {
+                  reftype = G__PARANORMAL;
+               }
                break;
             case 1:
                type = toupper(type);
-               if (G__PARAREFERENCE != reftype) reftype = G__PARANORMAL;
+               if (reftype != G__PARAREFERENCE) {
+                  reftype = G__PARANORMAL;
+               }
                break;
             default:
                if (pointlevel > 0) {
                   type = toupper(type);
                   reftype = pointlevel;
                }
-               else {}
                break;
          }
       }
-#endif // G__OLDIMPLEMENTATION1329
-      if (isupper(G__get_type(typenum))) {
+      if (isupper(G__get_type(typenum))) { // We are a pointer.
          switch (G__get_reftype(typenum)) {
             case G__PARANORMAL:
             case G__PARAREFERENCE:
@@ -686,16 +692,14 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
                   }
                }
                else {
-                  G__type2string(type, tagnum, -1, reftype, isconst);
-                  /* return buffer is static. So, stringbuf is set above */
+                  G__type2string(type, tagnum, -1, reftype, isconst); // Note: The return buffer is static, so stringbuf is set above.
                   goto endof_type2string;
                }
                break;
-
-               break;
             default:
+               // --
 #ifndef G__OLDIMPLEMENTATION2191
-               if ('1' == type) {
+               if (type == '1') {
                   switch (reftype) {
                      case G__PARAREFERENCE:
                      case G__PARANORMAL:
@@ -709,9 +713,8 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
                         break;
                   }
                }
-               else
 #else // G__OLDIMPLEMENTATION2191
-               if ('Q' == type) {
+               if (type == 'Q') {
                   if (isupper(type)) {
                      switch (reftype) {
                         case G__PARAREFERENCE:
@@ -727,36 +730,43 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
                      }
                   }
                }
-               else
 #endif // G__OLDIMPLEMENTATION2191
-                  if (islower(type) || G__get_reftype(typenum) > reftype) {
+               else {
+                  if (islower(type) || G__get_reftype(typenum.ToType()) > reftype) {
                      G__type2string(type, tagnum, -1, reftype, isconst);
                      goto endof_type2string;
                   }
-                  else if (G__get_reftype(typenum) == reftype) {
+                  else if (G__get_reftype(typenum.ToType()) == reftype) {
                      reftype = G__PARANORMAL;
                      type = tolower(type);
                   }
-                  else if (G__get_reftype(typenum) + 1 == reftype) {
+                  else if (G__get_reftype(typenum.ToType()) + 1 == reftype) {
                      reftype = G__PARANORMAL;
                   }
                   else {
-                     reftype = G__PARAP2P + reftype - G__get_reftype(typenum) - 2;
+                     reftype = G__PARAP2P + reftype - G__get_reftype(typenum.ToType()) - 2;
                   }
+               }
                break;
          }
       }
    }
-   else if (-1 != tagnum && tagnum != 0) {
+   else if (tagnum != -1) { // class/struct/union/enum/namespace
       if (tagnum >= G__struct.alltag || !G__struct.name[tagnum]) {
          strcpy(stringbuf, "(invalid_class)");
-         return(stringbuf);
+         return stringbuf;
       }
-      if ('$' == G__struct.name[tagnum][0]) {
-         if ('\0' == G__struct.name[tagnum][1]) {
-            G__ASSERT('e' == G__struct.type[tagnum]);
+      if (G__struct.name[tagnum][0] == '$') { // unnamed class/struct/union/enum/namespace
+         len = 0;
+         if (!G__struct.name[tagnum][1]) { // name is only '$', must be unnamed enum
+            G__ASSERT(G__struct.type[tagnum] == 'e');
             strcpy(string, "enum ");
             len = 5;
+         }
+      }
+      else { // nothing special, normal named struct
+         if ((G__globalcomp == G__CPPLINK) || G__iscpp) {
+            len = 0;
          }
          else {
             switch (G__struct.type[tagnum]) {
@@ -772,60 +782,22 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
                case 'u':
                   strcpy(string, "union ");
                   break;
+               case 'n':
+                  sprintf(string, "namespace ");
+                  break;
                case 'a':
-               default:
                   strcpy(string, "");
+                  break;
+               case 0:
+                  sprintf(string, "(unknown) ");
                   break;
             }
             len = strlen(string);
          }
       }
-      else {
-         if (G__CPPLINK == G__globalcomp
-               || G__iscpp
-            ) {
-            len = 0;
-         }
-         else {
-            // Let's first make sure that this does not exist as a typedef
-            // with the same name.  FIXME (actually should the name of the type
-            // really be with the keyword?.
-            ::Reflex::Type t = G__find_typedef(G__fulltagname(tagnum, 1));
-            if (!t && !t.IsTypedef()) {
-
-               switch (G__struct.type[tagnum]) {
-                  case 'e':
-                     strcpy(string, "enum ");
-                     break;
-                  case 'c':
-                     strcpy(string, "class ");
-                     break;
-                  case 's':
-                     strcpy(string, "struct ");
-                     break;
-                  case 'u':
-                     strcpy(string, "union ");
-                     break;
-                  case 'n':
-                     strcpy(string, "namespace ");
-                     break;
-                  case 'a':
-                     strcpy(string, "");
-                     break;
-                  case 0:
-                     strcpy(string, "(unknown) ");
-                     break;
-               }
-               len = strlen(string);
-            }
-            else {
-               len = 0;
-            }
-         }
-      }
       sprintf(string + len, "%s", G__fulltagname(tagnum, 1));
    }
-   else {
+   else { // fundamental type
       switch (tolower(type)) {
          case 'b':
             strcpy(string, "unsigned char");
@@ -871,9 +843,9 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
             break;
 #ifndef G__OLDIMPLEMENTATION2191
          case '1':
-#else
+#else // G__OLDIMPLEMENTATION2191
          case 'q':
-#endif
+#endif // G__OLDIMPLEMENTATION2191
          case 'y':
             strcpy(string, "void");
             break;
@@ -891,12 +863,11 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
 #endif
          case 'p':
             sprintf(string, "#define");
-            return(string);
+            return string;
          case 'o':
-            string[0] = '\0'; /* sprintf(string,""); */
-            return(string);
+            string[0] = '\0';
+            return string;
          case 'a':
-            /* G__ASSERT(isupper(type)); */
             strcpy(string, "G__p2memfunc");
             type = tolower(type);
             break;
@@ -905,66 +876,74 @@ extern "C" char* G__type2string(int type, int tagnum, int typenum_in, int reftyp
             break;
       }
    }
-
-   switch (type) { /* before tolower(type) */
-         /* #define G__OLDIMPLEMENTATION785 */
-      case 'q':
-      case 'a':
-         break;
-      default:
-         if (isupper(type)) {
-            if ((isconst&G__PCONSTVAR) && G__PARANORMAL == reftype)
-               strcpy(string + strlen(string), " *const");
-#ifdef G__OLDIMPLEMENTATION1859_YET
-            else if ((isconst&G__PCONSTVAR) && G__PARAREFERENCE == reftype) {
-               if ((isconst&G__CONSTVAR) == 0) strcpy(string + strlen(string), " const*&");
-               else strcpy(string + strlen(string), "*&");
-               reftype = G__PARANORMAL;
-            }
-#endif
-            else
-               strcpy(string + strlen(string), "*");
+   //
+   //  Handle pointer and reference parts of type.
+   //
+   if ((type != 'q') && (type != 'a')) {
+      // Take care of the first pointer level.
+      if (isupper(type)) {
+         if ((isconst & G__PCONSTVAR) && (reftype == G__PARANORMAL)) {
+            strcpy(string + strlen(string), " *const");
          }
-         switch (reftype) {
-            case G__PARANORMAL:
-               break;
-            case G__PARAREFERENCE:
-               if (!typenum || G__PARAREFERENCE != G__get_reftype(typenum)) {
-                  if (isconst&G__PCONSTVAR
-                        && 0 == (isconst&G__CONSTVAR)
-                     ) strcpy(string + strlen(string), " const&");
-                  else strcpy(string + strlen(string), "&");
+         else {
+            strcpy(string + strlen(string), "*");
+         }
+      }
+      // Handle the second and greater pointer levels,
+      // and possibly a reference with zero or one pointer.
+      switch (reftype) {
+         case G__PARANORMAL:
+            break;
+         case G__PARAREFERENCE:
+            if (!typenum || G__get_reftype(typenum.ToType()) != G__PARAREFERENCE) {
+               if ((isconst & G__PCONSTVAR) && !(isconst & G__CONSTVAR)) {
+                  strcpy(string + strlen(string), " const&");
                }
+               else {
+                  strcpy(string + strlen(string), "&");
+               }
+            }
+            break;
+         case G__PARAP2P:
+            if (isconst & G__PCONSTVAR) {
+               strcpy(string + strlen(string), " *const");
+            }
+            else {
+               strcpy(string + strlen(string), "*");
+            }
+            break;
+         case G__PARAP2P2P:
+            if (isconst & G__PCONSTVAR) {
+               strcpy(string + strlen(string), " **const");
+            }
+            else {
+               strcpy(string + strlen(string), "**");
+            }
+            break;
+         default:
+            if ((reftype > 10) || (reftype < 0)) { // workaround
                break;
-            case G__PARAP2P:
-               if (isconst&G__PCONSTVAR) strcpy(string + strlen(string), " *const");
-               else strcpy(string + strlen(string), "*");
-               break;
-            case G__PARAP2P2P:
-               if (isconst&G__PCONSTVAR) strcpy(string + strlen(string), " **const");
-               else strcpy(string + strlen(string), "**");
-               break;
-            default:
-               if (reftype > 10 || reftype < 0) break; /* workaround */
-               if (isconst&G__PCONSTVAR) strcpy(string + strlen(string), " ");
-               for (i = G__PARAP2P;i <= reftype;i++) strcpy(string + strlen(string), "*");
-               if (isconst&G__PCONSTVAR) strcpy(string + strlen(string), " const");
-               break;
-         }
-         break;
+            }
+            if (isconst & G__PCONSTVAR) {
+               strcpy(string + strlen(string), " ");
+            }
+            for (i = G__PARAP2P; i <= reftype; ++i) {
+               strcpy(string + strlen(string), "*");
+            }
+            if (isconst & G__PCONSTVAR) {
+               strcpy(string + strlen(string), " const");
+            }
+            break;
+      }
    }
-
    endof_type2string:
-   if (ref) {
+   // Handle a reference to two or more pointer levels.
+   if (ref) { // We are a reference to a pointer to xxx.
       strcat(stringbuf, "&");
    }
-
    if (strlen(stringbuf) >= sizeof(stringbuf)) {
-      G__fprinterr(G__serr,
-                   "Error in G__type2sting: string length (%d) greater than buffer length (%d)!",
-                   strlen(stringbuf),
-                   sizeof(stringbuf));
-      G__genericerror((char*)NULL);
+      G__fprinterr(G__serr, "Error in G__type2string: string length (%d) greater than buffer length (%d)!", strlen(stringbuf), sizeof(stringbuf));
+      G__genericerror(0);
    }
    return stringbuf;
 }

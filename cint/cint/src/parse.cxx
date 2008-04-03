@@ -4365,13 +4365,33 @@ static int G__defined_type(char* type_name, int len)
    //  Check for a typedef name.
    //
    G__typenum = G__defined_typename(type_name);
-   if (G__typenum == -1) {
+   if (G__typenum != -1) {
+      // -- We have a typedef name.
+      // Note: G__var_type was set by the G__defined_typename() call above to G__newtype.type[G__typenum] + ptroffset.
+      G__tagnum = G__newtype.tagnum[G__typenum];
+      G__reftype += G__newtype.reftype[G__typenum];
+      G__typedefnindex = G__newtype.nindex[G__typenum];
+      G__typedefindex = G__newtype.index[G__typenum];
+      // FIXME: We ignore G__newtype.isconst[G__typenum]!
+   }
+   else {
       // -- It was not a typedef name.
       //
       //  Check for a class, enum, namespace, struct, or union name.
       //
       G__tagnum = G__defined_tagname(type_name, 1);
-      if (G__tagnum == -1) {
+      if (G__tagnum != -1) {
+         // -- Ok, we found it, now check again as a typedef name (FIXME: Why???).
+         G__typenum = G__defined_typename(type_name);
+         if (G__typenum != -1) {
+            // Note: G__var_type was set by the G__defined_typename() call above to G__newtype.type[G__typenum] + ptroffset.
+            G__reftype += G__newtype.reftype[G__typenum];
+            G__typedefnindex = G__newtype.nindex[G__typenum];
+            G__typedefindex = G__newtype.index[G__typenum];
+            // FIXME: We ignore G__newtype.isconst[G__typenum]!
+         }
+      }
+      else {
          // -- Nope, it was not a class, enum, namespace, struct, or union name.
          if (G__fpundeftype && (cin != '(') && ((G__func_now == -1) || (G__def_tagnum != -1))) {
             // -- We have been asked to make a list of undefined type names.
@@ -4393,23 +4413,7 @@ static int G__defined_type(char* type_name, int len)
             return 0;
          }
       }
-      else {
-         // -- Ok, we found it, now check again as a typedef name (FIXME: Why???).
-         G__typenum = G__defined_typename(type_name);
-         if (G__typenum != -1) {
-            G__reftype += G__newtype.reftype[G__typenum];
-            G__typedefnindex = G__newtype.nindex[G__typenum];
-            G__typedefindex = G__newtype.index[G__typenum];
-         }
-      }
       G__var_type = 'u';
-   }
-   else {
-      // -- We have a typedef name.
-      G__tagnum = G__newtype.tagnum[G__typenum];
-      G__reftype += G__newtype.reftype[G__typenum];
-      G__typedefnindex = G__newtype.nindex[G__typenum];
-      G__typedefindex = G__newtype.index[G__typenum];
    }
    //
    //  Hack an enumerator.

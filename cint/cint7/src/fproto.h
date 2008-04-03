@@ -174,7 +174,6 @@ char *G__charformatter(int ifmt,struct G__param *libp,char *result);
 int G__istypename(char *temp);
 char* G__savestring(char** pbuf,char* name);
 void G__make_ifunctable(char *funcheader);
-int G__readansiproto(std::vector<Reflex::Type> &i_params_type, std::vector<std::pair<std::string,std::string> > &i_params_names,std::vector<G__value*> &default_vals, char &i_ansi);
 int G__interpret_func(G__value *result7,char *funcname,struct G__param *libp,int hash,const ::Reflex::Scope &p_ifunc,int funcmatch,int memfunc_flag);
 int G__interpret_func(G__value *result7,struct G__param *libp,int hash,const ::Reflex::Member &func,int funcmatch,int memfunc_flag);
 int G__function_signature_match(const Reflex::Member& func1

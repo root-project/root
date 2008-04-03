@@ -3211,7 +3211,7 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
    fprintf(fp,               "   result7->ref = (long) p;\n");
    fprintf(fp,               "   G__set_tagnum(result7,G__get_linked_tagnum(&%s));\n", G__mark_linked_tagnum(tagnum));
 
-   G__if_ary_union_reset(ifunc);
+   //G__if_ary_union_reset(ifunc);
    G__cppif_dummyfuncname(fp);
 
    fprintf(fp,               "}\n\n");
@@ -4163,7 +4163,7 @@ void Cint::Internal::G__cppif_genfunc(FILE* fp, FILE* /*hfp*/, int tagnum, const
 #endif // __x86_64__ && (__linux || __APPLE__)
       // --
    }
-   G__if_ary_union_reset(ifunc);
+   //G__if_ary_union_reset(ifunc);
    G__cppif_dummyfuncname(fp);
    fprintf(fp, "}\n\n");
 #ifndef G__OLDIMPLEMENTATION1823
@@ -4422,6 +4422,9 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
    int reftype = 0;
    int isconst = 0;
    G__get_cint5_type_tuple(param_type, &type, &tagnum, &typenum, &reftype, &isconst);
+   //if (typenum != -1) {
+   //   reftype = G__PARANORMAL;
+   //}
    // Promote link-off typedef to link-on if used in function.
    if (
       (typenum != -1) &&
@@ -4454,7 +4457,7 @@ void Cint::Internal::G__cppif_paratype(FILE* fp, const ::Reflex::Member& ifunc, 
    ) {
       switch (reftype) {
          case G__PARANORMAL:
-            if ((typenum != -1) && param_type.IsTypedef() && param_type.ToType().IsReference()) {
+            if ((typenum != -1) && param_type.ToType().IsReference()) {
                reftype = G__PARAREFERENCE;
                typenum = -1;
             }

@@ -297,6 +297,9 @@ G__value G__default_parameter;
 * loop compile mode turned on
 *********************************************/
 #define G__ASM
+#ifndef G__ASM_DBG
+#define G__ASM_DBG
+#endif // G__ASM_DBG
 
 /*********************************************
 * Old style compiled function name buffer size

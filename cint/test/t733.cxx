@@ -12,10 +12,6 @@
 using namespace std;
 
 int main() {
-#if (G__CINTVERSION < 70000000))
-      // emulate Reflex's global namespace:
-      cout << endl;
-#endif
   G__ClassInfo c;
   G__DataMemberInfo m;
   while(c.Next() && strcmp(c.Name(),"bool")!=0 && 

@@ -322,10 +322,12 @@ static int G__get_newname(char* new_name)
       }
       if (isspace(cin)) {
          int store_len;
-         if (strcmp(new_name, "operator") == 0 ||
-               strcmp(new_name, "*operator") == 0 ||
-               strcmp(new_name, "*&operator") == 0 ||
-               strcmp(new_name, "&operator") == 0) {
+         if (
+            !strcmp(new_name, "operator") ||
+            !strcmp(new_name, "*operator") ||
+            !strcmp(new_name, "*&operator") ||
+            !strcmp(new_name, "&operator")
+         ) {
             /* read real name */
             cin = G__fgetstream(temp1, "(");
             /* came to
