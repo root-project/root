@@ -8,6 +8,8 @@
 #include "Math/SMatrix.h"
 
 #include <string>
+
+bool gUseCPUTime = false; //default use real time
    
 using namespace ROOT::Math; 
 void kalman_do(const char * machine,int sym, int cut);
@@ -40,9 +42,17 @@ int read_data(const char *  machine, double * s, double * ss, double * t) {
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *ms; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *mss; 
   SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *mt; 
-  file->GetObject("SMatrix",ms);   
-  file->GetObject("SMatrix_sym",mss);   
-  file->GetObject("TMatrix",mt); 
+  if (!gUseCPUTime) {
+     file->GetObject("SMatrix",ms);   
+     file->GetObject("SMatrix_sym",mss);   
+     file->GetObject("TMatrix",mt); 
+  }
+  else { 
+     // use CPU time (the object have a name with _2)
+     file->GetObject("SMatrix_2",ms);   
+     file->GetObject("SMatrix_sym_2",mss);   
+     file->GetObject("TMatrix_2",mt); 
+  }
   if (ms == 0 || mss == 0 || mt == 0) return -1;
   for (int i=0; i<n; ++i){
     s[i]  = ms->apply(i);

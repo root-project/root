@@ -54,25 +54,31 @@ public:
 #endif
 
   // run the all tests
-  void  run() { 
-    test_smatrix_sym_kalman(); 
-    test_smatrix_kalman(); 
-    test_tmatrix_kalman(); 
+  int  run() { 
+     int iret = 0;
+     iret |= test_smatrix_sym_kalman(); 
+     iret |= test_smatrix_kalman(); 
+     iret |= test_tmatrix_kalman(); 
 #ifdef HAVE_CLHEP
-    test_clhep_kalman(); 
+     iret |= test_clhep_kalman(); 
 #endif
+     std::cout << "\n\n";
 
-    return; 
+     return iret; 
   }
+
+private: 
+   double fX2sum;
+   double fC2sum;
 
 }; 
 
 
 #define TR(N1,N2) \
-  { TestRunner<N1,N2> tr; tr.run(); }
+   { TestRunner<N1,N2> tr; if (tr.run()) return -1; }
 
 
-void runTest() { 
+int runTest() { 
 
 #ifndef RUN_ALL_POINTS
   TR(2,5) 
@@ -142,6 +148,7 @@ void runTest() {
   TR(10,7)
   TR(10,8)
 #endif
+     return 0;   
 }
 
 
@@ -181,9 +188,9 @@ void fillRandomSym(TRandom & r, M  & m, unsigned int first, unsigned int start =
 
 
 void printTime(TStopwatch & time, std::string s) { 
-  int pr = std::cout.precision(8);
-  std::cout << s << "\t" << " time = " << time.RealTime() << "\t(sec)\t" 
-	    << time.CpuTime() << "\t(CPU)"  
+  int pr = std::cout.precision(4);
+  std::cout << std::setw(12) << s << "\t" << " Real time = " << time.RealTime() << "\t(sec)\tCPU time = " 
+	    << time.CpuTime() << "\t(sec)"  
 	    << std::endl;
   std::cout.precision(pr);
 }
@@ -297,19 +304,17 @@ class TimeReport {
     TFile file(fileName.c_str(),"RECREATE"); 
     gSystem->Load("libSmatrix");
 
+    // save RealTime results
     for (ResultTable::iterator itr = fResult1.begin(); itr != fResult1.end(); ++itr) { 
       int ret = file.WriteObject(&(itr->second),(itr->first).c_str() ); 
       if (ret ==0) std::cerr << "==> Error saving results in ROOT file " << fileName << std::endl;  
     }
-    file.Close();
 
-    std::string fileName2 = "CPU_" + fileName; 
-    TFile file2(fileName2.c_str(),"RECREATE"); 
-    gSystem->Load("libSmatrix");
-
+    // save CPU time results
     for (ResultTable::iterator itr = fResult2.begin(); itr != fResult2.end(); ++itr) { 
-      int ret = file.WriteObject(&(itr->second),(itr->first).c_str() ); 
-      if (ret ==0) std::cerr << "==> Error saving results in ROOT file " << fileName << std::endl;  
+       std::string typeName = itr->first + "_2";
+       int ret = file.WriteObject(&(itr->second), typeName.c_str() ); 
+       if (ret ==0) std::cerr << "==> Error saving results in ROOT file " << fileName << std::endl;  
     }
     file.Close();
   }
@@ -390,9 +395,9 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_kalman() {
   int second = NDIM2;
   
 
-  std::cout << "************************************************\n";
-  std::cout << "  SMatrix kalman test  "   <<  first << " x " << second  << std::endl;
-  std::cout << "************************************************\n";
+  std::cout << "****************************************************************************\n";
+  std::cout << "\t\tSMatrix kalman test  "   <<  first << " x " << second  << std::endl;
+  std::cout << "****************************************************************************\n";
 
   
   
@@ -495,9 +500,21 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_kalman() {
   }
   //tr.dump();
 
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  int iret = 0;                                 
+  double d = std::abs(x2sum-fX2sum);
+  if ( d > 1.E-6 * fX2sum  ) {     
+     std::cout << "ERROR: difference found in x2sum = " << x2sum << "\tref = " << fX2sum << 
+     "\tdiff = " << d <<  std::endl;
+     iret = 1; 
+  }
+  d = std::abs(c2sum-fC2sum); 
+  if ( d > 1.E-6 * fC2sum  ) {     
+     std::cout << "ERROR: difference found in c2sum = " << c2sum << "\tref = " << fC2sum << 
+     "\tdiff = " << d <<  std::endl;
+     iret = 1; 
+  }
 
-  return 0;
+  return iret;
 }
 
 template <unsigned int NDIM1, unsigned int NDIM2>
@@ -525,9 +542,9 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_sym_kalman() {
   int second = NDIM2;
   
 
-  std::cout << "************************************************\n";
-  std::cout << "  SMatrix_SyM kalman test  "   <<  first << " x " << second  << std::endl;
-  std::cout << "************************************************\n";
+  std::cout << "****************************************************************************\n";
+  std::cout << "\t\tSMatrix_Sym kalman test  "   <<  first << " x " << second  << std::endl;
+  std::cout << "****************************************************************************\n";
 
   
   
@@ -647,7 +664,12 @@ int TestRunner<NDIM1,NDIM2>::test_smatrix_sym_kalman() {
     }
   }
 
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  // smatrix_sym is always first (skip check test) 
+  fX2sum = x2sum; 
+  fC2sum = c2sum;
+  if (x2sum == 0 || c2sum == 0) {     
+     std::cout << "WARNING: x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  }
 
   return 0;
 }
@@ -674,12 +696,10 @@ int TestRunner<NDIM1,NDIM2>::test_tmatrix_kalman() {
   int second = NDIM2;
 
 
-  std::cout << "************************************************\n";
-  std::cout << "  TMatrix Kalman test  "   <<  first << " x " << second  << std::endl;
-  std::cout << "************************************************\n";
+  std::cout << "****************************************************************************\n";
+  std::cout << "\t\tTMatrix Kalman test  "   <<  first << " x " << second  << std::endl;
+  std::cout << "****************************************************************************\n";
   
-  
-   
   int npass = NITER; 
   TRandom3 r(111);
   double x2sum = 0,c2sum = 0;
@@ -762,11 +782,26 @@ int TestRunner<NDIM1,NDIM2>::test_tmatrix_kalman() {
       //   }
   }  
   //tr.dump();
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  //std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
   
   //gReporter.print();
 
-  return 0;
+  int iret = 0;                                 
+  double d = std::abs(x2sum-fX2sum);
+  if ( d > 1.E-6 * fX2sum  ) {     
+     std::cout << "ERROR: difference found in x2sum = " << x2sum << "\tref = " << fX2sum << 
+     "\tdiff = " << d <<  std::endl;
+     iret = 1; 
+  }
+  d = std::abs(c2sum-fC2sum); 
+  if ( d > 1.E-6 * fC2sum  ) {     
+     std::cout << "ERROR: difference found in c2sum = " << c2sum << "\tref = " << fC2sum << 
+     "\tdiff = " << d <<  std::endl;
+     iret = 1; 
+  }
+
+
+  return iret;
 }
 
 
@@ -792,11 +827,9 @@ int TestRunner<NDIM1,NDIM2>::test_clhep_kalman() {
   int second = NDIM2;
 
 
-  std::cout << "************************************************\n";
+  std::cout << "****************************************************************************\n";
   std::cout << "  CLHEP Kalman test  "   <<  first << " x " << second  << std::endl;
-  std::cout << "************************************************\n";
-  
-  
+  std::cout << "****************************************************************************\n";
    
   int npass = NITER; 
   TRandom3 r(111);
@@ -866,17 +899,34 @@ int TestRunner<NDIM1,NDIM2>::test_clhep_kalman() {
       //   }
   }  
   //tr.dump();
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  //std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
   
-  return 0;
+  int iret = 0;                                 
+  double d = std::abs(x2sum-fX2sum);
+  if ( d > 1.E-6 * fX2sum  ) {     
+     std::cout << "ERROR: difference found in x2sum = " << x2sum << "\tref = " << fX2sum << 
+     "\tdiff = " << d <<  std::endl;
+     iret = 1; 
+  }
+  d = std::abs(c2sum-fC2sum); 
+  if ( d > 1.E-6 * fC2sum  ) {     
+     std::cout << "ERROR: difference found in c2sum = " << c2sum << "\tref = " << fC2sum << 
+     "\tdiff = " << d <<  std::endl;
+     iret = 1; 
+  }
+
+  return iret;
 }
 #endif
 
 
 int main(int argc, char *argv[]) { 
 
-
-  runTest(); 
+  
+   if (runTest() ) {
+      std::cout << "\nERROR - stressKalman FAILED - exit!" << std::endl ;
+      return -1;
+   }; 
 
   gReporter.print(std::cout); 
   std::string fname = "kalman"; 
@@ -886,5 +936,6 @@ int main(int argc, char *argv[]) {
   }
    
   gReporter.save(fname+".root");
-  
+
+  return 0;
 }
