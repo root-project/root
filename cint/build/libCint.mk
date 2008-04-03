@@ -43,8 +43,6 @@ BCO        = $(addsuffix $(G__CFG_OBJEXT),$(addprefix $(G__CFG_COREVERSION)/src/
 
 STUBSCXX     = $(addprefix $(G__CFG_COREVERSION)/src/,symbols.cxx)
 
-debug := $(shell echo $(STUBSCXX)-- 1>&2)
-
 COREO        = $(filter-out $(CXXAPIO),\
 	      $(filter-out $(RFLXO),\
 	      $(subst .cxx,$(G__CFG_OBJEXT),\
@@ -106,7 +104,7 @@ $(CINTLIBSHARED): $(LIBOBJECTS) $(SETUPO) $(REFLEXLIBDEP)
 	  $(G__CFG_READLINELIB4SHLIB) $(G__CFG_CURSESLIB4SHLIB) $(G__CFG_DEFAULTLIBS) $(REFLEXLINK)
 ifneq ($(G__CFG_MAKEIMPLIB),)
 	$(subst @imp@,$(@:$(G__CFG_SOEXT)=$(G__CFG_IMPLIBEXT)),\
-	  $(subst @so@,$@,$(G__CFG_MAKEIMPLIB)))
+	  $(subst @so@,${PWD}/$@,$(G__CFG_MAKEIMPLIB)))
 endif
 
 ############################################################################
