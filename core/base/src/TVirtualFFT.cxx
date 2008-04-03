@@ -310,7 +310,7 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
                return 0;
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
-            fft->Init(flag, 0, r2rkind);
+            if (fft) fft->Init(flag, 0, r2rkind);
             if (!opt.Contains("K"))
                fgFFT = fft;
             return fft;
