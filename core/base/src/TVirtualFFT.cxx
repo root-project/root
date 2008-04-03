@@ -88,6 +88,7 @@
 #include "TVirtualFFT.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
+#include "TError.h"
 
 TVirtualFFT *TVirtualFFT::fgFFT    = 0;
 TString      TVirtualFFT::fgDefault   = "";
@@ -193,12 +194,12 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
          if (opt.Contains("HC") || opt.Contains("DHT")) pluginname = "fftwr2r";
          if ((h=gROOT->GetPluginManager()->FindHandler("TVirtualFFT", pluginname))) {
             if (h->LoadPlugin()==-1) {
-               Error("FFT", "handler not found");
+               ::Error("TVirtualFFT::FFT", "handler not found");
                return 0;
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
             if (!fft) {
-               Error("FFT", "plugin failed to create TVirtualFFT object");
+               ::Error("TVirtualFFT::FFT", "plugin failed to create TVirtualFFT object");
                return 0;
             }
             Int_t *kind = new Int_t[1];
@@ -215,7 +216,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
             return fft;
          }
          else {
-            Error("FFT", "plugin not found");
+            ::Error("TVirtualFFT::FFT", "plugin not found");
             return 0;
          }
       }
@@ -310,12 +311,12 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
          pluginname = "fftwr2r";
          if ((h=gROOT->GetPluginManager()->FindHandler("TVirtualFFT", pluginname))) {
             if (h->LoadPlugin()==-1){
-               Error("SineCosine", "handler not found");
+               ::Error("TVirtualFFT::SineCosine", "handler not found");
                return 0;
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
             if (!fft) {
-               Error("SineCosine", "plugin failed to create TVirtualFFT object");
+               ::Error("TVirtualFFT::SineCosine", "plugin failed to create TVirtualFFT object");
                return 0;
             }
             fft->Init(flag, 0, r2rkind);
@@ -323,7 +324,7 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
                fgFFT = fft;
             return fft;
          } else {
-            Error("SineCosine", "handler not found");
+            ::Error("TVirtualFFT::SineCosine", "handler not found");
             return 0;
          }
       }
@@ -342,7 +343,7 @@ TVirtualFFT* TVirtualFFT::GetCurrentTransform()
    if (fgFFT)
       return fgFFT;
    else{
-      Warning("GetCurrentTransform", "fgFFT is not defined yet");
+      ::Warning("TVirtualFFT::GetCurrentTransform", "fgFFT is not defined yet");
       return 0;
    }
 }
