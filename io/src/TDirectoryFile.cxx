@@ -303,7 +303,7 @@ void TDirectoryFile::CleanTargets()
 
    TDirectory::CleanTargets();
 
-   // After CleanTargets either gFile was change appropriately
+   // After CleanTargets either gFile was changed appropriately
    // by a cd() or needs to be set to zero.
    if (gFile == this) {
       gFile = 0;
