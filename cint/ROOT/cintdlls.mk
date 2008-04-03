@@ -6,7 +6,7 @@
 .PHONY: cintdlls distclean-cintdlls clean-cintdlls
 
 # no: iterator pair
-# already in libCore (base/inc/Linkdef2.h): string 
+# already in libCore (core/base/inc/Linkdef2.h): string 
 CINTSTLDLLNAMES = vector vectorbool list deque map map2 set \
                   multimap multimap2 multiset \
                   stack queue exception stdexcept climits complex
@@ -23,8 +23,8 @@ CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDIRSTL)/,$(CINTSTLDLLNAMES)) \
 CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
 
 .PRECIOUS: \
-	$(addsuffix .cc ,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
-	$(addsuffix .o  ,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .cc ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
+	$(addsuffix .o  ,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .cxx,$(addprefix $(CINTDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .o  ,$(addprefix $(CINTDIRDLLSTL)/G__cpp_,$(CINTSTLDLLNAMES))) \
 	$(addsuffix .cxx,$(addprefix $(CINTDIRDLLSTL)/rootcint_,$(CINTSTLDLLNAMES))) \
@@ -38,39 +38,39 @@ CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
 CINTDICTDLLS =
 ifneq ($(findstring vector,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libvectorDict.$(SOEXT)
-$(CINTDIRSTL)/vector.dll: metautils/src/stlLoader_vector.o
+$(CINTDIRSTL)/vector.dll: core/metautils/src/stlLoader_vector.o
 endif
 ifneq ($(findstring list,$(CINTDLLS)),)
 CINTDICTDLLS += lib/liblistDict.$(SOEXT)
-$(CINTDIRSTL)/list.dll: metautils/src/stlLoader_list.o
+$(CINTDIRSTL)/list.dll: core/metautils/src/stlLoader_list.o
 endif
 ifneq ($(findstring deque,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libdequeDict.$(SOEXT)
-$(CINTDIRSTL)/deque.dll: metautils/src/stlLoader_deque.o
+$(CINTDIRSTL)/deque.dll: core/metautils/src/stlLoader_deque.o
 endif
 ifneq ($(findstring map,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libmapDict.$(SOEXT)
 CINTDICTDLLS += lib/libmap2Dict.$(SOEXT)
-$(CINTDIRSTL)/map.dll: metautils/src/stlLoader_map.o
-$(CINTDIRSTL)/map2.dll: metautils/src/stlLoader_map2.o
+$(CINTDIRSTL)/map.dll: core/metautils/src/stlLoader_map.o
+$(CINTDIRSTL)/map2.dll: core/metautils/src/stlLoader_map2.o
 endif
 ifneq ($(findstring set,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libsetDict.$(SOEXT)
-$(CINTDIRSTL)/set.dll: metautils/src/stlLoader_set.o
+$(CINTDIRSTL)/set.dll: core/metautils/src/stlLoader_set.o
 endif
 ifneq ($(findstring multimap,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libmultimapDict.$(SOEXT)
 CINTDICTDLLS += lib/libmultimap2Dict.$(SOEXT)
-$(CINTDIRSTL)/multimap.dll: metautils/src/stlLoader_multimap.o
-$(CINTDIRSTL)/multimap2.dll: metautils/src/stlLoader_multimap2.o
+$(CINTDIRSTL)/multimap.dll: core/metautils/src/stlLoader_multimap.o
+$(CINTDIRSTL)/multimap2.dll: core/metautils/src/stlLoader_multimap2.o
 endif
 ifneq ($(findstring multiset,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libmultisetDict.$(SOEXT)
-$(CINTDIRSTL)/multiset.dll: metautils/src/stlLoader_multiset.o
+$(CINTDIRSTL)/multiset.dll: core/metautils/src/stlLoader_multiset.o
 endif
 ifneq ($(findstring valarray,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libvalarrayDict.$(SOEXT)
-$(CINTDIRSTL)/valarray.dll: metautils/src/stlLoader_valarray.o
+$(CINTDIRSTL)/valarray.dll: core/metautils/src/stlLoader_valarray.o
 endif
 
 CINTDICTMAPS = $(CINTDICTDLLS:.$(SOEXT)=.rootmap)
@@ -81,7 +81,7 @@ ALLCINTDLLS = $(CINTDLLS) $(CINTDICTDLLS)
 ALLLIBS    += $(ALLCINTDLLS)
 ALLMAPS    += $(CINTDICTMAPS)
 
-INCLUDEFILES += $(addsuffix .d,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLLNAMES)))\
+INCLUDEFILES += $(addsuffix .d,$(addprefix core/metautils/src/stlLoader_,$(CINTSTLDLLNAMES)))\
    $(CINTDIRL)/posix/mktypes.d $(CINTDIRL)/posix/exten.d
 
 cintdlls: $(ALLCINTDLLS)
@@ -166,10 +166,10 @@ $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $(filter-out $(MAINLIBS),$^)
 	$(CINTDLLSOEXTCMD)
 
-metautils/src/stlLoader_%.cc: metautils/src/stlLoader.cc
+core/metautils/src/stlLoader_%.cc: core/metautils/src/stlLoader.cc
 	cp -f $< $@
 
-metautils/src/stlLoader_%.o: metautils/src/stlLoader_%.cc
+core/metautils/src/stlLoader_%.o: core/metautils/src/stlLoader_%.cc
 	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
@@ -219,17 +219,17 @@ $(CINTDIRDLLS)/sys/ipc.dll: $(CINTDIRL)/G__c_ipc.o
 ##### ipc special treatment - END
 
 ##### dictionaries
-$(CINTDIRDLLSTL)/rootcint_%.cxx: metautils/src/%Linkdef.h $(ROOTCINTTMPDEP)
+$(CINTDIRDLLSTL)/rootcint_%.cxx: core/metautils/src/%Linkdef.h $(ROOTCINTTMPDEP)
 	$(ROOTCINTTMP) -f $@ -c \
 	   $(subst multi,,${*:2=}) \
-	   metautils/src/$*Linkdef.h
+	   core/metautils/src/$*Linkdef.h
 
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.cxx,$(CINTDICTDLLS)): $(ROOTCINTTMPDEP)
 
 $(CINTDICTMAPS): lib/lib%Dict.rootmap: $(RLIBMAP) $(MAKEFILEDEP)
 	$(RLIBMAP) -o $@ -l \
-		    $*.dll -c metautils/src/$*Linkdef.h
+		    $*.dll -c core/metautils/src/$*Linkdef.h
 
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDIRDLLSTL)/rootcint_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $(filter-out $(MAINLIBS),$^)
@@ -243,7 +243,7 @@ clean-cintdlls:
 	  rm -f $(CINTDIRDLLSTL)/rootcint_$${cintdll}.o \
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.o \
 	  $(CINTDIRL)/G__c_$${cintdll}.o \
-	  metautils/src/stlLoader_$${cintdll}.o; done)
+	  core/metautils/src/stlLoader_$${cintdll}.o; done)
 	@rm -f $(ALLCINTDLLS) \
 	  $(CINTDIRL)/posix/exten.o $(CINTDIRDLLS)/posix.* \
 	  $(CINTDIRDLLS)/ipc.*
@@ -257,7 +257,7 @@ distclean-cintdlls: clean-cintdlls
 	  $(CINTDIRDLLSTL)/G__cpp_$${cintdll}.* \
 	  $(CINTDIRL)/G__cpp_$${cintdll}.* \
 	  $(CINTDIRL)/G__c_$${cintdll}.* \
-	  metautils/src/stlLoader_$${cintdll}.*; done)
+	  core/metautils/src/stlLoader_$${cintdll}.*; done)
 	@rm -f $(ALLCINTDLLS) $(CINTDICTMAPS) \
 	  $(CINTDIRL)/posix/mktypes$(EXEEXT)
 ifeq ($(PLATFORM),macosx)

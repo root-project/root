@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := clib
+MODNAME      := clib
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -32,6 +33,8 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CLIBH))
 INCLUDEFILES += $(CLIBDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(CLIBDIRI)/%.h
 		cp $< $@
 
@@ -39,17 +42,17 @@ $(CLIBDS):      $(CLIBDIRI)/Getline.h $(CLIBL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(CLIBDIRI)/Getline.h $(CLIBL)
 
-all-clib:       $(CLIBO) $(CLIBDO)
+all-$(MODNAME): $(CLIBO) $(CLIBDO)
 
-clean-clib:
+clean-$(MODNAME):
 		@rm -f $(CLIBO) $(CLIBDO)
 
-clean::         clean-clib
+clean::         clean-$(MODNAME)
 
-distclean-clib: clean-clib
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(CLIBDEP) $(CLIBDS) $(CLIBDH)
 
-distclean::     distclean-clib
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(CLIBO):       PCHCXXFLAGS =

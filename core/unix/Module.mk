@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := unix
+MODNAME      := unix
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -30,6 +31,8 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(UNIXH))
 INCLUDEFILES += $(UNIXDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(UNIXDIRI)/%.h
 		cp $< $@
 
@@ -37,14 +40,14 @@ $(UNIXDS):      $(UNIXH) $(UNIXL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(UNIXH) $(UNIXL)
 
-all-unix:       $(UNIXO) $(UNIXDO)
+all-$(MODNAME): $(UNIXO) $(UNIXDO)
 
-clean-unix:
+clean-$(MODNAME):
 		@rm -f $(UNIXO) $(UNIXDO)
 
-clean::         clean-unix
+clean::         clean-$(MODNAME)
 
-distclean-unix: clean-unix
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(UNIXDEP) $(UNIXDS) $(UNIXDH)
 
-distclean::     distclean-unix
+distclean::     distclean-$(MODNAME)

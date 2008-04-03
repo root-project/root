@@ -1093,7 +1093,7 @@ esac
 # and for sanity of source e.g. pcre-*.tar.gz must exist
 # which might not be the case if source was unpacked with StuffIt
 if test "x$platform" = "xmacosx" ; then
-   if test ! -f pcre/src/pcre-*.tar.gz ; then
+   if test ! -f core/pcre/src/pcre-*.tar.gz ; then
       echo "Source tree does not contain expected files, please unpack"
       echo "using tar and not StuffIt"
       exit 1
@@ -4504,8 +4504,9 @@ rm -f lib/libRXML* bin/libRXML* bin/xproofd etc/system.rootmap
 rm -f lib/libProofGui* bin/libProofGui* bin/xrdgsiproxy
 rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
 rm -f lib/libASPluginGS.*
-rm -f mathcore/src/G__MathCore32.*
-rm -f xrootd/src/headers.d asimage/src/headers.d
+rm -f math/mathcore/src/G__MathCore32.*
+rm -f xrootd/src/headers.d
+rm -f asimage/src/headers.d asimage/src/G__ASImageGS.*
 
 ######################################################################
 #

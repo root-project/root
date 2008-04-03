@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := newdelete
+MODNAME      := newdelete
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -28,6 +29,8 @@ ALLLIBS     += $(NEWLIB)
 INCLUDEFILES += $(NEWDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(NEWDIRI)/%.h
 		cp $< $@
 
@@ -35,14 +38,14 @@ $(NEWLIB):      $(NEWO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNew.$(SOEXT) $@ "$(NEWO)" "$(NEWLIBEXTRA)"
 
-all-new:        $(NEWLIB)
+all-$(MODNAME): $(NEWLIB)
 
-clean-new:
+clean-$(MODNAME):
 		@rm -f $(NEWO)
 
-clean::         clean-new
+clean::         clean-$(MODNAME)
 
-distclean-new:  clean-new
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(NEWDEP) $(NEWLIB)
 
-distclean::     distclean-new
+distclean::     distclean-$(MODNAME)

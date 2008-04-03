@@ -11,7 +11,7 @@ ifeq ($(INCLUDEPCHRULES),)
 
 PCHHEADERS    = TObject.h
 
-PCHEXTRASRC   = base/src/precompile.cxx
+PCHEXTRASRC   = core/base/src/precompile.cxx
 PCHEXTRAOBJ   = $(PCHEXTRASRC:.cxx=.o)
 PCHEXTRADEP   = $(PCHEXTRASRC:.cxx=.d)
 PCHEXTRAHDRI  = config/precompile.h.in

@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := zip
+MODNAME      := zip
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -58,17 +59,19 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ZIPH))
 INCLUDEFILES += $(ZIPDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(ZIPDIRI)/%.h
 		cp $< $@
 
-all-zip:        $(ZIPO)
+all-$(MODNAME): $(ZIPO)
 
-clean-zip:
+clean-$(MODNAME):
 		@rm -f $(ZIPO)
 
-clean::         clean-zip
+clean::         clean-$(MODNAME)
 
-distclean-zip:  clean-zip
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ZIPDEP)
 
-distclean::     distclean-zip
+distclean::     distclean-$(MODNAME)

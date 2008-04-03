@@ -3,7 +3,8 @@
 #
 # Author: Philippe Canal 9/1/2004
 
-MODDIR         := metautils
+MODNAME        := metautils
+MODDIR         := core/$(MODNAME)
 MODDIRS        := $(MODDIR)/src
 MODDIRI        := $(MODDIR)/inc
 
@@ -30,25 +31,27 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAUTILSH))
 INCLUDEFILES += $(METAUTILSDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(METAUTILSDIRI)/%.h
 		cp $< $@
 
 # $(ROOTCINTTMP) not yet known at this stage, use explicit path of rootcint_tmp
-$(METAUTILSDS): $(METAUTILSH) $(METAUTILSL) utils/src/rootcint_tmp.o $(ORDER_) utils/src/rootcint_tmp$(EXEEXT)
+$(METAUTILSDS): $(METAUTILSH) $(METAUTILSL) core/utils/src/rootcint_tmp.o $(ORDER_) core/utils/src/rootcint_tmp$(EXEEXT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAUTILSH) $(METAUTILSL)
 
-all-metautils:  $(METAUTILSO) $(METAUTILSDO)
+all-$(MODNAME): $(METAUTILSO) $(METAUTILSDO)
 
-clean-metautils:
+clean-$(MODNAME):
 		@rm -f $(METAUTILSO) $(METAUTILSDO)
 
-clean::         clean-metautils
+clean::         clean-$(MODNAME)
 
-distclean-metautils: clean-metautils
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(METAUTILSDEP) $(METAUTILSDS) $(METAUTILSDH)
 
-distclean::     distclean-metautils
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(METAUTILSO):  PCHCXXFLAGS =

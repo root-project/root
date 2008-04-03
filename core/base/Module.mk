@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := base
+MODNAME      := base
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -64,12 +65,14 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))
 INCLUDEFILES += $(BASEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(BASEDIRI)/%.h
 		cp $< $@
 
 # Explicitely state this dependency.
 # rmkdepend does not pick it up if $(COMPILEDATA) doesn't exist yet.
-base/src/TSystem.d base/src/TSystem.o: $(COMPILEDATA)
+$(BASEDIRS)/TSystem.d $(BASEDIRS)/TSystem.o: $(COMPILEDATA)
 
 $(BASEDS1):     $(BASEH1) $(BASEL1) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
@@ -89,23 +92,23 @@ $(BASEDS4):
 		@echo "1. In ManualBase4Body.h, modify the name of the 2 functions to match the name of the CINT wrapper functions in ManualBase4.cxx"
 		@echo "2. Replace the implementation of both functions by #include \"ManualBase4Body.h\" "
 
-all-base:       $(BASEO) $(BASEDO)
+all-$(MODNAME): $(BASEO) $(BASEDO)
 
-clean-base:
+clean-$(MODNAME):
 		@rm -f $(BASEO) $(BASEDO) $(BASEDIRS)/precompile.o
 
-clean::         clean-base
+clean::         clean-$(MODNAME)
 
-distclean-base: clean-base
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(BASEDEP) \
 		   $(filter-out $(BASEDIRS)/ManualBase4.cxx, $(BASEDS)) \
 		   $(filter-out $(BASEDIRS)/ManualBase4.h, $(BASEDH))
 
-distclean::     distclean-base
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-base/src/TPRegexp.o: $(PCREDEP)
-base/src/TPRegexp.o: CXXFLAGS += $(PCREINC)
+$(BASEDIRS)/TPRegexp.o: $(PCREDEP)
+$(BASEDIRS)/TPRegexp.o: CXXFLAGS += $(PCREINC)
 
 ifeq ($(ARCH),alphacxx6)
 $(BASEDIRS)/TRandom.o: OPT = $(NOOPT)

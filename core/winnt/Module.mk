@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := winnt
+MODNAME      := winnt
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -31,6 +32,8 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(WINNTH))
 INCLUDEFILES += $(WINNTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(WINNTDIRI)/%.h
 		cp $< $@
 
@@ -38,14 +41,14 @@ $(WINNTDS):     $(WINNTH1) $(WINNTL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WINNTH1) $(WINNTL)
 
-all-winnt:      $(WINNTO) $(WINNTDO)
+all-$(MODNAME): $(WINNTO) $(WINNTDO)
 
-clean-winnt:
+clean-$(MODNAME):
 		@rm -f $(WINNTO) $(WINNTDO)
 
-clean::         clean-winnt
+clean::         clean-$(MODNAME)
 
-distclean-winnt: clean-winnt
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(WINNTDEP) $(WINNTDS) $(WINNTDH)
 
-distclean::     distclean-winnt
+distclean::     distclean-$(MODNAME)

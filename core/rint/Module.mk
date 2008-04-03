@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := rint
+MODNAME      := rint
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(RINTMAP)
 INCLUDEFILES += $(RINTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(RINTDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(RINTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(RINTL)
 		$(RLIBMAP) -o $(RINTMAP) -l $(RINTLIB) \
 		   -d $(RINTLIBDEPM) -c $(RINTL)
 
-all-rint:       $(RINTLIB) $(RINTMAP)
+all-$(MODNAME): $(RINTLIB) $(RINTMAP)
 
-clean-rint:
+clean-$(MODNAME):
 		@rm -f $(RINTO) $(RINTDO)
 
-clean::         clean-rint
+clean::         clean-$(MODNAME)
 
-distclean-rint: clean-rint
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RINTDEP) $(RINTDS) $(RINTDH) $(RINTLIB) $(RINTMAP)
 
-distclean::     distclean-rint
+distclean::     distclean-$(MODNAME)

@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := meta
+MODNAME      := meta
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -30,6 +31,8 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH))
 INCLUDEFILES += $(METADEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(METADIRI)/%.h
 		cp $< $@
 
@@ -37,15 +40,14 @@ $(METADS):      $(METAH) $(METAL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAH) $(METAL)
 
-all-meta:       $(METAO) $(METADO)
+all-$(MODNAME): $(METAO) $(METADO)
 
-clean-meta:
+clean-$(MODNAME):
 		@rm -f $(METAO) $(METADO)
 
-clean::         clean-meta
+clean::         clean-$(MODNAME)
 
-distclean-meta: clean-meta
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(METADEP) $(METADS) $(METADH)
 
-distclean::     distclean-meta
-
+distclean::     distclean-$(MODNAME)

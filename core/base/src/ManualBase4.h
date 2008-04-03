@@ -27,8 +27,8 @@ extern void G__set_cpp_environmentManualBase4();
 }
 
 
-#include "base/inc/TObject.h"
-#include "base/inc/TMemberInspector.h"
+#include "TObject.h"
+#include "TMemberInspector.h"
 #include "TDirectory.h"
 
 #ifndef G__MEMFUNCBODY

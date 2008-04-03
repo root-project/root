@@ -11,7 +11,8 @@ PCRELDFLAGS  := $(filter-out -l%,$(PCRELIBF))
 PCREDEP      :=
 else
 
-MODDIR       := pcre
+MODNAME      := pcre
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 
 PCREVERS     := pcre-7.4
@@ -38,6 +39,8 @@ PCREDEP      := $(PCRELIB)
 PCRELDFLAGS  :=
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 $(PCRELIB): $(PCRELIBA)
 		cp $< $@
 		@(if [ $(PLATFORM) = "macosx" ]; then \
@@ -97,7 +100,7 @@ else
 		$(MAKE) libpcre.la)
 endif
 
-all-pcre:       $(PCRELIB)
+all-$(MODNAME): $(PCRELIB)
 
 clean-pcre:
 ifeq ($(PLATFORM),win32)
@@ -113,13 +116,13 @@ else
 		fi)
 endif
 
-clean::         clean-pcre
+clean::         clean-$(MODNAME)
 
-distclean-pcre: clean-pcre
+distclean-$(MODNAME): clean-$(MODNAME)
 		@mv $(PCRELIBS) $(PCREDIRS)/-$(PCREVERS).tar.gz
 		@rm -rf $(PCRELIB) $(PCREDIRS)/pcre-*
 		@mv $(PCREDIRS)/-$(PCREVERS).tar.gz $(PCRELIBS)
 
-distclean::     distclean-pcre
+distclean::     distclean-$(MODNAME)
 
 endif

@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := thread
+MODNAME      := thread
+MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -74,6 +75,8 @@ endif
 INCLUDEFILES += $(THREADDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(THREADDIRI)/%.h
 		cp $< $@
 
@@ -90,22 +93,21 @@ $(THREADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(THREADL)
 		$(RLIBMAP) -o $(THREADMAP) -l $(THREADLIB) \
 		   -d $(THREADLIBDEPM) -c $(THREADL)
 
-all-thread:     $(THREADLIB) $(THREADMAP)
+all-$(MODNAME): $(THREADLIB) $(THREADMAP)
 
-clean-thread:
+clean-$(MODNAME):
 		@rm -f $(THREADO) $(THREADDO)
 
-clean::         clean-thread
+clean::         clean-$(MODNAME)
 
-distclean-thread: clean-thread
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(THREADDEP) $(THREADDS) $(THREADDH) $(THREADLIB) $(THREADMAP)
 
-distclean::     distclean-thread
+distclean::     distclean-$(MODNAME)
 
 ##### cintdlls ######
-
 ifneq ($(ARCH),win32)
-$(CINTDIRDLLS)/pthread.dll: cint/lib/pthread/pthd.h $(ROOTCINTTMPDEP) $(CINTTMP)
+$(CINTDIRDLLS)/pthread.dll: cint/cint/lib/pthread/pthd.h $(ROOTCINTTMPDEP) $(CINTTMP)
 	@$(MAKECINTDLL) $(PLATFORM) C pthread pthread pthd.h \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \

@@ -58,31 +58,32 @@ include $(MAKEFILEDEP)
 
 ##### Modules to build #####
 
-MODULES       = build cint/cint metautils pcre utils base cont meta io \
-                math/mathcore net zip clib math/matrix newdelete \
+MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
+                core/cont core/meta io math/mathcore net core/zip \
+                core/clib math/matrix core/newdelete \
                 hist/hist tree/tree freetype graf gpad g3d gui math/minuit \
                 hist/histpainter tree/treeplayer ged tree/treeviewer \
-                math/physics \
-                postscript rint thread html eg geom/geom geom/geompainter vmc \
+                math/physics postscript core/rint core/thread html eg \
+                geom/geom geom/geompainter vmc \
                 math/fumili math/mlp math/quadp auth guibuilder xml \
                 math/foam math/splot math/smatrix sql tmva \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
                 fitpanel proof/proof proof/proofplayer sessionviewer guihtml
 
 ifeq ($(ARCH),win32)
-MODULES      += winnt win32gdk
-MODULES      := $(filter-out newdelete,$(MODULES))
+MODULES      += core/winnt win32gdk
+MODULES      := $(filter-out core/newdelete,$(MODULES))
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gcc)
-MODULES      += unix x11 x11ttf x3d rootx
+MODULES      += core/unix x11 x11ttf x3d rootx
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
-MODULES      += unix x11 x11ttf x3d rootx
+MODULES      += core/unix x11 x11ttf x3d rootx
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
@@ -235,7 +236,7 @@ endif
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += unix winnt x11 x11ttf win32gdk gl ftgl rfio castor \
+MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 pythia6 table mysql pgsql sapdb srputils x3d \
                 rootx rootd dcache chirp hbook asimage \
                 ldap krb5auth rpdutils globusauth pyroot ruby gfal \
@@ -347,7 +348,7 @@ GCC_VERS_FULL := gcc-$(GCC_MAJOR).$(GCC_MINOR).$(GCC_PATCH)
 
 ##### CINT Stub Functions Generation #####
 ifeq ($(NOSTUBS),yes)
-ROOTCINTTMP   = export CXXFLAGS="$(CXXFLAGS)"; utils/src/rootcint_nostubs_tmp.sh -$(ROOTDICTTYPE)
+ROOTCINTTMP   = export CXXFLAGS="$(CXXFLAGS)"; core/utils/src/rootcint_nostubs_tmp.sh -$(ROOTDICTTYPE)
 CXXFLAGS     += -DG__NOSTUBS
 CINTCXXFLAGS += -DG__NOSTUBS
 ifeq ($(NOSTUBSTEST),yes)
@@ -747,7 +748,7 @@ rootdrpm:
 	fi
 
 clean::
-	@rm -f __compiledata *~ core include/precompile.*
+	@rm -f __compiledata *~ core.* include/precompile.*
 
 ifeq ($(CXX),KCC)
 clean::
