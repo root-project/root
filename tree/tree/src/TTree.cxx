@@ -551,7 +551,7 @@ TTree::~TTree()
       // -- We are in a directory, which may possibly be a file.
       if (fDirectory->GetList()) {
          // -- Remove us from the directory listing.
-         fDirectory->GetList()->Remove(this);
+         fDirectory->Remove(this);
       }
       //delete the file cache if it points to this Tree
       TFile *file = fDirectory->GetFile();
@@ -2029,7 +2029,7 @@ TFile* TTree::ChangeFile(TFile* file)
    TBranch* branch = 0;
    TObject* obj = 0;
    while ((obj = file->GetList()->First())) {
-      file->GetList()->Remove(obj);
+      file->Remove(obj);
       // Histogram: just change the directory.
       if (obj->InheritsFrom("TH1")) {
          gROOT->ProcessLine(Form("((%s*)0x%lx)->SetDirectory((TDirectory*)0x%lx);", obj->ClassName(), (Long_t) obj, (Long_t) newfile));
@@ -2054,8 +2054,8 @@ TFile* TTree::ChangeFile(TFile* file)
          continue;
       }
       // Not a TH1 or a TTree, move object to new file.
-      newfile->GetList()->Add(obj);
-      file->GetList()->Remove(obj);
+      newfile->Append(obj);
+      file->Remove(obj);
    }
    delete file;
    file = 0;
@@ -2642,7 +2642,7 @@ void TTree::Delete(Option_t* option /* = "" */)
       if (gDebug) printf(" Deleting Tree: %s: %d baskets deleted. Total space freed = %d bytes\n",GetName(),nbask,ntot);
    }
 
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory = 0;
 
     // Delete object from CINT symbol table so it can not be used anymore.
@@ -5160,7 +5160,7 @@ void TTree::Refresh()
       return;
    }
    fDirectory->ReadKeys();
-   fDirectory->GetList()->Remove(this);
+   fDirectory->Remove(this);
    TTree* tree = (TTree*) fDirectory->Get(GetName());
    if (!tree) {
       return;
@@ -5179,8 +5179,8 @@ void TTree::Refresh()
       TBranch* branch = (TBranch*) leaf->GetBranch();
       branch->Refresh(tree->GetBranch(branch->GetName()));
    }
-   fDirectory->GetList()->Remove(tree);
-   fDirectory->GetList()->Add(this);
+   fDirectory->Remove(tree);
+   fDirectory->Append(this);
    delete tree;
    tree = 0;
 }
@@ -5697,11 +5697,11 @@ void TTree::SetDirectory(TDirectory* dir)
       return;
    }
    if (fDirectory) {
-      fDirectory->GetList()->Remove(this);
+      fDirectory->Remove(this);
    }
    fDirectory = dir;
    if (fDirectory) {
-      fDirectory->GetList()->Add(this);
+      fDirectory->Append(this);
    }
    TFile* file = 0;
    if (fDirectory) {
@@ -5873,11 +5873,11 @@ void TTree::SetName(const char* name)
    // Trees are named objects in a THashList.
    // We must update the hashlist if we change the name.
    if (fDirectory) {
-      fDirectory->GetList()->Remove(this);
+      fDirectory->Remove(this);
    }
    fName = name;
    if (fDirectory) {
-      fDirectory->GetList()->Add(this);
+      fDirectory->Append(this);
    }
 }
 
@@ -5893,12 +5893,12 @@ void TTree::SetObject(const char* name, const char* title)
    //  Trees are named objects in a THashList.
    //  We must update the hashlist if we change the name
    if (fDirectory) {
-      fDirectory->GetList()->Remove(this);
+      fDirectory->Remove(this);
    }
    fName = name;
    fTitle = title;
    if (fDirectory) {
-      fDirectory->GetList()->Add(this);
+      fDirectory->Append(this);
    }
 }
 

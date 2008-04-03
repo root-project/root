@@ -351,25 +351,22 @@ TGraph2D::~TGraph2D()
 {
    // TGraph2D destructor.
 
-   if (fX)          delete [] fX;
-   if (fY)          delete [] fY;
-   if (fZ)          delete [] fZ;
-   if (fHistogram)  delete fHistogram;
+   delete [] fX; fX = 0;
+   delete [] fY; fY = 0;
+   delete [] fZ; fZ = 0;
+   delete fHistogram; fHistogram = 0;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
       fFunctions->Delete();
       delete fFunctions;
+      fFunctions = 0;
    }
    if (fDirectory) {
-      fDirectory->GetList()->Remove(this);
+      fDirectory->Remove(this);
+      fDirectory = 0;
    }
-   if (fPainter)  delete fPainter;
-   fX         = 0;
-   fY         = 0;
-   fZ         = 0;
-   fHistogram = 0;
-   fDirectory = 0;
-   fFunctions = 0;
+   delete fPainter;
+   fPainter   = 0;
 }
 
 
@@ -424,7 +421,7 @@ void TGraph2D::Build(Int_t n)
       TObject *old = (TObject*)gDirectory->GetList()->FindObject(GetName());
       if (old) {
          Warning("Build","Replacing existing 2D graph: %s (Potential memory leak).",GetName());
-         gDirectory->GetList()->Remove(old);
+         gDirectory->Remove(old);
       }
       gDirectory->Append(this);
       fDirectory = gDirectory;
@@ -1411,9 +1408,9 @@ void TGraph2D::SetDirectory(TDirectory *dir)
    // 2D graph does not belong to any directory.
 
    if (fDirectory == dir) return;
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 
@@ -1482,9 +1479,9 @@ void TGraph2D::SetName(const char *name)
 
    //  2D graphs are named objects in a THashList.
    //  We must update the hashlist if we change the name
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fName = name;
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________
@@ -1495,10 +1492,10 @@ void TGraph2D::SetNameTitle(const char *name, const char *title)
 
    //  2D graphs are named objects in a THashList.
    //  We must update the hashlist if we change the name
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fName  = name;
    SetTitle(title);
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________

@@ -583,7 +583,7 @@ TH1::~TH1()
       fFunctions = 0;
    }
    if (fDirectory) {
-      fDirectory->GetList()->Remove(this);
+      fDirectory->Remove(this);
       fDirectory = 0;
    }
    delete fPainter;
@@ -738,7 +738,7 @@ void TH1::Build()
       TH1 *hold = (TH1*)gDirectory->GetList()->FindObject(GetName());
       if (hold) {
          Warning("Build","Replacing existing histogram: %s (Potential memory leak).",GetName());
-         gDirectory->GetList()->Remove(hold);
+         gDirectory->Remove(hold);
          hold->SetDirectory(0);
          //  delete hold;
       }
@@ -1921,7 +1921,7 @@ void TH1::Copy(TObject &obj) const
       // We are likely to change the hash value of this object
       // with TNamed::Copy, to keep things correct, we need to
       // clean up its existing entries.
-      ((TH1&)obj).fDirectory->GetList()->Remove(&obj);
+      ((TH1&)obj).fDirectory->Remove(&obj);
       ((TH1&)obj).fDirectory = 0;
    }
    TNamed::Copy(obj);
@@ -7187,9 +7187,9 @@ void TH1::SetDirectory(TDirectory *dir)
    // histogram does not belong to any directory.
 
    if (fDirectory == dir) return;
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 
@@ -7214,9 +7214,9 @@ void TH1::SetName(const char *name)
 
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fName = name;
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________
@@ -7227,10 +7227,10 @@ void TH1::SetNameTitle(const char *name, const char *title)
 
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fName  = name;
    SetTitle(title);
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________

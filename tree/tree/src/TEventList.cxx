@@ -102,7 +102,7 @@ TEventList::~TEventList()
 //*-*        =================================
 
    delete [] fList;
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory  = 0;
 }
 
@@ -340,9 +340,9 @@ void TEventList::SetDirectory(TDirectory *dir)
    // does not belong to any directory.
 
    if (fDirectory == dir) return;
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________
@@ -353,9 +353,9 @@ void TEventList::SetName(const char *name)
 
 //  TEventLists are named objects in a THashList.
 //  We must update the hashlist if we change the name
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fName = name;
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________

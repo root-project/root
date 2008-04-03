@@ -289,7 +289,7 @@ TEntryList::~TEntryList()
    
    fLists = 0;
 
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory  = 0;
 
 }
@@ -978,9 +978,9 @@ void TEntryList::SetDirectory(TDirectory *dir)
    //Add reference to directory dir. dir can be 0.
 
    if (fDirectory == dir) return;
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
-   if (fDirectory) fDirectory->GetList()->Add(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________
@@ -1034,7 +1034,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
       elist = new TEntryList("", "", treename, filename);
       if (elist->GetDirectory()) {
          //sub lists are not added to the current directory
-         elist->GetDirectory()->GetList()->Remove(elist);
+         elist->GetDirectory()->Remove(elist);
          elist->SetDirectory(0);
       }
       fLists->Add(elist);
@@ -1071,7 +1071,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
             elist = new TEntryList("", "", treename, filename);
             if (elist->GetDirectory()) {
                //sub lists are not added to the current directory
-               elist->GetDirectory()->GetList()->Remove(elist);
+               elist->GetDirectory()->Remove(elist);
                elist->SetDirectory(0);
             }
             fLists->Add(elist);

@@ -80,7 +80,7 @@ TChain::TChain()
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   gDirectory->GetList()->Remove(this);
+   gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
 
    // Reset PROOF-related bits
@@ -145,7 +145,7 @@ TChain::TChain(const char* name, const char* title)
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   gDirectory->GetList()->Remove(this);
+   gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
 
    // Reset PROOF-related bits
@@ -2119,10 +2119,10 @@ void TChain::SetDirectory(TDirectory* dir)
    // does not belong to any directory.
 
    if (fDirectory == dir) return;
-   if (fDirectory) fDirectory->GetList()->Remove(this);
+   if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
    if (fDirectory) {
-      fDirectory->GetList()->Add(this);
+      fDirectory->Append(this);
       fFile = fDirectory->GetFile();
    } else {
       fFile = 0;

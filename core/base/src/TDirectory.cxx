@@ -107,7 +107,7 @@ TDirectory::~TDirectory()
    TDirectory* mom = GetMotherDir();
 
    if (mom) {
-      mom->GetList()->Remove(this);
+      mom->Remove(this);
    }
 
    if (gDebug) {
@@ -842,16 +842,17 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
 //______________________________________________________________________________
 void TDirectory::ls(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List Directory contents*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =======================
-//  Indentation is used to identify the directory tree
-//  Subdirectories are listed first, then objects in memory.
-//
-//  The option can has the following format:
-//     [<regexp>]
-//  The <regexp> will be used to match the name of the objects.
-//  By default memory and disk objects are listed.
-//
+   // List Directory contents.
+   //
+   //  Indentation is used to identify the directory tree
+   //  Subdirectories are listed first, then objects in memory.
+   //
+   //  The option can has the following format:
+   //     [<regexp>]
+   //  The <regexp> will be used to match the name of the objects.
+   //  By default memory and disk objects are listed.
+   //
+
    TROOT::IndentLevel();
    cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
    TROOT::IncreaseDirLevel();
@@ -889,9 +890,7 @@ void TDirectory::ls(Option_t *option) const
 //______________________________________________________________________________
 void TDirectory::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Paint all objects in the directory *-*-*-*-*-*-*-*
-//*-*                    ==================================
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Paint all objects in the directory.
 
    fList->R__FOR_EACH(TObject,Paint)(option);
 }
@@ -899,9 +898,7 @@ void TDirectory::Paint(Option_t *option)
 //______________________________________________________________________________
 void TDirectory::Print(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Print all objects in the directory *-*-*-*-*-*-*-*
-//*-*                    ==================================
-//
+   // Print all objects in the directory.
 
    fList->R__FOR_EACH(TObject,Print)(option);
 }
@@ -917,10 +914,21 @@ void TDirectory::pwd() const
 //______________________________________________________________________________
 void TDirectory::RecursiveRemove(TObject *obj)
 {
-//*-*-*-*-*-*-*-*Recursively remove object from a Directory*-*-*-*-*-*-*-*
-//*-*            =========================================
+   // Recursively remove object from a Directory.
 
    fList->RecursiveRemove(obj);
+}
+ 
+//______________________________________________________________________________
+TObject *TDirectory::Remove(TObject* obj)
+{
+   // Remove an object from the in-memory list.
+
+   TObject *p = 0;
+   if (fList) {
+      p = fList->Remove(obj);
+   }
+   return p;
 }
 
 //______________________________________________________________________________
