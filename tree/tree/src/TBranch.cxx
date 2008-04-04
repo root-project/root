@@ -403,6 +403,12 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
    leaftype = 0;
 
    // Create the first basket.
+   //
+   // Note: We cannot do this until we have created the leaves,
+   //       otherwise we do not know the fEntryOffsetLen which
+   //       compensates for variable-sized leaves, like varying
+   //       length arrays.
+   //
    TBasket* basket = fTree->CreateBasket(this);
    fBaskets.AddAt(basket, 0);
 }
