@@ -118,10 +118,9 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
    {
       bool isref = in_type.IsReference();
       ::Reflex::Type current = in_type; 
-      //for (; !isref && current && current.IsTypedef();) {
-      //   current = current.ToType();
-      //   isref = current.IsReference();
-      //}
+      for (; current && current.IsTypedef();) {
+         current = current.ToType();
+      }
       // Count pointer levels.
       int pointers = 0;
       for (; current && current.IsPointer(); current = current.ToType()) {
