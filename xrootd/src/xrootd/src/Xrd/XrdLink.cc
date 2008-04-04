@@ -599,32 +599,41 @@ int XrdLink::Send(const char *Buff, int Blen)
   
 int XrdLink::Send(const struct iovec *iov, int iocnt, int bytes)
 {
-   int i, bytesleft, retc = 0;
+   ssize_t bytesleft, n, retc = 0;
+   const char *Buff;
+   int i;
 
 // Add up bytes if they were not given to us
 //
    if (!bytes) for (i = 0; i < iocnt; i++) bytes += iov[i].iov_len;
-   bytesleft = bytes;
+   bytesleft = static_cast<ssize_t>(bytes);
 
-// Get a lock
+// Get a lock and assume we will be successful (statistically we are)
 //
    wrMutex.Lock();
    isIdle = 0;
    BytesOut += bytes;
 
-// Write the data out. For now we will assume that writev() fully completes
-// an iov element or never starts. That's true on most platforms but not all. 
-// So, we will force an error if our assumption does not hold for this platform
-// and then go back and convert the writev() to a write()*iocnt for those.
+// Write the data out. On some version of Unix (e.g., Linux) a writev() may
+// end at any time without writing all the bytes when directed to a socket.
+// So, we attempt to resume the writev() using a combination of write() and
+// a writev() continuation. This approach slowly converts a writev() to a
+// series of writes if need be. We must do this inline because we must hold
+// the lock until all the bytes are written or an error occurs.
 //
    while(bytesleft)
-        {if ((retc = writev(FD, iov, iocnt)) < 0)
-            if (errno == EINTR) continue;
-               else break;
-         if (retc >= bytesleft) break;
-         if (retc != (int)iov->iov_len)
-            {retc = -1; errno = ECANCELED; break;}
-         iov++; iocnt--; bytesleft -= retc; BytesOut += retc;
+        {do {retc = writev(FD, iov, iocnt);} while(retc < 0 && errno == EINTR);
+         if (retc >= bytesleft || retc < 0) break;
+         bytesleft -= retc;
+         while(retc >= (n = static_cast<ssize_t>(iov->iov_len)))
+              {retc -= n; iov++; iocnt--;}
+         Buff = (const char *)iov->iov_base + retc; n -= retc; iov++; iocnt--;
+         while(n) {if ((retc = write(FD, Buff, n)) < 0)
+                      if (errno == EINTR) continue;
+                         else break;
+                   n -= retc; Buff += retc;
+                  }
+         if (retc < 0 || iocnt < 1) break;
         }
 
 // All done
