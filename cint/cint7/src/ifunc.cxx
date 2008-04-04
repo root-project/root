@@ -1855,7 +1855,7 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
       i_params_names.push_back(std::make_pair(param_name, default_str));
       i_params_default.push_back(default_val);
       // Free any default value we may have allocated.
-      delete default_val; // FIXME: This can be a stack variable, change it.
+      //delete default_val; // FIXME: This can be a stack variable, change it.
       default_val = 0;
       default_str = "";
    }
