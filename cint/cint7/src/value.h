@@ -182,7 +182,7 @@ template <> inline long long& G__value_ref<long long>(G__value& buf)
 #ifdef G__BOOL4BYTE
 template <> inline bool& G__value_ref<bool>(G__value& buf)
 {
-   return (bool&)buf.>obj.i;
+   return (bool&)buf.obj.i;
 }
 #else // G__BOOL4BYTE
 template <> inline bool& G__value_ref<bool>(G__value& buf)

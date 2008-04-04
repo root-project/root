@@ -6218,7 +6218,7 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, con
          return(*i);
       }
    }
-   return(::Reflex::Member()); /* not found case */
+   return Reflex::Member(); /* not found case */
 }
 
 //______________________________________________________________________________

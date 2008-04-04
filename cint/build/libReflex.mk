@@ -28,7 +28,7 @@ ifeq ($(LINKSTATIC),yes)
 else
   REFLEXLINK   = $(G__CFG_LIBP)lib $(subst @imp@,Reflex,$(G__CFG_LIBL))
 endif
- REFLEXLIBDEP = $(REFLEXSO) $(REFLEXLIB)
+  REFLEXLIBDEP = $(REFLEXSO) $(REFLEXLIB)
 endif
 
 
@@ -62,7 +62,7 @@ $(REFLEXSO): $(REFLEXLIB_OBJ) $(REFLEXLIB_DEF)
 	    $(G__CFG_LDOUT)$@ $(REFLEXLIB_OBJ)
 ifneq ($(G__CFG_MAKEIMPLIB),)
 	$(subst @imp@,$(@:$(G__CFG_SOEXT)=$(G__CFG_IMPLIBEXT)),\
-	  $(subst @so@,$@,$(G__CFG_MAKEIMPLIB)))
+	  $(subst @so@,${PWD}/$@,$(G__CFG_MAKEIMPLIB)))
 endif
 
 $(REFLEXSRCDIR)/%$(G__CFG_OBJEXT): $(REFLEXSRCDIR)/%.cxx
