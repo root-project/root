@@ -2181,35 +2181,72 @@ Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 
 
 //______________________________________________________________________________
-void TH2::Smooth(Int_t , Option_t *)
+void TH2::Smooth(Int_t ntimes, Option_t *option)
 {
-   // Smooth bin contents of this histogram.
-   // Bin contents are replaced by their smooth values.
-   // Errors (if any) are not modified.
-   // implementation by David McKee (dmckee@bama.ua.edu)
+   // Smooth bin contents of this 2-d histogram using kernel algorithms
+   // similar to the ones used in the raster graphics community.
+   // Bin contents in the active range are replaced by their smooth values.
+   // If Errors are defined via Sumw2, they are scaled.
+   // 3 kernels are proposed k5a, k5b and k3a.
+   // k5a and k5b act on 5x5 cells (i-2,i-1,i,i+1,i+2, and same for j)
+   // k5b is a bit more stronger in smoothing
+   // k3a acts only on 3x3 cells (i-1,i,i+1, and same for j).
+   // By default the kernel "k5a" is used. You can select the kernels "k5b" or "k3a"
+   // via the option argument.
+   // If TAxis::SetRange has been called on the x or/and y axis, only the bins
+   // in the specified range are smoothed.
+   // In the current implementation if the first argument is not used (default value=1).
+   //
+   // implementation by David McKee (dmckee@bama.ua.edu). Extended by Rene Brun
    
-   const Int_t ksize_x=5; 
-   const Int_t ksize_y=5; 
-   Double_t kernel[5][5] =  { { 0, 0, 1, 0, 0 }, 
-                              { 0, 2, 2, 2, 0 }, 
-                              { 1, 2, 5, 2, 1 }, 
-                              { 0, 2, 2, 2, 0 }, 
-                              { 0, 0, 1, 0, 0 } }; 
+   Double_t k5a[5][5] =  { { 0, 0, 1, 0, 0 }, 
+                           { 0, 2, 2, 2, 0 }, 
+                           { 1, 2, 5, 2, 1 }, 
+                           { 0, 2, 2, 2, 0 }, 
+                           { 0, 0, 1, 0, 0 } }; 
+   Double_t k5b[5][5] =  { { 0, 1, 2, 1, 0 },
+                           { 1, 2, 4, 2, 1 },
+                           { 1, 4, 8, 4, 2 },
+                           { 1, 2, 4, 2, 1 },
+                           { 0, 1, 2, 1, 0 } };
+   Double_t k3a[3][3] =  { { 0, 1, 0 },
+                           { 1, 2, 1 },
+                           { 0, 1, 0 } };
 
+   if (ntimes > 1) {
+      Warning("Smooth","Currently only ntimes=1 is supported");
+   }
+   TString opt = option;
+   opt.ToLower();
+   Int_t ksize_x=5; 
+   Int_t ksize_y=5; 
+   Double_t *kernel = &k5a[0][0];
+   if (opt.Contains("k5b")) kernel = &k5b[0][0];
+   if (opt.Contains("k3a")) {
+      kernel = &k3a[0][0];
+      ksize_x=3; 
+      ksize_y=3;
+   } 
+   
+   // find i,j ranges
+   Int_t ifirst = fXaxis.GetFirst();
+   Int_t ilast  = fXaxis.GetLast();
+   Int_t jfirst = fYaxis.GetFirst();
+   Int_t jlast  = fYaxis.GetLast();
+   
    // Determine the size of the bin buffer(s) needed 
-   Int_t lowest_bin=GetBin(0,0); 
+   Double_t nentries = fEntries;
    Int_t nx = GetNbinsX();
    Int_t ny = GetNbinsY();
-   Int_t highest_bin=GetBin(nx+1,ny+1); 
-   Int_t bufSize  = highest_bin-lowest_bin+1; 
+   Int_t bufSize  = (nx+2)*(ny+2);
    Double_t *buf  = new Double_t[bufSize]; 
    Double_t *ebuf = 0;
    if (fSumw2.fN) ebuf = new Double_t[bufSize]; 
 
-   // Copy all the data to the temporry buffers 
+   // Copy all the data to the temporary buffers 
    Int_t i,j,bin;
-   for (i=0; i<=nx; i++){ 
-      for (j=0; j<=ny; j++){ 
+   for (i=ifirst; i<=ilast; i++){ 
+      for (j=jfirst; j<=jlast; j++){ 
          bin = GetBin(i,j); 
          buf[bin] =GetBinContent(bin); 
          if (ebuf) ebuf[bin]=GetBinError(bin); 
@@ -2221,8 +2258,8 @@ void TH2::Smooth(Int_t , Option_t *)
    Int_t y_push = (ksize_y-1)/2; 
 
    // main work loop 
-   for (i=1; i<=nx; i++) { 
-      for (j=1; j<=ny; j++) { 
+   for (i=ifirst; i<=ilast; i++){ 
+      for (j=jfirst; j<=jlast; j++) { 
          Double_t content = 0.0; 
          Double_t error = 0.0; 
          Double_t norm = 0.0; 
@@ -2233,8 +2270,9 @@ void TH2::Smooth(Int_t , Option_t *)
                Int_t yb = j+(m-y_push); 
                if ( (xb >= 1) && (xb <= nx) && (yb >= 1) && (yb <= ny) ) { 
                   bin = GetBin(xb,yb); 
-                  Double_t k = kernel[n][m]; 
-                  if ( (k != 0.0 ) && (buf[bin] != 0.0) ) { // General version probably does not want the second condition 
+                  Double_t k = kernel[n*ksize_y +m]; 
+                  //if ( (k != 0.0 ) && (buf[bin] != 0.0) ) { // General version probably does not want the second condition 
+                  if ( k != 0.0 ) {
                      norm    += k; 
                      content += k*buf[bin]; 
                      if (ebuf) error   += k*k*buf[bin]*buf[bin]; 
@@ -2243,9 +2281,8 @@ void TH2::Smooth(Int_t , Option_t *)
             } 
          } 
 
-         content /= norm; 
-         if ( content != 0.0 ) { // General version probably does not want this condition 
-            SetBinContent(i,j,content); 
+         if ( norm != 0.0 ) {
+            SetBinContent(i,j,content/norm); 
             if (ebuf) {
                error /= (norm*norm); 
                SetBinError(i,j,sqrt(error)); 
@@ -2253,6 +2290,7 @@ void TH2::Smooth(Int_t , Option_t *)
          } 
       } 
    } 
+   fEntries = nentries;
 
    delete [] buf; 
    delete [] ebuf; 
