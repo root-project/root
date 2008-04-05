@@ -8233,7 +8233,7 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
 #ifdef G__CPPIF_EXTERNC
          fprintf(fp, "(%s) G__int(libp->para[%d])", G__p2f_typedefname(ifn, ifunc->page, k), k);
          break;
-#endif G__CPPIF_EXTERNC
+#endif // G__CPPIF_EXTERNC
       case 'c':
       case 'b':
       case 's':
