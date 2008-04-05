@@ -113,13 +113,13 @@ public:
    virtual ~TDirectory();
    static  void        AddDirectory(Bool_t add=kTRUE);
    static  Bool_t      AddDirectoryStatus();
-   virtual void        Append(TObject *obj);
-   virtual void        Add(TObject *obj) { Append(obj); }
+   virtual void        Append(TObject *obj, Bool_t replace = kFALSE);
+   virtual void        Add(TObject *obj, Bool_t replace = kFALSE) { Append(obj,replace); }
    virtual Int_t       AppendKey(TKey *) {return 0;}
    virtual void        Browse(TBrowser *b);
    virtual void        Build(TFile* motherFile = 0, TDirectory* motherDir = 0);
    virtual void        Clear(Option_t *option="");
-   virtual TObject    *CloneObject(const TObject *obj);
+   virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
    virtual void        Close(Option_t *option="");
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = 0);

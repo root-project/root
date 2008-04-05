@@ -751,6 +751,15 @@ TObject *TKey::ReadObj()
       dir->SetMother(fMotherDir);
       fMotherDir->Append(dir);
    }
+
+   // Append the object to the directory if requested:
+   { 
+      ROOT::DirAutoAdd_t addfunc = cl->GetDirectoryAutoAdd();
+      if (addfunc) {
+         addfunc(pobj, fMotherDir);
+      }
+   }
+
 CLEAR:
    delete fBufferRef;
    fBufferRef = 0;
@@ -884,6 +893,14 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
          dir->SetTitle(GetTitle());
          dir->SetMother(fMotherDir);
          fMotherDir->Append(dir);
+      }
+   }
+
+   {
+      // Append the object to the directory if requested:
+      ROOT::DirAutoAdd_t addfunc = cl->GetDirectoryAutoAdd();
+      if (addfunc) {
+         addfunc(pobj, fMotherDir);
       }
    }
 

@@ -64,10 +64,9 @@ TEventList::TEventList(): TNamed()
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
   :TNamed(name,title), fReapply(kFALSE)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a EventList*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =================
-//
-//  This Eventlist is added to the list of objects in current directory
+   // Create a EventList.
+   //
+   // This Eventlist is added to the list of objects in current directory.
 
    fN = 0;
    if (initsize > 100) fSize  = initsize;
@@ -76,14 +75,13 @@ TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_
    else                fDelta = 100;
    fList       = 0;
    fDirectory  = gDirectory;
-   gDirectory->Append(this);
+   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________
 TEventList::TEventList(const TEventList &list) : TNamed(list)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Copy constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ================
+   // Copy constructor.
 
    fN     = list.fN;
    fSize  = list.fSize;
@@ -98,10 +96,9 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
 //______________________________________________________________________________
 TEventList::~TEventList()
 {
-//*-*-*-*-*-*Default destructor for a EventList*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        =================================
+   // Default destructor for a EventList.
 
-   delete [] fList;
+   delete [] fList;  fList = 0;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory  = 0;
 }
@@ -109,8 +106,9 @@ TEventList::~TEventList()
 //______________________________________________________________________________
 void TEventList::Add(const TEventList *alist)
 {
-//          Merge contents of alist with this list.
-//   Both alist and this list are assumed to be sorted prior to this call
+   // Merge contents of alist with this list.
+   //
+   // Both alist and this list are assumed to be sorted prior to this call
 
    Int_t i;
    Int_t an = alist->GetN();
@@ -172,6 +170,14 @@ Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
    
    if (fList[imax] < entrymin) return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TEventList::DirectoryAutoAdd(TDirectory* dir)
+{
+   // Called by TKey and others to automatically add us to a directory when we are read from a file.
+   
+   SetDirectory(dir);
 }
 
 //______________________________________________________________________________
@@ -348,11 +354,10 @@ void TEventList::SetDirectory(TDirectory *dir)
 //______________________________________________________________________________
 void TEventList::SetName(const char *name)
 {
-// Change the name of this TEventList
-//
-
-//  TEventLists are named objects in a THashList.
-//  We must update the hashlist if we change the name
+   // Change the name of this TEventList
+   
+   //  TEventLists are named objects in a THashList.
+   //  We must update the hashlist if we change the name
    if (fDirectory) fDirectory->Remove(this);
    fName = name;
    if (fDirectory) fDirectory->Append(this);
@@ -387,10 +392,10 @@ void TEventList::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      fDirectory = 0;
       if (R__v > 1) {
          b.ReadClassBuffer(TEventList::Class(), this, R__v, R__s, R__c);
-         fDirectory = gDirectory;
-         gDirectory->Append(this);
+         ResetBit(kMustCleanup);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -405,13 +410,12 @@ void TEventList::Streamer(TBuffer &b)
          for (Int_t i=0;i<fN;i++) fList[i] = tlist[i];
          delete [] tlist;
       }
-      fDirectory = gDirectory;
-      gDirectory->Append(this);
+      ResetBit(kMustCleanup);
       b.CheckByteCount(R__s, R__c, TEventList::IsA());
       //====end of old versions
 
    } else {
-      b.WriteClassBuffer(TEventList::Class(),this);
+      b.WriteClassBuffer(TEventList::Class(), this);
    }
 }
 

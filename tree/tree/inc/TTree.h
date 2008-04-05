@@ -228,6 +228,7 @@ public:
    virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
+   virtual void            DirectoryAutoAdd(TDirectory *);
    Int_t                   Debug() const { return fDebug; }
    virtual void            Delete(Option_t* option = ""); // *MENU*
    virtual void            Draw(Option_t* opt) { Draw(opt, "", "", 1000000000, 0); }

@@ -150,7 +150,7 @@ TEntryList::TEntryList(const char *name, const char *title):TNamed(name, title)
    fReapply = kFALSE;
 
    fDirectory  = gDirectory;
-   gDirectory->Append(this);
+   if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
@@ -172,7 +172,7 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
    fReapply = kFALSE;
 
    fDirectory  = gDirectory;
-   gDirectory->Append(this);
+   if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
@@ -194,7 +194,7 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
    fReapply = kFALSE;
 
    fDirectory  = gDirectory;
-   gDirectory->Append(this);
+   if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
@@ -217,7 +217,7 @@ TEntryList::TEntryList(const TTree *tree)
 
    fReapply = kFALSE;
    fDirectory  = gDirectory;
-   gDirectory->Append(this);
+   if (fDirectory) fDirectory->Append(this);
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
@@ -274,12 +274,11 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
 //______________________________________________________________________________
 TEntryList::~TEntryList()
 {
-// d-tor
+   // Destructor.
 
    if (fBlocks){
       fBlocks->Delete();
       delete fBlocks;
-      
    }
    fBlocks = 0;
    if (fLists){
@@ -496,6 +495,14 @@ Int_t TEntryList::Contains(Long64_t entry, TTree *tree)
    }
    return 0;
 
+}
+
+//______________________________________________________________________________
+void TEntryList::DirectoryAutoAdd(TDirectory* dir)
+{
+   // Called by TKey and others to automatically add us to a directory when we are read from a file.
+   
+   SetDirectory(dir);
 }
 
 //________________________________________________________________________

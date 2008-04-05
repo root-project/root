@@ -4423,6 +4423,9 @@ void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
 void TClass::SetDirectoryAutoAdd(ROOT::DirAutoAdd_t autoAddFunc)
 {
    // Install a new wrapper around the directory auto add function..
+   // The function autoAddFunc has the signature void (*)(void *obj, TDirectory dir)
+   // and should register 'obj' to the directory if dir is not null
+   // and unregister 'obj' from its current directory if dir is null
 
    fDirAutoAdd = autoAddFunc;
 }

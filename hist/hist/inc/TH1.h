@@ -149,6 +149,7 @@ public:
    virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = 0) const;
 
    virtual Double_t ComputeIntegral();
+   virtual void     DirectoryAutoAdd(TDirectory *);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Divide(TF1 *f1, Double_t c1=1);
    virtual void     Divide(const TH1 *h1);

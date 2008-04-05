@@ -351,22 +351,7 @@ TGraph2D::~TGraph2D()
 {
    // TGraph2D destructor.
 
-   delete [] fX; fX = 0;
-   delete [] fY; fY = 0;
-   delete [] fZ; fZ = 0;
-   delete fHistogram; fHistogram = 0;
-   if (fFunctions) {
-      fFunctions->SetBit(kInvalidObject);
-      fFunctions->Delete();
-      delete fFunctions;
-      fFunctions = 0;
-   }
-   if (fDirectory) {
-      fDirectory->Remove(this);
-      fDirectory = 0;
-   }
-   delete fPainter;
-   fPainter   = 0;
+   Clear();
 }
 
 
@@ -376,6 +361,8 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    // Graph2D operator "="
 
    if (this == &g) return *this;
+
+   Clear();
 
    fNpoints = g.fNpoints;
    Build(fNpoints);
@@ -387,7 +374,6 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    }
    return *this;
 }
-
 
 //______________________________________________________________________________
 void TGraph2D::Build(Int_t n)
@@ -416,18 +402,52 @@ void TGraph2D::Build(Int_t n)
    fPainter   = 0;
    fUserHisto = kFALSE;
 
-   Bool_t add = TH1::AddDirectoryStatus();
-   if (add && gDirectory) {
-      TObject *old = (TObject*)gDirectory->GetList()->FindObject(GetName());
-      if (old) {
-         Warning("Build","Replacing existing 2D graph: %s (Potential memory leak).",GetName());
-         gDirectory->Remove(old);
-      }
-      gDirectory->Append(this);
+   if (TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
+      if (fDirectory) {
+         fDirectory->Append(this,kTRUE);
+      }
    }
 }
 
+//______________________________________________________________________________
+void TGraph2D::Clear(Option_t * /*option = "" */)
+{
+   // Free all memory allocated by this object.
+
+   delete [] fX; fX = 0;
+   delete [] fY; fY = 0;
+   delete [] fZ; fZ = 0;
+   delete fHistogram; fHistogram = 0;
+   if (fFunctions) {
+      fFunctions->SetBit(kInvalidObject);
+      fFunctions->Delete();
+      delete fFunctions;
+      fFunctions = 0;
+   }
+   if (fDirectory) {
+      fDirectory->Remove(this);
+      fDirectory = 0;
+   }
+   delete fPainter;
+   fPainter   = 0;
+}
+
+//______________________________________________________________________________
+void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
+{
+   // Perform the automatic addition of the graph to the given directory
+   //
+   // Note this function is called in place when the semantic requires 
+   // this object to be added to a directory (I.e. when being read from
+   // a TKey or being Cloned)
+   // 
+
+   Bool_t addStatus = TH1::AddDirectoryStatus();
+   if (addStatus) {
+      SetDirectory(dir);
+   }  
+}
 
 //______________________________________________________________________________
 Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
@@ -1596,11 +1616,8 @@ void TGraph2D::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       b.ReadClassBuffer(TGraph2D::Class(), this, R__v, R__s, R__c);
 
-      if (!gROOT->ReadingObject()) {
-         fDirectory = gDirectory;
-         if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
-      }
       ResetBit(kCanDelete);
+      ResetBit(kMustCleanup);
    } else {
       b.WriteClassBuffer(TGraph2D::Class(),this);
    }

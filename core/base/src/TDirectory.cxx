@@ -142,11 +142,28 @@ Bool_t TDirectory::AddDirectoryStatus()
 }
 
 //______________________________________________________________________________
-void TDirectory::Append(TObject *obj)
+void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 {
    // Append object to this directory.
+   //
+   // If replace is true:
+   //   remove any existing objects with the same same (if the name is not ""
 
    if (obj == 0 || fList == 0) return;
+
+   if (replace && obj->GetName() && obj->GetName()[0]) {
+      TObject *old;
+      while (0!=(old = GetList()->FindObject(obj->GetName()))) {
+         Warning("Append","Replacing existing %s: %s (Potential memory leak).",obj->IsA()->GetName(),GetName());
+         ROOT::DirAutoAdd_t func = old->IsA()->GetDirectoryAutoAdd();
+         if (func) {
+            func(old,0);
+         } else {
+            Remove(old);
+         }
+      }
+   }
+
    fList->Add(obj);
    obj->SetBit(kMustCleanup);
 }
@@ -211,15 +228,30 @@ void TDirectory::CleanTargets()
 }
 
 //______________________________________________________________________________
-TObject *TDirectory::CloneObject(const TObject *obj)
+TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE */)
 {
    // Clone an object.
    // This function is called when the directory is not a TDirectoryFile.
    // This version has to load the I/O package, hence via CINT
+   // 
+   // If autoadd is true and if the object class has a
+   // DirectoryAutoAdd function, it will be called at the end of the
+   // function with the parameter gDirector.  This usually means that
+   // the object will be appended to the current ROOT directory.
 
    // if no default ctor return immediately (error issued by New())
-   TObject *newobj = (TObject *)obj->IsA()->New();
-   if (!newobj) return 0;
+   char *pobj = (char*)obj->IsA()->New();
+   if (!pobj) return 0;
+   
+   Int_t baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
+   if (baseOffset==-1) {
+      // cl does not inherit from TObject.
+      // Since this is not supported in this function, the only reason we could reach this code
+      // is because something is screwed up in the ROOT code.
+      Fatal("CloneObject","Incorrect detection of the inheritance from TObject for class %s.\n",
+            obj->IsA()->GetName());
+   }
+   TObject *newobj = (TObject*)(pobj+baseOffset);
 
    //create a buffer where the object will be streamed
    //We are forced to go via the I/O package (ie TBufferFile).
@@ -239,6 +271,12 @@ TObject *TDirectory::CloneObject(const TObject *obj)
    newobj->ResetBit(kCanDelete);
 
    delete buffer;
+   if (autoadd) {
+      ROOT::DirAutoAdd_t func = obj->IsA()->GetDirectoryAutoAdd();
+      if (func) {
+         func(newobj,this);
+      }
+   }
    return newobj;
 }
 

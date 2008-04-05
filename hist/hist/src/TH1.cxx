@@ -730,20 +730,11 @@ void TH1::Build()
 
    UseCurrentStyle();
 
-   if (fgAddDirectory && gDirectory) {
-      if (!gDirectory->GetList()) {
-         Warning("Build","Current directory is not a valid directory");
-         return;
-      }
-      TH1 *hold = (TH1*)gDirectory->GetList()->FindObject(GetName());
-      if (hold) {
-         Warning("Build","Replacing existing histogram: %s (Potential memory leak).",GetName());
-         gDirectory->Remove(hold);
-         hold->SetDirectory(0);
-         //  delete hold;
-      }
-      gDirectory->Append(this);
+   if (TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
+      if (fDirectory) {
+         fDirectory->Append(this,kTRUE);
+      }
    }
 }
 
@@ -1967,6 +1958,22 @@ void TH1::Copy(TObject &obj) const
       gDirectory->Append(&obj);
       ((TH1&)obj).fDirectory = gDirectory;
    }
+}
+
+//______________________________________________________________________________
+void TH1::DirectoryAutoAdd(TDirectory *dir)
+{
+   // Perform the automatic addition of the histogram to the given directory
+   //
+   // Note this function is called in place when the semantic requires 
+   // this object to be added to a directory (I.e. when being read from
+   // a TKey or being Cloned)
+   // 
+
+   Bool_t addStatus = TH1::AddDirectoryStatus();
+   if (addStatus) {
+      SetDirectory(dir);
+   }  
 }
 
 //______________________________________________________________________________
@@ -5753,17 +5760,15 @@ void TH1::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      fDirectory = 0;
       if (R__v > 2) {
          b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
 
          fXaxis.SetParent(this);
          fYaxis.SetParent(this);
          fZaxis.SetParent(this);
-         if (fgAddDirectory && !gROOT->ReadingObject()) {
-            fDirectory = gDirectory;
-            if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
-         }
          ResetBit(kCanDelete);
+         ResetBit(kMustCleanup);
          return;
       }
       //process old versions before automatic schema evolution
@@ -5805,10 +5810,6 @@ void TH1::Streamer(TBuffer &b)
       fOption.Streamer(b);
       fFunctions->Delete();
       fFunctions->Streamer(b);
-      if (!gROOT->ReadingObject()) {
-         fDirectory = gDirectory;
-         if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
-      }
       b.CheckByteCount(R__s, R__c, TH1::IsA());
 
    } else {
@@ -6700,12 +6701,9 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    }
    // X option. Pseudo-experiments post-processor to determine KS probability
    const Int_t nEXPT = 1000;
-   if (opt.Contains("X")) {
+   if (opt.Contains("X")) { 
       Double_t dSEXPT;
-      Bool_t addStatus = fgAddDirectory;
-      fgAddDirectory = kFALSE;
-      TH1 *hExpt = (TH1*)Clone();
-      fgAddDirectory = addStatus;
+      TH1 *hExpt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
       // make nEXPT experiments (this should be a parameter)
       prb3 = 0;
       for (Int_t i=0; i < nEXPT; i++) {

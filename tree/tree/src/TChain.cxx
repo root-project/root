@@ -690,6 +690,14 @@ void TChain::CreatePackets()
 }
 
 //______________________________________________________________________________
+void TChain::DirectoryAutoAdd(TDirectory * /* dir */)
+{
+   // Override the TTree::DirectoryAutoAdd behavior:
+   // we never auto add. 
+
+}
+
+//______________________________________________________________________________
 Long64_t TChain::Draw(const char* varexp, const TCut& selection,
                       Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -1593,7 +1601,7 @@ void TChain::ls(Option_t* option) const
 //______________________________________________________________________________
 Long64_t TChain::Merge(const char* name, Option_t* option)
 {
-   // -- Merge all the entries in the chain into a new tree in a new file.
+   // Merge all the entries in the chain into a new tree in a new file.
    //
    // See important note in the following function Merge().
    //
@@ -1620,7 +1628,7 @@ Long64_t TChain::Merge(const char* name, Option_t* option)
 //______________________________________________________________________________
 Long64_t TChain::Merge(TCollection* /* list */, Option_t* /* option */ )
 {
-   // -- Merge all chains in the collection.  (NOT IMPLEMENTED)
+   // Merge all chains in the collection.  (NOT IMPLEMENTED)
 
    Error("Merge", "not implemented");
    return -1;
@@ -1629,7 +1637,12 @@ Long64_t TChain::Merge(TCollection* /* list */, Option_t* /* option */ )
 //______________________________________________________________________________
 Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 {
-   // -- Merge all the entries in the chain into a new tree in the current file.
+   // Merge all the entries in the chain into a new tree in the current file.
+   //
+   // Note: The "file" parameter is *not* the file where the new
+   //       tree will be inserted.  The new tree is inserted into
+   //       gDirectory, which is usually the most recently opened
+   //       file, or the directory most recently cd()'d to.
    //
    // If option = "C" is given, the compression level for all branches
    // in the new Tree is set to the file compression level.  By default,
@@ -2008,6 +2021,9 @@ void TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
    //      bname is the name of a branch.
    //      add is the address of the branch.
    //
+   //    Note: See the comments in TBranchElement::SetAddress() for a more
+   //          detailed discussion of the meaning of the add parameter.
+   //
    // IMPORTANT REMARK:
    // In case TChain::SetBranchStatus is called, it must be called
    // BEFORE calling this function.
@@ -2027,7 +2043,6 @@ void TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
    if (fTreeNumber >= 0) {
       TBranch* branch = fTree->GetBranch(bname);
       if (ptr) {
-         // FIXME: What if branch is zero here?
          *ptr = branch;
       }
       if (branch) {
@@ -2055,14 +2070,23 @@ void TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
 //_______________________________________________________________________
 void TChain::SetBranchAddress(const char* bname, void* add, TClass* realClass, EDataType datatype, Bool_t isptr)
 {
-   // -- Check if bname is already in the status list, and if not, create a TChainElement object and set its address.
+   // Check if bname is already in the status list, and if not, create a TChainElement object and set its address.
+   //
+   //    Note: See the comments in TBranchElement::SetAddress() for a more
+   //          detailed discussion of the meaning of the add parameter.
+   //
    return SetBranchAddress(bname, add, 0, realClass, datatype, isptr);
 }
 
 //_______________________________________________________________________
 void TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TClass* realClass, EDataType datatype, Bool_t isptr)
 {
-   // -- Check if bname is already in the status list, and if not, create a TChainElement object and set its address.
+   // Check if bname is already in the status list, and if not, create a TChainElement object and set its address.
+   //
+   //    Note: See the comments in TBranchElement::SetAddress() for a more
+   //          detailed discussion of the meaning of the add parameter.
+   //
+
    TChainElement* element = (TChainElement*) fStatus->FindObject(bname);
    if (!element) {
       element = new TChainElement(bname, "");

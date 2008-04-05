@@ -87,7 +87,9 @@ public:
    virtual ~TGraph2D();
 
    TGraph2D& operator=(const TGraph2D &);
-
+   
+   virtual void     Clear(Option_t *option="");
+   virtual void     DirectoryAutoAdd(TDirectory *);
    Int_t            DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    void             ExecuteEvent(Int_t event, Int_t px, Int_t py);

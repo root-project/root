@@ -49,6 +49,7 @@ public:
    virtual void      Clear(Option_t *option="") {Reset(option);}
    virtual Bool_t    Contains(Long64_t entry);
    virtual Bool_t    ContainsRange(Long64_t entrymin, Long64_t entrymax);
+   virtual void      DirectoryAutoAdd(TDirectory *);
    virtual void      Enter(Long64_t entry);
    TDirectory       *GetDirectory() const {return fDirectory;}
    virtual Long64_t  GetEntry(Int_t index) const;

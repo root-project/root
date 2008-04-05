@@ -77,6 +77,7 @@ public:
    virtual void      Browse(TBrowser*);
    virtual void      CanDeleteRefs(Bool_t flag = kTRUE);
    virtual void      CreatePackets();
+   virtual void      DirectoryAutoAdd(TDirectory *);
    virtual Long64_t  Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0);
    virtual Long64_t  Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0); // *MENU*
    virtual void      Draw(Option_t* opt) { Draw(opt, "", "", 1000000000, 0); }
