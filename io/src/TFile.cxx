@@ -2298,8 +2298,10 @@ void TFile::ReadStreamerInfo()
 
    // loop on all TStreamerInfo classes
    TStreamerInfo *info;
-   TIter next(list);
-   while ((info = (TStreamerInfo*)next())) {
+   TObjLink *lnk = list->FirstLink();
+   while (lnk) {
+      info = (TStreamerInfo*)lnk->GetObject();
+
       if (info->IsA() != TStreamerInfo::Class()) {
          Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
          continue;
@@ -2313,6 +2315,8 @@ void TFile::ReadStreamerInfo()
          printf("ReadStreamerInfo, class:%s, illegal uid=%d\n",info->GetName(),uid);
       }
       if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
+
+      lnk = lnk->Next();
    }
    fClassIndex->fArray[0] = 0;
    list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
