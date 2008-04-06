@@ -3797,7 +3797,7 @@ void TClass::PostLoadCheck()
       // BuildCheck is not appropriate here since it check a streamerinfo against the
       // 'current streamerinfo' which, at time point, would be the same as 'info'!
       if (info && GetListOfDataMembers()
-          && (info->GetCheckSum()!=GetCheckSum() && info->GetCheckSum()!=GetCheckSum(1)))
+          && (info->GetCheckSum()!=GetCheckSum() && info->GetCheckSum()!=GetCheckSum(1) && info->GetCheckSum()!=GetCheckSum(2)))
       {
          Bool_t warn = ! TestBit(kWarned);
          if (warn && info->GetOldVersion()<=2) {
@@ -4120,6 +4120,11 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
    // if code==1 data members of type enum are not counted in the checksum
    // if code==2 return the checksum of data members and base classes, not including the ranges and array size found in comments.  
    //            This is needed for backward compatibility.
+   //
+   // WARNING: this function must be kept in sync with TClass::GetCheckSum.
+   // They are both used to handle backward compatibility and should both return the same values.
+   // TStreamerInfo uses the information in TStreamerElement while TClass uses the information
+   // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
 
    if (fCheckSum && code == 0) return fCheckSum;
 
