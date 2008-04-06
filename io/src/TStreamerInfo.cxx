@@ -579,6 +579,7 @@ void TStreamerInfo::BuildCheck()
          Bool_t done = kFALSE;
          Bool_t oldIsNonVersioned = kFALSE;
          if (!fClass->TestBit(TClass::kWarned) && (fClassVersion == info->GetClassVersion()) && (fCheckSum != info->GetCheckSum())) {
+            // The TStreamerInfo's checksum is different from the checksum for the compile class.
 
             match = kFALSE;
             oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
@@ -593,11 +594,36 @@ void TStreamerInfo::BuildCheck()
                // members of type enum. We also used to not count the //[xyz] comment
                // in the checksum, so test for that too.
                if (  (fCheckSum == fClass->GetCheckSum() || fCheckSum == fClass->GetCheckSum(1) || fCheckSum == fClass->GetCheckSum(2))
-                   &&(info->GetCheckSum() == fClass->GetCheckSum() || info->GetCheckSum() == fClass->GetCheckSum(1) || info->GetCheckSum() == fClass->GetCheckSum(2))
-                  )
-               {
+                     &&(info->GetCheckSum() == fClass->GetCheckSum() || info->GetCheckSum() == fClass->GetCheckSum(1) || info->GetCheckSum() == fClass->GetCheckSum(2))
+                     )
+                  {
+                     match = kTRUE;
+                  }
+               if (fOldVersion <= 2) {
+                  // Names of STL base classes was modified in vers==3. Allocators removed
+                  // (We could be more specific (see test for the same case below)
                   match = kTRUE;
                }
+            } else {
+               // The on-file TStreamerInfo's checksum differs from the checksum of a TStreamerInfo on another file.
+               
+               match = kFALSE;
+               oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
+               
+               // In the case where the read-in TStreamerInfo does not
+               // match in the 'current' in memory TStreamerInfo for
+               // a non foreign class (we can not get here if this is
+               // a foreign class so we do not need to test it),
+               // we need to add this one more test since the CINT behaviour
+               // with enums changed over time, so verify the checksum ignoring
+               // members of type enum. We also used to not count the //[xyz] comment
+               // in the checksum, so test for that too.
+               if (fCheckSum == info->GetCheckSum(0) || fCheckSum == info->GetCheckSum(1) || fCheckSum == info->GetCheckSum(2)
+                   || GetCheckSum(0) == info->GetCheckSum() || GetCheckSum(1) == info->GetCheckSum() || GetCheckSum(2) == info->GetCheckSum() 
+                   || GetCheckSum(0) == info->GetCheckSum(0))
+                  {
+                     match = kTRUE;
+                  }
                if (fOldVersion <= 2) {
                   // Names of STL base classes was modified in vers==3. Allocators removed
                   // (We could be more specific (see test for the same case below)
@@ -667,7 +693,8 @@ void TStreamerInfo::BuildCheck()
       }
       // The slot was free, however it might still be reversed for the current 
       // loaded version of the class
-      if (fClass->GetListOfDataMembers() 
+      if (fClass->IsLoaded() 
+          && fClass->GetListOfDataMembers() 
           && (fClassVersion == fClass->GetClassVersion()) 
           && (fCheckSum != fClass->GetCheckSum()) 
           && (fClass->GetClassInfo())) {
@@ -1645,6 +1672,94 @@ void TStreamerInfo::ForceWriteInfo(TFile* file, Bool_t force)
          }
       }
    }
+}
+
+//______________________________________________________________________________
+UInt_t TStreamerInfo::GetCheckSum(UInt_t code) const 
+{
+   // Recalculate the checksum of this TStreamerInfo based on its code.
+   // 
+   // The class ckecksum is used by the automatic schema evolution algorithm
+   // to uniquely identify a class version.
+   // The check sum is built from the names/types of base classes and
+   // data members.
+   // Algorithm from Victor Perevovchikov (perev@bnl.gov).
+   //
+   // if code==1 data members of type enum are not counted in the checksum
+   // if code==2 return the checksum of data members and base classes, not including the ranges and array size found in comments.  
+   //            This is needed for backward compatibility.
+   //
+   // WARNING: this function must be kept in sync with TClass::GetCheckSum.
+   // They are both used to handle backward compatibility and should both return the same values.
+   // TStreamerInfo uses the information in TStreamerElement while TClass uses the information
+   // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
+
+   UInt_t id = 0;
+
+   int il;
+   TString name = GetName();
+   TString type;
+   il = name.Length();
+   for (int i=0; i<il; i++) id = id*3+name[i];
+
+   TIter next(GetElements());
+   TStreamerElement *el;
+   while ( (el=(TStreamerElement*)next()) ) {
+      if (el->IsBase()) {
+         name = el->GetName();
+         il = name.Length();
+         for (int i=0; i<il; i++) id = id*3+name[i];
+      }
+   } /* End of Base Loop */
+
+   next.Reset();
+   while ( (el=(TStreamerElement*)next()) ) {
+      if (el->IsBase()) continue;
+      
+      // humm can we tell if a TStreamerElement is an enum?
+      // Maybe something like:
+      Bool_t isenum = kFALSE;
+      if ( el->GetType()==3 && gROOT->GetType(el->GetTypeName())==0) {
+         // If the type is not an enum but a typedef to int then 
+         // el->GetTypeName() should be return 'int'
+         isenum = kTRUE;
+      }
+      if ( (code != 1) && isenum) id = id*3 + 1;
+      
+      name = el->GetName();  il = name.Length();
+
+      int i;
+      for (i=0; i<il; i++) id = id*3+name[i];
+
+      type = el->GetTypeName();
+      if (TClassEdit::IsSTLCont(type)) {
+         type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+      }
+
+      il = type.Length();
+      for (i=0; i<il; i++) id = id*3+type[i];
+
+      int dim = el->GetArrayDim();
+      if (dim) {
+         for (int i=0;i<dim;i++) id = id*3+el->GetMaxIndex(i);
+      }
+ 
+      
+      if (code != 2) {
+         const char *left = strstr(el->GetTitle(),"[");
+         if (left) {
+            const char *right = strstr(left,"]");
+            if (right) {
+               ++left;
+               while (left != right) {
+                  id = id*3 + *left;
+                  ++left;
+               }
+            }
+         }
+      }
+   }
+   return id;
 }
 
 //______________________________________________________________________________
