@@ -145,7 +145,7 @@ $(LIBDIR)runbase_C.$(DllSuf) : runbase.C directories
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | $(CALLROOTEXE) -l -b -n
 
 stlIoTest.log: $(DIRECTORIES) $(TEST_DLL)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' | grep -v 'did not support' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b brun.C 2>&1 | tee full.log | grep -v -e 'does not support' -e 'did not support' -e 'Testing older file format from:' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
 
 stlIoTest: stlIoTest.log
 	$(CMDECHO) diff -b stlIoTest.ref stlIoTest.log 
@@ -182,10 +182,10 @@ base: base.clog
 
 emulvector.root.log: writetest_emulvector.C
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q writetest_emulvector.C > emulvector.root.log 2>&1
-	
+
 emulvector.root: emulvector.root.log emulvector.root.ref
 	$(TestDiff)
-	
+
 Emulvector.log: emulvector.root
 
 Emulvector: Emulvector.log
