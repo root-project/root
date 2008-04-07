@@ -456,6 +456,7 @@ TGListTree::~TGListTree()
 {
    // Delete list tree widget.
 
+   Int_t refcnt;
    TGListTreeItem *item, *sibling;
 
    delete [] fDNDTypeList;
@@ -470,14 +471,30 @@ TGListTree::~TGListTree()
       delete item;
       item = sibling;
    }
-   if (fgOpenPic)
+   if (fgOpenPic) {
+      refcnt = fgOpenPic->References();
       fClient->FreePicture(fgOpenPic);
-   if (fgClosedPic)
+      if (refcnt == 1)
+         fgOpenPic = 0;
+   }
+   if (fgClosedPic) {
+      refcnt = fgClosedPic->References();
       fClient->FreePicture(fgClosedPic);
-   if (fgCheckedPic)
+      if (refcnt == 1)
+         fgClosedPic = 0;
+   }
+   if (fgCheckedPic) {
+      refcnt = fgCheckedPic->References();
       fClient->FreePicture(fgCheckedPic);
-   if (fgUncheckedPic)
+      if (refcnt == 1)
+         fgCheckedPic = 0;
+   }
+   if (fgUncheckedPic) {
+      refcnt = fgUncheckedPic->References();
       fClient->FreePicture(fgUncheckedPic);
+      if (refcnt == 1)
+         fgUncheckedPic = 0;
+   }
 }
 
 //--- text utility functions
