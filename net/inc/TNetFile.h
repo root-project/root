@@ -107,6 +107,9 @@ private:
    void       *GetDirPtr() const { return fDirp; }
 
 protected:
+   Bool_t      fIsLocal;     // TRUE if the path points to this host
+   TString     fLocalPrefix; // if fIsLocal, prefix to be prepend locally
+
    void        Create(const char *url, TSocket *sock = 0);
    void        InitRemoteEntity(const char *url);
 
@@ -122,6 +125,7 @@ public:
    const char *GetDirEntry(void *dirp = 0);
    Int_t       GetPathInfo(const char *path, FileStat_t &buf);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
+   int         Unlink(const char *path);
 
    ClassDef(TNetSystem,0)  // Directory handler for NetSystem
 };

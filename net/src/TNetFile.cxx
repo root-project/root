@@ -1087,3 +1087,21 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
 
    return (checkstd && checknet);
 }
+
+//______________________________________________________________________________
+Int_t TNetSystem::Unlink(const char *path)
+{
+   // Remove a path
+
+   // If local, use the local TSystem
+   if (fIsLocal) {
+      TString epath = TUrl(path).GetFile();
+      if (!fLocalPrefix.IsNull())
+         epath.Insert(0, fLocalPrefix);
+      return gSystem->Unlink(epath);
+   }
+
+   // Not implemented for rootd
+   Warning("Unlink", "funtionality not implemented - ignored (path: %s)", path);
+   return -1;
+}
