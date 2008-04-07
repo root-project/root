@@ -740,6 +740,10 @@ void TStreamerInfo::BuildCheck()
             return;
          }
       }
+      if (!fClass->IsLoaded() &&  this->fOnFileClassVersion>1)
+      {
+         ROOT::ResetClassVersion(fClass,(const char*)-1, this->fClassVersion);
+      }
    }
    // FIXME: This code can never execute because Build() calls
    // TStreamerElement::Class()->IgnoreTObjectStreamer()

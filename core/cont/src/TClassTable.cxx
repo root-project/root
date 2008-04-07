@@ -508,18 +508,29 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
    // Global function to update the version number.
    // This is called via the RootClassVersion macro.
+   //
+   // if cl!=0 and cname==-1, set the new class version if and only is
+   // greater than the existing one and greater or equal to 2;
+   // and also ignore the request if fVersionUsed is true.
 
-   if (cname) {
+   if (cname && cname!=(void*)-1) {
       TClassRec *r = TClassTable::FindElement(cname,kFALSE);
       if (r) r->fId = newid;
    }
    if (cl) {
       if (cl->fVersionUsed) {
          // Problem, the reset is called after the first usage!
-         Error("ResetClassVersion","Version number of %s can not be changed after first usage!",
-               cl->GetName());
+         if (cname!=(void*)-1) 
+            Error("ResetClassVersion","Version number of %s can not be changed after first usage!",
+                  cl->GetName());
       } else {
-         cl->SetClassVersion(newid);
+         if (cname==(void*)-1) {
+            if (cl->fClassVersion<newid && 2<=newid) {
+               cl->SetClassVersion(newid);
+            }
+         } else {
+            cl->SetClassVersion(newid);
+         }
       }
    }
 }
