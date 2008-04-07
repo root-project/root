@@ -30,6 +30,7 @@ class TEntryList;
 class TList;
 class TDSet;
 class TGridResult;
+class TFileCollection;
 
 
 class TGridCollection : public TObject {
@@ -110,6 +111,8 @@ public:
       { MayNotUse("GetCollectionName"); return 0;}
    virtual const char* GetInfoComment() const
       { MayNotUse("GetInfoComment"); return 0;}
+   virtual TFileCollection* GetFileCollection(const char* /*name*/ = "", const char* /*title*/ = "") const
+      { MayNotUse("GetFileCollection"); return 0;}
 
    ClassDef(TGridCollection,1)  // ABC managing collection of files on the Grid
 };

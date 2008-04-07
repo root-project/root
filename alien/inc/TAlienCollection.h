@@ -38,6 +38,7 @@
 #endif
 
 
+class TFileCollection;
 
 class TAlienCollection : public TGridCollection {
 
@@ -72,6 +73,8 @@ public:
    TAlienCollection(const char *localCollectionFile, UInt_t maxentries);
 
    virtual ~TAlienCollection();
+
+   TFileCollection* GetFileCollection(const char* name = "", const char* title = "") const;
 
    void        Reset();
    TMap       *Next();
@@ -134,6 +137,8 @@ public:
                                 UInt_t maxentries = 1000000);
    static TGridCollection *OpenQuery(TGridResult * queryresult,
                                      Bool_t nogrouping = kFALSE);
+   static TAlienCollection *OpenAlienCollection(TGridResult * queryresult,
+                                             Option_t* option = "");
 
    const char *GetOutputFileName(const char *infile, Bool_t rename = kTRUE, const char *suffix="root");
 

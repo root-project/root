@@ -39,6 +39,7 @@ class TAlien : public TGrid {
 
 public:
    enum { kSTDOUT = 0, kSTDERR = 1 , kOUTPUT = 2, kENVIR = 3 };
+   enum CatalogType { kFailed = -1, kFile = 0, kDirectory, kCollection };
 
 private:
    // Stream content types.
@@ -92,7 +93,8 @@ public:
    virtual Bool_t Register(const char *lfn, const char *turl, Long_t size=-1,
                            const char *se=0, const char *guid=0, Bool_t verbose=kFALSE);
    virtual Bool_t Rm(const char *lfn, Option_t *option="", Bool_t verbose=kFALSE);
-
+   virtual CatalogType Type(const char* lfn, Option_t* option = "", Bool_t verbose=kFALSE);
+   virtual TGridResult* GetCollection(const char* lfn, Option_t* option = "", Bool_t verbose=kFALSE);
 
    ClassDef(TAlien,0)  // Interface to Alien GRID services
 };

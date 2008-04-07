@@ -33,7 +33,8 @@
 #include "TObjArray.h"
 #include "TROOT.h"
 #include "TError.h"
-
+#include "TFileCollection.h"
+#include "TFileInfo.h"
 
 ClassImp(TAlienCollection)
 
@@ -140,6 +141,42 @@ TFile *TAlienCollection::OpenFile(const char *filename)
       return TFile::Open(turl);
    }
    return 0;
+}
+
+//______________________________________________________________________________
+TAlienCollection *TAlienCollection::OpenAlienCollection(TGridResult * queryresult,
+                                             Option_t* /*option*/)
+{
+   // Static method used to create an Alien event collection, by creating
+   // collection from a TGridResult GetCollection result (TAlien::GetCollection)
+
+   if (!queryresult)
+      return 0;
+
+   TList *filelist = new TList();
+
+   TIterator* fileiter = queryresult->MakeIterator();
+   TMap *filemap = 0;
+
+   while ((filemap = ((TMap *) fileiter->Next()))) {
+      if (!filemap->GetValue("origLFN"))
+         continue;
+
+      filemap->Add(new TObjString("lfn"), new TObjString(filemap->GetValue("origLFN")->GetName()));
+      filemap->Add(new TObjString("turl"), new TObjString(Form("alien://%s", filemap->GetValue("origLFN")->GetName())));
+      TString bname = gSystem->BaseName(filemap->GetValue("origLFN")->GetName());
+      filemap->Add(new TObjString("name"), new TObjString(bname.Data()));
+
+      TMap* filegroup = new TMap();
+      filegroup->Add(new TObjString(bname.Data()), filemap);
+      filegroup->Add(new TObjString(""), filemap);
+
+      // store the filegroup
+      filelist->Add(filegroup);
+   }
+   delete fileiter;
+
+   return new TAlienCollection(filelist, filelist->GetEntries(), 1);;
 }
 
 //______________________________________________________________________________
@@ -1527,3 +1564,46 @@ const char *TAlienCollection::GetOutputFileName(const char *infile,
    }
    return fLastOutFileName.Data();
 }
+
+//_____________________________________________________________________________
+TFileCollection* TAlienCollection::GetFileCollection(const char* name, const char* title) const
+{
+   // creates a TFileCollection objects and fills it with the information from this collection
+   // note that TFileCollection has a flat structure and no groups --> all files are filles on a flat level
+   // the TFileInfo of each file in the TFileCollection is filled with turl, size, md5, guid
+   // 
+   // the object has to be deleted by the user
+
+   TFileCollection* collection = new TFileCollection(name, title);
+
+   TIter next(fFileGroupList);
+   TMap* group = 0;
+   while ((group = dynamic_cast<TMap*>(next()))) {
+      TIter next2(group);
+      TObjString* key = 0;
+      while ((key = dynamic_cast<TObjString*> (next2()))) {
+        if (key->String().Length() == 0)
+          continue;
+
+        TMap* file = dynamic_cast<TMap*> (group->GetValue(key));
+        if (!file)
+          continue;
+
+        TObjString* turl = dynamic_cast<TObjString*> (file->GetValue("turl"));
+        TObjString* size = dynamic_cast<TObjString*> (file->GetValue("size"));
+        TObjString* md5 = dynamic_cast<TObjString*> (file->GetValue("md5"));
+        TObjString* guid = dynamic_cast<TObjString*> (file->GetValue("guid"));
+
+        if (!turl || turl->String().Length() == 0)
+          continue;
+
+        TFileInfo* fileInfo = new TFileInfo(turl->String(), size->String().Atoi(), guid->String(), md5->String());
+        collection->Add(fileInfo);
+      }
+   }
+
+   collection->Update();
+
+   return collection;
+}
+

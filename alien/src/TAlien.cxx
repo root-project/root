@@ -620,7 +620,29 @@ TGridCollection *TAlien::OpenCollection(const char *collectionfile,
 {
    // Factory function for a TAlienCollection based on an XML file.
 
-   return (TGridCollection*)TAlienCollection::Open(collectionfile, maxentries);
+   TString path(collectionfile);
+   if (path.BeginsWith("alien://", TString::kIgnoreCase)) {
+      TAlien* alien = dynamic_cast<TAlien*> (gGrid);
+      if (!alien) {
+        Error("OpenCollection",
+              "Trying to read a collection, but gGrid not initialized with AliEn");
+        return 0;
+      }
+      TString lfn = path(strlen("alien://"), path.Length());
+      if (alien->Type(lfn) == kCollection) {
+        // it is a collection
+        TGridResult* gridResult = alien->GetCollection(lfn);
+        if (!gridResult) {
+          Error("OpenCollection",
+                "Could not retrieve collection %d from the catalog", collectionfile);
+          return 0;
+        }
+
+        return TAlienCollection::OpenAlienCollection(gridResult);
+      }
+   }
+
+   return TAlienCollection::Open(collectionfile, maxentries);
 }
 
 //______________________________________________________________________________
@@ -630,4 +652,63 @@ TGridCollection *TAlien::OpenCollectionQuery(TGridResult *queryresult,
    // Factory function fo a TAlienCollection based on a gGrid Query.
 
    return (TGridCollection*)TAlienCollection::OpenQuery(queryresult, nogrouping);
+}
+
+//______________________________________________________________________________
+TAlien::CatalogType TAlien::Type(const char* lfn, Option_t* option, Bool_t verbose)
+{
+   // returns the type of the given lfn
+
+   TString cmdline = TString("type -z") + TString(" ") + TString(option) + TString(" ") + TString(lfn);
+
+   TGridResult* gridResult = Command(cmdline, kFALSE);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   if (!gridResult) {
+      Error("Type", "Did not receive TGridResult from query %s", cmdline.Data());
+      return kFailed;
+   }
+
+   const char* typeStr = gridResult->GetKey(0, "type");
+   if (!typeStr || strlen(typeStr) == 0) {
+      Error("Type", "Could not get type of %s", lfn);
+      delete gridResult;
+      return kFailed;
+   }
+
+   TAlien::CatalogType type = kFailed;
+
+   if (strcmp(typeStr, "file") == 0) {
+      type =  kFile;
+   } else if (strcmp(typeStr, "directory") == 0) {
+      type = kDirectory;
+   } else if (strcmp(typeStr, "collection") == 0) {
+      type = kCollection;
+   } else
+     Error("Type", "Unknown type %s", typeStr);
+
+   delete gridResult;
+
+   return type;
+}
+
+//______________________________________________________________________________
+TGridResult* TAlien::GetCollection(const char* lfn, Option_t* option, Bool_t verbose)
+{
+   //
+
+   TString cmdline = TString("listFilesFromCollection -z -v") + TString(" ") + TString(option) + TString(" ") + TString(lfn);
+
+   TGridResult* gridResult = Command(cmdline, kFALSE);
+
+   if (verbose) {
+      Stdout();
+      Stderr();
+   }
+
+   return gridResult;
 }
