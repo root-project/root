@@ -976,6 +976,8 @@ Bool_t TGContainer::HandleButton(Event_t *event)
          fDragging = kTRUE;
          fX0 = fXf = fXp;
          fY0 = fYf = fYp;
+         gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY, 
+                                  fXf-fX0, fYf-fY0);
       }
    }
 
@@ -988,6 +990,9 @@ Bool_t TGContainer::HandleButton(Event_t *event)
          fScrolling = kFALSE;
 
          if (gSystem) gSystem->RemoveTimer(fScrollTimer);
+         gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
+                                  fXf-fX0, fYf-fY0);
+         ClearViewPort();
 
       } else {
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
@@ -1114,11 +1119,16 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
    TGFrame *f = 0;
    fOnMouseOver = kFALSE;
 
+   Bool_t wasScrolling = fScrolling;
+
    if (gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
                         TGDNDManager::GetDNDActionCopy(), event->fTime);
-   } else if (fDragging) {
+   } 
+   else if (fDragging) {
 
+      gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
+                               fXf-fX0, fYf-fY0);
       fX0 =  TMath::Min(fXp,x);
       fY0 =  TMath::Min(fYp,y);
       fXf =  TMath::Max(fXp,x);
@@ -1127,17 +1137,20 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
       total = selected = 0;
 
       if (event->fX > Int_t(dim.fWidth) - kAutoScrollFudge) {
-         fCanvas->SetHsbPosition(x - dim.fWidth);
+         //fCanvas->SetHsbPosition(x - dim.fWidth);
          fScrolling = kTRUE;
       } else if (event->fX < kAutoScrollFudge) {
-         fCanvas->SetHsbPosition(x);
+         //fCanvas->SetHsbPosition(x);
          fScrolling = kTRUE;
       } else if (event->fY > Int_t(dim.fHeight) - kAutoScrollFudge) {
-         fCanvas->SetVsbPosition(y - dim.fHeight);
+         //fCanvas->SetVsbPosition(y - dim.fHeight);
          fScrolling = kTRUE;
       } else if (event->fY < kAutoScrollFudge) {
-         fCanvas->SetVsbPosition(y);
+         //fCanvas->SetVsbPosition(y);
          fScrolling = kTRUE;
+      }
+      else {
+         fScrolling = kFALSE;
       }
 
       TIter next(fList);
@@ -1154,12 +1167,14 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
               (xff > fX0 && xff < fXf)) &&
              ((yf0 > fY0 && yf0 < fYf) ||
               (yff > fY0 && yff < fYf))) {
-            ActivateItem(el);
+            if (!el->fFrame->IsActive())
+               ActivateItem(el);
             gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kHand));
             OnMouseOver(f);
             ++selected;
          } else {
-            DeActivateItem(el);
+            if (el->fFrame->IsActive())
+               DeActivateItem(el);
          }
       }
 
@@ -1169,7 +1184,10 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
                      fTotal, fSelected);
       }
-   } else {
+      gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
+                               fXf-fX0, fYf-fY0);
+   } 
+   else {
       TGFrame *over_frame = 0;
 
       TIter next(fList);
@@ -1211,7 +1229,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
       }
    }
 
-   if (fScrolling) {
+   if (!wasScrolling && fScrolling) {
       if (gSystem) {
          fScrollTimer->Reset();
          gSystem->AddTimer(fScrollTimer);
@@ -1469,6 +1487,8 @@ void TGContainer::OnAutoScroll()
       dy = dim.fHeight - kAutoScrollFudge - y;
 
    if (dx || dy) {
+      if (dx) dx /= 5;
+      if (dy) dy /= 5;
       Int_t adx = TMath::Abs(dx);
       Int_t ady = TMath::Abs(dy);
       if (adx > kAutoScrollFudge) adx = kAutoScrollFudge;
@@ -1508,14 +1528,16 @@ void TGContainer::OnAutoScroll()
             (xff > fX0 && xff < fXf)) &&
             ((yf0 > fY0 && yf0 < fYf) ||
             (yff > fY0 && yff < fYf))) {
-            ActivateItem(el);
+            if (!el->fFrame->IsActive())
+               ActivateItem(el);
             ++selected;
          } else {
-            DeActivateItem(el);
+            if (el->fFrame->IsActive())
+               DeActivateItem(el);
          }
       }
-
-      if (fMapSubwindows) gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0, fYf-fY0);
+      gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
+                               fXf-fX0, fYf-fY0);
 
       if (fTotal != total || fSelected != selected) {
          fTotal = total;
@@ -1523,7 +1545,10 @@ void TGContainer::OnAutoScroll()
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED),
                      fTotal, fSelected);
       }
+      ClearViewPort();
       DoRedraw();
+      gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
+                               fXf-fX0, fYf-fY0);
    }
 }
 

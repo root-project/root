@@ -869,10 +869,9 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
          fDragging = kTRUE;
          fX0 = fXf = fXp;
          fY0 = fYf = fYp;
-         if (fMapSubwindows) {
+         //if (fMapSubwindows)
             gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0,
                                      fYf-fY0);
-         }
       }
    }
 
@@ -884,7 +883,7 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
          fScrolling = kFALSE;
 
          if (gSystem) gSystem->RemoveTimer(fScrollTimer);
-         if (fMapSubwindows)
+         //if (fMapSubwindows)
             gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0, fY0, fXf-fX0,
                                      fYf-fY0);
       } else {
@@ -1407,10 +1406,11 @@ void TGListView::Layout()
  
    if (fViewMode == kLVDetails) {
       if (fJustChanged) {
-         fVport->MoveResize(fBorderWidth, fBorderWidth,
-         fVport->GetWidth(), fVport->GetHeight());
+         fVport->MoveResize(fBorderWidth, fBorderWidth, fVport->GetWidth(), 
+                            fVport->GetHeight());
          container->Move(0, h);
-         fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
+         fVScrollbar->SetRange((Int_t)container->GetHeight(), 
+                               (Int_t)fVport->GetHeight());
       } else {
          container->DrawRegion(0, 0, fVport->GetWidth(), fVport->GetHeight());
       }
