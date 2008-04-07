@@ -164,13 +164,4 @@ public:
     while ((_NAME3_(obj_,type,proc) = (type*) _NAME3_(nxt_,type,proc)())) \
        _NAME3_(obj_,type,proc)->proc
 
-// deprecated macros (will be removed in next release)
-#define ForEach(type,proc) \
-    SetCurrentCollection(); \
-    printf("please change ForEach to R__FOR_EACH in %s at line %d\n", __FILE__, __LINE__); \
-    TIter _NAME3_(nxt_,type,proc)(TCollection::GetCurrentCollection()); \
-    type *_NAME3_(obj_,type,proc); \
-    while ((_NAME3_(obj_,type,proc) = (type*) _NAME3_(nxt_,type,proc)())) \
-       _NAME3_(obj_,type,proc)->proc
-
 #endif
