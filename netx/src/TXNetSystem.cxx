@@ -233,6 +233,7 @@ void* TXNetSystem::OpenDirectory(const char* dir)
          XrdOucString s(fDir.Data());
          dirs.Push_back(s);
          cg.ClientAdmin()->ExistDirs(dirs, existDirs);
+         cg.ClientAdmin()->GoBackToRedirector();
          if (existDirs.GetSize()>0 && existDirs[0])
             return fDirp;
          else
@@ -279,6 +280,7 @@ Int_t TXNetSystem::MakeDirectory(const char* dir)
       if (cg.IsValid()) {
          // use default permissions 755 to create directory
          Bool_t ok = cg.ClientAdmin()->Mkdir(TUrl(dir).GetFile(),7,5,5);
+         cg.ClientAdmin()->GoBackToRedirector();
          if (ok) {
             return 0;
          } else {
@@ -310,6 +312,7 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
          TXNetSystemConnectGuard cg(this, fUrl);
          if (cg.IsValid()) {
             Bool_t ok = cg.ClientAdmin()->DirList(fDir, fDirList);
+            cg.ClientAdmin()->GoBackToRedirector();
             if (ok) {
                fDirListValid = kTRUE;
             } else {
@@ -352,6 +355,7 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
          // Extract the directory name
          TString edir = TUrl(path).GetFile();
          Bool_t ok = cg.ClientAdmin()->Stat(edir.Data(),id,size,flags,modtime);
+         cg.ClientAdmin()->GoBackToRedirector();
 
          // Flag offline files
          if (flags & kXR_offline) {
@@ -449,10 +453,12 @@ int TXNetSystem::Unlink(const char *path)
                ok = cg.ClientAdmin()->Rmdir(edir.Data());
             else
                ok = cg.ClientAdmin()->Rm(edir.Data());
+            cg.ClientAdmin()->GoBackToRedirector();
 
             // Done
             return ((ok) ? 0 : -1);
          } else if (!ok) {
+            cg.ClientAdmin()->GoBackToRedirector();
             cg.NotifyLastError();
          }
       }
@@ -478,6 +484,7 @@ Bool_t TXNetSystem::IsOnline(const char *path)
       if (gDebug > 1 )
          Info("IsOnline", "Checking %s\n",path);
       cg.ClientAdmin()->IsFileOnline(vs,vb);
+      cg.ClientAdmin()->GoBackToRedirector();
       if (!cg.ClientAdmin()->LastServerResp()) {
          return kFALSE;
       }
@@ -515,6 +522,7 @@ Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
       vecString vs;
       vs.Push_back(pathname);
       cg.ClientAdmin()->Prepare(vs, (kXR_char)option, (kXR_char)priority);
+      cg.ClientAdmin()->GoBackToRedirector();
       if (gDebug >0)
          Info("Prepare", "Got Status %d for %s",
               cg.ClientAdmin()->LastServerResp()->status, pathname.c_str());
@@ -572,6 +580,7 @@ Int_t TXNetSystem::Prepare(TCollection *paths,
 
       Info("Prepare","buffer ready: issuing prepare ...");
       cg.ClientAdmin()->Prepare(buf->Data(), (kXR_char)opt, (kXR_char)prio);
+      cg.ClientAdmin()->GoBackToRedirector();
       if (!bufout)
          delete buf;
       if (gDebug >0)
@@ -602,6 +611,7 @@ Bool_t TXNetSystem::GetPathsInfo(const char *paths, UChar_t *info)
    TXNetSystemConnectGuard cg(this, "");
    if (cg.IsValid()) {
       cg.ClientAdmin()->SysStatX(paths, info);
+      cg.ClientAdmin()->GoBackToRedirector();
       if (gDebug >0)
          Info("GetPathsInfo", "Got Status %d",
               cg.ClientAdmin()->LastServerResp()->status);
