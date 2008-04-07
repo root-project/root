@@ -1117,6 +1117,40 @@ Bool_t TSystem::AccessPathName(const char *, EAccessMode)
 }
 
 //______________________________________________________________________________
+Bool_t TSystem::IsPathLocal(const char *path)
+{
+   // Returns TRUE if the url in 'path' points to the local file system.
+   // This is used to avoid going through the NIC card for local operations.
+
+   Bool_t localPath = kTRUE;
+
+   TUrl url(path);
+   if (strlen(url.GetHost()) > 0) {
+      // Check locality
+      localPath = kFALSE;
+      TInetAddress a(gSystem->GetHostByName(url.GetHost()));
+      TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
+      if (!strcmp(a.GetHostName(), b.GetHostName()) ||
+          !strcmp(a.GetHostAddress(), b.GetHostAddress())) {
+         // Host OK
+         localPath = kTRUE;
+         // Check the user if specified
+         if (strlen(url.GetUser()) > 0) {
+            UserGroup_t *u = gSystem->GetUserInfo();
+            if (u) {
+               if (strcmp(u->fUser, url.GetUser()))
+                  // Requested a different user
+                  localPath = kFALSE;
+               delete u;
+            }
+         }
+      }
+   }
+   // Done
+   return localPath;
+}
+
+//______________________________________________________________________________
 int TSystem::CopyFile(const char *, const char *, Bool_t)
 {
    // Copy a file. If overwrite is true and file already exists the
