@@ -83,8 +83,8 @@ private:
    void    CreateXClient(const char *url, Option_t *option, Int_t netopt,
                          Bool_t parallelopen);
 
-   Int_t   ParseCacheOptions(const char *opts,
-                             Int_t &cachesz, Int_t &readaheadsz, Int_t &rmpolicy);
+   Int_t   ParseOptions(const char *opts, Int_t &cachesz, Int_t &readaheadsz,
+                        Int_t &rmpolicy, Int_t &mxredir);
    // Synchronizes the cache size in XrdClient
    // XrdClient cannot have a cache size smaller than the one in TFile
    void    SynchronizeCacheSize();

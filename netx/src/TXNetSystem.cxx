@@ -490,11 +490,15 @@ Bool_t TXNetSystem::IsOnline(const char *path)
                return kFALSE;
          }
          case kXR_error:
-            Error("IsOnline","Error %d : %s", cg.ClientAdmin()->LastServerError()->errnum,
-                             cg.ClientAdmin()->LastServerError()->errmsg);
+            if (gDebug > 0)
+               Info("IsOnline", "error %d : %s", cg.ClientAdmin()->LastServerError()->errnum,
+                                 cg.ClientAdmin()->LastServerError()->errmsg);
             return kFALSE;
          default:
-            return kTRUE;
+            if (gDebug > 0)
+               Info("IsOnline", "unidentified response: %d; check XProtocol.hh",
+                                 cg.ClientAdmin()->LastServerResp()->status);
+            return kFALSE;
       }
    }
    return kFALSE;

@@ -110,6 +110,8 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    //      "root://server1:port1[,server2:port2,...]/pathfile?readaheadsz=100000"
    //   e. set the cache remove policy
    //      "root://server1:port1[,server2:port2,...]/pathfile?rmpolicy=1"
+   //   f. set the max number of redirections
+   //      "root://server1:port1[,server2:port2,...]/pathfile?mxredir=2"
    // (multiple options can be set concurrently)
    TUrl urlnoanchor(url);
    // Set debug level
@@ -188,17 +190,18 @@ void TXNetFile::FormUrl(TUrl uu, TString &uus)
 }
 
 //_____________________________________________________________________________
-Int_t TXNetFile::ParseCacheOptions(const char *opts, Int_t &cachesz,
-                                   Int_t &readaheadsz, Int_t &rmpolicy)
+Int_t TXNetFile::ParseOptions(const char *opts,
+                              Int_t &cachesz, Int_t &readaheadsz,
+                              Int_t &rmpolicy, Int_t &mxredir)
 {
    // Parse input options for cache parameters
-   static const char *keys[3] = { "cachesz=", "readaheadsz=", "rmpolicy=" };
-
+   static const char *keys[4] = { "cachesz=", "readaheadsz=", "rmpolicy=",
+                                  "mxredir=" };
    Int_t fo = 0;
    TString s(opts);
 
    Int_t i = 0;
-   for (i = 0; i < 3; i++) {
+   for (i = 0; i < 4; i++) {
       Int_t j = s.Index(keys[i]);
       if (j != kNPOS) {
          TString val(s(j+strlen(keys[i]), s.Length()));
@@ -217,14 +220,17 @@ Int_t TXNetFile::ParseCacheOptions(const char *opts, Int_t &cachesz,
                readaheadsz = val.Atoi();
             else if (i == 2)
                rmpolicy = val.Atoi();
+            else if (i == 3)
+               mxredir = val.Atoi();
          }
       }
    }
 
    // Notify
    if (gDebug > 0)
-      Info("ParseCacheOptions","found: cachesz = %d, readaheadsz = %d, rmpolicy = %d",
-                               cachesz, readaheadsz, rmpolicy);
+      Info("ParseCacheOptions","found: cachesz = %d, readaheadsz = %d, "
+                               "rmpolicy = %d, mxredir = %d",
+                               cachesz, readaheadsz, rmpolicy, mxredir);
    // Done
    return fo;
 }
@@ -236,7 +242,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
    // The real creation work is done here.
 
 #ifndef OLDXRDLOCATE
-   Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1, np = 0;
+   Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1, mxredir = -1, np = 0;
 #endif
 
    fClient = 0;
@@ -279,13 +285,24 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
    }
 
 #ifndef OLDXRDLOCATE
-   // Get cache parameters, if any
-   if ((np = ParseCacheOptions(TUrl(url).GetOptions(),
-                                 cachesz, readaheadsz, rmpolicy)) > 0) {
+   // Get client (cache, redir) parameters, if any
+   np = ParseOptions(TUrl(url).GetOptions(),
+                     cachesz, readaheadsz, rmpolicy, mxredir);
+   // Set max redir, if asked
+   if (mxredir > 0) {
+      if (fClient->GetClientConn()) {
+         if (gDebug > 0)
+            Info("CreateXClient", "setting maxredir = %d", mxredir);
+         fClient->GetClientConn()->SetMaxRedirCnt(mxredir);
+      }
+      np--;
+   }
+   // Set the cache parameters, if any
+   if (np > 0) {
       if (gDebug > 0)
-         Info("ParseCacheOptions",
-               "setting cachesz = %d, readaheadsz = %d, rmpolicy = %d",
-               cachesz, readaheadsz, rmpolicy);
+         Info("CreateXClient", "setting cachesz = %d, readaheadsz = %d, "
+                               "rmpolicy = %d",
+                               cachesz, readaheadsz, rmpolicy);
       fClient->SetCacheParameters(cachesz, readaheadsz, rmpolicy);
    } else {
       // Set cache and readahead off for raw files
