@@ -27,6 +27,7 @@
 #include "TError.h"
 #include "TFileInfo.h"
 #include "TSeqCollection.h"
+#include "TFile.h"
 #include "TFileStager.h"
 #include "TObjString.h"
 #include "TPluginManager.h"
@@ -118,17 +119,25 @@ TFileStager *TFileStager::Open(const char *stager)
 //______________________________________________________________________________
 Bool_t TFileStager::IsStaged(const char *f)
 {
-   // Just check if the local file exists locally
+   // Just check if the file exists locally
 
-   return gSystem->AccessPathName(f) ? kFALSE : kTRUE;
+   // The safest is to open in raw mode
+   TUrl u(f);
+   u.SetOptions("filetype=raw");
+   TFile *ff = TFile::Open(u.GetUrl());
+   Bool_t rc = (ff && !ff->IsZombie()) ? kTRUE : kFALSE;
+   ff->Close();
+   delete ff;
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
 Int_t TFileStager::Locate(const char *u, TString &f)
 {
-   // Just check if the local file exists locally
+   // Just check if the file exists locally
 
-   if (gSystem->AccessPathName(u))
+   if (!IsStaged(u))
       return -1;
    f = u;
    return 0;
