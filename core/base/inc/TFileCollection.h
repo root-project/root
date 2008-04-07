@@ -31,20 +31,28 @@ class THashList;
 class TList;
 class TFileInfo;
 class TFileInfoMeta;
+class TObjString;
 
 
 class TFileCollection : public TNamed {
 
 private:
    THashList  *fList;               //-> list of TFileInfos
-   TList      *fMetaDataList;       //-> generic list of file meta data object(s) (summed over entries of fList)
+   TList      *fMetaDataList;       //-> generic list of file meta data object(s)
+                                    //  (summed over entries of fList)
    Long64_t    fTotalSize;          // total size of files in the list
-   Float_t     fStagedPercentage;   // percentage of files staged
+   Long64_t    fNFiles;             // number of files ( == fList->GetEntries(), needed
+                                    // because TFileCollection might be read without fList)
+   Long64_t    fNStagedFiles;       // number of staged files
+   Long64_t    fNCorruptFiles;      // number of corrupt files
 
    TFileCollection(const TFileCollection&);             // not implemented
    TFileCollection& operator=(const TFileCollection&);  // not implemented
 
 public:
+   enum EStatusBits {
+      kRemoteCollection = BIT(15)   // the collection is not staged
+   };
    TFileCollection(const char *name = 0, const char *title = 0,
                    const char *file = 0, Int_t nfiles = -1, Int_t firstfile = 1);
    virtual ~TFileCollection();
@@ -52,24 +60,37 @@ public:
    void            Add(TFileInfo *info);
    void            AddFromFile(const char *file, Int_t nfiles = -1, Int_t firstfile = 1);
    void            AddFromDirectory(const char *dir);
-   TList          *GetList() { return (TList*) fList; }
+   THashList      *GetList() { return fList; }
+   void            SetList(THashList* list) { fList = list; }
 
-   void            Update();
+   TObjString     *ExportInfo(const char *name = 0);
+
+   Int_t           Update(Long64_t avgsize = -1);
    void            Sort();
-   void            SetAnchor(const char *anchor) const;
+   void            SetAnchor(const char *anchor);
    void            Print(Option_t *option = "") const;
 
-   Long64_t        GetTotalSize() const { return fTotalSize; }
-   Float_t         GetStagedPercentage() const { return fStagedPercentage; }
-   Float_t         GetCorruptedPercentage() const;
+   void            SetBitAll(UInt_t f);
+   void            ResetBitAll(UInt_t f);
+
+   Long64_t        GetTotalSize() const           { return fTotalSize; }
+   Long64_t        GetNFiles() const              { return fNFiles; }
+   Long64_t        GetNStagedFiles() const        { return fNStagedFiles; }
+   Long64_t        GetNCorruptFiles() const       { return fNCorruptFiles; }
+   Float_t         GetStagedPercentage() const
+                   { return (fNFiles > 0) ? 100. * fNStagedFiles / fNFiles : 0; }
+   Float_t         GetCorruptedPercentage() const
+                   { return (fNFiles > 0) ? 100. * fNCorruptFiles / fNFiles : 0; }
 
    const char     *GetDefaultTreeName() const;
    Long64_t        GetTotalEntries(const char *tree) const;
    TFileInfoMeta  *GetMetaData(const char *meta = 0) const;
+   void            SetDefaultMetaData(const char *meta);
+   void            RemoveMetaData(const char *meta = 0);
 
    TFileCollection *GetStagedSubset();
 
-   ClassDef(TFileCollection, 1)  // Collection of TFileInfo objects
+   ClassDef(TFileCollection, 2)  // Collection of TFileInfo objects
 };
 
 #endif

@@ -50,7 +50,8 @@ class TFileInfoMeta;
 class TFileInfo : public TNamed {
 
 private:
-   TUrl            *fCurrentUrl;     //! current URL to access the file, points to URL in the fUrlList or 0, if the list end is reached
+   TUrl            *fCurrentUrl;     //! current URL to access the file, points to URL
+                                     //  in the fUrlList or 0, if the list end is reached
    TList           *fUrlList;        // list of file URLs
    Long64_t         fSize;           // file size
    TUUID           *fUUID;           //-> uuid of the referenced file
@@ -75,6 +76,7 @@ public:
    TUrl           *NextUrl();
    TUrl           *GetCurrentUrl() const;
    TUrl           *GetFirstUrl() const { return (TUrl*)fUrlList->First(); }
+   Int_t           GetNUrls() const    { return fUrlList->GetEntries(); }
 
    Long64_t        GetSize() const         { return fSize; }
    TUUID          *GetUUID() const         { return fUUID; }
@@ -86,7 +88,7 @@ public:
 
    TUrl           *FindByUrl(const char *url);
 
-   Bool_t          AddUrl(const char *url);
+   Bool_t          AddUrl(const char *url, Bool_t infront = kFALSE);
    Bool_t          RemoveUrl(const char *url);
    Bool_t          AddMetaData(TObject *meta);
    Bool_t          RemoveMetaData(const char *meta = 0);
@@ -107,17 +109,22 @@ private:
    Long64_t      fFirst;      // first valid tree entry
    Long64_t      fLast;       // last valid tree entry
    Bool_t        fIsTree;     // true if type is a TTree (or TTree derived)
+   Long64_t      fTotBytes;   // uncompressed size in bytes
+   Long64_t      fZipBytes;   // compressed size in bytes
 
    TFileInfoMeta(const TFileInfoMeta&);             // not implemented
    TFileInfoMeta& operator=(const TFileInfoMeta&);  // not implemented
 
 public:
-   TFileInfoMeta() : fEntries(-1), fFirst(0), fLast(-1), fIsTree(kFALSE) { }
+   TFileInfoMeta() : fEntries(-1), fFirst(0), fLast(-1),
+                     fIsTree(kFALSE), fTotBytes(-1), fZipBytes(-1){ }
    TFileInfoMeta(const char *objPath, const char *objClass = "TTree",
-                 Long64_t entries = -1, Long64_t first = 0, Long64_t last = -1);
+                 Long64_t entries = -1, Long64_t first = 0, Long64_t last = -1,
+                 Long64_t totbytes = -1, Long64_t zipbytes = -1);
    TFileInfoMeta(const char *objPath, const char *objDir,
                  const char *objClass, Long64_t entries = -1,
-                 Long64_t first = 0, Long64_t last = -1);
+                 Long64_t first = 0, Long64_t last = -1,
+                 Long64_t totbytes = -1, Long64_t zipbytes = -1);
 
    virtual ~TFileInfoMeta() { }
 
@@ -128,14 +135,18 @@ public:
    Long64_t        GetFirst() const        { return fFirst; }
    Long64_t        GetLast() const         { return fLast; }
    Bool_t          IsTree() const          { return fIsTree; }
+   Long64_t        GetTotBytes() const     { return fTotBytes; }
+   Long64_t        GetZipBytes() const     { return fZipBytes; }
 
    void            SetEntries(Long64_t entries) { fEntries = entries; }
    void            SetFirst(Long64_t first)     { fFirst = first; }
    void            SetLast(Long64_t last)       { fLast = last; }
+   void            SetTotBytes(Long64_t tot)    { fTotBytes = tot; }
+   void            SetZipBytes(Long64_t zip)    { fZipBytes = zip; }
 
    void            Print(Option_t *options="") const;
 
-   ClassDef(TFileInfoMeta,1)   // Describes TFileInfo meta data
+   ClassDef(TFileInfoMeta,2)   // Describes TFileInfo meta data
 };
 
 #endif

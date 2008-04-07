@@ -24,6 +24,7 @@
 #include "THashList.h"
 #include "TFileInfo.h"
 #include "TIterator.h"
+#include "TObjString.h"
 #include "TUrl.h"
 #include "TSystem.h"
 #include "Riostream.h"
@@ -37,7 +38,7 @@ ClassImp(TFileCollection)
 TFileCollection::TFileCollection(const char *name, const char *title,
                                  const char *textfile, Int_t nfiles, Int_t firstfile)
    : TNamed(name, title), fList(0), fMetaDataList(0),
-     fTotalSize(0), fStagedPercentage(0)
+     fTotalSize(0), fNFiles(0), fNStagedFiles(0), fNCorruptFiles(0)
 {
    // TFileCollection constructor. Specify a name and title describing
    // the list. If textfile is specified the file is opened and a
@@ -66,7 +67,8 @@ void TFileCollection::Add(TFileInfo *info)
 {
    // Add TFileInfo to the collection.
 
-   fList->Add(info);
+   if (fList)
+     fList->Add(info);
 }
 
 //______________________________________________________________________________
@@ -76,6 +78,9 @@ void TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t firs
    // The file should contain one url per line; empty lines or lines starting with '#'
    // (commented lines) are ignored.
    // If nfiles > 0 only nfiles files are added, starting from file 'firstfile' (>= 1).
+
+   if (!fList)
+     return;
 
    if (textfile && *textfile) {
       ifstream f;
@@ -110,6 +115,9 @@ void TFileCollection::AddFromDirectory(const char *dir)
    // can include wildcards after the last slash, causing all matching files
    // in that directory to be added. If dir is the full path of a file, only
    // one element is added.
+
+   if (!fList)
+     return;
 
    if (!dir || !*dir) {
       Error("AddFromDirectory", "input dir undefined");
@@ -166,6 +174,9 @@ TFileCollection *TFileCollection::GetStagedSubset()
 {
    // Creates a subset of the files that have the kStaged & !kCorrupted bit set.
 
+   if (!fList)
+     return 0;
+
    TFileCollection *subset = new TFileCollection(GetName(), GetTitle());
 
    TIter iter(fList);
@@ -181,30 +192,44 @@ TFileCollection *TFileCollection::GetStagedSubset()
 }
 
 //______________________________________________________________________________
-void TFileCollection::Update()
+Int_t TFileCollection::Update(Long64_t avgsize)
 {
    // Update accumulated information about the elements of the collection
-   // (e.g. fTotalSize). Also updates the meta data information by summarizing
+   // (e.g. fTotalSize). If 'avgsize' > 0, use an average file size of 'avgsize'
+   // bytes when the size info is not available.
+   // Also updates the meta data information by summarizing
    // the meta data of the contained objects.
+   // Return -1 in case of any failure, 0 if the total size is exact, 1 if
+   // incomplete, 2 if complete but (at least partially) estimated.
+
+   if (!fList)
+     return -1;
+
+   Int_t rc = 0;
 
    fTotalSize = 0;
-   fStagedPercentage = 0;
-
-   if (fList->GetEntries() == 0)
-      return;
-
+   fNStagedFiles = 0;
+   fNCorruptFiles = 0;
    fMetaDataList->Clear();
 
-   Long64_t stagedFiles = 0;
+   fNFiles = fList->GetEntries();
 
    TIter iter(fList);
    TFileInfo *fileInfo = 0;
    while ((fileInfo = dynamic_cast<TFileInfo*> (iter.Next()))) {
-      if (fileInfo->GetSize() > 0)
+
+      if (fileInfo->GetSize() > 0) {
          fTotalSize += fileInfo->GetSize();
+      } else {
+         rc = 1;
+         if (avgsize > 0) {
+            rc = 2;
+            fTotalSize += avgsize;
+         }
+      }
 
       if (fileInfo->TestBit(TFileInfo::kStaged) && !fileInfo->TestBit(TFileInfo::kCorrupted)) {
-         stagedFiles++;
+         fNStagedFiles++;
 
          if (fileInfo->GetMetaDataList()) {
             TIter metaDataIter(fileInfo->GetMetaDataList());
@@ -235,9 +260,12 @@ void TFileCollection::Update()
             }
          }
       }
+      if (fileInfo->TestBit(TFileInfo::kCorrupted))
+         fNCorruptFiles++;
    }
 
-   fStagedPercentage = 100.0 * stagedFiles / fList->GetEntries();
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -247,8 +275,10 @@ void TFileCollection::Print(Option_t *option) const
    // If option contains "M": prints meta data entries,
    // if option contains "F": prints all the files in the collection.
 
-   Printf("TFileCollection %s - %s contains: %d files with a size of %lld bytes, %.1f %% staged",
-          GetName(), GetTitle(), fList->GetEntries(), fTotalSize, fStagedPercentage);
+   Printf("TFileCollection %s - %s contains: %lld files with a size of"
+          " %lld bytes, %.1f %% staged - default tree name: '%s'",
+          GetName(), GetTitle(), fNFiles, fTotalSize, GetStagedPercentage(),
+          GetDefaultTreeName());
 
    if (TString(option).Contains("M", TString::kIgnoreCase)) {
       Printf("The files contain the following trees:");
@@ -263,16 +293,19 @@ void TFileCollection::Print(Option_t *option) const
       }
    }
 
-   if (TString(option).Contains("F", TString::kIgnoreCase)) {
+   if (fList && TString(option).Contains("F", TString::kIgnoreCase)) {
       Printf("The collection contains the following files:");
       fList->Print();
    }
 }
 
 //______________________________________________________________________________
-void TFileCollection::SetAnchor(const char *anchor) const
+void TFileCollection::SetAnchor(const char *anchor)
 {
    // Calls TUrl::SetAnchor() for all URLs contained in all TFileInfos.
+
+   if (!fList)
+     return;
 
    TIter iter(fList);
    TFileInfo *fileInfo = 0;
@@ -283,6 +316,34 @@ void TFileCollection::SetAnchor(const char *anchor) const
          url->SetAnchor(anchor);
       fileInfo->ResetUrl();
    }
+}
+
+//______________________________________________________________________________
+void TFileCollection::SetBitAll(UInt_t f)
+{
+   // Set the bit for all TFileInfos
+
+   if (!fList)
+     return;
+
+   TIter iter(fList);
+   TFileInfo *fileInfo = 0;
+   while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next())))
+      fileInfo->SetBit(f);
+}
+
+//______________________________________________________________________________
+void TFileCollection::ResetBitAll(UInt_t f)
+{
+   // Reset the bit for all TFileInfos
+
+   if (!fList)
+     return;
+
+   TIter iter(fList);
+   TFileInfo *fileInfo = 0;
+   while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next())))
+      fileInfo->ResetBit(f);
 }
 
 //______________________________________________________________________________
@@ -334,30 +395,93 @@ TFileInfoMeta *TFileCollection::GetMetaData(const char *meta) const
 }
 
 //______________________________________________________________________________
+void TFileCollection::SetDefaultMetaData(const char *meta)
+{
+   // Moves the indicated meta data in the first position, so that
+   // it becomes efectively the default.
+
+   TFileInfoMeta *fim = GetMetaData(meta);
+   if (fim) {
+      fMetaDataList->Remove(fim);
+      fMetaDataList->AddFirst(fim);
+   }
+}
+
+//______________________________________________________________________________
+void TFileCollection::RemoveMetaData(const char *meta)
+{
+   // Removes the indicated meta data object in all TFileInfos and this object
+   // If no name is given all metadata is removed
+
+   if (fList) {
+      TIter iter(fList);
+      TFileInfo *fileInfo = 0;
+      while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next())))
+         fileInfo->RemoveMetaData(meta);
+   }
+
+   if (meta) {
+      TObject* obj = fMetaDataList->FindObject("meta");
+      if (obj) {
+         fMetaDataList->Remove(obj);
+         delete obj;
+      }
+   } else
+      fMetaDataList->Clear();
+}
+
+//______________________________________________________________________________
 void TFileCollection::Sort()
 {
    // Sort the collection.
+
+   if (!fList)
+     return;
 
    fList->Sort();
 }
 
 //______________________________________________________________________________
-Float_t TFileCollection::GetCorruptedPercentage() const
+TObjString *TFileCollection::ExportInfo(const char *name)
 {
-   // Returns the percentage of files with the kCorrupted bit set,
-   // calculated on-the-fly because it is not supposed to be used often.
+   // Export the relevant info as a string; use 'name' as collection name,
+   // if defined, else use GetName().
+   // The output object must be destroyed by the caller
 
-   if (fList->GetEntries() == 0)
-      return -1;
+   TString treeInfo;
+   if (GetDefaultTreeName()) {
+      treeInfo = Form(" %s ", GetDefaultTreeName());
+      if (treeInfo.Length() < 14)
+         treeInfo.Resize(14);
+      TFileInfoMeta* meta = GetMetaData(GetDefaultTreeName());
+      if (meta)
+         treeInfo += Form("| %8lld ", meta->GetEntries());
+   } else {
+      treeInfo = "        N/A";
+   }
+   treeInfo.Resize(25);
 
-   Long64_t count = 0;
-
-   TIter iter(fList);
-   TFileInfo *fileInfo = 0;
-   while ((fileInfo = dynamic_cast<TFileInfo*>(iter.Next()))) {
-      if (fileInfo->TestBit(TFileInfo::kCorrupted))
-         count++;
+   // Renormalize the size to kB, MB or GB
+   const char *unit[4] = {"kB", "MB", "GB", "TB"};
+   Int_t k = 0;
+   Long64_t refsz = 1024;
+   Long64_t xsz = (Long64_t) (GetTotalSize() / refsz);
+   while (xsz > 1024 && k < 3) {
+      k++;
+      refsz *= 1024;
+      xsz = (Long64_t) (GetTotalSize() / refsz);
    }
 
-   return 100.0 * count / fList->GetEntries();
+   // The name
+   TString dsname(name);
+   if (dsname.IsNull()) dsname = GetName();
+
+   // Create the output string
+   TObjString *outs = 
+      new TObjString(Form("%s| %7lld |%s| %5lld %s |  %3d %%", dsname.Data(),
+                     GetNFiles(), treeInfo.Data(), xsz, unit[k],
+                     (Int_t)GetStagedPercentage()));
+   // Done
+   return outs;
 }
+

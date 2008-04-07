@@ -111,9 +111,11 @@ TUrl *TFileInfo::FindByUrl(const char *url)
 }
 
 //______________________________________________________________________________
-Bool_t TFileInfo::AddUrl(const char *url)
+Bool_t TFileInfo::AddUrl(const char *url, Bool_t infront)
 {
-   // Add a new URL. Returns kTRUE if successful, kFALSE otherwise.
+   // Add a new URL. If 'infront' is TRUE the new url is pushed at the beginning
+   // of the list; otherwise is pushed back.
+   // Returns kTRUE if successful, kFALSE otherwise.
 
    if (FindByUrl(url))
       return kFALSE;
@@ -128,7 +130,10 @@ Bool_t TFileInfo::AddUrl(const char *url)
    if (fUrlList->GetSize() == 0)
       fCurrentUrl = newurl;
 
-   fUrlList->Add(newurl);
+   if (infront)
+      fUrlList->AddFirst(newurl);
+   else
+      fUrlList->Add(newurl);
    return kTRUE;
 }
 
@@ -175,7 +180,7 @@ Bool_t TFileInfo::RemoveMetaData(const char *meta)
    // Returns kTRUE if successful, kFALSE otherwise.
 
    if (fMetaDataList) {
-      if (!meta) {
+      if (!meta || strlen(meta) <= 0) {
          SafeDelete(fMetaDataList);
          return kTRUE;
       } else {
@@ -199,7 +204,7 @@ TFileInfoMeta *TFileInfo::GetMetaData(const char *meta) const
 
    if (fMetaDataList) {
       TFileInfoMeta *m;
-      if (!meta)
+      if (!meta || strlen(meta) <= 0)
          m = (TFileInfoMeta *) fMetaDataList->First();
       else
          m = (TFileInfoMeta *) fMetaDataList->FindObject(meta);
@@ -248,8 +253,10 @@ void TFileInfo::Print(Option_t * /* option */) const
 
 //______________________________________________________________________________
 TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objClass,
-                             Long64_t entries, Long64_t first, Long64_t last)
-   : TNamed(objPath, objClass), fEntries(entries), fFirst(first), fLast(last)
+                             Long64_t entries, Long64_t first, Long64_t last,
+                             Long64_t totbytes, Long64_t zipbytes)
+              : TNamed(objPath, objClass), fEntries(entries), fFirst(first),
+                fLast(last), fTotBytes(totbytes), fZipBytes(zipbytes)
 {
    // Create file meta data object.
 
@@ -266,8 +273,10 @@ TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objClass,
 //______________________________________________________________________________
 TFileInfoMeta::TFileInfoMeta(const char *objPath, const char *objDir,
                              const char *objClass, Long64_t entries,
-                             Long64_t first, Long64_t last)
-   : TNamed(objPath, objClass), fEntries(entries), fFirst(first), fLast(last)
+                             Long64_t first, Long64_t last,
+                             Long64_t totbytes, Long64_t zipbytes)
+              : TNamed(objPath, objClass), fEntries(entries), fFirst(first),
+                fLast(last), fTotBytes(totbytes), fZipBytes(zipbytes)
 {
    // Create file meta data object.
 
