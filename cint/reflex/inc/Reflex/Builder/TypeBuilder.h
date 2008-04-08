@@ -20,12 +20,8 @@
 
 #if defined(__ICC)
 #define OffsetOf(c1,mem) (int(&((volatile const char&)((c1*)0)->mem)))
-#elif defined(__GNUC__) && (__GNUC__ < 4)
-// GCC 3 bug: cannot cast type T* to char&.
-// Consequence: cannot have member of type class C where C overloads op&()!
-#define OffsetOf(c1,mem) ((size_t)(&(((c1*)64)->mem))-64)
 #else
-#define OffsetOf(c1,mem) ((size_t)(&((volatile const char&)(((c1*)64)->mem))-64))
+#define OffsetOf(c1,mem) ((size_t)(&reinterpret_cast<const volatile char&>(((c1*)64)->mem))-64)
 #endif
 
 namespace Reflex {
