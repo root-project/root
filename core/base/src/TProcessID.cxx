@@ -209,7 +209,7 @@ UInt_t TProcessID::GetNProcessIDs()
 }
 
 //______________________________________________________________________________
-TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, void *obj)
+TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
 {
    // static function returning a pointer to TProcessID with its pid
    // encoded in the highest byte of uid
@@ -224,6 +224,15 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, void *obj)
       pid = fgObjPIDs->GetValue(hash,(Long_t)obj);
    }
    return (TProcessID*)fgPIDs->At(pid);
+}
+
+//______________________________________________________________________________
+TProcessID *TProcessID::GetProcessWithUID(const TObject *obj)
+{
+   // static function returning a pointer to TProcessID with its pid
+   // encoded in the highest byte of obj->GetUniqueID()
+
+   return GetProcessWithUID(obj->GetUniqueID(),obj);
 }
 
 //______________________________________________________________________________

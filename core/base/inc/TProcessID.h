@@ -64,7 +64,8 @@ public:
    static TProcessID  *GetPID();
    static TObjArray   *GetPIDs();
    static TProcessID  *GetProcessID(UShort_t pid);
-   static TProcessID  *GetProcessWithUID(UInt_t uid,void *obj);
+   static TProcessID  *GetProcessWithUID(const TObject *obj);
+   static TProcessID  *GetProcessWithUID(UInt_t uid,const void *obj);
    static TProcessID  *GetSessionProcessID();
    static  UInt_t      GetObjectCount();
    static  Bool_t      IsValid(TProcessID *pid);
