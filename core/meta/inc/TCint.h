@@ -58,16 +58,17 @@ private:
    char            fPrompt[64];     //proposed prompt string
    G__dictposition fDictPos;        //CINT dictionary context after init
    G__dictposition fDictPosGlobals; //CINT dictionary context after ResetGlobals()
-   TString         fSharedLibs;     //hold a list of lib loaded by G__loadfile
-   TString         fIncludePath;    //hold a list of lib include path
+   TString         fSharedLibs;     //list of shared libraries loaded by G__loadfile
+   TString         fIncludePath;    //list of CINT include paths
+   TString         fRootmapLoadPath;//dynamic load path used for loading rootmap files
    TEnv           *fMapfile;        //map of classes and libraries
-   TObjArray      *fRootMapFiles;   //list of non-default rootmap files loaded
+   TObjArray      *fRootmapFiles;   //list of non-default rootmap files loaded
    Bool_t          fLockProcessLine;//true if ProcessLine should lock gCINTMutex
    static void    *fgSetOfSpecials; //set of TObject*s used in CINT variables
 
    TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(),
-     fSharedLibs(), fIncludePath(), fMapfile(0), fRootMapFiles(0),
-     fLockProcessLine(kFALSE) { }  //for Dictionary() only
+     fSharedLibs(), fIncludePath(), fRootmapLoadPath(), fMapfile(0),
+     fRootmapFiles(0), fLockProcessLine(kFALSE) { }  //for Dictionary() only
    TCint(const TCint&);             // not implemented
    TCint &operator=(const TCint&);  // not implemented
    void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
@@ -93,12 +94,15 @@ public:
    const char *GetClassSharedLibs(const char *cls);
    const char *GetSharedLibDeps(const char *lib);
    const char *GetIncludePath();
-   TObjArray  *GetRootMapFiles() const { return fRootMapFiles; }
+   TObjArray  *GetRootMapFiles() const { return fRootmapFiles; }
    Int_t   InitializeDictionaries();
    Bool_t  IsLoaded(const char *filename) const;
    Int_t   Load(const char *filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char *filename, EErrorCode *error = 0);
    Int_t   LoadLibraryMap(const char *rootmapfile = 0);
+   Int_t   RescanLibraryMap();
+   Int_t   ReloadAllSharedLibraryMaps();
+   Int_t   UnloadAllSharedLibraryMaps();
    Int_t   UnloadLibraryMap(const char *library);
    Long_t  ProcessLine(const char *line, EErrorCode *error = 0);
    Long_t  ProcessLineAsynch(const char *line, EErrorCode *error = 0);
@@ -149,4 +153,3 @@ public:
 };
 
 #endif
-

@@ -98,7 +98,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    fMore      = 0;
    fPrompt[0] = 0;
    fMapfile   = 0;
-   fRootMapFiles = 0;
+   fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
 
    G__RegisterScriptCompiler(&ScriptCompiler);
@@ -143,7 +143,7 @@ TCint::~TCint()
    free(fDictPos.ptype);
    free(fDictPosGlobals.ptype);
    delete fMapfile;
-   delete fRootMapFiles;
+   delete fRootmapFiles;
 }
 
 //______________________________________________________________________________
@@ -153,7 +153,7 @@ void TCint::ClearFileBusy()
    // terminated by G__init_cint() and G__dlmod().
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    G__clearfilebusy(0);
 }
 
@@ -163,7 +163,7 @@ void TCint::ClearStack()
    // Delete existing temporary values
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    G__clearstack();
 }
 
@@ -174,7 +174,7 @@ Int_t TCint::InitializeDictionaries()
    // by G__init_cint() and G__dlmod().
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    return G__call_setup_funcs();
 }
 
@@ -196,7 +196,7 @@ void TCint::EnableAutoLoading()
    // $ROOTSYS/etc/system.rootmap).
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
    LoadLibraryMap();
 }
@@ -222,7 +222,7 @@ Bool_t TCint::IsLoaded(const char* filename) const
    //            the shared library path
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    G__SourceFileInfo file(filename);
    if (file.IsValid()) { return kTRUE; };
 
@@ -274,7 +274,7 @@ Int_t TCint::Load(const char *filename, Bool_t system)
    // if 'system' is true, the library is never unloaded.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    int i;
    if (!system)
       i = G__loadfile(filename);
@@ -466,7 +466,7 @@ void TCint::Reset()
    // TCint::SaveContext().
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    G__scratch_upto(&fDictPos);
 }
 
@@ -476,7 +476,7 @@ void TCint::ResetAll()
    // Reset the CINT state to its initial state.
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    G__init_cint("cint +V");
    G__init_process_cmd();
 }
@@ -486,7 +486,7 @@ void TCint::ResetGlobals()
 {
    // Reset the CINT global object state to the state saved by the last
    // call to TCint::SaveGlobalsContext().
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    G__scratch_globals_upto(&fDictPosGlobals);
@@ -498,7 +498,7 @@ void TCint::RewindDictionary()
    // Rewind CINT dictionary to the point where it was before executing
    // the current macro. This function is typically called after SEGV or
    // ctlr-C after doing a longjmp back to the prompt.
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    G__rewinddictionary();
@@ -509,7 +509,7 @@ Int_t TCint::DeleteGlobal(void *obj)
 {
    // Delete obj from CINT symbol table so it cannot be accessed anymore.
    // Returns 1 in case of success and 0 in case object was not in table.
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    return G__deleteglobal(obj);
@@ -519,7 +519,7 @@ Int_t TCint::DeleteGlobal(void *obj)
 void TCint::SaveContext()
 {
    // Save the current CINT state.
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    G__store_dictposition(&fDictPos);
@@ -541,7 +541,7 @@ void TCint::UpdateListOfGlobals()
    // is called by TROOT::GetListOfGlobals().
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    G__DataMemberInfo t, *a;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
@@ -565,7 +565,7 @@ void TCint::UpdateListOfGlobalFunctions()
    // is called by TROOT::GetListOfGlobalFunctions().
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    G__MethodInfo t, *a;
    void* vt =0;
 
@@ -648,7 +648,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
    // Set pointer to CINT's G__ClassInfo in TClass.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    if (!cl->fClassInfo || reload) {
 
       delete cl->fClassInfo; cl->fClassInfo = 0;
@@ -697,7 +697,7 @@ Bool_t TCint::CheckClassInfo(const char *name)
    // specifically check that each level of nesting is already loaded.
    // In case of templates the idea is that everything between the outer
    // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    char *classname = new char[strlen(name)*2];
@@ -761,7 +761,7 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
    // Create list of pointers to base class(es) for TClass cl.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    if (!cl->fBase) {
 
       cl->fBase = new TList;
@@ -783,7 +783,7 @@ void TCint::CreateListOfDataMembers(TClass *cl)
    // Create list of pointers to data members for TClass cl.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    if (!cl->fData) {
 
       cl->fData = new TList;
@@ -805,7 +805,7 @@ void TCint::CreateListOfMethods(TClass *cl)
    // Create list of pointers to methods for TClass cl.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    if (!cl->fMethod) {
 
       cl->fMethod = new TList;
@@ -827,7 +827,7 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
    // Create list of pointers to method arguments for TMethod m.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    if (!m->fMethodArgs) {
 
       m->fMethodArgs = new TList;
@@ -852,7 +852,7 @@ TString TCint::GetMangledName(TClass *cl, const char *method,
    // class is 0 the global function list will be searched.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    G__CallFunc  func;
    Long_t       offset;
 
@@ -874,7 +874,7 @@ TString TCint::GetMangledNameWithPrototype(TClass *cl, const char *method,
    // list will be searched.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    Long_t             offset;
 
    if (cl)
@@ -892,7 +892,7 @@ void *TCint::GetInterfaceMethod(TClass *cl, const char *method,
    // ones). If the class is 0 the global function list will be searched.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    G__CallFunc  func;
    Long_t       offset;
 
@@ -914,7 +914,7 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
    // function list will be searched.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    G__InterfaceMethod f;
    Long_t             offset;
 
@@ -935,7 +935,7 @@ const char *TCint::GetInterpreterTypeName(const char *name, Bool_t full)
    // This is used in particular to synchronize between the name used
    // by rootcint and by the run-time enviroment (TClass)
    // Return 0 if the name is not known.
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    if (!gInterpreter->CheckClassInfo(name)) return 0;
@@ -953,7 +953,7 @@ void TCint::Execute(const char *function, const char *params, int *error)
    // Execute a global function with arguments params.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    G__CallFunc  func;
    G__ClassInfo cl;
    Long_t       offset;
@@ -973,7 +973,7 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
    // Execute a method from class cl with arguments params.
 
    R__LOCKGUARD2(gCINTMutex);
-   
+
    void       *address;
    Long_t      offset;
    G__CallFunc func;
@@ -1056,7 +1056,7 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
 Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    return TApplication::ExecuteFile(filename, (int*)error);
@@ -1169,18 +1169,21 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
    // See also the AutoLoadCallback() method below.
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    // open the [system].rootmap files
    if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
       fMapfile->IgnoreDuplicates(kTRUE);
 
-      fRootMapFiles = new TObjArray;
-      fRootMapFiles->SetOwner();
+      fRootmapFiles = new TObjArray;
+      fRootmapFiles->SetOwner();
+   }
 
-      // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
-      // A rootmap file must end with the string ".rootmap".
-      TString ldpath = gSystem->GetDynamicPath();
+   // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
+   // A rootmap file must end with the string ".rootmap".
+   TString ldpath = gSystem->GetDynamicPath();
+   if (ldpath != fRootmapLoadPath) {
+      fRootmapLoadPath = ldpath;
 #ifdef WIN32
       TObjArray *paths = ldpath.Tokenize(";");
 #else
@@ -1214,7 +1217,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                         if (gDebug > 1)
                            Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
                         fMapfile->ReadFile(p, kEnvGlobal);
-                        fRootMapFiles->Add(new TObjString(p));
+                        fRootmapFiles->Add(new TObjString(p));
                      }
                   }
                   if (f.BeginsWith("rootmap")) {
@@ -1240,6 +1243,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
       // Add content of a specific rootmap file
       fMapfile->IgnoreDuplicates(kFALSE);
       fMapfile->ReadFile(rootmapfile, kEnvGlobal);
+      fRootmapFiles->Add(new TObjString(rootmapfile));
    }
 
    TEnvRec *rec;
@@ -1309,6 +1313,98 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
 }
 
 //______________________________________________________________________________
+Int_t TCint::RescanLibraryMap()
+{
+   // Scan again along the dynamic path for library maps. Entries for the loaded
+   // shared libraries are unloaded first. This can be useful after reseting
+   // the dynamic path through TSystem::SetDynamicPath()
+   // In case of error -1 is returned, 0 otherwise.
+
+   UnloadAllSharedLibraryMaps();
+   LoadLibraryMap();
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TCint::ReloadAllSharedLibraryMaps()
+{
+   // Reload the library map entries coming from all the loaded shared libraries,
+   // after first unloading the current ones.
+   // In case of error -1 is returned, 0 otherwise.
+
+   const TString sharedLibLStr = GetSharedLibs();
+   const TObjArray *sharedLibL = sharedLibLStr.Tokenize(" ");
+   const Int_t nrSharedLibs = sharedLibL->GetEntriesFast();
+
+   for (Int_t ilib = 0; ilib < nrSharedLibs; ilib++) {
+      const TString sharedLibStr = ((TObjString *)sharedLibL->At(ilib))->GetString();
+      const  TString sharedLibBaseStr = gSystem->BaseName(sharedLibStr);
+      const Int_t ret = UnloadLibraryMap(sharedLibBaseStr);
+
+      if (ret < 0) continue;
+
+      TString rootMapBaseStr = sharedLibBaseStr;
+      if (sharedLibBaseStr.EndsWith(".dll"))
+         rootMapBaseStr.ReplaceAll(".dll","");
+      else if (sharedLibBaseStr.EndsWith(".DLL"))
+         rootMapBaseStr.ReplaceAll(".DLL","");
+      else if (sharedLibBaseStr.EndsWith(".so"))
+         rootMapBaseStr.ReplaceAll(".so","");
+      else if (sharedLibBaseStr.EndsWith(".sl"))
+         rootMapBaseStr.ReplaceAll(".sl","");
+      else if (sharedLibBaseStr.EndsWith(".dl"))
+         rootMapBaseStr.ReplaceAll(".dl","");
+      else if (sharedLibBaseStr.EndsWith(".a"))
+         rootMapBaseStr.ReplaceAll(".a","");
+      else {
+         Error("ReloadAllSharedLibraryMaps","Unknown library type %s",sharedLibBaseStr.Data());
+         delete sharedLibL;
+         return -1;
+      }
+      rootMapBaseStr += ".rootmap";
+
+      const char *rootMap = gSystem->Which(gSystem->GetDynamicPath(),rootMapBaseStr);
+      if (!rootMap) {
+         Error("ReloadAllSharedLibraryMaps","Could not find rootmap %s in path",rootMap);
+         delete [] rootMap;
+         delete sharedLibL;
+         return -1;
+      }
+
+      const Int_t status = LoadLibraryMap(rootMap);
+      if (status < 0) {
+         Error("ReloadAllSharedLibraryMaps","Error loading map %s",rootMap);
+         delete [] rootMap;
+         delete sharedLibL;
+         return -1;
+      }
+      delete [] rootMap;
+   }
+   delete sharedLibL;
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TCint::UnloadAllSharedLibraryMaps()
+{
+   // Unload the library map entries coming from all the loaded shared libraries.
+   // Returns 0 if succesful
+
+   const TString sharedLibLStr = GetSharedLibs();
+   const TObjArray *sharedLibL = sharedLibLStr.Tokenize(" ");
+   for (Int_t ilib = 0; ilib < sharedLibL->GetEntriesFast(); ilib++) {
+      const TString sharedLibStr = ((TObjString *)sharedLibL->At(ilib))->GetString();
+      const  TString sharedLibBaseStr = gSystem->BaseName(sharedLibStr);
+      UnloadLibraryMap(sharedLibBaseStr);
+   }
+   delete sharedLibL;
+
+   return 0;
+}
+
+//______________________________________________________________________________
 Int_t TCint::UnloadLibraryMap(const char *library)
 {
    // Unload library map entries coming from the specified library.
@@ -1322,7 +1418,7 @@ Int_t TCint::UnloadLibraryMap(const char *library)
    TIter next(fMapfile->GetTable());
 
    R__LOCKGUARD(gCINTMutex);
-   
+
    Int_t ret = 0;
 
    while ((rec = (TEnvRec*) next())) {
@@ -1392,7 +1488,7 @@ Int_t TCint::AutoLoad(const char *cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    Int_t status = 0;
@@ -1441,7 +1537,7 @@ Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
 {
    // Load library containing specified class. Returns 0 in case of error
    // and 1 in case if success.
-   
+
    R__LOCKGUARD(gCINTMutex);
 
    if (!gROOT || !gInterpreter || !cls || !lib) return 0;
@@ -1526,9 +1622,9 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
    // a class (e.g. after re-executing the setup function). In such
    // cases we have to update the tagnum in the G__ClassInfo used by
    // the TClass for class "item".
-   
+
    R__LOCKGUARD(gCINTMutex);
- 
+
    if (gROOT && gROOT->GetListOfClasses()) {
 
       static Bool_t entered = kFALSE;
@@ -1751,9 +1847,9 @@ void TCint::AddIncludePath(const char *path)
    // Add the given path to the list of directories in which the interpreter
    // looks for include files. Only one path item can be specified at a
    // time, i.e. "path1:path2" is not supported.
-   
+
    R__LOCKGUARD(gCINTMutex);
-   
+
    char *incpath = gSystem->ExpandPathName(path);
 
    G__add_ipath(incpath);
@@ -1766,9 +1862,9 @@ const char *TCint::GetIncludePath()
 {
    // Refresh the list of include paths known to the interpreter and return it
    // with -I prepended.
-   
+
    R__LOCKGUARD(gCINTMutex);
-   
+
    fIncludePath = "";
 
    G__IncludePathInfo path;

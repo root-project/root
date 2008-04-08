@@ -53,6 +53,9 @@ public:
    Int_t    Load(const char *filenam, Bool_t system = kFALSE);
    void     LoadMacro(const char *filename, EErrorCode *error = 0);
    Int_t    LoadLibraryMap(const char *rootmapfile = 0);
+   Int_t    RescanLibraryMap();
+   Int_t    ReloadAllSharedLibraryMaps();
+   Int_t    UnloadAllSharedLibraryMaps();
    Int_t    UnloadLibraryMap(const char *library);
    Long_t   ProcessLine(const char *line, EErrorCode *error = 0);
    Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);

@@ -72,6 +72,9 @@ public:
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = 0) = 0;
    virtual Int_t    LoadLibraryMap(const char *rootmapfile = 0) = 0;
+   virtual Int_t    RescanLibraryMap() = 0;
+   virtual Int_t    ReloadAllSharedLibraryMaps() = 0;
+   virtual Int_t    UnloadAllSharedLibraryMaps() = 0;
    virtual Int_t    UnloadLibraryMap(const char *library) = 0;
    virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
    virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
