@@ -1136,9 +1136,13 @@ int G__defined_typename(const char *type_name)
   }
 
   ::Reflex::Scope scope = G__get_envtagnum();
-  if (G__tmplt_def_tagnum && !G__tmplt_def_tagnum.IsTopScope()) {
-     scope = G__tmplt_def_tagnum;
-  }
+  //
+  //  This is wrong, the G__templt_def_tagnum is the scope
+  //  that is defining the template, not the template itself.
+  //
+  //if (G__tmplt_def_tagnum && !G__tmplt_def_tagnum.IsTopScope()) {
+  //   scope = G__tmplt_def_tagnum;
+  //}
   if (!scope) {
      printf("Trying to look up typedef %s in an invalid enclosing scope!\n", type_name);
      while (scope.Id() && !scope && !scope.IsTopScope()) 
