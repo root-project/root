@@ -3273,8 +3273,12 @@ Int_t TBufferFile::ReadClassBuffer(TClass *cl, void *pointer)
    // read the class version from the buffer
    UInt_t R__s, R__c;
    Version_t version = ReadVersion(&R__s, &R__c, cl);
+   Bool_t v2file = kFALSE;
    TFile *file = (TFile*)GetParent();
-   if (file && file->GetVersion() < 30000) version = -1; //This is old file
+   if (file && file->GetVersion() < 30000) {
+      version = -1; //This is old file
+      v2file = kTRUE;
+   }
 
    //the StreamerInfo should exist at this point
    TObjArray *infos = cl->GetStreamerInfos();
@@ -3293,7 +3297,7 @@ Int_t TBufferFile::ReadClassBuffer(TClass *cl, void *pointer)
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),version);
       sinfo->Build();
 
-      if (version == -1) sinfo->BuildEmulated((TFile *)GetParent());
+      if (v2file) sinfo->BuildEmulated(file);
 
    } else if (!sinfo->GetOffsets()) {
       cl->BuildRealData(pointer);
