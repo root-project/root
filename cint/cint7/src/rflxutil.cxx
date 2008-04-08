@@ -141,40 +141,40 @@ void Cint::Internal::G__get_cint5_type_tuple(const ::Reflex::Type in_type, char*
    //        source code.  We do not have that information available.
    //
    {
-      *out_constvar = 0;
-      if (in_type.IsFunction()) {
-         if (in_type.IsConst()) {
-            *out_constvar |= G__CONSTFUNC;
-         }
-         if (in_type.ReturnType().IsConst()) {
-            *out_constvar |= G__CONSTVAR;
-         }
-      }
-      else {
-         //bool ptr_or_ref_seen = false;
-         //bool accumulated_const = false;
-         //for (::Reflex::Type current = in_type; current; current = current.ToType()) {
-         //   accumulated_const = accumulated_const || current.IsConst();
-         //   if (current.IsPointer() || current.IsReference()) {
-         //      accumulated_const = false;
-         //      if (!ptr_or_ref_seen) {
-         //         ptr_or_ref_seen = true;
-         //         if (current.IsConst()) {
-         //            *out_constvar |= G__PCONSTVAR;
-         //         }
-         //      }
-         //   }
-         //}
-         //if (accumulated_const) {
-         //   *out_constvar |= G__CONSTVAR;
-         //}
-         if (in_type.IsConst() && in_type.IsPointer()) {
-            *out_constvar |= G__PCONSTVAR;
-         }
-         if (in_type.RawType().IsConst()) {
-            *out_constvar |= G__CONSTVAR;
-         }
-      }
+      *out_constvar = G__get_isconst(in_type);
+      //if (in_type.IsFunction()) {
+      //   if (in_type.IsConst()) {
+      //      *out_constvar |= G__CONSTFUNC;
+      //   }
+      //   if (in_type.ReturnType().IsConst()) {
+      //      *out_constvar |= G__CONSTVAR;
+      //   }
+      //}
+      //else {
+      //   //bool ptr_or_ref_seen = false;
+      //   //bool accumulated_const = false;
+      //   //for (::Reflex::Type current = in_type; current; current = current.ToType()) {
+      //   //   accumulated_const = accumulated_const || current.IsConst();
+      //   //   if (current.IsPointer() || current.IsReference()) {
+      //   //      accumulated_const = false;
+      //   //      if (!ptr_or_ref_seen) {
+      //   //         ptr_or_ref_seen = true;
+      //   //         if (current.IsConst()) {
+      //   //            *out_constvar |= G__PCONSTVAR;
+      //   //         }
+      //   //      }
+      //   //   }
+      //   //}
+      //   //if (accumulated_const) {
+      //   //   *out_constvar |= G__CONSTVAR;
+      //   //}
+      //   if (in_type.IsConst() && in_type.IsPointer()) {
+      //      *out_constvar |= G__PCONSTVAR;
+      //   }
+      //   if (in_type.RawType().IsConst()) {
+      //      *out_constvar |= G__CONSTVAR;
+      //   }
+      //}
    }
 }
 
