@@ -347,7 +347,14 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
    const Int_t bufsize = 10000;
    TBuffer *buffer = new TBufferFile(TBuffer::kWrite,bufsize);
    buffer->MapObject(obj);  //register obj in map to handle self reference
-   ((TObject*)obj)->Streamer(*buffer);
+   {
+      Bool_t isRef = obj->TestBit(kIsReferenced); 
+      ((TObject*)obj)->ResetBit(kIsReferenced);	
+      
+      ((TObject*)obj)->Streamer(*buffer);
+      
+      if (isRef) ((TObject*)obj)->SetBit(kIsReferenced);
+   }
 
    // read new object from buffer
    buffer->SetReadMode();
