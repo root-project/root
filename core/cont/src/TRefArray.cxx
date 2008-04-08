@@ -9,53 +9,72 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRefArray                                                            //
-//                                                                      //
-// An array of references to TObjects. The array expands automatically  //
-// when  objects are added (shrinking can be done by hand using Expand()//
-//                                                                      //
-// The TRefArray can be filled with:                                    //
-//     array.Add(obj)                                                   //
-//     array.AddAt(obj,i)                                               //
-//     but not array[i] = obj  !!!                                      //
-//                                                                      //
-// The array elements can be retrieved with:                            //
-//     TObject *obj = array.At(i);                                      //
-//                                                                      //
-// When a TRefArray is Streamed, only the pointer unique id is written, //
-// not the referenced object. TRefArray may be assigned to different    //
-// branches of one Tree or several Trees.                               //
-// The branch containing the TRefArray can be read before or after the  //
-// array (eg TClonesArray, STL vector,..) of the referenced objects.    //
-//                                                                      //
-// See an example in $ROOTSYS/test/Event.h                              //
-//                                                                      //
-// RESTRICTIONS when using TRefArray                                    //
-// ---------------------------------                                    //
-//  - Elements in a TRefArray cannot point to a TFile or TDirectory.    //
-//  - All elements of a TRefArray must be set in the same process,      //
-//    In particular, one cannot modify some elements of the array in    //
-//    a different process.                                              //
-// Use an array of TRef when one of the above restrictions is met.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TRefArray                                                              //
+//                                                                        //
+// An array of references to TObjects. The array expands automatically    //
+// when  objects are added (shrinking can be done by hand using Expand() )//
+//                                                                        //
+// The TRefArray can be filled with:                                      //
+//     array.Add(obj)                                                     //
+//     array.AddAt(obj,i)                                                 //
+//     but not array[i] = obj  !!!                                        //
+//                                                                        //
+// The array elements can be retrieved with:                              //
+//     TObject *obj = array.At(i);                                        //
+//                                                                        //
+// By default the TRefArray 'points' to the current point and can only    //
+// receive object that have been created in this process.                 //
+// To point the TRefArray to a different process do:                      //
+//     TRefArray array( processId );                                      //
+//                                                                        //
+// For example, if 'obj' is an instance that was created in the different //
+// process and you do:                                                    //
+//     TRefArray array( TProcessID::GetProcessWithUID( obj ) );           //
+// Then                                                                   //
+//     array.Add(obj);                                                    //
+// is correct (obj comes from the process the array is pointed to         //
+// while                                                                  //
+//     TObject *nobj = new TObject;                                       //
+//     array.Add(nobj);                                                   //
+// is incorrect since 'nobj' was created in a different process than the  //
+// one the array is pointed to.  In thi case you will see error message:  //
+//     Error in <TRefArray::AddAtAndExpand>: The object at 0x... is not registered in the process the TRefArray point to (pid = ProcessID../....)
+//                                                                        //
+// When a TRefArray is Streamed, only the pointer unique id is written,   //
+// not the referenced object. TRefArray may be assigned to different      //
+// branches of one Tree or several Trees.                                 //
+// The branch containing the TRefArray can be read before or after the    //
+// array (eg TClonesArray, STL vector,..) of the referenced objects.      //
+//                                                                        //
+// See an example in $ROOTSYS/test/Event.h                                //
+//                                                                        //
+// RESTRICTIONS when using TRefArray                                      //
+// ---------------------------------                                      //
+//  - Elements in a TRefArray cannot point to a TFile or TDirectory.      //
+//  - All elements of a TRefArray must be set in the same process,        //
+//    In particular, one cannot modify some elements of the array in      //
+//    a different process.                                                //
+// Use an array of TRef when one of the above restrictions is met.        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 #include "TRefArray.h"
 #include "TRefTable.h"
 #include "TError.h"
 #include "TBits.h"
 #include "TSystem.h"
+#include "TROOT.h"
 
 ClassImp(TRefArray)
 
 //______________________________________________________________________________
-TRefArray::TRefArray()
+TRefArray::TRefArray(TProcessID *pid)
 {
    // default constructor
 
-   fPID  = TProcessID::GetSessionProcessID();
+   fPID  = pid ? pid : TProcessID::GetSessionProcessID();
    fUIDs = 0;
    fSize = 0;
    fLast = -1;
@@ -64,7 +83,7 @@ TRefArray::TRefArray()
 }
 
 //______________________________________________________________________________
-TRefArray::TRefArray(Int_t s, Int_t lowerBound)
+TRefArray::TRefArray(Int_t s, TProcessID *pid)
 {
    // Create an object array. Using s one can set the array size
    // and lowerBound can be used to set the array lowerbound
@@ -75,7 +94,24 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
       s = TCollection::kInitCapacity;
    }
 
-   fPID  = TProcessID::GetSessionProcessID();
+   fPID  = pid ? pid : TProcessID::GetSessionProcessID();
+   fUIDs = 0;
+   Init(s, 0);
+}
+
+//______________________________________________________________________________
+TRefArray::TRefArray(Int_t s, Int_t lowerBound, TProcessID *pid)
+{
+   // Create an object array. Using s one can set the array size
+   // and lowerBound can be used to set the array lowerbound
+   // index (default is 0).
+
+   if (s < 0) {
+      Warning("TRefArray", "size (%d) < 0", s);
+      s = TCollection::kInitCapacity;
+   }
+
+   fPID  = pid ? pid : TProcessID::GetSessionProcessID();
    fUIDs = 0;
    Init(s, lowerBound);
 }
@@ -133,6 +169,34 @@ TRefArray::~TRefArray()
    fSize = 0;
 }
 
+
+static Bool_t R__GetUID(Int_t &uid, TObject *obj, TProcessID *pid, const char *methodname)
+{
+   
+   // Check if the object can belong here
+   Bool_t valid = kTRUE;
+   if (obj->TestBit(kHasUUID)) {
+      valid = kFALSE;
+   } else if (obj->TestBit(kIsReferenced)) {
+      valid = (pid == TProcessID::GetProcessWithUID(obj));
+      if (valid) {
+         uid = obj->GetUniqueID();
+      }
+   } else {
+      valid = (pid == TProcessID::GetSessionProcessID());
+      if (valid) {
+         uid = TProcessID::AssignID(obj);
+      }
+   }
+
+   if (!valid) {
+      TString name; name.Form("TRefArray::%s",methodname);
+      ::Error(name,
+              Form("The object at %p is not registered in the process the TRefArray point to (pid = %s/%s)",obj,pid->GetName(),pid->GetTitle()));
+   }
+   return valid;
+}
+
 //______________________________________________________________________________
 void TRefArray::AddFirst(TObject *obj)
 {
@@ -141,8 +205,13 @@ void TRefArray::AddFirst(TObject *obj)
    // use either a TList or a TOrdCollection.
 
    if (!obj) return;
-   fUIDs[0] = TProcessID::AssignID(obj);
-   Changed();
+
+   // Check if the object can belong here
+   Int_t uid;
+   if (R__GetUID(uid, obj, fPID, "AddFirst")) {
+      fUIDs[0] = uid;
+      Changed();
+   }
 }
 
 //______________________________________________________________________________
@@ -212,9 +281,13 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
    if (idx-fLowerBound >= fSize)
       Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
 
-   fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
-   fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
-   Changed();
+   // Check if the object can belong here
+   Int_t uid;
+   if (R__GetUID(uid, obj, fPID, "AddAtAndExpand")) {
+      fUIDs[idx-fLowerBound] = uid;
+      fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+      Changed();
+   }
 }
 
 //______________________________________________________________________________
@@ -226,9 +299,13 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
    if (!obj) return;
    if (!BoundsOk("AddAt", idx)) return;
 
-   fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
-   fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
-   Changed();
+   // Check if the object can belong here
+   Int_t uid;
+   if (R__GetUID(uid, obj, fPID, "AddAt")) {
+      fUIDs[idx-fLowerBound] = uid;;
+      fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+      Changed();
+   }
 }
 
 //______________________________________________________________________________
@@ -242,10 +319,14 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
       Int_t i;
       for (i = 0; i < fSize; i++)
          if (!fUIDs[i]) {         // Add object at position i
-            fUIDs[i] = TProcessID::AssignID(obj);
-            fLast = TMath::Max(i, GetAbsLast());
-            Changed();
-            return i+fLowerBound;
+            // Check if the object can belong here
+            Int_t uid;
+            if (R__GetUID(uid, obj, fPID, "AddAtFree")) {
+               fUIDs[i] = uid;
+               fLast = TMath::Max(i, GetAbsLast());
+               Changed();
+               return i+fLowerBound;
+            }
          }
    }
    AddLast(obj);

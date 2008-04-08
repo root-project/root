@@ -48,8 +48,9 @@ protected:
    TObject      *GetFromTable(Int_t idx) const;
 
 public:
-   TRefArray();
-   TRefArray(Int_t s, Int_t lowerBound = 0);
+   TRefArray(TProcessID *pid = 0);
+   TRefArray(Int_t s, TProcessID *pid);
+   TRefArray(Int_t s, Int_t lowerBound = 0, TProcessID *pid = 0);
    TRefArray(const TRefArray &a);
    TRefArray& operator=(const TRefArray &a);
    virtual          ~TRefArray();
