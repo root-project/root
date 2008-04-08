@@ -19,27 +19,41 @@ PROOFAEXE=bin/proofserva
 
 rm -f $ROOTALIB $ROOTAEXE $PROOFAEXE
 
-excl="main proofd rootd rootx pythia pythia6 venus mysql pgsql rfio sapdb \
-      hbook newdelete table utils srputils krb5auth chirp dcache x11ttf \
-      alien asimage ldap pyroot qt qtroot quadp ruby vmc xml xmlparser gl \
-      roofit roofitcore oracle netx auth rpdutils mathmore minuit2 gfal monalisa \
-      proofx fftw qtgsi odbc castor unuran gdml cint7 g4root eve"
+excl="main proof/proofd rootd rootx pythia pythia6 mysql pgsql rfio sapdb \
+      hbook core/newdelete table core/utils srputils krb5auth chirp dcache \
+      x11ttf alien asimage ldap pyroot qt qtroot math/quadp ruby vmc xml \
+      xmlparser gl roofit roofitcore oracle netx auth rpdutils math/mathmore \
+      math/minuit2 gfal monalisa proof/proofx math/fftw qtgsi odbc \
+      castor math/unuran geom/gdml cint/cint7 g4root eve"
 
 objs=""
 gobjs=""
 for i in * ; do
+   inc=$i
    for j in $excl ; do
       if [ $j = $i ]; then
          continue 2
       fi
    done
-   ls $i/src/*.o > /dev/null 2>&1 && objs="$objs $i/src/*.o"
-   ls $i/src/G__*.o > /dev/null 2>&1 && gobjs="$gobjs $i/src/G__*.o"
+   ls $inc/src/*.o > /dev/null 2>&1 && objs="$objs $inc/src/*.o"
+   ls $inc/src/G__*.o > /dev/null 2>&1 && gobjs="$gobjs $inc/src/G__*.o"
+   if [ -d $i ]; then
+      for k in $i/* ; do
+         inc=$k
+         for j in $excl ; do
+            if [ $j = $k ]; then
+               continue 2
+            fi
+         done
+         ls $inc/src/*.o > /dev/null 2>&1 && objs="$objs $inc/src/*.o"
+         ls $inc/src/G__*.o > /dev/null 2>&1 && gobjs="$gobjs $inc/src/G__*.o"
+      done
+   fi
 done
 
 echo "Making $ROOTALIB..."
-echo ar rv $ROOTALIB cint/main/G__setup.o $objs > /dev/null 2>&1
-ar rv $ROOTALIB cint/main/G__setup.o $objs > /dev/null 2>&1
+echo ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs
+ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs > /dev/null 2>&1
 
 arstat=$?
 if [ $arstat -ne 0 ]; then
