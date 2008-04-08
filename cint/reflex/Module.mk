@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := cint/reflex
+MODNAME      := reflex
+MODDIR       := cint/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -105,8 +106,8 @@ RFLX_GENMAPX   = bin/genmap$(EXEEXT)
 ALLEXECS += $(RFLX_GENMAPX)
 
 ##### local rules #####
-.PHONY:         all-reflex clean-reflex distclean-reflex clean-genreflex \
-                clean-check-reflex check-reflex
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
+                clean-check-$(MODNAME) check-$(MODNAME) clean-genreflex
 
 POSTBIN += $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 
@@ -161,26 +162,26 @@ $(REFLEXDICTMAP): bin/rlibmap$(EXEEXT) $(MAKEFILEDEP) $(REFLEXL)
 		$(RLIBMAP) -o $(REFLEXDICTMAP) -l $(REFLEXDICTLIB) \
 		   -d $(REFLEXDICTLIBDEPM) -c $(REFLEXL)
 
-all-reflex:     $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXDICTMAP) $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
+all-$(MODNAME): $(REFLEXLIB) $(REFLEXDICTLIB) $(REFLEXDICTMAP) $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 
 clean-genreflex:
 		@rm -rf lib/python/genreflex
 
-clean-check-reflex:
+clean-check-$(MODNAME):
 		@rm -f $(RFLX_TESTLIB) $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
 
-clean-reflex: clean-genreflex clean-check-reflex
+clean-$(MODNAME): clean-genreflex clean-check-$(MODNAME)
 		@rm -f $(RFLX_GENMAPX)
 		@rm -f $(REFLEXO) $(REFLEXDO)
 
-clean::         clean-reflex
+clean::         clean-$(MODNAME)
 
-distclean-reflex: clean-reflex
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(REFLEXDEP) $(REFLEXDS) $(REFLEXDH) $(REFLEXLIB) \
 		   $(REFLEXDICTLIB) $(REFLEXDICTMAP)
 		@rm -rf include/Reflex lib/python
 
-distclean::     distclean-reflex
+distclean::     distclean-$(MODNAME)
 
 # test suite
 

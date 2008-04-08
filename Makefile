@@ -178,7 +178,7 @@ ifeq ($(BUILDCINT7),yes)
 MODULES      := $(subst cint/cint,cint/cint7,$(MODULES))
 endif
 ifeq ($(BUILDCINTEX),yes)
-MODULES      += cintex
+MODULES      += cint/cintex
 endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofitcore roofit
@@ -242,7 +242,7 @@ MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 ldap krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
-                oracle xmlparser math/mathmore cint/reflex cintex \
+                oracle xmlparser math/mathmore cint/reflex cint/cintex \
                 roofitcore roofit \
                 math/minuit2 monalisa math/fftw odbc math/unuran \
                 geom/gdml eve g4root glite

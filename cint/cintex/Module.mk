@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := cintex
+MODNAME      := cintex
+MODDIR       := cint/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -67,7 +68,7 @@ endif
 
 GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py
 
-CINTEXTESTD    = $(CINTEXDIR)/test
+CINTEXTESTD     = $(CINTEXDIR)/test
 CINTEXTESTDICTD = $(CINTEXTESTD)/dict
 CINTEXTESTDICTL = $(CINTEXTESTDICTD)/lib
 CINTEXTESTDICTH = $(CINTEXTESTDICTD)/CintexTest.h
@@ -76,6 +77,9 @@ CINTEXTESTDICTO = $(subst .cpp,.o,$(CINTEXTESTDICTS))
 CINTEXTESTDICT  = $(subst $(CINTEXTESTDICTD)/,$(CINTEXTESTDICTD)/test_,$(subst _rflx.o,Rflx.$(DICTEXT),$(CINTEXTESTDICTO)))
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
+                check-$(MODNAME) clean-check-$(MODNAME)
+
 include/Cintex/%.h: $(CINTEXDIRI)/Cintex/%.h
 		@(if [ ! -d "include/Cintex" ]; then    \
 		   mkdir -p include/Cintex;             \
@@ -95,28 +99,28 @@ $(CINTEXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CINTEXL)
 		$(RLIBMAP) -o $(CINTEXMAP) -l $(CINTEXLIB) \
 		   -d $(CINTEXLIBDEPM) -c $(CINTEXL)
 
-all-cintex:     $(CINTEXLIB) $(CINTEXMAP)
+all-$(MODNAME): $(CINTEXLIB) $(CINTEXMAP)
 
-clean-cintex: clean-check-cintex
+clean-$(MODNAME): clean-check-$(MODNAME)
 		@rm -f $(CINTEXO)
 
-clean-check-cintex:
+clean-check-$(MODNAME):
 		@rm -f $(CINTEXTESTDICTS) $(CINTEXTESTDICTO)
 
-clean::         clean-cintex
+clean::         clean-$(MODNAME)
 
-distclean-cintex: clean-cintex
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(CINTEXDEP) $(CINTEXLIB) $(CINTEXMAP) $(CINTEXPY) $(CINTEXPYC) $(CINTEXPYO)
 		@rm -rf include/Cintex
 
-distclean::     distclean-cintex
+distclean::     distclean-$(MODNAME)
 
 
 #### test suite ####
 
-check-cintex: $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT)
+check-$(MODNAME): $(REFLEXLIB) $(CINTEXLIB) $(CINTEXTESTDICT)
 		@echo "Running all Cintex tests"
-		@cintex/test/test_all$(SHEXT)  $(PYTHONINCDIR)
+		@$(CINTEXTESTD)/test_all$(SHEXT)  $(PYTHONINCDIR)
 
 $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
 		@mkdir -p $(CINTEXTESTDICTL)
