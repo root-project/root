@@ -147,6 +147,7 @@ TGClient::TGClient(const char *dpyName)
    fGlobalNeedRedraw = kFALSE;
    fForceRedraw      = kFALSE;
    fWaitForWindow    = kNone;
+   fWaitForEvent     = kOtherEvent;
 
    fResourcePool    = new TGResourcePool(this);
 
