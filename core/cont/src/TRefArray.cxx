@@ -24,7 +24,7 @@
 // The array elements can be retrieved with:                              //
 //     TObject *obj = array.At(i);                                        //
 //                                                                        //
-// By default the TRefArray 'points' to the current point and can only    //
+// By default the TRefArray 'points' to the current process and can only  //
 // receive object that have been created in this process.                 //
 // To point the TRefArray to a different process do:                      //
 //     TRefArray array( processId );                                      //
