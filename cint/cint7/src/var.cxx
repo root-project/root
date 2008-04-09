@@ -6320,7 +6320,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                   if (G__var_type == 'v') {
                      G__value_typenum(result) = G__deref(G__value_typenum(result));
                   }
-                  G__add_scopemember(varscope, name.c_str(), G__value_typenum(result), 0, offset, 
+                  G__add_scopemember(varscope, name.c_str(), G__value_typenum(result), 0, (size_t)offset, 
                                      offset, G__PUBLIC, 0);
                }
                switch (G__var_type) {
