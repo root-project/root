@@ -67,9 +67,9 @@
 //
 //  ==> Case B
 //      ======
-//     TBranch *branch = tree->Branch(branchname, p_object, bufsize, splitlevel)
-//     TBranch *branch = tree->Branch(branchname, className, p_object, bufsize, splitlevel)
-//        p_object is the address of a pointer to an object.
+//     TBranch *branch = tree->Branch(branchname, &p_object, bufsize, splitlevel)
+//     TBranch *branch = tree->Branch(branchname, className, &p_object, bufsize, splitlevel)
+//        p_object is a pointer to an object.
 //        If className is not specified, Branch uses the type of p_object to determine the
 //          type of the object.
 //        If className is used to specify explicitly the object type, the className must
@@ -84,6 +84,18 @@
 //          into subbranches, with one subbranch for each data member or object
 //          of the object itself. In case the object member is a TClonesArray,
 //          it is processed as a TObject*, only one branch.
+//
+//        Note: The pointer whose address is passed to TTree::Branch must not
+//        be destroyed (i.e. go out of scope) until the TTree is deleted or
+//        TTree::ResetBranchAddress is called.
+//
+//        Note: The pointer p_object must be initialized before calling TTree::Branch
+//          Do either: 
+//             MyDataClass* p_object = 0;
+//             tree->Branch(branchname, &p_object);
+//          Or 
+//             MyDataClass* p_object = new MyDataClass;
+//             tree->Branch(branchname, &p_object);
 //
 //  ==> Case C
 //      ======
