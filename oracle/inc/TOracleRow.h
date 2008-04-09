@@ -22,6 +22,9 @@
 #endif
 #include <occi.h>
 using namespace oracle::occi;
+#ifdef CONST
+#undef CONST
+#endif
 #else
 class ResultSet;
 class MetaData;

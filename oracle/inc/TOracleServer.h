@@ -23,6 +23,9 @@
 #include <occi.h>
 using namespace std;
 using namespace oracle::occi;
+#ifdef CONST
+#undef CONST
+#endif
 #else
 class Environment;
 class Connection;
