@@ -686,19 +686,51 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             RemoveActive(file);
 
             slstat->fCurFile = file;
-            file->GetNode()->IncSlaveCnt(slstat->GetName());
-            TMessage m(kPROOF_GETENTRIES);
             TDSetElement *elem = file->GetElement();
-            m << dset->IsTree()
-              << TString(elem->GetFileName())
-              << TString(elem->GetDirectory())
-              << TString(elem->GetObjName());
+            Long64_t entries = elem->GetEntries(kTRUE, kFALSE);
+            if (entries < 0 || strlen(elem->GetTitle()) <= 0) {
+               // This is decremented when we get the reply
+               file->GetNode()->IncSlaveCnt(slstat->GetName());
+               TMessage m(kPROOF_GETENTRIES);
+               m << dset->IsTree()
+               << TString(elem->GetFileName())
+               << TString(elem->GetDirectory())
+               << TString(elem->GetObjName());
 
-            s->GetSocket()->Send( m );
-            mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("TPacketizer","sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
-                elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
+               s->GetSocket()->Send( m );
+               mon.Activate(s->GetSocket());
+               PDB(kPacketizer,2)
+                  Info("ValidateFiles",
+                     "sent to worker-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                     s->GetOrdinal(), s->GetName(), s->GetSocket(),
+                     dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
+                     elem->GetDirectory(), elem->GetObjName());
+            } else {
+               // Fill the info
+               elem->SetTDSetOffset(entries);
+               if (entries > 0) {
+                  if (!elem->GetEntryList()) {
+                     if (elem->GetFirst() > entries) {
+                        Error("ValidateFiles",
+                              "first (%d) higher then number of entries (%d) in %d",
+                              elem->GetFirst(), entries, elem->GetFileName() );
+                        // disable element
+                        slstat->fCurFile->SetDone();
+                        elem->Invalidate();
+                        dset->SetBit(TDSet::kSomeInvalid);
+                     }
+                     if (elem->GetNum() == -1) {
+                        elem->SetNum(entries - elem->GetFirst());
+                     } else if (elem->GetFirst() + elem->GetNum() > entries) {
+                        Warning("ValidateFiles", "Num (%lld) + First (%lld) larger then number of"
+                                 " keys/entries (%lld) in %s", elem->GetNum(), elem->GetFirst(),
+                                 entries, elem->GetFileName());
+                        elem->SetNum(entries - elem->GetFirst());
+                     }
+                     elem->SetValid();
+                  }
+               }
+            }
          }
       }
 
@@ -719,11 +751,26 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       }
 
       TSocket *sock = mon.Select();
+      // If we have been interrupted break
+      if (!sock) {
+         Error("ValidateFiles", "selection has been interrupted - STOP");
+         mon.DeActivateAll();
+         fValid = kFALSE;
+         break;
+      }
       mon.DeActivate(sock);
 
       PDB(kPacketizer,3) Info("ValidateFiles", "select returned: %p", sock);
 
       TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
+      if (!sock->IsValid()) {
+         // A socket got invalid during validation
+         Error("ValidateFiles", "worker-%s (%s) got invalid - STOP",
+               slave->GetOrdinal(), slave->GetName());
+         ((TProof*)gProof)->MarkBad(slave);
+         fValid = kFALSE;
+         break;
+      }
 
       TMessage *reply;
 
@@ -731,7 +778,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          // Help! lost a slave?
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
-         Error("ValidateFiles", "Recv failed! for slave-%s (%s)",
+         Error("ValidateFiles", "Recv failed! for worker-%s (%s)",
                slave->GetOrdinal(), slave->GetName());
          continue;
          }
@@ -798,9 +845,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                Error("ValidateFiles", "first (%d) higher then number of entries (%d) in %d",
                      e->GetFirst(), entries, e->GetFileName() );
 
-               // disable element
+               // Invalidate the element
                slavestat->fCurFile->SetDone();
-               fValid = kFALSE; // ???
+               e->Invalidate();
+               dset->SetBit(TDSet::kSomeInvalid);
             }
 
             if ( e->GetNum() == -1 ) {
@@ -811,6 +859,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                      e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
                e->SetNum( entries - e->GetFirst() );
             }
+            e->SetValid();
          }
 
 
@@ -831,9 +880,9 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             gProofServ->GetSocket()->Send(m);
          }
 
-         // disable element
-         if (dset->Remove(e) == -1)
-            Error("ValidateFiles", "removing of not-registered element %p failed", e);
+         // Invalidate the element
+         e->Invalidate();
+         dset->SetBit(TDSet::kSomeInvalid);
       }
 
       workers.Add(slave); // Ready for the next job
@@ -916,7 +965,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       fBytesRead += ((bytesRead > 0) ? bytesRead : 0);
 
       PDB(kPacketizer,2)
-         Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
+         Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
                               sl->GetOrdinal(), sl->GetName(),
                               numev, latency, proctime, proccpu, bytesRead);
 

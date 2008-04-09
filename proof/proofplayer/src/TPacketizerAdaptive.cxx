@@ -49,7 +49,6 @@
 #include "TPerfStats.h"
 #include "TProofDebug.h"
 #include "TProof.h"
-#include "TProofPlayer.h"
 #include "TProofServ.h"
 #include "TSlave.h"
 #include "TSocket.h"
@@ -59,6 +58,7 @@
 #include "TRandom.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TList.h"
 
 //
 // The following three utility classes manage the state of the
@@ -197,6 +197,7 @@ public:
 
       const TFileNode *obj = dynamic_cast<const TFileNode*>(other);
       R__ASSERT(obj != 0);
+
       // how many more events it has than obj
 
       if (fgNetworkFasterThanHD) {
@@ -428,7 +429,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
 
    // Init pointer members
    fSlaveStats = 0;
-   fSlaveStats = 0;
    fUnAllocated = 0;
    fActive = 0;
    fFileNodes = 0;
@@ -491,8 +491,8 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    Double_t minPacketTime = 0;
    if (TProof::GetParameter(input, "PROOF_MinPacketTime",
                             minPacketTime) == 0) {
-      Info("Process", "using alternate minimum time of a packet: %ld",
-           packetAsAFraction);
+      Info("Process", "using alternate minimum time of a packet: %f",
+           minPacketTime);
       fgMinPacketTime = (Int_t) minPacketTime;
    }
 
@@ -908,7 +908,7 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
    while (kTRUE) {
 
       // send work
-      while( TSlave *s = (TSlave*)workers.First() ) {
+      while (TSlave *s = (TSlave *)workers.First()) {
 
          workers.Remove(s);
 
@@ -919,43 +919,77 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
          TFileStat *file = 0;
 
          // try its own node first
-         if ( (node = slstat->GetFileNode()) != 0 ) {
+         if ((node = slstat->GetFileNode()) != 0) {
             file = GetNextUnAlloc(node);
-            if ( file == 0 ) {
+            if (file == 0)
                slstat->SetFileNode(0);
-            }
          }
 
          // look for a file on any other node if necessary
-         if (file == 0) {
+         if (file == 0)
             file = GetNextUnAlloc();
-         }
 
-         if ( file != 0 ) {
+         if (file != 0) {
             // files are done right away
             RemoveActive(file);
 
             slstat->fCurFile = file;
-            file->GetNode()->IncExtSlaveCnt(slstat->GetName());
-            TMessage m(kPROOF_GETENTRIES);
             TDSetElement *elem = file->GetElement();
-            m << dset->IsTree()
-              << TString(elem->GetFileName())
-              << TString(elem->GetDirectory())
-              << TString(elem->GetObjName());
+            Long64_t entries = elem->GetEntries(kTRUE, kFALSE);
+            if (entries < 0 || strlen(elem->GetTitle()) <= 0) {
+               // This is decremented when we get the reply
+               file->GetNode()->IncExtSlaveCnt(slstat->GetName());
+               TMessage m(kPROOF_GETENTRIES);
+               m << dset->IsTree()
+               << TString(elem->GetFileName())
+               << TString(elem->GetDirectory())
+               << TString(elem->GetObjName());
 
-            s->GetSocket()->Send( m );
-            mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2)
-               Info("ValidateFiles",
-                    "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                    s->GetOrdinal(), s->GetName(), s->GetSocket(),
-                    dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
-                    elem->GetDirectory(), elem->GetObjName());
+               s->GetSocket()->Send( m );
+               mon.Activate(s->GetSocket());
+               PDB(kPacketizer,2)
+                  Info("ValidateFiles",
+                     "sent to worker-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                     s->GetOrdinal(), s->GetName(), s->GetSocket(),
+                     dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
+                     elem->GetDirectory(), elem->GetObjName());
+            } else {
+               // Fill the info
+               elem->SetTDSetOffset(entries);
+               if (entries > 0) {
+                  if (!elem->GetEntryList()) {
+                     if (elem->GetFirst() > entries) {
+                        Error("ValidateFiles",
+                              "first (%d) higher then number of entries (%d) in %d",
+                              elem->GetFirst(), entries, elem->GetFileName() );
+                        // disable element
+                        slstat->fCurFile->SetDone();
+                        elem->Invalidate();
+                        dset->SetBit(TDSet::kSomeInvalid);
+                     }
+                     if (elem->GetNum() == -1) {
+                        elem->SetNum(entries - elem->GetFirst());
+                     } else if (elem->GetFirst() + elem->GetNum() > entries) {
+                        Warning("ValidateFiles", "Num (%lld) + First (%lld) larger then number of"
+                                 " keys/entries (%lld) in %s", elem->GetNum(), elem->GetFirst(),
+                                 entries, elem->GetFileName());
+                        elem->SetNum(entries - elem->GetFirst());
+                     }
+                     elem->SetValid();
+                  }
+               }
+               // Notify the client
+               n++;
+               gProof->SendDataSetStatus(msg, n, tot, st);
+
+               // This worker is ready for the next validation
+               workers.Add(s);
+            }
          }
       }
 
-      if ( mon.GetActive() == 0 ) break; // nothing to wait for anymore
+      // Check if there is anything to wait for
+      if (mon.GetActive() == 0) break;
 
       PDB(kPacketizer,3) {
          Info("ValidateFiles", "waiting for %d slaves:", mon.GetActive());
@@ -964,51 +998,66 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
          while (TSocket *s = (TSocket*) next()) {
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
             if (sl)
-               Info("ValidateFiles", "   slave-%s (%s)",
+               Info("ValidateFiles", "   worker-%s (%s)",
                     sl->GetOrdinal(), sl->GetName());
          }
          delete act;
       }
 
       TSocket *sock = mon.Select();
+      // If we have been interrupted break
+      if (!sock) {
+         Error("ValidateFiles", "selection has been interrupted - STOP");
+         mon.DeActivateAll();
+         fValid = kFALSE;
+         break;
+      }
       mon.DeActivate(sock);
 
       PDB(kPacketizer,3) Info("ValidateFiles", "select returned: %p", sock);
 
       TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
+      if (!sock->IsValid()) {
+         // A socket got invalid during validation
+         Error("ValidateFiles", "worker-%s (%s) got invalid - STOP",
+               slave->GetOrdinal(), slave->GetName());
+         ((TProof*)gProof)->MarkBad(slave);
+         fValid = kFALSE;
+         break;
+      }
 
       TMessage *reply;
 
-      if ( sock->Recv(reply) <= 0 ) {
+      if (sock->Recv(reply) <= 0) {
          // Help! lost a slave?
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
-         Error("ValidateFiles", "Recv failed! for slave-%s (%s)",
+         Error("ValidateFiles", "Recv failed! for worker-%s (%s)",
                slave->GetOrdinal(), slave->GetName());
          continue;
          }
 
-      if ( reply->What() == kPROOF_FATAL ) {
-         Error("ValidateFiles", "kPROOF_FATAL from slave-%s (%s)",
+      if (reply->What() == kPROOF_FATAL) {
+         Error("ValidateFiles", "kPROOF_FATAL from worker-%s (%s)",
                slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
-      } else if ( reply->What() == kPROOF_LOGFILE ) {
+      } else if (reply->What() == kPROOF_LOGFILE) {
          PDB(kPacketizer,3) Info("ValidateFiles", "got logfile");
          Int_t size;
          (*reply) >> size;
          ((TProof*)gProof)->RecvLogFile(sock, size);
          mon.Activate(sock);
          continue;
-      } else if ( reply->What() == kPROOF_LOGDONE ) {
+      } else if (reply->What() == kPROOF_LOGDONE) {
          PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
          mon.Activate(sock);
          continue;
-      } else if ( reply->What() != kPROOF_GETENTRIES ) {
+      } else if (reply->What() != kPROOF_GETENTRIES) {
          // Help! unexpected message type
          Error("ValidateFiles",
-               "unexpected message type (%d) from slave-%s (%s)",
+               "unexpected message type (%d) from worker-%s (%s)",
                reply->What(), slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
@@ -1030,27 +1079,29 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
       }
 
       e->SetTDSetOffset(entries);
-      if ( entries > 0 ) {
+      if (entries > 0) {
 
          if (!e->GetEntryList()) {
-            if ( e->GetFirst() > entries ) {
+            if (e->GetFirst() > entries) {
                Error("ValidateFiles",
                      "first (%d) higher then number of entries (%d) in %d",
                      e->GetFirst(), entries, e->GetFileName() );
 
-               // disable element
+               // Invalidate the element
                slavestat->fCurFile->SetDone();
-               fValid = kFALSE; // ???
+               e->Invalidate();
+               dset->SetBit(TDSet::kSomeInvalid);
             }
 
-            if ( e->GetNum() == -1 ) {
-               e->SetNum( entries - e->GetFirst() );
-            } else if ( e->GetFirst() + e->GetNum() > entries ) {
+            if (e->GetNum() == -1) {
+               e->SetNum(entries - e->GetFirst());
+            } else if (e->GetFirst() + e->GetNum() > entries) {
                Error("ValidateFiles",
                      "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
                      e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
-               e->SetNum( entries - e->GetFirst() );
+               e->SetNum(entries - e->GetFirst());
             }
+            e->SetValid();
          }
 
 
@@ -1072,9 +1123,9 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
             gProofServ->GetSocket()->Send(m);
          }
 
-         // disable element
-         if (dset->Remove(e) == -1)
-            Error("ValidateFiles", "removing of not-registered element %p failed", e);
+         // invalidate element
+         e->Invalidate();
+         dset->SetBit(TDSet::kSomeInvalid);
       }
 
       workers.Add(slave); // Ready for the next job
@@ -1097,9 +1148,11 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
    TIter next(dset->GetListOfElements());
    TDSetElement *el;
    while ( (el = dynamic_cast<TDSetElement*> (next())) ) {
-      newOffset = offset + el->GetTDSetOffset();
-      el->SetTDSetOffset(offset);
-      offset = newOffset;
+      if (el->GetValid()) {
+         newOffset = offset + el->GetTDSetOffset();
+         el->SetTDSetOffset(offset);
+         offset = newOffset;
+      }
    }
 }
 
@@ -1137,9 +1190,6 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr)
       // in case the worker has suddenly slowed down
       if (rate < 0.25 * slstat->GetAvgRate())
          rate = (rate + slstat->GetAvgRate()) / 2;
-      // in case the worker was generally slow
-      if (rate < 0.20 * (fTotalEntries - fProcessed))
-         packetTime *= 2;
       num = (Long64_t)(rate * packetTime);
    } else { //first packet for this slave in this query
       Int_t packetSize = (fTotalEntries - fProcessed)
@@ -1170,9 +1220,11 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    // find slave
 
    TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue( sl );
-
-   R__ASSERT( slstat != 0 );
-
+   if (!slstat) {
+      Error("GetNextPacket", "TSlaveStat instance for worker %s not found!",
+                            (sl ? sl->GetName() : "**undef**"));
+      return 0;
+   }
    // update stats & free old element
 
    if ( slstat->fCurElem != 0 ) {
@@ -1202,7 +1254,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       fCumProcTime += proctime;
 
       PDB(kPacketizer,2)
-         Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
+         Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
               sl->GetOrdinal(), sl->GetName(),
               numev, latency, proctime, proccpu, bytesRead);
 
@@ -1319,7 +1371,12 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       if (file->GetNode()->GetMySlaveCnt() == 0 &&
          file->GetElement()->GetFirst() == file->GetNextEntry()) {
          fNEventsOnRemLoc -= file->GetElement()->GetNum();
-         R__ASSERT(fNEventsOnRemLoc >= 0);
+         if (fNEventsOnRemLoc < 0) {
+            Error("GetNextPacket",
+                  "inconsistent value for fNEventsOnRemLoc (%d): stop delivering packets!",
+                  fNEventsOnRemLoc);
+            return 0;
+         }
       }
       file->GetNode()->IncExtSlaveCnt(slstat->GetName());
       file->GetNode()->IncRunSlaveCnt();
@@ -1338,9 +1395,10 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    Long64_t first = file->GetNextEntry();
    Long64_t last = base->GetFirst() + base->GetNum();
 
-   // if the remaining part is smaller than the packetsize, increase the packetsize
+   // if the remaining part is smaller than the (packetsize * 1.5)
+   // then increase the packetsize
 
-   if ( first + num >= last ) {
+   if ( first + num * 1.5 >= last ) {
       num = last - first;
       file->SetDone(); // done
 
