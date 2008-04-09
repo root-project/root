@@ -47,8 +47,8 @@ TEveGedEditor::TEveGedEditor(TCanvas* canvas, Int_t width, Int_t height) :
    frame->SetModelClass(amClass);
    {
       Int_t off = edClass->GetDataMemberOffset("fPriority");
-      if(off == 0)
-         printf("ojej!\n");
+      if (off == 0)
+         Warning("TEveGedEditor::TEveGedEditor", "Can't fix priority for TAttMarkerEditor.\n");
       else
          * (Int_t*) (((char*)frame) + off) = 1;
    }

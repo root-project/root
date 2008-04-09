@@ -231,6 +231,7 @@ public:
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
    virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, Int_t /*xsrc*/ = 0, Int_t /*ysrc*/ = 0, UInt_t /*wsrc*/ = 0, UInt_t /*hsrc*/ = 0, Option_t * /*opt*/ = "") { }
    virtual void      FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
+   virtual void      FromGLBuffer(UChar_t* /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
    static EImageFileTypes GetImageFileTypeFromFilename(const char* opt);
 
    static TImage *Create();

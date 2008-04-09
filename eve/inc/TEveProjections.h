@@ -29,22 +29,28 @@ public:
 
 protected:
    EPType_e            fType;          // type
-   EGeoMode_e          fGeoMode;       // way of polygon reconstruction
+   EGeoMode_e          fGeoMode;       // strategy of polygon projection (what to try first)
    TString             fName;          // name
 
    TEveVector          fCenter;        // center of distortion
    TEveVector          fZeroPosVal;    // projected origin (0, 0, 0)
 
    Float_t             fDistortion;    // distortion
-   Float_t             fFixedRadius;   // projected radius independent of distortion
+   Float_t             fFixR;          // radius from which scaling remains constant
+   Float_t             fFixZ;          // z-coordinate from which scaling remains constant
+   Float_t             fPastFixRFac;   // relative scaling factor beyond fFixR as 10^x
+   Float_t             fPastFixZFac;   // relative scaling factor beyond fFixZ as 10^x
+   Float_t             fScaleR;        // scale factor to keep projected radius at fFixR fixed
+   Float_t             fScaleZ;        // scale factor to keep projected z-coordinate at fFixZ fixed
+   Float_t             fPastFixRScale; // relative scaling beyond fFixR
+   Float_t             fPastFixZScale; // relative scaling beyond fFixZ
 
-   Float_t             fScale;         // scale factor to keep projected radius fixed
    TEveVector          fLowLimit;      // convergence of point +infinity
    TEveVector          fUpLimit;       // convergence of point -infinity
 
 public:
    TEveProjection(TEveVector& center);
-   virtual ~TEveProjection(){}
+   virtual ~TEveProjection() {}
 
    virtual   void      ProjectPoint(Float_t&, Float_t&, Float_t&, EPProc_e p = kPP_Full ) = 0;
    virtual   void      ProjectPointFv(Float_t* v) { ProjectPoint(v[0], v[1], v[2]); }
@@ -62,11 +68,18 @@ public:
    void                SetGeoMode(EGeoMode_e m) { fGeoMode = m; }
    EGeoMode_e          GetGeoMode() { return fGeoMode; }
 
-   void                UpdateLimit();
-   void                SetDistortion(Float_t d);
-   Float_t             GetDistortion() { return fDistortion; }
-   void                SetFixedRadius(Float_t x);
-   Float_t             GetFixedRadius() { return fFixedRadius; }
+   virtual void        UpdateLimit();
+
+   void     SetDistortion(Float_t d);
+   Float_t  GetDistortion() const { return fDistortion; }
+   Float_t  GetFixR() const { return fFixR; }
+   Float_t  GetFixZ() const { return fFixZ; }
+   void     SetFixR(Float_t x);
+   void     SetFixZ(Float_t x);
+   Float_t  GetPastFixRFac() const { return fPastFixRFac; }
+   Float_t  GetPastFixZFac() const { return fPastFixZFac; }
+   void     SetPastFixRFac(Float_t x);
+   void     SetPastFixZFac(Float_t x);
 
    virtual   Bool_t    AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) { return kTRUE; }
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
@@ -97,12 +110,15 @@ public:
    TEveRhoZProjection(TEveVector& center);
    virtual ~TEveRhoZProjection() {}
 
-   virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance);
    virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = kPP_Full);
-   virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    virtual   void      SetCenter(TEveVector& center);
    virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
+
+   virtual void        UpdateLimit();
+
+   virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance);
+   virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.
 };

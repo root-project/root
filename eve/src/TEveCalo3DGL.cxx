@@ -55,6 +55,21 @@ void TEveCalo3DGL::SetBBox()
 }
 
 //______________________________________________________________________________
+Bool_t TEveCalo3DGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
+{
+   // Check if display-lists should be used.
+   // Compared to TGLLogicalShape version we also don't use them
+   // for outline-pass as colors are set internally.
+
+   if (!fScene || rnrCtx.SecSelection() ||
+       rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+   {
+      return kFALSE;
+   }
+   return fDLCache;
+}
+
+//______________________________________________________________________________
 inline void TEveCalo3DGL::CrossProduct(const Float_t a[3], const Float_t b[3],
                                        const Float_t c[3], Float_t out[3]) const
 {
@@ -305,13 +320,16 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    if (fM->fCacheOK == kFALSE)
    {
       fM->ResetCache();
-      fM->fData->GetCellList((fM->fEtaMin+fM->fEtaMax)*0.5f, fM->fEtaMax -fM->fEtaMin,
-                             fM->fPhi, fM->fPhiRng, fM->fThreshold, fM->fCellList);
+      fM->fData->GetCellList(0.5f*(fM->fEtaMin + fM->fEtaMax),
+                             fM->fEtaMax - fM->fEtaMin,
+                             fM->fPhi, fM->fPhiRng,
+                             fM->fThreshold, fM->fCellList);
       fM->fCacheOK= kTRUE;
    }
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
    glEnable(GL_NORMALIZE);
+   glEnable(GL_LIGHTING);
 
    TEveCaloData::CellData_t cellData;
    Float_t transTheta = fM->GetTransitionTheta();
@@ -321,7 +339,7 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    Float_t offset = 0;
 
    if (rnrCtx.SecSelection()) glPushName(0);
-   for(UInt_t i=0; i<fM->fCellList.size(); i++)
+   for (UInt_t i=0; i<fM->fCellList.size(); i++)
    {
       fM->fData->GetCellData(fM->fCellList[i], cellData);
 

@@ -18,7 +18,7 @@
 
 class TH2F;
 class TAxis;
-class TObjArray;
+class THStack;
 
 class TEveCaloData: public TEveRefCnt
 {
@@ -42,12 +42,19 @@ public:
       Float_t fPhiMax;
       Float_t fThetaMin;
       Float_t fThetaMax;
+      Float_t fEtaMin;
+      Float_t fEtaMax;
       Int_t   fZSideSign;
 
       CellData_t(): fValue(0), fPhiMin(0), fPhiMax(0), fThetaMin(0), fThetaMax(0), fZSideSign(1) {}
       void Configure(Float_t v, Float_t e1, Float_t e2, Float_t p1, Float_t p2);
 
       Float_t Value()    const { return fValue;    }
+
+      Float_t EtaMin()   const { return fEtaMin; }
+      Float_t EtaMax()   const { return fEtaMax; }
+      Float_t Eta()      const { return (fEtaMin+fEtaMax)*0.5f; }
+      Float_t EtaDelta() const { return fEtaMax-fEtaMin; }
 
       Float_t ThetaMin(Bool_t isSigned = kFALSE) const;
       Float_t ThetaMax(Bool_t isSigned = kFALSE) const;
@@ -57,7 +64,7 @@ public:
       Float_t PhiMin()   const { return fPhiMin; }
       Float_t PhiMax()   const { return fPhiMax; }
       Float_t Phi()      const { return (fPhiMin+fPhiMax)*0.5f; }
-      Float_t PhiDelta() const { return fPhiMax-fPhiMax; }
+      Float_t PhiDelta() const { return fPhiMax-fPhiMin; }
 
       Float_t ZSideSign()const { return fZSideSign;}
 
@@ -83,6 +90,8 @@ public:
 
    virtual Int_t GetNSlices() const = 0;
 
+   virtual Float_t  GetMaxVal() const = 0;
+
    virtual Bool_t SupportsEtaBinning(){ return kFALSE; }
    virtual Bool_t SupportsPhiBinning(){ return kFALSE; }
    virtual const TAxis* GetEtaBins(){ return 0 ;}
@@ -101,7 +110,7 @@ private:
    TEveCaloDataHist& operator=(const TEveCaloDataHist&); // Not implemented
 
 protected:
-  TObjArray*    fHStack; // stack of TH2F objects
+   THStack*    fHStack;
 
 public:
    TEveCaloDataHist();
@@ -115,6 +124,8 @@ public:
    virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data);
 
    virtual Int_t GetNSlices() const;
+
+   virtual Float_t  GetMaxVal() const;
 
    virtual Bool_t SupportsEtaBinning(){ return kTRUE; }
    virtual Bool_t SupportsPhiBinning(){ return kTRUE; }

@@ -12,7 +12,7 @@
 #include "TEveCaloData.h"
 
 #include "TAxis.h"
-#include "TObjArray.h"
+#include "THStack.h"
 #include "TH2.h"
 #include "TMath.h"
 
@@ -37,11 +37,15 @@ void TEveCaloData::CellData_t::Configure(Float_t v, Float_t e1, Float_t e2, Floa
    // Set parameters from cell ID.
 
    fValue  = v;
-   fPhiMin = p1;
-   fPhiMax = p2;
+
+   fEtaMin = e1;
+   fEtaMax = e2;
 
    fThetaMax = 2*TMath::ATan(TMath::Exp(-(TMath::Abs(e1))));
    fThetaMin = 2*TMath::ATan(TMath::Exp(-(TMath::Abs(e2))));
+
+   fPhiMin = p1;
+   fPhiMax = p2;
 
    fZSideSign = (e1 > 0) ? 1:-1;
 }
@@ -89,7 +93,7 @@ TEveCaloDataHist::TEveCaloDataHist(): fHStack(0)
 {
    // Constructor.
 
-   fHStack = new TObjArray();
+   fHStack = new THStack();
 }
 
 TEveCaloDataHist::~TEveCaloDataHist()
@@ -137,21 +141,20 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
       pr[1] = pr[3] = phi2;
    }
 
-   TH2F *hist0 = (TH2F*)fHStack->At(0);
+   TH2F *hist0 = (TH2F*)fHStack->GetStack()->At(0);
    TAxis *ax = hist0->GetXaxis();
    TAxis *ay = hist0->GetYaxis();
    TH2F *hist;
 
-   for (Int_t ieta=0; ieta<ay->GetNbins(); ieta++) {
-      for (Int_t iphi=0; iphi<ax->GetNbins(); iphi++)  {
-         if (   ax->GetBinLowEdge(ieta)   >= etaMin
-                && ax->GetBinUpEdge(ieta) <  etaMax
-                && ((ay->GetBinLowEdge(iphi)>=pr[0] && ay->GetBinUpEdge(iphi)<pr[1])
-                    || (ay->GetBinLowEdge(iphi)>=pr[2] && ay->GetBinUpEdge(iphi)<pr[3])))
+   for (Int_t ieta=0; ieta<ax->GetNbins(); ieta++) {
+      for (Int_t iphi=0; iphi<ay->GetNbins(); iphi++)  {
+         if ( ax->GetBinLowEdge(ieta)   >= etaMin
+              && ax->GetBinUpEdge(ieta) <  etaMax
+              && ((ay->GetBinLowEdge(iphi)>=pr[0] && ay->GetBinUpEdge(iphi)<pr[1])
+                  || (ay->GetBinLowEdge(iphi)>=pr[2] && ay->GetBinUpEdge(iphi)<pr[3])))
          {
-
             Int_t bin = hist0->GetBin(ieta, iphi);
-            TIter next(fHStack);
+            TIter next(fHStack->GetStack());
             Int_t slice = 0;
             while ((hist = (TH2F*) next()) != 0) {
                if (hist->GetBinContent(bin) > threshold)
@@ -169,7 +172,7 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloDat
 {
   // Get cell geometry and value from cell ID.
 
-   TH2F* hist  = (TH2F*) (fHStack->At(id.fSlice));
+   TH2F* hist  = (TH2F*) (fHStack->GetStack()->At(id.fSlice));
 
    Int_t x, y, z;
    hist->GetBinXYZ(id.fTower, x, y, z);
@@ -193,7 +196,15 @@ Int_t TEveCaloDataHist::GetNSlices() const
 {
    // Get number of tower slices.
 
-   return fHStack->GetEntriesFast();
+   return fHStack->GetStack()->GetEntriesFast();
+}
+
+//______________________________________________________________________________
+Float_t TEveCaloDataHist::GetMaxVal() const
+{
+   // Returns the maximum of all added histograms.
+
+   return fHStack->GetMaximum();
 }
 
 //______________________________________________________________________________
@@ -201,7 +212,7 @@ const TAxis* TEveCaloDataHist::GetEtaBins()
 {
    // Get eta axis.
 
-   TH2F* hist  = (TH2F*) (fHStack->At(0));
+   TH2F* hist  = (TH2F*) (fHStack->GetStack()->At(0));
    return hist->GetXaxis();
 }
 
@@ -210,7 +221,7 @@ const TAxis* TEveCaloDataHist::GetPhiBins()
 {
    // Get phi axis.
 
-   TH2F* hist  = (TH2F*) (fHStack->At(0));
+   TH2F* hist  = (TH2F*) (fHStack->GetStack()->At(0));
    return hist->GetYaxis();
 }
 
@@ -222,5 +233,5 @@ const TH2F* TEveCaloDataHist::GetHistogram(Int_t slice)
    if (slice > GetNSlices())
       return 0;
 
-   return (TH2F*)fHStack->At(slice);
+   return (TH2F*)fHStack->GetStack()->At(slice);
 }

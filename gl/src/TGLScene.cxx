@@ -18,7 +18,6 @@
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
 #include "TGLCamera.h"
-#include "TGLStopwatch.h"
 #include "TGLContext.h"
 #include "TGLIncludes.h"
 
@@ -28,8 +27,11 @@
 
 #include <algorithm>
 
-//______________________________________________________________________
+//==============================================================================
 // TGLScene::TSceneInfo
+//==============================================================================
+
+//______________________________________________________________________
 //
 // Extend TGLSceneInfo for needs of TGLScene:
 //
@@ -43,14 +45,127 @@
 //______________________________________________________________________________
 TGLScene::TSceneInfo::TSceneInfo(TGLViewerBase* view, TGLScene* scene) :
    TGLSceneInfo (view, scene),
+   fMinorStamp  (0),
    fOpaqueCnt   (0),
    fTranspCnt   (0),
    fAsPixelCnt  (0)
-{}
+{
+   // Constructor.
+}
 
 //______________________________________________________________________________
 TGLScene::TSceneInfo::~TSceneInfo()
-{}
+{
+   // Destructor.
+}
+
+//______________________________________________________________________________
+void TGLScene::TSceneInfo::ClearDrawElementVec(DrawElementVec_t& vec,
+                                               Int_t maxSize)
+{
+   // Clear given vec and if it grew too large compared to the size of
+   // shape-of-interest also resize it.
+
+   if (vec.capacity() > (size_t) maxSize) {
+      DrawElementVec_t foo;
+      foo.reserve((size_t) maxSize);
+      vec.swap(foo);
+   } else {
+      vec.clear();
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::TSceneInfo::ClearDrawElementPtrVec(DrawElementPtrVec_t& vec,
+                                                  Int_t maxSize)
+{
+   // Clear given vec and if it grew too large compared to the size of
+   // shape-of-interest also resize it.
+
+   if (vec.capacity() > (size_t) maxSize) {
+      DrawElementPtrVec_t foo;
+      foo.reserve((size_t) maxSize);
+      vec.swap(foo);
+   } else {
+      vec.clear();
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::TSceneInfo::ClearAfterRebuild()
+{
+   // Clear DrawElementVector fVisibleElement and optionally resize it
+   // so that it doesn't take more space then required by all the
+   // elements in the scene's draw-list.
+
+   Int_t maxSize = (Int_t) fShapesOfInterest.size();
+
+   ClearDrawElementVec(fVisibleElements, maxSize);
+}
+
+//______________________________________________________________________________
+void TGLScene::TSceneInfo::ClearAfterUpdate()
+{
+   // Clear DrawElementPtrVectors and optionally resize them so that
+   // they don't take more space then required by all the elements in
+   // the scene's draw-list.
+
+   Int_t maxSize = (Int_t) fShapesOfInterest.size();
+
+   ClearDrawElementPtrVec(fOpaqueElements, maxSize);
+   ClearDrawElementPtrVec(fTranspElements, maxSize);
+   ClearDrawElementPtrVec(fSelOpaqueElements, maxSize);
+   ClearDrawElementPtrVec(fSelTranspElements, maxSize);
+
+   fMinorStamp = 0;
+}
+
+//______________________________________________________________________________
+void TGLScene::TSceneInfo::Lodify(TGLRnrCtx& ctx)
+{
+   // Quantize LODs for gice render-context.
+
+   for (DrawElementVec_i i = fVisibleElements.begin(); i != fVisibleElements.end(); ++i)
+      i->fPhysical->QuantizeShapeLOD(i->fPixelLOD, ctx.CombiLOD(), i->fFinalLOD);
+}
+
+//______________________________________________________________________________
+void TGLScene::TSceneInfo::PreDraw()
+{
+   // Prepare for drawing - fill DrawElementPtrVectors from the
+   // contents of fVisibleElements if there was some change.
+
+   if (fMinorStamp < fScene->GetMinorStamp())
+   {
+      fOpaqueElements.clear();
+      fTranspElements.clear();
+      fSelOpaqueElements.clear();
+      fSelTranspElements.clear();   
+
+      for (DrawElementVec_i i = fVisibleElements.begin(); i != fVisibleElements.end(); ++i)
+      {
+         if (i->fPhysical->IsSelected())
+         {
+            if (i->fPhysical->IsTransparent())
+               fSelTranspElements.push_back(&*i);
+            else
+               fSelOpaqueElements.push_back(&*i);
+         } else {
+            if (i->fPhysical->IsTransparent())
+               fTranspElements.push_back(&*i);
+            else
+               fOpaqueElements.push_back(&*i);
+         }
+      }
+      fMinorStamp = fScene->GetMinorStamp();
+   }
+}
+
+//______________________________________________________________________________
+void TGLScene::TSceneInfo::PostDraw()
+{
+   // Clean-up after drawing, nothing to be done here.
+}
 
 //______________________________________________________________________________
 void TGLScene::TSceneInfo::ResetDrawStats()
@@ -105,8 +220,9 @@ void TGLScene::TSceneInfo::DumpDrawStats()
       out += Form("Drew scene (%s / %i LOD) - %i (Op %i Trans %i) %i pixel\n",
                   TGLRnrCtx::StyleName(LastStyle()), LastLOD(),
                   fOpaqueCnt + fTranspCnt, fOpaqueCnt, fTranspCnt, fAsPixelCnt);
-      out += Form("\tInner phys nums: scene=%d, op=%d, trans=%d",
-                  fDrawList.size(),
+      out += Form("\tInner phys nums: physicals=%d, of_interest=%d, visible=%d, op=%d, trans=%d",
+                  ((TGLScene*)fScene)->GetMaxPhysicalID(),
+                  fShapesOfInterest.size(), fVisibleElements.size(),
                   fOpaqueElements.size(), fTranspElements.size());
 
       // By shape type counts
@@ -124,8 +240,11 @@ void TGLScene::TSceneInfo::DumpDrawStats()
 }
 
 
-//______________________________________________________________________________
+//==============================================================================
 // TGLScene
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // TGLScene provides managememnt and rendering of ROOT's default 3D
 // object representation as logical and physical shapes.
@@ -151,7 +270,7 @@ void TGLScene::TSceneInfo::DumpDrawStats()
 // efficiency and syncronisation reasons. Hence viewer variant objects
 // camera, clips etc being owned by viewer and passed at draw/select
 
-ClassImp(TGLScene)
+ClassImp(TGLScene);
 
 //______________________________________________________________________________
 TGLScene::TGLScene() :
@@ -212,6 +331,7 @@ void TGLScene::ReleaseGLCtxIdentity()
 // SceneInfo management
 /**************************************************************************/
 
+
 //______________________________________________________________________________
 TGLScene::TSceneInfo* TGLScene::CreateSceneInfo(TGLViewerBase* view)
 {
@@ -223,70 +343,74 @@ TGLScene::TSceneInfo* TGLScene::CreateSceneInfo(TGLViewerBase* view)
 }
 
 //______________________________________________________________________________
-Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape* shape1,
-                                         const TGLPhysicalShape* shape2)
+inline Bool_t TGLScene::ComparePhysicalVolumes(const TGLPhysicalShape* shape1,
+                                               const TGLPhysicalShape* shape2)
 {
    // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
    // 'shape1' bigger than 'shape2'.
 
-   // TODO: Move this to TGLBoundingBox > operator?
-   // !!! MT: use diagonal instead of volume!
    return (shape1->BoundingBox().Volume() > shape2->BoundingBox().Volume());
 }
 
 //______________________________________________________________________________
-void TGLScene::RebuildSceneInfo(TGLRnrCtx& ctx)
+inline Bool_t TGLScene::ComparePhysicalDiagonals(const TGLPhysicalShape* shape1,
+                                                 const TGLPhysicalShape* shape2)
 {
-   // Major change in scene, need to rebuild draw-list.
+   // Compare 'shape1' and 'shape2' bounding box volumes - return kTRUE if
+   // 'shape1' bigger than 'shape2'.
+
+   return (shape1->BoundingBox().Diagonal() > shape2->BoundingBox().Diagonal());
+}
+
+//______________________________________________________________________________
+void TGLScene::RebuildSceneInfo(TGLRnrCtx& rnrCtx)
+{
+   // Major change in scene, need to rebuild all-element draw-vector and
+   // sort it.
    //
-   // Sort the TGLPhysical draw list by shape bounding box volume, from
+   // Sort the TGLPhysical draw list by shape bounding box diagonal, from
    // large to small. This makes dropout of shapes with time limited
    // Draw() calls must less noticable. As this does not use projected
    // size it only needs to be done after a scene content change - not
    // everytime scene drawn (potential camera/projection change).
 
-   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(ctx.GetSceneInfo());
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       Error("TGLScene::RebuildSceneInfo", "Scene mismatch.");
       return;
    }
 
-   TGLSceneBase::RebuildSceneInfo(ctx);
+   TGLSceneBase::RebuildSceneInfo(rnrCtx);
 
-   TGLStopwatch stopwatch;
-   if (gDebug>2) {
-      stopwatch.Start();
+   if (sinfo->fShapesOfInterest.capacity() > fPhysicalShapes.size()) {
+      ShapeVec_t foo;
+      foo.reserve(fPhysicalShapes.size());
+      sinfo->fShapesOfInterest.swap(foo);
+   } else {
+      sinfo->fShapesOfInterest.clear();
    }
 
-   ShapeVec_t new_draw_list;
-   new_draw_list.reserve(fPhysicalShapes.size());
-   sinfo->fDrawList.swap(new_draw_list);
+   PhysicalShapeMapIt_t pit = fPhysicalShapes.begin();
+   while (pit != fPhysicalShapes.end())
    {
-      PhysicalShapeMapIt_t pit = fPhysicalShapes.begin();
-      while (pit != fPhysicalShapes.end())
-      {
-         TGLPhysicalShape      * pshp = pit->second;
-         const TGLLogicalShape * lshp = pshp->GetLogical();
-         if (ctx.GetCamera()->OfInterest(pshp->BoundingBox(),
+      TGLPhysicalShape      * pshp = pit->second;
+      const TGLLogicalShape * lshp = pshp->GetLogical();
+      if (rnrCtx.GetCamera()->OfInterest(pshp->BoundingBox(),
                                          lshp->IgnoreSizeForOfInterest()))
-         {
-            sinfo->fDrawList.push_back(pit->second);
-         }
-         ++pit;
+      {
+         sinfo->fShapesOfInterest.push_back(pshp);
       }
+      ++pit;
    }
 
-   // Sort by volume of shape bounding box
-   // !!! MT: diagonal better!
-   std::sort(sinfo->fDrawList.begin(), sinfo->fDrawList.end(), TGLScene::ComparePhysicalVolumes);
+   std::sort(sinfo->fShapesOfInterest.begin(), sinfo->fShapesOfInterest.end(),
+             TGLScene::ComparePhysicalDiagonals);
 
-   if (gDebug>2) {
-      Info("TGLScene::RebuildSceneInfo", "sorting took %f msec", stopwatch.End());
-   }
+   sinfo->ClearAfterRebuild();
 }
 
 //______________________________________________________________________________
-void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
+void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
 {
    // Fill scene-info with information needed for rendering, take into
    // account the render-context (viewer state, camera, clipping).
@@ -294,7 +418,7 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
    // the visible ones. While at it, opaque and transparent shapes are
    // divided into two groups.
 
-   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(ctx.GetSceneInfo());
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       Error("TGLScene::UpdateSceneInfo", "Scene mismatch.");
       return;
@@ -302,40 +426,21 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
 
    // Clean-up/reset, update of transformation matrices and clipping
    // planes done in base-class.
-   TGLSceneBase::UpdateSceneInfo(ctx);
+   TGLSceneBase::UpdateSceneInfo(rnrCtx);
 
-   if ( ! sinfo->IsVisible() )
+   if (!sinfo->IsVisible())
       return;
 
-   Int_t drawListSize = (Int_t) sinfo->fDrawList.size();
-   if (sinfo->fOpaqueElements.capacity() > 1.4*drawListSize)
-   {
-      DrawElementVec_t foo;
-      foo.reserve( (size_t) (1.2*drawListSize));
-      sinfo->fOpaqueElements.swap(foo);
-   } else {
-      sinfo->fOpaqueElements.clear();
-   }
-   if (sinfo->fTranspElements.capacity() > 1.4*drawListSize)
-   {
-      DrawElementVec_t foo;
-      foo.reserve( (size_t) (1.2*drawListSize));
-      sinfo->fTranspElements.swap(foo);
-   } else {
-      sinfo->fTranspElements.clear();
-   }
-
+   sinfo->fVisibleElements.clear();
 
    // Check individual physicals, build DrawElementList.
 
    Int_t  checkCount = 0;
-   Bool_t timerp     = (ctx.RenderTimeout() > 0.0);
+   Bool_t timerp     = rnrCtx.IsStopwatchRunning();
    fUpdateTimeouted  = kFALSE;
 
-   TGLStopwatch stopwatch;
-   stopwatch.Start();
-
-   for (ShapeVec_i phys=sinfo->fDrawList.begin(); phys!=sinfo->fDrawList.end();
+   for (ShapeVec_i phys=sinfo->fShapesOfInterest.begin();
+        phys!=sinfo->fShapesOfInterest.end();
         ++phys, ++checkCount)
    {
       const TGLPhysicalShape * drawShape = *phys;
@@ -401,58 +506,45 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& ctx)
       // Draw? Then calculate lod and store ...
       if (drawNeeded)
       {
-         DrawElement_t de;
-         de.fPhysical = drawShape;
-         drawShape->CalculateShapeLOD(ctx, de.fPixelSize, de.fPixelLOD);
-
-         if (drawShape->IsTransparent())
-            sinfo->fTranspElements.push_back(de);
-         else
-            sinfo->fOpaqueElements.push_back(de);
+         DrawElement_t de(drawShape);
+         drawShape->CalculateShapeLOD(rnrCtx, de.fPixelSize, de.fPixelLOD);
+         sinfo->fVisibleElements.push_back(de);
       }
 
       // Terminate the traversal if over scene rendering limit.
-      // Only test every 1000 objects as this is somewhat costly.
-      if (timerp && (checkCount % 1000) == 999 &&
-          stopwatch.Lap() > ctx.RenderTimeout())
+      // Only test every 5000 objects as this is somewhat costly.
+      if (timerp && (checkCount % 5000) == 0 && rnrCtx.HasStopwatchTimedOut())
       {
          fUpdateTimeouted = kTRUE;
-         if (ctx.ViewerLOD() == TGLRnrCtx::kLODHigh)
+         if (rnrCtx.ViewerLOD() == TGLRnrCtx::kLODHigh)
             Warning("TGLScene::UpdateSceneInfo",
-                    "Timeout %.0fms reached, not all elements processed.",
-                    ctx.RenderTimeout());
+                    "Timeout reached, not all elements processed.");
          break;
       }
    }
 
-   stopwatch.End();
+   sinfo->ClearAfterUpdate();
 
    // !!! MT Transparents should be sorted by their eye z-coordinate.
    // Need combined matrices in scene-info to do this.
-   // This is CRAP! Should z-sort contributions from ALL scenes!
+   // Even more ... should z-sort contributions from ALL scenes!
 }
 
 //______________________________________________________________________________
-void TGLScene::LodifySceneInfo(TGLRnrCtx& ctx)
+void TGLScene::LodifySceneInfo(TGLRnrCtx& rnrCtx)
 {
    // Setup LOD-dependant values in scene-info.
    // We have to perform LOD quantization for all draw-elements.
 
-   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(ctx.GetSceneInfo());
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       Error("TGLScene::LodifySceneInfo", "Scene mismatch.");
       return;
    }
 
-   TGLSceneBase::LodifySceneInfo(ctx);
+   TGLSceneBase::LodifySceneInfo(rnrCtx);
 
-   DrawElementVec_t& ode = sinfo->fOpaqueElements;
-   for (DrawElementVec_i i=ode.begin(); i!=ode.end(); ++i)
-      i->fPhysical->QuantizeShapeLOD(i->fPixelLOD, ctx.CombiLOD(), i->fFinalLOD);
-
-   DrawElementVec_t& tde = sinfo->fTranspElements;
-   for (DrawElementVec_i i=tde.begin(); i!=tde.end(); ++i)
-      i->fPhysical->QuantizeShapeLOD(i->fPixelLOD, ctx.CombiLOD(), i->fFinalLOD);
+   sinfo->Lodify(rnrCtx);
 }
 
 
@@ -461,7 +553,7 @@ void TGLScene::LodifySceneInfo(TGLRnrCtx& ctx)
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLScene::PreRender(TGLRnrCtx & rnrCtx)
+void TGLScene::PreDraw(TGLRnrCtx & rnrCtx)
 {
    // Initialize rendering.
    // Pass to base-class where most work is done.
@@ -470,7 +562,9 @@ void TGLScene::PreRender(TGLRnrCtx & rnrCtx)
 
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
-      Error("TGLScene::Render", "SceneInfo mismatch.");
+      TGLSceneInfo* si = rnrCtx.GetSceneInfo();
+      Error("TGLScene::PreDraw", Form("SceneInfo mismatch (0x%lx, '%s').",
+                                      si, si ? si->IsA()->GetName() : "<>"));
       return;
    }
 
@@ -478,7 +572,7 @@ void TGLScene::PreRender(TGLRnrCtx & rnrCtx)
       fForceUpdateSI = kTRUE;
 
    // Setup ctx, check if Update/Lodify needed.
-   TGLSceneBase::PreRender(rnrCtx);
+   TGLSceneBase::PreDraw(rnrCtx);
 
    TGLContextIdentity* cid = rnrCtx.GetGLCtxIdentity();
    if (cid != fGLCtxIdentity)
@@ -488,43 +582,73 @@ void TGLScene::PreRender(TGLRnrCtx & rnrCtx)
       fGLCtxIdentity->AddClientRef();
    }
 
+   sinfo->PreDraw();
+
    // Reset-scene-info counters.
    sinfo->ResetDrawStats();
 }
 
 //______________________________________________________________________________
-void TGLScene::Render(TGLRnrCtx & rnrCtx)
+void TGLScene::RenderOpaque(TGLRnrCtx & rnrCtx)
 {
-   // Render scene.
+   // Render opaque elements.
 
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   assert(sinfo != 0);
-   if ( ! sinfo->IsVisible() )
-      return;
-
-   RenderAllPasses(rnrCtx, rnrCtx.RenderTimeout());
+   if (!sinfo->fOpaqueElements.empty())
+       RenderAllPasses(rnrCtx, sinfo->fOpaqueElements, kTRUE);
 }
 
 //______________________________________________________________________________
-void TGLScene::PostRender(TGLRnrCtx & rnrCtx)
+void TGLScene::RenderTransp(TGLRnrCtx & rnrCtx)
+{
+   // Render transparent elements.
+
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
+   if (!sinfo->fTranspElements.empty())
+       RenderAllPasses(rnrCtx, sinfo->fTranspElements, kTRUE);
+}
+
+//______________________________________________________________________________
+void TGLScene::RenderSelOpaque(TGLRnrCtx & rnrCtx)
+{
+   // Render selected opaque elements.
+
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
+   if (!sinfo->fSelOpaqueElements.empty())
+       RenderAllPasses(rnrCtx, sinfo->fSelOpaqueElements, kFALSE);
+}
+
+//______________________________________________________________________________
+void TGLScene::RenderSelTransp(TGLRnrCtx & rnrCtx)
+{
+   // Render selected transparent elements.
+
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
+   if (!sinfo->fSelTranspElements.empty())
+       RenderAllPasses(rnrCtx, sinfo->fSelTranspElements, kFALSE);
+}
+
+//______________________________________________________________________________
+void TGLScene::PostDraw(TGLRnrCtx & rnrCtx)
 {
    // Called after the rendering is finished.
    // In debug mode draw statistcs is dumped.
-   // Parent's PostRender is called for GL cleanup.
+   // Parent's PostDraw is called for GL cleanup.
+
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
 
    if (gDebug)
-   {
-      TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-      assert(sinfo != 0);
       sinfo->DumpDrawStats();
-   }
 
-   TGLSceneBase::PostRender(rnrCtx);
+   sinfo->PostDraw();
+
+   TGLSceneBase::PostDraw(rnrCtx);
 }
 
 //______________________________________________________________________________
-Double_t TGLScene::RenderAllPasses(TGLRnrCtx & rnrCtx,
-                                   Double_t    timeout)
+void TGLScene::RenderAllPasses(TGLRnrCtx           & rnrCtx,
+                               DrawElementPtrVec_t & elVec,
+                               Bool_t                check_timeout)
 {
    // Do full rendering of scene.
    //
@@ -579,10 +703,6 @@ Double_t TGLScene::RenderAllPasses(TGLRnrCtx & rnrCtx,
       }
    }
 
-   // Assume each full draw takes same time - probably too crude....
-   Double_t renderPassTimeout = timeout/reqPasses;
-   Double_t totalTime         = 0.0;
-
    for (Int_t i = 0; i < reqPasses; ++i)
    {
       // For outline two full draws (fill + wireframe) required.
@@ -593,6 +713,7 @@ Double_t TGLScene::RenderAllPasses(TGLRnrCtx & rnrCtx,
 
       if (pass == TGLRnrCtx::kPassOutlineFill)
       {
+         // First pass - filled polygons
          glEnable(GL_POLYGON_OFFSET_FILL);
          glPolygonOffset(1.f, 1.f);
       }
@@ -614,7 +735,7 @@ Double_t TGLScene::RenderAllPasses(TGLRnrCtx & rnrCtx,
       // If no clip object no plane sets to extract/pass
       if ( ! sinfo->ShouldClip())
       {
-         totalTime += RenderOnePass(rnrCtx, renderPassTimeout);
+         RenderElements(rnrCtx, elVec, check_timeout);
       }
       else
       {
@@ -646,7 +767,7 @@ Double_t TGLScene::RenderAllPasses(TGLRnrCtx & rnrCtx,
 
             // Draw scene once with full time slot, physicals have been
             // clipped during UpdateSceneInfo, so no need to repeat that.
-            totalTime += RenderOnePass(rnrCtx, renderPassTimeout, 0);
+            RenderElements(rnrCtx, elVec, check_timeout);
          }
          else
          {
@@ -664,7 +785,7 @@ Double_t TGLScene::RenderAllPasses(TGLRnrCtx & rnrCtx,
 
                // Draw scene with active planes, allocating fraction of time
                // for total planes.
-               totalTime += RenderOnePass(rnrCtx, renderPassTimeout/maxPlanes, &activePlanes);
+               RenderElements(rnrCtx, elVec, check_timeout, &activePlanes);
 
                p.Negate();
                glClipPlane(GL_CLIP_PLANE0+planeInd, p.CArr());
@@ -682,69 +803,13 @@ Double_t TGLScene::RenderAllPasses(TGLRnrCtx & rnrCtx,
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glEnable(GL_CULL_FACE);
    glEnable(GL_LIGHTING);
-
-   return totalTime;
 }
 
 //______________________________________________________________________________
-Double_t TGLScene::RenderOnePass(TGLRnrCtx           & rnrCtx,
-                                 Double_t              timeout,
-                                 const TGLPlaneSet_t * clipPlanes)
-{
-   // Render all opaque and transparent elements in the scene.
-
-   // !!! This is bugged ... should render all opaques from ALL scenes
-   // and then all transparents from ALL scenes.
-
-   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   assert(sinfo != 0);
-
-   // allocate timeout fractions fir opaque/transp
-   DrawElementVec_t& ode = sinfo->fOpaqueElements;
-   DrawElementVec_t& tde = sinfo->fTranspElements;
-   Double_t          oto = 0.0;
-   Double_t          tto = 0.0;
-   if (timeout > 0.0)
-   {
-      Double_t fac = timeout / (ode.size() + tde.size());
-      oto = fac * ode.size();
-      tto = fac * tde.size();
-   }
-
-   // render opaque elements
-   if (ode.size() > 0)
-   {
-      oto = RenderElements(rnrCtx, ode, oto, clipPlanes);
-   }
-
-   // render transparent elements
-   if (tde.size() > 0)
-   {
-      glDepthMask(GL_FALSE);
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-      tto = RenderElements(rnrCtx, tde, tto, clipPlanes);
-
-      glDepthMask(GL_TRUE);
-      glDisable(GL_BLEND);
-   }
-
-   if (gDebug > 4)
-   {
-      Info("TGLScene::RenderOnePass",
-           "requested %.2f ms, took %.2f ms (opaque=%f, transp=%f)",
-           timeout, oto + tto, oto, tto);
-   }
-
-   return oto + tto;
-}
-
-//______________________________________________________________________________
-Double_t TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
-                                  DrawElementVec_t    & elementVec,
-                                  Double_t              timeout,
-                                  const TGLPlaneSet_t * clipPlanes)
+void TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
+                              DrawElementPtrVec_t & elVec,
+                              Bool_t                check_timeout,
+                              const TGLPlaneSet_t * clipPlanes)
 {
    // Render DrawElements in elementVec with given timeout.
    // If clipPlanes is non-zero, test each element against its
@@ -753,16 +818,11 @@ Double_t TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    assert(sinfo != 0);
 
-   Bool_t timerp  = (timeout > 0.0);
-
-   TGLStopwatch stopwatch;
-   stopwatch.Start();
-
    Int_t drawCount = 0;
 
-   for (DrawElementVec_i i=elementVec.begin(); i!=elementVec.end(); ++i)
+   for (DrawElementPtrVec_i i = elVec.begin(); i != elVec.end(); ++i)
    {
-      const TGLPhysicalShape * drawShape = i->fPhysical;
+      const TGLPhysicalShape * drawShape = (*i)->fPhysical;
 
       Bool_t drawNeeded = kTRUE;
 
@@ -773,7 +833,7 @@ Double_t TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
       // Draw?
       if (drawNeeded)
       {
-         rnrCtx.SetShapeLOD(i->fFinalLOD);
+         rnrCtx.SetShapeLOD((*i)->fFinalLOD);
          glPushName(drawShape->ID());
          drawShape->Draw(rnrCtx);
          glPopName();
@@ -782,19 +842,16 @@ Double_t TGLScene::RenderElements(TGLRnrCtx           & rnrCtx,
       }
 
       // Terminate the draw if over opaque fraction timeout.
-      // Only test every 500 objects as this is somewhat costly.
-      if (timerp && (drawCount % 500) == 499 &&
-          stopwatch.Lap() > timeout)
+      // Only test every 2000 objects as this is somewhat costly.
+      if (check_timeout && (drawCount % 2000) == 0 &&
+          rnrCtx.HasStopwatchTimedOut())
       {
          if (rnrCtx.ViewerLOD() == TGLRnrCtx::kLODHigh)
              Warning("TGLScene::RenderElements",
-                     "Timeout %.0fms reached, not all elements rendered.",
-                     timeout);
+                     "Timeout reached, not all elements rendered.");
          break;
       }
    }
-
-   return stopwatch.End();
 }
 
 
@@ -1121,12 +1178,12 @@ Bool_t TGLScene::BeginUpdate()
 }
 
 //______________________________________________________________________________
-void TGLScene::EndUpdate(Bool_t sceneChanged, Bool_t updateViewers)
+void TGLScene::EndUpdate(Bool_t minorChange, Bool_t sceneChanged, Bool_t updateViewers)
 {
    // Exit scene update mode.
    //
    // If sceneChanged is true (default), the scene timestamp is
-   // increased and draw-lists etc will be rebuild on next draw
+   // increased and basic draw-lists etc will be rebuild on next draw
    // request. If you only changed colors or some other visual
    // parameters that do not affect object bounding-box or
    // transformation matrix, you can set it to false.
@@ -1135,6 +1192,9 @@ void TGLScene::EndUpdate(Bool_t sceneChanged, Bool_t updateViewers)
    // will be tagged as changed. If sceneChanged is true the
    // updateViewers should be true as well, unless you take care of
    // the viewers elsewhere or in some other way.
+
+   if (minorChange)
+      IncMinorStamp();
 
    if (sceneChanged)
       IncTimeStamp();

@@ -33,6 +33,11 @@ private:
    TGLScene(const TGLScene&);            // Not implemented
    TGLScene& operator=(const TGLScene&); // Not implemented
 
+   // Compare physical-shape volumes/diagonals -- for draw-vec sorting
+   static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1,
+                                        const TGLPhysicalShape * shape2);
+   static Bool_t ComparePhysicalDiagonals(const TGLPhysicalShape * shape1,
+                                          const TGLPhysicalShape * shape2);
 public:
    // Logical shapes
    typedef std::map<TObject*, TGLLogicalShape *>   LogicalShapeMap_t;
@@ -55,30 +60,56 @@ public:
       Short_t    fPixelLOD;  // Size in LOD units.
       Short_t    fFinalLOD;  // Corrected with SceneLOD and quantized.
 
-      DrawElement_t() : fPhysical(0), fPixelSize(0), fPixelLOD(0), fFinalLOD(0) {}
+      DrawElement_t(const TGLPhysicalShape* pshp=0) :
+         fPhysical(pshp), fPixelSize(0), fPixelLOD(0), fFinalLOD(0) {}
    };
 
-   typedef std::vector<DrawElement_t>           DrawElementVec_t;
-   typedef std::vector<DrawElement_t>::iterator DrawElementVec_i;
+   typedef std::vector<DrawElement_t>              DrawElementVec_t;
+   typedef std::vector<DrawElement_t>::iterator    DrawElementVec_i;
+
+   typedef std::vector<DrawElement_t*>             DrawElementPtrVec_t;
+   typedef std::vector<DrawElement_t*>::iterator   DrawElementPtrVec_i;
 
    // List of physical shapes ordered by volume/diagonal
    typedef std::vector<const TGLPhysicalShape *>   ShapeVec_t;
    typedef ShapeVec_t::iterator                    ShapeVec_i;
-
 
    // ----------------------------------------------------------------
    // SceneInfo ... extended scene context
 
    class TSceneInfo : public TGLSceneInfo
    {
-   public:
-      ShapeVec_t       fDrawList;
+   private:
+      Bool_t CmpDrawElements(const DrawElement_t& de1, const DrawElement_t& de2);
 
-      DrawElementVec_t fOpaqueElements;
-      DrawElementVec_t fTranspElements;
+   protected:
+      void ClearDrawElementVec(DrawElementVec_t& vec, Int_t maxSize);
+      void ClearDrawElementPtrVec(DrawElementPtrVec_t& vec, Int_t maxSize);
+
+   public:
+      ShapeVec_t          fShapesOfInterest;
+
+      DrawElementVec_t    fVisibleElements;
+
+      UInt_t              fMinorStamp;
+      DrawElementPtrVec_t fOpaqueElements;
+      DrawElementPtrVec_t fTranspElements;
+      DrawElementPtrVec_t fSelOpaqueElements;
+      DrawElementPtrVec_t fSelTranspElements;
 
       TSceneInfo(TGLViewerBase* view=0, TGLScene* scene=0);
       virtual ~TSceneInfo();
+
+      void ClearAfterRebuild();
+      void ClearAfterUpdate();
+
+      void Lodify(TGLRnrCtx& ctx);
+
+      void PreDraw();
+      void PostDraw();
+
+      // ---------------
+      // Draw statistics
 
       Int_t                     fOpaqueCnt;
       Int_t                     fTranspCnt;
@@ -96,12 +127,7 @@ protected:
    LogicalShapeMap_t      fLogicalShapes;  //!
    PhysicalShapeMap_t     fPhysicalShapes; //!
 
-   // Compare physical-shape volumes -- for draw list sorting
-   static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape * shape1,
-                                        const TGLPhysicalShape * shape2);
-
    virtual void DestroyPhysicalInternal(PhysicalShapeMapIt_t pit);
-
 
    // GLcontext
    TGLContextIdentity * fGLCtxIdentity;
@@ -124,27 +150,31 @@ public:
    virtual void CalcBoundingBox() const;
 
    virtual TSceneInfo* CreateSceneInfo(TGLViewerBase* view);
-   virtual void        RebuildSceneInfo(TGLRnrCtx& ctx);
-   virtual void        UpdateSceneInfo(TGLRnrCtx& ctx);
-   virtual void        LodifySceneInfo(TGLRnrCtx& ctx);
+   virtual void        RebuildSceneInfo(TGLRnrCtx& rnrCtx);
+   virtual void        UpdateSceneInfo(TGLRnrCtx& rnrCtx);
+   virtual void        LodifySceneInfo(TGLRnrCtx& rnrCtx);
 
 
    // Rendering
-   virtual void PreRender (TGLRnrCtx & rnrCtx);
-   virtual void Render    (TGLRnrCtx & rnrCtx);
-   virtual void PostRender(TGLRnrCtx & rnrCtx);
+   virtual void PreDraw   (TGLRnrCtx & rnrCtx);
+   // virtual void PreRender (TGLRnrCtx & rnrCtx);
+   // virtual void Render    (TGLRnrCtx & rnrCtx);
+   virtual void RenderOpaque    (TGLRnrCtx & rnrCtx);
+   virtual void RenderTransp    (TGLRnrCtx & rnrCtx);
+   virtual void RenderSelOpaque (TGLRnrCtx & rnrCtx);
+   virtual void RenderSelTransp (TGLRnrCtx & rnrCtx);
+   // virtual void PostRender(TGLRnrCtx & rnrCtx);
+   virtual void PostDraw  (TGLRnrCtx & rnrCtx);
 
-   virtual Double_t RenderAllPasses(TGLRnrCtx           & rnrCtx,
-                                    Double_t              timeout);
+   virtual void RenderAllPasses(TGLRnrCtx           & rnrCtx,
+                                DrawElementPtrVec_t & elVec,
+                                Bool_t                check_timeout);
 
-   virtual Double_t RenderOnePass  (TGLRnrCtx           & rnrCtx,
-                                    Double_t              timeout,
-                                    const TGLPlaneSet_t * clipPlanes = 0);
 
-   virtual Double_t RenderElements (TGLRnrCtx           & rnrCtx,
-                                    DrawElementVec_t    & elementVec,
-                                    Double_t              timeout,
-                                    const TGLPlaneSet_t * clipPlanes = 0);
+   virtual void RenderElements (TGLRnrCtx           & rnrCtx,
+                                DrawElementPtrVec_t & elVec,
+                                Bool_t                check_timeout,
+                                const TGLPlaneSet_t * clipPlanes = 0);
 
    // Selection
    virtual Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx);
@@ -167,7 +197,7 @@ public:
    // Updates / removals of logical and physical shapes
 
    virtual Bool_t BeginUpdate();
-   virtual void   EndUpdate(Bool_t sceneChanged=kTRUE, Bool_t updateViewers=kTRUE);
+   virtual void   EndUpdate(Bool_t minorChange=kTRUE, Bool_t sceneChanged=kTRUE, Bool_t updateViewers=kTRUE);
 
    virtual void UpdateLogical(TObject* logid);
 

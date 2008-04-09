@@ -63,14 +63,14 @@ void TEveTextGL::SetFont(TGLRnrCtx & rnrCtx) const
 
    if (fFont.GetMode() == TGLFont::kUndef)
    {
-      fFont = rnrCtx.GetFont(fM->GetFontSize(), fM->GetFontFile(), fM->GetFontMode());
+      rnrCtx.RegisterFont(fM->GetFontSize(), fM->GetFontFile(), fM->GetFontMode(), fFont);
    }
    else if (fFont.GetSize() != fM->GetFontSize() ||
             fFont.GetFile() != fM->GetFontFile() ||
             fFont.GetMode() != fM->GetFontMode())
    {
       rnrCtx.ReleaseFont(fFont);
-      fFont = rnrCtx.GetFont(fM->GetFontSize(), fM->GetFontFile(), fM->GetFontMode());
+      rnrCtx.RegisterFont(fM->GetFontSize(), fM->GetFontFile(), fM->GetFontMode(), fFont);
    }
    fFont.SetDepth(fM->GetExtrude());
 }

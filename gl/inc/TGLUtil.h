@@ -776,6 +776,8 @@ public:
    void       GetBaseVec(Int_t b, TGLVector3& v) const;
    void       GetBaseVec(Int_t b, Double_t* x) const;
 
+   TGLVector3 Multiply(const TGLVector3& v, Double_t w=1) const;
+   TGLVector3 Rotate(const TGLVector3& v) const;
    void       MultiplyIP(TGLVector3& v, Double_t w=1) const;
    void       RotateIP(TGLVector3& v) const;
 
@@ -932,6 +934,7 @@ public:
    static Bool_t IsColorLocked();
 
    static void Color(Color_t color_index, Float_t alpha=1);
+   static void ColorTransparency(Color_t color_index, UChar_t transparency=0);
    static void Color3ub(UChar_t r, UChar_t g, UChar_t b);
    static void Color4ub(UChar_t r, UChar_t g, UChar_t b, UChar_t a);
    static void Color3ubv(const UChar_t* rgb);

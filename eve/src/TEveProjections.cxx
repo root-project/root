@@ -30,15 +30,17 @@ Float_t TEveProjection::fgEps = 0.005f;
 
 //______________________________________________________________________________
 TEveProjection::TEveProjection(TEveVector& center) :
-   fType(kPT_Unknown),
-   fGeoMode(kGM_Unknown),
-   fName(0),
-   fCenter(center.fX, center.fY, center.fZ),
-   fDistortion(0.0f),
-   fFixedRadius(300),
-   fScale(1.0f),
-   fLowLimit(-1e50, -1e50, -1e50),
-   fUpLimit(  1e50,  1e50,  1e50)
+   fType          (kPT_Unknown),
+   fGeoMode       (kGM_Unknown),
+   fName          (0),
+   fCenter        (center.fX, center.fY, center.fZ),
+   fDistortion    (0.0f),
+   fFixR          (300), fFixZ          (400),
+   fPastFixRFac   (0),   fPastFixZFac   (0),
+   fScaleR        (1),   fScaleZ        (1),
+   fPastFixRScale (1),   fPastFixZScale (1),
+   fLowLimit      (-1e50, -1e50, -1e50),
+   fUpLimit       ( 1e50,  1e50,  1e50)
 {
    // Constructor.
 }
@@ -59,9 +61,9 @@ void TEveProjection::UpdateLimit()
    if (fDistortion == 0.0f)
       return;
 
-   Float_t  lim = 1.0f/fDistortion + fFixedRadius;
-   Float_t *c   = GetProjectedCenter();
-   fUpLimit.Set(lim + c[0], lim + c[1], c[2]);
+   Float_t lim = 1.0f/fDistortion + fFixR;
+   Float_t *c  = GetProjectedCenter();
+   fUpLimit .Set( lim + c[0],  lim + c[1], c[2]);
    fLowLimit.Set(-lim + c[0], -lim + c[1], c[2]);
 }
 
@@ -70,19 +72,52 @@ void TEveProjection::SetDistortion(Float_t d)
 {
    // Set distortion.
 
-   fDistortion = d;
-   fScale      = 1.0f + fFixedRadius*fDistortion;
+   fDistortion    = d;
+   fScaleR        = 1.0f + fFixR*fDistortion;
+   fScaleZ        = 1.0f + fFixZ*fDistortion;
+   fPastFixRScale = TMath::Power(10.0f, fPastFixRFac) / fScaleR;
+   fPastFixZScale = TMath::Power(10.0f, fPastFixZFac) / fScaleZ;
    UpdateLimit();
 }
 
 //______________________________________________________________________________
-void TEveProjection::SetFixedRadius(Float_t r)
+void TEveProjection::SetFixR(Float_t r)
 {
    // Set fixed radius.
 
-   fFixedRadius = r;
-   fScale = 1 + fFixedRadius*fDistortion;
+   fFixR          = r;
+   fScaleR        = 1 + fFixR*fDistortion;
+   fPastFixRScale = TMath::Power(10.0f, fPastFixRFac) / fScaleR;
    UpdateLimit();
+}
+
+//______________________________________________________________________________
+void TEveProjection::SetFixZ(Float_t z)
+{
+   // Set fixed radius.
+
+   fFixZ          = z;
+   fScaleZ        = 1 + fFixZ*fDistortion;
+   fPastFixZScale = TMath::Power(10.0f, fPastFixZFac) / fScaleZ;
+   UpdateLimit();
+}
+
+//______________________________________________________________________________
+void TEveProjection::SetPastFixRFac(Float_t x)
+{
+   // Set 2's-exponent for relative scaling beyond FixR.
+
+   fPastFixRFac   = x;
+   fPastFixRScale = TMath::Power(10.0f, fPastFixRFac) / fScaleR;
+}
+
+//______________________________________________________________________________
+void TEveProjection::SetPastFixZFac(Float_t x)
+{
+   // Set 2's-exponent for relative scaling beyond FixZ.
+
+   fPastFixZFac   = x;
+   fPastFixZScale = TMath::Power(10.0f, fPastFixZFac) / fScaleZ;
 }
 
 //______________________________________________________________________________
@@ -144,11 +179,12 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
       xM = 0.5f * (xL + xR);
       vec.Mult(dirVec, xM);
       ProjectVector(vec);
+      // printf("safr xL=%f, xR=%f; vec[i]=%f, sv=%f\n", xL, xR, vec[i], sv);
       if (vec[i] > sv)
          xR = xM;
       else
          xL = xM;
-   } while(TMath::Abs(vec[i] - sv) >= fgEps);
+   } while (TMath::Abs(vec[i] - sv) >= fgEps);
 
    return xM;
 }
@@ -188,20 +224,6 @@ TEveRhoZProjection::TEveRhoZProjection(TEveVector& center) :
 }
 
 //______________________________________________________________________________
-void TEveRhoZProjection::SetCenter(TEveVector& v)
-{
-   // Set center of distortion (virtual method).
-
-   fCenter = v;
-
-   Float_t r = TMath::Sqrt(v.fX*v.fX + v.fY*v.fY);
-   fProjectedCenter.fX = fCenter.fZ;
-   fProjectedCenter.fY = TMath::Sign(r, fCenter.fY);
-   fProjectedCenter.fZ = 0;
-   UpdateLimit();
-}
-
-//______________________________________________________________________________
 void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
                                       EPProc_e proc )
 {
@@ -220,14 +242,56 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       // move to center
       x -= fProjectedCenter.fX;
       y -= fProjectedCenter.fY;
+
       // distort
-      y = (y*fScale) / (1.0f + Abs(y)*fDistortion);
-      x = (x*fScale) / (1.0f + Abs(x)*fDistortion);
+      if (x > fFixZ)
+         x =  fFixZ + fPastFixZScale*(x - fFixZ);
+      else if (x < -fFixZ)
+         x = -fFixZ + fPastFixZScale*(x + fFixZ);
+      else
+         x =  x * fScaleZ / (1.0f + Abs(x)*fDistortion);
+
+      if (y > fFixR)
+         y =  fFixR + fPastFixRScale*(y - fFixR);
+      else if (y < -fFixR)
+         y = -fFixR + fPastFixRScale*(y + fFixR);
+      else
+         y =  y * fScaleR / (1.0f + Abs(y)*fDistortion);
+
       // move back from center
       x += fProjectedCenter.fX;
       y += fProjectedCenter.fY;
    }
    z = 0.0f;
+}
+
+//______________________________________________________________________________
+void TEveRhoZProjection::SetCenter(TEveVector& v)
+{
+   // Set center of distortion (virtual method).
+
+   fCenter = v;
+
+   Float_t r = TMath::Sqrt(v.fX*v.fX + v.fY*v.fY);
+   fProjectedCenter.fX = fCenter.fZ;
+   fProjectedCenter.fY = TMath::Sign(r, fCenter.fY);
+   fProjectedCenter.fZ = 0;
+   UpdateLimit();
+}
+
+//______________________________________________________________________________
+void TEveRhoZProjection::UpdateLimit()
+{
+   // Update convergence in +inf and -inf.
+
+   if (fDistortion == 0.0f)
+      return;
+
+   Float_t limR = 1.0f/fDistortion + fFixR;
+   Float_t limZ = 1.0f/fDistortion + fFixZ;
+   Float_t *c   = GetProjectedCenter();
+   fUpLimit .Set( limZ + c[0],  limR + c[1], c[2]);
+   fLowLimit.Set(-limZ + c[0], -limR + c[1], c[2]);
 }
 
 //______________________________________________________________________________
@@ -237,7 +301,7 @@ void TEveRhoZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
    // projected space.
    // This is virtual method from base-class TEveProjection.
 
-   if(screenAxis == 0)
+   if (screenAxis == 0)
       vec.Set(0.0f, 0.0f, 1.0f);
    else if (screenAxis == 1)
       vec.Set(0.0f, 1.0f, 0.0f);
@@ -251,7 +315,7 @@ Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
 
    Float_t a = fProjectedCenter.fY;
    Bool_t val = kTRUE;
-   if((v1.fY <  a && v2.fY > a) || (v1.fY > a && v2.fY < a))
+   if ((v1.fY <  a && v2.fY > a) || (v1.fY > a && v2.fY < a))
    {
       val = kFALSE;
       if (tolerance > 0)
@@ -306,11 +370,17 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       x -= fCenter.fX;
       y -= fCenter.fY;
       Float_t phi = (x == 0.0f && y == 0.0f) ? 0.0f : ATan2(y, x);
-      Float_t r = Sqrt(x*x + y*y);
-      // distort
-      Float_t nR = (r*fScale) / (1.0f + r*fDistortion);
-      x = nR*Cos(phi) + fCenter.fX;
-      y = nR*Sin(phi) + fCenter.fY;
+      Float_t r   = Sqrt(x*x + y*y);
+
+      if (r > fFixR)
+         r =  fFixR + fPastFixRScale*(r - fFixR);
+      else if (r < -fFixR)
+         r = -fFixR + fPastFixRScale*(r + fFixR);
+      else
+         r =  r * fScaleR / (1.0f + r*fDistortion);
+
+      x = r*Cos(phi) + fCenter.fX;
+      y = r*Sin(phi) + fCenter.fY;
    }
    z = 0.0f;
 }

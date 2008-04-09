@@ -38,19 +38,21 @@ private:
 protected:
    TEveCaloData* fData;  // event data reference
 
-   Float_t      fEtaMin; // eta min angle
-   Float_t      fEtaMax; // eta max angle
-   Float_t      fPhi;    // phi angle
-   Float_t      fPhiRng; // phi +/- offset
+   Float_t      fEtaLowLimit;
+   Float_t      fEtaHighLimit;
+   Float_t      fEtaMin;
+   Float_t      fEtaMax;
+
+   Float_t      fPhi;
+   Float_t      fPhiRng;
 
    Float_t      fThreshold;  // cell value threshold
 
    Float_t      fBarrelRadius;  // barrel raidus in cm
    Float_t      fEndCapPos;     // end cap z coordinate in cm
 
-   Float_t      fTowerHeight;   // height of tower
+   Float_t      fCellZScale;
 
-   Int_t             fDefaultValue;   // Default signal value.
    Bool_t            fValueIsColor;   // Interpret signal value as RGBA color.
    TEveRGBAPalette*  fPalette;        // Pointer to signal-color palette.
 
@@ -66,13 +68,18 @@ public:
 
    virtual ~TEveCaloViz();
 
+   void InvalidateCache() { fCacheOK = kFALSE; ResetBBox(); }
+
    TEveCaloData* GetData() const { return fData; }
    virtual void  SetData(TEveCaloData* d);
 
    Float_t GetBarrelRadius() const { return fBarrelRadius; }
-   void SetBarrelRadius(Float_t r) { fBarrelRadius = r; }
+   void SetBarrelRadius(Float_t r) { fBarrelRadius = r; ResetBBox(); }
    Float_t GetEndCapPos   () const { return fEndCapPos; }
-   void SetEndCapPos   (Float_t z) { fEndCapPos = z; }
+   void SetEndCapPos   (Float_t z) { fEndCapPos = z; ResetBBox(); }
+
+   virtual void    SetCellZScale(Float_t s) { fCellZScale = s; ResetBBox(); }
+   virtual Float_t GetDefaultCellHeight() const { return fBarrelRadius*fCellZScale; }
 
    Float_t GetTransitionEta() const;
    Float_t GetTransitionTheta() const;
@@ -81,17 +88,19 @@ public:
    void             SetPalette(TEveRGBAPalette* p);
    TEveRGBAPalette* AssertPalette();
 
-   virtual void SetTowerHeight (Float_t h);
 
-   void SetEta(Float_t l, Float_t u){ fEtaMin=l; fEtaMax =u;}
-   void SetPhi(Float_t x){ fPhi= x; }
-   void SetPhiRng(Float_t r){ fPhiRng = r;}
+   void SetEta(Float_t l, Float_t u) { fEtaMin=l; fEtaMax=u; InvalidateCache(); }
+   void SetEtaLimits(Float_t l, Float_t h) { fEtaLowLimit=l; fEtaHighLimit =h; InvalidateCache(); }
 
-   virtual void ResetCache(){}
+   void SetPhi(Float_t x)    { fPhi    = x; InvalidateCache(); }
+   void SetPhiRng(Float_t r) { fPhiRng = r; InvalidateCache(); }
+   void SetPhiWithRng(Float_t x, Float_t r) { fPhi = x; fPhiRng = r; InvalidateCache(); }
+
+
+   virtual void ResetCache() = 0;
 
    virtual void Paint(Option_t* option="");
 
-   virtual void ComputeBBox();
    virtual TClass* ProjectedClass() const;
 
    ClassDef(TEveCaloViz, 0); // Base-class for visualization of calorimeter eventdata.
@@ -111,10 +120,10 @@ protected:
    TEveCaloData::vCellId_t fCellList;
 
 public:
-   TEveCalo3D(const Text_t* n="TEveCalo3D", const Text_t* t=""):TEveCaloViz(n, t){}
-   TEveCalo3D(TEveCaloData* data): TEveCaloViz(data) { SetElementName("TEveCalo3D");}
-
+   TEveCalo3D(const Text_t* n="TEveCalo3D", const Text_t* t=""):TEveCaloViz(n, t){ fCellZScale = 0.2;}
+   TEveCalo3D(TEveCaloData* data): TEveCaloViz(data) { SetElementName("TEveCalo3D"); fCellZScale = 0.2;}
    virtual ~TEveCalo3D() {}
+   virtual void ComputeBBox();
 
    virtual void ResetCache();
 
@@ -133,6 +142,7 @@ private:
    TEveCalo2D& operator=(const TEveCalo2D&); // Not implemented
 
    TEveProjection::EPType_e  fOldProjectionType;
+
 protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellLists;
 
@@ -150,4 +160,51 @@ public:
 
    ClassDef(TEveCalo2D, 0); // Class for visualization of projected calorimeter event data.
 };
+/**************************************************************************/
+/**************************************************************************/
+
+class TEveCaloLego : public TEveCaloViz
+{
+   friend class TEveCaloLegoGL;
+
+private:
+   TEveCaloLego(const TEveCaloLego&);            // Not implemented
+   TEveCaloLego& operator=(const TEveCaloLego&); // Not implemented
+
+protected:
+   TEveCaloData::vCellId_t fCellList;
+
+   Color_t                 fFontColor;
+   Color_t                 fGridColor;
+
+   Int_t                   fFontSize; // font size in % of projected y axis
+   Int_t                   fNZStep; // Z axis label step in GeV
+
+public:
+   TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");
+   TEveCaloLego(TEveCaloData* data);
+
+   virtual ~TEveCaloLego(){}
+
+   Color_t  GetFontColor() const { return fFontColor; }
+   Color_t  GetGridColor() const { return fGridColor; }
+  
+   Int_t  GetFontSize() const { return fFontSize; }
+   Int_t  GetNZStep() const { return fNZStep; }
+
+   void   SetFontColor(Color_t ci) { fFontColor=ci; }
+   void   SetGridColor(Color_t ci) { fGridColor=ci; }
+
+   void   SetFontSize(Int_t fs) { fFontSize = fs; }
+   void   SetNZStep(Int_t s) { fNZStep = s;}
+
+   virtual Float_t GetDefaultCellHeight() const;
+
+   virtual void ResetCache();
+
+   virtual void ComputeBBox();
+
+   ClassDef(TEveCaloLego, 0);  // Class for visualization of calorimeter histogram data.
+};
+
 #endif

@@ -174,6 +174,8 @@ public:
    TGLCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLCamera();
 
+   const TGLMatrix& RefModelViewMatrix() const { return fModVM; }
+
    Bool_t IsCacheDirty() const { return fCacheDirty; }
    void   IncTimeStamp()       { fCacheDirty = kTRUE; ++fTimeStamp; }
    UInt_t TimeStamp()    const { return fTimeStamp; }

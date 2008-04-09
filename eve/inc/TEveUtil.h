@@ -53,6 +53,10 @@ public:
                                 UChar_t col[4], Bool_t alpha=kTRUE);
    static Color_t* FindColorVar(TObject* obj, const Text_t* varname);
 
+   // Text formatting
+
+   static const char* FormAxisValue(Float_t x);
+
    ClassDef(TEveUtil, 0); // Standard utility functions for Reve.
 };
 

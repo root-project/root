@@ -13,9 +13,7 @@
 #define ROOT_TGLRnrCtx
 
 #include <Rtypes.h>
-
-#include <list>
-#include <vector>
+#include "TGLStopwatch.h"
 
 class TGLViewerBase;
 class TGLCamera;
@@ -100,17 +98,20 @@ protected:
 
    Short_t         fDrawPass;
 
-   Double_t        fRenderTimeout;
+   TGLStopwatch    fStopwatch;
+   Double_t        fRenderTimeOut;
+   Bool_t          fIsRunning;
+   Bool_t          fHasTimedOut;
 
-   // Selection stuff
+   // Highlight / Selection stuff
+   Bool_t          fHighlight;
    Bool_t          fSelection;
    Bool_t          fSecSelection;
    Int_t           fPickRadius;
    TGLRect        *fPickRectangle;
    TGLSelectBuffer*fSelectBuffer;
 
-   // Colors for shape-selection-levels
-   UChar_t         fSSLColor[5][4];
+   UChar_t         fSSLColor[5][4];    // Colors for shape-selection-levels
 
    UInt_t          fEventKeySym;
 
@@ -119,6 +120,10 @@ protected:
    TGLContextIdentity *fGLCtxIdentity; //! Current GL context identity
 
    GLUquadric         *fQuadric;
+
+   // Picture grabbing
+   Bool_t           fGrabImage;    // Set to true to store the image.
+   UChar_t         *fGrabbedImage; // Buffer where image was stored after rendering.
 
 public:
    TGLRnrCtx(TGLViewerBase* viewer);
@@ -133,6 +138,9 @@ public:
    TGLSceneInfo  & RefSceneInfo()  { return *fSceneInfo; }
    TGLSceneBase  * GetScene();
    TGLSceneBase  & RefScene();
+
+   const TGLCamera & RefCamera() const { return *fCamera; }
+   const TGLCamera * GetCamera() const { return  fCamera; }
 
    // void SetViewer   (TGLViewerBase* v) { fViewer = v; }
    void SetCamera   (TGLCamera*     c) { fCamera = c; }
@@ -167,10 +175,16 @@ public:
    Bool_t  IsDrawPassFilled() const;
 
    // Render time-out
-   Double_t RenderTimeout()           const { return fRenderTimeout; }
-   void     SetRenderTimeout(Double_t tout) { fRenderTimeout = tout; }
+   Double_t RenderTimeOut()           const { return fRenderTimeOut; }
+   void     SetRenderTimeOut(Double_t tout) { fRenderTimeOut = tout; }
+   void     StartStopwatch();
+   void     StopStopwatch();
+   Bool_t   IsStopwatchRunning() const { return fIsRunning; }
+   Bool_t   HasStopwatchTimedOut();
 
-   // Selection stuff
+   // Highlight / Selection stuff
+   Bool_t  Highlight()    const           { return fHighlight;      }
+   void    SetHighlight(Bool_t hil)       { fHighlight = hil;       }
    Bool_t  Selection()    const           { return fSelection;      }
    void    SetSelection(Bool_t sel)       { fSelection = sel;       }
    Bool_t  SecSelection() const           { return fSecSelection;   }
@@ -197,10 +211,17 @@ public:
    TGLContextIdentity* GetGLCtxIdentity()   const { return fGLCtxIdentity; }
    void SetGLCtxIdentity(TGLContextIdentity* cid) { fGLCtxIdentity = cid; }
 
-   const TGLFont& GetFont(Int_t size, Int_t file, Int_t mode);
-   Bool_t   ReleaseFont(const TGLFont& font);
+   void  RegisterFont(Int_t size, Int_t file, Int_t mode, TGLFont& out);
+   void  RegisterFont(Int_t size, const Text_t* name, Int_t mode, TGLFont& out);
+   void  ReleaseFont(TGLFont& font);
 
    GLUquadric* GetGluQuadric() { return fQuadric; }
+
+   // Picture grabbing
+   void     SetGrabImage(Bool_t gi) { fGrabImage = gi; }
+   Bool_t   GetGrabImage()    const { return fGrabImage; }
+   UChar_t* GetGrabbedImage() const { return fGrabbedImage; }
+   void     SetGrabbedImage(UChar_t* img) { fGrabbedImage = img; }
 
    ClassDef(TGLRnrCtx, 0); // Collection of objects and data passes along all rendering calls.
 };

@@ -34,7 +34,8 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
 
    fType(0),
    fDistortion(0),
-   fFixedRadius(0),
+   fFixR(0), fFixZ(0),
+   fPastFixRFac(0), fPastFixZFac(0),
    fCurrentDepth(0),
 
    fCenterX(0),
@@ -72,16 +73,45 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    AddFrame(fDistortion, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
 
 
-   fFixedRadius = new TEveGValuator(this, "FixedR:", 90, 0);
-   fFixedRadius->SetNELength(nel);
-   fFixedRadius->SetLabelWidth(labelW);
-   fFixedRadius->Build();
-   fFixedRadius->SetLimits(0, 1000, 101, TGNumberFormat::kNESRealOne);
-   fFixedRadius->SetToolTip("Radius not scaled by distotion.");
-   fFixedRadius->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
-                         this, "DoFixedRadius()");
-   AddFrame(fFixedRadius, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
+   fFixR = new TEveGValuator(this, "FixedR:", 90, 0);
+   fFixR->SetNELength(nel);
+   fFixR->SetLabelWidth(labelW);
+   fFixR->Build();
+   fFixR->SetLimits(0, 1000, 101, TGNumberFormat::kNESRealOne);
+   fFixR->SetToolTip("Radius after which scale is kept constant.");
+   fFixR->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
+                         this, "DoFixR()");
+   AddFrame(fFixR, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
 
+   fFixZ = new TEveGValuator(this, "FixedZ:", 90, 0);
+   fFixZ->SetNELength(nel);
+   fFixZ->SetLabelWidth(labelW);
+   fFixZ->Build();
+   fFixZ->SetLimits(0, 1000, 101, TGNumberFormat::kNESRealOne);
+   fFixZ->SetToolTip("Z-coordinate after which scale is kept constant.");
+   fFixZ->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
+                         this, "DoFixZ()");
+   AddFrame(fFixZ, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
+
+   fPastFixRFac = new TEveGValuator(this, "ScaleR:", 90, 0);
+   fPastFixRFac->SetNELength(nel);
+   fPastFixRFac->SetLabelWidth(labelW);
+   fPastFixRFac->Build();
+   fPastFixRFac->SetLimits(-2, 2, 101, TGNumberFormat::kNESRealTwo);
+   fPastFixRFac->SetToolTip("Relative R-scale beyond FixedR.\nExpressed as 10^x.");
+   fPastFixRFac->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
+                         this, "DoPastFixRFac()");
+   AddFrame(fPastFixRFac, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
+
+   fPastFixZFac = new TEveGValuator(this, "ScaleZ:", 90, 0);
+   fPastFixZFac->SetNELength(nel);
+   fPastFixZFac->SetLabelWidth(labelW);
+   fPastFixZFac->Build();
+   fPastFixZFac->SetLimits(-2, 2, 101, TGNumberFormat::kNESRealTwo);
+   fPastFixZFac->SetToolTip("Relative Z-scale beyond FixedZ.\nExpressed as 10^x.");
+   fPastFixZFac->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
+                         this, "DoPastFixZFac()");
+   AddFrame(fPastFixZFac, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
 
    fCurrentDepth = new TEveGValuator(this, "CurrentZ:", 90, 0);
    fCurrentDepth->SetNELength(nel);
@@ -139,7 +169,10 @@ void TEveProjectionManagerEditor::SetModel(TObject* obj)
 
    fType->Select(fM->GetProjection()->GetType(), kFALSE);
    fDistortion->SetValue(1000.0f * fM->GetProjection()->GetDistortion());
-   fFixedRadius->SetValue(fM->GetProjection()->GetFixedRadius());
+   fFixR->SetValue(fM->GetProjection()->GetFixR());
+   fFixZ->SetValue(fM->GetProjection()->GetFixZ());
+   fPastFixRFac->SetValue(fM->GetProjection()->GetPastFixRFac());
+   fPastFixZFac->SetValue(fM->GetProjection()->GetPastFixZFac());
    fCurrentDepth->SetValue(fM->GetCurrentDepth());
 
    fCenterX->SetValue(fM->GetCenter().fX);
@@ -169,11 +202,41 @@ void TEveProjectionManagerEditor::DoDistortion()
 }
 
 //______________________________________________________________________________
-void TEveProjectionManagerEditor::DoFixedRadius()
+void TEveProjectionManagerEditor::DoFixR()
 {
    // Slot for setting fixed radius.
 
-   fM->GetProjection()->SetFixedRadius(fFixedRadius->GetValue());
+   fM->GetProjection()->SetFixR(fFixR->GetValue());
+   fM->ProjectChildren();
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveProjectionManagerEditor::DoFixZ()
+{
+   // Slot for setting fixed z-coordinate.
+
+   fM->GetProjection()->SetFixZ(fFixZ->GetValue());
+   fM->ProjectChildren();
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveProjectionManagerEditor::DoPastFixRFac()
+{
+   // Slot for setting fixed radius.
+
+   fM->GetProjection()->SetPastFixRFac(fPastFixRFac->GetValue());
+   fM->ProjectChildren();
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveProjectionManagerEditor::DoPastFixZFac()
+{
+   // Slot for setting fixed z-coordinate.
+
+   fM->GetProjection()->SetPastFixZFac(fPastFixZFac->GetValue());
    fM->ProjectChildren();
    Update();
 }

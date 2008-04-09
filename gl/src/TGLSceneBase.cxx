@@ -22,8 +22,11 @@
 #include <string>
 #include <algorithm>
 
-//______________________________________________________________________
+//==============================================================================
 // TGLSceneBase
+//==============================================================================
+
+//______________________________________________________________________
 //
 // Scene base-class --  provides basic interface expected by the
 // TGLViewer or its sub-classes:
@@ -42,7 +45,7 @@
 // default all GL contexts must use shared display-lists etc).
 
 
-ClassImp(TGLSceneBase)
+ClassImp(TGLSceneBase);
 
 UInt_t TGLSceneBase::fgSceneIDSrc = 1;
 
@@ -51,6 +54,7 @@ TGLSceneBase::TGLSceneBase() :
    TGLLockable(),
 
    fTimeStamp        (1),
+   fMinorStamp       (1),
    fLOD              (TGLRnrCtx::kLODHigh),
    fStyle            (TGLRnrCtx::kStyleUndef),
    fClip             (0),
@@ -300,25 +304,17 @@ void TGLSceneBase::LodifySceneInfo(TGLRnrCtx& ctx)
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLSceneBase::FullRender(TGLRnrCtx & rnrCtx)
+void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
 {
-   // Perform full rendering, call pre-render, render, post-render.
+   // Perform basic pre-render initialization:
+   //  - calculate LOD, Style, Clipping,
+   //  - build draw lists.
+   //
+   // This is called in the beginning of the GL-viewer draw cycle.
 
    if ( ! IsDrawOrSelectLock()) {
       Error("TGLSceneBase::FullRender", "expected Draw or Select Lock");
    }
-
-   PreRender(rnrCtx);
-   Render(rnrCtx);
-   PostRender(rnrCtx);
-}
-
-//______________________________________________________________________________
-void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
-{
-   // Perform pre-render initialization.
-   // Once sub-classes need specific style/lod/clip determination
-   // this can be split into several sub-initializers.
 
    TGLSceneInfo& sInfo = * rnrCtx.GetSceneInfo();
 
@@ -383,6 +379,22 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
    else                                         style = rnrCtx.ViewerStyle();
    rnrCtx.SetSceneStyle(style);
    sInfo.SetLastStyle(style);
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
+{
+   // Perform pre-render initialization - fill rnrCtx with
+   // values stored during PreDraw().
+   //
+   // This is called each time before RenderXyzz().
+
+   TGLSceneInfo& sInfo = * rnrCtx.GetSceneInfo();
+
+   rnrCtx.SetClip      (sInfo.LastClip());
+   rnrCtx.SetCamera    (sInfo.LastCamera());
+   rnrCtx.SetCombiLOD  (sInfo.LastLOD());
+   rnrCtx.SetSceneStyle(sInfo.LastStyle());
 
    // !!!
    // eventually handle matrix stack.
@@ -392,13 +404,46 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
 }
 
 //______________________________________________________________________________
-void TGLSceneBase::Render(TGLRnrCtx & /*rnrCtx*/)
+void TGLSceneBase::Render(TGLRnrCtx & rnrCtx)
 {
-   // Call PreRender(), draw the scene, call PostRender().
-   // Here we only draw scene-bounding box.
+   // This function does rendering of all stages, the shapes are
+   // rendered in the following order: opaque, transparent,
+   // selected-opaque, selected-transparent.
+   //
+   // GL-depth buffer is cleared after transparent shapes have been
+   // rendered.
+   //
+   // This is never called from ROOT GL directly. Use it if you know
+   // you are rendering a single scene.
 
-   glColor3f(0, 1, 0);
-   fBoundingBox.Draw();
+   RenderOpaque(rnrCtx);
+   RenderTransp(rnrCtx);
+   RenderSelOpaque(rnrCtx);
+   RenderSelTransp(rnrCtx);
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::RenderOpaque(TGLRnrCtx & /*rnrCtx*/)
+{
+   // Render opaque elements.
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::RenderTransp(TGLRnrCtx & /*rnrCtx*/)
+{
+   // Render transparent elements.
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::RenderSelOpaque(TGLRnrCtx & /*rnrCtx*/)
+{
+   // Render selected opaque elements.
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::RenderSelTransp(TGLRnrCtx & /*rnrCtx*/)
+{
+   // Render selected transparent elements.
 }
 
 //______________________________________________________________________________
@@ -412,6 +457,13 @@ void TGLSceneBase::PostRender(TGLRnrCtx & /*rnrCtx*/)
    // Should also fix camera matrices
 }
 
+//______________________________________________________________________________
+void TGLSceneBase::PostDraw(TGLRnrCtx & /*rnrCtx*/)
+{
+   // Finalize drawing.
+   //
+   // This is called at the end of the GL-viewer draw cycle.
+}
 
 /**************************************************************************/
 // Selection

@@ -62,6 +62,20 @@ void TEveCalo2DGL::SetBBox()
    SetAxisAlignedBBox(((TEveCalo2D*)fExternalObj)->AssertBBox());
 }
 
+//______________________________________________________________________________
+Bool_t TEveCalo2DGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
+{
+   // Check if display-lists should be used.
+   // Compared to TGLLogicalShape version we also don't use them
+   // for outline-pass as colors are set internally.
+
+   if (!fScene || rnrCtx.SecSelection() ||
+       rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+   {
+      return kFALSE;
+   }
+   return fDLCache;
+}
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -377,11 +391,8 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Render with OpenGL.
 
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POINT_BIT | GL_POLYGON_BIT);
-   glDisable(GL_LIGHTING);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glDisable(GL_CULL_FACE);
-   glPointSize(3);
+   TGLCapabilitySwitch light_off  (GL_LIGHTING,  kFALSE);
+   TGLCapabilitySwitch culling_ogg(GL_CULL_FACE, kFALSE);
 
    fM->AssertPalette();
 
@@ -390,8 +401,6 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       DrawRhoZ(rnrCtx);
    else if (pt == TEveProjection::kPT_RPhi)
       DrawRPhi(rnrCtx);
-
-   glPopAttrib();
 }
 
 //______________________________________________________________________________

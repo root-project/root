@@ -46,6 +46,8 @@ public:
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
 
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
+
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    // To support two-level selection

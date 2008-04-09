@@ -50,6 +50,9 @@
 #include "KeySymbols.h"
 #include "TContextMenu.h"
 
+#ifndef GL_BGRA
+#define GL_BGRA GL_BGRA_EXT
+#endif
 
 //______________________________________________________________________
 // TGLViewer
@@ -394,14 +397,19 @@ void TGLViewer::RequestDraw(Short_t LOD)
 //______________________________________________________________________________
 void TGLViewer::PreRender()
 {
+   // Initialize objects that influence rendering.
+   // Called before every render.
+
    fCamera = fCurrentCamera;
    fClip   = fClipSet->GetCurrentClip();
    if (fGLDevice != -1)
    {
       fRnrCtx->SetGLCtxIdentity(fGLCtxId);
-      fGLCtxId->DeleteDisplayLists();
+      fGLCtxId->DeleteGLResources();
    }
+
    TGLViewerBase::PreRender();
+
    // Setup lighting
    fLightSet->StdSetupLights(fOverallBoundingBox, *fCamera, fDebugMode);
    fClipSet->SetupClips(fOverallBoundingBox);
@@ -438,9 +446,10 @@ void TGLViewer::DoDraw()
    }
 
    // Setup scene draw time
-   fRnrCtx->SetRenderTimeout(fLOD == TGLRnrCtx::kLODHigh ?
+   fRnrCtx->SetRenderTimeOut(fLOD == TGLRnrCtx::kLODHigh ?
                              fMaxSceneDrawTimeHQ :
                              fMaxSceneDrawTimeLQ);
+   fRnrCtx->StartStopwatch();
 
    // GL pre draw setup
    if (!fIsPrinting) PreDraw();
@@ -457,6 +466,8 @@ void TGLViewer::DoDraw()
 
    PostRender();
    PostDraw();
+
+   fRnrCtx->StopStopwatch();
 
    ReleaseLock(kDrawLock);
 
@@ -600,10 +611,17 @@ void TGLViewer::PostDraw()
 {
    // Perform GL work which must be done after each draw of scene
    glFlush();
-   SwapBuffers();
+   if (fRnrCtx->GetGrabImage())
+   {
+      UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
+      glReadBuffer(GL_BACK);
+      glPixelStorei(GL_PACK_ALIGNMENT,1); 
+      glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
+                   GL_BGRA, GL_UNSIGNED_BYTE, xx);
 
-   // Flush everything in case picking starts
-   //   glFlush();
+      fRnrCtx->SetGrabbedImage(xx);
+   }
+   SwapBuffers();
 
    TGLUtil::CheckError("TGLViewer::PostDraw");
 }
@@ -614,12 +632,8 @@ void TGLViewer::MakeCurrent() const
    // Make GL context current
    if (fGLDevice == -1)
       fGLWindow->MakeCurrent();
-   else gGLManager->MakeCurrent(fGLDevice);
-
-   // Don't call TGLUtil::CheckError() as we do not
-   // have to be in GL thread here - GL window will call
-   // via gVirtualGL. Again re-enable once TGLManager replaces
-   // TGLUtil::CheckError();
+   else
+      gGLManager->MakeCurrent(fGLDevice);
 }
 
 //______________________________________________________________________________
@@ -795,8 +809,8 @@ Bool_t TGLViewer::RequestOverlaySelect(Int_t x, Int_t y)
    // point (x,y).
    // Request is directed via cross thread gVirtualGL object
 
-   // Take select lock on scene immediately we enter here - it is released
-   // in the other (drawing) thread - see TGLViewer::Select()
+   // Take select lock on viewer immediately - it is released
+   // in the other (drawing) thread - see TGLViewer::Select().
    // Removed when gVirtualGL removed
 
    if ( ! TakeLock(kSelectLock)) {

@@ -1,3 +1,6 @@
+// @(#)root/eve:$Id$
+// Author: Alja Mrak-Tadel
+
 TEveText* text_test()
 {
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);

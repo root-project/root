@@ -242,6 +242,7 @@ void TEveSceneList::ProcessSceneChanges(Bool_t dropLogicals, Set_t& stampSet)
       {
          Bool_t updateViewers = kFALSE;
          Bool_t incTimeStamp  = kFALSE;
+
          s->GetGLScene()->BeginUpdate();
 
          // Process stamps.
@@ -300,7 +301,7 @@ void TEveSceneList::ProcessSceneChanges(Bool_t dropLogicals, Set_t& stampSet)
             }
          }
 
-         s->GetGLScene()->EndUpdate(incTimeStamp, updateViewers);
+         s->GetGLScene()->EndUpdate(updateViewers, incTimeStamp, updateViewers);
       }
    }
 }

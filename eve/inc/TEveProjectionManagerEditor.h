@@ -33,7 +33,10 @@ protected:
 
    TGComboBox      *fType;         // TEveProjection type widget
    TEveGValuator   *fDistortion;   // TEveProjection distortion widget
-   TEveGValuator   *fFixedRadius;  // TEveProjection fixed-radius widget
+   TEveGValuator   *fFixR;         // TEveProjection fixed-radius widget
+   TEveGValuator   *fFixZ;         // TEveProjection fixed-z widget
+   TEveGValuator   *fPastFixRFac;  // TEveProjection relative scale after FixR
+   TEveGValuator   *fPastFixZFac;  // TEveProjection relative scale after FixZ
    TEveGValuator   *fCurrentDepth; // TEveProjection z-coordinate widget
 
    TGVerticalFrame *fCenterFrame;  // parent frame for distortion center
@@ -51,7 +54,10 @@ public:
 
    void DoType(Int_t type);
    void DoDistortion();
-   void DoFixedRadius();
+   void DoFixR();
+   void DoFixZ();
+   void DoPastFixRFac();
+   void DoPastFixZFac();
    void DoCurrentDepth();
    void DoCenter();
 

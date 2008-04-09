@@ -42,10 +42,15 @@ protected:
    typedef std::list<TGLSceneInfo*>::iterator   SceneInfoList_i;
 
    typedef std::vector<TGLSceneInfo*>           SceneInfoVec_t;
+   typedef std::vector<TGLSceneInfo*>::iterator SceneInfoVec_i;
 
    typedef std::vector<TGLOverlayElement*>      OverlayElmVec_t;
 
    SceneInfoList_i FindScene(TGLSceneBase* scene);
+
+   typedef void (TGLSceneBase::* SubRender_foo) (TGLRnrCtx &);
+
+   void SubRenderScenes(SubRender_foo render_foo);
 
    // Members
 

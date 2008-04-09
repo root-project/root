@@ -22,6 +22,7 @@
 
 #include "TMathBase.h"
 #include "TMath.h"
+
 //______________________________________________________________________________
 // GUI editor for TEveCaloEditor.
 //
@@ -39,7 +40,7 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    fPhiRng(0),
    fTower(0),
    fPalette(0),
-   fTowerHeight(0)
+   fCellZScale(0)
 {
    // Constructor.
 
@@ -53,7 +54,7 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    fEtaRng->SetLabelWidth(labelW);
    fEtaRng->Build();
    fEtaRng->GetSlider()->SetWidth(195);
-   fEtaRng->SetLimits(-5, 5, TGNumberFormat::kNESRealTwo);
+   fEtaRng->SetLimits(-5.5, 5.5, TGNumberFormat::kNESRealTwo);
    fEtaRng->Connect("ValueSet()", "TEveCaloVizEditor", this, "DoEtaRange()");
    AddFrame(fEtaRng, new TGLayoutHints(kLHintsTop, 1, 1, 4, 5));
 
@@ -93,15 +94,14 @@ void TEveCaloVizEditor::CreateTowerTab()
    fTower->AddFrame(title1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
 
 
-
    Int_t  labelW = 45;
-   fTowerHeight = new TEveGValuator(fTower, "Height:", 90, 0);
-   fTowerHeight->SetLabelWidth(labelW);
-   fTowerHeight->SetNELength(6);
-   fTowerHeight->Build();
-   fTowerHeight->SetLimits(0, 1, 100, TGNumberFormat::kNESRealTwo);
-   fTowerHeight->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoTowerHeight()");
-   fTower->AddFrame(fTowerHeight, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fCellZScale = new TEveGValuator(fTower, "ZScale:", 90, 0);
+   fCellZScale->SetLabelWidth(labelW);
+   fCellZScale->SetNELength(6);
+   fCellZScale->Build();
+   fCellZScale->SetLimits(0, 5, 100, TGNumberFormat::kNESRealTwo);
+   fCellZScale->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoCellZScale()");
+   fTower->AddFrame(fCellZScale, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
    TGHorizontalFrame *title2 = new TGHorizontalFrame(fTower, 145, 10, kLHintsExpandX| kFixedWidth);
    title2->AddFrame(new TGLabel(title2, "Palette Controls"),
@@ -113,8 +113,6 @@ void TEveCaloVizEditor::CreateTowerTab()
    fPalette = new TEveRGBAPaletteSubEditor(fTower);
    fTower->AddFrame(fPalette, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
    fPalette->Connect("Changed()", "TEveCaloVizEditor", this, "DoPalette()");
-
-
 }
 
 //______________________________________________________________________________
@@ -124,6 +122,7 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
 
    fM = dynamic_cast<TEveCaloViz*>(obj);
 
+   fEtaRng->SetLimits(fM->fEtaLowLimit, fM->fEtaHighLimit);
    fEtaRng->SetValues(fM->fEtaMin, fM->fEtaMax);
 
    fPhi->SetValue(fM->fPhi*TMath::RadToDeg());
@@ -131,8 +130,7 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
 
    fPalette->SetModel(fM->fPalette);
 
-   fTowerHeight->SetValue(fM->fTowerHeight);
-
+   fCellZScale->SetValue(fM->fCellZScale);
 }
 
 //______________________________________________________________________________
@@ -140,9 +138,7 @@ void TEveCaloVizEditor::DoEtaRange()
 {
    // Slot for setting eta range.
 
-   fM->fEtaMin = fEtaRng->GetMin();
-   fM->fEtaMax = fEtaRng->GetMax();
-   fM->fCacheOK = kFALSE;
+   fM->SetEta(fEtaRng->GetMin(), fEtaRng->GetMax());
    Update();
 }
 
@@ -151,19 +147,16 @@ void TEveCaloVizEditor::DoPhi()
 {
   // Slot for setting phi range.
 
-   fM->fPhi    = fPhi->GetValue()*TMath::DegToRad();
-   fM->fPhiRng = fPhiRng->GetValue()*TMath::DegToRad();
-   fM->fCacheOK = kFALSE;
+   fM->SetPhiWithRng(fPhi->GetValue()*TMath::DegToRad(), fPhiRng->GetValue()*TMath::DegToRad());
    Update();
 }
 
-
 //______________________________________________________________________________
-void TEveCaloVizEditor::DoTowerHeight()
+void TEveCaloVizEditor::DoCellZScale()
 {
   // Slot for setting tower height.
 
-   fM->SetTowerHeight(fTowerHeight->GetValue());
+   fM->SetCellZScale(fCellZScale->GetValue());
    Update();
 }
 
@@ -172,6 +165,6 @@ void TEveCaloVizEditor::DoPalette()
 {
    // Slot for palette changed.
 
-   fM->fCacheOK = kFALSE;
+   fM->InvalidateCache();
    Update();
 }

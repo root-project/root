@@ -98,7 +98,7 @@ public:
    Bool_t IsValid() const { return fCnt > 0; }
 
    void RegisterDLNameRangeToWipe(UInt_t base, Int_t size);
-   void DeleteDisplayLists();
+   void DeleteGLResources();
 
    static TGLContextIdentity *GetCurrent();
 

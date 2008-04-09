@@ -36,16 +36,11 @@ class TGLStopwatch
 private:
    // Fields
    Double_t        fStart;           //! start time (millisec)
-
-   static Bool_t   fgInitOverhead;   //! overhead calculated?
-   static Double_t fgOverhead;       //! timing overhead (millisecs)
+   Double_t        fEnd;             //! end time (millisec)
+   Double_t        fLastRun;         //! time of last run (milisec)
 
    // Methods
-   void     InitOverhead(void)  const;
    Double_t GetClock(void)      const;
-   Double_t WaitForTick(void)   const;
-   void     FinishDrawing(void) const;
-
 
 public:
    TGLStopwatch();
@@ -54,6 +49,7 @@ public:
    void     Start();
    Double_t Lap() const;
    Double_t End();
+   Double_t LastRun() const { return fLastRun; }
 
    ClassDef(TGLStopwatch,0) // a GL stopwatch utility class
 };

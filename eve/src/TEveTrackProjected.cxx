@@ -25,6 +25,8 @@
 
 ClassImp(TEveTrackProjected);
 
+Bool_t TEveTrackProjected::fgBreakTracks = kTRUE;
+
 //______________________________________________________________________________
 TEveTrackProjected::TEveTrackProjected() :
    TEveTrack  (),
@@ -158,23 +160,31 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
       p[2] = fDepth;
    }
 
+
    Float_t x, y, z;
-   std::vector<TEveVector> vvec;
    Int_t bL = 0, bR = GetBreakPointIdx(0);
+   Int_t sign = 1;
+   std::vector<TEveVector> vvec;
    while (1)
    {
       for(Int_t i=bL; i<=bR; i++)
       {
          GetPoint(i, x, y, z);
-         vvec.push_back(TEveVector(x, y, z));
+         vvec.push_back(TEveVector(x, sign*y, z));
       }
       if (bR == fLastPoint)
          break;
 
-      GetBreakPoint(bR, kTRUE,  x, y, z); vvec.push_back(TEveVector(x, y, z));
-      fBreakPoints.push_back((Int_t)vvec.size());
-      GetBreakPoint(bR, kFALSE, x, y, z); vvec.push_back(TEveVector(x, y, z));
-
+      if (fgBreakTracks)
+      {
+         GetBreakPoint(bR, kTRUE,  x, y, z); vvec.push_back(TEveVector(x, y, z));
+         fBreakPoints.push_back((Int_t)vvec.size());
+         GetBreakPoint(bR, kFALSE, x, y, z); vvec.push_back(TEveVector(x, y, z));
+      }
+      else
+      {
+         sign = -sign;
+      }
       bL = bR + 1;
       bR = GetBreakPointIdx(bL);
    }

@@ -2,10 +2,12 @@
 #define ROOT_TGLFontManager
 
 #include "TObjArray.h"
+#include <list>
 #include <vector>
 #include <map>
 
 class FTFont;
+class TGLFontManager;
 
 class TGLFont
 {
@@ -18,37 +20,44 @@ public:
    }; // Font-types of FTGL.
 
 private:
+   TGLFont& operator=(const TGLFont& o); // Not implemented.
+
+   FTFont          *fFont;     // FTGL font.
+   TGLFontManager  *fManager;  // Font manager.
+
+   Float_t          fDepth;  // depth of extruded fonts, enforced at render time.
 
 protected:
-   Int_t         fSize;   // free-type face size
-   Int_t         fFile;   // free-type file name
-   EMode         fMode;   // free-type FTGL class id
-
-   const FTFont *fFont;   // FTGL font
-
-   Float_t       fDepth;  // depth of extruded fonts, enforced at render time.
+   Int_t            fSize;   // free-type face size
+   Int_t            fFile;   // free-type file name
+   EMode            fMode;   // free-type FTGL class id
 
 public:
-   TGLFont(): fSize(-1), fFile(-1), fMode(kUndef), fFont(0), fDepth(1) {}
-   TGLFont(Int_t size, Int_t font, EMode mode, const FTFont* f=0);
-   TGLFont(const TGLFont& o);
-   virtual ~TGLFont() {}
+   TGLFont();
+   TGLFont(Int_t size, Int_t font, EMode mode, FTFont *f=0, TGLFontManager *mng=0);
+   TGLFont(const TGLFont& o);            // Not implemented.
+   virtual ~TGLFont();
 
-   TGLFont& operator=(const TGLFont& o);
+   void CopyAttributes(const TGLFont &o);
 
+  
    Int_t GetSize() const { return fSize;}
    Int_t GetFile() const { return fFile;}
    EMode GetMode() const { return fMode;}
 
+   void  SetFont(FTFont *f) { fFont =f;}
    const FTFont* GetFont() const { return fFont; }
+   void  SetManager(TGLFontManager *mng) {fManager = mng;}
+   const TGLFontManager* GetManager() const { return fManager; }
 
-   void SetDepth(Float_t d) { fDepth = d; }
+   Float_t GetDepth() const { return fDepth;}
+   void  SetDepth(Float_t d) { fDepth = d; }
 
    // FTGL wrapper functions
-   void   BBox(const Text_t* txt,
+   void  BBox(const Text_t* txt,
                Float_t& llx, Float_t& lly, Float_t& llz,
                Float_t& urx, Float_t& ury, Float_t& urz) const;
-   void   Render(const Text_t* txt) const;
+   void  Render(const Text_t* txt) const;
 
    // helper gl draw functions
    virtual void PreRender(Bool_t autoLight=kTRUE, Bool_t lightOn=kFALSE) const;
@@ -83,6 +92,7 @@ private:
    TGLFontManager& operator=(const TGLFontManager&); // Not implemented
 
    std::map<TGLFont, Int_t>  fFontMap;        // map of created fonts
+   std::list<const FTFont*>   fFontTrash;      // fonts to purge  
 
    static TObjArray     fgFontFileArray;      // map font-id to ttf-font-file
    static FontSizeVec_t fgFontSizeArray;      // map of valid font-size
@@ -93,11 +103,14 @@ public:
    TGLFontManager(){}
    virtual ~TGLFontManager();
 
-   const TGLFont& GetFont(Int_t size, Int_t file, TGLFont::EMode mode);
-   Bool_t         ReleaseFont(const TGLFont& font);
+   void   RegisterFont(Int_t size, Int_t file, TGLFont::EMode mode, TGLFont& out);
+   void   RegisterFont(Int_t size, const Text_t* name, TGLFont::EMode mode, TGLFont& out);
+   void   ReleaseFont(TGLFont& font);
 
    static TObjArray*        GetFontFileArray();
    static FontSizeVec_t*    GetFontSizeArray();
+
+   void   ClearFontTrash();
 
    ClassDef(TGLFontManager, 0); // A FreeType GL font manager.
 };

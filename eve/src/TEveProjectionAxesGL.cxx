@@ -68,26 +68,8 @@ void TEveProjectionAxesGL::SetBBox()
 
    SetAxisAlignedBBox(((TEveProjectionAxes*)fExternalObj)->AssertBBox());
 }
+
 /******************************************************************************/
-
-//______________________________________________________________________________
-const char* TEveProjectionAxesGL::GetText(Float_t x) const
-{
-   // Returns formatted text suitable for display of value 'x' on an
-   // axis tick-mark.
-
-   using namespace TMath;
-
-   if (Abs(x) > 1000)
-      return Form("%d", (Int_t) 10*Nint(x/10.0f));
-   if (Abs(x) > 100)
-      return Form("%d", (Int_t) Nint(x));
-   if (Abs(x) > 10)
-      return Form("%.1f", x);
-   if (Abs(x) >= 0.01 )
-      return Form("%.2f", x);
-   return "0";
-}
 
 //______________________________________________________________________________
 void TEveProjectionAxesGL::RenderText(const char* txt, Float_t x, Float_t y) const
@@ -141,7 +123,7 @@ void TEveProjectionAxesGL::DrawHInfo() const
    {
       glPushMatrix();
       glTranslatef((*it).first, -off, 0);
-      txt = GetText((*it).second);
+      txt = TEveUtil::FormAxisValue((*it).second);
       fFont.BBox(txt, llx, lly, llz, urx, ury, urz);
       Float_t xd = -0.5f*(urx+llx);
       if (txt[0] == '-')
@@ -172,7 +154,7 @@ void TEveProjectionAxesGL::DrawVInfo() const
    {
       glPushMatrix();
       glTranslatef(-off, (*it).first, 0);
-      txt = GetText((*it).second);
+      txt = TEveUtil::FormAxisValue((*it).second);
       fFont.BBox(txt, llx, lly, llz, urx, ury, urz);
       RenderText(txt, -urx, -0.38f*(ury+lly));
       glPopMatrix();

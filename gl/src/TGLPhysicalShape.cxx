@@ -372,14 +372,16 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    glPushMatrix();
    glMultMatrixd(fTransform.CArr());
    if (fInvertedWind)  glFrontFace(GL_CW);
-   if (fSelected && !rnrCtx.Selection())
+   if (fSelected && !rnrCtx.Selection() &&
+       rnrCtx.DrawPass() != TGLRnrCtx::kPassOutlineLine)
    {
       const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
-      Int_t inner[5][2] = { {0,-1}, {1,0}, {0,1}, {-1,0}, {0,0} };
+      Int_t inner[4][2] = { {0,-1}, {1,0}, {0,1}, {-1,0} };
       Int_t outer[8][2] = { {0,-2}, {2,0}, {0,2}, {-2,0}, {-1,-1}, {1,-1}, {1,1}, {-1,1} };
 
       // TGLCapabilitySwitch bs(GL_BLEND, kTRUE), lss(GL_LINE_SMOOTH, kTRUE);
 
+      rnrCtx.SetHighlight(kTRUE);
       TGLUtil::LockColor();
       for (int i = 0; i < 8; ++i)
       {
@@ -390,20 +392,30 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       TGLUtil::UnlockColor();
 
       SetupGLColors(rnrCtx);
-      glDepthFunc(GL_ALWAYS);
-      for (int i = 0; i < 5; ++i)
+      for (int i = 0; i < 4; ++i)
       {
          glViewport(vp.X() + inner[i][0], vp.Y() + inner[i][1], vp.Width(), vp.Height());
          glColor4fv(fColor);
          fLogicalShape->Draw(rnrCtx);
       }
       glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
-      glDepthFunc(GL_LESS);
+      rnrCtx.SetHighlight(kFALSE);
+
+      SetupGLColors(rnrCtx);
+      Float_t dr[2];
+      glGetFloatv(GL_DEPTH_RANGE,dr);
+      glDepthRange(dr[0], 0.5*dr[1]);
+      fLogicalShape->Draw(rnrCtx);
+      glDepthRange(dr[0], dr[1]);
    }
    else
    {
       SetupGLColors(rnrCtx);
+      if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+         TGLUtil::LockColor();
       fLogicalShape->Draw(rnrCtx);
+      if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+         TGLUtil::UnlockColor();
    }
    if (fInvertedWind)  glFrontFace(GL_CCW);
    glPopMatrix();

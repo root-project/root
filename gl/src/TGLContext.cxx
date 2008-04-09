@@ -211,7 +211,7 @@ Bool_t TGLContext::MakeCurrent()
    else {
       Bool_t rez = wglMakeCurrent(fPimpl->fHDC, fPimpl->fGLContext);
       if (rez)
-         fIdentity->DeleteDisplayLists();
+         fIdentity->DeleteGLResources();
       return rez;
    }
 }
@@ -322,7 +322,7 @@ Bool_t TGLContext::MakeCurrent()
                                         gVirtualX->GetWindowID(fPimpl->fWindowIndex),
                                         fPimpl->fGLContext);
       if (rez)
-         fIdentity->DeleteDisplayLists();
+         fIdentity->DeleteGLResources();
       return rez;
    }
 
@@ -450,14 +450,19 @@ void TGLContextIdentity::RegisterDLNameRangeToWipe(UInt_t base, Int_t size)
 }
 
 //______________________________________________________________________________
-void TGLContextIdentity::DeleteDisplayLists()
+void TGLContextIdentity::DeleteGLResources()
 {
-   //Delete display-list objects registered for destruction.
-   if (fDLTrash.empty()) return;
+   //Delete GL resources registered for destruction.
 
-   for (DLTrashIt_t it = fDLTrash.begin(), e = fDLTrash.end(); it != e; ++it)
-      glDeleteLists(it->first, it->second);
-   fDLTrash.clear();
+   if (!fDLTrash.empty()) 
+   {
+      for (DLTrashIt_t it = fDLTrash.begin(), e = fDLTrash.end(); it != e; ++it)
+         glDeleteLists(it->first, it->second);
+      fDLTrash.clear();
+   }
+  
+   if (fFontManager)
+      fFontManager->ClearFontTrash();
 }
 
 //______________________________________________________________________________

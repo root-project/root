@@ -189,6 +189,7 @@ public:
    void  SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = 0);
    void  SetImage(Pixmap_t pxm, Pixmap_t mask = 0);
    void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
+   void  FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h);
 
    // Utilities
    UInt_t     GetWidth() const;

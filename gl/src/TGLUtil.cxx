@@ -909,6 +909,30 @@ Double_t TGLMatrix::Invert()
 }
 
 //______________________________________________________________________________
+TGLVector3 TGLMatrix::Multiply(const TGLVector3& v, Double_t w) const
+{
+   // Multiply vector.
+   const Double_t* M = fVals;
+   TGLVector3 r;
+   r.X() = M[0]*v[0] + M[4]*v[1] +  M[8]*v[2] + M[12]*w;
+   r.Y() = M[1]*v[0] + M[5]*v[1] +  M[9]*v[2] + M[13]*w;
+   r.Z() = M[2]*v[0] + M[6]*v[1] + M[10]*v[2] + M[14]*w;
+   return r;
+}
+
+//______________________________________________________________________________
+TGLVector3 TGLMatrix::Rotate(const TGLVector3& v) const
+{
+   // Rotate vector. Translation is not applied.
+   const Double_t* M = fVals;
+   TGLVector3 r;
+   r.X() = M[0]*v[0] + M[4]*v[1] +  M[8]*v[2];
+   r.Y() = M[1]*v[0] + M[5]*v[1] +  M[9]*v[2];
+   r.Z() = M[2]*v[0] + M[6]*v[1] + M[10]*v[2];
+   return r;
+}
+
+//______________________________________________________________________________
 void TGLMatrix::MultiplyIP(TGLVector3& v, Double_t w) const
 {
    // Multiply vector in-place.
@@ -1056,7 +1080,7 @@ UInt_t TGLUtil::UnlockColor()
 //______________________________________________________________________________
 void TGLUtil::Color(Color_t color_index, Float_t alpha)
 {
-   // Set color from color_index.
+   // Set color from color_index and GL-style alpha (default 1).
 
    if (fgColorLockCount == 0) {
       if (color_index < 0)
@@ -1064,6 +1088,20 @@ void TGLUtil::Color(Color_t color_index, Float_t alpha)
       TColor* c = gROOT->GetColor(color_index);
       if (c)
          glColor4f(c->GetRed(), c->GetGreen(), c->GetBlue(), alpha);
+   }
+}
+
+//______________________________________________________________________________
+void TGLUtil::ColorTransparency(Color_t color_index, UChar_t transparency)
+{
+   // Set color from color_index and ROOT-style transparency (default 0).
+
+   if (fgColorLockCount == 0) {
+      if (color_index < 0)
+         color_index = 1;
+      TColor* c = gROOT->GetColor(color_index);
+      if (c)
+         glColor4f(c->GetRed(), c->GetGreen(), c->GetBlue(), 1.0f - 0.01f*transparency);
    }
 }
 

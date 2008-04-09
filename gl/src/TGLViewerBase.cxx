@@ -301,31 +301,74 @@ void TGLViewerBase::PreRender()
       const TGLBoundingBox & bbox  = sinfo->GetTransformedBBox();
       Bool_t visp = (!bbox.IsEmpty() && fCamera->FrustumOverlap(bbox) != kOutside);
       sinfo->ViewCheck(visp);
-      if (visp)
-         fVisScenes.push_back(sinfo);
-      else
+      if (visp) {
+         fRnrCtx->SetSceneInfo(sinfo);
+         sinfo->GetScene()->PreDraw(*fRnrCtx);
+         if (sinfo->IsVisible()) {
+            fVisScenes.push_back(sinfo);
+         } else {
+            sinfo->GetScene()->PostDraw(*fRnrCtx);
+            sinfo->GetScene()->ReleaseLock(kDrawLock);
+         }
+         fRnrCtx->SetSceneInfo(0);
+      } else {
          sinfo->GetScene()->ReleaseLock(kDrawLock);
+      }
    }
 }
 
-//______________________________________________________________________
-void TGLViewerBase::Render()
+//______________________________________________________________________________
+void TGLViewerBase::SubRenderScenes(SubRender_foo render_foo)
 {
-   // Go through a list of scenes and render them in order.
-
-   // !!! should be split into two passes: opaque / transparent.
-
    Int_t nScenes = fVisScenes.size();
+
    for (Int_t i = 0; i < nScenes; ++i)
    {
       TGLSceneInfo* sinfo = fVisScenes[i];
       TGLSceneBase* scene = sinfo->GetScene();
       fRnrCtx->SetSceneInfo(sinfo);
       glPushName(i);
-      scene->FullRender(*fRnrCtx);
+      scene->PreRender(*fRnrCtx);
+      (scene->*render_foo)(*fRnrCtx);
+      scene->PostRender(*fRnrCtx);
       glPopName();
       fRnrCtx->SetSceneInfo(0);
    }
+}
+
+//______________________________________________________________________
+void TGLViewerBase::Render()
+{
+   // Render all scenes. This is done in four passes:
+   // - render opaque objects from all scenes
+   // - render transparent objects from all scenes
+   // - clear depth buffer
+   // - render opaque selected objects from all scenes (with highlight)
+   // - render transparent selected objects from all scenes (with highlight)
+
+   SubRenderScenes(&TGLSceneBase::RenderOpaque);
+
+   glDepthMask(GL_FALSE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   SubRenderScenes(&TGLSceneBase::RenderTransp);
+
+   glDepthMask(GL_TRUE);
+   glDisable(GL_BLEND);
+
+   glClear(GL_DEPTH_BUFFER_BIT);
+
+   SubRenderScenes(&TGLSceneBase::RenderSelOpaque);
+
+   glDepthMask(GL_FALSE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   SubRenderScenes(&TGLSceneBase::RenderSelTransp);
+
+   glDepthMask(GL_TRUE);
+   glDisable(GL_BLEND);
 
    TGLUtil::CheckError("TGLViewerBase::Render - pre exit check");
 }
@@ -351,10 +394,13 @@ void TGLViewerBase::PostRender()
    // Function called after rendering is finished.
    // Here we just unlock the scenes.
 
-   Int_t nScenes = fVisScenes.size();
-   for (Int_t i = 0; i < nScenes; ++i)
+   for (SceneInfoVec_i i = fVisScenes.begin(); i != fVisScenes.end(); ++i)
    {
-      fVisScenes[i]->GetScene()->ReleaseLock(kDrawLock);
+      TGLSceneInfo* sinfo = *i;
+      fRnrCtx->SetSceneInfo(sinfo);
+      sinfo->GetScene()->PostDraw(*fRnrCtx);
+      fRnrCtx->SetSceneInfo(0);
+      sinfo->GetScene()->ReleaseLock(kDrawLock);
    }
    fChanged = kFALSE;
 }

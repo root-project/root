@@ -349,12 +349,12 @@ void TGLViewerEditor::CreateStyleTab()
    af->AddFrame(fUpdateScene, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 8, 1));
    fCameraHome = new TGTextButton(af, "Camera Home", 130);
    af->AddFrame(fCameraHome, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 1, 3));
-   fMaxSceneDrawTimeHQ = MakeLabeledNEntry(af, "Max HQ render time:", 120, 6, TGNumberFormat::kNESInteger);
+   fMaxSceneDrawTimeHQ = MakeLabeledNEntry(af, "Max HQ draw time:", 120, 6, TGNumberFormat::kNESInteger);
    fMaxSceneDrawTimeHQ->SetLimits(TGNumberFormat::kNELLimitMin, 0, 1e6);
-   fMaxSceneDrawTimeHQ->GetNumberEntry()->SetToolTipText("Maximum time spent in scene rendering\nin high-quality mode.");
-   fMaxSceneDrawTimeLQ = MakeLabeledNEntry(af, "Max LQ render time:", 120, 6, TGNumberFormat::kNESInteger);
+   fMaxSceneDrawTimeHQ->GetNumberEntry()->SetToolTipText("Maximum time spent in scene drawing\nin high-quality mode.");
+   fMaxSceneDrawTimeLQ = MakeLabeledNEntry(af, "Max LQ draw time:", 120, 6, TGNumberFormat::kNESInteger);
    fMaxSceneDrawTimeLQ->SetLimits(TGNumberFormat::kNELLimitMin, 0, 1e6);
-   fMaxSceneDrawTimeLQ->GetNumberEntry()->SetToolTipText("Maximum time spent in scene rendering\nin low-quality mode (during rotation etc).");
+   fMaxSceneDrawTimeLQ->GetNumberEntry()->SetToolTipText("Maximum time spent in scene drawing\nin low-quality mode (during rotation etc).");
 
    TGHorizontalFrame* hf = new TGHorizontalFrame(this);
    TGLabel* lab = new TGLabel(hf, "Clear Color");

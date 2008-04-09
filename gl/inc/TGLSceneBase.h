@@ -42,6 +42,7 @@ protected:
    TString            fTitle;       // Object title.
 
    UInt_t             fTimeStamp;   // Counter increased on every update.
+   UInt_t             fMinorStamp;  // Counter increased on minimal update.
    Short_t            fLOD;         // Scene-lod.
    Short_t            fStyle;       // Scene-style.
    TGLClip          * fClip;        // Scene clipping-plane.
@@ -87,10 +88,15 @@ public:
    virtual void          LodifySceneInfo(TGLRnrCtx& ctx);
 
    // Rendering
-   virtual void FullRender(TGLRnrCtx & rnrCtx);
+   virtual void PreDraw   (TGLRnrCtx & rnrCtx);
    virtual void PreRender (TGLRnrCtx & rnrCtx);
    virtual void Render    (TGLRnrCtx & rnrCtx);
+   virtual void RenderOpaque    (TGLRnrCtx & rnrCtx);
+   virtual void RenderTransp    (TGLRnrCtx & rnrCtx);
+   virtual void RenderSelOpaque (TGLRnrCtx & rnrCtx);
+   virtual void RenderSelTransp (TGLRnrCtx & rnrCtx);
    virtual void PostRender(TGLRnrCtx & rnrCtx);
+   virtual void PostDraw  (TGLRnrCtx & rnrCtx);
 
    // Selection interface
    virtual Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx);
@@ -99,7 +105,10 @@ public:
    // Getters & setters
 
    UInt_t GetTimeStamp() const { return fTimeStamp; }
-   void   IncTimeStamp()       { ++fTimeStamp;      }
+   void   IncTimeStamp()       { ++fTimeStamp; fMinorStamp = 1; }
+
+   UInt_t GetMinorStamp() const { return fMinorStamp; }
+   void   IncMinorStamp()       { ++fMinorStamp;      }
 
    Short_t  LOD()          const { return fLOD; }
    void     SetLOD(Short_t lod)  { fLOD = lod;  }

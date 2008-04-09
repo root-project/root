@@ -69,8 +69,12 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fClip         (0),
    fDrawPass     (kPassUndef),
 
-   fRenderTimeout(0.0),
+   fStopwatch    (),
+   fRenderTimeOut(0.0),
+   fIsRunning    (kFALSE),
+   fHasTimedOut  (kFALSE),
 
+   fHighlight    (kFALSE),
    fSelection    (kFALSE),
    fSecSelection (kFALSE),
    fPickRadius   (0),
@@ -79,7 +83,10 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
 
    fDLCaptureOpen (kFALSE),
    fGLCtxIdentity (0),
-   fQuadric       (0)
+   fQuadric       (0),
+
+   fGrabImage     (kFALSE),
+   fGrabbedImage  (0)
 {
    // Constructor.
 
@@ -138,6 +145,44 @@ Bool_t TGLRnrCtx::IsDrawPassFilled() const
    // Returns true if current render-pass uses filled polygon style.
 
    return fDrawPass == kPassFill || fDrawPass == kPassOutlineFill;
+}
+
+
+/******************************************************************************/
+// Stopwatch
+/******************************************************************************/
+
+//______________________________________________________________________________
+void TGLRnrCtx:: StartStopwatch()
+{
+   // Start the stopwatch.
+
+   if (fIsRunning)
+      return;
+
+   fStopwatch.Start();
+   fIsRunning   = kTRUE;
+   fHasTimedOut = kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLRnrCtx:: StopStopwatch()
+{
+   // Stop the stopwatch.
+
+   fHasTimedOut = fStopwatch.End() > fRenderTimeOut;
+   fIsRunning = kFALSE; 
+}
+
+//______________________________________________________________________________
+Bool_t TGLRnrCtx::HasStopwatchTimedOut()
+{
+   // Check if the stopwatch went beyond the render time limit.
+
+   if (fHasTimedOut) return kTRUE;
+   if (fIsRunning && fStopwatch.Lap() > fRenderTimeOut)
+      fHasTimedOut = kTRUE;
+   return fHasTimedOut;
 }
 
 
@@ -260,19 +305,26 @@ void TGLRnrCtx::CloseDLCapture()
 /******************************************************************************/
 
 //______________________________________________________________________
-const TGLFont& TGLRnrCtx::GetFont(Int_t size, Int_t file, Int_t mode)
+void TGLRnrCtx::RegisterFont(Int_t size, Int_t file, Int_t mode, TGLFont& out)
 {
    // Get font in the GL rendering context.
 
-   return fGLCtxIdentity->GetFontManager()->GetFont(size, file, (TGLFont::EMode)mode);
+   fGLCtxIdentity->GetFontManager()->RegisterFont(size, file, (TGLFont::EMode)mode, out);
 }
 
 //______________________________________________________________________
-Bool_t TGLRnrCtx::ReleaseFont(const TGLFont& font)
+void TGLRnrCtx::RegisterFont(Int_t size, const Text_t* name, Int_t mode, TGLFont& out)
+{
+   // Get font in the GL rendering context.
+
+   fGLCtxIdentity->GetFontManager()->RegisterFont(size, name, (TGLFont::EMode)mode, out);
+}
+//______________________________________________________________________
+void TGLRnrCtx::ReleaseFont(TGLFont& font)
 {
    // Release font in the GL rendering context.
 
-   return fGLCtxIdentity->GetFontManager()->ReleaseFont(font);
+   fGLCtxIdentity->GetFontManager()->ReleaseFont(font);
 }
 
 
