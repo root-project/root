@@ -618,11 +618,17 @@ void Reflex::ScopeBase::RemoveDataMember( const Member & dm ) const {
    // Remove data member dm from this scope.
    std::vector< Member >::iterator it;
    for ( it = fDataMembers.begin(); it != fDataMembers.end(); ++it) {
-      if ( *it == dm ) fDataMembers.erase(it); break;
+      if ( *it == dm ) {
+         fDataMembers.erase(it); 
+         break;
+      }
    }
    std::vector< OwnedMember >::iterator im;
    for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
-      if ( *im == dm ) fMembers.erase(im); break;
+      if ( *im == dm ) {
+         fMembers.erase(im); 
+         break;
+      }
    }
 }
 
@@ -656,11 +662,17 @@ void Reflex::ScopeBase::RemoveFunctionMember( const Member & fm ) const {
    // Remove function member fm from this scope.
    std::vector< Member >::iterator it;
    for ( it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it) {
-      if ( *it == fm ) fFunctionMembers.erase(it); break;
+      if ( *it == fm ) {
+         fFunctionMembers.erase(it); 
+         break;
+      }
    }
    std::vector< OwnedMember >::iterator im;
    for ( im = fMembers.begin(); im != fMembers.end(); ++im) {
-      if ( *im == fm ) fMembers.erase(im); break;
+      if ( *im == fm ) {
+         fMembers.erase(im); 
+         break;
+      }
    }
 }
 
@@ -679,7 +691,10 @@ void Reflex::ScopeBase::RemoveMemberTemplate( const MemberTemplate & mt ) const 
    // Remove member template mt from this scope.
    std::vector< OwnedMemberTemplate >::iterator it;
    for ( it = fMemberTemplates.begin(); it != fMemberTemplates.end(); ++it ) {
-      if ( *it == mt ) fMemberTemplates.erase(it); break;
+      if ( *it == mt ) {
+         fMemberTemplates.erase(it); 
+         break;
+      }
    }
 }
 
@@ -709,7 +724,8 @@ void Reflex::ScopeBase::RemoveSubScope( const Scope & subscope ) const {
    std::vector< Scope >::iterator it;
    for ( it = fSubScopes.begin(); it != fSubScopes.end(); ++it) {
       if ( *it == subscope ) {
-         fSubScopes.erase(it); break;
+         fSubScopes.erase(it); 
+         break;
       }
    }
 }
@@ -772,7 +788,8 @@ void Reflex::ScopeBase::RemoveSubType( const Type & ty ) const {
    std::vector< Type >::iterator it;
    for ( it = fSubTypes.begin(); it != fSubTypes.end(); ++it) {
       if ( *it == ty ) {
-         fSubTypes.erase(it); break;
+         fSubTypes.erase(it); 
+         break;
       }
    }
 }
@@ -793,7 +810,8 @@ void Reflex::ScopeBase::RemoveSubTypeTemplate( const TypeTemplate & tt ) const {
    std::vector< TypeTemplate >::iterator it;
    for ( it = fTypeTemplates.begin(); it != fTypeTemplates.end(); ++it) {
       if (*it == tt) {
-         fTypeTemplates.erase(it); break;
+         fTypeTemplates.erase(it); 
+         break;
       }
    }
 }
