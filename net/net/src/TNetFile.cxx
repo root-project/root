@@ -817,6 +817,7 @@ TNetSystem::TNetSystem(Bool_t ftpowner)
    fUser = "";
    fHost = "";
    fPort = -1;
+   fIsLocal = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -832,6 +833,7 @@ TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
    SetName("root");
 
    fFTPOwner = ftpowner;
+   fIsLocal = kFALSE;
    Create(url);
 }
 
@@ -875,6 +877,24 @@ void TNetSystem::Create(const char *url, TSocket *sock)
    fDir  = kFALSE;
    fDirp = 0;
    fFTP  = 0;
+
+   // Check locality, taking into account possible prefixes
+   fLocalPrefix = "";
+   fIsLocal = kFALSE;
+   // We may have been asked explicitely to go through the daemon
+   Bool_t forceRemote = gEnv->GetValue("Path.ForceRemote", 0);
+   TString opts = TUrl(url).GetOptions();
+   if (opts.Contains("remote=1"))
+      forceRemote = kTRUE;
+   else if (opts.Contains("remote=0"))
+      forceRemote = kFALSE;
+   if (!forceRemote) {
+      if ((fIsLocal = gSystem->IsPathLocal(url))) {
+         fLocalPrefix = gEnv->GetValue("Path.Localroot","");
+         // Nothing more to do
+         return;
+      }
+   }
 
    // Fill in user, host, port
    InitRemoteEntity(surl);
@@ -948,6 +968,14 @@ Int_t TNetSystem::MakeDirectory(const char *dir)
 {
    // Make a directory via rootd.
 
+   // If local, use the local TSystem
+   if (fIsLocal) {
+      TString edir = TUrl(dir).GetFile();
+      if (!fLocalPrefix.IsNull())
+         edir.Insert(0, fLocalPrefix);
+      return gSystem->MakeDirectory(edir);
+   }
+
    if (fFTP && fFTP->IsOpen()) {
       // Extract the directory name
       TString edir = TUrl(dir).GetFile();
@@ -961,6 +989,14 @@ void *TNetSystem::OpenDirectory(const char *dir)
 {
    // Open a directory via rfiod. Returns an opaque pointer to a dir
    // structure. Returns 0 in case of error.
+
+   // If local, use the local TSystem
+   if (fIsLocal) {
+      TString edir = TUrl(dir).GetFile();
+      if (!fLocalPrefix.IsNull())
+         edir.Insert(0, fLocalPrefix);
+      return gSystem->OpenDirectory(edir);
+   }
 
    if (!fFTP || !fFTP->IsOpen())
       return (void *)0;
@@ -988,6 +1024,12 @@ void TNetSystem::FreeDirectory(void *dirp)
 {
    // Free directory via rootd.
 
+   // If local, use the local TSystem
+   if (fIsLocal) {
+      gSystem->FreeDirectory(dirp);
+      return;
+   }
+
    if (dirp != fDirp) {
       Error("FreeDirectory", "invalid directory pointer (should never happen)");
       return;
@@ -1006,6 +1048,11 @@ void TNetSystem::FreeDirectory(void *dirp)
 const char *TNetSystem::GetDirEntry(void *dirp)
 {
    // Get directory entry via rootd. Returns 0 in case no more entries.
+
+   // If local, use the local TSystem
+   if (fIsLocal) {
+      return gSystem->GetDirEntry(dirp);
+   }
 
    if (dirp != fDirp) {
       Error("GetDirEntry", "invalid directory pointer (should never happen)");
@@ -1026,6 +1073,14 @@ Int_t TNetSystem::GetPathInfo(const char *path, FileStat_t &buf)
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
+   // If local, use the local TSystem
+   if (fIsLocal) {
+      TString epath = TUrl(path).GetFile();
+      if (!fLocalPrefix.IsNull())
+         epath.Insert(0, fLocalPrefix);
+      return gSystem->GetPathInfo(epath, buf);
+   }
+
    if (fFTP && fFTP->IsOpen()) {
       // Extract the directory name
       TString epath = TUrl(path).GetFile();
@@ -1042,6 +1097,13 @@ Bool_t TNetSystem::AccessPathName(const char *path, EAccessMode mode)
    // Mode is the same as for the Unix access(2) function.
    // Attention, bizarre convention of return value!!
 
+   // If local, use the local TSystem
+   if (fIsLocal) {
+      TString epath = TUrl(path).GetFile();
+      if (!fLocalPrefix.IsNull())
+         epath.Insert(0, fLocalPrefix);
+      return gSystem->AccessPathName(epath, mode);
+   }
 
    if (fFTP && fFTP->IsOpen()) {
       // Extract the directory name
