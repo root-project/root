@@ -349,7 +349,7 @@ Long64_t TEventIterObj::GetNextEvent()
 
       // Position within this element. TODO: more efficient?
       fNextKey->Reset();
-      for(fElemCur = -1; fElemCur < fElemFirst-1 ; fElemCur++, fNextKey->Next()) { }
+      for(fElemCur = -1; fElemCur < fElemFirst-1 ; fElemCur++, fNextKey->Next());
    }
 
    --fElemNum;
@@ -622,28 +622,33 @@ Long64_t TEventIterTree::GetNextEvent()
       }
 
       SafeDelete(fElem);
-      if (fTree) {
-         fElem = fDSet->Next(fTree->GetEntries());
-      } else {
-         fElem = fDSet->Next();
-      }
+      while (!fElem) {
+         if (fTree) {
+            fElem = fDSet->Next(fTree->GetEntries());
+         } else {
+            fElem = fDSet->Next();
+         }
 
-      if ( fElem == 0 ) {
-         fNum = 0;
-         return -1;
-      }
+         if (!fElem) {
+            // End of processing
+            fNum = 0;
+            return -1;
+         }
 
-      TTree *newTree = GetTrees(fElem);
-      if (!newTree) {
-         // Error has been reported
-         fNum = 0;
-         return -1;
-      }
-      if (newTree != fTree) {
-         // The old tree is wonwd by TFileTree and will be deleted there
-         fTree = newTree;
-         attach = kTRUE;
-         fOldBytesRead = fTree->GetCurrentFile()->GetBytesRead();
+         TTree *newTree = GetTrees(fElem);
+         if (newTree) {
+            if (newTree != fTree) {
+               // The old tree is wonwd by TFileTree and will be deleted there
+               fTree = newTree;
+               attach = kTRUE;
+               fOldBytesRead = fTree->GetCurrentFile()->GetBytesRead();
+            }
+         } else {
+            // Could not open this element: ask for another one
+            SafeDelete(fElem);
+            // The current tree, if any, is not valid anymore
+            fTree = 0;
+         }
       }
 
       // Validate values for this element
