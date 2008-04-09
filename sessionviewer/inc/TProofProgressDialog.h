@@ -80,6 +80,7 @@ private:
    Bool_t              fLogQuery;
    TNtuple            *fRatePoints;
    TGraph             *fRateGraph;
+   Float_t             fProcTime;
    Double_t            fAvgRate;
    Double_t            fAvgMBRate;
 
