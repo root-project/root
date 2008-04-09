@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := rootd
+MODNAME      := rootd
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -26,6 +27,8 @@ ALLEXECS     += $(ROOTD)
 INCLUDEFILES += $(ROOTDDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(ROOTDDIRI)/%.h
 		cp $< $@
 
@@ -33,17 +36,17 @@ $(ROOTD):       $(ROOTDO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTDO) $(RPDUTILO) $(GLBPATCHO) \
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
-all-rootd:      $(ROOTD)
+all-$(MODNAME): $(ROOTD)
 
-clean-rootd:
+clean-$(MODNAME):
 		@rm -f $(ROOTDO)
 
-clean::         clean-rootd
+clean::         clean-$(MODNAME)
 
-distclean-rootd: clean-rootd
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTDDEP) $(ROOTD)
 
-distclean::     distclean-rootd
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(ROOTDO):  CXXFLAGS += $(AUTHFLAGS)

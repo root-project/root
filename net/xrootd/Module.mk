@@ -3,7 +3,8 @@
 #
 # Author: G Ganis, 27/7/2004
 
-MODDIR     := xrootd
+MODNAME    := xrootd
+MODDIR     := net/$(MODNAME)
 MODDIRS    := $(MODDIR)/src
 
 XROOTDDIR  := $(MODDIR)
@@ -65,6 +66,8 @@ ALLLIBS    += $(XRDPLUGINS)
 ALLEXECS   += $(XRDEXECS)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 ifneq ($(PLATFORM),win32)
 $(XROOTDMAKE):
 		@(cd $(XROOTDDIRS); \
@@ -196,9 +199,9 @@ else
 		nmake -f Makefile.msc CFG=$(XRDDBG))
 endif
 
-all-xrootd:   $(XRDPLUGINS) $(XRDEXECS)
+all-$(MODNAME): $(XRDPLUGINS) $(XRDEXECS)
 
-clean-xrootd:
+clean-$(MODNAME):
 ifneq ($(PLATFORM),win32)
 		@(if [ -f $(XROOTDMAKE) ]; then \
 		   cd $(XROOTDDIRD); \
@@ -211,9 +214,9 @@ else
 		fi)
 endif
 
-clean::         clean-xrootd
+clean::         clean-$(MODNAME)
 
-distclean-xrootd: clean-xrootd
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf $(XRDEXECS) $(LPATH)/libXrd* bin/libXrd*
 ifneq ($(PLATFORM),win32)
 		@(if [ -f $(XROOTDMAKE) ]; then \
@@ -228,4 +231,4 @@ else
 		fi)
 endif
 
-distclean::     distclean-xrootd
+distclean::     distclean-$(MODNAME)

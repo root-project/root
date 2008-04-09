@@ -3,7 +3,8 @@
 #
 # Author: G. Ganis, 7/2005
 
-MODDIR       := auth
+MODNAME      := auth
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -40,10 +41,10 @@ RAUTHMAP     := $(RAUTHLIB:.$(SOEXT)=.rootmap)
 
 ##### libAFSAuth #####
 ifneq ($(AFSLIB),)
-AFSAUTHL       := $(MODDIRI)/LinkDefAFS.h
-AFSAUTHDS      := $(MODDIRS)/G__AFSAuth.cxx
-AFSAUTHDO      := $(AFSAUTHDS:.cxx=.o)
-AFSAUTHDH      := $(AFSAUTHDS:.cxx=.h)
+AFSAUTHL     := $(MODDIRI)/LinkDefAFS.h
+AFSAUTHDS    := $(MODDIRS)/G__AFSAuth.cxx
+AFSAUTHDO    := $(AFSAUTHDS:.cxx=.o)
+AFSAUTHDH    := $(AFSAUTHDS:.cxx=.h)
 
 AFSAUTHH     := $(MODDIRI)/AFSAuth.h $(MODDIRI)/AFSAuthTypes.h $(MODDIRI)/TAFS.h
 AFSAUTHS     := $(MODDIRS)/AFSAuth.cxx $(MODDIRS)/TAFS.cxx
@@ -91,6 +92,8 @@ INCLUDEFILES += $(AFSAUTHDEP)
 endif
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(AUTHDIRI)/%.h
 		cp $< $@
 
@@ -121,20 +124,20 @@ $(AFSAUTHMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(AFSAUTHL)
 		$(RLIBMAP) -o $(AFSAUTHMAP) -l $(AFSAUTHLIB) \
 		   -d $(AFSAUTHLIBDEPM) -c $(AFSAUTHL)
 
-all-auth:       $(RAUTHLIB) $(AFSAUTHLIB) $(RAUTHMAP) $(AFSAUTHMAP)
+all-$(MODNAME): $(RAUTHLIB) $(AFSAUTHLIB) $(RAUTHMAP) $(AFSAUTHMAP)
 
-clean-auth:
+clean-$(MODNAME):
 		@rm -f $(RAUTHO) $(RAUTHDO) $(DAEMONUTILSO) $(AFSAUTHO) \
 		       $(AFSAUTHDO)
 
-clean::         clean-auth
+clean::         clean-$(MODNAME)
 
-distclean-auth: clean-auth
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RAUTHDEP) $(RAUTHDS) $(RAUTHDH) $(RAUTHLIB) \
 		       $(AFSAUTHDEP) $(AFSAUTHDS) $(AFSAUTHLIB) \
 		       $(RAUTHMAP) $(AFSAUTHMAP)
 
-distclean::     distclean-auth
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS)

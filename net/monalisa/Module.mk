@@ -3,7 +3,8 @@
 #
 # Author: Andreas Peters, 07/12/2005
 
-MODDIR       := monalisa
+MODNAME      := monalisa
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(MONALISAMAP)
 INCLUDEFILES += $(MONALISADEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(MONALISADIRI)/%.h
 		cp $< $@
 
@@ -52,18 +55,18 @@ $(MONALISAMAP): $(RLIBMAP) $(MAKEFILEDEP) $(MONALISAL)
 		$(RLIBMAP) -o $(MONALISAMAP) -l $(MONALISALIB) \
 		   -d $(MONALISALIBDEPM) -c $(MONALISAL)
 
-all-monalisa:   $(MONALISALIB) $(MONALISAMAP)
+all-$(MODNAME): $(MONALISALIB) $(MONALISAMAP)
 
-clean-monalisa:
+clean-$(MODNAME):
 		@rm -f $(MONALISAO) $(MONALISADO)
 
-clean::         clean-monalisa
+clean::         clean-$(MODNAME)
 
-distclean-monalisa: clean-monalisa
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MONALISADEP) $(MONALISADS) $(MONALISADH) \
 		   $(MONALISALIB) $(MONALISAMAP)
 
-distclean::     distclean-monalisa
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(MONALISAO) $(MONALISADO): CXXFLAGS += $(MONALISAINCDIR:%=-I%) $(MONALISAWSINCDIR:%=-I%)

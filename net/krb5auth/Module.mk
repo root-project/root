@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 18/3/2002
 
-MODDIR       := krb5auth
+MODNAME      := krb5auth
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -37,6 +38,8 @@ ALLMAPS     += $(KRB5AUTHMAP)
 INCLUDEFILES += $(KRB5AUTHDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(KRB5AUTHDIRI)/%.h
 		cp $< $@
 
@@ -56,18 +59,18 @@ $(KRB5AUTHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(KRB5AUTHL)
 		$(RLIBMAP) -o $(KRB5AUTHMAP) -l $(KRB5AUTHLIB) \
 		   -d $(KRB5AUTHLIBDEPM) -c $(KRB5AUTHL)
 
-all-krb5auth:   $(KRB5AUTHLIB) $(KRB5AUTHMAP)
+all-$(MODNAME): $(KRB5AUTHLIB) $(KRB5AUTHMAP)
 
-clean-krb5auth:
+clean-$(MODNAME):
 		@rm -f $(KRB5AUTHO) $(KRB5AUTHDO)
 
-clean::         clean-krb5auth
+clean::         clean-$(MODNAME)
 
-distclean-krb5auth: clean-krb5auth
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(KRB5AUTHDEP) $(KRB5AUTHDS) $(KRB5AUTHDH) \
 		   $(KRB5AUTHLIB) $(KRB5AUTHMAP)
 
-distclean::     distclean-krb5auth
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(KRB5AUTHDO): CXXFLAGS += $(KRB5INCDIR:%=-I%)

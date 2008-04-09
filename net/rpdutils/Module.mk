@@ -3,7 +3,8 @@
 #
 # Author: Gerardo Ganis, 7/4/2003
 
-MODDIR       := rpdutils
+MODNAME      := rpdutils
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -76,6 +77,8 @@ ALLLIBS       += $(SRVAUTHLIB)
 INCLUDEFILES  += $(RPDUTILDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(RPDUTILDIRI)/%.h
 		cp $< $@
 
@@ -84,17 +87,17 @@ $(SRVAUTHLIB):  $(SRVAUTHO) $(RSAO) $(DAEMONUTILSO) $(ORDER_) $(MAINLIBS) $(SRVA
 		   "$(SOFLAGS)" libSrvAuth.$(SOEXT) $@ "$(SRVAUTHO) $(RSAO)" \
 		   "$(SRVAUTHLIBEXTRA) $(DAEMONUTILSO) $(CRYPTLIBS) $(AUTHLIBS)"
 
-all-rpdutils:   $(RPDUTILO) $(SRVAUTHLIB)
+all-$(MODNAME): $(RPDUTILO) $(SRVAUTHLIB)
 
-clean-rpdutils:
+clean-$(MODNAME):
 		@rm -f $(RPDUTILO)
 
-clean::         clean-rpdutils
+clean::         clean-$(MODNAME)
 
-distclean-rpdutils: clean-rpdutils
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RPDUTILDEP) $(SRVAUTHLIB)
 
-distclean::     distclean-rpdutils
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(RPDUTILO): CXXFLAGS += $(AUTHFLAGS)

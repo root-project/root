@@ -59,13 +59,13 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
-                core/cont core/meta io math/mathcore net core/zip \
+                core/cont core/meta io math/mathcore net/net core/zip \
                 core/clib math/matrix core/newdelete \
                 hist/hist tree/tree freetype graf gpad g3d gui math/minuit \
                 hist/histpainter tree/treeplayer ged tree/treeviewer \
                 math/physics postscript core/rint core/thread html eg \
                 geom/geom geom/geompainter vmc \
-                math/fumili math/mlp math/quadp auth guibuilder xml \
+                math/fumili math/mlp math/quadp net/auth guibuilder xml \
                 math/foam math/splot math/smatrix sql tmva \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
                 fitpanel proof/proof proof/proofplayer sessionviewer guihtml
@@ -126,7 +126,7 @@ ifeq ($(BUILDG4ROOT),yes)
 MODULES      += g4root
 endif
 ifeq ($(BUILDGLITE),yes)
-MODULES      += glite
+MODULES      += net/glite
 endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += chirp
@@ -190,32 +190,32 @@ ifeq ($(BUILDTABLE),yes)
 MODULES      += table
 endif
 ifeq ($(BUILDSRPUTIL),yes)
-MODULES      += srputils
+MODULES      += net/srputils
 endif
 ifeq ($(BUILDKRB5),yes)
-MODULES      += krb5auth
+MODULES      += net/krb5auth
 endif
 ifeq ($(BUILDLDAP),yes)
-MODULES      += ldap
+MODULES      += net/ldap
 endif
 ifeq ($(BUILDMONALISA),yes)
-MODULES      += monalisa
+MODULES      += net/monalisa
 endif
 ifeq ($(BUILDGLOBUS),yes)
-MODULES      += globusauth
+MODULES      += net/globusauth
 endif
 ifeq ($(BUILDHBOOK),yes)
 MODULES      += hbook
 endif
 ifeq ($(BUILDXRD),yes)
 ifneq ($(XROOTDDIR),)
-MODULES      += netx
+MODULES      += net/netx
 else
-MODULES      += xrootd netx
+MODULES      += net/xrootd net/netx
 endif
 endif
 ifeq ($(BUILDALIEN),yes)
-MODULES      += alien
+MODULES      += net/alien
 endif
 ifeq ($(BUILDCLARENS),yes)
 MODULES      += proof/clarens
@@ -224,7 +224,7 @@ ifeq ($(BUILDPEAC),yes)
 MODULES      += proof/peac
 endif
 ifneq ($(ARCH),win32)
-MODULES      += rpdutils rootd proof/proofd
+MODULES      += net/rpdutils net/rootd proof/proofd
 endif
 ifeq ($(BUILDXRD),yes)
 ifeq ($(ARCH),win32)
@@ -237,15 +237,16 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl rfio castor \
-                pythia6 table mysql pgsql sapdb srputils x3d \
-                rootx rootd dcache chirp hbook asimage \
-                ldap krb5auth rpdutils globusauth pyroot ruby gfal \
-                qt qtroot qtgsi xrootd netx alien \
+                pythia6 table mysql pgsql sapdb net/srputils x3d \
+                rootx net/rootd dcache chirp hbook asimage \
+                net/ldap net/krb5auth net/rpdutils net/globusauth \
+                pyroot ruby gfal \
+                qt qtroot qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 oracle xmlparser math/mathmore cint/reflex cint/cintex \
                 roofitcore roofit \
-                math/minuit2 monalisa math/fftw odbc math/unuran \
-                geom/gdml eve g4root glite
+                math/minuit2 net/monalisa math/fftw odbc math/unuran \
+                geom/gdml eve g4root net/glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

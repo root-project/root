@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := net
+MODNAME      := net
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -37,6 +38,8 @@ ALLMAPS      += $(NETMAP)
 INCLUDEFILES += $(NETDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(NETDIRI)/%.h
 		cp $< $@
 
@@ -52,14 +55,14 @@ $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP)
 $(NETMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(NETL)
 		$(RLIBMAP) -o $(NETMAP) -l $(NETLIB) -d $(NETLIBDEPM) -c $(NETL)
 
-all-net:        $(NETLIB) $(NETMAP)
+all-$(MODNAME): $(NETLIB) $(NETMAP)
 
-clean-net:
+clean-$(MODNAME):
 		@rm -f $(NETO) $(NETDO)
 
-clean::         clean-net
+clean::         clean-$(MODNAME)
 
-distclean-net:  clean-net
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(NETDEP) $(NETDS) $(NETDH) $(NETLIB) $(NETMAP)
 
-distclean::     distclean-net
+distclean::     distclean-$(MODNAME)

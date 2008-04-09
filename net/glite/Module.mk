@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 12/5/2002
 
-MODDIR       := glite
+MODNAME      := glite
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(GLITEMAP)
 INCLUDEFILES += $(GLITEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GLITEDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(GLITEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(GLITEL)
 		$(RLIBMAP) -o $(GLITEMAP) -l $(GLITELIB) \
 		   -d $(GLITELIBDEPM) -c $(GLITEL)
 
-all-glite:      $(GLITELIB) $(GLITEMAP)
+all-$(MODNAME): $(GLITELIB) $(GLITEMAP)
 
-clean-glite:
+clean-$(MODNAME):
 		@rm -f $(GLITEO) $(GLITEDO)
 
-clean::         clean-glite
+clean::         clean-$(MODNAME)
 
-distclean-glite: clean-glite
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GLITEDEP) $(GLITEDS) $(GLITEDH) $(GLITELIB) $(GLITEMAP)
 
-distclean::     distclean-glite
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(GLITEO) $(GLITEDO): CXXFLAGS += $(GAW_CPPFLAGS)

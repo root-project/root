@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 12/5/2002
 
-MODDIR       := alien
+MODNAME      := alien
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(ALIENMAP)
 INCLUDEFILES += $(ALIENDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(ALIENDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(ALIENMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(ALIENL)
 		$(RLIBMAP) -o $(ALIENMAP) -l $(ALIENLIB) \
 		   -d $(ALIENLIBDEPM) -c $(ALIENL)
 
-all-alien:      $(ALIENLIB) $(ALIENMAP)
+all-$(MODNAME): $(ALIENLIB) $(ALIENMAP)
 
-clean-alien:
+clean-$(MODNAME):
 		@rm -f $(ALIENO) $(ALIENDO)
 
-clean::         clean-alien
+clean::         clean-$(MODNAME)
 
-distclean-alien: clean-alien
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ALIENDEP) $(ALIENDS) $(ALIENDH) $(ALIENLIB) $(ALIENMAP)
 
-distclean::     distclean-alien
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(ALIENO) $(ALIENDO): CXXFLAGS += $(ALIENINCDIR:%=-I%)

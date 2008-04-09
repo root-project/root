@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := srputils
+MODNAME      := srputils
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -41,6 +42,8 @@ ALLEXECS    += $(RPASSWD) $(RTCONF)
 INCLUDEFILES += $(SRPUTILSDEP) $(RPASSWDDEP) $(RTCONFDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(SRPUTILSDIRI)/%.h
 		cp $< $@
 
@@ -59,18 +62,18 @@ $(RTCONF):      $(RTCONFO)
 		$(LD) $(LDFLAGS) -o $@ $(RTCONFO) \
 		   $(SRPLIBDIR) $(SRPLIB) $(CRYPTOLIBDIR) $(CRYPTOLIB)
 
-all-srputils:   $(SRPUTILSLIB) $(RPASSWD) $(RTCONF)
+all-$(MODNAME): $(SRPUTILSLIB) $(RPASSWD) $(RTCONF)
 
-clean-srputils:
+clean-$(MODNAME):
 		@rm -f $(SRPUTILSO) $(RPASSWDO) $(RTCONFO)
 
-clean::         clean-srputils
+clean::         clean-$(MODNAME)
 
-distclean-srputils: clean-srputils
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SRPUTILSDEP) $(SRPUTILSLIB) $(RPASSWDDEP) $(RPASSWD) \
 		   $(RTCONFDEP) $(RTCONF)
 
-distclean::     distclean-srputils
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(SRPUTILSO): CXXFLAGS += $(SRPINCDIR:%=-I%)

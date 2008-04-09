@@ -3,7 +3,8 @@
 #
 # Author: G. Ganis, 8/7/2004
 
-MODDIR       := netx
+MODNAME      := netx
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -51,7 +52,7 @@ endif
 # Xrootd includes
 NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifneq ($(EXTRA_XRDFLAGS),)
-NETXINCEXTRA += -Iproofd/inc
+NETXINCEXTRA += -Iproof/proofd/inc
 endif
 
 # Xrootd client libs
@@ -63,6 +64,8 @@ NETXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys \
 endif
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(NETXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 
@@ -79,17 +82,17 @@ $(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDETAG) $(ROOTCINTTMPDEP)
 $(NETXMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(NETXL)
 		$(RLIBMAP) -o $(NETXMAP) -l $(NETXLIB) -d $(NETXLIBDEPM) -c $(NETXL)
 
-all-netx:       $(NETXLIB) $(NETXMAP)
+all-$(MODNAME): $(NETXLIB) $(NETXMAP)
 
-clean-netx:
+clean-$(MODNAME):
 		@rm -f $(NETXO) $(NETXDO)
 
-clean::         clean-netx
+clean::         clean-$(MODNAME)
 
-distclean-netx: clean-netx
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(NETXDEP) $(NETXDS) $(NETXDH) $(NETXLIB) $(NETXMAP)
 
-distclean::     distclean-netx
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(NETXO) $(NETXDO): $(XROOTDETAG)

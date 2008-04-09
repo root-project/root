@@ -4,7 +4,8 @@
 # Author: Fons Rademakers, 18/3/2002 (for krb5auth)
 # Mod by: Gerardo Ganis, 18/1/2003
 
-MODDIR       := globusauth
+MODNAME      := globusauth
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -39,6 +40,8 @@ ALLLIBS     += $(GLBSAUTHLIB)
 INCLUDEFILES += $(GLBSAUTHDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GLBSAUTHDIRI)/%.h
 		cp $< $@
 
@@ -48,17 +51,17 @@ $(GLBSAUTHLIB): $(GLBSAUTHO) $(GLBPATCHO) $(ORDER_) $(MAINLIBS)
 		   "$(GLBSAUTHO) $(GLBPATCHO)" \
 		   "$(GLBSAUTHLIBEXTRA) $(GLOBUSLIBDIR) $(GLOBUSLIB)"
 
-all-globusauth: $(GLBSAUTHLIB)
+all-$(MODNAME): $(GLBSAUTHLIB)
 
-clean-globusauth:
+clean-$(MODNAME):
 		@rm -f $(GLBSAUTHO)
 
-clean::         clean-globusauth
+clean::         clean-$(MODNAME)
 
-distclean-globusauth: clean-globusauth
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GLBSAUTHDEP) $(GLBSAUTHLIB)
 
-distclean::     distclean-globusauth
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(GLBSAUTHO): CXXFLAGS += $(GLOBUSINCDIR:%=-I%)

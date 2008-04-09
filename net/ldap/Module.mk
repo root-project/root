@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 20/11/2002
 
-MODDIR       := ldap
+MODNAME      := ldap
+MODDIR       := net/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(LDAPMAP)
 INCLUDEFILES += $(LDAPDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(LDAPDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(LDAPMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(LDAPL)
 		$(RLIBMAP) -o $(LDAPMAP) -l $(LDAPLIB) \
 		   -d $(LDAPLIBDEPM) -c $(LDAPL)
 
-all-ldap:       $(LDAPLIB) $(LDAPMAP)
+all-$(MODNAME): $(LDAPLIB) $(LDAPMAP)
 
-clean-ldap:
+clean-$(MODNAME):
 		@rm -f $(LDAPO) $(LDAPDO)
 
-clean::         clean-ldap
+clean::         clean-$(MODNAME)
 
-distclean-ldap: clean-ldap
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(LDAPDEP) $(LDAPDS) $(LDAPDH) $(LDAPLIB) $(LDAPMAP)
 
-distclean::     distclean-ldap
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(LDAPO): CXXFLAGS += -DLDAP_DEPRECATED $(LDAPINCDIR:%=-I%)
