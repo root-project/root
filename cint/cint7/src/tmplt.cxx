@@ -1745,6 +1745,8 @@ static void G__templatemaptypename(char *string)
      *p = '\0';
      ::Reflex::Type typenum;
      if((typenum=G__find_typedef(string))) {
+        int type = G__get_type(typenum);
+        int ref = G__get_reftype(typenum);
 #ifndef G__OLDIMPLEMENTATION1712
         if(0==strstr(string,"::") && (typenum.DeclaringScope()!=::Reflex::Scope::GlobalScope())) {
            ++G__templatearg_enclosedscope;
@@ -1754,11 +1756,9 @@ static void G__templatemaptypename(char *string)
         if (target_tagnum >= 0 &&
            G__struct.name[target_tagnum][0] == '$') {
            int type = G__get_type(typenum);
-           type = tolower (type);
-           strcpy (string,G__type2string (type,target_tagnum,-1, 0, 0));
-        } else {
-           strcpy (string,typenum.FinalType().Name(::Reflex::SCOPED|::Reflex::QUALIFIED).c_str());
+           type = tolower(type);
         }
+        strcpy(string, G__type2string(type, target_tagnum, -1, ref, 0));
      } else {
         if(-1!=(tagnum=G__defined_tagname(string,1))) {
 #ifndef G__OLDIMPLEMENTATION1712
