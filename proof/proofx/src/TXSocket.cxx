@@ -255,6 +255,16 @@ TXSocket::~TXSocket()
 }
 
 //_____________________________________________________________________________
+void TXSocket::SetSessionID(Int_t id)
+{
+   // Set session ID to 'id'. If id < 0, disable also the asynchronous handler.
+
+   if (id < 0 && fConn)
+      fConn->SetAsync(0);
+   fSessionID = id;
+}
+
+//_____________________________________________________________________________
 void TXSocket::DisconnectSession(Int_t id, Option_t *opt)
 {
    // Disconnect a session. Use opt= "S" or "s" to
@@ -324,6 +334,9 @@ void TXSocket::Close(Option_t *opt)
          sessID = o.IsDigit() ? o.Atoi() : sessID;
       }
    }
+
+   // Disconnect the asynchronous requests handler
+   fConn->SetAsync(0);
 
    if (sessID > -1) {
       // Warn the remote session, if any (after destroy the session is gone)

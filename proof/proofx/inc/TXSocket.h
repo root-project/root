@@ -180,7 +180,7 @@ public:
    virtual void        RemoveClientID() { }
    virtual void        SetClientID(Int_t) { }
    void                SetSendOpt(ESendRecvOptions o) { fSendOpt = o; }
-   void                SetSessionID(Int_t id) { fSessionID = id; }
+   void                SetSessionID(Int_t id);
 
    // Send interfaces
    Int_t               Send(const TMessage &mess);
