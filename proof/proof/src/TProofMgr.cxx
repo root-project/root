@@ -376,7 +376,7 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    if (lm) {
       TIter nxm(lm);
       while ((m = (TProofMgr *)nxm()))
-         if (m->MatchUrl(url)) {
+         if (m->MatchUrl(url))
             if (m->IsValid()) {
                return m;
             } else {
@@ -384,7 +384,6 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
                SafeDelete(m);
                break;
             }
-         }
    }
 
    m = 0;
