@@ -1126,14 +1126,19 @@ int G__defined_typename(const char *type_name)
 /*******************************************************************/
 ::Reflex::Type Cint::Internal::G__find_typedef(const char *type_name)
 {
+  char buf[G__LONGLINE];
+  strcpy(buf, type_name);
+  int len = strlen(buf);
   int ispointer = 0;
-  std::string temp = type_name; 
-  int len = temp.size();
-  if(temp.size()>0 && temp[len-1]=='*') 
-  {
-    temp[--len]='\0';
+  if (len && buf[len-1] == '*') {
+    buf[--len] = '\0';
     ispointer = 'A' - 'a';
   }
+  len = strlen(buf);
+  if (G__ignore_stdnamespace && (len > 5) && !strncmp(buf, "std::", 5)) {
+     memmove(buf, buf + 5, len - 4); // one extra for the null terminator
+  }
+  len -= 5;
 
   ::Reflex::Scope scope = G__get_envtagnum();
   //
@@ -1144,24 +1149,24 @@ int G__defined_typename(const char *type_name)
   //   scope = G__tmplt_def_tagnum;
   //}
   if (!scope) {
-     printf("Trying to look up typedef %s in an invalid enclosing scope!\n", type_name);
-     while (scope.Id() && !scope && !scope.IsTopScope()) 
+     printf("Trying to look up typedef %s in an invalid enclosing scope!\n", buf);
+     while (scope.Id() && !scope && !scope.IsTopScope()) {
         scope = scope.DeclaringScope();
+     }
   }
 
-  //fprintf(stderr, "G__find_typedef: seaching for '%s' in scope '%s'\n", type_name, scope.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
-  ::Reflex::Type result = scope.LookupType(type_name);
+  //fprintf(stderr, "G__find_typedef: seaching for '%s' in scope '%s'\n", buf, scope.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
+  ::Reflex::Type result = scope.LookupType(buf);
 
-  if (!result && strstr(type_name,"<")!=0) {
+  if (!result && strstr(buf, "<")) {
      // This may be a template that need instantiating so let's try a
      // different way.
-     const char *p = G__find_last_scope_operator ((char*)type_name);
-     if (p && p!=type_name) {
-        std::string leftside(type_name,p-type_name);
+     const char* p = G__find_last_scope_operator(buf);
+     if (p && (p != buf)) {
+        std::string leftside(buf, p - buf);
         // Induce the instantiation of template if any
-        if ( !(leftside=="std" && G__ignore_stdnamespace)
-            && G__defined_tagname(leftside.c_str(),1)>=0) {
-           result = scope.LookupType(type_name);
+        if ( !(leftside=="std" && G__ignore_stdnamespace) && G__defined_tagname(leftside.c_str(), 1)>=0) {
+           result = scope.LookupType(buf);
         }
      }
   }
