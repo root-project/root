@@ -33,7 +33,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdlib.h>
 
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
@@ -83,11 +82,19 @@
 #include "TSQLServer.h"
 #include "TSQLResult.h"
 #include "TSQLRow.h"
+#include "TPRegexp.h"
+#include "TParameter.h"
+#include "TMap.h"
 #include "TSortedList.h"
 #include "TParameter.h"
+#include "TFileCollection.h"
+#include "TLockFile.h"
+#include "TProofDataSetManagerFile.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
+
+Bool_t TProofServ::fgLogToSysLog = kFALSE;      //true if logs should be sent to syslog too
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;
@@ -378,6 +385,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    fLogFile         = flog;
    fLogFileDes      = -1;
+   fgLogToSysLog    = (gEnv->GetValue("ProofServ.LogToSysLog", 0) != 0) ? kTRUE : kFALSE;
 
    fArchivePath     = "";
 
@@ -385,7 +393,6 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fPackageLock     = 0;
    fCacheLock       = 0;
    fQueryLock       = 0;
-   fDataSetLock     = 0;
 
    fSeqNum          = 0;
    fDrawQueries     = 0;
@@ -402,6 +409,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fShutdownTimerMtx = 0;
 
    fInflateFactor   = 1000;
+
+   fDataSetManager  = 0; // Initialized in Setup()
 
    // Quotas disabled by default
    fMaxQueries      = -1;
@@ -622,7 +631,6 @@ TProofServ::~TProofServ()
    SafeDelete(fPackageLock);
    SafeDelete(fCacheLock);
    SafeDelete(fQueryLock);
-   SafeDelete(fDataSetLock);
    SafeDelete(fGlobalPackageDirList);
    close(fLogFileDes);
 }
@@ -1241,8 +1249,13 @@ void TProofServ::HandleSocketInput()
 
       case kPROOF_DATASETS:
          {
-            HandleDataSets(mess);
-            SendLogFile();
+            Int_t rc = -1;
+            if (fProtocol > 16) {
+               rc = HandleDataSets(mess);
+            } else {
+               Error("HandleProcess", "old client: no or incompatible dataset support");
+            }
+            SendLogFile(rc);
          }
          break;
       case kPROOF_LIB_INC_PATH:
@@ -1426,8 +1439,13 @@ void TProofServ::HandleSocketInputDuringProcess()
 
       case kPROOF_DATASETS:
          {
-            HandleDataSets(mess);
-            SendLogFile();
+            Int_t rc = -1;
+            if (fProtocol > 16) {
+               rc = HandleDataSets(mess);
+            } else {
+               Error("HandleProcess", "old client: no or incompatible dataset support");
+            }
+            SendLogFile(rc);
          }
          break;
 
@@ -1773,6 +1791,10 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
 
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
+
+   // Do not send logs to master
+   if (!IsMaster())
+      FlushLogFile();
 
    off_t ltot=0, lnow=0;
    Int_t left = -1;
@@ -2215,21 +2237,6 @@ Int_t TProofServ::SetupCommon()
                        TString(fQueryDir).ReplaceAll("/","%").Data()));
       fQueryLock->Lock();
 
-      // 'datasets'
-      if ((fDataSetDir = gEnv->GetValue("ProofServ.DataSetDir", "-1")) == "-1") {
-         // Use default path in the sandbox
-         fDataSetDir = fWorkDir;
-         fDataSetDir += TString("/") + kPROOF_DataSetDir;
-         if (gSystem->AccessPathName(fDataSetDir))
-            gSystem->MakeDirectory(fDataSetDir);
-      }
-      if (gProofDebugLevel > 0)
-         Info("SetupCommon", "dataset dir is %s", fDataSetDir.Data());
-      fDataSetLock =
-         new TProofLockPath(Form("%s/%s%s",
-                            gSystem->TempDirectory(), kPROOF_DataSetLockFile,
-                            TString(fDataSetDir).ReplaceAll("/","%").Data()));
-
       // Send session tag to client
       TMessage m(kPROOF_SESSIONTAG);
       m << fSessionTag;
@@ -2241,8 +2248,58 @@ Int_t TProofServ::SetupCommon()
 
    // Set group and get the group priority
    fGroup = gEnv->GetValue("ProofServ.ProofGroup", "");
-   if (IsMaster())
+   if (IsMaster()) {
+      // Group priority
       fGroupPriority = GetPriority();
+      // Dataset manager instance via plug-in
+      TPluginHandler *h = 0;
+      TString dsm = gEnv->GetValue("Proof.DataSetManager", "");
+      if (!dsm.IsNull()) {
+         // Get plugin manager to load the appropriate TProofDataSetManager
+         if (gROOT->GetPluginManager()) {
+            // Find the appropriate handler
+            h = gROOT->GetPluginManager()->FindHandler("TProofDataSetManager", dsm);
+            if (h && h->LoadPlugin() != -1) {
+               // make instance of the dataset manager
+               fDataSetManager =
+                  reinterpret_cast<TProofDataSetManager*>(h->ExecPlugin(3, fGroup.Data(),
+                                                          fUser.Data(), dsm.Data()));
+            }
+         }
+      }
+      if (fDataSetManager && fDataSetManager->TestBit(TObject::kInvalidObject)) {
+         Warning("SetupCommon", "dataset manager plug-in initialization failed");
+         SafeDelete(fDataSetManager);
+      }
+
+      // If no valid dataset manager has been created we instantiate the default one
+      if (!fDataSetManager) {
+         TString opts("As:");
+         TString dsetdir = gEnv->GetValue("ProofServ.DataSetDir", "");
+         if (dsetdir.IsNull()) {
+            // Use the default in the sandbox
+            dsetdir = Form("%s/%s", fWorkDir.Data(), kPROOF_DataSetDir);
+            if (gSystem->AccessPathName(fDataSetDir))
+               gSystem->MakeDirectory(fDataSetDir);
+            opts += "Sb:";
+         }
+         // Find the appropriate handler
+         if (!h) {
+            h = gROOT->GetPluginManager()->FindHandler("TProofDataSetManager", "file");
+            if (h && h->LoadPlugin() == -1) h = 0;
+         }
+         if (h) {
+            // make instance of the dataset manager
+            fDataSetManager = reinterpret_cast<TProofDataSetManager*>(h->ExecPlugin(3,
+                              fGroup.Data(), fUser.Data(),
+                              Form("dir:%s opt:%s", dsetdir.Data(), opts.Data())));
+         }
+         if (fDataSetManager && fDataSetManager->TestBit(TObject::kInvalidObject)) {
+            Warning("SetupCommon", "default dataset manager plug-in initialization failed");
+            SafeDelete(fDataSetManager);
+         }
+      }
+   }
 
    // Quotas
    TString quotas = gEnv->GetValue(Form("ProofServ.UserQuotas.%s", fUser.Data()),"");
@@ -3286,27 +3343,81 @@ void TProofServ::HandleProcess(TMessage *mess)
    if (IsTopMaster()) {
 
       if ((!hasNoData) && dset->GetListOfElements()->GetSize() == 0) {
+         TFileCollection* dataset = 0;
+         TString dsTree, lookupopt;         // The dataset maybe in the form of a TFileCollection in the input list
+         TString dsname(dset->GetName());
+         if (dsname.BeginsWith("TFileCollection:")) {
+            // Isolate the real name
+            dsname.ReplaceAll("TFileCollection:", "");
+            // Get the object
+            dataset = (TFileCollection *) input->FindObject(dset->GetName());
+            if (!dataset) {
+               SendAsynMessage(Form("HandleProcess on %s: TFileCollection %s not"
+                                    " found in input list",
+                                    fPrefix.Data(), dset->GetName()));
+               Error("HandleProcess", "TFileCollection %s not found in input list",
+                                      dset->GetName());
+               return;
+            }
+            dsTree = dataset->GetDefaultTreeName();
+            // Make sure we lookup everything (unless the client or the administartor
+            // required something else)
+            if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
+               lookupopt = gEnv->GetValue("Proof.LookupOpt", "all");
+               input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
+            }
+         }
+
          // The received message included an empty dataset, with only the name
          // defined: assume that a dataset, stored on the PROOF master by that
          // name, should be processed.
-         TList *files = GetDataSet(dset->GetName());
-         if (!files) {
-            SendAsynMessage(Form("HandleProcess on %s: no such dataset: %s",
-                                 fPrefix.Data(), dset->GetName()));
-            Error("HandleProcess", "No such dataset on the master: %s",
-                  dset->GetName());
+         if (!dataset && fDataSetManager) {
+            dataset = fDataSetManager->GetDataSet(dset->GetName());
+            if (!dataset) {
+               SendAsynMessage(Form("HandleProcess on %s: no such dataset: %s",
+                                    fPrefix.Data(), dset->GetName()));
+               Error("HandleProcess", "no such dataset on the master: %s",
+                     dset->GetName());
+               return;
+            }
+            if (!(fDataSetManager->ParseDataSetUri(dset->GetName(), 0, 0, 0, &dsTree)))
+               dsTree = "";
+
+            // Apply the lookup option requested by the client or the administartor
+            // (by default we trust the information in the dataset)
+            if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
+               lookupopt = gEnv->GetValue("Proof.LookupOpt", "stageOnly");
+               input->Add(new TNamed("PROOF_LookupOpt", lookupopt.Data()));
+            }
+         } else {
+            SendAsynMessage(Form("HandleProcess on %s: no dataset manager!", fPrefix.Data()));
+            Error("HandleProcess", "no dataset manager: cannot proceed");
             return;
          }
-         files->SetOwner();
-         if (!dset->Add(files)) {
-            SendAsynMessage(Form("HandleProcess on %s: error retrieving"
-                                 " dataset: %s", fPrefix.Data(), dset->GetName()));
-            Error("HandleProcess", "Error retrieving dataset %s",
-                  dset->GetName());
-            delete files;
-            return;
+
+         // Transfer the list now
+         if (dataset) {
+            TList *missingFiles = new TList;
+            TSeqCollection* files = dataset->GetList();
+            Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
+            if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
+               SendAsynMessage(Form("HandleProcess on %s: error retrieving"
+                                    " dataset: %s", fPrefix.Data(), dset->GetName()));
+               Error("HandleProcess", "error retrieving dataset %s",
+                     dset->GetName());
+               delete dataset;
+               return;
+            }
+            delete dataset;
+
+            // Make sure it will be sent back merged with other similar lists created
+            // during processing; this list will be transferred by the player to the
+            // output list, once the latter has been created (see TProofPlayerRemote::Process)
+            if (missingFiles && missingFiles->GetSize() > 0) {
+               missingFiles->SetName("MissingFiles");
+               input->Add(missingFiles);
+            }
          }
-         delete files;
       }
 
       TProofQueryResult *pq = 0;
@@ -4507,7 +4618,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          (*mess) >> package;
 
-         // By first forwarding the load command to the workers
+         // By first forwarding the load command to the master and workers
          // and only then loading locally we load/build in parallel
          if (IsMaster())
             fProof->Load(package);
@@ -4516,8 +4627,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          // the binaries) are already in the cache
          CopyFromCache(package);
 
-         {
-            TProofServLogHandlerGuard hg(fLogFile, fSocket);
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket);
             PDB(kGlobal, 1) Info("HandleCache:kLoadMacro", "enter");
             // Load the macro
             gROOT->ProcessLine(Form(".L %s", package.Data()));
@@ -4526,9 +4636,9 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          // Cache binaries, if any new
          CopyToCache(package, 1);
 
-         // Wait for workers to be done
+         // Wait forworkers to be done
          if (IsMaster())
-            fProof->Collect();
+            fProof->Collect(TProof::kAllUnique);
 
          break;
       default:
@@ -4618,211 +4728,6 @@ void TProofServ::HandleWorkerLists(TMessage *mess)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::HandleDataSets(TMessage *mess)
-{
-   // Handle here all dataset requests
-
-   PDB(kGlobal, 1)
-      Info("HandleDataSets", "Enter");
-   TList *previousDataSet = 0; //used when appending datasets
-   TString dataSetName; // used in most cases
-   Int_t type = 0;
-   (*mess) >> type;
-   switch (type) {
-      case TProof::kCheckDataSetName:
-         //
-         // Check whether this dataset exist
-         // Communication Summary
-         //   Client                              Master
-         //     |------------>DataSetName----------->|
-         //     |<-------kMESS_OK/kMESS_NOTOK<-------| (Name OK/file exists)
-         {
-            TString fileListName;
-            (*mess) >> fileListName;
-            char *fileListPath =
-               Form("%s/%s.root", fDataSetDir.Data(), fileListName.Data());
-
-            // Lock the directory
-            // TProofLockPathGuard dslguard(fDataSetLock);
-
-            if (gSystem->AccessPathName(fileListPath, kFileExists) == kFALSE) {
-               //Dataset name does exist
-               fSocket->Send(kMESS_NOTOK);
-            } else {
-               fSocket->Send("", kMESS_OK);
-            }
-         }
-         break;
-      case TProof::kAppendDataSet:
-         {
-            (*mess) >> dataSetName;
-            previousDataSet = GetDataSet(dataSetName.Data());
-         }
-         // NO break => continuing with kCreateDataSet
-      case TProof::kCreateDataSet:
-         // list size must be above 0
-         {
-            if (type == TProof::kCreateDataSet) {
-               // if not kAppendDataSet
-               (*mess) >> dataSetName;
-            }
-            char *fileListPath =
-               Form("%s/%s.root", fDataSetDir.Data(), dataSetName.Data());
-
-            // We would overwrite a dataset if it existed by this name
-            TList *fileList =
-               (TList *) (mess->ReadObject(TList::Class()));
-            // if we started with kAppendDataSet
-            if (previousDataSet) {
-               TIter nextOldFile(previousDataSet);
-               while (TFileInfo *obj = (TFileInfo*)nextOldFile())
-                  fileList->Add(obj);
-               delete previousDataSet;
-            }
-
-            // (re)create file and save dataset in its current status
-            if (fileList->GetSize() > 0) {
-               // We will save a sorted list
-               fileList->Sort();
-               // Removing repeated files (also when it's a new dataset name!
-               TList *newFileList = new TList();
-               TIter nextFile(fileList);
-               TFileInfo *prevFile = (TFileInfo*)nextFile();
-               newFileList->Add(prevFile);
-               while (TFileInfo *obj = (TFileInfo*)nextFile())
-                  if (prevFile->Compare(obj)) {
-                     newFileList->Add(obj);
-                     prevFile = obj;
-                  }
-               if (gSystem->AccessPathName(gSystem->DirName(fileListPath))) {
-                  //the public dir or it's subdir does not exist
-                  TString dirname = gSystem->DirName(fileListPath);
-                  if (gSystem->mkdir(dirname, kTRUE))
-                     Error("HandleDataSets",
-                           "Error creating a datasets subdirectory: %s",
-                           dirname.Data());
-               }
-               TFile *f = TFile::Open(fileListPath, "RECREATE");
-               if (f) {
-                  f->cd();
-                  newFileList->Write("fileList", TObject::kSingleKey);
-                  f->Close();
-                  //TODO should depend on what Write returns
-                  fSocket->Send(kMESS_OK);
-               } else {
-                  fSocket->Send(kMESS_NOTOK);
-                  Error("HandleDataSets",
-                        "can't open dataset file for writing");
-               }
-               delete f;
-               delete newFileList;
-               fileList->SetOwner();
-               delete fileList;
-            } else {
-               fSocket->Send(kMESS_NOTOK);
-               Printf("Can not save an empty list.");
-            } // if (fileList->GetSize() > 0)
-         }
-         break;
-      case TProof::kGetDataSets:
-         {
-            TString dir;
-            (*mess) >> dir;
-            TString dataSetDirPath;
-            void *dataSetDir;
-            if (dir.Length())
-               if (strstr(dir, "public") == dir)
-                  // list user own public datasets
-                  dataSetDirPath = fDataSetDir + "/public/";
-               else {
-                  char *userName = (char *)malloc(strlen(dir));
-                  strcpy(userName, dir.Data() + 1); //dir starts with '~'
-                  strtok(userName, "/");
-                  dataSetDirPath = fWorkDir + "/../" + userName + "/" +
-                                     kPROOF_DataSetDir + "/public/";
-               }
-            else
-               dataSetDirPath = fDataSetDir;
-            if ((dataSetDir = gSystem->OpenDirectory(dataSetDirPath))) {
-               TRegexp rg(".*.root"); //check that it is a root file
-               TList *fileList = new TList();
-               const char *ent;
-               while ((ent = gSystem->GetDirEntry(dataSetDir))) {
-                  if (TString(ent).Index(rg) != kNPOS)
-                     //Matching dir entry
-                     fileList->Add(new TObjString(TString(ent, strlen(ent) - 5)));
-               }
-               fileList->Sort();
-               fSocket->SendObject(fileList, kMESS_OBJECT);
-               fileList->SetOwner();
-               delete fileList;
-            } else {
-               Printf("Can not open the dataset directory.");
-               fSocket->Send(kMESS_NOTOK);
-            }
-         }
-         break;
-      case TProof::kGetDataSet:
-         {
-            TString name;
-            (*mess) >> name;
-            if (TList *fileList = GetDataSet(name.Data())) {
-               fSocket->SendObject(fileList, kMESS_OK);
-               delete fileList;
-            } else                   // no such dataset
-               fSocket->Send(kMESS_NOTOK);
-         }
-         break;
-      case TProof::kRemoveDataSet:
-         {
-            TString name;
-            (*mess) >> name;
-
-            const char *fileListPath = Form("%s/%s.root",fDataSetDir.Data(),name.Data());
-
-            // Lock the directory
-            TProofLockPathGuard dslguard(fDataSetLock);
-
-            if (gSystem->AccessPathName(fileListPath, kFileExists) == kFALSE) {
-               if (gSystem->Unlink(fileListPath)) {
-                  Printf("Error removing dataset %s", name.Data());
-                  fSocket->Send(kMESS_NOTOK);
-               } else
-                  fSocket->Send(kMESS_OK);
-            } else {
-               Printf("The dataset does not exist");
-               fSocket->Send(kMESS_NOTOK);
-            }
-         }
-         break;
-      case TProof::kVerifyDataSet:
-         {
-            TString name;
-            (*mess) >> name;
-            if (TList *fileList = GetDataSet(name.Data())) {
-               TList *missingFileList = new TList();
-               TIter next(fileList);
-               TFileInfo *fileInfo;
-               while ((fileInfo = (TFileInfo *)next())) {
-                  if (gSystem->AccessPathName(fileInfo->GetFirstUrl()->GetUrl(),
-                                              kFileExists) != kFALSE)
-                     missingFileList->Add(fileInfo);
-               }
-               fSocket->SendObject(missingFileList, kMESS_OK);
-            } else
-               fSocket->Send(kMESS_NOTOK); //dataset does not exist
-         }
-         break;
-      default:
-         Error("HandleDataSets", "unknown type %d", type);
-         break;
-   }
-
-   // We are done
-   return 0;
-}
-
-//______________________________________________________________________________
 TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
                                                 Int_t & /* prioritychange */)
 {
@@ -4874,39 +4779,6 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
 
    // We are done
    return kQueryOK;
-}
-
-//______________________________________________________________________________
-TList *TProofServ::GetDataSet(const char *name)
-{
-   // Utility function used in various methods for user dataset upload.
-
-   TString fileListPath;
-   if (strchr(name, '~') == name) {
-      char *nameCopy = new char[strlen(name)];
-      strcpy(nameCopy, name + 1);
-      char *userName = strtok(nameCopy, "/");
-      if (strcmp(strtok(0, "/"), "public"))
-         return 0;
-      fileListPath = fWorkDir + "/../" + userName + "/"
-                     + kPROOF_DataSetDir + "/public/";
-      delete[] nameCopy;
-   } else if (strchr(name, '/') && strstr(name, "public") != name) {
-      Printf("Dataset name should be of form [[~user/]public/]dataset");
-      return 0;
-   } else
-      fileListPath = fDataSetDir + "/" + name + ".root";
-   TList *fileList = 0;
-   if (gSystem->AccessPathName(fileListPath.Data(), kFileExists) == kFALSE) {
-      TFile *f = TFile::Open(fileListPath);
-      f->cd();
-      fileList = (TList *) f->Get("fileList");
-      f->Close();
-      delete f;
-      if (strchr(name, '~') == name)  // not when allocated with Form
-         delete[] fileListPath;
-   }
-   return fileList;
 }
 
 //______________________________________________________________________________
@@ -5008,7 +4880,8 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    }
    fflush(stderr);
 
-   gSystem->Syslog(loglevel, buf);
+   if (fgLogToSysLog)
+     gSystem->Syslog(loglevel, buf);
 
    if (abort) {
 
@@ -5264,10 +5137,9 @@ void TProofServ::DeletePlayer()
 {
    // Delete player instance.
 
-   if (IsMaster()) {
-      if (fProof)
-         fProof->SetPlayer(0);
-   } else
+   if (IsMaster())
+      if (fProof) fProof->SetPlayer(0);
+   else
       delete fPlayer;
    fPlayer = 0;
 }
@@ -5368,7 +5240,166 @@ void TProofServ::HandleException(Int_t sig)
 {
    // Exception handler: we do not try to recover here, just exit.
 
+   Error("HandleException","exception triggered by signal: %d", sig);
+
    gSystem->Exit(sig);
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::HandleDataSets(TMessage *mess)
+{
+   // Handle here requests about datasets.
+
+   if (gDebug > 0)
+      Info("HandleDataSets", "enter");
+
+   // We need a dataset manager
+   if (!fDataSetManager) {
+      Error("HandleDataSets", "data manager instance undefined! - Protocol error?");
+      return -1;
+   }
+
+   // Used in most cases
+   TString dsUser, dsGroup, dsName, uri, opt;
+   Int_t rc = 0;
+
+   // Message type
+   Int_t type = 0;
+   (*mess) >> type;
+
+   switch (type) {
+      case TProof::kCheckDataSetName:
+         //
+         // Check whether this dataset exist
+         {
+            (*mess) >> uri;
+            if (fDataSetManager->ExistsDataSet(uri))
+               // Dataset name does exist
+               return -1;
+         }
+         break;
+      case TProof::kRegisterDataSet:
+         // list size must be above 0
+         {
+            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+               (*mess) >> uri;
+               (*mess) >> opt;
+               // Extract the list
+               TFileCollection *dataSet =
+                  dynamic_cast<TFileCollection*> ((mess->ReadObject(TFileCollection::Class())));
+               if (!dataSet || dataSet->GetList()->GetSize() == 0) {
+                  Error("HandleDataSets", "can not save an empty list.");
+                  return -1;
+               }
+               // Register the dataset (quota checks are done inside here)
+               return fDataSetManager->RegisterDataSet(uri, dataSet, opt);
+            } else {
+               Info("HandleDataSets", "dataset registration not allowed");
+               return -1;
+            }
+         }
+         break;
+
+      case TProof::kShowDataSets:
+         {
+            (*mess) >> uri;
+            // Scan the existing datasets and print the content
+            UInt_t opt = (UInt_t)TProofDataSetManager::kPrint;
+            fDataSetManager->GetDataSets(uri, opt);
+         }
+         break;
+
+      case TProof::kGetDataSets:
+         {
+            (*mess) >> uri;
+            // Get the datasets and fill a map
+            UInt_t opt = (UInt_t)TProofDataSetManager::kExport;
+            TMap *returnMap = fDataSetManager->GetDataSets(uri, opt);
+            if (returnMap) {
+               // Send them back
+               fSocket->SendObject(returnMap, kMESS_OK);
+               returnMap->DeleteAll();
+            } else {
+               // Failure
+               return -1;
+            }
+         }
+         break;
+      case TProof::kGetDataSet:
+         {
+            (*mess) >> uri;
+            // Get the list
+            TFileCollection *fileList = fDataSetManager->GetDataSet(uri);
+            if (fileList) {
+               fSocket->SendObject(fileList, kMESS_OK);
+               delete fileList;
+            } else {
+               // Failure
+               return -1;
+            }
+         }
+         break;
+      case TProof::kRemoveDataSet:
+         {
+            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowRegister)) {
+               (*mess) >> uri;
+               if (!fDataSetManager->RemoveDataSet(uri)) {
+                  // Failure
+                  return -1;
+               }
+            } else {
+               Info("HandleDataSets", "dataset creation / removal not allowed");
+               return -1;
+            }
+         }
+         break;
+      case TProof::kVerifyDataSet:
+         {
+            if (fDataSetManager->TestBit(TProofDataSetManager::kAllowVerify)) {
+               (*mess) >> uri;
+               TProofServLogHandlerGuard hg(fLogFile,  fSocket);
+               rc = fDataSetManager->ScanDataSet(uri);
+            } else {
+               Info("HandleDataSets", "dataset verification not allowed");
+               return -1;
+            }
+         }
+         break;
+      case TProof::kGetQuota:
+         {
+            if (fDataSetManager->TestBit(TProofDataSetManager::kCheckQuota)) {
+               TMap *groupQuotaMap = fDataSetManager->GetGroupQuotaMap();
+               if (groupQuotaMap) {
+                  // Send result
+                  fSocket->SendObject(groupQuotaMap, kMESS_OK);
+               } else {
+                  return -1;
+               }
+            } else {
+               Info("HandleDataSets", "quota control disabled");
+               return -1;
+            }
+         }
+         break;
+      case TProof::kShowQuota:
+         {
+            if (fDataSetManager->TestBit(TProofDataSetManager::kCheckQuota)) {
+               (*mess) >> opt;
+               // Display quota information
+               fDataSetManager->ShowQuota(opt);
+            } else {
+               Info("HandleDataSets", "quota control disabled");
+            }
+         }
+         break;
+      default:
+         rc = -1;
+         Error("HandleDataSets", "unknown type %d", type);
+         break;
+   }
+
+   // We are done
+   return rc;
 }
 
 //______________________________________________________________________________

@@ -71,7 +71,8 @@ public:
    enum EStatusBits {
       kHasBeenLookedUp = BIT(15),
       kWriteV3         = BIT(16),
-      kEmpty           = BIT(17)
+      kEmpty           = BIT(17),
+      kCorrupted       = BIT(18)
    };
 
 private:
@@ -105,7 +106,7 @@ public:
    Long64_t         GetFirst() const { return fFirst; }
    void             SetFirst(Long64_t first) { fFirst = first; }
    Long64_t         GetNum() const { return fNum; }
-   Long64_t         GetEntries(Bool_t istree = kTRUE);
+   Long64_t         GetEntries(Bool_t istree = kTRUE, Bool_t openfile = kTRUE);
    void             SetEntries(Long64_t ent) { fEntries = ent; }
    const char      *GetMsd() const { return fMsd; }
    void             SetNum(Long64_t num) { fNum = num; }
@@ -120,10 +121,13 @@ public:
    void             Validate(Bool_t isTree);
    void             Validate(TDSetElement *elem);
    void             Invalidate() { fValid = kFALSE; }
+   void             SetValid() { fValid = kTRUE; }
    Int_t            Compare(const TObject *obj) const;
    Bool_t           IsSortable() const { return kTRUE; }
    Int_t            Lookup(Bool_t force = kFALSE);
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
+   TFileInfo       *GetFileInfo(const char *type = "TTree");
+
 
    ClassDef(TDSetElement,6)  // A TDSet element
 };
@@ -135,7 +139,9 @@ public:
    // TDSet status bits
    enum EStatusBits {
       kWriteV3         = BIT(16),
-      kEmpty           = BIT(17)
+      kEmpty           = BIT(17),
+      kValidityChecked = BIT(18),  // Set if elements validiy has been checked
+      kSomeInvalid     = BIT(19)   // Set if at least one element is invalid
    };
 
 private:
@@ -167,7 +173,9 @@ public:
                              const char *dir = 0, Long64_t first = 0,
                              Long64_t num = -1, const char *msd = 0);
    virtual Bool_t        Add(TDSet *set);
-   virtual Bool_t        Add(TCollection *fileinfo);
+   virtual Bool_t        Add(TCollection *fileinfo, const char *meta = 0,
+                             Bool_t availableOnly = kFALSE, TCollection *badlist = 0);
+   virtual Bool_t        Add(TFileInfo *fileinfo, const char *meta = 0);
    virtual void          AddFriend(TDSet *friendset, const char *alias);
 
    virtual Long64_t      Process(const char *selector, Option_t *option = "",
@@ -191,7 +199,7 @@ public:
 
    Bool_t                IsTree() const { return fIsTree; }
    Bool_t                IsValid() const { return !fType.IsNull(); }
-   Bool_t                ElementsValid() const;
+   Bool_t                ElementsValid();
    const char           *GetType() const { return fType; }
    const char           *GetObjName() const { return fObjName; }
    const char           *GetDirectory() const { return fDir; }
@@ -218,7 +226,7 @@ public:
    void                  Validate();
    void                  Validate(TDSet *dset);
 
-   TList                *Lookup(Bool_t removeMissing = kFALSE);
+   void                  Lookup(Bool_t removeMissing = kFALSE, TList **missingFiles = 0);
    void                  SetLookedUp();
 
    void                  SetWriteV3(Bool_t on = kTRUE);

@@ -100,7 +100,6 @@ class XrdProofdManager {
 
    // Node properties
    const char       *BareLibPath() const { return fBareLibPath.c_str(); }
-   const char       *DataSetDir() const { return fDataSetDir.c_str(); }
    const char       *EffectiveUser() const { return fEffectiveUser.c_str(); }
    const char       *Host() const { return fHost.c_str(); }
    const char       *Image() const { return fImage.c_str(); }
@@ -159,7 +158,6 @@ class XrdProofdManager {
    int               fPort;           // Port for client-like connections
    XrdOucString      fImage;          // image name for these servers
    XrdOucString      fWorkDir;        // working dir for these servers
-   XrdOucString      fDataSetDir;     // dataset dir for this master server
    int               fNumLocalWrks;   // Number of workers to be started locally
    int               fResourceType;   // resource type
    XrdProofdFile     fPROOFcfg;       // PROOF static configuration
@@ -235,6 +233,7 @@ class XrdProofdManager {
    int               DoDirectiveRole(char *, XrdOucStream *, bool);
    int               DoDirectiveRootSys(char *, XrdOucStream *, bool);
    int               DoDirectiveSchedOpt(char *, XrdOucStream *, bool);
+   int               DoDirectiveSecLib(char *, XrdOucStream *, bool);
    int               DoDirectiveShutdown(char *, XrdOucStream *, bool);
 
    // Security service

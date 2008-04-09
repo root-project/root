@@ -86,7 +86,6 @@ XrdProofdManager::XrdProofdManager()
    fPort = XPD_DEF_PORT;
    fImage = "";        // image name for these servers
    fWorkDir = "";
-   fDataSetDir = "";
    fPROOFcfg.fName = "";
    fPROOFcfg.fMtime = 0;
    fWorkers.clear();
@@ -137,32 +136,6 @@ XrdProofdManager::~XrdProofdManager()
 }
 
 //__________________________________________________________________________
-static int CreateGroupDataSetDir(const char *, XrdProofGroup *g, void *rd)
-{
-   // Create dataset dir for group 'g' under the root dataset dir 'rd'
-
-   const char *dsetroot = (const char *)rd;
-
-   if (!dsetroot || strlen(dsetroot) <= 0)
-      // Dataset root dir undefined: we cannot continue
-      return 1;
-
-   XrdOucString gdsetdir = dsetroot;
-   gdsetdir += '/';
-   gdsetdir += g->Name();
-
-   XrdProofUI ui;
-   XrdProofdAux::GetUserInfo(geteuid(), ui);
-
-   if (XrdProofdAux::AssertDir(gdsetdir.c_str(), ui, 1) != 0) {
-      MERROR(MHEAD, "CreateGroupDataSetDir: could not assert " << gdsetdir);
-   }
-
-   // Process next
-   return 0;
-}
-
-//__________________________________________________________________________
 void XrdProofdManager::RegisterConfigDirectives()
 {
    // Register directives for configuration
@@ -182,6 +155,7 @@ void XrdProofdManager::RegisterConfigDirectives()
    fConfigDirectives.Add("role", new XrdProofdDirective("role", this, &DoMgrDirective));
    fConfigDirectives.Add("cron", new XrdProofdDirective("cron", this, &DoMgrDirective));
    fConfigDirectives.Add("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoMgrDirective));
+   fConfigDirectives.Add("xrootd.seclib", new XrdProofdDirective("xrootd.seclib", this, &DoMgrDirective));
    // Register config directives for strings
    fConfigDirectives.Add("seclib", new XrdProofdDirective("seclib", (void *)&fSecLib, &DoDirectiveString));
    fConfigDirectives.Add("tmp", new XrdProofdDirective("tmp", (void *)&fTMPdir, &DoDirectiveString));
@@ -190,7 +164,6 @@ void XrdProofdManager::RegisterConfigDirectives()
    fConfigDirectives.Add("superusers", new XrdProofdDirective("superusers", (void *)&fSuperUsers, &DoDirectiveString));
    fConfigDirectives.Add("image", new XrdProofdDirective("image", (void *)&fImage, &DoDirectiveString));
    fConfigDirectives.Add("workdir", new XrdProofdDirective("workdir", (void *)&fWorkDir, &DoDirectiveString));
-   fConfigDirectives.Add("datasetdir", new XrdProofdDirective("datasetdir", (void *)&fDataSetDir, &DoDirectiveString));
    fConfigDirectives.Add("proofplugin", new XrdProofdDirective("proofplugin", (void *)&fProofPlugin, &DoDirectiveString));
    // Register config directives for ints
    fConfigDirectives.Add("localwrks", new XrdProofdDirective("localwrks", (void *)&fNumLocalWrks, &DoDirectiveInt));
@@ -221,8 +194,6 @@ void XrdProofdManager::RegisterReConfigDirectives()
                            new XrdProofdDirective("superusers", (void *)&fSuperUsers, &DoDirectiveString));
    fReConfigDirectives.Add("image", new XrdProofdDirective("image", (void *)&fImage, &DoDirectiveString));
    fReConfigDirectives.Add("workdir", new XrdProofdDirective("workdir", (void *)&fWorkDir, &DoDirectiveString));
-   fReConfigDirectives.Add("datasetdir",
-                           new XrdProofdDirective("datasetdir", (void *)&fDataSetDir, &DoDirectiveString));
    fReConfigDirectives.Add("proofplugin",
                            new XrdProofdDirective("proofplugin", (void *)&fProofPlugin, &DoDirectiveString));
    // Register config directives for ints
@@ -393,18 +364,6 @@ int XrdProofdManager::ParseConfig(XrdProofUI ui, bool rcf)
       }
       fEDest->Say(0, "ProofdManager: ParseConfig: working directories under: ",
                      fWorkDir.c_str());
-   }
-
-   // Dataset directory, if specified
-   if (fDataSetDir.length() > 0) {
-      // Make sure it exists
-      if (XrdProofdAux::AssertDir(fDataSetDir.c_str(), ui, 1) != 0) {
-         fEDest->Say(0, "ProofdManager: ParseConfig: unable to assert dataset dir: ",
-                        fDataSetDir.c_str());
-         return -1;
-      }
-      fEDest->Say(0, "ProofdManager: ParseConfig: dataset directories under: ",
-                     fDataSetDir.c_str());
    }
 
    if (fSrvType != kXPD_WorkerServer || fSrvType == kXPD_AnyServer) {
@@ -618,12 +577,6 @@ int XrdProofdManager::ParseConfig(XrdProofUI ui, bool rcf)
       mp += (fSchedOpt == kXPD_sched_central) ? "central" : "local";
       mp += " priorities";
       fEDest->Say(0, mp.c_str());
-   }
-
-   // Dataset dir
-   if (fGroupsMgr && fDataSetDir.length() > 0) {
-      // Make sure that the group dataset dirs exists
-      fGroupsMgr->Apply(CreateGroupDataSetDir, (void *)fDataSetDir.c_str());
    }
 
    // Done
@@ -2109,6 +2062,8 @@ int XrdProofdManager::ProcessDirective(XrdProofdDirective *d,
       return DoDirectiveCron(val, cfg, rcf);
    } else if (d->fName == "xrd.protocol") {
       return DoDirectivePort(val, cfg, rcf);
+   } else if (d->fName == "xrootd.seclib") {
+      return DoDirectiveSecLib(val, cfg, rcf);
    }
    TRACE(XERR,"ProcessDirective: unknown directive: "<<d->fName);
    return -1;
@@ -2473,6 +2428,23 @@ int XrdProofdManager::DoDirectivePort(char *, XrdOucStream *cfg, bool)
       fPort = strtol(proto.c_str(), 0, 10);
       fPort = (fPort < 0) ? XPD_DEF_PORT : fPort;
    }
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdManager::DoDirectiveSecLib(char *, XrdOucStream *cfg, bool)
+{
+   // Process 'xrootd.seclib' directive: take the path only if fSecLib
+   // is not yet defined: in this way xpd.seclib will always be honoured first
+
+   if (!cfg)
+      // undefined inputs
+      return -1;
+
+   // Get the value
+   XrdOucString lib = cfg->GetToken();
+   if (lib.length() > 0 && fSecLib.length() <= 0)
+      fSecLib = lib;
    return 0;
 }
 

@@ -63,6 +63,7 @@
 #include "TEnv.h"
 #include "TH2.h"
 #include "TTreePlayer.h"
+#include "TFileCollection.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -1312,7 +1313,9 @@ void TSessionFrame::UpdateListOfDataSets()
 
       const TGPicture *dseticon = fClient->GetPicture("rootdb_t.xpm");
       // ask for the list of datasets
-      TList *dsetlist = fViewer->GetActDesc()->fProof->GetDataSets();
+
+      // TODO: is now returning a TMap; viewer has to be adapted
+      TList *dsetlist = 0; //fViewer->GetActDesc()->fProof->GetDataSets();
       if(dsetlist) {
          TGListTreeItem *dsetitem;
          fDataSetTree->OpenItem(fDataSetTree->GetFirstItem());
@@ -1324,7 +1327,7 @@ void TSessionFrame::UpdateListOfDataSets()
                                         dsetname->GetName(), dsetname);
                // ask for the list of files in the dataset
                TList *dsetfilelist = fViewer->GetActDesc()->fProof->GetDataSet(
-                                                            dsetname->GetName());
+                                                            dsetname->GetName())->GetList();
                if(dsetfilelist) {
                   TIter nextdsetfile(dsetfilelist);
                   while ((dsetfilename = (TFileInfo *)nextdsetfile())) {

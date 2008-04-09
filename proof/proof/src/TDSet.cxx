@@ -90,6 +90,9 @@ TDSetElement::TDSetElement() : TNamed("",""),
 {
    // Default constructor
    ResetBit(kWriteV3);
+   ResetBit(kHasBeenLookedUp);
+   ResetBit(kEmpty);
+   ResetBit(kCorrupted);
 }
 
 //______________________________________________________________________________
@@ -122,6 +125,9 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
       fDirectory = dir;
 
    ResetBit(kWriteV3);
+   ResetBit(kHasBeenLookedUp);
+   ResetBit(kEmpty);
+   ResetBit(kCorrupted);
 }
 
 //______________________________________________________________________________
@@ -139,6 +145,9 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    fEntries = elem.fEntries;
    fFriends = 0;
    ResetBit(kWriteV3);
+   ResetBit(kHasBeenLookedUp);
+   ResetBit(kEmpty);
+   ResetBit(kCorrupted);
 }
 
 //______________________________________________________________________________
@@ -146,6 +155,23 @@ TDSetElement::~TDSetElement()
 {
    // Clean up the element.
    DeleteFriends();
+}
+
+//______________________________________________________________________________
+TFileInfo *TDSetElement::GetFileInfo(const char *type)
+{
+   // Return the content of this element in the form of a TFileInfo
+
+   // Create the TFileInfoMeta object
+   TFileInfoMeta *meta = 0;
+   if (!strcmp(type, "TTree")) {
+      meta = new TFileInfoMeta(GetTitle(), "TTree", fEntries, fFirst,
+                                fFirst + fEntries - 1);
+   } else {
+      meta = new TFileInfoMeta(GetTitle(), fDirectory, type, fEntries, fFirst,
+                                fFirst + fEntries - 1);
+   }
+   return new TFileInfo(GetName(), 0, 0, 0, meta);
 }
 
 //______________________________________________________________________________
@@ -323,12 +349,14 @@ TDSetElement *TDSet::Next(Long64_t /*totalEntries*/)
 }
 
 //______________________________________________________________________________
-Long64_t TDSetElement::GetEntries(Bool_t isTree)
+Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
 {
-   // Returns number of entries in tree or objects in file. Returns -1 in
-   // case of error.
+   // Returns number of entries in tree or objects in file.
+   // If not yet defined and 'openfile' is TRUE, get the number from the file
+   // (may considerably slow down the application).
+   // Returns -1 in case of error.
 
-   if (fEntries > -1)
+   if (fEntries > -1 || !openfile)
       return fEntries;
 
    Double_t start = 0;
@@ -554,6 +582,9 @@ TDSet::TDSet()
    fEntryList = 0;
    fProofChain = 0;
    ResetBit(kWriteV3);
+   ResetBit(kEmpty);
+   ResetBit(kValidityChecked);
+   ResetBit(kSomeInvalid);
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
@@ -585,6 +616,9 @@ TDSet::TDSet(const char *name,
    fEntryList = 0;
    fProofChain = 0;
    ResetBit(kWriteV3);
+   ResetBit(kEmpty);
+   ResetBit(kValidityChecked);
+   ResetBit(kSomeInvalid);
 
    fType = "TTree";
    TClass *c = 0;
@@ -646,6 +680,9 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    fEntryList = 0;
    fProofChain = 0;
    ResetBit(kWriteV3);
+   ResetBit(kEmpty);
+   ResetBit(kValidityChecked);
+   ResetBit(kSomeInvalid);
 
    fType = "TTree";
    fIsTree = kTRUE;
@@ -877,10 +914,17 @@ Bool_t TDSet::Add(TDSet *dset)
 }
 
 //______________________________________________________________________________
-Bool_t TDSet::Add(TCollection *filelist)
+Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
+                  TCollection *badlist)
 {
    // Add files passed as list of TFileInfo, TUrl or TObjString objects .
    // If TFileInfo, the first entry and the number of entries are also filled.
+   // The argument 'meta' can be used to specify one of the subsets in the
+   // file as described in the metadata of TFileInfo. By default the first one
+   // is taken.
+   // If 'availableOnly' is true only files available ('staged' and non corrupted)
+   // are taken: those not satisfying this requirement are added to 'badlist', if
+   // the latter is defined. By default availableOnly is false.
 
    if (!filelist)
       return kFALSE;
@@ -891,12 +935,14 @@ Bool_t TDSet::Add(TCollection *filelist)
       TString cn(o->ClassName());
       if (cn == "TFileInfo") {
          TFileInfo *fi = (TFileInfo *)o;
-         TFileInfoMeta *m = fi->GetMetaData();
-         if (!m)
-            Add(fi->GetFirstUrl()->GetUrl());
-         else
-            Add(fi->GetFirstUrl()->GetUrl(), m->GetObject(), m->GetDirectory(),
-                m->GetFirst(), m->GetEntries());
+         if (!availableOnly ||
+            (fi->TestBit(TFileInfo::kStaged) &&
+            !fi->TestBit(TFileInfo::kCorrupted))) {
+            Add(fi, meta);
+         } else if (badlist && fi) {
+            // Return list of non-usable files
+            badlist->Add(fi);
+         }
       } else if (cn == "TUrl") {
          Add(((TUrl *)o)->GetUrl());
       } else if (cn == "TObjString") {
@@ -905,6 +951,61 @@ Bool_t TDSet::Add(TCollection *filelist)
          Warning("Add","found object fo unexpected type %s - ignoring", cn.Data());
       }
    }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
+{
+   // Add file described by 'fi' to list of files to be analyzed.
+   // The argument 'meta' can be used to specify a subsets in the
+   // file as described in the metadata of TFileInfo. By default the first one
+   // is taken.
+
+   if (!fi) {
+      Error("Add", "TFileInfo object name must be specified");
+      return kFALSE;
+   }
+
+   // Element to be added
+   TDSetElement *el = 0;
+
+   // Check if it already exists in the TDSet
+   const char *file = fi->GetFirstUrl()->GetUrl();
+   if ((el = (TDSetElement *) fElements->FindObject(file))) {
+      Warning("Add", "duplicate, %40s is already in dataset, ignored", file);
+      return kFALSE;
+   }
+
+   // Get the metadata, if any
+   TFileInfoMeta *m = fi->GetMetaData(meta);
+
+   // Create the element
+   const char *objname = 0;
+   const char *dir = 0;
+   Long64_t first = 0;
+   Long64_t num = -1;
+   if (!m) {
+      objname = GetObjName();
+      dir = GetDirectory();
+   } else {
+      objname = (m->GetObject() && strlen(m->GetObject())) ? m->GetObject() : GetObjName();
+      dir = (m->GetDirectory() && strlen(m->GetDirectory())) ? m->GetDirectory() : GetDirectory();
+      first = m->GetFirst();
+      num = m->GetEntries();
+   }
+   el = new TDSetElement(file, objname, dir, first, -1);
+   el->SetEntries(num);
+
+   // Set looked-up bit
+   if (fi->TestBit(TFileInfo::kStaged))
+      el->SetBit(TDSetElement::kHasBeenLookedUp);
+   if (fi->TestBit(TFileInfo::kCorrupted))
+      el->SetBit(TDSetElement::kCorrupted);
+
+   // Add the element
+   fElements->Add(el);
 
    return kTRUE;
 }
@@ -1191,13 +1292,21 @@ TTree* TDSet::GetTreeHeader(TProof* proof)
 }
 
 //______________________________________________________________________________
-Bool_t TDSet::ElementsValid() const
+Bool_t TDSet::ElementsValid()
 {
-   // Check if all elemnts are valid.
+   // Check if all elements are valid.
 
+   if (TestBit(TDSet::kValidityChecked))
+      return (TestBit(TDSet::kSomeInvalid) ? kFALSE : kTRUE);
+
+   SetBit(TDSet::kValidityChecked);
+   ResetBit(TDSet::kSomeInvalid);
    TIter nextElem(GetListOfElements());
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
-      if (!elem->GetValid()) return kFALSE;
+      if (!elem->GetValid()) {
+         SetBit(TDSet::kSomeInvalid);
+         return kFALSE;
+      }
    }
    return kTRUE;
 }
@@ -1229,13 +1338,13 @@ void TDSet::Validate()
 }
 
 //______________________________________________________________________________
-TList *TDSet::Lookup(Bool_t removeMissing)
+void TDSet::Lookup(Bool_t removeMissing, TList **listOfMissingFiles)
 {
    // Resolve the end-point URL for the current elements of this data set
    // If the removeMissing option is set to kTRUE, remove the TDSetElements
-   // that can not be located. 
-   // The method returns the list of removed TDSetElements (if any) or NULL.
-   // The list of removed elements must be later deleted.
+   // that can not be located.
+   // The method returns the list of removed TDSetElements in *listOfMissingFiles
+   // if the latter is defined (the list must be created outside).
 
    // If an entry- or event- list has been given, assign the relevant portions
    // to each element; this allows to look-up only for the elements which have
@@ -1243,7 +1352,6 @@ TList *TDSet::Lookup(Bool_t removeMissing)
    // operations.
    SplitEntryList();
 
-   TList *listOfMissingFiles = 0;
    TString msg("Looking up for exact location of files");
    UInt_t n = 0;
    UInt_t ng = 0;
@@ -1255,13 +1363,12 @@ TList *TDSet::Lookup(Bool_t removeMissing)
       if (elem->GetNum() != 0) { // -1 means "all entries"
          ng++;
          if (!elem->GetValid())
-            if (elem->Lookup())
+            if (elem->Lookup(kFALSE))
                if (removeMissing) {
                   if (Remove(elem, kFALSE))
                      Error("Lookup", "Error removing a missing file");
-                  if (!listOfMissingFiles)
-                     listOfMissingFiles = new TList;
-                  listOfMissingFiles->Add(elem);
+                  if (listOfMissingFiles)
+                   (*listOfMissingFiles)->Add(elem->GetFileInfo(fType));
                }
       }
       n++;
@@ -1278,7 +1385,8 @@ TList *TDSet::Lookup(Bool_t removeMissing)
       msg = Form("Files with entries to be processed: %d (out of %d)\n", ng, tot);
       gProofServ->SendAsynMessage(msg);
    }
-   return listOfMissingFiles;
+   // Done
+   return;
 }
 
 //______________________________________________________________________________

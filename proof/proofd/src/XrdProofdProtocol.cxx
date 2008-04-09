@@ -1189,28 +1189,6 @@ int XrdProofdProtocol::Login()
       return rc;
    }
 
-   // On masters assert the dataset directory ...
-   if ((fgMgr.SrvType() == kXPD_TopMaster || fgMgr.SrvType() == kXPD_AnyServer) &&
-       fgMgr.DataSetDir()) {
-      XrdOucString dsetdir = fgMgr.DataSetDir();
-      if (dsetdir.length() > 0) {
-         dsetdir += "/";
-         dsetdir += fGroupID;
-         dsetdir += "/";
-         dsetdir += fClientID;
-      } else {
-         dsetdir += fUI.fWorkDir;
-         dsetdir += "/datasets";
-      }
-      if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI, fgMgr.ChangeOwn()) == -1) {
-         XrdOucString emsg("Login: unable to assert dataset dir: ");
-         emsg += dsetdir;
-         TRACEP(XERR, emsg);
-         fResponse.Send(kXP_ServerError, emsg.c_str());
-         return rc;
-      }
-   }
-
    // If strong authentication is required ...
    if (fgMgr.CIA()) {
       // ... make sure that the directory for credentials exists in the sandbox ...
@@ -2480,32 +2458,12 @@ int XrdProofdProtocol::SetProofServEnv(int psid, int loglevel, const char *cfg)
    if (fPClient->Group()) {
       fprintf(frc,"# Proof group\n");
       fprintf(frc,"ProofServ.ProofGroup: %s\n", fPClient->Group()->Name());
-      // Make sure that the related dataset dir exists
-      // The disk quota manager requires that dataset metadata info under
-      // <user_datasetdir> = <global_datasetdir>/<group>/<user>
-      if ((fgMgr.SrvType() == kXPD_TopMaster || fgMgr.SrvType() == kXPD_AnyServer) &&
-         fgMgr.DataSetDir()) {
-         XrdOucString dsetdir = fgMgr.DataSetDir();
-         if (dsetdir.length() > 0) {
-            dsetdir += "/";
-            dsetdir += fGroupID;
-            dsetdir += "/";
-            dsetdir += fClientID;
-         } else {
-            dsetdir += fUI.fWorkDir;
-            dsetdir += "/datasets";
-         }
-         if (XrdProofdAux::AssertDir(dsetdir.c_str(), fUI, fgMgr.ChangeOwn()) == -1) {
-            MTRACE(XERR, "xpd:child: ",
-                         "SetProofServEnv: unable to assert dataset dir: "<<dsetdir);
-            return -1;
-         }
-         fprintf(frc,"# User's dataset dir\n");
-         fprintf(frc,"ProofServ.DataSetDir: %s\n", dsetdir.c_str());
-         // Export also the dataset root (for location purposes)
-         fprintf(frc,"# Global root for datasets\n");
-         fprintf(frc,"ProofServ.DataSetRoot: %s\n", fgMgr.DataSetDir());
-      }
+   }
+
+   //  Path to file with group information
+   if (fgMgr.GroupsMgr() && fgMgr.GroupsMgr()->GetCfgFile()) {
+      fprintf(frc,"# File with group information\n");
+      fprintf(frc, "Proof.GroupFile: %s\n", fgMgr.GroupsMgr()->GetCfgFile());
    }
 
    // Work dir

@@ -54,6 +54,8 @@ class TDSetElement;
 class TMessage;
 class TTimer;
 class TMutex;
+class TFileCollection;
+class TProofDataSetManager;
 
 // Hook to external function setting up authentication related stuff
 // for old versions.
@@ -87,7 +89,6 @@ private:
    TProofLockPath *fPackageLock;    //package dir locker
    TProofLockPath *fCacheLock;      //cache dir locker
    TProofLockPath *fQueryLock;      //query dir locker
-   TProofLockPath *fDataSetLock;    //dataset dir locker
    TString       fArchivePath;      //default archive path
    TSocket      *fSocket;           //socket connection to client
    TProof       *fProof;            //PROOF talking to slave servers
@@ -128,10 +129,14 @@ private:
 
    Int_t         fInflateFactor;    // Factor in 1/1000 to inflate the CPU time
 
+   TProofDataSetManager* fDataSetManager; // dataset manager
+
    // Quotas (-1 to disable)
    Int_t         fMaxQueries;       //Max number of queries fully kept
    Long64_t      fMaxBoxSize;       //Max size of the sandbox
    Long64_t      fHWMBoxSize;       //High-Water-Mark on the sandbox size
+
+   static Bool_t fgLogToSysLog;     //true if logs should be sent to syslog too
 
    void          RedirectOutput();
    Int_t         CatMotd();
@@ -145,8 +150,6 @@ private:
    Int_t         ApplyMaxQueries();
    Int_t         CleanupQueriesDir();
    void          FinalizeQuery(TProofQueryResult *pq);
-   TList        *GetDataSet(const char *name);
-
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
                                       TList *inl, Long64_t first, TDSet *dset,
                                       const char *selec, TObject *elist);
@@ -163,8 +166,8 @@ private:
 protected:
    virtual void  HandleArchive(TMessage *mess);
    virtual Int_t HandleCache(TMessage *mess);
-   virtual Int_t HandleDataSets(TMessage *mess);
    virtual void  HandleCheckFile(TMessage *mess);
+   virtual Int_t HandleDataSets(TMessage *mess);
    virtual void  HandleLibIncPath(TMessage *mess);
    virtual void  HandleProcess(TMessage *mess);
    virtual void  HandleQueryList(TMessage *mess);

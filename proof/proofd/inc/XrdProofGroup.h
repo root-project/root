@@ -103,6 +103,8 @@ public:
    XrdProofGroup *GetGroup(const char *grp);
    XrdProofGroup *GetUserGroup(const char *usr, const char *grp = 0);
 
+   const char    *GetCfgFile() const { return fCfgFile.fName.c_str(); }
+
    // Pseudo-iterator functionality
    void           ResetIter() { fIterator = "getnextgrp:"; }
    XrdProofGroup *Next();
