@@ -4558,6 +4558,10 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 {
    // Get process info for this process on Mac OS X.
 
+#ifdef _LP64
+#define vm_region vm_region_64
+#endif
+
    struct rusage ru;
    if (getrusage(RUSAGE_SELF, &ru) < 0) {
       ::SysError("TUnixSystem::GetDarwinProcInfo", "getrusage failed");
