@@ -895,9 +895,16 @@ static int G__initary(char* new_name)
          if (varstatic) {
             // -- We found the special name variable, copy its array bounds to this variable.
             // FIXME: Do we need to copy any properties here?
+            G__RflxVarProperties prop = *G__get_properties(varstatic);
             ::Reflex::Scope varscope = var.DeclaringScope();
+            std::string varname = var.Name();
+
             varscope.RemoveDataMember(var);
-            varscope.AddDataMember(var.Name().c_str(), varstatic.TypeOf(), varstatic.Offset(), 0);
+            G__add_scopemember(varscope, varname.c_str(), varstatic.TypeOf(), 0, varstatic.Offset(), 
+                               G__get_offset(var), G__PUBLIC, G__LOCALSTATIC);
+            prop.statictype = 1;
+            Reflex::Member newmember = varscope.DataMemberByName(varname);
+            *G__get_properties(newmember) = prop;
          }
       }
       // Ignore initializer.

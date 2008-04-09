@@ -15,6 +15,7 @@ int main()
   const int ASIZE = sizeof(a)/sizeof(int); 
 
   int i;
+  cout << "ASIZE = " << ASIZE << endl;
   for(i=0;i<ASIZE;++i) { 
     cout << a[i] << " ";
   }
