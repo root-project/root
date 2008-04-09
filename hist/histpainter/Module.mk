@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := hist/histpainter
+MODNAME      := histpainter
+MODDIR       := hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -36,7 +37,7 @@ ALLMAPS       += $(HISTPAINTERMAP)
 INCLUDEFILES += $(HISTPAINTERDEP)
 
 ##### local rules #####
-.PHONY:         all-histpainter clean-histpainter distclean-histpainter
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(HISTPAINTERDIRI)/%.h
 		cp $< $@
@@ -56,15 +57,15 @@ $(HISTPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTPAINTERL)
 		$(RLIBMAP) -o $(HISTPAINTERMAP) -l $(HISTPAINTERLIB) \
 		   -d $(HISTPAINTERLIBDEPM) -c $(HISTPAINTERL)
 
-all-histpainter: $(HISTPAINTERLIB) $(HISTPAINTERMAP)
+all-$(MODNAME): $(HISTPAINTERLIB) $(HISTPAINTERMAP)
 
-clean-histpainter:
+clean-$(MODNAME):
 		@rm -f $(HISTPAINTERO) $(HISTPAINTERDO)
 
-clean::         clean-histpainter
+clean::         clean-$(MODNAME)
 
-distclean-histpainter: clean-histpainter
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(HISTPAINTERDEP) $(HISTPAINTERDS) $(HISTPAINTERDH) \
 		   $(HISTPAINTERLIB) $(HISTPAINTERMAP)
 
-distclean::     distclean-histpainter
+distclean::     distclean-$(MODNAME)

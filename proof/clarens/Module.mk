@@ -3,7 +3,8 @@
 #
 # Author: Maarten Ballintijn 18/10/2004
 
-MODDIR       := proof/clarens
+MODNAME      := clarens
+MODDIR       := proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,7 +36,7 @@ ALLMAPS     += $(CLARENSMAP)
 INCLUDEFILES += $(CLARENSDEP)
 
 ##### local rules #####
-.PHONY:         all-clarens clean-clarens distclean-clarens
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(CLARENSDIRI)/%.h
 		cp $< $@
@@ -54,17 +55,17 @@ $(CLARENSMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(CLARENSL)
 		$(RLIBMAP) -o $(CLARENSMAP) -l $(CLARENSLIB) \
 		   -d $(CLARENSLIBDEPM) -c $(CLARENSL)
 
-all-clarens:    $(CLARENSLIB) $(CLARENSMAP)
+all-$(MODNAME): $(CLARENSLIB) $(CLARENSMAP)
 
-clean-clarens:
+clean-$(MODNAME):
 		@rm -f $(CLARENSO) $(CLARENSDO)
 
-clean::         clean-clarens
+clean::         clean-$(MODNAME)
 
-distclean-clarens: clean-clarens
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(CLARENSDEP) $(CLARENSDS) $(CLARENSDH) $(CLARENSLIB) $(CLARENSMAP)
 
-distclean::     distclean-clarens
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(CLARENSO) $(CLARENSDO):    CXXFLAGS += $(CLARENSINC)

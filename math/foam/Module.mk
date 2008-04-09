@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := math/foam
+MODNAME      := foam
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,7 +36,7 @@ ALLMAPS     += $(FOAMMAP)
 INCLUDEFILES += $(FOAMDEP)
 
 ##### local rules #####
-.PHONY:         all-foam clean-foam distclean-foam
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(FOAMDIRI)/%.h
 		cp $< $@
@@ -53,14 +54,14 @@ $(FOAMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(FOAML)
 		$(RLIBMAP) -o $(FOAMMAP) -l $(FOAMLIB) \
 		   -d $(FOAMLIBDEPM) -c $(FOAML)
 
-all-foam:       $(FOAMLIB) $(FOAMMAP)
+all-$(MODNAME): $(FOAMLIB) $(FOAMMAP)
 
-clean-foam:
+clean-$(MODNAME):
 		@rm -f $(FOAMO) $(FOAMDO)
 
-clean::         clean-foam
+clean::         clean-$(MODNAME)
 
-distclean-foam: clean-foam
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(FOAMDEP) $(FOAMDS) $(FOAMDH) $(FOAMLIB) $(FOAMMAP)
 
-distclean::     distclean-foam
+distclean::     distclean-$(MODNAME)

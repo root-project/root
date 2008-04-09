@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := proof/proof
+MODNAME      := proof
+MODDIR       := proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,7 +36,7 @@ ALLMAPS     += $(PROOFMAP)
 INCLUDEFILES += $(PROOFDEP)
 
 ##### local rules #####
-.PHONY:         all-proof clean-proof distclean-proof
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(PROOFDIRI)/%.h
 		cp $< $@
@@ -53,14 +54,14 @@ $(PROOFMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PROOFL)
 		$(RLIBMAP) -o $(PROOFMAP) -l $(PROOFLIB) \
 		   -d $(PROOFLIBDEPM) -c $(PROOFL)
 
-all-proof:      $(PROOFLIB) $(PROOFMAP)
+all-$(MODNAME): $(PROOFLIB) $(PROOFMAP)
 
-clean-proof:
+clean-$(MODNAME):
 		@rm -f $(PROOFO) $(PROOFDO)
 
-clean::         clean-proof
+clean::         clean-$(MODNAME)
 
-distclean-proof: clean-proof
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB) $(PROOFMAP)
 
-distclean::     distclean-proof
+distclean::     distclean-$(MODNAME)

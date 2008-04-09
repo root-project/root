@@ -3,7 +3,8 @@
 #
 # Author: Gerardo Ganis  12/12/2005
 
-MODDIR       := proof/proofx
+MODNAME      := proofx
+MODDIR       := proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -71,7 +72,7 @@ PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet \
 endif
 
 ##### local rules #####
-.PHONY:         all-proofx clean-proofx distclean-proofx
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
@@ -91,17 +92,17 @@ $(PROOFXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PROOFXL)
 		$(RLIBMAP) -o $(PROOFXMAP) -l $(PROOFXLIB) \
 		   -d $(PROOFXLIBDEPM) -c $(PROOFXL)
 
-all-proofx:     $(PROOFXLIB) $(PROOFXMAP)
+all-$(MODNAME): $(PROOFXLIB) $(PROOFXMAP)
 
-clean-proofx:
+clean-$(MODNAME):
 		@rm -f $(PROOFXO) $(PROOFXDO)
 
-clean::         clean-proofx
+clean::         clean-$(MODNAME)
 
-distclean-proofx: clean-proofx
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PROOFXDEP) $(PROOFXDS) $(PROOFXDH) $(PROOFXLIB) $(PROOFXMAP)
 
-distclean::     distclean-proofx
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PROOFXO) $(PROOFXDO): $(XROOTDETAG)

@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := hist/hist
+MODNAME      := hist
+MODDIR       := hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -40,7 +41,7 @@ ALLMAPS     += $(HISTMAP)
 INCLUDEFILES += $(HISTDEP)
 
 ##### local rules #####
-.PHONY:         all-hist clean-hist distclean-hist
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/Math/%.h: $(HISTDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then     \
@@ -64,14 +65,14 @@ $(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
 		$(RLIBMAP) -o $(HISTMAP) -l $(HISTLIB) \
 		   -d $(HISTLIBDEPM) -c $(HISTL)
 
-all-hist:       $(HISTLIB) $(HISTMAP)
+all-$(MODNAME): $(HISTLIB) $(HISTMAP)
 
-clean-hist:
+clean-$(MODNAME):
 		@rm -f $(HISTO) $(HISTDO)
 
-clean::         clean-hist
+clean::         clean-$(MODNAME)
 
-distclean-hist: clean-hist
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(HISTDEP) $(HISTDS) $(HISTDH) $(HISTLIB) $(HISTMAP)
 
-distclean::     distclean-hist
+distclean::     distclean-$(MODNAME)

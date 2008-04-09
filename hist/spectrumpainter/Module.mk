@@ -3,7 +3,8 @@
 #
 # Author: Olivier Couet, 27/11/2006
 
-MODDIR       := hist/spectrumpainter
+MODNAME      := spectrumpainter
+MODDIR       := hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,8 +36,7 @@ ALLMAPS       += $(SPECTRUMPAINTERMAP)
 INCLUDEFILES += $(SPECTRUMPAINTERDEP)
 
 ##### local rules #####
-.PHONY:         all-spectrumpainter clean-spectrumpainter \
-                distclean-spectrumpainter
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(SPECTRUMPAINTERDIRI)/%.h
 		cp $< $@
@@ -56,15 +56,15 @@ $(SPECTRUMPAINTERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SPECTRUMPAINTERL)
 		$(RLIBMAP) -o $(SPECTRUMPAINTERMAP) -l $(SPECTRUMPAINTERLIB) \
 		   -d $(SPECTRUMPAINTERLIBDEPM) -c $(SPECTRUMPAINTERL)
 
-all-spectrumpainter: $(SPECTRUMPAINTERLIB) $(SPECTRUMPAINTERMAP)
+all-$(MODNAME): $(SPECTRUMPAINTERLIB) $(SPECTRUMPAINTERMAP)
 
-clean-spectrumpainter:
+clean-$(MODNAME):
 		@rm -f $(SPECTRUMPAINTERO) $(SPECTRUMPAINTERDO)
 
-clean::         clean-spectrumpainter
+clean::         clean-$(MODNAME)
 
-distclean-spectrumpainter: clean-spectrumpainter
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SPECTRUMPAINTERDEP) $(SPECTRUMPAINTERDS) \
 		   $(SPECTRUMPAINTERDH) $(SPECTRUMPAINTERLIB) $(SPECTRUMPAINTERMAP)
 
-distclean::     distclean-spectrumpainter
+distclean::     distclean-$(MODNAME)

@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 23/1/2006
 
-MODDIR       := math/fftw
+MODNAME      := fftw
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,7 +36,7 @@ ALLMAPS      += $(FFTWLIB)
 INCLUDEFILES += $(FFTWDEP)
 
 ##### local rules #####
-.PHONY:         all-fftw clean-fftw distclean-fftw
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(FFTWDIRI)/%.h
 		cp $< $@
@@ -53,17 +54,17 @@ $(FFTWMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(FFTWL)
 		$(RLIBMAP) -o $(FFTWMAP) -l $(FFTWLIB) \
 		   -d $(FFTWLIBDEPM) -c $(FFTWL)
 
-all-fftw:       $(FFTWLIB) $(FFTWMAP)
+all-$(MODNAME): $(FFTWLIB) $(FFTWMAP)
 
-clean-fftw:
+clean-$(MODNAME):
 		@rm -f $(FFTWO) $(FFTWDO)
 
-clean::         clean-fftw
+clean::         clean-$(MODNAME)
 
-distclean-fftw: clean-fftw
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(FFTWDEP) $(FFTWDS) $(FFTWDH) $(FFTWLIB) $(FFTWMAP)
 
-distclean::     distclean-fftw
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(FFTWO) $(FFTWDO): CXXFLAGS += $(FFTW3INCDIR:%=-I%)

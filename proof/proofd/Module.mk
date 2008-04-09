@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := proof/proofd
+MODNAME      := proofd
+MODDIR       := proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -49,7 +50,7 @@ ALLLIBS      += $(XPDLIB)
 INCLUDEFILES += $(XPDDEP)
 
 ##### local rules #####
-.PHONY:         all-proofd clean-proofd distclean-proofd
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(PROOFDDIRI)/%.h
 		cp $< $@
@@ -59,17 +60,17 @@ $(XPDLIB):      $(XPCONNO) $(XPCONNH) $(XRDPLUGINS) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO)" \
 		   "$(XPDLIBEXTRA)"
 
-all-proofd:     $(XPDLIB)
+all-$(MODNAME): $(XPDLIB)
 
-clean-proofd:
+clean-$(MODNAME):
 		@rm -f $(XPCONNO)
 
-clean::         clean-proofd
+clean::         clean-$(MODNAME)
 
-distclean-proofd: clean-proofd
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(XPDDEP) $(XPDLIB)
 
-distclean::     distclean-proofd
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(XPCONNO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS)
@@ -132,6 +133,8 @@ INCLUDEFILES += $(PROOFDDEP)
 endif
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(PROOFDDIRI)/%.h
 		cp $< $@
 
@@ -144,17 +147,17 @@ $(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPLUGINS)
 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO)" \
 		   "$(XPDLIBEXTRA)"
 
-all-proofd:     $(PROOFDEXE) $(XPDLIB)
+all-$(MODNAME): $(PROOFDEXE) $(XPDLIB)
 
-clean-proofd:
+clean-$(MODNAME):
 		@rm -f $(PROOFDEXEO) $(XPDO)
 
-clean::         clean-proofd
+clean::         clean-$(MODNAME)
 
-distclean-proofd: clean-proofd
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPDDEP) $(XPDLIB)
 
-distclean::     distclean-proofd
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)

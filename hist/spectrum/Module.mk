@@ -3,7 +3,8 @@
 #
 # Author: Rene Brun, 28/09/2006
 
-MODDIR       := hist/spectrum
+MODNAME      := spectrum
+MODDIR       := hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,7 +36,7 @@ ALLMAPS      += $(SPECTRUMMAP)
 INCLUDEFILES += $(SPECTRUMDEP)
 
 ##### local rules #####
-.PHONY:         all-spectrum clean-spectrum distclean-spectrum
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(SPECTRUMDIRI)/%.h
 		cp $< $@
@@ -53,14 +54,14 @@ $(SPECTRUMMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SPECTRUML)
 		$(RLIBMAP) -o $(SPECTRUMMAP) -l $(SPECTRUMLIB) \
 		   -d $(SPECTRUMLIBDEPM) -c $(SPECTRUML)
 
-all-spectrum:   $(SPECTRUMLIB) $(SPECTRUMMAP)
+all-$(MODNAME): $(SPECTRUMLIB) $(SPECTRUMMAP)
 
-clean-spectrum:
+clean-$(MODNAME):
 		@rm -f $(SPECTRUMO) $(SPECTRUMDO)
 
-clean::         clean-spectrum
+clean::         clean-$(MODNAME)
 
-distclean-spectrum: clean-spectrum
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SPECTRUMDEP) $(SPECTRUMDS) $(SPECTRUMDH) $(SPECTRUMLIB) $(SPECTRUMMAP)
 
-distclean::     distclean-spectrum
+distclean::     distclean-$(MODNAME)

@@ -3,7 +3,8 @@
 #
 # Author: Maarten Ballintijn 18/10/2004
 
-MODDIR       := proof/peac
+MODNAME      := peac
+MODDIR       := proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -57,7 +58,7 @@ ALLMAPS     += $(PEACMAP) $(PEACGUIMAP)
 INCLUDEFILES += $(PEACDEP) $(PEACGUIDEP)
 
 ##### local rules #####
-.PHONY:         all-peac clean-peac distclean-peac
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(PEACDIRI)/%.h
 		cp $< $@
@@ -89,19 +90,19 @@ $(PEACGUIMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PEACGUIL)
 		$(RLIBMAP) -o $(PEACGUIMAP) -l $(PEACGUILIB) \
 		   -d $(PEACGUILIBDEPM) -c $(PEACGUIL)
 
-all-peac:       $(PEACLIB) $(PEACGUILIB) $(PEACMAP) $(PEACGUIMAP)
+all-$(MODNAME): $(PEACLIB) $(PEACGUILIB) $(PEACMAP) $(PEACGUIMAP)
 
-clean-peac:
+clean-$(MODNAME):
 		@rm -f $(PEACO) $(PEACDO) $(PEACGUIO) $(PEACGUIDO)
 
-clean::         clean-peac
+clean::         clean-$(MODNAME)
 
-distclean-peac: clean-peac
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PEACDEP) $(PEACDS) $(PEACDH) $(PEACLIB) \
 		   $(PEACGUIDEP) $(PEACGUIDS) $(PEACGUIDH) $(PEACGUILIB) \
 		   $(PEACMAP) $(PEACGUIMAP)
 
-distclean::     distclean-peac
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PEACO):       CXXFLAGS += $(CLARENSINC)

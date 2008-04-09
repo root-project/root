@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 20/6/2005
 
-MODDIR       := math/mathcore
+MODNAME      := mathcore
+MODDIR       := math/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -79,7 +80,8 @@ ALLMAPS      += $(MATHCOREMAP)
 INCLUDEFILES += $(MATHCOREDEP)
 
 ##### local rules #####
-.PHONY:         all-mathcore clean-mathcore distclean-mathcore test-mathcore
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
+                test-$(MODNAME)
 
 include/Math/%.h: $(MATHCOREDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then    \
@@ -118,23 +120,23 @@ $(MATHCOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ALLMATHCOREL)
 		$(RLIBMAP) -o $(MATHCOREMAP) -l $(MATHCORELIB) \
 		   -d $(MATHCORELIBDEPM) -c $(MATHCOREL) $(MATHCORELINC)
 
-all-mathcore:   $(MATHCORELIB) $(MATHCOREMAP)
+all-$(MODNAME): $(MATHCORELIB) $(MATHCOREMAP)
 
-clean-mathcore:
+clean-$(MODNAME):
 		@rm -f $(MATHCOREO) $(MATHCOREDO)
 
-clean::         clean-mathcore
+clean::         clean-$(MODNAME)
 
-distclean-mathcore: clean-mathcore
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MATHCOREDEP) $(MATHCOREDS) $(MATHCOREDH) \
 		   $(MATHCORELIB) $(MATHCOREMAP)
 		@rm -rf include/Math include/Fit
 		@cd $(MATHCOREDIR)/test; make distclean
 		@cd $(MATHCOREDIR)/test/fit; make distclean
 
-distclean::     distclean-mathcore
+distclean::     distclean-$(MODNAME)
 
-test-mathcore:	all-mathcore
+test-$(MODNAME): all-$(MODNAME)
 		@cd $(MATHCOREDIR)/test; make
 		@cd $(MATHCOREDIR)/test/fit; make
 

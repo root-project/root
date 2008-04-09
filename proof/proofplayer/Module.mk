@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 16/3/2007
 
-MODDIR       := proof/proofplayer
+MODNAME      := proofplayer
+MODDIR       := proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -53,7 +54,7 @@ ALLMAPS       += $(PROOFPLAYERMAP) $(PROOFDRAWMAP)
 INCLUDEFILES += $(PROOFPLAYERDEP) $(PROOFDRAWDEP)
 
 ##### local rules #####
-.PHONY:         all-proofplayer clean-proofplayer distclean-proofplayer
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(PROOFPLAYERDIRI)/%.h
 		cp $< $@
@@ -88,19 +89,19 @@ $(PROOFDRAWMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFDRAWL)
 		$(RLIBMAP) -o $(PROOFDRAWMAP) -l $(PROOFDRAWLIB) \
 		   -d $(PROOFDRAWLIBDEPM) -c $(PROOFDRAWL)
 
-all-proofplayer: $(PROOFPLAYERLIB) $(PROOFPLAYERMAP) $(PROOFDRAWLIB) $(PROOFDRAWMAP)
+all-$(MODNAME): $(PROOFPLAYERLIB) $(PROOFPLAYERMAP) $(PROOFDRAWLIB) $(PROOFDRAWMAP)
 
-clean-proofplayer:
+clean-$(MODNAME):
 		@rm -f $(PROOFPLAYERO) $(PROOFPLAYERDO) $(PROOFDRAWO) $(PROOFDRAWDO)
 
-clean::         clean-proofplayer
+clean::         clean-$(MODNAME)
 
-distclean-proofplayer: clean-proofplayer
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PROOFPLAYERDEP) $(PROOFPLAYERDS) $(PROOFPLAYERDH) \
 		   $(PROOFPLAYERLIB) $(PROOFPLAYERMAP) \
 		   $(PROOFDRAWDEP) $(PROOFDRAWDS) $(PROOFDRAWDH) \
 		   $(PROOFDRAWLIB) $(PROOFDRAWMAP) \
 
-distclean::     distclean-proofplayer
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
