@@ -41,6 +41,21 @@ int main() {
   FunctionMinimum min = migrad();
   std::cout<<"minimum: "<<min<<std::endl;
   }
+  {
+     // use analytical derivatives 
+     Quad4FGrad gfcn;
+
+     MnUserParameters upar;
+     upar.Add("x", 1., 0.1);
+     upar.Add("y", 1., 0.1);
+     upar.Add("z", 1., 0.1);
+     upar.Add("w", 1., 0.1);
+
+     MnMigrad migrad(gfcn, upar);
+     FunctionMinimum min = migrad();
+     std::cout<<"minimum: "<<min<<std::endl;
+  }
+
 //   stop = stopwatch.lap().ticks();
 //   std::cout<<"stop-start: "<<stop - start<<std::endl;
 /*

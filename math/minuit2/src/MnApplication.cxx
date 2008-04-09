@@ -10,6 +10,7 @@
 #include "Minuit2/MnApplication.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/ModularFunctionMinimizer.h"
+#include "Minuit2/FCNGradientBase.h"
 
 namespace ROOT {
 
@@ -23,10 +24,23 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
    unsigned int npar = VariableParameters();
    //   assert(npar > 0);
    if(maxfcn == 0) maxfcn = 200 + 100*npar + 5*npar*npar;
-   FunctionMinimum min = Minimizer().Minimize( Fcnbase(), fState, fStrategy, maxfcn, toler);
-   fNumCall += min.NFcn();
-   fState = min.UserState();
-   return min;
+   // check if FCnbase implements th FCNGradientBase
+   const FCNBase * fcn = &(Fcnbase()); 
+   const FCNGradientBase * gfcn = dynamic_cast<const FCNGradientBase *>(fcn);
+   if (gfcn != 0) { 
+      // case of gradient
+      FunctionMinimum min = Minimizer().Minimize( *gfcn, fState, fStrategy, maxfcn, toler);
+      fNumCall += min.NFcn();
+      fState = min.UserState();
+      return min;
+   }
+   else { 
+      // no gradient
+      FunctionMinimum min = Minimizer().Minimize( *fcn, fState, fStrategy, maxfcn, toler);
+      fNumCall += min.NFcn();
+      fState = min.UserState();
+      return min;
+   }
 }
 
 // facade: forward interface of MnUserParameters and MnUserTransformation
