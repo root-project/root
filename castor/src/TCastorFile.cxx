@@ -204,9 +204,11 @@ void TCastorFile::FindServerAndPath()
 
    // to be able to use the turl starting with  castor:
    if (!strcmp(fUrl.GetProtocol(),"castor"))
-      castorturl=Form("%s://%s","rfio",fUrl.GetFileAndOptions());
+      castorturl = Form("%s://%s", "rfio", fUrl.GetFile());
    else
-      castorturl=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
+      castorturl = Form("%s://%s", fUrl.GetProtocol(), fUrl.GetFile());
+   if (strlen(fUrl.GetOptions()) > 0)
+      castorturl += Form("?%s", fUrl.GetOptions());
 
    // the complete turl in fname
    TString fname = castorturl; // for compatibility with rfio_parse interface

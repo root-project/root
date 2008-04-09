@@ -128,9 +128,11 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    // the complete turl in fname
    TString fname;
    if (!addSlash)
-      fname.Form("%s://%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
+      fname.Form("%s://%s", fUrl.GetProtocol(), fUrl.GetFile());
    else
-      fname.Form("%s:///%s", fUrl.GetProtocol(), fUrl.GetFileAndOptions());
+      fname.Form("%s:///%s", fUrl.GetProtocol(), fUrl.GetFile());
+   if (strlen(fUrl.GetOptions()))
+      fname += Form("?%s", fUrl.GetOptions());
 
    if (recreate) {
       if (::rfio_access((char*)fname.Data(), kFileExists) == 0)
