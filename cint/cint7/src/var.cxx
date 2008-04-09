@@ -6417,8 +6417,7 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
 G__value Cint::Internal::G__getstructmem(int store_var_type, char* varname, char* membername, char* tagname, int* known2, const ::Reflex::Scope& varglobal, int objptr /* 1 : object, 2 : pointer */)
 {
    // -- FIXME: Describe me!
-   fprintf(stderr, "G__getstructmem: varname: '%s' membername: '%s' tagname: '%s' objptr: %d\n", varname, membername, tagname, objptr);
-   ::Reflex::Scope store_tagnum;
+   // fprintf(stderr, "G__getstructmem: varname: '%s' membername: '%s' tagname: '%s' objptr: %d\n", varname, membername, tagname, objptr);   ::Reflex::Scope store_tagnum;
    char* store_struct_offset = 0;
    int flag = 0;
 #ifndef G__OLDIMPLEMENTATION1259
