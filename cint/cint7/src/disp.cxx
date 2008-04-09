@@ -1639,7 +1639,7 @@ int Cint::Internal::G__varmonitor(FILE *fout,const ::Reflex::Scope &var,char *in
          //break;
       }
 
-      strcpy(msg,mon.TypeOf().Name().c_str());
+      strcpy(msg,mon.TypeOf().Name(Reflex::QUALIFIED).c_str());
       //sprintf(msg,"%s"
       //        ,G__type2string((int)var->type[imon1],var->p_tagtable[imon1]
       //                        ,G__get_typenum(var->p_typetable[imon1]),var->reftype[imon1]
