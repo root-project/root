@@ -165,7 +165,8 @@ void TProofLog::Prt(const char *what)
 
    if (what) {
       if (LogToBox()) {
-         // Send to log box: not yet implemented ...
+         // Send to log box:
+         EmitVA("Prt(const char*)", 2, what, kFALSE);
       } else {
          FILE *where = (fFILE) ? (FILE *)fFILE : stderr;
          fprintf(where, "%s", what);
@@ -174,10 +175,12 @@ void TProofLog::Prt(const char *what)
 }
 
 //________________________________________________________________________
-Int_t TProofLog::Save(const char *ord, const char *fname)
+Int_t TProofLog::Save(const char *ord, const char *fname, Option_t *opt)
 {
    // Save the content associated with worker 'ord' to finel 'fname'.
    // If 'ord' is "*" (default), the log from all the workers is saved.
+   // If 'opt' is "a" the file is open in append mode; otherwise the file
+   // is truncated.
 
    // Make sure we got a file name
    if (!fname) {
@@ -186,7 +189,15 @@ Int_t TProofLog::Save(const char *ord, const char *fname)
    }
 
    // Open file to write header
-   FILE *fout = fopen(fname, "w");
+   // Check, if the option is to append
+   TString option = opt;
+   option.ToLower();
+   FILE *fout=0;
+   if (option.Contains("a")){
+      fout = fopen(fname, "a");
+   } else {
+      fout = fopen(fname, "w");
+   }
    if (!fout) {
       Warning("Save", "file could not be opened - do nothing");
       return -1;

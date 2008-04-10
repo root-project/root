@@ -24,12 +24,16 @@
 #include "TNamed.h"
 #endif
 
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
+
 class TMacro;
 class TProofLogElem;
 class TProofMgr;
 
 
-class TProofLog : public TNamed {
+class TProofLog : public TNamed, public TQObject {
 
 friend class TProofLogElem;
 friend class TXProofMgr;
@@ -52,15 +56,15 @@ public:
    TProofLog(const char *stag, const char *url, TProofMgr *mgr);
    virtual ~TProofLog();
 
-   void Display(const char *ord = "*", Int_t from = -10, Int_t to = -1);
+   void   Display(const char *ord = "*", Int_t from = -10, Int_t to = -1);
    TList *GetListOfLogs() const { return fElem; }
-   Int_t Grep(const char *txt, Int_t from = 0);
-   void Print(Option_t *opt = 0) const;
-   void Prt(const char *what);
-   Int_t Retrieve(const char *ord = "*",
+   Int_t  Grep(const char *txt, Int_t from = 0);
+   void   Print(Option_t *opt = 0) const;
+   void   Prt(const char *what);
+   Int_t  Retrieve(const char *ord = "*",
                   TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
                   const char *fname = 0, const char *pattern = 0);
-   Int_t Save(const char *ord = "*", const char *fname = 0);
+   Int_t  Save(const char *ord = "*", const char *fname = 0, Option_t *opt="w");
 
    // Where to log
    void SetLogToBox(Bool_t lgbox = kFALSE) { SetBit(kLogToBox, lgbox); }
@@ -88,13 +92,13 @@ public:
                  TProofLog *logger);
    virtual ~TProofLogElem();
 
-   void Display(Int_t from = 0, Int_t to = -1);
+   void    Display(Int_t from = 0, Int_t to = -1);
    TMacro *GetMacro() const { return fMacro; }
-   Int_t Grep(const char *txt, TString &res, Int_t from = 0);
-   void Print(Option_t *opt = 0) const;
-   void Prt(const char *what);
-   Int_t Retrieve(TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
-                  const char *pattern = 0);
+   Int_t   Grep(const char *txt, TString &res, Int_t from = 0);
+   void    Print(Option_t *opt = 0) const;
+   void    Prt(const char *what);
+   Int_t   Retrieve(TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
+                    const char *pattern = 0);
 
    static Long64_t GetMaxTransferSize();
    static void     SetMaxTransferSize(Long64_t maxsz);
