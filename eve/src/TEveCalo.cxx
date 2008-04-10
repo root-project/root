@@ -384,8 +384,8 @@ ClassImp(TEveCaloLego);
 //______________________________________________________________________________
 TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
    TEveCaloViz(n, t),
-   fGridColor(kGray+3),
    fFontColor(0),
+   fGridColor(kGray+3),
    fFontSize(10),
    fNZStep(5)
 {
@@ -398,8 +398,8 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
 //______________________________________________________________________________
 TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    TEveCaloViz(data),
-   fGridColor(kGray+3),
    fFontColor(0),
+   fGridColor(kGray+3),
    fFontSize(10),
    fNZStep(5)
 {

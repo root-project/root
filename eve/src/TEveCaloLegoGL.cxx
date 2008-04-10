@@ -436,25 +436,29 @@ void TEveCaloLegoGL::DrawXYAxis(TGLRnrCtx & rnrCtx,
       idx = 0;
 
    // get location of x and y axis
-   Float_t axY, ayX;
+   Float_t axY,  ayX;
    Float_t axtX, aytY; // title pos
    switch (idx)
    {
       case 0:  
-         axY  = y0;  ayX = x0;
+         axY  = y0; ayX  = x0;
          axtX = x1; aytY = y1;
          break;
       case 1: 
-         ayX  = x1;  axY  = y0;
-         axtX = x0;  aytY = y1;  
+         ayX  = x1; axY  = y0;
+         axtX = x0; aytY = y1;  
          break;
       case 2: 
-         ayX  = x1;  axY  = y1;
-         axtX = x0;  aytY = y0;    
+         ayX  = x1; axY  = y1;
+         axtX = x0; aytY = y0;    
          break;
       case 3:
-         ayX  = x0;  axY = y1;
-         axtX = x1;  aytY= y0;  
+         ayX  = x0; axY  = y1;
+         axtX = x1; aytY = y0;  
+         break;
+      default:
+         ayX  = 0;  axY  = 0;
+         axtX = 0;  aytY = 0;  
          break;
    }
 
@@ -688,7 +692,7 @@ void TEveCaloLegoGL::DrawSimplified(TGLRnrCtx & rnrCtx) const
             if(sum > 1)
             {
                UChar_t c[4];
-               fM->fPalette->ColorFromValue(sum, c);
+               fM->fPalette->ColorFromValue(TMath::Nint(sum), c);
                TGLUtil::Color4ubv(c);
 
                ed = 2*eds*TMath::Max(0.2, TMath::Log10(sum));

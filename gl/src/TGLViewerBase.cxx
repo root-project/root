@@ -320,6 +320,9 @@ void TGLViewerBase::PreRender()
 //______________________________________________________________________________
 void TGLViewerBase::SubRenderScenes(SubRender_foo render_foo)
 {
+   // Call sub-rendering function render_foo on all currently visible
+   // scenes.
+
    Int_t nScenes = fVisScenes.size();
 
    for (Int_t i = 0; i < nScenes; ++i)
