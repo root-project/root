@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id:$
+// @(#)root/proof:$Id$
 // Author: Jan Fiete Grosse-Oetringhaus, 08.08.07
 
 /*************************************************************************
