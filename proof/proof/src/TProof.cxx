@@ -2568,9 +2568,9 @@ void TProof::UpdateDialog()
    // Handle abort ...
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
       if (fSync)
-         Info("CollectInputFrom",
-               "processing was aborted - %lld events processed",
-               fPlayer->GetEventsProcessed());
+         Info("UpdateDialog",
+              "processing was aborted - %lld events processed",
+              fPlayer->GetEventsProcessed());
 
       if (GetRemoteProtocol() > 11) {
          // New format
@@ -2584,9 +2584,9 @@ void TProof::UpdateDialog()
    // Handle stop ...
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kStopped) {
       if (fSync)
-         Info("CollectInputFrom",
-               "processing was stopped - %lld events processed",
-               fPlayer->GetEventsProcessed());
+         Info("UpdateDialog",
+              "processing was stopped - %lld events processed",
+              fPlayer->GetEventsProcessed());
 
       if (GetRemoteProtocol() > 11) {
          // New format
