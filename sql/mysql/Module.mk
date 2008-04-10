@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := mysql
+MODNAME      := mysql
+MODDIR       := sql/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(MYSQLMAP)
 INCLUDEFILES += $(MYSQLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(MYSQLDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(MYSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(MYSQLL)
 		$(RLIBMAP) -o $(MYSQLMAP) -l $(MYSQLLIB) \
 		   -d $(MYSQLLIBDEPM) -c $(MYSQLL)
 
-all-mysql:      $(MYSQLLIB) $(MYSQLMAP)
+all-$(MODNAME): $(MYSQLLIB) $(MYSQLMAP)
 
-clean-mysql:
+clean-$(MODNAME):
 		@rm -f $(MYSQLO) $(MYSQLDO)
 
-clean::         clean-mysql
+clean::         clean-$(MODNAME)
 
-distclean-mysql: clean-mysql
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MYSQLDEP) $(MYSQLDS) $(MYSQLDH) $(MYSQLLIB) $(MYSQLMAP)
 
-distclean::     distclean-mysql
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(MYSQLO) $(MYSQLDO): CXXFLAGS += $(MYSQLINCDIR:%=-I%)

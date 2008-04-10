@@ -3,7 +3,8 @@
 #
 # Author: Yan Liu, 11/17/2004
 
-MODDIR        := oracle
+MODNAME       := oracle
+MODDIR        := sql/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(ORACLEMAP)
 INCLUDEFILES += $(ORACLEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(ORACLEDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(ORACLEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ORACLEL)
 		$(RLIBMAP) -o $(ORACLEMAP) -l $(ORACLELIB) \
 		   -d $(ORACLELIBDEPM) -c $(ORACLEL)
 
-all-oracle:     $(ORACLELIB) $(ORACLEMAP)
+all-$(MODNAME): $(ORACLELIB) $(ORACLEMAP)
 
-clean-oracle:
+clean-$(MODNAME):
 		@rm -f $(ORACLEO) $(ORACLEDO)
 
-clean::         clean-oracle
+clean::         clean-$(MODNAME)
 
-distclean-oracle: clean-oracle
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ORACLEDEP) $(ORACLEDS) $(ORACLEDH) $(ORACLELIB) $(ORACLEMAP)
 
-distclean::     distclean-oracle
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(ORACLEO) $(ORACLEDO): CXXFLAGS += -I$(ORACLEINCDIR)

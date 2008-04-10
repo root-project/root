@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR      := odbc
+MODNAME     := odbc
+MODDIR      := sql/$(MODNAME)
 MODDIRS     := $(MODDIR)/src
 MODDIRI     := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(ODBCMAP)
 INCLUDEFILES += $(ODBCDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(ODBCDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(ODBCMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(ODBCL)
 		$(RLIBMAP) -o $(ODBCMAP) -l $(ODBCLIB) \
 		   -d $(ODBCLIBDEPM) -c $(ODBCL)
 
-all-odbc:      $(ODBCLIB) $(ODBCMAP)
+all-$(MODNAME): $(ODBCLIB) $(ODBCMAP)
 
-clean-odbc:
+clean-$(MODNAME):
 		@rm -f $(ODBCO) $(ODBCDO)
 
-clean::         clean-odbc
+clean::         clean-$(MODNAME)
 
-distclean-odbc: clean-odbc
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ODBCDEP) $(ODBCDS) $(ODBCDH) $(ODBCLIB) $(ODBCMAP)
 
-distclean::     distclean-odbc
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(ODBCO) $(ODBCDO): CXXFLAGS += $(ODBCINCDIR:%=-I%)

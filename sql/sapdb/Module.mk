@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 24/8/2001
 
-MODDIR       := sapdb
+MODNAME      := sapdb
+MODDIR       := sql/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(SAPDBMAP)
 INCLUDEFILES += $(SAPDBDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(SAPDBDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(SAPDBMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SAPDBL)
 		$(RLIBMAP) -o $(SAPDBMAP) -l $(SAPDBLIB) \
 		   -d $(SAPDBLIBDEPM) -c $(SAPDBL)
 
-all-sapdb:      $(SAPDBLIB) $(SAPDBMAP)
+all-$(MODNAME): $(SAPDBLIB) $(SAPDBMAP)
 
-clean-sapdb:
+clean-$(MODNAME):
 		@rm -f $(SAPDBO) $(SAPDBDO)
 
-clean::         clean-sapdb
+clean::         clean-$(MODNAME)
 
-distclean-sapdb: clean-sapdb
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SAPDBDEP) $(SAPDBDS) $(SAPDBDH) $(SAPDBLIB) $(SAPDBMAP)
 
-distclean::     distclean-sapdb
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(SAPDBO) $(SAPDBDO): CXXFLAGS += $(SAPDBINCDIR:%=-I%)

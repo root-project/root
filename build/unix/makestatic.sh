@@ -20,14 +20,15 @@ PROOFAEXE=bin/proofserva
 rm -f $ROOTALIB $ROOTAEXE $PROOFAEXE
 
 excl="main proof/proofd net/rootd net/xrootd rootx pythia pythia6 \
-      mysql pgsql io/rfio sapdb \
+      sql/mysql sql/pgsql io/rfio sql/sapdb \
       hbook core/newdelete table core/utils net/srputils net/krb5auth \
       net/globusauth io/chirp io/dcache \
       x11ttf net/alien asimage net/ldap pyroot qt gui/qtroot math/quadp \
       ruby vmc \
-      xmlparser gl roofit roofitcore oracle net/netx net/auth \
+      xmlparser gl roofit roofitcore sql/oracle net/netx net/auth \
       net/rpdutils math/mathmore \
-      math/minuit2 io/gfal net/monalisa proof/proofx math/fftw gui/qtgsi odbc \
+      math/minuit2 io/gfal net/monalisa proof/proofx math/fftw gui/qtgsi \
+      sql/odbc \
       io/castor math/unuran geom/gdml cint/cint7 g4root eve net/glite"
 
 objs=""

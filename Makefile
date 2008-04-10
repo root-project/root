@@ -97,19 +97,19 @@ endif
 MODULES      += gl eve
 endif
 ifeq ($(BUILDMYSQL),yes)
-MODULES      += mysql
+MODULES      += sql/mysql
 endif
 ifeq ($(BUILDORACLE),yes)
-MODULES      += oracle
+MODULES      += sql/oracle
 endif
 ifeq ($(BUILDPGSQL),yes)
-MODULES      += pgsql
+MODULES      += sql/pgsql
 endif
 ifeq ($(BUILDSAPDB),yes)
-MODULES      += sapdb
+MODULES      += sql/sapdb
 endif
 ifeq ($(BUILDODBC),yes)
-MODULES      += odbc
+MODULES      += sql/odbc
 endif
 ifeq ($(BUILDRFIO),yes)
 MODULES      += io/rfio
@@ -239,15 +239,15 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl \
                 io/rfio io/castor \
-                pythia6 table mysql pgsql sapdb net/srputils x3d \
+                pythia6 table sql/mysql sql/pgsql sql/sapdb net/srputils x3d \
                 rootx net/rootd io/dcache io/chirp hbook asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 pyroot ruby io/gfal \
                 qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
-                oracle xmlparser math/mathmore cint/reflex cint/cintex \
+                sql/oracle xmlparser math/mathmore cint/reflex cint/cintex \
                 roofitcore roofit \
-                math/minuit2 net/monalisa math/fftw odbc math/unuran \
+                math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml eve g4root net/glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif

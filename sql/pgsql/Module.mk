@@ -3,7 +3,8 @@
 #
 # Author: g.p.ciceri <gp.ciceri@acm.org>, 1/06/2001
 
-MODDIR       := pgsql
+MODNAME      := pgsql
+MODDIR       := sql/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(PGSQLMAP)
 INCLUDEFILES += $(PGSQLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(PGSQLDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(PGSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PGSQLL)
 		$(RLIBMAP) -o $(PGSQLMAP) -l $(PGSQLLIB) \
 		   -d $(PGSQLLIBDEPM) -c $(PGSQLL)
 
-all-pgsql:      $(PGSQLLIB) $(PGSQLMAP)
+all-$(MODNAME): $(PGSQLLIB) $(PGSQLMAP)
 
-clean-pgsql:
+clean-$(MODNAME):
 		@rm -f $(PGSQLO) $(PGSQLDO)
 
-clean::         clean-pgsql
+clean::         clean-$(MODNAME)
 
-distclean-pgsql: clean-pgsql
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PGSQLDEP) $(PGSQLDS) $(PGSQLDH) $(PGSQLLIB) $(PGSQLMAP)
 
-distclean::     distclean-pgsql
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PGSQLO) $(PGSQLDO): CXXFLAGS += $(PGSQLINCDIR:%=-I%)
