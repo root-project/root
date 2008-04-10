@@ -1228,12 +1228,6 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
             fExitStatus = kAborted;
             return -1;
          }
-         if (fProof->GetRunStatus() != TProof::kRunning) {
-            // We have been asked to stop
-            Error("Process", "received stop/abort request");
-            fExitStatus = kAborted;
-            return -1;
-         }
          if (!(dset->GetListOfElements()) ||
              !(dset->GetListOfElements()->GetSize())) {
             gProofServ->SendAsynMessage("Process: No files from the data set were found - Aborting");
