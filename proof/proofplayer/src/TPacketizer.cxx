@@ -639,7 +639,9 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
               slave->GetSocket(), slave->GetName());
       mon.Add(slave->GetSocket());
       slaves_by_sock.Add(slave->GetSocket(),slave);
-      Info("ValidateFiles", " mon: %p, wrk: %p, sck: %p", &mon, slave, slave->GetSocket());
+      PDB(kPacketizer,1)
+         Info("ValidateFiles",
+              "mon: %p, wrk: %p, sck: %p", &mon, slave, slave->GetSocket());
    }
 
    mon.DeActivateAll();
