@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := castor
+MODNAME      := castor
+MODDIR       := io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(CASTORMAP)
 INCLUDEFILES += $(CASTORDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(CASTORDIRI)/%.h
 		cp $< $@
 
@@ -52,17 +55,17 @@ $(CASTORMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CASTORL)
 		$(RLIBMAP) -o $(CASTORMAP) -l $(CASTORLIB) \
 		   -d $(CASTORLIBDEPM) -c $(CASTORL)
 
-all-castor:     $(CASTORLIB) $(CASTORMAP)
+all-$(MODNAME): $(CASTORLIB) $(CASTORMAP)
 
-clean-castor:
+clean-$(MODNAME):
 		@rm -f $(CASTORO) $(CASTORDO)
 
-clean::         clean-castor
+clean::         clean-$(MODNAME)
 
-distclean-castor: clean-castor
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(CASTORDEP) $(CASTORDS) $(CASTORDH) $(CASTORLIB) $(CASTORMAP)
 
-distclean::     distclean-castor
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(PLATFORM),win32)

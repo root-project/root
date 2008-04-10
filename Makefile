@@ -59,14 +59,14 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
-                core/cont core/meta io math/mathcore net/net core/zip \
+                core/cont core/meta io/io math/mathcore net/net core/zip \
                 core/clib math/matrix core/newdelete \
                 hist/hist tree/tree freetype graf gpad g3d gui/gui math/minuit \
                 hist/histpainter tree/treeplayer gui/ged tree/treeviewer \
                 math/physics postscript core/rint core/thread html eg \
                 geom/geom geom/geompainter vmc \
-                math/fumili math/mlp math/quadp net/auth gui/guibuilder xml \
-                math/foam math/splot math/smatrix sql tmva \
+                math/fumili math/mlp math/quadp net/auth gui/guibuilder io/xml \
+                math/foam math/splot math/smatrix io/sql tmva \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
                 gui/fitpanel proof/proof proof/proofplayer \
                 gui/sessionviewer gui/guihtml
@@ -112,16 +112,16 @@ ifeq ($(BUILDODBC),yes)
 MODULES      += odbc
 endif
 ifeq ($(BUILDRFIO),yes)
-MODULES      += rfio
+MODULES      += io/rfio
 endif
 ifeq ($(BUILDCASTOR),yes)
-MODULES      += castor
+MODULES      += io/castor
 endif
 ifeq ($(BUILDDCAP),yes)
-MODULES      += dcache
+MODULES      += io/dcache
 endif
 ifeq ($(BUILDGFAL),yes)
-MODULES      += gfal
+MODULES      += io/gfal
 endif
 ifeq ($(BUILDG4ROOT),yes)
 MODULES      += g4root
@@ -130,7 +130,7 @@ ifeq ($(BUILDGLITE),yes)
 MODULES      += net/glite
 endif
 ifeq ($(BUILDCHIRP),yes)
-MODULES      += chirp
+MODULES      += io/chirp
 endif
 ifeq ($(BUILDASIMAGE),yes)
 MODULES      += asimage
@@ -237,11 +237,12 @@ endif
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl rfio castor \
+MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl \
+                io/rfio io/castor \
                 pythia6 table mysql pgsql sapdb net/srputils x3d \
-                rootx net/rootd dcache chirp hbook asimage \
+                rootx net/rootd io/dcache io/chirp hbook asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
-                pyroot ruby gfal \
+                pyroot ruby io/gfal \
                 qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 oracle xmlparser math/mathmore cint/reflex cint/cintex \

@@ -3,7 +3,8 @@
 #
 # Authors: Linev Sergey, Rene Brun 10/05/2004
 
-MODDIR       := xml
+MODNAME      := xml
+MODDIR       := io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(XMLMAP)
 INCLUDEFILES += $(XMLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(XMLDIRI)/%.h
 		cp $< $@
 
@@ -51,15 +54,15 @@ $(XMLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(XMLL)
 		$(RLIBMAP) -o $(XMLMAP) -l $(XMLLIB) \
 		   -d $(XMLLIBDEPM) -c $(XMLL)
 
-all-xml:        $(XMLLIB) $(XMLMAP)
+all-$(MODNAME): $(XMLLIB) $(XMLMAP)
 
-clean-xml:
+clean-$(MODNAME):
 		@rm -f $(XMLO) $(XMLDO)
 
-clean::         clean-xml
+clean::         clean-$(MODNAME)
 
-distclean-xml:  clean-xml
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(XMLDEP) $(XMLDS) $(XMLDH) $(XMLLIB) $(XMLMAP)
 
-distclean::     distclean-xml
+distclean::     distclean-$(MODNAME)
 

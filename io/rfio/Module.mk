@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := rfio
+MODNAME      := rfio
+MODDIR       := io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(RFIOMAP)
 INCLUDEFILES += $(RFIODEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(RFIODIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(RFIOMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(RFIOL)
 		$(RLIBMAP) -o $(RFIOMAP) -l $(RFIOLIB) \
 		   -d $(RFIOLIBDEPM) -c $(RFIOL)
 
-all-rfio:       $(RFIOLIB) $(RFIOMAP)
+all-$(MODNAME): $(RFIOLIB) $(RFIOMAP)
 
-clean-rfio:
+clean-$(MODNAME):
 		@rm -f $(RFIOO) $(RFIODO)
 
-clean::         clean-rfio
+clean::         clean-$(MODNAME)
 
-distclean-rfio: clean-rfio
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RFIODEP) $(RFIODS) $(RFIODH) $(RFIOLIB) $(RFIOMAP)
 
-distclean::     distclean-rfio
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(PLATFORM),win32)

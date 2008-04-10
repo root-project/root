@@ -3,7 +3,8 @@
 #
 # Author: Rene Brun 06/02/2007
 
-MODDIR       := io
+MODNAME      := io
+MODDIR       := io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(IOMAP)
 INCLUDEFILES += $(IODEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(IODIRI)/%.h
 		cp $< $@
 
@@ -50,14 +53,14 @@ $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP)
 $(IOMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(IOL)
 		$(RLIBMAP) -o $(IOMAP) -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)
 
-all-io:         $(IOLIB) $(IOMAP)
+all-$(MODNAME): $(IOLIB) $(IOMAP)
 
-clean-io:
+clean-$(MODNAME):
 		@rm -f $(IOO) $(IODO)
 
-clean::         clean-io
+clean::         clean-$(MODNAME)
 
-distclean-io:   clean-io
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB) $(IOMAP)
 
-distclean::     distclean-io
+distclean::     distclean-$(MODNAME)

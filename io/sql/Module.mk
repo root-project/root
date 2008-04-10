@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 7/12/2005
 
-MODDIR       := sql
+MODNAME      := sql
+MODDIR       := io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(SQLMAP)
 INCLUDEFILES += $(SQLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(SQLDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(SQLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(SQLL)
 		$(RLIBMAP) -o $(SQLMAP) -l $(SQLLIB) \
 		   -d $(SQLLIBDEPM) -c $(SQLL)
 
-all-sql:        $(SQLLIB) $(SQLMAP)
+all-$(MODNAME): $(SQLLIB) $(SQLMAP)
 
-clean-sql:
+clean-$(MODNAME):
 		@rm -f $(SQLO) $(SQLDO)
 
-clean::         clean-sql
+clean::         clean-$(MODNAME)
 
-distclean-sql: clean-sql
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SQLDEP) $(SQLDS) $(SQLDH) $(SQLLIB) $(SQLMAP)
 
-distclean::     distclean-sql
+distclean::     distclean-$(MODNAME)

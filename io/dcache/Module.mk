@@ -2,7 +2,8 @@
 #
 # Author: Grzegorz Mazur <mazur@mail.desy.de>, 16/1/2002
 
-MODDIR       := dcache
+MODNAME      := dcache
+MODDIR       := io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -34,6 +35,8 @@ ALLMAPS     += $(DCACHEMAP)
 INCLUDEFILES += $(DCACHEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(DCACHEDIRI)/%.h
 	cp $< $@
 
@@ -50,17 +53,17 @@ $(DCACHEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(DCACHEL)
 		$(RLIBMAP) -o $(DCACHEMAP) -l $(DCACHELIB) \
 		   -d $(DCACHELIBDEPM) -c $(DCACHEL)
 
-all-dcache:     $(DCACHELIB) $(DCACHEMAP)
+all-$(MODNAME): $(DCACHELIB) $(DCACHEMAP)
 
-clean-dcache:
+clean-$(MODNAME):
 	@rm -f $(DCACHEO) $(DCACHEDO)
 
-clean::         clean-dcache
+clean::         clean-$(MODNAME)
 
-distclean-dcache: clean-dcache
+distclean-$(MODNAME): clean-$(MODNAME)
 	@rm -f $(DCACHEDEP) $(DCACHEDS) $(DCACHEDH) $(DCACHELIB) $(DCACHEMAP)
 
-distclean::     distclean-dcache
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(DCACHEO) $(DCACHEDO): CXXFLAGS += $(DCAPINCDIR:%=-I%)

@@ -2,9 +2,10 @@
 #
 # Author: Dan Bradley <dan@hep.wisc.edu>, 16/12/2002
 
-MODDIR       := chirp
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+MODNAME     := chirp
+MODDIR      := io/$(MODNAME)
+MODDIRS     := $(MODDIR)/src
+MODDIRI     := $(MODDIR)/inc
 
 CHIRPDIR    := $(MODDIR)
 CHIRPDIRS   := $(CHIRPDIR)/src
@@ -34,6 +35,8 @@ ALLMAPS     += $(CHIRPMAP)
 INCLUDEFILES += $(CHIRPDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(CHIRPDIRI)/%.h
 		cp $< $@
 
@@ -50,17 +53,17 @@ $(CHIRPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CHIRPL)
 		$(RLIBMAP) -o $(CHIRPMAP) -l $(CHIRPLIB) \
 		   -d $(CHIRPLIBDEPM) -c $(CHIRPL)
 
-all-chirp:      $(CHIRPLIB) $(CHIRPMAP)
+all-$(MODNAME): $(CHIRPLIB) $(CHIRPMAP)
 
-clean-chirp:
+clean-$(MODNAME):
 		@rm -f $(CHIRPO) $(CHIRPDO)
 
-clean::         clean-chirp
+clean::         clean-$(MODNAME)
 
-distclean-chirp: clean-chirp
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(CHIRPDEP) $(CHIRPDS) $(CHIRPDH) $(CHIRPLIB) $(CHIRPMAP)
 
-distclean::     distclean-chirp
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(CHIRPO) $(CHIRPDO): CXXFLAGS += $(CHIRPINCDIR:%=-I%)

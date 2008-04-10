@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 9/12/2005
 
-MODDIR       := gfal
+MODNAME      := gfal
+MODDIR       := io/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(GFALMAP)
 INCLUDEFILES += $(GFALDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GFALDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(GFALMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GFALL)
 		$(RLIBMAP) -o $(GFALMAP) -l $(GFALLIB) \
 		   -d $(GFALLIBDEPM) -c $(GFALL)
 
-all-gfal:       $(GFALLIB) $(GFALMAP)
+all-$(MODNAME): $(GFALLIB) $(GFALMAP)
 
-clean-gfal:
+clean-$(MODNAME):
 		@rm -f $(GFALO) $(GFALDO)
 
-clean::         clean-gfal
+clean::         clean-$(MODNAME)
 
-distclean-gfal: clean-gfal
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GFALDEP) $(GFALDS) $(GFALDH) $(GFALLIB) $(GFALMAP)
 
-distclean::     distclean-gfal
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(GFALO): CXXFLAGS += $(GFALINCDIR:%=-I%)
