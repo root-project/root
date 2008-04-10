@@ -5083,7 +5083,7 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
                      if (docp) {
                         gSystem->Exec(Form("%s %s", kRM, fncache.Data()));
                         PDB(kGlobal,2)
-                           Info("CopyFromCache","caching %s ...", e);
+                           Info("CopyToCache","caching %s ...", e);
                         gSystem->Exec(Form("%s %s %s", kCP, e, fncache.Data()));
                         savever = kTRUE;
                      }
