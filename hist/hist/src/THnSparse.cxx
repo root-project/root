@@ -1043,6 +1043,23 @@ void THnSparse::Add(const THnSparse* h, Double_t c)
 
    // Check consistency of the input
    if (!CheckConsistency(h, "Add")) return;
+   RebinnedAdd(h, c);
+}
+
+//______________________________________________________________________________
+void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
+{
+   // Add contents of h scaled by c to this histogram:
+   // this = this + c * h
+   // Note that if h has Sumw2 set, Sumw2 is automatically called for this
+   // if not already set.
+   // In contrast to Add(), RebinnedAdd() does not require consist binning of
+   // this and h; instead, each bin's center is used to determine the target bin.
+
+   if (fNdimensions!=h->GetNdimensions()) {
+      Warning("RebinnedAdd", "Different number of dimensions, cannot carry out operation on the histograms");
+      return;
+   }
 
    // Trigger error calculation if h has it
    if (!GetCalculateErrors() && h->GetCalculateErrors())
@@ -1380,7 +1397,7 @@ THnSparse* THnSparse::Rebin(const Int_t* group) const
             // variable bins
             Double_t *edges = new Double_t[newbins + 1];
             for (Int_t i = 0; i < newbins + 1; ++i)
-               if (group[d] * i <= newaxis->GetNbins() + 1)
+               if (group[d] * i <= newaxis->GetNbins())
                   edges[i] = newaxis->GetXbins()->At(group[d] * i);
                else edges[i] = newaxis->GetXmax();
             newaxis->Set(newbins, edges);

@@ -223,6 +223,7 @@ class THnSparse: public TNamed {
    void Multiply(const THnSparse* h);
    void Divide(const THnSparse* h);
    void Divide(const THnSparse* h1, const THnSparse* h2, Double_t c1 = 1., Double_t c2 = 1., Option_t* option="");
+   void RebinnedAdd(const THnSparse* h, Double_t c=1.);
 
    void Reset(Option_t* option = "");
    void Sumw2();
