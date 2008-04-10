@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := gui
+MODNAME      := gui
+MODDIR       := gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -73,6 +74,8 @@ ALLMAPS     += $(GUIMAP)
 INCLUDEFILES += $(GUIDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GUIDIRI)/%.h
 		cp $< $@
 
@@ -95,14 +98,14 @@ $(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL)
 		$(RLIBMAP) -o $(GUIMAP) -l $(GUILIB) \
 		   -d $(GUILIBDEPM) -c $(GUIL)
 
-all-gui:        $(GUILIB) $(GUIMAP)
+all-$(MODNAME): $(GUILIB) $(GUIMAP)
 
-clean-gui:
+clean-$(MODNAME):
 		@rm -f $(GUIO) $(GUIDO)
 
-clean::         clean-gui
+clean::         clean-$(MODNAME)
 
-distclean-gui:  clean-gui
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GUIDEP) $(GUIDS) $(GUIDH) $(GUILIB) $(GUIMAP)
 
-distclean::     distclean-gui
+distclean::     distclean-$(MODNAME)

@@ -4,8 +4,8 @@
 # Date:06/29/01
 #############################################################################
 
-include ../../../config/Makefile.config
-include ../../../test/Makefile.arch
+include ../../../../config/Makefile.config
+include ../../../../test/Makefile.arch
 
 MAKEDEP = rmkdepend
 

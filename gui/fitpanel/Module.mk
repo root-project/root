@@ -3,7 +3,8 @@
 #
 # Author: Ilka Antcheva, 02/10/2006
 
-MODDIR       := fitpanel
+MODNAME      := fitpanel
+MODDIR       := gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(FITPANELMAP)
 INCLUDEFILES += $(FITPANELDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(FITPANELDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,15 @@ $(FITPANELMAP): $(RLIBMAP) $(MAKEFILEDEP) $(FITPANELL)
 		$(RLIBMAP) -o $(FITPANELMAP) -l $(FITPANELLIB) \
 		   -d $(FITPANELLIBDEPM) -c $(FITPANELL)
 
-all-fitpanel:   $(FITPANELLIB) $(FITPANELMAP)
+all-$(MODNAME): $(FITPANELLIB) $(FITPANELMAP)
 
-clean-fitpanel:
+clean-$(MODNAME):
 		@rm -f $(FITPANELO) $(FITPANELDO)
 
-clean::         clean-fitpanel
+clean::         clean-$(MODNAME)
 
-distclean-fitpanel: clean-fitpanel
-		@rm -f $(FITPANELDEP) $(FITPANELDS) $(FITPANELDH) $(FITPANELLIB) $(FITPANELMAP)
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -f $(FITPANELDEP) $(FITPANELDS) $(FITPANELDH) \
+		   $(FITPANELLIB) $(FITPANELMAP)
 
-distclean::     distclean-fitpanel
+distclean::     distclean-$(MODNAME)

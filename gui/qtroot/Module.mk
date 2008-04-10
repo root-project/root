@@ -3,7 +3,8 @@
 #
 # Author: Valeri Fine, 20/5/2003
 
-MODDIR       := qtroot
+MODNAME      := qtroot
+MODDIR       := gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(QTROOTMAP)
 INCLUDEFILES += $(QTROOTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(QTROOTDIRI)/%.h
 		cp $< $@
 
@@ -51,18 +54,17 @@ $(QTROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(QTROOTL)
 		$(RLIBMAP) -o $(QTROOTMAP) -l $(QTROOTLIB) \
 		   -d $(QTROOTLIBDEPM) -c $(QTROOTL)
 
-all-qtroot:     $(QTROOTLIB) $(QTROOTMAP)
+all-$(MODNAME): $(QTROOTLIB) $(QTROOTMAP)
 
-clean-qtroot:
+clean-$(MODNAME):
 		@rm -f $(QTROOTO) $(QTROOTDO)
 
-clean::         clean-qtroot
+clean::         clean-$(MODNAME)
 
-distclean-qtroot:  clean-qtroot
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(QTROOTDEP) $(QTROOTDS) $(QTROOTDH) $(QTROOTLIB) $(QTROOTMAP)
 
-distclean::     distclean-qtroot
-
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(sort $(QTROOTO)) $(QTROOTDO): CXXFLAGS += $(GQTCXXFLAGS)

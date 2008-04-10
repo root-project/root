@@ -3,7 +3,8 @@
 #
 # Author: Ilka Antcheva, 18/2/2004
 
-MODDIR    := ged
+MODNAME   := ged
+MODDIR    := gui/$(MODNAME)
 MODDIRS   := $(MODDIR)/src
 MODDIRI   := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(GEDMAP)
 INCLUDEFILES += $(GEDDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GEDDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(GEDMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GEDL)
 		$(RLIBMAP) -o $(GEDMAP) -l $(GEDLIB) \
 		   -d $(GEDLIBDEPM) -c $(GEDL)
 
-all-ged:        $(GEDLIB) $(GEDMAP)
+all-$(MODNAME): $(GEDLIB) $(GEDMAP)
 
-clean-ged:
+clean-$(MODNAME):
 		@rm -f $(GEDO) $(GEDDO)
 
-clean::         clean-ged
+clean::         clean-$(MODNAME)
 
-distclean-ged: clean-ged
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GEDDEP) $(GEDDS) $(GEDDH) $(GEDLIB) $(GEDMAP)
 
-distclean::     distclean-ged
+distclean::     distclean-$(MODNAME)

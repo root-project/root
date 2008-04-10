@@ -61,14 +61,15 @@ include $(MAKEFILEDEP)
 MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
                 core/cont core/meta io math/mathcore net/net core/zip \
                 core/clib math/matrix core/newdelete \
-                hist/hist tree/tree freetype graf gpad g3d gui math/minuit \
-                hist/histpainter tree/treeplayer ged tree/treeviewer \
+                hist/hist tree/tree freetype graf gpad g3d gui/gui math/minuit \
+                hist/histpainter tree/treeplayer gui/ged tree/treeviewer \
                 math/physics postscript core/rint core/thread html eg \
                 geom/geom geom/geompainter vmc \
-                math/fumili math/mlp math/quadp net/auth guibuilder xml \
+                math/fumili math/mlp math/quadp net/auth gui/guibuilder xml \
                 math/foam math/splot math/smatrix sql tmva \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
-                fitpanel proof/proof proof/proofplayer sessionviewer guihtml
+                gui/fitpanel proof/proof proof/proofplayer \
+                gui/sessionviewer gui/guihtml
 
 ifeq ($(ARCH),win32)
 MODULES      += core/winnt win32gdk
@@ -153,10 +154,10 @@ ifeq ($(BUILDXML),yes)
 MODULES      += xmlparser
 endif
 ifeq ($(BUILDQT),yes)
-MODULES      += qt qtroot
+MODULES      += qt gui/qtroot
 endif
 ifeq ($(BUILDQTGSI),yes)
-MODULES      += qtgsi
+MODULES      += gui/qtgsi
 endif
 ifeq ($(BUILDGENVECTOR),yes)
 MODULES      += math/genvector
@@ -241,7 +242,7 @@ MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl rfio castor \
                 rootx net/rootd dcache chirp hbook asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 pyroot ruby gfal \
-                qt qtroot qtgsi net/xrootd net/netx net/alien \
+                qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 oracle xmlparser math/mathmore cint/reflex cint/cintex \
                 roofitcore roofit \

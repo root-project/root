@@ -3,7 +3,8 @@
 #
 # Author: Valeriy Onuchin, 24/4/2007
 
-MODDIR       := guihtml
+MODNAME      := guihtml
+MODDIR       := gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(GUIHTMLMAP)
 INCLUDEFILES += $(GUIHTMLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GUIHTMLDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(GUIHTMLMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(GUIHTMLL)
 		$(RLIBMAP) -o $(GUIHTMLMAP) -l $(GUIHTMLLIB) \
 		   -d $(GUIHTMLLIBDEPM) -c $(GUIHTMLL)
 
-all-guihtml:    $(GUIHTMLLIB) $(GUIHTMLMAP)
+all-$(MODNAME): $(GUIHTMLLIB) $(GUIHTMLMAP)
 
-clean-guihtml:
+clean-$(MODNAME):
 		@rm -f $(GUIHTMLO) $(GUIHTMLDO)
 
-clean::         clean-guihtml
+clean::         clean-$(MODNAME)
 
-distclean-guihtml: clean-guihtml
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GUIHTMLDEP) $(GUIHTMLDS) $(GUIHTMLDH) $(GUIHTMLLIB) $(GUIHTMLMAP)
 
-distclean::     distclean-guihtml
+distclean::     distclean-$(MODNAME)

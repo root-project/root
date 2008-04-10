@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 17/03/2007
 
-MODDIR       := sessionviewer
+MODNAME      := sessionviewer
+MODDIR       := gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS       += $(SESSIONVIEWERMAP)
 INCLUDEFILES += $(SESSIONVIEWERDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(SESSIONVIEWERDIRI)/%.h
 		cp $< $@
 
@@ -53,15 +56,15 @@ $(SESSIONVIEWERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SESSIONVIEWERL)
 		$(RLIBMAP) -o $(SESSIONVIEWERMAP) -l $(SESSIONVIEWERLIB) \
 		   -d $(SESSIONVIEWERLIBDEPM) -c $(SESSIONVIEWERL)
 
-all-sessionviewer: $(SESSIONVIEWERLIB) $(SESSIONVIEWERMAP)
+all-$(MODNAME): $(SESSIONVIEWERLIB) $(SESSIONVIEWERMAP)
 
-clean-sessionviewer:
+clean-$(MODNAME):
 		@rm -f $(SESSIONVIEWERO) $(SESSIONVIEWERDO)
 
-clean::         clean-sessionviewer
+clean::         clean-$(MODNAME)
 
-distclean-sessionviewer: clean-sessionviewer
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SESSIONVIEWERDEP) $(SESSIONVIEWERDS) \
 		   $(SESSIONVIEWERDH) $(SESSIONVIEWERLIB) $(SESSIONVIEWERMAP)
 
-distclean::     distclean-sessionviewer
+distclean::     distclean-$(MODNAME)

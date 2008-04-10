@@ -3,7 +3,8 @@
 #
 # Author: Bertrand Bellenot, 22/02/2006
 
-MODDIR       := qtgsi
+MODNAME      := qtgsi
+MODDIR       := gui/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -50,6 +51,9 @@ ALLMAPS       += $(QTGSIMAP)
 INCLUDEFILES  += $(QTGSIDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
+                test-$(MODNAME)
+
 include/%.h:    $(QTGSIDIRI)/%.h
 		cp $< $@
 
@@ -67,22 +71,22 @@ $(QTGSIMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QTGSIL)
 		$(RLIBMAP) -o $(QTGSIMAP) -l $(QTGSILIB) \
 		   -d $(QTGSILIBDEPM) -c $(QTGSIL)
 
-all-qtgsi:      $(QTGSILIB) $(QTGSIMAP)
+all-$(MODNAME): $(QTGSILIB) $(QTGSIMAP)
 
-test-qtgsi: 	$(QTGSILIB)
+test-$(MODNAME): $(QTGSILIB)
 		cd $(QTGSIDIR)/test; make $(QTTESTOPTS)
 
-clean-qtgsi:
+clean-$(MODNAME):
 		@rm -f $(QTGSIO) $(QTGSIMOCO)
 		-@cd $(QTGSIDIR)/test; make clean
 
-clean::         clean-qtgsi
+clean::         clean-$(MODNAME)
 
-distclean-qtgsi: clean-qtgsi
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(QTGSIDEP) $(QTGSIMOC) $(QTGSILIB) $(QTGSIMAP)
 		@rm -f $(QTGSIDS) $(QTGSIDH)
 
-distclean::     distclean-qtgsi
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(sort $(QTGSIMOCO) $(QTGSIO)): CXXFLAGS += $(QTGSICXXFLAGS)
