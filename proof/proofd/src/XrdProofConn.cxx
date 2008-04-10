@@ -306,6 +306,11 @@ int XrdProofConn::Connect()
    fPhyConn = fgConnMgr->GetConnection(fLogConnID)->GetPhyConnection();
    fConnected = 1;
 
+   // Fill in the remote protocol: either it was received during handshake
+   // or it was saved in the underlying physical connection
+   if (fRemoteProtocol < 0)
+      fRemoteProtocol = fPhyConn->fServerProto;
+
    // Handle asynchronous requests
    SetAsync(fUnsolMsgHandler);
 
@@ -846,6 +851,8 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake()
       XPD::ServerInitHandShake2HostFmt(&xbody);
 
       fRemoteProtocol = xbody.protover;
+      if (fPhyConn->fServerProto <= 0)
+         fPhyConn->fServerProto = fRemoteProtocol;
 
       return kSTXProofd;
 
