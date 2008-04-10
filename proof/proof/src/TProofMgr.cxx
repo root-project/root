@@ -47,11 +47,39 @@ TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
    if (!strcmp(fUrl.GetProtocol(), TUrl("a").GetProtocol()))
       fUrl.SetProtocol("proof");
 
+   // Check port
+   if (fUrl.GetPort() == TUrl("a").GetPort()) {
+      // For the time being we use 'rootd' service as default.
+      // This will be changed to 'proofd' as soon as XRD will be able to
+      // accept on multiple ports
+      Int_t port = gSystem->GetServiceByName("proofd");
+      if (port < 0) {
+         if (gDebug > 0)
+            Info("TProofMgr","service 'proofd' not found by GetServiceByName"
+                              ": using default IANA assigned tcp port 1093");
+         port = 1093;
+      } else {
+         if (gDebug > 1)
+            Info("TProofMgr","port from GetServiceByName: %d", port);
+      }
+      fUrl.SetPort(port);
+   }
+
+   // Make sure that the user is defined
+   if (strlen(fUrl.GetUser()) <= 0) {
+      // Fill in the default user
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         fUrl.SetUser(pw->fUser);
+         delete pw;
+      }
+   }
+
    // Check and save the host FQDN ...
    if (strcmp(fUrl.GetHost(), fUrl.GetHostFQDN()))
       fUrl.SetHost(fUrl.GetHostFQDN());
 
-   SetName(fUrl.GetUrl());
+   SetName(fUrl.GetUrl(kTRUE));
    if (alias)
       SetAlias(alias);
    else

@@ -51,43 +51,12 @@ static TXProofMgrInit gxproofmgr_init;
 
 //______________________________________________________________________________
 TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
-          : TProofMgr(url)
+          : TProofMgr(url, dbg, alias)
 {
    // Create a PROOF manager for the standard (old) environment.
 
    // Set the correct servert type
    fServType = kXProofd;
-
-   // Correct URL protocol
-   if (!strcmp(fUrl.GetProtocol(), TUrl("a").GetProtocol()))
-      fUrl.SetProtocol("proof");
-   // Check port
-   if (fUrl.GetPort() == TUrl("a").GetPort()) {
-      // For the time being we use 'rootd' service as default.
-      // This will be changed to 'proofd' as soon as XRD will be able to
-      // accept on multiple ports
-      Int_t port = gSystem->GetServiceByName("proofd");
-      if (port < 0) {
-         if (gDebug > 0)
-            Info("TXProofMgr","service 'proofd' not found by GetServiceByName"
-                              ": using default IANA assigned tcp port 1093");
-         port = 1093;
-      } else {
-         if (gDebug > 1)
-            Info("TXProofMgr","port from GetServiceByName: %d", port);
-      }
-      fUrl.SetPort(port);
-   }
-
-   // Check and save the host FQDN ...
-   if (strcmp(fUrl.GetHost(), fUrl.GetHostFQDN()))
-      fUrl.SetHost(fUrl.GetHostFQDN());
-
-   SetName(fUrl.GetUrl(kTRUE));
-   if (alias)
-      SetAlias(alias);
-   else
-      SetAlias(fUrl.GetHost());
 
    // Initialize
    if (Init(dbg) != 0) {
