@@ -84,6 +84,8 @@ private:
    Double_t            fAvgRate;
    Double_t            fAvgMBRate;
 
+   TString             fSessionUrl;
+
    static Bool_t       fgKeepDefault;
    static Bool_t       fgLogQueryDefault;
    static TString      fgTextQueryDefault;

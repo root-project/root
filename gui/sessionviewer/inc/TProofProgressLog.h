@@ -19,18 +19,37 @@
 class TGTextView;
 class TGTextButton;
 class TProofProgressDialog;
-
+class TProofLog;
+class TGTextEntry;
+class TGNumberEntry;
+class TGListBox;
+class TGSplitButton;
 
 class TProofProgressLog : public TGTransientFrame {
 
 private:
-   TGTextView           *fText;   // text widget
-   TGTextButton         *fClose;  // close button
-   TProofProgressDialog *fDialog; // owner dialog
+   TGTextView           *fText;      // text widget
+   TGTextButton         *fClose;     // close button
+   TGListBox            *fLogList;   // list of workers
+   TGTextButton         *fLogNew;    // display logs button
+   TProofProgressDialog *fDialog;    // owner dialog
+   TProofLog            *fProofLog;  // the log
+   TGNumberEntry        *fLinesFrom; // starting line
+   TGNumberEntry        *fLinesTo;   // ending line
+   TGTextEntry          *fGrepText;  // text to grep for in the logs
+   TGTextEntry          *fFileName;  // file to save to
+   TGTextButton         *fSave;      // save button
+   TGTextButton         *fGrepButton; //grep button
+   TGCheckButton        *fAllLines;  // display all lines button
+   TGSplitButton        *fAllWorkers; // display all workers button
 
 public:
    TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
    virtual ~TProofProgressLog();
+
+   TGListBox* BuildLogList(TGFrame *parent);
+   void       DoLog(Bool_t grep=kFALSE);
+   void       LogMessage(const char *msg, Bool_t all);
 
    void   LoadBuffer(const char *buffer);
    void   AddBuffer(const char *buffer);
@@ -39,7 +58,9 @@ public:
 
    void   Clear(Option_t * = 0);
    void   Popup();
-
+   void   SaveToFile();
+   void   NoLineEntry();
+   void   Select(Int_t id);
    // slots
    void   CloseWindow();
 

@@ -74,6 +74,11 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fProcTime      = 0.;
    fAvgRate       = 0.;
    fAvgMBRate     = 0.;
+
+   //have to save this information here, in case gProof is dead when
+   //the logs are requested
+   fSessionUrl = proof->GetManager()->GetUrl();
+
    if (PPD_SRV_NEWER(11))
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr");
 
@@ -270,8 +275,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fDialog->MapWindow();
 
    fStartTime = gSystem->Now();
-
-   //gClient->WaitFor(fDialog);
 }
 
 //______________________________________________________________________________
@@ -450,6 +453,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
    char buf[256];
    static const char *cproc[] = { "running", "done",
                                   "STOPPED", "ABORTED", "***EVENTS SKIPPED***"};
+
    // Update title
    sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel workers:",
            fProof ? fProof->GetMaster() : "<dummy>",
@@ -561,20 +565,16 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          fStatus = kIncomplete;
          // We use a different color to highlight incompletion
          fBar->SetBarColor("magenta");
-         fProcessed->SetText("Processed:");
-         sprintf(buf, "%lld events (%.2f MBs) in %.1f sec %s", total, mbsproc, procTime, cproc[fStatus]);
-         fTotal->SetText(buf);
-      } else {
-
-         if (fStatus > kDone) {
-            sprintf(buf, "%.1f sec (processed %lld events out of %lld - %.2f MBs of data) - %s",
-                        eta, evproc, total, mbsproc, cproc[fStatus]);
-         } else {
-            sprintf(buf, "%.1f sec (processed %lld events out of %lld - %.2f MBs of data)",
-                        eta, evproc, total, mbsproc);
-         }
-         fTotal->SetText(buf);
       }
+
+      if (fStatus > kDone) {
+         sprintf(buf, "%.1f sec (processed %lld events out of %lld - %.2f MBs of data) - %s",
+                      eta, evproc, total, mbsproc, cproc[fStatus]);
+      } else {
+         sprintf(buf, "%.1f sec (processed %lld events out of %lld - %.2f MBs of data)",
+                      eta, evproc, total, mbsproc);
+      }
+      fTotal->SetText(buf);
 
       // Post
       if (evtrti > 0.) {
@@ -612,8 +612,8 @@ TProofProgressDialog::~TProofProgressDialog()
                          "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fProof->Disconnect("StopProcess(Bool_t)", this,
                          "IndicateStop(Bool_t)");
-      fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
-                         "LogMessage(const char*,Bool_t)");
+      //fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
+      //                   "LogMessage(const char*,Bool_t)");
       fProof->Disconnect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
                          this,
                          "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
@@ -698,23 +698,11 @@ void TProofProgressDialog::DoLog()
    if (fProof) {
       if (!fLogWindow) {
          fLogWindow = new TProofProgressLog(this);
+         fLogWindow->DoLog();
       } else {
          // Clear window
          fLogWindow->Clear();
-      }
-      fProof->Connect("LogMessage(const char*,Bool_t)", "TProofProgressDialog",
-                      this, "LogMessage(const char*,Bool_t)");
-      if (!fLogQuery) {
-         fProof->LogMessage(0, kTRUE);
-      } else {
-         Int_t qry = -2;
-         TString qs = fTextQuery->GetString();
-         if (qs != "last" && qs.IsDigit())
-            qry = qs.Atoi();
-         Bool_t logonly = fProof->SendingLogToWindow();
-         fProof->SendLogToWindow(kTRUE);
-         fProof->ShowLog(qry);
-         fProof->SendLogToWindow(logonly);
+         fLogWindow->DoLog();
       }
    }
 }
