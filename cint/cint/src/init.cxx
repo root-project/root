@@ -1978,7 +1978,8 @@ static void G__defineMacro(const char* name, long value, const char* cintname = 
 
    char* start = temp;
    if (cintname) {
-      sprintf(temp + 3, "%s=%ld", cintname, value);
+      start +=3;
+      sprintf(start, "%s=%ld", cintname, value);
    }
    else {
       // generate CINT name:
@@ -2056,6 +2057,9 @@ void G__platformMacro()
    G__DEFINE_MACRO(__linux);
 #elif defined(linux)
    G__DEFINE_MACRO(linux);
+#endif
+#if defined(_FreeBSD_) && !defined(__FreeBSD__)
+# define __FreeBSD__ _FreeBSD_
 #endif
 #ifdef __FreeBSD__   /* FreeBSD */
    G__DEFINE_MACRO_N(__FreeBSD__, "G__FBSD");
