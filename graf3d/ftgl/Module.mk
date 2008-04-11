@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 15/11/2006
 
-MODDIR       := ftgl
+MODNAME      := ftgl
+MODDIR       := graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ FTGLLIBEXTRA += -lz
 endif
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(FTGLDIRI)/%.h
 		cp $< $@
 
@@ -45,17 +48,17 @@ $(FTGLLIB):     $(FTGLO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(FTGLLIBDEP)
 		   "$(FREETYPELDFLAGS) $(FREETYPELIB) \
 		    $(FTGLLIBEXTRA) $(XLIBS) $(GLLIBS)"
 
-all-ftgl:     $(FTGLLIB)
+all-$(MODNAME): $(FTGLLIB)
 
-clean-ftgl:
+clean-$(MODNAME):
 		@rm -f $(FTGLO)
 
-clean::         clean-ftgl
+clean::         clean-$(MODNAME)
 
-distclean-ftgl: clean-ftgl
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(FTGLDEP) $(FTGLLIB)
 
-distclean::     distclean-ftgl
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(FTGLO):     $(FREETYPEDEP)

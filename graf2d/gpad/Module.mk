@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := gpad
+MODNAME      := gpad
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(GPADMAP)
 INCLUDEFILES += $(GPADDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GPADDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(GPADMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GPADL)
 		$(RLIBMAP) -o $(GPADMAP) -l $(GPADLIB) \
 		   -d $(GPADLIBDEPM) -c $(GPADL)
 
-all-gpad:       $(GPADLIB) $(GPADMAP)
+all-$(MODNAME): $(GPADLIB) $(GPADMAP)
 
-clean-gpad:
+clean-$(MODNAME):
 		@rm -f $(GPADO) $(GPADDO)
 
-clean::         clean-gpad
+clean::         clean-$(MODNAME)
 
-distclean-gpad: clean-gpad
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GPADDEP) $(GPADDS) $(GPADDH) $(GPADLIB) $(GPADMAP)
 
-distclean::     distclean-gpad
+distclean::     distclean-$(MODNAME)

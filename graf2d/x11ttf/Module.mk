@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := x11ttf
+MODNAME      := x11ttf
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -39,10 +40,13 @@ endif
 INCLUDEFILES += $(X11TTFDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(X11TTFDIRI)/%.h
 		cp $< $@
 
-$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(X11TTFLIBDEP)
+$(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) \
+                $(X11TTFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11TTF.$(SOEXT) $@ \
 		   "$(X11TTFO) $(X11TTFDO)" \
@@ -57,17 +61,18 @@ $(X11TTFMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(X11TTFL)
 		$(RLIBMAP) -o $(X11TTFMAP) -l $(X11TTFLIB) \
 		   -d $(X11TTFLIBDEPM) -c $(X11TTFL)
 
-all-x11ttf:     $(X11TTFLIB) $(X11TTFMAP)
+all-$(MODNAME): $(X11TTFLIB) $(X11TTFMAP)
 
-clean-x11ttf:
+clean-$(MODNAME):
 		@rm -f $(X11TTFO) $(X11TTFDO)
 
-clean::         clean-x11ttf
+clean::         clean-$(MODNAME)
 
-distclean-x11ttf: clean-x11ttf
-		@rm -f $(X11TTFDEP) $(X11TTFDS) $(X11TTFDH) $(X11TTFLIB) $(X11TTFMAP)
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -f $(X11TTFDEP) $(X11TTFDS) $(X11TTFDH) $(X11TTFLIB) \
+		   $(X11TTFMAP)
 
-distclean::     distclean-x11ttf
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(X11TTFO) $(X11TTFDO): $(FREETYPEDEP)

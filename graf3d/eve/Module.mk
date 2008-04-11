@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers  26/11/2007
 
-MODDIR    := eve
+MODNAME   := eve
+MODDIR    := graf3d/$(MODNAME)
 MODDIRS   := $(MODDIR)/src
 MODDIRI   := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(EVEMAP)
 INCLUDEFILES += $(EVEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(EVEDIRI)/%.h
 		cp $< $@
 
@@ -51,17 +54,17 @@ $(EVEMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(EVEL)
 		$(RLIBMAP) -o $(EVEMAP) -l $(EVELIB) \
 		   -d $(EVELIBDEPM) -c $(EVEL)
 
-all-eve:        $(EVELIB) $(EVEMAP)
+all-$(MODNAME): $(EVELIB) $(EVEMAP)
 
-clean-eve:
+clean-$(MODNAME):
 		@rm -f $(EVEO) $(EVEDO)
 
-clean::         clean-eve
+clean::         clean-$(MODNAME)
 
-distclean-eve: clean-eve
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(EVEDEP) $(EVEDS) $(EVEDH) $(EVELIB) $(EVEMAP)
 
-distclean::     distclean-eve
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),win32)

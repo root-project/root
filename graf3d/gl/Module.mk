@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := gl
+MODNAME      := gl
+MODDIR       := graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -60,6 +61,8 @@ ALLMAPS      += $(GLMAP)
 INCLUDEFILES += $(GLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
@@ -76,17 +79,17 @@ $(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
 		$(RLIBMAP) -o $(GLMAP) -l $(GLLIB) \
 		   -d $(GLLIBDEPM) -c $(GLL)
 
-all-gl:         $(GLLIB) $(GLMAP)
+all-$(MODNAME): $(GLLIB) $(GLMAP)
 
-clean-gl:
+clean-$(MODNAME):
 		@rm -f $(GLO) $(GLO1) $(GLDO)
 
-clean::         clean-gl
+clean::         clean-$(MODNAME)
 
-distclean-gl:   clean-gl
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GLDEP) $(GLLIB) $(GLDS) $(GLDH) $(GLMAP)
 
-distclean::     distclean-gl
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),win32)
@@ -98,12 +101,8 @@ endif
 
 $(GLDIRS)/gl2ps.o: CFLAGS += $(OPENGLINCDIR:%=-I%)
 
-gl/src/TGLText.o: \
-                $(FREETYPEDEP)
-gl/src/TGLText.o: \
-                CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)
+$(GLDIRS)/TGLText.o: $(FREETYPEDEP)
+$(GLDIRS)/TGLText.o: CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)
 
-gl/src/TGLFontManager.o: \
-                $(FREETYPEDEP)
-gl/src/TGLFontManager.o: \
-                CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)
+$(GLDIRS)/TGLFontManager.o: $(FREETYPEDEP)
+$(GLDIRS)/TGLFontManager.o: CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%)

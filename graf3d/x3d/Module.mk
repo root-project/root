@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := x3d
+MODNAME      := x3d
+MODDIR       := graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -38,6 +39,8 @@ ALLMAPS     += $(X3DMAP)
 INCLUDEFILES += $(X3DDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(X3DDIRI)/%.h
 		cp $< $@
 
@@ -54,14 +57,14 @@ $(X3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X3DL)
 		$(RLIBMAP) -o $(X3DMAP) -l $(X3DLIB) \
 		   -d $(X3DLIBDEPM) -c $(X3DL)
 
-all-x3d:        $(X3DLIB) $(X3DMAP)
+all-$(MODNAME): $(X3DLIB) $(X3DMAP)
 
-clean-x3d:
+clean-$(MODNAME):
 		@rm -f $(X3DO) $(X3DDO)
 
-clean::         clean-x3d
+clean::         clean-$(MODNAME)
 
-distclean-x3d:  clean-x3d
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(X3DDEP) $(X3DDS) $(X3DDH) $(X3DLIB) $(X3DMAP)
 
-distclean::     distclean-x3d
+distclean::     distclean-$(MODNAME)

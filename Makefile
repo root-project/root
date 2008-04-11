@@ -60,11 +60,11 @@ include $(MAKEFILEDEP)
 
 MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
                 core/cont core/meta io/io math/mathcore net/net core/zip \
-                core/clib math/matrix core/newdelete \
-                hist/hist tree/tree freetype graf gpad g3d gui/gui math/minuit \
-                hist/histpainter tree/treeplayer gui/ged tree/treeviewer \
-                math/physics postscript core/rint core/thread html \
-                montecarlo/eg \
+                core/clib math/matrix core/newdelete hist/hist tree/tree \
+                graf2d/freetype graf2d/graf graf2d/gpad graf3d/g3d \
+                gui/gui math/minuit hist/histpainter tree/treeplayer \
+                gui/ged tree/treeviewer math/physics graf2d/postscript \
+                core/rint core/thread html montecarlo/eg \
                 geom/geom geom/geompainter montecarlo/vmc \
                 math/fumili math/mlp math/quadp net/auth gui/guibuilder io/xml \
                 math/foam math/splot math/smatrix io/sql tmva \
@@ -73,19 +73,19 @@ MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
                 gui/sessionviewer gui/guihtml
 
 ifeq ($(ARCH),win32)
-MODULES      += core/winnt win32gdk
+MODULES      += core/winnt graf2d/win32gdk
 MODULES      := $(filter-out core/newdelete,$(MODULES))
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gcc)
-MODULES      += core/unix x11 x11ttf x3d rootx
+MODULES      += core/unix graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
-MODULES      += core/unix x11 x11ttf x3d rootx
+MODULES      += core/unix graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
@@ -93,9 +93,9 @@ endif
 endif
 ifeq ($(BUILDGL),yes)
 ifeq ($(BUILDFTGL),yes)
-MODULES      += ftgl
+MODULES      += graf3d/ftgl
 endif
-MODULES      += gl eve
+MODULES      += graf3d/gl graf3d/eve
 endif
 ifeq ($(BUILDMYSQL),yes)
 MODULES      += sql/mysql
@@ -134,7 +134,7 @@ ifeq ($(BUILDCHIRP),yes)
 MODULES      += io/chirp
 endif
 ifeq ($(BUILDASIMAGE),yes)
-MODULES      += asimage
+MODULES      += graf2d/asimage
 endif
 ifeq ($(BUILDFPYTHIA6),yes)
 MODULES      += montecarlo/pythia6
@@ -155,7 +155,7 @@ ifeq ($(BUILDXML),yes)
 MODULES      += xmlparser
 endif
 ifeq ($(BUILDQT),yes)
-MODULES      += qt gui/qtroot
+MODULES      += graf2d/qt gui/qtroot
 endif
 ifeq ($(BUILDQTGSI),yes)
 MODULES      += gui/qtgsi
@@ -238,19 +238,19 @@ endif
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl \
-                io/rfio io/castor \
+MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
+                graf2d/win32gdk graf3d/gl graf3d/ftgl io/rfio io/castor \
                 montecarlo/pythia6 montecarlo/pythia8 table \
-                sql/mysql sql/pgsql sql/sapdb net/srputils x3d \
-                rootx net/rootd io/dcache io/chirp hbook asimage \
+                sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
+                rootx net/rootd io/dcache io/chirp hbook graf2d/asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal \
-                qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
+                graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle xmlparser math/mathmore cint/reflex cint/cintex \
                 roofit/roofitcore roofit/roofit \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
-                geom/gdml eve montecarlo/g4root net/glite
+                geom/gdml graf3d/eve montecarlo/g4root net/glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -524,10 +524,7 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
-                static map debian redhat skip postbin \
-                $(patsubst %,all-%,$(MODULES)) \
-                $(patsubst %,clean-%,$(MODULES)) \
-                $(patsubst %,distclean-%,$(MODULES))
+                static map debian redhat skip postbin
 
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:

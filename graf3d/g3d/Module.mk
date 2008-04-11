@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := g3d
+MODNAME      := g3d
+MODDIR       := graf3d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -40,6 +41,8 @@ ALLMAPS     += $(G3DMAP)
 INCLUDEFILES += $(G3DDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(G3DDIRI)/%.h
 		cp $< $@
 
@@ -56,14 +59,14 @@ $(G3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(G3DL)
 		$(RLIBMAP) -o $(G3DMAP) -l $(G3DLIB) \
 		   -d $(G3DLIBDEPM) -c $(G3DL)
 
-all-g3d:        $(G3DLIB) $(G3DMAP)
+all-$(MODNAME): $(G3DLIB) $(G3DMAP)
 
-clean-g3d:
+clean-$(MODNAME):
 		@rm -f $(G3DO) $(G3DDO)
 
-clean::         clean-g3d
+clean::         clean-$(MODNAME)
 
-distclean-g3d:  clean-g3d
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(G3DDEP) $(G3DDS) $(G3DDH) $(G3DLIB) $(G3DMAP)
 
-distclean::     distclean-g3d
+distclean::     distclean-$(MODNAME)

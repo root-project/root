@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := x11
+MODNAME      := x11
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -37,6 +38,8 @@ ALLMAPS     += $(X11MAP)
 INCLUDEFILES += $(X11DEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(X11DIRI)/%.h
 		cp $< $@
 
@@ -53,14 +56,14 @@ $(X11MAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X11L)
 		$(RLIBMAP) -o $(X11MAP) -l $(X11LIB) \
 		   -d $(X11LIBDEPM) -c $(X11L)
 
-all-x11:        $(X11LIB) $(X11MAP)
+all-$(MODNAME): $(X11LIB) $(X11MAP)
 
-clean-x11:
+clean-$(MODNAME):
 		@rm -f $(X11O) $(X11DO)
 
-clean::         clean-x11
+clean::         clean-$(MODNAME)
 
-distclean-x11:  clean-x11
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(X11DEP) $(X11DS) $(X11DH) $(X11LIB) $(X11MAP)
 
-distclean::     distclean-x11
+distclean::     distclean-$(MODNAME)

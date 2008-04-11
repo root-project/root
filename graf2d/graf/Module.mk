@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := graf
+MODNAME      := graf
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -43,6 +44,8 @@ ALLMAPS     += $(GRAFMAP)
 INCLUDEFILES += $(GRAFDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GRAFDIRI)/%.h
 		cp $< $@
 
@@ -63,30 +66,30 @@ $(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL1) $(GRAFL2)
 		$(RLIBMAP) -o $(GRAFMAP) -l $(GRAFLIB) \
 		   -d $(GRAFLIBDEPM) -c $(GRAFL1) $(GRAFL2)
 
-all-graf:       $(GRAFLIB) $(GRAFMAP)
+all-$(MODNAME): $(GRAFLIB) $(GRAFMAP)
 
-clean-graf:
+clean-$(MODNAME):
 		@rm -f $(GRAFO) $(GRAFDO)
 
-clean::         clean-graf
+clean::         clean-$(MODNAME)
 
-distclean-graf: clean-graf
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GRAFDEP) $(GRAFDS) $(GRAFDH) $(GRAFLIB) $(GRAFMAP)
 
-distclean::     distclean-graf
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(GRAFDO2):     $(FREETYPEDEP)
 $(GRAFDO2):     OPT = $(NOOPT)
 $(GRAFDO2):     CXXFLAGS += $(FREETYPEINC)
 
-graf/src/TTF.o graf/src/TText.o graf/src/TLatex.o: \
+$(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o: \
                 $(FREETYPEDEP)
-graf/src/TTF.o graf/src/TText.o graf/src/TLatex.o: \
+$(GRAFDIRS)/TTF.o $(GRAFDIRS)/TText.o $(GRAFDIRS)/TLatex.o: \
                 CXXFLAGS += $(FREETYPEINC)
 
 ifeq ($(PLATFORM),win32)
 ifeq (,$(findstring $(VC_MAJOR),14 15))
-graf/src/TLatex.o: OPT = $(NOOPT)
+$(GRAFDIRS)/TLatex.o: OPT = $(NOOPT)
 endif
 endif

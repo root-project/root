@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 27/11/2001
 
-MODDIR       := win32gdk
+MODNAME      := win32gdk
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -61,6 +62,8 @@ ALLMAPS     += $(WIN32GDKMAP)
 INCLUDEFILES += $(WIN32GDKDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(WIN32GDKDIRI)/%.h
 		cp $< $@
 
@@ -101,14 +104,14 @@ $(WIN32GDKMAP): $(RLIBMAP) $(MAKEFILEDEP) $(WIN32GDKL)
 		$(RLIBMAP) -o $(WIN32GDKMAP) -l $(WIN32GDKLIB) \
 		   -d $(WIN32GDKLIBDEPM) -c $(WIN32GDKL)
 
-all-win32gdk:   $(WIN32GDKLIB) $(WIN32GDKMAP)
+all-$(MODNAME): $(WIN32GDKLIB) $(WIN32GDKMAP)
 
-clean-win32gdk:
+clean-$(MODNAME):
 		@rm -f $(WIN32GDKO) $(WIN32GDKDO)
 
-clean::         clean-win32gdk
+clean::         clean-$(MODNAME)
 
-distclean-win32gdk: clean-win32gdk
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(WIN32GDKDEP) $(WIN32GDKDS) $(WIN32GDKDH) \
 		   $(WIN32GDKLIB) $(WIN32GDKMAP) $(GDKLIBS) $(GDKDLLS)
 ifeq ($(PLATFORM),win32)
@@ -116,7 +119,7 @@ ifeq ($(PLATFORM),win32)
 		nmake -nologo -f makefile.msc clean VC_MAJOR=$(VC_MAJOR))
 endif
 
-distclean::     distclean-win32gdk
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules #####
 $(WIN32GDKO1) $(WIN32GDKDO): $(FREETYPEDEP)

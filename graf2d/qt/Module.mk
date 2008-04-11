@@ -4,7 +4,8 @@
 #
 # Author: Valeri Fine, 21/10/2001
 
-MODDIR        := qt
+MODNAME       := qt
+MODDIR        := graf2d/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -40,7 +41,7 @@ GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
 
-QT4           :=  $(findstring QtCore, $(QTINCDIR))
+QT4           := $(findstring QtCore, $(QTINCDIR))
 
 QT3CPPFLAGS   := -DQT_DLL  -DQT_NO_DEBUG  -DQT_THREAD_SUPPORT
 QT4CPPFLAGS   := -DQT_QT3SUPPORT_LIB -DQT3_SUPPORT -DQT_GUI_LIB -DQT_CORE_LIB 
@@ -75,6 +76,8 @@ ALLMAPS       += $(GQTMAP)
 INCLUDEFILES  += $(GQTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(GQTDIRI)/%.h
 		cp $< $@
 
@@ -98,17 +101,17 @@ $(GQTMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GQTL)
 		$(RLIBMAP) -o $(GQTMAP) -l $(GQTLIB) \
 		   -d $(GQTLIBDEPM) -c $(GQTL)
 
-all-qt:         $(GQTLIB) $(GQTMAP)
+all-$(MODNAME): $(GQTLIB) $(GQTMAP)
 
-clean-qt:
+clean-$(MODNAME):
 		@rm  -f $(GQTO) $(GQTDO) $(GQTMOCO) $(GQTMOC)
 
-clean::         clean-qt
+clean::         clean-$(MODNAME)
 
-distclean-qt: clean-qt
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GQTDEP) $(GQTDS) $(GQTDH) $(GQTMOC) $(GQTLIB) $(GQTMAP)
 
-distclean::     distclean-qt
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(sort $(GQTMOCO) $(GQTO)): CXXFLAGS += $(GQTCXXFLAGS)
@@ -128,9 +131,9 @@ endif
 
 qtcint: lib/qtcint.dll
 
-lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/lib/qt/qtcint.h \
-                cint/lib/qt/qtclasses.h cint/lib/qt/qtglobals.h \
-                cint/lib/qt/qtfunctions.h
+lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/cint/lib/qt/qtcint.h \
+                cint/cint/lib/qt/qtclasses.h cint/cint/lib/qt/qtglobals.h \
+                cint/cint/lib/qt/qtfunctions.h
 	$(MAKECINTDLL) $(PLATFORM) C++ qtcint qt \
 	  " -p $(GQTCXXFLAGS) qtcint.h " \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \

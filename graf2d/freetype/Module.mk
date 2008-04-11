@@ -11,7 +11,8 @@ FREETYPELDFLAGS := $(filter-out -l%,$(FREETYPELIBF))
 FREETYPEDEP     :=
 else
 
-MODDIR       := freetype
+MODNAME      := freetype
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 
 FREETYPEVERS := freetype-2.3.5
@@ -39,6 +40,8 @@ FREETYPEDEP  := $(FREETYPELIB)
 FREETYPELDFLAGS :=
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 $(FREETYPELIB): $(FREETYPELIBA)
 ifeq ($(PLATFORM),aix5)
 		ar rv $@ $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/.libs/*.o
@@ -110,9 +113,9 @@ else
 		$(MAKE))
 endif
 
-all-freetype:   $(FREETYPELIB)
+all-$(MODNAME): $(FREETYPELIB)
 
-clean-freetype:
+clean-$(MODNAME):
 ifeq ($(PLATFORM),win32)
 		-@(if [ -d $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc ]; then \
 			cd $(FREETYPEDIRS)/$(FREETYPEVERS)/builds/win32/visualc; \
@@ -127,13 +130,13 @@ else
 		fi)
 endif
 
-clean::         clean-freetype
+clean::         clean-$(MODNAME)
 
-distclean-freetype: clean-freetype
+distclean-$(MODNAME): clean-$(MODNAME)
 		@mv $(FREETYPELIBS) $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz
 		@rm -rf $(FREETYPELIB) $(FREETYPEDIRS)/freetype-*
 		@mv $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz $(FREETYPELIBS)
 
-distclean::     distclean-freetype
+distclean::     distclean-$(MODNAME)
 
 endif

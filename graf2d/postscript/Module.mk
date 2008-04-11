@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := postscript
+MODNAME      := postscript
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -11,7 +12,7 @@ POSTSCRIPTDIR  := $(MODDIR)
 POSTSCRIPTDIRS := $(POSTSCRIPTDIR)/src
 POSTSCRIPTDIRI := $(POSTSCRIPTDIR)/inc
 
-##### libTree #####
+##### libPostscript #####
 POSTSCRIPTL  := $(MODDIRI)/LinkDef.h
 POSTSCRIPTDS := $(MODDIRS)/G__PostScript.cxx
 POSTSCRIPTDO := $(POSTSCRIPTDS:.cxx=.o)
@@ -35,10 +36,13 @@ ALLMAPS       += $(POSTSCRIPTMAP)
 INCLUDEFILES += $(POSTSCRIPTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(POSTSCRIPTDIRI)/%.h
 		cp $< $@
 
-$(POSTSCRIPTLIB): $(POSTSCRIPTO) $(POSTSCRIPTDO) $(ORDER_) $(MAINLIBS) $(POSTSCRIPTLIBDEP)
+$(POSTSCRIPTLIB): $(POSTSCRIPTO) $(POSTSCRIPTDO) $(ORDER_) $(MAINLIBS) \
+                  $(POSTSCRIPTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libPostscript.$(SOEXT) $@ \
 		   "$(POSTSCRIPTO) $(POSTSCRIPTDO)" \
@@ -52,18 +56,18 @@ $(POSTSCRIPTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(POSTSCRIPTL)
 		$(RLIBMAP) -o $(POSTSCRIPTMAP) -l $(POSTSCRIPTLIB) \
 		   -d $(POSTSCRIPTLIBDEPM) -c $(POSTSCRIPTL)
 
-all-postscript: $(POSTSCRIPTLIB) $(POSTSCRIPTMAP)
+all-$(MODNAME): $(POSTSCRIPTLIB) $(POSTSCRIPTMAP)
 
-clean-postscript:
+clean-$(MODNAME):
 		@rm -f $(POSTSCRIPTO) $(POSTSCRIPTDO)
 
-clean::         clean-postscript
+clean::         clean-$(MODNAME)
 
-distclean-postscript: clean-postscript
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(POSTSCRIPTDEP) $(POSTSCRIPTDS) $(POSTSCRIPTDH) \
 		   $(POSTSCRIPTLIB) $(POSTSCRIPTMAP)
 
-distclean::     distclean-postscript
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 ifeq ($(ARCH),alphacxx6)

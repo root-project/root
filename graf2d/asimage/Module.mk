@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 8/8/2002
 
-MODDIR       := asimage
+MODNAME      := asimage
+MODDIR       := graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -92,6 +93,8 @@ ALLMAPS     += $(ASIMAGEMAP) $(ASIMAGEGUIMAP)
 INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(ASIMAGEDIRI)/%.h
 		cp $< $@
 
@@ -147,7 +150,7 @@ else
 			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
 		fi; \
 		if [ "$(FREETYPEDIRI)" != "" ]; then \
-			TTFINCDIR="--with-ttf-includes=-I../../../$(FREETYPEDIRI)"; \
+			TTFINCDIR="--with-ttf-includes=-I../../../../$(FREETYPEDIRI)"; \
 		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
@@ -170,9 +173,9 @@ ifeq ($(PLATFORM),win32)
 		@(cd $(ASTEPDIRS); \
 		echo "*** Building libAfterImage ..." ; \
 		unset MAKEFLAGS; \
-		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) \
+		nmake FREETYPEDIRI=-I../../../../$(FREETYPEDIRI) \
                 -nologo -f libAfterImage.mak \
-		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I../../../build/win -FIw32pragma.h")
+		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I../../../../build/win -FIw32pragma.h")
 else
 		@(cd $(ASTEPDIRS); \
 		echo "*** Building libAfterImage ..." ; \
@@ -216,10 +219,9 @@ $(ASIMAGEGUIMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ASIMAGEGUIL)
 		$(RLIBMAP) -o $(ASIMAGEGUIMAP) -l $(ASIMAGEGUILIB) \
 		   -d $(ASIMAGEGUILIBDEPM) -c $(ASIMAGEGUIL)
 
-all-asimage:    $(ASIMAGELIB) $(ASIMAGEGUILIB) \
-$(ASIMAGEMAP) $(ASIMAGEGUIMAP)
+all-$(MODNAME): $(ASIMAGELIB) $(ASIMAGEGUILIB) $(ASIMAGEMAP) $(ASIMAGEGUIMAP)
 
-clean-asimage:
+clean-$(MODNAME):
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO) $(ASIMAGEGUIO) $(ASIMAGEGUIDO)
 ifeq ($(BUILTINASIMAGE),yes)
 ifeq ($(PLATFORM),win32)
@@ -237,9 +239,9 @@ else
 endif
 endif
 
-clean::         clean-asimage
+clean::         clean-$(MODNAME)
 
-distclean-asimage: clean-asimage
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) \
 		   $(ASIMAGELIB) $(ASIMAGEMAP) \
 		   $(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) \
@@ -261,13 +263,11 @@ else
 endif
 endif
 
-distclean::     distclean-asimage
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(ASIMAGEO): $(ASTEPLIB) $(FREETYPEDEP)
 $(ASIMAGEO): CXXFLAGS += $(FREETYPEINC) $(ASTEPDIRI)
 
-$(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEDO): \
-  $(ASTEPLIB)
-$(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEDO): \
-  CXXFLAGS += $(ASTEPDIRI)
+$(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEDO): $(ASTEPLIB)
+$(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEDO): CXXFLAGS += $(ASTEPDIRI)
