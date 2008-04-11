@@ -10,7 +10,7 @@
 *
 * Notes:    Visual C++ puts an underscore before each exported symbol.
 *           This file removes them.  I don't know if this is a problem
-*           this other compilers.  If VISUAL_CPLUSCPLUS is defined,
+*           this other compilers.  If _MSC_VER is defined,
 *           the underscore is removed.  If not, it isn't.  To get a
 *           full dump of an object file, use the -f option.  This can
 *           help determine the something that may be different with a
@@ -319,7 +319,7 @@ DumpExternals(PIMAGE_SYMBOL pSymbolTable, FILE *fout, unsigned cSymbols)
             }
             std::string::size_type posAt = symbol.find('@');
             if (posAt != std::string::npos) symbol.erase(posAt);
-#ifndef VISUAL_CPLUSPLUS
+#ifndef _MSC_VER
             fprintf(fout, "\t%s\n", symbol.c_str());
 #else
             fprintf(fout, "\t%s\n", symbol.c_str()+1);
@@ -452,7 +452,7 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
             }
 
             while (isspace(symbol[0])) symbol.erase(0,1);
-#ifdef VISUAL_CPLUSPLUS
+#ifdef _MSC_VER
             if (symbol[0] == '_') symbol.erase(0,1);
             if (fort) {
                std::string::size_type posAt = symbol.find('@');

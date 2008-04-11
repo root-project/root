@@ -59,7 +59,6 @@
 #define _X86_ 1 
 // #define _DLL  - used to be explicitely defined, 
 // but it's implicitely defined via /MD(d)
-#define VISUAL_CPLUSPLUS 1
 #define G__REDIRECTIO 1
 #define G__SHAREDLIB 1
 #define G__UNIX 1

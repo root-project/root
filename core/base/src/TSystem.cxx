@@ -3342,7 +3342,7 @@ void TSystem::SetMakeSharedLib(const char *directives)
    //
    // gSystem->SetMakeSharedLib(
    // "cl -DWIN32  -D_WIN32 -D_MT -D_DLL -MD /O2 /G5 /MD -DWIN32
-   //  -DVISUAL_CPLUSPLUS -D_WINDOWS $IncludePath $SourceFile
+   //  -D_WINDOWS $IncludePath $SourceFile
    //  /link -PDB:NONE /NODEFAULTLIB /INCREMENTAL:NO /RELEASE /NOLOGO
    //  $LinkedLibs -entry:_DllMainCRTStartup@12 -dll /out:$SharedLib")
 

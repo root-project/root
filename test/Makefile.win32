@@ -29,7 +29,7 @@ OutPutOpt     = -out:
 CC            = $(cc)
 CXX           = $(cc)
 CXXFLAGS      = $(cvarsdll) -EHsc -nologo -GR -DWIN32 \
-                -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include \
+                -D_WINDOWS -I$(ROOTSYS)/include \
                 -FIw32pragma.h
 LD            = $(link)
 
