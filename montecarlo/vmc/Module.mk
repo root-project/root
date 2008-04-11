@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 12/4/2002
 
-MODDIR       := vmc
+MODNAME      := vmc
+MODDIR       := montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -36,6 +37,8 @@ ALLMAPS     += $(VMCMAP)
 INCLUDEFILES += $(VMCDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(VMCDIRI)/%.h
 		cp $< $@
 
@@ -52,14 +55,14 @@ $(VMCMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(VMCL)
 		$(RLIBMAP) -o $(VMCMAP) -l $(VMCLIB) \
 		   -d $(VMCLIBDEPM) -c $(VMCL)
 
-all-vmc:        $(VMCLIB) $(VMCMAP)
+all-$(MODNAME): $(VMCLIB) $(VMCMAP)
 
-clean-vmc:
+clean-$(MODNAME):
 		@rm -f $(VMCO) $(VMCDO)
 
-clean::         clean-vmc
+clean::         clean-$(MODNAME)
 
-distclean-vmc:   clean-vmc
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(VMCDEP) $(VMCDS) $(VMCDH) $(VMCLIB) $(VMCMAP)
 
-distclean::     distclean-vmc
+distclean::     distclean-$(MODNAME)

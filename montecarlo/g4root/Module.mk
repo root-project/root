@@ -3,7 +3,8 @@
 #
 # Author: Andrei Gheata, 08/08/2006
 
-MODDIR       := g4root
+MODNAME      := g4root
+MODDIR       := montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -45,6 +46,8 @@ ALLMAPS     += $(G4ROOTMAP)
 INCLUDEFILES += $(G4ROOTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(G4ROOTDIRI)/%.h
 		cp $< $@
 
@@ -62,17 +65,17 @@ $(G4ROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(G4ROOTL)
 		$(RLIBMAP) -o $(G4ROOTMAP) -l $(G4ROOTLIB) \
 		   -d $(G4ROOTLIBDEPM) -c $(G4ROOTL)
 
-all-g4root:     $(G4ROOTLIB) $(G4ROOTMAP)
+all-$(MODNAME): $(G4ROOTLIB) $(G4ROOTMAP)
 
-clean-g4root:
+clean-$(MODNAME):
 		@rm -f $(G4ROOTO) $(G4ROOTDO)
 
-clean::         clean-g4root
+clean::         clean-$(MODNAME)
 
-distclean-g4root: clean-g4root
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(G4ROOTDEP) $(G4ROOTDS) $(G4ROOTDH) $(G4ROOTLIB) $(G4ROOTMAP)
 
-distclean::     distclean-g4root
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(G4ROOTO): CXXFLAGS += $(G4INCDIR:%=-I%) $(CLHEPINCDIR:%=-I%)

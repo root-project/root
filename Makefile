@@ -63,8 +63,9 @@ MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
                 core/clib math/matrix core/newdelete \
                 hist/hist tree/tree freetype graf gpad g3d gui/gui math/minuit \
                 hist/histpainter tree/treeplayer gui/ged tree/treeviewer \
-                math/physics postscript core/rint core/thread html eg \
-                geom/geom geom/geompainter vmc \
+                math/physics postscript core/rint core/thread html \
+                montecarlo/eg \
+                geom/geom geom/geompainter montecarlo/vmc \
                 math/fumili math/mlp math/quadp net/auth gui/guibuilder io/xml \
                 math/foam math/splot math/smatrix io/sql tmva \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
@@ -124,7 +125,7 @@ ifeq ($(BUILDGFAL),yes)
 MODULES      += io/gfal
 endif
 ifeq ($(BUILDG4ROOT),yes)
-MODULES      += g4root
+MODULES      += montecarlo/g4root
 endif
 ifeq ($(BUILDGLITE),yes)
 MODULES      += net/glite
@@ -136,10 +137,10 @@ ifeq ($(BUILDASIMAGE),yes)
 MODULES      += asimage
 endif
 ifeq ($(BUILDFPYTHIA6),yes)
-MODULES      += pythia6
+MODULES      += montecarlo/pythia6
 endif
 ifeq ($(BUILDFPYTHIA8),yes)
-MODULES      += pythia8
+MODULES      += montecarlo/pythia8
 endif
 ifeq ($(BUILDFFTW3),yes)
 MODULES      += math/fftw
@@ -239,7 +240,8 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl \
                 io/rfio io/castor \
-                pythia6 table sql/mysql sql/pgsql sql/sapdb net/srputils x3d \
+                montecarlo/pythia6 montecarlo/pythia8 table \
+                sql/mysql sql/pgsql sql/sapdb net/srputils x3d \
                 rootx net/rootd io/dcache io/chirp hbook asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal \
@@ -248,7 +250,7 @@ MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl \
                 sql/oracle xmlparser math/mathmore cint/reflex cint/cintex \
                 roofit/roofitcore roofit/roofit \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
-                geom/gdml eve g4root net/glite
+                geom/gdml eve montecarlo/g4root net/glite
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

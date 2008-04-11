@@ -3,7 +3,8 @@
 #
 # Author: Rene Brun 01/11/2007
 
-MODDIR       := pythia8
+MODNAME      := pythia8
+MODDIR       := montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -11,7 +12,7 @@ PYTHIA8DIR   := $(MODDIR)
 PYTHIA8DIRS  := $(PYTHIA8DIR)/src
 PYTHIA8DIRI  := $(PYTHIA8DIR)/inc
 
-##### libEGPythia6 #####
+##### libEGPythia8 #####
 PYTHIA8L     := $(MODDIRI)/LinkDef.h
 PYTHIA8DS    := $(MODDIRS)/G__Pythia8.cxx
 PYTHIA8DO    := $(PYTHIA8DS:.cxx=.o)
@@ -35,6 +36,8 @@ ALLMAPS     += $(PYTHIA8MAP)
 INCLUDEFILES += $(PYTHIA8DEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(PYTHIA8DIRI)/%.h
 		cp $< $@
 
@@ -52,17 +55,18 @@ $(PYTHIA8MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA8L)
 		$(RLIBMAP) -o $(PYTHIA8MAP) -l $(PYTHIA8LIB) \
 		   -d $(PYTHIA8LIBDEPM) -c $(PYTHIA8L)
 
-all-pythia8:    $(PYTHIA8LIB) $(PYTHIA8MAP)
+all-$(MODNAME): $(PYTHIA8LIB) $(PYTHIA8MAP)
 
-clean-pythia8:
+clean-$(MODNAME):
 		@rm -f $(PYTHIA8O) $(PYTHIA8DO)
 
-clean::         clean-pythia8
+clean::         clean-$(MODNAME)
 
-distclean-pythia8: clean-pythia8
-		@rm -f $(PYTHIA8DEP) $(PYTHIA8DS) $(PYTHIA8DH) $(PYTHIA8LIB) $(PYTHIA8MAP)
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -f $(PYTHIA8DEP) $(PYTHIA8DS) $(PYTHIA8DH) \
+		   $(PYTHIA8LIB) $(PYTHIA8MAP)
 
-distclean::     distclean-pythia8
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PYTHIA8O):    CXXFLAGS += $(FPYTHIA8INCDIR:%=-I%)

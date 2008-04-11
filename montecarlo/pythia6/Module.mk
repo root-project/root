@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := pythia6
+MODNAME      := pythia6
+MODDIR       := montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(PYTHIA6MAP)
 INCLUDEFILES += $(PYTHIA6DEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(PYTHIA6DIRI)/%.h
 		cp $< $@
 
@@ -52,17 +55,18 @@ $(PYTHIA6MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA6L)
 		$(RLIBMAP) -o $(PYTHIA6MAP) -l $(PYTHIA6LIB) \
 		   -d $(PYTHIA6LIBDEPM) -c $(PYTHIA6L)
 
-all-pythia6:    $(PYTHIA6LIB) $(PYTHIA6MAP)
+all-$(MODNAME): $(PYTHIA6LIB) $(PYTHIA6MAP)
 
-clean-pythia6:
+clean-$(MODNAME):
 		@rm -f $(PYTHIA6O) $(PYTHIA6DO)
 
-clean::         clean-pythia6
+clean::         clean-$(MODNAME)
 
-distclean-pythia6: clean-pythia6
-		@rm -f $(PYTHIA6DEP) $(PYTHIA6DS) $(PYTHIA6DH) $(PYTHIA6LIB) $(PYTHIA6MAP)
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -f $(PYTHIA6DEP) $(PYTHIA6DS) $(PYTHIA6DH) \
+		   $(PYTHIA6LIB) $(PYTHIA6MAP)
 
-distclean::     distclean-pythia6
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PYTHIA6O):    CXXFLAGS += $(FPYTHIA6CPPFLAGS)

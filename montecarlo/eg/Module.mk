@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := eg
+MODNAME      := eg
+MODDIR       := montecarlo/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -36,6 +37,8 @@ ALLMAPS     += $(EGMAP)
 INCLUDEFILES += $(EGDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(EGDIRI)/%.h
 		cp $< $@
 
@@ -52,14 +55,14 @@ $(EGMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(EGL)
 		$(RLIBMAP) -o $(EGMAP) -l $(EGLIB) \
 		   -d $(EGLIBDEPM) -c $(EGL)
 
-all-eg:         $(EGLIB) $(EGMAP)
+all-$(MODNAME): $(EGLIB) $(EGMAP)
 
-clean-eg:
+clean-$(MODNAME):
 		@rm -f $(EGO) $(EGDO)
 
-clean::         clean-eg
+clean::         clean-$(MODNAME)
 
-distclean-eg:   clean-eg
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(EGDEP) $(EGDS) $(EGDH) $(EGLIB) $(EGMAP)
 
-distclean::     distclean-eg
+distclean::     distclean-$(MODNAME)
