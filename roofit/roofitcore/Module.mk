@@ -3,7 +3,8 @@
 #
 # Author: Wouter Verkerke, 18/4/2005
 
-MODDIR         := roofitcore
+MODNAME        := roofitcore
+MODDIR         := roofit/$(MODNAME)
 MODDIRS        := $(MODDIR)/src
 MODDIRI        := $(MODDIR)/inc
 
@@ -100,12 +101,16 @@ ALLMAPS        += $(ROOFITCOREMAP)
 INCLUDEFILES   += $(ROOFITCOREDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h: $(ROOFITCOREDIRI)/%.h
 		cp $< $@
 
-$(ROOFITCORELIB): $(ROOFITCOREO) $(ROOFITCOREDO) $(ORDER_) $(MAINLIBS) $(ROOFITCORELIBDEP)
+$(ROOFITCORELIB): $(ROOFITCOREO) $(ROOFITCOREDO) $(ORDER_) $(MAINLIBS) \
+                  $(ROOFITCORELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRooFitCore.$(SOEXT) $@ "$(ROOFITCOREO) $(ROOFITCOREDO)" \
+		   "$(SOFLAGS)" libRooFitCore.$(SOEXT) $@ \
+		   "$(ROOFITCOREO) $(ROOFITCOREDO)" \
 		   "$(ROOFITCORELIBEXTRA)"
 
 $(ROOFITCOREDS1): $(ROOFITCOREH1) $(ROOFITCOREL1) $(ROOTCINTTMPDEP)
@@ -124,15 +129,15 @@ $(ROOFITCOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ROOFITCOREL)
 		$(RLIBMAP) -o $(ROOFITCOREMAP) -l $(ROOFITCORELIB) \
 		   -d $(ROOFITCORELIBDEPM) -c $(ROOFITCOREL)
 
-all-roofitcore: $(ROOFITCORELIB) $(ROOFITCOREMAP)
+all-$(MODNAME): $(ROOFITCORELIB) $(ROOFITCOREMAP)
 
-clean-roofitcore:
+clean-$(MODNAME):
 		@rm -f $(ROOFITCOREO) $(ROOFITCOREDO)
 
-clean::         clean-roofitcore
+clean::         clean-$(MODNAME)
 
-distclean-roofitcore: clean-roofitcore
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf $(ROOFITCOREDEP) $(ROOFITCORELIB) $(ROOFITCOREMAP) \
 		   $(ROOFITCOREDS) $(ROOFITCOREDH)
 
-distclean::     distclean-roofitcore
+distclean::     distclean-$(MODNAME)

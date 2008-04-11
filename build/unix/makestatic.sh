@@ -25,8 +25,8 @@ excl="main proof/proofd net/rootd net/xrootd rootx pythia pythia6 \
       net/globusauth io/chirp io/dcache \
       x11ttf net/alien asimage net/ldap pyroot qt gui/qtroot math/quadp \
       ruby vmc \
-      xmlparser gl roofit roofitcore sql/oracle net/netx net/auth \
-      net/rpdutils math/mathmore \
+      xmlparser gl roofit/roofit roofit/roofitcore sql/oracle \
+      net/netx net/auth net/rpdutils math/mathmore \
       math/minuit2 io/gfal net/monalisa proof/proofx math/fftw gui/qtgsi \
       sql/odbc \
       io/castor math/unuran geom/gdml cint/cint7 g4root eve net/glite"

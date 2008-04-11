@@ -3,7 +3,8 @@
 #
 # Author: Wouter Verkerke, 18/4/2005
 
-MODDIR       := roofit
+MODNAME      := roofit
+MODDIR       := roofit/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(ROOFITMAP)
 INCLUDEFILES += $(ROOFITDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(ROOFITDIRI)/%.h
 		cp $< $@
 
@@ -51,15 +54,15 @@ $(ROOFITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ROOFITL)
 		$(RLIBMAP) -o $(ROOFITMAP) -l $(ROOFITLIB) \
 		   -d $(ROOFITLIBDEPM) -c $(ROOFITL)
 
-all-roofit:     $(ROOFITLIB) $(ROOFITMAP)
+all-$(MODNAME): $(ROOFITLIB) $(ROOFITMAP)
 
-clean-roofit:
+clean-$(MODNAME):
 		@rm -f $(ROOFITO) $(ROOFITDO)
 
-clean::         clean-roofit
+clean::         clean-$(MODNAME)
 
-distclean-roofit: clean-roofit
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf $(ROOFITDEP) $(ROOFITLIB) $(ROOFITMAP) \
 		   $(ROOFITDS) $(ROOFITDH)
 
-distclean::     distclean-roofit
+distclean::     distclean-$(MODNAME)
