@@ -1457,25 +1457,25 @@ class genDictionary(object) :
         if n == narg-ndarg :  s += '  if ( arg.size() == %d ) {\n' % n
         else               :  s += '  else if ( arg.size() == %d ) { \n' % n
       if returns == 'void' :
-        first = iden + '  ((%s*)o)->%s(' % ( cl, name )
+        first = iden + '  (((%s*)o)->%s)(' % ( cl, name )
         s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
         s += iden + '  return 0;\n'
       else :
         if returns[-1] in ('*',')') and returns.find('::*') == -1 :
-          first = iden + '  return (void*)((%s*)o)->%s(' % ( cl, name )
+          first = iden + '  return (void*)(((%s*)o)->%s)(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
         elif returns[-1] == '&' :
-          first = iden + '  return (void*)&((%s*)o)->%s(' % ( cl, name )
+          first = iden + '  return (void*)&(((%s*)o)->%s)(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
         elif (returns in self.basictypes or
               self.translate_typedef (attrs['returns']) in self.basictypes or
               returns.find('::*') != -1 or
               name == 'operator '+tdfname):
-          first = iden + '  ret = ((%s*)o)->%s(' % ( cl, name )
+          first = iden + '  ret = (((%s*)o)->%s)(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
           s += iden + '  return &ret;\n'        
         else :
-          first = iden + '  return new %s(((%s*)o)->%s(' % ( returns, cl, name )
+          first = iden + '  return new %s((((%s*)o)->%s)(' % ( returns, cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + '));\n'
       if ndarg : 
         if n != narg : s += '  }\n'
@@ -1562,7 +1562,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genDestructorDef(self, attrs, childs):
     cl = self.genTypeName(attrs['context'])
-    return 'static void* destructor%s(void * o, const std::vector<void*>&, void *) {\n  ((::%s*)o)->~%s(); return 0;\n}' % ( attrs['id'], cl, attrs['name'] )
+    return 'static void* destructor%s(void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->~%s)(); return 0;\n}' % ( attrs['id'], cl, attrs['name'] )
 #----------------------------------------------------------------------------------
   def genDestructorBuild(self, attrs, childs):
     if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
