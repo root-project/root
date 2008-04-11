@@ -4,7 +4,7 @@
 # Authors: Jose Lo
 
 MODNAME       := xmlparser
-MODDIR        := $(MODNAME)
+MODDIR        := io/$(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 

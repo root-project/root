@@ -152,7 +152,7 @@ ifeq ($(BUILDRUBY),yes)
 MODULES      += bindings/ruby
 endif
 ifeq ($(BUILDXML),yes)
-MODULES      += xmlparser
+MODULES      += io/xmlparser
 endif
 ifeq ($(BUILDQT),yes)
 MODULES      += graf2d/qt gui/qtroot
@@ -247,7 +247,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 bindings/pyroot bindings/ruby io/gfal \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
-                sql/oracle xmlparser math/mathmore cint/reflex cint/cintex \
+                sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
                 roofit/roofitcore roofit/roofit \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite
