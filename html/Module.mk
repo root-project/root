@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := html
+MODNAME      := html
+MODDIR       := $(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(HTMLMAP)
 INCLUDEFILES += $(HTMLDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(HTMLDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(HTMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HTMLL)
 		$(RLIBMAP) -o $(HTMLMAP) -l $(HTMLLIB) \
 		   -d $(HTMLLIBDEPM) -c $(HTMLL)
 
-all-html:       $(HTMLLIB) $(HTMLMAP)
+all-$(MODNAME): $(HTMLLIB) $(HTMLMAP)
 
-clean-html:
+clean-$MODNAME):
 		@rm -f $(HTMLO) $(HTMLDO)
 
-clean::         clean-html
+clean::         clean-$MODNAME)
 
-distclean-html: clean-html
+distclean-$MODNAME): clean-$MODNAME)
 		@rm -f $(HTMLDEP) $(HTMLDS) $(HTMLDH) $(HTMLLIB) $(HTMLMAP)
 
-distclean::     distclean-html
+distclean::     distclean-$MODNAME)

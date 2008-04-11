@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := table
+MODNAME      := table
+MODDIR       := $(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS     += $(TABLEMAP)
 INCLUDEFILES += $(TABLEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(TABLEDIRI)/%.h
 		cp $< $@
 
@@ -51,14 +54,14 @@ $(TABLEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(TABLEL)
 		$(RLIBMAP) -o $(TABLEMAP) -l $(TABLELIB) \
 		   -d $(TABLELIBDEPM) -c $(TABLEL)
 
-all-table:      $(TABLELIB) $(TABLEMAP)
+all-$(MODNAME): $(TABLELIB) $(TABLEMAP)
 
-clean-table:
+clean-$(MODNAME):
 		@rm -f $(TABLEO) $(TABLEDO)
 
-clean::         clean-table
+clean::         clean-$(MODNAME)
 
-distclean-table: clean-table
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(TABLEDEP) $(TABLEDS) $(TABLEDH) $(TABLELIB) $(TABLEMAP)
 
-distclean::     distclean-table
+distclean::     distclean-$(MODNAME)

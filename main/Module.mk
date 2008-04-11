@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := main
+MODNAME      := main
+MODDIR       := $(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -125,6 +126,8 @@ INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP) \
                 $(SSH2RPDDEP) $(ROOTSEXEDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 $(ROOTEXE):     $(ROOTEXEO) $(BOOTLIBSDEP) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
 		   $(RPATH) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
@@ -139,16 +142,16 @@ $(PROOFSERVEXE): $(PROOFSERVO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) $(BOOTULIBS) \
 		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
 
-$(PROOFSERVSH): main/src/proofserv.sh
+$(PROOFSERVSH): $(MAINDIRS)/proofserv.sh
 		@echo "Install proofserv wrapper."
 		@cp $< $@
 		@chmod 0755 $@
 
-$(ROOTSEXE): $(ROOTSEXEO) $(BOOTLIBSDEP)
+$(ROOTSEXE):    $(ROOTSEXEO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTSEXEO) $(BOOTULIBS) \
 		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
 
-$(ROOTSSH): main/src/roots.sh
+$(ROOTSSH):     $(MAINDIRS)/roots.sh
 		@echo "Install roots wrapper."
 		@cp $< $@
 		@chmod 0755 $@
@@ -177,27 +180,27 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
 
 ifeq ($(BUILDHBOOK),yes)
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-               $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
-               $(ROOTSEXE) $(ROOTSSH)
+all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+                $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
+                $(ROOTSEXE) $(ROOTSSH)
 else
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-               $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
+all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+                $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 endif
 
-clean-main:
+clean-$(MODNAME):
 		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) \
 		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO) $(ROOTSEXEO)
 
-clean::         clean-main
+clean::         clean-$(MODNAME)
 
-distclean-main: clean-main
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERVEXE) $(PROOFSERVSH) $(HADDDEP) $(HADD) \
 		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
 		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) $(ROOTSSH)
 
-distclean::     distclean-main
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(SSH2RPDO): PCHCXXFLAGS =

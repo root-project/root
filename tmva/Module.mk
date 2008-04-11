@@ -3,8 +3,8 @@
 #
 # Author: Fons Rademakers, 20/6/2005
 
-
-MODDIR       := tmva
+MODNAME      := tmva
+MODDIR       := $(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -37,6 +37,8 @@ ALLMAPS      += $(TMVAMAP)
 INCLUDEFILES += $(TMVADEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/TMVA/%.h: $(TMVADIRI)/%.h
 		@(if [ ! -d "include/TMVA" ]; then     \
 		   mkdir -p include/TMVA;              \
@@ -56,15 +58,15 @@ $(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
 		$(RLIBMAP) -o $(TMVAMAP) -l $(TMVALIB) \
 		   -d $(TMVALIBDEPM) -c $(TMVAL)
 
-all-tmva:       $(TMVALIB) $(TMVAMAP)
+all-$(MODNAME): $(TMVALIB) $(TMVAMAP)
 
-clean-tmva:
+clean-$(MODNAME):
 		@rm -f $(TMVAO) $(TMVADO)
 
 clean::         clean-tmva
 
-distclean-tmva: clean-tmva
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(TMVADEP) $(TMVADS) $(TMVADH) $(TMVALIB) $(TMVAMAP)
 		@rm -rf include/TMVA
 
-distclean::     distclean-tmva
+distclean::     distclean-$(MODNAME)

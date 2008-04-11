@@ -3,7 +3,8 @@
 #
 # Authors: Jose Lo
 
-MODDIR        := xmlparser
+MODNAME       := xmlparser
+MODDIR        := $(MODNAME)
 MODDIRS       := $(MODDIR)/src
 MODDIRI       := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS      += $(XMLPARSERMAP)
 INCLUDEFILES += $(XMLPARSERDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(XMLPARSERDIRI)/%.h
 		cp $< $@
 
@@ -52,18 +55,18 @@ $(XMLPARSERMAP): $(RLIBMAP) $(MAKEFILEDEP) $(XMLPARSERL)
 		$(RLIBMAP) -o $(XMLPARSERMAP) -l $(XMLPARSERLIB) \
 		   -d $(XMLPARSERLIBDEPM) -c $(XMLPARSERL)
 
-all-xmlparser:  $(XMLPARSERLIB) $(XMLPARSERMAP)
+all-$(MODNAME): $(XMLPARSERLIB) $(XMLPARSERMAP)
 
-clean-xmlparser:
+clean-$(MODNAME):
 		@rm -f $(XMLPARSERO) $(XMLPARSERDO)
 
-clean::         clean-xmlparser
+clean::         clean-$(MODNAME)
 
-distclean-xmlparser: clean-xmlparser
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(XMLPARSERDEP) $(XMLPARSERDS) $(XMLPARSERDH) \
 		   $(XMLPARSERLIB) $(XMLPARSERMAP)
 
-distclean::     distclean-xmlparser
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(XMLPARSERO): CXXFLAGS += $(XMLINCDIR:%=-I%)
