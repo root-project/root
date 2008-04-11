@@ -104,7 +104,7 @@ template<class T> T Reflex::NameLookup::Lookup(bool isTemplateExpanded /* = fals
                   
                   size_t p = arg.size();
          
-                  while (p >=0 && (arg[p-1] == '*' || arg[p-1] == '&'))
+                  while (p > 0 && (arg[p-1] == '*' || arg[p-1] == '&'))
                      --p;
                   
                   std::string end( arg.substr( p ) );
