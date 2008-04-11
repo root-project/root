@@ -551,7 +551,7 @@ int G__const_whatnoerror()
 int G__printlinenum()
 {
    const char* format = " FILE:%s LINE:%d\n";
-#ifdef VISUAL_CPLUSPLUS
+#ifdef G__WIN32
    // make error msg Visual Studio compatible
    format = " %s(%d)\n";
 #elif defined(G__ROOT)

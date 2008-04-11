@@ -552,13 +552,13 @@ extern "C" int G__const_whatnoerror()
 extern "C" int G__printlinenum()
 {
    char* format = " FILE:%s LINE:%d\n";
-#ifdef VISUAL_CPLUSPLUS
+#ifdef G__WIN32
    // make error msg Visual Studio compatible
    format = " %s(%d)\n";
 #elif defined(G__ROOT)
    // make error msg GCC compatible
    format = " %s:%d:\n";
-#endif // VISUAL_CPLUSPLUS, G__ROOT
+#endif // G__WIN32, G__ROOT
    G__fprinterr(G__serr, format, G__stripfilename(G__ifile.name), G__ifile.line_number);
    return 0;
 }
