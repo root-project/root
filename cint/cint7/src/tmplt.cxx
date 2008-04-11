@@ -40,7 +40,7 @@ void Cint::Internal::G__IntList_init(G__IntList *body,long iin,G__IntList *prev)
 struct G__IntList* Cint::Internal::G__IntList_new(long iin,G__IntList *prev)
 {
   struct G__IntList *body;
-  body = (struct G__IntList*)malloc(sizeof(struct G__IntList));
+  body =  new G__IntList; // (struct G__IntList*)malloc(sizeof(struct G__IntList));
   G__IntList_init(body,iin,prev);
   return(body);
 }
@@ -82,7 +82,7 @@ void Cint::Internal::G__IntList_delete(G__IntList *body)
   else if(body->prev) {
     body->prev->next = (struct G__IntList*)NULL;
   }
-  free(body);
+  delete body; // free(body);
 }
 
 /***********************************************************************
@@ -106,7 +106,7 @@ void Cint::Internal::G__IntList_free(G__IntList *body)
   if(!body) return;
   if(body->prev) body->prev->next = (struct G__IntList*)NULL;
   while(body->next) G__IntList_free(body->next);
-  free(body);
+  delete body; // free(body);
 }
 
 /***********************************************************************
@@ -343,14 +343,14 @@ struct G__Templatearg *Cint::Internal::G__read_formal_templatearg()
 
     /* allocate entry of template argument list */
     if(stat) {
-      p = (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
+       p = new G__Templatearg; // (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
       p->next = (struct G__Templatearg *)NULL;
       /* store entry of the template argument list */
       targ = p;
       stat=0;
     }
     else {
-      p->next = (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
+       p->next = new G__Templatearg; // (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
       p=p->next;
       p->next = (struct G__Templatearg *)NULL;
     }
@@ -410,7 +410,7 @@ struct G__Templatearg *Cint::Internal::G__read_formal_templatearg()
       else if(strcmp(type,"float")==0) p->type = G__TMPLT_FLOATARG;
       else if(strcmp(type,"double")==0) p->type = G__TMPLT_DOUBLEARG;
       else if(strcmp(type,">")==0) {
-        if(targ) free((void*)targ);
+         if(targ) delete targ; // free((void*)targ);
         targ = (struct G__Templatearg *)NULL;
         return(targ);
       }
@@ -473,14 +473,14 @@ static G__Templatearg *G__read_specializationarg(char *source)
 
     /* allocate entry of template argument list */
     if(!p) {
-      p = (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
+       p = new G__Templatearg; // (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
       p->next = (struct G__Templatearg *)NULL;
       p->default_parameter=(char*)NULL;
       /* store entry of the template argument list */
       targ = p;
     }
     else {
-      p->next = (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
+       p->next = new G__Templatearg; // (struct G__Templatearg *)malloc(sizeof(struct G__Templatearg));
       p=p->next;
       p->default_parameter=(char*)NULL;
       p->next = (struct G__Templatearg *)NULL;
@@ -527,7 +527,7 @@ static G__Templatearg *G__read_specializationarg(char *source)
     else if(strcmp(type,"float")==0) p->type |= G__TMPLT_FLOATARG;
     else if(strcmp(type,"double")==0) p->type |= G__TMPLT_DOUBLEARG;
     else if(strcmp(type,">")==0) {
-      if(targ) free((void*)targ);
+      if(targ) delete targ; // free((void*)targ);
       targ = (struct G__Templatearg *)NULL;
       return(targ);
     }
@@ -732,7 +732,7 @@ int Cint::Internal::G__createtemplatememfunc(char *new_name)
     while(deftmpmemfunc->next) deftmpmemfunc=deftmpmemfunc->next;
 
     /* allocate member function template list */
-    deftmpmemfunc->next = (struct G__Definedtemplatememfunc*)malloc(sizeof(struct G__Definedtemplatememfunc));
+    deftmpmemfunc->next = new G__Definedtemplatememfunc; // (struct G__Definedtemplatememfunc*)malloc(sizeof(struct G__Definedtemplatememfunc));
     deftmpmemfunc->next->next = (struct G__Definedtemplatememfunc*)NULL;
 
     /* set file position */
@@ -788,8 +788,7 @@ int Cint::Internal::G__createtemplateclass(char *new_name,G__Templatearg *targ
         }
         if(spec_arg) {
           if(!deftmpclass->specialization) {
-            deftmpclass->specialization = (struct G__Definedtemplateclass*)
-              malloc(sizeof(struct G__Definedtemplateclass));
+             deftmpclass->specialization = new G__Definedtemplateclass; // (struct G__Definedtemplateclass*)malloc(sizeof(struct G__Definedtemplateclass));
             deftmpclass = deftmpclass->specialization;
             deftmpclass->def_para = (struct G__Templatearg*)NULL;
             deftmpclass->next = (struct G__Definedtemplateclass*)NULL;
@@ -875,7 +874,7 @@ int Cint::Internal::G__createtemplateclass(char *new_name,G__Templatearg *targ
 
   if(!override) {
     /* allocate and initialize next list */
-    deftmpclass->next = (struct G__Definedtemplateclass*)malloc(sizeof(struct G__Definedtemplateclass));
+     deftmpclass->next = new G__Definedtemplateclass; // (struct G__Definedtemplateclass*)malloc(sizeof(struct G__Definedtemplateclass));
     deftmpclass->next->def_para = (struct G__Templatearg*)NULL;
     deftmpclass->next->next = (struct G__Definedtemplateclass*)NULL;
     deftmpclass->next->name = (char*)NULL;
@@ -2010,7 +2009,7 @@ int Cint::Internal::G__gettemplatearglist(char *paralist,G__Charlist *charlist_i
           G__templatemaptypename(charlist->string);
           G__ASSERT((int)strlen(charlist->string)<=(int)len);
         }
-        charlist->next=(struct G__Charlist*)malloc(sizeof(struct G__Charlist));
+        charlist->next= new G__Charlist; // (struct G__Charlist*)malloc(sizeof(struct G__Charlist));
         charlist->next->next = (struct G__Charlist *)NULL;
         charlist->next->string = (char *)NULL;
         charlist = charlist->next;
@@ -2855,7 +2854,7 @@ void Cint::Internal::G__freedeftemplateclass(G__Definedtemplateclass *deftmpclas
 {
   if(deftmpclass->next) {
     G__freedeftemplateclass(deftmpclass->next);
-    free((void*)deftmpclass->next);
+    delete deftmpclass->next;
     deftmpclass->next = (struct G__Definedtemplateclass *)NULL;
   }
   if(deftmpclass->spec_arg) {
@@ -2864,7 +2863,7 @@ void Cint::Internal::G__freedeftemplateclass(G__Definedtemplateclass *deftmpclas
   }
   if(deftmpclass->specialization) {
     G__freedeftemplateclass(deftmpclass->specialization);
-    free((void*)deftmpclass->specialization);
+    delete deftmpclass->specialization;
     deftmpclass->specialization=(struct G__Definedtemplateclass*)NULL;
   }
   G__freetemplatearg(deftmpclass->def_para);
@@ -2888,7 +2887,7 @@ void Cint::Internal::G__freetemplatememfunc(G__Definedtemplatememfunc *memfunctm
 {
   if(memfunctmplt->next) {
     G__freetemplatememfunc(memfunctmplt->next);
-    free((void*)memfunctmplt->next);
+    delete memfunctmplt->next;
     memfunctmplt->next=(struct G__Definedtemplatememfunc *)NULL;
   }
 }
@@ -2903,7 +2902,7 @@ void Cint::Internal::G__freetemplatearg(G__Templatearg *def_para)
     if(def_para->next) G__freetemplatearg(def_para->next);
     if(def_para->string) free((void*)def_para->string);
     if(def_para->default_parameter) free((void*)def_para->default_parameter);
-    free((void*)def_para);
+    delete(def_para);
   }
 }
 
@@ -2956,7 +2955,7 @@ int Cint::Internal::G__checkset_charlist(char *type_name,G__Charlist *pcall_para
   int i;
   for(i=1;i<narg;i++) {
     if(!pcall_para->next) {
-      pcall_para->next = (struct G__Charlist*)malloc(sizeof(struct G__Charlist));
+       pcall_para->next = new G__Charlist; // (struct G__Charlist*)malloc(sizeof(struct G__Charlist));
       pcall_para->next->next = (struct G__Charlist*)NULL;
       pcall_para->next->string = (char*)NULL;
     }
@@ -3205,7 +3204,7 @@ void Cint::Internal::G__freetemplatefunc(G__Definetemplatefunc *deftmpfunc)
   int i;
   if(deftmpfunc->next) {
     G__freetemplatefunc(deftmpfunc->next);
-    free((void*)deftmpfunc->next);
+    delete(deftmpfunc->next);
     deftmpfunc->next = (struct G__Definetemplatefunc*)NULL;
   }
   if(deftmpfunc->def_para) {
@@ -3345,7 +3344,7 @@ int Cint::Internal::G__templatefunc(G__value *result,char *funcname,G__param *li
       G__friendtagnum = store_friendtagnum;
 
       if(pexplicitarg && pexplicitarg[0]) {
-        free((void*)pexplicitarg);
+        delete(pexplicitarg);
       }
 
       /* call the expanded template function */
@@ -3452,7 +3451,7 @@ int Cint::Internal::G__createtemplatefunc(char *funcname,G__Templatearg *targ
   * allocate next list entry
   **************************************************************/
   deftmpfunc->next
-  =(struct G__Definetemplatefunc*)malloc(sizeof(struct G__Definetemplatefunc));
+     = new G__Definetemplatefunc; // (struct G__Definetemplatefunc*)malloc(sizeof(struct G__Definetemplatefunc));
   deftmpfunc->next->next = (struct G__Definetemplatefunc*)NULL;
   deftmpfunc->next->def_para = (struct G__Templatearg*)NULL;
   deftmpfunc->next->name = (char*)NULL;
