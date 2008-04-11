@@ -78,12 +78,14 @@ namespace {
       Py_DECREF( pymetabases );
 
       PyObject* pymeta = PyType_Type.tp_new( &PyROOT::PyRootType_Type, args, NULL );
-      if ( ! pymeta )
-         PyErr_Print();
       Py_DECREF( args );
+      if ( ! pymeta ) {
+         Py_DECREF( pybases );
+         return 0;
+      }
 
       args = Py_BuildValue( (char*)"sO{}", name.c_str(), pybases );
-      PyObject* pyclass = PyType_Type.tp_new( (PyTypeObject*)pymeta, args, NULL );
+      PyObject* pyclass = ((PyTypeObject*)pymeta)->tp_new( (PyTypeObject*)pymeta, args, NULL );
       Py_DECREF( args );
       Py_DECREF( pymeta );
 
@@ -711,9 +713,9 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
    if ( pyobj != 0 ) {
    // fill proxy values
       if ( ! isRef )
-         pyobj->Set( address, klass );
+         pyobj->Set( address );
       else
-         pyobj->Set( (void**)address, klass );
+         pyobj->Set( (void**)address );
    }
 
 // successful completion

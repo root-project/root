@@ -233,7 +233,7 @@ namespace {
    {
       if ( pymeth->fSelf )
          return visit( (PyObject*)pymeth->fSelf, args );
-         
+
       return 0;
    }
 

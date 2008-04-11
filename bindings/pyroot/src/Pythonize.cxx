@@ -958,7 +958,7 @@ namespace {
 
       void* address = dir->GetObjectChecked( PyString_AS_STRING( name ), ptr->ObjectIsA() );
       if ( address ) {
-         ptr->Set( address, ptr->ObjectIsA() );
+         ptr->Set( address );
 
          Py_INCREF( Py_None );
          return Py_None;
@@ -1274,7 +1274,7 @@ namespace {
    // do nothing here, so that a NULL object is created (the address is later
    // filled by the TPySelector/ProofPlayer interaction)
       ObjectProxy* self = (ObjectProxy*)PyTuple_GET_ITEM( args, 0 );
-      self->Set( (void*)0, TClass::GetClass( "TPySelector" ) );
+      self->Set( (void*)0 );
 
       Py_INCREF( Py_None );
       return Py_None;                        // by definition

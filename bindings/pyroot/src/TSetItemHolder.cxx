@@ -6,9 +6,6 @@
 #include "Executors.h"
 #include "Adapters.h"
 
-// ROOT
-#include "TFunction.h"
-
 
 //- protected members --------------------------------------------------------
 template< class T, class M >

@@ -15,6 +15,48 @@ namespace PyROOT {
 
 namespace {
 
+//= PyROOT type proxy construction/destruction ===============================
+   PyObject* meta_alloc( PyTypeObject* metatype, Py_ssize_t nitems )
+   {
+   // specialized allocator, fitting in a few extra bytes for a TClassRef
+      int basicsize = metatype->tp_basicsize;
+      metatype->tp_basicsize = sizeof(PyRootClass);
+      PyObject* pyclass = PyType_Type.tp_alloc( metatype, nitems );
+      metatype->tp_basicsize = basicsize;
+
+      return pyclass;
+   }
+
+//____________________________________________________________________________
+   void meta_dealloc( PyRootClass* pytype )
+   {
+      pytype->fClass.~TClassRef();
+      return PyType_Type.tp_dealloc( (PyObject*)pytype );
+   }
+
+//____________________________________________________________________________
+   PyObject* pt_new( PyTypeObject* subtype, PyObject* args, PyObject* kwds )
+   {
+   // Called when PyRootType acts as a metaclass; since type_new always resets
+   // tp_alloc, and since it does not call tp_init on types, the metaclass is
+   // being fixed up here, and the class is initialized here as well.
+
+   // fixup of metaclass (left permanent, and in principle only called once b/c
+   // PyROOT caches python classes)
+      subtype->tp_alloc   = (allocfunc)meta_alloc;
+      subtype->tp_dealloc = (destructor)meta_dealloc;
+
+   // creation of the python-side class
+      PyRootClass* result = (PyRootClass*)PyType_Type.tp_new( subtype, args, kwds );
+
+   // initialization of class (based on name only, initially, which is lazy)
+      new (&result->fClass) TClassRef( PyString_AS_STRING( PyTuple_GET_ITEM( args, 0 ) ) );
+
+      return (PyObject*)result;
+   }
+
+
+//= PyROOT type metaclass behavior ===========================================
    PyObject* pt_getattro( PyObject* pyclass, PyObject* pyname )
    {
    // normal type lookup
@@ -92,7 +134,7 @@ PyTypeObject PyRootType_Type = {
    0,                         // tp_dictoffset
    0,                         // tp_init
    0,                         // tp_alloc
-   0,                         // tp_new
+   (newfunc)pt_new,           // tp_new
    0,                         // tp_free
    0,                         // tp_is_gc
    0,                         // tp_bases

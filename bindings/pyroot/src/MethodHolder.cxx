@@ -16,7 +16,6 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TString.h"
-#include "TFunction.h"
 #include "TClassEdit.h"
 #include "TVirtualMutex.h"
 #include "TException.h"
@@ -610,7 +609,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
       fOffset = objTag == methTag ? 0 : G__isanybase( methTag, objTag, (Long_t)object );
    }
 
-// actual call; recycle self instead of new object for same address objects
+// actual call; recycle self instead of returning new object for same address objects
    ObjectProxy* pyobj = (ObjectProxy*)Execute( object );
    if ( pyobj != (ObjectProxy*)TPyExceptionMagic &&
         ObjectProxy_Check( pyobj ) &&

@@ -4,7 +4,6 @@
 // Bindings
 #include "PyROOT.h"
 #include "ObjectProxy.h"
-#include "PyRootType.h"
 
 // ROOT
 #include "TObject.h"
@@ -13,10 +12,8 @@
 //____________________________________________________________________________
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
    if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
-      pyobj->fClass->Destructor( pyobj->fObject );
+      pyobj->ObjectIsA()->Destructor( pyobj->fObject );
    }
-
-   pyobj->fClass.~TClassRef();
 }
 
 
@@ -43,7 +40,6 @@ namespace {
    {
       ObjectProxy* pyobj = (ObjectProxy*)subtype->tp_alloc( subtype, 0 );
       pyobj->fObject = NULL;
-      new (&pyobj->fClass) TClassRef( (TClass*)0 );
       pyobj->fFlags  = 0;
 
       return pyobj;

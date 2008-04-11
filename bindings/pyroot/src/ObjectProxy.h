@@ -4,6 +4,9 @@
 #ifndef PYROOT_OBJECTPROXY_H
 #define PYROOT_OBJECTPROXY_H
 
+// Bindings
+#include "PyRootType.h"
+
 // ROOT
 #include "DllImport.h"
 #include "TClassRef.h"
@@ -15,7 +18,8 @@ namespace PyROOT {
 /** Object proxy object to hold ROOT instance
       @author  WLAV
       @date    01/04/2005
-      @version 1.0
+      @date    03/31/2008
+      @version 2.0
  */
 
    class ObjectProxy {
@@ -23,21 +27,15 @@ namespace PyROOT {
       enum EFlags { kNone = 0x0, kIsOwner = 0x0001, kIsReference = 0x0002 };
 
    public:
-      void Set( void** address, TClass* klass, EFlags flags = kNone )
+      void Set( void** address, EFlags flags = kNone )
       {
          fObject = (void*) address;
-      // destructor + placement new instead of assignment saves a temporary
-         fClass.~TClassRef();
-         new (&fClass) TClassRef( (TClass*)klass );
          fFlags  = flags | kIsReference;
       }
  
-      void Set( void* object, TClass* klass, EFlags flags = kNone )
+      void Set( void* object, EFlags flags = kNone )
       {
          fObject = object;
-      // destructor + placement new instead of assignment saves a temporary
-         fClass.~TClassRef();
-         new (&fClass) TClassRef( (TClass*)klass );
          fFlags  = flags & ~kIsReference;
       }
 
@@ -46,12 +44,12 @@ namespace PyROOT {
          if ( fObject && ( fFlags & kIsReference ) )
             return *(reinterpret_cast< void** >( const_cast< void* >( fObject ) ));
          else
-            return const_cast< void* >( fObject );        // may be null
+            return const_cast< void* >( fObject );          // may be null
       }
 
       TClass* ObjectIsA() const
       {
-         return fClass.GetClass();                        // may return null
+         return ((PyRootClass*)ob_type)->fClass.GetClass(); // may return null
       }
 
       void HoldOn() { fFlags |= kIsOwner; }
@@ -60,7 +58,6 @@ namespace PyROOT {
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
       void*     fObject;
-      TClassRef fClass;
       int       fFlags;
 
    private:              // private, as the python C-API will handle creation

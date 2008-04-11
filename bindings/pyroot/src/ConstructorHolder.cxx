@@ -94,7 +94,7 @@ PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::opera
       Py_INCREF( self );
 
    // TODO: Fix ownership once ObjectProxy can deal with Reflex
-      self->Set( (void*)address, 0 );
+      self->Set( (void*)address );
 
    // done with self
       Py_DECREF( self );
@@ -201,7 +201,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
       Py_INCREF( self );
 
    // note "kIsOwner" for ROOT object deletion from the python side
-      self->Set( (void*)address, klass, ObjectProxy::kIsOwner );
+      self->Set( (void*)address, ObjectProxy::kIsOwner );
 
    // allow lookup upon destruction on the ROOT/CINT side for TObjects
       TObject* object = (TObject*) klass->DynamicCast( TObject::Class(), (void*)address );
