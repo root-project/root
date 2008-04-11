@@ -23,8 +23,8 @@ excl="main proof/proofd net/rootd net/xrootd rootx pythia pythia6 \
       sql/mysql sql/pgsql io/rfio sql/sapdb \
       hbook core/newdelete table core/utils net/srputils net/krb5auth \
       net/globusauth io/chirp io/dcache \
-      x11ttf net/alien asimage net/ldap pyroot qt gui/qtroot math/quadp \
-      ruby vmc \
+      x11ttf net/alien asimage net/ldap qt gui/qtroot math/quadp \
+      bindings/pyroot bindings/ruby vmc \
       xmlparser gl roofit/roofit roofit/roofitcore sql/oracle \
       net/netx net/auth net/rpdutils math/mathmore \
       math/minuit2 io/gfal net/monalisa proof/proofx math/fftw gui/qtgsi \

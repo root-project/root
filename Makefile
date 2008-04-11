@@ -145,10 +145,10 @@ ifeq ($(BUILDFFTW3),yes)
 MODULES      += math/fftw
 endif
 ifeq ($(BUILDPYTHON),yes)
-MODULES      += pyroot
+MODULES      += bindings/pyroot
 endif
 ifeq ($(BUILDRUBY),yes)
-MODULES      += ruby
+MODULES      += bindings/ruby
 endif
 ifeq ($(BUILDXML),yes)
 MODULES      += xmlparser
@@ -242,7 +242,7 @@ MODULES      += core/unix core/winnt x11 x11ttf win32gdk gl ftgl \
                 pythia6 table sql/mysql sql/pgsql sql/sapdb net/srputils x3d \
                 rootx net/rootd io/dcache io/chirp hbook asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
-                pyroot ruby io/gfal \
+                bindings/pyroot bindings/ruby io/gfal \
                 qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle xmlparser math/mathmore cint/reflex cint/cintex \

@@ -3,7 +3,8 @@
 #
 # Authors: Elias Athanasopoulos, 31/5/2004
 
-MODDIR         := ruby
+MODNAME        := ruby
+MODDIR         := bindings/$(MODNAME)
 MODDIRS        := $(MODDIR)/src
 MODDIRI        := $(MODDIR)/inc
 
@@ -35,6 +36,8 @@ ALLMAPS        += $(RUBYROOTMAP)
 INCLUDEFILES   += $(RUBYROOTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(RUBYROOTDIRI)/%.h
 		cp $< $@
 
@@ -52,18 +55,18 @@ $(RUBYROOTMAP): $(RLIBMAP) $(MAKEFILEDEP) $(RUBYROOTL)
 		$(RLIBMAP) -o $(RUBYROOTMAP) -l $(RUBYROOTLIB) \
 		   -d $(RUBYROOTLIBDEPM) -c $(RUBYROOTL)
 
-all-ruby:       $(RUBYROOTLIB) $(RUBYROOTMAP)
+all-$(MODNAME): $(RUBYROOTLIB) $(RUBYROOTMAP)
 
-clean-ruby:
+clean-$(MODNAME):
 		@rm -f $(RUBYROOTO) $(RUBYROOTDO)
 
-clean::         clean-ruby
+clean::         clean-$(MODNAME)
 
-distclean-ruby: clean-ruby
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RUBYROOTDEP) $(RUBYROOTDS) $(RUBYROOTDH) \
 		   $(RUBYROOTLIB) $(RUBYROOTMAP)
 
-distclean::     distclean-ruby
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(RUBYROOTO): CXXFLAGS += $(RUBYINCDIR:%=-I%)

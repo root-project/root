@@ -3,7 +3,8 @@
 #
 # Authors: Pere Mato, Wim Lavrijsen, 22/4/2004
 
-MODDIR       := pyroot
+MODNAME      := pyroot
+MODDIR       := bindings/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -49,6 +50,8 @@ ALLMAPS     += $(PYROOTMAP)
 INCLUDEFILES += $(PYROOTDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(PYROOTDIRI)/%.h
 		cp $< $@
 
@@ -74,19 +77,19 @@ $(PYROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PYROOTL)
 		$(RLIBMAP) -o $(PYROOTMAP) -l $(PYROOTLIB) \
 		   -d $(PYROOTLIBDEPM) -c $(PYROOTL)
 
-all-pyroot:     $(PYROOTLIB) $(PYROOTMAP)
+all-$(MODNAME): $(PYROOTLIB) $(PYROOTMAP)
 
-clean-pyroot:
+clean-$(MODNAME):
 		@rm -f $(PYROOTO) $(PYROOTDO)
 
-clean::         clean-pyroot
+clean::         clean-$(MODNAME)
 
-distclean-pyroot: clean-pyroot
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
 		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO) $(PYROOTMAP) \
 		   $(PYROOTPYD)
 
-distclean::     distclean-pyroot
+distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 # Require Reflex support?
