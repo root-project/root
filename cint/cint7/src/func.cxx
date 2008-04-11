@@ -3126,33 +3126,36 @@ G__getfunction(char *item,int *known3,int memfunc_flag)
        int store_var_typeX = G__var_type;
        ::Reflex::Type funcnameTypedef = G__find_typedef(funcname);
        G__var_type = store_var_typeX;
+
+       int target = -1;
        if(funcnameTypedef) {
-         if(-1!=G__get_tagnum(funcnameTypedef)) {
-           strcpy(funcname,G__struct.name[G__get_tagnum(funcnameTypedef)]);
-         }
-         else {
-           result3 = fpara.para[0];
-           // CHECKME the old code was using 'i' now named 'hash_2' or cursor
-           if(
-              G__fundamental_conversion_operator(G__get_type(funcnameTypedef), -1, ::Reflex::Type(), G__get_reftype(funcnameTypedef), 0, &result3)
-           ) {
-             *known3=1;
-             if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
-             return(result3);
-           }
-           strcpy(funcname,G__type2string(G__get_type(funcnameTypedef)
-                                          ,G__get_tagnum(funcnameTypedef) ,-1
-                                          ,G__get_reftype(funcnameTypedef) ,0));
-         }
-         G__hash(funcname,hash,hash_2);
+          target = G__get_tagnum(funcnameTypedef);
+          if(-1==target) {
+             result3 = fpara.para[0];
+             // CHECKME the old code was using 'i' now named 'hash_2' or cursor
+             if(
+                G__fundamental_conversion_operator(G__get_type(funcnameTypedef), -1, ::Reflex::Type(), G__get_reftype(funcnameTypedef), 0, &result3)
+                ) {
+                *known3=1;
+                if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+                return(result3);
+             }
+             strcpy(funcname,G__type2string(G__get_type(funcnameTypedef)
+                                            ,G__get_tagnum(funcnameTypedef) ,-1
+                                            ,G__get_reftype(funcnameTypedef) ,0));
+          }
+          G__hash(funcname,hash,hash_2);
+       }
+       if (target==-1) {
+          target = G__defined_tagname(funcname,1);
        }
 
-       classhash=strlen(funcname);
-       int cursor = 0;
-       while(cursor<G__struct.alltag) {
-         if((G__struct.hash[cursor]==classhash)&&
-            (strcmp(G__struct.name[cursor],funcname)==0)
-            ) {
+       int cursor = target;
+       while(target!=-1 && cursor==target) {
+          // Intentionally loop only once, the loop used to loop over 
+          // from 0 to G__struct.alltag and exit in one case using
+          // 'break', so we will need to shuffle the control flow a bit
+          // to remove the while loop
            if('e'==G__struct.type[cursor] && 
               G__value_typenum(fpara.para[0]).RawType().IsEnum()) {
              return(fpara.para[0]);
@@ -3328,7 +3331,6 @@ G__getfunction(char *item,int *known3,int memfunc_flag)
              if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
              return(result3);
            }
-         }
          cursor++;
        } /* while(i<G__struct.alltag) */
 

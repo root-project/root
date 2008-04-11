@@ -117,9 +117,9 @@ template<class T> T Reflex::NameLookup::Lookup(bool isTemplateExpanded /* = fals
                   arg.erase(0, start - arg.c_str() ); 
 
                   Reflex::Type type( LookupType(arg , startScope ));
-                  type = type.FinalType();
 
                   if (type) {
+                     type = type.FinalType();
                      tmp << type.Name(Reflex::SCOPED|Reflex::QUALIFIED);
                   } else {
                      tmp << arg;
