@@ -43,8 +43,8 @@ namespace FTypes {
    static const std::type_info & Double()     { static const std::type_info & t = Type::ByName("double").TypeInfo();             return t; }
    static const std::type_info & LonDouble()  { static const std::type_info & t = Type::ByName("long double").TypeInfo();        return t; }
    static const std::type_info & Void()       { static const std::type_info & t = Type::ByName("void").TypeInfo();               return t; }
-   static const std::type_info & LonLong()    { static const std::type_info & t = Type::ByName("longlong").TypeInfo();           return t; }
-   static const std::type_info & UnsLonLong() { static const std::type_info & t = Type::ByName("ulonglong").TypeInfo();          return t; }
+   static const std::type_info & LonLong()    { static const std::type_info & t = Type::ByName("long long").TypeInfo();           return t; }
+   static const std::type_info & UnsLonLong() { static const std::type_info & t = Type::ByName("unsigned long long").TypeInfo();          return t; }
 }
 
 //-------------------------------------------------------------------------------
@@ -122,12 +122,31 @@ std::string Tools::BuildTypeName( Type & t,
 std::vector<std::string> Tools::GenTemplateArgVec( const std::string & Name ) {
 //-------------------------------------------------------------------------------
 // Return a vector of template arguments from a template type string.
-   std::string tpl;
-   std::vector<std::string> tl;
-   unsigned long int pos1 = Name.find("<");
-   unsigned long int pos2 = Name.rfind(">");
-   if ( pos1 == std::string::npos && pos2 == std::string::npos ) return tl; 
-   tpl = Name.substr(pos1+1, pos2-pos1-1);
+
+   std::vector<std::string> vec;
+   std::string tname;
+   GetTemplateComponents( Name, tname, vec);
+   return vec;
+}
+
+void Tools::GetTemplateComponents( const std::string & Name, std::string &templatename, std::vector<std::string> &args) {
+
+   // Return the template name and a vector of template arguments.
+
+   size_t basepos = Tools::GetBasePosition( Name );
+   const char *argpos = strstr( Name.c_str()+basepos, "<" );
+
+   if (!argpos) return;
+
+   size_t pos1 = argpos - Name.c_str();
+
+   templatename = Name.substr(0, pos1);
+   
+   size_t pos2 = Name.rfind(">");
+
+   if ( pos2 == std::string::npos ) return; 
+
+   std::string tpl = Name.substr(pos1+1, pos2-pos1-1);
    if (tpl[tpl.size()-1] == ' ') {
       tpl = tpl.substr(0,tpl.size()-1);
    }
@@ -139,7 +158,7 @@ std::vector<std::string> Tools::GenTemplateArgVec( const std::string & Name ) {
       if ( c == ',' ) {
          if ( ! par ) {
             StringStrip(argName);
-            tl.push_back(argName);
+            args.push_back(argName);
             argName = "";
          }
          else {
@@ -154,9 +173,9 @@ std::vector<std::string> Tools::GenTemplateArgVec( const std::string & Name ) {
    }
    if ( argName.length() ) {
       StringStrip(argName);
-      tl.push_back(argName);
+      args.push_back(argName);
    }
-   return tl;
+   return;
 }
 
 

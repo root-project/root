@@ -271,29 +271,33 @@ static int G__settemplatealias(char *tagnamein,char *tagname,int tagnum
 * G__cattemplatearg()
 *
 * Concatinate templatename and template arguments
+* if npara!=0, use only npara template arguments.
 ***********************************************************************/
-int Cint::Internal::G__cattemplatearg(char *tagname,G__Charlist *charlist)
+int Cint::Internal::G__cattemplatearg(char *tagname,G__Charlist *charlist, int npara)
 {
-  char *p;
-  p=strchr(tagname,'<');
-  if(p) ++p;
-  else {
-    p = tagname + strlen(tagname);
-    *p++ = '<';
-  }
-  /* B<int,5*2>
-   *   ^ => p */
-  while(charlist->next) {
-    strcpy(p,charlist->string);
-    p+=strlen(charlist->string);
-    charlist=charlist->next;
-    if(charlist->next) {
-      *p=','; ++p;
-    }
-  }
-  *p='>'; ++p;
-  *p='\0'; ++p;
-  return 0;
+   char *p;
+   p=strchr(tagname,'<');
+   if(p) ++p;
+   else {
+      p = tagname + strlen(tagname);
+      *p++ = '<';
+   }
+   /* B<int,5*2>
+    *   ^ => p */
+   int i = 0;
+   while(charlist->next && (npara==0 || i < npara) ) {
+      if (i!=0) {
+         *p=','; ++p;
+      }
+      strcpy(p,charlist->string);
+      p+=strlen(charlist->string);
+      charlist=charlist->next;
+      ++i;
+   }
+   if (*(p-1)=='>') { *p=' '; ++p; }
+   *p='>'; ++p;
+   *p='\0'; ++p;
+   return 0;
 }
 
 /***********************************************************************
@@ -2216,9 +2220,15 @@ int Cint::Internal::G__instantiate_templateclass(char *tagnamein, int noerror)
     int templatearg_enclosedscope=G__templatearg_enclosedscope;
     G__templatearg_enclosedscope=store_templatearg_enclosedscope;
 #endif
+    std::string tmp = tagname;
+    
+    G__cattemplatearg(tagname,&call_para, npara);
+
     std::string short_name = tagname;
+    strcpy(tagname,tmp.c_str());
 
     G__cattemplatearg(tagname,&call_para);
+
     long intTagnum = G__defined_tagname(tagname,1);
     if (intTagnum != -1)
       tagnum = G__Dict::GetDict().GetScope(intTagnum);
@@ -2226,29 +2236,15 @@ int Cint::Internal::G__instantiate_templateclass(char *tagnamein, int noerror)
 
 #ifndef G__OLDIMPLEMENTATION1867
     G__settemplatealias(tagnamein,tagname,intTagnum,&call_para
-                        ,deftmpclass->def_para,templatearg_enclosedscope);
+                        ,deftmpclass->def_para,0); //  templatearg_enclosedscope);
 #endif
-    if(!G__find_typedef(short_name.c_str())) {
-#ifdef __GNUC__
-#else
-#pragma message (FIXME("Is this really meant o be a local var hiding the func's version with same name?"))
-#endif
-       ::Reflex::Scope parent_tagnum;
-#ifndef G__OLDIMPLEMENTATION1712
-       if(templatearg_enclosedscope) {
-          parent_tagnum = G__get_envtagnum();
-       }
-       else {
-          parent_tagnum = tagnum.DeclaringScope();
-       }
-#else
+    if(short_name != tagname && !G__find_typedef(short_name.c_str())) {
        parent_tagnum = tagnum.DeclaringScope();
-#endif
        typenum = G__declare_typedef(short_name.c_str(), 'u', G__get_tagnum(tagnum),
           G__PARANORMAL, 0, G__globalcomp,
           G__get_tagnum(parent_tagnum), false);
 #ifndef G__OLDIMPLEMENTATION1503
-      if(3==defarg) G__struct.defaulttypenum[G__get_tagnum(tagnum)] = typenum;
+       if(3==defarg) G__struct.defaulttypenum[G__get_tagnum(tagnum)] = typenum;
 #endif
     }
     G__freecharlist(&call_para);

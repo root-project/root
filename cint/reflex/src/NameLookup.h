@@ -36,7 +36,7 @@ namespace Reflex {
 
    private: // Internal Utility Functions.
       NameLookup(const std::string& name, const Scope& current); // We can only be created by our static func members.
-      template <class T> T Lookup();
+      template <class T> T Lookup(bool isTemplateExpanded = false);
       template <class T> T LookupInScope();
       template <class T> T LookupInUnknownScope();
       void FindNextScopePos(); // Utility function, advance to the next name part in a qualified id.

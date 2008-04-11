@@ -432,7 +432,7 @@ int G__checkset_charlist(char *tname,struct G__Charlist *pcall_para,int narg,int
 #endif
 void G__define_struct(char type);
 G__value G__classassign(char *pdest,const ::Reflex::Type &tagnum,G__value result);
-int G__cattemplatearg(char *tagname,struct G__Charlist *charlist);
+ int G__cattemplatearg(char *tagname,struct G__Charlist *charlist, int npara = 0);
 char *G__catparam(struct G__param *libp,int catn,char *connect);
 int G__fgetname_template(char *string,char *endmark);
 int G__fgetstream_newtemplate(char *string,char *endmark);

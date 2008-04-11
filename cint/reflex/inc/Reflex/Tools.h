@@ -112,6 +112,11 @@ namespace Reflex {
 
       RFLX_API std::vector<std::string> GenTemplateArgVec( const std::string & name );
 
+      /**
+       * GetTemplateComponents extract from 'Name' a template name and a vector containing its argument.
+       *
+       */
+      RFLX_API void GetTemplateComponents( const std::string & Name, std::string &templatename, std::vector<std::string> &args );
 
       /**
       * getUnscopedPosition will return the position in a

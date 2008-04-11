@@ -20,6 +20,8 @@
 #include "Reflex/Tools.h"
 #include "Reflex/internal/OwnedMember.h"
 
+#include <sstream>
+
 //______________________________________________________________________________
 Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current):
    fLookupName(name), fPosNamePart(0), fPosNamePartLen(std::string::npos),
@@ -60,9 +62,13 @@ Reflex::Member LookupMember(const std::string& nam, const Scope& current )
 */
 
 //______________________________________________________________________________
-template<class T> T Reflex::NameLookup::Lookup()
+template<class T> T Reflex::NameLookup::Lookup(bool isTemplateExpanded /* = false */)
 {
    // Lookup a type using fLookupName, fCurrentScope.
+
+   Scope startScope = fCurrentScope;
+   T result;
+
    fPartialSuccess = false;
    fPosNamePart = 0;
    fPosNamePartLen = std::string::npos;
@@ -71,10 +77,68 @@ template<class T> T Reflex::NameLookup::Lookup()
       fLookedAtUsingDir.clear();
       // ::A...
       fCurrentScope = Scope::GlobalScope();
-      return LookupInScope<T>();
+      result = LookupInScope<T>();
+   } else {
+      // A...
+      result = LookupInUnknownScope<T>();
    }
-   // A...
-   return LookupInUnknownScope<T>();
+
+   if (!isTemplateExpanded && !result && fLookupName.find('<') != std::string::npos) {
+
+      // We need to replace the template argument both of this type
+      // and any of it enclosing type:
+      //    myspace::mytop<A,B>::mytype<C>
+      
+      std::ostringstream tmp;
+      for(size_t i = 0, level = 0, sofar = 0; i < fLookupName.size(); ++i) {
+         if (level==0) {
+            tmp << fLookupName.substr( sofar, i+1 - sofar );
+            sofar = i+1;
+         }
+         switch( fLookupName[i] ) {
+            case '<': ++level; break;
+            case '>': --level; // intentional fall through to the ',' case
+            case ',':
+               if (level == (1 - (int)(fLookupName[i]=='>'))) {
+                  std::string arg( fLookupName.substr( sofar, i-sofar) );
+                  
+                  size_t p = arg.size();
+         
+                  while (p >=0 && (arg[p-1] == '*' || arg[p-1] == '&'))
+                     --p;
+                  
+                  std::string end( arg.substr( p ) );
+                  arg.erase( p  );
+
+                  const char *start = arg.c_str();
+                  while(strncmp(start,"const ",6)==0) start+=6;
+
+                  tmp << arg.substr( 0, start - arg.c_str() );
+                  arg.erase(0, start - arg.c_str() ); 
+
+                  Reflex::Type type( LookupType(arg , startScope ));
+                  type = type.FinalType();
+
+                  if (type) {
+                     tmp << type.Name(Reflex::SCOPED|Reflex::QUALIFIED);
+                  } else {
+                     tmp << arg;
+                  }
+                  tmp << end;
+                  
+                  tmp << fLookupName[i];
+
+                  sofar = i+1;
+               } 
+               break;
+         }      
+      }
+      NameLookup next( tmp.str(), startScope );
+      return next.Lookup<T>(true);
+   }
+
+
+   return result;
 }
 
 //______________________________________________________________________________
