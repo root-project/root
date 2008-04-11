@@ -81,12 +81,13 @@
 #endif
 #endif
 
-// Some pragmas to avoid warnings in VisualC
-#ifdef _WIN32
-// windows.h defines CONST
+// windows.h and oracle define CONST
 #ifdef CONST
 #undef CONST
 #endif
+
+#ifdef _WIN32
+// Some pragmas to avoid warnings in MSVisualC
 // Disable warning C4786: identifier was truncated to '255' characters in the debug information
 #pragma warning ( disable : 4786 )
 // Disable warning C4291: no matching operator delete found; memory will not be freed if
