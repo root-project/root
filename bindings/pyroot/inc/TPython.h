@@ -53,7 +53,7 @@ public:
 // object proxy to void* conversion
    static void* ObjectProxy_AsVoidPtr( PyObject* pyobject );
 
-// void* to object proxy conversion
+// void* to object proxy conversion, returns a new reference
    static PyObject* ObjectProxy_FromVoidPtr( void* addr, const char* classname );
 
    virtual ~TPython() { }
