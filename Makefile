@@ -207,7 +207,7 @@ ifeq ($(BUILDGLOBUS),yes)
 MODULES      += net/globusauth
 endif
 ifeq ($(BUILDHBOOK),yes)
-MODULES      += hbook
+MODULES      += hist/hbook
 endif
 ifeq ($(BUILDXRD),yes)
 ifneq ($(XROOTDDIR),)
@@ -242,7 +242,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 graf2d/win32gdk graf3d/gl graf3d/ftgl io/rfio io/castor \
                 montecarlo/pythia6 montecarlo/pythia8 table \
                 sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
-                rootx net/rootd io/dcache io/chirp hbook graf2d/asimage \
+                rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \

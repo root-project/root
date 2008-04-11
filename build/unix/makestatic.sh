@@ -21,7 +21,7 @@ rm -f $ROOTALIB $ROOTAEXE $PROOFAEXE
 
 excl="main proof/proofd net/rootd net/xrootd rootx montecarlo/pythia6 \
       montecarlo/pythia8 sql/mysql sql/pgsql io/rfio sql/sapdb \
-      hbook core/newdelete table core/utils net/srputils net/krb5auth \
+      hist/hbook core/newdelete table core/utils net/srputils net/krb5auth \
       net/globusauth io/chirp io/dcache graf2d/x11ttf net/alien \
       graf2d/asimage net/ldap graf2d/qt gui/qtroot math/quadp \
       bindings/pyroot bindings/ruby montecarlo/vmc \

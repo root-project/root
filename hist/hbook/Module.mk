@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 18/2/2002
 
-MODDIR       := hbook
+MODNAME      := hbook
+MODDIR       := hist/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -38,6 +39,8 @@ ALLMAPS     += $(HBOOKMAP)
 INCLUDEFILES += $(HBOOKDEP)
 
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 include/%.h:    $(HBOOKDIRI)/%.h
 		cp $< $@
 
@@ -55,14 +58,14 @@ $(HBOOKMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(HBOOKL)
 		$(RLIBMAP) -o $(HBOOKMAP) -l $(HBOOKLIB) \
 		   -d $(HBOOKLIBDEPM) -c $(HBOOKL)
 
-all-hbook:      $(HBOOKLIB) $(HBOOKMAP)
+all-$(MODNAME): $(HBOOKLIB) $(HBOOKMAP)
 
-clean-hbook:
+clean-$(MODNAME):
 		@rm -f $(HBOOKO) $(HBOOKDO)
 
-clean::         clean-hbook
+clean::         clean-$(MODNAME)
 
-distclean-hbook: clean-hbook
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(HBOOKDEP) $(HBOOKDS) $(HBOOKDH) $(HBOOKLIB) $(HBOOKMAP)
 
-distclean::     distclean-hbook
+distclean::     distclean-$(MODNAME)
