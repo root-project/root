@@ -3130,7 +3130,11 @@ G__getfunction(char *item,int *known3,int memfunc_flag)
        int target = -1;
        if(funcnameTypedef) {
           target = G__get_tagnum(funcnameTypedef);
-          if(-1==target) {
+          if(-1!=target) {
+             target = G__get_tagnum(funcnameTypedef);
+             strcpy(funcname,G__struct.name[G__get_tagnum(funcnameTypedef)]);
+          } 	 
+          else {
              result3 = fpara.para[0];
              // CHECKME the old code was using 'i' now named 'hash_2' or cursor
              if(
@@ -3149,6 +3153,8 @@ G__getfunction(char *item,int *known3,int memfunc_flag)
        if (target==-1) {
           target = G__defined_tagname(funcname,1);
        }
+
+       classhash=strlen(funcname);
 
        int cursor = target;
        while(target!=-1 && cursor==target) {
