@@ -1445,7 +1445,7 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
          else {
             ::Reflex::Scope store_tagdefining = G__tagdefining;
             ::Reflex::Scope store_def_tagnum = G__def_tagnum;
-            if (G__friendtagnum) {
+            if (G__friendtagnum && !G__friendtagnum.IsTopScope()) {
                G__tagdefining = G__friendtagnum;
                G__def_tagnum = G__friendtagnum;
             }
