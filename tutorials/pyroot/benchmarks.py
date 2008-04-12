@@ -37,7 +37,11 @@ def bexec( dir, macro, bench ):
 if __name__ == '__main__':
    ROOT.gROOT.Reset()
 
-   macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+   try:
+    # convenience, allowing to run this file from a different directory
+      macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+   except NameError:
+      macrodir = ''      # in case of p2.2
 
  # window for keeping track of bench marks that are run
    bench = ROOT.TCanvas( 'bench','Benchmarks Summary', -1000, 50, 200, 500 )

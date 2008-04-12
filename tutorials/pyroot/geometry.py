@@ -1,7 +1,11 @@
 import os
 import ROOT
 
-macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+try:
+ # convenience, allowing to run this file from a different directory
+   macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+except NameError:
+   macrodir = ''         # in case of p2.2
 
 ROOT.gROOT.Reset()
 
