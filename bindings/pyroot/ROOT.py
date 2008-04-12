@@ -14,12 +14,12 @@ from __future__ import generators
 
 """
 
-__version__ = '5.0.1'
+__version__ = '5.0.2'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
 ### system and interpreter setup ------------------------------------------------
-import os, sys, time
+import os, sys
 import string as pystring
 
 ## there's no version_info in 1.5.2
@@ -183,10 +183,8 @@ _root.gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
 
 ### special case pythonization --------------------------------------------------
 def _TTree__iter__( self ):
-   n = self.GetEntries()
    i = 0
-   while i < n:
-      self.GetEntry(i)
+   while self.GetEntry(i):
       yield self                   # TODO: not sure how to do this w/ C-API ...
       i += 1
 
@@ -257,6 +255,7 @@ def _displayhook( v ):
 
 ### helper to prevent GUIs from starving
 def _processRootEvents( controller ):
+   import time
    gSystem = _root.gSystem
 
    while controller.keeppolling:
@@ -329,7 +328,7 @@ class ModuleFacade( object ):
                pass           # can still assign normally, to the module
 
     # actual assignment through descriptor, or normal python way
-      super( self.__class__, self ).__setattr__( name, value )
+      return super( self.__class__, self ).__setattr__( name, value )
 
    def __getattr1( self, name ):             # "start-up" getattr
     # special case, to allow "from ROOT import gROOT" w/o starting GUI thread
@@ -376,6 +375,15 @@ class ModuleFacade( object ):
 
     # reaching this point means failure ...
       raise AttributeError( name )
+
+   def __delattr__( self, name ):
+    # this is for convenience, as typically lookup results are kept at two places
+      try:
+         delattr( self.module._root, name )
+      except AttributeError:
+         pass
+
+      return super( self.__class__, self ).__delattr__( name )
 
    def __finalSetup( self ):
     # switch to running gettattr/setattr
@@ -447,6 +455,13 @@ def cleanup():
       if threading.currentThread() != facade.thread:
          facade.thread.join( 3. )                      # arbitrary
       del threading
+
+ # remove otherwise (potentially) circular references
+   import types
+   for k, v in facade.module.__dict__.items():
+      if type(v) == types.ModuleType:
+         del facade.module.__dict__[ k ]
+   del v, k, types
 
  # destroy facade
    del sys.modules[ __name__ ], facade

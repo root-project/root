@@ -115,7 +115,7 @@ namespace {
 //- helpers --------------------------------------------------------------------
 namespace {
 
-   inline void AddToScope( const char* label, TObject* obj, TClass* klass )
+   inline void AddToGlobalScope( const char* label, TObject* obj, TClass* klass )
    {
       PyModule_AddObject( gRootModule, const_cast< char* >( label ),
          PyROOT::BindRootObject( obj, klass ) );
@@ -184,9 +184,9 @@ void PyROOT::InitRoot()
    gROOT->GetListOfCleanups()->Add( &m );
 
 // bind ROOT globals that are needed in ROOT.py
-   AddToScope( "gROOT", gROOT, gROOT->IsA() );
-   AddToScope( "gSystem", gSystem, gSystem->IsA() );
-   AddToScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
+   AddToGlobalScope( "gROOT", gROOT, gROOT->IsA() );
+   AddToGlobalScope( "gSystem", gSystem, gSystem->IsA() );
+   AddToGlobalScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
 }
 
 //____________________________________________________________________________

@@ -410,7 +410,9 @@ extern "C" void initlibPyROOT()
    gRootModule = Py_InitModule( const_cast< char* >( "libPyROOT" ), gPyROOTMethods );
    if ( ! gRootModule )
       return;
-   Py_INCREF( gRootModule );
+
+// keep gRootModule, but do not increase its reference count even as it is borrowed,
+// or a self-referencing cycle would be created
 
 // inject meta type
    if ( ! Utility::InitProxy( gRootModule, &PyRootType_Type, "PyRootType" ) )
