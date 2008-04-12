@@ -119,7 +119,11 @@ template<class T> T Reflex::NameLookup::Lookup(bool isTemplateExpanded /* = fals
                   Reflex::Type type( LookupType(arg , startScope ));
 
                   if (type) {
-                     type = type.FinalType();
+                     if (type.Name()!="Double32_t" && type.Name()!="Float16_t") {
+                        // Use the real type rather than the typedef unless
+                        // this is Double32_t or Float16_t
+                        type = type.FinalType();
+                     }
                      tmp << type.Name(Reflex::SCOPED|Reflex::QUALIFIED);
                   } else {
                      tmp << arg;
