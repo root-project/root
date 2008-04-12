@@ -3713,7 +3713,7 @@ TFile* TTree::GetCurrentFile() const
 {
    // Return pointer to the current file.
 
-   if (!fDirectory) {
+   if (!fDirectory || fDirectory==gROOT) {
       return 0;
    }
    return fDirectory->GetFile();
