@@ -14,6 +14,9 @@ __all__ = [
 
 gROOT.LoadMacro( "TTreeTypes.C+" )
 
+v1 = std.vector( 'float' )()
+v2 = std.vector( std.vector( 'float' ) )()
+
 
 ### Write/Read an std::vector to/from file ===================================
 class TTree1ReadWriteSimpleObjectsTestCase( unittest.TestCase ):
@@ -99,7 +102,13 @@ class TTree1ReadWriteSimpleObjectsTestCase( unittest.TestCase ):
       t = TTree( self.tname, self.ttitle )
 
       d = SomeDataStruct()
-      t.Branch( 'floats', d.Floats )
+
+    # note: for p2.2, which has incomplete support of property types,
+    # we need to keep a reference alive to the result of the property
+    # call, or it will be deleted too soon; for later pythons, it is
+    # safe to use d.Floats directly in the Branch() call
+      fl = d.Floats
+      t.Branch( 'floats', fl )
       t.Branch( 'nlabel', AddressOf( d, 'NLabel' ), 'NLabel/I' )
       t.Branch( 'label',  AddressOf( d, 'Label' ),  'Label/C' )
 
