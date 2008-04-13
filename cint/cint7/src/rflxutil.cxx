@@ -198,6 +198,7 @@ int Cint::Internal::G__get_type(const ::Reflex::Type in)
    if (in.Name() == "switchStart$")  return 'a';
    if (in.Name() == "switchDefault$")  return 'z';
    if (in.Name() == "codeBreak$")  return 'Z';
+   if (in.Name() == "codeBreak$*")  return 'Z'; // This is actually a 'slot' for a not yet found special object
    if (in.Name() == "macroChar*$") return 'T';
    if (in.Name() == "defaultFunccall$") return G__DEFAULT_FUNCCALL;
 

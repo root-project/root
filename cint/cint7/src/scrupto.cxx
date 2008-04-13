@@ -394,11 +394,6 @@ static int G__free_struct_upto(int tagnum)
             var.DeclaringScope().RemoveDataMember(var);
          }
       }
-      // Free member functions
-      {
-         ::Reflex::Scope varscope = G__Dict::GetDict().GetScope(ialltag);
-         G__free_ifunc_table( varscope );
-      }
    }
    //
    //  Free the struct definitions.
@@ -419,6 +414,12 @@ static int G__free_struct_upto(int tagnum)
       // freeing class inheritance table
       free((void*) G__struct.baseclass[G__struct.alltag]);
       G__struct.baseclass[G__struct.alltag] = 0;
+
+      // Free member functions
+      {
+         ::Reflex::Scope varscope = G__Dict::GetDict().GetScope(G__struct.alltag);
+         G__free_ifunc_table( varscope );
+      }
 
       // freeing _memfunc_setup and memvar_setup function pointers
       if (G__struct.incsetup_memvar[G__struct.alltag]) {
@@ -826,7 +827,7 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
                      }
                   }
                   G__globalvarpointer = store_globalvarpointer;
-                  free(G__get_offset(var));
+                  delete [] (G__get_offset(var) -8);
                   G__get_offset(var) = 0;
                }
                else {
