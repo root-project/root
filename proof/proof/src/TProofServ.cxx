@@ -1792,10 +1792,6 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
 
-   // Do not send logs to master
-   if (!IsMaster())
-      FlushLogFile();
-
    off_t ltot=0, lnow=0;
    Int_t left = -1;
    Bool_t adhoc = kFALSE;
@@ -2153,8 +2149,8 @@ Int_t TProofServ::SetupCommon()
    }
 
    // check and make sure "cache" directory exists
-   fCacheDir = fWorkDir;
-   fCacheDir += TString("/") + kPROOF_CacheDir;
+   fCacheDir = gEnv->GetValue("ProofServ.CacheDir",
+                               Form("%s/%s", fWorkDir.Data(), kPROOF_CacheDir));
    if (gSystem->AccessPathName(fCacheDir))
       gSystem->MakeDirectory(fCacheDir);
    if (gProofDebugLevel > 0)
@@ -2165,8 +2161,8 @@ Int_t TProofServ::SetupCommon()
                          TString(fCacheDir).ReplaceAll("/","%").Data()));
 
    // check and make sure "packages" directory exists
-   fPackageDir = fWorkDir;
-   fPackageDir += TString("/") + kPROOF_PackDir;
+   fPackageDir = gEnv->GetValue("ProofServ.PackageDir",
+                                 Form("%s/%s", fWorkDir.Data(), kPROOF_WorkDir));
    if (gSystem->AccessPathName(fPackageDir))
       gSystem->MakeDirectory(fPackageDir);
    if (gProofDebugLevel > 0)
@@ -4867,16 +4863,18 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
        (level >= kBreak && level < kSysError)) {
       fprintf(stderr, "%s %5d %s | %s: %s\n", st(11,8).Data(), gSystem->GetPid(),
                      (gProofServ ? gProofServ->GetPrefix() : "proof"), type, msg);
-      buf.Form("%s:%s:%s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
-                              (gProofServ ? gProofServ->GetPrefix() : "proof"),
-                              type, msg);
+      if (fgLogToSysLog)
+         buf.Form("%s:%s:%s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
+                                 (gProofServ ? gProofServ->GetPrefix() : "proof"),
+                                 type, msg);
    } else {
       fprintf(stderr, "%s %5d %s | %s in <%s>: %s\n", st(11,8).Data(), gSystem->GetPid(),
                       (gProofServ ? gProofServ->GetPrefix() : "proof"),
                       type, location, msg);
-      buf.Form("%s:%s:%s:<%s>:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
-                                   (gProofServ ? gProofServ->GetPrefix() : "proof"),
-                                   type, location, msg);
+      if (fgLogToSysLog)
+         buf.Form("%s:%s:%s:<%s>:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
+                                      (gProofServ ? gProofServ->GetPrefix() : "proof"),
+                                       type, location, msg);
    }
    fflush(stderr);
 
