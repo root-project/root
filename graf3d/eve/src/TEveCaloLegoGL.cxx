@@ -89,14 +89,18 @@ void TEveCaloLegoGL::SetBBox()
 //______________________________________________________________________________
 Bool_t TEveCaloLegoGL::ShouldDLCache(const TGLRnrCtx & /*rnrCtx*/) const
 {  
-  
+   // Determines if display-list will be used for rendering.
+   // Virtual from TGLLogicalShape.
+
    return kFALSE;
 }
 
 //______________________________________________________________________________
 void TEveCaloLegoGL::DLCacheDrop()
 {
-   for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
+   // Drop all display-list definitions.
+
+   for (std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); ++i)
       i->second = 0;
 
    TGLObject::DLCacheDrop();
@@ -105,6 +109,8 @@ void TEveCaloLegoGL::DLCacheDrop()
 //______________________________________________________________________________
 void TEveCaloLegoGL::DLCachePurge()
 {
+   // Unregister all display-lists.
+
    static const TEveException eH("TEveCaloLegoGL::DLCachePurge ");
 
    if (fDLMap.empty()) return;
@@ -124,6 +130,8 @@ void TEveCaloLegoGL::DLCachePurge()
 void TEveCaloLegoGL::MakeQuad(Float_t x1, Float_t y1, Float_t z1, 
                               Float_t xw, Float_t yw, Float_t h) const
 { 
+   // Draw an axis-aligned box using quads.
+
    //    z
    //    |
    //    |
@@ -186,13 +194,16 @@ void TEveCaloLegoGL::MakeQuad(Float_t x1, Float_t y1, Float_t z1,
 //______________________________________________________________________________
 void TEveCaloLegoGL::MakeDisplayList() const
 {  
-   TEveRGBAPalette& P = *(fM->fPalette);
+   // Create display-list that draws histogram bars.
+   // It is used for filled and outline passes.
+
+   TEveRGBAPalette& pal = *(fM->fPalette);
    TEveCaloData::CellData_t cellData;
    Int_t   prevTower = 0;
    Float_t offset = 0;
 
    // ids in eta phi rng
-   Float_t scaleZ = fM->GetDefaultCellHeight()/(P.GetHighLimit()- P.GetLowLimit());  
+   Float_t scaleZ = fM->GetDefaultCellHeight()/(pal.GetHighLimit()- pal.GetLowLimit());  
    Int_t nSlices = fM->fData->GetNSlices(); 
    for(Int_t s=0; s<nSlices; s++) 
    {
@@ -210,9 +221,9 @@ void TEveCaloLegoGL::MakeDisplayList() const
          }
 
          fM->fData->GetCellData(fM->fCellList[i], cellData);
-         if (cellData.Value()>P.GetMinVal() && cellData.Value()<P.GetMaxVal())
+         if (cellData.Value()>pal.GetMinVal() && cellData.Value()<pal.GetMaxVal())
          {
-            Float_t z   = scaleZ*(cellData.Value() - P.GetMinVal());
+            Float_t z   = scaleZ*(cellData.Value() - pal.GetMinVal());
             if (s == fM->fCellList[i].fSlice)
             {
                glLoadName(i);
@@ -228,9 +239,12 @@ void TEveCaloLegoGL::MakeDisplayList() const
 }
 
 //______________________________________________________________________________
-inline void TEveCaloLegoGL::RnrText(const char* txt, Float_t xa, Float_t ya, Float_t za, 
+inline void TEveCaloLegoGL::RnrText(const char* txt,
+                                    Float_t xa, Float_t ya, Float_t za, 
                                     const TGLFont &font, Int_t mode) const
 {
+   // Render text txt at given position, font and alignmnet mode.
+
    glPushMatrix();
    glTranslatef(xa, ya, za);
 
@@ -264,14 +278,16 @@ inline void TEveCaloLegoGL::RnrText(const char* txt, Float_t xa, Float_t ya, Flo
 
 
 //______________________________________________________________________________
-void TEveCaloLegoGL::SetFont(Float_t al, TGLRnrCtx & rnrCtx) const
+void TEveCaloLegoGL::SetFont(Float_t axis_len, TGLRnrCtx & rnrCtx) const
 {
-   Float_t cfs = al*(fM->fFontSize/100.f);
+   // Set font size for given axis length.
+
+   Float_t cfs = axis_len*(fM->fFontSize/100.f);
    // get match in the array
    Int_t* fsp = &TGLFontManager::GetFontSizeArray()->front();
    Int_t  nums = TGLFontManager::GetFontSizeArray()->size();  
    Int_t i = 0;
-   while(i<nums)
+   while (i<nums)
    {
       if (cfs<fsp[i]) break;
       i++;
@@ -282,7 +298,7 @@ void TEveCaloLegoGL::SetFont(Float_t al, TGLRnrCtx & rnrCtx) const
    if (fNumFont.GetMode() == TGLFont::kUndef || (fs != fFontSize))
    {
       fFontSize = fs;
-      rnrCtx.RegisterFont(fs, "arial", TGLFont::kPixmap, fNumFont);
+      rnrCtx.RegisterFont(fs, "arial",  TGLFont::kPixmap, fNumFont);
       rnrCtx.RegisterFont(fs, "symbol", TGLFont::kPixmap, fSymbolFont);
    }
 }
@@ -290,10 +306,12 @@ void TEveCaloLegoGL::SetFont(Float_t al, TGLRnrCtx & rnrCtx) const
 //______________________________________________________________________________
 void TEveCaloLegoGL::DrawZAxisSimplified(TGLRnrCtx & rnrCtx, Float_t x0, Float_t y0) const
 {
+   // Draw simplified z-axis for top-down view.
+
    GLdouble x1, y1, x2, y2, z;
    GLdouble mm[16];
    GLint    vp[4];
-   glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
+   glGetDoublev(GL_MODELVIEW_MATRIX, mm);
    glGetIntegerv(GL_VIEWPORT, vp);
    const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr(); 
    gluProject(x0, -TMath::Pi()*0.5, 0, mm, pm, vp, &x1, &y1, &z);
@@ -312,6 +330,9 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx & rnrCtx,
                                Float_t x0, Float_t x1,
                                Float_t y0, Float_t y1) const
 {
+   // Draw z-axis at the appropriate grid corner-point including
+   // tick-marks and labels.
+
    const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
    GLdouble mm[16];
    GLint    vp[4];
@@ -325,11 +346,11 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx & rnrCtx,
    gluProject(x1, y0, 0, mm, pm, vp, &x[1], &y[1], &z[1]);
    gluProject(x1, y1, 0, mm, pm, vp, &x[2], &y[2], &z[2]);
    gluProject(x0, y1, 0, mm, pm, vp, &x[3], &y[3], &z[3]);
-  
+
    // get index 
    Int_t vidx = 0;
    Float_t xt = x[0];
-   for (Int_t i=1; i<4; ++i)
+   for (Int_t i = 1; i < 4; ++i)
    {
       if (x[i] < xt)
       {
@@ -340,7 +361,7 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx & rnrCtx,
    // x, y location of axis
    Float_t azX, azY;
    Float_t aztX, aztY;
-   if( vidx == 0) {
+   if (vidx == 0) {
       azX  = x0;   azY = y0;
       aztX = -fTMSize; aztY =-fTMSize;
    }
@@ -479,7 +500,7 @@ void TEveCaloLegoGL::DrawXYAxis(TGLRnrCtx & rnrCtx,
 
       RnrText("f", 1.1f*ayX, aytY, 0, fSymbolFont, ayX>0 && axY<0 || ayX<0 && axY>0);
       for (Int_t i=0; i<nY; ++i)
-          RnrText(Form("%.0f", ly0 + i), ayX + TMath::Sign(fTMSize*3,ayX), ly0 + i, 0, fNumFont, 3);
+         RnrText(Form("%.0f", ly0 + i), ayX + TMath::Sign(fTMSize*3,ayX), ly0 + i, 0, fNumFont, 3);
 
       glPopMatrix();
       fNumFont.PostRender();
@@ -520,8 +541,10 @@ void TEveCaloLegoGL::DrawXYAxis(TGLRnrCtx & rnrCtx,
 }
 
 //______________________________________________________________________________
-Int_t TEveCaloLegoGL::GetGridStep(Int_t axId,  const TAxis* ax,  TGLRnrCtx &rnrCtx) const
+Int_t TEveCaloLegoGL::GetGridStep(Int_t axId, const TAxis* ax, TGLRnrCtx &rnrCtx) const
 { 
+   // Calculate view-dependent step for grid rendering.
+
    GLdouble xp0, yp0, zp0, xp1, yp1, zp1;
    GLdouble mm[16];
    GLint    vp[4];
@@ -554,6 +577,9 @@ Int_t TEveCaloLegoGL::GetGridStep(Int_t axId,  const TAxis* ax,  TGLRnrCtx &rnrC
 //______________________________________________________________________________
 void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
 {
+   // Draw basic histogram components: x-y grid and axes with
+   // ticks-marks and labels.
+
    if (rnrCtx.Selection() || rnrCtx.Highlight())
       return;
 
@@ -606,6 +632,8 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
 //______________________________________________________________________________
 void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
+   // Draw the object.
+
    if (!fM->fCacheOK)
    { 
       fDLCacheOK = kFALSE;
@@ -637,6 +665,8 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 //______________________________________________________________________________
 void TEveCaloLegoGL::DrawSimplified(TGLRnrCtx & rnrCtx) const
 {
+   // Draw the calo lego-plot in 2D mode.
+
    TEveCaloData::CellData_t cd;
    Float_t min = fM->fPalette->GetMinVal();
    Float_t max = fM->fPalette->GetMaxVal();
@@ -745,7 +775,7 @@ void TEveCaloLegoGL::DrawSimplified(TGLRnrCtx & rnrCtx) const
 //______________________________________________________________________________
 void TEveCaloLegoGL::DrawDetailed(TGLRnrCtx & rnrCtx) const
 {
-   // Render the calo lego-plot with OpenGL.
+   // Draw the calo lego-plot in 3D.
  
    DrawHistBase(rnrCtx);
 

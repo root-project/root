@@ -24,6 +24,7 @@ class TEveCaloLegoGL : public TGLObject
 {
 public:
    enum EMode { kDetailed, kSimplified };
+
 private:
    TEveCaloLegoGL(const TEveCaloLegoGL&);            // Not implemented
    TEveCaloLegoGL& operator=(const TEveCaloLegoGL&); // Not implemented
@@ -31,7 +32,7 @@ private:
 protected:
    Int_t   GetGridStep(Int_t axId, const TAxis* ax, TGLRnrCtx &rnrCtx) const;
 
-   void    SetFont(Float_t l, TGLRnrCtx &rnrCtx) const;
+   void    SetFont(Float_t axis_len, TGLRnrCtx &rnrCtx) const;
    void    RnrText(const char* txt, Float_t x, Float_t y, Float_t z, 
                    const TGLFont &font, Int_t mode) const;
 
