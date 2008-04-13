@@ -93,7 +93,7 @@ protected:
    Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
 
 public:
-   enum EStatusBits { kIsInitializing = BIT(16) };
+   enum EStatusBits { kIsInitializing = BIT(16), kIsDone = BIT(17) };
    virtual ~TVirtualPacketizer();
 
    Bool_t                  IsValid() const { return fValid; }
