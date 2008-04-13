@@ -2109,10 +2109,10 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    }
    else if (strncmp("2>", com, 2) == 0) {
       if (strncmp("2>>", com, 3) == 0) index = 3;
-      else                        index = 2;
+      else                             index = 2;
       while (isspace(command[index]) && command[index] != '\0') index++;
       if ((*(command + index))) {
-         if (strncmp(">>", com, 2) != 0) {
+         if (index==2) { // strncmp("2>>", com, 3) != 0) {
             G__serr = fopen(command + index, "w");
             fclose(G__serr);
             /* fclose(G__sout); */
