@@ -2336,7 +2336,7 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
             }
          }
 #endif
-         if(type.RawType().IsFundamental() && 0==G__atevaluate(buf)) fprintf(G__sout,"%s\n",syscom);
+         if(Reflex::Tools::FundamentalType(type.RawType()) != Reflex::kVOID && 0==G__atevaluate(buf)) fprintf(G__sout,"%s\n",syscom);
 #ifdef G__SECURITY
          *err |= G__security_recover(G__serr);
 #endif
