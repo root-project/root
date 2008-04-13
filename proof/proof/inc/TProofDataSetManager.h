@@ -78,7 +78,7 @@ public:
       kAllowRegister = BIT(16),   // allow registration of a new dataset
       kAllowVerify   = BIT(17),   // allow verification of a dataset (requires registration permit)
       kAllowStaging  = BIT(18),   // allow staging of missing files (requires verification permit)
-      kIsSandbox     = BIT(19),   // dataset dir is in the user sandbox (simplified naming)
+      kIsSandbox     = BIT(19)    // dataset dir is in the user sandbox (simplified naming)
    };
 
    enum EDataSetWorkOpts { // General (bits 1-8)
