@@ -394,6 +394,11 @@ static int G__free_struct_upto(int tagnum)
             var.DeclaringScope().RemoveDataMember(var);
          }
       }
+      // Free member functions
+      {
+         ::Reflex::Scope varscope = G__Dict::GetDict().GetScope(ialltag);
+         G__free_ifunc_table( varscope );
+      }
    }
    //
    //  Free the struct definitions.
@@ -719,7 +724,7 @@ int Cint::Internal::G__free_ifunc_table(::Reflex::Scope& scope)
       toberemoved.push_back(*i);
    }
    for (std::vector<Reflex::Member>::const_iterator j = toberemoved.begin(); j != toberemoved.end(); ++j) {
-      scope.RemoveDataMember(*j);
+      scope.RemoveFunctionMember(*j);
    }
    // Do not free ifunc because it can be a global or static object.
    return 0;
