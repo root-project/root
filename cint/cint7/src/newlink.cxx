@@ -5612,7 +5612,7 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
                   fprintf(fp, "%d, ", G__get_funcproperties(*ifunc)->entry.ansi + ifunc->IsStatic()*2 + ifunc->IsExplicit()*4);
 
                fprintf(fp, "%d, ", G__get_access(*ifunc));
-               fprintf(fp, "%d, ", G__get_isconst(ifunc->TypeOf().ReturnType()));
+               fprintf(fp, "%d, ", G__get_isconst(ifunc->TypeOf()));
 
                /* newline to avoid lines more than 256 char for CMZ */
                if (ifunc->FunctionParameterSize() > 1) fprintf(fp, "\n");
@@ -6256,7 +6256,7 @@ void Cint::Internal::G__cpplink_func(FILE* fp)
          else
             fprintf(fp, "%d, ", G__get_funcproperties(*ifunc)->entry.ansi + ifunc->IsStatic()*2);
          fprintf(fp, "%d, ", G__get_access(*ifunc));
-         fprintf(fp, "%d, ", G__get_isconst(ifunc->TypeOf().ReturnType()));
+         fprintf(fp, "%d, ", G__get_isconst(ifunc->TypeOf()));
 
          /* newline to avoid lines more than 256 char for CMZ */
          if (ifunc->FunctionParameterSize() > 1) fprintf(fp, "\n");
