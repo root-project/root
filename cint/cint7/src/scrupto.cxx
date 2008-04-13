@@ -827,7 +827,7 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
                      }
                   }
                   G__globalvarpointer = store_globalvarpointer;
-                  delete [] (G__get_offset(var) -8);
+                  delete [] (G__get_offset(var)); //  -8);
                   G__get_offset(var) = 0;
                }
                else {
