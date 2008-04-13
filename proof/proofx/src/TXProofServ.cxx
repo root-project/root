@@ -665,10 +665,6 @@ void TXProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
 
-   // Do not send logs to master
-   if (!IsMaster())
-      FlushLogFile();
-
    off_t ltot, lnow;
    Int_t left;
 
