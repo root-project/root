@@ -70,6 +70,7 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
 
   // Construct component iterators
   _curIter = 0 ;
+  _curItem = 0 ;
   TIterator* cIter = _catList.createIterator() ;
   RooAbsCategoryLValue* cat ;
   while((cat=(RooAbsCategoryLValue*)cIter->Next())) {
@@ -127,6 +128,7 @@ TObject* RooMultiCatIter::Next()
 
   // Check for end
   if (_curIter==_nIter) {
+    _curItem = 0;
     return 0 ;
   }
 
@@ -140,7 +142,8 @@ TObject* RooMultiCatIter::Next()
     // If higher order increment was successful, reset master iterator
     if (_curIter>0) _curIter=0 ;
 
-    return compositeLabel() ;    
+    _curItem = compositeLabel() ;
+    return _curItem ;    
   } else {
 
     // Reset current iterator
@@ -151,7 +154,8 @@ TObject* RooMultiCatIter::Next()
 
     // Increment next iterator 
     _curIter++ ;
-    return Next() ;
+    _curItem = Next() ;
+    return _curItem ;
   }
 }
 
@@ -172,3 +176,21 @@ void RooMultiCatIter::Reset()
   }
   _curIter=0 ;
 }
+
+TObject *RooMultiCatIter::operator*() const
+{
+  return _curItem ;
+}
+
+bool RooMultiCatIter::operator!=(const TIterator &aIter) const
+{
+   if (nullptr == &aIter)
+      return false;
+   if ((aIter.IsA() == RooMultiCatIter::Class())) {
+      const RooMultiCatIter &iter(dynamic_cast<const RooMultiCatIter &>(aIter));
+      return (_curItem != iter._curItem);
+   }
+   
+   return false;
+}
+

@@ -37,6 +37,8 @@ public:
   virtual const TCollection* GetCollection() const ;
   virtual TObject* Next() ;
   virtual void Reset() ;
+  virtual bool operator!=(const TIterator &aIter) const ;
+  virtual TObject *operator*() const ;
 
 protected:
   
@@ -53,6 +55,7 @@ protected:
   Int_t _curIter ;               // Current location of master iterator
   TObjString _compositeLabel ;   //
   TString _rangeName ;           // Range name (optional)
+  TObject* _curItem;             // Current item returned by Next()
 
   ClassDef(RooMultiCatIter,0) // Iterator over all state permutations of a list of categories
 };

@@ -34,7 +34,8 @@ public:
   virtual const TCollection* GetCollection() const ;
   virtual TObject* Next() ;
   virtual void Reset() ;
-
+  virtual bool operator!=(const TIterator &aIter) const ;
+  virtual TObject *operator*() const ;
 protected:
   
   friend class RooDataHist ;

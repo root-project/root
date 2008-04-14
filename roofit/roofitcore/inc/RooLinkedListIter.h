@@ -31,11 +31,13 @@ public:
     TIterator(), _forward(forward), _list(list)
   {
     _ptr = _list->_first ;
+    _cptr = _ptr;
   }
 
   RooLinkedListIter(const RooLinkedListIter& other) :
     TIterator(other),
     _forward(other._forward),
+    _cptr(other._cptr),
     _ptr(other._ptr), 
     _list(other._list)
   {
@@ -50,11 +52,11 @@ public:
     if (iter) {
       _list = iter->_list ;
       _ptr = iter->_ptr ;
+      _cptr = iter->_cptr;
       _forward = iter->_forward ;
     }
     return *this ;
   }
-
     
   virtual const TCollection *GetCollection() const { 
     return 0 ; 
@@ -62,18 +64,42 @@ public:
 
   virtual TObject *Next() { 
     if (!_ptr) return 0 ;
+    _cptr = _ptr;
     TObject* arg = _ptr->_arg ;      
-      _ptr = _forward ? _ptr->_next : _ptr->_prev ;
-      return arg ;
+    _ptr = _forward ? _ptr->_next : _ptr->_prev ;
+    return arg ;
   }
 
   virtual void Reset() { 
     _ptr = _forward ? _list->_first : _list->_last ;
+    _cptr = _ptr;
+  }
+
+  bool operator!=(const TIterator &aIter) const {
+    if (nullptr == &aIter)
+       return _cptr;
+    if ((aIter.IsA() == RooLinkedListIter::Class())) {
+       const RooLinkedListIter &iter(dynamic_cast<const RooLinkedListIter &>(aIter));
+       return (_cptr != iter._cptr);
+    }
+    return false; // for base class we don't implement a comparison
+  }
+
+  bool operator!=(const RooLinkedListIter &aIter) const {
+    if (nullptr == (&aIter))
+      return _cptr;
+     
+    return (_cptr != aIter._cptr);
+  }
+
+  virtual TObject *operator*() const {
+    return (_cptr ? _cptr->_arg : nullptr);
   }
 
 protected:
   Bool_t _forward ;                //  Iterator direction
-  const RooLinkedListElem* _ptr ;  //! Current link element
+  const RooLinkedListElem* _cptr ; //! Current link element
+  const RooLinkedListElem* _ptr ;  //! Next link element
   const RooLinkedList* _list ;     //! Collection iterated over
 
   ClassDef(RooLinkedListIter,1) // Iterator for RooLinkedList container class

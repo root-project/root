@@ -98,3 +98,25 @@ void RooDataHistSliceIter::Reset()
 {
   _curStep=0 ;
 }
+
+
+TObject *RooDataHistSliceIter::operator*() const
+{
+   Int_t step = _curStep == 0 ? _curStep : _curStep - 1;
+   // Select appropriate entry in RooDataHist 
+   _hist->get(_baseIndex + step*_stepSize) ;
+
+   return _sliceArg ;
+}
+
+bool RooDataHistSliceIter::operator!=(const TIterator &aIter) const
+{
+   if (nullptr == &aIter)
+      return false;
+   if ((aIter.IsA() == RooDataHistSliceIter::Class())) {
+      const RooDataHistSliceIter &iter(dynamic_cast<const RooDataHistSliceIter &>(aIter));
+      return (_curStep != iter._curStep);
+   }
+   
+   return false;
+}
