@@ -43,8 +43,8 @@ namespace FTypes {
    static const std::type_info & Double()     { static const std::type_info & t = Type::ByName("double").TypeInfo();             return t; }
    static const std::type_info & LonDouble()  { static const std::type_info & t = Type::ByName("long double").TypeInfo();        return t; }
    static const std::type_info & Void()       { static const std::type_info & t = Type::ByName("void").TypeInfo();               return t; }
-   static const std::type_info & LonLong()    { static const std::type_info & t = Type::ByName("long long").TypeInfo();           return t; }
-   static const std::type_info & UnsLonLong() { static const std::type_info & t = Type::ByName("unsigned long long").TypeInfo();          return t; }
+   static const std::type_info & LonLong()    { static const std::type_info & t = Type::ByName("long long").TypeInfo();          return t; }
+   static const std::type_info & UnsLonLong() { static const std::type_info & t = Type::ByName("unsigned long long").TypeInfo(); return t; }
 }
 
 //-------------------------------------------------------------------------------

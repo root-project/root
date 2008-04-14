@@ -162,21 +162,19 @@ Reflex::Instance::Instance() {
 #endif
 
    // non fundamental types but also supported at initialisation
-   tb = new Fundamental( "longlong", 
+   tb = new Fundamental( "long long", 
                          sizeof( longlong ), 
                          typeid( longlong ));
    tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
-   new Typedef( "long long", t, FUNDAMENTAL, t );
    new Typedef( "long long int", t, FUNDAMENTAL, t );
 
-   tb = new Fundamental( "ulonglong", 
+   tb = new Fundamental( "unsigned long long", 
                          sizeof( ulonglong ), 
                          typeid( ulonglong ));
    tb->Properties().AddProperty( "Description", "fundamental type" );
    t = tb->ThisType();
    new Typedef( "long long unsigned", t, FUNDAMENTAL, t );
-   new Typedef( "unsigned long long", t, FUNDAMENTAL, t );
    new Typedef( "unsigned long long int", t, FUNDAMENTAL, t );
    new Typedef( "long long unsigned int", t, FUNDAMENTAL, t );
 
