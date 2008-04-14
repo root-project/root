@@ -104,7 +104,7 @@ TMVA::MethodSVM::~MethodSVM()
    if (fAlphas     != 0) delete fAlphas;  
    if (fErrorCache != 0) delete fErrorCache;
    if (fVariables  != 0) {
-      for (Int_t i = 0; i < GetNvar(); i++) delete (*fVariables)[i];
+      for (Int_t i = 0; i < GetNvar(); i++) delete [] (*fVariables)[i];
       delete fVariables;
    }
    if (fNormVar    != 0) delete fNormVar; 
