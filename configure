@@ -1412,6 +1412,8 @@ if test ! "$platform" = "win32"; then
 
     if test "x$found_dir" = "x" ; then
         enable_xft="no"
+        result "`basename $0`: Xft headers (libxft-devel) MUST be installed"
+        exit 1
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
@@ -1434,6 +1436,8 @@ if test ! "$platform" = "win32"; then
 
     if test "x$xftlib" = "x" ; then
         enable_xft="no"
+        result "`basename $0`: libXft (libxft-devel) MUST be installed"
+        exit 1
     fi
 fi
 
