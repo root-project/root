@@ -589,12 +589,14 @@ void TBranch::DropBaskets(Option_t* option)
          if (j < 0) continue;
          if ((j == fReadBasket || j == fWriteBasket) && !all) continue;
          basket = (TBasket*)fBaskets.UncheckedAt(j);
-         if (!basket) continue;
+         fBasketRAM[i] = -1;
+         fNBasketRAM--;
+         if (!basket) {
+            continue;
+         }
          basket->DropBuffers();
          GetListOfBaskets()->RemoveAt(j);
          delete basket;
-         fBasketRAM[i] = -1;
-         fNBasketRAM--;
       }
       if (fNBasketRAM < 0) {
          Error("DropBaskets", "fNBasketRAM =%d",fNBasketRAM);
