@@ -357,7 +357,11 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 
 #ifndef apolloFortran
 /* "extern" removed (CFITSIO) */
+#ifdef __APPLE__
+#define COMMON_BLOCK_DEF(DEFINITION, NAME) extern DEFINITION NAME
+#else
 #define COMMON_BLOCK_DEF(DEFINITION, NAME) /* extern */ DEFINITION NAME
+#endif
 #define CF_NULL_PROTO
 #else                                         /* HP doesn't understand #elif. */
 /* Without ANSI prototyping, Apollo promotes float functions to double.    */
