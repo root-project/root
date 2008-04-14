@@ -19,6 +19,29 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TIterator.h"
+#include "TError.h"
 
 
 ClassImp(TIterator)
+
+//______________________________________________________________________________
+bool TIterator::operator!=(const TIterator &) const
+{
+   // Compare two iterator objects.
+   // For backward compatibility reasons we have to provide this
+   // default implementation.
+
+   ::Warning("TIterator::operator!=", "this method must be overridden!");
+   return false;
+}
+
+//______________________________________________________________________________
+TObject *TIterator::operator*() const
+{
+   // Return current object or nullptr.
+   // For backward compatibility reasons we have to provide this
+   // default implementation.
+
+   ::Warning("TIterator::operator*", "this method must be overridden!");
+   return nullptr;
+}
