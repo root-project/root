@@ -1,6 +1,8 @@
 #include "TH1.h"
 #include "TFile.h"
 #include "TBenchmark.h"
+#include "TROOT.h"
+#include "TClass.h"
 
 TFile *Create(int ntop, int nsub, int nhist)
 {
@@ -33,6 +35,27 @@ TFile *Create(int ntop, int nsub, int nhist)
    }
    return f;
 }
+
+void cleanup(TDirectory *dir)
+{
+   // return;
+
+   gROOT->GetListOfFiles()->Remove(dir);
+   return;
+
+   TIter nextkey( dir->GetList() );
+
+   TObject *obj;
+   while ( (obj = nextkey())) {
+      if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
+         cleanup( (TDirectory*)obj );
+      }
+   }
+   //gROOT->SetMustClean(kFALSE);
+   dir->GetList()->Delete("fast");
+   //delete dir;
+   // dir->GetListOfKeys()->Delete("fast");
+}
        
 
 void directories(int ntop, int nsub, int nhist) 
@@ -41,22 +64,24 @@ void directories(int ntop, int nsub, int nhist)
    gBenchmark = new TBenchmark();
    gBenchmark->Start("directories");
    TFile *f = Create(ntop,nsub,nhist);
-   gBenchmark->Show("directories");gBenchmark->Start("directories");
+   fprintf(stdout,"Test Create: "); gBenchmark->Show("directories");gBenchmark->Start("directories");
    f->Write();
-   gBenchmark->Show("directories");gBenchmark->Start("directories");
+   fprintf(stdout,"Test Write : "); gBenchmark->Show("directories");gBenchmark->Start("directories");
+   cleanup(f);
+   fprintf(stdout,"Test Clean : "); gBenchmark->Show("directories");gBenchmark->Start("directories");
    f->Close();
-   gBenchmark->Show("directories");gBenchmark->Start("directories");
+   fprintf(stdout,"Test Close : "); gBenchmark->Show("directories");gBenchmark->Start("directories");
    delete f;
 }
 
-void steps(int ntop = 100, int nsub = 2) {
+void steps(int ntop = 100, int nsub = 2, int nhist = 24) {
 //    for(int h=100; h<500; h += 50) {
 //       directories(2,2,h);
 //    }
 
    int step = ntop / 5;
    for(int t=1; t<ntop; t += step) {
-      directories(t,nsub,24);
+      directories(t,nsub,nhist);
    }
 }
 
