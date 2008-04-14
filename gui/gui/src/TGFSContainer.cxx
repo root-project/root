@@ -710,7 +710,8 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
       pic = (TGPicture*)spic; pic->AddReference();
       lpic = (TGPicture*)slpic; lpic->AddReference();
 
-      item = new TGFileItem(this, lpic, slpic, spic, pic, new TGString(name),
+      item = new TGFileItem(this,lpic, slpic, spic, pic, 
+                            new TGString(gSystem->BaseName(name)),
                             type, size, uid, gid, modtime, fViewMode);
       AddItem(item);
    }
