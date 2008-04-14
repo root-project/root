@@ -52,8 +52,14 @@ public:
 
    virtual ~TVirtualMonitoringWriter() { if (fTmpOpenPhases) delete fTmpOpenPhases; }
 
-   virtual Bool_t SendFileReadProgress(TFile * /*file*/, Bool_t /*force*/ =kFALSE)
+   // TFile related info. In general they are gathered and sent only sometimes as summaries
+   virtual Bool_t SendFileCloseEvent(TFile * /*file*/)
+      { MayNotUse("SendFileCloseEvent"); return kFALSE; }
+   virtual Bool_t SendFileReadProgress(TFile * /*file*/)
       { MayNotUse("SendFileReadProgress"); return kFALSE; }
+   virtual Bool_t SendFileWriteProgress(TFile * /*file*/)
+      { MayNotUse("SendFileWriteProgress"); return kFALSE; }
+
    virtual Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = 0)
       { MayNotUse("SendParameters"); return kFALSE; }
    virtual Bool_t SendInfoTime() { MayNotUse("SendInfoTime"); return kFALSE; }

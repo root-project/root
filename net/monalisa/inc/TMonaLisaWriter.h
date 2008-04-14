@@ -26,6 +26,9 @@ struct ApMon;
 #endif
 
 #include <time.h>
+#include <map>
+
+class MonitoredTFileInfo;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -88,10 +91,18 @@ private:
    Int_t      fPid;              //! process id
    Bool_t     fInitialized;      // true if initialized
    Bool_t     fVerbose;          // verbocity
-   time_t     fLastSendTime;     // timestamp of the last send command for file reads
+   Double_t   fLastRWSendTime;     // timestamp of the last send command for file reads/writes
+   Double_t   fLastFCloseSendTime; // In order not to flood ML servers
    time_t     fLastProgressTime; // timestamp of the last send command for player process
-   time_t     fReportInterval;   // interval after which to send the latest value
-   TStopwatch fStopwatch;        // cpu time measurement
+
+   std::map<UInt_t,  MonitoredTFileInfo *>   //!
+             *fMonInfoRepo;      //! repo to gather per-file-instance mon info;
+                                 // ROOT should really have something like this
+
+   Int_t      fReportInterval;   // interval after which to send the latest value
+
+   TStopwatch fStopwatch;        // cpu and time measurement for job and proc status
+   TStopwatch fFileStopwatch;     // time measurements for data access throughputs
 
    TMonaLisaWriter(const TMonaLisaWriter&); // Not implemented
    TMonaLisaWriter& operator=(const TMonaLisaWriter&); // Not implemented
@@ -99,6 +110,7 @@ private:
    void Init(const char *monserver, const char *montag, const char *monid,
              const char *monsubid, const char *option);
 
+   Bool_t SendFileCheckpoint(TFile *file);
 public:
    TMonaLisaWriter(const char *monserver, const char *montag, const char *monid = 0,
                    const char *monsubid = 0, const char *option = "");
@@ -107,23 +119,27 @@ public:
 
    ApMon *GetApMon() const { return fApmon; }
 
-   Bool_t SendParameters(TList *valuelist, const char *identifier = 0);
-   Bool_t SendInfoTime();
-   Bool_t SendInfoUser(const char *user = 0);
-   Bool_t SendInfoDescription(const char *jobtag);
-   Bool_t SendInfoStatus(const char *status);
+   virtual Bool_t SendParameters(TList *valuelist, const char *identifier = 0);
+   virtual Bool_t SendInfoTime();
+   virtual Bool_t SendInfoUser(const char *user = 0);
+   virtual Bool_t SendInfoDescription(const char *jobtag);
+   virtual Bool_t SendInfoStatus(const char *status);
+
+   virtual Bool_t SendFileCloseEvent(TFile *file);
 
    // An Open might have several phases, and the timings might be interesting
    // to report
    // The info is only gathered, and sent when forcesend=kTRUE
-   Bool_t SendFileOpenProgress(TFile *file, TList *openphases, const char *openphasename,
+   virtual Bool_t SendFileOpenProgress(TFile *file, TList *openphases, const char *openphasename,
                                Bool_t forcesend = kFALSE);
 
-   Bool_t SendFileReadProgress(TFile *file, Bool_t force=kFALSE);
-   Bool_t SendProcessingStatus(const char *status, Bool_t restarttimer=kFALSE);
-   Bool_t SendProcessingProgress(Double_t nevent, Double_t nbytes, Bool_t force=kFALSE);
-   void   SetLogLevel(const char *loglevel = "WARNING");
-   void   Verbose(Bool_t onoff) { fVerbose = onoff; }
+   virtual Bool_t SendFileReadProgress(TFile *file);
+   virtual Bool_t SendFileWriteProgress(TFile *file);
+
+   virtual Bool_t SendProcessingStatus(const char *status, Bool_t restarttimer=kFALSE);
+   virtual Bool_t SendProcessingProgress(Double_t nevent, Double_t nbytes, Bool_t force=kFALSE);
+   virtual void   SetLogLevel(const char *loglevel = "WARNING");
+   virtual void   Verbose(Bool_t onoff) { fVerbose = onoff; }
 
    void   Print(Option_t *option = "") const;
 

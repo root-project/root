@@ -744,13 +744,14 @@ void TFile::Close(Option_t *option)
    if (!IsOpen()) return;
 
 
-   if (gMonitoringWriter && (!fWritable))
-      gMonitoringWriter->SendFileReadProgress(this,true);
-
    if (fIsArchive || !fIsRootFile) {
       FlushWriteCache();
       SysClose(fD);
       fD = -1;
+
+      if (gMonitoringWriter)
+         gMonitoringWriter->SendFileCloseEvent(this);
+
       return;
    }
 
@@ -775,6 +776,9 @@ void TFile::Close(Option_t *option)
    }
 
    FlushWriteCache();
+
+   if (gMonitoringWriter)
+      gMonitoringWriter->SendFileCloseEvent(this);
 
    // Delete free segments from free list (but don't delete list header)
    if (fFree) {
@@ -1299,9 +1303,6 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       Double_t start = 0;
       if (gPerfStats != 0) start = TTimeStamp();
 
-      if (gMonitoringWriter)
-         gMonitoringWriter->SendFileReadProgress(this);
-
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
 
@@ -1319,6 +1320,8 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       fReadCalls++;
       fgReadCalls++;
 
+      if (gMonitoringWriter)
+         gMonitoringWriter->SendFileReadProgress(this);
       if (gPerfStats != 0) {
          gPerfStats->FileReadEvent(this, len, double(TTimeStamp())-start);
       }
@@ -1873,6 +1876,9 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
       }
       fBytesWrite  += siz;
       fgBytesWrite += siz;
+
+      if (gMonitoringWriter)
+         gMonitoringWriter->SendFileWriteProgress(this);
 
       return kFALSE;
    }
@@ -2777,9 +2783,6 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
        f && f->IsWritable() && !f->IsRaw()) {
       new TFileCacheWrite(f, 1);
    }
-
-   if (gMonitoringWriter && f && (!f->IsWritable()))
-      gMonitoringWriter->SendFileReadProgress(f,true);
 
    return f;
 }

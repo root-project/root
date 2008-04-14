@@ -26,6 +26,22 @@
 // can be exploited through the ApMon class directly via                //
 // dynamic_cast<TMonaLisaWriter*>(gMonitoringWriter)->GetApMon().       //
 //                                                                      //
+// Additions/modifications by Fabrizio Furano 10/04/2008                //
+// - The implementation of TFile throughput and info sending was        //
+// just sending 'regular' samples about the activity of the single TFile//
+// instance that happened to trigger an activity in the right moment.   //
+// - Now TMonaLisaWriter keeps internally track of every activity       //
+// and regularly sends summaries valid for all the files which had      //
+// activity in the last time interval.                                  //
+// - Additionally, it's now finalized the infrastructure able to measure//
+// and keep track of the file Open latency. A packet is sent for each   //
+// successful Open, sending the measures of the latencies for the       //
+// various phases of the open. Currently exploited fully by TAlienFile  //
+// and TXNetFile. Easy to report from other TFiles too.                 //
+// - Now, the hook for the Close() func triggers sending of a packet    //
+// containing various information about the performance related to that //
+// file only.                                                           //
+// - Added support also for performance monitoring when writing         //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMonaLisaWriter.h"
@@ -36,9 +52,113 @@
 #include "TStopwatch.h"
 #include "Riostream.h"
 #include "TParameter.h"
-
+#include "THashList.h"
+#include "TMath.h"
 
 ClassImp(TMonaLisaWriter)
+
+
+// Information which is kept about an alive instance of TFile
+class MonitoredTFileInfo: public TObject {
+private:
+   TFile       *fileinst;
+public:
+   MonitoredTFileInfo(TFile *file, Double_t timenow): TObject(), fileinst(file) {
+      if (file->InheritsFrom("TXNetFile"))
+         fFileClassName = "TXNetFile";
+      else
+         fFileClassName = file->ClassName();
+
+      fLastBytesRead = 0;
+      fLastBytesWritten = 0;
+
+      fTempReadBytes = 0;
+      fTempWrittenBytes = 0;
+
+      fLastResetTime = timenow;
+      fCreationTime = timenow;
+
+      fKillme = kFALSE;
+   }
+
+   Double_t    fCreationTime;
+
+   TString     fFileClassName;
+
+   Long64_t    fLastBytesRead;
+   Long64_t    fTempReadBytes;
+   Long64_t    fLastBytesWritten;
+   Long64_t    fTempWrittenBytes;
+
+   Double_t    fLastResetTime;
+
+   Bool_t      fKillme;   // tells to remove the instance after the next computation step
+
+   void        GetThroughputs(Long64_t &readthr, Long64_t &writethr, Double_t timenow, Double_t prectime) {
+      readthr = -1;
+      writethr = -1;
+      Double_t t = TMath::Min(prectime, fLastResetTime);
+
+      Int_t mselapsed = TMath::FloorNint((timenow - t) * 1000);
+      mselapsed = TMath::Max(mselapsed, 1);
+
+      readthr = fTempReadBytes / mselapsed * 1000;
+      writethr = fTempWrittenBytes / mselapsed * 1000;
+   }
+
+   void        UpdateFileStatus(TFile *file) {
+      fTempReadBytes = file->GetBytesRead() - fLastBytesRead;
+      fTempWrittenBytes = file->GetBytesWritten() - fLastBytesWritten;
+   }
+
+   void        ResetFileStatus(TFile *file, Double_t timenow) {
+      if (fKillme) return;
+      fLastBytesRead = file->GetBytesRead();
+      fLastBytesWritten = file->GetBytesWritten();
+      fTempReadBytes = 0;
+      fTempWrittenBytes = 0;
+      fLastResetTime = timenow;
+   }
+
+   void        ResetFileStatus(Double_t timenow) {
+      if (fKillme) return;
+      ResetFileStatus(fileinst, timenow);
+   }
+
+};
+
+
+
+
+// Helper used to build up ongoing throughput summaries
+class MonitoredTFileSummary: public TNamed {
+public:
+   MonitoredTFileSummary(TString &fileclassname): TNamed(fileclassname, fileclassname) {
+      fBytesRead = 0;
+      fBytesWritten = 0;
+      fReadThroughput = 0;
+      fWriteThroughput = 0;
+   }
+
+   Long64_t    fBytesRead;
+   Long64_t    fBytesWritten;
+   Long64_t    fReadThroughput;
+   Long64_t    fWriteThroughput;
+
+   void        Update(MonitoredTFileInfo *mi, Double_t timenow, Double_t prectime) {
+      Long64_t rth, wth;
+      mi->GetThroughputs(rth, wth, timenow, prectime);
+
+      fBytesRead += mi->fTempReadBytes;
+      fBytesWritten += mi->fTempWrittenBytes;
+
+      if (rth > 0) fReadThroughput += rth;
+      if (wth > 0) fWriteThroughput += wth;
+   }
+
+};
+
+
 
 //______________________________________________________________________________
 TMonaLisaWriter::TMonaLisaWriter(const char *monserver, const char *montag,
@@ -46,6 +166,8 @@ TMonaLisaWriter::TMonaLisaWriter(const char *monserver, const char *montag,
                                  const char *option)
 {
    // Create MonaLisa write object.
+
+   fMonInfoRepo = new std::map<UInt_t, MonitoredTFileInfo *>;
 
    Init(monserver, montag, monid, monsubid, option);
 }
@@ -151,9 +273,13 @@ void TMonaLisaWriter::Init(const char *monserver, const char *montag, const char
 
    fVerbose = kFALSE;           // no verbosity as default
 
-   fLastSendTime = time(0);
+   fFileStopwatch.Start(kTRUE);
+   fLastRWSendTime = fFileStopwatch.RealTime();
+   fLastFCloseSendTime = fFileStopwatch.RealTime();
    fLastProgressTime = time(0);
-   fReportInterval = 5; // default interval is 5
+   fFileStopwatch.Continue();
+
+   fReportInterval = 120; // default interval is 120, to prevent flooding
    if (gSystem->Getenv("APMON_INTERVAL")) {
       fReportInterval = atoi(gSystem->Getenv("APMON_INTERVAL"));
       if (fReportInterval < 1)
@@ -252,6 +378,18 @@ void TMonaLisaWriter::Init(const char *monserver, const char *montag, const char
 TMonaLisaWriter::~TMonaLisaWriter()
 {
    // Cleanup.
+   if (fMonInfoRepo) {
+
+      std::map<UInt_t, MonitoredTFileInfo *>::iterator iter = fMonInfoRepo->begin();
+      while (iter != fMonInfoRepo->end()) {
+         delete iter->second;
+         iter++;
+      }
+
+      fMonInfoRepo->clear();
+      delete fMonInfoRepo;
+      fMonInfoRepo = 0;
+   }
 
    if (gMonitoringWriter == this)
       gMonitoringWriter = 0;
@@ -546,9 +684,8 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
    }
 
    // Take a measurement
-   fStopwatch.Start(kFALSE);
-   TParameter<Double_t> *nfo = new TParameter<Double_t>(openphasename, fStopwatch.RealTime());
-   fStopwatch.Continue();
+   TParameter<Double_t> *nfo = new TParameter<Double_t>(openphasename, fFileStopwatch.RealTime());
+   fFileStopwatch.Continue();
 
    if (!openphases) {
       fTmpOpenPhases->Add(nfo);
@@ -561,8 +698,11 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
       // Add this measurement
       openphases->Add(nfo);
       // Reset the temporary list
-      fTmpOpenPhases->SetOwner(0);
-      fTmpOpenPhases->Clear();
+      if (fTmpOpenPhases) {
+         fTmpOpenPhases->SetOwner(0);
+         fTmpOpenPhases->Clear();
+      }
+
    }
 
    if (!forcesend) return kTRUE;
@@ -616,40 +756,38 @@ Bool_t TMonaLisaWriter::SendFileOpenProgress(TFile *file, TList *openphases,
    delete valuelist;
    return success;
 }
+
 //______________________________________________________________________________
-Bool_t TMonaLisaWriter::SendFileReadProgress(TFile *file, Bool_t force)
-{
-   // Send the fileread progress to MonaLisa.
-
-   if (!force && (time(0)-fLastSendTime) < fReportInterval) {
-      // if the progress is not forced, we send maximum < 1 per second!
-      return kFALSE;
-   }
-
+Bool_t TMonaLisaWriter::SendFileCloseEvent(TFile *file) {
    if (!fInitialized) {
-      Error("SendProcessingProgress",
+      Error("SendFileCloseEvent",
             "Monitoring is not properly initialized!");
       return kFALSE;
    }
 
    Bool_t success = kFALSE;
+   Double_t timenow = fFileStopwatch.RealTime();
+   fFileStopwatch.Continue();
 
+   MonitoredTFileInfo *mi = 0;
+   std::map<UInt_t, MonitoredTFileInfo *>::iterator iter = fMonInfoRepo->find(file->GetUniqueID());
+   if (iter != fMonInfoRepo->end()) mi = iter->second;
+
+   Double_t timelapsed = 0.0;
+   if (mi) timelapsed = timenow - mi->fCreationTime;
 
    TList *valuelist = new TList();
    valuelist->SetOwner(kTRUE);
 
-   Long64_t nbytes=file->GetBytesRead();
-   // create a monitor text object
-   TMonaLisaValue *valread = new TMonaLisaValue("readbytes", nbytes);
-   valuelist->Add(valread);
-   TString strbytes="";
-   strbytes+=nbytes;
-   TMonaLisaText *valstrread = new TMonaLisaText("readbytes_str", strbytes.Data());
-   valuelist->Add(valstrread);
-   TMonaLisaText *valhost = new TMonaLisaText("hostname",fHostname);
-   valuelist->Add(valhost);
-   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId.Data());
-   valuelist->Add(valsid);
+   TString valname;
+   TString pfx = file->ClassName();
+   if (file->InheritsFrom("TXNetFile"))
+      pfx = "TXNetFile";
+
+   pfx += "_";
+
+   // The info to be sent is the one relative to the specific file
+
    TMonaLisaText *valdest = new TMonaLisaText("destname",file->GetEndpointUrl()->GetHost());
    valuelist->Add(valdest);
    TMonaLisaValue *valfid = new TMonaLisaValue("fileid",file->GetFileCounter());
@@ -659,9 +797,188 @@ Bool_t TMonaLisaWriter::SendFileReadProgress(TFile *file, Bool_t force)
    TMonaLisaText *valstrfid = new TMonaLisaText("fileid_str",strfid.Data());
    valuelist->Add(valstrfid);
 
+   valname = pfx;
+   valname += "readbytes";
+   TMonaLisaValue *valread = new TMonaLisaValue(valname, file->GetBytesRead());
+   valuelist->Add(valread);
+
+//    TString strbytes_r="";
+//    strbytes_r += file->GetBytesRead();
+//    TMonaLisaText *valstrread = new TMonaLisaText("readbytes_str", strbytes_r.Data());
+//    valuelist->Add(valstrread);
+
+   valname = pfx;
+   valname += "writtenbytes";
+   TMonaLisaValue *valwrite = new TMonaLisaValue(valname, file->GetBytesWritten());
+   valuelist->Add(valwrite);
+
+//    TString strbytes_w="";
+//    strbytes_w += file->GetBytesWritten();
+//    TMonaLisaText *valstrwrite = new TMonaLisaText("writtenbytes_str", strbytes_w.Data());
+//    valuelist->Add(valstrwrite);
+
+   int thput;
+   if (timelapsed > 0.001) {
+      Int_t selapsed = TMath::FloorNint(timelapsed * 1000);
+
+      thput = file->GetBytesRead() / selapsed * 1000;
+      valname = pfx;
+      valname += "filethrpt_rd";
+      TMonaLisaValue *valreadthavg = new TMonaLisaValue(valname, thput);
+      valuelist->Add(valreadthavg);
+
+      thput = file->GetBytesWritten() / selapsed * 1000;
+      valname = pfx;
+      valname += "filethrpt_wr";
+      TMonaLisaValue *valwritethavg = new TMonaLisaValue(valname, thput);
+      valuelist->Add(valwritethavg);
+   }
+
+   // And the specific file summary has to be removed from the repo
+   if (mi) {
+      mi->UpdateFileStatus(file);
+      mi->fKillme = kTRUE;
+   }
+
    // send it to monalisa
    success = SendParameters(valuelist);
-   fLastSendTime = time(0);
+
+
+   delete valuelist;
+   return success;
+}
+//______________________________________________________________________________
+Bool_t TMonaLisaWriter::SendFileReadProgress(TFile *file) {
+   return SendFileCheckpoint(file);
+}
+//______________________________________________________________________________
+Bool_t TMonaLisaWriter::SendFileWriteProgress(TFile *file) {
+   return SendFileCheckpoint(file);
+}
+//______________________________________________________________________________
+Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
+{
+   if (!fInitialized) {
+      Error("SendFileCheckpoint",
+            "Monitoring is not properly initialized!");
+      return kFALSE;
+   }
+
+   if (!file->IsOpen()) return kTRUE;
+
+   // We cannot handle this kind of ongoing averaged monitoring for a file which has not an unique id. Sorry.
+   // This seems to affect raw files, for which only the Close() info is available
+   // Removing this check causes a mess for non-raw and raw TFiles, because
+   // the UUID in the Init phase has not yet been set, and the traffic
+   // reported during that phase is reported wrongly, causing various leaks and troubles
+   // TFiles without an unique id can be monitored only in their Open/Close event
+   if (!file->TestBit(kHasUUID)) return kTRUE;
+
+   Double_t timenow = fFileStopwatch.RealTime();
+   fFileStopwatch.Continue();
+
+   // This info has to be gathered in any case.
+   
+   // Check if an MonitoredTFileInfo instance is already available
+   // If not, create one
+   MonitoredTFileInfo *mi = 0;
+   std::map<UInt_t, MonitoredTFileInfo *>::iterator iter = fMonInfoRepo->find(file->GetUniqueID());
+   if (iter != fMonInfoRepo->end()) mi = iter->second;
+   if (!mi) {
+
+      mi = new MonitoredTFileInfo(file, timenow);
+      if (mi) fMonInfoRepo->insert( make_pair( file->GetUniqueID(), mi ) ); 
+   }
+
+   // And now we get those partial values
+   if (mi) mi->UpdateFileStatus(file);
+
+   // Send the fileread progress to MonaLisa only if required or convenient
+   if ( timenow - fLastRWSendTime < fReportInterval) {
+      // if the progress is not forced, we send maximum 1 every fReportInterval seconds!
+      return kFALSE;
+   }
+
+   Bool_t success = kFALSE;
+
+   TList *valuelist = new TList();
+   valuelist->SetOwner(kTRUE);
+
+   TString valname;
+   
+   // We send only a little throughput summary info
+   // Instead we send the info for the actual file passed
+
+   TMonaLisaText *valhost = new TMonaLisaText("hostname",fHostname);
+   valuelist->Add(valhost);
+   TMonaLisaText *valsid = new TMonaLisaText("subid", fSubJobId.Data());
+   valuelist->Add(valsid);
+
+   // First of all, we create an internal summary, sorted by kind of TFile used
+   THashList summary;
+   summary.SetOwner(kTRUE);
+
+   iter = fMonInfoRepo->begin();
+   if (iter != fMonInfoRepo->end()) mi = iter->second;
+   else mi = 0;
+
+   while (mi) {
+      MonitoredTFileSummary *sum = static_cast<MonitoredTFileSummary *>(summary.FindObject(mi->fFileClassName));
+      if (!sum) {
+         sum = new MonitoredTFileSummary(mi->fFileClassName);
+         if (sum) summary.AddLast(sum);
+      }
+
+      if (sum) {
+         sum->Update(mi, timenow, fLastRWSendTime);
+         mi->ResetFileStatus(timenow);
+      }
+
+      // This could be an info about an already closed file
+      if (mi->fKillme) {
+         std::map<UInt_t, MonitoredTFileInfo *>::iterator tmpiter = iter;
+
+         iter->second = 0;
+      }
+
+      iter++;
+      if (iter != fMonInfoRepo->end()) mi = iter->second;
+      else mi = 0;
+      
+   }
+
+   for (iter = fMonInfoRepo->begin(); iter != fMonInfoRepo->end(); iter++)
+      if (!iter->second) fMonInfoRepo->erase(iter);
+
+   // This info is a summary valid for all the monitored files at once.
+   // It makes no sense at all to send data relative to a specific file here
+   // Cycle through the summary...
+   TIter nxt2(&summary);
+   MonitoredTFileSummary *sum;
+   while ((sum = (MonitoredTFileSummary *)nxt2())) {
+
+      if (sum->fReadThroughput >= 0) {
+         valname = sum->GetName();
+         valname += "_avgthrpt_rd";
+         TMonaLisaValue *valreadthr = new TMonaLisaValue(valname, sum->fReadThroughput);
+         valuelist->Add(valreadthr);
+      }
+
+      if ( sum->fWriteThroughput >= 0 ) {
+         valname = sum->GetName();
+         valname += "_avgthrpt_wr";
+         TMonaLisaValue *valwritethr = new TMonaLisaValue(valname, sum->fWriteThroughput);
+         valuelist->Add(valwritethr);
+      }
+
+   }
+
+
+   // send it to monalisa
+   success = SendParameters(valuelist);
+
+   fLastRWSendTime = timenow;
+
    delete valuelist;
    return success;
 }
