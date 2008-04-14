@@ -61,6 +61,7 @@
 #include "TGenericClassInfo.h"
 
 #include <cstdio>
+#include <cctype>
 #include <set>
 #include <sstream>
 #include <string>
@@ -285,8 +286,19 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          if (!strcmp(membertype->GetTypeName(), "char")) {
             i = strlen(*ppointer);
             if (kvalue+i >= kline) i=kline-kvalue;
-            strncpy(&line[kvalue],*ppointer,i);
-            line[kvalue+i] = 0;
+            Bool_t isPrintable = kTRUE;
+            for (Int_t j = 0; j < i; j++) {
+               if (!std::isprint((*ppointer)[j])) {
+                  isPrintable = kFALSE;
+                  break;
+               }
+            }
+            if (isPrintable) {
+               strncpy(line + kvalue, *ppointer, i);
+               line[kvalue+i] = 0;
+            } else {
+               line[kvalue] = 0;
+            }
          } else {
             strcpy(&line[kvalue], membertype->AsString(p3pointer));
          }
@@ -294,8 +306,19 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
                  !strcmp(member->GetFullTypeName(), "const char*")) {
          i = strlen(*ppointer);
          if (kvalue+i >= kline) i=kline-kvalue;
-         strncpy(&line[kvalue],*ppointer,i);
-         line[kvalue+i] = 0;
+         Bool_t isPrintable = kTRUE;
+         for (Int_t j = 0; j < i; j++) {
+            if (!std::isprint((*ppointer)[j])) {
+               isPrintable = kFALSE;
+               break;
+            }
+         }
+         if (isPrintable) {
+            strncpy(line + kvalue, *ppointer, i);
+            line[kvalue+i] = 0;
+         } else {
+            line[kvalue] = 0;
+         }
       } else {
          sprintf(&line[kvalue],"->%lx ", (Long_t)p3pointer);
       }
