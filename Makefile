@@ -490,12 +490,20 @@ G__%.o: G__%.cxx
 	   -I$(CINTDIR)/stl -- $<
 	$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(CXXOUT)$@ -c $<
 
-cint/%.o: cint/%.cxx
-	$(MAKEDEP) -R -fcint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
+cint/cint/%.o: cint/cint/%.cxx
+	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
 
-cint/%.o: cint/%.c
-	$(MAKEDEP) -R -fcint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
+cint/cint/%.o: cint/cint/%.c
+	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
+	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
+
+cint/cint7/%.o: cint/cint7/%.cxx
+	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CINTCXXFLAGS) $(CXXOUT)$@ -c $<
+
+cint/cint7/%.o: cint/cint7/%.c
+	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
 build/%.o: build/%.cxx
