@@ -57,8 +57,8 @@ public:
    }
 
    ~TMVATest() {
-      delete fFactory;
       fOutputfile->Close();
+      delete fFactory;
    }
 
    bool Initialize() {
