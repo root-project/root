@@ -26,6 +26,10 @@
 #include "TSeqCollection.h"
 #endif
 
+#include <iterator>
+
+
+class TObjArrayIter;
 
 class TObjArray : public TSeqCollection {
 
@@ -43,6 +47,8 @@ protected:
    Int_t         GetAbsLast() const;
 
 public:
+   typedef TObjArrayIter Iterator_t;
+
    TObjArray(Int_t s = TCollection::kInitCapacity, Int_t lowerBound = 0);
    TObjArray(const TObjArray &a);
    virtual          ~TObjArray();
@@ -52,7 +58,9 @@ public:
    virtual void     Delete(Option_t *option="");
    virtual void     Expand(Int_t newSize);   // expand or shrink an array
    Int_t            GetEntries() const;
-   Int_t            GetEntriesFast() const {return GetAbsLast()+1;}  //only OK when no gaps
+   Int_t            GetEntriesFast() const {
+      return GetAbsLast() + 1;   //only OK when no gaps
+   }
    Int_t            GetLast() const;
    TObject        **GetObjectRef(const TObject *obj) const;
    Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
@@ -100,14 +108,18 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TObjArrayIter : public TIterator {
+class TObjArrayIter : public TIterator,
+                      public std::iterator<std::bidirectional_iterator_tag, // TODO: ideally it should be a  randomaccess_iterator_tag
+                                           TObject*, std::ptrdiff_t,
+                                           const TObject**, const TObject*&> {
 
 private:
    const TObjArray  *fArray;     //array being iterated
-   Int_t             fCursor;    //current position in array
+   Int_t             fCurCursor; //current position in array
+   Int_t             fCursor;    //next position in array
    Bool_t            fDirection; //iteration direction
 
-   TObjArrayIter() : fArray(0), fCursor(0), fDirection(kTRUE) { }
+   TObjArrayIter() : fArray(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    TObjArrayIter(const TObjArray *arr, Bool_t dir = kIterForward);
@@ -118,7 +130,10 @@ public:
 
    const TCollection *GetCollection() const { return fArray; }
    TObject           *Next();
-   void              Reset();
+   void               Reset();
+   bool               operator!=(const TIterator &aIter) const;
+   bool               operator!=(const TObjArrayIter &aIter) const;
+   TObject           *operator*() const;
 
    ClassDef(TObjArrayIter,0)  //Object array iterator
 };

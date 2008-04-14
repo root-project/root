@@ -29,14 +29,29 @@
 //         while ((TObject *obj = next()))                              //
 //            obj->Draw(next.GetOption());                              //
 //                                                                      //
-//    3) Using the TObjLink list entries (that wrap the TObject*):      //
+//    3) Using the TList iterator TListIter and std::for_each           //
+//       algorithm:                                                     //
+//         // A function object, which will be applied to each element  //
+//         // of the given range.                                       //
+//         struct STestFunctor {                                        //
+//            bool operator()(TObject *aObj) {                          //
+//               ...                                                    //
+//               return true;                                           //
+//            }                                                         //
+//        }                                                             //
+//        ...                                                           //
+//        ...                                                           //
+//        TIter iter(mylist);                                           //
+//        for_each( iter.Begin(), TIter::End(), STestFunctor() );       //
+//                                                                      //
+//    4) Using the TObjLink list entries (that wrap the TObject*):      //
 //         TObjLink *lnk = GetListOfPrimitives()->FirstLink();          //
 //         while (lnk) {                                                //
 //            lnk->GetObject()->Draw(lnk->GetOption());                 //
 //            lnk = lnk->Next();                                        //
 //         }                                                            //
 //                                                                      //
-//    4) Using the TList's After() and Before() member functions:       //
+//    5) Using the TList's After() and Before() member functions:       //
 //         TFree *idcur = this;                                         //
 //         while (idcur) {                                              //
 //            ...                                                       //
@@ -872,6 +887,40 @@ void TListIter::SetOption(Option_t *option)
    // Sets the object option stored in the list.
 
    if (fCurCursor) fCurCursor->SetOption(option);
+}
+
+//______________________________________________________________________________
+void TListIter::Reset()
+{
+   // Reset list iterator.
+
+   fStarted = kFALSE;
+}
+
+//______________________________________________________________________________
+bool TListIter::operator!=(const TIterator &aIter) const
+{
+   // This operator compares two TIterator objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+
+   if ((aIter.IsA() == TListIter::Class())) {
+      const TListIter &iter(dynamic_cast<const TListIter &>(aIter));
+      return (fCurCursor != iter.fCurCursor);
+   }
+   return false; // for base class we don't implement a comparison
+}
+
+//______________________________________________________________________________
+bool TListIter::operator!=(const TListIter &aIter) const
+{
+   // This operator compares two TListIter objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+
+   return (fCurCursor != aIter.fCurCursor);
 }
 
 //_______________________________________________________________________

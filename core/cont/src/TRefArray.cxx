@@ -39,8 +39,10 @@
 //     TObject *nobj = new TObject;                                       //
 //     array.Add(nobj);                                                   //
 // is incorrect since 'nobj' was created in a different process than the  //
-// one the array is pointed to.  In thi case you will see error message:  //
-//     Error in <TRefArray::AddAtAndExpand>: The object at 0x... is not registered in the process the TRefArray point to (pid = ProcessID../....)
+// one the array is pointed to. In this case you will see error message:  //
+//     Error in <TRefArray::AddAtAndExpand>: The object at 0x... is not   //
+//     registered in the process the TRefArray point to                   //
+//     (pid = ProcessID../....)                                           //
 //                                                                        //
 // When a TRefArray is Streamed, only the pointer unique id is written,   //
 // not the referenced object. TRefArray may be assigned to different      //
@@ -172,7 +174,7 @@ TRefArray::~TRefArray()
 
 static Bool_t R__GetUID(Int_t &uid, TObject *obj, TProcessID *pid, const char *methodname)
 {
-   
+
    // Check if the object can belong here
    Bool_t valid = kTRUE;
    if (obj->TestBit(kHasUUID)) {
@@ -399,7 +401,10 @@ void TRefArray::Delete(Option_t *)
    fLast = -1;
 
    fSize = 0;
-   if (fUIDs) {delete [] fUIDs; fUIDs = 0;}
+   if (fUIDs) {
+      delete [] fUIDs;
+      fUIDs = 0;
+   }
 
    Changed();
 }
@@ -661,7 +666,9 @@ TObject *TRefArray::RemoveAt(Int_t idx)
       fUIDs[i] = 0;
       // recalculate array size
       if (i == fLast)
-         do { fLast--; } while (fLast >= 0 && fUIDs[fLast] == 0);
+         do {
+            fLast--;
+         } while (fLast >= 0 && fUIDs[fLast] == 0);
       Changed();
    }
 
@@ -683,7 +690,9 @@ TObject *TRefArray::Remove(TObject *obj)
    fUIDs[idx] = 0;
    // recalculate array size
    if (idx == fLast)
-      do { fLast--; } while (fLast >= 0 && fUIDs[fLast] == 0);
+      do {
+         fLast--;
+      } while (fLast >= 0 && fUIDs[fLast] == 0);
    Changed();
    return ob;
 }
@@ -830,12 +839,14 @@ TObject *TRefArrayIter::Next()
       for ( ; fCursor < fArray->Capacity() && fArray->At(fCursor) == 0;
               fCursor++) { }
 
+      fCurCursor = fCursor;
       if (fCursor < fArray->Capacity())
          return fArray->At(fCursor++);
    } else {
       for ( ; fCursor >= 0 && fArray->At(fCursor) == 0;
               fCursor--) { }
 
+      fCurCursor = fCursor;
       if (fCursor >= 0)
          return fArray->At(fCursor--);
    }
@@ -853,3 +864,37 @@ void TRefArrayIter::Reset()
       fCursor = fArray->Capacity() - 1;
 }
 
+//______________________________________________________________________________
+bool TRefArrayIter::operator!=(const TIterator &aIter) const
+{
+   // This operator compares two TIterator objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+
+   if (aIter.IsA() == TRefArrayIter::Class()) {
+      const TRefArrayIter &iter(dynamic_cast<const TRefArrayIter &>(aIter));
+      return (fCurCursor != iter.fCurCursor);
+   }
+   return false; // for base class we don't implement a comparison
+}
+
+//______________________________________________________________________________
+bool TRefArrayIter::operator!=(const TRefArrayIter &aIter) const
+{
+   // This operator compares two TRefArrayIter objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+
+   return (fCurCursor != aIter.fCurCursor);
+}
+
+//______________________________________________________________________________
+TObject *TRefArrayIter::operator*() const
+{
+   // Return current object or nullptr.
+
+   return (((fCurCursor >= 0) && (fCurCursor < fArray->Capacity())) ?
+           fArray->At(fCurCursor) : nullptr);
+}

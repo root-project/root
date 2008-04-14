@@ -142,6 +142,9 @@ public:
    const TCollection *GetCollection() const { return fMap; }
    TObject           *Next();
    void               Reset();
+   bool               operator!=(const TIterator &aIter) const;
+   bool               operator!=(const TMapIter &aIter) const;
+   TObject           *operator*() const;
 
    ClassDef(TMapIter,0)  //Map iterator
 };

@@ -94,10 +94,11 @@ class TOrdCollectionIter : public TIterator {
 
 private:
    const TOrdCollection  *fCol;       //collection being iterated
-   Int_t                  fCursor;    //current position in collection
+   Int_t                  fCurCursor; //current position in collection
+   Int_t                  fCursor;    //next position in collection
    Bool_t                 fDirection; //iteration direction
 
-   TOrdCollectionIter() : fCol(0), fCursor(0), fDirection(kFALSE) { }
+   TOrdCollectionIter() : fCol(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    TOrdCollectionIter(const TOrdCollection *col, Bool_t dir = kIterForward);
@@ -108,7 +109,10 @@ public:
 
    const TCollection *GetCollection() const { return fCol; }
    TObject           *Next();
-   void              Reset();
+   void               Reset();
+   bool               operator!=(const TIterator &aIter) const;
+   bool               operator!=(const TOrdCollectionIter &aIter) const;
+   TObject           *operator*() const;
 
    ClassDef(TOrdCollectionIter,0)  //Ordered collection iterator
 };
@@ -128,4 +132,3 @@ inline Int_t TOrdCollection::LogIndex(Int_t idx) const
    { return (idx < fGapStart) ? idx : idx - fGapSize; }
 
 #endif
-

@@ -123,6 +123,9 @@ public:
    const TCollection *GetCollection() const { return fTable; }
    TObject           *Next();
    void               Reset();
+   bool               operator!=(const TIterator &aIter) const;
+   bool               operator!=(const THashTableIter &aIter) const;
+   TObject           *operator*() const;
 
    ClassDef(THashTableIter,0)  //Hash table iterator
 };

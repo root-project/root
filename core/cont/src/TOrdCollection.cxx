@@ -512,6 +512,7 @@ TObject *TOrdCollectionIter::Next()
    // Return next object in collection. Returns 0 when no more objects in
    // collection.
 
+   fCurCursor = fCursor;
    if (fDirection == kIterForward) {
       if (fCursor < fCol->GetSize())
          return fCol->At(fCursor++);
@@ -531,4 +532,39 @@ void TOrdCollectionIter::Reset()
       fCursor = 0;
    else
       fCursor = fCol->GetSize() - 1;
+}
+
+//______________________________________________________________________________
+bool TOrdCollectionIter::operator!=(const TIterator &aIter) const
+{
+   // This operator compares two TIterator objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+
+   if (aIter.IsA() == TOrdCollectionIter::Class()) {
+      const TOrdCollectionIter &iter(dynamic_cast<const TOrdCollectionIter &>(aIter));
+      return (fCurCursor != iter.fCurCursor);
+   }
+   return false; // for base class we don't implement a comparison
+}
+
+//______________________________________________________________________________
+bool TOrdCollectionIter::operator!=(const TOrdCollectionIter &aIter) const
+{
+   // This operator compares two TOrdCollectionIter objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+
+   return (fCurCursor != aIter.fCurCursor);
+}
+
+//______________________________________________________________________________
+TObject *TOrdCollectionIter::operator*() const
+{
+   // Return current object or nullptr.
+
+   return (((fCurCursor >= 0) && (fCurCursor < fCol->GetSize())) ?
+           fCol->At(fCurCursor) : nullptr);
 }

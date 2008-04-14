@@ -459,7 +459,6 @@ void TBtree::RootIsEmpty()
    }
 }
 
-
 //_______________________________________________________________________
 void TBtree::Streamer(TBuffer &b)
 {
@@ -651,6 +650,7 @@ TObject *TBtreeIter::Next()
 {
    // Get next object from B-tree. Returns 0 when no more objects in tree.
 
+   fCurCursor = fCursor;
    if (fDirection == kIterForward) {
       if (fCursor < fTree->GetSize())
          return (*fTree)[fCursor++];
@@ -659,6 +659,40 @@ TObject *TBtreeIter::Next()
          return (*fTree)[fCursor--];
    }
    return 0;
+}
+
+//______________________________________________________________________________
+bool TBtreeIter::operator!=(const TIterator &aIter) const
+{
+   // This operator compares two TIterator objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+
+   if (aIter.IsA() == TBtreeIter::Class()) {
+      const TBtreeIter &iter(dynamic_cast<const TBtreeIter &>(aIter));
+      return (fCurCursor != iter.fCurCursor);
+   }
+   return false; // for base class we don't implement a comparison
+}
+
+//______________________________________________________________________________
+bool TBtreeIter::operator!=(const TBtreeIter &aIter) const
+{
+   // This operator compares two TBtreeIter objects.
+
+   if (nullptr == (&aIter))
+      return fCurCursor;
+   return (fCurCursor != aIter.fCurCursor);
+}
+
+//______________________________________________________________________________
+TObject* TBtreeIter::operator*() const
+{
+   // Return current object or nullptr.
+
+   return (((fCurCursor >= 0) && (fCurCursor < fTree->GetSize())) ?
+           (*fTree)[fCurCursor] : nullptr);
 }
 
 
@@ -1171,8 +1205,6 @@ void TBtInnerNode::PushLeft(Int_t noFromThis, TBtInnerNode *leftsib, Int_t pidx)
 //______________________________________________________________________________
 void TBtInnerNode::PushRight(Int_t noFromThis, TBtInnerNode *rightsib, Int_t pidx)
 {
-
-   //
    // The operation is three steps:
    //  Step I.   Make room for the incoming keys in RIGHTSIB.
    //  Step II.  Move the items from THIS into RIGHTSIB.
@@ -1190,7 +1222,8 @@ void TBtInnerNode::PushRight(Int_t noFromThis, TBtInnerNode *rightsib, Int_t pid
    tgt = rightsib->fLast + noFromThis;
    src = rightsib->fLast;
    rightsib->fLast = tgt;
-   rightsib->SetKey(0, fParent->GetKey(pidx)); IncNofKeys(0);
+   rightsib->SetKey(0, fParent->GetKey(pidx));
+   IncNofKeys(0);
    while (src >= 0) {
       // do this kind of assignment on TBtInnerNode items only when
       // the parent fields of the moved items do not change, as they

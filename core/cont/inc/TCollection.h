@@ -133,22 +133,38 @@ private:
    TIterator    *fIterator;         //collection iterator
 
 protected:
-   TIter() : fIterator(0) { }
+   TIter() : fIterator(nullptr) { }
 
 public:
    TIter(const TCollection *col, Bool_t dir = kIterForward)
-        : fIterator(col ? col->MakeIterator(dir) : 0) { }
+         : fIterator(col ? col->MakeIterator(dir) : 0) { }
    TIter(TIterator *it) : fIterator(it) { }
    TIter(const TIter &iter);
    TIter &operator=(const TIter &rhs);
-   virtual            ~TIter() { SafeDelete(fIterator) }
-   TObject           *operator()() { return fIterator ? fIterator->Next() : 0; }
-   TObject           *Next() { return fIterator ? fIterator->Next() : 0; }
-   const TCollection *GetCollection() const { return fIterator ? fIterator->GetCollection() : 0; }
+   virtual ~TIter() { SafeDelete(fIterator); }
+   TObject           *operator()() { return Next(); }
+   TObject           *Next() { return fIterator ? fIterator->Next() : nullptr; }
+   const TCollection *GetCollection() const { return fIterator ? fIterator->GetCollection() : nullptr; }
    Option_t          *GetOption() const { return fIterator ? fIterator->GetOption() : ""; }
    void               Reset() { if (fIterator) fIterator->Reset(); }
+   TIter             &operator++() { Next(); return *this; }
+   bool               operator!=(const TIter &aIter) const { return ((*fIterator) != *(aIter.fIterator)); }
+   TObject           *operator*() const { return *(*fIterator); }
+   TIter             &Begin();
+   static TIter       End();
 
    ClassDef(TIter,0)  //Iterator wrapper
+};
+
+template <class T>
+class TIterCategory: public TIter, public std::iterator_traits<typename T::Iterator_t> {
+
+public:
+   TIterCategory(const TCollection *col, Bool_t dir = kIterForward) : TIter(col, dir) { }
+   TIterCategory(TIterator *it) : TIter(it) { }
+   virtual ~TIterCategory() { }
+   TIterCategory &Begin() { TIter::Begin(); return *this; }
+   static TIterCategory End() { return TIterCategory(static_cast<TIterator*>(nullptr)); }
 };
 
 

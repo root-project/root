@@ -563,7 +563,9 @@ void TObjArray::RecursiveRemove(TObject *obj)
          fCont[i] = 0;
          // recalculate array size
          if (i == fLast)
-            do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+            do {
+               fLast--;
+            } while (fLast >= 0 && fCont[fLast] == 0);
          Changed();
       } else if (fCont[i] && fCont[i]->TestBit(kNotDeleted))
          fCont[i]->RecursiveRemove(obj);
@@ -585,7 +587,9 @@ TObject *TObjArray::RemoveAt(Int_t idx)
       fCont[i] = 0;
       // recalculate array size
       if (i == fLast)
-         do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+         do {
+            fLast--;
+         } while (fLast >= 0 && fCont[fLast] == 0);
       Changed();
    }
    return obj;
@@ -606,7 +610,9 @@ TObject *TObjArray::Remove(TObject *obj)
    fCont[idx] = 0;
    // recalculate array size
    if (idx == fLast)
-      do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+      do {
+         fLast--;
+      } while (fLast >= 0 && fCont[fLast] == 0);
    Changed();
    return ob;
 }
@@ -773,14 +779,18 @@ TObject *TObjArrayIter::Next()
       for ( ; fCursor < fArray->Capacity() && fArray->fCont[fCursor] == 0;
               fCursor++) { }
 
-      if (fCursor < fArray->Capacity())
+      fCurCursor = fCursor;
+      if (fCursor < fArray->Capacity()) {
          return fArray->fCont[fCursor++];
+      }
    } else {
       for ( ; fCursor >= 0 && fArray->fCont[fCursor] == 0;
               fCursor--) { }
 
-      if (fCursor >= 0)
+      fCurCursor = fCursor;
+      if (fCursor >= 0) {
          return fArray->fCont[fCursor--];
+      }
    }
    return 0;
 }
@@ -794,4 +804,39 @@ void TObjArrayIter::Reset()
       fCursor = 0;
    else
       fCursor = fArray->Capacity() - 1;
+}
+
+//______________________________________________________________________________
+bool TObjArrayIter::operator!=(const TIterator &aIter) const
+{
+   // This operator compares two TIterator objects.
+
+   if (nullptr == (&aIter))
+      return (fCurCursor < fArray->Capacity());
+
+   if (aIter.IsA() == TObjArrayIter::Class()) {
+      const TObjArrayIter &iter(dynamic_cast<const TObjArrayIter &>(aIter));
+      return (fCurCursor != iter.fCurCursor);
+   }
+   return false; // for base class we don't implement a comparison
+}
+
+//______________________________________________________________________________
+bool TObjArrayIter::operator!=(const TObjArrayIter &aIter) const
+{
+   // This operator compares two TObjArrayIter objects.
+
+   if (nullptr == (&aIter))
+      return (fCurCursor < fArray->Capacity());
+
+   return (fCurCursor != aIter.fCurCursor);
+}
+
+//______________________________________________________________________________
+TObject *TObjArrayIter::operator*() const
+{
+   // Return current object or nullptr.
+
+   return (((fCurCursor >= 0) && (fCurCursor < fArray->Capacity())) ?
+           fArray->fCont[fCurCursor] : nullptr);
 }

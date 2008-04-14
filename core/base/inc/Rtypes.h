@@ -97,20 +97,20 @@ typedef double         Coord_t;     //Pad world coordinates (double)
 typedef float          Angle_t;     //Graphics angle (float)
 typedef float          Size_t;      //Attribute size (float)
 
-enum EColor { kWhite =0,   kBlack =1,   kGray=920
-             ,kRed   =632, kGreen =416, kBlue=600, kYellow=400, kMagenta=616, kCyan=432
-             ,kOrange=800, kSpring=820, kTeal=840, kAzure =860, kViolet =880, kPink=900};
+enum EColor { kWhite =0,   kBlack =1,   kGray=920,
+              kRed   =632, kGreen =416, kBlue=600, kYellow=400, kMagenta=616, kCyan=432,
+              kOrange=800, kSpring=820, kTeal=840, kAzure =860, kViolet =880, kPink=900 };
 
 // There is several streamer concepts.
 class TClassStreamer;   // Streamer functor for a class
 class TMemberStreamer;  // Streamer functor for a data member
-typedef void         (*ClassStreamerFunc_t)(TBuffer&, void*);  // Streamer function for a class
-typedef void         (*MemberStreamerFunc_t)(TBuffer&, void*, Int_t); // Streamer function for a data member
+typedef void (*ClassStreamerFunc_t)(TBuffer&, void*);  // Streamer function for a class
+typedef void (*MemberStreamerFunc_t)(TBuffer&, void*, Int_t); // Streamer function for a data member
 
 // This class is used to implement proxy around collection classes.
 class TVirtualCollectionProxy;
 
-typedef void         (*VoidFuncPtr_t)();  //pointer to void function
+typedef void (*VoidFuncPtr_t)();  //pointer to void function
 
 
 //---- constants ---------------------------------------------------------------
@@ -119,8 +119,14 @@ typedef void         (*VoidFuncPtr_t)();  //pointer to void function
 #define NULL 0
 #endif
 
-const Bool_t kTRUE   = true;
-const Bool_t kFALSE  = false;
+#ifndef R__NULLPTR
+#ifndef nullptr
+#define nullptr 0
+#endif
+#endif
+
+const Bool_t kTRUE  = true;
+const Bool_t kFALSE = false;
 
 const Int_t     kMaxUChar    = 256;
 const Int_t     kMaxChar     = kMaxUChar >> 1;

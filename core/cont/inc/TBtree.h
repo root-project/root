@@ -334,10 +334,11 @@ class TBtreeIter : public TIterator {
 
 private:
    const TBtree  *fTree;      //btree being iterated
-   Int_t          fCursor;    //current position in btree
+   Int_t          fCurCursor; //current position in btree
+   Int_t          fCursor;    //next position in btree
    Bool_t         fDirection; //iteration direction
 
-   TBtreeIter() : fTree(0), fCursor(0) { }
+   TBtreeIter() : fTree(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    TBtreeIter(const TBtree *t, Bool_t dir = kIterForward);
@@ -349,6 +350,9 @@ public:
    const TCollection  *GetCollection() const { return fTree; }
    TObject            *Next();
    void                Reset();
+   bool                operator!=(const TIterator &aIter) const;
+   bool                operator!=(const TBtreeIter &aIter) const;
+   TObject            *operator*() const;
 
    ClassDef(TBtreeIter,0)  //B-tree iterator
 };

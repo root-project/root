@@ -74,20 +74,24 @@ inline T __median(T a, T b, T c, Compare comp) {
 }
 
 template <class InputIterator, class Function>
-void for_each(InputIterator first, InputIterator last, Function f) {
-    while (first != last) f(*first++);
+Function for_each(InputIterator first, InputIterator last, Function f) {
+  for (; first != last; ++first)
+    f(*first);
+  return f;
 }
 
 template <class InputIterator, class T>
 InputIterator find(InputIterator first, InputIterator last, const T& value) {
-    while (first != last && *first != value) ++first;  // first++;
+    while (first != last && *first != value) 
+      ++first;
     return first;
 }
 
 template <class InputIterator, class Predicate>
 InputIterator find_if(InputIterator first, InputIterator last,
 		      Predicate pred) {
-    while (first != last && !pred(*first)) first++;
+    while (first != last && !pred(*first)) 
+      ++first;
     return first;
 }
 
@@ -118,14 +122,14 @@ template <class InputIterator, class T, class Size>
 void count(InputIterator first, InputIterator last, const T& value,
 	   Size& n) {
     while (first != last) 
-	if (*first++ == value) n++;
+	if (*first++ == value) ++n;
 }
 
 template <class InputIterator, class Predicate, class Size>
 void count_if(InputIterator first, InputIterator last, Predicate pred,
 	      Size& n) {
     while (first != last)
-	if (pred(*first++)) n++;
+	if (pred(*first++)) ++n;
 }
 
 template <class ForwardIterator1, class ForwardIterator2, class Distance>

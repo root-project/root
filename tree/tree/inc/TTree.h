@@ -331,7 +331,7 @@ public:
    TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual void            Print(Option_t* option = "") const; // *MENU*
    virtual Long64_t        Process(const char* filename, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
-#if defined(__CINT__) 
+#if defined(__CINT__)
 #if defined(R__MANUAL_DICT)
    virtual Long64_t        Process(void* selector, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
 #endif
@@ -427,7 +427,18 @@ public:
    Option_t          *GetOption() const;
    TObject           *Next();
    void               Reset() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
-
+   bool operator !=(const TIterator&) const {
+      // TODO: Implement me
+      return false;
+   }
+   bool operator !=(const TTreeFriendLeafIter&) const {
+      // TODO: Implement me
+      return false;
+   }
+   TObject *operator*() const {
+      // TODO: Implement me
+      return nullptr;
+   }
    ClassDef(TTreeFriendLeafIter,0)  //Linked list iterator
  };
 

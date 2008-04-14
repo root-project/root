@@ -517,3 +517,21 @@ TIter &TIter::operator=(const TIter &rhs)
    }
    return *this;
 }
+
+//______________________________________________________________________________
+TIter &TIter::Begin()
+{
+   // Pointing to the first element of the container.
+
+   fIterator->Reset();
+   fIterator->Next();
+   return *this;
+}
+
+//______________________________________________________________________________
+TIter TIter::End()
+{
+   // Pointing to the element after the last - to a nullptr value in our case.
+
+   return TIter(static_cast<TIterator*>(nullptr));
+}

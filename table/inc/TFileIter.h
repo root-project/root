@@ -61,7 +61,6 @@
 class TFileIter : public TListIter {
 
 private:
-
    TFile      *fFileBackUp;       //! temporary data-members
    TDirectory *fDirectoryBackUp;  //! to save/restore TFile/TDirectory global scope
 
@@ -82,7 +81,6 @@ protected:
    TKey    *NextEventKey(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
 
 public:
-
    TFileIter(const char *name, Option_t *option = "",
              const char *ftitle = "", Int_t compress = 1,
              Int_t netopt = 0);
@@ -124,13 +122,16 @@ public:
    int operator==(const char *name) const;
    int operator!=(const char *name) const;
 
-public:  // abstract TIterator methods implementations:
+   // defined in TListIter
+   bool operator !=(const TIterator &aIter) const { return TListIter::operator!=(aIter); }
+   bool operator !=(const TListIter &aIter) const { return TListIter::operator!=(aIter); }
 
+   // abstract TIterator methods implementations:
    virtual TObject *Next();
-   virtual TObject *Next(Int_t  nSkip);
+   virtual TObject *Next(Int_t nSkip);
    virtual void Reset();
    virtual void Rewind();
-   TObject *operator()(Int_t  nSkip);
+   TObject *operator()(Int_t nSkip);
    TObject *operator()();
 
    ClassDef(TFileIter,0) // TFile class iterator
