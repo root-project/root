@@ -2911,7 +2911,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
          fNdata = 1;
       }
       TStreamerInfo *info = GetInfo();
-      if (info) {
+      if (!info) {
          return;
       }
       info->ReadBuffer(b, (char**) &fObject, fID);
