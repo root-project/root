@@ -1782,7 +1782,7 @@ void TBranch::SetFile(const char* fname)
 }
 
 //______________________________________________________________________________
-void TBranch::SetObject(void* obj)
+void TBranch::SetObject(void * /* obj */)
 {
    // Set object this branch is pointing to.
 
