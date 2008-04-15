@@ -29,10 +29,10 @@ void write()
    TH1F *hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);
 
-   std::vector<float> *vpx = new std::vector<float>;
-   std::vector<float> *vpy = new std::vector<float>;
-   std::vector<float> *vpz = new std::vector<float>;
-   std::vector<float> *vrand = new std::vector<float>;
+   std::vector<float> vpx;
+   std::vector<float> vpy;
+   std::vector<float> vpz;
+   std::vector<float> vrand;
 
    // Create a TTree
    TTree *t = new TTree("tvec","Tree with vectors");
@@ -54,10 +54,10 @@ void write()
    for (Int_t i = 0; i < 25000; i++) {
       Int_t npx = (Int_t)(gRandom->Rndm(1)*15);
 
-      vpx->clear();
-      vpy->clear();
-      vpz->clear();
-      vrand->clear();
+      vpx.clear();
+      vpy.clear();
+      vpz.clear();
+      vrand.clear();
 
       for (Int_t j = 0; j < npx; ++j) {
 
@@ -68,10 +68,10 @@ void write()
  
          hpx->Fill(px);
           
-         vpx->push_back(px);
-         vpy->push_back(py);
-         vpz->push_back(pz);
-         vrand->push_back(random);
+         vpx.push_back(px);
+         vpy.push_back(py);
+         vpz.push_back(pz);
+         vrand.push_back(random);
 
       }
       if (i && (i%kUPDATE) == 0) {
@@ -86,10 +86,6 @@ void write()
    f->Write();
    
    delete f;
-   delete vpx;
-   delete vpy;
-   delete vpz;
-   delete vrand;
 }
 
 
