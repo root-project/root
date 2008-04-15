@@ -276,11 +276,13 @@ endif
 
 $(MAKECINTO) $(CINTALLO): $(CINTCONF)
 
+$(MAKECINTO): CXXFLAGS := $(CINTCXXFLAGS)
 $(CINTDIRSD)/stdstrct.o:     CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
 $(CINTDIRS)/loadfile_tmp.o: CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
 
 $(CINTDIRS)/loadfile_tmp.cxx: $(CINTDIRS)/loadfile.cxx
 	cp -f $< $@
+
 
 ifneq ($(findstring -DG__NOSTUBS,$(CINTCXXFLAGS)),)
 $(CINTDIRS)/newlink.o: OPT = $(NOOPT)
@@ -291,5 +293,6 @@ ifeq ($(CPPPREP),)
 # cannot use "CPPPREP?=", as someone might set "CPPPREP="
   CPPPREP = $(CXX) -E -C
 endif
+
 include $(CINTCONFMK)
 ##### configcint.h - END
