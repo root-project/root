@@ -33,12 +33,12 @@ protected:
    TString     fClassName;        //Class name of referenced object
    TObject     *fOldObject;       //!Pointer to old object
 
-   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);   
+   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr);   
 
 public:
    TBranchObject();
-   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
-   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1, Bool_t isptrptr = kTRUE);
+   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1, Bool_t isptrptr = kTRUE);
    virtual ~TBranchObject();
    
    virtual void        Browse(TBrowser *b);

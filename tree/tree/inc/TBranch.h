@@ -161,6 +161,7 @@ public:
    virtual void      ResetAddress();
    virtual void      ResetReadEntry() {fReadEntry = -1;}
    virtual void      SetAddress(void *add);
+   virtual void      SetObject(void *objadd);
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);

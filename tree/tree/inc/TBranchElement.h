@@ -143,6 +143,7 @@ public:
    virtual void             ResetAddress();
    virtual void             ResetDeleteObject();
    virtual void             SetAddress(void* addobj);
+   virtual void             SetObject(void *objadd);
    virtual void             SetBasketSize(Int_t buffsize);
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }
    virtual void             SetClassName(const char* name) { fClassName = name; }

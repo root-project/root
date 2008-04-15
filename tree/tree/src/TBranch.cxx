@@ -1781,6 +1781,17 @@ void TBranch::SetFile(const char* fname)
    }
 }
 
+//______________________________________________________________________________
+void TBranch::SetObject(void* obj)
+{
+   // Set object this branch is pointing to.
+
+   if (TestBit(kDoNotProcess)) {
+      return;
+   }
+   Warning("SetObject","is not supported in TBranch objects");
+}
+
 //_______________________________________________________________________
 void TBranch::Streamer(TBuffer& b)
 {

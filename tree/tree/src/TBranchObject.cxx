@@ -46,25 +46,25 @@ TBranchObject::TBranchObject()
 }
 
 //______________________________________________________________________________
-TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
 : TBranch()
 {
    // Create a BranchObject.
 
-   Init(tree,0,name,classname,addobj,basketsize,splitlevel,compress);
+   Init(tree,0,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
 
 //______________________________________________________________________________
-TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr /* = kTRUE */)
 : TBranch()
 {
    // Create a BranchObject.
 
-   Init(0,parent,name,classname,addobj,basketsize,splitlevel,compress);
+   Init(0,parent,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
 }
 
 //______________________________________________________________________________
-void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr)
 {
    // Initialization routine (run from the constructor so do not make this function virtual)
 
@@ -78,6 +78,11 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    if (!cl) {
       Error("TBranchObject", "Cannot find class:%s", classname);
       return;
+   }
+
+   if (!isptrptr) {
+      fOldObject = (TObject*)addobj;
+      addobj = &fOldObject;
    }
 
    char** apointer = (char**) addobj;

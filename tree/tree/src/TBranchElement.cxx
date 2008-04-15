@@ -3204,7 +3204,9 @@ void TBranchElement::SetAddress(void* addr)
    //
 
    fAddress = (char*) addr;
-   fObject = 0;
+   if (fAddress != (char*)(&fObject)) {
+      fObject = 0;
+   }
    ResetBit(kDeleteObject);
 
    //
@@ -3589,6 +3591,18 @@ void TBranchElement::SetBranchCount(TBranchElement* brOfCounter)
          Warning("SetBranchCount", "Branch %s has no leaves!", GetName());
       }
    }
+}
+
+//______________________________________________________________________________
+void TBranchElement::SetObject(void* obj)
+{
+   // Set object this branch is pointing to.
+
+   if (TestBit(kDoNotProcess)) {
+      return;
+   }
+   fObject = (char*)obj;
+   SetAddress( &fObject );
 }
 
 //______________________________________________________________________________
