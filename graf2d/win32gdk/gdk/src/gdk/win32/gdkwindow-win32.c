@@ -364,7 +364,7 @@ GdkWindow *gdk_window_new(GdkWindow * parent,
       dwStyle =
           WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU | WS_CAPTION |
           WS_THICKFRAME | WS_CLIPCHILDREN;
-#if 0
+#if 1
       dwExStyle |= WS_EX_TOPMOST;	/* //HB: want this? */
 #endif
       xparent = gdk_root_window;
@@ -1912,8 +1912,8 @@ gdk_window_set_decorations(GdkWindow * window, GdkWMDecoration decorations)
        (WS_OVERLAPPED | WS_POPUP | WS_CHILD | WS_MINIMIZE | WS_VISIBLE |
         WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE);
 
-   exstyle &= (WS_EX_TOPMOST | WS_EX_TRANSPARENT);
-//  exstyle &= WS_EX_TRANSPARENT;
+//   exstyle &= (WS_EX_TOPMOST | WS_EX_TRANSPARENT);
+   exstyle &= WS_EX_TRANSPARENT;
 
    if (decorations & GDK_DECOR_ALL)
       style |=
@@ -1950,8 +1950,8 @@ void gdk_window_set_functions(GdkWindow * window, GdkWMFunction functions)
         WS_DISABLED | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_MAXIMIZE |
         WS_CAPTION | WS_BORDER | WS_SYSMENU);
 
-   exstyle &= (WS_EX_TOPMOST | WS_EX_TRANSPARENT);
-//  exstyle &= WS_EX_TRANSPARENT;
+//   exstyle &= (WS_EX_TOPMOST | WS_EX_TRANSPARENT);
+   exstyle &= WS_EX_TRANSPARENT;
 
    if (functions & GDK_FUNC_ALL)
       style |= (WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);

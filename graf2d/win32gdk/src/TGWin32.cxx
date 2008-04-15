@@ -4527,11 +4527,11 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
    if (attr) {
       MapSetWindowAttributes(attr, xmask, xattr);
       xattr.window_type = GDK_WINDOW_CHILD;
-      if (wtype & kTransientFrame) {
-         xattr.window_type = GDK_WINDOW_DIALOG;
-      }
       if (wtype & kMainFrame) {
          xattr.window_type = GDK_WINDOW_TOPLEVEL;
+      }
+      if (wtype & kTransientFrame) {
+         xattr.window_type = GDK_WINDOW_DIALOG;
       }
       if (wtype & kTempFrame) {
          xattr.window_type = GDK_WINDOW_TEMP;
@@ -4572,11 +4572,11 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
          xmask |= GDK_WA_VISUAL;
       }
       xattr.window_type = GDK_WINDOW_CHILD;
-      if (wtype & kTransientFrame) {
-         xattr.window_type = GDK_WINDOW_DIALOG;
-      }
       if (wtype & kMainFrame) {
          xattr.window_type = GDK_WINDOW_TOPLEVEL;
+      }
+      if (wtype & kTransientFrame) {
+         xattr.window_type = GDK_WINDOW_DIALOG;
       }
       if (wtype & kTempFrame) {
          xattr.window_type = GDK_WINDOW_TEMP;
