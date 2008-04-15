@@ -2,7 +2,7 @@
 #include "TROOT.h"
 #include "TSelectorCint.h"
 
-TBranch *TTreeBranchImpRefCint(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
+TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
    return tree->BranchImpRef(branchname,ptrClass,datatype,addobj,bufsize,splitlevel);
 }
@@ -132,10 +132,10 @@ static int G__ManualTree2_126_0_188(G__value* result7, G__CONST char* funcname, 
    const char *branchname = (const char*)G__int(libp->para[0]);
 
    if (ti.Reftype()==0) {
-      G__letint(result7,85,(long)TTreeBranchImpRefCint(((TTree*) G__getstructoffset()),branchname,ptrClass,datatype,
-                                                       (void*)G__int(libp->para[1]),
-                                                       (Int_t)G__int(libp->para[2]),
-                                                       (Int_t)G__int(libp->para[3])));
+      G__letint(result7,85,(long)TTreeBranchImpRef(((TTree*) G__getstructoffset()),branchname,ptrClass,datatype,
+                                                   (void*)G__int(libp->para[1]),
+                                                   (Int_t)G__int(libp->para[2]),
+                                                   (Int_t)G__int(libp->para[3])));
 
    } else {
 
