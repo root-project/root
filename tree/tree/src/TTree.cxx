@@ -64,32 +64,35 @@
 //            - L : a 64 bit signed integer (Long64_t)
 //            - l : a 64 bit unsigned integer (ULong64_t)
 //            - O : a boolean (Bool_t)
+//       * if address points to a single numerical variable, the leaflist is optional:
+//           int value;
+//           tree->Branch(branchname, &value);
 //
 //  ==> Case B
 //      ======
 //     TBranch *branch = tree->Branch(branchname, &p_object, bufsize, splitlevel)/
 //     TBranch *branch = tree->Branch(branchname, className, &p_object, bufsize, splitlevel)
-//        p_object is a pointer to an object.
-//        If className is not specified, Branch uses the type of p_object to determine the
-//          type of the object.
-//        If className is used to specify explicitly the object type, the className must
-//          be of a type related to the one pointed to by the pointer.  It should be either 
-//          a parent or derived class.
-//        if splitlevel=0, the object is serialized in the branch buffer.
-//        if splitlevel=1 (default), this branch will automatically be split
-//          into subbranches, with one subbranch for each data member or object
-//          of the object itself. In case the object member is a TClonesArray,
-//          the mechanism described in case C is applied to this array.
-//        if splitlevel=2 ,this branch will automatically be split
-//          into subbranches, with one subbranch for each data member or object
-//          of the object itself. In case the object member is a TClonesArray,
-//          it is processed as a TObject*, only one branch.
+//       * p_object is a pointer to an object.
+//       * If className is not specified, Branch uses the type of p_object to determine the
+//           type of the object.
+//       * If className is used to specify explicitly the object type, the className must
+//           be of a type related to the one pointed to by the pointer.  It should be either 
+//           a parent or derived class.
+//       * if splitlevel=0, the object is serialized in the branch buffer.
+//       * if splitlevel=1 (default), this branch will automatically be split
+//           into subbranches, with one subbranch for each data member or object
+//           of the object itself. In case the object member is a TClonesArray,
+//           the mechanism described in case C is applied to this array.
+//       * if splitlevel=2 ,this branch will automatically be split
+//           into subbranches, with one subbranch for each data member or object
+//           of the object itself. In case the object member is a TClonesArray,
+//           it is processed as a TObject*, only one branch.
 //
-//        Note: The pointer whose address is passed to TTree::Branch must not
-//        be destroyed (i.e. go out of scope) until the TTree is deleted or
-//        TTree::ResetBranchAddress is called.
+//       Note: The pointer whose address is passed to TTree::Branch must not
+//             be destroyed (i.e. go out of scope) until the TTree is deleted or
+//             TTree::ResetBranchAddress is called.
 //
-//        Note: The pointer p_object must be initialized before calling TTree::Branch
+//       Note: The pointer p_object must be initialized before calling TTree::Branch
 //          Do either: 
 //             MyDataClass* p_object = 0;
 //             tree->Branch(branchname, &p_object);
@@ -102,19 +105,19 @@
 //     MyClass object;
 //     TBranch *branch = tree->Branch(branchname, &object, bufsize, splitlevel)
 //
-//        Note: The 2nd parameter must be the address of a valid object.
-//        The object must not be destroyed (i.e. be deleted) until the TTree
-//           is deleted or TTree::ResetBranchAddress is called.
+//       Note: The 2nd parameter must be the address of a valid object.
+//              The object must not be destroyed (i.e. be deleted) until the TTree
+//               is deleted or TTree::ResetBranchAddress is called.
 //        
-//        if splitlevel=0, the object is serialized in the branch buffer.
-//        if splitlevel=1 (default), this branch will automatically be split
-//          into subbranches, with one subbranch for each data member or object
-//          of the object itself. In case the object member is a TClonesArray,
-//          the mechanism described in case C is applied to this array.
-//        if splitlevel=2 ,this branch will automatically be split
-//          into subbranches, with one subbranch for each data member or object
-//          of the object itself. In case the object member is a TClonesArray,
-//          it is processed as a TObject*, only one branch.
+//       * if splitlevel=0, the object is serialized in the branch buffer.
+//       * if splitlevel=1 (default), this branch will automatically be split
+//           into subbranches, with one subbranch for each data member or object
+//           of the object itself. In case the object member is a TClonesArray,
+//           the mechanism described in case C is applied to this array.
+//       * if splitlevel=2 ,this branch will automatically be split
+//           into subbranches, with one subbranch for each data member or object
+//           of the object itself. In case the object member is a TClonesArray,
+//           it is processed as a TObject*, only one branch.
 //
 //  ==> Case D
 //      ======
@@ -366,6 +369,40 @@ ClassImp(TTree)
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //
+
+static char DataTypeToChar(EDataType datatype) 
+{
+   // Return the leaflist 'char' for a given datatype.
+
+   switch(datatype) {
+   case kChar_t:     return 'B';
+   case kUChar_t:    return 'b';
+   case kBool_t:     return 'O'; 
+   case kShort_t:    return 'S';
+   case kUShort_t:   return 's';
+   case kCounter:
+   case kInt_t:      return 'I';
+   case kUInt_t:     return 'i';
+   case kDouble_t:
+   case kDouble32_t: return 'D';
+   case kFloat_t: 
+   case kFloat16_t:  return 'F';
+   case kLong_t:     return 0; // unsupported
+   case kULong_t:    return 0; // unsupported?
+   case kchar:       return 0; // unsupported
+   case kLong64_t:   return 'L';
+   case kULong64_t:  return 'l';
+
+   case kCharStar:   return 'C';
+   case kBits:       return 0; //unsupported
+      
+   case kOther_t:
+   case kNoType_t: 
+   default:
+      return 0;
+   }
+   return 0;
+}
 
 //______________________________________________________________________________
 //  Helper class to prevent infinite recursion in the usage of TTree Friends.
@@ -1029,9 +1066,10 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
 
    if (!ptrClass) {
       if (datatype == kOther_t || datatype == kNoType_t) {
-         Error("Branch", "The pointer specified for %s is not of a class known to ROOT", branchname);
+         Error("Branch", "The pointer specified for %s is not of a class or type known to ROOT", branchname);
       } else {
-         Error("Branch", "Can not create a numerical (%s) branch without a leaflist (for branch: %s!", TDataType::GetTypeName(datatype),branchname);
+         TString varname; varname.Form("%s_var/%c",branchname,DataTypeToChar(datatype));         
+         return Branch(branchname,addobj,varname.Data(),bufsize);
       }
       return 0;
    }
@@ -1519,27 +1557,14 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
                      break;
                   }
                }
-               if (code == 1) {
-                  // Note that we differentiate between strings and
-                  // char array by the fact that there is NO specified
-                  // size for a string (see next if (code == 1)
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "B");
-               } else if (code == 11) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "b");
-               } else if (code == 18) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "O");
-               } else if (code == 2) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "S");
-               } else if (code == 12) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "s");
-               } else if (code == 3) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "I");
-               } else if (code == 13) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "i");
-               } else if (code == 5) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "F");
-               } else if ((code == 8) || (code == 9)) {
-                  leaflist.Form("%s[%s]/%s", &rdname[0], index, "D");
+
+               char vcode = DataTypeToChar((EDataType)code);
+               // Note that we differentiate between strings and
+               // char array by the fact that there is NO specified
+               // size for a string (see next if (code == 1)
+
+               if (vcode) {
+                  leaflist.Form("%s[%s]/%c", &rdname[0], index, vcode);
                } else {
                   Error("BranchOld", "Cannot create branch for rdname: %s code: %d", branchname.Data(), code);
                   leaflist = "";
@@ -1569,26 +1594,10 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
          }
       } else if (dm->IsBasic()) {
          // We have a basic type.
-         if (code == 1) {
-            leaflist.Form("%s/%s", rdname, "B");
-         } else if (code == 11) {
-            leaflist.Form("%s/%s", rdname, "b");
-         } else if (code == 18) {
-            leaflist.Form("%s/%s", rdname, "O");
-         } else if (code == 2) {
-            leaflist.Form("%s/%s", rdname, "S");
-         } else if (code == 12) {
-            leaflist.Form("%s/%s", rdname, "s");
-         } else if (code == 3) {
-            leaflist.Form("%s/%s", rdname, "I");
-         } else if (code == 13) {
-            leaflist.Form("%s/%s", rdname, "i");
-         } else if (code == 5) {
-            leaflist.Form("%s/%s", rdname, "F");
-         } else if (code == 8) {
-            leaflist.Form("%s/%s", rdname, "D");
-         } else if (code == 9) {
-            leaflist.Form("%s/%s", rdname, "D");
+
+         char vcode = DataTypeToChar((EDataType)code);
+         if (vcode) {
+            leaflist.Form("%s/%c", rdname, vcode);
          } else {
             Error("BranchOld", "Cannot create branch for rdname: %s code: %d", branchname.Data(), code);
             leaflist = "";
