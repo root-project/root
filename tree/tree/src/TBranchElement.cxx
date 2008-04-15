@@ -783,9 +783,7 @@ TBranchElement::~TBranchElement()
    // -- Destructor.
 
    // Release any allocated I/O buffers.
-   // FIXME: Temporarily disable until we sort out the interface/documentation
-   // issues related the TTree ownership of the objects (See ReleaseObject)
-   // ResetAddress();
+   ResetAddress();
 
    delete[] fBranchOffset;
    fBranchOffset = 0;
@@ -2926,28 +2924,6 @@ void TBranchElement::ReleaseObject()
 {
    // -- Delete any object we may have allocated on a previous call to SetAddress.
 
-   // Make sure kDeleteObject and fObject are valid before proceeding.
-   // Note: We are *not* allowed to call ValidateAddress() because it
-   //       may call SetAddress(), which may call us resulting in an
-   //       infinite loop.
-   //ValidateAddress();
-
-   return; // FIXME: Disable the deletion of object owned by the TTree until we add a missing interface.
-
-   if (fID < 0) {
-      // -- We are a top-level branch.
-      if (fAddress && (*((char**) fAddress) != fObject)) {
-         // The semantics of fAddress and fObject are violated.
-         // Assume the user changed the pointer on us.
-         if (TestBit(kDeleteObject)) {
-            Warning("ReleaseObject", "branch: %s, You have overwritten the pointer to an object which I owned!", GetName());
-            Warning("ReleaseObject", "This is a memory leak.  Please use SetAddress() to change the pointer instead.");
-            ResetBit(kDeleteObject);
-         }
-      }
-   }
-
-   // Delete any object we may have allocated during a call to SetAddress.
    if (fObject && TestBit(kDeleteObject)) {
       ResetBit(kDeleteObject);
       if (fType == 3) {
@@ -3016,10 +2992,7 @@ void TBranchElement::Reset(Option_t* option)
 //______________________________________________________________________________
 void TBranchElement::ResetAddress()
 {
-   // -- Reset the branch user i/o buffer address.
-
-   // Make sure the user did not change the object pointer first.
-   ValidateAddress();
+   // Set branch address to zero and free all allocated memory.
 
    for (Int_t i = 0; i < fNleaves; ++i) {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
@@ -3394,7 +3367,7 @@ void TBranchElement::SetAddress(void* addr)
                // -- We are a top-level branch.
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
-                  SetBit(kDeleteObject);
+                  // -- Caller wants us to allocate the clones array, but he will own it.
                   *pp = new TClonesArray(GetClonesName());
                }
                fObject = (char*) *pp;
@@ -3404,7 +3377,7 @@ void TBranchElement::SetAddress(void* addr)
                //       or the i/o constructor can be lazy.
                TClonesArray** pp = (TClonesArray**) fAddress;
                if (!*pp) {
-                  SetBit(kDeleteObject);
+                  // -- Caller wants us to allocate the clones array, but he will own it.
                   *pp = new TClonesArray(GetClonesName());
                }
                fObject = (char*) *pp;
@@ -3459,7 +3432,7 @@ void TBranchElement::SetAddress(void* addr)
                // -- We are a top-level branch.
                void** pp = (void**) fAddress;
                if (!*pp) {
-                  SetBit(kDeleteObject);
+                  // -- Caller wants us to allocate the STL container, but he will own it.
                   *pp = proxy->New();
                   if (!(*pp)) {
                      Error("SetAddress", "Failed to allocate STL container for branch '%s'", GetName());
@@ -3476,7 +3449,7 @@ void TBranchElement::SetAddress(void* addr)
                //       or the i/o constructor can be lazy.
                void** pp = (void**) fAddress;
                if (!*pp) {
-                  SetBit(kDeleteObject);
+                  // -- Caller wants us to allocate the STL container, but he will own it.
                   *pp = proxy->New();
                   if (!(*pp)) {
                      Error("SetAddress", "Failed to allocate STL container for branch '%s'", GetName());
@@ -3538,15 +3511,10 @@ void TBranchElement::SetAddress(void* addr)
       } else {
          // -- Caller did not provide an i/o buffer for us to use, we must make one for ourselves.
          if (clOfBranch) {
-            SetBit(kDeleteObject);
-            // FIXME:
-            // If we end up creating a histogram here, we might not
-            // want to add it to the current directory and
-            // take ownership instead.  If we let it get added
-            // to the directory, then it could be deleted by
-            // the directory without us getting notified, and
-            // then we would try to delete it a second time.
-            // So we might want to call TH1::AddDirectory(kFALSE);
+            if (!pp) {
+               // -- Caller wants us to own the object.
+               SetBit(kDeleteObject);
+            }
             fObject = (char*) clOfBranch->New();
             if (pp) {
                *pp = fObject;
@@ -4055,9 +4023,9 @@ void TBranchElement::ValidateAddress() const
 
 
 	 // FIXME: Disable the check/warning TTree until we add a missing interface.
-         if (false && TestBit(kDeleteObject)) {
-            Warning("ValidateAddress", "branch: %s, You have overwritten the pointer to an object which I owned!", GetName());
-            Warning("ValidateAddress", "This is a memory leak.  Please use SetAddress() to change the pointer instead.");
+         if (TestBit(kDeleteObject)) {
+            // This should never happen!
+            Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p", fObject, *((char**) fAddress));
             const_cast<TBranchElement*>(this)->ResetBit(kDeleteObject);
          }
          const_cast<TBranchElement*>(this)->SetAddress(fAddress);
