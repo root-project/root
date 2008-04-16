@@ -4472,6 +4472,24 @@ void TTreeFormula::ResetLoading()
    fNeedLoading = kTRUE;
    fDidBooleanOptimization = kFALSE;
 
+   for(Int_t i=0; i<fNcodes; ++i) {
+      UInt_t max_dim = fNdimensions[i];
+      for(UInt_t dim=0; dim<max_dim ;++dim) {
+         if (fVarIndexes[i][dim]) {
+            fVarIndexes[i][dim]->ResetLoading();
+         }
+      }
+   }
+   Int_t n = fAliases.GetLast();
+   if ( fNoper < n ) {
+      n = fNoper;
+   }
+   for(Int_t k=0; k<n; ++k) {
+      TTreeFormula *f = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+      if (f) {
+         f->ResetLoading();
+      }
+   }
 }
 
 //______________________________________________________________________________
