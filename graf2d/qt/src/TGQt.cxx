@@ -1,6 +1,5 @@
 // @(#)root/qt:$Id$
 // Author: Valeri Fine   21/01/2002
-
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -43,12 +42,11 @@
 #  include <qpicture.h>
 #else /* QT_VERSION */
 //Added by qt3to4:
-#  include <Q3CString>
-#  include <Q3PointArray>
+#  include <QPolygon>
 #  include <QEvent>
 #  include <QImageWriter>
-#  include <q3ptrvector.h>
-#  include <q3valuestack.h>
+#  include <QVector>
+#  include <QStack>
 #  include <QPicture>
 #  include <QDebug>
 #endif /* QT_VERSION */
@@ -188,8 +186,8 @@ class TQWidgetCollection {
    QValueStack<int>         fFreeWindowsIdStack;
    QPtrVector<QPaintDevice> fWidgetCollection;
 #else /* QT_VERSION */
-   Q3ValueStack<int>         fFreeWindowsIdStack;
-   Q3PtrVector<QPaintDevice> fWidgetCollection;
+   QStack<int>             fFreeWindowsIdStack;
+   QVector<QPaintDevice *> fWidgetCollection;
 #endif /* QT_VERSION */
    Int_t                    fIDMax;       //  current max id
    Int_t                    fIDTotalMax;  // life-time max id
@@ -215,12 +213,23 @@ protected:
        // if (kNone > kDefault ) { firstRange = kDefault; secondRange = kNone;}
        for (int i=0;i<secondRange;i++)  {
              if (i == firstRange) continue; // skip it
+#if QT_VERSION < 0x40000
              fWidgetCollection.insert(i,(QPaintDevice *)(-1));
+#else
+             if (fWidgetCollection[i] != (QPaintDevice *)(-1))
+                delete fWidgetCollection[i];
+             fWidgetCollection[i] = (QPaintDevice *)(-1);
+#endif
              fFreeWindowsIdStack.push(i);
        }
        SetMaxId (secondRange);
-       fWidgetCollection.insert(kNone,0);
+#if QT_VERSION < 0x40000
+       fWidgetCollection.insert(kNone,(QPaintDevice*)0);
        fWidgetCollection.insert(kDefault,(QPaintDevice *)QApplication::desktop());
+#else
+       fWidgetCollection[kNone] = (QPaintDevice*)0;
+       fWidgetCollection[kDefault] = (QPaintDevice *)QApplication::desktop();
+#endif
    }
 
    //______________________________________________________________________________
@@ -237,7 +246,13 @@ protected:
          assert(fIDMax <= Id  );
          SetMaxId ( Id );
       }
+#if QT_VERSION < 0x40000
       fWidgetCollection.insert(Id,device);
+#else
+      if (fWidgetCollection[Id] != (QPaintDevice *)(-1)) 
+         delete  fWidgetCollection[Id];
+      fWidgetCollection[Id] = device;
+#endif
       // fprintf(stderr," add %p as %d max Id = %d \n", device, Id,fIDMax);
       return Id;
    }
@@ -248,7 +263,13 @@ protected:
       Int_t intWid = kNone;             // TGQt::iwid(device);
       if ((ULong_t) device != (ULong_t) -1) {
           intWid = find( device);
-          if ( intWid != -1 && fWidgetCollection.take(intWid)) {
+          if ( intWid != -1 && 
+#if QT_VERSION < 0x40000
+             fWidgetCollection.take(intWid)) {
+#else
+             fWidgetCollection[intWid]) {
+             fWidgetCollection.replace(intWid,0);
+#endif
              fFreeWindowsIdStack.push(intWid);
              if (fIDMax == intWid) SetMaxId(--fIDMax);
           } else {
@@ -263,7 +284,12 @@ protected:
    {
      QPaintDevice *device = fWidgetCollection[Id];
      if (device) {
+#if QT_VERSION < 0x40000
         delete fWidgetCollection.take(Id);
+#else
+        delete device;
+        fWidgetCollection.replace(Id,0);
+#endif
         fFreeWindowsIdStack.push(Id);
         if (fIDMax == Id) SetMaxId(--fIDMax);
      }
@@ -277,7 +303,13 @@ protected:
    inline uint MaxTotalId() const { return fIDTotalMax;}
    //______________________________________________________________________________
    inline int find(const QPaintDevice *device, uint i=0) const
-         { return fWidgetCollection.find(device,i); }
+   { 
+#if QT_VERSION < 0x40000
+      return fWidgetCollection.find(device,i); 
+#else
+      return fWidgetCollection.indexOf((QPaintDevice*)device,i); 
+#endif
+   }
    //______________________________________________________________________________
    inline QPaintDevice *operator[](int i) const {return fWidgetCollection[i];}
 };
@@ -688,6 +720,7 @@ TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuf
 {
    //*-*-*-*-*-*-*-*-*-*-*-*Default Constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                    ===================
+   assert(!fgTQt);
    fgTQt = this;
    gQt   = this;
    fSelectedBuffer = 0;
@@ -701,6 +734,7 @@ TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplay
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Normal Constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ==================                              *-*
+   assert(!fgTQt);
    fgTQt = this;
    gQt   = this;
    fSelectedBuffer = 0;
@@ -723,6 +757,10 @@ TGQt::~TGQt()
       for (it = fPallete.begin();it !=fPallete.end();++it) {
          QColor *c = *it; delete c;
       }
+#if QT_VERSION >= 0x40000
+       qDeleteAll(fCursors.begin(), fCursors.end());
+#endif
+      
       delete fQClientFilter;
       delete fQClientFilterBuffer;
       delete fQPainter; fQPainter = 0;
@@ -780,6 +818,7 @@ Bool_t TGQt::Init(void* /*display*/)
    //
    // Qt::BlankCursor - blank/invisible cursor
    // Qt::BitmapCursor
+#if QT_VERSION < 0x40000
    fCursors.setAutoDelete(true);
 
    fCursors.insert(kBottomLeft, new QCursor(Qt::SizeBDiagCursor)); // diagonal resize (/) LoadCursor(NULL, IDC_SIZENESW);// (display, XC_bottom_left_corner);
@@ -810,6 +849,32 @@ Bool_t TGQt::Init(void* /*display*/)
 #endif /* QT_VERSION */
    fCursors.insert(kWatch,      new QCursor(Qt::WaitCursor));      //
 
+#else
+
+   fCursors[kBottomLeft]  = new QCursor(Qt::SizeBDiagCursor); // diagonal resize (/) LoadCursor(NULL, IDC_SIZENESW);// (display, XC_bottom_left_corner);
+   fCursors[kBottomRight] = new QCursor(Qt::SizeFDiagCursor); // diagonal resize (\) LoadCursor(NULL, IDC_SIZENWSE);// (display, XC_bottom_right_corner);
+   fCursors[kTopLeft]     = new QCursor(Qt::SizeFDiagCursor); // diagonal resize (\)  (display, XC_top_left_corner);
+   fCursors[kTopRight]    = new QCursor(Qt::SizeBDiagCursor); // diagonal resize (/) LoadCursor(NULL, IDC_SIZENESW);// (display, XC_top_right_corner);
+   //fCursors[kBottomSide] = new QCursor(Qt::SplitHCursor);    // - horziontal splitting LoadCursor(NULL, IDC_SIZENS);  // (display, XC_bottom_side);
+   //fCursors[kLeftSide]   = new QCursor(Qt::SplitVCursor);    // - vertical splitting LoadCursor(NULL, IDC_SIZEWE);  // (display, XC_left_side);
+   //fCursors[kTopSide]    = new QCursor(Qt::SplitHCursor);    // - horziontal splitting LoadCursor(NULL, IDC_SIZENS);  // (display, XC_top_side);
+   //fCursors[kRightSide]  = new QCursor(Qt::SplitVCursor);    // - vertical splitting LoadCursor(NULL, IDC_SIZEWE);  // (display, XC_right_side);
+   fCursors[kBottomSide]  = new QCursor(Qt::SizeVerCursor);   // - horziontal splitting LoadCursor(NULL, IDC_SIZENS);  // (display, XC_bottom_side);
+   fCursors[kLeftSide]    = new QCursor(Qt::SizeHorCursor);   // - vertical splitting LoadCursor(NULL, IDC_SIZEWE);  // (display, XC_left_side);
+   fCursors[kTopSide]     = new QCursor(Qt::SizeVerCursor);   // - horziontal splitting LoadCursor(NULL, IDC_SIZENS);  // (display, XC_top_side);
+   fCursors[kRightSide]   = new QCursor(Qt::SizeHorCursor);   // - vertical splitting LoadCursor(NULL, IDC_SIZEWE);  // (display, XC_right_side);
+
+   fCursors[kMove]        = new QCursor(Qt::SizeAllCursor);   //  all directions resize LoadCursor(NULL, IDC_SIZEALL); // (display, XC_fleur);
+   fCursors[kCross]       = new QCursor(Qt::CrossCursor);     // - crosshair LoadCursor(NULL, IDC_CROSS);   // (display, XC_tcross);
+   fCursors[kArrowHor]    = new QCursor(Qt::SizeHorCursor);   //   horizontal resize LoadCursor(NULL, IDC_SIZEWE);  // (display, XC_sb_h_double_arrow);
+   fCursors[kArrowVer]    = new QCursor(Qt::SizeVerCursor);   //  vertical resize LoadCursor(NULL, IDC_SIZENS)  (display, XC_sb_v_double_arrow);
+   fCursors[kHand]        = new QCursor(Qt::PointingHandCursor); //  a pointing hand LoadCursor(NULL, IDC_NO);      // (display, XC_hand2);
+   fCursors[kRotate]      = new QCursor(Qt::ForbiddenCursor); // - a slashed circle LoadCursor(NULL, IDC_ARROW);    // (display, XC_exchange);
+   fCursors[kPointer]     = new QCursor(Qt::ArrowCursor);     // standard arrow cursor  / (display, XC_left_ptr);
+   fCursors[kArrowRight]  = new QCursor(Qt::UpArrowCursor);   // - upwards arrow LoadCursor(NULL, IDC_ARROW);   // XC_arrow
+   fCursors[kCaret]       = new QCursor(Qt::IBeamCursor);     //  ibeam/text entry LoadCursor(NULL, IDC_IBEAM);   // XC_xterm
+   fCursors[kWatch]       = new QCursor(Qt::WaitCursor);      //
+#endif
    // The default cursor
 
    fCursor = kCross;
@@ -1394,7 +1459,7 @@ void  TGQt::DrawFillArea(int n, TPoint *xy)
 #if QT_VERSION < 0x40000
       QPointArray qtPoints(n);
 #else /* QT_VERSION */
-      Q3PointArray qtPoints(n);
+      QPolygon qtPoints(n);
 #endif /* QT_VERSION */
       TPoint *rootPoint = xy;
       for (int i =0;i<n;i++,rootPoint++)
@@ -1436,7 +1501,7 @@ void  TGQt::DrawPolyLine(int n, TPoint *xy)
 #if QT_VERSION < 0x40000
     QPointArray qtPoints(n);
 #else /* QT_VERSION */
-    Q3PointArray qtPoints(n);
+    QPolygon qtPoints(n);
 #endif /* QT_VERSION */
     TPoint *rootPoint = xy;
     for (int i =0;i<n;i++,rootPoint++)
@@ -1466,7 +1531,7 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
 #if QT_VERSION < 0x40000
          QPointArray qtPoints(n);
 #else /* QT_VERSION */
-         Q3PointArray qtPoints(n);
+         QPolygon qtPoints(n);
 #endif /* QT_VERSION */
          TPoint *rootPoint = xy;
          for (int i=0;i<n;i++,rootPoint++)
@@ -1505,7 +1570,7 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
 #if QT_VERSION < 0x40000
                   QPointArray &mxy = fQtMarker->GetNodes();
 #else /* QT_VERSION */
-                  Q3PointArray &mxy = fQtMarker->GetNodes();
+                  QPolygon &mxy = fQtMarker->GetNodes();
 #endif /* QT_VERSION */
                   QPoint delta(xy[m].fX,xy[m].fY);
                   for( i = 0; i < CurMarker->GetNumber(); i++ )
@@ -1526,7 +1591,7 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
 #if QT_VERSION < 0x40000
                   QPointArray &mxy = fQtMarker->GetNodes();
 #else /* QT_VERSION */
-                  Q3PointArray &mxy = fQtMarker->GetNodes();
+                  QPolygon &mxy = fQtMarker->GetNodes();
 #endif /* QT_VERSION */
                   QPoint delta(xy[m].fX,xy[m].fY);
                   for( i = 0; i < CurMarker->GetNumber(); i++ )
@@ -1872,7 +1937,8 @@ Int_t  TGQt::RequestString(int x, int y, char *text)
 #if QT_VERSION < 0x40000
         QCString r = GetTextDecoder()->fromUnicode(reqDialog.fEdit.text());
 #else /* QT_VERSION */
-        Q3CString r = GetTextDecoder()->fromUnicode(reqDialog.fEdit.text());
+        QByteArray obr = GetTextDecoder()->fromUnicode(reqDialog.fEdit.text());
+        const char *r = obr.constData();
 #endif /* QT_VERSION */
         qstrcpy(text, (const char *)r);
         // restore the font

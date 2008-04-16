@@ -41,10 +41,7 @@
 #if (QT_VERSION > 0x039999)
 #  include <QPixmap>
 #  include <QEvent>
-#  include <q3memarray.h>
-#  include <q3ptrqueue.h>
-#  include <q3ptrlist.h>
-#  include <q3ptrvector.h>
+#  include <QVector>
 #else
 #  include <qmemarray.h>
 #  include <qptrqueue.h>
@@ -112,7 +109,7 @@ protected:
 #if QT_VERSION < 0x40000
    QPtrVector<QCursor>   fCursors;
 #else /* QT_VERSION */
-   Q3PtrVector<QCursor>   fCursors;
+   QVector<QCursor *>      fCursors;
 #endif /* QT_VERSION */
 //   Qt::CursorShape  fCursors[kNumCursors];  //List of cursors
    ECursor         fCursor;                 // Current cursor number;

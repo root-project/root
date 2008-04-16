@@ -1,5 +1,5 @@
 /****************************************************************************
-** $Id: TQtSymbolCodec.cxx,v 1.3 2006/03/19 21:12:10 fine Exp $
+** $Id: TQtSymbolCodec.cxx,v 1.4 2008/04/14 02:14:19 fine Exp $
 **
 ** Implementation of QTextCodec class
 **
@@ -10,8 +10,7 @@
 
 #include "TQtSymbolCodec.h"
 #if QT_VERSION >= 0x40000
-//Added by qt3to4:
-#include <Q3CString>
+#   include <QByteArray>
 #endif /* QT_VERSION */
 
 #ifndef QT_NO_CODEC_SYMBOL
@@ -167,7 +166,7 @@ QString QSymbolCodec::toUnicode(const char* chars, int len ) const
 #if QT_VERSION < 0x40000
 QCString QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
 #else /* QT_VERSION */
-Q3CString QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
+QByteArray QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
 #endif /* QT_VERSION */
 {
    // process only len chars...
@@ -180,7 +179,7 @@ Q3CString QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
 #if QT_VERSION < 0x40000
    QCString rstr;
 #else /* QT_VERSION */
-   Q3CString rstr;
+   QByteArray rstr;
 #endif /* QT_VERSION */
 
    return rstr;

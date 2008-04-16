@@ -4,7 +4,7 @@
 # Qmake include file to add the rules to create RootCint Dictionary
 #-------------------------------------------------------------------------
 #
-# $Id: rootcint.pri,v 1.4 2005/08/17 18:46:49 fine Exp $
+# $Id: rootcint.pri,v 1.6 2006/04/20 00:51:10 fine Exp $
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
@@ -57,22 +57,19 @@
 # -------  define rootlibs.pri -----------------
 ROOTLIBSPRI = 
 ROOTLIBSPRIFILE = rootlibs.pri
-
-
 # Wow !!! Qt exists function for the nested include file applies the relative path
 exists ($$ROOTLIBSPRIFILE){
-  ROOTLIBSPRI = inc/$$ROOTLIBSPRIFILE
+#  ROOTLIBSPRI = inc/$$ROOTLIBSPRIFILE
+  ROOTLIBSPRI = $$ROOTLIBSPRIFILE
 }
 
-isEmpty(ROOTLIBSPRI) 
-{
+isEmpty(ROOTLIBSPRI) { 
   exists ($(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE){
      ROOTLIBSPRI = $(QTROOTSYSDIR)/include/$$ROOTLIBSPRIFILE
   }
 }
 
-isEmpty(ROOTLIBSPRI) 
-{
+isEmpty(ROOTLIBSPRI) { 
   exists ($(ROOTSYS)/include/$$ROOTLIBSPRIFILE){
      ROOTLIBSPRI = $(ROOTSYS)/include/$$ROOTLIBSPRIFILE
   }
@@ -93,22 +90,16 @@ isEmpty(ROOTLIBSPRI){
 ROOTCINTRULEPRI = 
 ROOTCINTRULEPRIFILE = rootcintrule.pri
 
-isEmpty(ROOTCINTRULEPRI) 
-{
-  exists ($$ROOTCINTRULEPRIFILE){
-     ROOTCINTRULEPRI = inc/$$ROOTCINTRULEPRIFILE 
+exists ($$ROOTCINTRULEPRIFILE){
+     ROOTCINTRULEPRI = $$ROOTCINTRULEPRIFILE 
   }
-}
 
-isEmpty(ROOTCINTRULEPRI) 
-{
+isEmpty(ROOTCINTRULEPRI) { 
   exists ($(QTROOTSYSDIR)/include/$$ROOTCINTRULEPRIFILE ){
      ROOTCINTRULEPRI = $(QTROOTSYSDIR)/include/$$ROOTCINTRULEPRIFILE 
   }
 }
-
-isEmpty(ROOTCINTRULEPRI) 
-{
+isEmpty(ROOTCINTRULEPRI) { 
   exists ($(ROOTSYS)/include/$$ROOTCINTRULEPRIFILE ){
      ROOTCINTRULEPRI = $(ROOTSYS)/include/$$ROOTCINTRULEPRIFILE 
   }

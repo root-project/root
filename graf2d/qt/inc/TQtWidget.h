@@ -1,5 +1,5 @@
 // @(#)root/qt:$Id$
-// Author: Valeri Fine   23/01/2003
+// Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -88,7 +88,6 @@ class  TQtWidget : public QWidget {
 #endif
 private:
 		void operator=(const TQtWidget&);
-      TQtWidget(const TQtWidget&);
    //----- Private bits, clients can only test but not change them
    UInt_t         fBits;       //bit field status word
    enum {

@@ -28,7 +28,7 @@
 #if QT_VERSION >= 0x40000
 //Added by qt3to4:
 #include <QWheelEvent>
-#include <Q3CString>
+#include <QByteArray>
 #include <QFocusEvent>
 #include <QPaintEvent>
 #include <QCloseEvent>
@@ -217,7 +217,8 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
 #if QT_VERSION < 0x40000
    QCString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
 #else /* QT_VERSION */
-   Q3CString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
+   QByteArray oar = gQt->GetTextDecoder()->fromUnicode(qev.text());
+   const char *r = oar.constData();
 #endif /* QT_VERSION */
    qstrncpy((char *)&text, (const char *)r,1);
    return text;
@@ -451,7 +452,11 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          selectEventMask |=  kButtonPressMask;
          mouseEvent->accept();
          if (    !fgGrabber
+#if (QT_VERSION >= 0x040000)
+              &&  fButtonGrabList.count(frame) >0 
+#else
               &&  fButtonGrabList.findRef(frame) >=0 
+#endif
               &&  frame->IsGrabbed(event) )
          {
             GrabPointer(frame, frame->ButtonEventMask(),0,frame->GrabButtonCursor(), kTRUE,kFALSE);
@@ -668,6 +673,15 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
       // send message to another thread
       justInit = true;
    }
+#if ROOT_VERSION_CODE >= ROOT_VERSION(9,15,9)         
+   if (event.fType ==  kExpose ) {
+     Bool_t keepEvent4Qt =
+          (((TQtClientWidget*)(TGQt::wid(event.fWindow)))->IsEventSelected(selectEventMask) );
+     if (filterTime) filterTime->Stop();
+     delete &event;
+     return !keepEvent4Qt;
+   }
+#endif         
 
    if ( destroyNotify 
        || (event.fType == kClientMessage) || (event.fType == kDestroyNotify)  ||
@@ -777,8 +791,12 @@ void TQtPointerGrabber::ActivateGrabbing(bool on)
    fIsActive = on;
    // Make sure the result is correct
    QWidget *grabber = QWidget::mouseGrabber();
-   assert ( !fPointerGrabber->isVisible() || (fIsActive && (grabber == fPointerGrabber))
-           || (!fIsActive && !grabber) );
+
+#if (QT_VERSION < 0x40000)
+   assert ( !fPointerGrabber->isVisible() || (fIsActive && (grabber == fPointerGrabber)) || (!fIsActive && !grabber) );
+#else
+   assert ( !fPointerGrabber->isVisible() || (fIsActive) || (!fIsActive && !grabber) );
+#endif
 }
 //______________________________________________________________________________
 void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber

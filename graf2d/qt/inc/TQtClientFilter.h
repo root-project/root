@@ -8,7 +8,7 @@
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+ *********qlis****************************************************************/
 
 #ifndef ROOT_TQClientFilter
 #define ROOT_TQClientFilter
@@ -22,9 +22,7 @@
 // Added by qt3to4:
 #    include <QEvent>
 #    include <QMouseEvent>
-#    include <q3ptrqueue.h>
-#    include <q3ptrlist.h>
-#    include <q3intdict.h>
+#    include <QList>
 #  else 
 #    include <qptrqueue.h>
 #    include <qptrlist.h>
@@ -34,7 +32,7 @@
 #else
    class QObject;
 #  if (QT_VERSION > 0x039999)
-     class Q3PtrList<TQtClientWidget>;
+     class QList<TQtClientWidget*>;
 #  else /* QT_VERSION */
      class QPtrList<TQtClientWidget>;
 #  endif /* QT_VERSION */
@@ -65,7 +63,7 @@ protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;
 #if (QT_VERSION > 0x039999)
-   Q3PtrList<TQtClientWidget>  fButtonGrabList;
+   QList<TQtClientWidget*>     fButtonGrabList;
 #else /* QT_VERSION */
    QPtrList<TQtClientWidget>  fButtonGrabList;
 #endif /* QT_VERSION */
@@ -158,7 +156,12 @@ inline   void TQtClientFilter::RemoveButtonGrab(QObject *widget)
 { 
    TQtClientWidget *wid = (TQtClientWidget *)widget;
    if ((fgButtonGrabber == wid) && fgGrabber) fgGrabber->DisactivateGrabbing();
+#if (QT_VERSION >= 0x040000)
+   fButtonGrabList.removeAll(wid);
+#else
    fButtonGrabList.remove(wid);
+#endif
+
 }
 
 //______________________________________________________________________________
