@@ -2162,7 +2162,7 @@ Int_t TProofServ::SetupCommon()
 
    // check and make sure "packages" directory exists
    fPackageDir = gEnv->GetValue("ProofServ.PackageDir",
-                                 Form("%s/%s", fWorkDir.Data(), kPROOF_WorkDir));
+                                 Form("%s/%s", fWorkDir.Data(), kPROOF_PackDir));
    if (gSystem->AccessPathName(fPackageDir))
       gSystem->MakeDirectory(fPackageDir);
    if (gProofDebugLevel > 0)
