@@ -590,6 +590,11 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    dset->Reset();
    Long64_t cur = 0;
    while (( e = (TDSetElement*)dset->Next())) {
+
+      // Skip invalid or missing file; It will be moved
+      // from the dset to the 'MissingFiles' list in the player.
+      if (!e->GetValid()) continue;
+
       TUrl url = e->GetFileName();
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
