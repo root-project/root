@@ -23,6 +23,8 @@
 #include "TClass.h"
 #include "TObject.h"
 
+#include "TBufferFile.h"
+
 // Standard
 #include <string>
 
@@ -310,6 +312,23 @@ namespace {
    }
 
 //____________________________________________________________________________
+   PyObject* TObjectExpand( PyObject*, PyObject* args )
+   {
+   // This method and is a helper for pickling for TObject derived classes.
+      PyObject* pybuf = 0;
+      if ( ! PyArg_ParseTuple( args,
+                const_cast< char* >( "O!:__expand__" ), &PyString_Type, &pybuf ) )
+         return 0;
+
+   // use the PyString macro's to by-pass error checking; do not copy the buffer
+   // as the TBufferFile is local to this function only
+      TBufferFile buf( TBuffer::kRead,
+          PyString_GET_SIZE( pybuf ), PyString_AS_STRING( pybuf ), kFALSE );
+      TObject* result = buf.ReadObject( 0 );
+      return BindRootObject( result, result->IsA() );
+   }
+
+//____________________________________________________________________________
    PyObject* SetMemoryPolicy( PyObject*, PyObject* args )
    {
       PyObject* policy = 0;
@@ -380,6 +399,8 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "Create an object of given type, from given address" },
    { (char*) "MakeNullPointer", (PyCFunction)MakeNullPointer,
      METH_VARARGS, (char*) "Create a NULL pointer of the given type" },
+   { (char*) "_TObject__expand__", (PyCFunction)TObjectExpand,
+     METH_VARARGS, (char*) "Helper method for pickling" },
    { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
      METH_VARARGS, (char*) "Determines object ownership model" },
    { (char*) "SetSignalPolicy", (PyCFunction)SetSignalPolicy,
