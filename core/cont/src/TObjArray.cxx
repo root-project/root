@@ -741,6 +741,7 @@ TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter) : TIterator(iter)
    fArray     = iter.fArray;
    fDirection = iter.fDirection;
    fCursor    = iter.fCursor;
+   fCurCursor = iter.fCurCursor;
 }
 
 //______________________________________________________________________________
@@ -753,6 +754,7 @@ TIterator &TObjArrayIter::operator=(const TIterator &rhs)
       fArray     = rhs1.fArray;
       fDirection = rhs1.fDirection;
       fCursor    = rhs1.fCursor;
+      fCurCursor = rhs1.fCurCursor;
    }
    return *this;
 }
@@ -766,6 +768,7 @@ TObjArrayIter &TObjArrayIter::operator=(const TObjArrayIter &rhs)
       fArray     = rhs.fArray;
       fDirection = rhs.fDirection;
       fCursor    = rhs.fCursor;
+      fCurCursor = rhs.fCurCursor;
    }
    return *this;
 }
@@ -804,6 +807,8 @@ void TObjArrayIter::Reset()
       fCursor = 0;
    else
       fCursor = fArray->Capacity() - 1;
+
+   fCurCursor = fCursor;
 }
 
 //______________________________________________________________________________
