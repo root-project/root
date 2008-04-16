@@ -4,7 +4,7 @@
 CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log  NtpRecord.root *.clog twodim*.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += vectorInVector indexLoad vectorOfvector ScanString multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
+TEST_TARGETS += vectorInVector indexLoad vectorOfvector ScanString multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest nestedind
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -78,4 +78,7 @@ indexLoad: indexLoad.clog
 	$(TestDiff)
 
 vectorInVector: vectorInVector.log
+	$(TestDiff)
+
+nestedind: nestedind.log
 	$(TestDiff)
