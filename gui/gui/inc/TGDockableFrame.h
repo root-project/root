@@ -110,6 +110,7 @@ protected:
    Bool_t            fEnableHide;    // if frame can be hidden
    Bool_t            fEnableUndock;  // if frame can be undocked
    Bool_t            fDeleted;       // kTRUE if it is being deleted
+   Bool_t            fFixedSize;     // kTRUE if fixed size when undocked
    TString           fDockName;      // name of frame
    TGCompositeFrame *fContainer;     // container containing dockable frame
    TGCompositeFrame *fButtons;       // container containing dock and hide buttons
@@ -145,6 +146,9 @@ public:
 
    Bool_t IsUndocked() const { return (fFrame != 0); }
    Bool_t IsHidden() const { return fHidden; }
+
+   Bool_t IsFixedSize() const { return  fFixedSize; }
+   void   SetFixedSize(Bool_t fixed) { fFixedSize = fixed; }
 
    TGCompositeFrame *GetContainer() const { return fContainer; }
    TGUndockedFrame  *GetUndocked() const { return fFrame; }

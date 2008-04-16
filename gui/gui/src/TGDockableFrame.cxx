@@ -198,6 +198,7 @@ void TGUndockedFrame::FixSize()
 {
    // Fix the size of the undocked frame so it cannot be changed via the WM.
 
+   ChangeOptions(GetOptions() | kFixedSize);
    SetWMSize(fWidth, fHeight);
    SetWMSizeHints(fWidth, fHeight, fWidth, fHeight, 0, 0);
 }
@@ -244,6 +245,7 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    fHidden       = kFALSE;
    fFrame        = 0;
    fDeleted      = kFALSE;
+   fFixedSize    = kTRUE;
 
    fDockButton->Associate(this);
    fHideButton->Associate(this);
@@ -293,6 +295,7 @@ void TGDockableFrame::UndockContainer()
    fFrame = new TGUndockedFrame(fClient->GetDefaultRoot(), this);
    fFrame->SetEditDisabled();
 
+   TGDimension size = fContainer->GetSize();
    RemoveFrame(fContainer);
    fContainer->ReparentWindow(fFrame);
    fFrame->AddFrame(fContainer, fCl);  // fHints
@@ -303,11 +306,11 @@ void TGDockableFrame::UndockContainer()
    if (fDockName) fFrame->SetWindowName(fDockName);
 
    fFrame->MapSubwindows();
-   fFrame->Resize(fFrame->GetDefaultSize());
-   fFrame->FixSize();
-   fFrame->Move(ax, ay);
-   fFrame->SetWMPosition(ax, ay);
+   fFrame->Resize(size);
+   if (fFixedSize)
+      fFrame->FixSize();
    fFrame->MapWindow();
+   fFrame->Move(ax, ay);
 
    if (((TGFrame *)fParent)->IsComposite())           // paranoia check
       ((TGCompositeFrame *)fParent)->HideFrame(this);
