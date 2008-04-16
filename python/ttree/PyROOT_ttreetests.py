@@ -1,7 +1,7 @@
 # File: roottest/python/ttree/PyROOT_ttreetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/13/06
-# Last: 10/13/06
+# Last: 04/16/08
 
 """TTree reading/writing unit tests for PyROOT package."""
 
@@ -13,9 +13,6 @@ __all__ = [
 ]
 
 gROOT.LoadMacro( "TTreeTypes.C+" )
-
-v1 = std.vector( 'float' )()
-v2 = std.vector( std.vector( 'float' ) )()
 
 
 ### Write/Read an std::vector to/from file ===================================
