@@ -1306,16 +1306,18 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       // Record the list of missing or invalid elements in the output list
       if (listOfMissingFiles && listOfMissingFiles->GetSize() > 0) {
          TIter missingFiles(listOfMissingFiles);
-         TFileInfo *fi = 0;
-         while ((fi = (TFileInfo *) missingFiles.Next())) {
-            TString msg;
-            if (fi->GetCurrentUrl()) {
-               msg = Form("File not found: %s - skipping!",
-                                             fi->GetCurrentUrl()->GetUrl());
-            } else {
-               msg = Form("File not found: %s - skipping!", fi->GetName());
+         TString msg;
+         if (gDebug > 0) {
+            TFileInfo *fi = 0;
+            while ((fi = (TFileInfo *) missingFiles.Next())) {
+               if (fi->GetCurrentUrl()) {
+                  msg = Form("File not found: %s - skipping!",
+                                                fi->GetCurrentUrl()->GetUrl());
+               } else {
+                  msg = Form("File not found: %s - skipping!", fi->GetName());
+               }
+               gProofServ->SendAsynMessage(msg.Data());
             }
-            gProofServ->SendAsynMessage(msg.Data());
          }
          // Make sure it will be sent back
          if (!GetOutput("MissingFiles")) {
@@ -1327,7 +1329,18 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
             tmpStatus = new TStatus();
             AddOutputObject(tmpStatus);
          }
-         tmpStatus->Add("Some files were missing; check 'missingFiles' list");
+         // Estimate how much data are missing
+         Long64_t ngood = dset->GetListOfElements()->GetSize();
+         Long64_t nbad = listOfMissingFiles->GetSize();
+         Double_t xb = Double_t(nbad) / Double_t(ngood + nbad);
+         msg = Form("Some files were missing: about %.1\%; details in"
+                    " the 'missingFiles' list", xb * 100.);
+         tmpStatus->Add(msg.Data());
+         msg = Form(" +++\n"
+                    " +++ Some files were missing: about %.1\%; details in"
+                    " the 'missingFiles' list\n"
+                    " +++", xb * 100.);
+         gProofServ->SendAsynMessage(msg.Data());
       } else {
          // Cleanup
          SafeDelete(listOfMissingFiles);
