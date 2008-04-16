@@ -21,6 +21,8 @@
 using namespace ROOT::Reflex;
 using namespace std;
 
+extern "C" int G__GetCatchException();
+
 namespace ROOT { namespace Cintex {
 
    class StubContexts : public vector<StubContext_t*>  {
@@ -184,6 +186,17 @@ namespace ROOT { namespace Cintex {
       if ( !context->fInitialized ) context->Initialize();
       context->ProcessParam(libp);
   
+      if(!G__GetCatchException()) {
+
+         // Stub Calling
+         void* r = (*context->fStub)((void*)G__getstructoffset(), context->fParam, context->fStubctx);
+         context->ProcessResult(result, r);
+         if ( context->fRet_byvalue )  G__store_tempobject(*result);
+
+         return 1;
+   
+      }  
+
       // Catch here everything since going through the adaptor in the data section
       // does not transmit the exception 
       try {
