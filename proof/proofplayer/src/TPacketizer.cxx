@@ -28,6 +28,7 @@
 
 #include "Riostream.h"
 #include "TDSet.h"
+#include "TEnv.h"
 #include "TError.h"
 #include "TEventList.h"
 #include "TEntryList.h"
@@ -256,9 +257,34 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fFileNodes = 0;
    fMaxPerfIdx = 1;
 
-   Long_t maxSlaveCnt = 4;
-   TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt);
-   fMaxSlaveCnt = (Int_t)maxSlaveCnt;
+   Long_t maxSlaveCnt = 0;
+   if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
+      if (maxSlaveCnt < 1) {
+         Info("TPacketizer", "PROOF_MaxSlavesPerNode must be grater than 0");
+         maxSlaveCnt = 0;
+      }
+   } else {
+      // Try also with Int_t (recently supported in TProof::SetParameter)
+      Int_t mxslcnt = -1;
+      if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", mxslcnt) == 0) {
+         if (mxslcnt < 1) {
+            Info("TPacketizer", "PROOF_MaxSlavesPerNode must be grater than 0");
+            mxslcnt = 0;
+         }
+         maxSlaveCnt = (Long_t) mxslcnt;
+      }
+   }
+   if (!maxSlaveCnt)
+      maxSlaveCnt = gEnv->GetValue("Packetizer.MaxWorkersPerNode", 4);
+   if (maxSlaveCnt > 0) {
+      fMaxSlaveCnt = maxSlaveCnt;
+      Info("TPacketizer", "setting max number of workers per node to %ld", fMaxSlaveCnt);
+   } else {
+      // Use number of CPUs as default cutting at 2
+      SysInfo_t si;
+      gSystem->GetSysInfo(&si);
+      fMaxSlaveCnt =  (si.fCpus > 2) ? si.fCpus : 2;
+   }
 
    fPackets = new TList;
    fPackets->SetOwner();
@@ -703,10 +729,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                mon.Activate(s->GetSocket());
                PDB(kPacketizer,2)
                   Info("ValidateFiles",
-                     "sent to worker-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                     s->GetOrdinal(), s->GetName(), s->GetSocket(),
-                     dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
-                     elem->GetDirectory(), elem->GetObjName());
+                       "sent to worker-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                       s->GetOrdinal(), s->GetName(), s->GetSocket(),
+                       dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
+                       elem->GetDirectory(), elem->GetObjName());
             } else {
                // Fill the info
                elem->SetTDSetOffset(entries);
@@ -729,9 +755,18 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
                                  entries, elem->GetFileName());
                         elem->SetNum(entries - elem->GetFirst());
                      }
+                     PDB(kPacketizer,2)
+                        Info("ValidateFiles",
+                             "found elem '%s' with %lld entries", elem->GetFileName(), entries);
                      elem->SetValid();
                   }
                }
+               // Notify the client
+               n++;
+               gProof->SendDataSetStatus(msg, n, tot, st);
+
+               // This worker is ready for the next validation
+               workers.Add(s);
             }
          }
       }

@@ -58,7 +58,8 @@ private:
                                  // parameter, in the input list.
    Int_t     fMaxPerfIdx;   // maximum of our slaves' performance index
 
-   Int_t     fMaxSlaveCnt;  // maximum number of slaves per filenode
+   Long_t    fMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid
+                            // warnings from backward compatibility support)
    Int_t     fPacketAsAFraction; // used to calculate the packet size
                                  // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
                                  // fPacketAsAFraction can be interpreted as follows:

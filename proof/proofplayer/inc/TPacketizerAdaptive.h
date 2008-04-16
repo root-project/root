@@ -90,7 +90,8 @@ private:
    void           ValidateFiles(TDSet *dset, TList *slaves);
 
 public:
-   static Int_t   fgMaxSlaveCnt;  // maximum number of slaves per filenode
+   static Long_t  fgMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid
+                                  // warnings from backward compatibility support)
    static Int_t   fgPacketAsAFraction;// used to calculate the packet size
                                  // fPacketSize = fTotalEntries / (fPacketAsAFraction * nslaves)
                                  // fPacketAsAFraction can be interpreted as follows:

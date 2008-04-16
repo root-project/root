@@ -412,7 +412,7 @@ Int_t TPacketizerAdaptive::TSlaveStat::AddProcessed()
 
 ClassImp(TPacketizerAdaptive)
 
-Int_t    TPacketizerAdaptive::fgMaxSlaveCnt = 2;
+Long_t   TPacketizerAdaptive::fgMaxSlaveCnt = 2;
 Int_t    TPacketizerAdaptive::fgPacketAsAFraction = 4;
 Double_t TPacketizerAdaptive::fgMinPacketTime = 3;
 Int_t    TPacketizerAdaptive::fgNetworkFasterThanHD = 1;
@@ -435,26 +435,38 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fCumProcTime = 0;
    fMaxPerfIdx = 1;
 
-   Int_t maxSlaveCnt = 0;
-   if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0)
+   Long_t maxSlaveCnt = 0;
+   if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
       if (maxSlaveCnt < 1) {
-         Info("Process",
+         Info("TPacketizerAdaptive",
               "The value of PROOF_MaxSlavesPerNode must be grater than 0");
          maxSlaveCnt = 0;
       }
+   } else {
+      // Try also with Int_t (recently supported in TProof::SetParameter)
+      Int_t mxslcnt = -1;
+      if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", mxslcnt) == 0) {
+         if (mxslcnt < 1) {
+            Info("TPacketizerAdaptive",
+                 "The value of PROOF_MaxSlavesPerNode must be grater than 0");
+            mxslcnt = 0;
+         }
+         maxSlaveCnt = (Long_t) mxslcnt;
+      }
+   }
+
    if (!maxSlaveCnt)
       maxSlaveCnt = gEnv->GetValue("Packetizer.MaxWorkersPerNode", 0);
    if (maxSlaveCnt > 0) {
       fgMaxSlaveCnt = maxSlaveCnt;
-      Info("Process", "Setting max number of workers per node to %d",
+      Info("TPacketizerAdaptive", "Setting max number of workers per node to %ld",
            fgMaxSlaveCnt);
    } else {
-      // Use number of CPUs as default
+      // Use number of CPUs as default, cutting at 2
       SysInfo_t si;
       gSystem->GetSysInfo(&si);
-      if (si.fCpus > 2)
-         fgMaxSlaveCnt =  si.fCpus;
-   }
+      fgMaxSlaveCnt =  (si.fCpus > 2) ? si.fCpus : 2;
+    }
 
    // if forceLocal parameter is set to 1 then eliminate the cross-worker
    // processing;
@@ -467,7 +479,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       if (forceLocal == 1)
          fForceLocal = kTRUE;
       else
-         Info("Process",
+         Info("TPacketizerAdaptive",
             "The only accepted value of PROOF_ForceLocal parameter is 1 !");
    }
 
@@ -482,16 +494,16 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
                             packetAsAFraction) == 0) {
       if (packetAsAFraction > 0) {
          fgPacketAsAFraction = packetAsAFraction;
-         Info("Process",
+         Info("TPacketizerAdaptive",
               "using alternate fraction of query time as a packet size: %ld",
               packetAsAFraction);
       } else
-         Info("Process", "packetAsAFraction parameter must be higher than 0");
+         Info("TPacketizerAdaptive", "packetAsAFraction parameter must be higher than 0");
    }
    Double_t minPacketTime = 0;
    if (TProof::GetParameter(input, "PROOF_MinPacketTime",
                             minPacketTime) == 0) {
-      Info("Process", "using alternate minimum time of a packet: %f",
+      Info("TPacketizerAdaptive", "using alternate minimum time of a packet: %f",
            minPacketTime);
       fgMinPacketTime = (Int_t) minPacketTime;
    }
@@ -767,7 +779,7 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextNode()
    if (fn != 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
       // unlike in TPacketizer we look at the number of ext slaves only.
       PDB(kPacketizer,1) Info("NextNode",
-                              "Reached Slaves per Node Limit (%d)", fgMaxSlaveCnt);
+                              "Reached Slaves per Node Limit (%ld)", fgMaxSlaveCnt);
       fn = 0;
    }
 
@@ -814,7 +826,7 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextActiveNode()
    // look at only ext slaves
    if (fn != 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
       PDB(kPacketizer,1)
-         Info("NextActiveNode","reached Workers-per-Node limit (%d)", fgMaxSlaveCnt);
+         Info("NextActiveNode","reached Workers-per-Node limit (%ld)", fgMaxSlaveCnt);
       fn = 0;
    }
 
@@ -949,10 +961,10 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
                mon.Activate(s->GetSocket());
                PDB(kPacketizer,2)
                   Info("ValidateFiles",
-                     "sent to worker-%s (%s) via %p GETENTRIES on %s %s %s %s",
-                     s->GetOrdinal(), s->GetName(), s->GetSocket(),
-                     dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
-                     elem->GetDirectory(), elem->GetObjName());
+                       "sent to worker-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                       s->GetOrdinal(), s->GetName(), s->GetSocket(),
+                       dset->IsTree() ? "tree" : "objects", elem->GetFileName(),
+                       elem->GetDirectory(), elem->GetObjName());
             } else {
                // Fill the info
                elem->SetTDSetOffset(entries);
@@ -975,6 +987,9 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
                                  entries, elem->GetFileName());
                         elem->SetNum(entries - elem->GetFirst());
                      }
+                     PDB(kPacketizer,2)
+                        Info("ValidateFiles",
+                             "found elem '%s' with %lld entries", elem->GetFileName(), entries);
                      elem->SetValid();
                   }
                }
