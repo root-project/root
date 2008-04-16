@@ -7,7 +7,11 @@
 
 // ROOT
 #include "TObject.h"
+#include "TBufferFile.h"      // for pickling
 
+
+//- data _______________________________________________________________________
+R__EXTERN PyObject* gRootModule;
 
 //____________________________________________________________________________
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
@@ -28,9 +32,47 @@ namespace {
       return PyInt_FromLong( self->GetObject() ? 1 : 0 );
    }
 
+//= PyROOT object proxy pickle support =======================================
+   PyObject* op_reduce( ObjectProxy* self )
+   {
+   // Turn the TObject derived into a character stream and return for pickle,
+   // together with the callable object that can restore the stream into a
+   // TObject derived instance.
+
+   // keep a borrowed reference around to the callable function for expanding;
+   // because it is borrowed, it means that there can be no pickling during the
+   // shutdown of the libPyROOT module
+      static PyObject* s_expand = PyDict_GetItemString(
+         PyModule_GetDict( gRootModule ),  const_cast< char* >( "_TObject__expand__" ) );
+
+   // no cast is needed, but WriteObject taking a TClass argument is protected,
+   // so use WriteObjectAny()
+      TBufferFile buf( TBuffer::kWrite );
+      if ( buf.WriteObjectAny( self->GetObject(), self->ObjectIsA() ) != 1 ) {
+         PyErr_Format( PyExc_IOError,
+            "could not stream object of type %s", self->ObjectIsA()->GetName() );
+         return 0;
+      }
+
+   // use a string for the serialized result, as a python buffer will not copy
+   // the buffer contents; use a string for the class name, used when casting
+   // on reading back in (see RootModule.cxx:TObjectExpand)
+      PyObject* res2 = PyTuple_New( 2 );
+      PyTuple_SET_ITEM( res2, 0, PyString_FromStringAndSize( buf.Buffer(), buf.Length() ) );
+      PyTuple_SET_ITEM( res2, 1, PyString_FromString( self->ObjectIsA()->GetName() ) );
+
+      PyObject* result = PyTuple_New( 2 );
+      Py_INCREF( s_expand );
+      PyTuple_SET_ITEM( result, 0, s_expand );
+      PyTuple_SET_ITEM( result, 1, res2 );
+
+      return result;
+   }
+
 //____________________________________________________________________________
    PyMethodDef op_methods[] = {
       { (char*)"__nonzero__", (PyCFunction)op_nonzero, METH_NOARGS, NULL },
+      { (char*)"__reduce__",  (PyCFunction)op_reduce,  METH_NOARGS, NULL },
       { (char*)NULL, NULL, 0, NULL }
    };
 

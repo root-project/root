@@ -31,8 +31,6 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 
-#include "TBufferFile.h"
-
 // CINT
 #include "Api.h"
 
@@ -42,9 +40,6 @@
 #include <stdio.h>
 #include <utility>
 
-
-//- data _______________________________________________________________________
-R__EXTERN PyObject* gRootModule;
 
 namespace {
 
@@ -241,34 +236,6 @@ namespace {
 
       return CallPyObjMethod( self, "IsEqual", obj );
    }
-
-//____________________________________________________________________________
-   PyObject* TObjectReduce( PyObject*, PyObject* args )
-   {
-   // Turn the TObject derived into a character stream and return for pickle,
-   // together with the callable object that can restore the stream into a
-   // TObject derived instance.
-      ObjectProxy* self = 0;
-      if ( ! PyArg_ParseTuple( args,
-                const_cast< char* >( "O!:__reduce__" ), &ObjectProxy_Type, &self ) )
-         return 0;
-
-      TBufferFile buf( TBuffer::kWrite );
-      buf.WriteObject( (TObject*)self->GetObject() );
-
-   // use a string for the serialized result, as a python buffer will not copy
-   // the buffer contents
-      PyObject* res2 = PyTuple_New( 1 );
-      PyTuple_SET_ITEM( res2, 0, PyString_FromStringAndSize( buf.Buffer(), buf.Length() ) );
-
-      PyObject* result = PyTuple_New( 2 );
-      PyTuple_SET_ITEM( result, 0,
-         PyObject_GetAttrString( gRootModule, const_cast< char* >( "_TObject__expand__" ) ) );
-      PyTuple_SET_ITEM( result, 1, res2 );
-
-      return result;
-   }
-
 
 //- TClass behaviour -----------------------------------------------------------
    PyObject* TClassStaticCast( PyObject*, PyObject* args )
@@ -1659,10 +1626,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // comparing for lists
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjectCompare );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjectIsEqual );
-
-   // enable pickling
-      Utility::AddToClass( pyclass, "__reduce__",  (PyCFunction) TObjectReduce );
-      Utility::AddToClass( pyclass, "__expand__",  (PyCFunction) TObjectReduce );
 
       return kTRUE;
    }
