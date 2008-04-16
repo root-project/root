@@ -2457,6 +2457,11 @@ void G__SetCatchException(int mode)
    G__catchexception = mode;
 }
 
+int G__GetCatchException()
+{
+   return G__catchexception;
+}
+
 } /* extern "C" */
 
 /*
