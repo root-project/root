@@ -3113,6 +3113,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
          check = kTRUE;
       }
 
+      TFormLeafInfo * info = 0;
       Int_t max_dim = fNdimensions[codeindex];
       if ( max_dim ) {
          virt_dim = 0;
@@ -3151,7 +3152,6 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
             // are fixed!
 
             // NOTE: We could unroll some of this loops to avoid a few tests.
-            TFormLeafInfo * info = 0;
             if (fHasMultipleVarDim[codeindex]) {
                info = (TFormLeafInfo *)(fDataMembers.At(codeindex));
                // if (info && info->GetVarDim()==-1) info = 0;
@@ -3278,6 +3278,10 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                   local_index = instance % fManager->fCumulUsedSizes[virt_dim];
                } else {
                   local_index = instance;
+               }
+               if (info && local_index>=fCumulSizes[codeindex][max_dim]) {
+                  // We are out of bounds! [Multiple var dims, See same message a few line above]
+                  return fNdata[0]+1;
                }
                if (fIndexes[codeindex][max_dim]==-2) {
                   if (fDidBooleanOptimization && local_index!=0) {
