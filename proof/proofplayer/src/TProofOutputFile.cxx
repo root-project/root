@@ -11,13 +11,13 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofFile                                                           //
+// TProofOutputFile                                                     //
 //                                                                      //
 // Small class to steer the merging of files produced on the workers    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TProofFile.h"
+#include "TProofOutputFile.h"
 #include <TEnv.h>
 #include <TFileMerger.h>
 #include <TFile.h>
@@ -29,13 +29,14 @@
 #include <TSystem.h>
 #include <TUUID.h>
 
-ClassImp(TProofFile)
+ClassImp(TProofOutputFile)
 
-TFileMerger *TProofFile::fgMerger = 0; // Instance of the file merger for mode "CENTRAL"
+TFileMerger *TProofOutputFile::fgMerger = 0; // Instance of the file merger for mode "CENTRAL"
 
 //________________________________________________________________________________
-TProofFile::TProofFile(const char* path, const char* location, const char* mode)
-          : TNamed(path,"")
+TProofOutputFile::TProofOutputFile(const char* path,
+                                   const char* location, const char* mode)
+                 : TNamed(path,"")
 {
    // Main conctructor
 
@@ -52,24 +53,37 @@ TProofFile::TProofFile(const char* path, const char* location, const char* mode)
    Int_t pos = fDir.Index(fFileName);
    if (pos != kNPOS)
       fDir.Remove(pos);
+
    if (fDir == "file:") {
       fIsLocal = kTRUE;
-      // The directory for the file will be the sandbox
-      TString pfx  = gEnv->GetValue("Path.Localroot","");
-      fDir = Form("root://%s",gSystem->HostName());
-      if (gSystem->Getenv("XRDPORT")) {
-         TString sp(gSystem->Getenv("XRDPORT"));
-         if (sp.IsDigit())
-            fDir += Form(":%s", sp.Data());
-      }
       TString dirPath = gSystem->WorkingDirectory();
-      if (!pfx.IsNull())
-         dirPath.Remove(0, pfx.Length());
+      if (gSystem->Getenv("XRDCF")) {
+         // The directory for the file will be the sandbox
+         TString pfx  = gEnv->GetValue("Path.Localroot","");
+         fDir = Form("root://%s",gSystem->HostName());
+         if (gSystem->Getenv("XRDPORT")) {
+            TString sp(gSystem->Getenv("XRDPORT"));
+            if (sp.IsDigit())
+               fDir += Form(":%s", sp.Data());
+         }
+         if (!pfx.IsNull())
+            dirPath.Remove(0, pfx.Length());
+      } else {
+         fDir += "/";
+      }
       fDir += Form("/%s", dirPath.Data());
    }
    // Notify
-   if (gDebug > 1)
-      Info("TProofFile", "dir: %s", fDir.Data());
+   Info("TProofOutputFile", "dir: %s", fDir.Data());
+
+   // Default output file name
+   fOutputFileName = gEnv->GetValue("Proof.OutputFile", "");
+   if (!fOutputFileName.IsNull() && !fOutputFileName.EndsWith("/"))
+      fOutputFileName += "/";
+   // Add default file name
+   fOutputFileName += path;
+   if (!fOutputFileName.EndsWith(".root"))
+      fOutputFileName += ".root";
 
    // Location
    fLocation = "REMOTE";
@@ -77,7 +91,7 @@ TProofFile::TProofFile(const char* path, const char* location, const char* mode)
       fLocation = location;
       if (fLocation.CompareTo("LOCAL", TString::kIgnoreCase) &&
           fLocation.CompareTo("REMOTE", TString::kIgnoreCase)) {
-         Warning("TProofFile","unknown location %s: ignore (use: \"REMOTE\")", location);
+         Warning("TProofOutputFile","unknown location %s: ignore (use: \"REMOTE\")", location);
          fLocation = "REMOTE";
       }
       fLocation.ToUpper();
@@ -88,7 +102,7 @@ TProofFile::TProofFile(const char* path, const char* location, const char* mode)
       fMode = mode;
       if (fMode.CompareTo("CENTRAL", TString::kIgnoreCase) &&
           fMode.CompareTo("SEQUENTIAL", TString::kIgnoreCase)) {
-         Warning("TProofFile","unknown mode %s: ignore (use: \"CENTRAL\")", mode);
+         Warning("TProofOutputFile","unknown mode %s: ignore (use: \"CENTRAL\")", mode);
          fMode = "CENTRAL";
       }
       fMode.ToUpper();
@@ -96,7 +110,7 @@ TProofFile::TProofFile(const char* path, const char* location, const char* mode)
 }
 
 //______________________________________________________________________________
-TString TProofFile::GetTmpName(const char* name)
+TString TProofOutputFile::GetTmpName(const char* name)
 {
    // Create a temporary unique name for this file
 
@@ -114,7 +128,7 @@ TString TProofFile::GetTmpName(const char* name)
 }
 
 //______________________________________________________________________________
-void TProofFile::SetFileName(const char* name)
+void TProofOutputFile::SetFileName(const char* name)
 {
    // Set the file name
 
@@ -123,7 +137,7 @@ void TProofFile::SetFileName(const char* name)
 }
 
 //______________________________________________________________________________
-void TProofFile::SetOutputFileName(const char *name)
+void TProofOutputFile::SetOutputFileName(const char *name)
 {
    // Set the name of the output file; in the form of an Url.
 
@@ -135,7 +149,7 @@ void TProofFile::SetOutputFileName(const char *name)
 }
 
 //______________________________________________________________________________
-TFile* TProofFile::OpenFile(const char* opt)
+TFile* TProofOutputFile::OpenFile(const char* opt)
 {
    // Open the file using the unique temporary name
 
@@ -152,7 +166,7 @@ TFile* TProofFile::OpenFile(const char* opt)
 }
 
 //______________________________________________________________________________
-Long64_t TProofFile::Merge(TCollection* list)
+Long64_t TProofOutputFile::Merge(TCollection* list)
 {
    // Merge objects from the list into this object
 
@@ -178,16 +192,16 @@ Long64_t TProofFile::Merge(TCollection* list)
          TList* elist = new TList;
          elist->AddAll(list); 
          TIter next(elist);
-         TProofFile* pFile = 0;
+         TProofOutputFile* pFile = 0;
 
-         while ((pFile = (TProofFile*)next())) {
+         while ((pFile = (TProofOutputFile*)next())) {
             fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
             AddFile(merger, fileLoc);
          }
 
          Bool_t result = merger->Merge();
          if (!result) {
-            NotifyError("TProofFile::Merge: error from TFileMerger::Merge()");
+            NotifyError("TProofOutputFile::Merge: error from TFileMerger::Merge()");
             return -1;
          }
 
@@ -198,7 +212,7 @@ Long64_t TProofFile::Merge(TCollection* list)
          }
 
          next.Reset();
-         while ((pFile = (TProofFile*)next())) {
+         while ((pFile = (TProofOutputFile*)next())) {
             fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
             Unlink(fileLoc);
          }
@@ -237,9 +251,9 @@ Long64_t TProofFile::Merge(TCollection* list)
          TList* elist = new TList;
          elist->AddAll(list);
          TIter next(elist);
-         TProofFile* pFile = 0;
+         TProofOutputFile* pFile = 0;
 
-         while ((pFile = (TProofFile*)next())) {
+         while ((pFile = (TProofOutputFile*)next())) {
             fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
 
             TFile* fCurrFile = TFile::Open(fileLoc.Data(),"READ");
@@ -264,7 +278,7 @@ Long64_t TProofFile::Merge(TCollection* list)
          }
          Bool_t result =  merger->MergeRecursive(outputFile, fileList, 0);
          if (!result) {
-            NotifyError("TProofFile::Merge: error from TFileMerger::MergeRecursive()");
+            NotifyError("TProofOutputFile::Merge: error from TFileMerger::MergeRecursive()");
 
             TIter fnext(fileList);
             TFile *fCurrFile = 0;
@@ -289,7 +303,7 @@ Long64_t TProofFile::Merge(TCollection* list)
             }
 
             next.Reset();
-            while ((pFile = (TProofFile *)next())) {
+            while ((pFile = (TProofOutputFile *)next())) {
                fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
                Unlink(fileLoc);
             }
@@ -340,9 +354,9 @@ Long64_t TProofFile::Merge(TCollection* list)
       TList* elist = new TList;
       elist->AddAll(list); 
       TIter next(elist);
-      TProofFile* pFile = 0;
+      TProofOutputFile* pFile = 0;
 
-      while((pFile = (TProofFile*)next())) {
+      while((pFile = (TProofOutputFile*)next())) {
          fileLoc = Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
          AddFile(merger, fileLoc);
       }
@@ -359,7 +373,7 @@ Long64_t TProofFile::Merge(TCollection* list)
 }
 
 //______________________________________________________________________________
-void TProofFile::Print(Option_t *) const
+void TProofOutputFile::Print(Option_t *) const
 {
    // Dump the class content
 
@@ -376,7 +390,7 @@ void TProofFile::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TProofFile::NotifyError(const char *msg)
+void TProofOutputFile::NotifyError(const char *msg)
 {
    // Notify error message
 
@@ -393,33 +407,33 @@ void TProofFile::NotifyError(const char *msg)
 }
 
 //______________________________________________________________________________
-void TProofFile::AddFile(TFileMerger *merger, const char *path)
+void TProofOutputFile::AddFile(TFileMerger *merger, const char *path)
 {
    // Add file to merger, checking the result
 
    if (merger && path) {
       if (!merger->AddFile(path))
-         NotifyError(Form("TProofFile::AddFile:"
+         NotifyError(Form("TProofOutputFile::AddFile:"
                           " error from TFileMerger::AddFile(%s)", path));
    }
 }
 
 //______________________________________________________________________________
-void TProofFile::Unlink(const char *path)
+void TProofOutputFile::Unlink(const char *path)
 {
    // Unlink path
 
    if (path) {
       if (!gSystem->AccessPathName(path)) {
          if (gSystem->Unlink(path) != 0)
-            NotifyError(Form("TProofFile::Unlink:"
+            NotifyError(Form("TProofOutputFile::Unlink:"
                              " error from TSystem::Unlink(%s)", path));
       }
    }
 }
 
 //______________________________________________________________________________
-TFileMerger *TProofFile::GetFileMerger(Bool_t local)
+TFileMerger *TProofOutputFile::GetFileMerger(Bool_t local)
 {
    // Get instance of the file merger to be used in "CENTRAL" mode
 

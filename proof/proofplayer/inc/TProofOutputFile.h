@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TProofFile
-#define ROOT_TProofFile
+#ifndef ROOT_TProofOutputFile
+#define ROOT_TProofOutputFile
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofFile                                                           //
+// TProofOutputFile                                                           //
 //                                                                      //
 // Small class to steer the merging of files produced on workers        //
 //                                                                      //
@@ -26,13 +26,13 @@
 #endif
 
 class TCollection;
-class TProofFile;
+class TProofOutputFile;
 class TString;
 class TList;
 class TFile;
 class TFileMerger;
 
-class TProofFile : public TNamed {
+class TProofOutputFile : public TNamed {
 
 friend class TProof;
 friend class TProofPlayer;
@@ -65,9 +65,9 @@ private:
 protected:
 
 public:
-   TProofFile(const char* path = "prooffile.root",
+   TProofOutputFile(const char* path = "prooffile.root",
               const char* location = "REMOTE", const char* mode = "CENTRAL");
-   virtual ~TProofFile() { }
+   virtual ~TProofOutputFile() { }
 
    const char* GetDir() const { return fDir; }
    const char* GetFileName(Bool_t tmpName = kTRUE) const { return (tmpName) ? fFileName1 : fFileName; }
@@ -84,7 +84,7 @@ public:
 
    static TFileMerger* GetFileMerger(Bool_t local = kFALSE); // Instance of the file merger for mode "CENTRAL"
 
-   ClassDef(TProofFile,1) // Wrapper class to steer the merging of files produced on workers
+   ClassDef(TProofOutputFile,1) // Wrapper class to steer the merging of files produced on workers
 };
 
 #endif
