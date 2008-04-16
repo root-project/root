@@ -36,6 +36,7 @@
 #include "TRootEmbeddedCanvas.h"
 #include "TGSplitFrame.h"
 #include "TGLEmbeddedViewer.h"
+#include "TGDockableFrame.h"
 #include "TGShapedFrame.h"
 #include "TGButton.h"
 #include "TGTab.h"
@@ -617,6 +618,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    TGSplitFrame *frm;
    TEveScene *s = 0;
    TGHorizontalFrame *hfrm;
+   TGDockableFrame *dfrm;
    TGPictureButton *button;
 
    // create the "file" popup menu
@@ -733,7 +735,9 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    // get bottom left split frame
    frm = fSplitFrame->GetSecond()->GetFirst();
 
-   hfrm = new TGHorizontalFrame(frm);
+   dfrm = new TGDockableFrame(frm);
+   dfrm->SetFixedSize(kFALSE);
+   hfrm = new TGHorizontalFrame(dfrm);
    button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
    button->SetToolTipText("Swap to big view");
    hfrm->AddFrame(button);
@@ -743,7 +747,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    fViewer1 = new TGLEmbeddedViewer(hfrm, fPad);
    hfrm->AddFrame(fViewer1->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
                   kLHintsExpandY));
-   frm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   dfrm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   frm->AddFrame(dfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // set the camera to orthographic (XOY) for this viewer
    fViewer1->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
@@ -778,7 +783,9 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    // get bottom center split frame
    frm = fSplitFrame->GetSecond()->GetSecond()->GetFirst();
    // create (embed) a GL viewer inside
-   hfrm = new TGHorizontalFrame(frm);
+   dfrm = new TGDockableFrame(frm);
+   dfrm->SetFixedSize(kFALSE);
+   hfrm = new TGHorizontalFrame(dfrm);
    button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
    button->SetToolTipText("Swap to big view");
    hfrm->AddFrame(button);
@@ -788,7 +795,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    fViewer2 = new TGLEmbeddedViewer(hfrm, fPad);
    hfrm->AddFrame(fViewer2->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
                   kLHintsExpandY));
-   frm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   dfrm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   frm->AddFrame(dfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    // set the camera to orthographic (XOY) for this viewer
    fViewer2->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
@@ -817,7 +825,9 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    // get bottom right split frame
    frm = fSplitFrame->GetSecond()->GetSecond()->GetSecond();
 
-   hfrm = new TGHorizontalFrame(frm);
+   dfrm = new TGDockableFrame(frm);
+   dfrm->SetFixedSize(kFALSE);
+   hfrm = new TGHorizontalFrame(dfrm);
    button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
    button->SetToolTipText("Swap to big view");
    hfrm->AddFrame(button);
@@ -825,7 +835,8 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    fgHtmlSummary = new HtmlSummary("Alice Event Display Summary Table");
    fgHtml = new TGHtml(hfrm, 100, 100, -1);
    hfrm->AddFrame(fgHtml, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-   frm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   dfrm->AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   frm->AddFrame(dfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    if (fIsEmbedded && gEve) {
       gEve->GetListTree()->Connect("Clicked(TGListTreeItem*, Int_t, Int_t, Int_t)",
