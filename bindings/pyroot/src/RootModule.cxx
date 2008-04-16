@@ -312,7 +312,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* TObjectExpand( PyObject*, PyObject* args )
+   PyObject* ObjectProxyExpand( PyObject*, PyObject* args )
    {
    // This method and is a helper for pickling for TObject derived classes.
       PyObject* pybuf = 0;
@@ -401,7 +401,7 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "Create an object of given type, from given address" },
    { (char*) "MakeNullPointer", (PyCFunction)MakeNullPointer,
      METH_VARARGS, (char*) "Create a NULL pointer of the given type" },
-   { (char*) "_TObject__expand__", (PyCFunction)TObjectExpand,
+   { (char*) "_ObjectProxy__expand__", (PyCFunction)ObjectProxyExpand,
      METH_VARARGS, (char*) "Helper method for pickling" },
    { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
      METH_VARARGS, (char*) "Determines object ownership model" },

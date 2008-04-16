@@ -43,7 +43,7 @@ namespace {
    // because it is borrowed, it means that there can be no pickling during the
    // shutdown of the libPyROOT module
       static PyObject* s_expand = PyDict_GetItemString(
-         PyModule_GetDict( gRootModule ),  const_cast< char* >( "_TObject__expand__" ) );
+         PyModule_GetDict( gRootModule ),  const_cast< char* >( "_ObjectProxy__expand__" ) );
 
    // no cast is needed, but WriteObject taking a TClass argument is protected,
    // so use WriteObjectAny()

@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 07/02/07
+# Last: 04/16/08
 
 """PyROOT user module.
 
@@ -14,7 +14,7 @@ from __future__ import generators
 
 """
 
-__version__ = '5.0.2'
+__version__ = '5.0.3'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -27,7 +27,8 @@ if sys.version[0:3] < '2.2':
    raise ImportError, 'Python Version 2.2 or above is required.'
 
 ## 2.2 has 10 instructions as default, > 2.3 has 100 ... make same
-sys.setcheckinterval( 100 )
+if sys.version[0:3] == '2.2':
+   sys.setcheckinterval( 100 )
 
 ## readline support, if available
 try:
@@ -91,6 +92,11 @@ import libPyROOT as _root
 if needsGlobal:
    sys.setdlopenflags( dlflags )
 del needsGlobal
+
+## convince 2.2 it's ok to use the expand function
+if sys.version[0:3] == '2.2':
+   import copy_reg
+   copy_reg.constructor( _root._ObjectProxy__expand__ )
 
 
 ### configuration ---------------------------------------------------------------
