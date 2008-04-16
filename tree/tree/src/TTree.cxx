@@ -1068,7 +1068,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
       if (datatype == kOther_t || datatype == kNoType_t) {
          Error("Branch", "The pointer specified for %s is not of a class or type known to ROOT", branchname);
       } else {
-         TString varname; varname.Form("%s_var/%c",branchname,DataTypeToChar(datatype));         
+         TString varname; varname.Form("%s/%c",branchname,DataTypeToChar(datatype));         
          return Branch(branchname,addobj,varname.Data(),bufsize);
       }
       return 0;
