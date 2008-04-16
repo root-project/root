@@ -24,7 +24,7 @@
 #include "TAxis.h"
 #include "TObjString.h"
 
-
+#include "TH2.h"
 //______________________________________________________________________________
 // OpenGL renderer class for TEveCaloLego.
 //
@@ -42,7 +42,7 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fTMSize(0.1),
 
    fMinBinWidth(6), // number of pixels in projected axis
-   fNBinSteps(3),
+   fNBinSteps(5),
    fBinSteps(0)
 {
    // Constructor.
@@ -53,6 +53,8 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fBinSteps[0] = 1;
    fBinSteps[1] = 2;
    fBinSteps[2] = 5;
+   fBinSteps[3] = 8;
+   fBinSteps[4] = 20;
 }
 
 //______________________________________________________________________________
@@ -622,7 +624,7 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
       glEnd();
    }
 
-   if(fMode == kSimplified)
+   if (fMode == k2D)
       DrawZAxisSimplified(rnrCtx, x0, y0);
    else
       DrawZAxis(rnrCtx, x0, x1, y0, y1);
@@ -657,44 +659,153 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    }
    else
    { 
-      fMode = kSimplified;
-      DrawSimplified(rnrCtx);
+      fMode = k2D;
+      Draw2D(rnrCtx);
    }
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoGL::DrawSimplified(TGLRnrCtx & rnrCtx) const
+void TEveCaloLegoGL::DrawDetailed(TGLRnrCtx & rnrCtx) const
 {
-   // Draw the calo lego-plot in 2D mode.
-
-   TEveCaloData::CellData_t cd;
-   Float_t min = fM->fPalette->GetMinVal();
-   Float_t max = fM->fPalette->GetMaxVal();
+   // Render the calo lego-plot with OpenGL.
  
-   // cell quads   
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   glDisable(GL_LIGHTING);
-  
-   // reset rotation
-   TGLMatrix   mvm;
-   glGetDoublev(GL_MODELVIEW_MATRIX, mvm.Arr());
-   TGLVector3 s = mvm.GetScale();
-   TGLVector3 t = mvm.GetBaseVec(4);
-   glPushMatrix();   
-   glLoadIdentity();
-   glTranslated(t.X(), t.Y(), t.Z());
-   glScaled(s.X(), s.Y(), s.Z());
-
    DrawHistBase(rnrCtx);
 
-  // to avoid gl stippling
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(0.2, 1); 
-   glTranslatef(0, 0, 0.001);
+   if (!fDLCacheOK) MakeDisplayList();
+   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
+   glPushMatrix();
+   glScalef(1.f, 1.f, fM->fCellZScale);
+   // cell quads
+   {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      glEnable(GL_NORMALIZE);
 
-   glPushName(0);
-   // get average cell dimensions
+      glPolygonOffset(0.2, 1);
+      glTranslatef(0, 0, 0.001);
+
+      glPushName(0);
+      for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
+      {
+         TGLUtil::Color(fM->GetPalette()->GetDefaultColor()+i->first);
+         glCallList(i->second);
+      }
+      glPopName();
+   }
+   // cell outlines
+   {
+      if (rnrCtx.SceneStyle() == TGLRnrCtx::kFill)
+      {
+         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+         glDisable(GL_POLYGON_OFFSET_FILL);
+         TGLUtil::Color(1); 
+         for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
+            glCallList(i->second);
+      }
+   }
+   glPopMatrix();
+   glPopAttrib();
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoGL::Draw2DScaled(Int_t nEta, Int_t nPhi) const
+{
+   // Draw rebined histogram.
+
+   using namespace TMath;
+   const TAxis* ax = fM->fData->GetEtaBins();
+   const TAxis* ay = fM->fData->GetPhiBins();
+
+   std::vector<Float_t> vec;
+   Float_t eta0 = ax->GetBinLowEdge(0);
+   Float_t phi0 = ay->GetBinLowEdge(0);
+
+   Float_t etaStep = (ax->GetBinUpEdge(ax->GetNbins())- ax->GetBinLowEdge(0))/nEta;
+   Float_t phiStep = (ay->GetBinUpEdge(ay->GetNbins())- ay->GetBinLowEdge(0))/nPhi;
+
+   vec.assign(nEta*nPhi, 0.f);
+   TEveCaloData::CellData_t cd;
+   Float_t left, right, up, down; // cell corners
+   for (TEveCaloData::vCellId_t::iterator it=fM->fCellList.begin(); it!=fM->fCellList.end(); it++)
+   {
+      fM->fData->GetCellData(*it, cd);
+      Int_t iMin = FloorNint((cd.EtaMin()- eta0)/etaStep);
+      Int_t iMax = CeilNint ((cd.EtaMax()- eta0)/etaStep);
+      Int_t jMin = FloorNint((cd.PhiMin()- phi0)/phiStep);
+      Int_t jMax = CeilNint ((cd.PhiMax()- phi0)/phiStep);
+
+      for (Int_t i=iMin; i<iMax; i++)
+      {
+         left  = i*etaStep;
+         right = (i+1)*etaStep;
+
+         if (i == iMin)
+            left = cd.EtaMin()-eta0;
+
+         if (i == (iMax-1))
+            right = cd.EtaMax()-eta0;
+
+         for (Int_t j=jMin; j<jMax; j++)
+         {
+            down = j*phiStep;
+            up = down +phiStep;
+
+            if (j == jMin)      
+               down = cd.PhiMin() -phi0;
+
+            if (j == (jMax-1))  
+               up = cd.PhiMax() -phi0;
+
+            vec[i*nPhi+j]  += cd.Value()*(right-left)*(up-down);
+         }
+      }
+   }
+
+   /**************************************************************************/
+
+   Int_t sn = nEta*nPhi;
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
+   UChar_t col[4];
+   for (Int_t i=0; i<sn; i++)
+   { 
+      Float_t val = vec[i]*10;
+      val /= (phiStep*etaStep);
+      fM->fPalette->ColorFromValue(FloorNint(val), col);
+      TGLUtil::Color4ubv(col);
+      Float_t eta = Int_t(i/nPhi)*etaStep + eta0;
+      Float_t phi = (i- Int_t(i/nPhi)*nPhi)*phiStep + phi0;
+      {
+         glBegin(GL_QUADS);
+         glVertex2f(eta        , phi);
+         glVertex2f(eta+etaStep, phi);
+         glVertex2f(eta+etaStep, phi+phiStep);
+         glVertex2f(eta        , phi+phiStep);
+         glEnd();
+      }
+   }
+
+   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   TGLUtil::Color(fM->fGridColor);
+   for (Int_t i=0; i<sn; i++)
+   { 
+      Float_t eta = Int_t(i/nPhi)*etaStep + eta0;
+      Float_t phi = (i- Int_t(i/nPhi)*nPhi)*phiStep + phi0;
+      {
+         glBegin(GL_QUADS);
+         glVertex2f(eta        , phi);
+         glVertex2f(eta+etaStep, phi);
+         glVertex2f(eta+etaStep, phi+phiStep);
+         glVertex2f(eta        , phi+phiStep);
+         glEnd();
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoGL::Draw2DOrig() const
+{
+   // Draw 2D histogram with original bins.
+
    const TAxis* ax = fM->fData->GetEtaBins();
    const TAxis* ay = fM->fData->GetPhiBins();
    Float_t eds = 0.5f*(ax->GetBinUpEdge(ax->GetNbins())- ax->GetBinLowEdge(0))/ax->GetNbins(); // standard step
@@ -702,33 +813,34 @@ void TEveCaloLegoGL::DrawSimplified(TGLRnrCtx & rnrCtx) const
    Float_t ed, pd;
    Float_t e, p; 
 
+   TEveCaloData::CellData_t cd;
+   Float_t min = fM->fPalette->GetMinVal();
+   Float_t max = fM->fPalette->GetMaxVal();
    Int_t prevTower = 0;
    Float_t sum = 0;
-   for (UInt_t i=0; i<fM->fCellList.size(); ++i)
-   {   
-      if (fM->fCellList[i].fTower == prevTower)
+
+   for (TEveCaloData::vCellId_t::iterator it=fM->fCellList.begin(); it!=fM->fCellList.end(); it++)
+   {
+      fM->fData->GetCellData(*it, cd);     
+      if ((*it).fTower == prevTower)
       {
          sum += cd.Value();
       }
       else 
       {
-         fM->fData->GetCellData(fM->fCellList[i], cd);
          sum /= fM->fData->GetNSlices();
          if (sum>min && sum<max)
          {
-            glLoadName(i);
             e = cd.Eta();
             p = cd.Phi();
-            if(sum > 1)
+            if (sum > 1)
             {
                UChar_t c[4];
                fM->fPalette->ColorFromValue(TMath::Nint(sum), c);
                TGLUtil::Color4ubv(c);
 
-               ed = 2*eds*TMath::Max(0.2, TMath::Log10(sum));
-               pd = 2*pds*TMath::Max(0.2, TMath::Log10(sum));
-               // ed = cd.EtaDelta()*0.5;
-               // pd = cd.PhiDelta()*0.5;
+               ed = cd.EtaDelta()*0.5;
+               pd = cd.PhiDelta()*0.5;
 
                glBegin(GL_QUADS);
                glVertex2f(e-ed, p-pd);
@@ -764,53 +876,47 @@ void TEveCaloLegoGL::DrawSimplified(TGLRnrCtx & rnrCtx) const
             } 
          }
          sum = 0;
-         prevTower = fM->fCellList[i].fTower;
+         prevTower = (*it).fTower;
       }
    }
-   glPopName();
-   glPopMatrix();
-   glPopAttrib();
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoGL::DrawDetailed(TGLRnrCtx & rnrCtx) const
+void TEveCaloLegoGL::Draw2D(TGLRnrCtx & rnrCtx) const
 {
-   // Draw the calo lego-plot in 3D.
- 
-   DrawHistBase(rnrCtx);
+   using namespace TMath;
 
-   if (!fDLCacheOK) MakeDisplayList();
+   // Draw projected histogram.
+
+   TGLMatrix   mvm;
+   glGetDoublev(GL_MODELVIEW_MATRIX, mvm.Arr());
+   TGLVector3 s = mvm.GetScale();
+   TGLVector3 t = mvm.GetBaseVec(4);
+   glPushMatrix();   
+   glLoadIdentity();
+   glTranslated(t.X(), t.Y(), t.Z());
+   glScaled(s.X(), s.Y(), s.Z());
+
+   const TAxis* ax = fM->fData->GetEtaBins();
+   const TAxis* ay = fM->fData->GetPhiBins();
+   DrawZAxisSimplified(rnrCtx, ax->GetBinLowEdge(0), ay->GetBinLowEdge(0));
+   DrawXYAxis(rnrCtx, ax->GetBinLowEdge(0),ax->GetBinUpEdge(ax->GetNbins()),
+              ay->GetBinLowEdge(0),ay->GetBinUpEdge(ay->GetNbins()));
+
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glPushMatrix();
-   glScalef(1.f, 1.f, fM->fCellZScale);
-   // cell quads
-   {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      glEnable(GL_POLYGON_OFFSET_FILL);
-      glEnable(GL_NORMALIZE);
+   glDisable(GL_LIGHTING); 
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(0.2, 1); 
+   glTranslatef(0, 0, 0.001);
 
-      glPolygonOffset(0.2, 1);
-      glTranslatef(0, 0, 0.001);
+   Int_t es = GetGridStep(0, ax, rnrCtx);
+   Int_t ps = GetGridStep(1, ay, rnrCtx);
+   if(es == 1 && ps == 1)
+      Draw2DOrig();
+   else
+      Draw2DScaled(ax->GetNbins()/es, ay->GetNbins()/ps);
 
-      glPushName(0);
-      for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
-      {
-         TGLUtil::Color(fM->GetPalette()->GetDefaultColor()+i->first);
-         glCallList(i->second);
-      }
-      glPopName();
-   }
-   // cell outlines
-   {
-      if(rnrCtx.SceneStyle() == TGLRnrCtx::kFill)
-      {
-         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-         glDisable(GL_POLYGON_OFFSET_FILL);
-         TGLUtil::Color(1); 
-         for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
-            glCallList(i->second);
-      }
-   }
+
    glPopMatrix();
    glPopAttrib();
 }
