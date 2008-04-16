@@ -3376,7 +3376,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                      dset->GetName());
                return;
             }
-            if (!(fDataSetManager->ParseDataSetUri(dset->GetName(), 0, 0, 0, &dsTree)))
+            if (!(fDataSetManager->ParseUri(dset->GetName(), 0, 0, 0, &dsTree)))
                dsTree = "";
 
             // Apply the lookup option requested by the client or the administartor

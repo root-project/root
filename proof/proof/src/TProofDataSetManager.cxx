@@ -54,6 +54,19 @@ TProofDataSetManager::TProofDataSetManager(const char *group, const char *user,
    //
    // Main constructor
 
+   // Fill default group and user if none is given
+   if (fGroup.IsNull())
+      fGroup = "default";
+   if (fUser.IsNull()) {
+      fUser = "--nouser--";
+      // Get user logon name
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         fUser = pw->fUser;
+         delete pw;
+      }
+   }
+
    fGroupQuota.SetOwner();
    fGroupUsed.SetOwner();
    fUserUsed.SetOwner();
@@ -607,14 +620,41 @@ Int_t TProofDataSetManager::RegisterDataSet(const char *,
 }
 
 //______________________________________________________________________________
-Bool_t TProofDataSetManager::ParseDataSetUri(const char *uri,
-                                             TString *dsGroup, TString *dsUser,
-                                             TString *dsName, TString *dsTree,
-                                             Bool_t onlyCurrent, Bool_t wildcards)
+TString TProofDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
+                                        const char *dsName, const char *dsObjPath)
+{
+   // Creates URI for the dataset manger in the form '[[/dsGroup/]dsUser/]dsName[#dsObjPath]',
+   // The optional dsObjPath can be in the form [subdir/]objname]'.
+
+   TString uri;
+
+   if (dsGroup && strlen(dsGroup) > 0) {
+      if (dsUser && strlen(dsUser) > 0) {
+         uri += Form("/%s/%s/", dsGroup, dsUser);
+      } else {
+         uri += Form("/%s/*/", dsGroup);
+      }
+   } else if (dsUser && strlen(dsUser) > 0) {
+      uri += Form("%s/", dsUser);
+   }
+   if (dsName && strlen(dsName) > 0)
+      uri += dsName;
+   if (dsObjPath && strlen(dsObjPath) > 0)
+      uri += Form("#%s", dsObjPath);
+
+   // Done
+   return uri;
+}
+
+//______________________________________________________________________________
+Bool_t TProofDataSetManager::ParseUri(const char *uri,
+                                      TString *dsGroup, TString *dsUser,
+                                      TString *dsName, TString *dsTree,
+                                      Bool_t onlyCurrent, Bool_t wildcards)
 {
    // Parses a (relative) URI that describes a DataSet on the cluster.
-   // The input 'uri' should be in the form 'dsname[#[subdir/]objname]', where
-   // 'objname' is the name of the object (e.g. the tree name) and the 'subdir'
+   // The input 'uri' should be in the form '[[/group/]user/]dsname[#[subdir/]objname]',
+   //  where 'objname' is the name of the object (e.g. the tree name) and the 'subdir'
    // is the directory in the file wher it should be looked for.
    // After resolving against a base URI consisting of proof://masterhost/group/user/
    // - meaning masterhost, group and user of the current session -
@@ -633,14 +673,14 @@ Bool_t TProofDataSetManager::ParseDataSetUri(const char *uri,
    // Resolve given URI agains the base
    TUri resolved = TUri::Transform(uristr, fBase);
    if (resolved.HasQuery())
-      Info ("ParseDataSetUri", "URI query part <%s> ignored", resolved.GetQuery().Data());
+      Info ("ParseUri", "URI query part <%s> ignored", resolved.GetQuery().Data());
 
    TString path(resolved.GetPath());
    // Must be in the form /group/user/dsname
    Int_t pc = path.CountChar('/');
    if (pc != 3) {
       if (!TestBit(TProofDataSetManager::kIsSandbox)) {
-         Error ("ParseDataSetUri", "illegal dataset path: %s", uri);
+         Error ("ParseUri", "illegal dataset path: %s", uri);
          return kFALSE;
       } else if (pc >= 0 && pc < 3) {
          // Add missing slashes
@@ -656,7 +696,7 @@ Bool_t TProofDataSetManager::ParseDataSetUri(const char *uri,
       }
    }
    if (gDebug > 1)
-      Info("ParseDataSetUri", "path: '%s'", path.Data());
+      Info("ParseUri", "path: '%s'", path.Data());
 
    // Get individual values from tokens
    Int_t from = 1;
@@ -667,20 +707,22 @@ Bool_t TProofDataSetManager::ParseDataSetUri(const char *uri,
 
    // The fragment may contain the subdir and the object name in the form '[subdir/]objname'
    TString tree = resolved.GetFragment();
+   if (tree.EndsWith("/"))
+      tree.Remove(tree.Length()-1);
 
    if (gDebug > 1)
-      Info("ParseDataSetUri", "group: '%s', user: '%s', dsname:'%s', seg: '%s'",
+      Info("ParseUri", "group: '%s', user: '%s', dsname:'%s', seg: '%s'",
                               group.Data(), user.Data(), name.Data(), tree.Data());
 
    // Check for unwanted use of wildcards
    if ((user == "*" || group == "*") && !wildcards) {
-      Error ("ParseDataSetUri", "no wildcards allowed for user/group in this context");
+      Error ("ParseUri", "no wildcards allowed for user/group in this context");
       return kFALSE;
    }
 
    // dsname may only be empty if wildcards expected
    if (name.IsNull() && !wildcards) {
-      Error ("ParseDataSetUri", "DataSet name is empty");
+      Error ("ParseUri", "DataSet name is empty");
       return kFALSE;
    }
 
@@ -689,28 +731,28 @@ Bool_t TProofDataSetManager::ParseDataSetUri(const char *uri,
 
    // Check for illegal characters in all components
    if (!wcExp.Match(group)) {
-      Error("ParseDataSetUri", "illegal characters in group");
+      Error("ParseUri", "illegal characters in group");
       return kFALSE;
    }
 
    if (!wcExp.Match(user)) {
-      Error("ParseDataSetUri", "illegal characters in user");
+      Error("ParseUri", "illegal characters in user");
       return kFALSE;
    }
 
    if (name.Contains(TRegexp("[^A-Za-z0-9-._]"))) {
-      Error("ParseDataSetUri", "illegal characters in dataset name");
+      Error("ParseUri", "illegal characters in dataset name");
       return kFALSE;
    }
 
    if (tree.Contains(TRegexp("[^A-Za-z0-9-/_]"))) {
-      Error("ParseDataSetUri", "Illegal characters in subdir/object name");
+      Error("ParseUri", "Illegal characters in subdir/object name");
       return kFALSE;
    }
 
    // Check user & group
    if (onlyCurrent && (group.CompareTo(fGroup) || user.CompareTo(fUser))) {
-      Error("ParseDataSetUri", "only datasets from your group/user allowed");
+      Error("ParseUri", "only datasets from your group/user allowed");
       return kFALSE;
    }
 
