@@ -1639,8 +1639,8 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       headerfile << "   ~" << classname << "() {}" << endl;
       sourcefile << "#include \"" << header << "\"" << endl;
       sourcefile << "#include <cmath>" << endl << endl;
-      headerfile << "   double value(int index";
-      sourcefile << "double " << classname << "::value(int index";
+      headerfile << "   double Value(int index";
+      sourcefile << "double " << classname << "::Value(int index";
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
          headerfile << ",double in" << i;
          sourcefile << ",double in" << i;
@@ -1656,6 +1656,23 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       TNeuron *neuron;
       TObjArrayIter *it = (TObjArrayIter *) fLastLayer.MakeIterator();
       Int_t idx = 0;
+      while ((neuron = (TNeuron *) it->Next()))
+         sourcefile << "     case " << idx++ << ":" << endl
+                    << "         return neuron" << neuron << "();" << endl;
+      sourcefile << "     default:" << endl
+                 << "         return 0.;" << endl << "   }"
+                 << endl;
+      sourcefile << "}" << endl << endl;
+      headerfile << "   double Value(int index, double* input);" << endl;
+      sourcefile << "double " << classname << "::Value(int index, double* input) {" << endl;
+      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
+         sourcefile << "   input" << i << " = (input[" << i << "] - "
+             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
+             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << ";"
+             << endl;
+      sourcefile << "   switch(index) {" << endl;
+      it = (TObjArrayIter *) fLastLayer.MakeIterator();
+      idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
          sourcefile << "     case " << idx++ << ":" << endl
                     << "         return neuron" << neuron << "();" << endl;

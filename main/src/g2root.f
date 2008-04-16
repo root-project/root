@@ -244,7 +244,7 @@
          go to 90
       endif
       call rzfile(1,chtop,' ')
-      call rzldir(' ',' ')
+*      call rzldir(' ',' ')
 
       call g2rin
 
