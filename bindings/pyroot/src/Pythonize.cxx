@@ -174,6 +174,19 @@ namespace {
       if ( ! pyptr )
          return 0;
 
+   // prevent a potential infinite loop
+      if ( pyptr->ob_type == self->ob_type ) {
+         PyObject* val1 = PyObject_Str( self );
+         PyObject* val2 = PyObject_Str( name );
+         PyErr_Format( PyExc_AttributeError, "%s has no attribute \'%s\'",
+            PyString_AsString( val1 ), PyString_AsString( val2 ) );
+         Py_DECREF( val2 );
+         Py_DECREF( val1 );
+
+         Py_DECREF( pyptr );
+         return 0;
+      }
+
       PyObject* result = PyObject_GetAttr( pyptr, name );
       Py_DECREF( pyptr );
       return result;
