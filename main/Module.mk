@@ -94,17 +94,6 @@ ifeq ($(PLATFORM),win32)
 G2ROOT       :=
 endif
 
-##### g2rootold #####
-G2ROOTOLDS   := $(MODDIRS)/g2rootold.f
-G2ROOTOLDO   := $(G2ROOTOLDS:.f=.o)
-ifeq ($(PLATFORM),win32)
-G2ROOTOLDO   += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
-endif
-G2ROOTOLD    := bin/g2rootold$(EXEEXT)
-ifeq ($(PLATFORM),win32)
-G2ROOTOLD    :=
-endif
-
 ##### ssh2rpd #####
 SSH2RPDS        := $(MODDIRS)/ssh2rpd.cxx
 SSH2RPDO        := $(SSH2RPDS:.cxx=.o)
@@ -118,7 +107,7 @@ endif
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 ifneq ($(F77),)
-ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
+ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
 # include all dependency files
@@ -173,14 +162,9 @@ $(G2ROOT):      $(G2ROOTO) $(ORDER_) $(MINICERNLIB)
 		   $(RPATH) $(MINICERNLIB) \
 		   $(F77LIBS) $(SYSLIBS)
 
-$(G2ROOTOLD):   $(G2ROOTOLDO) $(ROOTLIBSDEP) $(MINICERNLIB)
-		$(F77LD) $(F77LDFLAGS) -o $@ $(G2ROOTOLDO) \
-		   $(RPATH) $(ROOTLIBS) $(MINICERNLIB) \
-		   $(F77LIBS) $(SYSLIBS)
-
 ifneq ($(F77),)
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
+                $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) \
                 $(ROOTSEXE) $(ROOTSSH)
 else
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
@@ -189,14 +173,14 @@ endif
 
 clean-$(MODNAME):
 		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) \
-		   $(G2ROOTO) $(G2ROOTOLDO) $(SSH2RPDO) $(ROOTSEXEO)
+		   $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
 		   $(PROOFSERVEXE) $(PROOFSERVSH) $(HADDDEP) $(HADD) \
-		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
+		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
 		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) $(ROOTSSH)
 
 distclean::     distclean-$(MODNAME)
