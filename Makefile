@@ -206,8 +206,10 @@ endif
 ifeq ($(BUILDGLOBUS),yes)
 MODULES      += net/globusauth
 endif
-ifeq ($(BUILDHBOOK),yes)
-MODULES      += hist/hbook
+# comment out to test minicern
+F77 :=
+ifneq ($(F77),)
+MODULES      += misc/minicern hist/hbook
 endif
 ifeq ($(BUILDXRD),yes)
 ifneq ($(XROOTDDIR),)
@@ -244,7 +246,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
                 rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
-                bindings/pyroot bindings/ruby io/gfal \
+                bindings/pyroot bindings/ruby io/gfal misc/minicern \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \

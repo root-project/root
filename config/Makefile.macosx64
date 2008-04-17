@@ -85,7 +85,7 @@ endif
 else
 ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
 F77          := gfortran
-F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT))
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.dylib)
 F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
 endif
 endif
@@ -104,12 +104,6 @@ F77FLAGS      = -m64
 # same fortran we use.
 ifeq ($(MACOSX_CPU),powerpc)
 F77LIBS += -L$(FINK_DIR)/lib -lg2c
-endif
-
-ifneq ($(F77),)
-ifeq ($(shell find $(FINK_DIR)/bin -name $(F77)),)
-BUILDHBOOK   := no
-endif
 endif
 
 # Override default in Makefile.config

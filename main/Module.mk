@@ -117,7 +117,7 @@ endif
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
-ifeq ($(BUILDHBOOK),yes)
+ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
 
@@ -165,21 +165,20 @@ $(SSH2RPD):     $(SSH2RPDO) $(SNPRINTFO)
 
 $(H2ROOT):      $(H2ROOTO) $(ROOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(H2ROOTO) \
-		   $(RPATH) $(ROOTLIBS) \
-		   $(CERNLIBDIR) $(CERNLIBS) $(SHIFTLIBDIR) \
-		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
+		   $(RPATH) $(ROOTLIBS) $(MINICERNLIB) \
+		   $(F77LIBS) $(SYSLIBS)
 
 $(G2ROOT):      $(G2ROOTO)
 		$(F77LD) $(F77LDFLAGS) -o $@ $(G2ROOTO) \
-		   $(CERNLIBDIR) $(CERNLIBS) $(SHIFTLIBDIR) \
-		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
+		   $(RPATH) $(MINICERNLIB) \
+		   $(F77LIBS) $(SYSLIBS)
 
 $(G2ROOTOLD):   $(G2ROOTOLDO)
 		$(F77LD) $(F77LDFLAGS) -o $@ $(G2ROOTOLDO) \
-		   $(CERNLIBDIR) $(CERNLIBS) $(SHIFTLIBDIR) \
-		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
+		   $(RPATH) $(ROOTLIBS) $(MINICERNLIB) \
+		   $(F77LIBS) $(SYSLIBS)
 
-ifeq ($(BUILDHBOOK),yes)
+ifneq ($(F77),)
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
                 $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
                 $(ROOTSEXE) $(ROOTSSH)

@@ -100,7 +100,7 @@ F77           = ifort
 F77FLAGS      =
 F77LIBS       =
 ifneq ($(shell find $(FINK_DIR)/bin -name gfortran),)
-F77LIBS      := $(shell gfortran -print-file-name=libgfortran.$(SOEXT))
+F77LIBS      := $(shell gfortran -print-file-name=libgfortran.dylib)
 F77LIBS      += $(shell gfortran -print-file-name=libgfortranbegin.a)
 endif
 F77LIBS      += -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
