@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 11/30/07
+# Last: 04/16/08
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -17,7 +17,8 @@ __all__ = [
    'Regression5LoKiNamespaceTestCase',
    'Regression6Int64ConversionTestCase',
    'Regression7MatchConstWithProperReturn',
-   'Regression8UseNamespaceProperlyInPythonize'
+   'Regression8UseNamespaceProperlyInPythonize',
+   'Regression9BreakSmartPtrCircularLoop'
 ]
 
 
@@ -204,6 +205,15 @@ class Regression9CheckEnumExactMatch( unittest.TestCase ):
       self.assertEqual( fish, a.testEnum1( fish ) )
       self.assertEqual( cow,  a.testEnum2( cow ) )
       self.assertEqual( bird, a.testEnum3( bird ) )
+
+### "smart" classes that return themselves on dereference cause a loop =======
+class Regression9BreakSmartPtrCircularLoop( unittest.TestCase ):
+   def test1VerifyNoLoopt( self ):
+      """Smart class that returns itself on dereference should not loop"""
+
+      gROOT.LoadMacro( "Scott3.C+" )
+      a = MyTooSmartClass()
+      self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
 
 
 ## actual test run
