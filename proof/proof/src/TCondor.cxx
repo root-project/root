@@ -28,7 +28,6 @@
 #include "Riostream.h"
 #include "TEnv.h"
 #include "TClass.h"
-#include <stdlib.h>
 
 ClassImp(TCondorSlave)
 ClassImp(TCondor)

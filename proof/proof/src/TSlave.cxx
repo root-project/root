@@ -34,7 +34,6 @@
 #include "TThread.h"
 #include "TSocket.h"
 #include "TObjString.h"
-#include <stdlib.h>
 
 ClassImp(TSlave)
 
