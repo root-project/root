@@ -36,7 +36,7 @@
 #include "TSocket.h"
 #include "TProofServ.h"
 #include "TProof.h"
-#include "TProofFile.h"
+#include "TProofOutputFile.h"
 #include "TProofSuperMaster.h"
 #include "TSlave.h"
 #include "TClass.h"
@@ -894,10 +894,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       TObject *o = 0;
       while ((o = nxo())) {
          // Special treatment for files
-         if (o->IsA() == TProofFile::Class()) {
-            ((TProofFile *)o)->SetWorkerOrdinal(gProofServ->GetOrdinal());
-            if (!strcmp(((TProofFile *)o)->GetDir(),""))
-               ((TProofFile *)o)->SetDir(gProofServ->GetSessionDir());
+         if (o->IsA() == TProofOutputFile::Class()) {
+            ((TProofOutputFile *)o)->SetWorkerOrdinal(gProofServ->GetOrdinal());
+            if (!strcmp(((TProofOutputFile *)o)->GetDir(),""))
+               ((TProofOutputFile *)o)->SetDir(gProofServ->GetSessionDir());
          }
       }
 
@@ -1475,7 +1475,7 @@ Bool_t  TProofPlayerRemote::MergeOutputFiles()
    // Merge output in files
 
    if (fMergeFiles) {
-      TFileMerger *filemerger = TProofFile::GetFileMerger();
+      TFileMerger *filemerger = TProofOutputFile::GetFileMerger();
       if (!filemerger) {
          Error("MergeOutputFiles", "file merger is null in gProofServ! Protocol error?");
          return kFALSE;
@@ -1915,7 +1915,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    }
 
    // Check if we need to merge files
-   TProofFile *pf = dynamic_cast<TProofFile*>(obj);
+   TProofOutputFile *pf = dynamic_cast<TProofOutputFile*>(obj);
    if (pf) {
       if (!strcmp(pf->GetMode(),"CENTRAL"))
          fMergeFiles = kTRUE;
