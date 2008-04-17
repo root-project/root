@@ -169,17 +169,25 @@ int *info;
       info[4] = (int) buf.st_uid;
       info[5] = (int) buf.st_gid;
       info[6] = (int) buf.st_size;
-#ifdef __APPLE__
+#if defined(__APPLE__)
       info[7] = (int) buf.st_atimespec.tv_sec;
       info[8] = (int) buf.st_mtimespec.tv_sec;
       info[9] = (int) buf.st_ctimespec.tv_sec;
+      info[10] = (int) buf.st_blksize;
+      info[11] = (int) buf.st_blocks;
+#elif defined(WIN32)
+      info[7] = 0;
+      info[8] = 0;
+      info[9] = 0;
+      info[10] = 0;
+      info[11] = 0;
 #else
       info[7] = (int) buf.st_atim.tv_sec;
       info[8] = (int) buf.st_mtim.tv_sec;
       info[9] = (int) buf.st_ctim.tv_sec;
-#endif
       info[10] = (int) buf.st_blksize;
       info[11] = (int) buf.st_blocks;
+#endif
    };
    free(ptname);
    return istat;
