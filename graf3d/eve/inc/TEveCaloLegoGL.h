@@ -22,9 +22,6 @@ class TEveCaloLego;
 
 class TEveCaloLegoGL : public TGLObject
 {
-public:
-   enum EMode { kDetailed, k2D };
-
 private:
    TEveCaloLegoGL(const TEveCaloLegoGL&);            // Not implemented
    TEveCaloLegoGL& operator=(const TEveCaloLegoGL&); // Not implemented
@@ -42,9 +39,9 @@ protected:
    void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
    void    Draw2D(TGLRnrCtx & rnrCt) const;
-   void    Draw2DOrig() const;
-   void    Draw2DScaled(Int_t nEta, Int_t nPhi) const;
-   void    DrawDetailed(TGLRnrCtx & rnrCtx) const;
+   void    Draw2DValSize() const;
+   void    Draw2DValColor(Int_t nEta, Int_t nPhi) const;
+   void    Draw3D(TGLRnrCtx & rnrCtx) const;
 
    void    MakeQuad(Float_t x, Float_t y, Float_t z, 
                     Float_t xw, Float_t yw, Float_t zh) const;
@@ -52,8 +49,6 @@ protected:
 
    mutable Bool_t                   fDLCacheOK;
    mutable std::map< Int_t, UInt_t> fDLMap;
-
-   mutable EMode                    fMode;
 
    TEveCaloLego            *fM;  // Model object.
 

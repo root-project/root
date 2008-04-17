@@ -387,7 +387,9 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
    fFontColor(0),
    fGridColor(kGray+3),
    fFontSize(10),
-   fNZStep(5)
+   fNZStep(5),
+   fProjection(kAuto),
+   f2DMode(kValColor)
 {
    // Constructor.
 
@@ -401,7 +403,9 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    fFontColor(0),
    fGridColor(kGray+3),
    fFontSize(10),
-   fNZStep(5)
+   fNZStep(5),
+   fProjection(kAuto),
+   f2DMode(kValColor)
 {
    // Constructor.
 

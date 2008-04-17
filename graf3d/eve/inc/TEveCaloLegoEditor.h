@@ -18,6 +18,7 @@ class TGButton;
 class TGCheckButton;
 class TGNumberEntry;
 class TGColorSelect;
+class TGComboBox;
 class TEveGValuator;
 
 class TEveCaloLego;
@@ -27,16 +28,20 @@ class TEveCaloLegoEditor : public TGedFrame
 private:
    TEveCaloLegoEditor(const TEveCaloLegoEditor&);            // Not implemented
    TEveCaloLegoEditor& operator=(const TEveCaloLegoEditor&); // Not implemented
+   TGComboBox*  MakeLabeledCombo(const char* name, Int_t off);
 
 protected:
    TEveCaloLego            *fM; // Model object.
 
-   TGColorSelect*    fGridColor;
+   TGColorSelect*     fGridColor;
 
    TGColorSelect*     fFontColor;
    TEveGValuator     *fFontSize;
-   TEveGValuator     *fNZStep
-;
+   TEveGValuator     *fNZStep;
+
+   TGComboBox        *fProjection;
+   TGComboBox        *f2DMode;
+
 public:
    TEveCaloLegoEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
@@ -50,6 +55,9 @@ public:
 
    void DoFontSize();
    void DoNZStep();
+
+   void DoProjection();
+   void Do2DMode();
 
    ClassDef(TEveCaloLegoEditor, 0); // GUI editor for TEveCaloLego.
 };

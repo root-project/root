@@ -167,6 +167,10 @@ class TEveCaloLego : public TEveCaloViz
 {
    friend class TEveCaloLegoGL;
 
+public:
+   enum EProjection_e { kAuto, k3D, k2D };
+   enum E2DMode_e     { kValColor, kValSize };
+
 private:
    TEveCaloLego(const TEveCaloLego&);            // Not implemented
    TEveCaloLego& operator=(const TEveCaloLego&); // Not implemented
@@ -180,6 +184,9 @@ protected:
    Int_t                   fFontSize; // font size in % of projected y axis
    Int_t                   fNZStep; // Z axis label step in GeV
 
+   EProjection_e           fProjection;
+   E2DMode_e               f2DMode;
+
 public:
    TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");
    TEveCaloLego(TEveCaloData* data);
@@ -187,16 +194,22 @@ public:
    virtual ~TEveCaloLego(){}
 
    Color_t  GetFontColor() const { return fFontColor; }
+   void     SetFontColor(Color_t ci) { fFontColor=ci; }
+
    Color_t  GetGridColor() const { return fGridColor; }
+   void     SetGridColor(Color_t ci) { fGridColor=ci; }
   
-   Int_t  GetFontSize() const { return fFontSize; }
+   Int_t    GetFontSize() const { return fFontSize; }
+   void     SetFontSize(Int_t fs) { fFontSize = fs; }
+
    Int_t  GetNZStep() const { return fNZStep; }
-
-   void   SetFontColor(Color_t ci) { fFontColor=ci; }
-   void   SetGridColor(Color_t ci) { fGridColor=ci; }
-
-   void   SetFontSize(Int_t fs) { fFontSize = fs; }
    void   SetNZStep(Int_t s) { fNZStep = s;}
+
+   void           SetProjection(EProjection_e p) { fProjection = p; }
+   EProjection_e  GetProjection() { return fProjection; }
+
+   void       Set2DMode(E2DMode_e p) { f2DMode = p; }
+   E2DMode_e  Get2DMode() { return f2DMode; }
 
    virtual Float_t GetDefaultCellHeight() const;
 
