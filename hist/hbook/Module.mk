@@ -20,10 +20,8 @@ HBOOKDH      := $(HBOOKDS:.cxx=.h)
 
 HBOOKH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HBOOKS1      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-HBOOKS2      := $(MODDIRS)/hntvar2.f
 HBOOKO1      := $(HBOOKS1:.cxx=.o)
-HBOOKO2      := $(HBOOKS2:.f=.o)
-HBOOKO       := $(HBOOKO1) $(HBOOKO2)
+HBOOKO       := $(HBOOKO1)
 
 HBOOKDEP     := $(HBOOKS1:.cxx=.d) $(HBOOKDO:.o=.d)
 
@@ -47,7 +45,7 @@ include/%.h:    $(HBOOKDIRI)/%.h
 $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(ORDER_) $(MAINLIBS) $(HBOOKLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHbook.$(SOEXT) $@ "$(HBOOKO1) $(HBOOKDO)" \
-		   "$(HBOOKO2) $(CERNLIBDIR) $(CERNLIBS) \
+		   "$(CERNLIBDIR) $(CERNLIBS) \
 		    $(SHIFTLIBDIR) $(SHIFTLIB) $(HBOOKLIBEXTRA) $(F77LIBS)"
 
 $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP)
