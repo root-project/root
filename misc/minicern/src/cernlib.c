@@ -185,7 +185,7 @@ int cfopen_perm = 0;
 void cfopei_(int *lundes,int *medium,int *nwrec,int *mode,int *nbuf,char *ftext,int *stat,int *lgtx)
 {
    char *pttext, *fchtak();
-   int flags;
+   int flags = 0;
    int fildes;
    int perm;
    if (nwrec || nbuf) { }
