@@ -84,7 +84,8 @@
       ID    = ID1
       IDPOS = LOCATI(IQ(LTAB+1),IQ(LCDIR+KNRH),ID)
       IF (IDPOS .LE. 0) THEN
-         CALL HBUG('Unknown N-tuple','HNTVAR',ID1)
+*         CALL HBUG('Unknown N-tuple','HNTVAR',ID1)
+         print *, 'Unknown Ntuple ',ID1
          RETURN
       ENDIF
       LCID  = LQ(LTAB-IDPOS)
