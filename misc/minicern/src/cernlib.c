@@ -8,12 +8,15 @@
 
 #include <sys/stat.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 
 char *fchtak(ftext,lgtext)
       char *ftext;
       int  lgtext;
 {
-      char *malloc();
       char *ptalc, *ptuse;
       char *utext;
       int  nalc;
@@ -80,12 +83,12 @@ int *iv, *ixv, *n;
 
 //------------------------------------------------------------------------------
 
-void cfget_(lundes, medium, nwrec, nwtak, mbuf, stat)
-char *mbuf;
-int *lundes, *medium, *nwrec, *nwtak, *stat;   
+void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf, int *stat)
 {
    int fildes;   
    int nbdn, nbdo;   
+
+   if (medium) { }
 
    *stat = 0;   
    if (*nwtak <= 0) return;   
@@ -95,9 +98,8 @@ int *lundes, *medium, *nwrec, *nwtak, *stat;
    nbdn = read (fildes, mbuf, nbdo);   
    if (nbdn == 0) goto heof;   
    if (nbdn < 0) goto herror;   
-   retn:
-      *nwtak = (nbdn - 1) / 4 + 1;
-      return;   
+   *nwtak = (nbdn - 1) / 4 + 1;
+   return;   
    heof:
       *stat = -1;
       return;
@@ -109,12 +111,13 @@ int *lundes, *medium, *nwrec, *nwtak, *stat;
 
 //------------------------------------------------------------------------------
 
-void cfseek_(lundes, medium, nwrec, jcrec, stat)
-int *lundes, *medium, *nwrec, *jcrec, *stat;
+void cfseek_(int *lundes, int *medium, int *nwrec, int *jcrec, int *stat)
 {
    int fildes;
    int nbdo;
    int isw;
+
+   if (medium) { }
 
    fildes = *lundes;
    nbdo = *jcrec * *nwrec * 4;
@@ -130,10 +133,10 @@ int *lundes, *medium, *nwrec, *jcrec, *stat;
 
 //------------------------------------------------------------------------------
 
-void cfclos_(lundes, medium)
-int *lundes, *medium;
+void cfclos_(int *lundes, int *medium)
 {
    int fildes;
+   if (medium) { }
    fildes = *lundes;
    close (fildes);
    return;
@@ -160,9 +163,15 @@ int *info;
       info[4] = (int) buf.st_uid;
       info[5] = (int) buf.st_gid;
       info[6] = (int) buf.st_size;
+#ifdef __APPLE__
+      info[7] = (int) buf.st_atimespec.tv_sec;
+      info[8] = (int) buf.st_mtimespec.tv_sec;
+      info[9] = (int) buf.st_ctimespec.tv_sec;
+#else
       info[7] = (int) buf.st_atim.tv_sec;
       info[8] = (int) buf.st_mtim.tv_sec;
       info[9] = (int) buf.st_ctim.tv_sec;
+#endif
       info[10] = (int) buf.st_blksize;
       info[11] = (int) buf.st_blocks;
    };
@@ -173,15 +182,13 @@ int *info;
 //------------------------------------------------------------------------------
 
 int cfopen_perm = 0;
-void cfopei_(lundes,medium,nwrec,mode,nbuf,ftext,stat,lgtx)
-      char *ftext;
-      int *lundes, *medium, *nwrec, *nbuf, *stat, *lgtx;
-      int *mode;
+void cfopei_(int *lundes,int *medium,int *nwrec,int *mode,int *nbuf,char *ftext,int *stat,int *lgtx)
 {
    char *pttext, *fchtak();
    int flags;
    int fildes;
    int perm;
+   if (nwrec || nbuf) { }
    *lundes = 0;
    *stat = -1;
    perm = cfopen_perm;
