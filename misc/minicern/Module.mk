@@ -37,7 +37,7 @@ include/%.h:    $(MINICERNDIRI)/%.h
 
 $(MINICERNLIB): $(MINICERNO) $(ORDER_) $(MINICERNLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libmincern.$(SOEXT) $@ "$(MINICERNO1)" \
+		   "$(SOFLAGS)" libminicern.$(SOEXT) $@ "$(MINICERNO1)" \
 		   "$(MINICERNO2) $(MINICERNLIBEXTRA) $(F77LIBS)"
 
 all-$(MODNAME): $(MINICERNLIB)
