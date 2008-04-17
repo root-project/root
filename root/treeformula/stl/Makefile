@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log mapvector.root
 #  the name of the target is changed in the rules then the name should be changed accordingly in
 #  this list.
 
-TEST_TARGETS += embedstl pair  stlString mapvector
+TEST_TARGETS += embedstl pair  stlString mapvector secondindex
 #stlBrowse
 
 # Searched for Rules.mk in roottest/scripts
@@ -78,3 +78,5 @@ mapvector.log: mapvector.root
 mapvector: mapvector.log
 	$(TestDiff)
 
+secondindex: secondindex.log
+	$(TestDiff)
