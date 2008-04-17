@@ -31,7 +31,12 @@ struct SEnumFunctor {
 // A functor for the find_if algorithm
 struct SFind {
    // using this ugly constructor, since there is problems with std::bindX in CINT
+#ifdef __CINT__
+   SFind(const SFind &oth) : fToFind(oth.fToFind) {}
+   SFind(const TString aStr): fToFind(aStr) {
+#else
    SFind(const TString &aStr): fToFind(aStr) {
+#endif
    }
    bool operator()(TObject *aObj) {
       TObjString *str(dynamic_cast<TObjString*>(aObj));
@@ -63,12 +68,12 @@ void TListAndSTL()
    TIter iter(&list);
    for_each(iter.Begin(), TIter::End(), SEnumFunctor());
 
-
    //->>>>>>> Example #2 <<<<<<<-
    // we can try to find something in the container
    // using the std::find_if algorithm on the list
    string strToFind("test string #4");
    SFind func(strToFind.c_str());
+
 
 #ifdef __CINT__
    TIter found(
