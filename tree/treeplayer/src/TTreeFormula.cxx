@@ -3225,7 +3225,10 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                // Let's update fCumulSizes for the rest of the code.
                Int_t vdim = info->GetVarDim();
                Int_t isize = info->GetSize(local_index);
-               if (fIndexes[codeindex][vdim]>isize) {
+               if (fIndexes[codeindex][vdim]>=0) {
+                  info->SetSecondaryIndex(fIndexes[codeindex][vdim]); 
+               }
+               if  (isize!=1 && fIndexes[codeindex][vdim]>isize) {
                   // We are out of bounds!
                   return fNdata[0]+1;
                }
@@ -3271,7 +3274,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                }
             }
             if (fIndexes[codeindex][max_dim]>=0) {
-               real_instance += fIndexes[codeindex][max_dim];
+               if (!info) real_instance += fIndexes[codeindex][max_dim];
             } else {
                Int_t local_index;
                if (virt_dim && fManager->fCumulUsedSizes[virt_dim]>1) {

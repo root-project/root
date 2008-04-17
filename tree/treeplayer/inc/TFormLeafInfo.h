@@ -87,6 +87,7 @@ public:
    virtual Int_t GetSumOfSizes();
    virtual void  LoadSizes(TBranch* branch);
    virtual void  SetPrimaryIndex(Int_t index);
+   virtual void  SetSecondaryIndex(Int_t index);
    virtual void  SetSize(Int_t index, Int_t val);
    virtual void  SetBranch(TBranch* br)  { if ( fNext ) fNext->SetBranch(br); }
    virtual void  UpdateSizes(TArrayI *garr);
@@ -320,10 +321,11 @@ public:
    Int_t fDim;               // physical number of the dimension that is variable
    Int_t fVirtDim;           // number of the virtual dimension to which this object correspond.
    Int_t fPrimaryIndex;      // Index of the dimensions that is indexing the second dimension's size
+   Int_t fSecondaryIndex;    // Index of the second dimension
    
 protected:
    TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
-                            TStreamerElement* element) : TFormLeafInfo(classptr,offset,element) {}
+                            TStreamerElement* element) : TFormLeafInfo(classptr,offset,element),fPrimaryIndex(-1),fSecondaryIndex(-1) {}
 
 public:
    TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
@@ -343,6 +345,7 @@ public:
    virtual void     LoadSizes(TBranch* branch);
    virtual Int_t    GetPrimaryIndex();
    virtual void     SetPrimaryIndex(Int_t index);
+   virtual void     SetSecondaryIndex(Int_t index);
    virtual void     SetSize(Int_t index, Int_t val);
    virtual Int_t    GetSize(Int_t index);
    virtual Int_t    GetSumOfSizes();

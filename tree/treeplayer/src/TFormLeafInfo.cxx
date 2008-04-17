@@ -430,6 +430,13 @@ void TFormLeafInfo::SetPrimaryIndex(Int_t index)
 }
 
 //______________________________________________________________________________
+void TFormLeafInfo::SetSecondaryIndex(Int_t index)
+{
+   // Set the primary index value
+   if (fNext) fNext->SetSecondaryIndex(index);
+}
+
+//______________________________________________________________________________
 void TFormLeafInfo::SetSize(Int_t index, Int_t val)
 {
    // Set the current size of the arrays
@@ -2060,7 +2067,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,
                                                     TStreamerElement* element,
                                                     TFormLeafInfo* parent) :
    TFormLeafInfo(classptr,offset,element),fNsize(0),fCounter2(0),fSumOfSizes(0),
-   fDim(0),fVirtDim(-1),fPrimaryIndex(-1)
+   fDim(0),fVirtDim(-1),fPrimaryIndex(-1),fSecondaryIndex(-1)
 {
    // Constructor.
 
@@ -2081,7 +2088,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,
 //______________________________________________________________________________
 TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim() :
    TFormLeafInfo(0,0,0),fNsize(0),fCounter2(0),fSumOfSizes(0),
-   fDim(0),fVirtDim(-1),fPrimaryIndex(-1)
+   fDim(0),fVirtDim(-1),fPrimaryIndex(-1),fSecondaryIndex(-1)
 {
    // Constructor.
 }
@@ -2098,6 +2105,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDi
    fDim = orig.fDim;
    fVirtDim = orig.fVirtDim;
    fPrimaryIndex = orig.fPrimaryIndex;
+   fSecondaryIndex = orig.fSecondaryIndex;
 }
 
 //______________________________________________________________________________
@@ -2170,6 +2178,13 @@ void TFormLeafInfoMultiVarDim::SetPrimaryIndex(Int_t index)
 {
    // Set the current value of the primary index.
    fPrimaryIndex = index;
+}
+
+//______________________________________________________________________________
+void TFormLeafInfoMultiVarDim::SetSecondaryIndex(Int_t index)
+{
+   // Set the current value of the primary index.
+   fSecondaryIndex = index;
 }
 
 //______________________________________________________________________________
@@ -2389,6 +2404,14 @@ void TFormLeafInfoMultiVarDimCollection::LoadSizes(TBranch* branch)
 Double_t TFormLeafInfoMultiVarDimCollection::ReadValue(char *where, Int_t instance)
 {
    // Return the value of the underlying data.
+   if (fSecondaryIndex>=0) {
+      UInt_t len = fNext->GetArrayLength();
+      if (len) {
+         instance = fSecondaryIndex*len;
+      } else {
+         instance = fSecondaryIndex;
+      }
+   }
    return fNext->ReadValue(where,instance);
 }
 
@@ -2501,6 +2524,14 @@ Double_t TFormLeafInfoMultiVarDimClones::ReadValue(char *where, Int_t instance)
 {
    // Return the value of the underlying data.
 
+   if (fSecondaryIndex>=0) {
+      UInt_t len = fNext->GetArrayLength();
+      if (len) {
+         instance = fSecondaryIndex*len;
+      } else {
+         instance = fSecondaryIndex;
+      }
+   }
    return fNext->ReadValue(where,instance);
 }
 
