@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog 
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += noname 
+TEST_TARGETS += noname simple i_simple
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -62,4 +62,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 noname: noname.log
+	$(TestDiff)
+
+simple: simple.clog
+	$(TestDiff)
+
+i_simple: simple.log
 	$(TestDiff)
