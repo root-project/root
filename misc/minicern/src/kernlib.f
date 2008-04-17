@@ -325,6 +325,12 @@
 
 *-------------------------------------------------------------------------------
 
+      SUBROUTINE UCOPYI (IA,IB,N)
+      DIMENSION IA(*),IB(*)
+      IF (N.EQ.0) RETURN
+         DO 21 I=1,N
+   21 IB(I)=IA(I)
+      END
       SUBROUTINE UCOPY (A,B,N)
       DIMENSION A(*),B(*)
       IF (N.EQ.0) RETURN
