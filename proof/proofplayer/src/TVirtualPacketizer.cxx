@@ -284,7 +284,7 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
    }
 
    // Final report only once (to correctly determine the proc time)
-   if (fProcessed >= fTotalEntries)
+   if (fTotalEntries > 0 && fProcessed >= fTotalEntries)
       SetBit(TVirtualPacketizer::kIsDone);
 
    // send message to client;
