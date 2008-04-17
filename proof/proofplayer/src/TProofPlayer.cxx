@@ -1330,16 +1330,16 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
             AddOutputObject(tmpStatus);
          }
          // Estimate how much data are missing
-         Long64_t ngood = dset->GetListOfElements()->GetSize();
-         Long64_t nbad = listOfMissingFiles->GetSize();
+         Int_t ngood = dset->GetListOfElements()->GetSize();
+         Int_t nbad = listOfMissingFiles->GetSize();
          Double_t xb = Double_t(nbad) / Double_t(ngood + nbad);
-         msg = Form("Some files were missing: about %.1\%; details in"
-                    " the 'missingFiles' list", xb * 100.);
+         msg = Form(" About %.2f %c of the requested files (%d out of %d) were missing; details in"
+                    " the 'missingFiles' list", xb * 100., '%', nbad, nbad + ngood);
          tmpStatus->Add(msg.Data());
          msg = Form(" +++\n"
-                    " +++ Some files were missing: about %.1\%; details in"
+                    " +++ About %.2f %c of the requested files (%d out of %d) are missing; details in"
                     " the 'missingFiles' list\n"
-                    " +++", xb * 100.);
+                    " +++", xb * 100., '%', nbad, nbad + ngood);
          gProofServ->SendAsynMessage(msg.Data());
       } else {
          // Cleanup
