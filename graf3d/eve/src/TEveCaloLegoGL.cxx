@@ -797,7 +797,7 @@ void TEveCaloLegoGL::Draw2DValColor(Int_t nEta, Int_t nPhi) const
       cid++;
    }
    glEnd();
-   fM->fPalette->SetMax(max);
+   fM->fPalette->SetMax(FloorNint(max));
 
    // draw grid
    TGLUtil::Color(fM->fGridColor);
