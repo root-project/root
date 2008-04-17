@@ -6,11 +6,17 @@
 //
 //------------------------------------------------------------------------------
 
-#include <sys/stat.h>
+#ifdef WIN32
+#  include <io.h>
+typedef long off_t;
+#else
+#  include <unistd.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 
 char *fchtak(ftext,lgtext)
