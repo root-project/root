@@ -57,7 +57,8 @@ TGLEventHandler::TGLEventHandler(const char *name, TGWindow *w, TObject *obj,
    fLastMouseOverPos   (-1, -1),
    fLastMouseOverShape (0),
    fActiveButtonID     (0),
-   fLastEventState     (0)
+   fLastEventState     (0),
+   fInPointerGrab      (kFALSE)
 {
    // Constructor.
 
@@ -277,6 +278,8 @@ Bool_t TGLEventHandler::HandleCrossing(Event_t *event)
       fGLViewer->Activated();
    }
    if (event->fType == kLeaveNotify) {
+      if (fGLViewer->fAction = TGLViewer::kDragNone)
+         Warning("TGLEventHandler::HandleCrossing", "drag-action set at leave-notify.");
       fGLViewer->fAction = TGLViewer::kDragNone;
       if (fMouseTimer) {
          fMouseTimer->Reset();
@@ -414,10 +417,24 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
             }
          }
       }
+
+      if (grabPointer)
+      {
+         gVirtualX->GrabPointer(fGLViewer->GetGLWidget()->GetContId(),
+                                kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
+                                kNone, kNone, kTRUE, kFALSE);
+         fInPointerGrab = kTRUE;
+      }
    }
    // Button UP
    else if (event->fType == kButtonRelease)
    {
+      if (fInPointerGrab)
+      {
+         gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+         fInPointerGrab = kFALSE;
+      }
+
       if (fGLViewer->fAction == TGLViewer::kDragOverlay)
       {
          fGLViewer->fCurrentOvlElm->Handle(*fGLViewer->fRnrCtx, fGLViewer->fOvlSelRec, event);

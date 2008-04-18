@@ -38,6 +38,7 @@ protected:
    TGLPhysicalShape *fLastMouseOverShape;
    UInt_t            fActiveButtonID;
    UInt_t            fLastEventState;
+   Bool_t            fInPointerGrab;
 
 public:
    TGLEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="");
