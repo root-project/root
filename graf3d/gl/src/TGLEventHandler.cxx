@@ -401,7 +401,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                      }
                      Int_t    x, y;
                      Window_t childdum;
-                     gVirtualX->TranslateCoordinates(fGLViewer->fGLWindow->GetId(),
+                     gVirtualX->TranslateCoordinates(fGLViewer->fGLWidget->GetId(),
                                                      gClient->GetDefaultRoot()->GetId(),
                                                      event->fX, event->fY, x, y, childdum);
                      selected->InvokeContextMenu(*fGLViewer->fContextMenu, x, y);

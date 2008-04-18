@@ -62,7 +62,7 @@ private:
    TGPopupMenu       *fFileSaveMenu;
    TGPopupMenu       *fCameraMenu;
    TGPopupMenu       *fHelpMenu;
-   TGLRenderArea     *fGLArea;
+
    // Ged
    TGCompositeFrame  *fLeftVerticalFrame;
    TGedEditor        *fGedEditor;
@@ -118,7 +118,7 @@ public:
    void ToggleOrthoRotate();
    void ToggleOrthoDolly();
 
-   ClassDef(TGLSAViewer, 0) // Standalone GL viewer
+   ClassDef(TGLSAViewer, 0); // Standalone GL viewer.
 };
 
 #endif

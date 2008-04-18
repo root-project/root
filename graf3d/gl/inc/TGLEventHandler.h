@@ -28,8 +28,8 @@
 class TGLViewer;
 class TGLPhysicalShape;
 
-class TGLEventHandler : public TGEventHandler {
-
+class TGLEventHandler : public TGEventHandler
+{
 protected:
    TGLViewer        *fGLViewer;
    TTimer           *fMouseTimer;     // mouse delay timer

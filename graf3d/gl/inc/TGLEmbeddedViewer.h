@@ -23,12 +23,11 @@
 class TGLRenderArea;
 class TGLEventHandler;
 
-class TGLEmbeddedViewer : public TGLViewer {
-
+class TGLEmbeddedViewer : public TGLViewer
+{
 private:
    // GUI components
    TGCompositeFrame  *fFrame;
-   TGLRenderArea     *fGLArea;
 
    void CreateFrames();
 
@@ -40,7 +39,6 @@ public:
    ~TGLEmbeddedViewer();
 
    virtual const char *GetName() const { return "GLViewer"; }
-   TGLWidget          *GetGLWindow() const { return fGLWindow; }
 
    TGCompositeFrame*   GetFrame() const { return fFrame; }
 
@@ -48,7 +46,7 @@ public:
    TGLOrthoCamera     *GetOrthoXOZCamera() { return &fOrthoXOZCamera; }
    TGLOrthoCamera     *GetOrthoZOYCamera() { return &fOrthoZOYCamera; }
 
-   ClassDef(TGLEmbeddedViewer, 0) // Embedded GL viewer
+   ClassDef(TGLEmbeddedViewer, 0); // Embedded GL viewer.
 };
 
 #endif

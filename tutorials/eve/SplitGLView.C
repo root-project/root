@@ -1225,7 +1225,7 @@ void SplitGLView::ItemClicked(TGListTreeItem *item, Int_t, Int_t, Int_t)
       //v->Activated();
       if (v->InheritsFrom("TGLEmbeddedViewer")) {
          TGLEmbeddedViewer *ev = (TGLEmbeddedViewer *)v;
-         gVirtualX->SetInputFocus(ev->GetGLWindow()->GetContainer()->GetId());
+         gVirtualX->SetInputFocus(ev->GetGLWidget()->GetContainer()->GetId());
       }
    }
 }

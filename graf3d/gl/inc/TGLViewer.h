@@ -94,7 +94,7 @@ protected:
    TGLOverlayElement  * fCurrentOvlElm;        //! current overlay element
    TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
 
-   TGEventHandler      *fEventHandler;
+   TGEventHandler      *fEventHandler;         //! event handler
 
    // Mouse ineraction
 public:
@@ -143,7 +143,7 @@ protected:
    void        SetupCameras(Bool_t reset);
 
 protected:
-   TGLWidget         *fGLWindow;
+   TGLWidget         *fGLWidget;
    Int_t              fGLDevice; //!for embedded gl viewer
    TGLContextIdentity*fGLCtxId;  //!for embedded gl viewer
 
@@ -183,6 +183,8 @@ public:
    virtual void   ResetCamerasAfterNextUpdate() { fResetCamerasOnNextUpdate = kTRUE; }
 
    virtual void   RefreshPadEditor(TObject* = 0) {}
+
+   TGLWidget* GetGLWidget() { return fGLWidget; }
 
    Int_t   GetDev()          const           { return fGLDevice; }
    Color_t GetClearColor()   const           { return fClearColor; }
@@ -262,9 +264,7 @@ public:
    virtual void DoubleClicked() { Emit("DoubleClicked()"); } // *SIGNAL*
 
    TGEventHandler *GetEventHandler() const { return fEventHandler; }
-   virtual void    SetEventHandler(TGEventHandler *handler) { fEventHandler = handler; }
-
-//   Bool_t HandleTimer(TTimer *t);
+   virtual void    SetEventHandler(TGEventHandler *handler);
 
    ClassDef(TGLViewer,0) // Standard ROOT GL viewer.
 };

@@ -98,6 +98,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
+   fEventHandler(0),
    fPushAction(kPushStd), fAction(kDragNone),
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
@@ -113,7 +114,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
-   fGLWindow(0),
+   fGLWidget(0),
    fGLDevice(-1),
    fGLCtxId(0),
    fIgnoreSizesOnUpdate(kFALSE),
@@ -148,6 +149,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
+   fEventHandler(0),
    fPushAction(kPushStd), fAction(kDragNone),
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
@@ -163,7 +165,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
-   fGLWindow(0),
+   fGLWidget(0),
    fGLDevice(fPad->GetGLDevice()),
    fGLCtxId(0),
    fIgnoreSizesOnUpdate(kFALSE),
@@ -217,6 +219,12 @@ TGLViewer::~TGLViewer()
 
    delete fContextMenu;
    delete fRedrawTimer;
+
+   if (fEventHandler) {
+      fGLWidget->SetEventHandler(0);
+      delete fEventHandler;
+   }
+
    if (fPad)
       fPad->ReleaseViewer3D();
    if (fGLDevice != -1)
@@ -371,7 +379,7 @@ void TGLViewer::RequestDraw(Short_t LOD)
    fRedrawTimer->Stop();
    // Ignore request if GL window or context not yet availible - we
    // will get redraw later
-   if (!fGLWindow && fGLDevice == -1) {
+   if (!fGLWidget && fGLDevice == -1) {
       fRedrawTimer->RequestDraw(100, LOD);
       return;
    }
@@ -631,7 +639,7 @@ void TGLViewer::MakeCurrent() const
 {
    // Make GL context current
    if (fGLDevice == -1)
-      fGLWindow->MakeCurrent();
+      fGLWidget->MakeCurrent();
    else
       gGLManager->MakeCurrent(fGLDevice);
 }
@@ -644,7 +652,7 @@ void TGLViewer::SwapBuffers() const
       Error("TGLViewer::SwapBuffers", "viewer is %s", LockName(CurrentLock()));
    }
    if (fGLDevice == -1)
-      fGLWindow->SwapBuffers();
+      fGLWidget->SwapBuffers();
    else {
       gGLManager->ReadGLBuffer(fGLDevice);
       gGLManager->Flush(fGLDevice);
@@ -1255,4 +1263,15 @@ void TGLViewer::PrintObjects()
    // Pass viewer for print capture by TGLOutput.
 
    TGLOutput::Capture(*this);
+}
+
+//______________________________________________________________________________
+void TGLViewer::SetEventHandler(TGEventHandler *handler)
+{
+   if (fEventHandler)
+      delete fEventHandler;
+
+   fEventHandler = handler;
+   if (fGLWidget)
+      fGLWidget->SetEventHandler(fEventHandler);
 }

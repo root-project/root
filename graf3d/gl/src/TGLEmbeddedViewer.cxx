@@ -20,13 +20,12 @@
 #include "TGLEmbeddedViewer.h"
 #include "TGLEventHandler.h"
 
-ClassImp(TGLEmbeddedViewer)
+ClassImp(TGLEmbeddedViewer);
 
 //______________________________________________________________________________
 TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad) :
    TGLViewer(pad, 0, 0, 400, 300),
-   fFrame(0),
-   fGLArea(0)
+   fFrame(0)
 {
    // Default constructor;
 
@@ -44,11 +43,6 @@ TGLEmbeddedViewer::~TGLEmbeddedViewer()
 {
    // Destroy standalone viewer object.
 
-//   delete fGLArea;
-   if (fEventHandler) {
-      fGLWindow->SetEventHandler(0);
-      delete fEventHandler;
-   }
    delete fFrame;
 }
 
@@ -57,13 +51,13 @@ void TGLEmbeddedViewer::CreateFrames()
 {
    // Internal frames creation.
 
-   fGLWindow = new TGLWidget(*fFrame, kTRUE, 10, 10, 0);
+   fGLWidget = new TGLWidget(*fFrame, kTRUE, 10, 10, 0);
    // Direct events from the TGWindow directly to the base viewer
 
-   fEventHandler = new TGLEventHandler("Default", fGLWindow, this);
-   fGLWindow->SetEventHandler(fEventHandler);
+   fEventHandler = new TGLEventHandler("Default", fGLWidget, this);
+   fGLWidget->SetEventHandler(fEventHandler);
 
-   fFrame->AddFrame(fGLWindow, new TGLayoutHints(kLHintsExpandX |
+   fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX |
                     kLHintsExpandY, 2, 2, 2, 2));
 }
 
