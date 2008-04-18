@@ -49,7 +49,7 @@ refarray_full.log: refarray.root refarray_C.$(DllSuf) $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'refarray.C+' > refarray_full.log 2>&1
 
 refarray.log: refarray_full.log
-	$(CMDECHO) cat refarray_full.log | sed -e 's/0x[0-9a-fA-F]* /0xNA /' -e 's/ProcessID.*)/na)/' > refarray.log
+	$(CMDECHO) cat refarray_full.log | sed -e 's/at [x0-9a-fA-F]* is/at 0xNA is/' -e 's/ProcessID.*)/na)/' > refarray.log
 
 refarray: refarray.log
 	$(TestDiff)
