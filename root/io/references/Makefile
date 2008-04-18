@@ -4,7 +4,7 @@
 CLEAN_TARGETS += *.o lotsRef.root $(ALL_LIBRARIES) *.log *.build.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += lotsRef referencesTest
+TEST_TARGETS += lotsRef referencesTest refarray
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -41,3 +41,15 @@ lotsRef.log: lotsRef.root lotsRef_C.$(DllSuf) A_C.$(DllSuf)
 
 lotsRef: lotsRef.log
 	$(TestDiff) && diff -bw logRef_root.ref logRef_root.log
+
+refarray.root: refarray_C.$(DllSuf) $(ROOTCORELIBS) 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'refarray.C+(1)' > refarray_root.log 2>&1
+
+refarray_full.log: refarray.root refarray_C.$(DllSuf) $(ROOTCORELIBS)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'refarray.C+' > refarray_full.log 2>&1
+
+refarray.log: refarray_full.log
+	$(CMDECHO) cat refarray_full.log | sed -e 's/0x[0-9a-fA-F]* /0xNA /' -e 's/ProcessID.*)/na)/' > refarray.log
+
+refarray: refarray.log
+	$(TestDiff)
