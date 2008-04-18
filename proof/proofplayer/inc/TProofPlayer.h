@@ -196,6 +196,7 @@ class TProofPlayerLocal : public TProofPlayer {
 
 public:
    TProofPlayerLocal(TProof *) { }
+   virtual ~TProofPlayerLocal() { }
 
    ClassDef(TProofPlayerLocal,0)  // PROOF player running on client
 };

@@ -5135,10 +5135,11 @@ void TProofServ::DeletePlayer()
 {
    // Delete player instance.
 
-   if (IsMaster())
+   if (IsMaster()) {
       if (fProof) fProof->SetPlayer(0);
-   else
+   } else {
       delete fPlayer;
+   }
    fPlayer = 0;
 }
 
