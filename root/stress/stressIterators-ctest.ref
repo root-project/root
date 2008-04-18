@@ -1,0 +1,52 @@
+====================================
+-----> TestContainer_for_each<TList>(list, list.GetSize())
+test string #0
+test string #1
+test string #2
+test string #3
+test string #4
+test string #5
+test string #6
+test string #7
+test string #8
+test string #9
+test string #10
+test string #11
+test string #12
+test string #13
+test string #14
+->> Ok.
+====================================
+-----> TestContainer_find_if<TList>(list, "test string #3")
+I found: test string #3
+->> Ok.
+====================================
+-----> TestContainer_count_if<TList>(list, "test string #3")
+->> Ok.
+====================================
+-----> TestContainer_for_each<TObjArray>(obj_array, obj_array.GetSize())
+test string #0
+test string #1
+test string #2
+test string #3
+test string #4
+test string #5
+test string #6
+test string #7
+test string #8
+test string #9
+test string #10
+test string #11
+test string #12
+test string #13
+test string #14
+->> Ok.
+====================================
+-----> TestContainer_find_if<TObjArray>(obj_array, "test string #3")
+I found: test string #3
+->> Ok.
+====================================
+-----> TestContainer_count_if<TObjArray>(obj_array, "test string #3")
+->> Ok.
+
+Test successfully finished!
