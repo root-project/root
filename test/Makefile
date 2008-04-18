@@ -616,7 +616,7 @@ endif
 endif
 
 $(STRESSITER):	$(STRESSITERO) 
-		$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 
