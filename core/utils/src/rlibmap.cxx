@@ -259,11 +259,8 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
             const char* linkOrCreate = strtok(0, " ");
             bool pragmaLink = (!strcmp(linkOrCreate, "link") &&
                                !strcmp(strtok(0, " "), "C++"));
-            bool pragmaCreate = false;
-            // disabled for now, until we find a way to load cintdlls without
-            // LD_LIBRARY_PATH nor G__p_class_autoloading / TAppication.
-            // (!strcmp(linkOrCreate, "create") &&
-            //!strcmp(strtok(0," "), "TClass"));
+            bool pragmaCreate = (!strcmp(linkOrCreate, "create") &&
+                                 !strcmp(strtok(0," "), "TClass"));
 
             if (pragmaLink || pragmaCreate) {
                const char *type = pragmaLink ? strtok(0, " ") : "class";

@@ -880,9 +880,6 @@ void TClass::Init(const char *name, Version_t cversion,
                return;
             }
          }
-         if (!fClassInfo) {
-            isStl = TClassEdit::IsSTLCont(name);
-         }
       }
    }
    if (!fClassInfo && !isStl)
@@ -944,7 +941,7 @@ void TClass::Init(const char *name, Version_t cversion,
       TIter next( fgClassTypedefHash->GetListForObject (resolvedThis) );
       while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
          if (resolvedThis != htmp->String()) continue;
-         oldcl = gROOT->GetClass (htmp->fOrigName);
+         oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(htmp->fOrigName); // gROOT->GetClass (htmp->fOrigName, kFALSE);
          if (oldcl && oldcl != this) {
             ForceReload (oldcl);
          }
@@ -3819,7 +3816,7 @@ void TClass::PostLoadCheck()
       // loaded from a file) is consisten with the definition in the library we just loaded.
       // BuildCheck is not appropriate here since it check a streamerinfo against the
       // 'current streamerinfo' which, at time point, would be the same as 'info'!
-      if (info && GetListOfDataMembers()
+      if (info && GetListOfDataMembers() && !GetCollectionProxy()
           && (info->GetCheckSum()!=GetCheckSum() && info->GetCheckSum()!=GetCheckSum(1) && info->GetCheckSum()!=GetCheckSum(2)))
       {
          Bool_t warn = ! TestBit(kWarned);

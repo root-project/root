@@ -656,6 +656,9 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 
          cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
+
+         Bool_t zombieCandidate = kFALSE;
+
          // In case a class contains an external enum, the enum will be seen as a
          // class. We must detect this special case and make the class a Zombie.
          // Here we assume that a class has at least one method.
@@ -665,7 +668,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
          // the building phase of the TClass, hence it is NOT well formed yet.
          if (cl->fClassInfo->IsValid() &&
              !(cl->fClassInfo->Property() & (kIsClass|kIsStruct|kIsNamespace))) {
-            cl->MakeZombie();
+            zombieCandidate = kTRUE; // cl->MakeZombie();
          }
 
          if (!cl->fClassInfo->IsLoaded()) {
@@ -673,12 +676,16 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
                // Namespace can have a ClassInfo but no CINT dictionary per se
                // because they are auto-created if one of their contained
                // classes has a dictionary.
-               cl->MakeZombie();
+               zombieCandidate = kTRUE; // cl->MakeZombie();
             }
 
             // this happens when no CINT dictionary is available
             delete cl->fClassInfo;
             cl->fClassInfo = 0;
+         }
+
+         if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
+            cl->MakeZombie();
          }
 
       }
@@ -1684,7 +1691,7 @@ void TCint::UpdateClassInfoWork(const char *item, Long_t tagnum)
          while ( TClass::TNameMapNode* htmp =
               static_cast<TClass::TNameMapNode*> (next()) ) {
             if (resolvedItem == htmp->String()) {
-               TClass* cl = gROOT->GetClass (htmp->fOrigName);
+               TClass* cl = gROOT->GetClass (htmp->fOrigName, kFALSE);
                if (cl) {
                   // we found at least one equivalent.
                   // let's force a reload
