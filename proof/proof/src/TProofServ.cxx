@@ -3068,7 +3068,7 @@ void TProofServ::RemoveQuery(const char *queryref)
    // Remove everything about query queryref.
 
    PDB(kGlobal, 1)
-      Info("RemoveQuery", "Enter");
+      Info("RemoveQuery", "Enter: %s", queryref);
 
    // Parse reference string
    Int_t qry = -1;
@@ -3623,6 +3623,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                   fQueries->Add(pqr);
                // Remove from the fQueries list
                fQueries->Remove(pq);
+               SafeDelete(pq);
             }
          }
 
