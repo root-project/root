@@ -475,11 +475,11 @@ bool TMapIter::operator!=(const TIterator &aIter) const
    // This operator compares two TIterator objects.
 
    if (nullptr == (&aIter))
-      return fCursor;
+      return fCursor->operator*();
 
    if (aIter.IsA() == TMapIter::Class()) {
       const TMapIter &iter(dynamic_cast<const TMapIter &>(aIter));
-      return (fCursor != iter.fCursor);
+      return (fCursor->operator*() != iter.fCursor->operator*());
    }
    return false; // for base class we don't implement a comparison
 }
@@ -490,15 +490,15 @@ bool TMapIter::operator!=(const TMapIter &aIter) const
    // This operator compares two TMapIter objects.
 
    if (nullptr == (&aIter))
-      return fCursor;
+      return fCursor->operator*();
 
-   return (fCursor != aIter.fCursor);
+   return (fCursor->operator*() != aIter.fCursor->operator*());
 }
 
 //______________________________________________________________________________
 TObject *TMapIter::operator*() const
 {
-   // Return pointer to current object or nullptr.
+   // Return pointer to current object (a TPair) or nullptr.
 
-   return (fCursor ? ((TPair *)(fCursor->operator*()))->Key() : nullptr);
+   return (fCursor ? fCursor->operator*() : nullptr);
 }
