@@ -113,6 +113,15 @@
 #undef GetCurrentTime
 #undef GetTimeFormat
 
+#undef wtype
+#undef DeleteFont
+#undef StrDup
+
+#undef wtype
+#undef DeleteFont
+#undef StrDup
+#undef SendMessage
+
 #if !defined(ROOT_TGWin32Object) && !defined(ROOT_TGWin32)
 #   undef GetObject
 #   undef GetClassInfo
