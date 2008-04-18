@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
 
 # Set the list of target to make while testing.
 
-TEST_TARGETS += $(TUTORIALSTESTS)
+TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
 # don't run these, they will fail and need to be fixed.
 
 TUTORIALSTESTS_NONBATCH := \
@@ -65,6 +65,8 @@ TUTORIALSTESTS_VETO += image/rose_image
 TUTORIALSTESTS_VETO += eve/text_test
 TUTORIALSTESTS_VETO += eve/test_paramlist
 
+TUTORIALSTESTS_VETO_CC := math/testrandom
+
 ifeq ($(GUI),)
   TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_NONBATCH)
 endif
@@ -75,7 +77,8 @@ TUTORIALSTESTS := $(patsubst $(ROOTSYS)/tutorials/%.C,%,$(TUTORIALSTESTS))
 # hsimple must be first
 TUTORIALSTESTS := hsimple $(filter-out hsimple,$(TUTORIALSTESTS))
 TUTORIALSTESTS := $(filter-out $(TUTORIALSTESTS_VETO),$(TUTORIALSTESTS))
-
+TUTORIALSTESTS_CC := $(filter $(TUTORIALSTESTS_VETO_CC),$(TUTORIALSTESTS))
+TUTORIALSTESTS := $(filter-out $(TUTORIALSTESTS_VETO_CC),$(TUTORIALSTESTS))
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -105,7 +108,10 @@ TUTDIR := $(ROOT_LOC)/tutorials
 # (value of final expression)
 TUTORIALSSTUBS := $(addsuffix _call.C,$(TUTORIALSTESTS))
 TUTORIALSLOGS  := $(addsuffix .log,$(TUTORIALSTESTS))
+TUTORIALSSTUBS_CC := $(addsuffix _call.CC,$(TUTORIALSTESTS_CC))
+TUTORIALSLOGS_CC  := $(addsuffix .clog,$(TUTORIALSTESTS_CC))
 
+debug := $(shell echo $(TUTORIALSSTUBS_CC) 1>&2 ) 
 
 $(TUTORIALSSTUBS): %_call.C:
 	$(CMDECHO) mkdir -p $(dir $@)
@@ -115,6 +121,15 @@ $(TUTORIALSSTUBS): %_call.C:
 $(TUTORIALSLOGS): %.log: %_call.C $(TUTDIR)/%.C
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && echo "" > $@
 
+ifneq (,$(TUTORIALSSTUBS_CC))
+$(TUTORIALSSTUBS_CC): %_call.CC:
+	$(CMDECHO) mkdir -p $(dir $@)
+	$(CMDECHO) echo 'int $(notdir $*)_call(){ int err; TROOT::SetMacroPath(".:$(TUTDIR)/$(dir $@)"); gROOT->ProcessLine(".x $(TUTDIR)/$*.C+", &err); return err; }' > $@
+
+
+$(TUTORIALSLOGS_CC): %.clog: %_call.CC $(TUTDIR)/%.C
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && echo "" > $@
+endif
 
 # Remember that sometest.log can be made automatically from
 #  from runsometest.C
@@ -126,6 +141,8 @@ $(TUTORIALSLOGS): %.log: %_call.C $(TUTDIR)/%.C
 # To run a diff and ignore whitespacing use $(TestDiffW)
 
 $(TUTORIALSTESTS): %: %.log
+
+$(TUTORIALSTESTS_CC): %: %.clog
 
 person.%: $(TUTDIR)/xml/person.%
 	$(CMDECHO) cp -f $< $@
