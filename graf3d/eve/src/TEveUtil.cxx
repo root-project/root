@@ -91,22 +91,19 @@ void TEveUtil::SetupGUI()
 {
    // Setup icon pictures and mime-types.
 
-   TString fld( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
-
-   TEveElement::fgRnrIcons[0] = gClient->GetPicture(fld + "eve_rnr00_t.xpm");
-   TEveElement::fgRnrIcons[1] = gClient->GetPicture(fld + "eve_rnr01_t.xpm");
-   TEveElement::fgRnrIcons[2] = gClient->GetPicture(fld + "eve_rnr10_t.xpm");
-   TEveElement::fgRnrIcons[3] = gClient->GetPicture(fld + "eve_rnr11_t.xpm");
+   TEveElement::fgRnrIcons[0] = gClient->GetPicture("eve_rnr00_t.xpm");
+   TEveElement::fgRnrIcons[1] = gClient->GetPicture("eve_rnr01_t.xpm");
+   TEveElement::fgRnrIcons[2] = gClient->GetPicture("eve_rnr10_t.xpm");
+   TEveElement::fgRnrIcons[3] = gClient->GetPicture("eve_rnr11_t.xpm");
 
    TEveElement::fgListTreeIcons[0] = gClient->GetPicture("folder_t.xpm");
-   TEveElement::fgListTreeIcons[1] = gClient->GetPicture(fld + "eve_viewer.xpm");
-   TEveElement::fgListTreeIcons[2] = gClient->GetPicture(fld + "eve_scene.xpm");
-   TEveElement::fgListTreeIcons[3] = gClient->GetPicture(fld + "eve_pointset.xpm");
-   TEveElement::fgListTreeIcons[4] = gClient->GetPicture(fld + "eve_track.xpm");
-   TEveElement::fgListTreeIcons[5] = gClient->GetPicture(fld + "eve_text.gif");
-   TEveElement::fgListTreeIcons[6] = gClient->GetPicture(fld + "eve_axes.xpm");
+   TEveElement::fgListTreeIcons[1] = gClient->GetPicture("eve_viewer.xpm");
+   TEveElement::fgListTreeIcons[2] = gClient->GetPicture("eve_scene.xpm");
+   TEveElement::fgListTreeIcons[3] = gClient->GetPicture("eve_pointset.xpm");
+   TEveElement::fgListTreeIcons[4] = gClient->GetPicture("eve_track.xpm");
+   TEveElement::fgListTreeIcons[5] = gClient->GetPicture("eve_text.gif");
+   TEveElement::fgListTreeIcons[6] = gClient->GetPicture("eve_axes.xpm");
    TEveElement::fgListTreeIcons[7] = gClient->GetPicture("ofolder_t.xpm");
-
 
    gClient->GetMimeTypeList()->AddType("root/tmacro", "TEveMacro",
                                        "tmacro_s.xpm", "tmacro_t.xpm", "");

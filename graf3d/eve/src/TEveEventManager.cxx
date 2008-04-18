@@ -38,19 +38,38 @@ void TEveEventManager::AfterNewEventLoaded()
    // It iterates over the list of registered commands
    // (fNewEventCommands) and executes them in given order.
 
-   TIter next(&fNewEventCommands);
-   TObject* o;
-   while ((o = next())) {
-      TObjString* s = dynamic_cast<TObjString*>(o);
-      if (s)
-         gInterpreter->ProcessLine(s->String());
+   for (std::vector<TString>::iterator i = fNewEventCommands.begin(); i != fNewEventCommands.end(); ++i)
+   {
+      gInterpreter->ProcessLine(*i);
    }
 }
 
 //______________________________________________________________________________
-void TEveEventManager::AddNewEventCommand(const Text_t* cmd)
+void TEveEventManager::AddNewEventCommand(const TString& cmd)
 {
    // Register a command to be executed on each new event.
 
-   fNewEventCommands.Add(new TObjString(cmd));
+   fNewEventCommands.push_back(cmd);
+}
+
+//______________________________________________________________________________
+void TEveEventManager::RemoveNewEventCommand(const TString& cmd)
+{
+   // Remove the first command equal to cmd.
+
+   for (std::vector<TString>::iterator i = fNewEventCommands.begin(); i != fNewEventCommands.end(); ++i)
+   {
+      if (cmd == *i) {
+         fNewEventCommands.erase(i);
+         break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TEveEventManager::ClearNewEventCommands()
+{
+   // Clear the list of commands to be executed on each new event.
+
+   fNewEventCommands.clear();
 }

@@ -13,18 +13,19 @@
 #define ROOT_TEveEventManager
 
 #include "TEveElement.h"
-#include "TList.h"
+
+#include <vector>
 
 class TEveEventManager : public TEveElementList
 {
 protected:
-   TList        fNewEventCommands;
+   std::vector<TString>  fNewEventCommands;
 
 public:
    TEveEventManager(const Text_t* n="TEveEventManager", const Text_t* t="");
    virtual ~TEveEventManager() {}
 
-   TList& GetNewEventCommands() { return fNewEventCommands; }
+   std::vector<TString>& GetNewEventCommands() { return fNewEventCommands; }
 
    virtual void Open() {}
    virtual void GotoEvent(Int_t /*event*/) {}
@@ -33,7 +34,10 @@ public:
    virtual void Close() {}
 
    virtual void AfterNewEventLoaded();
-   virtual void AddNewEventCommand(const Text_t* cmd);
+
+   virtual void AddNewEventCommand(const TString& cmd);
+   virtual void RemoveNewEventCommand(const TString& cmd);
+   virtual void ClearNewEventCommands();
 
    ClassDef(TEveEventManager, 1); // Base class for event management and navigation.
 };
