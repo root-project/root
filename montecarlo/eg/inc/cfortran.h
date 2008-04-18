@@ -357,7 +357,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 
 #ifndef apolloFortran
 /* "extern" removed (CFITSIO) */
-#ifdef __APPLE__
+#ifdef EXTCOMDEF
 #define COMMON_BLOCK_DEF(DEFINITION, NAME) extern DEFINITION NAME
 #else
 #define COMMON_BLOCK_DEF(DEFINITION, NAME) /* extern */ DEFINITION NAME
