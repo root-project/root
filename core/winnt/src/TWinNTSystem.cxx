@@ -328,9 +328,9 @@ namespace {
       }
 #endif
 #ifdef CINTINCDIR
-         dynpath += ";"; dynpath += CINTINCDIR; dynpath += "/stl";
+         dynpath += ";"; dynpath += CINTINCDIR; dynpath += "/cint/stl";
 #else
-         dynpath += ";"; dynpath += gRootDir; dynpath += "/cint/stl";
+         dynpath += ";"; dynpath += gRootDir; dynpath += "/cint/cint/stl";
 #endif
       return dynpath;
    }
