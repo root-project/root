@@ -636,7 +636,8 @@ distclean:      clean
 .SUFFIXES: .$(SrcSuf)
 
 ###
-
+stressIterators.$(ObjSuf): stressIterators.h
+ 
 Event.$(ObjSuf): Event.h
 MainEvent.$(ObjSuf): Event.h
 
