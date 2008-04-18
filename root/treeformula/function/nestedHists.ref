@@ -1,7 +1,5 @@
 
 Processing runnestedHists.C...
-Warning in <TClass::TClass>: no dictionary for class TPlate is available
-Warning in <TClass::TClass>: no dictionary for class TStrip is available
 Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fHists.
 <TCanvas::MakeDefCanvas>: created default TCanvas with name c1
 Warning in <TTreeFormula::DefinedVariable>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fHists.
