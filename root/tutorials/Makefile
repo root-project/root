@@ -111,8 +111,6 @@ TUTORIALSLOGS  := $(addsuffix .log,$(TUTORIALSTESTS))
 TUTORIALSSTUBS_CC := $(addsuffix _call.CC,$(TUTORIALSTESTS_CC))
 TUTORIALSLOGS_CC  := $(addsuffix .clog,$(TUTORIALSTESTS_CC))
 
-debug := $(shell echo $(TUTORIALSSTUBS_CC) 1>&2 ) 
-
 $(TUTORIALSSTUBS): %_call.C:
 	$(CMDECHO) mkdir -p $(dir $@)
 	$(CMDECHO) echo 'int $(notdir $*)_call(){ int err; TROOT::SetMacroPath(".:$(TUTDIR)/$(dir $@)"); gROOT->ProcessLine(".x $(TUTDIR)/$*.C", &err); return err; }' > $@
