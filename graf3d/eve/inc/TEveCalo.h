@@ -184,6 +184,8 @@ protected:
    Int_t                   fFontSize; // font size in % of projected y axis
    Int_t                   fNZStep; // Z axis label step in GeV
 
+   Int_t                   fBinWidth; // distance in pixels of projected up and low edge
+
    EProjection_e           fProjection;
    E2DMode_e               f2DMode;
 
@@ -204,6 +206,9 @@ public:
 
    Int_t  GetNZStep() const { return fNZStep; }
    void   SetNZStep(Int_t s) { fNZStep = s;}
+  
+   Int_t    GetBinWidth() const { return fBinWidth; }
+   void     SetBinWidth(Int_t bw) { fBinWidth = bw; }
 
    void           SetProjection(EProjection_e p) { fProjection = p; }
    EProjection_e  GetProjection() { return fProjection; }

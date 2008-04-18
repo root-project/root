@@ -59,7 +59,6 @@ protected:
    const   Float_t          fTMSize; // tick mark size
 
    // grid density modes
-   Float_t                  fMinBinWidth;
    Int_t                    fNBinSteps;
    Int_t*                   fBinSteps;
 

@@ -40,7 +40,6 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fFontSize(16),
    fTMSize(0.1),
 
-   fMinBinWidth(6), // number of pixels in projected axis
    fNBinSteps(5),
    fBinSteps(0)
 {
@@ -566,7 +565,7 @@ Int_t TEveCaloLegoGL::GetGridStep(Int_t axId, const TAxis* ax, TGLRnrCtx &rnrCtx
       }
 
       Float_t  gap = TMath::Sqrt((xp0-xp1)*(xp0-xp1) + (yp0-yp1)*(yp0-yp1));
-      if (gap>fMinBinWidth) 
+      if (gap>fM->fBinWidth) 
       {
          return fBinSteps[idx];
       }
@@ -635,7 +634,6 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       fM->ResetCache();
       fM->fData->GetCellList((fM->fEtaMin + fM->fEtaMax)*0.5f, fM->fEtaMax - fM->fEtaMin,
                              fM->fPhi, fM->fPhiRng, fM->fThreshold, fM->fCellList);
-      printf("GetCellList threshold %f\n",  fM->fThreshold);
       fM->fCacheOK = kTRUE;
    }
 
@@ -772,7 +770,7 @@ void TEveCaloLegoGL::Draw2DValColor(Int_t nEta, Int_t nPhi) const
    UChar_t col[4];
    Float_t min = fM->fPalette->GetMinVal();
    Float_t max = fM->fPalette->GetMaxVal();
-   fM->fPalette->SetMax(Int_t(maxv));
+   fM->fPalette->SetMax(Int_t(Log(maxv+1)));
    Float_t val;
    Int_t cid = 0;
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -782,6 +780,7 @@ void TEveCaloLegoGL::Draw2DValColor(Int_t nEta, Int_t nPhi) const
       val = *it;
       if (val>min && val<max)
       {
+         val = Log(val+1);
          fM->fPalette->ColorFromValue(FloorNint(val), col);
          TGLUtil::Color4ubv(col);
 	
@@ -798,25 +797,6 @@ void TEveCaloLegoGL::Draw2DValColor(Int_t nEta, Int_t nPhi) const
    }
    glEnd();
    fM->fPalette->SetMax(FloorNint(max));
-
-   // draw grid
-   TGLUtil::Color(fM->fGridColor);
-   glBegin(GL_LINES);
-   Float_t a = eta0;
-   for (Int_t i=0; i<=nEta; i++)
-   {
-      glVertex2f(a, phi0);
-      glVertex2f(a, phiT);
-      a += etaStep;
-   }
-   a = phi0;
-   for (Int_t i=0; i<=nPhi; i++)
-   {
-      glVertex2f(eta0, a);
-      glVertex2f(etaT, a);
-      a += phiStep;
-   }
-   glEnd();
 }
 
 //______________________________________________________________________________
@@ -916,23 +896,54 @@ void TEveCaloLegoGL::Draw2D(TGLRnrCtx & rnrCtx) const
 
    const TAxis* ax = fM->fData->GetEtaBins();
    const TAxis* ay = fM->fData->GetPhiBins();
-   DrawZAxisSimplified(rnrCtx, ax->GetBinLowEdge(0), ay->GetBinLowEdge(0));
-   DrawXYAxis(rnrCtx, ax->GetBinLowEdge(0),ax->GetBinUpEdge(ax->GetNbins()),
-              ay->GetBinLowEdge(0),ay->GetBinUpEdge(ay->GetNbins()));
+   Int_t es = GetGridStep(0, ax, rnrCtx);
+   Int_t ps = GetGridStep(1, ay, rnrCtx);
+   Float_t eta0 = ax->GetBinLowEdge(0);
+   Float_t etaT = ax->GetBinUpEdge(ax->GetNbins());
+   Float_t phi0 = ay->GetBinLowEdge(0);
+   Float_t phiT = ay->GetBinUpEdge(ay->GetNbins());
+   Int_t   nEta = CeilNint(ax->GetNbins()/es);
+   Int_t   nPhi = CeilNint(ay->GetNbins()/ps);
+   Float_t etaStep = (etaT-eta0)/nEta;
+   Float_t phiStep = (phiT-phi0)/nPhi;
 
+   // cells
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
    glDisable(GL_LIGHTING); 
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(0.2, 1); 
    glTranslatef(0, 0, 0.001);
-
-   Int_t es = GetGridStep(0, ax, rnrCtx);
-   Int_t ps = GetGridStep(1, ay, rnrCtx);
-
-   if (fM->f2DMode == TEveCaloLego::kValColor)
-      Draw2DValColor(ax->GetNbins()/es, ay->GetNbins()/ps);
+   if (fM->f2DMode == TEveCaloLego::kValColor)      
+      Draw2DValColor(nEta, nPhi);
    else
       Draw2DValSize();
+
+   // draw grid
+   if (rnrCtx.Selection() == kFALSE && rnrCtx.Highlight() == kFALSE)
+   {
+      DrawZAxisSimplified(rnrCtx, ax->GetBinLowEdge(0), ay->GetBinLowEdge(0));
+      DrawXYAxis(rnrCtx, ax->GetBinLowEdge(0),ax->GetBinUpEdge(ax->GetNbins()),
+                 ay->GetBinLowEdge(0),ay->GetBinUpEdge(ay->GetNbins()));
+
+      // XY bins
+      TGLUtil::Color(fM->fGridColor);
+      glBegin(GL_LINES);
+      Float_t a = eta0;
+      for (Int_t i=0; i<=nEta; i++)
+      {
+         glVertex2f(a, phi0);
+         glVertex2f(a, phiT);
+         a += etaStep;
+      }
+      a = phi0;
+      for (Int_t i=0; i<=nPhi; i++)
+      {
+         glVertex2f(eta0, a);
+         glVertex2f(etaT, a);
+         a += phiStep;
+      }
+      glEnd();
+   }          
 
    glPopMatrix();
    glPopAttrib();

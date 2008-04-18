@@ -40,8 +40,6 @@ protected:
 
    TEveGValuator              *fCellZScale;
 
-   void CreateTowerTab();
-
 public:
    TEveCaloVizEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());

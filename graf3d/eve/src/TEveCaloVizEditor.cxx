@@ -44,57 +44,36 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
 {
    // Constructor.
 
-   MakeTitle("TEveCaloVizEditor");
-
+   fTower = CreateEditorTabSubFrame("Towers");
    Int_t  labelW = 45;
 
    // eta
-   fEtaRng = new TEveGDoubleValuator(this,"Eta rng:", 40, 0);
+   fEtaRng = new TEveGDoubleValuator(fTower,"Eta rng:", 40, 0);
    fEtaRng->SetNELength(6);
    fEtaRng->SetLabelWidth(labelW);
    fEtaRng->Build();
    fEtaRng->GetSlider()->SetWidth(195);
    fEtaRng->SetLimits(-5.5, 5.5, TGNumberFormat::kNESRealTwo);
    fEtaRng->Connect("ValueSet()", "TEveCaloVizEditor", this, "DoEtaRange()");
-   AddFrame(fEtaRng, new TGLayoutHints(kLHintsTop, 1, 1, 4, 5));
+   fTower->AddFrame(fEtaRng, new TGLayoutHints(kLHintsTop, 1, 1, 4, 5));
 
    // phi
-   fPhi = new TEveGValuator(this, "Phi:", 90, 0);
+   fPhi = new TEveGValuator(fTower, "Phi:", 90, 0);
    fPhi->SetLabelWidth(labelW);
    fPhi->SetNELength(6);
    fPhi->Build();
    fPhi->SetLimits(-180, 180);
    fPhi->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoPhi()");
-   AddFrame(fPhi, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fTower->AddFrame(fPhi, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
-   fPhiRng = new TEveGValuator(this, "PhiRng:", 90, 0);
+   fPhiRng = new TEveGValuator(fTower, "PhiRng:", 90, 0);
    fPhiRng->SetLabelWidth(labelW);
    fPhiRng->SetNELength(6);
    fPhiRng->Build();
    fPhiRng->SetLimits(0, 180);
    fPhiRng->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoPhi()");
-   AddFrame(fPhiRng, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fTower->AddFrame(fPhiRng, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
-   CreateTowerTab();
-}
-
-//______________________________________________________________________________
-void TEveCaloVizEditor::CreateTowerTab()
-{
-   // Create second tab in the editor.
-
-   fTower = CreateEditorTabSubFrame("Tower");
-
-   TGHorizontalFrame *title1 = new TGHorizontalFrame(fTower, 145, 10,
-                                                     kLHintsExpandX | kFixedWidth);
-   title1->AddFrame(new TGLabel(title1, "Tower"),
-                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   title1->AddFrame(new TGHorizontal3DLine(title1),
-                    new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
-   fTower->AddFrame(title1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
-
-
-   Int_t  labelW = 45;
    fCellZScale = new TEveGValuator(fTower, "ZScale:", 90, 0);
    fCellZScale->SetLabelWidth(labelW);
    fCellZScale->SetNELength(6);

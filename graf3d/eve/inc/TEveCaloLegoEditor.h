@@ -31,13 +31,14 @@ private:
    TGComboBox*  MakeLabeledCombo(const char* name, Int_t off);
 
 protected:
-   TEveCaloLego            *fM; // Model object.
+   TEveCaloLego      *fM; // Model object.
 
    TGColorSelect*     fGridColor;
 
    TGColorSelect*     fFontColor;
    TEveGValuator     *fFontSize;
    TEveGValuator     *fNZStep;
+   TEveGValuator     *fBinWidth;
 
    TGComboBox        *fProjection;
    TGComboBox        *f2DMode;
@@ -55,6 +56,8 @@ public:
 
    void DoFontSize();
    void DoNZStep();
+
+   void DoBinWidth();
 
    void DoProjection();
    void Do2DMode();

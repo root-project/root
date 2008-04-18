@@ -17,6 +17,7 @@
 #include "TColor.h"
 #include "TGColorSelect.h"
 #include "TGLabel.h"
+#include "TG3DLine.h"
 
 //______________________________________________________________________________
 // GUI editor for TEveCaloLego.
@@ -34,6 +35,8 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
 
    fFontSize(0),
    fNZStep(0),
+
+   fBinWidth(0),
 
    fProjection(0),
    f2DMode(0)
@@ -67,26 +70,47 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
    }
+   Int_t lw = 60;
 
    fFontSize = new TEveGValuator(this, "FontSize:", 90, 0);
-   fFontSize->SetLabelWidth(60);
+   fFontSize->SetLabelWidth(lw);
    fFontSize->SetNELength(5);
+   fFontSize->SetShowSlider(kFALSE);
    fFontSize->Build();
    fFontSize->SetLimits(0.01, 10, 100, TGNumberFormat::kNESRealTwo);
    fFontSize->SetToolTip("Font size relative to size of projected Z axis in %");
    fFontSize->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoFontSize()");
-   AddFrame(fFontSize, new TGLayoutHints(kLHintsTop, 4, 1, 1, 0));
-
-   fNZStep = new TEveGValuator(this, "NZStep:", 90, 0);
-   fNZStep->SetLabelWidth(60);
+   AddFrame(fFontSize, new TGLayoutHints(kLHintsTop, 4, 1, 1, 1));
+   lw = 80;
+   fNZStep = new TEveGValuator(this, "NZTickMarks:", 90, 0);
+   fNZStep->SetLabelWidth(lw);
    fNZStep->SetNELength(5);
    fNZStep->SetShowSlider(kFALSE);
    fNZStep->Build();
    fNZStep->SetLimits(1, 20);
    fNZStep->SetToolTip("Number of labels along the Z axis.");
    fNZStep->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoNZStep()");
-   AddFrame(fNZStep, new TGLayoutHints(kLHintsTop, 4, 1, 0, 2));
+   AddFrame(fNZStep, new TGLayoutHints(kLHintsTop, 4, 2, 1, 2));
 
+   fBinWidth = new TEveGValuator(this, "BinWidth:", 90, 0);
+   fBinWidth->SetLabelWidth(lw);
+   fBinWidth->SetNELength(5);
+   fBinWidth->SetShowSlider(kFALSE);
+   fBinWidth->Build();
+   fBinWidth->SetLimits(1, 20);
+   fBinWidth->SetToolTip("Number of labels along the Z axis.");
+   fBinWidth->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoBinWidth()");
+   AddFrame(fBinWidth, new TGLayoutHints(kLHintsTop, 4, 2, 1, 2));
+
+   {
+      TGHorizontalFrame *title1 = new TGHorizontalFrame(this, 145, 10,
+                                                        kLHintsExpandX | kFixedWidth);
+      title1->AddFrame(new TGLabel(title1, "View"),
+                       new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+      title1->AddFrame(new TGHorizontal3DLine(title1),
+                       new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+      AddFrame(title1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
+   }
    fProjection = MakeLabeledCombo("Project:", 1);
    fProjection->AddEntry("Auto", TEveCaloLego::kAuto);
    fProjection->AddEntry("3D", TEveCaloLego::k3D);
@@ -133,6 +157,7 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
 
    fFontSize->SetValue(fM->GetFontSize());  
    fNZStep->SetValue(fM->GetNZStep());
+   fBinWidth->SetValue(fM->GetBinWidth());
 
    fProjection->Select(fM->GetProjection(), kFALSE);
    f2DMode->Select(fM->Get2DMode(), kFALSE);
@@ -171,6 +196,15 @@ void TEveCaloLegoEditor::DoNZStep()
    // Slot for NZStep.
 
    fM->SetNZStep((Int_t)fNZStep->GetValue());
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoEditor::DoBinWidth()
+{
+   // Slot for BinWidth.
+
+   fM->SetBinWidth((Int_t)fBinWidth->GetValue());
    Update();
 }
 
