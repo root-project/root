@@ -1402,3 +1402,14 @@ void SplitGLView::UpdateSummary()
 #pragma link C++ class SplitGLView;
 
 #endif
+
+#ifdef __CINT__
+void SplitGLView()
+{
+   printf("This script is used via ACLiC by the macro \"alice_esd_split.C\"\n");
+   printf("To see it in action, just run \".x alice_esd_split.C\"\n");
+   return;
+}
+#endif
+
+
