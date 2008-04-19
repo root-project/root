@@ -7,11 +7,35 @@
 //------------------------------------------------------------------------------
 
 #ifdef WIN32
-#  include <io.h>
+
+#include <io.h>
 typedef long off_t;
+
+#define cfclos_   __stdcall CFCLOS
+#define cfget_    __stdcall CFGET
+#define cfseek_   __stdcall CFSEEK
+#define ishftr_   __stdcall ISHFTR
+#define vxinvb_   __stdcall VXINVB
+#define vxinvc_   __stdcall VXINVC
+#define cfopei_   __stdcall CFOPEI
+#define cfstati_  __stdcall CFSTATI
+
+__declspec( dllexport ) void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, 
+                                     int *nbuf, char *ftext, int lftext, int *stat, 
+                                     int *lgtx);
+__declspec( dllexport ) int  cfstati_(char *fname, int lfname, int *info, int *lgname);
+__declspec( dllexport ) void cfclos_(int *lundes, int *medium);
+__declspec( dllexport ) void vxinvb_(int *ixv, int *n);
+__declspec( dllexport ) void vxinvc_(int *iv, int *ivx, int *n);
+__declspec( dllexport ) void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, 
+                                    char *mbuf, int *stat);
+__declspec( dllexport ) void cfseek_(int *lundes, int *medium, int *nwrec, int *jcrec, int *stat);
+__declspec( dllexport ) unsigned int ishftr_(unsigned int *arg, int *len);
+
 #else
-#  include <unistd.h>
+#include <unistd.h>
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -19,9 +43,7 @@ typedef long off_t;
 #include <sys/stat.h>
 
 
-char *fchtak(ftext,lgtext)
-      char *ftext;
-      int  lgtext;
+char *fchtak(char *ftext, int lgtext)
 {
       char *ptalc, *ptuse;
       char *utext;
@@ -43,17 +65,14 @@ exit: return  ptalc;
 
 //------------------------------------------------------------------------------
 
-unsigned int ishftr_(arg,len)
-unsigned int *arg;
-int *len;
+unsigned int ishftr_(unsigned int *arg, int *len)
 {
    return(*arg >> *len);
 }
 
 //------------------------------------------------------------------------------
 
-void vxinvb_(ixv, n)
-   int *ixv, *n;
+void vxinvb_(int *ixv, int *n)
 {
    int limit, jloop;
    int in;
@@ -71,8 +90,7 @@ void vxinvb_(ixv, n)
 
 //------------------------------------------------------------------------------
 
-void vxinvc_ (iv, ixv, n)
-int *iv, *ixv, *n;
+void vxinvc_ (int *iv, int *ixv, int *n)
 {
    int limit, jloop;
    int in;
@@ -89,7 +107,8 @@ int *iv, *ixv, *n;
 
 //------------------------------------------------------------------------------
 
-void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf, int *stat)
+void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf, 
+            int *stat)
 {
    int fildes;   
    int nbdn, nbdo;   
@@ -149,11 +168,11 @@ void cfclos_(int *lundes, int *medium)
 }
 
 //------------------------------------------------------------------------------
-
-int cfstati_(fname, info, lgname)
-char *fname;
-int *lgname;
-int *info;
+#ifdef WIN32
+int cfstati_(char *fname, int lfname, int *info, int *lgname)
+#else
+int cfstati_(char *fname, int *info, int *lgname)
+#endif
 {
    struct stat buf;
    char *ptname, *fchtak();
@@ -196,7 +215,13 @@ int *info;
 //------------------------------------------------------------------------------
 
 int cfopen_perm = 0;
-void cfopei_(int *lundes,int *medium,int *nwrec,int *mode,int *nbuf,char *ftext,int *stat,int *lgtx)
+#ifdef WIN32
+void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, int *nbuf,
+             char *ftext, int lftext, int *stat, int *lgtx)
+#else
+void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, int *nbuf,
+             char *ftext, int *stat, int *lgtx)
+#endif
 {
    char *pttext, *fchtak();
    int flags = 0;
