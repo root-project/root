@@ -249,7 +249,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) co
    vector<Double_t> val( GetNvar() );
    for (ivar=0; ivar<GetNvar(); ivar++) {
       val[ivar] = e->GetVal(ivar);
-      if (IsNormalised()) val[ivar] = Tools::NormVariable( val[ivar], GetXmin( ivar ), GetXmax( ivar ) );    
+      if (IsNormalised()) val[ivar] = gTools().NormVariable( val[ivar], GetXmin( ivar ), GetXmax( ivar ) );    
    }
 
    Double_t chi2 = 0;
@@ -438,7 +438,7 @@ void TMVA::MethodHMatrix::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The H-Matrix classifier discriminates one class (signal) of a feature" << Endl;
    fLogger << "vector from another (background). The correlated elements of the" << Endl;
@@ -448,7 +448,7 @@ void TMVA::MethodHMatrix::GetHelpMessage() const
    fLogger << "the vector elements between the two classes for the purpose of" << Endl;
    fLogger << "discrimination." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The TMVA implementation of the H-Matrix classifier has been shown" << Endl;
    fLogger << "to underperform in comparison with the corresponding Fisher discriminant," << Endl;
@@ -457,7 +457,7 @@ void TMVA::MethodHMatrix::GetHelpMessage() const
    fLogger << "non-Gaussian, H-Matrix may perform better than Fisher. In such" << Endl;
    fLogger << "occurrences the user is advised to employ non-linear classifiers. " << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "<None>" << Endl;
 }

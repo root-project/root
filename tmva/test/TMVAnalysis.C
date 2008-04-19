@@ -38,6 +38,7 @@ Bool_t Use_Cuts            = 0;
 Bool_t Use_CutsD           = 0;
 Bool_t Use_CutsPCA         = 0;
 Bool_t Use_CutsGA          = 1;
+Bool_t Use_CutsSA          = 0;
 // ---
 Bool_t Use_Likelihood      = 1;
 Bool_t Use_LikelihoodD     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
@@ -56,17 +57,16 @@ Bool_t Use_Fisher          = 1;
 // ---
 Bool_t Use_FDA_GA          = 0;
 Bool_t Use_FDA_MC          = 0;
-Bool_t Use_FDA_SA          = 0;
 Bool_t Use_FDA_MT          = 1;
 Bool_t Use_FDA_GAMT        = 0;
 Bool_t Use_FDA_MCMT        = 0;
 // ---
 Bool_t Use_MLP             = 1; // this is the recommended ANN
-Bool_t Use_CFMlpANN        = 0; 
-Bool_t Use_TMlpANN         = 0; 
+Bool_t Use_CFMlpANN        = 1; 
+Bool_t Use_TMlpANN         = 1; 
 // ---
 Bool_t Use_BDT             = 1;
-Bool_t Use_BDTD            = 0;
+Bool_t Use_BDTD            = 1;
 // ---
 Bool_t Use_RuleFit         = 1;
 Bool_t Use_RuleFitJF       = 0;
@@ -101,7 +101,7 @@ void TMVAnalysis( TString myMethodList = "" )
    TList* mlist = 0;
 
    if (myMethodList != "") {
-      Use_CutsGA = Use_CutsD = Use_CutsPCA = Use_Cuts
+      Use_CutsGA = Use_CutsSA = Use_CutsD = Use_CutsPCA = Use_Cuts
          = Use_LikelihoodKDE = Use_LikelihoodMIX = Use_LikelihoodPCA = Use_LikelihoodD = Use_Likelihood
          = Use_PDERSPCA = Use_PDERSD = Use_PDERS = Use_PDERSkNN
          = Use_KNN
@@ -109,7 +109,7 @@ void TMVAnalysis( TString myMethodList = "" )
          = Use_HMatrix = Use_Fisher = Use_BDTD = Use_BDT
          = Use_RuleFit = Use_RuleFitJF
          = Use_SVM_Gauss = Use_SVM_Poly = Use_SVM_Lin 
-         = Use_FDA_GA = Use_FDA_MC = Use_FDA_SA = Use_FDA_MT = Use_FDA_GAMT = Use_FDA_MCMT 
+         = Use_FDA_GA = Use_FDA_MC = Use_FDA_MT = Use_FDA_GAMT = Use_FDA_MCMT 
          = Use_Plugin
          = 0;
 
@@ -119,6 +119,7 @@ void TMVAnalysis( TString myMethodList = "" )
       if (mlist->FindObject( "CutsD"         ) != 0) Use_CutsD         = 1; 
       if (mlist->FindObject( "CutsPCA"       ) != 0) Use_CutsPCA       = 1; 
       if (mlist->FindObject( "CutsGA"        ) != 0) Use_CutsGA        = 1; 
+      if (mlist->FindObject( "CutsSA"        ) != 0) Use_CutsSA        = 1; 
       if (mlist->FindObject( "Likelihood"    ) != 0) Use_Likelihood    = 1; 
       if (mlist->FindObject( "LikelihoodD"   ) != 0) Use_LikelihoodD   = 1; 
       if (mlist->FindObject( "LikelihoodPCA" ) != 0) Use_LikelihoodPCA = 1; 
@@ -143,7 +144,6 @@ void TMVAnalysis( TString myMethodList = "" )
       if (mlist->FindObject( "SVM_Lin"       ) != 0) Use_SVM_Lin       = 1; 
       if (mlist->FindObject( "FDA_MC"        ) != 0) Use_FDA_MC        = 1; 
       if (mlist->FindObject( "FDA_GA"        ) != 0) Use_FDA_GA        = 1; 
-      if (mlist->FindObject( "FDA_SA"        ) != 0) Use_FDA_SA        = 1; 
       if (mlist->FindObject( "FDA_MT"        ) != 0) Use_FDA_MT        = 1; 
       if (mlist->FindObject( "FDA_GAMT"      ) != 0) Use_FDA_GAMT      = 1; 
       if (mlist->FindObject( "FDA_MCMT"      ) != 0) Use_FDA_MCMT      = 1; 
@@ -173,13 +173,25 @@ void TMVAnalysis( TString myMethodList = "" )
    // weightfiles in the directory weight/ 
    //
    // The second argument is the output file for the training results
-   TMVA::Factory *factory = new TMVA::Factory( "TMVAnalysis", outputFile, Form("!V:%sColor", gROOT->IsBatch()?"!":"") );
+   // All TMVA output can be suppressed by removing the "!" (not) in 
+   // front of the "Silent" argument in the option string
+   TMVA::Factory *factory = new TMVA::Factory( "TMVAnalysis", outputFile, 
+                                               Form("!V:!Silent:%sColor", gROOT->IsBatch()?"!":"") );
 
-   // if you wish to modify default settings 
+   // If you wish to modify default settings 
    // (please check "src/Config.h" to see all available global options)
    //    (TMVA::gConfig().GetVariablePlotting()).fTimesRMS = 8.0;
    //    (TMVA::gConfig().GetIONames()).fWeightFileDir = "myWeightDirectory";
 
+   // Define the input variables that shall be used for the MVA training
+   // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
+   // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
+   factory->AddVariable( "var1+var2", 'F' );
+   factory->AddVariable( "var1-var2", 'F' );
+   factory->AddVariable( "var3",      'F' );
+   factory->AddVariable( "var4",      'F' );
+
+   // read training and test data
    if (ReadDataFromAsciiIFormat) {
       // load the signal and background event samples from ascii files
       // format in file must be:
@@ -187,8 +199,8 @@ void TMVAnalysis( TString myMethodList = "" )
       // 0.04551   0.59923   0.32400   -0.19170
       // ...
 
-      TString datFileS = "data/toy_sig_lincorr.dat";
-      TString datFileB = "data/toy_bkg_lincorr.dat";
+      TString datFileS = "tmva_example_sig.dat";
+      TString datFileB = "tmva_example_bkg.dat";
       if (!factory->SetInputTrees( datFileS, datFileB )) exit(1);
    }
    else {
@@ -197,14 +209,14 @@ void TMVAnalysis( TString myMethodList = "" )
       TString fname = "./tmva_example.root";
       if (!gSystem->AccessPathName( fname )) {
          // first we try to find tmva_example.root in the local directory
-         std::cout << "--- TMVAnalysis  : accessing " << fname << std::endl;
+         std::cout << "--- TMVAnalysis    : Accessing " << fname << std::endl;
          input = TFile::Open( fname );
       } 
       else { 
          // second we try accessing the file via the web from
          // http://root.cern.ch/files/tmva_example.root
-         std::cout << "--- TMVAnalysis  : accessing tmva_example.root file from http://root.cern.ch/files" << std::endl;
-         std::cout << "--- TMVAnalysis  : for faster startup you may consider downloading it into you local directory" << std::endl;
+         std::cout << "--- TMVAnalysis    : Accessing tmva_example.root file from http://root.cern.ch/files" << std::endl;
+         std::cout << "--- TMVAnalysis    : For faster startup you may consider downloading it into you local directory" << std::endl;
          input = TFile::Open( "http://root.cern.ch/files/tmva_example.root" );
       }
 
@@ -216,22 +228,53 @@ void TMVAnalysis( TString myMethodList = "" )
       TTree *signal     = (TTree*)input->Get("TreeS");
       TTree *background = (TTree*)input->Get("TreeB");
 
-      // global event weights (see below for setting event-wise weights)
+      // global event weights per tree (see below for setting event-wise weights)
       Double_t signalWeight     = 1.0;
       Double_t backgroundWeight = 1.0;
 
-      factory->AddSignalTree    ( signal,     signalWeight );
+      // ====== register trees ====================================================
+      //
+      // the following method is the prefered one:
+      // you can add an arbitrary number of signal or background trees
+      factory->AddSignalTree    ( signal,     signalWeight     );
       factory->AddBackgroundTree( background, backgroundWeight );
+
+      // To give different trees for training and testing, do as follows:
+      //    factory->AddSignalTree( signalTrainingTree, signalTrainWeight, "Training" );
+      //    factory->AddSignalTree( signalTestTree,     signalTestWeight,  "Test" );
+
+      // Use the following code instead of the above two or four lines to add signal and background 
+      // training and test events "by hand"
+      // NOTE that in this case one should not give expressions (such as "var1+var2") in the input 
+      //      variable definition, but simply compute the expression before adding the event
+      // 
+      //    // --- begin ----------------------------------------------------------
+      //    std::vector<Double_t> vars( 4 ); // vector has size of number of input variables
+      //    Float_t  treevars[4];
+      //    for (Int_t ivar=0; ivar<4; ivar++) signal->SetBranchAddress( Form( "var%i", ivar+1 ), &(treevars[ivar]) );
+      //    for (Int_t i=0; i<signal->GetEntries(); i++) {
+      //       signal->GetEntry(i);
+      //       for (Int_t ivar=0; ivar<4; ivar++) vars[ivar] = treevars[ivar];
+      //       // add training and test events; here: first half is training, second is testing
+      //       // note that the weight can also be event-wise	
+      //       if (i < signal->GetEntries()/2) factory->AddSignalTrainingEvent( vars, signalWeight ); 
+      //       else                            factory->AddSignalTestEvent    ( vars, signalWeight ); 
+      //    }
+      //
+      //    for (Int_t ivar=0; ivar<4; ivar++) background->SetBranchAddress( Form( "var%i", ivar+1 ), &(treevars[ivar]) );
+      //    for (Int_t i=0; i<background->GetEntries(); i++) {
+      //       background->GetEntry(i); 
+      //       for (Int_t ivar=0; ivar<4; ivar++) vars[ivar] = treevars[ivar];
+      //       // add training and test events; here: first half is training, second is testing
+      //       // note that the weight can also be event-wise	
+      //       if (i < background->GetEntries()/2) factory->AddBackgroundTrainingEvent( vars, backgroundWeight ); 
+      //       else                                factory->AddBackgroundTestEvent    ( vars, backgroundWeight ); 
+      //    }
+      //    // --- end ------------------------------------------------------------
+      //
+      // ====== end of register trees ==============================================
    }
    
-   // Define the input variables that shall be used for the MVA training
-   // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
-   // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
-   factory->AddVariable("var1+var2", 'F');
-   factory->AddVariable("var1-var2", 'F');
-   factory->AddVariable("var3", 'F');
-   factory->AddVariable("var4", 'F');
-
    // This would set individual event weights (the variables defined in the 
    // expression need to exist in the original TTree)
    //    for signal    : factory->SetSignalWeightExpression("weight1*weight2");
@@ -246,10 +289,10 @@ void TMVAnalysis( TString myMethodList = "" )
 
    // If no numbers of events are given, half of the events in the tree are used for training, and 
    // the other half for testing:
-   //   factory->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
+   //    factory->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );  
    // To also specify the number of testing events, use:
-   //   factory->PrepareTrainingAndTestTree( mycut, 
-   //                                        "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" );  
+   //    factory->PrepareTrainingAndTestTree( mycut, 
+   //                                         "NSigTrain=3000:NBkgTrain=3000:NSigTest=3000:NBkgTest=3000:SplitMode=Random:!V" );  
 
    // ---- Book MVA methods
    //
@@ -274,6 +317,10 @@ void TMVAnalysis( TString myMethodList = "" )
    if (Use_CutsGA)
      factory->BookMethod( TMVA::Types::kCuts, "CutsGA",
                          "H:!V:FitMethod=GA:EffSel:Steps=30:Cycles=3:PopSize=100:SC_steps=10:SC_rate=5:SC_factor=0.95:VarProp=FSmart" );
+   
+   if (Use_CutsSA)
+      factory->BookMethod( TMVA::Types::kCuts, "CutsSA",
+                           "H:!V:FitMethod=SA:EffSel:MaxCalls=150000:KernelTemperature=IncreasingAdaptive:InitialTemperature=1e+6:MinTemperature=1e-6:Eps=1e-10:UseDefaultScale" );
    
    // Likelihood
    if (Use_Likelihood) 
@@ -333,18 +380,14 @@ void TMVAnalysis( TString myMethodList = "" )
       factory->BookMethod( TMVA::Types::kFisher, "Fisher", 
                            "H:!V:!Normalise:CreateMVAPdfs:Fisher:NbinsMVAPdf=50:NsmoothMVAPdf=1" );
 
-   // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit or GA
+   // Function discrimination analysis (FDA) -- test of various fitters - the recommended one is Minuit (or GA or SA)
    if (Use_FDA_MC) 
       factory->BookMethod( TMVA::Types::kFDA, "FDA_MC",
                           "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=MC:SampleSize=100000:Sigma=0.1" );
    
-   if (Use_FDA_GA) 
+   if (Use_FDA_GA) // can also use Simulated Annealing (SA) algorithm (see Cuts_SA options)
       factory->BookMethod( TMVA::Types::kFDA, "FDA_GA",
                            "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=GA:PopSize=100:Cycles=3:Steps=20:Trim=True:SaveBestGen=0" );
-
-   if (Use_FDA_SA) 
-      factory->BookMethod( TMVA::Types::kFDA, "FDA_SA",
-                           "H:!V:Formula=(0)+(1)*x0+(2)*x1+(3)*x2+(4)*x3:ParRanges=(-1,1);(-10,10);(-10,10);(-10,10);(-10,10):FitMethod=SA:MaxCalls=50000:TemperatureGradient=0.7:InitialTemperature=2000000:MinTemperature=500:Eps=1e-04:NFunLoops=5:NEps=4" );
 
    if (Use_FDA_MT) 
       factory->BookMethod( TMVA::Types::kFDA, "FDA_MT",
@@ -360,7 +403,7 @@ void TMVAnalysis( TString myMethodList = "" )
 
    // TMVA ANN: MLP (recommended ANN) -- all ANNs in TMVA are Multilayer Perceptrons
    if (Use_MLP)
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "Normalise:H:!V:NeuronType=tanh:NCycles=200:HiddenLayers=N+1,N:TestRate=5" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLP", "H:!V:!Normalise:NeuronType=tanh:NCycles=200:HiddenLayers=N+1,N:TestRate=5" );
 
    // CF(Clermont-Ferrand)ANN
    if (Use_CFMlpANN)
@@ -368,7 +411,7 @@ void TMVAnalysis( TString myMethodList = "" )
   
    // Tmlp(Root)ANN
    if (Use_TMlpANN)
-      factory->BookMethod( TMVA::Types::kTMlpANN, "TMlpANN", "!H:!V:NCycles=200:HiddenLayers=N+1,N"  ); // n_cycles:#nodes:#nodes:...
+      factory->BookMethod( TMVA::Types::kTMlpANN, "TMlpANN", "!H:!V:NCycles=200:HiddenLayers=N+1,N:LearningMethod=BFGS:ValidationFraction=0.3"  ); // n_cycles:#nodes:#nodes:...
   
    // Support Vector Machines using three different Kernel types (Gauss, polynomial and linear)
    if (Use_SVM_Gauss)
@@ -398,10 +441,11 @@ void TMVAnalysis( TString myMethodList = "" )
       factory->BookMethod( TMVA::Types::kRuleFit, "RuleFitJF",
                            "!V:RuleFitModule=RFFriedman:Model=ModRuleLinear:GDStep=0.01:GDNSteps=10000:GDErrScale=1.1:RFNendnodes=4" );
  
+   // --------------------------------------------------------------------------------------------------
 
    // As an example how to use the ROOT plugin mechanism, book BDT via
    // plugin mechanism
-   if (Use_Plugin && mlist!=0) {
+   if (Use_Plugin && mlist != 0) {
       TListIter mIt(mlist);
       TObjString *os;
       while( (os = (TObjString*) mIt()) ) {
@@ -416,11 +460,13 @@ void TMVAnalysis( TString myMethodList = "" )
          // 
          // or by telling the global plugin manager directly
          gPluginMgr->AddHandler("TMVA@@MethodBase", "BDT", "TMVA::MethodBDT", "TMVA.1", "MethodBDT(TString,TString,DataSet&,TString)");
-         if(s=="BDT")
+         if (s == "BDT")
             factory->BookMethod( TMVA::Types::kPlugins, "BDT",
                                  "!H:!V:NTrees=400:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:PruneMethod=CostComplexity:PruneStrength=4.5" );
       }
    }
+
+   // --------------------------------------------------------------------------------------------------
 
    // ---- Now you can tell the factory to train, test, and evaluate the MVAs
 

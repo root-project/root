@@ -74,7 +74,7 @@ TMVA::Volume::Volume( Double_t* l, Double_t* u, Int_t nvar )
    for (int ivar=0; ivar<nvar; ivar++) {
       (*fLower)[ivar] = l[ivar];
       (*fUpper)[ivar] = u[ivar];
-   }  
+   }
 }
 
 TMVA::Volume::Volume( Float_t* l, Float_t* u, Int_t nvar ) 
@@ -135,8 +135,8 @@ void TMVA::Volume::Delete( void )
 void TMVA::Volume::Scale( Double_t f )
 {
    // "scale" the volume by multiplying each upper and lower boundary by "f" 
-   Tools::Scale(*fLower,f);
-   Tools::Scale(*fUpper,f);
+   gTools().Scale(*fLower,f);
+   gTools().Scale(*fUpper,f);
 }
 
 void TMVA::Volume::ScaleInterval( Double_t f ) 

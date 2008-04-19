@@ -46,7 +46,7 @@ TMVA::TActivationTanh::TActivationTanh()
 {
    // constructor for tanh sigmoid (normalized in [-1,1])
 
-   fEqn           = new TFormula( "sigmoid",    "TMath::TanH(x)" );
+   fEqn           = new TFormula( "tanh",    "TMath::TanH(x)" );
    fEqnDerivative = new TFormula( "derivative", "1-(TMath::TanH(x))^2" ); 
 }
 
@@ -99,8 +99,10 @@ TString TMVA::TActivationTanh::GetExpression()
 void TMVA::TActivationTanh::MakeFunction(std::ostream& fout, const TString& fncName) 
 {
    // writes the sigmoid activation function source code
-   fout << "double " << fncName << "(double x) const {" << std::endl;
+   fout << "double " << fncName << "(double x) const" << std::endl;
+   fout << "{" << std::endl;
    fout << "   // hyperbolic tan" << std::endl;
-   fout << "   return tanh(-x);" << std::endl;
+   fout << "   return tanh(x);" << std::endl;
    fout << "}" << std::endl;
+   fout << " " << std::endl;
 }

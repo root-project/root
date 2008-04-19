@@ -612,7 +612,7 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
       }
 
       // compute separation
-      sep = TMVA::Tools::GetSeparation( rS, rB );
+      sep = TMVA::gTools().GetSeparation( rS, rB );
       if (ivar == -1) sepRef = sep;
       sep = sepRef - sep;
       
@@ -932,14 +932,14 @@ void TMVA::MethodLikelihood::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The maximum-likelihood classifier models the data with probability " << Endl;
    fLogger << "density functions (PDF) reproducing the signal and background" << Endl;
    fLogger << "distributions of the input variables. Correlations among the " << Endl;
    fLogger << "variables are ignored." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "Required for good performance are decorrelated input variables" << Endl;
    fLogger << "(PCA transformation via the option \"VarTransform=Decorrelate\"" << Endl;
@@ -947,7 +947,7 @@ void TMVA::MethodLikelihood::GetHelpMessage() const
    fLogger << "by precombining strongly correlated input variables, or by simply" << Endl;
    fLogger << "removing one of the variables." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "High fidelity PDF estimates are mandatory, i.e., sufficient training " << Endl;
    fLogger << "statistics is required to populate the tails of the distributions" << Endl;

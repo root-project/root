@@ -124,7 +124,6 @@ namespace TMVA {
       void DeclareOptions();
 
       Bool_t fVerbose;    // verbosity
-      Bool_t fColor;      // color mode
 
       std::map<TString, IMethod*> fMethodMap; // map of methods
 

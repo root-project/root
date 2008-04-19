@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -93,7 +92,7 @@ namespace TMVA {
       BinarySearchTreeNode* Search( Event * event ) const;
     
       // Adds an item to the tree, 
-      void Insert( Event * );
+      void Insert( const Event * );
     
       //get sum of weights of the nodes;
       Double_t GetSumOfWeights( void ) const;
@@ -143,18 +142,16 @@ namespace TMVA {
    private:
 
       // add a new  node to the tree (as daughter) 
-      void       Insert( Event*, Node* );
+      void       Insert( const Event*, Node* );
       // recursively search the nodes for Event
       BinarySearchTreeNode*      Search( Event*, Node *) const ;
     
       //check of Event variables lie with the volumde
       Bool_t   InVolume    (const std::vector<Float_t>&, Volume* ) const;
       //
-      void     DestroyNode ( BinarySearchTreeNode* );
-      
 
-      void     NormalizeTree( vector< pair< Double_t, TMVA::Event* > >::iterator, 
-                              vector< pair< Double_t, TMVA::Event* > >::iterator, UInt_t );
+      void     NormalizeTree( vector< pair< Double_t, const TMVA::Event* > >::iterator, 
+                              vector< pair< Double_t, const TMVA::Event* > >::iterator, UInt_t );
 
       // recursive search through daughter nodes in weight counting
       Double_t SearchVolume( Node*, Volume*, Int_t, 
@@ -174,7 +171,7 @@ namespace TMVA {
                                                 // should be the same as fNEventsW[0]+fNEventsW[1].. used as a check
       
       Bool_t                      fCanNormalize; // the tree can be normalised
-      std::vector< std::pair<Double_t,TMVA::Event*> > fNormalizeTreeTable;
+      std::vector< std::pair<Double_t,const TMVA::Event*> > fNormalizeTreeTable;
       
       ClassDef(BinarySearchTree,0) // Binary search tree including volume search method  
    };

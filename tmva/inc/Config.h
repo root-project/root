@@ -46,10 +46,10 @@ namespace TMVA {
       virtual ~Config();
 
       Bool_t UseColor() { return fUseColoredConsole; }
-      void SetUseColor( Bool_t uc ) { fUseColoredConsole = uc; }
+      void   SetUseColor( Bool_t uc ) { fUseColoredConsole = uc; }
 
-      Bool_t Silent() { return fSilent; }
-      void SetSilent( Bool_t s ) { fSilent = s; }
+      Bool_t IsSilent() { return fSilent; }
+      void   SetSilent( Bool_t s ) { fSilent = s; }
 
    public:
 
@@ -67,14 +67,15 @@ namespace TMVA {
          Int_t   fNbins1D;
          Int_t   fNbins2D;
          Int_t   fMaxNumOfAllowedVariablesForScatterPlots;
-      } fVariablePlotting;
+         Int_t   fNbinsXOfROCCurve;
+      } fVariablePlotting; // Customisable plotting properties
 
       // for file names and similar
       class IONames {
       public:
          TString fWeightFileDir;
          TString fWeightFileExtension;
-      } fIONames;
+      } fIONames; // Customisable weight file properties
          
       
    private:

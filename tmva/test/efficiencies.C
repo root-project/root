@@ -107,7 +107,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    while (hists.GetSize()) {
       TListIter hIt(&hists);
       TH1* hist(0);
-      Double_t largestInt=0;
+      Double_t largestInt=-1;
       TH1* histWithLargestInt(0);
       while ((hist = (TH1*)hIt())!=0) {
          Double_t integral = hist->Integral(1,hist->FindBin(0.9999));

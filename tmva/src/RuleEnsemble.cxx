@@ -513,7 +513,7 @@ void TMVA::RuleEnsemble::MakeRules( const std::vector< const DecisionTree *> & f
       nrulesCheck += nrules;
    }
    Double_t nmean = sumnendn/ntrees;
-   Double_t nsigm = TMath::Sqrt( Tools::ComputeVariance(sumn2,sumnendn,ntrees) );
+   Double_t nsigm = TMath::Sqrt( gTools().ComputeVariance(sumn2,sumnendn,ntrees) );
    Double_t ndev = 2.0*(nmean-2.0-nsigm)/(nmean-2.0+nsigm);
    //
    fLogger << kVERBOSE << "Average number of end nodes per tree   = " << nmean << Endl;
@@ -839,7 +839,7 @@ void TMVA::RuleEnsemble::RuleStatistics()
    fRuleNCsig = 0.0;
    if (nrules>0) {
       fRuleNCave = sumNc/nrules;
-      fRuleNCsig = TMath::Sqrt(Tools::ComputeVariance(sumNc2,sumNc,nrules));
+      fRuleNCsig = TMath::Sqrt(gTools().ComputeVariance(sumNc2,sumNc,nrules));
    }
 }
 

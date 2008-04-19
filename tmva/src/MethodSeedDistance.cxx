@@ -154,7 +154,7 @@ void TMVA::MethodSeedDistance::ProcessOptions()
    //   fLogger << kINFO << "rangestring " << fSeedRangeStringT << Endl;
    //   fLogger << kINFO << "rangestring number ) " << fNPars << Endl;
    
-   TList* parList = Tools::ParseFormatLine( fSeedRangeStringT, ";" );
+   TList* parList = gTools().ParseFormatLine( fSeedRangeStringT, ";" );
    //   if (parList->GetSize()*2 != fNPars) {
    //      fLogger << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
    //              << "the number of parameters: " << fNPars << " != ranges defined: " 
@@ -183,6 +183,8 @@ void TMVA::MethodSeedDistance::ProcessOptions()
 
       fParRange[ipar] = new Interval( pmin, pmax );
    }
+
+   delete parList;
 
    if( fScalingFactor ){
       fParRange.push_back( new Interval( 0.0, 1.0 ) );
@@ -580,11 +582,11 @@ void TMVA::MethodSeedDistance::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
 }

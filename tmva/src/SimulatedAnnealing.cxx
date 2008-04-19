@@ -11,11 +11,12 @@
  *      Implementation (see header for description)                               *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
+ *      Krzysztof Danielowski <danielow@cern.ch>       - IFJ & AGH, Poland        *
+ *      Kamil Kraszewski      <kalq@cern.ch>           - IFJ & UJ, Poland         *
+ *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
  *                                                                                *
- * Copyright (c) 2006:                                                            *
+ * Copyright (c) 2008:                                                            *
+ *      IFJ-Krakow, Poland                                                        *
  *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
@@ -29,33 +30,88 @@
 // Implementation of Simulated Annealing fitter  
 //_______________________________________________________________________
 
-#include "TRandom.h"
+#include <cmath>
+
+#include "TRandom3.h"
 #include "TMath.h"
-#include "Riostream.h"
+
 #include "TMVA/SimulatedAnnealing.h"
 #include "TMVA/Interval.h"
 #include "TMVA/IFitterTarget.h"
+#include "TMVA/GeneticRange.h"
+#include "TMVA/Timer.h"
 
 ClassImp(TMVA::SimulatedAnnealing)
 
 //_______________________________________________________________________
 TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::vector<Interval*>& ranges )
    : fFitterTarget          ( target ),
-     fRandom                ( new TRandom(100) ),
+     fRandom                ( new TRandom3(100) ),
      fRanges                ( ranges ),
      fMaxCalls              ( 500000 ),
-     fTemperatureGradient   ( 0.3 ),
-     fUseAdaptiveTemperature( kFALSE ),
      fInitialTemperature    ( 1000 ),
      fMinTemperature        ( 0 ),
-     fEps                   ( 1e-04 ),
-     fNFunLoops             ( 25 ),
-     fNEps                  ( 4 ), // needs to be at leas 2 !
+     fEps                   ( 1e-10 ),
+     fTemperatureScale      ( 0.06 ),
+     fUseDefaultScale       ( kFALSE ),
      fLogger( "SimulatedAnnealing" )
-{   
+{
    // constructor
+   fAdaptiveSpeed = 1.0;
+   fKernelTemperature = kIncreasingAdaptive;
 }
 
+//_______________________________________________________________________
+void TMVA::SimulatedAnnealing::SetOptions( Int_t    maxCalls,
+                                           Double_t initialTemperature,
+                                           Double_t minTemperature,
+                                           Double_t eps,
+                                           TString  kernelTemperatureS,
+                                           Double_t temperatureScale,
+                                           Double_t adaptiveSpeed,
+                                           Double_t temperatureAdaptiveStep,
+                                           Bool_t   useDefaultScale,
+                                           Bool_t   useDefaultTemperature)   
+{
+   // option setter
+
+   fMaxCalls = maxCalls;
+   fInitialTemperature = initialTemperature;
+   fMinTemperature = minTemperature;
+   fEps = eps;
+
+   if      (kernelTemperatureS == "IncreasingAdaptive") {
+      fKernelTemperature = kIncreasingAdaptive; 
+      fLogger << kINFO << "Using increasing adaptive algorithm" << Endl;
+   }
+   else if (kernelTemperatureS == "DecreasingAdaptive") {
+      fKernelTemperature = kDecreasingAdaptive; 
+      fLogger << kINFO << "Using decreasing adaptive algorithm" << Endl;
+   }
+   else if (kernelTemperatureS == "Sqrt") {
+      fKernelTemperature = kSqrt; 
+      fLogger << kINFO << "Using \"Sqrt\" algorithm" << Endl;
+   }
+   else if (kernelTemperatureS == "Homo") {
+      fKernelTemperature = kHomo; 
+      fLogger << kINFO << "Using \"Homo\" algorithm" << Endl;
+   }
+   else if (kernelTemperatureS == "Log") {
+      fKernelTemperature = kLog;  
+      fLogger << kINFO << "Using \"Log\" algorithm" << Endl;
+   }
+   else if (kernelTemperatureS == "Sin") {
+      fKernelTemperature = kSin;
+      fLogger << kINFO << "Using \"Sin\" algorithm" << Endl;
+   }
+
+   fTemperatureScale        = temperatureScale;
+   fAdaptiveSpeed           = adaptiveSpeed;
+   fTemperatureAdaptiveStep = temperatureAdaptiveStep;
+
+   fUseDefaultScale         = useDefaultScale;
+   fUseDefaultTemperature   = useDefaultTemperature;
+}
 //_______________________________________________________________________
 TMVA::SimulatedAnnealing::~SimulatedAnnealing()
 {
@@ -63,202 +119,288 @@ TMVA::SimulatedAnnealing::~SimulatedAnnealing()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
+void TMVA::SimulatedAnnealing::FillWithRandomValues( std::vector<Double_t>& parameters )
 {
-   // minimisation
-
-   // speed up loops
-   UInt_t npar = parameters.size();
-      
-   // sanity check
-   if (npar != fRanges.size()) fLogger << kFATAL << "<Minimize> Mismatch in vector lengths: "
-                                       << npar << " != " << fRanges.size() << Endl;
-
-   // set values
-   Double_t deltaT = fTemperatureGradient;
-
-   // step width of temperature reduction
-   Double_t stepWidth = 3*npar;
-   if (npar < 20) stepWidth = 50; // don't go below some minimum 
-
-   UInt_t i; // predefine for compatibility with old platforms (eg, SunOS5)
-   std::vector<Double_t> diffFCN; 
-   for (i = 0; i < (UInt_t)fNEps; ++i) diffFCN.push_back(1e20);
-
-   // result vector
-   std::vector<Double_t> bestParameters( parameters );
-
-   // auxiliary vectors
-   std::vector<Double_t> xPars( parameters );
-   std::vector<Double_t> yPars( parameters );
-   
-   // initialize adaptive errors with bold guess
-   std::vector<Double_t> adaptiveErrors;
-   std::vector<Int_t>    nAccepted;
-   for (UInt_t k = 0; k < npar; k++ ) {
-      adaptiveErrors.push_back( (fRanges[k]->GetMax() - fRanges[k]->GetMin())/10.0 );
-      nAccepted.push_back(0);
+   // random starting parameters
+   for (UInt_t rIter = 0; rIter < parameters.size(); rIter++) {
+      parameters[rIter] = fRandom->Uniform(0.0,1.0)*(fRanges[rIter]->GetMax() - fRanges[rIter]->GetMin()) + fRanges[rIter]->GetMin();
    }
-
-   // starting point (note that simulated annealing searches for maximum!)
-   Double_t retFCN = - fFitterTarget.EstimatorFunction( xPars );
-   Int_t    nCalls = 1;
-   Double_t maxFCN = retFCN;
-   diffFCN[1] = retFCN;
-
-   // set initial temperature
-   Double_t temperature = fInitialTemperature;
-
-   //---------------------------------------------------------------------------------
-   // perform the optimization until maximum iteration or required accuracy is reached
-   Int_t nIteration = 0;
-
-   // required for adaptive annealing
-   std::pair<Int_t,Int_t> optPoint;
-   std::pair<Int_t,Int_t> optPoint_previous;
-
-   // begin with new temperature
-   Bool_t continueWhile = kTRUE;
-   while (continueWhile) {
-
-      // iteration counter
-      nIteration++;
-
-      if (fUseAdaptiveTemperature) {
-         if (nIteration>0 && ( TMath::Abs( ( (float)nIteration/2. ) - nIteration/2 ) < 0.01 ) ) {
-            if (optPoint.first          > 0 && optPoint.second          == 0 && 
-                optPoint_previous.first > 0 && optPoint_previous.second == 0) {
-               if (stepWidth > 20) {
-                  deltaT = TMath::Sqrt( deltaT );
-                  stepWidth = 0.5*stepWidth;
-               }
-            }
-         }
-      }
-
-      // loop over the iterations before temperature reduction:
-      for (Int_t m = 0; m < stepWidth; m++) {
-
-         // adaptive annealing steps
-         optPoint_previous.first  = optPoint.first;
-         optPoint_previous.second = optPoint.second;
-         optPoint.first  = 0;
-         optPoint.second = 0;
-
-         // loop over the accepted-function evaluations
-         for (Int_t j = 0; j < fNFunLoops; j++) {
-
-            // loop over parameters
-            for (UInt_t h = 0; h < npar; h++) {
-
-               // randomize parameter h
-               yPars[h] = xPars[h] + gRandom->Uniform(-1.0,1.0)*adaptiveErrors[h];
-
-               // retry if randomising has thrown yPars out of its bounds
-               while (yPars[h] < fRanges[h]->GetMin() || yPars[h] > fRanges[h]->GetMax()) {
-                  yPars[h] = gRandom->Uniform(-2.0,2.0)*adaptiveErrors[h] + parameters[h];
-               }
-
-               // recover previous parameter setting 
-               if (h >= 1) yPars[h-1] = xPars[h-1];
-
-               // compute estimator for given variable set (again, searches for maximum)
-               Double_t retFCNi = - fFitterTarget.EstimatorFunction( yPars ); 
-
-               // too many function evaluations ? --> stop simulated annealing
-               ++nCalls;
-               if (nCalls >= fMaxCalls) {
-                  for (i = 0; i < npar; i++) parameters[i] = bestParameters[i];
-                  return -maxFCN;
-               }
-
-               // accept new solution if better FCN value
-               if (retFCNi > retFCN) {
-                  for (i = 0; i < npar; ++i) xPars[i] = yPars[i];
-                  retFCN = retFCNi;
-                  ++nAccepted[h];
-
-                  // best FCN value so far, record as new best parameter set
-                  if (retFCNi > maxFCN) {
-                     for (i = 0; i < npar; ++i) bestParameters[i] = yPars[i];
-                     
-                     if (m <= stepWidth/2) optPoint.first++;
-                     else                  optPoint.second++;
-                     
-                     maxFCN = retFCNi;
-                  }
-               } 
-               else {
-
-                  // original Metropolis et al. scheme to decide whether a solution is 
-                  // accepted if FCN is worse than before;
-                  // criterion following:
-                  //   N. Metropolis, A. Rosenbluth, M. Rosenbluth, A. Teller, E. Teller, 
-                  //   "Equation of State Calculations by Fast Computing Machines", 
-                  //   J. Chem. Phys., 21, 6, 1087-1092, 1953
-                  if (gRandom->Uniform(1.0) < this->GetPerturbationProbability( retFCNi, retFCN, 
-                                                                                temperature )) {
-                     for (i = 1; i < npar; ++i) xPars[i] = yPars[i];
-                     retFCN = retFCNi;
-                     ++nAccepted[h];
-                  } 
-               }
-            } 
-         } 
-         // adjust the adaptiveErrors and the temperature
-         // adjust adaptiveErrors to accept between 0.4 and 0.6 of the trial 
-         // points at the given temperature
-         for (i = 0; i < npar; ++i) {
-            Double_t ratio = Double_t(nAccepted[i])/Double_t(fNFunLoops);
-            // many FCN improvements, ie, far from minimum --> enhance error
-            if      (ratio > 0.6) adaptiveErrors[i] *= (2.0 * (ratio - 0.6) / 0.4 + 1.0);
-            // few FCN improvements, ie, closer to minimum --> reduce error
-            else if (ratio < 0.4) adaptiveErrors[i] /= (2.0 * (0.4 - ratio) / 0.4 + 1.0);
-            // else don't touch the error
-
-            // the error shouldn't be larger than the full variable range
-            if (adaptiveErrors[i] > fRanges[i]->GetMax() - fRanges[i]->GetMin()) 
-               adaptiveErrors[i] = fRanges[i]->GetMax() - fRanges[i]->GetMin();
-         }
-
-         // reset number of accepted functions
-         for (i = 0; i < npar; ++i) nAccepted[i] = 0;
-      } 
-
-      //  terminate simulated annealing if appropriate 
-      diffFCN[1] = retFCN;
-      if (TMath::Abs(maxFCN - diffFCN[1]) < fEps) 
-         for (i = 0; i < (UInt_t)fNEps; ++i) if (TMath::Abs(retFCN - diffFCN[i]) > fEps) continueWhile = kTRUE;
-
-      // more quite criteria
-      if (TMath::Abs(maxFCN) < 1e-06   ) continueWhile = kFALSE;
-      if (temperature < fMinTemperature) continueWhile = kFALSE;
-
-      if (continueWhile) {
-         // continue annealing
-         temperature = deltaT * temperature;
-         for (i = fNEps-1; i >= 1; --i) diffFCN[i] = diffFCN[i - 1];
-         for (i = 0; i < npar; ++i) xPars[i] = bestParameters[i];
-         retFCN = maxFCN;
-         printf( "new temp: %g --> maxFCN: %f10.10\n" , temperature, maxFCN );
-         fLogger << kVERBOSE << "parameters: ";
-         for (UInt_t i=0; i<parameters.size(); i++) 
-            cout << parameters[i] << " ";
-         fLogger << kVERBOSE << Endl << Endl;
-         
-      }
-   } // end of while loop
-
-   // return best parameter set
-   for (i = 0; i < npar; i++ ) parameters[i] = bestParameters[i];
-
-   return - maxFCN;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::SimulatedAnnealing::GetPerturbationProbability( Double_t E, Double_t Eref, 
-                                                               Double_t temperature )
+void TMVA::SimulatedAnnealing::ReWriteParameters( std::vector<Double_t>& from, std::vector<Double_t>& to)
 {
-   // calculates the probability that a perturbation occured
-   return (temperature > 0) ? TMath::Exp( (Eref - E)/temperature ) : 0;
+   // copy parameters
+   for (UInt_t rIter = 0; rIter < from.size(); rIter++) to[rIter] = from[rIter];
 }
+
+//_______________________________________________________________________
+void TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& parameters, std::vector<Double_t>& oldParameters, 
+                                                  Double_t currentTemperature )
+{
+   // generate adjacent parameters
+   ReWriteParameters( parameters, oldParameters );
+
+   for (UInt_t rIter=0;rIter<parameters.size();rIter++) {
+      Double_t uni,distribution,sign;
+      do {
+         uni = fRandom->Uniform(0.0,1.0);
+         sign = (uni - 0.5 >= 0.0) ? (1.0) : (-1.0);
+         distribution = currentTemperature * (pow(1.0 + 1.0/currentTemperature, TMath::Abs(2.0*uni - 1.0)) -1.0)*sign;
+         parameters[rIter] = oldParameters[rIter] +  (fRanges[rIter]->GetMax()-fRanges[rIter]->GetMin())*0.1*distribution;
+      }
+      while (parameters[rIter] < fRanges[rIter]->GetMin() || parameters[rIter] > fRanges[rIter]->GetMax() );
+   }
+}
+//_______________________________________________________________________
+std::vector<Double_t> TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& parameters, Double_t currentTemperature )
+{
+   // generate adjacent parameters
+   std::vector<Double_t> newParameters( fRanges.size() );   
+
+   for (UInt_t rIter=0; rIter<parameters.size(); rIter++) {
+      Double_t uni,distribution,sign;
+      do {
+         uni = fRandom->Uniform(0.0,1.0);
+         sign = (uni - 0.5 >= 0.0) ? (1.0) : (-1.0);
+         distribution = currentTemperature * (pow(1.0 + 1.0/currentTemperature, TMath::Abs(2.0*uni - 1.0)) -1.0)*sign;
+         newParameters[rIter] = parameters[rIter] +  (fRanges[rIter]->GetMax()-fRanges[rIter]->GetMin())*0.1*distribution;
+      }
+      while (newParameters[rIter] < fRanges[rIter]->GetMin() || newParameters[rIter] > fRanges[rIter]->GetMax() );
+   }
+
+   return newParameters;
+}
+
+//_______________________________________________________________________
+void TMVA::SimulatedAnnealing::GenerateNewTemperature( Double_t& currentTemperature, Int_t Iter )
+{
+   // generate new temperature
+   if      (fKernelTemperature == kSqrt) {
+         currentTemperature = fInitialTemperature/(Double_t)TMath::Sqrt(Iter+2) * fTemperatureScale;
+   }
+   else if (fKernelTemperature == kLog) {
+      currentTemperature = fInitialTemperature/(Double_t)TMath::Log(Iter+2) * fTemperatureScale;
+   }
+   else if (fKernelTemperature == kHomo) {
+      currentTemperature = fInitialTemperature/(Double_t)(Iter+2) * fTemperatureScale;
+   }
+   else if (fKernelTemperature == kSin) {
+      currentTemperature = (TMath::Sin( (Double_t)Iter / fTemperatureScale ) + 1.0 )/ (Double_t)(Iter+1.0) * fInitialTemperature + fEps;
+   }
+   else if (fKernelTemperature == kGeo) {
+      currentTemperature = currentTemperature*fTemperatureScale;
+   }
+   else if (fKernelTemperature == kIncreasingAdaptive) {
+      currentTemperature = fMinTemperature + fTemperatureScale*std::log(1.0+fProgress*fAdaptiveSpeed)/LOGE;
+   }
+   else if (fKernelTemperature == kDecreasingAdaptive) {
+      currentTemperature = currentTemperature*fTemperatureScale;
+   }
+   else fLogger << kFATAL << "No such kernel!" << Endl;
+}
+
+//________________________________________________________________________
+Bool_t TMVA::SimulatedAnnealing::ShouldGoIn( Double_t currentFit, Double_t localFit, Double_t currentTemperature )
+{
+   // result checker
+   if (currentTemperature < fEps) return kFALSE;
+   Double_t lim  = TMath::Exp( -TMath::Abs( currentFit - localFit ) / currentTemperature );
+   Double_t prob = fRandom->Uniform(0.0, 1.0);
+   return (prob < lim) ? kTRUE : kFALSE;
+}
+
+//_______________________________________________________________________
+void TMVA::SimulatedAnnealing::SetDefaultScale()
+{
+   // setting of default scale
+   if      (fKernelTemperature == kSqrt)   fTemperatureScale = 1.0;
+   else if (fKernelTemperature == kLog)  fTemperatureScale = 1.0;
+   else if (fKernelTemperature == kHomo) fTemperatureScale = 1.0;
+   else if (fKernelTemperature == kSin)  fTemperatureScale = 20.0;
+   else if (fKernelTemperature == kGeo)  fTemperatureScale = 0.99997;
+   else if (fKernelTemperature == kDecreasingAdaptive) {
+      fTemperatureScale = 1.0;
+      while (std::abs(pow(fTemperatureScale,fMaxCalls) * fInitialTemperature - fMinTemperature) >
+             std::abs(pow(fTemperatureScale-0.000001,fMaxCalls) * fInitialTemperature - fMinTemperature)) {
+         fTemperatureScale -= 0.000001;
+      }
+   }
+   else if (fKernelTemperature == kIncreasingAdaptive) fTemperatureScale = 0.15*( 1.0 / (Double_t)(fRanges.size() ) );
+   else fLogger << kFATAL << "No such kernel!" << Endl;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>& parameters  )
+{
+   // maximum temperature
+   Int_t equilibrium;
+   Bool_t stopper = 0; 
+   Double_t t, dT, cold, delta, deltaY, y, yNew, yBest, yOld;
+   std::vector<Double_t> x( fRanges.size() ), xNew( fRanges.size() ), xBest( fRanges.size() ), xOld( fRanges.size() );
+   t = fMinTemperature;
+   deltaY = cold = 0.0;
+   dT = fTemperatureAdaptiveStep;
+   for (UInt_t rIter = 0; rIter < x.size(); rIter++)
+      x[rIter] = ( fRanges[rIter]->GetMax() + fRanges[rIter]->GetMin() ) / 2.0;
+   y = yBest = 1E10;
+   for (Int_t i=0; i<fMaxCalls/50; i++) {
+      if ((i>0) && (deltaY>0.0)) {
+         cold = deltaY;
+         stopper = 1;
+      }
+      t += dT*i;
+      x = xOld = GenerateNeighbour(x,t);
+      y = yOld = fFitterTarget.EstimatorFunction( xOld );   
+      equilibrium = 0;
+      for ( Int_t i=0; (i<30) && (equilibrium<=12); i++ ) {
+         xNew = GenerateNeighbour(x,t);
+         //"energy"
+         yNew = fFitterTarget.EstimatorFunction( xNew );
+         deltaY = yNew - y;
+         if (deltaY < 0.0) {     // keep xnew if energy is reduced
+            std::swap(x,xNew);
+            std::swap(y,yNew);
+            if (y < yBest) {
+               xBest = x;
+               yBest = y;
+            }
+            delta = TMath::Abs( deltaY );
+            if      (y    != 0.0) delta /= y;
+            else if (yNew != 0.0) delta /= y;
+
+            // equilibrium is defined as a 10% or smaller change in 10 iterations 
+            if (delta < 0.1) equilibrium++;
+            else             equilibrium = 0;
+         }
+         else equilibrium++;
+      }
+
+      // "energy"
+      yNew = fFitterTarget.EstimatorFunction( xNew ); 
+      deltaY = yNew - yOld;
+      if ( (deltaY < 0.0 )&&( yNew < yBest)) {
+         xBest=x;
+         yBest = yNew;
+      }
+      y = yNew;
+      if ((stopper) && (deltaY >= (100.0 * cold))) break;  // phase transition with another parameter to change
+   }
+   parameters = xBest;
+   return t;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
+{
+   // minimisation algorithm
+   std::vector<Double_t> bestParameters(fRanges.size());
+   std::vector<Double_t> oldParameters (fRanges.size());
+
+   LOGE = std::log(M_E);
+
+   Double_t currentTemperature, bestFit, currentFit;
+   Int_t optimizeCalls, generalCalls, equals;
+
+   equals = 0;
+
+   if (fUseDefaultTemperature) {
+      if (fKernelTemperature == kIncreasingAdaptive) {
+         fMinTemperature = currentTemperature = 1e-06; 
+         FillWithRandomValues( parameters );
+      }
+      else fInitialTemperature = currentTemperature = GenerateMaxTemperature( parameters );
+   }
+   else {
+      if (fKernelTemperature == kIncreasingAdaptive)
+         currentTemperature = fMinTemperature; 
+      else
+         currentTemperature = fInitialTemperature;
+      FillWithRandomValues( parameters ); 
+   }
+   
+   if (fUseDefaultScale) SetDefaultScale();
+
+   fLogger << kINFO 
+           << "Temperatur scale = "      << fTemperatureScale  
+           << ", current temperature = " << currentTemperature  << Endl;
+
+   bestParameters = parameters;
+   bestFit        = currentFit = fFitterTarget.EstimatorFunction( bestParameters );
+
+   optimizeCalls = fMaxCalls/100;             //use 1% calls to optimize best founded minimum
+   generalCalls  = fMaxCalls - optimizeCalls; //and 99% calls to found that one
+   fProgress = 0.0;
+
+   Timer timer( fMaxCalls, fLogger.GetSource().c_str() );
+
+   for (Int_t sample = 0; sample < generalCalls; sample++) {
+      GenerateNeighbour( parameters, oldParameters, currentTemperature );
+      Double_t localFit = fFitterTarget.EstimatorFunction( parameters );
+      
+      if (localFit < currentFit || TMath::Abs(currentFit-localFit) < fEps) { // if not worse than last one
+         if (TMath::Abs(currentFit-localFit) < fEps) { // if the same as last one
+            equals++;
+            if (equals >= 3) //if we still at the same level, we should increase temperature
+               fProgress+=1.0;
+         }
+         else {
+            fProgress = 0.0;
+            equals = 0;
+         }
+         
+         currentFit = localFit;
+         
+         if (currentFit < bestFit) {
+            ReWriteParameters( parameters, bestParameters );
+            bestFit = currentFit;
+         }
+      }
+      else {
+         if (!ShouldGoIn(localFit, currentFit, currentTemperature))
+            ReWriteParameters( oldParameters, parameters );
+         else
+            currentFit = localFit;
+         
+         fProgress+=1.0;
+         equals = 0;
+      }
+      
+      GenerateNewTemperature( currentTemperature, sample );
+      
+      if ((fMaxCalls<100) || sample%Int_t(fMaxCalls/100.0) == 0) timer.DrawProgressBar( sample );
+   }
+
+   // get elapsed time   
+   fLogger << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
+           << "                            " << Endl;  
+   
+   // supose this minimum is the best one, now just try to improve it
+
+   Double_t startingTemperature = fMinTemperature*(fRanges.size())*2.0; 
+   currentTemperature = startingTemperature;
+
+   Int_t changes = 0;
+   for (Int_t sample=0;sample<optimizeCalls;sample++) {
+      GenerateNeighbour( parameters, oldParameters, currentTemperature );
+      Double_t localFit = fFitterTarget.EstimatorFunction( parameters );
+      
+      if (localFit < currentFit) { //if better than last one
+         currentFit = localFit;
+         changes++;
+         
+         if (currentFit < bestFit) {
+            ReWriteParameters( parameters, bestParameters );
+            bestFit = currentFit;
+         }
+      }
+      else ReWriteParameters( oldParameters, parameters ); //we never try worse parameters
+
+      currentTemperature-=(startingTemperature - fEps)/optimizeCalls;
+   }
+
+   ReWriteParameters( bestParameters, parameters );
+
+   return bestFit; 
+}
+

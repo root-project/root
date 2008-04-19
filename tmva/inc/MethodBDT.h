@@ -199,7 +199,9 @@ namespace TMVA {
       DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig 
       TString                          fPruneMethodS;    // prune method option String
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample 
-
+      Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training  
+      Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
+      Int_t                            fUseNvars;        // the number of variables used in the randomised tree splitting
 
       std::vector<Double_t>           fVariableImportance; // the relative importance of the different variables 
 

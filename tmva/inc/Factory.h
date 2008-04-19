@@ -94,21 +94,31 @@ namespace TMVA {
        * The 3rd branch will be called "myVar3"   and will contain an Int_t.
        * The 4th branch will be called "myString" and will contain a TObjString. 
        */
-      Bool_t SetInputTrees(TString signalFileName, TString backgroundFileName, 
-                           Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
-      Bool_t SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut = "");
+      Bool_t SetInputTrees( TString signalFileName, TString backgroundFileName, 
+                            Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
+      Bool_t SetInputTrees( TTree* inputTree, TCut SigCut, TCut BgCut = "" );
+
+      // add events to training and testing trees
+      void AddSignalTrainingEvent    ( std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddBackgroundTrainingEvent( std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddSignalTestEvent        ( std::vector<Double_t>& event, Double_t weight = 1.0 );
+      void AddBackgroundTestEvent    ( std::vector<Double_t>& event, Double_t weight = 1.0 );
 
       // Set input trees at once
-      Bool_t SetInputTrees(TTree* signal, TTree* background, 
-                           Double_t signalWeight=1.0, Double_t backgroundWeight=1.0);
+      Bool_t SetInputTrees( TTree* signal, TTree* background, 
+                            Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
 
       // set signal tree
-      void SetSignalTree(TTree* signal, Double_t weight=1.0);
-      void AddSignalTree(TTree* signal, Double_t weight=1.0);
+      void AddSignalTree( TTree* signal, Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
+      void AddSignalTree( TTree* signal, Double_t weight, const TString& treetype );      
+      // ... depreciated, kept for backwards compatibility
+      void SetSignalTree( TTree* signal, Double_t weight=1.0 ); 
 
       // set background tree
-      void SetBackgroundTree(TTree* background, Double_t weight=1.0);
-      void AddBackgroundTree(TTree* background, Double_t weight=1.0);
+      void AddBackgroundTree( TTree* background, Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
+      void AddBackgroundTree( TTree* background, Double_t weight, const TString & treetype );
+      // ... depreciated, kept for backwards compatibility
+      void SetBackgroundTree( TTree* background, Double_t weight=1.0 );
 
       // set input variable
       void SetInputVariables( std::vector<TString>* theVariables );
@@ -129,17 +139,15 @@ namespace TMVA {
 
 
       // prepare input tree for training
-      void PrepareTrainingAndTestTree( TCut cut, 
+      void PrepareTrainingAndTestTree( const TCut& cut, 
                                        Int_t Ntrain, Int_t Ntest = -1 );
 
-      void PrepareTrainingAndTestTree( TCut cut, 
+      void PrepareTrainingAndTestTree( const TCut& cut,
                                        Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
-                                       const TString& otherOpt="SplitMode=Random:!V" );
+                                       const TString& otherOpt );
 
-      void PrepareTrainingAndTestTree( TCut cut, 
-                                       const TString& splitOpt="NsigTrain=3000:NbkgTrain=3000:SplitMode=Random" );
-      void PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, 
-                                       const TString& splitOpt="NsigTrain=3000:NbkgTrain=3000:SplitMode=Random" );
+      void PrepareTrainingAndTestTree( const TCut& cut, const TString& splitOpt );
+      void PrepareTrainingAndTestTree( const TCut& sigcut, const TCut& bkgcut, const TString& splitOpt );
 
       Bool_t BookMethod( TString theMethodName, TString methodTitle, TString theOption = "" );
       Bool_t BookMethod( Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
@@ -154,7 +162,7 @@ namespace TMVA {
 
       // performance evaluation
       void EvaluateAllMethods( void );
-      void EvaluateAllVariables( TString options = "");
+      void EvaluateAllVariables( TString options = "" ); 
   
       // delete all methods and reset the method vector
       void DeleteAllMethods( void );
@@ -195,12 +203,27 @@ namespace TMVA {
       TFile*           fTargetFile;         // ROOT output file
       TString          fOptions;            // option string given by construction (presently only "V")
       Bool_t           fVerbose;            // verbose mode
-      Bool_t           fColor;              // color mode
-      Bool_t           fSilent;             // silent: no output at all
 
       std::vector<TTreeFormula*> fInputVarFormulas; // local forulas of the same
       std::vector<IMethod*>      fMethods;          // all MVA methods
       TString                    fJobName;          // jobname, used as extension in weight file names
+
+      // flag determining the way training and test data are assigned to Factory
+      enum DataAssignType { kUndefined = 0, kAssignTrees, kAssignEvents };
+      DataAssignType             fDataAssignType;         // flags for data assigning
+      Bool_t                     fSuspendDATVerification; // do not temporarily verify
+
+      // AssignType can only be event-wise OR tree-wise
+      Bool_t VerifyDataAssignType  ( DataAssignType ); 
+      void   CreateEventAssignTrees( TTree*&, const TString& name  );
+      void   SetInputTreesFromEventAssignTrees();
+      TTree*                     fTrainSigAssignTree; // tree for training events
+      TTree*                     fTrainBkgAssignTree; // tree for training events
+      TTree*                     fTestSigAssignTree;  // tree for test events
+      TTree*                     fTestBkgAssignTree;  // tree for test events
+      Int_t                      fATreeType;          // type of event (sig = 1, background = 0)
+      Float_t                    fATreeWeight;        // weight of the event
+      Float_t*                   fATreeEvent;         // event variables
 
       // local directory for each MVA in output target, used to store 
       // specific monitoring histograms (e.g., reference distributions of likelihood method)

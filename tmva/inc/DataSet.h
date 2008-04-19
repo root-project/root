@@ -66,17 +66,19 @@ namespace TMVA {
 
    public:
 
-      TreeInfo( TTree* tr, Double_t weight=1.0 ) 
-         : fTree(tr), fWeight(weight) {}
+      TreeInfo( TTree* tr, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType ) 
+         : fTree(tr), fWeight(weight), fTreeType(tt) {}
       ~TreeInfo() {}
-
+      
       TTree*   GetTree()   const { return fTree; }
       Double_t GetWeight() const { return fWeight; }
+      Types::ETreeType GettreeType() const { return fTreeType; }
 
    private:
 
       TTree*   fTree;    //! pointer to the tree
-      Double_t fWeight;  //  weight for the tree
+      Double_t fWeight;  //! weight for the tree
+      Types::ETreeType fTreeType; //! tree is for training/testing/both
    };
 
    class DataSet {
@@ -89,8 +91,8 @@ namespace TMVA {
       const char* GetName() const { return "DataSet"; }
 
       // the tree data
-      void     AddSignalTree    ( TTree* tr, Double_t weight=1.0 );
-      void     AddBackgroundTree( TTree* tr, Double_t weight=1.0 );
+      void     AddSignalTree    ( TTree* tr, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType );
+      void     AddBackgroundTree( TTree* tr, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType );
       UInt_t   NSignalTrees()                const { return fTreeCollection[Types::kSignal].size(); }
       UInt_t   NBackgroundTrees()            const { return fTreeCollection[Types::kBackground].size(); }
       const TreeInfo&  SignalTreeInfo(Int_t i)     const { return fTreeCollection[Types::kSignal][i]; }
@@ -102,9 +104,9 @@ namespace TMVA {
       void     AddVariable( const TString& expression, char varType='F', void* external = 0 );
       void     AddVariable( const TString& expression, Double_t min, Double_t max, char varType, void* external = 0 );
       std::vector<VariableInfo>& GetVariableInfos() { return fVariables; }
-      UInt_t   GetNVariables()               const { return fVariables.size(); }
-      char     GetVarType(Int_t i)           const { return fVariables[i].GetVarType(); }
-      Int_t    FindVar(const TString& var)   const;
+      UInt_t   GetNVariables()                const { return fVariables.size(); }
+      char     GetVarType(Int_t i)            const { return fVariables[i].GetVarType(); }
+      Int_t    FindVar(const TString& var)    const;
 
       const TString& GetExpression(Int_t i)      const { return fVariables[i].GetExpression(); }
       const TString& GetInternalVarName(Int_t i) const { return fVariables[i].GetInternalVarName(); }
@@ -168,6 +170,7 @@ namespace TMVA {
       // the weight 
       void SetSignalWeightExpression    ( const TString& expr ) { fWeightExp[Types::kSignal]     = expr; }
       void SetBackgroundWeightExpression( const TString& expr ) { fWeightExp[Types::kBackground] = expr; }
+      Bool_t HasNegativeEventWeights() const { return fHasNegativeEventWeights; }
 
       // some dataset stats
       Int_t GetNEvtTrain()     const { return fDataStats[Types::kTraining][Types::kSBBoth]; }
@@ -205,6 +208,8 @@ namespace TMVA {
       TCut                       fCutSig;           // the pretraining cut
       TCut                       fCutBkg;           // the pretraining cut
       TCut                       fMultiCut;         // phase-space cut
+      TTreeFormula*              fCutSigF;          // the pretraining cut as formula
+      TTreeFormula*              fCutBkgF;          // the pretraining cut as formula
 
       TTree*                     fTrainingTree;     //! tree used for training
       TTree*                     fTestTree;         //! tree used for testing 
@@ -228,6 +233,9 @@ namespace TMVA {
       // the weight
       TString                   fWeightExp[2];      //! the input formula string that is the weight
       TTreeFormula*             fWeightFormula[2];  //! local weight formula
+
+      Bool_t                    fExplicitTrainTest[2]; //! if set to true the user has specified training and testing data explicitly
+      Bool_t                    fHasNegativeEventWeights; // true if at least one signal or bkg event has negative weight
       
       mutable MsgLogger         fLogger;           //! message logger
 

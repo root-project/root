@@ -51,7 +51,7 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, int varCounter,
       fXminNorm =  min;
       fXmaxNorm =  max;
    }
-   fInternalVarName = Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
+   fInternalVarName = gTools().ReplaceRegularExpressions( GetExpression(), "_" );   
 }
 
 //_______________________________________________________________________
@@ -63,7 +63,7 @@ TMVA::VariableInfo::VariableInfo()
    // default constructor
    fXminNorm =  1e30;
    fXmaxNorm = -1e30;
-   fInternalVarName = Tools::ReplaceRegularExpressions( GetExpression(), "_" );   
+   fInternalVarName = gTools().ReplaceRegularExpressions( GetExpression(), "_" );   
 }
 
 TMVA::VariableInfo::VariableInfo( const VariableInfo& other ) 

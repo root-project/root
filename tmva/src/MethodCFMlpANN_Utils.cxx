@@ -58,11 +58,14 @@
 //_______________________________________________________________________
 
 #include <iostream>
+#include <string>
 #include <stdlib.h>
+
+#include "TMath.h"
 
 #include "TMVA/MethodCFMlpANN_Utils.h"
 #include "TMVA/Timer.h"
-#include "TMath.h"
+#include "TMVA/MsgLogger.h"
 
 ClassImp(TMVA::MethodCFMlpANN_Utils)
    
@@ -181,9 +184,11 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    fParam_1.nunisor = 30;
    fParam_1.nunishort = 48;
    fParam_1.nunap = 40;
-   printf("--- CFMlpANN     : Total number of events for training: %i\n", fParam_1.nevl);
-   printf("--- CFMlpANN     : Total number of events for testing : %i\n", fParam_1.nevt);
-   printf("--- CFMlpANN     : Total number of training cycles    : %i\n", fParam_1.nblearn);
+   std::string stmp = "--- CFMlpANN";   
+   for (int i=0; i<(int)TMVA::MsgLogger::MAXIMUM_SOURCE_NAME_LENGTH-(int)strlen("CFMlpANN"); i++) stmp += " ";
+   printf("%s: Total number of events for training: %i\n", stmp.c_str(), fParam_1.nevl);
+   printf("%s: Total number of events for testing : %i\n", stmp.c_str(), fParam_1.nevt);
+   printf("%s: Total number of training cycles    : %i\n", stmp.c_str(), fParam_1.nblearn);
    if (fParam_1.nevl > max_Events_) {
       printf("Error: number of learning events exceeds maximum: %i, %i ==> abort", 
              fParam_1.nevl, max_Events_ );
@@ -207,8 +212,7 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    }
    i__1 = fParam_1.layerm;
    for (j = 1; j <= i__1; ++j) {
-      printf("--- CFMlpANN     : Number of layers for neuron(%2i): %i\n",j, 
-             fNeur_1.neuron[j - 1]);
+      printf("%s: Number of layers for neuron(%2i): %i\n",stmp.c_str(), j, fNeur_1.neuron[j - 1]);
    }
    if (fNeur_1.neuron[fParam_1.layerm - 1] != 2) {
       printf("Error: wrong number of classes at ouput layer: %i != 2 ==> abort\n",
@@ -231,10 +235,10 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
       Arret("new training or continued one !");
    }
    if (fParam_1.ichoi == 0) {
-      printf("--- CFMlpANN     : New training will be performed\n");
+      printf("%s: New training will be performed\n", stmp.c_str());
    } 
    else {
-      printf("--- CFMlpANN     : New training will be continued from a weight file\n");
+      printf("%s: New training will be continued from a weight file\n", stmp.c_str());
    }
    ncoef = 0;
    ntemp = 0;
@@ -558,7 +562,7 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
 
    for (i1 = 1; i1 <= i__3; ++i1) {
 
-      if ( (num>0 && (i1-1)%num == 0) || i1 == i__3) timer.DrawProgressBar( i1-1 );
+      if ( (num>0 && (i1-1)%num==0) || i1==i__3) timer.DrawProgressBar( i1-1 );
 
       i__2 = fParam_1.nevl;
       for (i__ = 1; i__ <= i__2; ++i__) {
@@ -606,8 +610,11 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
          break;
       }
    }
-   printf("--- CFMlpANN     : Elapsed time: %s\n", (const char*)timer.GetElapsedTime()  );
+   std::string stmp = "--- CFMlpANN";   
+   for (int i=0; i<(int)TMVA::MsgLogger::MAXIMUM_SOURCE_NAME_LENGTH-(int)strlen("CFMlpANN"); i++) stmp += " ";
 
+   printf( "%s: Elapsed time: %s                            \n", 
+           stmp.c_str(), (const char*)timer.GetElapsedTime() );
 }
 
 #undef deltaww_ref

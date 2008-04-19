@@ -2,10 +2,7 @@
 #ifndef TMVA_TMVAGLOB
 #define TMVA_TMVAGLOB
 
-//#if !defined( __CINT__) || defined (__MAKECINT__)
 #include <iostream>
-using std::cout;
-using std::endl;
 
 #include "TPad.h"
 #include "TCanvas.h"
@@ -18,9 +15,11 @@ using std::endl;
 #include "TStyle.h"
 #include "TFile.h"
 #include "TDirectory.h"
-//#endif
 
 #include "RVersion.h"
+
+using std::cout;
+using std::endl;
 
 namespace TMVAGlob {
 
@@ -168,15 +167,20 @@ namespace TMVAGlob {
 
    }
 
-   // set style and remove existing canvas'
-   void Initialize( Bool_t useTMVAStyle = kTRUE )
+   void DestroyCanvases()
    {
 
-      // destroy canvas'
-      TList * loc = (TList*)gROOT->GetListOfCanvases();
+      TList* loc = (TList*)gROOT->GetListOfCanvases();
       TListIter itc(loc);
       TObject *o(0);
       while ((o = itc())) delete o;
+   }
+
+   // set style and remove existing canvas'
+   void Initialize( Bool_t useTMVAStyle = kTRUE )
+   {
+      // destroy canvas'
+      DestroyCanvases();
 
       // set style
       if (!useTMVAStyle) {
@@ -187,7 +191,6 @@ namespace TMVAGlob {
 
       SetTMVAStyle();
    }
-
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* OpenFile( const TString& fin )
@@ -234,22 +237,50 @@ namespace TMVAGlob {
          else {
             cout << "--- --------------------------------------------------------------------" << endl;
             cout << "--- If you want to save the image as eps, gif or png, please comment out " << endl;
-            cout << "--- the corresponding lines (line no. 238-239) in macros/tmvaglob.C" << endl;
+            cout << "--- the corresponding lines (line no. 239-241) in tmvaglob.C" << endl;
             cout << "--- --------------------------------------------------------------------" << endl;
-            // c->Print(epsName);
-            // c->Print(pngName);
-            // c->Print(epsName);
+            c->Print(epsName);
+             c->Print(pngName);
+            // c->Print(gifName);
          }
       }
    }
+
+   TImage * findImage(const char * imageName) { // looks for the image in macropath
    
+      TString macroPath(gROOT->GetMacroPath()); // look for the image in here
+      Ssiz_t curIndex(0);
+      TImage *img(0);
+      while(1) {
+         Ssiz_t pathStart = curIndex;
+         curIndex = macroPath.Index(":",curIndex);
+         Ssiz_t pathEnd = (curIndex==-1)?macroPath.Length():curIndex;
+         TString path(macroPath(pathStart,pathEnd-pathStart));
+         
+         gSystem->ExpandPathName(path);
+         const char* fullName = Form("%s/%s", path.Data(), imageName);
+
+         Bool_t fileFound = ! gSystem->AccessPathName(fullName);
+
+         if(fileFound) {
+            img = TImage::Open(fullName);
+            break;
+         }
+         if(curIndex==-1) break;
+         curIndex++;
+      }
+      return img;
+   }
+
    void plot_logo( Float_t v_scale = 1.0 )
    {
-      TImage *img = TImage::Open("../macros/tmva_logo.gif");
+
+      TImage *img = findImage("tmva_logo.gif");
       if (!img) {
-         cout << "+++ Could not open image ../macros/tmva_logo.gif" << endl;
+         cout << "+++ Could not open image tmva_logo.gif" << endl;
          return;
       }
+      
       img->SetConstRatio(kFALSE);
       UInt_t h_ = img->GetHeight();
       UInt_t w_ = img->GetWidth();

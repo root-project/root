@@ -47,7 +47,10 @@ TMVA::MCFitter::MCFitter( IFitterTarget& target,
                           const TString& name, 
                           const std::vector<Interval*>& ranges, 
                           const TString& theOption ) 
-   : TMVA::FitterBase( target, name, ranges, theOption )
+   : TMVA::FitterBase( target, name, ranges, theOption ),
+     fSamples( 0 ),
+     fSigma  ( 1 ),
+     fSeed   ( 0 )
 {
    // constructor
    DeclareOptions();
@@ -117,7 +120,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
       if (fSigma > 0.0) {
          parBestIt = bestParameters.begin();
          for (std::vector<TMVA::GeneticRange*>::iterator rndIt = rndRanges.begin(); rndIt<rndRanges.end(); rndIt++) {
-            (*parIt) = (*rndIt)->Random( kTRUE, fSigma,(*parBestIt) );
+            (*parIt) = (*rndIt)->Random( kTRUE, fSigma, (*parBestIt) );
             parIt++;
             parBestIt++;
          }

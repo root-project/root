@@ -99,10 +99,11 @@ void  TMVA::MethodVariable::WriteWeightsToStream( ostream & o ) const
 }
   
 //_______________________________________________________________________
-void  TMVA::MethodVariable::ReadWeightsFromStream( istream & istr )
+void  TMVA::MethodVariable::ReadWeightsFromStream( istream & /*istr*/ )
 {
    // Read configuration from input stream
-   if (istr.eof()) { }
+
+   // nothing to be done for this method
 }
 
 //_______________________________________________________________________
@@ -121,15 +122,15 @@ void TMVA::MethodVariable::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "<None>" << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "<None>" << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "<None>" << Endl;
 }

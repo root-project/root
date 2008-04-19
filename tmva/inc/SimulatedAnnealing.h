@@ -8,14 +8,15 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Base implementation of simulated annealing fitting procedure              *
+ *      Implementation of simulated annealing fitting procedure                   *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
+ *      Krzysztof Danielowski <danielow@cern.ch>       - IFJ & AGH, Poland        *
+ *      Kamil Kraszewski      <kalq@cern.ch>           - IFJ & UJ, Poland         *
+ *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
  *                                                                                *
- * Copyright (c) 2006:                                                            *
+ * Copyright (c) 2008:                                                            *
+ *      IFJ-Krakow, Poland                                                        *
  *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
@@ -36,6 +37,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#include <list>
 
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
@@ -62,19 +64,38 @@ namespace TMVA {
       Double_t Minimize( std::vector<Double_t>& parameters );
 
       // accessors
-      void SetMaxCalls    ( Int_t    mc    ) { fMaxCalls = mc; }
-      void SetTempGrad    ( Double_t dt    ) { fTemperatureGradient = dt; }
-      void SetUseAdaptTemp( Bool_t   yesno ) { fUseAdaptiveTemperature = yesno; }
-      void SetInitTemp    ( Double_t it    ) { fInitialTemperature = it; }
-      void SetMinTemp     ( Double_t min   ) { fMinTemperature = min; }
-      void SetNumFunLoops ( Int_t    num   ) { fNFunLoops = num; }
-      void SetAccuracy    ( Double_t eps   ) { fEps = eps; }
-      void SetNEps        ( Int_t    neps  ) { fNEps = neps; }
+      void SetMaxCalls          ( Int_t    mc    ) { fMaxCalls = mc; }
+      void SetInitTemp          ( Double_t it    ) { fInitialTemperature = it; }
+      void SetMinTemp           ( Double_t min   ) { fMinTemperature = min; }
+      void SetAccuracy          ( Double_t eps   ) { fEps = eps; }
+      void SetTemperatureScale  ( Double_t scale ) { fTemperatureScale = scale; }
+      void SetAdaptiveSpeed     ( Double_t speed ) { fAdaptiveSpeed = speed; }
+
+      void SetOptions( Int_t maxCalls, Double_t initialTemperature, Double_t minTemperature, Double_t eps,
+                       TString  kernelTemperatureS, Double_t temperatureScale, Double_t adaptiveSpeed, 
+                       Double_t temperatureAdaptiveStep, Bool_t useDefaultScale, Bool_t useDefaultTemperature );
+
 
    private:
 
-      Double_t GetPerturbationProbability( Double_t energy, Double_t energyRef, 
-                                           Double_t temperature );
+      enum EKernelTemperature {
+         kSqrt = 0,
+         kIncreasingAdaptive,
+         kDecreasingAdaptive,
+         kLog,
+         kHomo,
+         kSin,
+         kGeo
+      } fKernelTemperature;
+
+      void FillWithRandomValues( std::vector<Double_t>& parameters );
+      void ReWriteParameters( std::vector<Double_t>& from, std::vector<Double_t>& to );
+      void GenerateNewTemperature(Double_t& currentTemperature, Int_t Iter );
+      void GenerateNeighbour( std::vector<Double_t>& parameters, std::vector<Double_t>& oldParameters, Double_t currentTemperature );
+      Bool_t ShouldGoIn( Double_t currentFit, Double_t localFit, Double_t currentTemperature );
+      void SetDefaultScale();
+      Double_t GenerateMaxTemperature( std::vector<Double_t>& parameters );
+      std::vector<Double_t> GenerateNeighbour( std::vector<Double_t>& parameters, Double_t currentTemperature );
 
       IFitterTarget&                fFitterTarget;           // the fitter target
       TRandom*                      fRandom;                 // random generator
@@ -82,18 +103,25 @@ namespace TMVA {
 
       // fitter setup 
       Int_t                         fMaxCalls;               // maximum number of minimisation calls
-      Double_t                      fTemperatureGradient;    // temperature gradient
-      Bool_t                        fUseAdaptiveTemperature; // use adaptive termperature
       Double_t                      fInitialTemperature;     // initial temperature
       Double_t                      fMinTemperature;         // mimimum temperature
       Double_t                      fEps;                    // epsilon
-      Int_t                         fNFunLoops;              // number of function loops
-      Int_t                         fNEps;                   // number of epsilons                    
+      Double_t                      fTemperatureScale;       // how fast temperature change
+      Double_t                      fAdaptiveSpeed;          // how fast temperature change in adaptive (in adaptive two variables describe
+                                                             // the change of temperature, but fAdaptiveSpeed should be 1.0 and its not 
+                                                             // recomended to change it)
+      Double_t                      fTemperatureAdaptiveStep;// used to calculate InitialTemperature if fUseDefaultTemperature
+
+      Bool_t                        fUseDefaultScale;        // if TRUE, SA calculates its own TemperatureScale
+      Bool_t                        fUseDefaultTemperature;  // if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
 
       mutable MsgLogger             fLogger;                 // message logger
 
+      Double_t LOGE;
+      Double_t fProgress;
+
       ClassDef(SimulatedAnnealing,0)  // Base class for Simulated Annealing fitting
-   };   
+   };
 
 } // namespace TMVA
 

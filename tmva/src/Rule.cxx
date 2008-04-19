@@ -56,7 +56,8 @@
 //_______________________________________________________________________
 TMVA::Rule::Rule( RuleEnsemble *re,
                   const std::vector< const Node * >& nodes )
-   : fNorm          ( 1.0 )
+   : fCut           ( 0 )
+   , fNorm          ( 1.0 )
    , fSupport       ( 0.0 )
    , fSigma         ( 0.0 )
    , fCoefficient   ( 0.0 )
@@ -80,7 +81,8 @@ TMVA::Rule::Rule( RuleEnsemble *re,
 
 //_______________________________________________________________________
 TMVA::Rule::Rule( RuleEnsemble *re )
-   : fNorm          ( 1.0 )
+   : fCut           ( 0 )
+   , fNorm          ( 1.0 )
    , fSupport       ( 0.0 )
    , fSigma         ( 0.0 )
    , fCoefficient   ( 0.0 )
@@ -94,7 +96,8 @@ TMVA::Rule::Rule( RuleEnsemble *re )
 
 //_______________________________________________________________________
 TMVA::Rule::Rule()
-   : fNorm          ( 1.0 )
+   : fCut           ( 0 )
+   , fNorm          ( 1.0 )
    , fSupport       ( 0.0 )
    , fSigma         ( 0.0 )
    , fCoefficient   ( 0.0 )
@@ -104,6 +107,12 @@ TMVA::Rule::Rule()
    , fLogger( "RuleFit" )
 {
    // the simple constructor
+}
+
+//_______________________________________________________________________
+TMVA::Rule::~Rule() {
+   // the destructor
+   if(fCut) delete fCut;
 }
 
 //_______________________________________________________________________

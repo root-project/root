@@ -62,8 +62,6 @@
 const TString TMVA::Timer::fgClassName = "Timer";
 const Int_t   TMVA::Timer::fgNbins     = 24;  
 
-using TMVA::Tools::Color;
-
 ClassImp(TMVA::Timer)
 
 //_______________________________________________________________________
@@ -74,7 +72,7 @@ TMVA::Timer::Timer( const char* prefix, Bool_t colourfulOutput )
 {
    // constructor
    if (!strcmp(prefix, "")) fPrefix = Timer::fgClassName;
-   else              fPrefix = prefix;
+   else                     fPrefix = TString(prefix);
 
    fLogger = new MsgLogger( fPrefix.Data() );
 
@@ -91,7 +89,7 @@ TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
    // number of counts is provided by the user, so that the timer can obtain
    // the due time from linearly interpolating the spent time.
    if (!strcmp(prefix, "")) fPrefix = Timer::fgClassName;
-   else                     fPrefix = prefix;
+   else                     fPrefix = TString(prefix);
 
    fLogger = new MsgLogger( fPrefix.Data() );
 
@@ -150,7 +148,7 @@ void TMVA::Timer::DrawProgressBar()
 {
    // draws the progressbar
 
-   if(gConfig().Silent()) return;
+   if (gConfig().IsSilent()) return;
 
    fNcounts++;
    if (fNcounts == 1) {
@@ -166,15 +164,15 @@ void TMVA::Timer::DrawProgressBar( TString theString )
 {
    // draws a string in the progress bar
 
-   if(gConfig().Silent()) return;
+   if(gConfig().IsSilent()) return;
 
    clog << fLogger->GetPrintedSource();
 
-   clog << Color("white_on_green") << Color("dyellow") << "[" << Color("reset");
+   clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "[" << gTools().Color("reset");
 
-   clog << Color("white_on_green") << Color("dyellow") << theString << Color("reset");
+   clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << theString << gTools().Color("reset");
 
-   clog << Color("white_on_green") << Color("dyellow") << "]" << Color("reset");
+   clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "]" << gTools().Color("reset");
 
    clog << "\r" << flush; 
 }
@@ -185,7 +183,7 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts )
    // draws progress bar in color or B&W
    // caution: 
 
-   if(gConfig().Silent()) return;
+   if(gConfig().IsSilent()) return;
 
    // sanity check:
    if (icounts > fNcounts-1) icounts = fNcounts-1;
@@ -193,26 +191,26 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts )
    Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fgNbins);
 
    clog << fLogger->GetPrintedSource();
-   if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << "[" << Color("reset");
+   if (fColourfulOutput) clog << gTools().Color("white_on_green") << TMVA::gTools().Color("dyellow") << "[" << TMVA::gTools().Color("reset");
    else                  clog << "[";
    for (Int_t i=0; i<ic; i++) {
-      if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << ">" << Color("reset"); 
+      if (fColourfulOutput) clog << TMVA::gTools().Color("white_on_green") << TMVA::gTools().Color("dyellow") << ">" << TMVA::gTools().Color("reset"); 
       else                  clog << ">";
    }
    for (Int_t i=ic+1; i<fgNbins; i++) {
-      if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << "." << Color("reset"); 
+      if (fColourfulOutput) clog << TMVA::gTools().Color("white_on_green") << TMVA::gTools().Color("dyellow") << "." << TMVA::gTools().Color("reset"); 
       else                  clog << ".";
    }
-   if (fColourfulOutput) clog << Color("white_on_green") << Color("dyellow") << "]" << Color("reset");
+   if (fColourfulOutput) clog << TMVA::gTools().Color("white_on_green") << TMVA::gTools().Color("dyellow") << "]" << TMVA::gTools().Color("reset");
    else                  clog << "]" ;
 
    // timing information
    if (fColourfulOutput) {
-      clog << Color("reset") << " " ;
-      clog << "(" << Color("red") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << Color("reset")
+      clog << TMVA::gTools().Color("reset") << " " ;
+      clog << "(" << TMVA::gTools().Color("red") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << TMVA::gTools().Color("reset")
                << ", " 
                << "time left: "
-               << this->GetLeftTime( icounts ) << Color("reset") << ") ";
+               << this->GetLeftTime( icounts ) << TMVA::gTools().Color("reset") << ") ";
    }
    else {
       clog << "] " ;
@@ -243,6 +241,6 @@ TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific ) const
       else        out += Form( "%i mins", m );
    }
 
-   return (fColourfulOutput) ? Color("red") + out + Color("reset") : out;
+   return (fColourfulOutput) ? TMVA::gTools().Color("red") + out + TMVA::gTools().Color("reset") : out;
 }
 

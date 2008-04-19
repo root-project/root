@@ -82,8 +82,8 @@ namespace TMVA {
       void Train() { Train(NumCycles()); }
 
       // for GA
-      Double_t ComputeEstimator( std::vector<Double_t>& parameters);
-      Double_t EstimatorFunction( std::vector<Double_t>& parameters);
+      Double_t ComputeEstimator ( std::vector<Double_t>& parameters );
+      Double_t EstimatorFunction( std::vector<Double_t>& parameters );
 
       enum ETrainingMethod { kBP=0, kGA };
       enum EBPTrainingMode { kSequential=0, kBatch };

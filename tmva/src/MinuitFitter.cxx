@@ -56,7 +56,6 @@ TMVA::MinuitFitter::MinuitFitter( IFitterTarget& target,
 TMVA::MinuitFitter::~MinuitFitter( )
 {
    // destructor
-   fLogger << kINFO << "d" << Endl;
    delete fMinWrap;
 }
 
@@ -134,14 +133,14 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
 
    // timing of MC   
    Timer* timer = 0;
-   if ( !fBatch ) timer = new Timer();
+   if (!fBatch) timer = new Timer();
 
    // define fit parameters
    for (Int_t ipar=0; ipar<fNpars; ipar++) {
       fMinWrap->SetParameter( ipar, Form( "Par%i",ipar ), 
-                                 pars[ipar], fRanges[ipar]->GetWidth()/100.0, 
-                                 fRanges[ipar]->GetMin(), fRanges[ipar]->GetMax() );      
-      if ( fRanges[ipar]->GetWidth() == 0. ) fMinWrap->FixParameter( ipar );
+                              pars[ipar], fRanges[ipar]->GetWidth()/100.0, 
+                              fRanges[ipar]->GetMin(), fRanges[ipar]->GetMax() );      
+      if (fRanges[ipar]->GetWidth() == 0.0) fMinWrap->FixParameter( ipar );
    }
 
    // --------- execute the fit

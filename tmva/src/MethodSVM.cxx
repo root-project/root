@@ -104,13 +104,17 @@ TMVA::MethodSVM::~MethodSVM()
    if (fAlphas     != 0) delete fAlphas;  
    if (fErrorCache != 0) delete fErrorCache;
    if (fVariables  != 0) {
-      for (Int_t i = 0; i < GetNvar(); i++) delete [] (*fVariables)[i];
+      for (Int_t i = 0; i < GetNvar(); i++) delete[] (*fVariables)[i];
       delete fVariables;
    }
    if (fNormVar    != 0) delete fNormVar; 
    if (fTypesVec   != 0) delete fTypesVec;
    if (fI          != 0) delete fI;
    if (fKernelDiag != 0) delete fKernelDiag;
+
+   if (fMaxVars != 0) delete fMaxVars;
+   if (fMinVars != 0) delete fMinVars;
+
 
    if (fSupportVectors!=0) {
       for (vector<Float_t*>::iterator it = fSupportVectors->begin(); it!=fSupportVectors->end(); it++)
@@ -1065,7 +1069,7 @@ void TMVA::MethodSVM::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The Support Vector Machine (SVM) builds a hyperplance separating" << Endl;
    fLogger << "signal and background events (vectors) using the minimal subset of " << Endl;
@@ -1078,14 +1082,14 @@ void TMVA::MethodSVM::GetHelpMessage() const
    fLogger << "Gaussian and sigmoidal kernel functions. The Gaussian kernel allows " << Endl;
    fLogger << "to apply any discriminant shape in the input space." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "SVM is a general purpose non-linear classification method, which " << Endl;
    fLogger << "does not require data preprocessing like decorrelation or Principal " << Endl;
    fLogger << "Component Analysis. It generalises quite well and can handle analyses " << Endl;
    fLogger << "with large numbers of input variables." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "Optimal performance requires primarily a proper choice of the kernel " << Endl;
    fLogger << "parameters (the width \"Sigma\" in case of Gaussian kernel) and the" << Endl;

@@ -11,9 +11,13 @@
  *      Implementation                                                            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
+ *      Krzysztof Danielowski <danielow@cern.ch>       - IFJ & AGH, Poland        *
+ *      Andreas Hoecker       <Andreas.Hocker@cern.ch> - CERN, Switzerland        *
+ *      Kamil Kraszewski      <kalq@cern.ch>           - IFJ & UJ, Poland         *
+ *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2008:                                                            *
+ *      IFJ-Krakow, Poland                                                        *
  *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
@@ -29,7 +33,6 @@
 
 #include "TMVA/SimulatedAnnealingFitter.h"
 #include "TMVA/SimulatedAnnealing.h"
-#include "TMVA/Timer.h"
 #include "TMVA/Interval.h"
 
 ClassImp(TMVA::SimulatedAnnealingFitter)
@@ -46,7 +49,7 @@ TMVA::SimulatedAnnealingFitter::SimulatedAnnealingFitter( IFitterTarget& target,
    // default parameters settings for Simulated Annealing algorithm
    DeclareOptions();
    ParseOptions();
-}            
+}
 
 //_______________________________________________________________________
 void TMVA::SimulatedAnnealingFitter::DeclareOptions() 
@@ -63,43 +66,58 @@ void TMVA::SimulatedAnnealingFitter::DeclareOptions()
    // NEps                     <int>      number of epochs for simulated annealing
 
    // default settings
-   fMaxCalls               = 50000;
-   fTemperatureGradient    = 0.7;
-   fUseAdaptiveTemperature = kTRUE;
-   fInitialTemperature     = 100000;
-   fMinTemperature         = 500;
-   fEps                    = 1e-04;
-   fNFunLoops              = 5;
-   fNEps                   = 4; // needs to be at least 2 !
+   fMaxCalls                = 100000;
+   fInitialTemperature      = 1e+6;
+   fMinTemperature          = 1e-6;
+   fEps                     = 1e-10;
+   fTemperatureScale        = 1.0;
+   fAdaptiveSpeed           = 1.0;
+   fTemperatureAdaptiveStep = 0.009875;
+   fKernelTemperatureS      = "IncreasingAdaptive";
+   fUseDefaultScale         = kFALSE;
+   fUseDefaultTemperature   = kFALSE;
+
    DeclareOptionRef(fMaxCalls,               "MaxCalls",               "Maximum number of minimisation calls");
-   DeclareOptionRef(fTemperatureGradient,    "TemperatureGradient",    "Temperature gradient"); 
-   DeclareOptionRef(fUseAdaptiveTemperature, "UseAdaptiveTemperature", "Use adaptive termperature");  
    DeclareOptionRef(fInitialTemperature,     "InitialTemperature",     "Initial temperature");  
    DeclareOptionRef(fMinTemperature,         "MinTemperature",         "Mimimum temperature");
    DeclareOptionRef(fEps,                    "Eps",                    "Epsilon");  
-   DeclareOptionRef(fNFunLoops,              "NFunLoops",              "Number of function loops");  
-   DeclareOptionRef(fNEps,                   "NEps",                   "Number of epsilons");                   
+   DeclareOptionRef(fTemperatureScale,       "TemperatureScale",       "Temperature scale");
+   DeclareOptionRef(fAdaptiveSpeed,          "AdaptiveSpeed",          "Adaptive speed");
+   DeclareOptionRef(fTemperatureAdaptiveStep,"TemperatureAdaptiveStep","Step made in each generation temperature adaptive");
+   DeclareOptionRef(fUseDefaultScale,        "UseDefaultScale",        "Use default temperature scale for temperature minimisation algorithm");
+   DeclareOptionRef(fUseDefaultTemperature,  "UseDefaultTemperature",  "Use default initial temperature");
+
+   DeclareOptionRef(fKernelTemperatureS,     "KernelTemperature",      "Temperature minimisation algorithm");
+   AddPreDefVal(TString("IncreasingAdaptive"));
+   AddPreDefVal(TString("DecreasingAdaptive"));
+   AddPreDefVal(TString("Sqrt"));
+   AddPreDefVal(TString("Log"));
+   AddPreDefVal(TString("Sin"));
+   AddPreDefVal(TString("Homo"));
+   AddPreDefVal(TString("Geo"));
 }
 
 //_______________________________________________________________________
-void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    naxCalls,               
-                                                    Int_t    nFunLoops,              
-                                                    Int_t    nEps,                   
-                                                    Bool_t   useAdaptiveTemperature, 
-                                                    Double_t temperatureGradient,    
-                                                    Double_t initialTemperature,     
-                                                    Double_t minTemperature,         
-                                                    Double_t eps )
+void TMVA::SimulatedAnnealingFitter::SetParameters( Int_t    maxCalls,
+                                                    Double_t initialTemperature,
+                                                    Double_t minTemperature,
+                                                    Double_t eps,
+                                                    TString  kernelTemperatureS,
+                                                    Double_t temperatureScale,
+                                                    Double_t temperatureAdaptiveStep,
+                                                    Bool_t   useDefaultScale,
+                                                    Bool_t   useDefaultTemperature)
 {
    // set SA configuration parameters
-   fMaxCalls               = naxCalls;             
-   fNFunLoops              = nFunLoops;            
-   fNEps                   = nEps;                 
-   fUseAdaptiveTemperature = useAdaptiveTemperature;
-   fTemperatureGradient    = temperatureGradient;  
-   fInitialTemperature     = initialTemperature;   
-   fMinTemperature         = minTemperature;       
-   fEps                    = eps;                  
+   fMaxCalls                 = maxCalls;
+   fInitialTemperature       = initialTemperature;
+   fMinTemperature           = minTemperature; 
+   fEps                      = eps;
+   fKernelTemperatureS       = kernelTemperatureS;
+   fTemperatureScale         = temperatureScale;
+   fTemperatureAdaptiveStep = temperatureAdaptiveStep;
+   fUseDefaultScale          = useDefaultScale;
+   fUseDefaultTemperature    = useDefaultTemperature;
 }
 
 //_______________________________________________________________________
@@ -107,19 +125,14 @@ Double_t TMVA::SimulatedAnnealingFitter::Run( std::vector<Double_t>& pars )
 {
    // Execute fitting
    fLogger << kINFO << "<SimulatedAnnealingFitter> Optimisation, please be patient ... " << Endl;
+   fLogger << kINFO << "(progress timing may be inaccurate for SA)" << Endl;
 
    SimulatedAnnealing sa( GetFitterTarget(), fRanges );
 
    // set driving parameters
-   sa.SetMaxCalls    ( fMaxCalls );              
-   sa.SetTempGrad    ( fTemperatureGradient );   
-   sa.SetUseAdaptTemp( fUseAdaptiveTemperature );
-   sa.SetInitTemp    ( fInitialTemperature );    
-   sa.SetMinTemp     ( fMinTemperature );
-   sa.SetNumFunLoops ( fNFunLoops );                   
-   sa.SetAccuracy    ( fEps );             
-   sa.SetNEps        ( fNEps );                  
-
+   sa.SetOptions( fMaxCalls, fInitialTemperature, fMinTemperature, fEps, fKernelTemperatureS,
+                  fTemperatureScale, fAdaptiveSpeed, fTemperatureAdaptiveStep, 
+                  fUseDefaultScale, fUseDefaultTemperature );
    // minimise
    Double_t fcn = sa.Minimize( pars );
 

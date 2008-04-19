@@ -91,6 +91,8 @@ ClassImp(TMVA::MethodPDERS)
 TMVA::MethodPDERS::MethodPDERS( const TString& jobName, const TString& methodTitle, DataSet& theData, 
                                 const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+   , fDelta(0)
+   , fShift(0)
 {
    // standard constructor for the PDERS method
    // format and syntax of option string: "VolumeRangeMode:options"
@@ -111,6 +113,8 @@ TMVA::MethodPDERS::MethodPDERS( DataSet& theData,
                                 const TString& theWeightFile,
                                 TDirectory* theTargetDir )
    : MethodBase( theData, theWeightFile, theTargetDir )
+   , fDelta(0)
+   , fShift(0)
 {
    // construct MethodPDERS through from file
    InitPDERS();
@@ -159,6 +163,9 @@ void TMVA::MethodPDERS::InitPDERS( void )
 TMVA::MethodPDERS::~MethodPDERS( void )
 {
    // destructor
+   if(fDelta) delete fDelta;
+   if(fShift) delete fShift;
+
    if (NULL != fBinaryTreeS) delete fBinaryTreeS;
    if (NULL != fBinaryTreeB) delete fBinaryTreeB;
 }
@@ -377,51 +384,55 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
 {
    // defines volume dimensions
 
-   // init relative scales
+   if(GetNvar()<=0) {
+      fLogger << kFATAL << "GetNvar() <= 0: " << GetNvar() << Endl;
+   }
 
+
+   // init relative scales
    fkNNMin      = Int_t(fNEventsMin);
    fkNNMax      = Int_t(fNEventsMax);   
 
-   fDelta = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
-   fShift = (GetNvar() > 0) ? new std::vector<Float_t>( GetNvar() ) : 0;
-   if (fDelta != 0) {
-      switch (fVRangeMode) {
+   if(fDelta) delete fDelta;
+   if(fShift) delete fShift;
+   fDelta = new std::vector<Float_t>( GetNvar() );
+   fShift = new std::vector<Float_t>( GetNvar() );
+
+   switch (fVRangeMode) {
          
-      case kRMS:
-      case kkNN:
-      case kAdaptive:
-         // sanity check
-         if ((Int_t)fAverageRMS.size() != GetNvar())
-            fLogger << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
-         for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-            {
-               (*fDelta)[ivar] = fAverageRMS[ivar]*fDeltaFrac;
-               fLogger << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
-                       << "\t]: " << fAverageRMS[ivar]
-                       << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
-                       << Endl;
-            }
-         break;
-         
-      case kMinMax:
-         for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-            (*fDelta)[ivar] = (GetXmax( ivar ) - GetXmin( ivar ))*fDeltaFrac;
-         break;
-         
-      case kUnscaled:
-         for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-            (*fDelta)[ivar] = fDeltaFrac;
-         break;
-      default:
-         fLogger << kFATAL << "<SetVolumeElement> unknown range-set mode: "
-                 << fVRangeMode << Endl;
-      }
+   case kRMS:
+   case kkNN:
+   case kAdaptive:
+      // sanity check
+      if ((Int_t)fAverageRMS.size() != GetNvar())
+         fLogger << kFATAL << "<SetVolumeElement> RMS not computed: " << fAverageRMS.size() << Endl;
       for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-         (*fShift)[ivar] = 0.5; // volume is centered around test value
+         {
+            (*fDelta)[ivar] = fAverageRMS[ivar]*fDeltaFrac;
+            fLogger << kVERBOSE << "delta of var[" << (*fInputVars)[ivar]
+                    << "\t]: " << fAverageRMS[ivar]
+                    << "\t  |  comp with |max - min|: " << (GetXmax( ivar ) - GetXmin( ivar ))
+                    << Endl;
+         }
+      break;
+         
+   case kMinMax:
+      for (Int_t ivar=0; ivar<GetNvar(); ivar++)
+         (*fDelta)[ivar] = (GetXmax( ivar ) - GetXmin( ivar ))*fDeltaFrac;
+      break;
+         
+   case kUnscaled:
+      for (Int_t ivar=0; ivar<GetNvar(); ivar++)
+         (*fDelta)[ivar] = fDeltaFrac;
+      break;
+   default:
+      fLogger << kFATAL << "<SetVolumeElement> unknown range-set mode: "
+              << fVRangeMode << Endl;
    }
-   else {
-      fLogger << kFATAL << "GetNvar() <= 0: " << GetNvar() << Endl;
-   }
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++)
+      (*fShift)[ivar] = 0.5; // volume is centered around test value
+   
+
 }
 
 //_______________________________________________________________________
@@ -516,9 +527,10 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
       countS = KernelEstimate( e, eventsS, v );
       countB = KernelEstimate( e, eventsB, v );
       
+      delete volume;
       delete lb;
       delete ub;
-   } 
+   }
    else if (fVRangeMode == kAdaptive) {      // adaptive volume
 
       // -----------------------------------------------------------------------
@@ -717,7 +729,6 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
    }
    // -----------------------------------------------------------------------
 
-   volume->Delete();
    delete volume;
 
    if (countS < 1e-20 && countB < 1e-20) return 0.5;
@@ -1008,7 +1019,7 @@ void TMVA::MethodPDERS::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "PDERS is a generalization of the projective likelihood classifier " << Endl;
    fLogger << "to N dimensions, where N is the number of input variables used." << Endl;
@@ -1025,7 +1036,7 @@ void TMVA::MethodPDERS::GetHelpMessage() const
    fLogger << "A more involved version of PDERS (selected by the option \"KernelEstimator\")" << Endl;
    fLogger << "uses Kernel estimation methods to approximate the shape of the PDF." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "PDERS can be very powerful in case of strongly non-linear problems, " << Endl;
    fLogger << "e.g., distinct islands of signal and background regions. Because of " << Endl;
@@ -1037,7 +1048,7 @@ void TMVA::MethodPDERS::GetHelpMessage() const
    fLogger << "memory, limits the number of training events that can effectively be " << Endl;
    fLogger << "used to model the multidimensional PDF." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "If the PDERS response is found too slow when using the adaptive volume " << Endl;
    fLogger << "size (option \"VolumeRangeMode=Adaptive\"), it might be found beneficial" << Endl;

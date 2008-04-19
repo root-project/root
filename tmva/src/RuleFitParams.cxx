@@ -1099,8 +1099,8 @@ Double_t TMVA::RuleFitParams::ErrorRateRoc()
    }
    fsigave = sumfsig/sFsig.size();
    fbkgave = sumfbkg/sFbkg.size();
-   fsigrms = TMath::Sqrt(Tools::ComputeVariance(sumf2sig,sumfsig,sFsig.size()));
-   fbkgrms = TMath::Sqrt(Tools::ComputeVariance(sumf2bkg,sumfbkg,sFbkg.size()));
+   fsigrms = TMath::Sqrt(gTools().ComputeVariance(sumf2sig,sumfsig,sFsig.size()));
+   fbkgrms = TMath::Sqrt(gTools().ComputeVariance(sumf2bkg,sumfbkg,sFbkg.size()));
    //
    return ErrorRateRocRaw( sFsig, sFbkg );
 }
@@ -1186,7 +1186,7 @@ UInt_t TMVA::RuleFitParams::RiskPerfTst()
          }
       }
    }
-   Double_t sigx = TMath::Sqrt(Tools::ComputeVariance( sumx2, sumx, nok ) );
+   Double_t sigx = TMath::Sqrt(gTools().ComputeVariance( sumx2, sumx, nok ) );
    Double_t maxacc = minx+sigx;
    //
    if (nok>0) {

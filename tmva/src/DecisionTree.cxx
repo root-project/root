@@ -87,6 +87,9 @@ TMVA::DecisionTree::DecisionTree( void )
      fSepType    (NULL),
      fMinSize    (0),
      fPruneMethod(kCostComplexityPruning),
+     fRandomisedTree (kFALSE),
+     fUseNvars   (0),
+     fMyTrandom  (NULL),
      fQualityIndex(NULL)
 {
    // default constructor using the GiniIndex as separation criterion, 
@@ -94,6 +97,7 @@ TMVA::DecisionTree::DecisionTree( void )
    // separation gain in the node splitting
 
    fLogger.SetSource( "DecisionTree" );
+   fMyTrandom   = new TRandom2(0);
 }
 
 //_______________________________________________________________________
@@ -104,6 +108,9 @@ TMVA::DecisionTree::DecisionTree( DecisionTreeNode* n )
      fSepType    (NULL),
      fMinSize    (0),
      fPruneMethod(kCostComplexityPruning),
+     fRandomisedTree (kFALSE),
+     fUseNvars   (0),
+     fMyTrandom  (NULL),
      fQualityIndex(NULL)
 {
    // default constructor using the GiniIndex as separation criterion, 
@@ -119,13 +126,17 @@ TMVA::DecisionTree::DecisionTree( DecisionTreeNode* n )
 
 //_______________________________________________________________________
 TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize,
-                                  Int_t nCuts, TMVA::SeparationBase *qtype):
+                                  Int_t nCuts, TMVA::SeparationBase *qtype,
+                                  Bool_t randomisedTree, Int_t useNvars, Int_t iSeed):
    BinaryTree(),
    fNvars      (0),
    fNCuts      (nCuts),
    fSepType    (sepType),
    fMinSize    (minSize),
    fPruneMethod(kCostComplexityPruning),
+   fRandomisedTree (randomisedTree),
+   fUseNvars   (useNvars),
+   fMyTrandom  (NULL),
    fQualityIndex(qtype)
 {
    // constructor specifying the separation type, the min number of
@@ -134,6 +145,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize,
    // splitting.
 
    fLogger.SetSource( "DecisionTree" );
+   fMyTrandom   = new TRandom2(iSeed);
 }
 
 //_______________________________________________________________________
@@ -144,6 +156,9 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d):
    fSepType    (d.fSepType),
    fMinSize    (d.fMinSize),
    fPruneMethod(d.fPruneMethod),
+   fRandomisedTree (d.fRandomisedTree),
+   fUseNvars    (d.fUseNvars),
+   fMyTrandom  (NULL),   
    fQualityIndex(d.fQualityIndex)
 {
    // copy constructor that creates a true copy, i.e. a completely independent tree 
@@ -159,10 +174,10 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d):
 TMVA::DecisionTree::~DecisionTree( void )
 {
    // destructor
-   // too bad, I cannot delete this as I don't know how to make a proper copy
-   // when copying a decsiont Tree.. hence so far I just copy the pointer, which
-   // means I cannot delet it here...
-   //   delete fQualityIndex; 
+
+   // desctruction of the tree nodes done in the "base class" BinaryTree
+
+   if (fMyTrandom) delete fMyTrandom;
 }
 
 //_______________________________________________________________________
@@ -201,11 +216,11 @@ void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n)
 
 //_______________________________________________________________________
 Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
-                                     TMVA::DecisionTreeNode *node )
+                                     TMVA::DecisionTreeNode *node)
 {
    // building the decision tree by recursively calling the splitting of 
    // one (root-) node into two daughter nodes (returns the number of nodes)
-   
+
    if (node==NULL) {
       //start with the root node
       node = new TMVA::DecisionTreeNode();
@@ -236,6 +251,21 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
          buw += 1;
       }
    }
+
+   if (s+b < 0){
+      fLogger << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. (Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle be fine as long as on average you end up with something positive. For this you have to make sure that the minimul number of (unweighted) events demanded for a tree node (currently you use: nEventsMin="<<fMinSize<<", you can set this via the BDT option string when booking the classifier) is large enough to allow for reasonable averaging!!!"<<Endl
+              << " If this does not help.. maybe you want to try the option: NoNegWeightsInTraining  which ignores events with negative weight in the training. " << Endl;
+      double NBKG=0.;
+      for (UInt_t i=0; i<eventSample.size(); i++){
+         if (! eventSample[i]->IsSignal()){
+            NBKG += eventSample[i]->GetWeight();
+            cout << "Event "<< i<< " has (original) weight: " <<  eventSample[i]->GetWeight()/eventSample[i]->GetBoostWeight() 
+                 << " boostWeight: " << eventSample[i]->GetBoostWeight() << endl;
+         }
+      }
+      cout << " that gives in total: " << NBKG<<endl;
+   } 
+
    node->SetNSigEvents(s);
    node->SetNBkgEvents(b);
    node->SetNSigEvents_unweighted(suw);
@@ -375,6 +405,28 @@ void TMVA::DecisionTree::ClearTree()
       ((DecisionTreeNode*)(this->GetRoot()))->ClearNodeAndAllDaughters();
 
 }
+
+//_______________________________________________________________________
+void TMVA::DecisionTree::CleanTree(DecisionTreeNode *node)
+{
+   // remove those last splits that result in two leaf nodes that
+   // are both of the type background
+
+   if (node==NULL){
+      node = (DecisionTreeNode *)this->GetRoot();
+   }
+
+   DecisionTreeNode *l = (DecisionTreeNode*)node->GetLeft();
+   DecisionTreeNode *r = (DecisionTreeNode*)node->GetRight();
+   if (node->GetNodeType() == 0){
+      this->CleanTree(l);
+      this->CleanTree(r);
+      if (l->GetNodeType() * r->GetNodeType() > 0 ){
+         this->PruneNode(node);
+      }
+   } 
+}
+
 
 //_______________________________________________________________________
 void TMVA::DecisionTree::PruneTree()
@@ -953,7 +1005,6 @@ void  TMVA::DecisionTree::SetCutPoints(vector<Double_t> & cut_points,
 
 //_______________________________________________________________________
 
-#if USE_HELGESCODE==1
 Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
                                        TMVA::DecisionTreeNode *node)
 {
@@ -997,68 +1048,45 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
    vector< vector<Double_t> > cutValues(fNvars);
    vector< vector<Bool_t> > cutTypes(fNvars);
 
-   for (int ivar=0; ivar < fNvars; ivar++){
-      cutValues[ivar].resize(fNCuts);
-      cutTypes[ivar].resize(fNCuts);
-      nSelS[ivar].resize(fNCuts);
-      nSelB[ivar].resize(fNCuts);
-      nSelS_unWeighted[ivar].resize(fNCuts);
-      nSelB_unWeighted[ivar].resize(fNCuts);
-      significance[ivar].resize(fNCuts);
+   vector<Bool_t> useVariable(fNvars);
+   for (int ivar=0; ivar < fNvars; ivar++) useVariable[ivar]=kFALSE;
+   if (fRandomisedTree) { // choose for each node splitting a random subset of variables to choose from
+      if (fUseNvars==0) { // no number specified... choose s.th. which hopefully works well..
+         if (fNvars < 12) fUseNvars = TMath::Max(2,Int_t( Float_t(fNvars) / 2.5 ));
+         else if (fNvars < 40) fUseNvars = Int_t( Float_t(fNvars) / 5 );
+         else fUseNvars = Int_t( Float_t(fNvars) / 10 );
+      }
+      Int_t nSelectedVars = 0;
+      while ( nSelectedVars < fUseNvars ){
+         Double_t bla = fMyTrandom->Rndm()*fNvars;
+         useVariable[Int_t (bla)] = kTRUE;
+         for (int ivar=0; ivar < fNvars; ivar++) {
+            if (useVariable[ivar] == kTRUE) nSelectedVars++;
+         }
+      }
+   } else {
+      for (int ivar=0; ivar < fNvars; ivar++) useVariable[ivar] = kTRUE;
+   }
 
-      //set the grid for the cut scan on the variables
-      Double_t istepSize =( (*xmax)[ivar] - (*xmin)[ivar] ) / Double_t(fNCuts);
-      for (Int_t icut=0; icut<fNCuts; icut++){
-         cutValues[ivar][icut]=(*xmin)[ivar]+(Float_t(icut)+0.5)*istepSize;
+
+   for (int ivar=0; ivar < fNvars; ivar++){
+      if ( useVariable[ivar] ) {
+         cutValues[ivar].resize(fNCuts);
+         cutTypes[ivar].resize(fNCuts);
+         nSelS[ivar].resize(fNCuts);
+         nSelB[ivar].resize(fNCuts);
+         nSelS_unWeighted[ivar].resize(fNCuts);
+         nSelB_unWeighted[ivar].resize(fNCuts);
+         significance[ivar].resize(fNCuts);
+
+         //set the grid for the cut scan on the variables
+         Double_t istepSize =( (*xmax)[ivar] - (*xmin)[ivar] ) / Double_t(fNCuts);
+         for (Int_t icut=0; icut<fNCuts; icut++){
+            cutValues[ivar][icut]=(*xmin)[ivar]+(Float_t(icut)+0.5)*istepSize;
+         }
       }
    }
  
-#if USE_HELGE_V1==1
-
-   // this is the alternative code, having as an outer loop the loop over the variables, and 
-   // the inner loop over the event sample. I would like to keep this (it does not seem to be
-   // any slower) as this would be necessary for any more clever cut optimisation algorithm
-   // i can right now think of.
-
-   nTotS=0; nTotB=0;
-   nTotS_unWeighted=0; nTotB_unWeighted=0;   
-   for (int ivar=0; ivar < fNvars; ivar++){
-      for (UInt_t iev=0; iev<nevents; iev++){
-
-         Double_t eventData  = eventSample[iev]->GetData(ivar); 
-         Int_t    eventType  = eventSample[iev]->GetType(); 
-         Double_t eventWeight= eventSample[iev]->GetWeight(); 
-
-
-         if (ivar==0){
-            if (eventType==1){
-               nTotS+=eventWeight;
-               nTotS_unWeighted++;
-            }
-            else {
-               nTotB+=eventWeight;
-               nTotB_unWeighted++;
-            }
-         }
-         // now scan trough the cuts for each varable and find which one gives
-         // the best separationGain at the current stage.
-         // just scan the possible cut values for this variable
-         for (Int_t icut=0; icut<fNCuts; icut++){
-            if (eventData > cutValues[ivar][icut]){
-               if (eventType==1) {
-                  nSelS[ivar][icut]+=eventWeight;
-                  nSelS_unWeighted[ivar][icut]++;
-               } 
-               else {
-                  nSelB[ivar][icut]+=eventWeight;
-                  nSelB_unWeighted[ivar][icut]++;
-               }
-            }
-         }
-      }
-   }
-
-#else 
 
    nTotS=0; nTotB=0;
    nTotS_unWeighted=0; nTotB_unWeighted=0;   
@@ -1078,47 +1106,50 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
          // now scan trough the cuts for each varable and find which one gives
          // the best separationGain at the current stage.
          // just scan the possible cut values for this variable
-         Double_t eventData = eventSample[iev]->GetVal(ivar); 
-         for (Int_t icut=0; icut<fNCuts; icut++){
-            if (eventData > cutValues[ivar][icut]){
-               if (eventType==1) {
-                  nSelS[ivar][icut]+=eventWeight;
-                  nSelS_unWeighted[ivar][icut]++;
-               } 
-               else {
-                  nSelB[ivar][icut]+=eventWeight;
-                  nSelB_unWeighted[ivar][icut]++;
+         if ( useVariable[ivar] ) {
+            Double_t eventData = eventSample[iev]->GetVal(ivar); 
+            for (Int_t icut=0; icut<fNCuts; icut++){
+               if (eventData > cutValues[ivar][icut]){
+                  if (eventType==1) {
+                     nSelS[ivar][icut]+=eventWeight;
+                     nSelS_unWeighted[ivar][icut]++;
+                  } 
+                  else {
+                     nSelB[ivar][icut]+=eventWeight;
+                     nSelB_unWeighted[ivar][icut]++;
+                  }
                }
             }
          }
       }
    }
 
-#endif
 
    // now select the optimal cuts for each varable and find which one gives
    // the best separationGain at the current stage.
    for (int ivar=0; ivar < fNvars; ivar++) {
-      for (Int_t icut=0; icut<fNCuts; icut++){
-         // now the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
-         // calculated by the "SamplePurities" from the branches that would go to the
-         // left or the right from this node if "these" cuts were used in the Node:
-         // hereby: nSelS and nSelB would go to the right branch
-         //        (nTotS - nSelS) + (nTotB - nSelB)  would go to the left branch;
-       
-         // only allow splits where both daughter nodes match the specified miniumum number
-         // for this use the "unweighted" events, as you are interested in "statistically 
-         // significant splits, which is determined rather by the actuall number of entries
-         // for a node, rather than the sum of event weights.
-         if ( (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut]) >= fMinSize &&
-              (( nTotS_unWeighted+nTotB_unWeighted)- 
-               (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut])) >= fMinSize) {
-            sepTmp = fSepType->GetSeparationGain(nSelS[ivar][icut], nSelB[ivar][icut], nTotS, nTotB);
+      if ( useVariable[ivar] ){
+         for (Int_t icut=0; icut<fNCuts; icut++){
+            // now the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
+            // calculated by the "SamplePurities" fom the branches that would go to the
+            // left or the right from this node if "these" cuts were used in the Node:
+            // hereby: nSelS and nSelB would go to the right branch
+            //        (nTotS - nSelS) + (nTotB - nSelB)  would go to the left branch;
             
-            if (separationGain < sepTmp) {
-               separationGain = sepTmp;
-               mxVar = ivar;
-               cutIndex = icut;
+            // only allow splits where both daughter nodes match the specified miniumum number
+            // for this use the "unweighted" events, as you are interested in "statistically 
+            // significant splits, which is determined rather by the actuall number of entries
+            // for a node, rather than the sum of event weights.
+            if ( (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut]) >= fMinSize &&
+                 (( nTotS_unWeighted+nTotB_unWeighted)- 
+                  (nSelS_unWeighted[ivar][icut] +  nSelB_unWeighted[ivar][icut])) >= fMinSize) {
+               sepTmp = fSepType->GetSeparationGain(nSelS[ivar][icut], nSelB[ivar][icut], nTotS, nTotB);
+               
+               if (separationGain < sepTmp) {
+                  separationGain = sepTmp;
+                  mxVar = ivar;
+                  cutIndex = icut;
+               }
             }
          }
       }
@@ -1145,99 +1176,6 @@ Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
    return separationGain;
 }
 
-#else 
-
-//_______________________________________________________________________
-Double_t TMVA::DecisionTree::TrainNode(vector<TMVA::Event*> & eventSample,
-                                       TMVA::DecisionTreeNode *node)
-{
-   // decide how to split a node. At each node, ONE of the variables is
-   // choosen, which gives the best separationGain between signal and bkg on
-   // the sample which enters the Node.  
-   // In order to do this, for each variable a scan of the different cut
-   // values in a grid (grid = fNCuts) is performed and the resulting separationGain
-   // gains are compared.. This cut scan uses a simple loop over events, 
-   // but may be remodified to use binary search trees.
-
-   vector<Double_t> xmin ( fNvars );
-   vector<Double_t> xmax ( fNvars );
-
-   Double_t separationGain = -1;
-   Double_t cutValue=-999;
-   Int_t mxVar=-1;
-   Bool_t cutType=kTRUE;
-   Double_t  nSelS=0., nSelB=0., nTotS=0., nTotB=0.;
-   UInt_t num_events = eventSample.size();
-   
-   vector<vector<Double_t> > signal_counts (fNvars);
-   vector<vector<Double_t> > background_counts (fNvars);
-   vector<vector<Double_t> > cut_points (fNvars);
-   vector<vector<Double_t> > significance (fNvars);
-   
-   this->FindMinAndMax(eventSample, xmin, xmax);
-
-   
-   for (Int_t i=0; i < fNvars; i++){
-      signal_counts[i].resize(fNCuts);
-      background_counts[i].resize(fNCuts);
-      cut_points[i].resize(fNCuts);
-      significance[i].resize(fNCuts);
-
-      this->SetCutPoints(cut_points[i], xmin[i], xmax[i], fNCuts);
-   }
-
-   for (UInt_t event=0; event < num_events; event++){
-     
-      Int_t event_type = eventSample[event]->GetType();
-      Double_t event_weight = eventSample[event]->GetWeight();
-     
-      if (event_type == 1){
-         nTotS += event_weight;
-      } 
-      else {
-         nTotB += event_weight;
-      }
-     
-      for (Int_t variable = 0; variable < fNvars; variable++){
-         Double_t event_val = eventSample[event]->GetData(variable);
-         for (Int_t cut=0; cut < fNCuts; cut++){
-            if (event_val > cut_points[variable][cut]){
-               if (event_type == 1){
-                  signal_counts[variable][cut] += event_weight;
-               } 
-               else {
-                  background_counts[variable][cut] += event_weight;
-               }
-            }
-         } 
-      }
-   }
-
-   for (Int_t var = 0; var < fNvars; var++){
-      for (Int_t cut=0; cut < fNCuts; cut++){
-         Double_t cur_sep = fSepType->GetSeparationGain(signal_counts[var][cut],
-                                                        background_counts[var][cut],
-                                                        nTotS, nTotB);
-         if (separationGain < cur_sep) {
-            separationGain = cur_sep;
-            cutValue=cut_points[var][cut];
-            cutType= (nSelS/nTotS > nSelB/nTotB) ? kTRUE : kFALSE;
-            mxVar = var;
-         } 
-         
-      }
-   }
-   
-   node->SetSelector(mxVar);
-   node->SetCutValue(cutValue);
-   node->SetCutType(cutType);
-   node->SetSeparationGain(separationGain);
-
-   fVariableImportance[mxVar] += separationGain*separationGain * (nTotS+nTotB)* (nTotS+nTotB);
-  
-   return separationGain;
-}
-#endif
 
 //_______________________________________________________________________
 Double_t TMVA::DecisionTree::CheckEvent(const TMVA::Event & e, Bool_t UseYesNoLeaf)

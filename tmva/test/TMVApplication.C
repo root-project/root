@@ -20,7 +20,7 @@ Bool_t Use_CutsGA          = 1;
 Bool_t Use_Likelihood      = 1;
 Bool_t Use_LikelihoodD     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
 Bool_t Use_LikelihoodPCA   = 1; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
-Bool_t Use_PDERS           = 0;
+Bool_t Use_PDERS           = 1;
 Bool_t Use_PDERSD          = 0;
 Bool_t Use_PDERSPCA        = 0;
 Bool_t Use_KNN             = 1;
@@ -29,13 +29,13 @@ Bool_t Use_Fisher          = 1;
 Bool_t Use_FDA_GA          = 0;
 Bool_t Use_FDA_MT          = 1;
 Bool_t Use_MLP             = 1; // this is the recommended ANN
-Bool_t Use_CFMlpANN        = 0; 
-Bool_t Use_TMlpANN         = 0; 
+Bool_t Use_CFMlpANN        = 1; 
+Bool_t Use_TMlpANN         = 1; 
 Bool_t Use_SVM_Gauss       = 1;
 Bool_t Use_SVM_Poly        = 0;
 Bool_t Use_SVM_Lin         = 0;
 Bool_t Use_BDT             = 1;
-Bool_t Use_BDTD            = 0;
+Bool_t Use_BDTD            = 1;
 Bool_t Use_RuleFit         = 1;
 Bool_t Use_Plugin          = 0;
 // ---------------------------------------------------------------
@@ -92,7 +92,7 @@ void TMVApplication( TString myMethodList = "" )
    //
    // create the Reader object
    //
-   TMVA::Reader *reader = new TMVA::Reader("!Color");    
+   TMVA::Reader *reader = new TMVA::Reader("!Color:!Silent");    
 
    // create a set of variables and declare them to the reader
    // - the variable names must corresponds in name and type to 
@@ -101,8 +101,8 @@ void TMVApplication( TString myMethodList = "" )
    Float_t var3, var4;
    reader->AddVariable( "var1+var2", &var1 );
    reader->AddVariable( "var1-var2", &var2 );
-   reader->AddVariable( "var3", &var3 );
-   reader->AddVariable( "var4", &var4 );
+   reader->AddVariable( "var3",      &var3 );
+   reader->AddVariable( "var4",      &var4 );
 
    //
    // book the MVA methods
@@ -176,11 +176,11 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_KNN)           histKNN   = new TH1F( "MVA_KNN",           "MVA_KNN",           nbin,  0, 1 );
    if (Use_HMatrix)       histHm    = new TH1F( "MVA_HMatrix",       "MVA_HMatrix",       nbin, -0.95, 1.55 );
    if (Use_Fisher)        histFi    = new TH1F( "MVA_Fisher",        "MVA_Fisher",        nbin, -4, 4 );
-   if (Use_MLP)           histNn    = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -0.25, 1.5 );
+   if (Use_MLP)           histNn    = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.25, 1.5 );
    if (Use_CFMlpANN)      histNnC   = new TH1F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,  0, 1 );
    if (Use_TMlpANN)       histNnT   = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
    if (Use_BDT)           histBdt   = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
-   if (Use_BDTD)          histBdtD  = new TH1F( "MVA_BDTD",          "MVA_BDTD",          nbin, -0.4, 0.6 );
+   if (Use_BDTD)          histBdtD  = new TH1F( "MVA_BDTD",          "MVA_BDTD",          nbin, -0.8, 0.8 );
    if (Use_RuleFit)       histRf    = new TH1F( "MVA_RuleFit",       "MVA_RuleFit",       nbin, -2.0, 2.0 );
    if (Use_SVM_Gauss)     histSVMG  = new TH1F( "MVA_SVM_Gauss",     "MVA_SVM_Gauss",     nbin, 0.0, 1.0 );
    if (Use_SVM_Poly)      histSVMP  = new TH1F( "MVA_SVM_Poly",      "MVA_SVM_Poly",      nbin, 0.0, 1.0 );
@@ -189,7 +189,7 @@ void TMVApplication( TString myMethodList = "" )
    if (Use_FDA_GA)        histFDAGA = new TH1F( "MVA_FDA_GA",        "MVA_FDA_GA",        nbin, -2.0, 3.0 );
    if (Use_Plugin)        histPBdt  = new TH1F( "MVA_PBDT",          "MVA_BDT",           nbin, -0.8, 0.8 );
 
-   // book examsple histogram for probability (the other methods are done similarly)
+   // book example histogram for probability (the other methods are done similarly)
    TH1F *probHistFi(0), *rarityHistFi(0);
    if (Use_Fisher) {
       probHistFi   = new TH1F( "PROBA_MVA_Fisher",  "PROBA_MVA_Fisher",  nbin, 0, 1 );

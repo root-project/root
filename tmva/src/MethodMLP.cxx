@@ -345,7 +345,7 @@ void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& 
    
    for (Int_t j = 0; j < GetNvar(); j++) {
       x = branchVar[j];
-      if (IsNormalised()) x = Tools::NormVariable( x, GetXmin( j ), GetXmax( j ) );
+      if (IsNormalised()) x = gTools().NormVariable( x, GetXmin( j ), GetXmax( j ) );
       neuron = GetInputNeuron(j);
       neuron->ForceValue(x);
    }
@@ -630,7 +630,7 @@ void TMVA::MethodMLP::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The MLP artificial neural network (ANN) is a traditional feed-" << Endl;
    fLogger << "forward multilayer perceptron impementation. The MLP has a user-" << Endl;
@@ -638,7 +638,7 @@ void TMVA::MethodMLP::GetHelpMessage() const
    fLogger << "nodes is determined by the input variables (output classes, i.e., " << Endl;
    fLogger << "signal and one background). " << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "Neural networks are stable and performing for a large variety of " << Endl;
    fLogger << "linear and non-linear classification problems. However, in contrast" << Endl;
@@ -653,7 +653,7 @@ void TMVA::MethodMLP::GetHelpMessage() const
    fLogger << "(at least 10k training cycles are required to achieve approximately" << Endl;
    fLogger << "competitive results)." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "Overtraining: " << Tools::Color("reset")
+   fLogger << gTools().Color("bold") << "Overtraining: " << gTools().Color("reset")
            << "only the TMlpANN performs an explicit separation of the" << Endl;
    fLogger << "full training sample into independent training and validation samples." << Endl;
    fLogger << "We have found that in most high-energy physics applications the " << Endl;
@@ -666,7 +666,7 @@ void TMVA::MethodMLP::GetHelpMessage() const
    fLogger << "pendent test sample, caution is needed. The results for these samples " << Endl;
    fLogger << "are printed to standard output at the end of each training job." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The hidden layer architecture for all ANNs is defined by the option" << Endl;
    fLogger << "\"HiddenLayers=N+1,N,...\", where here the first hidden layer has N+1" << Endl;

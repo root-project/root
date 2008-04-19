@@ -59,7 +59,7 @@ namespace TMVA {
    public:
 
       // constructor of a node for the search tree
-      BinarySearchTreeNode( Event* e = NULL );
+      BinarySearchTreeNode( const Event* e = NULL );
 
       // constructor of a daughter node as a daughter of 'p'
       BinarySearchTreeNode( BinarySearchTreeNode* parent, char pos );

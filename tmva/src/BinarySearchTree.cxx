@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -50,7 +49,7 @@
 #include "TTree.h"
 #include "Riostream.h"
 #include <stdexcept>
-#include <algorithm>
+#include <stdlib.h>
 
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
@@ -101,14 +100,17 @@ TMVA::BinarySearchTree::BinarySearchTree( const BinarySearchTree &b)
 TMVA::BinarySearchTree::~BinarySearchTree( void ) 
 {
    // destructor
+
+   for(std::vector< pair<Double_t, const TMVA::Event*> >::iterator pIt = fNormalizeTreeTable.begin();
+       pIt != fNormalizeTreeTable.end(); pIt++) {
+      delete pIt->second;
+   }
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTree::Insert( Event* event ) 
+void TMVA::BinarySearchTree::Insert( const Event* event ) 
 {
    // insert a new "event" in the binary tree
-   //   set "eventOwnershipt" to kTRUE if the event should be owned (deleted) by
-   //   the tree
    fCurrentDepth=0;
    fStatisticsIsValid = kFALSE;
 
@@ -134,11 +136,11 @@ void TMVA::BinarySearchTree::Insert( Event* event )
    }
 
    // normalise the tree to speed up searches
-   if (fCanNormalize) fNormalizeTreeTable.push_back( make_pair(0.0,event) );
+   if (fCanNormalize) fNormalizeTreeTable.push_back( make_pair(0.0,new Event(*event)) );
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTree::Insert( Event *event, 
+void TMVA::BinarySearchTree::Insert( const Event *event, 
                                      Node *node ) 
 {
    // private internal function to insert a event (node) at the proper position
@@ -235,7 +237,7 @@ Double_t TMVA::BinarySearchTree::Fill( const MethodBase& callingMethod, TTree* t
    fPeriod = callingMethod.GetVarTransform().GetNVariables();
 
    // get the event: this implicitly takes into account variable transformation
-   Event& event = callingMethod.GetEvent(); 
+   const Event& event = callingMethod.GetEvent(); 
 
    // insert all events into the tree
    for (Int_t ievt=0; ievt<theTree->GetEntries(); ievt++) {
@@ -244,7 +246,7 @@ Double_t TMVA::BinarySearchTree::Fill( const MethodBase& callingMethod, TTree* t
       // insert event into binary tree
       if (theType==-1 || event.Type()==theType) {
          // create new event with pointer to event vector, and with a weight
-         this->Insert( new Event(event) );
+         this->Insert( &event );
          nevents++;
          fSumOfWeights += event.GetWeight();
       }
@@ -326,44 +328,58 @@ Double_t TMVA::BinarySearchTree::Fill( std::vector<Event*> theTree, Int_t theTyp
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTree::NormalizeTree ( std::vector< pair<Double_t, TMVA::Event*> >::iterator leftBound, 
-                                             std::vector< pair<Double_t, TMVA::Event*> >::iterator rightBound, 
+void TMVA::BinarySearchTree::NormalizeTree ( std::vector< pair<Double_t, const TMVA::Event*> >::iterator leftBound, 
+                                             std::vector< pair<Double_t, const TMVA::Event*> >::iterator rightBound, 
                                              UInt_t actDim )
 {
+
    // normalises the binary-search tree to reduce the branch length and hence speed up the 
    // search procedure (in average)
    if (leftBound == rightBound) return;
    
    if (actDim == fPeriod)  actDim = 0;
    
-   for (std::vector< pair<Double_t, TMVA::Event*> >::iterator i=leftBound; i!=rightBound; i++) {
+   for (std::vector< pair<Double_t, const TMVA::Event*> >::iterator i=leftBound; i!=rightBound; i++) {
       i->first = i->second->GetVal( actDim );
    }
    
-   sort( leftBound, rightBound );
+   std::sort( leftBound, rightBound );
    
-   std::vector< pair<Double_t, TMVA::Event*> >::iterator leftTemp  = leftBound;
-   std::vector< pair<Double_t, TMVA::Event*> >::iterator rightTemp = rightBound;
+   std::vector< pair<Double_t, const TMVA::Event*> >::iterator leftTemp  = leftBound;
+   std::vector< pair<Double_t, const TMVA::Event*> >::iterator rightTemp = rightBound;
   
+   // meet in the middle
    while (true) {
       rightTemp--; if (rightTemp == leftTemp ) break;
       leftTemp++;  if (leftTemp  == rightTemp) break;
    }
   
-   std::vector< pair<Double_t, TMVA::Event*> >::iterator mid     = leftTemp;
-   std::vector< pair<Double_t, TMVA::Event*> >::iterator midTemp = mid;
+   std::vector< pair<Double_t, const TMVA::Event*> >::iterator mid     = leftTemp;
+   std::vector< pair<Double_t, const TMVA::Event*> >::iterator midTemp = mid;
+
+   //    int i=0;
+   //    for(std::vector< pair<Double_t, const TMVA::Event*> >::iterator tmpIter = leftBound; tmpIter != rightBound; tmpIter++)
+   //       cout << "...    " << i++ <<": " << mid->first << "   ->  " << mid->second->GetVal( actDim ) << endl;
+
 
    if (mid!=leftBound) midTemp--;
 
    while (mid != leftBound && mid->second->GetVal( actDim ) == midTemp->second->GetVal( actDim ))  {
       mid--; 
       midTemp--;
-   }  
+   }
 
    Insert( mid->second );
+
+   //    Print(cout);
+   //    cout << endl << endl;
+
    NormalizeTree( leftBound, mid, actDim+1 );
    mid++;
+   //    Print(cout);
+   //    cout << endl << endl;
    NormalizeTree( mid, rightBound, actDim+1 );
+
 
    return;  
 }
@@ -550,8 +566,6 @@ Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vec
 
       if (tl) queue.push( make_pair( (const BinarySearchTreeNode*)st.first->GetLeft(), d+1 ) );
       if (tr) queue.push( make_pair( (const BinarySearchTreeNode*)st.first->GetRight(), d+1 ) );
-      //       if (tl) queue.push( make_pair( (BinarySearchTreeNode*)st.first->GetLeft(), d+1 ) );
-      //       if (tr) queue.push( make_pair( (BinarySearchTreeNode*)st.first->GetRight(), d+1 ) );
    }
 
    return count;

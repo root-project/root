@@ -54,6 +54,7 @@ TMVA::Config::Config() :
    fVariablePlotting.fNbins1D  = 60;
    fVariablePlotting.fNbins2D  = 300;
    fVariablePlotting.fMaxNumOfAllowedVariablesForScatterPlots = 20;
+   fVariablePlotting.fNbinsXOfROCCurve                        = 100;
 
    // IO names
    fIONames.fWeightFileDir       = "weights";

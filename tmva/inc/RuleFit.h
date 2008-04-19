@@ -160,7 +160,7 @@ namespace TMVA {
       RuleFit( const RuleFit & other );
 
       // copy method
-      void Copy( const RuleFit & other );
+      //void Copy( const RuleFit & other );
 
       std::vector<TMVA::Event *>          fTrainingEvents;      // all training events
       std::vector<TMVA::Event *>          fTrainingEventsRndm;  // idem, but randomly shuffled

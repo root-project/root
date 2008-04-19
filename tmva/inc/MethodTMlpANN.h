@@ -42,7 +42,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
@@ -107,13 +106,17 @@ namespace TMVA {
       void CreateMLPOptions( TString );
 
       // option string
-      TString fLayerSpec;        // Layer specification option
+      TString fLayerSpec;          // Layer specification option
 
       TMultiLayerPerceptron* fMLP; // the TMLP
+      TTree*                 fLocalTrainingTree; // local copy of training tree
      
-      TString fHiddenLayer;      // string containig the hidden layer structure
-      Int_t   fNcycles;          // number of training cylcles
-      TString fMLPBuildOptions;  // option string to build the mlp
+      TString  fHiddenLayer;        // string containig the hidden layer structure
+      Int_t    fNcycles;            // number of training cylcles
+      Double_t fValidationFraction; // fraction of events in training tree used for cross validation
+      TString  fMLPBuildOptions;    // option string to build the mlp
+
+      TString  fLearningMethod;     // the learning method (given via option string)
 
       void InitTMlpANN( void );
 

@@ -58,6 +58,8 @@ TMVA::MethodFDA::MethodFDA( const TString& jobName, const TString& methodTitle, 
                             const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, methodTitle, theData, theOption, theTargetDir ), 
      IFitterTarget()
+   , fFitter(0)
+   , fConvergerFitter(0)
 {
    // standard constructor
    InitFDA();
@@ -145,7 +147,7 @@ void TMVA::MethodFDA::ProcessOptions()
    fParRangeStringT.ReplaceAll( " ", "" );
    fNPars = fParRangeStringT.CountChar( ')' );
 
-   TList* parList = Tools::ParseFormatLine( fParRangeStringT, ";" );
+   TList* parList = gTools().ParseFormatLine( fParRangeStringT, ";" );
    if (parList->GetSize() != fNPars) {
       fLogger << kFATAL << "<ProcessOptions> Mismatch in parameter string: " 
               << "the number of parameters: " << fNPars << " != ranges defined: " 
@@ -174,6 +176,8 @@ void TMVA::MethodFDA::ProcessOptions()
 
       fParRange[ipar] = new Interval( pmin, pmax );
    }
+   
+   delete parList;
    
    // intepret formula string
 
@@ -252,6 +256,10 @@ TMVA::MethodFDA::~MethodFDA( void )
 {
    // destructor
    ClearAll();
+
+   if(fFitter) delete fFitter;
+   if(fConvergerFitter!=0 && fConvergerFitter!=this) delete fConvergerFitter;
+
 }
 
 //_______________________________________________________________________
@@ -331,7 +339,7 @@ void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>
    fLogger << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    vector<TString>  parNames;
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
-   Tools::FormattedOutput( pars, parNames, "Parameter" , "Fit result", fLogger, "%g" );   
+   gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", fLogger, "%g" );   
    fLogger << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
    fLogger << "Value of estimator at minimum: " << estimator << Endl;
 }
@@ -455,7 +463,7 @@ void TMVA::MethodFDA::GetHelpMessage() const
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The function discriminant analysis (FDA) is a classifier suitable " << Endl;
    fLogger << "to solve linear or simple nonlinear discrimination problems." << Endl; 
@@ -473,7 +481,7 @@ void TMVA::MethodFDA::GetHelpMessage() const
    fLogger << "and the allowed parameter ranges:" << Endl;
    fLogger << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "The FDA performance depends on the complexity and fidelity of the" << Endl;
    fLogger << "user-defined discriminator function. As a general rule, it should" << Endl;
@@ -484,7 +492,7 @@ void TMVA::MethodFDA::GetHelpMessage() const
    fLogger << "necessary. Comparison with more involved nonlinear classifiers can" << Endl;
    fLogger << "be used as a guide." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "Depending on the function used, the choice of \"FitMethod\" is" << Endl;
    fLogger << "crucial for getting valuable solutions with FDA. As a guideline it" << Endl;

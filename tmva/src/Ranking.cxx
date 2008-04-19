@@ -36,7 +36,7 @@
 ClassImp(TMVA::Ranking)
 
 TMVA::Ranking::Ranking()
-  : fLogger( "", kINFO )
+  : fLogger( "" )
 {
    // default constructor
    fRanking.clear();
@@ -45,7 +45,7 @@ TMVA::Ranking::Ranking()
 TMVA::Ranking::Ranking( const TString& context, const TString& rankingDiscriminatorName ) 
    : fContext( context ),
      fRankingDiscriminatorName( rankingDiscriminatorName ),
-     fLogger( fContext.Data(), kINFO )
+     fLogger( fContext.Data() )
 {
    // constructor
 }

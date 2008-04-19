@@ -64,7 +64,7 @@ TMVA::VariableTransformBase::VariableTransformBase( std::vector<VariableInfo>& v
      fCurrentEvtIdx(0),
      fOutputBaseDir(0),
      fRanking(0),
-     fLogger( GetName(), kINFO )
+     fLogger( GetName() )
 {
    // standard constructor
    std::vector<VariableInfo>::iterator it = fVariables.begin();
@@ -293,12 +293,12 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    // --> avoid above critical number (which can be user defined)
    if (nvar > (UInt_t)gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots) {
       Int_t nhists = nvar*(nvar - 1)/2;
-      fLogger << kINFO << Tools::Color("dgreen") << Endl;
+      fLogger << kINFO << gTools().Color("dgreen") << Endl;
       fLogger << kINFO << "<PlotVariables> Will not produce scatter plots ==> " << Endl;
       fLogger << kINFO
               << "|  The number of " << nvar << " input variables would require " << nhists << " two-dimensional" << Endl;
       fLogger << kINFO
-              << "|  histograms, which would occupy the computer's memory. Note that this" << Endl;
+              << "|  histograms, which would flood the computer's memory. Note that this" << Endl;
       fLogger << kINFO
               << "|  suppression does not have any consequences for your analysis, other" << Endl;
       fLogger << kINFO
@@ -308,7 +308,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
       fLogger << "|  script via the command line:" << Endl;
       fLogger << kINFO
               << "|  \"(TMVA::gConfig().GetVariablePlotting()).fMaxNumOfAllowedVariablesForScatterPlots = <some int>;\""
-              << Tools::Color("reset") << Endl;
+              << gTools().Color("reset") << Endl;
       fLogger << Endl;
       fLogger << kINFO << "Some more output" << Endl;
    }
@@ -337,9 +337,13 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
          if (xmin >= xmax) xmax = xmin*1.1; // try first...
          if (xmin >= xmax) xmax = xmin + 1; // this if xmin == xmax == 0
 
+         // increase max by width of a single bin: this is necessary to keep the events with 
+         // values equal to the maximum within the histogram
+         xmax += (xmax - xmin)/nbins1D;
+
          vS[i] = new TH1F( Form("%s__S%s", myVari.Data(), transfType.Data()), Variable(i).GetExpression(), nbins1D, xmin, xmax );
          vB[i] = new TH1F( Form("%s__B%s", myVari.Data(), transfType.Data()), Variable(i).GetExpression(), nbins1D, xmin, xmax );         
-      }
+      }      
 
       vS[i]->SetXTitle(Variable(i).GetExpression());
       vB[i]->SetXTitle(Variable(i).GetExpression());
@@ -409,7 +413,7 @@ void TMVA::VariableTransformBase::PlotVariables( TTree* theTree )
    if (fRanking) delete fRanking;
    fRanking = new Ranking( GetName(), "Separation" );
    for (UInt_t i=0; i<nvar; i++) {   
-      Double_t sep = Tools::GetSeparation( vS[i], vB[i] );
+      Double_t sep = gTools().GetSeparation( vS[i], vB[i] );
       fRanking->AddRank( Rank( vS[i]->GetTitle(), sep ) );
    }
 
@@ -516,7 +520,7 @@ void TMVA::VariableTransformBase::ReadVarsFromStream( std::istream& istr )
          fLogger << kINFO << "the correct working of the classifier):" << Endl;
          fLogger << kINFO << "   var #" << varIdx <<" declared in Reader: " << varIt->GetExpression() << Endl;
          fLogger << kINFO << "   var #" << varIdx <<" declared in file  : " << varInfo.GetExpression() << Endl;
-         fLogger << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
+         fLogger << kFATAL << "The expression declared to the Reader needs to be checked (name and/or order is wrong)" << Endl;
       }
    }
 }

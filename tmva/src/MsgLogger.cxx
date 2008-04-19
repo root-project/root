@@ -29,25 +29,21 @@
 // STL include(s):
 #include <iomanip>
 #include <iostream>
-#include <string>
 
 #include <stdlib.h>
-
-using std::string;
-using std::cout;
-using std::endl;
 
 // ROOT include(s):
 
 ClassImp(TMVA::MsgLogger)
 
 // this is the hard-coded maximum length of the source names
-static const string::size_type MAXIMUM_SOURCE_NAME_LENGTH = 13;
+const std::string::size_type TMVA::MsgLogger::MAXIMUM_SOURCE_NAME_LENGTH = 15;
 // this is the hardcoded prefix
-static const string PREFIX = "--- ";
+static const std::string PREFIX = "--- ";
 // this is the hardcoded suffix
-static const string SUFFIX = ": ";
+static const std::string SUFFIX = ": ";
 
+//_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
    : fObjSource( source ), 
      fStrSource( "" ), 
@@ -61,7 +57,8 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
    InitMaps();
 }
 
-TMVA::MsgLogger::MsgLogger( const string& source, EMsgType minType )
+//_______________________________________________________________________
+TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
    : fObjSource( 0 ),
      fStrSource( source ), 
      fPrefix( PREFIX ), 
@@ -74,6 +71,7 @@ TMVA::MsgLogger::MsgLogger( const string& source, EMsgType minType )
    InitMaps();
 }
 
+//_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( EMsgType minType )
    : fObjSource( 0 ), 
      fStrSource( "Unknown" ), 
@@ -87,6 +85,7 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
    InitMaps();
 }
 
+//_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const MsgLogger& parent ) :
    //   basic_ios< MsgLogger::char_type, MsgLogger::traits_type >( new MsgLogger::__stringbuf_type() ),
    std::basic_ios< MsgLogger::char_type, MsgLogger::traits_type >(),
@@ -101,11 +100,13 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent ) :
    *this = parent;
 }
 
+//_______________________________________________________________________
 TMVA::MsgLogger::~MsgLogger() 
 {
    // destructor
 }
 
+//_______________________________________________________________________
 TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent ) 
 {
    // assingment operator
@@ -119,10 +120,11 @@ TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
    return *this;
 }
 
-string TMVA::MsgLogger::GetFormattedSource() const
+//_______________________________________________________________________
+std::string TMVA::MsgLogger::GetFormattedSource() const
 {
    // make sure the source name is no longer than fMaxSourceSize:
-   string source_name;
+   std::string source_name;
    if (fObjSource) source_name = fObjSource->GetName();
    else            source_name = fStrSource;
 
@@ -134,30 +136,32 @@ string TMVA::MsgLogger::GetFormattedSource() const
    return source_name;
 }
 
-string TMVA::MsgLogger::GetPrintedSource() const
+//_______________________________________________________________________
+std::string TMVA::MsgLogger::GetPrintedSource() const
 { 
    // the full logger prefix
-   string source_name = GetFormattedSource();
+   std::string source_name = GetFormattedSource();
    if (source_name.size() < fMaxSourceSize) 
-      for (string::size_type i=source_name.size(); i<fMaxSourceSize; i++) source_name.push_back( ' ' );
+      for (std::string::size_type i=source_name.size(); i<fMaxSourceSize; i++) source_name.push_back( ' ' );
 
    return fPrefix + source_name + fSuffix; 
 }
 
+//_______________________________________________________________________
 void TMVA::MsgLogger::Send() 
 {
    // activates the logger writer
 
    // make sure the source name is no longer than fMaxSourceSize:
-   string source_name = GetFormattedSource();
+   std::string source_name = GetFormattedSource();
 
-   string message = this->str();
-   string::size_type previous_pos = 0, current_pos = 0;
+   std::string message = this->str();
+   std::string::size_type previous_pos = 0, current_pos = 0;
 
    // slice the message into lines:
    while (kTRUE) {
       current_pos = message.find( '\n', previous_pos );
-      string line = message.substr( previous_pos, current_pos - previous_pos );
+      std::string line = message.substr( previous_pos, current_pos - previous_pos );
 
       std::ostringstream message_to_send;
       // must call the modifiers like this, otherwise g++ get's confused with the operators...
@@ -175,6 +179,7 @@ void TMVA::MsgLogger::Send()
    return;
 }
 
+//_______________________________________________________________________
 void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const 
 {
    // putting the output string, the message type, and the color
@@ -183,25 +188,26 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    if (type < fMinType) return;
    std::map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
-   if( !gConfig().Silent() ) {
+   if (!gConfig().IsSilent()) {
       if (gConfig().UseColor()) {
          // no text for INFO
-         if (type == kINFO) cout << fPrefix << line << endl; // no color for info
-         else               cout << fColorMap.find( type )->second << fPrefix << "<" 
-                                 << stype->second << "> " << line  << "\033[0m" << endl;
+         if (type == kINFO) std::cout << fPrefix << line << std::endl; // no color for info
+         else               std::cout << fColorMap.find( type )->second << fPrefix << "<" 
+                                      << stype->second << "> " << line  << "\033[0m" << std::endl;
       } 
       else {
-         if (type == kINFO) cout << fPrefix << line << endl;
-         else               cout << fPrefix << "<" << stype->second << "> " << line << endl;
+         if (type == kINFO) std::cout << fPrefix << line << std::endl;
+         else               std::cout << fPrefix << "<" << stype->second << "> " << line << std::endl;
       }
    }
    // take decision to stop if fatal error
    if (type == kFATAL) { 
-      if( !gConfig().Silent() ) cout << "***> abort program execution" << endl;
+      if (!gConfig().IsSilent()) std::cout << "***> abort program execution" << std::endl;
       exit(1);
    }
 }
 
+//_______________________________________________________________________
 TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger ) 
 {
    // end line
@@ -209,22 +215,23 @@ TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger )
    return logger;
 }
 
+//_______________________________________________________________________
 void TMVA::MsgLogger::InitMaps()
 {
    // fill maps that assign a string and a color to echo message level
-   fTypeMap[kVERBOSE]  = "VERBOSE";
-   fTypeMap[kDEBUG]    = "DEBUG";
-   fTypeMap[kINFO]     = "INFO";
-   fTypeMap[kWARNING]  = "WARNING";
-   fTypeMap[kERROR]    = "ERROR";
-   fTypeMap[kFATAL]    = "FATAL";
-   fTypeMap[kSILENT]   = "SILENT";
+   fTypeMap[kVERBOSE]  = std::string("VERBOSE");
+   fTypeMap[kDEBUG]    = std::string("DEBUG");
+   fTypeMap[kINFO]     = std::string("INFO");
+   fTypeMap[kWARNING]  = std::string("WARNING");
+   fTypeMap[kERROR]    = std::string("ERROR");
+   fTypeMap[kFATAL]    = std::string("FATAL");
+   fTypeMap[kSILENT]   = std::string("SILENT");
 
-   fColorMap[kVERBOSE] = "\033[1;34m";
-   fColorMap[kDEBUG]   = "\033[34m";
-   fColorMap[kINFO]    = "";
-   fColorMap[kWARNING] = "\033[1;31m";
-   fColorMap[kERROR]   = "\033[31m";
-   fColorMap[kFATAL]   = "\033[37;41;1m";
-   fColorMap[kSILENT]  = "\033[30m";   
+   fColorMap[kVERBOSE] = std::string("\033[1;34m");
+   fColorMap[kDEBUG]   = std::string("\033[34m");
+   fColorMap[kINFO]    = std::string("");
+   fColorMap[kWARNING] = std::string("\033[1;31m");
+   fColorMap[kERROR]   = std::string("\033[31m");
+   fColorMap[kFATAL]   = std::string("\033[37;41;1m");
+   fColorMap[kSILENT]  = std::string("\033[30m");
 }

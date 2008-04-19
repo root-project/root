@@ -73,12 +73,18 @@ ClassImp(TMVA::Factory)
 
 //_______________________________________________________________________
 TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption )
-   : Configurable          ( theOption ),
-     fDataSet              ( new DataSet ),
-     fTargetFile           ( theTargetFile ),
-     fVerbose              ( kFALSE ),
-     fSilent               ( kFALSE ),
-     fJobName              ( jobName )
+   : Configurable           ( theOption ),
+     fDataSet               ( new DataSet ),
+     fTargetFile            ( theTargetFile ),
+     fVerbose               ( kFALSE ),
+     fJobName               ( jobName ),
+     fDataAssignType        ( kUndefined ),
+     fSuspendDATVerification( kFALSE ),
+     fTrainSigAssignTree    ( 0 ),
+     fTrainBkgAssignTree    ( 0 ),
+     fTestSigAssignTree     ( 0 ),
+     fTestBkgAssignTree     ( 0 ),
+     fATreeEvent            ( 0 )
 {  
    // standard constructor
    //   jobname       : this name will appear in all weight file names produced by the MVAs
@@ -89,16 +95,18 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    // histograms are not automatically associated with the current
    // directory and hence don't go out of scope when closing the file
    // TH1::AddDirectory(kFALSE);
+   Bool_t silent = kFALSE;
+   Bool_t color  = !gROOT->IsBatch();
    DeclareOptionRef( fVerbose, "V", "verbose flag" );
-   DeclareOptionRef( fColor=!gROOT->IsBatch(), "Color", "color flag (default on)" );
-   DeclareOptionRef( fSilent, "S", "boolean silent flag (default off)" );
+   DeclareOptionRef( color, "Color", "Color flag (default on)" );
+   DeclareOptionRef( silent, "Silent", "Boolean silent flag (default off)" );
 
    ParseOptions( kFALSE );
 
-   fLogger.SetMinType( Verbose() ? kVERBOSE : kINFO );
+   if (Verbose()) fLogger.SetMinType( kVERBOSE );
 
-   gConfig().SetUseColor( fColor );
-   gConfig().SetSilent( fSilent );
+   gConfig().SetUseColor( color );
+   gConfig().SetSilent( silent );
 
    Greetings();
 
@@ -113,8 +121,9 @@ void TMVA::Factory::Greetings()
    // print welcome message
    // options are: kLogoWelcomeMsg, kIsometricWelcomeMsg, kLeanWelcomeMsg
 
-   Tools::TMVAWelcomeMessage( fLogger, Tools::kLogoWelcomeMsg );
-   Tools::TMVAVersionMessage( fLogger ); fLogger << Endl;
+   gTools().ROOTVersionMessage( fLogger ); 
+   gTools().TMVAWelcomeMessage( fLogger, gTools().kLogoWelcomeMsg );
+   gTools().TMVAVersionMessage( fLogger ); fLogger << Endl;
 }
 
 //_______________________________________________________________________
@@ -122,6 +131,12 @@ TMVA::Factory::~Factory( void )
 {
    // default destructor
    this->DeleteAllMethods();
+
+   if (!fTrainSigAssignTree) delete fTrainSigAssignTree;
+   if (!fTrainBkgAssignTree) delete fTrainBkgAssignTree;
+   if (!fTestSigAssignTree)  delete fTestSigAssignTree;
+   if (!fTestBkgAssignTree)  delete fTestBkgAssignTree;
+
    delete fDataSet;
 }
 
@@ -151,8 +166,142 @@ void TMVA::Factory::SetInputVariables( vector<TString>* theVariables )
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Factory::SetInputTrees(TTree* signal, TTree* background, 
-                                    Double_t signalWeight, Double_t backgroundWeight)
+Bool_t TMVA::Factory::VerifyDataAssignType( DataAssignType thisType )
+{
+   // sanity check to enforce exclusive usage of data assignment (either event-wise OR tree-wise)
+
+   // is verification suspended ?
+   if (fSuspendDATVerification) { fSuspendDATVerification = kFALSE; return kTRUE; }
+
+   if      (thisType        == kUndefined) fLogger << kFATAL << "Big troubles in \"VerifyDataAssignType\"" << Endl;
+   else if (fDataAssignType == kUndefined) fDataAssignType = thisType;
+   else if (thisType        != fDataAssignType) {
+      fLogger << kINFO 
+              << "Given flags: thisType = " << thisType << ", DataAssignType = " << fDataAssignType << Endl;
+      fLogger << kFATAL  
+              << "You have added individual training or test events to the factory AND "
+              << "also added complete trees. This is incompatible in TMVA -> please use " 
+              << "the one OR the other (or contact the authors if such mixed access is required)." << Endl;
+      return kFALSE;
+   }
+   
+   return kTRUE;
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::CreateEventAssignTrees( TTree*& fAssignTree, const TString& name )
+{
+   // create the data assignment tree (for event-wise data assignment by user)
+   fAssignTree = new TTree( name, name );
+   fAssignTree->Branch( "type",   &fATreeType,   "ATreeType/I" );
+   fAssignTree->Branch( "weight", &fATreeWeight, "ATreeWeight/I" );
+   std::vector<VariableInfo>& vars = Data().GetVariableInfos();
+   if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()];
+   for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
+      TString name = vars[ivar].GetExpression();
+      fAssignTree->Branch( name, &(fATreeEvent[ivar]), name + "/F" );
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::AddSignalTrainingEvent( std::vector<Double_t>& event, Double_t weight )
+{
+   // add signal training event
+   VerifyDataAssignType( kAssignEvents );
+
+   // first call -> create tree !
+   if (!fTrainSigAssignTree) CreateEventAssignTrees( fTrainSigAssignTree, "LocalSigTrainTree" );
+   
+   // sanity check
+   if (event.size() != (UInt_t)fTrainSigAssignTree->GetNbranches()-2 || 
+       event.size() != Data().GetVariableInfos().size()) {
+      fLogger << kFATAL 
+              << "Dimension mismatch in \"AddSignalTrainingEvent\", does the "
+              << "input vector contain as many dimenions as variables defined ? => please check" << Endl;
+   }
+   
+   // fill tree
+   fATreeType   = 1;
+   fATreeWeight = weight;
+   for (UInt_t ivar=0; ivar<event.size(); ivar++) fATreeEvent[ivar] = event[ivar];
+   fTrainSigAssignTree->Fill();
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::AddBackgroundTrainingEvent( std::vector<Double_t>& event, Double_t weight )
+{
+   // add background training event
+   VerifyDataAssignType( kAssignEvents );
+
+   // first call -> create tree !
+   if (!fTrainBkgAssignTree) CreateEventAssignTrees( fTrainBkgAssignTree, "LocalBkgTraiTree" );
+
+   // sanity check
+   if (event.size() != (UInt_t)fTrainBkgAssignTree->GetNbranches()-2 || 
+       event.size() != Data().GetVariableInfos().size()) {
+      fLogger << kFATAL 
+              << "Dimension mismatch in \"AddBackgroundTrainingEvent\", does the "
+              << "input vector contain as many dimenions as variables defined ? => please check" << Endl;
+   }
+   
+   // fill tree
+   fATreeType   = 0;
+   fATreeWeight = weight;
+   for (UInt_t ivar=0; ivar<event.size(); ivar++) fATreeEvent[ivar] = event[ivar];
+   fTrainBkgAssignTree->Fill();
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::AddSignalTestEvent( std::vector<Double_t>& event, Double_t weight )
+{
+   // add signal test event
+   VerifyDataAssignType( kAssignEvents );
+
+   // first call -> create tree !
+   if (!fTestSigAssignTree) CreateEventAssignTrees( fTestSigAssignTree, "LocalSigTestTree" );
+
+   // sanity check
+   if (event.size() != (UInt_t)fTestSigAssignTree->GetNbranches()-2 || 
+       event.size() != Data().GetVariableInfos().size()) {
+      fLogger << kFATAL 
+              << "Dimension mismatch in \"AddSignalTestEvent\", does the "
+              << "input vector contain as many dimenions as variables defined ? => please check" << Endl;
+   }
+   
+   // fill tree
+   fATreeType   = 1;
+   fATreeWeight = weight;
+   for (UInt_t ivar=0; ivar<event.size(); ivar++) fATreeEvent[ivar] = event[ivar];
+   fTestSigAssignTree->Fill();
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::AddBackgroundTestEvent( std::vector<Double_t>& event, Double_t weight )
+{
+   // add background test event
+   VerifyDataAssignType( kAssignEvents );
+
+   // first call -> create tree !
+   if (!fTestBkgAssignTree) CreateEventAssignTrees( fTestBkgAssignTree, "LocalBkgTestTree" );
+
+   // sanity check
+   if (event.size() != (UInt_t)fTestBkgAssignTree->GetNbranches()-2 || 
+       event.size() != Data().GetVariableInfos().size()) {
+      fLogger << kFATAL 
+              << "Dimension mismatch in \"AddBackgroundTestEvent\", does the "
+              << "input vector contain as many dimenions as variables defined ? => please check" << Endl;
+   }
+   
+   // fill tree
+   fATreeType   = 0;
+   fATreeWeight = weight;
+   for (UInt_t ivar=0; ivar<event.size(); ivar++) fATreeEvent[ivar] = event[ivar];
+   fTestBkgAssignTree->Fill();
+}
+
+//_______________________________________________________________________
+Bool_t TMVA::Factory::SetInputTrees( TTree* signal, TTree* background, 
+                                     Double_t signalWeight, Double_t backgroundWeight )
 {
    // define the input trees for signal and background; no cuts are applied
    if (!signal || !background) {
@@ -167,7 +316,7 @@ Bool_t TMVA::Factory::SetInputTrees(TTree* signal, TTree* background,
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Factory::SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut)
+Bool_t TMVA::Factory::SetInputTrees( TTree* inputTree, TCut SigCut, TCut BgCut )
 {
    // define the input trees for signal and background from single input tree,
    // containing both signal and background events distinguished by the type 
@@ -176,6 +325,9 @@ Bool_t TMVA::Factory::SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut)
       fLogger << kFATAL << "Zero pointer for input tree: " << inputTree << Endl;
       return kFALSE;
    }
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
 
    TTree* signalTree = inputTree->CloneTree(0);
    TTree* backgTree  = inputTree->CloneTree(0);
@@ -200,7 +352,7 @@ Bool_t TMVA::Factory::SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut)
       backgList = (TEventList*)gDirectory->Get("backgList");
    }
    signalList->Print();
-   backgList->Print();
+   backgList ->Print();
   
    for (Int_t i=0;i<inputTree->GetEntries(); i++) {
       inputTree->GetEntry(i);
@@ -214,11 +366,11 @@ Bool_t TMVA::Factory::SetInputTrees(TTree* inputTree, TCut SigCut, TCut BgCut)
    }
 
    signalTree->ResetBranchAddresses();
-   backgTree->ResetBranchAddresses();
+   backgTree ->ResetBranchAddresses();
 
 
-   Data().AddSignalTree(signalTree, 1.0);
-   Data().AddBackgroundTree(backgTree, 1.0);
+   Data().AddSignalTree    ( signalTree, 1.0 );
+   Data().AddBackgroundTree( backgTree,  1.0 );
 
    delete signalList;
    delete backgList;
@@ -232,6 +384,9 @@ Bool_t TMVA::Factory::SetInputTrees( TString datFileS, TString datFileB,
    // create trees from these ascii files
    TTree* signalTree = new TTree( "TreeS", "Tree (S)" );
    TTree* backgTree  = new TTree( "TreeB", "Tree (B)" );
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
   
    signalTree->ReadFile( datFileS );
    backgTree->ReadFile( datFileB );
@@ -254,8 +409,8 @@ Bool_t TMVA::Factory::SetInputTrees( TString datFileS, TString datFileB,
    }
    in.close();
     
-   signalTree->Write();
-   backgTree ->Write();
+   //signalTree->Write();
+   //backgTree ->Write();
 
    SetSignalTree    ( signalTree, signalWeight );
    SetBackgroundTree( backgTree,  backgroundWeight );
@@ -264,40 +419,53 @@ Bool_t TMVA::Factory::SetInputTrees( TString datFileS, TString datFileB,
 }
 
 //_______________________________________________________________________
-void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, 
+void TMVA::Factory::SetInputTreesFromEventAssignTrees()
+{
+   // assign event-wise local trees to data set
+   SetWeightExpression( "weight" );
+
+   fSuspendDATVerification = kTRUE; AddSignalTree    ( fTrainSigAssignTree, 1.0, Types::kTraining );
+   fSuspendDATVerification = kTRUE; AddSignalTree    ( fTestSigAssignTree,  1.0, Types::kTesting  );
+   fSuspendDATVerification = kTRUE; AddBackgroundTree( fTrainBkgAssignTree, 1.0, Types::kTraining );
+   fSuspendDATVerification = kTRUE; AddBackgroundTree( fTestBkgAssignTree,  1.0, Types::kTesting  );
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::PrepareTrainingAndTestTree( const TCut& cut, 
                                                 Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest,
                                                 const TString& otherOpt )
 {
    // prepare the training and test trees
    TString opt(Form("NsigTrain=%i:NbkgTrain=%i:NsigTest=%i:NbkgTest=%i:%s", 
                     NsigTrain, NbkgTrain, NsigTest, NbkgTest, otherOpt.Data()));
-   PrepareTrainingAndTestTree( cut, opt );
+   PrepareTrainingAndTestTree( cut, cut, opt );
 }
 
 //_______________________________________________________________________
-void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Ntest )
+void TMVA::Factory::PrepareTrainingAndTestTree( const TCut& cut, Int_t Ntrain, Int_t Ntest )
 {
    // prepare the training and test trees 
    // kept for backward compatibility
    TString opt(Form("NsigTrain=%i:NbkgTrain=%i:NsigTest=%i:NbkgTest=%i:SplitMode=Random:EqualTrainSample:!V", 
                     Ntrain, Ntrain, Ntest, Ntest));
-   PrepareTrainingAndTestTree( cut, opt );
+   PrepareTrainingAndTestTree( cut, cut, opt );
 }
 
 //_______________________________________________________________________
-void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, const TString& splitOpt )
+void TMVA::Factory::PrepareTrainingAndTestTree( const TCut& cut, const TString& splitOpt )
 { 
    // prepare the training and test trees
-   fLogger << kINFO << "Preparing trees for training and testing..." << Endl;
-   Data().SetCuts(cut, cut); // same cut for signal and background
-
-   Data().PrepareForTrainingAndTesting( splitOpt );
+   PrepareTrainingAndTestTree( cut, cut, splitOpt );
 }
 
 //_______________________________________________________________________
-void TMVA::Factory::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, const TString& splitOpt )
+void TMVA::Factory::PrepareTrainingAndTestTree( const TCut& sigcut, const TCut& bkgcut, const TString& splitOpt )
 { 
    // prepare the training and test trees
+
+   // if event-wise data assignment, add local trees to dataset first
+   if (fDataAssignType == kAssignEvents) SetInputTreesFromEventAssignTrees();
+
    fLogger << kINFO << "Preparing trees for training and testing..." << Endl;
    Data().SetCuts(sigcut, bkgcut); // different cuts for signal and background
 
@@ -307,31 +475,91 @@ void TMVA::Factory::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, const 
 //_______________________________________________________________________
 void TMVA::Factory::SetSignalTree( TTree* signal, Double_t weight )
 {
+   // set signal tree
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
+
    // number of signal events (used to compute significance)
    Data().ClearSignalTreeList();
    AddSignalTree( signal, weight );
 }
 
 //_______________________________________________________________________
-void TMVA::Factory::AddSignalTree( TTree* signal, Double_t weight )
+void TMVA::Factory::AddSignalTree( TTree* signal, Double_t weight, Types::ETreeType treetype )
 {
+   // add signal tree
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
+
    // number of signal events (used to compute significance)
-   Data().AddSignalTree( signal, weight );
+   Data().AddSignalTree( signal, weight, treetype );
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::AddSignalTree( TTree* signal, Double_t weight, const TString& treetype )
+{
+   // add signal tree
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
+
+   // number of signal events (used to compute significance)
+   Types::ETreeType tt = Types::kMaxTreeType;
+   TString tmpTreeType = treetype; tmpTreeType.ToLower();
+   if      (tmpTreeType.Contains( "train" ) && tmpTreeType.Contains( "test" )) tt = Types::kMaxTreeType;
+   else if (tmpTreeType.Contains( "train" ))                                   tt = Types::kTraining;
+   else if (tmpTreeType.Contains( "test" ))                                    tt = Types::kTesting;
+   else {
+      fLogger << kFATAL << "<AddSignalTree> cannot interpret tree type: \"" << treetype 
+              << "\" should be \"Training\" or \"Test\" or \"Training and Testing\"" << Endl;
+   }
+
+   Data().AddSignalTree( signal, weight, tt );
 }
 
 //_______________________________________________________________________
 void TMVA::Factory::SetBackgroundTree( TTree* background, Double_t weight )
 {
+   // set background tree
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
+
    // number of background events (used to compute significance)
    Data().ClearBackgroundTreeList();
    AddBackgroundTree( background, weight );
 }
 
 //_______________________________________________________________________
-void TMVA::Factory::AddBackgroundTree( TTree* background, Double_t weight )
+void TMVA::Factory::AddBackgroundTree( TTree* background, Double_t weight, Types::ETreeType treetype )
 {
+   // add background tree
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
+
    // number of background events (used to compute significance)
-   Data().AddBackgroundTree( background, weight );
+   Data().AddBackgroundTree( background, weight, treetype );
+}
+
+//_______________________________________________________________________
+void TMVA::Factory::AddBackgroundTree( TTree* background, Double_t weight, const TString & treetype )
+{
+   // add background tree
+
+   // sanity check that we are now using tree assignment as opposed to event assignment
+   VerifyDataAssignType( kAssignTrees );
+
+   // number of background events (used to compute significance)
+   Types::ETreeType tt = Types::kMaxTreeType;
+   if(treetype=="train") {
+      tt = Types::kTraining;
+   } else if(treetype=="test") {
+      tt = Types::kTesting;
+   }
+   Data().AddBackgroundTree( background, weight, tt );
 }
 
 //_______________________________________________________________________
@@ -366,7 +594,7 @@ Bool_t TMVA::Factory::BookMethod( Types::EMVA theMethod, TString methodTitle, TS
    // initialize methods
    MethodBase *method = 0;
 
-   switch(theMethod) {
+   switch (theMethod) {
    case Types::kCuts:       
       method = new MethodCuts           ( fJobName, methodTitle, Data(), theOption ); break;
    case Types::kFisher:     
@@ -418,7 +646,7 @@ Bool_t TMVA::Factory::BookMethod( Types::EMVA theMethod, TString methodTitle, TS
       }
       break;
    default:
-      fLogger << kFATAL << "Method: " << theMethod << " does not exist" << Endl;
+      fLogger << kFATAL << "Method: \"" << theMethod << "\" does not exist" << Endl;
    }
 
    fLogger << kINFO << "Booking method: " << method->GetMethodTitle() << Endl;
@@ -522,8 +750,8 @@ void TMVA::Factory::TestAllMethods( void )
       MethodBase* mva = (MethodBase*)*itrMethod;
       fLogger << kINFO << "Test method: " << mva->GetMethodTitle() << Endl;
       mva->AddClassifierToTestTree(0);
-      if (DEBUG_TMVA_Factory) Data().GetTestTree()->Print();
    }
+   if (DEBUG_TMVA_Factory) Data().GetTestTree()->Print();
 }
 
 //_______________________________________________________________________
@@ -679,7 +907,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       vtemp.push_back( sig[k]   );
       vtemp.push_back( sep[k]   );
       vector<TString> vtemps = mname[k];
-      Tools::UsefulSortDescending( vtemp, &vtemps );
+      gTools().UsefulSortDescending( vtemp, &vtemps );
       effArea[k]    = vtemp[0];
       eff10[k]      = vtemp[1];
       eff01[k]      = vtemp[2];
@@ -762,19 +990,19 @@ void TMVA::Factory::EvaluateAllMethods( void )
       const TMatrixD* covMatS = tpSig->GetCovarianceMatrix();
       const TMatrixD* covMatB = tpBkg->GetCovarianceMatrix();
    
-      const TMatrixD* corrMatS = Tools::GetCorrelationMatrix( covMatS );
-      const TMatrixD* corrMatB = Tools::GetCorrelationMatrix( covMatB );
+      const TMatrixD* corrMatS = gTools().GetCorrelationMatrix( covMatS );
+      const TMatrixD* corrMatB = gTools().GetCorrelationMatrix( covMatB );
 
       // print correlation matrices
       if (corrMatS != 0 && corrMatB != 0) {
 
          fLogger << kINFO << Endl;
          fLogger << kINFO << "Inter-MVA correlation matrix (signal):" << Endl;
-         Tools::FormattedOutput( *corrMatS, *theVars, fLogger );
+         gTools().FormattedOutput( *corrMatS, *theVars, fLogger );
          fLogger << kINFO << Endl;
 
          fLogger << kINFO << "Inter-MVA correlation matrix (background):" << Endl;
-         Tools::FormattedOutput( *corrMatB, *theVars, fLogger );
+         gTools().FormattedOutput( *corrMatB, *theVars, fLogger );
          fLogger << kINFO << Endl;   
       }
       else fLogger << kWARNING << "<TestAllMethods> cannot compute correlation matrices" << Endl;
@@ -783,7 +1011,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       fLogger << kINFO << "The following \"overlap\" matrices contain the fraction of events for which " << Endl;
       fLogger << kINFO << "the MVAs 'i' and 'j' have returned conform answers about \"signal-likeness\"" << Endl;
       fLogger << kINFO << "An event is signal-like, if its MVA output exceeds the following value:" << Endl;
-      Tools::FormattedOutput( rvec, *theVars, "Method" , "Cut value", fLogger );
+      gTools().FormattedOutput( rvec, *theVars, "Method" , "Cut value", fLogger );
       fLogger << kINFO << "which correspond to the working point: eff(signal) = 1 - eff(background)" << Endl;
 
       // give notice that cut method has been excluded from this test
@@ -792,11 +1020,11 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
       fLogger << kINFO << Endl;
       fLogger << kINFO << "Inter-MVA overlap matrix (signal):" << Endl;
-      Tools::FormattedOutput( *overlapS, *theVars, fLogger );
+      gTools().FormattedOutput( *overlapS, *theVars, fLogger );
       fLogger << kINFO << Endl;
       
       fLogger << kINFO << "Inter-MVA overlap matrix (background):" << Endl;
-      Tools::FormattedOutput( *overlapB, *theVars, fLogger );
+      gTools().FormattedOutput( *overlapB, *theVars, fLogger );
 
       // cleanup
       delete tpSig;

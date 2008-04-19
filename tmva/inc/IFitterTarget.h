@@ -51,7 +51,7 @@ namespace TMVA {
 
       virtual ~IFitterTarget() {}
 
-      virtual Double_t EstimatorFunction( std::vector<Double_t> & parameters ) = 0;
+      virtual Double_t EstimatorFunction( std::vector<Double_t>& parameters ) = 0;
 
    private:
 

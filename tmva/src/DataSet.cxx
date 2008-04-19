@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <iostream>
+#include <iomanip>
 
 #include "TMVA/DataSet.h"
 #include "TMVA/Tools.h"
@@ -34,7 +35,6 @@
 
 #include "TEventList.h"
 #include "TFile.h"
-#include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
 #include "TRandom.h"
@@ -78,6 +78,8 @@ TMVA::DataSet::DataSet()
      fCutSig( "" ),
      fCutBkg( "" ),
      fMultiCut( "" ),
+     fCutSigF( 0 ),
+     fCutBkgF( 0 ),
      fTrainingTree( 0 ),
      fTestTree( 0 ),
      fMultiCutTestTree( 0 ),
@@ -85,7 +87,8 @@ TMVA::DataSet::DataSet()
      fEvent( 0 ),
      fCurrentTree( 0 ),
      fCurrentEvtIdx( 0 ),
-     fLogger( "DataSet", kINFO )
+     fHasNegativeEventWeights( kFALSE ),
+     fLogger( "DataSet" )
 {
    // constructor
 
@@ -97,9 +100,9 @@ TMVA::DataSet::DataSet()
       }
    }
 
-   fWeightExp[Types::kSignal]     = fWeightExp[Types::kBackground]     = "";
-   fWeightFormula[Types::kSignal] = fWeightFormula[Types::kBackground] = 0;
-
+   fWeightExp[Types::kSignal]         = fWeightExp[Types::kBackground]     = "";
+   fWeightFormula[Types::kSignal]     = fWeightFormula[Types::kBackground] = 0;
+   fExplicitTrainTest[Types::kSignal] = fExplicitTrainTest[Types::kBackground] = kFALSE;
 }
 
 //_______________________________________________________________________
@@ -116,6 +119,10 @@ TMVA::DataSet::~DataSet()
          delete fWeightFormula[sb]; fWeightFormula[sb]=0;
       }
    }
+
+   if(fCutSigF) delete fCutSigF;
+   if(fCutBkgF) delete fCutBkgF;
+
 
    if(fTrainingTree) { delete fTrainingTree; fTrainingTree = 0; }
    if(fTestTree) { delete fTestTree; fTestTree = 0; }
@@ -232,19 +239,45 @@ void TMVA::DataSet::ResetBranchAndEventAddresses( TTree* tree )
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::AddSignalTree( TTree* tr, Double_t weight ) 
+void TMVA::DataSet::AddSignalTree( TTree* tr, Double_t weight, Types::ETreeType tt ) 
 {
    // add a signal tree to the dataset to be used as input
-   // multiple trees is not used at the moment, use chains instead
-   fTreeCollection[Types::kSignal].push_back(TreeInfo(tr,weight));
+   if(fTreeCollection[Types::kSignal].size()==0) {
+      // on the first tree check if explicit treetype is given
+      fExplicitTrainTest[Types::kSignal] = (tt!=Types::kMaxTreeType);
+   } else {
+      // if the first tree has a specific type, all later tree's must also have one
+      if(fExplicitTrainTest[Types::kSignal] != (tt!=Types::kMaxTreeType)) {
+         if(tt==Types::kMaxTreeType)
+            fLogger << kFATAL << "For the signal tree " << tr->GetName()
+                    << " you did "<< (tt==Types::kMaxTreeType?"not ":"") << "specify a type,"
+                    << " while you did "<< (tt==Types::kMaxTreeType?"":"not ") << "for the first signal tree "
+                    << fTreeCollection[Types::kSignal][0].GetTree()->GetName()
+                    << Endl;
+      }
+   }
+   fTreeCollection[Types::kSignal].push_back(TreeInfo(tr,weight,tt));
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::AddBackgroundTree( TTree* tr, Double_t weight ) 
+void TMVA::DataSet::AddBackgroundTree( TTree* tr, Double_t weight, Types::ETreeType tt ) 
 {
    // add a background tree to the dataset to be used as input
-   // multiple trees is not used at the moment, use chains instead
-   fTreeCollection[Types::kBackground].push_back(TreeInfo(tr,weight));
+   if(fTreeCollection[Types::kBackground].size()==0) {
+      // on the first tree check if explicit treetype is given
+      fExplicitTrainTest[Types::kBackground] = (tt!=Types::kMaxTreeType);
+   } else {
+      // if the first tree has a specific type, all later tree's must also have one
+      if(fExplicitTrainTest[Types::kBackground] != (tt!=Types::kMaxTreeType)) {
+         if(tt==Types::kMaxTreeType)
+            fLogger << kFATAL << "For the background tree " << tr->GetName()
+                    << " you did "<< (tt==Types::kMaxTreeType?"not ":"") << "specify a type,"
+                    << " while you did "<< (tt==Types::kMaxTreeType?"":"not ") << "for the first background tree "
+                    << fTreeCollection[Types::kBackground][0].GetTree()->GetName()
+                    << Endl;
+      }
+   }
+   fTreeCollection[Types::kBackground].push_back(TreeInfo(tr,weight,tt));
 }
 
 //_______________________________________________________________________
@@ -298,7 +331,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 
    Configurable splitSpecs( splitOpt );
    splitSpecs.SetName("DataSet");
-   splitSpecs.fLogger.SetMinType( Verbose() ? kVERBOSE: kINFO );
+   if (Verbose()) splitSpecs.fLogger.SetMinType( kVERBOSE );
 
    UInt_t splitSeed(0);
 
@@ -338,7 +371,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    splitSpecs.DeclareOptionRef( fVerbose, "V", "Verbosity (default: true)" );
    splitSpecs.ParseOptions();
 
-   fLogger.SetMinType( Verbose() ? kVERBOSE: kINFO );
+   if (Verbose()) fLogger.SetMinType( kVERBOSE );
 
    // put all to upper case
    splitMode.ToUpper(); normMode.ToUpper(); 
@@ -365,11 +398,19 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    Double_t renormFactor[2] = { -1, -1 };
 
    // create the type, weight and boostweight branches
-   TTree* tmpTree[2];
-   tmpTree[Types::kSignal] = new TTree("SigTT", "Variables used for MVA training");
-   tmpTree[Types::kSignal]->Branch( "type",       &type,        "type/I",        basketsize );
-   tmpTree[Types::kSignal]->Branch( "weight",     &weight,      "weight/F",      basketsize );
-   tmpTree[Types::kSignal]->Branch( "boostweight",&boostweight, "boostweight/F", basketsize );
+   // tmpTree is an array of trees that hold the data extracted from the user tree
+   // 
+   // such a tree contains the training variables, the event weight, the boostweight, 
+   // and the type (signal/background)
+   // 
+   // tmpTree is a 2x2 array, the first index specifies signal or background, 
+   // the second index is only used if the user decided to explicitely specify
+   // if trees shoujld contain training or test data
+   TTree* tmpTree[2][2];
+   tmpTree[Types::kSignal][0] = new TTree("SigTT", "Variables used for MVA training");
+   tmpTree[Types::kSignal][0]->Branch( "type",       &type,        "type/I",        basketsize );
+   tmpTree[Types::kSignal][0]->Branch( "weight",     &weight,      "weight/F",      basketsize );
+   tmpTree[Types::kSignal][0]->Branch( "boostweight",&boostweight, "boostweight/F", basketsize );
 
    // create the variable branches
    UInt_t nvars = GetNVariables();
@@ -379,24 +420,56 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
       const char* myVar = GetInternalVarName(ivar).Data();
 
       // here, we do not use the true vartype of the variable, but use Float always internally
-      tmpTree[Types::kSignal]->Branch( myVar, &vArr[ivar], Form("Var%02i/F", ivar), basketsize );
+      tmpTree[Types::kSignal][0]->Branch( myVar, &vArr[ivar], Form("Var%02i/F", ivar), basketsize );
 
    } // end of loop over input variables
 
-   tmpTree[Types::kBackground] = (TTree*)tmpTree[Types::kSignal]->CloneTree(0);
-   tmpTree[Types::kBackground]->SetName("BkgTT");
+   // create background tree with the same structure as the signal tree
+   tmpTree[Types::kBackground][0] = (TTree*)tmpTree[Types::kSignal][0]->CloneTree(0);
+   tmpTree[Types::kBackground][0]->SetName("BkgTT");
+   // detach both trees from any file
+   tmpTree[Types::kSignal][0]    ->SetDirectory(0);
+   tmpTree[Types::kBackground][0]->SetDirectory(0);
 
-   tmpTree[Types::kSignal]    ->SetDirectory(0);
-   tmpTree[Types::kBackground]->SetDirectory(0);
+   if(fExplicitTrainTest[Types::kSignal]) {
+      tmpTree[Types::kSignal][1] = (TTree*)tmpTree[Types::kSignal][0]->CloneTree(0);
+      tmpTree[Types::kSignal][1]->SetName("SigTT_test");
+      tmpTree[Types::kSignal][1]->SetDirectory(0);
+      tmpTree[Types::kSignal][0]->SetName("SigTT_train");
+   } else tmpTree[Types::kSignal][1] = 0;
+   if(fExplicitTrainTest[Types::kBackground]) {
+      tmpTree[Types::kBackground][1] = (TTree*)tmpTree[Types::kSignal][0]->CloneTree(0);
+      tmpTree[Types::kBackground][1]->SetName("BkgTT_test");
+      tmpTree[Types::kBackground][1]->SetDirectory(0);
+      tmpTree[Types::kBackground][0]->SetName("BkgTT_train");
+   } else tmpTree[Types::kBackground][1] = 0;
+
+
 
    // number of signal and background events passing cuts
-   Int_t nAfterCut[2];  nAfterCut[0]  = nAfterCut[1]  = 0;
-   Int_t nBeforeCut[2]; nBeforeCut[0] = nBeforeCut[1] = 0;
+   Int_t nInitialEvents[2]; nInitialEvents[0] = nInitialEvents[1] = 0;
+   Int_t nEvBeforeCut[2];   nEvBeforeCut[0]   = nEvBeforeCut[1]   = 0;
+   Int_t nEvAfterCut[2];    nEvAfterCut[0]    = nEvAfterCut[1]    = 0;
+   Float_t nWeEvBeforeCut[2]; nWeEvBeforeCut[0] = nWeEvBeforeCut[1] = 0;
+   Float_t nWeEvAfterCut[2];  nWeEvAfterCut[0]  = nWeEvAfterCut[1]  = 0;
+
+   Bool_t haveArrayVariable = kFALSE;
+   Bool_t *varIsArray = new Bool_t[nvars];
+   Float_t *varAvLength[2]; 
+   varAvLength[0] = new Float_t[nvars];
+   varAvLength[1] = new Float_t[nvars];
+   for(UInt_t ivar=0; ivar<nvars; ivar++) {
+      varIsArray[ivar] = kFALSE;
+      varAvLength[0][ivar] = 0;
+      varAvLength[1][ivar] = 0;
+   }
+
+   Double_t nNegWeights[2] = { 0, 0 };
 
    // if we work with chains we need to remember the current tree
-   // if the chain jumps to a new tree we have to reset the formulas
+   // if the chain jumps to a new tree we have to reset the formulas   
    for (Int_t sb=0; sb<2; sb++) { // sb=0 - signal, sb=1 - background
-
+      
       fLogger << kINFO << "Create training and testing trees: looping over " << typeName[sb] 
               << " events ..." << Endl;
 
@@ -408,29 +481,20 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
       for (; treeIt != fTreeCollection[sb].end(); treeIt++) {
 
          TreeInfo currentInfo = *treeIt;
+
+         TTree * treeToFill = (currentInfo.GettreeType()==Types::kTesting)?tmpTree[sb][1]:tmpTree[sb][0];
+
          Bool_t isChain = (TString("TChain") == currentInfo.GetTree()->ClassName());
          type = 1-sb;
          currentInfo.GetTree()->LoadTree(0);
-         currentInfo.GetTree()->Draw( ">>evList", sb==0 ? CutSig() : CutBkg(), "goff" );
-         TEventList* evList = (TEventList*)gDirectory->Get( "evList" );
          ChangeToNewTree( currentInfo.GetTree()->GetTree() );
 
          // count number of events in tree before cut
-         nBeforeCut[sb] += currentInfo.GetTree()->GetEntries();
-
-         // sanity check
-         if (!evList) fLogger << kFATAL 
-                              << "<PrepareForTrainingAndTesting> Big troubles: zero event list pointer returned" 
-                              << Endl;
-
-         // count number of events in tree after cut
-         nAfterCut[sb] += evList->GetN(); 
+         nInitialEvents[sb] += currentInfo.GetTree()->GetEntries();
 
          // loop over events in ntuple
          for (Long64_t evtIdx = 0; evtIdx < currentInfo.GetTree()->GetEntries(); evtIdx++) {
-            if (!evList->Contains(evtIdx)) continue;
 
-            // survived the cut
             currentInfo.GetTree()->LoadTree(evtIdx);
 
             // may need to reload tree in case of chains
@@ -442,11 +506,16 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
                }
             }
             currentInfo.GetTree()->GetEntry(evtIdx);
+            
+            // First we find out if one variable is an array
             Int_t sizeOfArrays = 1;
             Int_t prevArrExpr = 0;
             for (UInt_t ivar=0; ivar<nvars; ivar++) {
                Int_t ndata = fInputVarFormulas[ivar]->GetNdata();
+               varAvLength[sb][ivar] += ndata;
                if (ndata == 1) continue;
+               haveArrayVariable = kTRUE;
+               varIsArray[ivar] = kTRUE;
                if (sizeOfArrays == 1) {
                   sizeOfArrays = ndata;
                   prevArrExpr = ivar;
@@ -464,19 +533,48 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
                   fLogger << kFATAL << "Need to abort" << Endl;
                }
             }
+
+
             for (Int_t idata = 0;  idata<sizeOfArrays; idata++) {
                Bool_t containsNaN = kFALSE;
+
+               // the cut expression
+               Float_t cutVal = 1;
+               TTreeFormula* sbCut = (sb==0?fCutSigF:fCutBkgF);
+               if(sbCut) {
+                  Int_t ndata = sbCut->GetNdata();
+                  if(ndata==1) {
+                     cutVal = sbCut->EvalInstance(0);
+                  } else {
+                     cutVal = sbCut->EvalInstance(idata);
+                  }
+                  if (TMath::IsNaN(cutVal)) {
+                     containsNaN = kTRUE;
+                     fLogger << kWARNING << "Cut expression resolves to infinite value (NaN): " 
+                             << sbCut->GetTitle() << Endl;
+                  }
+               }
+
+               // read the variables
                for (UInt_t ivar=0; ivar<nvars; ivar++) {
                   Int_t ndata = fInputVarFormulas[ivar]->GetNdata();
-                  vArr[ivar] = (ndata == 1 ? 
-                                fInputVarFormulas[ivar]->EvalInstance(0) : 
-                                fInputVarFormulas[ivar]->EvalInstance(idata));
+                  if(ndata==1) {
+                     vArr[ivar] = fInputVarFormulas[ivar]->EvalInstance(0);
+                  } else {
+                     vArr[ivar] = fInputVarFormulas[ivar]->EvalInstance(idata);
+                  }
                   if (TMath::IsNaN(vArr[ivar])) {
                      containsNaN = kTRUE;
                      fLogger << kWARNING << "Expression resolves to infinite value (NaN): " 
                              << fInputVarFormulas[ivar]->GetTitle() << Endl;
                   }
                }
+
+               // for (UInt_t ivar=0; ivar<nvars; ivar++) 
+               //    cout << "   " << vArr[ivar];
+               // cout << "     cut " << (sbCut?sbCut->GetTitle():"");
+               // cout << ((cutVal<0.5)?" --> rejected":" --> accepted");
+               // cout << endl;
 
                // the weight (can also be an array)
                weight = currentInfo.GetWeight(); // multiply by tree weight
@@ -492,6 +590,19 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
                   }
                }
 
+               // global flag if negative weights exist -> can be used by classifiers who may 
+               // require special data treatment (also print warning)
+               if (weight < 0) nNegWeights[sb]++;
+
+               // Count the events before rejection due to cut or NaN value
+               // (weighted and unweighted)
+               nEvBeforeCut[sb] ++;
+               if(!TMath::IsNaN(weight))
+                  nWeEvBeforeCut[sb] += weight;
+
+               // apply the cut
+               if(cutVal<0.5) continue;
+
                if (containsNaN) {
                   fLogger << kWARNING << "Event " << evtIdx;
                   if (sizeOfArrays>1) fLogger << kWARNING << "[" << idata << "]";
@@ -499,8 +610,13 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
                   continue;
                }
 
+               // Count the events after rejection due to cut or NaN value
+               // (weighted and unweighted)
+               nEvAfterCut[sb] ++;
+               nWeEvAfterCut[sb] += weight;
+
                // event accepted, fill temporary ntuple
-               tmpTree[sb]->Fill();
+               treeToFill->Fill();
 
                // add up weights
                sumOfWeights[sb] += weight;
@@ -508,29 +624,53 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
             }
          }
          
-         // event list not needed anymore
-         delete evList;
-      
          currentInfo.GetTree()->ResetBranchAddresses();
       }
 
       // compute renormalisation factors
       renormFactor[sb] = nTempEvents[sb]/sumOfWeights[sb];
+
+      for(UInt_t ivar=0; ivar<nvars; ivar++)
+         varAvLength[sb][ivar] /= nInitialEvents[sb];
    }
 
    // number of events info
-   fLogger << kINFO << "Prepare training and Test samples:" << Endl;
-   fLogger << kINFO << "  Signal tree     - total number of events     : " << nBeforeCut[0] << Endl;
-   fLogger << kINFO << "  Background tree - total number of events     : " << nBeforeCut[1] << Endl;
+   fLogger << kINFO << "Prepare training and test samples:" << Endl;
+   fLogger << kINFO << "    Signal tree     - number of events :  " << std::setw(5) << nInitialEvents[0] << Endl;
+   fLogger << kINFO << "    Background tree - number of events :  " << std::setw(5) << nInitialEvents[1] << Endl;
 
-   // apply cuts to the input trees and create TEventLists
-   if (HasCuts()) {
-      fLogger << kINFO << "  --> Apply cuts on input trees (signal)       : " << CutSigS() << Endl;
-      fLogger << kINFO << "  --> Apply cuts on input trees (background)   : " << CutBkgS() << Endl;
-      fLogger << kINFO << "  Signal tree    : number of events passing cut: " << nAfterCut[0] << Endl;
-      fLogger << kINFO << "  Background tree: number of events passing cut: " << nAfterCut[1] << Endl;
+   if (haveArrayVariable) {
+      fLogger << kINFO << "Some variables are arrays:" << Endl;
+      for(UInt_t ivar=0; ivar<nvars; ivar++) {
+         if(varIsArray[ivar]) {
+            fLogger << kINFO << "    Variable " << GetExpression(ivar) << " : array with average length "
+                    << varAvLength[0][ivar] << " (S) and " << varAvLength[1][ivar] << "(B)" << Endl;
+         } else {
+            fLogger << kINFO << "    Variable " << GetExpression(ivar) << " : single" << Endl;
+         }
+      }
+      fLogger << kINFO << "Number of events after serialization:" << Endl;
+      fLogger << kINFO << "    Signal          - number of events :  "
+              << std::setw(5) << nEvBeforeCut[0] << "    weighted : " << std::setw(5) << nWeEvBeforeCut[0] << Endl;
+      fLogger << kINFO << "    Background      - number of events :  "
+              << std::setw(5) << nEvBeforeCut[1] << "    weighted : " << std::setw(5) << nWeEvBeforeCut[1] << Endl;
    }
-   else fLogger << kINFO << "No cuts applied" << Endl;
+
+
+   fLogger << kINFO << "Preselection:" << Endl;
+   if (HasCuts()) {
+      fLogger << kINFO << "    On signal input       : " << (TString(CutSigS())!=""?CutSigS():"-") << Endl;
+      fLogger << kINFO << "    On background input   : " << (TString(CutBkgS())!=""?CutBkgS():"-") << Endl;
+      fLogger << kINFO << "    Signal          - number of events :  "
+              << std::setw(5) << nEvAfterCut[0] << "    weighted : " << std::setw(5) << nWeEvAfterCut[0] << Endl;
+      fLogger << kINFO << "    Background      - number of events :  "
+              << std::setw(5) << nEvAfterCut[1] << "    weighted : " << std::setw(5) << nWeEvAfterCut[1] << Endl;
+      fLogger << kINFO << "    Signal          - efficiency       :                 "
+              << std::setw(10) << nWeEvAfterCut[0]/nWeEvBeforeCut[0] << Endl;
+      fLogger << kINFO << "    Background      - efficiency       :                 " 
+              << std::setw(10) << nWeEvAfterCut[1]/nWeEvBeforeCut[1] << Endl;
+   }
+   else fLogger << kINFO << "    No preselection cuts applied on signal or background" << Endl;
 
 
    // print rescaling info
@@ -540,67 +680,88 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    }
    else if (normMode == "NUMEVENTS") {
       fLogger << kINFO << "Weight renormalisation mode: \"NumEvents\": renormalise signal and background" << Endl;
-      fLogger << kINFO << "... weights independently so that Sum[i=1..N_j]{w_i} = N_j, j=signal, background" << Endl;
-      fLogger << kINFO << "... (note that N_j is the sum of training and test events)" << Endl;
-      for (Int_t sb=0; sb<2; sb++) { // sb=0 - signal, sb=1 - background
-         fLogger << kINFO << "Rescale " << typeName[sb] << " event weights by factor: " << renormFactor[sb] << Endl;
-      }
+      fLogger << kINFO << "    weights independently so that Sum[i=1..N_j]{w_i} = N_j, j=signal, background" << Endl;
+      fLogger << kINFO << "    (note that N_j is the sum of training and test events)" << Endl;
+      fLogger << kINFO << "Event weights scaling factor:" << Endl;
+      fLogger << kINFO << "    signal     : " << renormFactor[0] << Endl;
+      fLogger << kINFO << "    background : " << renormFactor[1] << Endl;
    }
    else if (normMode == "EQUALNUMEVENTS") {
       fLogger << kINFO << "Weight renormalisation mode: \"EqualNumEvents\": renormalise signal and background" << Endl;
-      fLogger << kINFO << "   weights so that Sum[i=1..N_j]{w_i} = N_signal, j=signal, background" << Endl;
-      fLogger << kINFO << "   (note that N_j is the sum of training and test events)" << Endl;
+      fLogger << kINFO << "    weights so that Sum[i=1..N_j]{w_i} = N_signal, j=signal, background" << Endl;
+      fLogger << kINFO << "    (note that N_j is the sum of training and test events)" << Endl;
       // sb=0 - signal, sb=1 - background
       renormFactor[1] *= nTempEvents[0]/nTempEvents[1];
-      for (Int_t sb=0; sb<2; sb++) { 
-         fLogger << kINFO << "Rescale " << typeName[sb] << " event weights by factor: " << renormFactor[sb] << Endl;
-      }
+      fLogger << kINFO << "Event weights scaling factor:" << Endl;
+      fLogger << kINFO << "    signal     : " << renormFactor[0] << Endl;
+      fLogger << kINFO << "    background : " << renormFactor[1] << Endl;
    }
    else {
       fLogger << kFATAL << "<PrepareForTrainingAndTesting> Unknown NormMode: " << normMode << Endl;
+   }
+
+   // info on use of negative event weights
+   if (nNegWeights[0] > 0 || nNegWeights[1] > 0) {
+      fHasNegativeEventWeights = kTRUE;
+      fLogger << kINFO << "Negative event weights detected:" << Endl;
+      fLogger << kINFO << "    Signal tree     - number of events with negative weights : " << std::setw(5) 
+              << nNegWeights[0] << Endl;
+      fLogger << kINFO << "    Background tree - number of events with negative weights : " << std::setw(5) 
+              << nNegWeights[1] << Endl;
    }
 
    // ============================================================
    // now the training tree needs to be pruned
    // ============================================================
 
-   Long64_t origSize[2];
+   Long64_t maxTrainSize[2];
+   Long64_t maxTestSize[2];
 
    for (Int_t sb = 0; sb<2; sb++ ) {
-      origSize[sb] = tmpTree[sb]->GetEntries();
+      maxTrainSize[sb] = tmpTree[sb][0]->GetEntries();
+      if(fExplicitTrainTest[sb])
+         maxTestSize[sb] = tmpTree[sb][1]->GetEntries();
    }
 
    Long64_t finalNEvents[2][2] = { {nSigTrainEvents, nSigTestEvents},
                                    {nBkgTrainEvents, nBkgTestEvents} };
 
    fLogger << kVERBOSE << "Number of available training events:" << Endl
-           << "  Signal    : " << origSize[Types::kSignal] << Endl
-           << "  Background: " << origSize[Types::kBackground] << Endl;
+           << "  Signal    : " << maxTrainSize[Types::kSignal] << Endl
+           << "  Background: " << maxTrainSize[Types::kBackground] << Endl;
 
    for (Int_t sb = 0; sb<2; sb++) { // sb: 0-signal, 1-background
 
-      if (finalNEvents[sb][Types::kTraining]>origSize[sb])
+      // first some checks if some requested event numbers are larger then what we have
+      if (finalNEvents[sb][Types::kTraining]>maxTrainSize[sb])
          fLogger << kFATAL << "More training events requested than available for the " << typeName[sb] << Endl;
-
-      if (finalNEvents[sb][Types::kTesting]>origSize[sb])
-         fLogger << kFATAL << "More testing events requested than available for the " << typeName[sb] << Endl;
-
-      if (finalNEvents[sb][Types::kTraining] + finalNEvents[sb][Types::kTesting] > origSize[sb])
-         fLogger << kFATAL << "More testing and training events requested than available for the " << typeName[sb] << Endl;
-
+      if(fExplicitTrainTest[sb]) {
+         if(finalNEvents[sb][Types::kTesting]>maxTestSize[sb])
+            fLogger << kFATAL << "More testing events requested than available for the " << typeName[sb] << Endl;
+      } else {
+         if (finalNEvents[sb][Types::kTraining] + finalNEvents[sb][Types::kTesting] > maxTrainSize[sb])
+            fLogger << kFATAL << "More testing and training events requested than available for the " << typeName[sb] << Endl;
+      }
+      
+      // extra logic if one of the specified numbers is 0
       if (finalNEvents[sb][Types::kTraining]==0 || finalNEvents[sb][Types::kTesting]==0) {
-         if (finalNEvents[sb][Types::kTraining]==0 && finalNEvents[sb][Types::kTesting]==0) {
-            finalNEvents[sb][Types::kTraining] = finalNEvents[sb][Types::kTesting] = origSize[sb]/2;
-         } 
-         else if (finalNEvents[sb][Types::kTesting]==0) {
-            finalNEvents[sb][Types::kTesting]  = origSize[sb] - finalNEvents[sb][Types::kTraining];
-         } 
-         else {
-            finalNEvents[sb][Types::kTraining]  = origSize[sb] - finalNEvents[sb][Types::kTesting];
+         if(fExplicitTrainTest[sb]) {
+            if (finalNEvents[sb][Types::kTraining]==0)
+               finalNEvents[sb][Types::kTraining]  = maxTrainSize[sb];
+            if (finalNEvents[sb][Types::kTesting]==0)
+               finalNEvents[sb][Types::kTesting]  = maxTestSize[sb];
+         } else {
+            if (finalNEvents[sb][Types::kTraining]==0 && finalNEvents[sb][Types::kTesting]==0) {
+               finalNEvents[sb][Types::kTraining] = finalNEvents[sb][Types::kTesting] = maxTrainSize[sb]/2;
+            } else if (finalNEvents[sb][Types::kTesting]==0) {
+               finalNEvents[sb][Types::kTesting]  = maxTrainSize[sb] - finalNEvents[sb][Types::kTraining];
+            } else {
+               finalNEvents[sb][Types::kTraining]  = maxTrainSize[sb] - finalNEvents[sb][Types::kTesting];
+            }
          }
       }
    }
-
+   
    for (Int_t j=0;j<2;j++) {
       for (Int_t i=0;i<2;i++) fDataStats[j][i] = finalNEvents[i][j];
       fDataStats[j][Types::kSBBoth] = fDataStats[j][Types::kSignal] + fDataStats[j][Types::kBackground];
@@ -616,62 +777,109 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 
    for (Int_t sb = 0; sb<2; sb++ ) { // signal, background
       
-      const Long64_t size = origSize[sb];
-
       if (splitMode == "RANDOM") {
 
-         fLogger << kINFO << "Randomly shuffle events in training and testing trees for " << typeName[sb] << Endl;
-
-         // the index array
-         Long64_t* idxArray = new Long64_t[size];
-         Bool_t*   allPickedIdxArray = new Bool_t[size];
-         for (Int_t i=0; i<size; i++) { idxArray[i]=i; allPickedIdxArray[i] = kFALSE; }
-         
-         for (Int_t itype=Types::kTraining; itype<Types::kMaxTreeType; itype++) {
-
-            // the selected events
-            Bool_t* thisPickedIdxArray = new Bool_t[size];
-            for (Int_t i=0; i<size; i++) thisPickedIdxArray[i] = kFALSE;
-            
-            Long64_t pos = 0;
-            for (Long64_t i=0; i<finalNEvents[sb][itype]; i++) {
-               do { pos = Long64_t(size * rndm.Rndm()); } while (allPickedIdxArray[idxArray[pos]]);
-               thisPickedIdxArray[idxArray[pos]] = kTRUE;
-               allPickedIdxArray [idxArray[pos]] = kTRUE;
+         if(fExplicitTrainTest[sb]) {
+            for (Int_t itype=Types::kTraining; itype<Types::kMaxTreeType; itype++) {
+               const Long64_t size = (itype==Types::kTraining)?maxTrainSize[sb]:maxTestSize[sb];
+               fLogger << kINFO << "Randomly pick events in "
+                       << ((itype==Types::kTraining)?"training":"testing") << " trees for " << typeName[sb] << Endl;
+               Bool_t* thisPickedIdxArray = new Bool_t[size];
+               for (Int_t i=0; i<size; i++) thisPickedIdxArray[i] = kFALSE;
+               Long64_t pos = 0;
+               for (Long64_t i=0; i<finalNEvents[sb][itype]; i++) {
+                  do { pos = Long64_t(size * rndm.Rndm()); } while (thisPickedIdxArray[pos]);
+                  thisPickedIdxArray[pos] = kTRUE;
+               }
+               for (Long64_t i=0; i<size; i++) if (thisPickedIdxArray[i]) evtList[sb][itype]->Enter(i); 
+               delete [] thisPickedIdxArray;
             }
-            for (Long64_t i=0; i<size; i++) if (thisPickedIdxArray[i]) evtList[sb][itype]->Enter(i); 
 
-            delete [] thisPickedIdxArray;
+         } else {
+
+            const Long64_t size = maxTrainSize[sb];
+            fLogger << kINFO << "Randomly pick events in training and testing trees for " << typeName[sb] << Endl;
+            // the index array
+            Bool_t*   allPickedIdxArray = new Bool_t[size];
+            for (Int_t i=0; i<size; i++) { allPickedIdxArray[i] = kFALSE; }
+            for (Int_t itype=Types::kTraining; itype<Types::kMaxTreeType; itype++) {
+               // the selected events
+               Bool_t* thisPickedIdxArray = new Bool_t[size];
+               for (Int_t i=0; i<size; i++) thisPickedIdxArray[i] = kFALSE;
+               Long64_t pos = 0;
+               for (Long64_t i=0; i<finalNEvents[sb][itype]; i++) {
+                  do { pos = Long64_t(size * rndm.Rndm()); } while (allPickedIdxArray[pos]);
+                  thisPickedIdxArray[pos] = kTRUE;
+                  allPickedIdxArray [pos] = kTRUE;
+               }
+               for (Long64_t i=0; i<size; i++) if (thisPickedIdxArray[i]) evtList[sb][itype]->Enter(i); 
+               delete [] thisPickedIdxArray;
+            }
+            delete [] allPickedIdxArray;
          }
 
-         delete [] idxArray;
-         delete [] allPickedIdxArray;
-      }
-      else if (splitMode == "ALTERNATE") {
-
-         fLogger << kINFO << "Pick alternating training and test events from input tree for " << typeName[sb] << Endl;
+      } else if (splitMode == "ALTERNATE") {
          
-         Int_t ntrain = finalNEvents[sb][Types::kTraining];
-         Int_t ntest  = finalNEvents[sb][Types::kTesting];
+         if(fExplicitTrainTest[sb]) {
 
-         Int_t lcd       = largestCommonDivider(ntrain,ntest);
-         Int_t trainfrac = ntrain/lcd;
-         Int_t modulo    = (ntrain+ntest)/lcd;
+            for (Int_t itype=Types::kTraining; itype<Types::kMaxTreeType; itype++) {
+               Int_t nkeep = finalNEvents[sb][itype];
+               Int_t available = (itype==Types::kTraining)?maxTrainSize[sb]:maxTestSize[sb];
+            
+               // example: 2000 available, 1800 requested
+               Int_t lcd    = largestCommonDivider(nkeep,available); // example: lcd = 200
+               Int_t frac   = nkeep/lcd;                             // example: frac = 9
+               Int_t modulo = available/lcd;                         // example: modulo = 10
 
-         for (Long64_t i=0; i<finalNEvents[sb][Types::kTraining]+finalNEvents[sb][Types::kTesting]; i++) {
-            Bool_t isTrainingEvent = (i%modulo)<trainfrac;
-            evtList[sb][isTrainingEvent ? Types::kTraining:Types::kTesting]->Enter( i );
+               Long64_t kept=0;
+               Long64_t i=0;
+
+               for(;kept<nkeep;i++)
+                  if( (i%modulo)<frac ) {
+                     evtList[sb][itype]->Enter( i );
+                     kept++;
+                  }
+            }
+
+         } else {
+
+            fLogger << kINFO << "Pick alternating training and test events from input tree for " << typeName[sb] << Endl;
+         
+            Int_t ntrain    = finalNEvents[sb][Types::kTraining];
+            Int_t ntest     = finalNEvents[sb][Types::kTesting];
+            Int_t available = maxTrainSize[sb];
+            
+            // example: 2000 training and 1600 test events, available 6000
+            Int_t lcd       = largestCommonDivider(ntrain,ntest); // example: lcd = 400
+            Int_t trainfrac = ntrain/lcd;                         // example: trainfrac = 5
+            Int_t testfrac  = ntest/lcd + trainfrac;              // example: testfrac = 4 + 5
+            Int_t modulo    = available/lcd;                      // example: modulo = 15
+
+            // every 15 events pick 5 training and 4 testing events, in total 400 times
+            for (Long64_t i=0; i<available; i++) {
+               if((i%modulo)<trainfrac) {
+                  evtList[sb][Types::kTraining]->Enter( i );
+               } else if((i%modulo)<testfrac) {
+                  evtList[sb][Types::kTesting]->Enter( i );
+               }
+            }
          }
-      }
-      else if (splitMode == "BLOCK") {
+      } else if (splitMode == "BLOCK") {
 
+         if(fExplicitTrainTest[sb]) {
+            fLogger << kINFO << "Pick block-wise training events from input tree for " << typeName[sb] << Endl;
+            for (Long64_t i=0; i<finalNEvents[sb][Types::kTraining]; i++)
+               evtList[sb][Types::kTraining]->Enter( i );
+         fLogger << kINFO << "Pick block-wise test events from input tree for " << typeName[sb] << Endl;
+            for (Long64_t i=0; i<finalNEvents[sb][Types::kTesting]; i++)
+               evtList[sb][Types::kTesting]->Enter( i );
+         } else {
          fLogger << kINFO << "Pick block-wise training and test events from input tree for " << typeName[sb] << Endl;
-         
-         for (Long64_t i=0; i<finalNEvents[sb][Types::kTraining]; i++)
-            evtList[sb][Types::kTraining]->Enter( i );
-         for (Long64_t i=0; i<finalNEvents[sb][Types::kTesting]; i++)
-            evtList[sb][Types::kTesting]->Enter( i + finalNEvents[sb][Types::kTraining]);
-
+            for (Long64_t i=0; i<finalNEvents[sb][Types::kTraining]; i++)
+               evtList[sb][Types::kTraining]->Enter( i );
+            for (Long64_t i=0; i<finalNEvents[sb][Types::kTesting]; i++)
+               evtList[sb][Types::kTesting]->Enter( i + finalNEvents[sb][Types::kTraining]);
+         }
       }
       else fLogger << kFATAL << "Unknown type: " << splitMode << Endl;
    }
@@ -679,30 +887,51 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    gROOT->cd();
 
    // merge signal and background trees, and renormalise the event weights in this step   
-   for (Int_t itreeTypeTmp=0; itreeTypeTmp<2; itreeTypeTmp++) {
-
-      Types::ETreeType itreeType = (itreeTypeTmp == 0) ? Types::kTraining : Types::kTesting;
+   for (Int_t itreeType=Types::kTraining; itreeType<Types::kMaxTreeType; itreeType++) {
 
       fLogger << kINFO << "Create " << (itreeType == Types::kTraining ? "training" : "testing") << " tree" << Endl;        
-      TTree* newTree = tmpTree[Types::kSignal]->CloneTree(0); 
+      TTree* newTree = tmpTree[Types::kSignal][0]->CloneTree(0); 
       for (Int_t sb=0; sb<2; sb++) {
 
-         // renormalise only if non-trivial renormalisation factor
-         for (Int_t ievt=0; ievt<tmpTree[sb]->GetEntries(); ievt++) {            
+         if(fExplicitTrainTest[sb]) {
+            if(tmpTree[sb][itreeType]!=0) {
+               // renormalise only if non-trivial renormalisation factor
+               for (Int_t ievt=0; ievt<tmpTree[sb][itreeType]->GetEntries(); ievt++) {
+
+                  if (!evtList[sb][itreeType]->Contains(ievt)) continue;
+
+                  tmpTree[sb][itreeType]->GetEntry( ievt );
+                  weight *= renormFactor[sb];
+                  newTree->Fill();
+               }
+            }
+         } else {
+            // renormalise only if non-trivial renormalisation factor
+            for (Int_t ievt=0; ievt<tmpTree[sb][0]->GetEntries(); ievt++) {            
             
-            if (!evtList[sb][itreeType]->Contains(ievt)) continue;
+               if (!evtList[sb][itreeType]->Contains(ievt)) continue;
             
-            tmpTree[sb]->GetEntry( ievt );            
-            weight *= renormFactor[sb];
-            newTree->Fill();
+               tmpTree[sb][0]->GetEntry( ievt );            
+               weight *= renormFactor[sb];
+               newTree->Fill();
+            }
          }
       }
       if (itreeType == Types::kTraining) SetTrainingTree( newTree );
       else                               SetTestTree( newTree );
    }
 
-   delete tmpTree[Types::kSignal];
-   delete tmpTree[Types::kBackground];
+   delete tmpTree[Types::kSignal][0];
+   delete tmpTree[Types::kBackground][0];
+   if(fExplicitTrainTest[Types::kSignal]    ) delete tmpTree[Types::kSignal][1];
+   if(fExplicitTrainTest[Types::kBackground]) delete tmpTree[Types::kBackground][1];
+
+   delete evtList[Types::kSignal]    [Types::kTraining];
+   delete evtList[Types::kBackground][Types::kTraining];
+   delete evtList[Types::kSignal]    [Types::kTesting];
+   delete evtList[Types::kBackground][Types::kTesting];
+
+
 
    GetTrainingTree()->SetName("TrainingTree");
    GetTrainingTree()->SetTitle("Tree used for MVA training");
@@ -713,10 +942,10 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
    GetTestTree()->ResetBranchAddresses();
    
    fLogger << kINFO << "Collected:" << Endl;
-   fLogger << kINFO << "  Training signal entries     : " << fDataStats[Types::kTraining][Types::kSignal]     << Endl;
-   fLogger << kINFO << "  Training background entries : " << fDataStats[Types::kTraining][Types::kBackground] << Endl;
-   fLogger << kINFO << "  Testing  signal entries     : " << fDataStats[Types::kTesting][Types::kSignal]      << Endl;
-   fLogger << kINFO << "  Testing  background entries : " << fDataStats[Types::kTesting][Types::kBackground]  << Endl;
+   fLogger << kINFO << "- Training signal entries     : " << GetNEvtSigTrain()  << Endl;
+   fLogger << kINFO << "- Training background entries : " << GetNEvtBkgdTrain() << Endl;
+   fLogger << kINFO << "- Testing  signal entries     : " << GetNEvtSigTest()   << Endl;
+   fLogger << kINFO << "- Testing  background entries : " << GetNEvtBkgdTest()  << Endl;
 
    // sanity check
    if (GetNEvtSigTrain() <= 0 || GetNEvtBkgdTrain() <= 0 ||
@@ -725,7 +954,7 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
               << "background sample" << Endl;
    }
 
-   if (!gConfig().Silent() && Verbose()) {
+   if (!gConfig().IsSilent() && Verbose()) {
       GetTrainingTree()->Print();
       GetTestTree()->Print();
       GetTrainingTree()->Show(0);
@@ -775,9 +1004,31 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
       fInputVarFormulas.push_back( ttf );
       // sanity check
       if (ttf->GetNcodes() == 0) {
-         fLogger << kFATAL << "Expression: " << GetExpression(i) 
-                 << " does not appear to depend on any TTree variable --> please check spelling" << Endl;
+         fLogger << kFATAL << "Variable expression '" << GetExpression(i) 
+                 << "' does not appear to depend on any TTree variable in Tree "
+                 << tr->GetName() << " --> please check spelling" << Endl;
       }
+   }
+
+   // the cuts
+   if(TString(fCutSig.GetTitle()) != "") {
+      if(fCutSigF) delete fCutSigF;
+      fCutSigF = new TTreeFormula( "SigCut", fCutSig.GetTitle(), tr );
+      // sanity check
+      if (fCutSigF->GetNcodes() == 0)
+         fLogger << kFATAL << "Signal cut '" << fCutSig.GetTitle()
+                 << "' does not appear to depend on any TTree variable in Tree "
+                 << tr->GetName() << " --> please check spelling" << Endl;
+   }
+
+   if(TString(fCutBkg.GetTitle()) != "") {
+      if(fCutBkgF) delete fCutBkgF;
+      fCutBkgF = new TTreeFormula( "BkgCut", fCutBkg.GetTitle(), tr );
+      // sanity check
+      if (fCutBkgF->GetNcodes() == 0)
+         fLogger << kFATAL << "Background cut '" << fCutBkg.GetTitle()
+                 << "' does not appear to depend on any TTree variable in Tree "
+                 << tr->GetName() << " --> please check spelling" << Endl;
    }
 
    // recreate all formulas associated with the new tree
@@ -790,7 +1041,7 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
          delete fWeightFormula[sb]; fWeightFormula[sb]=0;
       }
       if (fWeightExp[sb]!=TString("")) {
-         fWeightFormula[sb] = new TTreeFormula("FormulaWeight",fWeightExp[sb].Data(),tr);
+         fWeightFormula[sb] = new TTreeFormula( "FormulaWeight", fWeightExp[sb].Data(), tr );
       }
    }
 
@@ -807,6 +1058,14 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
          for (Int_t bi = 0; bi<fWeightFormula[sb]->GetNcodes(); bi++)
             tr->SetBranchStatus( fWeightFormula[sb]->GetLeaf(bi)->GetBranch()->GetName(), 1 );
    }
+
+   for (Int_t sb=0; sb<2; sb++) {
+      TTreeFormula * tfc = sb==0?fCutSigF:fCutBkgF;
+      if (tfc!=0)
+         for (Int_t bi = 0; bi<tfc->GetNcodes(); bi++)
+            tr->SetBranchStatus( tfc->GetLeaf(bi)->GetBranch()->GetName(), 1 );
+   }
+
    return;
 }
 
@@ -841,11 +1100,11 @@ void TMVA::DataSet::PrintCorrelationMatrix( TTree* theTree )
 
    fLogger << Endl;
    fLogger << kINFO << "Correlation matrix (signal):" << Endl;
-   TMVA::Tools::FormattedOutput( *corrMatS, exprs, fLogger );
+   gTools().FormattedOutput( *corrMatS, exprs, fLogger );
    fLogger << Endl;
 
    fLogger << kINFO << "Correlation matrix (background):" << Endl;
-   TMVA::Tools::FormattedOutput( *corrMatB, exprs, fLogger );
+   gTools().FormattedOutput( *corrMatB, exprs, fLogger );
    fLogger << Endl;
 
    // ---- histogramming
@@ -1006,13 +1265,13 @@ void TMVA::DataSet::GetCovarianceMatrix( Bool_t isSignal, TMatrixDBase* mat, Boo
 
          for (ivar=0; ivar<nvar; ivar++) {
 
-            Double_t xi = ( (norm) ? Tools::NormVariable( GetEvent().GetVal(ivar), xmin(ivar), xmax(ivar) )
+            Double_t xi = ( (norm) ? gTools().NormVariable( GetEvent().GetVal(ivar), xmin(ivar), xmax(ivar) )
                             : GetEvent().GetVal(ivar) );
             vec(ivar) += xi*weight;
             mat2(ivar, ivar) += (xi*xi*weight);
 
             for (jvar=ivar+1; jvar<nvar; jvar++) {
-               Double_t xj =  ( (norm) ? Tools::NormVariable( GetEvent().GetVal(jvar), xmin(ivar), xmax(ivar) )
+               Double_t xj =  ( (norm) ? gTools().NormVariable( GetEvent().GetVal(jvar), xmin(ivar), xmax(ivar) )
                                 : GetEvent().GetVal(jvar) );
                mat2(ivar, jvar) += (xi*xj*weight);
                mat2(jvar, ivar) = mat2(ivar, jvar); // symmetric matrix

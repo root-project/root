@@ -102,8 +102,10 @@ TString TMVA::TActivationSigmoid::GetExpression()
 void TMVA::TActivationSigmoid::MakeFunction( std::ostream& fout, const TString& fncName ) 
 {
    // writes the sigmoid activation function source code
-   fout << "double " << fncName << "(double x) const {" << std::endl;
+   fout << "double " << fncName << "(double x) const" << std::endl;
+   fout << "{" << std::endl;
    fout << "   // sigmoid" << std::endl;
    fout << "   return 1.0/(1.0+exp(-x));" << std::endl;
    fout << "}" << std::endl;
+   fout << " " << std::endl;
 }

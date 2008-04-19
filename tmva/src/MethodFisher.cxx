@@ -21,9 +21,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         *
- *      U. of Victoria, Canada                                                    *
- *      MPI-K Heidelberg, Germany                                                 *
+ *      CERN, Switzerland                                                         * 
+ *      U. of Victoria, Canada                                                    * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -33,70 +33,70 @@
 
 //_______________________________________________________________________
 /* Begin_Html
-  Fisher and Mahalanobis Discriminants (Linear Discriminant Analysis)
-
+  Fisher and Mahalanobis Discriminants (Linear Discriminant Analysis) 
+  
   <p>
-  In the method of Fisher discriminants event selection is performed
+  In the method of Fisher discriminants event selection is performed 
   in a transformed variable space with zero linear correlations, by
-  distinguishing the mean values of the signal and background
+  distinguishing the mean values of the signal and background 
   distributions.<br></p>
-
+  
   <p>
-  The linear discriminant analysis determines an axis in the (correlated)
-  hyperspace of the input variables
-  such that, when projecting the output classes (signal and background)
+  The linear discriminant analysis determines an axis in the (correlated) 
+  hyperspace of the input variables 
+  such that, when projecting the output classes (signal and background) 
   upon this axis, they are pushed as far as possible away from each other,
-  while events of a same class are confined in a close vicinity.
+  while events of a same class are confined in a close vicinity. 
   The linearity property of this method is reflected in the metric with
   which "far apart" and "close vicinity" are determined: the covariance
   matrix of the discriminant variable space.
   </p>
 
   <p>
-  The classification of the events in signal and background classes
-  relies on the following characteristics (only): overall sample means,
+  The classification of the events in signal and background classes 
+  relies on the following characteristics (only): overall sample means,    
   <i><my:o>x</my:o><sub>i</sub></i>, for each input variable, <i>i</i>,
-  class-specific sample means, <i><my:o>x</my:o><sub>S(B),i</sub></i>,
-  and total covariance matrix <i>T<sub>ij</sub></i>. The covariance matrix
-  can be decomposed into the sum of a <i>within-</i> (<i>W<sub>ij</sub></i>)
+  class-specific sample means, <i><my:o>x</my:o><sub>S(B),i</sub></i>, 
+  and total covariance matrix <i>T<sub>ij</sub></i>. The covariance matrix 
+  can be decomposed into the sum of a <i>within-</i> (<i>W<sub>ij</sub></i>) 
   and a <i>between-class</i> (<i>B<sub>ij</sub></i>) class matrix. They describe
   the dispersion of events relative to the means of their own class (within-class
   matrix), and relative to the overall sample means (between-class matrix).
   The Fisher coefficients, <i>F<sub>i</sub></i>, are then given by <br>
   <center>
-  <img vspace=6 src="gif/tmva_fisherC.gif" align="bottom" >
+  <img vspace=6 src="gif/tmva_fisherC.gif" align="bottom" > 
   </center>
-  where in TMVA is set <i>N<sub>S</sub>=N<sub>B</sub></i>, so that the factor
+  where in TMVA is set <i>N<sub>S</sub>=N<sub>B</sub></i>, so that the factor 
   in front of the sum simplifies to &frac12;.
   The Fisher discriminant then reads<br>
   <center>
-  <img vspace=6 src="gif/tmva_fisherD.gif" align="bottom" >
+  <img vspace=6 src="gif/tmva_fisherD.gif" align="bottom" > 
   </center>
   The offset <i>F</i><sub>0</sub> centers the sample mean of <i>x</i><sub>Fi</sub>
   at zero. Instead of using the within-class matrix, the Mahalanobis variant
   determines the Fisher coefficients as follows:<br>
   <center>
-  <img vspace=6 src="gif/tmva_mahaC.gif" align="bottom" >
+  <img vspace=6 src="gif/tmva_mahaC.gif" align="bottom" > 
   </center>
   with resulting <i>x</i><sub>Ma</sub> that are very similar to the
   <i>x</i><sub>Fi</sub>. <br></p>
 
   TMVA provides two outputs for the ranking of the input variables:<br><p></p>
   <ul>
-  <li> <u>Fisher test:</u> the Fisher analysis aims at simultaneously maximising
+  <li> <u>Fisher test:</u> the Fisher analysis aims at simultaneously maximising 
   the between-class separation, while minimising the within-class dispersion.
-  A useful measure of the discrimination power of a variable is hence given
+  A useful measure of the discrimination power of a variable is hence given 
   by the diagonal quantity: <i>B<sub>ii</sub>/W<sub>ii</sub></i>.
   </li>
 
-  <li> <u>Discrimination power:</u> the value of the Fisher coefficient is a
-  measure of the discriminating power of a variable. The discrimination power
+  <li> <u>Discrimination power:</u> the value of the Fisher coefficient is a 
+  measure of the discriminating power of a variable. The discrimination power 
   of set of input variables can therefore be measured by the scalar
   <center>
-  <img vspace=6 src="gif/tmva_discpower.gif" align="bottom" >
+  <img vspace=6 src="gif/tmva_discpower.gif" align="bottom" > 
   </center>
   </li>
-  </ul>
+  </ul>      
   The corresponding numbers are printed on standard output.
   End_Html */
 //_______________________________________________________________________
@@ -115,11 +115,11 @@
 ClassImp(TMVA::MethodFisher)
 
 //_______________________________________________________________________
-TMVA::MethodFisher::MethodFisher( const TString& jobName, const TString& methodTitle, DataSet& theData,
+TMVA::MethodFisher::MethodFisher( const TString& jobName, const TString& methodTitle, DataSet& theData, 
                                   const TString& theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
-   // standard constructor for the "Fisher"
+   // standard constructor for the "Fisher" 
    InitFisher(); // sets default values
 
    // interpretation of configuration option string
@@ -132,12 +132,12 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName, const TString& methodT
 }
 
 //_______________________________________________________________________
-TMVA::MethodFisher::MethodFisher( DataSet& theData,
-                                  const TString& theWeightFile,
+TMVA::MethodFisher::MethodFisher( DataSet& theData, 
+                                  const TString& theWeightFile,  
                                   TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir )
 {
-   // constructor to calculate the Fisher-MVA from previously generatad
+   // constructor to calculate the Fisher-MVA from previously generatad 
    // coefficients (weight file)
    InitFisher();
 
@@ -149,10 +149,10 @@ void TMVA::MethodFisher::InitFisher( void )
 {
    // default initialization called by all constructors
    SetMethodName( "Fisher" );
-   SetMethodType( TMVA::Types::kFisher );
+   SetMethodType( TMVA::Types::kFisher );  
    SetTestvarName();
 
-   fMeanMatx    = 0;
+   fMeanMatx    = 0; 
    fBetw        = 0;
    fWith        = 0;
    fCov         = 0;
@@ -168,7 +168,7 @@ void TMVA::MethodFisher::InitFisher( void )
    SetSignalReferenceCut( 0.0 );
 }
 
-void TMVA::MethodFisher::DeclareOptions()
+void TMVA::MethodFisher::DeclareOptions() 
 {
    //
    // MethodFisher options:
@@ -180,7 +180,7 @@ void TMVA::MethodFisher::DeclareOptions()
    AddPreDefVal(TString("Mahalanobis"));
 }
 
-void TMVA::MethodFisher::ProcessOptions()
+void TMVA::MethodFisher::ProcessOptions() 
 {
    // process user options
    MethodBase::ProcessOptions();
@@ -212,7 +212,7 @@ void TMVA::MethodFisher::Train( void )
    if (!CheckSanity()) fLogger << kFATAL << "<Train> sanity check failed" << Endl;
 
    // get mean value of each variables for signal, backgd and signal+backgd
-   GetMean();
+   GetMean();   
 
    // get the matrix of covariance 'within class'
    GetCov_WithinClass();
@@ -274,7 +274,7 @@ void TMVA::MethodFisher::GetMean( void )
    // init vectors
    Double_t *sumS = new Double_t[(Int_t)GetNvar()];
    Double_t *sumB = new Double_t[(Int_t)GetNvar()];
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) { sumS[ivar] = sumB[ivar] = 0; }
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) { sumS[ivar] = sumB[ivar] = 0; }   
 
    // initialize internal sum-of-weights variables
    fSumOfWeightsS = 0;
@@ -296,7 +296,7 @@ void TMVA::MethodFisher::GetMean( void )
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) sum[ivar] += GetEventVal( ivar )*weight;
    }
 
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {   
       (*fMeanMatx)( ivar, 2 ) = sumS[ivar];
       (*fMeanMatx)( ivar, 0 ) = sumS[ivar]/fSumOfWeightsS;
 
@@ -305,7 +305,7 @@ void TMVA::MethodFisher::GetMean( void )
 
       // signal + background
       (*fMeanMatx)( ivar, 2 ) /= (fSumOfWeightsS + fSumOfWeightsB);
-   }
+   }  
    delete [] sumS;
    delete [] sumB;
 }
@@ -314,7 +314,7 @@ void TMVA::MethodFisher::GetMean( void )
 void TMVA::MethodFisher::GetCov_WithinClass( void )
 {
    // the matrix of covariance 'within class' reflects the dispersion of the
-   // events relative to the center of gravity of their own class
+   // events relative to the center of gravity of their own class  
 
    // assert required
    assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0 );
@@ -331,7 +331,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
    memset(sumBgd,0,nvar2*sizeof(Double_t));
 
    Int_t k=0;
-
+   
    // 'within class' covariance
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
 
@@ -343,7 +343,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
       for (Int_t x=0; x<nvar; x++) xval[x] = GetEventVal( x );
       Int_t k=0;
       for (Int_t x=0; x<nvar; x++) {
-         for (Int_t y=0; y<nvar; y++) {
+         for (Int_t y=0; y<nvar; y++) {            
             Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
             if (IsSignalEvent()) sumSig[k] += v;
             else                 sumBgd[k] += v;
@@ -393,8 +393,8 @@ void TMVA::MethodFisher::GetCov_BetweenClass( void )
 void TMVA::MethodFisher::GetCov_Full( void )
 {
    // compute full covariance matrix from sum of within and between matrices
-   for (Int_t x=0; x<GetNvar(); x++)
-      for (Int_t y=0; y<GetNvar(); y++)
+   for (Int_t x=0; x<GetNvar(); x++) 
+      for (Int_t y=0; y<GetNvar(); y++) 
          (*fCov)(x, y) = (*fWith)(x, y) + (*fBetw)(x, y);
 }
 
@@ -407,7 +407,7 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    // let Xb be the array of the mean values of variables for backgd evts
    // let InvWith be the inverse matrix of the 'within class' correlation matrix
    //
-   // then the array of Fisher coefficients is
+   // then the array of Fisher coefficients is 
    // [coeff] =sqrt(fNsig*fNbgd)/fNevt*transpose{Xs-Xb}*InvWith
 
    // assert required
@@ -429,19 +429,19 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    TMatrixD invCov( *theMat );
    if ( TMath::Abs(invCov.Determinant()) < 10E-24 ) {
       fLogger << kWARNING << "<GetFisherCoeff> matrix is almost singular with deterninant="
-              << TMath::Abs(invCov.Determinant())
-              << " did you use the variables that are linear combinations or highly correlated?"
+              << TMath::Abs(invCov.Determinant()) 
+              << " did you use the variables that are linear combinations or highly correlated?" 
               << Endl;
    }
    if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
       fLogger << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
-              << TMath::Abs(invCov.Determinant())
-              << " did you use the variables that are linear combinations?"
+              << TMath::Abs(invCov.Determinant())  
+              << " did you use the variables that are linear combinations?" 
               << Endl;
    }
 
    invCov.Invert();
-
+   
    // apply rescaling factor
    Double_t xfact = TMath::Sqrt( fSumOfWeightsS*fSumOfWeightsB ) / (fSumOfWeightsS + fSumOfWeightsB);
 
@@ -454,18 +454,18 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
       for (jvar=0; jvar<GetNvar(); jvar++) {
          Double_t d = (*fMeanMatx)(jvar, 0) - (*fMeanMatx)(jvar, 1);
          (*fFisherCoeff)[ivar] += invCov(ivar, jvar)*d;
-      }
-
+      }    
+    
       // rescale
       (*fFisherCoeff)[ivar] *= xfact;
    }
 
    // offset correction
    fF0 = 0.0;
-   for (ivar=0; ivar<GetNvar(); ivar++){
+   for (ivar=0; ivar<GetNvar(); ivar++){ 
       fF0 += (*fFisherCoeff)[ivar]*((*fMeanMatx)(ivar, 0) + (*fMeanMatx)(ivar, 1));
    }
-   fF0 /= -2.0;
+   fF0 /= -2.0;  
 }
 
 //_______________________________________________________________________
@@ -478,7 +478,7 @@ void TMVA::MethodFisher::GetDiscrimPower( void )
    // we want signal & backgd classes as compact and separated as possible
    // the discriminating power is then defined as the ration "fBetw/fWith"
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      if ((*fCov)(ivar, ivar) != 0)
+      if ((*fCov)(ivar, ivar) != 0) 
          (*fDiscrimPow)[ivar] = (*fBetw)(ivar, ivar)/(*fCov)(ivar, ivar);
       else
          (*fDiscrimPow)[ivar] = 0;
@@ -486,7 +486,7 @@ void TMVA::MethodFisher::GetDiscrimPower( void )
 }
 
 //_______________________________________________________________________
-const TMVA::Ranking* TMVA::MethodFisher::CreateRanking()
+const TMVA::Ranking* TMVA::MethodFisher::CreateRanking() 
 {
    // computes ranking of input variables
 
@@ -501,7 +501,7 @@ const TMVA::Ranking* TMVA::MethodFisher::CreateRanking()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodFisher::PrintCoefficients( void )
+void TMVA::MethodFisher::PrintCoefficients( void ) 
 {
    // display Fisher coefficients and discriminating power for each variable
    // check maximum length of variable name
@@ -518,7 +518,7 @@ void TMVA::MethodFisher::PrintCoefficients( void )
    }
    vars  .push_back( "(offset)" );
    coeffs.push_back( fF0 );
-   TMVA::Tools::FormattedOutput( coeffs, vars, "Variable" , "Coefficient", fLogger );
+   TMVA::gTools().FormattedOutput( coeffs, vars, "Variable" , "Coefficient", fLogger );   
 
    if (IsNormalised()) {
       fLogger << kINFO << "NOTE: You have chosen to use the \"Normalise\" booking option. Hence, the" << Endl;
@@ -528,8 +528,8 @@ void TMVA::MethodFisher::PrintCoefficients( void )
 
       // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         fLogger << kINFO
-                 << setw(maxL+9) << TString("[") + GetInputExp(ivar) + "]' = 2*("
+         fLogger << kINFO 
+                 << setw(maxL+9) << TString("[") + GetInputExp(ivar) + "]' = 2*(" 
                  << setw(maxL+2) << TString("[") + GetInputExp(ivar) + "]"
                  << setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
                  << setw(6) << TMath::Abs(GetXmin(ivar)) << setw(3) << ")/"
@@ -541,17 +541,17 @@ void TMVA::MethodFisher::PrintCoefficients( void )
       fLogger << kINFO << "Fisher classifier is applied outside the Reader, the transformation must be" << Endl;
       fLogger << kINFO << "implemented -- or the \"Normalise\" option is removed and Fisher retrained." << Endl;
       fLogger << kINFO << Endl;
-   }
+   }   
 }
-
+  
 //_______________________________________________________________________
 void  TMVA::MethodFisher::WriteWeightsToStream( ostream& o ) const
-{
+{  
    // save the weights
    o << std::setprecision(12) << fF0 << endl;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) o << std::setprecision(12) << (*fFisherCoeff)[ivar] << endl;
 }
-
+  
 //_______________________________________________________________________
 void  TMVA::MethodFisher::ReadWeightsFromStream( istream& istr )
 {
@@ -606,10 +606,10 @@ void TMVA::MethodFisher::GetHelpMessage() const
 {
    // get help message text
    //
-   // typical length of text line:
+   // typical length of text line: 
    //         "|--------------------------------------------------------------|"
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Short description:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "Fisher discriminants select events by distinguishing the mean " << Endl;
    fLogger << "values of the signal and background distributions in a trans- " << Endl;
@@ -626,7 +626,7 @@ void TMVA::MethodFisher::GetHelpMessage() const
    fLogger << "    determined: the covariance matrix of the discriminating" << Endl;
    fLogger << "    variable space.)" << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance optimisation:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "Optimal performance for Fisher discriminants is obtained for " << Endl;
    fLogger << "linearly correlated Gaussian-distributed variables. Any deviation" << Endl;
@@ -641,7 +641,8 @@ void TMVA::MethodFisher::GetHelpMessage() const
    fLogger << "to no separation. The simple transformation x -> |x| renders this " << Endl;
    fLogger << "variable powerful for the use in a Fisher discriminant." << Endl;
    fLogger << Endl;
-   fLogger << Tools::Color("bold") << "--- Performance tuning via configuration options:" << Tools::Color("reset") << Endl;
+   fLogger << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    fLogger << Endl;
    fLogger << "<None>" << Endl;
 }
+

@@ -62,6 +62,11 @@ namespace TMVA {
 
    public:
 
+      // this is the hard-coded maximum length of the source names
+      static const std::string::size_type MAXIMUM_SOURCE_NAME_LENGTH;
+
+   public:
+
       MsgLogger( const TObject* source, EMsgType minType = kINFO );
       MsgLogger( const std::string& source, EMsgType minType = kINFO );
       MsgLogger( EMsgType minType = kINFO );

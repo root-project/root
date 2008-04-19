@@ -37,6 +37,8 @@
 #include "TRandom3.h"
 #include "TH2F.h"
 
+#include <stdlib.h>
+
 #include "TMVA/MethodBase.h"
 #include "TMVA/MethodANNBase.h"
 #include "TMVA/TNeuron.h"
@@ -46,8 +48,6 @@
 #include "TMVA/Tools.h"
 #include "TMVA/TNeuronInputChooser.h"
 #include "TMVA/Ranking.h"
-
-#include <stdlib.h>
 
 using std::vector;
 
@@ -582,7 +582,7 @@ const TMVA::Ranking* TMVA::MethodANNBase::CreateRanking()
                   meanS, meanB, rmsS, rmsB, xmin, xmax );
 
       avgVal = (meanS + meanB) / 2.0; // change this into a real weighted average
-      if (IsNormalised()) avgVal = 0.5*(1 + Tools::NormVariable( avgVal, GetXmin( i ), GetXmax( i )));
+      if (IsNormalised()) avgVal = 0.5*(1 + gTools().NormVariable( avgVal, GetXmin( i ), GetXmax( i )));
 
       for (Int_t j = 0; j < numSynapses; j++) {
          synapse = neuron->PostLinkAt(j);
@@ -739,7 +739,7 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "}" << endl;
 
    fout << endl;
-   TString fncName = className+"::ActivationFnc";
+   TString fncName = className + "::ActivationFnc";
    fActivation->MakeFunction(fout, fncName);
 
    fout << "   " << endl;

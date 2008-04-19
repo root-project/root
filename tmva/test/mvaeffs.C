@@ -103,8 +103,6 @@ public:
       sigE->SetLineWidth( 3 );
       bgdE->SetLineWidth( 3 );
       sSig->SetLineWidth( 3 );
-      sSig->SetLineColor( 6 );
-      sSig->GetYaxis()->SetAxisColor(6);
 
       // the purity and quality
       purS->SetFillStyle( 0 );
@@ -326,7 +324,7 @@ void StatDialogMVAEffs::UpdateSignificanceHists()
    MethodInfo* info(0);
    TString cname = "Classifier";
    if (cname.Length() >  maxLenTitle)  maxLenTitle = cname.Length();
-   TString str = Form( "%*s   (   #signal, #backgr.)  Optimal-cut  S/sqrt(S+B)  Eff-sig  Eff-bkg", 
+   TString str = Form( "%*s   (  #signal, #backgr.)  Optimal-cut  S/sqrt(S+B)      NSig      NBkg   EffSig   EffBkg", 
                        maxLenTitle, cname.Data() );
    cout << "--- " << setfill('=') << setw(str.Length()) << "" << setfill(' ') << endl;
    cout << "--- " << str << endl;
@@ -336,7 +334,7 @@ void StatDialogMVAEffs::UpdateSignificanceHists()
          Float_t eS = info->origSigE->GetBinContent( i );
          Float_t S = eS * fNSignal;
          Float_t B = info->origBgdE->GetBinContent( i ) * fNBackground;
-         info->purS->SetBinContent( i, S/(S+B) );
+         info->purS->SetBinContent( i, (S+B==0)?0:S/(S+B) );
          info->sSig->SetBinContent( i, f.Eval(S,B) );
          info->effpurS->SetBinContent( i, eS*info->purS->GetBinContent( i ) );
       }
@@ -344,10 +342,10 @@ void StatDialogMVAEffs::UpdateSignificanceHists()
       info->maxSignificance = info->sSig->GetMaximum();
       info->sSig->Scale(1/info->maxSignificance);
 
-
       // update the text in the lower left corner
       PrintResults( info );
    }
+   cout << "--- " << setfill('-') << setw(str.Length()) << "" << setfill(' ') << endl << endl;
 }
 
 void StatDialogMVAEffs::ReadHistograms(TFile* file) 
@@ -410,6 +408,7 @@ void StatDialogMVAEffs::DrawHistograms()
 
    // define Canvas layout here!
    const Int_t width = 600;   // size of canvas
+   Int_t signifColor = TColor::GetColor( "#00aa00" );
 
    TIter next(fInfoList);
    MethodInfo* info(0);
@@ -433,19 +432,28 @@ void StatDialogMVAEffs::DrawHistograms()
       c->SetTopMargin(.2);
       
       // and the signal purity and quality
-      info->sSig->SetTitle("Efficiency");
-      info->sSig->GetXaxis()->SetTitle( info->methodTitle + " output" );
-      TMVAGlob::SetFrameStyle( info->sSig );
+      info->effpurS->SetTitle("Cut efficiencies and optimal cut value");
+      info->effpurS->GetXaxis()->SetTitle( info->methodTitle + " output" );
+      info->effpurS->GetYaxis()->SetTitle( "Efficiency (Purity)" );
+      TMVAGlob::SetFrameStyle( info->effpurS );
+
       c->SetTicks(0,0);
+      c->SetRightMargin ( 2.0 );
+
       info->effpurS->SetMaximum(1.1);
       info->effpurS->Draw("histl");
-      info->purS->Draw("samehistl");
+
+      info->purS->Draw("samehistl");      
 
       // overlay signal and background histograms
       info->sigE->Draw("samehistl");
       info->bgdE->Draw("samehistl");
 
+      info->sSig->SetLineColor( signifColor );
       info->sSig->Draw("samehistl");
+
+      // redraw axes
+      info->effpurS->Draw( "sameaxis" );
 
       // Draw legend               
       TLegend *legend1= new TLegend( c->GetLeftMargin(), 1 - c->GetTopMargin(), 
@@ -490,8 +498,12 @@ void StatDialogMVAEffs::DrawHistograms()
       // Draw second axes
       info->rightAxis = new TGaxis(c->GetUxmax(), c->GetUymin(),
                                    c->GetUxmax(), c->GetUymax(),0,1.1*info->maxSignificance,510,"+L");
-      info->rightAxis->SetLineColor(6);
-      info->rightAxis->SetLabelColor(6);
+      info->rightAxis->SetLineColor ( signifColor );
+      info->rightAxis->SetLabelColor( signifColor );
+      info->rightAxis->SetTitleColor( signifColor );
+
+      info->rightAxis->SetTitleSize( info->sSig->GetXaxis()->GetTitleSize() );
+      info->rightAxis->SetTitle( "Significance" );
       info->rightAxis->Draw();
 
       c->Update();
@@ -518,12 +530,15 @@ void StatDialogMVAEffs::PrintResults( const MethodInfo* info )
                                              info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
    }
 
-   TString opt = Form( "%%%is:  (%%10.9g,%%9.8g)    %%9.4f   %%10.6g %%8.4g %%8.4g", maxLenTitle );
+   TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   %%10.6g  %%8.7g  %%8.7g %%8.4g %%8.4g", 
+                       maxLenTitle );
    cout << "--- " 
         << Form( opt.Data(),
                  info->methodTitle.Data(), fNSignal, fNBackground, 
                  info->sSig->GetXaxis()->GetBinCenter( maxbin ),
                  info->maxSignificance,
+                 info->origSigE->GetBinContent( maxbin )*fNSignal,   
+                 info->origBgdE->GetBinContent( maxbin )*fNBackground,
                  info->origSigE->GetBinContent( maxbin ),
                  info->origBgdE->GetBinContent( maxbin ) )
         << endl;
@@ -538,12 +553,8 @@ void mvaeffs( TString fin = "TMVA.root",
 
    TFile* file = TMVAGlob::OpenFile( fin );
    gGui->ReadHistograms(file);
-
    gGui->SetFormula(formula);
-
    gGui->UpdateSignificanceHists();
-
    gGui->DrawHistograms();
-
    gGui->RaiseDialog();   
 }

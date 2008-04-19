@@ -118,8 +118,7 @@ TMVA::Reader::Reader( TString theOption, Bool_t verbose )
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE ),
-     fLogger( this )
+     fLogger ( this )
 {
    // constructor
    DeclareOptions();
@@ -133,8 +132,7 @@ TMVA::Reader::Reader( vector<TString>& inputVars, TString theOption, Bool_t verb
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE ),
-     fLogger( this )
+     fLogger ( this )
 {
    // constructor
    DeclareOptions();
@@ -153,8 +151,7 @@ TMVA::Reader::Reader( vector<string>& inputVars, TString theOption, Bool_t verbo
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE ),
-     fLogger( this )
+     fLogger ( this )
 {
    // constructor
    DeclareOptions();
@@ -173,8 +170,7 @@ TMVA::Reader::Reader( const string varNames, TString theOption, Bool_t verbose )
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE ),
-     fLogger( this )
+     fLogger ( this )
 {
    // constructor
    DeclareOptions();
@@ -191,8 +187,7 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
    : Configurable( theOption ),
      fDataSet( new DataSet ),
      fVerbose( verbose ),
-     fColor( kFALSE ),
-     fLogger( this )
+     fLogger ( this )
 {
    // constructor
    DeclareOptions();
@@ -208,14 +203,18 @@ TMVA::Reader::Reader( const TString varNames, TString theOption, Bool_t verbose 
 void TMVA::Reader::DeclareOptions() 
 {
    // declaration of configuration options
-   DeclareOptionRef( fVerbose, "V", "verbose flag" );
-   DeclareOptionRef( fColor=kTRUE, "Color", "color flag (default on)" );
+   Bool_t silent = kFALSE;
+   Bool_t color  = kTRUE;
+   DeclareOptionRef( fVerbose, "V",      "verbose flag" );
+   DeclareOptionRef( color,    "Color",  "Color flag (default on)" );
+   DeclareOptionRef( silent,   "Silent", "Boolean silent flag (default off)" );
    
    ParseOptions(kFALSE);
    
-   fLogger.SetMinType( Verbose() ? kVERBOSE : kINFO );
+   if (Verbose()) fLogger.SetMinType( kVERBOSE );
    
-   gConfig().SetUseColor(fColor);
+   gConfig().SetUseColor( color );
+   gConfig().SetSilent  ( silent );
 
    if (fDataSet!=0) fDataSet->SetVerbose(Verbose());
 }
@@ -256,6 +255,13 @@ void TMVA::Reader::AddVariable( const TString& expression, Int_t* datalink )
 TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& weightfile )
 {
    // read method name from weight file
+
+   // sanity check first - variables must have been added beforehand !!
+   if (Data().GetNVariables() <= 0) {
+      fLogger << kFATAL 
+              << "<BookMVA>: before booking you must register references to your MVA input "
+              << "variables via the call: \"reader->AddVariable( \"myFirstVar\", &muFirstVar );\" " << Endl;
+   }
 
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
    if (it != fMethodMap.end()) {

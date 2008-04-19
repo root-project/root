@@ -40,6 +40,7 @@
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include "TTreeFormula.h"
+#include "TROOT.h"
 
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
@@ -54,19 +55,27 @@
 #include "TMVA/Version.h"
 #endif
 
-namespace TMVA {
+TMVA::Tools * TMVA::Tools::fgTools = 0;
 
-   namespace Tools {
-      const char* Tools_NAME_ = "Tools"; // name to locate output
-      static MsgLogger* Tools_Logger = 0;
-   }   
+TMVA::Tools& TMVA::gTools() { return TMVA::Tools::Instance(); }
 
+TMVA::Tools::Tools() 
+  : fRegexp("!%^&()'<>?= "),
+    fLogger(new MsgLogger("Tools"))
+{
+   // constructor   
+}
+
+TMVA::Tools::~Tools() 
+{
+   // destructor
+   delete fLogger;
 }
 
 TMVA::MsgLogger& TMVA::Tools::Logger()
 {
-   // static access to a common MsgLogger
-   return Tools_Logger ? *Tools_Logger : *(Tools_Logger = new MsgLogger( Tools_NAME_ ));
+   // access to a common MsgLogger
+   return *fLogger;
 }
 
 Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
@@ -124,7 +133,7 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B )
    return separation;
 }
 
-void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
+void TMVA::Tools::ComputeStat( TTree* theTree, const TString theVarName,
                                Double_t& meanS, Double_t& meanB,
                                Double_t& rmsS,  Double_t& rmsB,
                                Double_t& xmin,  Double_t& xmax,
@@ -137,7 +146,7 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
    if (0 == theTree->FindBranch( theVarName )) 
       Logger() << kFATAL << "<ComputeStat> variable: " << theVarName << " is not member of tree" << Endl;
 
-   Long64_t entries = theTree->GetEntries();
+   const Long64_t entries = theTree->GetEntries();
 
    // first fill signal and background in arrays before analysis
    Double_t* varVecS  = new Double_t[entries];
@@ -149,17 +158,17 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
    Double_t xmin_ = 0, xmax_ = 0;
 
    if (norm) {
-      xmin_ = theTree->GetMinimum( theVarName );
-      xmax_ = theTree->GetMaximum( theVarName );
+      xmin_ = theTree->GetMinimum( theVarName.Data() );
+      xmax_ = theTree->GetMaximum( theVarName.Data() );
    }
 
-   static Int_t    theType;
+   Int_t    theType;
    TBranch * br1 = theTree->GetBranch("type" );
    br1->SetAddress( &theType );
 
-   static Double_t theVarD = 0;
-   static Float_t  theVarF = 0;
-   static Int_t    theVarI = 0;
+   Double_t theVarD = 0;
+   Float_t  theVarF = 0;
+   Int_t    theVarI = 0;
 
    TBranch * br2 = theTree->GetBranch( theVarName );
    TString leafType = ((TLeaf*)br2->GetListOfLeaves()->At(0))->GetTypeName();
@@ -184,7 +193,7 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
       br1->GetEntry(ievt);
       br2->GetEntry(ievt);
       Double_t theVar = 0;
-      switch(tIdx) {
+      switch (tIdx) {
       case 0: theVar = theVarD; break;
       case 1: theVar = theVarF; break;
       case 2: theVar = theVarI; break;
@@ -206,6 +215,8 @@ void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
    rmsS  = TMath::RMS ( nEventsS, varVecS );
    rmsB  = TMath::RMS ( nEventsB, varVecB );
 
+   theTree->ResetBranchAddresses();
+   
    delete [] varVecS;
    delete [] varVecB;
 }
@@ -325,6 +336,7 @@ TList* TMVA::Tools::ParseFormatLine( TString formatString, const char* sep )
 {
    // Parse the string and cut into labels separated by ":"
    TList*   labelList = new TList();
+   labelList->SetOwner();
    while (formatString.First(sep)==0) formatString.Remove(0,1); // remove initial separators
 
    while (formatString.Length()>0) {
@@ -418,7 +430,7 @@ Bool_t TMVA::Tools::CheckSplines( const TH1* theHist, const TSpline* theSpline )
    return retval;
 }
 
-vector<Double_t> TMVA::Tools::MVADiff(vector<Double_t>& a, vector<Double_t>& b)
+std::vector<Double_t> TMVA::Tools::MVADiff( std::vector<Double_t>& a, std::vector<Double_t>& b )
 {
    // computes difference between two vectors
    if (a.size() != b.size()) {
@@ -429,19 +441,19 @@ vector<Double_t> TMVA::Tools::MVADiff(vector<Double_t>& a, vector<Double_t>& b)
    return result;
 }
 
-void TMVA::Tools::Scale( vector<Double_t>& v, Double_t f )
+void TMVA::Tools::Scale( std::vector<Double_t>& v, Double_t f )
 {
    // scales double vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
-void TMVA::Tools::Scale( vector<Float_t>& v, Float_t f )
+void TMVA::Tools::Scale( std::vector<Float_t>& v, Float_t f )
 {
    // scales float vector
    for (UInt_t i=0; i<v.size();i++) v[i]*=f;
 }
 
-void TMVA::Tools::UsefulSortAscending( vector<vector<Double_t> >& v )
+void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v )
 {
    // sort 2D vector
    UInt_t nArrays=v.size();
@@ -460,7 +472,7 @@ void TMVA::Tools::UsefulSortAscending( vector<vector<Double_t> >& v )
    }
 }
 
-void TMVA::Tools::UsefulSortDescending( vector<vector<Double_t> >& v, vector<TString>* vs )
+void TMVA::Tools::UsefulSortDescending( std::vector<std::vector<Double_t> >& v, std::vector<TString>* vs )
 {
    // sort 2D vector AND (in parallel) TString vector
    UInt_t nArrays=v.size();
@@ -482,7 +494,7 @@ void TMVA::Tools::UsefulSortDescending( vector<vector<Double_t> >& v, vector<TSt
    }
 }
 
-void TMVA::Tools::UsefulSortDescending( vector<Double_t>& v )
+void TMVA::Tools::UsefulSortDescending( std::vector<Double_t>& v )
 {
    // sort vector
    vector< vector<Double_t> > vtemp;
@@ -491,7 +503,7 @@ void TMVA::Tools::UsefulSortDescending( vector<Double_t>& v )
    v = vtemp[0];
 }
 
-void TMVA::Tools::UsefulSortAscending( vector<Double_t>& v )
+void TMVA::Tools::UsefulSortAscending( std::vector<Double_t>& v )
 {
    // sort vector
    vector<vector<Double_t> > vtemp;
@@ -500,7 +512,7 @@ void TMVA::Tools::UsefulSortAscending( vector<Double_t>& v )
    v=vtemp[0];
 }
 
-Int_t TMVA::Tools::GetIndexMaxElement( vector<Double_t>& v )
+Int_t TMVA::Tools::GetIndexMaxElement( std::vector<Double_t>& v )
 {
    // find index of maximum entry in vector
    if (v.size()==0) return -1;
@@ -515,7 +527,7 @@ Int_t TMVA::Tools::GetIndexMaxElement( vector<Double_t>& v )
    return pos;
 }
 
-Int_t TMVA::Tools::GetIndexMinElement( vector<Double_t>& v )
+Int_t TMVA::Tools::GetIndexMinElement( std::vector<Double_t>& v )
 {
    // find index of minimum entry in vector
    if (v.size()==0) return -1;
@@ -536,8 +548,8 @@ Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )
    // helper function to search for "!%^&()'<>?= " in a string
 
    Bool_t  regular = kFALSE;
-   for (Int_t i = 0; i < Tools::__regexp__.Length(); i++) 
-      if (s.Contains( Tools::__regexp__[i] )) { regular = kTRUE; break; }
+   for (Int_t i = 0; i < Tools::fRegexp.Length(); i++) 
+      if (s.Contains( Tools::fRegexp[i] )) { regular = kTRUE; break; }
 
    return regular;
 }
@@ -549,8 +561,8 @@ TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString&
    // and replace all ::,*,/,+,- with _M_,_T_,_D_,_P_,_M_ respectively
 
    TString snew = s;
-   for (Int_t i = 0; i < Tools::__regexp__.Length(); i++) 
-      snew.ReplaceAll( Tools::__regexp__[i], r );
+   for (Int_t i = 0; i < Tools::fRegexp.Length(); i++) 
+      snew.ReplaceAll( Tools::fRegexp[i], r );
 
    snew.ReplaceAll( "::", r );
    snew.ReplaceAll( "*", "_T_" );
@@ -753,16 +765,31 @@ void TMVA::Tools::TMVAWelcomeMessage()
    cout << endl;
    cout << Color("bold") << "TMVA -- Toolkit for Multivariate Data Analysis" << Color("reset") << endl;
    cout << "        " << "Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE << endl;
-   cout << "        " << "Copyright (C) 2005-2007 CERN, MPI-K Heidelberg and Victoria U." << endl;
+   cout << "        " << "Copyright (C) 2005-2008 CERN, MPI-K Heidelberg and Victoria U." << endl;
    cout << "        " << "Home page http://tmva.sourceforge.net" << endl;
    cout << "        " << "All rights reserved, please read http://tmva.sf.net/license.txt" << endl << endl;
 }
 
 void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
 {
-   // prints the release number and date
-   logger << "________________Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE 
+   // prints the TMVA release number and date
+   logger << "__________TMVA Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE 
           << "" << Endl;
+}
+
+void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
+{
+   // prints the ROOT release number and date
+   static const char *months[] = { "Jan","Feb","Mar","Apr","May",
+                                   "Jun","Jul","Aug","Sep","Oct",
+                                   "Nov","Dec" };
+   Int_t   idatqq = gROOT->GetVersionDate();   
+   Int_t   iday   = idatqq%100;
+   Int_t   imonth = (idatqq/100)%100;
+   Int_t   iyear  = (idatqq/10000);
+   TString versionDate = Form("%s %d, %4d",months[imonth-1],iday,iyear);
+
+   logger << "You are running ROOT Version: " << gROOT->GetVersion() << ", " << versionDate << Endl;
 }
 
 void TMVA::Tools::TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage msgType )

@@ -6,16 +6,16 @@
 #include "tmvaglob.C"
 
 // some global lists
-TList*               TMVAGui_keyContent;
-std::vector<TString> TMVAGui_inactiveButtons;
+static TList*               TMVAGui_keyContent;
+static std::vector<TString> TMVAGui_inactiveButtons;
 
 // utility function
 void ActionButton( TControlBar* cbar, 
                    const TString& title, const TString& macro, const TString& comment, 
-                   const TString& buttonType, const TString& requiredKey = "" ) 
+                   const TString& buttonType, TString requiredKey = "" ) 
 {
    cbar->AddButton( title, macro, comment, buttonType );
-   
+
    // search    
    if (requiredKey != "") {
       Bool_t found = kFALSE;
@@ -29,13 +29,19 @@ void ActionButton( TControlBar* cbar,
 
 // main GUI
 void TMVAGui( const char* fName = "TMVA.root" ) 
-{
+{   
    // Use this script in order to run the various individual macros
    // that plot the output of TMVA (e.g. running TMVAnalysis.C),
    // stored in the file "TMVA.root"
    // for further documentation, look in the individual macros
 
+   TString curMacroPath(gROOT->GetMacroPath());
+   gROOT->SetMacroPath(curMacroPath+":$ROOTSYS/tmva/test/:");
+
    cout << "--- Launch TMVA GUI to view input file: " << fName << endl;
+
+   // init
+   TMVAGui_inactiveButtons.clear();
 
    // check if file exist
    TFile* file = TFile::Open( fName );
@@ -58,12 +64,12 @@ void TMVAGui( const char* fName = "TMVA.root" )
    // create the control bar
    TControlBar* cbar = new TControlBar( "vertical", "TMVA Plotting Macros", 0, 0 );
 
-   const char* buttonType = "button";
+   const TString buttonType( "button" );
 
    // configure buttons   
    Int_t ic = 0;
    ActionButton( cbar, 
-                 Form( "(%ia) Input Variables", ++ic),
+                 Form( "(%ia) Input Variables (training sample)", ++ic),
                  Form( ".x variables.C(\"%s\",0)", fName ),
                  "Plots all input variables (macro variables.C)",
                  buttonType );
@@ -105,7 +111,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  buttonType );
 
    ActionButton( cbar,  
-                 Form( "(%ia) Classifier Output Distributions", ++ic ),
+                 Form( "(%ia) Classifier Output Distributions (test sample)", ++ic ),
                  Form( ".x mvas.C(\"%s\",0)", fName ),
                  "Plots the output of each classifier for the test data (macro mvas.C(...,0))",
                  buttonType, defaultRequiredClassifier );
@@ -140,6 +146,18 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  "Plots background rejection vs signal efficiencies (macro efficiencies.C)",
                  buttonType, defaultRequiredClassifier );
 
+   TString title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
+   ActionButton( cbar,  
+                 title,
+                 Form( ".x paracoor.C(\"%s\")", fName ),
+                 "Plots parallel coordinates for classifiers and input variables (macro paracoor.C, requires ROOT >= 5.17)",
+                 buttonType, defaultRequiredClassifier );
+
+   // parallel coordinates only exist since ROOT 5.17
+   #if ROOT_VERSION_CODE < ROOT_VERSION(5,17,0)
+   TMVAGui_inactiveButtons.push_back( title );
+   #endif
+
    ActionButton( cbar,  
                  Form( "(%i) Likelihood Reference Distributiuons", ++ic),
                  Form( ".x likelihoodrefs.C(\"%s\")", fName ), 
@@ -160,8 +178,8 @@ void TMVAGui( const char* fName = "TMVA.root" )
 
    ActionButton( cbar,  
                  Form( "(%i) Decision Trees", ++ic ),
-                 Form( ".x BDT.C", fName ),
-                 "Plots the Decision Tree (#1); to plot other trees (i) call macro BDT.C(i) from command line",
+                 Form( ".x BDT.C+(\"%s\")", fName ),
+                 "Plots the Decision Trees trained by BDT algorithms (macro BDT.C(itree,...))",
                  buttonType, "BDT" );
 
    ActionButton( cbar,  
@@ -175,6 +193,8 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  Form( ".x rulevis.C(\"%s\",0)", fName ),
                  "Plots all input variables with rule ensemble weights, including linear terms (macro rulevis.C)",
                  buttonType, "RuleFit" );
+
+   cbar->AddSeparator();
 
    cbar->AddButton( Form( "(%i) Quit", ++ic ),   ".q", "Quit", buttonType );
 

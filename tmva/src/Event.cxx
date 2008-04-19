@@ -190,7 +190,7 @@ Float_t TMVA::Event::GetVal(UInt_t ivar) const
 Float_t TMVA::Event::GetValueNormalized(UInt_t ivar) const 
 {
    // returns the value of variable ivar, normalized to [-1,1]
-   return Tools::NormVariable(GetVal(ivar),fVariables[ivar].GetMin(),fVariables[ivar].GetMax());
+   return gTools().NormVariable(GetVal(ivar),fVariables[ivar].GetMin(),fVariables[ivar].GetMax());
 }
 
 //____________________________________________________________

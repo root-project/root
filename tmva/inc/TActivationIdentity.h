@@ -53,7 +53,7 @@ namespace TMVA {
 
       // evaluate the derivative of the activation function
       virtual Double_t EvalDerivative(Double_t arg) { 
-         if (arg) { }
+         if (arg); 
          return 1; // f'(x) = 1
       } 
 

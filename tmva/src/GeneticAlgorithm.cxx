@@ -66,9 +66,7 @@ TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populatio
    //                          the size of "ranges" is the number of coefficients which are optimised
    // Purpose: 
    //     Creates a random population with individuals of the size ranges.size()
-   if( seed != 0 ){
-      fPopulation.SetRandomSeed( seed );
-   }
+   fPopulation.SetRandomSeed( seed );
 
    for (std::vector<TMVA::Interval*>::const_iterator it = fRanges.begin(); it<fRanges.end(); it++) {
       fPopulation.AddFactor( (*it) );

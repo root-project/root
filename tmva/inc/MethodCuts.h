@@ -107,7 +107,7 @@ namespace TMVA {
      
       // also overwrite:
       Double_t GetSeparation  ( TH1*, TH1* ) const { return 0; }
-      Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB) { } return 0; }
+      Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB); return 0; }
       Double_t GetSignificance( void )       const { return 0; }
       Double_t GetmuTransform ( TTree *)           { return 0; }
       Double_t GetEfficiency  ( TString, TTree *, Double_t& );
@@ -120,18 +120,23 @@ namespace TMVA {
       Double_t ComputeEstimator( std::vector<Double_t> & );
       
       Double_t EstimatorFunction( std::vector<Double_t> & );
+      Double_t EstimatorFunction( Int_t ievt1, Int_t ievt2 );
 
       void SetTestSignalEfficiency( Double_t effS ) { fTestSignalEff = effS; }
       
       // retrieve cut values for given signal efficiency
       void PrintCuts( Double_t effS ) const;
       void GetCuts  ( Double_t effS, std::vector<Double_t>& cutMin, std::vector<Double_t>& cutMax ) const;
+      void GetCuts  ( Double_t effS, Double_t* cutMin, Double_t* cutMax ) const;
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }
 
       void DeclareOptions();
       void ProcessOptions();
+
+      // maximum |cut| value
+      static const Double_t MaxAbsCutVal;
 
    protected:
 
@@ -147,7 +152,9 @@ namespace TMVA {
       enum EFitMethodType { kUseMonteCarlo = 0,
                             kUseGeneticAlgorithm,
                             kUseSimulatedAnnealing,
-                            kUseMinuit };
+                            kUseMinuit,
+                            kUseEventScan,
+                            kUseMonteCarloEvents };
 
       // efficiency calculation method
       // - kUseEventSelection: computes efficiencies from given data sample
@@ -170,8 +177,6 @@ namespace TMVA {
       EEffMethod              fEffMethod;     // chosen efficiency calculation method
       vector<EFitParameters>* fFitParams;     // vector for series of fit methods
       Double_t                fTestSignalEff; // used to test optimized signal efficiency
-      Double_t                fEffSMin;       // used to test optimized signal efficiency
-      Double_t                fEffSMax;       // used to test optimized signal efficiency      
       Double_t*               fCutRangeMin;   // minimum of allowed cut range
       Double_t*               fCutRangeMax;   // maximum of allowed cut range
       vector<Interval*>       fCutRange;      // allowed ranges for cut optimisation

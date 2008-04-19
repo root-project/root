@@ -62,13 +62,15 @@ TMVA::RuleFit::RuleFit()
      fLogger( "RuleFit" )
 {
    // default constructor
-   ;
 }
 
 //_______________________________________________________________________
 TMVA::RuleFit::~RuleFit()
 {
    // destructor
+
+   std::vector< const TMVA::DecisionTree *>::iterator dtIt = fForest.begin();
+   for(;dtIt != fForest.begin(); dtIt++) delete *dtIt;
 }
 
 //_______________________________________________________________________
@@ -121,19 +123,19 @@ void TMVA::RuleFit::SetMethodBase( const MethodBase *rfbase )
 }
 
 //_______________________________________________________________________
-void TMVA::RuleFit::Copy( const RuleFit& other )
-{
-   // copy method
-   if(this != &other) {
-      fMethodRuleFit   = other.GetMethodRuleFit();
-      fMethodBase      = other.GetMethodBase();
-      fTrainingEvents  = other.GetTrainingEvents();
-      //      fSubsampleEvents = other.GetSubsampleEvents();
+// void TMVA::RuleFit::Copy( const RuleFit& other )
+// {
+//    // copy method
+//    if(this != &other) {
+//       fMethodRuleFit   = other.GetMethodRuleFit();
+//       fMethodBase      = other.GetMethodBase();
+//       fTrainingEvents  = other.GetTrainingEvents();
+//       //      fSubsampleEvents = other.GetSubsampleEvents();
    
-      fForest       = other.GetForest();
-      fRuleEnsemble = other.GetRuleEnsemble();
-   }
-}
+//       fForest       = other.GetForest();
+//       fRuleEnsemble = other.GetRuleEnsemble();
+//    }
+// }
 
 //_______________________________________________________________________
 Double_t TMVA::RuleFit::CalcWeightSum( const std::vector<Event *> *events, UInt_t neve )
@@ -227,7 +229,7 @@ void TMVA::RuleFit::MakeForest()
       // generate random number of events
       // do not implement the above in this release...just set it to default
       //      nminRnd = fNodeMinEvents;
-      DecisionTree *dt;
+      DecisionTree *dt(0);
       Bool_t tryAgain=kTRUE;
       Int_t ntries=0;
       const Int_t ntriesMax=10;
@@ -359,7 +361,7 @@ void TMVA::RuleFit::ForestStatistics()
       sumn  += nd;
       sumn2 += nd*nd;
    }
-   Double_t sig = TMath::Sqrt( Tools::ComputeVariance( sumn2, sumn, ntrees ));
+   Double_t sig = TMath::Sqrt( gTools().ComputeVariance( sumn2, sumn, ntrees ));
    fLogger << kVERBOSE << "Nodes in trees: average & std dev = " << sumn/ntrees << " , " << sig << Endl;
 }
 

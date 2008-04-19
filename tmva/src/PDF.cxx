@@ -62,7 +62,7 @@ ClassImp(TMVA::PDF)
 #pragma warning ( disable : 4355 )
 #endif
 
-   //_______________________________________________________________________
+//_______________________________________________________________________
 TMVA::PDF::PDF()
    : fUseHistogram  ( kFALSE ),
      fNsmooth       ( 0 ),
@@ -145,13 +145,13 @@ TMVA::PDF::PDF( const TH1* hist, KDEKernel::EKernelType ktype, KDEKernel::EKerne
      fKDEtype       ( ktype ),
      fKDEiter       ( kiter ),
      fKDEborder     ( kborder ),
-     fFineFactor    ( FineFactor)
+     fFineFactor    ( FineFactor),
+     fLogger        ( this )
 {
    // constructor of kernel based PDF:
    // - default kernel type is Gaussian
    // - default number of iterations is 1 (i.e. nonadaptive KDE)
    // sanity check
-   fLogger   = this;
    if (hist == NULL) fLogger << kFATAL << "Called without valid histogram pointer!" << Endl;
 
    // histogram should be non empty

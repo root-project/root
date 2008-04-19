@@ -40,6 +40,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TH2.h"
+#include "TRandom.h"
+#include "TRandom2.h"
 
 #ifndef ROOT_TMVA_DecisionTreeNode
 #include "TMVA/DecisionTreeNode.h"
@@ -72,7 +74,8 @@ namespace TMVA {
 
       // the constructur needed for constructing the decision tree via training with events
       DecisionTree( SeparationBase *sepType,Int_t minSize, 
-                    Int_t nCuts, SeparationBase *qtype=NULL );
+                    Int_t nCuts, SeparationBase *qtype=NULL,
+                    Bool_t randomisedTree=kFALSE, Int_t useNvars=0, Int_t iSeed=0);
 
       // copy constructor
       DecisionTree (const DecisionTree &d);
@@ -130,6 +133,8 @@ namespace TMVA {
       // is coded as a sequence of left-right moves starting from the root, coded as
       // 0-1 bit patterns stored in the "long-integer" together with the depth
       DecisionTreeNode* GetNode( ULong_t sequence, UInt_t depth );
+
+      void CleanTree(DecisionTreeNode *node=NULL);
 
       std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityGainMap() { return fQualityGainMap; }
       std::multimap<Double_t,TMVA::DecisionTreeNode* >& GetQualityMap()     { return fQualityMap; }
@@ -191,6 +196,11 @@ namespace TMVA {
       Double_t  fPruneStrength;  // a parameter to set the "amount" of pruning..needs to be adjusted 
       
       EPruneMethod fPruneMethod; // method used for prunig 
+
+      Bool_t    fRandomisedTree; // choose at each node splitting a random set of variables 
+      Int_t     fUseNvars;       // the number of variables used in randomised trees;
+      
+      TRandom2  *fMyTrandom;     // random number generator for randomised trees
 
       std::vector< Double_t > fVariableImportance; // the relative importance of the different variables 
       

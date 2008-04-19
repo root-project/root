@@ -531,7 +531,7 @@ inline Double_t TMVA::MethodBase::GetEventVal( Int_t ivar ) const
 inline Double_t TMVA::MethodBase::GetEventValNormalised(Int_t ivar) const 
 {         
    // normalises input variables
-   return Tools::NormVariable( GetEvent().GetVal(ivar), GetXmin(ivar), GetXmax(ivar) );
+   return gTools().NormVariable( GetEvent().GetVal(ivar), GetXmin(ivar), GetXmax(ivar) );
 }
 
 //_______________________________________________________________________

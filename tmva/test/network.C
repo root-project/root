@@ -210,7 +210,7 @@ TString* get_var_names( Int_t nVars )
       TClass *cl = gROOT->GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH1")) continue;
       TH1 *sig = (TH1*)key->ReadObj();
-      hname = sig->GetTitle();
+      TString hname = sig->GetTitle();
       
       vars[ivar] = hname; ivar++;
 
@@ -261,10 +261,10 @@ void draw_activation(TCanvas* c, Double_t cx, Double_t cy,
 
    switch (whichActivation) {
    case 0:
-      activation = TImage::Open("../macros/sigmoid-small.png");
+      activation = TImage::Open("sigmoid-small.png");
       break;
    case 1:
-      activation = TImage::Open("../macros/line-small.png");
+      activation = TImage::Open("line-small.png");
       break;
    default:
       cout << "Activation index " << whichActivation << " is not known." << endl;

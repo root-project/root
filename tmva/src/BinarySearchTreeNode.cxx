@@ -51,7 +51,7 @@ ClassImp(TMVA::BinarySearchTreeNode)
 
 
 //_______________________________________________________________________
-TMVA::BinarySearchTreeNode::BinarySearchTreeNode( Event* e ) : 
+TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e ) : 
    TMVA::Node(),
    fWeight(e==0?0:e->GetWeight()),
    fIsSignal(e==0?kTRUE:e->IsSignal()),

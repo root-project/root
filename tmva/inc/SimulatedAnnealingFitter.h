@@ -8,12 +8,16 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *       Fitter using Simulated Annealing                                         *
+ *       Fitter using Simulated Annealing algorithm                               *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
+ *      Krzysztof Danielowski <danielow@cern.ch>       - IFJ & AGH, Poland        *
+ *      Andreas Hoecker       <Andreas.Hocker@cern.ch> - CERN, Switzerland        *
+ *      Kamil Kraszewski      <kalq@cern.ch>           - IFJ & UJ, Poland         *
+ *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
+ * Copyright (c) 2008:                                                            *
+ *      IFJ-Krakow, Poland                                                        *
  *      CERN, Switzerland                                                         * 
  *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
@@ -41,24 +45,25 @@ namespace TMVA {
 
    class IFitterTarget;
    class Interval;
-   
+
    class SimulatedAnnealingFitter : public FitterBase {
-      
+
    public:
-      
+
       SimulatedAnnealingFitter( IFitterTarget& target, const TString& name, 
                                 const std::vector<TMVA::Interval*>& ranges, const TString& theOption );
 
       virtual ~SimulatedAnnealingFitter() {}
 
       void SetParameters( Int_t    fMaxCalls,              
-                          Int_t    fNFunLoops,             
-                          Int_t    fNEps,                  
-                          Bool_t   fUseAdaptiveTemperature,
-                          Double_t fTemperatureGradient,   
                           Double_t fInitialTemperature,    
                           Double_t fMinTemperature,        
-                          Double_t fEps );                  
+                          Double_t fEps,
+                          TString  fKernelTemperatureS,
+                          Double_t fTemperatureScale,
+                          Double_t fTemperatureAdaptiveStep,
+                          Bool_t   fUseDefaultScale,
+                          Bool_t   fUseDefaultTemperature );
 
       Double_t Run( std::vector<Double_t>& pars );
 
@@ -67,14 +72,18 @@ namespace TMVA {
       void DeclareOptions();
 
       Int_t              fMaxCalls;                // max number of FCN calls
-      Int_t              fNFunLoops;               // number of FCN loops
-      Int_t              fNEps;                    // test parameter
-      Bool_t             fUseAdaptiveTemperature;  // compute temperature steps on the fly
-      Double_t           fTemperatureGradient;     // starting value for temperature gradient
       Double_t           fInitialTemperature;      // initial temperature (depends on FCN)
       Double_t           fMinTemperature;          // minimum temperature before SA quit
       Double_t           fEps;                     // relative required FCN accuracy at minimum
-      
+      TString            fKernelTemperatureS;      // string just to set fKernelTemperature
+      Double_t           fTemperatureScale;        // how fast temperature change
+      Double_t           fAdaptiveSpeed;           // how fast temperature change in adaptive (in adaptive two variables describe
+                                                   // the change of temperature, but fAdaptiveSpeed should be 1.0 and its not 
+                                                   // recomended to change it)
+      Double_t           fTemperatureAdaptiveStep; // used to calculate InitialTemperature if fUseDefaultTemperature
+      Bool_t             fUseDefaultScale;         // if TRUE, SA calculates its own TemperatureScale
+      Bool_t             fUseDefaultTemperature;   // if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
+
       ClassDef(SimulatedAnnealingFitter,0) // Fitter using a Simulated Annealing Algorithm
    };
 

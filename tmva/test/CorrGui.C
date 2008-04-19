@@ -6,6 +6,9 @@
 
 #include "TControlBar.h"
 #include "tmvaglob.C"
+
+static TControlBar* CorrGui_Global__cbar = 0;
+
 void CorrGui(  TString fin = "TMVA.root",  TMVAGlob::TypeOfPlot type = TMVAGlob::kNormal ) 
 {
    // Use this script in order to run the various individual macros
@@ -14,15 +17,19 @@ void CorrGui(  TString fin = "TMVA.root",  TMVAGlob::TypeOfPlot type = TMVAGlob:
    // for further documentation, look in the individual macros
 
    cout << "--- Open CorrGui for input file: " << fin << " and type: " << type << endl;
+
+   // destroy all open cavases
+   TMVAGlob::DestroyCanvases(); 
    
    //   gROOT->Reset();
    //   gStyle->SetScreenFactor(2); // if you have a large screen, select 1,2 or 1.4
 
    // create the control bar
-   TControlBar * cbar = new TControlBar( "vertical", "Plotting correlations", 50, 50 );
+   TControlBar* cbar = new TControlBar( "vertical", "Plotting correlations", 50, 50 );
+   CorrGui_Global__cbar = cbar;
 
    const char* buttonType = "button";
-   const char* scriptpath = "../macros"; 
+   const char* scriptpath = "./"; 
 
    // configure buttons   
 
@@ -69,23 +76,24 @@ void CorrGui(  TString fin = "TMVA.root",  TMVAGlob::TypeOfPlot type = TMVAGlob:
          hname.ReplaceAll("__S","");
          Var[it]+=hname;
         
-         ++it;
-	
-      }}
+         ++it;	
+      }
+   }
 
 
-   for (Int_t ic=0;ic<it;ic++) {
-    
-
-      cbar->AddButton( Form(  "Variable %s",Var[ic].Data()),
+   for (Int_t ic=0;ic<it;ic++) {    
+      cbar->AddButton( Form( "Variable %s",Var[ic].Data()),
                        Form( ".x %s/correlationscatters.C\(\"%s\",\"%s\",%i)", 
                              scriptpath, fin.Data(), Var[ic].Data(), type ),
                        Form( "Draws all scatter plots for variable \"%s\"",Var[ic].Data() ),
                        buttonType );
-
    }
       
-   //   cbar->AddButton("Close Bar", "gROOT.Reset(\"a\")", "Close ControlBar");
+   // *** problems with this button in ROOT 5.19 ***
+   #if ROOT_VERSION_CODE < ROOT_VERSION(5,19,0)
+   cbar->AddButton( "Close", "CorrGui_DeleteTBar()", "Close this control bar", "button" );
+   #endif
+   // **********************************************
 
    // set the style 
    cbar->SetTextColor("blue");
@@ -98,3 +106,12 @@ void CorrGui(  TString fin = "TMVA.root",  TMVAGlob::TypeOfPlot type = TMVAGlob:
 
    gROOT->SaveContext();
 }
+
+void CorrGui_DeleteTBar()
+{
+   TMVAGlob::DestroyCanvases(); 
+
+   delete CorrGui_Global__cbar;
+   CorrGui_Global__cbar = 0;
+}
+

@@ -28,35 +28,34 @@
 // J Friedman's RuleFit method
 //_______________________________________________________________________
 
+#include <algorithm>
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMath.h"
+#include "Riostream.h"
+
 #include "TMVA/MethodRuleFit.h"
 #include "TMVA/RuleFitAPI.h"
 #include "TMVA/RuleFit.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
-#include "Riostream.h"
-#include <algorithm>
 
 ClassImp(TMVA::RuleFitAPI)
 
-   TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
-                                 RuleFit *rulefit,
-                                 EMsgType minType = kINFO ) :
-   fMethodRuleFit(rfbase),
-   fRuleFit(rulefit),
-   fLogger("RuleFitAPI",minType)
+TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
+                              RuleFit *rulefit,
+                              EMsgType minType = kINFO ) 
+   : fMethodRuleFit( rfbase ),
+     fRuleFit      ( rulefit ),
+     fLogger       ( "RuleFitAPI", minType )
 {
    // standard constructor
-   if (rfbase) {
-      SetRFWorkDir(rfbase->GetRFWorkDir());
-   } else {
-      SetRFWorkDir("./rulefit");
-   }
+   if (rfbase) SetRFWorkDir(rfbase->GetRFWorkDir());
+   else        SetRFWorkDir("./rulefit");
+
    InitRuleFit();
 }
-
 
 //_______________________________________________________________________
 TMVA::RuleFitAPI::~RuleFitAPI()

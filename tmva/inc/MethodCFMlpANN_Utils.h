@@ -164,10 +164,10 @@ namespace TMVA {
 
       // ANN weights
       struct {
-         Double_t x[max_nLayers_*max_nNodes_];
-         Double_t y[max_nLayers_*max_nNodes_];             
-         Double_t o[max_nNodes_];
-         Double_t w[max_nLayers_*max_nNodes_*max_nNodes_]; 
+         Double_t x [max_nLayers_*max_nNodes_];
+         Double_t y [max_nLayers_*max_nNodes_];             
+         Double_t o [max_nNodes_];
+         Double_t w [max_nLayers_*max_nNodes_*max_nNodes_]; 
          Double_t ww[max_nLayers_*max_nNodes_];            
          Double_t cut[max_nNodes_];
          Double_t deltaww[max_nLayers_*max_nNodes_]; 
@@ -176,9 +176,9 @@ namespace TMVA {
 
       // ANN weights
       struct {
-         Double_t coef[max_nNodes_], temp[max_nLayers_], demin, demax;
-         Double_t del[max_nLayers_*max_nNodes_];                
-         Double_t delw[max_nLayers_*max_nNodes_*max_nNodes_];  
+         Double_t coef [max_nNodes_], temp[max_nLayers_], demin, demax;
+         Double_t del  [max_nLayers_*max_nNodes_];                
+         Double_t delw [max_nLayers_*max_nNodes_*max_nNodes_];  
          Double_t delta[max_nLayers_*max_nNodes_*max_nNodes_]; 
          Double_t delww[max_nLayers_*max_nNodes_];                
          Int_t idde;

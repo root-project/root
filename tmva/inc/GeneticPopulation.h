@@ -103,8 +103,8 @@ namespace TMVA {
       Double_t GetCounterFitness() const { return fCounterFitness; }
       Int_t    GetPopulationSize() const { return fPopulationSize; }
 
-      std::multimap<Double_t, TMVA::GeneticGenes>* GetGenePool()    const { return fGenePool; }
-      std::multimap<Double_t, TMVA::GeneticGenes>* GetNewGenePool() const { return fNewGenePool; }
+      std::multimap<Double_t, GeneticGenes>* GetGenePool()    const { return fGenePool; }
+      std::multimap<Double_t, GeneticGenes>* GetNewGenePool() const { return fNewGenePool; }
       std::vector<TMVA::GeneticRange*>&      GetRanges()            { return fRanges; }
   
    private:

@@ -58,20 +58,30 @@ namespace TMVA {
 
    class Event;
    
-   namespace Tools {
+   class Tools {
+   private:
+      Tools();
+
+   public:
+
+      // destructor
+      ~Tools();
+
+      // accessor to single instance
+      static Tools& Instance() { return fgTools?*(fgTools): *(fgTools = new Tools()); }
 
       // simple statistics operations on tree entries
-      void  ComputeStat( TTree* theTree, const TString& theVarName,
-                         Double_t&, Double_t&, Double_t&, 
-                         Double_t&, Double_t&, Double_t&, Bool_t norm = kFALSE );
+      void  ComputeStat( TTree* theTree, const TString theVarName,
+                                Double_t&, Double_t&, Double_t&, 
+                                Double_t&, Double_t&, Double_t&, Bool_t norm = kFALSE );
 
       // compute variance from sums
       inline Double_t ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx );
 
       // creates histograms normalized to one
       TH1* projNormTH1F( TTree* theTree, TString theVarName,
-                         TString name, Int_t nbins, 
-                         Double_t xmin, Double_t xmax, TString cut );
+                                TString name, Int_t nbins, 
+                                Double_t xmin, Double_t xmax, TString cut );
 
       // normalize histogram by its integral
       Double_t NormHist( TH1* theHist, Double_t norm = 1.0 );
@@ -100,8 +110,8 @@ namespace TMVA {
 
       // vector rescaling
       std::vector<Double_t> MVADiff( std::vector<Double_t>&, std::vector<Double_t>& );
-      void Scale     ( std::vector<Double_t>&, Double_t );
-      void Scale     ( std::vector<Float_t>&,  Float_t  );
+      void Scale( std::vector<Double_t>&, Double_t );
+      void Scale( std::vector<Float_t>&,  Float_t  );
   
       // re-arrange a vector of arrays (vectors) in a way such that the first array
       // is ordered, and the other arrays reshuffeld accordingly
@@ -140,27 +150,31 @@ namespace TMVA {
       // output logger
       MsgLogger& Logger();
 
-      const TString __regexp__ = "!%^&()'<>?= ";
-
       const TString& Color( const TString& );
 
       // print welcome message (to be called from, eg, .TMVAlogon)
-      enum EWelcomeMessage {
-         kStandardWelcomeMsg = 1,
-         kIsometricWelcomeMsg,
-         kBlockWelcomeMsg,
-         kLeanWelcomeMsg,
-         kLogoWelcomeMsg,
-         kSmall1WelcomeMsg,
-         kSmall2WelcomeMsg,
-         kOriginalWelcomeMsgColor,
-         kOriginalWelcomeMsgBW
-      };
+      enum EWelcomeMessage { kStandardWelcomeMsg = 1,
+                             kIsometricWelcomeMsg,
+                             kBlockWelcomeMsg,
+                             kLeanWelcomeMsg,
+                             kLogoWelcomeMsg,
+                             kSmall1WelcomeMsg,
+                             kSmall2WelcomeMsg,
+                             kOriginalWelcomeMsgColor,
+                             kOriginalWelcomeMsgBW };
 
       void TMVAWelcomeMessage();
       void TMVAWelcomeMessage( MsgLogger& logger, EWelcomeMessage m = kStandardWelcomeMsg );
       void TMVAVersionMessage( MsgLogger& logger );
-   } // Common tools
+      void ROOTVersionMessage( MsgLogger& logger );
+
+      const TString fRegexp;
+      MsgLogger*    fLogger;
+      static Tools* fgTools;
+
+   }; // Common tools
+
+   Tools& gTools(); // global accessor
 
 } // namespace TMVA
 

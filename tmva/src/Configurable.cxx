@@ -66,10 +66,9 @@ TMVA::Configurable::Configurable( const TString& theOption)
    : fOptions                    ( theOption ),
      fLooseOptionCheckingEnabled ( kTRUE ),
      fLastDeclaredOption         ( 0 ),
-     fLogger (this)
+     fLogger                     ( this )
 {
    // constructor
-   fLogger.SetMinType( kINFO );
    fListOfOptions.SetOwner();   
 }
 

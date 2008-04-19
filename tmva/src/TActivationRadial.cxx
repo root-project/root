@@ -45,8 +45,8 @@ TMVA::TActivationRadial::TActivationRadial()
 {
    // constructor for gaussian with center 0, width 1
 
-   fEqn           = new TFormula( "Gaussian",   "TMath::Exp(-x^2/2.0)" );
-   fEqnDerivative = new TFormula( "derivative", "-x*TMath::Exp(-x^2/2.0)" );
+   fEqn           = new TFormula( "Gaussian",   "TMath::Exp(-x*x/2.0)" );
+   fEqnDerivative = new TFormula( "derivative", "-x*TMath::Exp(-x*x/2.0)" );
 }
 
 //______________________________________________________________________________
@@ -98,8 +98,10 @@ TString TMVA::TActivationRadial::GetExpression()
 void TMVA::TActivationRadial::MakeFunction( std::ostream& fout, const TString& fncName ) 
 {
    // writes the sigmoid activation function source code
-   fout << "double " << fncName << "(double x) const {" << std::endl;
+   fout << "double " << fncName << "(double x) const" << std::endl;
+   fout << "{" << std::endl;
    fout << "   // radial" << std::endl;
    fout << "   return exp(-x*x/2.0);" << std::endl;
    fout << "}" << std::endl;
+   fout << " " << std::endl;
 }

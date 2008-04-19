@@ -73,7 +73,7 @@ namespace TMVA {
       // empty constructor
       Rule();
 
-      virtual ~Rule() {}
+      virtual ~Rule();
 
       // set message type
       void SetMsgType( EMsgType t ) { fLogger.SetMinType(t); }
