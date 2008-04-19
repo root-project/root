@@ -53,9 +53,9 @@ define RootsysTestDiff
 	| sed 's,\([[:space:]]\?[.[:digit:]]\+e[+-]\)0\([[:digit:]]\{2\}\), \1\2,g' \
 	> $<.nomark || true
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -b $@.ref$(ROOTBITS) $<.nomark ; \
+	   diff -u -b $@.ref$(ROOTBITS) $<.nomark ; \
 	else \
-	   diff -b $@.ref $<.nomark ; \
+	   diff -u -b $@.ref $<.nomark ; \
 	fi
 	$(CMDECHO) rm -f $<.nomark
 	$(CMDECHO) ( \
