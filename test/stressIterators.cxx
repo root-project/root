@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <sstream>
 #include <stdexcept>
+#include <functional>
 // ROOT
 #include "TList.h"
 #include "TObjString.h"
