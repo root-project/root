@@ -133,7 +133,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 /* Split #if into 2 because some HP-UX can't handle long #if */
 #if !(defined(NAGf90Fortran)||defined(f2cFortran)||defined(hpuxFortran)||defined(apolloFortran)||defined(sunFortran)||defined(IBMR2Fortran)||defined(CRAYFortran))
 #if !(defined(mipsFortran)||defined(DECFortran)||defined(vmsFortran)||defined(CONVEXFortran)||defined(PowerStationFortran)||defined(AbsoftUNIXFortran)||defined(AbsoftProFortran)||defined(SXFortran))
-/* If your compiler barfs on ' #error', replace # with the trigraph for #     */
+/* If your compiler barfs on ' #error', replace # with the trigraph for # 
  #error "cfortran.h:  Can't find your environment among:\
     - MIPS cc and f77 2.0. (e.g. Silicon Graphics, DECstations, ...)     \
     - IBM AIX XL C and FORTRAN Compiler/6000 Version 01.01.0000.0000     \
@@ -156,6 +156,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
     - Absoft UNIX F77: Use #define AbsoftUNIXFortran or cc -DAbsoftUNIXFortran \
     - Absoft Pro Fortran: Use #define AbsoftProFortran \
     - Portland Group Fortran: Use #define pgiFortran"
+*/
 /* Compiler must throw us out at this point! */
 #endif
 #endif
