@@ -313,7 +313,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::IMethod* method )
          boostFactor = (1-err)/err ;
       }
       else {
-         boostFactor =  pow((1-err)/err,adaBoostBeta) ;
+         boostFactor =  TMath::Power((1-err)/err,adaBoostBeta) ;
       }
    }
    else {

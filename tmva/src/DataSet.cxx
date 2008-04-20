@@ -24,6 +24,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include <cmath>
+
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -318,6 +320,7 @@ Int_t TMVA::DataSet::FindVar(const TString& var) const
 //_______________________________________________________________________
 void TMVA::DataSet::PrepareForTrainingAndTesting( const TString& splitOpt )
 { 
+
    // The internally used training and testing trees are prepaired in
    // this method 
    // First the variables (expressions) of interest are copied from

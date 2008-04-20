@@ -304,7 +304,7 @@ const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
    return corrMat;
 }
 
-TH1* TMVA::Tools::projNormTH1F( TTree* theTree, TString theVarName,
+TH1* TMVA::Tools::ProjNormTH1F( TTree* theTree, TString theVarName,
                                 TString name, Int_t nbins,
                                 Double_t xmin, Double_t xmax, TString cut )
 {
@@ -729,7 +729,7 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    logger << Endl;
 }
 
-void TMVA::Tools::writeFloatArbitraryPrecision( Float_t val, ostream& os ) 
+void TMVA::Tools::WriteFloatArbitraryPrecision( Float_t val, ostream& os ) 
 {
    // writes a float value with the available precision to a stream
    os << val << " :: ";
@@ -742,7 +742,7 @@ void TMVA::Tools::writeFloatArbitraryPrecision( Float_t val, ostream& os )
    os << ":: ";
 }
 
-void TMVA::Tools::readFloatArbitraryPrecision( Float_t& val, istream& is ) 
+void TMVA::Tools::ReadFloatArbitraryPrecision( Float_t& val, istream& is ) 
 {
    // reads a float value with the available precision from a stream
    Float_t a = 0;

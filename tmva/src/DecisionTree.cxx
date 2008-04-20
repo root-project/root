@@ -255,15 +255,15 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
    if (s+b < 0){
       fLogger << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. (Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle be fine as long as on average you end up with something positive. For this you have to make sure that the minimul number of (unweighted) events demanded for a tree node (currently you use: nEventsMin="<<fMinSize<<", you can set this via the BDT option string when booking the classifier) is large enough to allow for reasonable averaging!!!"<<Endl
               << " If this does not help.. maybe you want to try the option: NoNegWeightsInTraining  which ignores events with negative weight in the training. " << Endl;
-      double NBKG=0.;
+      double nBkg=0.;
       for (UInt_t i=0; i<eventSample.size(); i++){
          if (! eventSample[i]->IsSignal()){
-            NBKG += eventSample[i]->GetWeight();
+            nBkg += eventSample[i]->GetWeight();
             cout << "Event "<< i<< " has (original) weight: " <<  eventSample[i]->GetWeight()/eventSample[i]->GetBoostWeight() 
                  << " boostWeight: " << eventSample[i]->GetBoostWeight() << endl;
          }
       }
-      cout << " that gives in total: " << NBKG<<endl;
+      cout << " that gives in total: " << nBkg<<endl;
    } 
 
    node->SetNSigEvents(s);

@@ -62,11 +62,6 @@ namespace TMVA {
 
    public:
 
-      // this is the hard-coded maximum length of the source names
-      static const std::string::size_type MAXIMUM_SOURCE_NAME_LENGTH;
-
-   public:
-
       MsgLogger( const TObject* source, EMsgType minType = kINFO );
       MsgLogger( const std::string& source, EMsgType minType = kINFO );
       MsgLogger( EMsgType minType = kINFO );
@@ -77,10 +72,11 @@ namespace TMVA {
       void        SetSource ( const std::string& source ) { fStrSource = source; }
       EMsgType    GetMinType()                      const { return fMinType; }
       void        SetMinType( EMsgType minType )          { fMinType = minType; }
-      UInt_t      GetMaxSourceSize()   const              { return (UInt_t)fMaxSourceSize; }
       std::string GetSource()          const              { return fStrSource; }
       std::string GetPrintedSource()   const;
       std::string GetFormattedSource() const;
+
+      static UInt_t GetMaxSourceSize()                    { return (UInt_t)fgMaxSourceSize; }
       
       // Needed for copying
       MsgLogger& operator= ( const MsgLogger& parent );
@@ -114,7 +110,7 @@ namespace TMVA {
       const std::string               fPrefix;        // the prefix of the source name
       const std::string               fSuffix;        // suffix following source name
       EMsgType                        fActiveType;    // active type
-      const std::string::size_type    fMaxSourceSize; // maximum length of source name
+      static UInt_t                   fgMaxSourceSize; // maximum length of source name
 
       std::map<EMsgType, std::string> fTypeMap;       // matches output types with strings
       std::map<EMsgType, std::string> fColorMap;      // matches output types with terminal colors

@@ -185,7 +185,7 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
    fParam_1.nunishort = 48;
    fParam_1.nunap = 40;
    std::string stmp = "--- CFMlpANN";   
-   for (int i=0; i<(int)TMVA::MsgLogger::MAXIMUM_SOURCE_NAME_LENGTH-(int)strlen("CFMlpANN"); i++) stmp += " ";
+   for (int i=0; i<(int)TMVA::MsgLogger::GetMaxSourceSize()-(int)strlen("CFMlpANN"); i++) stmp += " ";
    printf("%s: Total number of events for training: %i\n", stmp.c_str(), fParam_1.nevl);
    printf("%s: Total number of events for testing : %i\n", stmp.c_str(), fParam_1.nevt);
    printf("%s: Total number of training cycles    : %i\n", stmp.c_str(), fParam_1.nblearn);
@@ -611,7 +611,7 @@ void TMVA::MethodCFMlpANN_Utils::Innit( char *det, Double_t *tout2, Double_t *ti
       }
    }
    std::string stmp = "--- CFMlpANN";   
-   for (int i=0; i<(int)TMVA::MsgLogger::MAXIMUM_SOURCE_NAME_LENGTH-(int)strlen("CFMlpANN"); i++) stmp += " ";
+   for (int i=0; i<(int)TMVA::MsgLogger::GetMaxSourceSize()-(int)strlen("CFMlpANN"); i++) stmp += " ";
 
    printf( "%s: Elapsed time: %s                            \n", 
            stmp.c_str(), (const char*)timer.GetElapsedTime() );

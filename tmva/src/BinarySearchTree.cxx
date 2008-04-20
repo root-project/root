@@ -136,7 +136,7 @@ void TMVA::BinarySearchTree::Insert( const Event* event )
    }
 
    // normalise the tree to speed up searches
-   if (fCanNormalize) fNormalizeTreeTable.push_back( make_pair(0.0,new Event(*event)) );
+   if (fCanNormalize) fNormalizeTreeTable.push_back( make_pair(0.0,new const Event(*event)) );
 }
 
 //_______________________________________________________________________

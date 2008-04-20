@@ -79,7 +79,7 @@ namespace TMVA {
       inline Double_t ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx );
 
       // creates histograms normalized to one
-      TH1* projNormTH1F( TTree* theTree, TString theVarName,
+      TH1* ProjNormTH1F( TTree* theTree, TString theVarName,
                                 TString name, Int_t nbins, 
                                 Double_t xmin, Double_t xmax, TString cut );
 
@@ -134,8 +134,8 @@ namespace TMVA {
                             TString format = "%+1.3f" );
       void FormattedOutput( const TMatrixD&, const std::vector<TString>&, MsgLogger& logger );
 
-      void writeFloatArbitraryPrecision( Float_t  val, ostream& os );
-      void readFloatArbitraryPrecision ( Float_t& val, istream& is );
+      void WriteFloatArbitraryPrecision( Float_t  val, ostream& os );
+      void ReadFloatArbitraryPrecision ( Float_t& val, istream& is );
 
       // check variable range and set var to lower or upper if out of range
       template<typename T>

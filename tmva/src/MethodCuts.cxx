@@ -116,7 +116,7 @@ End_Html */
 
 ClassImp(TMVA::MethodCuts)
 
-const Double_t TMVA::MethodCuts::MaxAbsCutVal = 1.0e30;
+const Double_t TMVA::MethodCuts::fgMaxAbsCutVal = 1.0e30;
 
 //_______________________________________________________________________
 TMVA::MethodCuts::MethodCuts( const TString& jobName, const TString& methodTitle, DataSet& theData, 
@@ -713,11 +713,11 @@ void  TMVA::MethodCuts::Train( void )
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
       for (Int_t ibin=0; ibin<fNbins; ibin++) {
 
-         if ((*fFitParams)[ivar] == kForceMin && fCutMin[ivar][ibin] > -MaxAbsCutVal) {
-            fCutMin[ivar][ibin] = -MaxAbsCutVal;
+         if ((*fFitParams)[ivar] == kForceMin && fCutMin[ivar][ibin] > -fgMaxAbsCutVal) {
+            fCutMin[ivar][ibin] = -fgMaxAbsCutVal;
          }
-         if ((*fFitParams)[ivar] == kForceMax && fCutMax[ivar][ibin] < MaxAbsCutVal) {
-            fCutMax[ivar][ibin] = MaxAbsCutVal;
+         if ((*fFitParams)[ivar] == kForceMax && fCutMax[ivar][ibin] < fgMaxAbsCutVal) {
+            fCutMax[ivar][ibin] = fgMaxAbsCutVal;
          }
       }
    }

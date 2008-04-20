@@ -136,7 +136,7 @@ namespace TMVA {
       void ProcessOptions();
 
       // maximum |cut| value
-      static const Double_t MaxAbsCutVal;
+      static const Double_t fgMaxAbsCutVal;
 
    protected:
 

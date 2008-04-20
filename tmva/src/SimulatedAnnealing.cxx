@@ -30,8 +30,6 @@
 // Implementation of Simulated Annealing fitter  
 //_______________________________________________________________________
 
-#include <cmath>
-
 #include "TRandom3.h"
 #include "TMath.h"
 
@@ -146,7 +144,7 @@ void TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<Double_t>& paramet
       do {
          uni = fRandom->Uniform(0.0,1.0);
          sign = (uni - 0.5 >= 0.0) ? (1.0) : (-1.0);
-         distribution = currentTemperature * (pow(1.0 + 1.0/currentTemperature, TMath::Abs(2.0*uni - 1.0)) -1.0)*sign;
+         distribution = currentTemperature * (TMath::Power(1.0 + 1.0/currentTemperature, TMath::Abs(2.0*uni - 1.0)) -1.0)*sign;
          parameters[rIter] = oldParameters[rIter] +  (fRanges[rIter]->GetMax()-fRanges[rIter]->GetMin())*0.1*distribution;
       }
       while (parameters[rIter] < fRanges[rIter]->GetMin() || parameters[rIter] > fRanges[rIter]->GetMax() );
@@ -163,7 +161,7 @@ std::vector<Double_t> TMVA::SimulatedAnnealing::GenerateNeighbour( std::vector<D
       do {
          uni = fRandom->Uniform(0.0,1.0);
          sign = (uni - 0.5 >= 0.0) ? (1.0) : (-1.0);
-         distribution = currentTemperature * (pow(1.0 + 1.0/currentTemperature, TMath::Abs(2.0*uni - 1.0)) -1.0)*sign;
+         distribution = currentTemperature * (TMath::Power(1.0 + 1.0/currentTemperature, TMath::Abs(2.0*uni - 1.0)) -1.0)*sign;
          newParameters[rIter] = parameters[rIter] +  (fRanges[rIter]->GetMax()-fRanges[rIter]->GetMin())*0.1*distribution;
       }
       while (newParameters[rIter] < fRanges[rIter]->GetMin() || newParameters[rIter] > fRanges[rIter]->GetMax() );
@@ -192,7 +190,7 @@ void TMVA::SimulatedAnnealing::GenerateNewTemperature( Double_t& currentTemperat
       currentTemperature = currentTemperature*fTemperatureScale;
    }
    else if (fKernelTemperature == kIncreasingAdaptive) {
-      currentTemperature = fMinTemperature + fTemperatureScale*std::log(1.0+fProgress*fAdaptiveSpeed)/LOGE;
+      currentTemperature = fMinTemperature + fTemperatureScale*TMath::Log(1.0+fProgress*fAdaptiveSpeed);
    }
    else if (fKernelTemperature == kDecreasingAdaptive) {
       currentTemperature = currentTemperature*fTemperatureScale;
@@ -221,8 +219,8 @@ void TMVA::SimulatedAnnealing::SetDefaultScale()
    else if (fKernelTemperature == kGeo)  fTemperatureScale = 0.99997;
    else if (fKernelTemperature == kDecreasingAdaptive) {
       fTemperatureScale = 1.0;
-      while (std::abs(pow(fTemperatureScale,fMaxCalls) * fInitialTemperature - fMinTemperature) >
-             std::abs(pow(fTemperatureScale-0.000001,fMaxCalls) * fInitialTemperature - fMinTemperature)) {
+      while (TMath::Abs(TMath::Power(fTemperatureScale,fMaxCalls) * fInitialTemperature - fMinTemperature) >
+             TMath::Abs(TMath::Power(fTemperatureScale-0.000001,fMaxCalls) * fInitialTemperature - fMinTemperature)) {
          fTemperatureScale -= 0.000001;
       }
    }
@@ -296,8 +294,6 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    // minimisation algorithm
    std::vector<Double_t> bestParameters(fRanges.size());
    std::vector<Double_t> oldParameters (fRanges.size());
-
-   LOGE = std::log(M_E);
 
    Double_t currentTemperature, bestFit, currentFit;
    Int_t optimizeCalls, generalCalls, equals;

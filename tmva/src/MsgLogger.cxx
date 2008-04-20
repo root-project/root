@@ -32,16 +32,18 @@
 
 #include <stdlib.h>
 
+// this is the hardcoded prefix
+#define PREFIX "--- "
+// this is the hardcoded suffix
+#define SUFFIX ": "
+
 // ROOT include(s):
 
 ClassImp(TMVA::MsgLogger)
 
 // this is the hard-coded maximum length of the source names
-const std::string::size_type TMVA::MsgLogger::MAXIMUM_SOURCE_NAME_LENGTH = 15;
-// this is the hardcoded prefix
-static const std::string PREFIX = "--- ";
-// this is the hardcoded suffix
-static const std::string SUFFIX = ": ";
+UInt_t TMVA::MsgLogger::fgMaxSourceSize = 15;
+
 
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
@@ -50,7 +52,6 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
      fPrefix( PREFIX ), 
      fSuffix( SUFFIX ), 
      fActiveType( kINFO ), 
-     fMaxSourceSize( MAXIMUM_SOURCE_NAME_LENGTH ),
      fMinType( minType )
 {
    // constructor
@@ -64,7 +65,6 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
      fPrefix( PREFIX ), 
      fSuffix( SUFFIX ), 
      fActiveType( kINFO ), 
-     fMaxSourceSize( MAXIMUM_SOURCE_NAME_LENGTH ),
      fMinType( minType )
 {
    // constructor
@@ -78,7 +78,6 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
      fPrefix( PREFIX ), 
      fSuffix( SUFFIX ), 
      fActiveType( kINFO ), 
-     fMaxSourceSize( MAXIMUM_SOURCE_NAME_LENGTH ),
      fMinType( minType )
 {
    // constructor
@@ -92,8 +91,7 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent ) :
    std::ostringstream(),
    TObject(),
    fPrefix( PREFIX ), 
-   fSuffix( SUFFIX ),
-   fMaxSourceSize( MAXIMUM_SOURCE_NAME_LENGTH )
+   fSuffix( SUFFIX )
 {
    // copy constructor
    InitMaps();
@@ -123,13 +121,13 @@ TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent )
 //_______________________________________________________________________
 std::string TMVA::MsgLogger::GetFormattedSource() const
 {
-   // make sure the source name is no longer than fMaxSourceSize:
+   // make sure the source name is no longer than fgMaxSourceSize:
    std::string source_name;
    if (fObjSource) source_name = fObjSource->GetName();
    else            source_name = fStrSource;
 
-   if (source_name.size() > fMaxSourceSize) {
-      source_name = source_name.substr( 0, fMaxSourceSize - 3 );
+   if (source_name.size() > fgMaxSourceSize) {
+      source_name = source_name.substr( 0, fgMaxSourceSize - 3 );
       source_name += "...";
    }
    
@@ -141,8 +139,8 @@ std::string TMVA::MsgLogger::GetPrintedSource() const
 { 
    // the full logger prefix
    std::string source_name = GetFormattedSource();
-   if (source_name.size() < fMaxSourceSize) 
-      for (std::string::size_type i=source_name.size(); i<fMaxSourceSize; i++) source_name.push_back( ' ' );
+   if (source_name.size() < fgMaxSourceSize) 
+      for (std::string::size_type i=source_name.size(); i<fgMaxSourceSize; i++) source_name.push_back( ' ' );
 
    return fPrefix + source_name + fSuffix; 
 }
@@ -152,7 +150,7 @@ void TMVA::MsgLogger::Send()
 {
    // activates the logger writer
 
-   // make sure the source name is no longer than fMaxSourceSize:
+   // make sure the source name is no longer than fgMaxSourceSize:
    std::string source_name = GetFormattedSource();
 
    std::string message = this->str();
@@ -166,7 +164,7 @@ void TMVA::MsgLogger::Send()
       std::ostringstream message_to_send;
       // must call the modifiers like this, otherwise g++ get's confused with the operators...
       message_to_send.setf( std::ios::adjustfield, std::ios::left );
-      message_to_send.width( fMaxSourceSize );
+      message_to_send.width( fgMaxSourceSize );
       message_to_send << source_name << fSuffix << line;
       this->WriteMsg( fActiveType, message_to_send.str() );
 

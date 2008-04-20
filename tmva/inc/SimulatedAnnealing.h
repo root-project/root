@@ -117,7 +117,6 @@ namespace TMVA {
 
       mutable MsgLogger             fLogger;                 // message logger
 
-      Double_t LOGE;
       Double_t fProgress;
 
       ClassDef(SimulatedAnnealing,0)  // Base class for Simulated Annealing fitting

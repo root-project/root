@@ -60,7 +60,7 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itA)-(*itB);
-         distance += pow( val, 2 );
+         distance += TMath::Power( val, 2 );
          itA++;
       }
    }else{
@@ -75,12 +75,12 @@ Double_t TMVA::MetricEuler::Distance( std::vector<Double_t>& pointA, std::vector
             break;
          }
          val = (*itPar)*( (*itA)-(*itB) );
-         distance += pow( val, 2 );
+         distance += TMath::Power( val, 2 );
          itA++;
          itPar++;
       }
       if( itA != pointA.end() ){
-         distance *= pow( (*itA),2 );
+         distance *= TMath::Power( (*itA),2 );
       }
    }
    return sqrt( distance );
