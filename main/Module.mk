@@ -75,10 +75,10 @@ H2ROOTS2     := $(HBOOKS2)
 # Symbols in cfopei.obj is already provided in packmd.lib,
 #H2ROOTS3    := $(wildcard $(MAINDIRW)/*.c)
 H2ROOTS3     := $(filter-out $(MAINDIRW)/cfopei.c, $(wildcard $(MAINDIRW)/*.c))
-H2ROOTS4     := $(MAINDIRW)/tzvers.f
+#H2ROOTS4     := $(MAINDIRW)/tzvers.f
 H2ROOTO      := $(H2ROOTS1:.cxx=.o) $(H2ROOTS2:.f=.o)
 ifeq ($(PLATFORM),win32)
-H2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
+H2ROOTO      += $(H2ROOTS3:.c=.o)
 endif
 H2ROOTDEP    := $(H2ROOTS1:.cxx=.d)
 H2ROOT       := bin/h2root$(EXEEXT)
@@ -87,7 +87,7 @@ H2ROOT       := bin/h2root$(EXEEXT)
 G2ROOTS      := $(MODDIRS)/g2root.f
 G2ROOTO      := $(G2ROOTS:.f=.o)
 ifeq ($(PLATFORM),win32)
-G2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
+G2ROOTO      += $(H2ROOTS3:.c=.o)
 endif
 G2ROOT       := bin/g2root$(EXEEXT)
 ifeq ($(PLATFORM),win32)
