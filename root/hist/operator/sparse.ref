@@ -11,3 +11,4 @@ Dividing two THnSparse: SUCCESS
 Error calculation: SUCCESS
 Dividing two THnSparse (binomial): SUCCESS
 Binomial errors of division result: SUCCESS
+Merging histograms: SUCCESS

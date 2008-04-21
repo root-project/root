@@ -198,6 +198,38 @@ void CheckBinomial(TH3* h, THnSparse* sparse)
 }
 
 
+void CheckMerge(TH3* h, THnSparse* sparse)
+{
+   // check merging of three THnSparse
+   TList h3_clones;
+   h3_clones.SetOwner();
+   for (int i = 0; i < 4; ++i) {
+      h3_clones.AddLast(h->Clone());
+      ((TH3*)h3_clones.Last())->Scale(i);
+   }
+
+   TList hs_clones;
+   hs_clones.SetOwner();
+   for (int i = 0; i < 4; ++i) {
+      hs_clones.AddLast(sparse->Clone());
+      ((THnSparse*)hs_clones.Last())->Scale(i);
+   }
+
+   TH3* h3Merge = (TH3*) h->Clone();
+   THnSparse* hsMerge = (THnSparse*) sparse->Clone();
+
+   h3Merge->Merge(&h3_clones);
+   hsMerge->Merge(&hs_clones);
+
+   TH3* proj = hsMerge->Projection(0, 1, 2);
+   Test(h3Merge, proj, "Merging histograms");
+
+   delete proj;
+   delete h3Merge;
+   delete hsMerge;
+}
+
+
 void runsparse() 
 {
    Int_t nbins[] = {10, 80, 14};
@@ -231,6 +263,7 @@ void runsparse()
    CheckDivide(h, sparse);
    CheckErrors(h, sparse);
    CheckBinomial(h, sparse);
+   CheckMerge(h, sparse);
 
    delete h;
    delete sparse;
