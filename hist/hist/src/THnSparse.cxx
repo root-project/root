@@ -416,6 +416,44 @@ THnSparse* THnSparse::CloneEmpty(const char* name, const char* title,
 }
 
 //______________________________________________________________________________
+TH1* THnSparse::CreateHist(const char* name, const char* title,
+                           const TObjArray* axes) const {
+   // Create an empty histogram with name and title with a given
+   // set of axes. Create a TH1D/TH2D/TH3D, depending on the number
+   // of elements in axes.
+
+   const int ndim = axes->GetSize();
+
+   TH1* hist = 0;
+   // create hist with dummy axes, we fix them later.
+   if (ndim == 1)
+      hist = new TH1D(name, title, 1, 0., 1.);
+   else if (ndim == 2)
+      hist = new TH2D(name, title, 1, 0., 1., 1, 0., 1.);
+   else if (ndim == 3)
+      hist = new TH3D(name, title, 1, 0., 1., 1, 0., 1., 1, 0., 1.);
+   else {
+      Error("CreateHist", "Cannot create histogram %s with %d dimensions!", name, ndim);
+      return 0;
+   }
+
+   TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
+   for (Int_t d = 0; d < ndim; ++d) {
+      TAxis* reqaxis = (TAxis*)(*axes)[d];
+      if (reqaxis->GetXbins()->GetSize())
+         // non-uniform bins:
+         hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXbins()->GetArray());
+      else
+         // uniform bins:
+         hax[d]->Set(reqaxis->GetNbins(), reqaxis->GetXmin(), reqaxis->GetXmax());
+   }
+
+   hist->Rebuild();
+
+   return hist;
+}
+
+//______________________________________________________________________________
 Long_t THnSparse::GetBin(const Double_t* x, Bool_t allocate /* = kTRUE */)
 {
    // Get the bin index for the n dimensional tuple x,
@@ -691,61 +729,7 @@ TH1D* THnSparse::Projection(Int_t xDim, Option_t* option /*= ""*/) const
    // keeping only axis "xDim".
    // If "option" contains "E" errors will be calculated.
 
-   TString name(GetName());
-   name += "_";
-   name += GetAxis(xDim)->GetName();
-   TString title(GetTitle());
-   Ssiz_t posInsert = title.First(';');
-   if (posInsert == kNPOS) {
-      title += " projection ";
-      title += GetAxis(xDim)->GetTitle();
-   } else {
-      title.Insert(posInsert, GetAxis(xDim)->GetTitle());
-      title.Insert(posInsert, " projection ");
-   }
-
-   Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
-
-   TH1D* h = new TH1D(name, title, GetAxis(xDim)->GetNbins(),
-                      GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax());
-
-   TAxis *axis = GetAxis(xDim);
-   Bool_t hadRange = axis->TestBit(TAxis::kAxisRange);
-   axis->SetBit(TAxis::kAxisRange, kFALSE);
-
-   Int_t* coord = new Int_t[fNdimensions];
-   memset(coord, 0, sizeof(Int_t) * fNdimensions);
-   Double_t err = 0.;
-   Double_t preverr = 0.;
-   Double_t v = 0.;
-
-   for (Long64_t i = 0; i < GetNbins(); ++i) {
-      v = GetBinContent(i, coord);
-
-      if (!IsInRange(coord)) continue;
-
-      if (wantErrors) {
-         if (haveErrors) {
-            err = GetBinError(i);
-            err *= err;
-         } else err = v;
-         preverr = h->GetBinError(coord[xDim]);
-         h->SetBinError(coord[xDim], TMath::Sqrt(preverr * preverr + err));
-      }
-
-      // only _after_ error calculation, or sqrt(v) is taken into account!
-      h->AddBinContent(coord[xDim], v);
-   }
-
-   delete [] coord;
-
-   h->SetEntries(fEntries);
-
-   // reset kAxisRange bit:
-   axis->SetBit(TAxis::kAxisRange, hadRange);
-
-   return h;
+   return (TH1D*) ProjectionAny(1, &xDim, false, option);
 }
 
 //______________________________________________________________________________
@@ -755,77 +739,9 @@ TH2D* THnSparse::Projection(Int_t xDim, Int_t yDim, Option_t* option /*= ""*/) c
    // keeping only axes "xDim" and "yDim".
    // If "option" contains "E" errors will be calculated.
 
-   TString name(GetName());
-   name += "_";
-   name += GetAxis(xDim)->GetName();
-   name += GetAxis(yDim)->GetName();
-
-   TString title(GetTitle());
-   Ssiz_t posInsert = title.First(';');
-   if (posInsert == kNPOS) {
-      title += " projection ";
-      title += GetAxis(xDim)->GetTitle();
-      title += GetAxis(yDim)->GetTitle();
-   } else {
-      title.Insert(posInsert, GetAxis(yDim)->GetTitle());
-      title.Insert(posInsert, ", ");
-      title.Insert(posInsert, GetAxis(xDim)->GetTitle());
-      title.Insert(posInsert, " projection ");
-   }
-
-   Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
-
    // y, x looks wrong, but it's what TH3::Project3D("xy") does
-   TH2D* h = new TH2D(name, title,
-                      GetAxis(yDim)->GetNbins(),
-                      GetAxis(yDim)->GetXmin(), GetAxis(yDim)->GetXmax(),
-                      GetAxis(xDim)->GetNbins(),
-                      GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax());
-
-   TAxis *axisX = GetAxis(xDim);
-   Bool_t hadRangeX = axisX->TestBit(TAxis::kAxisRange);
-   axisX->SetBit(TAxis::kAxisRange, kFALSE);
-   TAxis *axisY = GetAxis(yDim);
-   Bool_t hadRangeY = axisY->TestBit(TAxis::kAxisRange);
-   axisY->SetBit(TAxis::kAxisRange, kFALSE);
-
-   Int_t* coord = new Int_t[fNdimensions];
-   Double_t err = 0.;
-   Double_t preverr = 0.;
-   Double_t v = 0.;
-   Long_t bin = 0;
-
-   memset(coord, 0, sizeof(Int_t) * fNdimensions);
-   for (Long64_t i = 0; i < GetNbins(); ++i) {
-      v = GetBinContent(i, coord);
-
-      if (!IsInRange(coord)) continue;
-
-      bin = h->GetBin(coord[yDim],coord[xDim] );
-
-      if (wantErrors) {
-         if (haveErrors) {
-            err = GetBinError(i);
-            err *= err;
-         } else err = v;
-         preverr = h->GetBinError(coord[yDim], coord[xDim]);
-         h->SetBinError(coord[yDim], coord[xDim],
-                        TMath::Sqrt(preverr * preverr + err));
-      }
-
-      // only _after_ error calculation, or sqrt(v) is taken into account!
-      h->AddBinContent(bin, v);
-   }
-   delete [] coord;
-
-   h->SetEntries(fEntries);
-
-   // reset kAxisRange bit:
-   axisX->SetBit(TAxis::kAxisRange, hadRangeX);
-   axisY->SetBit(TAxis::kAxisRange, hadRangeY);
-
-   return h;
+   const Int_t dim[2] = {yDim, xDim};
+   return (TH2D*) ProjectionAny(2, dim, false, option);
 }
 
 //______________________________________________________________________________
@@ -836,86 +752,8 @@ TH3D* THnSparse::Projection(Int_t xDim, Int_t yDim, Int_t zDim,
    // keeping only axes "xDim", "yDim", and "zDim".
    // If "option" contains "E" errors will be calculated.
 
-   TString name(GetName());
-   name += "_";
-   name += GetAxis(xDim)->GetName();
-   name += GetAxis(yDim)->GetName();
-   name += GetAxis(zDim)->GetName();
-
-   TString title(GetTitle());
-   Ssiz_t posInsert = title.First(';');
-   if (posInsert == kNPOS) {
-      title += " projection ";
-      title += GetAxis(xDim)->GetTitle();
-      title += GetAxis(yDim)->GetTitle();
-      title += GetAxis(zDim)->GetTitle();
-   } else {
-      title.Insert(posInsert, GetAxis(zDim)->GetTitle());
-      title.Insert(posInsert, ", ");
-      title.Insert(posInsert, GetAxis(yDim)->GetTitle());
-      title.Insert(posInsert, ", ");
-      title.Insert(posInsert, GetAxis(xDim)->GetTitle());
-      title.Insert(posInsert, " projection ");
-   }
-
-   Bool_t haveErrors = GetCalculateErrors();
-   Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
-
-   TH3D* h = new TH3D(name, title, GetAxis(xDim)->GetNbins(),
-                      GetAxis(xDim)->GetXmin(), GetAxis(xDim)->GetXmax(),
-                      GetAxis(yDim)->GetNbins(),
-                      GetAxis(yDim)->GetXmin(), GetAxis(yDim)->GetXmax(),
-                      GetAxis(zDim)->GetNbins(),
-                      GetAxis(zDim)->GetXmin(), GetAxis(zDim)->GetXmax());
-
-
-   TAxis *axisX = GetAxis(xDim);
-   Bool_t hadRangeX = axisX->TestBit(TAxis::kAxisRange);
-   axisX->SetBit(TAxis::kAxisRange, kFALSE);
-   TAxis *axisY = GetAxis(yDim);
-   Bool_t hadRangeY = axisY->TestBit(TAxis::kAxisRange);
-   axisY->SetBit(TAxis::kAxisRange, kFALSE);
-   TAxis *axisZ = GetAxis(zDim);
-   Bool_t hadRangeZ = axisZ->TestBit(TAxis::kAxisRange);
-   axisZ->SetBit(TAxis::kAxisRange, kFALSE);
-
-   Int_t* coord = new Int_t[fNdimensions];
-   memset(coord, 0, sizeof(Int_t) * fNdimensions);
-   Double_t err = 0.;
-   Double_t preverr = 0.;
-   Double_t v = 0.;
-   Long_t bin = 0;
-
-   for (Long64_t i = 0; i < GetNbins(); ++i) {
-      v = GetBinContent(i, coord);
-
-      if (!IsInRange(coord)) continue;
-
-      bin = h->GetBin(coord[xDim], coord[yDim], coord[zDim]);
-
-      if (wantErrors) {
-         if (haveErrors) {
-            err = GetBinError(i);
-            err *= err;
-         } else err = v;
-         preverr = h->GetBinError(coord[xDim], coord[yDim], coord[zDim]);
-         h->SetBinError(coord[xDim], coord[yDim], coord[zDim],
-                        TMath::Sqrt(preverr * preverr + err));
-      }
-
-      // only _after_ error calculation, or sqrt(v) is taken into account!
-      h->AddBinContent(bin, v);
-   }
-   delete [] coord;
-
-   h->SetEntries(fEntries);
-
-   // reset kAxisRange bit:
-   axisX->SetBit(TAxis::kAxisRange, hadRangeX);
-   axisY->SetBit(TAxis::kAxisRange, hadRangeY);
-   axisZ->SetBit(TAxis::kAxisRange, hadRangeZ);
-
-   return h;
+   const Int_t dim[3] = {xDim, yDim, zDim};
+   return (TH3D*) ProjectionAny(3, dim, false, option);
 }
 
 //______________________________________________________________________________
@@ -924,6 +762,18 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
 {
    // Project all bins into a ndim-dimensional histogram,
    // keeping only axes "dim".
+   // If "option" contains "E" errors will be calculated.
+
+   return (THnSparse*) ProjectionAny(ndim, dim, true, option);
+}
+
+
+//______________________________________________________________________________
+TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
+                                  Bool_t wantSparse, Option_t* option /*= ""*/) const
+{
+   // Project all bins into a 3-dimensional histogram,
+   // keeping only axes "xDim", "yDim", and "zDim".
    // If "option" contains "E" errors will be calculated.
 
    TString name(GetName());
@@ -939,8 +789,8 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
          title += GetAxis(dim[d])->GetTitle();
    } else {
       for (Int_t d = ndim - 1; d >= 0; --d) {
-         title.Insert(posInsert, GetAxis(dim[d])->GetTitle());
-         if (dim > 0)
+         title.Insert(posInsert, GetAxis(d)->GetTitle());
+         if (d)
             title.Insert(posInsert, ", ");
       }
       title.Insert(posInsert, " projection ");
@@ -951,7 +801,14 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
       newaxes.AddAt(GetAxis(dim[d]),d);
    }
 
-   THnSparse* h = CloneEmpty(name.Data(), title.Data(), &newaxes, fChunkSize);
+   THnSparse* sparse = 0;
+   TH1* hist = 0;
+   TObject* ret = 0;
+
+   if (wantSparse)
+      ret = sparse = CloneEmpty(name, title, &newaxes, fChunkSize);
+   else
+      ret = hist = CreateHist(name, title, &newaxes); 
 
    Bool_t* hadRange  = new Bool_t[ndim];
    for (Int_t d = 0; d < ndim; ++d){
@@ -964,6 +821,7 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    Bool_t wantErrors = (option && (strchr(option, 'E') || strchr(option, 'e'))) || haveErrors;
 
    Int_t* bins  = new Int_t[ndim];
+   Int_t  linbin = 0;
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
 
@@ -974,29 +832,45 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
 
-      for (Int_t d = 0; d < ndim; ++d) {
-         bins[d] = coord[dim[d]];
-      }
-
       if (!IsInRange(coord)) continue;
+
+      for (Int_t d = 0; d < ndim; ++d)
+         bins[d] = coord[dim[d]];
+
+      if (!wantSparse) {
+         if (ndim == 1) linbin = bins[0];
+         else if (ndim == 2) linbin = hist->GetBin(bins[0], bins[1]);
+         else if (ndim == 3) linbin = hist->GetBin(bins[0], bins[1], bins[2]);
+      }
 
       if (wantErrors) {
          if (haveErrors) {
             err = GetBinError(i);
             err *= err;
          } else err = v;
-         preverr = h->GetBinError(bins);
-         h->SetBinError(bins, TMath::Sqrt(preverr * preverr + err));
+         if (wantSparse) {
+            preverr = sparse->GetBinError(bins);
+            sparse->SetBinError(bins, TMath::Sqrt(preverr * preverr + err));
+         } else {
+            preverr = hist->GetBinError(linbin);
+            hist->SetBinError(linbin, TMath::Sqrt(preverr * preverr + err));
+         }
       }
 
       // only _after_ error calculation, or sqrt(v) is taken into account!
-      h->AddBinContent(bins, v);
+      if (wantSparse)
+         sparse->AddBinContent(bins, v);
+      else
+         hist->AddBinContent(linbin, v);
    }
 
    delete [] bins;
    delete [] coord;
 
-   h->SetEntries(fEntries);
+   if (wantSparse)
+      sparse->SetEntries(fEntries);
+   else
+      hist->SetEntries(fEntries);
 
    // reset kAxisRange bit:
    for (Int_t d = 0; d < ndim; ++d)
@@ -1004,7 +878,7 @@ THnSparse* THnSparse::Projection(Int_t ndim, const Int_t* dim,
 
    delete [] hadRange;
 
-   return h;
+   return ret;
 }
 
 //______________________________________________________________________________
