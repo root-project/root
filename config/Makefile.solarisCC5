@@ -57,9 +57,9 @@ CILIBS        = -lm -ltermcap -ldl
 # Fortran:
 #F77           = /opt/SUNWspro/bin/f77
 F77           = f77
-F77LIBS       = -lM77 -lF77 -lsunmath
+F77LIBS       = -lf77compat -lfui -lfsu -lmtsk -lsunmath
 # Use this on Solaris 10 with F90 compiler
-#F77LIBS       = -lf77compat -lfui -lfsu -lsunperf -lsunmath
+#F77LIBS       = -lf77compat -lfui -lfsu -lmtsk -lsunperf -lsunmath
 
 # Override default in Makefile.config
 INSTALL      := cp -pR
