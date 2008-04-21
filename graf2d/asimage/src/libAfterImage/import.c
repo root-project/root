@@ -19,6 +19,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 /*#undef NO_DEBUG_OUTPUT*/
+#ifndef NO_DEBUG_OUTPUT
+#define DEBUG_TIFF
+#endif
+
 #undef LOCAL_DEBUG
 #undef DO_CLOCKING
 #undef DEBUG_TRANSP_GIF
@@ -2306,6 +2310,207 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 #endif			/* GIF GIF GIF GIF GIF GIF GIF GIF GIF GIF GIF GIF GIF GIF GIF GIF */
 
 #ifdef HAVE_TIFF/* TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF */
+
+/* demosaicing */
+#define ASIM_DEMOSAIC_DEFAULT_STRIP_SIZE 	5
+
+typedef struct ASIMStrip
+{
+#define ASIM_SCL_Interpolated 	(0x01<<SCL_CUSTOM_OFFSET);
+
+	int 		 size, width;
+	ASScanline 	**lines;
+	int 		 start_line;
+
+#define ASIM_IsStripLineLoaded(sptr,l)   		((sptr)->lines[l]->flags & SCL_DO_COLOR)
+#define ASIM_IsStripLineInterpolated(sptr,l)   	((sptr)->lines[l]->flags & ASIM_SCL_Interpolated)
+}ASIMStrip;
+
+typedef void (*ASIMStripLoader)(ASScanline *scl, CARD8 *data, int data_size);
+
+void
+destroy_asim_strip (ASIMStrip **pstrip)
+{
+	if (pstrip)
+	{
+		ASIMStrip *strip = *pstrip;
+		if (strip)
+		{
+			int i = strip->size;
+			while (--i >= 0)
+				free_scanline (strip->lines[i], False);
+			free (strip->lines);
+			free (strip);
+			*pstrip = NULL;
+		}
+	}
+}
+
+ASIMStrip *
+create_asim_strip(unsigned int size, unsigned int width, int shift, int bgr)
+{
+	ASIMStrip *strip;
+	int i;
+	
+	if (width == 0 || size == 0)
+		return NULL;
+	
+	strip = safecalloc( 1, sizeof(ASIMStrip));
+	if ((strip->lines = safemalloc (size*sizeof(ASScanline*))) == NULL)
+	{
+		free (strip);
+		return NULL;
+	}
+	
+	strip->size = size;
+	
+	for (i = 0 ; i < (int)size; ++i)
+		if ((strip->lines[i] = prepare_scanline (width, shift, NULL, bgr)) == NULL)
+		{
+			strip->size = i;
+			destroy_asim_strip (&strip);
+			return NULL;
+		}
+
+	strip->width = width;
+	strip->start_line = 0;
+	
+	return strip;
+}
+
+void
+advance_asim_strip (ASIMStrip *strip)
+{
+	ASScanline *tmp = strip->lines[0];
+	int i;
+	
+	/* move all scanlines up, shuffling first scanline to the back */
+	for (i = 0 ; i < strip->size-1; ++i )
+		strip->lines[i] = strip->lines[i+1];
+	strip->lines[strip->size-1] = tmp;
+	
+	/* clear the state of the scanline : */
+	tmp->flags = 0;	
+
+	strip->start_line++;
+} 
+
+/* returns number of lines processed from the data */
+int
+load_asim_strip (ASIMStrip *strip, CARD8 *data, int data_size, int data_start_line, int data_row_size, 
+				 ASIMStripLoader *line_loaders, int line_loaders_num)
+{
+	int line = 0;
+	int loaded = 0;
+	
+	if (strip == NULL || data == NULL || data_size <= 0 || data_row_size <= 0 || line_loaders == NULL)
+		return 0;
+	line = data_start_line - strip->start_line;
+	if (line < 0)
+	{
+		data += data_row_size*(-line);
+		data_size -= data_row_size*(-line);
+		line = 0;
+	}
+		
+	while (line < strip->size && data_size > 0)
+	{
+		int loader = (strip->start_line+line)%line_loaders_num;
+		if (!ASIM_IsStripLineLoaded(strip,line) && line_loaders[loader])
+			line_loaders[loader] (strip->lines[line], data, data_size);
+
+		++line;
+		++loaded;
+		data_size -= data_row_size;
+		data += data_row_size;
+	}
+	return loaded;
+}
+
+static int
+decode_12_be (CARD32 *c1, CARD32 *c2, CARD8 *data, int width, int data_size)
+{
+	int x;
+	int max_x = (data_size*2)/3;
+	
+	if (max_x > width)
+		max_x = width;
+	
+	if (max_x > 0)
+	{
+#if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)
+		fprintf (stderr, "decode_12_be CFA data : ");		
+		for (x = 0 ; x < (max_x*3)/2; x += 3)
+			fprintf (stderr, " |%2.2X %2.2X %2.2X", data[x], data[x+1], data[x+2]);				
+		fprintf (stderr, "\n");		
+#endif
+		for (x = 0 ; x+1 < max_x; x += 2)
+		{
+			CARD32 tail = ((CARD32)data[1])&0x00F0;
+			c1[x] = (((CARD32)data[0]) << 8)|tail|(tail>>4);
+			tail = data[2]&0x0F;
+			c2[x] = (((CARD32)data[1]&0x0f) << 12)| ((CARD32)data[2]<<4) |tail;
+			data += 3;
+		}
+
+		if (x < max_x);
+		{
+			CARD32 tail = ((CARD32)data[1])&0x00F0;
+			c1[x] = (((CARD32)data[0]) << 8)|tail|(tail>>4);
+		}
+
+		for (x = 1 ; x < max_x; x += 2)
+		{
+			c1[x] = c1[x-1];
+			c2[x] = c2[x-1];
+		}
+#if 0
+#if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)	
+fprintf (stderr, "decode_12_be  C1 data : ");		
+	for (x = 0 ; x < max_x; ++x)
+		fprintf (stderr, " %4.4X", c1[x]);						
+fprintf (stderr, "\ndecode_12_be  C2 data : ");		
+	for (x = 0 ; x < max_x; ++x)
+		fprintf (stderr, " %4.4X", c2[x]);						
+fprintf (stderr, "\n");				
+#endif
+#endif
+	}
+	return max_x;
+} 
+
+void decode_BG_12_be (ASScanline *scl, CARD8 *data, int data_size)
+{
+	if (decode_12_be (scl->blue, scl->green, data, scl->width, data_size))
+		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_BLUE);
+}
+
+void decode_GR_12_be (ASScanline *scl, CARD8 *data, int data_size)
+{
+	if (decode_12_be (scl->green, scl->red, data, scl->width, data_size))	
+		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_RED);
+}
+
+void decode_RG_12_be (ASScanline *scl, CARD8 *data, int data_size)
+{
+	if (decode_12_be (scl->red, scl->green, data, scl->width, data_size))
+		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_RED);
+}
+
+void decode_GB_12_be (ASScanline *scl, CARD8 *data, int data_size)
+{
+	if (decode_12_be (scl->green, scl->blue, data, scl->width, data_size))
+		set_flags (scl->flags, SCL_DO_GREEN|SCL_DO_BLUE);
+}
+
+void
+interpolate_asim_strip_custom_bggr (ASIMStrip *strip)
+{
+
+}
+
+/* end of demosaicing */
+
 ASImage *
 tiff2ASImage( const char * path, ASImageImportParams *params )
 {
@@ -2313,11 +2518,13 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 
 	static ASImage 	 *im = NULL ;
 	CARD32 *data;
+	int data_size;
 	CARD32 width = 1, height = 1;
 	CARD16 depth = 4 ;
 	CARD16 bits = 0 ;
 	CARD32 rows_per_strip =0 ;
 	CARD32 tile_width = 0, tile_length = 0 ;
+	CARD32 planar_config = 0 ;
 	CARD16 photo = 0;
 	START_TIME(started);
 
@@ -2327,6 +2534,9 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 		return NULL;
 	}
 
+#ifdef DEBUG_TIFF
+	{;}
+#endif
 	if( params->subimage > 0 )
 		if( !TIFFSetDirectory(tif, params->subimage))
 		{
@@ -2345,6 +2555,12 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 		rows_per_strip = height ;	
 	if( !TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photo) )
 		photo = 0 ;
+		
+#ifndef PHOTOMETRIC_CFA
+#define PHOTOMETRIC_CFA 32803		
+#endif
+		
+	TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &planar_config);
 	
 	if( TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width) ||
 		TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_length) )
@@ -2354,17 +2570,20 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 		return NULL;   
 	}		
 
+
 	if( rows_per_strip == 0 || rows_per_strip > height ) 
 		rows_per_strip = height ;
 	if( depth <= 0 ) 
 		depth = 4 ;
 	if( depth <= 2 && get_flags( photo, PHOTOMETRIC_RGB) )
 		depth += 2 ;
-	LOCAL_DEBUG_OUT( "size = %ldx%ld, depth = %d, bits = %d, rps = %ld, photo = 0x%X", 
-					 width, height, depth, bits, rows_per_strip, photo );
+	LOCAL_DEBUG_OUT ("size = %ldx%ld, depth = %d, bits = %d, rps = %ld, photo = %d, tile_size = %dx%d, config = %d", 
+					 width, height, depth, bits, rows_per_strip, photo, tile_width, tile_length, planar_config);
 	if( width < MAX_IMPORT_IMAGE_SIZE && height < MAX_IMPORT_IMAGE_SIZE )
 	{
-		if ((data = (CARD32*) _TIFFmalloc(width*rows_per_strip*sizeof(CARD32))) != NULL)
+		data_size = width*rows_per_strip*sizeof(CARD32);
+		data = (CARD32*) _TIFFmalloc(data_size);
+		if (data != NULL)
 		{
 			CARD8 		 *r = NULL, *g = NULL, *b = NULL, *a = NULL ;
 			ASFlagType store_flags = ASStorage_RLEDiffCompress	;
@@ -2384,10 +2603,114 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 				g = safemalloc( width );	   
 				b = safemalloc( width );	   
 			}	 
-			
-			while( first_row < height ) 
-			{	
-				if (TIFFReadRGBAStrip(tif, first_row, (void*)data))
+			if (photo == PHOTOMETRIC_CFA)
+			{/* need alternative - more complicated method */
+				Bool success = False;
+
+				ASIMStrip *strip = create_asim_strip(10, im->width, 8, True);
+				ASImageOutput *imout = start_image_output( NULL, im, ASA_ASImage, 8, ASIMAGE_QUALITY_DEFAULT);
+
+				LOCAL_DEBUG_OUT( "custom CFA TIFF reading...");
+
+				if (strip && imout)
+				{
+					int cfa_type = 0;
+					ASIMStripLoader line_loaders[2][2] = 
+						{	{decode_RG_12_be, decode_GB_12_be},
+	 						{decode_BG_12_be, decode_GR_12_be}
+						};
+					int line_loaders_num[2] = {2, 2};
+
+					int bytes_per_row = (bits * width + 7)/8;
+					int loaded_data_size = 0;
+
+					if ( 1/* striped image */)
+					{
+						int strip_no;
+						uint32* bc;
+						TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc);
+						int all_strip_size = 0;
+						for (strip_no = 0; strip_no < TIFFNumberOfStrips(tif); ++strip_no)
+							all_strip_size += bc[strip_no];
+						/* create one large buffer for the image data : */
+						if (data_size < all_strip_size)
+						{
+							data_size = all_strip_size;
+							_TIFFfree(data);
+							data = _TIFFmalloc(data_size);
+						}
+
+						if (planar_config == PLANARCONFIG_CONTIG) 
+						{
+							for (strip_no = 0; strip_no < TIFFNumberOfStrips(tif); strip_no++)
+							{
+								int bytes_in;
+								if (bits == 12) /* can't use libTIFF's function - it can't handle 12bit data ! */
+									bytes_in = TIFFReadRawStrip(tif, strip_no, data+loaded_data_size, data_size-loaded_data_size);
+								else
+									bytes_in = TIFFReadEncodedStrip(tif, strip_no, data+loaded_data_size, data_size-loaded_data_size);
+
+LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_no], bytes_in, bytes_per_row);
+								if (bytes_in >= 0)
+									loaded_data_size += bytes_in;
+								else 
+								{
+									LOCAL_DEBUG_OUT( "failed reading strip %d", strip_no);
+								}
+							}	
+						} else if (planar_config == PLANARCONFIG_SEPARATE) 
+						{
+							/* TODO: do something with split channels */
+						}
+					}else
+					{
+						/* TODO: implement support for tiled images */
+					}
+
+					if (loaded_data_size > 0)
+					{
+						int offset;
+						int data_row = 0;
+						do
+						{
+							offset = data_row * bytes_per_row;
+							int loaded_rows = load_asim_strip (strip, (CARD8*)data + offset, loaded_data_size-offset, 
+																data_row, bytes_per_row, 
+																line_loaders[cfa_type], line_loaders_num[cfa_type]);
+
+LOCAL_DEBUG_OUT ( "data_row = %d, loaded_rows = %d", data_row, loaded_rows );																	
+
+							if (loaded_rows == 0)
+							{ /* need to write out some rows to free up space */
+								if (!get_flags (strip->lines[0]->flags, SCL_DO_RED))
+								{
+									int x;
+									for (x = 0; x < width; ++x)
+									{
+										strip->lines[0]->red[x] = strip->lines[1]->red[x];
+										strip->lines[1]->blue[x] = strip->lines[0]->blue[x];
+									}
+									set_flags (strip->lines[0]->flags, SCL_DO_RED);
+									set_flags (strip->lines[1]->flags, SCL_DO_BLUE);
+								}
+								imout->output_image_scanline( imout, strip->lines[0], 1);
+								advance_asim_strip (strip);
+
+							}	
+							data_row += loaded_rows;
+						}while (offset < loaded_data_size);
+						success = True;
+					}
+				}
+				destroy_asim_strip (&strip);
+				stop_image_output( &imout );					
+
+				if (!success)
+					destroy_asimage (&im);
+			}else
+			{
+				TIFFReadRGBAStrip(tif, first_row, (void*)data);
+				do
 				{
 					register CARD32 *row = data ;
 					int y = first_row + rows_per_strip ;
@@ -2418,13 +2741,18 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 					 		im->channels[IC_GREEN][y] = dup_data( NULL, im->channels[IC_RED][y]);	  
 							im->channels[IC_BLUE][y]  = dup_data( NULL, im->channels[IC_RED][y]);
 						}		 
-					
+
 						if( depth == 4 || depth == 2 ) 
 							im->channels[IC_ALPHA][y]  = store_data( NULL, a, width, store_flags, 0);
 						row += width ;
 					}
-				}
-				first_row += rows_per_strip ;
+					/* move onto the next strip now : */
+					do
+					{
+						first_row += rows_per_strip ;
+					}while (first_row < height && !TIFFReadRGBAStrip(tif, first_row, (void*)data));
+
+				}while (first_row < height);
 		    }
 			set_asstorage_block_size( NULL, old_storage_block_size );
 
