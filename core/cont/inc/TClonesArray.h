@@ -66,7 +66,9 @@ public:
    void             AddBefore(const TObject *, TObject *) { MayNotUse("AddBefore"); }
    void             BypassStreamer(Bool_t bypass=kTRUE);
    Bool_t           CanBypassStreamer() const { return TestBit(kBypassStreamer); }
-
+   void             SetClass(const char *classname,Int_t size=1000);
+   void             SetClass(const TClass *cl,Int_t size=1000);
+   
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);
    virtual void     Sort(Int_t upto = kMaxInt);
