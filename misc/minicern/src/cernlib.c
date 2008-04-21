@@ -20,18 +20,6 @@ typedef long off_t;
 #define cfopei_   __stdcall CFOPEI
 #define cfstati_  __stdcall CFSTATI
 
-__declspec( dllexport ) void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, 
-                                     int *nbuf, char *ftext, int lftext, int *stat, 
-                                     int *lgtx);
-__declspec( dllexport ) int  cfstati_(char *fname, int lfname, int *info, int *lgname);
-__declspec( dllexport ) void cfclos_(int *lundes, int *medium);
-__declspec( dllexport ) void vxinvb_(int *ixv, int *n);
-__declspec( dllexport ) void vxinvc_(int *iv, int *ivx, int *n);
-__declspec( dllexport ) void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, 
-                                    char *mbuf, int *stat);
-__declspec( dllexport ) void cfseek_(int *lundes, int *medium, int *nwrec, int *jcrec, int *stat);
-__declspec( dllexport ) unsigned int ishftr_(unsigned int *arg, int *len);
-
 #else
 #include <unistd.h>
 #endif
