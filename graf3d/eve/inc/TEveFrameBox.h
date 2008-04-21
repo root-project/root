@@ -46,6 +46,8 @@ public:
    void SetAAQuadXY(Float_t x, Float_t y, Float_t z, Float_t dx, Float_t dy);
    void SetAAQuadXZ(Float_t x, Float_t y, Float_t z, Float_t dx, Float_t dz);
 
+   void SetQuadByPoints(const Float_t* pointArr, Int_t nPoints);
+
    void SetAABox(Float_t x,  Float_t y,  Float_t z,
                  Float_t dx, Float_t dy, Float_t dz);
 

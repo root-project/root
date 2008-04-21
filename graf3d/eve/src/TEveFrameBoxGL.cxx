@@ -18,12 +18,11 @@
 #include "TMath.h"
 
 //______________________________________________________________________________
-// TEveFrameBoxGL
 //
 // A class encapsulating GL rendering of TEveFrameBox via a static
 // meber function.
 
-ClassImp(TEveFrameBoxGL)
+ClassImp(TEveFrameBoxGL);
 
 //______________________________________________________________________________
 void TEveFrameBoxGL::RenderFrame(const TEveFrameBox& b, Bool_t fillp)
@@ -35,8 +34,9 @@ void TEveFrameBoxGL::RenderFrame(const TEveFrameBox& b, Bool_t fillp)
    if (b.fFrameType == TEveFrameBox::kFT_Quad)
    {
       glBegin(fillp ? GL_POLYGON : GL_LINE_LOOP);
-      glVertex3fv(p);       glVertex3fv(p + 3);
-      glVertex3fv(p + 6);   glVertex3fv(p + 9);
+      Int_t nPoints = b.fFrameSize / 3;
+      for (Int_t i = 0; i < nPoints; ++i, p += 3)
+         glVertex3fv(p);
       glEnd();
    }
    else if (b.fFrameType == TEveFrameBox::kFT_Box)
