@@ -219,8 +219,9 @@ void TMVA::SimulatedAnnealing::SetDefaultScale()
    else if (fKernelTemperature == kGeo)  fTemperatureScale = 0.99997;
    else if (fKernelTemperature == kDecreasingAdaptive) {
       fTemperatureScale = 1.0;
-      while (TMath::Abs(TMath::Power(fTemperatureScale,fMaxCalls) * fInitialTemperature - fMinTemperature) >
-             TMath::Abs(TMath::Power(fTemperatureScale-0.000001,fMaxCalls) * fInitialTemperature - fMinTemperature)) {
+      while (
+         TMath::Abs(TMath::Power(fTemperatureScale,fMaxCalls) * fInitialTemperature - fMinTemperature) >
+         TMath::Abs(TMath::Power(fTemperatureScale-0.000001,fMaxCalls) * fInitialTemperature - fMinTemperature)) {
          fTemperatureScale -= 0.000001;
       }
    }
