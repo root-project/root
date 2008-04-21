@@ -2564,7 +2564,7 @@
    30 CONTINUE
       RETURN
    40 PRINT *, 'Variable ', NAME(1:LENOCC(NAME))
-      print*, 'Address not word aligned','HBNAME',ID
+      print*, 'Address not word aligned','HBNAME'
       RETURN
       END
 
