@@ -34,6 +34,10 @@ namespace Reflex {
       Scope fCurrentScope; // Scope where lookup is currently occuring.
       bool fPartialSuccess; // Flag indicating that a left-prefix has matched.
 
+      // intentionally not implemented:
+      NameLookup(const NameLookup&);
+      NameLookup& operator=(const NameLookup&);
+       
    private: // Internal Utility Functions.
       NameLookup(const std::string& name, const Scope& current); // We can only be created by our static func members.
       template <class T> T Lookup(bool isTemplateExpanded = false);

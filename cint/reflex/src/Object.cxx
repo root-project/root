@@ -26,9 +26,9 @@ Reflex::Object::Get( const std::string & dm ) const {
 //-------------------------------------------------------------------------------
 // Get a data member value of this object.
    Member m = TypeOf().MemberByName( dm );
-   if ( m ) return m.Get( * this );
-   else throw RuntimeError("No such MemberAt " + dm );
-   return Object();
+   if ( !m )
+      throw RuntimeError("No such MemberAt " + dm );
+   return m.Get( * this );
 }
 
 
@@ -75,12 +75,13 @@ Reflex::Object::Invoke( const std::string & fm,
 //-------------------------------------------------------------------------------
 // Invoke a data member of this object. Sign can be used for finding overloaded funs.
    Member m = TypeOf().FunctionMemberByName( fm, sign );
-   if ( m ) {
-      if ( args.size() ) return m.Invoke( * this, args );
-      else               return m.Invoke( * this );
-   }
-   else throw RuntimeError("No such MemberAt " + fm );
-   return Object();
+   if ( !m )
+      throw RuntimeError("No such MemberAt " + fm );
+
+   if ( args.size() )
+      return m.Invoke( * this, args );
+
+   return m.Invoke( * this );
 }
 
 
