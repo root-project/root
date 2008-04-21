@@ -7286,7 +7286,7 @@
          IF(JBIT(IQ(KQSP+LTOP),3).NE.0)THEN
             LCDIR=LTOP
          print*,'>>>>>> RZFREE'
-            CALL RZFREE('RZFILE')
+*            CALL RZFREE('RZFILE')
          ENDIF
          CALL MZDROP(JQPDVS,LTOP,' ')
          LTOP = 0
