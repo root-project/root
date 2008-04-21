@@ -7104,3 +7104,198 @@
       END
 
 *-------------------------------------------------------------------------------
+
+      SUBROUTINE RZSCAN(CHPATH,UROUT)
+      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      COMMON /QUEST/ IQUEST(100)
+      COMMON /ZEBQ/  IQFENC(4), LQ(100)
+                              DIMENSION    IQ(92),        Q(92)
+                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
+      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
+     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
+     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
+     +,              NQTRAC,MQTRAC(48)
+                                       EQUIVALENCE (KQSP,NQOFFS(1))
+      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
+     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
+     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
+     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
+                                       DIMENSION    IQCUR(16)
+                                       EQUIVALENCE (IQCUR(1),LQSTOR)
+      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
+     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
+     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
+     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
+     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
+     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
+     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
+     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
+                                       DIMENSION    IQTABV(16)
+                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
+     +,              LTEMP,LCORD,LFROM
+      EQUIVALENCE (LQRS,LQSYSS(7))
+      PARAMETER (NLPATM=100)
+      COMMON /RZDIRN/NLCDIR,NLNDIR,NLPAT
+      COMMON /RZDIRC/CHCDIR(NLPATM),CHNDIR(NLPATM),CHPAT(NLPATM)
+      CHARACTER*16   CHNDIR,    CHCDIR,    CHPAT
+      COMMON /RZCH/  CHWOLD,CHL
+      CHARACTER*255  CHWOLD,CHL
+      PARAMETER (KUP=5,KPW1=7,KNCH=9,KDATEC=10,KDATEM=11,KQUOTA=12,
+     +           KRUSED=13,KWUSED=14,KMEGA=15,KRZVER=16,KIRIN=17,
+     +           KIROUT=18,KRLOUT=19,KIP1=20,KNFREE=22,KNSD=23,KLD=24,
+     +           KLB=25,KLS=26,KLK=27,KLF=28,KLC=29,KLE=30,KNKEYS=31,
+     +           KNWKEY=32,KKDES=33,KNSIZE=253,KEX=6,KNMAX=100)
+      CHARACTER *(*) CHPATH
+      EXTERNAL UROUT
+      DIMENSION ISD(NLPATM),NSD(NLPATM),IHDIR(4)
+      IQUEST(1)=0
+      IF(LQRS.EQ.0)GO TO 99
+      IF(LCDIR.EQ.0)GO TO 99
+      CALL RZCDIR(CHWOLD,'R')
+      CALL RZCDIR(CHPATH,' ')
+      IF(IQUEST(1).NE.0) GOTO 99
+      CALL RZPAFF(CHPAT,NLPAT,CHL)
+      NLPAT0=NLPAT
+      ITIME=0
+  10  CONTINUE
+      IF(ITIME.NE.0)THEN
+         CALL RZPAFF(CHPAT,NLPAT,CHL)
+      IF(IQUEST(1).NE.0)THEN
+         NLPAT=NLPAT-1
+         GO TO 20
+      ENDIF
+         CALL RZCDIR(CHL,' ')
+      ENDIF
+      IF(IQUEST(1).NE.0)THEN
+         NLPAT=NLPAT-1
+         GO TO 20
+      ENDIF
+      ISD(NLPAT)=0
+      NSD(NLPAT)=IQ(KQSP+LCDIR+KNSD)
+      CALL UROUT(CHL)
+  20  ISD(NLPAT)=ISD(NLPAT)+1
+      IF(ISD(NLPAT).LE.NSD(NLPAT))THEN
+         NLPAT=NLPAT+1
+         LS=IQ(KQSP+LCDIR+KLS)
+         IH=LS+7*(ISD(NLPAT-1)-1)
+         CALL ZITOH(IQ(KQSP+LCDIR+IH),IHDIR,4)
+         CALL UHTOC(IHDIR,4,CHPAT(NLPAT),16)
+         ITIME=ITIME+1
+         GO TO 10
+      ELSE
+         NLPAT=NLPAT-1
+         IF(NLPAT.GE.NLPAT0)THEN
+            LUP=LQ(KQSP+LCDIR+1)
+            CALL MZDROP(JQPDVS,LCDIR,' ')
+            LCDIR=LUP
+            GO TO 20
+         ENDIF
+      ENDIF
+  90  CALL RZCDIR(CHWOLD,' ')
+  99  RETURN
+      END
+
+*-------------------------------------------------------------------------------
+
+      SUBROUTINE MZWIPE (IXWP)
+      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      COMMON /QUEST/ IQUEST(100)
+      COMMON /ZEBQ/  IQFENC(4), LQ(100)
+                              DIMENSION    IQ(92),        Q(92)
+                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
+      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
+     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
+     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
+     +,              NQTRAC,MQTRAC(48)
+                                       EQUIVALENCE (KQSP,NQOFFS(1))
+      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
+     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
+     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
+     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
+                                       DIMENSION    IQCUR(16)
+                                       EQUIVALENCE (IQCUR(1),LQSTOR)
+      COMMON /ZVFAUT/IQVID(2),IQVSTA,IQVLOG,IQVTHR(2),IQVREM(2,6)
+      DIMENSION    IXWP(9)
+      DIMENSION    NAMESR(2)
+      DATA  NAMESR / 4HMZWI, 4HPE   /
+      IXWIPE = IXWP(1)
+      IF (IXWIPE.EQ.0)  IXWIPE=21
+      CALL MZGARB (0,IXWIPE)
+      END
+
+*-------------------------------------------------------------------------------
+
+      SUBROUTINE RZEND(CHDIR)
+      COMMON /ZUNIT/ IQREAD,IQPRNT,IQPR2,IQLOG,IQPNCH,IQTTIN,IQTYPE
+      COMMON /ZUNITZ/IQDLUN,IQFLUN,IQHLUN,  NQUSED
+      COMMON /ZSTATE/QVERSN,NQPHAS,IQDBUG,NQDCUT,NQWCUT,NQERR
+     +,              NQLOGD,NQLOGM,NQLOCK,NQDEVZ,NQOPTS(6)
+      PARAMETER      (IQDROP=25, IQMARK=26, IQCRIT=27, IQSYSX=28)
+      COMMON /QUEST/ IQUEST(100)
+      COMMON /ZEBQ/  IQFENC(4), LQ(100)
+                              DIMENSION    IQ(92),        Q(92)
+                              EQUIVALENCE (IQ(1),LQ(9)), (Q(1),IQ(1))
+      COMMON /MZCA/  NQSTOR,NQOFFT(16),NQOFFS(16),NQALLO(16), NQIAM
+     +,              LQATAB,LQASTO,LQBTIS, LQWKTB,NQWKTB,LQWKFZ
+     +,              MQKEYS(3),NQINIT,NQTSYS,NQM99,NQPERM,NQFATA,NQCASE
+     +,              NQTRAC,MQTRAC(48)
+                                       EQUIVALENCE (KQSP,NQOFFS(1))
+      COMMON /MZCB/  JQSTOR,KQT,KQS,  JQDIVI,JQDIVR
+     +,              JQKIND,JQMODE,JQDIVN,JQSHAR,JQSHR1,JQSHR2,NQRESV
+     +,              LQSTOR,NQFEND,NQSTRU,NQREF,NQLINK,NQMINR,LQ2END
+     +,              JQDVLL,JQDVSY,NQLOGL,NQSNAM(6)
+                                       DIMENSION    IQCUR(16)
+                                       EQUIVALENCE (IQCUR(1),LQSTOR)
+      COMMON /MZCC/  LQPSTO,NQPFEN,NQPSTR,NQPREF,NQPLK,NQPMIN,LQP2E
+     +,              JQPDVL,JQPDVS,NQPLOG,NQPNAM(6)
+     +,              LQSYSS(10), LQSYSR(10), IQTDUM(22)
+     +,              LQSTA(21), LQEND(20), NQDMAX(20),IQMODE(20)
+     +,              IQKIND(20),IQRCU(20), IQRTO(20), IQRNO(20)
+     +,              NQDINI(20),NQDWIP(20),NQDGAU(20),NQDGAF(20)
+     +,              NQDPSH(20),NQDRED(20),NQDSIZ(20)
+     +,              IQDN1(20), IQDN2(20),      KQFT, LQFSTA(21)
+                                       DIMENSION    IQTABV(16)
+                                       EQUIVALENCE (IQTABV(1),LQPSTO)
+      COMMON /RZCL/  LTOP,LRZ0,LCDIR,LRIN,LROUT,LFREE,LUSED,LPURG
+     +,              LTEMP,LCORD,LFROM
+      EQUIVALENCE (LQRS,LQSYSS(7))
+      CHARACTER  CHDIR*(*)
+      DIMENSION IHDIR(4)
+      LOGICAL RZSAME
+      JBIT(IZW,IZP)     = AND(ISHFTR(IZW,IZP-1),1)
+      JBYT(IZW,IZP,NZB) = ISHFTR(LSHIFT(IZW,33-IZP-NZB),32-NZB)
+      IQUEST(1)=0
+      IF(LQRS.EQ.0)GO TO 99
+      CALL RZSAVE
+      NCHD=LEN(CHDIR)
+      IF(NCHD.GT.16)NCHD=16
+      CALL VBLANK(IHDIR,4)
+      CALL UCTOH(CHDIR,IHDIR,4,NCHD)
+      CALL ZHTOI(IHDIR,IHDIR,4)
+      LRZ=LQRS
+  10  IF(LRZ.NE.0)THEN
+         IF(.NOT.RZSAME(IHDIR,IQ(KQSP+LRZ+1),4))THEN
+            LRZ=LQ(KQSP+LRZ)
+            GO TO 10
+         ENDIF
+      LTOP=LRZ
+      LOGLV = JBYT(IQ(KQSP+LTOP),15,3)-3
+      IF(LOGLV.GE.0) WRITE(IQLOG,9019) CHDIR
+ 9019 FORMAT(' RZEND. called for ',A)
+         IF(JBIT(IQ(KQSP+LTOP),3).NE.0)THEN
+            LCDIR=LTOP
+         print*,'>>>>>> RZFREE'
+            CALL RZFREE('RZFILE')
+         ENDIF
+         CALL MZDROP(JQPDVS,LTOP,' ')
+         LTOP = 0
+         LCDIR= 0
+      ELSEIF(NQLOGD.GE.-2)THEN
+         WRITE(IQLOG,1000) CHDIR
+ 1000    FORMAT(' RZEND. Unknown directory ',A)
+      ENDIF
+  99  RETURN
+      END
+
+*-------------------------------------------------------------------------------
