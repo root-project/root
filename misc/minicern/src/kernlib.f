@@ -118,7 +118,7 @@
 
       FUNCTION JBIT (IZW,IZP)
       IAND (IZV,IZW) = AND (IZV, IZW)
-      IOR (IZV,IZW) = OR (IZV, IZW)
+*      IOR (IZV,IZW) = OR (IZV, IZW)
 *      IEOR (IZV,IZW) = XOR (IZV, IZW)
 *      ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
       JBIT = IAND (ISHFTR(IZW, IZP-1), 1)
