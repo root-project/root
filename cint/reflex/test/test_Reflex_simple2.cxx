@@ -1051,7 +1051,7 @@ void ReflexSimple2Test::testTypedef() {
 
 void ReflexSimple2Test::testCppSelection() {
 
-   Type t00 = Type::ByName("ns::TestTemplatedSelectionClass<int,int>");
+   Type t00 = Type::ByName("ns::TestTemplatedSelectionClass<int,int,float>");
    CPPUNIT_ASSERT(t00);
 
   Scope g = Scope::ByName("");
