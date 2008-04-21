@@ -99,7 +99,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fCurrentOvlElm     (0),
 
    fEventHandler(0),
-   fPushAction(kPushStd), fAction(kDragNone),
+   fPushAction(kPushStd), fDragAction(kDragNone),
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
    fMaxSceneDrawTimeLQ(100),
@@ -150,7 +150,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fCurrentOvlElm     (0),
 
    fEventHandler(0),
-   fPushAction(kPushStd), fAction(kDragNone),
+   fPushAction(kPushStd), fDragAction(kDragNone),
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
    fMaxSceneDrawTimeLQ(100),
@@ -442,6 +442,14 @@ void TGLViewer::DoDraw()
       }
    }
 
+   if (fGLDevice == -1 && (fViewport.Width() <= 0 || fViewport.Height() <= 0)) {
+      ReleaseLock(kDrawLock);
+      if (gDebug > 2) {
+	 Info("TGLViewer::DoDraw()", "zero surface area, draw skipped.");
+      }
+      return;
+   }
+
    if (fGLDevice != -1) {
       Int_t viewport[4] = {};
       gGLManager->ExtractViewport(fGLDevice, viewport);
@@ -493,7 +501,7 @@ void TGLViewer::DoDraw()
    }
 
    if (fLOD != TGLRnrCtx::kLODHigh &&
-       (fAction < kDragCameraRotate || fAction > kDragCameraDolly))
+       (fDragAction < kDragCameraRotate || fDragAction > kDragCameraDolly))
    {
       // Request final draw pass.
       fRedrawTimer->RequestDraw(100, TGLRnrCtx::kLODHigh);
@@ -919,7 +927,7 @@ void TGLViewer::SetViewport(Int_t x, Int_t y, Int_t width, Int_t height)
    fViewport.Set(x, y, width, height);
    fCurrentCamera->SetViewport(fViewport);
 
-   if (gDebug>2) {
+   if (gDebug > 2) {
       Info("TGLViewer::SetViewport", "updated - corner %d,%d dimensions %d,%d", x, y, width, height);
    }
 }
