@@ -14,6 +14,7 @@
 #include "TArrayI.h"
 #include "TAxis.h"
 #include "TClass.h"
+#include "TCollection.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TH1D.h"
@@ -1088,6 +1089,30 @@ void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
    Double_t nEntries = GetEntries() + c * h->GetEntries();
    SetEntries(nEntries);
 }
+
+
+//______________________________________________________________________________
+Long64_t THnSparse::Merge(TCollection* list)
+{
+   // Merge this with a list of THnSparses. All THnSparses provided
+   // in the list must have the same bin layout!
+
+   if (!list) return 0;
+   if (list->IsEmpty()) return (Long64_t)GetEntries();
+
+   TIter iter(list);
+   const TObject* addMeObj = 0;
+   while ((addMeObj = iter())) {
+      const THnSparse* addMe = dynamic_cast<const THnSparse*>(addMeObj);
+      if (!addMe) 
+         Error("Merge", "Object named %s is not THnSpase! Skipping it.",
+               addMeObj->GetName());
+      else
+         Add(addMe);
+   }
+   return (Long64_t)GetEntries();
+}
+
 
 //______________________________________________________________________________
 void THnSparse::Multiply(const THnSparse* h)

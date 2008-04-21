@@ -51,6 +51,7 @@
 #endif
 
 class TAxis;
+class TCollection;
 class TH1D;
 class TH2D;
 class TH3D;
@@ -217,6 +218,8 @@ class THnSparse: public TNamed {
 
    THnSparse* Rebin(Int_t group) const;
    THnSparse* Rebin(const Int_t* group) const;
+
+   Long64_t   Merge(TCollection* list);
 
    void Scale(Double_t c);
    void Add(const THnSparse* h, Double_t c=1.);
