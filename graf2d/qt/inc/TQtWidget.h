@@ -194,7 +194,7 @@ public:
 public:
    // Static method to inmitate ROOT as needed
    static TApplication *InitRint(Bool_t prompt=kFALSE, const char *appClassName="QtRint", int *argc=0, char **argv=0,
-          void *options = 0, int numOptions = 0, Bool_t noLogo = kFALSE);
+          void *options = 0, int numOptions = 0, Bool_t noLogo = kTRUE);
    //  Proxy methods to access the TCanvas selected TObject 
    //  and last processed ROOT TCanvas event
    Int_t             GetEvent()       const;

@@ -10,14 +10,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include "TQtEventQueue.h"
 #include "TQtLock.h"
 #include <qapplication.h>
-#if QT_VERSION >= 0x40000
-//Added by qt3to4:
-#include <Q3PtrList>
-#endif /* QT_VERSION */
+#include <cassert>
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -34,15 +30,27 @@
 //______________________________________________________________________________
 #if QT_VERSION < 0x40000
 TQtEventQueue::TQtEventQueue(bool autoDelete): QPtrList<Event_t> ()
-#else /* QT_VERSION */
-TQtEventQueue::TQtEventQueue(bool autoDelete): Q3PtrList<Event_t> ()
-#endif /* QT_VERSION */
 { 
   //  If auto-deleting is turned on, all the items in a collection 
   //  are deleted when the collection itself is deleted.
    setAutoDelete(autoDelete); 
 }
+#else /* QT_VERSION */
+TQtEventQueue::TQtEventQueue(bool autoDelete): QQueue<const Event_t *> ()
+{ 
+  //  If auto-deleting is turned on, all the items in a collection 
+  //  are deleted when the collection itself is deleted.
+}
+#endif /* QT_VERSION */
 
+//______________________________________________________________________________
+TQtEventQueue::~TQtEventQueue()
+{
+#if QT_VERSION >= 0x40000
+    qDeleteAll(*this); 
+#endif
+}
+#if 0
 //______________________________________________________________________________
 #if QT_VERSION < 0x40000
 int TQtEventQueue::compareItems(QPtrCollection::Item i1, QPtrCollection::Item i2)
@@ -64,6 +72,7 @@ int TQtEventQueue::compareItems(Q3PtrCollection::Item i1, Q3PtrCollection::Item 
    Event_t &ev2 = *(Event_t *)i2;
    return ev1.fWindow - ev2.fWindow;
 }
+#endif
 
 //______________________________________________________________________________
 int TQtEventQueue::RemoveItems(const Event_t *ev)
@@ -72,15 +81,30 @@ int TQtEventQueue::RemoveItems(const Event_t *ev)
    // The removed item is deleted if auto-deletion (by default) is enabled
    // with class ctor
    
+   // This method is used to debug the application only (by far)
    int counter = 0;
+   assert(0);
    if (ev) {
+#if 0
       TQtLock lock;
+#if QT_VERSION < 0x40000
       int next = find(ev);
       while(next != -1) {
          remove();            // The removed item is deleted also
          next = findNext(ev);
          counter++;
       }
+#else
+      // to be done yet.  
+      assert(0);
+      int next = remove_if(begin(),end(),ev);
+      while(next != -1) {
+         remove();            // The removed item is deleted also
+         next = findNext(ev);
+         counter++;
+      }
+#endif
+#endif 
    }
    return counter;
 }

@@ -30,7 +30,7 @@ TQtMarker::TQtMarker(int n, TPoint *xy, int type) : fNumNode(n),
                fChain(0), fCindex(0), fMarkerType(type)
 {
   if (type >= 2) {
-#ifdef R__QTWIN32
+#if defined(R__QTWIN32) && (QT_VERSION < 0x40000)
      fChain.setPoints(n,(QCOORD *)xy);
 #else
      fChain.resize(n);

@@ -196,38 +196,32 @@ protected:
    inline  Int_t SetMaxId(Int_t newId)
    {
       fIDMax =  newId;
-      fIDTotalMax  = newId>fIDTotalMax ? newId:fIDTotalMax;
+      if (newId>fIDTotalMax) {
+         fIDTotalMax  = newId;
+#if QT_VERSION >= 0x40000
+         fWidgetCollection.resize(fIDTotalMax+1);
+#endif
+      }
       return fIDMax;
    }
 
  public:
    //______________________________________________________________________________
-   TQWidgetCollection () : fWidgetCollection(20) , fIDMax(-1), fIDTotalMax(-1)
+   TQWidgetCollection () : fIDMax(-1), fIDTotalMax(-1)
    {
-       // mark the position below kNone and beteween kNone and kDefault
+       // mark the position before kNone and between kNone and kDefault
        // as "free position" if any
        int kDefault = 1;
-       assert((kNone >= 0) &&  (kDefault > 0 ));
-       Int_t firstRange  = kNone;
-       Int_t secondRange = kDefault;
-       // if (kNone > kDefault ) { firstRange = kDefault; secondRange = kNone;}
-       for (int i=0;i<secondRange;i++)  {
-             if (i == firstRange) continue; // skip it
+       assert(!kNone);
 #if QT_VERSION < 0x40000
-             fWidgetCollection.insert(i,(QPaintDevice *)(-1));
-#else
-             if (fWidgetCollection[i] != (QPaintDevice *)(-1))
-                delete fWidgetCollection[i];
-             fWidgetCollection[i] = (QPaintDevice *)(-1);
+      fWidgetCollection.resize(20);
 #endif
-             fFreeWindowsIdStack.push(i);
-       }
-       SetMaxId (secondRange);
+       SetMaxId (kDefault);
 #if QT_VERSION < 0x40000
        fWidgetCollection.insert(kNone,(QPaintDevice*)0);
        fWidgetCollection.insert(kDefault,(QPaintDevice *)QApplication::desktop());
 #else
-       fWidgetCollection[kNone] = (QPaintDevice*)0;
+       fWidgetCollection[kNone]    = (QPaintDevice*)0;
        fWidgetCollection[kDefault] = (QPaintDevice *)QApplication::desktop();
 #endif
    }
@@ -240,17 +234,18 @@ protected:
          Id = fFreeWindowsIdStack.pop();
          if (Id > fIDMax ) SetMaxId ( Id );
       } else {
-         Id = fWidgetCollection.count()+1;
+         Id = fWidgetCollection.count();
+#if QT_VERSION < 0x40000
+         Id++;
          if (Id >= int(fWidgetCollection.size()) )
               fWidgetCollection.resize(2*Id);
+#endif
          assert(fIDMax <= Id  );
          SetMaxId ( Id );
       }
 #if QT_VERSION < 0x40000
       fWidgetCollection.insert(Id,device);
 #else
-      if (fWidgetCollection[Id] != (QPaintDevice *)(-1)) 
-         delete  fWidgetCollection[Id];
       fWidgetCollection[Id] = device;
 #endif
       // fprintf(stderr," add %p as %d max Id = %d \n", device, Id,fIDMax);
@@ -268,7 +263,7 @@ protected:
              fWidgetCollection.take(intWid)) {
 #else
              fWidgetCollection[intWid]) {
-             fWidgetCollection.replace(intWid,0);
+             fWidgetCollection[intWid] = (QPaintDevice *)(-1);
 #endif
              fFreeWindowsIdStack.push(intWid);
              if (fIDMax == intWid) SetMaxId(--fIDMax);
@@ -288,7 +283,7 @@ protected:
         delete fWidgetCollection.take(Id);
 #else
         delete device;
-        fWidgetCollection.replace(Id,0);
+        fWidgetCollection[Id] = (QPaintDevice *)(-1);
 #endif
         fFreeWindowsIdStack.push(Id);
         if (fIDMax == Id) SetMaxId(--fIDMax);
@@ -1250,6 +1245,11 @@ void  TGQt::CopyPixmap(int wid, int xpos, int ypos)
    {
       // fprintf(stderr,"x=%d,y=%d: %d %d %d %d\n",xpos,ypos,sr.x(),sr.y(),sr.width(),sr.height());
       QPaintDevice *dst = fSelectedBuffer ? fSelectedBuffer : fSelectedWindow;
+      if (dst == (QPaintDevice *)-1) {
+         Error("TGQt::CopyPixmap","Wrong TGuiFactory implementation was provided. Please, check your plugin settings");
+         assert(dst != (QPaintDevice *)-1);
+      }
+
       bool isPainted = dst->paintingActive ();
       if (isPainted) End();
 #if QT_VERSION < 0x40000

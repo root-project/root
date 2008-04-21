@@ -8,7 +8,7 @@
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *********qlis****************************************************************/
+ *************************************************************************/
 
 #ifndef ROOT_TQClientFilter
 #define ROOT_TQClientFilter
@@ -30,13 +30,14 @@
 #  endif  /* QT_VERSION */
 #  include <qapplication.h>
 #else
+   class TQtClientWidget;
    class QObject;
 #  if (QT_VERSION > 0x039999)
      class QList<TQtClientWidget*>;
 #  else /* QT_VERSION */
      class QPtrList<TQtClientWidget>;
 #  endif /* QT_VERSION */
-#endif  /* CINT */ 
+#endif  /* CINT */
 
 #include "TQtClientWidget.h"
 
@@ -47,7 +48,7 @@
 
 class TQtNextEventMessage;
 class TQtEventQueue;
-// class TQtClientWidget;
+class TQtClientWidget;
 class TQtPointerGrabber;
 
 class TQtClientFilter : public QObject {
@@ -62,11 +63,13 @@ private:
 protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;
+#ifndef __CINT__
 #if (QT_VERSION > 0x039999)
    QList<TQtClientWidget*>     fButtonGrabList;
 #else /* QT_VERSION */
    QPtrList<TQtClientWidget>  fButtonGrabList;
 #endif /* QT_VERSION */
+#endif
    static TQtClientWidget    *fgPointerGrabber;
    static TQtClientWidget    *fgButtonGrabber;
    static TQtClientWidget    *fgActiveGrabber;

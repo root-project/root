@@ -257,7 +257,7 @@ TQtWidget *TQtWidget::Canvas(Int_t id)
 
 //_____________________________________________________________________________
 TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, int *argc, char **argv,
-          void *options, int numOptions, Bool_t /*noLogo*/)
+          void *options, int numOptions, Bool_t noLogo)
 {
    //
    // Instantiate ROOT from within Qt application if needed
@@ -299,7 +299,7 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
          delete [] extLib;
        }
 
-       TRint *rint = new TRint(appClassName, &localArgc, argv ? argv : qApp->argv(),options,numOptions,kFALSE);
+       TRint *rint = new TRint(appClassName, &localArgc, argv ? argv : qApp->argv(),options,numOptions,noLogo);
        // To mimic what TRint::Run(kTRUE) does.
        Int_t prompt= gEnv->GetValue("Gui.Prompt", (Int_t)0);
        if (prompt) {
@@ -337,10 +337,11 @@ void TQtWidget::adjustSize()
 void TQtWidget::Erase ()
 {
   // Erases the entire widget and its double buffer
-
+ 
   fPixmapID.fill(this,QPoint(0,0));
   erase();
 }
+
 //_____________________________________________________________________________
 void TQtWidget::cd()
 {

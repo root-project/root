@@ -40,9 +40,9 @@
 #  include <QBoxLayout>
 #  include <QKeyEvent>
 #  include <QEvent>
-#  include <Q3ValueList>
+#  include <QList>
 #  include <QVBoxLayout>
-#  include <Q3PointArray>
+#  include <QPolygon>
 #  include <QDesktopWidget>
 #  include <QDebug>
 #  include <QPalette>
@@ -914,7 +914,7 @@ void TGQt::NextEvent(Event_t &event)
    //   if (qApp->hasPendingEvents())  qApp->processOneEvent ();
    //   qApp->processEvents (5000);
    if (fQClientFilterBuffer) {
-      Event_t *ev = fQClientFilterBuffer->dequeue ();
+      const Event_t *ev = fQClientFilterBuffer->dequeue ();
       if (ev) {
          // There is a danger of artifacts at this point.
          // For example the mouse pointer had left some screen area but
@@ -2441,7 +2441,7 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
 #if QT_VERSION < 0x40000
     QPointArray segments(2*nseg);
 #else /* QT_VERSION */
-    Q3PointArray segments(2*nseg);
+    QPolygon segments(2*nseg);
 #endif /* QT_VERSION */
     for (int i=0;i<nseg;i++) {
        segments.setPoint (2*i,   seg[i].fX1, seg[i].fY1);
@@ -2617,7 +2617,7 @@ void  TGQt::FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt)
 #if QT_VERSION < 0x40000
       QPointArray pa(npnt);
 #else /* QT_VERSION */
-      Q3PointArray pa(npnt);
+      QPolygon pa(npnt);
 #endif /* QT_VERSION */
       Int_t x = points[0].fX;
       Int_t y = points[0].fY;
@@ -2769,7 +2769,7 @@ Region_t TGQt::PolygonRegion(Point_t *points, Int_t np, Bool_t winding)
 #if QT_VERSION < 0x40000
    QPointArray pa;
 #else /* QT_VERSION */
-   Q3PointArray pa;
+   QPolygon pa;
 #endif /* QT_VERSION */
    pa.resize( np );
    for(int i=0; i<np; i++)
@@ -2972,15 +2972,20 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
 #if QT_VERSION < 0x40000
             QValueList<int> sizes = fdb.pointSizes( family, style );
             for ( QValueList<int>::Iterator points = sizes.begin();
-#else /* QT_VERSION */
-            Q3ValueList<int> sizes = fdb.pointSizes( family, style );
-            for ( Q3ValueList<int>::Iterator points = sizes.begin();
-#endif /* QT_VERSION */
                   points != sizes.end() && (Int_t)xlFonts.size() < max; ++points ) 
             {
               currentFont.SetPointSize(*points);
               if (currentFont ==  patternFont )  xlFonts.push_back(currentFont.ToString());
             }
+#else /* QT_VERSION */
+            QList<int> sizes = fdb.pointSizes( family, style );
+            for ( int points=0 ;  points < sizes.size()
+                                 && (Int_t)xlFonts.size() < max; ++points ) 
+            {
+              currentFont.SetPointSize(sizes[points]);
+              if (currentFont ==  patternFont )  xlFonts.push_back(currentFont.ToString());
+            }
+#endif /* QT_VERSION */
         }
     }
     count = xlFonts.size();
