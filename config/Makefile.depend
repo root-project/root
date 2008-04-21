@@ -187,6 +187,9 @@ EVELIBDEP              = $(EVELIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
+HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+                         $(TREEPLAYERLIB) $(IOLIB)
+
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
 HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
