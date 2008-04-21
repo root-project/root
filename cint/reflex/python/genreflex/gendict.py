@@ -1018,7 +1018,15 @@ class genDictionary(object) :
       elif colon  : s = '::'
     return s
 #----------------------------------------------------------------------------------
-  def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False) :
+  def genTypeName(self, id, enum=False, const=False, colon=False, alltempl=False, _useCache=True,_cache={}) :
+    if _useCache:
+      key = (self,id,enum,const,colon,alltempl)
+      if _cache.has_key(key):
+        return _cache[key]
+      else:
+        ret = self.genTypeName(id,enum,const,colon,alltempl,False)
+        _cache[key] = ret
+        return ret
     elem  = self.xref[id]['elem']
     attrs = self.xref[id]['attrs']
     if self.isUnnamedType(attrs.get('demangled')) :
@@ -1861,7 +1869,15 @@ def getTemplateArgString( cl ) :
 #---------------------------------------------------------------------------------------
 def normalizeClassAllTempl(name)   : return normalizeClass(name,True)
 def normalizeClassNoDefTempl(name) : return normalizeClass(name,False)
-def normalizeClass(name,alltempl) :
+def normalizeClass(name,alltempl,_useCache=True,_cache={}) :
+  if _useCache:
+    key = (name,alltempl)
+    if _cache.has_key(key):
+      return _cache[key]    
+    else:
+      ret = normalizeClass(name,alltempl,False)
+      _cache[key] = ret
+      return ret
   names, cnt = [], 0
   for s in string.split(name,'::') :
     if cnt == 0 : names.append(s)
@@ -1872,8 +1888,16 @@ def normalizeClass(name,alltempl) :
 #--------------------------------------------------------------------------------------
 def normalizeFragmentAllTempl(name)   : return normalizeFragment(name,True)
 def normalizeFragmentNoDefTempl(name) : return normalizeFragment(name) 
-def normalizeFragment(name,alltempl=False) :
+def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
   name = name.strip()
+  if _useCache:
+    key = (name,alltempl)
+    if _cache.has_key(key):
+      return _cache[key]    
+    else:
+      ret = normalizeFragment(name,alltempl,False)
+      _cache[key] = ret
+      return ret
   if name.find('<') == -1  : 
     nor =  name
     if nor.find('int') == -1: return nor
