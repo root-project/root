@@ -90,7 +90,7 @@ typedef CARD32 ARGB32;
 #define ARGB32_CHAN8(c,i)		(((c)>>((i)<<3))&0x00FF)
 #define MAKE_ARGB32_CHAN8(v,i)	(((v)&0x0000FF)<<((i)<<3))
 
-#if 0
+#ifdef _WIN32
 #define ARGB32_ALPHA16(c)		((((c)>>16)&0x00FF00)|(((c)>>24)&0x0000FF))
 #define ARGB32_RED16(c)			((((c)>>8 )&0x00FF00)|(((c)>>16)&0x0000FF))
 #define ARGB32_GREEN16(c)	 	(( (c)     &0x00FF00)|(((c)>>8 )&0x0000FF))
