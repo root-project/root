@@ -566,11 +566,46 @@ void TBranch::Browse(TBrowser* b)
       if (gPad) gPad->Update();
    }
 }
+ 
+ //______________________________________________________________________________
+void TBranch::DeleteBaskets(Option_t* option)
+{
+   // Loop on all branch baskets. If the file where branch buffers reside is
+   // writable, free the disk space associated to the baskets of the branch,
+   // then call Reset(). If the option contains "all", delete also the baskets
+   // for the subbranches.
+   // The branch is reset.
+   // NOTE that this function must be used with extreme care. Deleting branch baskets
+   // fragments the file and may introduce inefficiencies when adding new entries
+   // in the Tree or later on when reading the Tree.
+
+   TString opt = option;
+   opt.ToLower();
+   TFile *file = GetFile(0);
+
+   if(fDirectory && (fDirectory != gROOT) && fDirectory->IsWritable()) {
+      for(Int_t i=0; i<fWriteBasket; i++) {
+         if (fBasketSeek[i]) file->MakeFree(fBasketSeek[i],fBasketSeek[i]+fBasketBytes[i]-1);
+      }
+   }
+
+   // process subbranches
+   if (opt.Contains("all")) {
+      TObjArray *lb = GetListOfBranches();
+      Int_t nb = lb->GetEntriesFast();
+      for (Int_t j = 0; j < nb; j++) {
+	 TBranch* branch = (TBranch*) lb->UncheckedAt(j);
+	 if (branch) branch->DeleteBaskets("all");
+      }
+   }
+   DropBaskets();
+   Reset();
+}
 
 //______________________________________________________________________________
 void TBranch::DropBaskets(Option_t* option)
 {
-   // Loop on all branch baskets. Drop all except readbasket.
+   // Loop on all branch baskets. Drop all baskets from memory except readbasket.
    // If the option contains "all", drop all baskets including
    // read- and write-baskets.
 

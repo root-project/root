@@ -105,6 +105,7 @@ public:
 
    virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);
    virtual void      Browse(TBrowser *b);
+   virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();
    virtual Int_t     Fill();
