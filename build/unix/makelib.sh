@@ -48,7 +48,9 @@ LIBVERS=
 VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
-   if [ $LIB != "lib/libCint.$soext" ] && [ $LIB != "lib/libReflex.$soext" ]; then
+   if [ $LIB != "lib/libCint.$soext" ] \
+       && [ $LIB != "lib/libReflex.$soext" ] \
+       && [ $LIB != "lib/libminicern.$soext" ]; then
       NEEDREFLEX=""
       if [ "`bin/root-config --dicttype`" != "cint" ]; then
           NEEDREFLEX="-lReflex"
@@ -162,7 +164,9 @@ elif [ $LD = "KCC" ]; then
    $cmd
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
    EXPLLNKCORE=
-   if [ $SONAME != "libCint.dll" ]; then
+   if [ $SONAME != "libCint.dll" ] \
+       && [ $SONAME != "libReflex.dll" ] \
+       && [ $SONAME != "libminicern.dll" ] ; then
       if [ $SONAME != "libCore.dll" ]; then
          EXPLLNKCORE="-Llib -lCore -lCint"
       else
