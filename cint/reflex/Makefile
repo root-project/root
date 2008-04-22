@@ -8,7 +8,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *_rflx.cpp *_rflxdriver.C
 # the name should be changed accordingly in this list.
 
 RFLXDICTTESTS:= classVersion_rflx properties_rflx
-TEST_TARGETS += $(RFLXDICTTESTS) ReflexCintexOrder CintexReflexOrder
+TEST_TARGETS += $(RFLXDICTTESTS) ReflexCintexOrder CintexReflexOrder Tools
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -88,3 +88,6 @@ endif
 endif
 
 properties_rflx: GENREFLEXFLAGS=--iocomments
+
+Tools: Tools.log
+	$(TestDiff)
