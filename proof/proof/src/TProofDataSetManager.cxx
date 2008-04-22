@@ -253,10 +253,14 @@ Bool_t TProofDataSetManager::ReadGroupConfig(const char *cf)
             TString sdq;
             if (!line.Tokenize(sdq, from, " ")) // No token
                continue;
-            if (sdq.IsDigit()) {
-               Long64_t quota = (Long64_t) 1024 * 1024 * 1024 * sdq.Atoi();
+            Long64_t quota = ToBytes(sdq);
+            if (quota > -1) {
                fGroupQuota.Add(new TObjString(grp),
                                new TParameter<Long64_t> ("group quota", quota));
+            } else {
+               Warning("ReadGroupConfig",
+                       "problems parsing string: wrong or unsupported suffix? %s",
+                        sdq.Data());
             }
          } else if (type == "commonuser") {
             // Read common user for this group
@@ -307,28 +311,56 @@ Bool_t TProofDataSetManager::ReadGroupConfig(const char *cf)
                Info("ReadGroupConfig","incomplete line: '%s'", line.Data());
             continue;
          }
-         // Determine factor
-         const char *unit[4] = {  "", "k", "M", "G"};
-         Int_t jj = 3;
-         while (jj > 0) {
-            if (avgsize.EndsWith(unit[jj], TString::kIgnoreCase)) {
-               avgsize.Remove(avgsize.Length()-1);
-               break;
-            }
-            jj--;
-         }
-         if (avgsize.IsDigit()) {
-            const Int_t fact[4] = { 1, 1024, 1048576, 1073741824};
-            fAvgFileSize = avgsize.Atoi() * fact[jj];
+         Long64_t avgsz = ToBytes(avgsize);
+         if (avgsz > -1) {
+            fAvgFileSize = avgsz;
          } else {
             Warning("ReadGroupConfig",
-                    "average size should be a number, not: %s", avgsize.Data());
+                    "problems parsing string: wrong or unsupported suffix? %s",
+                    avgsize.Data());
          }
       }
    }
    in.close();
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Long64_t TProofDataSetManager::ToBytes(const char *size)
+{
+   // Static utility function to gt the number of bytes from a string
+   // representation in the form "<digit><sfx>" with <sfx> = {"", "k", "M", "G",
+   // "T", "P"} (case insensitive).
+   // Returns -1 if the format is wrong.
+
+   Long64_t lsize = -1;
+
+   // Check if valid
+   if (!size || strlen(size) <= 0) return lsize;
+
+   TString s(size);
+   // Determine factor
+   Long64_t fact = 1;
+   if (!s.IsDigit()) {
+      const char *unit[5] = { "k", "M", "G", "T", "P"};
+      fact = 1024;
+      Int_t jj = 0;
+      while (jj <= 4) {
+         if (s.EndsWith(unit[jj], TString::kIgnoreCase)) {
+            s.Remove(s.Length()-1);
+            break;
+         }
+         fact *= 1024;
+         jj++;
+      }
+   }
+   // Apply factor now
+   if (s.IsDigit())
+      lsize = s.Atoi() * fact;
+
+   // Done
+   return lsize;
 }
 
 //______________________________________________________________________________
