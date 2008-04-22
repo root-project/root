@@ -458,7 +458,7 @@ static char *kill_trailing(      s,      t) char *s; char t;
 {char *e;
 e = s + strlen(s);
 if (e>s) {                           /* Need this to handle NULL string.*/
-  while (e>s && *--e==t);            /* Don't follow t's past beginning. */
+  while (e>s && *--e==t) { }            /* Don't follow t's past beginning. */
   e[*e==t?0:1] = '\0';               /* Handle s[0]=t correctly.       */
 } return s; }
 
@@ -474,7 +474,7 @@ static char *kill_trailingn(      s,      t,       e) char *s; char t; char *e;
 {
 if (e==s) *e = '\0';                 /* Kill the string makes sense here.*/
 else if (e>s) {                      /* Watch out for neg. length string.*/
-  while (e>s && *--e==t);            /* Don't follow t's past beginning. */
+  while (e>s && *--e==t) { }            /* Don't follow t's past beginning. */
   e[*e==t?0:1] = '\0';               /* Handle s[0]=t correctly.       */
 } return s; }
 
@@ -539,7 +539,7 @@ if (num_term == _NUM_ELEMS || num_term == _NUM_ELEM_ARG)
   return term_char;
 if (num_term <=0) num_term = (int)elem_len;
 for (num=0; ; num++) {
-  for (i=0; i<(unsigned)num_term && *strv==term_char; i++,strv++);
+  for (i=0; i<(unsigned)num_term && *strv==term_char; i++,strv++) { }
   if (i==(unsigned)num_term) break;
   else strv += elem_len-i;
 }
