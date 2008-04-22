@@ -70,18 +70,21 @@ CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-F77           = ifort
-F77FLAGS      =
+F77           =
+ifeq ($(shell which ifort 2>&1 | sed -ne "s/.*\/ifort/ifort/p"),ifort)
+F77          := ifort
+F77FLAGS     :=
 # check for libg2c and libfrtbegin
 ifneq ($(shell g77 -print-file-name=libg2c.so),libg2c.so)
-LIBG2C        := $(shell g77 -print-file-name=libg2c.so) -lnsl
+LIBG2C       := $(shell g77 -print-file-name=libg2c.so) -lnsl
 else
-LIBG2C        := $(shell g77 -print-file-name=libg2c.a)  -lnsl
+LIBG2C       := $(shell g77 -print-file-name=libg2c.a)  -lnsl
 endif
 LIBFRTBEGIN  := $(shell g77 -print-file-name=libfrtbegin.a)
-F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
+F77LIBS      := $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
+endif
 
 # Precompiled headers:
 PCHSUPPORTED := $(ENABLEPCH)

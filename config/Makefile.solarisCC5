@@ -55,11 +55,14 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm -ltermcap -ldl
 
 # Fortran:
-#F77           = /opt/SUNWspro/bin/f77
-F77           = f77
-F77LIBS       = -lf77compat -lfui -lfsu -lmtsk -lsunmath
+F77           =
+ifeq ($(shell which f77 2>&1 | sed -ne "s/.*\/f77/f77/p"),f77)
+#F77          := /opt/SUNWspro/bin/f77
+F77          := f77
+F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunmath
 # Use this on Solaris 10 with F90 compiler
-#F77LIBS       = -lf77compat -lfui -lfsu -lmtsk -lsunperf -lsunmath
+#F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunperf -lsunmath
+endif
 
 # Override default in Makefile.config
 INSTALL      := cp -pR

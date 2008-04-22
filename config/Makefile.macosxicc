@@ -96,15 +96,18 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 
 # Fortran:
-F77           = ifort
-F77FLAGS      =
-F77LIBS       =
+F77           =
+ifeq ($(shell which ifort 2>&1 | sed -ne "s/.*\/ifort/ifort/p"),ifort)
+F77          := ifort
+F77FLAGS     :=
+F77LIBS      :=
 ifneq ($(shell find $(FINK_DIR)/bin -name gfortran),)
 F77LIBS      := $(shell gfortran -print-file-name=libgfortran.dylib)
 F77LIBS      += $(shell gfortran -print-file-name=libgfortranbegin.a)
 endif
 F77LIBS      += -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
+endif
 
 # Precompiled headers:
 PCHSUPPORTED := $(ENABLEPCH)
