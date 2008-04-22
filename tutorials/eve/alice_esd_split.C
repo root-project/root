@@ -120,7 +120,8 @@ Int_t esd_event_id       = 0; // Current event id.
 TEveTrackList *track_list = 0;
 
 TGTextEntry *gTextEntry;
-      
+TGHProgressBar *gProgress;
+
 /******************************************************************************/
 // Initialization and steering functions
 /******************************************************************************/
@@ -370,6 +371,11 @@ void make_gui()
    }
    frmMain->AddFrame(hf, new TGLayoutHints(kLHintsTop | kLHintsExpandX,0,0,20,0));
 
+   gProgress = new TGHProgressBar(frmMain, TGProgressBar::kFancy, 100);
+   gProgress->ShowPosition(kTRUE, kFALSE, "%.0f tracks");
+   gProgress->SetBarColor("green");
+   frmMain->AddFrame(gProgress, new TGLayoutHints(kLHintsExpandX, 10, 10, 5, 5));
+
    frmMain->MapSubwindows();
    frmMain->Resize();
    frmMain->MapWindow();
@@ -422,6 +428,8 @@ void alice_esd_read()
    TEveTrackPropagator* trkProp = track_list->GetPropagator();
    trkProp->SetMagField( 0.1 * esdrun->fMagneticField ); // kGaus to Tesla
 
+   gProgress->Reset();
+   gProgress->SetMax(tracks->GetEntriesFast());
    for (Int_t n=0; n<tracks->GetEntriesFast(); ++n)
    {
       AliESDtrack* at = (AliESDtrack*) tracks->At(n);
@@ -442,6 +450,7 @@ void alice_esd_read()
       //     AliESDfriendTrack* ft = (AliESDfriendTrack*) frnd->fTracks->At(n);
       //     printf("%d friend = %p\n", ft);
       // }
+      gProgress->Increment(1);
    }
 
    track_list->MakeTracks();
