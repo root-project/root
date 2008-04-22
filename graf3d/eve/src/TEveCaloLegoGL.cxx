@@ -744,7 +744,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
       // draw in original binning
       TEveCaloData::CellData_t cellData;
       Int_t prevTower = 0;
-      Float_t sum;
+      Float_t sum = 0;
       glBegin(GL_QUADS);
       for (TEveCaloData::vCellId_t::iterator it=fM->fCellList.begin(); it!=fM->fCellList.end(); it++)
       {
