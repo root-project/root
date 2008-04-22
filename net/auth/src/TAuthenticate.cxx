@@ -56,6 +56,7 @@
 #if defined(R__LINUX) || defined(R__FBSD) || defined(R__OBSD)
 #  include <unistd.h>
 #endif
+#include <stdlib.h>
 
 #if defined(R__ALPHA) || defined(R__SGI) || defined(R__MACOSX)
 extern "C" char *crypt(const char *, const char *);

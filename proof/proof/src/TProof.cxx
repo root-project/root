@@ -20,6 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
 #ifdef WIN32
