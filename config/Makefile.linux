@@ -50,14 +50,7 @@ ifeq ($(shell ls -id `gfortran -print-libgcc-file-name` | awk '{print $$1}'),$(s
 F77          := gfortran
 F77FLAGS     := -fPIC -std=legacy
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
-F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a) -lnsl
-ifeq ($(shell which g77 2>&1 | sed -ne "s/.*\/g77/g77/p"),g77)
-ifneq ($(shell g77 -print-file-name=libg2c.so),libg2c.so)
-F77LIBS      += $(shell g77 -print-file-name=libg2c.so) -lnsl
-else
-F77LIBS      += $(shell g77 -print-file-name=libg2c.a) -lnsl
-endif
-endif
+F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
 endif
 endif
 
