@@ -109,15 +109,8 @@ endif
 ifeq ($(F77),)
 ifeq ($(shell which g77 2>&1 | sed -ne "s/.*\/g77/g77/p"),g77)
 F77          := g77
-F77LIBS       =
+F77LIBS      := -L$(FINK_DIR)/lib -lg2c
 endif
-endif
-
-# We add libg2c only in case of ppc because then we probably have cernlib
-# compiled with g77. In case of Intel Mac it should be compiled with the
-# same fortran we use.
-ifeq ($(MACOSX_CPU),powerpc)
-F77LIBS += -L$(FINK_DIR)/lib -lg2c
 endif
 
 # Override default in Makefile.config
