@@ -32,6 +32,9 @@
 #include "THashTable.h"
 #endif
 
+#include <iterator>
+
+
 class THashTableIter;
 class TMapIter;
 class TBrowser;
