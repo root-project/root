@@ -98,11 +98,15 @@ CILIBS        =
 CRYPTLIBS     =
 
 # Fortran:
+ifeq ($(shell fl32 -ver 2>/dev/null),)
+F77           = 
+else
 F77           = build/win/f77.sh
 F77FLAGS      = -nologo -4Nportlib $(BLDF77FLAGS) -recursive
 F77LD         = $(F77)
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =
+endif
 
 # Precompiled headers:
 PCHSUPPORTED  := $(ENABLEPCH)
