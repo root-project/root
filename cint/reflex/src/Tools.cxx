@@ -362,10 +362,10 @@ bool Tools::IsTemplated(const char * name ) {
             // is not templated.
             return false;
          if (name[i] == '>') {
-            // check for operator> or operator>>
+            // check for operator> or operator>> or operator->
             if (i > 7) {
                int j = i;
-               if (name[i - 1] == '>') --j;
+               if (name[i - 1] == '>' || name[i - 1] == '-') --j;
                while (j && isspace(name[j]))
                   --j;
                if (j > 7 && !strncmp(name + j - 8, "operator", 8))
