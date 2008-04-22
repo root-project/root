@@ -333,10 +333,49 @@ std::string Tools::GetBaseName( const std::string & name,
 bool Tools::IsTemplated(const char * name ) {
 //-------------------------------------------------------------------------------
 // Check if a type name is templated.
-   for (size_t i = strlen(name)-1; i > 0; --i) {
-      if (( name[i] == '>' ) && ( strchr(name,'<') != 0 )) return true;
-      else if ( name[i] == ' ') break;
-      else return false;
+// Only check the current scope, i.e. IsTemplated("A<T>::B") will return false!
+// Functions are treated as templated if they have an explicit template argument
+// in front of their argument list, e.g. both "operator A<T>()" and "int f<T>()"
+// are determined to be templated.
+
+   // Watch out for A<T>::op>() - which we treat as non templated!
+   // So a trailing '>' is not sufficient, even if there is a '<' in
+   // the type name.
+
+   // level of nested parantheses, e.g. for the _not_ templated
+   // f(A<int>(*)(B<float>))
+   unsigned int paraLevel = 0;
+
+   for (size_t i = strlen(name) - 1; i > 0; --i) {
+      if (name[i] == ')')
+         ++paraLevel;
+      else if (name[i] == '(') {
+         if (paraLevel)
+            --paraLevel;
+         else
+            std::cerr << "Reflex::Tool::IsTemplated(): ERROR: level of parantheses < 0 for "
+                      << name << std::endl;
+      } else if (!paraLevel) {
+         if (name[i] == ':' && name[i - 1] == ':')
+            // Reached the first scope that is not in a template arg.
+            // Only the last scope is tested here, so this type name
+            // is not templated.
+            return false;
+         if (name[i] == '>') {
+            // check for operator> or operator>>
+            if (i > 7) {
+               int j = i;
+               if (name[i - 1] == '>') --j;
+               while (j && isspace(name[j]))
+                  --j;
+               if (j > 7 && !strncmp(name + j - 8, "operator", 8))
+                  // it's the operator!
+                  return false;
+            }
+            // not the operator> or operator>>
+            return true;
+         }
+      }
    }
    return false;
    /* alpha 
