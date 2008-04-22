@@ -1423,33 +1423,35 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    if (fitOption.Bound || fitOption.User || fitOption.Errors || fitOption.Minuit)
       linear = kFALSE;
 
-   char l[] = "TLinearFitter";
-   Int_t strdiff = 0;
-   Bool_t isSet = kFALSE;
-   if (TVirtualFitter::GetFitter()){
-      //Is a fitter already set? Is it linear?
-      isSet = kTRUE;
-      strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
+   const TString linearFitterClass = "TLinearFitter";
+   Bool_t fitterSet = kFALSE;
+   Bool_t linearSet = kFALSE;
+   if (TVirtualFitter::GetFitter()) {
+      // Is a fitter already set? Is it linear?
+      fitterSet = kTRUE;
+      linearSet = (TVirtualFitter::GetFitter()->IsA()->GetName() == linearFitterClass);
    }
-   if (linear){
+
+   TVirtualFitter *origFitter = 0;
+   if (linear) {
       //
-      TClass *cl = TClass::GetClass("TLinearFitter");
-      if (isSet && strdiff!=0) {
-         delete TVirtualFitter::GetFitter();
-         isSet = kFALSE;
+      TClass *cl = TClass::GetClass(linearFitterClass);
+      if (fitterSet && !linearSet) {
+         origFitter = TVirtualFitter::GetFitter();
+         fitterSet = kFALSE;
       }
-      if (!isSet && cl) {
+      if (!fitterSet && cl) {
          TVirtualFitter::SetFitter((TVirtualFitter *)cl->New());
       }
    } else {
-      if (isSet && strdiff==0){
-         delete TVirtualFitter::GetFitter();
-         isSet = kFALSE;
+      if (fitterSet && linearSet) {
+         origFitter = TVirtualFitter::GetFitter();
+         fitterSet = kFALSE;
       }
-      if (!isSet)
+      if (!fitterSet)
          TVirtualFitter::SetFitter(0);
    }
-   TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
+   TVirtualFitter *grFitter = TVirtualFitter::Fitter(this,f1->GetNpar());
    grFitter->Clear();
 
    // Get pointer to the function by searching in the list of functions in ROOT
@@ -1477,7 +1479,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
    // If case of a predefined function, then compute initial values of parameters
 
-   if (linear){
+   if (linear) {
       if (fitOption.Robust)
          fitResult = grFitter->ExecuteCommand("FitGraph", &h, 0);
       else
@@ -1529,7 +1531,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          if (we <= TMath::Abs(par)*1e-6) we = 1;
          grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
       }
-      if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
+      if (nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
       // Reset Print level
       if (!fitOption.Quiet) {
@@ -1609,6 +1611,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       if (TestBit(kCanDelete)) return fitResult;
       if (gPad) gPad->Modified();
    }
+
+   // Restore the original fitter
+   if (origFitter)
+   {
+     delete TVirtualFitter::GetFitter();
+     TVirtualFitter::SetFitter(origFitter);
+   }
+
    return fitResult;
 }
 
