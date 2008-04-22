@@ -60,6 +60,13 @@ unsigned int ishftr_(unsigned int *arg, int *len)
 
 //------------------------------------------------------------------------------
 
+unsigned int lshift_(unsigned int *arg, int *len)
+{
+   return(*arg << *len);
+}
+
+//------------------------------------------------------------------------------
+
 void vxinvb_(int *ixv, int *n)
 {
    int limit, jloop;
