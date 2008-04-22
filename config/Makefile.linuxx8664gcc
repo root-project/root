@@ -51,27 +51,20 @@ F77           =
 ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
 ifeq ($(shell ls -id `gfortran -print-libgcc-file-name` | awk '{print $$1}'),$(shell ls -id `$(CC) -print-libgcc-file-name` | awk '{print $$1}'))
 F77          := gfortran
-F77FLAGS     := -fPIC -std=legacy
-F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
-F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a) -lnsl
-ifeq ($(shell which g77 2>&1 | sed -ne "s/.*\/g77/g77/p"),g77)
-ifneq ($(shell g77 -print-file-name=libg2c.so),libg2c.so)
-F77LIBS      += $(shell g77 -print-file-name=libg2c.so) -lnsl
-else
-F77LIBS      += $(shell g77 -print-file-name=libg2c.a) -lnsl
-endif
-endif
+F77FLAGS     := -fPIC -m64 -std=legacy
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT))
+F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
 endif
 endif
 
 ifeq ($(F77),)
 ifeq ($(shell which g77 2>&1 | sed -ne "s/.*\/g77/g77/p"),g77)
 F77          := g77
-F77FLAGS     := -fPIC
+F77FLAGS     := -fPIC -m64
 ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
-F77LIBS      := $(shell $(F77) -print-file-name=libg2c.so) -lnsl
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libg2c.so) -lnsl
 else
-F77LIBS      := $(shell $(F77) -print-file-name=libg2c.a) -lnsl
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libg2c.a) -lnsl
 endif
 endif
 endif
