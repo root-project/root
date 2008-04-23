@@ -127,8 +127,8 @@ static int gRedDiv, gGreenDiv, gBlueDiv, gRedShift, gGreenShift, gBlueShift;
 
 
 
-static void sort(list, numPolys)
-polygon **list;
+static void sort(list1, numPolys)
+polygon **list1;
 int numPolys;
 /*****************************************************************************
    Specialized quick sort for painter algorithm.
@@ -141,8 +141,8 @@ int numPoints;
 StackElement stack[MAXSTACK];
 point **Point, **lastPoint;
 
-   v0 = list;
-   v1 = &(list[numPolys]);
+   v0 = list1;
+   v1 = &(list1[numPolys]);
 
 /* Set the key value to be the average of the vertices' distances */
 
@@ -185,11 +185,11 @@ point **Point, **lastPoint;
 /* Big enough to qsort ? */
 
       if(length > STOP){
-         v1 = &(list[start]);
-         v2 = &(list[start + (length / 4)]);
-         v3 = &(list[start + (length / 2)]);
-         v4 = &(list[start + ((length * 3) / 4)]);
-         v5 = &(list[end]);
+         v1 = &(list1[start]);
+         v2 = &(list1[start + (length / 4)]);
+         v3 = &(list1[start + (length / 2)]);
+         v4 = &(list1[start + ((length * 3) / 4)]);
+         v5 = &(list1[end]);
          v6 = v1;
 
          median5(v1,v2,v3,v4,v5)
@@ -198,8 +198,8 @@ point **Point, **lastPoint;
          *v3 = *v6;
          *v6 = *v0;
 
-         v1 = &(list[start + 1]);
-         v2 = &(list[end]);
+         v1 = &(list1[start + 1]);
+         v2 = &(list1[end]);
 
 /* Split */
 
@@ -233,7 +233,7 @@ point **Point, **lastPoint;
          *v2 = *v6;
          *v6 = *v0;
 
-         high = v2 - list;
+         high = v2 - list1;
 
 /* Put sublists on the stack, smallest on top */
 
@@ -255,8 +255,8 @@ point **Point, **lastPoint;
 
 /* insertion sort all the remaining sublists at once */
 
-   v2 = list;
-   v3 = &(list[numPolys - 1]);
+   v2 = list1;
+   v3 = &(list1[numPolys - 1]);
    v4 = v2 + 1;
 
    while(v4 <= v3){
@@ -276,31 +276,31 @@ point **Point, **lastPoint;
 
 
 
-static void Rotate(points, cx, cy, cz, sx, sy, sz)
-anglePoint *points;
+static void Rotate(points1, cx, cy, cz, sx, sy, sz)
+anglePoint *points1;
 double cx, cy, cz, sx, sy, sz;
 /******************************************************************************
    Rotate about Z, X, then Y, for two points.
 ******************************************************************************/
 {
-int index;
+int index1;
 double x, y, z, t;
 
-    for(index = 0; index < 2; index++){
-       x = points[index].x;
-       y = points[index].y;
-       z = points[index].z;
+    for(index1 = 0; index1 < 2; index1++){
+       x = points1[index1].x;
+       y = points1[index1].y;
+       z = points1[index1].z;
 
        t = x * cz + y * sz;
        y = y * cz - x * sz;
        x = t;
 
-       points[index].y = y * cx + z * sx;
+       points1[index1].y = y * cx + z * sx;
 
        z = z * cx - y * sx;
 
-       points[index].x = x * cy + z * sy;
-       points[index].z = z * cy - x * sy;
+       points1[index1].x = x * cy + z * sy;
+       points1[index1].z = z * cy - x * sy;
        }
 }
 
@@ -343,29 +343,29 @@ double X1, Y1, Z1;
    in my weird coordinate system.
 ******************************************************************************/
 {
-anglePoint points[2];
+anglePoint points1[2];
 
-   points[0].x = 0.0; points[0].y = 0.0; points[0].z = 1.0;
-   points[1].x = 1.0; points[1].y = 0.0; points[1].z = 0.0;
+   points1[0].x = 0.0; points1[0].y = 0.0; points1[0].z = 1.0;
+   points1[1].x = 1.0; points1[1].y = 0.0; points1[1].z = 0.0;
 
-   Rotate(points, cos(*X), cos(*Y), cos(*Z), sin(*X), sin(*Y), sin(*Z));
-   Rotate(points, cos(X1), cos(Y1), cos(Z1), sin(X1), sin(Y1), sin(Z1));
+   Rotate(points1, cos(*X), cos(*Y), cos(*Z), sin(*X), sin(*Y), sin(*Z));
+   Rotate(points1, cos(X1), cos(Y1), cos(Z1), sin(X1), sin(Y1), sin(Z1));
 
-   *Y = acos(DotProduct(points[0].x, points[0].z, 0.0, 1.0));
+   *Y = acos(DotProduct(points1[0].x, points1[0].z, 0.0, 1.0));
 
-   if(points[0].x < 0.0)
+   if(points1[0].x < 0.0)
       *Y = -*Y;
 
-   Rotate(points, 1.0, cos(-*Y), 1.0, 0.0, sin(-*Y), 0.0);
-   *X = acos(DotProduct(points[0].y, points[0].z, 0.0, 1.0));
+   Rotate(points1, 1.0, cos(-*Y), 1.0, 0.0, sin(-*Y), 0.0);
+   *X = acos(DotProduct(points1[0].y, points1[0].z, 0.0, 1.0));
 
-   if(points[0].y < 0.0)
+   if(points1[0].y < 0.0)
       *X = -*X;
 
-   Rotate(points, cos(-*X), 1.0, 1.0, sin(-*X), 0.0, 0.0);
-   *Z = acos(DotProduct(points[1].x, points[1].y, 1.0, 0.0));
+   Rotate(points1, cos(-*X), 1.0, 1.0, sin(-*X), 0.0, 0.0);
+   *Z = acos(DotProduct(points1[1].x, points1[1].y, 1.0, 0.0));
 
-   if(!(points[1].y < 0.0))
+   if(!(points1[1].y < 0.0))
       *Z = -*Z;
 }
 
@@ -379,8 +379,8 @@ int x, y;
 ******************************************************************************/
 {
 int hUnit, vUnit;
-   _XPoint points[512];
-   void *ptrp = points;
+   _XPoint points1[512];
+   void *ptrp = points1;
 
    hUnit = XTextWidth(g->font, LONGESTSTRING, strlen(LONGESTSTRING)) /
    strlen(LONGESTSTRING);
@@ -388,94 +388,94 @@ int hUnit, vUnit;
 
 /* X */
 
-   points[0].x =  9 * hUnit + x; points[0].y =  1 * vUnit + y;
-   points[1].x =  9 * hUnit + vUnit + x; points[1].y =  1 * vUnit + y;
-   points[2].x = 14 * hUnit + vUnit + x; points[2].y =  6 * vUnit + y;
-   points[3].x = 14 * hUnit + x; points[3].y =  6 * vUnit + y;
+   points1[0].x =  9 * hUnit + x; points1[0].y =  1 * vUnit + y;
+   points1[1].x =  9 * hUnit + vUnit + x; points1[1].y =  1 * vUnit + y;
+   points1[2].x = 14 * hUnit + vUnit + x; points1[2].y =  6 * vUnit + y;
+   points1[3].x = 14 * hUnit + x; points1[3].y =  6 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 14 * hUnit + vUnit + x; points[0].y =  1 * vUnit + y;
-   points[1].x = 14 * hUnit + x; points[1].y =  1 * vUnit + y;
-   points[2].x =  9 * hUnit + x; points[2].y =  6 * vUnit + y;
-   points[3].x =  9 * hUnit + vUnit + x; points[3].y =  6 * vUnit + y;
+   points1[0].x = 14 * hUnit + vUnit + x; points1[0].y =  1 * vUnit + y;
+   points1[1].x = 14 * hUnit + x; points1[1].y =  1 * vUnit + y;
+   points1[2].x =  9 * hUnit + x; points1[2].y =  6 * vUnit + y;
+   points1[3].x =  9 * hUnit + vUnit + x; points1[3].y =  6 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
 /* 3 */
 
-   points[0].x = 18 * hUnit + x; points[0].y =  1 * vUnit + y;
-   points[1].x = 22 * hUnit + x; points[1].y =  1 * vUnit + y;
-   points[2].x = 23 * hUnit + x; points[2].y =  2 * vUnit + y;
-   points[3].x = 18 * hUnit + x; points[3].y =  2 * vUnit + y;
+   points1[0].x = 18 * hUnit + x; points1[0].y =  1 * vUnit + y;
+   points1[1].x = 22 * hUnit + x; points1[1].y =  1 * vUnit + y;
+   points1[2].x = 23 * hUnit + x; points1[2].y =  2 * vUnit + y;
+   points1[3].x = 18 * hUnit + x; points1[3].y =  2 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 23 * hUnit - vUnit + x; points[0].y =  2 * vUnit + y;
-   points[1].x = 23 * hUnit + x; points[1].y =  2 * vUnit + y;
-   points[2].x = 23 * hUnit + x; points[2].y =  3 * vUnit + y;
-   points[3].x = 23 * hUnit - vUnit + x; points[3].y =  4 * vUnit + y;
+   points1[0].x = 23 * hUnit - vUnit + x; points1[0].y =  2 * vUnit + y;
+   points1[1].x = 23 * hUnit + x; points1[1].y =  2 * vUnit + y;
+   points1[2].x = 23 * hUnit + x; points1[2].y =  3 * vUnit + y;
+   points1[3].x = 23 * hUnit - vUnit + x; points1[3].y =  4 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 23 * hUnit - vUnit + x; points[0].y =  3 * vUnit + y;
-   points[1].x = 23 * hUnit + x; points[1].y =  4 * vUnit + y;
-   points[2].x = 23 * hUnit + x; points[2].y =  5 * vUnit + y;
-   points[3].x = 23 * hUnit - vUnit + x; points[3].y =  5 * vUnit + y;
+   points1[0].x = 23 * hUnit - vUnit + x; points1[0].y =  3 * vUnit + y;
+   points1[1].x = 23 * hUnit + x; points1[1].y =  4 * vUnit + y;
+   points1[2].x = 23 * hUnit + x; points1[2].y =  5 * vUnit + y;
+   points1[3].x = 23 * hUnit - vUnit + x; points1[3].y =  5 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 18 * hUnit + x; points[0].y =  5 * vUnit + y;
-   points[1].x = 23 * hUnit + x; points[1].y =  5 * vUnit + y;
-   points[2].x = 22 * hUnit + x; points[2].y =  6 * vUnit + y;
-   points[3].x = 18 * hUnit + x; points[3].y =  6 * vUnit + y;
+   points1[0].x = 18 * hUnit + x; points1[0].y =  5 * vUnit + y;
+   points1[1].x = 23 * hUnit + x; points1[1].y =  5 * vUnit + y;
+   points1[2].x = 22 * hUnit + x; points1[2].y =  6 * vUnit + y;
+   points1[3].x = 18 * hUnit + x; points1[3].y =  6 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 19 * hUnit + x; points[0].y =  3 * vUnit + y;
-   points[1].x = 23 * hUnit - vUnit + x; points[1].y =  3 * vUnit + y;
-   points[2].x = 23 * hUnit - vUnit + x; points[2].y =  4 * vUnit + y;
-   points[3].x = 19 * hUnit + x; points[3].y =  4 * vUnit + y;
+   points1[0].x = 19 * hUnit + x; points[0].y =  3 * vUnit + y;
+   points1[1].x = 23 * hUnit - vUnit + x; points1[1].y =  3 * vUnit + y;
+   points1[2].x = 23 * hUnit - vUnit + x; points1[2].y =  4 * vUnit + y;
+   points1[3].x = 19 * hUnit + x; points1[3].y =  4 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
 /* D */
 
-   points[0].x = 26 * hUnit + x; points[0].y =  1 * vUnit + y;
-   points[1].x = 30 * hUnit + x; points[1].y =  1 * vUnit + y;
-   points[2].x = 30 * hUnit + vUnit + x; points[2].y =  2 * vUnit + y;
-   points[3].x = 26 * hUnit + x; points[3].y =  2 * vUnit + y;
+   points1[0].x = 26 * hUnit + x; points1[0].y =  1 * vUnit + y;
+   points1[1].x = 30 * hUnit + x; points1[1].y =  1 * vUnit + y;
+   points1[2].x = 30 * hUnit + vUnit + x; points1[2].y =  2 * vUnit + y;
+   points1[3].x = 26 * hUnit + x; points1[3].y =  2 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 26 * hUnit + x; points[0].y =  5 * vUnit + y;
-   points[1].x = 30 * hUnit + vUnit + x; points[1].y =  5 * vUnit + y;
-   points[2].x = 30 * hUnit + x; points[2].y =  6 * vUnit + y;
-   points[3].x = 26 * hUnit + x; points[3].y =  6 * vUnit + y;
+   points1[0].x = 26 * hUnit + x; points1[0].y =  5 * vUnit + y;
+   points1[1].x = 30 * hUnit + vUnit + x; points1[1].y =  5 * vUnit + y;
+   points1[2].x = 30 * hUnit + x; points1[2].y =  6 * vUnit + y;
+   points1[3].x = 26 * hUnit + x; points1[3].y =  6 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 26 * hUnit + x; points[0].y =  1 * vUnit + y;
-   points[1].x = 26 * hUnit + vUnit + x; points[1].y =  1 * vUnit + y;
-   points[2].x = 26 * hUnit + vUnit + x; points[2].y =  6 * vUnit + y;
-   points[3].x = 26 * hUnit + x; points[3].y =  6 * vUnit + y;
+   points1[0].x = 26 * hUnit + x; points1[0].y =  1 * vUnit + y;
+   points1[1].x = 26 * hUnit + vUnit + x; points1[1].y =  1 * vUnit + y;
+   points1[2].x = 26 * hUnit + vUnit + x; points1[2].y =  6 * vUnit + y;
+   points1[3].x = 26 * hUnit + x; points1[3].y =  6 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
 
-   points[0].x = 30 * hUnit + x; points[0].y =  2 * vUnit + y;
-   points[1].x = 30 * hUnit + vUnit + x; points[1].y =  2 * vUnit + y;
-   points[2].x = 30 * hUnit + vUnit + x; points[2].y =  5 * vUnit + y;
-   points[3].x = 30 * hUnit + x; points[3].y =  5 * vUnit + y;
+   points1[0].x = 30 * hUnit + x; points1[0].y =  2 * vUnit + y;
+   points1[1].x = 30 * hUnit + vUnit + x; points1[1].y =  2 * vUnit + y;
+   points1[2].x = 30 * hUnit + vUnit + x; points1[2].y =  5 * vUnit + y;
+   points1[3].x = 30 * hUnit + x; points1[3].y =  5 * vUnit + y;
 
    XFillPolygon(g->dpy, g->helpWin, g->helpGc, ptrp, 4, Convex,
    CoordModeOrigin);
@@ -598,7 +598,7 @@ Ginfo *g;
    Set up color information/stipples for a one bit display.
 ******************************************************************************/
 {
-int index;
+int index1;
 Color *color;
 int numColors;
 
@@ -607,16 +607,16 @@ int numColors;
 
 /* Set the colors (may not be used) */
 
-   for(index = 0; index < numColors; index++){
-      color[index].value = 1;
+   for(index1 = 0; index1 < numColors; index1++){
+      color[index1].value = 1;
 
 /* Set the stipples */
 
-      color[index].stipple =(int)((double)NUMSTIPPLES *
+      color[index1].stipple =(int)((double)NUMSTIPPLES *
       ((double)sqrt((double)(
-      (double)color[index].red   * (double)color[index].red +
-      (double)color[index].green * (double)color[index].green +
-      (double)color[index].blue  * (double)color[index].blue))
+      (double)color[index1].red   * (double)color[index1].red +
+      (double)color[index1].green * (double)color[index1].green +
+      (double)color[index1].blue  * (double)color[index1].blue))
       / MAXCOLORDIST));
       }
 }
@@ -629,135 +629,135 @@ Ginfo *g;
    Set up color information/stipples for a eight bit display.
 ******************************************************************************/
 {
-Color *colors;
+Color *colors1;
 int numColors;
 int colorIndex = 0;
-int index, index2, redIndex, blueIndex, greenIndex;
+int index1, index2, redIndex, blueIndex, greenIndex;
 XColor c;
 
-   colors = g->colors;
+   colors1 = g->colors;
    numColors = g->numColors;
 
 /* Put "black" into the place reserved for it in the end */
 
-   colors[numColors].red   = 0;
-   colors[numColors].green = 0;
-   colors[numColors].blue  = 0;
+   colors1[numColors].red   = 0;
+   colors1[numColors].green = 0;
+   colors1[numColors].blue  = 0;
 
 /* Put "red" into the place reserved for it in the end */
 
-   colors[numColors + 1].red   = 255;
-   colors[numColors + 1].green = 0;
-   colors[numColors + 1].blue  = 0;
+   colors1[numColors + 1].red   = 255;
+   colors1[numColors + 1].green = 0;
+   colors1[numColors + 1].blue  = 0;
 
 /* Put "blue" into the place reserved for it in the end */
 
-   colors[numColors + 2].red   = 0;
-   colors[numColors + 2].green = 0;
-   colors[numColors + 2].blue  = 255;
+   colors1[numColors + 2].red   = 0;
+   colors1[numColors + 2].green = 0;
+   colors1[numColors + 2].blue  = 255;
 
 /* Put "purple" into the place reserved for it in the end */
 
-   colors[numColors + 3].red   = 255;
-   colors[numColors + 3].green = 0;
-   colors[numColors + 3].blue  = 255;
+   colors1[numColors + 3].red   = 255;
+   colors1[numColors + 3].green = 0;
+   colors1[numColors + 3].blue  = 255;
 
 /* Blank out the colormap */
 
-   for(index = 0; index < 256; index++){
+   for(index1 = 0; index1 < 256; index1++){
       c.red    = 0;
       c.green  = 0;
       c.blue   = 0;
       c.flags  = DoRed | DoGreen | DoBlue;
       c.pixel  = 255;
       c.pad    = 0;
-      g->cmapColors[0][index] = c;
-      g->cmapColors[1][index] = c;
-      g->cmapColors[2][index] = c;
+      g->cmapColors[0][index1] = c;
+      g->cmapColors[1][index1] = c;
+      g->cmapColors[2][index1] = c;
       }
 
    if(numColors <= BUFFER_CMAP){
 
       colorIndex= numColors + 3;
-      index = 15;
+      index1 = 15;
 
 /* Set stipple, and colormap double buffer colors */
 
-      while((index > 0) && (colorIndex >= 0)){
-         c.red    = colors[colorIndex].red   << 8;
-         c.green  = colors[colorIndex].green << 8;
-         c.blue   = colors[colorIndex].blue  << 8;
+      while((index1 > 0) && (colorIndex >= 0)){
+         c.red    = colors1[colorIndex].red   << 8;
+         c.green  = colors1[colorIndex].green << 8;
+         c.blue   = colors1[colorIndex].blue  << 8;
          c.flags  = DoRed | DoGreen | DoBlue;
 
-         colors[colorIndex].value = index * 16 + index;
+         colors1[colorIndex].value = index1 * 16 + index1;
 
-         colors[colorIndex].stipple =(int)((double)NUMSTIPPLES *
+         colors1[colorIndex].stipple =(int)((double)NUMSTIPPLES *
          ((double)sqrt((double)(
-         (double)colors[colorIndex].red   * (double)colors[colorIndex].red +
-         (double)colors[colorIndex].green * (double)colors[colorIndex].green +
-         (double)colors[colorIndex].blue  * (double)colors[colorIndex].blue))
+         (double)colors1[colorIndex].red   * (double)colors1[colorIndex].red +
+         (double)colors1[colorIndex].green * (double)colors1[colorIndex].green +
+         (double)colors1[colorIndex].blue  * (double)colors1[colorIndex].blue))
          / MAXCOLORDIST));
 
          for(index2 = 1; index2 < 16; index2++){
-            c.pixel  = index2 * 16 + index;
-            g->cmapColors[0][index2 * 16 + index] = c;
+            c.pixel  = index2 * 16 + index1;
+            g->cmapColors[0][index2 * 16 + index1] = c;
 
-            c.pixel  = index * 16 + index2;
-            g->cmapColors[1][index * 16 + index2] = c;
+            c.pixel  = index1 * 16 + index2;
+            g->cmapColors[1][index1 * 16 + index2] = c;
             }
 
-         index--;
+         index1--;
          colorIndex--;
          }
    }else{
 
 /* Set permanent black, red, blue, purple for cmap double buffer */
 
-      for(index = 0; index < 4; index++){
-         c.red    = colors[numColors + index].red   << 8;
-         c.green  = colors[numColors + index].green << 8;
-         c.blue   = colors[numColors + index].blue  << 8;
+      for(index1 = 0; index1 < 4; index1++){
+         c.red    = colors1[numColors + index1].red   << 8;
+         c.green  = colors1[numColors + index1].green << 8;
+         c.blue   = colors1[numColors + index1].blue  << 8;
          c.flags  = DoRed | DoGreen | DoBlue;
-         c.pixel  = 12 + index;
-         g->cmapColors[0][12 + index] = c;
-         g->cmapColors[1][12 + index] = c;
-         colors[numColors + index].value = c.pixel;
+         c.pixel  = 12 + index1;
+         g->cmapColors[0][12 + index1] = c;
+         g->cmapColors[1][12 + index1] = c;
+         colors1[numColors + index1].value = c.pixel;
          }
 
       if(numColors <= MAX_COLORS){
          colorIndex = 0;
-         index = 9;
+         index1 = 9;
          index2 = 0;
 
 /* Fill in the rest of the colors */
 
          while(colorIndex < numColors){
-            if((index < 12) || (index > 15)){
-               c.red    = colors[colorIndex].red   << 8;
-               c.green  = colors[colorIndex].green << 8;
-               c.blue   = colors[colorIndex].blue  << 8;
+            if((index1 < 12) || (index1 > 15)){
+               c.red    = colors1[colorIndex].red   << 8;
+               c.green  = colors1[colorIndex].green << 8;
+               c.blue   = colors1[colorIndex].blue  << 8;
                c.flags  = DoRed | DoGreen | DoBlue;
-               c.pixel  = index;
-               g->cmapColors[0][index] = c;
-               g->cmapColors[1][index] = c;
-               colors[colorIndex].value = index;
+               c.pixel  = index1;
+               g->cmapColors[0][index1] = c;
+               g->cmapColors[1][index1] = c;
+               colors1[colorIndex].value = index1;
 
-               colors[colorIndex].stipple =(int)((double)NUMSTIPPLES *
+               colors1[colorIndex].stipple =(int)((double)NUMSTIPPLES *
                ((double)sqrt((double)(
-               (double)colors[colorIndex].red *
-               (double)colors[colorIndex].red +
-               (double)colors[colorIndex].green *
-               (double)colors[colorIndex].green +
-               (double)colors[colorIndex].blue  *
-               (double)colors[colorIndex].blue))
+               (double)colors1[colorIndex].red *
+               (double)colors1[colorIndex].red +
+               (double)colors1[colorIndex].green *
+               (double)colors1[colorIndex].green +
+               (double)colors1[colorIndex].blue  *
+               (double)colors1[colorIndex].blue))
                / MAXCOLORDIST));
 
                colorIndex++;
                }
-            index++;
+            index1++;
             }
       }else{
-         index = 17;
+         index1 = 17;
          index2 = 0;
          redIndex   = 0;
          greenIndex = 0;
@@ -770,9 +770,9 @@ XColor c;
             c.green  = (greenIndex * VALUESCALE) << 8;
             c.blue   = (blueIndex * VALUESCALE) << 8;
             c.flags  = DoRed | DoGreen | DoBlue;
-            c.pixel  = index;
-            g->cmapColors[0][index] = c;
-            g->cmapColors[1][index] = c;
+            c.pixel  = index1;
+            g->cmapColors[0][index1] = c;
+            g->cmapColors[1][index1] = c;
 
             redIndex++;
 
@@ -785,21 +785,21 @@ XColor c;
                greenIndex = 0;
                blueIndex++;
                }
-            index++;
+            index1++;
             }
 
-         for(index = 0; index < numColors; index++){
-            colors[index].value = colors[index].red * 36 +
-               colors[index].green * 6 + colors[index].blue + 17;
+         for(index1 = 0; index1 < numColors; index1++){
+            colors1[index1].value = colors1[index1].red * 36 +
+               colors1[index1].green * 6 + colors1[index1].blue + 17;
 
-            colors[colorIndex].stipple =(int)((double)NUMSTIPPLES *
+            colors1[colorIndex].stipple =(int)((double)NUMSTIPPLES *
             ((double)sqrt((double)(
-            (double)colors[colorIndex].red *
-            (double)colors[colorIndex].red +
-            (double)colors[colorIndex].green *
-            (double)colors[colorIndex].green +
-            (double)colors[colorIndex].blue  *
-            (double)colors[colorIndex].blue))
+            (double)colors1[colorIndex].red *
+            (double)colors1[colorIndex].red +
+            (double)colors1[colorIndex].green *
+            (double)colors1[colorIndex].green +
+            (double)colors1[colorIndex].blue  *
+            (double)colors1[colorIndex].blue))
             / MAXCOLORDIST));
 
             }
@@ -808,24 +808,24 @@ XColor c;
 
 /* Set the colors for the special fast colormap double buffer */
 
-   index = 0;
+   index1 = 0;
    for(redIndex = 0; redIndex < 4; redIndex++){
       for(blueIndex = 0; blueIndex < 4; blueIndex++){
           if(redIndex != blueIndex){
-             g->wireframeColors[0][index] =
+             g->wireframeColors[0][index1] =
                 g->cmapColors[0][(redIndex + 12) * 16 + (blueIndex + 12)];
-             g->wireframeColors[1][index] =
+             g->wireframeColors[1][index1] =
                 g->cmapColors[1][(redIndex + 12) * 16 + (blueIndex + 12)];
-             index++;
+             index1++;
              }
           }
       }
 
 /* Just in case set the rest of the colors */
 
-   for(index = 13; index < 256; index++){
-      g->wireframeColors[0][index] = g->wireframeColors[0][3];
-      g->wireframeColors[1][index] = g->wireframeColors[1][3];
+   for(index1 = 13; index1 < 256; index1++){
+      g->wireframeColors[0][index1] = g->wireframeColors[0][3];
+      g->wireframeColors[1][index1] = g->wireframeColors[1][3];
       }
 
 /* Set the colors for the pix stereo mode */
@@ -843,14 +843,14 @@ XColor c;
 
 /* Set stereoColor to nearest color */
 
-   for(index = 0; index < numColors; index++){
+   for(index1 = 0; index1 < numColors; index1++){
       colorIndex = (int)((double)15 *
-      ((double)sqrt((double)((double)colors[index].red *
-      (double)colors[index].red + (double)colors[index].green *
-      (double)colors[index].green + (double)colors[index].blue *
-      (double)colors[index].blue)) / MAXCOLORDIST));
+      ((double)sqrt((double)((double)colors1[index1].red *
+      (double)colors1[index1].red + (double)colors1[index1].green *
+      (double)colors1[index1].green + (double)colors1[index1].blue *
+      (double)colors1[index1].blue)) / MAXCOLORDIST));
 
-      colors[index].stereoColor = (colorIndex + 1) * 16 + (colorIndex + 1);
+      colors1[index1].stereoColor = (colorIndex + 1) * 16 + (colorIndex + 1);
       }
 
 /* Set various important color values */
@@ -858,10 +858,10 @@ XColor c;
    g->stereoBlack  = (0 + 1) * 16 + (0 + 1);
    g->redMask  = BUFFER0;
    g->blueMask = BUFFER1;
-   g->Black  = colors[numColors].value;
-   g->Red    = colors[numColors + 1].value;
-   g->Blue   = colors[numColors + 2].value;
-   g->Purple = colors[numColors + 3].value;
+   g->Black  = colors1[numColors].value;
+   g->Red    = colors1[numColors + 1].value;
+   g->Blue   = colors1[numColors + 2].value;
+   g->Purple = colors1[numColors + 3].value;
 }
 
 
@@ -871,8 +871,8 @@ Ginfo *g;
    Set up color information/stipples for TrueColor displays.
 ******************************************************************************/
 {
-int index, colorValue;
-Color *colors;
+int index1, colorValue;
+Color *colors1;
 int numColors;
 
    /* On TrueColor displays the color pixel value composed directly of
@@ -882,36 +882,36 @@ int numColors;
       color the div is the number of bits to left shift (divide) from 255.
    */
 
-   colors = g->colors;
+   colors1 = g->colors;
    numColors = g->numColors;
 
-   for(index = 0; index < numColors; index++){
+   for(index1 = 0; index1 < numColors; index1++){
 
 /* In TrueColor every color is what it is */
 
-      colors[index].value =
-      (colors[index].red >>   gRedDiv)   << gRedShift |
-      (colors[index].green >> gGreenDiv) << gGreenShift |
-      (colors[index].blue >>  gBlueDiv)  << gBlueShift;
+      colors1[index1].value =
+      (colors1[index1].red >>   gRedDiv)   << gRedShift |
+      (colors1[index1].green >> gGreenDiv) << gGreenShift |
+      (colors1[index1].blue >>  gBlueDiv)  << gBlueShift;
 
 /* Set stipple */
 
-      colors[index].stipple =(int)((double)NUMSTIPPLES *
+      colors1[index1].stipple =(int)((double)NUMSTIPPLES *
       ((double)sqrt((double)(
-      (double)colors[index].red   * (double)colors[index].red +
-      (double)colors[index].green * (double)colors[index].green +
-      (double)colors[index].blue  * (double)colors[index].blue))
+      (double)colors1[index1].red   * (double)colors1[index1].red +
+      (double)colors1[index1].green * (double)colors1[index1].green +
+      (double)colors1[index1].blue  * (double)colors1[index1].blue))
       / MAXCOLORDIST));
 
 /* Set stereo color */
 
       colorValue= (int)((double)(255 >> gRedDiv) *
-      ((double)sqrt((double)((double)colors[index].red *
-      (double)colors[index].red + (double)colors[index].green *
-      (double)colors[index].green + (double)colors[index].blue *
-      (double)colors[index].blue)) / MAXCOLORDIST));
+      ((double)sqrt((double)((double)colors1[index1].red *
+      (double)colors1[index1].red + (double)colors1[index1].green *
+      (double)colors1[index1].green + (double)colors1[index1].blue *
+      (double)colors1[index1].blue)) / MAXCOLORDIST));
 
-      colors[index].stereoColor = (colorValue << gRedShift) |
+      colors1[index1].stereoColor = (colorValue << gRedShift) |
                                   (colorValue << gBlueShift);
       }
 
@@ -970,7 +970,7 @@ XColor oldColormap[MAXCOLORS];
 XWindowAttributes attributes;
 XSetWindowAttributes attribs;
 XWMHints wmhint;
-int index, index2, screen;
+int index1, index2, screen;
 Visual *vis;
 XSizeHints sizehint;
 int x, y, NUMCOLORS;
@@ -1145,17 +1145,17 @@ int useroot = 0;
 
 /* Create Tiles for monochrome display */
 
-   for(index = 0; index < NUMSTIPPLES; index++){
-      g->stipple[index]= XCreateBitmapFromData(g->dpy, g->win, bits,
+   for(index1 = 0; index1 < NUMSTIPPLES; index1++){
+      g->stipple[index1]= XCreateBitmapFromData(g->dpy, g->win, bits,
       STIPPLESIZE, STIPPLESIZE);
-      temp_gc = XCreateGC(g->dpy, g->stipple[index], 0x0, NULL);
+      temp_gc = XCreateGC(g->dpy, g->stipple[index1], 0x0, NULL);
       XSetForeground(g->dpy, temp_gc, 0);
-      XFillRectangle(g->dpy, g->stipple[index], temp_gc, 0, 0, STIPPLESIZE,
+      XFillRectangle(g->dpy, g->stipple[index1], temp_gc, 0, 0, STIPPLESIZE,
       STIPPLESIZE);
       XSetForeground(g->dpy, temp_gc, 1);
-      for(index2 = 0; index2 < stipples[index][0]; index2++){
-         XDrawPoint(g->dpy, g->stipple[index], temp_gc,
-         stipples[index][index2 * 2 + 1], stipples[index][index2 * 2 + 2]);
+      for(index2 = 0; index2 < stipples[index1][0]; index2++){
+         XDrawPoint(g->dpy, g->stipple[index1], temp_gc,
+         stipples[index1][index2 * 2 + 1], stipples[index1][index2 * 2 + 2]);
          }
       XFreeGC(g->dpy, temp_gc);
       }
@@ -1230,8 +1230,8 @@ int useroot = 0;
 /* Since we only use 16 colors, set all our other entries to the old values.
    Hopefully some other windows might display in true colors */
 
-      for(index = 0; index < NUMCOLORS; index++)
-         oldColormap[index].pixel = index;
+      for(index1 = 0; index1 < NUMCOLORS; index1++)
+         oldColormap[index1].pixel = index1;
 
       XQueryColors(g->dpy, attributes.colormap, oldColormap, NUMCOLORS);
       XStoreColors(g->dpy, g->colormap, oldColormap, NUMCOLORS);
@@ -2412,11 +2412,11 @@ register short  RX, BX;
 
 
 
-static void DrawSegments(display, win, gc, segs, numSegs, g)
+static void DrawSegments(display, win, gc, segs1, numSegs, g)
 Display *display;
 Window win;
 GC gc;
-XSegment segs[];
+XSegment segs1[];
 int numSegs;
 Ginfo *g;
 /******************************************************************************
@@ -2424,21 +2424,21 @@ Ginfo *g;
    maximum request size of the X server!
 ******************************************************************************/
 {
-int requestSize, evenAmount, remainder, index;
+int requestSize, evenAmount, remainder1, index1;
 
    requestSize = g->requestSize;
    evenAmount = (numSegs / requestSize) * requestSize;
-   remainder  = numSegs - evenAmount;
+   remainder1  = numSegs - evenAmount;
 
-   index = 0;
+   index1 = 0;
 
-   while(index < evenAmount){
-      XDrawSegments(display, win, gc, &segs[index], requestSize);
-      index += requestSize;
+   while(index1 < evenAmount){
+      XDrawSegments(display, win, gc, &segs1[index1], requestSize);
+      index1 += requestSize;
       }
 
-   if(remainder > 0)
-      XDrawSegments(display, win, gc, &segs[index], remainder);
+   if(remainder1 > 0)
+      XDrawSegments(display, win, gc, &segs1[index1], remainder1);
 }
 
 
@@ -2453,7 +2453,7 @@ int mode;
 {
 Drawable dest;
 long lastColor;
-int lastChange, index;
+int lastChange, index1;
 
    dest = g->dest;
 
@@ -2498,12 +2498,12 @@ int lastChange, index;
          lastChange = 4;
          lastColor = g->redColors[lastChange];
 
-         for(index = 5; index < g->numberRed; index++){
-            if(g->redColors[index] != lastColor){
+         for(index1 = 5; index1 < g->numberRed; index1++){
+            if(g->redColors[index1] != lastColor){
                XSetForeground(g->dpy, g->gc, lastColor);
                DrawSegments(g->dpy, dest,  g->gc, &(g->redSegments[lastChange]),
-               index - lastChange, g);
-               lastChange = index;
+               index1 - lastChange, g);
+               lastChange = index1;
                lastColor = g->redColors[lastChange];
                }
             }
@@ -2529,18 +2529,18 @@ int mode;
    Draw polygon outlines using painter algorithm for the three display modes.
 ******************************************************************************/
 {
-register int index, npoints, numPolys;
-register polygon *poly, **list;
+register int index1, npoints, numPolys;
+register polygon *poly, **list1;
 register point  **pointPtr, **lastPointPtr;
 Drawable dest;
 
-_XPoint points[512], *XPointPtr;
-   void *ptrp = points;
+_XPoint points1[512], *XPointPtr;
+   void *ptrp = points1;
    dest = g->dest;
    numPolys = o->numPolys;
-   list     = o->list;
+   list1     = o->list;
 
-   sort(list, numPolys);
+   sort(list1, numPolys);
 
    switch(mode){
 
@@ -2550,10 +2550,10 @@ _XPoint points[512], *XPointPtr;
          XFillRectangle(g->dpy, dest,  g->gc, o->fillX, o->fillY,
          o->fillWidth, o->fillHeight);
 
-         for(index = 0; index < numPolys; index++){
+         for(index1 = 0; index1 < numPolys; index1++){
 
-            poly = list[index];
-            XPointPtr = points;
+            poly = list1[index1];
+            XPointPtr = points1;
             npoints      =   poly->numPoints;
             pointPtr     =   poly->points;
             lastPointPtr = &(poly->points[npoints]);
@@ -2567,7 +2567,7 @@ _XPoint points[512], *XPointPtr;
             XSetForeground(g->dpy, g->gc, g->black);
             XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
-            points[npoints] = points[0];
+            points1[npoints] = points1[0];
             XSetForeground(g->dpy, g->gc, g->white);
             XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
             CoordModeOrigin);
@@ -2584,9 +2584,9 @@ _XPoint points[512], *XPointPtr;
 
          XSetPlaneMask(g->dpy, g->gc, g->redMask);
 
-         for(index = 0; index < numPolys; index++){
-            poly = list[index];
-            XPointPtr = points;
+         for(index1 = 0; index1 < numPolys; index1++){
+            poly = list1[index1];
+            XPointPtr = points1;
             npoints      =   poly->numPoints;
             pointPtr     =   poly->points;
             lastPointPtr = &(poly->points[npoints]);
@@ -2600,7 +2600,7 @@ _XPoint points[512], *XPointPtr;
             XSetForeground(g->dpy, g->gc, g->stereoBlack);
             XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
-            points[npoints] = points[0];
+            points1[npoints] = points1[0];
             XSetForeground(g->dpy, g->gc, poly->color->stereoColor);
             XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
             CoordModeOrigin);
@@ -2609,9 +2609,9 @@ _XPoint points[512], *XPointPtr;
          if(g->stereoBlue){
             XSetPlaneMask(g->dpy, g->gc, g->blueMask);
 
-            for(index = 0; index < numPolys; index++){
-               poly = list[index];
-               XPointPtr = points;
+            for(index1 = 0; index1 < numPolys; index1++){
+               poly = list1[index1];
+               XPointPtr = points1;
                npoints      =   poly->numPoints;
                pointPtr     =   poly->points;
                lastPointPtr = &(poly->points[npoints]);
@@ -2626,7 +2626,7 @@ _XPoint points[512], *XPointPtr;
                XSetForeground(g->dpy, g->gc, g->stereoBlack);
                XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
                CoordModeOrigin);
-               points[npoints] = points[0];
+               points1[npoints] = points1[0];
                XSetForeground(g->dpy, g->gc, poly->color->stereoColor);
                XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
                CoordModeOrigin);
@@ -2641,9 +2641,9 @@ _XPoint points[512], *XPointPtr;
          XFillRectangle(g->dpy, dest,  g->gc, o->fillX, o->fillY,
          o->fillWidth, o->fillHeight);
 
-         for(index = 0; index < numPolys; index++){
-            poly = list[index];
-            XPointPtr = points;
+         for(index1 = 0; index1 < numPolys; index1++){
+            poly = list1[index1];
+            XPointPtr = points1;
             npoints      =   poly->numPoints;
             pointPtr     =   poly->points;
             lastPointPtr = &(poly->points[npoints]);
@@ -2658,7 +2658,7 @@ _XPoint points[512], *XPointPtr;
             XFillPolygon(g->dpy, dest, g->gc, ptrp, npoints, Convex,
             CoordModeOrigin);
 
-            points[npoints] = points[0];
+            points1[npoints] = points1[0];
             XSetForeground(g->dpy, g->gc, poly->color->value);
             XDrawLines(g->dpy, dest, g->gc, ptrp, npoints + 1,
             CoordModeOrigin);
@@ -2681,19 +2681,19 @@ int mode;
    Draw polygons using painter algorithm for the three display modes.
 ******************************************************************************/
 {
-register int index, npoints, numPolys;
-register polygon *poly, **list;
+register int index1, npoints, numPolys;
+register polygon *poly, **list1;
 register point  **pointPtr, **lastPointPtr;
 Drawable dest;
-_XPoint points[512], *XPointPtr;
+_XPoint points1[512], *XPointPtr;
 long lastColor;
 
-   void *ptrp = points;
+   void *ptrp = points1;
    dest = g->dest;
    numPolys = o->numPolys;
-   list     = o->list;
+   list1     = o->list;
 
-   sort(list, numPolys);
+   sort(list1, numPolys);
 
    switch(mode){
 
@@ -2706,10 +2706,10 @@ long lastColor;
          XSetBackground(g->dpy, g->gc, g->black);
          XSetFillStyle(g->dpy, g->gc, FillOpaqueStippled);
 
-         for(index = 0; index < numPolys; index++){
+         for(index1 = 0; index1 < numPolys; index1++){
 
-            poly = list[index];
-            XPointPtr = points;
+            poly = list1[index1];
+            XPointPtr = points1;
             XSetStipple(g->dpy, g->gc, g->stipple[poly->color->stipple]);
             npoints      =   poly->numPoints;
             pointPtr     =   poly->points;
@@ -2737,9 +2737,9 @@ long lastColor;
 
          XSetPlaneMask(g->dpy, g->gc, g->redMask);
 
-         for(index = 0; index < numPolys; index++){
-            poly = list[index];
-            XPointPtr = points;
+         for(index1 = 0; index1 < numPolys; index1++){
+            poly = list1[index1];
+            XPointPtr = points1;
             if(poly->color->stereoColor != lastColor){
                XSetForeground(g->dpy, g->gc, poly->color->stereoColor);
                lastColor = poly->color->stereoColor;
@@ -2761,9 +2761,9 @@ long lastColor;
          if(g->stereoBlue){
             XSetPlaneMask(g->dpy, g->gc, g->blueMask);
 
-            for(index = 0; index < numPolys; index++){
-               poly = list[index];
-               XPointPtr = points;
+            for(index1 = 0; index1 < numPolys; index1++){
+               poly = list1[index1];
+               XPointPtr = points1;
                if(poly->color->stereoColor != lastColor){
                   XSetForeground(g->dpy, g->gc, poly->color->stereoColor);
                   lastColor = poly->color->stereoColor;
@@ -2793,9 +2793,9 @@ long lastColor;
          o->fillWidth, o->fillHeight);
          lastColor = g->Black;
 
-         for(index = 0; index < numPolys; index++){
-            poly = list[index];
-            XPointPtr = points;
+         for(index1 = 0; index1 < numPolys; index1++){
+            poly = list1[index1];
+            XPointPtr = points1;
             if(poly->color->value != lastColor){
                XSetForeground(g->dpy, g->gc, poly->color->value);
                lastColor = poly->color->value;
@@ -3003,7 +3003,7 @@ void MakePolygonArray()
      *  Make polygon pointer array
      */
 
-    int index, index2, i;
+    int index1, index2, i;
     point *prevPoint;
     segment *tmpSeg;
 
@@ -3027,21 +3027,21 @@ void MakePolygonArray()
      *  Update more lists
      */
 
-    for(index = 0; index < gSize3D.numPolys; index++) {
+    for(index1 = 0; index1 < gSize3D.numPolys; index1++) {
 
        index2 = 0;
 
-       if((list[index]->segs[0]->P == list[index]->segs[1]->P) ||
-           (list[index]->segs[0]->P == list[index]->segs[1]->Q)) {
-           prevPoint = list[index]->segs[0]->Q;
+       if((list[index1]->segs[0]->P == list[index1]->segs[1]->P) ||
+           (list[index1]->segs[0]->P == list[index1]->segs[1]->Q)) {
+           prevPoint = list[index1]->segs[0]->Q;
        }
        else{
-           prevPoint = list[index]->segs[0]->P;
+           prevPoint = list[index1]->segs[0]->P;
        }
 
-       while(index2 < list[index]->numSegs){
+       while(index2 < list[index1]->numSegs){
 
-           tmpSeg = list[index]->segs[index2];
+           tmpSeg = list[index1]->segs[index2];
 
            if(tmpSeg->P == prevPoint){
                prevPoint = tmpSeg->Q;
@@ -3067,30 +3067,30 @@ void MakePolygonArray()
                    return;
                }
            }
-           prevPoint->polys[prevPoint->numPolys] = &(polys[index]);
+           prevPoint->polys[prevPoint->numPolys] = &(polys[index1]);
            prevPoint->numPolys++;
 
         /*
          *  Update polygons' point lists
          */
 
-           if(polys[index].numPoints == 0){
-               if((polys[index].points = (point **)calloc(1, sizeof(point *)))== NULL){
+           if(polys[index1].numPoints == 0){
+               if((polys[index1].points = (point **)calloc(1, sizeof(point *)))== NULL){
                    puts("Unable to allocate memory for polygon points !");
                    return;
                }
            }
            else {
-               if((polys[index].points = (point **) realloc(
-                   polys[index].points, (polys[index].numPoints + 1) *
+               if((polys[index1].points = (point **) realloc(
+                   polys[index1].points, (polys[index1].numPoints + 1) *
                    sizeof(point *))) == NULL){
                    puts("Unable to allocate memory for point polygons !");
                    return;
                }
            }
 
-           polys[index].points[polys[index].numPoints] = prevPoint;
-           polys[index].numPoints++;
+           polys[index1].points[polys[index1].numPoints] = prevPoint;
+           polys[index1].numPoints++;
 
            index2++;
        }
