@@ -664,11 +664,11 @@ void TGColorPick::CreateDitheredImage(Pixmap_t image, Int_t which)
          TColor::Pixel2RGB(fCurrentColor, r, g, b);
          TColor::RGB2HLS(r, g, b, h, l, s);
 
-         Int_t l = (ih - y) * 255 / ih;
+         Int_t ll = (ih - y) * 255 / ih;
 
-         TColor::HLS2RGB(h, l, s, r, g, b);
+         TColor::HLS2RGB(h, ll, s, r, g, b);
 
-         for (Int_t x = 0; x < iw; ++x) {
+         for (x = 0; x < iw; ++x) {
             line[x].fRed   = r;
             line[x].fGreen = g;
             line[x].fBlue  = b;
