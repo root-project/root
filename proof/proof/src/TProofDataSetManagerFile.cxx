@@ -169,6 +169,10 @@ Bool_t TProofDataSetManagerFile::BrowseDataSets(const char *group,
    Bool_t exporting = (option & kExport) ? kTRUE : kFALSE;
    Bool_t updating = (option & kQuotaUpdate) ? kTRUE : kFALSE;
 
+   // If printing is required add kReadShort to the options
+   if (printing || updating)
+      option |= kReadShort;
+
    // The last three options are mutually exclusive
    if (((Int_t)printing + (Int_t)exporting + (Int_t)updating) > 1) {
       Error("BrowseDataSets",
@@ -794,7 +798,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
                  fileInfo->GetCurrentUrl()->GetUrl());
 
          // Check if file is still available, if touch is set actually read from the file
-         TFile *file = TFile::Open(Form("%s?filetype=rawmxredir=7", url.GetUrl()));
+         TFile *file = TFile::Open(Form("%s?filetype=raw&mxredir=2", url.GetUrl()));
          if (file) {
             if (touch) {
                // Actually access the file

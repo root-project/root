@@ -125,9 +125,14 @@ Bool_t TFileStager::IsStaged(const char *f)
    TUrl u(f);
    u.SetOptions("filetype=raw");
    TFile *ff = TFile::Open(u.GetUrl());
-   Bool_t rc = (ff && !ff->IsZombie()) ? kTRUE : kFALSE;
-   ff->Close();
-   delete ff;
+   Bool_t rc = kTRUE;
+   if (!ff || ff->IsZombie()) {
+      rc = kFALSE;
+      if (ff) {
+         ff->Close();
+         delete ff;
+      }
+   }
    // Done
    return rc;
 }
@@ -158,6 +163,15 @@ TString TFileStager::GetPathName(TObject *o)
    } else if (cn == "TFileInfo") {
       TFileInfo *fi = (TFileInfo *)o;
       pathname = (fi->GetCurrentUrl()) ? fi->GetCurrentUrl()->GetUrl() : "";
+      if (fi->GetCurrentUrl()) {
+         if (strlen(fi->GetCurrentUrl()->GetAnchor()) > 0) {
+            TUrl url(*(fi->GetCurrentUrl()));
+            url.SetAnchor("");
+            pathname = url.GetUrl();
+         }
+      } else {
+         pathname = fi->GetCurrentUrl()->GetUrl();
+      }
    }
 
    // Done
