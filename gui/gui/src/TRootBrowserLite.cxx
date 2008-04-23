@@ -676,14 +676,14 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       fGrouped = kTRUE;
 
       // clear fList
-      TGFrameElement *el;
+      TGFrameElement *el2;
       TIter nextl(fList);
 
-      while ((el = (TGFrameElement *) nextl())) {
-         el->fFrame->DestroyWindow();
-         delete el->fFrame;
-         fList->Remove(el);
-         delete el;
+      while ((el2 = (TGFrameElement *) nextl())) {
+         el2->fFrame->DestroyWindow();
+         delete el2->fFrame;
+         fList->Remove(el2);
+         delete el2;
       }
 
       fCurrentName = new TGString(fCurrentList->GetName());
@@ -1625,7 +1625,7 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
 
       // special case for remote object: browse real object
       if (obj->InheritsFrom("TRemoteObject") && ext.EndsWith(".root")) {
-         TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
+         TRootBrowserCursorSwitcher cursorSwitcher2(fIconBox, fLt);
          gApplication->SetBit(TApplication::kProcessRemotely);
          gApplication->ProcessLine("((TApplicationServer *)gApplication)->BrowseFile(0);");
          Refresh();
@@ -1992,19 +1992,19 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             case kCT_ITEMCLICK:
                if (parm1 == kButton1 || parm1 == kButton3) {
                   HideTextEdit();
-                  TGListTreeItem *item;
-                  TObject *obj = 0;
-                  if ((item = fLt->GetSelected()) != 0 ) {
-                     ListTreeHighlight(item);
-                     obj = (TObject *) item->GetUserData();
+                  TGListTreeItem *item2;
+                  TObject *obj2 = 0;
+                  if ((item2 = fLt->GetSelected()) != 0 ) {
+                     ListTreeHighlight(item2);
+                     obj2 = (TObject *) item2->GetUserData();
 
                      fStatusBar->SetText("", 1);   // clear
                   }
-                  if (item && parm1 == kButton3) {
+                  if (item2 && parm1 == kButton3) {
                      Int_t x = (Int_t)(parm2 & 0xffff);
                      Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                     obj = (TObject *) item->GetUserData();
-                     if (obj) fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
+                     obj2 = (TObject *) item2->GetUserData();
+                     if (obj2) fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
                   }
                   fClient->NeedRedraw(fLt);
                   fListView->LayoutHeader(0);
@@ -2018,17 +2018,17 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      HideTextEdit();
                   }
                   if (fListLevel && fIconBox->WasGrouped()) {
-                     TObject *obj;
-                     TGListTreeItem *item;
+                     TObject *obj2;
+                     TGListTreeItem *item2;
 
                      if (fListLevel) {
-                        item = fListLevel->GetParent();
-                        if (item) fListLevel = item;
+                        item2 = fListLevel->GetParent();
+                        if (item2) fListLevel = item2;
 
-                        obj = (TObject *) fListLevel->GetUserData();
+                        obj2 = (TObject *) fListLevel->GetUserData();
                         HighlightListLevel();
-                        if (obj) {
-                           BrowseObj(obj);
+                        if (obj2) {
+                           BrowseObj(obj2);
                         }
                      }
                      break;
@@ -2046,10 +2046,10 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             case kCT_ITEMCLICK:
                if (fIconBox->NumSelected() == 1) {
                   // display title of selected object
-                  TGFileItem *item;
+                  TGFileItem *item2;
                   void *p = 0;
-                  if ((item = (TGFileItem *)fIconBox->GetNextSelected(&p)) != 0) {
-                     TObject *obj = (TObject *)item->GetUserData();
+                  if ((item2 = (TGFileItem *)fIconBox->GetNextSelected(&p)) != 0) {
+                     TObject *obj2 = (TObject *)item2->GetUserData();
 
                      TGListTreeItem *itm = 0;
                      if (!fListLevel) itm = fLt->GetFirstItem();
@@ -2057,7 +2057,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      //Bool_t found = kFALSE;
 
                      while (itm) {
-                        if (itm->GetUserData() == obj) break;
+                        if (itm->GetUserData() == obj2) break;
                         itm = itm->GetNextSibling();
                      }
 
@@ -2069,32 +2069,32 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         }
                      }
 
-                     fStatusBar->SetText(obj->GetName(), 1);
+                     fStatusBar->SetText(obj2->GetName(), 1);
                   }
                }
                if (parm1 == kButton3) {
                   // show context menu for selected object
                   if (fIconBox->NumSelected() == 1) {
                      void *p = 0;
-                     TGFileItem *item;
-                     if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
+                     TGFileItem *item2;
+                     if ((item2 = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
                         Int_t x = (Int_t)(parm2 & 0xffff);
                         Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                        TObject *obj = (TObject *)item->GetUserData();
-                        if (obj) {
-                           if (obj->IsA() == TKey::Class()) {
-                              TKey *key = (TKey*)obj;
+                        TObject *obj2 = (TObject *)item2->GetUserData();
+                        if (obj2) {
+                           if (obj2->IsA() == TKey::Class()) {
+                              TKey *key = (TKey*)obj2;
                               TClass *cl = TClass::GetClass(key->GetClassName());
                               void *add = gROOT->FindObject((char *) key->GetName());
                               if (cl->IsTObject()) {
-                                 obj = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);
+                                 obj2 = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);
                               } else {
                                  Error("ProcessMessage","do not support non TObject (like %s) yet",
                                        cl->GetName());
                                  break;
                               }
                            }
-                           fBrowser->GetContextMenu()->Popup(x, y, obj, fBrowser);
+                           fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
                         }
                      }
                   }
@@ -2104,11 +2104,11 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                if (parm1 == kButton1) {
                   if (fIconBox->NumSelected() == 1) {
                      void *p = 0;
-                     TGFileItem *item;
-                     if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
-                        TObject *obj = (TObject *)item->GetUserData();
-                        DoubleClicked(obj);
-                        IconBoxAction(obj);
+                     TGFileItem *item2;
+                     if ((item2 = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
+                        TObject *obj2 = (TObject *)item2->GetUserData();
+                        DoubleClicked(obj2);
+                        IconBoxAction(obj2);
                         return kTRUE; //
                      }
                   }
