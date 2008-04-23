@@ -105,14 +105,14 @@ void vxinvc_ (int *iv, int *ixv, int *n)
 //------------------------------------------------------------------------------
 
 void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf, 
-            int *stat)
+            int *astat)
 {
    int fildes;   
    int nbdn, nbdo;   
 
    if (medium) { }
 
-   *stat = 0;   
+   *astat = 0;   
    if (*nwtak <= 0) return;   
 		     
    fildes = *lundes;   
@@ -123,17 +123,17 @@ void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf,
    *nwtak = (nbdn - 1) / 4 + 1;
    return;   
    heof:
-      *stat = -1;
+      *astat = -1;
       return;
    herror:
-      *stat = 0;
+      *astat = 0;
       printf ("error in CFGET\n");
       return;
 }
 
 //------------------------------------------------------------------------------
 
-void cfseek_(int *lundes, int *medium, int *nwrec, int *jcrec, int *stat)
+void cfseek_(int *lundes, int *medium, int *nwrec, int *jcrec, int *astat)
 {
    int fildes;
    int nbdo;
@@ -145,11 +145,11 @@ void cfseek_(int *lundes, int *medium, int *nwrec, int *jcrec, int *stat)
    nbdo = *jcrec * *nwrec * 4;
    isw = lseek (fildes, nbdo, 0); 
    if (isw < 0) goto trouble;
-   *stat = 0;
+   *astat = 0;
    return;
 
    trouble: 
-      *stat = -1;
+      *astat = -1;
       printf("error in CFSEEK\n");  
 }
 
@@ -214,10 +214,10 @@ int cfstati_(char *fname, int *info, int *lgname)
 int cfopen_perm = 0;
 #ifdef WIN32
 void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, int *nbuf,
-             char *ftext, int lftext, int *stat, int *lgtx)
+             char *ftext, int lftext, int *astat, int *lgtx)
 #else
 void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, int *nbuf,
-             char *ftext, int *stat, int *lgtx)
+             char *ftext, int *astat, int *lgtx)
 #endif
 {
    char *pttext, *fchtak();
@@ -226,7 +226,7 @@ void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, int *nbuf,
    int perm;
    if (nwrec || nbuf) { }
    *lundes = 0;
-   *stat = -1;
+   *astat = -1;
    perm = cfopen_perm;
    cfopen_perm = 0;
    if (*medium == 1) goto fltp;
@@ -266,10 +266,10 @@ act:
    fildes = open (pttext, flags, perm);
    if (fildes < 0) goto errm;
    *lundes = fildes;
-   *stat = 0;
+   *astat = 0;
    goto done;
 errm: 
-   *stat = 0;
+   *astat = 0;
    printf("error in CFOPEN\n");
 done: 
    free(pttext);
