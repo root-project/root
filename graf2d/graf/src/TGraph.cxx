@@ -3022,28 +3022,28 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                ComputeLogs(npt, optionZ);
 
                //do not draw the two vertical lines on the edges
-               Int_t npoints = npt-2;
+               Int_t Nbpoints = npt-2;
                Int_t point1  = 1;
                if (optionOff) {
                   // remove points before the low cutoff
                   Int_t ip;
-                  for (ip=point1; ip<=npoints; ip++) {
+                  for (ip=point1; ip<=Nbpoints; ip++) {
                      if (gyworkl[ip] != ywmin) {
                         point1 = ip;
                         break;
                      }
                   }
                   // remove points after the high cutoff
-                  Int_t point2 = npoints;
+                  Int_t point2 = Nbpoints;
                   for (ip=point2; ip>=point1; ip--) {
                      if (gyworkl[ip] != ywmin) {
                         point2 = ip;
                         break;
                      }
                   }
-                  npoints = point2-point1+1;
+                  Nbpoints = point2-point1+1;
                }
-               gPad->PaintPolyLine(npoints,&gxworkl[point1],&gyworkl[point1],noClip);
+               gPad->PaintPolyLine(Nbpoints,&gxworkl[point1],&gyworkl[point1],noClip);
                continue;
             }
          }  //endfor (i=first; i<=last;i++)
