@@ -5355,15 +5355,15 @@ void TGuiBldDragManager::AddClassMenuMethods(TGPopupMenu *menu, TObject *object)
             {
                if (menuItem->IsToggle()) {
                   if (object) {
-                     TMethod* method =
+                     TMethod* method2 =
                            object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),
                                                                  menuItem->GetArgs());
                      TToggle *t = new TToggle;
-                     t->SetToggledObject(object, method);
+                     t->SetToggledObject(object, method2);
                      t->SetOnValue(1);
                      fPimpl->fFrameMenuTrash->Add(t);
 
-                     menu->AddEntry(method->GetName(), kToggleMenuAct, t);
+                     menu->AddEntry(method2->GetName(), kToggleMenuAct, t);
                      if (t->GetState()) menu->CheckEntryByData(t);
                   } else {
                      Warning("Dialog","Cannot use toggle for a global function");
@@ -5404,10 +5404,10 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
       TString str = method->GetCommentString();
 
       if (str.Contains("*DIALOG")) {
-         TString str;
-         str.Form("((TGuiBldDragManager*)0x%lx)->%s((%s*)0x%lx)", this, method->GetName(), 
+         TString str2;
+         str2.Form("((TGuiBldDragManager*)0x%lx)->%s((%s*)0x%lx)", this, method->GetName(), 
                   fPimpl->fMenuObject->ClassName(), fPimpl->fMenuObject);
-         G__calc((char *)str.Data());
+         G__calc((char *)str2.Data());
          //delete fFrameMenu;  // suicide (BB)?
          //fFrameMenu = 0;
          return;

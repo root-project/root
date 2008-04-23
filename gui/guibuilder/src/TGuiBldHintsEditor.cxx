@@ -440,10 +440,10 @@ void TGuiBldHintsEditor::UpdateState()
    fe->fLayout->SetPadBottom(fPadBottom->GetIntNumber());
 
    if (fe->fLayout->References() > 1) {
-      TGLayoutHints *lh = new TGLayoutHints(*fe->fLayout);
+      TGLayoutHints *lh2 = new TGLayoutHints(*fe->fLayout);
       fe->fLayout->RemoveReference();
-      lh->AddReference();
-      fe->fLayout = lh;
+      lh2->AddReference();
+      fe->fLayout = lh2;
    } else {
       fe->fLayout->SetLayoutHints(lh);
    }
