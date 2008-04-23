@@ -2057,7 +2057,7 @@ void TDecompSparse::Factor_sub2(const Int_t n,const Int_t nz,Double_t *a,const I
          j = -iw[iinput];
          irow = iw2[j];
          apos = posfac+IDiag(nfront,irow);
-         for (Int_t idummy = 1; idummy < nz+1; idummy++) {
+         for (idummy = 1; idummy < nz+1; idummy++) {
             apos2 = apos+iw2[j]-irow;
             a[apos2] = a[apos2]+a[ainput];
             ainput = ainput+1;

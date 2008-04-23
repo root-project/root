@@ -194,8 +194,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
    TArrayD ups(nCol_v);
    TArrayD betas(nCol_v);
 
-   Int_t i,j;
-   for (i = 0; i < nCol_v; i++) {
+   for (Int_t i = 0; i < nCol_v; i++) {
       // Set up Householder Transformation q(i)
 
       Double_t up,beta;
@@ -206,13 +205,13 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
          DefHouseHolder(vc_i,i,i+1,up,beta);
 
          // Apply q(i) to v
-         for (j = i; j < nCol_v; j++) {
+         for (Int_t j = i; j < nCol_v; j++) {
             TMatrixDColumn vc_j = TMatrixDColumn(v,j);
             ApplyHouseHolder(vc_i,up,beta,i,i+1,vc_j);
          }
 
          // Apply q(i) to u
-         for (j = 0; j < nCol_u; j++)
+         for (Int_t j = 0; j < nCol_u; j++)
          {
             TMatrixDColumn uc_j = TMatrixDColumn(u,j);
             ApplyHouseHolder(vc_i,up,beta,i,i+1,uc_j);
@@ -231,7 +230,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
          betas[i] = beta;
 
          // apply h(i) to v
-         for (j = i; j < nRow_v; j++) {
+         for (Int_t j = i; j < nRow_v; j++) {
             TMatrixDRow vr_j = TMatrixDRow(v,j);
             ApplyHouseHolder(vr_i,up,beta,i+1,i+2,vr_j);
 
@@ -255,7 +254,7 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
    // construct product matrix h = h(1)*h(2)*...*h(nCol_v-1), h(nCol_v-1) = I
 
    TVectorD vr_i(nCol_v);
-   for (i = nCol_v-1; i >= 0; i--) {
+   for (Int_t i = nCol_v-1; i >= 0; i--) {
       if (i < nCol_v-1)
          vr_i = TMatrixDRow_const(v,i);
       TMatrixDRow(v,i) = 0.0;

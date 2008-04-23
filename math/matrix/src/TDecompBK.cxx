@@ -161,7 +161,7 @@ Bool_t TDecompBK::Decompose()
       if ( k > 0 ) {
          TVectorD vcol = TMatrixDColumn_const(fU,k);
          vcol.Abs();
-         const Int_t imax = TMath::LocMax(k,vcol.GetMatrixArray());
+         imax = TMath::LocMax(k,vcol.GetMatrixArray());
          colmax = vcol[imax];
       } else {
          colmax = 0.;

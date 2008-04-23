@@ -301,7 +301,7 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
    // Sort eigenvalues and corresponding vectors.
 
    for (i = 0; i < n-1; i++) {
-      Int_t k = i;
+      k = i;
       Double_t p = pD[i];
       for (j = i+1; j < n; j++) {
          if (pD[j] > p) {

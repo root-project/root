@@ -158,10 +158,8 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
          for (i = 0; i <= high; i++) {
             const Int_t off_i = i*n;
             Double_t f = 0.0;
-            for (j = high; j >= m; j--) {
-               const Int_t off_i = i*n;
+            for (j = high; j >= m; j--)
                f += pO[j]*pH[off_i+j];
-            }
             f = f/h;
             for (j = m; j <= high; j++)
                pH[off_i+j] -= f*pO[j];
@@ -667,7 +665,7 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
    for (i = 0; i < nn; i++) {
       if (i < low || i > high) {
          const Int_t off_i = i*nn;
-         for (Int_t j = i; j < nn; j++)
+         for (j = i; j < nn; j++)
             pV[off_i+j] = pH[off_i+j];
       }
    }

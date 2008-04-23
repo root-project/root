@@ -824,30 +824,29 @@ void TMatrixTBase<Element>::Print(Option_t *option) const
       const char *f = strstr(option,"f=");
       if (f) format = f+2;
    }
-   Int_t i;
    char topbar[100];
    sprintf(topbar,format,123.456789);
    Int_t nch = strlen(topbar)+1;
-   if (nch > 19) nch=19;
+   if (nch > 19) nch = 19;
    char ftopbar[20];
-   for (i=0;i<nch;i++) ftopbar[i] = ' ';
+   for (Int_t i = 0; i < nch; i++) ftopbar[i] = ' ';
    Int_t nk = 1 + Int_t(TMath::Log10(fNcols));
    sprintf(ftopbar+nch/2,"%s%dd","%",nk);
    Int_t nch2 = strlen(ftopbar);
-   for (i=nch2;i<nch;i++) ftopbar[i] = ' ';
+   for (Int_t i = nch2; i < nch; i++) ftopbar[i] = ' ';
    ftopbar[nch] = '|';
    ftopbar[nch+1] = 0;
 
    printf("\n%dx%d matrix is as follows",fNrows,fNcols);
 
    Int_t cols_per_sheet = 5;
-   if (nch <=8) cols_per_sheet =10;
+   if (nch <= 8) cols_per_sheet =10;
    const Int_t ncols  = fNcols;
    const Int_t nrows  = fNrows;
    const Int_t collwb = fColLwb;
    const Int_t rowlwb = fRowLwb;
    nk = 5+nch*TMath::Min(cols_per_sheet,fNcols);
-   for (i=0;i<nk;i++) topbar[i] = '-';
+   for (Int_t i = 0; i < nk; i++) topbar[i] = '-';
    topbar[nk] = 0;
    for (Int_t sheet_counter = 1; sheet_counter <= ncols; sheet_counter += cols_per_sheet) {
       printf("\n\n     |");

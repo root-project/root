@@ -1771,8 +1771,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
    // Determine how many non-zero's are already available in
    // [row_lwb..row_lwb+nrows_source-1][col_lwb..col_lwb+ncols_source-1]
    Int_t nr_nonzeros = 0;
-   Int_t irow,index;
-   for (irow = 0; irow < this->fNrows; irow++) {
+   for (Int_t irow = 0; irow < this->fNrows; irow++) {
       if (irow+this->fRowLwb >= row_lwb+nRows_source || irow+this->fRowLwb < row_lwb) continue;
       const Int_t sIndex = fRowIndex[irow];
       const Int_t eIndex = fRowIndex[irow+1];
@@ -1807,7 +1806,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
 
    Int_t nr = 0;
    rowIndex_new[0] = 0;
-   for (irow = 0; irow < this->fNrows; irow++) {
+   for (Int_t irow = 0; irow < this->fNrows; irow++) {
       rowIndex_new[irow+1] = rowIndex_new[irow];
       Bool_t flagRow = kFALSE;
       if (irow+this->fRowLwb < row_lwb+nRows_source && irow+this->fRowLwb >= row_lwb)
@@ -1819,7 +1818,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
       if (flagRow) {
          const Int_t icol_left = col_off-1;
          const Int_t left = TMath::BinarySearch(eIndex_o-sIndex_o,colIndex_old+sIndex_o,icol_left)+sIndex_o;
-         for (index = sIndex_o; index <= left; index++) {
+         for (Int_t index = sIndex_o; index <= left; index++) {
             rowIndex_new[irow+1]++;
             colIndex_new[nr] = colIndex_old[index];
             elements_new[nr] = elements_old[index];
@@ -1829,7 +1828,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
          if (rowIndex_s && colIndex_s) {
             const Int_t sIndex_s = rowIndex_s[irow-row_off];
             const Int_t eIndex_s = rowIndex_s[irow-row_off+1];
-            for (index = sIndex_s; index < eIndex_s; index++) {
+            for (Int_t index = sIndex_s; index < eIndex_s; index++) {
                rowIndex_new[irow+1]++;
                colIndex_new[nr] = colIndex_s[index]+col_off;
                elements_new[nr] = elements_s[index];
@@ -1852,7 +1851,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
                right++;
             right++;
 
-            for (index = right; index < eIndex_o; index++) {
+            for (Int_t index = right; index < eIndex_o; index++) {
                rowIndex_new[irow+1]++;
                colIndex_new[nr] = colIndex_old[index];
                elements_new[nr] = elements_old[index];
@@ -1860,7 +1859,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
             }
          }
       } else {
-         for (index = sIndex_o; index < eIndex_o; index++) {
+         for (Int_t index = sIndex_o; index < eIndex_o; index++) {
             rowIndex_new[irow+1]++;
             colIndex_new[nr] = colIndex_old[index];
             elements_new[nr] = elements_old[index];

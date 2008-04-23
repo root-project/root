@@ -624,9 +624,8 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
 
    for (Int_t j = 0; j < n; j++) {
       const Int_t off_j = j*n;
-      Int_t i;
       // Run down jth column from top to diag, to form the elements of U.
-      for (i = 0; i < j; i++) {
+      for (Int_t i = 0; i < j; i++) {
          const Int_t off_i = i*n;
          Double_t r = pLU[off_i+j];
          for (Int_t k = 0; k < i; k++) {
@@ -643,7 +642,7 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
 
       Double_t max = 0.0;
       Int_t imax = 0;
-      for (i = j; i < n; i++) {
+      for (Int_t i = j; i < n; i++) {
          const Int_t off_i = i*n;
          Double_t r = pLU[off_i+j];
          for (Int_t k = 0; k < j; k++) {
