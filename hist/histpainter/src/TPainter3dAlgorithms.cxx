@@ -2372,7 +2372,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
             }
             Int_t cs = fColorTop;
             if ( nv > 2 && (v[nv-1] == v[nv-2])) {
-               for (Int_t iv = nv-1; iv>2; iv--) {
+               for (iv = nv-1; iv>2; iv--) {
                   if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
                }
             }
@@ -2578,7 +2578,7 @@ L100:
          }
          Int_t cs = fColorTop;
          if ( nv > 2 && (v[nv-1] == v[nv-2])) {
-            for (Int_t iv = nv-1; iv>2; iv--) {
+            for (iv = nv-1; iv>2; iv--) {
                if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
             }
          }
@@ -2803,7 +2803,7 @@ L100:
          }
          Int_t cs = fColorTop;
          if ( nv > 2 && (v[nv-1] == v[nv-2])) {
-            for (Int_t iv = nv-1; iv>2; iv--) {
+            for (iv = nv-1; iv>2; iv--) {
                if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
             }
          }
@@ -3078,7 +3078,7 @@ L200:
       }
       Int_t cs = fColorTop;
       if ( nv > 2 && (v[nv-1] == v[nv-2])) {
-         for (Int_t iv = nv-1; iv>2; iv--) {
+         for (iv = nv-1; iv>2; iv--) {
             if (v[nv-1] == v[iv-1]) fColorTop = fColorMain[iv-2];
          }
       }

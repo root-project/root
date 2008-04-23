@@ -207,7 +207,7 @@ TList *TGraphPainter::GetContourList(Double_t contour)
    }
 
    Bool_t *segUsed = new Bool_t[fNdt];
-   for(Int_t i=0; i<fNdt; i++) segUsed[i]=kFALSE;
+   for(i=0; i<fNdt; i++) segUsed[i]=kFALSE;
 
    // Find all the graphs making the contour. There is two kind of graphs,
    // either they are "opened" or they are "closed"
@@ -821,7 +821,7 @@ void TGraphPainter::PaintTriangles(Option_t *option)
    fGraph2D->TAttFill::Modify();
    fGraph2D->SetLineColor(fGraph2D->GetLineColor());
    fGraph2D->TAttLine::Modify();
-   Int_t ls = fGraph2D->GetLineStyle();
+   int lst = fGraph2D->GetLineStyle();
    for (it=0; it<fNdt; it++) {
       t[0] = fPTried[order[it]];
       t[1] = fNTried[order[it]];
@@ -866,7 +866,7 @@ endloop:
       continue;
    }
    fGraph2D->SetFillStyle(fs);
-   fGraph2D->SetLineStyle(ls);
+   fGraph2D->SetLineStyle(lst);
    fGraph2D->TAttLine::Modify();
    fGraph2D->TAttFill::Modify();
    delete [] order;
