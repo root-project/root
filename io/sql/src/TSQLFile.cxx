@@ -1825,7 +1825,7 @@ TSQLClassInfo* TSQLFile::RequestSQLClassInfo(const char* clname, Int_t version)
 
    if (fSQLClassInfos!=0) {
       TIter iter(fSQLClassInfos);
-      TSQLClassInfo* info = 0;
+      info = 0;
       while ((info = (TSQLClassInfo*) iter()) !=0 ) {
          if (info->GetClassId()>maxid)
             maxid = info->GetClassId();
@@ -1975,11 +1975,11 @@ void TSQLFile::ReadSQLClassInfos()
 
             const char* fullname = row->GetField(3);
             const char* sqlname = row->GetField(4);
-            const char* info = row->GetField(5);
+            const char* info2 = row->GetField(5);
 
             if (typ==TSQLStructure::kIdColumn) {
                 if (cols==0) cols = new TObjArray;
-                cols->Add(new TSQLClassColumnInfo(fullname, sqlname, info));
+                cols->Add(new TSQLClassColumnInfo(fullname, sqlname, info2));
             }
 
             delete row;
@@ -2005,17 +2005,17 @@ void TSQLFile::ReadSQLClassInfos()
          const char* classname = row->GetField(3);
          const char* rawtable = row->GetField(4);
 
-         TSQLClassInfo* info = FindSQLClassInfo(classname, version);
+         TSQLClassInfo* info2 = FindSQLClassInfo(classname, version);
 
-         if (info==0) {
-            info = new TSQLClassInfo(tableid, classname, version);
+         if (info2==0) {
+            info2 = new TSQLClassInfo(tableid, classname, version);
 
             if (fSQLClassInfos==0) fSQLClassInfos = new TList;
-            fSQLClassInfos->Add(info);
+            fSQLClassInfos->Add(info2);
          }
 
-         info->SetRawTableName(rawtable);
-         info->SetRawExist(kTRUE);
+         info2->SetRawTableName(rawtable);
+         info2->SetRawExist(kTRUE);
 
          delete row;
       }
