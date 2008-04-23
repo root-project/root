@@ -230,12 +230,12 @@ void TEveStraightLineSetProjected::UpdateProjection()
       Line_t  *lo = (Line_t*) orig.GetLinePlex().Atom(m->fLineID);
       Line_t  *lp = (Line_t*) fLinePlex.Atom(m->fLineID);
 
-      TEveVector t1, d, x;
+      TEveVector t1, d, xx;
 
-      t1.Set(lo->fV1); x.Set(lo->fV2); x -= t1; x *= m->fPos; x += t1;
-      proj.ProjectVector(x);
-      t1.Set(lp->fV1); d.Set(lp->fV2); d -= t1; x -= t1;
+      t1.Set(lo->fV1); xx.Set(lo->fV2); xx -= t1; xx *= m->fPos; xx += t1;
+      proj.ProjectVector(xx);
+      t1.Set(lp->fV1); d.Set(lp->fV2); d -= t1; xx -= t1;
 
-      AddMarker(m->fLineID, d.Dot(x) / d.Mag2());
+      AddMarker(m->fLineID, d.Dot(xx) / d.Mag2());
    }
 }

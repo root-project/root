@@ -108,12 +108,12 @@ void TEveLineProjected::UpdateProjection()
    // Virtual from TEveProjected.
 
    TEveProjection& proj = * fManager->GetProjection();
-   TEveLine      & ls   = * dynamic_cast<TEveLine*>(fProjectable);
+   TEveLine      & als   = * dynamic_cast<TEveLine*>(fProjectable);
 
-   Int_t n = ls.Size();
+   Int_t n = als.Size();
    Reset(n);
    fLastPoint = n - 1;
-   Float_t *o = ls.GetP(), *p = GetP();
+   Float_t *o = als.GetP(), *p = GetP();
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
    {
       p[0] = o[0]; p[1] = o[1]; p[2] = o[2];
