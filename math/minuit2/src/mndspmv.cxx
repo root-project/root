@@ -156,7 +156,7 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
    
    /*     Quick return if possible. */
    
-   if (n == 0 || alpha == 0. && beta == 1.) {
+   if ( ( n == 0)  || ( alpha == 0. && beta == 1.) ) {
       return 0;
    }
    
