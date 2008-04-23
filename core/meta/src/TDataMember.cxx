@@ -318,8 +318,8 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             ptr1 = strtok(tokens[i],"()");
             ptr1 = strtok((char*)0,"()");
 
-            char opt[2048];  //and save it!
-            strcpy(opt,ptr1);
+            char opts[2048];  //and save it!
+            strcpy(opts,ptr1);
 
             //now parse it...
             //fistly we just store strings like: xxx="Label Name"
@@ -328,7 +328,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
             //It's not elegant but works.
 
             do {
-               ptr1 = strtok(opt_cnt++ ? (char*)0:opt,","); //options extraction
+               ptr1 = strtok(opt_cnt++ ? (char*)0:opts,","); //options extraction
                if (ptr1) {
                   TOptionListItem *it = new TOptionListItem(this,1,0,0,ptr1,"");
                   optionlist->Add(it);
