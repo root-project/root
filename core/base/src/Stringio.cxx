@@ -90,7 +90,7 @@ istream& TString::ReadToDelim(istream& strm, char delim)
                   delim);                    // Delimiter
          Pref()->fNchars += strm.gcount();
          if (!strm.good()) break;            // Check for EOF or stream failure
-         int p = strm.peek();
+         p = strm.peek();
          if (p == delim) {                   // Check for delimiter
             strm.get();                      // eat the delimiter.
             break;

@@ -309,9 +309,9 @@ TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
    subStrL->SetOwner();
 
    for (Int_t i = 0; i < nrMatch; i++) {
-      Int_t start = pos[2*i];
-      Int_t stop  = pos[2*i+1];
-      if (start >= 0 && stop >= 0) {
+      Int_t startp = pos[2*i];
+      Int_t stopp  = pos[2*i+1];
+      if (startp >= 0 && stopp >= 0) {
          const TString subStr = s(pos[2*i], pos[2*i+1]-pos[2*i]);
          subStrL->Add(new TObjString(subStr));
       } else

@@ -120,20 +120,20 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {
-         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
-         if (!level.CompareTo("Print", TString::kIgnoreCase))
+         TString slevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+         if (!slevel.CompareTo("Print", TString::kIgnoreCase))
             gErrorIgnoreLevel = kPrint;
-         else if (!level.CompareTo("Info", TString::kIgnoreCase))
+         else if (!slevel.CompareTo("Info", TString::kIgnoreCase))
             gErrorIgnoreLevel = kInfo;
-         else if (!level.CompareTo("Warning", TString::kIgnoreCase))
+         else if (!slevel.CompareTo("Warning", TString::kIgnoreCase))
             gErrorIgnoreLevel = kWarning;
-         else if (!level.CompareTo("Error", TString::kIgnoreCase))
+         else if (!slevel.CompareTo("Error", TString::kIgnoreCase))
             gErrorIgnoreLevel = kError;
-         else if (!level.CompareTo("Break", TString::kIgnoreCase))
+         else if (!slevel.CompareTo("Break", TString::kIgnoreCase))
             gErrorIgnoreLevel = kBreak;
-         else if (!level.CompareTo("SysError", TString::kIgnoreCase))
+         else if (!slevel.CompareTo("SysError", TString::kIgnoreCase))
             gErrorIgnoreLevel = kSysError;
-         else if (!level.CompareTo("Fatal", TString::kIgnoreCase))
+         else if (!slevel.CompareTo("Fatal", TString::kIgnoreCase))
             gErrorIgnoreLevel = kFatal;
       }
    }
