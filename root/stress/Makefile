@@ -9,6 +9,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.nomark *.log *.root *.dat *.ps test files \
 STRESSSRC := $(wildcard $(ROOTSYS)/test/stress*.cxx)
 STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressProof-test,\
+	$(filter-out stressTMVA-test,\
 	$(notdir $(STRESSSRC:.cxx=-test))))
 ifeq ($(findstring roofit,$(shell root-config --features)),)
 STRESSTESTS  := $(filter-out stressRooFit-test,$(STRESSTESTS))
