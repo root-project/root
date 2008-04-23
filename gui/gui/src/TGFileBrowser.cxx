@@ -936,10 +936,10 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // replace actual user data (TObjString) by the TDirectory...
             if (item->GetUserData()) {
                // first delete the data to avoid memory leaks
-               TObject *obj = static_cast<TObject *>(item->GetUserData());
+               TObject *obj2 = static_cast<TObject *>(item->GetUserData());
                // only delete TObjString as they are the only objects
                // created who have to be deleted
-               delete dynamic_cast<TObjString *>(obj);
+               delete dynamic_cast<TObjString *>(obj2);
             }
             item->SetUserData(rfile);
             fNKeys = rfile->GetListOfKeys()->GetEntries();

@@ -281,9 +281,9 @@ void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
             nshrink = total_nshrink;
             for (ind = 0; ind < nthings; ++ind)
                if (thing[ind].fShrink) {
-                  UInt_t size = thing[ind].fRealSize;
+                  UInt_t size2 = thing[ind].fRealSize;
                   thing[ind].fRealSize = TMath::Max(1U,thing[ind].fRealSize - extra / nshrink);
-                  extra -= size - thing[ind].fRealSize;
+                  extra -= size2 - thing[ind].fRealSize;
                   --nshrink;
                   if (thing[ind].fRealSize < 2) {
                      total_nshrink -= 1;

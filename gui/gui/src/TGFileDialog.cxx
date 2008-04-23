@@ -512,9 +512,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                if (parm1 == kButton1) {
                   if (fFc->NumSelected() > 0) {
                      if ( fFileInfo->fMultipleSelection == kFALSE ) {
-                        TGLVEntry *e = (TGLVEntry *) fFc->GetNextSelected(&p);
+                        TGLVEntry *e2 = (TGLVEntry *) fFc->GetNextSelected(&p);
                         fTbfname->Clear();
-                        fTbfname->AddText(0, e->GetItemName()->GetString());
+                        fTbfname->AddText(0, e2->GetItemName()->GetString());
                         fClient->NeedRedraw(fName);
                      }
                      else {
@@ -590,9 +590,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             case kTE_ENTER:
                // same code as under kIDF_OK
                if (fTbfname->GetTextLength() == 0) {
-                  const char *txt = "Please provide file name or use \"Cancel\"";
+                  const char *txt2 = "Please provide file name or use \"Cancel\"";
                   new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                               "Missing File Name", txt, kMBIconExclamation,
+                               "Missing File Name", txt2, kMBIconExclamation,
                                kMBOk);
                   return kTRUE;
                } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists) &&

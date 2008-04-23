@@ -1593,11 +1593,11 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (!IsSaved()) {
                         Int_t retval;
                         Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
-                        char msg[512];
+                        char msg2[512];
 
-                        sprintf(msg, "Save \"%s\"?",
+                        sprintf(msg2, "Save \"%s\"?",
                                 untitled ? "Untitled" : fText->GetFileName());
-                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg2,
                            kMBIconExclamation, kMBYes|kMBNo|kMBCancel, &retval);
 
                         if (retval == kMBCancel)
@@ -1676,9 +1676,9 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      if (!Search(fSearch->fBuffer, fSearch->fDirection,
                                  fSearch->fCaseSensitive)) {
-                        char msg[256];
-                        sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
-                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
+                        char msg2[256];
+                        sprintf(msg2, "Couldn't find \"%s\"", fSearch->fBuffer);
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg2,
                                      kMBIconExclamation, kMBOk, 0);
                      }
                      break;
