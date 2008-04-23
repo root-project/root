@@ -162,7 +162,7 @@ void TGLFaceSet::SetFromMesh(const RootCsg::TBaseMesh *mesh)
 
       fPolyDesc.push_back(polySize);
 
-      for(UInt_t i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
+      for(i = 0; i < polySize; ++i) fPolyDesc.push_back(mesh->GetVertexIndex(polyIndex, i));
    }
 
    CalculateNormals();

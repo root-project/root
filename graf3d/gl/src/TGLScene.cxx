@@ -760,9 +760,9 @@ void TGLScene::RenderAllPasses(TGLRnrCtx           & rnrCtx,
          {
             // Clip away scene outside of the clip object.
             // Load all clip planes (up to max) at once.
-            for (UInt_t i=0; i<maxPlanes; i++) {
-               glClipPlane(GL_CLIP_PLANE0+i, planeSet[i].CArr());
-               glEnable(GL_CLIP_PLANE0+i);
+            for (UInt_t ii=0; ii<maxPlanes; ii++) {
+               glClipPlane(GL_CLIP_PLANE0+ii, planeSet[ii].CArr());
+               glEnable(GL_CLIP_PLANE0+ii);
             }
 
             // Draw scene once with full time slot, physicals have been

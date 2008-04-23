@@ -384,7 +384,7 @@ void TGLSurfacePainter::DrawPlot()const
 
          glColor4d(0., 0., 0., 0.5);
 
-         for (Int_t i = 0; i < nX - 1; ++i) {
+         for (i = 0; i < nX - 1; ++i) {
             for (Int_t j = 0; j < nY - 1; ++j) {
                Rgl::DrawQuadOutline(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j], fMesh[i + 1][j + 1]);
             }
@@ -415,11 +415,11 @@ void TGLSurfacePainter::DrawPlot()const
 
       glColor4d(1.f, 0.f, 0.4f, 0.6f);
       glBegin(GL_LINE_STRIP);
-      for (Int_t i = 0; i < nX; ++i)
+      for (i = 0; i < nX; ++i)
          glVertex3dv(fMesh[i][0].CArr());
       for (Int_t j = 0; j < nY; ++j)
          glVertex3dv(fMesh[nX - 1][j].CArr());
-      for (Int_t i = nX - 1; i >= 0; --i)
+      for (i = nX - 1; i >= 0; --i)
          glVertex3dv(fMesh[i][nY - 1].CArr());
       for (Int_t j = nY - 1; j >= 0; --j)
          glVertex3dv(fMesh[0][j].CArr());
