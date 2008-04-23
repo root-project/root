@@ -3542,7 +3542,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
             Bool_t abort =
               (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
-            TMessage m(kPROOF_STOPPROCESS);
+            m.Reset(kPROOF_STOPPROCESS);
             if (fProtocol > 8) {
                m << fPlayer->GetEventsProcessed() << abort;
             } else {
@@ -4789,20 +4789,20 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    if (gErrorIgnoreLevel == kUnset) {
       gErrorIgnoreLevel = 0;
       if (gEnv) {
-         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
-         if (!level.CompareTo("Print", TString::kIgnoreCase))
+         TString lvl = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+         if (!lvl.CompareTo("Print", TString::kIgnoreCase))
             gErrorIgnoreLevel = kPrint;
-         else if (!level.CompareTo("Info", TString::kIgnoreCase))
+         else if (!lvl.CompareTo("Info", TString::kIgnoreCase))
             gErrorIgnoreLevel = kInfo;
-         else if (!level.CompareTo("Warning", TString::kIgnoreCase))
+         else if (!lvl.CompareTo("Warning", TString::kIgnoreCase))
             gErrorIgnoreLevel = kWarning;
-         else if (!level.CompareTo("Error", TString::kIgnoreCase))
+         else if (!lvl.CompareTo("Error", TString::kIgnoreCase))
             gErrorIgnoreLevel = kError;
-         else if (!level.CompareTo("Break", TString::kIgnoreCase))
+         else if (!lvl.CompareTo("Break", TString::kIgnoreCase))
             gErrorIgnoreLevel = kBreak;
-         else if (!level.CompareTo("SysError", TString::kIgnoreCase))
+         else if (!lvl.CompareTo("SysError", TString::kIgnoreCase))
             gErrorIgnoreLevel = kSysError;
-         else if (!level.CompareTo("Fatal", TString::kIgnoreCase))
+         else if (!lvl.CompareTo("Fatal", TString::kIgnoreCase))
             gErrorIgnoreLevel = kFatal;
       }
    }
@@ -5305,8 +5305,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          {
             (*mess) >> uri;
             // Scan the existing datasets and print the content
-            UInt_t opt = (UInt_t)TProofDataSetManager::kPrint;
-            fDataSetManager->GetDataSets(uri, opt);
+            fDataSetManager->GetDataSets(uri, (UInt_t)TProofDataSetManager::kPrint);
          }
          break;
 
@@ -5314,8 +5313,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          {
             (*mess) >> uri;
             // Get the datasets and fill a map
-            UInt_t opt = (UInt_t)TProofDataSetManager::kExport;
-            TMap *returnMap = fDataSetManager->GetDataSets(uri, opt);
+            TMap *returnMap = fDataSetManager->GetDataSets(uri, (UInt_t)TProofDataSetManager::kExport);
             if (returnMap) {
                // Send them back
                fSocket->SendObject(returnMap, kMESS_OK);
