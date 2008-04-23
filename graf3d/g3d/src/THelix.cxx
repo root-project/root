@@ -518,12 +518,12 @@ void THelix::SetRange(Double_t * range, EHelixRangeType rType)
    Double_t * zl    = new Double_t[nSeg+1];
 
    for (i=0; i<=nSeg; i++) {                    // calculate xl[], yl[], zl[];
-      Double_t t, phase;
+      Double_t t, phase2;
       if (i==nSeg) t = fRange[1];                // the last point
       else         t = fRange[0] + dt * i;
-      phase = -fW * t + fPhi0;
-      xl[i] = fX0 - fVt/fW * TMath::Sin(phase);
-      yl[i] = fY0 + fVt/fW * TMath::Cos(phase);
+      phase2 = -fW * t + fPhi0;
+      xl[i] = fX0 - fVt/fW * TMath::Sin(phase2);
+      yl[i] = fY0 + fVt/fW * TMath::Cos(phase2);
       zl[i] = fZ0 + fVz * t;
    }
 
