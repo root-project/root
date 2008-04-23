@@ -19,6 +19,7 @@ typedef long off_t;
 #define vxinvc_   __stdcall VXINVC
 #define cfopei_   __stdcall CFOPEI
 #define cfstati_  __stdcall CFSTATI
+#define lnblnk_   __stdcall LNBLNK
 
 #else
 #include <unistd.h>
@@ -272,6 +273,17 @@ errm:
 done: 
    free(pttext);
    return;
+}
+
+//------------------------------------------------------------------------------
+
+int lnblnk_ (char *chline, int len)
+{
+   char  *chcur;
+   chcur = chline + len;
+   while (chcur > chline) { if (*--chcur != ' ') goto exit; }
+   return 0;
+   exit: return chcur+1 - chline;
 }
 
 //------------------------------------------------------------------------------
