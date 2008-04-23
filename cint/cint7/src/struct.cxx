@@ -447,12 +447,19 @@ int Cint::Internal::G__class_autoloading(int tagnum)
       if (G__p_class_autoloading) {
          // -- We have a callback, use that.
          G__enable_autoloading = 0;
+         // reset the def tagnums to not collide with dict setup
+         ::Reflex::Scope store_def_tagnum = G__def_tagnum; 
+         ::Reflex::Scope store_tagdefining = G__tagdefining; 
+         G__def_tagnum = Scope();
+         G__tagdefining = Scope();
          int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
+         G__def_tagnum = store_def_tagnum;
+         G__tagdefining = store_tagdefining;
          if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
             if (strstr(G__struct.name[tagnum],"<") != 0) {
                // Kill this entry.
-               ::Reflex::Scope store_def_tagnum = G__def_tagnum; 
-               ::Reflex::Scope store_tagdefining = G__tagdefining; 
+               store_def_tagnum = G__def_tagnum; 
+               store_tagdefining = G__tagdefining; 
                G__tagdefining = G__def_tagnum = G__Dict::GetDict().GetScope(G__struct.parent_tagnum[tagnum]);
                int found_tagnum = G__defined_tagname(G__struct.name[tagnum],3);
                G__def_tagnum = store_def_tagnum;

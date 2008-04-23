@@ -482,12 +482,19 @@ int G__class_autoloading(int* ptagnum)
       strcpy(copyLibname, libname);
       if (G__p_class_autoloading) {
          G__enable_autoloading = 0;
+         // reset the def tagnums to not collide with dict setup
+         int store_def_tagnum = G__def_tagnum;
+         int store_tagdefining = G__tagdefining;
+         G__def_tagnum = -1;
+         G__tagdefining = -1;
          int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
+         G__def_tagnum = store_def_tagnum;
+         G__tagdefining = store_tagdefining;
          if (G__struct.type[tagnum] == G__CLASS_AUTOLOAD) {
             if (strstr(G__struct.name[tagnum],"<") != 0) {
                // Kill this entry.
-               int store_def_tagnum = G__def_tagnum;
-               int store_tagdefining = G__tagdefining;
+               store_def_tagnum = G__def_tagnum;
+               store_tagdefining = G__tagdefining;
                G__tagdefining = G__def_tagnum = G__struct.parent_tagnum[tagnum];
                // "hide" tagnum's name: we want to check whether this auto-loading loaded
                // another version of the same class, e.g. because of vector<Long64_t>
