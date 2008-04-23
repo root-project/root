@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <stdlib.h>
 #include "qevent.h"
 #include "qdialog.h"
 #include "qpushbutton.h"

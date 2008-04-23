@@ -12,6 +12,7 @@
 
 #include "TQRootApplication.h"
 #include "TSystem.h"
+#include <stdlib.h>
 
 bool TQRootApplication::fgDebug=kFALSE;
 bool TQRootApplication::fgWarning=kFALSE;
