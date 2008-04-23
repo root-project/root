@@ -603,8 +603,8 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
    Double_t saf[6];
    Double_t rxy2 = point[0]*point[0]+point[1]*point[1];
    Double_t rxy = TMath::Sqrt(rxy2);
-   Double_t r2 = rxy2+point[2]*point[2];
-   Double_t r=TMath::Sqrt(r2);
+   Double_t rad2 = rxy2+point[2]*point[2];
+   Double_t r=TMath::Sqrt(rad2);
    Bool_t rzero=kFALSE;
    if (r<=1E-20) rzero=kTRUE;
    //localize theta
