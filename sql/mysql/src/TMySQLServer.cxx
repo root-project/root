@@ -485,7 +485,7 @@ TSQLTableInfo *TMySQLServer::GetTableInfo(const char* tablename)
    TSQLResult* stats = Query(sql.Data());
 
    if (stats!=0) {
-      TSQLRow* row = 0;
+      row = 0;
 
       while ((row = stats->Next()) != 0) {
          if (strcmp(row->GetField(0), tablename)!=0) {
