@@ -429,7 +429,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    char line[1024];
    Int_t n, ret = 0, nranges = 0, ltot = 0;
    TString boundary, boundaryEnd;
-   Long64_t first = -1, last, tot;
+   Long64_t first = -1, last = -1, tot;
 
    while ((n = GetLine(fSocket, line, 1024)) >= 0) {
       if (n == 0) {
