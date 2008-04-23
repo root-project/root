@@ -346,7 +346,11 @@ bool Tools::IsTemplated(const char * name ) {
    // f(A<int>(*)(B<float>))
    unsigned int paraLevel = 0;
 
-   for (size_t i = strlen(name) - 1; i > 0; --i) {
+   size_t len = strlen(name);
+
+   if (len==0) return false;
+
+   for (size_t i = len - 1; i > 0; --i) {
       if (name[i] == ')')
          ++paraLevel;
       else if (name[i] == '(') {
