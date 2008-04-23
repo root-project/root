@@ -1131,7 +1131,6 @@ Int_t TGX11::OpenDisplay(Display *disp)
    fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
 
    if (fVisual->c_class == TrueColor) {
-      int i;
       for (i = 0; i < int(sizeof(fVisual->blue_mask)*kBitsPerByte); i++) {
          if (fBlueShift == -1 && ((fVisual->blue_mask >> i) & 1))
             fBlueShift = i;
