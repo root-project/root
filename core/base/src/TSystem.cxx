@@ -1909,7 +1909,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
 #if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)
    if (so2dylib) {
-      TString libs = fListLibs;
+      TString libs2 = fListLibs;
       TString maclibs;
 
       TRegexp separator("[^ \\t\\s]+");
@@ -1918,12 +1918,12 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
       Ssiz_t start, index, end;
       start = index = end = 0;
 
-      while ((start < libs.Length()) && (index != kNPOS)) {
-         index = libs.Index(separator, &end, start);
+      while ((start < libs2.Length()) && (index != kNPOS)) {
+         index = libs2.Index(separator, &end, start);
          if (index >= 0) {
             // Change .so into .dylib and remove the
             // path info if it is not accessible
-            TString s = libs(index, end);
+            TString s = libs2(index, end);
             if (s.Index(user_so) != kNPOS) {
                s.ReplaceAll(".so",".dylib");
                if ( GetPathInfo( s, 0, (Long_t*)0, 0, 0 ) != 0 ) {
