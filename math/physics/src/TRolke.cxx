@@ -368,7 +368,7 @@ Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm,
 }
 
 //_________________________________________________________________________
-Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t e, Double_t tau, Double_t b, Int_t m, Int_t what)
+Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t , Double_t tau, Double_t b, Int_t m, Int_t what)
 {
    // Calculates the Profile Likelihood for MODEL 1:
    //  Poisson background/ Binomial Efficiency
@@ -394,10 +394,11 @@ Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t e
    if (what == 3) {
       if (mu == 0){
          b = (x+y)/(1.0+tau);
-         e = zm;
+         Double_t e = zm;
          f = LikeMod1(mu,b,e,x,y,z,tau,m);
       } else {
          TRolke g;
+         Double_t e = 0; 
          g.ProfLikeMod1(mu,b,e,x,y,z,tau,m);
          f = LikeMod1(mu,b,e,x,y,z,tau,m);
       }
