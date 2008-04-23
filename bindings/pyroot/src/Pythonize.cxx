@@ -648,8 +648,8 @@ namespace {
       Py_XDECREF( result );
 
       for ( Py_ssize_t i = 0; i < PySequence_Size( tup ); ++i ) {
-         PyObject* result = CallPyObjMethod( self, "AddAt", PyTuple_GET_ITEM( tup, i ), 0 );
-         Py_XDECREF( result );
+         PyObject* retval = CallPyObjMethod( self, "AddAt", PyTuple_GET_ITEM( tup, i ), 0 );
+         Py_XDECREF( retval );
       }
 
       Py_INCREF( Py_None );

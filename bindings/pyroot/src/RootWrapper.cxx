@@ -674,10 +674,10 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
    while ( mt.Next() ) {
       if ( mt.IsValid() && mt.Name() == name ) {
       // add to list of globals (same as synchronization would do for all funcs)
-         TFunction* func = new TFunction( new G__MethodInfo( mt ) );
-         gROOT->GetListOfGlobalFunctions()->Add( func );
+         TFunction* f = new TFunction( new G__MethodInfo( mt ) );
+         gROOT->GetListOfGlobalFunctions()->Add( f );
 
-         overloads.push_back( new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func ) );
+         overloads.push_back( new TFunctionHolder< TScopeAdapter, TMemberAdapter >( f ) );
       }
    }
 
