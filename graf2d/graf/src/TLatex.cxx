@@ -531,19 +531,19 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          if (strncmp(buf,"^{",2)==0) {
             if (opPower==-1 && nBrackets==0 && nCroch==0) opPower=i;
             if (i>3) {
-               Char_t buf[4];
-               strncpy(buf,&text[i-4],4);
-               if (strncmp(buf,"#int",4)==0) abovePlace = 1;
-               if (strncmp(buf,"#sum",4)==0) abovePlace = 2;
+               Char_t buf1[4];
+               strncpy(buf1,&text[i-4],4);
+               if (strncmp(buf1,"#int",4)==0) abovePlace = 1;
+               if (strncmp(buf1,"#sum",4)==0) abovePlace = 2;
             }
          }
          if (strncmp(buf,"_{",2)==0) {
             if (opUnder==-1 && nBrackets==0 && nCroch==0) opUnder=i;
             if (i>3) {
-               Char_t buf[4];
-               strncpy(buf,&text[i-4],4);
-               if (strncmp(buf,"#int",4)==0) abovePlace = 1;
-               if (strncmp(buf,"#sum",4)==0) abovePlace = 2;
+               Char_t buf2[4];
+               strncpy(buf2,&text[i-4],4);
+               if (strncmp(buf2,"#int",4)==0) abovePlace = 1;
+               if (strncmp(buf2,"#sum",4)==0) abovePlace = 2;
             }
          }
          if (strncmp(buf,"]{",2)==0)
