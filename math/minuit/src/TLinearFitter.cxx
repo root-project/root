@@ -1461,7 +1461,7 @@ void TLinearFitter::SetFormula(const char *formula)
 
       //fill the array of functions
       oa = sstring.Tokenize("|");
-      for (Int_t i=0; i<fNfunctions; i++) {
+      for (i=0; i<fNfunctions; i++) {
          replaceformula = ((TObjString *)oa->UncheckedAt(i))->GetString();
          TFormula *f = new TFormula("f", replaceformula.Data());
          if (!f) {
@@ -2244,7 +2244,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
          } else {
             func=0;
             if ((fSpecial>100)&&(fSpecial<200)){
-               Int_t npar = fSpecial-100;
+               npar = fSpecial-100;
                val[0] = 1;
                for (j=1; j<npar; j++)
                   val[j] = val[j-1]*fX(i, 0);
@@ -2253,7 +2253,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
             } else {
                if (fSpecial>200) {
                   //hyperplane case
-                  Int_t npar = fSpecial-201;
+                  npar = fSpecial-201;
                   func+=fParams(0);
                   for (j=0; j<npar; j++)
                      func += fParams(j+1)*fX(i, j);
@@ -2325,7 +2325,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
          } else {
             func=0;
             if ((fSpecial>100)&&(fSpecial<200)){
-               Int_t npar = fSpecial-100;
+               npar = fSpecial-100;
                val[0] = 1;
                for (j=1; j<npar; j++)
                   val[j] = val[j-1]*fX(index[i], 0);
@@ -2334,7 +2334,7 @@ Double_t TLinearFitter::CStep(Int_t step, Int_t h, Double_t *residuals, Int_t *i
             } else {
                if (fSpecial>200) {
                   //hyperplane case
-                  Int_t npar = fSpecial-201;
+                  npar = fSpecial-201;
                   func+=fParams(0);
                   for (j=0; j<npar; j++)
                      func += fParams(j+1)*fX(index[i], j);
