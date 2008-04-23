@@ -124,7 +124,6 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
 
    TString cmd(commentstring);
    TString option;
-   TString token;
    TString hierarchy;
    TGPopupMenu *currentMenu = 0;
 
@@ -137,7 +136,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
 
       Ssiz_t start = cmd.Index("{",opt_ptr) + 1;
       Ssiz_t end = cmd.Index("}",start);
-      TString option = cmd(start,end - start);
+      option = cmd(start,end - start);
 
       // Look for Hierarchy token
       TObjArray * array = option.Tokenize(";");
@@ -176,9 +175,9 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
             TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
             // Alphabetical ordering
             TGMenuEntry *ptr2;
-            TIter next(currentMenu->GetListOfEntries());
+            TIter next2(currentMenu->GetListOfEntries());
             // Search for popup with corresponding name
-            while ((ptr2 = (TGMenuEntry *) next()) &&				    
+            while ((ptr2 = (TGMenuEntry *) next2()) &&				    
                    (ptr2->GetType() != kMenuPopup  ||
                    last_component.CompareTo(ptr2->GetName()) > 0 )) { }
 	
