@@ -650,15 +650,15 @@ Int_t TSocket::Recv(TMessage *&mess)
 
    if (mess->What() & kMESS_ACK) {
       char ok[2] = { 'o', 'k' };
-      Int_t n = 0;
-      if ((n = gSystem->SendRaw(fSocket, ok, sizeof(ok), 0)) < 0) {
-         if (n == -5) {
+      Int_t n2 = 0;
+      if ((n2 = gSystem->SendRaw(fSocket, ok, sizeof(ok), 0)) < 0) {
+         if (n2 == -5) {
             // Connection reset or broken
             Close();
          }
          delete mess;
          mess = 0;
-         return n;
+         return n2;
       }
       mess->SetWhat(mess->What() & ~kMESS_ACK);
 
@@ -854,7 +854,7 @@ Bool_t TSocket::Authenticate(const char *user)
       rc = kFALSE;
 
       // Receive confirmation that everything went well
-      Int_t kind, stat;
+      Int_t stat;
       if (Recv(stat, kind) > 0) {
 
          if (kind == kROOTD_ERR) {
