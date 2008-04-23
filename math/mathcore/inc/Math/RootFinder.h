@@ -118,7 +118,7 @@ namespace ROOT {
          
          
          /**
-            Provide to the solver the function and an initial estimate of the Root, 
+            Provide to the solver the function and an initial estimate of the root, 
             for algorithms using derivatives. 
             The templated function f must be of a type implementing the \a operator()  
             and the \a Gradient() methods. 
@@ -126,8 +126,8 @@ namespace ROOT {
             Returns non zero if starting point is not valid 
          */
          
-         int  SetFunction( const IGradFunction & f, double Root) { 
-            return fSolver->SetFunction( f, Root); 
+         int  SetFunction( const IGradFunction & f, double xstart) { 
+            return fSolver->SetFunction( f, xstart); 
          }   
          
          /** 
