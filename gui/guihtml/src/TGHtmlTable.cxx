@@ -590,13 +590,13 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
                   SETMAX(reqW[iCol1], requestedW);
                   min = pStart->minW[iCol1] + separation;
                } else {
-                  int n = cell->colspan;
-                  int per = maxW / n;
+                  int n2 = cell->colspan;
+                  int per = maxW / n2;
                   int ix;
-                  SETMAX(ColMin(iCol1, iCol1+n-1), minW);
-                  SETMAX(ColReq(iCol1, iCol1+n-1), requestedW);
+                  SETMAX(ColMin(iCol1, iCol1+n2-1), minW);
+                  SETMAX(ColReq(iCol1, iCol1+n2-1), requestedW);
                   min = minW + separation;
-                  for (ix = iCol1; ix < iCol1 + n; ix++) {
+                  for (ix = iCol1; ix < iCol1 + n2; ix++) {
                      if (minW != maxW) {  //-- without this some tables are not displayed properly
                         SETMAX(pStart->maxW[ix], per);
                      }
@@ -661,9 +661,9 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
       // Expand the width of columns marked with "colspan=0".
 
       if (min0span[i] > 0 || max0span[i] > 0) {
-         int n = pStart->nCol - i + 1;
-         minW = (min0span[i] + (n - 1) * (1 - separation)) / n;
-         maxW = (max0span[i] + (n - 1) * (1 - separation)) / n;
+         int n2 = pStart->nCol - i + 1;
+         minW = (min0span[i] + (n2 - 1) * (1 - separation)) / n2;
+         maxW = (max0span[i] + (n2 - 1) * (1 - separation)) / n2;
          for (j = i; j <= pStart->nCol; j++) {
             SETMAX(pStart->minW[j], minW);
             SETMAX(pStart->maxW[j], maxW);

@@ -83,9 +83,9 @@ TGHtmlTextElement::~TGHtmlTextElement()
 }
 
 //______________________________________________________________________________
-TGHtmlMarkupElement::TGHtmlMarkupElement(int type, int argc,
+TGHtmlMarkupElement::TGHtmlMarkupElement(int type2, int argc,
                                          int arglen[], char *av[]) :
-                                         TGHtmlElement(type)
+                                         TGHtmlElement(type2)
 {
    //
 
@@ -213,8 +213,8 @@ int TGHtmlMarkupElement::GetUnorderedListType(int dflt)
 //int TGHtmlMarkupElement::GetVerticalAlignment(int dflt);
 
 //______________________________________________________________________________
-TGHtmlTable::TGHtmlTable(int type, int argc, int arglen[], char *argv[]) :
-             TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlTable::TGHtmlTable(int type2, int argc, int arglen[], char *argv2[]) :
+             TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -236,8 +236,8 @@ TGHtmlTable::~TGHtmlTable()
 }
 
 //______________________________________________________________________________
-TGHtmlCell::TGHtmlCell(int type, int argc, int arglen[], char *argv[]) :
-            TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlCell::TGHtmlCell(int type2, int argc, int arglen[], char *argv2[]) :
+            TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -259,8 +259,8 @@ TGHtmlCell::~TGHtmlCell()
 }
 
 //______________________________________________________________________________
-TGHtmlRef::TGHtmlRef(int type, int argc, int arglen[], char *argv[]) :
-           TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlRef::TGHtmlRef(int type2, int argc, int arglen[], char *argv2[]) :
+           TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -277,8 +277,8 @@ TGHtmlRef::~TGHtmlRef()
 }
 
 //______________________________________________________________________________
-TGHtmlLi::TGHtmlLi(int type, int argc, int arglen[], char *argv[]) :
-          TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlLi::TGHtmlLi(int type2, int argc, int arglen[], char *argv2[]) :
+          TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -290,8 +290,8 @@ TGHtmlLi::TGHtmlLi(int type, int argc, int arglen[], char *argv[]) :
 }
 
 //______________________________________________________________________________
-TGHtmlListStart::TGHtmlListStart(int type, int argc, int arglen[], char *argv[]) :
-                  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlListStart::TGHtmlListStart(int type2, int argc, int arglen[], char *argv2[]) :
+                  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -303,9 +303,9 @@ TGHtmlListStart::TGHtmlListStart(int type, int argc, int arglen[], char *argv[])
 }
 
 //______________________________________________________________________________
-TGHtmlImageMarkup::TGHtmlImageMarkup(int type, int argc,
-                                   int arglen[], char *argv[]) :
-  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlImageMarkup::TGHtmlImageMarkup(int type2, int argc,
+                                   int arglen[], char *argv2[]) :
+  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -323,8 +323,8 @@ TGHtmlImageMarkup::TGHtmlImageMarkup(int type, int argc,
 }
 
 //______________________________________________________________________________
-TGHtmlForm::TGHtmlForm(int type, int argc, int arglen[], char *argv[]) :
-  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlForm::TGHtmlForm(int type2, int argc, int arglen[], char *argv2[]) :
+  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -336,8 +336,8 @@ TGHtmlForm::TGHtmlForm(int type, int argc, int arglen[], char *argv[]) :
 }
 
 //______________________________________________________________________________
-TGHtmlHr::TGHtmlHr(int type, int argc, int arglen[], char *argv[]) :
-  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlHr::TGHtmlHr(int type2, int argc, int arglen[], char *argv2[]) :
+  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -346,8 +346,8 @@ TGHtmlHr::TGHtmlHr(int type, int argc, int arglen[], char *argv[]) :
 }
 
 //______________________________________________________________________________
-TGHtmlAnchor::TGHtmlAnchor(int type, int argc, int arglen[], char *argv[]) :
-  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlAnchor::TGHtmlAnchor(int type2, int argc, int arglen[], char *argv2[]) :
+  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -355,8 +355,8 @@ TGHtmlAnchor::TGHtmlAnchor(int type, int argc, int arglen[], char *argv[]) :
 }
 
 //______________________________________________________________________________
-TGHtmlScript::TGHtmlScript(int type, int argc, int arglen[], char *argv[]) :
-  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlScript::TGHtmlScript(int type2, int argc, int arglen[], char *argv2[]) :
+  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -365,8 +365,8 @@ TGHtmlScript::TGHtmlScript(int type, int argc, int arglen[], char *argv[]) :
 }
 
 //______________________________________________________________________________
-TGHtmlMapArea::TGHtmlMapArea(int type, int argc, int arglen[], char *argv[]) :
-  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlMapArea::TGHtmlMapArea(int type2, int argc, int arglen[], char *argv2[]) :
+  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 
@@ -387,8 +387,8 @@ TGHtmlBlock::~TGHtmlBlock() {
 #endif
 
 //______________________________________________________________________________
-TGHtmlInput::TGHtmlInput(int type, int argc, int arglen[], char *argv[]) :
-  TGHtmlMarkupElement(type, argc, arglen, argv)
+TGHtmlInput::TGHtmlInput(int type2, int argc, int arglen[], char *argv2[]) :
+  TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
    //
 

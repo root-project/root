@@ -479,16 +479,16 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
                max = text->x + text->w;
                ss = p->style.subscript;
                if (ss > 0) {
-                  int ascent = text->ascent;
-                  int delta = (ascent + text->descent) * ss / 2;
-                  ascent += delta;
+                  int ascent2 = text->ascent;
+                  int delta = (ascent2 + text->descent) * ss / 2;
+                  ascent2 += delta;
                   text->y = -delta;
-                  if (ascent > maxAscent) maxAscent = ascent;
-                  if (ascent > maxTextAscent) maxTextAscent = ascent;
+                  if (ascent2 > maxAscent) maxAscent = ascent2;
+                  if (ascent2 > maxTextAscent) maxTextAscent = ascent2;
                } else if (ss < 0) {
-                  int descent = text->descent;
-                  int delta = (descent + text->ascent) * (-ss) / 2;
-                  descent += delta;
+                  int descent2 = text->descent;
+                  int delta = (descent2 + text->ascent) * (-ss) / 2;
+                  descent2 += delta;
                   text->y = delta;
                } else {
                   text->y = 0;

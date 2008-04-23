@@ -915,18 +915,18 @@ void TGHtml::_Clear()
 
    colorUsed = 0;
    while (imageList) {
-      TGHtmlImage *p = imageList;
-      imageList = p->pNext;
-      delete p;
+      TGHtmlImage *p2 = imageList;
+      imageList = p2->pNext;
+      delete p2;
    }
 
    if (bgImage) delete bgImage;
    bgImage = 0;
 
    while (styleStack) {
-      SHtmlStyleStack *p = styleStack;
-      styleStack = p->pNext;
-      delete p;
+      SHtmlStyleStack *p2 = styleStack;
+      styleStack = p2->pNext;
+      delete p2;
    }
    ClearGcCache();
    ResetLayoutContext();

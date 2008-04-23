@@ -366,7 +366,7 @@ void TGHtmlBrowser::Back()
       fComboBox->Select(index - 1, kTRUE);
       TGTextLBEntry *entry = (TGTextLBEntry *)fComboBox->GetSelectedEntry();
       if (entry) {
-         const char *string = entry->GetTitle();
+         string = entry->GetTitle();
          if (string)
             Selected(string);
       }
@@ -387,7 +387,7 @@ void TGHtmlBrowser::Forward()
       fComboBox->Select(index + 1, kTRUE);
       TGTextLBEntry *entry = (TGTextLBEntry *)fComboBox->GetSelectedEntry();
       if (entry) {
-         const char *string = entry->GetTitle();
+         string = entry->GetTitle();
          if (string)
             Selected(string);
       }
