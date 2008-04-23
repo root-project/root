@@ -466,9 +466,9 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 
       Bool_t isEnum = kFALSE;
       if (!strcmp("(unknown)",name)) {
-         G__TypeInfo type(func->GetReturnTypeName());
-         name = type.TrueName();
-         if (type.Property()&kIsEnum) {
+         G__TypeInfo typed(func->GetReturnTypeName());
+         name = typed.TrueName();
+         if (typed.Property()&kIsEnum) {
             isEnum = kTRUE;
          }
       }
