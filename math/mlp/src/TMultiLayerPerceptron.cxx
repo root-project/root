@@ -1301,7 +1301,6 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
    const Int_t nneurons =inpL->GetLast()+1;
    TNeuron *neuron = 0;
    Int_t i = 0;
-   TString name;
    for (i = 0; i<nneurons; i++) {
       const TString name = ((TObjString *)inpL->At(i))->GetString();
       neuron = new TNeuron(TNeuron::kOff, name);
@@ -1474,11 +1473,11 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
       if (opt.Contains("train") && opt.Contains("test")) {
          events = fTraining;
          setname = "train";
-         TH1D *hist = ((TH1D *) gDirectory->Get("MLP_test"));
+         hist = ((TH1D *) gDirectory->Get("MLP_test"));
          if (!hist)
             hist = new TH1D(setname, title, 50, 1, -1);
          hist->Reset();
-         Int_t nEvents = events->GetN();
+         nEvents = events->GetN();
          for (i = 0; i < nEvents; i++)
             hist->Fill(Result(events->GetEntry(i), index));
          hist->Draw("same");
@@ -1733,10 +1732,10 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                case (TNeuron::kSoftmax):
                   {
                      sourcefile << "   return (exp(input) / (";
-                     Int_t n = 0;
-                     TNeuron* side = neuron->GetInLayer(n++);
+                     Int_t nn = 0;
+                     TNeuron* side = neuron->GetInLayer(nn++);
                      sourcefile << "exp(input" << side << "())";
-                     while ((side = neuron->GetInLayer(n++)))
+                     while ((side = neuron->GetInLayer(nn++)))
                         sourcefile << " + exp(input" << side << "())";
                      sourcefile << ") * ";
                      break;
@@ -1864,10 +1863,10 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                   }
                case (TNeuron::kSoftmax):
                   {
-                     Int_t n = 0;
-                     TNeuron* side = neuron->GetInLayer(n++);
+                     Int_t nn = 0;
+                     TNeuron* side = neuron->GetInLayer(nn++);
                      sourcefile << "      div = exp(neuron" << side << "())" << endl;
-                     while ((side = neuron->GetInLayer(n++)))
+                     while ((side = neuron->GetInLayer(nn++)))
                         sourcefile << "      div = div + exp(neuron" << side << "())" << endl;
                      sourcefile << "      neuron"  << neuron ;
                      sourcefile << "= (exp(neuron" << neuron << ") / div * ";
@@ -1965,10 +1964,10 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                case (TNeuron::kSoftmax):
                   {
                      pythonfile << "\t\treturn (exp(input) / (";
-                     Int_t n = 0;
-                     TNeuron* side = neuron->GetInLayer(n++);
+                     Int_t nn = 0;
+                     TNeuron* side = neuron->GetInLayer(nn++);
                      pythonfile << "exp(self.neuron" << side << "())";
-                     while ((side = neuron->GetInLayer(n++)))
+                     while ((side = neuron->GetInLayer(nn++)))
                         pythonfile << " + exp(self.neuron" << side << "())";
                      pythonfile << ") * ";
                      break;
