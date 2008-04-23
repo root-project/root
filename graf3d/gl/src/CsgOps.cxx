@@ -1606,9 +1606,9 @@ namespace RootCsg {
    }
 
    //______________________________________________________________________________
-   Int_t compute_classification(const Double_t &distance, const Double_t &epsilon)
+   Int_t compute_classification(const Double_t &distance, const Double_t &epsil)
    {
-      if (TMath::Abs(distance) < epsilon) return 0;
+      if (TMath::Abs(distance) < epsil) return 0;
       else return distance < 0 ? 1 : 2;
    }
 
@@ -1793,9 +1793,9 @@ namespace RootCsg {
                fMesh.Verts().push_back(VERTEX_t());
                TVector3 v = aVertex - lastVertex;
                Double_t sideA = plane.SignedDistance(lastVertex);
-               Double_t epsilon = -sideA / plane.Normal().Dot(v);
-               fMesh.Verts().back().Pos() = lastVertex + (v * epsilon);
-               typename TMesh::Polygon::TVProp splitProp(newVertexIndex,p.VertexProps(j),p.VertexProps(i),epsilon);
+               Double_t epsil = -sideA / plane.Normal().Dot(v);
+               fMesh.Verts().back().Pos() = lastVertex + (v * epsil);
+               typename TMesh::Polygon::TVProp splitProp(newVertexIndex,p.VertexProps(j),p.VertexProps(i),epsil);
                inP.Verts().push_back(  splitProp );
                outP.Verts().push_back( splitProp );
                fFunctionBinder.InsertVertexAlongEdge(lastIndex,newIndex,splitProp);
