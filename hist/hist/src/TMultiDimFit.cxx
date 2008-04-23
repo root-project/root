@@ -3609,13 +3609,13 @@ void TMultiDimFit::Print(Option_t *option) const
          if (i != fNVariables-1) cout << ", ";
       }
       cout << ") = ";
-      for (Int_t i = 0; i < fNCoefficients; i++) {
+      for (i = 0; i < fNCoefficients; i++) {
          if (i != 0)
             cout << endl << "\t" << (fCoefficients(i) < 0 ? "- " : "+ ") 
             << TMath::Abs(fCoefficients(i));
          else 
             cout << fCoefficients(i);
-         for (Int_t j = 0; j < fNVariables; j++) {
+         for (j = 0; j < fNVariables; j++) {
             Int_t p = fPowers[fPowerIndex[i] * fNVariables + j];
             switch (p) { 
                case 1: break;
