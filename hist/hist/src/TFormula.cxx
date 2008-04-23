@@ -738,7 +738,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          if (j>2) {
             if (chaine[j-2] == 'e') {
                Bool_t isrightdecimal = 1;
-               int k;
+
                for(k=j-3; k>=0 && isrightdecimal; --k) {
                   t = chaine[k];
                   isrightdecimal = isrightdecimal && (strchr("0123456789.",t)!=0);
@@ -1144,7 +1144,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      Bool_t isHexa = kFALSE;
                      Bool_t hasExpo= kFALSE;
                      if ((chaine(0,2)=="0x")||(chaine(0,2)=="0X")) isHexa=kTRUE;
-                     for (Int_t j=0; j<chaine.Length() && err==0; j++) {
+                     for (j=0; j<chaine.Length() && err==0; j++) {
                         t=chaine[j];
                         if (!isHexa) {
                            if (j>0 && (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-")) {
@@ -1186,7 +1186,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         vafConst = (Double_t) vafConst2;}
                         fExpr[fNoper] = chaine;
                         k = -1;
-                        for (Int_t j=0;j<fNconst;j++) {
+                        for (j=0;j<fNconst;j++) {
                            if (vafConst == fConst[j] ) k= j;
                         }
                         if ( k < 0) {  k = fNconst; fNconst++; fConst[k] = vafConst; }
@@ -2050,12 +2050,12 @@ Int_t TFormula::Compile(const char *expression)
    TString chaine = GetTitle();
 
    if (chaine.Contains(";")) {
-      char *ctemp = new char[chaine.Length()+1];
-      strcpy(ctemp,chaine.Data());
-      char *semicol = (char*)strstr(ctemp,";");
+      char *sctemp = new char[chaine.Length()+1];
+      strcpy(sctemp,chaine.Data());
+      char *semicol = (char*)strstr(sctemp,";");
       if (semicol) *semicol = 0;
-      chaine = ctemp;
-      delete [] ctemp;
+      chaine = sctemp;
+      delete [] sctemp;
    }
 //  chaine.ToLower();
 
@@ -2873,7 +2873,8 @@ TString TFormula::GetExpFormula(Option_t *option) const
             offset = -nargs;
             // The function name contains return type and parameters types we need
             // to trim them.
-            for(int i=0, depth=0;i<funcname.Length();++i) {
+            int depth;
+	    for(i=0, depth=0;i<funcname.Length();++i) {
                switch (funcname[i]) {
                   case '<':
                      ++depth; break;
@@ -3577,9 +3578,9 @@ void TFormula::Optimize()
             i+=2;
             fOperOffset[i].fType0=actionparam;
             fOperOffset[i].fOffset0=GetActionParamOptimized(i-1);
-            Int_t offset =  int(fConst[fOperOffset[i].fOffset0]+0.4);
-            fOperOffset[i].fOffset0=offset;
-            Int_t nparmax = offset+fPredefined[i]->fNParameters;
+            Int_t offset2 =  int(fConst[fOperOffset[i].fOffset0]+0.4);
+            fOperOffset[i].fOffset0=offset2;
+            Int_t nparmax = offset2+fPredefined[i]->fNParameters;
             if (nparmax>fNpar){ // increase expected number of parameters
                fNpar=nparmax;
             }
