@@ -115,15 +115,15 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       stem += ",";
       stem += v;
 
-      string ts(stem);
-      ts += "> >";
+      string tss(stem);
+      tss += "> >";
 
-      if (a==ts) return true;
+      if (a==tss) return true;
 
-      ts = stem;
-      ts += " > >";
+      tss = stem;
+      tss += " > >";
 
-      if (a==ts) return true;
+      if (a==tss) return true;
 
       stem = "allocator<pair<const ";
       stem += k;
@@ -131,15 +131,15 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       stem += ",";
       stem += v;
 
-      ts = stem;
-      ts += "> >";
+      tss = stem;
+      tss += "> >";
 
-      if (a==ts) return true;
+      if (a==tss) return true;
 
-      ts = stem;
-      ts += " > >";
+      tss = stem;
+      tss += " > >";
 
-      if (a==ts) return true;
+      if (a==tss) return true;
 
    }
 
