@@ -1565,7 +1565,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 
    if(!xbins && (fXaxis.GetXbins()->GetSize() > 0)){ // variable bin sizes
       Double_t *bins = new Double_t[newbins+1];
-      for(Int_t i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
+      for(i = 0; i <= newbins; ++i) bins[i] = fXaxis.GetBinLowEdge(1+i*ngroup);
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
    } else if (xbins) {
