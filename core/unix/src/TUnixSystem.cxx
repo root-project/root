@@ -1678,12 +1678,12 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
    if (search == 0)
       search = ".";
 
-   TString pwd(gSystem->WorkingDirectory());
-   pwd += "/";
+   TString apwd(gSystem->WorkingDirectory());
+   apwd += "/";
    for (const char* ptr = search; *ptr;) {
       TString name;
       if (*ptr != '/' && *ptr !='$' && *ptr != '~')
-         name = pwd;
+         name = apwd;
       const char* posEndOfPart = strchr(ptr, ':');
       if (posEndOfPart) {
          name.Append(ptr, posEndOfPart - ptr);
@@ -1730,9 +1730,9 @@ Int_t TUnixSystem::GetUid(const char *user)
    if (!user || !user[0])
       return getuid();
    else {
-      struct passwd *pwd = getpwnam(user);
-      if (pwd)
-         return pwd->pw_uid;
+      struct passwd *apwd = getpwnam(user);
+      if (apwd)
+         return apwd->pw_uid;
    }
    return 0;
 }
@@ -1783,16 +1783,16 @@ UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
    if (iUserInfo != gUserInfo.end())
       return new UserGroup_t(iUserInfo->second);
 
-   struct passwd *pwd = getpwuid(uid);
-   if (pwd) {
+   struct passwd *apwd = getpwuid(uid);
+   if (apwd) {
       UserGroup_t *ug = new UserGroup_t;
-      ug->fUid      = pwd->pw_uid;
-      ug->fGid      = pwd->pw_gid;
-      ug->fUser     = pwd->pw_name;
-      ug->fPasswd   = pwd->pw_passwd;
-      ug->fRealName = pwd->pw_gecos;
-      ug->fShell    = pwd->pw_shell;
-      UserGroup_t *gr = GetGroupInfo(pwd->pw_gid);
+      ug->fUid      = apwd->pw_uid;
+      ug->fGid      = apwd->pw_gid;
+      ug->fUser     = apwd->pw_name;
+      ug->fPasswd   = apwd->pw_passwd;
+      ug->fRealName = apwd->pw_gecos;
+      ug->fShell    = apwd->pw_shell;
+      UserGroup_t *gr = GetGroupInfo(apwd->pw_gid);
       if (gr) ug->fGroup = gr->fGroup;
       delete gr;
 
