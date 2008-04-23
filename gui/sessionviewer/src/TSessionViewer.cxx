@@ -1847,8 +1847,8 @@ void TSessionFrame::OnBtnGetQueriesClicked()
             continue;
          // check also in our query description list
          Bool_t found = kFALSE;
-         TIter nextp(fViewer->GetActDesc()->fQueries);
-         while ((lquery = (TQueryDescription *)nextp())) {
+         TIter nextp2(fViewer->GetActDesc()->fQueries);
+         while ((lquery = (TQueryDescription *)nextp2())) {
             if (lquery->fReference.CompareTo(newquery->fReference) == 0) {
                found = kTRUE;
                break;
@@ -4264,13 +4264,13 @@ void TSessionViewer::Build()
 
    int spacing = 8;
    fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
-   for (int i = 0; xpm_toolbar[i]; i++) {
-      tb_data[i].fPixmap = xpm_toolbar[i];
-      if (strlen(xpm_toolbar[i]) == 0) {
+   for (int ii = 0; xpm_toolbar[ii]; ii++) {
+      tb_data[ii].fPixmap = xpm_toolbar[ii];
+      if (strlen(xpm_toolbar[ii]) == 0) {
          spacing = 8;
          continue;
       }
-      fToolBar->AddButton(this, &tb_data[i], spacing);
+      fToolBar->AddButton(this, &tb_data[ii], spacing);
       spacing = 0;
    }
    AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
@@ -4998,9 +4998,9 @@ void TSessionViewer::ResetSession()
       // disable animation timer
       DisableTimer();
       // change list tree item picture to disconnected pixmap
-      TGListTreeItem *item = fSessionHierarchy->FindChildByData(
-                             fSessionItem, fActDesc);
-      item->SetPictures(fProofDiscon, fProofDiscon);
+      TGListTreeItem *item2 = fSessionHierarchy->FindChildByData(
+                              fSessionItem, fActDesc);
+      item2->SetPictures(fProofDiscon, fProofDiscon);
 
       OnListTreeClicked(fSessionHierarchy->GetSelected(), 1, 0, 0);
       fSessionHierarchy->ClearViewPort();
