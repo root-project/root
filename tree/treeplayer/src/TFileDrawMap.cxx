@@ -578,9 +578,9 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
             box.SetFillColor(color);
             Int_t nbaskets = branch->GetMaxBaskets();
             for (Int_t i=0;i<nbaskets;i++) {
-               Long64_t bseek = branch->GetBasketSeek(i);
+               bseek = branch->GetBasketSeek(i);
                if (!bseek) break;
-               Int_t nbytes = branch->GetBasketBytes()[i];
+               nbytes = branch->GetBasketBytes()[i];
                PaintBox(box,bseek,nbytes);
             }
          }

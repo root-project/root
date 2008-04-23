@@ -2757,9 +2757,9 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       delete timer;
       //we must reset the cache
       {
-         TFile *curfile = fTree->GetCurrentFile();
-         if (curfile && fTree->GetCacheSize() > 0) {
-            tpf = (TTreeCache*)curfile->GetCacheRead();
+         TFile *curfile2 = fTree->GetCurrentFile();
+         if (curfile2 && fTree->GetCacheSize() > 0) {
+            tpf = (TTreeCache*)curfile2->GetCacheRead();
             if (tpf) tpf->SetEntryRange(0,0);
          }
       }
@@ -2962,8 +2962,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       if (!fname) fname = (char*)"";
       lenfile = strlen(fname);
       if (!lenfile) {
-         Int_t nch = strlen(fTree->GetName());
-         fname = new char[nch+10];
+         Int_t nch2 = strlen(fTree->GetName());
+         fname = new char[nch2+10];
          strcpy(fname, fTree->GetName());
          strcat(fname, "-scan.dat");
       }
@@ -3510,7 +3510,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    Double_t min, max;
    for(i = 0; i < npar; i++) {
       fitfunc->GetParLimits(i, min, max);
-      Double_t we = 0.1*TMath::Abs(max-min);
+      we = 0.1*TMath::Abs(max-min);
       if (we == 0) we = 0.3*TMath::Abs(fitfunc->GetParameter(i));
       if (we == 0) we = 1;
       if(min < max) {

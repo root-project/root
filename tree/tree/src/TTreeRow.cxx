@@ -182,7 +182,7 @@ void TTreeRow::Streamer(TBuffer &R__b)
       R__b.ReadFastArray(fRow,nch);
       R__b.CheckByteCount(R__s, R__c, TTreeRow::IsA());
    } else {
-      UInt_t R__c = R__b.WriteVersion(TTreeRow::Class(),kTRUE);
+      R__c = R__b.WriteVersion(TTreeRow::Class(),kTRUE);
       TSQLRow::Streamer(R__b);
       R__b << fColumnCount;
       R__b.WriteFastArray(fFields,fColumnCount);

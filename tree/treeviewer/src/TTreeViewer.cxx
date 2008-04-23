@@ -2091,39 +2091,39 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                     vname = leaf->GetName();
                               }
                            }
-                           char* msg = new char[2000];
+                           char* msg2 = new char[2000];
                            // get item type
                            ULong_t *itemType = (ULong_t *) item->GetUserData();
                            if (*itemType & kLTTreeType) {
                            // X, Y or Z clicked
                               char symbol = (char)((*itemType) >> 8);
-                              sprintf(msg, "%c expression : %s", symbol, vname);
+                              sprintf(msg2, "%c expression : %s", symbol, vname);
                            } else {
                               if (*itemType & kLTCutType) {
                               // scissors clicked
-                                 sprintf(msg, "Cut : %s", vname);
+                                 sprintf(msg2, "Cut : %s", vname);
                               } else {
                                  if (*itemType & kLTPackType) {
-                                    sprintf(msg, "Box : %s", vname);
+                                    sprintf(msg2, "Box : %s", vname);
                                  } else {
                                     if (*itemType & kLTExpressionType) {
                                        // expression clicked
-                                       sprintf(msg, "Expression : %s", vname);
+                                       sprintf(msg2, "Expression : %s", vname);
                                     } else {
                                        if (*itemType & kLTBranchType) {
-                                          sprintf(msg, "Branch : %s", vname);
+                                          sprintf(msg2, "Branch : %s", vname);
                                        } else {
-                                          sprintf(msg, "Leaf : %s", vname);
+                                          sprintf(msg2, "Leaf : %s", vname);
                                        }
                                     }
                                  }
                               }
                            }
                            // write who is responsable for this
-                           TString message = msg;
+                           TString message = msg2;
                            message = message(0,150);
-                           Message(msg);
-                           delete[] msg;
+                           Message(msg2);
+                           delete[] msg2;
                            // check if this should be pasted into the expression editor
                            if ((*itemType & kLTBranchType) || (*itemType & kLTCutType)) break;
                            fDialogBox = TGSelectBox::GetInstance();

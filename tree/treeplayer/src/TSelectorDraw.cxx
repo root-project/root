@@ -830,10 +830,10 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    if (hkeep) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
-   for(Int_t i=0;i<fValSize;++i)
+   for(i=0;i<fValSize;++i)
       fVarMultiple[i] = kFALSE;
    fSelectMultiple = kFALSE;
-   for(Int_t i=0;i<fDimension;++i){
+   for(i=0;i<fDimension;++i){
       if(fVar[i] && fVar[i]->GetMultiplicity()) fVarMultiple[i] = kTRUE;
    }
 
@@ -843,7 +843,7 @@ void TSelectorDraw::Begin(TTree *tree)
    fWeight  = fTree->GetWeight();
    fNfill   = 0;
 
-   for(Int_t i=0;i<fDimension;++i){
+   for(i=0;i<fDimension;++i){
       if(!fVal[i] && fVar[i]){
          fVal[i] = new Double_t[(Int_t)fTree->GetEstimate()];
       }
@@ -851,7 +851,7 @@ void TSelectorDraw::Begin(TTree *tree)
 
    if (!fW)             fW  = new Double_t[(Int_t)fTree->GetEstimate()];
 
-   for(Int_t i=0;i<fValSize;++i){
+   for(i=0;i<fValSize;++i){
       fVmin[i] = FLT_MAX;
       fVmax[i] = -FLT_MAX;
    }

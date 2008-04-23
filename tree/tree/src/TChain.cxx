@@ -1818,10 +1818,10 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
             break;
          }
          if (newTree->GetDirectory()) {
-            TFile* file = newTree->GetDirectory()->GetFile();
-            if (file && (file->GetEND() > TTree::GetMaxTreeSize())) {
-               if (newTree->GetDirectory() == (TDirectory*) file) {
-                  newTree->ChangeFile(file);
+            TFile* file2 = newTree->GetDirectory()->GetFile();
+            if (file2 && (file2->GetEND() > TTree::GetMaxTreeSize())) {
+               if (newTree->GetDirectory() == (TDirectory*) file2) {
+                  newTree->ChangeFile(file2);
                }
             }
          }

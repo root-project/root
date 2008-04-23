@@ -224,7 +224,7 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
       //this block is empty
       fN = block->fN;
       fIndices = new UShort_t[fN];
-      for (Int_t i=0; i<fN; i++)
+      for (i=0; i<fN; i++)
          fIndices[i] = block->fIndices[i];
       fNPassed = block->fNPassed;
       fType = block->fType;
@@ -250,7 +250,7 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
          } else {
             //the other block stores entries that don't pass
             if (block->fNPassed==0){
-               for (Int_t i=0; i<kBlockSize*16; i++){
+               for (i=0; i<kBlockSize*16; i++){
                   Enter(i);
                }
             }
@@ -497,14 +497,14 @@ void TEntryListBlock::PrintWithShift(Int_t shift) const
          }
       } else {
          if (fNPassed==0){
-            for (Int_t i=0; i<kBlockSize*16; i++)
+            for (i=0; i<kBlockSize*16; i++)
                printf("%d\n", i+shift);
             return;
          }
-         for (Int_t i=0; i<fIndices[0]; i++){
+         for (i=0; i<fIndices[0]; i++){
             printf("%d\n", i+shift);
          }
-         for (Int_t i=0; i<fNPassed-1; i++){
+         for (i=0; i<fNPassed-1; i++){
             for (Int_t j=fIndices[i]+1; j<fIndices[i+1]; j++){
                printf("%d\n", j+shift);
             }

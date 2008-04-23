@@ -647,7 +647,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
          if (!clElements) continue;
 
          // now loop over the class's streamer elements
-         TVirtualStreamerInfo* streamerInfo= clElements->GetStreamerInfo();
+         streamerInfo= clElements->GetStreamerInfo();
          TIter iElem(streamerInfo->GetElements());
          TStreamerElement* elem=0;
          while ((elem=(TStreamerElement*)iElem())) {

@@ -207,8 +207,8 @@ Bool_t ROOT::TBranchProxy::Setup()
 
       }
       if (!fWhere && fBranch->IsA()==TBranch::Class()) {
-         TLeaf *leaf = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
-         fWhere = leaf->GetValuePointer();
+         TLeaf *leaf2 = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+         fWhere = leaf2->GetValuePointer();
       }
 
       if (!fWhere) {
