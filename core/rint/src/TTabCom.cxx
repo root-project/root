@@ -1809,11 +1809,11 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
             Int_t i;
             for (i = 0; i < tmp->GetSize(); i++) {
-               TString str = ((TObjString *) tmp->At(i))->String();
+               TString astr = ((TObjString *) tmp->At(i))->String();
                TString rxp = "^";
                rxp += prefix;
-               if (str.Contains(TRegexp(rxp))) {
-                  str.Remove(0, prefix.Length());
+               if (astr.Contains(TRegexp(rxp))) {
+                  astr.Remove(0, prefix.Length());
                   TString s = str("^[^: ]*");
                   TObjString *ostr = new TObjString(s);
                   if (!pList->Contains(ostr))
@@ -1825,12 +1825,12 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
             // Add all the sub-namespaces in the specified namespace.
             for (i = 0; i < fpNamespaces->GetSize(); i++) {
-               TString str =
+               TString astr =
                    ((TObjString *) fpNamespaces->At(i))->String();
                TString rxp = "^";
                rxp += prefix;
-               if (str.Contains(TRegexp(rxp))) {
-                  str.Remove(0, prefix.Length());
+               if (astr.Contains(TRegexp(rxp))) {
+                  astr.Remove(0, prefix.Length());
                   TString s = str("^[^: ]*");
                   TObjString *ostr = new TObjString(s);
                   if (!pList->Contains(ostr))
