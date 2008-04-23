@@ -1976,23 +1976,22 @@ again:
       if (px != pxorg || py != pyorg) {
 
          // Get parent corners pixels coordinates
-         TPad *parent = fMother;
-         Int_t parentpx1 = parent->XtoAbsPixel(parent->GetX1());
-         Int_t parentpx2 = parent->XtoAbsPixel(parent->GetX2());
-         Int_t parentpy1 = parent->YtoAbsPixel(parent->GetY1());
-         Int_t parentpy2 = parent->YtoAbsPixel(parent->GetY2());
+         Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
+         Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
+         Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
+         Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
 
          // Get pad new corners pixels coordinates
-         Int_t px1 = XtoAbsPixel(fX1); if (px1 < parentpx1) {px1 = parentpx1; }
-         Int_t px2 = XtoAbsPixel(fX2); if (px2 > parentpx2) {px2 = parentpx2; }
-         Int_t py1 = YtoAbsPixel(fY1); if (py1 > parentpy1) {py1 = parentpy1; }
-         Int_t py2 = YtoAbsPixel(fY2); if (py2 < parentpy2) {py2 = parentpy2; }
+         Int_t apx1 = XtoAbsPixel(fX1); if (apx1 < parentpx1) {apx1 = parentpx1; }
+         Int_t apx2 = XtoAbsPixel(fX2); if (apx2 > parentpx2) {apx2 = parentpx2; }
+         Int_t apy1 = YtoAbsPixel(fY1); if (apy1 > parentpy1) {apy1 = parentpy1; }
+         Int_t apy2 = YtoAbsPixel(fY2); if (apy2 < parentpy2) {apy2 = parentpy2; }
 
          // Compute new pad positions in the NDC space of parent
-         fXlowNDC = Double_t(px1 - parentpx1)/Double_t(parentpx2 - parentpx1);
-         fYlowNDC = Double_t(py1 - parentpy1)/Double_t(parentpy2 - parentpy1);
-         fWNDC    = Double_t(px2 - px1)/Double_t(parentpx2 - parentpx1);
-         fHNDC    = Double_t(py2 - py1)/Double_t(parentpy2 - parentpy1);
+         fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
+         fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
+         fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
+         fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
       }
 
       // Restore old range
@@ -4773,13 +4772,13 @@ void TPad::ResizePad(Option_t *option)
          } else {
             if (fGLDevice != -1) {
                Int_t borderSize = fBorderSize > 0 ? fBorderSize : 2;
-               Int_t ww = w - 2 * borderSize;
-               Int_t hh = h - 2 * borderSize;
+               Int_t w2 = w - 2 * borderSize;
+               Int_t h2 = h - 2 * borderSize;
                Int_t px = 0, py = 0;
                XYtoAbsPixel(fX1, fY2, px, py);
-               if (ww < 0) ww = 1;//not to get HUGE pixmap :)
-               if (hh < 0) hh = 1;//not to get HUGE pixmap :)
-               if (gGLManager->ResizeOffScreenDevice(fGLDevice, px + borderSize, py + borderSize, ww, hh))
+               if (w2 < 0) w2 = 1;//not to get HUGE pixmap :)
+               if (h2 < 0) h2 = 1;//not to get HUGE pixmap :)
+               if (gGLManager->ResizeOffScreenDevice(fGLDevice, px + borderSize, py + borderSize, w2, h2))
                   Modified(kTRUE);
             }
 
