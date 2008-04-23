@@ -596,8 +596,8 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
             char fmt[] = {"#%09d"};
             fmt[3]  = '0'+(int)log10(double(sz))+1;
             char buf[20];
-            for (int i=0;i<sz;i++) {
-               void *p = proxy->At(i);
+            for (int ii=0;ii<sz;ii++) {
+               void *p = proxy->At(ii);
 
                if (proxy->HasPointers()) {
                   p = *((void**)p);
@@ -606,7 +606,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
                   p = actualCl->DynamicCast(valueCl,p,0);
                }
                fCount++;
-               sprintf(buf,fmt,i);
+               sprintf(buf,fmt,ii);
                ts = bwname;
                ts += buf;
                fBrowser->Add( p, actualCl, ts );
@@ -2075,7 +2075,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load)
    VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
    if (dict) {
       (dict)();
-      TClass *cl = GetClass(typeinfo,kFALSE);
+      cl = GetClass(typeinfo,kFALSE);
       if (cl) cl->PostLoadCheck();
       return cl;
    }
@@ -4195,7 +4195,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 
          int dim = tdm->GetArrayDim();
          if (prop&kIsArray) {
-            for (int i=0;i<dim;i++) id = id*3+tdm->GetMaxIndex(i);
+            for (int ii=0;ii<dim;ii++) id = id*3+tdm->GetMaxIndex(ii);
          }
          if (code != 2) {
             const char *left = strstr(tdm->GetTitle(),"[");
