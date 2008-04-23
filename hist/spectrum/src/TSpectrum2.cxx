@@ -2888,7 +2888,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
    double **working_space = new double *[ssizex + i];
    for (j = 0; j < ssizex + i; j++) {
       Double_t *wsk = working_space[j] = new double[16 * (ssizey + i)];
-      for (Int_t k=0;k<16 * (ssizey + i);k++) wsk[k] = 0;
+      for (k=0;k<16 * (ssizey + i);k++) wsk[k] = 0;
    }   
    for(j = 0; j < ssizey_ext; j++){
       for(i = 0; i < ssizex_ext; i++){
