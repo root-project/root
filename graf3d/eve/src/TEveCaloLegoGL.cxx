@@ -518,11 +518,11 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
       glTranslatef(0, 0, -fTMSize*2.5); // translate onder the grid plane
       TGLUtil::Color(fM->fFontColor);
 
-      RnrText("h", axtX, 1.1f*axY, 0, fSymbolFont, axY>0 && ayX>0 || axY<0 && ayX<0);
+      RnrText("h", axtX, 1.1f*axY, 0, fSymbolFont, (axY>0 && ayX>0) || (axY<0 && ayX<0));
       for (Int_t i=0; i<nX; i++)
          RnrText(Form("%.0f", lx0 + 2*i), lx0 + 2*i, axY + TMath::Sign(fTMSize*3,axY), 0, fNumFont, 2);
 
-      RnrText("f", 1.1f*ayX, aytY, 0, fSymbolFont, ayX>0 && axY<0 || ayX<0 && axY>0);
+      RnrText("f", 1.1f*ayX, aytY, 0, fSymbolFont, (ayX>0 && axY<0) || (ayX<0 && axY>0));
       for (Int_t i=0; i<nY; ++i)
          RnrText(Form("%.0f", ly0 + i), ayX + TMath::Sign(fTMSize*3,ayX), ly0 + i, 0, fNumFont, 3);
 
