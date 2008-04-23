@@ -349,7 +349,7 @@ Long64_t TEventIterObj::GetNextEvent()
 
       // Position within this element. TODO: more efficient?
       fNextKey->Reset();
-      for(fElemCur = -1; fElemCur < fElemFirst-1 ; fElemCur++, fNextKey->Next());
+      for(fElemCur = -1; fElemCur < fElemFirst-1 ; fElemCur++, fNextKey->Next()) { }
    }
 
    --fElemNum;

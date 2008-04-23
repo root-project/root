@@ -743,7 +743,7 @@ Int_t TProofDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
    // Parse options
    Bool_t notify = (gDebug > 0 || (option & kDebug)) ? kTRUE : kFALSE;
    // Max number of files
-   Int_t maxFiles = ((option & kMaxFiles) & filesmax > -1) ? filesmax : -1;
+   Int_t maxFiles = ((option & kMaxFiles) && (filesmax > -1)) ? filesmax : -1;
    if (maxFiles > -1 && notify)
       Info("ScanDataSet", "processing a maximum of %d files", maxFiles);
    // Reopen

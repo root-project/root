@@ -403,8 +403,8 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    TList *lm = TProofMgr::GetListOfManagers();
    if (lm) {
       TIter nxm(lm);
-      while ((m = (TProofMgr *)nxm()))
-         if (m->MatchUrl(url))
+      while ((m = (TProofMgr *)nxm())) {
+         if (m->MatchUrl(url)) {
             if (m->IsValid()) {
                return m;
             } else {
@@ -412,6 +412,8 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
                SafeDelete(m);
                break;
             }
+         }
+      }
    }
 
    m = 0;

@@ -5924,13 +5924,14 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
    (*reply) >> s1;
    (*reply) >> t;
 
-   PDB(kGlobal, 1)
-      if (t)
+   PDB(kGlobal, 1) {
+      if (t) {
          Info("GetTreeHeader", Form("%s, message size: %d, entries: %d\n",
              s1.Data(), reply->BufferSize(), (int) t->GetMaxEntryLoop()));
-      else
+      } else {
          Info("GetTreeHeader", Form("%s, message size: %d\n", s1.Data(), reply->BufferSize()));
-
+      }
+   }
    delete reply;
 
    return t;
@@ -6486,15 +6487,15 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
          return kError;
       }
    }
-   if (opt & kOverwriteAllFiles && opt & kOverwriteNoFiles
-       || opt & kNoOverwriteDataSet && opt & kAppend
-       || opt & kOverwriteDataSet && opt & kAppend
-       || opt & kNoOverwriteDataSet && opt & kOverwriteDataSet
-       || opt & kAskUser && opt & (kOverwriteDataSet |
+   if (((opt & kOverwriteAllFiles) && (opt & kOverwriteNoFiles))
+       || ((opt & kNoOverwriteDataSet) && (opt & kAppend))
+       || ((opt & kOverwriteDataSet) && (opt & kAppend))
+       || ((opt & kNoOverwriteDataSet) && (opt & kOverwriteDataSet))
+       || ((opt & kAskUser) && (opt & (kOverwriteDataSet |
                                    kNoOverwriteDataSet |
                                    kAppend |
                                    kOverwriteAllFiles |
-                                   kOverwriteNoFiles)) {
+                                   kOverwriteNoFiles)))) {
       Error("UploadDataSet", "you specified contradicting options.");
       return kError;
    }
