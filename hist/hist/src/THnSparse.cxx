@@ -341,10 +341,10 @@ THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
 
    for (Int_t i = 0; i < fNdimensions; ++i) {
       TAxis* axis = new TAxis(nbins[i], xmin ? xmin[i] : 0., xmax ? xmax[i] : 1.);
-      TString name("axis");
-      name += i;
-      axis->SetName(name);
-      axis->SetTitle(name);
+      TString aname("axis");
+      aname += i;
+      axis->SetName(aname);
+      axis->SetTitle(aname);
       fAxes.AddAtAndExpand(axis, i);
    }
    fAxes.SetOwner();
