@@ -695,8 +695,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       if (idF>=0) {
          Int_t lnF = fTimeFormat.Length();
          TString stringtimeoffset = fTimeFormat(idF+2,lnF);
-         Int_t yy, mm, dd, hh, mi, ss;
-         if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6) {
+         Int_t year, mm, dd, hh, mi, ss;
+         if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &year, &mm, &dd, &hh, &mi, &ss) == 6) {
             struct tm tp;
             struct tm* tptest;
             time_t timeoffsettest;
@@ -704,7 +704,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             Int_t zoneoffset = TTimeStamp::GetZoneOffset();
             // convert offset in hours
             zoneoffset /= 3600;
-            tp.tm_year  = yy-1900;
+            tp.tm_year  = year-1900;
             tp.tm_mon   = mm-1;
             tp.tm_mday  = dd;
             tp.tm_hour  = hh - zoneoffset;
@@ -1171,8 +1171,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             if (k%nn3 == 0) ltick = 1;
             if (k%nn2 == 0) ltick = 0;
             if (fFunction) {
-               Double_t xx = binLow+Double_t(k)*dxtick;
-               Double_t zz = fFunction->Eval(xx)-rwmi;
+               Double_t xf = binLow+Double_t(k)*dxtick;
+               Double_t zz = fFunction->Eval(xf)-rwmi;
                xtick = zz* axis_length / TMath::Abs(rwma-rwmi);
             } else {
                xtick = Double_t(k)*dxtick;
@@ -1434,9 +1434,9 @@ L110:
             wTimeIni = wlabel;
             for ( k=0; k<=nlabels; k++) {
                if (fFunction) {
-                  Double_t xx = binLow+Double_t(k*nn2)*dxtick;
-                  Double_t zz = fFunction->Eval(xx)-rwmi;
-                  wlabel = xx;
+                  Double_t xf = binLow+Double_t(k*nn2)*dxtick;
+                  Double_t zz = fFunction->Eval(xf)-rwmi;
+                  wlabel = xf;
                   xlabel = zz* axis_length / TMath::Abs(rwma-rwmi);
                } else {
                   xlabel = dxlabel*k;
