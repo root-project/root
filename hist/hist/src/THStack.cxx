@@ -637,7 +637,7 @@ void THStack::Paint(Option_t *option)
    if (!fHistogram) {
       Bool_t add = TH1::AddDirectoryStatus();
       TH1::AddDirectory(kFALSE);
-      TH1 *h = (TH1*)fHists->At(0);
+      h = (TH1*)fHists->At(0);
       TAxis *xaxis = h->GetXaxis();
       TAxis *yaxis = h->GetYaxis();
       if (h->GetDimension() > 1) {
@@ -711,7 +711,7 @@ void THStack::Paint(Option_t *option)
    strcpy(noption,loption);
    Int_t nhists = fHists->GetSize();
    if (nostack) {
-      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      lnk = (TObjOptLink*)fHists->FirstLink();
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
             sprintf(loption,"%s%s",noption,lnk->GetOption());
@@ -722,7 +722,7 @@ void THStack::Paint(Option_t *option)
          lnk = (TObjOptLink*)lnk->Next();
       }
    } else {
-      TObjOptLink *lnk = (TObjOptLink*)fHists->LastLink();
+      lnk = (TObjOptLink*)fHists->LastLink();
       TH1 *h1;
       Int_t h1col, h1fill;
       for (Int_t i=0;i<nhists;i++) {
