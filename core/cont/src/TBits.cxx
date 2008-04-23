@@ -282,7 +282,7 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
 
    UInt_t i;
    if (startBit == 0) {
-      for(UInt_t i=0; i<fNbytes; i++) {
+      for(i=0; i<fNbytes; i++) {
          if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];
       }
       return fNbits;
@@ -327,7 +327,7 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
 
    UInt_t i;
    if (startBit == 0) {
-      for(UInt_t i=0; i<fNbytes; i++) {
+      for(i=0; i<fNbytes; i++) {
          if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];
       }
       return fNbits;
