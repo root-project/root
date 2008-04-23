@@ -2274,12 +2274,12 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObje
       Long64_t objid = DefineObjectId(kTRUE);
       Int_t strid = f->IsLongStringCode(objid, value);
 
-      TString buf;
+      TString buf2;
 
       // if special prefix found, than try get such string
       if (strid>0)
-         if (f->GetLongString(objid, strid, buf))
-            value = buf.Data();
+         if (f->GetLongString(objid, strid, buf2))
+            value = buf2.Data();
 
       Int_t len = (value==0) ? 0 : strlen(value);
       if (len<255) {
