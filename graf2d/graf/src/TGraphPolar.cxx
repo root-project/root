@@ -910,7 +910,6 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
                }
             } else if (fPolarLabels){
                // print the specified polar labels
-               TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
                textangular->PaintLatex(costhetas,sinthetas,FindTextAngle(theta),
                                        GetPolarLabelSize(), fPolarLabels[i]);
@@ -943,7 +942,6 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
                }
             } else if (fPolarLabels) {
                // print the specified polar labels
-               TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
                textangular->PaintText(costhetas,sinthetas,fPolarLabels[i]);
             }
@@ -1014,7 +1012,6 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
             }
             else if (fPolarLabels){
                // print the specified polar labels
-               TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
                textangular->PaintText(costhetas,sinthetas,fPolarLabels[i]);
             }
@@ -1033,7 +1030,6 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
                                        corr+sinthetas,0,GetPolarLabelSize(),s);
             } else if (fPolarLabels){
                // print the specified polar labels
-               TLatex *textangular = new TLatex();
                textangular->SetTextAlign(FindAlign(theta));
                textangular->PaintText(costhetas,sinthetas,fPolarLabels[i]);
             }
