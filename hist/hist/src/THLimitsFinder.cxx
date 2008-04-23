@@ -338,7 +338,7 @@ LOK:
       BinHigh = oldBinHigh;
       BinLow = oldBinLow;
       BinWidth = (oldBinHigh - oldBinLow)/nbins;
-      Double_t atest = BinWidth*0.0001;
+      atest = BinWidth*0.0001;
       if (al-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
       if (BinHigh-ah >= atest) { BinHigh -= BinWidth;  nbins--; }
    }
