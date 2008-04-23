@@ -2844,7 +2844,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       AssignAndDelete(file, ConcatFileName(gSystem->HomeDirectory(), name) );
       mapfileStream << file << endl;
       mapfileStream << name << endl;
-      for (int i = 0; i < gInterpreter->GetRootMapFiles()->GetEntriesFast(); i++) {
+      for (i = 0; i < gInterpreter->GetRootMapFiles()->GetEntriesFast(); i++) {
          mapfileStream << ((TObjString*)gInterpreter->GetRootMapFiles()->At(i))->GetString() << endl;
       }
    }
