@@ -2180,7 +2180,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
          eusq = TMath::Sqrt(eu);
       }
       grFitter->Derivatives(df,x);
-      Int_t n = 0;
+      n = 0;
       fsum = (fu-cu)/eusq;
       for (i=0;i<npar;i++) {
          if (pl0[i]>0){
