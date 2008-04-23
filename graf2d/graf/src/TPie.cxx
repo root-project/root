@@ -547,9 +547,9 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          } else if (isResizing) {
             if (!gPad->OpaqueResizing()) DrawGhost();
 
-            Float_t dr = mdx*TMath::Cos(gCurrent_ang)+mdy*TMath::Sin(gCurrent_ang)/radXY;
-            if (gRadius+dr>=minRad) {
-               gRadius += dr;
+            Float_t dr1 = mdx*TMath::Cos(gCurrent_ang)+mdy*TMath::Sin(gCurrent_ang)/radXY;
+            if (gRadius+dr1>=minRad) {
+               gRadius += dr1;
             } else {
                gRadius = minRad;
             }
@@ -561,10 +561,10 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Double_t xx = gPad->AbsPixeltoX(px);
             Double_t yy = gPad->AbsPixeltoY(py);
 
-            Double_t dx  = xx-gX;
-            Double_t dy  = yy-gY;
+            Double_t dx1  = xx-gX;
+            Double_t dy1  = yy-gY;
 
-            Double_t ang = TMath::ATan2(dy,dx);
+            Double_t ang = TMath::ATan2(dy1,dx1);
             if (ang<0) ang += TMath::TwoPi();
 
             gAngularOffset = (ang-gCurrent_ang)*180/TMath::Pi();
