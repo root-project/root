@@ -582,9 +582,9 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                      // templates or function without shadow
                      // need to have explicit namespace
                      if (arg.find('<') != std::string::npos ||
-                           fCacheNeedShadow[tagname] != 1
-                           && ((ciArg.Property() & G__BIT_ISCLASS)
-                               || (ciArg.Property() & G__BIT_ISSTRUCT))) {
+                           (fCacheNeedShadow[tagname] != 1
+                            && ((ciArg.Property() & G__BIT_ISCLASS)
+                                || (ciArg.Property() & G__BIT_ISSTRUCT)))) {
                         // replace "pair" by "std::pair"
                         if (arg == "pair") arg.insert(0, "std::");
                         // we don't have a (full) shadow for this guy
@@ -634,16 +634,16 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
          while (d.Next()) {
             // fprintf(stderr,"%s %s %ld\n",d.Type()->Name(),d.Name(),d.Property());
 
-            if ((d.Type()->Property() & G__BIT_ISCONSTANT)
-                  && (d.Type()->Property() & G__BIT_ISENUM)  // an enum const
+            if (((d.Type()->Property() & G__BIT_ISCONSTANT)
+                 && (d.Type()->Property() & G__BIT_ISENUM))  // an enum const
                   || (d.Property() & G__BIT_ISSTATIC)) // a static member
                continue;
             if (strcmp("G__virtualinfo", d.Name()) == 0) continue;
 
             std::string type_name = GetNonConstTypeName(d, true); // .Type()->Name();
 
-            if ((d.Type()->Property() & G__BIT_ISENUM) &&
-                  (type_name.length() == 0 || type_name == "enum") ||
+            if (((d.Type()->Property() & G__BIT_ISENUM) &&
+                 (type_name.length() == 0 || type_name == "enum")) ||
                   type_name.find("::") == type_name.length() - 2) {
                // We have unamed enums, let's fake it:
                fOut << indent << "         enum {kDummy} " << d.Name();
@@ -659,7 +659,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   if (!strcmp(d.Type()->Name(), "time_t"))
                      type_name = "time_t";
                   // for p2memfunc, take original type instead of Cint's para-type
-                  if (d.Type()->Type() == 'a' && d.Type()->Name())
+                  if (d.Type()->Type() == 'a' && d.Type()->Name()) {
                      if (d.Type()->TrueName()
                            && !strcmp(d.Type()->TrueName(), "G__p2memfunc")) {
                         fOut << indent << "         "
@@ -667,6 +667,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                         type_name = "";
                      } else
                         type_name = d.Type()->Name();
+                  }
                   if (!type_name.empty()) {
                      // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
                      const char* ulonglong_s = "unsigned long long";

@@ -660,7 +660,7 @@ void G__make_ifunctable(char* funcheader)
             ) {
                const char* posEndType = oprtype;
                while (isalnum(*posEndType)
-                      || posEndType[0] == ':' && posEndType[1] == ':'
+                      || (posEndType[0] == ':' && posEndType[1] == ':')
                       || *posEndType == '_')
                   ++posEndType;
                char* ptrrefbuf = 0;
@@ -680,7 +680,7 @@ void G__make_ifunctable(char* funcheader)
                   const char* posEndType = oprtype;
                   bool isTemplate = (strchr(G__struct.name[oprtagnum], '<'));
                   while (isalnum(*posEndType)
-                         || posEndType[0] == ':' && posEndType[1] == ':' && (++posEndType)
+                         || (posEndType[0] == ':' && posEndType[1] == ':' && (++posEndType))
                          || *posEndType == '_') {
                      ++posEndType;
                      if (isTemplate && *posEndType == '<') {
@@ -3094,7 +3094,7 @@ unsigned int G__rate_inheritance(int basetagnum, int derivedtagnum)
                int derivedtagnum2 = derivedtagnum;
                while (0 == (derived2->herit[ii]->property&G__ISDIRECTINHERIT)) {
                   ++distance;
-                  while (ii && 0 == (derived2->herit[--ii]->property&G__ISDIRECTINHERIT));
+                  while (ii && 0 == (derived2->herit[--ii]->property&G__ISDIRECTINHERIT)) {}
                   derivedtagnum2 = derived2->herit[ii]->basetagnum;
                   derived2 = G__struct.baseclass[derivedtagnum2];
                   for (ii = 0;ii < derived2->basen;ii++) {

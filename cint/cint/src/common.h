@@ -1046,7 +1046,7 @@ struct G__ifunc_table {
 #ifdef __cplusplus
    bool operator < (const struct G__ifunc_table& right) const {
       return tagnum < right.tagnum 
-         || tagnum == right.tagnum && page < right.page;
+         || (tagnum == right.tagnum && page < right.page);
    }
 #endif
 };

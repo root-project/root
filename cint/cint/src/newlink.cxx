@@ -187,6 +187,9 @@ static int G__privateaccess = 0;
    class G__IncSetupStack {
 
    public:
+      G__IncSetupStack() {
+         memset(this, 0, sizeof(G__IncSetupStack));
+      }
 
       struct G__ifunc_table_internal *G__incset_p_ifunc;
       int G__incset_tagnum;
@@ -11243,11 +11246,12 @@ int G__separate_parameter(char *original,int *pos,char *param)
       int c = original[i];
       switch(c) {
        case '\'':
-          if (!double_quote)
+          if (!double_quote) {
              if (single_quote) single_quote = 0;
              // only turn on single_quote if at the beginning!
              else if (i == startPos)  single_quote = 1;
              else if (single_arg_quote) single_arg_quote = 0;
+          }
           break;
        case '"':
           if (!single_quote) double_quote ^= 1;

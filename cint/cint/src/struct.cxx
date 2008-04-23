@@ -1591,7 +1591,7 @@ int G__defined_tagname(const char* tagname, int noerror)
 try_again:
    for (i = G__struct.alltag - 1; i >= 0; --i) {
       if ((len == G__struct.hash[i]) && !strcmp(atom_tagname, G__struct.name[i])) {
-         if (!p && (G__struct.parent_tagnum[i] == -1) || (env_tagnum == G__struct.parent_tagnum[i])) {
+         if ((!p && (G__struct.parent_tagnum[i] == -1)) || (env_tagnum == G__struct.parent_tagnum[i])) {
             if (noerror < 3) {
                G__class_autoloading(&i);
             }

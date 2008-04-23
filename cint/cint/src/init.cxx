@@ -1306,7 +1306,7 @@ int G__main(int argc, char** argv)
    if (G__globalcomp == G__CPPLINK) {
       // -- C++ header.
       if (G__steptrace || G__stepover) {
-         while (!G__pause());
+         while (!G__pause()) {}
       }
 
 #ifdef G__NOSTUBS
@@ -1332,7 +1332,7 @@ int G__main(int argc, char** argv)
    else if (G__globalcomp == G__CLINK) {
       // -- C header.
       if (G__steptrace || G__stepover) {
-         while (!G__pause());
+         while (!G__pause()) {}
       }
 
 #ifdef G__NOSTUBS

@@ -1519,16 +1519,16 @@ int G__isfloat(const char* string, int* type)
    // determine whether unsigned int is enough to hold value
    unsigned int lenmax = unsign ? lenmaxuint : lenmaxint;
    unsigned int lenmaxl = unsign ? lenmaxulong : lenmaxlong;
-   if (*type == 'i')
-      if (len > lenmax)
+   if (*type == 'i') {
+      if (len > lenmax) {
          if (len > lenmaxl)
             *type = 'n';
          else
             *type = 'l';
-      else if (len == lenmax) {
+      } else if (len == lenmax) {
          long l = atol(string);
-         if (!unsign && (l > INT_MAX || l < INT_MIN)
-               || unsign && l > (long)UINT_MAX)
+         if ((!unsign && (l > INT_MAX || l < INT_MIN))
+             || (unsign && l > (long)UINT_MAX))
             *type = 'l';
       }
       else if (len == lenmaxl) {
@@ -1547,7 +1547,7 @@ int G__isfloat(const char* string, int* type)
                *type = 'l';
          }
       }
-
+   }
    /**************************************************************
     * check illegal type specification
     **************************************************************/

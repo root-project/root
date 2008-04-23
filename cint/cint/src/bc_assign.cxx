@@ -431,7 +431,7 @@ extern "C" int G__bc_assignment(struct G__var_array *var,int ig15,int lparan
 
   // void* assignment
   if((ltype.Type()=='Y' && rtype.Ispointer()) 
-     || ltype.Ispointer()  && 0==G__int(*prresult)) {
+     || (ltype.Ispointer()  && 0==G__int(*prresult))) {
     // simple assignment, this part is always true
     if(G__bc_stvar(ltype,rtype,var,ig15,lparan,lvar_type,prresult
 		   ,G__currentscope->GetInst()
@@ -561,7 +561,7 @@ extern "C" int G__bc_objassignment(G__value *plresult ,G__value *prresult) {
 
   // void* assignment
   if((ltype.Type()=='Y' && rtype.Ispointer()) 
-     || ltype.Ispointer()  && 0==G__int(*prresult)) {
+     || (ltype.Ispointer()  && 0==G__int(*prresult))) {
     // simple assignment, this part is always true
     G__bc_letvar(plresult,prresult,G__currentscope->GetInst());
     return(0);

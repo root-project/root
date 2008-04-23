@@ -308,7 +308,7 @@ static int G__setline(char* statement, int c, int* piout)
                }
             }
             if ((c != '\n') && (c != '\r')) {
-               while (((c = G__fgetc()) != '\n') && (c != '\r'));
+               while (((c = G__fgetc()) != '\n') && (c != '\r')) {};
             }
          }
       }
@@ -4806,8 +4806,8 @@ int G__pp_if()
             condition[len] = '(';
             ++len;
          }
-   }
-   while (len > 0 && '\\' == condition[len - 1] || c == ' ');
+   } while ((len > 0 && '\\' == condition[len - 1]) || c == ' ');
+
    {
       char *p;
       while ((p = strstr(condition, "\\\n")) != 0) {

@@ -562,7 +562,7 @@ static int G__destroy_upto_vararray(G__var_array* var, int global, int ig15)
                )
             )
          ) || // or,
-         (ig15 >= 0) && // We are *not* handling function local variables, and
+         ( (ig15 >= 0) && // We are *not* handling function local variables, and
 #endif // G__ASM_WHOLEFUNC
          (
             (var->statictype[idx] != G__LOCALSTATIC) || // Not a static variable, or
@@ -575,6 +575,9 @@ static int G__destroy_upto_vararray(G__var_array* var, int global, int ig15)
             //  (var->reftype[idx] == G__PARANORMAL) // Is a reference
             //)
          )
+#ifdef G__ASM_WHOLEFUNC
+         )
+#endif
       ) {
          // Default to variable is not of a precompiled class type.
          int cpplink = 0;

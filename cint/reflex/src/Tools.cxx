@@ -207,7 +207,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
                     --j;
                  }
               }
-              for (; (j > -1) && (name[j] == ' '); --j);
+              for ( ; (j > -1) && (name[j] == ' '); --j) {}
               if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                  // -- We may have an operator name.
                  if (name.substr(j - 7, 8) == "operator") {
@@ -226,7 +226,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
                     --j;
                  }
               }
-              for (; (j > -1) && (name[j] == ' '); --j);
+              for ( ; (j > -1) && (name[j] == ' '); --j) {}
               if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                  // -- We may have an operator name.
                  if (name.substr(j - 7, 8) == "operator") {
@@ -240,11 +240,11 @@ size_t Tools::GetBasePosition(const std::string& name) {
          case ')':
             {
               int j = i - 1;
-              for (; (j > -1) && (name[j] == ' '); --j);
+              for ( ; (j > -1) && (name[j] == ' '); --j) {}
               if (j > -1) {
                  if (name[j] == '(') {
                     --j;
-                    for (; (j > -1) && (name[j] == ' '); --j);
+                    for ( ; (j > -1) && (name[j] == ' '); --j) {}
                     if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                        // -- We may have an operator name.
                        if (name.substr(j - 7, 8) == "operator") {
@@ -260,7 +260,7 @@ size_t Tools::GetBasePosition(const std::string& name) {
          case '(':
             {
               int j = i - 1;
-              for (; (j > -1) && (name[j] == ' '); --j);
+              for ( ; (j > -1) && (name[j] == ' '); --j) {}
               if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
                  // -- We may have an operator name.
                  if (name.substr(j - 7, 8) == "operator") {
@@ -633,7 +633,7 @@ std::string Tools::NormalizeName( const char * nam ) {
          if (!isalphanum(prev) || !isalpha(next)) {
             continue; // continue on non-word boundaries
          }
-      } else if (curr == '>' && prev == '>' || curr == '(' && prev != ')') {
+      } else if ((curr == '>' && prev == '>') || (curr == '(' && prev != ')')) {
          norm_name += ' ';
       }
       norm_name += (prev = curr);

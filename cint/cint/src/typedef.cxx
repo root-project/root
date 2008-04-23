@@ -1005,7 +1005,7 @@ void G__define_type()
             //
             if (tagtype == 'e') {
                G__disp_mask = 10000;
-               while ((c = G__fgetc()) != '{');
+               while ((c = G__fgetc()) != '{') {}
                enumval.obj.i = -1;
                enumval.type = 'i' ;
                enumval.tagnum = G__tagnum ;

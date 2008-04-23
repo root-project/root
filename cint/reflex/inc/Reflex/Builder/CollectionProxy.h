@@ -114,7 +114,7 @@ namespace Reflex  {
       static void* next(void* env)  {
          PEnv_t  e = PEnv_t(env);
          PCont_t c = PCont_t(e->object);
-         for (; e->idx > 0 && e->iter() != c->end(); ++(e->iter()), --e->idx );
+         for ( ; e->idx > 0 && e->iter() != c->end(); ++(e->iter()), --e->idx ) {}
          // TODO: Need to find something for going backwards....
          if ( e->iter() == c->end() ) return 0;
 #ifdef _KCC  // KAI compiler

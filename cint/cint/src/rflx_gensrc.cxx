@@ -835,9 +835,9 @@ void rflx_gensrc::gen_stubfuncdecl_params(std::ostringstream & s,
       if (ma.Type()->Name() && strstr(ma.Type()->Name(),"(*)"))
          // func ptr
          s << ma.Type()->Name() << arrStr;
-      else if (! ma.Type()->Fullname() &&
-         strstr(ma.Type()->TrueName(),"void*") && 
-         strcmp(ma.Type()->Name(),"void*")
+      else if ((! ma.Type()->Fullname() &&
+                strstr(ma.Type()->TrueName(),"void*") && 
+                strcmp(ma.Type()->Name(),"void*"))
          || !strcmp(ma.Type()->TrueName(),"G__p2memfunc"))
       //else if (ma.Type()->Type()=='a')
          // func ptr with typedef
@@ -1071,13 +1071,14 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
          G__ClassInfo ciBaseClass(ciBase);
          int myAccess=ciBase.Property() & 
             (G__BIT_ISVIRTUALBASE | G__BIT_ISPRIVATE | G__BIT_ISPROTECTED | G__BIT_ISPUBLIC);
-         if (myAccess & G__BIT_ISPROTECTED && accessBase & G__BIT_ISPRIVATE)
-            myAccess=myAccess & !G__BIT_ISPROTECTED | G__BIT_ISPRIVATE;
-         else if (myAccess & G__BIT_ISPUBLIC)
+         if ((myAccess & G__BIT_ISPROTECTED) && (accessBase & G__BIT_ISPRIVATE))
+            myAccess=(myAccess & !G__BIT_ISPROTECTED) | G__BIT_ISPRIVATE;
+         else if (myAccess & G__BIT_ISPUBLIC) {
             if (accessBase & G__BIT_ISPRIVATE) 
-               myAccess=myAccess & !G__BIT_ISPUBLIC | G__BIT_ISPRIVATE;
+               myAccess=(myAccess & !G__BIT_ISPUBLIC) | G__BIT_ISPRIVATE;
             else if (accessBase & G__BIT_ISPROTECTED) 
-               myAccess=myAccess & !G__BIT_ISPUBLIC | G__BIT_ISPROTECTED;
+               myAccess=(myAccess & !G__BIT_ISPUBLIC) | G__BIT_ISPROTECTED;
+         }
 
          baseClassesToSearch.push_back(std::make_pair(ciBaseClass, std::make_pair(myAccess,inhlevel+1)));
 

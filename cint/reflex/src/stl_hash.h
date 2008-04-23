@@ -19,9 +19,17 @@
 #define __gnu_cxx              std
 #endif
 #elif defined(__GNUC__)
-// For gcc, the hash_map and hash_set classes are in the extensions area
-#include <ext/hash_set>
-#include <ext/hash_map>
+# if (__GNUC__ < 4) || ( (__GNUC__ == 4) && (__GNUC_MINOR__ < 3) )
+  // For gcc, the hash_map and hash_set classes are in the extensions area
+#  include <ext/hash_set>
+#  include <ext/hash_map>
+# else
+// GCC >= 4.3:
+// silence warning
+#  define _BACKWARD_BACKWARD_WARNING_H
+#  include <backward/hash_set>
+#  include <backward/hash_map>
+# endif
 #elif defined (_WIN32)
 // MSDEV.NET has hash_map and hash_set, but different hash functions!
 #include <hash_map>

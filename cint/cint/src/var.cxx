@@ -5653,8 +5653,9 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
             if (var->reftype[ig15] > G__PARAREFERENCE) {
                varparan += (var->reftype[ig15] % G__PARAREF) - G__PARAP2P + 1;
             }
-            int ig25 = 0;
-            for (; (ig25 < paran) && (ig25 < varparan); ++ig25);
+            int ig25 = paran;
+            if (paran > varparan)
+               ig25 = varparan;
             while ((ig25 < paran) && var->varlabel[ig15][ig25+4]) {
                ++ig25;
             }
@@ -5672,8 +5673,9 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          (
             (var->statictype[ig15] == G__LOCALSTATIC) ||
             (
-               (var->statictype[ig15] == G__COMPILEDGLOBAL) &&
-               (var->tagnum == -1) || ((var->tagnum != -1) && (G__struct.type[var->tagnum] == 'n'))
+               ((var->tagnum == -1) && (var->statictype[ig15] == G__COMPILEDGLOBAL))
+               
+               || ((var->tagnum != -1) && (G__struct.type[var->tagnum] == 'n'))
             )
          )
       ) {
