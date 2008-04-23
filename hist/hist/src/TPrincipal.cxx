@@ -948,7 +948,7 @@ With <IMG
    // Increment the data point counter
    Int_t i,j;
    if (++fNumberOfDataPoints == 1) {
-      for (Int_t i = 0; i < fNumberOfVariables; i++)
+      for (i = 0; i < fNumberOfVariables; i++)
          fMeanValues(i) = p[i];
    }
    else {
