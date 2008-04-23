@@ -1015,7 +1015,7 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
       h = TMath::Sqrt(xx[0]);   
    } else {
       // 3 real solutions of the cubic
-      for (Int_t i=0; i<3; i++) {
+      for (i=0; i<3; i++) {
          h = xx[i];
          if (h>=0) break;
       }

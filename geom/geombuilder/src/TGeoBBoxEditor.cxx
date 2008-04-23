@@ -274,9 +274,9 @@ void TGeoBBoxEditor::DoApply()
             fShape->Draw();
             fPad->GetView()->ShowAxis();
          } else {
-            const Double_t *orig = fShape->GetOrigin();
-            view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
-                           orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
+            const Double_t *origin = fShape->GetOrigin();
+            view->SetRange(origin[0]-fShape->GetDX(), origin[1]-fShape->GetDY(), origin[2]-fShape->GetDZ(),
+                           origin[0]+fShape->GetDX(), origin[1]+fShape->GetDY(), origin[2]+fShape->GetDZ());
             Update();
          }                  
       } else Update();

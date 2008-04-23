@@ -363,9 +363,10 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
    Double_t saf[6];
+   Double_t r1,r2,z1,z2,dz,si,ci;
    Double_t rxy2 = point[0]*point[0]+point[1]*point[1];
    Double_t rxy = TMath::Sqrt(rxy2);
-   Double_t r2 = rxy2+point[2]*point[2];
+   r2 = rxy2+point[2]*point[2];
    Double_t r=TMath::Sqrt(r2);
    Bool_t rzero=kFALSE;
    Double_t phi=0;
@@ -468,9 +469,8 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return TMath::Min(snxt,snext);
             }       
          } else {
-            Double_t r1,r2,z1,z2,dz;
-            Double_t si = TMath::Sin(fTheta1*TMath::DegToRad());
-            Double_t ci = TMath::Cos(fTheta1*TMath::DegToRad());
+            si = TMath::Sin(fTheta1*TMath::DegToRad());
+            ci = TMath::Cos(fTheta1*TMath::DegToRad());
             if (ci>0) {
                r1 = fRmin*si;
                z1 = fRmin*ci;
@@ -515,9 +515,8 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                if (IsPointInside(&ptnew[0], kTRUE, kFALSE, kTRUE)) return TMath::Min(snxt,snext);
             }       
          } else {
-            Double_t r1,r2,z1,z2,dz;
-            Double_t si = TMath::Sin(fTheta2*TMath::DegToRad());
-            Double_t ci = TMath::Cos(fTheta2*TMath::DegToRad());
+            si = TMath::Sin(fTheta2*TMath::DegToRad());
+            ci = TMath::Cos(fTheta2*TMath::DegToRad());
             if (ci>0) {
                r1 = fRmin*si;
                z1 = fRmin*ci;
@@ -1045,11 +1044,11 @@ void TGeoSphere::SetSegsAndPols(TBuffer3D & buff) const
       // extra longitudes on top
       // indsegin + nlat*fNseg+(nlat-1)*nlong + [0, nlong)
       if (nup) {
-         Int_t indup = indptin + nlat*nlong;
+         Int_t indupltop = indptin + nlat*nlong;
          for (j=0; j<nlong; j++) {
             buff.fSegs[indx++]   = c+1;
             buff.fSegs[indx++] = indptin + j;
-            buff.fSegs[indx++] = indup;
+            buff.fSegs[indx++] = indupltop;
          }   
       }      
       // extra longitudes on bottom

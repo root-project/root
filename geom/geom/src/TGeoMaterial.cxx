@@ -674,7 +674,7 @@ void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
       Double_t *amixture = new Double_t[nelements];
       Double_t *weights  = new Double_t[nelements];
       Int_t *nnatoms  = new Int_t[nelements];
-      for (Int_t j=0; j<fNelements; j++) {
+      for (j=0; j<fNelements; j++) {
          zmixture[j] = fZmixture[j];
          amixture[j] = fAmixture[j];
          weights[j]  = fWeights[j];

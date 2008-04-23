@@ -2343,7 +2343,7 @@ TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
    if (fDivision) {
       TGeoVolume *cell;
       TGeoVolumeMulti *div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
-      for (Int_t i=0; i<div->GetNvolumes(); i++) {
+      for (i=0; i<div->GetNvolumes(); i++) {
          cell = div->GetVolume(i);
          fDivision->AddVolume(cell);
       }

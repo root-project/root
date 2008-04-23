@@ -731,12 +731,12 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          Bool_t ovlp = kFALSE;
          Bool_t nextovlp = kFALSE;
          Bool_t offset = kFALSE;
-         TGeoNode *current = fCurrentNode;
-         TGeoNode *mother, *mup;
+         TGeoNode *currentnode = fCurrentNode;
+         TGeoNode *mothernode, *mup;
          TGeoHMatrix *matrix;
          while (nmany) {
-            mother = GetMother(up);
-            mup = mother;
+            mothernode = GetMother(up);
+            mup = mothernode;
             imother = up+1;
             offset = kFALSE;
             while (mup->IsOffset()) {
@@ -745,7 +745,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
             }   
             nextovlp = mup->IsOverlapping();
             if (offset) {
-               mother = mup;
+               mothernode = mup;
                if (nextovlp) nmany -= imother-up;
                up = imother-1;
             } else {    
@@ -756,23 +756,23 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
                matrix->MasterToLocal(fPoint,dpt);
                matrix->MasterToLocalVect(fDirection,dvec);
                snext = TGeoShape::Big();
-               if (!mother->GetVolume()->IsAssembly()) snext = mother->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
+               if (!mothernode->GetVolume()->IsAssembly()) snext = mothernode->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
                if (snext<fStep-gTolerance) {
                   fIsStepEntering  = kFALSE;
                   fIsStepExiting  = kTRUE;
                   fStep = snext;
-                  fNextNode = mother;
+                  fNextNode = mothernode;
                   fNextDaughterIndex = -3;
                   if (computeGlobal) fCurrentMatrix->CopyFrom(matrix);
                   while (up--) CdUp();
                   DoBackupState();
                   up = 1;
-                  current = fCurrentNode;
-                  ovlp = current->IsOverlapping();
+                  currentnode = fCurrentNode;
+                  ovlp = currentnode->IsOverlapping();
                   continue;
                }   
             }   
-            current = mother;
+            currentnode = mothernode;
             ovlp = nextovlp;
             up++;            
          }
@@ -1143,12 +1143,12 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
          Bool_t ovlp = kFALSE;
          Bool_t nextovlp = kFALSE;
          Bool_t offset = kFALSE;
-         TGeoNode *current = fCurrentNode;
-         TGeoNode *mother, *mup;
+         TGeoNode *currentnode = fCurrentNode;
+         TGeoNode *mothernode, *mup;
          TGeoHMatrix *matrix;
          while (nmany) {
-            mother = GetMother(up);
-            mup = mother;
+            mothernode = GetMother(up);
+            mup = mothernode;
             imother = up+1;
             offset = kFALSE;
             while (mup->IsOffset()) {
@@ -1157,7 +1157,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
             }   
             nextovlp = mup->IsOverlapping();
             if (offset) {
-               mother = mup;
+               mothernode = mup;
                if (nextovlp) nmany -= imother-up;
                up = imother-1;
             } else {    
@@ -1168,11 +1168,11 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
                matrix->MasterToLocal(fPoint,dpt);
                matrix->MasterToLocalVect(fDirection,dvec);
                snext = TGeoShape::Big();
-               if (!mother->GetVolume()->IsAssembly()) snext = mother->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
+               if (!mothernode->GetVolume()->IsAssembly()) snext = mothernode->GetVolume()->GetShape()->DistFromInside(dpt,dvec,iact,fStep);
                   fIsStepEntering = kFALSE;
                   fIsStepExiting  = kTRUE;
                if (snext<fStep-gTolerance) {
-                  fNextNode = mother;
+                  fNextNode = mothernode;
                   fCurrentMatrix->CopyFrom(matrix);
                   fStep = snext;
                   while (up--) CdUp();
@@ -1180,12 +1180,12 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
                   PushPath();
                   icrossed = -1;
                   up = 1;
-                  current = fCurrentNode;
-                  ovlp = current->IsOverlapping();
+                  currentnode = fCurrentNode;
+                  ovlp = currentnode->IsOverlapping();
                   continue;
                }   
             }   
-            current = mother;
+            currentnode = mothernode;
             ovlp = nextovlp;
             up++;            
          }
@@ -1202,7 +1202,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    }
    fIsOnBoundary = kTRUE;
    if (icrossed == -1) {
-      TGeoNode *skip = fCurrentNode;
+      skip = fCurrentNode;
       is_assembly = fCurrentNode->GetVolume()->IsAssembly();
       if (!fLevel && !is_assembly) {
          fIsOutside = kTRUE;
@@ -1498,7 +1498,7 @@ void TGeoNavigator::SafetyOverlaps()
       Int_t up = 1;
       Int_t imother;
       Int_t nmany = fNmany;
-      Bool_t ovlp = kFALSE;
+      Bool_t crtovlp = kFALSE;
       Bool_t nextovlp = kFALSE;
       TGeoNode *current = fCurrentNode;
       TGeoNode *mother, *mup;
@@ -1509,14 +1509,14 @@ void TGeoNavigator::SafetyOverlaps()
          imother = up+1;
          while (mup->IsOffset()) mup = GetMother(imother++);
          nextovlp = mup->IsOverlapping();
-         if (ovlp) nmany--;
-         if (ovlp || nextovlp) {
+         if (crtovlp) nmany--;
+         if (crtovlp || nextovlp) {
             matrix = GetMotherMatrix(up);
             matrix->MasterToLocal(fPoint,local);
             safe = mother->GetVolume()->GetShape()->Safety(local,kTRUE);
             if (safe<fSafety) fSafety = safe;
             current = mother;
-            ovlp = nextovlp;
+            crtovlp = nextovlp;
          }
          up++;
       }      

@@ -109,15 +109,15 @@ TGeoElementRN::TGeoElementRN()
 }
 
 //______________________________________________________________________________
-TGeoElementRN::TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level,
+TGeoElementRN::TGeoElementRN(Int_t aa, Int_t zz, Int_t iso, Double_t level,
                Double_t deltaM, Double_t halfLife, const char* JP,
                Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
                Double_t tg_s, Int_t status)
-              :TGeoElement("", JP, Z, A)
+              :TGeoElement("", JP, zz, aa)
 {
 // Constructor.
    TObject::SetBit(kElementChecked,kFALSE);
-   fENDFcode = ENDF(A,Z,iso);
+   fENDFcode = ENDF(aa,zz,iso);
    fIso      = iso;
    fLevel    = level;
    fDeltaM   = deltaM;
@@ -132,7 +132,7 @@ TGeoElementRN::TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level,
    fStatus   = status;
    fDecays   = 0;
    fRatio    = 0;
-   MakeName(A,Z,iso);
+   MakeName(aa,zz,iso);
    if ((TMath::Abs(fHalfLife)<1.e-30) || fHalfLife<-1) Warning("ctor","Element %s has T1/2=%g [s]", fName.Data(), fHalfLife);
 }
 
