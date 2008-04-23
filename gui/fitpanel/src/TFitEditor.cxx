@@ -2536,11 +2536,11 @@ Bool_t TFitEditor::HasFitFunction(TObject *obj)
    } 
    if (lf) {
       GetFunctionsFromList(lf);
-      TObject *obj;
+      TObject *obj2;
       TIter next(lf, kIterBackward);
-      while ((obj = next())) {
-         if (obj->InheritsFrom(TF1::Class())) {
-            func = (TF1 *)obj;
+      while ((obj2 = next())) {
+         if (obj2->InheritsFrom(TF1::Class())) {
+            func = (TF1 *)obj2;
             fFitFunc = new TF1();
             func->Copy(*fFitFunc);
             CheckRange(func);
