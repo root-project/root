@@ -559,7 +559,7 @@ void TStreamerInfo::BuildCheck()
          }
          if (info==0) {
             // Find an empty slot.
-            Int_t ninfos = array->GetEntriesFast() - 1;
+            ninfos = array->GetEntriesFast() - 1;
             Int_t slot = 1; // Start of Class version 1.
             while ((slot < ninfos) && (array->UncheckedAt(slot) != 0)) {
                ++slot;
@@ -1217,9 +1217,9 @@ void TStreamerInfo::BuildOld()
                   Int_t elemType = element->GetType();
                   Bool_t isPrealloc = (elemType == kObjectp) || (elemType == kAnyp) || (elemType == (kObjectp + kOffsetL)) || (elemType == (kAnyp + kOffsetL));
 
-                  TClassStreamer *streamer = newClass->GetStreamer();
-                  if (streamer) {
-                     TConvertMapToProxy *ms = new TConvertMapToProxy(streamer, element->IsaPointer(), isPrealloc);
+                  TClassStreamer *streamer2 = newClass->GetStreamer();
+                  if (streamer2) {
+                     TConvertMapToProxy *ms = new TConvertMapToProxy(streamer2, element->IsaPointer(), isPrealloc);
                      if (ms && ms->IsValid()) {
                         element->SetStreamer(ms);
                         switch( element->GetType() ) {
@@ -1745,7 +1745,7 @@ UInt_t TStreamerInfo::GetCheckSum(UInt_t code) const
 
       int dim = el->GetArrayDim();
       if (dim) {
-         for (int i=0;i<dim;i++) id = id*3+el->GetMaxIndex(i);
+         for (i=0;i<dim;i++) id = id*3+el->GetMaxIndex(i);
       }
  
       
@@ -2053,7 +2053,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
                if (nest==0 && GetName()[i-1]==':') {
                   // We have a scope
                   TString nsname(GetName(), i-1);
-                  TClass *cl = gROOT->GetClass(nsname);
+                  cl = gROOT->GetClass(nsname);
                   if (cl && cl->Size()!=0) {
                      // This class is actually nested.
                      return 0;
@@ -2931,7 +2931,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, TStreamerInfo::IsA());
    } else {
 //      R__b.WriteClassBuffer(TStreamerInfo::Class(),this);
-      UInt_t R__c = R__b.WriteVersion(TStreamerInfo::IsA(), kTRUE);
+      R__c = R__b.WriteVersion(TStreamerInfo::IsA(), kTRUE);
       R__b.ClassBegin(TStreamerInfo::Class());
       R__b.ClassMember("TNamed");
       TNamed::Streamer(R__b);

@@ -133,11 +133,11 @@ public:
       }
       void read_std_string_pointer(TBuffer& b) {
          TString s;
-         std::string* str = (std::string*)ptr();
-         if (!str) str = new std::string();
+         std::string* str2 = (std::string*)ptr();
+         if (!str2) str2 = new std::string();
          s.Streamer(b);
-         *str = s;
-         set(str);
+         *str2 = s;
+         set(str2);
       }
       void write_std_string_pointer(TBuffer& b)  {
          const char* c;

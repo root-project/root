@@ -877,7 +877,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    }
 
    if (cl->InheritsFrom(TObject::Class())) {
-      Int_t baseOffset = cl->GetBaseClassOffset(TObject::Class());
+      baseOffset = cl->GetBaseClassOffset(TObject::Class());
       if (baseOffset==-1) {
          Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",
             fClassName.Data());
