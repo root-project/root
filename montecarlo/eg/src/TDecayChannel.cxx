@@ -26,17 +26,17 @@ TDecayChannel::TDecayChannel()
 }
 
 //_____________________________________________________________________________
-TDecayChannel::TDecayChannel(Int_t    Number,
+TDecayChannel::TDecayChannel(Int_t    NumberD,
                              Int_t    MatrixElementType,
-                             Double_t BranchingRatio,
-                             Int_t    NDaughters,
-                             Int_t*   DaughterPdgCode)
+                             Double_t BRatio,
+                             Int_t    NumberDaughters,
+                             Int_t*   DaughterCode)
 {
    //constructor
-   fNumber            = Number;
+   fNumber            = NumberD;
    fMatrixElementCode = MatrixElementType;
-   fBranchingRatio    = BranchingRatio;
-   fDaughters.Set(NDaughters,DaughterPdgCode);
+   fBranchingRatio    = BRatio;
+   fDaughters.Set(NumberDaughters,DaughterCode);
 }
 
 //_____________________________________________________________________________

@@ -96,10 +96,10 @@ TParticlePDG::TParticlePDG(Int_t )
 }
 
 //______________________________________________________________________________
-TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t Mass,
-                           Bool_t Stable, Double_t Width, Double_t Charge,
-                           const char* ParticleClass, Int_t PdgCode, Int_t Anti,
-                           Int_t TrackingCode)
+TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t aMass,
+                           Bool_t aStable, Double_t aWidth, Double_t aCharge,
+                           const char* aParticleClass, Int_t aPdgCode, Int_t Anti,
+                           Int_t aTrackingCode)
   : TNamed(Name,Title)
 {
 
@@ -117,13 +117,13 @@ TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t Mass,
    fX             = 0;
    fStable        = 0;
 
-   fMass          = Mass;
-   fStable        = Stable;
-   fWidth         = Width;
-   fCharge        = Charge;
-   fParticleClass = ParticleClass;
-   fPdgCode       = PdgCode;
-   fTrackingCode  = TrackingCode;
+   fMass          = aMass;
+   fStable        = aStable;
+   fWidth         = aWidth;
+   fCharge        = aCharge;
+   fParticleClass = aParticleClass;
+   fPdgCode       = aPdgCode;
+   fTrackingCode  = aTrackingCode;
    fDecayList     = NULL;
    if (Anti) fAntiParticle = this;
    else      fAntiParticle = 0;

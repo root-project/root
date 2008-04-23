@@ -594,7 +594,6 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 
             if (nch) {
                // read in decay channels
-               int ich = 0;
                while ( ((c[0]=getc(file)) != EOF) && (ich <nch)) {
                   if (c[0] != '#') {
                      ungetc(c[0],file);
@@ -627,7 +626,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 
    Int_t code[20];
    TParticlePDG  *ap, *p, *daughter;
-   TDecayChannel dc;
+   TDecayChannel *dc;
 
    while ((p = (TParticlePDG*) it.Next())) {
 
@@ -635,8 +634,8 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
       if (p->PdgCode() < 0) {
          ap = GetParticle(-p->PdgCode());
          nch = ap->NDecayChannels();
-         for (int ich=0; ich<nch; ich++) {
-            TDecayChannel* dc = ap->DecayChannel(ich);
+         for (ich=0; ich<nch; ich++) {
+            dc = ap->DecayChannel(ich);
             ndau = dc->NDaughters();
             for (int i=0; i<ndau; i++) {
                // conserve CPT
