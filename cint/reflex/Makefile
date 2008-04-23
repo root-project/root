@@ -77,7 +77,12 @@ ReflexCintexOrder: ReflexCintexOrder.log
 	$(TestDiff)
 CintexReflexOrder: CintexReflexOrder.log
 	$(TestDiff)
+
+Tools: Tools.log
+	$(TestDiff)
+
 else
+
 $(RFLXDICTTESTS): %_rflx:
 $(TEST_TARGETS):
 ifeq ($(HAVEGCCXML),"nocintex")
@@ -88,6 +93,3 @@ endif
 endif
 
 properties_rflx: GENREFLEXFLAGS=--iocomments
-
-Tools: Tools.log
-	$(TestDiff)
