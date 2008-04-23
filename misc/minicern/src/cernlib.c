@@ -15,6 +15,7 @@ typedef long off_t;
 #define cfget_    __stdcall CFGET
 #define cfseek_   __stdcall CFSEEK
 #define ishftr_   __stdcall ISHFTR
+#define lshift_   __stdcall LSHIFT
 #define vxinvb_   __stdcall VXINVB
 #define vxinvc_   __stdcall VXINVC
 #define cfopei_   __stdcall CFOPEI
