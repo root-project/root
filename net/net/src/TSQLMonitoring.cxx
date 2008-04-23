@@ -32,7 +32,7 @@ TSQLMonitoringWriter::TSQLMonitoringWriter(const char *serv, const char *user,
    // Constructor.
 
    // Open connection to SQL server
-   TSQLServer *fDB = TSQLServer::Connect(serv, user, pass);
+   fDB = TSQLServer::Connect(serv, user, pass);
    if (!fDB || fDB->IsZombie()) {
       SafeDelete(fDB);
       // Invalid object
