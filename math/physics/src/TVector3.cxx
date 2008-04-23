@@ -171,8 +171,8 @@ ClassImp(TVector3)
 TVector3::TVector3(const TVector3 & p) : TObject(p),
   fX(p.fX), fY(p.fY), fZ(p.fZ) {}
 
-TVector3::TVector3(Double_t x, Double_t y, Double_t z)
-: fX(x), fY(y), fZ(z) {}
+TVector3::TVector3(Double_t xx, Double_t yy, Double_t zz)
+: fX(xx), fY(yy), fZ(zz) {}
 
 TVector3::TVector3(const Double_t * x0)
 : fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}

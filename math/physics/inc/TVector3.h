@@ -215,14 +215,14 @@ inline Double_t TVector3::Px() const { return fX; }
 inline Double_t TVector3::Py() const { return fY; }
 inline Double_t TVector3::Pz() const { return fZ; }
 
-inline void TVector3::SetX(Double_t x) { fX = x; }
-inline void TVector3::SetY(Double_t y) { fY = y; }
-inline void TVector3::SetZ(Double_t z) { fZ = z; }
+inline void TVector3::SetX(Double_t xx) { fX = xx; }
+inline void TVector3::SetY(Double_t yy) { fY = yy; }
+inline void TVector3::SetZ(Double_t zz) { fZ = zz; }
 
-inline void TVector3::SetXYZ(Double_t x, Double_t y, Double_t z) {
-   fX = x;
-   fY = y;
-   fZ = z;
+inline void TVector3::SetXYZ(Double_t xx, Double_t yy, Double_t zz) {
+   fX = xx;
+   fY = yy;
+   fZ = zz;
 }
 
 inline void TVector3::GetXYZ(Double_t *carray) const {
@@ -290,13 +290,13 @@ inline Double_t TVector3::Mag2() const { return fX*fX + fY*fY + fZ*fZ; }
 
 
 inline TVector3 TVector3::Orthogonal() const {
-   Double_t x = fX < 0.0 ? -fX : fX;
-   Double_t y = fY < 0.0 ? -fY : fY;
-   Double_t z = fZ < 0.0 ? -fZ : fZ;
-   if (x < y) {
-      return x < z ? TVector3(0,fZ,-fY) : TVector3(fY,-fX,0);
+   Double_t xx = fX < 0.0 ? -fX : fX;
+   Double_t yy = fY < 0.0 ? -fY : fY;
+   Double_t zz = fZ < 0.0 ? -fZ : fZ;
+   if (xx < yy) {
+      return xx < zz ? TVector3(0,fZ,-fY) : TVector3(fY,-fX,0);
    } else {
-      return y < z ? TVector3(-fZ,0,fX) : TVector3(fY,-fX,0);
+      return yy < zz ? TVector3(-fZ,0,fX) : TVector3(fY,-fX,0);
    }
 }
 
