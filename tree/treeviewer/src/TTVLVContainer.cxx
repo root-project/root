@@ -793,7 +793,7 @@ void TGSelectBox::SaveText()
       TTVLVEntry* item;
       while ((item=(TTVLVEntry*)next())) {
          if (item != fEntry) {
-            TString name = item->GetTrueName();
+            name = item->GetTrueName();
             name.ReplaceAll(fOldAlias.Data(), fTeAlias->GetText());
             item->SetTrueName(name.Data());
          }
