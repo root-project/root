@@ -2178,11 +2178,11 @@ void TBufferXML::WriteFastArray(const Char_t    *c, Int_t n)
    if (usedefault) {
       TBufferXML_WriteFastArray(c);
    } else {
-      Char_t* buf = new Char_t[n+1];
-      memcpy(buf, c, n);
-      buf[n] = 0;
-      XmlWriteValue(buf, xmlio::CharStar);
-      delete[] buf;
+      Char_t* buf2 = new Char_t[n+1];
+      memcpy(buf2, c, n);
+      buf2[n] = 0;
+      XmlWriteValue(buf2, xmlio::CharStar);
+      delete[] buf2;
    }
 }
 

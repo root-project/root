@@ -701,7 +701,7 @@ void TXMLFile::WriteStreamerInfo()
 
    fStreamerInfoNode = fXML->NewChild(0, 0, xmlio::SInfos);
    for (int n=0;n<=list.GetLast();n++) {
-      TStreamerInfo* info  = (TStreamerInfo*) list.At(n);
+      info  = (TStreamerInfo*) list.At(n);
 
       XMLNodePointer_t infonode = fXML->NewChild(fStreamerInfoNode, 0, "TStreamerInfo");
 
@@ -713,9 +713,9 @@ void TXMLFile::WriteStreamerInfo()
       fXML->NewAttr(infonode, 0, "canoptimize", (info->TestBit(TStreamerInfo::kCannotOptimize) ? xmlio::False : xmlio::True));
       fXML->NewIntAttr(infonode, "checksum", info->GetCheckSum());
 
-      TIter iter(info->GetElements());
+      TIter iter2(info->GetElements());
       TStreamerElement* elem=0;
-      while ((elem= (TStreamerElement*) iter()) != 0) {
+      while ((elem= (TStreamerElement*) iter2()) != 0) {
          StoreStreamerElement(infonode, elem);
       }
    }
