@@ -189,6 +189,7 @@
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
+#include <string>
 
 const char *ed_filetypes[] = {
    "ROOT Macros",  "*.C",

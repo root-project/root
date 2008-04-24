@@ -9,6 +9,7 @@
 
 #include <time.h>
 #include <Riostream.h>
+#include <string>
 
 #include <TROOT.h>
 #include <TStyle.h>
