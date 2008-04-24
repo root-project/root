@@ -190,12 +190,13 @@ public:
          vec_iterator  fCurrentRow;
       public:
         iterator(): fRowSize(0), fThisTable(0) {;}
-        iterator(const TTable &table, vec_iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
-        iterator(const TTable &table, vec_const_iterator &rowPtr) :
+        iterator(const TTable &table, vec_iterator &arowPtr) :
+	fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(arowPtr) {;}
+        iterator(const TTable &table, vec_const_iterator &arowPtr) :
            fRowSize(table.GetRowSize()),
            fThisTable(&table),
-           fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&rowPtr) {;}
-//           fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&rowPtr) ) {;}
+           fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&arowPtr) {;}
+//           fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&arowPtr) ) {;}
         iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
         void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
         void operator++()    { ++fCurrentRow;   }
