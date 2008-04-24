@@ -22,7 +22,7 @@ class MnParStr {
 
 public:
 
-   MnParStr(const char* Name) : fName(Name) {}
+   MnParStr(const char* name) : fName(name) {}
 
    ~MnParStr() {}
   
@@ -221,36 +221,36 @@ const MinuitParameter& MnUserTransformation::Parameter(unsigned int n) const {
    return fParameters[n];
 }
 
-bool MnUserTransformation::Add(const char* Name, double val, double err) {
+bool MnUserTransformation::Add(const char* name, double val, double err) {
    // add a new unlimited parameter giving name, value and err (step size)
    // return false if parameter already exists
    // return false if parameter already exists
-   if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(Name)) != fParameters.end() ) 
+   if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)) != fParameters.end() ) 
       return false; 
    fExtOfInt.push_back(fParameters.size());
    fCache.push_back(val);
-   fParameters.push_back(MinuitParameter(fParameters.size(), Name, val, err));
+   fParameters.push_back(MinuitParameter(fParameters.size(), name, val, err));
    return true;
 }
 
-bool MnUserTransformation::Add(const char* Name, double val, double err, double low, double up) {
+bool MnUserTransformation::Add(const char* name, double val, double err, double low, double up) {
    // add a new limited parameter giving name, value, err (step size) and lower/upper limits
    // return false if parameter already exists
-   if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(Name)) != fParameters.end() ) 
+   if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)) != fParameters.end() ) 
       return false; 
    fExtOfInt.push_back(fParameters.size());
    fCache.push_back(val);
-   fParameters.push_back(MinuitParameter(fParameters.size(), Name, val, err, low, up));
+   fParameters.push_back(MinuitParameter(fParameters.size(), name, val, err, low, up));
    return true;
 }
 
-bool MnUserTransformation::Add(const char* Name, double val) {
+bool MnUserTransformation::Add(const char* name, double val) {
    // add a new unlimited parameter giving name and value
    // return false if parameter already exists
-   if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(Name)) != fParameters.end() ) 
+   if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)) != fParameters.end() ) 
       return false; 
    fCache.push_back(val);
-   fParameters.push_back(MinuitParameter(fParameters.size(), Name, val));
+   fParameters.push_back(MinuitParameter(fParameters.size(), name, val));
    return true;
 }
 
@@ -325,67 +325,67 @@ double MnUserTransformation::Error(unsigned int n) const {
 
 // interface by parameter name
 
-void MnUserTransformation::Fix(const char* Name) {
+void MnUserTransformation::Fix(const char* name) {
    // fix parameter 
-   Fix(Index(Name));
+   Fix(Index(name));
 }
 
-void MnUserTransformation::Release(const char* Name) {
+void MnUserTransformation::Release(const char* name) {
    // release parameter 
-   Release(Index(Name));
+   Release(Index(name));
 }
 
-void MnUserTransformation::SetValue(const char* Name, double val) {
+void MnUserTransformation::SetValue(const char* name, double val) {
    // set value for parameter 
-   SetValue(Index(Name), val);
+   SetValue(Index(name), val);
 }
 
-void MnUserTransformation::SetError(const char* Name, double err) {
+void MnUserTransformation::SetError(const char* name, double err) {
    // set error
-   SetError(Index(Name), err);
+   SetError(Index(name), err);
 }
 
-void MnUserTransformation::SetLimits(const char* Name, double low, double up) {
+void MnUserTransformation::SetLimits(const char* name, double low, double up) {
    // set lower/upper limits
-   SetLimits(Index(Name), low, up);
+   SetLimits(Index(name), low, up);
 }
 
-void MnUserTransformation::SetUpperLimit(const char* Name, double up) {
+void MnUserTransformation::SetUpperLimit(const char* name, double up) {
    // set upper limit
-   SetUpperLimit(Index(Name), up);
+   SetUpperLimit(Index(name), up);
 }
 
-void MnUserTransformation::SetLowerLimit(const char* Name, double lo) {
+void MnUserTransformation::SetLowerLimit(const char* name, double lo) {
    // set lower limit
-   SetLowerLimit(Index(Name), lo);
+   SetLowerLimit(Index(name), lo);
 }
 
-void MnUserTransformation::RemoveLimits(const char* Name) {
+void MnUserTransformation::RemoveLimits(const char* name) {
    // remove limits
-   RemoveLimits(Index(Name));
+   RemoveLimits(Index(name));
 }
 
-double MnUserTransformation::Value(const char* Name) const {
+double MnUserTransformation::Value(const char* name) const {
    // get parameter value
-   return Value(Index(Name));
+   return Value(Index(name));
 }
 
-double MnUserTransformation::Error(const char* Name) const {
+double MnUserTransformation::Error(const char* name) const {
    // get parameter error
-   return Error(Index(Name));
+   return Error(Index(name));
 }
 
-unsigned int MnUserTransformation::Index(const char* Name) const {
-   // get index (external) corresponding to Name
+unsigned int MnUserTransformation::Index(const char* name) const {
+   // get index (external) corresponding to name
    std::vector<MinuitParameter>::const_iterator ipar = 
-   std::find_if(fParameters.begin(), fParameters.end(), MnParStr(Name));
+   std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name));
    assert(ipar != fParameters.end());
    //   return (ipar - fParameters.begin());
    return (*ipar).Number();
 }
 
 const char* MnUserTransformation::Name(unsigned int n) const {
-   // get Name corresponding to index (external)
+   // get name corresponding to index (external)
    assert(n < fParameters.size()); 
    return fParameters[n].Name();
 }

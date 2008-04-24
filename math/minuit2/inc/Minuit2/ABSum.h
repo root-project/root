@@ -40,8 +40,8 @@ public:
   template<class A, class B>
   ABSum(const ABSum<A,B>& sum) : fA(M1(sum.fA)), fB(M2(sum.fB)) {}
 
-  const M1& a() const {return fA;}
-  const M2& b() const {return fB;}
+  const M1& A() const {return fA;}
+  const M2& B() const {return fB;}
 
 private:
 

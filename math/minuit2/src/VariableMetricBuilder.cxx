@@ -236,7 +236,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
 
       // <= needed for case 0 <= 0
-      if(fabs(pp.y() - s0.Fval()) <=  fabs(s0.Fval())*prec.Eps() ) {
+      if(fabs(pp.Y() - s0.Fval()) <=  fabs(s0.Fval())*prec.Eps() ) {
 #ifdef WARNINGMSG
          MN_INFO_MSG("VariableMetricBuilder: no improvement in line search");
 #endif
@@ -249,13 +249,13 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       }
       
 #ifdef DEBUG
-      std::cout << "Result after line search : \nx = " << pp.x() 
+      std::cout << "Result after line search : \nx = " << pp.X() 
                 << "\nOld Fval = " << s0.Fval() 
-                << "\nNew Fval = " << pp.y() 
+                << "\nNew Fval = " << pp.Y() 
                 << "\nNFcalls = " << fcn.NumOfCalls() << std::endl; 
 #endif
       
-      MinimumParameters p(s0.Vec() + pp.x()*step, pp.y());
+      MinimumParameters p(s0.Vec() + pp.X()*step, pp.Y());
       
       
       FunctionGradient g = gc(p, s0.Gradient());

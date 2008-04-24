@@ -84,8 +84,8 @@ public:
   template<class A, class B, class T>
   LAVector(const ABObj<vec, ABSum<ABObj<vec, A, T>, ABObj<vec, B, T> >,T>& sum) : fSize(0), fData(0) {
 //     std::cout<<"template<class A, class B, class T> LAVector(const ABObj<ABSum<ABObj<A, T>, ABObj<B, T> > >& sum)"<<std::endl;
-    (*this) = sum.Obj().a();
-    (*this) += sum.Obj().b();
+    (*this) = sum.Obj().A();
+    (*this) += sum.Obj().B();
     (*this) *= double(sum.f());
   }
 
@@ -94,10 +94,10 @@ public:
 //     std::cout<<"template<class A, class T> LAVector(const ABObj<ABSum<ABObj<LAVector, T>, ABObj<A, T> >,T>& sum)"<<std::endl;
 
     // recursive construction
-//     std::cout<<"(*this)=sum.Obj().b();"<<std::endl;
-    (*this) = sum.Obj().b();
-//     std::cout<<"(*this)+=sum.Obj().a();"<<std::endl;
-    (*this) += sum.Obj().a();  
+//     std::cout<<"(*this)=sum.Obj().B();"<<std::endl;
+    (*this) = sum.Obj().B();
+//     std::cout<<"(*this)+=sum.Obj().A();"<<std::endl;
+    (*this) += sum.Obj().A();  
     (*this) *= double(sum.f());
 //     std::cout<<"leaving template<class A, class T> LAVector(const ABObj<ABSum<ABObj<LAVector,.."<<std::endl;
   }
@@ -111,17 +111,17 @@ public:
   
   //
   template<class T>
-  LAVector(const ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>& prod) : fSize(prod.Obj().b().Obj().size()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*prod.Obj().b().Obj().size())) {
+  LAVector(const ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>& prod) : fSize(prod.Obj().B().Obj().size()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*prod.Obj().B().Obj().size())) {
 //     std::cout<<"template<class T> LAVector(const ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>& prod)"<<std::endl;
 
-    Mndspmv("U", fSize, prod.f()*prod.Obj().a().f()*prod.Obj().b().f(), prod.Obj().a().Obj().Data(), prod.Obj().b().Obj().Data(), 1, 0., fData, 1);
+    Mndspmv("U", fSize, prod.f()*prod.Obj().A().f()*prod.Obj().B().f(), prod.Obj().A().Obj().Data(), prod.Obj().B().Obj().Data(), 1, 0., fData, 1);
   }
 
   //
   template<class T>
   LAVector(const ABObj<vec, ABSum<ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>, ABObj<vec, LAVector, T> >, T>& prod) : fSize(0), fData(0) {
-    (*this) = prod.Obj().b();
-    (*this) += prod.Obj().a();
+    (*this) = prod.Obj().B();
+    (*this) += prod.Obj().A();
     (*this) *= double(prod.f());    
   }
 
@@ -162,7 +162,7 @@ public:
 
   template<class T>
   LAVector& operator+=(const ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>& prod) {
-    Mndspmv("U", fSize, prod.f()*prod.Obj().a().f()*prod.Obj().b().f(), prod.Obj().a().Obj().Data(), prod.Obj().b().Data(), 1, 1., fData, 1);
+    Mndspmv("U", fSize, prod.f()*prod.Obj().A().f()*prod.Obj().B().f(), prod.Obj().A().Obj().Data(), prod.Obj().B().Data(), 1, 1., fData, 1);
     return *this;
   }
   
@@ -235,11 +235,11 @@ public:
   template<class A, class B, class T>
   LAVector& operator=(const ABObj<vec, ABSum<ABObj<vec, A, T>, ABObj<vec, B, T> >,T>& sum) {
     if(fSize == 0 && fData == 0) {
-      (*this) = sum.Obj().a();
-      (*this) += sum.Obj().b();
+      (*this) = sum.Obj().A();
+      (*this) += sum.Obj().B();
     } else {
-      LAVector tmp(sum.Obj().a());
-      tmp += sum.Obj().b();
+      LAVector tmp(sum.Obj().A());
+      tmp += sum.Obj().B();
       assert(fSize == tmp.size());
       memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
@@ -250,11 +250,11 @@ public:
   template<class A, class T>
   LAVector& operator=(const ABObj<vec, ABSum<ABObj<vec, LAVector, T>, ABObj<vec, A, T> >,T>& sum)  {
     if(fSize == 0 && fData == 0) {
-      (*this) = sum.Obj().b();
-      (*this) += sum.Obj().a();
+      (*this) = sum.Obj().B();
+      (*this) += sum.Obj().A();
     } else {
-      LAVector tmp(sum.Obj().a());
-      tmp += sum.Obj().b();
+      LAVector tmp(sum.Obj().A());
+      tmp += sum.Obj().B();
       assert(fSize == tmp.size());
       memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
@@ -266,13 +266,13 @@ public:
   template<class T>
   LAVector& operator=(const ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>& prod) {
     if(fSize == 0 && fData == 0) {
-      fSize = prod.Obj().b().Obj().size();
+      fSize = prod.Obj().B().Obj().size();
       fData = (double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*fSize);
-      Mndspmv("U", fSize, double(prod.f()*prod.Obj().a().f()*prod.Obj().b().f()), prod.Obj().a().Obj().Data(), prod.Obj().b().Obj().Data(), 1, 0., fData, 1);    
+      Mndspmv("U", fSize, double(prod.f()*prod.Obj().A().f()*prod.Obj().B().f()), prod.Obj().A().Obj().Data(), prod.Obj().B().Obj().Data(), 1, 0., fData, 1);    
     } else {
-      LAVector tmp(prod.Obj().b());
+      LAVector tmp(prod.Obj().B());
       assert(fSize == tmp.size());
-      Mndspmv("U", fSize, double(prod.f()*prod.Obj().a().f()), prod.Obj().a().Obj().Data(), tmp.Data(), 1, 0., fData, 1);
+      Mndspmv("U", fSize, double(prod.f()*prod.Obj().A().f()), prod.Obj().A().Obj().Data(), tmp.Data(), 1, 0., fData, 1);
     }      
     return *this;
   }
@@ -281,12 +281,12 @@ public:
   template<class T>
   LAVector& operator=(const ABObj<vec, ABSum<ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>, ABObj<vec, LAVector, T> >, T>& prod) {
     if(fSize == 0 && fData == 0) {
-      (*this) = prod.Obj().b();
-      (*this) += prod.Obj().a();
+      (*this) = prod.Obj().B();
+      (*this) += prod.Obj().A();
     } else {
       //       std::cout<<"creating tmp variable"<<std::endl;
-      LAVector tmp(prod.Obj().b());
-      tmp += prod.Obj().a();
+      LAVector tmp(prod.Obj().B());
+      tmp += prod.Obj().A();
       assert(fSize == tmp.size());
       memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }

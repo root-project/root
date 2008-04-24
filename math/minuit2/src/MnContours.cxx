@@ -124,9 +124,9 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
       
       std::vector<std::pair<double,double> >::iterator idist1 = result.end()-1;
       std::vector<std::pair<double,double> >::iterator idist2 = result.begin();
-      double distx = idist1->first - (idist2)->first;
-      double disty = idist1->second - (idist2)->second;
-      double bigdis = scalx*scalx*distx*distx + scaly*scaly*disty*disty;
+      double dx = idist1->first - (idist2)->first;
+      double dy = idist1->second - (idist2)->second;
+      double bigdis = scalx*scalx*dx*dx + scaly*scaly*dy*dy;
       
       for(std::vector<std::pair<double,double> >::iterator ipair = result.begin(); ipair != result.end()-1; ipair++) {
          double distx = ipair->first - (ipair+1)->first;

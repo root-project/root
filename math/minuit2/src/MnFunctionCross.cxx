@@ -332,9 +332,9 @@ L500:
    std::cout << "MnFunctionCross: parabola fit: iteration " << ipt  << std::endl;   
 #endif
          
-         double coeff1 = parbol.c();
-         double coeff2 = parbol.b(); 
-         double coeff3 = parbol.a(); 
+         double coeff1 = parbol.C();
+         double coeff2 = parbol.B(); 
+         double coeff3 = parbol.A(); 
          double determ = coeff2*coeff2 - 4.*coeff3*(coeff1 - aim);
 
 #ifdef DEBUG

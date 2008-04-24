@@ -28,11 +28,11 @@ MnAlgebraicSymMatrix BasicMinimumError::Hessian() const {
 #ifdef WARNINGMSG
       MN_INFO_MSG("BasicMinimumError:  inversion fails; return diagonal matrix.");
 #endif
-      MnAlgebraicSymMatrix tmp(fMatrix.Nrow());
+      MnAlgebraicSymMatrix tmp2(fMatrix.Nrow());
       for(unsigned int i = 0; i < fMatrix.Nrow(); i++) {
-         tmp(i,i) = 1./fMatrix(i,i);
+         tmp2(i,i) = 1./fMatrix(i,i);
       }
-      return tmp;
+      return tmp2;
    }
    return tmp;
 }

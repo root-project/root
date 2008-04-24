@@ -33,7 +33,7 @@ public:
 
   MnCross(const  MnUserParameterState& state, unsigned int nfcn) : fValue(0.), fState(state), fNFcn(nfcn), fValid(false), fLimset(false), fMaxFcn(false), fNewMin(false) {} 
   
-  MnCross(double Value, const MnUserParameterState& state, unsigned int nfcn) : fValue(Value), fState(state), fNFcn(nfcn), fValid(true), fLimset(false), fMaxFcn(false), fNewMin(false) {}
+  MnCross(double value, const MnUserParameterState& state, unsigned int nfcn) : fValue(value), fState(state), fNFcn(nfcn), fValid(true), fLimset(false), fMaxFcn(false), fNewMin(false) {}
   
   MnCross(const MnUserParameterState& state, unsigned int nfcn, CrossParLimit) : fValue(0.), fState(state), fNFcn(nfcn), fValid(true), fLimset(true), fMaxFcn(false), fNewMin(false) {}
 

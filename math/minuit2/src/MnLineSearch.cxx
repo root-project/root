@@ -161,14 +161,14 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       //     std::cout<<"slam= "<<slam<<std::endl;
       if(slam < slamin) {
          if (debug) std::cout << "slam smaller than " << slamin << " return " << std::endl; 
-         //       std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
-         //       std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
+         //       std::cout<<"f1, f2= "<<p0.Y()<<", "<<p1.Y()<<std::endl;
+         //       std::cout<<"x1, x2= "<<p0.X()<<", "<<p1.X()<<std::endl;
          //       std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
          return MnParabolaPoint(xvmin, fvmin);
       }
-      if(fabs(slam - 1.) < toler8 && p1.y() < p0.y()) {
-         //       std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
-         //       std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
+      if(fabs(slam - 1.) < toler8 && p1.Y() < p0.Y()) {
+         //       std::cout<<"f1, f2= "<<p0.Y()<<", "<<p1.Y()<<std::endl;
+         //       std::cout<<"x1, x2= "<<p0.X()<<", "<<p1.X()<<std::endl;
          //       std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
          return MnParabolaPoint(xvmin, fvmin);
       }
@@ -199,8 +199,8 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          xvmin = slam;
       }
       // LM : correct a bug using precision
-      if (fabs( p0.y() - fvmin) < fabs(fvmin)*prec.Eps() ) { 
-         //   if(p0.y()-prec.Eps() < fvmin && fvmin < p0.y()+prec.Eps()) {
+      if (fabs( p0.Y() - fvmin) < fabs(fvmin)*prec.Eps() ) { 
+         //   if(p0.Y()-prec.Eps() < fvmin && fvmin < p0.Y()+prec.Eps()) {
          iterate = true;
          flast = f2;
          toler8 = toler*slam;
@@ -217,8 +217,8 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
    
    if (debug){
       std::cout<<"after initial 2-point iter: "<<std::endl;
-      std::cout<<"x0, x1, x2= "<<p0.x()<<", "<<p1.x()<<", "<<slam<<std::endl;
-      std::cout<<"f0, f1, f2= "<<p0.y()<<", "<<p1.y()<<", "<<f2<<std::endl;
+      std::cout<<"x0, x1, x2= "<<p0.X()<<", "<<p1.X()<<", "<<slam<<std::endl;
+      std::cout<<"f0, f1, f2= "<<p0.Y()<<", "<<p1.Y()<<", "<<f2<<std::endl;
    }
    
    MnParabolaPoint p2(slam, f2);
@@ -229,14 +229,14 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       MnParabola pb = MnParabolaFactory()(p0, p1, p2);
       if (debug) { 
          std::cout << "\nLS Iteration " << niter << std::endl;  
-         std::cout<<"x0, x1, x2= "<<p0.x()<<", "<<p1.x()<<", "<<p2.x() <<std::endl;
-         std::cout<<"f0, f1, f2= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y() <<std::endl;
+         std::cout<<"x0, x1, x2= "<<p0.X()<<", "<<p1.X()<<", "<<p2.X() <<std::endl;
+         std::cout<<"f0, f1, f2= "<<p0.Y()<<", "<<p1.Y()<<", "<<p2.Y() <<std::endl;
          std::cout << "slamax = " << slamax << std::endl;
-         std::cout<<"p2-p0,p1: "<<p2.y() - p0.y()<<", "<<p2.y() - p1.y()<<std::endl;
-         std::cout<<"a, b, c= "<<pb.a()<<" "<<pb.b()<<" "<<pb.c()<<std::endl;
+         std::cout<<"p2-p0,p1: "<<p2.Y() - p0.Y()<<", "<<p2.Y() - p1.Y()<<std::endl;
+         std::cout<<"a, b, c= "<<pb.A()<<" "<<pb.B()<<" "<<pb.C()<<std::endl;
       }
-      if(pb.a() < prec.Eps2()) {
-         double slopem = 2.*pb.a()*xvmin + pb.b();
+      if(pb.A() < prec.Eps2()) {
+         double slopem = 2.*pb.A()*xvmin + pb.B();
          if(slopem < 0.) slam = xvmin + slamax;
          else slam = xvmin - slamax;
          if (debug) std::cout << "xvmin = " << xvmin << " slopem " << slopem << " slam " << slam << std::endl;
@@ -264,11 +264,11 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          iterate = false;
          double toler9 = std::max(toler8, fabs(toler8*slam));
          // min. of parabola at one point    
-         if(fabs(p0.x() - slam) < toler9 || 
-            fabs(p1.x() - slam) < toler9 || 
-            fabs(p2.x() - slam) < toler9) {
-            //   	std::cout<<"f1, f2, f3= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y()<<std::endl;
-            //   	std::cout<<"x1, x2, x3= "<<p0.x()<<", "<<p1.x()<<", "<<p2.x()<<std::endl;
+         if(fabs(p0.X() - slam) < toler9 || 
+            fabs(p1.X() - slam) < toler9 || 
+            fabs(p2.X() - slam) < toler9) {
+            //   	std::cout<<"f1, f2, f3= "<<p0.Y()<<", "<<p1.Y()<<", "<<p2.Y()<<std::endl;
+            //   	std::cout<<"x1, x2, x3= "<<p0.X()<<", "<<p1.X()<<", "<<p2.X()<<std::endl;
             //   	std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
             return MnParabolaPoint(xvmin, fvmin);
          }
@@ -279,10 +279,10 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          f3 = fcn(st.Vec() + slam*step);
          if (debug) { 
                std::cout<<"f3= "<<f3<<std::endl;
-               std::cout<<"f3-p(2-0).y()= "<<f3-p2.y()<<" "<<f3-p1.y()<<" "<<f3-p0.y()<<std::endl;
+               std::cout<<"f3-p(2-0).Y()= "<<f3-p2.Y()<<" "<<f3-p1.Y()<<" "<<f3-p0.Y()<<std::endl;
          }
          // if latest point worse than all three previous, cut step
-         if(f3 > p0.y() && f3 > p1.y() && f3 > p2.y()) {
+         if(f3 > p0.Y() && f3 > p1.Y() && f3 > p2.Y()) {
             if (debug) { 
                	std::cout<<"f3 worse than all three previous"<<std::endl;
             }
@@ -303,8 +303,8 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       
       // find worst previous point out of three and replace
       MnParabolaPoint p3(slam, f3);
-      if(p0.y() > p1.y() && p0.y() > p2.y()) p0 = p3;
-      else if(p1.y() > p0.y() && p1.y() > p2.y()) p1 = p3;
+      if(p0.Y() > p1.Y() && p0.Y() > p2.Y()) p0 = p3;
+      else if(p1.Y() > p0.Y() && p1.Y() > p2.Y()) p1 = p3;
       else p2 = p3;
       if (debug) std::cout << " f3 " << f3 << " fvmin " << fvmin << " xvmin " << xvmin << std::endl;
       if(f3 < fvmin) {
@@ -319,8 +319,8 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
    } while(niter < maxiter);
    
    if (debug) { 
-      std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
-      std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
+      std::cout<<"f1, f2= "<<p0.Y()<<", "<<p1.Y()<<std::endl;
+      std::cout<<"x1, x2= "<<p0.X()<<", "<<p1.X()<<std::endl;
       std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
    }
    return MnParabolaPoint(xvmin, fvmin);

@@ -38,22 +38,22 @@ const MinuitParameter& MnUserParameters::Parameter(unsigned int n) const {
    return fTransformation.Parameter(n);
 }
 
-bool MnUserParameters::Add(const char* Name, double val, double err) {
+bool MnUserParameters::Add(const char* name, double val, double err) {
    // add a new unlimited parameter giving name, value and err (step size)
    // return false if parameter already exists
-   return fTransformation.Add(Name, val, err);
+   return fTransformation.Add(name, val, err);
 }
 
-bool  MnUserParameters::Add(const char* Name, double val, double err, double low, double up) {
+bool  MnUserParameters::Add(const char* name, double val, double err, double low, double up) {
    // add a new limited parameter giving name, value, err (step size) and lower/upper limits
    // return false if parameter already exists
-   return fTransformation.Add(Name, val, err, low, up);
+   return fTransformation.Add(name, val, err, low, up);
 }
 
-bool  MnUserParameters::Add(const char* Name, double val) {
+bool  MnUserParameters::Add(const char* name, double val) {
    // add a new unlimited parameter giving name and value
    // return false if parameter already exists
-   return fTransformation.Add(Name, val);
+   return fTransformation.Add(name, val);
 }
 
 void MnUserParameters::Fix(unsigned int n) {
@@ -108,63 +108,63 @@ double MnUserParameters::Error(unsigned int n) const {
 
 // interface using  parameter name
 
-void MnUserParameters::Fix(const char* Name) {
+void MnUserParameters::Fix(const char* name) {
    // fix parameter 
-   Fix(Index(Name));
+   Fix(Index(name));
 }
 
-void MnUserParameters::Release(const char* Name) {
+void MnUserParameters::Release(const char* name) {
    // release parameter 
-   Release(Index(Name));
+   Release(Index(name));
 }
 
-void MnUserParameters::SetValue(const char* Name, double val) {
+void MnUserParameters::SetValue(const char* name, double val) {
    // set value for parameter 
-   SetValue(Index(Name), val);
+   SetValue(Index(name), val);
 }
 
-void MnUserParameters::SetError(const char* Name, double err) {
+void MnUserParameters::SetError(const char* name, double err) {
    // set error
-   SetError(Index(Name), err);
+   SetError(Index(name), err);
 }
 
-void MnUserParameters::SetLimits(const char* Name, double low, double up) {
+void MnUserParameters::SetLimits(const char* name, double low, double up) {
    // set lower/upper limits
-   SetLimits(Index(Name), low, up);
+   SetLimits(Index(name), low, up);
 }
 
-void MnUserParameters::SetUpperLimit(const char* Name, double up) {
+void MnUserParameters::SetUpperLimit(const char* name, double up) {
    // set upper limit
-   fTransformation.SetUpperLimit(Index(Name), up);
+   fTransformation.SetUpperLimit(Index(name), up);
 }
 
-void MnUserParameters::SetLowerLimit(const char* Name, double low) {
+void MnUserParameters::SetLowerLimit(const char* name, double low) {
    // set lower limit
-   fTransformation.SetLowerLimit(Index(Name), low);
+   fTransformation.SetLowerLimit(Index(name), low);
 }
 
-void MnUserParameters::RemoveLimits(const char* Name) {
+void MnUserParameters::RemoveLimits(const char* name) {
    // remove limits
-   RemoveLimits(Index(Name));
+   RemoveLimits(Index(name));
 }
 
-double MnUserParameters::Value(const char* Name) const {
+double MnUserParameters::Value(const char* name) const {
    // get parameter value
-   return Value(Index(Name));
+   return Value(Index(name));
 }
 
-double MnUserParameters::Error(const char* Name) const {
+double MnUserParameters::Error(const char* name) const {
    // get parameter error
-   return Error(Index(Name));
+   return Error(Index(name));
 }
 
-unsigned int MnUserParameters::Index(const char* Name) const {
-   // get index (external) corresponding to Name
-   return fTransformation.Index(Name);
+unsigned int MnUserParameters::Index(const char* name) const {
+   // get index (external) corresponding to name
+   return fTransformation.Index(name);
 }
 
 const char* MnUserParameters::Name(unsigned int n) const {
-   // get Name corresponding to index (external)
+   // get name corresponding to index (external)
    return fTransformation.Name(n);
 }
 

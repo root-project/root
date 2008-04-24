@@ -31,21 +31,21 @@ class MinuitParameter {
 public:
   
    //constructor for constant Parameter
-   MinuitParameter(unsigned int num, const char* Name, double val) : 
+   MinuitParameter(unsigned int num, const char* name, double val) : 
       fNum(num), fValue(val), fError(0.), fConst(true), fFix(false), 
       fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false){
-      SetName(Name);
+      SetName(name);
    }
   
    //constructor for standard Parameter
-   MinuitParameter(unsigned int num, const char* Name, double val, double err) :
+   MinuitParameter(unsigned int num, const char* name, double val, double err) :
       fNum(num), fValue(val), fError(err), fConst(false), fFix(false), 
       fLoLimit(0.), fUpLimit(0.), fLoLimValid(false), fUpLimValid(false){
-      SetName(Name);
+      SetName(name);
    }
   
    //constructor for limited Parameter
-   MinuitParameter(unsigned int num, const char* Name, double val, double err, 
+   MinuitParameter(unsigned int num, const char* name, double val, double err, 
                    double min, double max) : 
       fNum(num),fValue(val), fError(err), fConst(false), fFix(false), 
       fLoLimit(min), fUpLimit(max), fLoLimValid(true), fUpLimValid(true){
@@ -54,7 +54,7 @@ public:
          fLoLimit = max;
          fUpLimit = min;
       }
-      SetName(Name);    
+      SetName(name);    
    }
 
    ~MinuitParameter() {}
@@ -151,10 +151,10 @@ private:
 
 private:
 
-   void SetName(const char* Name) {
-      int l = std::min(int(strlen(Name)), 11);
+   void SetName(const char* name) {
+      int l = std::min(int(strlen(name)), 11);
       memset(fName, 0, 11*sizeof(char));
-      memcpy(fName, Name, l*sizeof(char));
+      memcpy(fName, name, l*sizeof(char));
       fName[10] = '\0';
    }
 };

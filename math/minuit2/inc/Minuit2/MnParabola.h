@@ -59,7 +59,7 @@ public:
 
   */
 
-  double y(double x) const {return (fA*x*x + fB*x +fC);}
+  double Y(double x) const {return (fA*x*x + fB*x +fC);}
 
 
   /**
@@ -135,7 +135,7 @@ public:
 
    */
 
-  double a() const {return fA;}
+  double A() const {return fA;}
 
 
   /**
@@ -146,7 +146,7 @@ public:
 
   */
 
-  double b() const {return fB;}
+  double B() const {return fB;}
 
 
   /**
@@ -157,7 +157,7 @@ public:
 
   */
 
-  double c() const {return fC;}
+  double C() const {return fC;}
 
 private:
 

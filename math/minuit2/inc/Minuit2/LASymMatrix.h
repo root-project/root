@@ -101,8 +101,8 @@ public:
   LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, A, T>, ABObj<sym, B, T> >,T>& sum) : fSize(0), fNRow(0), fData(0) {
 //     std::cout<<"template<class A, class B, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, A, T>, ABObj<sym, B, T> > >& sum)"<<std::endl;
 //     recursive construction
-    (*this) = sum.Obj().a();
-    (*this) += sum.Obj().b();
+    (*this) = sum.Obj().A();
+    (*this) += sum.Obj().B();
     //std::cout<<"leaving template<class A, class B, class T> LASymMatrix(const ABObj..."<<std::endl;
   }
 
@@ -111,10 +111,10 @@ public:
 //     std::cout<<"template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix, T>, ABObj<sym, A, T> >,T>& sum)"<<std::endl;
 
     // recursive construction
-    //std::cout<<"(*this)=sum.Obj().b();"<<std::endl;
-    (*this)=sum.Obj().b();
-    //std::cout<<"(*this)+=sum.Obj().a();"<<std::endl;
-    (*this)+=sum.Obj().a();  
+    //std::cout<<"(*this)=sum.Obj().B();"<<std::endl;
+    (*this)=sum.Obj().B();
+    //std::cout<<"(*this)+=sum.Obj().A();"<<std::endl;
+    (*this)+=sum.Obj().A();  
     //std::cout<<"leaving template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix,.."<<std::endl;
   }
 
@@ -139,8 +139,8 @@ public:
 //     std::cout<<"template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, MatrixInverse<sym, ABObj<sym, LASymMatrix, T>, T>, T>, ABObj<sym, A, T> >, T>& sum)"<<std::endl;
 
     // recursive construction
-    (*this)=sum.Obj().b();
-    (*this)+=sum.Obj().a();  
+    (*this)=sum.Obj().B();
+    (*this)+=sum.Obj().A();  
     //std::cout<<"leaving template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix,.."<<std::endl;
   }
 
@@ -151,8 +151,8 @@ public:
 //     std::cout<<"template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector, T>, T>, T> ABObj<sym, A, T> >,T>& sum)"<<std::endl;
 
     // recursive construction
-    (*this)=sum.Obj().b();
-    (*this)+=sum.Obj().a();  
+    (*this)=sum.Obj().B();
+    (*this)+=sum.Obj().A();  
     //std::cout<<"leaving template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix,.."<<std::endl;
   }
 
@@ -285,12 +285,12 @@ public:
     //std::cout<<"template<class A, class B, class T> LASymMatrix& operator=(const ABObj<sym, ABSum<ABObj<sym, A, T>, ABObj<sym, B, T> >,T>& sum)"<<std::endl;
     // recursive construction
     if(fSize == 0 && fData == 0) {
-      (*this) = sum.Obj().a();
-      (*this) += sum.Obj().b();
+      (*this) = sum.Obj().A();
+      (*this) += sum.Obj().B();
       (*this) *= sum.f();
     } else {
-      LASymMatrix tmp(sum.Obj().a());
-      tmp += sum.Obj().b();
+      LASymMatrix tmp(sum.Obj().A());
+      tmp += sum.Obj().B();
       tmp *= sum.f();
       assert(fSize == tmp.size());
       memcpy(fData, tmp.Data(), fSize*sizeof(double));
@@ -304,13 +304,13 @@ public:
     
     if(fSize == 0 && fData == 0) {
       //std::cout<<"fSize == 0 && fData == 0"<<std::endl;
-      (*this) = sum.Obj().b();
-      (*this) += sum.Obj().a();
+      (*this) = sum.Obj().B();
+      (*this) += sum.Obj().A();
       (*this) *= sum.f();
     } else {
       //std::cout<<"creating tmp variable"<<std::endl;
-      LASymMatrix tmp(sum.Obj().b());
-      tmp += sum.Obj().a();
+      LASymMatrix tmp(sum.Obj().B());
+      tmp += sum.Obj().A();
       tmp *= sum.f();
       assert(fSize == tmp.size());
       memcpy(fData, tmp.Data(), fSize*sizeof(double));

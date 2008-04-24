@@ -164,8 +164,8 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
    
    if(stra.Strategy() == 2 && !st.HasCovariance()) {
       //calculate full 2nd derivative
-      MinimumState tmp = MnHesse(stra)(fcn, state, st.Trafo());
-      return MinimumSeed(tmp, st.Trafo());
+      MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
+      return MinimumSeed(tmpState, st.Trafo());
    }
    
    return MinimumSeed(state, st.Trafo());

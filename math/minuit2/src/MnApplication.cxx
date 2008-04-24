@@ -62,19 +62,19 @@ const MinuitParameter& MnApplication::Parameter(unsigned int i) const {
 }
 
 
-void MnApplication::Add(const char* Name, double val, double err) {
+void MnApplication::Add(const char* name, double val, double err) {
    //add free Parameter
-   fState.Add(Name, val, err);
+   fState.Add(name, val, err);
 }
 
-void MnApplication::Add(const char* Name, double val, double err, double low, double up) {
+void MnApplication::Add(const char* name, double val, double err, double low, double up) {
    //add limited Parameter 
-   fState.Add(Name, val, err, low, up);
+   fState.Add(name, val, err, low, up);
 }
 
-void MnApplication::Add(const char* Name, double val) {
+void MnApplication::Add(const char* name, double val) {
    //add const Parameter
-   fState.Add(Name, val);
+   fState.Add(name, val);
 }
 
 //interaction via external number of Parameter
@@ -110,13 +110,13 @@ double MnApplication::Value(const char* i) const {return fState.Value(i);}
 double MnApplication::Error(const char* i) const {return fState.Error(i);}
 
 
-unsigned int MnApplication::Index(const char* Name) const {
-   //convert Name into external number of Parameter
-   return fState.Index(Name);
+unsigned int MnApplication::Index(const char* name) const {
+   //convert name into external number of Parameter
+   return fState.Index(name);
 }
 
 const char* MnApplication::Name(unsigned int i) const {
-   //convert external number into Name of Parameter
+   //convert external number into name of Parameter
    return fState.Name(i);
 }
 

@@ -63,7 +63,7 @@ public:
 
   */
 
-  double x() const {return fX;}
+  double X() const {return fX;}
 
 
   /**
@@ -74,7 +74,7 @@ public:
 
   */
 
-  double y() const {return fY;}
+  double Y() const {return fY;}
 
 private:
 

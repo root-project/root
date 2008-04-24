@@ -214,8 +214,8 @@ L30:
    }
    
    //verify if matrix pos-def (still 2nd derivative)
-   MinimumError tmp = MnPosDef()(MinimumError(vhmat,1.), prec);
-   vhmat = tmp.InvHessian();
+   MinimumError tmpErr = MnPosDef()(MinimumError(vhmat,1.), prec);
+   vhmat = tmpErr.InvHessian();
    int ifail = Invert(vhmat);
    if(ifail != 0) {
       

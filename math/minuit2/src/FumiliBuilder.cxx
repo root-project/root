@@ -278,13 +278,13 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
       //     MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
       
-      //     if(fabs(pp.y() - s0.Fval()) < prec.Eps()) {
+      //     if(fabs(pp.Y() - s0.Fval()) < prec.Eps()) {
       //       std::cout<<"FumiliBuilder: no improvement"<<std::endl;
       //       break; //no improvement
       //     }
       
       
-      //     MinimumParameters p(s0.Vec() + pp.x()*step, pp.y());
+      //     MinimumParameters p(s0.Vec() + pp.X()*step, pp.Y());
       
       // if taking a full step 
       
@@ -298,11 +298,11 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
          MnLineSearch lsearch;   
          MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
          
-         if(fabs(pp.y() - s0.Fval()) < prec.Eps()) {
+         if(fabs(pp.Y() - s0.Fval()) < prec.Eps()) {
             //std::cout<<"FumiliBuilder: no improvement"<<std::endl;
             break; //no improvement
          }
-         p =  MinimumParameters(s0.Vec() + pp.x()*step, pp.y() );
+         p =  MinimumParameters(s0.Vec() + pp.X()*step, pp.Y() );
       }
       
 #ifdef DEBUG

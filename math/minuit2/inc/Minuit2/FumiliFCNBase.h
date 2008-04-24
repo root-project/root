@@ -144,7 +144,7 @@ protected :
    }
 
    // methods to be used by the derived classes to set the values 
-   void SetFCNValue(double Value) { fValue = Value; }
+   void SetFCNValue(double value) { fValue = value; }
 
    std::vector<double> & Gradient() { return fGradient; }
 

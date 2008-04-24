@@ -84,11 +84,11 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 
 
 #ifdef DEBUG
-            std::cout << "\nLine search result " << pp.x() << " f(0)  " << pa.Fval() << " f(1) " << pp.y() << std::endl;
+            std::cout << "\nLine search result " << pp.X() << " f(0)  " << pa.Fval() << " f(1) " << pp.Y() << std::endl;
 #endif
 
-            step *= pp.x();
-            pa = MinimumParameters(pa.Vec() + step, pp.y());    
+            step *= pp.X();
+            pa = MinimumParameters(pa.Vec() + step, pp.Y());    
 
             dgrad = gc(pa, dgrad);         
 

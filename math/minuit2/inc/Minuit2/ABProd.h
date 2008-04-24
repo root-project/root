@@ -40,8 +40,8 @@ public:
   template<class A, class B>
   ABProd(const ABProd<A,B>& prod) : fA(M1(prod.fA)), fB(M2(prod.fB)) {}
 
-  const M1& a() const {return fA;}
-  const M2& b() const {return fB;}
+  const M1& A() const {return fA;}
+  const M2& B() const {return fB;}
  
 private:
 
