@@ -110,6 +110,8 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
 {
    // Normal constructor. Options are:
 
+   UInt_t ui=0;
+
    fArraySize = 16;
    fTree=tree;
    fSelector= new TSelectorDraw();
@@ -145,7 +147,7 @@ TSpider::TSpider(TTree* tree ,const char *varexp, const char *selection,
 
    fTree->SetScanField(fNx*fNy);
    fCurrentEntries = new Long64_t[fNx*fNy];
-   for(UInt_t ui=0;ui<fNx*fNy;++ui) fCurrentEntries[ui]=0;
+   for(ui=0;ui<fNx*fNy;++ui) fCurrentEntries[ui]=0;
 
    TString opt = option;
 
@@ -220,7 +222,7 @@ void TSpider::AddVariable(const char* varexp)
    ++fNcols;
    SyncFormulas();
 
-   UInt_t ui;
+   UInt_t ui=0;
    Long64_t notSkipped=0;
    Int_t tnumber=-1;
    Long64_t entryNumber;
@@ -285,20 +287,20 @@ void TSpider::AddVariable(const char* varexp)
    fAve[fNcols-1]/=notSkipped;
 
    Color_t lc;
-   Style_t ls;
+   Style_t lt;
    Width_t lw;
    Color_t fc;
    Style_t fs;
 
    if(fAverageSlices){
       lc = fAverageSlices[0]->GetLineColor();
-      ls = fAverageSlices[0]->GetLineStyle();
+      lt = fAverageSlices[0]->GetLineStyle();
       lw = fAverageSlices[0]->GetLineWidth();
       fc = fAverageSlices[0]->GetFillColor();
       fs = fAverageSlices[0]->GetFillStyle();
    } else {
       lc = fAveragePoly->GetLineColor();
-      ls = fAveragePoly->GetLineStyle();
+      lt = fAveragePoly->GetLineStyle();
       lw = fAveragePoly->GetLineWidth();
       fc = fAveragePoly->GetFillColor();
       fs = fAveragePoly->GetFillStyle();
@@ -308,8 +310,8 @@ void TSpider::AddVariable(const char* varexp)
    fPolargram = NULL;
 
    if(fSegmentDisplay){
-      for(UInt_t ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
-      for(UInt_t ui=0;ui<fNcols-1;++ui) delete fAverageSlices[ui];
+      for(ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
+      for(ui=0;ui<fNcols-1;++ui) delete fAverageSlices[ui];
    }
    fPolyList->Delete();
    delete fPolyList;
@@ -324,16 +326,16 @@ void TSpider::AddVariable(const char* varexp)
    Draw("");
 
    if(fAverageSlices){
-      for(UInt_t ui = 0;ui<fNcols;++ui){
+      for(ui = 0;ui<fNcols;++ui){
          fAverageSlices[ui]->SetLineColor(lc);
-         fAverageSlices[ui]->SetLineStyle(ls);
+         fAverageSlices[ui]->SetLineStyle(lt);
          fAverageSlices[ui]->SetLineWidth(lw);
          fAverageSlices[ui]->SetFillColor(fc);
          fAverageSlices[ui]->SetFillStyle(fs);
       }
    } else {
       fAveragePoly->SetLineColor(lc);
-      fAveragePoly->SetLineStyle(ls);
+      fAveragePoly->SetLineStyle(lt);
       fAveragePoly->SetLineWidth(lw);
       fAveragePoly->SetFillColor(fc);
       fAveragePoly->SetFillStyle(fs);
@@ -347,8 +349,10 @@ void TSpider::DeleteVariable(const char* varexp)
    // Delete a variable from its expression.
 
    Int_t var=-1;
+   UInt_t ui=0;
+
    if(fNcols == 2) return;
-   for(UInt_t ui=0; ui<fNcols;++ui){
+   for(ui=0; ui<fNcols;++ui){
       if(!strcmp(varexp,((TTreeFormula*)fFormulas->At(ui))->GetTitle())) var = ui;
    }
    if(var<0) return;
@@ -356,7 +360,7 @@ void TSpider::DeleteVariable(const char* varexp)
    fFormulas->Remove(fFormulas->At(var));
    SyncFormulas();
 
-   for(UInt_t ui=var+1;ui<fNcols;++ui){
+   for(ui=var+1;ui<fNcols;++ui){
       fMin[ui-1] = fMin[ui];
       fMax[ui-1] = fMax[ui];
       fAve[ui-1] = fAve[ui];
@@ -367,20 +371,20 @@ void TSpider::DeleteVariable(const char* varexp)
    --fNcols;
 
    Color_t lc;
-   Style_t ls;
+   Style_t lt;
    Width_t lw;
    Color_t fc;
    Style_t fs;
 
    if(fAverageSlices){
       lc = fAverageSlices[0]->GetLineColor();
-      ls = fAverageSlices[0]->GetLineStyle();
+      lt = fAverageSlices[0]->GetLineStyle();
       lw = fAverageSlices[0]->GetLineWidth();
       fc = fAverageSlices[0]->GetFillColor();
       fs = fAverageSlices[0]->GetFillStyle();
    } else {
       lc = fAveragePoly->GetLineColor();
-      ls = fAveragePoly->GetLineStyle();
+      lt = fAveragePoly->GetLineStyle();
       lw = fAveragePoly->GetLineWidth();
       fc = fAveragePoly->GetFillColor();
       fs = fAveragePoly->GetFillStyle();
@@ -390,8 +394,8 @@ void TSpider::DeleteVariable(const char* varexp)
    fPolargram = NULL;
 
    if(fSegmentDisplay){
-      for(UInt_t ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
-      for(UInt_t ui=0;ui<=fNcols;++ui) delete fAverageSlices[ui];
+      for(ui=0;ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
+      for(ui=0;ui<=fNcols;++ui) delete fAverageSlices[ui];
    }
    fPolyList->Delete();
    delete fPolyList;
@@ -407,16 +411,16 @@ void TSpider::DeleteVariable(const char* varexp)
    if(fNcols == 2) SetSegmentDisplay(kTRUE);
 
    if(fAverageSlices){
-      for(UInt_t ui = 0;ui<fNcols;++ui){
+      for(ui = 0;ui<fNcols;++ui){
          fAverageSlices[ui]->SetLineColor(lc);
-         fAverageSlices[ui]->SetLineStyle(ls);
+         fAverageSlices[ui]->SetLineStyle(lt);
          fAverageSlices[ui]->SetLineWidth(lw);
          fAverageSlices[ui]->SetFillColor(fc);
          fAverageSlices[ui]->SetFillStyle(fs);
       }
    } else {
       fAveragePoly->SetLineColor(lc);
-      fAveragePoly->SetLineStyle(ls);
+      fAveragePoly->SetLineStyle(lt);
       fAveragePoly->SetLineWidth(lw);
       fAveragePoly->SetFillColor(fc);
       fAveragePoly->SetFillStyle(fs);
@@ -445,6 +449,8 @@ void TSpider::Draw(Option_t *options)
 {
    // Draw the spider.
 
+   UInt_t ui=0;
+
    gEnv->SetValue("Canvas.ShowEditor",1);
    if(!gPad && !fCanvas){
       fCanvas = new TCanvas("screen","Spider Plot",fNx*256,fNy*256);
@@ -460,7 +466,7 @@ void TSpider::Draw(Option_t *options)
    fCanvas->cd();
    SetCurrentEntries();
    AppendPad(options);
-   for(UInt_t ui=0;ui<fNx*fNy;++ui){
+   for(ui=0;ui<fNx*fNy;++ui){
       fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
@@ -488,7 +494,7 @@ void TSpider::DrawPolyAverage(Option_t* /*options*/)
    Int_t linewidth=1;
    Int_t linestyle=1;
 
-   UInt_t ui;
+   UInt_t ui=0;
    Double_t slice = 2*TMath::Pi()/fNcols;
    Double_t *x = new Double_t[fNcols+1];
    Double_t *y = new Double_t[fNcols+1];
@@ -578,7 +584,9 @@ void TSpider::DrawSlices(Option_t* options)
 void TSpider::DrawSlicesAverage(Option_t* /*options*/)
 {
    // Draw the slices representing the average for the segment plot.
+
    UInt_t ui=0;
+
    Int_t fillstyle=3002;
    Int_t linecolor=4;
    Int_t fillcolor=linecolor;
@@ -838,9 +846,8 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
 {
    // Browse the tree to set the min, max and average value of each variable of fVar.
 
-   UInt_t ui;
+   UInt_t ui=0;
    Int_t i;
-
 
    fMax = new Double_t [fArraySize];
    fMin= new Double_t [fArraySize];
@@ -916,8 +923,7 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
          ++entry;
       }
    }
-   for(ui=0;ui<fNcols;++ui)
-      fAve[ui]/=notSkipped;
+   for(ui=0;ui<fNcols;++ui) fAve[ui]/=notSkipped;
 }
 
 
@@ -926,7 +932,9 @@ void TSpider::Paint(Option_t* options)
 {
    // Paint the spider.
 
+   UInt_t ui=0;
    TString opt = options;
+
    if(opt.Contains("n")) return;
 
    Double_t slice = 2*TMath::Pi()/fNcols;
@@ -937,7 +945,7 @@ void TSpider::Paint(Option_t* options)
    }
 
    TLatex *txt = new TLatex();
-   for(UInt_t ui=0;ui<fNx*fNy;++ui){
+   for(ui=0;ui<fNx*fNy;++ui){
       txt->SetTextAlign(13);
       fCanvas->cd(ui+1);
       if (fCurrentEntries) {
@@ -972,8 +980,10 @@ void TSpider::SetAverageLineStyle(Style_t sty)
 {
    // Set the LineStyle of the average.
 
+   UInt_t ui=0;
+
    if(fAverageSlices){
-      for(UInt_t ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetLineStyle(sty);
+      for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetLineStyle(sty);
    } else if(fAveragePoly) fAveragePoly->SetLineStyle(sty);
 }
 
@@ -983,8 +993,10 @@ void TSpider::SetAverageLineColor(Color_t col)
 {
    // Set the LineColor of the average.
 
+   UInt_t ui=0;
+
    if(fAverageSlices){
-      for(UInt_t ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetLineColor(col);
+      for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetLineColor(col);
    } else if(fAveragePoly) fAveragePoly->SetLineColor(col);
 }
 
@@ -994,8 +1006,10 @@ void TSpider::SetAverageLineWidth(Width_t wid)
 {
    // Set the LineWidth of the average.
 
+   UInt_t ui=0;
+
    if(fAverageSlices){
-      for(UInt_t ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetLineWidth(wid);
+      for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetLineWidth(wid);
    } else if(fAveragePoly) fAveragePoly->SetLineWidth(wid);
 }
 
@@ -1005,8 +1019,10 @@ void TSpider::SetAverageFillColor(Color_t col)
 {
    // Set the FillColor of the average.
 
+   UInt_t ui=0;
+
    if(fAverageSlices){
-      for(UInt_t ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetFillColor(col);
+      for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetFillColor(col);
    } else if(fAveragePoly) fAveragePoly->SetFillColor(col);
 }
 
@@ -1016,8 +1032,10 @@ void TSpider::SetAverageFillStyle(Style_t sty)
 {
    // Set the FillStyle of the average.
 
+   UInt_t ui=0;
+
    if(fAverageSlices){
-      for(UInt_t ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetFillStyle(sty);
+      for(ui=0;ui<fNcols;++ui) fAverageSlices[ui]->SetFillStyle(sty);
    } else if(fAveragePoly) fAveragePoly->SetFillStyle(sty);
 }
 
@@ -1029,7 +1047,7 @@ void TSpider::SetDisplayAverage(Bool_t disp)
 
    if(disp == fDisplayAverage) return;
 
-   UInt_t ui;
+   UInt_t ui=0;
 
    fDisplayAverage = disp;
    delete fAveragePoly;
@@ -1069,7 +1087,7 @@ void TSpider::SetCurrentEntries()
    // Set the current selected entries.
 
    Int_t i;
-   UInt_t ui;
+   UInt_t ui=0;
    Int_t tnumber=-1;
    Long64_t entryNumber;
    Long64_t entry = fEntry;
@@ -1138,8 +1156,10 @@ void TSpider::SetLineStyle(Style_t sty)
 {
    // Set line style.
 
+   UInt_t ui=0;
+
    TAttLine::SetLineStyle(sty);
-   for(UInt_t ui = 0; ui<fNx*fNy;++ui){
+   for(ui=0; ui<fNx*fNy;++ui){
       if(fSegmentDisplay){
          TList *li = (TList*)fPolyList->At(ui);
          for(UInt_t var=0;var<fNcols;++var) ((TArc*)li->At(var))->SetLineStyle(sty);
@@ -1153,8 +1173,10 @@ void TSpider::SetLineColor(Color_t col)
 {
    // Set lin color.
 
+   UInt_t ui=0;
+
    TAttLine::SetLineColor(col);
-   for(UInt_t ui = 0; ui<fNx*fNy;++ui){
+   for(ui=0; ui<fNx*fNy;++ui){
       if(fSegmentDisplay){
          TList *li = (TList*)fPolyList->At(ui);
          for(UInt_t var=0;var<fNcols;++var) ((TArc*)li->At(var))->SetLineColor(col);
@@ -1168,8 +1190,10 @@ void TSpider::SetLineWidth(Width_t wid)
 {
    //Set line width.
 
+   UInt_t ui=0;
+
    TAttLine::SetLineWidth(wid);
-   for(UInt_t ui = 0; ui<fNx*fNy;++ui){
+   for(ui=0; ui<fNx*fNy;++ui){
       if(fSegmentDisplay){
          TList *li = (TList*)fPolyList->At(ui);
          for(UInt_t var=0;var<fNcols;++var) ((TArc*)li->At(var))->SetLineWidth(wid);
@@ -1183,8 +1207,10 @@ void TSpider::SetFillColor(Color_t col)
 {
    // Set fill color.
 
+   UInt_t ui=0;
+
    TAttFill::SetFillColor(col);
-   for(UInt_t ui = 0; ui<fNx*fNy;++ui){
+   for(ui=0; ui<fNx*fNy;++ui){
       if(fSegmentDisplay){
          TList *li = (TList*)fPolyList->At(ui);
          for(UInt_t var=0;var<fNcols;++var) ((TArc*)li->At(var))->SetFillColor(col);
@@ -1198,8 +1224,10 @@ void TSpider::SetFillStyle(Style_t sty)
 {
    // Set fill style.
 
+   UInt_t ui=0;
+
    TAttFill::SetFillStyle(sty);
-   for(UInt_t ui = 0; ui<fNx*fNy;++ui){
+   for(ui=0; ui<fNx*fNy;++ui){
       if(fSegmentDisplay){
          TList *li = (TList*)fPolyList->At(ui);
          for(UInt_t var=0;var<fNcols;++var) ((TArc*)li->At(var))->SetFillStyle(sty);
@@ -1226,27 +1254,28 @@ void TSpider::SetNx(UInt_t nx)
    if(fNx == nx || nx <= 0) return;
    fEntry = fCurrentEntries[0];
 
+   UInt_t ui=0;
    Color_t lc;
-   Style_t ls;
+   Style_t lt;
    Width_t lw;
    Color_t fc;
    Style_t fs;
    if(fAverageSlices){
       lc = fAverageSlices[0]->GetLineColor();
-      ls = fAverageSlices[0]->GetLineStyle();
+      lt = fAverageSlices[0]->GetLineStyle();
       lw = fAverageSlices[0]->GetLineWidth();
       fc = fAverageSlices[0]->GetFillColor();
       fs = fAverageSlices[0]->GetFillStyle();
    } else {
       lc = fAveragePoly->GetLineColor();
-      ls = fAveragePoly->GetLineStyle();
+      lt = fAveragePoly->GetLineStyle();
       lw = fAveragePoly->GetLineWidth();
       fc = fAveragePoly->GetFillColor();
       fs = fAveragePoly->GetFillStyle();
    }
 
    if(fSegmentDisplay){
-      for(UInt_t ui = 0; ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
+      for(ui=0; ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
    }
    fPolyList->Delete();
    delete fPolyList;
@@ -1261,7 +1290,7 @@ void TSpider::SetNx(UInt_t nx)
    fCanvas->Clear();
    fCanvas->Divide(fNx,fNy);
 
-   for(UInt_t ui=0; ui < fNx*fNy;++ui){
+   for(ui=0; ui < fNx*fNy;++ui){
       fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
@@ -1276,16 +1305,16 @@ void TSpider::SetNx(UInt_t nx)
    }
 
    if(fAverageSlices){
-      for(UInt_t ui = 0;ui<fNcols;++ui){
+      for(ui = 0;ui<fNcols;++ui){
          fAverageSlices[ui]->SetLineColor(lc);
-         fAverageSlices[ui]->SetLineStyle(ls);
+         fAverageSlices[ui]->SetLineStyle(lt);
          fAverageSlices[ui]->SetLineWidth(lw);
          fAverageSlices[ui]->SetFillColor(fc);
          fAverageSlices[ui]->SetFillStyle(fs);
       }
    } else {
       fAveragePoly->SetLineColor(lc);
-      fAveragePoly->SetLineStyle(ls);
+      fAveragePoly->SetLineStyle(lt);
       fAveragePoly->SetLineWidth(lw);
       fAveragePoly->SetFillColor(fc);
       fAveragePoly->SetFillStyle(fs);
@@ -1301,27 +1330,28 @@ void TSpider::SetNy(UInt_t ny)
    if(fNy == ny || ny <= 0) return;
    fEntry = fCurrentEntries[0];
 
+   UInt_t ui=0;
    Color_t lc;
-   Style_t ls;
+   Style_t lt;
    Width_t lw;
    Color_t fc;
    Style_t fs;
    if(fAverageSlices){
       lc = fAverageSlices[0]->GetLineColor();
-      ls = fAverageSlices[0]->GetLineStyle();
+      lt = fAverageSlices[0]->GetLineStyle();
       lw = fAverageSlices[0]->GetLineWidth();
       fc = fAverageSlices[0]->GetFillColor();
       fs = fAverageSlices[0]->GetFillStyle();
    } else {
       lc = fAveragePoly->GetLineColor();
-      ls = fAveragePoly->GetLineStyle();
+      lt = fAveragePoly->GetLineStyle();
       lw = fAveragePoly->GetLineWidth();
       fc = fAveragePoly->GetFillColor();
       fs = fAveragePoly->GetFillStyle();
    }
 
    if(fSegmentDisplay){
-      for(UInt_t ui = 0; ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
+      for(ui=0; ui<fNx*fNy;++ui) ((TList*)fPolyList->At(ui))->Delete();
    }
    fPolyList->Delete();
    delete fPolyList;
@@ -1336,7 +1366,7 @@ void TSpider::SetNy(UInt_t ny)
    fCanvas->Clear();
    fCanvas->Divide(fNx,fNy);
 
-   for(UInt_t ui=0; ui < fNx*fNy;++ui){
+   for(ui=0; ui < fNx*fNy;++ui){
       fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
@@ -1351,16 +1381,16 @@ void TSpider::SetNy(UInt_t ny)
    }
 
    if(fAverageSlices){
-      for(UInt_t ui = 0;ui<fNcols;++ui){
+      for(ui = 0;ui<fNcols;++ui){
          fAverageSlices[ui]->SetLineColor(lc);
-         fAverageSlices[ui]->SetLineStyle(ls);
+         fAverageSlices[ui]->SetLineStyle(lt);
          fAverageSlices[ui]->SetLineWidth(lw);
          fAverageSlices[ui]->SetFillColor(fc);
          fAverageSlices[ui]->SetFillStyle(fs);
       }
    } else {
       fAveragePoly->SetLineColor(lc);
-      fAveragePoly->SetLineStyle(ls);
+      fAveragePoly->SetLineStyle(lt);
       fAveragePoly->SetLineWidth(lw);
       fAveragePoly->SetFillColor(fc);
       fAveragePoly->SetFillStyle(fs);
@@ -1375,26 +1405,29 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
 
    if(seg == fSegmentDisplay) return;
 
+   UInt_t ui=0;
+
    if(fSegmentDisplay){
-      for(UInt_t ui=0;ui<fNx*fNy;++ui){
+      for(ui=0;ui<fNx*fNy;++ui){
          ((TList*)fPolyList->At(ui))->Delete();
       }
    }
    fPolyList->Delete();
+
    Color_t lc;
-   Style_t ls;
+   Style_t lt;
    Width_t lw;
    Color_t fc;
    Style_t fs;
    if(fAverageSlices){
       lc = fAverageSlices[0]->GetLineColor();
-      ls = fAverageSlices[0]->GetLineStyle();
+      lt = fAverageSlices[0]->GetLineStyle();
       lw = fAverageSlices[0]->GetLineWidth();
       fc = fAverageSlices[0]->GetFillColor();
       fs = fAverageSlices[0]->GetFillStyle();
    } else {
       lc = fAveragePoly->GetLineColor();
-      ls = fAveragePoly->GetLineStyle();
+      lt = fAveragePoly->GetLineStyle();
       lw = fAveragePoly->GetLineWidth();
       fc = fAveragePoly->GetFillColor();
       fs = fAveragePoly->GetFillStyle();
@@ -1402,21 +1435,21 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
    delete fPolyList;
    fPolyList = NULL;
    if(fAverageSlices){
-      for(UInt_t ui =0;ui<fNcols;++ui) delete fAverageSlices[ui];
+      for(ui=0;ui<fNcols;++ui) delete fAverageSlices[ui];
    }
    delete [] fAverageSlices;
    fAverageSlices = NULL;
    delete fAveragePoly;
    fAveragePoly = NULL;
 
-   for(UInt_t ui=0;ui<fNx*fNy;++ui){
+   for(ui=0;ui<fNx*fNy;++ui){
       fCanvas->cd(ui+1);
       gPad->Clear();
    }
 
    fSegmentDisplay = seg;
 
-   for(UInt_t ui=0; ui < fNx*fNy;++ui){
+   for(ui=0; ui < fNx*fNy;++ui){
       fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
@@ -1431,16 +1464,16 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
    }
 
    if(fAverageSlices){
-      for(UInt_t ui = 0;ui<fNcols;++ui){
+      for(ui=0;ui<fNcols;++ui){
          fAverageSlices[ui]->SetLineColor(lc);
-         fAverageSlices[ui]->SetLineStyle(ls);
+         fAverageSlices[ui]->SetLineStyle(lt);
          fAverageSlices[ui]->SetLineWidth(lw);
          fAverageSlices[ui]->SetFillColor(fc);
          fAverageSlices[ui]->SetFillStyle(fs);
       }
    } else {
       fAveragePoly->SetLineColor(lc);
-      fAveragePoly->SetLineStyle(ls);
+      fAveragePoly->SetLineStyle(lt);
       fAveragePoly->SetLineWidth(lw);
       fAveragePoly->SetFillColor(fc);
       fAveragePoly->SetFillStyle(fs);
@@ -1480,12 +1513,11 @@ void TSpider::SetVariablesExpression(const char* varexp)
    fNcols=8;
 
    TObjArray *leaves = fTree->GetListOfLeaves();
-//   if(!leaves) return;
    UInt_t nleaves = leaves->GetEntriesFast();
    if (nleaves < fNcols) fNcols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
 
-   //*-*- if varexp is empty, take first 8 columns by default
+   // if varexp is empty, take first 8 columns by default
    Int_t allvar = 0;
    TString *cnames = new TString[fArraySize];
    if (!strcmp(varexp, "*")) { fNcols = nleaves; allvar = 1; }
@@ -1499,7 +1531,7 @@ void TSpider::SetVariablesExpression(const char* varexp)
          cnames[fNcols] = lf->GetName();
          fNcols++;
       }
-      //*-*- otherwise select only the specified columns
+      // otherwise select only the specified columns
    } else {
       fNcols = 1;
       onerow = varexp;
@@ -1517,7 +1549,7 @@ void TSpider::SetVariablesExpression(const char* varexp)
       }
    }
 
-   //*-*- Create the TreeFormula objects corresponding to each column
+   // Create the TreeFormula objects corresponding to each column
    for (ui=0;ui<fNcols;ui++) {
       fFormulas->Add(new TTreeFormula("Var1",cnames[ui].Data(),fTree));
    }
