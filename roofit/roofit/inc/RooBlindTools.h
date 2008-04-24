@@ -109,7 +109,7 @@ public:
 
   const blindMode& mode()const {return _mode;}
 
-  void setMode(blindMode mode) {_mode=mode;}
+  void setMode(blindMode bmode) {_mode=bmode;}
 
   Double_t getPrecisionCentralValue() const {return _PrecisionCentralValue;}
 

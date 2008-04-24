@@ -32,10 +32,10 @@ ClassImp(RooGExpModel)
 ;
 
 
-RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x, 
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn, 
 			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
 			   Bool_t nlo, Type type) : 
-  RooResolutionModel(name,title,x), 
+  RooResolutionModel(name,title,xIn), 
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
   ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
@@ -45,11 +45,11 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x,
 }
 
 
-RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x, 
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn, 
 			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
 			   RooAbsReal& _rsSF,
 			   Bool_t nlo, Type type) : 
-  RooResolutionModel(name,title,x), 
+  RooResolutionModel(name,title,xIn), 
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
   ssf("ssf","Sigma Scale Factor",this,_rsSF),
@@ -62,11 +62,11 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x,
 }
 
 
-RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& x, 
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn, 
 			   RooAbsReal& _sigma, RooAbsReal& _rlife, 
 			   RooAbsReal& _sigmaSF, RooAbsReal& _rlifeSF,
 			   Bool_t nlo, Type type) : 
-  RooResolutionModel(name,title,x), 
+  RooResolutionModel(name,title,xIn), 
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
   ssf("ssf","Sigma Scale Factor",this,_sigmaSF),

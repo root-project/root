@@ -581,7 +581,7 @@ RooNDKeysPdf::mirrorDataSet() const
     
     for (Int_t m=0; m<Int_t(mjdx.size()); m++) {
       Int_t size1 = 1 << m;
-      Int_t size2 = 1 << m+1;
+      Int_t size2 = 1 << (m+1);
       // copy all previous mirror points
       for (Int_t l=size1; l<size2; ++l) { 
 	epoints[l] = epoints[l-size1];

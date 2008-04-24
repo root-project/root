@@ -55,7 +55,7 @@ Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) c
   switch(code) {
   case 1: 
     {
-      if(c == 0.0) return 0;
+      if(c == 0.0) return (x.max(rangeName) - x.min(rangeName));
       return ( exp( c*x.max(rangeName) ) - exp( c*x.min(rangeName) ) )/c;
     }
   }

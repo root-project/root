@@ -52,7 +52,9 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 Double_t RooGaussian::evaluate() const
 {
   Double_t arg= x - mean;  
-  return exp(-0.5*arg*arg/(sigma*sigma)) ;
+  Double_t ret =exp(-0.5*arg*arg/(sigma*sigma)) ;
+  //cout << "gauss(x=" << x << ",mean=" << mean << ",sigma=" << sigma << ")=" << ret << endl ;
+  return ret ;
 }
 
 
@@ -69,11 +71,16 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
 {
   assert(code==1) ;
 
+
   static const Double_t root2 = sqrt(2.) ;
   static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   
   Double_t xscale = root2*sigma;
-  return rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
+  Double_t ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
+
+  //cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ")=" << ret << endl ;
+  return ret ;
+
 }
 
 

@@ -20,7 +20,6 @@
 #include "RooRealProxy.h"
 #include "RooAbsReal.h"
 #include "RooDataSet.h"
-#include "Riostream.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 class Roo2DKeysPdf : public RooAbsPdf 

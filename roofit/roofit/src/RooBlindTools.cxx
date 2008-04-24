@@ -35,7 +35,7 @@ ClassImp(RooBlindTools)
 //----------------
 // Constructors --
 //----------------
-RooBlindTools::RooBlindTools(const char *stSeed, blindMode Mode,
+RooBlindTools::RooBlindTools(const char *stSeedIn, blindMode Mode,
 			     Double_t centralValue, Double_t sigmaOffset, Bool_t s2bMode) :
 
   _PrecisionOffsetScale(sigmaOffset),
@@ -43,7 +43,7 @@ RooBlindTools::RooBlindTools(const char *stSeed, blindMode Mode,
   _mode(Mode),
   _s2bMode(s2bMode)
 {
-  setup(stSeed);
+  setup(stSeedIn);
 }
 
 
@@ -59,10 +59,10 @@ RooBlindTools::RooBlindTools(const RooBlindTools& blindTool):
 
 
 
-void RooBlindTools::setup(const char *stSeed)
+void RooBlindTools::setup(const char *stSeedIn)
 {
 
-  _stSeed = stSeed;
+  _stSeed = stSeedIn;
 
   _DeltaZScale = 1.56;
 

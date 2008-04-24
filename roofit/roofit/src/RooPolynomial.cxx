@@ -130,7 +130,8 @@ Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) co
   assert(code==1) ;
 
   Double_t sum(_x.max(rangeName)-_x.min(rangeName)) ;
-
+  //cout << "RooPolynomial::aI(" << GetName() << ") range = " << _x.min(rangeName) << " - " << _x.max(rangeName) << endl ;
+  
   const RooArgSet* nset = _coefList.nset() ;
   Int_t order(_lowestOrder) ;
   _coefIter->Reset() ;
