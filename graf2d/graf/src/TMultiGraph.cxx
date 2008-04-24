@@ -1028,7 +1028,7 @@ void TMultiGraph::Paint(Option_t *option)
       if (fHistogram) {
          //cleanup in case of a previous unzoom
          if (fHistogram->GetMinimum() >= fHistogram->GetMaximum()) {
-            Int_t nch = strlen(fHistogram->GetXaxis()->GetTitle());
+            nch = strlen(fHistogram->GetXaxis()->GetTitle());
             firstx = fHistogram->GetXaxis()->GetFirst();
             lastx  = fHistogram->GetXaxis()->GetLast();
             if (nch) {
