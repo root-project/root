@@ -34,6 +34,13 @@
 #include "TString.h"
 #endif
 
+#ifndef __CINT__
+namespace std
+{
+   template<typename _Tp> struct iterator_traits;
+}
+#endif
+
 class TClass;
 class TObjectTable;
 class TVirtualMutex;
