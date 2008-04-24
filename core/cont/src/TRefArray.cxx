@@ -801,6 +801,7 @@ TRefArrayIter::TRefArrayIter(const TRefArrayIter &iter) : TIterator(iter)
    fArray     = iter.fArray;
    fDirection = iter.fDirection;
    fCursor    = iter.fCursor;
+   fCurCursor = iter.fCurCursor;
 }
 
 //______________________________________________________________________________
@@ -813,6 +814,7 @@ TIterator &TRefArrayIter::operator=(const TIterator &rhs)
       fArray     = rhs1.fArray;
       fDirection = rhs1.fDirection;
       fCursor    = rhs1.fCursor;
+      fCurCursor = rhs1.fCurCursor;
    }
    return *this;
 }
@@ -826,6 +828,7 @@ TRefArrayIter &TRefArrayIter::operator=(const TRefArrayIter &rhs)
       fArray     = rhs.fArray;
       fDirection = rhs.fDirection;
       fCursor    = rhs.fCursor;
+      fCurCursor = rhs.fCurCursor;
    }
    return *this;
 }
@@ -862,6 +865,8 @@ void TRefArrayIter::Reset()
       fCursor = 0;
    else
       fCursor = fArray->Capacity() - 1;
+   
+   fCurCursor = fCursor;
 }
 
 //______________________________________________________________________________
@@ -870,7 +875,7 @@ bool TRefArrayIter::operator!=(const TIterator &aIter) const
    // This operator compares two TIterator objects.
 
    if (nullptr == (&aIter))
-      return fCurCursor;
+      return (fCurCursor < fArray->Capacity());
 
    if (aIter.IsA() == TRefArrayIter::Class()) {
       const TRefArrayIter &iter(dynamic_cast<const TRefArrayIter &>(aIter));
@@ -885,7 +890,7 @@ bool TRefArrayIter::operator!=(const TRefArrayIter &aIter) const
    // This operator compares two TRefArrayIter objects.
 
    if (nullptr == (&aIter))
-      return fCurCursor;
+      return (fCurCursor < fArray->Capacity());
 
    return (fCurCursor != aIter.fCurCursor);
 }
