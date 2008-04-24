@@ -459,13 +459,11 @@ Int_t TOrdCollection::BinarySearch(TObject *obj)
 ClassImp(TOrdCollectionIter)
 
 //______________________________________________________________________________
-TOrdCollectionIter::TOrdCollectionIter(const TOrdCollection *col, Bool_t dir)
+TOrdCollectionIter::TOrdCollectionIter(const TOrdCollection *col, Bool_t dir): fCol(col), fDirection(dir)
 {
    // Create collection iterator. By default the iteration direction
    // is kIterForward. To go backward use kIterBackward.
 
-   fCol = col;
-   fDirection = dir;
    Reset();
 }
 
@@ -477,6 +475,7 @@ TOrdCollectionIter::TOrdCollectionIter(const TOrdCollectionIter &iter) : TIterat
    fCol       = iter.fCol;
    fDirection = iter.fDirection;
    fCursor    = iter.fCursor;
+   fCurCursor = iter.fCurCursor;
 }
 
 //______________________________________________________________________________
@@ -489,6 +488,7 @@ TIterator &TOrdCollectionIter::operator=(const TIterator &rhs)
       fCol       = rhs1.fCol;
       fDirection = rhs1.fDirection;
       fCursor    = rhs1.fCursor;
+      fCurCursor = rhs1.fCurCursor;
    }
    return *this;
 }
@@ -502,6 +502,7 @@ TOrdCollectionIter &TOrdCollectionIter::operator=(const TOrdCollectionIter &rhs)
       fCol       = rhs.fCol;
       fDirection = rhs.fDirection;
       fCursor    = rhs.fCursor;
+      fCurCursor = rhs.fCurCursor;
    }
    return *this;
 }
@@ -532,6 +533,8 @@ void TOrdCollectionIter::Reset()
       fCursor = 0;
    else
       fCursor = fCol->GetSize() - 1;
+   
+   fCurCursor = fCursor;
 }
 
 //______________________________________________________________________________
@@ -540,7 +543,7 @@ bool TOrdCollectionIter::operator!=(const TIterator &aIter) const
    // This operator compares two TIterator objects.
 
    if (nullptr == (&aIter))
-      return fCurCursor;
+      return (fCurCursor < fCol->GetSize());
 
    if (aIter.IsA() == TOrdCollectionIter::Class()) {
       const TOrdCollectionIter &iter(dynamic_cast<const TOrdCollectionIter &>(aIter));
@@ -555,7 +558,7 @@ bool TOrdCollectionIter::operator!=(const TOrdCollectionIter &aIter) const
    // This operator compares two TOrdCollectionIter objects.
 
    if (nullptr == (&aIter))
-      return fCurCursor;
+      return (fCurCursor < fCol->GetSize());
 
    return (fCurCursor != aIter.fCurCursor);
 }
