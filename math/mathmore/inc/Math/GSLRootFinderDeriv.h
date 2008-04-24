@@ -93,9 +93,9 @@ public:
    }
 #endif    
      
-   int SetFunction( const IGradFunction & f, double Root) { 
+   int SetFunction( const IGradFunction & f, double xstart) { 
       const void * p = &f; 
-      return SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), Root ); 
+      return SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), xstart ); 
    }
 
      
