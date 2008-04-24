@@ -159,7 +159,15 @@ public:
   static void setCacheCheck(Bool_t flag) ;
 
   // Evaluation error logging 
-  class EvalError ;
+  class EvalError {
+  public:
+    EvalError() { _msg[0] = 0 ; _srvval[0] = 0 ; }
+    EvalError(const EvalError& other) { strcpy(_msg,other._msg) ; strcpy(_srvval,other._srvval) ; } ;
+    void setMessage(const char* tmp) { strcpy(_msg,tmp) ; }
+    void setServerValues(const char* tmp) { strcpy(_srvval,tmp) ; }
+    char _msg[1024] ;
+    char _srvval[1024] ;
+  } ;
   static Bool_t evalErrorLoggingEnabled() { return _doLogEvalError ; }
   static void enableEvalErrorLogging(Bool_t flag) { _doLogEvalError = flag ; }
   void logEvalError(const char* message, const char* serverValueString=0) const ;
@@ -292,15 +300,6 @@ protected:
 private:
 
   static Bool_t _doLogEvalError ;
-  class EvalError {
-  public:
-    EvalError() { _msg[0] = 0 ; _srvval[0] = 0 ; }
-    EvalError(const EvalError& other) { strcpy(_msg,other._msg) ; strcpy(_srvval,other._srvval) ; } ;
-    void setMessage(const char* tmp) { strcpy(_msg,tmp) ; }
-    void setServerValues(const char* tmp) { strcpy(_srvval,tmp) ; }
-    char _msg[1024] ;
-    char _srvval[1024] ;
-  } ;
   static std::map<const RooAbsArg*,std::list<EvalError> > _evalErrorList ;
 
   Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
