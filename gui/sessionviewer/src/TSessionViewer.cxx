@@ -2403,7 +2403,7 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fFB->AddFrame(frmProg, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
    // total progress infos
    fFB->AddFrame(fTotal = new TGLabel(fFB,
-         " Estimated time left : 00:00:00 (--- events of --- processed) "),
+         " Estimated time left : 0 sec (--- events of --- processed) "),
          new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
    // progress rate infos
    fFB->AddFrame(fRate = new TGLabel(fFB,
@@ -2561,6 +2561,9 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
 
+   Long_t tt;
+   UInt_t hh=0, mm=0, ss=0;
+   char stm[256];
    // if no actual session, just return
    if (!fViewer->GetActDesc()->fProof)
       return;
@@ -2574,7 +2577,7 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
         TQueryDescription::kSessionQuerySubmitted) &&
        (fViewer->GetActDesc()->fActQuery->fStatus !=
         TQueryDescription::kSessionQueryRunning) ) {
-      fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
+      fTotal->SetText(" Estimated time left : 0 sec (0 events of 0 processed)        ");
       fRate->SetText(" Processing Rate : 0.0f events/sec   ");
       frmProg->Reset();
       fFB->Layout();
@@ -2626,14 +2629,38 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
       eta = ((Float_t)((Long_t)tdiff)*total/Float_t(processed) -
             Long_t(tdiff))/1000.;
 
+   tt = (Long_t)eta;
+   if (tt > 0) {
+      hh = (UInt_t)(tt / 3600);
+      mm = (UInt_t)((tt % 3600) / 60);
+      ss = (UInt_t)((tt % 3600) % 60);
+   }
+   if (hh)
+      sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+   else if (mm)
+      sprintf(stm, "%d min %d sec", mm, ss);
+   else
+      sprintf(stm, "%d sec", ss);
    if (processed == total) {
       // finished
-      buf = Form(" Processed : %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
+      tt = (Long_t(tdiff)/1000);
+      if (tt > 0) {
+         hh = (UInt_t)(tt / 3600);
+         mm = (UInt_t)((tt % 3600) / 60);
+         ss = (UInt_t)((tt % 3600) % 60);
+      }
+      if (hh)
+         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+      else if (mm)
+         sprintf(stm, "%d min %d sec", mm, ss);
+      else
+         sprintf(stm, "%d sec", ss);
+      buf = Form(" Processed : %lld events in %s", total, stm);
       fTotal->SetText(buf);
    } else {
       // update status infos
-      buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
-                 eta, processed, total);
+      buf = Form(" Estimated time left : %s (%lld events of %lld processed)        ",
+                 stm, processed, total);
       fTotal->SetText(buf);
    }
    if (processed > 0 && (Long_t)tdiff > 0) {
@@ -2663,6 +2690,9 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
 
+   Long_t tt;
+   UInt_t hh=0, mm=0, ss=0;
+   char stm[256];
    char cproc[80];
    Int_t status;
 
@@ -2697,7 +2727,7 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
    else if (status == kStopped)
       frmProg->SetBarColor("yellow");
    else if (status == -1 ) {
-      fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
+      fTotal->SetText(" Estimated time left : 0 sec (0 events of 0 processed)        ");
       fRate->SetText(" Processing Rate : 0.0f events/sec   ");
       frmProg->Reset();
       fFB->Layout();
@@ -2743,14 +2773,37 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
       eta = ((Float_t)((Long_t)tdiff)*total/(Float_t)(processed) -
             (Long_t)(tdiff))/1000.;
 
+   tt = (Long_t)eta;
+   if (tt > 0) {
+      hh = (UInt_t)(tt / 3600);
+      mm = (UInt_t)((tt % 3600) / 60);
+      ss = (UInt_t)((tt % 3600) % 60);
+   }
+   if (hh)
+      sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+   else if (mm)
+      sprintf(stm, "%d min %d sec", mm, ss);
+   else
+      sprintf(stm, "%d sec", ss);
    if ((processed != total) && (status == kRunning)) {
       // update status infos
-      buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
-                 eta, processed, total);
+      buf = Form(" Estimated time left : %s (%lld events of %lld processed)        ",
+                 stm, processed, total);
       fTotal->SetText(buf);
    } else {
-      buf = Form(" Processed : %ld events in %.1f sec", (Long_t)processed,
-                 (Long_t)tdiff/1000.0);
+      tt = (Long_t(tdiff)/1000);
+      if (tt > 0) {
+         hh = (UInt_t)(tt / 3600);
+         mm = (UInt_t)((tt % 3600) / 60);
+         ss = (UInt_t)((tt % 3600) % 60);
+      }
+      if (hh)
+         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+      else if (mm)
+         sprintf(stm, "%d min %d sec", mm, ss);
+      else
+         sprintf(stm, "%d sec", ss);
+      buf = Form(" Processed : %ld events in %s", (Long_t)processed, stm);
       strcat(buf, cproc);
       fTotal->SetText(buf);
    }
@@ -3255,7 +3308,7 @@ void TSessionQueryFrame::UpdateInfos()
          }
       }
       else {
-         fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
+         fTotal->SetText(" Estimated time left : 0 sec (0 events of 0 processed)        ");
          fRate->SetText(" Processing Rate : 0.0f events/sec   ");
          frmProg->Reset();
          fFB->Layout();
