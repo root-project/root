@@ -26,6 +26,7 @@
 #ifdef WIN32
 #include <io.h>
 #endif
+#include <string>
 #include <stdlib.h>
 #include <errno.h>
 
