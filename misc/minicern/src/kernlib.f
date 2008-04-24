@@ -56,8 +56,10 @@
 
       SUBROUTINE UBUNCH (MS,MT,NCHP)
       DIMENSION MS(99), MT(99), NCHP(9)
-      data iblan1/x'20202020'/
-      data mask1/x'000000ff'/
+*      data iblan1/x'20202020'/
+*      data mask1/x'000000ff'/
+      data iblan1/538976288/
+      data mask1/255/
       NCH = NCHP(1)
       IF (NCH) 91,39,11
    11 NWT = ISHFT (NCH,-2)
