@@ -886,6 +886,7 @@ void THnSparse::Scale(Double_t c)
 {
    // Scale contents and errors of this histogram by c:
    // this = this * c
+   // It does not modify the histogram's number of entries.
 
 
    Int_t* coord = new Int_t[fNdimensions];
@@ -902,8 +903,6 @@ void THnSparse::Scale(Double_t c)
          SetBinError(coord, c * err);
       }
    }
-
-   SetEntries(c * GetEntries());
 
    delete [] coord;
 }

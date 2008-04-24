@@ -7302,7 +7302,10 @@ Double_t TH1::GetBinError(Int_t bin) const
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-   if (fSumw2.fN) return TMath::Sqrt(fSumw2.fArray[bin]);
+   if (fSumw2.fN) {
+      Double_t err2 = fSumw2.fArray[bin];
+      return TMath::Sqrt(err2);
+   }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
    return TMath::Sqrt(error2);
 }
