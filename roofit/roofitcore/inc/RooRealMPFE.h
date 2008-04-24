@@ -48,7 +48,8 @@ public:
   enum State { Initialize,Client,Server,Inline } ;
   State _state ;
 
-  enum Message { SendReal, SendCat, Calculate, Retrieve, ReturnValue, Terminate, ConstOpt, Verbose } ;
+  enum Message { SendReal=0, SendCat=1, Calculate=2, Retrieve=3, ReturnValue=4, Terminate=5, 
+		 ConstOpt=6, Verbose=7, RetrieveErrors=8, SendError=9, LogEvalError=10 } ;
   
   void initialize() ; 
   void initVars() ;
@@ -63,6 +64,8 @@ public:
   Bool_t _verboseServer ;
   Bool_t _inlineMode ;
   mutable Bool_t _forceCalc ;
+  mutable Bool_t _remoteEvalErrorLoggingState ;
+  Int_t  _pid ;            // PID of child process
 
   Int_t _pipeToClient[2] ; // Pipe to client process
   Int_t _pipeToServer[2] ; // Pipe to server process

@@ -146,6 +146,22 @@ RooSimGenContext::~RooSimGenContext()
 }
 
 
+void RooSimGenContext::attach(const RooArgSet& args) 
+{
+  // Attach the index category clone to the event
+  if (_idxCat->isDerived()) {
+    _idxCat->recursiveRedirectServers(args,kTRUE) ;
+  }
+
+  // Forward initGenerator call to all components
+  RooAbsGenContext* gc ;
+  TIterator* iter = _gcList.MakeIterator() ;
+  while((gc=(RooAbsGenContext*)iter->Next())){
+    gc->attach(args) ;
+  }
+  delete iter;
+  
+}
 
 void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 {
@@ -211,6 +227,25 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
   RooAbsGenContext* gc ;
   while((gc=(RooAbsGenContext*)iter->Next())) {
     gc->setProtoDataOrder(lut) ;
+  }
+  delete iter ;
+}
+
+void RooSimGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
+{
+  RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
+  os << indent << "--- RooSimGenContext ---" << endl ;
+  os << indent << "Using PDF ";
+  _pdf->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
+  os << indent << "List of component generators" << endl ;
+
+  TString indent2(indent) ;
+  indent2.Append("    ") ;
+
+  TIterator* iter = _gcList.MakeIterator() ;
+  RooAbsGenContext* gc ;
+  while((gc=(RooAbsGenContext*)iter->Next())) {
+    gc->printMultiline(os,content,verbose,indent2);
   }
   delete iter ;
 }

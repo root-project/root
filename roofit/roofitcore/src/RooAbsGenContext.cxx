@@ -19,6 +19,8 @@
 
 #include "RooFit.h"
 
+#include "TClass.h"
+
 #include "RooAbsGenContext.h"
 #include "RooAbsGenContext.h"
 #include "RooAbsPdf.h"
@@ -93,6 +95,13 @@ RooAbsGenContext::~RooAbsGenContext()
   if(0 != _theEvent) delete _theEvent;
   if (_protoOrder) delete[] _protoOrder ;
 }
+
+
+void RooAbsGenContext::attach(const RooArgSet& /*params*/) 
+{
+  // Empty
+}
+
 
 RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
   // Generate the specified number of events with nEvents>0 and
@@ -195,18 +204,44 @@ void RooAbsGenContext::initGenerator(const RooArgSet&) {
   // The base class provides a do-nothing default implementation.
 }
 
-void RooAbsGenContext::printToStream(ostream &os, PrintOption opt, TString indent) const
+
+void RooAbsGenContext::printName(ostream& os) const 
 {
-  oneLinePrint(os,*this);
-  if(opt >= Standard) {
-    PrintOption less= lessVerbose(opt);
-    TString deeper(indent);
-    indent.Append("  ");
-    os << indent << "  Generator of ";
-    _theEvent->printToStream(os,less,deeper);
-    os << indent << "  Prototype variables are ";
-    _protoVars.printToStream(os,less,deeper);
-  }
+  os << GetName() ;
+}
+
+void RooAbsGenContext::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooAbsGenContext::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooAbsGenContext::printArgs(ostream& os) const 
+{
+  os << "[ " ;    
+  TIterator* iter = _theEvent->createIterator() ;
+  RooAbsArg* arg ;
+  Bool_t first(kTRUE) ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (first) {
+      first=kFALSE ;
+    } else {
+      os << "," ;
+    }
+    os << arg->GetName() ;
+  }    
+  os << "]" ;
+  delete iter ;
+}
+
+
+
+void RooAbsGenContext::printMultiline(ostream &/*os*/, Int_t /*contents*/, Bool_t /*verbose*/, TString /*indent*/) const
+{
 }
 
 
@@ -228,4 +263,17 @@ void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
       _protoOrder[i] = lut[i] ;
     }
   }
+}
+
+Int_t RooAbsGenContext::defaultPrintContents(Option_t* /*opt*/) const 
+{
+  return kName|kClassName|kValue ;
+}
+
+RooPrintable::StyleOption RooAbsGenContext::defaultPrintStyle(Option_t* opt) const 
+{
+  if (opt && TString(opt).Contains("v")) {
+    return kVerbose ;
+  } 
+  return kStandard ;
 }

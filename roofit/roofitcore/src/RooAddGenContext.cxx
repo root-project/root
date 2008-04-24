@@ -86,6 +86,19 @@ RooAddGenContext::~RooAddGenContext()
 }
 
 
+void RooAddGenContext::attach(const RooArgSet& args) 
+{
+  _pdf->recursiveRedirectServers(args) ;
+
+  // Forward initGenerator call to all components
+  TIterator* iter = _gcList.MakeIterator() ;
+  RooAbsGenContext* gc ;
+  while((gc=(RooAbsGenContext*)iter->Next())){
+    gc->attach(args) ;
+  }
+  delete iter ;
+}
+
 
 void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 {
@@ -138,5 +151,20 @@ void RooAddGenContext::setProtoDataOrder(Int_t* lut)
   Int_t i ;
   for (i=0 ; i<_nComp ; i++) {
     ((RooAbsGenContext*)_gcList.At(i))->setProtoDataOrder(lut) ;
+  }
+}
+
+void RooAddGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
+{
+  RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
+  os << indent << "--- RooAddGenContext ---" << endl ;
+  os << indent << "Using PDF ";
+  _pdf->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
+  
+  os << indent << "List of component generators" << endl ;
+  TString indent2(indent) ;
+  indent2.Append("    ") ;
+  for (Int_t i=0 ; i<_nComp ; i++) {
+    ((RooAbsGenContext*)_gcList.At(i))->printMultiline(os,content,verbose,indent2) ;
   }
 }

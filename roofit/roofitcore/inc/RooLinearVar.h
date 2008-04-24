@@ -51,7 +51,6 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   using RooAbsRealLValue::operator= ;
   using RooAbsRealLValue::setVal ;

@@ -86,7 +86,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 }
 
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t weight) :
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
   RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from an existing data collection (binned or unbinned)
@@ -110,12 +110,12 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // all missing dimensions will be projected.
 
   initialize() ;
-  add(data,(const RooFormulaVar*)0,weight) ;
+  add(data,(const RooFormulaVar*)0,wgt) ;
   appendToDir(this,kTRUE) ;
 }
 
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight) :
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
   RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
@@ -288,9 +288,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   appendToDir(this,kTRUE) ;
 
   // Transfer contents
-  RooArgSet set(*xvar) ;
-  if (yvar) set.add(*yvar) ;
-  if (zvar) set.add(*zvar) ;
+  RooArgSet vset(*xvar) ;
+  if (yvar) vset.add(*yvar) ;
+  if (zvar) vset.add(*zvar) ;
 
   Int_t ix(0),iy(0),iz(0) ;
   for (ix=0 ; ix < xvar->getBins() ; ix++) {
@@ -301,14 +301,14 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 	if (zvar) {
 	  for (iz=0 ; iz < zvar->getBins() ; iz++) {
 	    zvar->setBin(iz) ;
-	    add(set,histo->GetBinContent(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,2)) ;
+	    add(vset,histo->GetBinContent(ix+1+xmin,iy+1+ymin,iz+1+zmin)*wgt,TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin,iz+1+zmin)*wgt,2)) ;
 	  }
 	} else {
-	  add(set,histo->GetBinContent(ix+1+xmin,iy+1+ymin)*weight,TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin)*weight,2)) ;
+	  add(vset,histo->GetBinContent(ix+1+xmin,iy+1+ymin)*wgt,TMath::Power(histo->GetBinError(ix+1+xmin,iy+1+ymin)*wgt,2)) ;
 	}
       }
     } else {
-      add(set,histo->GetBinContent(ix+1+xmin)*weight,TMath::Power(histo->GetBinError(ix+1+xmin)*weight,2)) ;	    
+      add(vset,histo->GetBinContent(ix+1+xmin)*wgt,TMath::Power(histo->GetBinError(ix+1+xmin)*wgt,2)) ;	    
     }
   }  
   
@@ -379,17 +379,17 @@ void RooDataHist::initialize(Bool_t fillTree)
   Int_t ibin ;
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
     _iterator->Reset() ;
-    RooAbsLValue* arg ;
-    Int_t i(0), idx(0), tmp(ibin) ;
-    Double_t binVolume(1) ;
-    while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
-      idx  = tmp / _idxMult[i] ;
-      tmp -= idx*_idxMult[i++] ;
-      RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
+    RooAbsLValue* arg2 ;
+    Int_t j(0), idx(0), tmp(ibin) ;
+    Double_t theBinVolume(1) ;
+    while((arg2=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
+      idx  = tmp / _idxMult[j] ;
+      tmp -= idx*_idxMult[j++] ;
+      RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg2) ;
       arglv->setBin(idx) ;
-      binVolume *= arglv->getBinWidth(idx) ;
+      theBinVolume *= arglv->getBinWidth(idx) ;
     }
-    _binv[ibin] = binVolume ;
+    _binv[ibin] = theBinVolume ;
     Fill() ;
   }
 
@@ -791,7 +791,7 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOr
 
 
 
-void RooDataHist::add(const RooArgSet& row, Double_t weight, Double_t sumw2) 
+void RooDataHist::add(const RooArgSet& row, Double_t wgt, Double_t sumw2) 
 {
   // Increment the weight of the bin enclosing the coordinates
   // given by 'row' by the specified amount
@@ -799,14 +799,14 @@ void RooDataHist::add(const RooArgSet& row, Double_t weight, Double_t sumw2)
 
   _vars = row ;
   Int_t idx = calcTreeIndex() ;
-  _wgt[idx] += weight ;  
-  _sumw2[idx] += (sumw2>0?sumw2:weight*weight) ;
+  _wgt[idx] += wgt ;  
+  _sumw2[idx] += (sumw2>0?sumw2:wgt*wgt) ;
   _errLo[idx] = -1 ;
   _errHi[idx] = -1 ;
 }
 
 
-void RooDataHist::set(const RooArgSet& row, Double_t weight, Double_t wgtErrLo, Double_t wgtErrHi) 
+void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErrLo, Double_t wgtErrHi) 
 {
   // Increment the weight of the bin enclosing the coordinates
   // given by 'row' by the specified amount
@@ -814,13 +814,13 @@ void RooDataHist::set(const RooArgSet& row, Double_t weight, Double_t wgtErrLo, 
 
   _vars = row ;
   Int_t idx = calcTreeIndex() ;
-  _wgt[idx] = weight ;  
+  _wgt[idx] = wgt ;  
   _errLo[idx] = wgtErrLo ;  
   _errHi[idx] = wgtErrHi ;  
 }
 
 
-void RooDataHist::set(Double_t weight, Double_t wgtErr) 
+void RooDataHist::set(Double_t wgt, Double_t wgtErr) 
 {
   // Increment the weight of the bin enclosing the coordinates
   // given by 'row' by the specified amount
@@ -830,13 +830,13 @@ void RooDataHist::set(Double_t weight, Double_t wgtErr)
     _curIndex = calcTreeIndex() ;
   }
 
-  _wgt[_curIndex] = weight ;  
+  _wgt[_curIndex] = wgt ;  
   _errLo[_curIndex] = wgtErr ;  
   _errHi[_curIndex] = wgtErr ;  
 }
 
 
-void RooDataHist::set(const RooArgSet& row, Double_t weight, Double_t wgtErr) 
+void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErr) 
 {
   // Increment the weight of the bin enclosing the coordinates
   // given by 'row' by the specified amount
@@ -844,25 +844,25 @@ void RooDataHist::set(const RooArgSet& row, Double_t weight, Double_t wgtErr)
 
   _vars = row ;
   Int_t idx = calcTreeIndex() ;
-  _wgt[idx] = weight ;  
+  _wgt[idx] = wgt ;  
   _errLo[idx] = wgtErr ;  
   _errHi[idx] = wgtErr ;  
 }
 
 
-void RooDataHist::add(const RooAbsData& dset, const char* cut, Double_t weight) 
+void RooDataHist::add(const RooAbsData& dset, const char* cut, Double_t wgt) 
 {  
   // Add all data points contained in 'dset' to this data set with given weight.
   // Optional cut string expression selects the data points to be added and can
   // reference any variable contained in this data set
 
   RooFormulaVar cutVar("select",cut,*dset.get()) ;
-  add(dset,&cutVar,weight) ;
+  add(dset,&cutVar,wgt) ;
 }
 
 
 
-void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Double_t weight) 
+void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Double_t wgt) 
 {
   // Add all data points contained in 'dset' to this data set with given weight.
   // Optional RooFormulaVar pointer selects the data points to be added.
@@ -887,7 +887,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
   for (i=0 ; i<dset.numEntries() ; i++) {
     const RooArgSet* row = dset.get(i) ;
     if (!cloneVar || cloneVar->getVal()) {
-      add(*row,weight*dset.weight()) ;
+      add(*row,wgt*dset.weight()) ;
     }
   }
 
@@ -911,8 +911,8 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
   Double_t total(0) ;
   for (i=0 ; i<_arrSize ; i++) {
     
-    Double_t binVolume = correctForBinSize ? _binv[i] : 1.0 ;
-    total += _wgt[i]/binVolume ;
+    Double_t theBinVolume = correctForBinSize ? _binv[i] : 1.0 ;
+    total += _wgt[i]/theBinVolume ;
   }
 
   return total ;
@@ -977,8 +977,8 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     }
     
     if (!skip) {
-      Double_t binVolume = correctForBinSize ? (*_pbinv)[ibin] : 1.0 ;
-      total += _wgt[ibin]/binVolume ;
+      Double_t theBinVolume = correctForBinSize ? (*_pbinv)[ibin] : 1.0 ;
+      total += _wgt[ibin]/theBinVolume ;
     }
   }
   delete ssIter ;
@@ -1018,17 +1018,17 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
     _iterator->Reset() ;
     RooAbsLValue* arg ;
-    Int_t i(0), idx(0), tmp(ibin) ;
-    Double_t binVolume(1) ;
+    Int_t j(0), idx(0), tmp(ibin) ;
+    Double_t theBinVolume(1) ;
     while((arg=dynamic_cast<RooAbsLValue*>(_iterator->Next()))) {
-      idx  = tmp / _idxMult[i] ;
-      tmp -= idx*_idxMult[i++] ;
-      if (selDim[i-1]) {
+      idx  = tmp / _idxMult[j] ;
+      tmp -= idx*_idxMult[j++] ;
+      if (selDim[j-1]) {
 	RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
-	binVolume *= arglv->getBinWidth(idx) ;
+	theBinVolume *= arglv->getBinWidth(idx) ;
       }
     }
-    (*pbinv)[ibin] = binVolume ;
+    (*pbinv)[ibin] = theBinVolume ;
   }
 
   delete[] selDim ;

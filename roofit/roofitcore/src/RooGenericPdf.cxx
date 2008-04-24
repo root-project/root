@@ -116,14 +116,15 @@ Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList,
 
 
 
-void RooGenericPdf::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooGenericPdf::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print info about this object to the specified stream. 
-  RooAbsPdf::printToStream(os,opt,indent);
-  if(opt >= Verbose) {
+  RooAbsPdf::printMultiline(os,content,verbose,indent);
+  if (verbose) {
+    os << " --- RooGenericPdf --- " << endl ;
     indent.Append("  ");
-    os << indent;
-    _formula.printToStream(os,opt,indent);
+    os << indent ;
+    _formula.printMultiline(os,content,verbose,indent);
   }
 }
 

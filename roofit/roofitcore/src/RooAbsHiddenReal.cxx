@@ -69,19 +69,10 @@ RooAbsHiddenReal::~RooAbsHiddenReal()
 }
 
 
-void RooAbsHiddenReal::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooAbsHiddenReal::printValue(ostream& os) const
 {
-  // Special version of printToStream that doesn't reveal the objects value
-
-  if (isHidden()) {
-    // Print current value and definition of formula
-    os << indent << "RooAbsHiddenReal: " << GetName() << " : (value hidden) " ;
-    if(!_unit.IsNull()) os << ' ' << _unit;
-    printAttribList(os) ;
-    os << endl ;
-  } else {
-    RooAbsReal::printToStream(os,opt,indent) ;
-  }
+  // Special version of printValue that doesn't reveal the objects value
+  os << "(hidden)" ;
 } 
 
 

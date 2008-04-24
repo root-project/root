@@ -79,8 +79,9 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-		     Bool_t extended, const char* cutRange, const char* addCoefRange,Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),cutRange,addCoefRange,nCPU,verbose,splitCutRange),
+		       Bool_t extended, const char* cutRange, const char* addCoefRange,
+		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
+  RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
    _etype(RooAbsData::Poisson), _extended(extended)
 {
   
@@ -88,8 +89,9 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-		     const RooArgSet& projDeps, Bool_t extended, const char* cutRange, const char* addCoefRange, Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,data,projDeps,cutRange,addCoefRange,nCPU,verbose,splitCutRange),
+		       const RooArgSet& projDeps, Bool_t extended, const char* cutRange, const char* addCoefRange, 
+		       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
+  RooAbsOptTestStatistic(name,title,pdf,data,projDeps,cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
   _etype(RooAbsData::Poisson), _extended(extended)
 {
   
@@ -109,27 +111,29 @@ RooChi2Var::~RooChi2Var()
 }
 
 
-Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const 
+Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
   Int_t i ;
   Double_t result(0) ;
 
+  RooAbsPdf* pdfClone = (RooAbsPdf*)_funcClone ;
+
   // Determine total number of data events to be used for PDF normalization
   Double_t nDataTotal ;
   if (_extended) {
-    nDataTotal = _pdfClone->expectedEvents(_dataClone->get()) ;
+    nDataTotal = pdfClone->expectedEvents(_dataClone->get()) ;
   } else {
     nDataTotal = _dataClone->sumEntries() ;
   }
 
   // Loop over bins of dataset
   RooDataHist* data = (RooDataHist*) _dataClone ;
-    for (i=firstEvent ; i<lastEvent ; i++) {
+    for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
     data->get(i);
     Double_t nData = data->weight() ;
-    Double_t nPdf = _pdfClone->getVal(_normSet) * nDataTotal * data->binVolume() ;
+    Double_t nPdf = pdfClone->getVal(_normSet) * nDataTotal * data->binVolume() ;
 
     Double_t eExt = nPdf-nData ;
 

@@ -50,10 +50,10 @@
 ClassImp(RooFormulaVar)
 
 
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents) : 
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents) : 
   RooAbsReal(name,title), 
   _actualVars("actualVars","Variables used by formula expression",this),
-  _formula(0), _formExpr(formula)
+  _formula(0), _formExpr(inFormula)
 {  
   // Constructor with formula expression and list of input variables
 //   RooFormula tmpFormula(name,formula,dependents) ;
@@ -131,14 +131,14 @@ Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList,
 
 
 
-void RooFormulaVar::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooFormulaVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Print info about this object to the specified stream.   
-  RooAbsReal::printToStream(os,opt,indent);
-  if(opt >= Verbose) {
+  RooAbsReal::printMultiline(os,contents,verbose,indent);
+  if(verbose) {
     indent.Append("  ");
     os << indent;
-    formula().printToStream(os,opt,indent);
+    formula().printMultiline(os,contents,verbose,indent);
   }
 }
 

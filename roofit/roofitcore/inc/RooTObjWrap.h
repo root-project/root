@@ -24,18 +24,18 @@ class RooTObjWrap : public TNamed {
 public:
 
   RooTObjWrap(Bool_t isArray=kFALSE) : _isArray(isArray) {} ;
-  RooTObjWrap(TObject* obj, Bool_t isArray=kFALSE) : TNamed(), _isArray(isArray) { _list.Add(obj) ; } 
+  RooTObjWrap(TObject* inObj, Bool_t isArray=kFALSE) : TNamed(), _isArray(isArray) { _list.Add(inObj) ; } 
   RooTObjWrap(const RooTObjWrap& other) : TNamed(other), _list(other._list) {}
   virtual ~RooTObjWrap() {} ;
 
   TObject* obj() const { return _list.At(0) ; }
   const RooLinkedList& objList() const { return _list ; }
 
-  void setObj(TObject* obj) { 
+  void setObj(TObject* inObj) { 
      if (!_isArray) {
          _list.Clear() ;
      }
-    _list.Add(obj) ; 
+    _list.Add(inObj) ; 
    }
 
 protected:

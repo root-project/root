@@ -32,16 +32,16 @@
 ClassImp(RooRealProxy)
 ;
 
-RooRealProxy::RooRealProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsReal& ref,
+RooRealProxy::RooRealProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsReal& ref,
 			   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
-  RooArgProxy(name, desc, owner,ref, valueServer, shapeServer, ownArg)
+  RooArgProxy(inName, desc, owner,ref, valueServer, shapeServer, ownArg)
 {
   // Constructor with owner and proxied real-valued object
 }
 
 
-RooRealProxy::RooRealProxy(const char* name, RooAbsArg* owner, const RooRealProxy& other) : 
-  RooArgProxy(name, owner, other) 
+RooRealProxy::RooRealProxy(const char* inName, RooAbsArg* owner, const RooRealProxy& other) : 
+  RooArgProxy(inName, owner, other) 
 {
   // Copy constructor 
 }
@@ -56,11 +56,11 @@ RooRealProxy::~RooRealProxy()
 RooAbsRealLValue* RooRealProxy::lvptr() const 
 {
   // Assert that the held arg is an LValue
-  RooAbsRealLValue* lvptr = (RooAbsRealLValue*)dynamic_cast<const RooAbsRealLValue*>(_arg) ;
-  if (!lvptr) {
+  RooAbsRealLValue* Lvptr = (RooAbsRealLValue*)dynamic_cast<const RooAbsRealLValue*>(_arg) ;
+  if (!Lvptr) {
     cout << "RooRealProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
     assert(0) ;
   }
-  return lvptr ;
+  return Lvptr ;
 }
 

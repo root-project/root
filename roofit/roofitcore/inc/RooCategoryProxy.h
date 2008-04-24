@@ -45,7 +45,7 @@ public:
 
   // LValue operations 
   RooCategoryProxy& operator=(Int_t index) { lvptr()->setIndex(index) ; return *this ; }
-  RooCategoryProxy& operator=(const char* label) { lvptr()->setLabel(label) ; return *this ; }
+  RooCategoryProxy& operator=(const char* _label) { lvptr()->setLabel(_label) ; return *this ; }
 
 protected:
 

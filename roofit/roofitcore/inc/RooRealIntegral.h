@@ -43,13 +43,13 @@ public:
 
   Bool_t isValid() const { return _valid; }
 
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
+  void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
 protected:
 
   mutable Bool_t _valid;
 
-  enum OperMode { Hybrid, Analytic, PassThrough } ;
+  enum IntOperMode { Hybrid, Analytic, PassThrough } ;
   //friend class RooAbsPdf ;
 
   Bool_t initNumIntegrator() const;
@@ -89,13 +89,15 @@ protected:
   TIterator* _sumCatIter ; //!
   
   Int_t _mode ;
-  OperMode _operMode ;
+  IntOperMode _intOperMode ;   // integration operation mode
 
   mutable Bool_t _restartNumIntEngine ; //! do not persist
   mutable RooAbsIntegrator* _numIntEngine ;  //! do not persist
   mutable RooAbsFunc *_numIntegrand;         //! do not persist
 
   TNamed* _rangeName ; 
+
+  virtual void operModeHook() ; // cache operation mode
 
   ClassDef(RooRealIntegral,1) // Real-valued variable representing an integral over a RooAbsReal object
 };

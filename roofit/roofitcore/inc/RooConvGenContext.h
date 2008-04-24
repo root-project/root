@@ -41,7 +41,9 @@ public:
 
   virtual void setProtoDataOrder(Int_t* lut) ;
 
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
+  virtual void attach(const RooArgSet& params) ;
+
+  virtual void printMultiline(ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
 
 protected:

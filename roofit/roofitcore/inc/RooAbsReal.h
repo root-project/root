@@ -19,8 +19,8 @@
 #include "RooAbsArg.h"
 #include "RooCmdArg.h"
 #include "RooCurve.h"
+#include "RooArgSet.h"
 
-class RooArgSet ;
 class RooArgList ;
 class RooDataSet ;
 class RooPlot;
@@ -36,6 +36,10 @@ class TH1;
 class TH1F;
 class TH2F;
 class TH3F;
+
+#include <list>
+#include <string>
+#include <iostream>
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -110,6 +114,9 @@ public:
   void setIntegratorConfig() ;
   void setIntegratorConfig(const RooNumIntConfig& config) ;
 
+  virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),Bool_t force=kTRUE) ;
+  virtual void fixAddCoefRange(const char* rangeName=0,Bool_t force=kTRUE) ;
+
 
 public:
 
@@ -129,7 +136,7 @@ public:
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
-		     Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0) const;
+		     Double_t scaleFactor= 1, const RooArgSet *projectedVars= 0, Bool_t scaling=kTRUE) const;
 
   // Create 1,2, and 3D histograms from and fill it
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar,
@@ -146,10 +153,22 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
-
+  virtual void printValue(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   static void setCacheCheck(Bool_t flag) ;
+
+  // Evaluation error logging 
+  class EvalError ;
+  static Bool_t evalErrorLoggingEnabled() { return _doLogEvalError ; }
+  static void enableEvalErrorLogging(Bool_t flag) { _doLogEvalError = flag ; }
+  void logEvalError(const char* message, const char* serverValueString=0) const ;
+  static void printEvalErrors(ostream&os=std::cout, Int_t maxPerNode=10000000) ;
+  static Int_t numEvalErrors() ;
+  static Int_t numEvalErrorItems() { return _evalErrorList.size() ; }
+  static std::map<const RooAbsArg*,std::list<EvalError> >::const_iterator evalErrorIter() { return _evalErrorList.begin() ; }
+
+  static void clearEvalErrorLog() ;
 
 protected:
 
@@ -189,6 +208,11 @@ protected:
 
   Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
 		   const RooArgSet& set) const ;
+
+
+  RooAbsReal* createIntObj(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const ;
+  void findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& innerObs, const char* rangeName) const ;
+
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
@@ -234,13 +258,15 @@ protected:
   friend class RooAbsOptGoodnessOfFit ;
   
   struct PlotOpt {
-   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), projSet(0), precision(1e-3), shiftToZero(kFALSE),
-               projDataSet(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),projectionRangeName(0),
-               curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.) {} ;
+   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(kFALSE), projSet(0), precision(1e-3), 
+               shiftToZero(kFALSE),projDataSet(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
+               projectionRangeName(0),curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
+               numCPU(1),interleave(kTRUE) {} ;
    Option_t* drawOptions ;
    Double_t scaleFactor ;	 
    ScaleType stype ;
    const RooAbsData* projData ;
+   Bool_t binProjData ;
    const RooArgSet* projSet ;
    Double_t precision ;
    Bool_t shiftToZero ;
@@ -255,6 +281,8 @@ protected:
    const char* addToCurveName ;
    Double_t addToWgtSelf ;
    Double_t addToWgtOther ;
+   Int_t    numCPU ;
+   Bool_t interleave ;
   } ;
 
   // Plot implementation functions
@@ -262,6 +290,18 @@ protected:
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const;
 
 private:
+
+  static Bool_t _doLogEvalError ;
+  class EvalError {
+  public:
+    EvalError() { _msg[0] = 0 ; _srvval[0] = 0 ; }
+    EvalError(const EvalError& other) { strcpy(_msg,other._msg) ; strcpy(_srvval,other._srvval) ; } ;
+    void setMessage(const char* tmp) { strcpy(_msg,tmp) ; }
+    void setServerValues(const char* tmp) { strcpy(_srvval,tmp) ; }
+    char _msg[1024] ;
+    char _srvval[1024] ;
+  } ;
+  static std::map<const RooAbsArg*,std::list<EvalError> > _evalErrorList ;
 
   Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
 

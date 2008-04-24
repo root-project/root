@@ -25,8 +25,8 @@
 ClassImp(RooThreshEntry)
 ;
 
-RooThreshEntry::RooThreshEntry(Double_t thresh, const RooCatType& cat) : 
-  _thresh(thresh), _cat(cat) 
+RooThreshEntry::RooThreshEntry(Double_t inThresh, const RooCatType& inCat) : 
+  _thresh(inThresh), _cat(inCat) 
 {
 }
 

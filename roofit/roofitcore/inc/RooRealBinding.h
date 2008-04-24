@@ -31,6 +31,8 @@ public:
   virtual Double_t getMinLimit(UInt_t dimension) const;
   virtual Double_t getMaxLimit(UInt_t dimension) const;
 
+  virtual const char* getName() const ; 
+
 protected:
   void loadValues(const Double_t xvector[]) const;
   const RooAbsReal *_func;

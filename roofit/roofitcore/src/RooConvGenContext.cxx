@@ -183,22 +183,29 @@ RooConvGenContext::~RooConvGenContext()
 }
 
 
-void RooConvGenContext::printToStream(ostream &os, PrintOption opt, TString indent) const
+void RooConvGenContext::attach(const RooArgSet& args) 
 {
-  RooAbsGenContext::printToStream(os,opt,indent);
-}
+  // Find convolution variable in input and output sets
+  RooRealVar* cvModel = (RooRealVar*) _modelVars->find(_convVarName) ;
+  RooRealVar* cvPdf   = (RooRealVar*) _pdfVars->find(_convVarName) ;
 
+  // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable  
+  RooArgSet* pdfCommon = (RooArgSet*) args.selectCommon(*_pdfVars) ;
+  pdfCommon->remove(*cvPdf,kTRUE,kTRUE) ;
+
+  RooArgSet* modelCommon = (RooArgSet*) args.selectCommon(*_modelVars) ;
+  modelCommon->remove(*cvModel,kTRUE,kTRUE) ;
+
+  _pdfGen->attach(*pdfCommon) ;
+  _modelGen->attach(*modelCommon) ;  
+
+  delete pdfCommon ;
+  delete modelCommon ;
+}
 
 void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 {
   // Initialize genertor for this event holder
-
-//   cout << "RooConvGenContext::initGenerator(" << this << "," << GetName() << ") _pdfVars = " << _pdfVars << endl ; 
-//   _pdfVars->Print("v") ;
-//   cout << "RooConvGenContext::initGenerator(" << this << "," << GetName() << ") _modelVars = " << _modelVars << endl ; 
-//   _modelVars->Print("v") ;
-//   cout << "RooConvGenContext::initGenerator(" << this << "," << GetName() << ") theEvent = " << &theEvent << endl ; 
-//   theEvent.Print("v") ;
 
   // Find convolution variable in input and output sets
   _cvModel = (RooRealVar*) _modelVars->find(_convVarName) ;
@@ -215,7 +222,6 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
   modelCommon->remove(*_cvModel,kTRUE,kTRUE) ;
   _modelVars->replace(*modelCommon) ;
   delete modelCommon ;
-
 
   // Initialize component generators
   _pdfGen->initGenerator(*_pdfVars) ;
@@ -264,4 +270,17 @@ void RooConvGenContext::setProtoDataOrder(Int_t* lut)
   RooAbsGenContext::setProtoDataOrder(lut) ;
   _modelGen->setProtoDataOrder(lut) ;
   _pdfGen->setProtoDataOrder(lut) ;
+}
+
+void RooConvGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
+{
+  RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
+  os << indent << "--- RooConvGenContext ---" << endl ;
+  os << indent << "List of component generators" << endl ;
+
+  TString indent2(indent) ;
+  indent2.Append("    ") ;
+  
+  _modelGen->printMultiline(os,content,verbose,indent2);
+  _pdfGen->printMultiline(os,content,verbose,indent2);
 }

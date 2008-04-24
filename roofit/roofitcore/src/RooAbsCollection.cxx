@@ -348,10 +348,10 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent) {
   _ownCont= kTRUE;
 
   // add a pointer to a clone of this variable to our list (we now own it!)
-  RooAbsArg *clone= (RooAbsArg*)var.Clone();
-  if(0 != clone) _list.Add((RooAbsArg*)clone);
+  RooAbsArg *clone2= (RooAbsArg*)var.Clone();
+  if(0 != clone2) _list.Add((RooAbsArg*)clone2);
 
-  return clone;
+  return clone2;
 }
 
 
@@ -699,72 +699,101 @@ string RooAbsCollection::contentsString() const
 {
   string retVal ;
   ostringstream ostr(retVal) ;
-  printToStream(ostr,InLine,"") ;
+  ostr << *this ;
   return retVal ;
 }
 
 
-void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this argument set to the specified stream.
-  //
-  //  Standard: OneLine description of each argument
-  //     Shape: Standard description of each argument
-  //   Verbose: Shape description of each argument
 
-  // we cannot use oneLinePrint() since we do not inherit from TNamed
-  if (opt==OneLine || opt==InLine) {
-    os << "(" ;
-    TIterator *iter= createIterator();
-    RooAbsArg *arg ;
-    Bool_t first(kTRUE) ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      if (!first) {
-	os << "," ;
-      } else {
-	first = kFALSE ;
-      }
-      os << arg->GetName() ;
-    }
-    os << ")" ;
-    if (opt==OneLine) {
-      os << endl ;
-    }
-    delete iter ;
-    return ;
-  }
-
-
-  os << ClassName() << "::" << GetName() << ":" << (_ownCont?" (Owning contents)":"") << endl;
-  if(opt >= Standard) {
-    TIterator *iterator= createIterator();
-    int index= 0;
-    RooAbsArg *next = 0;
-    opt= lessVerbose(opt);
-    TString deeper(indent);
-    deeper.Append("     ");
-
-    // Adjust the with of the name field to fit the largest name, if requesed
-    Int_t maxNameLen(1) ;
-    Int_t nameFieldLength = RooAbsArg::_nameLength ;
-    if (nameFieldLength==0) {
-      while((next=(RooAbsArg*)iterator->Next())) {
-	Int_t len = strlen(next->GetName()) ;
-	if (len>maxNameLen) maxNameLen = len ;
-      }
-      iterator->Reset() ;
-      RooAbsArg::nameFieldLength(maxNameLen+1) ;
-    }
-
-    while((0 != (next= (RooAbsArg*)iterator->Next()))) {
-      os << indent << setw(3) << ++index << ") ";
-      next->printToStream(os,opt,deeper);
-    }
-    delete iterator;
-
-    // Reset name field length, if modified
-    if (nameFieldLength==0) RooAbsArg::nameFieldLength(0) ;
-  }
+void RooAbsCollection::printName(ostream& os) const 
+{
+  os << GetName() ;
 }
+
+void RooAbsCollection::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooAbsCollection::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+
+Int_t RooAbsCollection::defaultPrintContents(Option_t* opt) const 
+{
+  if (opt && TString(opt)=="I") {
+    return kValue ;
+  }
+  if (opt && TString(opt).Contains("v")) {
+    return kAddress|kName|kArgs|kClassName|kValue|kTitle ;
+  }
+  return kName|kClassName|kValue|kExtras ;
+}
+
+RooPrintable::StyleOption RooAbsCollection::defaultPrintStyle(Option_t* opt) const 
+{
+  if (opt && TString(opt).Contains("v")) {
+    return kVerbose ;
+  } 
+  return kStandard ;
+}
+
+
+
+
+void RooAbsCollection::printValue(ostream& os) const
+{
+  Bool_t first2(kTRUE) ;
+  os << "(" ;
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (!first2) {
+      os << "," ;
+    } else {
+      first2 = kFALSE ;
+    }
+    os << arg->GetName() ;
+    
+  }
+  os << ")" ;  
+  delete iter ;
+}
+
+void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbose*/, TString indent) const
+{
+  os << indent << ClassName() << "::" << GetName() << ":" << (_ownCont?" (Owning contents)":"") << endl;
+
+  TIterator *iterator= createIterator();
+  int index= 0;
+  RooAbsArg *next = 0;
+  TString deeper(indent);
+  deeper.Append("     ");
+  
+  // Adjust the with of the name field to fit the largest name, if requesed
+  Int_t maxNameLen(1) ;
+  Int_t nameFieldLengthSaved = RooAbsArg::_nameLength ;
+  if (nameFieldLengthSaved==0) {
+    while((next=(RooAbsArg*)iterator->Next())) {
+      Int_t len = strlen(next->GetName()) ;
+      if (len>maxNameLen) maxNameLen = len ;
+    }
+    iterator->Reset() ;
+    RooPrintable::nameFieldLength(maxNameLen+1) ;
+  }
+  
+  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
+    os << indent << setw(3) << ++index << ") ";
+    next->printStream(os,contents,kSingleLine,"");
+  }
+  delete iterator;
+  
+  // Reset name field length, if modified
+  if (nameFieldLengthSaved!=0) RooPrintable::nameFieldLength(0) ;
+}
+
 
 
 void RooAbsCollection::dump() const 

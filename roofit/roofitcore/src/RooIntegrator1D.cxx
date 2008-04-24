@@ -219,8 +219,8 @@ Bool_t RooIntegrator1D::checkLimits() const {
     _xmax= integrand()->getMaxLimit(0);
   }
   _range= _xmax - _xmin;
-  if(_range <= 0) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+  if(_range < 0) {
+    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min >= max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
     return kFALSE;
   }
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
@@ -287,7 +287,7 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;
   }
 
-  oocoutW((TObject*)0,Integration) << "RooIntegrator1D::integral: integral over range (" << _xmin << "," << _xmax << ") did not converge after " 
+  oocoutW((TObject*)0,Integration) << "RooIntegrator1D::integral: integral of " << _function->getName() << " over range (" << _xmin << "," << _xmax << ") did not converge after " 
 				   << _maxSteps << " steps" << endl;
   for(j= 1; j <= _maxSteps; j++) {
     ooccoutW((TObject*)0,Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;

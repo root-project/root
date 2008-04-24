@@ -141,24 +141,24 @@ RooFormulaVar* RooResolutionModel::identity()
 }
 
 
-RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbsArg* owner) const
+RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooAbsArg* owner) const
 {
   // Instantiate a clone of this resolution model representing a convolution with given
   // basis function. The owners object name is incorporated in the clones name
   // to avoid multiple convolution objects with the same name in complex PDF structures.
 
   // Check that primary variable of basis functions is our convolution variable  
-  if (basis->getParameter(0) != x.absArg()) {
+  if (inBasis->getParameter(0) != x.absArg()) {
     coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this  
 			  << ") convolution parameter of basis function and PDF don't match" << endl 
-			  << "basis->findServer(0) = " << basis->findServer(0) << endl 
+			  << "basis->findServer(0) = " << inBasis->findServer(0) << endl 
 			  << "x.absArg()           = " << x.absArg() << endl ;
     return 0 ;
   }
 
   TString newName(GetName()) ;
   newName.Append("_conv_") ;
-  newName.Append(basis->GetName()) ;
+  newName.Append(inBasis->GetName()) ;
   newName.Append("_[") ;
   newName.Append(owner->GetName()) ;
   newName.Append("]") ;
@@ -167,17 +167,17 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbs
   
   TString newTitle(conv->GetTitle()) ;
   newTitle.Append(" convoluted with basis function ") ;
-  newTitle.Append(basis->GetName()) ;
+  newTitle.Append(inBasis->GetName()) ;
   conv->SetTitle(newTitle.Data()) ;
 
-  conv->changeBasis(basis) ;
+  conv->changeBasis(inBasis) ;
 
   return conv ;
 }
 
 
 
-void RooResolutionModel::changeBasis(RooFormulaVar* basis) 
+void RooResolutionModel::changeBasis(RooFormulaVar* inBasis) 
 {
   // Change the basis function we convolute with.
   // For one-time use by convolution() only.
@@ -198,7 +198,7 @@ void RooResolutionModel::changeBasis(RooFormulaVar* basis)
   _ownBasis = kFALSE ;
 
   // Change basis pointer and update client-server link
-  _basis = basis ;
+  _basis = inBasis ;
   if (_basis) {
     TIterator* bsIter = _basis->serverIterator() ;
     RooAbsArg* basisServer ;
@@ -208,7 +208,7 @@ void RooResolutionModel::changeBasis(RooFormulaVar* basis)
     delete bsIter ;
   }
 
-  _basisCode = basis?basisCode(basis->GetTitle()):0 ;
+  _basisCode = inBasis?basisCode(inBasis->GetTitle()):0 ;
 }
 
 
@@ -321,21 +321,21 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 }
 
 
-void RooResolutionModel::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooResolutionModel::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print info about this object to the specified stream. In addition to the info
-  // from RooAbsArg::printToStream() we add:
+  // from RooAbsArg::printStream() we add:
   //
   //     Shape : value, units, plot range
   //   Verbose : default binning and print label
 
-  RooAbsPdf::printToStream(os,opt,indent) ;
+  RooAbsPdf::printMultiline(os,content,verbose,indent) ;
 
-  if(opt >= Verbose) {
+  if(verbose) {
     os << indent << "--- RooResolutionModel ---" << endl;
     os << indent << "basis function = " ; 
     if (_basis) {
-      _basis->printToStream(os,opt,indent) ;
+      _basis->printStream(os,kName|kAddress|kTitle,kSingleLine,indent) ;
     } else {
       os << "<none>" << endl ;
     }

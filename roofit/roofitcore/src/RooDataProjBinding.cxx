@@ -122,12 +122,22 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
       }
     }
 
+//     _real->Print("v") ;
+//     ((RooAbsReal*)_real)->printCompactTree() ;
+
+//     RooArgSet* params = _real->getObservables(_data->get()) ;
+
     for (i=0 ; i<nEvt ; i++) {
       _data->get(i) ;
 
       Double_t wgt = _data->weight() ;
-      if (wgt) {
-	result += wgt * _real->getVal(_nset) ;
+      Double_t ret ;
+      if (wgt) {	
+	ret = _real->getVal(_nset) ;
+	result += wgt * ret ;
+// 	cout << "ret[" << i << "] = " ;
+// 	params->printStream(cout,RooPrintable::kName|RooPrintable::kValue,RooPrintable::kStandard) ;
+// 	cout << " = " << ret << endl ;
 	wgtSum += wgt ;
       }      
     }

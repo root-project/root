@@ -31,16 +31,16 @@
 ClassImp(RooCategoryProxy)
 ;
 
-RooCategoryProxy::RooCategoryProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
+RooCategoryProxy::RooCategoryProxy(const char* Name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
 				   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
-  RooArgProxy(name, desc, owner, ref, valueServer, shapeServer, ownArg)
+  RooArgProxy(Name, desc, owner, ref, valueServer, shapeServer, ownArg)
 {
   // Constructor with owner and proxied category object
 }
 
 
-RooCategoryProxy::RooCategoryProxy(const char* name, RooAbsArg* owner, const RooCategoryProxy& other) : 
-  RooArgProxy(name, owner, other) 
+RooCategoryProxy::RooCategoryProxy(const char* Name, RooAbsArg* owner, const RooCategoryProxy& other) : 
+  RooArgProxy(Name, owner, other) 
 {
   // Copy constructor
 }
@@ -54,11 +54,11 @@ RooCategoryProxy::~RooCategoryProxy()
 RooAbsCategoryLValue* RooCategoryProxy::lvptr() const 
 {
   // Assert that the held arg is an LValue
-  RooAbsCategoryLValue* lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
-  if (!lvptr) {
+  RooAbsCategoryLValue* Lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
+  if (!Lvptr) {
     cout << "RooCategoryProxy(" << name() << ")::INTERNAL error, expected " << _arg->GetName() << " to be an lvalue" << endl ;
     assert(0) ;
   }
-  return lvptr ;
+  return Lvptr ;
 }
 

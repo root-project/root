@@ -85,9 +85,9 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
 
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, 
-				   const RooResolutionModel& model, RooRealVar& convVar) :
+				   const RooResolutionModel& model, RooRealVar& cVar) :
   RooAbsPdf(name,title), _isCopy(kFALSE),
-  _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&convVar),
+  _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&cVar),
   _convSet("convSet","Set of resModel X basisFunc convolutions",this),
   _convNormSet(0), _convSetIter(_convSet.createIterator()),
   _coefNormMgr(this,10),
@@ -95,7 +95,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
 {
   // Constructor. The supplied resolution model must be constructed with the same
   // convoluted variable as this physics model ('convVar')
-  _convNormSet = new RooArgSet(convVar,"convNormSet") ;
+  _convNormSet = new RooArgSet(cVar,"convNormSet") ;
 }
 
 
@@ -597,38 +597,37 @@ void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 
 RooArgSet* RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const 
 {
-  RooArgSet* coefVars = getParameters((RooArgSet*)0) ;
-  TIterator* iter = coefVars->createIterator() ;
+  RooArgSet* cVars = getParameters((RooArgSet*)0) ;
+  TIterator* iter = cVars->createIterator() ;
   RooAbsArg* arg ;
   Int_t i ;
   while(((arg=(RooAbsArg*)iter->Next()))) {
     for (i=0 ; i<_convSet.getSize() ; i++) {
       if (_convSet.at(i)->dependsOn(*arg)) {
-	coefVars->remove(*arg,kTRUE) ;
+	cVars->remove(*arg,kTRUE) ;
       }
     }
   }
   delete iter ;  
-  return coefVars ;
+  return cVars ;
 }
 
 
 
 
-void RooAbsAnaConvPdf::printToStream(ostream& os, PrintOption opt, TString indent) const {
+void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const {
   // Print info about this object to the specified stream. In addition to the info
-  // from RooAbsPdf::printToStream() we add:
+  // from RooAbsPdf::printStream() we add:
   //
   //   Verbose : detailed information on convolution integrals
 
-  RooAbsPdf::printToStream(os,opt,indent);
-  if(opt >= Verbose) {
-    os << indent << "--- RooAbsAnaConvPdf ---" << endl;
-    TIterator* iter = _convSet.createIterator() ;
-    RooResolutionModel* conv ;
-    while (((conv=(RooResolutionModel*)iter->Next()))) {
-      conv->printToStream(os,Verbose,"    ") ;
-    }
+  RooAbsPdf::printMultiline(os,contents,verbose,indent);
+
+  os << indent << "--- RooAbsAnaConvPdf ---" << endl;
+  TIterator* iter = _convSet.createIterator() ;
+  RooResolutionModel* conv ;
+  while (((conv=(RooResolutionModel*)iter->Next()))) {
+    conv->printMultiline(os,contents,verbose,indent) ;
   }
 }
 

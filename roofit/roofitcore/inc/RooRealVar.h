@@ -62,9 +62,11 @@ public:
   void setMin(const char* name, Double_t value) ;
   void setMax(const char* name, Double_t value) ;
   void setRange(const char* name, Double_t min, Double_t max) ;
+  void setRange(const char* name, RooAbsReal& min, RooAbsReal& max) ;
   inline void setMin(Double_t value) { setMin(0,value) ; }
   inline void setMax(Double_t value) { setMax(0,value) ; }
   inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
+  inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(0,min,max) ; }
 
   void setBins(Int_t nBins) { setBinning(RooUniformBinning(getMin(),getMax(),nBins)) ; } 
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
@@ -95,8 +97,14 @@ public:
   // We implement a fundamental type of AbsArg that can be stored in a dataset
   inline virtual Bool_t isFundamental() const { return kTRUE; }
 
+  // Force to be a leaf-node of any expression tree, even if we have (shape) servers
+  // virtual Bool_t isDerived() const { return kFALSE ; }
+
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printValue(ostream& os) const ;
+  virtual void printExtras(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
 
   TString* format(const RooCmdArg& formatArg) const ;
@@ -127,6 +135,7 @@ public:
   Double_t _asymErrLo ; // Low side of asymmetric error associated with current value
   Double_t _asymErrHi ; // High side of asymmetric error associated with current value
   RooAbsBinning* _binning ; 
+  RooLinkedList _altNonSharedBinning ; // Non-shareable alternative binnings
 
   inline RooRealVarSharedProperties* sharedProp() const {
      if (!_sharedProp) {

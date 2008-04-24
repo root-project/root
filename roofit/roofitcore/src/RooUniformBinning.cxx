@@ -145,10 +145,3 @@ Double_t* RooUniformBinning::array() const
 }
 
 
-void RooUniformBinning::printToStream(ostream &os, PrintOption opt, TString indent) const
-{
-  if (opt==Standard) {
-    os << indent << "B(" << _nbins << ")" << endl ;
-  }
-}
-

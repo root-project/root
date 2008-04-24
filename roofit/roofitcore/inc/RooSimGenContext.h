@@ -31,6 +31,11 @@ public:
   virtual ~RooSimGenContext();
   virtual void setProtoDataOrder(Int_t* lut) ;
 
+  virtual void attach(const RooArgSet& params) ;
+
+  virtual void printMultiline(ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+
+
 protected:
 
   virtual void initGenerator(const RooArgSet &theEvent);

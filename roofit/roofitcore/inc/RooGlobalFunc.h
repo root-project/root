@@ -37,8 +37,8 @@ RooCmdArg DrawOption(const char* opt) ;
 RooCmdArg Normalization(Double_t scaleFactor) ;
 RooCmdArg Slice(const RooArgSet& sliceSet) ;
 RooCmdArg Project(const RooArgSet& projSet) ;
-RooCmdArg ProjWData(const RooAbsData& projData) ;
-RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData) ;
+RooCmdArg ProjWData(const RooAbsData& projData, Bool_t binData=kFALSE) ;
+RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, Bool_t binData=kFALSE) ;
 RooCmdArg Asymmetry(const RooCategory& cat) ;
 RooCmdArg Precision(Double_t prec) ;
 RooCmdArg ShiftToZero() ;
@@ -76,7 +76,7 @@ RooCmdArg RefreshNorm() ;
 // RooChi2Var::ctor arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(RooDataHist::ErrorType) ;
-RooCmdArg NumCPU(Int_t nCPU) ;
+RooCmdArg NumCPU(Int_t nCPU, Bool_t interleave=kFALSE) ;
 
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
@@ -114,6 +114,9 @@ RooCmdArg Minos(Bool_t flag=kTRUE) ;
 RooCmdArg Minos(const RooArgSet& minosArgs) ;
 RooCmdArg SplitRange(Bool_t flag=kTRUE) ;
 RooCmdArg SumCoefRange(const char* rangeName) ;
+RooCmdArg Constrain(const RooArgSet& params) ;
+RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
+RooCmdArg PrintEvalErrors(Int_t numErrors) ;
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
@@ -135,6 +138,7 @@ RooCmdArg NumEvents(Int_t numEvents) ;
 RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
 RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
 RooCmdArg AxisLabel(const char* name) ;
+RooCmdArg Scaling(Bool_t flag) ; 
 
 // RooAbsReal::createIntegral arguments
 RooCmdArg NormSet(const RooArgSet& nset) ;

@@ -75,14 +75,14 @@ ClassImp(RooNumConvolution)
 ;
 
 
-RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& pdf, RooAbsReal& resmodel, const RooNumConvolution* proto) : 
+RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& inPdf, RooAbsReal& resmodel, const RooNumConvolution* proto) : 
   RooAbsReal(name,title), 
   _init(kFALSE),
   _convIntConfig(RooNumIntConfig::defaultConfig()),
   _integrand(0),
   _integrator(0),
   _origVar("origVar","Original Convolution variable",this,convVar),
-  _origPdf("origPdf","Original Input PDF",this,pdf),
+  _origPdf("origPdf","Original Input PDF",this,inPdf),
   _origModel("origModel","Original Resolution model",this,resmodel),
   _ownedClonedPdfSet("ownedClonePdfSet"),
   _ownedClonedModelSet("ownedCloneModelSet"),

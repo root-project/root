@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <stdlib.h>
+#include "TClass.h"
 #include "RooCatType.h"
 
 #include "Riostream.h"
@@ -41,11 +42,24 @@ void RooCatType::SetName(const Text_t* name)
   strncpy(_label,name,255) ;
 }
 
-void RooCatType::printToStream(ostream& os, PrintOption /*opt*/, TString /*indent*/) const {
-  // Print info about this category type to the specified stream. We only have a
-  // OneLine output format.
 
-  // we don't use oneLinePrint() since GetTitle() is empty.
-  os << ClassName() << "::" << GetName() << ": Value = " << getVal() << endl;
+void RooCatType::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooCatType::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooCatType::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooCatType::printValue(ostream& os) const
+{
+  os << getVal() ;
 }
 

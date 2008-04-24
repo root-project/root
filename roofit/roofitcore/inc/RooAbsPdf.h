@@ -124,10 +124,15 @@ public:
 			      Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
   virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
 
+  // Constraint management
+  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, const RooArgSet& /*constrainedParams*/) const { return 0 ; }
+  virtual RooArgSet* getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const ;
   
   // Project p.d.f into lower dimensional p.d.f
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
 
+  // Create cumulative density function from p.d.f
+  RooAbsReal* createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
@@ -154,15 +159,13 @@ public:
   virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printValue(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
   Bool_t isSelectedComp() const ;
-
-  virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),Bool_t force=kTRUE) ;
-  virtual void fixAddCoefRange(const char* rangeName=0,Bool_t force=kTRUE) ;
 
   virtual Double_t extendedTerm(UInt_t observedEvents, const RooArgSet* nset=0) const ;
 
@@ -222,7 +225,7 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem(RooAbsReal& norm) : _norm(&norm) {} ;
-    void operModeHook(RooAbsArg::OperMode) {} ;
+    void operModeHook(RooAbsArg::OperMode) ;
     virtual ~CacheElem() ; 
     virtual RooArgList containedArgs(Action) { return RooArgList(*_norm) ; }
     RooAbsReal* _norm ;

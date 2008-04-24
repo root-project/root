@@ -152,7 +152,7 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 }
 
 
-Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& defaultConfig)
+Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
   // Add a configuration section for a particular integrator. Integrator name and capabilities are
   // automatically determined from instance passed as 'proto'. The defaultConfig object is associated
@@ -183,7 +183,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
   }
   
   // Store default configuration parameters
-  RooArgSet* config = (RooArgSet*) defaultConfig.snapshot() ;
+  RooArgSet* config = (RooArgSet*) inDefaultConfig.snapshot() ;
   config->setName(name) ;
   _configSets.Add(config) ;
 
@@ -232,49 +232,33 @@ void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
 }
 
 
-void RooNumIntConfig::printToStream(ostream &os, PrintOption opt, TString indent) const
+void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
 {
-  // Print contents of configuration information to stream os at level of verbosity
-  // specified by 'opt'
-
-  switch(opt) {
-  case InLine:
-    os << indent << "RooNumIntConfig" ;
-  case OneLine:
-    os << indent << endl ;
-    break ;
-
-  case Shape:
-    break ;
-
-  case Standard:
-    os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
-    if (_printEvalCounter) {
-      os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
-    }
-
-    os << indent << "1-D integration method: " << _method1D.getLabel() ;
-    if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
-      os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
-    } else {
-      os << endl ;
-    }
-    os << indent << "2-D integration method: " << _method2D.getLabel() ;
-    if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
-      os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
-    } else {
-      os << endl ;
-    }
-    os << indent << "N-D integration method: " << _methodND.getLabel() ;
-    if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
-      os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
-    } else {
-      os << endl ;
-    }
-    break ;
-
-
-  case Verbose:
+  os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
+  if (_printEvalCounter) {
+    os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
+  }
+  
+  os << indent << "1-D integration method: " << _method1D.getLabel() ;
+  if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
+    os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
+  } else {
+    os << endl ;
+  }
+  os << indent << "2-D integration method: " << _method2D.getLabel() ;
+  if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
+    os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
+  } else {
+    os << endl ;
+  }
+  os << indent << "N-D integration method: " << _methodND.getLabel() ;
+  if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
+    os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
+  } else {
+    os << endl ;
+  }
+  
+  if (verbose) {
     os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;;
     if (_printEvalCounter) {
       os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
@@ -326,6 +310,5 @@ void RooNumIntConfig::printToStream(ostream &os, PrintOption opt, TString indent
     }
 
     delete cIter ;
-    break ;
   }
 }

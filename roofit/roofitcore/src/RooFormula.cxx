@@ -347,24 +347,34 @@ RooFormula::DefinedVariable(TString &name) {
 }
 
 
-void RooFormula::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this argument set to the specified stream.
-  //
-  //   OneLine: use RooPrintable::oneLinePrint()
-  //  Standard: our formula
-  //   Verbose: formula and list of actual dependents
+void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const {
+  os << indent << "--- RooFormula ---" << endl;
+  os << indent << "  Formula: \"" << GetTitle() << "\"" << endl;
+  indent.Append("  ");
+  os << indent << actualDependents() << endl ;
+}
 
-  if(opt == Standard) {
-    os << indent << GetTitle() << endl;
-  }
-  else {
-    oneLinePrint(os,*this);
-    if(opt == Verbose) {
-      os << indent << "--- RooFormula ---" << endl;
-      os << indent << "  Formula: \"" << GetTitle() << "\"" << endl;
-      indent.Append("  ");
-      os << indent;
-      actualDependents().printToStream(os,lessVerbose(opt),indent);
-    }
-  }
+void RooFormula::printValue(ostream& os) const 
+{
+  os << const_cast<RooFormula*>(this)->eval(0) ;
+}
+
+void RooFormula::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooFormula::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooFormula::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooFormula::printArgs(ostream& os) const 
+{
+  os << "[ actualVars=" << _actual << " ]" ;
 }

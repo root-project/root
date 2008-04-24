@@ -28,13 +28,11 @@
 ClassImp(RooPlotable)
 ;
 
-void RooPlotable::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  if(opt >= Verbose) {
-    os << indent << "--- RooPlotable ---" << endl;
-    os << indent << "  y-axis min = " << getYAxisMin() << endl
-       << indent << "  y-axis max = " << getYAxisMax() << endl
-       << indent << "  y-axis label \"" << getYAxisLabel() << "\"" << endl;
-  }
+void RooPlotable::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const {
+  os << indent << "--- RooPlotable ---" << endl;
+  os << indent << "  y-axis min = " << getYAxisMin() << endl
+     << indent << "  y-axis max = " << getYAxisMax() << endl
+     << indent << "  y-axis label \"" << getYAxisLabel() << "\"" << endl;
 }
 
 TObject *RooPlotable::crossCast() {

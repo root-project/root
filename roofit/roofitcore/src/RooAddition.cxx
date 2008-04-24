@@ -30,6 +30,7 @@
 
 #include "RooAddition.h"
 #include "RooAbsReal.h"
+#include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNLLVar.h"
@@ -127,7 +128,6 @@ RooAddition::RooAddition(const RooAddition& other, const char* name) :
   _set2("set2",this,other._set2)
 {
   // Copy constructor
-  // Copy constructor
   _setIter1 = _set1.createIterator() ;
   if (other._setIter2) {
     _setIter2 = _set2.createIterator() ;
@@ -154,6 +154,11 @@ Double_t RooAddition::evaluate() const
   const RooArgSet* nset = _set1.nset() ;
 
   _setIter1->Reset() ;
+
+  if (_setIter2 && _set2.getSize()==0) {
+    delete _setIter2 ;
+    _setIter2=0 ;
+  }
 
   if (!_setIter2) {
 

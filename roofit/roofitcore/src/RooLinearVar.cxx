@@ -173,15 +173,6 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-void RooLinearVar::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this object to the specified stream.
-
-  RooAbsReal::printToStream(os,opt,indent);
-  if(opt >= Verbose) {
-    os << indent << "--- RooLinearVar ---" << endl;
-  }
-}
-
 
  RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 
 {

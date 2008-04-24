@@ -50,7 +50,7 @@ public:
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
 
-  virtual void print(ostream& os) const ;
+  virtual void print(ostream& os, Bool_t addContents=kFALSE) const ;
 
   RooSetProxy& operator=(const RooArgSet& other) ;
   

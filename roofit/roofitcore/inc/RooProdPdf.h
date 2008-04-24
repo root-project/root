@@ -73,6 +73,9 @@ public:
   virtual void generateEvent(Int_t code);  
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
+  // Constraint management
+  virtual RooArgSet* getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const ;
+
 protected:
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;

@@ -43,8 +43,3 @@ RooTable::~RooTable()
 {
 }
 
-
-void RooTable::printToStream(ostream& os, PrintOption /*opt*/, TString indent) const
-{
-  os << indent << "RooTable" << endl ;
-}

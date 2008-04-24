@@ -36,7 +36,7 @@
 #include "RooRangeBinning.h"
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
-
+#include "RooParamBinning.h"
 
 
 ClassImp(RooRealVar)
@@ -101,6 +101,21 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 
   _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
   _binning = other._binning->clone() ;
+  _binning->insertHook(*this) ;
+
+  //cout << "RooRealVar::cctor(this = " << this << " name = " << GetName() << ", other = " << &other << ")" << endl ;
+  
+  RooAbsBinning* ab ;
+  TIterator* iter = other._altNonSharedBinning.MakeIterator() ;
+  while((ab=(RooAbsBinning*)iter->Next())) {
+    RooAbsBinning* abc = ab->clone() ;
+    //cout << "cloning binning " << ab << " into " << abc << endl ;
+    _altNonSharedBinning.Add(abc) ;
+    abc->insertHook(*this) ;
+  }
+
+  
+  
 }
 
 
@@ -108,6 +123,8 @@ RooRealVar::~RooRealVar()
 {
   // Destructor
   delete _binning ;
+  _altNonSharedBinning.Delete() ;
+
   if (_sharedProp) {
     _sharedPropList.unregisterProperties(_sharedProp) ;
   }
@@ -169,25 +186,17 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
     return *_binning ;
   }
   
-  // Check if binning with this name has been created already
-  RooAbsBinning* binning = (RooAbsBinning*) (sharedProp()->_altBinning).FindObject(name) ;
+  // Check if non-shared binning with this name has been created already
+  RooAbsBinning* binning = (RooAbsBinning*) _altNonSharedBinning.FindObject(name) ;
   if (binning) {
     return *binning ;
   }
 
-  // If binning is not found, check for it in (live) ancestors in cloning history
-//   RooLinkedList ancestors = getCloningAncestors() ;
-//   TIterator* ancIter = ancestors.MakeIterator() ;
-//   RooRealVar* anc ;
-//   while((anc=(RooRealVar*)ancIter->Next())) {
-//     if (instanceList().isLive(anc) && anc->hasBinning(name)) {
-//       cout << "RooRealVar::getBinning(" << GetName() << ") INFO: this instance of " <<  GetName() << "(" << this << ") has no range named '" 
-// 	   << name << "' but cloning ancestor " << anc << " does, using ancestor range" << endl ;
-//       delete ancIter ;
-//       return anc->getBinning(name,kFALSE,kFALSE) ;
-//     }
-//   }
-//   delete ancIter ;
+  // Check if binning with this name has been created already
+  binning = (RooAbsBinning*) (sharedProp()->_altBinning).FindObject(name) ;
+  if (binning) {
+    return *binning ;
+  }
 
 
   // Return default binning if requested binning doesn't exist
@@ -211,14 +220,21 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
 void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name) 
 {
   if (!name) {
-    if (_binning) delete _binning ;
+    if (_binning) {
+      _binning->removeHook(*this) ;
+      delete _binning ;
+    }
     _binning = binning.clone() ;
+    _binning->insertHook(*this) ;
   } else {
 
+    RooLinkedList* altBinning = binning.isShareable() ? &(sharedProp()->_altBinning) : &_altNonSharedBinning ;
+
     // Remove any old binning with this name
-    RooAbsBinning* oldBinning = (RooAbsBinning*) (sharedProp()->_altBinning).FindObject(name) ;
+    RooAbsBinning* oldBinning = (RooAbsBinning*) altBinning->FindObject(name) ;
     if (oldBinning) {
-      sharedProp()->_altBinning.Remove(oldBinning) ;
+      altBinning->Remove(oldBinning) ;
+      oldBinning->removeHook(*this) ;
       delete oldBinning ;
     }
 
@@ -226,8 +242,9 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
     RooAbsBinning* newBinning = binning.clone() ;
     newBinning->SetName(name) ;
     newBinning->SetTitle(name) ;
-    sharedProp()->_altBinning.Add(newBinning) ;
-
+    newBinning->insertHook(*this) ;
+    altBinning->Add(newBinning) ;
+    
   }
   
 
@@ -309,6 +326,12 @@ void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
   setShapeDirty() ;  
 }
 
+
+void RooRealVar::setRange(const char* name, RooAbsReal& min, RooAbsReal& max) 
+{
+  RooParamBinning pb(min,max,100) ;
+  setBinning(pb,name) ;
+}
 
 
 Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
@@ -509,21 +532,65 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this object to the specified stream. In addition to the info
-  // from RooAbsRealLValue::printToStream() we add:
-  //
-  //   Verbose : fit range and error
+void RooRealVar::printValue(ostream& os) const 
+{
+  os << getVal() ;
+}
 
-  RooAbsRealLValue::printToStream(os,opt,indent);
-  if(opt >= Verbose) {
-    os << indent << "--- RooRealVar ---" << endl;
-    TString unit(_unit);
-    if(!unit.IsNull()) unit.Prepend(' ');
-    if(opt >= Verbose) {
-      os << indent << "  Error = " << getError() << unit << endl;
-    }
+void RooRealVar::printExtras(ostream& os) const
+{
+  if(hasError() && !hasAsymError()) {
+    os << " +/- " << getError() ;
+  } else if (hasAsymError()) {
+    os << " +/- (" << getAsymErrorLo() << "," << getAsymErrorHi() << ")" ;
   }
+
+  // Append limits if not constants
+  if (isConstant()) {
+    os << "C " ;
+  }      
+
+  // Append fit limits
+  os << "L(" ;
+  if(hasMin()) {
+    os << getMin();
+  }
+  else {
+    os << "-INF";
+  }
+  if(hasMax()) {
+    os << " - " << getMax() ;
+  }
+  else {
+    os << " - +INF";
+  }
+  os << ") " ;
+  
+  if (getBins()!=100) {
+    os << "B(" << getBins() << ") " ;
+  }
+  
+  // Add comment with unit, if unit exists
+  if (!_unit.IsNull())
+    os << "// [" << getUnit() << "]" ;
+  
+}
+
+Int_t RooRealVar::defaultPrintContents(Option_t* opt) const 
+{
+  if (opt && TString(opt)=="I") {
+    return kName|kClassName|kValue ;
+  }
+  return kName|kClassName|kValue|kExtras ;
+}
+
+void RooRealVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+{
+  RooAbsRealLValue::printMultiline(os,contents,verbose,indent);
+  os << indent << "--- RooRealVar ---" << endl;
+  TString unit(_unit);
+  if(!unit.IsNull()) unit.Prepend(' ');
+  os << indent << "  Error = " << getError() << unit << endl;
 }
 
 
@@ -739,9 +806,9 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     if (branch) {     
       t.SetBranchAddress(errName,&_error) ;
     } else {
-      TString format(errName);
-      format.Append("/D");
-      t.Branch(errName, &_error, (const Text_t*)format, bufSize);
+      TString format2(errName);
+      format2.Append("/D");
+      t.Branch(errName, &_error, (const Text_t*)format2, bufSize);
     }
   }
 
@@ -753,9 +820,9 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     if (lobranch) {     
       t.SetBranchAddress(loName,&_asymErrLo) ;
     } else {
-      TString format(loName);
-      format.Append("/D");
-      t.Branch(loName, &_asymErrLo, (const Text_t*)format, bufSize);
+      TString format2(loName);
+      format2.Append("/D");
+      t.Branch(loName, &_asymErrLo, (const Text_t*)format2, bufSize);
     }
 
     TString hiName(GetName()) ;
@@ -764,9 +831,9 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
     if (hibranch) {     
       t.SetBranchAddress(hiName,&_asymErrHi) ;
     } else {
-      TString format(hiName);
-      format.Append("/D");
-      t.Branch(hiName, &_asymErrHi, (const Text_t*)format, bufSize);
+      TString format2(hiName);
+      format2.Append("/D");
+      t.Branch(hiName, &_asymErrHi, (const Text_t*)format2, bufSize);
     }
   }
 }

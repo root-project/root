@@ -77,8 +77,8 @@ RooAddModel::RooAddModel() :
 
 
 
-RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, Bool_t ownPdfList) :
-  RooResolutionModel(name,title,((RooResolutionModel*)pdfList.at(0))->convVar()),
+RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, Bool_t ownPdfList) :
+  RooResolutionModel(name,title,((RooResolutionModel*)inPdfList.at(0))->convVar()),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _projectCoefs(kFALSE),
@@ -97,7 +97,7 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   //
   // All PDFs must inherit from RooAbsPdf. All coefficients must inherit from RooAbsReal
 
-  if (pdfList.getSize()>coefList.getSize()+1) {
+  if (inPdfList.getSize()>inCoefList.getSize()+1) {
     coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() 
 			  << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
     assert(0) ;
@@ -107,8 +107,8 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   _coefIter = _coefList.createIterator() ;
  
   // Constructor with N PDFs and N or N-1 coefs
-  TIterator* pdfIter = pdfList.createIterator() ;
-  TIterator* coefIter = coefList.createIterator() ;
+  TIterator* pdfIter = inPdfList.createIterator() ;
+  TIterator* coefIter = inCoefList.createIterator() ;
   RooAbsPdf* pdf ;
   RooAbsReal* coef ;
 
@@ -216,7 +216,7 @@ void RooAddModel::fixCoefRange(const char* rangeName)
 
 
 
-RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* owner) const
+RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* owner) const
 {
   // Instantiate a clone of this resolution model representing a convolution with given
   // basis function. The owners object name is incorporated in the clones name
@@ -225,44 +225,44 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* basis, RooAbsArg* ow
   // RooAddModel will clone all the component models to create a composite convolution object
 
   // Check that primary variable of basis functions is our convolution variable  
-  if (basis->findServer(0) != x.absArg()) {
+  if (inBasis->findServer(0) != x.absArg()) {
     coutE(InputArguments) << "RooAddModel::convolution(" << GetName() 
 			  << ") convolution parameter of basis function and PDF don't match" << endl ;
-    ccoutE(InputArguments) << "basis->findServer(0) = " << basis->findServer(0) << " " << basis->findServer(0)->GetName() << endl ;
+    ccoutE(InputArguments) << "basis->findServer(0) = " << inBasis->findServer(0) << " " << inBasis->findServer(0)->GetName() << endl ;
     ccoutE(InputArguments) << "x.absArg()           = " << x.absArg() << " " << x.absArg()->GetName() << endl ;
-    basis->Print("v") ;
+    inBasis->Print("v") ;
     return 0 ;
   }
 
   TString newName(GetName()) ;
   newName.Append("_conv_") ;
-  newName.Append(basis->GetName()) ;
+  newName.Append(inBasis->GetName()) ;
   newName.Append("_[") ;
   newName.Append(owner->GetName()) ;
   newName.Append("]") ;
 
   TString newTitle(GetTitle()) ;
   newTitle.Append(" convoluted with basis function ") ;
-  newTitle.Append(basis->GetName()) ;
+  newTitle.Append(inBasis->GetName()) ;
 
   _pdfIter->Reset() ;
   RooResolutionModel* model ;
   RooArgList modelList ;
   while((model = (RooResolutionModel*)_pdfIter->Next())) {       
     // Create component convolution
-    RooResolutionModel* conv = model->convolution(basis,owner) ;    
+    RooResolutionModel* conv = model->convolution(inBasis,owner) ;    
     modelList.add(*conv) ;
   }
 
   _coefIter->Reset() ;
   RooAbsReal* coef ;
-  RooArgList coefList ;  
+  RooArgList theCoefList ;  
   while((coef = (RooAbsReal*)_coefIter->Next())) {
-    coefList.add(*coef) ;
+    theCoefList.add(*coef) ;
   }
     
-  RooAddModel* convSum = new RooAddModel(newName,newTitle,modelList,coefList,kTRUE) ;
-  convSum->changeBasis(basis) ;
+  RooAddModel* convSum = new RooAddModel(newName,newTitle,modelList,theCoefList,kTRUE) ;
+  convSum->changeBasis(inBasis) ;
   return convSum ;
 }
 
@@ -388,19 +388,19 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
     
     // Recalculate projection integrals of PDFs 
     _pdfIter->Reset() ;
-    RooAbsPdf* pdf ;
+    RooAbsPdf* thePdf ;
 
-    while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+    while((thePdf=(RooAbsPdf*)_pdfIter->Next())) {
 
       // Calculate projection integral
       RooAbsReal* pdfProj ;
       if (!nset2->equals(_refCoefNorm)) {
-	pdfProj = pdf->createIntegral(*nset2,_refCoefNorm) ;
+	pdfProj = thePdf->createIntegral(*nset2,_refCoefNorm) ;
 	pdfProj->setOperMode(operMode()) ;
       } else {
 	TString name(GetName()) ;
 	name.Append("_") ;
-	name.Append(pdf->GetName()) ;
+	name.Append(thePdf->GetName()) ;
 	name.Append("_ProjectNorm") ;
 	pdfProj = new RooRealVar(name,"Unit Projection normalization integral",1.0) ;
       }
@@ -409,14 +409,14 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
 
       // Calculation optional supplemental normalization term
       RooArgSet supNormSet(_refCoefNorm) ;
-      RooArgSet* deps = pdf->getParameters(RooArgSet()) ;
+      RooArgSet* deps = thePdf->getParameters(RooArgSet()) ;
       supNormSet.remove(*deps,kTRUE,kTRUE) ;
       delete deps ;
 
       RooAbsReal* snorm ;
       TString name(GetName()) ;
       name.Append("_") ;
-      name.Append(pdf->GetName()) ;
+      name.Append(thePdf->GetName()) ;
       name.Append("_ProjSupNorm") ;
       if (supNormSet.getSize()>0) {
 	snorm = new RooRealIntegral(name,"Projection Supplemental normalization integral",
@@ -429,14 +429,14 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
       // Calculate reference range adjusted projection integral
       RooAbsReal* rangeProj1 ;
       if (_refCoefRangeName && _refCoefNorm.getSize()>0) {
-	rangeProj1 = pdf->createIntegral(_refCoefNorm,_refCoefNorm,RooNameReg::str(_refCoefRangeName)) ;
+	rangeProj1 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,RooNameReg::str(_refCoefRangeName)) ;
 	rangeProj1->setOperMode(operMode()) ;
       } else {
-	TString name(GetName()) ;
-	name.Append("_") ;
-	name.Append(pdf->GetName()) ;
-	name.Append("_RangeNorm1") ;
-	rangeProj1 = new RooRealVar(name,"Unit range normalization integral",1.0) ;
+	TString theName(GetName()) ;
+	theName.Append("_") ;
+	theName.Append(thePdf->GetName()) ;
+	theName.Append("_RangeNorm1") ;
+	rangeProj1 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
       }
       cache->_refRangeProjList.addOwned(*rangeProj1) ;
       
@@ -444,14 +444,14 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
       // Calculate range adjusted projection integral
       RooAbsReal* rangeProj2 ;
       if (rangeName && _refCoefNorm.getSize()>0) {
-	rangeProj2 = pdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
+	rangeProj2 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
 	rangeProj2->setOperMode(operMode()) ;
       } else {
-	TString name(GetName()) ;
-	name.Append("_") ;
-	name.Append(pdf->GetName()) ;
-	name.Append("_RangeNorm2") ;
-	rangeProj2 = new RooRealVar(name,"Unit range normalization integral",1.0) ;
+	TString theName(GetName()) ;
+	theName.Append("_") ;
+	theName.Append(thePdf->GetName()) ;
+	theName.Append("_RangeNorm2") ;
+	rangeProj2 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
       }
       cache->_rangeProjList.addOwned(*rangeProj2) ;
 
@@ -551,7 +551,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
 		    << "sn = " << sn->GetName() << endl 
 		    << "r1 = " << r1->GetName() << endl 
 		    << "r2 = " << r2->GetName() << endl ;
-      r1->printToStream(ccoutD(Eval)) ;
+      r1->printStream(ccoutD(Eval),kName|kArgs|kValue,kSingleLine) ;
       r1->printCompactTree(ccoutD(Eval)) ;
     }
 

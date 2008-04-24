@@ -50,16 +50,16 @@ ClassImp(RooAbsOptTestStatistic)
 RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 {
   _normSet = 0 ;
-  _pdfCloneSet = 0 ;
+  _funcCloneSet = 0 ;
   _dataClone = 0 ;
-  _pdfClone = 0 ;
+  _funcClone = 0 ;
   _projDeps = 0 ;
 }
 
-RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					       Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
-  RooAbsTestStatistic(name,title,pdf,data,projDeps,rangeName, addCoefRangeName, nCPU, verbose, splitCutRange),
+RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
+					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
+					       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
+  RooAbsTestStatistic(name,title,real,data,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
   _projDeps(0)
 {
 
@@ -72,37 +72,37 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   RooArgSet obs(*data.get()) ;
   obs.remove(projDeps,kTRUE,kTRUE) ;
 
-  // Check that the PDF is valid for use with this dataset
+  // Check that the FUNC is valid for use with this dataset
   // Check if there are any unprotected multiple occurrences of dependents
-  if (pdf.recursiveCheckObservables(&obs)) {
-    coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR in PDF dependents, abort" << endl ;
+  if (real.recursiveCheckObservables(&obs)) {
+    coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR in FUNC dependents, abort" << endl ;
     RooErrorHandler::softAbort() ;
     return ;
   }
   
   
-  // Check if the fit ranges of the dependents in the data and in the PDF are consistent
-  RooArgSet* pdfDepSet = pdf.getObservables(&data) ;
+  // Check if the fit ranges of the dependents in the data and in the FUNC are consistent
+  RooArgSet* realDepSet = real.getObservables(&data) ;
   const RooArgSet* dataDepSet = data.get() ;
-  TIterator* iter = pdfDepSet->createIterator() ;
+  TIterator* iter = realDepSet->createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
-    if (!pdfReal) continue ;
+    RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
+    if (!realReal) continue ;
     
-    RooRealVar* datReal = dynamic_cast<RooRealVar*>(dataDepSet->find(pdfReal->GetName())) ;
+    RooRealVar* datReal = dynamic_cast<RooRealVar*>(dataDepSet->find(realReal->GetName())) ;
     if (!datReal) continue ;
     
-    if (pdfReal->getMin()<(datReal->getMin()-1e-6)) {
-      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR minimum of PDF variable " << arg->GetName() 
-			    << "(" << pdfReal->getMin() << ") is smaller than that of " 
+    if (realReal->getMin()<(datReal->getMin()-1e-6)) {
+      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR minimum of FUNC variable " << arg->GetName() 
+			    << "(" << realReal->getMin() << ") is smaller than that of " 
 			    << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
     
-    if (pdfReal->getMax()>(datReal->getMax()+1e-6)) {
-      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of PDF variable " << arg->GetName() 
+    if (realReal->getMax()>(datReal->getMax()+1e-6)) {
+      coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of FUNC variable " << arg->GetName() 
 			    << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
@@ -111,36 +111,36 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   }
 
   
-  // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from pdfDepSet ranges
+  // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
-    _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*pdfDepSet),RooFit::CutRange(rangeName)) ;  
+    _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*realDepSet),RooFit::CutRange(rangeName)) ;  
   } else {
-    _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*pdfDepSet)) ;  
+    _dataClone = ((RooAbsData&)data).reduce(RooFit::SelectVars(*realDepSet)) ;  
   }
   
   if (rangeName && strlen(rangeName)) {
     
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing likelihood for sub-range named " << rangeName << endl ;
 
-    // Adjust PDF normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
+    // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     TIterator* iter2 = _dataClone->get()->createIterator() ;
     while((arg=(RooAbsArg*)iter2->Next())) {
-      RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
-      if (pdfReal) {
+      RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
+      if (realReal) {
         if (!(addCoefRangeName && strlen(addCoefRangeName))) {
-	  pdfReal->setRange(Form("NormalizationRangeFor%s",rangeName),pdfReal->getMin(),pdfReal->getMax()) ;
+	  realReal->setRange(Form("NormalizationRangeFor%s",rangeName),realReal->getMin(),realReal->getMax()) ;
 	}
-	pdfReal->setRange(pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
+	realReal->setRange(realReal->getMin(rangeName),realReal->getMax(rangeName)) ;
       }
     }
 
-    // Mark fitted range in original PDF dependents for future use
+    // Mark fitted range in original FUNC dependents for future use
     if (!_splitRange) {
       iter->Reset() ;
       while((arg=(RooAbsArg*)iter->Next())) {      
-	RooRealVar* pdfReal = dynamic_cast<RooRealVar*>(arg) ;
-	if (pdfReal) {
-	  pdfReal->setRange("fit",pdfReal->getMin(rangeName),pdfReal->getMax(rangeName)) ;
+	RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
+	if (realReal) {
+	  realReal->setRange("fit",realReal->getMin(rangeName),realReal->getMax(rangeName)) ;
 	}
       }
     }
@@ -148,35 +148,37 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   }
   delete iter ;
 
-  delete pdfDepSet ;  
+  delete realDepSet ;  
 
   setEventCount(_dataClone->numEntries()) ;
  
  
-  // Clone all PDF compents by copying all branch nodes
-  RooArgSet tmp("PdfBranchNodeList") ;
-  pdf.branchNodeServerList(&tmp) ;
-  _pdfCloneSet = (RooArgSet*) tmp.snapshot(kFALSE) ;
+  // Clone all FUNC compents by copying all branch nodes
+  RooArgSet tmp("RealBranchNodeList") ;
+  real.branchNodeServerList(&tmp) ;
+  _funcCloneSet = (RooArgSet*) tmp.snapshot(kFALSE) ;
   
-  // Find the top level PDF in the snapshot list
-  _pdfClone = (RooAbsPdf*) _pdfCloneSet->find(pdf.GetName()) ;
+  // Find the top level FUNC in the snapshot list
+  _funcClone = (RooAbsReal*) _funcCloneSet->find(real.GetName()) ;
+
 
   // Fix RooAddPdf coefficients to original normalization range
   if (rangeName) {
+
     // WVE Remove projected dependents from normalization
-    _pdfClone->fixAddCoefNormalization(*_dataClone->get()) ;
+    _funcClone->fixAddCoefNormalization(*_dataClone->get()) ;
     
     if (addCoefRangeName) {
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
-      _pdfClone->fixAddCoefRange(addCoefRangeName,kFALSE) ;
+      _funcClone->fixAddCoefRange(addCoefRangeName,kFALSE) ;
     } else {
-      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
-      _pdfClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
+	cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
+	_funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
     }
   }
 
-  // Attach PDF to data set
-  _pdfClone->attachDataSet(*_dataClone) ;
+  // Attach FUNC to data set
+  _funcClone->attachDataSet(*_dataClone) ;
 
   // Store normalization set  
   _normSet = (RooArgSet*) data.get()->snapshot(kFALSE) ;
@@ -205,7 +207,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   } 
 
   // Add parameters as servers
-  RooArgSet* params = _pdfClone->getParameters(_dataClone) ;
+  RooArgSet* params = _funcClone->getParameters(_dataClone) ;
   _paramSet.add(*params) ;
   delete params ;
 
@@ -224,8 +226,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 }
 
 
-
-
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
   RooAbsTestStatistic(other,name)
 {
@@ -236,21 +236,21 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
     return ;
   }
 
-  _pdfCloneSet = (RooArgSet*) other._pdfCloneSet->snapshot(kFALSE) ;
-  _pdfClone = (RooAbsPdf*) _pdfCloneSet->find(other._pdfClone->GetName()) ;
+  _funcCloneSet = (RooArgSet*) other._funcCloneSet->snapshot(kFALSE) ;
+  _funcClone = (RooAbsReal*) _funcCloneSet->find(other._funcClone->GetName()) ;
 
   // Copy the operMode attribute of all branch nodes
-  TIterator* iter = _pdfCloneSet->createIterator() ;
+  TIterator* iter = _funcCloneSet->createIterator() ;
   RooAbsArg* branch ;
   while((branch=(RooAbsArg*)iter->Next())) {
-    branch->setOperMode(other._pdfCloneSet->find(branch->GetName())->operMode()) ;
+    branch->setOperMode(other._funcCloneSet->find(branch->GetName())->operMode()) ;
   }
   delete iter ;
 
   // WVE Must use clone with cache redirection here
-  _dataClone = (RooAbsData*) other._dataClone->cacheClone(_pdfCloneSet) ;
+  _dataClone = (RooAbsData*) other._dataClone->cacheClone(_funcCloneSet) ;
 
-  _pdfClone->attachDataSet(*_dataClone) ;
+  _funcClone->attachDataSet(*_dataClone) ;
   _normSet = (RooArgSet*) other._normSet->snapshot() ;
   
   if (other._projDeps) {
@@ -265,7 +265,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
 RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
 {
   if (operMode()==Slave) {
-    delete _pdfCloneSet ;
+    delete _funcCloneSet ;
     delete _dataClone ;
     delete _projDeps ;
   } 
@@ -292,7 +292,7 @@ Bool_t RooAbsOptTestStatistic::redirectServersHook(const RooAbsCollection& newSe
 {
   RooAbsTestStatistic::redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
   if (operMode()!=Slave) return kFALSE ;  
-  Bool_t ret = _pdfClone->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
+  Bool_t ret = _funcClone->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
   return ret ;
 }
 
@@ -303,7 +303,7 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
   if (operMode()!=Slave) return ;
   TString indent2(indent) ;
   indent2 += ">>" ;
-  _pdfClone->printCompactTree(os,indent2) ;
+  _funcClone->printCompactTree(os,indent2) ;
 }
 
 
@@ -351,16 +351,16 @@ void RooAbsOptTestStatistic::optimizeCaching()
 
   // Trigger create of all object caches now in nodes that have deferred object creation
   // so that cache contents can be processed immediately
-  _pdfClone->getVal(_normSet) ;
+  _funcClone->getVal(_normSet) ;
 
   // Set value caching mode for all nodes that depend on any of the observables to ADirty
-  _pdfClone->optimizeCacheMode(*_dataClone->get()) ;
+  _funcClone->optimizeCacheMode(*_dataClone->get()) ;
 
   // Disable propagation of dirty state flags for observables
   _dataClone->setDirtyProp(kFALSE) ;  
 
   // Disable reading of observables that are not used
-  _dataClone->optimizeReadingWithCaching(*_pdfClone, RooArgSet()) ;
+  _dataClone->optimizeReadingWithCaching(*_funcClone, RooArgSet()) ;
 }
 
 
@@ -369,11 +369,11 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
   if(activate) {
     // Trigger create of all object caches now in nodes that have deferred object creation
     // so that cache contents can be processed immediately
-    _pdfClone->getVal(_normSet) ;
+    _funcClone->getVal(_normSet) ;
     
     // Find all nodes that depend exclusively on constant parameters
     RooArgSet cacheableNodes ;
-    _pdfClone->findConstantNodes(*_dataClone->get(),cacheableNodes) ;
+    _funcClone->findConstantNodes(*_dataClone->get(),cacheableNodes) ;
 
     // Cache constant nodes with dataset 
     _dataClone->cacheArgs(cacheableNodes,_normSet) ;  
@@ -387,7 +387,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
     delete cIter ;  
     
     // Disable reading of observables that are no longer used
-    _dataClone->optimizeReadingWithCaching(*_pdfClone, cacheableNodes) ;
+    _dataClone->optimizeReadingWithCaching(*_funcClone, cacheableNodes) ;
 
   } else {
     

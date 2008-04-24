@@ -33,13 +33,6 @@ public:
 
   virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) = 0 ;
 
-  // Printing interface (human readable) WVE change to RooPrintable interface
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
-
-  inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
-  }
-
   virtual Bool_t isIdentical(const RooTable& other) = 0 ;
 
 protected:

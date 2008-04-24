@@ -137,31 +137,31 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-void RooThresholdCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooThresholdCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print info about this threshold category to the specified stream. In addition to the info
-  // from RooAbsCategory::printToStream() we add:
+  // from RooAbsCategory::printStream() we add:
   //
   //  Standard : input category
   //     Shape : default value
   //   Verbose : list of thresholds
 
-   RooAbsCategory::printToStream(os,opt,indent);
+   RooAbsCategory::printMultiline(os,content,verbose,indent);
 
-   if (opt > Standard) {
+   if (verbose) {
      os << indent << "--- RooThresholdCategory ---" << endl
 	<< indent << "  Maps from " ;
-     _inputVar.arg().printToStream(os,Standard);
+     _inputVar.arg().printStream(os,0,kStandard);
      
      os << indent << "  Threshold list" << endl ;
      _threshIter->Reset() ;
      RooThreshEntry* te ;
      while((te=(RooThreshEntry*)_threshIter->Next())) {
        os << indent << "    input < " << te->thresh() << " --> " ; 
-       te->cat().printToStream(os,OneLine) ;
+       te->cat().printStream(os,kName|kValue,kSingleLine) ;
      }
-     os << indent << "  Default value is ";
-     _defCat->printToStream(os,OneLine);
+     os << indent << "  Default value is " ;
+     _defCat->printStream(os,kValue,kSingleLine);
 
 
    }

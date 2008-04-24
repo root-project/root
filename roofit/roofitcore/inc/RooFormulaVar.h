@@ -43,7 +43,7 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const ;
 
   // Debugging
   void dumpFormula() { formula().dump() ; }

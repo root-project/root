@@ -40,6 +40,7 @@
 #include "RooMsgService.h"
 
 #include "Riostream.h"
+#include "TClass.h"
 #include <iomanip>
 #include <math.h>
 #include <assert.h>
@@ -111,9 +112,9 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   // Adjust limits
   Int_t i ;
   for (i=0 ; i<GetN() ; i++) {    
-    Double_t x,y ;
-    GetPoint(i,x,y) ;
-    updateYAxisLimits(y);
+    Double_t x2,y2 ;
+    GetPoint(i,x2,y2) ;
+    updateYAxisLimits(y2);
   }
 }
 
@@ -338,24 +339,31 @@ Double_t RooCurve::getFitRangeBinW() const {
   return 0 ;
 }
 
-void RooCurve::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this histogram to the specified output stream.
-  //
-  //   Standard: number of entries
-  //    Verbose: print points on curve
 
-  oneLinePrint(os,*this);
-  RooPlotable::printToStream(os,opt,indent);
-  if(opt >= Standard) {
-    os << indent << "--- RooCurve ---" << endl;
-    Int_t n= GetN();
-    os << indent << "  Contains " << n << " points" << endl;
-    if(opt >= Verbose) {
-      os << indent << "  Graph points:" << endl;
-      for(Int_t i= 0; i < n; i++) {
-	os << indent << setw(3) << i << ") x = " << fX[i] << " , y = " << fY[i] << endl;
-      }
-    }
+void RooCurve::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooCurve::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooCurve::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+
+void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
+{
+  os << indent << "--- RooCurve ---" << endl ;
+  Int_t n= GetN();
+  os << indent << "  Contains " << n << " points" << endl;
+  os << indent << "  Graph points:" << endl;
+  for(Int_t i= 0; i < n; i++) {
+    os << indent << setw(3) << i << ") x = " << fX[i] << " , y = " << fY[i] << endl;
   }
 }
 
@@ -531,8 +539,14 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
 {
   Int_t n= GetN();
   for(Int_t i= 0; i < n; i++) {
-    if (fabs(fX[i]-other.fX[i])>tol) return kFALSE ;
-    if (fabs(fY[i]-other.fY[i])>tol) return kFALSE ;
+    if (fabs(fX[i]-other.fX[i])>tol) {
+      cout << "fX[" << i << "] = " << fX[i] << " other.fX[" << i << "] = " << other.fX[i] << endl ;
+      return kFALSE ;
+    }
+    if (fabs(fY[i]-other.fY[i])>tol) {
+      cout << "fY[" << i << "] = " << fY[i] << " other.fY[" << i << "] = " << other.fY[i] << endl ;
+      return kFALSE ;
+    }
   }
 
   return kTRUE ;

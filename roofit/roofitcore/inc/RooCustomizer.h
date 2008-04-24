@@ -37,6 +37,8 @@ public:
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
   virtual ~RooCustomizer() ;
   
+  void setOwning(Bool_t flag) { _owning = flag ; }
+  
   void splitArgs(const RooArgSet& argSet, const RooAbsCategory& splitCat) ;
   void splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) ;
   void replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) ;
@@ -47,9 +49,14 @@ public:
   const RooArgSet& cloneLeafList() const { return *_cloneNodeListOwned ; }
 
   // Printing interface 
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent= "") const;
+
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
   // Releases ownership of list of cloned branch nodes
@@ -63,6 +70,7 @@ protected:
   RooAbsArg* doBuild(const char* masterCatState, Bool_t verbose) ;
 
   Bool_t _sterile ;
+  Bool_t _owning ;
   TString _name ;
 
   TList _splitArgList ;

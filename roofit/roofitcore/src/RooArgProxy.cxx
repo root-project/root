@@ -37,9 +37,9 @@ ClassImp(RooArgProxy)
 ;
 
 
-RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
+RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
 			 Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) : 
-  TNamed(name,desc), _owner(owner), _arg(&arg),
+  TNamed(inName,desc), _owner(owner), _arg(&arg),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
   // Constructor with owner and proxied variable
@@ -48,8 +48,8 @@ RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, R
 }
 
 
-RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) : 
-  TNamed(name,name), RooAbsProxy(other), _owner(owner), _arg(other._arg), 
+RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy& other) : 
+  TNamed(inName,inName), RooAbsProxy(other), _owner(owner), _arg(other._arg), 
   _valueServer(other._valueServer), _shapeServer(other._shapeServer),
   _isFund(other._isFund), _ownArg(other._ownArg) 
 {
@@ -88,7 +88,11 @@ void RooArgProxy::changeDataSet(const RooArgSet* newNormSet)
   _arg->setProxyNormSet(newNormSet) ;
 }
 
-void RooArgProxy::print(ostream& os) const 
+void RooArgProxy::print(ostream& os, Bool_t addContents) const 
 { 
-  os << name() << "=" << (_arg?_arg->GetName():"NULL") ; 
+  os << name() << "=" << (_arg?_arg->GetName():"NULL")  ;
+  if (_arg && addContents) {
+    os << "=" ;
+    _arg->printStream(os,RooPrintable::kValue,RooPrintable::kInline) ;
+  }
 }

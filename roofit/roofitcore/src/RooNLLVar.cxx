@@ -48,6 +48,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeStringOnTheFly("RooNLLVar::RooNLLVar","AddCoefRange",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 kFALSE,
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
 {
@@ -75,8 +76,9 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,Int_t nCPU, Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),rangeName,addCoefRangeName,nCPU,verbose,splitRange),
+		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
+		     Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitRange) : 
+  RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
   _extended(extended)
 {
   
@@ -84,8 +86,9 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
 
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, Int_t nCPU,Bool_t verbose, Bool_t splitRange) : 
-  RooAbsOptTestStatistic(name,title,pdf,data,projDeps,rangeName,addCoefRangeName,nCPU,verbose,splitRange),
+		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, 
+		     Int_t nCPU,Bool_t interleave,Bool_t verbose, Bool_t splitRange) : 
+  RooAbsOptTestStatistic(name,title,pdf,data,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange),
   _extended(extended)
 {
   
@@ -104,13 +107,15 @@ RooNLLVar::~RooNLLVar()
 }
 
 
-Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const 
+Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
   Int_t i ;
   Double_t result(0) ;
   
+  RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
+
   Double_t sumWeight(0) ;
-  for (i=firstEvent ; i<lastEvent ; i++) {
+  for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
     _dataClone->get(i);
@@ -119,13 +124,13 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
     //cout << "RooNLLVar(" << GetName() << ") wgt[" << i << "] = " << _dataClone->weight() << endl ;
     
     //cout << "evaluating nll for event #" << i << " of " << lastEvent-firstEvent << endl ;
-    Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet);
+    Double_t term = _dataClone->weight() * pdfClone->getLogVal(_normSet);
     sumWeight += _dataClone->weight() ;
 
     // If any event evaluates with zero probability, abort calculation
     if(term == 0) {
-      coutE(Eval) << "RooNLLVar::evaluatePartition(" << GetName() 
-		  << "): WARNING: event " << i << " has zero or negative probability" << endl ;
+//       coutE(Eval) << "RooNLLVar::evaluatePartition(" << GetName() 
+// 		  << "): WARNING: event " << i << " has zero or negative probability" << endl ;
       return 0 ;
     }
 
@@ -134,7 +139,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   
   // include the extended maximum likelihood term, if requested
   if(_extended && firstEvent==0) {
-    result+= _pdfClone->extendedTerm((Int_t)_dataClone->sumEntries(),_dataClone->get());
+    result+= pdfClone->extendedTerm((Int_t)_dataClone->sumEntries(),_dataClone->get());
   }    
 
   // If part of simultaneous PDF normalize probability over 
@@ -142,6 +147,8 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   if (_simCount>1) {
     result += sumWeight*log(1.0*_simCount) ;
   }
+
+  //cout << "RooNLLVar(first=" << firstEvent << ", last=" << lastEvent << ", step=" << stepSize << ") result = " << result << endl ;
 
   return result ;
 }

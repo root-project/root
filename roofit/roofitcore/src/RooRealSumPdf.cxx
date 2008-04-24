@@ -97,7 +97,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 
 }
 
-RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList) :
+RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList& inFuncList, const RooArgList& inCoefList) :
   RooAbsPdf(name,title),
   _codeReg(10),
   _lastFuncIntSet(0),
@@ -114,7 +114,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   //
   // All functions and coefficients must inherit from RooAbsReal. 
 
-  if (!(funcList.getSize()==coefList.getSize()+1 || funcList.getSize()==coefList.getSize())) {
+  if (!(inFuncList.getSize()==inCoefList.getSize()+1 || inFuncList.getSize()==inCoefList.getSize())) {
     coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() 
 			  << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << endl ;
     assert(0) ;
@@ -124,13 +124,13 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   _coefIter = _coefList.createIterator() ;
  
   // Constructor with N functions and N or N-1 coefs
-  TIterator* funcIter = funcList.createIterator() ;
-  TIterator* coefIter = coefList.createIterator() ;
-  RooAbsReal* func ;
-  RooAbsReal* coef ;
+  TIterator* funcIter = inFuncList.createIterator() ;
+  TIterator* coefIter = inCoefList.createIterator() ;
+  RooAbsArg* func ;
+  RooAbsArg* coef ;
 
-  while((coef = (RooAbsReal*)coefIter->Next())) {
-    func = (RooAbsReal*) funcIter->Next() ;
+  while((coef = (RooAbsArg*)coefIter->Next())) {
+    func = (RooAbsArg*) funcIter->Next() ;
 
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutW(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") coefficient " << coef->GetName() << " is not of type RooAbsReal, ignored" << endl ;
@@ -213,6 +213,7 @@ Double_t RooRealSumPdf::evaluate() const
     func = (RooAbsReal*)_funcIter->Next() ;
     Double_t coefVal = coef->getVal() ;
     if (coefVal) {
+      cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") coefVal = " << coefVal << " funcVal = " << func->getVal() << endl ;
       value += func->getVal()*coefVal ;
       lastCoef -= coef->getVal() ;
     }
@@ -222,6 +223,8 @@ Double_t RooRealSumPdf::evaluate() const
     // Add last func with correct coefficient
     func = (RooAbsReal*) _funcIter->Next() ;
     value += func->getVal()*lastCoef ;
+
+    cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") lastCoef = " << lastCoef << " funcVal = " << func->getVal() << endl ;
     
     // Warn about coefficient degeneration
     if (lastCoef<0 || lastCoef>1) {

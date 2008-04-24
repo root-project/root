@@ -62,6 +62,7 @@ public:
   Int_t setPrintLevel(Int_t newLevel) ; 
   void setNoWarn() ;
   Int_t setWarnLevel(Int_t newLevel) ;
+  void setPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors ; }
   void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
   Bool_t setLogFile(const char* logfile=0) ;  
@@ -99,6 +100,7 @@ private:
   Bool_t      _handleLocalErrors ;
   Int_t       _numBadNLL ;
   Int_t       _nPar ;
+  Int_t       _printEvalErrors ;
   RooArgList* _floatParamList ;
   RooArgList* _initFloatParamList ;
   RooArgList* _constParamList ;

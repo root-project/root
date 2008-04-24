@@ -35,7 +35,8 @@ public:
   Bool_t addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+
   void writeToStream(ostream& os, Bool_t compact) const ;
 
 protected:

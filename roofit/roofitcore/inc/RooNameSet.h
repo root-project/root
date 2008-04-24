@@ -36,9 +36,13 @@ public:
   Bool_t operator==(const RooNameSet& other) ;  
   RooNameSet& operator=(const RooNameSet&) ;
 
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printValue(ostream& os) const ;
+
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
   Int_t _len ;

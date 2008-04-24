@@ -56,12 +56,12 @@ RooAbsTestStatistic::RooAbsTestStatistic()
 }
 
 
-RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName, 
-					 Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
+					 Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
-  _pdf(&pdf),
+  _func(&real),
   _data(&data),
   _projDeps((RooArgSet*)projDeps.Clone()),
   _rangeName(rangeName?rangeName:""),
@@ -72,21 +72,22 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _nGof(0),
   _gofArray(0),
   _nCPU(nCPU),
-  _mpfeArray(0)
+  _mpfeArray(0),
+  _mpinterl(interleave)
 {
   // Register all parameters as servers 
-  RooArgSet* params = pdf.getParameters(&data) ;
+  RooArgSet* params = real.getParameters(&data) ;
   _paramSet.add(*params) ;
   delete params ;
 
-  if (nCPU>1) {
+  if (_nCPU>1) {
 
     _gofOpMode = MPMaster ;
 
   } else {
 
-    // Determine if PDF is a RooSimultaneous
-    Bool_t simMode = dynamic_cast<RooSimultaneous*>(&pdf)?kTRUE:kFALSE ;
+    // Determine if RooAbsReal is a RooSimultaneous
+    Bool_t simMode = dynamic_cast<RooSimultaneous*>(&real)?kTRUE:kFALSE ;
     
     if (simMode) {
       _gofOpMode = SimMaster ;
@@ -106,7 +107,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
 RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name) : 
   RooAbsReal(other,name), 
   _paramSet("paramSet",this,other._paramSet),
-  _pdf(other._pdf),
+  _func(other._func),
   _data(other._data),
   _projDeps((RooArgSet*)other._projDeps->Clone()),
   _rangeName(other._rangeName),
@@ -118,7 +119,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _nEvents(other._nEvents),
   _setNum(other._setNum),
   _numSets(other._numSets),
-  _nCPU(other._nCPU)
+  _nCPU(other._nCPU),
+  _mpinterl(other._mpinterl)
 {
   if (operMode()==SimMaster) {
     _nGof = other._nGof ; 
@@ -177,6 +179,12 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     // Evaluate array of owned GOF objects
     Double_t ret = combinedValue((RooAbsReal**)_gofArray,_nGof) ;
+
+    // Only apply global normalization if SimMaster doesn't have MP master
+    if (numSets()==1) {
+      ret /= globalNormalization() ;
+    }
+
     return ret ;
 
   } else if (_gofOpMode==MPMaster) {
@@ -186,15 +194,31 @@ Double_t RooAbsTestStatistic::evaluate() const
     for (i=0 ; i<_nCPU ; i++) {
       _mpfeArray[i]->calculate() ;
     }
-    Double_t ret = combinedValue((RooAbsReal**)_mpfeArray,_nCPU) ;
+    Double_t ret = combinedValue((RooAbsReal**)_mpfeArray,_nCPU)/globalNormalization() ;
     return ret ;
 
   } else {
 
-    // Evaluate as straight PDF
-    Int_t nFirst = _nEvents * _setNum / _numSets ;
-    Int_t nLast = _nEvents * (_setNum+1) / _numSets ;
-    Double_t ret =  evaluatePartition(nFirst,nLast) ;
+    // Evaluate as straight FUNC
+    Int_t nFirst, nLast, nStep ;
+    if (_mpinterl) {
+      nFirst = _setNum ;
+      nLast  = _nEvents ;
+      nStep  = _numSets ;
+    } else {
+      nFirst = _nEvents * _setNum / _numSets ;
+      nLast  = _nEvents * (_setNum+1) / _numSets ;    
+      nStep  = 1 ;
+    }
+
+
+    //cout << "nCPU = " << _nCPU << (_mpinterl?"INTERLEAVE":"BULK") << " nFirst = " << nFirst << " nLast = " << nLast << " nStep = " << nStep << endl ;
+    
+    Double_t ret =  evaluatePartition(nFirst,nLast,nStep) ;
+    if (numSets()==1) {
+      ret /= globalNormalization() ;
+    }
+
     return ret ;
 
   }
@@ -207,9 +231,9 @@ Bool_t RooAbsTestStatistic::initialize()
   if (_init) return kFALSE ;
 
   if (_gofOpMode==MPMaster) {
-    initMPMode(_pdf,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
+    initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   } else if (_gofOpMode==SimMaster) {
-    initSimMode((RooSimultaneous*)_pdf,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
+    initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   }
   _init = kTRUE ;
   return kFALSE ;
@@ -272,28 +296,28 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
 
 
 
-void RooAbsTestStatistic::setMPSet(Int_t setNum, Int_t numSets) 
+void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets) 
 {
-  _setNum = setNum ; _numSets = numSets ;
+  _setNum = inSetNum ; _numSets = inNumSets ;
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     initialize() ;
     Int_t i ;
     for (i=0 ; i<_nGof ; i++) {
-      if (_gofArray[i]) _gofArray[i]->setMPSet(setNum,numSets) ;
+      if (_gofArray[i]) _gofArray[i]->setMPSet(inSetNum,inNumSets) ;
     }
   } 
 }
 
 
-void RooAbsTestStatistic::initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
+void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
   Int_t i ;
   _mpfeArray = new pRooRealMPFE[_nCPU] ;
 
   // Create proto-goodness-of-fit 
   //cout << "initMPMode -- creating prototype gof" << endl ;
-  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*pdf,*data,*projDeps,rangeName,addCoefRangeName,_verbose,1,_splitRange) ;
+  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_verbose,_splitRange) ;
 
   for (i=0 ; i<_nCPU ; i++) {
 
@@ -356,10 +380,13 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     if (pdf && dset && dset->numEntries(kTRUE)!=0.) {      
       coutE(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
 		     << " (" << dset->numEntries() << " dataset entries)" << endl ;
+
       if (_splitRange && rangeName) {
-	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU,_verbose,_splitRange) ;
+	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,
+			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange) ;
       } else {
-	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,rangeName,addCoefRangeName,_nCPU,_verbose,_splitRange) ;
+	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,
+			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange) ;
       }
       _gofArray[n]->setSimCount(_nGof) ;
       

@@ -41,6 +41,8 @@
 #pragma link C++ class RooMsgService+ ;
 #pragma link C++ class RooProjectedPdf+ ;
 #pragma link C++ class RooWorkspace+ ;
+#pragma link C++ class RooWorkspace::CodeRepo- ;
+#pragma link C++ class RooWorkspace::WSDir+ ;
 #pragma link C++ class RooProfileLL+ ;
 #pragma link C++ class RooAbsCachedPdf+ ;
 #pragma link C++ class RooAbsSelfCachedPdf+ ;
@@ -55,6 +57,10 @@
 #pragma link C++ class RooAbsCacheElement+ ;
 #pragma link C++ class RooExtendedTerm+ ;
 #pragma link C++ class RooSentinel+ ;
+#pragma link C++ class RooParamBinning+ ;
+#pragma link C++ class RooConstraintSum+ ;
+#pragma link C++ class RooRecursiveFraction+ ;
+#pragma link C++ class RooDataWeightedAverage+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

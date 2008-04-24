@@ -38,6 +38,7 @@
 #include "TMatrix.h"
 #include "TVector.h"
 #include "TDirectory.h"
+#include "TClass.h"
 #include "RooFitResult.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -393,7 +394,9 @@ Double_t RooFitResult::covariance(Int_t row, Int_t col) const {
   return rowVar->getError()*colVar->getError()*correlation(row,col);  
 }
 
-void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) const
+
+
+void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const
 {
   // Print fit result to stream 'os'. In Verbose mode, the contant parameters and
   // the initial and final values of the floating parameters are printed. 
@@ -412,7 +415,7 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
      << endl ;
 
   Int_t i ;
-  if (opt>=Verbose) {
+  if (verbose) {
     if (_constPars->getSize()>0) {
       os << indent << "    Constant Parameter    Value     " << endl
 	 << indent << "  --------------------  ------------" << endl ;
@@ -425,8 +428,6 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
 
       os << endl ;
     }
-
-
 
     // Has any parameter asymmetric errors?
     Bool_t doAsymErr(kFALSE) ;
@@ -777,3 +778,43 @@ void RooFitResult::SetNameTitle(const char *name, const char* title)
   TNamed::SetNameTitle(name,title) ;
   if (_dir) _dir->GetList()->Add(this);
 }
+
+void RooFitResult::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooFitResult::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooFitResult::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooFitResult::printArgs(ostream& os) const 
+{
+  os << "[ constPars=" << *_constPars << " floatPars=" << *_finalPars << " ]" ;
+}
+
+
+void RooFitResult::printValue(ostream& os) const 
+{
+  os << "status=" << _status << " FCNmin=" << _minNLL << " EDM=" << _edm << " covQual=" << _covQual ;
+}
+
+Int_t RooFitResult::defaultPrintContents(Option_t* /*opt*/) const 
+{
+  return kName|kClassName|kValue ;
+}
+
+RooPrintable::StyleOption RooFitResult::defaultPrintStyle(Option_t* opt) const 
+{
+  if (opt && TString(opt).Contains("v")) {
+    return kVerbose ;
+  } 
+  return kStandard ;
+}
+

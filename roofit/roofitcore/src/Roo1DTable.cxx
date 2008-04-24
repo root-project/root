@@ -26,6 +26,7 @@
 #include "TMath.h"
 #include "Roo1DTable.h"
 #include "RooMsgService.h"
+#include "TClass.h"
 
 using namespace std ;
 
@@ -109,11 +110,42 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
 }
 
 
-
-void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) const 
+void Roo1DTable::printName(ostream& os) const 
 {
-  // Print the formateed table contents on the given stream
+  os << GetName() ;
+}
 
+void Roo1DTable::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void Roo1DTable::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void Roo1DTable::printValue(ostream& os) const 
+{
+  // Contents
+  os << "(" ;
+  for (Int_t i=0 ; i<_types.GetEntries() ; i++) {
+    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    if (_count[i]>0) {
+      if (i>0) {
+	os << "," ;
+      }
+      os << entry->GetName() << "=" << _count[i] ;
+    }
+  }
+  os << ")" ;
+}
+
+
+void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
+{
+  // Print the formatted table contents on the given stream
+  
   os << indent << endl ;
   os << indent << "  Table " << GetName() << " : " << GetTitle() << endl ;
 
@@ -145,7 +177,7 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) con
   // Contents
   for (i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
-    if (_count[i]>0 || opt>=Verbose) {
+    if (_count[i]>0 || verbose) {
       os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << _count[i] << " |" << endl ;
     }
   }

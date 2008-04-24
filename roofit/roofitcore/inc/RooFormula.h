@@ -47,10 +47,17 @@ public:
   void dump() ;
   Bool_t reCompile(const char* newFormula) ;
 
+
+  virtual void printValue(ostream& os) const ;
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
+  void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
 protected:

@@ -58,7 +58,9 @@ public:
   // I/O streaming interface
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
-  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+
+  virtual void printValue(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { return kTRUE ; }
 

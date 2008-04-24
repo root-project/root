@@ -81,7 +81,7 @@ public:
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny,
                         const char* cuts="", const char *name="hist") const;
 
-  void printToStream(ostream& os, PrintOption opt, TString indent) const ;
+  void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;

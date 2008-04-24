@@ -32,6 +32,8 @@ public:
   Int_t numCall() const { return _ncall ; }
   void resetNumCall() const { _ncall = 0 ; }
 
+  virtual const char* getName() const { return "(unnamed)" ; }  
+
 protected:
   mutable Int_t _ncall ;
   UInt_t _dimension;

@@ -21,7 +21,8 @@
 #include "RooFit.h"
 
 #include "RooAbsBinning.h"
-#include "RooAbsBinning.h"
+#include "RooAbsReal.h"
+#include "TClass.h"
 
 #include "Riostream.h"
 
@@ -39,27 +40,52 @@ RooAbsBinning::~RooAbsBinning()
 }
 
 
-void RooAbsBinning::printToStream(ostream &os, PrintOption opt, TString indent) const
+void RooAbsBinning::printName(ostream& os) const 
 {
-  if (opt==Standard) {
+  os << GetName() ;
+}
 
-    Bool_t first(kTRUE) ;
-    Int_t n = numBins() ;
-    os << "B(" ;
+void RooAbsBinning::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
 
-    Int_t i ;
-    for (i=0 ; i<n ; i++) {
-      if (!first) {
-	os << indent << " : " ;
-      } else {
-	first = kFALSE ;
-      }
-      os << binLow(i) ;
-    }
-    os << " : " << binHigh(n-1) ;
-    os << ")" << endl ;
-    return ;
+void RooAbsBinning::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooAbsBinning::printArgs(ostream& os) const 
+{
+  os << "[ " ;    
+  if (lowBoundFunc()) {
+    os << "lowerBound=" << lowBoundFunc()->GetName() ;
   }
+  if (highBoundFunc()) {
+    if (lowBoundFunc()) {
+      os << " " ;
+    }
+    os << "upperBound=" << highBoundFunc()->GetName() ;
+  }
+  os << " ]" ;  
+}
+
+
+void RooAbsBinning::printValue(ostream &os) const
+{
+  Int_t n = numBins() ;
+  os << "B(" ;
+  
+  Int_t i ;
+  for (i=0 ; i<n ; i++) {
+    if (i>0) {
+      os << " : " ;
+    }
+    os << binLow(i) ;
+  }
+  os << " : " << binHigh(n-1) ;
+  os << ")" ;
+
 }
 
 void RooAbsBinning::Streamer(TBuffer &R__b)

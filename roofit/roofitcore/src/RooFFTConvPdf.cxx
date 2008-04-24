@@ -203,7 +203,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::CacheElem& cache) const
   Bool_t loop(kTRUE) ;
   while(loop) {
     // Set current slice position
-    for (Int_t i=0 ; i<n ; i++) { obsLV[i]->setBin(binCur[i]) ; }
+    for (Int_t j=0 ; j<n ; j++) { obsLV[j]->setBin(binCur[j]) ; }
 
     // Fill current slice
     fillCacheSlice(cachePdf,otherObs) ;
@@ -324,8 +324,8 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
 {
   // Clone input pdf and attach to dataset
   RooArgSet* cloneSet = (RooArgSet*) RooArgSet(pdf).snapshot(kTRUE) ;
-  RooAbsPdf* clone = (RooAbsPdf*) cloneSet->find(pdf.GetName()) ;
-  clone->attachDataSet(hist) ;
+  RooAbsPdf* theClone = (RooAbsPdf*) cloneSet->find(pdf.GetName()) ;
+  theClone->attachDataSet(hist) ;
 
   RooRealVar* histX = (RooRealVar*) hist.get()->find(obs.GetName()) ;
   N = histX->numBins() ;
@@ -346,10 +346,10 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
   // First scan hist into temp array 
   Double_t *tmp = new Double_t[N] ;
   TIterator* iter = const_cast<RooDataHist&>(hist).sliceIterator(obs,slicePos) ;
-  Int_t i=0 ;
+  Int_t k=0 ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    tmp[i++] = clone->getVal(hist.get()) ;
+    tmp[k++] = theClone->getVal(hist.get()) ;
   }
   delete iter ;
 

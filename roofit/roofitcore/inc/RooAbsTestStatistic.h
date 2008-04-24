@@ -23,7 +23,7 @@
 
 class RooArgSet ;
 class RooAbsData ;
-class RooAbsPdf ;
+class RooAbsReal ;
 class RooSimultaneous ;
 class RooRealMPFE ;
 
@@ -37,17 +37,19 @@ public:
 
   // Constructors, assignment etc
   RooAbsTestStatistic() ;
-  RooAbsTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-		      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+		      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
   virtual ~RooAbsTestStatistic();
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) = 0 ;
+				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) = 0 ;
 
   virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
+
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
+  virtual Double_t globalNormalization() const { return 1.0 ; }
 
 protected:
 
@@ -56,11 +58,14 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual Double_t evaluate() const ;
 
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent) const = 0 ;
+  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const = 0 ;
 
   void setMPSet(Int_t setNum, Int_t numSets) ; 
   void setSimCount(Int_t simCount) { _simCount = simCount ; }
   void setEventCount(Int_t nEvents) { _nEvents = nEvents ; }
+
+  Int_t numSets() const { return _numSets ; }
+  Int_t setNum() const { return _setNum ; }
   
   RooSetProxy _paramSet ;
 
@@ -68,7 +73,7 @@ protected:
   GOFOpMode operMode() const { return _gofOpMode ; }
 
   // Original arguments
-  RooAbsPdf* _pdf ;
+  RooAbsReal* _func ;
   RooAbsData* _data ;
   const RooArgSet* _projDeps ;
   std::string _rangeName ; 
@@ -81,7 +86,7 @@ private:
 
   Bool_t initialize() ;
   void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
-  void initMPMode(RooAbsPdf* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;
+  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;
 
   mutable Bool_t _init ; //! 
   GOFOpMode   _gofOpMode ;
@@ -97,6 +102,8 @@ private:
   // Parallel mode data
   Int_t          _nCPU ;
   pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
+
+  Bool_t         _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
 
   ClassDef(RooAbsTestStatistic,1) // Abstract real-valued variable
 };

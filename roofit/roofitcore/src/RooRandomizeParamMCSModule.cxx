@@ -136,11 +136,11 @@ void RooRandomizeParamMCSModule::sampleSumUniform(const RooArgSet& paramSet, Dou
   RooArgSet okset2 ;
   if (genParams()) {
     TIterator* psiter = okset.createIterator() ;
-    RooAbsArg* arg ;
-    while ((arg=(RooAbsArg*)psiter->Next())) {
-      RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg->GetName())) ;
+    RooAbsArg* arg2 ;
+    while ((arg2=(RooAbsArg*)psiter->Next())) {
+      RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg2->GetName())) ;
       if (!actualVar) {
-	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
+	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg2->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
       } else {
 	okset2.add(*actualVar) ;
       }
@@ -186,11 +186,11 @@ void RooRandomizeParamMCSModule::sampleSumGauss(const RooArgSet& paramSet, Doubl
   RooArgSet okset2 ;
   if (genParams()) {
     TIterator* psiter = okset.createIterator() ;
-    RooAbsArg* arg ;
-    while ((arg=(RooAbsArg*)psiter->Next())) {
-      RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg->GetName())) ;
+    RooAbsArg* arg2 ;
+    while ((arg2=(RooAbsArg*)psiter->Next())) {
+      RooRealVar* actualVar= static_cast<RooRealVar*>(genParams()->find(arg2->GetName())) ;
       if (!actualVar) {
-	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
+	oocoutW((TObject*)0,InputArguments) << "RooRandomizeParamMCSModule::sampleSumUniform: variable " << arg2->GetName() << " is not a parameter of RooMCStudy model and is ignored!" << endl ;	
       } else {
 	okset2.add(*actualVar) ;
       }

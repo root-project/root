@@ -66,12 +66,14 @@ ClassImp(RooAbsArg)
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
 Bool_t RooAbsArg::_flipAClean(kFALSE) ;
-Int_t  RooAbsArg::_nameLength(0) ;
 
 RooAbsArg::RooAbsArg() :
   TNamed(),
   _deleteWatch(kFALSE),
-  _operMode(Auto)
+  _operMode(Auto),
+  _ownedComponents(0),
+  _prohibitServerRedirect(kFALSE)
+  
 {
   // Default constructor creates an unnamed object. At present this
   // will trigger an assert(0) because may indicate an attempt to
@@ -91,7 +93,10 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   _deleteWatch(kFALSE),
   _valueDirty(kTRUE),
   _shapeDirty(kTRUE),
-  _operMode(Auto)
+  _operMode(Auto),
+  _ownedComponents(0),
+  _prohibitServerRedirect(kFALSE)
+
 {
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -109,8 +114,9 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
     _boolAttrib(other._boolAttrib),
     _stringAttrib(other._stringAttrib),
     _deleteWatch(other._deleteWatch),
-    _operMode(Auto)
-
+    _operMode(Auto),
+    _ownedComponents(0),
+    _prohibitServerRedirect(kFALSE)
 {
   // Copy constructor transfers all properties of the original
   // object, except for its list of clients. The newly created
@@ -184,7 +190,10 @@ RooAbsArg::~RooAbsArg()
   delete _clientShapeIter ;
   delete _clientValueIter ;
 
-
+  if (_ownedComponents) {
+    delete _ownedComponents ;
+    _ownedComponents = 0 ;
+  }
 
   RooTrace::destroy(this) ;
 }
@@ -205,12 +214,6 @@ void RooAbsArg::verboseDirty(Bool_t flag)
 {
   _verboseDirty = flag ;
 }
-
-void RooAbsArg::nameFieldLength(Int_t newLen)
-{
-  _nameLength = newLen>0 ? newLen : 0 ;
-}
-
 
 Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 {
@@ -269,6 +272,34 @@ const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const
   }
 }
 
+void RooAbsArg::setTransientAttribute(const Text_t* name, Bool_t value)
+{
+  // Set (default) or clear a named boolean attribute of this object.
+
+  if (value) {
+
+    _boolAttribTransient.insert(name) ;
+
+  } else {
+
+    set<string>::iterator iter = _boolAttribTransient.find(name) ;
+    if (iter != _boolAttribTransient.end()) {
+      _boolAttribTransient.erase(iter) ;
+    }
+
+  }
+
+}
+
+
+Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
+{
+  // Check if a named attribute is set. By default, all attributes
+  // are unset.
+  return (_boolAttribTransient.find(name) != _boolAttribTransient.end()) ;
+}
+
+
 
 void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 {
@@ -276,11 +307,15 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
   // we depend on it. In addition to the basic client-server relationship,
   // we can declare dependence on the server's value and/or shape.
 
-  if (_verboseDirty) {
-       cxcoutD(LinkStateMgmt) << "RooAbsArg::addServer(" << GetName() << "): adding server " << server.GetName()
-			      << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+  if (_prohibitServerRedirect) {
+    cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): PROHIBITED SERVER ADDITION REQUESTED: adding server " << server.GetName()
+			   << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+    assert(0) ;
   }
 
+  cxcoutD(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): adding server " << server.GetName()
+			 << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+  
   // Add server link to given server
   _serverList.Add(&server) ;
 
@@ -309,6 +344,12 @@ void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force)
 {
   // Unregister another RooAbsArg as a server to us, ie, declare that
   // we no longer depend on its value and shape.
+
+  if (_prohibitServerRedirect) {
+    cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): PROHIBITED SERVER REMOVAL REQUESTED: removing server "
+			   << server.GetName() << "(" << &server << ")" << endl ;
+    assert(0) ;
+  }
 
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::removeServer(" << GetName() << "): removing server "
@@ -374,12 +415,12 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 
 
 
-void RooAbsArg::leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg) const
+void RooAbsArg::leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t recurseNonDerived) const
 {
   // Fill supplied list with all leaf nodes of the arg tree, starting with
   // ourself as top node. A leaf node is node that has no servers declared.
 
-  treeNodeServerList(list,arg,kFALSE,kTRUE) ;
+  treeNodeServerList(list,arg,kFALSE,kTRUE,kFALSE,recurseNonDerived) ;
 }
 
 
@@ -391,9 +432,8 @@ void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* ar
 
   treeNodeServerList(list,arg,kTRUE,kFALSE) ;
 }
-
-
-void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t valueOnly) const
+ 
+void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t valueOnly, Bool_t recurseFundamental) const
 {
   // Fill supplied list with nodes of the arg tree, following all server links,
   // starting with ourself as top node.
@@ -408,23 +448,22 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
   // Decide if to add current node
   if ((doBranch&&doLeaf) ||
       (doBranch&&arg->isDerived()) ||
-      (doLeaf&&!arg->isDerived())) {
+      (doLeaf&&arg->isFundamental()&&(!(recurseFundamental&&arg->isDerived()))) ) {
     list->add(*arg,kTRUE) ;
   }
 
   // Recurse if current node is derived
-  if (arg->isDerived()) {
+  if (arg->isDerived() && (!arg->isFundamental() || recurseFundamental)) {
     RooAbsArg* server ;
     TIterator* sIter = arg->serverIterator() ;
     while ((server=(RooAbsArg*)sIter->Next())) {
 
       // Skip non-value server nodes if requested
-      Bool_t isValueServer = server->_clientListValue.FindObject((TObject*)arg)?kTRUE:kFALSE ;
-      if (valueOnly && !isValueServer) {
+      Bool_t isValueSrv = server->_clientListValue.FindObject((TObject*)arg)?kTRUE:kFALSE ;
+      if (valueOnly && !isValueSrv) {
 	continue ;
       }
-
-      treeNodeServerList(list,server,doBranch,doLeaf,valueOnly) ;
+      treeNodeServerList(list,server,doBranch,doLeaf,valueOnly,recurseFundamental) ;
     }
     delete sIter ;
   }
@@ -516,13 +555,13 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList) const
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  treeNodeServerList(&leafList,0,kFALSE,kTRUE,kTRUE) ;
+  treeNodeServerList(&leafList,0,kFALSE,kTRUE,kTRUE) ; 
   //leafNodeServerList(&leafList) ;
   TIterator *sIter = leafList.createIterator() ;
 
   RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)sIter->Next())) {
-    if (arg->dependsOn(*dataList) && arg->isLValue()) {
+    if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
       depList->add(*arg) ;
     }
   }
@@ -705,16 +744,20 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   }
 
   // Propagate dirty flag to all clients if this is a down->up transition
-  cxcoutD(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
-			 << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
+  if (_verboseDirty) {
+    cxcoutD(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
+			   << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
+  }
 
   _valueDirty = kTRUE ;
-
+  
   _clientValueIter->Reset() ;
   RooAbsArg* client ;
   while ((client=(RooAbsArg*)_clientValueIter->Next())) {
     client->setValueDirty(source) ;
   }
+
+  
 }
 
 
@@ -723,8 +766,10 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
   // Mark this object as having changed its shape, and propagate this status
   // change to all of our clients.
 
-  cxcoutD(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
-			 << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
+  if (_verboseDirty) {
+    cxcoutD(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
+			   << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
+  }
 
   if (_clientListShape.GetSize()==0) {
     _shapeDirty = kTRUE ;
@@ -823,8 +868,8 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   // Process the proxies
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
-    Bool_t ret = getProxy(i)->changePointer(newSet,nameChange) ;
-    allReplaced &= ret ;
+    Bool_t ret2 = getProxy(i)->changePointer(newSet,nameChange) ;
+    allReplaced &= ret2 ;
   }
 
   if (mustReplaceAll && !allReplaced) {
@@ -883,7 +928,7 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
   return newServer;
 }
 
-Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange)
+Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t recurseInNewSet)
 {
   // Cyclic recursion protection
   static RooLinkedList callStack ;
@@ -893,9 +938,18 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
     callStack.Add(this) ;
   }
 
+  // Do not recurse into newset if not so specified
+//   if (!recurseInNewSet && newSet.contains(*this)) {    
+//     return kFALSE ;
+//   }
+  
+
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
   Bool_t ret(kFALSE) ;
 
+  cxcoutD(LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << this << "," << GetName() << ") newSet = " << newSet << " mustReplaceAll = " 
+			 << (mustReplaceAll?"T":"F") << " nameChange = " << (nameChange?"T":"F") << " recurseInNewSet = " << (recurseInNewSet?"T":"F") << endl ;
+  
   // Do redirect on self (identify operation as recursion step)
   ret |= redirectServers(newSet,mustReplaceAll,nameChange,kTRUE) ;
 
@@ -903,7 +957,7 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
   TIterator* sIter = serverIterator() ;
   RooAbsArg* server ;
   while((server=(RooAbsArg*)sIter->Next())) {
-    ret |= server->recursiveRedirectServers(newSet,mustReplaceAll,nameChange) ;
+    ret |= server->recursiveRedirectServers(newSet,mustReplaceAll,nameChange,recurseInNewSet) ;
   }
   delete sIter ;
 
@@ -1077,99 +1131,118 @@ void RooAbsArg::copyList(TList& dest, const TList& source)
 }
 
 
-void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  const
+void RooAbsArg::printName(ostream& os) const 
 {
-  // Print the state of this object to the specified output stream.
-  //
-  //  OneLine : use RooPrintable::oneLinePrint()
-  // Standard : use virtual writeToStream() method in non-compact mode
-  //  Verbose : list dirty flags,attributes, clients, servers, and proxies
-  //
-  // Subclasses will normally call this method first in their implementation,
-  // and then add any additional state of their own with the Shape or Verbose
-  // options.
+  os << GetName() ;
+}
 
-  if(opt == Standard) {
-    os << ClassName() << "::" << this << "::" << GetName() ;
-    Int_t nfill = _nameLength-strlen(GetName()) ;
-    while(nfill-- > 0) os << " " ;
-    os << ": " ;
-    if (isDerived()) {
-      os << "(" ;
-      writeToStream(os,kFALSE);
-      os << ") -> " ;
-      writeToStream(os,kTRUE);
-    } else {
-      writeToStream(os,kFALSE);
+void RooAbsArg::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooAbsArg::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooAbsArg::printArgs(ostream& os) const 
+{
+  os << "[ " ;    
+  for (Int_t i=0 ; i<numProxies() ; i++) {
+    RooAbsProxy* p = getProxy(i) ;
+    if (!TString(p->name()).BeginsWith("!")) {
+      p->print(os) ;
+      os << " " ;
     }
-    os << endl;
+  }    
+  os << "]" ;  
+}
+
+Int_t RooAbsArg::defaultPrintContents(Option_t* /*opt*/) const 
+{
+  return kName|kClassName|kValue|kArgs ;
+}
+
+RooPrintable::StyleOption RooAbsArg::defaultPrintStyle(Option_t* opt) const 
+{
+  if (opt && TString(opt).Contains("t")) {
+    return kTreeStructure ;
+  } 
+  if (opt && TString(opt).Contains("v")) {
+    return kVerbose ;
+  } 
+  return kSingleLine ;
+}
+
+
+void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
+{
+  os << indent << "--- RooAbsArg ---" << endl;
+  // dirty state flags
+  os << indent << "  Value State: " ;
+  switch(_operMode) {
+  case ADirty: os << "FORCED DIRTY" ; break ;
+  case AClean: os << "FORCED clean" ; break ;
+  case Auto: os << (isValueDirty() ? "DIRTY":"clean") ; break ;
   }
-  else {
-    if (opt==InLine) {
-      inLinePrint(os,*this) ;
-    } else if (opt==OneLine) {
-      oneLinePrint(os,*this);
-    } else if(opt == Verbose) {
-      os << indent << "--- RooAbsArg ---" << endl;
-      // dirty state flags
-      os << indent << "  Value State: " ;
-      switch(_operMode) {
-      case ADirty: os << "FORCED DIRTY" ; break ;
-      case AClean: os << "FORCED clean" ; break ;
-      case Auto: os << (isValueDirty() ? "DIRTY":"clean") ; break ;
-      }
-      os << endl
-	 << indent << "  Shape State: " << (isShapeDirty() ? "DIRTY":"clean") << endl;
-      // attribute list
-      os << indent << "  Attributes: " ;
-      printAttribList(os) ;
-      os << endl ;
-      // our memory address (for x-referencing with client addresses of other args)
-      os << indent << "  Address: " << (void*)this << endl;
-      // client list
-      os << indent << "  Clients: " << endl;
-      TIterator *clientIter= _clientList.MakeIterator();
-      RooAbsArg* client ;
-      while ((client=(RooAbsArg*)clientIter->Next())) {
-	os << indent << "    (" << (void*)client  << ","
-	   << (_clientListValue.FindObject(client)?"V":"-")
-	   << (_clientListShape.FindObject(client)?"S":"-")
-	   << ") " ;
-	client->printToStream(os,OneLine);
-      }
-      delete clientIter;
-
-      // server list
-      os << indent << "  Servers: " << endl;
-      TIterator *serverIter= _serverList.MakeIterator();
-      RooAbsArg* server ;
-      while ((server=(RooAbsArg*)serverIter->Next())) {
-	os << indent << "    (" << (void*)server << ","
-	   << (server->_clientListValue.FindObject((TObject*)this)?"V":"-")
-	   << (server->_clientListShape.FindObject((TObject*)this)?"S":"-")
-	   << ") " ;
-	server->printToStream(os,OneLine);
-      }
-      delete serverIter;
-
-      // proxy list
-      os << indent << "  Proxies: " << endl ;
-      for (int i=0 ; i<numProxies() ; i++) {
-	RooAbsProxy* proxy=getProxy(i) ;
-
-	if (proxy->IsA()->InheritsFrom(RooArgProxy::Class())) {
-	  os << indent << "    " << proxy->name() << " -> " ;
-	  ((RooArgProxy*)proxy)->absArg()->printToStream(os,OneLine) ;
-	} else {
-	  os << indent << "    " << proxy->name() << " -> " ;
-	  TString moreIndent(indent) ;
-	  moreIndent.Append("    ") ;
-	  ((RooSetProxy*)proxy)->printToStream(os,Standard,moreIndent.Data()) ;
-	}
-      }
+  os << endl
+     << indent << "  Shape State: " << (isShapeDirty() ? "DIRTY":"clean") << endl;
+  // attribute list
+  os << indent << "  Attributes: " ;
+  printAttribList(os) ;
+  os << endl ;
+  // our memory address (for x-referencing with client addresses of other args)
+  os << indent << "  Address: " << (void*)this << endl;
+  // client list
+  os << indent << "  Clients: " << endl;
+  TIterator *clientIter= _clientList.MakeIterator();
+  RooAbsArg* client ;
+  while ((client=(RooAbsArg*)clientIter->Next())) {
+    os << indent << "    (" << (void*)client  << ","
+       << (_clientListValue.FindObject(client)?"V":"-")
+       << (_clientListShape.FindObject(client)?"S":"-")
+       << ") " ;
+    client->printStream(os,kClassName|kTitle|kName,kSingleLine);
+  }
+  delete clientIter;
+  
+  // server list
+  os << indent << "  Servers: " << endl;
+  TIterator *serverIter= _serverList.MakeIterator();
+  RooAbsArg* server ;
+  while ((server=(RooAbsArg*)serverIter->Next())) {
+    os << indent << "    (" << (void*)server << ","
+       << (server->_clientListValue.FindObject((TObject*)this)?"V":"-")
+       << (server->_clientListShape.FindObject((TObject*)this)?"S":"-")
+       << ") " ;
+    server->printStream(os,kClassName|kName|kTitle,kSingleLine);
+  }
+  delete serverIter;
+  
+  // proxy list
+  os << indent << "  Proxies: " << endl ;
+  for (int i=0 ; i<numProxies() ; i++) {
+    RooAbsProxy* proxy=getProxy(i) ;
+    
+    if (proxy->IsA()->InheritsFrom(RooArgProxy::Class())) {
+      os << indent << "    " << proxy->name() << " -> " ;
+      ((RooArgProxy*)proxy)->absArg()->printStream(os,kName,kSingleLine) ;
+    } else {
+      os << indent << "    " << proxy->name() << " -> " ;
+      TString moreIndent(indent) ;
+      moreIndent.Append("    ") ;
+      ((RooSetProxy*)proxy)->printStream(os,kName,kStandard,moreIndent.Data()) ;
     }
   }
 }
+
+
+void RooAbsArg::printTree(ostream& os, TString /*indent*/) const
+{
+  const_cast<RooAbsArg*>(this)->printCompactTree(os) ;
+}
+
 
 ostream& operator<<(ostream& os, RooAbsArg &arg)
 {
@@ -1444,14 +1517,14 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
 
     if (_serverList.GetSize()>0) {
       switch(operMode()) {
-      case Auto:   os << " [Auto]"  ; break ;
-      case AClean: os << " [ACLEAN]" ; break ;
-      case ADirty: os << " [ADIRTY]" ; break ;
+      case Auto:   os << " [Auto] "  ; break ;
+      case AClean: os << " [ACLEAN] " ; break ;
+      case ADirty: os << " [ADIRTY] " ; break ;
       }
-      if (client) {
-	if (isValueServer(*client)) os << "V" ;
-	if (isShapeServer(*client)) os << "S" ;
-      }
+    }
+    if (client) {
+      if (isValueServer(*client)) os << "V" ;
+      if (isShapeServer(*client)) os << "S" ;
     }
     os << endl ;
 
@@ -1673,4 +1746,12 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 Bool_t RooAbsArg::inhibitDirty()
 {
   return _inhibitDirty ;
+}
+
+Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps) 
+{ 
+  if (!_ownedComponents) {
+    _ownedComponents = new RooArgSet("owned components") ;
+  }
+  return _ownedComponents->addOwned(comps) ; 
 }

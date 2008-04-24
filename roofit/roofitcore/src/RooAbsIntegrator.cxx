@@ -35,8 +35,8 @@ RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalC
 {
 }
 
-RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter) :
-  _function(&function), _valid(function.isValid()), _printEvalCounter(printEvalCounter)
+RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, Bool_t doPrintEvalCounter) :
+  _function(&function), _valid(function.isValid()), _printEvalCounter(doPrintEvalCounter)
 {
 }
 

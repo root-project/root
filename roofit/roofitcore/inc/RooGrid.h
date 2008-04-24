@@ -28,9 +28,13 @@ public:
   virtual ~RooGrid();
 
   // Printing interface
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
   inline Bool_t isValid() const { return _valid; }

@@ -45,7 +45,6 @@ public:
   virtual void findConstantNodes(const RooArgSet& /*obs*/, RooArgSet& /*cacheList*/, RooLinkedList& /*processedNodes*/) ;
 
   virtual void insertObjectHook(RooAbsCacheElement&) ;
-
  
 protected:
 

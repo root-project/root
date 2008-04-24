@@ -74,7 +74,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _sumCat("!sumCat","SuperCategory for summation",this,kFALSE,kFALSE),
   _sumCatIter(0),
   _mode(0),
-  _operMode(Hybrid), 
+  _intOperMode(Hybrid), 
   _restartNumIntEngine(kFALSE),
   _numIntEngine(0), 
   _numIntegrand(0),
@@ -107,6 +107,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 				     << function.GetName() << " over observables" << depList << " with normalization " 
 				     << (funcNormSet?*funcNormSet:RooArgSet()) << " with range identifier " 
 				     << (rangeName?rangeName:"<none>") << endl ;
+
 
   // Use objects integrator configuration if none is specified
   if (!_iconfig) _iconfig = (RooNumIntConfig*) function.getIntegratorConfig() ;
@@ -251,10 +252,16 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   sIter = function.serverIterator() ;
   while((arg=(RooAbsArg*)sIter->Next())) {
 
+    //cout << "considering server" << arg->GetName() << endl ;
+
     // Dependent or parameter?
     if (!arg->dependsOnValue(intDepList)) {
 
-      addServer(*arg,kTRUE,kFALSE) ;
+      //cout << " server does not depend on observables, adding server as value server to integral" << endl ;
+
+      if (function.dependsOnValue(*arg)) {
+	addServer(*arg,kTRUE,kFALSE) ;
+      }
 
       continue ;
 
@@ -262,15 +269,37 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
       // Add final dependents of arg as shape servers
       RooArgSet argLeafServers ;
-      arg->leafNodeServerList(&argLeafServers) ;
+      arg->leafNodeServerList(&argLeafServers,0,kFALSE) ;
 
+      //arg->printCompactTree() ;
+      //cout << "leaf nodes of server are " << argLeafServers << " depList = " << depList << endl ;
+
+      // Skip arg if it is neither value or shape server
+      if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
+	//cout << " server is neither value not shape server of function, ignoring" << endl ;
+	continue ;
+      }
+      
       TIterator* lIter = argLeafServers.createIterator() ;
       RooAbsArg* leaf ;
       while((leaf=(RooAbsArg*)lIter->Next())) {
-	if (depList.find(leaf->GetName()) && isValueServer(*leaf)) {
-	  oocxcoutD(&function,Integration) << function.GetName() << ": Adding observable " << leaf->GetName() << " of server " << arg->GetName() << " as shape dependent" << endl ;
-	  addServer(*leaf,kFALSE,kTRUE) ;
+
+	//cout << " considering leafnode " << leaf->GetName() << " of server " << arg->GetName() << endl ;
+
+	if (depList.find(leaf->GetName()) && function.dependsOnValue(*leaf)) {
+
+	  RooAbsRealLValue* leaflv = dynamic_cast<RooAbsRealLValue*>(leaf) ;
+	  if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
+	    oocxcoutD(&function,Integration) << function.GetName() << " : Observable " << leaf->GetName() << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf" << endl ;
+	    addServer(*leaflv->getBinning(rangeName).lowBoundFunc(),kTRUE,kFALSE) ;
+	    addServer(*leaflv->getBinning(rangeName).highBoundFunc(),kTRUE,kFALSE) ;
+	  } else {
+	    oocxcoutD(&function,Integration) << function.GetName() << ": Adding observable " << leaf->GetName() << " of server " 
+					     << arg->GetName() << " as shape dependent" << endl ;
+	    addServer(*leaf,kFALSE,kTRUE) ;
+	  }
 	} else if (!depList.find(leaf->GetName())) {
+
 	  oocxcoutD(&function,Integration) << function.GetName() << ": Adding parameter " << leaf->GetName() << " of server " << arg->GetName() << " as value dependent" << endl ;
 	  addServer(*leaf,kTRUE,kFALSE) ;
 	}	
@@ -356,7 +385,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   while ((arg=(RooAbsArg*)aiIter->Next())) {    
 
     // Process only derived RealLValues
-    if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class()) && arg->isDerived()) {
+    if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class()) && arg->isDerived() && !arg->isFundamental()) {
 
       // Add to list of Jacobians to calculate
       _jacList.add(*arg) ;
@@ -379,7 +408,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Loop again over function servers to add remaining numeric integrations
   sIter->Reset() ;
   while((arg=(RooAbsArg*)sIter->Next())) {
-    
+
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(intDepList)) {
 
@@ -390,7 +419,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	
 	// Expand server in final dependents 
 	RooArgSet *argDeps = arg->getObservables(&intDepList) ;
-	
+
 	// Add final dependents, that are not forcibly integrated analytically, 
 	// to numerical integration list      
 	TIterator* iter = argDeps->createIterator() ;
@@ -438,13 +467,13 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Determine operating mode
   if (numIntDepList.getSize()>0) {
     // Numerical and optional Analytical integration
-    _operMode = Hybrid ;
+    _intOperMode = Hybrid ;
   } else if (_anaList.getSize()>0) {
     // Purely analytical integration
-    _operMode = Analytic ;    
+    _intOperMode = Analytic ;    
   } else {
     // No integration performed
-    _operMode = PassThrough ;
+    _intOperMode = PassThrough ;
   }
 
   // Determine auto-dirty status  
@@ -598,7 +627,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _sumCat("!sumCat",this,other._sumCat),
   _sumCatIter(0),
   _mode(other._mode),
-  _operMode(other._operMode), 
+  _intOperMode(other._intOperMode), 
   _restartNumIntEngine(kFALSE),
   _numIntEngine(0), 
   _numIntegrand(0),
@@ -638,7 +667,7 @@ RooRealIntegral::~RooRealIntegral()
 Double_t RooRealIntegral::evaluate() const 
 {  
   Double_t retVal(0) ;
-  switch (_operMode) {    
+  switch (_intOperMode) {    
     
   case Hybrid: 
     {      
@@ -670,10 +699,9 @@ Double_t RooRealIntegral::evaluate() const
   case Analytic:
     {
       retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) / jacobianProduct() ;
-      if (RooAbsPdf::_verboseEval>0)
-	cxcoutD(Tracing) << "RooRealIntegral::evaluate_analytic(" << GetName() 
-			 << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
-			 << " raw = " << retVal << endl ;
+      cxcoutD(Tracing) << "RooRealIntegral::evaluate_analytic(" << GetName() 
+		       << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
+		       << " raw = " << retVal << " _funcNormSet = " << (_funcNormSet?*_funcNormSet:RooArgSet()) << endl ;
       break ;
     }
 
@@ -707,17 +735,17 @@ Double_t RooRealIntegral::evaluate() const
 
 
   if (dologD(Tracing)) {
-    cxcoutD(Tracing) << "RooRealIntegral::evaluate() anaInt = " << _anaList << " numInt = " << _intList << _sumList << " mode = " ;
+    cxcoutD(Tracing) << "RooRealIntegral::evaluate(" << GetName() << ") anaInt = " << _anaList << " numInt = " << _intList << _sumList << " mode = " ;
     switch(_mode) {
-    case Hybrid: ccoutD(Tracing) << "Hybrid" << endl ; break ;
-    case Analytic: ccoutD(Tracing) << "Analytic" << endl ; break ;
-    case PassThrough: ccoutD(Tracing) << "PassThrough" << endl ; break ;
+    case Hybrid: ccoutD(Tracing) << "Hybrid" ; break ;
+    case Analytic: ccoutD(Tracing) << "Analytic" ; break ;
+    case PassThrough: ccoutD(Tracing) << "PassThrough" ; break ;
     }
+
+    ccxcoutD(Tracing) << "raw*fact = " << retVal << endl ;
+
   }
 
-  if (RooAbsPdf::_verboseEval>0) {
-    cxcoutD(Tracing) << "RooRealIntegral::evaluate(" << GetName() << ") raw*fact = " << retVal << endl ;
-  }
   return retVal ;
 }
 
@@ -789,7 +817,7 @@ Double_t RooRealIntegral::integrate() const
     // Partial or complete numerical integration
 //     if(_intList.getSize() > 1) {
 //       cout << "RooRealIntegral: Integrating out ";
-//       _intList.printToStream(cout,OneLine);
+//       _intList.printStream(cout,OneLine);
 //     }
     return _numIntEngine->calculate() ;
   }
@@ -814,6 +842,13 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerL
 }
 
 
+void RooRealIntegral::operModeHook()
+{
+  if (_operMode==ADirty) {
+    
+  }
+}
+
 
 
 Bool_t RooRealIntegral::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const 
@@ -823,37 +858,30 @@ Bool_t RooRealIntegral::isValidReal(Double_t /*value*/, Bool_t /*printError*/) c
 }
 
 
-void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooRealIntegral::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Print the state of this object to the specified output stream.
-  RooAbsReal::printToStream(os,opt,indent) ;
-  if (opt==Verbose) {
-    os << indent << "--- RooRealIntegral ---" << endl;
-    os << indent << "  Integrates ";
-    _function.arg().printToStream(os,Standard,indent);
-    TString deeper(indent);
-    deeper.Append("  ");
-    os << indent << "  operating mode is " 
-       << (_operMode==Hybrid?"Hybrid":(_operMode==Analytic?"Analytic":"PassThrough")) << endl ;
-    os << indent << "  Summed discrete args are ";
-    _sumList.printToStream(os,Standard,deeper);
-    os << indent << "  Numerically integrated args are ";
-    _intList.printToStream(os,Standard,deeper);
-    os << indent << "  Analytically integrated args using mode " << _mode << " are ";
-    _anaList.printToStream(os,Standard,deeper);
-    os << indent << "  Arguments included in Jacobian are ";
-    _jacList.printToStream(os,Standard,deeper);
-    os << indent << "  Factorized arguments are ";
-    _facList.printToStream(os,Standard,deeper);
-    os << indent << "  Function normalization set " ;
-    if (_funcNormSet) 
-      _funcNormSet->Print("1") ; 
-    else
-      os << "<none>" ;
-
-    os << endl ;
-    return ;
-  }
+  RooAbsReal::printMultiline(os,contents,verbose,indent) ;
+  os << indent << "--- RooRealIntegral ---" << endl; 
+  os << indent << "  Integrates ";
+  _function.arg().printStream(os,kName|kArgs,kSingleLine,indent);
+  TString deeper(indent);
+  deeper.Append("  ");
+  os << indent << "  operating mode is " 
+     << (_intOperMode==Hybrid?"Hybrid":(_intOperMode==Analytic?"Analytic":"PassThrough")) << endl ;
+  os << indent << "  Summed discrete args are " << _sumList << endl ;
+  os << indent << "  Numerically integrated args are " << _intList << endl;
+  os << indent << "  Analytically integrated args using mode " << _mode << " are " << _anaList << endl ;
+  os << indent << "  Arguments included in Jacobian are " << _jacList << endl ;
+  os << indent << "  Factorized arguments are " << _facList << endl ;
+  os << indent << "  Function normalization set " ;
+  if (_funcNormSet) 
+    _funcNormSet->Print("1") ; 
+  else
+    os << "<none>" ;
+  
+  os << endl ;
 } 
+
 
 

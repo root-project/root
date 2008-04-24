@@ -133,7 +133,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 
 
-RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff) :
+RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& inPdfList, Double_t cutOff) :
   RooAbsPdf(name,title), 
   _cacheMgr(this,10),
   _genCode(10),
@@ -159,7 +159,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
   // If a cutoff is specified, the PDFs most likely to be small should
   // be put first in the product. The default cutOff value is zero.
 
-  TIterator* iter = pdfList.createIterator() ;
+  TIterator* iter = inPdfList.createIterator() ;
   RooAbsArg* arg ;
   Int_t numExtended(0) ;
   while((arg=(RooAbsArg*)iter->Next())) {
@@ -209,10 +209,10 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
   // Constructor from named argument list
   //
   // fullPdf -- Set of 'regular' PDFS that are normalized over all their observables
-  // ConditionalPdf(pdfSet,depSet) -- Add PDF to product with condition that it
-  //                                  only be normalized over specified observables
-  //                                  any remaining observables will be conditional
-  //                                  observables
+  // Conditional(pdfSet,depSet) -- Add PDF to product with condition that it
+  //                               only be normalized over specified observables
+  //                               any remaining observables will be conditional
+  //                               observables
   //                               
   //
   // For example, given a PDF F(x,y) and G(y)
@@ -259,10 +259,10 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
   // Constructor from named argument list
   //
   // fullPdf -- Set of 'regular' PDFS that are normalized over all their observables
-  // ConditionalPdf(pdfSet,depSet) -- Add PDF to product with condition that it
-  //                                  only be normalized over specified observables
-  //                                  any remaining observables will be conditional
-  //                                  observables
+  // Conditional(pdfSet,depSet) -- Add PDF to product with condition that it
+  //                               only be normalized over specified observables
+  //                               any remaining observables will be conditional
+  //                               observables
   //                               
   //
   // For example, given a PDF F(x,y) and G(y)
@@ -362,19 +362,19 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
    
       RooArgSet* pdfSet = (RooArgSet*) carg->getObject(0) ;
       RooArgSet* normSet = (RooArgSet*) carg->getObject(1) ;
-      TIterator* siter = pdfSet->createIterator() ;
-      RooAbsPdf* pdf ;
-      while((pdf=(RooAbsPdf*)siter->Next())) {
-	_pdfList.add(*pdf) ;
+      TIterator* siter2 = pdfSet->createIterator() ;
+      RooAbsPdf* thePdf ;
+      while((thePdf=(RooAbsPdf*)siter2->Next())) {
+	_pdfList.add(*thePdf) ;
 	_pdfNSetList.Add(normSet->snapshot()) ;       
 
-	if (pdf->canBeExtended()) {
-	  _extendedIndex = _pdfList.index(pdf) ;
+	if (thePdf->canBeExtended()) {
+	  _extendedIndex = _pdfList.index(thePdf) ;
 	  numExtended++ ;
 	}
 
       }
-      delete siter ;
+      delete siter2 ;
 
 
     } else if (TString(carg->GetName()).CompareTo("")) {
@@ -442,10 +442,11 @@ Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedLis
     Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
     value *= piVal ;
 //     if (_verboseEval<0) {
-//       cout << "RPP:calc(" << GetName() << "): value *= " << piVal << " (" << partInt->GetName() << ") nset = " ; normSet->Print("1") ;
+//      cout << "RPP:calc(" << GetName() << "): value *= " << piVal << " (" << partInt->GetName() << ") nset = " ; normSet->Print("1") ;
+//      partInt->getVariables()->Print("v") ;
 //     }
     if (value<_cutOff) {
-      //cout << "RooProdPdf::calculate(" << GetName() << ") calculation cut off after " << partInt->GetName() << endl ; 
+//        cout << "RooProdPdf::calculate(" << GetName() << ") calculation cut off after " << partInt->GetName() << endl ; 
       break ;
     }
   }
@@ -507,9 +508,9 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
     // Make list of normalization dependents for this PDF ;
     if (pdfNSet->getSize()>0) {
-      RooArgSet* tmp = (RooArgSet*) pdfAllDeps.selectCommon(*pdfNSet) ;
-      pdfNormDeps.add(*tmp) ;
-      delete tmp ;
+      RooArgSet* tmp2 = (RooArgSet*) pdfAllDeps.selectCommon(*pdfNSet) ;
+      pdfNormDeps.add(*tmp2) ;
+      delete tmp2 ;
     } else {
       pdfNormDeps.add(pdfAllDeps) ;
     }
@@ -835,11 +836,11 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 //       cout << "----" << endl ;
 
       // See if any term in this group depends in any ay on outerDepInt
-      RooArgSet* term ;
-      TIterator* tIter = group->MakeIterator() ;
-      while((term=(RooArgSet*)tIter->Next())) {
+      RooArgSet* term2 ;
+      TIterator* tIter2 = group->MakeIterator() ;
+      while((term2=(RooArgSet*)tIter2->Next())) {
 
-	Int_t termIdx = terms.IndexOf(term) ;
+	Int_t termIdx = terms.IndexOf(term2) ;
 	RooArgSet* termNormDeps = (RooArgSet*) norms.At(termIdx) ;
 	RooArgSet* termIntDeps = (RooArgSet*) ints.At(termIdx) ;
 	RooArgSet* termImpDeps = (RooArgSet*) imps.At(termIdx) ;
@@ -860,10 +861,10 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 	}
 	
 	// Add terms of this group to new term      
-	tIter->Reset() ;
-	while((term=(RooArgSet*)tIter->Next())) {
+	tIter2->Reset() ;
+	while((term2=(RooArgSet*)tIter->Next())) {
 // 	  cout << "transferring group term to new merged group" << endl ;
-	  newGroup->Add(term) ;	  
+	  newGroup->Add(term2) ;	  
 	}
 
 	// Remove this group from list and delete it (but not its contents)
@@ -1107,7 +1108,8 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
   Double_t val = calculate(partIntList,normList) ;
   
-  //cout << "RPP::aIWN(" << GetName() << ") value = " << val << endl ;
+//   cout << "RPP::aIWN(" << GetName() << ") ,code = " << code << ", value = " << val << endl ;
+//   partIntList->Print("v") ;
   return val ;
 }
 
@@ -1149,6 +1151,9 @@ RooAbsPdf::ExtendMode RooProdPdf::extendMode() const
 
 Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const 
 {
+  if (_extendedIndex<=0) {
+    coutE(Generation) << "ERROR: Requesting expected number of events from a RooProdPdf that does not contain an extended p.d.f" << endl ;
+  }
   assert(_extendedIndex>=0) ;
   return ((RooAbsPdf*)_pdfList.at(_extendedIndex))->expectedEvents(nset) ;
 }
@@ -1307,4 +1312,25 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const
   Int_t idx = _pdfList.index(&pdf) ;
   if (idx<0) return 0 ;
   return (RooArgSet*) _pdfNSetList.At(idx) ;
+}
+
+
+RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const
+{
+  RooArgSet* ret = new RooArgSet("constraints") ;
+
+  // Loop over p.d.f. components
+  TIterator* piter = _pdfList.createIterator() ;
+  RooAbsPdf* pdf ;
+  while((pdf=(RooAbsPdf*)piter->Next())) {
+    // A constraint term is a p.d.f that does not depend on any of the listed observables
+    // but does depends on any of the parameters that should be constrained
+    if (!pdf->dependsOnValue(observables) && pdf->dependsOnValue(constrainedParams)) {
+      ret->add(*pdf) ;
+    }
+  }
+
+  delete piter ;
+
+  return ret ;
 }

@@ -22,22 +22,24 @@
 
 class RooArgSet ;
 class RooAbsData ;
-class RooAbsPdf ;
+class RooAbsReal ;
 
 class RooAbsOptTestStatistic : public RooAbsTestStatistic {
 public:
 
   // Constructors, assignment etc
   RooAbsOptTestStatistic() ;
-  RooAbsOptTestStatistic(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
+  RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-			 Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) ;
+			 Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) ;
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
   virtual ~RooAbsOptTestStatistic();
 
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const ;
 
 protected:
+
+  friend class RooAbsReal ;
 
   void constOptimizeTestStatistic(ConstOpCode opcode) ;
   
@@ -48,9 +50,9 @@ protected:
   void optimizeConstantTerms(Bool_t) ;
 
   RooArgSet*  _normSet ;
-  RooArgSet*  _pdfCloneSet ;
+  RooArgSet*  _funcCloneSet ;
   RooAbsData* _dataClone ;
-  RooAbsPdf*  _pdfClone ;
+  RooAbsReal* _funcClone ;
   RooArgSet*  _projDeps ;
 
   ClassDef(RooAbsOptTestStatistic,1) // Abstract real-valued variable

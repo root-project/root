@@ -50,14 +50,14 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::CacheElem& cache) con
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
   RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
-  RooAbsSelfCachedPdf* clone = (RooAbsSelfCachedPdf*) cloneSet->find(GetName()) ;
-  clone->disableCache(kTRUE) ;
-  clone->attachDataSet(cacheHist) ;
+  RooAbsSelfCachedPdf* clone2 = (RooAbsSelfCachedPdf*) cloneSet->find(GetName()) ;
+  clone2->disableCache(kTRUE) ;
+  clone2->attachDataSet(cacheHist) ;
 
   // Iterator over all bins of RooDataHist and fill weights
   for (Int_t i=0 ; i<cacheHist.numEntries() ; i++) {
     const RooArgSet* obs = cacheHist.get(i) ;
-    Double_t wgt = clone->getVal(obs) ;
+    Double_t wgt = clone2->getVal(obs) ;
     cacheHist.set(wgt) ;
   }
 

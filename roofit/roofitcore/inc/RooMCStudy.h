@@ -58,6 +58,7 @@ public:
   const RooFitResult* fitResult(Int_t sampleNum) const ;
   const RooDataSet* genData(Int_t sampleNum) const ;
   const RooDataSet& fitParDataSet() ;
+  const RooDataSet* genParDataSet() const { return _genParData ; }
 
   // Plot methods
   RooPlot* plotParamOn(RooPlot* frame, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
@@ -110,6 +111,9 @@ protected:
   const RooDataSet* _genProtoData ;    // Generator prototype data set
   RooArgSet         _projDeps ;        // List of projected dependents in fit
 
+  RooAbsPdf*        _constrPdf ;        // Constraints p.d.f
+  RooAbsGenContext* _constrGenContext ; // Generator context for constraints p.d.f
+
   RooArgSet    _dependents ;    // List of dependents 
   RooArgSet    _allDependents ; // List of generate + prototype dependents
   RooAbsPdf*   _fitModel ;      // Fit model 
@@ -119,6 +123,7 @@ protected:
   
   TList       _genDataList ;    // List of generated data sample
   TList       _fitResList ;     // List of RooFitResult fit output objects
+  RooDataSet* _genParData ;     // List of of generated parameters of each sample
   RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
   TString     _fitOptions ;     // Fit options string
   RooLinkedList _fitOptList ;   // Fit option command list 
@@ -129,6 +134,7 @@ protected:
 
   Bool_t      _canAddFitResults ; // Allow adding of external fit results?
   Bool_t      _verboseGen       ; // Verbose generation?
+  Bool_t      _perExptGenParams ; // Do generation parameter change per event?
 
   std::list<RooAbsMCStudyModule*> _modList ; // List of additional study modules ;
 

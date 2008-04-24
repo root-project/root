@@ -36,10 +36,14 @@ public:
   const RooArgSet *generateEvent(UInt_t remaining);
 
   // ascii printing interface
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
-  inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+   inline virtual void Print(Option_t *options= 0) const {
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
+
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
 
   Double_t getFuncMax() ;
   void attachParameters(const RooArgSet& vars) ;

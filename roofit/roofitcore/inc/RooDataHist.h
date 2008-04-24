@@ -51,7 +51,7 @@ public:
   }
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, Double_t weight=1.0) { add(row,weight,-1.) ; }
+  virtual void add(const RooArgSet& row, Double_t wgt=1.0) { add(row,wgt,-1.) ; }
   virtual void add(const RooArgSet& row, Double_t weight, Double_t sumw2) ;
   void set(Double_t weight, Double_t wgtErr=-1) ;
   void set(const RooArgSet& row, Double_t weight, Double_t wgtErr=-1) ;

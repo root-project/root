@@ -25,10 +25,15 @@ public:
   RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho= 0, Int_t points= 100);
   virtual ~RooEllipse();
 
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
-  };
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
+  }
 
   // These methods return zero to indicate that they do not support
   // this interface. See RooPlot::updateFitRangeNorm() for details.

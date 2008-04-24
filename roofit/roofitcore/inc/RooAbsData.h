@@ -93,8 +93,17 @@ public:
 
   // Printing interface (human readable)
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
+
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
+  virtual void printValue(ostream& os) const ;
+
+  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
 
 protected:
 

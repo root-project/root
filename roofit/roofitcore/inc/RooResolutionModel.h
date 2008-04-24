@@ -44,7 +44,7 @@ public:
 
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*identity() ; }
 
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
   static void cleanup() ;
 

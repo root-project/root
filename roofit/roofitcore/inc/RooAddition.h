@@ -40,8 +40,8 @@ protected:
   RooArgList   _ownedList ;
   RooListProxy _set1 ;
   RooListProxy _set2 ;
-  TIterator* _setIter1 ;  //! do not persist
-  TIterator* _setIter2 ;  //! do not persist
+  mutable TIterator* _setIter1 ;  //! do not persist
+  mutable TIterator* _setIter2 ;  //! do not persist
 
   Double_t evaluate() const;
 

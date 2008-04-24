@@ -36,7 +36,7 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

@@ -27,6 +27,7 @@
 #include "RooMsgService.h"
 
 #include "Riostream.h"
+#include "TClass.h"
 #include <math.h>
 #include <assert.h>
 
@@ -99,17 +100,26 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
   }
 }
 
-void RooEllipse::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this histogram to the specified output stream.
-  //
-  //   Standard: number of entries
-  //    Verbose: print points on curve
 
-  oneLinePrint(os,*this);
-  RooPlotable::printToStream(os,opt,indent);
-  if(opt == Verbose) {
-    for(Int_t index=0; index < fNpoints; index++) {
-      os << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;
-    }
+void RooEllipse::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooEllipse::printTitle(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooEllipse::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooEllipse::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+{
+  RooPlotable::printMultiline(os,contents,verbose,indent);
+  for(Int_t index=0; index < fNpoints; index++) {
+    os << indent << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;
   }
 }

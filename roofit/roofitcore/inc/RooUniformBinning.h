@@ -45,8 +45,6 @@ public:
   virtual Double_t averageBinWidth() const { return _binw ; }
   virtual Double_t* array() const ;
 
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
-
 protected:
 
   mutable Double_t* _array ; //! do not persist

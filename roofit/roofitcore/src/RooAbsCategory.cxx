@@ -241,7 +241,7 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
   if (printError) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for ";
     if (dologE(InputArguments)) {
-      other.printToStream(ccoutE(InputArguments),OneLine);
+      other.printStream(ccoutE(InputArguments),kName|kValue,kSingleLine);
     }
   }
   return 0 ;
@@ -325,30 +325,33 @@ void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
   }
 }
 
-void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooAbsCategory::printValue(ostream& os) const
+{
+  os << getLabel() ;
+}
+
+void RooAbsCategory::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Print info about this object to the specified stream. In addition to the info
-  // from RooAbsArg::printToStream() we add:
+  // from RooAbsArg::printStream() we add:
   //
   //     Shape : label, index, defined types
 
-  RooAbsArg::printToStream(os,opt,indent);
-  if(opt >= Shape) {
-    os << indent << "--- RooAbsCategory ---" << endl;
-    if (_types.GetEntries()==0) {
-      os << indent << "  ** No values defined **" << endl;
-      return;
-    }
-    os << indent << "  Value is \"" << getLabel() << "\" (" << getIndex() << ")" << endl;
-    os << indent << "  Has the following possible values:" << endl;
-    indent.Append("    ");
-    opt= lessVerbose(opt);
-    RooCatType *type;
-    _typeIter->Reset() ;
-    while((type=(RooCatType*)_typeIter->Next())) {
-      os << indent;
-      type->printToStream(os,opt,indent);
-    }
+  RooAbsArg::printMultiline(os,contents,verbose,indent);
+
+  os << indent << "--- RooAbsCategory ---" << endl;
+  if (_types.GetEntries()==0) {
+    os << indent << "  ** No values defined **" << endl;
+    return;
+  }
+  os << indent << "  Value is \"" << getLabel() << "\" (" << getIndex() << ")" << endl;
+  os << indent << "  Has the following possible values:" << endl;
+  indent.Append("    ");
+  RooCatType *type;
+  _typeIter->Reset() ;
+  while((type=(RooCatType*)_typeIter->Next())) {
+    os << indent;
+    type->printStream(os,kName|kValue,kSingleLine,indent);
   }
 }
 

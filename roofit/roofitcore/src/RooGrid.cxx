@@ -27,6 +27,7 @@
 #include "RooRandom.h"
 #include "TMath.h"
 #include "RooMsgService.h"
+#include "TClass.h"
 
 #include <math.h>
 #include "Riostream.h"
@@ -228,24 +229,40 @@ Bool_t RooGrid::nextBox(UInt_t box[]) const {
   return kFALSE;
 }
 
-void RooGrid::printToStream(ostream& os, PrintOption opt, TString indent) const {
+
+
+void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const {
   // Print info about this object to the specified stream.
 
   os << ClassName() << ": volume = " << getVolume() << endl;
-  if(opt >= Standard) {
-    os << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "
-       << getNBins() << " bin(s) and sampled with " << _boxes << " box(es)" << endl;
-    for(UInt_t index= 0; index < getDimension(); index++) {
-      os << indent << "  (" << index << ") ["
-	 << setw(10) << _xl[index] << "," << setw(10) << _xu[index] << "]" << endl;
-      if(opt < Verbose) continue;
-      for(UInt_t bin= 0; bin < _bins; bin++) {
-	os << indent << "    bin-" << bin << " : x = " << coord(bin,index) << " , y = "
-	   << value(bin,index) << endl;
-      }
+  os << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "
+     << getNBins() << " bin(s) and sampled with " << _boxes << " box(es)" << endl;
+  for(UInt_t index= 0; index < getDimension(); index++) {
+    os << indent << "  (" << index << ") ["
+       << setw(10) << _xl[index] << "," << setw(10) << _xu[index] << "]" << endl;
+    if(!verbose) continue;
+    for(UInt_t bin= 0; bin < _bins; bin++) {
+      os << indent << "    bin-" << bin << " : x = " << coord(bin,index) << " , y = "
+	 << value(bin,index) << endl;
     }
   }
 }
+
+void RooGrid::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooGrid::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooGrid::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
 
 void RooGrid::accumulate(const UInt_t bin[], Double_t amount) {
   // Add the specified amount to bin[j] of the 1D histograms associated

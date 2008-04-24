@@ -26,10 +26,10 @@ ClassImp(RooEffProd)
   ;
 
 RooEffProd::RooEffProd(const char *name, const char *title, 
-                             RooAbsPdf& pdf, RooAbsReal& eff) :
+                             RooAbsPdf& inPdf, RooAbsReal& inEff) :
   RooAbsPdf(name,title),
-  _pdf("pdf","pre-efficiency pdf", this,pdf),
-  _eff("eff","efficiency function",this,eff)
+  _pdf("pdf","pre-efficiency pdf", this,inPdf),
+  _eff("eff","efficiency function",this,inEff)
 {  
 
 }

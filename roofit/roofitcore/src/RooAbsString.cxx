@@ -112,14 +112,9 @@ void RooAbsString::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
 }
 
 
-void RooAbsString::printToStream(ostream& os, PrintOption /*opt*/, TString indent) const
+void RooAbsString::printValue(ostream& os) const
 {
-  //Print object contents
-  os << indent << "RooAbsString: " << GetName() << " = " << getVal();
-  os << indent << " : \"" << fTitle << "\"" ;
-
-  printAttribList(os) ;
-  os << endl ;
+  os << getVal() ;
 }
 
 

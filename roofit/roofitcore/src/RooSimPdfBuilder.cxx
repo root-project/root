@@ -774,19 +774,19 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		// Build now
 
 		char *tokptr = 0;
-		char *catName = strtok_r(token,",",&tokptr) ;
+		char *catName2 = strtok_r(token,",",&tokptr) ;
 
 		RooArgSet compCatSet ;
-		while(catName) {
-		  RooAbsArg* cat = splitCatSet.find(catName) ;
+		while(catName2) {
+		  RooAbsArg* cat = splitCatSet.find(catName2) ;
 		  
 		  // If not, check if it is an auxiliary splitcat
 		  if (!cat) {
-		    cat = (RooAbsCategory*) auxSplitSet.find(catName) ;
+		    cat = (RooAbsCategory*) auxSplitSet.find(catName2) ;
 		  }
 
 		  if (!cat) {
-		    coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << catName
+		    coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR " << catName2
 					  << " not found in the primary or auxilary splitcat list" << endl ;
 		    customizerList->Delete() ;
 		    delete customizerList ;
@@ -797,7 +797,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		  }
 		  compCatSet.add(*cat) ;
 
-		  catName = strtok_r(0,",",&tokptr) ;
+		  catName2 = strtok_r(0,",",&tokptr) ;
 		}		
 
 

@@ -380,7 +380,7 @@ const RooArgSet* RooDataSet::get() const
 } 
 
 
-void RooDataSet::add(const RooArgSet& data, Double_t weight) 
+void RooDataSet::add(const RooArgSet& data, Double_t wgt) 
 {
   // Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
   // Any variables present in 'data' but not in the dataset will be silently ignored
@@ -389,7 +389,7 @@ void RooDataSet::add(const RooArgSet& data, Double_t weight)
   checkInit() ;
 
   _varsNoWgt = data;
-  if (_wgtVar) _wgtVar->setVal(weight) ;
+  if (_wgtVar) _wgtVar->setVal(wgt) ;
   Fill();
 }
 
@@ -798,14 +798,14 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	{
 	  if(debug) oocxcoutD((TObject*)0,DataHandling) << "skipping comment on line " << line << endl;
 	    
-	  TString line ;
-	  line.ReadLine(file) ;
-	  if (line.Contains("#BLIND#")) {	  
+	  TString aline ;
+	  aline.ReadLine(file) ;
+	  if (aline.Contains("#BLIND#")) {	  
 	    haveBlindString = true ;
 	    if (haveRefBlindString) {
 	      
 	      // compare to ref blind string 
-	      TString curBlindString(line(7,line.Length()-7)) ;
+	      TString curBlindString(aline(7,aline.Length()-7)) ;
 	      if (debug) oocxcoutD((TObject*)0,DataHandling) << "Found blind string " << curBlindString << endl ;
 	      if (curBlindString != data->_blindString) {
 		  oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: ERROR blinding string mismatch, abort" << endl ;
@@ -814,7 +814,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	      
 	    } else {
 	      // store ref blind string 
-	      data->_blindString=TString(line(7,line.Length()-7)) ;
+	      data->_blindString=TString(aline(7,aline.Length()-7)) ;
 	      if (debug) oocxcoutD((TObject*)0,DataHandling) << "Storing ref blind string " << data->_blindString << endl ;
 	      haveRefBlindString = true ;
 	    }	    
@@ -896,14 +896,14 @@ Bool_t RooDataSet::write(const char* filename)
 }
 
 
-void RooDataSet::printToStream(ostream& os, PrintOption opt, TString indent) const {
+void RooDataSet::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const {
   // Print info about this dataset to the specified output stream.
   //
   //   Standard: number of entries
   //      Shape: list of variables we define & were generated with
 
-  RooTreeData::printToStream(os,opt,indent) ;
-  if (opt>=Shape && _wgtVar) {
+  RooTreeData::printMultiline(os,contents,verbose,indent) ;
+  if (_wgtVar) {
     os << indent << "  Dataset variable \"" << _wgtVar->GetName() << "\" is interpreted as the event weight" << endl ;
   }
 }

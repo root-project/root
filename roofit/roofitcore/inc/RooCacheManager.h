@@ -186,6 +186,7 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
     return lastIndex() ;
   } 
 
+
   if (sterileIdx>=0) {
     // Found sterile slot that can should be recycled [ sterileIndex only set if isetRangeName matches ]
     //cout << "RooCacheManager::setNormList(" << self->GetName() << "): recycling sterile slot " << lastIndex() << endl ;

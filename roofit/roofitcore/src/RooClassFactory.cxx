@@ -485,8 +485,8 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
        << endl  ;
 
     if (intObs.size()>0) {
-      for (UInt_t i=0 ; i<intObs.size() ; i++) {
-	cf << "   if (matchArgs(allVars,analVars," << intObs[i] << ")) return " << i+1 << " ; " << endl ;
+      for (UInt_t ii=0 ; ii<intObs.size() ; ii++) {
+	cf << "   if (matchArgs(allVars,analVars," << intObs[ii] << ")) return " << ii+1 << " ; " << endl ;
       }
     } else {
       cf << "   // if (matchArgs(allVars,analVars,x)) return 1 ; " << endl ;
@@ -506,8 +506,8 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
        << endl ;
 
     if (intObs.size()>0) {
-      for (UInt_t i=0 ; i<intObs.size() ; i++) {
-	cf << "   if (code==" << i+1 << ") { return (" << intExpr[i] << ") ; } " << endl ;
+      for (UInt_t ii=0 ; ii<intObs.size() ; ii++) {
+	cf << "   if (code==" << ii+1 << ") { return (" << intExpr[ii] << ") ; } " << endl ;
       }      
     } else {
       cf << "   // assert(code==1) ; " << endl 

@@ -20,6 +20,8 @@
 #include "RooPrintable.h"
 #include "TNamed.h" 
 class TIterator ;
+class RooAbsRealLValue ;
+class RooAbsReal ;
 
 class RooAbsBinning : public TNamed, public RooPrintable {
 public:
@@ -50,9 +52,22 @@ public:
   virtual Double_t* array() const = 0 ;
 
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const;
+
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
+  virtual void printValue(ostream& os) const ;
+  
+
+  virtual Bool_t isParameterized() const { return kFALSE ; }
+  virtual RooAbsReal* lowBoundFunc() const { return 0 ; }
+  virtual RooAbsReal* highBoundFunc() const { return 0 ; }
+  virtual Bool_t isShareable() const { return kTRUE ; }
+  virtual void insertHook(RooAbsRealLValue&) const {} ;
+  virtual void removeHook(RooAbsRealLValue&) const {} ;
 
 protected:
   

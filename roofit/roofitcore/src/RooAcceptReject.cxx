@@ -35,6 +35,7 @@
 #include "TString.h"
 #include "TIterator.h"
 #include "RooMsgService.h"
+#include "TClass.h"
 
 #include <assert.h>
 
@@ -140,7 +141,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   if(_verbose) {
     coutI(Generation) << fName << "::" << ClassName() << ":" << endl
 		      << "  Initializing accept-reject generator for" << endl << "    ";
-    _funcClone->Print();
+    _funcClone->printStream(ccoutI(Generation),kName,kSingleLine);
     if (_funcMaxVal) {
       ccoutI(Generation) << "  Function maximum provided, no trial sampling performed" << endl ;
     } else {
@@ -148,11 +149,12 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       ccoutI(Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
       ccoutI(Generation) << "  Min sampling trials is " << _minTrials << endl;
     }
-    ccoutI(Generation) << "  Will generate category vars ";
-    TString indent("  ");
-    _catVars.printToStream(ccoutI(Generation),Standard,indent);
-    ccoutI(Generation) << "  Will generate real vars ";
-    _realVars.printToStream(ccoutI(Generation),Standard,indent);
+    if (_catVars.getSize()>0) {
+      ccoutI(Generation) << "  Will generate category vars "<< _catVars << endl ;
+    }
+    if (_realVars.getSize()>0) {
+      ccoutI(Generation) << "  Will generate real vars " << _realVars << endl ;
+    }
   }
 
   // create a fundamental type for storing function values
@@ -199,10 +201,6 @@ RooAcceptReject::~RooAcceptReject() {
   delete _funcValStore;
 }
 
-void RooAcceptReject::printToStream(ostream &os, PrintOption /*opt*/, TString /*indent*/) const
-{
-  oneLinePrint(os,*this);
-}
 
 
 
@@ -360,6 +358,27 @@ Double_t RooAcceptReject::getFuncMax()
   }  
 
   return _maxFuncVal ;
+}
+
+
+void RooAcceptReject::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooAcceptReject::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooAcceptReject::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooAcceptReject::printArgs(ostream& os) const 
+{
+  os << "[ function=" << _funcClone->GetName() << " catobs=" << _catVars << " realobs=" << _realVars << " ]" ;
 }
 
 

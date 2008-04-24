@@ -83,29 +83,29 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
 
   // Double_t range = getMax() - getMin() ; // ok for +/-INIFINITY
   Double_t clippedValue(value);
-  Bool_t inRange(kTRUE) ;
+  Bool_t isInRange(kTRUE) ;
 
   // test this value against our upper fit limit
   if(hasMax() && value > (getMax(rangeName)+1e-6)) {
     if (clippedValPtr) {
-      coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-			    << " rounded down to max limit " << getMax(rangeName) << endl ;
+//       coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
+// 			    << " rounded down to max limit " << getMax(rangeName) << endl ;
     }
     clippedValue = getMax(rangeName);
-    inRange = kFALSE ;
+    isInRange = kFALSE ;
   }
   // test this value against our lower fit limit
   if(hasMin() && value < getMin(rangeName)-1e-6) {
     if (clippedValPtr) {
-      coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-			    << " rounded up to min limit " << getMin(rangeName) << endl;
+//       coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
+// 			    << " rounded up to min limit " << getMin(rangeName) << endl;
     }
     clippedValue = getMin(rangeName);
-    inRange = kFALSE ;
+    isInRange = kFALSE ;
   } 
 
   if (clippedValPtr) *clippedValPtr=clippedValue ;
-  return inRange ;
+  return isInRange ;
 }
 
 
@@ -246,16 +246,16 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const {
   const char* name = pc.getString("name",0,kTRUE) ;
   const char* title = pc.getString("title",0,kTRUE) ;
 
-  RooPlot* frame = new RooPlot(*this,xmin,xmax,nbins) ;
+  RooPlot* theFrame = new RooPlot(*this,xmin,xmax,nbins) ;
 
   if (name) {
-    frame->SetName(name) ;
+    theFrame->SetName(name) ;
   }
   if (title) {
-    frame->SetTitle(title) ;
+    theFrame->SetTitle(title) ;
   }
 
-  return frame ;
+  return theFrame ;
 }
 
 RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const {
@@ -333,32 +333,25 @@ void RooAbsRealLValue::copyCache(const RooAbsArg* source)
   setVal(_value) ; // force back-propagation
 }
 
-
-
-void RooAbsRealLValue::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this object to the specified stream. In addition to the info
-  // from RooAbsReal::printToStream() we add:
-  //
-  //   Verbose : fit range and error
-
-  RooAbsReal::printToStream(os,opt,indent);
-  if(opt >= Verbose) {
-    os << indent << "--- RooAbsRealLValue ---" << endl;
-    TString unit(_unit);
-    if(!unit.IsNull()) unit.Prepend(' ');
-    os << indent << "  Fit range is [ ";
-    if(hasMin()) {
-      os << getMin() << unit << " , ";
-    }
-    else {
-      os << "-INF , ";
-    }
-    if(hasMax()) {
-      os << getMax() << unit << " ]" << endl;
-    }
-    else {
-      os << "+INF ]" << endl;
-    }
+void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+{
+  // Structure printing
+  RooAbsReal::printMultiline(os,contents,verbose,indent);
+  os << indent << "--- RooAbsRealLValue ---" << endl;
+  TString unit(_unit);
+  if(!unit.IsNull()) unit.Prepend(' ');
+  os << indent << "  Fit range is [ ";
+  if(hasMin()) {
+    os << getMin() << unit << " , ";
+  }
+  else {
+    os << "-INF , ";
+  }
+  if(hasMax()) {
+    os << getMax() << unit << " ]" << endl;
+  }
+  else {
+    os << "+INF ]" << endl;
   }
 }
 
@@ -818,13 +811,13 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   if((0 != tAxisLabel) && (0 != strlen(tAxisLabel))) {
     TString axisTitle(tAxisLabel);
     axisTitle.Append(" / ( ");
-    for(Int_t index= 0; index < dim; index++) {
-      Double_t delta= bins[index]->averageBinWidth() ; // xyz[index]->getBins();
-      if(index > 0) axisTitle.Append(" x ");
+    for(Int_t index2= 0; index2 < dim; index2++) {
+      Double_t delta= bins[index2]->averageBinWidth() ; // xyz[index2]->getBins();
+      if(index2 > 0) axisTitle.Append(" x ");
       axisTitle.Append(Form("%g",delta));
-      if(strlen(xyz[index]->getUnit())) {
+      if(strlen(xyz[index2]->getUnit())) {
 	axisTitle.Append(" ");
-	axisTitle.Append(xyz[index]->getUnit());
+	axisTitle.Append(xyz[index2]->getUnit());
       }
     }
     axisTitle.Append(" )");

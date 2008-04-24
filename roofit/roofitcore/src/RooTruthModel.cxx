@@ -31,8 +31,8 @@ ClassImp(RooTruthModel)
 ;
 
 
-RooTruthModel::RooTruthModel(const char *name, const char *title, RooRealVar& x) : 
-  RooResolutionModel(name,title,x)
+RooTruthModel::RooTruthModel(const char *name, const char *title, RooRealVar& xIn) : 
+  RooResolutionModel(name,title,xIn)
 {  
   // Constructor
 
@@ -81,7 +81,7 @@ Int_t RooTruthModel::basisCode(const char* name) const
 
 
 
-void RooTruthModel::changeBasis(RooFormulaVar* basis) 
+void RooTruthModel::changeBasis(RooFormulaVar* inBasis) 
 {
   // Process change basis function. Since we actually
   // evaluate the basis function object, we need to
@@ -93,12 +93,12 @@ void RooTruthModel::changeBasis(RooFormulaVar* basis)
   }
 
   // Change basis pointer and update client-server link
-  _basis = basis ;
+  _basis = inBasis ;
   if (_basis) {
     addServer(*_basis,kTRUE,kFALSE) ;
   }
 
-  _basisCode = basis?basisCode(basis->GetTitle()):0 ;
+  _basisCode = inBasis?basisCode(inBasis->GetTitle()):0 ;
 }
 
 

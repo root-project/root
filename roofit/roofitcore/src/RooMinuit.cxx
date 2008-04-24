@@ -94,6 +94,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _profile = kFALSE ;
   _handleLocalErrors = kFALSE ;
   _printLevel = 1 ;
+  _printEvalErrors = 10 ;
   _warnLevel = 0 ;
 
   // Examine parameter list
@@ -242,7 +243,10 @@ Int_t RooMinuit::migrad()
 
   synchronize(_verbose) ;
   profileStart() ;
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("MIGRAD",arglist,2);
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -259,7 +263,10 @@ Int_t RooMinuit::hesse()
 
   synchronize(_verbose) ;
   profileStart() ;
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("HESSE",arglist,1);
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -275,7 +282,10 @@ Int_t RooMinuit::minos()
 
   synchronize(_verbose) ;
   profileStart() ;
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1);
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -305,7 +315,10 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
 
   synchronize(_verbose) ;
   profileStart() ;
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   profileStop() ;
   backProp() ;
 
@@ -322,7 +335,10 @@ Int_t RooMinuit::seek()
 
   synchronize(_verbose) ;
   profileStart() ;
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("SEEK",arglist,1);
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -338,7 +354,10 @@ Int_t RooMinuit::simplex()
 
   synchronize(_verbose) ;
   profileStart() ;
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("SIMPLEX",arglist,2);
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -353,7 +372,10 @@ Int_t RooMinuit::improve()
 
   synchronize(_verbose) ;
   profileStart() ;
+  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("IMPROVE",arglist,1);
+  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -798,7 +820,7 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
 }
 
 
-Bool_t RooMinuit::setLogFile(const char* logfile) 
+Bool_t RooMinuit::setLogFile(const char* inLogfile) 
 {
   if (_logfile) {
     coutI(Minimization) << "RooMinuit::setLogFile: closing previous log file" << endl ;
@@ -806,9 +828,9 @@ Bool_t RooMinuit::setLogFile(const char* logfile)
     delete _logfile ;
     _logfile = 0 ;
   }
-  _logfile = new ofstream(logfile) ;
+  _logfile = new ofstream(inLogfile) ;
   if (!_logfile->good()) {
-    coutI(Minimization) << "RooMinuit::setLogFile: cannot open file " << logfile << endl ;
+    coutI(Minimization) << "RooMinuit::setLogFile: cannot open file " << inLogfile << endl ;
     _logfile->close() ;
     delete _logfile ;
     _logfile= 0;
@@ -837,7 +859,7 @@ Bool_t RooMinuit::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
   RooRealVar* par = (RooRealVar*)_floatParamList->at(index) ;
 
   if (par->getVal()!=value) {
-    if (verbose) cxcoutD(Minimization) << par->GetName() << "=" << value << ", " ;
+    if (verbose) cout << par->GetName() << "=" << value << ", " ;
     par->setVal(value) ;  
     return kTRUE ;
   }
@@ -938,11 +960,31 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
 
   // Calculate the function for these parameters
   f= context->_func->getVal() ;
-  if (f==0 || (context->_handleLocalErrors&&RooAbsPdf::evalError())) {
-    oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status. Returning maximum FCN" << endl
-				  << "            so far (" << maxFCN << ") to force MIGRAD to back out of this region" << endl ;
+  if (f==0 || (context->_handleLocalErrors&&(RooAbsPdf::evalError()) || RooAbsReal::numEvalErrors()>0) ) {
+
+    if (context->_printEvalErrors>=0) {
+      oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status." << endl 
+				    << "Returning maximum FCN so far (" << maxFCN 
+				    << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
+      
+      TIterator* iter = context->_floatParamList->createIterator() ;
+      RooRealVar* var ;
+      Bool_t first(kTRUE) ;
+      ooccoutW(context,Minimization) << "Parameter values: " ;
+      while((var=(RooRealVar*)iter->Next())) {
+	if (first) { first = kFALSE ; } else ooccoutW(context,Minimization) << ", " ;
+	ooccoutW(context,Minimization) << var->GetName() << "=" << var->getVal() ;
+      }
+      delete iter ;
+      ooccoutW(context,Minimization) << endl ;
+      
+      RooAbsReal::printEvalErrors(ooccoutW(context,Minimization),context->_printEvalErrors) ;
+      ooccoutW(context,Minimization) << endl ;
+    }
+
     f = maxFCN ;
     RooAbsPdf::clearEvalError() ;
+    RooAbsReal::clearEvalErrorLog() ;
     context->_numBadNLL++ ;
   } else if (f>maxFCN) {
     maxFCN = f ;

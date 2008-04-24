@@ -56,12 +56,12 @@ ClassImp(RooSimultaneous)
 
 
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
-				 RooAbsCategoryLValue& indexCat) : 
+				 RooAbsCategoryLValue& inIndexCat) : 
   RooAbsPdf(name,title), 
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
-  _indexCat("indexCat","Index category",this,indexCat),
+  _indexCat("indexCat","Index category",this,inIndexCat),
   _numPdf(0),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
@@ -77,12 +77,12 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 
 
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
-				 const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) :
+				 const RooArgList& inPdfList, RooAbsCategoryLValue& inIndexCat) :
   RooAbsPdf(name,title), 
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
-  _indexCat("indexCat","Index category",this,indexCat),
+  _indexCat("indexCat","Index category",this,inIndexCat),
   _numPdf(0),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
@@ -94,15 +94,15 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   //
   // PDFs may not overlap (i.e. share any variables) with the index category
 
-  if (pdfList.getSize() != indexCat.numTypes()) {
+  if (inPdfList.getSize() != inIndexCat.numTypes()) {
     coutE(InputArguments) << "RooSimultaneous::ctor(" << GetName() 
 			  << " ERROR: Number PDF list entries must match number of index category states, no PDFs added" << endl ;
     return ;    
   }
 
   // Iterator over PDFs and index cat states and add each pair
-  TIterator* pIter = pdfList.createIterator() ;
-  TIterator* cIter = indexCat.typeIterator() ;
+  TIterator* pIter = inPdfList.createIterator() ;
+  TIterator* cIter = inIndexCat.typeIterator() ;
   RooAbsPdf* pdf ;
   RooCatType* type ;
   while ((pdf=(RooAbsPdf*)pIter->Next())) {

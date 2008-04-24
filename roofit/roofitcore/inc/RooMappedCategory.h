@@ -35,7 +35,7 @@ public:
   Bool_t map(const char* inKeyRegExp, const char* outKeyName, Int_t outKeyNum=NoCatIdx) ; 
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
+  void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

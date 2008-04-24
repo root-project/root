@@ -86,7 +86,8 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+
   
   // Build 1-dimensional plots
   RooPlot* frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(), 

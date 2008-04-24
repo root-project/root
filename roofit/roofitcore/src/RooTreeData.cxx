@@ -443,8 +443,8 @@ void RooTreeData::loadValues(const char *filename, const char *treename,
     coutE(InputArguments) << "RooTreeData::loadValues: unable to open " << filename << endl;
   }
   else {
-    TTree* tree= (TTree*)gDirectory->Get(treename);
-    loadValues(tree,cutVar);
+    TTree* tree2= (TTree*)gDirectory->Get(treename);
+    loadValues(tree2,cutVar);
   }
 }
 
@@ -653,13 +653,43 @@ Bool_t RooTreeData::changeObservableName(const char* from, const char* to)
   }
 
   // Process name change
-  var->SetName(to) ;
+  TString oldBranchName = var->cleanBranchName() ;
+  var->SetName(to) ;  
+
+  // Change the branch name as well 
+  if (_tree->GetBranch(oldBranchName.Data())) {
+
+    // Simple case varName = branchName
+    _tree->GetBranch(oldBranchName.Data())->SetName(var->cleanBranchName().Data()) ;
+
+    // Process any error branch if existing
+    if (_tree->GetBranch(Form("%s_err",oldBranchName.Data()))) {
+      _tree->GetBranch(Form("%s_err",oldBranchName.Data()))->SetName(Form("%s_err",var->cleanBranchName().Data())) ;
+    }
+    if (_tree->GetBranch(Form("%s_aerr_lo",oldBranchName.Data()))) {
+      _tree->GetBranch(Form("%s_aerr_lo",oldBranchName.Data()))->SetName(Form("%s_aerr_lo",var->cleanBranchName().Data())) ;
+    }
+    if (_tree->GetBranch(Form("%s_aerr_hi",oldBranchName.Data()))) {
+      _tree->GetBranch(Form("%s_aerr_hi",oldBranchName.Data()))->SetName(Form("%s_aerr_hi",var->cleanBranchName().Data())) ;
+    }
+
+  } else {
+
+    // Native category case branchNames = varName_idx and varName_lbl
+    if (_tree->GetBranch(Form("%s_idx",oldBranchName.Data()))) {
+      _tree->GetBranch(Form("%s_idx",oldBranchName.Data()))->SetName(Form("%s_idx",var->cleanBranchName().Data())) ;
+    }
+    if (_tree->GetBranch(Form("%s_lbl",oldBranchName.Data()))) {
+      _tree->GetBranch(Form("%s_lbl",oldBranchName.Data()))->SetName(Form("%s_lb",var->cleanBranchName().Data())) ;
+    }
+    
+  }
   
   // If variable have default tree branch association (varName=vranchName) now make
   // branch association explicit as default will no longer hold
-  if (!var->getStringAttribute("BranchName")) {
-    var->setStringAttribute("BranchName",from) ;
-  }
+//   if (!var->getStringAttribute("BranchName")) {
+//     var->setStringAttribute("BranchName",from) ;
+//   }
 
   return kFALSE ;
 }
@@ -1517,7 +1547,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
     tableName.Append(cuts) ;
     tableName.Append(")") ;    
   }
-  Roo1DTable* table = tableVar->createTable(tableName) ;
+  Roo1DTable* table2 = tableVar->createTable(tableName) ;
 
   // Make cut selector if cut is specified
   RooFormulaVar* cutVar = 0;
@@ -1535,13 +1565,13 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
 
     if (cutVar && cutVar->getVal()==0) continue ;
     
-    table->fill(*tableVar,weight()) ;
+    table2->fill(*tableVar,weight()) ;
   }
 
   if (ownPlotVar) delete tableSet ;
   if (cutVar) delete cutVar ;
 
-  return table ;
+  return table2 ;
 }
 
 
@@ -1837,31 +1867,33 @@ Int_t RooTreeData::numEntries(Bool_t) const
 }
 
 
-void RooTreeData::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this dataset to the specified output stream.
-  //
-  //   Standard: number of entries
-  //      Shape: list of variables we define & were generated with
+void RooTreeData::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const {
 
-  oneLinePrint(os,*this);
-  if(opt >= Standard) {
-    if (isWeighted()) {
-      os << indent << "  Contains " << numEntries() << " entries with a total weight of " << sumEntries() << endl;
-    } else {
-      os << indent << "  Contains " << numEntries() << " entries" << endl;
+  RooAbsData::printMultiline(os,content,verbose,indent) ;  
+
+  os << indent << "Dataset " << GetName() << " (" << GetTitle() << ")" << endl ;
+  if (isWeighted()) {
+    os << indent << "  Contains " << numEntries() << " entries with a total weight of " << sumEntries() << endl;
+  } else {
+    os << indent << "  Contains " << numEntries() << " entries" << endl;
+  }
+
+  if (!verbose) {
+    os << indent << "  Observables " << _vars << endl ;
+  } else {
+    os << indent << "  Observables: " ;
+    _vars.printStream(os,kName|kValue|kExtras|kTitle,kVerbose,indent+"  ") ;
+  }
+
+  if(verbose) {
+    if (_cachedVars.getSize()>0) {
+      os << indent << "  Caches " << _cachedVars << endl ;
     }
-    if(opt >= Shape) {
-      os << indent << "  Defines ";
-      TString deeper(indent);
-      deeper.Append("  ");
-      _vars.printToStream(os,Standard,deeper);
-      os << indent << "  Caches ";
-      _cachedVars.printToStream(os,Standard,deeper);
-      
-      if(_truth.getSize() > 0) {
-	os << indent << "  Generated with ";
-	_truth.printToStream(os,Shape,deeper);
-      }
+    if(_truth.getSize() > 0) {
+      os << indent << "  Generated with ";
+      TString deeper(indent) ;
+      deeper += "   " ;
+      _truth.printStream(os,kName|kValue,kStandard,deeper) ;
     }
   }
 }
@@ -1914,6 +1946,11 @@ Bool_t RooTreeData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
   return anyClient?ret:kFALSE ;
 }
 
+
+void RooTreeData::Draw(Option_t* opt) 
+{
+  return _tree->Draw(opt) ;
+}
 
 
 

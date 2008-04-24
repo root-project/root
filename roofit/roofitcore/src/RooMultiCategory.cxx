@@ -39,13 +39,13 @@
 ClassImp(RooMultiCategory)
 ;
 
-RooMultiCategory::RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList) :
+RooMultiCategory::RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList2) :
   RooAbsCategory(name, title), _catSet("catSet","Input category set",this,kTRUE,kTRUE)
 {  
   // Constructor from list of input categories
 
   // Copy category list
-  TIterator* iter = inputCatList.createIterator() ;
+  TIterator* iter = inputCatList2.createIterator() ;
   RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooAbsCategory*>(arg)) {
@@ -129,18 +129,18 @@ RooMultiCategory::evaluate() const
 
 
 
-void RooMultiCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooMultiCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print the state of this object to the specified output stream.
 
-  RooAbsCategory::printToStream(os,opt,indent) ;
+  RooAbsCategory::printMultiline(os,content,verbose,indent) ;
   
-  if (opt>=Verbose) {     
+  if (verbose) {     
     os << indent << "--- RooMultiCategory ---" << endl;
     os << indent << "  Input category list:" << endl ;
     TString moreIndent(indent) ;
     moreIndent.Append("   ") ;
-    _catSet.printToStream(os,Standard,moreIndent.Data()) ;
+    _catSet.printStream(os,kName|kValue,kStandard,moreIndent.Data()) ;
   }
 }
 

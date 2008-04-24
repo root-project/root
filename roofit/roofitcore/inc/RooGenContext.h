@@ -32,7 +32,9 @@ public:
 		const RooArgSet* auxProto=0, Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
   virtual ~RooGenContext();
 
-  virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
+  virtual void printMultiline(ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+
+  virtual void attach(const RooArgSet& params) ;
 
 protected:
 

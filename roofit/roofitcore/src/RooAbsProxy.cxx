@@ -53,7 +53,7 @@ void RooAbsProxy::changeNormSet(const RooArgSet* newNormSet)
   _nset = (RooArgSet*) newNormSet ;
 }
 
-void RooAbsProxy::print(ostream& os) const 
+void RooAbsProxy::print(ostream& os, Bool_t /*addContents*/) const 
 { 
   os << name() << endl ; 
 }

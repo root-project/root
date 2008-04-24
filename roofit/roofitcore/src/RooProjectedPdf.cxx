@@ -93,6 +93,9 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   }
 
   RooArgSet* nset2 =  intpdf.arg().getObservables(*nset) ;
+  if (iset) {
+    nset2->add(*iset) ;
+  }
   RooAbsReal* proj = intpdf.arg().createIntegral(*iset,nset2) ;
   delete nset2 ;
 

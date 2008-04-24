@@ -99,7 +99,7 @@ public:
   // WVE Debug stuff
   void dump() ;
 
-  void printToStream(ostream& os, PrintOption opt, TString indent) const ;
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
   using RooAbsData::plotOn ;
   virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
@@ -125,7 +125,9 @@ public:
   // PlotOn implementation
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const ;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const ;
-
+  
+  // Draw implementation forwarded to underlying tree
+  virtual void Draw(Option_t* opt) ;
 
 protected:
 

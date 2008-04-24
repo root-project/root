@@ -280,18 +280,27 @@ RooGenContext::~RooGenContext()
   if (_uniIter) delete _uniIter ;
 }
 
-void RooGenContext::initGenerator(const RooArgSet &theEvent) {
 
+void RooGenContext::attach(const RooArgSet& args) 
+{
   // Attach the cloned model to the event buffer we will be filling.
-  _pdfClone->recursiveRedirectServers(theEvent,kFALSE);
+  _pdfClone->recursiveRedirectServers(args,kFALSE);
   if (_acceptRejectFunc) {
-    _acceptRejectFunc->recursiveRedirectServers(theEvent,kFALSE) ; // WVE DEBUG
+    _acceptRejectFunc->recursiveRedirectServers(args,kFALSE) ; // WVE DEBUG
   }
 
   // Attach the RooAcceptReject generator the event buffer
   if (_generator) {
-    _generator->attachParameters(theEvent) ;
+    _generator->attachParameters(args) ;
   }
+
+}
+
+
+
+void RooGenContext::initGenerator(const RooArgSet &theEvent) {
+  
+  attach(theEvent) ;
 
   // Reset the cloned model's error counters.
   _pdfClone->resetErrorCounters();
@@ -355,20 +364,18 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) {
 
 }
 
-void RooGenContext::printToStream(ostream &os, PrintOption opt, TString indent) const
+void RooGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
 {
-  RooAbsGenContext::printToStream(os,opt,indent);
-  if(opt >= Standard) {
-    PrintOption less= lessVerbose(opt);
-    TString deeper(indent);
-    indent.Append("  ");
-    os << indent << "Using PDF ";
-    _pdfClone->printToStream(os,less,deeper);
-    if(opt >= Verbose) {
-      os << indent << "Use PDF generator for ";
-      _directVars.printToStream(os,less,deeper);
-      os << indent << "Use accept/reject for ";
-      _otherVars.printToStream(os,less,deeper);
+  RooAbsGenContext::printMultiline(os,content,verbose,indent);
+  os << indent << " --- RooGenContext --- " << endl ;
+  os << indent << "Using PDF ";
+  _pdfClone->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
+  
+  if(verbose) {
+    os << indent << "Use PDF generator for " << _directVars << endl ;
+    os << indent << "Use accept/reject for " << _otherVars << endl ;
+    if (_protoVars.getSize()>0) {
+      os << indent << "Prototype observables are " << _protoVars << endl ;
     }
   }
 }

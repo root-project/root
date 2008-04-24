@@ -36,7 +36,7 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  virtual void printValue(ostream& stream) const ;
   
   inline Bool_t isHidden() const { return _state.arg().getIndex()!=0 ; }
   Double_t getHiddenVal(const RooArgSet* nset=0) const { return RooAbsReal::getVal(nset) ; }

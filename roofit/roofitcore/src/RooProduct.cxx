@@ -52,8 +52,8 @@ namespace {
 
 
 RooProduct::RooProduct() :
-  _compRIter (0),
-  _compCIter (0)
+  _compRIter( _compRSet.createIterator() ),
+  _compCIter( _compCSet.createIterator() )
 {
 }
 
@@ -143,28 +143,28 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   while((var=(RooAbsReal*)allVarsIter->Next())) {
     RooArgSet *vars  = new RooArgSet(); vars->add(*var);
     RooArgSet *comps = new RooArgSet();
-    RooAbsReal* rcomp ; 
+    RooAbsReal* rcomp2 ; 
     
     _compRIter->Reset() ;
-    while((rcomp=(RooAbsReal*)_compRIter->Next())) {
-      if( rcomp->dependsOn(*var) ) comps->add(*rcomp);
+    while((rcomp2=(RooAbsReal*)_compRIter->Next())) {
+      if( rcomp2->dependsOn(*var) ) comps->add(*rcomp2);
     }
     map->push_back( std::make_pair(vars,comps) );
   }
 
   // Merge groups with overlapping dependents
-  Bool_t overlaps;
+  Bool_t overlap;
   do {
     std::pair<ProdMap::iterator,ProdMap::iterator> i = findOverlap2nd(map->begin(),map->end());
-    overlaps = (i.first!=i.second);
-    if (overlaps) {
+    overlap = (i.first!=i.second);
+    if (overlap) {
       i.first->first->add(*i.second->first);
       i.first->second->add(*i.second->second);
       delete i.second->first;
       delete i.second->second;
       map->erase(i.second);
     }
-  } while (overlaps);
+  } while (overlap);
   
   // check that we have all variables to be integrated over on the LHS
   // of the map, and all terms in the product do appear on the RHS

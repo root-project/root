@@ -91,3 +91,8 @@ Double_t RooRealBinding::getMaxLimit(UInt_t index) const {
   assert(isValid());
   return _vars[index]->getMax(RooNameReg::str(_rangeName));
 }
+
+const char* RooRealBinding::getName() const 
+{ 
+  return _func->GetName() ; 
+} 

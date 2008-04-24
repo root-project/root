@@ -128,9 +128,9 @@ RooMappedCategory::evaluate() const
 
   // Scan array of regexps
   for (int i=0 ; i<_mapArray.GetEntries() ; i++) {
-    RooMapCatEntry* map = (RooMapCatEntry*)_mapArray.At(i) ;
-    if (map->match(inKey)) {
-      return map->outCat() ;
+    RooMapCatEntry* theMap = (RooMapCatEntry*)_mapArray.At(i) ;
+    if (theMap->match(inKey)) {
+      return theMap->outCat() ;
     }
   }
 
@@ -139,32 +139,32 @@ RooMappedCategory::evaluate() const
 }
 
 
-void RooMappedCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
+void RooMappedCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   // Print info about this mapped category to the specified stream. In addition to the info
-  // from RooAbsCategory::printToStream() we add:
+  // from RooAbsCategory::printStream() we add:
   //
   //  Standard : input category
   //     Shape : default value
   //   Verbose : list of mapping rules
 
-   RooAbsCategory::printToStream(os,opt,indent);
+  RooAbsCategory::printMultiline(os,content,verbose,indent);
 
-   if (opt > Standard) {
-     os << indent << "--- RooMappedCategory ---" << endl
-	<< indent << "  Maps from " ;
-     _inputCat.arg().printToStream(os,Standard);
-     
-     os << indent << "  Default value is ";
-     _defCat->printToStream(os,OneLine);
-
-     os << indent << "  Mapping rules:" << endl;
-     Int_t n= _mapArray.GetEntries();
-     for(Int_t i= 0 ; i< n; i++) {
-       RooMapCatEntry* map = (RooMapCatEntry*)_mapArray.At(i) ;
-       os << indent << "  " << map->GetName() << " -> " << map->outCat().GetName() << endl ;
-     }
-   }
+  if (verbose) {
+    os << indent << "--- RooMappedCategory ---" << endl
+       << indent << "  Maps from " ;
+    _inputCat.arg().printStream(os,0,kStandard);
+    
+    os << indent << "  Default value is ";
+    _defCat->printStream(os,kName|kValue,kSingleLine);
+    
+    os << indent << "  Mapping rules:" << endl;
+    Int_t n= _mapArray.GetEntries();
+    for(Int_t i= 0 ; i< n; i++) {
+      RooMapCatEntry* theMap = (RooMapCatEntry*)_mapArray.At(i) ;
+      os << indent << "  " << theMap->GetName() << " -> " << theMap->outCat().GetName() << endl ;
+    }
+  }
 }
 
 
@@ -236,15 +236,15 @@ void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
     RooCatType prevOutCat ;
     Bool_t first(kTRUE) ;
     for (int i=0 ; i<_mapArray.GetEntries() ; i++) {
-      RooMapCatEntry* map = (RooMapCatEntry*)_mapArray.At(i) ;
-      if (map->outCat().getVal()!=prevOutCat.getVal()) {
+      RooMapCatEntry* theMap = (RooMapCatEntry*)_mapArray.At(i) ;
+      if (theMap->outCat().getVal()!=prevOutCat.getVal()) {
 	if (!first) { os << " " ; }
 	first=kFALSE ;
 
-	os << map->outCat().GetName() << ":" << map->GetName() ;
-	prevOutCat=map->outCat() ;
+	os << theMap->outCat().GetName() << ":" << theMap->GetName() ;
+	prevOutCat=theMap->outCat() ;
       } else {
-	os << "," << map->GetName() ;
+	os << "," << theMap->GetName() ;
       }
     }
     

@@ -47,9 +47,9 @@ void RooSetProxy::operator delete (void * /*ptr*/)
 {
 }
 
-RooSetProxy::RooSetProxy(const char* name, const char* /*desc*/, RooAbsArg* owner, 
+RooSetProxy::RooSetProxy(const char* inName, const char* /*desc*/, RooAbsArg* owner, 
 			 Bool_t defValueServer, Bool_t defShapeServer) :
-  RooArgSet(name), _owner(owner), 
+  RooArgSet(inName), _owner(owner), 
   _defValueServer(defValueServer), 
   _defShapeServer(defShapeServer)
 {
@@ -59,8 +59,8 @@ RooSetProxy::RooSetProxy(const char* name, const char* /*desc*/, RooAbsArg* owne
 }
 
 
-RooSetProxy::RooSetProxy(const char* name, RooAbsArg* owner, const RooSetProxy& other) : 
-  RooArgSet(other,name), _owner(owner),  
+RooSetProxy::RooSetProxy(const char* inName, RooAbsArg* owner, const RooSetProxy& other) : 
+  RooArgSet(other,inName), _owner(owner),  
   _defValueServer(other._defValueServer), 
   _defShapeServer(other._defShapeServer)
 {
@@ -200,7 +200,24 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
 }
 
 
-void RooSetProxy::print(ostream& os) const 
+void RooSetProxy::print(ostream& os, Bool_t addContents) const 
 { 
-  os << name() << "=" ; printToStream(os,InLine) ; 
+  if (!addContents) {
+    os << name() << "=" ; printStream(os,kValue,kInline) ; 
+  } else {
+    os << name() << "=(" ;
+    TIterator* iter = createIterator() ;
+    RooAbsArg* arg ;
+    Bool_t first2(kTRUE) ;
+    while ((arg=(RooAbsArg*)iter->Next())) {
+      if (first2) {
+	first2 = kFALSE ;
+      } else {
+	os << "," ;
+      }
+      arg->printStream(os,kValue|kName,kInline) ;
+    }
+    os << ")" ;
+    delete iter ;
+  }
 }

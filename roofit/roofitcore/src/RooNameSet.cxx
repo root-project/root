@@ -20,6 +20,7 @@
 #include "Riostream.h"
 
 #include "TObjString.h"
+#include "TClass.h"
 #include "RooNameSet.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -143,7 +144,22 @@ RooNameSet& RooNameSet::operator=(const RooNameSet& other)
   return *this ;
 }
 
+void RooNameSet::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
 
-void RooNameSet::printToStream(ostream &os, PrintOption /*opt*/, TString indent) const{
-  os << indent << _nameList << endl ;
+void RooNameSet::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooNameSet::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooNameSet::printValue(ostream& os) const 
+{
+  os << _nameList ;
 }

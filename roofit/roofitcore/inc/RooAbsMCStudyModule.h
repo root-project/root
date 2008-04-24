@@ -66,7 +66,7 @@ protected:
    // which are only functional after module has been attached to a RooMCStudy object
 
    // Refit model using orignal or specified data sample
-   RooFitResult* refit(RooAbsData* genSample=0) { if (_mcs) return _mcs->refit(genSample) ; else return 0 ; }
+   RooFitResult* refit(RooAbsData* inGenSample=0) { if (_mcs) return _mcs->refit(inGenSample) ; else return 0 ; }
 
    // Accessors for generated dataset and model
    RooDataSet* genSample() { return _mcs ? _mcs->_genSample : 0 ; }

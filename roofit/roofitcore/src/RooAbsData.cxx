@@ -23,6 +23,8 @@
 #include "RooFit.h"
 #include "Riostream.h"
 
+#include "TClass.h"
+
 #include "RooAbsData.h"
 #include "RooAbsData.h"
 #include "RooFormulaVar.h"
@@ -393,4 +395,60 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   fillHistogram(histo,vars,cutSpec,cutRange) ;
 
   return histo ;
+}
+
+
+void RooAbsData::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
+
+void RooAbsData::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
+
+void RooAbsData::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+void RooAbsData::printArgs(ostream& os) const 
+{
+  os << "[" ;    
+  _iterator->Reset() ;
+  RooAbsArg* arg ;
+  Bool_t first(kTRUE) ;
+  while((arg=(RooAbsArg*)_iterator->Next())) {
+    if (first) {
+      first=kFALSE ;
+    } else {
+      os << "," ;
+    }
+    os << arg->GetName() ;
+  }
+  os << "]" ;
+}
+
+void RooAbsData::printValue(ostream& os) const 
+{
+  os << numEntries(kTRUE) << " entries" << (isWeighted()?" (sum of weights)":"") ;
+}
+
+
+Int_t RooAbsData::defaultPrintContents(Option_t* opt) const 
+{
+  if (opt && TString(opt)=="I") {
+    return kName|kClassName|kArgs ;
+  }
+  
+  return kName|kClassName|kValue ;
+}
+
+RooPrintable::StyleOption RooAbsData::defaultPrintStyle(Option_t* opt) const 
+{
+  if (opt && TString(opt).Contains("v")) {
+    return kVerbose ;
+  } 
+  return kStandard ;
 }

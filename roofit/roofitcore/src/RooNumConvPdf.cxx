@@ -75,12 +75,12 @@ ClassImp(RooNumConvPdf)
 ;
 
 
-RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf, RooAbsPdf& resmodel) : 
+RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& inPdf, RooAbsPdf& resmodel) : 
   RooAbsPdf(name,title), 
   _init(kFALSE),
   _conv(0),
   _origVar("origVar","Original Convolution variable",this,convVar),
-  _origPdf("origPdf","Original Input PDF",this,pdf),
+  _origPdf("origPdf","Original Input PDF",this,inPdf),
   _origModel("origModel","Original Resolution model",this,resmodel)
 {
   // Constructor of convolution operator PDF

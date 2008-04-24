@@ -30,6 +30,8 @@
 
 #ifndef _WIN32
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #endif
 
 #include <errno.h>
@@ -40,7 +42,7 @@
 #include "RooCategory.h"
 #include "RooMPSentinel.h"
 
-
+#include "TSystem.h"
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 
@@ -54,7 +56,9 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
   _vars("vars","vars",this),
   _verboseClient(kFALSE),
   _verboseServer(kFALSE),
-  _inlineMode(calcInline)
+  _inlineMode(calcInline),
+  _remoteEvalErrorLoggingState(kFALSE),
+  _pid(0)
 {  
 #ifdef _WIN32
   _inlineMode = kTRUE;
@@ -72,7 +76,9 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _verboseClient(other._verboseClient),
   _verboseServer(other._verboseServer),
   _inlineMode(other._inlineMode),
-  _forceCalc(other._forceCalc)
+  _forceCalc(other._forceCalc),
+  _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
+  _pid(other._pid)
 {
   // Copy constructor
   _saveVars.addClone(other._saveVars) ;
@@ -131,8 +137,10 @@ void RooRealMPFE::initialize() {
   pipe(_pipeToClient) ;
   pipe(_pipeToServer) ;
   
-  pid_t pid = fork() ;
-  if (pid==0) {
+  _pid = fork() ;
+  if (_pid==0) {
+
+    cout << "child getpid = " << getpid() << endl ;
 
     // Start server loop 
     _state = Server ;
@@ -143,11 +151,13 @@ void RooRealMPFE::initialize() {
 	 << ") server process terminating" << endl ;
     exit(0) ;
 
-  } else if (pid>0) {
-    
+  } else if (_pid>0) {
+ 
+    cout << "parent getpid = " << getpid() << endl ;
+   
     // Client process - fork successul
     cout << "RooRealMPFE::initialize(" << GetName() 
-	 << ") successfully forked server process " << pid << endl ;
+	 << ") successfully forked server process " << _pid << endl ;
     _state = Client ;
     _calcInProgress = kFALSE ;
 
@@ -167,7 +177,7 @@ void RooRealMPFE::serverLoop()
   Bool_t doLoop(kTRUE) ;
   Message msg ;
 
-  Int_t idx, index ;
+  Int_t idx, index, numErrors ;
   Double_t value ;
 
   while(doLoop) {
@@ -203,8 +213,11 @@ void RooRealMPFE::serverLoop()
       msg = ReturnValue ;
       write(_pipeToClient[1],&msg,sizeof(Message)) ;
       write(_pipeToClient[1],&_value,sizeof(Double_t)) ;
+      numErrors = numEvalErrors() ;
+      write(_pipeToClient[1],&numErrors,sizeof(Int_t)) ;
+
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-			       << ") IPC toClient> ReturnValue " << _value << endl ; 
+ 			       << ") IPC toClient> ReturnValue " << _value << " NumError " << numErrors << endl ; 
       break ;
 
     case ConstOpt:
@@ -227,6 +240,55 @@ void RooRealMPFE::serverLoop()
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
 			       << ") IPC fromClient> Terminate" << endl ; 
       doLoop = kFALSE ;
+      break ;
+
+    case LogEvalError:
+      {
+      Bool_t flag2 ;
+      read(_pipeToServer[0],&flag2,sizeof(Bool_t)) ;
+      RooAbsReal::enableEvalErrorLogging(flag2) ;
+      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+			       << ") IPC fromClient> LogEvalError flag = " << (flag2?"kTRUE":"kFALSE") << endl ;       
+      }
+      break ;
+
+    case RetrieveErrors:
+
+      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+			       << ") IPC fromClient> RetrieveErrors" << endl ; 
+
+      // Loop over errors
+      static std::map<const RooAbsArg*,list<EvalError> >::const_iterator iter = evalErrorIter() ;
+      for (int i=0 ; i<numEvalErrorItems() ; i++) {
+
+	list<EvalError>::const_iterator iter2 = iter->second.begin() ;
+	for (;iter2!=iter->second.end();++iter2) {
+
+	  // Reply with SendError message
+	  msg = SendError ;
+	  write(_pipeToClient[1],&msg,sizeof(Message)) ;
+	  write(_pipeToClient[1],&iter->first,sizeof(RooAbsReal*)) ;
+
+	  Int_t ntext = strlen(iter2->_msg) ;
+	  write(_pipeToClient[1],&ntext,sizeof(Int_t)) ;
+	  write(_pipeToClient[1],iter2->_msg,ntext+1) ;
+
+	  Int_t ntext2 = strlen(iter2->_srvval) ;
+	  write(_pipeToClient[1],&ntext2,sizeof(Int_t)) ;
+	  write(_pipeToClient[1],iter2->_srvval,ntext2+1) ;
+
+	  if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				   << ") IPC toClient> SendError Arg " << iter->first << " Msg " << iter2->_msg << endl ; 
+	}
+      }  
+
+      {
+	RooAbsReal* null(0) ;
+	write(_pipeToClient[1],&msg,sizeof(Message)) ;
+	write(_pipeToClient[1],&null,sizeof(RooAbsReal*)) ;
+      }
+      // Clear error list on local side
+      clearEvalErrorLog() ;           
       break ;
 
     default:
@@ -340,6 +402,16 @@ Double_t RooRealMPFE::evaluate() const
     Message msg ;
     Double_t value ;
 
+    // If current error loggin state is not the same as remote state
+    // update the remote state
+    if (evalErrorLoggingEnabled() != _remoteEvalErrorLoggingState) {
+      msg = LogEvalError ;
+      write(_pipeToServer[1],&msg,sizeof(Message)) ;    
+      Bool_t flag = evalErrorLoggingEnabled() ;
+      write(_pipeToServer[1],&flag,sizeof(Bool_t)) ;      
+      _remoteEvalErrorLoggingState = evalErrorLoggingEnabled() ;
+    }
+
     msg = Retrieve ;
     write(_pipeToServer[1],&msg,sizeof(Message)) ;    
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
@@ -353,6 +425,42 @@ Double_t RooRealMPFE::evaluate() const
     read(_pipeToClient[0],&value,sizeof(Double_t)) ;
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
 			     << ") IPC fromServer> ReturnValue " << value << endl ;
+
+    Int_t numError ;
+    read(_pipeToClient[0],&numError,sizeof(Int_t)) ;
+    if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
+			     << ") IPC fromServer> NumErrors " << numError << endl ;
+
+    // Retrieve remote errors and feed into local error queue
+    if (numError>0) {
+      msg=RetrieveErrors ;
+      write(_pipeToServer[1],&msg,sizeof(Message)) ;    
+      if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
+			     << ") IPC toServer> RetrieveErrors " << endl ;    
+
+      while(true) {
+	RooAbsReal* ptr(0) ;
+	Int_t ntext1,ntext2 ;
+	char msgbuf1[1024] ;
+	char msgbuf2[1024] ;
+	read(_pipeToClient[0],&msg,sizeof(Message)) ;
+	read(_pipeToClient[0],&ptr,sizeof(RooAbsReal*)) ;
+	if (ptr==0) {
+	  break ;
+	}
+
+	read(_pipeToClient[0],&ntext1,sizeof(Int_t)) ;
+	read(_pipeToClient[0],msgbuf1,ntext1+1) ;
+	read(_pipeToClient[0],&ntext2,sizeof(Int_t)) ;
+	read(_pipeToClient[0],msgbuf2,ntext2+1) ;
+	
+	if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
+				 << ") IPC fromServer> SendError Arg " << ptr << " Msg " << msgbuf1 << endl ;    
+	
+	ptr->logEvalError(msgbuf1,msgbuf2) ;
+      }
+	
+    }
 
     // Mark end of calculation in progress 
     _calcInProgress = kFALSE ;
@@ -380,6 +488,9 @@ void RooRealMPFE::standby()
     close(_pipeToClient[1]) ;
     close(_pipeToServer[0]) ;
     close(_pipeToServer[1]) ;
+
+    // Release resource of child process
+    waitpid(_pid,0,0) ;
     
     // Revert to initialize state 
     _state = Initialize ;

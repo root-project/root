@@ -70,10 +70,11 @@ public:
   inline Bool_t isValueServer(const char* name) const { return _clientListValue.FindObject(name)?kTRUE:kFALSE ; }
   inline Bool_t isShapeServer(const RooAbsArg& arg) const { return _clientListShape.FindObject(&arg)?kTRUE:kFALSE ; }
   inline Bool_t isShapeServer(const char* name) const { return _clientListShape.FindObject(name)?kTRUE:kFALSE ; }
-  void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0) const ;
+  void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
   void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0) const ;
   void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, 
-			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE, Bool_t valueOnly=kFALSE) const ;
+			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE, 
+			  Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
   
   // Is this object a fundamental type that can be added to a dataset?
   // Fundamental-type subclasses override this method to return kTRUE.
@@ -126,10 +127,20 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const = 0 ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
+
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+  virtual void printTree(ostream& os, TString indent="") const ;
+
+  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
+
 
   // Accessors to attributes
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
@@ -139,6 +150,11 @@ public:
   void setStringAttribute(const Text_t* key, const Text_t* value) ;
   const Text_t* getStringAttribute(const Text_t* key) const ;
   inline const std::map<std::string,std::string>& stringAttributes() const { return _stringAttrib ; }
+
+  // Accessors to transient attributes
+  void setTransientAttribute(const Text_t* name, Bool_t value=kTRUE) ;
+  Bool_t getTransientAttribute(const Text_t* name) const ;
+  inline const std::set<std::string>& transientAttributes() const { return _boolAttribTransient ; }
 
   inline Bool_t isConstant() const { return getAttribute("Constant") ; }
   RooLinkedList getCloningAncestors() const ;
@@ -156,9 +172,6 @@ public:
   static void setACleanADirty(Bool_t flag) ;
 
   virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
-
-  // Formatting control
-  static void nameFieldLength(Int_t newLen) ;
 
   // Range management
   virtual Bool_t inRange(const char*) const { return kTRUE ; }
@@ -215,6 +228,10 @@ public:
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
 
   static UInt_t crc32(const char* data) ;
+  
+  Bool_t addOwnedComponents(const RooArgSet& comps) ;
+  
+  void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
 
   protected:
 
@@ -273,11 +290,12 @@ public:
   friend class RooGenProdProj ;
 
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
-  Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
+  Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t recurseInNewSet=kTRUE) ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) { return kFALSE ; } ;
   virtual void serverNameChangeHook(const RooAbsArg* /*oldServer*/, const RooAbsArg* /*newServer*/) { } ;
 
   friend class RooFormula ;
+  friend class RooParamBinning ;
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void addServerList(RooAbsCollection& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t valueProp, Bool_t shapeProp) ;
@@ -303,7 +321,9 @@ public:
   // Attribute list
   std::set<std::string> _boolAttrib ; // Boolean attributes
   std::map<std::string,std::string> _stringAttrib ; // String attributes
-  void printAttribList(ostream& os) const;
+  std::set<std::string> _boolAttribTransient ; //! Transient boolean attributes (not copied in ctor)
+
+void printAttribList(ostream& os) const;
 
   // Hooks for RooTreeData interface
   friend class RooTreeData ;
@@ -319,7 +339,7 @@ public:
   // Global   
   friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  
   friend istream& operator>>(istream& is, RooAbsArg &arg) ;
-  
+
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
@@ -327,8 +347,6 @@ public:
   Bool_t _deleteWatch ; //! Delete watch flag 
 
   static Bool_t inhibitDirty() ;
-
-  static Int_t _nameLength ;
 
 private:
 
@@ -339,6 +357,11 @@ private:
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
   mutable OperMode _operMode ; // Dirty state propagation mode
 
+  // Owned components
+  RooArgSet* _ownedComponents ; //!
+
+  mutable Bool_t _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
+  
   ClassDef(RooAbsArg,3) // Abstract variable
 };
 

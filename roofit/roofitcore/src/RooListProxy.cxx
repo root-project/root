@@ -37,9 +37,9 @@ ClassImp(RooListProxy)
 ;
 
 
-RooListProxy::RooListProxy(const char* name, const char* /*desc*/, RooAbsArg* owner, 
+RooListProxy::RooListProxy(const char* inName, const char* /*desc*/, RooAbsArg* owner, 
 			 Bool_t defValueServer, Bool_t defShapeServer) :
-  RooArgList(name), _owner(owner), 
+  RooArgList(inName), _owner(owner), 
   _defValueServer(defValueServer), 
   _defShapeServer(defShapeServer)
 {
@@ -49,8 +49,8 @@ RooListProxy::RooListProxy(const char* name, const char* /*desc*/, RooAbsArg* ow
 }
 
 
-RooListProxy::RooListProxy(const char* name, RooAbsArg* owner, const RooListProxy& other) : 
-  RooArgList(other,name), _owner(owner),  
+RooListProxy::RooListProxy(const char* inName, RooAbsArg* owner, const RooListProxy& other) : 
+  RooArgList(other,inName), _owner(owner),  
   _defValueServer(other._defValueServer), 
   _defShapeServer(other._defShapeServer)
 {
@@ -153,7 +153,24 @@ Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t
 }
 
 
-void RooListProxy::print(ostream& os) const 
+void RooListProxy::print(ostream& os, Bool_t addContents) const 
 { 
-  os << name() << "=" ; printToStream(os,InLine) ; 
+  if (!addContents) {
+    os << name() << "=" ; printStream(os,kValue,kInline) ; 
+  } else {
+    os << name() << "=(" ;
+    TIterator* iter = createIterator() ;
+    RooAbsArg* arg ;
+    Bool_t first2(kTRUE) ;
+    while ((arg=(RooAbsArg*)iter->Next())) {
+      if (first2) {
+	first2 = kFALSE ;
+      } else {
+	os << "," ;
+      }
+      arg->printStream(os,kValue|kName,kInline) ;
+    }
+    os << ")" ;
+    delete iter ;
+  }
 }

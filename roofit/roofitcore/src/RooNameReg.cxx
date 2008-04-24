@@ -59,17 +59,17 @@ void RooNameReg::cleanup()
 }
 
 
-const TNamed* RooNameReg::constPtr(const char* str) {
+const TNamed* RooNameReg::constPtr(const char* inStr) {
 
   // Handle null pointer case explicitly
-  if (str==0) return 0 ;
+  if (inStr==0) return 0 ;
 
   // See if name is already registered ;
-  TNamed* t = (TNamed*) _htable.find(str) ;
+  TNamed* t = (TNamed*) _htable.find(inStr) ;
   if (t) return t ;
 
   // If not, register now
-  t = new TNamed(str,str) ;
+  t = new TNamed(inStr,inStr) ;
   _htable.add(t) ;
   _list.Add(t) ;
   

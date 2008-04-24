@@ -31,17 +31,20 @@ public:
 	     const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-	    Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+	    Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, 
+	     Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
 
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+	     const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, 
+	     Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
 
   RooChi2Var(const RooChi2Var& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, Int_t nCPU=1, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) {
-    return new RooChi2Var(name,title,pdf,(RooDataHist&)data,projDeps,_extended,rangeName,addCoefRangeName,nCPU, verbose, splitCutRange) ;
+  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& data,
+				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
+				      Int_t nCPU=1, Bool_t interleave=kFALSE,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) {
+    return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)data,projDeps,_extended,rangeName,addCoefRangeName,nCPU,interleave,verbose, splitCutRange) ;
   }
   
   virtual ~RooChi2Var();
@@ -54,7 +57,7 @@ protected:
 
   RooDataHist::ErrorType _etype ;
   Bool_t _extended ;
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent) const ;
+  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
   
   ClassDef(RooChi2Var,1) // Abstract real-valued variable
 };

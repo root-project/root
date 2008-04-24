@@ -436,44 +436,48 @@ void RooPlot::Draw(Option_t *options) {
 }
 
 
+void RooPlot::printName(ostream& os) const 
+{
+  os << GetName() ;
+}
 
-void RooPlot::printToStream(ostream& os, PrintOption opt, TString indent) const {
-  // Print info about this plot object to the specified stream.
-  //
-  //  Standard: plot variable and number of contained objects
-  //     Shape: list of our contained objects
+void RooPlot::printTitle(ostream& os) const 
+{
+  os << GetTitle() ;
+}
 
-  oneLinePrint(os,*this);
-  if(opt >= Standard) {
-    TString deeper(indent);
-    deeper.Append("    ");
-    if(0 != _plotVarClone) {
-      os << indent << "  Plotting ";
-      _plotVarClone->printToStream(os,OneLine,deeper);
-    }
-    else {
-      os << indent << "  No plot variable specified" << endl;
-    }
-    os << indent << "  Plot contains " << _items.GetSize() << " object(s)" << endl;
-    if(opt >= Shape) {
-      _iterator->Reset();
-      TObject *obj = 0;
-      while((obj= _iterator->Next())) {
-	os << deeper << "(Options=\"" << _iterator->GetOption() << "\") ";
-	// Is this a printable object?
-	if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
-	  ostream& oldDefault= RooPrintable::defaultStream(&os);
-	  obj->Print("1");
-	  RooPrintable::defaultStream(&oldDefault);
-	}
-	// is it a TNamed subclass?
-	else if(obj->IsA()->InheritsFrom(TNamed::Class())) {
-	  oneLinePrint(os,(const TNamed&)(*obj));
-	}
-	// at least it is a TObject
-	else {
-	  os << obj->ClassName() << "::" << obj->GetName() << endl;
-	}
+void RooPlot::printClassName(ostream& os) const 
+{
+  os << IsA()->GetName() ;
+}
+
+
+void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TString indent) const {
+
+  TString deeper(indent);
+  deeper.Append("    ");
+  if(0 != _plotVarClone) {
+    os << indent << "  Plotting ";
+    _plotVarClone->printStream(os,kName|kTitle,kSingleLine,deeper);
+  }
+  else {
+    os << indent << "  No plot variable specified" << endl;
+  }
+  os << indent << "  Plot contains " << _items.GetSize() << " object(s)" << endl;
+
+  if(verbose) {
+    _iterator->Reset();
+    TObject *obj = 0;
+    while((obj= _iterator->Next())) {
+      os << deeper << "(Options=\"" << _iterator->GetOption() << "\") ";
+      // Is this a printable object?      
+      if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
+	RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
+	po->printStream(os,kName|kArgs|kExtras,kSingleLine) ;
+      }
+      // is it a TNamed subclass?
+      else {
+	os << obj->ClassName() << "::" << obj->GetName() << endl;
       }
     }
   }
@@ -703,14 +707,14 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename,bool nor
 }
 
 
-void RooPlot::DrawOpt::initialize(const char* rawOpt) 
+void RooPlot::DrawOpt::initialize(const char* inRawOpt) 
 {
-  if (!rawOpt) {
+  if (!inRawOpt) {
     drawOptions[0] = 0 ;
     invisible=kFALSE ;
     return ;
   }
-  strcpy(drawOptions,rawOpt) ;
+  strcpy(drawOptions,inRawOpt) ;
   strtok(drawOptions,":") ;
   const char* extraOpt = strtok(0,":") ;
   if (extraOpt) {
