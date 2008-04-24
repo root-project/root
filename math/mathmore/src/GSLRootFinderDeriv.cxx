@@ -73,14 +73,14 @@ GSLRootFinderDeriv & GSLRootFinderDeriv::operator = (const GSLRootFinderDeriv &r
 
 
 
-int GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double Root) {
+int GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double xstart) {
    // set Function with signature as GSL
-   fRoot = Root;
+   fRoot = xstart;
    fFunction->SetFuncPointer( f ); 
    fFunction->SetDerivPointer( df ); 
    fFunction->SetFdfPointer( Fdf ); 
    fFunction->SetParams( p ); 
-   int status = gsl_root_fdfsolver_set( fS->Solver(), fFunction->GetFunc(), Root); 
+   int status = gsl_root_fdfsolver_set( fS->Solver(), fFunction->GetFunc(), fRoot); 
    if (status == GSL_SUCCESS)  
       fValidPoint = true; 
    else 
