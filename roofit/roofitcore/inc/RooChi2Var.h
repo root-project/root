@@ -20,6 +20,7 @@
 #include "RooAbsOptTestStatistic.h"
 #include "RooCmdArg.h"
 #include "RooDataHist.h"
+#include "RooAbsPdf.h"
 
 class RooChi2Var : public RooAbsOptTestStatistic {
 public:
