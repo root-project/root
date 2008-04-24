@@ -957,15 +957,15 @@ void TParallelCoord::SetAxisHistogramHeight(Double_t h)
 
 
 //______________________________________________________________________________
-void TParallelCoord::SetGlobalLogScale(Bool_t ls)
+void TParallelCoord::SetGlobalLogScale(Bool_t lt)
 {
    // All axes in log scale.
 
-   if (ls == TestBit(kGlobalLogScale)) return;
-   SetBit(kGlobalLogScale,ls);
+   if (lt == TestBit(kGlobalLogScale)) return;
+   SetBit(kGlobalLogScale,lt);
    TIter next(fVarList);
    TParallelCoordVar* var;
-   while ((var = (TParallelCoordVar*)next())) var->SetLogScale(ls);
+   while ((var = (TParallelCoordVar*)next())) var->SetLogScale(lt);
    if (TestBit(kGlobalScale)) SetGlobalScale(kTRUE);
 }
 
