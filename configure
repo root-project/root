@@ -29,6 +29,7 @@ altld=
 
 deprecated_options="         \
    enable_mathcore           \
+   enable_cern               \
 "
 
 options="                    \
@@ -42,7 +43,6 @@ options="                    \
    enable_builtin_pcre       \
    enable_builtin_zlib       \
    enable_castor             \
-   enable_cern               \
    enable_chirp              \
    enable_cint7              \
    enable_cintex             \
@@ -91,7 +91,6 @@ options="                    \
    enable_xft                \
    enable_xml                \
    enable_xrootd             \
-   $deprecated_options       \
 "
 
 #
@@ -99,6 +98,7 @@ options="                    \
 # on per default explictly afterwards.
 #
 for c in $options ; do eval ${c}="yes" ; done
+for c in $deprecated_options ; do eval ${c}="yes" ; done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_afs=no
@@ -142,7 +142,6 @@ CASTOR           \
 GFAL             \
 G4ROOT           \
 GSL              \
-CERNLIB          \
 PYTHIA6          \
 PYTHIA8          \
 FFTW3            \
@@ -888,7 +887,6 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
-  cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
   cint7              Build the *experimental* new Cint library
   cintex             Build the libCintex Reflex interface library
@@ -945,7 +943,6 @@ with options, prefix with --with-, enables corresponding support
   alien-libdir       AliEn support, location of libapiUI
   castor-incdir      CASTOR support, location of stager_api.h
   castor-libdir      CASTOR support, location of libshift
-  cern-libdir        HBOOK converter, location of CERNLIB libraries
   chirp-incdir       Chirp support, location of chirp_client.h
   chirp-libdir       Chirp support, location of libchirp_client
   cppunit            Cppunit testing, directory of the cppunit installation
@@ -1145,7 +1142,7 @@ if test $# -gt 0 ; then
       --with-afterimage-libdir=*) afterimagelibdir=$optarg; enable_builtin_afterimage=no ;;
       --with-castor-incdir=*)  castorincdir=$optarg  ; enable_castor="yes"  ;;
       --with-castor-libdir=*)  castorlibdir=$optarg  ; enable_castor="yes"  ;;
-      --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
+      --with-cern-libdir=*)    echo "WARNING: option $1 is deprecated and ignored"'!' ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
       --with-cppunit=*)        cppunit=$optarg       ;;
@@ -1239,6 +1236,11 @@ if test $# -gt 0 ; then
         eval ${f}=yes
         eval ${f}_explicit=yes
         for c in $options ; do
+           if test "x$c" = "x$f" ; then
+              f=""
+        fi
+        done
+        for c in $deprecated_options ; do
            if test "x$c" = "x$f" ; then
               f=""
         fi
@@ -2467,59 +2469,6 @@ if test ! "x$enable_fftw3" = "xno"; then
 fi
 check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
      "Explicitly required FFT in the West dependencies not fulfilled"
-
-######################################################################
-#
-### echo %%% CERNLIB Usage - Third party libraries
-#
-# (See http://www.cern.ch)
-#
-# Check for CERN libs (libpacklib and libkernlib)
-#
-if test ! "x$enable_cern" = "xno"; then
-    cernlibdirs="$CERNLIB $CERNLIB/lib ${CERN}/${CERN_LEVEL}/lib  \
-	/cern/pro/lib /cern/new/lib /cern/old/lib /opt/cern/pro/lib \
-	/opt/cern/new/lib /opt/cern/old/lib /usr/local/cern/pro/lib \
-	/usr/local/cern/new/lib /usr/local/cern/old/lib /usr/lib \
-	/usr/lib/cern /usr/local/lib /usr/local/lib/cern $finkdir/lib"
-    check_library "libpacklib_noshift libpacklib packmd packlib" \
-	"$enable_shared" "${cernlibdir}" $cernlibdirs
-    packlib=$found_lib
-    packlibdir=$found_dir
-
-    check_library "libkernlib_noshift libkernlib kernmd kernlib" \
-	"$enable_shared" "${cernlibdir}" $cernlibdirs
-    kernlib=$found_lib
-    kernlibdir=$found_dir
-
-    if test ! "x$packlib" = "x" && test "x$enable_rfio" = "xno" ; then
-        # check if libpacklib contains rfio references, if yes make further check
-        check_symbol rfio "$packlib" "$packlibdir"
-        if test  $found_symbol -eq 1 ; then
-            # check if libpacklib contains rfio code (case of < 2002 version)
-            check_symbol rfio_connect "$packlib" "$packlibdir"
-            if test  $found_symbol -eq 0 ; then
-                result "### Need libshift with this version of $packlib"
-                if test "x$shiftold" = "xyes"; then
-                    result "### Found old version of libshift, please uprade to >=1.5.2"
-                else
-                    result "### Run configure with --enable-rfio or set --with-shift-libdir"
-                fi
-                packlib=""
-            fi
-        fi
-    fi
-
-    if test "x$packlib" = "x" || test "x$kernlib" = "x"; then
-        enable_cern="no"
-     else
-        cernlib="$packlib $kernlib"
-        cernlibdir="$packlibdir $kernlibdir"
-    fi
-fi
-check_explicit "$enable_cern" "$enable_cern_explicit" \
-     "Explicitly required CernLib dependencies not fulfilled"
-
 
 ######################################################################
 #
@@ -4507,7 +4456,7 @@ fi
 rm -f lib/libRXML* bin/libRXML* bin/xproofd etc/system.rootmap
 rm -f lib/libProofGui* bin/libProofGui* bin/xrdgsiproxy
 rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
-rm -f lib/libASPluginGS.*
+rm -f lib/libASPluginGS.* bin/g2rootold*
 rm -f math/mathcore/src/G__MathCore32.*
 rm -f xrootd/src/headers.d
 rm -f asimage/src/headers.d asimage/src/G__ASImageGS.*
@@ -4666,8 +4615,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
     -e "s|@buildxrd@|$buildxrd|"                \
-    -e "s|@cernlibdir@|$cernlibdir|"            \
-    -e "s|@cernlibs@|$cernlib|"                 \
     -e "s|@castorincdir@|$castorincdir|"        \
     -e "s|@castorlib@|$castorlib|"              \
     -e "s|@castorlibdir@|$castorlibdir|"        \
@@ -4837,7 +4784,6 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@xrdaddopts@|$xrdaddopts|"            \
     -e "s|@xrootddir@|$xrootddir|"              \
     -e "s|@buildgl@|$enable_opengl|"            \
-    -e "s|@buildhbook@|$enable_cern|"           \
     -e "s|@buildldap@|$enable_ldap|"            \
     -e "s|@buildmysql@|$enable_mysql|"          \
     -e "s|@buildpgsql@|$enable_pgsql|"          \

@@ -206,8 +206,6 @@ endif
 ifeq ($(BUILDGLOBUS),yes)
 MODULES      += net/globusauth
 endif
-# comment out to test minicern
-#F77 :=
 ifneq ($(F77),)
 MODULES      += misc/minicern hist/hbook
 endif

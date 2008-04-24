@@ -63,10 +63,6 @@ OPENGLULIB     := @openglulib@
 OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := $(filter-out /usr/include, @openglincdir@)
 
-BUILDHBOOK     := @buildhbook@
-CERNLIBDIR     := @cernlibdir@
-CERNLIBS       := @cernlibs@
-
 BUILDLDAP      := @buildldap@
 LDAPLIBDIR     := @ldaplibdir@
 LDAPCLILIB     := @ldaplib@
