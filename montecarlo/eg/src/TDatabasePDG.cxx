@@ -594,6 +594,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 
             if (nch) {
                // read in decay channels
+               ich = 0;
                while ( ((c[0]=getc(file)) != EOF) && (ich <nch)) {
                   if (c[0] != '#') {
                      ungetc(c[0],file);
