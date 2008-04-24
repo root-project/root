@@ -39,8 +39,13 @@ TEveProjection::TEveProjection(TEveVector& center) :
    fPastFixRFac   (0),   fPastFixZFac   (0),
    fScaleR        (1),   fScaleZ        (1),
    fPastFixRScale (1),   fPastFixZScale (1),
-   fLowLimit      (-1e50, -1e50, -1e50),
-   fUpLimit       ( 1e50,  1e50,  1e50)
+   fLowLimit(-std::numeric_limits<Float_t>::infinity(),
+             -std::numeric_limits<Float_t>::infinity(),
+             -std::numeric_limits<Float_t>::infinity()),
+   fUpLimit ( std::numeric_limits<Float_t>::infinity(),
+              std::numeric_limits<Float_t>::infinity(),
+              std::numeric_limits<Float_t>::infinity())
+
 {
    // Constructor.
 }
