@@ -144,7 +144,7 @@ void ReflexUnitTest::any_type()
 
 void ReflexUnitTest::empty_type() {
   Type t;
-  CPPUNIT_ASSERT_EQUAL(38, int(Type::TypeSize()));
+  CPPUNIT_ASSERT_EQUAL(40, int(Type::TypeSize()));
   CPPUNIT_ASSERT(!t);
   CPPUNIT_ASSERT_EQUAL(size_t(0), size_t(t.Allocate()));
   CPPUNIT_ASSERT(!t.BaseAt(0));

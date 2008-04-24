@@ -90,20 +90,11 @@ typedef CARD32 ARGB32;
 #define ARGB32_CHAN8(c,i)		(((c)>>((i)<<3))&0x00FF)
 #define MAKE_ARGB32_CHAN8(v,i)	(((v)&0x0000FF)<<((i)<<3))
 
-#if 0
-#define ARGB32_ALPHA16(c)		((((c)>>16)&0x00FF00)|(((c)>>24)&0x0000FF))
-#define ARGB32_RED16(c)			((((c)>>8 )&0x00FF00)|(((c)>>16)&0x0000FF))
-#define ARGB32_GREEN16(c)	 	(( (c)     &0x00FF00)|(((c)>>8 )&0x0000FF))
-#define ARGB32_BLUE16(c)		((((c)<<8) &0x00FF00)|(((c)    )&0x0000FF))
-#define ARGB32_CHAN16(c,i)		((ARGB32_CHAN8(c,i)<<8)|ARGB32_CHAN8(c,i))
-#else
-#define ARGB32_ALPHA16(c)		({ CARD32 __c = ARGB32_ALPHA8(c); __c | (__c<<8);})
-#define ARGB32_RED16(c)			({ CARD32 __c = ARGB32_RED8(c); __c | (__c<<8);})
-#define ARGB32_GREEN16(c)	 	({ CARD32 __c = ARGB32_GREEN8(c); __c | (__c<<8);})
-#define ARGB32_BLUE16(c)		({ CARD32 __c = ARGB32_BLUE8(c); __c | (__c<<8);})
-#define ARGB32_CHAN16(c,i)		({ CARD32 __c = ARGB32_CHAN8(c,i); __c | (__c<<8);})
-#endif
-
+#define ARGB32_ALPHA16(c)		((((c)>>16)&0x00FF00)|0x00FF)
+#define ARGB32_RED16(c)			((((c)>>8)&0x00FF00)|0x00FF)
+#define ARGB32_GREEN16(c)	 	(( (c)    &0x00FF00)|0x00FF)
+#define ARGB32_BLUE16(c)		((((c)<<8)&0x00FF00)|0x00FF)
+#define ARGB32_CHAN16(c,i)		((ARGB32_CHAN8(c,i)<<8)|0x00FF)
 #define MAKE_ARGB32_CHAN16(v,i)	((((v)&0x00FF00)>>8)<<((i)<<3))
 /*******************/
 /****d* libAfterImage/ColorPart
@@ -176,10 +167,6 @@ typedef struct ASScanline
 #define SCL_DO_COLOR		(SCL_DO_RED|SCL_DO_GREEN|SCL_DO_BLUE)
 #define SCL_DO_ALL			(SCL_DO_RED|SCL_DO_GREEN|SCL_DO_BLUE| \
                              SCL_DO_ALPHA)
-#define SCL_RESERVED_MASK	0x0000FFFF
-#define SCL_CUSTOM_MASK		0xFFFF0000
-#define SCL_CUSTOM_OFFSET	16
-							 
 	CARD32	 	   flags ;   /* combination of  the above values */
 	CARD32        *buffer ;
 	CARD32        *blue, *green, *red, *alpha ;

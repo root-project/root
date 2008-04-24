@@ -19,8 +19,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
-
 #include "TCondor.h"
 #include "TList.h"
 #include "TSystem.h"

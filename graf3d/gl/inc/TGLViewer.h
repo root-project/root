@@ -105,7 +105,7 @@ public:
                         kDragOverlay };
 protected:
    EPushAction          fPushAction;
-   EDragAction          fDragAction;
+   EDragAction          fAction;
 
    // Redraw timer
    TGLRedrawTimer     * fRedrawTimer;        //! timer for triggering redraws
@@ -212,7 +212,7 @@ public:
    void SetCameraMarkup(TGLCameraMarkupStyle* m) { fCameraMarkup = m; }
 
    EPushAction GetPushAction() const { return fPushAction; }
-   EDragAction GetDragAction() const { return fDragAction; }
+   EDragAction GetAction()     const { return fAction; }
 
    const TGLPhysicalShape * GetSelected() const;
 

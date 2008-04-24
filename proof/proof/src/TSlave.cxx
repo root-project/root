@@ -20,8 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
-
 #include "RConfigure.h"
 #include "TApplication.h"
 #include "TSlave.h"

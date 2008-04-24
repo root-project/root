@@ -118,9 +118,9 @@
 
       FUNCTION JBIT (IZW,IZP)
       IAND (IZV,IZW) = AND (IZV, IZW)
-*      IOR (IZV,IZW) = OR (IZV, IZW)
-*      IEOR (IZV,IZW) = XOR (IZV, IZW)
-*      ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
+      IOR (IZV,IZW) = OR (IZV, IZW)
+      IEOR (IZV,IZW) = XOR (IZV, IZW)
+      ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
       JBIT = IAND (ISHFTR(IZW, IZP-1), 1)
       END
 
@@ -129,9 +129,9 @@
       FUNCTION JBYT (IZW,IZP,NZB)
       PARAMETER (NBITPW=32)
       PARAMETER (NCHAPW=4)
-*      IAND (IZV,IZW) = AND (IZV, IZW)
-*      IOR (IZV,IZW) = OR (IZV, IZW)
-*      IEOR (IZV,IZW) = XOR (IZV, IZW)
+      IAND (IZV,IZW) = AND (IZV, IZW)
+      IOR (IZV,IZW) = OR (IZV, IZW)
+      IEOR (IZV,IZW) = XOR (IZV, IZW)
       ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
       JBYT = ISHFTR(ISHFTL(IZW,NBITPW+1-IZP-NZB), NBITPW-NZB)
       END
@@ -183,7 +183,7 @@
       PARAMETER (IALL11 = -1)
       IAND (IZV,IZW) = AND (IZV, IZW)
       IOR (IZV,IZW) = OR (IZV, IZW)
-*      IEOR (IZV,IZW) = XOR (IZV, IZW)
+      IEOR (IZV,IZW) = XOR (IZV, IZW)
       ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
       MSK = ISHFTR (IALL11, NBITPW-NZB)
       IZW = IOR ( IAND (IZW, NOT(ISHFTL(MSK,IZP-1)))
@@ -193,9 +193,9 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE SBIT1 (IZW,IZP)
-*      IAND (IZV,IZW) = AND (IZV, IZW)
+      IAND (IZV,IZW) = AND (IZV, IZW)
       IOR (IZV,IZW) = OR (IZV, IZW)
-*      IEOR (IZV,IZW) = XOR (IZV, IZW)
+      IEOR (IZV,IZW) = XOR (IZV, IZW)
       ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
       IZW = IOR (IZW, ISHFTL(1,IZP-1))
       END
@@ -204,8 +204,8 @@
 
       SUBROUTINE SBIT0 (IZW,IZP)
       IAND (IZV,IZW) = AND (IZV, IZW)
-*      IOR (IZV,IZW) = OR (IZV, IZW)
-*      IEOR (IZV,IZW) = XOR (IZV, IZW)
+      IOR (IZV,IZW) = OR (IZV, IZW)
+      IEOR (IZV,IZW) = XOR (IZV, IZW)
       ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
       IZW = IAND (IZW, NOT(ISHFTL(1,IZP-1)) )
       END
@@ -346,9 +346,9 @@
       PARAMETER (NCHAPW=4)
       PARAMETER (IALL11 = -1)
       IAND (IZV,IZW) = AND (IZV, IZW)
-
-
-
+      IOR (IZV,IZW) = OR (IZV, IZW)
+      IEOR (IZV,IZW) = XOR (IZV, IZW)
+      ISHFTL (IZW,NZB) = LSHIFT (IZW,NZB)
       JTH = JTHP(1)
       NINT = NINTP(1)
       IF (NINT.LE.0) RETURN

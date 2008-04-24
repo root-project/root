@@ -21,7 +21,6 @@
 #include "Reflex/internal/OwnedMember.h"
 
 #include <sstream>
-#include <string.h>
 
 //______________________________________________________________________________
 Reflex::NameLookup::NameLookup(const std::string& name, const Scope& current):

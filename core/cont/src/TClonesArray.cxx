@@ -98,8 +98,29 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    // TClonesArray) via a TMessage over a TSocket don't forget to call
    // BypassStreamer(kFALSE). See TClonesArray::BypassStreamer().
 
-   fKeep = 0;
-   SetClass(classname,s);
+   if (!gROOT)
+      ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
+
+   fClass = TClass::GetClass(classname);
+   char *name = new char[strlen(classname)+2];
+   sprintf(name, "%ss", classname);
+   SetName(name);
+   delete [] name;
+
+   fKeep = new TObjArray(s);
+
+   BypassStreamer(kTRUE);
+
+   if (!fClass) {
+      MakeZombie();
+      Error("TClonesArray", "%s is not a valid class name", classname);
+      return;
+   }
+   if (!fClass->InheritsFrom(TObject::Class())) {
+      MakeZombie();
+      Error("TClonesArray", "%s does not inherit from TObject", classname);
+      return;
+   }
 }
 
 //______________________________________________________________________________
@@ -128,8 +149,30 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
    // TClonesArray) via a TMessage over a TSocket don't forget to call
    // BypassStreamer(kFALSE). See TClonesArray::BypassStreamer().
 
-   fKeep = 0;
-   SetClass(cl,s);
+   if (!gROOT)
+      ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
+
+   fKeep  = 0;
+   fClass = (TClass*)cl;
+   if (!fClass) {
+      MakeZombie();
+      Error("TClonesArray", "called with a null pointer");
+      return;
+   }
+   const char *classname = fClass->GetName();
+   if (!fClass->InheritsFrom(TObject::Class())) {
+      MakeZombie();
+      Error("TClonesArray", "%s does not inherit from TObject", classname);
+      return;
+   }
+   char *name = new char[strlen(classname)+2];
+   sprintf(name, "%ss", classname);
+   SetName(name);
+   delete [] name;
+
+   fKeep = new TObjArray(s);
+
+   BypassStreamer(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -491,63 +534,6 @@ TObject *TClonesArray::Remove(TObject *obj)
    Changed();
    return obj;
 }
-
-//______________________________________________________________________________
-void TClonesArray::SetClass(const TClass *cl, Int_t s)
-{
-   // Create an array of clone objects of class cl. The class must inherit from
-   // TObject. If the class defines an own operator delete(), make sure that
-   // it looks like this:
-   //
-   //    void MyClass::operator delete(void *vp)
-   //    {
-   //       if ((Long_t) vp != TObject::GetDtorOnly())
-   //          ::operator delete(vp);       // delete space
-   //       else
-   //          TObject::SetDtorOnly(0);
-   //    }
-   //
-   // The second argument s indicates an approximate number of objects
-   // that will be entered in the array. If more than s objects are entered,
-   // the array will be automatically expanded.
-   //
-   // NB: This function should not be called in the TClonesArray is already
-   //     initialized with a class.
-
-   if (fKeep) {
-      Error("SetClass", "TClonesArray already initialized with another class");
-      return;
-   }
-   fClass = (TClass*)cl;
-   if (!fClass) {
-      MakeZombie();
-      Error("SetClass", "called with a null pointer");
-      return;
-   }
-   const char *classname = fClass->GetName();
-   if (!fClass->InheritsFrom(TObject::Class())) {
-      MakeZombie();
-      Error("SetClass", "%s does not inherit from TObject", classname);
-      return;
-   }
-   char *name = new char[strlen(classname)+2];
-   sprintf(name, "%ss", classname);
-   SetName(name);
-   delete [] name;
-
-   fKeep = new TObjArray(s);
-
-   BypassStreamer(kTRUE);
-}
-
-//______________________________________________________________________________
-void TClonesArray::SetClass(const char *classname, Int_t s)
-{
-   //see TClonesArray::SetClass(const TClass*)
-   
-   SetClass(TClass::GetClass(classname),s);
-}
-
 
 //______________________________________________________________________________
 void TClonesArray::SetOwner(Bool_t /* enable */)

@@ -30,18 +30,20 @@ protected:
    Int_t   GetGridStep(Int_t axId, const TAxis* ax, TGLRnrCtx &rnrCtx) const;
 
    void    SetFont(Float_t axis_len, TGLRnrCtx &rnrCtx) const;
-   void    RnrText(const char* txt, Float_t x, Float_t y, Float_t z,
+   void    RnrText(const char* txt, Float_t x, Float_t y, Float_t z, 
                    const TGLFont &font, Int_t mode) const;
 
-   void    DrawZScales3D(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
-   void    DrawZScales2D(TGLRnrCtx &rnrCtx, Float_t x0, Float_t y0) const;
-   void    DrawXYScales(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
-   void    DrawHistBase(TGLRnrCtx &rnrCtx, Bool_t is3D) const;
+   void    DrawZAxis(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
+   void    DrawZAxisSimplified(TGLRnrCtx &rnrCtx, Float_t x0, Float_t y0) const;
+   void    DrawXYAxis(TGLRnrCtx &rnrCtx, Float_t x0, Float_t x1, Float_t y0, Float_t y1) const;
+   void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
-   void    DrawCells2D(TGLRnrCtx & rnrCt) const;
+   void    Draw2D(TGLRnrCtx & rnrCt) const;
+   void    Draw2DValSize() const;
+   void    Draw2DValColor(Int_t nEta, Int_t nPhi) const;
+   void    Draw3D(TGLRnrCtx & rnrCtx) const;
 
-   void    DrawCells3D(TGLRnrCtx & rnrCtx) const;
-   void    MakeQuad(Float_t x, Float_t y, Float_t z,
+   void    MakeQuad(Float_t x, Float_t y, Float_t z, 
                     Float_t xw, Float_t yw, Float_t zh) const;
    void    MakeDisplayList() const;
 

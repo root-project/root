@@ -537,24 +537,14 @@ slice_asimage2( ASVisual *asv, ASImage *src,
 
 /* same as above with scale = 0 */
 ASImage*
-slice_asimage (ASVisual *asv, ASImage *src,
+slice_asimage( ASVisual *asv, ASImage *src,
 			   int slice_x_start, int slice_x_end,
 			   int slice_y_start, int slice_y_end,
 			   int to_width,
 			   int to_height,
 			   ASAltImFormats out_format,
-			   unsigned int compression_out, int quality);
+			   unsigned int compression_out, int quality );
 
-ASImage *
-pixelize_asimage (ASVisual *asv, ASImage *src,
-			      int clip_x, int clip_y, int clip_width, int clip_height,
-				  int pixel_width, int pixel_height,
-				  ASAltImFormats out_format, unsigned int compression_out, int quality );
-ASImage *
-color2alpha_asimage (ASVisual *asv, ASImage *src,
-			         int clip_x, int clip_y, int clip_width, int clip_height,
-				     ARGB32 color,
-				     ASAltImFormats out_format, unsigned int compression_out, int quality);
 
 #ifdef __cplusplus
 }

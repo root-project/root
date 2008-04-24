@@ -21,15 +21,7 @@ MINICERNO    := $(MINICERNO1) $(MINICERNO2)
 
 MINICERNDEP  := $(MINICERNS1:.c=.d)
 
-ifneq ($(PLATFORM),win32)
 MINICERNLIB  := $(LPATH)/libminicern.$(SOEXT)
-else
-MINICERNLIB  := $(LPATH)/libminicern.lib
-LNKFLAGS      = -nologo -ignore:4049,4075,4217,4221
-ifeq (yes,$(WINRTDEBUG))
-  LNKFLAGS   += -nodefaultlib:msvcrt.lib
-endif
-endif
 
 # used in the main Makefile
 ALLLIBS      += $(MINICERNLIB)
@@ -43,15 +35,10 @@ INCLUDEFILES += $(MINICERNDEP)
 include/%.h:    $(MINICERNDIRI)/%.h
 		cp $< $@
 
-ifneq ($(PLATFORM),win32)
 $(MINICERNLIB): $(MINICERNO) $(ORDER_) $(MINICERNLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libminicern.$(SOEXT) $@ "$(MINICERNO1)" \
 		   "$(MINICERNO2) $(MINICERNLIBEXTRA) $(F77LIBS)"
-else
-$(MINICERNLIB): $(MINICERNO) $(ORDER_) $(MINICERNLIBDEP)
-		$(LD) -LIB $(LNKFLAGS) -o $@ "$(MINICERNO1) $(MINICERNO2)"
-endif
 
 all-$(MODNAME): $(MINICERNLIB)
 

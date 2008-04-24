@@ -168,8 +168,7 @@ clean-genreflex:
 		@rm -rf lib/python/genreflex
 
 clean-check-$(MODNAME):
-		@rm -f $(RFLX_TESTLIB) $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX) \
-		       $(RFLX_TESTD)/test_Reflex_generate.testout
+		@rm -f $(RFLX_TESTLIB) $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
 
 clean-$(MODNAME): clean-genreflex clean-check-$(MODNAME)
 		@rm -f $(RFLX_GENMAPX)
@@ -195,7 +194,7 @@ endif
 check-reflex-run%: $(RFLX_TESTD)/% $(REFLEXLIB) $(RFLX_TESTLIB)
 		$(RFLX_EXPORTTESTPATH); $(RFLX_TESTD)/$*
 
-check-reflex: $(addprefix check-reflex-run,$(notdir $(RFLX_UNITTESTX))) check-reflex-diff-generate
+check-reflex: $(addprefix check-reflex-run,$(notdir $(RFLX_UNITTESTX)))
 
 $(RFLX_TESTDL)/libtest_%Rflx.$(SOEXT) : $(RFLX_TESTD)/%_rflx.o
 		@mkdir -p $(dir $@)
@@ -216,11 +215,5 @@ $(RFLX_UNITTESTO) : $(RFLX_TESTD)/test_Reflex%.o : $(RFLX_TESTD)/test_Reflex%.cx
 $(RFLX_UNITTESTX) : $(RFLX_TESTD)/test_Reflex% : $(RFLX_TESTD)/test_Reflex%.o
 		$(LD) $(LDFLAGS) -o $@ $< $(RFLX_CPPUNITLL) $(RFLX_REFLEXLL)
 
-.PHONY: check-reflex-diff-generate
-$(RFLX_TESTD)/test_Reflex_generate.testout: $(RFLX_TESTD)/test_Reflex_generate $(REFLEXLIB) $(RFLX_TESTLIB)
-	$(RFLX_EXPORTTESTPATH); $(RFLX_TESTD)/test_Reflex_generate
-
-check-reflex-diff-generate: $(RFLX_TESTD)/test_Reflex_generate.testout $(RFLX_TESTD)/test_Reflex_generate.testref
-	@diff -u $(RFLX_TESTD)/test_Reflex_generate.testref $(RFLX_TESTD)/test_Reflex_generate.testout
 $(REFLEXO):      PCHCXXFLAGS =
 $(RFLX_GENMAPO): PCHCXXFLAGS =

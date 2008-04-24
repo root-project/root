@@ -294,6 +294,9 @@ divide_component( register CARD32 *src, register CARD32 *dst, CARD16 ratio, int 
 }
 
 
+
+
+
 /* ******************** ASImageDecoder ****************************/
 ASImageDecoder *
 start_image_decoding( ASVisual *asv,ASImage *im, ASFlagType filter,

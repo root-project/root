@@ -9,24 +9,19 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
    TRandom r(0);
    gStyle->SetPalette(1, 0);
 
-   TEveRGBAPalette *pal = new TEveRGBAPalette(0, 130);
-   TEveFrameBox    *box = new TEveFrameBox();
-   box->SetAAQuadXY(-10, -10, 0, 20, 20);
-   box->SetFrameColor((Color_t) kGray);
+   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
 
    TEveQuadSet* q = new TEveQuadSet("RectangleXY");
    q->SetPalette(pal);
-   q->SetFrame(box);
    q->Reset(TEveQuadSet::kQT_RectangleXY, kFALSE, 32);
    for (Int_t i=0; i<num; ++i) {
-      q->AddQuad(r.Uniform(-10, 9), r.Uniform(-10, 9), 0,
+      q->AddQuad(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
                  r.Uniform(0.2, 1), r.Uniform(0.2, 1));
       q->QuadValue(r.Uniform(0, 130));
    }
    q->RefitPlex();
 
    TEveTrans& t = q->RefMainTrans();
-   t.RotateLF(1, 3, 0.5*TMath::Pi());
    t.SetPos(x, y, z);
 
    if (register)
@@ -34,8 +29,6 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
       gEve->AddElement(q);
       gEve->Redraw3D(kTRUE);
    }
-
-   Info("quad_test", "use alt-left-mouse to select individual digits.");
 
    return q;
 }
@@ -57,7 +50,7 @@ TEveQuadSet* quad_test_emc(Float_t x=0, Float_t y=0, Float_t z=0,
    for (Int_t i=0; i<num; ++i) {
       q->AddQuad(r.Uniform(-100, 100), r.Uniform(-100, 100));
       q->QuadValue(r.Uniform(0, 130));
-      q->QuadId(new TNamed(Form("Cell %d", i), "Dong!"));
+      q->AddId(new TNamed(Form("Cell %d", i)));
    }
    q->RefitPlex();
 
@@ -74,43 +67,23 @@ TEveQuadSet* quad_test_circ()
 {
    TEveManager::Create();
 
-   TRandom rnd(0);
+   TRandom r(0);
    gStyle->SetPalette(1, 0);
 
-   Float_t R = 10, dW = 1, dH = .5;
-
-   TEveFrameBox *box = new TEveFrameBox();
-   {
-      Float_t  frame[3*36];
-      Float_t *p = frame;
-      for (Int_t i = 0; i < 36; ++i, p += 3) {
-         p[0] = 11 * TMath::Cos(TMath::TwoPi()*i/36);
-         p[1] = 11 * TMath::Sin(TMath::TwoPi()*i/36);
-         p[2] = 0;
-      }
-      box->SetQuadByPoints(frame, 36);
-   }
-   box->SetFrameColor((Color_t) kGray);
-
    TEveQuadSet* q = new TEveQuadSet("Pepe");
-   q->SetFrame(box);
-   q->Reset(TEveQuadSet::kQT_HexagonXY, kFALSE, 32);
+   q->Reset(TEveQuadSet::kQT_RectangleXY, kFALSE, 32);
 
-   for (Float_t r = R; r > 2; r *= 0.8)
-   {
-      Int_t maxI = 2.0*TMath::Pi()*r / 2;
-      for (Int_t i = 0; i < maxI; ++i)
-      {
-         Float_t x = r * TMath::Cos(TMath::TwoPi()*i/maxI);
-         Float_t y = r * TMath::Sin(TMath::TwoPi()*i/maxI);
-         q->AddHexagon(x, y, rnd.Uniform(-1, 1), rnd.Uniform(0.2, 1));
-         q->QuadValue(rnd.Uniform(0, 130));
-      }
+   Float_t R = 10, dW = 1, dH = .5;
+   for (Int_t i=0; i<12; ++i) {
+      Float_t x = R * TMath::Cos(TMath::TwoPi()*i/12);
+      Float_t y = R * TMath::Sin(TMath::TwoPi()*i/12);
+      q->AddQuad(x-dW, y-dH, r.Uniform(-1, 1), 2*dW, 2*dH);
+      q->QuadValue(r.Uniform(0, 130));
    }
    q->RefitPlex();
 
    TEveTrans& t = q->RefMainTrans();
-   t.RotateLF(1, 3, 0.5*TMath::Pi());
+   t.SetPos(0, 0, 300);
 
    gEve->AddElement(q);
    gEve->Redraw3D();

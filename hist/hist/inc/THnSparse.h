@@ -51,8 +51,6 @@
 #endif
 
 class TAxis;
-class TCollection;
-class TH1;
 class TH1D;
 class TH2D;
 class TH3D;
@@ -149,10 +147,6 @@ class THnSparse: public TNamed {
 
    Bool_t CheckConsistency(const THnSparse *h, const char *tag) const;
    Bool_t IsInRange(Int_t *coord) const;
-   TH1* CreateHist(const char* name, const char* title,
-                   const TObjArray* axes) const;
-   TObject* ProjectionAny(Int_t ndim, const Int_t* dim,
-                          Bool_t wantSparse, Option_t* option = "") const;
 
  public:
    THnSparse(const char* name, const char* title, Int_t dim,
@@ -223,8 +217,6 @@ class THnSparse: public TNamed {
 
    THnSparse* Rebin(Int_t group) const;
    THnSparse* Rebin(const Int_t* group) const;
-
-   Long64_t   Merge(TCollection* list);
 
    void Scale(Double_t c);
    void Add(const THnSparse* h, Double_t c=1.);

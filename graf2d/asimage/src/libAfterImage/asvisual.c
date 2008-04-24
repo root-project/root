@@ -150,13 +150,7 @@ prepare_scanline( unsigned int width, unsigned int shift, ASScanline *reusable_m
 	/* we want to align data by 8 byte boundary (double)
 	 * to allow for code with less ifs and easier MMX/3Dnow utilization :*/
 	aligned_width = width + (width&0x00000001);
-	sl->buffer = ptr = safecalloc (1, ((aligned_width*4)+16)*sizeof(CARD32)+8);
-	if (ptr == NULL)
-	{
-		if (sl != reusable_memory)
-			free (sl);
-		return NULL;
-	}
+	sl->buffer = ptr = safemalloc (((aligned_width*4)+16)*sizeof(CARD32)+8);
 
 	sl->xc1 = sl->red 	= (CARD32*)((((long)ptr+7)>>3)*8);
 	sl->xc2 = sl->green = sl->red   + aligned_width;
@@ -175,14 +169,13 @@ prepare_scanline( unsigned int width, unsigned int shift, ASScanline *reusable_m
 	}
 	/* this way we can be sure that our buffers have size of multiplies of 8s
 	 * and thus we can skip unneeded checks in code */
-#if 0
 	/* initializing padding into 0 to avoid any garbadge carry-over
 	 * bugs with diffusion: */
 	sl->red[aligned_width-1]   = 0;
 	sl->green[aligned_width-1] = 0;
 	sl->blue[aligned_width-1]  = 0;
 	sl->alpha[aligned_width-1] = 0;
-#endif	
+	
 	sl->back_color = ARGB32_DEFAULT_BACK_COLOR;
 
 	return sl;

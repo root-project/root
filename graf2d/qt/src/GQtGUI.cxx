@@ -2713,7 +2713,6 @@ void         TGQt::Update(Int_t mode)
    // Flush flushes output buffer. Sync flushes buffer and waits till all
    // requests have been processed by X server.
 #ifndef R__QTX11
-   if (mode) {}
    QApplication::flush ();
 #else
    if (mode == 0)

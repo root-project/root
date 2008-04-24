@@ -85,21 +85,6 @@ void TEveFrameBox::SetAAQuadXZ(Float_t x,  Float_t y, Float_t z,
 }
 
 //______________________________________________________________________________
-void TEveFrameBox::SetQuadByPoints(const Float_t* pointArr, Int_t nPoints)
-{
-   // Setup frame with explicitly given corner coordinates.
-   // Arguments:
-   //   pointArr - array containing the 3D points
-   //   nPoint   - number of points, size of array divided by 3
-
-   fFrameType = kFT_Quad;
-   fFrameSize = 3*nPoints;
-   delete [] fFramePoints;
-   fFramePoints = new Float_t [fFrameSize];
-   memcpy(fFramePoints, pointArr, fFrameSize*sizeof(Float_t));
-}
-
-//______________________________________________________________________________
 void TEveFrameBox::SetAABox(Float_t x,  Float_t y,  Float_t z,
                             Float_t dx, Float_t dy, Float_t dz)
 {
