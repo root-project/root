@@ -62,6 +62,11 @@ using namespace RooFit ;
 //                                                                           //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
+Double_t htol = 1e-3 ; // histogram test tolerance
+Double_t ctol = 1e-3 ; // curve test tolerance
+Double_t fptol = 1e-3 ; // fit parameter test tolerance
+Double_t fctol = 1e-3 ; // fit correlation test tolerance
+Double_t vtol = 1e-3 ; // value test tolerance
 
 Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun) ;
 
@@ -225,17 +230,27 @@ Bool_t RooFitTestUnit::runCompTests()
 	if (obj->IsA()==RooHist::Class()) {
 	  RooHist* testHist = static_cast<RooHist*>(obj) ;
 	  RooHist* refHist = static_cast<RooHist*>(objRef) ;
-	  if (!testHist->isIdentical(*refHist)) {
+	  if (!testHist->isIdentical(*refHist,htol)) {
 	    cout << "stressRooFit ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName() 
 		 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << endl ;
+
+// 	    TFile fdbg("debug.root","RECREATE") ;
+// 	    obj->Write() ;
+// 	    fdbg.Close() ;
+
 	    ret = kFALSE ;
 	  }
 	} else if (obj->IsA()==RooCurve::Class()) {
 	  RooCurve* testCurve = static_cast<RooCurve*>(obj) ;
 	  RooCurve* refCurve = static_cast<RooCurve*>(objRef) ;
-	  if (!testCurve->isIdentical(*refCurve)) {
+	  if (!testCurve->isIdentical(*refCurve,ctol)) {
 	    cout << "stressRooFit ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName() 
 		 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << endl ;
+
+// 	    TFile fdbg("debug.root","RECREATE") ;
+// 	    iter->first->Write() ;
+// 	    fdbg.Close() ;
+
 	    ret = kFALSE ;
 	  }
 	}	
@@ -279,7 +294,7 @@ Bool_t RooFitTestUnit::runCompTests()
 	cout << "comparing RooFitResult " << iter2->first << " to benchmark " << iter2->second << " = " << bmark << endl ;      
       }
 
-      if (!iter2->first->isIdentical(*bmark)) {
+      if (!iter2->first->isIdentical(*bmark,fptol,fctol)) {
 	cout << "stressRooFit ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName() 
 	     <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << endl ;
 	ret = kFALSE ;
@@ -322,7 +337,7 @@ Bool_t RooFitTestUnit::runCompTests()
 	cout << "comparing value " << iter3->first << " to benchmark " << iter3->second << " = " << (Double_t)(*ref) << endl ;      
       }
 
-      if (fabs(iter3->first - (Double_t)(*ref))>1e-6 ) {
+      if (fabs(iter3->first - (Double_t)(*ref))>vtol ) {
 	cout << "stressRooFit ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << endl ;
 	ret = kFALSE ;
       }
@@ -2111,6 +2126,9 @@ int main(int argc,const char *argv[])
   string refFileName = "http://root.cern.ch/files/stressRooFit_ref.root" ;
   if (gROOT->GetVersionInt() > 51900)
      refFileName = "http://root.cern.ch/files/stressRooFit_ref_2.root" ;
+  if (gROOT->GetVersionInt() > 51902)
+     refFileName = "http://root.cern.ch/files/stressRooFit_ref_3.root" ;
+
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {
     string arg = argv[i] ;
