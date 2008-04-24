@@ -26,6 +26,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TVirtualMutex.h"
+#include <string>
 
 namespace {
 

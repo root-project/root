@@ -25,6 +25,7 @@
 #include "TVectorD.h"
 #include "TStyle.h"
 #include "TClass.h"
+#include <string>
 
 ClassImp(TGraphErrors)
 

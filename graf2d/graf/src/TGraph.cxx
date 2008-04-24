@@ -34,6 +34,7 @@
 #include "TClass.h"
 #include "TSystem.h"
 #include <stdlib.h>
+#include <string>
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 

@@ -31,6 +31,7 @@
 #include <list>
 #include <algorithm>
 #include <iostream>
+#include <string>
 
 //______________________________________________________________________________
 // TEveUtil

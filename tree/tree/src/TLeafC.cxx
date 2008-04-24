@@ -18,6 +18,7 @@
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
+#include <string>
 
 ClassImp(TLeafC)
 
