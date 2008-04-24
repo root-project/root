@@ -12,7 +12,7 @@ UNURANDIR    := $(MODDIR)
 UNURANDIRS   := $(UNURANDIR)/src
 UNURANDIRI   := $(UNURANDIR)/inc
 
-UNRVERS      := unuran-1.1.1-root
+UNRVERS      := unuran-1.2.3-root
 
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
@@ -145,7 +145,7 @@ clean::         clean-$(MODNAME)
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(UNURANETAG) $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
 		@mv $(UNRSRCS) $(UNURANDIRS)/-$(UNRVERS).tar.gz
-		@rm -rf $(UNURANDIRS)/$(UNRVERS)
+		@rm -rf $(UNURANDIRS)/unuran-*-root
 		@mv $(UNURANDIRS)/-$(UNRVERS).tar.gz $(UNRSRCS)
 
 distclean::     distclean-$(MODNAME)
