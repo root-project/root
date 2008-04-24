@@ -489,9 +489,9 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
    printf("%s loading: '%s' -> '%s'.\n", eh.Data(),
           filename.Data(), exp_filename.Data());
 
-   std::map<TString, TGeoManager*>::iterator g = fGeometries.find(filename);
-   if (g != fGeometries.end()) {
-      return g->second;
+   std::map<TString, TGeoManager*>::iterator geom = fGeometries.find(filename);
+   if (geom != fGeometries.end()) {
+      return geom->second;
    } else {
       gGeoManager = 0;
       if (TGeoManager::Import(filename) == 0)
