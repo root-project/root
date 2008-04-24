@@ -437,7 +437,7 @@ negotia:
    // Auth calls depend of fSec
    if (fSecurity == kClear) {
 
-      Bool_t rc = kFALSE;
+      rc = kFALSE;
 
       // UsrPwd Authentication
       user = fgDefaultUser;
@@ -462,7 +462,7 @@ negotia:
 
    } else if (fSecurity == kSRP) {
 
-      Bool_t rc = kFALSE;
+      rc = kFALSE;
 
       // SRP Authentication
       user = fgDefaultUser;
@@ -1895,7 +1895,7 @@ Int_t TAuthenticate::SshAuth(TString &user)
    TString fileErr = "";
    if (sshproto == 0) {
       // Prepare local file first in the home directory
-      TString fileErr = "rootsshtmp_";
+      fileErr = "rootsshtmp_";
       FILE *floc = gSystem->TempFileName(fileErr,gSystem->HomeDirectory());
       if (floc == 0) {
          // Try the temp directory
@@ -2011,8 +2011,8 @@ Int_t TAuthenticate::SshAuth(TString &user)
 
    if (ssh_rc && sshproto == 0) {
 
-      Int_t srvtyp = fSocket->GetServType();
-      Int_t rproto = fSocket->GetRemoteProtocol();
+      srvtyp = fSocket->GetServType();
+      rproto = fSocket->GetRemoteProtocol();
       Int_t level = 2;
       if ((srvtyp == TSocket::kROOTD && rproto < 10) ||
           (srvtyp == TSocket::kPROOFD && rproto < 9))
@@ -2540,7 +2540,7 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
          } else {
             // Anonymous like login with automatic passwd generation ...
             TString localuser;
-            UserGroup_t *pw = gSystem->GetUserInfo();
+            pw = gSystem->GetUserInfo();
             if (pw)
                localuser = StrDup(pw->fUser);
             delete pw;
@@ -4272,7 +4272,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
          // Line with host info directives
          TString user = "*";
 
-         char *nxt = strtok(0," ");
+         nxt = strtok(0," ");
          if (!strncmp(nxt,"user",4)) {
             nxt = strtok(0," ");
             if (strncmp(nxt,"list",4) && strncmp(nxt,"method",6)) {
@@ -4364,9 +4364,9 @@ Int_t TAuthenticate::ReadRootAuthrc()
    // the Master/Slaves, if requested ...
    TList tmpproofauthinfo;
    if (proofserv.Length() > 0) {
-      char *tmp = new char[proofserv.Length()+1];
-      strcpy(tmp,proofserv.Data());
-      char *nxt = strtok(tmp," ");
+      char *tmps = new char[proofserv.Length()+1];
+      strcpy(tmps,proofserv.Data());
+      char *nxt = strtok(tmps," ");
       while (nxt) {
          TString tmp((const char *)nxt);
          Int_t pdd = -1;
@@ -4434,7 +4434,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
          // Go to next
          nxt = strtok(0," ");
       }
-      if (tmp) delete [] tmp;
+      if (tmps) delete [] tmps;
    }
 
    // Update proofauthinfo with new info found
