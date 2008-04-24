@@ -697,7 +697,10 @@ extern "C" int G__reloadfile(char *filename)
               it to */
            break;
         }
-        j=G__srcfile[j].included_from;
+        // sanity check; this can only happen if something went wrong during loadfile
+        if ( j != G__srcfile[j].included_from)
+           j = G__srcfile[j].included_from;
+        else break;
       }
       break;
     }
