@@ -40,8 +40,6 @@
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 
-#include <string>
-
 #ifdef R__GLOBALSTL
 namespace std { using ::list; }
 #endif

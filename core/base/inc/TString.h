@@ -41,24 +41,7 @@
 #endif
 
 #include <stdarg.h>
-
-#ifndef __CINT__
-namespace std
-{
-   template<typename _Alloc>
-   class allocator;
-
-   template<typename _CharT>
-   struct char_traits;
-
-   template<typename _CharT, typename _Traits, typename _Alloc>
-   class basic_string;
-
-   typedef basic_string<char, char_traits<char>, allocator<char> > string;
-}
-#else
 #include <string>
-#endif
 
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }
