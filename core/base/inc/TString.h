@@ -45,10 +45,16 @@
 #ifndef __CINT__
 namespace std
 {
+   template<typename _Alloc>
+   class allocator;
+
+   template<typename _CharT>
+   struct char_traits;
+
    template<typename _CharT, typename _Traits, typename _Alloc>
    class basic_string;
 
-   typedef basic_string<char> string;
+   typedef basic_string<char, char_traits<char>, allocator<char> > string;
 }
 #else
 #include <string>
@@ -689,4 +695,3 @@ inline Bool_t operator!=(const char *s1, const TSubString &s2)
 { return !(s2 == s1); }
 
 #endif
-
