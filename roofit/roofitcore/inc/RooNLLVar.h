@@ -18,6 +18,7 @@
 
 #include "RooAbsOptTestStatistic.h"
 #include "RooCmdArg.h"
+#include "RooAbsPdf.h"
 
 class RooNLLVar : public RooAbsOptTestStatistic {
 public:
