@@ -450,8 +450,8 @@ int Cint::Internal::G__class_autoloading(int tagnum)
          // reset the def tagnums to not collide with dict setup
          ::Reflex::Scope store_def_tagnum = G__def_tagnum; 
          ::Reflex::Scope store_tagdefining = G__tagdefining; 
-         G__def_tagnum = Scope();
-         G__tagdefining = Scope();
+         G__def_tagnum = Reflex::Scope();
+         G__tagdefining = Reflex::Scope();
          int res = (*G__p_class_autoloading)(G__fulltagname(tagnum, 1), copyLibname);
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
