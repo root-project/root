@@ -47,7 +47,7 @@ double poisson_pmf(double * x, double * p) {
 }
 double binomial_pmf(double * x, double * p) { 
 
-   double y = ROOT::Math::binomial_pdf(int(x[0]),p[1],p[0]);
+   double y = ROOT::Math::binomial_pdf(static_cast<unsigned int>(x[0]),p[1], static_cast<unsigned int>(p[0]));
 //   std::cout << x[0] << " f(x) = " << y << std::endl;
    return y; 
 }
@@ -223,7 +223,7 @@ int testPoisson() {
 
      const double mu = muVal[imu]; 
 
-     int nmax = mu*3;
+     int nmax = static_cast<int>(mu*3);
      TH1D * h2 = new TH1D("h2","reference Poisson prob",nmax,0,nmax);
      TH1D * h3 = new TH1D("h3","UNURAN gen prob",nmax,0,nmax);
      TH1D * h4 = new TH1D("h4","UNURAN gen prob 2",nmax,0,nmax);
@@ -343,7 +343,7 @@ int testBinomial() {
      par[0] = NVal[ib];
      par[1] = pVal[ib];
 
-     int nmax = par[0]*par[1]*3;
+     int nmax = static_cast<int>(par[0]*par[1]*3);
      TH1D * h2 = new TH1D("h2","reference Binomial prob",nmax,0,nmax);
      TH1D * h3 = new TH1D("h3","UNURAN gen prob",nmax,0,nmax);
      TH1D * h4 = new TH1D("h4","UNURAN gen prob 2",nmax,0,nmax);
@@ -351,11 +351,11 @@ int testBinomial() {
 
      std::cout << "\nBinomial n = " << par[0] << "  " << par[1] << std::endl;
 
-     testRootBinomial(par[0],par[1],tR[ib],h2);
+     testRootBinomial(static_cast<int>(par[0]),par[1],tR[ib],h2);
 
 
      // test UNURAN with standard method
-     bool ret = unr.InitBinomial(par[0],par[1]);
+     bool ret = unr.InitBinomial(static_cast<int>(par[0]),par[1]);
      if (!ret) iret = -1;
      testUnuran(unr,tU[ib],h3,h2);
 
@@ -364,7 +364,7 @@ int testBinomial() {
      // use re-init for a fast re-initialization 
 
      TStopwatch w;
-     unr.InitBinomial(par[0], par[1],"dstd");
+     unr.InitBinomial(static_cast<int>(par[0]), par[1],"dstd");
      w.Start(); 
      for (int i = 0; i < n; ++i) {
         unr.ReInitDiscrDist(2,par);  
