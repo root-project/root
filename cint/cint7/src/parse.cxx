@@ -3042,6 +3042,8 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
                   }
                   // The body did a break, and we are generating bytecode.
                   executed_break = 1;
+                  // We do not propagate the break status upwards.
+                  result = G__null;
                   if (isblock) {
                      // -- Parse the rest of the body, generating code.
                      //fprintf(stderr, "G__exec_loop: Body did a break, generating code for rest of body block.\n"); 
@@ -3057,6 +3059,8 @@ static G__value G__exec_loop(char *forinit,char *condition,int naction,char **fo
                   // -- The body did a continue.
                   //fprintf(stderr, "G__exec_loop: The body did a continue.\n");
                   executed_continue = 1;
+                  // We do not propagate the continue status.
+                  result = G__null;
                   if (G__asm_noverflow) {
                      // -- We are generating bytecode.
                      if (isblock) {
