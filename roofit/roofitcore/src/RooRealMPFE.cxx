@@ -140,7 +140,7 @@ void RooRealMPFE::initialize() {
   _pid = fork() ;
   if (_pid==0) {
 
-    cout << "child getpid = " << getpid() << endl ;
+    cout << "child getpid = " << gSystem->GetPid() << endl ;
 
     // Start server loop 
     _state = Server ;
@@ -153,7 +153,7 @@ void RooRealMPFE::initialize() {
 
   } else if (_pid>0) {
  
-    cout << "parent getpid = " << getpid() << endl ;
+    cout << "parent getpid = " << gSystem->GetPid() << endl ;
    
     // Client process - fork successul
     cout << "RooRealMPFE::initialize(" << GetName() 

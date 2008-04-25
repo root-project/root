@@ -52,6 +52,7 @@
 #include "RooGlobalFunc.h"
 #include "RooSentinel.h"
 
+#include "TSystem.h"
 #include "Riostream.h"
 #include <iomanip>
 #include <fstream>
@@ -399,7 +400,7 @@ ostream& RooMsgService::log(const RooAbsArg* self, MsgLevel level, MsgTopic topi
     
   if (_streams[as].prefix && !skipPrefix) {
     if (_showPid) {
-      (*_streams[as].os) << "pid" << getpid() << " " ;
+      (*_streams[as].os) << "pid" << gSystem->GetPid() << " " ;
     }
     (*_streams[as].os) << "[#" << as << "] " << _levelNames[level] << ":" << _topicNames[topic]  << " -- " ;
   }
@@ -424,7 +425,7 @@ ostream& RooMsgService::log(const TObject* self, MsgLevel level, MsgTopic topic,
     
   if (_streams[as].prefix && !skipPrefix) {
     if (_showPid) {
-      (*_streams[as].os) << "pid" << getpid() << " " ;
+      (*_streams[as].os) << "pid" << gSystem->GetPid() << " " ;
     }
     (*_streams[as].os) << "[#" << as << "] " << _levelNames[level] << ":" << _topicNames[topic]  << " -- " ;
   }
