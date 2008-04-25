@@ -258,31 +258,31 @@ void RooRealMPFE::serverLoop()
 			       << ") IPC fromClient> RetrieveErrors" << endl ; 
 
       // Loop over errors
-      static std::map<const RooAbsArg*,list<EvalError> >::const_iterator iter = evalErrorIter() ;
-      for (int i=0 ; i<numEvalErrorItems() ; i++) {
-
-	list<EvalError>::const_iterator iter2 = iter->second.begin() ;
-	for (;iter2!=iter->second.end();++iter2) {
-
-	  // Reply with SendError message
-	  msg = SendError ;
-	  write(_pipeToClient[1],&msg,sizeof(Message)) ;
-	  write(_pipeToClient[1],&iter->first,sizeof(RooAbsReal*)) ;
-
-	  Int_t ntext = strlen(iter2->_msg) ;
-	  write(_pipeToClient[1],&ntext,sizeof(Int_t)) ;
-	  write(_pipeToClient[1],iter2->_msg,ntext+1) ;
-
-	  Int_t ntext2 = strlen(iter2->_srvval) ;
-	  write(_pipeToClient[1],&ntext2,sizeof(Int_t)) ;
-	  write(_pipeToClient[1],iter2->_srvval,ntext2+1) ;
-
-	  if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-				   << ") IPC toClient> SendError Arg " << iter->first << " Msg " << iter2->_msg << endl ; 
-	}
-      }  
-
       {
+	static std::map<const RooAbsArg*,list<EvalError> >::const_iterator iter = evalErrorIter() ;
+	for (int i=0 ; i<numEvalErrorItems() ; i++) {
+	  
+	  list<EvalError>::const_iterator iter2 = iter->second.begin() ;
+	  for (;iter2!=iter->second.end();++iter2) {
+	    
+	    // Reply with SendError message
+	    msg = SendError ;
+	    write(_pipeToClient[1],&msg,sizeof(Message)) ;
+	    write(_pipeToClient[1],&iter->first,sizeof(RooAbsReal*)) ;
+	    
+	    Int_t ntext = strlen(iter2->_msg) ;
+	    write(_pipeToClient[1],&ntext,sizeof(Int_t)) ;
+	    write(_pipeToClient[1],iter2->_msg,ntext+1) ;
+	    
+	    Int_t ntext2 = strlen(iter2->_srvval) ;
+	    write(_pipeToClient[1],&ntext2,sizeof(Int_t)) ;
+	    write(_pipeToClient[1],iter2->_srvval,ntext2+1) ;
+	    
+	    if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				     << ") IPC toClient> SendError Arg " << iter->first << " Msg " << iter2->_msg << endl ; 
+	  }
+	}  
+	
 	RooAbsReal* null(0) ;
 	write(_pipeToClient[1],&msg,sizeof(Message)) ;
 	write(_pipeToClient[1],&null,sizeof(RooAbsReal*)) ;
