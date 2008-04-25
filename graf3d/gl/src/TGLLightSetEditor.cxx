@@ -83,13 +83,13 @@ void TGLLightSetSubEditor::SetModel(TGLLightSet* m)
    // New model was set, refresh data.
 
    fM = m;
-   UInt_t ls = fM->GetLightState();
+   UInt_t als = fM->GetLightState();
 
-   fTopLight   ->SetState((ls & TGLLightSet::kLightTop)    ? kButtonDown : kButtonUp);
-   fRightLight ->SetState((ls & TGLLightSet::kLightRight)  ? kButtonDown : kButtonUp);
-   fBottomLight->SetState((ls & TGLLightSet::kLightBottom) ? kButtonDown : kButtonUp);
-   fLeftLight  ->SetState((ls & TGLLightSet::kLightLeft)   ? kButtonDown : kButtonUp);
-   fFrontLight ->SetState((ls & TGLLightSet::kLightFront)  ? kButtonDown : kButtonUp);
+   fTopLight   ->SetState((als & TGLLightSet::kLightTop)    ? kButtonDown : kButtonUp);
+   fRightLight ->SetState((als & TGLLightSet::kLightRight)  ? kButtonDown : kButtonUp);
+   fBottomLight->SetState((als & TGLLightSet::kLightBottom) ? kButtonDown : kButtonUp);
+   fLeftLight  ->SetState((als & TGLLightSet::kLightLeft)   ? kButtonDown : kButtonUp);
+   fFrontLight ->SetState((als & TGLLightSet::kLightFront)  ? kButtonDown : kButtonUp);
 
    fSpecularLight->SetState(fM->GetUseSpecular() ? kButtonDown : kButtonUp);
 }
