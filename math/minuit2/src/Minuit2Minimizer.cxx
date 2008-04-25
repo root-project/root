@@ -265,7 +265,7 @@ bool Minuit2Minimizer::Minimize() {
       // run Hesse
       ROOT::Minuit2::MnHesse hesse(strategy );
       ROOT::Minuit2::MnUserFcn mfcn(*GetFCN(), fMinimum->UserState().Trafo() );
-      ROOT::Minuit2::MinimumState st = hesse( *GetFCN(), fMinimum->State(), fMinimum->UserState().Trafo(), maxfcn); 
+      ROOT::Minuit2::MinimumState st = hesse( mfcn, fMinimum->State(), fMinimum->UserState().Trafo(), maxfcn); 
       fMinimum->Add(st); 
    }
 
