@@ -23,7 +23,6 @@
 // as a plot range and number of plot bins and plot creation methods.
 
 #include <sys/types.h>
-#include <unistd.h>
 
 
 #include "RooFit.h"

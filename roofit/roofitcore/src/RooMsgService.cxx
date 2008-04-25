@@ -40,7 +40,6 @@
 #define INST_MSG_SERVICE
 
 #include <sys/types.h>
-#include <unistd.h>
 
 #include "RooFit.h"
 #include "RooAbsArg.h"
