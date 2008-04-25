@@ -6,7 +6,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-include $(ROOTSYS)/test/Makefile.arch
+include ../Makefile.arch
 
 #------------------------------------------------------------------------------
 

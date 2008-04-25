@@ -119,6 +119,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(GENVECTORDH) $(GENVECTORDH32) \
 		   $(GENVECTORLIB) $(GENVECTORMAP)
 		@rm -rf include/Math
+		@cd $(GENVECTORDIR)/test; make distclean
 
 distclean::     distclean-$(MODNAME)
 

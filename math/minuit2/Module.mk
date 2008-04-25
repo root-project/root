@@ -104,6 +104,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MINUIT2DEP) $(MINUIT2DS) $(MINUIT2DH) $(MINUIT2LIB) \
 		   $(MINUIT2MAP)
 		@rm -rf include/Minuit2
+		@cd $(MINUIT2DIR)/test; make distclean
 
 distclean::     distclean-$(MODNAME)
 
