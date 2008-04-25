@@ -552,17 +552,17 @@ static int gl2psListNbr(GL2PSlist *list)
   return(list->n);
 }
 
-static void *gl2psListPointer(GL2PSlist *list, GLint index)
+static void *gl2psListPointer(GL2PSlist *list, GLint index2)
 {
   if(!list){
     gl2psMsg(GL2PS_ERROR, "Cannot point into unallocated list");
     return NULL;
   }
-  if((index < 0) || (index >= list->n)){
+  if((index2 < 0) || (index2 >= list->n)){
     gl2psMsg(GL2PS_ERROR, "Wrong list index in gl2psListPointer");
     return NULL;
   }
-  return(&list->array[index * list->size]);
+  return(&list->array[index2 * list->size]);
 }
 
 static void gl2psListSort(GL2PSlist *list,
@@ -1107,7 +1107,7 @@ static int gl2psTrianglesFirst(const void *a, const void *b)
 
 static GLint gl2psFindRoot(GL2PSlist *primitives, GL2PSprimitive **root)
 {
-  GLint i, j, count, best = 1000000, index = 0;
+  GLint i, j, count, best = 1000000, index2 = 0;
   GL2PSprimitive *prim1, *prim2;
   GL2PSplane plane;
   GLint maxp;
@@ -1137,13 +1137,13 @@ static GLint gl2psFindRoot(GL2PSlist *primitives, GL2PSprimitive **root)
       }
       if(count < best){
         best = count;
-        index = i;
+        index2 = i;
         *root = prim1;
-        if(!count) return index;
+        if(!count) return index2;
       }
     }
-    /* if(index) gl2psMsg(GL2PS_INFO, "GL2PS_BEST_ROOT was worth it: %d", index); */
-    return index;
+    /* if(index2) gl2psMsg(GL2PS_INFO, "GL2PS_BEST_ROOT was worth it: %d", index2); */
+    return index2;
   }
   else{
     return 0;
@@ -1222,12 +1222,12 @@ static void gl2psBuildBspTree(GL2PSbsptree *tree, GL2PSlist *primitives)
 {
   GL2PSprimitive *prim, *frontprim = NULL, *backprim = NULL;
   GL2PSlist *frontlist, *backlist;
-  GLint i, index;
+  GLint i, index2;
 
   tree->front = NULL;
   tree->back = NULL;
   tree->primitives = gl2psListCreate(1, 2, sizeof(GL2PSprimitive*));
-  index = gl2psFindRoot(primitives, &prim);
+  index2 = gl2psFindRoot(primitives, &prim);
   gl2psGetPlane(prim, tree->plane);
   gl2psAddPrimitiveInList(prim, tree->primitives);
 
@@ -1235,7 +1235,7 @@ static void gl2psBuildBspTree(GL2PSbsptree *tree, GL2PSlist *primitives)
   backlist = gl2psListCreate(1, 2, sizeof(GL2PSprimitive*));
 
   for(i = 0; i < gl2psListNbr(primitives); i++){
-    if(i != index){
+    if(i != index2){
       prim = *(GL2PSprimitive**)gl2psListPointer(primitives,i);
       switch(gl2psSplitPrimitive(prim, tree->plane, &frontprim, &backprim)){
       case GL2PS_COINCIDENT:
@@ -2811,7 +2811,7 @@ static void gl2psPrintPostScriptFooter(void)
 
 static void gl2psPrintPostScriptBeginViewport(GLint viewport[4])
 {
-  GLint index;
+  GLint index2;
   GLfloat rgba[4];
   int x = viewport[0], y = viewport[1], w = viewport[2], h = viewport[3];
 
@@ -2830,10 +2830,10 @@ static void gl2psPrintPostScriptBeginViewport(GLint viewport[4])
       glGetFloatv(GL_COLOR_CLEAR_VALUE, rgba);
     }
     else{
-      glGetIntegerv(GL_INDEX_CLEAR_VALUE, &index);
-      rgba[0] = gl2ps->colormap[index][0];
-      rgba[1] = gl2ps->colormap[index][1];
-      rgba[2] = gl2ps->colormap[index][2];
+      glGetIntegerv(GL_INDEX_CLEAR_VALUE, &index2);
+      rgba[0] = gl2ps->colormap[index2][0];
+      rgba[1] = gl2ps->colormap[index2][1];
+      rgba[2] = gl2ps->colormap[index2][2];
       rgba[3] = 0.0F;
     }
     gl2psPrintf("%g %g %g C\n"
@@ -4316,7 +4316,7 @@ static void gl2psPrintPDFFooter(void)
 static void gl2psPrintPDFBeginViewport(GLint viewport[4])
 {
   int offs = 0;
-  GLint index;
+  GLint index2;
   GLfloat rgba[4];
   int x = viewport[0], y = viewport[1], w = viewport[2], h = viewport[3];
   
@@ -4334,10 +4334,10 @@ static void gl2psPrintPDFBeginViewport(GLint viewport[4])
       glGetFloatv(GL_COLOR_CLEAR_VALUE, rgba);
     }
     else{
-      glGetIntegerv(GL_INDEX_CLEAR_VALUE, &index);
-      rgba[0] = gl2ps->colormap[index][0];
-      rgba[1] = gl2ps->colormap[index][1];
-      rgba[2] = gl2ps->colormap[index][2];
+      glGetIntegerv(GL_INDEX_CLEAR_VALUE, &index2);
+      rgba[0] = gl2ps->colormap[index2][0];
+      rgba[1] = gl2ps->colormap[index2][1];
+      rgba[2] = gl2ps->colormap[index2][2];
       rgba[3] = 0.0F;
     }
     offs += gl2psPrintPDFFillColor(rgba);
@@ -4503,7 +4503,7 @@ GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer,
                                   GLint nr, GLint ng, GLint nb, GLint buffersize,
                                   FILE *stream, const char *filename)
 {
-  GLint index;
+  GLint index2;
   int i;
 
   if(gl2ps){
@@ -4616,10 +4616,10 @@ GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer,
     gl2ps->colorsize = colorsize;
     gl2ps->colormap = (GL2PSrgba*)gl2psMalloc(gl2ps->colorsize * sizeof(GL2PSrgba));
     memcpy(gl2ps->colormap, colormap, gl2ps->colorsize * sizeof(GL2PSrgba));
-    glGetIntegerv(GL_INDEX_CLEAR_VALUE, &index);
-    gl2ps->bgcolor[0] = gl2ps->colormap[index][0];
-    gl2ps->bgcolor[1] = gl2ps->colormap[index][1];
-    gl2ps->bgcolor[2] = gl2ps->colormap[index][2];
+    glGetIntegerv(GL_INDEX_CLEAR_VALUE, &index2);
+    gl2ps->bgcolor[0] = gl2ps->colormap[index2][0];
+    gl2ps->bgcolor[1] = gl2ps->colormap[index2][1];
+    gl2ps->bgcolor[2] = gl2ps->colormap[index2][2];
     gl2ps->bgcolor[3] = 0.0F;
   }
   else{
