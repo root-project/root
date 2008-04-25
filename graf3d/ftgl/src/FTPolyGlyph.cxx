@@ -2,7 +2,7 @@
 #include "FTVectoriser.h"
 
 
-FTPolyGlyph::FTPolyGlyph( FT_GlyphSlot glyph, bool useDisplayList)
+FTPolyGlyph::FTPolyGlyph( FT_GlyphSlot glyph, bool useDisplayList1)
 :   FTGlyph( glyph),
     glList(0)
 {
@@ -24,7 +24,7 @@ FTPolyGlyph::FTPolyGlyph( FT_GlyphSlot glyph, bool useDisplayList)
         
     vectoriser.MakeMesh( 1.0);
     
-    if( useDisplayList)
+    if( useDisplayList1)
     {
         glList = glGenLists( 1);
         glNewList( glList, GL_COMPILE);
@@ -51,7 +51,7 @@ FTPolyGlyph::FTPolyGlyph( FT_GlyphSlot glyph, bool useDisplayList)
         glEnd();
     }
 
-    if(useDisplayList)
+    if(useDisplayList1)
     {
         glEndList();
     }

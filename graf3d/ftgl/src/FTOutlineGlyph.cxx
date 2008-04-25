@@ -2,7 +2,7 @@
 #include    "FTVectoriser.h"
 
 
-FTOutlineGlyph::FTOutlineGlyph( FT_GlyphSlot glyph, bool useDisplayList)
+FTOutlineGlyph::FTOutlineGlyph( FT_GlyphSlot glyph, bool useDisplayList1)
 :   FTGlyph( glyph),
     glList(0)
 {
@@ -20,7 +20,7 @@ FTOutlineGlyph::FTOutlineGlyph( FT_GlyphSlot glyph, bool useDisplayList)
         return;
     }
 
-    if(useDisplayList)
+    if(useDisplayList1)
     {
         glList = glGenLists(1);
         glNewList( glList, GL_COMPILE);
@@ -39,7 +39,7 @@ FTOutlineGlyph::FTOutlineGlyph( FT_GlyphSlot glyph, bool useDisplayList)
         glEnd();
     }
 
-    if(useDisplayList)
+    if(useDisplayList1)
     {
         glEndList();
     }

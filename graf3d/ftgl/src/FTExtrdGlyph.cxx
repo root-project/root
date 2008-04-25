@@ -6,7 +6,7 @@
 #include    "FTVectoriser.h"
 
 
-FTExtrdGlyph::FTExtrdGlyph( FT_GlyphSlot glyph, float depth, bool useDisplayList)
+FTExtrdGlyph::FTExtrdGlyph( FT_GlyphSlot glyph, float depth, bool useDisplayList1)
 :   FTGlyph( glyph),
     glList(0)
 {
@@ -26,7 +26,7 @@ FTExtrdGlyph::FTExtrdGlyph( FT_GlyphSlot glyph, float depth, bool useDisplayList
 
     unsigned int tesselationIndex;
     
-    if(useDisplayList)
+    if(useDisplayList1)
     {
         glList = glGenLists(1);
         glNewList( glList, GL_COMPILE);
@@ -124,7 +124,7 @@ FTExtrdGlyph::FTExtrdGlyph( FT_GlyphSlot glyph, float depth, bool useDisplayList
         glEnd();
     }
         
-    if(useDisplayList)
+    if(useDisplayList1)
     {
         glEndList();
     }

@@ -130,14 +130,14 @@ FTContour::FTContour( FT_Vector* contour, char* pointTags, unsigned int numberOf
         {
             FTPoint controlPoint2 = nextPoint;
             
-            FTPoint nextPoint = ( pointIndex == numberOfPoints - 2)
+            FTPoint nextPoint1 = ( pointIndex == numberOfPoints - 2)
                                 ? pointList[0]
                                 : FTPoint( contour[pointIndex + 2]);
             
             controlPoints[0][0] = previousPoint.X(); controlPoints[0][1] = previousPoint.Y();
             controlPoints[1][0] = controlPoint.X();  controlPoints[1][1] = controlPoint.Y();
             controlPoints[2][0] = controlPoint2.X(); controlPoints[2][1] = controlPoint2.Y();
-            controlPoints[3][0] = nextPoint.X();     controlPoints[3][1] = nextPoint.Y();
+            controlPoints[3][0] = nextPoint1.X();     controlPoints[3][1] = nextPoint1.Y();
         
             evaluateCubicCurve();
             ++pointIndex;

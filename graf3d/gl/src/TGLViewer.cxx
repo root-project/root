@@ -371,7 +371,7 @@ void TGLViewer::InitGL()
 }
 
 //______________________________________________________________________________
-void TGLViewer::RequestDraw(Short_t LOD)
+void TGLViewer::RequestDraw(Short_t LODInput)
 {
    // Post request for redraw of viewer at level of detail 'LOD'
    // Request is directed via cross thread gVirtualGL object.
@@ -380,7 +380,7 @@ void TGLViewer::RequestDraw(Short_t LOD)
    // Ignore request if GL window or context not yet availible - we
    // will get redraw later
    if (!fGLWidget && fGLDevice == -1) {
-      fRedrawTimer->RequestDraw(100, LOD);
+      fRedrawTimer->RequestDraw(100, LODInput);
       return;
    }
 
@@ -391,10 +391,10 @@ void TGLViewer::RequestDraw(Short_t LOD)
       if (gDebug>3) {
          Info("TGLViewer::RequestDraw", "viewer locked - requesting another draw.");
       }
-      fRedrawTimer->RequestDraw(100, LOD);
+      fRedrawTimer->RequestDraw(100, LODInput);
       return;
    }
-   fLOD = LOD;
+   fLOD = LODInput;
 
    if (!gVirtualX->IsCmdThread())
       gROOT->ProcessLineFast(Form("((TGLViewer *)0x%x)->DoDraw()", this));

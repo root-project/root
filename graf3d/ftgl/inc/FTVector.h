@@ -128,22 +128,22 @@ class FTGL_EXPORT FTVector
             }
             
             reserve(n);
-            iterator begin, end;
+            iterator begin1, end1;
             
             if( n >= Size)
             {
-                begin = this->end();
-                end = this->begin() + n;
+                begin1 = this->end();
+                end1 = this->begin() + n;
             }
             else
             {
-                begin = this->begin() + n;
-                end = this->end();
+                begin1 = this->begin() + n;
+                end1 = this->end();
             }
         
-            while( begin != end)
+            while( begin1 != end1)
             {
-                *begin++ = x;
+                *begin1++ = x;
             }
         
             Size = n;
@@ -164,13 +164,13 @@ class FTGL_EXPORT FTVector
             
             value_type *new_items = new value_type[new_capacity];
             
-            iterator begin = this->begin();
-            iterator end = this->end();
+            iterator begin2 = this->begin();
+            iterator end2 = this->end();
             value_type *ptr = new_items;
             
-            while( begin != end)
+            while( begin2 != end2)
             {
-                *ptr++ = *begin++;
+                *ptr++ = *begin2++;
             }
             
             if( Capacity)
