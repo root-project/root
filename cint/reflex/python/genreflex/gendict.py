@@ -1937,7 +1937,7 @@ def normalizeFragment(name,alltempl=False,_useCache=True,_cache={}) :
       sargs = []
       for i in range(len(args)) :  
         if args[i].find(defargs[i]) == -1 : sargs.append(args[i])
-      sargs = [normalizeClass(a, alltempl) for a in sargs]
+    sargs = [normalizeClass(a, alltempl) for a in sargs]
 
   nor = clname + '<' + string.join(sargs,',')
   if nor[-1] == '>' : nor += ' >' + suffix
