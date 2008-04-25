@@ -1449,10 +1449,12 @@ void TBranchElement::InitInfo()
          if (cl == TClonesArray::Class()) {
             fClassVersion = TClonesArray::Class()->GetClassVersion();
          }
-         Bool_t optim = TVirtualStreamerInfo::CanOptimize();
-         TVirtualStreamerInfo::Optimize(kFALSE);
-         fInfo = (TStreamerInfo*)cl->GetStreamerInfo(fClassVersion);
-         TVirtualStreamerInfo::Optimize(optim);
+         {
+            Bool_t optim = TVirtualStreamerInfo::CanOptimize();
+            TVirtualStreamerInfo::Optimize(kFALSE);
+            fInfo = (TStreamerInfo*)cl->GetStreamerInfo(fClassVersion);
+            TVirtualStreamerInfo::Optimize(optim);
+         }
          // FIXME: Check that the found streamer info checksum matches our branch class checksum here.
          // Check to see if the class code was unloaded/reloaded
          // since we were created.
@@ -2038,7 +2040,7 @@ void TBranchElement::InitializeOffsets()
             fInitOffsets = kTRUE;
             return;
          }
-         Int_t localOffset = subBranchElement->GetOffset();
+         localOffset = subBranchElement->GetOffset();
 
          {
             Int_t streamerType = subBranchElement->GetType();
@@ -2439,10 +2441,8 @@ void TBranchElement::Print(Option_t* option) const
              GetClassName(), GetParentName(),
              (fBranchOffset&&parent) ? parent->fBranchOffset[ind] : 0,
              GetOffset(), GetObject());
-      TObjArray* brl = ((TBranchElement*)this)->GetListOfBranches();
-      Int_t nbranches = brl->GetEntriesFast();
       for (Int_t i = 0; i < nbranches; ++i) {
-         TBranchElement* subbranch = (TBranchElement*)brl->At(i);
+         TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
          subbranch->Print("debugAddressSub");
       }
       return;

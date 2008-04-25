@@ -343,13 +343,13 @@ namespace ROOT {
 
       if (fListOfBaseProxies.GetSize()) {
 
-         TIter next(&fListOfBaseProxies);
+         TIter nextbase(&fListOfBaseProxies);
 
-         desc = (TBranchProxyDescriptor*)next();
+         desc = (TBranchProxyDescriptor*)nextbase();
          fprintf(hf,"\n%-*s%-*s(director, parent, membername)",  offset+6, " ", fMaxDatamemberType,desc->GetTypeName());
          wroteFirst = true;
 
-         while ( (desc = (TBranchProxyDescriptor*)next()) ) {
+         while ( (desc = (TBranchProxyDescriptor*)nextbase()) ) {
             fprintf(hf,",\n%-*s%-*s(director, parent, membername)",  offset+6, " ", fMaxDatamemberType,desc->GetTypeName());
          }
 
@@ -363,7 +363,7 @@ namespace ROOT {
          wroteFirst = true;
       }
 
-      next = &fListOfSubProxies;
+      next.Reset();
       while ( (desc = (TBranchProxyDescriptor*)next()) ) {
          if (wroteFirst) fprintf(hf,",");
          desc->OutputInit(hf,offset,fMaxDatamemberType,GetSubBranchPrefix());
