@@ -649,6 +649,7 @@ void TGClient::WaitFor(TGWindow *w)
       if (esave == kUnmapNotify)
          wsave = kNone;
       gSystem->ProcessEvents();//gSystem->InnerLoop();
+      gSystem->Sleep(5);
    }
 
    fWaitForWindow = wsave;
@@ -666,8 +667,10 @@ void TGClient::WaitForUnmap(TGWindow *w)
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kUnmapNotify;
 
-   while (fWaitForWindow != kNone)
+   while (fWaitForWindow != kNone) {
       gSystem->ProcessEvents();//gSystem->InnerLoop();
+      gSystem->Sleep(5);
+   }
 
    fWaitForWindow = wsave;
    fWaitForEvent  = esave;
