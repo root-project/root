@@ -816,22 +816,22 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         // The branch contains a non-split base class that we are unfolding!
 
                         // See AnalyzeTree for similar code!
-                        TBranchProxyClassDescriptor *cldesc = 0;
+                        TBranchProxyClassDescriptor *local_cldesc = 0;
 
-                        TVirtualStreamerInfo *info = branch->GetInfo();
-                        if (strcmp(cl->GetName(),info->GetName())!=0) {
-                           info = cl->GetStreamerInfo(); // might be the wrong version
+                        TVirtualStreamerInfo *binfo = branch->GetInfo();
+                        if (strcmp(cl->GetName(),binfo->GetName())!=0) {
+                           binfo = cl->GetStreamerInfo(); // might be the wrong version
                         }
-                        cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
-                                                                 branch->GetName(),
-                                                                 isclones, 0 /* unsplit object */, 
-                                                                 containerName);
+                        local_cldesc = new TBranchProxyClassDescriptor(cl->GetName(), binfo,
+                                                                       branch->GetName(),
+                                                                       isclones, 0 /* unsplit object */, 
+                                                                       containerName);
 
                         TStreamerElement *elem = 0;
 
-                        TIter next(info->GetElements());
+                        TIter next(binfo->GetElements());
                         while( (elem = (TStreamerElement*)next()) ) {
-                           AnalyzeElement(branch,elem,level+1,cldesc,"");
+                           AnalyzeElement(branch,elem,level+1,local_cldesc,"");
                         }
 
                      } else {
@@ -840,10 +840,10 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         if (pos != -1) {
                            branchname.Remove(pos);
                         }
-                        TString prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
+                        TString local_prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
                         cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                                  branchname,
-                                                                 prefix,
+                                                                 local_prefix,
                                                                  isclones, branch->GetSplitLevel(),
                                                                  containerName);
                         lookedAt += AnalyzeBranches( level+1, cldesc, branch, objInfo);
@@ -855,7 +855,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                      if (pos != -1) {
                         branchname.Remove(pos);
                      }
-                     TString prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
+                     TString local_prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
                      objInfo = GetBaseClass( element );
                      if (objInfo == 0) {
                         // There is no data in this base class
@@ -864,7 +864,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                      cl = objInfo->GetClass();
                      cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                               branchname,
-                                                              prefix,
+                                                              local_prefix,
                                                               isclones, branch->GetSplitLevel(),
                                                               containerName);
                      usedBranch = kFALSE;
@@ -883,22 +883,22 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         // The branch contains a non-split object that we are unfolding!
 
                         // See AnalyzeTree for similar code!
-                        TBranchProxyClassDescriptor *cldesc = 0;
+                        TBranchProxyClassDescriptor *local_cldesc = 0;
 
-                        TVirtualStreamerInfo *info = branch->GetInfo();
-                        if (strcmp(cl->GetName(),info->GetName())!=0) {
-                           info = cl->GetStreamerInfo(); // might be the wrong version
+                        TVirtualStreamerInfo *binfo = branch->GetInfo();
+                        if (strcmp(cl->GetName(),binfo->GetName())!=0) {
+                           binfo = cl->GetStreamerInfo(); // might be the wrong version
                         }
-                        cldesc = new TBranchProxyClassDescriptor(cl->GetName(), info,
-                                                                 branch->GetName(),
-                                                                 isclones, 0 /* unsplit object */,
-                                                                 containerName);
+                        local_cldesc = new TBranchProxyClassDescriptor(cl->GetName(), binfo,
+                                                                       branch->GetName(),
+                                                                       isclones, 0 /* unsplit object */,
+                                                                       containerName);
 
                         TStreamerElement *elem = 0;
 
-                        TIter next(info->GetElements());
+                        TIter next(binfo->GetElements());
                         while( (elem = (TStreamerElement*)next()) ) {
-                           AnalyzeElement(branch,elem,level+1,cldesc,"");
+                           AnalyzeElement(branch,elem,level+1,local_cldesc,"");
                         }
 
                      } else {
@@ -918,9 +918,9 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                   } else {
                      // We do not have a proper node for the base class, we need to loop over
                      // the next branches
-                     TString prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
-                     if (prefix.Length()) prefix += ".";
-                     prefix += element->GetName();
+                     TString local_prefix = topdesc ? topdesc->GetSubBranchPrefix() : parent->GetName();
+                     if (local_prefix.Length()) local_prefix += ".";
+                     local_prefix += element->GetName();
                      objInfo = branch->GetInfo();
                      Int_t pos = branchname.Last('.');
                      if (pos != -1) {
@@ -933,7 +933,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                      }
                      cldesc = new TBranchProxyClassDescriptor(cl->GetName(), objInfo,
                                                               branchname,
-                                                              prefix,
+                                                              local_prefix,
                                                               isclones, branch->GetSplitLevel(),
                                                               containerName);
                      usedBranch = kFALSE;
@@ -1220,8 +1220,8 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             if (cl) {
                if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' || branch->GetSplitLevel()) {
                   TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
-                  TVirtualStreamerInfo *info = (be && !isclones) ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
-                  desc = new TBranchProxyClassDescriptor(cl->GetName(), info, branchname,
+                  TVirtualStreamerInfo *beinfo = (be && !isclones) ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
+                  desc = new TBranchProxyClassDescriptor(cl->GetName(), beinfo, branchname,
                      isclones, branch->GetSplitLevel(),containerName);
                } else {
                   type = Form("TObjProxy<%s >",cl->GetName());
@@ -1235,11 +1235,11 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                // We have a non-splitted object!
 
                if (desc) {
-                  TVirtualStreamerInfo *info = cl->GetStreamerInfo();
+                  TVirtualStreamerInfo *cinfo = cl->GetStreamerInfo();
                   TStreamerElement *elem = 0;
 
-                  TIter next(info->GetElements());
-                  while( (elem = (TStreamerElement*)next()) ) {
+                  TIter cnext(cinfo->GetElements());
+                  while( (elem = (TStreamerElement*)cnext()) ) {
                      AnalyzeElement(branch,elem,1,desc,"");
                   }
 
@@ -1677,10 +1677,9 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
       TString cutscriptfunc = fCutScript;
       if (cutfilename) {
-         Ssiz_t dot_pos = cutscriptfunc.Last('.');
+         dot_pos = cutscriptfunc.Last('.');
          cutscriptfunc.Replace( dot_pos, fCutScript.Length()-dot_pos, "");
          TString cutscriptHeader = cutscriptfunc;
-         const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
 
          for (i = 0; i < 6; i++ ) {
             TString possible = cutscriptHeader;
@@ -1839,10 +1838,10 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                  fMaxDatamemberType, data->GetDataName(), data->GetBranchName());
       }
       next = &fListOfFriends;
-      TFriendProxyDescriptor *clp;
-      while ( (clp = (TFriendProxyDescriptor*)next()) ) {
+      TFriendProxyDescriptor *fpd;
+      while ( (fpd = (TFriendProxyDescriptor*)next()) ) {
           fprintf(hf,",\n      %-*s(&fDirector,tree,%d)",
-                 fMaxDatamemberType, clp->GetTitle(), clp->GetIndex());
+                 fMaxDatamemberType, fpd->GetTitle(), fpd->GetIndex());
       }
 
       fprintf(hf,    "\n      { }\n");
