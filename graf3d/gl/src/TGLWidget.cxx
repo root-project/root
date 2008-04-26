@@ -60,11 +60,7 @@ Bool_t TGLWidgetContainer::HandleCrossing(Event_t *ev)
    if ((ev->fType == kEnterNotify) &&
        (!gVirtualX->InheritsFrom("TGX11")) &&
        (gVirtualX->GetInputFocus() != GetId())) {
-      // check if gClient in in a WaitFor() loop, to avoid
-      // stealing the focus from a dialog
-      EGEventType  e = gClient->GetWaitForEvent();
-      if (e != kDestroyNotify && e != kUnmapNotify)
-         gVirtualX->SetInputFocus(GetId());
+      gVirtualX->SetInputFocus(GetId());
    }
    if (fEventHandler)
       return fEventHandler->HandleCrossing(ev);
