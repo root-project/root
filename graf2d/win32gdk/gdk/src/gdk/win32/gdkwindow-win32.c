@@ -364,7 +364,7 @@ GdkWindow *gdk_window_new(GdkWindow * parent,
       dwStyle =
           WS_OVERLAPPED | WS_MINIMIZEBOX | WS_SYSMENU | WS_CAPTION |
           WS_THICKFRAME | WS_CLIPCHILDREN;
-#if 1
+#if 0
       dwExStyle |= WS_EX_TOPMOST;	/* //HB: want this? */
 #endif
       xparent = gdk_root_window;
