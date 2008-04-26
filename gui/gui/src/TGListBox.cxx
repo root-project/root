@@ -511,8 +511,7 @@ void TGLBContainer::DoRedraw()
 {
    // redraw
 
-   gVirtualX->ClearArea(fId, 0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
-   DrawRegion(0, 0, fViewPort->GetWidth(), fViewPort->GetHeight());
+   return TGContainer::DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -525,7 +524,7 @@ void TGLBContainer::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
 
    TGLBFrameElement *nw = new TGLBFrameElement(lbe, lhints ? lhints : fgDefaultHints);
    fList->Add(nw);
-   fClient->NeedRedraw(this);
+   ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -561,7 +560,7 @@ void TGLBContainer::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t aft
       else
          fList->AddAfter(el, nw);
    }
-   fClient->NeedRedraw(this);
+   ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -593,7 +592,7 @@ void TGLBContainer::AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints)
 
       fList->AddBefore(el, nw);
    }
-   fClient->NeedRedraw(this);
+   ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -621,7 +620,7 @@ void TGLBContainer::RemoveEntry(Int_t id)
          break;
       }
    }
-   fClient->NeedRedraw(this);
+   ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -648,7 +647,7 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
          delete l;
       }
    }
-   fClient->NeedRedraw(this);
+   ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -672,7 +671,7 @@ void TGLBContainer::RemoveAll()
       delete e;
       delete l;
    }
-   fClient->NeedRedraw(this);
+   ClearViewPort();
 }  
 
 //______________________________________________________________________________
@@ -707,7 +706,7 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
             fLastActive = f;
             fLastActiveEl = el;
          }
-         fClient->NeedRedraw(this);
+         ClearViewPort();
          return f;
       }
    }
@@ -778,7 +777,7 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
    }
    fLastActive = 0;
    fLastActiveEl = 0;
-   fClient->NeedRedraw(this);
+   ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -829,14 +828,14 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
       Int_t newpos = vb->GetPosition() - 1;
       if (newpos < 0) newpos = 0;
       vb->SetPosition(newpos);
-      fClient->NeedRedraw(this);
+      ClearViewPort();
       return kTRUE;
    }
    if ((event->fCode == kButton5) && vb) {
       // scroll 2 lines down (a button down is always followed by a button up)
       Int_t newpos = vb->GetPosition() + 1;
       vb->SetPosition(newpos);
-      fClient->NeedRedraw(this);
+      ClearViewPort();
       return kTRUE;
    }
 
@@ -905,7 +904,8 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
       fScrolling = kFALSE;
       gSystem->RemoveTimer(fScrollTimer);
    }
-   if (fChangeStatus || (last != fLastActive)) fClient->NeedRedraw(this);
+   if (fChangeStatus || (last != fLastActive)) 
+      ClearViewPort();
    return kTRUE;
 }
 
@@ -954,7 +954,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             if (activate) {
                if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                   f->Toggle();
-                  fClient->NeedRedraw(this);
+                  ClearViewPort();
                   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                               f->EntryId(), 0);
                }
@@ -981,7 +981,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             f->Activate(kFALSE);
          }
          if (last != fLastActive) {
-            fClient->NeedRedraw(this);
+            ClearViewPort();
          }
       }
    }
@@ -1032,7 +1032,7 @@ void TGLBContainer::OnAutoScroll()
          if ((y + pos.fY > yf0) && (y + pos.fY < yff)) {
             if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                f->Toggle();
-               fClient->NeedRedraw(this);
+               ClearViewPort();
                SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                            f->EntryId(), 0);
             }
@@ -1462,7 +1462,8 @@ void TGListBox::Layout()
    }
 
    fVScrollbar->SetRange(container->GetHeight()/fItemVsize, fVport->GetHeight()/fItemVsize);
-   fClient->NeedRedraw(container);
+   //fClient->NeedRedraw(container);
+   ((TGContainer *)container)->ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -1472,7 +1473,7 @@ void TGListBox::SortByName(Bool_t ascend)
 
    fLbc->GetList()->Sort(ascend);
    Layout();
-   fClient->NeedRedraw(fLbc);
+   fLbc->ClearViewPort();
 }
 
 //______________________________________________________________________________
@@ -1507,8 +1508,7 @@ void TGListBox::ChangeBackground(Pixel_t back)
       TGLBEntry *lbe = (TGLBEntry *)el->fFrame;
       lbe->SetBackgroundColor(back);
    }
-
-   fClient->NeedRedraw(fLbc);
+   fLbc->ClearViewPort();
 }
 
 //______________________________________________________________________________
