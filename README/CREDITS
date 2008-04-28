@@ -53,6 +53,10 @@ N: Daniel Barna
 E: daniel.barna@cern.ch
 D: CINT install target
 
+N: Jean-Francois Bastien 
+E: jfbastien@cae.com
+D: contribution to Reflex
+
 N: Guy Barrand
 E: barrand@lal.in2p3.fr
 D: contribution to GUI classes
@@ -350,6 +354,10 @@ D: PROOF dataset upload mechanism
 N: Stanislaw Jadach
 E: Stanislaw.jadach@ifj.edu.pl
 D: the FOAM classes
+
+N: Lukasz Janyst
+E: ljanyst@cern.ch
+D: split vector<T*> and schema evolution
 
 N: Luke Jones
 E: jones@netoffice.com
@@ -678,6 +686,10 @@ D: contribution to the TMVA package
 N: Shaowen Wang
 E: shaowen-wang@uiowa.edu 
 D: TOracleResult
+
+N: Hady Zalek
+E: hady.zalek@gmail.com
+D: contributed to Reflex
 
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
