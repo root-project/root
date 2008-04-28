@@ -2465,8 +2465,7 @@ int Cint::Internal::G__overloadopr(int operatortag, G__value expressionin, G__va
                sprintf(expr, "*%s*)%ld", arg2, expressionin.ref);
             }
             strcpy(arg2, expr);
-         }
-         if (G__get_type(expressionin) == 'm') {
+         } else if (G__get_type(expressionin) == 'm') {
             strcat(arg2, "ULL");
          }
          else if (G__get_type(expressionin) == 'n') {

@@ -2448,8 +2448,7 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
                sprintf(expr, "*%s*)%ld", arg2, expressionin.ref);
             }
             strcpy(arg2, expr);
-         }
-         if (expressionin.type == 'm') {
+         } else if (expressionin.type == 'm') {
             strcat(arg2, "ULL");
          }
          else if (expressionin.type == 'n') {
