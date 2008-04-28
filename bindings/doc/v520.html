@@ -1,0 +1,25 @@
+
+<br>
+<hr>
+<h3>Pyroot</h3>
+<P>
+There are several improvements in language mappings, as well as cleanup of
+the code for python2.2 (Py_ssize_t handling) and MacOS 10.3. Additionally,
+there are code cleanups (removing use of CINT internals) that should be
+fully transparent to the end-user.
+</P>
+
+<P>
+The language mapping improvements are:
+
+<UL>
+ <LI>Abstract classes can no longer be instantiated (__init__ will raise an exception)</LI>
+ <LI>Looping over empty STL(-like) containers will yield an immediate StopIteration</LI>
+ <LI>Unknown& is favored over Unknown* in function overloading</LI>
+ <LI>Implemented unary-, unary+ (__neg__ and __pos__)</LI>
+ <LI>Mapped operator bool() to __nonzero__</LI>
+ <LI>Support for templated member functions</LI>
+ <LI>Implemented __setitem__ for unsigned int& and unsigned long& returns</LI>
+</UL>
+
+</P>
