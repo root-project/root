@@ -471,6 +471,16 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      break;
 
                   case 'p':
+                     *str++ = '0';
+                     *str++ = 'x';
+                     ulong_val = (ULong64_t) va_arg(ap, unsigned long int);
+
+                     status = snprintf_convert_ulong(str, left, 16,
+                                                     "0123456789abcdef",
+                                                     ulong_val, flags,
+                                                     width, precision);
+                     str += status;
+                     left -= status;
                      break;
 
                   case 'c':
