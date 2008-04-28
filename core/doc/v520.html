@@ -1,0 +1,31 @@
+<br>
+<hr>
+<h3>Core</h3>
+<ul>
+<li>
+Class TMessageHandler derives now from TQObject and does emit signals.
+This allows for easier usage of this class.
+</li>
+<li>
+In this release xrootd and libAfterImage are managed in Subversion
+via so called "vendor branches". This is completely transparent
+except for people who do directly use svn. You will get the message:
+<pre>
+   $ svn up
+   svn: Failed to add directory 'xrootd/src/xrootd': object of the same name already exists
+   $ rm -rf xrootd/src/xrootd
+   $ svn up
+   svn: Failed to add directory 'asimage/src/libAfterImage': object of the same name already exists
+   $ rm -rf asimage/src/libAfterImage
+   $ svn up
+</pre>
+</li>
+<li>
+Port to gcc 4.3 RC1. This version of gcc is much stricker with respect to
+implicit header files so in many source files <stdlib.h> and <string.h>
+had to be added.
+</li>
+<li>
+  with ACLIC, Remove double dash (//) from the filename passed to cint and rootcint.
+</li>
+</uL>
