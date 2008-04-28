@@ -424,6 +424,11 @@ N: Henry Maddocks
 E: ftgl@opengl.geek.nz
 D: FTGL package (http://homepages.paradise.net.nz/henryj/code/index.html#FTGL)
 
+N: Anar Manafov
+E: anar.manafov@gmail.com
+D: STL compatible iterators for ROOT collections
+D: gLite plugin, PROOF development
+
 N: David Gonzalez Maline
 E: firemanworld@gmail.com
 D: contribution to GUI classes
