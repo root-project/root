@@ -1,0 +1,66 @@
+
+<br>
+<hr>
+<h3>GUI</h3>
+<h4>New classes</h4>
+<ul>
+<li> <tt>TGSplitFrame</tt>:   Horizontally or vertically splittable composite frame. Once split, each part will contain a new TGSplitFrame, separated by a TGSplitter.
+<li> <tt>TGShapedFrame</tt>:  TGCompositeFrame on which a custom shape is applied, starting from a picture file, by taking its transparency mask, and then applying the picture as background.
+<li> <tt>TGEventHandler</tt>: Base Event Handler class allowing to delegate event handling (base class for GL event handlers).
+</ul>
+These classes have been primarily developed to be used in EVE.
+<br>To see an example of how to use them, see <tt>tutorials/eve/SplitGLView.C</tt> (this macro is used as a plugin by <tt>tutorials/eve/alice_esd_split.C</tt>)
+<br>(see screenshot in Eve paragraph)
+<h4>Changes in TGListTree</h4>
+<ul>
+<li> <tt>TGListTreeItem</tt> is now a base class and <tt>TGListTreeItemStd</tt> is the standard implementation (modification required by EVE)
+<li> Switched the icon and checkbox position in <tt>TGListTreeItem</tt>.
+<li> Added custom user control flags, with their getters and setters (required by EVE)
+   <ul>
+      <li> <tt>fUserControlled</tt>: flag to take over the control
+      <li> <tt>fEventHandled</tt>: flag to tell TGListTree that the current event has been processed by user.
+   <br>
+   And a few signals have been added:
+      <li> <tt>MouseOver(TGListTreeItem *entry)</tt>
+      <li> <tt>MouseOver(TGListTreeItem *entry, UInt_t mask)</tt>
+      <li> <tt>Clicked(TGListTreeItem *entry, Int_t btn, UInt_t mask, Int_t x, Int_t y)</tt>
+   <br>allowing alltogether to have better control on <tt>TGListTree</tt> behaviour.
+   </ul>
+<li> Added <tt>DrawOutline()</tt>, allowing to draw colored outline around a list tree item (following the mouse by default).
+<li> Implemented correct keyboard navigation.
+<li> Improvements for creation of list trees containing large number of items (i.e. 1 million).
+</ul>
+<br>
+<hr>
+<h3>GUI HTML</h3>
+<ul>
+<li> Implemented controls handling (text buttons, radio buttons and check buttons)
+<li> Implemented signals for these controls:
+   <ul>
+      <li> <tt>ButtonClicked(const char *name, const char *val)</tt>
+      <li> <tt>SubmitClicked(const char *val)</tt>
+      <li> <tt>CheckToggled(const char *name, Bool_t on, const char *val)</tt>
+      <li> <tt>RadioChanged(const char *name, const char *val)</tt>
+   </ul>
+</ul>
+
+<h4>GUI BUILDER</h4>
+<ul>
+<li> Robustness has been improved and several bugs fixed.
+</ul>
+
+<h4>Context Menus</h4>
+
+The context menu of ROOT classes can be created with hierarchical sub-menus, which are more convenient and offer better organization. This makes possible to access more class methods from the context menu (without having the menu becoming larger than the screen). The next is an example of the hierarchihal submenu structure shown below.
+
+<pre> void SetLevelOne(EPaletteType  palette = pal3); // *MENU={Hierarchy="Candidates/SetLevelOne"}*
+ void SetPalette(EPaletteType palette = pal3);   // *SUBMENU={Hierarchy="Candidates/SetPalette"}*
+ void SetCatalog(const char * = "HESS") { }      // *MENU={Hierarchy="Candidates/SetCatalog"}*
+ void AddCatalog(const char * = "HESS") { }      // *MENU={Hierarchy="Candidates/AddCatalog"}*
+ void RemoveCatalog(const char *  = "HESS") { }  // *MENU={Hierarchy="Candidates/RemoveCatalog"}*
+ void AddCandidate(const char * = "NAME") { }    // *MENU={Hierarchy="Candidates/AddCandidate"}*
+
+ EPaletteType fPalette; //*OPTION={GetMethod="GetPalette";SetMethod="SetPalette";Items=(PrettyPalette="PrettyPalette",SchlenkPalette="Schlenk",pal3="Pal3",pal4="Pal4")}*</pre>
+
+<p><img alt="Hierarchical context menus." src="pictures519/contextmenu.gif">
+<p>
