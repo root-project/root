@@ -1,0 +1,81 @@
+
+
+<br>
+<hr>
+<h3>RGLITE: A ROOT GRID interface</h3>
+RGLite plug-in - a ROOT plug-in module, which implements the ROOT Grid
+interface and offers to ROOT users possibilities to perform a number of
+operations using gLite middleware from within ROOT.<br>
+Supported features:<br>
+<ul>
+  <li>Workload Management System operations:
+    <ul>
+      <li>job submission &#8211; normal, DAG and parametric jobs (gLite
+WMProxy API),
+      </li>
+      <li>smart look-up algorithm for WMP-Endpoints,
+      </li>
+      <li>job status querying (gLite LB API),
+      </li>
+      <li>job output retrieving (Globus GridFTP).
+      </li>
+    </ul>
+  </li>
+  <li>File Catalog operations (gLite/LCG LFC API):
+    <ul>
+      <li>smart session manager,
+      </li>
+      <li>set/query the current working catalog directory,
+      </li>
+      <li>list files, directories and their stats,
+      </li>
+      <li>add/remove files in a catalog namespace,
+      </li>
+      <li>add/remove directories,
+      </li>
+      <li>add/remove replicas from a given file.
+      </li>
+    </ul>
+  </li>
+  <li>An executive logging.
+  </li>
+  <li>Support of an external XML configuration file with according XML
+schema.
+  </li>
+</ul>
+Usage examples:<br>
+<br>
+<b>Job operations</b><br>
+<br>
+<font color="Green">// loading RGLite plug-in</font><br>
+TGrid::Connect("glite");<br>
+<font color="Green">// submitting Grid job</font><br>
+TGridJob *job = gGrid-&gt;Submit("JDLs/simple.jdl");<br>
+<font color="Green">// getting status object</font><br>
+TGridJobStatus *status = job-&gt;GetJobStatus();<br>
+<font color="Green">// getting status of the job.</font><br>
+TGridJobStatus::EGridJobStatus st( status-&gt;GetStatus() );<br>
+<font color="Green">// when the st is TGridJobStatus::kDONE you can
+retrieve job's output</font><br>
+job-&gt;GetOutputSandbox("/tmp");<br>
+<br>
+<b>File Catalog operations</b><br>
+<br>
+<font color="Green">// loading RGLite plug-in</font><br>
+TGrid::Connect("glite");<br>
+<font color="Green">// changing the current directory to "/grid/dech"</font><br>
+gGrid-&gt;Cd("/grid/dech");<br>
+<font color="Green">// using Mkdir to create a new directory</font><br>
+Bool_t b = gGrid-&gt;Mkdir("root_test2");<br>
+<font color="Green">// listing the current directory</font><br>
+TGridResult* result = gGrid-&gt;Ls();<br>
+<font color="Green">// full file information</font><br>
+result-&gt;Print("all");<br>
+<font color="Green">// removing the directory </font><br>
+b = gGrid-&gt;Rmdir("root_test2");<br>
+<br>
+<br>
+Documentation: <br>
+<a class="moz-txt-link-freetext" href="http://www-linux.gsi.de/%7Emanafov/D-Grid/docz/RGLite/html/">http://www-linux.gsi.de/%7Emanafov/D-Grid/docz/RGLite/html/</a><br>
+and<br>
+<a class="moz-txt-link-freetext" href="http://www-linux.gsi.de/~manafov/D-Grid/docz/">http://www-linux.gsi.de/~manafov/D-Grid/docz/</a><br>
