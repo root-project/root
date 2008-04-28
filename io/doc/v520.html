@@ -1,0 +1,41 @@
+
+<br>
+<hr>
+<H3>I/O</H3>
+<p>
+Fix schema evolution problem in TTree::Draw by extending support in
+TStreamerInfo::ReadValueAux to 'converted' numerical types, (see
+http://root.cern.ch/phpBB2/viewtopic.php?t=6225)
+<p>
+Repaired writing Foreign class in XML files
+
+<br>
+<hr>
+
+<h3>XROOTD</h3>
+  <ul>
+    <li>Fix problem with setrlimit on MacOsX Leopard<span style="font-family: monospace;"></span></li>
+    <li><span style="font-family: monospace;"></span>Client:</li>
+    <ul>
+      <li>Optimized file&nbsp;closing recipe<span style="font-family: monospace;"></span></li>
+      <li><span style="font-family: monospace;"></span>Fix potential cache thrashing problem with big blocks requests.<span style="font-family: monospace;"></span></li>
+    </ul>
+    <li>Several fixes in the GSI plug-in:</li>
+    <ul>
+      <li>support for large (&gt; 32 bits) certificate serial numbers in CRL handling</li>
+    </ul>
+  </ul>
+  <li>netx:</li>
+  <ul>
+    <li>TXNetFile:</li>
+    <ul>
+      <li>Enable per-instance control of the cache parameters also for RAW files;<span style="font-family: monospace;"> </span>by default cache is OFF for these files, but there maybe cases in which<span style="font-family: monospace;"> </span>the cache can improve performances.</li>
+      <li>Remove call to XrdClient::Sync in SysStat</li>
+    </ul>
+    <li>TXNetSystem:</li>
+    <ul>
+      <li>Fix problem with GetDirEntry: the entry object was going out-of-scope<span style="font-family: monospace;"> </span>so that the returned string was meaningless.<span style="font-family: monospace;"></span></li>
+      <li><span style="font-family: monospace;"></span>Reset the list if dir entries in FreeDirectory.</li>
+    </ul>
+  </ul>
+</ul>
