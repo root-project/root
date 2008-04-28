@@ -194,7 +194,7 @@ static Bool_t R__GetUID(Int_t &uid, TObject *obj, TProcessID *pid, const char *m
    if (!valid) {
       TString name; name.Form("TRefArray::%s",methodname);
       ::Error(name,
-              Form("The object at %p is not registered in the process the TRefArray point to (pid = %s/%s)",obj,pid->GetName(),pid->GetTitle()));
+              "The object at %p is not registered in the process the TRefArray point to (pid = %s/%s)",obj,pid->GetName(),pid->GetTitle());
    }
    return valid;
 }
