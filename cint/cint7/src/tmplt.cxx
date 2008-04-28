@@ -2316,13 +2316,14 @@ int Cint::Internal::G__instantiate_templateclass(char *tagnamein, int noerror)
       // but we know we want ...,0>. We can't rename reflex types,
       // so we create a typedef to it.
       Reflex::Type origType = G__Dict::GetDict().GetType(intTagnum);
-      if (origType)
-         Reflex::TypedefTypeBuilder(tagname, origType);
-
-      free((void*)G__struct.name[intTagnum]);
-      G__struct.name[intTagnum] = (char*)malloc(strlen(tagname)+1);
-      strcpy(G__struct.name[intTagnum],tagname);
-      G__struct.hash[intTagnum] = strlen(tagname);
+      if (origType) {
+         std::string typedef_fullname = origType.DeclaringScope().Name(Reflex::SCOPED);
+         if (typedef_fullname.length()) {
+            typedef_fullname += "::";
+         }
+         typedef_fullname += tagname;
+         Reflex::TypedefTypeBuilder(typedef_fullname.c_str(), origType);
+      }
     } else // no "else" in the old days, but:
      // we won't find it back with tagname, as it's now a typedef called "tagname".
      intTagnum = G__defined_tagname(tagname,2);
