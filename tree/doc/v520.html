@@ -1,0 +1,34 @@
+<br>
+<hr>
+<H3>Tree</H3>
+<p>
+Re-enabled the splitting of TVector3 and of any classes starting by TVector
+that is not a TVectorT.
+<p>
+Fix the list of StreamerInfo stored in the TFile in the case of a slow
+CloneTree, previously some of the classes whose named contained '::' and any
+of the STL container names was inadvertently omitted (in case of classes
+that are part of the TTree but had only a base and no member or in some
+cases where it had only object data members.
+<p>
+Prevent storing a 2nd time an object non derived from TObject in the case
+where the object is <em>both</em> the top level object of branch and has
+some of it sub-object containing a pointer back to the object.  (This was
+actually activate in v5.18).
+
+<h4>STL collections with pointers can be split</h4>
+<pre>
+ TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel )
+ </pre>
+<p>
+STLcollection is the address of a pointer to std::vector, std::list,
+         std::deque, std::set or std::multiset containing pointers to objects.
+         If the splitlevel is a value bigger than 100 then the collection
+         will be written in split mode. Ie. if it contains objects of any
+         types deriving from TTrack this function will sort the objects
+         basing on their type and store them in separate branches in split
+         mode.
+<p>The ROOT test example in ROOTSYS/test/bench.cxx shows many examples of collections
+and storage in a TTree when using split mode or not. This program illustrates the important
+gain in space and time when using this new facility.
+
