@@ -20,6 +20,7 @@ MTOPT         = -mt
 endif
 
 CC_MINOR_VER := $(shell CC -V 2>&1 | sed 's,^.*5\.\([^[:space:]]*\).*$$,\1,')
+SOLCPU       := $(shell uname -p)
 
 CCPTR := -ptr$(ROOTSYS)
 ifeq ($(findstring $(CC_MINOR_VER),0 1 2 3 4),)
@@ -59,7 +60,11 @@ F77           =
 ifeq ($(shell which f77 2>&1 | sed -ne "s/.*\/f77/f77/p"),f77)
 #F77          := /opt/SUNWspro/bin/f77
 F77          := f77
-F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunmath
+ifeq ($(SOLCPU),i386)
+F77LIBS      := -lfui -lfsu -lmtsk -lsunmath
+else
+#F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunmath
+endif
 # Use this on Solaris 10 with F90 compiler
 #F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunperf -lsunmath
 endif
