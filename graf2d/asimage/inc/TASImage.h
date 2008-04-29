@@ -210,6 +210,7 @@ public:
    Double_t  *GetVecArray();
    UInt_t    *GetScanline(UInt_t y);
    void       GetImageBuffer(char **buffer, int *size, EImageFileTypes type = TImage::kPng);
+   void       GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const;
    Bool_t     SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
    void       PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc = 0, Int_t ysrc = 0, UInt_t wsrc = 0, UInt_t hsrc = 0, Option_t *opt = "");
    void       SetPaletteEnabled(Bool_t on = kTRUE);  // *TOGGLE*

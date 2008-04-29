@@ -2012,6 +2012,18 @@ UInt_t TASImage::GetScaledHeight() const
 }
 
 //______________________________________________________________________________
+void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
+{
+   // Return the zoom parameters. This is useful when the zoom has been done
+   // interactively using the mouse.
+
+   x = fZoomOffX;
+   y = fZoomOffY;
+   w = fZoomWidth;
+   h = fZoomHeight;
+}
+
+//______________________________________________________________________________
 Bool_t TASImage::InitVisual()
 {
    // Static function to initialize the ASVisual.
