@@ -161,23 +161,28 @@ namespace ROOT {
        /**
           Set internal data based on an array of 4 Scalar numbers
        */
-       void SetCoordinates( const Scalar src[] )
-       { fCoordinates.SetCoordinates(src);  }
+       LorentzVector<CoordSystem>& SetCoordinates( const Scalar src[] ) { 
+          fCoordinates.SetCoordinates(src);  
+          return *this;
+       }
 
        /**
           Set internal data based on 4 Scalar numbers
        */
-       void SetCoordinates( Scalar a, Scalar b, Scalar c, Scalar d )
-       { fCoordinates.SetCoordinates(a, b, c, d);  }
+       LorentzVector<CoordSystem>& SetCoordinates( Scalar a, Scalar b, Scalar c, Scalar d ) {
+          fCoordinates.SetCoordinates(a, b, c, d);  
+          return *this;
+       }
 
        /**
           Set internal data based on 4 Scalars at *begin to *end
        */
        template< class IT >
-       void SetCoordinates( IT begin, IT end  )
-       { IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
-       assert (++begin==end);
-       SetCoordinates (*a,*b,*c,*d);
+       LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT end  ) {
+          IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
+          assert (++begin==end);
+          SetCoordinates (*a,*b,*c,*d);
+          return *this;
        }
 
        /**
@@ -220,11 +225,13 @@ namespace ROOT {
           (if the vector is held in another coordinates, like (Pt,eta,phi,m)
           then (x, y, z, t) are converted to that form)
        */
-       void SetXYZT (Scalar x, Scalar y, Scalar z, Scalar t) {
+       LorentzVector<CoordSystem>& SetXYZT (Scalar x, Scalar y, Scalar z, Scalar t) {
           fCoordinates.SetPxPyPzE(x,y,z,t);
+          return *this;
        }
-       void SetPxPyPzE (Scalar x, Scalar y, Scalar z, Scalar t) {
+       LorentzVector<CoordSystem>& SetPxPyPzE (Scalar x, Scalar y, Scalar z, Scalar t) {
           fCoordinates.SetPxPyPzE(x,y,z,t);
+          return *this;
        }
 
        // ------------------- Equality -----------------
@@ -643,14 +650,14 @@ namespace ROOT {
           Work only if the component is one of which the vector is represented. 
           For example SetE will work for a PxPyPzE Vector but not for a PxPyPzM Vector.  
        */
-       void  SetE  ( Scalar a )  { fCoordinates.SetE  (a); }
-       void  SetEta( Scalar a )  { fCoordinates.SetEta(a); }
-       void  SetM  ( Scalar a )  { fCoordinates.SetM  (a); }
-       void  SetPhi( Scalar a )  { fCoordinates.SetPhi(a); }
-       void  SetPt ( Scalar a )  { fCoordinates.SetPt (a); }
-       void  SetPx ( Scalar a )  { fCoordinates.SetPx (a); }
-       void  SetPy ( Scalar a )  { fCoordinates.SetPy (a); }
-       void  SetPz ( Scalar a )  { fCoordinates.SetPz (a); }
+       LorentzVector<CoordSystem>& SetE  ( Scalar a )  { fCoordinates.SetE  (a); return *this; }
+       LorentzVector<CoordSystem>& SetEta( Scalar a )  { fCoordinates.SetEta(a); return *this; }
+       LorentzVector<CoordSystem>& SetM  ( Scalar a )  { fCoordinates.SetM  (a); return *this; }
+       LorentzVector<CoordSystem>& SetPhi( Scalar a )  { fCoordinates.SetPhi(a); return *this; }
+       LorentzVector<CoordSystem>& SetPt ( Scalar a )  { fCoordinates.SetPt (a); return *this; }
+       LorentzVector<CoordSystem>& SetPx ( Scalar a )  { fCoordinates.SetPx (a); return *this; }
+       LorentzVector<CoordSystem>& SetPy ( Scalar a )  { fCoordinates.SetPy (a); return *this; }
+       LorentzVector<CoordSystem>& SetPz ( Scalar a )  { fCoordinates.SetPz (a); return *this; }
 
     private:
 

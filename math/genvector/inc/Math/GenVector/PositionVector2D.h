@@ -146,8 +146,10 @@ namespace ROOT {
           Set internal data based on 2 Scalar numbers. 
           These are for example (x,y) for a cartesian vector or (r,phi) for a polar vector
        */
-       void SetCoordinates( Scalar a, Scalar b)
-       { fCoordinates.SetCoordinates(a, b);  }
+       PositionVector2D<CoordSystem, Tag>& SetCoordinates( Scalar a, Scalar b) {
+          fCoordinates.SetCoordinates(a, b); 
+          return *this; 
+       }
 
 
        /**
@@ -163,8 +165,9 @@ namespace ROOT {
           (if the vector is held in polar coordinates,
           then (x, y) are converted to that form)
        */
-       void SetXY (Scalar x, Scalar y) {
+       PositionVector2D<CoordSystem, Tag>& SetXY (Scalar x, Scalar y) {
           fCoordinates.SetXY (x,y);
+          return *this;
        }
 
        // ------------------- Equality -----------------
@@ -215,23 +218,35 @@ namespace ROOT {
        /**
           Change X - Cartesian2D coordinates only
        */
-       void SetX (Scalar x) { fCoordinates.SetX(x); }
+       PositionVector2D<CoordSystem, Tag>& SetX (Scalar x) { 
+          fCoordinates.SetX(x); 
+          return *this;
+       }
 
        /**
           Change Y - Cartesian2D coordinates only
        */
-       void SetY (Scalar y) { fCoordinates.SetY(y); }
+       PositionVector2D<CoordSystem, Tag>& SetY (Scalar y) { 
+          fCoordinates.SetY(y); 
+          return *this;
+       }
 
 
        /**
           Change R - Polar2D coordinates only
        */
-       void SetR (Scalar r) { fCoordinates.SetR(r); }
+       PositionVector2D<CoordSystem, Tag>& SetR (Scalar r) { 
+          fCoordinates.SetR(r); 
+          return *this;
+       }
 
        /**
           Change Phi - Polar2D coordinates 
        */
-       void SetPhi (Scalar phi) { fCoordinates.SetPhi(phi); }
+       PositionVector2D<CoordSystem, Tag>& SetPhi (Scalar phi) { 
+          fCoordinates.SetPhi(phi); 
+          return *this;
+       }
 
 
        // ------ Operations combining two vectors ------
