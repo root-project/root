@@ -1133,6 +1133,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    GetRange(xmin, xmax);
    rd.SetFunction(wf1, xmin, xmax);
    rd.SetRelTolerance(eps);
+   gErrorTF1 = rd.Error();
    return rd.Derivative1(x);
 
 }
@@ -1183,6 +1184,7 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    GetRange(xmin, xmax);
    rd.SetFunction(wf1, xmin, xmax);
    rd.SetRelTolerance(eps);
+   gErrorTF1 = rd.Error();
    return rd.Derivative2(x);
 }
 
@@ -1232,6 +1234,7 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    GetRange(xmin, xmax);
    rd.SetFunction(wf1, xmin, xmax);
    rd.SetRelTolerance(eps);
+   gErrorTF1 = rd.Error();
    return rd.Derivative3(x);
 }
 
