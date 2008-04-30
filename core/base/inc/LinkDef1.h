@@ -110,6 +110,7 @@
 
 #pragma link C++ nestedtypedef;
 #pragma link C++ namespace ROOT;
+#pragma link C++ namespace TMath; 
 #pragma link C++ typedef ShowMembersFunc_t;
 #pragma link C++ typedef ROOT::NewFunc_t;
 #pragma link C++ typedef ROOT::NewArrFunc_t;
