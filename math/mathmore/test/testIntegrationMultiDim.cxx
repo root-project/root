@@ -44,6 +44,7 @@
 #include "TH1.h"
 //#include "TLegend.h"
 
+bool showGraphics = true;
 
 const int n = 3; //default dimensionality
 
@@ -217,24 +218,28 @@ void performance()
     Vegas_performance->SetBinContent(N-1,integral_MC(N, a, b, p));
    }
 
-   num_performance->SetBarWidth(0.45);
-   num_performance->SetBarOffset(0.05);
-   num_performance->SetFillColor(49);
-   num_performance->SetStats(0);
-   //num_performance->GetXaxis()->SetLimits(1.5, Nmax+0.5);
-   num_performance->GetXaxis()->SetTitle("number of dimensions");
-   num_performance->GetYaxis()->SetTitle("time [s]");
-   num_performance->SetTitle("comparison of performance");
-   TH1 *h1 = num_performance->DrawCopy("bar2");
-   Vegas_performance->SetBarWidth(0.40);
-   Vegas_performance->SetBarOffset(0.5);
-   Vegas_performance->SetFillColor(kRed);
-   TH1 *h2 =  Vegas_performance->DrawCopy("bar2,same");
+   if ( showGraphics )
+   {
+      num_performance->SetBarWidth(0.45);
+      num_performance->SetBarOffset(0.05);
+      num_performance->SetFillColor(49);
+      num_performance->SetStats(0);
+      //num_performance->GetXaxis()->SetLimits(1.5, Nmax+0.5);
+      num_performance->GetXaxis()->SetTitle("number of dimensions");
+      num_performance->GetYaxis()->SetTitle("time [s]");
+      num_performance->SetTitle("comparison of performance");
+      TH1 *h1 = num_performance->DrawCopy("bar2");
+      Vegas_performance->SetBarWidth(0.40);
+      Vegas_performance->SetBarOffset(0.5);
+      Vegas_performance->SetFillColor(kRed);
+      TH1 *h2 =  Vegas_performance->DrawCopy("bar2,same");
+      
+      TLegend *legend = new TLegend(0.25,0.65,0.55,0.82);
+      legend->AddEntry(h1,"Cubature","f");
+      legend->AddEntry(h2,"MC Vegas","f");
+      legend->Draw();
+   }
 
-   TLegend *legend = new TLegend(0.25,0.65,0.55,0.82);
-   legend->AddEntry(h1,"Cubature","f");
-   legend->AddEntry(h2,"MC Vegas","f");
-   legend->Draw();
    for (unsigned int i=1; i<=size; i++)
      std::cout << i << " " << num_performance->GetBinContent(i) << "\t" << Vegas_performance->GetBinContent(i)<<std::endl;
 }
@@ -242,9 +247,39 @@ void performance()
 
 int main(int argc, char **argv)
 {
-  TApplication theApp("App",&argc,argv);
-  performance();
-  //  char ch;
-  //std::cin >>ch;
-  theApp.Run();
+   int status = 0;
+
+   using std::cerr;
+   using std::cout;
+   using std::endl;
+
+   if ( argc > 1 && argc != 2 )
+   {
+      cerr << "Usage: " << argv[0] << " [-ng]\n";
+      cerr << "  where:\n";
+      cerr << "     -ng : no graphics mode";
+      cerr << endl;
+      exit(1);
+   }
+
+   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
+   {
+      showGraphics = false;
+   }
+
+   TApplication* theApp = 0;
+
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
+   performance();
+
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
+
+   return status;
 }

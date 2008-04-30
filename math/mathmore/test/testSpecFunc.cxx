@@ -125,11 +125,14 @@ int testSpecFunc() {
 
    iret |= compare("inc_gamma(1,0.001) ", ROOT::Math::inc_gamma(1.0,0.001), 0.0009995001666250083319, 1);
 
-   iret |= compare("inc_gamma(100,99) ", ROOT::Math::inc_gamma(100.,99.), 0.4733043303994607, 1);
+   // increase tolerance when using Cephes (test values are correctly checked with Mathematica
+   // GSL was more precise in this case
+   iret |= compare("inc_gamma(100,99) ", ROOT::Math::inc_gamma(100.,99.), 0.4733043303994607, 100);
 
-   iret |= compare("inc_gamma_c(100,99) ", ROOT::Math::inc_gamma_c(100.,99.), 0.5266956696005394, 1);
+   iret |= compare("inc_gamma_c(100,99) ", ROOT::Math::inc_gamma_c(100.,99.), 0.5266956696005394, 100);
 
-   iret |= compare("inc_gamma_c(1000,1000.1) ", ROOT::Math::inc_gamma_c(1000.,1000.1),  0.4945333598559338247, 1);
+   // need to increase here by a further factor of 5 for Windows 
+   iret |= compare("inc_gamma_c(1000,1000.1) ", ROOT::Math::inc_gamma_c(1000.,1000.1),  0.4945333598559338247, 5000);
 
    iret |= compare("erf(0.5) ", ROOT::Math::erf(0.5), 0.5204998778130465377);
    

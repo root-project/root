@@ -247,7 +247,7 @@ void testPoissonCLHEP( R & r, double mu,TH1D & h) {
   //  r.SetSeed(0);
   for (int i = 0; i < n; ++i) {
     //int n = RandPoisson::shoot(mu + RandFlat::shoot());
-    int n = r(mu);
+    int n = static_cast<unsigned int> ( r(mu) ) ;
     if (fillHist)
       h.Fill( double(n) );
   }

@@ -111,16 +111,16 @@ bool GSLMinimizer::SetVariable(unsigned int ivar, const std::string & name, doub
    return true; 
 }
       
-void GSLMinimizer::SetFunction(const Minimizer::IObjFunction & func) { 
+void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) { 
    // set the function to minimizer 
    // need to calculate numerical the derivatives since are not supported
    fObjFunc = new MultiNumGradFunction( func); 
    fDim = fObjFunc->NDim(); 
 }
 
-void GSLMinimizer::SetFunction(const Minimizer::IGradObjFunction & func) { 
+void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) { 
    // set the function to minimizer (need to clone ??)
-   fObjFunc = dynamic_cast< const Minimizer::IGradObjFunction *>(func.Clone() ); 
+   fObjFunc = dynamic_cast< const ROOT::Math::IMultiGradFunction *>(func.Clone() ); 
    fDim = func.NDim(); 
 }
 

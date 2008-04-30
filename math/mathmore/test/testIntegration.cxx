@@ -18,6 +18,8 @@ namespace ROOT {
    }
 }
 
+const double ERRORLIMIT = 1E-8;
+
 double exactIntegral ( const std::vector<double> & par, double a, double b) { 
 
   ROOT::Math::Polynomial *func = new ROOT::Math::Polynomial( par.size() +1);
@@ -42,8 +44,9 @@ double singularFunction(double x) {
 }
 
 
-void testIntegration() {
+int testIntegration() {
 
+  int status = 0;
 
   gErrorIgnoreLevel = 5000;
 
@@ -74,7 +77,7 @@ void testIntegration() {
   std::cout << "Adaptive singular integration:" << std::endl;
   std::cout << "Return code " << ig.Status() << std::endl; 
   std::cout << "Result      " << value << " +/- " << ig.Error() << std::endl << std::endl; 
-
+  status += fabs(exactresult-value) > ERRORLIMIT;
 
   
   // integrate again ADAPTIve, with different rule 
@@ -86,6 +89,7 @@ void testIntegration() {
   std::cout << "Adaptive Gauss61 integration:" << std::endl;
   std::cout << "Return code " << ig2.Status() << std::endl; 
   std::cout << "Result      " << value << " +/- " << ig2.Error() << std::endl << std::endl; 
+  status += fabs(exactresult-value) > ERRORLIMIT;
 
   
   std::cout << "Testing SetFunction member function" << std::endl;
@@ -96,7 +100,7 @@ void testIntegration() {
   ROOT::Math::IGenFunction &func2 = *pol; 
   ig3.SetFunction(func2);
   std::cout << "Result      " << ig3.Integral( 0, 3) << " +/- " << ig3.Error() << std::endl; 
- 
+  status += fabs(exactresult-ig3.Integral( 0, 3)) > ERRORLIMIT;
 
   // test error 
   //typedef double ( * FreeFunc ) ( double);
@@ -126,7 +130,7 @@ void testIntegration() {
   double r3 = ig.Integral(sp2); 
   std::cout << "Result on [-1,-0.5] = " << r3 << std::endl;
 
- 
+  return status;
 }
 
 void  testIntegPerf(){
@@ -191,8 +195,11 @@ void  testIntegPerf(){
 
 int main() {
 
-  testIntegration();
+  int status = 0;
+
+  status += testIntegration();
   testIntegPerf();
-  return 0;
+
+  return status;
 
 }

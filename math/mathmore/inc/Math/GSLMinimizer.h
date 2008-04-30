@@ -133,10 +133,10 @@ private:
 public: 
 
    /// set the function to minimize
-   virtual void SetFunction(const Minimizer::IObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
 
    /// set gradient the function to minimize
-   virtual void SetFunction(const Minimizer::IGradObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
 
    /// set free variable 
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
@@ -209,7 +209,7 @@ private:
    unsigned int fDim; 
 
    ROOT::Math::GSLMultiMinimizer * fGSLMultiMin; 
-   const Minimizer::IGradObjFunction * fObjFunc; 
+   const ROOT::Math::IMultiGradFunction * fObjFunc; 
    
    double fMinVal; 
    double fLSTolerance;  // Line Search Tolerance

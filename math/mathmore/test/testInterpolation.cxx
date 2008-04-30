@@ -16,6 +16,8 @@
 
 #include <cmath>
 
+bool showGraphics = true;
+
 TGraph *grorig = 0;
 
 void interpolate( const  ROOT::Math::Interpolator & itp ) { 
@@ -132,13 +134,37 @@ void testInterpolation() {
 #ifndef __CINT__
 int main(int argc, char **argv)
 {
-   if (argc > 1) { 
-      TApplication theApp("App",&argc,argv);
-      testInterpolation();
-      theApp.Run();
-   } 
-   else 
-      testInterpolation();
+   using std::cerr;
+   using std::cout;
+   using std::endl;
+
+   if ( argc > 1 && argc != 2 )
+   {
+      cerr << "Usage: " << argv[0] << " [-ng]\n";
+      cerr << "  where:\n";
+      cerr << "     -ng : no graphics mode";
+      cerr << endl;
+      exit(1);
+   }
+
+   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
+   {
+      showGraphics = false;
+   }
+
+   TApplication* theApp = 0;
+
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
+   testInterpolation();
+
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
 
    return 0;
 }

@@ -38,20 +38,20 @@ void myfunc_fdf( double x, void * /*params*/, double *y, double *dy) {
 
 template<class RF> 
 int findRoot( RF * r ) { 
-  //int status = r->Solve( 100, absTol, relTol); 
-  int status;
-  status = r->Solve(); 
+  //int returnCode = r->Solve( 100, absTol, relTol); 
+  int returnCode;
+  returnCode = r->Solve(); 
 
-  return  status; 
+  return  returnCode; 
 }
 
 template<class RF> 
-int printStats( RF * r, int status, TStopwatch& timer ) { 
+int printStats( RF * r, int returnCode, TStopwatch& timer ) { 
   std::cout << "\nTest " << r->Name() << " algorithm " << std::endl; 
 
   double root = r->Root();
 
-  std::cout << "Return code:  " << status << std::endl; 
+  std::cout << "Return code:  " << returnCode << std::endl; 
   std::cout << "Result:       " << root << " n iters = " << r->Iterations() << std::endl; 
   std::cout << "Exact result: " << sqrt(5.0) << " difference: " << root - sqrt(5.0) << std::endl; 
   std::cout << "Time: " << timer.RealTime()/(double) iterTest << std::endl;   
@@ -65,9 +65,10 @@ int printStats( RF * r, int status, TStopwatch& timer ) {
 }
 
 
-void testRootFinder() {
+int testRootFinder() {
 
-  int status;
+  int returnCode;
+  int status = 0;
   TStopwatch timer;
 
   ROOT::Math::Polynomial polyf(2);
@@ -86,10 +87,10 @@ void testRootFinder() {
   for (int i = 0; i < iterTest; ++i)
   {
      rf1->SetFunction( func, 0, 5); 
-     status = findRoot(rf1);
+     returnCode = findRoot(rf1);
   }
   timer.Stop();
-  printStats(rf1, status, timer);
+  status += printStats(rf1, returnCode, timer);
 
 
   ROOT::Math::RootFinder *rf2 = new ROOT::Math::RootFinder(ROOT::Math::RootFinder::kGSL_FALSE_POS);
@@ -97,10 +98,10 @@ void testRootFinder() {
   for (int i = 0; i < iterTest; ++i)
   {
      rf2->SetFunction( func, 0, 5); 
-     status = findRoot(rf2); 
+     returnCode = findRoot(rf2); 
   }
   timer.Stop();
-  printStats(rf2, status, timer);
+  status += printStats(rf2, returnCode, timer);
 
   // methods using derivatives 
 
@@ -111,10 +112,10 @@ void testRootFinder() {
   for (int i = 0; i < iterTest; ++i)
   {
      rf3->SetFunction( gfunc, 1); 
-     status = findRoot(rf3); 
+     returnCode = findRoot(rf3); 
   }
   timer.Stop();
-  printStats(rf3, status, timer);
+  status += printStats(rf3, returnCode, timer);
 
   
   ROOT::Math::RootFinder *rf4 = new ROOT::Math::RootFinder(ROOT::Math::RootFinder::kGSL_STEFFENSON);
@@ -122,10 +123,10 @@ void testRootFinder() {
   for (int i = 0; i < iterTest; ++i)
   {
      rf4->SetFunction( gfunc, 1); 
-     status = findRoot(rf4); 
+     returnCode = findRoot(rf4); 
   }
   timer.Stop();
-  printStats(rf4, status, timer);
+  status += printStats(rf4, returnCode, timer);
   
 
   ROOT::Math::Roots::Newton *rf5 = new ROOT::Math::Roots::Newton();
@@ -134,10 +135,10 @@ void testRootFinder() {
   for (int i = 0; i < iterTest; ++i)
   {
      rf5->SetFunction(myfunc_gsl, myfunc_deriv_gsl, myfunc_fdf, ptr2, 5.); 
-     status = findRoot(rf5); 
+     returnCode = findRoot(rf5); 
   }
   timer.Stop();
-  printStats(rf5, status, timer);
+  status += printStats(rf5, returnCode, timer);
 
 
 
@@ -151,16 +152,20 @@ void testRootFinder() {
   for (int i = 0; i < iterTest; ++i)
   {
      rf6->SetFunction( funcPtr, ptr1, 0.0, 5.0); 
-     status = findRoot(rf6); 
+     returnCode = findRoot(rf6); 
   }
   timer.Stop();
-  printStats(rf6, status, timer);
+  status += printStats(rf6, returnCode, timer);
+
+  return status;
 
 }
 
 int main() {
 
-  testRootFinder();
-  return 0;
+  int status = 0;
 
+  status += testRootFinder();
+
+  return status;
 }

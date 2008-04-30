@@ -89,7 +89,6 @@ int main() {
   printCheb(*cDeriv, 1.0, 2.0); 
   delete cDeriv;
 
-  std::cout << ROOT::Math::cyl_bessel_j(1.2, 3.4);
 
  
   return 0; 

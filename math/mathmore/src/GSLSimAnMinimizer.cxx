@@ -91,7 +91,7 @@ bool GSLSimAnMinimizer::SetFixedVariable(unsigned int ivar, const std::string & 
 
 
       
-void GSLSimAnMinimizer::SetFunction(const Minimizer::IObjFunction & func) { 
+void GSLSimAnMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) { 
    // set the function to minimize
    
    // keep pointers to the chi2 function
@@ -99,7 +99,7 @@ void GSLSimAnMinimizer::SetFunction(const Minimizer::IObjFunction & func) {
    fDim = func.NDim();
 }
 
-void GSLSimAnMinimizer::SetFunction(const Minimizer::IGradObjFunction & /* func */) { 
+void GSLSimAnMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & /* func */) { 
    // set the function to minimizer (need to clone ??)
    // not supported yet 
    return; 

@@ -19,6 +19,7 @@
 
 #endif
 
+const double ERRORLIMIT = 1E-5;
 
 typedef double ( * FP ) ( double, void * ); 
 typedef double ( * FP2 ) ( double ); 
@@ -33,9 +34,9 @@ double myfunc2 ( double x) {
   return std::pow( x, 1.5); 
 }
 
-void testDerivation() {
+int testDerivation() {
 
-
+   int status = 0;
 
 
   // Derivative of an IGenFunction
@@ -61,8 +62,7 @@ void testDerivation() {
   std::cout << "Exact result: " << f1->Derivative(x0) << std::endl;
   std::cout << "EvalForward:  " << der->EvalForward(*f1, x0) << std::endl;
   std::cout << "EvalBackward: " << der->EvalBackward(x0, step) << std::endl << std::endl;;
-
-
+  status += fabs(result-f1->Derivative(x0)) > ERRORLIMIT;
   
   
   // Derivative of a free function
@@ -76,7 +76,10 @@ void testDerivation() {
   std::cout << "EvalBackward: " << der->EvalBackward(x0) << std::endl;
 
   std::cout << "Exact result: " << 1.5*sqrt(x0) << std::endl << std::endl;
-  
+
+  status += fabs(der->EvalCentral(x0)-1.5*sqrt(x0)) > ERRORLIMIT;
+  status += fabs(der->EvalForward(x0)-1.5*sqrt(x0)) > ERRORLIMIT;
+  status += fabs(der->EvalBackward(x0)-1.5*sqrt(x0)) > ERRORLIMIT;
 
   
   
@@ -90,6 +93,11 @@ void testDerivation() {
   std::cout << "EvalForward:  " << der->EvalForward(x0) << std::endl;
   std::cout << "EvalBackward: " << der->EvalBackward(x0) << std::endl;
   std::cout << "Exact result: " << 1.5*sqrt(x0) << std::endl << std::endl;
+
+  status += fabs(der->Eval( *f3, x0)-1.5*sqrt(x0)) > ERRORLIMIT;
+  status += fabs(der->EvalForward(x0)-1.5*sqrt(x0)) > ERRORLIMIT;
+  status += fabs(der->EvalBackward(x0)-1.5*sqrt(x0)) > ERRORLIMIT;
+
 
   // tets case when an empty Derivator is used 
 
@@ -111,6 +119,7 @@ void testDerivation() {
 //   std::cout << "df/dy  = " << der->EvalCentral(fy,2.) << std::endl;
 // #endif
 
+  return status;
 }
 
 
@@ -344,7 +353,9 @@ void testDerivPerfParam() {
 
 int main() {
 
-  testDerivation();
+  int status = 0;
+
+  status += testDerivation();
 
 #ifdef HAVE_ROOTLIBS
   testDerivPerf();
@@ -352,6 +363,6 @@ int main() {
   testDerivPerfParam();
 #endif
 
-  return 0;
+  return status;
 
 }

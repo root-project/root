@@ -68,7 +68,7 @@ bool GSLNLSMinimizer::SetVariable(unsigned int ivar, const std::string & name, d
    return true; 
 }
       
-void GSLNLSMinimizer::SetFunction(const Minimizer::IObjFunction & func) { 
+void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) { 
    // set the function to minimizer 
    // need to create vector of funcitons to be passed to GSL multifit
    // support now only CHi2 implementation
@@ -90,7 +90,7 @@ void GSLNLSMinimizer::SetFunction(const Minimizer::IObjFunction & func) {
    fObjFunc = chi2Func; 
  }
 
-void GSLNLSMinimizer::SetFunction(const Minimizer::IGradObjFunction & /* func */) { 
+void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & /* func */) { 
    // set the function to minimizer (need to clone ??)
    // not supported yet 
    return; 

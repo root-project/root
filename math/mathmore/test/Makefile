@@ -19,10 +19,13 @@ CXXFLAGS += $(GSLFLAGS)
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib"  $(GSLLIBS)
 UNURANLIB        = "$(ROOTSYS)/lib/libUnuran.lib"
-UNURANLIB        = "$(ROOTSYS)/lib/libUnuran.lib"
+TMVALIB          = "$(ROOTSYS)/lib/libTMVA.lib" "$(ROOTSYS)/lib/libMLP.lib" "$(ROOTSYS)/lib/libTreePlayer.lib" \
+	           "$(ROOTSYS)/lib/libMinuit.lib" "$(ROOTSYS)/lib/libMinuit2.lib"
+
 else
 EXTRALIBS        = -lMathMore -lMathCore $(GSLLIBDIR) $(GSLLIBS)
 UNURANLIB        = -lUnuran
+TMVALIB          = -lTMVA -lMLP -lTreePlayer -lMinuit -lMinuit2
 CXXFLAGS += -g
 
 ifneq ($(CLHEPBASE),)

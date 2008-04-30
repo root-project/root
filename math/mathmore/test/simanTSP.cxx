@@ -24,6 +24,7 @@
 #include "TCanvas.h"
 #include "TApplication.h"
 
+bool showGraphics = true;
 
 using namespace ROOT::Math; 
 
@@ -297,20 +298,23 @@ void simanTSP(bool debug = true) {
    xmin[N_CITIES] = xmin[0];
    ymin[N_CITIES] = ymin[0];
 
-   TGraph *g0 = new TGraph(N_CITIES+1,x0,y0);
-   TGraph *gmin = new TGraph(N_CITIES+1,xmin,ymin);
+   if ( showGraphics )
+   {
 
-   TCanvas * c1 = new TCanvas("c","TSP",10,10,1000,800);
-   c1->Divide(2,2);
-   c1->cd(1);
-   g0->Draw("alp");
-   g0->SetMarkerStyle(20);
-   c1->cd(2);
-   gmin->SetMarkerStyle(20);
-   gmin->Draw("alp");
-   c1->cd(3);
-   h1->Draw();
-
+      TGraph *g0 = new TGraph(N_CITIES+1,x0,y0);
+      TGraph *gmin = new TGraph(N_CITIES+1,xmin,ymin);
+      
+      TCanvas * c1 = new TCanvas("c","TSP",10,10,1000,800);
+      c1->Divide(2,2);
+      c1->cd(1);
+      g0->Draw("alp");
+      g0->SetMarkerStyle(20);
+      c1->cd(2);
+      gmin->SetMarkerStyle(20);
+      gmin->Draw("alp");
+      c1->cd(3);
+      h1->Draw();
+   }
 
 }
 
@@ -443,13 +447,37 @@ void  FullSearch()
 #ifndef __CINT__
 int main(int argc, char **argv)
 {
-   if (argc > 1) { 
-      TApplication theApp("App",&argc,argv);
+   using std::cout;
+   using std::endl;
+   using std::cerr;
+
+   if ( argc > 1 && argc != 2 )
+   {
+      cerr << "Usage: " << argv[0] << " [-ng]\n";
+      cerr << "  where:\n";
+      cerr << "     -ng : no graphics mode";
+      cerr << endl;
+      exit(1);
+   }
+
+   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
+   {
+      showGraphics = false;
+   }
+
+   if ( showGraphics )
+   {
+      TApplication* theApp = 0;
+      theApp = new TApplication("App",&argc,argv);
       simanTSP(true);
-      theApp.Run();
-   } 
-   else 
-      simanTSP(false); // no debug printed in this case for each iteration
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
+   else
+   {
+      simanTSP(false);
+   }
 
    // to check that the result is correct
    // FullSearch();
