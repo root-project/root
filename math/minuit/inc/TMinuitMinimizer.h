@@ -81,10 +81,10 @@ private:
 public: 
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::Minimizer::IObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::Minimizer::IGradObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
 
    /// set free variable 
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
@@ -176,7 +176,7 @@ private:
 
    // need to have a static copy of the function 
    //NOTE: This is NOT thread safe.
-   static IObjFunction * fgFunc;
+   static ROOT::Math::IMultiGenFunction * fgFunc;
 
    static TMinuit * fgMinuit; 
 

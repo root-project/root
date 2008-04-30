@@ -93,14 +93,14 @@ TLinearMinimizer & TLinearMinimizer::operator = (const TLinearMinimizer &rhs)
 }
 
 
-void TLinearMinimizer::SetFunction(const  IObjFunction & ) { 
+void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & ) { 
    // Set function to be minimized. Flag an error since only support Gradient objective functions
 
    Error("SetFunction1","Wrong type of function used for Linear fitter");
 }
 
 
-void TLinearMinimizer::SetFunction(const  IGradObjFunction & objfunc) { 
+void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfunc) { 
    // Set the function to be minimized. The function must be a Chi2 gradient function 
    // When performing a linear fit we need the basis functions, which are the partial derivatives with respect to the parameters of the model function.
 

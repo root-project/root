@@ -62,10 +62,10 @@ private:
 public: 
 
    /// set the fit model function
-   virtual void SetFunction(const ROOT::Math::Minimizer::IObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::Minimizer::IGradObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
 
    /// set free variable (dummy impl. )
    virtual bool SetVariable(unsigned int , const std::string & , double , double ) { return false; } 
@@ -130,7 +130,7 @@ private:
    std::vector<double> fErrors;
    std::vector<double> fCovar; 
 
-   const ROOT::Math::Minimizer::IGradObjFunction * fObjFunc;
+   const ROOT::Math::IMultiGradFunction * fObjFunc;
    TLinearFitter * fFitter; 
 
    ClassDef(TLinearMinimizer,1)  //Implementation of the Minimizer interface using TLinearFitter 

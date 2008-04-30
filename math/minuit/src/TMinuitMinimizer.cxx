@@ -32,7 +32,7 @@
 
 // initialize the static instances
 
-ROOT::Math::Minimizer::IObjFunction * TMinuitMinimizer::fgFunc = 0; 
+ROOT::Math::IMultiGenFunction * TMinuitMinimizer::fgFunc = 0; 
 TMinuit * TMinuitMinimizer::fgMinuit = 0; 
 
 ClassImp(TMinuitMinimizer)
@@ -87,7 +87,7 @@ TMinuitMinimizer & TMinuitMinimizer::operator = (const TMinuitMinimizer &rhs)
 
 
 
-void TMinuitMinimizer::SetFunction(const  IObjFunction & func) { 
+void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) { 
    // Set the objective function to be minimized 
 
    // Here a TMinuit instance is created since only at this point we know the number of parameters 
@@ -109,7 +109,7 @@ void TMinuitMinimizer::SetFunction(const  IObjFunction & func) {
    fDim = func.NDim(); 
    
    // assign to the static pointer (NO Thread safety here)
-   fgFunc = const_cast<IObjFunction *>(&func); 
+   fgFunc = const_cast<ROOT::Math::IMultiGenFunction *>(&func); 
    fMinuit->SetFCN(&TMinuitMinimizer::Fcn);
 
    // set print level in TMinuit
@@ -122,7 +122,7 @@ void TMinuitMinimizer::SetFunction(const  IObjFunction & func) {
 
 }
 
-void TMinuitMinimizer::SetFunction(const  IGradObjFunction & func) { 
+void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func) { 
 
    fDim = func.NDim(); 
 
@@ -137,7 +137,7 @@ void TMinuitMinimizer::SetFunction(const  IGradObjFunction & func) {
    fDim = func.NDim(); 
    
    // assign to the static pointer (NO Thread safety here)
-   fgFunc = const_cast<IGradObjFunction *>(&func); 
+   fgFunc = const_cast<ROOT::Math::IMultiGradFunction *>(&func); 
    fMinuit->SetFCN(&TMinuitMinimizer::FcnGrad);
 
    // set print level in TMinuit
@@ -160,7 +160,7 @@ void TMinuitMinimizer::Fcn( int &, double * , double & f, double * x , int /* if
 
 void TMinuitMinimizer::FcnGrad( int &, double * g, double & f, double * x , int iflag ) { 
    // implementation of TMinuit FCN function using an IGenFunction
-   IGradObjFunction * gFunc = dynamic_cast<IGradObjFunction *> ( fgFunc); 
+   ROOT::Math::IMultiGradFunction * gFunc = dynamic_cast<ROOT::Math::IMultiGradFunction *> ( fgFunc); 
 
    assert(gFunc != 0);
    f = gFunc->operator()(x);
