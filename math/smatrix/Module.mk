@@ -37,7 +37,7 @@ SMATRIXH    := $(SMATRIXH1) $(SMATRIXH2)
 SMATRIXS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 SMATRIXO    := $(SMATRIXS:.cxx=.o)
 
-SMATRIXDEP  := $(SMATRIXO:.o=.d)  $(SMATRIXDO:.o=.d)
+SMATRIXDEP  := $(SMATRIXO:.o=.d)  $(SMATRIXDO:.o=.d) $(SMATRIXDO32:.o=.d)
 
 SMATRIXLIB  := $(LPATH)/libSmatrix.$(SOEXT)
 SMATRIXMAP  := $(SMATRIXLIB:.$(SOEXT)=.rootmap)
