@@ -862,24 +862,31 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //            ^
    // and check type of paramaters and store it into G__ifunc
    //
-   if (builder.prop.entry.ansi && !isvoid && (funcheader[0] != '~')) {
-      // -- We are an ansi-style function which takes parameters, rewind and parse them.
-      if (G__dispsource) {
-         // -- Do not display the next 1000 characters read.  // FIXME: This is arbitrary and may fail!
-         G__disp_mask = 1000;
+   if (builder.prop.entry.ansi) {
+      if (isvoid | (funcheader[0] == '~')) {
+         // -- No parameters, initialize builder.params_type,
+         //    builder.params_names, and builder.default_vals
+         //    to empty.
       }
-      //
-      //  Rewind the file position.
-      //
-      fsetpos(G__ifile.fp, &temppos);
-      G__ifile.line_number = store_line_number;
-      // Parse the parameter declarations.
-      //fprintf(stderr, "G__make_ifunctable: calling G__readansiproto for '%s'\n", funcheader);
-      G__readansiproto(builder.params_type, builder.params_name, builder.default_vals, &builder.prop.entry.ansi);
-      cin = ')';
-      if (G__dispsource) {
-         // -- Allow read characters to be seen again.
-         G__disp_mask = 0;
+      else {
+         // -- We are an ansi-style function which takes parameters, rewind and parse them.
+         if (G__dispsource) {
+            // -- Do not display the next 1000 characters read.  // FIXME: This is arbitrary and may fail!
+            G__disp_mask = 1000;
+         }
+         //
+         //  Rewind the file position.
+         //
+         fsetpos(G__ifile.fp, &temppos);
+         G__ifile.line_number = store_line_number;
+         // Parse the parameter declarations.
+         //fprintf(stderr, "G__make_ifunctable: calling G__readansiproto for '%s'\n", funcheader);
+         G__readansiproto(builder.params_type, builder.params_name, builder.default_vals, &builder.prop.entry.ansi);
+         cin = ')';
+         if (G__dispsource) {
+            // -- Allow read characters to be seen again.
+            G__disp_mask = 0;
+         }
       }
    }
    // Set G__no_exec to skip ifunc body
@@ -1822,7 +1829,10 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
          }
       }
       else if (tagnum != -1) { // a class, enum, struct, or union type was used in the parameter type
-         paramType = G__Dict::GetDict().GetScope(tagnum);
+         paramType = G__Dict::GetDict().GetType(tagnum);
+         if (!paramType) { // If not found, try again looking for the helper typdef for templates with default params.
+            paramType = ::Reflex::Type::ByName(G__struct.name[tagnum]);
+         }
          if (isconst & G__CONSTVAR) {
             paramType = Reflex::Type(paramType, Reflex::CONST, Reflex::Type::APPEND);
          }
