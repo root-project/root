@@ -265,10 +265,10 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
 
          // Thread vector cleanup
          while (!thrHandlers.empty()) {
-            std::vector<TProofThread *>::iterator i = thrHandlers.end()-1;
-            if (*i) {
-               SafeDelete(*i);
-               thrHandlers.erase(i);
+            std::vector<TProofThread *>::iterator ii = thrHandlers.end()-1;
+            if (*ii) {
+               SafeDelete(*ii);
+               thrHandlers.erase(ii);
             }
          }
       } else { // Serial startup
@@ -342,7 +342,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
       // of remote operations are almost parallelized
       TIter nxsl(fSlaves);
       TSlave *sl = 0;
-      int nSlavesDone = 0, nSlaves = fSlaves->GetSize();
+      int nSlavesDone = 0, nSlavesTotal = fSlaves->GetSize();
       while ((sl = (TSlave *) nxsl())) {
 
          // Finalize setup of the server
@@ -359,7 +359,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t parallel, Bool_t)
          // Notify end of startup operations
          nSlavesDone++;
          TMessage m(kPROOF_SERVERSTARTED);
-         m << TString("Setting up worker servers") << nSlaves
+         m << TString("Setting up worker servers") << nSlavesTotal
            << nSlavesDone << sl->IsValid();
          gProofServ->GetSocket()->Send(m);
       }

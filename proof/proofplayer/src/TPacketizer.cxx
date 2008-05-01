@@ -639,7 +639,7 @@ void TPacketizer::Reset()
    TObject *key;
    while ((key = slaves.Next()) != 0) {
       TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(key);
-      TFileNode *fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
+      fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
       if (fn != 0 ) {
          slstat->SetFileNode(fn);
          fn->IncMySlaveCnt();
@@ -663,16 +663,16 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
    workers.AddAll(slaves);
    TIter    si(slaves);
-   TSlave   *slave;
-   while ((slave = (TSlave*)si.Next()) != 0) {
+   TSlave  *slm = 0;
+   while ((slm = (TSlave*)si.Next()) != 0) {
       PDB(kPacketizer,3)
          Info("ValidateFiles","socket added to monitor: %p (%s)",
-              slave->GetSocket(), slave->GetName());
-      mon.Add(slave->GetSocket());
-      slaves_by_sock.Add(slave->GetSocket(),slave);
+              slm->GetSocket(), slm->GetName());
+      mon.Add(slm->GetSocket());
+      slaves_by_sock.Add(slm->GetSocket(), slm);
       PDB(kPacketizer,1)
          Info("ValidateFiles",
-              "mon: %p, wrk: %p, sck: %p", &mon, slave, slave->GetSocket());
+              "mon: %p, wrk: %p, sck: %p", &mon, slm, slm->GetSocket());
    }
 
    mon.DeActivateAll();
@@ -844,13 +844,13 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          continue;
       } else if ( reply->What() == kPROOF_MESSAGE ) {
          // Send one level up
-         TString msg;
-         (*reply) >> msg;
+         TString s;
+         (*reply) >> s;
          Bool_t lfeed = kTRUE;
          if ((reply->BufferSize() > reply->Length()))
             (*reply) >> lfeed;
          TMessage m(kPROOF_MESSAGE);
-         m << msg << lfeed;
+         m << s << lfeed;
          gProofServ->GetSocket()->Send(m);
          mon.Activate(sock);
          continue;

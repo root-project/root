@@ -878,8 +878,9 @@ Int_t TXSocket::Flush()
       list<TXSockBuf *>::iterator i;
       for (i = fAQue.begin(); i != fAQue.end(); i++) {
          if (*i) {
-            {  R__LOCKGUARD(&fgSMtx);
+            {  fgSMtx.Lock();
                fgSQue.push_back(*i);
+               fgSMtx.UnLock();
             }
             fAQue.erase(i);
             nf += (*i)->fLen;

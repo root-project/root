@@ -194,9 +194,9 @@ Bool_t TFileMerger::Merge()
       file->Close();
       // remove the temporary files
       if(fLocal) {
-         TString path(file->GetPath());
-         path = path(0, path.Index(':',0));
-         gSystem->Unlink(path);
+         TString p(file->GetPath());
+         p = p(0, p.Index(':',0));
+         gSystem->Unlink(p);
       }
    }
    return result;

@@ -877,7 +877,7 @@ void TPacketizerAdaptive::Reset()
    TObject *key;
    while ((key = slaves.Next()) != 0) {
       TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(key);
-      TFileNode *fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
+      fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
       if (fn != 0 ) {
          slstat->SetFileNode(fn);
          fn->IncMySlaveCnt();
@@ -901,12 +901,12 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
 
    workers.AddAll(slaves);
    TIter    si(slaves);
-   TSlave   *slave;
-   while ((slave = (TSlave*)si.Next()) != 0) {
+   TSlave   *slm;
+   while ((slm = (TSlave*)si.Next()) != 0) {
       PDB(kPacketizer,3) Info("ValidateFiles","socket added to monitor: %p (%s)",
-          slave->GetSocket(), slave->GetName());
-      mon.Add(slave->GetSocket());
-      slaves_by_sock.Add(slave->GetSocket(),slave);
+          slm->GetSocket(), slm->GetName());
+      mon.Add(slm->GetSocket());
+      slaves_by_sock.Add(slm->GetSocket(), slm);
    }
 
    mon.DeActivateAll();

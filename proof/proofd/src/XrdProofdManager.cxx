@@ -666,12 +666,13 @@ XrdProofConn *XrdProofdManager::GetProofConn(const char *url)
    // Request Timeout
    EnvPutInt(NAME_REQUESTTIMEOUT, fRequestTO);
 
-   if ((p = new XrdProofConn(url, m, -1, -1, 0, buf.c_str()))) 
+   if ((p = new XrdProofConn(url, m, -1, -1, 0, buf.c_str()))) {
       if (p->IsValid())
          // Cache it
          fProofConnHash.Rep(url, p, 0, Hash_keepdata);
       else
          SafeDelete(p);
+   }
 
    // Restore original retry parameters
    XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
