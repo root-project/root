@@ -283,7 +283,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
             return -1;
          }
          // This may have changed
-         TString ticketPrincipal =
+         ticketPrincipal =
              TString(Form("%.*s@%.*s",client->data->length, client->data->data,
                                       client->realm.length, client->realm.data));
       }
