@@ -127,6 +127,17 @@ Reflex::Member Reflex::Scope::FunctionMemberByName( const std::string & name,
 
 
 //-------------------------------------------------------------------------------
+Reflex::Member Reflex::Scope::FunctionMemberByNameAndSignature( const std::string & name,
+                                                                const Type & signature,
+                                                                unsigned int modifiers_mask) const {
+//------------------------------------------------------------------------------- 
+// Return a function member by it's name, qualified by it's signature type.
+   if ( * this ) return fScopeName->fScopeBase->FunctionMemberByNameAndSignature( name, signature, modifiers_mask ); 
+   return Dummy::Member();
+}
+
+
+//-------------------------------------------------------------------------------
 size_t Reflex::Scope::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
 // Return number of function members of this scope.

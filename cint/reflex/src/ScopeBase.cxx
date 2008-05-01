@@ -236,6 +236,27 @@ Reflex::ScopeBase::FunctionMemberByName( const std::string & name,
 
 
 //-------------------------------------------------------------------------------
+Reflex::Member
+Reflex::ScopeBase::FunctionMemberByNameAndSignature( const std::string & name,
+                                               const Type & signature,
+                                               unsigned int modifiers_mask) const {
+//-------------------------------------------------------------------------------
+   // Return function member by name and signature.
+   for (Members::const_iterator it = fFunctionMembers.begin(); it != fFunctionMembers.end(); ++it ) {
+      if (it->Name() == name) {
+         if (signature) {
+            if (signature.IsSignatureEquivalentTo(it->TypeOf(),modifiers_mask)) return (*it);
+         }
+         else {
+            return (*it);
+         }
+      }
+   }
+   return Dummy::Member();
+}
+
+
+//-------------------------------------------------------------------------------
 size_t Reflex::ScopeBase::FunctionMemberSize() const {
 //-------------------------------------------------------------------------------
    // Return number of function members.

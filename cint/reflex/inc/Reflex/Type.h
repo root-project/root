@@ -516,6 +516,17 @@ namespace Reflex {
 
 
       /** 
+      * IsSignatureEquivalentTo returns true if the two types are equivalent,
+      * ignoring the return type for functions
+      * @param type to compare to
+      * @modifiers_mask do not compare the listed modifiers
+      * @return true if two types are equivalent
+      */
+      bool IsSignatureEquivalentTo( const Type & typ, 
+         unsigned int modifiers_mask = 0 ) const;
+
+
+      /** 
       * IsFunction returns true if the type represents a function
       * @return true if type represents a function
       */

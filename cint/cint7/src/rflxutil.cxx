@@ -1097,21 +1097,24 @@ Reflex::Type Cint::Internal::G__deref(const Reflex::Type typein)
    return result;
 }
 
+void G__dumpreflex_function(const ::Reflex::Scope scope, int level);
+
 //______________________________________________________________________________
 void G__dumpreflex_atlevel(const ::Reflex::Scope scope, int level)
 {
+   G__dumpreflex_function(scope, level);
    for (
       ::Reflex::Member_Iterator m = scope.DataMember_Begin();
       m != scope.DataMember_End();
       ++m
    ) {
-         for (int i=0; i<level; ++i)
+         for (int i=0; i<(level*2); ++i)
             fprintf(stderr, " ");
          fprintf(stderr, "data member: '%s'\n", m->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    }
    for (::Reflex::Scope_Iterator iscope = scope.SubScope_Begin();
       iscope != scope.SubScope_End(); ++iscope) {
-         for (int i=0; i<level; ++i)
+         for (int i=0; i<(level*2); ++i)
             fprintf(stderr, " ");
          fprintf(stderr, "%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
          G__dumpreflex_atlevel(*iscope, level+1);
@@ -1119,7 +1122,7 @@ void G__dumpreflex_atlevel(const ::Reflex::Scope scope, int level)
    for (::Reflex::Type_Iterator itype = scope.SubType_Begin();
       itype != scope.SubType_End(); ++itype) {
          if (itype->IsClass()) continue;
-         for (int i=0; i<level; ++i)
+         for (int i=0; i<(level*2); ++i)
             fprintf(stderr, " ");
          fprintf(stderr, "%s %s\n", itype->TypeTypeAsString().c_str(), itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    }
@@ -1128,6 +1131,7 @@ void G__dumpreflex_atlevel(const ::Reflex::Scope scope, int level)
 //______________________________________________________________________________
 void G__dumpreflex_function(const ::Reflex::Scope scope, int level)
 {
+#if 0
    for (::Reflex::Scope_Iterator iscope = scope.SubScope_Begin();
       iscope != scope.SubScope_End(); ++iscope) {
          for (int i=0; i<level; ++i)
@@ -1135,9 +1139,10 @@ void G__dumpreflex_function(const ::Reflex::Scope scope, int level)
          fprintf(stderr, "%s %s\n", iscope->IsClass()?"class":"scope", iscope->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
          G__dumpreflex_function(*iscope, level+1);
    }
+#endif // 0
    for (::Reflex::Member_Iterator itype = scope.FunctionMember_Begin();
       itype != scope.FunctionMember_End(); ++itype) {
-         for (int i=0; i<level; ++i)
+         for (int i=0; i<(level*2); ++i)
             fprintf(stderr, " ");
          fprintf(stderr, "%s\n", itype->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    }
@@ -1146,7 +1151,7 @@ void G__dumpreflex_function(const ::Reflex::Scope scope, int level)
 //______________________________________________________________________________
 void Cint::Internal::G__dumpreflex()
 {
-   return;
+   //return;
    ::G__dumpreflex_atlevel(::Reflex::Scope::GlobalScope(), 0);
 }
 
@@ -1717,22 +1722,22 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    //        add the created function type as a member of any Reflex::Scope.
    //
    ::Reflex::Type ftype = Reflex::FunctionTypeBuilder(returnType, params_type, typeid(::Reflex::UnknownType));
-   //if (!G__tagdefining.Name().compare("TMatrixT<double>")) {
-   //   fprintf(stderr, "G__BuilderInfo::Build: Abstract count for '%s' count: %d  for: '%s'\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_properties(G__tagdefining)->tagnum], name.c_str());
+   //fprintf(stderr, "\nG__BuilderInfo::Build: processing function '%s::%s' type '%s'.\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), name.c_str(), ftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+   //if (!G__tagdefining.Name().compare("FumiliMinimizer")) {
+      //fprintf(stderr, "G__BuilderInfo::Build: Abstract count for '%s' count: %d  for: '%s'\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_properties(G__tagdefining)->tagnum], name.c_str());
    //}
-   //fprintf(stderr, "G__BuilderInfo::Build: processing function '%s' type '%s'.\n", name.c_str(), ftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    //fprintf(stderr, "G__Builderinfo::Build: isconst: %d\n", isconst);
    //fprintf(stderr, "G__Builderinfo::Build: isexplicit: %d\n", isexplicit);
    //fprintf(stderr, "G__Builderinfo::Build: staticalloc: %d\n", (int) staticalloc);
    //fprintf(stderr, "G__Builderinfo::Build: isvirtual: %d\n", isvirtual);
    //fprintf(stderr, "G__Builderinfo::Build: ispurevirtual: %d\n", ispurevirtual);
-   for (
-      std::vector<Reflex::Type>::iterator iter = params_type.begin();
-      iter != params_type.end();
-      ++iter
-   ) {
-      //fprintf(stderr, "G__Builderinfo::Build: param type: %s\n", iter->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-   }
+   //for (
+   //   std::vector<Reflex::Type>::iterator iter = params_type.begin();
+   //   iter != params_type.end();
+   //   ++iter
+   //) {
+   //   fprintf(stderr, "G__Builderinfo::Build: param type: %s\n", iter->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+   //}
    //fprintf(stderr, "G__Builderinfo::Build:\n");
    //
    //  Fetch any previously seen declaration of this function in the defining class or namespace.
@@ -1769,7 +1774,14 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    //};
    ::Reflex::Type modftype(::Reflex::Type(ftype, modifiers));
    unsigned int modifiers_mask = ::Reflex::PUBLIC | ::Reflex::PROTECTED | ::Reflex::PRIVATE | ::Reflex::EXPLICIT | ::Reflex::STATIC | ::Reflex::VIRTUAL | ::Reflex::ABSTRACT | ::Reflex::CONSTRUCTOR | ::Reflex::DESTRUCTOR | ::Reflex::COPYCONSTRUCTOR;
+   //fprintf(stderr, "G__BuilderInfo::Build: search for function member '%s' modftype '%s'\n", name.c_str(), modftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
    ::Reflex::Member m(G__p_ifunc.FunctionMemberByName(name, modftype, modifiers_mask));
+   //if (m) {
+   //   fprintf(stderr, "G__BuilderInfo::Build: search found member '%s'\n", m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+   //}
+   //else {
+   //   fprintf(stderr, "G__BuilderInfo::Build: search failed.\n");
+   //}
    //
    //  If we implement a pure virtual function from
    //  a base class, decrement the pure virtual count
@@ -1786,11 +1798,18 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       for (int basen = 0; basen < baseclass->basen; ++basen) {
          G__incsetup_memfunc(baseclass->basetagnum[basen]);
          ::Reflex::Scope scope(G__Dict::GetDict().GetScope(baseclass->basetagnum[basen]));
-         ::Reflex::Member base_m(scope.FunctionMemberByName(name, modftype, modifiers_mask));
+         //fprintf(stderr, "G__BuilderInfo::Build: search base class '%s' for function member '%s' type '%s'\n", scope.Name(Reflex::SCOPED).c_str(), name.c_str(), modftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+         ::Reflex::Member base_m(scope.FunctionMemberByNameAndSignature(name, modftype, modifiers_mask));
+         //if (base_m) {
+         //   fprintf(stderr, "G__BuilderInfo::Build: search found member '%s'\n", base_m.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+         //}
+         //else {
+         //   fprintf(stderr, "G__BuilderInfo::Build: search failed.\n");
+         //}
          if (base_m) {
             int tagnum_tagdefining  = G__get_tagnum(G__tagdefining);
             if (base_m.IsAbstract() && G__struct.isabstract[tagnum_tagdefining]) {
-               //fprintf(stderr, "G__BuilderInfo::Build: Decrement abstract count for '%s' count: %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[tagnum_tagdefining]);
+               //fprintf(stderr, "G__BuilderInfo::Build: 1 Decrement abstract count for '%s' count: %d -> %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[tagnum_tagdefining], G__struct.isabstract[tagnum_tagdefining] - 1);
                --G__struct.isabstract[tagnum_tagdefining]; // We now have one less pure virtual member function.
             }
             if (base_m.IsVirtual()) {
@@ -1849,7 +1868,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
          // if (m.IsConst() != isconst)
          if (ispurevirtual & !m.IsAbstract()) {
             if (G__tagdefining) {
-               //fprintf(stderr, "G__BuilderInfo::Build: 2 Decrement abstract count for '%s' count: %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)]);
+               //fprintf(stderr, "G__BuilderInfo::Build: 2 Decrement abstract count for '%s' count: %d -> %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], G__struct.isabstract[G__get_tagnum(G__tagdefining)] - 1);
                --G__struct.isabstract[G__get_tagnum(G__tagdefining)];
             }
          }
@@ -1874,7 +1893,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       }
       else {
          if (ispurevirtual && G__tagdefining) {
-            //fprintf(stderr, "G__BuilderInfo::Build: 3 Decrement abstract count for '%s' count: %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)]);
+            //fprintf(stderr, "G__BuilderInfo::Build: 3 Decrement abstract count for '%s' count: %d -> %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], G__struct.isabstract[G__get_tagnum(G__tagdefining)] - 1);
             --G__struct.isabstract[G__get_tagnum(G__tagdefining)];
          }
       }
@@ -2001,7 +2020,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       //::Reflex::FunctionBuilder funcBuilder(ftype, fullname.c_str(), 0 /*stubFP*/, 0 /*stubCtx*/, GetParamNames().c_str(), modifiers);
       //m = funcBuilder.ToMember();
       if (!m) {
-         //fprintf(stderr, "G__BuilderInfo::Build: Something went wrong creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
+         fprintf(stderr, "G__BuilderInfo::Build: Something went wrong creating entry for '%s' in '%s'\n", name.c_str(), G__p_ifunc.Name(::Reflex::SCOPED | ::Reflex::QUALIFIED).c_str());
          G__dumpreflex_function(G__p_ifunc, 1);
          return m;
       }

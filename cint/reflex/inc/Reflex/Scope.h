@@ -237,6 +237,20 @@ namespace Reflex {
 
 
       /**
+      * FunctionMemberByNameAndSignature will return the member with the name, 
+      * optionally the signature of the function may be given as a type
+      * @param  name of function member
+      * @param  signature of the member function 
+      * @modifiers_mask When matching, do not compare the listed modifiers
+      * @return reflection information of the function member
+      */
+      // this overloading is unfortunate but I can't include Type.h here
+      Member FunctionMemberByNameAndSignature( const std::string & name,
+         const Type & signature,
+         unsigned int modifers_mask = 0) const;
+
+
+      /**
       * FunctionMemberSize will return the number of function members of
       * this type
       * @return number of function members

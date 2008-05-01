@@ -234,6 +234,76 @@ bool Reflex::Type::IsEquivalentTo( const Type & typ, unsigned int modifiers_mask
 
 
 //-------------------------------------------------------------------------------
+bool Reflex::Type::IsSignatureEquivalentTo( const Type & typ, unsigned int modifiers_mask ) const {
+//-------------------------------------------------------------------------------
+// Check if two function types are equivalent, ignoring the return type
+// for functions. It will compare the information of the type depending
+// on the TypeType.
+   if ( *this == typ ) return true;
+
+   Type t1 = *this;
+   Type t2 = typ;
+
+   unsigned int mod1 = t1.fModifiers | modifiers_mask;
+   unsigned int mod2 = t2.fModifiers | modifiers_mask;
+
+   while (t1.IsTypedef()) { 
+      t1 = t1.ToType();
+      mod1 |= t1.fModifiers;
+   }
+   while ( t2.IsTypedef()) {
+      t2 = t2.ToType();
+      mod2 |= t2.fModifiers;
+   }
+
+   if (mod1 == mod2) {
+
+      switch ( t1.TypeType() ) {
+      case CLASS:
+      case STRUCT:
+      case TYPETEMPLATEINSTANCE:
+         if ( t2.IsClass() )           return ( t1.fTypeName == t2.fTypeName ); 
+      case FUNDAMENTAL:
+         if ( t2.IsFundamental() )     return ( t1.fTypeName == t2.fTypeName );
+      case UNION:
+         if ( t2.IsUnion() )           return ( t1.fTypeName == t2.fTypeName ); 
+      case ENUM:
+         if ( t2.IsEnum() )            return ( t1.fTypeName == t2.fTypeName ); 
+      case POINTER:
+         if ( t2.IsPointer() )         return ( t1.ToType().IsEquivalentTo(t2.ToType(),modifiers_mask) );
+      case POINTERTOMEMBER:
+         if ( t2.IsPointerToMember() ) return ( t1.ToType().IsEquivalentTo(t2.ToType(),modifiers_mask) );
+      case ARRAY:
+         if ( t2.IsArray() )           return ( t1.ToType().IsEquivalentTo(t2.ToType(),modifiers_mask) && t1.ArrayLength() == t2.ArrayLength() );
+      case FUNCTION:
+         if ( t2.IsFunction() ) {
+
+            if ( t1.FunctionParameterSize() == t2.FunctionParameterSize() ) {
+
+               Type_Iterator pi1;
+               Type_Iterator pi2;
+               for ( pi1 = t1.FunctionParameter_Begin(), pi2 = t2.FunctionParameter_Begin(); 
+                     pi1 != t1.FunctionParameter_End(),  pi2 != t2.FunctionParameter_End(); 
+                     ++pi1, ++pi2 ) {
+
+                  if ( ! pi1->IsEquivalentTo(*pi2,modifiers_mask)) return false;
+
+               }
+               return true;
+            }
+            return false;
+         }
+      default:
+         return false;
+      }
+   }
+   else {
+      return false;
+   }
+}
+
+
+//-------------------------------------------------------------------------------
 Reflex::Member Reflex::Type::MemberByName( const std::string & nam,
                                                        const Type & signature ) const {
 //-------------------------------------------------------------------------------

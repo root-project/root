@@ -147,6 +147,19 @@ namespace Reflex {
 
 
       /**
+      * FunctionMemberByNameAndSignature will return the MemberAt with the Name, 
+      * optionally the signature of the function may be given
+      * @param  Name of function MemberAt
+      * @param  signature of the MemberAt function
+      * @modifiers_mask When matching, do not compare the listed modifiers
+      * @return function MemberAt
+      */
+      Member FunctionMemberByNameAndSignature( const std::string & name,
+         const Type & signature,
+         unsigned int modifiers_mask = 0) const;
+
+
+      /**
       * FunctionMemberSize will return the number of function members of
       * this type
       * @return number of function members
