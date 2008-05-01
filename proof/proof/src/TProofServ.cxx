@@ -3405,6 +3405,14 @@ void TProofServ::HandleProcess(TMessage *mess)
                delete dataset;
                return;
             }
+            if (missingFiles) {
+               // The missing files objects have to be removed from the dataset
+               // before delete.
+               TIter next(missingFiles);
+               TObject *file;
+               while ((file = next()))
+                  dataset->GetList()->Remove(file);
+            }
             delete dataset;
 
             // Make sure it will be sent back merged with other similar lists created
