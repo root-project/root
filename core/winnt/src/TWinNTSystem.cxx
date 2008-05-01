@@ -1923,6 +1923,36 @@ FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
 //---- Paths & Files -----------------------------------------------------------
 
 //______________________________________________________________________________
+TList *TWinNTSystem::GetVolumes(Option_t *opt) const
+{
+   // Get list of volumes (drives) mounted on the system.
+
+   int drive, curdrive;
+
+   if (!opt || !strlen(opt)) {
+      return 0;
+   }
+   TList *drives = new TList();
+   // Save current drive
+   curdrive = _getdrive();
+   if (strstr(opt, "cur")) {
+      drives->Add(new TObjString(Form("%c:", (curdrive + 'A' - 1))));
+   }
+   else if (strstr(opt, "all")) {
+      // If we can switch to the drive, it exists
+      // but skip floppy drives...
+      for( drive = 3; drive <= 26; ++drive ) {
+         if( !_chdrive( drive ) ) {
+            drives->Add(new TObjString(Form("%c:", (drive + 'A' - 1))));
+         }
+      }
+      // Restore original drive
+      _chdrive( curdrive );
+   }
+   return drives;
+}
+
+//______________________________________________________________________________
 const char *TWinNTSystem::DirName(const char *pathname)
 {
    // Return the directory name in pathname. DirName of c:/user/root is /user.

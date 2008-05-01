@@ -197,6 +197,7 @@ public:
    int               Utime(const char *file, Long_t modtime, Long_t actime);
    const char       *UnixPathName(const char *unixpathname);
    const char       *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
+   TList            *GetVolumes(Option_t *opt = "") const;
 
    //---- Standard Output redirection --------------------------
    Int_t             RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = 0);

@@ -74,7 +74,7 @@ public:
    TRootBrowser *GetNewBrowser() const          { return fNewBrowser; }
    void          SetNewBrowser(TRootBrowser* b) { fNewBrowser = b;    }
 
-   void        AddFSDirectory(const char* entry, const char* path=0);
+   void        AddFSDirectory(const char* entry, const char* path=0, Option_t *opt="");
    void        AddKey(TGListTreeItem *itm, TObject *obj, const char *name = 0);
    void        AddRemoteFile(TObject *obj);
    void        ApplyFilter(Int_t id);
@@ -83,6 +83,7 @@ public:
    void        CheckRemote(TGListTreeItem *item);
    void        Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y);
    TString     DirName(TGListTreeItem* item);
+   TString     FullPathName(TGListTreeItem* item);
    void        DoubleClicked(TGListTreeItem *item, Int_t btn);
    Long_t      XXExecuteDefaultAction(TObject *obj);
    char       *FormatFileInfo(const char *fname, Long64_t size, Long_t modtime);
