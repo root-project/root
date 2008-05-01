@@ -933,14 +933,14 @@ TObject *THbookFile::Convert1D(Int_t id)
       if (hcbits[8]) h1->SetBinError(i,hie(id,i));
       if (gr && i>0 && i<=ncx) gr->SetPoint(i,x,hif(id,i));
    }
-   Float_t ymin, ymax;
+   Float_t yymin, yymax;
    if (hcbits[19]) {
-      ymax = q[lcid+kMAX1];
-      h1->SetMaximum(ymax);
+      yymax = q[lcid+kMAX1];
+      h1->SetMaximum(yymax);
    }
    if (hcbits[20]) {
-      ymin = q[lcid+kMIN1];
-      h1->SetMinimum(ymin);
+      yymin = q[lcid+kMIN1];
+      h1->SetMinimum(yymin);
    }
    h1->SetEntries(nentries);
    return h1;
