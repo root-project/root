@@ -355,7 +355,7 @@ void TGFileBrowser::BrowseObj(TObject *obj)
          TString curdrive = ((TObjString *)(curvol->At(0)))->GetString();
          TIter next(volumes);
          TObjString *drive;
-         while (drive = (TObjString *)next()) {
+         while ((drive = (TObjString *)next())) {
             AddFSDirectory(Form("%s\\", drive->GetName()), 0, 
                  (drive->GetString() == curdrive) ? "SetRootDir" : "Add");
          }

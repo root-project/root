@@ -289,7 +289,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    if (volumes && curvol) {
       TIter next(volumes);
       TObjString *drive;
-      while (drive = (TObjString *)next()) {
+      while ((drive = (TObjString *)next())) {
          if (drive->GetString() == curdrive)
             continue;
          gLbc[idx].fName   = StrDup(Form("Drive %s", drive->GetName()));
