@@ -1926,6 +1926,7 @@ FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
 TList *TWinNTSystem::GetVolumes(Option_t *opt) const
 {
    // Get list of volumes (drives) mounted on the system.
+   // The returned TList must be deleted by the user using "delete".
 
    int drive, curdrive;
 
@@ -1933,6 +1934,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       return 0;
    }
    TList *drives = new TList();
+   drives->SetOwner();
    // Save current drive
    curdrive = _getdrive();
    if (strstr(opt, "cur")) {
