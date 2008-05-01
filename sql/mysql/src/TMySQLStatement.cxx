@@ -418,7 +418,7 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
          return *((double*) addr);
          break;
 #if MYSQL_VERSION_ID >= 50022
-      case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */: 
+      case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */:
 #endif
       case MYSQL_TYPE_STRING:
       case MYSQL_TYPE_VAR_STRING:
@@ -427,8 +427,10 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
          ULong_t len = fBuffer[npar].fResLength;
          if ((str==0) || (*str==0) || (len==0)) return 0;
          Int_t size = fBuffer[npar].fSize;
-         if (1.*len<size) str[len] = 0; else
-                          str[size-1] = 0;
+         if (1.*len<size)
+            str[len] = 0;
+         else
+            str[size-1] = 0;
          long double buf = 0;
          sscanf(str,"%Lf",&buf);
          return buf;
@@ -558,7 +560,7 @@ const char *TMySQLStatement::GetString(Int_t npar)
    CheckGetField("GetString", 0);
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING)
-      || (fBind[npar].buffer_type==MYSQL_TYPE_BLOB) 
+      || (fBind[npar].buffer_type==MYSQL_TYPE_BLOB)
       || (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING)
 #if MYSQL_VERSION_ID >= 50022
       || (fBuffer[npar].fSqlType==MYSQL_TYPE_NEWDECIMAL)
@@ -736,7 +738,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, int s
       case MYSQL_TYPE_FLOAT:    allocsize = sizeof(float); break;
       case MYSQL_TYPE_DOUBLE:   allocsize = sizeof(double); break;
 #if MYSQL_VERSION_ID >= 50022
-      case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */: 
+      case MYSQL_TYPE_NEWDECIMAL /* new MYSQL_TYPE fixed precision decimal */:
 #endif
       case MYSQL_TYPE_STRING:   allocsize = sqlsize > 256 ? sqlsize : 256; break;
       case MYSQL_TYPE_VAR_STRING: allocsize = sqlsize > 256 ? sqlsize : 256; break;

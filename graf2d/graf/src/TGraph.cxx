@@ -1614,10 +1614,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    }
 
    // Restore the original fitter
-   if (origFitter)
-   {
-     delete TVirtualFitter::GetFitter();
-     TVirtualFitter::SetFitter(origFitter);
+   if (origFitter) {
+      delete TVirtualFitter::GetFitter();
+      TVirtualFitter::SetFitter(origFitter);
    }
 
    return fitResult;
@@ -3023,28 +3022,28 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                ComputeLogs(npt, optionZ);
 
                //do not draw the two vertical lines on the edges
-               Int_t Nbpoints = npt-2;
+               Int_t nbpoints = npt-2;
                Int_t point1  = 1;
                if (optionOff) {
                   // remove points before the low cutoff
                   Int_t ip;
-                  for (ip=point1; ip<=Nbpoints; ip++) {
+                  for (ip=point1; ip<=nbpoints; ip++) {
                      if (gyworkl[ip] != ywmin) {
                         point1 = ip;
                         break;
                      }
                   }
                   // remove points after the high cutoff
-                  Int_t point2 = Nbpoints;
+                  Int_t point2 = nbpoints;
                   for (ip=point2; ip>=point1; ip--) {
                      if (gyworkl[ip] != ywmin) {
                         point2 = ip;
                         break;
                      }
                   }
-                  Nbpoints = point2-point1+1;
+                  nbpoints = point2-point1+1;
                }
-               gPad->PaintPolyLine(Nbpoints,&gxworkl[point1],&gyworkl[point1],noClip);
+               gPad->PaintPolyLine(nbpoints,&gxworkl[point1],&gyworkl[point1],noClip);
                continue;
             }
          }  //endfor (i=first; i<=last;i++)

@@ -30,7 +30,7 @@ namespace ROOT {
       return &theDefault;
    }
 
-   
+
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
@@ -137,7 +137,7 @@ namespace ROOT {
     fSizeof(gci.fSizeof)
    { }
 
-  TGenericClassInfo& TGenericClassInfo::operator=(const TGenericClassInfo& gci) 
+  TGenericClassInfo& TGenericClassInfo::operator=(const TGenericClassInfo& gci)
    {
      if(this!=&gci) {
        fAction=gci.fAction;
@@ -167,7 +167,7 @@ namespace ROOT {
    void TGenericClassInfo::Init(Int_t pragmabits)
    {
       // Initilization routine.
-      
+
       //TVirtualStreamerInfo::Class_Version MUST be the same as TStreamerInfo::Class_Version
       if (fVersion==-2) fVersion = TVirtualStreamerInfo::Class_Version();
       if (!fAction) return;
@@ -455,6 +455,8 @@ namespace ROOT {
 
    void TGenericClassInfo::SetDirectoryAutoAdd(DirAutoAdd_t func)
    {
+      // Install a new wrapper around SetDirectoryAutoAdd.
+
       fDirAutoAdd = func;
       if (fClass) fClass->SetDirectoryAutoAdd(fDirAutoAdd);
    }

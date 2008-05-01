@@ -327,7 +327,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          if (lenName == 0 || ctype == leafname) {
             Warning("TBranch","No name was given to the leaf number '%d' in the leaflist of the branch '%s'.",fNleaves,name);
-            sprintf(leafname,"__noname%d",fNleaves);            
+            sprintf(leafname,"__noname%d",fNleaves);
          }
          TLeaf* leaf = 0;
          if (*leaftype == 'C') {
@@ -566,7 +566,7 @@ void TBranch::Browse(TBrowser* b)
       if (gPad) gPad->Update();
    }
 }
- 
+
  //______________________________________________________________________________
 void TBranch::DeleteBaskets(Option_t* option)
 {
@@ -594,8 +594,8 @@ void TBranch::DeleteBaskets(Option_t* option)
       TObjArray *lb = GetListOfBranches();
       Int_t nb = lb->GetEntriesFast();
       for (Int_t j = 0; j < nb; j++) {
-	 TBranch* branch = (TBranch*) lb->UncheckedAt(j);
-	 if (branch) branch->DeleteBaskets("all");
+         TBranch* branch = (TBranch*) lb->UncheckedAt(j);
+         if (branch) branch->DeleteBaskets("all");
       }
    }
    DropBaskets();
@@ -1230,7 +1230,7 @@ TFile* TBranch::GetFile(Int_t mode)
    delete [] bname;
 
    // Open file (new file if mode = 1)
-   { 
+   {
       TDirectory::TContext ctxt(0);
       if (mode) file = TFile::Open(bFileName, "recreate");
       else      file = TFile::Open(bFileName);

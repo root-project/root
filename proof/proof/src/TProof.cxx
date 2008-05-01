@@ -2911,7 +2911,7 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
 
    Long64_t rv = -1;
 
-   // We include the TFileCollection to the input list and we create a 
+   // We include the TFileCollection to the input list and we create a
    // fake TDSet with infor about it
    TDSet *dset = new TDSet(Form("TFileCollection:%s", fc->GetName()));
    fPlayer->AddInput(fc);
@@ -3417,7 +3417,7 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
       fPlayer->StopProcess(abort, timeout);
 
    // Stop any blocking 'Collect' request; on masters we do this only if
-   // aborting; when stopping, we still need to receive the results 
+   // aborting; when stopping, we still need to receive the results
    if (!IsMaster() || abort)
       InterruptCurrentMonitor();
 
@@ -6947,6 +6947,8 @@ Int_t TProof::RemoveDataSet(const char *uri, const char* optStr)
 //______________________________________________________________________________
 TList* TProof::FindDataSets(const char* /*searchString*/, const char* /*optStr*/)
 {
+   // Find datasets, returns in a TList all found datasets.
+
    Error ("FindDataSets", "not yet implemented");
    return (TList *) 0;
 }
@@ -7029,9 +7031,9 @@ void TProof::ShowDataSetQuota(Option_t* opt)
    // if opt contains "U" shows also distribution of usage on user-level
 
    if (fProtocol < 15) {
-     Info("ShowDataSetQuota",
-          "functionality not available: the server does not have dataset support");
-     return;
+      Info("ShowDataSetQuota",
+           "functionality not available: the server does not have dataset support");
+      return;
    }
 
    TSocket *master = 0;

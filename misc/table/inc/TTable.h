@@ -189,81 +189,80 @@ public:
          const TTable *fThisTable;
          vec_iterator  fCurrentRow;
       public:
-        iterator(): fRowSize(0), fThisTable(0) {;}
-        iterator(const TTable &table, vec_iterator &arowPtr) :
-	fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(arowPtr) {;}
-        iterator(const TTable &table, vec_const_iterator &arowPtr) :
-           fRowSize(table.GetRowSize()),
-           fThisTable(&table),
-           fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&arowPtr) {;}
-//           fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&arowPtr) ) {;}
-        iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
-        void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
-        void operator++()    { ++fCurrentRow;   }
-        void operator++(int) {   fCurrentRow++; }
-        void operator--()    { --fCurrentRow;   }
-        void operator--(int) {   fCurrentRow--; }
-        iterator operator+(Int_t idx)   { std::vector<Long_t>::iterator addition   = fCurrentRow+idx; return  iterator(*fThisTable,addition); }
-        iterator operator-(Int_t idx)   { std::vector<Long_t>::iterator subtraction = fCurrentRow-idx; return  iterator(*fThisTable,subtraction); }
-        void operator+=(Int_t idx)  {  fCurrentRow+=idx; }
-        void operator-=(Int_t idx)  {  fCurrentRow-=idx; }
-        void *rowPtr() const { return  (void *)(((const char *)fThisTable->GetArray()) + (*fCurrentRow)*fRowSize ); }
-        operator void *() const { return rowPtr(); }
-        Int_t operator-(const iterator &it) const { return (*fCurrentRow)-(*(it.fCurrentRow)); }
-        Long_t operator *() const { return  *fCurrentRow; }
-        Bool_t operator==(const iterator &t) const { return  ( (fCurrentRow == t.fCurrentRow) && (fThisTable == t.fThisTable) ); }
-        Bool_t operator!=(const iterator &t) const { return !operator==(t); }
+         iterator(): fRowSize(0), fThisTable(0) {;}
+         iterator(const TTable &table, vec_iterator &arowPtr) :
+            fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(arowPtr) {;}
+         iterator(const TTable &table, vec_const_iterator &arowPtr) :
+            fRowSize(table.GetRowSize()), fThisTable(&table),
+            fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&arowPtr) {;}
+            //fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&arowPtr) ) {;}
+         iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
+         void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
+         void operator++()    { ++fCurrentRow;   }
+         void operator++(int) {   fCurrentRow++; }
+         void operator--()    { --fCurrentRow;   }
+         void operator--(int) {   fCurrentRow--; }
+         iterator operator+(Int_t idx)   { std::vector<Long_t>::iterator addition   = fCurrentRow+idx; return  iterator(*fThisTable,addition); }
+         iterator operator-(Int_t idx)   { std::vector<Long_t>::iterator subtraction = fCurrentRow-idx; return  iterator(*fThisTable,subtraction); }
+         void operator+=(Int_t idx)  {  fCurrentRow+=idx; }
+         void operator-=(Int_t idx)  {  fCurrentRow-=idx; }
+         void *rowPtr() const { return  (void *)(((const char *)fThisTable->GetArray()) + (*fCurrentRow)*fRowSize ); }
+         operator void *() const { return rowPtr(); }
+         Int_t operator-(const iterator &it) const { return (*fCurrentRow)-(*(it.fCurrentRow)); }
+         Long_t operator *() const { return  *fCurrentRow; }
+         Bool_t operator==(const iterator &t) const { return  ( (fCurrentRow == t.fCurrentRow) && (fThisTable == t.fThisTable) ); }
+         Bool_t operator!=(const iterator &t) const { return !operator==(t); }
 
-        const TTable &Table()   const { return *fThisTable;}
-        const Long_t &RowSize() const { return fRowSize;}
+         const TTable &Table()   const { return *fThisTable;}
+         const Long_t &RowSize() const { return fRowSize;}
 #ifndef __CINT__
-        const std::vector<Long_t>::iterator &Row() const { return fCurrentRow;}
+         const std::vector<Long_t>::iterator &Row() const { return fCurrentRow;}
 #endif
-    };
+   };
 
 #ifndef __CINT__
-    //  pointer iterator
-    // This create an iterator to iterate over all table column of the
-    // type provided.
-    // For example" piterator(table,kPtr) is to iterate over
-    // all cells of (TTableMap *) type
+   //  pointer iterator
+   // This create an iterator to iterate over all table column of the
+   // type provided.
+   // For example" piterator(table,kPtr) is to iterate over
+   // all cells of (TTableMap *) type
 
-    class piterator {
+   class piterator {
       private:
-        std::vector<ULong_t>  fPtrs;
-        UInt_t                fCurrentRowIndex;
-        UInt_t                fCurrentColIndex;
-        UInt_t                fRowSize;
-        const Char_t         *fCurrentRowPtr;
-        void                **fCurrentColPtr;
+         std::vector<ULong_t>  fPtrs;
+         UInt_t                fCurrentRowIndex;
+         UInt_t                fCurrentColIndex;
+         UInt_t                fRowSize;
+         const Char_t         *fCurrentRowPtr;
+         void                **fCurrentColPtr;
 
       protected:
-        void **column() {return  fCurrentColPtr = (void **)(fCurrentRowPtr + fPtrs[fCurrentColIndex]);}
+         void **column() {return  fCurrentColPtr = (void **)(fCurrentRowPtr + fPtrs[fCurrentColIndex]);}
 
       public:
-        piterator(const TTable *t=0,EColumnType type=kPtr);
-        piterator(const piterator& iter);
-        void operator=(const piterator& iter);
+         piterator(const TTable *t=0,EColumnType type=kPtr);
+         piterator(const piterator& iter);
+         void operator=(const piterator& iter);
 
-        void operator++();
-        void operator++(int);
-        void operator--();
-        void operator--(int);
+         void operator++();
+         void operator++(int);
+         void operator--();
+         void operator--(int);
 
 //        operator const char *() const;
-        void **operator *();
+         void **operator *();
 
-        Bool_t operator==(const piterator &t) const;
-        Bool_t operator!=(const piterator &t) const;
+         Bool_t operator==(const piterator &t) const;
+         Bool_t operator!=(const piterator &t) const;
 
-        UInt_t Row()    const;
-        UInt_t Column() const;
+         UInt_t Row()    const;
+         UInt_t Column() const;
 
-        void  MakeEnd(UInt_t lastRowIndex);
-    }; // class iterator over pointers
+         void  MakeEnd(UInt_t lastRowIndex);
+   }; // class iterator over pointers
 
-    piterator pbegin(){ return piterator(this); }
-    piterator pend(){ piterator pLast(this); pLast.MakeEnd(GetNRows()); return pLast; }
+   piterator pbegin(){ return piterator(this); }
+   piterator pend(){ piterator pLast(this); pLast.MakeEnd(GetNRows()); return pLast; }
 #endif
    static const char *TableDictionary() { return 0; };
    ClassDef(TTable,4)  // vector of the C structures

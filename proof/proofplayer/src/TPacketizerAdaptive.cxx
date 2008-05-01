@@ -466,7 +466,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       SysInfo_t si;
       gSystem->GetSysInfo(&si);
       fgMaxSlaveCnt =  (si.fCpus > 2) ? si.fCpus : 2;
-    }
+   }
 
    // if forceLocal parameter is set to 1 then eliminate the cross-worker
    // processing;

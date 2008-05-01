@@ -110,7 +110,7 @@ public:
    virtual Int_t            ScanDataSet(const char *uri, UInt_t /*option*/ = 0);
    virtual void             ShowQuota(const char *opt);
 
-   ClassDef(TProofDataSetManager, 0)
+   ClassDef(TProofDataSetManager, 0)  // Abstract data set manager class
 };
 
 #endif

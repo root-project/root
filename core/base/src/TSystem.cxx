@@ -2143,7 +2143,7 @@ void AssignAndDelete(TString& target, char *tobedeleted) {
 
 #ifdef WIN32
 
-static TString R__Exec(const char *cmd) 
+static TString R__Exec(const char *cmd)
 {
    // Execute a command and return the stdout in a string.
 
@@ -2158,7 +2158,7 @@ static TString R__Exec(const char *cmd)
       if (x=='\n' || x=='\r') break;
       result += x;
    }
-   
+
    fclose(f);
    return result;
 }
@@ -2170,10 +2170,10 @@ static void R__FixLink(TString &cmd)
 
    TString res = R__Exec("which cl.exe 2>&1|grep cl|sed 's,cl\\.exe$,link\\.exe,' 2>&1");
    if (res.Length()) {
-        res = R__Exec(Form("cygpath -w '%s' 2>&1",res.Data()));
-        if (res.Length()) {
-           cmd.ReplaceAll(" link ",Form(" \"%s\" ",res.Data())); 
-        }
+      res = R__Exec(Form("cygpath -w '%s' 2>&1",res.Data()));
+      if (res.Length()) {
+         cmd.ReplaceAll(" link ",Form(" \"%s\" ",res.Data()));
+      }
    }
 }
 #endif

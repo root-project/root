@@ -264,10 +264,10 @@ Bool_t TProofDataSetManagerFile::BrowseDataSets(const char *group,
                datasetMap->Add(new TObjString(datasetName), fileList);
          }
       }
-  }
-  gSystem->FreeDirectory(userDir);
+   }
+   gSystem->FreeDirectory(userDir);
 
-  return kTRUE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________

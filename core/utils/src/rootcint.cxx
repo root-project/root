@@ -516,21 +516,21 @@ string R__tmpnam()
    static bool initialized = false;
    static list<R__tmpnamElement> tmpnamList;
 
-   
+
    if (!initialized) {
 #if R__USE_MKSTEMP
       // Unlike tmpnam mkstemp does not prepend anything
-      // to its result but must get the pattern as a 
+      // to its result but must get the pattern as a
       // full pathname.
       tmpdir = std::string(P_tmpdir) + "/";
 #endif
- 
+
       if (strlen(P_tmpdir) <= 2) {
          // tmpnam (see man page) prepends the value of the
          // P_tmpdir (defined in stdio.h) to its result.
          // If P_tmpdir is less that 2 character it is likely to
-         // just be '/' or '\\' and we do not want to write in 
-         // the root directory, so let's add the temp directory. 
+         // just be '/' or '\\' and we do not want to write in
+         // the root directory, so let's add the temp directory.
          char *tmp;
          if ((tmp = getenv("CINTTMPDIR"))) tmpdir = tmp;
          else if ((tmp=getenv("TEMP")))    tmpdir = tmp;
@@ -1667,7 +1667,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
                      << "      ((" << classname.c_str() << "*)p)->DirectoryAutoAdd(dir);" << std::endl
                      << "   }" << std::endl;
    }
-     
+
 
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
 }
@@ -2290,7 +2290,7 @@ void WriteClassInit(G__ClassInfo &cl)
    if (HasDirectoryAutoAdd(cl)) {
       (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *p, TDirectory *dir);" << std::endl;
    }
-      
+
    (*dictSrcOut) << std::endl
 
                  << "   // Function generating the singleton type initializer" << std::endl;
@@ -2357,8 +2357,8 @@ void WriteClassInit(G__ClassInfo &cl)
       delete [] proto;
 
       if (methodinfo.IsValid() &&
-          //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
-          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
+         //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
+         strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
 
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
@@ -3798,7 +3798,7 @@ const char *CopyArg(const char *original)
          {
             return slash+5;
          }
-      }   
+      }
       return original;
    }
 #else
@@ -4313,7 +4313,7 @@ int main(int argc, char **argv)
                ++ic;
                argvv[argcc++] = (char*)"-.";
                dicttype = atoi(argv[ic]);
-               argvv[argcc++] = argv[ic]; 
+               argvv[argcc++] = argv[ic];
                ++ic;
                continue;
             }
@@ -4323,7 +4323,7 @@ int main(int argc, char **argv)
             // the easiest way is to get it as a parameter
             if (!strcmp(argv[ic], "-L") ||  !strcmp(argv[ic], "--symbols-file")) {
                ++ic;
-               
+
                FILE *fpsym = fopen(argv[ic],"r");
                if (fpsym) // File exists
                   fclose(fpsym);
@@ -4333,7 +4333,7 @@ int main(int argc, char **argv)
                }
 
                argvv[argcc++] = (char*)"-L";
-               argvv[argcc++] = argv[ic]; 
+               argvv[argcc++] = argv[ic];
                ++ic;
                continue;
             }
@@ -4473,7 +4473,7 @@ int main(int argc, char **argv)
          ++ic;
          argvv[argcc++] = (char*)"-.";
          dicttype = atoi(argv[ic]);
-         argvv[argcc++] = argv[ic]; 
+         argvv[argcc++] = argv[ic];
          ++ic;
       }
 
@@ -4492,7 +4492,7 @@ int main(int argc, char **argv)
 
          ++ic;
          argvv[argcc++] = (char*)"-L";
-         argvv[argcc++] = argv[ic]; 
+         argvv[argcc++] = argv[ic];
          ++ic;
       }
    }
@@ -4517,17 +4517,17 @@ int main(int argc, char **argv)
          const char *basen = basename(header_c);
          string headerb(basen);
          string::size_type idx = headerb.rfind("Tmp");
-         
+
          int l;
          if(idx != string::npos) {
             l = idx;
-            headerb[l] = '\0';   
+            headerb[l] = '\0';
          }
          else{
             idx = headerb.rfind(".");
             if(idx != string::npos) {
                l = idx;
-               headerb[l] = '\0';   
+               headerb[l] = '\0';
             }
          }
 
@@ -4611,7 +4611,7 @@ int main(int argc, char **argv)
 
       argvv[argcc++] = autold;
    }
-   
+
 #ifdef G__NOSTUBS
    if(insertedBundle) G__setisfilebundled(1);
 #endif
@@ -4766,7 +4766,7 @@ int main(int argc, char **argv)
       (*dictSrcOut) << std::endl;
    }
 
-   //    if(dicttype==3){ 
+   //    if(dicttype==3){
    //      G__ClassInfo cl;
    //      cl.Init();
    //      bool has_input_error = false;
@@ -4794,7 +4794,7 @@ int main(int argc, char **argv)
    //        // We could add an option -k to keep the file even in case of error.
    //        CleanupOnExit(1);
    //        exit(1);
-   //      }     
+   //      }
    //    }
 
    G__ClassInfo cl;
@@ -4836,9 +4836,9 @@ int main(int argc, char **argv)
    }
 
    // 26-07-07
-   // dont generate the showmembers if we only want 
+   // dont generate the showmembers if we only want
    // all the memfunc_setup stuff (stub-less calls)
-   if(dicttype==0 || dicttype==1) {   
+   if(dicttype==0 || dicttype==1) {
       //
       // We will loop over all the classes several times.
       // In order we will call
@@ -5114,7 +5114,7 @@ int main(int argc, char **argv)
 
       if (!il) remove(autold);
       if (use_preprocessor) remove(bundlename.c_str());
-   
+
    } // (stub-less calls)
 
    // Append CINT dictionary to file containing Streamers and ShowMembers
@@ -5139,7 +5139,7 @@ int main(int argc, char **argv)
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
          int  nl = 0;
          char inclf[kMaxLen];
-         
+
          // 07-11-07
          // Include the temporaries here to get one file with everything
          char inclfTmp1[kMaxLen];
@@ -5156,7 +5156,7 @@ int main(int argc, char **argv)
             if (!strncmp(line, "#include", 8) && strstr(line, inclf))
                continue;
             fprintf(fpd, "%s", line);
-            
+
 
             // 'linesToSkip' is because we want to put it after #defined private/protected
             if (++nl == linesToSkip && icc) {
