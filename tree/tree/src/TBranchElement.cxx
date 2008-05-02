@@ -2040,6 +2040,7 @@ void TBranchElement::InitializeOffsets()
             fInitOffsets = kTRUE;
             return;
          }
+
          localOffset = subBranchElement->GetOffset();
 
          {
@@ -2047,6 +2048,11 @@ void TBranchElement::InitializeOffsets()
             if (streamerType > TStreamerInfo::kObject && aSubBranch->GetListOfBranches()->GetEntries()==0) {
                aSubBranch->SetBit(kBranchAny);
             }
+         }
+
+         if (subBranchElement->GetNewType()<0) {
+            subBranch->ResetBit(kBranchAny);
+            subBranch->ResetBit(kBranchObject);
          }
 
          // Note: This call is expensive, do it only once.
