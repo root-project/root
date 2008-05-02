@@ -51,8 +51,12 @@ void TDOMParser::ReleaseUnderlying()
 {
    // Release any existing document.
 
-   if (fTXMLDoc)
+   if (fTXMLDoc) {
       delete fTXMLDoc;
+      fTXMLDoc = 0;
+   }
+
+   SetParseCode(0);
 
    TXMLParser::ReleaseUnderlying();
 }
@@ -69,8 +73,10 @@ Int_t TDOMParser::ParseFile(const char *filename)
 
    fContext = xmlCreateFileParserCtxt(filename);
 
-   if (!fContext)
+   if (!fContext) {
+      SetParseCode(-2);
       return -2;
+   }
 
    InitializeContext();
 
@@ -91,8 +97,10 @@ Int_t TDOMParser::ParseBuffer(const char *buffer, Int_t len)
 
    fContext = xmlCreateMemoryParserCtxt(buffer, len);
 
-   if (!fContext)
+   if (!fContext) {
+      SetParseCode(-2);
       return -2;
+   }
 
    InitializeContext();
 
@@ -103,16 +111,27 @@ Int_t TDOMParser::ParseBuffer(const char *buffer, Int_t len)
 Int_t TDOMParser::ParseContext()
 {
    // Creates a XML document for the parser.
-   // It returns 0 on success, -1 if no XML document was created and
-   // -5 if the document is not well formated.
+   // It returns 0 on success, and
+   // -1 if no XML document was created,
+   // -5 if the document is not well formated,
+   // -6 if document is not valid.
 
    xmlParseDocument(fContext);
 
-   if (!fContext->myDoc)
+   if (!fContext->myDoc) {
+      SetParseCode(-1);
       return -1;
+   }
 
-   if (!fContext->wellFormed)
+   if (!fContext->wellFormed) {
+      SetParseCode(-5);
       return -5;
+   }
+
+   if (!fContext->valid) {
+      SetParseCode(-6);
+      return -6;
+   }
 
    fTXMLDoc = new TXMLDocument(fContext->myDoc);
 

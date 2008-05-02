@@ -38,11 +38,10 @@
 class TDOMParser : public TXMLParser {
 
 private:
-   TDOMParser(const TDOMParser&);            // Not implemented
-   TDOMParser& operator=(const TDOMParser&); // Not implemented
-
    TXMLDocument *fTXMLDoc;      // xmlDoc
 
+   TDOMParser(const TDOMParser&);            // Not implemented
+   TDOMParser& operator=(const TDOMParser&); // Not implemented
    Int_t ParseContext();
 
 public:

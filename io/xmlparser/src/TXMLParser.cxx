@@ -125,8 +125,11 @@ const char *TXMLParser::GetParseCodeMessage(Int_t parseCode) const
       case -5:
          return "Document is not well-formed";
          break;
+      case -6:
+         return "Document is not valid";
+         break;
       default:
-         return "Parse code not exists";
+         return "Parse code does not exist";
    }
 }
 
