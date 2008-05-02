@@ -319,7 +319,7 @@ void Cint::G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::strin
       G__ClassInfo space = cl.EnclosingClass();
       if (!space.IsValid())
          space = cl.EnclosingSpace();
-      if (space.IsValid())
+      if (space.IsValid() && strlen(space.Name())>0)
          GetFullShadowNameRecurse(space, fullname);
       else {
          fullname = "::";
