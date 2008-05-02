@@ -1,7 +1,51 @@
 
 <br>
 <hr>
-<h3>Pyroot</h3>
+<h3>PyROOT</h3>
+<P>
+This release contains two big new features: the ability to use PROOF with
+python, and the ability to pickle (python serialize) ROOT objects.
+Pickling of ROOT objects is straightforward: just hand them to pickle (or
+cPickle) like any other python object.
+To use PROOF with python, derive your custom class from TPySelector, override
+the methods that you want to specialize, and put it in a file that is shipped
+to the worker nodes, e.g.:
+</P>
+<PRE>
+from ROOT import TPySelector
+
+class MyPySelector( TPySelector ):
+   def Begin( self ):
+      print 'py: beginning'
+
+   def SlaveBegin( self, tree ):
+      print 'py: slave beginning'
+
+   def Process( self, entry ):
+      self.fChain.GetEntry( entry )
+      print 'py: processing', self.fChain.ipi
+      return 1
+
+   def SlaveTerminate( self ):
+      print 'py: slave terminating'
+
+   def Terminate( self ):
+      print 'py: terminating'
+</PRE>
+<P>
+The file containing the class (e.g. mymodule.py) will be treated as a
+python module and should be loadable through PYTHONPATH (typically '.') at
+the worker node.
+Setup PROOF as normal, and call:
+</P>
+<PRE>
+dataset.Process( 'TPySelector', 'mymodule' )
+</PRE>
+<P>
+PROOF will instantiate a TPySelector instance, which will in turn pick up
+the python class from module 'mymodule' and forward all calls.
+</P>
+
 <P>
 There are several improvements in language mappings, as well as cleanup of
 the code for python2.2 (Py_ssize_t handling) and MacOS 10.3. Additionally,
@@ -11,6 +55,7 @@ fully transparent to the end-user.
 
 <P>
 The language mapping improvements are:
+</P>
 
 <UL>
  <LI>Abstract classes can no longer be instantiated (__init__ will raise an exception)</LI>
@@ -22,4 +67,12 @@ The language mapping improvements are:
  <LI>Implemented __setitem__ for unsigned int& and unsigned long& returns</LI>
 </UL>
 
+<P>
+The python presentation of ROOT objects (ObjectProxy) as well as the
+meta-class hierarchy have undergone an internal change where individual
+ObjectProxy's no longer carry a TClassRef.
+Instead, this has moved to the python class level.
+Although there is now an extra layer of indirection to retrieve the
+class, the code is actually faster due to lower memory usage and lower
+memory turnover.
 </P>
