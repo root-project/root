@@ -744,7 +744,9 @@ extern "C" int G__defined_tagname(const char *tagname, int noerror)
          return -1;
       }
       // CAUTION: tagname may be modified in following function.
+      char store_var_type = G__var_type;
       i = G__instantiate_templateclass((char*) tagname, noerror);
+      G__var_type = store_var_type;
       return i;
    }
    else if (noerror < 2) {
