@@ -663,18 +663,16 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       }
    }
    else {
+      if (numstar && (islower(G__var_type))) {
+         G__var_type = toupper(G__var_type);
+         --numstar;
+      }
       if (numstar) {
-         if (islower(G__var_type)) {
-            G__var_type = toupper(G__var_type);
+         if (G__reftype == G__PARANORMAL) {
+            G__reftype = G__PARAP2P;
+            --numstar;
          }
-         else {
-            if (G__reftype == G__PARANORMAL) {
-                  G__reftype = G__PARAP2P;
-            }
-            else {
-                  G__reftype += 1;
-            }
-         }
+         G__reftype += numstar;
       }
       if (G__tagnum && !G__tagnum.IsNamespace()) {
          // -- The return type is either a class, enum, struct, or union.
