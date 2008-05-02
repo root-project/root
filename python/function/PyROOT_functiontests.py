@@ -112,7 +112,7 @@ class Func2FitFunctionTestCase( unittest.TestCase ):
       f = TF1( 'pygaus', pygaus, -4, 4, 4 )
       f.SetParameters( 600, 0.43, 0.35, 600 )
 
-      h = TH1F( "h"," test", 100, -4, 4 )
+      h = TH1F( "h", "test", 100, -4, 4 )
       h.FillRandom( "gaus", 200000 )
       h.Fit( f, "0Q" )
 

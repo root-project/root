@@ -2,13 +2,14 @@
   File: roottest/python/ttree/TTreeTypes.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 11/17/06
-  Last: 11/21/06
+  Last: 04/22/08
 */
 
 #include <vector>
 
 
 #ifdef __MAKECINT__
+using namespace std;
 #pragma link C++ class vector< vector< float > >;
 #pragma link C++ class vector< vector< float > >::iterator;
 #pragma link C++ class vector< vector< float > >::const_iterator;

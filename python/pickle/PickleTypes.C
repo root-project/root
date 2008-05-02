@@ -2,7 +2,7 @@
   File: roottest/python/pickle/PickleTypes.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 04/16/08
-  Last: 04/16/08
+  Last: 04/22/08
 
   Note: these started off as the same types as ../ttree/TTreeTypes.C
 */
@@ -11,6 +11,7 @@
 
 
 #ifdef __MAKECINT__
+using namespace std;
 #pragma link C++ class vector< vector< float > >;
 #pragma link C++ class vector< vector< float > >::iterator;
 #pragma link C++ class vector< vector< float > >::const_iterator;

@@ -38,7 +38,7 @@ class PickleReadingSimpleObjectsTestCase( unittest.TestCase ):
       h1 = pickle.load( self.in1 )
       __doh1test( self, h1 )
 
-      h1 = pickle.load( self.in2 )
+      h1 = cPickle.load( self.in2 )
       __doh1test( self, h1 )
 
    def test2ReadNonTObjectDerived( self ):

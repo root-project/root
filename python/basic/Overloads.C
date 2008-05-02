@@ -2,10 +2,9 @@
   File: roottest/python/basic/Overloads.C
   Author: WLavrijsen@lbl.gov
   Created: 04/15/05
-  Last: 01/03/08
+  Last: 05/02/08
 */
 
-#include "TError.h"
 #include <string>
 
 class MyA {
