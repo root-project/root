@@ -1385,7 +1385,7 @@ fi
 # Mandatory test, must succeed
 # Check for X11 and Xpm library (for X11 use always shared lib)
 #
-if test ! "$platform" = "win32"; then
+if test ! "x$platform" = "xwin32"; then
     check_library "libX11" "yes" "$x11libdir" \
         /usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
         /usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
@@ -1447,7 +1447,7 @@ fi
 #
 ### echo %%%Xft support (X11 antialiased fonts)
 #
-if test "$platform" = "win32"; then
+if test "x$platform" = "xwin32"; then
    enable_xft="no"
 fi
 hasxft="undef"
@@ -1532,7 +1532,7 @@ hpuxia64acc)
     ;;
 esac
 if test "x$enable_thread" = "xyes" && \
-   test ! "$platform" = "win32"    && \
+   test ! "x$platform" = "xwin32"  && \
    test "x$threadlib" = "x" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
 	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
@@ -1548,7 +1548,7 @@ fi
 
 haspthread="undef"
 if test "x$enable_thread" = "xyes" && \
-   test ! "$platform" = "win32"; then
+   test ! "x$platform" = "xwin32"; then
    haspthread="define"
 fi
 
@@ -1698,7 +1698,7 @@ result "$enable_builtin_zlib"
 #
 # (see mesa3d.org)
 #
-if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
+if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
     # Check for OpenGL compatible include and library
     check_header "GL/gl.h" "$openglincdir" $OPENGL $OPENGL/include \
 	/usr/include /usr/include/X11 /usr/X11/include \
@@ -1749,7 +1749,7 @@ check_explicit "$enable_opengl" "$enable_opengl_explicit" \
 #
 # On win32 we always have OpenGL available (is this true?)
 #
-if test "$platform" = "win32"; then
+if test "x$platform" = "xwin32"; then
    enable_opengl="yes"
    openglincdir="include"
 fi
@@ -2920,6 +2920,10 @@ check_explicit "$enable_ruby" "$enable_ruby_explicit" \
 #
 if test ! "x$enable_xml" = "xno" ; then
     # Check for xml include and library
+    if test "x$platform" = "xmacosx"; then
+        # prefer native libxml2 over the one in Fink (/sw)
+        PATH=/usr/bin:$PATH
+    fi
     checking_msg "xml2-config"
     xml2_config=`$cwhich xml2-config 2> /dev/null`
     if test ! "x$xml2_config" = "x" && test -x "$xml2_config" && \
@@ -4396,7 +4400,7 @@ freebsd*|openbsd|aix*|win32*)
     enable_explicitlink="yes"
     ;;
 esac
-if test "x$enable_explicitlink" = "xyes" && test ! "$platform" = "win32" ; then
+if test "x$enable_explicitlink" = "xyes" && test ! "x$platform" = "xwin32"; then
     mkliboption=$mkliboption"-x "
 fi
 
@@ -4467,7 +4471,7 @@ rm -f asimage/src/headers.d asimage/src/G__ASImageGS.*
 #
 # First win32 does not support -L in ldflags, so remove @ldflags@.
 #
-if test "$platform" = "win32" ; then
+if test "x$platform" = "xwin32" ; then
     sed -e "s|@ldflags@||"        \
         < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
@@ -5006,7 +5010,7 @@ result "done"
 # etc/root.mimes
 #
 message "Writing $MIMEOUT"
-if test "$platform" = "win32" ; then
+if test "x$platform" = "xwin32" ; then
    cp -f $MIMEWIN32IN $MIMEOUT
 else
    cp -f $MIMEUNIXIN $MIMEOUT
@@ -5129,7 +5133,7 @@ sed -e "s|@bindir@|$bindir2|"           \
     -e "s|@mandir@|$mandir2|"           \
     < $THISROOTCSHIN > $THISROOTCSHOUT
 result "done"
-if test "$platform" = "win32"; then
+if test "x$platform" = "xwin32"; then
     message "Writing $THISROOTBATOUT"
     cp -f $THISROOTBATIN $THISROOTBATOUT
     result "done"
@@ -5162,7 +5166,7 @@ if test "x$enable_reflex" = "xyes"; then
     chmod a+x $GENREFLEXSHOUT
     result "done"
 
-    if test "$platform" = "win32"; then
+    if test "x$platform" = "xwin32"; then
         message "Writing $GENREFLEXBATOUT"
         if test "$prefix" = "\$(ROOTSYS)" ; then
             libdirreflex='%~d0%~p0\\..\\lib'
@@ -5184,7 +5188,7 @@ if test "x$enable_reflex" = "xyes"; then
     chmod a+x $GENREFLEXROOTCINTSHOUT
     result "done"
 
-    if test "$platform" = "win32"; then
+    if test "x$platform" = "xwin32"; then
         message "Writing $GENREFLEXROOTCINTBATOUT"
         if test "$prefix" = "\$(ROOTSYS)" ; then
             libdirreflex='%~d0%~p0\\..\\lib'
