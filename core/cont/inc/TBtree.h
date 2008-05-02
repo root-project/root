@@ -74,7 +74,6 @@ public:
 
    TBtree(Int_t ordern = 3);  //create a TBtree of order n
    virtual     ~TBtree();
-#ifndef __CINT__
    void        Clear(Option_t *option="");
    void        Delete(Option_t *option="");
    TObject    *FindObject(const char *name) const;
@@ -101,7 +100,7 @@ public:
    Int_t       Order() { return fOrder; }
    TObject    *operator[](Int_t i) const;
    Int_t       Rank(const TObject *obj) const;
-#endif
+
    ClassDef(TBtree,0)  //A B-tree
 };
 
