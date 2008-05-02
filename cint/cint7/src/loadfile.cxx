@@ -2045,7 +2045,10 @@ extern "C" int G__loadfile(const char *filenamein)
       G__UnlockCriticalSection();
       return(G__LOADFILE_FAILURE);
     }
-    while (!G__eof && G__return<G__RETURN_EXIT1) G__exec_statement(&brace_level);
+    while (!G__eof && G__return<G__RETURN_EXIT1) {
+       int brace_level = 0;       
+       G__exec_statement(&brace_level);
+    }
   }
 #endif  /* of G__SHAREDLIB */
 
