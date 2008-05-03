@@ -415,11 +415,11 @@ void TMVA::MethodSVM::ReadWeightsFromStream( TFile& fFin )
    Int_t nvar = suppVecTree->GetNbranches(); 
   
    Float_t *var = new Float_t[nvar];
-   Int_t i = 0; 
 
+   Int_t iv = 0; 
    TIter next_branch1( suppVecTree->GetListOfBranches() );
    while (TBranch *branch = (TBranch*)next_branch1())
-      suppVecTree->SetBranchAddress( branch->GetName(), &var[i++]);
+      suppVecTree->SetBranchAddress( branch->GetName(), &var[iv++]);
    
    TVectorD *alphaVec = (TVectorD*)fFin.Get( "AlphasVector" );
 

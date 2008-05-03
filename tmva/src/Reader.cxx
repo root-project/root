@@ -558,11 +558,11 @@ void TMVA::Reader::GetMethodNameTitle(const TString& weightfile, TString& method
    // read the method name
    fin.getline(buf,512);
    while (!TString(buf).BeginsWith("Method")) fin.getline(buf,512);
-   TString ls(buf);
-   Int_t idx1 = ls.First(':')+2; Int_t idx2 = ls.Index(' ',idx1)-idx1; if (idx2<0) idx2=ls.Length();
+   TString lstr(buf);
+   Int_t idx1 = lstr.First(':')+2; Int_t idx2 = lstr.Index(' ',idx1)-idx1; if (idx2<0) idx2=lstr.Length();
    fin.close();  
 
-   TString fullname = ls(idx1,idx2);
+   TString fullname = lstr(idx1,idx2);
    idx1 = fullname.First(':');
    Int_t idxtit = (idx1<0 ? fullname.Length() : idx1);
    methodName  = fullname(0, idxtit);

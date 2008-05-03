@@ -504,32 +504,20 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
    }
    fLogger << kVERBOSE << "debug: my test: S/B: " << iS << "  " << iB << Endl;
    fLogger << kVERBOSE << "debug: binTree: S/B: " << countS << "  " << countB << Endl << Endl;
+
 #endif
 
    // -------------------------------------------------------------------------
 
    if (fVRangeMode == kRMS || fVRangeMode == kMinMax || fVRangeMode == kUnscaled ) { // Constant volume
-      std::vector<Double_t> *lb = new std::vector<Double_t>( GetNvar() );
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
-      std::vector<Double_t> *ub = new std::vector<Double_t>( *lb );
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         (*lb)[ivar] -= (*fDelta)[ivar]*(1.0 - (*fShift)[ivar]);
-         (*ub)[ivar] += (*fDelta)[ivar]*(*fShift)[ivar];
-      }
-      Volume* volume = new Volume( lb, ub );
-      // starting values
-      Volume v( *volume );
-      
+
       std::vector<const BinarySearchTreeNode*> eventsS;
       std::vector<const BinarySearchTreeNode*> eventsB;
-      fBinaryTreeS->SearchVolume( &v, &eventsS );
-      fBinaryTreeB->SearchVolume( &v, &eventsB );
-      countS = KernelEstimate( e, eventsS, v );
-      countB = KernelEstimate( e, eventsB, v );
-      
-      delete volume;
-      delete lb;
-      delete ub;
+      fBinaryTreeS->SearchVolume( volume, &eventsS );
+      fBinaryTreeB->SearchVolume( volume, &eventsB );
+      countS = KernelEstimate( e, eventsS, *volume );
+      countB = KernelEstimate( e, eventsB, *volume );
+
    }
    else if (fVRangeMode == kAdaptive) {      // adaptive volume
 
@@ -730,6 +718,8 @@ Float_t TMVA::MethodPDERS::RScalc( const Event& e )
    // -----------------------------------------------------------------------
 
    delete volume;
+   delete lb;
+   delete ub;
 
    if (countS < 1e-20 && countB < 1e-20) return 0.5;
    if (countB < 1e-20) return 1.0;

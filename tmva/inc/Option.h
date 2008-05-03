@@ -303,18 +303,17 @@ namespace TMVA {
 
    //______________________________________________________________________
    template<class T>
-   inline Bool_t TMVA::Option<T*>::SetValue( const TString& val, Int_t i ) 
+   inline Bool_t TMVA::Option<T*>::SetValue( const TString& val, Int_t ind ) 
    {
       // template 
-      if (i>=fSize) return kFALSE;
+      if (ind >= fSize) return kFALSE;
       std::stringstream str(val.Data());
-      if (i<0) {
+      if (ind < 0) {
          str >> Value(0);
-         for (Int_t i=1; i<fSize; i++)
-            Value(i) = Value(0);      
+         for (Int_t i=1; i<fSize; i++) Value(i) = Value(0);      
       } 
       else {
-         str >> Value(i);
+         str >> Value(ind);
       }
       return kTRUE;
    }

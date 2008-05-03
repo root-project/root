@@ -198,8 +198,8 @@ void TMVA::Factory::CreateEventAssignTrees( TTree*& fAssignTree, const TString& 
    std::vector<VariableInfo>& vars = Data().GetVariableInfos();
    if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()];
    for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
-      TString name = vars[ivar].GetExpression();
-      fAssignTree->Branch( name, &(fATreeEvent[ivar]), name + "/F" );
+      TString vname = vars[ivar].GetExpression();
+      fAssignTree->Branch( vname, &(fATreeEvent[ivar]), vname + "/F" );
    }
 }
 
@@ -551,14 +551,18 @@ void TMVA::Factory::AddBackgroundTree( TTree* background, Double_t weight, const
 
    // sanity check that we are now using tree assignment as opposed to event assignment
    VerifyDataAssignType( kAssignTrees );
-
+   
    // number of background events (used to compute significance)
    Types::ETreeType tt = Types::kMaxTreeType;
-   if(treetype=="train") {
-      tt = Types::kTraining;
-   } else if(treetype=="test") {
-      tt = Types::kTesting;
+   TString tmpTreeType = treetype; tmpTreeType.ToLower();
+   if      (tmpTreeType.Contains( "train" ) && tmpTreeType.Contains( "test" )) tt = Types::kMaxTreeType;
+   else if (tmpTreeType.Contains( "train" ))                                   tt = Types::kTraining;
+   else if (tmpTreeType.Contains( "test" ))                                    tt = Types::kTesting;
+   else {
+      fLogger << kFATAL << "<AddBackgroundTree> cannot interpret tree type: \"" << treetype 
+              << "\" should be \"Training\" or \"Test\" or \"Training and Testing\"" << Endl;
    }
+
    Data().AddBackgroundTree( background, weight, tt );
 }
 

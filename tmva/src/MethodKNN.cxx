@@ -265,7 +265,7 @@ Double_t TMVA::MethodKNN::GetMvaValue()
    // classifier response
 
    const Int_t nvar = GetNvar();
-   const Double_t weight = GetEventWeight();
+   const Double_t evweight = GetEventWeight();
    
    kNN::VarVec vvec(static_cast<UInt_t>(nvar), 0.0);
    
@@ -277,7 +277,7 @@ Double_t TMVA::MethodKNN::GetMvaValue()
 
    // search for fnkNN+1 nearest neighbors
    // most of CPU time is spent in this recursive function
-   fModule->Find(kNN::Event(vvec, weight, 3), knn + 1);
+   fModule->Find(kNN::Event(vvec, evweight, 3), knn + 1);
 
    const kNN::List &rlist = fModule->GetkNNList();
    if (rlist.size() != knn + 1) {

@@ -212,16 +212,15 @@ Bool_t TMVA::SimulatedAnnealing::ShouldGoIn( Double_t currentFit, Double_t local
 void TMVA::SimulatedAnnealing::SetDefaultScale()
 {
    // setting of default scale
-   if      (fKernelTemperature == kSqrt)   fTemperatureScale = 1.0;
+   if      (fKernelTemperature == kSqrt) fTemperatureScale = 1.0;
    else if (fKernelTemperature == kLog)  fTemperatureScale = 1.0;
    else if (fKernelTemperature == kHomo) fTemperatureScale = 1.0;
    else if (fKernelTemperature == kSin)  fTemperatureScale = 20.0;
    else if (fKernelTemperature == kGeo)  fTemperatureScale = 0.99997;
    else if (fKernelTemperature == kDecreasingAdaptive) {
       fTemperatureScale = 1.0;
-      while (
-         TMath::Abs(TMath::Power(fTemperatureScale,fMaxCalls) * fInitialTemperature - fMinTemperature) >
-         TMath::Abs(TMath::Power(fTemperatureScale-0.000001,fMaxCalls) * fInitialTemperature - fMinTemperature)) {
+      while (TMath::Abs(TMath::Power(fTemperatureScale,fMaxCalls) * fInitialTemperature - fMinTemperature) >
+             TMath::Abs(TMath::Power(fTemperatureScale-0.000001,fMaxCalls) * fInitialTemperature - fMinTemperature)) {
          fTemperatureScale -= 0.000001;
       }
    }
@@ -252,7 +251,7 @@ Double_t TMVA::SimulatedAnnealing::GenerateMaxTemperature( std::vector<Double_t>
       x = xOld = GenerateNeighbour(x,t);
       y = yOld = fFitterTarget.EstimatorFunction( xOld );   
       equilibrium = 0;
-      for ( Int_t i=0; (i<30) && (equilibrium<=12); i++ ) {
+      for ( Int_t k=0; (k<30) && (equilibrium<=12); k++ ) {
          xNew = GenerateNeighbour(x,t);
          //"energy"
          yNew = fFitterTarget.EstimatorFunction( xNew );

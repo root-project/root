@@ -428,8 +428,7 @@ void TMVA::MethodBDT::Train( void )
             d->FillQualityMap();
             d->FillQualityGainMap();
             
-            multimap<Double_t, DecisionTreeNode* > qgm = d->GetQualityGainMap();
-            
+            multimap<Double_t, DecisionTreeNode* >& qgm = d->GetQualityGainMap(); 
             multimap<Double_t, DecisionTreeNode* >::iterator it=qgm.begin();
             d->PruneNode(it->second);
             out2 << "************* pruned T " << count << " ****************" <<endl;
@@ -450,19 +449,17 @@ void TMVA::MethodBDT::Train( void )
          Int_t count=1;
          while (d->GetNNodes() > 3) {
             DecisionTreeNode *n = d->GetWeakestLink();
-            multimap<Double_t, DecisionTreeNode* > ls = d->GetLinkStrengthMap();
-            multimap<Double_t, DecisionTreeNode* >::iterator it=ls.begin();
+            multimap<Double_t, DecisionTreeNode* >& lsm = d->GetLinkStrengthMap();
+            multimap<Double_t, DecisionTreeNode* >::iterator it=lsm.begin();
             fLogger << kINFO << "Nodes before " << d->CountNodes() << Endl;
             h->SetBinContent(count++,it->first);
             fLogger << kINFO << "Prune Node sequence: " << n->GetSequence() << ", depth:" << n->GetDepth() << Endl;
             d->PruneNode(n);
             fLogger << kINFO << "Nodes after  " << d->CountNodes() << Endl;
-            for (it=ls.begin();it!=ls.end();it++) cout << it->first << " / ";
+            for (it=lsm.begin();it!=lsm.end();it++) cout << it->first << " / ";
             fLogger << kINFO << Endl;                                      
             out2 << "************* pruned T " << count << " ****************" <<endl;
             d->Print(out2);
-
-
          }
          h->Write();
       }
@@ -483,7 +480,8 @@ void TMVA::MethodBDT::Train( void )
 
          fBoostWeights.push_back( this->Boost(fEventSample, fForest.back(), itree) );
 
-      } else if (!pruneBeforeBoost  && fPruneMethod !=  DecisionTree::kNoPruning) {
+      } 
+      else if (!pruneBeforeBoost  && fPruneMethod !=  DecisionTree::kNoPruning) {
 
          fBoostWeights.push_back( this->Boost(fEventSample, fForest.back(), itree) );
 
@@ -502,12 +500,12 @@ void TMVA::MethodBDT::Train( void )
          nNodesAfterPruningCount += nNodesAfterPruning;
          fNodesAfterPruningVsTree->SetBinContent(itree+1,nNodesAfterPruning);
          alpha->SetBinContent(itree+1,fPruneStrength);
-      } else {
+      } 
+      else {
          if (fUseYesNoLeaf){//remove leaf nodes where both daughter nodes are of same type
             fForest.back()->CleanTree(); 
          }
          fBoostWeights.push_back( this->Boost(fEventSample, fForest.back(), itree) );
-
       }
 
       fITree = itree;
@@ -533,7 +531,7 @@ void TMVA::MethodBDT::Train( void )
 }
 
 //_______________________________________________________________________
-Double_t  TMVA::MethodBDT::PruneTree( DecisionTree *dt, Int_t itree)
+Double_t TMVA::MethodBDT::PruneTree( DecisionTree *dt, Int_t itree)
 {
    // prune a tree adjusting the prunestrength using the "test sample" until
    // the best efficiency on the test sample is obtained. In principle the

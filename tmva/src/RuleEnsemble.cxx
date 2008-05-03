@@ -624,7 +624,7 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
       //
       Int_t type;
       const Double_t w = 1.0/fRuleFit->GetNEveEff();
-      for (UInt_t ie=0; ie<neve; ie++) {
+      for (ie=0; ie<neve; ie++) {
          val  = vardata[v][ie].first;
          ew   = vardata[v][ie].second.first;
          type = vardata[v][ie].second.second;

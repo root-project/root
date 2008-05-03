@@ -92,7 +92,7 @@ void TMVApplication( TString myMethodList = "" )
    //
    // create the Reader object
    //
-   TMVA::Reader *reader = new TMVA::Reader("!Color:!Silent");    
+   TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
 
    // create a set of variables and declare them to the reader
    // - the variable names must corresponds in name and type to 

@@ -95,7 +95,7 @@ void ClassApplication( TString myMethodList = "Fisher" )
          }
          if (bulkname[imva] == "MLP"          ) {
             classReader[imva] = new ReadMLP          ( inputVars );
-            hist[imva] = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -0.25, 1.5 );
+            hist[imva] = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.3, 1.3 );
          }
          if (bulkname[imva] == "BDT"          ) {
             classReader[imva] = new ReadBDT          ( inputVars );

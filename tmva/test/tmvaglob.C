@@ -246,8 +246,9 @@ namespace TMVAGlob {
       }
    }
 
-   TImage * findImage(const char * imageName) { // looks for the image in macropath
-   
+   TImage * findImage(const char * imageName) 
+   { 
+      // looks for the image in macropath
       TString macroPath(gROOT->GetMacroPath()); // look for the image in here
       Ssiz_t curIndex(0);
       TImage *img(0);

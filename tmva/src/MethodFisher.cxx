@@ -329,8 +329,6 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
    Double_t *xval    = new Double_t[nvar];
    memset(sumSig,0,nvar2*sizeof(Double_t));
    memset(sumBgd,0,nvar2*sizeof(Double_t));
-
-   Int_t k=0;
    
    // 'within class' covariance
    for (Int_t ievt=0; ievt<Data().GetNEvtTrain(); ievt++) {
@@ -351,7 +349,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
          }
       }
    }
-   k=0;
+   Int_t k=0;
    for (Int_t x=0; x<nvar; x++) {
       for (Int_t y=0; y<nvar; y++) {
          (*fWith)(x, y) = (sumSig[k] + sumBgd[k])/(fSumOfWeightsS + fSumOfWeightsB);

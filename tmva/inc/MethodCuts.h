@@ -107,7 +107,7 @@ namespace TMVA {
      
       // also overwrite:
       Double_t GetSeparation  ( TH1*, TH1* ) const { return 0; }
-      Double_t GetSeparation  ( PDF* pdfS = 0, PDF* pdfB = 0 ) const { if (pdfS && pdfB) return 0; return 0; }
+      Double_t GetSeparation  ( PDF* = 0, PDF* = 0 ) const { return 0; }
       Double_t GetSignificance( void )       const { return 0; }
       Double_t GetmuTransform ( TTree *)           { return 0; }
       Double_t GetEfficiency  ( TString, TTree *, Double_t& );

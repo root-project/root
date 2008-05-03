@@ -1198,10 +1198,10 @@ void TMVA::DataSet::GetCorrelationMatrix( Bool_t isSignal, TMatrixDBase* mat )
    GetCovarianceMatrix( isSignal, mat );
 
    // now the correlation
-   UInt_t nvar = GetNVariables(), ivar, jvar;
+   UInt_t nvar = GetNVariables();
 
-   for (ivar=0; ivar<nvar; ivar++) {
-      for (jvar=0; jvar<nvar; jvar++) {
+   for (UInt_t ivar=0; ivar<nvar; ivar++) {
+      for (UInt_t jvar=0; jvar<nvar; jvar++) {
          if (ivar != jvar) {
             Double_t d = (*mat)(ivar, ivar)*(*mat)(jvar, jvar);
             if (d > 0) (*mat)(ivar, jvar) /= sqrt(d);

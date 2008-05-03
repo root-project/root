@@ -277,8 +277,8 @@ TMVA::MethodBase::~MethodBase( void )
   if (fSplS)            delete fSplS;
   if (fSplB)            delete fSplB;
   if (fSpleffBvsS)      delete fSpleffBvsS;
-  if(fSplRefS)        delete fSplRefS;
-  if(fSplRefB)        delete fSplRefB;
+  if (fSplRefS)         delete fSplRefS;
+  if (fSplRefB)         delete fSplRefB;
 
 
   // Histograms
@@ -292,15 +292,15 @@ TMVA::MethodBase::~MethodBase( void )
   if (fHistB_highbin)   delete fHistB_highbin;
   if (fHistTrS_plotbin) delete fHistTrS_plotbin;
   if (fHistTrB_plotbin) delete fHistTrB_plotbin;
-  if (fTrainEffS)     delete fTrainEffS;
-  if (fTrainEffB)     delete fTrainEffB;
-  if (fTrainEffBvsS)  delete fTrainEffBvsS;
-  if (fTrainRejBvsS)  delete fTrainRejBvsS;
-  if (fEffS)          delete fEffS;
-  if (fEffB)          delete fEffB;
-  if (fEffBvsS)       delete fEffBvsS;
-  if (fRejBvsS)       delete fRejBvsS;
-  if (finvBeffvsSeff) delete finvBeffvsSeff;
+  if (fTrainEffS)       delete fTrainEffS;
+  if (fTrainEffB)       delete fTrainEffB;
+  if (fTrainEffBvsS)    delete fTrainEffBvsS;
+  if (fTrainRejBvsS)    delete fTrainRejBvsS;
+  if (fEffS)            delete fEffS;
+  if (fEffB)            delete fEffB;
+  if (fEffBvsS)         delete fEffBvsS;
+  if (fRejBvsS)         delete fRejBvsS;
+  if (finvBeffvsSeff)   delete finvBeffvsSeff;
 }
 
 //_______________________________________________________________________
@@ -860,9 +860,9 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    // first read the method name
    GetLine(fin,buf);
    while (!TString(buf).BeginsWith("Method")) GetLine(fin,buf);
-   TString ls(buf);
-   Int_t idx1 = ls.First(':')+2; Int_t idx2 = ls.Index(' ',idx1)-idx1; if (idx2<0) idx2=ls.Length();
-   TString fullname = ls(idx1,idx2);
+   TString lstr(buf);
+   Int_t idx1 = lstr.First(':')+2; Int_t idx2 = lstr.Index(' ',idx1)-idx1; if (idx2<0) idx2=lstr.Length();
+   TString fullname = lstr(idx1,idx2);
    idx1 = fullname.First(':');
    Int_t idxtit = (idx1<0 ? fullname.Length() : idx1);
    TString methodName  = fullname(0, idxtit);

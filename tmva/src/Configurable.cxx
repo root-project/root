@@ -153,9 +153,9 @@ void TMVA::Configurable::ParseOptions( Bool_t verbose )
 
          // deal with array specification
          if (optname.Contains('[')) {
-            TString s = optname(optname.First('[')+1,100);
-            s.Remove(s.First(']'));
-            std::stringstream str(s.Data());
+            TString sp = optname(optname.First('[')+1,100);
+            sp.Remove(sp.First(']'));
+            std::stringstream str(sp.Data());
             str >> idx;                              // save the array index
             optname.Remove(optname.First('['));      // and remove [idx] from the option name
          }

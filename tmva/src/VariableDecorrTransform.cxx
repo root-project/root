@@ -289,17 +289,16 @@ void TMVA::VariableDecorrTransform::MakeFunction( std::ostream& fout, const TStr
 {
    // creates a decorrelation function
    TMatrixD* mat = fDecorrMatrix[0];
-   if (part==1) {
+   if (part == 1) {
       fout << std::endl;
       fout << "   double fSigTF["<<mat->GetNrows()<<"]["<<mat->GetNcols()<<"];" << std::endl;
       fout << "   double fBgdTF["<<mat->GetNrows()<<"]["<<mat->GetNcols()<<"];" << std::endl;
       fout << std::endl;
    }
 
-   if (part==2) {
+   if (part == 2) {
       fout << "inline void " << fcncName << "::InitTransform()" << std::endl;
       fout << "{" << std::endl;
-      TMatrixD* mat = fDecorrMatrix[0];
       for (int i=0; i<mat->GetNrows(); i++) {
          for (int j=0; j<mat->GetNcols(); j++) {
             fout << "   fSigTF["<<i<<"]["<<j<<"] = " << std::setprecision(12) << (*mat)[i][j] << ";" << std::endl;
