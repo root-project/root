@@ -5821,7 +5821,11 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
    //  Initialize the line number and filename and number.
    //
    G__ifile.line_number = p_ifunc->pentry[ifn]->line_number;
-   strcpy(G__ifile.name, G__srcfile[p_ifunc->pentry[ifn]->filenum].filename);
+   if (p_ifunc->pentry[ifn]->filenum>=0) {
+      strcpy(G__ifile.name, G__srcfile[p_ifunc->pentry[ifn]->filenum].filename);
+   } else {
+      strcpy(G__ifile.name, "unknown");
+   }
    G__ifile.filenum = p_ifunc->pentry[ifn]->filenum;
    //
    //  Stop at a breakpoint if necessary.

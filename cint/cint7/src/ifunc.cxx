@@ -5277,8 +5277,12 @@ asm_ifunc_start:   /* loop compilation execution label */
    G__break_exit_func = 0;
    /* store line number and filename*/
    G__ifile.line_number = G__get_funcproperties(ifn)->entry.line_number;
-   strcpy(G__ifile.name, G__srcfile[G__get_funcproperties(ifn)->filenum].filename);
    G__ifile.filenum = G__get_funcproperties(ifn)->entry.filenum;
+   if (G__ifile.filenum>=0) {
+      strcpy(G__ifile.name, G__srcfile[G__ifile.filenum].filename);
+   } else {
+      strcpy(G__ifile.name, "unknown");
+   }
    /* check breakpoint */
    if (0 == G__nobreak && 0 == G__no_exec_compile &&
          G__srcfile[G__ifile.filenum].breakpoint &&
