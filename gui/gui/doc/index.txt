@@ -8,7 +8,7 @@ BEGIN_HTML
     </a></li>
 <li><a href="ftp://root.cern.ch/root/doc/26ROOTandQt.pdf">The Chapter about ROOT/Qt integration in the Users Guide
     </a></li>
-<li><a href="http://root.cern.ch/root/HowtoSignalslot.html">How to use the Signal/Slot communication mechanism
+<li><a href="http://root.cern.ch/root/HowtoSignalSlot.html">How to use the Signal/Slot communication mechanism
       </A></li>
 <li><a href="http://root.cern.ch/root/HowtoGuiBuilder.html">How to use the GUI Builder
       </A></li>
