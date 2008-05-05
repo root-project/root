@@ -122,7 +122,16 @@ Begin_Macro(source)
    }
    return c;
 }
-End_Macro */
+End_Macro
+
+Begin_Html
+Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled. They 
+are meant to be very fast to draw and are always drawn with the same number of
+pixels; therefore <tt>SetMarkerSize</tt> does not apply on them. To have a 
+"scalable dot" a filled circle should be used instead, i.e. the marker style
+number 20. By default (if <tt>SetMarkerStyle</tt> is not specified), the marker 
+style used is 1. That's the most common one to draw scatter plots.
+End_Html */
 
 
 //______________________________________________________________________________
