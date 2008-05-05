@@ -5078,6 +5078,8 @@ int main(int argc, char **argv)
                   if (G__ShadowMaker::IsSTLCont(cl.Name()) == 0 ) {
                      WriteClassInit(cl);
                   }
+               } else if ((cl.Property() & (G__BIT_ISNAMESPACE))) {
+                  WriteNamespaceInit(cl);
                }
             }
             WriteClassCode(cl, force);
