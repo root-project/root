@@ -6506,7 +6506,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    //  Statistical test of compatibility in shape between
    //  THIS histogram and h2, using Kolmogorov test.
    //
-   //     Default: Ignore under- and overflow bins in comparison
+   //     Default: Ignore under- and overflow bins in comparison 
    //
    //     option is a character string to specify options
    //         "U" include Underflows in test  (also for 2-dim)
@@ -6528,6 +6528,8 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    //   The returned function value is the probability of test
    //       (much less than one means NOT compatible)
    //
+   //   If one of the histogram has zero errors, it can be treated as a function in the comparison
+   // 
    //  Code adapted by Rene Brun from original HBOOK routine HDIFF
    //
    //  NOTE1
@@ -6604,7 +6606,12 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    Double_t sum1 = 0, sum2 = 0;
    Double_t ew1, ew2, w1 = 0, w2 = 0;
    Int_t bin;
-   for (bin=1;bin<=ncx1;bin++) {
+   Int_t ifirst = 1;
+   Int_t ilast = ncx1;
+   // integral of all bins (use underflow/overflow if option)
+   if (opt.Contains("U")) ifirst = 0; 
+   if (opt.Contains("O")) ilast = ncx1 +1; 
+   for (bin = ifirst; bin <= ilast; bin++) {
       sum1 += h1->GetBinContent(bin);
       sum2 += h2->GetBinContent(bin);
       ew1   = h1->GetBinError(bin);
@@ -6620,60 +6627,34 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       Error("KolmogorovTest","Histogram2 %s integral is zero\n",h2->GetName());
       return 0;
    }
-   Double_t tsum1 = sum1;
-   Double_t tsum2 = sum2;
-   if (opt.Contains("U")) {
-      tsum1 += h1->GetBinContent(0);
-      tsum2 += h2->GetBinContent(0);
-   }
-   if (opt.Contains("O")) {
-      tsum1 += h1->GetBinContent(ncx1+1);
-      tsum2 += h2->GetBinContent(ncx1+1);
+
+   // calculate the effective entries.  
+   // the case when errors are zero (w1 == 0 or w2 ==0) are equivalent to 
+   // compare to a function. In that case the rescaling is done only on sqrt(esum2) or sqrt(esum1) 
+   Double_t esum1 = 0, esum2 = 0; 
+   if (w1 > 0) 
+      esum1 = sum1 * sum1 / w1; 
+   else 
+      afunc1 = kTRUE;    // use later for calculating z
+   
+   if (w2 > 0) 
+      esum2 = sum2 * sum2 / w2; 
+   else 
+      afunc2 = kTRUE;    // use later for calculating z
+   
+   if (afunc2 && afunc1) { 
+      Error("KolmogorovTest","Errors are zero for both histograms\n");
+      return 0;
    }
 
-   // Check if histograms are weighted.
-   // If number of entries = number of channels, probably histograms were
-   // not filled via Fill(), but via SetBinContent()
-   Double_t ne1 = h1->GetEntries();
-   Double_t ne2 = h2->GetEntries();
-   // look at first histogram
-   Double_t difsum1 = (ne1-tsum1)/tsum1;
-   Double_t esum1 = sum1;
-   if (difsum1 > difprec && Int_t(ne1) != ncx1) {
-      if (opt.Contains("U") || opt.Contains("O")) {
-         Warning("KolmogorovTest","U/O option with weighted events for hist:%s\n",h1->GetName());
-      }
-      if (h1->GetSumw2N() == 0) {
-         Warning("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h1->GetName());
-      } else {
-         esum1 = sum1*sum1/w1;  //number of equivalent entries
-      }
-   }
-   // look at second histogram
-   Double_t difsum2 = (ne2-tsum2)/tsum2;
-   Double_t esum2   = sum2;
-   if (difsum2 > difprec && Int_t(ne2) != ncx1) {
-      if (opt.Contains("U") || opt.Contains("O")) {
-         Warning("KolmogorovTest","U/O option with weighted events for hist:%s\n",h2->GetName());
-      }
-      if (h2->GetSumw2N() == 0) {
-         Warning("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h2->GetName());
-      } else {
-         esum2 = sum2*sum2/w2;  //number of equivalent entries
-      }
-   }
 
-   Double_t s1 = 1/tsum1;
-   Double_t s2 = 1/tsum2;
+   Double_t s1 = 1/sum1;
+   Double_t s2 = 1/sum2;
 
    // Find largest difference for Kolmogorov Test
    Double_t dfmax =0, rsum1 = 0, rsum2 = 0;
 
-   Int_t first = 1;
-   Int_t last  = ncx1;
-   if (opt.Contains("U")) first = 0;
-   if (opt.Contains("O")) last  = ncx1+1;
-   for (bin=first;bin<=last;bin++) {
+   for (bin=ifirst;bin<=ilast;bin++) {
       rsum1 += s1*h1->GetBinContent(bin);
       rsum2 += s2*h2->GetBinContent(bin);
       dfmax = TMath::Max(dfmax,TMath::Abs(rsum1-rsum2));
@@ -6681,19 +6662,25 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    // Get Kolmogorov probability
    Double_t z, prb1=0, prb2=0, prb3=0;
-   if (afunc1)      z = dfmax*TMath::Sqrt(esum2);
-   else if (afunc2) z = dfmax*TMath::Sqrt(esum1);
-   else             z = dfmax*TMath::Sqrt(esum1*esum2/(esum1+esum2));
+
+   // case h1 is exact (has zero errors)
+  if  (afunc1)  
+      z = dfmax*TMath::Sqrt(esum2);
+  // case h2 has zero errors
+  else if (afunc2) 
+      z = dfmax*TMath::Sqrt(esum1);
+  else 
+     // for comparison between two data sets 
+     z = dfmax*TMath::Sqrt(esum1*esum2/(esum1+esum2));
 
    prob = TMath::KolmogorovProb(z);
 
-   if (opt.Contains("N")) {
+   // option N to combine normalization makes sense if both afunc1 and afunc2 are false
+   if (opt.Contains("N") && !(afunc1 || afunc2 ) ) {
       // Combine probabilities for shape and normalization,
       prb1 = prob;
-      Double_t resum1 = esum1;  if (afunc1) resum1 = 0;
-      Double_t resum2 = esum2;  if (afunc2) resum2 = 0;
       Double_t d12    = esum1-esum2;
-      Double_t chi2   = d12*d12/(resum1+resum2);
+      Double_t chi2   = d12*d12/(esum1+esum2);
       prb2 = TMath::Prob(chi2,1);
       // see Eadie et al., section 11.6.2
       if (prob > 0 && prb2 > 0) prob *= prb2*(1-TMath::Log(prob*prb2));
@@ -6701,14 +6688,14 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    }
    // X option. Pseudo-experiments post-processor to determine KS probability
    const Int_t nEXPT = 1000;
-   if (opt.Contains("X")) { 
+   if (opt.Contains("X") && !(afunc1 || afunc2 ) ) { 
       Double_t dSEXPT;
       TH1 *hExpt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
       // make nEXPT experiments (this should be a parameter)
       prb3 = 0;
       for (Int_t i=0; i < nEXPT; i++) {
          hExpt->Reset();
-         hExpt->FillRandom(h1,(Int_t)ne2);
+         hExpt->FillRandom(h1,(Int_t)esum2);
          dSEXPT = KolmogorovTest(hExpt,"M");
          if (dSEXPT>dfmax) prb3 += 1.0;
       }
@@ -6718,8 +6705,8 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    // debug printout
    if (opt.Contains("D")) {
-      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
-      printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
+      printf(" Kolmo Prob  h1 = %s, sum bin content =%g  effective entries =%g\n",h1->GetName(),sum1,esum1);
+      printf(" Kolmo Prob  h2 = %s, sum bin content =%g  effective entries =%g\n",h2->GetName(),sum2,esum2);
       printf(" Kolmo Prob     = %g, Max Dist = %g\n",prob,dfmax);
       if (opt.Contains("N"))
          printf(" Kolmo Prob     = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
