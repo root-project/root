@@ -79,6 +79,7 @@ ALLMAPS      += $(MATHCOREMAP)
 # include all dependency files
 INCLUDEFILES += $(MATHCOREDEP)
 
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
                 test-$(MODNAME)
@@ -142,4 +143,7 @@ test-$(MODNAME): all-$(MODNAME)
 
 ##### extra rules ######
 $(MATHCOREO): CXXFLAGS += -DUSE_ROOT_ERROR
-$(MATHCOREDO): CXXFLAGS += -DUSE_ROOT_ERROR
+$(MATHCOREDO): CXXFLAGS += -DUSE_ROOT_ERROR 
+# add optimization to G__Math compilation
+$(MATHCOREDO1) : NOOPT = $(OPT)
+

@@ -26,12 +26,13 @@
 #include "TString.h"
 
 #include <Math/SpecFuncMathCore.h>
+#include <Math/PdfFuncMathCore.h>
+#include <Math/ProbFuncMathCore.h>
 
 //const Double_t
 //   TMath::Pi = 3.14159265358979323846,
 //   TMath::E  = 2.7182818284590452354;
 
-const Int_t kWorkMax = 100;
 
 // Without this macro the THtml doc for TMath can not be generated
 #if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
@@ -501,64 +502,8 @@ Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma, Bool_t norm)
    // This function has been adapted from the CERNLIB routine G110 denlan.
    // If norm=kTRUE (default is kFALSE) the result is divided by sigma
 
-   static Double_t p1[5] = {0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253};
-   static Double_t q1[5] = {1.0         ,-0.3388260629, 0.09594393323, -0.01608042283,    0.003778942063};
-
-   static Double_t p2[5] = {0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411,   0.0001283617211};
-   static Double_t q2[5] = {1.0         , 0.7428795082, 0.3153932961,   0.06694219548,    0.008790609714};
-
-   static Double_t p3[5] = {0.1788544503, 0.09359161662,0.006325387654, 0.00006611667319,-0.000002031049101};
-   static Double_t q3[5] = {1.0         , 0.6097809921, 0.2560616665,   0.04746722384,    0.006957301675};
-
-   static Double_t p4[5] = {0.9874054407, 118.6723273,  849.2794360,   -743.7792444,      427.0262186};
-   static Double_t q4[5] = {1.0         , 106.8615961,  337.6496214,    2016.712389,      1597.063511};
-
-   static Double_t p5[5] = {1.003675074,  167.5702434,  4789.711289,    21217.86767,     -22324.94910};
-   static Double_t q5[5] = {1.0         , 156.9424537,  3745.310488,    9834.698876,      66924.28357};
-
-   static Double_t p6[5] = {1.000827619,  664.9143136,  62972.92665,    475554.6998,     -5743609.109};
-   static Double_t q6[5] = {1.0         , 651.4101098,  56974.73333,    165917.4725,     -2815759.939};
-
-   static Double_t a1[3] = {0.04166666667,-0.01996527778, 0.02709538966};
-
-   static Double_t a2[2] = {-1.845568670,-4.284640743};
-
-   if (sigma <= 0) return 0;
-   Double_t v = (x-mpv)/sigma;
-   Double_t u, ue, us, den;
-   if (v < -5.5) {
-      u   = TMath::Exp(v+1.0);
-      if (u < 1e-10) return 0.0;
-      ue  = TMath::Exp(-1/u);
-      us  = TMath::Sqrt(u);
-      den = 0.3989422803*(ue/us)*(1+(a1[0]+(a1[1]+a1[2]*u)*u)*u);
-   } else if(v < -1) {
-      u   = TMath::Exp(-v-1);
-      den = TMath::Exp(-u)*TMath::Sqrt(u)*
-             (p1[0]+(p1[1]+(p1[2]+(p1[3]+p1[4]*v)*v)*v)*v)/
-             (q1[0]+(q1[1]+(q1[2]+(q1[3]+q1[4]*v)*v)*v)*v);
-   } else if(v < 1) {
-      den = (p2[0]+(p2[1]+(p2[2]+(p2[3]+p2[4]*v)*v)*v)*v)/
-            (q2[0]+(q2[1]+(q2[2]+(q2[3]+q2[4]*v)*v)*v)*v);
-   } else if(v < 5) {
-      den = (p3[0]+(p3[1]+(p3[2]+(p3[3]+p3[4]*v)*v)*v)*v)/
-            (q3[0]+(q3[1]+(q3[2]+(q3[3]+q3[4]*v)*v)*v)*v);
-   } else if(v < 12) {
-      u   = 1/v;
-      den = u*u*(p4[0]+(p4[1]+(p4[2]+(p4[3]+p4[4]*u)*u)*u)*u)/
-                (q4[0]+(q4[1]+(q4[2]+(q4[3]+q4[4]*u)*u)*u)*u);
-   } else if(v < 50) {
-      u   = 1/v;
-      den = u*u*(p5[0]+(p5[1]+(p5[2]+(p5[3]+p5[4]*u)*u)*u)*u)/
-                (q5[0]+(q5[1]+(q5[2]+(q5[3]+q5[4]*u)*u)*u)*u);
-   } else if(v < 300) {
-      u   = 1/v;
-      den = u*u*(p6[0]+(p6[1]+(p6[2]+(p6[3]+p6[4]*u)*u)*u)*u)/
-                (q6[0]+(q6[1]+(q6[2]+(q6[3]+q6[4]*u)*u)*u)*u);
-   } else {
-      u   = 1/(v-v*TMath::Log(v)/(v+1));
-      den = u*u*(1+(a2[0]+a2[1]*u)*u);
-   }
+   if (sigma <= 0) return 0; 
+   Double_t den = ::ROOT::Math::landau_pdf(x, sigma, mpv); 
    if (!norm) return den;
    return den/sigma;
 }
@@ -671,22 +616,16 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 Double_t TMath::PoissonI(Double_t x, Double_t par)
 {
   // compute the Poisson distribution function for (x,par)
-  // This is a non-smooth function
+  // This is a non-smooth function.  
+  // This function is equivalent to ROOT::Math::poisson_pdf
 //Begin_Html
 /*
 <img src="gif/PoissonI.gif">
 */
 //End_Html
 
-
-   const Double_t  kMaxInt = 2e6;
-   if(x<0) return 0;
-   if(x<1) return TMath::Exp(-par);
-   Double_t gam;
    Int_t ix = Int_t(x);
-   if(x < kMaxInt) gam = TMath::Power(par,ix)/TMath::Gamma(ix+1);
-   else            gam = TMath::Power(par,x)/TMath::Gamma(x+1);
-   return gam/TMath::Exp(par);
+   return Poisson(ix,par); 
 }
 
 //______________________________________________________________________________
@@ -714,20 +653,7 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
       else          return 1;
    }
 
-   if (ndf==1) {
-      Double_t v = 1.-Erf(Sqrt(chi2)/Sqrt(2.));
-      return v;
-   }
-
-   // Gaussian approximation for large ndf
-   Double_t q = Sqrt(2*chi2)-Sqrt(Double_t(2*ndf-1));
-   if (ndf > 30 && q > 5) {
-      Double_t v = 0.5*(1-Erf(q/Sqrt(2.)));
-      return v;
-   }
-
-   // Evaluate the incomplete gamma function
-   return (1-Gamma(0.5*ndf,0.5*chi2));
+   return ::ROOT::Math::chisquared_cdf_c(chi2,ndf); 
 }
 
 //______________________________________________________________________________
@@ -1993,7 +1919,7 @@ Double_t TMath::StruveL0(Double_t x)
 
    if (x<=20.) {
       a0=2.0*x/pi;
-      for (int i=1; i<=60;i++) {
+      for (i=1; i<=60;i++) {
          r*=(x/(2*i+1))*(x/(2*i+1));
          s+=r;
          if(TMath::Abs(r/s)<1.e-12) break;
@@ -2355,9 +2281,10 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
    //   gamma - shape parameter
    //   mu    - location parameter
    //   beta  - scale parameter
-   // The formula was taken from "Engineering Statistics Handbook" on site
+   //
+   // The definition can be found in "Engineering Statistics Handbook" on site
    // http://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm
-   // Implementation by Anna Kreshuk.
+   // use now implementation in ROOT::Math::gamma_pdf 
    //Begin_Html
    /*
    <img src="gif/gammadist.gif">
@@ -2368,10 +2295,7 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
       Error("TMath::GammaDist", "illegal parameter values");
       return 0;
    }
-   Double_t temp   = (x-mu)/beta;
-   Double_t temp2  = beta * TMath::Gamma(gamma);
-   Double_t result = (TMath::Power(temp, gamma-1) * TMath::Exp(-temp))/temp2;
-   return result;
+   return ::ROOT::Math::gamma_pdf(x, gamma, beta, mu); 
 }
 
 //______________________________________________________________________________
@@ -2418,7 +2342,7 @@ Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m
    // m is the scale parameter
    // The formula was taken from "Engineering Statistics Handbook" on site
    // http://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm
-   // Implementation by Anna Kreshuk.
+   // Implementation using ROOT::Math::lognormal_pdf
    //Begin_Html
    /*
    <img src="gif/lognormal.gif">
@@ -2429,11 +2353,11 @@ Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m
       Error("TMath::Lognormal", "illegal parameter values");
       return 0;
    }
-   Double_t templog2 = TMath::Log((x-theta)/m)*TMath::Log((x-theta)/m);
-   Double_t temp1 = TMath::Exp(-templog2/(2*sigma*sigma));
-   Double_t temp2 = (x-theta)*sigma*TMath::Sqrt(2*TMath::Pi());
+   // lognormal_pdf uses same definition of http://en.wikipedia.org/wiki/Log-normal_distribution
+   // where mu = log(m)
+   
+   return ::ROOT::Math::lognormal_pdf(x, TMath::Log(m), sigma, theta); 
 
-   return temp1/temp2;
 }
 
 //______________________________________________________________________________
@@ -2781,62 +2705,8 @@ Double_t TMath::LandauI(Double_t x)
    //The algorithm was taken from the Cernlib function dislan(G110)
    //Reference: K.S.Kolbig and B.Schorr, "A program package for the Landau
    //distribution", Computer Phys.Comm., 31(1984), 97-111
-
-   Double_t p1[] = {0.2514091491e+0,-0.6250580444e-1, 0.1458381230e-1, -0.2108817737e-2, 0.7411247290e-3};
-   Double_t q1[] = {1.0             ,-0.5571175625e-2, 0.6225310236e-1, -0.3137378427e-2, 0.1931496439e-2};
-
-   Double_t p2[] = {0.2868328584e+0, 0.3564363231e+0, 0.1523518695e+0, 0.2251304883e-1};
-   Double_t q2[] = {1.0             , 0.6191136137e+0, 0.1720721448e+0, 0.2278594771e-1};
-
-   Double_t p3[] = {0.2868329066e+0, 0.3003828436e+0, 0.9950951941e-1, 0.8733827185e-2};
-   Double_t q3[] = {1.0             , 0.4237190502e+0, 0.1095631512e+0, 0.8693851567e-2};
-
-   Double_t p4[] = {0.1000351630e+1, 0.4503592498e+1, 0.1085883880e+2, 0.7536052269e+1};
-   Double_t q4[] = {1.0             , 0.5539969678e+1, 0.1933581111e+2, 0.2721321508e+2};
-
-   Double_t p5[] = {0.1000006517e+1, 0.4909414111e+2, 0.8505544753e+2, 0.1532153455e+3};
-   Double_t q5[] = {1.0             , 0.5009928881e+2, 0.1399819104e+3, 0.4200002909e+3};
-
-   Double_t p6[] = {0.1000000983e+1, 0.1329868456e+3, 0.9162149244e+3, -0.9605054274e+3};
-   Double_t q6[] = {1.0             , 0.1339887843e+3, 0.1055990413e+4, 0.5532224619e+3};
-
-   Double_t a1[] = {0, -0.4583333333e+0, 0.6675347222e+0,-0.1641741416e+1};
-
-   Double_t a2[] = {0,  1.0             ,-0.4227843351e+0,-0.2043403138e+1};
-
-   Double_t u, v;
-   Double_t lan;
-   v = x;
-   if (v < -5.5) {
-      u = TMath::Exp(v+1);
-      lan = 0.3989422803*TMath::Exp(-1./u)*TMath::Sqrt(u)*(1+(a1[1]+(a1[2]+a1[3]*u)*u)*u);
-   }
-   else if (v < -1 ) {
-      u = TMath::Exp(-v-1);
-      lan = (TMath::Exp(-u)/TMath::Sqrt(u))*(p1[0]+(p1[1]+(p1[2]+(p1[3]+p1[4]*v)*v)*v)*v)/
-          (q1[0]+(q1[1]+(q1[2]+(q1[3]+q1[4]*v)*v)*v)*v);
-   }
-   else if (v < 1)
-      lan = (p2[0]+(p2[1]+(p2[2]+p2[3]*v)*v)*v)/(q2[0]+(q2[1]+(q2[2]+q2[3]*v)*v)*v);
-   else if (v < 4)
-      lan = (p3[0]+(p3[1]+(p3[2]+p3[3]*v)*v)*v)/(q3[0]+(q3[1]+(q3[2]+q3[3]*v)*v)*v);
-   else if (v < 12) {
-      u = 1./v;
-      lan = (p4[0]+(p4[1]+(p4[2]+p4[3]*u)*u)*u)/(q4[0]+(q4[1]+(q4[2]+q4[3]*u)*u)*u);
-   }
-   else if (v < 50) {
-      u = 1./v;
-      lan = (p5[0]+(p5[1]+(p5[2]+p5[3]*u)*u)*u)/(q5[0]+(q5[1]+(q5[2]+q5[3]*u)*u)*u);
-   }
-   else if (v < 300) {
-      u = 1./v;
-      lan = (p6[0]+(p6[1]+(p6[2]+p6[3]*u)*u)*u)/(q6[0]+(q6[1]+(q6[2]+q6[3]*u)*u)*u);
-   }
-   else {
-      u = 1./(v-v*TMath::Log(v)/(v+1));
-      lan = 1-(a2[1]+(a2[2]+a2[3]*u)*u)*u;
-   }
-   return lan;
+   
+   return ::ROOT::Math::landau_cdf(x);
 }
 
 

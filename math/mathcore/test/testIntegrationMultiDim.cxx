@@ -196,7 +196,6 @@ int main(int argc, char **argv)
 
    if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
    {
-      std::cout << "No graphics mode!" << std::endl;
       showGraphics = false;
    }
 
@@ -214,4 +213,5 @@ int main(int argc, char **argv)
    }
 
    return 0;
+
 }

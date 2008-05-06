@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+const double ERRORLIMIT = 1E-8;
 const int iterTest = 10000;
 int myfuncCalls = 0;
 
@@ -15,20 +16,23 @@ double myfunc ( double x ) {
    return x*x - 5; 
 }
 
-void printStats(TStopwatch& timer, double root) {
+int printStats(TStopwatch& timer, double root) {
 
    //std::cout << "Return code:  " << status << std::endl; 
+   double difference = root - sqrt(5.0);
    std::cout << "Result:       " << root << std::endl; 
-   std::cout << "Exact result: " << sqrt(5.0) << " difference: " << root - sqrt(5.0) << std::endl; 
+   std::cout << "Exact result: " << sqrt(5.0) << " difference: " << difference << std::endl; 
    std::cout << "Time: " << timer.RealTime()/(double) iterTest << std::endl; 
    std::cout << "Number of calls to function: " << myfuncCalls/iterTest << std::endl;
 
+   return difference > ERRORLIMIT;
 }
 
-void testRootFinder() {
+int testRootFinder() {
 
    TStopwatch timer;
    double root;
+   int status = 0;
 
    ROOT::Math::Polynomial polyf(2);
    std::vector<double> p(3);
@@ -51,7 +55,7 @@ void testRootFinder() {
    }
    timer.Stop();
    std::cout << "RootFinder Stats:" << std::endl;
-   printStats(timer, root);
+   status += printStats(timer, root);
 
 
    TF1* f1 = new TF1("f1", "x*x - 5", 0, 5);
@@ -63,13 +67,14 @@ void testRootFinder() {
    }
    timer.Stop();
    std::cout << "\nTF1 Stats:" << std::endl;
-   printStats(timer, root);
+   status += printStats(timer, root);
 
+   return status;
 }
 
 int main() {
 
-   testRootFinder();
-   return 0;
+   int status = testRootFinder();
+   return status;
 
 }

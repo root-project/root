@@ -23,6 +23,7 @@ const int maxsize = 500;
 const int increment = 10;
 const int arraysize = (maxsize-minsize)/10 + 1;
 
+bool showGraphics = true;
 
 template<typename T> 
 struct Compare { 
@@ -88,41 +89,67 @@ void stdsort()
    for ( int i = minsize; i <= maxsize; i += increment)
       cout << tM[(i-minsize)/10] << ' ' << tS[(i-minsize)/10] << endl;
 
-   TCanvas* c1 = new TCanvas("c1", "Comparision of Sorting Time", 600, 400);
-   TH2F* hpx = new TH2F("hpx", "Comparision of Sorting Time", arraysize, minsize, maxsize, arraysize, 0,tM[arraysize-1]);
-   hpx->SetStats(kFALSE);
-   hpx->Draw();
-   
-   TGraph* gM = new TGraph(arraysize, &index[0], &tM[0]);
-   gM->SetLineColor(2);
-   gM->SetLineWidth(3);
-   gM->SetTitle("TMath::Sort()");
-   gM->Draw("SAME");
-
-   TGraph* gS = new TGraph(arraysize, &index[0], &tS[0]);
-   gS->SetLineColor(3);
-   gS->SetLineWidth(3);
-   gS->SetTitle("std::sort()");
-   gS->Draw("SAME");
-
-   TLegend* legend = new TLegend(0.15,0.72,0.4,0.86);
-   legend->AddEntry(gM, "TMath::Sort()");
-   legend->AddEntry(gS, "std::sort()");
-   legend->Draw();
-
-   hpx->GetXaxis()->SetTitle("Array Size");
-   hpx->GetYaxis()->SetTitle("Time");
-   
-
-   c1->Show();
+   if ( showGraphics )
+   {
+      TCanvas* c1 = new TCanvas("c1", "Comparision of Sorting Time", 600, 400);
+      TH2F* hpx = new TH2F("hpx", "Comparision of Sorting Time", arraysize, minsize, maxsize, arraysize, 0,tM[arraysize-1]);
+      hpx->SetStats(kFALSE);
+      hpx->Draw();
+      
+      TGraph* gM = new TGraph(arraysize, &index[0], &tM[0]);
+      gM->SetLineColor(2);
+      gM->SetLineWidth(3);
+      gM->SetTitle("TMath::Sort()");
+      gM->Draw("SAME");
+      
+      TGraph* gS = new TGraph(arraysize, &index[0], &tS[0]);
+      gS->SetLineColor(3);
+      gS->SetLineWidth(3);
+      gS->SetTitle("std::sort()");
+      gS->Draw("SAME");
+      
+      TLegend* legend = new TLegend(0.15,0.72,0.4,0.86);
+      legend->AddEntry(gM, "TMath::Sort()");
+      legend->AddEntry(gS, "std::sort()");
+      legend->Draw();
+      
+      hpx->GetXaxis()->SetTitle("Array Size");
+      hpx->GetYaxis()->SetTitle("Time");
+      
+      
+      c1->Show();
+   }
 
 }
 
 int main(int argc, char **argv)
 {
-   TApplication theApp("App",&argc,argv);
+   if ( argc > 1 && argc != 2 )
+   {
+      cerr << "Usage: " << argv[0] << " [-ng]\n";
+      cerr << "  where:\n";
+      cerr << "     -ng : no graphics mode";
+      cerr << endl;
+      exit(1);
+   }
+
+   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
+   {
+      showGraphics = false;
+   }
+
+   TApplication* theApp = 0;
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
    stdsort();
-   theApp.Run();
+
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
 
    return 0;
 }

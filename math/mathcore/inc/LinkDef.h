@@ -114,13 +114,6 @@
 #pragma link C++ function TMath::IsInside(Float_t, Float_t, Int_t, Float_t*, Float_t*);
 #pragma link C++ function TMath::IsInside(Int_t, Int_t, Int_t, Int_t*, Int_t*);
 
-#pragma link C++ function TMath::Sort(Int_t, const Short_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Int_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Float_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Double_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Long_t*, Int_t*, Bool_t);
-#pragma link C++ function TMath::Sort(Int_t, const Long64_t*, Int_t*, Bool_t);
-
 #pragma link C++ function TMath::Sort(Long64_t, const Short_t*, Long64_t*, Bool_t);
 #pragma link C++ function TMath::Sort(Long64_t, const Int_t*, Long64_t*, Bool_t);
 #pragma link C++ function TMath::Sort(Long64_t, const Float_t*, Long64_t*, Bool_t);

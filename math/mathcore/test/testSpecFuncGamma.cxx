@@ -2,6 +2,8 @@
 #include <fstream>
 #include <vector>
 
+#include <cmath>
+
 #include <TMath.h>
 #include <Math/SpecFuncMathCore.h>
 
@@ -12,11 +14,13 @@
 #include <TGraph.h>
 #include <TLegend.h>
 
+const double ERRORLIMIT = 1E-8;
 const double MIN = -2.5;
 const double MAX = +2.5;
 const double INCREMENT = 0.01;
-const int ARRAYSIZE = (int) (( MAX - MIN ) / INCREMENT);
-inline int arrayindex(double i) { return ARRAYSIZE - (int) ( (MAX - i) / INCREMENT ) -1 ; };
+const int ARRAYSIZE = (int) (( MAX - MIN ) / INCREMENT) + 1;
+
+bool showGraphics = true;
 
 using namespace std;
 
@@ -31,7 +35,7 @@ TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
    return g;
 }
 
-void testSpecFuncGamma() 
+int testSpecFuncGamma() 
 {
    vector<Double_t> x( ARRAYSIZE );
    vector<Double_t> yg( ARRAYSIZE );
@@ -43,12 +47,15 @@ void testSpecFuncGamma()
 
    Double_t a = 0.56;
 
+   int status = 0;
+
    //ofstream cout ("values.txt");
 
+   unsigned int index = 0;
    for ( double i = MIN; i < MAX; i += INCREMENT )
    {
 //       cout << "i:"; cout.width(5); cout << i 
-//            << " index: "; cout.width(5); cout << arrayindex(i) 
+//            << " index: "; cout.width(5); cout << index 
 //            << " TMath::Gamma(x): "; cout.width(10); cout << TMath::Gamma(i)
 //            << " ROOT::Math::tgamma(x): "; cout.width(10); cout << ROOT::Math::tgamma(i)
 //            << " TMath::Gamma(a, x): "; cout.width(10); cout << TMath::Gamma(a, i)
@@ -57,49 +64,108 @@ void testSpecFuncGamma()
 //            << " ROOT::Math::lgamma(x): "; cout.width(10); cout << ROOT::Math::lgamma(i)
 //            << endl;
 
-      x[arrayindex(i)] = i;
-      yg[arrayindex(i)] = TMath::Gamma(i);
-      ymtg[arrayindex(i)] = ROOT::Math::tgamma(i);
-      yga[arrayindex(i)] = TMath::Gamma(a, i);
-      ymga[arrayindex(i)] = ROOT::Math::inc_gamma(a, i);
-      ylng[arrayindex(i)] = TMath::LnGamma(i);
-      ymlng[arrayindex(i)] = ROOT::Math::lgamma(i);
+      x[index] = i;
+      yg[index] = TMath::Gamma(i);
+      ymtg[index] = ROOT::Math::tgamma(i);
+      // take the infinity values out of the error checking!
+      if ( std::fabs(yg[index]) < 1E+12 && std::fabs( yg[index] - ymtg[index] ) > ERRORLIMIT )
+      {
+         cout << "i " << i   
+              << " yg[index] " << yg[index]
+              << " ymtg[index] " << ymtg[index]
+              << " " << std::fabs( yg[index] - ymtg[index] )
+              << endl;
+         status += 1;
+      }
+
+      yga[index] = TMath::Gamma(a, i);
+      ymga[index] = ROOT::Math::inc_gamma(a, i);
+      if ( std::fabs( yga[index] - ymga[index] ) > ERRORLIMIT )
+      {
+         cout << "i " << i   
+              << " yga[index] " << yga[index]
+              << " ymga[index] " << ymga[index]
+              << " " << std::fabs( yga[index] - ymga[index] )
+              << endl;
+         status += 1;
+      }
+
+      ylng[index] = TMath::LnGamma(i);
+      ymlng[index] = ROOT::Math::lgamma(i);
+      if ( std::fabs( ylng[index] - ymlng[index] ) > ERRORLIMIT )
+      {
+         cout << "i " << i   
+              << " ylng[index] " << ylng[index]
+              << " ymlng[index] " << ymlng[index]
+              << " " << std::fabs( ylng[index] - ymlng[index] )
+              << endl;
+         status += 1;
+      }
+
+      index += 1;
    }
 
-   TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400); 
-   TH2F* hpx = new TH2F("hpx", "Two Graphs(hpx)", ARRAYSIZE, MIN, MAX, ARRAYSIZE, -1,5);
-   hpx->SetStats(kFALSE);
-   hpx->Draw();
-
-   TGraph* gg    = drawPoints(&x[0], &yg[0], 1);
-   TGraph* gmtg  = drawPoints(&x[0], &ymtg[0], 2, 7);
-   TGraph* gga   = drawPoints(&x[0], &yga[0], 3);
-   TGraph* gmga  = drawPoints(&x[0], &ymga[0], 4, 7);
-   TGraph* glng  = drawPoints(&x[0], &ylng[0], 5);
-   TGraph* gmlng = drawPoints(&x[0], &ymlng[0], 6, 7);
-
-   TLegend* legend = new TLegend(0.61,0.52,0.86,0.86);
-   legend->AddEntry(gg,    "TMath::Gamma()");
-   legend->AddEntry(gmtg,  "ROOT::Math::tgamma()");
-   legend->AddEntry(gga,   "TMath::GammaI()");
-   legend->AddEntry(gmga,  "ROOT::Math::inc_gamma()");
-   legend->AddEntry(glng,  "TMath::LnGamma()");
-   legend->AddEntry(gmlng, "ROOT::Math::lgamma()");
-   legend->Draw();
-
-   c1->Show();
+   if ( showGraphics )
+   {
+      
+      TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400); 
+      TH2F* hpx = new TH2F("hpx", "Two Graphs(hpx)", ARRAYSIZE, MIN, MAX, ARRAYSIZE, -1,5);
+      hpx->SetStats(kFALSE);
+      hpx->Draw();
+      
+      TGraph* gg    = drawPoints(&x[0], &yg[0], 1);
+      TGraph* gmtg  = drawPoints(&x[0], &ymtg[0], 2, 7);
+      TGraph* gga   = drawPoints(&x[0], &yga[0], 3);
+      TGraph* gmga  = drawPoints(&x[0], &ymga[0], 4, 7);
+      TGraph* glng  = drawPoints(&x[0], &ylng[0], 5);
+      TGraph* gmlng = drawPoints(&x[0], &ymlng[0], 6, 7);
+      
+      TLegend* legend = new TLegend(0.61,0.52,0.86,0.86);
+      legend->AddEntry(gg,    "TMath::Gamma()");
+      legend->AddEntry(gmtg,  "ROOT::Math::tgamma()");
+      legend->AddEntry(gga,   "TMath::GammaI()");
+      legend->AddEntry(gmga,  "ROOT::Math::inc_gamma()");
+      legend->AddEntry(glng,  "TMath::LnGamma()");
+      legend->AddEntry(gmlng, "ROOT::Math::lgamma()");
+      legend->Draw();
+      
+      c1->Show();
+   }
 
    cout << "Test Done!" << endl;
 
-   return;
+   return status;
 }
 
 
 int main(int argc, char **argv) 
 {
-   TApplication theApp("App",&argc,argv);
-   testSpecFuncGamma();
-   theApp.Run();
+   if ( argc > 1 && argc != 2 )
+   {
+      cerr << "Usage: " << argv[0] << " [-ng]\n";
+      cerr << "  where:\n";
+      cerr << "     -ng : no graphics mode";
+      cerr << endl;
+      exit(1);
+   }
 
-   return 0;
+   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
+   {
+      showGraphics = false;
+   }
+
+   TApplication* theApp = 0;
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
+   int status = testSpecFuncGamma();
+
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
+
+   return status;
 }

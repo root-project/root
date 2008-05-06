@@ -20,33 +20,36 @@ const int arraysize = (maxsize-minsize)/10 + 1;
 template<typename T> 
 struct CompareDesc { 
 
-   CompareDesc(const T *  d) : fData(d) {}
+   CompareDesc(T d) : fData(d) {}
 
    bool operator()(int i1, int i2) { 
-      return fData[i1] > fData[i2];
+      return *(fData + i1) > *(fData + i2);
    }
 
-   const T * fData; 
+   T fData;
 };
 
 template<typename T> 
 struct CompareAsc { 
 
-   CompareAsc(const T *  d) : fData(d) {}
+   CompareAsc(T d) : fData(d) {}
 
    bool operator()(int i1, int i2) { 
-      return fData[i1] < fData[i2];
+      return *(fData + i1) < *(fData + i2);
    }
 
-   const T * fData; 
+   T fData; 
 };
 
 #endif
 
-template <typename T> void testSort(const int n)
+template <typename T> bool testSort(const int n)
 {
    vector<T> k(n);
-   vector<T> index(n);
+   vector<T> indexM(n);
+   vector<T> indexS(n);
+
+   bool equals = true;
 
    TRandom2 r( time( 0 ) );
 
@@ -57,55 +60,61 @@ template <typename T> void testSort(const int n)
    }
    cout << endl;
 
-
-
-   for(Int_t i = 0; i < n; i++) { index[i] = i; }
-   TMath::Sort(n,&k[0],&index[0],kTRUE);  
+   for(Int_t i = 0; i < n; i++) { indexM[i] = i; }
+   TMath::Sort(n,&k[0],&indexM[0],kTRUE);  
 
    cout << "TMath[kTRUE]\n\tindex = ";
    for ( Int_t i = 0; i < n; ++i )
-      cout << k[index[i]] << ' ';
+      cout << k[indexM[i]] << ' ';
    cout << endl;
 
-  
-
-   for(Int_t i = 0; i < n; i++) { index[i] = i; }
-   std::sort(&index[0],&index[n], CompareDesc<T>(&k[0]) );
+   for(Int_t i = 0; i < n; i++) { indexS[i] = i; }
+   std::sort(&indexS[0],&indexS[n], CompareDesc<const T*>(&k[0]) );
 
    cout << "std::sort[CompareDesc]\n\tindex = ";
    for ( Int_t i = 0; i < n; ++i )
-      cout << k[index[i]] << ' ';
+      cout << k[indexS[i]] << ' ';
    cout << endl;
 
 
+   equals &= std::equal(indexM.begin(), indexM.end(), indexS.begin());
+   cout << "Equals? " << (char*) (equals?"OK":"FAILED") << endl;
 
-   for(Int_t i = 0; i < n; i++) { index[i] = i; }
-   TMath::Sort(n,&k[0],&index[0],kFALSE);  
+
+   for(Int_t i = 0; i < n; i++) { indexM[i] = i; }
+   TMath::Sort(n,&k[0],&indexM[0],kFALSE);  
 
    cout << "TMath[kFALSE]\n\tindex = ";
    for ( Int_t i = 0; i < n; ++i )
-      cout << k[index[i]] << ' ';
+      cout << k[indexM[i]] << ' ';
    cout << endl;
 
-
-
-   for(Int_t i = 0; i < n; i++) { index[i] = i; }
-   std::sort(&index[0],&index[n], CompareAsc<T>(&k[0]) );
+   for(Int_t i = 0; i < n; i++) { indexS[i] = i; }
+   std::sort(&indexS[0],&indexS[n], CompareAsc<const T*>(&k[0]) );
 
    cout << "std::sort[CompareAsc]\n\tindex = ";
    for ( Int_t i = 0; i < n; ++i )
-      cout << k[index[i]] << ' ';
+      cout << k[indexS[i]] << ' ';
    cout << endl;
+
+
+   equals &= std::equal(indexM.begin(), indexM.end(), indexS.begin());
+   cout << "Equals? " << (char*) (equals?"OK":"FAILED") << endl;
+
+   return equals;
 }
 
-void stdsort() 
+bool stdsort() 
 {
-   testSort<Int_t>(20);
+   return testSort<Int_t>(20);
 }
 
-int main(int argc, char **argv)
+int main(int /* argc */ , char ** /* argv */ )
 {
-   stdsort();
+   bool equals = stdsort();
 
-   return 0;
+   if ( !equals )
+      return 1;
+   else
+      return 0;
 }

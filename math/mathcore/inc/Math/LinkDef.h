@@ -60,6 +60,12 @@
 #pragma link C++ class ROOT::Math::AdaptiveIntegratorMultiDim+;
 #pragma link C++ typedef ROOT::Math::Integrator;
 
+#pragma link C++ namespace ROOT::Math::IntegrationOneDim;
+#pragma link C++ enum ROOT::Math::IntegrationOneDim::Type;
+#pragma link C++ namespace ROOT::Math::IntegrationMultiDim;
+#pragma link C++ enum ROOT::Math::IntegrationMultiDim::Type;
+
+
 #pragma link C++ class ROOT::Math::BasicFitMethodFunction<ROOT::Math::IBaseFunctionMultiDim>+;
 #pragma link C++ class ROOT::Math::BasicFitMethodFunction<ROOT::Math::IGradientFunctionMultiDim>+;
 
