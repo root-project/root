@@ -88,9 +88,12 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
    fPerspectiveCameraYOZ(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
    fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
-   fOrthoXOYCamera(TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down Z axis, X horz, Y vert
-   fOrthoXOZCamera(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down Y axis, X horz, Z vert
-   fOrthoZOYCamera(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down X axis, Z horz, Y vert
+   fOrthoXOYCamera (TGLOrthoCamera::kXOY,  TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
+   fOrthoXOZCamera (TGLOrthoCamera::kXOZ,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
+   fOrthoZOYCamera (TGLOrthoCamera::kZOY,  TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
+   fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3( 0.0, 0.0,-1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
+   fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
+   fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
 
    fLightSet          (0),
@@ -139,9 +142,12 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
    fPerspectiveCameraYOZ(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
    fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
-   fOrthoXOYCamera(TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down Z axis, X horz, Y vert
-   fOrthoXOZCamera(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down Y axis, X horz, Z vert
-   fOrthoZOYCamera(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down X axis, Z horz, Y vert
+   fOrthoXOYCamera (TGLOrthoCamera::kXOY,  TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
+   fOrthoXOZCamera (TGLOrthoCamera::kXOZ,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
+   fOrthoZOYCamera (TGLOrthoCamera::kZOY,  TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
+   fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3( 0.0, 0.0,-1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
+   fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
+   fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
 
    fLightSet          (0),
@@ -956,6 +962,12 @@ TGLCamera& TGLViewer::RefCamera(ECameraType cameraType)
          return fOrthoXOZCamera;
       case kCameraOrthoZOY:
          return fOrthoZOYCamera;
+      case kCameraOrthoXnOY:
+         return fOrthoXnOYCamera;
+      case kCameraOrthoXnOZ:
+         return fOrthoXnOZCamera;
+      case kCameraOrthoZnOY:
+         return fOrthoZnOYCamera;
       default:
          Error("TGLViewer::SetCurrentCamera", "invalid camera type");
          return *fCurrentCamera;
@@ -998,6 +1010,18 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
       }
       case kCameraOrthoZOY: {
          fCurrentCamera = &fOrthoZOYCamera;
+         break;
+      }
+      case kCameraOrthoXnOY: {
+         fCurrentCamera = &fOrthoXnOYCamera;
+         break;
+      }
+      case kCameraOrthoXnOZ: {
+         fCurrentCamera = &fOrthoXnOZCamera;
+         break;
+      }
+      case kCameraOrthoZnOY: {
+         fCurrentCamera = &fOrthoZnOYCamera;
          break;
       }
       default: {

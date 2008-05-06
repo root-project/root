@@ -286,6 +286,9 @@ void TGLSAViewer::CreateMenus()
    fCameraMenu->AddEntry("Orthographic (XOY)", kGLXOY);
    fCameraMenu->AddEntry("Orthographic (XOZ)", kGLXOZ);
    fCameraMenu->AddEntry("Orthographic (ZOY)", kGLZOY);
+   fCameraMenu->AddEntry("Orthographic (XnOY)", kGLXnOY);
+   fCameraMenu->AddEntry("Orthographic (XnOZ)", kGLXnOZ);
+   fCameraMenu->AddEntry("Orthographic (ZnOY)", kGLZnOY);
    fCameraMenu->AddSeparator();
    fCameraMenu->AddEntry("Ortho allow rotate", kGLOrthoRotate);
    fCameraMenu->AddEntry("Ortho allow dolly",  kGLOrthoDolly);
@@ -437,6 +440,15 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             break;
          case kGLZOY:
             SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
+            break;
+         case kGLXnOY:
+            SetCurrentCamera(TGLViewer::kCameraOrthoXnOY);
+            break;
+         case kGLXnOZ:
+            SetCurrentCamera(TGLViewer::kCameraOrthoXnOZ);
+            break;
+         case kGLZnOY:
+            SetCurrentCamera(TGLViewer::kCameraOrthoZnOY);
             break;
          case kGLOrthoRotate:
             ToggleOrthoRotate();

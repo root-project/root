@@ -37,9 +37,9 @@ ClassImp(TGLOrthoCamera)
 UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 500;
 
 //______________________________________________________________________________
-TGLOrthoCamera::TGLOrthoCamera(const TGLVector3 & hAxes, const TGLVector3 & vAxes) :
-   TGLCamera(hAxes, vAxes),
-   fType(kZOY),
+TGLOrthoCamera::TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVector3 & vAxis) :
+   TGLCamera(hAxis, vAxis),
+   fType(type),
    fEnableRotate(kFALSE), fDollyToZoom(kTRUE),
    fZoomMin(0.001), fZoomDefault(0.78), fZoomMax(1000.0),
    fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
@@ -48,15 +48,6 @@ TGLOrthoCamera::TGLOrthoCamera(const TGLVector3 & hAxes, const TGLVector3 & vAxe
    // Construct orthographic camera.
 
    Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
-
-   // define camera type relative to horizontal vector
-   TGLVector3 v = fCamBase.GetBaseVec(1);
-   for (Int_t i=0; i<3; i++) {
-      if (TMath::Abs(v[i]) == 1) {
-         fType = (TGLOrthoCamera::EType)i;
-         break;
-      }
-   }
 }
 
 //______________________________________________________________________________
@@ -90,18 +81,24 @@ void TGLOrthoCamera::Reset()
 
    TGLVector3 e = fVolume.Extents();
    switch (fType) {
-      case kX0Y: {
+      case kXOY: 
+      case kXnOY:
+      {
          // X -> X, Y -> Y, Z -> Z
          fDefXSize = e.X(); fDefYSize = e.Y();
          break;
       }
-      case kXOZ: {
+      case kXOZ:
+      case kXnOZ:
+      {
          // X -> X, Z -> Y, Y -> Z
          fDefXSize = e.X(); fDefYSize = e.Z();
          break;
       }
 
-      case kZOY: {
+      case kZOY:
+      case kZnOY:
+      {
          // Z -> X, Y -> Y, X -> Z
          fDefXSize = e.Z(); fDefYSize = e.Y();
          break;

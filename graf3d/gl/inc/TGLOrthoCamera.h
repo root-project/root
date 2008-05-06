@@ -39,7 +39,8 @@ class TGLPaintDevice;
 
 class TGLOrthoCamera : public TGLCamera {
 public:
-   enum EType { kZOY, kXOZ, kX0Y  }; // pair of world axes aligned to h/v screen
+   enum EType { kZOY,  kXOZ,  kXOY,    // Pair of world axes aligned to h/v screen.
+                kZnOY, kXnOZ, kXnOY }; // 'n' means preceeding axis is negated.
 private:
    // Fields
    EType          fType;         //! camera type
@@ -71,8 +72,10 @@ private:
    static   UInt_t   fgZoomDeltaSens;
 public:
    TGLOrthoCamera();
-   TGLOrthoCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
+   TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLOrthoCamera();
+
+   virtual Bool_t IsOrthographic() const { return kTRUE; }
 
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();

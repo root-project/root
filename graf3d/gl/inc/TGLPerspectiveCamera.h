@@ -42,6 +42,8 @@ public:
    TGLPerspectiveCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLPerspectiveCamera();
 
+   virtual Bool_t IsPersepective() const { return kTRUE; }
+
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);

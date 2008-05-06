@@ -55,8 +55,9 @@ class TGLViewer : public TVirtualViewer3D,
    friend class TGLEventHandler;
 public:
 
-   enum ECameraType { kCameraPerspXOZ, kCameraPerspYOZ, kCameraPerspXOY,
-                      kCameraOrthoXOY, kCameraOrthoXOZ, kCameraOrthoZOY };
+   enum ECameraType { kCameraPerspXOZ,  kCameraPerspYOZ,  kCameraPerspXOY,
+                      kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
+                      kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY };
 
 private:
    TGLViewer(const TGLViewer &);             // Not implemented
@@ -79,6 +80,9 @@ protected:
    TGLOrthoCamera       fOrthoXOYCamera;       //!
    TGLOrthoCamera       fOrthoXOZCamera;       //!
    TGLOrthoCamera       fOrthoZOYCamera;       //!
+   TGLOrthoCamera       fOrthoXnOYCamera;       //!
+   TGLOrthoCamera       fOrthoXnOZCamera;       //!
+   TGLOrthoCamera       fOrthoZnOYCamera;       //!
    TGLCamera          * fCurrentCamera;        //!
 
    // Lights
