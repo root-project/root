@@ -380,7 +380,6 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
       aztX = -fTMSize; aztY = +fTMSize;
    }
 
-
    // project bottom and top point
    GLdouble dn[3];
    GLdouble up[3];
@@ -616,6 +615,8 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx, Bool_t is3D) const
    TGLUtil::Color(fM->fGridColor);
    Int_t es = GetGridStep(0, ax, rnrCtx);
    Int_t ps = GetGridStep(1, ay, rnrCtx);
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
+   glLineWidth(1);
    glBegin(GL_LINES);
    if ((es == 1 && ps == 1) || is3D)
    {
@@ -664,6 +665,7 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx, Bool_t is3D) const
       }
    }
    glEnd();
+   glPopAttrib();
 
    // labels, titles and tickmarks
    if (is3D)
@@ -680,18 +682,10 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
 {
    // Render the calo lego-plot with OpenGL.
 
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glPushMatrix();
+   glTranslatef(0, 0, -0.001);
    glScalef(1.f, 1.f, fM->fCellZScale);
    // cell quads
    {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      glEnable(GL_POLYGON_OFFSET_FILL);
-      glEnable(GL_NORMALIZE);
-
-      glPolygonOffset(0.2, 1);
-      glTranslatef(0, 0, 0.001);
-
       glPushName(0);
       for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
       {
@@ -711,8 +705,6 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
             glCallList(i->second);
       }
    }
-   glPopMatrix();
-   glPopAttrib();
 }
 
 //______________________________________________________________________________
@@ -731,24 +723,23 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
    Float_t phi0 = ay->GetBinLowEdge(0);
    Float_t phiT = ay->GetBinUpEdge(ay->GetNbins());
 
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glDisable(GL_LIGHTING);
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(0.2, 1);
-   glTranslatef(0, 0, -0.001);
    UChar_t col[4];
    Color_t defCol = fM->GetPalette()->GetDefaultColor();
-
+   glTranslatef(0, 0, -0.001);
+   glPushName(0);
    if (es==1 && ps==1)
    {
       // draw in original binning
       TEveCaloData::CellData_t cellData;
+      Int_t name = 0;
       Int_t prevTower = 0;
       Float_t sum = 0;
-      glBegin(GL_QUADS);
+
       for (TEveCaloData::vCellId_t::iterator it=fM->fCellList.begin(); it!=fM->fCellList.end(); it++)
-      {
+      {   
          fM->fData->GetCellData(*it, cellData);
+         glLoadName(name);
+         glBegin(GL_QUADS);
          if ((*it).fTower != prevTower)
          {
             if (sum>=fM->fPalette->GetMinVal() && sum<fM->fPalette->GetMaxVal())
@@ -780,8 +771,9 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
          {
             sum += cellData.Value();
          }
-      }
-      glEnd();
+         glEnd();
+         name++;
+      };
    }
    else
    {
@@ -882,34 +874,22 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
       glEnd();
       fM->fPalette->SetMax(FloorNint(maxOrig));
    }
-   glPopMatrix();
-   glPopAttrib();
+   glPopName();
 }
-
 
 //______________________________________________________________________________
 void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Draw the object.
 
-   // gret projection type
-   const TGLMatrix& mvm = rnrCtx.RefCamera().RefModelViewMatrix();
+   // get projection type
    Bool_t is3D;
    if (fM->fProjection == TEveCaloLego::kAuto)
-   {
-      TGLVector3 z (0, 0, 1);
-      TGLVector3 zp(mvm.Rotate(z));
-      Double_t theta = TMath::ACos(Dot(z, zp)/zp.Mag());
-      is3D = (theta > 0.15);
-   }
+      is3D = (rnrCtx.RefCamera().IsPersepective());
    else if (fM->fProjection == TEveCaloLego::k2D)
-   {
       is3D = kFALSE;
-   }
    else
-   {
       is3D = kTRUE;
-   }
 
    // update cache
    if(fM->fCacheOK == kFALSE)
@@ -922,28 +902,21 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    }
    if (is3D && fDLCacheOK == kFALSE) MakeDisplayList();
 
-
-   // reset matrix if 2D
-   if (is3D == kFALSE)
-   {
-      is3D = kFALSE;
-      TGLVector3 s = mvm.GetScale();
-      TGLVector3 t = mvm.GetBaseVec(4);
-      glPushMatrix();
-      glLoadIdentity();
-      glTranslated(t.X(), t.Y(), t.Z());
-      glScaled(s.X(), s.Y(), s.Z());
-   }
-
    // draw histogram base
    if (rnrCtx.Selection() == kFALSE && rnrCtx.Highlight() == kFALSE)
-   {
       DrawHistBase(rnrCtx, is3D);
-   }
 
    // draw cells
    fM->AssertPalette();
-   is3D ? DrawCells3D(rnrCtx): DrawCells2D(rnrCtx);   
+   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
+   glDisable(GL_LIGHTING);
+   glEnable(GL_NORMALIZE);
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(0.2, 1);
+   glPushMatrix();
+   is3D ? DrawCells3D(rnrCtx): DrawCells2D(rnrCtx); 
+   glPopMatrix();
+   glPopAttrib();  
 }
 
 //______________________________________________________________________________

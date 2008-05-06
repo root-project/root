@@ -132,6 +132,8 @@ public:
    // Demangle overlay select buffer
    Bool_t FindClosestOverlayRecord(TGLOvlSelectRecord& rec, Int_t& recIdx);
 
+   TGLRnrCtx* GetRnrCtx() const { return fRnrCtx;} 
+
    ClassDef(TGLViewerBase, 0) // GL Viewer base-class.
 }; // endclass TGLViewerBase
 

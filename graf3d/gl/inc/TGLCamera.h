@@ -158,13 +158,6 @@ protected:
    mutable Double_t fLargestSeen;          //! largest box volume seen in OfInterest() - used when
                                            // bootstrapping interest box
 
-   // Methods
-   Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
-                                Int_t screenShift, Int_t screenShiftRange,
-                                Bool_t mod1, Bool_t mod2) const;
-   Double_t   AdjustDelta(Double_t screenShift, Double_t deltaFactor,
-                          Bool_t mod1, Bool_t mod2) const;
-
    // Internal cache update - const as the actual camera configuration is unaffected
    void       UpdateCache() const;
 
@@ -199,6 +192,12 @@ public:
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const = 0;
    virtual void   Markup(TGLCameraMarkupStyle* /* ms */) const {}
 
+   Bool_t     AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
+                                Int_t screenShift, Int_t screenShiftRange,
+                                Bool_t mod1, Bool_t mod2) const;
+   Double_t   AdjustDelta(Double_t screenShift, Double_t deltaFactor,
+                          Bool_t mod1, Bool_t mod2) const;
+
    void    SetExternalCenter(Bool_t x);
    Bool_t  GetExternalCenter(){ return fExternalCenter; }
 
@@ -210,6 +209,8 @@ public:
 
    const TGLMatrix& GetCamBase()  const { return fCamBase;  }
    const TGLMatrix& GetCamTrans() const { return fCamTrans; }
+
+   Double_t GetTheta() const;
 
    TGLMatrix& RefLastNoPickProjM() const { return fLastNoPickProjM; }
 

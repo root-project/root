@@ -827,6 +827,18 @@ void TGLCamera::SetCenterVec(Double_t x, Double_t y, Double_t z)
 }
 
 //______________________________________________________________________________
+Double_t TGLCamera::GetTheta() const
+{
+   // Get angle between camera up axis.
+
+   TGLVector3 fwd  = fCamTrans.GetBaseVec(1);
+   TGLVector3 zdir = fCamBase.GetBaseVec(3);
+   fCamBase.RotateIP(fwd);
+   return TMath::ACos(fwd*zdir);
+}
+
+//______________________________________________________________________________
+
 Bool_t TGLCamera::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
    // Rotate the camera round view volume center established in Setup().

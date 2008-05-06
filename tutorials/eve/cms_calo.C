@@ -7,7 +7,6 @@ void cms_calo()
   TFile::SetCacheFileDir(".");
   TEveManager::Create();
   gEve->GetSelection()->SetPickToSelect(1);
-  //  gEve->GetHighlight()->SetPickToSelect(0);
   
   // event data
   TFile* hf = TFile::Open(histFile, "CACHEREAD");
@@ -17,9 +16,17 @@ void cms_calo()
   data->AddHistogram(ecalHist);
   data->AddHistogram(hcalHist);
 
-  Double_t etaLimLow  = hcalHist->GetXaxis()->GetXmin();
-  Double_t etaLimHigh = hcalHist->GetXaxis()->GetXmax();
+  // different calorimeter presentations
+  TEveCalo3D* calo3d = MakeCalo3D(data);
+  MakeCalo2D(calo3d);
+  MakeCaloLego(data);
 
+  gEve->Redraw3D(1);
+}
+
+//______________________________________________________________________________
+TEveCalo3D* MakeCalo3D(TEveCaloDataHist* data)
+{
   // palette
   gStyle->SetPalette(1, 0);
   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 100);
@@ -27,16 +34,20 @@ void cms_calo()
   pal->SetDefaultColor((Color_t)4);
   pal->SetShowDefValue(kFALSE);
 
-  // calo 3D
+  // 3D towers
   TEveCalo3D* calo3d = new TEveCalo3D(data);
   calo3d->SetBarrelRadius(129);
   calo3d->SetEndCapPos(300);
-  calo3d->SetEtaLimits(etaLimLow, etaLimHigh);
   calo3d->SetPalette(pal);
   gEve->AddElement(calo3d);
 
-  // calo 2D
-  TEveViewer* v1 = gEve->SpawnNewViewer("Projected 2D");
+  return calo3d;
+}
+
+//______________________________________________________________________________
+void MakeCalo2D(TEveCalo3D* calo3d)
+{
+  TEveViewer* v1 = gEve->SpawnNewViewer("2D Viewer");
   TEveScene*  s1 = gEve->SpawnNewScene("Projected Event");
   v1->AddScene(s1);
   TGLViewer* v = v1->GetGLViewer();
@@ -46,30 +57,50 @@ void cms_calo()
   v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
   v->SetClearColor(kBlue + 4);
 
+  // projected calorimeter
   TEveProjectionManager* mng = new TEveProjectionManager();
   mng->SetProjection(TEveProjection::kPT_RhoZ);
   gEve->AddElement(mng, s1);
   gEve->AddToListTree(mng, kTRUE);
   mng->ImportElements(calo3d);
+}
 
+//______________________________________________________________________________
+void MakeCaloLego(TEveCaloDataHist* data)
+{
+  TEveViewer* v2 = gEve->SpawnNewViewer("Lego Viewer");
+  TGLViewer* v = v2->GetGLViewer();
+  v->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
+  v->SetEventHandler(new TEveLegoEventHandler("Lego", v->GetGLWidget(), v));
 
-  // lego
+  // histogram
   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 100);
   pal->SetLimits(0, data->GetMaxVal());
   pal->SetDefaultColor((Color_t)4);
-  TEveViewer* v2 = gEve->SpawnNewViewer("Lego ");
-  v2->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
   TEveScene*  s2 = gEve->SpawnNewScene("Lego");
   v2->AddScene(s2);
   TEveCaloLego* lego = new TEveCaloLego(data);
   lego->SetPalette(pal);
-  lego->SetEtaLimits(etaLimLow, etaLimHigh);
-  lego->SetTitle("caloTower Et distribution");
-  lego->SetGridColor(kOrange - 8);
-  lego->InitMainTrans();
-  lego->RefMainTrans().RotateLF(1, 2, -TMath::PiOver2());
+  lego->SetGridColor(kGray+3);
+  lego->Set2DMode(TEveCaloLego::kValSize);
   gEve->AddElement(lego, s2);
   gEve->AddToListTree(lego, kTRUE);
-
-  gEve->Redraw3D(1);
+  
+  //random lines to demonstrate TEveLegoEventHandler
+  TRandom r(0);
+  gStyle->SetPalette(1, 0);
+  TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
+  TEveQuadSet* q = new TEveQuadSet("LineXYFixedZ");
+  q->SetPalette(pal);
+  q->Reset(TEveQuadSet::kQT_LineXYFixedZ, kFALSE, 32);
+  for (Int_t i=0; i<10; ++i) {
+    q->AddLine(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
+	       r.Uniform(0.2, 1));
+    q->QuadValue(r.Uniform(0, 130));
+  }
+  q->RefitPlex();
+  TEveTrans& t = q->RefMainTrans();
+  Float_t  sc = 0.3;
+  t.SetScale(sc, sc, sc);
+  gEve->AddElement(q, s2);
 }
