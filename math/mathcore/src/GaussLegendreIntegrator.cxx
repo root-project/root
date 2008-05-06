@@ -17,6 +17,8 @@ namespace Math {
 
 GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps)
 {
+   // Basic contructor
+
    fEpsilon = eps;
    fNum = num;
    fX = 0;
@@ -31,6 +33,8 @@ GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps)
 
 GaussLegendreIntegrator::~GaussLegendreIntegrator()
 {
+   // Default Destructor 
+
    if ( fFunction != 0 && fFunctionCopied )
       delete fFunction;
 
@@ -40,12 +44,16 @@ GaussLegendreIntegrator::~GaussLegendreIntegrator()
 
 void GaussLegendreIntegrator::SetNumberPoints(int num)
 {
+   // Set the number of points used in the calculation of the integral
+
    fNum = num;
    CalcGaussLegendreSamplingPoints();
 }
 
 void GaussLegendreIntegrator::GetWeightVectors(double *x, double *w)
 {
+   // Returns the arrays x and w.
+
    memcpy(x, fX, fNum);
    memcpy(w, fW, fNum);
 }
@@ -53,6 +61,8 @@ void GaussLegendreIntegrator::GetWeightVectors(double *x, double *w)
 
 double GaussLegendreIntegrator::Integral(double a, double b)
 {
+   // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints.
+
    if (fNum<=0 || fX == 0 || fW == 0)
       return 0;
 
@@ -75,6 +85,8 @@ double GaussLegendreIntegrator::Integral(double a, double b)
 
 void GaussLegendreIntegrator::SetRelTolerance (double eps)
 {
+   // Set the desired relative Error.
+
    fEpsilon = eps;
    CalcGaussLegendreSamplingPoints();
 }
@@ -84,6 +96,8 @@ void GaussLegendreIntegrator::SetAbsTolerance (double)
 
 double GaussLegendreIntegrator::Result () const
 {
+   // Returns the result of the last integral calculation.
+
    if (!fUsedOnce)
       MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "You must calculate the result at least once!");
 
@@ -95,12 +109,16 @@ double GaussLegendreIntegrator::Error() const
 
 int GaussLegendreIntegrator::Status() const
 {
+   // This method is not implemented.
+
    return 0;
    // TODO
 }
 
 void GaussLegendreIntegrator::SetFunction (const IGenFunction & function, bool copy)
 {
+   //  Set integration function.
+
    if ( copy )
       fFunction = function.Clone();
    else
@@ -127,6 +145,9 @@ double GaussLegendreIntegrator::IntegralCauchy (double /*a*/, double /*b*/, doub
 
 void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
 {
+   // Given the number of sampling points this routine fills the
+   // arrays x and w.
+
    if (fNum<=0 || fEpsilon<=0)
       return;
 

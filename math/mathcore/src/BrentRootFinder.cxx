@@ -26,6 +26,8 @@ BrentRootFinder::~BrentRootFinder() {}
 
 int BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
 {
+// Set function to solve and the interval in where to look for the root. 
+
    fFunction = &f;
 
    if (xlow >= xup) 
@@ -48,6 +50,8 @@ double BrentRootFinder::Root() const
 
 int BrentRootFinder::Solve(int, double /*absTol*/, double /*relTol*/)
 {
+// Returns the X value corresponding to the function value fy for (xmin<x<xmax).
+
    double fy = 0; // To find the root
 
    double xmin = fXMin;

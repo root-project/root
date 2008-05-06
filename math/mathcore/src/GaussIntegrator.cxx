@@ -18,6 +18,8 @@ bool GaussIntegrator::fgAbsValue = false;
 
 GaussIntegrator::GaussIntegrator()
 {
+// Default Constructor.
+
    fEpsilon = 1e-12;
    fLastResult = fLastError = 0;
    fUsedOnce = false;
@@ -27,6 +29,8 @@ GaussIntegrator::GaussIntegrator()
 
 GaussIntegrator::~GaussIntegrator()
 {
+   // Destructor.
+
    if ( fFunctionCopied && fFunction != 0   )
       delete fFunction;
 }
@@ -36,6 +40,8 @@ void GaussIntegrator::AbsValue(bool flag)
 
 double GaussIntegrator::Integral(double a, double b)
 {
+   //  Return Integral of function between a and b.
+
    const double kHF = 0.5;
    const double kCST = 5./1000;
 
@@ -121,6 +127,8 @@ void GaussIntegrator::SetAbsTolerance (double)
 
 double GaussIntegrator::Result () const
 {
+   // Returns the result of the last Integral calculation.
+
    if (!fUsedOnce)
       MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "You must calculate the result at least once!");
 
@@ -135,6 +143,8 @@ int GaussIntegrator::Status() const
 
 void GaussIntegrator::SetFunction (const IGenFunction & function, bool copy)
 {
+   // Set integration function
+
    if ( copy )
       fFunction = function.Clone();
    else

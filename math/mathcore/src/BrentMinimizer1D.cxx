@@ -39,6 +39,8 @@ namespace Math {
 
 BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D() 
 {
+// Default Constructor.
+
    fFunction = 0;
    fXMin = 0;
    fXMax = 0;
@@ -48,6 +50,8 @@ BrentMinimizer1D::~BrentMinimizer1D() {}
 
 int BrentMinimizer1D::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
 {
+// Sets function to be minimized. 
+
    fFunction = &f;
 
    if (xlow >= xup) 
@@ -82,6 +86,10 @@ double BrentMinimizer1D::FValUpper() const
 
 int BrentMinimizer1D::Minimize( int maxIter, double , double )
 {
+// Find minimum position iterating until convergence specified by the
+// absolute and relative tolerance or the maximum number of iteration
+// is reached.
+
    int niter=0;
    double x;
    double xmin = fXMin;
