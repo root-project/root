@@ -174,6 +174,9 @@ public:
    TGLCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLCamera();
 
+   virtual Bool_t IsOrthographic() const { return kFALSE; }
+   virtual Bool_t IsPersepective() const { return kFALSE; }
+
    const TGLMatrix& RefModelViewMatrix() const { return fModVM; }
 
    Bool_t IsCacheDirty() const { return fCacheDirty; }
