@@ -1566,12 +1566,12 @@ const char *TAlienCollection::GetOutputFileName(const char *infile,
 }
 
 //_____________________________________________________________________________
-TFileCollection* TAlienCollection::GetFileCollection(const char* name, const char* title) const
+TFileCollection *TAlienCollection::GetFileCollection(const char* name, const char* title) const
 {
    // creates a TFileCollection objects and fills it with the information from this collection
    // note that TFileCollection has a flat structure and no groups --> all files are filles on a flat level
    // the TFileInfo of each file in the TFileCollection is filled with turl, size, md5, guid
-   // 
+   //
    // the object has to be deleted by the user
 
    TFileCollection* collection = new TFileCollection(name, title);
@@ -1582,23 +1582,23 @@ TFileCollection* TAlienCollection::GetFileCollection(const char* name, const cha
       TIter next2(group);
       TObjString* key = 0;
       while ((key = dynamic_cast<TObjString*> (next2()))) {
-        if (key->String().Length() == 0)
-          continue;
+         if (key->String().Length() == 0)
+            continue;
 
-        TMap* file = dynamic_cast<TMap*> (group->GetValue(key));
-        if (!file)
-          continue;
+         TMap* file = dynamic_cast<TMap*> (group->GetValue(key));
+         if (!file)
+            continue;
 
-        TObjString* turl = dynamic_cast<TObjString*> (file->GetValue("turl"));
-        TObjString* size = dynamic_cast<TObjString*> (file->GetValue("size"));
-        TObjString* md5 = dynamic_cast<TObjString*> (file->GetValue("md5"));
-        TObjString* guid = dynamic_cast<TObjString*> (file->GetValue("guid"));
+         TObjString* turl = dynamic_cast<TObjString*> (file->GetValue("turl"));
+         TObjString* size = dynamic_cast<TObjString*> (file->GetValue("size"));
+         TObjString* md5 = dynamic_cast<TObjString*> (file->GetValue("md5"));
+         TObjString* guid = dynamic_cast<TObjString*> (file->GetValue("guid"));
 
-        if (!turl || turl->String().Length() == 0)
-          continue;
+         if (!turl || turl->String().Length() == 0)
+            continue;
 
-        TFileInfo* fileInfo = new TFileInfo(turl->String(), size->String().Atoi(), guid->String(), md5->String());
-        collection->Add(fileInfo);
+         TFileInfo* fileInfo = new TFileInfo(turl->String(), size->String().Atoi(), guid->String(), md5->String());
+         collection->Add(fileInfo);
       }
    }
 
@@ -1606,4 +1606,3 @@ TFileCollection* TAlienCollection::GetFileCollection(const char* name, const cha
 
    return collection;
 }
-
