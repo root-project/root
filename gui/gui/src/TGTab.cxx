@@ -337,6 +337,9 @@ void TGTab::RemoveTab(Int_t tabIndex, Bool_t storeRemoved)
    TGFrameElement *elTab, *elCont;
    Int_t  count = 0;
 
+   // Notify (signal) for removed tab "tabIndex"
+   Removed(tabIndex);
+
    TIter next(fList) ;
    next() ; // skip first container
 

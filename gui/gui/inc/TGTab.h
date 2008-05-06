@@ -120,6 +120,7 @@ public:
 
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
 
+   virtual void Removed(Int_t id) { Emit("Removed(Int_t)", id); }    //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
    virtual TGLayoutManager *GetLayoutManager() const;
 
