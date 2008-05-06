@@ -1078,7 +1078,7 @@ void TRootBrowserLite::CreateBrowser(const char *name)
 
    fComboLayout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 0, 2, 2);
    fToolBar->AddFrame(fFSComboBox, fComboLayout);
-   fFSComboBox->Resize(150, fFSComboBox->GetDefaultHeight());
+   fFSComboBox->Resize(190, fFSComboBox->GetDefaultHeight());
    fFSComboBox->Associate(this);
 
    int spacing = 8;

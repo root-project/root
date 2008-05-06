@@ -352,12 +352,18 @@ void TGFileBrowser::BrowseObj(TObject *obj)
       TList *volumes = gSystem->GetVolumes("all");
       TList *curvol  = gSystem->GetVolumes("cur");
       if (volumes && curvol) {
-         TString curdrive = ((TObjString *)(curvol->At(0)))->GetString();
+         const char *curdrive;
+         TNamed *named = (TNamed *)curvol->At(0);
+         if (named)
+            curdrive = named->GetName();
+         else
+            curdrive = StrDup("C:");
          TIter next(volumes);
-         TObjString *drive;
-         while ((drive = (TObjString *)next())) {
-            AddFSDirectory(Form("%s\\", drive->GetName()), 0, 
-                 (drive->GetString() == curdrive) ? "SetRootDir" : "Add");
+         TNamed *drive;
+         while ((drive = (TNamed *)next())) {
+            AddFSDirectory(Form("%s\\", drive->GetName()), drive->GetTitle(), 
+                           (strcmp(drive->GetName(), curdrive) == 0) ? 
+                           "SetRootDir" : "Add");
          }
          delete volumes;
          delete curvol;
@@ -491,19 +497,20 @@ void TGFileBrowser::Refresh(Bool_t /*force*/)
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGFileBrowser::AddFSDirectory(const char *entry, const char * /*path*/, 
+void TGFileBrowser::AddFSDirectory(const char *entry, const char *path, 
                                    Option_t *opt)
 {
    // Add file system directory in the list tree.
 
+   TGListTreeItem *item = 0;
    if ((opt == 0) || (strlen(opt) == 0)) {
       if (fRootDir == 0 && !fListTree->FindChildByName(0, rootdir))
-         fRootDir = fListTree->AddItem(0, rootdir);
+         item = fRootDir = fListTree->AddItem(0, rootdir);
       return;
    }
    if (strstr(opt, "SetRootDir")) {
       if (!fListTree->FindChildByName(0, entry))
-         fRootDir = fListTree->AddItem(0, entry);
+         item = fRootDir = fListTree->AddItem(0, entry);
    } 
    else if (strstr(opt, "Add")) {
       // MT: i give up! wanted to place entries for selected
@@ -511,7 +518,22 @@ void TGFileBrowser::AddFSDirectory(const char *entry, const char * /*path*/,
       // TGListTreeItem *lti = fListTree->AddItem(0, entry);
       //
       if (!fListTree->FindChildByName(0, entry))
-         fListTree->AddItem(0, entry);
+         item = fListTree->AddItem(0, entry);
+   }
+   if (item && path) {
+      TString infos = path;
+      item->SetTipText(path);
+      TGPicture *pic = 0;
+      if (infos.Contains("Removable"))
+         pic = (TGPicture *)gClient->GetPicture("fdisk_t.xpm");
+      else if (infos.Contains("Local"))
+         pic = (TGPicture *)gClient->GetPicture("hdisk_t.xpm");
+      else if (infos.Contains("CD"))
+         pic = (TGPicture *)gClient->GetPicture("cdrom_t.xpm");
+      else if (infos.Contains("Network"))
+         pic = (TGPicture *)gClient->GetPicture("netdisk_t.xpm");
+      if (pic)
+         item->SetPictures(pic, pic);
    }
 }
 

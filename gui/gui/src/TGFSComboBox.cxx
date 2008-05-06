@@ -35,7 +35,6 @@
 #include "TGResourcePool.h"
 #include "TGPicture.h"
 #include "TSystem.h"
-#include "TObjString.h"
 #include "Riostream.h"
 
 const TGFont *TGTreeLBEntry::fgDefaultFont = 0;
@@ -232,16 +231,39 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    Int_t idx = 0;
    TList *volumes = gSystem->GetVolumes("all");
    TList *curvol  = gSystem->GetVolumes("cur");
-   TString curdrive;
+   TString infos;
+   const char *curdrive = "";
    if (volumes && curvol) {
-      curdrive = ((TObjString *)(curvol->At(0)))->GetString();
-      gLbc[idx].fName = StrDup(Form("Drive %s", curdrive.Data()));
-      gLbc[idx].fPath = StrDup(Form("%s\\", curdrive.Data()));
-      gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
-      gLbc[idx].fId     = 1000;
-      gLbc[idx].fIndent = 0; 
-      gLbc[idx].fFlags  = 0;
-      ++idx;
+      TNamed *named = (TNamed *)curvol->At(0);
+      if (named) {
+         curdrive = named->GetName();
+         infos = named->GetTitle();
+         gLbc[idx].fName = StrDup(infos.Data());
+         gLbc[idx].fPath = StrDup(Form("%s\\", curdrive));
+         if (infos.Contains("Removable"))
+            gLbc[idx].fPixmap = StrDup("fdisk_t.xpm");
+         else if (infos.Contains("Local"))
+            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
+         else if (infos.Contains("CD"))
+            gLbc[idx].fPixmap = StrDup("cdrom_t.xpm");
+         else if (infos.Contains("Network"))
+            gLbc[idx].fPixmap = StrDup("netdisk_t.xpm");
+         else
+            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
+         gLbc[idx].fId     = 1000;
+         gLbc[idx].fIndent = 0; 
+         gLbc[idx].fFlags  = 0;
+         ++idx;
+      }
+      else {
+         gLbc[idx].fName = StrDup("Root");
+         gLbc[idx].fPath = StrDup("/");
+         gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
+         gLbc[idx].fId     = 1000;
+         gLbc[idx].fIndent = 1; 
+         gLbc[idx].fFlags  = 0;
+         ++idx;
+      }
    }
    else {
       gLbc[idx].fName = StrDup("Root");
@@ -288,13 +310,23 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 
    if (volumes && curvol) {
       TIter next(volumes);
-      TObjString *drive;
-      while ((drive = (TObjString *)next())) {
-         if (drive->GetString() == curdrive)
+      TNamed *drive;
+      while ((drive = (TNamed *)next())) {
+         if (!strcmp(drive->GetName(), curdrive))
             continue;
-         gLbc[idx].fName   = StrDup(Form("Drive %s", drive->GetName()));
+         infos = drive->GetTitle();
+         gLbc[idx].fName   = StrDup(drive->GetTitle());
          gLbc[idx].fPath   = StrDup(Form("%s\\", drive->GetName()));
-         gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
+         if (infos.Contains("Removable"))
+            gLbc[idx].fPixmap = StrDup("fdisk_t.xpm");
+         else if (infos.Contains("Local"))
+            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
+         else if (infos.Contains("CD"))
+            gLbc[idx].fPixmap = StrDup("cdrom_t.xpm");
+         else if (infos.Contains("Network"))
+            gLbc[idx].fPixmap = StrDup("netdisk_t.xpm");
+         else
+            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
          gLbc[idx].fId     = (idx+1) * 1000;
          gLbc[idx].fIndent = 0;
          gLbc[idx].fFlags  = 0;
