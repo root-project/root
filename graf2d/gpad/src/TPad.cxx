@@ -2058,6 +2058,16 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    Int_t bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
 
+   // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
+   // drawing technique to paint a 2D plot.
+   TString opt = axis->GetParent()->GetDrawOption();
+   opt.ToLower();
+   Bool_t kCont4 = kFALSE;
+   if (strstr(opt,"cont4")) {
+      view = 0;
+      kCont4 = kTRUE;
+   }
+
    switch (event) {
 
    case kButton1Down:
@@ -2167,7 +2177,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
             xmin = GetUxmin() +ratio1*(GetUxmax() - GetUxmin());
             xmax = GetUxmin() +ratio2*(GetUxmax() - GetUxmin());
-            if (GetLogx()) {
+            if (GetLogx() && !kCont4) {
                xmin = PadtoX(xmin);
                xmax = PadtoX(xmax);
             }
@@ -2175,7 +2185,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
             xmin = GetUymin() +ratio1*(GetUymax() - GetUymin());
             xmax = GetUymin() +ratio2*(GetUymax() - GetUymin());
-            if (GetLogy()) {
+            if (GetLogy() && !kCont4) {
                xmin = PadtoY(xmin);
                xmax = PadtoY(xmax);
             }
@@ -2192,6 +2202,17 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             ratio1 = ratio2;
             ratio2 = temp;
          }
+
+         // xmin and xmax need to be adjusted in case of CONT4.
+         if (kCont4) {
+            Double_t low = axis->GetBinLowEdge(axis->GetFirst());
+            Double_t up  = axis->GetBinUpEdge(axis->GetLast());
+            Double_t xmi = GetUxmin();
+            Double_t xma = GetUxmax();
+            xmin = ((xmin-xmi)/(xma-xmi))*(up-low)+low;
+            xmax = ((xmax-xmi)/(xma-xmi))*(up-low)+low;
+         }
+
          if (!strcmp(axis->GetName(),"xaxis")) axisNumber = 1;
          if (!strcmp(axis->GetName(),"yaxis")) axisNumber = 2;
          if (ratio2 - ratio1 > 0.05) {
