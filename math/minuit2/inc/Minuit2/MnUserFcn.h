@@ -27,8 +27,8 @@ class MnUserFcn : public MnFcn {
 
 public:
 
-  MnUserFcn(const FCNBase& fcn, const MnUserTransformation& trafo) :
-    MnFcn(fcn), fTransform(trafo) {}
+   MnUserFcn(const FCNBase& fcn, const MnUserTransformation& trafo, int ncall = 0) :
+      MnFcn(fcn,ncall), fTransform(trafo) {}
 
   ~MnUserFcn() {}
 

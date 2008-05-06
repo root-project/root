@@ -37,14 +37,19 @@ public:
 public:
    
 
+   /// constructor from only MinimumSeed. Minimum is only from seed result not full minimization 
    FunctionMinimum(const MinimumSeed& seed, double up) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, up))) {}
   
+   /// constructor at the end of a successfull minimization from seed and vector of states 
    FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up))) {}
   
+   /// constructor at the end of a failed minimization due to exceeding function call limit 
    FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up, MnReachedCallLimit) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up, BasicFunctionMinimum::MnReachedCallLimit()))) {}
   
+   /// constructor at the end of a failed minimization due to edm above maximum value
    FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up, MnAboveMaxEdm) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up, BasicFunctionMinimum::MnAboveMaxEdm()))) {}
 
+   /// copy constructo
    FunctionMinimum(const FunctionMinimum& min) : fData(min.fData) {}
   
    FunctionMinimum& operator=(const FunctionMinimum& min) {

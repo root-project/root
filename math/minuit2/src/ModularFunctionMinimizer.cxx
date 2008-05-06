@@ -25,8 +25,6 @@
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnLineSearch.h"
 #include "Minuit2/MnParabolaPoint.h"
-#include "Minuit2/FumiliFCNBase.h"
-#include "Minuit2/FumiliGradientCalculator.h"
 
 namespace ROOT {
 

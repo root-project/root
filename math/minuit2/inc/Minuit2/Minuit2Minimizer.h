@@ -99,10 +99,10 @@ public:
    virtual void Clear();
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::Minimizer::IObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
 
    /// set gradient the function to minimize
-   virtual void SetFunction(const ROOT::Math::Minimizer::IGradObjFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
 
    /// set free variable 
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 

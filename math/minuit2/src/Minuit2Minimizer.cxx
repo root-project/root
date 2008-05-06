@@ -53,7 +53,6 @@ Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type ) :
    fMinimum(0)   
 {
    // Default constructor implementation depending on minimizer type 
-   SetTolerance(0.001);
    SetMinimizerType(type); 
 }
 
@@ -65,8 +64,7 @@ Minuit2Minimizer::Minuit2Minimizer(const char *  type ) :
    fMinimum(0)   
 {   
    // constructor from a string
-   SetTolerance(0.001);
-   // select type from the string
+
    std::string algoname(type);
    // tolower() is not an  std function (Windows)
    std::transform(algoname.begin(), algoname.end(), algoname.begin(), (int(*)(int)) tolower ); 
@@ -184,12 +182,12 @@ bool Minuit2Minimizer::SetFixedVariable(unsigned int ivar , const std::string & 
 }
 
 
-void Minuit2Minimizer::SetFunction(const  IObjFunction & func) { 
+void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) { 
    // set function to be minimized
    if (fMinuitFCN) delete fMinuitFCN;
    fDim = func.NDim(); 
    if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<IObjFunction> (func, ErrorUp() );
+      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction> (func, ErrorUp() );
    }
    else { 
       // for Fumili the fit method function interface is required
@@ -202,12 +200,12 @@ void Minuit2Minimizer::SetFunction(const  IObjFunction & func) {
    }
 }
 
-void Minuit2Minimizer::SetFunction(const  IGradObjFunction & func) { 
+void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func) { 
    // set function to be minimized
    fDim = func.NDim(); 
    if (fMinuitFCN) delete fMinuitFCN;
    if (!fUseFumili) { 
-      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<IGradObjFunction> (func, ErrorUp() );
+      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction> (func, ErrorUp() );
    }
    else { 
       // for Fumili the fit method function interface is required
@@ -262,12 +260,11 @@ bool Minuit2Minimizer::Minimize() {
 
    // check if Hesse needs to be run 
    if (fMinimum->IsValid() && IsValidError() && fMinimum->State().Error().Dcovar() != 0 ) {
-      // run Hesse
+      // run Hesse (Hesse will add results in the last state of fMinimum
       ROOT::Minuit2::MnHesse hesse(strategy );
-      ROOT::Minuit2::MnUserFcn mfcn(*GetFCN(), fMinimum->UserState().Trafo() );
-      ROOT::Minuit2::MinimumState st = hesse( mfcn, fMinimum->State(), fMinimum->UserState().Trafo(), maxfcn); 
-      fMinimum->Add(st); 
+      hesse( *GetFCN(), *fMinimum, maxfcn); 
    }
+
 
 
 #ifdef USE_ROOT_ERROR

@@ -21,6 +21,7 @@ namespace ROOT {
 
 FunctionMinimum ScanBuilder::Minimum(const MnFcn& mfcn, const GradientCalculator&, const MinimumSeed& seed, const MnStrategy&, unsigned int, double) const {
    // find the function minimum performing a parameter scan (using MnParameterScan class)  
+   // function gradient is not used
    MnAlgebraicVector x = seed.Parameters().Vec();
    MnUserParameterState upst(seed.State(), mfcn.Up(), seed.Trafo());
    MnParameterScan scan(mfcn.Fcn(), upst.Parameters(), seed.Fval());

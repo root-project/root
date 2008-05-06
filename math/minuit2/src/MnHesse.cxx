@@ -17,6 +17,7 @@
 #include "Minuit2/InitialGradientCalculator.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
+#include "Minuit2/FunctionMinimum.h"
 
 //#define DEBUG
 
@@ -56,7 +57,7 @@ MnUserParameterState MnHesse::operator()(const FCNBase& fcn, const MnUserParamet
 
 MnUserParameterState MnHesse::operator()(const FCNBase& fcn, const MnUserParameterState& state, unsigned int maxcalls) const {
    // interface from MnUserParameterState 
-   // create Minimum state and use that interface
+   // create a new Minimum state and use that interface
    unsigned int n = state.VariableParameters();
    MnUserFcn mfcn(fcn, state.Trafo());
    MnAlgebraicVector x(n);
@@ -70,8 +71,16 @@ MnUserParameterState MnHesse::operator()(const FCNBase& fcn, const MnUserParamet
    return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
 }
 
+void MnHesse::operator()(const FCNBase& fcn, FunctionMinimum& min, unsigned int maxcalls) const {
+   // interface from FunctionMinimum to be used after minimization 
+   // use last state from the minimization without the need to re-create a new state
+   MnUserFcn mfcn(fcn, min.UserState().Trafo());
+   MinimumState st = (*this)( mfcn, min.State(), min.UserState().Trafo(), maxcalls); 
+   min.Add(st); 
+}
+
 MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, const MnUserTransformation& trafo, unsigned int maxcalls) const {
-   // interface from MinimumState and MnUserTransformation
+   // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
    
    const MnMachinePrecision& prec = trafo.Precision();
@@ -121,6 +130,11 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
       double dmin = 8.*prec.Eps2()*(fabs(xtf) + prec.Eps2());
       double d = fabs(gst(i));
       if(d < dmin) d = dmin;
+
+#ifdef DEBUG
+      std::cout << "\nDerivative parameter  " << i << " d = " << d << " dmin = " << dmin << std::endl;
+#endif
+
       
       for(unsigned int icyc = 0; icyc < Ncycles(); icyc++) {
          double sag = 0.;
@@ -133,6 +147,11 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
             fs2 = mfcn(x);
             x(i) = xtf;
             sag = 0.5*(fs1+fs2-2.*amin);
+
+#ifdef DEBUG
+            std::cout << "cycle " << icyc << " mul " << multpy << "\t sag = " << sag << " d = " << d << std::endl; 
+#endif
+            // FMinuit checks that fabs(sag) != 0 (t.b.i)
             if(fabs(sag) > prec.Eps2()) goto L30; // break;
             if(trafo.Parameter(i).HasLimits()) {
                if(d > 0.5) goto L26;
@@ -167,6 +186,12 @@ L30:
          d = sqrt(2.*aimsag/fabs(g2(i)));
          if(trafo.Parameter(i).HasLimits()) d = std::min(0.5, d);
          if(d < dmin) d = dmin;
+
+#ifdef DEBUG
+         std::cout << "\t g1 = " << grd(i) << " g2 = " << g2(i) << " step = " << gst(i) << " d = " << d 
+                   << " diffd = " <<  fabs(d-dlast)/d << " diffg2 = " << fabs(g2(i)-g2bfor)/g2(i) << std::endl;
+#endif
+
          
          // see if converged
          if(fabs((d-dlast)/d) < Tolerstp()) break;
@@ -192,12 +217,18 @@ L30:
       }
       
    }
+
+#ifdef DEBUG
+   std::cout << "\n Second derivatives " << g2 << std::endl; 
+#endif   
    
    if(fStrategy.Strategy() > 0) {
       // refine first derivative
       HessianGradientCalculator hgc(mfcn, trafo, fStrategy);
       FunctionGradient gr = hgc(st.Parameters(), FunctionGradient(grd, g2, gst));
+      // update gradient and step values 
       grd = gr.Grad();
+      gst = gr.Gstep();
    }
    
    //off-diagonal Elements  
@@ -247,6 +278,16 @@ L30:
    MinimumError err(vhmat, 0.);
    VariableMetricEDMEstimator estim;
    double edm = estim.Estimate(gr, err);
+
+#ifdef DEBUG
+   std::cout << "\nNew state from MnHesse " << std::endl;
+   std::cout << "Gradient " << grd << std::endl; 
+   std::cout << "Second Deriv " << g2 << std::endl; 
+   std::cout << "Gradient step " << gst << std::endl; 
+   std::cout << "Error  " << vhmat  << std::endl; 
+   std::cout << "edm  " << edm  << std::endl; 
+#endif
+
    
    return MinimumState(st.Parameters(), err, gr, edm, mfcn.NumOfCalls());
 }

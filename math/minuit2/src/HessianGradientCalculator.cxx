@@ -18,6 +18,13 @@
 
 #include <math.h>
 
+//#define DEBUG
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h"
+#endif
+
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -65,7 +72,9 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
    MnAlgebraicVector x = par.Vec();
    MnAlgebraicVector grd = Gradient.Grad();
    const MnAlgebraicVector& g2 = Gradient.G2();
-   const MnAlgebraicVector& gstep = Gradient.Gstep();
+   //const MnAlgebraicVector& gstep = Gradient.Gstep();
+   // update also gradient step sizes
+   MnAlgebraicVector gstep = Gradient.Gstep();
    
    double fcnmin = par.Fval();
    //   std::cout<<"fval: "<<fcnmin<<std::endl;
@@ -95,20 +104,32 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
          double fs2 = Fcn()(x);
          x(i) = xtf;
          //       double sag = 0.5*(fs1+fs2-2.*fcnmin);
+         //LM: should I calculate also here second derivatives ???
+
          grdold = grd(i);
          grdnew = (fs1-fs2)/(2.*d);
          dgmin = Precision().Eps()*(fabs(fs1) + fabs(fs2))/d;
-         if(fabs(grdnew) < Precision().Eps()) break;
+         //if(fabs(grdnew) < Precision().Eps()) break;
+         if (grdnew == 0) break; 
          double change = fabs((grdold-grdnew)/grdnew);
          if(change > chgold && j > 1) break;
          chgold = change;
          grd(i) = grdnew;
+         //LM : update also the step sizes
+         gstep(i) = d; 
+
          if(change < 0.05) break;
          if(fabs(grdold-grdnew) < dgmin) break;
          if(d < dmin) break;
          d *= 0.2;
       }  
+
       dgrd(i) = std::max(dgmin, fabs(grdold-grdnew));
+
+#ifdef DEBUG
+      std::cout << "HGC Param : " << i << "\t new g1 = " << grd(i) << " gstep = " << d << " dgrd = " << dgrd(i) << std::endl;
+#endif
+
    }
    
    return std::pair<FunctionGradient, MnAlgebraicVector>(FunctionGradient(grd, g2, gstep), dgrd);

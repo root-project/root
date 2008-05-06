@@ -2,6 +2,7 @@
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
+#include "Math/Functor.h"
 
 #include "TVirtualFitter.h"
 
@@ -25,9 +26,9 @@ int gNCall = 0;
 int gNCall2 = 0;
 int gNmin = 1000; 
 int gVerbose = 0; 
+bool useGradient = false; 
 
-
-bool minos = false; 
+bool minos = true; 
 
 double gAbsTolerance = 0.005;
 
@@ -91,6 +92,7 @@ public :
 
    mutable double fTrueMin[2];
 }; 
+
 
 // TRIGONOMETRIC FLETCHER FUNCTION
 
@@ -366,7 +368,53 @@ public :
    mutable std::vector<double> fTrueMin;
 }; 
 
+//WOOD function (4 dim function) 
 
+double WoodFunction(const double * par) { 
+  gNCall++; 
+
+  const double w = par[0]; 
+  const double x = par[1]; 
+  const double y = par[2]; 
+  const double z = par[3]; 
+
+  const double w1 = w-1;
+  const double x1 = x-1;
+  const double y1 = y-1;
+  const double z1 = z-1;
+  const double tmp1 = x-w*w;
+  const double tmp2 = z-y*y;
+
+  double f = 100*tmp1*tmp1+w1*w1+90*tmp2*tmp2+y1*y1+10.1*(x1*x1+z1*z1)+19.8*x1*z1;
+  return f; 
+}
+
+//Powell Function (4 dim function)
+double PowellFunction(const double * par) { 
+  gNCall++; 
+
+  const double w = par[0]; 
+  const double x = par[1]; 
+  const double y = par[2]; 
+  const double z = par[3]; 
+
+  const double tmp1 = w+10*x;
+  const double tmp2 = y-z;
+  const double tmp3 = x-2*y;
+  const double tmp4 = w-z;
+
+  double f = tmp1*tmp1+5*tmp2*tmp2+tmp3*tmp3*tmp3*tmp3+10*tmp4*tmp4*tmp4*tmp4;
+  return f;
+}
+
+double SimpleQuadFunction(const double * par) { 
+   gNCall++;
+   double x = par[0]; 
+   double y = par[1]; 
+   double f =  x * x + 2 * y * y  - x*y; 
+   std::cout << "Quadfunc " << gNCall << "\t" << x << " , " << y << " f = " << f << std::endl; 
+   return f; 
+} 
 
 const double *  TrueMinimum(const  ROOT::Math::IMultiGenFunction & func) {
 
@@ -397,18 +445,18 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
 
    int iret = 0; 
 
+   min->SetMaxFunctionCalls(1000000);
+   min->SetMaxIterations(100000);
+   min->SetTolerance(gAbsTolerance);
    if (func.NDim() >= 10) { 
-      min->SetMaxFunctionCalls(1000000);
-      min->SetMaxIterations(100000);
-      min->SetTolerance(gAbsTolerance);
-      if (func.NDim() >= 10) min->SetTolerance(0.01);
+      min->SetTolerance(0.01);
       
    }
 
    min->SetPrintLevel(gVerbose);
    // check if func provides gradient
    const ROOT::Math::IMultiGradFunction * gfunc = dynamic_cast<const  ROOT::Math::IMultiGradFunction *>(&func);
-   if (gfunc != 0) 
+   if (gfunc != 0 && useGradient) 
       min->SetFunction(*gfunc); 
    else 
       min->SetFunction(func); 
@@ -438,6 +486,7 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
    }
 
    if (!ok) iret = -2;
+   int ncall_migrad = gNCall; 
 
    // test Minos (use the default up of 1)
    if (minos) { 
@@ -445,10 +494,14 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
       double el,eu; 
       for (unsigned int i = 0; i < func.NDim(); ++i) { 
          ret  = min->GetMinosError(i,el,eu); 
+         std::cout << "ncalls " << gNCall << "\t";
          if (ret) std::cout << "MINOS error  for " << i  << " = " << el << "   " << eu << std::endl;
          else     std::cout << "MINOS failed for " << i << std::endl; 
       }
    }  
+
+   std::cout << "\nMigrad Ncalls:\t " << ncall_migrad << std::endl;
+   std::cout << "Minos Ncalls :\t " << gNCall - ncall_migrad << std::endl;
    
 
 //   std::cout << "funciton at the minimum " << func(xmin) << std::endl;
@@ -602,18 +655,22 @@ int testRosenBrock() {
    gNmin = 2000;
 #endif
 
+   gNmin = 1; 
+
     
    RosenBrockFunction fRB;
    double xRB[2] = { -1.,1.2};
-   //iret |= testNewMinimizer(fRB,xRB,s0,"Minuit","");
-   iret |= testNewMinimizer(fRB,xRB,s0,"Minuit2","");
-   iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugateFR");
-   iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugatePR");
-   iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS");
-   iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS2");
 
-   iret |= testOldMinimizer(RosenBrock,"Minuit",2);
-   iret |= testOldMinimizer(RosenBrock,"Minuit2",2);
+   iret |= testNewMinimizer(fRB,xRB,s0,"Minuit","");
+   iret |= testNewMinimizer(fRB,xRB,s0,"Minuit2","");
+
+//    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugateFR");
+//    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugatePR");
+//    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS");
+//    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS2");
+
+//    iret |= testOldMinimizer(RosenBrock,"Minuit",2);
+//    iret |= testOldMinimizer(RosenBrock,"Minuit2",2);
 
 
    return iret; 
@@ -632,6 +689,7 @@ int testChebyQuad() {
 #ifndef DEBUG
    gNmin = std::max(1, int(20000/n/n) );
 #endif
+   gNmin = 1;
 
 
    double s0[n];
@@ -667,11 +725,12 @@ int testChebyQuad() {
    std::cout << "FUNC " << func(x1) << std::endl;
 
 
+   iret |= testNewMinimizer(func,x0,s0, "Minuit","");
    iret |= testNewMinimizer(func,x0,s0, "Minuit2","");
-   //iret |= testNewMinimizer(func,x0,s0, "Minuit","");
-   iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugateFR");
-   iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugatePR");
-   iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","BFGS");
+
+//    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugateFR");
+//    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugatePR");
+//    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","BFGS");
 
    return iret;
 }
@@ -686,6 +745,7 @@ int testTrigoFletcher() {
 #ifndef DEBUG
    gNmin = 2;
 #endif
+   gNmin = 1;
 
    const int nT = 50;
    TrigoFletcherFunction fTrigo(nT);
@@ -698,10 +758,99 @@ int testTrigoFletcher() {
 
 
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"Minuit2","");
-   //iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"Minuit","");
-   iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugateFR");
-   iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugatePR");
-   iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","BFGS");
+   iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"Minuit","");
+
+//    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugateFR");
+//    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugatePR");
+//    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","BFGS");
+
+
+   return iret; 
+}
+
+
+int testWood() { 
+
+   int iret = 0; 
+
+
+   // test with Wood function (4d) 
+//   minimum    : F(1,1,1,1)  =   0.
+
+
+#ifndef DEBUG
+   gNmin = 1000;
+#endif
+   gNmin = 1;
+
+   ROOT::Math::Functor f(&WoodFunction,4);
+
+   double x0[4] = { -3, -1, -3, -1 };
+   double s0[4] = { 0.1, 0.1, 0.1, 0.1};
+
+   std::cout << "\n************************************************************\n"; 
+   std::cout << "\tWOOD 4 function test  \n\n";
+
+
+   iret |= testNewMinimizer(f, x0, s0,"Minuit","");
+   iret |= testNewMinimizer(f, x0, s0,"Minuit2","");
+
+
+   return iret; 
+}
+
+int testPowell() { 
+
+   int iret = 0; 
+
+
+   // test with Powell function (4d) 
+   // minimum is at F(0,0,0,0) = 0
+#ifndef DEBUG
+   gNmin = 1000;
+#endif
+   gNmin = 1;
+
+   ROOT::Math::Functor f(&PowellFunction,4);
+
+   double x0[4] = { -3, -1, 0, 1 };
+   double s0[4] = { 0.1, 0.1, 0.1, 0.1};
+
+   std::cout << "\n************************************************************\n"; 
+   std::cout << "\tPOWELL function test   \n\n";
+
+
+   iret |= testNewMinimizer(f, x0, s0,"Minuit","");
+   iret |= testNewMinimizer(f, x0, s0,"Minuit2","");
+
+
+   return iret; 
+}
+
+
+int testQuadFunc() { 
+
+   int iret = 0; 
+
+
+   // test with a simple quadratic function 2d
+   // minimum is at F(0,0) = 0
+#ifndef DEBUG
+   gNmin = 1000;
+#endif
+   gNmin = 1;
+
+   ROOT::Math::Functor f(&SimpleQuadFunction,2);
+
+   double x0[4] = { -3, -3 };
+   double s0[4] = { 0.1, 0.1};
+
+   std::cout << "\n************************************************************\n"; 
+   std::cout << "\tSIMPLE QUAD  function test   \n\n";
+
+
+   iret |= testNewMinimizer(f, x0, s0,"Minuit","");
+   iret |= testNewMinimizer(f, x0, s0,"Minuit2","");
 
 
    return iret; 
@@ -716,10 +865,17 @@ int main() {
    gVerbose = 3; 
    gNmin = 1; 
 #endif
+   
+   //gVerbose = 3; 
 
    iret |=  testRosenBrock();
    iret |=  testChebyQuad();
    iret |=  testTrigoFletcher();
+
+   iret |=  testWood();
+   iret |=  testPowell();
+
+   iret |=  testQuadFunc();
 
 
 

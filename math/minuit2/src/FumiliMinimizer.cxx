@@ -21,6 +21,8 @@
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FumiliFCNBase.h"
+#include "Minuit2/FumiliFCNBase.h"
+#include "Minuit2/FumiliGradientCalculator.h"
 #include "Minuit2/FCNGradientBase.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
@@ -69,7 +71,7 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
 
 FunctionMinimum FumiliMinimizer::Minimize(const FCNGradientBase& fcn, const MnUserParameterState& st, const MnStrategy& strategy, unsigned int maxfcn, double toler) const {
    // Minimize using Fumili. Case of interface is a FCNGradientBase. 
-   // Normally other method is used  
+   // Normally other method is used  - probably this could be removed (t.b.i.)
    
    // need MnUserFcn
    MnUserFcn mfcn(fcn, st.Trafo() );

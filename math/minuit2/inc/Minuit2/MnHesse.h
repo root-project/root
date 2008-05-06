@@ -28,6 +28,7 @@ class MnUserTransformation;
 class MinimumState;
 class MnMachinePrecision;
 class MnFcn;
+class FunctionMinimum; 
 
 //_______________________________________________________________________
 /** 
@@ -69,7 +70,14 @@ public:
    MnUserParameterState operator()(const FCNBase&, const MnUserParameters&, const MnUserCovariance&, unsigned int maxcalls=0) const;
    /// FCN + MnUserParameterState
    MnUserParameterState operator()(const FCNBase&, const MnUserParameterState&, unsigned int maxcalls=0) const;
+   /// 
+   /// API to use MnHesse after minimization when function mimimum is avalilable, otherwise information on the last state will be 
+   /// lost. (It would be needed to re-call the gradient and spend extra useless function calls) 
+   /// The Function Minimum is updated (modified) by adding the Hesse results as last state of minimization
    ///
+   void operator()(const FCNBase&, FunctionMinimum&, unsigned int maxcalls=0) const;
+   
+
    /// internal interface
    ///
    MinimumState operator()(const MnFcn&, const MinimumState&, const MnUserTransformation&, unsigned int maxcalls=0) const;

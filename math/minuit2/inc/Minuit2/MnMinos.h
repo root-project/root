@@ -58,6 +58,11 @@ public:
    /// ask for MinosError (Lower + Upper)
    /// can be printed via std::cout  
    MinosError Minos(unsigned int, unsigned int maxcalls = 0) const;
+
+protected: 
+   
+   /// internal method to get crossing value via MnFunctionCross
+   MnCross FindCrossValue(int dir , unsigned int, unsigned int maxcalls = 0) const;
   
 private:
   
