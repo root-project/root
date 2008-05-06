@@ -125,7 +125,7 @@ public:
    /// set a function to minimize using gradient 
    virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func) 
    {
-      SetFunction(static_cast<const ROOT::Math::IMultiGenFunction &> (func));
+      SetFunction(static_cast<const ::ROOT::Math::IMultiGenFunction &> (func));
    }
    
 
