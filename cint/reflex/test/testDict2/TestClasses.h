@@ -1,5 +1,5 @@
 #include <list>
-
+#include <cstdlib>
 
 namespace {
    class ForwardedUnnamedType;
