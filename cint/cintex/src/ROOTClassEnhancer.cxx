@@ -279,14 +279,14 @@ namespace ROOT { namespace Cintex {
                         1 );                  // implementation line number
    }
 
-   void ROOTClassEnhancerInfo::AddFunction( const std::string& Name,
+   void ROOTClassEnhancerInfo::AddFunction( const std::string& name,
                                             const Type & sig,
                                             StubFunction stubFP,
                                             void*  stubCtx,
                                             int mods)
    {
       // Add function info.
-      fType.AddFunctionMember( Name.c_str(), sig, stubFP, stubCtx, 0, PUBLIC | mods );
+      fType.AddFunctionMember( name.c_str(), sig, stubFP, stubCtx, 0, PUBLIC | mods );
    }
 
    inline static ROOTClassEnhancerInfo& context(void* ctxt)  {
@@ -400,20 +400,20 @@ namespace ROOT { namespace Cintex {
                }
                std::auto_ptr<CollFuncTable> m((CollFuncTable*)method.Invoke().Address());
 
-               ::ROOT::TCollectionProxyInfo info(tid,
-                                                 m->iter_size,
-                                                 m->value_diff,
-                                                 m->value_offset,
-                                                 m->size_func,
-                                                 m->resize_func,
-                                                 m->clear_func,
-                                                 m->first_func,
-                                                 m->next_func,
-                                                 m->construct_func,
-                                                 m->destruct_func,
-                                                 m->feed_func,
-                                                 m->collect_func);
-               root_class->SetCollectionProxy(info);
+               ::ROOT::TCollectionProxyInfo cpinfo(tid,
+                                                   m->iter_size,
+                                                   m->value_diff,
+                                                   m->value_offset,
+                                                   m->size_func,
+                                                   m->resize_func,
+                                                   m->clear_func,
+                                                   m->first_func,
+                                                   m->next_func,
+                                                   m->construct_func,
+                                                   m->destruct_func,
+                                                   m->feed_func,
+                                                   m->collect_func);
+               root_class->SetCollectionProxy(cpinfo);
 
                root_class->SetBit(TClass::kIsForeign);
             }

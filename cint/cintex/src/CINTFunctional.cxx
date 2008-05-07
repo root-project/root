@@ -326,8 +326,8 @@ namespace ROOT { namespace Cintex {
          unsigned long end_addr   = (unsigned long) (code + len);
          start_addr = start_addr & -pagesize;
          end_addr   = (end_addr + pagesize-1) & -pagesize;
-         unsigned long len = end_addr - start_addr;
-         if ( mprotect( (void*)start_addr, len, PROT_READ|PROT_WRITE|PROT_EXEC) < 0 ) {
+         unsigned long len_pg = end_addr - start_addr;
+         if ( mprotect( (void*)start_addr, len_pg, PROT_READ|PROT_WRITE|PROT_EXEC) < 0 ) {
             return 0;
          }
       }
