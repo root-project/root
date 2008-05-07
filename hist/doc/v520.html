@@ -20,6 +20,9 @@
 Fixed a bug in the Th1::KolmogorovTest function in the cse of scaled or weighted  histograms. The routine has been improved and 
 now could also be used for comparing an histogram with a function if it is represented as an histogram with zero errors (equivalent to the case of options "F1" or "F2" in the original HDIFF routine of HBOOK).
 
+<h4>TH2</h4>
+
+Improve <tt>TH2::FitFitSliceX</tt> and <tt>TH2::FitFitSliceY</tt> by adding the possibility to return the generated histograms in a TObjArray when the passed pointer is not null.  
 
 
 <h4>THnSparse</h4>

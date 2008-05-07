@@ -589,7 +589,7 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
 
 
 //______________________________________________________________________________
-void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option_t *option)
+void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option_t *option, TObjArray* arr)
 {
    // Project slices along X in case of a 2-D histogram, then fit each slice
    // with function f1 and make a histogram for each fit parameter
@@ -608,7 +608,17 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
    //     "G4" merge 4 consecutive bins along X
    //     "G5" merge 5 consecutive bins along X
    //
-   // Note that the generated histograms are added to the list of objects
+   // The generated histograms are returned by adding them to arr, if arr is not NULL.
+   // arr's SetOwner() is called, to signal that it is the user's respponsability to
+   // delete the histograms, possibly by deleting the arrary.
+   //    TObjArray aSlices;
+   //    h2->FitSlicesX(func, 0, -1, "QNR", &aSlices);
+   // will already delete the histograms once aSlice goes out of scope. aSlices will
+   // contain the histogram for the i-th parameter of the fit function at aSlices[i];
+   // aSlices[n] (n being the number of parameters) contains the chi2 distribution of
+   // the fits.
+   //
+   // If arr is NULL, the generated histograms are added to the list of objects
    // in the current directory. It is the user's responsability to delete
    // these histograms.
    //
@@ -651,6 +661,11 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
    Double_t *parsave = new Double_t[npar];
    f1->GetParameters(parsave);
 
+   if (arr) {
+      arr->SetOwner();
+      arr->Expand(npar + 1);
+   }
+
    //Create one histogram for each function parameter
    Int_t ipar;
    TH1D **hlist = new TH1D*[npar];
@@ -667,11 +682,15 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
          hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
       }
       hlist[ipar]->GetXaxis()->SetTitle(fYaxis.GetTitle());
+      if (arr)
+         (*arr)[ipar] = hlist[ipar];
    }
    sprintf(name,"%s_chi2",GetName());
    delete gDirectory->FindObject(name);
    TH1D *hchi2 = new TH1D(name,"chisquare", nbins, fYaxis.GetXmin(), fYaxis.GetXmax());
    hchi2->GetXaxis()->SetTitle(fYaxis.GetTitle());
+   if (arr)
+      (*arr)[npar] = hchi2;
 
    //Loop on all bins in Y, generate a projection along X
    Int_t bin;
@@ -701,7 +720,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
 }
 
 //______________________________________________________________________________
-void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option_t *option)
+void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option_t *option, TObjArray* arr)
 {
    // Project slices along Y in case of a 2-D histogram, then fit each slice
    // with function f1 and make a histogram for each fit parameter
@@ -720,7 +739,17 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
    //     "G4" merge 4 consecutive bins along Y
    //     "G5" merge 5 consecutive bins along Y
    //
-   // Note that the generated histograms are added to the list of objects
+   // The generated histograms are returned by adding them to arr, if arr is not NULL.
+   // arr's SetOwner() is called, to signal that it is the user's respponsability to
+   // delete the histograms, possibly by deleting the arrary.
+   //    TObjArray aSlices;
+   //    h2->FitSlicesX(func, 0, -1, "QNR", &aSlices);
+   // will already delete the histograms once aSlice goes out of scope. aSlices will
+   // contain the histogram for the i-th parameter of the fit function at aSlices[i];
+   // aSlices[n] (n being the number of parameters) contains the chi2 distribution of
+   // the fits.
+   //
+   // If arr is NULL, the generated histograms are added to the list of objects
    // in the current directory. It is the user's responsability to delete
    // these histograms.
    //
@@ -771,6 +800,11 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
    Double_t *parsave = new Double_t[npar];
    f1->GetParameters(parsave);
 
+   if (arr) {
+      arr->SetOwner();
+      arr->Expand(npar + 1);
+   }
+
    //Create one histogram for each function parameter
    Int_t ipar;
    TH1D **hlist = new TH1D*[npar];
@@ -787,11 +821,15 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
          hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
       }
       hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
+      if (arr)
+         (*arr)[ipar] = hlist[ipar];
    }
    sprintf(name,"%s_chi2",GetName());
    delete gDirectory->FindObject(name);
    TH1D *hchi2 = new TH1D(name,"chisquare", nbins, fXaxis.GetXmin(), fXaxis.GetXmax());
    hchi2->GetXaxis()->SetTitle(fXaxis.GetTitle());
+   if (arr)
+      (*arr)[npar] = hchi2;
 
    //Loop on all bins in X, generate a projection along Y
    Int_t bin;
