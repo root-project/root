@@ -21,11 +21,43 @@ except for people who do directly use svn. You will get the message:
 </pre>
 </li>
 <li>
-Port to gcc 4.3 RC1. This version of gcc is much stricker with respect to
+Port to gcc 4.3.0 This version of gcc is much stricker with respect to
 implicit header files so in many source files <stdlib.h> and <string.h>
 had to be added.
 </li>
 <li>
-  with ACLIC, Remove double dash (//) from the filename passed to cint and rootcint.
+TPRegexp
+<ul>
+<li>
+Modularized Match() and Substitute() functions so that the low-level work
+is done by MatchInternal() and SubstituteInternal().
+</li>
+<li>
+Added function TString GetModifiers() that translates from bit-flag
+options back to perl-style option characters.
+</li>
+<li>
+For all functions that do actual matching replaced the default value
+of 'Int_t nMatchMax' argument from 30 to 10. PCRE internals require
+the index buffer to be 3-times the number of allowed matches. This
+multiplication is now performed in individual functions and nMatchMax
+is really the number of allowed matches. Two function calls in 
+TString passing this number explicitly have been updated.
+</li>
+</ul>
+</li>
+<li>
+TPMERegexp
+<ul>
+<li>
+New sub-class of TPRegexp with API closer to PERL.
+Supports main Perl operations using regular expressions (Match,
+Substitute and Split). To retrieve the results one can simply use
+operator[] returning a TString.
+</li>
+</ul>
+</li>
+<li>
+New tutorial regexp_pme.C.
 </li>
 </uL>
