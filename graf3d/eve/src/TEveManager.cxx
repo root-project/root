@@ -481,6 +481,7 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
    // Get geometry with given filename.
    // This is cached internally so the second time this function is
    // called with the same argument the same geo-manager is returned.
+   // gGeoManager is set to the return value.
 
    static const TEveException eh("TEveManager::GetGeometry ");
 
@@ -491,11 +492,20 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
 
    std::map<TString, TGeoManager*>::iterator geom = fGeometries.find(filename);
    if (geom != fGeometries.end()) {
-      return geom->second;
+      gGeoManager = geom->second;
    } else {
       gGeoManager = 0;
-      if (TGeoManager::Import(filename) == 0)
-         throw(eh + "GeoManager::Import() failed for '" + exp_filename + "'.");
+      Bool_t locked = TGeoManager::IsLocked();
+      if (locked) {
+         Warning(eh, "TGeoManager is locked ... unlocking it.");
+         TGeoManager::UnlockGeometry();
+      }
+      if (TGeoManager::Import(filename) == 0) {
+         throw(eh + "TGeoManager::Import() failed for '" + exp_filename + "'.");
+      }
+      if (locked) {
+         TGeoManager::LockGeometry();
+      }
 
       gGeoManager->GetTopVolume()->VisibleDaughters(1);
 
@@ -520,8 +530,8 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
       }
 
       fGeometries[filename] = gGeoManager;
-      return gGeoManager;
    }
+   return gGeoManager;
 }
 
 //______________________________________________________________________________

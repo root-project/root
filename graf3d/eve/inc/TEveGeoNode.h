@@ -137,14 +137,15 @@ public:
    TEveGeoShape(const Text_t* name="TEveGeoShape", const Text_t* title=0);
    virtual ~TEveGeoShape();
 
-   virtual Bool_t CanEditMainColor() const { return kTRUE; }
+   virtual Bool_t  CanEditMainColor() const { return kTRUE; }
 
    virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
    virtual UChar_t GetMainTransparency()     const { return fTransparency; }
    virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
 
-   Color_t     GetColor() const  { return fColor; }
-   TGeoShape*  GetShape()        { return fShape; }
+   Color_t     GetColor() const { return fColor; }
+   TGeoShape*  GetShape()       { return fShape; }
+   void        SetShape(TGeoShape* s);
 
    virtual void Paint(Option_t* option="");
 

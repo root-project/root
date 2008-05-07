@@ -476,10 +476,22 @@ TEveGeoShape::~TEveGeoShape()
 {
    // Destructor.
 
+   SetShape(0);
+}
+
+//______________________________________________________________________________
+void TEveGeoShape::SetShape(TGeoShape* s)
+{
+   // Set TGeoShape shown by this object.
+
    if (fShape) {
       fShape->SetUniqueID(fShape->GetUniqueID() - 1);
       if (fShape->GetUniqueID() == 0)
          delete fShape;
+   }
+   fShape = s;
+   if (fShape) {
+      fShape->SetUniqueID(fShape->GetUniqueID() + 1);
    }
 }
 
@@ -598,9 +610,7 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
    gsre->fTransparency = (UChar_t) (100.0f*(1.0f - rgba[3]));
    gsre->SetRnrSelf(gse->GetRnrSelf());
    gsre->SetRnrChildren(gse->GetRnrElements());
-   gsre->fShape = gse->GetShape();
-   if (gsre->fShape)
-      gsre->fShape->SetUniqueID(gsre->fShape->GetUniqueID() + 1);
+   gsre->SetShape(gse->GetShape());
 
    if (parent)
       parent->AddElement(gsre);
