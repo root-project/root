@@ -1115,6 +1115,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       }
    }
 
+   if (fHistogram) fHistogram->ResetBit(TH1::kCanRebin);
    return fSelectedRows;
 }
 
