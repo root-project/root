@@ -217,7 +217,7 @@ MINUITLIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
 MINUIT2LIBEXTRA         = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libMathCore.lib
 FUMILILIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMathCore.lib
-TREELIBEXTRA            = lib/libNet.lib lib/libRIO.lib
+TREELIBEXTRA            = lib/libNet.lib lib/libRIO.lib lib/libThread.lib
 TREEPLAYERLIBEXTRA      = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libRIO.lib \
                           lib/libMathCore.lib
@@ -330,7 +330,7 @@ HTMLLIBEXTRA            = -Llib -lGraf -lThread
 MINUITLIBEXTRA          = -Llib -lGraf -lHist -lMatrix -lMathCore
 MINUIT2LIBEXTRA         = -Llib -lGraf -lHist -lMatrix -lMathCore
 FUMILILIBEXTRA          = -Llib -lGraf -lHist -lMathCore
-TREELIBEXTRA            = -Llib -lNet -lRIO
+TREELIBEXTRA            = -Llib -lNet -lRIO -lThread
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO -lMathCore
 TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui -lTreePlayer \
                           -lGed -lRIO -lMathCore
