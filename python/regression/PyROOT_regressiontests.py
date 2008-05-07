@@ -76,6 +76,8 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
 
       cmd = "python -c 'import sys, ROOT; ROOT.gROOT; %s "\
             "sys.exit( 5 + int(\"thread\" in ROOT.__dict__) )'"
+      if self.hasThread == self.noThread:
+         cmd += " - -b"
 
       stat, out = commands.getstatusoutput( cmd % "" )
       self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
@@ -98,6 +100,8 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
 
       cmd = "python -c 'import sys; %s ;"\
             "import ROOT; sys.exit( 5 + int(\"thread\" in ROOT.__dict__) )'"
+      if self.hasThread == self.noThread:
+         cmd += " - -b"
 
       stat, out = commands.getstatusoutput( cmd % "from ROOT import *" )
       self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
@@ -112,6 +116,8 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
       """Test various ways of preventing GUI thread startup"""
 
       cmd = "python -c '%s import ROOT, sys; sys.exit( 5+int(\"thread\" in ROOT.__dict__ ) )'"
+      if self.hasThread == self.noThread:
+         cmd += " - -b"
 
       stat, out = commands.getstatusoutput( (cmd % 'from ROOT import *;') + ' - -b' )
       self.assertEqual( os.WEXITSTATUS(stat), self.noThread )
