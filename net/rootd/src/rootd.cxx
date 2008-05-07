@@ -2553,9 +2553,9 @@ int main(int argc, char **argv)
       rootbindir = std::string(confdir).append("/bin");
    // Make it available to all the session via env
    if (rootbindir.length()) {
-      char *tmp = new char[15 + rootbindir.length()];
-      sprintf(tmp, "ROOTBINDIR=%s", rootbindir.c_str());
-      putenv(tmp);
+      char *tmp1 = new char[15 + rootbindir.length()];
+      sprintf(tmp1, "ROOTBINDIR=%s", rootbindir.c_str());
+      putenv(tmp1);
    }
 
    // Define rootetcdir if not done already
@@ -2563,29 +2563,29 @@ int main(int argc, char **argv)
       rootetcdir = std::string(confdir).append("/etc");
    // Make it available to all the session via env
    if (rootetcdir.length()) {
-      char *tmp = new char[15 + rootetcdir.length()];
-      sprintf(tmp, "ROOTETCDIR=%s", rootetcdir.c_str());
-      putenv(tmp);
+      char *tmp1 = new char[15 + rootetcdir.length()];
+      sprintf(tmp1, "ROOTETCDIR=%s", rootetcdir.c_str());
+      putenv(tmp1);
    }
 
    // If specified, set the special daemonrc file to be used
    if (daemonrc.length()) {
-      char *tmp = new char[15+daemonrc.length()];
-      sprintf(tmp, "ROOTDAEMONRC=%s", daemonrc.c_str());
-      putenv(tmp);
+      char *tmp1 = new char[15+daemonrc.length()];
+      sprintf(tmp1, "ROOTDAEMONRC=%s", daemonrc.c_str());
+      putenv(tmp1);
    }
 #ifdef R__GLBS
    // If specified, set the special gridmap file to be used
    if (gridmap.length()) {
-      char *tmp = new char[15+gridmap.length()];
-      sprintf(tmp, "GRIDMAP=%s", gridmap.c_str());
-      putenv(tmp);
+      char *tmp1 = new char[15+gridmap.length()];
+      sprintf(tmp1, "GRIDMAP=%s", gridmap.c_str());
+      putenv(tmp1);
    }
    // If specified, set the special hostcert.conf file to be used
    if (hostcertconf.length()) {
-      char *tmp = new char[15+hostcertconf.length()];
-      sprintf(tmp, "ROOTHOSTCERT=%s", hostcertconf.c_str());
-      putenv(tmp);
+      char *tmp1 = new char[15+hostcertconf.length()];
+      sprintf(tmp1, "ROOTHOSTCERT=%s", hostcertconf.c_str());
+      putenv(tmp1);
    }
 #endif
 
@@ -2662,4 +2662,3 @@ int main(int argc, char **argv)
    }
 
 }
-

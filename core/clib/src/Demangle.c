@@ -2526,7 +2526,7 @@ demangle_function_name (work, mangled, declp, scan)
 	{
 	  for (i = 0; i < (int)(sizeof (optable) / sizeof (optable[0])); i++)
 	    {
-	      int len = declp->p - declp->b - 3;
+	      len = declp->p - declp->b - 3;
 	      if ((int)strlen(optable[i].in) == len
 		  && memcmp (optable[i].in, declp->b + 3, len) == 0)
 		{
