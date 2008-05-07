@@ -737,6 +737,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    dfrm = new TGDockableFrame(frm);
    dfrm->SetFixedSize(kFALSE);
+   dfrm->EnableHide(kFALSE);
    hfrm = new TGHorizontalFrame(dfrm);
    button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
    button->SetToolTipText("Swap to big view");
@@ -785,6 +786,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    // create (embed) a GL viewer inside
    dfrm = new TGDockableFrame(frm);
    dfrm->SetFixedSize(kFALSE);
+   dfrm->EnableHide(kFALSE);
    hfrm = new TGHorizontalFrame(dfrm);
    button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
    button->SetToolTipText("Swap to big view");
@@ -827,6 +829,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    dfrm = new TGDockableFrame(frm);
    dfrm->SetFixedSize(kFALSE);
+   dfrm->EnableHide(kFALSE);
    hfrm = new TGHorizontalFrame(dfrm);
    button= new TGPictureButton(hfrm, gClient->GetPicture("swap.png"));
    button->SetToolTipText("Swap to big view");
