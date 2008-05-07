@@ -28,6 +28,9 @@ def genRootMap(mapfile, dicfile, libfile, cnames, classes) :
   transtable = string.maketrans(': ', '@-')
   transtable = string.maketrans(': ', '@-')
 
+  for c in classes :
+    c['fullname'] = c.get('fullname', c['name'])
+
   # filter out classes that were de-selected by rootmap attribute
   cveto = filter( lambda c: isRootmapVetoed(c),classes)
   for cv in cveto :

@@ -344,6 +344,8 @@ class genreflex:
         else :
           mapfile = os.path.join(self.outputDir, self.rootmap)
         if not self.rootmaplib :  self.rootmaplib = 'lib'+name+'.so'
+        cnames += [ td['name'] for td in dg.typedefs_for_usr ]
+        classes+= dg.typedefs_for_usr
         genrootmap.genRootMap(mapfile, name,  self.rootmaplib, cnames, classes)
     #------------Delete intermediate files------------------
       if 'debug' not in self.opts :
