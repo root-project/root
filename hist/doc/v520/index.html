@@ -24,6 +24,10 @@ now could also be used for comparing an histogram with a function if it is repre
 
 Improve <tt>TH2::FitFitSliceX</tt> and <tt>TH2::FitFitSliceY</tt> by adding the possibility to return the generated histograms in a TObjArray when the passed pointer is not null.  
 
+<h4>TProfile and TProfile2D</h4>
+
+Add a new option "W" in <tt>TProfile::ProjectionX</tt> and <tt>TProfile::ProjectionXY</tt> to be able to return the equivalent weighted filled histogram. Its bin content is equal to the profile bin content multiplied by the bin entries.
+
 
 <h4>THnSparse</h4>
 <ul>

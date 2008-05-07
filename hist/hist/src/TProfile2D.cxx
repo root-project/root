@@ -1491,15 +1491,25 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 //
 //   The projection is always of the type TH2D.
 //
-//   if option "E" is specified, the errors are computed. (default)
+//   if option "E" is specified  the errors of the projected histogram are computed and set 
+//      to be equal to the errors of the profile.
+//      Option "E" is defined as the default one in the header file. 
+//   if option "" is specified the histogram errors are simply the sqrt of its content
 //   if option "B" is specified, the content of bin of the returned histogram
 //      will be equal to the GetBinEntries(bin) of the profile,
 //   if option "C=E" the bin contents of the projection are set to the
 //       bin errors of the profile
+//   if option "W" is specified the bin content of the projected histogram  is set to the 
+//       product of the bin content of the profile and the entries. 
+//       With this option the returned histogram will be equivalent to the one obtained by 
+//       filling directly a TH2D using the 3-rd value as a weight. 
 //
+
 
    TString opt = option;
    opt.ToLower();
+   
+
    Int_t nx = fXaxis.GetNbins();
    Int_t ny = fYaxis.GetNbins();
 
@@ -1514,24 +1524,32 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
    Bool_t computeErrors = kFALSE;
    Bool_t cequalErrors  = kFALSE;
    Bool_t binEntries    = kFALSE;
+   Bool_t binWeight     = kFALSE;
    if (opt.Contains("b")) binEntries = kTRUE;
    if (opt.Contains("e")) computeErrors = kTRUE;
+   if (opt.Contains("w")) binWeight = kTRUE;
    if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
-   if (computeErrors) h1->Sumw2();
+   if (computeErrors || binWeight ) h1->Sumw2();
    if (pname != name)  delete [] pname;
 
    // Fill the projected histogram
    Int_t bin,binx, biny;
-   Double_t cont,err;
+   Double_t cont;
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          bin = GetBin(binx,biny);
-         if (binEntries)    cont = GetBinEntries(bin);
-         else               cont = GetBinContent(binx,biny);
-         err   = GetBinError(binx,biny);
-         if (cequalErrors)  h1->SetBinContent(binx,biny, err);
-         else               h1->SetBinContent(binx,biny, cont);
-         if (computeErrors) h1->SetBinError(binx,biny,err);
+         
+         if (binEntries)         cont = GetBinEntries(bin);
+         else if (cequalErrors)  cont = GetBinError(bin);
+         else if (binWeight)     cont = GetBinContent(bin) * GetBinEntries(bin);
+         else                    cont = GetBinContent(bin);    // default case
+
+         h1->SetBinContent(bin ,cont);
+
+         // if option E projected histogram errors are same as profile
+         if (computeErrors ) h1->SetBinError(bin , GetBinError(bin) );
+         // in case of option W bin error is deduced from bin sum of z**2 values of profile
+         if (binWeight)      h1->SetBinError(bin , TMath::Sqrt(fSumw2.fArray[bin] ) );
       }
    }
    h1->SetEntries(fEntries);
