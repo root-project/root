@@ -43,7 +43,7 @@
 
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 
- TTreeCacheUnzip::EParUnzipMode TTreeCacheUnzip::fgParallel = TTreeCacheUnzip::kEnable;
+ TTreeCacheUnzip::EParUnzipMode TTreeCacheUnzip::fgParallel = TTreeCacheUnzip::kDisable;
 
 // Unzip cache is 10% of TTreeCache.
 // if by default fBufferSize = 10MB
@@ -561,7 +561,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 
       if (loc >= 0 && (pos == fSeekSort[loc]) ) {
 	 // We shouldn't have to "wait" so a long Lock is not be very bad for the performance
-         R__LOCKGUARD(fMutexList);
+         fMutexList->Lock();
 
          if( (loc >= fUnzipStart) && (loc < fUnzipEnd )) {
             Long64_t locPos = fUnzipPos[loc]; // Gives the pos in the buffer
@@ -589,6 +589,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
                this->SendSignal();
 
             // We found it and copied to the buffer... we are done
+            fMutexList->UnLock();
             return locLen;
          }
 
@@ -599,6 +600,8 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
          // If we are in a new batch of transfer... inform the thread in case it's sleeping
          if (loc > fUnzipNext)
             this->SendSignal();
+
+         fMutexList->UnLock();
       }
    }
 
