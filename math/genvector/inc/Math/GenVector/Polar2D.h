@@ -128,7 +128,7 @@ public :
    /** 
        set all values using cartesian coordinates  
    */
-   void SetXY(Scalar x, Scalar y); 
+   void SetXY(Scalar a, Scalar b); 
 
 
 private:
@@ -207,9 +207,9 @@ public:
 
    // ====== Set member functions for coordinates in other systems =======
 
-   void SetX(Scalar x);
+   void SetX(Scalar a);
 
-   void SetY(Scalar y); 
+   void SetY(Scalar a); 
 
 #endif
 
@@ -240,8 +240,8 @@ namespace ROOT {
    namespace Math { 
 
 template <class T>  
-void Polar2D<T>::SetXY(Scalar x, Scalar y) {  
-   *this = Cartesian2D<Scalar>(x, y);
+void Polar2D<T>::SetXY(Scalar a, Scalar b) {  
+   *this = Cartesian2D<Scalar>(a, b);
 }
 
 
@@ -251,16 +251,16 @@ void Polar2D<T>::SetXY(Scalar x, Scalar y) {
 // ====== Set member functions for coordinates in other systems =======
 
       template <class T>  
-      void Polar2D<T>::SetX(Scalar x) {  
+      void Polar2D<T>::SetX(Scalar a) {  
          GenVector_exception e("Polar2D::SetX() is not supposed to be called");
          Throw(e);
-         Cartesian2D<Scalar> v(*this); v.SetX(x); *this = Polar2D<Scalar>(v);
+         Cartesian2D<Scalar> v(*this); v.SetX(a); *this = Polar2D<Scalar>(v);
       }
       template <class T>  
-      void Polar2D<T>::SetY(Scalar y) {  
+      void Polar2D<T>::SetY(Scalar a) {  
          GenVector_exception e("Polar2D::SetY() is not supposed to be called");
          Throw(e);
-         Cartesian2D<Scalar> v(*this); v.SetY(y); *this = Polar2D<Scalar>(v);
+         Cartesian2D<Scalar> v(*this); v.SetY(a); *this = Polar2D<Scalar>(v);
       }
 
 #endif  

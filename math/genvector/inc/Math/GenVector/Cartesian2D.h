@@ -52,7 +52,7 @@ public :
    /**
       Constructor from x,y  coordinates
    */
-   Cartesian2D(Scalar x, Scalar y) : fX(x), fY(y) {  } 
+   Cartesian2D(Scalar xx, Scalar yy) : fX(xx), fY(yy) {  } 
 
    /**
       Construct from any Vector or coordinate system implementing 
@@ -83,12 +83,12 @@ public :
    /**
       Set internal data based on 2 Scalar numbers
    */ 
-   void SetCoordinates(Scalar  x, Scalar  y) { fX=x; fY=y;  }
+   void SetCoordinates(Scalar  xx, Scalar  yy) { fX=xx; fY=yy;  }
 
    /**
       get internal data into 2 Scalar numbers
    */ 
-   void GetCoordinates(Scalar& x, Scalar& y ) const {x=fX; y=fY; }  				
+   void GetCoordinates(Scalar& xx, Scalar& yy ) const {xx=fX; yy=fY; }  
 
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}
@@ -99,19 +99,19 @@ public :
    /** 
        set the x coordinate value keeping y constant
    */ 
-   void SetX(Scalar x) { fX = x; }
+   void SetX(Scalar a) { fX = a; }
 
    /** 
        set the y coordinate value keeping x constant
    */ 
-   void SetY(Scalar y) { fY = y; }
+   void SetY(Scalar a) { fY = a; }
 
    /** 
        set all values using cartesian coordinates  
    */
-   void SetXY(Scalar x, Scalar y ) { 
-      fX=x; 
-      fY=y; 
+   void SetXY(Scalar xx, Scalar yy ) { 
+      fX=xx; 
+      fY=yy; 
    }
  
    /**

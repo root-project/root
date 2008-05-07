@@ -296,8 +296,8 @@ namespace ROOT {
   namespace Math { 
 
 template <class T>  
-void CylindricalEta3D<T>::SetXYZ(Scalar x, Scalar y, Scalar z) {  
-   *this = Cartesian3D<Scalar>(x, y, z);
+void CylindricalEta3D<T>::SetXYZ(Scalar xx, Scalar yy, Scalar zz) {  
+   *this = Cartesian3D<Scalar>(xx, yy, zz);
 }
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
@@ -306,24 +306,24 @@ void CylindricalEta3D<T>::SetXYZ(Scalar x, Scalar y, Scalar z) {
 
 
 template <class T>  
-void CylindricalEta3D<T>::SetX(Scalar x) {  
+void CylindricalEta3D<T>::SetX(Scalar xx) {  
    GenVector_exception e("CylindricalEta3D::SetX() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetX(x); 
+   Cartesian3D<Scalar> v(*this); v.SetX(xx); 
    *this = CylindricalEta3D<Scalar>(v);
 }
 template <class T>  
-void CylindricalEta3D<T>::SetY(Scalar y) {  
+void CylindricalEta3D<T>::SetY(Scalar yy) {  
    GenVector_exception e("CylindricalEta3D::SetY() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetY(y); 
+   Cartesian3D<Scalar> v(*this); v.SetY(yy); 
    *this = CylindricalEta3D<Scalar>(v);
 }
 template <class T>  
-void CylindricalEta3D<T>::SetZ(Scalar z) {  
+void CylindricalEta3D<T>::SetZ(Scalar zz) {  
    GenVector_exception e("CylindricalEta3D::SetZ() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetZ(z); 
+   Cartesian3D<Scalar> v(*this); v.SetZ(zz); 
    *this = CylindricalEta3D<Scalar>(v);
 }
 template <class T>  

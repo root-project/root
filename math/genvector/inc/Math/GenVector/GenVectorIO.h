@@ -96,20 +96,20 @@ public:
     manipulator( manip_t m
                , char_t  ch = 0
                )
-    : m(m)
-    , ch(ch)
+    : fMan(m)
+    , fChar(ch)
   { }
 
   template< class traits_t >
     void
     set( std::basic_ios<char_t,traits_t> & ios ) const
   {
-    set_manip<char_t>( ios, m, ch );
+    set_manip<char_t>( ios, fMan, fChar );
   }
 
 private:
-  manip_t  m;
-  char_t   ch;
+  manip_t  fMan;
+  char_t   fChar;
 
 };  // manipulator<>
 

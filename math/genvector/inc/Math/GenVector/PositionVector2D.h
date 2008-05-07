@@ -165,8 +165,8 @@ namespace ROOT {
           (if the vector is held in polar coordinates,
           then (x, y) are converted to that form)
        */
-       PositionVector2D<CoordSystem, Tag>& SetXY (Scalar x, Scalar y) {
-          fCoordinates.SetXY (x,y);
+       PositionVector2D<CoordSystem, Tag>& SetXY (Scalar a, Scalar b) {
+          fCoordinates.SetXY (a,b);
           return *this;
        }
 
@@ -218,16 +218,16 @@ namespace ROOT {
        /**
           Change X - Cartesian2D coordinates only
        */
-       PositionVector2D<CoordSystem, Tag>& SetX (Scalar x) { 
-          fCoordinates.SetX(x); 
+       PositionVector2D<CoordSystem, Tag>& SetX (Scalar a) { 
+          fCoordinates.SetX(a); 
           return *this;
        }
 
        /**
           Change Y - Cartesian2D coordinates only
        */
-       PositionVector2D<CoordSystem, Tag>& SetY (Scalar y) { 
-          fCoordinates.SetY(y); 
+       PositionVector2D<CoordSystem, Tag>& SetY (Scalar a) { 
+          fCoordinates.SetY(a); 
           return *this;
        }
 
@@ -235,16 +235,16 @@ namespace ROOT {
        /**
           Change R - Polar2D coordinates only
        */
-       PositionVector2D<CoordSystem, Tag>& SetR (Scalar r) { 
-          fCoordinates.SetR(r); 
+       PositionVector2D<CoordSystem, Tag>& SetR (Scalar a) { 
+          fCoordinates.SetR(a); 
           return *this;
        }
 
        /**
           Change Phi - Polar2D coordinates 
        */
-       PositionVector2D<CoordSystem, Tag>& SetPhi (Scalar phi) { 
-          fCoordinates.SetPhi(phi); 
+       PositionVector2D<CoordSystem, Tag>& SetPhi (Scalar ang) { 
+          fCoordinates.SetPhi(ang); 
           return *this;
        }
 

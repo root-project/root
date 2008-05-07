@@ -297,15 +297,15 @@ public:
        }
    }
 
-   VecTrack(double * begin, double * end) 
+   VecTrack(double * ibegin, double * iend) 
      {
        fTrks.reserve(kLen);
-       double * itr = begin;
+       double * itr = ibegin;
        for (int i = 0; i < kLen; ++i) { 
          fTrks.push_back(T(itr, itr + T::kSize) ); 
          itr += T::kSize;
        }
-       assert( itr == end); 
+       assert( itr == iend); 
      }
 
    enum {  kLen = 3, kSize =  kLen*T::kSize };

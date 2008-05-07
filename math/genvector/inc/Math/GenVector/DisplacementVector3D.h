@@ -261,8 +261,8 @@ namespace ROOT {
          (if the vector is held in polar or cylindrical eta coordinates,
          then (x, y, z) are converted to that form)
        */
-      DisplacementVector3D<CoordSystem, Tag>& SetXYZ (Scalar x, Scalar y, Scalar z) {
-            fCoordinates.SetXYZ(x,y,z);
+      DisplacementVector3D<CoordSystem, Tag>& SetXYZ (Scalar a, Scalar b, Scalar c) {
+            fCoordinates.SetXYZ(a,b,c);
             return *this;
       }
 
@@ -345,42 +345,42 @@ namespace ROOT {
       /**
          Change X - Cartesian3D coordinates only
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetX (Scalar x) { fCoordinates.SetX(x); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetX (Scalar xx) { fCoordinates.SetX(xx); return *this;}
 
       /**
          Change Y - Cartesian3D coordinates only
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetY (Scalar y) { fCoordinates.SetY(y); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetY (Scalar yy) { fCoordinates.SetY(yy); return *this;}
 
       /**
          Change Z - Cartesian3D coordinates only
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetZ (Scalar z) { fCoordinates.SetZ(z); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetZ (Scalar zz) { fCoordinates.SetZ(zz); return *this;}
 
       /**
          Change R - Polar3D coordinates only
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetR (Scalar r) { fCoordinates.SetR(r); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetR (Scalar rr) { fCoordinates.SetR(rr); return *this;}
 
       /**
          Change Theta - Polar3D coordinates only
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetTheta (Scalar theta) { fCoordinates.SetTheta(theta); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetTheta (Scalar ang) { fCoordinates.SetTheta(ang); return *this;}
 
       /**
          Change Phi - Polar3D or CylindricalEta3D coordinates
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetPhi (Scalar phi) { fCoordinates.SetPhi(phi); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetPhi (Scalar ang) { fCoordinates.SetPhi(ang); return *this;}
 
       /**
          Change Rho - CylindricalEta3D coordinates only
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetRho (Scalar rho) { fCoordinates.SetRho(rho); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetRho (Scalar rr) { fCoordinates.SetRho(rr); return *this;}
 
       /**
          Change Eta - CylindricalEta3D coordinates only
       */
-       DisplacementVector3D<CoordSystem, Tag>& SetEta (Scalar eta) { fCoordinates.SetEta(eta); return *this;}
+       DisplacementVector3D<CoordSystem, Tag>& SetEta (Scalar etaval) { fCoordinates.SetEta(etaval); return *this;}
 
 
       // ------ Operations combining two vectors ------

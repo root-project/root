@@ -55,8 +55,8 @@ public :
    /**
       Construct from rho eta and phi values
    */
-   Cylindrical3D(Scalar rho, Scalar z, Scalar phi) :  
-      fRho(rho), fZ(z), fPhi(phi) { Restrict(); }
+   Cylindrical3D(Scalar rho, Scalar zz, Scalar phi) :  
+      fRho(rho), fZ(zz), fPhi(phi) { Restrict(); }
 
    /**
       Construct from any Vector or coordinate system implementing 
@@ -100,14 +100,14 @@ public :
    /**
       Set internal data based on 3 Scalar numbers ( rho, z , phi)
    */ 
-   void SetCoordinates(Scalar  rho, Scalar  z, Scalar  phi) 
-   { fRho=rho; fZ=z; fPhi=phi; Restrict(); }
+   void SetCoordinates(Scalar  rho, Scalar  zz, Scalar  phi) 
+   { fRho=rho; fZ=zz; fPhi=phi; Restrict(); }
 
    /**
       get internal data into 3 Scalar numbers ( rho, z , phi)
    */ 
-   void GetCoordinates(Scalar& rho, Scalar& z, Scalar& phi) const 
-   {rho=fRho; z=fZ; phi=fPhi;}  				
+   void GetCoordinates(Scalar& rho, Scalar& zz, Scalar& phi) const 
+   {rho=fRho; zz=fZ; phi=fPhi;}  				
 
 private:
    inline static Scalar pi() { return M_PI; } 
@@ -150,8 +150,8 @@ public:
    /** 
        set the z coordinate value keeping rho and phi constant
    */ 
-   void SetZ(T z) { 
-      fZ = z;      
+   void SetZ(T zz) { 
+      fZ = zz;      
    }
 
    /** 
@@ -270,8 +270,8 @@ namespace ROOT {
   namespace Math { 
 
 template <class T>  
-void Cylindrical3D<T>::SetXYZ(Scalar x, Scalar y, Scalar z) {  
-   *this = Cartesian3D<Scalar>(x, y, z);
+void Cylindrical3D<T>::SetXYZ(Scalar xx, Scalar yy, Scalar zz) {  
+   *this = Cartesian3D<Scalar>(xx, yy, zz);
 }
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
@@ -281,16 +281,16 @@ void Cylindrical3D<T>::SetXYZ(Scalar x, Scalar y, Scalar z) {
 
 
 template <class T>  
-void Cylindrical3D<T>::SetX(Scalar x) {  
+void Cylindrical3D<T>::SetX(Scalar xx) {  
    GenVector_exception e("Cylindrical3D::SetX() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetX(x); *this = Cylindrical3D<Scalar>(v);
+   Cartesian3D<Scalar> v(*this); v.SetX(xx); *this = Cylindrical3D<Scalar>(v);
 }
 template <class T>  
-void Cylindrical3D<T>::SetY(Scalar y) {  
+void Cylindrical3D<T>::SetY(Scalar yy) {  
    GenVector_exception e("Cylindrical3D::SetY() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetY(y); *this = Cylindrical3D<Scalar>(v);
+   Cartesian3D<Scalar> v(*this); v.SetY(yy); *this = Cylindrical3D<Scalar>(v);
 }
 template <class T>  
 void Cylindrical3D<T>::SetR(Scalar r) {  

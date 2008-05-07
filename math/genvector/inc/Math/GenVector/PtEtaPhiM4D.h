@@ -432,10 +432,10 @@ void PtEtaPhiM4D<ScalarType>::SetPz(Scalar pz) {
    PxPyPzE4D<Scalar> v(*this); v.SetPz(pz); *this = PtEtaPhiM4D<Scalar>(v);
 }
 template <class ScalarType>  
-void PtEtaPhiM4D<ScalarType>::SetE(Scalar t) {  
+void PtEtaPhiM4D<ScalarType>::SetE(Scalar energy) {  
    GenVector_exception e("PtEtaPhiM4D::SetE() is not supposed to be called");
    Throw(e);
-   PxPyPzE4D<Scalar> v(*this); v.SetE(t);   *this = PtEtaPhiM4D<Scalar>(v);
+   PxPyPzE4D<Scalar> v(*this); v.SetE(energy);   *this = PtEtaPhiM4D<Scalar>(v);
 }
 
 #endif  // endif __MAKE__CINT || G__DICTIONARY

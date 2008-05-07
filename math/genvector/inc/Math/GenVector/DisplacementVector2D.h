@@ -187,8 +187,8 @@ namespace ROOT {
            (if the vector is held in polar coordinates,
            then (x, y) are converted to that form)
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetXY (Scalar x, Scalar y) {
-           fCoordinates.SetXY(x,y);
+        DisplacementVector2D<CoordSystem, Tag>& SetXY (Scalar a, Scalar b) {
+           fCoordinates.SetXY(a,b);
            return *this;
         }
 
@@ -250,16 +250,16 @@ namespace ROOT {
         /**
            Change X - Cartesian2D coordinates only
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetX (Scalar x) { 
-           fCoordinates.SetX(x); 
+        DisplacementVector2D<CoordSystem, Tag>& SetX (Scalar a) { 
+           fCoordinates.SetX(a); 
            return *this;
         }
 
         /**
            Change Y - Cartesian2D coordinates only
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetY (Scalar y) { 
-           fCoordinates.SetY(y); 
+        DisplacementVector2D<CoordSystem, Tag>& SetY (Scalar a) { 
+           fCoordinates.SetY(a); 
            return *this;
         }
 
@@ -267,8 +267,8 @@ namespace ROOT {
         /**
            Change R - Polar2D coordinates only
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetR (Scalar r) { 
-           fCoordinates.SetR(r); 
+        DisplacementVector2D<CoordSystem, Tag>& SetR (Scalar a) { 
+           fCoordinates.SetR(a); 
            return *this;
         }
 
@@ -276,8 +276,8 @@ namespace ROOT {
         /**
            Change Phi - Polar2D  coordinates
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetPhi (Scalar phi) { 
-           fCoordinates.SetPhi(phi);
+        DisplacementVector2D<CoordSystem, Tag>& SetPhi (Scalar ang) { 
+           fCoordinates.SetPhi(ang);
            return *this;
         }
 

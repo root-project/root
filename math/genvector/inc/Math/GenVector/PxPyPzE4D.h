@@ -60,8 +60,8 @@ public :
    /**
       Constructor  from x, y , z , t values
    */
-   PxPyPzE4D(Scalar x, Scalar y, Scalar z, Scalar t) : 
-      fX(x), fY(y), fZ(z), fT(t) { }
+   PxPyPzE4D(Scalar px, Scalar py, Scalar pz, Scalar e) : 
+      fX(px), fY(py), fZ(pz), fT(e) { }
 
 
    /**
@@ -106,14 +106,14 @@ public :
    /**
       Set internal data based on 4 Scalar numbers
    */ 
-   void SetCoordinates(Scalar  x, Scalar  y, Scalar  z, Scalar t) 
-   { fX=x; fY=y; fZ=z; fT=t;}
+   void SetCoordinates(Scalar  px, Scalar  py, Scalar  pz, Scalar e) 
+   { fX=px; fY=py; fZ=pz; fT=e;}
 
    /**
       get internal data into 4 Scalar numbers
    */ 
-   void GetCoordinates(Scalar& x, Scalar& y, Scalar& z, Scalar& t) const 
-   { x=fX; y=fY; z=fZ; t=fT;}  				
+   void GetCoordinates(Scalar& px, Scalar& py, Scalar& pz, Scalar& e) const 
+   { px=fX; py=fY; pz=fZ; e=fT;}  				
 
    // --------- Coordinates and Coordinate-like Scalar properties -------------
 
@@ -241,26 +241,26 @@ public :
    /**
       set X value 
    */
-   void SetPx( Scalar  x) { 
-      fX = x; 
+   void SetPx( Scalar  px) { 
+      fX = px; 
    }
    /**
       set Y value 
    */
-   void SetPy( Scalar  y) { 
-      fY = y; 
+   void SetPy( Scalar  py) { 
+      fY = py; 
    }
    /**
       set Z value 
    */
-   void SetPz( Scalar  z) { 
-      fZ = z; 
+   void SetPz( Scalar  pz) { 
+      fZ = pz; 
    }
    /**
       set T value 
    */
-   void SetE( Scalar  t) { 
-      fT = t; 
+   void SetE( Scalar  e) { 
+      fT = e; 
    }
 
    /** 

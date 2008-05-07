@@ -95,9 +95,9 @@ SVector<T,D>::SVector(const T* a, unsigned int len) {
 }
 
 template <class T, unsigned int D>
-SVector<T,D>::SVector(const_iterator begin, const_iterator end) {
-   assert( begin + D == end);
-   std::copy(begin, end, fArray);
+SVector<T,D>::SVector(const_iterator ibegin, const_iterator iend) {
+   assert( ibegin + D == iend);
+   std::copy(ibegin, iend, fArray);
 }
 
 
@@ -536,18 +536,18 @@ inline const T* SVector<T,D>::end() const { return fArray + Dim(); }
 
 template <class T, unsigned int D>
 template <class InputIterator> 
-void SVector<T,D>::SetElements(InputIterator begin, InputIterator end) { 
+void SVector<T,D>::SetElements(InputIterator ibegin, InputIterator iend) { 
    // iterator size must match vector size
-   assert( begin + D == end);
-   std::copy(begin, end, fArray);
+   assert( ibegin + D == iend);
+   std::copy(ibegin, iend, fArray);
 }
 
 template <class T, unsigned int D>
 template <class InputIterator> 
-void SVector<T,D>::SetElements(InputIterator begin, unsigned int size) { 
+void SVector<T,D>::SetElements(InputIterator ibegin, unsigned int size) { 
    // size <= vector size
    assert( size <= D);
-   std::copy(begin, begin+size, fArray);
+   std::copy(ibegin, ibegin+size, fArray);
 }
 
 

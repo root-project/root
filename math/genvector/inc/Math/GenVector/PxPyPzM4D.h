@@ -65,8 +65,8 @@ public :
    /**
       Constructor  from x, y , z , m values
    */
-   PxPyPzM4D(Scalar x, Scalar y, Scalar z, Scalar m) : 
-      fX(x), fY(y), fZ(z), fM(m) { 
+   PxPyPzM4D(Scalar px, Scalar py, Scalar pz, Scalar m) : 
+      fX(px), fY(py), fZ(pz), fM(m) { 
      
       if (fM < 0) RestrictNegMass();
    }
@@ -117,16 +117,16 @@ public :
    /**
       Set internal data based on 4 Scalar numbers
    */ 
-   void SetCoordinates(Scalar  x, Scalar  y, Scalar  z, Scalar m) { 
-      fX=x; fY=y; fZ=z; fM=m;
+   void SetCoordinates(Scalar  px, Scalar  py, Scalar  pz, Scalar m) { 
+      fX=px; fY=py; fZ=pz; fM=m;
       if (fM < 0) RestrictNegMass();
    }
 
    /**
       get internal data into 4 Scalar numbers
    */ 
-   void GetCoordinates(Scalar& x, Scalar& y, Scalar& z, Scalar& m) const 
-   { x=fX; y=fY; z=fZ; m=fM;}  				
+   void GetCoordinates(Scalar& px, Scalar& py, Scalar& pz, Scalar& m) const 
+   { px=fX; py=fY; pz=fZ; m=fM;}  				
 
    // --------- Coordinates and Coordinate-like Scalar properties -------------
 
@@ -257,20 +257,20 @@ public :
    /**
       set X value 
    */
-   void SetPx( Scalar  x) { 
-      fX = x; 
+   void SetPx( Scalar  px) { 
+      fX = px; 
    }
    /**
       set Y value 
    */
-   void SetPy( Scalar  y) { 
-      fY = y; 
+   void SetPy( Scalar  py) { 
+      fY = py; 
    }
    /**
       set Z value 
    */
-   void SetPz( Scalar  z) { 
-      fZ = z; 
+   void SetPz( Scalar  pz) { 
+      fZ = pz; 
    }
    /**
       set T value 
@@ -419,10 +419,10 @@ inline void PxPyPzM4D<ScalarType>::SetPhi(ScalarType phi) {
    PtEtaPhiE4D<ScalarType> v(*this); v.SetPhi(phi); *this = PxPyPzM4D<ScalarType>(v);
 }
 template <class ScalarType>  
-inline void PxPyPzM4D<ScalarType>::SetE(ScalarType t) {  
-   GenVector_exception e("PxPyPzM4D::SetM() is not supposed to be called");
+inline void PxPyPzM4D<ScalarType>::SetE(ScalarType energy) {  
+   GenVector_exception e("PxPyPzM4D::SetE() is not supposed to be called");
    Throw(e);
-   PxPyPzE4D<ScalarType> v(*this); v.SetE(t); 
+   PxPyPzE4D<ScalarType> v(*this); v.SetE(energy); 
    *this = PxPyPzM4D<ScalarType>(v);
 }
 

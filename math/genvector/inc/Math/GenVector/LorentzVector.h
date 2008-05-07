@@ -225,12 +225,12 @@ namespace ROOT {
           (if the vector is held in another coordinates, like (Pt,eta,phi,m)
           then (x, y, z, t) are converted to that form)
        */
-       LorentzVector<CoordSystem>& SetXYZT (Scalar x, Scalar y, Scalar z, Scalar t) {
-          fCoordinates.SetPxPyPzE(x,y,z,t);
+       LorentzVector<CoordSystem>& SetXYZT (Scalar xx, Scalar yy, Scalar zz, Scalar tt) {
+          fCoordinates.SetPxPyPzE(xx,yy,zz,tt);
           return *this;
        }
-       LorentzVector<CoordSystem>& SetPxPyPzE (Scalar x, Scalar y, Scalar z, Scalar t) {
-          fCoordinates.SetPxPyPzE(x,y,z,t);
+       LorentzVector<CoordSystem>& SetPxPyPzE (Scalar xx, Scalar yy, Scalar zz, Scalar ee) {
+          fCoordinates.SetPxPyPzE(xx,yy,zz,ee);
           return *this;
        }
 
@@ -481,9 +481,9 @@ namespace ROOT {
           // TODO - It would be good to check that E > Pz and use the Throw()
           //        mechanism or at least load a NAN if not.
           //        We should then move the code to a .cpp file.
-          Scalar e = E();
-          Scalar pz = Pz();
-          return .5f* std::log( (e+pz)/(e-pz) );
+          Scalar ee = E();
+          Scalar ppz = Pz();
+          return .5f* std::log( (ee+ppz)/(ee-ppz) );
        }
 
        /**
@@ -492,16 +492,16 @@ namespace ROOT {
        Scalar ColinearRapidity() const {
           // TODO - It would be good to check that E > Pz and use the Throw()
           //        mechanism or at least load a NAN if not.
-          Scalar e = E();
-          Scalar p = P();
-          return .5f* std::log( (e+p)/(e-p) );
+          Scalar ee = E();
+          Scalar pp = P();
+          return .5f* std::log( (ee+pp)/(ee-pp) );
        }
 
        /**
           Determine if momentum-energy can represent a physical massive particle
        */
        bool isTimelike( ) const {
-          Scalar e = E(); Scalar p = P(); return e*e > p*p;
+          Scalar ee = E(); Scalar pp = P(); return ee*ee > pp*pp;
        }
 
        /**
@@ -509,16 +509,16 @@ namespace ROOT {
        */
        bool isLightlike( Scalar tolerance
                          = 100*std::numeric_limits<Scalar>::epsilon() ) const {
-          Scalar e = E(); Scalar p = P(); Scalar delta = e-p;
-          if ( e==0 ) return p==0;
-          return delta*delta < tolerance * e*e;
+          Scalar ee = E(); Scalar pp = P(); Scalar delta = ee-pp;
+          if ( ee==0 ) return pp==0;
+          return delta*delta < tolerance * ee*ee;
        }
 
        /**
           Determine if momentum-energy is spacelike, and represents a tachyon
        */
        bool isSpacelike( ) const {
-          Scalar e = E(); Scalar p = P(); return e*e < p*p;
+          Scalar ee = E(); Scalar pp = P(); return ee*ee < pp*pp;
        }
 
        typedef DisplacementVector3D< Cartesian3D<Scalar> > BetaVector;
@@ -577,14 +577,14 @@ namespace ROOT {
                 // to avoid Nan 
                 return 0; 
              else { 
-                GenVector_exception e ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
-                Throw(e); 
+                GenVector_exception ex ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
+                Throw(ex); 
                 return 1./E();
              }	  
           }
           if ( M2() <= 0 ) {     
-             GenVector_exception e ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
-             Throw(e); 
+             GenVector_exception ex ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
+             Throw(ex); 
           }	  
           return P() / E();
        }  
@@ -598,19 +598,19 @@ namespace ROOT {
              if ( P2() == 0) {
                 return 1;
              } else {
-                GenVector_exception e ("LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
-                Throw(e); 
+                GenVector_exception ex ("LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
+                Throw(ex); 
                 return 0;
              }
           }
           if ( t2 < v2 ) { 
-             GenVector_exception e ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
-             Throw(e); 
+             GenVector_exception ex ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
+             Throw(ex); 
              return 0;
           }
           else if ( t2 == v2 ) {
-             GenVector_exception e ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
-             Throw(e); 
+             GenVector_exception ex ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
+             Throw(ex); 
           }
           return 1./std::sqrt(1. - v2/t2 );
        } /* gamma */

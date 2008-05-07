@@ -264,8 +264,8 @@ namespace ROOT {
   namespace Math { 
 
 template <class T>  
-void Polar3D<T>::SetXYZ(Scalar x, Scalar y, Scalar z) {  
-   *this = Cartesian3D<Scalar>(x, y, z);
+void Polar3D<T>::SetXYZ(Scalar xx, Scalar yy, Scalar zz) {  
+   *this = Cartesian3D<Scalar>(xx, yy, zz);
 }
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
@@ -275,22 +275,22 @@ void Polar3D<T>::SetXYZ(Scalar x, Scalar y, Scalar z) {
 
 
 template <class T>  
-void Polar3D<T>::SetX(Scalar x) {  
+void Polar3D<T>::SetX(Scalar xx) {  
    GenVector_exception e("Polar3D::SetX() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetX(x); *this = Polar3D<Scalar>(v);
+   Cartesian3D<Scalar> v(*this); v.SetX(xx); *this = Polar3D<Scalar>(v);
 }
 template <class T>  
-void Polar3D<T>::SetY(Scalar y) {  
+void Polar3D<T>::SetY(Scalar yy) {  
    GenVector_exception e("Polar3D::SetY() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetY(y); *this = Polar3D<Scalar>(v);
+   Cartesian3D<Scalar> v(*this); v.SetY(yy); *this = Polar3D<Scalar>(v);
 }
 template <class T>  
-void Polar3D<T>::SetZ(Scalar z) {  
+void Polar3D<T>::SetZ(Scalar zz) {  
    GenVector_exception e("Polar3D::SetZ() is not supposed to be called");
    Throw(e);
-   Cartesian3D<Scalar> v(*this); v.SetZ(z); *this = Polar3D<Scalar>(v);
+   Cartesian3D<Scalar> v(*this); v.SetZ(zz); *this = Polar3D<Scalar>(v);
 }
 template <class T>  
 void Polar3D<T>::SetRho(Scalar rho) {  

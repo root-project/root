@@ -118,19 +118,19 @@ SMatrix<T,D1,D2,R>::SMatrix(const Expr<A,T,D1,D2,R2>& rhs) {
 //=============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
-SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, InputIterator end, bool triang, bool lower) {
+SMatrix<T,D1,D2,R>::SMatrix(InputIterator ibegin, InputIterator iend, bool triang, bool lower) {
    // assume iterator size == matrix size 
    for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
-   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,end,triang,lower); 
+   AssignItr<T,D1,D2,R>::Evaluate(*this,ibegin,iend,triang,lower); 
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
-SMatrix<T,D1,D2,R>::SMatrix(InputIterator begin, unsigned int size, bool triang, bool lower) {
+SMatrix<T,D1,D2,R>::SMatrix(InputIterator ibegin, unsigned int size, bool triang, bool lower) {
    // assume iterator size <= matrix size (no check needed in AssignItr) 
    assert( size <= R::kSize);
    for(unsigned int i=0; i<R::kSize; ++i) fRep.Array()[i] = 0;
-   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower,false); 
+   AssignItr<T,D1,D2,R>::Evaluate(*this,ibegin,ibegin+size,triang,lower,false); 
 }
 
 
@@ -649,17 +649,17 @@ inline const T * SMatrix<T,D1,D2,R>::end() const {
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
-void SMatrix<T,D1,D2,R>::SetElements(InputIterator begin, InputIterator end, bool triang, bool lower) {
+void SMatrix<T,D1,D2,R>::SetElements(InputIterator ibegin, InputIterator iend, bool triang, bool lower) {
    // assume iterator size == matrix size when filling full matrix
-   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,end,triang,lower); 
+   AssignItr<T,D1,D2,R>::Evaluate(*this,ibegin,iend,triang,lower); 
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 template <class InputIterator>
-void SMatrix<T,D1,D2,R>::SetElements(InputIterator begin, unsigned int size, bool triang, bool lower) {
+void SMatrix<T,D1,D2,R>::SetElements(InputIterator ibegin, unsigned int size, bool triang, bool lower) {
    // assume iterator size <= matrix size  (no check to be done in AssignItr)
    assert( size <= R::kSize);
-   AssignItr<T,D1,D2,R>::Evaluate(*this,begin,begin+size,triang,lower,false); 
+   AssignItr<T,D1,D2,R>::Evaluate(*this,ibegin,ibegin+size,triang,lower,false); 
 }
 
 

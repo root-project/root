@@ -62,7 +62,7 @@ public :
    /**
       Constructor from x,y,z coordinates
    */
-   Cartesian3D(Scalar x, Scalar y, Scalar z) : fX(x), fY(y), fZ(z) {  } 
+   Cartesian3D(Scalar xx, Scalar yy, Scalar zz) : fX(xx), fY(yy), fZ(zz) {  } 
 
    /**
       Construct from any Vector or coordinate system implementing 
@@ -105,12 +105,12 @@ public :
    /**
       Set internal data based on 3 Scalar numbers
    */ 
-   void SetCoordinates(Scalar  x, Scalar  y, Scalar  z) { fX=x; fY=y; fZ=z; }
+   void SetCoordinates(Scalar  xx, Scalar  yy, Scalar  zz) { fX=xx; fY=yy; fZ=zz; }
 
    /**
       get internal data into 3 Scalar numbers
    */ 
-   void GetCoordinates(Scalar& x, Scalar& y, Scalar& z) const {x=fX; y=fY; z=fZ;}  				
+   void GetCoordinates(Scalar& xx, Scalar& yy, Scalar& zz) const {xx=fX; yy=fY; zz=fZ;}  				
 
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}
@@ -131,25 +131,25 @@ public :
    /** 
        set the x coordinate value keeping y and z constant
    */ 
-   void SetX(Scalar x) { fX = x; }
+   void SetX(Scalar xx) { fX = xx; }
 
    /** 
        set the y coordinate value keeping x and z constant
    */ 
-   void SetY(Scalar y) { fY = y; }
+   void SetY(Scalar yy) { fY = yy; }
 
    /** 
        set the z coordinate value keeping x and y constant
    */ 
-   void SetZ(Scalar z) { fZ = z; }
+   void SetZ(Scalar zz) { fZ = zz; }
 
    /** 
        set all values using cartesian coordinates  
    */
-   void SetXYZ(Scalar x, Scalar y, Scalar z) { 
-      fX=x; 
-      fY=y; 
-      fZ=z; 
+   void SetXYZ(Scalar xx, Scalar yy, Scalar zz) { 
+      fX=xx; 
+      fY=yy; 
+      fZ=zz; 
    }
 
    /**
