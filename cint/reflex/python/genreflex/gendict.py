@@ -49,6 +49,7 @@ class genDictionary(object) :
     self.selectionname      = 'Reflex::Selection'
     self.unnamedNamespaces = []
     self.globalNamespaceID = ''
+    self.typedefs_for_usr = []
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
@@ -323,6 +324,7 @@ class genDictionary(object) :
               if not self.quiet:
                 print '--->> genreflex: INFO: Using typedef %s to select class %s' % (self.genTypeName(t['id']), self.genTypeName(catt['id']))
               selec.append(catt)
+              self.typedefs_for_usr.append(t)
       if self.resolvettd :
         newselector = self.resolveSelectorTypedefs( self.selector.sel_classes )
         if newselector:
