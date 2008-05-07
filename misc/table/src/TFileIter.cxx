@@ -21,7 +21,7 @@
 //                                                                       //
 //        ///////        //////////      ////////        ///////     //////
 //
-// void TestFileIter(){
+// void TesTFileIter(){
 // // This macros tests the various methods of TFileIter class.
 //   gSystem->Load("libTable");
 //
@@ -122,17 +122,27 @@
 ClassImp(TFileIter)
 
 //__________________________________________________________________________
-TFileIter::TFileIter(TFile *file) : fRootFile(file),
-           fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1)),
-           fCursorPosition(-1),  fOwnTFile(kFALSE)
+TFileIter::TFileIter(TFile *file) : fFileBackUp(0),fDirectoryBackUp(0), fNestedIterator(0)
+         , fRootFile(file)
+         , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
+         , fCursorPosition(-1),  fOwnTFile(kFALSE)
 { 
-   //to be documented
+   // Create iterator over all objects from the TFile provided
    Initialize(); 
 }
 
 //__________________________________________________________________________
+TFileIter::TFileIter(TDirectory *directory) :  fFileBackUp(0),fDirectoryBackUp(0), fNestedIterator(0)
+         , fRootFile(directory)
+         , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
+         , fCursorPosition(-1),  fOwnTFile(kFALSE)
+{ 
+   // Create iterator over all objects from the TDirectory provided
+   Initialize(); 
+}
+//__________________________________________________________________________
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
-                     , Int_t compress, Int_t /*netopt*/) : fRootFile (0)
+                     , Int_t compress, Int_t /*netopt*/) :fNestedIterator(0),fRootFile (0)
 {
    // Open ROOT TFile by the name provided;
    // This TFile is to be deleted by the TFileIter alone
@@ -149,19 +159,23 @@ TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
 
 //__________________________________________________________________________
 TFileIter::TFileIter(const TFileIter &dst) : TListIter()
-          ,fRootFile(dst.fRootFile)
-          ,fEventName(dst.fEventName), fRunNumber(dst.fRunNumber)
+          ,fFileBackUp(0),  fDirectoryBackUp(0), fNestedIterator(0)
+          ,fRootFile(dst.fRootFile),fEventName(dst.fEventName), fRunNumber(dst.fRunNumber)
           ,fEventNumber(dst.fRunNumber),
            fCursorPosition(-1),  fOwnTFile(dst.fOwnTFile)
 {
-   // Copy stor can be used with the "read only" files only.
+   // Copy ctor can be used with the "read only" files only.
    assert(!fRootFile->IsWritable());
    if (fRootFile && fOwnTFile && !fRootFile->IsWritable()) {
       // Reopen the file
-      fRootFile = TFile::Open(MapName(fRootFile->GetName())
-                            ,fRootFile->GetOption()
-                            ,fRootFile->GetTitle()
-                            ,fRootFile->GetCompressionLevel());
+      if (fRootFile->InheritsFrom(TFile::Class())) 
+      {
+         TFile *thisFile = (TFile *)fRootFile;
+         fRootFile = TFile::Open(MapName(fRootFile->GetName())
+            ,fRootFile->GetOption()
+            ,fRootFile->GetTitle()
+            ,thisFile->GetCompressionLevel());
+      }
    }
 
    Initialize();
@@ -171,7 +185,9 @@ TFileIter::TFileIter(const TFileIter &dst) : TListIter()
 //__________________________________________________________________________
 TFileIter::~TFileIter()
 {
-   //to be documented
+   // TFileIter dtor
+   TFileIter *deleteit = fNestedIterator; fNestedIterator = 0;
+   delete deleteit;
    if (fRootFile && fOwnTFile ) {  // delete own TFile if any
       if (fRootFile->IsWritable()) fRootFile->Write();
       fRootFile->Close();
@@ -180,81 +196,13 @@ TFileIter::~TFileIter()
    }
 }
 
-#if 0
-//__________________________________________________________________________
-Int_t TFileIter::Copy(TFile *destFile)
-{
-   //to be documented
-   Int_t nBytes = 0;
-   class TCopyKey : public TKey {
-public:
-   // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-   TCopyKey(const TKey &src) : TName(src) {
-      Mirror(src);
-   }
-   // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-   void Mirror(const TKey &src) {
-      fVersion = src.fVersion;     //Key version identifier
-      fNbytes  = src.fNbytes;      //Number of bytes for the object on file
-      fObjlen  = src.fObjlen;      //Length of uncompressed object in bytes
-      fDatime  = src.fDatime;      //Date/Time of insertion in file
-      fKeylen  = src.fKeylen;      //Number of bytes for the key itself
-      fCycle   = src.fCycle;       //Cycle number
-      fSeekKey = src.fSeekKey;     //Location of object on file
-      fSeekPdir= src.fSeekPdir;    //Location of parent directory on file
-      fClassName = src.fClassName; //Object Class name
-      fLeft    = src.fLeft;        //Number of bytes left in current segment
-
-      fBuffer = 0;  //Object buffer
-      fBufferRef = 0;;     //Pointer to the TBuffer object
-   }
-   // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-   virtual ~TCopyKey();
-   // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-   virtual TObject   ReadObj() {
-      fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-      if (!fBufferRef) {
-          Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
-         return 0;
-      }
-      if (fObjlen > fNbytes-fKeylen) {
-         fBuffer = new char[fNbytes];
-         ReadFile();                    //Read object structure from file
-         memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
-      } else {
-         fBuffer = fBufferRef->Buffer();
-         ReadFile();                    //Read object structure from file
-      }
-   }
-};
-
-==
-   TKey *cKey = GetCurrentKey();
-   if (cKey) {
-      TFile *save = gFile;
-      TDirectiry *savedir = gDirectrory;
-      destFile->cd();
-      TCopyKey *key = new TCopyKey(*cKey);
-
-      if (!key->GetSeekKey()) {
-         gDirectory->GetListOfKeys()->Remove(key);
-         delete key;
-      } else {
-         gFile->SumBuffer(key->GetObjlen());
-         nBytes = key->WriteFile(0);
-      }
-   }
-==
-   return nBytes;
-}
-#endif
 //__________________________________________________________________________
 void TFileIter::Initialize()
 {
    //to be documented
    if (fRootFile) {
       fDirection =  kIterForward;
-      if (fRootFile &&  fRootFile->IsOpen() && !fRootFile->IsZombie() ) Reset();
+      if (IsOpen()) Reset();
       else  {
          if (fRootFile && fOwnTFile ) delete fRootFile;
          fRootFile = 0;
@@ -262,13 +210,32 @@ void TFileIter::Initialize()
    }
 }
 //__________________________________________________________________________
+Bool_t  TFileIter::IsOpen() const
+{
+   Bool_t iOpen = kFALSE;
+   if (fRootFile && !fRootFile->IsZombie() ) {
+      iOpen = kTRUE;
+      if (fRootFile->InheritsFrom(TFile::Class()) && !((TFile*)fRootFile)->IsOpen()) 
+         iOpen = kFALSE;
+   }
+   return iOpen;
+}
+
+//__________________________________________________________________________
 TKey *TFileIter::GetCurrentKey() const
 {
   // return the pointer to the current TKey
-   TKey *key = 0;
-   if (fCurCursor) key = (TKey *)fCurCursor->GetObject();
-   return key;
+   
+   return ((TFileIter*)this)->SkipObjects(0);
 }
+//__________________________________________________________________________
+Int_t TFileIter::GetDepth() const
+{
+   // return the current number of the nested subdirectroies;
+   //      = 0 - means there is no subdirectories
+   return fNestedIterator ? fNestedIterator->GetDepth()+1 : 0;
+}
+
 //__________________________________________________________________________
 const char *TFileIter::GetKeyName() const
 {
@@ -286,8 +253,8 @@ TObject *TFileIter::GetObject() const
   // ATTENTION:  memory leak danger !!!
   // ---------
   // This method does create a new object and it is the end-user
-  // code responsibility to take care about the object returned
-  // to avoid memeory leak.
+  // code responsibility to take care about this object
+  // to avoid memory leak.
   //
    return ReadObj(GetCurrentKey());
 }
@@ -303,12 +270,14 @@ Int_t TFileIter::GetObjlen() const
 //__________________________________________________________________________
 Int_t TFileIter::TotalKeys() const
 {
-  // The total number of the TKey keys in this current TFile
+  // The total number of the TKey keys in the current TDirectory only
   // Usually this means the total number of different objects
-  // thos can be read separately with one "read" operation
-
+  // those can be read one by one.
+  // It does NOT count the nested sub-TDirectory. 
+  // It is too costly and it can be abused.
+   
    Int_t size = 0;
-   if(fList) size =  fList->GetSize();
+   if(fList) size +=  fList->GetSize();
    return size;
 }
 //__________________________________________________________________________
@@ -321,16 +290,61 @@ TObject *TFileIter::Next(Int_t  nSkip)
    SkipObjects(nSkip);
    return GetObject();
 }
+
+//__________________________________________________________________________
+void TFileIter::PurgeKeys(TList *listOfKeys) {
+  assert(listOfKeys);
+  // Remove the TKey duplication,
+  // leave the keys with highest cycle number only
+  // Sort if first
+  listOfKeys->Sort();
+  TObjLink *lnk   = listOfKeys->FirstLink();
+  while(lnk) {
+     TKey *key = (TKey *)lnk->GetObject();
+     Short_t cycle = key->GetCycle(); 
+     const char *keyName = key->GetName();
+     // Check next object
+     lnk = lnk->Next();
+     if (lnk) {
+        TKey *nextkey = 0;
+        TObjLink *lnkThis = lnk;
+        while (     lnk
+             &&   (nextkey = (TKey *)lnk->GetObject()) 
+             &&  !strcmp(nextkey->GetName(), keyName) 
+            ) {
+            // compare the cycles
+            Short_t nextCycle = nextkey->GetCycle() ;
+            //printf(" TFileIter::PurgeKeys found new cycle %s :%d : %d\n",
+            //      keyName,cycle ,nextCycle);
+            assert(cycle != nextCycle);
+            TObjLink *lnkNext = lnk->Next();
+            if (cycle > nextCycle ) { 
+               delete listOfKeys->Remove(lnk);
+            } else {
+               delete listOfKeys->Remove(lnkThis);
+               cycle   = nextCycle;
+               lnkThis = lnk;
+            } 
+            lnk = lnkNext;
+         }
+      } 
+   }
+}
+
 //__________________________________________________________________________
 void TFileIter::Reset()
 {
    // Reset the status of the iterator
-
+   if (fNestedIterator) { 
+      TFileIter *it = fNestedIterator; 
+      fNestedIterator=0;
+      delete it;
+   }
    TListIter::Reset();
    if (!fRootFile->IsWritable()) {
       TList *listOfKeys = fRootFile->GetListOfKeys();
       if (listOfKeys) {
-         if (!listOfKeys->IsSorted()) listOfKeys->Sort();
+         if (!listOfKeys->IsSorted()) PurgeKeys(listOfKeys);
          fList = listOfKeys;
          if (fDirection == kIterForward) {
             fCursorPosition = 0;
@@ -349,45 +363,54 @@ void TFileIter::SetCursorPosition(const char *keyNameToFind)
 {
    // Find the key by the name provided
    Reset();
-   while( (*this != keyNameToFind) && SkipObjects() ) { }
+   while( (*this != keyNameToFind) && SkipObjects() );
 }
 //__________________________________________________________________________
-TObject *TFileIter::SkipObjects(Int_t  nSkip)
+TKey *TFileIter::SkipObjects(Int_t  nSkip)
 {
  //
- // Returns the pointer to the nSkip object from the current one
+ // Returns the TKey pointer to the nSkip TKey object from the current one
  // nSkip = 0; the state of the iterator is not changed
  //
  // nSkip > 0; iterator skips nSkip objects in the container.
  //            the direction of the iteration is
  //            sign(nSkip)*kIterForward
  //
-   TObject *nextObject  = 0;
-   Int_t collectionSize = 0;
-   if (fList && (collectionSize = fList->GetSize())  ) {
-      if (fDirection !=kIterForward) nSkip = -nSkip;
-      Int_t newPos = fCursorPosition + nSkip;
-      if (0 <= newPos && newPos < collectionSize) {
-         do {
-            if (fCursorPosition < newPos) {
-               fCursorPosition++;
-               fCurCursor = fCursor;
-               fCursor    = fCursor->Next();
-            } else if (fCursorPosition > newPos) {
-               fCursorPosition--;
-               fCurCursor = fCursor;
-               fCursor    = fCursor->Prev();
-            }
-         } while (fCursorPosition != newPos) ;
-         if (fCurCursor) nextObject = fCurCursor->GetObject();;
-      } else  {
-         fCurCursor = fCursor = 0;
-         if (newPos < 0) {
-            fCursorPosition = -1;
-            if (fList) fCursor = fList->FirstLink();
+ // Returns: TKey that can be used to fetch the object from the TDirectory
+ //
+   TKey *nextObject  = fNestedIterator ? fNestedIterator->SkipObjects(nSkip): 0;
+   if (!nextObject) {
+      if (fNestedIterator) {
+         TFileIter *it = fNestedIterator;
+         fNestedIterator = 0;
+         delete it;
+      }
+      Int_t collectionSize = 0;
+      if (fList && (collectionSize = fList->GetSize())  ) {
+         if (fDirection !=kIterForward) nSkip = -nSkip;
+         Int_t newPos = fCursorPosition + nSkip;
+         if (0 <= newPos && newPos < collectionSize) {
+            do {
+               if (fCursorPosition < newPos) {
+                  fCursorPosition++;
+                  fCurCursor = fCursor;
+                  fCursor    = fCursor->Next();
+               } else if (fCursorPosition > newPos) {
+                  fCursorPosition--;
+                  fCurCursor = fCursor;
+                  fCursor    = fCursor->Prev();
+               }
+            } while (fCursorPosition != newPos);
+            if (fCurCursor) nextObject = dynamic_cast<TKey *>(fCurCursor->GetObject());
          } else  {
-            fCursorPosition = collectionSize;
-            if (fList) fCursor = fList->LastLink();
+            fCurCursor = fCursor = 0;
+            if (newPos < 0) {
+               fCursorPosition = -1;
+               if (fList) fCursor = fList->FirstLink();
+            } else  {
+               fCursorPosition = collectionSize;
+               if (fList) fCursor = fList->LastLink();
+            }
          }
       }
    }
@@ -408,10 +431,10 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
    //   TIter &nextKey = *fKeysIterator;
    TKey *key = 0;
    TDsKey thisKey;
-   while ( (key = (TKey *)SkipObjects()) ) {
+   while ( (key = SkipObjects()) ) {
       if (fDirection==kIterForward) fCursorPosition++;
       else                          fCursorPosition--;
-      if ( strcmp(name,"*")) {
+      if ( name != "*") {
          thisKey.SetKey(key->GetName());
          if (thisKey.GetName() < name)  continue;
          if (thisKey.GetName() > name) { key = 0; break; }
@@ -447,18 +470,17 @@ TObject *TFileIter::NextEventGet(UInt_t eventNumber, UInt_t runNumber, const cha
 //__________________________________________________________________________
 TObject *TFileIter::ReadObj(const TKey *key)  const
 {
-   //to be documented
+   //Read the next TObject from for the TDirectory by TKey provided
    TObject *obj = 0;
-   if (key)  {
-      if (fRootFile != gFile) {
-         TFileIter &th = *((TFileIter *)this);
-         th.SaveFileScope();
-         (th.fRootFile)->cd();
-      }
+   if (fNestedIterator) obj = fNestedIterator->ReadObj(key);
+   else if (key)  {
       obj = ((TKey *)key)->ReadObj();
-      if (fRootFile != gFile) {
-         TFileIter &th = *((TFileIter *)this);
-         th.RestoreFileScope();
+      if (obj && obj->InheritsFrom(TDirectory::Class()) ) 
+      {
+         // create the next iteration level.
+         assert(!fNestedIterator);
+         ((TFileIter*)this)->fNestedIterator = new TFileIter((TDirectory *)obj);
+         // FIXME:  needs to set  fDirection if needed 02/11/2007 vf
       }
    }
    return obj;
@@ -471,22 +493,20 @@ Int_t  TFileIter::NextEventPut(TObject *obj, UInt_t eventNum,  UInt_t runNumber
    // Create a special TKey name with obj provided and write it out.
 
    Int_t wBytes = 0;
-   if (obj && fRootFile &&  fRootFile->IsOpen() && fRootFile->IsWritable()) {
+   if (obj && IsOpen() && fRootFile->IsWritable()) {
       TDsKey thisKey(runNumber,eventNum);
       if (name && name[0])
          thisKey.SetName(name);
       else
          thisKey.SetName(obj->GetName());
 
-      if (fRootFile != gFile) {
+      if (fRootFile != gDirectory) {
          SaveFileScope();
          fRootFile->cd();
       }
       wBytes = obj->Write(thisKey.GetKey());
-      fRootFile->Flush();
-      if (fRootFile != gFile) {
-         RestoreFileScope();
-      }
+      if (fRootFile->InheritsFrom(TFile::Class())) ((TFile*)fRootFile)->Flush();
+      if (fRootFile != gDirectory)     RestoreFileScope();
    }
    return wBytes;
 }

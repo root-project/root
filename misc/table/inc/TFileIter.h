@@ -61,13 +61,15 @@
 class TFileIter : public TListIter {
 
 private:
+
    TFile      *fFileBackUp;       //! temporary data-members
    TDirectory *fDirectoryBackUp;  //! to save/restore TFile/TDirectory global scope
+   TFileIter *fNestedIterator;   //! The inner TFidrectory interator;
 
    virtual TIterator &operator=(const TIterator &) { return *this; }
 
 protected:
-   TFile   *fRootFile;            // Tfile to be iterated over
+   TDirectory   *fRootFile;       // TDirectory/TFile to be iterated over
    TString  fEventName;           // current key name
    UInt_t   fRunNumber;           // current "run number"
    UInt_t   fEventNumber;         // current "event number"
@@ -81,29 +83,35 @@ protected:
    TKey    *NextEventKey(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
 
 public:
+
    TFileIter(const char *name, Option_t *option = "",
              const char *ftitle = "", Int_t compress = 1,
              Int_t netopt = 0);
    TFileIter(TFile *file=0);
+   TFileIter(TDirectory *directory);
    TFileIter(const TFileIter &);
    virtual ~TFileIter();
 // --- draft !!!     virtual Int_t Copy(TFile *destFile);
    Int_t   CurrentCursorPosition() const;
    virtual const TFile *GetTFile() const;
+   virtual const TDirectory *GetTDirectory() const;
    static  TString MapName(const char *name, const char *localSystemKey = 0
                                             , const char *mountedFileSystemKey = 0);
    static  const char *GetResourceName();
    static  const char *GetDefaultMapFileName();
    static  const char *GetLocalFileNameKey();
    static  const char *GetForeignFileSystemKey();
+   static  void  PurgeKeys(TList *listOfKeys);
+   virtual Bool_t      IsOpen() const;
    virtual TObject    *NextEventGet(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
    virtual Int_t       NextEventPut(TObject *obj, UInt_t eventNum, UInt_t runNumber, const char *name=0);
    void                SetCursorPosition(Int_t cursorPosition);
    void                SetCursorPosition(const char *keyNameToFind);
    Int_t               GetObjlen() const;
    virtual Int_t       TotalKeys() const;
-   virtual TObject    *SkipObjects(Int_t  nSkip=1);
+   virtual TKey       *SkipObjects(Int_t  nSkip=1);
    virtual TObject    *GetObject() const;
+   virtual Int_t       GetDepth() const;
 
    TKey               *GetCurrentKey() const;
    const char         *GetKeyName() const;
@@ -118,20 +126,18 @@ public:
    TObject *operator*() const;
    operator const char *() const;
    operator const TFile *() const;
+   operator const TDirectory *() const;
    operator int () const;
    int operator==(const char *name) const;
    int operator!=(const char *name) const;
 
-   // defined in TListIter
-   bool operator !=(const TIterator &aIter) const { return TListIter::operator!=(aIter); }
-   bool operator !=(const TListIter &aIter) const { return TListIter::operator!=(aIter); }
+public:  // abstract TIterator methods implementations:
 
-   // abstract TIterator methods implementations:
    virtual TObject *Next();
-   virtual TObject *Next(Int_t nSkip);
+   virtual TObject *Next(Int_t  nSkip);
    virtual void Reset();
    virtual void Rewind();
-   TObject *operator()(Int_t nSkip);
+   TObject *operator()(Int_t  nSkip);
    TObject *operator()();
 
    ClassDef(TFileIter,0) // TFile class iterator
@@ -150,22 +156,27 @@ inline const char *TFileIter::GetForeignFileSystemKey(){return "MountedFileSyste
 inline Int_t TFileIter::CurrentCursorPosition() const
 {
    // return the current
-   return fCursorPosition;
+   return fNestedIterator ? fNestedIterator->CurrentCursorPosition() : fCursorPosition;
 }
 
 //__________________________________________________________________________
-inline const TFile *TFileIter::GetTFile() const { return fRootFile; }
+inline const TFile *TFileIter::GetTFile() const { return GetTDirectory()->GetFile(); }
+//__________________________________________________________________________
+inline const TDirectory *TFileIter::GetTDirectory() const
+{ return fNestedIterator ? fNestedIterator->GetTDirectory() : fRootFile; }
 
 //__________________________________________________________________________
 inline TObject *TFileIter::Next()
 {
    // Make 1 step over the file objects and returns its pointer
    // or 0, if there is no object left in the container
-  return Next(1);
+   return Next(1);
 }
 
 //__________________________________________________________________________
-inline void TFileIter::Rewind() {
+inline void TFileIter::Rewind() 
+{
+   // Alias for "Reset" method
    Reset();
 }
 //__________________________________________________________________________
@@ -173,7 +184,10 @@ inline void  TFileIter::SetCursorPosition(Int_t cursorPosition)
 {
    // Make <cursorPosition> steps (>0 - forward) over the file
    // objects to skip it
-   SkipObjects(cursorPosition - fCursorPosition);
+   if (fNestedIterator) 
+      fNestedIterator->SetCursorPosition(cursorPosition);
+   else 
+      SkipObjects(cursorPosition - fCursorPosition);
 }
 
 //__________________________________________________________________________
@@ -189,6 +203,10 @@ inline TFileIter &TFileIter::operator=(Int_t cursorPosition)
   SetCursorPosition(cursorPosition);
   return *this;
 }
+//__________________________________________________________________________
+inline TFileIter::operator const TDirectory *() const
+{ return GetTDirectory();  }
+
 //__________________________________________________________________________
 inline TFileIter::operator const TFile *() const
 { return GetTFile (); }
