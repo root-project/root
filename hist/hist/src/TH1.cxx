@@ -321,24 +321,50 @@ All histogram classes are derived from the base class TH1
 
 <h4>Operations on histograms</h4>
 
-
-     Many types of operations are supported on histograms or between histograms
+     Many types of operations are supported on histograms or between histograms:
 <ul>
-     <li> Addition of an histogram to the current histogram
-     <li> Additions of two histograms with coefficients and storage into the current
-       histogram
-     <li> Multiplications and Divisions are supported in the same way as additions.
-     <li> The Add, Divide and Multiply functions also exist to add,divide or multiply
-       an histogram by a function.
+     <li> Addition of an histogram to the current histogram.
+     <li> Additions of two histograms with coefficients and storage into the
+          current histogram.
+     <li> Multiplications and Divisions are supported in the same way as
+          additions.
+     <li> The <tt>Add</tt>, <tt>Divide</tt> and <tt>Multiply</tt>
+          functions also exist to add, divide or multiply an histogram by a
+	  function.
 </ul>
-     If an histogram has associated error bars (TH1::Sumw2 has been called),
-     the resulting error bars are also computed assuming independent histograms.
-     In case of divisions, Binomial errors are also supported.
-     One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
-       myhist.SetBit(TH1::kIsAverage);
-     When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
-
-
+     If an histogram has associated error bars (<tt>TH1::Sumw2</tt> has been
+     called), the resulting error bars are also computed assuming independent
+     histograms. In case of divisions, binomial errors are also supported.
+     One can mark a histogram to be an "average" histogram by setting its bit
+     <tt>kIsAverage</tt> via
+<pre>
+        myhist.SetBit(TH1::kIsAverage);
+</pre>
+     When adding (see <tt>TH1::Add</tt>) average histograms, the histograms
+     are averaged and not summed.
+<p>
+     Histograms objects (not pointers <tt>TH1F h1</tt>) can be multiplied by a
+     constant using:
+<pre>
+	h1.Scale(const)
+</pre>
+     A new histogram can be created without changing the original one doing:
+<pre>
+        TH1F h3 = 8*h1;
+</pre>
+     To multiply two histogram objects and put the result in a 3rd one do:
+<pre>
+        TH1F h3 = h1*h2;
+</pre>
+     The same kind of things can be done with pointers to histograms 
+     (<tt>TH1F *h1, *h2</tt>):
+<pre>
+        h1->Scale(const)
+        TH1F h3 = 8*(*h1);
+        TH1F h3 = (*h1)*(*h2);
+</pre>
+    Of course, the <tt>TH1</tt> methods <tt>Add</tt>, <tt>Multiply</tt> and
+    <tt>Divide</tt> can be used instead of the operators.
 
 <h4>Fitting histograms</h4>
 
