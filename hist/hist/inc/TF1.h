@@ -254,7 +254,11 @@ public:
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}
-   virtual void     SetFunction(Double_t (*fcn)(Double_t *, Double_t *)) { fFunctor = ROOT::Math::ParamFunctor(fcn);}
+   template <class PtrObj, typename MemFn> 
+   void SetFunction( PtrObj& p, MemFn memFn );
+   template <typename Func> 
+   void SetFunction( Func f );
+   //virtual void     SetFunction(Double_t (*fcn)(Double_t *, Double_t *));
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void     SetNDF(Int_t ndf);
@@ -295,5 +299,23 @@ inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)
    { TF1::SetRange(xmin, xmax); }
 inline void TF1::SetRange(Double_t xmin, Double_t, Double_t,  Double_t xmax, Double_t, Double_t)
    { TF1::SetRange(xmin, xmax); }
+
+template <typename Func> 
+void TF1::SetFunction( Func f )    {
+   // set function from a generic C++ callable object 
+   fType = 1; 
+   fFunctor = ROOT::Math::ParamFunctor(f); 
+} 
+// void TF1::SetFunction(Double_t (*fcn)(Double_t *, Double_t *)) { 
+//    // specialization for free functions
+//    fType = 1; 
+//    fFunctor = ROOT::Math::ParamFunctor(fcn);
+// }
+template <class PtrObj, typename MemFn> 
+void TF1::SetFunction( PtrObj& p, MemFn memFn )   { 
+   // set from a pointer to a member function
+   fType = 1; 
+   fFunctor = ROOT::Math::ParamFunctor(p,memFn); 
+} 
 
 #endif
