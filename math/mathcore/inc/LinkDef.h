@@ -19,6 +19,8 @@
 
 #pragma link C++ namespace TMath;
 
+#pragma link C++ global ROOT_TMath;
+
 #pragma link C++ global gRandom;
 
 #pragma link C++ class TComplex+;
