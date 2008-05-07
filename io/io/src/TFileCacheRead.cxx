@@ -56,6 +56,7 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fFile        = 0;
    fBuffer      = 0;
    fIsSorted    = kFALSE;
+   fIsTransferred = kFALSE;
 
    // Asynchronous reading
    fBytesToPrefetch = 0;
@@ -104,6 +105,7 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    }
 
    fIsSorted    = kFALSE;
+   fIsTransferred = kFALSE;
    if (file) file->SetCacheRead(this);
 }
 
@@ -130,6 +132,7 @@ void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
    // be prefetched. If pos <= 0 the current blocks (if any) are reset.
 
    fIsSorted = kFALSE;
+   fIsTransferred = kFALSE;
    if (pos <= 0) {
       fNseek = 0;
       fNtot  = 0;
@@ -220,6 +223,7 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
          if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb)) {
             return -1;
          }
+         fIsTransferred = kTRUE;
       } else {
          // In any case, we'll start to request the chunks.
          // This implementation simply reads all the chunks in advance

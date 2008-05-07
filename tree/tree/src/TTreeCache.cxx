@@ -51,6 +51,7 @@
 #include "TRegexp.h"
 #include "TLeaf.h"
 #include "TFriendElement.h"
+#include "TFile.h"
 
 Int_t TTreeCache::fgLearnEntries = 100;
 
@@ -392,6 +393,13 @@ Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 }
 
 //_____________________________________________________________________________
+void TTreeCache::ResetCache()
+{
+   // This will simply clear the cache
+   TFileCacheRead::Prefetch(0,0);
+}
+
+//_____________________________________________________________________________
 void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 {
    // Set the minimum and maximum entry number to be processed
@@ -437,6 +445,7 @@ void TTreeCache::StartLearningPhase()
    fNbranches  = 0;
    fZipBytes   = 0;
    if (fBrNames) fBrNames->Delete();
+   fIsTransferred = kFALSE;
 }
 
 //_____________________________________________________________________________
@@ -451,6 +460,17 @@ void TTreeCache::StopLearningPhase()
    fIsLearning = kFALSE;
    fIsManual = kTRUE;
    FillBuffer();
+
+   // If this is the first time we get here since the last FillBuffer
+   // it's probable that the information about the prefetched buffers is there
+   // but it hasn't actually been transfered... Is this the best place to put it??
+   if (fNseek > 0 && !fIsSorted) {
+      Sort();
+
+      // Then we use the vectored read to read everything now
+      fFile->ReadBuffers(fBuffer,fPos,fLen,fNb);
+      fIsTransferred = kTRUE;
+   }
 }
 
 //_____________________________________________________________________________

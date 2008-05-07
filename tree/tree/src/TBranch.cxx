@@ -34,6 +34,7 @@
 #include "TMath.h"
 #include "TTree.h"
 #include "TTreeCache.h"
+#include "TTreeCacheUnzip.h"
 #include "TVirtualPad.h"
 
 #include <cstddef>
@@ -980,8 +981,13 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
    //add branch to cache (if any)
-   TTreeCache *tpf = (TTreeCache*)file->GetCacheRead();
-   if (tpf) tpf->AddBranch(this);
+   TFileCacheRead *pf = GetFile()->GetCacheRead();
+   if (pf && pf->InheritsFrom(TTreeCache::Class())){
+      TTreeCache *tpf = (TTreeCache*)pf;
+      tpf->AddBranch(this);
+      if (fSkipZip) tpf->SetSkipZip();
+   }
+
    //now read basket
    Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
    if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
@@ -999,7 +1005,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
             return 0;
          }
       }
-      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%d, badread=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread);
+      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%d, badread=%d, nerrors=%d, basketnumber=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
       return 0;
    }
 

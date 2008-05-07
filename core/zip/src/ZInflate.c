@@ -15,7 +15,7 @@
 #define NULL 0L
 #endif
 
-static int qflag = 0;
+static const int qflag = 0;
 
 #include "zlib.h"
 
@@ -235,7 +235,7 @@ typedef unsigned long     ulg;  /*  predefined on some systems) & match zip  */
 #endif
 
 #ifndef FLUSH           /* default is to simply write the buffer to stdout */
-#  define FLUSH(n) R__WriteData(n)  /* return value not used */
+#  define FLUSH(n,obufptr,obufcnt,R__slide) R__WriteData(n,obufptr,obufcnt,R__slide)  /* return value not used */
 #endif
 /* Warning: the fwrite above might not work on 16-bit compilers, since
    0x8000 might be interpreted as -32,768 by the library function. */
@@ -274,51 +274,38 @@ struct huft {
 #    define OF(a) ()
 #  endif /* ?__STDC__ */
 #endif
-int R__huft_build OF((unsigned *, unsigned, unsigned, ush *, ush *,
-                   struct huft **, int *));
+int R__huft_build OF((unsigned *, unsigned, unsigned, const ush *, const ush *,
+                   struct huft **, int *, unsigned*));
 int R__huft_free OF((struct huft *));
-int R__Inflate_codes OF((struct huft *, struct huft *, int, int));
-int R__Inflate_stored OF((void));
-int R__Inflate_fixed OF((void));
-int R__Inflate_dynamic OF((void));
-int R__Inflate_block OF((int *));
-int R__Inflate OF((void));
+int R__Inflate_codes OF((struct huft *, struct huft *, int, int, uch**, long*, uch**, long*, ulg*, unsigned*, uch* , unsigned*));
+int R__Inflate_stored OF((uch**, long*, uch**, long*, ulg*, unsigned*, uch* , unsigned*));
+int R__Inflate_fixed OF((uch**, long*, uch**, long*, ulg*, unsigned*, uch* , unsigned*, unsigned*));
+int R__Inflate_dynamic OF((uch**, long*, uch**, long*, ulg*, unsigned*, uch* , unsigned*, unsigned*));
+int R__Inflate_block OF((int *, uch**, long*, uch**, long*, ulg*, unsigned*, uch* , unsigned*, unsigned*));
+int R__Inflate OF((uch**, long*, uch**, long*));
 int R__Inflate_free OF((void));
 
-/* The inflate algorithm uses a sliding 32K byte window on the uncompressed
-   stream to find repeated byte strings.  This is implemented here as a
-   circular buffer.  The index is updated simply by incrementing and then
-   and'ing with 0x7fff (32K-1). */
-/* It is left to other modules to supply the 32K area.  It is assumed
-   to be usable as if it were declared "uch slide[32768];" or as just
-   "uch *slide;" and then malloc'ed in the latter case.  The definition
-   must be in unzip.h, included above. */
-
-static uch R__slide [32768];
-static unsigned wp;            /* current position in slide */
-
-
 /* Tables for deflate from PKZIP's appnote.txt. */
-static unsigned border[] = {    /* Order of the bit length code lengths */
+static const unsigned border[] = {    /* Order of the bit length code lengths */
         16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
-static ush cplens[] = {         /* Copy lengths for literal codes 257..285 */
+static const ush cplens[] = {         /* Copy lengths for literal codes 257..285 */
         3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
         35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0};
         /* note: see note #13 above about the 258 in this list. */
-static ush cplext[] = {         /* Extra bits for literal codes 257..285 */
+static const ush cplext[] = {         /* Extra bits for literal codes 257..285 */
         0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
         3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 99, 99}; /* 99==invalid */
-static ush cpdist[] = {         /* Copy offsets for distance codes 0..29 */
+static const ush cpdist[] = {         /* Copy offsets for distance codes 0..29 */
         1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
         257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
         8193, 12289, 16385, 24577};
-static ush cpdext[] = {         /* Extra bits for distance codes */
+static const ush cpdext[] = {         /* Extra bits for distance codes */
         0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
         7, 7, 8, 8, 9, 9, 10, 10, 11, 11,
         12, 12, 13, 13};
 
 /* And'ing with mask[n] masks the lower n bits */
-static ush mask[] = {
+static const ush mask[] = {
     0x0000,
     0x0001, 0x0003, 0x0007, 0x000f, 0x001f, 0x003f, 0x007f, 0x00ff,
     0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff
@@ -345,26 +332,21 @@ static ush mask[] = {
    block.  See the huft_build() routine.
  */
 
-static ulg bb;                         /* bit buffer */
-static unsigned bk;                    /* bits in bit buffer */
-static uch  *ibufptr,*obufptr;
-static long  ibufcnt, obufcnt;
-
 #define CHECK_EOF
 
 #ifndef CHECK_EOF
-static int  R__ReadByte();
+static int  R__ReadByte((uch  *, long*));
 #endif
-static void R__WriteData OF((int));
+static void R__WriteData OF((int,uch**,long*,uch*));
 
 #ifndef CHECK_EOF
-#  define NEEDBITS(n) {while(k<(n)){b|=((ulg)NEXTBYTE)<<k;k+=8;}}
+#  define NEEDBITS(n,b,k,ibufptr,ibufcnt) {while((k)<(n)){(b)|=((ulg)NEXTBYTE)<<(k);(k)+=8;}}
 #else
-#  define NEEDBITS(n) {while(k<(n)){if(ibufcnt-- <= 0)return 1;\
-    b|=((ulg) *ibufptr++)<<k;k+=8;}}
+#  define NEEDBITS(n,b,k,ibufptr,ibufcnt) {while((k)<(n)){if((ibufcnt)-- <= 0)return 1;\
+   (b)|=((ulg) *(ibufptr)++)<<(k);(k)+=8;}}
 #endif                      /* Piet Plomp:  change "return 1" to "break" */
 
-#define DUMPBITS(n) {b>>=(n);k-=(n);}
+#define DUMPBITS(n,b,k) {(b)>>=(n);(k)-=(n);}
 
 
 /*
@@ -400,8 +382,8 @@ static void R__WriteData OF((int));
  */
 
 
-static int lbits = 9;          /* bits in base literal/length lookup table */
-static int dbits = 6;          /* bits in base distance lookup table */
+static const int lbits = 9;    /* bits in base literal/length lookup table */
+static const int dbits = 6;    /* bits in base distance lookup table */
 
 
 /* If BMAX needs to be larger than 16, then h and x[] should be ulg. */
@@ -409,10 +391,7 @@ static int dbits = 6;          /* bits in base distance lookup table */
 #define N_MAX 288       /* maximum number of codes in any set */
 
 
-static unsigned hufts;         /* track memory usage */
-
-
-int R__huft_build(unsigned *b, unsigned n, unsigned s, ush *d, ush *e, struct huft **t, int *m)
+int R__huft_build(unsigned *b, unsigned n, unsigned s, const ush *d, const ush *e, struct huft **t, int *m, unsigned* hufts)
 /* unsigned *b;             code lengths in bits (all assumed <= BMAX) */
 /* unsigned n;              number of codes (assumed <= N_MAX) */
 /* unsigned s;              number of simple-valued codes (0..s-1) */
@@ -554,7 +533,7 @@ int R__huft_build(unsigned *b, unsigned n, unsigned s, ush *d, ush *e, struct hu
             R__huft_free(u[0]);
           return 3;             /* not enough memory */
         }
-        hufts += z + 1;         /* track memory usage */
+        (*hufts) += z + 1;         /* track memory usage */
         *t = q + 1;             /* link to list for huft_free() */
         *(t = &(q->v.t)) = (struct huft *)NULL;
         u[h] = ++q;             /* table starts after link */
@@ -638,7 +617,7 @@ int R__huft_free(struct huft *t)
 
 #else
 
-int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd)
+int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd, uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt, ulg* bb, unsigned* bk, uch* R__slide, unsigned* wp)
 /* struct huft *tl, *td;    literal/length and distance decoder tables */
 /* int bl, bd;              number of bits decoded by tl[] and td[] */
 /* inflate (decompress) the codes in a deflated (compressed) block.
@@ -654,9 +633,9 @@ int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd)
 
 
   /* make local copies of globals */
-  b = bb;                       /* initialize bit buffer */
-  k = bk;
-  w = wp;                       /* initialize window position */
+  b = (*bb);                       /* initialize bit buffer */
+  k = (*bk);
+  w = (*wp);                       /* initialize window position */
 
 
   /* inflate the coded data */
@@ -664,22 +643,22 @@ int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd)
   md = mask[bd];
   while (1)                     /* do until end of block */
   {
-    NEEDBITS((unsigned)bl)
+    NEEDBITS((unsigned)bl,b,k,(*ibufptr),(*ibufcnt))
     if ((e = (t = tl + ((unsigned)b & ml))->e) > 16)
       do {
         if (e == 99)
           return 1;
-        DUMPBITS(t->b)
+        DUMPBITS(t->b,b,k)
         e -= 16;
-        NEEDBITS(e)
+        NEEDBITS(e,b,k,(*ibufptr),(*ibufcnt))
       } while ((e = (t = t->v.t + ((unsigned)b & mask[e]))->e) > 16);
-    DUMPBITS(t->b)
+    DUMPBITS(t->b,b,k)
     if (e == 16)                /* then it's a literal */
     {
       R__slide[w++] = (uch)t->v.n;
       if (w == WSIZE)
       {
-        FLUSH(w);
+        FLUSH(w,obufptr,obufcnt,R__slide);
         w = 0;
       }
     }
@@ -690,24 +669,24 @@ int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd)
         break;
 
       /* get length of block to copy */
-      NEEDBITS(e)
+      NEEDBITS(e,b,k,(*ibufptr),(*ibufcnt))
       n = t->v.n + ((unsigned)b & mask[e]);
-      DUMPBITS(e);
+      DUMPBITS(e,b,k);
 
       /* decode distance of block to copy */
-      NEEDBITS((unsigned)bd)
+      NEEDBITS((unsigned)bd,b,k,(*ibufptr),(*ibufcnt))
       if ((e = (t = td + ((unsigned)b & md))->e) > 16)
         do {
           if (e == 99)
             return 1;
-          DUMPBITS(t->b)
+          DUMPBITS(t->b,b,k)
           e -= 16;
-          NEEDBITS(e)
+          NEEDBITS(e,b,k,(*ibufptr),(*ibufcnt))
         } while ((e = (t = t->v.t + ((unsigned)b & mask[e]))->e) > 16);
-      DUMPBITS(t->b)
-      NEEDBITS(e)
+      DUMPBITS(t->b,b,k)
+      NEEDBITS(e,b,k,(*ibufptr),(*ibufcnt))
       d = w - t->v.n - ((unsigned)b & mask[e]);
-      DUMPBITS(e)
+      DUMPBITS(e,b,k)
 
       /* do the copy */
       do {
@@ -726,7 +705,7 @@ int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd)
           } while (--e);
         if (w == WSIZE)
         {
-          FLUSH(w);
+          FLUSH(w,obufptr,obufcnt,R__slide);
           w = 0;
         }
       } while (n);
@@ -735,9 +714,9 @@ int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd)
 
 
   /* restore the globals from the locals */
-  wp = w;                       /* restore global window pointer */
-  bb = b;                       /* restore global bit buffer */
-  bk = k;
+  (*wp) = w;                       /* restore global window pointer */
+  (*bb) = b;                       /* restore global bit buffer */
+  (*bk) = k;
 
 
   /* done */
@@ -748,7 +727,7 @@ int R__Inflate_codes(struct huft *tl, struct huft *td, int bl, int bd)
 
 
 
-int R__Inflate_stored()
+int R__Inflate_stored(uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt, ulg* bb, unsigned* bk, uch* R__slide, unsigned* wp)
 /* "decompress" an inflated type 0 (stored) block. */
 {
   unsigned n;           /* number of bytes in block */
@@ -759,44 +738,44 @@ int R__Inflate_stored()
 
   /* make local copies of globals */
   Trace((stderr, "\nstored block"));
-  b = bb;                       /* initialize bit buffer */
-  k = bk;
-  w = wp;                       /* initialize window position */
+  b = (*bb);                       /* initialize bit buffer */
+  k = (*bk);
+  w = (*wp);                       /* initialize window position */
 
 
   /* go to byte boundary */
   n = k & 7;
-  DUMPBITS(n);
+  DUMPBITS(n,b,k);
 
 
   /* get the length and its complement */
-  NEEDBITS(16)
+  NEEDBITS(16,b,k,(*ibufptr),(*ibufcnt))
   n = ((unsigned)b & 0xffff);
-  DUMPBITS(16)
-  NEEDBITS(16)
+  DUMPBITS(16,b,k)
+  NEEDBITS(16,b,k,(*ibufptr),(*ibufcnt))
   if (n != (unsigned)((~b) & 0xffff))
     return 1;                   /* error in compressed data */
-  DUMPBITS(16)
+  DUMPBITS(16,b,k)
 
 
   /* read and output the compressed data */
   while (n--)
   {
-    NEEDBITS(8)
+    NEEDBITS(8,b,k,(*ibufptr),(*ibufcnt))
     R__slide[w++] = (uch)b;
     if (w == WSIZE)
     {
-      FLUSH(w);
+      FLUSH(w,obufptr,obufcnt,R__slide);
       w = 0;
     }
-    DUMPBITS(8)
+    DUMPBITS(8,b,k)
   }
 
 
   /* restore the globals from the locals */
-  wp = w;                       /* restore global window pointer */
-  bb = b;                       /* restore global bit buffer */
-  bk = k;
+  (*wp) = w;                       /* restore global window pointer */
+  (*bb) = b;                       /* restore global bit buffer */
+  (*bk) = k;
   return 0;
 }
 
@@ -806,7 +785,7 @@ struct huft *R__fixed_tl = (struct huft *)NULL;
 struct huft *R__fixed_td;
 int R__fixed_bl, R__fixed_bd;
 
-int R__Inflate_fixed()
+int R__Inflate_fixed(uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt, ulg* bb, unsigned* bk, uch* R__slide, unsigned* wp, unsigned* hufts)
 /* decompress an inflated type 1 (fixed Huffman codes) block.  We should
    either replace this with a custom decoder, or at least precompute the
    Huffman tables. */
@@ -829,7 +808,7 @@ int R__Inflate_fixed()
       l[i] = 8;
     R__fixed_bl = 7;
     if ((i = R__huft_build(l, 288, 257, cplens, cplext,
-                        &R__fixed_tl, &R__fixed_bl)) != 0)
+                        &R__fixed_tl, &R__fixed_bl, hufts)) != 0)
     {
       R__fixed_tl = (struct huft *)NULL;
       return i;
@@ -839,7 +818,7 @@ int R__Inflate_fixed()
     for (i = 0; i < 30; i++)      /* make an incomplete code set */
       l[i] = 5;
     R__fixed_bd = 5;
-    if ((i = R__huft_build(l, 30, 0, cpdist, cpdext, &R__fixed_td, &R__fixed_bd)) > 1)
+    if ((i = R__huft_build(l, 30, 0, cpdist, cpdext, &R__fixed_td, &R__fixed_bd, hufts)) > 1)
     {
       R__huft_free(R__fixed_tl);
       R__fixed_tl = (struct huft *)NULL;
@@ -849,12 +828,12 @@ int R__Inflate_fixed()
 
 
   /* decompress until an end-of-block code */
-  return R__Inflate_codes(R__fixed_tl, R__fixed_td, R__fixed_bl, R__fixed_bd) != 0;
+  return R__Inflate_codes(R__fixed_tl, R__fixed_td, R__fixed_bl, R__fixed_bd, ibufptr, ibufcnt, obufptr, obufcnt, bb, bk, R__slide, wp) != 0;
 }
 
 
 
-int R__Inflate_dynamic()
+int R__Inflate_dynamic(uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt, ulg* bb, unsigned* bk, uch* R__slide, unsigned* wp, unsigned* hufts)
 /* decompress an inflated type 2 (dynamic Huffman codes) block. */
 {
   int i;                /* temporary variables */
@@ -880,20 +859,20 @@ int R__Inflate_dynamic()
 
   /* make local bit buffer */
   Trace((stderr, "\ndynamic block"));
-  b = bb;
-  k = bk;
+  b = (*bb);
+  k = (*bk);
 
 
   /* read in table lengths */
-  NEEDBITS(5)
+  NEEDBITS(5,b,k,(*ibufptr),(*ibufcnt))
   nl = 257 + ((unsigned)b & 0x1f);      /* number of literal/length codes */
-  DUMPBITS(5)
-  NEEDBITS(5)
+  DUMPBITS(5,b,k)
+  NEEDBITS(5,b,k,(*ibufptr),(*ibufcnt))
   nd = 1 + ((unsigned)b & 0x1f);        /* number of distance codes */
-  DUMPBITS(5)
-  NEEDBITS(4)
+  DUMPBITS(5,b,k)
+  NEEDBITS(4,b,k,(*ibufptr),(*ibufcnt))
   nb = 4 + ((unsigned)b & 0xf);         /* number of bit length codes */
-  DUMPBITS(4)
+  DUMPBITS(4,b,k)
 #ifdef PKZIP_BUG_WORKAROUND
   if (nl > 288 || nd > 32)
 #else
@@ -905,9 +884,9 @@ int R__Inflate_dynamic()
   /* read in bit-length-code lengths */
   for (j = 0; j < nb; j++)
   {
-    NEEDBITS(3)
+    NEEDBITS(3,b,k,(*ibufptr),(*ibufcnt))
     ll[border[j]] = (unsigned)b & 7;
-    DUMPBITS(3)
+    DUMPBITS(3,b,k)
   }
   for (; j < 19; j++)
     ll[border[j]] = 0;
@@ -915,7 +894,7 @@ int R__Inflate_dynamic()
 
   /* build decoding table for trees--single level, 7 bit lookup */
   bl = 7;
-  if ((i = R__huft_build(ll, 19, 19, NULL, NULL, &tl, &bl)) != 0)
+  if ((i = R__huft_build(ll, 19, 19, NULL, NULL, &tl, &bl, hufts)) != 0)
   {
     if (i == 1)
       R__huft_free(tl);
@@ -929,17 +908,17 @@ int R__Inflate_dynamic()
   i = l = 0;
   while ((unsigned)i < n)
   {
-    NEEDBITS((unsigned)bl)
+    NEEDBITS((unsigned)bl,b,k,(*ibufptr),(*ibufcnt))
     j = (td = tl + ((unsigned)b & m))->b;
-    DUMPBITS(j)
+    DUMPBITS(j,b,k)
     j = td->v.n;
     if (j < 16)                 /* length of code in bits (0..15) */
       ll[i++] = l = j;          /* save last length in l */
     else if (j == 16)           /* repeat last length 3 to 6 times */
     {
-      NEEDBITS(2)
+      NEEDBITS(2,b,k,(*ibufptr),(*ibufcnt))
       j = 3 + ((unsigned)b & 3);
-      DUMPBITS(2)
+      DUMPBITS(2,b,k)
       if ((unsigned)i + j > n)
         return 1;
       while (j--)
@@ -947,9 +926,9 @@ int R__Inflate_dynamic()
     }
     else if (j == 17)           /* 3 to 10 zero length codes */
     {
-      NEEDBITS(3)
+      NEEDBITS(3,b,k,(*ibufptr),(*ibufcnt))
       j = 3 + ((unsigned)b & 7);
-      DUMPBITS(3)
+      DUMPBITS(3,b,k)
       if ((unsigned)i + j > n)
         return 1;
       while (j--)
@@ -958,9 +937,9 @@ int R__Inflate_dynamic()
     }
     else                        /* j == 18: 11 to 138 zero length codes */
     {
-      NEEDBITS(7)
+      NEEDBITS(7,b,k,(*ibufptr),(*ibufcnt))
       j = 11 + ((unsigned)b & 0x7f);
-      DUMPBITS(7)
+      DUMPBITS(7,b,k)
       if ((unsigned)i + j > n)
         return 1;
       while (j--)
@@ -975,13 +954,13 @@ int R__Inflate_dynamic()
 
 
   /* restore the global bit buffer */
-  bb = b;
-  bk = k;
+  (*bb) = b;
+  (*bk) = k;
 
 
   /* build the decoding tables for literal/length and distance codes */
   bl = lbits;
-  if ((i = R__huft_build(ll, nl, 257, cplens, cplext, &tl, &bl)) != 0)
+  if ((i = R__huft_build(ll, nl, 257, cplens, cplext, &tl, &bl, hufts)) != 0)
   {
     if (i == 1 && !qflag) {
       FPRINTF(stderr, "(incomplete l-tree)  ");
@@ -990,7 +969,7 @@ int R__Inflate_dynamic()
     return i;                   /* incomplete code set */
   }
   bd = dbits;
-  if ((i = R__huft_build(ll + nl, nd, 0, cpdist, cpdext, &td, &bd)) != 0)
+  if ((i = R__huft_build(ll + nl, nd, 0, cpdist, cpdext, &td, &bd, hufts)) != 0)
   {
     if (i == 1 && !qflag) {
       FPRINTF(stderr, "(incomplete d-tree)  ");
@@ -1007,7 +986,7 @@ int R__Inflate_dynamic()
 
 
   /* decompress until an end-of-block code */
-  if (R__Inflate_codes(tl, td, bl, bd))
+  if (R__Inflate_codes(tl, td, bl, bd, ibufptr, ibufcnt, obufptr, obufcnt, bb, bk, R__slide, wp))
     return 1;
 
 
@@ -1019,7 +998,7 @@ int R__Inflate_dynamic()
 
 
 
-int R__Inflate_block(int *e)
+int R__Inflate_block(int *e, uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt, ulg* bb, unsigned* bk, uch* R__slide, unsigned* wp, unsigned* hufts)
 /* int *e;                  last block flag */
 /* decompress an inflated block */
 {
@@ -1029,41 +1008,41 @@ int R__Inflate_block(int *e)
 
 
   /* make local bit buffer */
-  b = bb;
-  k = bk;
+  b = (*bb);
+  k = (*bk);
 
 
   /* read in last block bit */
-  NEEDBITS(1)
+  NEEDBITS(1,b,k,(*ibufptr),(*ibufcnt))
   *e = (int)b & 1;
-  DUMPBITS(1)
+  DUMPBITS(1,b,k)
 
 
   /* read in block type */
-  NEEDBITS(2)
+  NEEDBITS(2,b,k,(*ibufptr),(*ibufcnt))
   t = (unsigned)b & 3;
-  DUMPBITS(2)
+  DUMPBITS(2,b,k)
 
 
   /* restore the global bit buffer */
-  bb = b;
-  bk = k;
+  (*bb) = b;
+  (*bk) = k;
 
 
   /* inflate that block type */
   if (t == 2)
-    return R__Inflate_dynamic();
+    return R__Inflate_dynamic(ibufptr,ibufcnt,obufptr,obufcnt,bb,bk,R__slide,wp,hufts);
   if (t == 0)
-    return R__Inflate_stored();
+    return R__Inflate_stored(ibufptr,ibufcnt,obufptr,obufcnt,bb,bk,R__slide,wp);
   if (t == 1)
-    return R__Inflate_fixed();
+    return R__Inflate_fixed(ibufptr,ibufcnt,obufptr,obufcnt,bb,bk,R__slide,wp,hufts);
 
 
   /* bad block type */
   return 2;
 }
 
-int R__Inflate()
+int R__Inflate(uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt)
 /* decompress an inflated entry */
 {
   int e;                /* last block flag */
@@ -1072,16 +1051,25 @@ int R__Inflate()
 
 
   /* initialize window, bit buffer */
-  wp = 0;
-  bk = 0;
-  bb = 0;
+  unsigned bk = 0;      /* bits in bit buffer */
+  ulg bb = 0;           /* bit buffer */
 
+/*The inflate algorithm uses a sliding 32K byte window on the uncompressed
+  stream to find repeated byte strings.  This is implemented here as a
+  circular buffer.  The index is updated simply by incrementing and then
+  and'ing with 0x7fff (32K-1). */
+/*It is left to other modules to supply the 32K area.  It is assumed
+  to be usable as if it were declared "uch slide[32768];" or as just
+  "uch *slide;" and then malloc'ed in the latter case.  The definition
+  must be in unzip.h, included above. */
+  uch R__slide [32768];
+  unsigned wp = 0;            /* current position in slide */
 
   /* decompress until the last block */
   h = 0;
   do {
-    hufts = 0;
-    if ((r = R__Inflate_block(&e)) != 0)
+    unsigned hufts = 0;            /* track memory usage */
+    if ((r = R__Inflate_block(&e, ibufptr, ibufcnt, obufptr, obufcnt, &bb, &bk, R__slide, &wp, &hufts)) != 0)
       return r;
     if (hufts > h)
       h = hufts;
@@ -1089,7 +1077,7 @@ int R__Inflate()
 
 
   /* flush out slide */
-  FLUSH(wp);
+  FLUSH(wp,obufptr,obufcnt,R__slide);
 
 
   /* return success */
@@ -1131,6 +1119,8 @@ int R__Inflate_free()
 void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 {
   long isize;
+  uch  *ibufptr,*obufptr;
+  long  ibufcnt, obufcnt;
 
   *irep = 0L;
 
@@ -1199,7 +1189,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   }
 
   /* Old zlib format */
-  if (R__Inflate()) {
+  if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
     fprintf(stderr,"R__unzip: error during decompression\n");
     return;
   }
@@ -1217,21 +1207,21 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 }
 
 #ifndef CHECK_EOF
-static int R__ReadByte ()
+static int R__ReadByte (uch** ibufptr, long*  ibufcnt)
 {
   int k;
-  if(ibufcnt-- <= 0)
+  if((*ibufcnt)-- <= 0)
     k = -1;
   else
-    k = *ibufptr++;
+    k = *(*ibufptr)++;
   return k;
 }
 #endif
 
-static void R__WriteData(int n)
+static void R__WriteData(int n, uch** obufptr, long*  obufcnt, uch* R__slide)
 {
-  if( obufcnt >= n ) memcpy(obufptr, R__slide, n);
-  obufptr += n;
-  obufcnt -= n;
+  if( (*obufcnt) >= n ) memcpy((*obufptr), R__slide, n);
+  (*obufptr) += n;
+  (*obufcnt) -= n;
 }
 

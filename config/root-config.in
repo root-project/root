@@ -34,7 +34,7 @@ fi
 
 newlib="-lNew"
 rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
-          -lRint -lPostscript -lMatrix -lPhysics -lMathCore $zliblib"
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread $zliblib"
 rootglibs="-lGui"
 
 if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then

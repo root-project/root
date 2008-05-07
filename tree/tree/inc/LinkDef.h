@@ -51,6 +51,7 @@
 #pragma link C++ class TTree-;
 #pragma link C++ class TTreeCloner+;
 #pragma link C++ class TTreeCache+;
+#pragma link C++ class TTreeCacheUnzip+;
 #pragma link C++ class TVirtualTreePlayer;
 #pragma link C++ class TVirtualIndex+;
 #pragma link C++ class TTreeResult+;

@@ -53,6 +53,7 @@ protected:
    TFile        *fFile;           //Pointer to file
    char         *fBuffer;         //[fBufferSize] buffer of contiguous prefetched blocks
    Bool_t        fIsSorted;       //True if fSeek array is sorted
+   Bool_t        fIsTransferred;   //True when fBuffer contains something valid
 
 private:
    TFileCacheRead(const TFileCacheRead &);            //cannot be copied

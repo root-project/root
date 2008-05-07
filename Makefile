@@ -266,7 +266,7 @@ CINTLIBS     := -lCint
 CINT7LIBS    := -lCint -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
-                -lTree -lMatrix -lMathCore
+                -lTree -lMatrix -lMathCore -lThread
 BOOTLIBS     := -lCore -lCint -lMathCore
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
@@ -282,7 +282,7 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib \
-                $(LPATH)/libMathcore.lib
+                $(LPATH)/libMathcore.lib $(LPATH)/libThread.lib
 BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libMathcore.lib
 ifneq ($(ROOTDICTTYPE),cint)
