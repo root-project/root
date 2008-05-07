@@ -69,13 +69,16 @@ The fit data are decoupled from the fitter class and described by the <tt>ROOT::
 
 <p>More detailed description of the current MathCore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_19_02/html/MathCore.html">location</a>.</p>
 
-  <p>
+  <br>
+
  <h3>GenVector</h3>
   The new physics vector classes have been moved out from the MathCore library in a new library, <em>libGenVector</em>.  The library contains as well the CINT dictionary including main instantiations for the template classes.
 <br>
 In addition the setter methods for the 2D,3D and 4D vector classes have been extended following a suggestion by G. Raven. Functions like <tt>SetX</tt> instead of returning a <tt>void</tt> return now a reference to the vector class itself (<tt>*this</tt>).
 
-
+<h3>SMatrix</h3>
+Fix a bug discovered by Harals Soleng in the addition of two matrix expressions. Remove also some compilation warning found on Windows when compiling matrices instantiated using float types.  
+<par>
 <br>
 <hr>
 <h3>MathMore</h3>
