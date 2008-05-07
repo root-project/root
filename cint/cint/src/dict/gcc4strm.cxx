@@ -11,6 +11,10 @@
 #undef free
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
 extern "C" void G__cpp_reset_tagtableG__stream();
 
 extern "C" void G__set_cpp_environmentG__stream() {
