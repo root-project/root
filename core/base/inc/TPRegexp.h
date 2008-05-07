@@ -41,7 +41,7 @@ struct PCREPriv_t;
 
 class TPRegexp {
 
-private:
+protected:
    enum {
       kPCRE_GLOBAL     = 0x80000000,
       kPCRE_OPTIMIZE   = 0x40000000,
@@ -60,6 +60,13 @@ private:
                         const TString &replacePattern,
                         Int_t *ovec, Int_t nmatch) const;
 
+   Int_t    MatchInternal(const TString& s, Int_t start,
+                          Int_t nMaxMatch, TArrayI *pos=0);
+
+   Int_t    SubstituteInternal(TString &s, const TString &replace,
+                               Int_t start, Int_t nMaxMatch0,
+                               Bool_t doDollarSubst);
+
 public:
    TPRegexp();
    TPRegexp(const TString &pat);
@@ -67,15 +74,18 @@ public:
    virtual ~TPRegexp();
 
    Int_t      Match(const TString &s, const TString &mods="",
-                    Int_t offset=0, Int_t nMatchMax=30, TArrayI *pos=0);
+                    Int_t start=0, Int_t nMaxMatch=10, TArrayI *pos=0);
    TObjArray *MatchS(const TString &s, const TString &mods="",
-                     Int_t offset=0, Int_t nMaxMatch=30);
+                     Int_t start=0, Int_t nMaxMatch=10);
    Bool_t     MatchB(const TString &s, const TString &mods="",
-                     Int_t offset=0, Int_t nMaxMatch=30) {
-                           return (Match(s,mods,offset,nMaxMatch) > 0); }
+                     Int_t start=0, Int_t nMaxMatch=10) {
+                           return (Match(s,mods,start,nMaxMatch) > 0); }
    Int_t      Substitute(TString &s, const TString &replace,
-                         const TString &mods="", Int_t offset=0,
-                         Int_t nMatchMax=30);
+                         const TString &mods="", Int_t start=0,
+                         Int_t nMatchMax=10);
+
+   TString GetPattern()   const { return fPattern; }
+   TString GetModifiers() const;
 
    TPRegexp &operator=(const TPRegexp &p);
 
@@ -83,8 +93,45 @@ public:
 };
 
 
-class TStringToken : public TString
-{
+class TPMERegexp : protected TPRegexp {
+
+protected:
+   Int_t    fNMaxMatches;         // maximum number of matches
+   Int_t    fNMatches;            // number of matches returned from last pcre_exec call
+   TArrayI  fMarkers;             // last set of indexes of matches
+
+   TString  fLastStringMatched;   // copy of the last TString matched
+   void    *fAddressOfLastString; // used for checking for change of TString in global match
+
+   Int_t    fLastGlobalPosition;  // end of last match when kPCRE_GLOBAL is set
+
+public:
+   TPMERegexp();
+   TPMERegexp(const TString& s, const TString& opts = "", Int_t nMatchMax = 10);
+   TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax = 10);
+   TPMERegexp(const TPMERegexp& r);
+
+   virtual ~TPMERegexp() {}
+
+   Int_t   GetNMaxMatches()   const { return fNMaxMatches; }
+   void    SetNMaxMatches(Int_t nm) { fNMaxMatches = nm; }
+   void    ResetGlobalState();
+
+   Int_t   Match(const TString& s, UInt_t start = 0);
+   Int_t   Split(const TString& s, Int_t maxfields = 0);
+   TString Substitute(const TString& s, const TString& r, Bool_t doDollarSubst=kTRUE);
+
+   Int_t   NMatches()    const { return fNMatches; }
+   TString operator[](Int_t);
+
+   virtual void Print(Option_t* option="");
+
+   ClassDef(TPMERegexp, 0); // Wrapper for Perl-like regular expression matching.
+};
+
+
+class TStringToken : public TString {
+
 protected:
    const TString fFullStr;
    TPRegexp      fSplitRe;

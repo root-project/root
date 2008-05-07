@@ -96,6 +96,7 @@
 #pragma link C++ class TROOT;
 #pragma link C++ class TRegexp;
 #pragma link C++ class TPRegexp;
+#pragma link C++ class TPMERegexp;
 #pragma link C++ class TRefCnt;
 #pragma link C++ class TSignalHandler;
 #pragma link C++ class TStdExceptionHandler;
