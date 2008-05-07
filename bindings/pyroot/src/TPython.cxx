@@ -224,13 +224,13 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
       return;
    }
 
-// setup command line part
-   PyObject* oldargv = PySys_GetObject( const_cast< char* >( "argv" ) );
+// store a copy of the old cli for restoration
+   PyObject* oldargv = PySys_GetObject( const_cast< char* >( "argv" ) );   // borrowed
    if ( ! oldargv )                               // e.g. apache
       PyErr_Clear();
    else {
       PyObject* l = PyList_New( PyList_GET_SIZE( oldargv ) );
-      for ( int i = 1; i < PyList_GET_SIZE( oldargv ); ++i ) {
+      for ( int i = 0; i < PyList_GET_SIZE( oldargv ); ++i ) {
          PyObject* item = PyList_GET_ITEM( oldargv, i );
          Py_INCREF( item );
          PyList_SET_ITEM( l, i, item );           // steals ref
@@ -238,6 +238,7 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
       oldargv = l;
    }
 
+// create and set (add progam name) the new command line
    argc += 1;
    const char** argv2 = new const char*[ argc ];
    for ( int i = 1; i < argc; ++i ) argv2[ i ] = argv[ i-1 ];
@@ -255,8 +256,10 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
    Py_DECREF( gbl );
 
 // restore original command line
-   PySys_SetObject( const_cast< char* >( "argv" ), oldargv );
-   Py_XDECREF( oldargv );
+   if ( oldargv ) {
+      PySys_SetObject( const_cast< char* >( "argv" ), oldargv );
+      Py_DECREF( oldargv );
+   }
 }
 
 //____________________________________________________________________________
