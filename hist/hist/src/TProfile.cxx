@@ -163,8 +163,8 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,
 //*-*-*-*-*-*Constructor for Profile histograms with range in y*-*-*-*-*-*
 //*-*        ==================================================
 //  The first five parameters are similar to TH1D::TH1D.
-//  Only the values of Y between YMIN and YMAX will be considered at filling time.
-//  ymin and ymax will also be the maximum and minimum values
+//  Only the values of Y between ylow and yup will be considered at filling time.
+//  ylow and yup will also be the maximum and minimum values
 //  on the y scale when drawing the profile.
 //
 //        See TProfile::BuildOptions for more explanations on errors
