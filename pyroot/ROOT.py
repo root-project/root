@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 07/02/07
+# Last: 05/06/08
 
 """PyROOT user module.
 
@@ -66,10 +66,6 @@ try:
 except:
  # module readline typically doesn't exist on non-Unix platforms
    pass
-
-## remove DISPLAY variable in batch mode as to not confuse early ROOT calls
-if hasattr(sys,'argv') and '-b' in sys.argv and os.environ.has_key( 'DISPLAY' ):
-   del os.environ[ 'DISPLAY' ]       
 
 ## special filter on MacOS X (warnings caused by linking that is still required)
 if sys.platform == 'darwin':
