@@ -1,52 +1,40 @@
-
 <br>
 <hr>
+
+
 <h3>TASImage - libAfterImage library</h3>
 
 <h4>TASImage</h4>
 <ul>
 <li> Protection added in DrawCircle. Problem seen with gcc version 4.2.3.
-
-<li> Fixed byte swapping issues.
-With that fix the pictures generated in batch mode on Solaris and
-Mac are now correct (cf stressGraphics -k).
-<li> The Alpha Blending code has been rewritten in a simpler way in
-order to work on linux
-with gcc 4.2.3. Here also the pictures generated in batch mode
-were wrong.
-<li> In FillRectangleInternal when the rectangle to be drawn had
-its width or its height equal to 0, they were set to the current image width ot
-height. This
-was not a good solution because this obscured completly the
-picture. In
-particular, some markers being drawn with a filled rectangle,
-they obscured
-the picture when that were really small because in that case the
-rectangle
-drawn had width=height=0. Now, when a rectangle has its width or
-height
-equal to 0 it is set to 1 (pixel) with makes sense because &quot;0&quot;
-means tiny not
-huge ...
+<li> Fixed byte swapping issues. With that fix the pictures generated in batch
+     mode on Solaris and Mac are now correct (cf stressGraphics -k).
+<li> The Alpha Blending code has been rewritten in a simpler way in order to
+     work on linux with gcc 4.2.3. Here also the pictures generated in batch
+     mode were wrong.
+<li> In FillRectangleInternal when the rectangle to be drawn had its width or
+     its height equal to 0, they were set to the current image width or height.
+     This was not a good solution because this obscured completly the picture.
+     In particular, some markers being drawn with a filled rectangle, they
+     obscured the picture when they were really small because in that case the
+     rectangle drawn had width=height=0. Now, when a rectangle has its width or
+     height equal to 0 it is set to 1 (pixel) with makes sense because
+     &quot;0&quot; means &quot;tiny&quot; not &quot;huge&quot; ...
 </ul>
 
 <h4>libAfterImage</h4>
 <ul>
-<li>
-There no need anymore for the special version we had up to now.
-The modifications we needed have been introduced in the official
-version.
-<p>
-This version also fixes the color problem on BigEndian machines.
-On these machines
-(Mac and Solaris for instance) the color of the jpeg and png
-images saved from the
-&quot;File&quot; menu in a TCanvas were completely wrong.
+<li> There no need anymore for the special version we had up to now. The
+     modifications we needed have been introduced in the official version.
+<p>  This version also fixes the color problem on BigEndian machines.
+     On these machines (Mac and Solaris for instance) the color of the jpeg
+     and png images saved from the &quot;File&quot; menu in a TCanvas were
+     completely wrong.
 </ul>
 
 
-
 <h3>Graphical Output</h3>
+
 <h4>PDF</h4>
 <ul>
 <li> Text rotated at 270 degrees was not correct. The PDF rotation matrix 
@@ -54,11 +42,12 @@ images saved from the
      produced a wrong output and also printed result was wrong.
      &quot;gv&quot; worked.
 </ul>
+
 <h4>PostScript</h4>
 <ul>
 <li> The character &quot;@&quot; could not be printed in PostScript files.
 <li> Change the Page numbering to make it appear nicer in postcript viewers
-     like gv. It is compliant with the Adobe Postscript Document
+     like &quot;gv&quot;. It is compliant with the Adobe Postscript Document
      Structuring Conventions (easily found on the web).
 </ul>
 
@@ -66,10 +55,12 @@ images saved from the
 <h3>TPad</h3>
 <ul>
 <li> In batch mode it was not possible to generate a bitmap file (gif,
-     jpeg etc..) with a filename containing &quot;)&quot;, &quot;(&quot;, &quot;]&quot; or &quot;[&quot;.
+     jpeg etc..) with a filename containing &quot;)&quot;, 
+     &quot;(&quot;, &quot;]&quot; or &quot;[&quot;.
 <li> The Tickx and Tixky attributes were not saved properly by SavePrimitive.
 <li> PaintPolyLineNDC was not working in case of PS output.
-<li> In ExecuteEvent. A problem was found Mathieu de Naurois &lt;denauroi@in2p3.fr&gt;.
+<li> In ExecuteEvent. A problem was found Mathieu de Naurois 
+     &lt;denauroi@in2p3.fr&gt;.
      It can be reproduced by the following sequence:
      <ol>
      <li> do TCanvas c
@@ -90,20 +81,21 @@ images saved from the
 <h3>Miscellaneous</h3>
 
 <h4>TView3D</h4>
-Protection was missing in ctors in case gPad does not exits.
+<ul>
+<li>Protection was missing in ctors in case gPad does not exits.
+</ul>
 
 <h4>TMultiGraph</h4>
 <ul>
-<p><li> Joining two multigraphs using <tt>In TMultiGraph::Add(TMultiGraph*,Option_t *)</tt>
-        method issued the error:
-        <pre>
-        Error in <TList::AddLast>: argument is a null pointer
-        </pre>
-        Despite of the message the joined multigraph was correct.
-        Internally the loop on the input multigraph was one step too long.
-<p><li> Implement the fit parameters painting.
+<li> Joining two multigraphs using <tt>In
+     TMultiGraph::Add(TMultiGraph*,Option_t *)</tt> method issued the error:
+     <pre>
+     Error in &lt;TList::AddLast&gt;: argument is a null pointer
+     </pre>
+     Despite of the message the joined multigraph was correct.
+     Internally the loop on the input multigraph was one step too long.
+<li> Implement the fit parameters painting.
 </ul>
-
 
 <h4>Histograms painting with option BOX</h4>
 <ul>
@@ -115,20 +107,27 @@ Protection was missing in ctors in case gPad does not exits.
 </ul>
 
 <h4>TGraph2D</h4>
-The operator "=" was not correct.
+<ul>
+<li>The operator "=" was not correct.
+</ul>
 
 <h4>TPie</h4>
-Add the <tt>TPie::GetEntries()</tt> method that return the number slices.
-(Guido Volpi)
+<ul>
+<li> Add the <tt>TPie::GetEntries()</tt> method that return the number slices.
+     (Guido Volpi)
+</ul>
 
 <h4>TPaletteAxis</h4>
-Attributes are now accessible in the context menu.
-(requested by Mathieu de Naurois &lt;denauroi@in2p3.fr&gt;)
-
+<ul>
+<li> Attributes are now accessible in the context menu.
+     (requested by Mathieu de Naurois &lt;denauroi@in2p3.fr&gt;)
+</ul>
 
 <h4>TPolyLine</h4>
-Implement the possibility to draw TPolyLine in NDC coordinates
-(it was partially done but the code was not used).
+<ul>
+<li> Implement the possibility to draw TPolyLine in NDC coordinates
+     (it was partially done but the code was not used).
+</ul>
 
 <h4>Documentation</h4>
 <ul>
@@ -137,12 +136,14 @@ Implement the possibility to draw TPolyLine in NDC coordinates
 <li> Update the help for animated gif generation in TPad.
 </ul>
 
-
 <h4>TCutG</h4>
-The graphical cuts applied on histograms did not work when the cut name
-contained a mix of lower and upper case characters. This problem occured because
-the option used to draw an histogram was always converted into lower case before
-begin stored in a pad (in Draw and DrawCopy). Now in Draw() and DrawCopy() the
-AppendPad() procedure is called with the option string not converted in lower
+<ul>
+<li> The graphical cuts applied on histograms did not work when the cut name
+     contained a mix of lower and upper case characters. This problem occured
+     because the option used to draw an histogram was always converted into
+     lower case before begin stored in a pad (in Draw and DrawCopy). Now in
+     Draw() and DrawCopy() the AppendPad() procedure is called with the option
+     string not converted in lower
 case.
+</ul>
 
