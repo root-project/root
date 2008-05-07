@@ -36,7 +36,7 @@ Keys_t & sKeys() {
 
 //-------------------------------------------------------------------------------
 std::ostream & Reflex::operator<<( std::ostream & s,
-                                         const PropertyListImpl & p ) {
+                                   const PropertyListImpl & p ) {
 //-------------------------------------------------------------------------------
 // Operator to put properties on the ostream.
    if ( p.fProperties ) {
@@ -50,8 +50,9 @@ std::ostream & Reflex::operator<<( std::ostream & s,
 
 
 //-------------------------------------------------------------------------------
- Reflex::PropertyListImpl::~PropertyListImpl() {
+Reflex::PropertyListImpl::~PropertyListImpl() {
 //-------------------------------------------------------------------------------
+// Destruct, deleting our fProperties.
    delete fProperties;
 }
 
@@ -133,7 +134,7 @@ const std::string & Reflex::PropertyListImpl::KeyAt( size_t nth ) {
 
 //-------------------------------------------------------------------------------
 size_t Reflex::PropertyListImpl::KeyByName( const std::string & key,
-                                                  bool allocateNew ) {
+                                            bool allocateNew ) {
 //-------------------------------------------------------------------------------
 // Return a key by it's name.
    Keys_t::iterator it = std::find( sKeys().begin(), sKeys().end(), key );
@@ -184,7 +185,7 @@ Reflex::PropertyListImpl::PropertyAsString( size_t key ) const {
 
 //-------------------------------------------------------------------------------
 size_t Reflex::PropertyListImpl::PropertyKey( const std::string & key,
-                                                    bool allocateNew ) const {
+                                              bool allocateNew ) const {
 //-------------------------------------------------------------------------------
    // return the index of property key, allocate a new one if allocateNew = true
    return KeyByName( key, allocateNew );

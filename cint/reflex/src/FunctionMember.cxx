@@ -26,12 +26,12 @@
 
 //-------------------------------------------------------------------------------
 Reflex::FunctionMember::FunctionMember( const char *  nam,
-                                              const Type &  typ,
-                                              StubFunction  stubFP,
-                                              void*         stubCtx,
-                                              const char *  parameters,
-                                              unsigned int  modifiers,
-                                              TYPE          memType )
+                                        const Type &  typ,
+                                        StubFunction  stubFP,
+                                        void*         stubCtx,
+                                        const char *  parameters,
+                                        unsigned int  modifiers,
+                                        TYPE          memType )
 //-------------------------------------------------------------------------------
    : MemberBase( nam, typ, memType, modifiers ),
      fStubFP( stubFP ), 
@@ -40,6 +40,7 @@ Reflex::FunctionMember::FunctionMember( const char *  nam,
      fParameterDefaults( std::vector<std::string>()),
      fReqParameters( 0 )
 {
+// Contruct a FunctionMember (see FunctionBuilder)
    UpdateFunctionParameterNames(parameters);
 }
 

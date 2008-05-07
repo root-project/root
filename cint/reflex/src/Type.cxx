@@ -143,8 +143,8 @@ Reflex::Member Reflex::Type::FunctionMemberAt( size_t nth ) const {
 
 //-------------------------------------------------------------------------------
 Reflex::Member Reflex::Type::FunctionMemberByName( const std::string & nam,
-						   const Type & signature,
-						   unsigned int modifiers_mask /*= 0*/) const {
+                                                   const Type & signature,
+                                                   unsigned int modifiers_mask /*= 0*/) const {
 //-------------------------------------------------------------------------------
 // Return a function member by name. Signature can be used for overloaded functions.
    if ( * this ) return fTypeName->fTypeBase->FunctionMemberByName( nam, signature, modifiers_mask );
@@ -441,7 +441,8 @@ void Reflex::Type::GenerateDict( DictionaryGenerator & generator) const {
 //-------------------------------------------------------------------------------
 void Reflex::Type::Unload() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) delete fTypeName->fTypeBase;
+//  Unload a type, i.e. delete the TypeName's TypeBase object.
+   if ( * this ) delete fTypeName->fTypeBase;
 }
 
 #ifdef REFLEX_CINT_MERGE

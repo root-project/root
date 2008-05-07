@@ -117,8 +117,8 @@ Reflex::Member Reflex::Scope::FunctionMemberByName( const std::string & name ) c
 
 //-------------------------------------------------------------------------------
 Reflex::Member Reflex::Scope::FunctionMemberByName( const std::string & name,
-                                                                const Type & signature,
-                                                                unsigned int modifiers_mask) const {
+                                                    const Type & signature,
+                                                    unsigned int modifiers_mask) const {
 //------------------------------------------------------------------------------- 
 // Return a function member by it's name, qualified by it's signature type.
    if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, signature, modifiers_mask ); 
@@ -189,7 +189,7 @@ Reflex::Scope::MemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
 Reflex::Member 
 Reflex::Scope::MemberByName( const std::string & name,
-                                   const Type & signature ) const {
+                             const Type & signature ) const {
 //-------------------------------------------------------------------------------
 // Return a member in this scope, looked up by name and signature (for functions)
    if ( * this ) return fScopeName->fScopeBase->MemberByName(name, signature); 
@@ -382,9 +382,9 @@ void Reflex::Scope::AddDataMember( const Member & dm ) const {
 
 //-------------------------------------------------------------------------------
 void Reflex::Scope::AddDataMember( const char * name,
-                                         const Type & type,
-                                         size_t offset,
-                                         unsigned int modifiers ) const {
+                                   const Type & type,
+                                   size_t offset,
+                                   unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
 // Add data member to this scope.
    if ( * this ) fScopeName->fScopeBase->AddDataMember( name, 
@@ -446,10 +446,10 @@ void Reflex::Scope::AddSubType( const Type & ty ) const {
 
 //-------------------------------------------------------------------------------
 void Reflex::Scope::AddSubType( const char * type,
-                                      size_t size,
-                                      TYPE typeType,
-                                      const std::type_info & typeInfo,
-                                      unsigned int modifiers ) const {
+                                size_t size,
+                                TYPE typeType,
+                                const std::type_info & typeInfo,
+                                unsigned int modifiers ) const {
 //-------------------------------------------------------------------------------
 // Add sub type to this scope.
    if ( * this ) fScopeName->fScopeBase->AddSubType( type, 
@@ -511,7 +511,8 @@ void Reflex::Scope::GenerateDict( DictionaryGenerator & generator) const {
 //-------------------------------------------------------------------------------
 void Reflex::Scope::Unload() const {
 //-------------------------------------------------------------------------------
-  if ( * this ) delete fScopeName->fScopeBase;
+// Unload a scope, i.e. delete the ScopeName's ScopeBase object.
+   if ( * this ) delete fScopeName->fScopeBase;
 }
 
 

@@ -263,6 +263,7 @@ Reflex::ClassBuilder& Reflex::ClassBuilder::addUnion(const char* nam, const char
 //______________________________________________________________________________
 Reflex::ClassBuilder& Reflex::ClassBuilder::SetSizeOf(size_t size)
 {
+// Set the class's size.
    fClassBuilderImpl.SetSizeOf(size);
    return *this;
 }

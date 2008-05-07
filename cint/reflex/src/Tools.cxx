@@ -201,73 +201,73 @@ size_t Tools::GetBasePosition(const std::string& name) {
       switch (name[i]) {
          case '>':
             {
-              int j = i - 1;
-              if (j > -1) {
-                 if ((name[j] == '-') || (name[j] == '>')) {
-                    --j;
-                 }
-              }
-              for ( ; (j > -1) && (name[j] == ' '); --j) {}
-              if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
-                 // -- We may have an operator name.
-                 if (name.substr(j - 7, 8) == "operator") {
-                    i = j - 8;
-                    break;
-                 }
-              }
-              ab++;
+               int j = i - 1;
+               if (j > -1) {
+                  if ((name[j] == '-') || (name[j] == '>')) {
+                     --j;
+                  }
+               }
+               for ( ; (j > -1) && (name[j] == ' '); --j) {}
+               if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                  // -- We may have an operator name.
+                  if (name.substr(j - 7, 8) == "operator") {
+                     i = j - 8;
+                     break;
+                  }
+               }
+               ab++;
             }
             break;
          case '<':
             {
-              int j = i - 1;
-              if (j > -1) {
-                 if (name[j] == '<') {
-                    --j;
-                 }
-              }
-              for ( ; (j > -1) && (name[j] == ' '); --j) {}
-              if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
-                 // -- We may have an operator name.
-                 if (name.substr(j - 7, 8) == "operator") {
-                    i = j - 8;
-                    break;
-                 }
-              }
+               int j = i - 1;
+               if (j > -1) {
+                  if (name[j] == '<') {
+                     --j;
+                  }
+               }
+               for ( ; (j > -1) && (name[j] == ' '); --j) {}
+               if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                  // -- We may have an operator name.
+                  if (name.substr(j - 7, 8) == "operator") {
+                     i = j - 8;
+                     break;
+                  }
+               }
             }
             ab--;
             break;
          case ')':
             {
-              int j = i - 1;
-              for ( ; (j > -1) && (name[j] == ' '); --j) {}
-              if (j > -1) {
-                 if (name[j] == '(') {
-                    --j;
-                    for ( ; (j > -1) && (name[j] == ' '); --j) {}
-                    if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
-                       // -- We may have an operator name.
-                       if (name.substr(j - 7, 8) == "operator") {
-                          i = j - 8;
-                          break;
-                       }
-                    }
-                 }
-              }
+               int j = i - 1;
+               for ( ; (j > -1) && (name[j] == ' '); --j) {}
+               if (j > -1) {
+                  if (name[j] == '(') {
+                     --j;
+                     for ( ; (j > -1) && (name[j] == ' '); --j) {}
+                     if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                        // -- We may have an operator name.
+                        if (name.substr(j - 7, 8) == "operator") {
+                           i = j - 8;
+                           break;
+                        }
+                     }
+                  }
+               }
             }
             rb++;
             break;
          case '(':
             {
-              int j = i - 1;
-              for ( ; (j > -1) && (name[j] == ' '); --j) {}
-              if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
-                 // -- We may have an operator name.
-                 if (name.substr(j - 7, 8) == "operator") {
-                    i = j - 8;
-                    break;
-                 }
-              }
+               int j = i - 1;
+               for ( ; (j > -1) && (name[j] == ' '); --j) {}
+               if ((j > -1) && (name[j] == 'r') && ((j - 7) > -1)) {
+                  // -- We may have an operator name.
+                  if (name.substr(j - 7, 8) == "operator") {
+                     i = j - 8;
+                     break;
+                  }
+               }
             }
             rb--;
             break;

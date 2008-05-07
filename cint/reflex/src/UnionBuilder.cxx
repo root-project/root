@@ -35,7 +35,7 @@ Reflex::UnionBuilderImpl::UnionBuilderImpl(const char* nam, size_t size, const s
 : fUnion(0)
 , fLastMember()
 {
-   // -- Construct union info.
+// Construct union info.
    std::string nam2(nam);
    const Type& c = Type::ByName(nam2);
    if (c) {
@@ -54,14 +54,14 @@ Reflex::UnionBuilderImpl::UnionBuilderImpl(const char* nam, size_t size, const s
 //______________________________________________________________________________
 Reflex::UnionBuilderImpl::~UnionBuilderImpl()
 {
-   // -- UnionBuilderImpl destructor. Used for call back functions (e.g. Cintex).
+// UnionBuilderImpl destructor. Used for call back functions (e.g. Cintex).
    FireClassCallback(fUnion->ThisType());
 }
 
 //______________________________________________________________________________
 void Reflex::UnionBuilderImpl::AddItem(const char* nam, const Type& typ)
 {
-   // -- Add data member info (internal).  !!! Obsolete, do not use.
+// Add data member info (internal).  !!! Obsolete, do not use.
    fLastMember = Member(new DataMember(nam, typ, 0, 0));
    fUnion->AddDataMember(fLastMember);
 }
@@ -69,7 +69,7 @@ void Reflex::UnionBuilderImpl::AddItem(const char* nam, const Type& typ)
 //______________________________________________________________________________
 void Reflex::UnionBuilderImpl::AddDataMember(const char* nam, const Type& typ, size_t offs, unsigned int modifiers /*= 0*/)
 {
-   // -- Add data member info (internal).
+// Add data member info (internal).
    fLastMember = Member(new DataMember(nam, typ, offs, modifiers));
    fUnion->AddDataMember(fLastMember);
 }
@@ -77,7 +77,7 @@ void Reflex::UnionBuilderImpl::AddDataMember(const char* nam, const Type& typ, s
 //______________________________________________________________________________
 void Reflex::UnionBuilderImpl::AddFunctionMember(const char* nam, const Type& typ, StubFunction stubFP, void* stubCtx /*= 0*/, const char* params /*= 0*/, unsigned int modifiers /*= 0*/)
 {
-   // -- Add function member info (internal).
+// Add function member info (internal).
    if (Tools::IsTemplated(nam)) {
       fLastMember = Member(new FunctionMemberTemplateInstance(nam, typ, stubFP, stubCtx, params, modifiers, *(dynamic_cast<ScopeBase*>(fUnion))));
    }
@@ -90,14 +90,14 @@ void Reflex::UnionBuilderImpl::AddFunctionMember(const char* nam, const Type& ty
 //______________________________________________________________________________
 void Reflex::UnionBuilderImpl::AddProperty(const char* key, const char* value)
 {
-   // -- Attach property to this union as string.
+// Attach property to this union as string.
    AddProperty(key, Any(value));
 }
 
 //______________________________________________________________________________
 void Reflex::UnionBuilderImpl::AddProperty(const char* key, Any value)
 {
-   // -- Attach property to this union as Any object.
+// Attach property to this union as Any object.
    if (fLastMember) {
       fLastMember.Properties().AddProperty(key, value);
    }
@@ -109,14 +109,14 @@ void Reflex::UnionBuilderImpl::AddProperty(const char* key, Any value)
 //______________________________________________________________________________
 void Reflex::UnionBuilderImpl::SetSizeOf(size_t size)
 {
-   // -- Set the size of the union (internal).
+// Set the size of the union (internal).
    fUnion->SetSize(size);
 }
 
 //______________________________________________________________________________
 Reflex::Type Reflex::UnionBuilderImpl::ToType()
 {
-   // -- Return the type currently being built.
+// Return the type currently being built.
    return fUnion->ThisType();
 }
 
@@ -132,19 +132,19 @@ Reflex::Type Reflex::UnionBuilderImpl::ToType()
 Reflex::UnionBuilder::UnionBuilder(const char* nam, const std::type_info& ti, size_t size, unsigned int modifiers /*= 0*/, TYPE typ /*= UNION*/)
 : fUnionBuilderImpl(nam, size, ti, modifiers, typ)
 {
-   // -- Constructor.
+// Constructor.
 }
 
 //______________________________________________________________________________
 Reflex::UnionBuilder::~UnionBuilder()
 {
-   // -- Destructor.
+// Destructor.
 }
 
 //______________________________________________________________________________
 Reflex::UnionBuilder& Reflex::UnionBuilder::AddItem(const char* nam, const char* typ)
 {
-   // -- !!! Obsolete, do not use.
+// !!! Obsolete, do not use.
    fUnionBuilderImpl.AddItem(nam, TypeBuilder(typ));
    return *this;
 }
@@ -152,7 +152,7 @@ Reflex::UnionBuilder& Reflex::UnionBuilder::AddItem(const char* nam, const char*
 //______________________________________________________________________________
 Reflex::UnionBuilder& Reflex::UnionBuilder::AddDataMember(const Type& typ, const char* nam, size_t offs, unsigned int modifiers /*= 0*/)
 {
-   // -- Add data member info to this union.
+// Add data member info to this union.
    fUnionBuilderImpl.AddDataMember(nam, typ, offs, modifiers);
    return *this;
 }
@@ -160,7 +160,7 @@ Reflex::UnionBuilder& Reflex::UnionBuilder::AddDataMember(const Type& typ, const
 //______________________________________________________________________________
 Reflex::UnionBuilder& Reflex::UnionBuilder::AddFunctionMember(const Type& typ, const char* nam, StubFunction stubFP, void* stubCtx, const char* params, unsigned int modifiers)
 {
-   // -- Add function member info to this union.
+// Add function member info to this union.
    fUnionBuilderImpl.AddFunctionMember(nam, typ, stubFP, stubCtx, params, modifiers);
    return *this;
 }
@@ -168,6 +168,7 @@ Reflex::UnionBuilder& Reflex::UnionBuilder::AddFunctionMember(const Type& typ, c
 //______________________________________________________________________________
 Reflex::UnionBuilder& Reflex::UnionBuilder::SetSizeOf(size_t size)
 {
+// Set the object / memory size of the union.
    fUnionBuilderImpl.SetSizeOf(size);
    return *this;
 }
@@ -175,6 +176,7 @@ Reflex::UnionBuilder& Reflex::UnionBuilder::SetSizeOf(size_t size)
 //______________________________________________________________________________
 Reflex::Type Reflex::UnionBuilder::ToType()
 {
+// Get the union's Type object.
    return fUnionBuilderImpl.ToType();
 }
 
