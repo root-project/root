@@ -407,7 +407,8 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    fNZStep(5),
    fBinWidth(5),
    fProjection(kAuto),
-   f2DMode(kValColor)
+   f2DMode(kValColor),
+   fBoxMode(kBack)
 {
    // Constructor.
 

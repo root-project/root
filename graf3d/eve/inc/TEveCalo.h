@@ -170,6 +170,7 @@ class TEveCaloLego : public TEveCaloViz
 public:
    enum EProjection_e { kAuto, k3D, k2D };
    enum E2DMode_e     { kValColor, kValSize };
+   enum EBoxMode_e    { kNone, kFrontBack, kBack};
 
 private:
    TEveCaloLego(const TEveCaloLego&);            // Not implemented
@@ -188,6 +189,7 @@ protected:
 
    EProjection_e           fProjection;
    E2DMode_e               f2DMode;
+   EBoxMode_e              fBoxMode;
 
 public:
    TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");
@@ -215,6 +217,9 @@ public:
 
    void       Set2DMode(E2DMode_e p) { f2DMode = p; }
    E2DMode_e  Get2DMode() { return f2DMode; }
+
+   void       SetBoxMode(EBoxMode_e p) { fBoxMode = p; }
+   EBoxMode_e  GetBoxMode() { return fBoxMode; }
 
    virtual Float_t GetDefaultCellHeight() const;
 

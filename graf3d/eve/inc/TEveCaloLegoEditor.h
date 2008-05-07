@@ -42,6 +42,7 @@ protected:
 
    TGComboBox        *fProjection;
    TGComboBox        *f2DMode;
+   TGComboBox        *fBoxMode;
 
 public:
    TEveCaloLegoEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -61,6 +62,7 @@ public:
 
    void DoProjection();
    void Do2DMode();
+   void DoBoxMode();
 
    ClassDef(TEveCaloLegoEditor, 0); // GUI editor for TEveCaloLego.
 };

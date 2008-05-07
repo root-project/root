@@ -39,7 +39,8 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    fBinWidth(0),
 
    fProjection(0),
-   f2DMode(0)
+   f2DMode(0),
+   fBoxMode(0)
 {
    // Constructor.
 
@@ -121,6 +122,12 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    f2DMode->AddEntry("ValColor", TEveCaloLego::kValColor);
    f2DMode->AddEntry("ValSize",  TEveCaloLego::kValSize);
    f2DMode->Connect("Selected(Int_t)", "TEveCaloLegoEditor", this, "Do2DMode()");
+
+   fBoxMode = MakeLabeledCombo("Box:", 4);
+   fBoxMode->AddEntry("None", TEveCaloLego::kNone);
+   fBoxMode->AddEntry("Back",  TEveCaloLego::kBack);
+   fBoxMode->AddEntry("FrontBack",  TEveCaloLego::kFrontBack);
+   fBoxMode->Connect("Selected(Int_t)", "TEveCaloLegoEditor", this, "DoBoxMode()");
 }
 
 //______________________________________________________________________________
@@ -161,6 +168,7 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
 
    fProjection->Select(fM->GetProjection(), kFALSE);
    f2DMode->Select(fM->Get2DMode(), kFALSE);
+   fBoxMode->Select(fM->GetBoxMode(), kFALSE);
 }
 
 //______________________________________________________________________________
@@ -223,5 +231,14 @@ void TEveCaloLegoEditor::Do2DMode()
    // Slot for projection.
 
    fM->Set2DMode((TEveCaloLego::E2DMode_e)f2DMode->GetSelected());
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloLegoEditor::DoBoxMode()
+{
+   // Slot for projection.
+
+   fM->SetBoxMode((TEveCaloLego::EBoxMode_e)fBoxMode->GetSelected());
    Update();
 }
