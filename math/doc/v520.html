@@ -13,19 +13,30 @@ A major clean-up and re-structuring has been performed for the TMath functions. 
 Some of the basic special functions of TMath, like the error function or the gamma and beta functions use now the  <a href="#" target="http:://www.netlib.org/cephes">Cephes</a> implementation from Stephen L. Moshier, which is used by the  <tt>ROOT::Math</tt> functions and it has been found to be more accurate and in some cases even faster.  
 <ul>
   <li>use template functions instead of having the same function for all the various basic types, for functions like <tt>TMath::Mean</tt>,<tt>TMath::GeomMean</tt>, <tt>TMath::Median</tt>, <tt>TMath::KOrdStat</tt>
-  <li>re-implement <tt>TMath::LocMin</tt> and <tt>TMath::LocMax</tt> using the STL algorithms <tt>std::min_element</tt> and <tt>std::max_element</tt>
-  <li>re-implement <tt>TMath::Sort</tt> using <tt>std::sort</tt>.
-  <li><tt>TMath::Erf</tt> and <tt>TMath::Erfc</tt> call <tt>ROOT::Math::erf</tt> and <tt>ROOT::math::erfc</tt> which are implemented using the Cephes algorithms
-  <li><tt>TMath::Gamma(z)</tt>  is implemented with <tt>ROOT::Math::tgamma</tt> and the incomplete gamma function, <tt>TMath::Gamma(a,x)</tt> it is implemented using <tt>ROOT::Math::inc_gamma</tt>. This affects also other functions which use the gamma or incomplete gamma functions, like <tt>TMath::Prob</tt> (the upper chi2 probability)  
-  <li><tt>TMath::LnGamma(z)</tt> is also implemented using <tt>ROOT::Math::lgamma</tt>. This affects also <tt>TMath::Beta</tt> which is implemented using the log of the gamma function.
-  <li><tt>TMath::BetaIncomplete</tt> is implemented using <tt>ROOT::Math::beta_inc</tt>.
+  <li>Use STL to implement the following  TMath algorithms: 
+  <ul>  
+  <li> <tt>TMath::Sort</tt> re-implemented using <tt>std::sort</tt>.</li>
+  <li><tt>TMath::BinarySearch</tt> re-implemented using the STL algorithm <tt>std::lower_bound</tt></li>
   </ul>
-  More detailed information on the new mathematical functions can be found in <a href="http://project-mathlibs.web.cern.ch/project-mathlibs/documents/slawinska.pdf">this</a> presentation from M. Slawinska. 
-
-
-  <p>
- <h4>GenVector</h4>
-  The new physics vector classes have been moved out from the MathCore library in a new library, <em>libGenVector</em>.  The library contains as well the CINT dictionary including main instantiations for the template classes.
+ The STL algorithms were found in these cases to be more performant in term of CPU time. For some like   <tt>TMath::LocMin</tt>, <tt>TMath::LocMax</tt> or <tt>TMath::Permute</tt> the original implementation has been left since it was found to be more performant than the generic one provided by STL.
+  </li>
+  <li>Add an interface working with generic iterators, similar to the STL algorithm interface, to the following TMath functions:
+	<tt>MinElement, MaxElemen, LocMin, LocMax, Mean, GeomMean, RMS, BinarySearch</tt>. The iterator interface for sort is called <tt>TMath::SortItr</tt> to avoid a compilation ambiguity. For example, for finding the mean from an <tt>std::vector<double> v</tt> one simply needs to call <tt>TMath::Mean(v.begin(), v.end() ) </tt>
+  </li>
+  <li>Various changes have been applied to the mathematical function to remove duplications with the special and statistical functions defined in ROOT::Math. In detailed the implementations which have been changed and can return a sightly different result than before are:
+  <ul>
+  <li><tt>TMath::Erf</tt> and <tt>TMath::Erfc</tt> call <tt>ROOT::Math::erf</tt> and <tt>ROOT::math::erfc</tt> which are implemented using the Cephes algorithms
+  <li><tt>TMath::Gamma(z)</tt>  is implemented with <tt>ROOT::Math::tgamma</tt> and the incomplete gamma function, <tt>TMath::Gamma(a,x)</tt> it is implemented using <tt>ROOT::Math::inc_gamma</tt>.</li>
+  <li><tt>TMath::Prob(z)</tt> (the upper chi2 probability) is implemented using <tt>ROOT::Math::chisquared_cdf_c</tt> which uses <tt>ROOT::Math::inc_gamma</tt>. </li> 
+  <li><tt>TMath::LnGamma(z)</tt> is also implemented using <tt>ROOT::Math::lgamma</tt>. This affects also <tt>TMath::Beta</tt> which is implemented using the log of the gamma function.</li>
+  <li><tt>TMath::BetaIncomplete</tt> is implemented using <tt>ROOT::Math::beta_inc</tt>.</li>
+  <li><tt>TMath::GammaDist</tt> is implemented using <tt>ROOT::Math::gamma_pdf</tt>.</li>
+  <li><tt>TMath::LogNormal</tt> is implemented using <tt>ROOT::Math::lognormal_pdf</tt>.</li>
+  <li><tt>TMath::PoissonI</tt>:  fixed a problem for large values and is implemented using directly TMath::Poisson with integer values.</tt>
+  </ul>
+  More detailed information on the new mathematical functions can be found in <a href="http://project-mathlibs.web.cern.ch/project-mathlibs/documents/slawinska.pdf">this</a> presentation from M. Slawinska.
+  </li>
+</ul>
 
   <p>
   <h4>Fit</h4>
@@ -58,6 +69,12 @@ The fit data are decoupled from the fitter class and described by the <tt>ROOT::
 
 <p>More detailed description of the current MathCore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_19_02/html/MathCore.html">location</a>.</p>
 
+  <p>
+ <h3>GenVector</h3>
+  The new physics vector classes have been moved out from the MathCore library in a new library, <em>libGenVector</em>.  The library contains as well the CINT dictionary including main instantiations for the template classes.
+<br>
+In addition the setter methods for the 2D,3D and 4D vector classes have been extended following a suggestion by G. Raven. Functions like <tt>SetX</tt> instead of returning a <tt>void</tt> return now a reference to the vector class itself (<tt>*this</tt>).
+
 
 <br>
 <hr>
@@ -72,15 +89,6 @@ The fit data are decoupled from the fitter class and described by the <tt>ROOT::
 <p>More detailed description of the current MathMore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_19_02/html/MathMore.html">location</a>.</p>
 
   <p>&nbsp;</p>
-<h3>Hist</h3>
-  The hist library now depends on <em>libMathCore</em> which must be linked whenever one needs to use the histogram library.
-  The major changes have been done in the TF1 class.
-<ul>
-  <li>
-  The code used for implementing methods like <tt>TF1::Integration</tt> or <tt>TF1::Derivation</tt> or <tt>TF1::GetX</tt> has now been moved in MathCore, but it remains the same.
-  <li>A new method <tt>TF1::operator()(double x, double y=0, double z)</tt> which is equivalent to <tt>TF1::Eval</tt> has been added for using TF1 as a callable object.
-  </li>
-</ul>
 
 <br>
 <hr>
@@ -91,3 +99,35 @@ The fit data are decoupled from the fitter class and described by the <tt>ROOT::
     <li><tt>TLinearMinimizer</tt>: implementation of the <tt>ROOT::Math::Minimizer</tt> interface with the TLinearFitter.
   </ul>
 In addition, the method <tt>TLinearFitter::SetBasisFunction(TObjArray  * f)</tt> has been added to set directly the linear terms of the fit function.
+
+<br>
+<hr>
+
+ <h3>Minuit2</h3>
+
+  Various fixes have been applied to different problems discovered mainly by a test program from Alfio Lazzaro. In detail:
+  <ul>
+    <li>
+ Fix a bug in <tt>MnMinos</tt> which was setting wrong initial values when the parameters were limited.
+  This was resulting in a much larger number of function calls used inside <tt>MnMinos</tt>. </li>
+
+<li> Improve <tt>MnHesse</tt> by returning in the final state the improved gradient step values used in <tt>HessianGradientCalculator</tt>. With this change same results are obtained from using Hesse in Minuit2 or TMinuit. In addition, the interface of MnHesse (<tt>MnHesse::operator()</tt> ) has been improved to use it  from the <tt>FunctionMinimum</tt> object (similar to MnMinos) in order to be called after the minimization (Migrad). The API with a <tt>MnUserParameterState</tt> should not be used after minimization, because in that case the latest state information resulting from the minimum (gradient values and step sizes) is lost.  
+</li>
+<li>Add support in <tt>MnMigrad</tt> and <tt>MnMinimize</tt> for user provided analytical gradient of the FCN function. One needs to pass an instance of a function implementing the <tt>ROOT::Minuit2::FcnGradientBase</tt> interface. 
+</li>
+
+<li>
+The<tt> Minuit2Minimizer</tt> class has been improved by having an option to always run Hesse if it was not done before during the minimization.
+</li>
+</ul>
+
+  
+
+<br>
+<hr>
+
+ <h3>Unuran</h3>
+
+A new version, 1.2.4, has been added to fix mainly some problems found in gcc 4.3. For the detailed changes of this new UNU.RAN version see the file <tt>$ROOTSYS/math/unuran/src/unuran-1.2.4-root/NEWS</tt>. 
+
+<br>
