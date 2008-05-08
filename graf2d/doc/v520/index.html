@@ -21,6 +21,30 @@
      rectangle drawn had width=height=0. Now, when a rectangle has its width or
      height equal to 0 it is set to 1 (pixel) with makes sense because
      &quot;0&quot; means &quot;tiny&quot; not &quot;huge&quot; ...
+<li> New method to retrieve the last zoom position on an image:
+     <pre>
+     void TASImage::GetZoomPosition(UInt_t &amp;x, UInt_t &amp;y, UInt_t &amp;w, UInt_t &amp;h) const
+     </pre>
+     This is useful when the zoom has been done interactively using the mouse.
+<li> In batch, when a picture was saved in a binary file (gif for instance) from
+     an image containing more than one pad, only the first pad was saved. The
+     following macro demonstrates the problem: ccc2.gif was wrong compared to
+     ccc1.gif.
+<pre>
+       {
+          gROOT-&gt;SetBatch();
+          TCanvas *c = new TCanvas;
+          c-&gt;Divide(1,2);
+          TH1F *h = new TH1F(&quot;gaus&quot;, &quot;gaus&quot;, 100, -5, 5);
+          h-&gt;FillRandom(&quot;gaus&quot;, 10000);
+          c-&gt;cd(1); h-&gt;Draw();
+          c-&gt;cd(2); h-&gt;Draw(&quot;c*&quot;);
+          c-&gt;Print(&quot;ccc1.gif&quot;);
+          TImage *img = TImage::Create();
+          img-&gt;FromPad(c);
+          img-&gt;WriteImage(&quot;ccc2.gif&quot;);
+       }
+</pre>
 </ul>
 
 <h4>libAfterImage</h4>
@@ -31,6 +55,8 @@
      On these machines (Mac and Solaris for instance) the color of the jpeg
      and png images saved from the &quot;File&quot; menu in a TCanvas were
      completely wrong.
+<li> Addition for image pixelization and color to alpha functionality.
+<li> Fixed bunch of compilation bugs showing up on old systems.
 </ul>
 
 
@@ -84,6 +110,7 @@
 <h4>TView3D</h4>
 <ul>
 <li>Protection was missing in ctors in case gPad does not exits.
+<li>Allow interactive zooming on histograms painted with option CONT4
 </ul>
 
 <h4>TMultiGraph</h4>
@@ -98,18 +125,26 @@
 <li> Implement the fit parameters painting.
 </ul>
 
-<h4>Histograms painting with option BOX</h4>
+<h4>Histograms painting</h4>
 <ul>
 <li> For 2D histograms, when all the bins' contents were negative, the boxes
      were not painted correctly.
 <li> For 3D histograms painted using OpenGL (drawing options "glbox" and 
      "glbox1") a minus sign on negative bins is added in order to  
      distinguish them from positive bins.
+<li> In <tt>THistPainter::PaintH3</tt> the palette is drawn in case of option
+     COLZ. This is useful when a TTree 4D plot is painted with that option.
 </ul>
 
 <h4>TGraph2D</h4>
 <ul>
 <li>The operator "=" was not correct.
+</ul>
+
+<h4>TGraph</h4>
+<ul>
+<li>Protection added in <tt>PaintPolyLineHatches</tt> (division by zero in some
+    cases).
 </ul>
 
 <h4>TPie</h4>
