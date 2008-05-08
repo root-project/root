@@ -219,6 +219,7 @@ TProofPlayer::~TProofPlayer()
 
    fInput->Clear("nodelete");
    SafeDelete(fInput);
+   SafeDelete(fOutput);      // owns the output list
    SafeDelete(fSelector);
    SafeDelete(fFeedbackTimer);
    SafeDelete(fEvIter);
@@ -1215,7 +1216,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          // A list for the missing files may already have been added to the
          // output list; otherwise, if needed it will be created inside
          if ((listOfMissingFiles = (TList *)fInput->FindObject("MissingFiles"))) {
-            // Move it to the output list
+            // The list will be registered into the output list:
+            // remove it from the input list to avoid problems at destruction
             fInput->Remove(listOfMissingFiles);
          } else {
             listOfMissingFiles = new TList;

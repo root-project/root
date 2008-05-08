@@ -3537,10 +3537,14 @@ void TProofServ::HandleProcess(TMessage *mess)
 
          // Set input
          TIter next(input);
-         for (TObject *o; (o = next()); ) {
+         TObject *o = 0;
+         while ((o = next())) {
             PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
             fPlayer->AddInput(o);
          }
+
+         // Remove the list of the missing files from the original list, if any
+         if ((o = input->FindObject("MissingFiles"))) input->Remove(o);
 
          // Process
          PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
@@ -3656,7 +3660,8 @@ void TProofServ::HandleProcess(TMessage *mess)
 
       // Set input
       TIter next(input);
-      for (TObject *o; (o = next()); ) {
+      TObject *o = 0;
+      while ((o = next())) {
          PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
          fPlayer->AddInput(o);
       }
