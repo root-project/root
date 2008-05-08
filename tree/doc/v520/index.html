@@ -3,28 +3,142 @@
 <A NAME="tree"></A>
 <H3>Tree</H3>
 <p>
-Re-enabled the splitting of TVector3 and of any classes starting by TVector
-that is not a TVectorT.
-<p>
-Fix the list of StreamerInfo stored in the TFile in the case of a slow
-CloneTree, previously some of the classes whose named contained '::' and any
-of the STL container names was inadvertently omitted (in case of classes
-that are part of the TTree but had only a base and no member or in some
-cases where it had only object data members.
-<p>
-Prevent storing a 2nd time an object non derived from TObject in the case
-where the object is <em>both</em> the top level object of branch and has
-some of it sub-object containing a pointer back to the object.  (This was
-actually activate in v5.18).
+<h4>Branch creation enhancement and clarifications</h4>
+<ul>
+<li>Make the leaflist optional if the  address points to a single numerical variable:
+<pre>   Int_t value;
+   tree->Branch(branchname, &value);</pre></li>
+<li>
+Introduce a way to create branch using directly
+an object:
+<pre>  MyClass object;
+  TBranch *branch = tree->Branch(branchname, &object, bufsize, splitlevel)</pre></li>
 
-<h4>STL collections with pointers can be split</h4>
-<pre>
- TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel )
- </pre>
+<li>Clarify the ownership rules of user objects in a TTree.   This clarification (and the improved auto-add-to-directory behavior
+of the TH1*) allows for the TTree to now delete the memory that
+its has allocated and whose ownsership was _not_ transfer back 
+to the user (this is happens any time the user give the TTree
+the address of a pointer):
+
+For a top-level branch the meaning of addr is as follows:
+
+If addr is zero, then we allocate a branch object
+internally and the branch is the owner of the allocated
+object, not the caller.  However the caller may obtain
+a pointer to the branch object with GetObject().
 <p>
-STLcollection is the address of a pointer to std::vector, std::list,
-         std::deque, std::set or std::multiset containing pointers to objects.
-         If the splitlevel is a value bigger than 100 then the collection
+Example:
+
+<pre>   branch->SetAddress(0);
+   Event* event = branch->GetObject();
+   ... Do some work.</pre>
+
+If addr is not zero, but the pointer addr points at is
+zero, then we allocate a branch object and set the passed
+pointer to point at the allocated object.  The caller
+owns the allocated object and is responsible for deleting
+it when it is no longer needed.
+<p>
+Example:
+
+<pre>   Event* event = 0;
+   branch->SetAddress(&event);
+   ... Do some work.
+   delete event;
+   event = 0;</pre>
+
+If addr is not zero and the pointer addr points at is
+also not zero, then the caller has allocated a branch
+object and is asking us to use it.  The caller owns it
+and must delete it when it is no longer needed.
+<p>
+Example:
+
+<pre>   Event* event = new Event();
+   branch->SetAddress(&event);
+   ... Do some work.
+   delete event;
+   event = 0;</pre>
+
+These rules affect users of TTree::Branch(),
+TTree::SetBranchAddress(), and TChain::SetBranchAddress()
+as well because those routines call this one.
+<p>
+An example of a tree with branches with objects allocated
+and owned by us:
+
+<pre>   TFile* f1 = new TFile("myfile_original.root");
+   TTree* t1 = (TTree*) f->Get("MyTree");
+   TFile* f2 = new TFile("myfile_copy.root", "recreate");
+   TTree* t2 = t1->Clone(0);
+   for (Int_t i = 0; i < 10; ++i) {
+      t1->GetEntry(i);
+      t2->Fill();
+   }
+   t2->Write()
+   delete f2;
+   f2 = 0;
+   delete f1;
+   f1 = 0;</pre>
+   
+An example of a branch with an object allocated by us,
+but owned by the caller:
+
+<pre>   TFile* f = new TFile("myfile.root", "recreate");
+   TTree* t = new TTree("t", "A test tree.")
+   Event* event = 0;
+   TBranchElement* br = t->Branch("event.", &event);
+   for (Int_t i = 0; i < 10; ++i) {
+      ... Fill event with meaningful data in some way.
+      t->Fill();
+   }
+   t->Write();
+   delete event;
+   event = 0;
+   delete f;
+   f = 0;</pre>
+
+Notice that the only difference between this example
+and the following example is that the event pointer
+is zero when the branch is created.
+<p>
+An example of a branch with an object allocated and
+owned by the caller:
+
+<pre>   TFile* f = new TFile("myfile.root", "recreate");
+   TTree* t = new TTree("t", "A test tree.")
+   Event* event = new Event();
+   TBranchElement* br = t->Branch("event.", &event);
+   for (Int_t i = 0; i < 10; ++i) {
+      ... Fill event with meaningful data in some way.
+      t->Fill();
+   }
+   t->Write();
+   delete event;
+   event = 0;
+   delete f;
+   f = 0;</pre>
+</li>
+
+<ul>
+
+<h4>TTreeFormula (TTree::Draw, TTree::Scan)</h4>
+<ul>
+<li>Fix CollectionTree-&gt;Scan("reco_ee_et[][2]:reco_ee_et[0][2]")
+where reco_ee_et is a vector&lt;vector&lt;double&gt; &gt;  See http://root.cern.ch/phpBB2/viewtopic.php?t=6536</li>
+<li>Insure that the formula that are used as indices or as argument to special functions have their branch(es) loaded once.  This fixes http://root.cern.ch/phpBB2/viewtopic.php?p=27080#27080
+<li>Correct the drawing of "X[1]:X[5]" when X is a vector< vector<float> >
+and X[1].size()!=X[5].size().  (reported at http://root.cern.ch/phpBB2/viewtopic.php?p=27070)
+</ul>
+
+<h4>Splitting STL collections of  pointers</h4>
+STL collection of pointers can now be split by calling
+<pre>
+TBranch *branch = tree->Branch( branchname, STLcollection, buffsize, splitlevel )
+</pre>
+where STLcollection is the address of a pointer to std::vector, std::list,
+std::deque, std::set or std::multiset containing pointers to objects.<br>
+and where the splitlevel is a value bigger than 100 then the collection
          will be written in split mode. Ie. if it contains objects of any
          types deriving from TTrack this function will sort the objects
          basing on their type and store them in separate branches in split
@@ -32,4 +146,51 @@ STLcollection is the address of a pointer to std::vector, std::list,
 <p>The ROOT test example in ROOTSYS/test/bench.cxx shows many examples of collections
 and storage in a TTree when using split mode or not. This program illustrates the important
 gain in space and time when using this new facility.
+
+<h4>Parallel unzipping</h4>
+
+Introducing a parallel unzipping algorithm for pre-fetched buffers. Since we already know what buffers are going to be read, we can decompress a few of them in advance in an additional thread and give the impression that the data decompression comes for free (we gain up to 30% in reading intensive jobs).
+<p>
+The size of this unzipping cache is 20% the size of the TTreeCache and can be modified with TTreeCache::SetUnzipBufferSize(Long64_t bufferSize). Theoretically, we only need one buffer in advance but in practice we might fall short if the unzipping cache is too small (synchronization costs).
+<p>
+This experimental feature is disabled by default, to activate it use the static function <pre>TTreeCache::SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable).</pre> The possible values to pass are: <ul><li>TTreeCacheUnzip::kEnable to enable it</li><li>TTreeCacheUnzip::kDisable to disable it</li><li>TTreeCacheUnzip::kForce to force it.</li></ul>The TTreeCacheUnzip is actived 
+only if you have more than one core.  To activate it with only one core useTTreeCacheUnzip::kForce option (for example to measure the overhead).
+
+<h4>Others</h4>
+<li>Re-enabled the splitting of TVector3 and of any classes starting by TVector
+that is not a TVectorT.</li>
+<li>Fix the list of StreamerInfo stored in the TFile in the case of a slow
+CloneTree, previously some of the classes whose named contained '::' and any
+of the STL container names was inadvertently omitted (in case of classes
+that are part of the TTree but had only a base and no member or in some
+cases where it had only object data members.<li>
+<li>Prevent storing a 2nd time an object non derived from TObject in the case
+where the object is <em>both</em> the top level object of branch and has
+some of it sub-object containing a pointer back to the object.  (This was
+actually activated in v5.18).</li>
+<li>  <pre>
+void TBranch::DeleteBaskets(Option_t* option)</pre>
+new function which loops on all branch baskets. If the file where branch buffers reside is  writable, free the disk space associated to the baskets of the branch, then call Reset(). If the option contains "all", delete also the baskets for the subbranches.   The branch is reset.
+<br> NOTE that this function must be used with extreme care. Deleting branch baskets
+   fragments the file and may introduce inefficiencies when adding new entries
+   in the Tree or later on when reading the Tree.
+</li>
+<li>Protect TTree::GetCurrentFile in case the current directory is gROOT.
+This case may happen when a TChain calls TChain::Process and no files have been
+connected to the chain yet, but a TFile has been opened meanwhile.</li>
+<li>Remove the calls to MapObject introduce in revision 21384 when 
+are unnecessary hence restoring lost performance in case where
+the TTree contains many simple type (double, int, etc.)</li>
+
+<li>In TBranchElement::Streamer when writing, call ForceWriteInfo
+not only for the TStreamerInfo directly concerning this branch
+but also (in the case of the top level branch of a split TClonesArray
+or a split STL container) call ForceWriteInfo for the class of
+the value.
+<p>
+This omission meant that slow CloneTree was (fataly) missing in 
+some cases the copy of the TStreamerInfo for class that are part 
+part of the TTree but had only a base and no member or in 
+some cases where it had only object data members.</li>
+</ul>
 
