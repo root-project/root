@@ -270,8 +270,9 @@ public:
    TGEventHandler *GetEventHandler() const { return fEventHandler; }
    virtual void    SetEventHandler(TGEventHandler *handler);
 
-   TGLOvlSelectRecord&  GetOvlSelRec() { return fOvlSelRec; } //! select record from last overlay select
-   TGLOverlayElement* GetCurrentOvlElm() const { return  fCurrentOvlElm; }
+   TGLSelectRecord&    GetSelRec()    { return fSelRec; }
+   TGLOvlSelectRecord& GetOvlSelRec() { return fOvlSelRec; }
+   TGLOverlayElement*  GetCurrentOvlElm() const { return fCurrentOvlElm; }
 
    ClassDef(TGLViewer,0) // Standard ROOT GL viewer.
 };

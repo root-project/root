@@ -51,14 +51,11 @@ TEveLegoEventHandler::TEveLegoEventHandler(const char *name, TGWindow *w, TObjec
 //______________________________________________________________________________
 Bool_t TEveLegoEventHandler::HandleKey(Event_t *event)
 {  
-   // This is virtual method from base-class TGLEventHandler.
+   // Virtual from TGLEventHandler.
+   // Free the camera when home is pressed.
 
    if (event->fCode == kKey_Home)
-   {
       fMode = kFree;
-      fGLViewer->ResetCurrentCamera();
-      return kTRUE;
-   }
 
    return TGLEventHandler::HandleKey(event);
 }
@@ -66,6 +63,9 @@ Bool_t TEveLegoEventHandler::HandleKey(Event_t *event)
 //______________________________________________________________________________
 Bool_t TEveLegoEventHandler::HandleDoubleClick(Event_t *event)
 {
+   // Virtual from TGLEventHandler.
+   // Sets id of the tower with scale.
+
    if (fGLViewer->IsLocked()) return kFALSE;
 
    if (event->fCode == kButton1)
@@ -96,8 +96,9 @@ Bool_t TEveLegoEventHandler::HandleDoubleClick(Event_t *event)
 //______________________________________________________________________________
 Bool_t TEveLegoEventHandler::HandleMotion(Event_t * event)
 {
-   // This is virtual method from base-class TGLEventHandler.
-   // Handles same actions as base-class, except TGLViewer::kDragCameraRotate.
+   // Virtual from TGLEventHandler.
+   // Jumps into/out-of orhographic view during kDragCameraRotate when
+   // angle reaches the transition value.
 
    fGLViewer->MouseIdle(0, 0, 0);
    if (fGLViewer->IsLocked()) {
