@@ -17,6 +17,10 @@
 #include "TPaveLabel.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TROOT.h"
+#include "TFrame.h"
+
+//#include "Fit/FitConfig.h"
 
 
 TF1 *fitFcn;
@@ -39,15 +43,21 @@ Double_t fitFunction(Double_t *x, Double_t *par) {
 }
 
 void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {   
+   printf("\n*********************************************************************************\n");
+   printf("\t %s \n",fitter);
+   printf("*********************************************************************************\n");
+
    gRandom = new TRandom3();
    TStopwatch timer;
    //   timer.Start();
    TVirtualFitter::SetDefaultFitter(fitter);
+   //ROOT::Fit::FitConfig::SetDefaultMinimizer(fitter);
    pad->SetGrid();
    pad->SetLogy();
    fitFcn->SetParameters(1,1,1,6,.03,1);
    fitFcn->Update();
-   histo = new TH1D(fitter,"Fit bench",200,0,3);
+   std::string title = std::string(fitter) + " fit bench";
+   histo = new TH1D(fitter,title.c_str(),200,0,3);
          
    timer.Start();
    for (Int_t pass=0;pass<npass;pass++) {
@@ -56,24 +66,30 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
       for (Int_t i=0;i<5000;i++) {
          histo->Fill(fitFcn->GetRandom());
       }
-      histo->Fit("fitFcn","0Q");
+      histo->Fit(fitFcn,"Q0");
    }
 
-   histo->Fit("fitFcn","EV");
+   histo->Fit(fitFcn,"EV");
    timer.Stop();
+
+   (histo->GetFunction("fitFcn"))->SetLineColor(kRed+3);
+   gPad->SetFillColor(kYellow-10);
 
 
    Double_t cputime = timer.CpuTime();
    printf("%s, npass=%d  : RT=%7.3f s, Cpu=%7.3f s\n",fitter,npass,timer.RealTime(),cputime);
-   TPaveLabel *p = new TPaveLabel(0.5,0.7,0.85,0.8,Form("%s CPU= %g s",fitter,cputime),"brNDC");
+   TPaveLabel *p = new TPaveLabel(0.45,0.7,0.88,0.8,Form("%s CPU= %g s",fitter,cputime),"brNDC");
    p->Draw();
+   p->SetTextColor(kRed+3);
+   p->SetFillColor(kYellow-8);
    pad->Update();
 }
 
 void minuit2FitBench(Int_t npass=20) {
    TH1::AddDirectory(kFALSE);
-   TCanvas *c1 = new TCanvas("c1","Fitting Demo",10,10,900,900);
+   TCanvas *c1 = new TCanvas("FitBench","Fitting Demo",10,10,900,900);
    c1->Divide(2,2);
+   c1->SetFillColor(kYellow-9);
    // create a TF1 with the range from 0 to 3 and 6 parameters
    fitFcn = new TF1("fitFcn",fitFunction,0,3,6);
    fitFcn->SetNpx(200);

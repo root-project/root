@@ -10,7 +10,7 @@ Linking with <em>libMathCore</em> is therefore required for running any major RO
 <p>
 Together with the libraries merge, many changes have been applied to both TMath and the other mathcore classes.
 <h4>TMath</h4>
-A major clean-up and re-structuring has been performed for the TMath functions. In particular some functions have been implemented  using STL algorithms which have shown for these case better berformances in term of CPU time. The file <em>TMathImp.h</em> contains the implementations for the template functions. 
+A major clean-up and re-structuring has been performed for the TMath functions. In particular some functions have been implemented  using STL algorithms which have shown for these case better performances in term of CPU time. The file <em>TMathImp.h</em> contains the implementations for the template functions. 
 Some of the basic special functions of TMath, like the error function or the gamma and beta functions use now the  <a href="#" target="http:://www.netlib.org/cephes">Cephes</a> implementation from Stephen L. Moshier, which is used by the  <tt>ROOT::Math</tt> functions and it has been found to be more accurate and in some cases even faster.  
 <ul>
   <li>use template functions instead of having the same function for all the various basic types, for functions like <tt>TMath::Mean</tt>,<tt>TMath::GeomMean</tt>, <tt>TMath::Median</tt>, <tt>TMath::KOrdStat</tt>
@@ -63,12 +63,12 @@ The fit data are decoupled from the fitter class and described by the <tt>ROOT::
 <h4>Additional MathCore changes</h4>
 
     <ul>
-  <li>New classes <tt>GaussIntegrator</tt> and <tt>GaussLegendreIntegrator</tt> for numerical integration of one-dimensional functions. The first class uses Gaussian  8 and 16 point  quadrature approximation, it provides the translation of the CERNLIB algorith
+  <li>New classes <tt>GaussIntegrator</tt> and <tt>GaussLegendreIntegrator</tt> for numerical integration of one-dimensional functions. The first class uses Gaussian  8 and 16 point  quadrature approximation, it provides the translation of the CERNLIB algorithm
   <a href="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/d103/top.html">DGAUSS</a> by Sigfried Kolbig,  and it is used by the <tt>TF1::Integral</tt> method. The second one uses the Gauss Legendre quadrature formula. It is used by the <tt>TF1::IntegralFast</tt> method.
-  These classes implement both the same  virtual interface as the adaptive integration methods provided by the MathMore library.  They can all be created and used easly via the entry class <tt>ROOT::Math::IntegratorOneDim</tt>. 
+  These classes implement both the same  virtual interface as the adaptive integration methods provided by the MathMore library.  They can all be created and used easily via the entry class <tt>ROOT::Math::IntegratorOneDim</tt>. 
 </li>
 <li>New class <tt>ROOT::Math::RichardsonDerivator</tt> implementing numerical derivation using the Richardson's extrapolation formula (use 2 derivative estimates to compute a third, more accurate estimation). This is used by the <tt>TD1::Derivative</tt> method. </li>
-<li>New class <tt>BrentRootFinder</tt> for finding the root of one-dimensional function using the Brent algorithm. The class inherits from a virtual interface, which is also implemented by the MathMore root finder methods. The user can therefore by using the <tt>ROOT::Math::RootFinder</tt> class instantiates the various root finder algorithms </li>.  The <tt>BrentRootFinder</tt> class is used by the <tt>TF1::GetX</tt>. A similar clas, <tt>BrentMinimizer1D</tt> provides the possibility to find the minimum one-dimensional function using  the Brent algorithm. This class is used by <tt>TF1::GetMinimum</tt> or <tt>TF1::GetMaximum</tt> </li>
+<li>New class <tt>BrentRootFinder</tt> for finding the root of one-dimensional function using the Brent algorithm. The class inherits from a virtual interface, which is also implemented by the MathMore root finder methods. The user can therefore by using the <tt>ROOT::Math::RootFinder</tt> class instantiates the various root finder algorithms.  The <tt>BrentRootFinder</tt> class is used by <tt>TF1::GetX</tt>. A similar class, <tt>BrentMinimizer1D</tt> provides the possibility to find the minimum if a one-dimensional function using  the Brent algorithm. This class is used by <tt>TF1::GetMinimum</tt> or <tt>TF1::GetMaximum</tt> </li>
 </ul>
 
 <p>More detailed description of the current MathCore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_19_02/html/MathCore.html">location</a>.</p>

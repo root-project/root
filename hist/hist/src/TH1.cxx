@@ -2266,8 +2266,15 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             b1  = h1->GetBinContent(bin);
             b2  = h2->GetBinContent(bin);
-            if (b2) w = c1*b1/(c2*b2);
-            else    w = 0;
+            if (b2) {
+               if (binomial) 
+                  w = b1/b2;    // c1 and c2 are ignored
+               else 
+                  w = c1*b1/(c2*b2);
+            }
+            else 
+               w = 0;
+
             SetBinContent(bin,w);
             fEntries++;
             if (fSumw2.fN) {
@@ -2278,7 +2285,6 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                if (binomial) {
                   if (b1 != b2) {
                      // in the case of binomial statistics c1 and c2 must be 1 otherwise it does not make sense
-                     w = b1/b2;    // c1 and c2 are ignored
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
                      // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 )

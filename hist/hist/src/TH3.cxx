@@ -2244,25 +2244,25 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
                case 6:
                   // "xz"
                   if (iybin < iymin || iybin > iymax) continue;
-                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(izbin), cont);
+                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin), cont);
                   break;
 
                case 7:
                   // "zx"
                   if (iybin < iymin || iybin > iymax) continue;
-                  if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(izbin), cont);
+                  if (cont) p2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin), cont);
                   break;
 
                case 8:
                   // "yz"
                   if (ixbin < ixmin || ixbin > ixmax) continue;
-                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(izbin), cont);
+                  if (cont) p2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin), cont);
                   break;
 
                case 9:
                   // "zy"
                   if (ixbin < ixmin || ixbin > ixmax) continue;
-                  if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(izbin), cont);
+                  if (cont) p2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin), cont);
                   break;
             }
             if (cont) {

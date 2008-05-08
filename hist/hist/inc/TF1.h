@@ -258,7 +258,6 @@ public:
    void SetFunction( PtrObj& p, MemFn memFn );
    template <typename Func> 
    void SetFunction( Func f );
-   //virtual void     SetFunction(Double_t (*fcn)(Double_t *, Double_t *));
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void     SetNDF(Int_t ndf);
@@ -306,11 +305,6 @@ void TF1::SetFunction( Func f )    {
    fType = 1; 
    fFunctor = ROOT::Math::ParamFunctor(f); 
 } 
-// void TF1::SetFunction(Double_t (*fcn)(Double_t *, Double_t *)) { 
-//    // specialization for free functions
-//    fType = 1; 
-//    fFunctor = ROOT::Math::ParamFunctor(fcn);
-// }
 template <class PtrObj, typename MemFn> 
 void TF1::SetFunction( PtrObj& p, MemFn memFn )   { 
    // set from a pointer to a member function

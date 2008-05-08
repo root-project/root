@@ -1,38 +1,57 @@
 <br>
 <hr>
 <A NAME="hist"></A>
-<h3>hist: Histogram classes</h3>
+<h3>Histogram package</h3>
 
-  The hist library now depends on <em>libMathCore</em> which must be linked whenever one needs to use the histogram library.
+  The <em>libHist</em> library now depends on <em>libMathCore</em> which must be linked whenever one needs to use the histogram library.
 <br>
 
 <h4>TF1</h4>
-  The major changes done in the TF1 class are:
+
 <ul>
   <li>
-  The code used for implementing methods like <tt>TF1::Integration</tt> or <tt>TF1::Derivation</tt> or <tt>TF1::GetX</tt> has now been moved in MathCore, but it remains the same.
-  <li>A new method <tt>TF1::operator()(double x, double y=0, double z)</tt> which is equivalent to <tt>TF1::Eval</tt> has been added for using TF1 as a callable object.
-  </li>
+  The code used for implementing numerical methods like <tt>TF1::Integration</tt> or <tt>TF1::Derivation</tt> or <tt>TF1::GetX</tt> has now been now moved in MathCore and used to implement corresponding classes like <tt>GaussIntegrator</tt> or <tt>BrentRootFinder</tt>. The impementation remains however the same.</li>
+  <li>A new method <tt>TF1::operator()(double x, double y=0, double z)</tt> which is equivalent to <tt>TF1::Eval</tt> has been added for using TF1 as a callable object.</li>
+  <li>New templated methods <tt>TF1::SetFunction</tt> for generic C++ callable objects or for class member functions.</li>
 </ul>
 
 
 <h4>TH1</h4>
 
-Fixed a bug in the Th1::KolmogorovTest function in the cse of scaled or weighted  histograms. The routine has been improved and 
-now could also be used for comparing an histogram with a function if it is represented as an histogram with zero errors (equivalent to the case of options "F1" or "F2" in the original HDIFF routine of HBOOK).
+<ul>
+<li> Fixed a bug in the <tt>TH1::KolmogorovTest</tt> function in the case of scaled or weighted  histograms. The routine has been improved and 
+now could also be used for comparing an histogram with a function if it is represented as an histogram with zero errors (equivalent to the case of options "F1" or "F2" in the original HDIFF routine of HBOOK).</li>
+</ul>
+
 
 <h4>TH2</h4>
 
-Improve <tt>TH2::FitFitSliceX</tt> and <tt>TH2::FitFitSliceY</tt> by adding the possibility to return the generated histograms in a TObjArray when the passed pointer is not null.  
+<ul>
+<li>
+Improve <tt>TH2::FitFitSliceX</tt> and <tt>TH2::FitFitSliceY</tt> by adding the possibility to return the generated histograms in a TObjArray when the passed pointer is not null.
+</li>
+</ul>
+
+<h4>TH3</h4>
+
+<ul>
+<li>
+Fixed a bug in <tt>TH3::Project3DProfile</tt>. 
+</li>
+</ul>
 
 <h4>TProfile and TProfile2D</h4>
 
+<ul>
+<li>
 Add a new option "W" in <tt>TProfile::ProjectionX</tt> and <tt>TProfile::ProjectionXY</tt> to be able to return the equivalent weighted filled histogram. Its bin content is equal to the profile bin content multiplied by the bin entries.
+</li>
+</ul>
 
 
 <h4>THnSparse</h4>
 <ul>
-<li>Implement THnSparse::Projection and THnSparse::Merge
+<li>Implement <tt>THnSparse::Projection</tt> and <tt>THnSparse::Merge</tt>
 
 </ul>
 
