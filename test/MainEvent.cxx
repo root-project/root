@@ -91,6 +91,7 @@
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
+#include "TTreeCacheUnzip.h"
 
 #include "Event.h"
 
@@ -107,6 +108,7 @@ int main(int argc, char **argv)
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
    Int_t netf   = 0;
+   Int_t punzip = 0;
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
@@ -119,6 +121,7 @@ int main(int argc, char **argv)
    if (arg4 == 10) { write = 0; hfill = 1;}
    if (arg4 == 11) { write = 1; hfill = 1;}
    if (arg4 == 20) { write = 0; read  = 1;}  //read sequential
+   if (arg4 == 21) { write = 0; read  = 1;  punzip = 1;}  //read sequential + parallel unzipping
    if (arg4 == 25) { write = 0; read  = 2;}  //read random
    if (arg4 >= 30) { netf  = 1; }            //use TNetFile
    if (arg4 == 30) { write = 0; read  = 1;}  //netfile + read sequential
@@ -153,6 +156,7 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
       } else
          hfile = new TFile("Event.root");
+      if(punzip) TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
       tree = (TTree*)hfile->Get("T");
       tree->SetCacheSize(10000000); //this is the default value: 10 MBytes
       TBranch *branch = tree->GetBranch("event");
