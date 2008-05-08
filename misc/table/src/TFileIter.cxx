@@ -363,7 +363,7 @@ void TFileIter::SetCursorPosition(const char *keyNameToFind)
 {
    // Find the key by the name provided
    Reset();
-   while( (*this != keyNameToFind) && SkipObjects() );
+   while( (*this != keyNameToFind) && SkipObjects() ) {;}
 }
 //__________________________________________________________________________
 TKey *TFileIter::SkipObjects(Int_t  nSkip)
@@ -434,7 +434,7 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
    while ( (key = SkipObjects()) ) {
       if (fDirection==kIterForward) fCursorPosition++;
       else                          fCursorPosition--;
-      if ( name != "*") {
+      if ( name[0] != '*') {
          thisKey.SetKey(key->GetName());
          if (thisKey.GetName() < name)  continue;
          if (thisKey.GetName() > name) { key = 0; break; }
