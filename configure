@@ -56,6 +56,7 @@ options="                    \
    enable_g4root             \
    enable_glite              \
    enable_globus             \
+   enable_gsl_shared         \
    enable_krb5               \
    enable_ldap               \
    enable_genvector          \
@@ -106,6 +107,7 @@ enable_cint7=no
 enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
+enable_gsl_shared=no
 enable_pch=no
 enable_qt=no
 enable_qtgsi=no
@@ -900,6 +902,7 @@ enable/disable options, prefix with either --enable- or --disable-
   g4root             GEANT4 navigator based on TGeo, requires GEANT4 installed
   globus             Globus authentication support, requires Globus toolkit
   glite	             gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
+  gsl-shared         enable linking against shared libraries for GSL (default no)
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   genvector          Build the new libGenVector library
@@ -3947,9 +3950,10 @@ if test ! "x$enable_mathmore" = "xno"; then
     # Check for GSL include and library
     gslskip=
     hasmathmore="define"
-    # by default use now static GSL library everywhere
-    #enable_gsl_shared=$enable_shared"
-    enable_gsl_shared="no"
+    # by default use now static GSL library everywhere unless configure
+    # was run with --enable-gsl-shared option
+    # before the global --enable-shared was used:
+    # enable_gsl_shared=$enable_shared"
 
     check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
 	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
@@ -4035,10 +4039,13 @@ if test ! "x$enable_mathmore" = "xno"; then
 	        # and linker flags
 		result "ok"
 	        gslflags=`gsl-config --cflags`
-	        #gsllibs=`gsl-config --libs`
-		#use static libs
-		gslprefix=`gsl-config --prefix`
-		gsllibs="$gslprefix/lib/libgsl.a $gslprefix/lib/libgslcblas.a"
+	        if test "x$enable_gsl_shared" = "xyes"; then
+		    gsllibs=`gsl-config --libs`
+		else
+		    # use static libs
+		    gslprefix=`gsl-config --prefix`
+		    gsllibs="$gslprefix/lib/libgsl.a $gslprefix/lib/libgslcblas.a"
+	        fi
 		gsllibdir=""
                 gslversion=$gsl_version
             fi
