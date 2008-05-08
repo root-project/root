@@ -3700,9 +3700,15 @@ void TProofServ::HandleProcess(TMessage *mess)
          fSocket->SendObject(0, kPROOF_OUTPUTLIST);
       }
 
-      // Cleanup
+      // Cleanup the input data set info
       SafeDelete(dset);
-      fPlayer->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
+      SafeDelete(enl);
+      SafeDelete(evl);
+
+      // Make also sure the input list objects are deleted
+      fPlayer->GetInputList()->SetOwner(0);
+      input->SetOwner();
+      SafeDelete(input);
 
       // Signal the master that we are idle
       fSocket->Send(kPROOF_SETIDLE);
