@@ -7,12 +7,12 @@
 <ul>
 <li>Make the leaflist optional if the  address points to a single numerical variable:
 <pre>   Int_t value;
-   tree->Branch(branchname, &value);</pre></li>
+   tree->Branch(branchname, &amp;value);</pre></li>
 <li>
 Introduce a way to create branch using directly
 an object:
 <pre>  MyClass object;
-  TBranch *branch = tree->Branch(branchname, &object, bufsize, splitlevel)</pre></li>
+  TBranch *branch = tree->Branch(branchname, &amp;object, bufsize, splitlevel)</pre></li>
 
 <li>Clarify the ownership rules of user objects in a TTree.   This clarification (and the improved auto-add-to-directory behavior
 of the TH1*) allows for the TTree to now delete the memory that
@@ -42,7 +42,7 @@ it when it is no longer needed.
 Example:
 
 <pre>   Event* event = 0;
-   branch->SetAddress(&event);
+   branch->SetAddress(&amp;event);
    ... Do some work.
    delete event;
    event = 0;</pre>
@@ -55,7 +55,7 @@ and must delete it when it is no longer needed.
 Example:
 
 <pre>   Event* event = new Event();
-   branch->SetAddress(&event);
+   branch->SetAddress(&amp;event);
    ... Do some work.
    delete event;
    event = 0;</pre>
@@ -87,7 +87,7 @@ but owned by the caller:
 <pre>   TFile* f = new TFile("myfile.root", "recreate");
    TTree* t = new TTree("t", "A test tree.")
    Event* event = 0;
-   TBranchElement* br = t->Branch("event.", &event);
+   TBranchElement* br = t->Branch("event.", &amp;event);
    for (Int_t i = 0; i < 10; ++i) {
       ... Fill event with meaningful data in some way.
       t->Fill();
@@ -108,7 +108,7 @@ owned by the caller:
 <pre>   TFile* f = new TFile("myfile.root", "recreate");
    TTree* t = new TTree("t", "A test tree.")
    Event* event = new Event();
-   TBranchElement* br = t->Branch("event.", &event);
+   TBranchElement* br = t->Branch("event.", &amp;event);
    for (Int_t i = 0; i < 10; ++i) {
       ... Fill event with meaningful data in some way.
       t->Fill();
@@ -120,14 +120,14 @@ owned by the caller:
    f = 0;</pre>
 </li>
 
-<ul>
+</ul>
 
 <h4>TTreeFormula (TTree::Draw, TTree::Scan)</h4>
 <ul>
 <li>Fix CollectionTree-&gt;Scan("reco_ee_et[][2]:reco_ee_et[0][2]")
 where reco_ee_et is a vector&lt;vector&lt;double&gt; &gt;  See http://root.cern.ch/phpBB2/viewtopic.php?t=6536</li>
 <li>Insure that the formula that are used as indices or as argument to special functions have their branch(es) loaded once.  This fixes http://root.cern.ch/phpBB2/viewtopic.php?p=27080#27080
-<li>Correct the drawing of "X[1]:X[5]" when X is a vector< vector<float> >
+<li>Correct the drawing of "X[1]:X[5]" when X is a vector&lt; vector&lt;float&gt; &gt;
 and X[1].size()!=X[5].size().  (reported at http://root.cern.ch/phpBB2/viewtopic.php?p=27070)
 </ul>
 
@@ -157,6 +157,7 @@ This experimental feature is disabled by default, to activate it use the static 
 only if you have more than one core.  To activate it with only one core useTTreeCacheUnzip::kForce option (for example to measure the overhead).
 
 <h4>Others</h4>
+<ul>
 <li>Re-enabled the splitting of TVector3 and of any classes starting by TVector
 that is not a TVectorT.</li>
 <li>Fix the list of StreamerInfo stored in the TFile in the case of a slow
