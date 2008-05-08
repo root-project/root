@@ -1013,10 +1013,10 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    for (i=0; i < 20; ++i) {
       char tmp[20];
 
-      sprintf(tmp, "Entry %i", i+1);
-      fListBox->AddEntry(tmp, i+1);
+      sprintf(tmp, "Entry %i", i);
+      fListBox->AddEntry(tmp, i);
    }
-   fFirstEntry = 1;
+   fFirstEntry = 0;
    fLastEntry  = 20;
 
    fListBox->Resize(150, 80);
@@ -1179,7 +1179,7 @@ Bool_t TestDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fListBox->Layout();
                      break;
                   case 91:  // remove one entry in list box
-                     if (fFirstEntry < fLastEntry) {
+                     if (fFirstEntry <= fLastEntry) {
                         fListBox->RemoveEntry(fFirstEntry);
                         fListBox->Layout();
                         fFirstEntry++;
