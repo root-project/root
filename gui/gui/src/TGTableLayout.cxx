@@ -264,7 +264,7 @@ void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
    // switching so it is abstracted out to a normal function to save typing.
 
    if (homogeneous) {
-      UInt_t ind, nexpand = 0, cur_size = 0;
+      UInt_t ind, nshrink=0, nexpand=0, cur_size=0;
 
       for (ind = 0; ind < nthings; ++ind)
          cur_size += thing[ind].fDefSize;
@@ -273,6 +273,18 @@ void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
          for (ind = 0; ind < nthings; ++ind)
             if (thing[ind].fExpand) { ++ nexpand; break; }
          if (nexpand > 0) {
+            UInt_t size = real_size;
+            for (ind = 0; ind < nthings; ++ ind) {
+               UInt_t extra = size / (nthings - ind);
+               thing[ind].fRealSize = TMath::Max(1U, extra);
+               size -= extra;
+            }
+         }
+      }
+      if (cur_size > real_size) {
+         for (ind = 0; ind < nthings; ++ind)
+            if (thing[ind].fShrink) { ++ nshrink; break; }
+         if (nshrink > 0) {
             UInt_t size = real_size;
             for (ind = 0; ind < nthings; ++ ind) {
                UInt_t extra = size / (nthings - ind);
