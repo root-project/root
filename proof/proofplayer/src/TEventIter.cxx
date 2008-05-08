@@ -219,7 +219,10 @@ Long64_t TEventIterUnit::GetNextEvent()
       return -1;
 
    while (fElem == 0 || fCurrent == 0) {
-      fElem = fDSet->Next();
+
+      if (!(fElem = fDSet->Next()))
+         return -1;
+
       if (!fElem->TestBit(TDSetElement::kEmpty)) {
          Error("GetNextEvent", "data element must be set to kEmtpy");
          return -1;
