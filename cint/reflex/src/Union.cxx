@@ -112,7 +112,7 @@ Reflex::Scope Reflex::Union::DeclaringScope() const
 }
 
 //______________________________________________________________________________
- Reflex::Member Reflex::Union::FunctionMemberAt(size_t nth) const
+Reflex::Member Reflex::Union::FunctionMemberAt(size_t nth) const
 {
 // Return the nth function member of the union.
    return ScopeBase::FunctionMemberAt(nth);
