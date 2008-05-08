@@ -61,4 +61,19 @@ operator[] returning a TString.
 <li>
 New tutorial regexp_pme.C.
 </li>
-</uL>
+</ul>
+<h4>Meta</h4>
+<ul>
+<li>Add a new TClass interface to be able to trigger the "auto addition of object
+to a TDirectory object".  If a class has a member function:
+<pre>        DirectoryAutoAdd(TDirectory*)</pre>
+it will now be accessible (when the dictionary is generated via rootcint 
+for now) via TClass::GetDirectoryAutoAdd which return a wrapper with the 
+signature:<pre>
+        void (*)(void *this_obj,TDirectory *where_to_add)
+</pre>
+</li><li>Extend <b><i>#pragma create TClass;</b></i> to namespaces.</li>
+<li>Enable autoloading of the cintdlls.</li>
+<li>rlibmap now handles <b><i>#pragma create TClass;</b></i> statements.</li>
+
+</ul>
