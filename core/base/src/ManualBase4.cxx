@@ -50,10 +50,10 @@ namespace ROOT {
 extern "C" void G__cpp_reset_tagtableManualBase4();
 
 extern "C" void G__set_cpp_environmentManualBase4() {
-  G__add_compiledheader("base/inc/TObject.h");
-  G__add_compiledheader("base/inc/TMemberInspector.h");
-  G__add_compiledheader("TDirectory.h");
-  G__cpp_reset_tagtableManualBase4();
+   G__add_compiledheader("base/inc/TObject.h");
+   G__add_compiledheader("base/inc/TMemberInspector.h");
+   G__add_compiledheader("TDirectory.h");
+   G__cpp_reset_tagtableManualBase4();
 }
 #include <new>
 extern "C" int G__cpp_dllrevManualBase4() { return(30051515); }
@@ -77,18 +77,18 @@ extern "C" int G__cpp_dllrevManualBase4() { return(30051515); }
 * Get size of pointer to member function
 *********************************************************/
 class G__Sizep2memfuncManualBase4 {
- public:
-  G__Sizep2memfuncManualBase4() {p=&G__Sizep2memfuncManualBase4::sizep2memfunc;}
-    size_t sizep2memfunc() { return(sizeof(p)); }
-  private:
-    size_t (G__Sizep2memfuncManualBase4::*p)();
+public:
+   G__Sizep2memfuncManualBase4() {p=&G__Sizep2memfuncManualBase4::sizep2memfunc;}
+   size_t sizep2memfunc() { return(sizeof(p)); }
+private:
+   size_t (G__Sizep2memfuncManualBase4::*p)();
 };
 
 size_t G__get_sizep2memfuncManualBase4()
 {
-  G__Sizep2memfuncManualBase4 a;
-  G__setsizep2memfunc((int)a.sizep2memfunc());
-  return((size_t)a.sizep2memfunc());
+   G__Sizep2memfuncManualBase4 a;
+   G__setsizep2memfunc((int)a.sizep2memfunc());
+   return((size_t)a.sizep2memfunc());
 }
 
 
@@ -170,8 +170,8 @@ static void G__cpp_setup_global1() {
    G__resetglobalenv();
 }
 extern "C" void G__cpp_setup_globalManualBase4() {
-  G__cpp_setup_global0();
-  G__cpp_setup_global1();
+   G__cpp_setup_global0();
+   G__cpp_setup_global1();
 }
 
 /*********************************************************
@@ -197,9 +197,9 @@ static void G__cpp_setup_func2() {
 }
 
 extern "C" void G__cpp_setup_funcManualBase4() {
-  G__cpp_setup_func0();
-  G__cpp_setup_func1();
-  G__cpp_setup_func2();
+   G__cpp_setup_func0();
+   G__cpp_setup_func1();
+   G__cpp_setup_func2();
 }
 
 /*********************************************************
@@ -211,8 +211,8 @@ G__linked_taginfo G__ManualBase4LN_TDirectory = { "TDirectory" , 99 , -1 };
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtableManualBase4() {
-  G__ManualBase4LN_TBuffer.tagnum = -1 ;
-  G__ManualBase4LN_TDirectory.tagnum = -1 ;
+   G__ManualBase4LN_TBuffer.tagnum = -1 ;
+   G__ManualBase4LN_TDirectory.tagnum = -1 ;
 }
 
 
@@ -223,26 +223,26 @@ extern "C" void G__cpp_setup_tagtableManualBase4() {
    G__tagtable_setup(G__get_linked_tagnum(&G__ManualBase4LN_TDirectory),sizeof(TDirectory),-1,65280,"Describe directory structure in memory",NULL,G__setup_memfuncTDirectory);
 }
 extern "C" void G__cpp_setupManualBase4(void) {
-  G__check_setup_version(30051515,"G__cpp_setupManualBase4()");
-  G__set_cpp_environmentManualBase4();
-  G__cpp_setup_tagtableManualBase4();
+   G__check_setup_version(30051515,"G__cpp_setupManualBase4()");
+   G__set_cpp_environmentManualBase4();
+   G__cpp_setup_tagtableManualBase4();
 
-  G__cpp_setup_inheritanceManualBase4();
+   G__cpp_setup_inheritanceManualBase4();
 
-  G__cpp_setup_typetableManualBase4();
+   G__cpp_setup_typetableManualBase4();
 
-  G__cpp_setup_memvarManualBase4();
+   G__cpp_setup_memvarManualBase4();
 
-  G__cpp_setup_memfuncManualBase4();
-  G__cpp_setup_globalManualBase4();
-  G__cpp_setup_funcManualBase4();
+   G__cpp_setup_memfuncManualBase4();
+   G__cpp_setup_globalManualBase4();
+   G__cpp_setup_funcManualBase4();
 
    if(0==G__getsizep2memfunc()) G__get_sizep2memfuncManualBase4();
-  return;
+   return;
 }
 class G__cpp_setup_initManualBase4 {
-  public:
-    G__cpp_setup_initManualBase4() { G__add_setup_func("ManualBase4",(G__incsetup)(&G__cpp_setupManualBase4)); G__call_setup_funcs(); }
+public:
+   G__cpp_setup_initManualBase4() { G__add_setup_func("ManualBase4",(G__incsetup)(&G__cpp_setupManualBase4)); G__call_setup_funcs(); }
    ~G__cpp_setup_initManualBase4() { G__remove_setup_func("ManualBase4"); }
 };
 G__cpp_setup_initManualBase4 G__cpp_setup_initializerManualBase4;
