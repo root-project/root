@@ -212,6 +212,9 @@ void TFileIter::Initialize()
 //__________________________________________________________________________
 Bool_t  TFileIter::IsOpen() const
 {
+   // Check whether the associated ROOT TFile was open
+   // and TFile object is healthy.
+
    Bool_t iOpen = kFALSE;
    if (fRootFile && !fRootFile->IsZombie() ) {
       iOpen = kTRUE;
@@ -292,23 +295,25 @@ TObject *TFileIter::Next(Int_t  nSkip)
 }
 
 //__________________________________________________________________________
-void TFileIter::PurgeKeys(TList *listOfKeys) {
-  assert(listOfKeys);
-  // Remove the TKey duplication,
-  // leave the keys with highest cycle number only
-  // Sort if first
-  listOfKeys->Sort();
-  TObjLink *lnk   = listOfKeys->FirstLink();
-  while(lnk) {
-     TKey *key = (TKey *)lnk->GetObject();
-     Short_t cycle = key->GetCycle(); 
-     const char *keyName = key->GetName();
-     // Check next object
-     lnk = lnk->Next();
-     if (lnk) {
-        TKey *nextkey = 0;
-        TObjLink *lnkThis = lnk;
-        while (     lnk
+void TFileIter::PurgeKeys(TList *listOfKeys) 
+{
+   // Remove the TKey duplication,
+   // leave the keys with highest cycle number only
+   // Sort if first
+
+   assert(listOfKeys);
+   listOfKeys->Sort();
+   TObjLink *lnk   = listOfKeys->FirstLink();
+   while(lnk) {
+      TKey *key = (TKey *)lnk->GetObject();
+      Short_t cycle = key->GetCycle(); 
+      const char *keyName = key->GetName();
+      // Check next object
+      lnk = lnk->Next();
+      if (lnk) {
+         TKey *nextkey = 0;
+         TObjLink *lnkThis = lnk;
+         while (     lnk
              &&   (nextkey = (TKey *)lnk->GetObject()) 
              &&  !strcmp(nextkey->GetName(), keyName) 
             ) {
@@ -324,11 +329,11 @@ void TFileIter::PurgeKeys(TList *listOfKeys) {
                delete listOfKeys->Remove(lnkThis);
                cycle   = nextCycle;
                lnkThis = lnk;
-            } 
+            }
             lnk = lnkNext;
          }
-      } 
-   }
+      }
+    }
 }
 
 //__________________________________________________________________________
