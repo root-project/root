@@ -3586,7 +3586,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                Int_t ns = 0;
                Int_t totsz = 0;
                TIter nxo(fPlayer->GetOutputList());
-               TObject *o = 0;
+               o = 0;
                while ((o = nxo())) {
                   ns++;
                   mbuf.Reset();
@@ -3689,7 +3689,7 @@ void TProofServ::HandleProcess(TMessage *mess)
             Int_t ns = 0;
             Int_t olsz = fPlayer->GetOutputList()->GetSize();
             TIter nxo(fPlayer->GetOutputList());
-            TObject *o = 0;
+            o = 0;
             while ((o = nxo())) {
                ns++;
                mbuf.Reset();
