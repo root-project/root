@@ -38,6 +38,8 @@ class TEveDigitSet : public TEveElement,
 public:
    enum ERenderMode_e { kRM_AsIs, kRM_TEveLine, kRM_Fill };
 
+   typedef void (*Callback_foo)(TEveDigitSet*, Int_t, TObject*);
+
 protected:
    struct DigitBase_t
    {
@@ -50,18 +52,20 @@ protected:
       virtual ~DigitBase_t() {}
    };
 
-   Int_t             fDefaultValue;   // Default signal value.
-   Bool_t            fValueIsColor;   // Interpret signal value as RGBA color.
-   Bool_t            fOwnIds;         // Flag specifying if id-objects are owned by the TEveDigitSet
-   TEveChunkManager  fPlex;           // Container of digit data.
+   Int_t             fDefaultValue;   //  Default signal value.
+   Bool_t            fValueIsColor;   //  Interpret signal value as RGBA color.
+   Bool_t            fOwnIds;         //  Flag specifying if id-objects are owned by the TEveDigitSet
+   TEveChunkManager  fPlex;           //  Container of digit data.
    DigitBase_t*      fLastDigit;      //! The last digit added to collection.
 
-   TEveFrameBox*     fFrame;          // Pointer to frame structure.
-   TEveRGBAPalette*  fPalette;        // Pointer to signal-color palette.
-   ERenderMode_e     fRenderMode;     // Render mode: as-is / line / filled.
-   Bool_t            fDisableLigting; // Disable lighting for rendering.
-   Bool_t            fEmitSignals;    // Emit signals on secondary-select.
-   Bool_t            fHistoButtons;   // Show histogram buttons in object editor.
+   TEveFrameBox*     fFrame;          //  Pointer to frame structure.
+   TEveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
+   ERenderMode_e     fRenderMode;     //  Render mode: as-is / line / filled.
+   Bool_t            fDisableLigting; //  Disable lighting for rendering.
+   Bool_t            fHistoButtons;   //  Show histogram buttons in object editor.
+
+   Bool_t            fEmitSignals;    //  Emit signals on secondary-select.
+   Callback_foo      fCallbackFoo;    //! Additional function to call on secondary-select.
 
    DigitBase_t* NewDigit();
    void       ReleaseIds();
@@ -120,13 +124,16 @@ public:
    ERenderMode_e  GetRenderMode()           const { return fRenderMode; }
    void           SetRenderMode(ERenderMode_e rm) { fRenderMode = rm; }
 
-   Bool_t GetEmitSignals() const   { return fEmitSignals; }
-   void   SetEmitSignals(Bool_t f) { fEmitSignals = f; }
-
    Bool_t GetHistoButtons() const   { return fHistoButtons; }
    void   SetHistoButtons(Bool_t f) { fHistoButtons = f; }
 
-   ClassDef(TEveDigitSet, 1); // Base-class for storage of digit collections; provides transformation matrix (TEveTrans), signal to color mapping (TEveRGBAPalette) and visual grouping (TEveFrameBox).
+   Bool_t GetEmitSignals() const   { return fEmitSignals; }
+   void   SetEmitSignals(Bool_t f) { fEmitSignals = f; }
+
+   Callback_foo GetCallbackFoo()         const { return fCallbackFoo; }
+   void         SetCallbackFoo(Callback_foo f) { fCallbackFoo = f; }
+
+   ClassDef(TEveDigitSet, 0); // Base-class for storage of digit collections; provides transformation matrix (TEveTrans), signal to color mapping (TEveRGBAPalette) and visual grouping (TEveFrameBox).
 };
 
 #endif

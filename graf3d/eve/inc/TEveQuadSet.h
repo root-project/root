@@ -128,7 +128,7 @@ public:
 
    // virtual void Paint(Option_t* option="");
 
-   ClassDef(TEveQuadSet, 1); // Collection of 2D primitives (rectangles, hexagons, or lines); each primitive can be assigned a signal value and a TRef.
+   ClassDef(TEveQuadSet, 0); // Collection of 2D primitives (rectangles, hexagons, or lines); each primitive can be assigned a signal value and a TRef.
 };
 
 #endif

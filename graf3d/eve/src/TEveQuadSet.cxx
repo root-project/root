@@ -38,7 +38,7 @@
 // For quad modes the deltas are expected to be positive.
 // For line modes negative deltas are ok.
 
-ClassImp(TEveQuadSet)
+ClassImp(TEveQuadSet);
 
 //______________________________________________________________________________
 TEveQuadSet::TEveQuadSet(const Text_t* n, const Text_t* t) :

@@ -77,7 +77,7 @@ public:
    void SetDefHeight(Float_t v) { fDefHeight = v ; }
    void SetDefDepth(Float_t v)  { fDefDepth  = v ; }
 
-   ClassDef(TEveBoxSet, 1); // Collection of 3D primitives (fixed-size boxes, boxes of different sizes, or arbitrary sexto-epipeds); each primitive can be assigned a signal value and a TRef.
+   ClassDef(TEveBoxSet, 0); // Collection of 3D primitives (fixed-size boxes, boxes of different sizes, or arbitrary sexto-epipeds); each primitive can be assigned a signal value and a TRef.
 };
 
 #endif

@@ -15,6 +15,7 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
    box->SetFrameColor((Color_t) kGray);
 
    TEveQuadSet* q = new TEveQuadSet("RectangleXY");
+   q->SetOwnIds(kTRUE);
    q->SetPalette(pal);
    q->SetFrame(box);
    q->Reset(TEveQuadSet::kQT_RectangleXY, kFALSE, 32);
@@ -22,6 +23,7 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
       q->AddQuad(r.Uniform(-10, 9), r.Uniform(-10, 9), 0,
                  r.Uniform(0.2, 1), r.Uniform(0.2, 1));
       q->QuadValue(r.Uniform(0, 130));
+      q->QuadId(new TNamed(Form("QuadIdx %d", i), "TNamed assigned to a quad as an indentifier."));
    }
    q->RefitPlex();
 
@@ -198,6 +200,12 @@ TEveQuadSet* quad_test_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
          gEve->Redraw3D();
       }
    }
+
+   // This show another way of getting notified about
+   // secondary selection hit. The callback function and the
+   // setting of it must be done in compiled code.
+   gROOT->ProcessLine(".L quad_test_callback.cxx+");
+   quad_test_set_callback(q);
 
    return q;
 }

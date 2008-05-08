@@ -37,7 +37,7 @@
 //
 // See also base-class TEveDigitSet for more information.
 
-ClassImp(TEveBoxSet)
+ClassImp(TEveBoxSet);
 
 //______________________________________________________________________________
 TEveBoxSet::TEveBoxSet(const Text_t* n, const Text_t* t) :

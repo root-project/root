@@ -151,6 +151,7 @@
 // TEveDigitSet
 #pragma link C++ class TEveDigitSet+;
 #pragma link C++ class TEveDigitSetEditor+;
+#pragma link C++ typedef TEveDigitSet::Callback_foo;
 
 // TEveQuadSet
 #pragma link C++ class TEveQuadSet+;

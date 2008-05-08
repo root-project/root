@@ -41,7 +41,7 @@
 //   TEveQuadSet: rectangle, hexagon or line per digit
 //   TEveBoxSet   a 3D box per digit
 
-ClassImp(TEveDigitSet)
+ClassImp(TEveDigitSet);
 
 //______________________________________________________________________________
 TEveDigitSet::TEveDigitSet(const Text_t* n, const Text_t* t) :
@@ -58,8 +58,9 @@ TEveDigitSet::TEveDigitSet(const Text_t* n, const Text_t* t) :
    fPalette        (0),
    fRenderMode     (kRM_Fill),
    fDisableLigting (kTRUE),
+   fHistoButtons   (kTRUE),
    fEmitSignals    (kFALSE),
-   fHistoButtons   (kTRUE)
+   fCallbackFoo    (0)
 {
    // Constructor.
 
@@ -231,11 +232,15 @@ void TEveDigitSet::DigitSelected(Int_t idx)
 {
    // Called from renderer when a digit with index idx is selected.
 
+   DigitBase_t *qb  = GetDigit(idx);
+   TObject     *obj = qb->fId.GetObject();
+
+   if (fCallbackFoo) {
+      (fCallbackFoo)(this, idx, obj);
+   }
    if (fEmitSignals) {
       SecSelected(this, idx);
    } else {
-      DigitBase_t* qb = GetDigit(idx);
-      TObject* obj = qb->fId.GetObject();
       printf("TEveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%lx\n",
              idx, qb->fValue, (ULong_t)obj);
       if (obj)
