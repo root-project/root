@@ -21,14 +21,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProfile2D
-#include "TProfile2D.h"
+#ifndef ROOT_TH1
+#include "TH1.h"
 #endif
 
 #ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
 #endif
 
+class TProfile2D;
 
 class TH3 : public TH1, public TAtt3D {
 

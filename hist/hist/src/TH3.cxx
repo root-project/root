@@ -13,6 +13,7 @@
 #include "TClass.h"
 #include "THashList.h"
 #include "TH3.h"
+#include "TProfile2D.h"
 #include "TH2.h"
 #include "TF1.h"
 #include "TVirtualPad.h"
