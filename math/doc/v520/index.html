@@ -22,7 +22,10 @@ Some of the basic special functions of TMath, like the error function or the gam
  The STL algorithms were found in these cases to be more performant in term of CPU time. For some like   <tt>TMath::LocMin</tt>, <tt>TMath::LocMax</tt> or <tt>TMath::Permute</tt> the original implementation has been left since it was found to be more performant than the generic one provided by STL.
   </li>
   <li>Add an interface working with generic iterators, similar to the STL algorithm interface, to the following TMath functions:
-	<tt>MinElement, MaxElemen, LocMin, LocMax, Mean, GeomMean, RMS, BinarySearch</tt>. The iterator interface for sort is called <tt>TMath::SortItr</tt> to avoid a compilation ambiguity. For example, for finding the mean from an <tt>std::vector<double> v</tt> one simply needs to call <tt>TMath::Mean(v.begin(), v.end() ) </tt>
+	<tt>MinElement, MaxElemen, LocMin, LocMax, Mean, GeomMean, RMS,
+	BinarySearch</tt>. The iterator interface for sort is called
+	<tt>TMath::SortItr</tt> to avoid a compilation ambiguity. For example,
+	for finding the mean from an <tt>std::vector&lt;double&gt; v</tt> one simply needs to call <tt>TMath::Mean(v.begin(), v.end() ) </tt>
   </li>
   <li>Various changes have been applied to the mathematical function to remove duplications with the special and statistical functions defined in ROOT::Math. In detailed the implementations which have been changed and can return a sightly different result than before are:
   <ul>
@@ -33,7 +36,7 @@ Some of the basic special functions of TMath, like the error function or the gam
   <li><tt>TMath::BetaIncomplete</tt> is implemented using <tt>ROOT::Math::beta_inc</tt>.</li>
   <li><tt>TMath::GammaDist</tt> is implemented using <tt>ROOT::Math::gamma_pdf</tt>.</li>
   <li><tt>TMath::LogNormal</tt> is implemented using <tt>ROOT::Math::lognormal_pdf</tt>.</li>
-  <li><tt>TMath::PoissonI</tt>:  fixed a problem for large values and is implemented using directly TMath::Poisson with integer values.</tt>
+  <li><tt>TMath::PoissonI</tt>:  fixed a problem for large values and is implemented using directly TMath::Poisson with integer values.
   </ul>
   More detailed information on the new mathematical functions can be found in <a href="http://project-mathlibs.web.cern.ch/project-mathlibs/documents/slawinska.pdf">this</a> presentation from M. Slawinska.
   </li>
@@ -79,7 +82,6 @@ In addition the setter methods for the 2D,3D and 4D vector classes have been ext
 
 <h3>SMatrix</h3>
 Fix a bug discovered by Harals Soleng in the addition of two matrix expressions. Remove also some compilation warning found on Windows when compiling matrices instantiated using float types.  
-<par>
 <br>
 <hr>
 <h3>MathMore</h3>
@@ -87,8 +89,7 @@ Fix a bug discovered by Harals Soleng in the addition of two matrix expressions.
 <ul>
   <li>Modify and rename the class <tt>ROOT::Math::RootFinder</tt> to <tt>ROOT::Math::GSLRootFinder</tt> to distinguish from the main interface class which has been put in the Mathcore library and it can create the GSLRootFinder using the plug-in manager. Furthermore, the class <tt>ROOT::Math::GSLRootFinder</tt> is not anymore a template class on the algorithm. They type of root-finder algorithm can now be selected via an enumeration</li>
   <li>Fixed a bug in the <tt>ROOT::Math::GSLNLSMutiFi</tt> class. 
-     </ul>
-  </li>
+</ul>
 
 <p>More detailed description of the current MathMore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_19_02/html/MathMore.html">location</a>.</p>
 
