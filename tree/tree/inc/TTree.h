@@ -67,7 +67,6 @@
 #endif
 
 class TBranch;
-class TVirtualTreePlayer;
 class TBrowser;
 class TFile;
 class TDirectory;
