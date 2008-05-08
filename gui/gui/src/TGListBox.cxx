@@ -1285,7 +1285,7 @@ void TGListBox:: RemoveEntry(Int_t id)
    // If id = -1 - the selected entry/entries is/are removed.
    //                
 
-   if (id > 0) {
+   if (id >= 0) {
       fLbc->RemoveEntry(id);
       Layout();
       return;
