@@ -12,10 +12,14 @@
 #include "TGLViewer.h"
 #include "TGLWidget.h"
 #include "TGLOverlay.h"
+#include "TGLLogicalShape.h"
+#include "TGLPhysicalShape.h"
 #include "KeySymbols.h"
 
 #include "TMath.h"
 #include "TGLUtil.h"
+
+#include "TEveCaloLegoGL.h"
 
 
 //==============================================================================
@@ -37,7 +41,9 @@ TEveLegoEventHandler::TEveLegoEventHandler(const char *name, TGWindow *w, TObjec
 
    fMode(kFree),
    fTransTheta(0.5f),
-   fTheta(0.f)
+   fTheta(0.f),
+
+   fLastPickedLego(0)
 {
    // Constructor.
 }
@@ -55,6 +61,36 @@ Bool_t TEveLegoEventHandler::HandleKey(Event_t *event)
    }
 
    return TGLEventHandler::HandleKey(event);
+}
+
+//______________________________________________________________________________
+Bool_t TEveLegoEventHandler::HandleDoubleClick(Event_t *event)
+{
+   if (fGLViewer->IsLocked()) return kFALSE;
+
+   if (event->fCode == kButton1)
+   {
+      fGLViewer->RequestSelect(event->fX, event->fY);
+      TGLPhysicalShape* pshape = fGLViewer->GetSelRec().GetPhysShape();
+      if (pshape && fGLViewer->GetSelRec().GetN() > 2)
+      {
+         TGLLogicalShape& lshape = const_cast<TGLLogicalShape&> (*pshape->GetLogical());
+         TGLLogicalShape* f = &lshape;
+         TEveCaloLegoGL*  lego   = dynamic_cast<TEveCaloLegoGL*>(f);
+                 
+         if (lego)
+         {
+            fLastPickedLego = lego;
+            lego->SetTowerPicked(fGLViewer->GetSelRec().GetItem(2));
+         }
+      }
+      else if (fLastPickedLego)
+      {
+         fLastPickedLego->SetTowerPicked(-1);
+      }
+      fGLViewer->RequestDraw();
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________

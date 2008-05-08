@@ -41,7 +41,9 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fTMSize(0.1),
 
    fNBinSteps(5),
-   fBinSteps(0)
+   fBinSteps(0),
+
+   fTowerPicked(-1)
 {
    // Constructor.
 
@@ -282,21 +284,29 @@ void TEveCaloLegoGL::SetFont(Float_t cfs, TGLRnrCtx & rnrCtx) const
 {
    // Set font size for given axis length.
 
-   Int_t* fsp = &TGLFontManager::GetFontSizeArray()->front();
-   Int_t  nums = TGLFontManager::GetFontSizeArray()->size();
-   Int_t i = 0;
-   while (i<nums)
+   Int_t fs;
+   if (cfs > 36)
    {
-      if (cfs<fsp[i]) break;
-      i++;
+      fs = 36;
    }
-   Int_t fs = fsp[i];
-
-   // minimum font size is 10
-   if (fs < 10) fs = 12;
+   else if (cfs <12)
+   {
+      fs = 12;
+   }
+   else 
+   {
+      Int_t* fsp = &TGLFontManager::GetFontSizeArray()->front();
+      Int_t  nums = TGLFontManager::GetFontSizeArray()->size();
+      Int_t i = 0;
+      while (i<nums)
+      {
+         if (cfs<=fsp[i]) break;
+         i++;
+      }
+      fs = fsp[i];
+   }
 
    // case the is no bigger font available
-
    if (fNumFont.GetMode() == TGLFont::kUndef || (fs != fFontSize))
    {
       fFontSize = fs;
@@ -362,24 +372,19 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
    }
    // x, y location of axis
    Float_t azX  = 0, azY  = 0;
-   Float_t aztX = 0, aztY = 0;
    switch(idxLeft)
    {
       case 0:
          azX  =  x0;      azY  =  y0;
-         aztX = -fTMSize; aztY = -fTMSize;
          break;
       case 1:
          azX  =  x1;      azY  =  y0;
-         aztX =  fTMSize; aztY = -fTMSize;
          break;
       case 2:
          azX  =  x1;      azY  =  y1;
-         aztX =  fTMSize; aztY =  fTMSize;
          break;
       case 3:
          azX  =  x0;      azY  =  y1;
-         aztX = -fTMSize; aztY =  fTMSize;
          break;
    }
  
@@ -388,7 +393,6 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
  
 
    /**************************************************************************/
-
    Double_t zt = 1.f;
    Int_t idxDepth = 0;
    for (Int_t i=0; i<4; ++i)
@@ -409,6 +413,7 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
          idxDepthT = i;
       }
    }
+
    if (idxDepth==idxLeft)  idxDepth =idxDepthT;
 
    Float_t ayX = 0, axY = 0;
@@ -441,8 +446,8 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
    if (fM->fBoxMode)
    {
       // info strips
-      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
       glLineWidth(1);
+      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
       glLineStipple(1, 0x5555);
       glEnable(GL_LINE_STIPPLE);
       glBegin(GL_LINES);
@@ -495,27 +500,31 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
          glVertex3f(ayX, cY, z1);
       }      
       glEnd();
+      glLineWidth(2);
    }
-   else 
-   {
-      glBegin(GL_LINES);
-      glVertex3f(azX, azY, 0);
-      glVertex3f(azX, azY, z1);
-      glEnd();
-   }
+
+   glBegin(GL_LINES);
+   glVertex3f(azX, azY, 0);
+   glVertex3f(azX, azY, z1);
+   glEnd();
+
 
    /**************************************************************************/
    // tick-marks
    glBegin(GL_LINES);
    Int_t ntm = (fM->fNZStep)*5;
    Float_t tmStep  = step*0.2f; // number of subdevision 5
+
+   TGLVertex3 worldRef(azX, azY, 0.5*z1);
+   TGLVector3 d = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, 1, 0);
+   d *= fNumFont.GetSize()*0.4;
    for (Int_t i = 1; i <= ntm; ++i)
    {
       glVertex3f(azX, azY, i*tmStep);
-      if (i % 5)
-         glVertex3f(azX+aztX*0.5f, azY+aztY*0.5f, i*tmStep);
+      if (i % 5 != 0)
+         glVertex3f(azX-d.X()*0.5, azY-d.Y()*0.5, i*tmStep-d.Z()*0.5);
       else
-         glVertex3f(azX+aztX, azY+aztY, i*tmStep);
+         glVertex3f(azX-d.X(), azY-d.Y(), i*tmStep-d.Z());
    }
    glEnd();
 
@@ -529,16 +538,60 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
                                      + (up[2]-dn[2])*(up[2]-dn[2]));
    SetFont(zAxisLength*0.1f, rnrCtx);
 
+   // axis labels, title
    fNumFont.PreRender(kFALSE);
    TGLUtil::Color(fM->fFontColor);
    Float_t off  = 2;
-   // axis title
-   RnrText(Form("Et[GeV]  %d", fM->fNZStep*tickval), azX + aztX*off, azY + aztY*off, fM->fNZStep*step, fNumFont, 4);
-   // axis labels
+   RnrText(Form("Et[GeV]  %d", fM->fNZStep*tickval), azX - d.X()*off, azY - d.Y()*off, z1, fNumFont, 4);
    for (Int_t i = 1; i < fM->fNZStep; ++i)
-      RnrText(Form("%d",i*tickval), azX + aztX*off, azY + aztY*off, i*step, fNumFont, 4);
-
+      RnrText(Form("%d",i*tickval), azX - d.X()*off, azY - d.Y()*off, i*step, fNumFont, 4);
    fNumFont.PostRender();
+ 
+   // picked info
+   if (fTowerPicked >= 0)
+   {
+      TGLUtil::Color(fM->fFontColor);
+      TEveCaloData::CellData_t cd;
+      fM->fData->GetCellData(fM->fCellList[fTowerPicked], cd);
+      switch(idxLeft)
+      {
+         case 0:
+            azX  =  cd.EtaMin();      azY  =  cd.PhiMin();
+            break;
+         case 1:
+            azX  =  cd.EtaMax();      azY  =  cd.PhiMin();
+            break;
+         case 2:
+            azX  =  cd.EtaMax();      azY  =  cd.PhiMax();
+            break;
+         case 3:
+            azX  =  cd.EtaMin();      azY  =  cd.PhiMax();
+            break;
+      }
+
+      TGLVertex3 cellworldRef(azX, azY, 0.5*ntm*tmStep);
+      d = rnrCtx.RefCamera().ViewportDeltaToWorld(cellworldRef, 1, 0);
+
+      glBegin(GL_LINES);
+      // tick marks
+      d *= fNumFont.GetSize()*0.4;
+      for (Int_t i = 1; i <= ntm; ++i)
+      {
+         glVertex3f(azX, azY, i*tmStep);
+         if (i % 5 != 0)
+            glVertex3f(azX-d.X()*0.5, azY-d.Y()*0.5, i*tmStep-d.Z()*0.5);
+         else
+            glVertex3f(azX-d.X(), azY-d.Y(), i*tmStep-d.Z());
+      }
+      glEnd();
+
+      // labels
+      fNumFont.PreRender(kFALSE);
+      RnrText(Form("Et[GeV]  %d", fM->fNZStep*tickval), azX - d.X()*off, azY -d.Y()*off, z1, fNumFont, 4);
+      for (Int_t i = 1; i < fM->fNZStep; ++i)
+         RnrText(Form("%d",i*tickval), azX - d.X()*off, azY -d.Y()*off, i*step, fNumFont, 4);
+      fNumFont.PostRender();
+   }
 }
 
 //______________________________________________________________________________
@@ -706,8 +759,6 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx, Bool_t is3D) const
    TGLUtil::Color(fM->fGridColor);
    Int_t es = GetGridStep(0, ax, rnrCtx);
    Int_t ps = GetGridStep(1, ay, rnrCtx);
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
-   glLineWidth(1);
    glBegin(GL_LINES);
    if ((es == 1 && ps == 1) || is3D)
    {
@@ -756,7 +807,9 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx, Bool_t is3D) const
       }
    }
    glEnd();
-   glPopAttrib();
+
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+   glLineWidth(2);
 
    // labels, titles and tickmarks
    if (is3D)
@@ -765,6 +818,7 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx, Bool_t is3D) const
       DrawZScales2D(rnrCtx, eta0, phi0);
 
    DrawXYScales(rnrCtx, eta0, etaT, phi0, phiT);
+   glPopAttrib();
 }
 
 //______________________________________________________________________________
@@ -975,7 +1029,8 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // get projection type
    Bool_t is3D;
    if (fM->fProjection == TEveCaloLego::kAuto)
-      is3D = (rnrCtx.RefCamera().IsPersepective());
+      is3D = (! (rnrCtx.RefCamera().IsOrthographic() && rnrCtx.RefCamera().GetCamBase().GetBaseVec(1).Z()));
+
    else if (fM->fProjection == TEveCaloLego::k2D)
       is3D = kFALSE;
    else
@@ -992,17 +1047,19 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    }
    if (is3D && fDLCacheOK == kFALSE) MakeDisplayList();
 
+
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+   glLineWidth(1);
+   glDisable(GL_LIGHTING);
+   glEnable(GL_NORMALIZE);
+   glEnable(GL_POLYGON_OFFSET_FILL);
    // draw histogram base
    if (rnrCtx.Selection() == kFALSE && rnrCtx.Highlight() == kFALSE)
       DrawHistBase(rnrCtx, is3D);
 
    // draw cells
+   glPolygonOffset(0.8, 1);
    fM->AssertPalette();
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glDisable(GL_LIGHTING);
-   glEnable(GL_NORMALIZE);
-   glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(0.2, 1);
    glPushMatrix();
    is3D ? DrawCells3D(rnrCtx): DrawCells2D(rnrCtx); 
    glPopMatrix();
