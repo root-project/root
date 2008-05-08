@@ -3099,6 +3099,10 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //                 matched by
    //    tree->Draw("arr1-Alt$(arr2,0)");
    //
+   //  The ternary operator is not directly support in TTree::Draw however, to plot the
+   //  equivalent of 'var2<20 ? -99 : var1', you can use:
+   //     tree->Draw("(var2<20)*99+(var2>=20)*var1","");
+   // 
    //     Drawing a user function accessing the TTree data directly
    //     =========================================================
    //
