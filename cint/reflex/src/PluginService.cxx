@@ -123,18 +123,8 @@ void* Reflex::PluginService::Create( const string & name,
       return 0; 
    }
    else {
-      try {
-         Object rett = m.Invoke(dummy, argv);
-         return rett.Address();
-      }
-      catch (RuntimeError& e) {
-         if ( Debug() ) cout << "PluginService: Got exception -> " << e.what() << endl;
-         return 0;
-      }
-      catch (exception& e) {
-         if ( Debug() ) cout << "PluginService: Got exception -> " << e.what() << endl;
-         return 0;
-      }      
+      Object rett = m.Invoke(dummy, argv);
+      return rett.Address();
    }
 }
 
@@ -186,18 +176,8 @@ void* Reflex::PluginService::CreateWithId(const Any& id,
       return 0; 
    }
    else {
-      try {
-         Object rett = m.Invoke(dummy, argv);
-         return rett.Address();
-      }
-      catch (RuntimeError& e) {
-         if ( Debug() ) cout << "PluginService: Got exception -> " << e.what() << endl;
-         return 0;
-      }
-      catch (exception& e) {
-         if ( Debug() ) cout << "PluginService: Got exception -> " << e.what() << endl;
-         return 0;
-      }      
+      Object rett = m.Invoke(dummy, argv);
+      return rett.Address();
    }
 }
 
