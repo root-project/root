@@ -5,26 +5,57 @@
 <A NAME="graf3d"></A>
 <h3>OpenGL</h3>
 
-<h4>General infrastructure</h4>
+<h4>Major changes</h4>
 
 <ul>
 
-<li> Modularization of input event-handling in TGLViewer: all
-event-handling is done by the TGLEventHandler class.
+<li> Reorganization of scene rendering in TGLViewer - render opaque
+objects from all scenes first, then all transparent ones.
+
+<li> Modularization of input event-handling in <tt>TGLViewer</tt>: all
+event-handling is done by the <tt>TGLEventHandler</tt> class. One can
+sub-class it now and modify behaviour of a given viewer. For
+example, see <tt>TEveLegoEventHandler</tt>.
 
 <li> Support highlighting of physical shapes for providing feedback and
 showing selection.
 
-<li> Improved FTGL font management and text rendering support.
+</ul>
 
-<li> Improved camera controls.
+
+<h4>Minor changes, fixes and improvements</h4>
+
+<ul>
+
+<li> Improve saving of images from the GL-viewer so that the dialog
+boxes and other windows do not result in black areas on the saved
+image. The window must still be fully contained within the desktop.
+
+<li> Improved camera controls. Three new orthographic cameras have
+been added to <tt>TGLViewer</tt>, looking at the scene from another
+side than the one present so far.
+
+<li> Improved FTGL font management across rendering contexts and text
+rendering support.
 
 </ul>
 
-	
+
+<h4>Performance issues with the latest ATI drivers</h4>
+
+In late 2007 ATI switched to a new driver architecture. With these
+drivers a significant degradation of GL performance in selection mode,
+up to a factor of 50, can be observed. Both linux and Windows drivers
+are affected. The best option for the time being is to stay with older
+drivers.
+
+
 <br>
 <hr>
 <h3>Eve</h3>
+
+<h4>Major changes</h4>
+
 <ul>
 
 <li> Support for multiple, parallel OpenGL views that can show different
@@ -33,15 +64,36 @@ projections of the same event.
 <li> Provide object selection and feedback highlight across all GL-views and
 list-trees.
 
-<li> New classes for visualization of calorimeter data (<tt>TEveCaloXYZ</tt>,
-still under development, see <tt>tutorials/eve/cms_calo.C</tt>.
+<p><img alt="Eve window showing some of the new features." 
+src="graf3d_eve-news-1.png">
+
+<li> New classes for visualization of calorimeter data
+(<tt>TEveCaloXYZ</tt>, still under development, see
+<tt>tutorials/eve/cms_calo.C</tt>. Available representations:
+3D-cylindrical view, projected views r-phi and rho-z, and lego-view
+(with dedicated event handler allowing detailed and scalable
+inspection of the data).
+
+<p><img alt="Eve window showing some of the new features." 
+src="graf3d_eve-news-2.png">
+
+</ul>
+
+
+<h4>Minor changes, fixes and improvements</h4>
+
+<ul>
 
 <li> Improved handling of projected elements.
+
+<li> For fish-eye projections, allow fixing of compression scale
+beyond given distance from the center.
+
+<li> <tt>TEveFrameBox</tt> now supports arbitrary 2d frame shapes -
+user specifies individual points via SetQuadByPoints() function.  See
+tutorials/eve/quad_test.C::quad_test_circ() for an example.
 
 <li> Consolidation of existing classes and code - Eve is still under rapid
 development.
 
 </ul>
-
-<p><img alt="Eve window showing some of the new features." src="graf3d_eve-news-1.png">
-
