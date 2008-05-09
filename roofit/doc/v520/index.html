@@ -2,3 +2,157 @@
 <hr>
 <A NAME="roofit"></A>
 <h3>RooFit</h3>
+
+ <h4>RooWorkspace</h4>
+
+      New feature that allows to persist source code of RooFit classes that
+      are not in ROOT distribution inside a <tt>RooWorkspace</tt> to facilitate sharing
+      of custom code with others. To import code of custom classes call
+<pre>
+         RooWorkspace::importClassCode()
+</pre>
+      after importing the objects themselves into the workspace. For all classes
+      that are compiled with ACliC <tt>RooWorkspace</tt> can automatically find the source
+      code using the ROOT <tt>TClass</tt> interface. For custom classes that are compiled
+      externally and loaded into ROOT as shared library it might be necessary to
+      provide the location of the source files manually using the static RooWorkspace
+      member functions <tt>addClassDeclImportDir()</tt> and <tt>addClassImplImportDir()</tt>.<br><br>
+      
+      When a <tt>TFile</tt> with a <tt>RooWorkspace</tt> containing source code is opened in a ROOT
+      session that does not have the class code already loaded for the classes
+      contained in the workspace, the code in the workspace is written to file,
+      compiled and loaded into the ROOT session on the fly.<br><br>
+
+      The code repository of <tt>RooWorkspace</tt> is designed to handle classes that
+      have either their own implementation and header file, or are part of a group
+      of classes that share a common header and implementation file. More complicated
+      structuring of source code into files is not supported. 
+
+  <h4>Parameterized ranges</h4>
+
+      It is now possible to use <tt>RooAbsReal</tt> derived functions as range definition for variables
+      to construct ranges that vary as function of another variable. For example
+<pre>
+         RooRealVar x("x","x",-10,10) ; // variable with fixed range [-10,10] 
+         RooRealVar y("y","y",0,20) ; // variable with fixed range [-10,10] 
+   
+         RooFormulaVar x_lo("x_lo","y-20",y) ;      
+         RooFormulaVar x_hi("x_hi","sin(y)*5",y) ;      
+         x.setRange(x_lo,x_hi) ;  // Change x to have variable range depending on y
+</pre>  
+      It is also possible to define parameterized named ranges in the same way
+<pre>
+         x.setRange("signalRegion",x_lo,x_hi) ;
+</pre>
+      There are no fundamental limits to the complexity of the parameterized ranges
+      that can be defined as long as the problem is uniquely defined. For example, given three observables 
+      x, y and z, one can define a parameterized named range 'R' of x in terms of y and of y in terms of z
+      and ask to calculate the three dimensional integral of any function or p.d.f in terms of (x,y,z)
+      over that range 'R' and it will be calculated correctly, taking recursive range dependencies into
+      account. A definition of a range 'R' on the other hand where the bounds of x depend on y <i>and</i>
+      the bounds of y depend on x is not allowed, and an error message will be printed to complain about
+      the ambiguity of the problem definition. Integrals over non-rectangular regions are created the
+      same way as integrals over rectangular regions using the <tt>RooAbsReal::createIntegral()</tt> function, the
+      chosen mode of operation depends on the shape of the requestion integration range.<br><br>
+
+      Note that in general integration over non (hyper)rectangular regions will be more computationally
+      intensive as only a subset of the observables can be integrated analytically (all of those that do not
+      have parameterized ranges plus those that have parameterized ranges but are not involved in the
+      parameterization of others (e.g. x and y in the example above)
+
+  <h4>Cumulative distribution functions</h4>
+
+      You can create an <tt>RooAbsReal</tt> derived object representing the <i>cumulative distribution function</i>
+      (=<tt>Int[-inf : x] F(x') dx'</tt>) of any <tt>RooAbsPdf</tt> using the new <tt>RooAbsPdf::createCdf</tt> function.
+<pre>
+         RooAbsReal* myCdf = myPdf->createCdf(observables,normobs) ;
+</pre>
+      where <tt>observables</tt> is the <tt>RooArgSet</tt> with the observables for which to create the CDF and <tt>normobs</tt>
+      is the (optional) set of observables over which the p.d.f should be normalized <i>in addition</i>
+      to <tt>observables</tt>. The <tt>createCdf()</tt> function can create one-dimensional as well as higher dimensional c.d.f.s.
+
+ <h4>Constraints management</h4>
+
+      New tools have been added to simplify studies with fits involving (external) constraints on parameters.
+      The general philosophy is that constraints on parameters can be represented as probability density functions
+      and can thus be modeled by <tt>RooAbsPdf</tt> classes (e.g. a <tt>RooGaussian</tt> for a simple Gaussian constraint on a parameter).
+      There are two modes of operation: you can add parameter constraints to your problem definition by multiplying
+      the constraint p.d.f.s with your 'master' p.d.f. or you specify them externally in each operation. The
+      first mode of operation keeps all information in your master p.d.f and may make the logistics of non-trivial
+      fitting problems easier. It works as follows: first you define your regular p.d.f, then you define your
+      constraint p.d.f and you multiply them with <tt>RooProdPdf</tt>.
+<pre>
+        // Construct constraint
+        RooGaussian fconstraint("fconstraint","fconstraint",f,RooConst(0.8),RooConst(0.1)) ;
+
+        // Multiply constraint with p.d.f
+        RooProdPdf pdfc("pdfc","p.d.f with constraint",RooArgSet(p.d.f,fconstraint)) ;
+</pre>
+      If your top level p.d.f is already a <tt>RooProdPdf</tt> it also fine to multiply all terms together in one go.
+      Constraints do not need to be specified a the top-level <tt>RooProdPdf</tt>, constraint p.d.f.s in any component
+      <tt>RooProdPdf</tt> lower in the expression tree are used as well. Constraints are <i>not</i> used by default in fitting
+      if present in a p.d.f. To activate the use of a constraint in fitting, use the <tt>Constrain()</tt> argument in <tt>fitTo()</tt>
+<pre>
+        // Fit with internal constraint
+        RooFitResult* r2 = pdfc.fitTo(*d,Constrain(f)) ;
+</pre> 
+      This will instruct <tt>RooAbsPdf::fitTo()</tt> to included any constraint p.d.f on parameter f in the
+      definition of the likelihood. It is possible to add multiple constraints on the same parameter
+      to the 'master' p.d.f. If so, all constraints on a given parameter will be added to the likelihood.<br><br>
+
+      The <tt>RooMCStudy</tt> class has been extended to accept the <tt>Constrain()</tt> argument as well in its constructor.
+      If specified it will do two things: 1) it will pass the constrain argument to the fitting pass of
+      the toy study and 2) it will modify the generation step into a two-step procedure: for each toy
+      in the study it will first sample a value of each constrained parameter from the joint constraints
+      p.d.f and it will then generate the observables for that experiment with the thus obtained parameter values.
+      In this mode of operation the parameter values for each toy may thus be different. The actual parameter
+      for each toy can be obtained with the newly added <tt>RooMCStudy::genParDataSet()</tt> member function. The calculation
+      of the pull values for each parameter has been modified accordingly.<br><br>
+
+      Alternatively, it is possible to specify constraints to both <tt>RooAbsPdf::fitTo()</tt> and the <tt>RooMCStudy</tt> constructor
+      using the <tt>ExternalConstraint()</tt> named argument to supply constraint p.d.f.s that are not part of the 'master'
+      p.d.f but rather an ad-hoc supplied external constraint. The argument supplied to <tt>ExternalConstraint()</tt> should
+      be (a set of) constraint p.d.f(s), rather than (a set of) parameters for which internal constraint p.d.f.s should
+      be picked up.
+
+ <h4>New PDF error handling structure</h4>
+
+      New infrastructure has been put into place to propagate and process p.d.f evaluation errors during fitting.
+      Previously evaluation errors were marked with a zero p.d.f value and propagated as a special condition
+      in <tt>RooAddPdf</tt>, <tt>RooProdPdf</tt> etc to result in a zero top-level p.d.f value that was caught by the RooFit minuit
+      interface as a special condition. Summary information on the value of the parameters and the observables
+      was printed for the first 10 occurrences of such conditions. Now, each p.d.f component that generates an error
+      in its evaluation logs the error into a separate facility during fitting and the the RooFit minuit interface
+      polls this error logging facility for problems. This allows much more detailed and accurate warning messages
+      during the minimization phase. The level of verbosity of this new error facility can be controlled with
+      a new <tt>PrintEvalErrors(Int_t code)</tt> argument to <tt>fitTo()</tt>. With code of -1, no errors are printed at all. With a
+      code of zero, one line is printed for each p.d.f component with problems summarizing the number of times
+      problems occured during the likelihood evaluation. A code greater than zero will generate even more detail and
+      print the details of each evaluation error as provided by the p.d.f (zero value, not-a-number, normalization zero etc..)
+      and show the observable values at which this error occurred. At most N detailed messages per p.d.f component
+      are shown where N is the integral value of the 'code' argument.
+
+  <h4> Other new features</h4>
+  <ul>
+  <li>The <tt>RooAddPdf</tt> constructor has been augmented with an additional boolean argument that allows to
+      interpret the supplied fraction parameters as recursive fractions rather than plain fractions.
+      If activated, an example <tt>RooAddPdf</tt> with three input p.d.f. A,B,C and two fractions fA and fB will
+      result in the expression<br><br>
+ 
+        <tt>fA*A + (1-fA)(fB*B + 1-fB*C)</tt>  rather than <tt>fA*A + fB*B + (1-fA-fB)*C</tt><br><br>
+
+      Recursive fraction have the advantage that all fraction can be defined to be in the range [0-1]
+      without resulting in configuration where the sum of all fractions exceeds 1.<br><br>
+     
+  <li>The low-level object printing interface <tt>printToStream()</tt> has been deprecated in favor of a new
+      <tt>printStream()</tt> method which allows much greater control over the information printed. <br><br>
+
+  <li>Data weighted projections of p.d.fs using the <tt>ProjWData()</tt> argument in <tt>RooAbsPdf::plotOn()</tt> are now calculated
+      with a new classes that derives from <tt>RooAbsOptTestStatistic</tt> and can thus implement the same evaluation
+      optimizations as are done for <tt>RooNLLVar</tt> and <tt>RooChi2Var</tt>. Specifically it is now possible to calculate projections
+      involving <tt>ProjWData()</tt> in parallel on multi-core hosts by adding the <tt>NumCPU(Int_t)</tt> argument to <tt>plotOn()</tt>.
+      <br><br>
+
+  <li>Assorted minor fixes
+  </ul>
+
