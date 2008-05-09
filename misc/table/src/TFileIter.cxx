@@ -333,7 +333,7 @@ void TFileIter::PurgeKeys(TList *listOfKeys)
             lnk = lnkNext;
          }
       }
-    }
+   }
 }
 
 //__________________________________________________________________________
