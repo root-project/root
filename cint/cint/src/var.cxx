@@ -5069,7 +5069,11 @@ inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, struct G__var_array* 
             /* paran < var->paran[ig15] */ \
             /* MyType* var[ddd][nnn]; MyType** v = var[xxx]; */ \
             /* FIXME: This is a syntax error if (var->paran[ig15] - paran) > 1. */ \
-            result.ref = (long)(&var->p[ig15]); \
+            if (G__struct_offset) { \
+               result.ref = (long)(G__struct_offset + var->p[ig15]);         \
+            } else { \
+               result.ref = (long)(&var->p[ig15]); \
+            } \
             G__letint(&result, PTYPE, *((long*) result.ref)); \
          } \
          break; \
