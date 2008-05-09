@@ -1233,16 +1233,20 @@ void TBranchElement::FillLeaves(TBuffer& b)
             // FIXME: We do nothing with type 7 (TVirtualStreamerInfo::kCharStar, char*) here!
             case TVirtualStreamerInfo::kDouble   /*  8 */: { b.WriteFastArray((Double_t*)  fAddress, n); break; }
             case TVirtualStreamerInfo::kDouble32 /*  9 */: {
+               TVirtualStreamerInfo* si = GetInfo();
+               TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
                Double_t* xx = (Double_t*) fAddress;
                for (Int_t ii = 0; ii < n; ++ii) {
-                  b << (Float_t) xx[ii];
+                  b.WriteDouble32(&(xx[ii]),se);
                }
                break;
             }
             case TVirtualStreamerInfo::kFloat16 /*  19 */: {
+               TVirtualStreamerInfo* si = GetInfo();
+               TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
                Float_t* xx = (Float_t*) fAddress;
                for (Int_t ii = 0; ii < n; ++ii) {
-                  b << (Float_t) xx[ii];
+                  b.WriteFloat16(&(xx[ii]),se);
                }
                break;
             }
@@ -1256,7 +1260,6 @@ void TBranchElement::FillLeaves(TBuffer& b)
             case TVirtualStreamerInfo::kLong64   /* 16 */: { b.WriteFastArray((Long64_t*)  fAddress, n); break; }
             case TVirtualStreamerInfo::kULong64  /* 17 */: { b.WriteFastArray((ULong64_t*) fAddress, n); break; }
             case TVirtualStreamerInfo::kBool     /* 18 */: { b.WriteFastArray((Bool_t*)    fAddress, n); break; }
-            // Note: Type 19 is unused for now. NO It is used above
          }
       } else {
          if (!fObject) {
@@ -2677,18 +2680,20 @@ void TBranchElement::ReadLeaves(TBuffer& b)
             case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
             case 18:  {b.ReadFastArray((Bool_t*)  fAddress, n); break;}
             case  9:  {
+               TVirtualStreamerInfo* si = GetInfo();
+               TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
                Double_t *xx = (Double_t*) fAddress;
-               Float_t afloat;
                for (Int_t ii=0;ii<n;ii++) {
-                  b >> afloat; xx[ii] = Double_t(afloat);
+                  b.ReadDouble32(&(xx[ii]),se);
                }
                break;
             }
             case  19:  {
-               Double_t *xx = (Double_t*) fAddress;
-               Float_t afloat;
+               TVirtualStreamerInfo* si = GetInfo();
+               TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
+               Float_t *xx = (Float_t*) fAddress;
                for (Int_t ii=0;ii<n;ii++) {
-                  b >> afloat; xx[ii] = Double_t(afloat);
+                  b.ReadFloat16(&(xx[ii]),se);
                }
                break;
             }
@@ -2747,18 +2752,20 @@ void TBranchElement::ReadLeaves(TBuffer& b)
                case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
                case 18:  {b.ReadFastArray((Bool_t*)   fAddress, n); break;}
                case  9:  {
-                  Double_t *xx = (Double_t*)fAddress;
-                  Float_t afloat;
+                  TVirtualStreamerInfo* si = GetInfo();
+                  TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
+                  Double_t *xx = (Double_t*) fAddress;
                   for (Int_t ii=0;ii<n;ii++) {
-                     b>> afloat; xx[ii] = Double_t(afloat);
+                     b.ReadDouble32(&(xx[ii]),se);
                   }
                   break;
                }
                case  19:  {
-                  Double_t *xx = (Double_t*)fAddress;
-                  Float_t afloat;
+                  TVirtualStreamerInfo* si = GetInfo();
+                  TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
+                  Float_t *xx = (Float_t*) fAddress;
                   for (Int_t ii=0;ii<n;ii++) {
-                     b>> afloat; xx[ii] = Double_t(afloat);
+                     b.ReadFloat16(&(xx[ii]),se);
                   }
                   break;
                }
