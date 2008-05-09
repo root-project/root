@@ -25,6 +25,7 @@ The previous CINT stand-alone CVS / SVN repositories are now abandoned; CINT sta
 <li>Several functions now take modifier masks for certain operations, e.g. <tt>Type::IsEquivalentTo()</tt></li>
 <li>From Giovanni Petrucciani: speed up gendict considerably (he reports a factor 60) by implementing a cache for e.g. the normalize functions in the python scripts.</li>
 <li>Fix determination of FinalType()</li>
+<li>PluginService does not catch exceptions thrown by the plugin's function anymore.</li>
 <li>Add missing dll exports / visibility declarations.</li>
 <li>Outline all new / delete operations, so user code does not pick up an incompatible one.</li>
 <li><tt>long long</tt> is now supported (and required) as a fundamental type; MSVC &lt;= 7.0 is thus not supported anymore.</li>
