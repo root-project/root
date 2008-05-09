@@ -25,7 +25,7 @@ class TEveCaloData: public TEveRefCnt
 public:
    struct CellId_t
    {
-     // Cell ID inner structure.
+      // Cell ID inner structure.
 
       Int_t fTower;
       Int_t fSlice;
@@ -35,7 +35,7 @@ public:
 
    struct CellData_t
    {
-     // Cell geometry inner structure.
+      // Cell geometry inner structure.
 
       Float_t fValue;
       Float_t fPhiMin;
@@ -78,19 +78,25 @@ private:
    TEveCaloData(const TEveCaloData&);            // Not implemented
    TEveCaloData& operator=(const TEveCaloData&); // Not implemented
 
+protected:
+   Float_t      fThreshold;  // cell value threshold
+
 public:
    TEveCaloData();
    virtual ~TEveCaloData(){}
 
-   virtual Int_t GetCellList(Float_t etaMin, Float_t etaMax,
-                             Float_t phi, Float_t phiRng,
-                             Float_t threshold, vCellId_t &out) = 0;
+   virtual Int_t GetCellList(Float_t minVal, Float_t maxVal,
+                             Float_t etaMin, Float_t etaMax,
+                             Float_t phi, Float_t phiRng, vCellId_t &out) = 0;
 
    virtual void  GetCellData(const CellId_t &id, CellData_t& data) = 0;
 
    virtual Int_t GetNSlices() const = 0;
 
    virtual Float_t  GetMaxVal() const = 0;
+
+   Float_t GetThreshold() {return fThreshold;}
+   void    SetThreshold(Float_t t) {fThreshold = t;}
 
    virtual Bool_t SupportsEtaBinning(){ return kFALSE; }
    virtual Bool_t SupportsPhiBinning(){ return kFALSE; }
@@ -116,10 +122,9 @@ public:
    TEveCaloDataHist();
    virtual ~TEveCaloDataHist();
 
-
-   virtual Int_t GetCellList(Float_t etaMin, Float_t etaMax,
-                             Float_t phi, Float_t phiRng,
-                             Float_t threshold, TEveCaloData::vCellId_t &out);
+   virtual Int_t GetCellList(Float_t minVal, Float_t maxVal,
+                             Float_t etaMin, Float_t etaMax,
+                             Float_t phi, Float_t phiRng, vCellId_t &out);
 
    virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data);
 

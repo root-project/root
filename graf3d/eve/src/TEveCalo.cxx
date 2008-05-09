@@ -49,8 +49,6 @@ TEveCaloViz::TEveCaloViz(const Text_t* n, const Text_t* t) :
    fPhi(0.),
    fPhiRng(TMath::Pi()),
 
-   fThreshold(0.001f),
-
    fBarrelRadius(-1.f),
    fEndCapPos(-1.f),
 
@@ -80,8 +78,6 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
 
    fPhi(0.),
    fPhiRng(TMath::Pi()),
-
-   fThreshold(0.001f),
 
    fBarrelRadius(-1.f),
    fEndCapPos(-1.f),
@@ -151,8 +147,6 @@ void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
 
    fPhi       = m->fPhi;
    fPhiRng    = m->fPhiRng;
-   fThreshold = m->fThreshold;
-
    fBarrelRadius = m->fBarrelRadius;
    fEndCapPos    = m->fEndCapPos;
 

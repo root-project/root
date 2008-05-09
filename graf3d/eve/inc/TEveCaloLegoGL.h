@@ -54,7 +54,7 @@ protected:
    mutable TGLFont          fSymbolFont;
    mutable Int_t            fFontSize; // font size in pixels
 
-   const   Float_t          fTMSize; // tick mark size
+   const   Float_t          fTMSize; //  XY tick-mark size in world coordinates
 
    // grid density modes
    Int_t                    fNBinSteps;

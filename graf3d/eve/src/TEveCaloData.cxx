@@ -25,7 +25,8 @@
 
 ClassImp(TEveCaloData);
 
-TEveCaloData::TEveCaloData():TEveRefCnt()
+TEveCaloData::TEveCaloData():TEveRefCnt(),
+  fThreshold(0.001f)
 {
    // Constructor.
 
@@ -104,12 +105,13 @@ TEveCaloDataHist::~TEveCaloDataHist()
 }
 
 //______________________________________________________________________________
-Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
-                                    Float_t phi, Float_t phiD,
-                                    Float_t threshold, TEveCaloData::vCellId_t &out)
+Int_t TEveCaloDataHist::GetCellList(Float_t minVal, Float_t maxVal,
+                                    Float_t eta, Float_t etaD,
+                                    Float_t phi, Float_t phiD, 
+                                    TEveCaloData::vCellId_t &out)
 
 {
-  // Get list of cell IDs in given eta and phi range.
+   // Get list of cell IDs in given eta and phi range.
 
    using namespace TMath;
 
@@ -146,6 +148,8 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
    TAxis *ay = hist0->GetYaxis();
    TH2F *hist;
 
+   Int_t bin = 0;
+   Float_t val = 0;
    for (Int_t ieta=0; ieta<ax->GetNbins(); ieta++) {
       for (Int_t iphi=0; iphi<ay->GetNbins(); iphi++)  {
          if ( ax->GetBinLowEdge(ieta)   >= etaMin
@@ -153,13 +157,16 @@ Int_t TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
               && ((ay->GetBinLowEdge(iphi)>=pr[0] && ay->GetBinUpEdge(iphi)<pr[1])
                   || (ay->GetBinLowEdge(iphi)>=pr[2] && ay->GetBinUpEdge(iphi)<pr[3])))
          {
-            Int_t bin = hist0->GetBin(ieta, iphi);
             TIter next(fHStack->GetStack());
             Int_t slice = 0;
+            bin = hist0->GetBin(ieta, iphi);
             while ((hist = (TH2F*) next()) != 0) {
-               if (hist->GetBinContent(bin) > threshold)
+               val = hist->GetBinContent(bin);
+               if (val>fThreshold && val>minVal && val<=maxVal)
+               {
                   out.push_back(TEveCaloData::CellId_t(bin, slice));
-               slice++;
+                  slice++;
+               }
             }
          }
       }

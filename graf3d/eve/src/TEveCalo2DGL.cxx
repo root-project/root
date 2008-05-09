@@ -150,8 +150,8 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
               || (ax->GetBinLowEdge(ibin)>=pr[2] && ax->GetBinUpEdge(ibin)<pr[3]))
          {
             TEveCaloData::vCellId_t* clv = new TEveCaloData::vCellId_t();
-            Int_t nc = data->GetCellList(eta, etaRng, ax->GetBinCenter(ibin), ax->GetBinWidth(ibin),
-                                         fM->fThreshold, *clv);
+            Int_t nc = data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
+                                         eta, etaRng, ax->GetBinCenter(ibin), ax->GetBinWidth(ibin),*clv);
             if (nc)
                fM->fCellLists.push_back(clv);
             else
@@ -318,8 +318,9 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
             continue;
          TEveCaloData::vCellId_t* aa = new TEveCaloData::vCellId_t();
          TEveCaloData::vCellId_t& aaref = * aa;
-         Int_t nc = data->GetCellList(ax->GetBinCenter(ibin), ax->GetBinWidth(ibin),
-                                      fM->fPhi, fM->fPhiRng, fM->fThreshold, aaref);
+         Int_t nc = data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
+                                      ax->GetBinCenter(ibin), ax->GetBinWidth(ibin),
+                                      fM->fPhi, fM->fPhiRng, aaref);
          if (nc) fM->fCellLists.push_back(aa);
       }
       fM->fCacheOK= kTRUE;

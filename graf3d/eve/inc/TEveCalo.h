@@ -46,8 +46,6 @@ protected:
    Float_t      fPhi;
    Float_t      fPhiRng;
 
-   Float_t      fThreshold;  // cell value threshold
-
    Float_t      fBarrelRadius;  // barrel raidus in cm
    Float_t      fEndCapPos;     // end cap z coordinate in cm
 

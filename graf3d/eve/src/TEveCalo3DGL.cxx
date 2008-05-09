@@ -320,10 +320,10 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    if (fM->fCacheOK == kFALSE)
    {
       fM->ResetCache();
-      fM->fData->GetCellList(0.5f*(fM->fEtaMin + fM->fEtaMax),
+      fM->fData->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
+                             0.5f*(fM->fEtaMin + fM->fEtaMax),
                              fM->fEtaMax - fM->fEtaMin,
-                             fM->fPhi, fM->fPhiRng,
-                             fM->fThreshold, fM->fCellList);
+                             fM->fPhi, fM->fPhiRng, fM->fCellList);
       fM->fCacheOK= kTRUE;
    }
 
