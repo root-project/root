@@ -4,6 +4,18 @@
 <h3>Core</h3>
 <ul>
 <li>
+The ROOT source directory has been drastically reorganized and simplified.
+Each source directory containing the code for a single library or plugin,
+were all in the same top level directory, without logical grouping.
+This made it difficult to see which libraries were related and belonged
+together. In the new structure we've added a set of meta directories
+that are used to group the sources of related libraries, and that also
+reflects the ROOT team work package structure.
+Note, the name and number of libraries has not been changed.
+This new structure also facilitates the maintaining of the release notes
+and other documentation items per meta package.
+</li>
+<li>
 Class TMessageHandler derives now from TQObject and does emit signals.
 This allows for easier usage of this class.
 </li>
@@ -75,5 +87,46 @@ signature:<pre>
 </li><li>Extend <b><i>#pragma create TClass;</b></i> to namespaces.</li>
 <li>Enable autoloading of the cintdlls.</li>
 <li>rlibmap now handles <b><i>#pragma create TClass;</b></i> statements.</li>
-
+</ul>
+<h4>Cont</h4>
+<ul>
+<li>
+Support for std algorithms and iterators for ROOT collection classes by Anar.
+The background is the following. While working on the PROOF code I found
+that enumerating TList is an inconvenient and a long operation, I had to
+write the same code all over the place and make duplications. I tried
+to use STD algorithms with it, namely std::for_each, and failed.
+I therefore decided to enable std::for_each algorithm for ROOT 
+Containers/Iterators by making as few as possible changes, without rewriting
+iterators at all. Now with only two simple lines of code one is able to
+iterate through a container:
+<pre>
+   TIter iter(&list);
+   for_each(iter.Begin(), TIter::End(), SEnumFunctor());
+</pre>
+or
+<pre>
+   for_each(iter.Begin(), inter_end, SEnumFunctor());
+</pre>
+where iter_end could be an iterator to a middle of the container.
+<p>
+After I had changed Iterators so that they could be used with std::for_each,
+I decided to go further and did some more changes. As a result,
+<ul>
+<li>
+   I have updated CINT implementation of some algorithms (they look now
+   more or less better in terms of the standard),
+</li>
+<li>
+   All collections can be now used with std::for_each, std::find_if,
+   std::count_if (probably with some more algorithms. I've listed here
+   only what has been *checked* by me).
+</li>
+</ul>
+<li>
+A test program has been added: $ROOTSYS/test/stressIterators.cxx
+</li>
+<li>
+A tutorial macro has been added: $ROOTSYS/tutorials/cont/TListAndSTL.C
+</li>
 </ul>
