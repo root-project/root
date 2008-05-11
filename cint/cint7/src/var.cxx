@@ -1,4 +1,4 @@
-/* /% C %/ */
+//* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
  ************************************************************************
@@ -5094,10 +5094,10 @@ inline void G__get_pvar(CONVFUNC f, char TYPE, char PTYPE, ::Reflex::Member& var
             /* paran < var->paran[ig15] */
             /* MyType* var[ddd][nnn]; MyType** v = var[xxx]; */
             /* FIXME: This is a syntax error if (var->paran[ig15] - paran) > 1. */
-            if (G__struct_offset) {
-               result.ref = (long)(G__struct_offset + var->p[ig15]);
+            if (local_G__struct_offset) {
+               result->ref = (long)(local_G__struct_offset + (long)G__get_offset(variable));
             } else {
-               result.ref = (long)(&var->p[ig15]);
+               result->ref = (long)(&G__get_offset(variable));
             }
             G__letint(result, PTYPE, *((long*) result->ref));
          }
