@@ -312,6 +312,7 @@ ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
                 -Wl,-u,.G__cpp_setupG__G3D      \
                 -Wl,-u,.G__cpp_setupG__GPad     \
                 -Wl,-u,.G__cpp_setupG__Tree     \
+                -Wl,-u,.G__cpp_setupG__Thread   \
                 -Wl,-u,.G__cpp_setupG__Matrix
 BOOTULIBS    := -Wl,-u,.G__cpp_setupG__MathCore
 else
@@ -322,6 +323,7 @@ ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
                 -Wl,-u,_G__cpp_setupG__G3D      \
                 -Wl,-u,_G__cpp_setupG__GPad     \
                 -Wl,-u,_G__cpp_setupG__Tree     \
+                -Wl,-u,_G__cpp_setupG__Thread   \
                 -Wl,-u,_G__cpp_setupG__Matrix
 BOOTULIBS    := -Wl,-u,_G__cpp_setupG__MathCore
 endif
@@ -334,6 +336,7 @@ ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__G3D    \
                 -include:_G__cpp_setupG__GPad   \
                 -include:_G__cpp_setupG__Tree   \
+                -include:_G__cpp_setupG__Thread \
                 -include:_G__cpp_setupG__Matrix
 BOOTULIBS    := -include:_G__cpp_setupG__MathCore
 endif
@@ -421,6 +424,7 @@ MAKECOMPDATA  = build/unix/compiledata.sh
 MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
+MAKERELNOTES  = build/unix/makereleasenotes.sh
 MAKECINTDLL   = build/unix/makecintdll.sh
 MAKESTATIC    = build/unix/makestatic.sh
 RECONFIGURE   = build/unix/reconfigure.sh
@@ -532,7 +536,7 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
-                static map debian redhat skip postbin
+                releasenotes static map debian redhat skip postbin
 
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
@@ -801,7 +805,8 @@ endif
 	-@mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
 	@rm -f bin/roota bin/proofserva lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
-	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
+	@rm -f $(CINTDIR)/stl/*.dll build/dummy.d
+	@rm -f README/ChangeLog README/ReleaseNotes
 	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/include/*.so*
 	@rm -f etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd
 	@rm -f etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd
@@ -828,7 +833,10 @@ static: rootlibs
 changelog:
 	@$(MAKECHANGELOG)
 
-html: $(ROOTEXE) changelog
+releasenotes:
+	@$(MAKERELNOTES)
+
+html: $(ROOTEXE) changelog releasenotes
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
