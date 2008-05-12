@@ -48,7 +48,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","TSpider example",200,10,700,700);
-   TFile *f = new TFile("hsimple.root");
+   TFile *f = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
    if (!f || f->IsZombie()) {
       printf("Please run <ROOT location>/tutorials/hsimple.C before.");
       return;

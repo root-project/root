@@ -282,7 +282,17 @@ a.linkeddoc {
 }
 
 #searchform {
-   margin-left: 2em;
+   margin-left: -0.75em;
+   display: inline;
+}
+#searchlink {
+	background-color: ButtonFace;
+	border-style: outset;
+	border-width: 1px;
+	padding: 1px 0.2em 1px 0.2em;
+	text-decoration: none;
+	color: ButtonText;
+	margin-left: 0.5em;
 }
 
 /*** Class doc pages ***/
@@ -391,7 +401,14 @@ td.funcname {
    margin: 0px 0px 0px 0px;
    width: 100%;
 }
-
+span.funcprop 
+{
+	margin-left: 1em;
+	background-color: #FFFFCC;
+	border: solid 1px #FFFF33;
+	font-size: 80%;
+	font-weight: bold;
+}
 td.dataname {
    font-weight: bolder;
    vertical-align: top;
