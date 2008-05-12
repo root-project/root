@@ -165,17 +165,15 @@ struct G__ifunc_table* Cint::G__MethodInfo::ifunc()
    }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* Cint::G__MethodInfo::Title() 
+const char* Cint::G__MethodInfo::Title()
 {
    static char buf[G__INFO_TITLELEN];
-   buf[0]='\0';
-   if(IsValid()) {
-      G__getcomment(buf,&G__get_properties(fFunc)->comment,G__get_tagnum(fScope));
-      return(buf);
+   buf[0] = '\0';
+   if (IsValid()) {
+      G__getcomment(buf, &G__get_funcproperties(fFunc)->comment, G__get_tagnum(fScope));
+      return buf;
    }
-   else {
-      return((char*)NULL);
-   }
+   return 0;
 }
 ///////////////////////////////////////////////////////////////////////////
 long Cint::G__MethodInfo::Property()
