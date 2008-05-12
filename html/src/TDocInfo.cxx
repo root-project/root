@@ -52,7 +52,7 @@ Int_t TClassDocInfo::Compare(const TObject* obj) const
 // which is documented <a href="./HTML_index.html">here</a>. The list of
 // all modules is shown e.g. in the <a href="ClassIndex.html">class index</a>.</p>
 // <p>A module's documentation is searched by combining its source directory
-// (see <a href="#TModuleDocInfo:SetSourceDir">SetSourceDir()</a>) and the
+// (see <a href="#TModuleDocInfo:SetInputDir">SetInputDir()</a>) and the
 // module documentation search path defined by 
 // <a href="./THtml.html#THtml:SetModuleDocPath">THtml::SetModuleDocPath()</a>;
 // it defaults to "../doc", i.e. for a module's sources in "module/src" its
@@ -62,11 +62,3 @@ Int_t TClassDocInfo::Compare(const TObject* obj) const
 
 
 ClassImp(TModuleDocInfo);
-
-void TModuleDocInfo::SetSourceDir(const char* dir)
-{
-   // Set the module's source directory. It serves as part of
-   // the search path for the module documentation.
-   fSourceDir = dir;
-   gSystem->ExpandPathName(fSourceDir);
-}

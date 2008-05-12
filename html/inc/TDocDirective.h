@@ -58,6 +58,7 @@ protected:
    void SetParameters(const char* params);
    void SetTag(const char* tag) { SetTitle(tag); }
    void SetCounter(Int_t count) { fCounter = count; }
+   virtual void DeleteOutputFiles(const char* ext) const;
 
 public:
    // get the tag ending this directive
@@ -68,6 +69,9 @@ public:
 
    // retrieve the result (replacement) of the directive; return false if invalid
    virtual Bool_t GetResult(TString& result) = 0;
+
+   // Delete output for the parser's current class or module.
+   virtual void DeleteOutput() const {}
 
    friend class TDocParser;
 
@@ -107,6 +111,8 @@ public:
    virtual void AddLine(const TSubString& line);
    virtual const char* GetEndTag() const { return "end_macro"; }
    virtual Bool_t GetResult(TString& result);
+   // Delete output for the parser's current class or module.
+   virtual void DeleteOutput() const { DeleteOutputFiles(".gif"); }
 
    ClassDef(TDocMacroDirective, 0); // Handler for "Begin_Macro"/"End_Macro" for code that is executed and that can generate an image for documentation
 };
@@ -140,6 +146,8 @@ public:
    TList* GetListOfLines() const;
 
    virtual Bool_t GetResult(TString& result);
+   // Delete output for the parser's current class or module.
+   virtual void DeleteOutput() const { DeleteOutputFiles(".gif"); }
 
    ClassDef(TDocLatexDirective, 0); // Handler for "Begin_Latex"/"End_Latex" to generate an image from latex
 };

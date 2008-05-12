@@ -13,6 +13,7 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
+#pragma link C++ nestedclasses;
 
 #pragma link C++ global gHtml;
 
@@ -27,4 +28,11 @@
 #pragma link C++ class TClassDocInfo;
 #pragma link C++ class TModuleDocInfo;
 #pragma link C++ class TLibraryDocInfo;
+#pragma link C++ class THtml::THelperBase;
+#pragma link C++ class THtml::TModuleDefinition;
+#pragma link C++ class THtml::TFileDefinition;
+#pragma link C++ class THtml::TPathDefinition;
+#pragma link C++ class THtml::TFileSysEntry;
+#pragma link C++ class THtml::TFileSysDir;
+#pragma link C++ class THtml::TFileSysDB;
 #endif

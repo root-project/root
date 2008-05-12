@@ -35,6 +35,7 @@ class TClass;
 class TDataMember;
 class TDataType;
 class THtml;
+class TModuleDocInfo;
 class TString;
 class TSubString;
 class TVirtualPad;
@@ -62,6 +63,8 @@ protected:
                                   const char *copyright, const char* footer);
    virtual void   WriteSearch(std::ostream& out);
    void           WriteModuleLinks(std::ostream& out);
+   void           WriteModuleLinks(std::ostream& out, TModuleDocInfo* super);
+   void           WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname = 0);
 
 public:
    enum EFileType { kSource, kInclude, kTree, kDoc };

@@ -26,68 +26,180 @@
 #include "THashList.h"
 #endif
 
+#ifndef ROOT_THashTable
+#include "THashTable.h"
+#endif
+
+#ifndef ROOT_TExMap
+#include "TExMap.h"
+#endif
+
 #include <map>
 
 class TClass;
 class TClassDocInfo;
 class TVirtualMutex;
 
-class THtml : public TObject {
-protected:
-   enum ETraverse {
-      kUp, kDown, kBoth        // direction to traverse class tree in ClassHtmlTree()
+class THtml: public TObject {
+public:
+   //______________________________________________________________
+   // Helper base class.
+   class THelperBase: public TObject {
+   public:
+      THelperBase(): fHtml(0) {}
+      virtual ~THelperBase();
+      void    SetOwner(THtml* html);
+      THtml*  GetOwner() const { return fHtml; }
+   private:
+      THtml*  fHtml; // object owning the helper
+      ClassDef(THelperBase, 0); // a helper object's base class
    };
 
-protected:
-   TString        fXwho;            // URL for name lookup
-   TString        fROOTURL;         // Root URL for ROOT's reference guide for libs that are not in fLibURLs
-   std::map<std::string, TString> fLibURLs; // URL for documentation of external libraries
-   TString        fClassDocTag;     // tag for class documentation
-   TString        fAuthorTag;       // tag for author
-   TString        fLastUpdateTag;   // tag for last update
-   TString        fCopyrightTag;    // tag for copyright
-   TString        fHeader;          // header file name
-   TString        fFooter;          // footerer file name
-   TString        fHomepage;        // URL of homepage
-   TString        fSearchStemURL;   // URL stem used to build search URL
-   TString        fSearchEngine;    // link to search engine
-   TString        fViewCVS;         // link to ViewCVS; %f is replaced by the filename (no %f: it's appended)
-   TString        fWikiURL;         // URL stem of class's wiki page, %c replaced by mangled class name (no %c: appended)
-   TString        fCharset;         // Charset for doc pages
-   TString        fDocStyle;        // doc style (only "Doc++" has special treatment)
-   
-   TString        fSourcePrefix;    // prefix to relative source path
-   TString        fSourceDir;       // source path
-   TString        fIncludePath;     // include path
-   TString        fOutputDir;       // output directory
-   TString        fDotDir;          // directory of GraphViz's dot binary
-   TString        fEtcDir;          // directory containing auxiliary files
-   Int_t          fFoundDot;        // whether dot is accessible (-1 dunno, 1 yes, 0 no)
-   TString        fCounter;         // counter string
-   TString        fCounterFormat;   // counter printf-like format
-   TString        fClassFilter;     // filter used for buidling known classes
-   TString        fProductName;     // name of the product to document
-   TString        fProductDocDir;   // directory containing documentation for the product
-   TString        fMacroPath;       // path for macros run via the Begin/End Macro directive
-   TString        fModuleDocPath;   // path to check for module documentation
-   THashList      fClasses;         // known classes
-   THashList      fModules;         // known modules
-   std::map<TClass*,std::string> fGuessedDeclFileNames; // names of additional decl file names
-   std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
-   THashList      fLibDeps;         // Library dependencies
-   TIter         *fThreadedClassIter; // fClasses iterator for MakeClassThreaded
-   Int_t          fThreadedClassCount; // counter of processed classes for MakeClassThreaded
+   //______________________________________________________________
+   // Helper class to translate between classes and their
+   // modules. Can be derived from and thus replaced by
+   // the user; see THtml::SetModuleDefinition().
+   class TModuleDefinition: public THelperBase {
+   public:
+      virtual bool GetModule(TClass* cl, TString& out_modulename) const;
+      ClassDef(TModuleDefinition, 0); // helper class to determine a class's module
+   };
 
-   TVirtualMutex *fMakeClassMutex; // Mutex for MakeClassThreaded
+   //______________________________________________________________
+   // Helper class to translate between classes and their
+   // filenames. Can be derived from and thus replaced by
+   // the user; see THtml::SetFileDefinition().
+   class TFileDefinition: public THelperBase {
+   public:
+      virtual bool GetDeclFileName(const TClass* cl, TString& out_filename, TString& out_fsys) const;
+      virtual bool GetImplFileName(const TClass* cl, TString& out_filename, TString& out_fsys) const;
+   protected:
+      virtual bool GetFileName(const TClass* cl, bool decl, TString& out_filename, TString& out_fsys) const;
 
-   virtual void    CreateJavascript() const;
-   virtual void    CreateStyleSheet() const;
-   void            CreateListOfTypes();
-   void            CreateListOfClasses(const char* filter);
-   void            MakeClass(void* cdi, Bool_t force=kFALSE);
-   TClassDocInfo  *GetNextClass();
+      void SplitClassIntoDirFile(const TString& clname, TString& dir, TString& filename) const;
+      void ExpandSearchPath(TString& path) const;
+      ClassDef(TFileDefinition, 0); // helper class to determine a class's source files
+   };
 
-   static void    *MakeClassThreaded(void* info);
+   //______________________________________________________________
+   // Helper class to translate between file names and their
+   // version used for documentation. Can be derived from and thus
+   // replaced by the user; see THtml::SetPathDefinition().
+   class TPathDefinition: public THelperBase {
+   public:
+      virtual bool GetMacroPath(const TString& module, TString& out_dir) const;
+      virtual bool GetIncludeAs(TClass* cl, TString& out_include_as) const;
+      virtual bool GetFileNameFromInclude(const char* included, TString& out_fsname) const;
+      virtual bool GetDocDir(const TString& module, TString& doc_dir) const;
+   protected:
+      ClassDef(TPathDefinition, 0); // helper class to determine directory layouts
+   };
+
+   class TFileSysDir;
+   class TFileSysDB;
+   //______________________________________________________________
+   // Utility class representing a directory entry
+   class TFileSysEntry: public TObject {
+   public:
+      TFileSysEntry(const char* name, TFileSysDir* parent):
+         fName(name), fParent(parent), fLevel(parent ? parent->GetLevel() + 1 : 0) {}
+      const char* GetName() const { return fName; }
+      virtual ULong_t Hash() const { return fName.Hash(); }
+      void GetFullName(TString& fullname) const {
+         fullname = "";
+         if (fParent) {
+            fParent->GetFullName(fullname);
+            fullname += "/";
+         }
+         fullname += fName;
+      }
+
+      TFileSysDir* GetParent() const { return fParent; }
+      Int_t GetLevel() const { return fLevel; }
+   private:
+      TString      fName; // name of the element
+      TFileSysDir* fParent; // parent directory
+      Int_t        fLevel; // level of directory
+      ClassDef(TFileSysEntry, 0); // an entry of the local file system
+   };
+
+   //______________________________________________________________
+   // Utility class representing a directory
+   class TFileSysDir: public TFileSysEntry {
+   public:
+      TFileSysDir(const char* name, TFileSysDir* parent):
+         TFileSysEntry(name, parent)
+      { fFiles.SetOwner(); fDirs.SetOwner(); }
+      const TList* GetFiles() const { return &fFiles; }
+      const TList* GetSubDirs() const { return &fDirs; }
+
+      void Recurse(TFileSysDB* db, const char* path);
+
+   private:
+      TList fFiles;
+      TList fDirs;
+      ClassDef(TFileSysDir, 0); // an directory if the local file system
+   };
+
+   //______________________________________________________________
+   // Utility class representing a directory
+   class TFileSysDB: public TFileSysDir {
+   public:
+      TFileSysDB(const char* path, const char* ignore, Int_t maxdirlevel):
+         TFileSysDir(path, 0), fIgnorePath(ignore), fMaxLevel(maxdirlevel)
+      { Fill(); }
+
+      TExMap& GetMapIno() { return fMapIno; }
+      THashTable& GetEntries() { return fEntries; }
+      const TString& GetIgnore() const { return fIgnorePath; }
+      Int_t   GetMaxLevel() const { return fMaxLevel; }
+
+   protected:
+      void Fill() { Recurse(this, GetName()); }
+
+   private:
+      TExMap   fMapIno; // inode to TFileSysDir map, to detect softlinks
+      THashTable fEntries; // hash map of all filenames without paths
+      TString  fIgnorePath; // regexp of path to ignore while building entry tree
+      Int_t    fMaxLevel; // maximum level of directory nesting
+      ClassDef(TFileSysDB, 0); // instance of file system data
+   };
+
+
+   //______________________________________________________________
+   // Configuration holder for path related settings
+   struct TPathInfo {
+      enum EDotAccess {
+         kDotUnknown,
+         kDotFound,
+         kDotNotFound
+      };
+
+      TPathInfo():
+         fFoundDot(kDotUnknown),
+#ifdef R__WIN32
+         fInputPath("./;src/;include/"),
+#else
+         fInputPath("./:src/:include/"),
+#endif
+         fIncludePath("include"),
+         // .whatever implicitly ignored, no need to add .svn!
+         fIgnorePath("\\b(include|CVS|test|tutorials|doc|lib|python|demo|freetype-|gdk|libAfterImage|etc|config|build|bin)\\b"),
+         fDocPath("doc"),
+         fMacroPath("macros:."),
+         fOutputDir("htmldoc") {}
+
+      EDotAccess     fFoundDot;        // whether dot is accessible
+      TString        fInputPath;       // directories to look for classes; prepended to Decl/ImplFileName()
+      TString        fIncludePath;     // directory prefixes (":" delimited) to remove when quoting include files
+      TString        fIgnorePath;      // regexp pattern for directories to ignore ("\b(CVS|\.svn)\b") for ROOT
+      TString        fDocPath;         // subdir to check for module documentation ("doc" for ROOT)
+      TString        fMacroPath;       // subdir of fDocPath for macros run via the Begin/End Macro directive; ("macros" for ROOT)
+      TString        fDotDir;          // directory of GraphViz's dot binary
+      TString        fEtcDir;          // directory containing auxiliary files
+      TString        fOutputDir;       // output directory
+   };
+
 
 public:
    THtml();
@@ -106,85 +218,94 @@ public:
    void          MakeTree(const char *className, Bool_t force=kFALSE);
 
    // Configuration setters
+   void          SetModuleDefinition(const TModuleDefinition& md);
+   void          SetFileDefinition(const TFileDefinition& fd);
+   void          SetPathDefinition(const TPathDefinition& pd);
    void          SetProductName(const char* product) { fProductName = product; }
-   void          SetOutputDir(const char *dir) { fOutputDir = dir; }
-   void          SetSourceDir(const char *dir);
-   void          SetIncludePath(const char *path) { fIncludePath = path; }
-   void          SetSourcePrefix(const char *prefix);
-   void          SetEtcDir(const char* dir) { fEtcDir = dir; }
-   void          SetModuleDocPath(const char* path) { fModuleDocPath = path; }
-   void          SetProductDocDir(const char* dir) { fProductDocDir = dir; }
-   void          SetDotDir(const char* dir) { fDotDir = dir; fFoundDot = -1; }
-   void          SetRootURL(const char* url) { fROOTURL = url; }
-   void          SetLibURL(const char* lib, const char* url) { fLibURLs[lib] = url; }
-   void          SetXwho(const char *xwho) { fXwho = xwho; }
-   void          SetMacroPath(const char* path) {fMacroPath = path;}
+   void          SetOutputDir(const char *dir) { fPathInfo.fOutputDir = dir; }
+   void          SetInputDir(const char *dir);
+   void          SetEtcDir(const char* dir) { fPathInfo.fEtcDir = dir; }
+   void          SetDocPath(const char* path) { fPathInfo.fDocPath = path; }
+   void          SetDotDir(const char* dir) { fPathInfo.fDotDir = dir; fPathInfo.fFoundDot = TPathInfo::kDotUnknown; }
+   void          SetRootURL(const char* url) { fLinkInfo.fROOTURL = url; }
+   void          SetLibURL(const char* lib, const char* url) { fLinkInfo.fLibURLs[lib] = url; }
+   void          SetXwho(const char *xwho) { fLinkInfo.fXwho = xwho; }
+   void          SetMacroPath(const char* path) {fPathInfo.fMacroPath = path;}
    void          AddMacroPath(const char* path);
    void          SetCounterFormat(const char* format) { fCounterFormat = format; }
-   void          SetClassDocTag(const char* tag) { fClassDocTag = tag; }
-   void          SetAuthorTag(const char* tag) { fAuthorTag = tag; }
-   void          SetLastUpdateTag(const char* tag) { fLastUpdateTag = tag; }
-   void          SetCopyrightTag(const char* tag) { fCopyrightTag = tag; }
-   void          SetHeader(const char* file) { fHeader = file; }
-   void          SetFooter(const char* file) { fFooter = file; }
-   void          SetHomepage(const char* url) { fHomepage = url; }
-   void          SetSearchStemURL(const char* url) { fSearchStemURL = url; }
-   void          SetSearchEngine(const char* url) { fSearchEngine = url; }
-   void          SetViewCVS(const char* url) { fViewCVS = url; }
-   void          SetWikiURL(const char* url) { fWikiURL = url; }
-   void          SetCharset(const char* charset) { fCharset = charset; }
-   void          SetDocStyle(const char* style) { fDocStyle = style; }
+   void          SetClassDocTag(const char* tag) { fDocSyntax.fClassDocTag = tag; }
+   void          SetAuthorTag(const char* tag) { fDocSyntax.fAuthorTag = tag; }
+   void          SetLastUpdateTag(const char* tag) { fDocSyntax.fLastUpdateTag = tag; }
+   void          SetCopyrightTag(const char* tag) { fDocSyntax.fCopyrightTag = tag; }
+   void          SetHeader(const char* file) { fOutputStyle.fHeader = file; }
+   void          SetFooter(const char* file) { fOutputStyle.fFooter = file; }
+   void          SetHomepage(const char* url) { fLinkInfo.fHomepage = url; }
+   void          SetSearchStemURL(const char* url) { fLinkInfo.fSearchStemURL = url; }
+   void          SetSearchEngine(const char* url) { fLinkInfo.fSearchEngine = url; }
+   void          SetViewCVS(const char* url) { fLinkInfo.fViewCVS = url; }
+   void          SetWikiURL(const char* url) { fLinkInfo.fWikiURL = url; }
+   void          SetCharset(const char* charset) { fOutputStyle.fCharset = charset; }
+   void          SetDocStyle(const char* style) { fDocSyntax.fDocStyle = style; }
 
    // Configuration getters
+   const TModuleDefinition& GetModuleDefinition() const;
+   const TFileDefinition&   GetFileDefinition() const;
+   const TPathDefinition&   GetPathDefinition() const;
    const TString&      GetProductName() const { return fProductName; }
+   const TString&      GetInputPath() const { return fPathInfo.fInputPath; }
    const TString&      GetOutputDir(Bool_t createDir = kTRUE) const;
-   const TString&      GetSourceDir() const { return fSourceDir; }
-   const TString&      GetIncludePath() const { return fIncludePath; }
-   const TString&      GetSourcePrefix() const { return fSourcePrefix; }
    virtual const char* GetEtcDir();
-   const TString&      GetModuleDocPath() const { return fModuleDocPath; }
-   const TString&      GetProductDocDir() const { return fProductDocDir; }
-   const TString&      GetDotDir() const { return fDotDir; }
+   const TString&      GetModuleDocPath() const { return fPathInfo.fDocPath; }
+   const TString&      GetDotDir() const { return fPathInfo.fDotDir; }
    const char*         GetURL(const char* lib = 0) const;
-   const TString&      GetXwho() const { return fXwho; }
-   const TString&      GetMacroPath() const { return fMacroPath; }
+   const TString&      GetXwho() const { return fLinkInfo.fXwho; }
+   const TString&      GetMacroPath() const { return fPathInfo.fMacroPath; }
    const char*         GetCounterFormat() const { return fCounterFormat; }
-   const TString&      GetClassDocTag() const { return fClassDocTag; }
-   const TString&      GetAuthorTag() const { return fAuthorTag; }
-   const TString&      GetLastUpdateTag() const { return fLastUpdateTag; }
-   const TString&      GetCopyrightTag() const { return fCopyrightTag; }
-   const TString&      GetHeader() const { return fHeader; }
-   const TString&      GetFooter() const { return fFooter; }
-   const TString&      GetHomepage() const { return fHomepage; }
-   const TString&      GetSearchStemURL() const { return fSearchStemURL; }
-   const TString&      GetSearchEngine() const { return fSearchEngine; }
-   const TString&      GetViewCVS() const { return fViewCVS; }
-   const TString&      GetWikiURL() const { return fWikiURL; }
-   const TString&      GetCharset() const { return fCharset; }
-   const TString&      GetDocStyle() const { return fDocStyle; }
+   const TString&      GetClassDocTag() const { return fDocSyntax.fClassDocTag; }
+   const TString&      GetAuthorTag() const { return fDocSyntax.fAuthorTag; }
+   const TString&      GetLastUpdateTag() const { return fDocSyntax.fLastUpdateTag; }
+   const TString&      GetCopyrightTag() const { return fDocSyntax.fCopyrightTag; }
+   const TString&      GetHeader() const { return fOutputStyle.fHeader; }
+   const TString&      GetFooter() const { return fOutputStyle.fFooter; }
+   const TString&      GetHomepage() const { return fLinkInfo.fHomepage; }
+   const TString&      GetSearchStemURL() const { return fLinkInfo.fSearchStemURL; }
+   const TString&      GetSearchEngine() const { return fLinkInfo.fSearchEngine; }
+   const TString&      GetViewCVS() const { return fLinkInfo.fViewCVS; }
+   const TString&      GetWikiURL() const { return fLinkInfo.fWikiURL; }
+   const TString&      GetCharset() const { return fOutputStyle.fCharset; }
+   const TString&      GetDocStyle() const { return fDocSyntax.fDocStyle; }
 
    // Functions that should only be used by TDocOutput etc.
    Bool_t              CopyFileFromEtcDir(const char* filename) const;
    virtual void        CreateAuxiliaryFiles() const;
    virtual TClass*     GetClass(const char *name) const;
    const char*         GetCounter() const { return fCounter; }
-   virtual const char* GetDeclFileName(TClass* cl) const;
+   void                GetModuleMacroPath(const TString& module, TString& out_path) const { GetPathDefinition().GetMacroPath(module, out_path); }
+   virtual bool        GetDeclFileName(TClass* cl, Bool_t filesys, TString& out_name) const;
    void                GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) const;
-   virtual const char* GetImplFileName(TClass* cl) const;
-   virtual const char* GetFileName(const char *filename) const;
-   virtual void        GetSourceFileName(TString& filename);
+   static const char*  GetDirDelimiter() {
+      // ";" on windows, ":" everywhere else
+#ifdef R__WIN32
+      return ";";
+#else
+      return ":";
+#endif
+   }
+   virtual bool        GetImplFileName(TClass* cl, Bool_t filesys, TString& out_name) const;
    virtual void        GetHtmlFileName(TClass *classPtr, TString& filename) const;
    virtual const char* GetHtmlFileName(const char* classname) const;
-   TCollection*        GetLibraryDependencies() { return &fLibDeps; }
-   const TList*        GetListOfModules() const { return &fModules; }
-   const TList*        GetListOfClasses() const { return &fClasses; }
+   TList*              GetLibraryDependencies() { return &fDocEntityInfo.fLibDeps; }
+   const TList*        GetListOfModules() const { return &fDocEntityInfo.fModules; }
+   const TList*        GetListOfClasses() const { return &fDocEntityInfo.fClasses; }
+   TFileSysDB*         GetLocalFiles() const { if (!fLocalFiles) SetLocalFiles(); return fLocalFiles; }
    TVirtualMutex*      GetMakeClassMutex() const { return  fMakeClassMutex; }
-   virtual void        GetModuleName(TString& module, const char* filename) const;
    virtual void        GetModuleNameForClass(TString& module, TClass* cl) const;
+   const TPathInfo&    GetPathInfo() const { return fPathInfo; }
    Bool_t              HaveDot();
+   void                HelperDeleted(THelperBase* who);
    static Bool_t       IsNamespace(const TClass*cl);
    void                SetDeclFileName(TClass* cl, const char* filename);
-   void                SetFoundDot(Bool_t found = kTRUE) { fFoundDot = found; }
+   void                SetFoundDot(Bool_t found = kTRUE);
    void                SetImplFileName(TClass* cl, const char* filename);
 
    // unused
@@ -192,6 +313,68 @@ public:
       Error("ReplaceSpecialChars",
             "Removed, call TDocOutput::ReplaceSpecialChars() instead!"); }
    void                SetEscape(char /*esc*/ ='\\') {} // for backward comp
+
+protected:
+   struct TDocSyntax {
+      TString        fClassDocTag;     // tag for class documentation
+      TString        fAuthorTag;       // tag for author
+      TString        fLastUpdateTag;   // tag for last update
+      TString        fCopyrightTag;    // tag for copyright
+      TString        fDocStyle;        // doc style (only "Doc++" has special treatment)
+   };
+
+   struct TLinkInfo {
+      TString        fXwho;            // URL for name lookup
+      TString        fROOTURL;         // Root URL for ROOT's reference guide for libs that are not in fLibURLs
+      std::map<std::string, TString> fLibURLs; // URL for documentation of external libraries
+      TString        fHomepage;        // URL of homepage
+      TString        fSearchStemURL;   // URL stem used to build search URL
+      TString        fSearchEngine;    // link to search engine
+      TString        fViewCVS;         // link to ViewCVS; %f is replaced by the filename (no %f: it's appended)
+      TString        fWikiURL;         // URL stem of class's wiki page, %c replaced by mangled class name (no %c: appended)
+   };
+
+   struct TOutputStyle {
+      TString        fHeader;          // header file name
+      TString        fFooter;          // footerer file name
+      TString        fCharset;         // Charset for doc pages
+   };
+
+   struct TDocEntityInfo {
+      TString        fClassFilter;     // filter used for buidling known classes
+      THashList      fClasses;         // known classes
+      THashList      fModules;         // known modules
+      THashList      fLibDeps;         // Library dependencies
+   };
+
+protected:
+   virtual void    CreateJavascript() const;
+   virtual void    CreateStyleSheet() const;
+   void            CreateListOfTypes();
+   void            CreateListOfClasses(const char* filter);
+   virtual bool    GetDeclImplFileName(TClass* cl, bool filesys, bool decl, TString& out_name) const;
+   void            MakeClass(void* cdi, Bool_t force=kFALSE);
+   TClassDocInfo  *GetNextClass();
+   void            SetLocalFiles() const;
+
+   static void    *MakeClassThreaded(void* info);
+
+protected:   
+   TString        fCounter;         // counter string
+   TString        fCounterFormat;   // counter printf-like format
+   TString        fProductName;     // name of the product to document
+   TIter         *fThreadedClassIter; // fClasses iterator for MakeClassThreaded
+   Int_t          fThreadedClassCount; // counter of processed classes for MakeClassThreaded
+   TVirtualMutex *fMakeClassMutex; // Mutex for MakeClassThreaded
+   TDocSyntax     fDocSyntax;      // doc syntax configuration
+   TLinkInfo      fLinkInfo;       // link (URL) configuration
+   TOutputStyle   fOutputStyle;    // output style configuration
+   TPathInfo      fPathInfo;       // path configuration
+   TDocEntityInfo fDocEntityInfo;  // data for documented entities
+   mutable TPathDefinition *fPathDef; // object translating classes to module names
+   mutable TModuleDefinition *fModuleDef; // object translating classes to module names
+   mutable TFileDefinition* fFileDef; // object translating classes to file names
+   mutable TFileSysDB    *fLocalFiles; // files found locally for a given source path
 
    ClassDef(THtml,0)  //Convert class(es) into HTML file(s)
 };
