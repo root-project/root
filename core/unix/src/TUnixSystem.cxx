@@ -374,7 +374,7 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    // when libSystem.B.dylib is loaded we have finished loading all dylibs
    // explicitly linked against the executable. Additional dylibs
-   // come when they are explicitly linked against loaded so's, currentky
+   // come when they are explicitly linked against loaded so's, currently
    // we are not interested in these
    if (lib.EndsWith("/libSystem.B.dylib"))
       gotFirstSo = kTRUE;
