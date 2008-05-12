@@ -49,6 +49,7 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__G3D        \
               -include:_G__cpp_setupG__GPad       \
               -include:_G__cpp_setupG__Tree       \
+              -include:_G__cpp_setupG__Thread     \
               -include:_G__cpp_setupG__Rint       \
               -include:_G__cpp_setupG__PostScript \
               -include:_G__cpp_setupG__Matrix     \
@@ -62,6 +63,7 @@ elif test "$platform" = "aix5"; then
               -Wl,-u,.G__cpp_setupG__G3D        \
               -Wl,-u,.G__cpp_setupG__GPad       \
               -Wl,-u,.G__cpp_setupG__Tree       \
+              -Wl,-u,.G__cpp_setupG__Thread     \
               -Wl,-u,.G__cpp_setupG__Rint       \
               -Wl,-u,.G__cpp_setupG__PostScript \
               -Wl,-u,.G__cpp_setupG__Matrix     \
@@ -75,6 +77,7 @@ else
               -Wl,-u,_G__cpp_setupG__G3D        \
               -Wl,-u,_G__cpp_setupG__GPad       \
               -Wl,-u,_G__cpp_setupG__Tree       \
+              -Wl,-u,_G__cpp_setupG__Thread     \
               -Wl,-u,_G__cpp_setupG__Rint       \
               -Wl,-u,_G__cpp_setupG__PostScript \
               -Wl,-u,_G__cpp_setupG__Matrix     \
