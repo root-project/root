@@ -21,6 +21,7 @@
 <ul>
 <li> Fixed a bug in the <tt>TH1::KolmogorovTest</tt> function in the case of scaled or weighted  histograms. The routine has been improved and 
 now could also be used for comparing an histogram with a function if it is represented as an histogram with zero errors (equivalent to the case of options "F1" or "F2" in the original HDIFF routine of HBOOK).</li>
+<li>Improved the <tt>TH1::Chi2Test</tt> for the treatment of empty bins in the histograms. If both histograms have one empty bin, the number of degree of freedom is decreased by one but the test is performed without reporting an error. If only one histogram is having an empty bin it is considered in the comparison.  
 </ul>
 
 

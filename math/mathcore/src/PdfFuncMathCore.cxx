@@ -55,11 +55,14 @@ namespace Math {
    
    double chisquared_pdf(double x, double r, double x0) {
       
-      if ((x-x0) <= 0) {
+      if ((x-x0) <  0) {
          return 0.0;
-      } else {
-         return std::exp ((r/2 - 1) * std::log((x-x0)/2) - (x-x0)/2 - ROOT::Math::lgamma(r/2))/2;
       }
+      double a = r/2 -1.; 
+      // let return inf for case x  = x0 and treat special case of r = 2 otherwise will return nan
+      if (x == x0 && a == 0) return 0.5;
+
+      return std::exp ((r/2 - 1) * std::log((x-x0)/2) - (x-x0)/2 - ROOT::Math::lgamma(r/2))/2;
       
    }
    

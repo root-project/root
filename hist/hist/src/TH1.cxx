@@ -321,50 +321,24 @@ All histogram classes are derived from the base class TH1
 
 <h4>Operations on histograms</h4>
 
-     Many types of operations are supported on histograms or between histograms:
+
+     Many types of operations are supported on histograms or between histograms
 <ul>
-     <li> Addition of an histogram to the current histogram.
-     <li> Additions of two histograms with coefficients and storage into the
-          current histogram.
-     <li> Multiplications and Divisions are supported in the same way as
-          additions.
-     <li> The <tt>Add</tt>, <tt>Divide</tt> and <tt>Multiply</tt>
-          functions also exist to add, divide or multiply an histogram by a
-	  function.
+     <li> Addition of an histogram to the current histogram
+     <li> Additions of two histograms with coefficients and storage into the current
+       histogram
+     <li> Multiplications and Divisions are supported in the same way as additions.
+     <li> The Add, Divide and Multiply functions also exist to add,divide or multiply
+       an histogram by a function.
 </ul>
-     If an histogram has associated error bars (<tt>TH1::Sumw2</tt> has been
-     called), the resulting error bars are also computed assuming independent
-     histograms. In case of divisions, binomial errors are also supported.
-     One can mark a histogram to be an "average" histogram by setting its bit
-     <tt>kIsAverage</tt> via
-<pre>
-        myhist.SetBit(TH1::kIsAverage);
-</pre>
-     When adding (see <tt>TH1::Add</tt>) average histograms, the histograms
-     are averaged and not summed.
-<p>
-     Histograms objects (not pointers <tt>TH1F h1</tt>) can be multiplied by a
-     constant using:
-<pre>
-	h1.Scale(const)
-</pre>
-     A new histogram can be created without changing the original one doing:
-<pre>
-        TH1F h3 = 8*h1;
-</pre>
-     To multiply two histogram objects and put the result in a 3rd one do:
-<pre>
-        TH1F h3 = h1*h2;
-</pre>
-     The same kind of things can be done with pointers to histograms 
-     (<tt>TH1F *h1, *h2</tt>):
-<pre>
-        h1->Scale(const)
-        TH1F h3 = 8*(*h1);
-        TH1F h3 = (*h1)*(*h2);
-</pre>
-    Of course, the <tt>TH1</tt> methods <tt>Add</tt>, <tt>Multiply</tt> and
-    <tt>Divide</tt> can be used instead of the operators.
+     If an histogram has associated error bars (TH1::Sumw2 has been called),
+     the resulting error bars are also computed assuming independent histograms.
+     In case of divisions, Binomial errors are also supported.
+     One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
+       myhist.SetBit(TH1::kIsAverage);
+     When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
+
+
 
 <h4>Fitting histograms</h4>
 
@@ -1199,7 +1173,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //          the first histogram should be unweighted
    //       o "WW" = MC MC comparison (weighted-weighted)
    //       o "NORM" = to be used when one or both of the histograms is scaled
-   //          (unweighted-unweighted)
+   //                  but the histogram originally was unweighted
    //       o by default underflows and overlows are not included:
    //          * "OF" = overflows included
    //          * "UF" = underflows included
@@ -1416,7 +1390,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   (minimal expected frequency equal to one) and the weighted histogram with
    //   500 events (minimal expected frequency equal to 25)
    //Begin_Macro
-   // ../../../tutorials/math/chi2test.C
+   // ../../tutorials/math/chi2test.C
    //End_Macro
    //   Fig 1. An example of comparison of the unweighted histogram with 200 events
    //   and the weighted histogram with 500 events:
@@ -1438,7 +1412,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   frequency equal to one) and the weighted histogram with 500 events (minimal
    //   expected frequency equal to 25)
    //Begin_Macro
-   // ../../../tutorials/math/chi2test.C(17)
+   // ../../tutorials/math/chi2test.C(17)
    //End_Macro
    //   Fig 2. An example of comparison of the unweighted histogram with 217 events
    //   and the weighted histogram with 500 events:
@@ -1521,22 +1495,25 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //        For unweighted unweighted  comparison
    //       igood=1'There is a bin in the 1st histogram with less than 1 event'
    //       igood=2'There is a bin in the 2nd histogram with less than 1 event'
+   //       igood=3'when the conditions for igood=1 and igood=2 are satisfied'
    //        For  unweighted weighted  comparison
    //       igood=1'There is a bin in the 1st histogram with less then 1 event'
-   //       igood=2'There is a bin in the 2nd histogram with less then 10 effective
-   //               number of events'
+   //       igood=2'There is a bin in the 2nd histogram with less then 10 effective number of events'
+   //       igood=3'when the conditions for igood=1 and igood=2 are satisfied'
    //        For  weighted weighted  comparison
    //       igood=1'There is a bin in the 1st  histogram with less then 10 effective
    //        number of events'
    //       igood=2'There is a bin in the 2nd  histogram with less then 10 effective
    //               number of events'
+   //       igood=3'when the conditions for igood=1 and igood=2 are satisfied'
+   //
    //  - chi2 - chisquare of the test
    //  - ndf  - number of degrees of freedom (important, when both histograms have the same
    //         empty bins)
    //  - res -  normalized residuals for further analysis
 
 
-   Int_t i, j, k;
+   Int_t i, j, k = 0;
    Int_t i_start, i_end;
    Int_t j_start, j_end;
    Int_t k_start, k_end;
@@ -1544,6 +1521,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    Double_t bin1, bin2;
    Double_t err1,err2;
    Double_t sum1=0, sum2=0;
+   Double_t sumw1=0, sumw2=0;
+
 
    chi2 = 0;
    ndf = 0;
@@ -1616,26 +1595,46 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    ndf = (i_end - i_start + 1)*(j_end - j_start + 1)*(k_end - k_start + 1) - 1;
 
+   Bool_t comparisonUU = opt.Contains("UU");
+   Bool_t comparisonUW = opt.Contains("UW");
+   Bool_t comparisonWW = opt.Contains("WW");
+   Bool_t scaledHistogram  = opt.Contains("NORM");
+   if (scaledHistogram && !comparisonUU) { 
+      Info("ChistatTestX","NORM option should be used together with UU option. It is ignored");
+   }
+   // look at histo global bin content and effective entries 
+   Stat_t s[kNstat];
+   this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
+   double sumBinContent1 = s[0]; 
+   double effEntries1 = (s[1] ? s[0]*s[0]/s[1] : 0.); 
 
-  //small number of events diagnostics
-   for(i=i_start; i<=i_end; i++) {
-      for (j=j_start; j<=j_end; j++) {
-         for (k=k_start; k<=k_end; k++) {
-            bin1 = this->GetBinContent(i,j,k);
-            bin2 = h2->GetBinContent(i,j,k);
-            if (!opt.Contains("UU") && bin2 <= 0){
-               Error("ChistatTestX","Hist2: zero events in bin (%d,%d,%d)\n", i,j,k);
-               return 0;
-            }
-            if (opt.Contains("WW") && bin1 <= 0){
-               Error("ChistatTestX","Hist1: zero events in bin (%d,%d,%d)\n", i,j,k);
-               return 0;
-            }
-         }
+   h2->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
+   double sumBinContent2 = s[0]; 
+   double effEntries2 = (s[1] ? s[0]*s[0]/s[1] : 0.); 
+      
+   if (!comparisonUU && !comparisonUW && !comparisonWW ) { 
+      // deduce automatically from type of histogram
+      if (TMath::Abs(sumBinContent1 - effEntries1) < 1) { 
+         if ( TMath::Abs(sumBinContent2 - effEntries2) < 1) comparisonUU = true; 
+         else comparisonUW = true; 
+      }
+      else comparisonWW = true; 
+   }
+   // check unweighted histogram 
+   if (comparisonUW) { 
+      if (TMath::Abs(sumBinContent1 - effEntries1) >= 1) { 
+         Warning("ChistatTestX","First Histogram is not unweighted and option UW has been requested");
       }
    }
+   if ( (!scaledHistogram && comparisonUU)   ) { 
+      if ( ( TMath::Abs(sumBinContent1 - effEntries1) >= 1) || (TMath::Abs(sumBinContent2 - effEntries2) >= 1) ) { 
+         Warning("ChistatTestX","Histograms are not both unweighted and option UU has been requested");
+      }
+   }
+
+
    //get number of events in histogramm
-   if (opt.Contains("UU") && opt.Contains("NORM")) {
+   if (comparisonUU && scaledHistogram) {
       for (i=i_start; i<=i_end; i++) {
          for (j=j_start; j<=j_end; j++) {
             for (k=k_start; k<=k_end; k++) {
@@ -1643,18 +1642,27 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                bin2 = h2->GetBinContent(i,j,k);
                err1 = this->GetBinError(i,j,k);
                err2 = h2->GetBinError(i,j,k);
-               if (err1==0) continue;            //otherwise divison by zero
-               if (err2==0) continue;
-               bin1 *= bin1/(err1*err1);
-               bin2 *= bin2/(err2*err2);
-               bin1 += 0.5;
-               bin2 += 0.5;
-               bin1 = Int_t(bin1);
-               bin2 = Int_t(bin2);
-               bin1 = Double_t(bin1);
-               bin2 = Double_t(bin2);
+               if (err1 > 0 ) { 
+                  bin1 *= bin1/(err1*err1);
+                  //avoid rounding errors
+                  bin1 = TMath::Floor(bin1+0.5);
+               }
+               else 
+                  bin1 = 0;
+
+               if (err2 > 0) { 
+                  bin2 *= bin2/(err2*err2);
+                  //avoid rounding errors
+                  bin2 = TMath::Floor(bin2+0.5);
+               }
+               else 
+                  bin2 = 0; 
+
+               // sum contents
                sum1 += bin1;
                sum2 += bin2;
+               sumw1 += err1*err1;
+               sumw2 += err2*err2;
             }
          }
       }
@@ -1664,6 +1672,14 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
             for (k=k_start; k<=k_end; k++) {
                sum1 += this->GetBinContent(i,j,k);
                sum2 += h2->GetBinContent(i,j,k);
+               if ( comparisonWW ) { 
+                  err1 = this->GetBinError(i,j,k);
+                  sumw1 += err1*err1;
+               }
+               if ( comparisonUW || comparisonWW ) {
+                  err2 = h2->GetBinError(i,j,k);
+                  sumw2 += err2*err2;
+               }
             }
          }
       }
@@ -1674,12 +1690,21 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       Error("ChistatTestX","one of the histograms is empty");
       return 0;
    }
+   // check if errors are not zero in case of weighted histograms
+   if ( ( comparisonUW || comparisonWW)  && sumw2 <= 0){
+      Error("ChistatTestX","Hist2 has all errors zero\n", i,j,k);
+      return 0;
+   }
+   if ( comparisonWW  && sumw1 <= 0){
+      Error("ChistatTestX","Hist1 has all errors zero\n", i,j,k);
+      return 0;
+   }
 
    //THE TEST
    Int_t m=0, n=0;
 
    //Experiment - experiment comparison
-   if (opt.Contains("UU")) {
+   if (comparisonUU) {
       Double_t sum = sum1 + sum2;
       Double_t binsum,temp1,temp2,correc;
       for (i=i_start; i<=i_end; i++) {
@@ -1688,21 +1713,29 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                bin1 = this->GetBinContent(i,j,k);
                bin2 = h2->GetBinContent(i,j,k);
 
-               if (bin1 == 0 || bin2 == 0) {
+               if ( (bin1 == 0)  && (bin2 == 0) ) {
                   --ndf;  //no data means one degree of freedom less
                } else {
-                  if (opt.Contains("NORM")) {
+                  if (scaledHistogram) {
+                     // scale bin value to effective bin entries
                      err1 = this->GetBinError(i,j,k);
+                     if (err1 > 0 ) { 
+                        bin1 *= bin1/(err1*err1);
+                        //avoid rounding errors
+                        bin1 = TMath::Floor(bin1+0.5);
+                     }
+                     else 
+                        bin1 = 0;
+
                      err2 = h2->GetBinError(i,j,k);
-                     bin1 *= bin1/(err1*err1);
-                     bin2 *= bin2/(err2*err2);
-                     //avoid rounding errors
-                     bin1 += 0.5;
-                     bin2 += 0.5;
-                     bin1 = Int_t(bin1);
-                     bin2 = Int_t(bin2);
-                     bin1 = Double_t(bin1);
-                     bin2 = Double_t(bin2);
+                     if (err2 > 0) { 
+                        bin2 *= bin2/(err2*err2);
+                        //avoid rounding errors
+                        bin2 = TMath::Floor(bin2+0.5);
+                     }
+                     else 
+                        bin2 = 0; 
+
                   }
 
 
@@ -1710,11 +1743,17 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   temp1 = binsum*sum1/sum;
                   temp2 = binsum*sum2/sum;
 
+//                  if(opt.Contains("P")) printf("bin %d p = %g\t",i,binsum/sum);
+
                   if (res)
                      res[i-i_start] = (bin1-temp1)/TMath::Sqrt(temp1);
 
-                  if (temp1 < 1) m++;
-                  if (temp2 < 1) n++;
+                  if (bin1 < 1) {
+                     m++;
+                  }
+                  if (bin2 < 1) { 
+                     n++;
+                  }
 
                   //Habermann correction for residuals
                   correc = (1-sum1/sum)*(1-binsum/sum);
@@ -1730,12 +1769,13 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       }
 
       chi2 /= sum1*sum2;
+      // flag error only when of the two histogram is zero
       if (m) {
-         igood = 1;
+         igood += 1;
          Info("Chi2TestX","There is bin in Hist1 with less than 1 number of events.\n");
       }
       if (n) {
-         igood = 2;
+         igood += 2;
          Info("Chi2TestX","There is bin in Hist2 with less than 1 number of events.\n");
       }
 
@@ -1745,8 +1785,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    }
 
 
-   //Experiment - MC comparison
-   if (opt.Contains("UW")) {
+   //unweighted - weighted  comparison
+   if ( comparisonUW ) {
       Double_t var1,var2;
       Double_t probb,temp,temp1,temp2;
       for (i=i_start; i<=i_end; i++) {
@@ -1757,11 +1797,28 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                bin2 = h2->GetBinContent(i,j,k);
                err2 = h2->GetBinError(i,j,k);
 
+               // case both histogram have zero biin contents
+               if ( (bin1 == 0) && (bin2 == 0) ) {
+                  --ndf;  //no data means one degree of freedom less
+                  continue;
+               } 
+
+               // case weighted histogram has zero bin content and error 
+               if (bin2 == 0 && err2 == 0) { 
+                  // use as approximated  error from the total sum weight 
+                  //  and sum weight squared
+                  err2 = sum2/sumw2; 
+               }
+
                err2 *= err2;
+
+               if (bin1 < 1)  m++;
+               if (bin2*bin2/err2 < 10) n++;
 
                var1 = sum2*bin2 - sum1*err2;
                var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
-
+               // if bin1 is zero and bin2=1 and sum1=sum2 var1=0 && var2 ==0
+               // approximate by adding +1 to bin1
                while (var1*var1+bin1 == 0 || var1+var2 == 0) {
                   sum1++;
                   bin1++;
@@ -1793,8 +1850,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                temp1 = probb * sum1;
                temp2 = probb * sum2;
 
-               if (temp1 < 1) m++;
-               if (bin2*bin2/err2 < 10) n++;
+//               if(opt.Contains("P")) printf("bin %d p = %g\t",i,probb);
+
 
                temp = bin1 - temp1;
                chi2 += temp*temp/temp1;
@@ -1807,17 +1864,16 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                if (res)
                   res[i-i_start] = temp/TMath::Sqrt(temp2);
 
-               //if (y) this->SetBinContent(i,j,k,bin1-x);
             }
          }
       }
 
       if (m) {
-         igood = 1;
+         igood += 1;
          Info("Chi2TestX","There is bin in Hist1 with less than 1 number of events.\n");
       }
       if (n) {
-         igood = 2;
+         igood += 2;
          Info("Chi2TestX","There is bin in Hist2 with less than 10 effective number of events.\n");
       }
 
@@ -1826,8 +1882,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       return prob;
    }
 
-   //MC - MC comarison
-   if (opt.Contains("WW")) {
+   // weighted - weighted  comparison
+   if (comparisonWW) {
       Double_t temp,temp1,temp2,temp3;
       for (i=i_start; i<=i_end; i++) {
          for (j=j_start; j<=j_end; j++) {
@@ -1839,9 +1895,17 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                err1 *= err1;
                err2 *= err2;
 
+               // case both histogram have zero biin contents
+               if ( (bin1 == 0) && (bin2 == 0) ) {
+                  --ndf;  //no data means one degree of freedom less
+                  continue;
+               } 
+
                temp  = sum1*sum1*err2 + sum2*sum2*err1;
                temp1 = sum2*bin1 - sum1*bin2;
                chi2 += temp1*temp1/temp;
+
+//               if(opt.Contains("P")) printf("bin %d p = %g\t",i, (bin1*sum1/err1 + bin2*sum2/err2)/(sum1*sum1/err1 + sum2*sum2/err2));
 
                temp2 = bin1*sum1*err2 + bin2*sum2*err1;
                temp2 *= sum1/temp;
@@ -1858,11 +1922,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          }
       }
       if (m) {
-         igood = 1;
+         igood += 1;
          Info("Chi2TestX","There is bin in Hist1 with less than 10 effective number of events.\n");
       }
       if (n) {
-         igood = 2;
+         igood += 2;
          Info("Chi2TestX","There is bin in Hist2 with less than 10 effective number of events.\n");
       }
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -2266,15 +2330,8 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
             b1  = h1->GetBinContent(bin);
             b2  = h2->GetBinContent(bin);
-            if (b2) {
-               if (binomial) 
-                  w = b1/b2;    // c1 and c2 are ignored
-               else 
-                  w = c1*b1/(c2*b2);
-            }
-            else 
-               w = 0;
-
+            if (b2) w = c1*b1/(c2*b2);
+            else    w = 0;
             SetBinContent(bin,w);
             fEntries++;
             if (fSumw2.fN) {
@@ -2285,6 +2342,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                if (binomial) {
                   if (b1 != b2) {
                      // in the case of binomial statistics c1 and c2 must be 1 otherwise it does not make sense
+                     w = b1/b2;    // c1 and c2 are ignored
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
                      //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
                      // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 )
@@ -6538,7 +6596,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    //  Statistical test of compatibility in shape between
    //  THIS histogram and h2, using Kolmogorov test.
    //
-   //     Default: Ignore under- and overflow bins in comparison 
+   //     Default: Ignore under- and overflow bins in comparison
    //
    //     option is a character string to specify options
    //         "U" include Underflows in test  (also for 2-dim)
@@ -6560,8 +6618,6 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    //   The returned function value is the probability of test
    //       (much less than one means NOT compatible)
    //
-   //   If one of the histogram has zero errors, it can be treated as a function in the comparison
-   // 
    //  Code adapted by Rene Brun from original HBOOK routine HDIFF
    //
    //  NOTE1
