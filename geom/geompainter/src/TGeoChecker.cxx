@@ -974,7 +974,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
 }
 
 //______________________________________________________________________________
-void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t npoints) const
+void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, Int_t npoints) const
 {
 // Check illegal overlaps for volume VOL within a limit OVLP by sampling npoints
 // inside the volume shape.
