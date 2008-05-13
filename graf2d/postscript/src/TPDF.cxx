@@ -1196,7 +1196,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr(")");
    PrintStr("@");
    PrintStr("/Title (");
-   PrintStr(GetName());
+   if (strlen(GetName())<=80) PrintStr(GetName());
    PrintStr(")");
    PrintStr("@");
    PrintStr("/Keywords (ROOT)");
