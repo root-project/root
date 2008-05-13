@@ -499,12 +499,12 @@ Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
 
    //
    // Create and Recreate are correlated
+   if (create)
+      openOpt |= kXR_new;
    if (recreate) {
       openOpt |= kXR_delete;
       create = kTRUE;
    }
-   if (create)
-      openOpt |= kXR_new;
 
    Bool_t mkpath = (gEnv->GetValue("XNet.Mkpath", 0) == 1) ? kTRUE : kFALSE;
    char *p = (char*)strstr(fUrl.GetOptions(), "mkpath=");
@@ -1014,12 +1014,6 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
       return TNetFile::SysStat(fd, id, size, flags, modtime);
    }
 
-   if (!IsOpen()) {
-      Error("SysStat","The remote file is not open");
-      *size = 0;
-      return 1;
-   }
-
    // Return file stat information. The interface and return value is
    // identical to TSystem::GetPathInfo().
 
@@ -1036,8 +1030,12 @@ Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
          Info("SysStat", "got stats = %ld %lld %ld %ld",
                          *id, *size, *flags, *modtime);
    } else {
-      if (gDebug > 1)
-         Info("SysStat", "could not stat remote file");
+      if (gDebug > 1) {
+         if (!IsOpen())
+            Info("SysStat", "could not stat remote file. File not open.");
+         else
+            Info("SysStat", "could not stat remote file");
+      }
       *id = -1;
       return 1;
    }
