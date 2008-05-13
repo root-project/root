@@ -1,10 +1,10 @@
 
 <br>
 <hr>
-<A NAME="proof"></A>
+<a name="proof"></a>
 <h3>PROOF</h3>
 <ul>
-  <li>A few fixes to run the TProofCondor plug-in:</li>
+  <li>A few fixes to run the TProofCondor plug-in:
   <ul>
     <li>Adapt the signatures of the main constructors of TProofCondor 
 and TProofPEAC
@@ -13,13 +13,13 @@ and TProofPEAC
 TProof-derived plug-in via
 a directive the xrootd config file 'xpd.proofplugin', e.g. 
 'xpd.proofplugin condor:'</li>
-  </ul>
-  <li>Packetizer parameters</li>
+  </ul></li>
+  <li>Packetizer parameters
   <ul>
     <li>The type of "PROOF_MaxSlavesPerNode",
 &nbsp;"PROOF_ForceLocal" and
 &nbsp;"PROOF_PacketAsAFraction" parameters has been changed from Long_t to Int_t.&nbsp;</li>
     <li>The max workers per node can now be also set in the xrootd config file with<br clear="all">
 &nbsp; &nbsp; &nbsp; &nbsp;xpd.putrc&nbsp; Packetizer.MaxWorkersPerNode: &lt;desired number&gt;</li>
-  </ul>
+  </ul></li>
 </ul>

@@ -1,6 +1,6 @@
 <br>
 <hr>
-<A NAME="core"></A>
+<a name="core"></a>
 <h3>Core</h3>
 <ul>
 <li>
@@ -84,9 +84,9 @@ for now) via TClass::GetDirectoryAutoAdd which return a wrapper with the
 signature:<pre>
         void (*)(void *this_obj,TDirectory *where_to_add)
 </pre>
-</li><li>Extend <b><i>#pragma create TClass;</b></i> to namespaces.</li>
+</li><li>Extend <b><i>#pragma create TClass;</i></b> to namespaces.</li>
 <li>Enable autoloading of the cintdlls.</li>
-<li>rlibmap now handles <b><i>#pragma create TClass;</b></i> statements.</li>
+<li>rlibmap now handles <b><i>#pragma create TClass;</i></b> statements.</li>
 </ul>
 <h4>Cont</h4>
 <ul>
@@ -101,7 +101,7 @@ Containers/Iterators by making as few as possible changes, without rewriting
 iterators at all. Now with only two simple lines of code one is able to
 iterate through a container:
 <pre>
-   TIter iter(&list);
+   TIter iter(&amp;list);
    for_each(iter.Begin(), TIter::End(), SEnumFunctor());
 </pre>
 or
