@@ -1421,10 +1421,6 @@ void THtml::CreateListOfClasses(const char* filter)
       TClass *classPtr = TClass::GetClass((const char *) cname, kTRUE);
       if (!classPtr) continue;
 
-      // we cannot document namespaces yet - and TMath is really a class
-      if (IsNamespace(classPtr) && s != "TMath")
-         continue;
-
       TString hdr;
       TString hdrFS;
       TString src;
