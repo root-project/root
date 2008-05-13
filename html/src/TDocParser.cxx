@@ -1787,7 +1787,10 @@ Bool_t TDocParser::ProcessComment()
    if (posComment != kNPOS)
       commentLine.Remove(posComment, 22);
 
-   Strip(commentLine);
+   // don't strip in C comments, do strip if opening:
+   if (!InContext(kComment) || (InContext(kComment) & kCXXComment)
+       || (fLineStripped[0] == '/' && fLineStripped[1] == '*'))
+      Strip(commentLine);
 
    // look for start tag of class description
    if ((fClassDocState == kClassDoc_LookingNothingFound
