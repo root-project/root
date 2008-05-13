@@ -191,7 +191,7 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
    }
 
    if (recreate) {
-      fAOption = "CREATE";
+      fAOption = "RECREATE";
       create = kTRUE;
    }
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -502,20 +502,22 @@ TAlienFile::~TAlienFile()
 //______________________________________________________________________________
 void TAlienFile::Close(Option_t * option)
 {
-   // Close file.
+   if (!IsOpen()) return;
 
-   if (fOption == "READ") {
-      TXNetFile::Close(option);
+   // Close file.
+   TXNetFile::Close(option);
+
+   if (fOption == "READ")
       return;
-   }
+
    // set GCLIENT_EXTRA_ARG environment
    gSystem->Setenv("GCLIENT_EXTRA_ARG", fAuthz.Data());
 
-   Flush();
-
    // commit the envelope
    TString command("commit ");
+   
 
+   if (!GetSize()) Error("Close", "The reported size of the written file is 0");
    command += (Long_t) GetSize();
    command += " ";
    command += fLfn;
@@ -553,7 +555,7 @@ void TAlienFile::Close(Option_t * option)
    }
 
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
-   TXNetFile::Close(option);
+
 }
 
 //______________________________________________________________________________

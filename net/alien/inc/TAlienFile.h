@@ -52,7 +52,7 @@ public:
               const char *authz = 0);
    virtual ~TAlienFile();
 
-   void Close(const Option_t *opt = "");
+   virtual void Close(const Option_t *opt = "");
 
    static TAlienFile *Open(const char *lfn, const Option_t *option = "",
                            const char *title = "", Int_t compress = 1,
