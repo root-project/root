@@ -474,7 +474,7 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
    PrintStr(         " /RC RC 1 add def");
    PrintStr(         " /GC RC 1 add def");
    PrintStr(         " /BC RC 2 add def}");
-   PrintStr(         "{CT RC get 255 div CT GC get 255 div CT BC get 255 div c");
+   PrintStr(         "{CT RC get 255 div CT GC get 255 div CT BC get 255 div setrgbcolor");
    PrintStr(         " DrawCell");
    PrintStr(         " /RC RC 3 add def");
    PrintStr(         " /GC GC 3 add def");
