@@ -725,8 +725,8 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
                dout = (znew-pt[2])*invdir;
             }
             // protection for the first segment            
-            Double_t dinp = (din>snext-TGeoShape::Tolerance())?din:TGeoShape::Big();
-            Double_t doutp = (dout>snext-TGeoShape::Tolerance())?dout:TGeoShape::Big();
+            Double_t dinp = (din>TMath::Abs(snext-TGeoShape::Tolerance()))?din:TGeoShape::Big();
+            Double_t doutp = (dout>TMath::Abs(snext-TGeoShape::Tolerance()))?dout:TGeoShape::Big();
             distr = TMath::Min(dinp, doutp);
             if (iphcrt==iphstart && ipl==iplstart) {
                if (rproj<rpgin+TGeoShape::Tolerance()) {
