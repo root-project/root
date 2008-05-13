@@ -531,7 +531,7 @@ void TGeoUnion::SetPoints(Double_t * /*points*/) const
 }
 
 //-----------------------------------------------------------------------------
-Double_t TGeoUnion::Safety(Double_t *point, Bool_t) const
+Double_t TGeoUnion::Safety(Double_t *point, Bool_t in) const
 {
 // Compute safety distance for a union node;
    Double_t local1[3], local2[3];
@@ -539,6 +539,8 @@ Double_t TGeoUnion::Safety(Double_t *point, Bool_t) const
    Bool_t in1 = fLeft->Contains(local1);
    fRightMat->MasterToLocal(point,local2);
    Bool_t in2 = fRight->Contains(local2);
+   Bool_t intrue = in1 | in2;
+   if (intrue^in) return 0.0;
    Double_t saf1 = fLeft->Safety(local1, in1);
    Double_t saf2 = fRight->Safety(local2, in2);
    if (in1 && in2) return TMath::Min(saf1, saf2);
@@ -812,7 +814,7 @@ Int_t TGeoSubtraction::GetNpoints() const
    return 0;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t) const
+Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t in) const
 {
 // Compute safety distance for a union node;
    Double_t local1[3], local2[3];
@@ -820,6 +822,8 @@ Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t) const
    Bool_t in1 = fLeft->Contains(local1);
    fRightMat->MasterToLocal(point,local2);
    Bool_t in2 = fRight->Contains(local2);
+   Bool_t intrue = in1 & (~in2);
+   if (in^intrue) return 0.0;
    Double_t saf1 = fLeft->Safety(local1, in1);
    Double_t saf2 = fRight->Safety(local2, in2);
    if (in1 && in2) return saf2;
@@ -1174,7 +1178,7 @@ Int_t TGeoIntersection::GetNpoints() const
    return 0;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoIntersection::Safety(Double_t *point, Bool_t) const
+Double_t TGeoIntersection::Safety(Double_t *point, Bool_t in) const
 {
 // Compute safety distance for a union node;
    Double_t local1[3], local2[3];
@@ -1182,6 +1186,8 @@ Double_t TGeoIntersection::Safety(Double_t *point, Bool_t) const
    Bool_t in1 = fLeft->Contains(local1);
    fRightMat->MasterToLocal(point,local2);
    Bool_t in2 = fRight->Contains(local2);
+   Bool_t intrue = in1 & in2;
+   if (in^intrue) return 0.0;
    Double_t saf1 = fLeft->Safety(local1, in1);
    Double_t saf2 = fRight->Safety(local2, in2);
    if (in1 && in2) return TMath::Min(saf1, saf2);

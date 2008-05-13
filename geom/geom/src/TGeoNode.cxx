@@ -211,10 +211,31 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", fVolume->GetName(),ovlp);
    }
    if (sampling) {
-      Info("CheckOverlaps", "Checking overlaps by sampling can only be done per volume.");
-      Info("=============", "Volume %s will be sampled", fVolume->GetName());
-      fVolume->CheckOverlaps(ovlp, option);
+      Info("CheckOverlaps", "Checking overlaps by sampling <%s> for %s and daughters", option, fVolume->GetName());
+      Info("CheckOverlaps", "=== NOTE: Extrusions NOT checked with sampling option ! ===");
+      fVolume->CheckOverlaps(ovlp,option);
+      TGeoIterator next(fVolume);
+      TGeoNode *node;
+      TString path;
+      while ((node=next())) {
+         next.GetPath(path);
+         printf("Checking: %s\n", path.Data());
+         if (!node->GetVolume()->IsSelected()) {
+            node->GetVolume()->SelectVolume(kFALSE);
+            node->GetVolume()->CheckOverlaps(ovlp,option);
+         }   
+      }   
+      fVolume->SelectVolume(kTRUE);
       geom->SetCheckingOverlaps(kFALSE);
+      geom->SortOverlaps();
+      TObjArray *overlaps = geom->GetListOfOverlaps();
+      Int_t novlps = overlaps->GetEntriesFast();     
+      TNamed *obj;
+      for (Int_t i=0; i<novlps; i++) {
+         obj = (TNamed*)overlaps->At(i);
+         obj->SetName(Form("ov%05d",i));
+      }
+      Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
       return;
    }   
          

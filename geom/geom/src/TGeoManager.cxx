@@ -855,6 +855,15 @@ Int_t TGeoManager::AddTrack(Int_t id, Int_t pdgcode, TObject *particle)
 }
 
 //_____________________________________________________________________________
+Int_t TGeoManager::AddTrack(TVirtualGeoTrack *track)
+{
+// Add a track to the list of tracks
+   Int_t index = fNtracks;
+   fTracks->AddAtAndExpand(track,fNtracks++);
+   return index;
+}
+
+//_____________________________________________________________________________
 TVirtualGeoTrack *TGeoManager::MakeTrack(Int_t id, Int_t pdgcode, TObject *particle)
 {
 // Makes a primary track but do not attach it to the list of tracks. The track

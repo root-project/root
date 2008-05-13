@@ -978,9 +978,14 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
 {
 // Check illegal overlaps for volume VOL within a limit OVLP by sampling npoints
 // inside the volume shape.
-   if (vol->GetFinder()) return;
    Int_t nd = vol->GetNdaughters();
    if (nd<2) return;
+   TGeoVoxelFinder *voxels = vol->GetVoxels();
+   if (!voxels) return;
+   if (voxels->NeedRebuild()) {
+      voxels->Voxelize();
+      vol->FindOverlaps();
+   }   
    TGeoBBox *box = (TGeoBBox*)vol->GetShape();
    TGeoShape *shape;
    TGeoNode *node;
@@ -989,17 +994,18 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
    Double_t dz = box->GetDZ();
    Double_t pt[3];
    Double_t local[3];
+   Int_t *check_list = 0;
+   Int_t ncheck = 0;
    const Double_t *orig = box->GetOrigin();
    Int_t ipoint = 0;
    Int_t itry = 0;
    Int_t iovlp = 0;
-   Int_t id=0, id1=0;
+   Int_t id=0, id0=0, id1=0;
    Bool_t in, incrt;
    Double_t safe;
-   TPolyMarker3D *marker = 0;
-   Bool_t *flags = 0;
+   TGeoOverlap **flags = 0;
    Int_t novlps = 0;
-   gRandom = new TRandom3();
+   if (!gRandom) new TRandom3();
    while (ipoint < npoints) {
    // Shoot randomly in the bounding box.
       pt[0] = orig[0] - dx + 2.*dx*gRandom->Rndm();
@@ -1016,8 +1022,11 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
       // Check if the point is inside one or more daughters
       in = kFALSE;
       ipoint++;
-      for (id=0; id<nd; id++) {
-         node  = vol->GetNode(id);
+      check_list = voxels->GetCheckList(pt, ncheck);
+      if (!check_list || ncheck<2) continue;
+      for (id=0; id<ncheck; id++) {
+         id0 = check_list[id];
+         node  = vol->GetNode(id0);
          // Ignore MANY's
          if (node->IsOverlapping()) continue;
          node->GetMatrix()->MasterToLocal(pt,local);
@@ -1026,49 +1035,36 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
          if (!incrt) continue;
          if (!in) {
             in = kTRUE;
-            id1 = id;
+            id1 = id0;
             continue;
          }
          // The point is inside 2 or more daughters, check safety
          safe = shape->Safety(local, kTRUE);
-         if (safe < ovlp) continue;
+//         if (safe < ovlp) continue;
          // We really have found an overlap -> store the point in a container
          iovlp++;
-         if (!marker) {
-            marker = new TPolyMarker3D();
-            marker->SetMarkerColor(kRed);
-         }   
-         marker->SetNextPoint(pt[0], pt[1], pt[2]);
          if (!novlps) {
-            flags = new Bool_t[nd*nd];
-            memset(flags, 0, nd*nd*sizeof(Bool_t));
+            flags = new TGeoOverlap*[nd*nd];
+            memset(flags, 0, nd*nd*sizeof(TGeoOverlap*));
          }
-         if (!flags[nd*id1+id]) {
-            flags[nd*id1+id] = kTRUE;
+         TGeoOverlap *nodeovlp = flags[nd*id1+id0];
+         if (!nodeovlp) {
             novlps++;
-            TGeoOverlap *nodeovlp = new TGeoOverlap(Form("Volume %s: node %s overlapping %s", 
-               vol->GetName(), vol->GetNode(id1)->GetName(), vol->GetNode(id)->GetName()),
-               vol->GetNode(id1)->GetVolume(),vol->GetNode(id)->GetVolume(),
-               vol->GetNode(id1)->GetMatrix(),vol->GetNode(id)->GetMatrix(), kTRUE, safe);
+            nodeovlp = new TGeoOverlap(Form("Volume %s: node %s overlapping %s", 
+               vol->GetName(), vol->GetNode(id1)->GetName(), vol->GetNode(id0)->GetName()),
+               vol->GetNode(id1)->GetVolume(),vol->GetNode(id0)->GetVolume(),
+               vol->GetNode(id1)->GetMatrix(),vol->GetNode(id0)->GetMatrix(), kTRUE, safe);
+            flags[nd*id1+id0] = nodeovlp;
             fGeoManager->AddOverlap(nodeovlp);
-         }      
+         } 
+         // Max 100 points per marker
+         if (nodeovlp->GetPolyMarker()->GetN()<100) nodeovlp->SetNextPoint(pt[0],pt[1],pt[2]);
+         if (nodeovlp->GetOverlap()<safe) nodeovlp->SetOverlap(safe);
       }
    }
 
    if (flags) delete [] flags;
-   if (!novlps) {
-//      Info("CheckOverlapsBySampling", "No overlaps found within %g cm for daughters of %s",
-//           ovlp, vol->GetName());
-      return;
-   }   
-   // Draw the volume.
-   vol->SetVisContainers();
-//   fGeoManager->SetVisLevel(1);
-//   fGeoManager->SetTopVisible();
-   vol->Draw();
-   marker->Draw("SAME");
-   gPad->Modified();
-   gPad->Update();
+   if (!novlps) return;
    Double_t capacity = vol->GetShape()->Capacity();
    capacity *= Double_t(iovlp)/Double_t(npoints);
    Double_t err = 1./TMath::Sqrt(Double_t(iovlp));

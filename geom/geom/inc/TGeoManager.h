@@ -141,6 +141,7 @@ public:
    Int_t                  AddTransformation(const TGeoMatrix *matrix);
    Int_t                  AddShape(const TGeoShape *shape);
    Int_t                  AddTrack(Int_t id, Int_t pdgcode, TObject *particle=0);
+   Int_t                  AddTrack(TVirtualGeoTrack *track);
    Int_t                  AddVolume(TGeoVolume *volume);
    Int_t                  AddNavigator(TGeoNavigator *navigator);
    void                   ClearOverlaps();
