@@ -231,7 +231,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       TObjArray *overlaps = geom->GetListOfOverlaps();
       Int_t novlps = overlaps->GetEntriesFast();     
       TNamed *obj;
-      for (Int_t i=0; i<novlps; i++) {
+      for (i=0; i<novlps; i++) {
          obj = (TNamed*)overlaps->At(i);
          obj->SetName(Form("ov%05d",i));
       }
