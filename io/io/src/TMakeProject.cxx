@@ -235,6 +235,70 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
 }
 
 //______________________________________________________________________________
+UInt_t TMakeProject::GenerateEmptyNestedClass(FILE *fp, const char *topclass, const char *clname)
+{
+   // Look at clname and generate any 'empty' nested classes that might be used
+   // as template parameter.
+
+   UInt_t tlen = strlen(topclass);
+   UInt_t len = strlen(clname);
+   UInt_t nest = 0;
+   UInt_t last = 0;
+
+   for (UInt_t i = 0; i < len; ++i) {
+      switch (clname[i]) {
+            case '<':
+               ++nest;
+               if (nest == 1) last = i + 1;
+               break;
+            case '>':
+               --nest; /* intentional fall throught to the next case */
+            case ',':
+               if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
+                  TString incName(clname + last, i - last);
+                  incName = TClassEdit::ShortType(incName.Data(), 1);
+                  if (clname[i] == '>' && nest == 1) incName.Append(">");
+                  Int_t stlType;
+                  if (isdigit(incName[0])) {
+                     // Not a class name, nothing to do.
+                  } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
+                     TMakeProject::GenerateEmptyNestedClass( fp, topclass, incName );
+                  } else if (TClassEdit::IsStdClass(incName)) {
+                     // Do nothing.
+                  } else {
+                     TClass *cl = gROOT->GetClass(incName);
+                     if (cl) {
+                        // We have a cl (and hence a streamerInfo and hence we are not empty,
+                        // so we have nothing to do.
+                        //if (cl->GetClassInfo()) {
+                        //} else {
+                        //}
+                     } else if (incName.Length() && incName[0] != ' ' && gROOT->GetType(incName) == 0) {
+                        if (strchr(incName,'<')) {
+                           TMakeProject::GenerateEmptyNestedClass( fp, topclass, incName );
+                        }
+                        if (strncmp(topclass,incName,tlen)==0 && incName[(Ssiz_t)tlen+1]==':' && strchr(incName.Data()+tlen+2,':')==0) {
+                           Bool_t istemplate = kFALSE;
+                           if (istemplate) {
+                              fprintf(fp, "   class %s", incName.Data()+tlen+3);
+                              fprintf(fp, " {\n");
+                              fprintf(fp, "public:\n");
+                              fprintf(fp, "operator int() { return 0; };\n");
+                              fprintf(fp, "};\n");
+                           } else {
+                              fprintf(fp, "   enum %s { kDefault_%s };\n", incName.Data()+tlen+2, incName.Data()+tlen+2);
+                           }
+                        }
+                     }
+                  }
+                  last = i + 1;
+               }
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, char *inclist, Bool_t implementEmptyClass)
 {
    // Insert a (complete) forward declaration for the class 'clname'

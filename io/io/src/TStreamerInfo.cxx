@@ -1803,9 +1803,19 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       }
    }
 
-   // Generate data members.
    fprintf(fp,"\npublic:\n");
 
+   // Now checks if any of the parameter of data member which are of templated type
+   // are nested __and__ not in the list of subclasses (hence empty).
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      const char *eclname = element->GetTypeName();
+      if (strchr(eclname,'<')==0) continue;
+
+      TMakeProject::GenerateEmptyNestedClass(fp, GetName(), eclname);
+   }
+
+   // Generate data members.
    char *line = new char[kMaxLen];
    char name[128];
    char cdim[8];
