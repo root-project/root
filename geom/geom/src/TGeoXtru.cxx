@@ -656,6 +656,7 @@ void TGeoXtru::GetPlaneNormal(const Double_t *vert, Double_t *norm) const
    cross += norm[1]*norm[1];
    norm[2] = v1[0]*v2[1]-v1[1]*v2[0];
    cross += norm[2]*norm[2];
+   if (cross < TGeoShape::Tolerance()) return;
    cross = 1./TMath::Sqrt(cross);
    for (Int_t i=0; i<3; i++) norm[i] *= cross;
 }   
