@@ -301,7 +301,8 @@ void TView3D::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int
    //            IZ1     - 1st point of Z-axis
    //            IZ2     - 2nd point of Z-axis
    //
-   /*                8                        6
+   /*
+                     8                        6
                     / \                      /|\
                  5 /   \ 7                5 / | \ 7
                   |\   /|                  |  |  |
@@ -438,17 +439,17 @@ void TView3D::DefinePerspectiveView()
    //      nper[16] - normalizing transformation
    // compute tr+rot to get COV in origin, view vector parallel to -Z axis, up
    // vector parallel to Y.
-   //
-   //                      ^Yv   UP ^  proj. plane
-   //                     |        |   /|
-   //                    |        |  /  |
-   //                   |   dproj  /  x--- center of window (COW)
-   //              COV |----------|--x--|------------> Zv
-   //                           /           | VRP'z
-   //                    /   --->      |  /
-   //             /     VPN       |/
-   //            Xv
-   //
+   /*
+                         ^Yv   UP ^  proj. plane
+                        |        |   /|
+                       |        |  /  |
+                      |   dproj  /  x--- center of window (COW)
+                 COV |----------|--x--|------------> Zv
+                              /           | VRP'z
+                       /   --->      |  /
+                /     VPN       |/
+               Xv
+   */
    //   1 - translate COP to origin of MARS : Tper = T(-copx, -copy, -copz)
    //   2 - rotate VPN : R = Rz(-psi)*Rx(-theta)*Rz(-phi) (inverse Euler)
    //   3 - left-handed screen reference to right-handed one of MARS : Trl
@@ -987,15 +988,15 @@ Int_t TView3D::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio
    // Return distance to axis from point px,py.
    //
    //  Algorithm:
-   //
-   //    A(x1,y1)         P                             B(x2,y2)
-   //    ------------------------------------------------
-   //                     I
-   //                     I
-   //                     I
-   //                     I
-   //                    M(x,y)
-   //
+   /*
+       A(x1,y1)         P                             B(x2,y2)
+       ------------------------------------------------ 
+                        I
+                        I
+                        I
+                        I
+                       M(x,y)
+   */
    //  Let us call  a = distance AM     A=a**2
    //               b = distance BM     B=b**2
    //               c = distance AB     C=c**2
@@ -1321,19 +1322,20 @@ void TView3D::SetOutlineToCube()
    //      x = fRmin[0]        X = fRmax[0]
    //      y = fRmin[1]        Y = fRmax[1]
    //      z = fRmin[2]        Z = fRmax[2]
-   //
-   //
-   //            (x,Y,Z) +---------+ (X,Y,Z)
-   //                   /         /|
-   //                  /         / |
-   //                 /         /  |
-   //        (x,y,Z) +---------+   |
-   //                |         |   + (X,Y,z)
-   //                |         |  /
-   //                |         | /
-   //                |         |/
-   //                +---------+
-   //             (x,y,z)   (X,y,z)
+   /*
+   
+               (x,Y,Z) +---------+ (X,Y,Z)
+                      /         /|
+                     /         / |
+                    /         /  |
+           (x,y,Z) +---------+   |
+                   |         |   + (X,Y,z)
+                   |         |  /
+                   |         | /
+                   |         |/
+                   +---------+
+                (x,y,z)   (X,y,z)
+   */
 
    if (!fOutline) {
       fDefaultOutline = kTRUE;
