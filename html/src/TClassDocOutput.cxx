@@ -132,7 +132,10 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
                 << gSystem->BaseName(declFile)
                 << "\">header</a> to check for available constructors.</b><br />" << endl;
 
-   for (Int_t access = TDocParser::kPublic; access >= 0 && !fHtml->IsNamespace(fCurrentClass); --access) {
+   Int_t minAccess = 0;
+   if (fHtml->IsNamespace(fCurrentClass))
+      minAccess = TDocParser::kPublic;
+   for (Int_t access = TDocParser::kPublic; access >= minAccess; --access) {
 
       const TList* methods = fParser->GetMethods((TDocParser::EAccess)access);
       if (methods->GetEntries() == 0)
