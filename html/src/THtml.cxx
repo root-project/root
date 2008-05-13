@@ -338,8 +338,13 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
                                           "math/minuit2/", "math/smatrix/"};
       for (unsigned int i = 0; i < sizeof(vetoClasses) / sizeof(char*); ++i) {
          if (clfile.Contains(vetoClasses[i])) {
-            out_filename = "";
-            return false;
+            // of course there are exceptions from the exceptions:
+            // TComplex and TRandom, TRandom1,...
+            if (strcmp(cl->GetName(), "TComplex")
+                && strncmp(cl->GetName(), "TRandom", 7)) {
+               out_filename = "";
+               return false;
+            } else break;
          }
       }
    }
