@@ -4355,8 +4355,9 @@ void TGWin32::MapRaised(Window_t id)
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    gdk_window_show((GdkWindow *)id);
    if (GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_TEMP) {
-      ::SetForegroundWindow(window);
       ::BringWindowToTop(window);
+      if (GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_CHILD)
+         ::SetForegroundWindow(window);
    }
 
    if (hwnd == gConsoleWindow) {
@@ -4413,7 +4414,8 @@ void TGWin32::RaiseWindow(Window_t id)
    }
    else {
       ::BringWindowToTop(window);
-      ::SetForegroundWindow(window);
+      if (GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_CHILD)
+         ::SetForegroundWindow(window);
    }
 }
 
