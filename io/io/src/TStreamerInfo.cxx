@@ -1967,7 +1967,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
       ninc += TMakeProject::GenerateIncludeForTemplate(fp, clname, inclist, kFALSE);
    }
 
-   char name[128];
+   char name[1024];
    char cdim[8];
    Int_t ltype = 10;
    Int_t ldata = 10;
