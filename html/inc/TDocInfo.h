@@ -59,7 +59,7 @@ public:
 
            void            SetSelected(Bool_t sel = kTRUE) { fSelected = sel; }
            Bool_t          IsSelected() const { return fSelected; }
-           Bool_t          HaveSource() const { return fImplFileSysName.Length(); }
+           Bool_t          HaveSource() const { return fDeclFileSysName.Length(); }
    
            void            SetHtmlFileName(const char* name) { fHtmlFileName = name; }
            void            SetDeclFileName(const char* name) { fDeclFileName = name; }

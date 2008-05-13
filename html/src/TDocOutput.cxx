@@ -23,6 +23,7 @@
 #include "TMethod.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TUrl.h"
 #include "TVirtualMutex.h"
 #include <vector>
 #include <list>
@@ -1840,11 +1841,12 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char *dir,
 //______________________________________________________________________________
 void TDocOutput::WriteModuleLinks(std::ostream& out)
 {
-   // Create a dov containing links to all topmost modules
+   // Create a div containing links to all topmost modules
 
    if (fHtml->GetListOfModules()->GetSize()) {
       out << "<div id=\"indxModules\"><h4>Modules</h4>" << endl;
       // find index chars
+      fHtml->SortListOfModules();
       TIter iModule(fHtml->GetListOfModules());
       TModuleDocInfo* module = 0;
       while ((module = (TModuleDocInfo*) iModule())) {
@@ -1864,13 +1866,14 @@ void TDocOutput::WriteModuleLinks(std::ostream& out)
 //______________________________________________________________________________
 void TDocOutput::WriteModuleLinks(std::ostream& out, TModuleDocInfo* super)
 {
-   // Create a dov containing links to all modules
+   // Create a div containing links to all modules
 
    if (super->GetSub().GetSize()) {
       TString superName(super->GetName());
       superName.ToUpper();
       out << "<div id=\"indxModules\"><h4>" << superName << " Modules</h4>" << endl;
       // find index chars
+      super->GetSub().Sort();
       TIter iModule(&super->GetSub());
       TModuleDocInfo* module = 0;
       while ((module = (TModuleDocInfo*) iModule())) {
@@ -1903,18 +1906,24 @@ void TDocOutput::WriteSearch(std::ostream& out)
       return;
 
    if (searchCmd.Length()) {
+      TUrl url(searchCmd);
+      TString serverName(url.GetHost());
+      if (serverName.Length()) {
+         serverName.Prepend(" title=\"");
+         serverName += "\" ";
+      }
       // create search input
       out << "<script type=\"text/javascript\">" << endl
-         << "function onSearch() {" << endl
-         << "var s='" << searchCmd <<"';" << endl
-         << "var ref=String(document.location.href).replace(/https?:\\/\\//,'').replace(/\\/[^\\/]*$/,'').replace(/\\//g,'%2F');" << endl
-         << "window.location.href=s.replace(/%u/ig,ref).replace(/%s/ig,escape(document.searchform.t.value));" << endl
-         << "return false;}" << endl
-         << "</script>" << endl
-         << "<a class=\"descrheadentry\"> </a>" << endl
-         << "<form id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\" >" << endl
-         << "<input name=\"t\" value=\"Search documentation...\" onfocus=\"if (document.searchform.t.value==' Search documentation...        ') document.searchform.t.value='';\"></input></form>" << endl
-         << "<a id=\"searchlink\" href=\"javascript:onSearch();\" onclick=\"return onSearch()\">Search</a>" << endl;
+          << "function onSearch() {" << endl
+          << "var s='" << searchCmd <<"';" << endl
+          << "var ref=String(document.location.href).replace(/https?:\\/\\//,'').replace(/\\/[^\\/]*$/,'').replace(/\\//g,'%2F');" << endl
+          << "window.location.href=s.replace(/%u/ig,ref).replace(/%s/ig,escape(document.searchform.t.value));" << endl
+          << "return false;}" << endl
+          << "</script>" << endl
+          << "<a class=\"descrheadentry\"> </a>" << endl
+          << "<form id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\" >" << endl
+          << "<input name=\"t\" size=\"30\" value=\"Search documentation...\" onfocus=\"if (document.searchform.t.value=='Search documentation...') document.searchform.t.value='';\"></input></form>" << endl
+          << "<a id=\"searchlink\" " << serverName << " href=\"javascript:onSearch();\" onclick=\"return onSearch()\">Search</a>" << endl;
    } else if (searchEngine.Length())
       // create link to search engine page
       out << "<a class=\"descrheadentry\" href=\"" << searchEngine

@@ -295,6 +295,7 @@ public:
    virtual void        GetHtmlFileName(TClass *classPtr, TString& filename) const;
    virtual const char* GetHtmlFileName(const char* classname) const;
    TList*              GetLibraryDependencies() { return &fDocEntityInfo.fLibDeps; }
+   void                SortListOfModules() { fDocEntityInfo.fModules.Sort(); }
    const TList*        GetListOfModules() const { return &fDocEntityInfo.fModules; }
    const TList*        GetListOfClasses() const { return &fDocEntityInfo.fClasses; }
    TFileSysDB*         GetLocalFiles() const { if (!fLocalFiles) SetLocalFiles(); return fLocalFiles; }

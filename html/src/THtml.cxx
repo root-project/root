@@ -328,6 +328,23 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl, TString& o
       }
    }
 
+   if (clfile.Length() && !decl) {
+      // Do not return the source file for these packages, even though we can find them.
+      // THtml needs to have the class description in the source file if it finds the
+      // source file, and these classes have their class descriptions in the header files.
+      // THtml needs to be improved to collect all of a class' documentation before writing
+      // it out, so it can take the class doc from the header even though a source exists.
+      static const char* vetoClasses[] = {"math/mathcore/", "math/mathmore/", "math/genvector/", 
+                                          "math/minuit2/", "math/smatrix/"};
+      for (unsigned int i = 0; i < sizeof(vetoClasses) / sizeof(char*); ++i) {
+         if (clfile.Contains(vetoClasses[i])) {
+            out_filename = "";
+            return false;
+         }
+      }
+   }
+
+
    if (!clfile.Length()) {
       // determine possible decl file name from class + scope name:
       // A::B::C::myclass will result in possible file name myclass.h
@@ -457,9 +474,9 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
       // just return the full path.
       // If we have matched any include path then this ROOT-only
       // algorithm is skipped!
-      hdr = strstr(hdr, "/inc/");
-      if (!hdr) return true;
-      hdr += 5;
+      Ssiz_t posInc = hdr.Index("/inc/");
+      if (!posInc == kNPOS) return true;
+      hdr.Remove(0, posInc + 5);
       out_dir = hdr;
 
       // TMVA special treatment:
@@ -1248,8 +1265,8 @@ Bool_t THtml::HaveDot()
    // Check whether dot is available in $PATH or in the directory set 
    // by SetDotPath()
 
-   if (fPathInfo.fFoundDot != -1) 
-      return (Bool_t)fPathInfo.fFoundDot;
+   if (fPathInfo.fFoundDot != TPathInfo::kDotUnknown) 
+      return (fPathInfo.fFoundDot == TPathInfo::kDotFound);
 
    R__LOCKGUARD(GetMakeClassMutex());
 
@@ -1388,7 +1405,7 @@ void THtml::CreateListOfClasses(const char* filter)
    gClassTable->Init();
 
    TString reg = filter;
-   TRegexp re(reg, kTRUE);
+   TPMERegexp re(reg);
 
    for (Int_t i = 0; i < totalNumberOfClasses; i++) {
 
@@ -1457,7 +1474,7 @@ void THtml::CreateListOfClasses(const char* filter)
          cdi->SetHtmlFileName(htmlfilename);
       }
 
-      cdi->SetSelected(!(filter && filter[0] && strcmp(filter,"*") && s.Index(re) == kNPOS));
+      cdi->SetSelected(!(filter && filter[0] && strcmp(filter,"*") && !re.Match(s)));
 
       TString modulename;
       GetModuleDefinition().GetModule(classPtr, modulename);

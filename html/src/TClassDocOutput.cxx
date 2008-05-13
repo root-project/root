@@ -1461,7 +1461,7 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
    const TString& viewCVSLink = GetHtml()->GetViewCVS();
    Bool_t mustReplace = viewCVSLink.Contains("%f");
    if (viewCVSLink.Length()) {
-      if (headerFileName) {
+      if (headerFileName.Length()) {
          TString link(viewCVSLink);
          TString sHeader(headerFileName);
          if (GetHtml()->GetProductName() && !strcmp(GetHtml()->GetProductName(), "ROOT")
@@ -1493,7 +1493,7 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
          else link += sHeader;
          classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewCVS header</a> ";
       }
-      if (sourceFileName) {
+      if (sourceFileName.Length()) {
          TString link(viewCVSLink);
          if (mustReplace) link.ReplaceAll("%f", sourceFileName);
          else link += sourceFileName;
