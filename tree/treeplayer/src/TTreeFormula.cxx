@@ -3784,7 +3784,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                      if (TMath::IsNaN(tab[argloc])) {
                         // TString would add 'nan' this is not what we want
                         // so let's do somethign else
-                        args += "(double)(0x8000000000000)";
+                        args += "TMath::Sqrt(-1)";
                      } else {
                         args += tab[argloc];
                      }
