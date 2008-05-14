@@ -480,7 +480,7 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
       // If we have matched any include path then this ROOT-only
       // algorithm is skipped!
       Ssiz_t posInc = hdr.Index("/inc/");
-      if (!posInc == kNPOS) return true;
+      if (posInc == kNPOS) return true;
       hdr.Remove(0, posInc + 5);
       out_dir = hdr;
 
