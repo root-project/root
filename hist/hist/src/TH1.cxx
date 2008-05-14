@@ -1513,7 +1513,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //  - res -  normalized residuals for further analysis
 
 
-   Int_t i, j, k = 0;
+   Int_t i, j=0, k = 0;
    Int_t i_start, i_end;
    Int_t j_start, j_end;
    Int_t k_start, k_end;
