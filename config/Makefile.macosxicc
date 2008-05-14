@@ -109,6 +109,10 @@ F77LIBS      += -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
 endif
 
+ifneq ($(F77),)
+F77LD        := $(F77)
+endif
+
 # Precompiled headers:
 PCHSUPPORTED := $(ENABLEPCH)
 ifeq ($(PCHSUPPORTED),yes)
