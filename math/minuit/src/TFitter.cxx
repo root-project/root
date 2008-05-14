@@ -748,8 +748,9 @@ void TFitter::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
       if (fu < 1.e-9) fu = 1.e-9;
       if (fitOption.Like == 1) {
          icu  = Int_t(cu);
-         fsub = -fu +icu*TMath::Log(fu);
-         fobs = GetSumLog(icu);
+         fsub = -fu +cu*TMath::Log(fu);
+         if (icu <10000) fobs = GetSumLog(icu);
+         else            fobs = TMath::LnGamma(cu+1);
       } else {
          fsub = -fu +cu*TMath::Log(fu);
          fobs = TMath::LnGamma(cu+1);
@@ -820,8 +821,9 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
       if (fu < 1.e-9) fu = 1.e-9;
       if (fitOption.Like == 1) {
          icu  = Int_t(cu);
-         fsub = -fu +icu*TMath::Log(fu);
-         fobs = GetSumLog(icu);
+         fsub = -fu +cu*TMath::Log(fu);
+         if (icu <10000) fobs = GetSumLog(icu);
+         else            fobs = TMath::LnGamma(cu+1);
       } else {
          fsub = -fu +cu*TMath::Log(fu);
          fobs = TMath::LnGamma(cu+1);
