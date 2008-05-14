@@ -35,6 +35,7 @@
 #include "TError.h"
 #include "TFileCollection.h"
 #include "TFileInfo.h"
+#include <cstdlib>
 
 ClassImp(TAlienCollection)
 

@@ -28,6 +28,7 @@
 #include "TUrl.h"
 #include "TFileInfo.h"
 #include "TEntryList.h"
+#include <cstdlib>
 
 
 ClassImp(TAlienResult)

@@ -43,6 +43,7 @@
 #include "TProcessUUID.h"
 #include "TUrl.h"
 #include "TError.h"
+#include <cstdlib>
 
 ClassImp(TAlienFile)
 
