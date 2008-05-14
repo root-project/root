@@ -1931,6 +1931,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
    Int_t   drive, curdrive;
    UInt_t  type;
    TString sDrive, sType;
+   char    curdir[_MAX_PATH];
    char    szFs[32];
 
    if (!opt || !strlen(opt)) {
@@ -1971,6 +1972,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       drives->Add(new TNamed(sDrive.Data(), sType.Data()));
    }
    else if (strstr(opt, "all")) {
+      _getcwd(curdir, _MAX_PATH);
       // If we can switch to the drive, it exists
       // but skip floppy drives...
       UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS); 
@@ -2008,6 +2010,8 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       ::SetErrorMode(nOldErrorMode);
       // Restore original drive
       _chdrive( curdrive );
+      if (curdir && strlen(curdir))
+         _chdir(curdir);
    }
    return drives;
 }
