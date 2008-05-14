@@ -54,7 +54,7 @@ The following macro gives an example:
 End_Html
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","PolyLine3D & PolyMarker3D Window",200,10,500,500);
+   cV3D = new TCanvas("cV3D","PolyLine3D & PolyMarker3D Window",200,10,500,500);
 
    // Creating a view
    TView3D *view = TView::CreateView(1);
