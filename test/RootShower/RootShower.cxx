@@ -686,7 +686,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                     case M_FILE_HTML:
                          {
                              THtml html;
-                             html.SetSourceDir(gProgPath);
+                             html.SetInputDir(gProgPath);
                              html.MakeClass("MyParticle");
                              html.MakeClass("MyDetector");
                              html.MakeClass("EventHeader");
