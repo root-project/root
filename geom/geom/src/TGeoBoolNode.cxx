@@ -822,7 +822,7 @@ Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t in) const
    Bool_t in1 = fLeft->Contains(local1);
    fRightMat->MasterToLocal(point,local2);
    Bool_t in2 = fRight->Contains(local2);
-   Bool_t intrue = in1 & (~in2);
+   Bool_t intrue = in1 && (!in2);
    if (in^intrue) return 0.0;
    Double_t saf1 = fLeft->Safety(local1, in1);
    Double_t saf2 = fRight->Safety(local2, in2);
