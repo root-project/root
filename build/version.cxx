@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
    if (revs[strlen(revs)-1] == '\n') revs[strlen(revs)-1] = 0;
    fclose(fp);
    
-   const char *out = "base/inc/RVersion.h";
+   const char *out = "core/base/inc/RVersion.h";
    fp = fopen(out, "w");
    if (!fp) {
       printf("%s: can not open output file %s\n", argv[0], out);
