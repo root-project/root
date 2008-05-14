@@ -220,7 +220,7 @@ TDataMember *TMethod::FindDataMember()
             if (a) a->fDataMember = member; //SET THE APROPRIATE FIELD !!!
                                      //We can do it - friend decl. in MethodArg
          }
-         delete tokens[i];
+         delete [] tokens[i];
       }
       return member; // nothing else to do! We return a pointer to the last
                      // found data member
