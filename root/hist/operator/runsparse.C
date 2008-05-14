@@ -146,6 +146,7 @@ TH3* GetErrors(TH3* h)
       Double_t eh = h->GetBinError(i);
       herr->SetBinContent(i, eh);
    }
+   herr->SetEntries(h->GetEntries());
    return herr;
 }
 
@@ -162,6 +163,7 @@ void CheckErrors(TH3* h, THnSparse* sparse)
       Double_t es = sparse->GetBinError(i);
       hserr->SetBinContent(hserr->GetBin(coord[0], coord[1], coord[2]), es);
    }
+   hserr->SetEntries(sparse->GetEntries());
    TH3* herr = GetErrors(h);
    Test(hserr, herr, "Error calculation");
    delete hserr;
