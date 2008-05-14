@@ -60,11 +60,11 @@ include $(MAKEFILEDEP)
 
 MODULES       = build cint/cint core/metautils core/pcre core/utils core/base \
                 core/cont core/meta io/io math/mathcore net/net core/zip \
-                core/clib math/matrix core/newdelete hist/hist tree/tree \
-                graf2d/freetype graf2d/graf graf2d/gpad graf3d/g3d \
+                core/clib core/thread math/matrix core/newdelete hist/hist \
+                tree/tree graf2d/freetype graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
                 gui/ged tree/treeviewer math/physics graf2d/postscript \
-                core/rint core/thread html montecarlo/eg \
+                core/rint html montecarlo/eg \
                 geom/geom geom/geompainter montecarlo/vmc \
                 math/fumili math/mlp math/quadp net/auth gui/guibuilder io/xml \
                 math/foam math/splot math/smatrix io/sql tmva \
