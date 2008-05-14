@@ -5,7 +5,7 @@
 #
 # Author: Fons Rademakers, 28/4/2000
 
-CINT=cint/main/cint_tmp
+CINT=cint/cint/main/cint_tmp
 SCRIPT=build/version.cxx
 
 $CINT $SCRIPT
