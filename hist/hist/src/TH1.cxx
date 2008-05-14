@@ -1390,7 +1390,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   (minimal expected frequency equal to one) and the weighted histogram with
    //   500 events (minimal expected frequency equal to 25)
    //Begin_Macro
-   // ../../tutorials/math/chi2test.C
+   // ../../../tutorials/math/chi2test.C
    //End_Macro
    //   Fig 1. An example of comparison of the unweighted histogram with 200 events
    //   and the weighted histogram with 500 events:
@@ -1412,7 +1412,7 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   frequency equal to one) and the weighted histogram with 500 events (minimal
    //   expected frequency equal to 25)
    //Begin_Macro
-   // ../../tutorials/math/chi2test.C(17)
+   // ../../../tutorials/math/chi2test.C(17)
    //End_Macro
    //   Fig 2. An example of comparison of the unweighted histogram with 217 events
    //   and the weighted histogram with 500 events:
