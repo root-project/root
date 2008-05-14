@@ -1547,6 +1547,7 @@ void TSpider::SetVariablesExpression(const char* varexp)
       for (ui=0;ui<fNcols;ui++) {
          cnames[ui] = fSelector->GetNameByIndex(onerow,index,ui);
       }
+      delete [] index;
    }
 
    // Create the TreeFormula objects corresponding to each column

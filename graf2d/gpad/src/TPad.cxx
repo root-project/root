@@ -4229,7 +4229,9 @@ void TPad::Print(const char *filenam, Option_t *option)
       fs2 = gSystem->ExpandPathName(fs1.Data());
       fs2.Replace((fs2.Length()-1),1,"]");
    } else {
-      fs2 = gSystem->ExpandPathName(fs1.Data());
+      char* exppath = gSystem->ExpandPathName(fs1.Data());
+      fs2 = exppath;
+      delete [] exppath;
    }
    filename = (char*)fs2.Data();
 
