@@ -16,7 +16,7 @@ cd $EXPDIR
 svn co http://root.cern.ch/svn/root/trunk root
 
 # remove .svn directories containing extra copy of the code
-find root -name .svn -exec rm -rf {} \;
+find root -depth -name .svn -exec rm -rf {} \;
 
 tar cvf $TARFILE root
 gzip $TARFILE
