@@ -36,7 +36,7 @@ protected:
    TGColorSelect*     fGridColor;
 
    TGColorSelect*     fFontColor;
-   TEveGValuator     *fFontSize;
+
    TEveGValuator     *fNZStep;
    TEveGValuator     *fBinWidth;
 
@@ -55,7 +55,6 @@ public:
    void DoFontColor(Pixel_t color);
    void DoGridColor(Pixel_t color);
 
-   void DoFontSize();
    void DoNZStep();
 
    void DoBinWidth();

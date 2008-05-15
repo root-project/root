@@ -33,7 +33,6 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    fGridColor(0),
    fFontColor(0),
 
-   fFontSize(0),
    fNZStep(0),
 
    fBinWidth(0),
@@ -71,18 +70,8 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
    }
-   Int_t lw = 60;
 
-   fFontSize = new TEveGValuator(this, "FontSize:", 90, 0);
-   fFontSize->SetLabelWidth(lw);
-   fFontSize->SetNELength(5);
-   fFontSize->SetShowSlider(kFALSE);
-   fFontSize->Build();
-   fFontSize->SetLimits(0.01, 10, 100, TGNumberFormat::kNESRealTwo);
-   fFontSize->SetToolTip("Font size relative to size of projected Z axis in %");
-   fFontSize->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoFontSize()");
-   AddFrame(fFontSize, new TGLayoutHints(kLHintsTop, 4, 1, 1, 1));
-   lw = 80;
+   Int_t lw = 80;
    fNZStep = new TEveGValuator(this, "NZTickMarks:", 90, 0);
    fNZStep->SetLabelWidth(lw);
    fNZStep->SetNELength(5);
@@ -162,7 +151,6 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
    fFontColor->SetColor(TColor::Number2Pixel(fM->GetFontColor()), kFALSE);
    fGridColor->SetColor(TColor::Number2Pixel(fM->GetGridColor()), kFALSE);
 
-   fFontSize->SetValue(fM->GetFontSize());  
    fNZStep->SetValue(fM->GetNZStep());
    fBinWidth->SetValue(fM->GetBinWidth());
 
@@ -186,15 +174,6 @@ void TEveCaloLegoEditor::DoGridColor(Pixel_t pixel)
    // Slot for GridColor.
 
    fM->SetGridColor(Color_t(TColor::GetColor(pixel)));
-   Update();
-}
-
-//______________________________________________________________________________
-void TEveCaloLegoEditor::DoFontSize()
-{
-   // Slot for FontSize.
-
-   fM->SetFontSize((Int_t)fFontSize->GetValue());
    Update();
 }
 

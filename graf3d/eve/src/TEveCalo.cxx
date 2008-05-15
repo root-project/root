@@ -378,36 +378,51 @@ ClassImp(TEveCaloLego);
 //______________________________________________________________________________
 TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
    TEveCaloViz(n, t),
+
    fFontColor(0),
    fGridColor(kGray+3),
-   fFontSize(10),
+
    fNZStep(5),
+   fZAxisStep(0.f),
+
    fBinWidth(5),
+
    fProjection(kAuto),
    f2DMode(kValColor)
 {
    // Constructor.
 
    SetElementNameTitle("TEveCaloLego", "TEveCaloLego");
-   fCellZScale =0.5;
 }
 
 //______________________________________________________________________________
 TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    TEveCaloViz(data),
+  
    fFontColor(0),
    fGridColor(kGray+3),
-   fFontSize(10),
+
    fNZStep(5),
+   fZAxisStep(0.f),
+
    fBinWidth(5),
+
    fProjection(kAuto),
    f2DMode(kValColor),
+
    fBoxMode(kBack)
 {
    // Constructor.
 
    SetElementNameTitle("TEveCaloLego", "TEveCaloLego");
-   fCellZScale = 0.5;
+}
+
+//______________________________________________________________________________
+Int_t TEveCaloLego::GetAxisStep(Float_t max) const
+{
+   Int_t s = 5.f*TMath::CeilNint(max*1.f/(fNZStep*5));
+   return s;
+  
 }
 
 //______________________________________________________________________________

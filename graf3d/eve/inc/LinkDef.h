@@ -222,6 +222,7 @@
 #pragma link C++ class TEveCaloLegoEditor+;
 #pragma link C++ class TEveCaloLegoGL+;
 #pragma link C++ class TEveLegoEventHandler+;
+#pragma link C++ class TEveLegoOverlay+;
 
 // Generic configuration
 #pragma link C++ class TEveParamList;

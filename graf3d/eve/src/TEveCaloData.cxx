@@ -15,6 +15,7 @@
 #include "THStack.h"
 #include "TH2.h"
 #include "TMath.h"
+#include "TList.h"
 
 
 //______________________________________________________________________________
@@ -157,7 +158,7 @@ Int_t TEveCaloDataHist::GetCellList(Float_t minVal, Float_t maxVal,
               && ((ay->GetBinLowEdge(iphi)>=pr[0] && ay->GetBinUpEdge(iphi)<pr[1])
                   || (ay->GetBinLowEdge(iphi)>=pr[2] && ay->GetBinUpEdge(iphi)<pr[3])))
          {
-            TIter next(fHStack->GetStack());
+            TIter next(fHStack->GetHists());
             Int_t slice = 0;
             bin = hist0->GetBin(ieta, iphi);
             while ((hist = (TH2F*) next()) != 0) {
@@ -165,8 +166,8 @@ Int_t TEveCaloDataHist::GetCellList(Float_t minVal, Float_t maxVal,
                if (val>fThreshold && val>minVal && val<=maxVal)
                {
                   out.push_back(TEveCaloData::CellId_t(bin, slice));
-                  slice++;
                }
+               slice++;
             }
          }
       }
@@ -179,10 +180,11 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloDat
 {
   // Get cell geometry and value from cell ID.
 
-   TH2F* hist  = (TH2F*) (fHStack->GetStack()->At(id.fSlice));
+   TH2F* hist  = (TH2F*) (fHStack->GetHists()->At(id.fSlice));
 
    Int_t x, y, z;
    hist->GetBinXYZ(id.fTower, x, y, z);
+
    cellData.Configure(hist->GetBinContent(id.fTower),
                       hist->GetXaxis()->GetBinLowEdge(x),
                       hist->GetXaxis()->GetBinUpEdge(x),
@@ -203,7 +205,7 @@ Int_t TEveCaloDataHist::GetNSlices() const
 {
    // Get number of tower slices.
 
-   return fHStack->GetStack()->GetEntriesFast();
+   return fHStack->GetHists()->GetEntries();
 }
 
 //______________________________________________________________________________
@@ -219,7 +221,7 @@ const TAxis* TEveCaloDataHist::GetEtaBins()
 {
    // Get eta axis.
 
-   TH2F* hist  = (TH2F*) (fHStack->GetStack()->At(0));
+   TH2F* hist  = (TH2F*) (fHStack->GetHists()->At(0));
    return hist->GetXaxis();
 }
 
@@ -228,7 +230,7 @@ const TAxis* TEveCaloDataHist::GetPhiBins()
 {
    // Get phi axis.
 
-   TH2F* hist  = (TH2F*) (fHStack->GetStack()->At(0));
+   TH2F* hist  = (TH2F*) (fHStack->GetHists()->At(0));
    return hist->GetYaxis();
 }
 
@@ -240,5 +242,5 @@ const TH2F* TEveCaloDataHist::GetHistogram(Int_t slice)
    if (slice > GetNSlices())
       return 0;
 
-   return (TH2F*)fHStack->GetStack()->At(slice);
+   return (TH2F*)fHStack->GetHists()->At(slice);
 }

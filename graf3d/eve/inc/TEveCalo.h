@@ -180,8 +180,8 @@ protected:
    Color_t                 fFontColor;
    Color_t                 fGridColor;
 
-   Int_t                   fFontSize; // font size in % of projected y axis
    Int_t                   fNZStep; // Z axis label step in GeV
+   Float_t                 fZAxisStep;
 
    Int_t                   fBinWidth; // distance in pixels of projected up and low edge
 
@@ -189,11 +189,17 @@ protected:
    E2DMode_e               f2DMode;
    EBoxMode_e              fBoxMode;
 
+   Bool_t                  fDrawHPlane;
+   Float_t                 fHPlaneVal;
+
+
 public:
    TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");
    TEveCaloLego(TEveCaloData* data);
 
    virtual ~TEveCaloLego(){}
+
+   Int_t  GetAxisStep(Float_t max) const;
 
    Color_t  GetFontColor() const { return fFontColor; }
    void     SetFontColor(Color_t ci) { fFontColor=ci; }
@@ -201,9 +207,6 @@ public:
    Color_t  GetGridColor() const { return fGridColor; }
    void     SetGridColor(Color_t ci) { fGridColor=ci; }
   
-   Int_t    GetFontSize() const { return fFontSize; }
-   void     SetFontSize(Int_t fs) { fFontSize = fs; }
-
    Int_t  GetNZStep() const { return fNZStep; }
    void   SetNZStep(Int_t s) { fNZStep = s;}
   
@@ -218,6 +221,12 @@ public:
 
    void       SetBoxMode(EBoxMode_e p) { fBoxMode = p; }
    EBoxMode_e  GetBoxMode() { return fBoxMode; }
+
+   Bool_t GetDrawHPlane() const { return fDrawHPlane; }
+   void   SetDrawHPlane(Bool_t s) { fDrawHPlane = s;}
+
+   Float_t  GetHPlaneVal() const { return fHPlaneVal; }
+   void     SetHPlaneVal(Float_t s) { fHPlaneVal = s;}
 
    virtual Float_t GetDefaultCellHeight() const;
 

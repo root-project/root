@@ -10,12 +10,12 @@ void cms_calo()
   
   // event data
   TFile* hf = TFile::Open(histFile, "CACHEREAD");
-  TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
   TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
+  TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
   TEveCaloDataHist* data = new TEveCaloDataHist();
   data->AddHistogram(ecalHist);
   data->AddHistogram(hcalHist);
-
+  
   // different calorimeter presentations
   TEveCalo3D* calo3d = MakeCalo3D(data);
   MakeCalo2D(calo3d);
@@ -30,7 +30,7 @@ TEveCalo3D* MakeCalo3D(TEveCaloDataHist* data)
   // palette
   gStyle->SetPalette(1, 0);
   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 100);
-  pal->SetLimits(0, data->GetMaxVal());
+  pal->SetLimits(0, TMath::CeilNint(data->GetMaxVal()));
   pal->SetDefaultColor((Color_t)4);
   pal->SetShowDefValue(kFALSE);
 
@@ -75,18 +75,18 @@ void MakeCaloLego(TEveCaloDataHist* data)
 
   // histogram
   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 100);
-  pal->SetLimits(0, data->GetMaxVal());
+  pal->SetLimits(0, TMath::CeilNint(data->GetMaxVal()));
   pal->SetDefaultColor((Color_t)4);
   TEveScene*  s2 = gEve->SpawnNewScene("Lego");
   v2->AddScene(s2);
   TEveCaloLego* lego = new TEveCaloLego(data);
   lego->SetPalette(pal);
-  lego->SetGridColor(kGray+3);
+  lego->SetGridColor(kGray+2);
   lego->Set2DMode(TEveCaloLego::kValSize);
   gEve->AddElement(lego, s2);
   gEve->AddToListTree(lego, kTRUE);
   
-  //random lines to demonstrate TEveLegoEventHandler
+  // random lines to demonstrate TEveLegoEventHandler
   TRandom r(0);
   gStyle->SetPalette(1, 0);
   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
@@ -103,4 +103,12 @@ void MakeCaloLego(TEveCaloDataHist* data)
   Float_t  sc = 0.3;
   t.SetScale(sc, sc, sc);
   gEve->AddElement(q, s2);
+
+  // overlay
+  gEve->DisableRedraw();
+  TEveLegoOverlay* overlay = new TEveLegoOverlay();
+  overlay->SetCaloLego(lego);
+  v->AddOverlayElement(overlay);
+  gEve->AddElement(overlay, s2);
+  gEve->EnableRedraw();
 }

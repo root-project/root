@@ -296,6 +296,32 @@ TGLFontManager::FontSizeVec_t* TGLFontManager::GetFontSizeArray()
 }
 
 //______________________________________________________________________________
+Int_t TGLFontManager::GetFontSize(Float_t ds, Int_t min, Int_t max)
+{
+   // Get availabe font size.
+
+   if (fgStaticInitDone == kFALSE) InitStatics();
+
+   Int_t  nums = fgFontSizeArray.size();
+   Int_t i = 0;
+   while (i<nums)
+   {
+      if (ds<=fgFontSizeArray[i]) break;
+      i++;
+   }
+
+   Int_t fs =  fgFontSizeArray[i];
+
+   if (min>0 && fs<min)
+      fs = min;
+
+   if (max>0 && fs>max)
+      fs = max;
+
+   return fs;
+}
+
+//______________________________________________________________________________
 void TGLFontManager::InitStatics()
 {
    // Create a list of available font files and allowed font sizes.

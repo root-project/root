@@ -52,7 +52,6 @@ protected:
 
    mutable TGLFont          fNumFont;
    mutable TGLFont          fSymbolFont;
-   mutable Int_t            fFontSize; // font size in pixels
 
    const   Float_t          fTMSize; //  XY tick-mark size in world coordinates
 
