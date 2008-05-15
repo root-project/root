@@ -188,7 +188,7 @@ void TEveCaloViz::Paint(Option_t* /*option*/)
 
    static const TEveException eH("TEvecaloViz::Paint ");
 
-   if (!fData) 
+   if (!fData)
       return;
 
    TBuffer3D buff(TBuffer3DTypes::kGeneric);
@@ -398,7 +398,7 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
 //______________________________________________________________________________
 TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    TEveCaloViz(data),
-  
+
    fFontColor(0),
    fGridColor(kGray+3),
 
@@ -420,15 +420,14 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
 //______________________________________________________________________________
 Int_t TEveCaloLego::GetAxisStep(Float_t max) const
 {
-   Int_t s = 5.f*TMath::CeilNint(max*1.f/(fNZStep*5));
-   return s;
-  
+   // Returns reasonable step between two axis labels.
+
+   return 5*TMath::CeilNint(max*1.f/(fNZStep*5));
 }
 
 //______________________________________________________________________________
 Float_t TEveCaloLego::GetDefaultCellHeight() const
 {
-
    // Get default cell height.
 
    return TMath::TwoPi();
@@ -457,5 +456,5 @@ void TEveCaloLego::ComputeBBox()
    fBBox[3] = fPhi + 1.2f*fPhiRng;
 
    fBBox[4] = -GetDefaultCellHeight()*fCellZScale*0.2;
-   fBBox[5] = GetDefaultCellHeight()*fCellZScale*1.2;
+   fBBox[5] =  GetDefaultCellHeight()*fCellZScale*1.2;
 }

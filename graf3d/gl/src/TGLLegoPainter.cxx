@@ -1081,7 +1081,7 @@ void TGLLegoPainter::DrawPalette()const
    //Draw. Palette.
    Rgl::DrawPalette(fCamera, fPalette);
 
-   glFinish();   
+   glFinish();
 
    fCamera->SetCamera();
    fCamera->Apply();

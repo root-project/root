@@ -81,7 +81,7 @@ public:
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
- 
+
    ClassDef(TEveCaloLegoGL, 0); // GL renderer class for TEveCaloLego.
 };
 

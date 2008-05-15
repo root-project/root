@@ -171,7 +171,7 @@ void TGLRnrCtx:: StopStopwatch()
    // Stop the stopwatch.
 
    fHasTimedOut = fStopwatch.End() > fRenderTimeOut;
-   fIsRunning = kFALSE; 
+   fIsRunning = kFALSE;
 }
 
 //______________________________________________________________________________

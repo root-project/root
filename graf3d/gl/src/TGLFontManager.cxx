@@ -240,7 +240,7 @@ void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode,
 
 //______________________________________________________________________________
 void TGLFontManager::RegisterFont(Int_t size, const Text_t* name, TGLFont::EMode mode, TGLFont &out)
-{ 
+{
    TObjArray* farr = GetFontFileArray();
    TIter next(farr);
    TObjString* os;

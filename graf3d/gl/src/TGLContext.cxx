@@ -454,13 +454,13 @@ void TGLContextIdentity::DeleteGLResources()
 {
    //Delete GL resources registered for destruction.
 
-   if (!fDLTrash.empty()) 
+   if (!fDLTrash.empty())
    {
       for (DLTrashIt_t it = fDLTrash.begin(), e = fDLTrash.end(); it != e; ++it)
          glDeleteLists(it->first, it->second);
       fDLTrash.clear();
    }
-  
+
    if (fFontManager)
       fFontManager->ClearFontTrash();
 }

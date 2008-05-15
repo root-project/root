@@ -29,10 +29,10 @@
 
 //______________________________________________________________________________
 //
-// A base class of TGLEventHandler. Switches current camera from perspective 
+// A base class of TGLEventHandler. Switches current camera from perspective
 // to orthographic bird-view, if camera theta is less than given threshold. It sets back
-// perspective camera when accumulated angle is more than transition theta. 
-// 
+// perspective camera when accumulated angle is more than transition theta.
+//
 
 //______________________________________________________________________________
 TEveLegoEventHandler::TEveLegoEventHandler(const char *name, TGWindow *w, TObject *obj,
@@ -50,7 +50,7 @@ TEveLegoEventHandler::TEveLegoEventHandler(const char *name, TGWindow *w, TObjec
 
 //______________________________________________________________________________
 Bool_t TEveLegoEventHandler::HandleKey(Event_t *event)
-{  
+{
    // Virtual from TGLEventHandler.
    // Free the camera when home is pressed.
 
@@ -77,7 +77,7 @@ Bool_t TEveLegoEventHandler::HandleDoubleClick(Event_t *event)
          TGLLogicalShape& lshape = const_cast<TGLLogicalShape&> (*pshape->GetLogical());
          TGLLogicalShape* f = &lshape;
          TEveCaloLegoGL*  lego   = dynamic_cast<TEveCaloLegoGL*>(f);
-                 
+
          if (lego)
          {
             fLastPickedLego = lego;
@@ -156,7 +156,7 @@ Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Boo
 {
    // Method to handle action TGLViewer::kDragCameraRotate. It switches from standard perspective
    // view to bird-view bellow angle fTransTheta and restores view when accumulated theta is larger
-   // than transition angle. 
+   // than transition angle.
 
    using namespace TMath;
 
@@ -173,23 +173,23 @@ Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Boo
          fMode = kFree;
       }
    }
-   else 
-   {  
+   else
+   {
       Double_t theta = cam.GetTheta();
       Double_t thetaN = theta+hRotate;
       if(thetaN > Pi()-cam.GetVAxisMinAngle()) thetaN = Pi()-cam.GetVAxisMinAngle();
       else if (thetaN <cam.GetVAxisMinAngle()) thetaN = cam.GetVAxisMinAngle();
 
-      fTheta = thetaN; 
+      fTheta = thetaN;
 
       if (thetaN<fTransTheta)
       {
          fGLViewer->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
          fMode = kLocked;
       }
-      else 
+      else
       {
-         fGLViewer->CurrentCamera().Rotate(xDelta, yDelta, mod1, mod2);      
+         fGLViewer->CurrentCamera().Rotate(xDelta, yDelta, mod1, mod2);
       }
    }
    return kTRUE;

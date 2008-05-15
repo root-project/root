@@ -418,7 +418,7 @@ Bool_t TEveTrackPropagator::LineIntersectPlane(const TEveVector& p,
    } else {
       itsect = pos + p*t;
       return kTRUE;
-   }   
+   }
 }
 
 //______________________________________________________________________________

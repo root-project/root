@@ -637,7 +637,7 @@ void TGLViewer::PostDraw()
    {
       UChar_t* xx = new UChar_t[4 * fViewport.Width() * fViewport.Height()];
       glReadBuffer(GL_BACK);
-      glPixelStorei(GL_PACK_ALIGNMENT,1); 
+      glPixelStorei(GL_PACK_ALIGNMENT,1);
       glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                    GL_BGRA, GL_UNSIGNED_BYTE, xx);
 

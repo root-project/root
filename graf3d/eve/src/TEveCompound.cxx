@@ -50,7 +50,7 @@ void TEveCompound::AddElement(TEveElement* el)
 void TEveCompound::RemoveElementLocal(TEveElement* el)
 {
    // Decompoundofy el, call base-class version.
-   
+
    if (el->GetCompound() == this)
       el->SetCompound(0);
 
@@ -67,7 +67,7 @@ void TEveCompound::RemoveElementsLocal()
       if ((*i)->GetCompound() == this)
          (*i)->SetCompound(0);
    }
- 
+
    TEveElementList::RemoveElementsLocal();
 }
 

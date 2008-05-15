@@ -140,7 +140,7 @@ void TGLScene::TSceneInfo::PreDraw()
       fOpaqueElements.clear();
       fTranspElements.clear();
       fSelOpaqueElements.clear();
-      fSelTranspElements.clear();   
+      fSelTranspElements.clear();
 
       for (DrawElementVec_i i = fVisibleElements.begin(); i != fVisibleElements.end(); ++i)
       {

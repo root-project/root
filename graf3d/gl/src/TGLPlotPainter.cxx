@@ -140,7 +140,7 @@ void TGLPlotPainter::Paint()
          Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
          if (fDrawPalette)
             DrawPaletteAxis();
-         gVirtualX->SelectWindow(gPad->GetPixmapID());         
+         gVirtualX->SelectWindow(gPad->GetPixmapID());
       } else if(fDrawPalette) {
          glAdapter->SelectOffScreenDevice();
          DrawPaletteAxis();
@@ -1752,7 +1752,7 @@ namespace Rgl {
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
 
-      const Double_t leftX = camera->GetWidth() * lr;   
+      const Double_t leftX = camera->GetWidth() * lr;
       const Double_t rightX = camera->GetWidth() * rr;
       const Double_t margin = 0.1 * camera->GetHeight();
       const Double_t h = (camera->GetHeight() * 0.8) / palette.GetPaletteSize();
@@ -1779,7 +1779,7 @@ namespace Rgl {
          glVertex2d(rightX, margin + (i + 1) * h);
          glVertex2d(leftX, margin + (i + 1) * h);
          glEnd();
-      }   
+      }
 
    }
 

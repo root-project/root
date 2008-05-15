@@ -22,7 +22,7 @@
 
 //______________________________________________________________________________
 //
-// 
+//
 // GL-overaly control GUI for TEveCaloLego.
 //
 //
@@ -33,7 +33,7 @@ ClassImp(TEveLegoOverlay);
 TEveLegoOverlay::TEveLegoOverlay() :
    TGLOverlayElement(),
    TEveElementList("Lego Menu", "TEveLegoOverlay", kTRUE),
-  
+
    fCalo(0),
 
    fActiveID(-1),
@@ -147,7 +147,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
    glPointSize(8);
    glBegin(GL_POINTS);
    glVertex3f(0, fSliderVal*fSliderH, -0.1);
-   glEnd();  
+   glEnd();
 }
 
 /******************************************************************************/
@@ -233,7 +233,7 @@ Bool_t TEveLegoOverlay::SetSliderVal(Event_t* event, TGLRnrCtx &rnrCtx)
    TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
    fSliderVal = (1 -event->fY*1./wprt.Height() -fSliderPosY)/fSliderH;
 
-   if (fSliderVal < 0 ) 
+   if (fSliderVal < 0 )
       fSliderVal = 0;
    else if (fSliderVal > fValidRegion)
       fSliderVal = fValidRegion;

@@ -48,22 +48,22 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    {
       // grid color
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
-      TGLabel* lab = new TGLabel(f, "GridColor:");   
+      TGLabel* lab = new TGLabel(f, "GridColor:");
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 4, 1, 2));
-    
+
       fGridColor = new TGColorSelect(f, 0, -1);
       f->AddFrame(fGridColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 2));
       fGridColor->Connect("ColorSelected(Pixel_t)", "TEveCaloLegoEditor", this, "DoGridColor(Pixel_t)");
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
    }
-   // axis 
+   // axis
    {
       // font color
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
-      TGLabel* lab = new TGLabel(f, "FontColor:");   
+      TGLabel* lab = new TGLabel(f, "FontColor:");
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 2, 1, 1));
-      
+
       fFontColor = new TGColorSelect(f, 0, -1);
       f->AddFrame(fFontColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 2));
       fFontColor->Connect("ColorSelected(Pixel_t)", "TEveCaloLegoEditor", this, "DoFontColor(Pixel_t)");
@@ -147,7 +147,7 @@ void TEveCaloLegoEditor::SetModel(TObject* obj)
 {
    // Set model object.
 
-   fM = dynamic_cast<TEveCaloLego*>(obj); 
+   fM = dynamic_cast<TEveCaloLego*>(obj);
    fFontColor->SetColor(TColor::Number2Pixel(fM->GetFontColor()), kFALSE);
    fGridColor->SetColor(TColor::Number2Pixel(fM->GetGridColor()), kFALSE);
 

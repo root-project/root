@@ -108,7 +108,7 @@ TEveCaloDataHist::~TEveCaloDataHist()
 //______________________________________________________________________________
 Int_t TEveCaloDataHist::GetCellList(Float_t minVal, Float_t maxVal,
                                     Float_t eta, Float_t etaD,
-                                    Float_t phi, Float_t phiD, 
+                                    Float_t phi, Float_t phiD,
                                     TEveCaloData::vCellId_t &out)
 
 {

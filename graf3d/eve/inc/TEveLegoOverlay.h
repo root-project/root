@@ -33,14 +33,14 @@ private:
 
 protected:
    TEveCaloLego*  fCalo;
-   
+
    Int_t          fActiveID;
    Color_t        fActiveCol;
 
    Float_t        fMenuW;
    Float_t        fButtonW;
    Float_t        fSliderH;    // slider height in % of viewport
-   Float_t        fSliderPosY; // y position of slider bottom up 
+   Float_t        fSliderPosY; // y position of slider bottom up
 
    Bool_t         fShowSlider;
    Float_t        fSliderVal;

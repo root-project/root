@@ -40,7 +40,7 @@ public:
 
    void CopyAttributes(const TGLFont &o);
 
-  
+
    Int_t GetSize() const { return fSize;}
    Int_t GetFile() const { return fFile;}
    EMode GetMode() const { return fMode;}
@@ -92,7 +92,7 @@ private:
    TGLFontManager& operator=(const TGLFontManager&); // Not implemented
 
    std::map<TGLFont, Int_t>  fFontMap;        // map of created fonts
-   std::list<const FTFont*>   fFontTrash;      // fonts to purge  
+   std::list<const FTFont*>   fFontTrash;      // fonts to purge
 
    static TObjArray     fgFontFileArray;      // map font-id to ttf-font-file
    static FontSizeVec_t fgFontSizeArray;      // map of valid font-size
@@ -109,7 +109,7 @@ public:
 
    static TObjArray*        GetFontFileArray();
    static FontSizeVec_t*    GetFontSizeArray();
- 
+
    static Int_t             GetFontSize(Float_t ds, Int_t min = -1, Int_t max = -1);
 
    void   ClearFontTrash();

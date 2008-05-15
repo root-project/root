@@ -206,10 +206,10 @@ public:
 
    Color_t  GetGridColor() const { return fGridColor; }
    void     SetGridColor(Color_t ci) { fGridColor=ci; }
-  
+
    Int_t  GetNZStep() const { return fNZStep; }
    void   SetNZStep(Int_t s) { fNZStep = s;}
-  
+
    Int_t    GetBinWidth() const { return fBinWidth; }
    void     SetBinWidth(Int_t bw) { fBinWidth = bw; }
 

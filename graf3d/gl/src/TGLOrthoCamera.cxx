@@ -81,7 +81,7 @@ void TGLOrthoCamera::Reset()
 
    TGLVector3 e = fVolume.Extents();
    switch (fType) {
-      case kXOY: 
+      case kXOY:
       case kXnOY:
       {
          // X -> X, Y -> Y, Z -> Z
