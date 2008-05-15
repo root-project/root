@@ -86,6 +86,10 @@
 #pragma link C++ typedef TEveElement::Set_t;
 #pragma link C++ typedef TEveElement::Set_i;
 
+// TEveCompound
+#pragma link C++ class TEveCompound+;
+#pragma link C++ class TEveCompoundProjected+;
+
 // TEveSelection
 #pragma link C++ class TEveSelection+;
 

@@ -21,6 +21,7 @@ class TGListTree;
 class TGListTreeItem;
 class TGPicture;
 
+class TEveCompound;
 class TEveTrans;
 class TGeoMatrix;
 
@@ -72,24 +73,25 @@ public:
    typedef std::set<TEveElement*>::iterator     Set_i;
 
 protected:
-   // TRef     fSource;
+   TEveCompound    *fCompound;             //  Compound this object belongs to.
 
-   List_t     fParents;              //  List of parents.
-   List_t     fChildren;             //  List of children.
+   List_t           fParents;              //  List of parents.
+   List_t           fChildren;             //  List of children.
 
-   Bool_t     fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
-   Int_t      fDenyDestroy;          //  Deny-destroy count.
+   Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
+   Int_t            fDenyDestroy;          //  Deny-destroy count.
 
-   Bool_t     fRnrSelf;              //  Render this element.
-   Bool_t     fRnrChildren;          //  Render children of this element.
-   Bool_t     fCanEditMainTrans;     //  Allow editing of main transformation.
+   Bool_t           fRnrSelf;              //  Render this element.
+   Bool_t           fRnrChildren;          //  Render children of this element.
+   Bool_t           fCanEditMainTrans;     //  Allow editing of main transformation.
 
-   Color_t   *fMainColorPtr;         //  Pointer to main-color variable.
-   TEveTrans *fMainTrans;            //  Pointer to main transformation matrix.
+   Color_t         *fMainColorPtr;         //  Pointer to main-color variable.
+   TEveTrans       *fMainTrans;            //  Pointer to main transformation matrix.
 
-   sLTI_t     fItems;                //! Set of list-tree-items.
+   sLTI_t           fItems;                //! Set of list-tree-items.
 
-   void      *fUserData;             //! Externally assigned and controlled user data.
+   TRef             fSource;               //  External object that is represented by this element.
+   void            *fUserData;             //! Externally assigned and controlled user data.
 
    virtual void RemoveElementsInternal();
 
@@ -103,6 +105,10 @@ public:
    virtual void SetElementName (const Text_t* name);
    virtual void SetElementTitle(const Text_t* title);
    virtual void SetElementNameTitle(const Text_t* name, const Text_t* title);
+
+   TEveElement*  GetMaster();
+   TEveCompound* GetCompound()                { return fCompound; }
+   void          SetCompound(TEveCompound* c) { fCompound = c;    }
 
    virtual void AddParent(TEveElement* re);
    virtual void RemoveParent(TEveElement* re);
@@ -140,15 +146,6 @@ public:
    virtual TObject* GetObject      (const TEveException& eh="TEveElement::GetObject ") const;
    virtual TObject* GetEditorObject(const TEveException& eh="TEveElement::GetEditorObject ") const { return GetObject(eh); }
    virtual TObject* GetRenderObject(const TEveException& eh="TEveElement::GetRenderObject ") const { return GetObject(eh); }
-
-   /*
-     TRef&    GetSource() { return fSource; }
-     TObject* GetSourceObject() const { return fSource.GetObject(); }
-     void SetSourceObject(TObject* o) { fSource.SetObject(o); }
-
-     void DumpSourceObject();    // *MENU*
-     void InspectSourceObject(); // *MENU*
-   */
 
    // --------------------------------
 
@@ -223,6 +220,14 @@ public:
 
    virtual void SetTransMatrix(Double_t* carr);
    virtual void SetTransMatrix(const TGeoMatrix& mat);
+
+   TRef&    GetSource()                 { return fSource; }
+   TObject* GetSourceObject()     const { return fSource.GetObject(); }
+   void     SetSourceObject(TObject* o) { fSource.SetObject(o); }
+   /*
+     void DumpSourceObject();    // *MENU*
+     void InspectSourceObject(); // *MENU*
+   */
 
    void* GetUserData() const { return fUserData; }
    void  SetUserData(void* ud) { fUserData = ud; }

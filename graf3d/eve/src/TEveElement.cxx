@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TEveElement.h"
+#include "TEveCompound.h"
 #include "TEveTrans.h"
 #include "TEveManager.h"
 #include "TEveSelection.h"
@@ -200,6 +201,20 @@ void TEveElement::SetElementNameTitle(const Text_t* name, const Text_t* title)
 }
 
 /******************************************************************************/
+
+TEveElement* TEveElement::GetMaster()
+{
+   // Return the master element - that is the upwards compound not
+   // inside another compound.
+   // If this element is not in a compound, this is returned.
+
+   TEveElement* el = this;
+   while (el->fCompound != 0)
+      el = el->fCompound;
+   return el;
+}
+
+//******************************************************************************
 
 //______________________________________________________________________________
 void TEveElement::AddParent(TEveElement* re)
@@ -793,7 +808,7 @@ void TEveElement::RemoveElements()
 void TEveElement::RemoveElementsLocal()
 {
    // Perform additional local removal of all elements.
-   // See comment to RemoveelementLocal(TEveElement*).
+   // See comment to RemoveElementlocal(TEveElement*).
 }
 
 /******************************************************************************/
@@ -1062,6 +1077,13 @@ void TEveElement::DecImpliedHighlighted()
 void TEveElement::FillImpliedSelectedSet(Set_t& impSelSet)
 {
    // Populate set impSelSet with derived / dependant elements.
+   //
+   // Here we check if class of this is TEveProjectable and add the projected
+   // replicas to the set. Thus it does not have to be reimplemented for
+   // each sub-class of TEveProjected.
+   //
+   // Note that this also takes care of projections of TEveCompound
+   // class, which is also a projectable.
 
    TEveProjectable* p = dynamic_cast<TEveProjectable*>(this);
    if (p)
