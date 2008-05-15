@@ -17,7 +17,7 @@
 #include <cassert>
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::Step(Vertex4D_t& v, TEveVector& p)
+void TEveTrackPropagator::Helix_t::Step(TEveVector4& v, TEveVector& p)
 {
    // Step from position 'v' with momentum 'p'.
    // Both quantities are input and output.
@@ -27,15 +27,15 @@ void TEveTrackPropagator::Helix_t::Step(Vertex4D_t& v, TEveVector& p)
    v.fZ += fLam*TMath::Abs(fR*fPhiStep);
    v.fT += fTimeStep;
 
-   Float_t pxt = p.fX*fCos  - p.fY*fSin;
-   Float_t pyt = p.fY*fCos  + p.fX*fSin;
+   const Float_t pxt = p.fX*fCos  - p.fY*fSin;
+   const Float_t pyt = p.fY*fCos  + p.fX*fSin;
    p.fX = pxt;
    p.fY = pyt;
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::Helix_t::StepVertex(const Vertex4D_t& v, const TEveVector& p,
-                                              Vertex4D_t& forw)
+void TEveTrackPropagator::Helix_t::StepVertex(const TEveVector4& v, const TEveVector& p,
+                                              TEveVector4& forw)
 {
    // Step from position 'v' with momentum 'p'.
    // Return end position in 'forw'. Momentum is not changed.
@@ -85,6 +85,7 @@ TEveTrackPropagator::TEveTrackPropagator() :
    fFitDaughters  (kTRUE),
    fFitReferences (kTRUE),
    fFitDecay      (kTRUE),
+   fFitCluster2Ds (kTRUE),
    fRnrDaughters  (kTRUE),
    fRnrReferences (kTRUE),
    fRnrDecay      (kTRUE),
@@ -220,7 +221,7 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
          crosR = true;
 
       Float_t maxR2 = fMaxR * fMaxR;
-      Vertex4D_t forw;
+      TEveVector4 forw;
       while (fN < fNLast)
       {
          fH.StepVertex(fV, p, forw);
@@ -272,7 +273,7 @@ Bool_t TEveTrackPropagator::HelixToVertex(TEveVector& v, TEveVector& p)
          Float_t yf = fV.fY + (p.fY*sinf + p.fX*(1 - cosf)) / fH.fA;
          fH.fXoff   = (v.fX - xf) / fnsteps;
          fH.fYoff   = (v.fY - yf) / fnsteps;
-         Vertex4D_t forw;
+         TEveVector4 forw;
          for (Int_t l=0; l<nsteps; l++)
          {
             fH.StepVertex(fV, p, forw);
@@ -357,6 +358,93 @@ void TEveTrackPropagator::LineToBounds(TEveVector& p)
 }
 
 //______________________________________________________________________________
+Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVector& p,
+                                                const TEveVector& point,
+                                                const TEveVector& normal,
+                                                      TEveVector& itsect)
+{
+   InitHelix(p);
+   SetNumOfSteps(); // These are steps to bound, need it for starting step.
+
+   TEveVector pos(fV);
+   TEveVector mom(p);
+
+   TEveVector n(normal);
+   TEveVector delta = pos - point;
+   Float_t d = delta.Dot(n);
+   if (d > 0) {
+      n.NegateXYZ(); // Turn normal around so that we approach from negative side of the plane
+      d = -d;
+   }
+
+   TEveVector4 pos4(pos);
+   while (1)
+   {
+      fH.Step(pos4, mom);
+      TEveVector new_pos = pos4;
+      Float_t new_d = (new_pos - point).Dot(n);
+      if (new_d < d) {
+         // We are going further away ... fail intersect.
+         Warning("TEveTrackPropagator::HelixIntersectPlane", "going away from the plane.");
+         return kFALSE;
+      }
+      if (new_d > 0) {
+         delta = new_pos - pos;
+         itsect = pos + delta * (d / (d - new_d));
+         return kTRUE;
+      }
+      pos = new_pos;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TEveTrackPropagator::LineIntersectPlane(const TEveVector& p,
+                                               const TEveVector& point,
+                                               const TEveVector& normal,
+                                                     TEveVector& itsect)
+{
+   TEveVector pos(fV.fX, fV.fY, fV.fZ);
+   TEveVector delta = pos - point;
+
+   Float_t d = delta.Dot(normal);
+   if (d == 0) {
+      itsect = pos;
+      return kTRUE;
+   }
+
+   Float_t t = (p.Dot(normal)) / d;
+   if (t < 0) {
+      return kFALSE;
+   } else {
+      itsect = pos + p*t;
+      return kTRUE;
+   }   
+}
+
+//______________________________________________________________________________
+Bool_t TEveTrackPropagator::IntersectPlane(const TEveVector& p,
+                                           const TEveVector& point,
+                                           const TEveVector& normal,
+                                                 TEveVector& itsect)
+{
+   // Find intersection of currently propagated track with a plane.
+   // Current track position is used as starting point.
+   //
+   // Args:
+   //  p        - track momentum to use for extrapolation
+   //  point    - a point on a plane
+   //  normal   - normal of the plane
+   //  itsect   - output, point of intersection
+   // Returns:
+   //  kFALSE if intersection can not be found, kTRUE otherwise.
+
+   if (fCharge != 0 && TMath::Abs(fMagField) > 1e-5 && p.Perp2() > 1e-12)
+      return HelixIntersectPlane(p, point, normal, itsect);
+   else
+      return LineIntersectPlane(p, point, normal, itsect);
+}
+
+//______________________________________________________________________________
 void TEveTrackPropagator::FillPointSet(TEvePointSet* ps) const
 {
    // Reset ps and populate it with points in propagation cache.
@@ -365,7 +453,7 @@ void TEveTrackPropagator::FillPointSet(TEvePointSet* ps) const
    ps->Reset(size);
    for (Int_t i = 0; i < size; ++i)
    {
-      const Vertex4D_t& v = fPoints[i];
+      const TEveVector4& v = fPoints[i];
       ps->SetNextPoint(v.fX, v.fY, v.fZ);
    }
 }
@@ -472,11 +560,29 @@ void TEveTrackPropagator::SetFitDecay(Bool_t x)
 }
 
 //______________________________________________________________________________
+void TEveTrackPropagator::SetFitCluster2Ds(Bool_t x)
+{
+   // Set 2D-cluster fitting and rebuild tracks.
+
+   fFitCluster2Ds = x;
+   RebuildTracks();
+}
+
+//______________________________________________________________________________
 void TEveTrackPropagator::SetRnrDecay(Bool_t rnr)
 {
    // Set decay rendering and rebuild tracks.
 
    fRnrDecay = rnr;
+   RebuildTracks();
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::SetRnrCluster2Ds(Bool_t rnr)
+{
+   // Set rendering of 2D-clusters and rebuild tracks.
+
+   fRnrCluster2Ds = rnr;
    RebuildTracks();
 }
 

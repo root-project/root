@@ -42,6 +42,7 @@ public:
 protected:
    TEveVector         fV;          // Starting vertex
    TEveVector         fP;          // Starting momentum
+   TEveVector         fPEnd;       // Momentum at the last point of extrapolation
    Double_t           fBeta;       // Relativistic beta factor
    Int_t              fPdg;        // PDG code
    Int_t              fCharge;     // Charge in units of e0
@@ -70,8 +71,9 @@ public:
    void SetPropagator(TEveTrackPropagator* rs);
    void SetAttLineAttMarker(TEveTrackList* tl);
 
-   const TEveVector& GetVertex()   const { return fV; }
-   const TEveVector& GetMomentum() const { return fP; }
+   const TEveVector& GetVertex()      const { return fV;    }
+   const TEveVector& GetMomentum()    const { return fP;    }
+   const TEveVector& GetEndMomentum() const { return fPEnd; }
 
    Int_t GetPdg()    const   { return fPdg;   }
    void SetPdg(Int_t pdg)    { fPdg = pdg;    }

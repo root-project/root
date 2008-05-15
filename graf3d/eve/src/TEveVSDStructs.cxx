@@ -11,13 +11,25 @@
 
 #include "TEveVSDStructs.h"
 
-//______________________________________________________________________________
+
+//==============================================================================
 // TEveVector
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Float three-vector; a inimal Float_t copy of TVector3 used to
 // represent points and momenta (also used in VSD).
 
-ClassImp(TEveVector)
+ClassImp(TEveVector);
+
+//______________________________________________________________________________
+void TEveVector::Dump() const
+{
+   // Dump to stdout as "(x, y, z)\n".
+
+   printf("(%f, %f, %f)\n", fX, fY, fZ);
+}
 
 //______________________________________________________________________________
 Float_t TEveVector::Eta() const
@@ -31,7 +43,7 @@ Float_t TEveVector::Eta() const
 }
 
 //______________________________________________________________________________
-TEveVector TEveVector::operator + (const TEveVector & b)
+TEveVector TEveVector::operator + (const TEveVector & b) const
 {
    // Vector addition.
 
@@ -39,7 +51,7 @@ TEveVector TEveVector::operator + (const TEveVector & b)
 }
 
 //______________________________________________________________________________
-TEveVector TEveVector::operator - (const TEveVector & b)
+TEveVector TEveVector::operator - (const TEveVector & b) const
 {
    // Vector subtraction.
 
@@ -47,7 +59,7 @@ TEveVector TEveVector::operator - (const TEveVector & b)
 }
 
 //______________________________________________________________________________
-TEveVector TEveVector::operator * (Float_t a)
+TEveVector TEveVector::operator * (Float_t a) const
 {
    // Multiplication with scalar.
 
@@ -55,13 +67,42 @@ TEveVector TEveVector::operator * (Float_t a)
 }
 
 
-//______________________________________________________________________________
-// TEvePathMark
-//
-// Special-point on track: position/momentum reference, daughter
-// creation or decay (also used in VSD).
+//==============================================================================
+// TEveVector4
+//==============================================================================
 
-ClassImp(TEvePathMark)
+//______________________________________________________________________________
+//
+// Float four-vector.
+
+ClassImp(TEveVector4);
+
+//______________________________________________________________________________
+void TEveVector4::Dump() const
+{
+   // Dump to stdout as "(x, y, z; t)\n".
+
+   printf("(%f, %f, %f; %f)\n", fX, fY, fZ, fT);
+}
+
+
+//==============================================================================
+// TEvePathMark
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Special-point on track:
+//  kDaughter  - daughter creation; fP is momentum of the daughter
+//  kReference - position/momentum reference
+//  kDecay     - decay point, fP not used
+//  kCluster2D - measurement with large error in one direction (like strip detectors):
+//               fP - normal to detector plane,
+//               fE - large error direction, must be normalized.
+//               Track is propagated to plane and correction in fE direction is discarded.
+
+
+ClassImp(TEvePathMark);
 
 //______________________________________________________________________________
 const char* TEvePathMark::TypeName()
@@ -73,6 +114,7 @@ const char* TEvePathMark::TypeName()
       case kDaughter:  return "Daughter";
       case kReference: return "Reference";
       case kDecay:     return "Decay";
+      case kCluster2D: return "Cluster2D";
       default:         return "Unknown";
    }
 }

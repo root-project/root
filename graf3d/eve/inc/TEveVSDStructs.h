@@ -50,6 +50,8 @@ public:
    TEveVector(Float_t x, Float_t y, Float_t z) : fX(x), fY(y), fZ(z) {}
    virtual ~TEveVector() {}
 
+   void Dump() const;
+
    operator const Float_t*() const { return &fX; }
    operator       Float_t*()       { return &fX; }
 
@@ -57,9 +59,9 @@ public:
    TEveVector& operator +=(const TEveVector& v) { fX += v.fX; fY += v.fY; fZ += v.fZ; return *this; }
    TEveVector& operator -=(const TEveVector& v) { fX -= v.fX; fY -= v.fY; fZ -= v.fZ; return *this; }
 
-   TEveVector operator + (const TEveVector &);
-   TEveVector operator - (const TEveVector &);
-   TEveVector operator * (Float_t a);
+   TEveVector operator + (const TEveVector &) const;
+   TEveVector operator - (const TEveVector &) const;
+   TEveVector operator * (Float_t a) const;
 
    Float_t& operator [] (Int_t indx);
    Float_t  operator [] (Int_t indx) const;
@@ -73,6 +75,8 @@ public:
    void Set(Double_t x, Double_t y, Double_t z) { fX = x; fY = y; fZ = z; }
    void Set(const TVector3& v)   { fX = v.x(); fY = v.y(); fZ = v.z(); }
    void Set(const TEveVector& v) { fX = v.fX;  fY = v.fY;  fZ = v.fZ;  }
+
+   void NegateXYZ() { fX = - fX; fY = -fY; fZ = -fZ; }
 
    Float_t Phi()      const;
    Float_t Theta()    const;
@@ -93,8 +97,7 @@ public:
    TEveVector& Mult(const TEveVector&a, Float_t af)
    { fX = a.fX*af; fY = a.fY*af; fZ = a.fZ*af; return *this; }
 
-
-   ClassDef(TEveVector, 1); // Float three-vector; a inimal Float_t copy of TVector3 used to represent points and momenta (also used in VSD).
+   ClassDef(TEveVector, 1); // Float three-vector; a minimal Float_t copy of TVector3 used to represent points and momenta (also used in VSD).
 };
 
 //______________________________________________________________________________
@@ -134,22 +137,65 @@ inline Float_t TEveVector::operator [] (Int_t idx) const
 
 
 /******************************************************************************/
+// TEveVector4
+/******************************************************************************/
+
+class TEveVector4 : public TEveVector
+{
+public:
+   Float_t fT;
+
+   TEveVector4()                    : TEveVector(),  fT(0) {}
+   TEveVector4(const TEveVector& v) : TEveVector(v), fT(0) {}
+   TEveVector4(Float_t x, Float_t y, Float_t z, Float_t t=0) :
+      TEveVector(x, y, z), fT(t) {}
+   virtual ~TEveVector4() {}
+
+   void Dump() const;
+
+   TEveVector4 operator + (const TEveVector4 & b)
+   { return TEveVector4(fX + b.fX, fY + b.fY, fZ + b.fZ, fT + b.fT); }
+
+   TEveVector4 operator - (const TEveVector4 & b)
+   { return TEveVector4(fX - b.fX, fY - b.fY, fZ - b.fZ, fT - b.fT); }
+
+   TEveVector4 operator * (Float_t a)
+   { return TEveVector4(a*fX, a*fY, a*fZ, a*fT); }
+
+   TEveVector4& operator += (const TEveVector4 & b)
+   { fX += b.fX; fY += b.fY; fZ += b.fZ; fT += b.fT; return *this; }
+
+   ClassDef(TEveVector4, 1); // Float four-vector.
+};
+
+
+
+/******************************************************************************/
 // TEvePathMark
 /******************************************************************************/
 
 class TEvePathMark
 {
 public:
-   enum EType_e   { kReference, kDaughter, kDecay };
+   enum EType_e   { kReference, kDaughter, kDecay, kCluster2D };
 
    EType_e     fType; // Mark-type.
    TEveVector  fV;    // Vertex.
    TEveVector  fP;    // Momentum.
+   TEveVector  fE;    // Extra, meaning depends on fType.
    Float_t     fTime; // Time.
 
-   TEvePathMark(EType_e type=kReference) : fType(type), fV(), fP(), fTime(0) {}
+   TEvePathMark(EType_e type=kReference) :
+      fType(type), fV(), fP(), fE(), fTime(0) {}
+
+   TEvePathMark(EType_e type, const TEveVector& v, Float_t time=0) :
+      fType(type), fV(v), fP(), fE(), fTime(time) {}
+
    TEvePathMark(EType_e type, const TEveVector& v, const TEveVector& p, Float_t time=0) :
-      fType(type), fV(v), fP(p), fTime(time) {}
+      fType(type), fV(v), fP(p), fE(), fTime(time) {}
+
+   TEvePathMark(EType_e type, const TEveVector& v, const TEveVector& p, const TEveVector& e, Float_t time=0) :
+      fType(type), fV(v), fP(p), fE(e), fTime(time) {}
 
    virtual ~TEvePathMark() {}
 

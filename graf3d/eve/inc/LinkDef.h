@@ -32,6 +32,7 @@
 
 // TEveVSD structs
 #pragma link C++ class TEveVector+;
+#pragma link C++ class TEveVector4+;
 #pragma link C++ class TEvePathMark+;
 #pragma link C++ class TEveMCTrack+;
 #pragma link C++ class TEveHit+;

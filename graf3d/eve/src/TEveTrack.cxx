@@ -48,6 +48,7 @@ TEveTrack::TEveTrack() :
 
    fV(),
    fP(),
+   fPEnd(),
    fBeta(0),
    fPdg(0),
    fCharge(0),
@@ -66,6 +67,7 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* rs):
 
    fV(t->Vx(), t->Vy(), t->Vz()),
    fP(t->Px(), t->Py(), t->Pz()),
+   fPEnd(),
    fBeta(t->P()/t->Energy()),
    fPdg(0),
    fCharge(0),
@@ -95,6 +97,7 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* rs):
 
    fV(t->Vx(), t->Vy(), t->Vz()),
    fP(t->Px(), t->Py(), t->Pz()),
+   fPEnd(),
    fBeta(t->P()/t->Energy()),
    fPdg(0),
    fCharge(0),
@@ -124,6 +127,7 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* rs) :
 
    fV(t->fV),
    fP(t->fP),
+   fPEnd(),
    fBeta(t->fBeta),
    fPdg(0),
    fCharge(t->fSign),
@@ -146,6 +150,7 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    TEveLine(),
    fV(t.fV),
    fP(t.fP),
+   fPEnd(),
    fBeta(t.fBeta),
    fPdg(t.fPdg),
    fCharge(t.fCharge),
@@ -154,7 +159,9 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    fPathMarks(),
    fPropagator(0)
 {
-   // Copy constructor.
+   // Copy constructor. Track paremeters are copied but the
+   // extrapolation is not perfermed so you should still call
+   // MakeTrack() to do that.
 
    SetMainColor(t.GetMainColor());
    // TEveLine
@@ -282,8 +289,9 @@ void TEveTrack::MakeTrack(Bool_t recurse)
    TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefStyle);
 
    const Float_t maxRsq = rTP.GetMaxR() * rTP.GetMaxR();
+   const Float_t maxZ   = rTP.GetMaxZ();
 
-   if (TMath::Abs(fV.fZ) < rTP.GetMaxZ() && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
+   if (TMath::Abs(fV.fZ) < maxZ && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
    {
       TEveVector currP = fP;
       Bool_t decay = kFALSE;
@@ -292,42 +300,57 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       {
          if (rTP.GetFitReferences() && pm->fType == TEvePathMark::kReference)
          {
-            if (TMath::Abs(pm->fV.fZ) > rTP.GetMaxZ() ||
-               pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
-               goto bounds;
+            if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+               break;
             // printf("%s fit reference  \n", fName.Data());
             if (fPropagator->GoToVertex(pm->fV, currP)) {
                currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
             }
          }
-         else if (rTP.GetFitDaughters() &&  pm->fType == TEvePathMark::kDaughter)
+         else if (rTP.GetFitDaughters() && pm->fType == TEvePathMark::kDaughter)
          {
-            if (TMath::Abs(pm->fV.fZ) > rTP.GetMaxZ() ||
-                pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
-               goto bounds;
+            if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+               break;
             // printf("%s fit daughter  \n", fName.Data());
             if (fPropagator->GoToVertex(pm->fV, currP)) {
                currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
             }
          }
-         else if (rTP.GetFitDecay() &&  pm->fType == TEvePathMark::kDecay)
+         else if (rTP.GetFitDecay() && pm->fType == TEvePathMark::kDecay)
          {
-            if (TMath::Abs(pm->fV.fZ) > rTP.GetMaxZ() ||
-                pm->fV.fX*pm->fV.fX + pm->fV.fY*pm->fV.fY > maxRsq)
-               goto bounds;
+            if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+               break;
             // printf("%s fit decay \n", fName.Data());
             fPropagator->GoToVertex(pm->fV, currP);
             decay = true;
             break;
          }
+         else if (rTP.GetFitCluster2Ds() && pm->fType == TEvePathMark::kCluster2D)
+         {
+            // This if should actually be done for corrected point.
+            TEveVector itsect;
+            if (fPropagator->IntersectPlane(currP, pm->fV, pm->fP, itsect))
+            {
+               TEveVector delta   = itsect - pm->fV;
+               TEveVector vtopass = pm->fV + pm->fE*(pm->fE.Dot(delta));
+               if (TEveTrackPropagator::IsOutsideBounds(vtopass, maxRsq, maxZ))
+                  break;
+               fPropagator->GoToVertex(vtopass, currP);
+            }
+            else
+            {
+               Warning("TEveTrack::MakeTrack", "Failed to intersect plane for Cluster2D. Ignoring path-mark.");
+            }
+            break;
+         }
       } // loop path-marks
 
-   bounds:
       if (!decay || rTP.GetFitDecay() == kFALSE)
       {
          // printf("%s loop to bounds  \n",fName.Data() );
          fPropagator->GoToBounds(currP);
       }
+      fPEnd = currP;
       //  make_polyline:
       fPropagator->FillPointSet(this);
       fPropagator->ResetTrack();

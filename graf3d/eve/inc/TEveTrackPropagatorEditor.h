@@ -54,9 +54,11 @@ protected:
    TGButton           *fFitDaughters;
    TGButton           *fFitReferences;
    TGButton           *fFitDecay;
+   TGButton           *fFitCluster2Ds;
    TGButton           *fRnrDaughters;
    TGButton           *fRnrReferences;
    TGButton           *fRnrDecay;
+   TGButton           *fRnrCluster2Ds;
 
    TGCompositeFrame   *fRefsCont;
 

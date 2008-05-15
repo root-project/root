@@ -17,12 +17,15 @@
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveTrackGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GL-renderer for TEveTrack class.
 
-ClassImp(TEveTrackGL)
+ClassImp(TEveTrackGL);
 
 //______________________________________________________________________________
 TEveTrackGL::TEveTrackGL() : TEveLineGL()
@@ -96,13 +99,16 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          switch (pm->fType)
          {
             case TEvePathMark::kDaughter:
-               if (rTP.GetRnrDaughters()) accept = kTRUE;
+               if (rTP.GetRnrDaughters())  accept = kTRUE;
                break;
             case TEvePathMark::kReference:
                if (rTP.GetRnrReferences()) accept = kTRUE;
                break;
             case TEvePathMark::kDecay:
-               if (rTP.GetRnrDecay()) accept = kTRUE;
+               if (rTP.GetRnrDecay())      accept = kTRUE;
+               break;
+            case TEvePathMark::kCluster2D:
+               if (rTP.GetRnrCluster2Ds()) accept = kTRUE;
                break;
          }
          if (accept)

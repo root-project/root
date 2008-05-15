@@ -17,12 +17,15 @@
 #include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveTrackProjectedGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GL-renderer for TEveTrackProjected class.
 
-ClassImp(TEveTrackProjectedGL)
+ClassImp(TEveTrackProjectedGL);
 
 //______________________________________________________________________________
 TEveTrackProjectedGL::TEveTrackProjectedGL() : TEveTrackGL(), fM(0)
@@ -107,6 +110,9 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
                break;
             case TEvePathMark::kDecay:
                if (rTP.GetRnrDecay())      accept = kTRUE;
+               break;
+            case TEvePathMark::kCluster2D:
+               if (rTP.GetRnrCluster2Ds()) accept = kTRUE;
                break;
          }
          if (accept)
