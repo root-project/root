@@ -17,4 +17,5 @@
 #pragma link C++ class TAlienDirectoryEntry;
 #pragma link C++ class TAlienSystem;
 #pragma link C++ class TAlienJobStatusList;
+#pragma link C++ class TAlienPackage;
 #endif
