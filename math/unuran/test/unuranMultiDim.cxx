@@ -18,6 +18,7 @@
 #include "TRandom3.h"
 #include "TSystem.h"
 #include "TApplication.h"
+#include "TError.h"
 
 // #include "Math/ProbFunc.h"
 // #include "Math/DistFunc.h"
@@ -95,12 +96,13 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    w.Stop(); 
    double time = w.CpuTime()*1.E9/n; 
 
-   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call";
+   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call\t";
    if (href != 0)  { 
       double prob = href->Chi2Test(h1,"UU");
-      std::cout << "\t\tChi2 Prob = "<< prob << endl;
-      if (prob < 1E-06) { 
-         std::cout << "Chi2 Test failed ! " << std::endl;
+      std::cout << "\tChi2 Prob = "<< prob << endl;
+      // use lower value since hitro is not very precise 
+      if (prob < 1.E-12) { 
+         std::cout << "\nChi2 Test failed ! " << std::endl;
          href->Chi2Test(h1,"UUP"); // print all chi2 test info
          return 1;
       }
@@ -133,7 +135,7 @@ int testGetRandom(TF3 * f, TH3 * h1, const TH3 * href = 0) {
       double prob = href->Chi2Test(h1,"UU");
       std::cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
       if (prob < 1E-06) { 
-         std::cout << "Chi2 Test failed ! " << std::endl;
+         std::cout << "\tChi2 Test failed ! " << std::endl;
          href->Chi2Test(h1,"UUP"); // print all chi2 test info
          return 2;
       }
@@ -145,6 +147,9 @@ int testGetRandom(TF3 * f, TH3 * h1, const TH3 * href = 0) {
 
 
 int  unuranMultiDim() { 
+
+   // switch off printing of  info messages from chi2 test
+   gErrorIgnoreLevel = 1001; 
 
 
    gSystem->Load("libMathCore");
@@ -189,7 +194,7 @@ int  unuranMultiDim() {
 
    testGetRandom(f,h2,h1);
 
-   h1 = h2; 
+   *h1 = *h2; 
    np = 200;
    f->SetNpx(np);   f->SetNpy(np);   f->SetNpz(np);
    std::cout << "Function Points used in GetRandom: [ " << f->GetNpx() << " , "  
@@ -205,7 +210,7 @@ int  unuranMultiDim() {
    TUnuran unr(&r,2);  // 2 is debug level 
    
    int iret = 0; 
-   TH3 * href = h2; 
+   TH3 * href = new TH3D(*h2); 
 
    //vnrou method (requires only pdf) 
    std::string method = "vnrou";
@@ -268,6 +273,8 @@ int  unuranMultiDim() {
    iret |= testUnuran(unr, method, dist, h3, href);
    method = "hitro";
    iret |= testUnuran(unr, method, dist, h3, href);
+
+
 #ifdef USE_GIBBS
    method = "gibbs";      
    logdist.SetDomain(xmin,xmax);

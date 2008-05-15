@@ -16,6 +16,7 @@
 #include "TRandom3.h"
 #include "TSystem.h"
 #include "TApplication.h"
+#include "TError.h"
 
 // #include "Math/ProbFunc.h"
 // #include "Math/DistFunc.h"
@@ -132,6 +133,10 @@ int testGetRandom(TF2 * f, TH1 * h1, const TH2 * href = 0) {
 int unuranMulti2D() { 
 
    gRandom->SetSeed(0);
+
+   // switch off printing of  info messages from chi2 test
+   gErrorIgnoreLevel = 1001; 
+
 
    gSystem->Load("libMathCore");
    gSystem->Load("libUnuran");

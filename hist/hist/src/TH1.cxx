@@ -1513,7 +1513,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //  - res -  normalized residuals for further analysis
 
 
-   Int_t i, j=0, k = 0;
+   Int_t i = 0, j=0, k = 0;
    Int_t i_start, i_end;
    Int_t j_start, j_end;
    Int_t k_start, k_end;
@@ -1690,13 +1690,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       Error("ChistatTestX","one of the histograms is empty");
       return 0;
    }
-   // check if errors are not zero in case of weighted histograms
-   if ( ( comparisonUW || comparisonWW)  && sumw2 <= 0){
-      Error("ChistatTestX","Hist2 has all errors zero\n", i,j,k);
-      return 0;
-   }
-   if ( comparisonWW  && sumw1 <= 0){
-      Error("ChistatTestX","Hist1 has all errors zero\n", i,j,k);
+   if ( comparisonWW  && ( sumw1 <= 0 && sumw2 <=0 ) ){
+      Error("ChistatTestX","Hist1 and Hist2 have both all errors zero\n");
       return 0;
    }
 
@@ -1805,16 +1800,26 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
                // case weighted histogram has zero bin content and error 
                if (bin2 == 0 && err2 == 0) { 
+                  if (sumw2 > 0) { 
                   // use as approximated  error from the total sum weight 
                   //  and sum weight squared
                   err2 = sum2/sumw2; 
+                  }
+                  else { 
+                     // return error because infinite discrepancy here: 
+                     // bin1 != 0 and bin2 =0 in a histogram with all errors zero 
+                     Error("ChistatTestX","Hist2 has in bin %d,%d,%d zero content and all errors zero\n", i,j,k);
+                     return 0;
+                  }
                }
+               // case of err2 = 0 and bin2 not zero is treated without problems
+               // by excluding second chi2 sum 
 
                err2 *= err2;
 
                if (bin1 < 1)  m++;
-               if (bin2*bin2/err2 < 10) n++;
-
+               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
+               
                var1 = sum2*bin2 - sum1*err2;
                var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
                // if bin1 is zero and bin2=1 and sum1=sum2 var1=0 && var2 ==0
@@ -1845,25 +1850,34 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   }
                   var2 = TMath::Sqrt(var2);
                }
-
+               
                probb = (var1+var2)/(2*sum2*sum2);
+            
                temp1 = probb * sum1;
                temp2 = probb * sum2;
-
+               
 //               if(opt.Contains("P")) printf("bin %d p = %g\t",i,probb);
-
-
+               
                temp = bin1 - temp1;
                chi2 += temp*temp/temp1;
-               temp = bin2 - temp2;
-               chi2 += temp*temp/err2;
 
-               temp1 = sum2*err2/var2;
-               temp2 = 1 + (sum1*err2 - sum2*bin2)/var2;
-               temp2 = temp1*temp1*sum1*probb*(1-probb) + temp2*temp2*err2/4;
-               if (res)
-                  res[i-i_start] = temp/TMath::Sqrt(temp2);
+               if (err2 > 0) {
+                  temp = bin2 - temp2;
+                  chi2 += temp*temp/err2;
+               }
+               
+               if (res) { 
+                  if (err2 > 0) { 
+                     temp1 = sum2*err2/var2;
+                     temp2 = 1 + (sum1*err2 - sum2*bin2)/var2;
+                     temp2 = temp1*temp1*sum1*probb*(1-probb) + temp2*temp2*err2/4;
+                     res[i-i_start] = temp/TMath::Sqrt(temp2);
+                  }
+                  else 
+                     // temp1 is probb * sum1
+                     res[i-i_start] = temp/TMath::Sqrt(temp1);
 
+               }
             }
          }
       }
@@ -1884,7 +1898,6 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    // weighted - weighted  comparison
    if (comparisonWW) {
-      Double_t temp,temp1,temp2,temp3;
       for (i=i_start; i<=i_end; i++) {
          for (j=j_start; j<=j_end; j++) {
             for (k=k_start; k<=k_end; k++) {
@@ -1900,24 +1913,38 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   --ndf;  //no data means one degree of freedom less
                   continue;
                } 
-
-               temp  = sum1*sum1*err2 + sum2*sum2*err1;
-               temp1 = sum2*bin1 - sum1*bin2;
-               chi2 += temp1*temp1/temp;
+               if ( (err1 == 0) && (err2 == 0) ) { 
+                  // case of zero errors but non zero bin content
+                  Error("ChistatTestX","Hist1 and Hist2 have both in bin %d,%d,%d errors zero\n", i,j,k);
+                  return 0; 
+               }
+               
+               Double_t sigma  = sum1*sum1*err2 + sum2*sum2*err1;
+               Double_t delta = sum2*bin1 - sum1*bin2;
+               chi2 += delta*delta/sigma;
 
 //               if(opt.Contains("P")) printf("bin %d p = %g\t",i, (bin1*sum1/err1 + bin2*sum2/err2)/(sum1*sum1/err1 + sum2*sum2/err2));
 
-               temp2 = bin1*sum1*err2 + bin2*sum2*err1;
-               temp2 *= sum1/temp;
-               temp2 = bin1-temp2;
-               temp3 = sum1*sum1 / (sum1*sum1/err1 + sum2*sum2/err2);
-               if (res)
-                  res[i-i_start] = temp2/TMath::Sqrt(err1-temp3);
+               if (res) { 
+                  Double_t temp = bin1*sum1*err2 + bin2*sum2*err1;
+                  Double_t probb = temp/sigma; 
+                  Double_t z = 0; 
+                  if (err1 > err2 ) { 
+                     Double_t d1 = (bin1 - sum1 * probb);
+                     Double_t s1 = err1* ( 1. - err2 * sum1 * sum1 / sigma );
+                     z = d1/ TMath::Sqrt(s1); 
+                  } 
+                  else { 
+                     Double_t d2 = (bin2 - sum2 * probb);
+                     Double_t s2 = err2* ( 1. - err1 * sum2 * sum2 / sigma );
+                     z = d2/ TMath::Sqrt(s2); 
+                  }
 
-               bin1 *= bin1/err1;
-               bin2 *= bin2/err2;
-               if (bin1 < 10) m++;
-               if (bin2 < 10) n++;
+                  res[i-i_start] = z;
+               }
+
+               if (err1 > 0 && bin1*bin1/err1 < 10) m++;
+               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
             }
          }
       }

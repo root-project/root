@@ -24,6 +24,8 @@
 #include <cmath>
 #include <cassert>
 
+#include "TError.h"
+
 #include <iostream> 
 
 using std::cout; 
@@ -142,6 +144,9 @@ private:
 int unuranDistr() { 
 
    int iret = 0;
+
+   // switch off printing of  info messages from chi2 test
+   gErrorIgnoreLevel = 1001; 
 
 
    gSystem->Load("libMathCore");

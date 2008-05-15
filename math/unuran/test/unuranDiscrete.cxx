@@ -17,6 +17,8 @@
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TStopwatch.h"
+#include "TError.h"
+
 
 #ifdef WRITE_OUTPUT
 #include "TFile.h"
@@ -76,17 +78,17 @@ int testUnuran(TUnuran & unr, double & time, TH1 * h1, const TH1 * href,  bool w
    } 
    double prob; 
    if (weightHist) 
-      prob = href->Chi2Test(h1,"WW");
+      prob = h1->Chi2Test(href,"UW");
    else
-      prob = href->Chi2Test(h1,"UU");
+      prob = h1->Chi2Test(href,"UU");
    std::string s = "Time using Unuran  " +  unr.MethodName();
    std::cout << std::left << std::setw(40) << s << "\t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
    if (prob < 1E-06) { 
       std::cout << "Chi2 Test failed for method " << unr.MethodName() << std::endl;
       if (weightHist) 
-         href->Chi2Test(h1,"WWP"); // print all chi2 test info
+         h1->Chi2Test(href,"UWP"); // print all chi2 test info
       else 
-         href->Chi2Test(h1,"UUP"); // print all chi2 test info
+         h1->Chi2Test(href,"UUP"); // print all chi2 test info
 
       return 1;
    }
@@ -147,7 +149,7 @@ int testProbVector() {
    double p[10] = {1.,2.,3.,5.,3.,2.,1.,0.5,0.3,0.5 };
    for (int i = 0; i< 10; ++i) { 
       h0->SetBinContent(i+1,p[i]);
-      h0->SetBinError(i,0.0);
+      h0->SetBinError(i+1,0.);
    }
    double sum = h0->GetSumOfWeights();
    std::cout << " prob sum = " << sum << std::endl; 
@@ -425,6 +427,9 @@ int unuranDiscrete() {
 
    c1 = new TCanvas("c1_unuranDiscr_PV","Discrete distribution from PV",10,10,800,800); 
    c1->Divide(3,3);
+
+   // switch off printing of  info messages from chi2 test
+   gErrorIgnoreLevel = 1001; 
 
    iret |= testProbVector(); 
    iret |= testPoisson(); 

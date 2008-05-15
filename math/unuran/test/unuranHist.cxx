@@ -23,12 +23,18 @@
 #include "TRandom3.h"
 
 #include "TStopwatch.h"
+#include "TError.h"
+
 #include <iterator> 
 
 #include <iostream>
 
 
 int unuranHist() {
+
+   // switch off printing of  info messages from chi2 test
+   gErrorIgnoreLevel = 1001; 
+
 
    int nbin = 100;
    double xmin = -5; 
