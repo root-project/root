@@ -376,14 +376,16 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
        rnrCtx.DrawPass() != TGLRnrCtx::kPassOutlineLine)
    {
       const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
-      Int_t inner[4][2] = { {0,-1}, {1,0}, {0,1}, {-1,0} };
-      Int_t outer[8][2] = { {0,-2}, {2,0}, {0,2}, {-2,0}, {-1,-1}, {1,-1}, {1,1}, {-1,1} };
+      Int_t inner[4][2] = { { 0,-1}, { 1, 0}, { 0, 1}, {-1, 0} };
+      Int_t outer[8][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
+                            { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
 
       // TGLCapabilitySwitch bs(GL_BLEND, kTRUE), lss(GL_LINE_SMOOTH, kTRUE);
 
       rnrCtx.SetHighlight(kTRUE);
       TGLUtil::LockColor();
-      for (int i = 0; i < 8; ++i)
+      Int_t first_outer = (rnrCtx.CombiLOD() == TGLRnrCtx::kLODHigh) ? 0 : 4;
+      for (int i = first_outer; i < 8; ++i)
       {
          glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
          glColor4ubv(rnrCtx.GetSSLColor(fSelected));
