@@ -68,7 +68,7 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
       case kBT_FreeBox:              return sizeof(BFreeBox_t);
       case kBT_AABox:                return sizeof(BAABox_t);
       case kBT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
-      default:                      throw(eH + "unexpected atom type.");
+      default:                       throw(eH + "unexpected atom type.");
    }
    return 0;
 }
@@ -218,9 +218,6 @@ void TEveBoxSet::ComputeBBox()
       }
 
    } // end switch box-type
-
-   printf("%s BBox is x(%f,%f), y(%f,%f), z(%f,%f)\n", GetName(),
-          fBBox[0], fBBox[1], fBBox[2], fBBox[3], fBBox[4], fBBox[5]);
 }
 
 /******************************************************************************/
