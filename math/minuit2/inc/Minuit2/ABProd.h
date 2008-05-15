@@ -26,8 +26,8 @@ private:
 
   ABProd& operator=(const ABProd&) {return *this;}
 
-  template<class A, class B>
-  ABProd& operator=(const ABProd<A,B>&) {return *this;}
+  template<class MI1, class MI2>
+  ABProd& operator=(const ABProd<MI1,MI2>&) {return *this;}
   
 public:
 
@@ -37,8 +37,8 @@ public:
 
   ABProd(const ABProd& prod) : fA(prod.fA), fB(prod.fB) {}
 
-  template<class A, class B>
-  ABProd(const ABProd<A,B>& prod) : fA(M1(prod.fA)), fB(M2(prod.fB)) {}
+  template<class MI1, class MI2>
+  ABProd(const ABProd<MI1,MI2>& prod) : fA(M1(prod.fA)), fB(M2(prod.fB)) {}
 
   const M1& A() const {return fA;}
   const M2& B() const {return fB;}
