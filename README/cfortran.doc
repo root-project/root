@@ -1,6 +1,7 @@
-cfortran.doc  4.3
-http://www-zeus.desy.de/~burow/cfortran/
-Burkhard Burow  burow@desy.de                 1990 - 2001.
+cfortran.doc 4.3 */
+www-zeus.desy.de/~burow   OR   anonymous ftp@zebra.desy.de 
+Burkhard Burow  burow@desy.de                 1990 - 1998. 
+
 
               cfortran.h :  Interfacing C or C++ and FORTRAN
 
@@ -96,7 +97,8 @@ cfortran.doc, the engine cfortran.h, examples in cfortest.c and
 cfortex.f/or. [cfortex.for under VMS, cfortex.f on other machines.]
 
 The cfortran.h package continues to be developed. The most recent version is
-available via www at http://www-zeus.desy.de/~burow/cfortran/
+available via www at http://www-zeus.desy.de/~burow
+or via anonymous ftp at zebra.desy.de (131.169.2.244).
 
 The examples may be run using one of the following sets of instructions:
 
@@ -193,13 +195,13 @@ HP9000> # Older f77 may need
 HP9000> f77 -c cfortex.f
 HP9000> CC -o cfortest cfortest.c cfortex.o -lI77 -lF77 && cfortest
 
-HP0000> # If old-style f77 +800 compiled objects are required:
+HP9000> # If old-style f77 +800 compiled objects are required:
 HP9000> # #define hpuxFortran800
 HP9000> cc -c -Aa -DhpuxFortran800 cfortest.c
 HP9000> f77 +800 -o cfortest cfortest.o cfortex.f
 
 f2c> # In the following, 'CC' is any C compiler.
-f2c> f2c -R cfortex.f
+f2c> f2c cfortex.f
 f2c> CC -o cfortest -Df2cFortran cfortest.c cfortex.c -lf2c  &&  cfortest
 
 Portland Group $ # Presumably other C compilers also work.
@@ -531,9 +533,10 @@ FORTRAN_REAL is 'double' on t3e and 'float' elsewhere.
 FORTRAN_REAL thus corresponds to FORTRAN's REAL on all machines, including t3e.
 
 
-o f2c
-  f2c, by default promotes REAL functions to double. cfortran.h does not (yet)
-support this, so the f2c -R option must be used to turn this promotion off.
+o f2c / g77
+  f2c and g77 by default promote REAL functions to double.  As of December 9,
+2005, the Debian package of cfortran supports this behavior, so the f2c -R
+option must *NOT* be used to turn this promotion off.
 
 o f2c
 [Thanks to Dario Autiero for pointing out the following.]
@@ -570,6 +573,11 @@ Names which do contain an underscore may use the following work-around:
 #define e_asy_ e_asy__
 #endif
 /* Last three lines are a work-around for the strange f2c naming feature. */
+
+o gfortran
+  gfortran behaves similarly to f2c and g77, EXCEPT that it does NOT by default
+promote REAL functions to double.  Therefore you should use -DgFortran instead
+of -Dg77Fortran or -Df2cFortran to let cfortran.h know about this difference.
 
 o NAG f90
   The Fortran 77 subset of Fortran 90 is supported. Extending cfortran.h to 
@@ -641,7 +649,7 @@ Old versions of cc(1), say <~1986, may require help for cfortran.h applications:
    [For an ancient math.h on a 386 or sparc, get similar from a new math.h.]
    #ifdef mc68000     /* 5 lines Copyright (c) 1988 by Sun Microsystems, Inc. */
    #define FLOATFUNCTIONTYPE	int
-   #define RETURNFLOAT(x) 		return (*(int *)(&(x)))
+   #define RETURNFLOAT(x) 	return (*(int *)(&(x)))
    #define ASSIGNFLOAT(x,y)	*(int *)(&x) = y
    #endif
 
@@ -872,7 +880,7 @@ unique name, but in practice, the name of the FORTRAN routine in UPPER CASE
 works everywhere and would seem to be an obvious choice.
 
 
-3. <BYTE|DOUBLE|BYTE|DOUBLE|FLOAT|INT|LOGICAL|LONG|SHORT><V|VV|VVV|...>
+3. <BYTE|DOUBLE|FLOAT|INT|LOGICAL|LONG|SHORT><V|VV|VVV|...>
 
 cfortran.h encourages the exact specification of the type and dimension of
 array parameters because it allows the C compiler to detect errors in the
@@ -1833,7 +1841,7 @@ RETURNFLOAT(x) and ASSIGNFLOAT(x,y) instead of including math.h.
 
 Unlike all other C compilers supported by cfortran.h,
 'gcc -traditional' promotes to double all functions returning float
-as demonstrated bu the following example.
+as demonstrated by the following example.
 
 /* m.c */
 #include <stdio.h>
@@ -2015,8 +2023,9 @@ Acknowledgements:
 
 THIS PACKAGE, I.E. CFORTRAN.H, THIS DOCUMENT, AND THE CFORTRAN.H EXAMPLE
 PROGRAMS ARE PROPERTY OF THE AUTHOR WHO RESERVES ALL RIGHTS. THIS PACKAGE AND
-THE CODE IT PRODUCES MAY BE FREELY DISTRIBUTED WITHOUT FEES, SUBJECT TO THE
-FOLLOWING RESTRICTIONS:
+THE CODE IT PRODUCES MAY BE FREELY DISTRIBUTED WITHOUT FEES, SUBJECT
+(AT YOUR CHOICE) EITHER TO THE GNU LIBRARY GENERAL PUBLIC LICENSE
+AT http://www.gnu.org/licenses/lgpl.html OR TO THE FOLLOWING RESTRICTIONS:
 - YOU MUST ACCOMPANY ANY COPIES OR DISTRIBUTION WITH THIS (UNALTERED) NOTICE.
 - YOU MAY NOT RECEIVE MONEY FOR THE DISTRIBUTION OR FOR ITS MEDIA 
   (E.G. TAPE, DISK, COMPUTER, PAPER.)
