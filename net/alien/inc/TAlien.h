@@ -96,6 +96,8 @@ public:
    virtual CatalogType Type(const char* lfn, Option_t* option = "", Bool_t verbose=kFALSE);
    virtual TGridResult* GetCollection(const char* lfn, Option_t* option = "", Bool_t verbose=kFALSE);
 
+   //--- Software Packages
+   virtual TGridResult* ListPackages(const char* alienpackagedir="/alice/packages");
    ClassDef(TAlien,0)  // Interface to Alien GRID services
 };
 

@@ -712,3 +712,57 @@ TGridResult* TAlien::GetCollection(const char* lfn, Option_t* option, Bool_t ver
 
    return gridResult;
 }
+
+//______________________________________________________________________________
+TGridResult* TAlien::ListPackages(const char* alienpackagedir)
+{
+   // List packages in the specified directory.
+
+   if (!alienpackagedir) {
+      alienpackagedir = "/alice/packages";
+   }
+
+   TGridResult* gr = (TGridResult*) new TAlienResult();
+
+   TGridResult* result = Ls(alienpackagedir);
+   if (result) {
+      Int_t i=0;
+      while ( result->GetFileName(i)) {
+         TString pname=result->GetFileName(i);
+         TGridResult* version = Ls(Form("%s/%s",alienpackagedir,pname.Data()));
+         if (version) {
+            Int_t j=0;
+            while (version->GetFileName(j)) {
+               TString pversion=version->GetFileName(j);
+               if ((pversion.Contains("post_"))) {
+               } else {
+                  TGridResult* platform = Ls(Form("%s/%s/%s",alienpackagedir,pname.Data(),pversion.Data()));
+                  if (platform) {
+                     Int_t k=0;
+                     TString allplatform="";
+                     while (platform->GetFileName(k)) {
+                        TString pplatform=platform->GetFileName(k);
+                        allplatform+=pplatform;
+                        allplatform+=" ";
+                        TMap* grmap = new TMap();
+                        grmap->Add((TObject*) new TObjString("name"),
+                           (TObject*) new TObjString(pplatform.Data()));
+                        grmap->Add((TObject*) new TObjString("path"),
+                           new TObjString( Form ( "%s/%s/%s/%s" , alienpackagedir,pname.Data(),pversion.Data(),pplatform.Data())));
+                        gr->Add(grmap);
+                        k++;
+                     }
+                     Info("ListPackages","Package: %-16s Version: %-20s Platform:  [ %s ]",pname.Data(),pversion.Data(),allplatform.Data());
+                     delete platform;
+                  }
+               }
+               j++;
+            }
+            delete version;
+         }
+         i++;
+      }
+      delete result;
+   }
+   return gr;
+}
