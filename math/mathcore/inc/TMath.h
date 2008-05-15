@@ -570,7 +570,7 @@ struct CompareAsc {
 template <typename Iterator> 
 Double_t TMath::Mean(Iterator first, Iterator last)
 {
-   // Return the weighted mean of an array a with length n.
+   // Return the weighted mean of an array defined by the iterators.
 
    Double_t sum = 0;
    Double_t sumw = 0;
@@ -587,7 +587,9 @@ Double_t TMath::Mean(Iterator first, Iterator last)
 template <typename Iterator, typename WeightIterator> 
 Double_t TMath::Mean(Iterator first, Iterator last, WeightIterator w)
 {
-   // Return the weighted mean of an array a with length n.
+   // Return the weighted mean of an array defined by the first and
+   // last iterators. The w iterator should point to the first element
+   // of a vector of weights of the same size as the main array.
 
    Double_t sum = 0;
    Double_t sumw = 0;
@@ -626,7 +628,7 @@ Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
 template <typename Iterator> 
 Double_t TMath::GeomMean(Iterator first, Iterator last)
 {
-   // Return the geometric mean of an array a with length n.
+   // Return the geometric mean of an array defined by the iterators.
    // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
 
    Double_t logsum = 0.;
@@ -645,13 +647,17 @@ Double_t TMath::GeomMean(Iterator first, Iterator last)
 template <typename T> 
 Double_t TMath::GeomMean(Long64_t n, const T *a)
 {
+   // Return the geometric mean of an array a of size n.
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
    return TMath::GeomMean(a, a+n);
 }
 
 template <typename Iterator> 
 Double_t TMath::RMS(Iterator first, Iterator last)
 {
-   // Return the RMS of an array a with length n.
+   // Return the RMS of an array defined by the iterators.
+
    Double_t n = 0;
 
    Double_t tot = 0, tot2 =0, adouble;
@@ -670,13 +676,15 @@ Double_t TMath::RMS(Iterator first, Iterator last)
 template <typename T> 
 Double_t TMath::RMS(Long64_t n, const T *a)
 {
+   // Return the RMS of an array a with length n.
+
    return TMath::RMS(a, a+n);
 }
 
 template <typename Iterator, typename Element>
 Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
 {
-   // Binary search in an array of n values to locate value.
+   // Binary search in an array defined by its iterators.
    //
    // The values in the iterators range are supposed to be sorted
    // prior to this call.  If match is found, function returns
@@ -727,12 +735,13 @@ template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T **array, 
 template <typename Iterator, typename IndexIterator>
 void TMath::SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t down)
 {
-   // Sort the n1 elements of the Short_t array a.
-   // In output the array index contains the indices of the sorted array.
-   // If down is false sort in increasing order (default is decreasing order).
+   // Sort the n1 elements of the Short_t array defined by its
+   // iterators.  In output the array index contains the indices of
+   // the sorted array.  If down is false sort in increasing order
+   // (default is decreasing order).
 
-   // NOTE that the array index must be created with a length >= n1
-   // before calling this function.
+   // NOTE that the array index must be created with a length bigger
+   // or equal than the main array before calling this function.
 
    int i = 0;
 
@@ -755,7 +764,7 @@ template <typename Element, typename Index> void TMath::Sort(Long64_t n, const E
    // In output the array index contains the indices of the sorted array.
    // If down is false sort in increasing order (default is decreasing order).
 
-   // NOTE that the array index must be created with a length >= n1
+   // NOTE that the array index must be created with a length >= n
    // before calling this function.
 
    for(Long64_t i = 0; i < n; i++) { index[i] = i; }
