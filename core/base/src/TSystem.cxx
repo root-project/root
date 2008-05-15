@@ -52,7 +52,6 @@
 #include "TVirtualMutex.h"
 #include "compiledata.h"
 
-
 const char *gRootDir;
 const char *gProgName;
 const char *gProgPath;
@@ -2726,6 +2725,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Select the dictionary name
    TString dict = BaseName( tmpnam(0) );
+#ifdef WIN32
+   dict += rand(); // Make the name more random (needed on windows).
+#endif
    // do a basename to remove /var/tmp
 
    // the file name end up in the file produced
