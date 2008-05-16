@@ -1313,7 +1313,7 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       xbr = ncolumns;
       if (xbr > (Int_t)fDataRange->fXbr) {
          xbr = fDataRange->fXbr;
-         ncolumns = abs(xbr - xtl);
+         ncolumns = TMath::Abs(xbr - xtl);
       }
    }
 
@@ -1323,7 +1323,7 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       ybr = nrows;
       if (ybr > (Int_t)fDataRange->fYbr) {
          ybr = fDataRange->fYbr;
-         nrows =  abs(ybr - ytl);
+         nrows =  TMath::Abs(ybr - ytl);
       }
    }
 
@@ -1334,7 +1334,7 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       xtl = xbr - ncolumns;
       if (xtl < 0) {
          xtl = 0;
-         ncolumns = abs(xbr - xtl);
+         ncolumns = TMath::Abs(xbr - xtl);
          Info("TGTable::GotoTableRange", "Right column boundry out of"
                                          " bounds, set to 0");
       }
@@ -1352,8 +1352,8 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       }
    }
 
-   nrows = abs(ybr - ytl);
-   ncolumns = abs(xbr - xtl);
+   nrows    = TMath::Abs(ybr - ytl);
+   ncolumns = TMath::Abs(xbr - xtl);
 
    // Resize rows and columns if needed
    ResizeTable(nrows, ncolumns);
