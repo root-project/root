@@ -65,12 +65,13 @@ class THnSparseArrayChunk: public TObject {
 
  public:
    THnSparseArrayChunk():
-      fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0),
+      fCoordinateAllocationSize(-1), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0),
       fContent(0), fSumw2(0) {}
 
    THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
    virtual ~THnSparseArrayChunk();
 
+   Int_t    fCoordinateAllocationSize; //! size of the allocated coordinate buffer; -1 means none or fCoordinatesSize
    Int_t    fSingleCoordinateSize; // size of a single bin coordinate
    Int_t    fCoordinatesSize;      // size of the bin coordinate buffer
    Char_t  *fCoordinates;          //[fCoordinatesSize] compact bin coordinate buffer

@@ -185,14 +185,15 @@ ClassImp(THnSparseArrayChunk);
 
 //______________________________________________________________________________
 THnSparseArrayChunk::THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont):
-      fSingleCoordinateSize(coordsize), fCoordinatesSize(0),  fCoordinates(0), fContent(cont),
+      fCoordinateAllocationSize(-1), fSingleCoordinateSize(coordsize), fCoordinatesSize(0),
+      fCoordinates(0), fContent(cont),
       fSumw2(0)
 {
    // (Default) initialize a chunk. Takes ownership of cont (~THnSparseArrayChunk deletes it),
    // and create an ArrayF for errors if "errors" is true.
 
-   fCoordinates = new Char_t[fSingleCoordinateSize * cont->GetSize()];
-
+   fCoordinateAllocationSize = fSingleCoordinateSize * cont->GetSize();
+   fCoordinates = new Char_t[fCoordinateAllocationSize];
    if (errors) Sumw2();
 }
 
@@ -209,6 +210,27 @@ THnSparseArrayChunk::~THnSparseArrayChunk()
 void THnSparseArrayChunk::AddBin(ULong_t idx, const Char_t* coordbuf)
 {
    // Create a new bin in this chunk
+
+   // When streaming out only the filled chunk is saved.
+   // When reading back only the memory needed for that filled part gets
+   // allocated. We need to check whether the allowed chunk size is
+   // bigger than the allocated size. If fCoordinateAllocationSize is
+   // set to -1 this chunk has been allocated by the  streamer and the
+   // buffer allocation size is defined by [fCoordinatesSize]. In that
+   // case we need to compare fCoordinatesSize to
+   // fSingleCoordinateSize * fContent->GetSize()
+   // to determine whether we need to expand the buffer.
+   if (fCoordinateAllocationSize == -1 && fContent) {
+      Int_t chunksize = fSingleCoordinateSize * fContent->GetSize();
+      if (fCoordinatesSize < chunksize) {
+         // need to re-allocate:
+         Char_t *newcoord = new Char_t[chunksize];
+         memcpy(newcoord, fCoordinates, fCoordinatesSize);
+         delete [] fCoordinates;
+         fCoordinates = newcoord;
+      }
+      fCoordinateAllocationSize = chunksize;
+   }
 
    memcpy(fCoordinates + idx * fSingleCoordinateSize, coordbuf, fSingleCoordinateSize);
    fCoordinatesSize += fSingleCoordinateSize;
