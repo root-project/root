@@ -1353,7 +1353,7 @@ int G__search_typename(const char *typenamein,int typein
         baseType = G__get_from_type(typein,false);
      }
      if (!baseType.Id()) {
-        Cint::Internal::G__dumpreflex();
+        //Cint::Internal::G__dumpreflex();
         G__fprinterr(G__serr,"Internal error: G__declare_typedef could not find the type for tagnum==%d (to define %s as %s)",
            tagnum,type_name,G__fulltagname(tagnum,0));
         G__genericerror((char*)NULL);

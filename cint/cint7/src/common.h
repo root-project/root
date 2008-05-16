@@ -1316,9 +1316,7 @@ public:
    
 class G__RflxProperties {
 public:
-   G__RflxProperties(): 
-      autoload(0), filenum(-1), linenum(-1), 
-      globalcomp(G__NOLINK), iscpplink(G__NOLINK), typenum(-1), tagnum(-1), isFromUsing(false), vtable(0),isBytecodeArena(0) {}
+   G__RflxProperties() : autoload(0), filenum(-1), linenum(-1), globalcomp(G__NOLINK), iscpplink(G__NOLINK), typenum(-1), tagnum(-1), isFromUsing(false), vtable(0), isBytecodeArena(0) {}
    int autoload;
    int filenum; // entry in G__srcfile
    int linenum;
@@ -1337,18 +1335,19 @@ public:
 
 class G__RflxVarProperties: public G__RflxProperties {
 public:
-   G__RflxVarProperties(): bitfield_start(0),bitfield_width(0),addressOffset(0),isCompiledGlobal(false) ,lock(false)
-      {}
+   G__RflxVarProperties(): G__RflxProperties(), bitfield_start(0), bitfield_width(0), addressOffset(0), isCompiledGlobal(false) , lock(false) {}
    short bitfield_start;
    short bitfield_width;
 
-   char *addressOffset;   // Offset to be added to the 'base' address (the object address for data member, 0 for global variable, etc.)
+   char* addressOffset;   // Offset to be added to the 'base' address (the object address for data member, 0 for global variable, etc.)
    bool isCompiledGlobal; // true if G__var_array::statictype was equal to G__COMPILEDGLOBAL
-   bool lock; 
+   bool lock;
 };
 
-class G__RflxFuncProperties: public G__RflxProperties {
+class G__RflxFuncProperties: public G__RflxProperties
+{
 public:
+   G__RflxFuncProperties() : G__RflxProperties() {}
    G__InterfaceMethod ifmethod;
    G__funcentry entry;
 };

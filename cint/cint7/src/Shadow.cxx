@@ -14,48 +14,46 @@
 
 bool Cint::G__ShadowMaker::fgVetoShadow = false;
 
-Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix, 
-   bool(*needShadowClass)(G__ClassInfo &cl) /*=Cint::G__ShadowMaker::NeedShadowClass*/,
-   bool(*needTypedefShadow)(G__ClassInfo &cl) /*=0*/):
-   fOut(out), fNSPrefix(nsprefix), fNeedTypedefShadow(needTypedefShadow) {
-
+Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix, bool (*needShadowClass)(G__ClassInfo &cl) /*=Cint::G__ShadowMaker::NeedShadowClass*/, bool (*needTypedefShadow)(G__ClassInfo &cl) /*=0*/) : fOut(out), fNSPrefix(nsprefix), fNeedTypedefShadow(needTypedefShadow)
+{
    G__ClassInfo cl;
    // loop over all classes, deciding whether they need a shadow by themselves
    cl.Init();
    while (cl.Next()) {
-      fCacheNeedShadow[cl.Tagnum()]=cl.IsValid() 
-         && (cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)
-         && cl.Linkage() == G__CPPLINK)
-         && needShadowClass(cl);
+      fCacheNeedShadow[cl.Tagnum()] = cl.IsValid()
+                                      && (cl.Property() & (G__BIT_ISCLASS | G__BIT_ISSTRUCT)
+                                          && cl.Linkage() == G__CPPLINK)
+                                      && needShadowClass(cl);
    }
 
    // loop over all classes again, and for nested classes also generate shadow if parent needs shadow
    cl.Init();
    while (cl.Next()) {
       if (fCacheNeedShadow[cl.Tagnum()]) continue;
-      G__ClassInfo encClass=cl.EnclosingClass();
+      G__ClassInfo encClass = cl.EnclosingClass();
       if (!encClass.IsValid() || !fCacheNeedShadow[encClass.Tagnum()]) continue;
       fCacheNeedShadow[cl.Tagnum()] = 1;
    }
 
-   // loop over all classes again, and for nested classes needing shadow set 
+   // loop over all classes again, and for nested classes needing shadow set
    // parent to "dummy shadow" (i.e. only providing the enclosing scope)
    // if parent doesn't need shadow
    cl.Init();
    while (cl.Next()) {
       if (!fCacheNeedShadow[cl.Tagnum()]) continue;
-      G__ClassInfo encClass=cl.EnclosingClass();
-      if (!encClass.IsValid() || !(encClass.Property() & G__BIT_ISCLASS)) 
+      G__ClassInfo encClass = cl.EnclosingClass();
+      if (!encClass.IsValid() || !(encClass.Property() & G__BIT_ISCLASS))
          continue;
-      int tagnum=encClass.Tagnum();
-      if (!fCacheNeedShadow[tagnum]) 
-         fCacheNeedShadow[tagnum]=2;
+      int tagnum = encClass.Tagnum();
+      if (!fCacheNeedShadow[tagnum])
+         fCacheNeedShadow[tagnum] = 2;
    }
 }
 
 //______________________________________________________________________________
-void Cint::G__ShadowMaker::VetoShadow(bool veto /*=true*/) { 
-   fgVetoShadow = veto; 
+void Cint::G__ShadowMaker::VetoShadow(bool veto /*=true*/)
+{
+   fgVetoShadow = veto;
 }
 
 //______________________________________________________________________________
@@ -67,53 +65,53 @@ bool Cint::G__ShadowMaker::NeedShadowClass(G__ClassInfo& cl)
    if (cl.RootFlag() == G__NOSTREAMER) return false;
    if (IsStdPair(cl)) return true;
    if (IsSTLCont(cl.Name())) return false;
-   if (strcmp(cl.Name(),"string") == 0 ) return false;
+   if (strcmp(cl.Name(), "string") == 0) return false;
 
-   return (cl.FileName()==0 || strncmp(cl.FileName(),"prec_stl",8)!=0);
+   return (cl.FileName() == 0 || strncmp(cl.FileName(), "prec_stl", 8) != 0);
 }
 
 //______________________________________________________________________________
 int Cint::G__ShadowMaker::WriteNamespaceHeader(G__ClassInfo &cl)
 {
-  // Write all the necessary opening part of the namespace and
-  // return the number of closing brackets needed
-  // For example for Space1::Space2
-  // we write: namespace Space1 { namespace Space2 {
-  // and return 2.
+   // Write all the necessary opening part of the namespace and
+   // return the number of closing brackets needed
+   // For example for Space1::Space2
+   // we write: namespace Space1 { namespace Space2 {
+   // and return 2.
 
-  int closing_brackets = 0;
-  G__ClassInfo namespace_obj = cl.EnclosingSpace();
-  //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
-  //    cl.Fullname(),namespace_obj.Fullname());
-  if (namespace_obj.Property() & G__BIT_ISNAMESPACE) {
-     closing_brackets = WriteNamespaceHeader(namespace_obj);
-     for (int indent=0; indent<closing_brackets; ++indent) {
-        fOut << "   ";
-     }
-     fOut << "      namespace " << namespace_obj.Name() << " {" << std::endl;
-     closing_brackets++;
-  }
+   int closing_brackets = 0;
+   G__ClassInfo namespace_obj = cl.EnclosingSpace();
+   //fprintf(stderr,"DEBUG: in WriteNamespaceHeader for %s with %s\n",
+   //    cl.Fullname(),namespace_obj.Fullname());
+   if (namespace_obj.Property() & G__BIT_ISNAMESPACE) {
+      closing_brackets = WriteNamespaceHeader(namespace_obj);
+      for (int indent = 0; indent < closing_brackets; ++indent) {
+         fOut << "   ";
+      }
+      fOut << "      namespace " << namespace_obj.Name() << " {" << std::endl;
+      closing_brackets++;
+   }
 
-  return closing_brackets;
+   return closing_brackets;
 }
 
 //______________________________________________________________________________
 void Cint::G__ShadowMaker::GetFullyQualifiedName(G__ClassInfo &cl, std::string &fullyQualifiedName)
 {
-   GetFullyQualifiedName(cl.Fullname(),fullyQualifiedName);
+   GetFullyQualifiedName(cl.Fullname(), fullyQualifiedName);
    const char *qual = fullyQualifiedName.c_str();
    if (!strncmp(qual, "::vector", strlen("::vector"))
-       ||!strncmp(qual, "::list", strlen("::list"))
-       ||!strncmp(qual, "::deque", strlen("::deque"))
-       ||!strncmp(qual, "::map", strlen("::map"))
-       ||!strncmp(qual, "::multimap", strlen("::multimap"))
-       ||!strncmp(qual, "::set", strlen("::set"))
-       ||!strncmp(qual, "::multiset", strlen("::multiset"))
-       ||!strncmp(qual, "::allocator", strlen("::allocator"))
-       ||!strncmp(qual, "::pair", strlen("::pair"))
-       ) {
+         || !strncmp(qual, "::list", strlen("::list"))
+         || !strncmp(qual, "::deque", strlen("::deque"))
+         || !strncmp(qual, "::map", strlen("::map"))
+         || !strncmp(qual, "::multimap", strlen("::multimap"))
+         || !strncmp(qual, "::set", strlen("::set"))
+         || !strncmp(qual, "::multiset", strlen("::multiset"))
+         || !strncmp(qual, "::allocator", strlen("::allocator"))
+         || !strncmp(qual, "::pair", strlen("::pair"))
+      ) {
 
-      fullyQualifiedName.erase(0,2);
+      fullyQualifiedName.erase(0, 2);
 
    }
 }
@@ -131,40 +129,43 @@ void Cint::G__ShadowMaker::GetFullyQualifiedName(G__TypeInfo &type, std::string 
 
       fullyQualifiedName = type.TrueName();
 
-   } else if (typeName == "vector"
-       ||typeName == "list"
-       ||typeName == "deque"
-       ||typeName == "map"
-       ||typeName == "multimap"
-       ||typeName == "set"
-       ||typeName == "multiset"
-       ||typeName == "allocator"
-       ||typeName == "pair"
-      ) {
+   }
+   else if (typeName == "vector"
+            || typeName == "list"
+            || typeName == "deque"
+            || typeName == "map"
+            || typeName == "multimap"
+            || typeName == "set"
+            || typeName == "multiset"
+            || typeName == "allocator"
+            || typeName == "pair"
+           ) {
 
-      GetFullyQualifiedName(type.Name(),fullyQualifiedName);
+      GetFullyQualifiedName(type.Name(), fullyQualifiedName);
       const char *qual = fullyQualifiedName.c_str();
       if (!strncmp(qual, "::vector", strlen("::vector"))
-       ||!strncmp(qual, "::list", strlen("::list"))
-       ||!strncmp(qual, "::deque", strlen("::deque"))
-       ||!strncmp(qual, "::map", strlen("::map"))
-       ||!strncmp(qual, "::multimap", strlen("::multimap"))
-       ||!strncmp(qual, "::set", strlen("::set"))
-       ||!strncmp(qual, "::multiset", strlen("::multiset"))
-       ||!strncmp(qual, "::allocator", strlen("::allocator"))
-       ||!strncmp(qual, "::pair", strlen("::pair"))
-      ) {
+            || !strncmp(qual, "::list", strlen("::list"))
+            || !strncmp(qual, "::deque", strlen("::deque"))
+            || !strncmp(qual, "::map", strlen("::map"))
+            || !strncmp(qual, "::multimap", strlen("::multimap"))
+            || !strncmp(qual, "::set", strlen("::set"))
+            || !strncmp(qual, "::multiset", strlen("::multiset"))
+            || !strncmp(qual, "::allocator", strlen("::allocator"))
+            || !strncmp(qual, "::pair", strlen("::pair"))
+         ) {
 
-         fullyQualifiedName.erase(0,2);
+         fullyQualifiedName.erase(0, 2);
 
       }
 
-   } else if (type.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT
-                                 |G__BIT_ISENUM|G__BIT_ISUNION))  {
+   }
+   else if (type.Property() & (G__BIT_ISCLASS | G__BIT_ISSTRUCT
+                               | G__BIT_ISENUM | G__BIT_ISUNION))  {
 
-      GetFullyQualifiedName(type.TrueName(),fullyQualifiedName);
+      GetFullyQualifiedName(type.TrueName(), fullyQualifiedName);
 
-   } else {
+   }
+   else {
 
       fullyQualifiedName = type.TrueName();
 
@@ -193,84 +194,88 @@ void Cint::G__ShadowMaker::GetFullyQualifiedName(const char *originalName, std::
    current = next = 0;
    current = &(name[0]);
    next = &(name[0]);
-   for (int c = 0; c<len; c++) {
+   for (int c = 0; c < len; c++) {
       switch (name[c]) {
-      case '<':
-         if (nesting==0) {
-            name[c] = 0;
-            current = next;
-            if (c+1<len) next = &(name[c+1]);
-            else next = 0;
-            fullyQualifiedName += current;
-            fullyQualifiedName += "< ";
-            //fprintf(stderr,"will copy1: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
-         }
-         nesting++;
-         break;
-      case '>':
-         nesting--;
-         if (nesting==0) {
-            name[c] = 0;
-            current = next;
-            if (c+1<len) next = &(name[c+1]);
-            else next = 0;
-            arg.Init(current);
-            if (strlen(current) && arg.IsValid()) {
-                GetFullyQualifiedName(arg,subQualifiedName);
-                fullyQualifiedName += subQualifiedName;
-            } else {
-                fullyQualifiedName += current;
+         case '<':
+            if (nesting == 0) {
+               name[c] = 0;
+               current = next;
+               if (c + 1 < len) next = &(name[c+1]);
+               else next = 0;
+               fullyQualifiedName += current;
+               fullyQualifiedName += "< ";
+               //fprintf(stderr,"will copy1: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
             }
-            fullyQualifiedName += " >";
-            //fprintf(stderr,"will copy2: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
-         }
-         break;
-      case ',':
-         if (nesting==1) {
-            name[c] = 0;
-            current = next;
-            if (c+1<len) next = &(name[c+1]);
-            else next = 0;
-            arg.Init(current);
-            if (strlen(current) && arg.IsValid()) {
-                GetFullyQualifiedName(arg,subQualifiedName);
-                fullyQualifiedName += subQualifiedName;
-            } else {
-                fullyQualifiedName += current;
+            nesting++;
+            break;
+         case '>':
+            nesting--;
+            if (nesting == 0) {
+               name[c] = 0;
+               current = next;
+               if (c + 1 < len) next = &(name[c+1]);
+               else next = 0;
+               arg.Init(current);
+               if (strlen(current) && arg.IsValid()) {
+                  GetFullyQualifiedName(arg, subQualifiedName);
+                  fullyQualifiedName += subQualifiedName;
+               }
+               else {
+                  fullyQualifiedName += current;
+               }
+               fullyQualifiedName += " >";
+               //fprintf(stderr,"will copy2: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
             }
-            fullyQualifiedName += ", ";
-            //fprintf(stderr,"will copy3: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
-         }
-         break;
-      case ' ':
-      case '&':
-      case '*':
-         if (nesting==1) {
-            char keep = name[c];
-            name[c] = 0;
-            current = next;
-            if (c+1<len) next = &(name[c+1]);
-            else next = 0;
-            arg.Init(current);
-            if (strlen(current) && arg.IsValid()) {
-                GetFullyQualifiedName(arg,subQualifiedName);
-                fullyQualifiedName += subQualifiedName;
-            } else {
-                fullyQualifiedName += current;
+            break;
+         case ',':
+            if (nesting == 1) {
+               name[c] = 0;
+               current = next;
+               if (c + 1 < len) next = &(name[c+1]);
+               else next = 0;
+               arg.Init(current);
+               if (strlen(current) && arg.IsValid()) {
+                  GetFullyQualifiedName(arg, subQualifiedName);
+                  fullyQualifiedName += subQualifiedName;
+               }
+               else {
+                  fullyQualifiedName += current;
+               }
+               fullyQualifiedName += ", ";
+               //fprintf(stderr,"will copy3: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
             }
-            fullyQualifiedName += keep;
-            //fprintf(stderr,"will copy4: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
-            //fprintf(stderr,"have current %p, &name[0] %p for name %s \n",
-            //        current,&(name[0]),name.c_str());
-         }
-         break;
+            break;
+         case ' ':
+         case '&':
+         case '*':
+            if (nesting == 1) {
+               char keep = name[c];
+               name[c] = 0;
+               current = next;
+               if (c + 1 < len) next = &(name[c+1]);
+               else next = 0;
+               arg.Init(current);
+               if (strlen(current) && arg.IsValid()) {
+                  GetFullyQualifiedName(arg, subQualifiedName);
+                  fullyQualifiedName += subQualifiedName;
+               }
+               else {
+                  fullyQualifiedName += current;
+               }
+               fullyQualifiedName += keep;
+               //fprintf(stderr,"will copy4: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
+               //fprintf(stderr,"have current %p, &name[0] %p for name %s \n",
+               //        current,&(name[0]),name.c_str());
+            }
+            break;
       }
    }
    //fprintf(stderr,"preCalculated: %s\n",fullyQualifiedName.c_str());
-   if (current == &(name[0]) ) {
+   if (current == &(name[0])) {
       fullyQualifiedName += name;
-   } else if ( next ) {
-      for( int i = (next-&(name[0])); i<len; i++ ) {
+   }
+   else if (next) {
+      for (int i = (next - &(name[0])); i < len; i++) {
          fullyQualifiedName += name[i];
       }
    }
@@ -286,18 +291,23 @@ bool Cint::G__ShadowMaker::IsSTLCont(const char *type)
 
    if (!type) return false;
 
-   if (!strncmp(type,"std::",5)) type+=5;
-   const char* templateChar=strchr(type,'<');
-   size_t posTemplate=templateChar-type;
+   if (!strncmp(type, "std::", 5)) type += 5;
+   const char* templateChar = strchr(type, '<');
+   size_t posTemplate = templateChar - type;
    if (!templateChar || !posTemplate) return false;
 
    switch (posTemplate) {
-      case 3: return !(strncmp(type,"map",3) && strncmp(type,"set",3) 
-                 && strncmp(type,"any",3));
-      case 4: return !(strncmp(type,"list",4));
-      case 5: return !(strncmp(type,"deque",5));
-      case 6: return !(strncmp(type,"vector",6));
-      case 8: return !(strncmp(type,"multimap",8) && strncmp(type,"multiset",8));
+      case 3:
+         return !(strncmp(type, "map", 3) && strncmp(type, "set", 3)
+                  && strncmp(type, "any", 3));
+      case 4:
+         return !(strncmp(type, "list", 4));
+      case 5:
+         return !(strncmp(type, "deque", 5));
+      case 6:
+         return !(strncmp(type, "vector", 6));
+      case 8:
+         return !(strncmp(type, "multimap", 8) && strncmp(type, "multiset", 8));
    }
    return false;
 }
@@ -307,8 +317,8 @@ bool Cint::G__ShadowMaker::IsStdPair(G__ClassInfo &cl)
 {
    // Is this an std pair
 
-   return (strncmp(cl.Name(),"pair<",strlen("pair<"))==0
-           && strncmp(cl.FileName(),"prec_stl",8)==0);
+   return (strncmp(cl.Name(), "pair<", strlen("pair<")) == 0
+           && strncmp(cl.FileName(), "prec_stl", 8) == 0);
 }
 
 //______________________________________________________________________________
@@ -319,7 +329,7 @@ void Cint::G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::strin
       G__ClassInfo space = cl.EnclosingClass();
       if (!space.IsValid())
          space = cl.EnclosingSpace();
-      if (space.IsValid() && strlen(space.Name())>0)
+      if (space.IsValid() && strlen(space.Name()) > 0)
          GetFullShadowNameRecurse(space, fullname);
       else {
          fullname = "::";
@@ -332,10 +342,11 @@ void Cint::G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::strin
    if (fCacheNeedShadow[cl.Tagnum()]) {
       fullname += G__map_cpp_name((char*)cl.Name());
       fullname += "::";
-   } else {
+   }
+   else {
       fullname += cl.Name();
       //if (cl.Property() & G__BIT_ISCLASS)
-         fullname += "::";
+      fullname += "::";
       //else
       //   fullname += "__";
    }
@@ -345,9 +356,9 @@ void Cint::G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::strin
 void Cint::G__ShadowMaker::GetFullShadowName(G__ClassInfo &cl, std::string &fullname)
 {
    GetFullShadowNameRecurse(cl, fullname);
-   size_t len=fullname.length();
-   if (len>1)
-      fullname.erase(fullname.length()-2);
+   size_t len = fullname.length();
+   if (len > 1)
+      fullname.erase(fullname.length() - 2);
 }
 
 //______________________________________________________________________________
@@ -355,38 +366,42 @@ std::string Cint::G__ShadowMaker::GetNonConstTypeName(G__DataMemberInfo &m, bool
 {
    // Return the type of the data member, without ANY const keyword
 
-   if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
+   if (m.Property() & (G__BIT_ISCONSTANT | G__BIT_ISPCONSTANT)) {
       std::string full;
       G__TypeInfo* type = m.Type();
       const char *typeName = 0;
       if (fullyQualified) {
          GetFullyQualifiedName(*(m.Type()), full);
          typeName = full.c_str();
-      } else {
+      }
+      else {
          typeName = type->Name();
       }
       static const char *constwd = "const";
-      const char *s; int lev=0;
+      const char *s;
+      int lev = 0;
       std::string ret;
-      for (s=typeName;*s;s++) {
-         if (*s=='<') lev++;
-         if (*s=='>') lev--;
-         if (lev==0 && strncmp(constwd,s,strlen(constwd))==0) {
-            const char *after = s+strlen(constwd);
-            if (strspn(after,"&* ")>=1 || *after==0) {
-               s+=strlen(constwd)-1;
+      for (s = typeName;*s;s++) {
+         if (*s == '<') lev++;
+         if (*s == '>') lev--;
+         if (lev == 0 && strncmp(constwd, s, strlen(constwd)) == 0) {
+            const char *after = s + strlen(constwd);
+            if (strspn(after, "&* ") >= 1 || *after == 0) {
+               s += strlen(constwd) - 1;
                continue;
             }
          }
          ret += *s;
       }
       return ret;
-   } else {
+   }
+   else {
       if (fullyQualified) {
          std::string typeName;
-         GetFullyQualifiedName(*(m.Type()),typeName);
+         GetFullyQualifiedName(*(m.Type()), typeName);
          return typeName;
-      } else {
+      }
+      else {
          return m.Type()->Name();
       }
    }
@@ -560,15 +575,43 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
                   }
 
                   std::string arg = typenameOriginal.substr(posTemplArg + 1, posArgEnd - posTemplArg - 1);
-                  std::string::size_type posRef = std::string::npos;
-                  posRef = arg.find_first_of(" *&");
-                  while (posRef != std::string::npos) {
-                     arg.erase(posRef, 1);
-                     posRef = arg.find_first_of(" *&");
-                  }
+                  //std::string::size_type posRef = arg.find_first_of(" *&");
+                  //while (posRef != std::string::npos) {
+                  //   arg.erase(posRef, 1);
+                  //   posRef = arg.find_first_of(" *&");
+                  //}
                   // if the type is not defined (i.e. it's fundamental)
                   // and if we don't have a real shadoew for it, use the
                   // global scope's type.
+                  std::string::size_type posRef = 0;
+                  int templateLevel = 0;
+                  for (; arg[posRef]; ++posRef) {
+                     switch (arg[posRef]) {
+                     case '<':
+                        if (arg[posRef + 1] != '<') ++templateLevel;
+                        else ++posRef;
+                        break;
+                     case '>':
+                        if (arg[posRef + 1] != '>') ++templateLevel;
+                        else if (posRef > 8) {
+                           std::string::size_type posOp = posRef - 1;
+                           while (posOp && isspace(arg[posOp])) --posOp;
+                           if (posOp > 8 && !arg.compare(posOp - 8, 8, "operator"))
+                              // it's the operator >>
+                              ++posRef; 
+                           else ++templateLevel;
+                        } else ++templateLevel;
+                        break;
+                     case '*':
+                     case '&':
+                        if (!templateLevel) {
+                           arg.erase(posRef, 1);
+                           --posRef;
+                        }
+                        break;
+                     }
+                  }
+
                   int tagname = G__defined_tagname(arg.c_str(), 1);
                   if (tagname != -1) {
                      G__ClassInfo ciArg(tagname);
@@ -732,7 +775,8 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo& cl, int level /*=0*/)
 }
 
 //______________________________________________________________________________
-void Cint::G__ShadowMaker::WriteAllShadowClasses() {
+void Cint::G__ShadowMaker::WriteAllShadowClasses()
+{
    if (fgVetoShadow) return;
 
    fOut << "// START OF SHADOWS" << std::endl << std::endl;
@@ -748,16 +792,16 @@ void Cint::G__ShadowMaker::WriteAllShadowClasses() {
       if (!ns.empty()) {
          fOut << ind << "namespace " << ns << " {" << std::endl;
          namespaceParts.push_back(ns);
-         ind+="   ";
+         ind += "   ";
       }
-      remainingNSPrefix.erase(0, posNextNS+2);
+      remainingNSPrefix.erase(0, posNextNS + 2);
    }
    fOut << ind << "namespace Shadow {" << std::endl;
 
    G__ClassInfo cl;
    cl.Init();
    while (cl.Next()) {
-      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
+      if ((cl.Property() & (G__BIT_ISCLASS | G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
          // Write Code for initialization object
          WriteShadowClass(cl);
       }
@@ -765,9 +809,9 @@ void Cint::G__ShadowMaker::WriteAllShadowClasses() {
 
    fOut << ind << "} // of namespace Shadow" << std::endl;
    while (namespaceParts.size()) {
-      ind.erase(0,3);
-      fOut << ind << "} // of namespace " 
-           << namespaceParts.back() << std::endl;
+      ind.erase(0, 3);
+      fOut << ind << "} // of namespace "
+      << namespaceParts.back() << std::endl;
       namespaceParts.pop_back();
    }
    fOut << "// END OF SHADOWS" << std::endl << std::endl;

@@ -783,8 +783,8 @@ extern "C" int G__defined_tagname(const char *tagname, int noerror)
    }
    // Not found.
    if (noerror == 0) {
-      G__dumpreflex();
-      G__fprinterr(G__serr, "G__defined_tagname: Error: class, struct, union or type '%s' is not defined ", tagname);
+      //G__dumpreflex();
+      G__fprinterr(G__serr, "G__defined_tagname: Error: class, struct, union or type '%s' is not defined  %s:%d ", tagname, __FILE__, __LINE__);
       G__genericerror(0);
    }
    // We failed, return an error code.

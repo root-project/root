@@ -4760,7 +4760,24 @@ static G__value Cint::Internal::G__allocvariable(G__value result, G__value para[
    //
    //  Security, check for unassigned internal pointer.
    //
-   G__CHECK(G__SECURE_POINTER_INIT, !G__def_struct_member && std::isupper(G__var_type) && (G__ASM_FUNC_NOP == G__asm_wholefunction) && G__get_offset(var) && (0 == (*((long*) G__get_offset(var)))), *((long*) G__get_offset(var)) = 0);
+   //PSRXXXG__CHECK(G__SECURE_POINTER_INIT, !G__def_struct_member && std::isupper(G__var_type) && (G__ASM_FUNC_NOP == G__asm_wholefunction) && G__get_offset(var) && (0 == (*((long*) G__get_offset(var)))), *((long*) G__get_offset(var)) = 0);
+   if (G__security & G__SECURE_POINTER_INIT) {
+      if (G__security_handle(G__SECURE_POINTER_INIT)) {
+         if (!G__def_struct_member) {
+            if (isupper(G__var_type)) {
+               if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
+                  if (G__asm_wholefunction == G__ASM_FUNC_NOP) {
+                     if (G__get_offset(var)) {
+                        if (!(*((long*) G__get_offset(var)))) {
+                           *((long*) G__get_offset(var)) = 0;
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
    //
    //  Security, increment reference count on a pointed-at object.
    //

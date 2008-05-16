@@ -801,7 +801,8 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
             temp += G__tagnum.Name();
             temp += "()";
             if (G__dispsource) {
-               G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d", G__store_struct_offset, temp.c_str(), var.Name().c_str(), G__get_varlabel(var, 1) /* number of elements */, G__struct.iscpplink[G__get_tagnum(G__tagnum)]);
+               //G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d", G__store_struct_offset, temp.c_str(), var.Name().c_str(), G__get_varlabel(var, 1) /* number of elements */, G__struct.iscpplink[G__get_tagnum(G__tagnum)]);
+               G__fprinterr(G__serr, "\n!!!Calling destructor '%s::%s' array elements: %d linked: %d addr: %08lX\n", var.Name(Reflex::SCOPED).c_str(), temp.c_str(), G__get_varlabel(var, 1) /* number of elements */, G__struct.iscpplink[G__get_tagnum(G__tagnum)], G__store_struct_offset);
             }
             int store_prerun = G__prerun;
             G__prerun = 0;
@@ -810,7 +811,10 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
                cpplink = 1;
                if (G__test_static(var, G__AUTOARYDISCRETEOBJ)) {
                   // -- The variable is an array with auto storage duration.
-                  // FIXME: Do we really need this special case?
+                  //
+                  // Note: We allocated the memory for this variable using
+                  //       G__malloc() and the element count is not stored
+                  //       in the allocated block.
                   char* store_globalvarpointer = G__globalvarpointer;
                   int size = ((::Reflex::Type) G__tagnum).SizeOf();
                   int num_of_elements = G__get_varlabel(var, 1) /* number of elements */;
@@ -827,16 +831,13 @@ int Cint::Internal::G__destroy_upto(::Reflex::Scope& scope, int global, int inde
                      }
                   }
                   G__globalvarpointer = store_globalvarpointer;
-                  delete [] (G__get_offset(var)); //  -8);
+                  free(G__get_offset(var)); // Note: Was allocated by G__malloc().
                   G__get_offset(var) = 0;
                }
                else {
                   // -- The variable is *not* an array with auto storage duration.
                   G__store_struct_offset = G__get_offset(var);
-                  int i = G__get_varlabel(var, 1) /* number of elements */;
-                  if (i > 0) {
-                     G__cpp_aryconstruct = i;
-                  }
+                  G__cpp_aryconstruct = G__get_varlabel(var, 1) /* number of elements */;
                   int done = 0;
                   G__getfunction((char*) temp.c_str(), &done, G__TRYDESTRUCTOR);
                   G__cpp_aryconstruct = 0;

@@ -115,7 +115,7 @@ int Cint::G__TypedefInfo::Next()
    if (typeiter != max_index) {
       ++typeiter;
    }
-   if (typeiter != max_index) {
+   if (typeiter == max_index) {
       Init(Reflex::Type());
       // Init changed it, make it max again.
       typeiter = max_index;
