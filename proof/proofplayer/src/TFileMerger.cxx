@@ -175,7 +175,7 @@ Bool_t TFileMerger::Merge()
    if (!result) {
       Error("Merge", "error during merge of your ROOT files");
    } else {
-      fOutputFile->Write();
+      //fOutputFile->Write(); NOOOO !! this is already done in MergeRecursive
       // copy the result file to the final destination
       TFile::Cp(fOutputFilename1, fOutputFilename);
    }
