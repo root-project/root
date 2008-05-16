@@ -97,7 +97,7 @@ X11TTFLIBDEPM          = $(X11LIB) $(GRAFLIB)
 X3DLIBDEPM             = $(G3DLIB) $(GUILIB)
 MONALISALIBDEPM        = $(NETLIB) $(IOLIB)
 THREADLIBDEPM          = $(IOLIB)
-EVELIBDEPM             = $(GEOMLIB) $(G3DLIB) $(GUILIB) \
+EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(GLLIB) $(FTGLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
@@ -306,7 +306,7 @@ GDMLLIBEXTRA            = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
 UNURANLIBEXTRA          = lib/libHist.lib lib/libMathCore.lib
 MONALISALIBEXTRA        = lib/libNet.lib lib/libRIO.lib
 THREADLIBEXTRA          = lib/libRIO.lib
-EVELIBEXTRA             = lib/libGeom.lib \
+EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
                           lib/libGpad.lib lib/libGraf3d.lib lib/libGui.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libPhysics.lib \
                           lib/libGed.lib lib/libEG.lib lib/libTree.lib \
@@ -398,7 +398,7 @@ GDMLLIBEXTRA            = -Llib -lGeom -lXMLIO -lHist -lRIO
 UNURANLIBEXTRA          = -Llib -lHist -lMathCore
 MONALISALIBEXTRA        = -Llib -lNet -lRIO
 THREADLIBEXTRA          = -Llib -lRIO
-EVELIBEXTRA             = -Llib -lGeom -lGraf3d -lGui -lGpad \
+EVELIBEXTRA             = -Llib -lGeom -lGeomPainter -lGraf3d -lGui -lGpad \
                           -lGraf -lHist -lPhysics -lGed -lEG -lTree \
                           -lTreePlayer -lRGL -lRIO -lRint -lMathCore
 
