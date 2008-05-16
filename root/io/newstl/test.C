@@ -145,13 +145,22 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
    filename += ".root";
    TFile file(filename,"READ");
 
+   if (file.IsZombie()) return false;
+
    holder = dynamic_cast<HolderClass*>( file.Get("holder") );
-   if (!holder) result = false;
-   else {
+   if (!holder) {
+      TestError("Reading",Form("Missing object: holder"));
+      result = false;
+   } else {
       result &= holder->Verify(0,Form("%s: write in dir",testname),0);
    }
 
    TTree *chain = dynamic_cast<TTree*>( file.Get("stltree") );
+
+   if (!chain) {
+      TestError("treeReading",Form("Missing TTree: stltree"));
+      return false;
+   }
 
    if (nEntry==0 || nEntry>chain->GetEntriesFast()) nEntry = (Int_t)chain->GetEntriesFast();
    for ( Int_t entryInChain = 0, entryInTree = chain->LoadTree(0);
