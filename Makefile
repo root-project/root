@@ -806,7 +806,8 @@ endif
 	@rm -f bin/roota bin/proofserva lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll build/dummy.d
-	@rm -f README/ChangeLog README/ReleaseNotes
+	@rm -f README/ChangeLog
+	@rm -rf README/ReleaseNotes
 	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/include/*.so*
 	@rm -f etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd
 	@rm -f etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd
