@@ -198,6 +198,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
    ((THashList*)target->GetList())->Rehash(nguess);
    ((THashList*)target->GetListOfKeys())->Rehash(nguess);
    TList listH;
+   TString listHargs;
+   listHargs.Form("((TCollection*)%p)",&listH);
    while(first_source) {
       TDirectory *current_sourcedir = first_source->GetDirectory(path);
       if (!current_sourcedir) {
@@ -223,31 +225,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
          //current_sourcedir->cd();
          TObject *obj = key->ReadObj();
 
-         if ( obj->IsA()->InheritsFrom( TH1::Class() ) ) {
-            // descendant of TH1 -> merge it
-
-            TH1 *h1 = (TH1*)obj;
-
-            // loop over all source files and add the content of the
-            // correspondant histogram to the one pointed to by "h1"
-            TFile *nextsource = (TFile*)sourcelist->After( first_source );
-            while ( nextsource ) {
-               // make sure we are at the correct directory level by cd'ing to path
-               TDirectory *ndir = nextsource->GetDirectory(path);
-               if (ndir) {
-                  ndir->cd();
-                  TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
-                  if (key2) {
-                     TObject *hobj = key2->ReadObj();
-                     hobj->ResetBit(kMustCleanup);
-                     listH.Add(hobj);
-                     h1->Merge(&listH);
-                     listH.Delete();
-                  }
-               }
-               nextsource = (TFile*)sourcelist->After( nextsource );
-            }
-         } else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
+         if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
       
             // loop over all source files create a chain of Trees "globChain"
             if (!noTrees) {
@@ -294,6 +272,33 @@ void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir )
             // GetPath(), so we can still figure out where we are in the recursion
             MergeRootfile( newdir, sourcelist,1);
 
+         } else if ( obj->InheritsFrom(TObject::Class())
+              && obj->IsA()->GetMethodWithPrototype("Merge", "TCollection*") ) {
+            // object implements Merge(TCollection*)
+
+            // loop over all source files and merge same-name object
+            TFile *nextsource = (TFile*)sourcelist->After( first_source );
+            while ( nextsource ) {
+               // make sure we are at the correct directory level by cd'ing to path
+               TDirectory *ndir = nextsource->GetDirectory(path);
+               if (ndir) {
+                  ndir->cd();
+                  TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
+                  if (key2) {
+                     TObject *hobj = key2->ReadObj();
+                     hobj->ResetBit(kMustCleanup);
+                     listH.Add(hobj);
+                     Int_t error = 0;
+                     obj->Execute("Merge", listHargs.Data(), &error);
+                     if (error) {
+                        cerr << "Error calling Merge() on " << obj->GetName()
+                             << " with the corresponding object in " << nextsource->GetName() << endl;
+                     }
+                     listH.Delete();
+                  }
+               }
+               nextsource = (TFile*)sourcelist->After( nextsource );
+            }
          } else {
             // object is of no type that we can merge 
             cout << "Cannot merge object type, name: " 
