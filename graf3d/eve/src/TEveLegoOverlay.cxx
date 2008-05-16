@@ -45,8 +45,7 @@ TEveLegoOverlay::TEveLegoOverlay() :
    fSliderPosY(0.15),
 
    fShowSlider(kFALSE),
-   fSliderVal(0),
-   fValidRegion(1.f)
+   fSliderVal(0)
 {
    // Constructor.
 
@@ -79,9 +78,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
    glTranslatef(0, fSliderPosY, 0);
 
    Int_t tickval = fCalo->GetAxisStep(fCalo->GetData()->GetMaxVal());
-   fValidRegion = (fCalo->GetData()->GetMaxVal()*1.f)/(1.f*fCalo->GetNZStep()*tickval);
-
-   Float_t scale = fSliderH/(fCalo->GetNZStep()*tickval);
+   Float_t scale = fSliderH/(fCalo->GetNZSteps()*tickval);
    // event handling
    if ( rnrCtx.Selection())
    {
@@ -90,8 +87,8 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       glBegin(GL_QUADS);
       glVertex2f(-w, 0);
       glVertex2f( w, 0);
-      glVertex2f( w, fSliderH*fValidRegion);
-      glVertex2f(-w, fSliderH*fValidRegion);
+      glVertex2f( w, fSliderH);
+      glVertex2f(-w, fSliderH);
       glEnd();
    }
 
@@ -115,7 +112,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
    Int_t val = 0;
    glPushMatrix();
    glTranslatef(3*off, 0, 0);
-   for(Int_t i=0; i<=fCalo->GetNZStep(); i++)
+   for(Int_t i=0; i<=fCalo->GetNZSteps(); i++)
    {
       RenderText(Form("%d", val), val*scale);
       val+= tickval;
@@ -124,13 +121,13 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
    fNumFont.PostRender();
 
    // tick-marks
-   Int_t nt = 5*fCalo->GetNZStep();
+   Int_t nt = 5*fCalo->GetNZSteps();
    Float_t tmStep =  fSliderH/nt;
 
    glLineWidth(2);
    glBegin(GL_LINES);
    glVertex2f(0, 0);
-   glVertex2f(0, tickval*scale*fCalo->GetNZStep());
+   glVertex2f(0, tickval*scale*fCalo->GetNZSteps());
    glEnd();
 
    glLineWidth(1);
@@ -173,7 +170,7 @@ void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
    glScalef(2, 2, 1); // normalised coordinates
 
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_POINT_BIT);
+   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT | GL_POINT_BIT);
    glEnable(GL_POINT_SMOOTH);
    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -204,9 +201,19 @@ void TEveLegoOverlay::Render(TGLRnrCtx& rnrCtx)
    glEnd();
 
    TGLUtil::Color(4);
+
+   glLineWidth(1);
    glBegin(GL_LINES);
    glVertex2f(0, 0); glVertex2f(0, bh);
    glVertex2f((bw+bwt)*0.5, bh*0.5); glVertex2f(-(bw+bwt)*0.5, bh*0.5);
+   glEnd();
+
+   glLineWidth(2);
+   glBegin(GL_LINE_LOOP);
+   glVertex2f(-bw, 0);
+   glVertex2f( bw, 0);
+   glVertex2f( bwt, bh);
+   glVertex2f(-bwt, bh);
    glEnd();
 
    glPopMatrix();
@@ -235,8 +242,8 @@ Bool_t TEveLegoOverlay::SetSliderVal(Event_t* event, TGLRnrCtx &rnrCtx)
 
    if (fSliderVal < 0 )
       fSliderVal = 0;
-   else if (fSliderVal > fValidRegion)
-      fSliderVal = fValidRegion;
+   else if (fSliderVal > 1)
+      fSliderVal = 1;
 
    fCalo->SetHPlaneVal(fSliderVal);
 

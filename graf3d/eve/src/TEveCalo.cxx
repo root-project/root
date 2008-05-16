@@ -381,8 +381,10 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
 
    fFontColor(0),
    fGridColor(kGray+3),
+   fPlaneColor(kRed-5),
+   fPlaneTransparency(60),
 
-   fNZStep(5),
+   fNZSteps(5),
    fZAxisStep(0.f),
 
    fBinWidth(5),
@@ -401,8 +403,10 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
 
    fFontColor(0),
    fGridColor(kGray+3),
+   fPlaneColor(kRed-5),
+   fPlaneTransparency(60),
 
-   fNZStep(5),
+   fNZSteps(5),
    fZAxisStep(0.f),
 
    fBinWidth(5),
@@ -422,7 +426,7 @@ Int_t TEveCaloLego::GetAxisStep(Float_t max) const
 {
    // Returns reasonable step between two axis labels.
 
-   return 5*TMath::CeilNint(max*1.f/(fNZStep*5));
+   return 5*TMath::CeilNint(max*1.f/(fNZSteps*5));
 }
 
 //______________________________________________________________________________

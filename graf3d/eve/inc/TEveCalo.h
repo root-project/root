@@ -179,8 +179,10 @@ protected:
 
    Color_t                 fFontColor;
    Color_t                 fGridColor;
+   Color_t                 fPlaneColor;
+   UChar_t                 fPlaneTransparency;
 
-   Int_t                   fNZStep; // Z axis label step in GeV
+   Int_t                   fNZSteps; // Z axis label step in GeV
    Float_t                 fZAxisStep;
 
    Int_t                   fBinWidth; // distance in pixels of projected up and low edge
@@ -207,8 +209,14 @@ public:
    Color_t  GetGridColor() const { return fGridColor; }
    void     SetGridColor(Color_t ci) { fGridColor=ci; }
 
-   Int_t  GetNZStep() const { return fNZStep; }
-   void   SetNZStep(Int_t s) { fNZStep = s;}
+   Color_t  GetPlaneColor() const { return fPlaneColor; }
+   void     SetPlaneColor(Color_t ci) { fPlaneColor=ci; }
+
+   UChar_t  GetPlaneTransparency() const { return fPlaneTransparency; }
+   void     SetPlaneTransparency(UChar_t t) { fPlaneTransparency=t; }
+
+   Int_t  GetNZSteps() const { return fNZSteps; }
+   void   SetNZSteps(Int_t s) { fNZSteps = s;}
 
    Int_t    GetBinWidth() const { return fBinWidth; }
    void     SetBinWidth(Int_t bw) { fBinWidth = bw; }

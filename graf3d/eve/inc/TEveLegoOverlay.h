@@ -44,7 +44,6 @@ protected:
 
    Bool_t         fShowSlider;
    Float_t        fSliderVal;
-   Float_t        fValidRegion;
 
    mutable TGLFont  fNumFont;
 
