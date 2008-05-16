@@ -379,32 +379,32 @@ void TAlienJDL::Parse(const char * filename)
    TString lineString;
    Char_t line[1024];
    while ( file.good() ) {
-     file.getline ( line,1024 );
-     lineString=line;
-     if ( !lineString.IsNull() ) {
-        TObjArray *strCmdOrValue = lineString.Tokenize ( "=" );
-        TObjString*strObjCmd = ( TObjString* ) strCmdOrValue->At ( 0 );
-        TObjString*strObjValue = ( TObjString* ) strCmdOrValue->At ( 1 );
-        TString cmdString ( strObjCmd->GetString() );
-        TString valueString ( strObjValue->GetString() );
-        cmdString.ReplaceAll ( " ","" );
-        valueString.ReplaceAll ( " ","" );
-        valueString.ReplaceAll ( "\",\"","`" );
+      file.getline ( line,1024 );
+      lineString=line;
+      if ( !lineString.IsNull() ) {
+         TObjArray *strCmdOrValue = lineString.Tokenize ( "=" );
+         TObjString*strObjCmd = ( TObjString* ) strCmdOrValue->At ( 0 );
+         TObjString*strObjValue = ( TObjString* ) strCmdOrValue->At ( 1 );
+         TString cmdString ( strObjCmd->GetString() );
+         TString valueString ( strObjValue->GetString() );
+         cmdString.ReplaceAll ( " ","" );
+         valueString.ReplaceAll ( " ","" );
+         valueString.ReplaceAll ( "\",\"","`" );
 
-        TObjArray *strValues = valueString.Tokenize ( "`" );
-        for ( Int_t i=0;i<strValues->GetEntries();i++ ) {
-           TObjString *strObjValue2 = ( TObjString* ) strValues->At ( i );
-           TString valueString2 ( strObjValue2->GetString() );
-           valueString2.ReplaceAll ( "\"","" );
-           valueString2.ReplaceAll ( "{","" );
-           valueString2.ReplaceAll ( "}","" );
-           valueString2.ReplaceAll ( ";","" );
-           SetValueByCmd ( cmdString,valueString2 );
-        }
-    }
-  }
+         TObjArray *strValues = valueString.Tokenize ( "`" );
+         for ( Int_t i=0;i<strValues->GetEntries();i++ ) {
+            TObjString *strObjValue2 = ( TObjString* ) strValues->At ( i );
+            TString valueString2 ( strObjValue2->GetString() );
+            valueString2.ReplaceAll ( "\"","" );
+            valueString2.ReplaceAll ( "{","" );
+            valueString2.ReplaceAll ( "}","" );
+            valueString2.ReplaceAll ( ";","" );
+            SetValueByCmd ( cmdString,valueString2 );
+         }
+      }
+   }
 
-  file.close();
+   file.close();
 }
 
 //______________________________________________________________________________

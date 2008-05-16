@@ -503,6 +503,7 @@ TAlienFile::~TAlienFile()
 //______________________________________________________________________________
 void TAlienFile::Close(Option_t * option)
 {
+   //close a file 
    if (!IsOpen()) return;
 
    // Close file.
