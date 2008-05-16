@@ -29,12 +29,11 @@
 #include "TFile.h"
 #include "TUUID.h"
 #include "TSystem.h"
-#include "TH1.h"
-#include "TChain.h"
 #include "TKey.h"
 #include "THashList.h"
 #include "TObjString.h"
 #include "TClass.h"
+#include "TROOT.h"
 #include "TMethodCall.h"
 #include "Riostream.h"
 
@@ -113,8 +112,8 @@ Bool_t TFileMerger::AddFile(const char *url)
       fFileList->Add(newfile);
 
       if (!fMergeList)
-         fMergeList = new TList;  
-      TObjString *urlObj = new TObjString(url); 
+         fMergeList = new TList;
+      TObjString *urlObj = new TObjString(url);
       fMergeList->Add(urlObj);
 
       return  kTRUE;
@@ -186,7 +185,7 @@ Bool_t TFileMerger::Merge()
    gSystem->Unlink(path);
    fOutputFile = 0;
 
-   // Remove local copies if there are any 
+   // Remove local copies if there are any
    TIter next(fFileList);
    TFile *file;
    while ((file = (TFile*) next())) {
@@ -212,9 +211,13 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    TString path( (char*)strstr( target->GetPath(), ":" ) );
    path.Remove( 0, 2 );
 
+   //gain time, do not add the objects in the list in memory
+   Long_t addDirStat = gROOT->ProcessLine("TH1::AddDirectoryStatus();");
+   gROOT->ProcessLine("TH1::AddDirectory(kFALSE);");
+
    TDirectory *first_source = (TDirectory*)sourcelist->First();
    THashList allNames;
-   while(first_source) {
+   while (first_source) {
       TDirectory *current_sourcedir = first_source->GetDirectory(path);
       if (!current_sourcedir) {
          first_source = (TDirectory*)sourcelist->After(first_source);
@@ -222,11 +225,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
       }
 
       // loop over all keys in this directory
-      TChain *globChain = 0;
+      Long_t globChain = 0;
       TIter nextkey( current_sourcedir->GetListOfKeys() );
       TKey *key, *oldkey=0;
-      //gain time, do not add the objects in the list in memory
-      TH1::AddDirectory(kFALSE);
 
       while ( (key = (TKey*)nextkey())) {
          if (current_sourcedir == target) break;
@@ -240,14 +241,13 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
          current_sourcedir->cd();
          TObject *obj = key->ReadObj();
 
-         if ( obj->IsA()->InheritsFrom( TH1::Class() ) ) {
+         if ( obj->IsA()->InheritsFrom( "TH1" ) ) {
             // descendant of TH1 -> merge it
 
-            TH1 *h1 = (TH1*)obj;
             TList listH;
 
             // loop over all source files and add the content of the
-            // correspondant histogram to the one pointed to by "h1"
+            // correspondant histogram to the one pointed to by "obj"
             TFile *nextsource = (TFile*)sourcelist->After( first_source );
             while ( nextsource ) {
                // make sure we are at the correct directory level by cd'ing to path
@@ -259,7 +259,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      TObject *hobj = key2->ReadObj();
                      hobj->ResetBit(kMustCleanup);
                      listH.Add(hobj);
-                     h1->Merge(&listH);
+                     gROOT->ProcessLine(Form("((TH1 *)0x%lx)->Merge(0x%lx);", obj, &listH));
                      listH.Delete();
                   }
                }
@@ -275,8 +275,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                } else {
                   obj_name = obj->GetName();
                }
-               globChain = new TChain(obj_name);
-               globChain->Add(first_source->GetName());
+               globChain = gROOT->ProcessLine(Form("new TChain(%s);", obj_name.Data()));
+               gROOT->ProcessLine(Form("((TChain *)0x%lx)->Add(%s);", globChain, first_source->GetName()));
                TFile *nextsource = (TFile*)sourcelist->After( first_source );
                while ( nextsource ) {
                   //do not add to the list a file that does not contain this Tree
@@ -292,7 +292,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                         if (aobj) { mustAdd = kTRUE; delete aobj;}
                      }
                      if (mustAdd) {
-                        globChain->Add(nextsource->GetName());
+                        gROOT->ProcessLine(Form("((TChain *)0x%lx)->Add(%s);", globChain, nextsource->GetName()));
                      }
                   }
                   delete curf;
@@ -345,6 +345,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                }
                Warning("MergeRecursive", "object type without Merge function will be added unmerged, name: %s title: %s",
                        obj->GetName(), obj->GetTitle());
+               if (addDirStat)
+                  gROOT->ProcessLine("TH1::AddDirectory(kTRUE);");
                return kTRUE;
             }
          }
@@ -361,10 +363,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                //printf("cas d'une directory\n");
             } else if(obj->IsA()->InheritsFrom( "TTree" )) {
                if (!fNoTrees) {
-                  globChain->ls();
-                  if (fFastMethod) globChain->Merge(target->GetFile(),0,"keep fast");
-                  else             globChain->Merge(target->GetFile(),0,"keep");
-                  delete globChain;
+                  gROOT->ProcessLine(Form("((TChain *)0x%lx)->ls();", globChain));
+                  if (fFastMethod)
+                     gROOT->ProcessLine(Form("((TChain *)0x%lx)->Merge(%s,0,\"keep fast\");", globChain, target->GetFile()));
+                  else
+                     gROOT->ProcessLine(Form("((TChain *)0x%lx)->Merge(%s,0,\"keep\");", globChain, target->GetFile()));
+                  gROOT->ProcessLine(Form("delete (TChain *)0x%lx;", globChain));
                }
             } else {
                obj->Write( key->GetName() );
@@ -377,5 +381,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    // save modifications to target file
    target->SaveSelf(kTRUE);
    if (!isdir) sourcelist->Remove(sourcelist->First());
+   if (addDirStat)
+      gROOT->ProcessLine("TH1::AddDirectory(kTRUE);");
    return kTRUE;
 }
