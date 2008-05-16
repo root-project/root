@@ -235,6 +235,9 @@ Bool_t TTreeCacheUnzip::FillBuffer()
       //we have found the branch. We now register all its baskets
       //from the requested offset to the basket below fEntrymax
       for (Int_t j=0;j<nb;j++) {
+         // This basket has already been read, skip it
+         if (b->GetListOfBaskets()->UncheckedAt(j)) continue;
+
          Long64_t pos = b->GetBasketSeek(j);
          Int_t len = lbaskets[j];
          if (pos <= 0 || len <= 0) continue;
