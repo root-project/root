@@ -1039,7 +1039,7 @@ void TGTable::UpdateView()
 }
 
 //______________________________________________________________________________
-const UInt_t TGTable::GetNTableRows() const
+UInt_t TGTable::GetNTableRows() const
 {
    // Return the amount of rows in the table.
    
@@ -1047,7 +1047,7 @@ const UInt_t TGTable::GetNTableRows() const
 }
 
 //______________________________________________________________________________
-const UInt_t TGTable::GetNDataRows() const
+UInt_t TGTable::GetNDataRows() const
 {
    // Return the amount of rows in the data source.
 
@@ -1055,7 +1055,7 @@ const UInt_t TGTable::GetNDataRows() const
 }
 
 //______________________________________________________________________________
-const UInt_t TGTable::GetNTableColumns() const
+UInt_t TGTable::GetNTableColumns() const
 {
    // Return the amount of columns in the table.
 
@@ -1063,7 +1063,7 @@ const UInt_t TGTable::GetNTableColumns() const
 }
 
 //______________________________________________________________________________
-const UInt_t TGTable::GetNDataColumns() const
+UInt_t TGTable::GetNDataColumns() const
 {
    // Return the amount of columns in the data source.
 
@@ -1071,7 +1071,7 @@ const UInt_t TGTable::GetNDataColumns() const
 }
 
 //______________________________________________________________________________
-const UInt_t TGTable::GetNTableCells() const
+UInt_t TGTable::GetNTableCells() const
 {
    // Return the amount of cells in the table.
 
@@ -1079,7 +1079,7 @@ const UInt_t TGTable::GetNTableCells() const
 }
 
 //______________________________________________________________________________
-const UInt_t TGTable::GetNDataCells() const
+UInt_t TGTable::GetNDataCells() const
 {
    // Return the amount of cell in the data source.
 
@@ -1150,7 +1150,7 @@ TGTableHeader *TGTable::GetTableHeader()
 // }
 
 //______________________________________________________________________________
-const Pixel_t TGTable::GetRowBackground(UInt_t row) const
+Pixel_t TGTable::GetRowBackground(UInt_t row) const
 {
    // Get the background collor for row.
 
@@ -1162,7 +1162,7 @@ const Pixel_t TGTable::GetRowBackground(UInt_t row) const
 }
 
 //______________________________________________________________________________
-const Pixel_t TGTable::GetHeaderBackground() const
+Pixel_t TGTable::GetHeaderBackground() const
 {
    // Get the background color of headers.
 
@@ -1291,8 +1291,8 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       return;
    }
 
-   Int_t nrows = abs(ybr - ytl);
-   Int_t ncolumns = abs(xbr - xtl);
+   Int_t nrows    = TMath::Abs(ybr - ytl);
+   Int_t ncolumns = TMath::Abs(xbr - xtl);
 
    if (xtl > xbr) {
       Info("TGTable::GotoTableRange","Swapping x-range boundries");

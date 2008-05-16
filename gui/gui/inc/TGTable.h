@@ -180,13 +180,13 @@ public:
    virtual void UpdateView();
 
    // Getters
-   virtual const UInt_t       GetNTableRows() const;
-   virtual const UInt_t       GetNDataRows() const;
-   virtual const UInt_t       GetNTableColumns() const;
-   virtual const UInt_t       GetNDataColumns() const;
-   virtual const UInt_t       GetNTableCells() const;
-   virtual const UInt_t       GetNDataCells() const;
-   virtual const TTableRange *GetCurrentRange() const;
+   virtual UInt_t       GetNTableRows() const;
+   virtual UInt_t       GetNDataRows() const;
+   virtual UInt_t       GetNTableColumns() const;
+   virtual UInt_t       GetNDataColumns() const;
+   virtual UInt_t       GetNTableCells() const;
+   virtual UInt_t       GetNDataCells() const;
+   virtual const  TTableRange *GetCurrentRange() const;
    
    virtual TVirtualTableInterface *GetInterface() { return fInterface; }
 
@@ -203,8 +203,8 @@ public:
 //    virtual const TGGC*  GetCellBckgndGC(TGTableCell *cell) const; 
 //    virtual const TGGC*  GetCellBckgndGC(UInt_t row, UInt_t column) const; 
    
-   virtual const Pixel_t GetRowBackground(UInt_t row) const;
-   virtual const Pixel_t GetHeaderBackground() const ;
+   virtual Pixel_t GetRowBackground(UInt_t row) const;
+   virtual Pixel_t GetHeaderBackground() const ;
    
    virtual void SetOddRowBackground(Pixel_t pixel);
    virtual void SetEvenRowBackground(Pixel_t pixel);
