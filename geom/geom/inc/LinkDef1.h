@@ -81,6 +81,6 @@
 #pragma link C++ class TGeoIterator;
 #pragma link C++ class TGeoBuilder;
 #pragma link C++ class TGeoNavigator+;
-
+#pragma link C++ class TGeoOverlap+;
 
 #endif

@@ -34,7 +34,7 @@ GEOMH1       := TGeoAtt.h TGeoBoolNode.h \
                 TGeoScaledShape.h TVirtualGeoPainter.h TVirtualGeoTrack.h \
 		TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h \
-                TGeoBuilder.h TGeoNavigator.h
+                TGeoBuilder.h TGeoNavigator.h TGeoOverlap.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h
 GEOMH1       := $(patsubst %,$(MODDIRI)/%,$(GEOMH1))
 GEOMH2       := $(patsubst %,$(MODDIRI)/%,$(GEOMH2))

@@ -40,5 +40,6 @@
 #pragma link C++ class TCollectionStreamer-;
 #pragma link C++ class TCollectionClassStreamer-;
 #pragma link C++ class TCollectionMemberStreamer-;
+#pragma link C++ class TFileMerger+;
 
 #endif
