@@ -369,7 +369,8 @@
       CHARACTER    MODE*(*), NAME*(*)
       DIMENSION    NVMODE(4)
       CHARACTER    CHUSE*4
-      LGN = LNBLNK (NAME)
+      print *,'CFOPEN called'
+*     LGN = LNBLNK (NAME)
       CHUSE = MODE
       CALL CUTOL (CHUSE)
       CALL VZEROI (NVMODE,4)
@@ -394,7 +395,8 @@
       INTEGER FUNCTION CFSTAT (NAME, INFO)
       CHARACTER*(*)  NAME
       INTEGER        INFO(12), CFSTATI
-      LGN   = LNBLNK (NAME)
+      print *, 'CFSTAT called'
+*      LGN   = LNBLNK (NAME)
       CFSTAT = CFSTATI (NAME, INFO, LGN)
       END
 

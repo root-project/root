@@ -11,14 +11,11 @@
 #ifndef ROOT_TVirtualTableInterface
 #define ROOT_TVirtualTableInterface
 
-// class TString;
-// class TArrayD;
-
 class TVirtualTableInterface {
 
 public:
-//    TVirtualTableInterface(UInt_t nrows, UInt_t ncols) : fNRows(nrows), fNColumns(ncols) {};
-   virtual ~TVirtualTableInterface() = 0;
+   TVirtualTableInterface() {;}
+   virtual ~TVirtualTableInterface() {;}
 
    virtual Double_t    GetValue(UInt_t row, UInt_t column) = 0;
    virtual const char *GetValueAsString(UInt_t row, UInt_t column) = 0;
