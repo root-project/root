@@ -26,8 +26,8 @@ private:
 
   ABSum& operator=(const ABSum&) {return *this;}
 
-  template<class A, class B>
-  ABSum& operator=(const ABSum<A,B>&) {return *this;}
+  template<class MI1, class MI2>
+  ABSum& operator=(const ABSum<MI1,MI2>&) {return *this;}
 
 public:
 
@@ -37,8 +37,8 @@ public:
 
   ABSum(const ABSum& sum) : fA(sum.fA), fB(sum.fB) {}
 
-  template<class A, class B>
-  ABSum(const ABSum<A,B>& sum) : fA(M1(sum.fA)), fB(M2(sum.fB)) {}
+  template<class MI1, class MI2>
+  ABSum(const ABSum<MI1,MI2>& sum) : fA(M1(sum.fA)), fB(M2(sum.fB)) {}
 
   const M1& A() const {return fA;}
   const M2& B() const {return fB;}
