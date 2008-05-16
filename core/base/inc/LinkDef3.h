@@ -174,6 +174,7 @@
 #pragma link C++ function operator==(const TUri&, const TUri&);
 #pragma link C++ class TUrl;
 #pragma link C++ class TInetAddress-;
+#pragma link C++ class TVirtualTableInterface+;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.

@@ -529,6 +529,14 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
 }
 
 //______________________________________________________________________________
+TGDimension TGFrame::GetDefaultSize() const
+{ 
+   //   std::cout << fWidth << "x" << fHeight << std::endl;
+   return TGDimension(fWidth, fHeight); 
+}
+
+
+//______________________________________________________________________________
 void TGFrame::Move(Int_t x, Int_t y)
 {
    // Move frame.
@@ -1044,6 +1052,24 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    // child composite frames
    if (fMustCleanup == kDeepCleanup)
       f->SetCleanup(kDeepCleanup);
+}
+
+//______________________________________________________________________________
+void TGCompositeFrame::RemoveAll()
+{
+   // Remove all frames from composite frame.
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      fList->Remove(el);
+      if (el->fLayout) el->fLayout->RemoveReference();
+//       el->fFrame->SetFrameElement(0);
+      delete el;
+   }
 }
 
 //______________________________________________________________________________

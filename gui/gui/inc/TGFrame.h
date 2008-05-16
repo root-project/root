@@ -241,7 +241,7 @@ public:
    virtual void   SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
+   virtual TGDimension GetDefaultSize() const ;
    virtual void    Move(Int_t x, Int_t y);
    virtual void    Resize(UInt_t w = 0, UInt_t h = 0);
    virtual void    Resize(TGDimension size);
@@ -410,6 +410,7 @@ public:
    virtual void SetLayoutManager(TGLayoutManager *l);
 
    virtual void   AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void   RemoveAll();
    virtual void   RemoveFrame(TGFrame *f);
    virtual void   ShowFrame(TGFrame *f);
    virtual void   HideFrame(TGFrame *f);

@@ -77,7 +77,14 @@
 #pragma link C++ class TDNDData;
 #pragma link C++ class TGDNDManager;
 #pragma link C++ class TGDragWindow;
-
+#pragma link C++ class TGTableCell;
+#pragma link C++ class TGTableHeader;
+#pragma link C++ class TGTable;
+#pragma link C++ class TTableRange;
+#pragma link C++ class TGTableFrame;
+#pragma link C++ class TGSimpleTable;
+#pragma link C++ class TGTableHeaderFrame;
+#pragma link C++ class TGSimpleTableInterface;
 #pragma link C++ class TGCommandPlugin;
 #pragma link C++ class TGFileBrowser;
 #pragma link C++ class TBrowserPlugin;

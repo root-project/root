@@ -3,8 +3,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODNAME      := gui
-MODDIR       := gui/$(MODNAME)
+MODDIR       := gui/gui
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -47,9 +46,11 @@ GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TGDockableFrame.h TGMdi.h TGMdiFrame.h TGMdiMainFrame.h \
                 TGMdiDecorFrame.h TGMdiMenu.h TVirtualDragManager.h \
                 TGuiBuilder.h TGRedirectOutputGuard.h TGPasswdDialog.h \
-                TGTextEditor.h TGSpeedo.h TGDNDManager.h TGCommandPlugin.h \
-                TGFileBrowser.h TRootBrowser.h \
-                TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
+                TGTextEditor.h TGSpeedo.h TGDNDManager.h TGTable.h \
+                TGSimpleTableInterface.h TGSimpleTable.h TGTableCell.h \
+		TGTableHeader.h TGTableContainer.h TGTextEditor.h TGSpeedo.h \
+		TGDNDManager.h TGCommandPlugin.h TGFileBrowser.h \
+		TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
 
 GUIH4        := HelpText.h
 GUIH1        := $(patsubst %,$(MODDIRI)/%,$(GUIH1))
@@ -74,8 +75,6 @@ ALLMAPS     += $(GUIMAP)
 INCLUDEFILES += $(GUIDEP)
 
 ##### local rules #####
-.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
-
 include/%.h:    $(GUIDIRI)/%.h
 		cp $< $@
 
@@ -98,14 +97,14 @@ $(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL)
 		$(RLIBMAP) -o $(GUIMAP) -l $(GUILIB) \
 		   -d $(GUILIBDEPM) -c $(GUIL)
 
-all-$(MODNAME): $(GUILIB) $(GUIMAP)
+all-gui:        $(GUILIB) $(GUIMAP)
 
-clean-$(MODNAME):
+clean-gui:
 		@rm -f $(GUIO) $(GUIDO)
 
-clean::         clean-$(MODNAME)
+clean::         clean-gui
 
-distclean-$(MODNAME): clean-$(MODNAME)
+distclean-gui:  clean-gui
 		@rm -f $(GUIDEP) $(GUIDS) $(GUIDH) $(GUILIB) $(GUIMAP)
 
-distclean::     distclean-$(MODNAME)
+distclean::     distclean-gui
