@@ -47,6 +47,10 @@
       Apr 2006: Modifications to support gfortran (and g77 with -fno-f2c flag)
                 since by default it returns "float" for FORTRAN REAL function.
                 (KMCCARTY)
+      May 2008: Revert commenting out of "extern" in COMMON_BLOCK_DEF macro.
+		Add braces around do-nothing ";" in 3 empty while blocks to
+		get rid of compiler warnings.  Thanks to ROOT developers
+		Jacek Holeczek and Rene Brun for these suggestions. (KMCCARTY)
  *******/
 
 /* 
