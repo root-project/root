@@ -205,7 +205,9 @@ public:
    virtual Bool_t  HasMainColor() const { return fMainColorPtr != 0; }
    virtual Color_t GetMainColor() const { return fMainColorPtr ? *fMainColorPtr : 0; }
    virtual void    SetMainColor(Color_t color);
-   void            SetMainColor(Pixel_t pixel);
+   void            SetMainColorPixel(Pixel_t pixel);
+   void            SetMainColorRGB(UChar_t r, UChar_t g, UChar_t b);
+   void            SetMainColorRGB(Float_t r, Float_t g, Float_t b);
 
    virtual Bool_t  CanEditMainTransparency() const { return kFALSE; }
    virtual UChar_t GetMainTransparency()     const { return 0; }

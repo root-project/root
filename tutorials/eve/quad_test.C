@@ -12,7 +12,7 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
    TEveRGBAPalette *pal = new TEveRGBAPalette(0, 130);
    TEveFrameBox    *box = new TEveFrameBox();
    box->SetAAQuadXY(-10, -10, 0, 20, 20);
-   box->SetFrameColor((Color_t) kGray);
+   box->SetFrameColor(kGray);
 
    TEveQuadSet* q = new TEveQuadSet("RectangleXY");
    q->SetOwnIds(kTRUE);
@@ -92,7 +92,7 @@ TEveQuadSet* quad_test_circ()
       }
       box->SetQuadByPoints(frame, 36);
    }
-   box->SetFrameColor((Color_t) kGray);
+   box->SetFrameColor(kGray);
 
    TEveQuadSet* q = new TEveQuadSet("Pepe");
    q->SetFrame(box);
@@ -221,11 +221,11 @@ void quad_test_hierarchy(Int_t n=4)
 
    TEveFrameBox* box = new TEveFrameBox();
    box->SetAABox(-10, -10, -10, 20, 20, 20);
-   box->SetFrameColor((Color_t) 33);
+   box->SetFrameColor(33);
 
    TEveElementList* l = new TEveElementList("Parent/Dir");
    l->SetTitle("Tooltip");
-   //  l->SetMainColor((Color_t)3);
+   //  l->SetMainColor(3);
    gEve->AddElement(l);
 
    for (Int_t i=0; i<n; ++i)

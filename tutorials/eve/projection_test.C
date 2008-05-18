@@ -38,7 +38,7 @@ void projection_test()
    gsre->SetRnrState(kFALSE);
 
    TEveLine* line = new TEveLine;
-   line->SetMainColor((Color_t)3);
+   line->SetMainColor(kGreen);
    for (Int_t i=0; i<160; ++i)
       line->SetNextPoint(120*sin(0.2*i), 120*cos(0.2*i), 80-i);
    gEve->AddElement(line);

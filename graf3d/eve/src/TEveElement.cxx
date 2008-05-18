@@ -640,11 +640,27 @@ void TEveElement::SetMainColor(Color_t color)
 }
 
 //______________________________________________________________________________
-void TEveElement::SetMainColor(Pixel_t pixel)
+void TEveElement::SetMainColorPixel(Pixel_t pixel)
 {
-   // Convert pixel to Color_t and call the above function.
+   // Convert pixel to Color_t and call SetMainColor().
 
-   SetMainColor(Color_t(TColor::GetColor(pixel)));
+   SetMainColor(TColor::GetColor(pixel));
+}
+
+//______________________________________________________________________________
+void TEveElement::SetMainColorRGB(UChar_t r, UChar_t g, UChar_t b)
+{
+   // Convert RGB values to Color_t and call SetMainColor.
+
+   SetMainColor(TColor::GetColor(r, g, b));
+}
+
+//______________________________________________________________________________
+void TEveElement::SetMainColorRGB(Float_t r, Float_t g, Float_t b)
+{
+   // Convert RGB values to Color_t and call SetMainColor.
+
+   SetMainColor(TColor::GetColor(r, g, b));
 }
 
 /******************************************************************************/

@@ -111,7 +111,7 @@ void regexp_pme()
       printf("Global substitute\n%s", underline);
       TPMERegexp re("(\\w+)\\.(\\w+)@[\\w\\.-]+", "g");
       TString m("rene.brun@cern.ch, philippe.canal@fnal.gov, fons.rademakers@cern.ch");
-      TString r("\\u$1 \\U$2\\E\\");
+      TString r("\\u$1 \\U$2\\E");
       TString s(re.Substitute(m, r));
       re.Print();
       printf("Substitute '%s','%s' => '%s'\n", m.Data(), r.Data(), s.Data());

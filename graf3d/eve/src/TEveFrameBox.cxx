@@ -161,7 +161,7 @@ void TEveFrameBox::SetFrameColor(Color_t ci)
 }
 
 //______________________________________________________________________________
-void TEveFrameBox::SetFrameColor(Pixel_t pix)
+void TEveFrameBox::SetFrameColorPixel(Pixel_t pix)
 {
    // Set color of the frame.
 
@@ -169,7 +169,7 @@ void TEveFrameBox::SetFrameColor(Pixel_t pix)
 }
 
 //______________________________________________________________________________
-void TEveFrameBox::SetFrameColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
+void TEveFrameBox::SetFrameColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
    // Set color of the frame.
 

@@ -68,8 +68,8 @@ public:
    UChar_t* GetFrameRGBA()  { return fFrameRGBA;  }
 
    void SetFrameColor(Color_t ci);
-   void SetFrameColor(Pixel_t pix);
-   void SetFrameColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
+   void SetFrameColorPixel(Pixel_t pix);
+   void SetFrameColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
    Color_t  GetBackColor() const { return fBackColor; }
    Color_t* PtrBackColor() { return &fBackColor; }

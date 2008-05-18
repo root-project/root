@@ -182,7 +182,7 @@ void TEveElementEditor::DoMainColor(Pixel_t color)
 {
    // Slot for MainColor.
 
-   fRE->SetMainColor(color);
+   fRE->SetMainColorPixel(color);
    Update();
 }
 
