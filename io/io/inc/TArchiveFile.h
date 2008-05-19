@@ -40,6 +40,10 @@ class TObjArray;
 class TArchiveFile : public TObject {
 
 protected:
+
+   TArchiveFile(const TArchiveFile&); // Not implemented
+   TArchiveFile& operator=(const TArchiveFile&); // Not implemented
+
    TString         fArchiveName;  // Archive file name
    TString         fMemberName;   // Sub-file name
    Int_t           fMemberIndex;  // Index of sub-file in archive

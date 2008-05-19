@@ -94,7 +94,7 @@ public:
 
 inline TSplinePoly::TSplinePoly(TSplinePoly const &other)
 :
-  TObject(other)
+   TObject(other), fX(0), fY(0)
 {
   CopyPoly(other);
 }
@@ -136,7 +136,7 @@ private:
 
 inline TSplinePoly3::TSplinePoly3(TSplinePoly3 const &other)
 :
-  TSplinePoly(other)
+		    TSplinePoly(other), fB(0), fC(0), fD(0)
 {
   CopyPoly(other);
 }
@@ -182,7 +182,7 @@ private:
 
 inline TSplinePoly5::TSplinePoly5(TSplinePoly5 const &other)
 :
-  TSplinePoly(other)
+    TSplinePoly(other), fB(0), fC(0), fD(0), fE(0), fF(0)
 {
   CopyPoly(other);
 }

@@ -171,6 +171,12 @@ public:
                    TList *s, TProof *prf);
 
    virtual ~TProofThreadArg() { if (fUrl) delete fUrl; }
+
+private:
+
+   TProofThreadArg(const TProofThreadArg&); // Not implemented
+   TProofThreadArg& operator=(const TProofThreadArg&); // Not implemented
+
 };
 
 // PROOF Thread class for parallel startup
@@ -179,13 +185,22 @@ public:
    TThread         *fThread;
    TProofThreadArg *fArgs;
 
-   TProofThread(TThread *t, TProofThreadArg *a) { fThread = t; fArgs = a; }
+   TProofThread(TThread *t, TProofThreadArg *a) : fThread(t), fArgs(a) {}
    virtual ~TProofThread() { SafeDelete(fThread); SafeDelete(fArgs); }
+private:
+
+   TProofThread(const TProofThread&); // Not implemented
+   TProofThread& operator=(const TProofThread&); // Not implemented
+
 };
 
 // PROOF Interrupt signal handler
 class TProofInterruptHandler : public TSignalHandler {
 private:
+
+   TProofInterruptHandler(const TProofInterruptHandler&); // Not implemented
+   TProofInterruptHandler& operator=(const TProofInterruptHandler&); // Not implemented
+
    TProof *fProof;
 public:
    TProofInterruptHandler(TProof *p)
@@ -196,6 +211,10 @@ public:
 // Input handler for messages from TProofServ
 class TProofInputHandler : public TFileHandler {
 private:
+
+   TProofInputHandler(const TProofInputHandler&); // Not implemented
+   TProofInputHandler& operator=(const TProofInputHandler&); // Not implemented
+
    TSocket *fSocket;
    TProof  *fProof;
 public:
