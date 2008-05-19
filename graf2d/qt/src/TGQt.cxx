@@ -1858,9 +1858,13 @@ void  TGQt::PutByte(Byte_t )
 }
 
 //______________________________________________________________________________
-void  TGQt::QueryPointer(int &ix, int &iy){
-   // deprecated
-	if (ix*iy){;}
+void  TGQt::QueryPointer(int &ix, int &iy)
+{
+   // Query pointer position.
+   // ix       : X coordinate of pointer
+   // iy       : Y coordinate of pointer
+   QPoint pos = QCursor::pos();
+   ix = pos.x(); iy = pos.y();
 }
 
 //______________________________________________________________________________
