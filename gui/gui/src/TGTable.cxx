@@ -70,7 +70,7 @@ then creating the TGTable using this interface.
 <br><br>
 A simple macro to use a TGTable with a TGSimpleTableInterface:
 End_Html
-Begin_Macro(source)
+Begin_Macro(source, gui)
 {
    //Create an array to hold a bunch of numbers
    Double_t data[6][5]; // 6 by 5 array
@@ -89,10 +89,10 @@ Begin_Html
 It is also possible to visualise data from a tree. A simple macro
 showing the use of a TTreeTableInterface follows.
 End_Html
-Begin_Macro(source)
+Begin_Macro(source, gui)
 {
    // Open a root file.
-   TFile *file = new TFile("hsimple.root");
+   TFile *file = new TFile("$ROOTSYS/tutorials/hsimple.root");
    // Load a tree from the file
    TNtuple *ntuple = (TNtuple *)file.Get("ntuple");
    // Create an interface
