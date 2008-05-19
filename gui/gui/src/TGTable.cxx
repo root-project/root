@@ -77,7 +77,7 @@ Begin_Macro(source)
    //Create an interface
    TGSimpleTableInterface *iface = new TGSimpleTableInterface(data); 
    //Create the table
-   TGTable *table = new TGTable(0, iface); 
+   TGTable *table = new TGTable(0, 999, iface); 
    //Update data
    array[5][1] = 3.01; 
    //update the table view
@@ -96,9 +96,9 @@ Begin_Macro(source)
    // Load a tree from the file
    TNtuple *ntuple = (TNtuple *)file.Get("ntuple");
    // Create an interface
-   TTreeTableInterface *iface = new TGSimpleTableInterface(ntuple); 
+   TTreeTableInterface *iface = new TTreeTableInterface(ntuple); 
    // Create the table
-   TGTable *table = new TGTable(0, iface); 
+   TGTable *table = new TGTable(0, 999, iface); 
    // Set the selection used
    iface->SetSelection("px > 0.");
    // Add a column
@@ -118,7 +118,7 @@ End_Macro
 //______________________________________________________________________________
 TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface, 
                  UInt_t nrows, UInt_t ncolumns) 
-   : TGCompositeFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0), 
+   : TGMainFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0), 
      fRowHeaders(0), fColumnHeaders(0), fReadOnly(kFALSE), fSelectColor(0), 
      fTMode(0), fAllData(kFALSE), fTableFrame(0), fCanvas(0), fCellWidth(80), 
      fCellHeight(25), fInterface(interface)
@@ -147,6 +147,7 @@ TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
 
    if(fInterface) SetInterface(fInterface, nrows, ncolumns);
    SetWindowName();
+   MapWindow();
 }
 
 //______________________________________________________________________________
@@ -373,6 +374,8 @@ void TGTable::Init()
    fPrevButton->Connect("Clicked()", "TGTable", this, "PreviousChunk()");
    fGotoButton->Connect("Clicked()", "TGTable", this, "Goto()");
 
+   MapSubwindows();
+   Layout();
 }
 
 //______________________________________________________________________________
