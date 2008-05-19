@@ -479,8 +479,12 @@ void TEveTrackCounterEditor::DoFileReport()
          return;
    }
    FILE* out = fopen(file, "w");
-   fM->OutputEventTracks(out);
-   fclose(out);
+   if (out) {
+      fM->OutputEventTracks(out);
+      fclose(out);
+   } else {
+      Error("TEveTrackCounterEditor::DoFileReport", "Can not open file '%s' for writing.", file);
+   }
 }
 
 //______________________________________________________________________________

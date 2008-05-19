@@ -855,7 +855,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
                glVertex3f(cellData.Eta() +etaW, cellData.Phi()+phiW, sum);
                glVertex3f(cellData.Eta() -etaW, cellData.Phi()+phiW, sum);
             }
-            sum = 0;
+            sum = cellData.Value();
             prevTower = (*it).fTower;
          }
          else
@@ -913,35 +913,32 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
          }
       }
       Float_t maxv = 0;
-      Float_t surf = phiStep*etaStep;
       for (std::vector<Float_t>::iterator it=vec.begin(); it !=vec.end(); it++)
-      {
-         (*it) /= surf;
          if (*it > maxv) maxv = *it;
-      }
 
-      // draw scaled  cells in diffrent modes
-      Int_t max = CeilNint(Log(maxv+1));
-      Float_t fac = fM->fPalette->GetHighLimit()*1.f/max;
+      Float_t paletteFac = fM->fPalette->GetHighLimit()*1.f/maxv;
+      Float_t logMax = Log(maxv+1);
+      Float_t logPaletteFac = fM->fPalette->GetHighLimit()*1.f/logMax;
+
       Float_t etaW, phiW;
       Int_t cid = 0;
       glBegin(GL_QUADS);
       for (std::vector<Float_t>::iterator it=vec.begin(); it !=vec.end(); it++)
       {
-         Int_t val = FloorNint(fac*Log(*it+1));
-         if ( val > 0) 
+         if(*it>0)
          {
+            Float_t logVal = Log(*it+1);
             Float_t eta = Int_t(cid/nPhi)*etaStep + eta0;
             Float_t phi = (cid -Int_t(cid/nPhi)*nPhi)*phiStep + phi0;
             if (fM->f2DMode == TEveCaloLego::kValColor)
             {
-               fM->fPalette->ColorFromValue(val, col);
+               fM->fPalette->ColorFromValue((Int_t)(logVal*logPaletteFac), col);
                TGLUtil::Color4ubv(col);
                {
-                  glVertex3f(eta        , phi,         val);
-                  glVertex3f(eta+etaStep, phi,         val);
-                  glVertex3f(eta+etaStep, phi+phiStep, val);
-                  glVertex3f(eta        , phi+phiStep, val);
+                  glVertex3f(eta        , phi,         (*it)*paletteFac);
+                  glVertex3f(eta+etaStep, phi,         (*it)*paletteFac);
+                  glVertex3f(eta+etaStep, phi+phiStep, (*it)*paletteFac);
+                  glVertex3f(eta        , phi+phiStep, (*it)*paletteFac);
                }
             }
             else if (fM->f2DMode == TEveCaloLego::kValSize)
@@ -949,12 +946,12 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
                TGLUtil::Color(defCol);
                eta += etaStep*0.5f;
                phi += phiStep*0.5f;
-               etaW = (etaStep*val*0.5f)/fM->fPalette->GetHighLimit();
-               phiW = (phiStep*val*0.5f)/fM->fPalette->GetHighLimit();
-               glVertex3f(eta -etaW, phi -phiW, val);
-               glVertex3f(eta +etaW, phi -phiW, val);
-               glVertex3f(eta +etaW, phi +phiW, val);
-               glVertex3f(eta -etaW, phi +phiW, val);
+               etaW = etaStep*0.5f*logVal/logMax;
+               phiW = phiStep*0.5f*logVal/logMax;
+               glVertex3f(eta -etaW, phi -phiW, (*it)*paletteFac);
+               glVertex3f(eta +etaW, phi -phiW, (*it)*paletteFac);
+               glVertex3f(eta +etaW, phi +phiW, (*it)*paletteFac);
+               glVertex3f(eta -etaW, phi +phiW, (*it)*paletteFac);
             }
          }
          cid++;
