@@ -26,9 +26,6 @@ const char *XrdSysLoggerCVSID = "$Id$";
 #include <strings.h>
 #include <sys/termios.h>
 #include <sys/uio.h>
-#if !defined(__macos__) && !defined(__CYGWIN__)
-#include <stropts.h>
-#endif
 #endif // WIN32
 
 #include "XrdSys/XrdSysLogger.hh"

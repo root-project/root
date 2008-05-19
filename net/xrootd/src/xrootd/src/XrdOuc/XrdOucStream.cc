@@ -24,9 +24,6 @@ const char *XrdOucStreamCVSID = "$Id$";
 #if !defined(__linux__) && !defined(__CYGWIN__)
 #include <sys/conf.h>
 #endif
-#if !defined(__macos__) && !defined(__CYGWIN__)
-#include <stropts.h>
-#endif
 #include <sys/stat.h>
 #include <sys/termios.h>
 #include <sys/types.h>
