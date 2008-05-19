@@ -82,6 +82,7 @@
 #include "TEnv.h"
 #include "TRegexp.h"
 #include "TROOT.h"
+#include "TSortedList.h"
 #include "THashList.h"
 #include "THashTable.h"
 #include "Varargs.h"
@@ -378,21 +379,29 @@ void TPluginManager::LoadHandlerMacros(const char *path)
    if (dirp) {
       if (gDebug > 0)
          Info("LoadHandlerMacros", "%s", path);
+      TSortedList macros;
+      macros.SetOwner();
       const char *f1;
       while ((f1 = gSystem->GetDirEntry(dirp))) {
          TString f = f1;
          if (f[0] == 'P' && f.EndsWith(".C")) {
             const char *p = gSystem->ConcatFileName(path, f);
             if (!gSystem->AccessPathName(p, kReadPermission)) {
-               if (gDebug > 1)
-                  Info("LoadHandlerMacros", "   plugin macro: %s", p);
-               Long_t res;
-               if ((res = gROOT->Macro(p, 0, kFALSE)) < 0) {
-                  Error("LoadHandlerMacros", "pluging macro %s returned %ld",
-                        p, res);
-               }
+               macros.Add(new TObjString(p));
             }
             delete [] p;
+         }
+      }
+      // load macros in alphabetical order
+      TIter next(&macros);
+      TObjString *s;
+      while ((s = (TObjString*)next())) {
+         if (gDebug > 1)
+            Info("LoadHandlerMacros", "   plugin macro: %s", s->String().Data());
+         Long_t res;
+         if ((res = gROOT->Macro(s->String(), 0, kFALSE)) < 0) {
+            Error("LoadHandlerMacros", "pluging macro %s returned %ld",
+                  s->String().Data(), res);
          }
       }
    }
@@ -426,7 +435,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 
    if (!fBasesLoaded) {
       fBasesLoaded = new THashTable();
-      fBasesLoaded->IsOwner();
+      fBasesLoaded->SetOwner();
    }
    TString sbase = base;
    if (sbase != "") {
@@ -494,7 +503,7 @@ void TPluginManager::AddHandler(const char *base, const char *regexp,
 
    if (!fHandlers) {
       fHandlers = new TList;
-      fHandlers->IsOwner();
+      fHandlers->SetOwner();
    }
 
    // make sure there is no previous handler for the same case
