@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
+#include <mach-o/dyld.h>
 #endif
 
 #if defined(__sgi) || defined(__sun)
@@ -156,6 +157,28 @@ static STRUCT_UTMP *SearchEntry(int n, const char *tty)
       ue++;
    }
    return 0;
+}
+
+static void SetRootSys()
+{
+#ifdef __APPLE__
+   const char *exepath = _dyld_get_image_name(0);
+   if (exepath) {
+      char *ep = new char[strlen(exepath)+1];
+      strcpy(ep, exepath);
+      char *s;
+      if ((s = strrchr(ep, '/'))) {
+         *s = 0;
+         if ((s = strrchr(ep, '/'))) {
+            *s = 0;
+            char *env = new char[strlen(ep) + 10];
+            sprintf(env, "ROOTSYS=%s", ep);
+            putenv(env);
+         }
+      }
+      delete [] ep;
+   }
+#endif
 }
 
 static void SetDisplay()
@@ -321,6 +344,9 @@ int main(int argc, char **argv)
    char  arg0[2048];
 
 #ifndef ROOTPREFIX
+   // Try to set ROOTSYS depending on pathname of the executable
+   SetRootSys();
+
    if (!getenv("ROOTSYS")) {
       fprintf(stderr, "%s: ROOTSYS not set. Set it before trying to run %s.\n",
               argv[0], argv[0]);

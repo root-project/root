@@ -370,7 +370,12 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    TString lib = _dyld_get_image_name(i++);
 
-   //printf("%s %p\n", lib.Data(), mh);
+#ifndef ROOTPREFIX
+   if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so")) {
+      TString rs = gSystem->DirName(lib);
+      gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+   }
+#endif
 
    // when libSystem.B.dylib is loaded we have finished loading all dylibs
    // explicitly linked against the executable. Additional dylibs
@@ -435,17 +440,18 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigFloatingException,     SigHandler);
    UnixSignal(kSigWindowChanged,         SigHandler);
 
+#if defined(R__MACOSX)
+   // trap loading of all dylibs to register dylib name
+   // sets also ROOTSYS if built without ROOTPREFIX
+   _dyld_register_func_for_add_image(DylibAdded);
+#endif
+
 #ifndef ROOTPREFIX
    gRootDir = Getenv("ROOTSYS");
    if (gRootDir == 0)
       gRootDir= "/usr/local/root";
 #else
    gRootDir = ROOTPREFIX;
-#endif
-
-#if defined(R__MACOSX)
-   // trap loading of all dylibs to register dylib name
-   _dyld_register_func_for_add_image(DylibAdded);
 #endif
 
    return kFALSE;

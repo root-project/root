@@ -113,6 +113,7 @@ namespace std {} using namespace std;
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
 #endif
+
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
 
@@ -238,13 +239,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
       return;
    }
 
-#ifndef ROOTPREFIX
-   if (!getenv("ROOTSYS")) {
-      fprintf(stderr, "Fatal in <TROOT::TROOT>: ROOTSYS not set. Set it before trying to run.\n");
-      exit(1);
-   }
-#endif
-
    R__LOCKGUARD2(gROOTMutex);
 
    gROOT      = this;
@@ -262,6 +256,13 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Initialize Operating System interface
    InitSystem();
+
+#ifndef ROOTPREFIX
+   if (!gSystem->Getenv("ROOTSYS")) {
+      fprintf(stderr, "Fatal in <TROOT::TROOT>: ROOTSYS not set. Set it before trying to run.\n");
+      exit(1);
+   }
+#endif
 
    // Initialize interface to CINT C++ interpreter
    fVersionInt      = 0;  // check in TROOT dtor in case TCint fails
@@ -1598,15 +1599,15 @@ void TROOT::Reset(Option_t *option)
    //
    // This function is typically used at the beginning (or end) of an unnamed macro
    // to clean the environment.
-   // 
+   //
    // IMPORTANT WARNING:
    // Do not use this call from within any function (neither compiled nor
-   // interpreted.  This should only be used from a unnamed macro 
-   // (which starts with a { (curly braces)  ).  For example, using TROOT::Reset 
-   // from within an interpreted function will lead to the unloading of the 
-   // dictionary and source file, including the one defining the function being 
+   // interpreted.  This should only be used from a unnamed macro
+   // (which starts with a { (curly braces)  ).  For example, using TROOT::Reset
+   // from within an interpreted function will lead to the unloading of the
+   // dictionary and source file, including the one defining the function being
    // executed.
-   // 
+   //
 
    if (IsExecutingMacro()) return;  //True when TMacro::Exec runs
    if (fInterpreter) {
