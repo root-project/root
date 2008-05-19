@@ -247,10 +247,9 @@ void TDSetElement::Validate(TDSetElement *elem)
       return;
    }
 
-   const char *name = TUrl(GetFileName()).GetFileAndOptions();
-   const char *elemname = TUrl(elem->GetFileName()).GetFileAndOptions();
-
-   if (!strcmp(name, elemname) &&
+   TString name = TUrl(GetFileName()).GetFileAndOptions();
+   TString elemname = TUrl(elem->GetFileName()).GetFileAndOptions();
+   if ((name == elemname) &&
        !strcmp(GetDirectory(), elem->GetDirectory()) &&
        !strcmp(GetObjName(), elem->GetObjName())) {
       Long64_t entries = elem->fFirst + elem->fNum;
