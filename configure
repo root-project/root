@@ -3782,8 +3782,7 @@ if test ! "x$enable_krb5" = "xno" ; then
     if test "x$krb5incdir" = "x" && test ! "x$krb5dir" = "x" ; then
 	krb5incdir=$krb5dir/include
     fi
-    check_header "krb5.h" "$krb5incdir" /usr/athena/include \
-	    /usr/local/athena/include /usr/kerberos/include \
+    check_header "krb5.h" "$krb5incdir" /usr/kerberos/include \
 	    /usr/krb5/include /usr/local/kerberos/include \
 	    /usr/include /usr/include/kerberosV /usr/local/include
     if test "x$found_dir" = "x" ; then
@@ -3800,7 +3799,7 @@ if test ! "x$enable_krb5" = "xno" ; then
     if test "x$krb5libdir" = "x" && test ! "x$krb5dir" = "x" ; then
 	krb5libdirorg=$krb5dir/lib
     fi
-    krb5libdirs="/usr/athena/lib /usr/local/athena/lib /usr/kerberos/lib \
+    krb5libdirs="/usr/kerberos/lib \
                  /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
 
     # check whether using MIT krb5
@@ -3847,8 +3846,7 @@ if test ! "x$enable_krb5" = "xno" ; then
       if test ! "x$krb5dir" = "x" ; then
 	 krb5bindir=$krb5dir/bin
       fi
-      for i in "$krb5bindir" /usr/athena/bin \
-             /usr/local/athena/bin /usr/kerberos/bin \
+      for i in "$krb5bindir" /usr/kerberos/bin \
              /usr/krb5/bin /usr/local/kerberos/bin \
              /usr/bin /usr/local/bin ; do
          if test -x $i/kinit ; then

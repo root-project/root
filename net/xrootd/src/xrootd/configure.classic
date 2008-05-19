@@ -1308,8 +1308,7 @@ if test ! "x$enable_krb4" = "xno" ; then
     esac
 
     check_header "kerberosIV/krb.h" "$krb4incdir" \
-            "$slackrbinc" /usr/athena/include \
-	    /usr/local/athena/include /usr/kerberos/include \
+            "$slackrbinc" /usr/kerberos/include \
 	    /usr/krb5/include /usr/local/kerberos/include \
 	    /usr/include /usr/local/include
     if test "x$found_dir" = "x" ; then
@@ -1326,8 +1325,7 @@ if test ! "x$enable_krb4" = "xno" ; then
     if test "x$krb4libdir" = "x" && test ! "x$krb4dir" = "x" ; then
 	krb4libdirorg=$krb4dir/lib
     fi
-    krb4libdirs="$slackrblib /usr/athena/lib \
-                 /usr/local/athena/lib /usr/kerberos/lib \
+    krb4libdirs="$slackrblib /usr/kerberos/lib \
                  /usr/krb4/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
 
     # check whether using MIT krb5
@@ -1437,8 +1435,7 @@ if test ! "x$enable_krb5" = "xno" ; then
     esac
 
     check_header "krb5.h" "$krb5incdir" \
-            "$slackrbinc" /usr/athena/include \
-    	    /usr/local/athena/include /usr/kerberos/include \
+            "$slackrbinc" /usr/kerberos/include \
     	    /usr/krb5/include /usr/local/kerberos/include \
     	    /usr/include/et /usr/include /usr/local/include
     if test "x$found_dir" = "x" ; then
@@ -1455,8 +1452,7 @@ if test ! "x$enable_krb5" = "xno" ; then
     if test "x$krb5libdir" = "x" && test ! "x$krb5dir" = "x" ; then
 	krb5libdirorg=$krb5dir/lib
     fi
-    krb5libdirs="$slackrblib /usr/athena/lib \
-                 /usr/local/athena/lib /usr/kerberos/lib \
+    krb5libdirs="$slackrblib /usr/kerberos/lib \
                  /usr/krb5/lib /usr/local/kerberos/lib /usr/lib /usr/local/lib"
 
     # check whether using MIT krb5
@@ -1895,8 +1891,7 @@ if test "x$enable_krb5" = "xyes" ; then
         fi
     fi
     check_header "com_err.h" "$comerrincdir" \
-            "$slackrbinc" /usr/athena/include \
-    	    /usr/local/athena/include /usr/kerberos/include \
+            "$slackrbinc" /usr/kerberos/include \
     	    /usr/krb5/include /usr/local/kerberos/include \
     	    /usr/include /usr/local/include
 
