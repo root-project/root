@@ -69,6 +69,8 @@ public:
 
            ULong_t         Hash() const;
 
+           TList&          GetListOfTypedefs() { return fTypedefs; }
+
    virtual Bool_t          IsSortable() const { return kTRUE; }
    virtual Int_t           Compare(const TObject* obj) const;
 
@@ -82,6 +84,7 @@ private:
    TString                 fImplFileName; // source
    TString                 fDeclFileSysName; // file system's location of the header
    TString                 fImplFileSysName; // file system's location of the source
+   TList                   fTypedefs; // typedefs to this class
    Bool_t                  fSelected; // selected for doc output
 
    ClassDef(TClassDocInfo,0); // info cache for class documentation

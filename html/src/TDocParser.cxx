@@ -642,6 +642,29 @@ void TDocParser::DecorateKeywords(TString& line)
             //TFunction *globFunc = gROOT->GetGlobalFunctionWithPrototype(word);
             //globFunc = 0;
          }
+         if (!subType && !subClass) {
+            // also try template
+            while (isspace(line[endWord])) ++endWord;
+            if (line[endWord] == '<' || line[endWord] == '>') {
+               // check for possible template
+               Ssiz_t endWordT = endWord + 1;
+               int templateLevel = 1;
+               while (endWordT < line.Length()
+                      && (templateLevel
+                          || IsName(line[endWordT])
+                          || line[endWordT] == '<' 
+                          || line[endWordT] == '>')) {
+                  if (line[endWordT] == '<')
+                     ++templateLevel;
+                  else if (line[endWordT] == '>')
+                     --templateLevel;
+                  endWordT++;
+               }
+               subClass = fHtml->GetClass(line(i, endWordT - i).Data());
+               if (subClass)
+                  word = line(i, endWordT - i);
+            }
+         }
       }
 
       if (lookupScope && !subType && !subClass) {
@@ -650,12 +673,40 @@ void TDocParser::DecorateKeywords(TString& line)
             subClassName += "::";
             subClassName += word;
             subClass = fHtml->GetClass(subClassName);
+            if (!subClass)
+               subType = gROOT->GetType(subClassName);
          }
-         if (!subClass) {
+         if (!subClass && !subType) {
             // also try A::B::c()
             datamem = lookupScope->GetDataMember(word);
             if (!datamem)
                meth = lookupScope->GetMethodAllAny(word);
+         }
+         if (!subClass && !subType && !datamem && !meth) {
+            // also try template
+            while (isspace(line[endWord])) ++endWord;
+            if (line[endWord] == '<' || line[endWord] == '>') {
+               // check for possible template
+               Ssiz_t endWordT = endWord + 1;
+               int templateLevel = 1;
+               while (endWordT < line.Length()
+                      && (templateLevel
+                          || IsName(line[endWordT])
+                          || line[endWordT] == '<' 
+                          || line[endWordT] == '>')) {
+                  if (line[endWordT] == '<')
+                     ++templateLevel;
+                  else if (line[endWordT] == '>')
+                     --templateLevel;
+                  endWordT++;
+               }
+               TString subClassName(lookupScope->GetName());
+               subClassName += "::";
+               subClassName += line(i, endWordT - i);
+               subClass = fHtml->GetClass(subClassName);
+               if (subClass)
+                  word = line(i, endWordT - i);
+            }
          }
       }
       // create the link
@@ -686,7 +737,8 @@ void TDocParser::DecorateKeywords(TString& line)
                if (retTypeName.BeginsWith("const "))
                   retTypeName.Remove(0,6);
                Ssiz_t pos=0;
-               while (IsWord(retTypeName[pos])) ++pos;
+               while (IsWord(retTypeName[pos]) || retTypeName[pos]=='<' || retTypeName[pos]=='>' || retTypeName[pos]==':')
+                  ++pos;
                retTypeName.Remove(pos, retTypeName.Length());
                if (retTypeName.Length())
                   currentType.back() = fHtml->GetClass(retTypeName);

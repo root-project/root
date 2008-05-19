@@ -81,6 +81,7 @@ public:
    virtual void   CreateModuleIndex();
    virtual void   CreateProductIndex();
    virtual void   CreateTypeIndex();
+   virtual void   CreateClassTypeDefs();
    virtual void   CreateHierarchy();
 
    virtual void   DecorateEntityBegin(TString& str, Ssiz_t& pos, TDocParser::EParseContext type);

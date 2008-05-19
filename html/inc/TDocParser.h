@@ -131,7 +131,7 @@ protected:
    void           AddClassMethodsRecursively(TBaseClass* bc);
    void           AddClassDataMembersRecursively(TBaseClass* bc);
    void           AnchorFromLine(TString& anchor);
-   EParseContext  Context() const { return (EParseContext)(fParseContext.back() & kParseContextMask); }
+   EParseContext  Context() const { return fParseContext.empty() ? kComment : (EParseContext)(fParseContext.back() & kParseContextMask); }
    virtual void   ExpandCPPLine(TString& line, Ssiz_t& pos);
    virtual Bool_t HandleDirective(TString& keyword, Ssiz_t& pos, 
       TString& word, Ssiz_t& copiedToCommentUpTo);

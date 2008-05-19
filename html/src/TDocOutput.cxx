@@ -429,7 +429,7 @@ void TDocOutput::CreateHierarchy()
          continue;
       }
 
-      TClassDocOutput cdo(*fHtml, basePtr);
+      TClassDocOutput cdo(*fHtml, basePtr, 0);
       cdo.CreateClassHierarchy(out, cdi->GetHtmlFileName());
    }
 
@@ -902,6 +902,106 @@ void TDocOutput::CreateProductIndex()
       << "<p>A diagram showing all of " << GetHtml()->GetProductName() << "'s libraries and their dependencies</p>" << std::endl;
 
    WriteHtmlFooter(out);
+}
+
+//______________________________________________________________________________
+void TDocOutput::CreateClassTypeDefs()
+{
+   // Create a forwarding page for each typedef pointing to a class.
+   TDocParser parser(*this);
+
+   TIter iClass(GetHtml()->GetListOfClasses());
+   TClassDocInfo* cdi = 0;
+   while ((cdi = (TClassDocInfo*) iClass())) {
+      if (cdi->GetListOfTypedefs().IsEmpty())
+         continue;
+      TIter iTypedefs(&cdi->GetListOfTypedefs());
+      TDataType* dt = 0;
+      while ((dt = (TDataType*) iTypedefs())) {
+         // create a filename
+         TString filename(dt->GetName());
+         NameSpace2FileName(filename);
+
+         gSystem->PrependPathName(fHtml->GetOutputDir(), filename);
+
+         filename += ".html";
+
+         // open class file
+         std::ofstream outfile(filename);
+
+         if (!outfile.good()) {
+            Error("CreateClassTypeDefs", "Can't open file '%s' !", filename.Data());
+            return;
+         }
+
+         WriteHtmlHeader(outfile, dt->GetName());
+
+         outfile << "<a name=\"TopOfPage\"></a>" << endl;
+
+
+         // show box with lib, include
+         // needs to go first to allow title on the left
+         TString dtName(dt->GetName());
+         ReplaceSpecialChars(dtName);
+         TString sTitle("typedef ");
+         sTitle += dtName;
+
+         TString sInclude;
+         TString sLib;
+         TClass* cls = cdi->GetClass();
+         const char* lib=cls->GetSharedLibs();
+         GetHtml()->GetPathDefinition().GetIncludeAs(cls, sInclude);
+         if (lib) {
+            char* libDup=StrDup(lib);
+            char* libDupSpace=strchr(libDup,' ');
+            if (libDupSpace) *libDupSpace = 0;
+            char* libDupEnd=libDup+strlen(libDup);
+            while (libDupEnd!=libDup)
+               if (*(--libDupEnd)=='.') {
+                  *libDupEnd=0;
+                  break;
+               }
+            sLib = libDup;
+            delete[] libDup;
+         }
+         outfile << "<script type=\"text/javascript\">WriteFollowPageBox('" 
+            << sTitle << "','" << sLib << "','" << sInclude << "');</script>" << endl;
+
+         TString modulename;
+         fHtml->GetModuleNameForClass(modulename, cls);
+         TModuleDocInfo* module = (TModuleDocInfo*) fHtml->GetListOfModules()->FindObject(modulename);
+         WriteTopLinks(outfile, module, dt->GetName());
+
+         outfile << "</div><div class=\"dropshadow\"><div class=\"withshadow\">";
+         outfile << "<h1>" << sTitle << "</h1>" << endl
+            << "<div class=\"classdescr\">" << endl;
+
+         outfile << dtName << " is a typedef to ";
+         parser.DecorateKeywords(outfile, cls->GetName());
+         outfile << endl
+            << "</div>" << std::endl 
+            << "</div></div><div style=\"clear:both;\"></div>" << std::endl;
+
+         // the typedef isn't a data member, but the CSS is applicable nevertheless
+         outfile << endl << "<div id=\"datamembers\">" << endl
+            << "<table class=\"data\" cellspacing=\"0\">" << endl;
+         outfile << "<tr class=\"data";
+         outfile << "\"><td class=\"datatype\">typedef ";
+         parser.DecorateKeywords(outfile, dt->GetFullTypeName());
+         outfile << "</td><td class=\"dataname\">";
+         ReplaceSpecialChars(outfile, dt->GetName());
+         if (dt->GetTitle() && dt->GetTitle()[0]) {
+            outfile << "</td><td class=\"datadesc\">";
+            ReplaceSpecialChars(outfile, dt->GetTitle());
+         } else outfile << "</td><td>";
+         outfile << "</td></tr>" << endl
+            << "</table></div>" << endl;
+
+         // write footer
+         WriteHtmlFooter(outfile);
+
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1412,10 +1512,23 @@ void TDocOutput::ReferenceEntity(TSubString& str, TDataType* entity, const char*
    //  str.Begin():  2
    //  str.Length(): 30
 
-   TString link("ListOfTypes.html#");
    TString mangledEntity(entity->GetName());
    NameSpace2FileName(mangledEntity);
-   link += mangledEntity;
+
+   TString link;
+   TClassDocInfo* cdi = 0;
+   bool isClassTypedef = entity->GetType() == -1;
+   if (isClassTypedef)
+      /* is class/ struct / union */
+      isClassTypedef = isClassTypedef && (entity->Property() & 7);
+   if (isClassTypedef)
+      cdi = (TClassDocInfo*) GetHtml()->GetListOfClasses()->FindObject(entity->GetFullTypeName());
+   if (cdi) {
+      link = mangledEntity + ".html";
+   } else {
+      link = "ListOfTypes.html#";
+      link += mangledEntity;
+   }
 
    if (comment && !strcmp(comment, entity->GetName()))
       comment = "";
@@ -1921,7 +2034,7 @@ void TDocOutput::WriteSearch(std::ostream& out)
           << "return false;}" << endl
           << "</script>" << endl
           << "<a class=\"descrheadentry\"> </a>" << endl
-          << "<form id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\" >" << endl
+          << "<form id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\" action=\"javascript:onSearch();\" method=\"post\">" << endl
           << "<input name=\"t\" size=\"30\" value=\"Search documentation...\" onfocus=\"if (document.searchform.t.value=='Search documentation...') document.searchform.t.value='';\"></input></form>" << endl
           << "<a id=\"searchlink\" " << serverName << " href=\"javascript:onSearch();\" onclick=\"return onSearch()\">Search</a>" << endl;
    } else if (searchEngine.Length())

@@ -14,6 +14,7 @@
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TMethodArg.h"
+#include "TDataType.h"
 #include "TDocInfo.h"
 #include "TDocParser.h"
 #include "TEnv.h"
@@ -44,8 +45,9 @@
 ClassImp(TClassDocOutput);
 
 //______________________________________________________________________________
-TClassDocOutput::TClassDocOutput(THtml& html, TClass* cl):
-   TDocOutput(html), fHierarchyLines(0), fCurrentClass(cl), fParser(0)
+TClassDocOutput::TClassDocOutput(THtml& html, TClass* cl, TList* typedefs):
+   TDocOutput(html), fHierarchyLines(0), fCurrentClass(cl),
+   fCurrentClassesTypedefs(typedefs), fParser(0)
 {
    // Create an object given the invoking THtml object, and the TClass
    // object that we will generate output for.
@@ -209,14 +211,14 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
             propGetter = (strstr(method->GetTitle(), "*GETTER"));
             if (propSignal || propMenu || propToggle || propGetter) {
                classFile << "<span class=\"funcprop\">";
-               if (propSignal) classFile << "<abbr title=\"emits a signal\"/>SIGNAL</abbr> ";
-               if (propMenu) classFile << "<abbr title=\"has a popup menu entry\"/>MENU</abbr> ";
-               if (propToggle) classFile << "<abbr title=\"toggles a state\"/>TOGGLE</abbr> ";
+               if (propSignal) classFile << "<abbr title=\"emits a signal\">SIGNAL</abbr> ";
+               if (propMenu) classFile << "<abbr title=\"has a popup menu entry\">MENU</abbr> ";
+               if (propToggle) classFile << "<abbr title=\"toggles a state\">TOGGLE</abbr> ";
                if (propGetter) {
                   TString getter(method->GetTitle());
                   Ssiz_t posGetter = getter.Index("*GETTER=");
                   getter.Remove(0, posGetter + 8);
-                  classFile << "<abbr title=\"use " + getter + "() as getter\"/>GETTER</abbr> ";
+                  classFile << "<abbr title=\"use " + getter + "() as getter\">GETTER</abbr> ";
                }
                classFile << "</span>";
             }
@@ -351,7 +353,7 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
          if (member->GetClass() != fCurrentClass)
             classFile << "</a>";
          classFile << "</td>";
-         if (member->GetTitle() && strlen(member->GetTitle())) {
+         if (member->GetTitle() && member->GetTitle()[0]) {
             classFile << "<td class=\"datadesc\">";
             ReplaceSpecialChars(classFile, member->GetTitle());
          } else classFile << "<td>";
@@ -1286,7 +1288,9 @@ void TClassDocOutput::MakeTree(Bool_t force /*= kFALSE*/)
    }
 
    if (!htmlFile.Length()) {
-      Printf(fHtml->GetCounterFormat(), "-skipped-", "", fCurrentClass->GetName());
+      TString what(fCurrentClass->GetName());
+      what += " (source not found)";
+      Printf(fHtml->GetCounterFormat(), "-skipped-", "", what.Data());
       return;
    }
 
@@ -1369,12 +1373,26 @@ void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& de
       } else
          ReplaceSpecialChars(out, inheritFrom->GetName());
    }
+   out << "</h1>" << endl;
 
-   out << "</h1>" << endl
-      << "<div class=\"classdescr\">" << endl;
+   out << "<div class=\"classdescr\">" << endl;
 
    if (description.Length())
       out << "<pre>" << description << "</pre>";
+
+   // typedefs pointing to this class:
+   if (fCurrentClassesTypedefs && !fCurrentClassesTypedefs->IsEmpty()) {
+      out << "<h4>This class is also known as (typedefs to this class)</h4>";
+      TIter iTD(fCurrentClassesTypedefs);
+      bool firsttd = true;
+      TDataType* dt = 0;
+      while ((dt = (TDataType*) iTD())) {
+         if (!firsttd)
+            out << ", ";
+         else firsttd = false;
+         fParser->DecorateKeywords(out, dt->GetName());
+      }
+   }
 
    out << "</div>" << std::endl 
        << "</div></div>" << std::endl;

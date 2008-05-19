@@ -26,6 +26,7 @@ protected:
 
    Int_t          fHierarchyLines; // counter for no. lines in hierarchy
    TClass*        fCurrentClass;   // class to generate output for
+   TList*         fCurrentClassesTypedefs; // typedefs to the current class
    TDocParser*    fParser;         // parser we use
 
    void           ClassHtmlTree(std::ostream &out, TClass *classPtr, ETraverse dir=kBoth, int depth=1);
@@ -52,7 +53,7 @@ protected:
    virtual void   WriteClassDescription(std::ostream& out, const TString& description);
 
 public:
-   TClassDocOutput(THtml& html, TClass* cl);
+   TClassDocOutput(THtml& html, TClass* cl, TList* typedefs);
    virtual ~TClassDocOutput();
 
    void           Class2Html(Bool_t force=kFALSE);

@@ -17,6 +17,7 @@
 #include "TClassDocOutput.h"
 #include "TClassEdit.h"
 #include "TClassTable.h"
+#include "TDataType.h"
 #include "TDocInfo.h"
 #include "TDocOutput.h"
 #include "TEnv.h"
@@ -555,7 +556,7 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
    // can be a THtml::GetDirDelimiter() delimited list of paths.
 
    TString sPath(path);
-   printf("scanning %s...\n", path);
+   Info("Recurse", "scanning %s...", path);
    TString dir;
    Ssiz_t posPath = 0;
    TPMERegexp regexp(db->GetIgnore());
@@ -1270,8 +1271,8 @@ Bool_t THtml::HaveDot()
    // Check whether dot is available in $PATH or in the directory set 
    // by SetDotPath()
 
-   if (fPathInfo.fFoundDot != TPathInfo::kDotUnknown) 
-      return (fPathInfo.fFoundDot == TPathInfo::kDotFound);
+   if (fPathInfo.fFoundDot != PathInfo_t::kDotUnknown) 
+      return (fPathInfo.fFoundDot == PathInfo_t::kDotFound);
 
    R__LOCKGUARD(GetMakeClassMutex());
 
@@ -1283,10 +1284,10 @@ Bool_t THtml::HaveDot()
    if (gDebug > 3)
       Info("HaveDot", "Running: %s", runDot.Data());
    if (gSystem->Exec(runDot)) {
-      fPathInfo.fFoundDot = TPathInfo::kDotNotFound;
+      fPathInfo.fFoundDot = PathInfo_t::kDotNotFound;
       return kFALSE;
    }
-   fPathInfo.fFoundDot = TPathInfo::kDotFound;
+   fPathInfo.fFoundDot = PathInfo_t::kDotFound;
    return kTRUE;
 
 }
@@ -1513,6 +1514,19 @@ void THtml::CreateListOfClasses(const char* filter)
          if (cdi->HaveSource() && cdi->IsSelected())
             module->SetSelected();
       }
+
+      // clear the typedefs; we fill them later
+      cdi->GetListOfTypedefs().Clear();
+   }
+
+   // fill typedefs
+   TIter iTypedef(gROOT->GetListOfTypes());
+   TDataType* dt = 0;
+   while ((dt = (TDataType*) iTypedef())) {
+      if (dt->GetType() != -1) continue;
+      TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(dt->GetFullTypeName());
+      if (cdi)
+         cdi->GetListOfTypedefs().Add(dt);
    }
 
    fDocEntityInfo.fClasses.Sort();
@@ -1536,11 +1550,11 @@ void THtml::CreateListOfClasses(const char* filter)
 //______________________________________________________________________________
 void THtml::CreateListOfTypes()
 {
-// Create index of all data types
+// Create index of all data types and a page for each typedef-to-class
 
    TDocOutput output(*this);
    output.CreateTypeIndex();
-
+   output.CreateClassTypeDefs();
 }
 
 //______________________________________________________________________________
@@ -2004,14 +2018,16 @@ void THtml::MakeClass(void *cdi_void, Bool_t force)
            || gSystem->IsAbsoluteFileName(htmlFile))
        ) {
       htmlFile.Remove(0);
-      //printf("CASE skipped, class=%s, htmlFile=%s\n",className,htmlFile);
    }
    if (htmlFile.Length()) {
-      TClassDocOutput cdo(*this, currentClass);
+      TClassDocOutput cdo(*this, currentClass, &cdi->GetListOfTypedefs());
       cdo.Class2Html(force);
       cdo.MakeTree(force);
-   } else
-      Printf(fCounterFormat.Data(), "-skipped-", fCounter.Data(), cdi->GetName());
+   } else {
+      TString what(cdi->GetName());
+      what += " (sources not found)";
+      Printf(fCounterFormat.Data(), "-skipped-", fCounter.Data(), what.Data());
+   }
 }
 
 
@@ -2044,6 +2060,7 @@ void THtml::MakeIndex(const char *filter)
    TDocOutput output(*this);
    // create indices
    output.CreateTypeIndex();
+   output.CreateClassTypeDefs();
    output.CreateModuleIndex();
    output.CreateClassIndex();
    output.CreateProductIndex();
@@ -2070,15 +2087,15 @@ void THtml::MakeTree(const char *className, Bool_t force)
       return;
    }
 
-   TClassDocOutput cdo(*this, classPtr);
+   TClassDocOutput cdo(*this, classPtr, 0);
    cdo.MakeTree(force);
 }
 
 //______________________________________________________________________________
 void THtml::SetFoundDot(Bool_t found) {
    // Set whether "dot" (a GraphViz utility) is avaliable
-   if (found) fPathInfo.fFoundDot = TPathInfo::kDotFound;
-   else fPathInfo.fFoundDot = TPathInfo::kDotNotFound;
+   if (found) fPathInfo.fFoundDot = PathInfo_t::kDotFound;
+   else fPathInfo.fFoundDot = PathInfo_t::kDotNotFound;
 }
 
 //______________________________________________________________________________

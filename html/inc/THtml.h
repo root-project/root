@@ -168,14 +168,14 @@ public:
 
    //______________________________________________________________
    // Configuration holder for path related settings
-   struct TPathInfo {
+   struct PathInfo_t {
       enum EDotAccess {
          kDotUnknown,
          kDotFound,
          kDotNotFound
       };
 
-      TPathInfo():
+      PathInfo_t():
          fFoundDot(kDotUnknown),
 #ifdef R__WIN32
          fInputPath("./;src/;include/"),
@@ -226,7 +226,7 @@ public:
    void          SetInputDir(const char *dir);
    void          SetEtcDir(const char* dir) { fPathInfo.fEtcDir = dir; }
    void          SetDocPath(const char* path) { fPathInfo.fDocPath = path; }
-   void          SetDotDir(const char* dir) { fPathInfo.fDotDir = dir; fPathInfo.fFoundDot = TPathInfo::kDotUnknown; }
+   void          SetDotDir(const char* dir) { fPathInfo.fDotDir = dir; fPathInfo.fFoundDot = PathInfo_t::kDotUnknown; }
    void          SetRootURL(const char* url) { fLinkInfo.fROOTURL = url; }
    void          SetLibURL(const char* lib, const char* url) { fLinkInfo.fLibURLs[lib] = url; }
    void          SetXwho(const char *xwho) { fLinkInfo.fXwho = xwho; }
@@ -301,7 +301,7 @@ public:
    TFileSysDB*         GetLocalFiles() const { if (!fLocalFiles) SetLocalFiles(); return fLocalFiles; }
    TVirtualMutex*      GetMakeClassMutex() const { return  fMakeClassMutex; }
    virtual void        GetModuleNameForClass(TString& module, TClass* cl) const;
-   const TPathInfo&    GetPathInfo() const { return fPathInfo; }
+   const PathInfo_t&    GetPathInfo() const { return fPathInfo; }
    Bool_t              HaveDot();
    void                HelperDeleted(THelperBase* who);
    static Bool_t       IsNamespace(const TClass*cl);
@@ -316,7 +316,7 @@ public:
    void                SetEscape(char /*esc*/ ='\\') {} // for backward comp
 
 protected:
-   struct TDocSyntax {
+   struct DocSyntax_t {
       TString        fClassDocTag;     // tag for class documentation
       TString        fAuthorTag;       // tag for author
       TString        fLastUpdateTag;   // tag for last update
@@ -324,7 +324,7 @@ protected:
       TString        fDocStyle;        // doc style (only "Doc++" has special treatment)
    };
 
-   struct TLinkInfo {
+   struct LinkInfo_t {
       TString        fXwho;            // URL for name lookup
       TString        fROOTURL;         // Root URL for ROOT's reference guide for libs that are not in fLibURLs
       std::map<std::string, TString> fLibURLs; // URL for documentation of external libraries
@@ -335,13 +335,13 @@ protected:
       TString        fWikiURL;         // URL stem of class's wiki page, %c replaced by mangled class name (no %c: appended)
    };
 
-   struct TOutputStyle {
+   struct OutputStyle_t {
       TString        fHeader;          // header file name
       TString        fFooter;          // footerer file name
       TString        fCharset;         // Charset for doc pages
    };
 
-   struct TDocEntityInfo {
+   struct DocEntityInfo_t {
       TString        fClassFilter;     // filter used for buidling known classes
       THashList      fClasses;         // known classes
       THashList      fModules;         // known modules
@@ -367,11 +367,11 @@ protected:
    TIter         *fThreadedClassIter; // fClasses iterator for MakeClassThreaded
    Int_t          fThreadedClassCount; // counter of processed classes for MakeClassThreaded
    TVirtualMutex *fMakeClassMutex; // Mutex for MakeClassThreaded
-   TDocSyntax     fDocSyntax;      // doc syntax configuration
-   TLinkInfo      fLinkInfo;       // link (URL) configuration
-   TOutputStyle   fOutputStyle;    // output style configuration
-   TPathInfo      fPathInfo;       // path configuration
-   TDocEntityInfo fDocEntityInfo;  // data for documented entities
+   DocSyntax_t     fDocSyntax;      // doc syntax configuration
+   LinkInfo_t      fLinkInfo;       // link (URL) configuration
+   OutputStyle_t   fOutputStyle;    // output style configuration
+   PathInfo_t      fPathInfo;       // path configuration
+   DocEntityInfo_t fDocEntityInfo;  // data for documented entities
    mutable TPathDefinition *fPathDef; // object translating classes to module names
    mutable TModuleDefinition *fModuleDef; // object translating classes to module names
    mutable TFileDefinition* fFileDef; // object translating classes to file names
