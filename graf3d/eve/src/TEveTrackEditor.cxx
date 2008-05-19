@@ -483,7 +483,8 @@ void TEveTrackCounterEditor::DoFileReport()
       fM->OutputEventTracks(out);
       fclose(out);
    } else {
-      Error("TEveTrackCounterEditor::DoFileReport", "Can not open file '%s' for writing.", file);
+      Error("TEveTrackCounterEditor::DoFileReport",
+            "Can not open file '%s' for writing.", file.Data());
    }
 }
 
