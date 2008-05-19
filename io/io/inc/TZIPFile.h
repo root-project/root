@@ -113,6 +113,9 @@ protected:
       kDEFLATED            = 8             // Stored using deflate
    };
 
+   TZIPFile(const TZIPFile&); // Not implemented
+   TZIPFile& operator=(const TZIPFile&); // Not implemented
+
 public:
    TZIPFile();
    TZIPFile(const char *archive, const char *member, TFile *file);
