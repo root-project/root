@@ -82,6 +82,7 @@ Begin_Macro(source, gui)
    array[5][1] = 3.01; 
    //update the table view
    table->Update(); 
+   return table;
 }
 End_Macro
 Begin_Html
@@ -102,9 +103,11 @@ Begin_Macro(source, gui)
    // Set the selection used
    iface->SetSelection("px > 0.");
    // Add a column
-   iface->AddColumn("(px + py) / (px - py)", 0);
+   iface->AddColumn("(px+py)/(px-py)", 0);
    //update the table view
    table->Update(); 
+   delete file;
+   return table;
 }
 End_Macro
 */
@@ -118,7 +121,7 @@ End_Macro
 //______________________________________________________________________________
 TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface, 
                  UInt_t nrows, UInt_t ncolumns) 
-   : TGMainFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0), 
+   : TGMainFrame(p, 400, 200, kVerticalFrame), TGWidget(id), fRows(0), 
      fRowHeaders(0), fColumnHeaders(0), fReadOnly(kFALSE), fSelectColor(0), 
      fTMode(0), fAllData(kFALSE), fTableFrame(0), fCanvas(0), fCellWidth(80), 
      fCellHeight(25), fInterface(interface)
