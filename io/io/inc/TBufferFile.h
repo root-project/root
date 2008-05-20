@@ -101,6 +101,7 @@ public:
    Bool_t   CheckObject(const TObject *obj);
    Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
 
+   TStreamerInfo     *GetInfoStack(Int_t number) const;
    virtual Int_t      GetVersionOwner() const;
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
@@ -116,7 +117,7 @@ public:
    virtual void       IncrementLevel(TVirtualStreamerInfo* info);
    virtual void       SetStreamerElementNumber(Int_t) {}
    virtual void       DecrementLevel(TVirtualStreamerInfo*);
-   TVirtualStreamerInfo     *GetInfo() {return (TVirtualStreamerInfo*)fInfo;}
+   TVirtualStreamerInfo  *GetInfo() {return (TVirtualStreamerInfo*)fInfo;}
    virtual void       ClassBegin(const TClass*, Version_t = -1) {}
    virtual void       ClassEnd(const TClass*) {}
    virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) {}

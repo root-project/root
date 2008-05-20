@@ -129,6 +129,17 @@ TBufferFile::~TBufferFile()
 }
 
 //______________________________________________________________________________
+TStreamerInfo *TBufferFile::GetInfoStack(Int_t number) const
+{
+   //return the TStreamerInfo at position number in the InfoStack
+   //return 0 if the number requested is outside the stack
+   
+   Int_t n = fInfoStack.size();
+   if (number < 0 || number >= n) return 0;
+   return fInfoStack[number];
+}
+
+//______________________________________________________________________________
 Int_t TBufferFile::GetVersionOwner() const
 {
    // Return the version number of the owner file.
