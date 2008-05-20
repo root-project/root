@@ -25,6 +25,8 @@
 #pragma link C++ class TAxisEditor;
 #pragma link C++ class TFrameEditor;
 #pragma link C++ class TGraphEditor;
+#pragma link C++ class TPieEditor;
+#pragma link C++ class TPieSliceEditor;
 #pragma link C++ class TH1Editor;
 #pragma link C++ class TH2Editor;
 #pragma link C++ class TF1Editor;
