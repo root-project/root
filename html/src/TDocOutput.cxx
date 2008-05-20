@@ -918,6 +918,9 @@ void TDocOutput::CreateClassTypeDefs()
       TIter iTypedefs(&cdi->GetListOfTypedefs());
       TDataType* dt = 0;
       while ((dt = (TDataType*) iTypedefs())) {
+         if (gDebug > 0)
+            Info("CreateClassTypeDefs", "Creating typedef %s to class %s",
+                 dt->GetName(), cdi->GetName());
          // create a filename
          TString filename(dt->GetName());
          NameSpace2FileName(filename);
@@ -1359,7 +1362,7 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
             if (in) {
                out << "<pre>"; // this is what e.g. the html directive expects
                TDocParser parser(*this);
-               parser.Convert(out, in, "../");
+               parser.Convert(out, in, "./");
                out << "</pre>";
             }
          } else if (filename.EndsWith(".html", TString::kIgnoreCase)) {

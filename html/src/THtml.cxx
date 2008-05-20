@@ -556,7 +556,8 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
    // can be a THtml::GetDirDelimiter() delimited list of paths.
 
    TString sPath(path);
-   Info("Recurse", "scanning %s...", path);
+   if (gDebug > 0 || GetLevel() < 2)
+      Info("Recurse", "scanning %s...", path);
    TString dir;
    Ssiz_t posPath = 0;
    TPMERegexp regexp(db->GetIgnore());
@@ -1517,6 +1518,11 @@ void THtml::CreateListOfClasses(const char* filter)
 
       // clear the typedefs; we fill them later
       cdi->GetListOfTypedefs().Clear();
+
+      if (gDebug > 0)
+         Info("CreateListOfClasses", "Adding class %s, module %s (%sselected)",
+              cdi->GetName(), module ? module->GetName() : "[UNKNOWN]",
+              cdi->IsSelected() ? "" : "not ");
    }
 
    // fill typedefs
@@ -1525,8 +1531,12 @@ void THtml::CreateListOfClasses(const char* filter)
    while ((dt = (TDataType*) iTypedef())) {
       if (dt->GetType() != -1) continue;
       TClassDocInfo* cdi = (TClassDocInfo*) fDocEntityInfo.fClasses.FindObject(dt->GetFullTypeName());
-      if (cdi)
+      if (cdi) {
          cdi->GetListOfTypedefs().Add(dt);
+         if (gDebug > 1)
+            Info("CreateListOfClasses", "Adding typedef %s to class %s",
+                 dt->GetName(), cdi->GetName());
+      }
    }
 
    fDocEntityInfo.fClasses.Sort();
