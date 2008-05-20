@@ -219,7 +219,7 @@ extern "C" {
 #if defined(R__AIX)
 // #   define HAVE_XL_TRBK   // does not work as expected
 #endif
-#if defined(R__LINUX) || defined(R__HURD)
+#if (defined(R__LINUX) || defined(R__HURD)) && !defined(R__WINGCC)
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #   endif
@@ -352,14 +352,19 @@ static void SigHandler(ESignals sig)
 }
 
 #if defined(HAVE_DLADDR)
-void SetRootSys()
+//______________________________________________________________________________
+static void SetRootSys()
 {
+#ifndef ROOTPREFIX
    void *addr = (void *)SetRootSys;
    Dl_info info;
    if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
       TString rs = gSystem->DirName(info.dli_fname);
       gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
    }
+#else
+   return;
+#endif
 }
 #endif
 
