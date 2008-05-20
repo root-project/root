@@ -74,15 +74,17 @@
       } else if (mess->What() == kMESS_OBJECT) {
          //printf("got object of class: %s\n", mess->GetClass()->GetName());
          TH1 *h = (TH1 *)mess->ReadObject(mess->GetClass());
-         if (s == s0)
-            pad1->cd();
-         else
-            pad2->cd();
-         h->Print();
-         h->DrawCopy();  // draw a copy of the histogram, not the histo itself
-         c1->Modified();
-         c1->Update();
-         delete h;       // delete histogram
+         if (h) {
+            if (s == s0)
+               pad1->cd();
+            else
+               pad2->cd();
+            h->Print();
+            h->DrawCopy();  //draw a copy of the histogram, not the histo itself
+            c1->Modified();
+            c1->Update();
+            delete h;       // delete histogram
+         }
       } else {
          printf("*** Unexpected message ***\n");
       }
