@@ -934,7 +934,7 @@ void TDocOutput::CreateClassTypeDefs()
 
          if (!outfile.good()) {
             Error("CreateClassTypeDefs", "Can't open file '%s' !", filename.Data());
-            return;
+            continue;
          }
 
          WriteHtmlHeader(outfile, dt->GetName());
