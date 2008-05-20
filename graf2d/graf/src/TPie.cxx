@@ -986,6 +986,12 @@ void TPie::Paint(Option_t *option)
 
    } // end loop to draw the slices
 
+
+   // Set the font
+   textlabel->SetTextFont(GetTextFont());
+   textlabel->SetTextSize(GetTextSize());
+   textlabel->SetTextColor(GetTextColor());
+
    // Loop to place the labels.
    for (Int_t i=0;i<fNvals;++i) {
       Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
@@ -993,10 +999,6 @@ void TPie::Paint(Option_t *option)
 
       Float_t label_off = fLabelsOffset;
 
-      // Set the font
-      textlabel->SetTextFont(GetTextFont());
-      textlabel->SetTextSize(GetTextSize());
-      textlabel->SetTextColor(GetTextColor());
 
       // Paint the text in the pad
       TString tmptxt  = fLabelFormat;

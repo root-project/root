@@ -368,10 +368,15 @@ void TPieEditor::DoTextChange()
 {
    if (fAvoidSignal) return;
    
+   // font color
    fPie->SetTextColor(TColor::GetColor(fColorSelect->GetColor()));
 
-   fPie->SetTextFont(fTypeCombo->GetSelected()*10);
+   // font type
+   Int_t fontPrec = fPie->GetTextFont()%10;
+   Int_t fontType = fTypeCombo->GetSelected();
+   fPie->SetTextFont(fontType*10+fontPrec);
 
+   // font size
    TVirtualPad* pad = fGedEditor->GetPad();
    
    Float_t val = TString(fSizeCombo->GetSelectedEntry()->GetTitle()).Atoi();

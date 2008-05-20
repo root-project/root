@@ -31,7 +31,7 @@ TPieSliceEditor::TPieSliceEditor(const TGWindow *p,
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 120, 20, kHorizontalFrame);
    TGLabel *lbl1 = new TGLabel(f1,"Value");
-   fValue = new TGNumberEntry(f1, 2, 2, kPieSlice_Value);
+   fValue = new TGNumberEntry(f1, 2, 2, kPieSlice_Value, TGNumberEntry::kNESReal, TGNumberEntry::kNEANonNegative);
    //fValue->SetToolTipText("Set the slice absolute value")
    fValue->Resize(50, 20);
    f1->AddFrame(lbl1, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
