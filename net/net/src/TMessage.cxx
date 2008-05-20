@@ -280,8 +280,8 @@ Int_t TMessage::Uncompress()
 
    Int_t buflen;
    Int_t hdrlen = 2*sizeof(UInt_t);
-   char *bufcur = fBufComp + hdrlen;
-   frombuf(bufcur, &buflen);
+   UChar_t *bufcur = (UChar_t*)(fBufComp + hdrlen);
+   frombuf((char*&)bufcur, &buflen);
    fBuffer  = new char[buflen];
    fBufSize = buflen;
    fBufCur  = fBuffer + sizeof(UInt_t) + sizeof(fWhat);
@@ -293,7 +293,7 @@ Int_t TMessage::Uncompress()
    while (1) {
       nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
       nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
-      R__unzip(&nin, (UChar_t*)bufcur, &nbuf, messbuf, &nout);
+      R__unzip(&nin, bufcur, &nbuf, messbuf, &nout);
       if (!nout) break;
       noutot += nout;
       if (noutot >= buflen - hdrlen) break;
