@@ -12,11 +12,11 @@
 #ifndef ROOT_TDocInfo
 #define ROOT_TDocInfo
 
+#ifndef ROOT_TClass
+#include "TClass.h"
+#endif
 #ifndef ROOT_THashList
 #include "THashList.h"
-#endif
-#ifndef ROOT_TClassRef
-#include "TClassRef.h"
 #endif
 #ifndef ROOT_TNamed
 #include "TNamed.h"
@@ -24,7 +24,7 @@
 #include <string>
 #include <set>
 
-class TClass;
+class TDictionary;
 
 class TModuleDocInfo;
 //____________________________________________________________________
@@ -44,9 +44,19 @@ public:
       fDeclFileSysName(fsdecl), fImplFileSysName(fsimpl),
       fSelected(kTRUE) { }
 
+   TClassDocInfo(TDictionary* cl,
+      const char* htmlfilename = "",
+      const char* fsdecl = "", const char* fsimpl = "",
+      const char* decl = 0, const char* impl = 0): 
+      fClass(cl), fModule(0), fHtmlFileName(htmlfilename),
+      fDeclFileName(decl),
+      fImplFileName(impl),
+      fDeclFileSysName(fsdecl), fImplFileSysName(fsimpl),
+      fSelected(kTRUE) { }
+
    virtual ~TClassDocInfo() {}
 
-           TClass*         GetClass() const { return fClass; }
+           TDictionary*    GetClass() const { return fClass; }
    virtual const char*     GetName() const;
            const char*     GetHtmlFileName() const { return fHtmlFileName; }
            const char*     GetDeclFileName() const { return fDeclFileName; }
@@ -59,7 +69,8 @@ public:
 
            void            SetSelected(Bool_t sel = kTRUE) { fSelected = sel; }
            Bool_t          IsSelected() const { return fSelected; }
-           Bool_t          HaveSource() const { return fDeclFileSysName.Length(); }
+           Bool_t          HaveSource() const { return fDeclFileSysName.Length()
+                                                   || (fClass && !dynamic_cast<TClass*>(fClass)); }
    
            void            SetHtmlFileName(const char* name) { fHtmlFileName = name; }
            void            SetDeclFileName(const char* name) { fDeclFileName = name; }
@@ -77,7 +88,7 @@ public:
 private:
    TClassDocInfo();
 
-   TClassRef               fClass; // class represented by this info object
+   TDictionary*            fClass; // class (or typedef) represented by this info object
    TModuleDocInfo*         fModule; // module this class is in
    TString                 fHtmlFileName; // name of the HTML doc file
    TString                 fDeclFileName; // header

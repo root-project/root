@@ -26,8 +26,7 @@ ClassImp(TClassDocInfo);
 const char* TClassDocInfo::GetName() const
 {
    // Get the class name, or (UNKNOWN) is no TClass object was found.
-   TClass* cl = fClass;
-   return cl ? cl->GetName() : "(UNKNOWN)";
+   return fClass ? fClass->GetName() : "(UNKNOWN)";
 }
 
 ULong_t TClassDocInfo::Hash() const

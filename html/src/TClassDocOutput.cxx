@@ -1105,9 +1105,11 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
    TIter iClass(fHtml->GetListOfClasses());
    while ((cdi = (TClassDocInfo*)iClass())) {
 
-      TClass *cl = cdi->GetClass();
+      TDictionary *dict = cdi->GetClass();
+      TClass *cl = dynamic_cast<TClass*>(dict);
       if (cl == 0) {
-         Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
+         if (!dict)
+            Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
          continue;
       }
 
@@ -1208,7 +1210,7 @@ void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t
    TIter iClass(fHtml->GetListOfClasses());
    while ((cdi = (TClassDocInfo*)iClass()) && (!maxLines || fHierarchyLines<maxLines)) {
 
-      TClass *classPtr = cdi->GetClass();
+      TClass *classPtr = dynamic_cast<TClass*>(cdi->GetClass());
       if (!classPtr) continue;
 
       // find base classes with same name as basePtr

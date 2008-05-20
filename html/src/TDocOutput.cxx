@@ -423,9 +423,11 @@ void TDocOutput::CreateHierarchy()
          continue;
 
       // get class
-      TClass *basePtr = cdi->GetClass();
+      TDictionary *dictPtr = cdi->GetClass();
+      TClass *basePtr = dynamic_cast<TClass*>(dictPtr);
       if (basePtr == 0) {
-         Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
+         if (!dictPtr)
+            Warning("THtml::CreateHierarchy", "skipping class %s\n", cdi->GetName());
          continue;
       }
 
@@ -505,9 +507,11 @@ void TDocOutput::CreateClassIndex()
          continue;
 
       // get class
-      TClass* currentClass = cdi->GetClass();
+      TDictionary *currentDict = cdi->GetClass();
+      TClass* currentClass = dynamic_cast<TClass*>(currentDict);
       if (!currentClass) {
-         Warning("THtml::CreateClassIndex", "skipping class %s\n", cdi->GetName());
+         if (!currentDict)
+            Warning("THtml::CreateClassIndex", "skipping class %s\n", cdi->GetName());
          continue;
       }
 
@@ -621,7 +625,11 @@ void TDocOutput::CreateModuleIndex()
 
             if (classNames.size() > 1) continue;
 
-            TString libs(cdi->GetClass()->GetSharedLibs());
+            TClass* cdiClass = dynamic_cast<TClass*>(cdi->GetClass());
+            if (!cdiClass)
+               continue;
+
+            TString libs(cdiClass->GetSharedLibs());
             Ssiz_t posDepLibs = libs.Index(' ');
             TString thisLib(libs);
             if (posDepLibs != kNPOS)
@@ -676,7 +684,7 @@ void TDocOutput::CreateModuleIndex()
          if (!cdi->IsSelected() || !cdi->HaveSource())
             continue;
 
-         TClass *classPtr = cdi->GetClass();
+         TDictionary *classPtr = cdi->GetClass();
          if (!classPtr) {
             Error("CreateModuleIndex", "Unknown class '%s' !", cdi->GetName());
             continue;
@@ -941,34 +949,35 @@ void TDocOutput::CreateClassTypeDefs()
 
          outfile << "<a name=\"TopOfPage\"></a>" << endl;
 
-
-         // show box with lib, include
-         // needs to go first to allow title on the left
          TString dtName(dt->GetName());
          ReplaceSpecialChars(dtName);
          TString sTitle("typedef ");
          sTitle += dtName;
 
-         TString sInclude;
-         TString sLib;
-         TClass* cls = cdi->GetClass();
-         const char* lib=cls->GetSharedLibs();
-         GetHtml()->GetPathDefinition().GetIncludeAs(cls, sInclude);
-         if (lib) {
-            char* libDup=StrDup(lib);
-            char* libDupSpace=strchr(libDup,' ');
-            if (libDupSpace) *libDupSpace = 0;
-            char* libDupEnd=libDup+strlen(libDup);
-            while (libDupEnd!=libDup)
-               if (*(--libDupEnd)=='.') {
-                  *libDupEnd=0;
-                  break;
-               }
-            sLib = libDup;
-            delete[] libDup;
+         TClass* cls = dynamic_cast<TClass*>(cdi->GetClass());
+         if (cls) {
+            // show box with lib, include
+            // needs to go first to allow title on the left
+            TString sInclude;
+            TString sLib;
+            const char* lib=cls->GetSharedLibs();
+            GetHtml()->GetPathDefinition().GetIncludeAs(cls, sInclude);
+            if (lib) {
+               char* libDup=StrDup(lib);
+               char* libDupSpace=strchr(libDup,' ');
+               if (libDupSpace) *libDupSpace = 0;
+               char* libDupEnd=libDup+strlen(libDup);
+               while (libDupEnd!=libDup)
+                  if (*(--libDupEnd)=='.') {
+                     *libDupEnd=0;
+                     break;
+                  }
+               sLib = libDup;
+               delete[] libDup;
+            }
+            outfile << "<script type=\"text/javascript\">WriteFollowPageBox('" 
+                    << sTitle << "','" << sLib << "','" << sInclude << "');</script>" << endl;
          }
-         outfile << "<script type=\"text/javascript\">WriteFollowPageBox('" 
-            << sTitle << "','" << sLib << "','" << sInclude << "');</script>" << endl;
 
          TString modulename;
          fHtml->GetModuleNameForClass(modulename, cls);
