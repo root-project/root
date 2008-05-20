@@ -796,6 +796,23 @@ fGUIThreadHandle(0), fGUIThreadId(0)
       fBeepDuration = gEnv->GetValue("Root.System.BeepDuration", 1);
       fBeepFreq     = gEnv->GetValue("Root.System.BeepFreq", 0);
    }
+
+#ifndef ROOTPREFIX
+   // set ROOTSYS
+   HMODULE hModCore = ::GetModuleHandle("libCore.dll");
+   if (hModCore) {
+      char buf[MAX_MODULE_NAME32 + 1];
+      ::GetModuleFileName(hModCore, buf, sizeof(buf));
+      char* pLibName = strstr(buf, "libCore.dll");
+      if (pLibName) {
+         --pLibName; // skip trailing \\ or /
+         while (--pLibName >= buf && *pLibName != '\\' && *pLibName != '/');
+         *pLibName = 0;
+         if (buf[0])
+            Setenv("ROOTSYS", buf);
+      }
+   }
+#endif
 }
 
 //______________________________________________________________________________
