@@ -66,7 +66,7 @@ Int_t TPieSlice::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
    if (fIsActive) {
       dist = 0;
       fIsActive = kFALSE;
-      gPad->SetCursor(kCross);
+      gPad->SetCursor(kHand);
    }
 
    return dist;
