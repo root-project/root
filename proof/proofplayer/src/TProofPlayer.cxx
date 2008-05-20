@@ -219,7 +219,6 @@ TProofPlayer::~TProofPlayer()
 
    fInput->Clear("nodelete");
    SafeDelete(fInput);
-   SafeDelete(fOutput);      // owns the output list
    SafeDelete(fSelector);
    SafeDelete(fFeedbackTimer);
    SafeDelete(fEvIter);
