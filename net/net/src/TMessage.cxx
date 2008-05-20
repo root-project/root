@@ -280,8 +280,9 @@ Int_t TMessage::Uncompress()
 
    Int_t buflen;
    Int_t hdrlen = 2*sizeof(UInt_t);
-   UChar_t *bufcur = (UChar_t*)(fBufComp + hdrlen);
-   frombuf((char*&)bufcur, &buflen);
+   char *bufcur1 = fBufComp + hdrlen;
+   frombuf(bufcur1, &buflen);
+   UChar_t *bufcur = (UChar_t*)bufcur1;
    fBuffer  = new char[buflen];
    fBufSize = buflen;
    fBufCur  = fBuffer + sizeof(UInt_t) + sizeof(fWhat);
