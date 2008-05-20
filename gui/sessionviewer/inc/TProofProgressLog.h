@@ -43,6 +43,7 @@ private:
    TGCheckButton        *fAllLines;  // display all lines button
    TGSplitButton        *fAllWorkers; // display all workers button
 
+   Bool_t               fFullText;    // 0 - when grep was called
 public:
    TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
    virtual ~TProofProgressLog();

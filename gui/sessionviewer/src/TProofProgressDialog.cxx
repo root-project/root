@@ -419,8 +419,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       fStop->SetState(kButtonDisabled);
       fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
-      if (!fKeep)
-         DoClose();
+      if (!fKeep) DoClose();
+
+      // Set the status to done
+      fStatus = kDone;
+
    } else {
       // A negative value for process indicates that we are finished,
       // no matter whether the processing was complete
@@ -460,6 +463,9 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
          fStop->SetState(kButtonDisabled);
          fAbort->SetState(kButtonDisabled);
          fClose->SetState(kButtonUp);
+
+         // Set the status to done
+         fStatus = kDone;
       }
    }
    fPrevProcessed = evproc;
@@ -595,8 +601,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       fStop->SetState(kButtonDisabled);
       fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
-      if (!fKeep)
-         DoClose();
+      if (!fKeep) DoClose();
+
+      // Set the status to done
+      fStatus = kDone;
+
    } else {
       // A negative value for process indicates that we are finished,
       // no matter whether the processing was complete

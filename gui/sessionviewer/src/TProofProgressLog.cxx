@@ -38,7 +38,8 @@ TProofProgressLog::TProofProgressLog(TProofProgressDialog *d, Int_t w, Int_t h) 
    // Create a window frame for log messages.
 
    fDialog = d;
-
+   fProofLog = 0;
+   fFullText = kTRUE;
    // use hierarchical cleaning
    SetCleanup(kDeepCleanup);
 
@@ -273,9 +274,13 @@ void TProofProgressLog::DoLog(Bool_t grep)
       to = fLinesTo->GetIntNumber();
    }
    if (!grep) {
-      fProofLog = TProof::Mgr(fDialog->fSessionUrl.Data())->GetSessionLogs();
+      if (!fProofLog || !fFullText || fDialog->fStatus==TProofProgressDialog::kRunning){
+         fProofLog = TProof::Mgr(fDialog->fSessionUrl.Data())->GetSessionLogs();
+         fFullText = kTRUE;
+      }
    } else {
       fProofLog = TProof::Mgr(fDialog->fSessionUrl.Data())->GetSessionLogs(0, 0, greptext.Data());
+      fFullText = kFALSE;
    }
    TList *selected = new TList;
    fLogList->GetSelectedEntries(selected);
