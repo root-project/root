@@ -1274,95 +1274,29 @@ void TPostScript::FontEncode()
 {
    // Font Reencoding
 
-   PrintStr("@/reencdict 24 dict def");
-   PrintStr(" /ReEncode");
-   PrintStr(" {reencdict begin");
-   PrintStr(" /nco&na exch def");
-   PrintStr("@/nfnam exch def /basefontname exch");
-   PrintStr(" def /basefontdict basefontname");
-   PrintStr(" findfont def");
-   PrintStr("@/newfont basefontdict maxlength dict def");
-   PrintStr(" basefontdict");
-   PrintStr(" {exch dup /FID ne");
-   PrintStr("@{dup /Encoding eq");
-   PrintStr(" {exch dup length array copy");
-   PrintStr(" newfont 3 1 roll put} {exch ");
-   PrintStr("@newfont 3 1 roll put}");
-   PrintStr(" ifelse}");
+   PrintStr("/reEncode ");
+   PrintStr("{exch findfont");
+   PrintStr(" dup length dict begin");
+   PrintStr(" {1 index /FID eq ");
    PrintStr(" {pop pop}");
-   PrintStr(" ifelse");
-   PrintStr(" } forall newfont");
-   PrintStr("@/FontName nfnam put");
-   PrintStr(" nco&na aload pop");
-   PrintStr(" nco&na length 2 idiv {newfont");
-   PrintStr("@/Encoding get 3 1 roll put}");
-   PrintStr(" repeat");
-   PrintStr(" nfnam newfont definefont pop");
-   PrintStr(" end } def");
-   PrintStr("@/accvec [");
-   PrintStr(" 176 /agrave");
-   PrintStr(" 181 /Agrave");
-   PrintStr(" 190 /acircumflex");
-   PrintStr(" 192 /Acircumflex");
-   PrintStr("@201 /adieresis");
-   PrintStr(" 204 /Adieresis");
-   PrintStr(" 209 /ccedilla");
-   PrintStr(" 210 /Ccedilla");
-   PrintStr(" 211 /eacute");
-   PrintStr("@212 /Eacute");
-   PrintStr(" 213 /egrave");
-   PrintStr(" 214 /Egrave");
-   PrintStr(" 215 /ecircumflex");
-   PrintStr(" 216 /Ecircumflex");
-   PrintStr("@217 /edieresis");
-   PrintStr(" 218 /Edieresis");
-   PrintStr(" 219 /icircumflex");
-   PrintStr(" 220 /Icircumflex");
-   PrintStr("@221 /idieresis");
-   PrintStr(" 222 /Idieresis");
-   PrintStr(" 223 /ntilde");
-   PrintStr(" 224 /Ntilde");
-   PrintStr(" 226 /ocircumflex");
-   PrintStr("@228 /Ocircumflex");
-   PrintStr(" 230 /Odieresis");
-   PrintStr(" 231 /ucircumflex");
-   PrintStr(" 236 /Ucircumflex");
-   PrintStr("@237 /udieresis");
-   PrintStr(" 238 /Udieresis");
-   PrintStr(" 239 /aring");
-   PrintStr(" 240 /odieresis");
-   PrintStr(" 242 /Aring");
-   PrintStr(" 243 /ydieresis");
-   PrintStr("@244 /Ydieresis");
-   PrintStr(" 246 /aacute");
-   PrintStr(" 247 /Aacute");
-   PrintStr(" 252 /ugrave");
-   PrintStr(" 253 /Ugrave");
-   PrintStr("@127 /atilde");
-   PrintStr(" 128 /Atilde");
-   PrintStr(" 129 /oacute");
-   PrintStr(" 130 /Oacute");
-   PrintStr(" 131 /iacute");
-   PrintStr("@132 /Iacute");
-   PrintStr(" 133 /igrave");
-   PrintStr(" 134 /Igrave");
-   PrintStr(" 135 /otilde");
-   PrintStr(" 136 /Otilde");
-   PrintStr("@137 /uacute");
-   PrintStr(" 138 /Uacute");
-   PrintStr("] def");
-   PrintStr("/Times-Roman /Times-Roman accvec ReEncode@");
-   PrintStr("/Times-Italic /Times-Italic accvec ReEncode@");
-   PrintStr("/Times-Bold /Times-Bold accvec ReEncode@");
-   PrintStr("/Times-BoldItalic /Times-BoldItalic accvec ReEncode@");
-   PrintStr("/Helvetica /Helvetica accvec ReEncode@");
-   PrintStr("/Helvetica-Oblique /Helvetica-Oblique accvec ReEncode@");
-   PrintStr("/Helvetica-Bold /Helvetica-Bold accvec ReEncode@");
-   PrintStr("/Helvetica-BoldOblique /Helvetica-BoldOblique  accvec ReEncode@");
-   PrintStr("/Courier /Courier accvec ReEncode@");
-   PrintStr("/Courier-Oblique /Courier-Oblique accvec ReEncode");
-   PrintStr("/Courier-Bold /Courier-Bold accvec ReEncode@");
-   PrintStr("/Courier-BoldOblique /Courier-BoldOblique accvec ReEncode@");
+   PrintStr(" {def} ifelse");
+   PrintStr(" } forall");
+   PrintStr(" /Encoding exch def");
+   PrintStr(" currentdict end");
+   PrintStr(" dup /FontName get exch");
+   PrintStr(" definefont pop");
+   PrintStr(" } def");
+   PrintStr(" [/Times-Bold /Times-Italic /Times-BoldItalic /Helvetica");
+   PrintStr(" /Helvetica-Oblique /Helvetica-Bold /Helvetica-BoldOblique");
+   PrintStr(" /Courier /Courier-Oblique /Courier-Bold /Courier-BoldOblique");
+   PrintStr(" /Times-Roman /AvantGarde-Book /AvantGarde-BookOblique");
+   PrintStr(" /AvantGarde-Demi /AvantGarde-DemiOblique /Bookman-Demi");
+   PrintStr(" /Bookman-DemiItalic /Bookman-Light /Bookman-LightItalic");
+   PrintStr(" /Helvetica-Narrow /Helvetica-Narrow-Bold /Helvetica-Narrow-BoldOblique");
+   PrintStr(" /Helvetica-Narrow-Oblique /NewCenturySchlbk-Roman /NewCenturySchlbk-Bold");
+   PrintStr(" /NewCenturySchlbk-BoldItalic /NewCenturySchlbk-Italic");
+   PrintStr(" /Palatino-Bold /Palatino-BoldItalic /Palatino-Italic /Palatino-Roman");
+   PrintStr(" ] {ISOLatin1Encoding reEncode } forall");
 
    // Initialization of text PostScript procedures
    PrintStr("/oshow {gsave [] 0 sd true charpath stroke gr} def@");
@@ -1531,7 +1465,6 @@ void TPostScript::Initialize()
 
    DefineMarkers();
    FontEncode();
-   MakeGreek();
 
    // mode=1 for portrait black/white
    if (fMode == 1)  {
@@ -1683,89 +1616,6 @@ void TPostScript::Initialize()
       PrintFast(nh,gStyle->GetHeaderPS());
       if (fMode != 3) SaveRestore(1);
    }
-}
-
-
-//______________________________________________________________________________
-void TPostScript::MakeGreek()
-{
-   // Reencode the Greek (/Symbol) font into the special font (/Special)
-
-   PrintStr("@/accspe [");
-   PrintStr(" 65 /plusminus ");
-   PrintStr(" 66 /bar ");
-   PrintStr(" 67 /existential ");
-   PrintStr(" 68 /universal ");
-   PrintStr("@69 /exclam ");
-   PrintStr(" 70 /numbersign");
-   PrintStr(" 71 /greater ");
-   PrintStr(" 72 /question ");
-   PrintStr(" 73 /integral ");
-   PrintStr("@74 /colon ");
-   PrintStr(" 75 /semicolon ");
-   PrintStr(" 76 /less ");
-   PrintStr(" 77 /bracketleft ");
-   PrintStr(" 78 /bracketright");
-   PrintStr("@79 /greaterequal");
-   PrintStr(" 80 /braceleft");
-   PrintStr(" 81 /braceright");
-   PrintStr(" 82 /radical");
-   PrintStr("@83 /spade");
-   PrintStr(" 84 /heart");
-   PrintStr(" 85 /diamond");
-   PrintStr(" 86 /club");
-   PrintStr(" 87 /lessequal");
-   PrintStr("@88 /multiply");
-   PrintStr(" 89 /percent");
-   PrintStr(" 90 /infinity");
-   PrintStr(" 48 /circlemultiply");
-   PrintStr(" 49 /circleplus");
-   PrintStr("@50 /emptyset ");
-   PrintStr(" 51 /lozenge");
-   PrintStr(" 52 /bullet");
-   PrintStr(" 53 /arrowright");
-   PrintStr(" 54 /arrowup");
-   PrintStr("@55 /arrowleft");
-   PrintStr(" 56 /arrowdown");
-   PrintStr(" 57 /arrowboth");
-   PrintStr(" 48 /degree");
-   PrintStr(" 44 /comma");
-   PrintStr(" 43 /plus");
-   PrintStr(" 45 /angle");
-   PrintStr(" 42 /angleleft");
-   PrintStr(" 47 /divide");
-   PrintStr(" 61 /notequal");
-   PrintStr(" 40 /equivalence");
-   PrintStr(" 41 /second");
-
-   PrintStr(" 97 /approxequal");
-   PrintStr(" 98 /congruent");
-   PrintStr(" 99 /perpendicular");
-   PrintStr(" 100 /partialdiff");
-   PrintStr(" 101 /florin");
-   PrintStr(" 102 /intersection");
-   PrintStr(" 103 /union");
-   PrintStr(" 104 /propersuperset");
-   PrintStr(" 105 /reflexsuperset");
-   PrintStr(" 106 /notsubset");
-   PrintStr(" 107 /propersubset");
-   PrintStr(" 108 /reflexsubset");
-   PrintStr(" 109 /element");
-   PrintStr(" 110 /notelement");
-   PrintStr(" 111 /gradient");
-   PrintStr(" 112 /logicaland");
-   PrintStr(" 113 /logicalor");
-   PrintStr(" 114 /arrowdblboth");
-   PrintStr(" 115 /arrowdblleft");
-   PrintStr(" 116 /arrowdblup");
-   PrintStr(" 117 /arrowdblright");
-   PrintStr(" 118 /arrowdbldown");
-   PrintStr(" 119 /ampersand");
-   PrintStr(" 120 /omega1");
-   PrintStr(" 121 /similar");
-   PrintStr(" 122 /aleph");
-   PrintStr(" ] def");
-   PrintStr("/Symbol /Special accspe ReEncode@");
 }
 
 

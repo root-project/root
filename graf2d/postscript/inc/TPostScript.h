@@ -130,7 +130,6 @@ public:
    void  SetLineScale(Float_t scale=3) {fLineScale = scale;}
    void  SetMarkerColor( Color_t cindex=1);
    void  SetTextColor( Color_t cindex=1);
-   void  MakeGreek();
    void  MovePS(Int_t x, Int_t y);
    void  Range(Float_t xrange, Float_t yrange);
    void  SetColor(Int_t color = 1);
