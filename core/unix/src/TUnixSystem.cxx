@@ -351,6 +351,18 @@ static void SigHandler(ESignals sig)
       ((TUnixSystem*)gSystem)->DispatchSignals(sig);
 }
 
+#if defined(HAVE_DLADDR)
+void SetRootSys()
+{
+   void *addr = (void *)SetRootSys;
+   Dl_info info;
+   if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
+      TString rs = gSystem->DirName(info.dli_fname);
+      gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+   }
+}
+#endif
+
 #if defined(R__MACOSX)
 static TString gLinkedDylibs;
 
@@ -444,6 +456,8 @@ Bool_t TUnixSystem::Init()
    // trap loading of all dylibs to register dylib name
    // sets also ROOTSYS if built without ROOTPREFIX
    _dyld_register_func_for_add_image(DylibAdded);
+#elif defined(HAVE_DLADDR)
+   SetRootSys();
 #endif
 
 #ifndef ROOTPREFIX
