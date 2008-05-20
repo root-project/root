@@ -156,6 +156,7 @@ else
 		./configure \
 		--with-ttf $$TTFINCDIR \
 		--with-afterbase=no \
+		--without-svg \
 		--disable-glx \
 		$$MMX \
 		$(ASTEPDBG) \
