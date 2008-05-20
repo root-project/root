@@ -24,6 +24,7 @@
 */
 //End_Html
 
+#include "snprintf.h"
 #include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGButtonGroup.h"
@@ -166,8 +167,8 @@ void TPieEditor::ConnectSignals2Slots()
 void TPieEditor::ActivateBaseClassEditors(TClass* cl)
 {
    // Exclude TAttTextEditor from this interface.
-   TGedEditor *fGedEditor = GetGedEditor();
-   fGedEditor->ExcludeClassEditor(TAttText::Class());
+   TGedEditor *GedEditor = GetGedEditor();
+   GedEditor->ExcludeClassEditor(TAttText::Class());
    TGedFrame::ActivateBaseClassEditors(cl);
 }
 
@@ -375,7 +376,7 @@ void TPieEditor::DoTextChange()
    
    Float_t val = TString(fSizeCombo->GetSelectedEntry()->GetTitle()).Atoi();
    
-   Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(val);
+   Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY((Int_t)val);
    Float_t textSize;
 
    if (fGedEditor->GetModel()->InheritsFrom(TPaveLabel::Class())) {
