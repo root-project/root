@@ -92,7 +92,7 @@ private:
    TGLFontManager& operator=(const TGLFontManager&); // Not implemented
 
    std::map<TGLFont, Int_t>  fFontMap;        // map of created fonts
-   std::list<const FTFont*>   fFontTrash;      // fonts to purge
+   std::list<const FTFont*>  fFontTrash;      // fonts to purge
 
    static TObjArray     fgFontFileArray;      // map font-id to ttf-font-file
    static FontSizeVec_t fgFontSizeArray;      // map of valid font-size
@@ -100,7 +100,7 @@ private:
    static void          InitStatics();
 
 public:
-   TGLFontManager(){}
+   TGLFontManager() : fFontMap(), fFontTrash() {}
    virtual ~TGLFontManager();
 
    void   RegisterFont(Int_t size, Int_t file, TGLFont::EMode mode, TGLFont& out);
