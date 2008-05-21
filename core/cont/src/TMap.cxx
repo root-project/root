@@ -16,8 +16,9 @@
 // TMap implements an associative array of (key,value) pairs using a    //
 // THashTable for efficient retrieval (therefore TMap does not conserve //
 // the order of the entries). The hash value is calculated              //
-// using the value returned by the keys Hash() function. Both key and   //
-// value need to inherit from TObject.                                  //
+// using the value returned by the keys Hash() function and the         //
+// key comparison is done via the IsEqual() function.                   //
+// Both key and value must inherit from TObject.                        //
 //Begin_Html
 /*
 <img src=gif/tmap.gif>
@@ -93,13 +94,21 @@ Int_t TMap::Capacity() const
 //______________________________________________________________________________
 void TMap::Clear(Option_t *option)
 {
-   // Remove all (key,value) pairs from the map but DO NOT delete the keys
-   // and/or values. Key objects are not deleted unless the TMap is the
-   // owner (set via SetOwner()). To delete only the value objects call
-   // DeleteValues() and to delete both keys and values use DeleteAll().
+   // Remove all (key,value) pairs from the map. The keys/values are
+   // deleted depending on the state of key-ownership (SetOwner()) and
+   // value-ownership (SetOwnerValue()).
+   //
+   // To delete these objects regardless of the ownership state use:
+   //  - Delete()       to delete only keys;
+   //  - DeleteValues() to delete only values;
+   //  - DeleteAll()    to delete both keys and values.
 
-   if (IsOwner())
+   if (IsOwner() && IsOwnerValue())
+      DeleteAll();
+   else if (IsOwner())
       Delete();
+   else if (IsOwnerValue())
+      DeleteValues();
    else {
       fTable->Delete(option);    // delete the TPair's
       fSize = 0;
@@ -177,6 +186,31 @@ void TMap::DeleteAll()
 
    fTable->Delete();   // delete the TPair's
    fSize = 0;
+}
+
+//______________________________________________________________________________
+Bool_t TMap::DeleteEntry(TObject *key)
+{
+   // Remove (key,value) pair with key from the map. Returns true
+   // if the key was found and removed, false otherwise.
+   // The key and value objects are deleted if map is the owner
+   // of keys and values respectively.
+
+   if (!key) return kFALSE;
+
+   TPair *a;
+   if ((a = (TPair *)fTable->FindObject(key))) {
+      if (fTable->Remove(key)) {
+         if (IsOwner() && a->Key() && a->Key()->IsOnHeap())
+            TCollection::GarbageCollect(a->Key());
+         if (IsOwnerValue() && a->Value() && a->Value()->IsOnHeap())
+            TCollection::GarbageCollect(a->Value());
+         delete a;
+         fSize--;
+         return kTRUE;
+      }
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -297,14 +331,17 @@ void TMap::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
 //______________________________________________________________________________
 TObject *TMap::Remove(TObject *key)
 {
-   // Remove the (key,value) pair with key from the map. Returns the key
-   // object or 0 in case key was not found.
+   // Remove the (key,value) pair with key from the map. Returns the
+   // key object or 0 in case key was not found. If map is the owner
+   // of values, the value is deleted.
 
    if (!key) return 0;
 
    TPair *a;
    if ((a = (TPair *)fTable->FindObject(key))) {
       if (fTable->Remove(key)) {
+         if (IsOwnerValue() && a->Value() && a->Value()->IsOnHeap())
+            TCollection::GarbageCollect(a->Value());
          TObject *kobj = a->Key();
          delete a;
          fSize--;
@@ -312,6 +349,50 @@ TObject *TMap::Remove(TObject *key)
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+TPair *TMap::RemoveEntry(TObject *key)
+{
+   // Remove (key,value) pair with key from the map. Returns the
+   // pair object or 0 in case the key was not found.
+   // It is caller's responsibility to delete the pair and, eventually,
+   // the key and value objects.
+
+   if (!key) return 0;
+
+   TPair *a;
+   if ((a = (TPair *)fTable->FindObject(key))) {
+      if (fTable->Remove(key)) {
+         fSize--;
+         return a;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+void TMap::SetOwnerValue(Bool_t enable)
+{
+   // Set whether this map is the owner (enable==true)
+   // of its values.  If it is the owner of its contents,
+   // these objects will be deleted whenever the collection itself
+   // is deleted. The objects might also be deleted or destructed when Clear
+   // is called (depending on the collection).
+
+   if (enable)
+      SetBit(kIsOwnerValue);
+   else
+      ResetBit(kIsOwnerValue);
+}
+
+//______________________________________________________________________________
+void TMap::SetOwnerKeyValue(Bool_t ownkeys, Bool_t ownvals)
+{
+   // Set ownership for keys and values.
+
+   SetOwner(ownkeys);
+   SetOwnerValue(ownvals);
 }
 
 //______________________________________________________________________________
