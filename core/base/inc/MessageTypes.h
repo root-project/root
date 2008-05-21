@@ -34,7 +34,8 @@ enum EMessageTypes {
    kMESS_STRING          = 3,            //string follows
    kMESS_OBJECT          = 4,            //object follows
    kMESS_CINT            = 5,            //cint command follows
-
+   kMESS_STREAMERINFO    = 6,            //TStreamerInfo object follows
+      
    //---- PROOF message opcodes (1000 - 1999)
    kPROOF_GROUPVIEW      = 1000,         //groupview follows
    kPROOF_STOP           = 1001,         //stop proof server
