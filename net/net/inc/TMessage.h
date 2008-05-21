@@ -29,6 +29,7 @@
 #include "MessageTypes.h"
 #endif
 
+class TList;
 
 class TMessage : public TBufferFile {
 
@@ -38,6 +39,7 @@ friend class TPSocket;
 friend class TXSocket;
 
 private:
+   TList   *fInfos;       //Array of TStreamerInfo used in WriteObject
    UInt_t   fWhat;        //Message type
    TClass  *fClass;       //If message is kMESS_OBJECT pointer to object's class
    Int_t    fCompress;    //Compression level from 0 (not compressed) to 9 (max compression)
@@ -58,7 +60,8 @@ public:
    virtual ~TMessage();
 
    void     Forward();
-   TClass  *GetClass() const { return fClass; }
+   TClass  *GetClass() const { return fClass;} 
+   void     IncrementLevel(TVirtualStreamerInfo* info);
    void     Reset();
    void     Reset(UInt_t what) { SetWhat(what); Reset(); }
    UInt_t   What() const { return fWhat; }
@@ -70,6 +73,7 @@ public:
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
    Int_t    CompLength() const { return (Int_t)(fBufCompCur - fBufComp); }
+   void     WriteObject(const TObject *obj);
 
    ClassDef(TMessage,0)  // Message buffer class
 };

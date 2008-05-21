@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMessage.h"
+#include "TVirtualStreamerInfo.h"
 #include "Bytes.h"
 #include "TFile.h"
 
@@ -55,6 +56,8 @@ TMessage::TMessage(UInt_t what) : TBufferFile(TBuffer::kWrite)
    fBufComp    = 0;
    fBufCompCur = 0;
    fCompPos    = 0;
+   fInfos      = new TList();
+   
 }
 
 //______________________________________________________________________________
@@ -72,6 +75,7 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
    fBufComp    = 0;
    fBufCompCur = 0;
    fCompPos    = 0;
+   fInfos      = new TList();
 
    if (fWhat & kMESS_ZIP) {
       // if buffer has kMESS_ZIP set, move it to fBufComp and uncompress
@@ -97,6 +101,7 @@ TMessage::~TMessage()
    // Clean up compression buffer.
 
    delete [] fBufComp;
+   delete fInfos;
 }
 
 //______________________________________________________________________________
@@ -113,6 +118,17 @@ void TMessage::Forward()
          fCompPos = fBufCur;
       }
    }
+}
+
+//______________________________________________________________________________
+void TMessage::IncrementLevel(TVirtualStreamerInfo* info)
+{
+   // Increment level.
+
+   TBufferFile::IncrementLevel(info);
+//printf(" TMessage::IncrementLevel fNInfos=%d, info=%s\n",fNInfos,info->GetName());
+  
+   fInfos->Add(info);
 }
 
 //______________________________________________________________________________
@@ -306,4 +322,13 @@ Int_t TMessage::Uncompress()
    fCompress = 1;
 
    return 0;
+}
+
+//______________________________________________________________________________
+void TMessage::WriteObject(const TObject *obj)
+{
+   // Write object to message buffer.
+
+   fInfos->Clear();
+   WriteObjectAny(obj, TObject::Class());
 }
