@@ -86,7 +86,7 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
 //- static public members ----------------------------------------------------
 Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
 {
-// Create a TPyROOTApplication. Returns false if a gApplication is not null.
+// Create a TPyROOTApplication. Returns false if gApplication is not null.
 
    if ( ! gApplication ) {
    // retrieve arg list from python, translate to raw C, pass on

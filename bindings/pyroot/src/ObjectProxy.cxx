@@ -35,9 +35,9 @@ namespace {
 //= PyROOT object proxy pickle support =======================================
    PyObject* op_reduce( ObjectProxy* self )
    {
-   // Turn the TObject derived into a character stream and return for pickle,
-   // together with the callable object that can restore the stream into a
-   // TObject derived instance.
+   // Turn the object proxy instance into a character stream and return for
+   // pickle, together with the callable object that can restore the stream
+   // into the object proxy instance.
 
    // keep a borrowed reference around to the callable function for expanding;
    // because it is borrowed, it means that there can be no pickling during the

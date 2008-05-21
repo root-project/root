@@ -314,7 +314,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* ObjectProxyExpand( PyObject*, PyObject* args )
    {
-   // This method and is a helper for pickling for TObject derived classes.
+   // This method is a helper for (un)pickling of ObjectProxy instances.
       PyObject* pybuf = 0;
       const char* clname = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!s:__expand__" ),
