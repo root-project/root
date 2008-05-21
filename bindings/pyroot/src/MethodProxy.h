@@ -31,7 +31,7 @@ namespace PyROOT {
 
       struct MethodInfo_t {
          MethodInfo_t() : fIsSorted( kFALSE ) { fRefCount = new int(1); }
-         ~MethodInfo_t() { delete fRefCount; }
+         ~MethodInfo_t();
 
          std::string                 fName;
          MethodProxy::DispatchMap_t  fDispatchMap;

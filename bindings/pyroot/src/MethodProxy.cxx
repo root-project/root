@@ -351,3 +351,13 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
    fMethodInfo->fMethods.swap( methods );
    fMethodInfo->fIsSorted = kFALSE;
 }
+
+//____________________________________________________________________________
+PyROOT::MethodProxy::MethodInfo_t::~MethodInfo_t()
+{
+   for ( Methods_t::iterator it = fMethods.begin(); it != fMethods.end(); ++it ) {
+      delete *it;
+   }
+   fMethods.clear();
+   delete fRefCount;
+}
