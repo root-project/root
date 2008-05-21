@@ -501,7 +501,6 @@ void TestReport1(TCanvas *C, const TString &title)
                                            gPNGErrNb[gTestNum-1]);
 
    gErrorIgnoreLevel = 0;
-   gErrorIgnoreLevel = 0;
 
    return;
 }
