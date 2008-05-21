@@ -438,6 +438,7 @@ struct Data {
   long   transient3; //Set transient by adding comment in selection file
   Data() : i(0), l(0), c(0), s(0), f(0.0), d(0.0), b(false), ll(0), ull(0), len(0), array(0),
            transient1(1), transient2(2),transient3(3) {
+     memset(arra, 0, sizeof(arra));
     //std::cout << "Data constructor called" << std::endl; 
   }
   Data(const Data& o) : i(o.i), l(o.l), c(o.c), s(o.s), f(o.f), d(o.d), b(o.b), ll(o.ll), ull(o.ull) {
@@ -449,10 +450,11 @@ struct Data {
       len = 0;
       array = 0;
     }
-    //std::cout << "Data copy constructor called" << std::endl; 
+    memset(arra, 0, sizeof(arra));
+   //std::cout << "Data copy constructor called" << std::endl; 
   }
   ~Data() {
-    delete array;
+    delete [] array;
     //std::cout << "Data destructor called" << std::endl; 
   }
   void setPattern(int o = 0) {
@@ -466,6 +468,7 @@ struct Data {
     f = 9.9F + o;
     d = 9.99 + o;
     array = new double[i];
+    memset(array, 42, sizeof(double)*i);
   }  
   bool checkPattern(int o = 0) {
     return (c == 9 + o)  &&
@@ -489,6 +492,7 @@ struct OData {
 };
 
 struct MyData : public Data {
+   MyData(): extra(0) {}
   int extra;
 };
 
@@ -509,7 +513,7 @@ struct Aggregate : public Data {
   Data farray[3];
   Data* darray;
   //MyString str;
-  Aggregate() : extra(0), dptr(0), narray(0), darray(0) {}
+  Aggregate() : extra(0), dptr(0), narray(0), darray(0) { memset(farray, 0, sizeof(farray)); }
   ~Aggregate() { delete dptr; delete [] darray; }
   void setFArrayPattern() {
     for ( unsigned int i = 0; i < sizeof(farray)/sizeof(Data); i++) farray[i].setPattern(i);
