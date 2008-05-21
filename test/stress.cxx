@@ -1496,9 +1496,11 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 2303;
+   Int_t nlinesGood = 2121;
+   Bool_t counting = kFALSE;
    while (fgets(line,255,fp)) {
-      nlines++;
+      if (counting) nlines++;
+      if (strstr(line,"%%EndProlog")) counting = kTRUE;
    }
    fclose(fp);
    delete c;
