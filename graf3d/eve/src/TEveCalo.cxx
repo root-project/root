@@ -384,7 +384,7 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
    fPlaneColor(kRed-5),
    fPlaneTransparency(60),
 
-   fNZSteps(5),
+   fNZSteps(6),
    fZAxisStep(0.f),
 
    fBinWidth(5),
@@ -406,7 +406,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    fPlaneColor(kRed-5),
    fPlaneTransparency(60),
 
-   fNZSteps(5),
+   fNZSteps(6),
    fZAxisStep(0.f),
 
    fBinWidth(5),

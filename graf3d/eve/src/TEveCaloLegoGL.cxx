@@ -25,6 +25,8 @@
 #include "TObjString.h"
 
 #include "TH2.h"
+#include "THLimitsFinder.h"
+
 //______________________________________________________________________________
 // OpenGL renderer class for TEveCaloLego.
 //
@@ -604,62 +606,127 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
          break;
    }
 
-   Float_t lx0 = -4, ly0 = -2;
-   Int_t   nX = 5, nY = 5;
-
-   Float_t zOff =  -fDataMax*0.02;
+ 
+  
+   Float_t zOff =  -fDataMax*0.03;
 
    // XY labels
-   {
-      fNumFont.PreRender(kFALSE);
-      glPushMatrix();
-      glTranslatef(0, 0, zOff);
-      TGLUtil::Color(fM->fFontColor);
+   glPushMatrix();
+   glTranslatef(0, 0, zOff);
+   fNumFont.PreRender(kFALSE);     
+   TGLUtil::Color(fM->fFontColor);
 
-      RnrText("h", axtX, 1.1f*axY, 0, fSymbolFont, (axY>0 && ayX>0) || (axY<0 && ayX<0));
-      for (Int_t i=0; i<nX; i++)
-         RnrText(Form("%.0f", lx0 + 2*i), lx0 + 2*i, axY + TMath::Sign(fTMSize*3,axY), 0, fNumFont, 2);
+   // title
+   RnrText("h", axtX, 1.1f*axY, 0, fSymbolFont, (axY>0 && ayX>0) || (axY<0 && ayX<0));
+   RnrText("f", 1.1f*ayX, aytY, 0, fSymbolFont, (ayX>0 && axY<0) || (ayX<0 && axY>0));
 
-      RnrText("f", 1.1f*ayX, aytY, 0, fSymbolFont, (ayX>0 && axY<0) || (ayX<0 && axY>0));
-      for (Int_t i=0; i<nY; ++i)
-         RnrText(Form("%.0f", ly0 + i), ayX + TMath::Sign(fTMSize*3,ayX), ly0 + i, 0, fNumFont, 2);
+   // X optimised limits
+   Double_t oXmin, oXmax, oXbw;
+   Int_t oXndiv;
+   THLimitsFinder::Optimize(x0, x1, fM->fNZSteps, oXmin, oXmax, oXndiv, oXbw);
+   for (Int_t i=0; i<=oXndiv; i++)
+      RnrText(Form("%.0f", oXmin + oXbw*i), oXmin+oXbw*i, axY + TMath::Sign(fTMSize*3,axY), 0, fNumFont, 2);
 
-      glPopMatrix();
-      fNumFont.PostRender();
-   }
+   // Y optimised limits
+   Double_t oYmin, oYmax, oYbw;
+   Int_t oYndiv;
+   THLimitsFinder::Optimize(y0, y1, fM->fNZSteps, oYmin, oYmax, oYndiv, oYbw);
+   for (Int_t i=0; i<=oYndiv; ++i)
+      RnrText(Form("%.0f", oYmin + oYbw*i), ayX + TMath::Sign(fTMSize*3,ayX), oYmin+oYbw*i, 0, fNumFont, 2);
+
+   glPopMatrix();
+   fNumFont.PostRender();
 
    // XY tick-marks
    TGLUtil::Color(fM->fGridColor);
    {
+     
+      // second order tick-marks
+      Double_t oXmin2, oXmax2, oXbw2;
+      Int_t oXndiv2;
+      Float_t zOff2 = zOff*0.5;
+      Float_t yOff =  axY *0.03;
+      Float_t yOff2 = yOff*0.5;
+ 
+      glPushMatrix();
+      glTranslatef(0, axY, 0);
       glBegin(GL_LINES);
-
-      glVertex3f(x0, axY, 0);
-      glVertex3f(x1, axY, 0);
-
-      Float_t xs = 0.25f;
-      Float_t xt = Int_t(x0/xs)*xs;
-      while (xt < x1)
+      glVertex3f(x0, 0, 0);
+      glVertex3f(x1, 0, 0);
+      THLimitsFinder::Optimize(oXmin, oXbw+oXmin, fM->fNZSteps, oXmin2, oXmax2, oXndiv2, oXbw2);
+      Float_t xt = oXmin;
+      Float_t xt2;
+      for(Int_t i=0; i<=oXndiv; i++)
       {
-         glVertex3f(xt, axY, 0);
-         glVertex3f(xt, axY, (Int_t(xt*10) % 5) ? zOff/2 : zOff);
-         glVertex3f(xt, axY, 0);
-         glVertex3f(xt, ((Int_t(xt*10) % 5) ? 1.0125f : 1.025f)*axY, 0);
-         xt += xs;
+         glVertex3f(xt, 0, 0);
+         glVertex3f(xt, 0, zOff);
+         glVertex3f(xt, 0, 0);
+         glVertex3f(xt, 0+yOff, 0);
+         xt2 = xt;
+         for (Int_t j=0; j<=oXndiv2; j++)
+         {
+            if (xt2 >= x1) break;
+            glVertex3f(xt2, 0, 0);
+            glVertex3f(xt2, 0, zOff2);
+            glVertex3f(xt2, 0, 0);
+            glVertex3f(xt2, yOff2, 0);
+            xt2 += oXbw2;
+         }
+         xt += oXbw;
+      }
+      // draw wertices below optimised minimum
+      xt2 = oXmin;
+      while(xt2 > x0)
+      {
+         glVertex3f(xt2, 0, 0);
+         glVertex3f(xt2, 0, zOff2);
+         glVertex3f(xt2, 0, 0);
+         glVertex3f(xt2, yOff2, 0);
+         xt2 -= oXbw2;
       }
 
-      glVertex3f(ayX, y0, 0);
-      glVertex3f(ayX, y1, 0);
-      Float_t ys = 0.25f;
-      Float_t yt = Int_t(y0/ys)*ys;
-      while (yt < y1)
+      glEnd();
+      glPopMatrix();
+
+      glPushMatrix();
+      glTranslatef(ayX, 0, 0);
+      glBegin(GL_LINES);
+      glVertex3f(0, y0, 0);
+      glVertex3f(0, y1, 0);
+      Double_t oYmin2, oYmax2, oYbw2;
+      Int_t oYndiv2;
+      THLimitsFinder::Optimize(oYmin, oYbw+oYmin, fM->fNZSteps, oYmin2, oYmax2, oYndiv2, oYbw2);
+      Float_t yt = oYmin; 
+      Float_t yt2;
+      for(Int_t i=0; i<=oYndiv; i++)
       {
-         glVertex3f(ayX, yt, 0);
-         glVertex3f(ayX, yt, (Int_t(yt*10) % 5) ? zOff/2 : zOff);
-         glVertex3f(ayX, yt, 0);
-         glVertex3f(((Int_t(yt*10) % 5) ? 1.0125f : 1.025f)*ayX, yt, 0);
-         yt += ys;
+         glVertex3f(0, yt, 0);
+         glVertex3f(0, yt, zOff);
+         glVertex3f(0, yt, 0);
+         glVertex3f(yOff, yt, 0);
+         yt2 = yt;
+         for (Int_t j=0; j<=oYndiv2; j++)
+         {  
+            if (yt2 >= y1) break;
+            glVertex3f(0, yt2, 0);
+            glVertex3f(0, yt2, zOff2);
+            glVertex3f(0, yt2, 0);
+            glVertex3f(yOff2, yt2, 0);
+            yt2 += oYbw2;
+         }
+         yt += oYbw;
+      }
+      yt2 = oYmin;
+      while(yt2 > y0)
+      {
+         glVertex3f(0, yt2, 0);
+         glVertex3f(0, yt2, zOff2);
+         glVertex3f(0, yt2, 0);
+         glVertex3f(yOff2, yt2, 0);
+         yt2 -= oYbw2;  
       }
       glEnd();
+      glPopMatrix();
    }
 } // DrawXYScales
 

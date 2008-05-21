@@ -38,38 +38,28 @@ void TEveCaloData::CellData_t::Configure(Float_t v, Float_t e1, Float_t e2, Floa
 {
    // Set parameters from cell ID.
 
-   fValue  = v;
+   using namespace TMath;
 
-   fEtaMin = e1;
-   fEtaMax = e2;
-
-   fThetaMax = 2*TMath::ATan(TMath::Exp(-(TMath::Abs(e1))));
-   fThetaMin = 2*TMath::ATan(TMath::Exp(-(TMath::Abs(e2))));
+   if (e1<0)
+   {
+      fThetaMin = Pi() - 2*ATan(Exp(- Abs(e2)));
+      fThetaMax = Pi() - 2*ATan(Exp(- Abs(e1)));
+      fZSideSign = -1;
+   }
+   else
+   {
+      fThetaMax = 2*ATan(Exp( -Abs(e1)));
+      fThetaMin = 2*ATan(Exp( -Abs(e2)));
+      fZSideSign = 1;
+   }
 
    fPhiMin = p1;
    fPhiMax = p2;
 
-   fZSideSign = (e1 > 0) ? 1:-1;
-}
+   fEtaMin = e1;
+   fEtaMax = e2;
 
-//______________________________________________________________________________
-Float_t TEveCaloData::CellData_t::ThetaMin(Bool_t sig) const
-{
-   // Get minimum theta in radians. By default returns value calculated from
-   // absolute vale of eta.
-
-   if (sig && fZSideSign == -1) return TMath::Pi() - fThetaMin;
-   return fThetaMin;
-}
-
-//______________________________________________________________________________
-Float_t TEveCaloData::CellData_t::ThetaMax(Bool_t sig) const
-{
-   // Get maximum theta in radians. By default returns value calculated from
-   // absolute value of eta.
-
-   if (sig && fZSideSign == -1 ) return TMath::Pi() - fThetaMax;
-   return fThetaMax;
+   fValue  = v;
 }
 
 //______________________________________________________________________________
@@ -78,7 +68,7 @@ void TEveCaloData::CellData_t::Dump() const
   // Print member data.
 
    printf(">> theta %2.1f phi %2.1f val %2.2f \n",
-          Theta(kTRUE)*TMath::RadToDeg(),
+          Theta()*TMath::RadToDeg(),
           Phi()*TMath::RadToDeg(), Value());
 }
 
