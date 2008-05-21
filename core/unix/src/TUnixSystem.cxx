@@ -351,6 +351,32 @@ static void SigHandler(ESignals sig)
       ((TUnixSystem*)gSystem)->DispatchSignals(sig);
 }
 
+//______________________________________________________________________________
+static const char *GetExePath()
+{
+   static TString exepath;
+   if (exepath == "") {
+#ifdef __APPLE__
+      exepath = _dyld_get_image_name(0);
+#endif
+#ifdef __linux
+      char linkname[64];  // /proc/<pid>/exe
+      char buf[1024];     // exe path name
+      pid_t pid;
+
+      // get our pid and build the name of the link in /proc
+      pid = getpid();
+      sprintf(linkname, "/proc/%i/exe", pid);
+      int ret = readlink(linkname, buf, 1024);
+      if (ret > 0 && ret < 1024) {
+         buf[ret] = 0;
+         exepath = buf;
+      }
+#endif
+   }
+   return exepath;
+}
+
 #if defined(HAVE_DLADDR)
 //______________________________________________________________________________
 static void SetRootSys()
@@ -483,8 +509,19 @@ void TUnixSystem::SetProgname(const char *name)
 {
    // Set the application name (from command line, argv[0]) and copy it in
    // gProgName. Copy the application pathname in gProgPath.
+   // If name is 0 let the system set the actual executable name and path
+   // (works on MacOS X and Linux).
 
-   if (name && strlen(name) > 0) {
+   if (gProgName)
+      delete [] gProgName;
+   if (gProgPath)
+      delete [] gProgPath;
+
+   if (!name || !*name) {
+      name = GetExePath();
+      gProgName = StrDup(BaseName(name));
+      gProgPath = StrDup(DirName(name));
+   } else {
       gProgName = StrDup(BaseName(name));
       char *w   = Which(Getenv("PATH"), gProgName);
       gProgPath = StrDup(DirName(w));

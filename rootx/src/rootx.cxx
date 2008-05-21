@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <string>
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
 #include <mach-o/dyld.h>
@@ -159,11 +160,35 @@ static STRUCT_UTMP *SearchEntry(int n, const char *tty)
    return 0;
 }
 
+static const char *GetExePath()
+{
+   static std::string exepath;
+   if (exepath == "") {
+#ifdef __APPLE__
+      exepath = _dyld_get_image_name(0);
+#endif
+#ifdef __linux
+      char linkname[64];  // /proc/<pid>/exe
+      char buf[1024];     // exe path name
+      pid_t pid;
+
+      // get our pid and build the name of the link in /proc
+      pid = getpid();
+      sprintf(linkname, "/proc/%i/exe", pid);
+      int ret = readlink(linkname, buf, 1024);
+      if (ret > 0 && ret < 1024) {
+         buf[ret] = 0;
+         exepath = buf;
+      }
+#endif
+   }
+   return exepath.c_str();
+}
+
 static void SetRootSys()
 {
-#ifdef __APPLE__
-   const char *exepath = _dyld_get_image_name(0);
-   if (exepath) {
+   const char *exepath = GetExePath();
+   if (exepath && *exepath) {
       char *ep = new char[strlen(exepath)+1];
       strcpy(ep, exepath);
       char *s;
@@ -178,7 +203,6 @@ static void SetRootSys()
       }
       delete [] ep;
    }
-#endif
 }
 
 static void SetDisplay()
