@@ -33,6 +33,7 @@
 #include "TUrl.h"
 #include "TVirtualAuth.h"
 #include "TVirtualMutex.h"
+#include "TStreamerInfo.h"
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
@@ -426,6 +427,29 @@ Int_t TSocket::Send(const TMessage &mess)
       Error("Send", "cannot send a message used for reading");
       return -1;
    }
+   
+   //check if TStreamerInfo must be sent. The list of TStreamerInfo of classes
+   //in the object in the message is in the fInfos list of the message.
+   //We send only the TStreamerInfos not yet send on this socket.
+   if (mess.fInfos->GetEntries()) {
+      TIter next(mess.fInfos);
+      TStreamerInfo *info;
+      TList *minilist =0;
+      while ((info=(TStreamerInfo*)next())) {
+         Int_t uid = info->GetNumber();
+         if (fBitsInfo.TestBitNumber(uid)) continue; //TStreamerInfo had already been sent
+         fBitsInfo.SetBitNumber(uid);
+         if (!minilist) minilist = new TList();
+         minilist->Add(info);
+      }
+      if (minilist) {
+         TMessage messinfo(kMESS_STREAMERINFO);
+         messinfo.WriteObject(minilist);
+         delete minilist;
+         messinfo.fInfos->Clear();
+         Send(messinfo);
+      }
+   }         
 
    mess.SetLength();   //write length in first word of buffer
 
@@ -486,9 +510,11 @@ Int_t TSocket::SendObject(const TObject *obj, Int_t kind)
    // return after having received an acknowledgement, making the sending
    // synchronous.
 
+   //stream object to message buffer
    TMessage mess(kind);
    mess.WriteObject(obj);
 
+   //now sending the object itself
    Int_t nsent;
    if ((nsent = Send(mess)) < 0)
       return -1;
@@ -620,6 +646,8 @@ Int_t TSocket::Recv(TMessage *&mess)
       return -1;
    }
 
+   oncemore:
+      
    Int_t  n;
    UInt_t len;
    if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
@@ -648,6 +676,26 @@ Int_t TSocket::Recv(TMessage *&mess)
 
    mess = new TMessage(buf, len+sizeof(UInt_t));
 
+   if (mess->What() == kMESS_STREAMERINFO) {
+      TList *list = (TList*)mess->ReadObject(TList::Class());
+      TIter next(list);
+      TStreamerInfo *info;
+      while ((info = (TStreamerInfo*)next())) {
+         TClass *cl = TClass::GetClass(info->GetName());
+         if (cl && cl->GetStreamerInfo(info->GetOldVersion())) {
+            //delete
+            //printf("TStreamerInfo: %s, version=%d already there\n",info->GetName(),info->GetOldVersion());
+            continue;
+         }
+         info->BuildCheck();
+         printf("importing TStreamerInfo: %s, version=%d\n",info->GetName(),info->GetOldVersion());
+         
+      }
+      delete list;
+      delete mess;
+      goto oncemore;
+   }
+   
    if (mess->What() & kMESS_ACK) {
       char ok[2] = { 'o', 'k' };
       Int_t n2 = 0;
