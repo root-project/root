@@ -73,7 +73,7 @@ protected:
    void   CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
-   virtual  void     WriteObject(const void *actualObjStart, const TClass *actualClass);
+   virtual  void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass);
 
 public:
    enum { kMapSize = 503 };
@@ -101,7 +101,6 @@ public:
    Bool_t   CheckObject(const TObject *obj);
    Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
 
-   TStreamerInfo     *GetInfoStack(Int_t number) const;
    virtual Int_t      GetVersionOwner() const;
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
