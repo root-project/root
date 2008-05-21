@@ -750,6 +750,7 @@ guess_architecture () {
     esac
     if [ "$arch" = "macosx" ]; then
        if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 5 ]; then
+          macosx105=yes
           if `sysctl machdep.cpu.extfeatures | grep "64" > /dev/null  2>&1` ; then
              arch=macosx64
           fi
@@ -4484,17 +4485,19 @@ fi
 
 if test "x$enable_globus" = "xyes" && test "x$enable_rpath" = "xyes"; then
     case "$arch" in
-        solarisCC5)
+       solarisCC5)
           sed -e "s|@ldflags@|-R$globusdir/lib @ldflags@|" \
                  < Makefile.tmp > Makefile.tmpp
           ;;
-        solarisgcc*)
+       solarisgcc* | linux* | freebsd* | openbsd*)
           sed -e "s|@ldflags@|-Wl,-rpath,$globusdir/lib @ldflags@|" \
                  < Makefile.tmp > Makefile.tmpp
           ;;
-        linux*)
-          sed -e "s|@ldflags@|-Wl,-rpath,$globusdir/lib @ldflags@|" \
-                 < Makefile.tmp > Makefile.tmpp
+       macosx*)
+          if test ! "x$macosx105" = "x"; then
+             sed -e "s|@ldflags@|-Wl,-rpath,$globusdir/lib @ldflags@|" \
+                    < Makefile.tmp > Makefile.tmpp
+          fi
           ;;
     esac
     if test -f Makefile.tmpp ; then
@@ -4531,13 +4534,15 @@ if test ! "x$haveconfig" = "x" ; then
              sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
              ;;
-          solarisgcc*)
+          solarisgcc* | linux* | freebsd* | openbsd*)
              sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
              ;;
-          linux*)
-             sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
-                    < Makefile.tmp > Makefile.tmpp
+          macosx*)
+             if test ! "x$macosx105" = "x"; then
+                sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+                       < Makefile.tmp > Makefile.tmpp
+             fi
              ;;
        esac
        if test -f Makefile.tmpp ; then
@@ -4572,16 +4577,29 @@ else
     aclocaldir=\$\(ROOTSYS\)/build/misc
     elispdir=\$\(ROOTSYS\)/build/misc
 
-    # when using rpath in this case build product is not relocatable
+    # when using rpath in this case the build product is not relocatable
+    # except for macosx 10.5 where we build relative to the location of
+    # the executable
     if test "x$enable_rpath" = "xyes" ; then
-        if test "$arch" = "solarisCC5"; then
-            sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
+       case "$arch" in
+          solarisCC5)
+             sed -e "s|@ldflags@|-R$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
-        else
-            sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+             ;;
+          solarisgcc* | linux* | freebsd* | openbsd*)
+             sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
                     < Makefile.tmp > Makefile.tmpp
-        fi
-        mv Makefile.tmpp Makefile.tmp
+             ;;
+          macosx*)
+             if test ! "x$macosx105" = "x"; then
+                sed -e "s|@ldflags@|-Wl,-rpath,@loader_path/../lib @ldflags@|" \
+                       < Makefile.tmp > Makefile.tmpp
+             fi
+             ;;
+       esac
+       if test -f Makefile.tmpp ; then
+          mv Makefile.tmpp Makefile.tmp
+       fi
     fi
 
     sed -e "s|@useconfig@|FALSE|" \

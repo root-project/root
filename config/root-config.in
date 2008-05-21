@@ -5,6 +5,19 @@
 #
 # Author: Fons Rademakers, 06/06/99
 
+if [ "x$ROOTSYS" = "x" ]; then
+   progdir=`dirname $0`
+   runningdir=`pwd`
+   if echo $progdir | grep -q -s ^/ || echo $progdir | grep -q -s ^~ ; then
+      # absolute path
+      fullpath=$progdir
+   else
+      # relative path
+      fullpath=$runningdir/$progdir
+   fi
+   ROOTSYS=`dirname $fullpath`
+fi
+
 arch=@architecture@
 platform=@platform@
 bindir=@bindir@
@@ -421,11 +434,14 @@ case $arch in
       auxldflags="--exceptions $auxldflags"
    fi
    ;;
-freebsd*|linux*)
+freebsd* | openbsd* | linux*)
    for f in $features ; do
       if test "x$f" = "xthread" ; then
          auxcflags="-pthread $auxcflags"
          auxlibs="-pthread $auxlibs"
+      fi
+      if test "x$f" = "xrpath" ; then
+         auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
    done
    ;;
@@ -438,6 +454,11 @@ macosx*)
          else
 	    auxcflags="-D_REENTRANT $auxcflags"
 	    auxlibs="-lpthread $auxlibs"
+         fi
+      fi
+      if test "x$f" = "xrpath" ; then
+         if [ $macosx_minor -ge 5 ]; then
+            auxlibs="-Wl,-rpath,$libdir $auxlibs"
          fi
       fi
    done
