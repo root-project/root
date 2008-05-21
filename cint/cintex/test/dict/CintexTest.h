@@ -773,7 +773,7 @@ public:
     std::string tmp = s; // just to fail before printing anything
     return 1;
   }
-  int echo(unsigned int i)
+  int echo(unsigned int)
   {
     return 2;
   }

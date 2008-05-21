@@ -66,7 +66,7 @@ DICTEXT  = $(SOEXT)
 endif
 endif
 
-GENREFLEX_CMD2 = python ../../../lib/python/genreflex/genreflex.py
+GENREFLEX_CMD2 = python ../../../../lib/python/genreflex/genreflex.py
 
 CINTEXTESTD     = $(CINTEXDIR)/test
 CINTEXTESTDICTD = $(CINTEXTESTD)/dict

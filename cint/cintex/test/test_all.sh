@@ -5,8 +5,8 @@ export PYTHONDIR=$1/../../bin
 
 export PATH=${ROOTSYS}/bin:${PATH}
 export PYTHONPATH=${ROOTSYS}/lib:${PYTHONPATH}
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOTSYS}/cintex/dict/lib:${ROOTSYS}/lib:${PYTHONDIR}/../lib:${ROOTSYS}/cintex/test/dict
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOTSYS}/cint/cintex/dict/lib:${ROOTSYS}/lib:${PYTHONDIR}/../lib:${ROOTSYS}/cint/cintex/test/dict
 
-bin/root -b -q -l cintex/test/test_Cintex.C
-bin/root -b -q -l cintex/test/test_Persistency.C
-${PYTHONDIR}/python cintex/test/test_PyCintex_basics.py -b
+bin/root -b -q -l cint/cintex/test/test_Cintex.C
+bin/root -b -q -l cint/cintex/test/test_Persistency.C
+${PYTHONDIR}/python cint/cintex/test/test_PyCintex_basics.py -b
