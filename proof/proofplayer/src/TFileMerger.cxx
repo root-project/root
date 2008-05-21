@@ -369,6 +369,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   else             globChain->Merge(target->GetFile(),0,"keep");
                   delete globChain;
                }
+            } else if (obj->IsA()->InheritsFrom( "TCollection" )) {
+               obj->Write( key->GetName(), TObject::kSingleKey );
             } else {
                obj->Write( key->GetName() );
             }
