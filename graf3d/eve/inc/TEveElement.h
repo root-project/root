@@ -73,10 +73,10 @@ public:
    typedef std::set<TEveElement*>::iterator     Set_i;
 
 protected:
-   TEveCompound    *fCompound;             //  Compound this object belongs to.
-
    List_t           fParents;              //  List of parents.
    List_t           fChildren;             //  List of children.
+   TEveCompound    *fCompound;             //  Compound this object belongs to.
+   TString          fVizTag;           //  Tag describing the role of element.
 
    Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
    Int_t            fDenyDestroy;          //  Deny-destroy count.
@@ -105,6 +105,15 @@ public:
    virtual void SetElementName (const Text_t* name);
    virtual void SetElementTitle(const Text_t* title);
    virtual void SetElementNameTitle(const Text_t* name, const Text_t* title);
+
+   const TString& GetVizTag() const             { return fVizTag; }
+   void           SetVizTag(const TString& tag) { fVizTag = tag;  }
+
+   virtual void PropagateVizParams();
+   virtual void CopyVizParams(const TEveElement* el);
+   virtual void CopyVizParamsFromDB();
+
+   void ApplyVizTag(const TString& tag) { SetVizTag(tag); CopyVizParamsFromDB(); }
 
    TEveElement*  GetMaster();
    TEveCompound* GetCompound()                { return fCompound; }
@@ -196,7 +205,9 @@ public:
    virtual Bool_t GetRnrState()    const { return fRnrSelf && fRnrChildren; }
    virtual void   SetRnrSelf(Bool_t rnr);
    virtual void   SetRnrChildren(Bool_t rnr);
+   virtual void   SetRnrSelfChildren(Bool_t rnr_self, Bool_t rnr_children);
    virtual void   SetRnrState(Bool_t rnr);
+   virtual void   PropagateRnrStateToProjecteds();
 
    virtual Bool_t CanEditMainColor() const  { return kFALSE; }
    Color_t* GetMainColorPtr()               { return fMainColorPtr; }
@@ -208,6 +219,7 @@ public:
    void            SetMainColorPixel(Pixel_t pixel);
    void            SetMainColorRGB(UChar_t r, UChar_t g, UChar_t b);
    void            SetMainColorRGB(Float_t r, Float_t g, Float_t b);
+   virtual void    PropagateMainColorToProjecteds(Color_t color, Color_t old_color);
 
    virtual Bool_t  CanEditMainTransparency() const { return kFALSE; }
    virtual UChar_t GetMainTransparency()     const { return 0; }

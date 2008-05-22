@@ -24,12 +24,35 @@
 ClassImp(TEveCompound);
 
 //______________________________________________________________________________
-TEveCompound::TEveCompound() :
-   TEveElementList (),
+TEveCompound::TEveCompound(const Text_t* n, const Text_t* t, Bool_t doColor) :
+   TEveElementList (n, t, doColor),
    TEveProjectable (),
    fCompoundOpen   (0)
 {
    // Constructor.
+}
+
+//______________________________________________________________________________
+void TEveCompound::SetMainColor(Color_t color)
+{
+   // SetMainColor for the compound.
+   // The color is also propagated to children (compouind elements)
+   // whoose current color is the same as the old color.
+
+   Color_t old_color = GetMainColor();
+
+   TEveElement::SetMainColor(color);
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if ((*i)->GetCompound() == this && (*i)->GetMainColor() == old_color)
+         (*i)->SetMainColor(color);
+   }
+}
+
+//______________________________________________________________________________
+void TEveCompound::PropagateVizParams()
+{
+   TEveElement::PropagateVizParams();
 }
 
 //******************************************************************************
@@ -120,4 +143,22 @@ TEveCompoundProjected::TEveCompoundProjected() :
    TEveProjected ()
 {
    // Constructor.
+}
+
+//______________________________________________________________________________
+void TEveCompoundProjected::SetMainColor(Color_t color)
+{
+   // Revert back to the behaviour of TEveElement as color
+   // is propagated:
+   // a) from projectable -> projected
+   // b) from compound -> compound elements
+   // and we do not need to do this twice for projected-compound-elements.
+
+   TEveElement::SetMainColor(color);
+}
+
+//______________________________________________________________________________
+void TEveCompoundProjected::PropagateVizParams()
+{
+
 }

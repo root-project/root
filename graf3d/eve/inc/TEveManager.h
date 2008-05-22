@@ -22,6 +22,7 @@
 #include <list>
 #include <map>
 
+class TMap;
 class TMacro;
 class TFolder;
 class TCanvas;
@@ -39,8 +40,6 @@ class TEveSelection;
 class TEveGListTreeEditorFrame;
 class TEveBrowser;
 class TEveGedEditor;
-
-class PadPrimitive;
 
 class TEveViewer; class TEveViewerList;
 class TEveScene;  class TEveSceneList;
@@ -79,8 +78,22 @@ public:
       ClassDef(TExceptionHandler, 0); // Exception handler for Eve exceptions.
    };
 
+   class TVizDBKey : public TObject
+   {
+      TClass    *fClass;
+      TString    fVizTag;
+   public:
+      TVizDBKey(TClass *cls, const TString& tag) : fClass(cls), fVizTag(tag) {}
+
+      virtual ULong_t Hash() const;
+      virtual Bool_t  IsEqual(const TObject* obj) const;
+
+      ClassDef(TVizDBKey, 0); // Key for visualization parameter data-base.
+   };
+
 private:
    TExceptionHandler        *fExcHandler;
+   TMap                     *fVizDB;
 
    TEveBrowser              *fBrowser;
    TEveGListTreeEditorFrame *fLTEFrame;

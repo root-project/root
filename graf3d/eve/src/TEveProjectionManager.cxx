@@ -191,6 +191,7 @@ TEveElement* TEveProjectionManager::ImportElementsRecurse(TEveElement* el,
    {
       TEveProjected   *new_pr = 0;
       TEveProjectable *pble   = dynamic_cast<TEveProjectable*>(el);
+      // !!!! Do something for compounds here.
       if (pble)
       {
          new_el = (TEveElement*) pble->ProjectedClass()->New();

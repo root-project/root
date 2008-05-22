@@ -49,10 +49,15 @@ public:
 
    virtual TClass* ProjectedClass() const = 0;
 
+   virtual Bool_t HasProjecteds() const { return ! fProjectedList.empty(); }
+
    virtual void AddProjected(TEveProjected* p)    { fProjectedList.push_back(p); }
-   virtual void RemoveProjected(TEveProjected* p) { fProjectedList.remove(p); }
+   virtual void RemoveProjected(TEveProjected* p) { fProjectedList.remove(p);    }
 
    virtual void AddProjectedsToSet(std::set<TEveElement*>& set);
+
+   virtual void PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children);
+   virtual void PropagateMainColor(Color_t color, Color_t old_color);
 
    ClassDef(TEveProjectable, 0); // Abstract base class for classes that can be transformed with non-linear projections.
 };

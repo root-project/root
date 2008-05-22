@@ -26,6 +26,7 @@
 
 #include "TROOT.h"
 #include "TFile.h"
+#include "TMap.h"
 #include "TMacro.h"
 #include "TFolder.h"
 #include "TBrowser.h"
@@ -49,11 +50,12 @@ TEveManager* gEve = 0;
 // Central aplicat manager for Reve.
 // Manages elements, GUI, GL scenes and GL viewers.
 
-ClassImp(TEveManager)
+ClassImp(TEveManager);
 
 //______________________________________________________________________________
 TEveManager::TEveManager(UInt_t w, UInt_t h) :
    fExcHandler  (0),
+   fVizDB       (new TMap()),
    fBrowser     (0),
    fEditor      (0),
    fStatusBar   (0),
@@ -165,6 +167,7 @@ TEveManager::~TEveManager()
    // Destructor.
 
    delete fExcHandler;
+   delete fVizDB;
 }
 
 /******************************************************************************/
@@ -603,15 +606,16 @@ TEveManager* TEveManager::Create()
 }
 
 
-/******************************************************************************/
+//==============================================================================
+//==============================================================================
 // TEveManager::TExceptionHandler
-/******************************************************************************/
+//==============================================================================
 
 //______________________________________________________________________________
 //
 // Exception handler for Eve exceptions.
 
-ClassImp(TEveManager::TExceptionHandler)
+ClassImp(TEveManager::TExceptionHandler);
 
 //______________________________________________________________________________
 TStdExceptionHandler::EStatus
@@ -628,4 +632,33 @@ TEveManager::TExceptionHandler::Handle(std::exception& exc)
    } else {
       return kSEProceed;
    }
+}
+
+
+//==============================================================================
+//==============================================================================
+// TEveManager::TVizDBKey
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Key for storing vizual-database entries.
+
+ClassImp(TEveManager::TVizDBKey);
+
+//______________________________________________________________________________
+ULong_t TEveManager::TVizDBKey::Hash() const
+{
+   // Hash function.
+
+   return ((ULong_t)fClass)*fVizTag.Hash();
+}
+
+//______________________________________________________________________________
+Bool_t  TEveManager::TVizDBKey::IsEqual(const TObject* obj) const
+{
+   // Comparison function.
+
+   const TVizDBKey& o = *(TVizDBKey*)obj;
+   return fClass == o.fClass && fVizTag == o.fVizTag;
 }

@@ -28,15 +28,19 @@ private:
    TEveCompound& operator=(const TEveCompound&); // Not implemented
 
 protected:
-   Short_t  fCompoundOpen; // If true, tag new children as compound members.
+   Short_t  fCompoundOpen; // If more than zero, tag new children as compound members.
 
 public:
-   TEveCompound();
+   TEveCompound(const Text_t* n="TEveCompound", const Text_t* t="",
+                Bool_t doColor=kTRUE);
    virtual ~TEveCompound() {}
 
    void   OpenCompound()         { ++fCompoundOpen;  }
    void   CloseCompound()        { --fCompoundOpen; }
    Bool_t IsCompoundOpen() const { return fCompoundOpen > 0; }
+
+   virtual void SetMainColor(Color_t color);
+   virtual void PropagateVizParams();
 
    virtual void AddElement(TEveElement* el);
    virtual void RemoveElementLocal(TEveElement* el);
@@ -66,6 +70,9 @@ protected:
 public:
    TEveCompoundProjected();
    virtual ~TEveCompoundProjected() {}
+
+   virtual void SetMainColor(Color_t color);
+   virtual void PropagateVizParams();
 
    // Abstract from TEveProjected, we seem not to care.
    virtual void SetDepth(Float_t /*d*/) {}
