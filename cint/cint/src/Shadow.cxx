@@ -437,6 +437,8 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
 
       if (cl.Property() & G__BIT_ISENUM)
          fOut << indent << "      enum " << classname << " ";
+      else if (cl.Property() & G__BIT_ISUNION)
+         fOut << indent << "      union " << classname << " ";
       else
          fOut << indent << "      class " << classname << " ";
 
