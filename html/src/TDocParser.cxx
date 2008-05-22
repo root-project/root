@@ -1899,6 +1899,7 @@ Bool_t TDocParser::ProcessComment()
 
    if (commentLine.Length() > 2 && Context() != kDirective)
       while (commentLine.Length() > 2
+             && !IsWord(commentLine[0])
              && commentLine[0] == commentLine[commentLine.Length() - 1])
          commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
    
