@@ -18,6 +18,8 @@ TPieSliceEditor::TPieSliceEditor(const TGWindow *p,
                   UInt_t options, Pixel_t back)
                   : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
+   // TPieSliceEditor constructor.
+   
    fPieSlice = 0;
    
    // start initializing the window components
@@ -59,6 +61,8 @@ TPieSliceEditor::~TPieSliceEditor()
 //______________________________________________________________________________
 void TPieSliceEditor::SetModel(TObject *obj)
 {
+   // Set model.
+
    fPieSlice = (TPieSlice*) (obj);
    
    fAvoidSignal = kTRUE;

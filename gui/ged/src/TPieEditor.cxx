@@ -167,8 +167,9 @@ void TPieEditor::ConnectSignals2Slots()
 void TPieEditor::ActivateBaseClassEditors(TClass* cl)
 {
    // Exclude TAttTextEditor from this interface.
-   TGedEditor *GedEditor = GetGedEditor();
-   GedEditor->ExcludeClassEditor(TAttText::Class());
+
+   TGedEditor *gedEditor = GetGedEditor();
+   gedEditor->ExcludeClassEditor(TAttText::Class());
    TGedFrame::ActivateBaseClassEditors(cl);
 }
 
@@ -348,6 +349,7 @@ void TPieEditor::DoChange3DAngle()
 void TPieEditor::DoGraphLineWidth()
 {
    // Slot connected to the graph line width.
+
    if (fAvoidSignal) return;
    
    TString opt = GetDrawOption();
@@ -366,6 +368,8 @@ void TPieEditor::DoGraphLineWidth()
 //______________________________________________________________________________
 void TPieEditor::DoTextChange()
 {
+   // Change text.
+
    if (fAvoidSignal) return;
    
    // font color
