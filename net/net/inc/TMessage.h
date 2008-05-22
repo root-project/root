@@ -46,7 +46,9 @@ private:
    char    *fBufComp;     //Compressed buffer
    char    *fBufCompCur;  //Current position in compressed buffer
    char    *fCompPos;     //Position of fBufCur when message was compressed
-
+   
+   static Bool_t   fgEvolution;  //True if support for schema evolution required
+   
    // TMessage objects cannot be copied or assigned
    TMessage(const TMessage &);           // not implemented
    void operator=(const TMessage &);     // not implemented
@@ -59,6 +61,8 @@ public:
    TMessage(UInt_t what = kMESS_ANY);
    virtual ~TMessage();
 
+   static void EnableSchemaEvolution(Bool_t enable=kTRUE);
+   
    void     Forward();
    TClass  *GetClass() const { return fClass;} 
    void     IncrementLevel(TVirtualStreamerInfo* info);

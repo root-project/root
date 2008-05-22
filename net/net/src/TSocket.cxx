@@ -431,7 +431,7 @@ Int_t TSocket::Send(const TMessage &mess)
    //check if TStreamerInfo must be sent. The list of TStreamerInfo of classes
    //in the object in the message is in the fInfos list of the message.
    //We send only the TStreamerInfos not yet send on this socket.
-   if (mess.fInfos->GetEntries()) {
+   if (mess.fInfos && mess.fInfos->GetEntries()) {
       TIter next(mess.fInfos);
       TStreamerInfo *info;
       TList *minilist =0;
