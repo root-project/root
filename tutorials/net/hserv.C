@@ -1,4 +1,4 @@
-{
+void hserv() {
    // Server program which waits for two clients to connect. It then monitors
    // the sockets and displays the objects it receives. To see how to
    // make a non-blocking server see the script hserv2.C.
