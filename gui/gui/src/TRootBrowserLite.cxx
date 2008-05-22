@@ -1443,14 +1443,11 @@ void TRootBrowserLite::AddToTree(TObject *obj, const char *name, Int_t check)
                top = top->GetParent();
             }
          }
-         if (isRemote) {
-            // add the remote object only if not already in the list
-            if ((!fLt->FindChildByName(fListLevel, name)) &&
-                (!fLt->FindChildByData(fListLevel, obj)))
-               fLt->AddItem(fListLevel, name, obj);
-         }
-         else
+         // add the object only if not already in the list
+         if ((!fLt->FindChildByName(fListLevel, name)) &&
+            (!fLt->FindChildByData(fListLevel, obj))) {
             fLt->AddItem(fListLevel, name, obj);
+         }
       }
    }
 }
@@ -1996,8 +1993,6 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   TObject *obj2 = 0;
                   if ((item2 = fLt->GetSelected()) != 0 ) {
                      ListTreeHighlight(item2);
-                     obj2 = (TObject *) item2->GetUserData();
-
                      fStatusBar->SetText("", 1);   // clear
                   }
                   if (item2 && parm1 == kButton3) {
@@ -2304,13 +2299,17 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
       if (obj) {
          if (obj->IsA() == TKey::Class()) {
 
+            TKey *key = (TKey *)obj;
+            TString name = obj->GetName();
+            name += ";";
+            name += key->GetCycle();
             Chdir(item->GetParent());
-            TObject *k_obj = gROOT->FindObject(obj->GetName());
+            TObject *k_obj = gROOT->FindObject(name);
 
             if (k_obj) {
                TGListTreeItem *parent = item->GetParent();
                DeleteListTreeItem(item);
-               TGListTreeItem *itm = fLt->AddItem(parent, k_obj->GetName(), k_obj);
+               TGListTreeItem *itm = fLt->AddItem(parent, name, k_obj);
                if (itm) {
                   itm->SetUserData(k_obj);
                   item = itm;
@@ -2647,8 +2646,11 @@ void TRootBrowserLite::RecursiveRemove(TObject *obj)
    // via TBrowser::Refresh() which should be called once all objects have
    // been removed.
 
-   if (fListLevel && (fListLevel->GetUserData() == obj)) {
-      TGListTreeItem *parent = fListLevel->GetParent();
+   TGListTreeItem *item = fLt->FindItemByObj(fLt->GetFirstItem(), obj);
+   if (item == 0)
+      return;
+   if (fListLevel && (item == fListLevel)) {
+      TGListTreeItem *parent = item->GetParent();
       if (parent) {
          fListLevel = parent;
          fLt->ClearHighlighted();
@@ -2658,8 +2660,7 @@ void TRootBrowserLite::RecursiveRemove(TObject *obj)
       else
          fListLevel = 0;
    }
-   if (fHistory) fHistory->RecursiveRemove(obj);
-   fLt->RecursiveDeleteItem(fLt->GetFirstItem(), obj);
+   DeleteListTreeItem(item);
 }
 
 //______________________________________________________________________________
