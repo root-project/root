@@ -747,6 +747,136 @@ namespace {
       return SUCCEEDED(hres);
    }
 
+   void UpdateRegistry(TWinNTSystem* sys, char* buf /* size of buffer: MAX_MODULE_NAME32 + 1 */) {
+      // register ROOT as the .root file handler:
+      GetModuleFileName(0, buf, MAX_MODULE_NAME32 + 1);
+      if (strcmp(sys->TWinNTSystem::BaseName(buf), "root.exe"))
+         return;
+      HKEY regCUS;
+      if (!::RegOpenKeyEx(HKEY_CURRENT_USER, "Software", 0, KEY_READ, &regCUS) == ERROR_SUCCESS)
+         return;
+      HKEY regCUSC;
+      if (!::RegOpenKeyEx(regCUS, "Classes", 0, KEY_READ, &regCUSC) == ERROR_SUCCESS) {
+         ::RegCloseKey(regCUS);
+         return;
+      }
+
+      HKEY regROOT;
+      bool regROOTwrite = false;
+      TString iconloc(buf);
+      iconloc += ",-101";
+
+      if (::RegOpenKeyEx(regCUSC, "ROOTDEV.ROOT", 0, KEY_READ, &regROOT) != ERROR_SUCCESS) {
+         ::RegCloseKey(regCUSC);
+         if (::RegOpenKeyEx(regCUS, "Classes", 0, KEY_READ | KEY_WRITE, &regCUSC) == ERROR_SUCCESS &&
+            ::RegCreateKeyEx(regCUSC, "ROOTDEV.ROOT", 0, NULL, 0, KEY_READ | KEY_WRITE,
+            NULL, &regROOT, NULL) == ERROR_SUCCESS) {
+            regROOTwrite = true;
+         }
+      } else {
+         HKEY regROOTIcon;
+         if (::RegOpenKeyEx(regROOT, "DefaultIcon", 0, KEY_READ, &regROOTIcon) == ERROR_SUCCESS) {
+            char bufIconLoc[1024];
+            DWORD dwType;
+            DWORD dwSize = sizeof(bufIconLoc);
+
+            if (::RegQueryValueEx(regROOTIcon, NULL, NULL, &dwType, (BYTE*)bufIconLoc, &dwSize))
+               regROOTwrite = (iconloc != bufIconLoc);
+            else
+               regROOTwrite = true;
+            ::RegCloseKey(regROOTIcon);
+         } else
+            regROOTwrite = true;
+         if (regROOTwrite) {
+            // re-open for writing
+            ::RegCloseKey(regCUSC);
+            ::RegCloseKey(regROOT);
+            if (::RegOpenKeyEx(regCUS, "Classes", 0, KEY_READ | KEY_WRITE, &regCUSC) != ERROR_SUCCESS) {
+               // error opening key for writing:
+               regROOTwrite = false;
+            } else {
+               if (::RegOpenKeyEx(regCUSC, "ROOTDEV.ROOT", 0, KEY_WRITE, &regROOT) != ERROR_SUCCESS) {
+                  // error opening key for writing:
+                  regROOTwrite = false;
+                  ::RegCloseKey(regCUSC);
+               }
+            }
+         }
+      }
+
+      // determine the fileopen.C file path:
+      TString fileopen;
+#ifndef ROOT_PREFIX
+      fileopen += sys->TWinNTSystem::DriveName(buf);
+      fileopen += ":";
+      fileopen += sys->TWinNTSystem::DirName(sys->TWinNTSystem::DirName(buf));
+      fileopen += "\\macros";
+#else
+      fileopen += ROOTMACRODIR;
+#endif
+      fileopen += "\\fileopen.C";
+
+      if (regROOTwrite) {
+         // only write to registry if fileopen.C is readable
+         regROOTwrite = (::_access(fileopen, kReadPermission) == 0);
+      }
+
+      if (!regROOTwrite) {
+         ::RegCloseKey(regROOT);
+         ::RegCloseKey(regCUSC);
+         ::RegCloseKey(regCUS);
+         return;
+      }
+
+      static const char apptitle[] = "ROOT data file";
+      ::RegSetValueEx(regROOT, NULL, 0, REG_SZ, (BYTE*)apptitle, sizeof(apptitle));
+      DWORD editflags = /*FTA_OpenIsSafe*/ 0x00010000; // trust downloaded files
+      ::RegSetValueEx(regROOT, "EditFlags", 0, REG_DWORD, (BYTE*)&editflags, sizeof(editflags));
+
+      HKEY regROOTIcon;
+      if (::RegCreateKeyEx(regROOT, "DefaultIcon", 0, NULL, 0, KEY_READ | KEY_WRITE,
+                           NULL, &regROOTIcon, NULL) == ERROR_SUCCESS) {
+         TString iconloc(buf);
+         iconloc += ",-101";
+         ::RegSetValueEx(regROOTIcon, NULL, 0, REG_SZ, (BYTE*)iconloc.Data(), iconloc.Length() + 1);
+         ::RegCloseKey(regROOTIcon);
+      }
+
+      // "open" verb
+      HKEY regROOTshell;
+      if (::RegCreateKeyEx(regROOT, "shell", 0, NULL, 0, KEY_READ | KEY_WRITE,
+                           NULL, &regROOTshell, NULL) == ERROR_SUCCESS) {
+         HKEY regShellOpen;
+         if (::RegCreateKeyEx(regROOTshell, "open", 0, NULL, 0, KEY_READ | KEY_WRITE,
+                              NULL, &regShellOpen, NULL) == ERROR_SUCCESS) {
+            HKEY regShellOpenCmd;
+            if (::RegCreateKeyEx(regShellOpen, "command", 0, NULL, 0, KEY_READ | KEY_WRITE,
+                                 NULL, &regShellOpenCmd, NULL) == ERROR_SUCCESS) {
+               TString cmd(buf);
+               cmd += " -l \"%1\" \"";
+               cmd += fileopen;
+               cmd += "\"";
+               ::RegSetValueEx(regShellOpenCmd, NULL, 0, REG_SZ, (BYTE*)cmd.Data(), cmd.Length() + 1);
+               ::RegCloseKey(regShellOpenCmd);
+            }
+            ::RegCloseKey(regShellOpen);
+         }
+         ::RegCloseKey(regROOTshell);
+      }
+      ::RegCloseKey(regROOT);
+
+      if (::RegCreateKeyEx(regCUSC, ".root", 0, NULL, 0, KEY_READ | KEY_WRITE,
+                           NULL, &regROOT, NULL) == ERROR_SUCCESS) {
+         static const char appname[] = "ROOTDEV.ROOT";
+         ::RegSetValueEx(regROOT, NULL, 0, REG_SZ, (BYTE*)appname, sizeof(appname));
+      }
+      ::RegCloseKey(regCUSC);
+      ::RegCloseKey(regCUS);
+
+      // tell Windows that the association was changed
+      ::SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+   } // UpdateRegistry()
+
 } // end unnamed namespace
 
 
@@ -797,12 +927,13 @@ fGUIThreadHandle(0), fGUIThreadId(0)
       fBeepFreq     = gEnv->GetValue("Root.System.BeepFreq", 0);
    }
 
+   char *buf = new char[MAX_MODULE_NAME32 + 1];
+
 #ifndef ROOTPREFIX
    // set ROOTSYS
    HMODULE hModCore = ::GetModuleHandle("libCore.dll");
    if (hModCore) {
-      char buf[MAX_MODULE_NAME32 + 1];
-      ::GetModuleFileName(hModCore, buf, sizeof(buf));
+      ::GetModuleFileName(hModCore, buf, MAX_MODULE_NAME32 + 1);
       char* pLibName = strstr(buf, "libCore.dll");
       if (pLibName) {
          --pLibName; // skip trailing \\ or /
@@ -813,6 +944,10 @@ fGUIThreadHandle(0), fGUIThreadId(0)
       }
    }
 #endif
+
+   UpdateRegistry(this, buf);
+
+   delete [] buf;
 }
 
 //______________________________________________________________________________
@@ -1963,7 +2098,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       *szFs='\0';
       sDrive.Form("%c:", (curdrive + 'A' - 1));
       sType.Form("Unknown Drive (%s)", sDrive.Data());
-      GetVolumeInformation(Form("%s\\", sDrive.Data()), NULL, 0, NULL, NULL, 
+      GetVolumeInformation(Form("%s\\", sDrive.Data()), NULL, 0, NULL, NULL,
                            NULL, (LPSTR)szFs, 32);
       type = ::GetDriveType(sDrive.Data());
       switch (type) {
@@ -1992,7 +2127,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
       _getcwd(curdir, _MAX_PATH);
       // If we can switch to the drive, it exists
       // but skip floppy drives...
-      UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS); 
+      UINT nOldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
       for( drive = 3; drive <= 26; ++drive ) {
          if( !_chdrive( drive ) ) {
             *szFs='\0';

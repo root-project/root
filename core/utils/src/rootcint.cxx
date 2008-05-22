@@ -311,6 +311,8 @@ const char *help =
 #ifdef system
 #undef system
 #endif
+#include <windows.h>
+#include <Tlhelp32.h> // for MAX_MODULE_NAME32
 #include <process.h>
 #include <errno.h>
 #endif
@@ -508,6 +510,15 @@ const char *GetExePath()
          exepath = buf;
       }
 #endif
+#ifdef _WIN32
+   char *buf = new char[MAX_MODULE_NAME32 + 1];
+   ::GetModuleFileName(NULL, buf, MAX_MODULE_NAME32 + 1);
+   char* p = buf;
+   while ((p = strchr(p, '\\')))
+      *(p++) = '/';
+   exepath = buf;
+   delete buf;
+#endif
    }
    return exepath.c_str();
 }
@@ -523,14 +534,20 @@ void SetRootSys()
       strcpy(ep, exepath);
       char *s;
       if ((s = strrchr(ep, '/'))) {
-         *s = 0;
-         if ((s = strrchr(ep, '/'))) {
+         // $ROOTSYS/bin/rootcint
+         int removesubdirs = 2;
+         if (!strncmp(s, "rootcint_tmp", 12))
+            // $ROOTSYS/core/utils/src/rootcint_tmp
+            removesubdirs = 4;
+         for (int i = 0; s && i < removesubdirs; ++i) {
             *s = 0;
-            char *env = new char[strlen(ep) + 10];
-            sprintf(env, "ROOTSYS=%s", ep);
-            putenv(env);
+            s = strrchr(ep, '/');
          }
+         if (s) *s = 0;
       }
+      char *env = new char[strlen(ep) + 10];
+      sprintf(env, "ROOTSYS=%s", ep);
+      putenv(env);
       delete [] ep;
    }
 }
@@ -615,8 +632,7 @@ string R__tmpnam()
 #endif
 }
 
-#ifdef WIN32
-#include "windows.h"
+#ifdef _WIN32
 //______________________________________________________________________________
 // defined in newlink.c
 extern "C" FILE *FOpenAndSleep(const char *filename, const char *mode);
