@@ -38,7 +38,7 @@ public:
   ABProd(const ABProd& prod) : fA(prod.fA), fB(prod.fB) {}
 
   template<class MI1, class MI2>
-  ABProd(const ABProd<MI1,MI2>& prod) : fA(M1(prod.fA)), fB(M2(prod.fB)) {}
+  ABProd(const ABProd<MI1,MI2>& prod) : fA(M1(prod.A() )), fB(M2(prod.B() )) {}
 
   const M1& A() const {return fA;}
   const M2& B() const {return fB;}

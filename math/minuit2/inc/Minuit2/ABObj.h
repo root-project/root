@@ -49,7 +49,7 @@ public:
 
   template<class b, class c>
   ABObj(const ABObj<mtype,b,c>& obj) : 
-    fObject(M(obj.fObject)), fFactor(T(obj.fFactor)) {}
+     fObject(M(obj.Obj() )), fFactor(T(obj.f() )) {}
 
   const M& Obj() const {return fObject;}
 

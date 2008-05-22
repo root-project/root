@@ -38,7 +38,7 @@ public:
   ABSum(const ABSum& sum) : fA(sum.fA), fB(sum.fB) {}
 
   template<class MI1, class MI2>
-  ABSum(const ABSum<MI1,MI2>& sum) : fA(M1(sum.fA)), fB(M2(sum.fB)) {}
+  ABSum(const ABSum<MI1,MI2>& sum) : fA(M1(sum.A() )), fB(M2(sum.B() )) {}
 
   const M1& A() const {return fA;}
   const M2& B() const {return fB;}
