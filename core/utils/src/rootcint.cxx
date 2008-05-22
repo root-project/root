@@ -539,7 +539,7 @@ void SetRootSys()
          if (!strncmp(s, "rootcint_tmp", 12))
             // $ROOTSYS/core/utils/src/rootcint_tmp
             removesubdirs = 4;
-         for (int i = 0; s && i < removesubdirs; ++i) {
+         for (int i = 1; s && i < removesubdirs; ++i) {
             *s = 0;
             s = strrchr(ep, '/');
          }
