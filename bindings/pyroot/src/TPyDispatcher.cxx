@@ -63,7 +63,7 @@ TPyDispatcher::~TPyDispatcher() {
 
 
 //- public members -----------------------------------------------------------
-PyObject* TPyDispatcher::Dispatch( const char* format, ... )
+PyObject* TPyDispatcher::DispatchVA( const char* format, ... )
 {
 // Dispatch the arguments to the held callable python object, using format to
 // interpret the types of the arguments. Note that format is in python style,
