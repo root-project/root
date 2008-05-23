@@ -778,7 +778,7 @@ class genDictionary(object) :
     elif notAccessibleType :
       sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s), %s, %s)' % ( cls, self.xref[notAccessibleType]['attrs']['access'].title(), self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable), mod, typ )
     else :
-      sc += '  ClassBuilder("%s", typeid(%s), sizeof(%s), %s, %s)' % (cls, cls, cls, mod, typ)
+      sc += '  ClassBuilder("%s", typeid(::%s), sizeof(::%s), %s, %s)' % (cls, cls, cls, mod, typ)
     if 'extra' in attrs :
       for pname, pval in attrs['extra'].items() :
         if pname not in ('name','pattern','n_name','file_name','file_pattern') :
@@ -1580,7 +1580,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genDestructorDef(self, attrs, childs):
     cl = self.genTypeName(attrs['context'])
-    return 'static void* destructor%s(void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->~%s)(); return 0;\n}' % ( attrs['id'], cl, attrs['name'] )
+    return 'static void* destructor%s(void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->::%s::~%s)(); return 0;\n}' % ( attrs['id'], cl, cl, attrs['name'] )
 #----------------------------------------------------------------------------------
   def genDestructorBuild(self, attrs, childs):
     if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
