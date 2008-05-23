@@ -1341,7 +1341,10 @@ class genDictionary(object) :
       print '--->> genreflex: WARNING: Bit-fields are not supported as data members (%s %s::%s:%s)' % ( type, cls, name, attrs['bits'] )
       self.warnings += 1
       return ''
-    if self.selector : xattrs = self.selector.selfield( cls,name)
+    if self.selector :
+      fieldsel = self.selector.matchfield(cls,name)
+      if not fieldsel[1]: xattrs = fieldsel[0]
+      else              : return ""
     else             : xattrs = None
     mod = self.genModifier(attrs,xattrs)
     if attrs['type'][-1] == 'c' :
