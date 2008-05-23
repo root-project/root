@@ -7,12 +7,12 @@
 # This software is provided "as is" without express or implied warranty.
 
 import xml.parsers.expat
-import os, sys, string, time
+import os, sys, string, time, re
 import gccdemangler
 
 class genDictionary(object) :
 #----------------------------------------------------------------------------------
-  def __init__(self, hfile, opts):
+  def __init__(self, hfile, opts, gccxmlvers):
     self.classes    = []
     self.namespaces = []
     self.typeids    = []
@@ -50,6 +50,7 @@ class genDictionary(object) :
     self.unnamedNamespaces = []
     self.globalNamespaceID = ''
     self.typedefs_for_usr = []
+    self.gccxmlvers = gccxmlvers
     # The next is to avoid a known problem with gccxml that it generates a
     # references to id equal '_0' which is not defined anywhere
     self.xref['_0'] = {'elem':'Unknown', 'attrs':{'id':'_0','name':''}, 'subelems':[]}
@@ -1059,7 +1060,7 @@ class genDictionary(object) :
       t = self.genTypeName(attrs['type'],enum, const, colon)
       if   t[-1] == ')' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t.replace('::*)','::**)').replace('::)','::*)').replace('(*)', '(**)').replace('()','(*)')
       elif t[-1] == ']' or t[-7:] == ') const' or t[-10:] == ') volatile' : s += t[:t.find('[')] + '(*)' + t[t.find('['):]
-      else              : s += t + '*'   
+      else              : s += t + '*'
     elif elem == 'ReferenceType' :
       s += self.genTypeName(attrs['type'],enum, const, colon)+'&'
     elif elem in ('FunctionType','MethodType') :
@@ -1100,7 +1101,13 @@ class genDictionary(object) :
       else : pass
     elif elem == 'OffsetType' :
       s += self.genTypeName(attrs['type'], enum, const, colon) + ' '
-      s += self.genTypeName(attrs['basetype'], enum, const, colon) + '::'  
+      s += self.genTypeName(attrs['basetype'], enum, const, colon) + '::'
+      # OffsetType A::*, different treatment for GCCXML 0.7 and 0.9:
+      # 0.7: basetype: A*
+      # 0.9: basetype: A - add a "*" here
+      version = float(re.compile('\\b\\d+\\.\\d+\\b').match(self.gccxmlvers).group())
+      if  version >= 0.9 : 
+        s += "*"
     else :
       if 'name' in attrs : s += attrs['name']
       s = normalizeClass(s,alltempl)                   # Normalize STL class names, primitives, etc.
@@ -1151,7 +1158,7 @@ class genDictionary(object) :
         elif elem == 'ReferenceType' :
           c += 'ReferenceBuilder(type'+attrs['type']+');\n'
         elif elem == 'ArrayType' :
-          mx = attrs['max']
+          mx = attrs['max'].rstrip('u')
           # check if array is bound (max='fff...' for unbound arrays)
           if mx.isdigit() : len = str(int(mx)+1)
           else            : len = '0' 
@@ -1792,6 +1799,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def completeClass(self, attrs):
     # Complete class with "instantiated" templated methods or constructors
+    # for GCCXML 0.9: add default c'tor, copy c'tor, d'tor if not available.
     if 'members' in attrs : members = attrs['members'].split()
     else                  : members = []
     cid = attrs['id']
@@ -1811,6 +1819,57 @@ class genDictionary(object) :
             fname =  dname[1][dname[1].rfind('::' + m['name'])+2:]
             m['name'] = fname
         attrs['members'] += u' ' + m['id']
+    haveCtor    = 0
+    haveCtorCpy = 0
+    haveDtor    = 0
+    for m in members :
+      if self.xref[m]['elem'] == 'Constructor' :
+        haveCtor = 1
+        args = self.xref[m]['subelems']
+        if haveCtorCpy == 0 \
+               and (len(args) == 1 \
+                    or (len(args) > 1 and 'default' in args[1])) :
+          arg0type = args[0]['type']
+          elem = self.xref[arg0type]['elem']
+          while elem in ( 'ReferenceType', 'CvQualifiedType') :
+            arg0type = self.xref[arg0type]['attrs']['type']
+            elem = self.xref[arg0type]['elem']
+          if arg0type == cid: haveCtorCpy = 1
+      elif self.xref[m]['elem'] == 'Destructor' :
+        haveDtor = 1
+    if haveCtor == 0 :
+      id = u'_x%d' % self.x_id.next()
+      new_attrs = { 'name':attrs['name'], 'id':id, 'context':cid, 'artificial':'true', 'access':'public' }
+      self.xref[id] = {'elem':'Constructor', 'attrs':new_attrs, 'subelems':[] }
+      attrs['members'] += u' ' + id      
+    if haveCtorCpy == 0 :
+      ccid = cid + 'c'
+      # const cid exists?
+      if ccid not in self.xref :
+        new_attrs = { 'id':ccid, 'type':cid }
+        self.xref[ccid] = {'elem':'ReferenceType', 'attrs':new_attrs }
+      # const cid& exists?
+      crcid = 0
+      for xid in self.xref :
+        if self.xref[xid]['elem'] == 'ReferenceType' and self.xref[xid]['attrs']['type'] == ccid :
+          crcid = xid
+          break
+      if crcid == 0:
+        crcid = u'_x%d' % self.x_id.next()
+        new_attrs = { 'id':crcid, 'type':ccid, 'const':'1' }
+        self.xref[crcid] = {'elem':'ReferenceType', 'attrs':new_attrs }
+
+      # build copy ctor
+      id = u'_x%d' % self.x_id.next()
+      new_attrs = { 'name':attrs['name'], 'id':id, 'context':cid, 'artificial':'true', 'access':'public' }
+      arg = { 'type':crcid }
+      self.xref[id] = {'elem':'Constructor', 'attrs':new_attrs, 'subelems':[arg] }
+      attrs['members'] += u' ' + id
+    if haveDtor == 0 :
+      id = u'_x%d' % self.x_id.next()
+      new_attrs = { 'name':attrs['name'], 'id':id, 'context':cid, 'artificial':'true', 'access':'public' }
+      self.xref[id] = {'elem':'Destructor', 'attrs':new_attrs, 'subelems':[] }
+      attrs['members'] += u' ' + id      
 #---------------------------------------------------------------------------------------
 def getContainerId(c):
   if   c[-8:] == 'iterator' : return ('NOCONTAINER','')

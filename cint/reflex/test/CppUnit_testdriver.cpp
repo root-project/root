@@ -13,7 +13,7 @@
 *  - This class will also integrate CppUnit test with Oval
 */
 
-int main( int /*argc*/, char /* **argv */)
+int main( int /*argc*/, char** /*argv*/)
  {
 
    /// Get the top level suite from the registry

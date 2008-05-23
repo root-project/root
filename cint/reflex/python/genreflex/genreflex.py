@@ -256,6 +256,7 @@ class genreflex:
     if gccxmlv != '0.6.0' and gccxmlv != self.gccxmlvers :
       print '--->> genreflex: WARNING: gccxml versions differ. Used version: %s. Recommended version: %s. ' % ( gccxmlv, self.gccxmlvers)
       print '--->> genreflex: WARNING: gccxml binary used: %s' % ( self.gccxml )
+    self.gccxmlvers = gccxmlv
     s += sout    
     compiler = ''
     for l in sout.split('\n'):
@@ -320,7 +321,7 @@ class genreflex:
       gccxmlinfo = self.genGccxmlInfo()
      #---------------Generate the dictionary---------------
       if not self.quiet : print '--->> genreflex: INFO: Generating Reflex Dictionary'
-      dg = gendict.genDictionary(source, self.opts)
+      dg = gendict.genDictionary(source, self.opts, self.gccxmlvers)
       dg.parse(xmlfile)
       classes   = dg.selclasses(self.selector, self.deep)
       functions = dg.selfunctions(self.selector)

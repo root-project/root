@@ -83,19 +83,34 @@ void generate_class( ostream& out, const Type& cl, const string& indent = "" ) {
 
   out << indent << "};" << endl;
 }
+
+template <typename T>
+struct NameSorter {
+   bool operator()(const T& one, const T& two) const {
+      return one.Name(0) < two.Name(0);
+   }
+};
+
 void generate_namespace(ostream& out, const Scope& ns, const string& indent = "" ) {
 
   if ( ! ns.IsTopScope() ) out << indent << "namespace "<< ns.Name() << " {" << endl;
 
+
   // Sub-Namespaces
-  for ( size_t i = 0; i < ns.SubScopeSize(); i++ ) {
-    Scope sc = ns.SubScopeAt(i);
+  std::vector<Scope> subscopes(ns.SubScope_Begin(), ns.SubScope_End());
+  std::sort(subscopes.begin(), subscopes.end(), NameSorter<Scope>());
+
+  for ( size_t i = 0; i < subscopes.size(); i++ ) {
+    Scope sc = subscopes[i];
     if ( sc.IsNamespace() ) generate_namespace(out, sc, indent + "  ");
     if ( sc.IsClass() ) generate_class(out, Type::ByName(sc.Name(SCOPED)), indent + "  ");
   }
   // Types----
-  for ( size_t t = 0; t < ns.SubTypeSize(); t++ ) {
-    Type ty = ns.SubTypeAt(t);
+  std::vector<Type> subtypes(ns.SubType_Begin(), ns.SubType_End());
+  std::sort(subtypes.begin(), subtypes.end(), NameSorter<Type>());
+
+  for ( size_t t = 0; t < subtypes.size(); t++ ) {
+    Type ty = subtypes[t];
     if ( ty.IsClass() ) generate_class(out, ty, indent + "  ");
   }
 

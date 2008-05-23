@@ -27,6 +27,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <string.h>
 
 using namespace ROOT::Reflex;
 using namespace std;
