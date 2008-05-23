@@ -66,6 +66,7 @@ private:
 
    Long64_t  fTotalEntries; // total number of entries to be distributed;
                             // not used in the progressive packetizer
+   TList    *fFailedPackets;// a list of packets that failed while processing
 
    // Members for progress info
    Long_t    fStartTime;    // time offset
@@ -105,6 +106,8 @@ public:
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
    virtual void            SetInitTime();
    virtual void            StopProcess(Bool_t abort);
+   TList                  *GetFailedPackets() { return fFailedPackets; }
+   void                    SetFailedPackets(TList *list) { fFailedPackets = list; }
 
    Long64_t      GetBytesRead() const { return fBytesRead; }
    Float_t       GetInitTime() const { return fInitTime; }

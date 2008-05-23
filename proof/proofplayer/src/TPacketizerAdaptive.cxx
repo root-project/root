@@ -200,11 +200,8 @@ public:
 
       // how many more events it has than obj
 
-      if (fgNetworkFasterThanHD) {
-         // The network bandwidth is greater than hard disk transfer.
-         // Smaller means having fewer workers processing its data.
-         // If equal, the numer of events left for processing decides.
-
+      if (TPacketizerAdaptive::fgStrategy == 1) {
+         // The default adaptive strategy.
          Int_t myVal = GetRunSlaveCnt();
          Int_t otherVal = obj->GetRunSlaveCnt();
          if (myVal < otherVal) {
@@ -221,76 +218,14 @@ public:
             }
          }
       } else {
-         // Network bandwidth is smaller than Hard Disk transfer
-         // TODO: Do more tests when such environment will be available.
-
-         // File nodes are sorted by number of remote workers.
-         // In addition filenodes with the same number of remote workers
-         // are sorted by number of their own ones.
-         // If that is equal as well,
-         // they are sorted by the number of events left per worker
-         // The decision can be reversed if the diffEvents
-         // is greater or smaller than half or 1/3 of avEventsLeft.
-
-         Long64_t diffEvents =
-            GetEventsLeftPerSlave() - obj->GetEventsLeftPerSlave();
-         Int_t myExtSlaves = GetExtSlaveCnt();
-         Int_t otherExtSlaves = obj->GetExtSlaveCnt();
-         Long64_t avEventsLeft = (GetEventsLeftPerSlave()
-                                  + obj->GetEventsLeftPerSlave())/2;
-         // # my workers processing remote files
-         Int_t mySlavesProcRemote = GetSlaveCnt() - GetRunSlaveCnt();
-         Int_t otherSlavesProcRemote = obj->GetSlaveCnt()
-                                       - obj->GetRunSlaveCnt();
-         if ( mySlavesProcRemote < otherSlavesProcRemote ) {
-            if (diffEvents < -(avEventsLeft / 2)
-                && obj->GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
-               return 1;
-            else
-               return -1;
-         } else if ( mySlavesProcRemote > otherSlavesProcRemote ) {
-            if (diffEvents > (avEventsLeft / 2)
-                && GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
-               return -1;
-            else
-               return 1;
-         } else if (myExtSlaves < otherExtSlaves) {
-            if (diffEvents < -(avEventsLeft / 3)
-                && obj->GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
-               return 1;
-            else
-               return -1;
-         } else if (myExtSlaves > otherExtSlaves) {
-            if (diffEvents > (avEventsLeft / 3)
-                && GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
-               return -1;
-            else
-               return 1;
+         Int_t myVal = GetSlaveCnt();
+         Int_t otherVal = obj->GetSlaveCnt();
+         if (myVal < otherVal) {
+            return -1;
+         } else if (myVal > otherVal) {
+            return 1;
          } else {
-            Int_t myOwnSlaves = GetMySlaveCnt();
-            Int_t otherOwnSlaves = obj->GetMySlaveCnt();
-            if (myOwnSlaves < otherOwnSlaves) {
-               // if the other node has much more to process
-               if (diffEvents < -(avEventsLeft / 3)
-                   && obj->GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
-                  return 1;
-               else
-                  return -1;
-            } else if (myOwnSlaves > otherOwnSlaves) {
-               if (diffEvents > (avEventsLeft / 3)
-                   && GetExtSlaveCnt() < TPacketizerAdaptive::fgMaxSlaveCnt)
-                  return -1;
-               else
-                  return 1;
-            } else {
-
-            if (diffEvents > 0) {
-                  return -1;
-               } else if (diffEvents < 0) {
-                  return 1;
-               } else
-                  return 0;
-            }
+            return 0;
          }
       }
    }
@@ -315,8 +250,9 @@ public:
 
 
 TPacketizerAdaptive::TFileNode::TFileNode(const char *name)
-   : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
-     fActFileNext(0), fMySlaveCnt(0), fExtSlaveCnt(0), fProcessed(0), fEvents(0)
+   : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),
+     fActFiles(new TList), fActFileNext(0), fMySlaveCnt(0),
+     fExtSlaveCnt(0), fProcessed(0), fEvents(0)
 {
    // Constructor
 
@@ -415,7 +351,7 @@ ClassImp(TPacketizerAdaptive)
 Long_t   TPacketizerAdaptive::fgMaxSlaveCnt = 2;
 Int_t    TPacketizerAdaptive::fgPacketAsAFraction = 4;
 Double_t TPacketizerAdaptive::fgMinPacketTime = 3;
-Int_t    TPacketizerAdaptive::fgNetworkFasterThanHD = 1;
+Int_t    TPacketizerAdaptive::fgStrategy = 1;
 
 //______________________________________________________________________________
 TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
@@ -434,6 +370,19 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fFileNodes = 0;
    fCumProcTime = 0;
    fMaxPerfIdx = 1;
+
+   // The possibility to change packetizer strategy to the basic TPacketizer's
+   // one (in which workers always process their local data first).
+   Int_t strategy = -1;
+   if (TProof::GetParameter(input, "PROOF_PacketizerStrategy", strategy) == 0) {
+      if (strategy == 0) {
+         fgStrategy = 0;
+         fgMaxSlaveCnt = 4; // can be overwritten by PROOF_MaxSlavesPerNode
+         Info("TPacketizerAdaptive", "using the basic strategy of TPacketizer");
+      } else
+         Info("TPacketizerAdaptive", "The only accepted value for the"
+              " PROOF_PacketizerStrategy parameter is 0!");
+   }
 
    Long_t maxSlaveCnt = 0;
    if (TProof::GetParameter(input, "PROOF_MaxSlavesPerNode", maxSlaveCnt) == 0) {
@@ -462,7 +411,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       Info("TPacketizerAdaptive", "Setting max number of workers per node to %ld",
            fgMaxSlaveCnt);
    } else {
-      // Use number of CPUs as default, cutting at 2
+      // Use number of CPUs (or minimum 2) as default
       SysInfo_t si;
       gSystem->GetSysInfo(&si);
       fgMaxSlaveCnt =  (si.fCpus > 2) ? si.fCpus : 2;
@@ -507,11 +456,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
            minPacketTime);
       fgMinPacketTime = (Int_t) minPacketTime;
    }
-
-   fgNetworkFasterThanHD = gEnv->GetValue("ProofServ.NetworkFasterThanHD", 1);
-   if (fgNetworkFasterThanHD != 1)
-      Info("TPacketizerAdaptive","fgNetworkFasterThanHD set to %d",
-                                 fgNetworkFasterThanHD);
 
    Double_t baseLocalPreference = 1.2;
    TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference);
@@ -1193,32 +1137,44 @@ Long64_t TPacketizerAdaptive::GetEntriesProcessed(TSlave *slave) const
 //______________________________________________________________________________
 Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr)
 {
-   // Calculates the packet size based on performance of this slave
-   // and est. time left untill the end of the query.
+   // The result depends on the fgStrategy
 
-   TSlaveStat* slstat = (TSlaveStat*)slStatPtr;
    Long64_t num;
-   Float_t rate = slstat->GetCurRate();
-   if (!rate)
-      rate = slstat->GetAvgRate();
-   if (rate) {
-      Float_t avgProcRate = (fProcessed/(fCumProcTime / fSlaveStats->GetSize()));
-      Float_t packetTime;
-      packetTime = ((fTotalEntries - fProcessed)/avgProcRate)/fgPacketAsAFraction;
-      if (packetTime < fgMinPacketTime)
-         packetTime = fgMinPacketTime;
-      // in case the worker has suddenly slowed down
-      if (rate < 0.25 * slstat->GetAvgRate())
-         rate = (rate + slstat->GetAvgRate()) / 2;
-      num = (Long64_t)(rate * packetTime);
-   } else { //first packet for this slave in this query
-      Int_t packetSize = (fTotalEntries - fProcessed)
-                         / (6 * fgPacketAsAFraction * fSlaveStats->GetSize());
-      num = Long64_t(packetSize *
-            ((Float_t)slstat->fSlave->GetPerfIdx() / fMaxPerfIdx));
+   if (fgStrategy == 0) {
+      // TPacketizer's heuristic for starting packet size
+      // Constant packet size;
+      Int_t nslaves = fSlaveStats->GetSize();
+      if (nslaves > 0) {
+         num = fTotalEntries / (fgPacketAsAFraction * nslaves);
+      } else {
+         num = 1;
+      }
+   } else {
+      // The dynamic heuristic for setting the packet size (default)
+      // Calculates the packet size based on performance of this slave
+      // and estimated time left until the end of the query.
+      TSlaveStat* slstat = (TSlaveStat*)slStatPtr;
+      Float_t rate = slstat->GetCurRate();
+      if (!rate)
+         rate = slstat->GetAvgRate();
+      if (rate) {
+         Float_t avgProcRate = (fProcessed/(fCumProcTime / fSlaveStats->GetSize()));
+         Float_t packetTime;
+         packetTime = ((fTotalEntries - fProcessed)/avgProcRate)/fgPacketAsAFraction;
+         if (packetTime < fgMinPacketTime)
+            packetTime = fgMinPacketTime;
+         // in case the worker has suddenly slowed down
+         if (rate < 0.25 * slstat->GetAvgRate())
+            rate = (rate + slstat->GetAvgRate()) / 2;
+         num = (Long64_t)(rate * packetTime);
+      } else { //first packet for this slave in this query
+         Int_t packetSize = (fTotalEntries - fProcessed)
+                            / (6 * fgPacketAsAFraction * fSlaveStats->GetSize());
+         num = Long64_t(packetSize *
+               ((Float_t)slstat->fSlave->GetPerfIdx() / fMaxPerfIdx));
+      }
    }
    if (num < 1) num = 1;
-
    return num;
 }
 
@@ -1252,9 +1208,8 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       Long64_t bytesRead = -1;
       Long64_t totalEntries = -1;
 
-      Long64_t numev = slstat->fCurElem->GetNum();
+      Long64_t expectedNumEv = slstat->fCurElem->GetNum();
 
-      slstat->AddProcessed();
       (*r) >> latency >> proctime >> proccpu;
       // only read new info if available
       if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
@@ -1262,16 +1217,33 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       Long64_t totev = 0;
       if (r->BufferSize() > r->Length()) (*r) >> totev;
 
-      // Record
+      // Calculate the number of events processed in the last packet
+      Long64_t numev;
       if (totev > 0)
          numev = totev - slstat->fProcessed;
-      fProcessed += ((numev > 0) ? numev : 0);
-      fBytesRead += ((bytesRead > 0) ? bytesRead : 0);
+      else
+         numev = 0;
 
-      // update processing rate
-      slstat->UpdateRates(numev, proctime);
+      if (numev == expectedNumEv) {
+         // The last packet was sucessfully processed
+         slstat->AddProcessed();
+         fProcessed += ((numev > 0) ? numev : 0);
+         fBytesRead += ((bytesRead > 0) ? bytesRead : 0);
 
-      fCumProcTime += proctime;
+         // update processing rate
+         slstat->UpdateRates(numev, proctime);
+
+         fCumProcTime += proctime;
+
+      } else {
+         // The last packet was not processed properly.
+         // Add it to the failed packets list.
+
+         if (!fFailedPackets) {
+            fFailedPackets = new TList();
+         }
+         fFailedPackets->Add(slstat->fCurElem);
+      }
 
       PDB(kPacketizer,2)
          Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
@@ -1331,7 +1303,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
                (firstNonLocalNode->GetExtSlaveCnt() < fgMaxSlaveCnt):0;
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
-         if ( nonLocalNodePossible ) {
+         if ( nonLocalNodePossible && fgStrategy == 1) {
             // openLocal is set to kFALSE
             if ( slstat->GetFileNode()->GetRunSlaveCnt() >
                  slstat->GetFileNode()->GetMySlaveCnt() - 1 )
@@ -1341,7 +1313,8 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
             else if ( slaveRate == 0 ) { // first file for this slave
                // GetLocalEventsLeft() counts the potential slave
                // as running on its fileNode.
-               if ( slstat->GetLocalEventsLeft() * localPreference > (avgEventsLeftPerSlave))
+               if ( slstat->GetLocalEventsLeft() * localPreference
+                   > (avgEventsLeftPerSlave))
                   openLocal = kTRUE;
                else if ( (firstNonLocalNode->GetEventsLeftPerSlave())
                      < slstat->GetLocalEventsLeft() * localPreference )
@@ -1354,7 +1327,8 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
                // at this point slstat has a non zero avg rate > 0
                Float_t slaveTime = slstat->GetLocalEventsLeft()/slaveRate;
                // and thus fCumProcTime, fProcessed > 0
-               Float_t avgTime = avgEventsLeftPerSlave/(fProcessed/fCumProcTime);
+               Float_t avgTime = avgEventsLeftPerSlave
+                                 /(fProcessed/fCumProcTime);
                if (slaveTime * localPreference > avgTime)
                   openLocal = kTRUE;
                else if ((firstNonLocalNode->GetEventsLeftPerSlave())
@@ -1362,7 +1336,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
                   openLocal = kTRUE;
             }
          }
-         if (openLocal) {
+         if (openLocal || fgStrategy == 0) {
             // Try its own node
             file = slstat->GetFileNode()->GetNextUnAlloc();
             if (!file)

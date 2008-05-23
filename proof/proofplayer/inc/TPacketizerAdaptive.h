@@ -99,7 +99,7 @@ public:
                                  // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
                                  // It can be set with PROOF_PacketAsAFraction in input list.
    static Double_t fgMinPacketTime; // minimum packet time
-   static Int_t   fgNetworkFasterThanHD; // 1 if network faster than hard disk
+   static Int_t   fgStrategy; // 0 means the classic and 1 (default) - the adaptive strategy
 
    TPacketizerAdaptive(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                        TList *input);

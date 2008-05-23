@@ -80,7 +80,7 @@ extern XrdOucTrace *XrdProofdTrace;
 //   return (XrdProofSched *)0;
 // }}
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 static bool XpdWrkComp(XrdProofWorker *&lhs, XrdProofWorker *&rhs)
 {
    // COmpare two workers for sorting
@@ -144,7 +144,7 @@ void XrdProofSched::ResetParameters()
    fNodesFraction = 0.5;
 }
 
-//_________________________________________________________________________________
+//______________________________________________________________________________
 int XrdProofSched::Config(const char *cfn)
 {
    // Configure this instance using the content of file 'cfn'.
@@ -227,14 +227,14 @@ int XrdProofSched::GetNumWorkers(XrdProofServProxy *xps)
          priority = (xps->Group()->Priority() * sessions->size()) / summedPriority;
 
    }
-   int nWrks = (int)(nFreeCPUs * fNodesFraction * priority) + fMinForQuery;
+   int nWrks = min((int)(nFreeCPUs * fNodesFraction * priority), fMinForQuery);
    nWrks = (nWrks >= (int) wrks->size()) ? wrks->size() - 1 : nWrks;
    TRACE(DBG,"GetNumWorkers: "<< nFreeCPUs<<" : "<< nWrks);
 
    return nWrks;
 }
 
-//__________________________________________________________________________
+//______________________________________________________________________________
 int XrdProofSched::GetWorkers(XrdProofServProxy *xps,
                               std::list<XrdProofWorker *> *wrks)
 {
