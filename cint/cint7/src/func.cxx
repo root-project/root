@@ -5093,6 +5093,7 @@ char *Cint::Internal::G__charformatter(int ifmt, G__param* libp, char* result)
          case '8':
          case '9':
             dig = dig * 10 + pformat[ichar] - '0';
+      case '#': // "alternate form"
          case '.':
          case '-':
          case '+':
