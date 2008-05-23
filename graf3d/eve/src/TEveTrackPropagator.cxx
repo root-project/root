@@ -228,7 +228,13 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
          if (crosR && forw.Perp2() > maxR2)
          {
             Float_t t = (fMaxR - fV.R()) / (forw.R() - fV.R());
-            assert(t >= 0 && t <= 1);
+            if (t < 0 || t > 1)
+	    {
+               Warning("TEveTrackPropagator::HelixToBounds",
+                       "In MaxR crossing expected t>=0 && t<=1: t=%f, r1=%f, r2=%f, MaxR=%f.",
+                       t, fV.R(), forw.R(), fMaxR);
+               return;
+	    }
             fPoints.push_back(fV + (forw-fV)*t);
             ++fN;
             return;
@@ -236,7 +242,13 @@ void TEveTrackPropagator::HelixToBounds(TEveVector& p)
          if (TMath::Abs(forw.fZ) > fMaxZ)
          {
             Float_t t = (fMaxZ - TMath::Abs(fV.fZ)) / TMath::Abs((forw.fZ - fV.fZ));
-            assert(t >= 0 && t <= 1);
+            if (t < 0 || t > 1)
+	    {
+               Warning("TEveTrackPropagator::HelixToBounds",
+                       "In MaxZ crossing expected t>=0 && t<=1: t=%f, z1=%f, z2=%f, MaxZ=%f.",
+                       t, fV.fZ, forw.fZ, fMaxZ);
+               return;
+	    }
             fPoints.push_back(fV + (forw-fV)*t);
             ++fN;
             return;

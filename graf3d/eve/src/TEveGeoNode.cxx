@@ -108,31 +108,17 @@ void TEveGeoNode::ExpandIntoListTree(TGListTree* ltree,
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveGeoNode::SetRnrSelf(Bool_t rnr)
+void TEveGeoNode::AddStamp(UChar_t bits)
 {
-   // Set render state of self, propagate also to TGeoNode.
+   // Override from TEveElement.
+   // Process visibility changes and forward them to fNode.
 
-   TEveElement::SetRnrSelf(rnr);
-   fNode->SetVisibility(rnr);
-}
-
-//______________________________________________________________________________
-void TEveGeoNode::SetRnrChildren(Bool_t rnr)
-{
-   // Set render state of children, propagate also to TGeoNode.
-
-   TEveElement::SetRnrChildren(rnr);
-   fNode->VisibleDaughters(rnr);
-}
-
-//______________________________________________________________________________
-void TEveGeoNode::SetRnrState(Bool_t rnr)
-{
-   // Set common render state, propagate also to TGeoNode.
-
-   TEveElement::SetRnrState(rnr);
-   fNode->SetVisibility(rnr);
-   fNode->VisibleDaughters(rnr);
+   TEveElement::AddStamp(bits);
+   if (bits & kCBVisibility)
+   {
+      fNode->SetVisibility(fRnrSelf);
+      fNode->VisibleDaughters(fRnrChildren);
+   }
 }
 
 /******************************************************************************/
@@ -142,8 +128,8 @@ void TEveGeoNode::SetMainColor(Color_t color)
 {
    // Set color, propagate to volume's line color.
 
+   TEveElement::SetMainColor(color);
    fNode->GetVolume()->SetLineColor(color);
-   UpdateItems();
 }
 
 /******************************************************************************/
@@ -162,10 +148,10 @@ void TEveGeoNode::UpdateNode(TGeoNode* node)
 
    // printf("%s node %s %p\n", eH.Data(), node->GetName(), node);
 
-   if(fNode == node)
-      UpdateItems();
+   if (fNode == node)
+      StampColorSelection();
 
-   for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       ((TEveGeoNode*)(*i))->UpdateNode(node);
    }
 
@@ -186,7 +172,7 @@ void TEveGeoNode::UpdateVolume(TGeoVolume* volume)
    // printf("%s volume %s %p\n", eH.Data(), volume->GetName(), volume);
 
    if(fNode->GetVolume() == volume)
-      UpdateItems();
+      StampColorSelection();
 
    for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       ((TEveGeoNode*)(*i))->UpdateVolume(volume);
@@ -349,27 +335,13 @@ void TEveGeoTopNode::UseNodeTrans()
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveGeoTopNode::SetRnrSelf(Bool_t rnr)
+void TEveGeoTopNode::AddStamp(UChar_t bits)
 {
-   // Revert from GeoNode back to standard behaviour.
+   // Revert from TEveGeoNode back to standard behaviour, that is,
+   // do not pass visibility chanes to fNode as they are honoured
+   // in Paint() method.
 
-   TEveElement::SetRnrSelf(rnr);
-}
-
-//______________________________________________________________________________
-void TEveGeoTopNode::SetRnrChildren(Bool_t rnr)
-{
-   // Revert from GeoNode back to standard behaviour.
-
-   TEveElement::SetRnrChildren(rnr);
-}
-
-//______________________________________________________________________________
-void TEveGeoTopNode::SetRnrState(Bool_t rnr)
-{
-   // Revert from GeoNode back to standard behaviour.
-
-   TEveElement::SetRnrState(rnr);
+   TEveElement::AddStamp(bits);
 }
 
 /******************************************************************************/

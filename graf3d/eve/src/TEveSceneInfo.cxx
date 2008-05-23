@@ -47,21 +47,16 @@ TGLSceneBase* TEveSceneInfo::GetGLScene() const
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveSceneInfo::SetRnrSelf(Bool_t rnr)
+void TEveSceneInfo::AddStamp(UChar_t bits)
 {
-   // Set self render state.
+   // Override from TEveElement.
+   // Process visibility changes and forward them to fGLScene.
 
-   TEveElement::SetRnrSelf(rnr);
-   fGLSceneInfo->SetActive(fRnrSelf);
-}
-
-//______________________________________________________________________________
-void TEveSceneInfo::SetRnrState(Bool_t rnr)
-{
-   // Set combined render state (self and children).
-
-   TEveElement::SetRnrState(rnr);
-   fGLSceneInfo->SetActive(fRnrSelf);
+   TEveElement::AddStamp(bits);
+   if (bits & kCBVisibility)
+   {
+      fGLSceneInfo->SetActive(fRnrSelf);
+   }
 }
 
 /******************************************************************************/

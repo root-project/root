@@ -22,12 +22,14 @@ class TEveSelection : public TEveElementList,
                       public TQObject
 {
 public:
-   enum EPickToSelect  // How to convert picking events to selection:
+   enum EPickToSelect  // How to convert picking events to top selected element:
    {
-      kPS_Ignore,      // ignore picking
-      kPS_Element,     // select element (default for selection)
-      kPS_Projectable, // select projectable and all its projections (default for highlight)
-      kPS_Compound     // select compound and all its projections
+      kPS_Ignore,        // ignore picking
+      kPS_Element,       // select element (default for selection)
+      kPS_Projectable,   // select projectable
+      kPS_Compound,      // select compound
+      kPS_PableCompound, // select projectable and compound
+      kPS_Master         // select master element (top-level compound)
    };
 
 private:
@@ -84,6 +86,9 @@ public:
 
    // ----------------------------------------------------------------
    // User input processing.
+
+   TEveElement* MapToProjectable();
+   
 
    TEveElement* MapPickedToSelected(TEveElement* el);
 

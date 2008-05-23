@@ -52,6 +52,8 @@ void TEveCompound::SetMainColor(Color_t color)
 //______________________________________________________________________________
 void TEveCompound::PropagateVizParams()
 {
+   // Propagate visualization parameters to dependent elements.
+
    TEveElement::PropagateVizParams();
 }
 
@@ -108,7 +110,10 @@ void TEveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       if ((*i)->GetCompound() == this)
+      {
+         impSelSet.insert(*i);
          (*i)->FillImpliedSelectedSet(impSelSet);
+      }
 
    }
    TEveElementList::FillImpliedSelectedSet(impSelSet);
@@ -160,5 +165,6 @@ void TEveCompoundProjected::SetMainColor(Color_t color)
 //______________________________________________________________________________
 void TEveCompoundProjected::PropagateVizParams()
 {
+   // Propagate visualization parameters to dependent elements.
 
 }

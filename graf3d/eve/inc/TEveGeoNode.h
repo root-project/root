@@ -51,9 +51,8 @@ public:
    virtual void   ExpandIntoListTree(TGListTree* ltree, TGListTreeItem* parent);
 
    virtual Bool_t CanEditElement() const { return kFALSE; }
-   virtual void   SetRnrSelf(Bool_t rnr);
-   virtual void   SetRnrChildren(Bool_t rnr);
-   virtual void   SetRnrState(Bool_t rnr);
+
+   virtual void   AddStamp(UChar_t bits);
 
    virtual Bool_t CanEditMainColor() const { return kTRUE; }
    virtual void   SetMainColor(Color_t color);
@@ -97,9 +96,8 @@ public:
 
    virtual Bool_t CanEditElement() const { return kTRUE; }
    virtual Bool_t SingleRnrState() const { return kTRUE; }
-   virtual void   SetRnrSelf(Bool_t rnr);
-   virtual void   SetRnrChildren(Bool_t rnr);
-   virtual void   SetRnrState(Bool_t rnr);
+
+   virtual void   AddStamp(UChar_t bits);
 
    virtual void Draw(Option_t* option="");
    virtual void Paint(Option_t* option="");

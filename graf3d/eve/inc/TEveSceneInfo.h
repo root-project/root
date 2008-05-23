@@ -41,8 +41,9 @@ public:
    TGLSceneInfo * GetGLSceneInfo() const { return fGLSceneInfo; }
    TGLSceneBase * GetGLScene()     const;
 
-   virtual void   SetRnrSelf(Bool_t rnr);
-   virtual void   SetRnrState(Bool_t rnr);
+   virtual Bool_t SingleRnrState() const { return kTRUE; }
+
+   virtual void   AddStamp(UChar_t bits);
 
    virtual Bool_t AcceptElement(TEveElement* el);
    virtual Bool_t HandleElementPaste(TEveElement* el);

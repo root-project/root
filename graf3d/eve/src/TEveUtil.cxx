@@ -464,19 +464,6 @@ void TEveRefBackPtr::DecRefCount(TEveElement* re)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveRefBackPtr::UpdateBackPtrItems()
-{
-   // Call UpdateItems() on list of reverse references.
-
-   std::list<TEveElement*>::iterator i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      (*i)->UpdateItems();
-      ++i;
-   }
-}
-
-//______________________________________________________________________________
 void TEveRefBackPtr::StampBackPtrElements(UChar_t stamps)
 {
    // Add givem stamps to elements in the list of reverse references.

@@ -78,7 +78,9 @@ void TEveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {
-      dynamic_cast<TEveElement*>(*i)->SetRnrSelfChildren(rnr_self, rnr_children);
+      TEveElement* el = dynamic_cast<TEveElement*>(*i);
+      if (el->SetRnrSelfChildren(rnr_self, rnr_children))
+         el->ElementChanged();
    }
 }
 

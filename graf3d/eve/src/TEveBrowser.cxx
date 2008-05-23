@@ -526,7 +526,9 @@ enum EEveMenu_e {
    kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
    kVerticalBrowser,
    kSel_PS_Ignore, kSel_PS_Element, kSel_PS_Projectable, kSel_PS_Compound,
-   kHil_PS_Ignore, kHil_PS_Element, kHil_PS_Projectable, kHil_PS_Compound
+   kSel_PS_PableCompound, kSel_PS_Master, kSel_PS_END,
+   kHil_PS_Ignore, kHil_PS_Element, kHil_PS_Projectable, kHil_PS_Compound,
+   kHil_PS_PableCompound, kHil_PS_Master, kHil_PS_END
 };
 
 }
@@ -561,8 +563,11 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
       fSelPopup->AddEntry("Element",     kSel_PS_Element);
       fSelPopup->AddEntry("Projectable", kSel_PS_Projectable);
       fSelPopup->AddEntry("Compound",    kSel_PS_Compound);
+      fSelPopup->AddEntry("Projectable and Compound",
+                          kSel_PS_PableCompound);
+      fSelPopup->AddEntry("Master",      kSel_PS_Master);
       fSelPopup->RCheckEntry(kSel_PS_Ignore + gEve->GetSelection()->GetPickToSelect(),
-                             kSel_PS_Ignore, kSel_PS_Compound);
+                             kSel_PS_Ignore, kSel_PS_END - 1);
       fEvePopup->AddPopup("Selection", fSelPopup);
    }
    {
@@ -571,8 +576,11 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
       fHilPopup->AddEntry("Element",     kHil_PS_Element);
       fHilPopup->AddEntry("Projectable", kHil_PS_Projectable);
       fHilPopup->AddEntry("Compound",    kHil_PS_Compound);
+      fHilPopup->AddEntry("Projectable and Compound",
+                          kHil_PS_PableCompound);
+      fHilPopup->AddEntry("Master",      kHil_PS_Master);
       fHilPopup->RCheckEntry(kHil_PS_Ignore + gEve->GetHighlight()->GetPickToSelect(),
-                             kHil_PS_Ignore, kHil_PS_Compound);
+                             kHil_PS_Ignore, kHil_PS_END - 1);
       fEvePopup->AddPopup("Highlight", fHilPopup);
    }
 
@@ -652,18 +660,22 @@ void TEveBrowser::EveMenu(Int_t id)
       case kSel_PS_Element:
       case kSel_PS_Projectable:
       case kSel_PS_Compound:
+      case kSel_PS_PableCompound:
+      case kSel_PS_Master:
          gEve->GetSelection()->SetPickToSelect(id - kSel_PS_Ignore);
          fSelPopup->RCheckEntry(kSel_PS_Ignore + gEve->GetSelection()->GetPickToSelect(),
-                                kSel_PS_Ignore, kSel_PS_Compound);
+                                kSel_PS_Ignore, kSel_PS_END - 1);
          break;
 
       case kHil_PS_Ignore:
       case kHil_PS_Element:
       case kHil_PS_Projectable:
       case kHil_PS_Compound:
+      case kHil_PS_PableCompound:
+      case kHil_PS_Master:
          gEve->GetHighlight()->SetPickToSelect(id - kHil_PS_Ignore);
          fHilPopup->RCheckEntry(kHil_PS_Ignore + gEve->GetHighlight()->GetPickToSelect(),
-                                kHil_PS_Ignore, kHil_PS_Compound);
+                                kHil_PS_Ignore, kHil_PS_END - 1);
          break;
 
       case kVerticalBrowser:

@@ -109,7 +109,6 @@ void TEveGedEditor::Update(TGedFrame* /*gframe*/)
    // Propagates changes to TEveElement and TEveManager.
 
    if (fElement) {
-      fElement->UpdateItems();
       fElement->ElementChanged();
    }
 

@@ -179,9 +179,8 @@ public:
                                             TGListTreeItem* parent_lti);
 
    virtual Int_t GetNItems() const { return fItems.size(); }
-   virtual void  UpdateItems();
 
-   void SpawnEditor();                          // *MENU*
+   void         SpawnEditor();                  // *MENU*
    virtual void ExportToCINT(Text_t* var_name); // *MENU*
 
    virtual Bool_t AcceptElement(TEveElement* el);
@@ -203,10 +202,10 @@ public:
    virtual Bool_t GetRnrSelf()     const { return fRnrSelf; }
    virtual Bool_t GetRnrChildren() const { return fRnrChildren; }
    virtual Bool_t GetRnrState()    const { return fRnrSelf && fRnrChildren; }
-   virtual void   SetRnrSelf(Bool_t rnr);
-   virtual void   SetRnrChildren(Bool_t rnr);
-   virtual void   SetRnrSelfChildren(Bool_t rnr_self, Bool_t rnr_children);
-   virtual void   SetRnrState(Bool_t rnr);
+   virtual Bool_t SetRnrSelf(Bool_t rnr);
+   virtual Bool_t SetRnrChildren(Bool_t rnr);
+   virtual Bool_t SetRnrSelfChildren(Bool_t rnr_self, Bool_t rnr_children);
+   virtual Bool_t SetRnrState(Bool_t rnr);
    virtual void   PropagateRnrStateToProjecteds();
 
    virtual Bool_t CanEditMainColor() const  { return kFALSE; }
@@ -279,11 +278,12 @@ public:
 
    enum EChangeBits
    {
-      kCBColorSelection =  1, // Main color or select/hilite state changed.
-      kCBTransBBox      =  2, // Transformation matrix or bounding-box changed.
-      kCBObjProps       =  4  // Object changed, requires dropping its display-lists.
-      // kCBElementAdded   =  8, // Element was added to a new parent.
-      // kCBElementRemoved = 16  // Element was removed from a parent.
+      kCBColorSelection =  BIT(0), // Main color or select/hilite state changed.
+      kCBTransBBox      =  BIT(1), // Transformation matrix or bounding-box changed.
+      kCBObjProps       =  BIT(2), // Object changed, requires dropping its display-lists.
+      kCBVisibility     =  BIT(3)  // Rendering of self/children changed.
+      // kCBElementAdded   = BIT(), // Element was added to a new parent.
+      // kCBElementRemoved = BIT()  // Element was removed from a parent.
 
       // Deletions are handled in a special way in TEveManager::PreDeleteElement().
    };
@@ -296,11 +296,11 @@ public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }
    void StampTransBBox()      { AddStamp(kCBTransBBox); }
    void StampObjProps()       { AddStamp(kCBObjProps); }
+   void StampVisibility()     { AddStamp(kCBVisibility); }
    // void StampElementAdded()   { AddStamp(kCBElementAdded); }
    // void StampElementRemoved() { AddStamp(kCBElementRemoved); }
-   void ClearStamps()         { fChangeBits = 0; }
-   void SetStamp(UChar_t bits);
-   void AddStamp(UChar_t bits);
+   virtual void AddStamp(UChar_t bits);
+   virtual void ClearStamps() { fChangeBits = 0; }
 
    UChar_t GetChangeBits() const { return fChangeBits; }
 

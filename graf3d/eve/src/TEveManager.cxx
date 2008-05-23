@@ -276,22 +276,34 @@ void TEveManager::DoRedraw3D()
 
    // printf("TEveManager::DoRedraw3D redraw triggered\n");
 
-   // fScenes ->RepaintChangedScenes (fDropLogicals);
+   // Process element visibility changes, mark relevant scenes as changed.
+   {
+      TEveElement::List_t scenes;
+      for (TEveElement::Set_i i = fStampedElements.begin(); i != fStampedElements.end(); ++i)
+      {
+         if ((*i)->GetChangeBits() & TEveElement::kCBVisibility)
+         {
+            (*i)->CollectSceneParents(scenes);
+         }
+      }
+      ScenesChanged(scenes);
+   }
+
+   // Process changes in scenes.
    fScenes ->ProcessSceneChanges(fDropLogicals, fStampedElements);
    fViewers->RepaintChangedViewers(fResetCameras, fDropLogicals);
 
+   // Process changed elements again, update GUI (just editor so far,
+   // but more can come).
    for (TEveElement::Set_i i = fStampedElements.begin(); i != fStampedElements.end(); ++i)
    {
       if (fEditor->GetModel() == (*i)->GetEditorObject(eh))
          EditElement((*i));
 
-      // !!!! so far better just to redraw the list-tree;
-      // !!!! UpdateItems is obsolete, anyway.
-      // (*i)->UpdateItems();
       (*i)->ClearStamps();
    }
    fStampedElements.clear();
-   GetListTree()->ClearViewPort(); // !!!! see above.
+   GetListTree()->ClearViewPort(); // Fix this when several list-trees can be added.
 
    fResetCameras = kFALSE;
    fDropLogicals = kFALSE;

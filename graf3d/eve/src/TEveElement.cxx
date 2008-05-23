@@ -209,12 +209,19 @@ void TEveElement::SetElementNameTitle(const Text_t* name, const Text_t* title)
 //______________________________________________________________________________
 void TEveElement::PropagateVizParams()
 {
+   // Propagate visualization parameters to dependent elements.
 
 }
 
 //______________________________________________________________________________
 void TEveElement::CopyVizParams(const TEveElement* el)
 {
+   // Copy visualization parameters from element el.
+   // This method needs to be overriden by any class that introduces
+   // new parameters.
+   // See, for example, TEvePointSet::CopyVizParams(),
+   // TEveLine::CopyVizParams() and TEveTrack::CopyVizParams().
+
    SetMainColor(el->GetMainColor());
    // rnr-self/children ???
 }
@@ -222,7 +229,9 @@ void TEveElement::CopyVizParams(const TEveElement* el)
 //______________________________________________________________________________
 void TEveElement::CopyVizParamsFromDB()
 {
-
+   // Copy visualization parameters from the data-base. The data-base
+   // entry to use as the model is chosen from the fVizTag and the
+   // class of the element.
 }
 
 //******************************************************************************
@@ -527,17 +536,6 @@ TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree,
    return 0;
 }
 
-//______________________________________________________________________________
-void TEveElement::UpdateItems()
-{
-   // Update list-tree-items representing this element.
-
-   static const TEveException eh("TEveElement::UpdateItems ");
-
-   for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
-      i->fTree->ClearViewPort();
-}
-
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -597,76 +595,86 @@ void TEveElement::PadPaint(Option_t* option)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveElement::SetRnrSelf(Bool_t rnr)
+Bool_t TEveElement::SetRnrSelf(Bool_t rnr)
 {
    // Set render state of this element, i.e. if it will be published
    // on next scene update pass.
+   // Returns true if the state has changed.
 
    if (SingleRnrState())
    {
-      SetRnrState(rnr);
-      return;
+      return SetRnrState(rnr);
    }
 
    if (rnr != fRnrSelf)
    {
       fRnrSelf = rnr;
-      UpdateItems();
+      StampVisibility();
       PropagateRnrStateToProjecteds();
+      return kTRUE;
    }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TEveElement::SetRnrChildren(Bool_t rnr)
+Bool_t TEveElement::SetRnrChildren(Bool_t rnr)
 {
    // Set render state of this element's children, i.e. if they will
    // be published on next scene update pass.
+   // Returns true if the state has changed.
 
    if (SingleRnrState())
    {
-      SetRnrState(rnr);
-      return;
+      return SetRnrState(rnr);
    }
 
    if (rnr != fRnrChildren)
    {
       fRnrChildren = rnr;
-      UpdateItems();
+      StampVisibility();
       PropagateRnrStateToProjecteds();
+      return kTRUE;
    }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TEveElement::SetRnrSelfChildren(Bool_t rnr_self, Bool_t rnr_children)
+Bool_t TEveElement::SetRnrSelfChildren(Bool_t rnr_self, Bool_t rnr_children)
 {
    // Set state for rendering of this element and its children.
+   // Returns true if the state has changed.
 
    if (SingleRnrState())
    {
-      SetRnrState(rnr_self);
-      return;
+      return SetRnrState(rnr_self);
    }
+
    if (fRnrSelf != rnr_self || fRnrChildren != rnr_children)
    {
       fRnrSelf     = rnr_self;
       fRnrChildren = rnr_children;
-      UpdateItems();
+      StampVisibility();
       PropagateRnrStateToProjecteds();
-   } 
+      return kTRUE;
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TEveElement::SetRnrState(Bool_t rnr)
+Bool_t TEveElement::SetRnrState(Bool_t rnr)
 {
    // Set render state of this element and of its children to the same
    // value.
+   // Returns true if the state has changed.
 
    if (fRnrSelf != rnr || fRnrChildren != rnr)
    {
       fRnrSelf = fRnrChildren = rnr;
-      UpdateItems();
+      StampVisibility();
       PropagateRnrStateToProjecteds();
+      return kTRUE;
    }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1201,20 +1209,12 @@ UChar_t TEveElement::GetSelectedLevel() const
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveElement::SetStamp(UChar_t bits)
-{
-   // Set fChangeBits to bits.
-   // Register this element to gEve as stamped.
-
-   fChangeBits = bits;
-   if (!fDestructing) gEve->ElementStamped(this);
-}
-
-//______________________________________________________________________________
 void TEveElement::AddStamp(UChar_t bits)
 {
    // Add (bitwise or) given stamps to fChangeBits.
    // Register this element to gEve as stamped.
+   // This method is virtual so that sub-classes can add additional
+   // actions. The base-class method should still be called (or replicated).
 
    fChangeBits |= bits;
    if (!fDestructing) gEve->ElementStamped(this);

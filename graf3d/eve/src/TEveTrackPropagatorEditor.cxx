@@ -247,9 +247,8 @@ void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
 //______________________________________________________________________________
 void TEveTrackPropagatorSubEditor::Changed()
 {
-   // Update registered tracks and emit "Changed()" signal.
+   // Emit "Changed()" signal.
 
-   fM->UpdateBackPtrItems();
    Emit("Changed()");
 }
 
