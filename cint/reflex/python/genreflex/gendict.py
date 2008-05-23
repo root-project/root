@@ -833,16 +833,20 @@ class genDictionary(object) :
     else:
       cls = self.genTypeName(attrs['id'],const=True,colon=True)
       clt = string.translate(str(cls), self.transtable)
+    if clt :
+      c = '#ifdef ' + clt + '\n' + '#undef ' + clt + '\n' + '#endif' + '\n'
+    else :
+      c = ''
     xtyp = self.xref[attrs['id']]
     typ = xtyp['elem'].lower()
     indent = inner * 2 * ' '
     if typ == 'enumeration' :
-      c = indent + 'enum %s {};\n' % clt
+      c += indent + 'enum %s {};\n' % clt
     else:
       if not bases : 
-        c = indent + '%s %s {\n%s  public:\n' % (typ, clt, indent)
+        c += indent + '%s %s {\n%s  public:\n' % (typ, clt, indent)
       else :
-        c = indent + '%s %s : ' % (typ, clt)
+        c += indent + '%s %s : ' % (typ, clt)
         for b in bases :
           if b.get('virtual','') == '1' : acc = 'virtual ' + b['access']
           else                          : acc = b['access']
