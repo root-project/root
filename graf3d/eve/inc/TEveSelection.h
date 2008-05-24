@@ -87,9 +87,6 @@ public:
    // ----------------------------------------------------------------
    // User input processing.
 
-   TEveElement* MapToProjectable();
-   
-
    TEveElement* MapPickedToSelected(TEveElement* el);
 
    virtual void UserPickedElement(TEveElement* el, Bool_t multi=kFALSE);
