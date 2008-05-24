@@ -50,6 +50,23 @@ TEveLine::TEveLine(const Text_t* name, Int_t n_points, ETreeVarType_e tv_type) :
 }
 
 //______________________________________________________________________________
+void TEveLine::CopyVizParams(const TEveElement* el)
+{
+   // Copy visualization parameters from element el.
+
+   const TEveLine* m = dynamic_cast<const TEveLine*>(el);
+   if (m)
+   {
+      TAttLine::operator=(*m);
+      fRnrLine   = m->fRnrLine;
+      fRnrPoints = m->fRnrPoints;
+      fSmooth    = m->fSmooth;
+   }
+
+   TEvePointSet::CopyVizParams(el);
+}
+
+//______________________________________________________________________________
 TClass* TEveLine::ProjectedClass() const
 {
    // Virtual from TEveProjectable, returns TEvePointSetProjected class.

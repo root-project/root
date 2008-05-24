@@ -66,14 +66,41 @@ void TEveStraightLineSet::AddLine(Float_t x1, Float_t y1, Float_t z1,
    fLastLine = new (fLinePlex.NewAtom()) Line_t(x1, y1, z1, x2, y2, z2);
 }
 
-/******************************************************************************/
-
 //______________________________________________________________________________
 void TEveStraightLineSet::AddMarker(Int_t line, Float_t pos)
 {
    // Add a marker for line with given index on relative position pos.
 
    /*Marker_t* marker = */new (fMarkerPlex.NewAtom()) Marker_t(line, pos);
+}
+
+/******************************************************************************/
+
+void TEveStraightLineSet::CopyVizParams(const TEveElement* el)
+{
+   // Copy visualization parameters from element el.
+
+   const TEveStraightLineSet* m = dynamic_cast<const TEveStraightLineSet*>(el);
+   if (m)
+   {
+      TAttLine::operator=(*m);
+      TAttMarker::operator=(*m);
+      fRnrMarkers = m->fRnrMarkers;
+      fRnrLines   = m->fRnrLines;
+   }
+
+   TEveElement::CopyVizParams(el);
+}
+
+/******************************************************************************/
+
+//______________________________________________________________________________
+TClass* TEveStraightLineSet::ProjectedClass() const
+{
+   // Return class of projected object.
+   // Virtual from TEveProjectable.
+
+   return TEveStraightLineSetProjected::Class();
 }
 
 /******************************************************************************/
@@ -121,17 +148,6 @@ void TEveStraightLineSet::Paint(Option_t* /*option*/)
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
    if (reqSections != TBuffer3D::kNone)
       Error(eH, "only direct GL rendering supported.");
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-TClass* TEveStraightLineSet::ProjectedClass() const
-{
-   // Return class of projected object.
-   // Virtual from TEveProjectable.
-
-   return TEveStraightLineSetProjected::Class();
 }
 
 

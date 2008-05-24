@@ -317,6 +317,22 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEvePointSet::CopyVizParams(const TEveElement* el)
+{
+   // Copy visualization parameters from element el.
+
+   const TEvePointSet* m = dynamic_cast<const TEvePointSet*>(el);
+   if (m)
+   {
+      TAttMarker::operator=(*m);
+      fOption = m->fOption;
+   }
+
+   TEveElement::CopyVizParams(el);
+}
+
+
+//______________________________________________________________________________
 TClass* TEvePointSet::ProjectedClass() const
 {
    // Virtual from TEveProjectable, returns TEvePointSetProjected class.

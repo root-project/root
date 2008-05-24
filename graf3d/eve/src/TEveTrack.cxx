@@ -369,6 +369,16 @@ void TEveTrack::MakeTrack(Bool_t recurse)
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEveTrack::CopyVizParams(const TEveElement* el)
+{
+   // Copy visualization parameters from element el.
+
+   // No local parameters.
+
+   TEveLine::CopyVizParams(el);
+}
+
+//______________________________________________________________________________
 TClass* TEveTrack::ProjectedClass() const
 {
    // Virtual from TEveProjectable, return TEveTrackProjected class.
@@ -1139,6 +1149,29 @@ void TEveTrackList::ImportClusters()
 }
 
 /******************************************************************************/
+
+//______________________________________________________________________________
+void TEveTrackList::CopyVizParams(const TEveElement* el)
+{
+   // Copy visualization parameters from element el.
+
+   const TEveTrackList* m = dynamic_cast<const TEveTrackList*>(el);
+   if (m)
+   {
+      TAttMarker::operator=(*m);
+      TAttLine::operator=(*m);
+      fRecurse = m->fRecurse;
+      fRnrLine = m->fRnrLine;
+      fMinPt   = m->fMinPt;
+      fMaxPt   = m->fMaxPt;
+      fLimPt   = m->fLimPt;
+      fMinP    = m->fMinP;
+      fMaxP    = m->fMaxP;
+      fLimP    = m->fLimP;
+   }
+
+   TEveElement::CopyVizParams(el);
+}
 
 //______________________________________________________________________________
 TClass* TEveTrackList::ProjectedClass() const

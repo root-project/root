@@ -55,6 +55,8 @@ public:
    Bool_t GetSmooth() const    { return fSmooth;    }
    void SetSmooth(Bool_t r)    { fSmooth = r;       }
 
+   virtual void CopyVizParams(const TEveElement* el);
+
    virtual TClass* ProjectedClass() const;
 
    static Bool_t GetDefaultSmooth()       { return fgDefaultSmooth; }

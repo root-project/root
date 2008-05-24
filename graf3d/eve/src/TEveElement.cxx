@@ -207,10 +207,15 @@ void TEveElement::SetElementNameTitle(const Text_t* name, const Text_t* title)
 //******************************************************************************
 
 //______________________________________________________________________________
-void TEveElement::PropagateVizParams()
+void TEveElement::PropagateVizParamsToProjecteds()
 {
    // Propagate visualization parameters to dependent elements.
 
+   TEveProjectable* pable = dynamic_cast<TEveProjectable*>(this);
+   if (pable && pable->HasProjecteds())
+   {
+      pable->PropagateVizParams();
+   }
 }
 
 //______________________________________________________________________________
@@ -222,8 +227,10 @@ void TEveElement::CopyVizParams(const TEveElement* el)
    // See, for example, TEvePointSet::CopyVizParams(),
    // TEveLine::CopyVizParams() and TEveTrack::CopyVizParams().
 
-   SetMainColor(el->GetMainColor());
-   // rnr-self/children ???
+   // Color is propagate in SetMainColor().
+   // Render state is not propagated. Maybe it should be, at least optionally.
+
+   StampObjProps();
 }
 
 //______________________________________________________________________________

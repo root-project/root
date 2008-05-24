@@ -84,6 +84,8 @@ public:
 
    virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
+   virtual void CopyVizParams(const TEveElement* el);
+
    virtual TClass* ProjectedClass() const;
 
    ClassDef(TEvePointSet, 1); // Set of 3D points with same marker attributes; optionally each point can be assigned an external TRef or a number of integer indices.

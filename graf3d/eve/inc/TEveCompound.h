@@ -40,7 +40,6 @@ public:
    Bool_t IsCompoundOpen() const { return fCompoundOpen > 0; }
 
    virtual void SetMainColor(Color_t color);
-   virtual void PropagateVizParams();
 
    virtual void AddElement(TEveElement* el);
    virtual void RemoveElementLocal(TEveElement* el);
@@ -72,7 +71,6 @@ public:
    virtual ~TEveCompoundProjected() {}
 
    virtual void SetMainColor(Color_t color);
-   virtual void PropagateVizParams();
 
    // Abstract from TEveProjected, we seem not to care.
    virtual void SetDepth(Float_t /*d*/) {}

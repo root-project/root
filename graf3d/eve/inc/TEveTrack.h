@@ -107,6 +107,8 @@ public:
 
    virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
+   virtual void CopyVizParams(const TEveElement* el);
+
    virtual TClass* ProjectedClass() const;
 
    ClassDef(TEveTrack, 1); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
@@ -192,6 +194,8 @@ public:
 
    void ImportHits();     // *MENU*
    void ImportClusters(); // *MENU*
+
+   virtual void CopyVizParams(const TEveElement* el);
 
    virtual TClass* ProjectedClass() const;
 

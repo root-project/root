@@ -109,7 +109,7 @@ public:
    const TString& GetVizTag() const             { return fVizTag; }
    void           SetVizTag(const TString& tag) { fVizTag = tag;  }
 
-   virtual void PropagateVizParams();
+   virtual void PropagateVizParamsToProjecteds();
    virtual void CopyVizParams(const TEveElement* el);
    virtual void CopyVizParamsFromDB();
 

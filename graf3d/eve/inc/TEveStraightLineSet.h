@@ -91,16 +91,18 @@ public:
    TEveChunkManager& GetLinePlex()   { return fLinePlex;   }
    TEveChunkManager& GetMarkerPlex() { return fMarkerPlex; }
 
-   virtual void ComputeBBox();
-   virtual void Paint(Option_t* option="");
-
    virtual Bool_t GetRnrMarkers() { return fRnrMarkers; }
    virtual Bool_t GetRnrLines()   { return fRnrLines;   }
 
    virtual void SetRnrMarkers(Bool_t x) { fRnrMarkers = x; }
    virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
 
+   virtual void CopyVizParams(const TEveElement* el);
+
    virtual TClass* ProjectedClass() const;
+
+   virtual void ComputeBBox();
+   virtual void Paint(Option_t* option="");
 
    ClassDef(TEveStraightLineSet, 1); // Set of straight lines with optional markers along the lines.
 };

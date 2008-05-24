@@ -42,19 +42,12 @@ void TEveCompound::SetMainColor(Color_t color)
    Color_t old_color = GetMainColor();
 
    TEveElement::SetMainColor(color);
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       if ((*i)->GetCompound() == this && (*i)->GetMainColor() == old_color)
          (*i)->SetMainColor(color);
    }
-}
-
-//______________________________________________________________________________
-void TEveCompound::PropagateVizParams()
-{
-   // Propagate visualization parameters to dependent elements.
-
-   TEveElement::PropagateVizParams();
 }
 
 //******************************************************************************
@@ -160,11 +153,4 @@ void TEveCompoundProjected::SetMainColor(Color_t color)
    // and we do not need to do this twice for projected-compound-elements.
 
    TEveElement::SetMainColor(color);
-}
-
-//______________________________________________________________________________
-void TEveCompoundProjected::PropagateVizParams()
-{
-   // Propagate visualization parameters to dependent elements.
-
 }
