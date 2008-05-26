@@ -80,6 +80,10 @@ public:
 
    class TVizDBKey : public TObject
    {
+
+      TVizDBKey(const TVizDBKey &); // Not implemented
+      TVizDBKey& operator=(const TVizDBKey &); // Not implemented
+
       TClass    *fClass;
       TString    fVizTag;
    public:
