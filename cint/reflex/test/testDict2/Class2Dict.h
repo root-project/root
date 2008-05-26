@@ -22,6 +22,7 @@
 #include "MemberPointer.h"
 #include "TemplatedClasses.h"
 #include "TestClasses.h"
+#include "VirtFuncOverrider.h"
 
 #include "ClassSelections.h"
 

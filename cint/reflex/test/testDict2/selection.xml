@@ -56,5 +56,7 @@
 
   <class pattern="std::vector<ClassO*"/>
   <class pattern="std::vector<const ClassO*"/>
+
+  <class name="VirtFuncOverrider::Comp" />
  
 </lcgdict>

@@ -103,7 +103,8 @@ void generate_namespace(ostream& out, const Scope& ns, const string& indent = ""
   for ( size_t i = 0; i < subscopes.size(); i++ ) {
     Scope sc = subscopes[i];
     if ( sc.IsNamespace() ) generate_namespace(out, sc, indent + "  ");
-    if ( sc.IsClass() ) generate_class(out, Type::ByName(sc.Name(SCOPED)), indent + "  ");
+    //one is enough, and we already generate classes as types below:
+    // if ( sc.IsClass() ) generate_class(out, Type::ByName(sc.Name(SCOPED)), indent + "  ");
   }
   // Types----
   std::vector<Type> subtypes(ns.SubType_Begin(), ns.SubType_End());
