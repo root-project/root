@@ -1,5 +1,6 @@
 /* ensure that the shadow for Comp overrides ia() or we'll have an
-   ambiguous ICh::ia() vs Obj::ia()
+   ambiguous ICh::ia() vs Obj::ia().
+   From Jean-François Bastien.
 */
 
 namespace VirtFuncOverrider {
