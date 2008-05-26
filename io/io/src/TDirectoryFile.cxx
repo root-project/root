@@ -1161,7 +1161,7 @@ void TDirectoryFile::ReadAll(Option_t* opt)
 }
 
 //______________________________________________________________________________
-Int_t TDirectoryFile::ReadKeys()
+Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Read the KEYS linked list*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =========================
@@ -1192,33 +1192,36 @@ Int_t TDirectoryFile::ReadKeys()
 
    TDirectory::TContext ctxt(this);
 
-   fKeys->Delete();
-   //In case directory was updated by another process, read new
-   //position for the keys
-   Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
-   char *header       = new char[nbytes];
-   char *buffer       = header;
-   fFile->Seek(fSeekDir);
-   fFile->ReadBuffer(buffer,nbytes);
-   buffer += fNbytesName;
-   Version_t versiondir;
-   frombuf(buffer,&versiondir);
-   fDatimeC.ReadBuffer(buffer);
-   fDatimeM.ReadBuffer(buffer);
-   frombuf(buffer, &fNbytesKeys);
-   frombuf(buffer, &fNbytesName);
-   if (versiondir > 1000) {
-      frombuf(buffer, &fSeekDir);
-      frombuf(buffer, &fSeekParent);
-      frombuf(buffer, &fSeekKeys);
-   } else {
-      Int_t sdir,sparent,skeys;
-      frombuf(buffer, &sdir);    fSeekDir    = (Long64_t)sdir;
-      frombuf(buffer, &sparent); fSeekParent = (Long64_t)sparent;
-      frombuf(buffer, &skeys);   fSeekKeys   = (Long64_t)skeys;
+   char *buffer;
+   if (forceRead) {
+      fKeys->Delete();
+      //In case directory was updated by another process, read new
+      //position for the keys
+      Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
+      char *header = new char[nbytes];
+      buffer       = header;
+      fFile->Seek(fSeekDir);
+      fFile->ReadBuffer(buffer,nbytes);
+      buffer += fNbytesName;
+      Version_t versiondir;
+      frombuf(buffer,&versiondir);
+      fDatimeC.ReadBuffer(buffer);
+      fDatimeM.ReadBuffer(buffer);
+      frombuf(buffer, &fNbytesKeys);
+      frombuf(buffer, &fNbytesName);
+      if (versiondir > 1000) {
+         frombuf(buffer, &fSeekDir);
+         frombuf(buffer, &fSeekParent);
+         frombuf(buffer, &fSeekKeys);
+      } else {
+         Int_t sdir,sparent,skeys;
+         frombuf(buffer, &sdir);    fSeekDir    = (Long64_t)sdir;
+         frombuf(buffer, &sparent); fSeekParent = (Long64_t)sparent;
+         frombuf(buffer, &skeys);   fSeekKeys   = (Long64_t)skeys;
+      }
+      delete [] header;
    }
-   delete [] header;
-
+   
    Int_t nkeys = 0;
    Long64_t fsize = fFile->GetSize();
    if ( fSeekKeys >  0) {

@@ -169,7 +169,7 @@ public:
    virtual void        Purge(Short_t /*nkeep*/=1) {}
    virtual void        pwd() const;
    virtual void        ReadAll(Option_t * /*option*/="") {}
-   virtual Int_t       ReadKeys() {return 0;}
+   virtual Int_t       ReadKeys(Bool_t /*forceRead*/=kTRUE) {return 0;}
    virtual Int_t       ReadTObject(TObject * /*obj*/, const char * /*keyname*/) {return 0;}
    virtual TObject    *Remove(TObject*);
    virtual void        RecursiveRemove(TObject *obj);

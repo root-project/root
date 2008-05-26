@@ -103,7 +103,7 @@ public:
                             Int_t netopt = 0);
    virtual void        Purge(Short_t nkeep=1);
    virtual void        ReadAll(Option_t *option="");
-   virtual Int_t       ReadKeys();
+   virtual Int_t       ReadKeys(Bool_t forceRead=kTRUE);
    virtual Int_t       ReadTObject(TObject *obj, const char *keyname);
    virtual void        rmdir(const char *name);
    virtual void        Save();
