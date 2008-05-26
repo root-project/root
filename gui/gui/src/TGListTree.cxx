@@ -701,7 +701,12 @@ Bool_t TGListTree::HandleCrossing(Event_t *event)
             DrawOutline(fId, fCurrent, 0xffffff, kTRUE);
          if (fBelowMouse)
             DrawOutline(fId, fBelowMouse, 0xffffff, kTRUE);
-         fCurrent = fBelowMouse = 0;
+         fCurrent = 0;
+      }
+      if (fBelowMouse) {
+         fBelowMouse = 0;
+         MouseOver(0);
+         MouseOver(0, event->fState);
       }
    }
    return kTRUE;
