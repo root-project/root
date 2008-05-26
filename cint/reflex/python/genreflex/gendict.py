@@ -77,6 +77,19 @@ class genDictionary(object) :
       self.functions.append(attrs)
     elif name in ('Constructor','Method','OperatorMethod') :
       if 'name' in attrs and attrs['name'][0:3] != '_ZT' :
+        if '>' not in attrs['name'] and 'demangled' in attrs :
+          # check whether this method is templated; GCCXML will
+          # not pass the real name foo<int> but only foo"
+          demangled = attrs['demangled']
+          posargs = demangled.rfind('(')
+          if posargs and posargs > 1 \
+                 and demangled[posargs - 1] == '>' \
+                 and (demangled[posargs - 2].isalnum() \
+                      or demangled[posargs - 2] == '_') :
+            posname = demangled.find(attrs['name'] + '<');
+            if posname :
+              print 'AXEL: templated old name: %s, demangled: %s, new name: %s' % (attrs['name'], demangled, demangled[posname : posargs])
+              attrs['name'] = demangled[posname : posargs]
         self.methods.append(attrs)
     elif name == 'Namespace' :
       self.namespaces.append(attrs)

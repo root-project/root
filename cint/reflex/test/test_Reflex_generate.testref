@@ -33,7 +33,7 @@
     int a (void);
     void setA (int v);
     void dummy (int, float);
-    ClassA operator operator= (const int&);
+    ClassA operator operator=<int> (const int&);
   };
   class ClassAAA {
   public:
@@ -1669,7 +1669,7 @@
     int a (void);
     void setA (int v);
     void dummy (int, float);
-    ClassA operator operator= (const int&);
+    ClassA operator operator=<int> (const int&);
   };
   class ClassAAA {
   public:
