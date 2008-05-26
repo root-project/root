@@ -219,7 +219,7 @@ void TEveElement::PropagateVizParamsToProjecteds()
 }
 
 //______________________________________________________________________________
-void TEveElement::CopyVizParams(const TEveElement* el)
+void TEveElement::CopyVizParams(const TEveElement* /* el */)
 {
    // Copy visualization parameters from element el.
    // This method needs to be overriden by any class that introduces
