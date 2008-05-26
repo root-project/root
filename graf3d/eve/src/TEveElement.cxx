@@ -239,6 +239,14 @@ void TEveElement::CopyVizParamsFromDB()
    // Copy visualization parameters from the data-base. The data-base
    // entry to use as the model is chosen from the fVizTag and the
    // class of the element.
+
+   TEveElement* model = gEve->FindVizDBEntry(fVizTag);
+   if (model) {
+      CopyVizParams(model);
+   } else {
+      Warning("TEveElement::CopyVizParamsFromDB",
+              "Model element not found for tag '%s'.", fVizTag.Data());
+   }
 }
 
 //******************************************************************************

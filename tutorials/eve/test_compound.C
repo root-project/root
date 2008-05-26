@@ -19,6 +19,12 @@ void test_compound()
 {
    TEveManager::Create();
 
+   TEveLine* ml = new TEveLine;
+   ml->SetMainColor(kRed);
+   ml->SetLineStyle(2);
+   ml->SetLineWidth(3);
+   gEve->InsertVizDBEntry("BigLine", ml);
+
    TEveCompound* cmp = new TEveCompound;
    cmp->SetMainColor(kGreen);
    gEve->AddElement(cmp);
@@ -31,7 +37,7 @@ void test_compound()
    cmp->AddElement(random_line(rnd, 20, 10));
 
    TEveLine* line = random_line(rnd, 20, 12);
-   line->SetMainColor(kRed);
+   line->ApplyVizTag("BigLine");
    cmp->AddElement(line);
 
    cmp->CloseCompound();

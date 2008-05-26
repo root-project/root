@@ -24,6 +24,8 @@
 
 #include "TGLSAViewer.h"
 
+#include "TGeoManager.h"
+#include "TObjString.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TMap.h"
@@ -47,7 +49,7 @@ TEveManager* gEve = 0;
 //______________________________________________________________________________
 // TEveManager
 //
-// Central aplicat manager for Reve.
+// Central aplication manager for Eve.
 // Manages elements, GUI, GL scenes and GL viewers.
 
 ClassImp(TEveManager);
@@ -55,7 +57,9 @@ ClassImp(TEveManager);
 //______________________________________________________________________________
 TEveManager::TEveManager(UInt_t w, UInt_t h) :
    fExcHandler  (0),
-   fVizDB       (new TMap()),
+   fVizDB       (0),
+   fGeometries  (0),
+   fGeometryAliases (0),
    fBrowser     (0),
    fEditor      (0),
    fStatusBar   (0),
@@ -78,9 +82,7 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
 
    fStampedElements(),
    fSelection      (0),
-   fHighlight      (0),
-
-   fGeometries     ()
+   fHighlight      (0)
 {
    // Constructor.
 
@@ -92,6 +94,10 @@ TEveManager::TEveManager(UInt_t w, UInt_t h) :
    gEve = this;
 
    fExcHandler = new TExceptionHandler;
+
+   fGeometries      = new TMap; fGeometries->SetOwnerKeyValue();
+   fGeometryAliases = new TMap; fGeometryAliases->SetOwnerKeyValue();
+   fVizDB           = new TMap; fVizDB->SetOwnerKeyValue();
 
    fSelection = new TEveSelection("Global Selection");
    fHighlight = new TEveSelection("Global Highlight");
@@ -166,8 +172,10 @@ TEveManager::~TEveManager()
 {
    // Destructor.
 
-   delete fExcHandler;
+   delete fGeometryAliases;
+   delete fGeometries;
    delete fVizDB;
+   delete fExcHandler;
 }
 
 /******************************************************************************/
@@ -486,9 +494,57 @@ Bool_t TEveManager::ElementPaste(TEveElement* element)
    return kFALSE;
 }
 
-/******************************************************************************/
-// GeoManager registration
-/******************************************************************************/
+
+//==============================================================================
+// VizDB interface
+//==============================================================================
+
+//______________________________________________________________________________
+Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
+                                     Bool_t replace)
+{
+   // Insert a new visualization-parameter database entry. Returns
+   // true if the element is inserted successfully.
+   // If entry with the same key already exists the behaviour depends on the
+   // 'replace' flag:
+   //   true  - the old model is deleted and new one is inserted (default);
+   //   false - the old model is kept, false is returned.
+   // If insert is successful, the ownership of the model-element is
+   // transferred to the manager.
+
+   TPair* pair = (TPair*) fVizDB->FindObject(tag);
+   if (pair)
+   {
+      if (replace)
+      {
+         delete pair->Value();
+         pair->SetValue(dynamic_cast<TObject*>(model));
+         return kTRUE;
+      }
+      else
+      {
+         return kFALSE;
+      }
+   }
+   else
+   {
+      fVizDB->Add(new TObjString(tag), dynamic_cast<TObject*>(model));
+      return kTRUE;
+   }
+}
+
+//______________________________________________________________________________
+TEveElement* TEveManager::FindVizDBEntry(const TString& tag)
+{
+   // Find a visualization-parameter database entry corresponding to tag.
+   // If the entry is not found 0 is returned.
+
+   return dynamic_cast<TEveElement*>(fVizDB->GetValue(tag));
+}
+
+//==============================================================================
+// GeoManager, geometry-alias registration
+//==============================================================================
 
 //______________________________________________________________________________
 TGeoManager* TEveManager::GetGeometry(const TString& filename)
@@ -505,11 +561,8 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
    printf("%s loading: '%s' -> '%s'.\n", eh.Data(),
           filename.Data(), exp_filename.Data());
 
-   std::map<TString, TGeoManager*>::iterator geom = fGeometries.find(filename);
-   if (geom != fGeometries.end()) {
-      gGeoManager = geom->second;
-   } else {
-      gGeoManager = 0;
+   gGeoManager = (TGeoManager*) fGeometries->GetValue(filename);
+   if (!gGeoManager) {
       Bool_t locked = TGeoManager::IsLocked();
       if (locked) {
          Warning(eh, "TGeoManager is locked ... unlocking it.");
@@ -544,7 +597,7 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
          }
       }
 
-      fGeometries[filename] = gGeoManager;
+      fGeometries->Add(new TObjString(filename), gGeoManager);
    }
    return gGeoManager;
 }
@@ -557,10 +610,10 @@ TGeoManager* TEveManager::GetGeometryByAlias(const TString& alias)
 
    static const TEveException eh("TEveManager::GetGeometry ");
 
-   std::map<TString, TString>::iterator i = fGeometryAliases.find(alias);
-   if (i == fGeometryAliases.end())
+   TObjString* full_name = (TObjString*) fGeometryAliases->GetValue(alias);
+   if (!full_name)
       throw(eh + "geometry alias '" + alias + "' not registered.");
-   return GetGeometry(i->second);
+   return GetGeometry(full_name->String());
 }
 
 //______________________________________________________________________________
@@ -580,8 +633,10 @@ void TEveManager::RegisterGeometryAlias(const TString& alias, const TString& fil
    // After that the geometry can be retrieved also by calling:
    //   gEve->GetGeometryByName(name);
 
-   fGeometryAliases[alias] = filename;
+   fGeometryAliases->Add(new TObjString(alias), new TObjString(filename));
 }
+
+//==============================================================================
 
 //______________________________________________________________________________
 void TEveManager::SetStatusLine(const char* text)
@@ -644,33 +699,4 @@ TEveManager::TExceptionHandler::Handle(std::exception& exc)
    } else {
       return kSEProceed;
    }
-}
-
-
-//==============================================================================
-//==============================================================================
-// TEveManager::TVizDBKey
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Key for storing vizual-database entries.
-
-ClassImp(TEveManager::TVizDBKey);
-
-//______________________________________________________________________________
-ULong_t TEveManager::TVizDBKey::Hash() const
-{
-   // Hash function.
-
-   return ((ULong_t)fClass)*fVizTag.Hash();
-}
-
-//______________________________________________________________________________
-Bool_t  TEveManager::TVizDBKey::IsEqual(const TObject* obj) const
-{
-   // Comparison function.
-
-   const TVizDBKey& o = *(TVizDBKey*)obj;
-   return fClass == o.fClass && fVizTag == o.fVizTag;
 }
