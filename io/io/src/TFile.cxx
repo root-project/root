@@ -550,9 +550,11 @@ void TFile::Init(Bool_t create)
       delete key;
    } else {
       //*-*----------------UPDATE
-      char *header = new char[kBEGIN];
+      //char *header = new char[kBEGIN];
+      char *header = new char[kBEGIN+200];
       Seek(0);
-      ReadBuffer(header, kBEGIN);
+      //ReadBuffer(header, kBEGIN);
+      ReadBuffer(header, kBEGIN+200);
 
       // make sure this is a ROOT file
       if (strncmp(header, "root", 4)) {
@@ -589,7 +591,6 @@ void TFile::Init(Bool_t create)
          frombuf(buffer, &fNbytesInfo);
       }
       fSeekDir = fBEGIN;
-      delete [] header;
       //*-*-------------Read Free segments structure if file is writable
       if (fWritable) {
          fFree = new TList;
@@ -601,11 +602,16 @@ void TFile::Init(Bool_t create)
       }
       //*-*-------------Read directory info
       Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
-      header       = new char[nbytes];
-      buffer       = header;
-      Seek(fBEGIN);
-      ReadBuffer(buffer,nbytes);
-      buffer = header+fNbytesName;
+      if (nbytes+fBEGIN > kBEGIN+200) {
+         delete [] header;
+         header       = new char[nbytes];
+         buffer       = header;
+         Seek(fBEGIN);
+         ReadBuffer(buffer,nbytes);
+         buffer = header+fNbytesName;
+      } else {
+         buffer = header+fBEGIN+fNbytesName;
+      }
       Version_t version,versiondir;
       frombuf(buffer,&version); versiondir = version%1000;
       fDatimeC.ReadBuffer(buffer);
@@ -652,7 +658,7 @@ void TFile::Init(Bool_t create)
       //*-* -------------Read keys of the top directory
       if (fSeekKeys > fBEGIN && fEND <= size) {
          //normal case. Recover only if file has no keys
-         TDirectoryFile::ReadKeys();
+         TDirectoryFile::ReadKeys(kFALSE);
          gDirectory = this;
          if (!GetNkeys()) {
             if (tryrecover) {
@@ -1089,14 +1095,13 @@ TList *TFile::GetStreamerInfoList()
    TList *list = 0;
    if (fSeekInfo) {
       TDirectory::TContext ctx(gDirectory,this); // gFile and gDirectory used in ReadObj
-
       TKey *key = new TKey(this);
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
       Seek(fSeekInfo);
       ReadBuffer(buf,fNbytesInfo);
       key->ReadKeyBuffer(buf);
-      list = (TList*)key->ReadObj();
+      list = (TList*)key->ReadObj(buffer);
       if (list) list->SetOwner();
       delete [] buffer;
       delete key;
