@@ -243,7 +243,7 @@ Int_t TKeyXML::Read(TObject* tobj)
 }
 
 //______________________________________________________________________________
-TObject* TKeyXML::ReadObj()
+TObject* TKeyXML::ReadObj(char * /*bufferRead*/)
 {
    // read object derived from TObject class, from key
    // if it is not TObject or in case of error, return 0

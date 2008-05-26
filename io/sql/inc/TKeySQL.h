@@ -63,7 +63,7 @@ public:
    virtual void      Keep() {}
 
    virtual Int_t     Read(TObject* obj);
-   virtual TObject  *ReadObj();
+   virtual TObject  *ReadObj(char *bufferRead=0);
    virtual void     *ReadObjectAny(const TClass *expectedClass);
   
    virtual void      ReadBuffer(char *&) {}

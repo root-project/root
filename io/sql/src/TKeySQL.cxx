@@ -201,7 +201,7 @@ Int_t TKeySQL::Read(TObject* tobj)
 }
 
 //______________________________________________________________________________
-TObject* TKeySQL::ReadObj()
+TObject* TKeySQL::ReadObj(char * /*bufferRead*/)
 {
 // Read object derived from TObject class
 // If it is not TObject or in case of error, return 0
