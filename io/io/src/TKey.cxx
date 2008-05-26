@@ -629,7 +629,7 @@ void TKey::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-TObject *TKey::ReadObj()
+TObject *TKey::ReadObj(char *bufferRead)
 {
    // To read a TObject* from the file.
    //
@@ -642,6 +642,9 @@ TObject *TKey::ReadObj()
    //  object of the class type it describes. This new object now calls its
    //  Streamer function to rebuilt itself.
    //
+   //  bufferRead is an optional argument that may contain an existing buffer.
+   //   when specified (non null) the function reads the object directly from this buffer
+   //   instead of creating an internal buffer and reading teh buffer from the file.
    //  see TKey::ReadObjectAny to read any object non-derived from TObject
    //
    //  NOTE:
@@ -680,9 +683,14 @@ TObject *TKey::ReadObj()
    fBufferRef->SetPidOffset(fPidOffset);
 
    if (fObjlen > fNbytes-fKeylen) {
-      fBuffer = new char[fNbytes];
-      ReadFile();                    //Read object structure from file
-      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      if (!bufferRead) {
+         fBuffer = new char[fNbytes];
+         ReadFile();                    //Read object structure from file
+         memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      } else {
+         fBuffer = bufferRead;
+         memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      }
    } else {
       fBuffer = fBufferRef->Buffer();
       ReadFile();                    //Read object structure from file
@@ -730,9 +738,9 @@ TObject *TKey::ReadObj()
       }
       if (nout) {
          tobj->Streamer(*fBufferRef); //does not work with example 2 above
-         delete [] fBuffer;
+         if (!bufferRead) delete [] fBuffer;
       } else {
-         delete [] fBuffer;
+         if (!bufferRead) delete [] fBuffer;
          delete pobj;
          pobj = 0;
          tobj = 0;

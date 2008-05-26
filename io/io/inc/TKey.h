@@ -97,7 +97,7 @@ protected:
    virtual void        ls(Option_t *option="") const;
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       Read(TObject *obj);
-   virtual TObject    *ReadObj();
+   virtual TObject    *ReadObj(char *bufferRead=0);
    virtual void       *ReadObjectAny(const TClass *expectedClass);
    virtual void        ReadBuffer(char *&buffer);
            void        ReadKeyBuffer(char *&buffer);
