@@ -16,7 +16,7 @@
 #ifndef ROOT_Math_GenVector_Cartesian2D 
 #define ROOT_Math_GenVector_Cartesian2D  1
 
-#ifndef ROOT_Math_GenVector_Polar3Dfwd 
+#ifndef ROOT_Math_GenVector_Polar2Dfwd 
 #include "Math/GenVector/Polar2Dfwd.h"
 #endif
 
