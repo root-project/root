@@ -46,13 +46,20 @@ if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ] || \
    [ "$ARCH" = "macosx64" ] || [ "$ARCH" = "macosxicc" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    SOEXT="so"
-   if [ $macosx_minor -ge 3 ]; then
+   if [ $macosx_minor -ge 5 ]; then
+      if [ "x`echo $SOFLAGS | grep -- '-install_name'`" != "x" ]; then
+         # If soname is specified, add the library name.
+         SOFLAGS=$SOFLAGS\$LibName.$SOEXT
+      fi
+      MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor"
+   elif [ $macosx_minor -ge 3 ]; then
       SOFLAGS="-bundle $OPT -undefined dynamic_lookup"
+      EXPLLINKLIBS=""
       MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor"
    else
       SOFLAGS="-bundle $OPT -undefined suppress"
+      EXPLLINKLIBS=""
    fi
-   EXPLLINKLIBS=""
 elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.
     SOFLAGS=$SOFLAGS\$LibName.$SOEXT

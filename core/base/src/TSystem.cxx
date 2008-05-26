@@ -26,7 +26,6 @@
 #ifdef WIN32
 #include <io.h>
 #endif
-#include <string>
 #include <stdlib.h>
 #include <errno.h>
 
@@ -2624,7 +2623,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
         || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
       // The library has already been built and loaded.
 
-
       Bool_t reload = kFALSE;
       TNamed *libinfo = (TNamed*)fCompiled->FindObject(library);
       if (libinfo) {
@@ -2683,7 +2681,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString libmapfilename;
    AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
    libmapfilename += ".rootmap";
-#if defined(R__MACOSX) || defined(R__WIN32)
+#if (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)) || defined(R__WIN32)
    Bool_t produceRootmap = kTRUE;
 #else
    Bool_t produceRootmap = kFALSE;
@@ -2855,10 +2853,25 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Generate the rootcint command line
    TString rcint;
-#ifdef G__NOSTUBS
-   rcint = "rootcint_nostubs.sh --lib-list-prefix=";
+#ifndef ROOTBINDIR
+   rcint = gSystem->Getenv("ROOTSYS");
+#ifndef R__WIN32
+   rcint += "/bin/";
 #else
-   rcint = "rootcint --lib-list-prefix=";
+   rcint += "\\bin\\";
+#endif
+#else
+   rcint = ROOTBINDIR;
+#ifndef R__WIN32
+   rcint += "/";
+#else
+   rcint += "\\";
+#endif
+#endif
+#ifdef G__NOSTUBS
+   rcint += "rootcint_nostubs.sh --lib-list-prefix=";
+#else
+   rcint += "rootcint --lib-list-prefix=";
 #endif
    rcint += mapfile;
    rcint += " -f ";
@@ -2885,20 +2898,24 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Load the library the script might depend on
    if (result) {
+      TString linkedlibs = GetLibraries("", "S");
+      TString libtoload;
       ifstream liblist(mapfileout);
-      string libtoload;
 
       ofstream libmapfile;
       if (produceRootmap) {
-         libmapfile.open(libmapfilename.Data());
-         libmapfile << "Library." << libname.Data() << ": " << libname.Data();
+         libmapfile.open(libmapfilename);
+         libmapfile << "Library." << libname << ": " << libname;
       }
 
       while ( liblist >> libtoload ) {
          // Load the needed library except for the library we are currently building!
-         if (libtoload != library.Data() && libtoload != libname.Data() && libtoload != libname_ext.Data()) {
-            gROOT->LoadClass("",libtoload.c_str());
-            if (produceRootmap) libmapfile << " " << libtoload;
+         if (libtoload != library && libtoload != libname && libtoload != libname_ext) {
+            gROOT->LoadClass("", libtoload);
+            if (produceRootmap) {
+               if (!linkedlibs.Contains(libtoload))
+                  libmapfile << " " << libtoload;
+            }
          }
       }
 
@@ -2930,8 +2947,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("$LinkedLibs",linkLibraries);
    cmd.ReplaceAll("$LibName",libname);
    cmd.ReplaceAll("$BuildDir",build_loc);
-   if (mode==kDebug) cmd.ReplaceAll("$Opt",fFlagsDebug);
-   else cmd.ReplaceAll("$Opt",fFlagsOpt);
+   if (mode==kDebug)
+      cmd.ReplaceAll("$Opt",fFlagsDebug);
+   else
+      cmd.ReplaceAll("$Opt",fFlagsOpt);
 
 #ifdef WIN32
    R__FixLink(cmd);
@@ -2962,8 +2981,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    testcmd.ReplaceAll("$ExeName",exec);
    testcmd.ReplaceAll("$LinkedLibs",linkLibraries);
    testcmd.ReplaceAll("$BuildDir",build_loc);
-   if (mode==kDebug) testcmd.ReplaceAll("$Opt",fFlagsDebug);
-   else testcmd.ReplaceAll("$Opt",fFlagsOpt);
+   if (mode==kDebug)
+      testcmd.ReplaceAll("$Opt",fFlagsDebug);
+   else
+      testcmd.ReplaceAll("$Opt",fFlagsOpt);
 
 #ifdef WIN32
    R__FixLink(testcmd);
