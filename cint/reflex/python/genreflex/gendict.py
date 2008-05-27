@@ -912,7 +912,8 @@ class genDictionary(object) :
                  and not self.hasNonPublicArgs(basemember['subelems']):
               # This method is virtual and publicly accessible.
               # Remove the class name and the scope operator from the demangled method name.
-              demangledBaseMethod = basemember['attrs'].get('demangled')[len(currentBaseName) + 3:]
+              # clt is '__'+classname, so its len is identical to classname+'::'
+              demangledBaseMethod = basemember['attrs'].get('demangled')[len(clt):]
               found = 0
               if demangledBaseMethod in allBasesMethods.keys():
                 # the method exists in another base.
