@@ -81,6 +81,11 @@
 #endif
 #endif
 
+#ifdef _WIN32
+// include it now so it doesn't get included later and redefines CONST
+#include "Windows.h
+#endif
+
 // windows.h and oracle define CONST
 #ifdef CONST
 #undef CONST
