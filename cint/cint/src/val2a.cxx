@@ -1778,6 +1778,10 @@ G__value G__string2type_body(const char* typenamin, int noerror)
             result.type = 'n';
             break;
          }
+         if (strcmp(typenam, "long int") == 0) {
+            result.type = 'l';
+            break;
+         }
          break;
       case 9:
          if ((strcmp(typenam, "long long") == 0) || (strcmp(typenam, "__int64") == 0)) {

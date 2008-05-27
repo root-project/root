@@ -1646,6 +1646,9 @@ extern "C" G__value G__string2type_body(const char* typenamin, int noerror)
          if (strcmp(typenam.c_str(), "longlong") == 0) {
             typenam = "long long";
          }
+         if (strcmp(typenam.c_str(), "long int") == 0) {
+            typenam = "long";
+         }
          break;
       case 9:
          if (strcmp(typenam.c_str(), "__int64") == 0) {
