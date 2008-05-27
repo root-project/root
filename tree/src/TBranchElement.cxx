@@ -1909,6 +1909,16 @@ void TBranchElement::InitializeOffsets()
 
    Int_t nbranches = fBranches.GetEntriesFast();
 
+   if (fID < 0) {
+      // -- We are a top-level branch.  Let's mark whether we need to use MapObject.
+      if (fBranchClass.GetClass()) {
+         if (fBranchClass.GetClass()->InheritsFrom(TObject::Class())) {
+            SetBit(kBranchObject);
+         } else {
+            SetBit(kBranchAny);
+         }
+      }
+   }
    if (nbranches) {
       // Allocate space for the new sub-branch offsets.
       delete[] fBranchOffset;
