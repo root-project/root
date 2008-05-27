@@ -601,6 +601,8 @@ void TFile::Init(Bool_t create)
          }
       }
       //*-*-------------Read directory info
+      Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
+                +2*sizeof(Int_t);
       Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
       if (nbytes+fBEGIN > kBEGIN+200) {
          delete [] header;
@@ -611,6 +613,7 @@ void TFile::Init(Bool_t create)
          buffer = header+fNbytesName;
       } else {
          buffer = header+fBEGIN+fNbytesName;
+         nk += kBEGIN;
       }
       Version_t version,versiondir;
       frombuf(buffer,&version); versiondir = version%1000;
@@ -618,8 +621,6 @@ void TFile::Init(Bool_t create)
       fDatimeM.ReadBuffer(buffer);
       frombuf(buffer, &fNbytesKeys);
       frombuf(buffer, &fNbytesName);
-      Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
-                +2*sizeof(Int_t);
       if (version > 1000) {
          frombuf(buffer, &fSeekDir);
          frombuf(buffer, &fSeekParent);
