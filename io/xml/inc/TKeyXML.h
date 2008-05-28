@@ -44,7 +44,8 @@ class TKeyXML : public TKey {
       //virtual void      Print(Option_t* ="") const {}
 
       virtual Int_t     Read(TObject* tobj);
-      virtual TObject  *ReadObj(char *bufferRead=0);
+      virtual TObject  *ReadObj();
+      virtual TObject  *ReadObjWithBuffer(char *bufferRead);
       virtual void     *ReadObjectAny(const TClass *expectedClass);
       
       virtual void      ReadBuffer(char *&) {}

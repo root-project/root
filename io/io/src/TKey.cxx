@@ -58,7 +58,6 @@
 #include "Bytes.h"
 #include "TInterpreter.h"
 #include "TError.h"
-#include "Api.h"
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -629,7 +628,7 @@ void TKey::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-TObject *TKey::ReadObj(char *bufferRead)
+TObject *TKey::ReadObj()
 {
    // To read a TObject* from the file.
    //
@@ -642,9 +641,6 @@ TObject *TKey::ReadObj(char *bufferRead)
    //  object of the class type it describes. This new object now calls its
    //  Streamer function to rebuilt itself.
    //
-   //  bufferRead is an optional argument that may contain an existing buffer.
-   //   when specified (non null) the function reads the object directly from this buffer
-   //   instead of creating an internal buffer and reading teh buffer from the file.
    //  see TKey::ReadObjectAny to read any object non-derived from TObject
    //
    //  NOTE:
@@ -662,7 +658,6 @@ TObject *TKey::ReadObj(char *bufferRead)
    //
    //  Of course, dynamic_cast<> can also be used in the example 1.
 
-//printf("in TKey::ReadObj, fClassname=%s\n",fClassName.Data());
    TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObj", "Unknown class %s", fClassName.Data());
@@ -683,14 +678,9 @@ TObject *TKey::ReadObj(char *bufferRead)
    fBufferRef->SetPidOffset(fPidOffset);
 
    if (fObjlen > fNbytes-fKeylen) {
-      if (!bufferRead) {
-         fBuffer = new char[fNbytes];
-         ReadFile();                    //Read object structure from file
-         memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
-      } else {
-         fBuffer = bufferRead;
-         memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
-      }
+      fBuffer = new char[fNbytes];
+      ReadFile();                    //Read object structure from file
+      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
    } else {
       fBuffer = fBufferRef->Buffer();
       ReadFile();                    //Read object structure from file
@@ -738,9 +728,142 @@ TObject *TKey::ReadObj(char *bufferRead)
       }
       if (nout) {
          tobj->Streamer(*fBufferRef); //does not work with example 2 above
-         if (!bufferRead) delete [] fBuffer;
+         delete [] fBuffer;
       } else {
-         if (!bufferRead) delete [] fBuffer;
+         delete [] fBuffer;
+         delete pobj;
+         pobj = 0;
+         tobj = 0;
+         goto CLEAR;
+      }
+   } else {
+      tobj->Streamer(*fBufferRef);
+   }
+
+   if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
+
+   if (cl->InheritsFrom(TDirectoryFile::Class())) {
+      TDirectory *dir = dynamic_cast<TDirectoryFile*>(tobj);
+      dir->SetName(GetName());
+      dir->SetTitle(GetTitle());
+      dir->SetMother(fMotherDir);
+      fMotherDir->Append(dir);
+   }
+
+   // Append the object to the directory if requested:
+   { 
+      ROOT::DirAutoAdd_t addfunc = cl->GetDirectoryAutoAdd();
+      if (addfunc) {
+         addfunc(pobj, fMotherDir);
+      }
+   }
+
+CLEAR:
+   delete fBufferRef;
+   fBufferRef = 0;
+   fBuffer    = 0;
+
+   return tobj;
+}
+
+//______________________________________________________________________________
+TObject *TKey::ReadObjWithBuffer(char *bufferRead)
+{
+   // To read a TObject* from bufferRead.
+   // This function is identical to TKey::ReadObj, but it reads directly
+   // from bufferRead instead of reading from a file.
+   //  The object associated to this key is read from the buffer into memory
+   //  Using the class identifier we find the TClass object for this class.
+   //  A TClass object contains a full description (i.e. dictionary) of the
+   //  associated class. In particular the TClass object can create a new
+   //  object of the class type it describes. This new object now calls its
+   //  Streamer function to rebuilt itself.
+   //
+   //  NOTE:
+   //  In case the class of this object derives from TObject but not
+   //  as a first inheritance, one must cast the return value twice.
+   //  Example1: Normal case:
+   //      class MyClass : public TObject, public AnotherClass
+   //   then on return, one can do:
+   //    MyClass *obj = (MyClass*)key->ReadObj();
+   //
+   //  Example2: Special case:
+   //      class MyClass : public AnotherClass, public TObject
+   //   then on return, one must do:
+   //    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
+   //
+   //  Of course, dynamic_cast<> can also be used in the example 1.
+
+   TClass *cl = TClass::GetClass(fClassName.Data());
+   if (!cl) {
+      Error("ReadObjWithBuffer", "Unknown class %s", fClassName.Data());
+      return 0;
+   }
+   if (!cl->InheritsFrom(TObject::Class())) {
+      // in principle user should call TKey::ReadObjectAny!
+      return (TObject*)ReadObjectAny(0);
+   }
+
+   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
+   if (!fBufferRef) {
+      Error("ReadObjWithBuffer", "Cannot allocate buffer: fObjlen = %d", fObjlen);
+      return 0;
+   }
+   if (GetFile()==0) return 0;
+   fBufferRef->SetParent(GetFile());
+   fBufferRef->SetPidOffset(fPidOffset);
+
+   if (fObjlen > fNbytes-fKeylen) {
+      fBuffer = bufferRead;
+      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+   } else {
+      fBuffer = fBufferRef->Buffer();
+      ReadFile();                    //Read object structure from file
+   }
+
+   // get version of key
+   fBufferRef->SetBufferOffset(sizeof(fNbytes));
+   Version_t kvers = fBufferRef->ReadVersion();
+
+   fBufferRef->SetBufferOffset(fKeylen);
+   TObject *tobj = 0;
+   // Create an instance of this class
+
+   char *pobj = (char*)cl->New();
+   Int_t baseOffset = cl->GetBaseClassOffset(TObject::Class());
+   if (baseOffset==-1) {
+      // cl does not inherit from TObject.
+      // Since this is not possible yet, the only reason we could reach this code
+      // is because something is screw up in the ROOT code.
+      Fatal("ReadObjWithBuffer","Incorrect detection of the inheritance from TObject for class %s.\n",
+            fClassName.Data());
+   }
+   tobj = (TObject*)(pobj+baseOffset);
+   if (!pobj) {
+      Error("ReadObjWithBuffer", "Cannot create new object of class %s", fClassName.Data());
+      return 0;
+   }
+   if (kvers > 1)
+      fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
+
+   if (fObjlen > fNbytes-fKeylen) {
+      char *objbuf = fBufferRef->Buffer() + fKeylen;
+      UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
+      Int_t nin, nout, nbuf;
+      Int_t noutot = 0;
+      while (1) {
+         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
+         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         if (!nout) break;
+         noutot += nout;
+         if (noutot >= fObjlen) break;
+         bufcur += nin;
+         objbuf += nout;
+      }
+      if (nout) {
+         tobj->Streamer(*fBufferRef); //does not work with example 2 above
+      } else {
          delete pobj;
          pobj = 0;
          tobj = 0;

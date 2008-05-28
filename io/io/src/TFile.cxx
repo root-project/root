@@ -1102,7 +1102,7 @@ TList *TFile::GetStreamerInfoList()
       Seek(fSeekInfo);
       ReadBuffer(buf,fNbytesInfo);
       key->ReadKeyBuffer(buf);
-      list = (TList*)key->ReadObj(buffer);
+      list = (TList*)key->ReadObjWithBuffer(buffer);
       if (list) list->SetOwner();
       delete [] buffer;
       delete key;
