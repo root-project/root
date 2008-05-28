@@ -912,8 +912,10 @@ class genDictionary(object) :
                  and not self.hasNonPublicArgs(basemember['subelems']):
               # This method is virtual and publicly accessible.
               # Remove the class name and the scope operator from the demangled method name.
-              # clt is '__'+classname, so its len is identical to classname+'::'
-              demangledBaseMethod = basemember['attrs'].get('demangled')[len(clt):]
+              demangledBaseMethod = basemember['attrs'].get('demangled')
+              posFuncName = demangledBaseMethod.rfind('::' + basemember['attrs'].get('name') + '(')
+              if posFuncName == -1 : continue
+              demangledBaseMethod = demangledBaseMethod[posFuncName + 2:]
               found = 0
               if demangledBaseMethod in allBasesMethods.keys():
                 # the method exists in another base.
@@ -939,7 +941,7 @@ class genDictionary(object) :
           member = allBasesMethods[demangledMethod]
           if len(member['bases']) > 1:
             ret = self.genTypeName(member['returns'])
-            if not '(' in ret:
+            if '(' not in ret:
               # skip functions returning functions; we don't get the prototype right easily:
               cmem = '  virtual %s %s throw();' % (ret, demangledMethod)
               c += indent + cmem + '\n'
