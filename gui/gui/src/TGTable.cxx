@@ -72,17 +72,43 @@ A simple macro to use a TGTable with a TGSimpleTableInterface:
 End_Html
 Begin_Macro(source, gui)
 {
-   //Create an array to hold a bunch of numbers
-   Double_t data[6][5]; // 6 by 5 array
-   //Create an interface
-   TGSimpleTableInterface *iface = new TGSimpleTableInterface(data); 
-   //Create the table
-   TGTable *table = new TGTable(0, 999, iface); 
+   // Create an array to hold a bunch of numbers
+   Int_t i = 0, j = 0;
+   UInt_t nrows = 6, ncolumns = 5;
+   Double_t** data = new Double_t*[nrows];
+   for (i = 0; i < nrows; i++) {
+      data[i] = new Double_t[ncolumns];
+      for (j = 0; j < ncolumns; j++) {
+         data[i][j] = 10 * i + j;
+      }
+   }
+
+   // Create a main frame to contain the table
+   TGMainFrame* mainframe = new TGMainFrame(0, 400, 200);
+   mainframe->SetCleanup(kDeepCleanup) ;
+
+   // Create an interface
+   TGSimpleTableInterface *iface = new TGSimpleTableInterface(data, 6, 5); 
+
+   // Create the table
+   TGTable *table = new TGTable(mainframe, 999, iface); 
+
+   // Add the table to the main frame
+   mainframe->AddFrame(table, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
    //Update data
-   array[5][1] = 3.01; 
+   data[5][1] = 3.01; 
    //update the table view
    table->Update(); 
-   return table;
+
+   // Layout and map the main frame
+   mainframe->SetWindowName("Tree Table Test") ;
+   mainframe->MapSubwindows() ;
+   mainframe->Layout();
+   mainframe->Resize() ;
+   mainframe->MapWindow() ;
+
+   return mainframe;
 }
 End_Macro
 Begin_Html
@@ -96,18 +122,35 @@ Begin_Macro(source, gui)
    TFile *file = new TFile("$ROOTSYS/tutorials/hsimple.root");
    // Load a tree from the file
    TNtuple *ntuple = (TNtuple *)file.Get("ntuple");
+
    // Create an interface
    TTreeTableInterface *iface = new TTreeTableInterface(ntuple); 
+
+   // Create a main frame to contain the table
+   TGMainFrame* mainframe = new TGMainFrame(0, 400, 200);
+   mainframe->SetCleanup(kDeepCleanup) ;
+
    // Create the table
-   TGTable *table = new TGTable(0, 999, iface); 
-   // Set the selection used
+   TGTable *table = new TGTable(mainframe, 999, iface, 10, 6); 
+
+   // Add the table to the main frame
+   mainframe->AddFrame(table, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
+   // Set a selection
    iface->SetSelection("px > 0.");
    // Add a column
    iface->AddColumn("(px+py)/(px-py)", 0);
    //update the table view
    table->Update(); 
-   delete file;
-   return table;
+
+   // Layout and map the main frame
+   mainframe->SetWindowName("Tree Table Test") ;
+   mainframe->MapSubwindows() ;
+   mainframe->Layout();
+   mainframe->Resize() ;
+   mainframe->MapWindow() ;
+
+   return mainframe;
 }
 End_Macro
 */
@@ -121,7 +164,7 @@ End_Macro
 //______________________________________________________________________________
 TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface, 
                  UInt_t nrows, UInt_t ncolumns) 
-   : TGMainFrame(p, 400, 200, kVerticalFrame), TGWidget(id), fRows(0), 
+   : TGCompositeFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0), 
      fRowHeaders(0), fColumnHeaders(0), fReadOnly(kFALSE), fSelectColor(0), 
      fTMode(0), fAllData(kFALSE), fTableFrame(0), fCanvas(0), fCellWidth(80), 
      fCellHeight(25), fInterface(interface)
@@ -150,7 +193,7 @@ TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
 
    if(fInterface) SetInterface(fInterface, nrows, ncolumns);
    SetWindowName();
-   MapWindow();
+//    MapWindow();
 }
 
 //______________________________________________________________________________
@@ -377,8 +420,8 @@ void TGTable::Init()
    fPrevButton->Connect("Clicked()", "TGTable", this, "PreviousChunk()");
    fGotoButton->Connect("Clicked()", "TGTable", this, "Goto()");
 
-   MapSubwindows();
-   Layout();
+//    MapSubwindows();
+//    Layout();
 }
 
 //______________________________________________________________________________

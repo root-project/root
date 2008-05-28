@@ -25,8 +25,8 @@ private:
 protected:
 
 public:
-   TGSimpleTableInterface(Double_t **data, UInt_t ncolumns = 2, 
-                          UInt_t nrows = 2);
+   TGSimpleTableInterface(Double_t **data, UInt_t nrows = 2, 
+                          UInt_t ncolumns = 2);
    virtual ~TGSimpleTableInterface();
 
    virtual Double_t    GetValue(UInt_t row, UInt_t column);

@@ -37,7 +37,7 @@ class TGLabel;
 class TGTextEntry;
 class TTableRange;
 
-class TGTable : public TGMainFrame, public TGWidget {
+class TGTable : public TGCompositeFrame, public TGWidget {
 
 private:
    TObjArray     *fRows;          // Array of rows
