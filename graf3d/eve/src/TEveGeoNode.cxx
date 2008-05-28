@@ -64,6 +64,7 @@ const Text_t* TEveGeoNode::GetName()  const
    return fNode->GetName();
 }
 
+//______________________________________________________________________________
 const Text_t* TEveGeoNode::GetTitle() const
 {
    // Return title, taken from geo-node. Used via TObject.
@@ -79,6 +80,7 @@ const Text_t* TEveGeoNode::GetElementName()  const
    return fNode->GetName();
 }
 
+//______________________________________________________________________________
 const Text_t* TEveGeoNode::GetElementTitle() const
 {
    // Return title, taken from geo-node. Used via TEveElement.
@@ -88,6 +90,7 @@ const Text_t* TEveGeoNode::GetElementTitle() const
 
 /******************************************************************************/
 
+//______________________________________________________________________________
 void TEveGeoNode::ExpandIntoListTree(TGListTree* ltree,
                                      TGListTreeItem* parent)
 {
@@ -212,26 +215,28 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
 {
    // Export the node hierarchy into tree of TEveGeoShapeExtract objects.
 
+   static const TEveException eh("TEveGeoNode::DumpShapeTree ");
+
    printf("dump_shape_tree %s \n", geon->GetName());
    TGeoNode*   tnode   = 0;
    TGeoVolume* tvolume = 0;
    TGeoShape*  tshape  = 0;
 
    tnode = geon->GetNode();
-   if(tnode == 0) {
-      printf("Null node for %s; assuming it's a holder and descending.\n", geon->GetName());
-      goto do_dump;
+   if (tnode == 0)
+   {
+      Info(eh, "Null TGeoNode for TEveGeoNode '%s': assuming it's a holder and descending.", geon->GetName());
+   }
+   else
+   {
+      tvolume = tnode->GetVolume();
+      if (tvolume == 0) {
+         Warning(eh, "Null TGeoVolume for TEveGeoNode '%s'; skipping its sub-tree.\n", geon->GetName());
+         return 0;
+      }
+      tshape  = tvolume->GetShape();
    }
 
-   tvolume = tnode->GetVolume();
-   if(tvolume == 0) {
-      printf("Null volume for %s; skipping.\n", geon->GetName());
-      return 0;
-   }
-
-   tshape  = tvolume->GetShape();
-
-do_dump:
    // transformation
    TEveTrans trans;
    if (parent) if (parent) trans.SetFromArray(parent->GetTrans());
@@ -248,7 +253,7 @@ do_dump:
    TEveGeoShapeExtract* gse = new TEveGeoShapeExtract(geon->GetName(), geon->GetTitle());
    gse->SetTrans(trans.Array());
    Int_t ci = 0;
-   if(tvolume) ci = tvolume->GetLineColor();
+   if (tvolume) ci = tvolume->GetLineColor();
    TColor* c = gROOT->GetColor(ci);
    Float_t rgba[4] = {1, 0, 0, 1};
    if (c) {
@@ -258,32 +263,33 @@ do_dump:
    }
    gse->SetRGBA(rgba);
    Bool_t rnr = geon->GetRnrSelf();
-   if(level > gGeoManager->GetVisLevel())
+   if (level > gGeoManager->GetVisLevel())
       rnr = kFALSE;
    gse->SetRnrSelf(rnr);
    gse->SetRnrElements(geon->GetRnrChildren());
 
-   if(dynamic_cast<TGeoShapeAssembly*>(tshape)){
-      //    printf("<TGeoShapeAssembly \n");
+   if (dynamic_cast<TGeoShapeAssembly*>(tshape)) {
+      Info(eh, "TGeoShapeAssembly name='%s' encountered in traversal. This is not supported.", tshape->GetName());
       tshape = 0;
    }
    gse->SetShape(tshape);
-   level ++;
-   if ( geon->GetNChildren())
+   ++level;
+   if (geon->GetNChildren())
    {
       TList* ele = new TList();
       gse->SetElements(ele);
       gse->GetElements()->SetOwner(true);
 
       TEveElement::List_i i = geon->BeginChildren();
-      while (i != geon->EndChildren()) {
+      while (i != geon->EndChildren())
+      {
          TEveGeoNode* l = dynamic_cast<TEveGeoNode*>(*i);
          DumpShapeTree(l, gse, level+1);
-         i++;
+         ++i;
       }
    }
 
-   if(parent)
+   if (parent)
       parent->GetElements()->Add(gse);
 
    return gse;
@@ -390,8 +396,8 @@ void TEveGeoTopNode::VolumeVisChanged(TGeoVolume* volume)
 {
    // Callback for propagating volume visibility changes.
 
-   static const TEveException eH("TEveGeoTopNode::VolumeVisChanged ");
-   printf("%s volume %s %p\n", eH.Data(), volume->GetName(), (void*)volume);
+   static const TEveException eh("TEveGeoTopNode::VolumeVisChanged ");
+   printf("%s volume %s %p\n", eh.Data(), volume->GetName(), (void*)volume);
    UpdateVolume(volume);
 }
 
@@ -400,8 +406,8 @@ void TEveGeoTopNode::VolumeColChanged(TGeoVolume* volume)
 {
    // Callback for propagating volume parameter changes.
 
-   static const TEveException eH("TEveGeoTopNode::VolumeColChanged ");
-   printf("%s volume %s %p\n", eH.Data(), volume->GetName(), (void*)volume);
+   static const TEveException eh("TEveGeoTopNode::VolumeColChanged ");
+   printf("%s volume %s %p\n", eh.Data(), volume->GetName(), (void*)volume);
    UpdateVolume(volume);
 }
 
@@ -410,8 +416,8 @@ void TEveGeoTopNode::NodeVisChanged(TGeoNode* node)
 {
    // Callback for propagating node visibility changes.
 
-   static const TEveException eH("TEveGeoTopNode::NodeVisChanged ");
-   printf("%s node %s %p\n", eH.Data(), node->GetName(), (void*)node);
+   static const TEveException eh("TEveGeoTopNode::NodeVisChanged ");
+   printf("%s node %s %p\n", eh.Data(), node->GetName(), (void*)node);
    UpdateNode(node);
 }
 
@@ -474,8 +480,12 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
 {
    // Paint object.
 
+   static const TEveException eh("TEveGeoShape::Paint ");
+
    if (fShape == 0)
       return;
+
+   TEveGeoManagerHolder gmgr(0);
 
    TBuffer3D& buff = (TBuffer3D&) fShape->GetBuffer3D
       (TBuffer3D::kCore, kFALSE);
@@ -491,12 +501,15 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
    Int_t reqSec = gPad->GetViewer3D()->AddObject(buff);
 
    if (reqSec != TBuffer3D::kNone) {
+      // This shouldn't happen, but I suspect it does sometimes.
+      if (reqSec & TBuffer3D::kCore)
+         Warning(eh, "Core section required again for shape='%s'. This shouldn't happen.", GetName());
       fShape->GetBuffer3D(reqSec, kTRUE);
       reqSec = gPad->GetViewer3D()->AddObject(buff);
    }
 
    if (reqSec != TBuffer3D::kNone)
-      printf("spooky reqSec=%d for %s\n", reqSec, GetName());
+      Warning(eh, "Extra section required: reqSec=%d, shape=%s.", reqSec, GetName());
 }
 
 /******************************************************************************/
@@ -561,10 +574,9 @@ TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
 {
    // Import a shape extract 'gse' under element 'parent'.
 
-   gEve->DisableRedraw();
+   TEveManager::TRedrawDisabler redrawOff(gEve);
    TEveGeoShape* gsre = SubImportShapeExtract(gse, parent);
    gsre->ElementChanged();
-   gEve->EnableRedraw();
    return gsre;
 }
 

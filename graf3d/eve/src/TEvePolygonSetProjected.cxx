@@ -78,6 +78,20 @@ TEvePolygonSetProjected::~TEvePolygonSetProjected()
    ClearPolygonSet();
 }
 
+//______________________________________________________________________________
+void TEvePolygonSetProjected::SetMainColor(Color_t color)
+{
+   // Set main color.
+   // Override so that line-color can also be changed if it is equal
+   // to fill color (which is treated as main color).
+
+   if (fFillColor == fLineColor) {
+      fLineColor = color;
+      StampObjProps();
+   }
+   TEveElementList::SetMainColor(color);
+}
+
 /******************************************************************************/
 
 //______________________________________________________________________________

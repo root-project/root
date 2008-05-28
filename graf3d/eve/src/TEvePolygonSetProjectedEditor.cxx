@@ -91,6 +91,6 @@ void TEvePolygonSetProjectedEditor::DoLineColor(Pixel_t pixel)
 {
    // Slot for setting line color of polygon outline.
 
-   fPS->SetLineColor(pixel);
+   fPS->SetLineColor(TColor::GetColor(pixel));
    Update();
 }

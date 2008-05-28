@@ -517,7 +517,11 @@ Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
    {
       if (replace)
       {
-         delete pair->Value();
+         TEveElement* old_model = dynamic_cast<TEveElement*>(pair->Value());
+         old_model->DecDenyDestroy();
+         old_model->Destroy();
+         model->IncDenyDestroy();
+         model->SetRnrChildren(kFALSE);
          pair->SetValue(dynamic_cast<TObject*>(model));
          return kTRUE;
       }
@@ -528,6 +532,8 @@ Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
    }
    else
    {
+      model->IncDenyDestroy();
+      model->SetRnrChildren(kFALSE);
       fVizDB->Add(new TObjString(tag), dynamic_cast<TObject*>(model));
       return kTRUE;
    }

@@ -106,20 +106,23 @@ public:
    virtual void    DumpPolys() const;
    void            DumpBuffer3D();
 
-   //rendering
+
+   // Rendering parameters.
+
    virtual Bool_t  CanEditMainColor() const { return kTRUE; }
-   virtual Color_t GetLineColor()     const { return fLineColor; }
+   virtual void    SetMainColor(Color_t color);
 
    virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
    virtual UChar_t GetMainTransparency()     const { return fTransparency; }
    virtual void    SetMainTransparency(UChar_t t)  { fTransparency = t; }
 
-   virtual void    SetFillColor(Pixel_t pixel) { fFillColor = Color_t(TColor::GetColor(pixel));}
-   virtual void    SetLineColor(Pixel_t pixel) { fLineColor = Color_t(TColor::GetColor(pixel));}
+   virtual Color_t GetFillColor() const { return fFillColor; }
+   virtual Color_t GetLineColor() const { return fLineColor; }
+   virtual Float_t GetLineWidth() const { return fLineWidth;}
 
-   virtual void    SetFillColor(Color_t c)   { fFillColor = c; }
-   virtual void    SetLineColor(Color_t c)   { fLineColor = c; }
-   virtual void    SetLineWidth(Double_t lw) { fLineWidth = lw;}
+   virtual void    SetFillColor(Color_t c)  { fFillColor = c; }
+   virtual void    SetLineColor(Color_t c)  { fLineColor = c; }
+   virtual void    SetLineWidth(Float_t lw) { fLineWidth = lw;}
 
    ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
 

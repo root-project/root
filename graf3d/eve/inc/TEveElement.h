@@ -76,7 +76,8 @@ protected:
    List_t           fParents;              //  List of parents.
    List_t           fChildren;             //  List of children.
    TEveCompound    *fCompound;             //  Compound this object belongs to.
-   TString          fVizTag;           //  Tag describing the role of element.
+   TEveElement     *fVizModel;             //! Element used as model from VizDB.
+   TString          fVizTag;               //  Tag used to query VizDB for model element.
 
    Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
    Int_t            fDenyDestroy;          //  Deny-destroy count.
@@ -108,6 +109,9 @@ public:
 
    const TString& GetVizTag() const             { return fVizTag; }
    void           SetVizTag(const TString& tag) { fVizTag = tag;  }
+
+   TEveElement*   GetVizModel() const           { return fVizModel; }
+   void           SetVizModel(TEveElement* model);
 
    virtual void PropagateVizParamsToProjecteds();
    virtual void CopyVizParams(const TEveElement* el);

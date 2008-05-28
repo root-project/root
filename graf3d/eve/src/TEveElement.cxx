@@ -65,6 +65,7 @@ TEveElement::TEveElement() :
    fParents             (),
    fChildren            (),
    fCompound            (0),
+   fVizModel            (0),
    fVizTag              (),
    fDestroyOnZeroRefCnt (kTRUE),
    fDenyDestroy         (0),
@@ -91,6 +92,7 @@ TEveElement::TEveElement(Color_t& main_color) :
    fParents             (),
    fChildren            (),
    fCompound            (0),
+   fVizModel            (0),
    fVizTag              (),
    fDestroyOnZeroRefCnt (kTRUE),
    fDenyDestroy         (0),
@@ -207,9 +209,29 @@ void TEveElement::SetElementNameTitle(const Text_t* name, const Text_t* title)
 //******************************************************************************
 
 //______________________________________________________________________________
+void TEveElement::SetVizModel(TEveElement* model)
+{
+   // Set visualization-parameter model element.
+   // Direct calling of this function should in principle be avoided as
+   // it can lead to dissynchronization of viz-tag and viz-model.
+
+   if (fVizModel)
+      fVizModel->RemoveElement(this);
+   fVizModel = model;
+   if (fVizModel)
+      fVizModel->AddElement(this);
+}
+
+//______________________________________________________________________________
 void TEveElement::PropagateVizParamsToProjecteds()
 {
    // Propagate visualization parameters to dependent elements.
+   //
+   // MainColor is propagated independently in SetMainColor().
+   // In this case, as fMainColor is a pointer to Color_t, it should
+   // be set in TProperClass::CopyVizParams().
+   //
+   // Render state is not propagated. Maybe it should be, at least optionally.
 
    TEveProjectable* pable = dynamic_cast<TEveProjectable*>(this);
    if (pable && pable->HasProjecteds())
@@ -227,10 +249,7 @@ void TEveElement::CopyVizParams(const TEveElement* /* el */)
    // See, for example, TEvePointSet::CopyVizParams(),
    // TEveLine::CopyVizParams() and TEveTrack::CopyVizParams().
 
-   // Color is propagate in SetMainColor().
-   // Render state is not propagated. Maybe it should be, at least optionally.
-
-   StampObjProps();
+   AddStamp(kCBColorSelection | kCBObjProps);
 }
 
 //______________________________________________________________________________
@@ -242,7 +261,8 @@ void TEveElement::CopyVizParamsFromDB()
 
    TEveElement* model = gEve->FindVizDBEntry(fVizTag);
    if (model) {
-      CopyVizParams(model);
+      SetVizModel(model);
+      CopyVizParams(fVizModel);
    } else {
       Warning("TEveElement::CopyVizParamsFromDB",
               "Model element not found for tag '%s'.", fVizTag.Data());
