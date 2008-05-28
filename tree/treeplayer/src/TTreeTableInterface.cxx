@@ -362,13 +362,11 @@ const char *TTreeTableInterface::GetValueAsString(UInt_t row, UInt_t column)
    }
    if (column < fNColumns) {
       TTreeFormula *formula = (TTreeFormula *)fFormulas->At(column);
-      TString str;
       if(formula->IsString()) {
-         str.Form("%s", formula->EvalStringInstance());
+         return Form("%s", formula->EvalStringInstance());
       } else {
-         str.Form("%5.2f", (Double_t)formula->EvalInstance());
+         return Form("%5.2f", (Double_t)formula->EvalInstance());
       }
-      return str.Data();
    } else {
       Error("TTreeTableInterface", "Column requested does not exist");
       return 0;
@@ -381,9 +379,7 @@ const char *TTreeTableInterface::GetRowHeader(UInt_t row)
    // Return a string to use as a label for rowheader at column.
 
    if (row < fNRows) {
-      TString str;
-      str.Form("%d", fEntries->GetEntry(row));
-      return str.Data();
+      return Form("%d", fEntries->GetEntry(row));
    } else {
       Error("TTreeTableInterface", "Row requested does not exist");
       return "";

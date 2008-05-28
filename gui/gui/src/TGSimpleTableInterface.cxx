@@ -64,9 +64,7 @@ const char *TGSimpleTableInterface::GetValueAsString(UInt_t row, UInt_t column)
 
    // FIXME use template string for string format instead of hardcoded format
 
-   TString str;
-   str.Form("%5.2f", GetValue(row, column));
-   return str.Data();
+   return Form("%5.2f", GetValue(row, column));
 }
 
 //______________________________________________________________________________
@@ -74,9 +72,7 @@ const char *TGSimpleTableInterface::GetRowHeader(UInt_t row)
 {
    // Return a name for the header at row.
 
-   TString str("DRow ");
-   str += row;
-   return str.Data();
+   return Form("DRow %d", row);
 }
 
 //______________________________________________________________________________
@@ -84,7 +80,5 @@ const char *TGSimpleTableInterface::GetColumnHeader(UInt_t column)
 {
    // Return a name for the header at column.
 
-   TString str("DCol ");
-   str += column;
-   return str.Data();
+   return Form("DCol %d", column);
 }
