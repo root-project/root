@@ -37,6 +37,9 @@
 #include "TSystem.h"
 #include "TVirtualMonitoring.h"
 
+// One Gigabyte
+#define DSM_ONE_GB (1073741824)
+
 // Name for common datasets
 TString TProofDataSetManager::fgCommonDataSetTag = "COMMON";
 
@@ -91,9 +94,10 @@ TProofDataSetManager::TProofDataSetManager(const char *group, const char *user,
       if (!TestBit(TProofDataSetManager::kIsSandbox))
          fBase.SetUri(TString(Form("/%s/%s/", fGroup.Data(), fUser.Data())));
 
-      // Read config file
-      ReadGroupConfig(gEnv->GetValue("Proof.GroupFile", ""));
    }
+
+   // Read config file
+   ReadGroupConfig(gEnv->GetValue("Proof.GroupFile", ""));
 }
 
 //______________________________________________________________________________
@@ -253,6 +257,8 @@ Bool_t TProofDataSetManager::ReadGroupConfig(const char *cf)
             TString sdq;
             if (!line.Tokenize(sdq, from, " ")) // No token
                continue;
+            // Enforce GigaBytes as default
+            if (sdq.IsDigit()) sdq += "G";
             Long64_t quota = ToBytes(sdq);
             if (quota > -1) {
                fGroupQuota.Add(new TObjString(grp),
@@ -486,8 +492,8 @@ void TProofDataSetManager::ShowQuota(const char *opt)
       Long64_t groupUsed = GetGroupUsed(group->String());
 
       Printf(" +++ Group %s uses %.1f GB out of %.1f GB", group->String().Data(),
-                                        (Float_t) groupUsed / 1024 / 1024 / 1024,
-                                       (Float_t) groupQuota / 1024 / 1024 / 1024);
+                                        (Float_t) groupUsed / DSM_ONE_GB,
+                                       (Float_t) groupQuota / DSM_ONE_GB);
 
       // display also user information
       if (opt && !TString(opt).Contains("U", TString::kIgnoreCase))
@@ -506,7 +512,7 @@ void TProofDataSetManager::ShowQuota(const char *opt)
             continue;
 
          Printf(" +++  User %s uses %.1f GB", user->String().Data(),
-                                  (Float_t) size2->GetVal() / 1024 / 1024 / 1024);
+                                  (Float_t) size2->GetVal() / DSM_ONE_GB);
       }
 
       Printf("------------------------------------------------------");
@@ -535,7 +541,7 @@ void TProofDataSetManager::PrintUsedSpace()
 
       if (userMap && size) {
          Printf("Group %s: %lld B = %.2f GB", group->String().Data(), size->GetVal(),
-                                      (Float_t) size->GetVal() / 1024 / 1024 / 1024);
+                                      (Float_t) size->GetVal() / DSM_ONE_GB);
 
          TIter iter2(userMap);
          TObjString *user = 0;
@@ -544,7 +550,7 @@ void TProofDataSetManager::PrintUsedSpace()
                dynamic_cast<TParameter<Long64_t>*> (userMap->GetValue(user->String().Data()));
             if (size2)
                Printf("  User %s: %lld B = %.2f GB", user->String().Data(), size2->GetVal(),
-                                            (Float_t) size2->GetVal() / 1024 / 1024 / 1024);
+                                            (Float_t) size2->GetVal() / DSM_ONE_GB);
          }
 
          Printf("------------------------------------------------------");
