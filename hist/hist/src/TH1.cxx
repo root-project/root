@@ -6041,12 +6041,17 @@ void TH1::Reset(Option_t *option)
    //               ===========================================
    //
    // if option "ICE" is specified, resets only Integral, Contents and Errors.
+   // if option "M"   is specified, resets also Minimum and Maximum
 
    TString opt = option;
    opt.ToUpper();
    fSumw2.Reset();
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
 
+   if (opt.Contains("M")) {
+      SetMinimum();
+      SetMaximum();
+   }
    if (opt.Contains("ICE")) return;
    if (fBuffer) BufferEmpty();
    fTsumw       = 0;
