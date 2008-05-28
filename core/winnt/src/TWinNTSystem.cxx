@@ -780,7 +780,7 @@ namespace {
             DWORD dwType;
             DWORD dwSize = sizeof(bufIconLoc);
 
-            if (::RegQueryValueEx(regROOTIcon, NULL, NULL, &dwType, (BYTE*)bufIconLoc, &dwSize))
+            if (::RegQueryValueEx(regROOTIcon, NULL, NULL, &dwType, (BYTE*)bufIconLoc, &dwSize) == ERROR_SUCCESS)
                regROOTwrite = (iconloc != bufIconLoc);
             else
                regROOTwrite = true;
