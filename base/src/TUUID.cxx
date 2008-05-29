@@ -384,7 +384,6 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
 #else
    struct timeval tp;
    gettimeofday(&tp, 0);
-#ifdef R__LONGLONG
    // Offset between UUID formatted times and Unix formatted times.
    // UUID UTC base time is October 15, 1582.
    // Unix base time is January 1, 1970.
@@ -392,10 +391,6 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
                          R__LL(0x01B21DD213814000);
    timestamp->high = (UInt_t) (uuid_time >> 32);
    timestamp->low  = (UInt_t) (uuid_time & 0xFFFFFFFF);
-#else
-   timestamp->high = tp.tv_sec;
-   timestamp->low  = tp.tv_usec * 10;
-#endif
 #endif
 }
 
@@ -628,7 +623,7 @@ TDatime TUUID::GetTime() const
    ts.low   = fTimeLow;
    ts.high  = (UInt_t)fTimeMid;
    ts.high |= (UInt_t)((fTimeHiAndVersion & 0x0FFF) << 16);
-#ifdef R__LONGLONG
+
    // Offset between UUID formatted times and Unix formatted times.
    // UUID UTC base time is October 15, 1582.
    // Unix base time is January 1, 1970.
@@ -638,9 +633,7 @@ TDatime TUUID::GetTime() const
    uuid_time /= R__LL(10000000);
    UInt_t tt = (UInt_t) uuid_time;
    dt.Set(tt);
-#else
-   Warning("GetTime", "no long long support, return current time");
-#endif
+
    return dt;
 }
 
