@@ -149,7 +149,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
    // otherwise only deal with default ctor
 
       if ( klass->GetClassInfo() != 0 ) {
-         Long_t tagnum = klass->GetClassInfo()->Tagnum();
+         Long_t tagnum = ((G__ClassInfo*)klass->GetClassInfo())->Tagnum();
 
       // data storage for an object of this class
          address = (Long_t)new char[ klass->Size() ];

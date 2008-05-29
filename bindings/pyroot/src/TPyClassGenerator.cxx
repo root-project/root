@@ -130,7 +130,7 @@ namespace {
       res->obj.i  = (Long_t)retval;
       res->ref    = (Long_t)retval;
       res->type   = 'u';
-      res->tagnum = TPyReturn::Class()->GetClassInfo()->Tagnum();
+      res->tagnum = ((G__ClassInfo*)TPyReturn::Class()->GetClassInfo())->Tagnum();
 
       return ( 1 || hash || res || libp );
    }

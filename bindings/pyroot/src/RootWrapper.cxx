@@ -98,7 +98,7 @@ namespace {
    Long_t GetDataMemberAddress( TClass* klass, TDataMember* mb )
    {
       Long_t offset = 0;
-      G__DataMemberInfo dmi = klass->GetClassInfo()->GetDataMember( mb->GetName(), &offset );
+      G__DataMemberInfo dmi = ((G__ClassInfo*)klass->GetClassInfo())->GetDataMember( mb->GetName(), &offset );
       return dmi.Offset();
    }
 
@@ -745,7 +745,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
        //   Long_t offset = clActual->GetBaseClassOffset( klass );
          Long_t offset;
          if (klass->GetClassInfo() &&  clActual->GetClassInfo()) {
-            offset = G__isanybase(klass->GetClassInfo()->Tagnum(), clActual->GetClassInfo()->Tagnum(), (Long_t)address );
+            offset = G__isanybase(((G__ClassInfo*)klass->GetClassInfo())->Tagnum(), ((G__ClassInfo*)clActual->GetClassInfo())->Tagnum(), (Long_t)address );
          } else {
             offset = clActual->GetBaseClassOffset( klass ); 
          }

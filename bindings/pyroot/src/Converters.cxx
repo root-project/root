@@ -714,8 +714,8 @@ Bool_t PyROOT::TRootObjectConverter::SetArg( PyObject* pyobject, TParameter& par
 
    // calculate offset between formal and actual arguments
       para.fv = pyobj->GetObject();
-      G__ClassInfo* clFormalInfo = fClass->GetClassInfo();
-      G__ClassInfo* clActualInfo = pyobj->ObjectIsA()->GetClassInfo();
+      G__ClassInfo* clFormalInfo = (G__ClassInfo*)fClass->GetClassInfo();
+      G__ClassInfo* clActualInfo = (G__ClassInfo*)pyobj->ObjectIsA()->GetClassInfo();
       Long_t offset = 0;
       if ( clFormalInfo && clActualInfo && clFormalInfo != clActualInfo )
          offset = G__isanybase( clFormalInfo->Tagnum(), clActualInfo->Tagnum(), para.fl );

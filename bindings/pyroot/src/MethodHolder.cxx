@@ -189,7 +189,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
    fMethodCall = new G__CallFunc();
    fMethodCall->Init();
 
-   G__ClassInfo* gcl = ((TClass*)fClass.Id())->GetClassInfo();
+   G__ClassInfo* gcl = (G__ClassInfo*)((TClass*)fClass.Id())->GetClassInfo();
    if ( ! gcl )
       gcl = GetGlobalNamespaceInfo();
 
@@ -603,8 +603,8 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
    TClass* klass = self->ObjectIsA();
    if ( klass ) {             // TODO: check should not be needed; only for Reflex, which'll fail
    // reset this method's offset for the object as appropriate
-      int objTag  = klass->GetClassInfo()  ? klass->GetClassInfo()->Tagnum()  : -1;   // derived
-      G__ClassInfo* cli = ((TClass*)fClass.Id())->GetClassInfo();
+      int objTag  = (G__ClassInfo*)klass->GetClassInfo()  ? ((G__ClassInfo*)klass->GetClassInfo())->Tagnum()  : -1;   // derived
+      G__ClassInfo* cli = (G__ClassInfo*)((TClass*)fClass.Id())->GetClassInfo();
       int methTag = cli ? cli->Tagnum() : -1;                                         // base
       fOffset = objTag == methTag ? 0 : G__isanybase( methTag, objTag, (Long_t)object );
    }

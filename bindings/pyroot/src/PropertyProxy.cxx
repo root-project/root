@@ -178,8 +178,8 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    fName      = dm->GetName();
 
    if ( dm->GetClass()->GetClassInfo() ) {
-      fOwnerTagnum = dm->GetClass()->GetClassInfo()->Tagnum();
-      fOwnerIsNamespace = dm->GetClass()->GetClassInfo()->Property() & G__BIT_ISNAMESPACE;
+      fOwnerTagnum = ((G__ClassInfo*)dm->GetClass()->GetClassInfo())->Tagnum();
+      fOwnerIsNamespace = ((G__ClassInfo*)dm->GetClass()->GetClassInfo())->Property() & G__BIT_ISNAMESPACE;
    }
 }
 
@@ -246,7 +246,7 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 
    Long_t offset = 0;
    if ( 0 < fOwnerTagnum ) {
-      Int_t realTagnum = pyobj->ObjectIsA()->GetClassInfo()->Tagnum();
+      Int_t realTagnum = ((G__ClassInfo*)pyobj->ObjectIsA()->GetClassInfo())->Tagnum();
       if ( fOwnerTagnum != realTagnum )
          offset = G__isanybase( fOwnerTagnum, realTagnum, (Long_t)obj );
    }

@@ -258,7 +258,7 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
    }
 
    if ( mod & ( ROOT::Reflex::FINAL | ROOT::Reflex::F ) ) {
-      G__ClassInfo* clInfo = fClass->GetClassInfo();
+      G__ClassInfo* clInfo = (G__ClassInfo*)fClass->GetClassInfo();
       if ( mod & ( ROOT::Reflex::SCOPED | ROOT::Reflex::S ) )
          return clInfo ? clInfo->Fullname() : fClass->GetName();
 
@@ -277,7 +277,7 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
       return actual;
 
    } else if ( ! ( mod & ( ROOT::Reflex::SCOPED | ROOT::Reflex::S ) ) ) {
-      G__ClassInfo* clInfo = fClass->GetClassInfo();
+      G__ClassInfo* clInfo = (G__ClassInfo*)fClass->GetClassInfo();
       return clInfo ? clInfo->Name() : fClass->GetName();
    }
 
