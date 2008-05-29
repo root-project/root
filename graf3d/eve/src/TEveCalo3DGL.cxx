@@ -307,9 +307,7 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    {
       fM->ResetCache();
       fM->fData->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                             0.5f*(fM->fEtaMin + fM->fEtaMax),
-                             fM->fEtaMax - fM->fEtaMin,
-                             fM->fPhi, fM->fPhiRng, fM->fCellList);
+                             fM->GetEta(), fM->GetEtaRng(), fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
       fM->fCacheOK= kTRUE;
    }
 

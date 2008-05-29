@@ -23,6 +23,7 @@
 #include "TBuffer3DTypes.h"
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
+#include "TAxis.h"
 
 #include "TGLUtil.h"
 
@@ -41,10 +42,8 @@ TEveCaloViz::TEveCaloViz(const Text_t* n, const Text_t* t) :
 
    fData(0),
 
-   fEtaLowLimit(-5.f),
-   fEtaHighLimit(5.f),
-   fEtaMin(fEtaLowLimit),
-   fEtaMax(fEtaHighLimit),
+   fEtaMin(-1),
+   fEtaMax(1),
 
    fPhi(0.),
    fPhiRng(TMath::Pi()),
@@ -71,10 +70,8 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
 
    fData(0),
 
-   fEtaLowLimit(-5.f),
-   fEtaHighLimit(5.f),
-   fEtaMin(fEtaLowLimit),
-   fEtaMax(fEtaHighLimit),
+   fEtaMin(-1),
+   fEtaMax(1),
 
    fPhi(0.),
    fPhiRng(TMath::Pi()),
@@ -104,6 +101,33 @@ TEveCaloViz::~TEveCaloViz()
 }
 
 //______________________________________________________________________________
+void TEveCaloViz::SetEta(Float_t l, Float_t u)
+{
+   // Set eta range.
+
+   fEtaMin=l;
+   fEtaMax=u;
+
+   if(fData && fData->GetEtaBins())
+         fData->GetEtaBins()->SetRangeUser(l, u);
+
+   InvalidateCache();
+}
+
+ //______________________________________________________________________________
+void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
+{
+   // Set phi range.
+
+   using namespace TMath;
+
+   fPhi = phi;
+   fPhiRng = rng;
+
+   InvalidateCache();
+}
+
+//______________________________________________________________________________
 Float_t TEveCaloViz::GetTransitionTheta() const
 {
    // Get transition angle between barrel and end-cap cells.
@@ -130,6 +154,14 @@ void TEveCaloViz::SetData(TEveCaloData* data)
    if (fData) fData->DecRefCount();
    fData = data;
    if (fData) fData->IncRefCount();
+
+
+   fData->GetEtaLimits(fEtaMin, fEtaMax);
+   Double_t min, max;
+   fData->GetPhiLimits(min, max);
+   fPhi = (max+min)*0.5;
+   fPhiRng =(max-min)*0.5;
+
    InvalidateCache();
 }
 
@@ -142,8 +174,6 @@ void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
 
    fEtaMin    = m->fEtaMin;
    fEtaMax    = m->fEtaMax;
-   fEtaLowLimit = m->fEtaLowLimit;
-   fEtaHighLimit = m->fEtaHighLimit;
 
    fPhi       = m->fPhi;
    fPhiRng    = m->fPhiRng;
@@ -390,7 +420,10 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
    fBinWidth(5),
 
    fProjection(kAuto),
-   f2DMode(kValColor)
+   f2DMode(kValColor),
+
+   fDrawHPlane(kFALSE),
+   fHPlaneVal(0)
 {
    // Constructor.
 
@@ -399,7 +432,7 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
 
 //______________________________________________________________________________
 TEveCaloLego::TEveCaloLego(TEveCaloData* data):
-   TEveCaloViz(data),
+   TEveCaloViz(),
 
    fFontColor(0),
    fGridColor(kGray+3),
@@ -414,19 +447,15 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    fProjection(kAuto),
    f2DMode(kValColor),
 
-   fBoxMode(kBack)
+   fBoxMode(kBack),
+
+   fDrawHPlane(kFALSE),
+   fHPlaneVal(0)
 {
    // Constructor.
 
    SetElementNameTitle("TEveCaloLego", "TEveCaloLego");
-}
-
-//______________________________________________________________________________
-Int_t TEveCaloLego::GetAxisStep(Float_t max) const
-{
-   // Returns reasonable step between two axis labels.
-
-   return 5*TMath::CeilNint(max*1.f/(fNZSteps*5));
+   SetData(data);
 }
 
 //______________________________________________________________________________
@@ -453,12 +482,22 @@ void TEveCaloLego::ComputeBBox()
 
    BBoxInit();
 
-   fBBox[0] = 1.2f*fEtaMin;
-   fBBox[1] = 1.2f*fEtaMax;
+   // Float_t[6] X(min,max), Y(min,max), Z(min,max)
+   if (fData)
+   {
+      Float_t ex = 1.2;
 
-   fBBox[2] = fPhi - 1.2f*fPhiRng;
-   fBBox[3] = fPhi + 1.2f*fPhiRng;
+      Double_t em, eM, pm, pM;
+      fData->GetEtaLimits(em, eM);
+      fData->GetPhiLimits(pm, pM);
 
-   fBBox[4] = -GetDefaultCellHeight()*fCellZScale*0.2;
-   fBBox[5] =  GetDefaultCellHeight()*fCellZScale*1.2;
+      fBBox[0] = ex*em;
+      fBBox[1] = ex*eM;
+
+      fBBox[2] = ex*pm;
+      fBBox[3] = ex*pM;
+
+      fBBox[4] = -GetDefaultCellHeight()*fCellZScale*0.2;
+      fBBox[5] =  GetDefaultCellHeight()*fCellZScale*1.2;
+   }
 }

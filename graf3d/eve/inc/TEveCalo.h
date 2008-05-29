@@ -38,13 +38,11 @@ private:
 protected:
    TEveCaloData* fData;  // event data reference
 
-   Float_t      fEtaLowLimit;
-   Float_t      fEtaHighLimit;
-   Float_t      fEtaMin;
-   Float_t      fEtaMax;
+   Double_t      fEtaMin;
+   Double_t      fEtaMax;
 
-   Float_t      fPhi;
-   Float_t      fPhiRng;
+   Double_t      fPhi;
+   Double_t      fPhiRng;
 
    Float_t      fBarrelRadius;  // barrel raidus in cm
    Float_t      fEndCapPos;     // end cap z coordinate in cm
@@ -87,12 +85,19 @@ public:
    TEveRGBAPalette* AssertPalette();
 
 
-   void SetEta(Float_t l, Float_t u) { fEtaMin=l; fEtaMax=u; InvalidateCache(); }
-   void SetEtaLimits(Float_t l, Float_t h) { fEtaLowLimit=l; fEtaHighLimit =h; InvalidateCache(); }
+   void SetEta(Float_t l, Float_t u);
+   Float_t GetEta() const { return (fEtaMin+fEtaMax)*0.5f;}
+   Float_t GetEtaMin() const {return fEtaMin;}
+   Float_t GetEtaMax() const {return fEtaMax;}
+   Float_t GetEtaRng() const {return fEtaMax-fEtaMin;}
 
-   void SetPhi(Float_t x)    { fPhi    = x; InvalidateCache(); }
-   void SetPhiRng(Float_t r) { fPhiRng = r; InvalidateCache(); }
-   void SetPhiWithRng(Float_t x, Float_t r) { fPhi = x; fPhiRng = r; InvalidateCache(); }
+   virtual void SetPhi(Float_t phi)    { SetPhiWithRng(phi, fPhiRng); }
+   virtual void SetPhiRng(Float_t rng) { SetPhiWithRng(fPhi, rng); }
+   virtual void SetPhiWithRng(Float_t x, Float_t r);
+   Float_t GetPhi() const { return fPhi;}
+   Float_t GetPhiMin() const {return fPhi-fPhiRng;}
+   Float_t GetPhiMax() const {return fPhi+fPhiRng;}
+   Float_t GetPhiRng() const {return fPhiRng;}
 
 
    virtual void ResetCache() = 0;
@@ -194,14 +199,11 @@ protected:
    Bool_t                  fDrawHPlane;
    Float_t                 fHPlaneVal;
 
-
 public:
    TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");
    TEveCaloLego(TEveCaloData* data);
 
    virtual ~TEveCaloLego(){}
-
-   Int_t  GetAxisStep(Float_t max) const;
 
    Color_t  GetFontColor() const { return fFontColor; }
    void     SetFontColor(Color_t ci) { fFontColor=ci; }

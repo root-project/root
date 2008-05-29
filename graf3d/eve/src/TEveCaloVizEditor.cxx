@@ -101,7 +101,9 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
 
    fM = dynamic_cast<TEveCaloViz*>(obj);
 
-   fEtaRng->SetLimits(fM->fEtaLowLimit, fM->fEtaHighLimit);
+   Double_t min, max;
+   fM->GetData()->GetEtaLimits(min, max);
+   fEtaRng->SetLimits((Float_t)min, (Float_t)max);
    fEtaRng->SetValues(fM->fEtaMin, fM->fEtaMax);
 
    fPhi->SetValue(fM->fPhi*TMath::RadToDeg());

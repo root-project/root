@@ -53,11 +53,12 @@ void TEveCaloData::CellData_t::Configure(Float_t v, Float_t e1, Float_t e2, Floa
       fZSideSign = 1;
    }
 
-   fPhiMin = p1;
-   fPhiMax = p2;
 
    fEtaMin = e1;
    fEtaMax = e2;
+
+   fPhiMin = p1;
+   fPhiMax = p2;
 
    fValue  = v;
 }
@@ -106,33 +107,10 @@ Int_t TEveCaloDataHist::GetCellList(Float_t minVal, Float_t maxVal,
 
    using namespace TMath;
 
-   etaD *= 1.01f;
-   phiD *= 1.01f;
-
-   // eta interval
-   Float_t etaMin = eta - etaD*0.5f;
-   Float_t etaMax = eta + etaD*0.5f;
-
-   // phi interval
-   Float_t pr[4];
-   Float_t phi1  = phi - phiD;
-   Float_t phi2  = phi + phiD;
-   if (phi2 >TMath::Pi() && phi1>-Pi()) {
-      pr[0] =  phi1;
-      pr[1] =  Pi();
-      pr[2] =  -Pi();
-      pr[3] =  -TwoPi()+phi2;
-   }
-   else if (phi1<-TMath::Pi() && phi2<=Pi()) {
-      pr[0] = -Pi();
-      pr[1] =  phi2;
-      pr[2] =  TwoPi()+phi1;
-      pr[3] =  Pi();
-   }
-   else {
-      pr[0] = pr[2] = phi1;
-      pr[1] = pr[3] = phi2;
-   }
+   Float_t phiMin = phi - phiD;
+   Float_t phiMax = phi + phiD;
+   Float_t etaMin = eta - etaD;
+   Float_t etaMax = eta + etaD;
 
    TH2F *hist0 = (TH2F*)fHStack->GetStack()->At(0);
    TAxis *ax = hist0->GetXaxis();
@@ -141,23 +119,48 @@ Int_t TEveCaloDataHist::GetCellList(Float_t minVal, Float_t maxVal,
 
    Int_t bin = 0;
    Float_t val = 0;
-   for (Int_t ieta=0; ieta<ax->GetNbins(); ieta++) {
-      for (Int_t iphi=0; iphi<ay->GetNbins(); iphi++)  {
-         if ( ax->GetBinLowEdge(ieta)   >= etaMin
-              && ax->GetBinUpEdge(ieta) <  etaMax
-              && ((ay->GetBinLowEdge(iphi)>=pr[0] && ay->GetBinUpEdge(iphi)<pr[1])
-                  || (ay->GetBinLowEdge(iphi)>=pr[2] && ay->GetBinUpEdge(iphi)<pr[3])))
+   Double_t phi0, phi1;
+   Bool_t phiInside;
+   for (Int_t ieta=1; ieta<=ax->GetNbins(); ieta++) {
+      for (Int_t iphi=1; iphi<=ay->GetNbins(); iphi++)  {
+         if ( ax->GetBinLowEdge(ieta)>=etaMin && ax->GetBinUpEdge(ieta)<=etaMax)
          {
-            TIter next(fHStack->GetHists());
-            Int_t slice = 0;
-            bin = hist0->GetBin(ieta, iphi);
-            while ((hist = (TH2F*) next()) != 0) {
-               val = hist->GetBinContent(bin);
-               if (val>fThreshold && val>minVal && val<=maxVal)
-               {
-                  out.push_back(TEveCaloData::CellId_t(bin, slice));
+            phiInside = kFALSE;
+            phi0 = ay->GetBinLowEdge(iphi);
+            phi1 = ay->GetBinUpEdge(iphi);
+
+            if ( phi0>=phiMin && phi1 <=phiMax)
+            {
+               phiInside = kTRUE;
+            }
+            else if (phiMax>Pi() && phi1<phiMin)
+            {
+               phi0 += TwoPi();
+               phi1 += TwoPi();
+               if (phi0>phiMin && phi1<phiMax)
+                  phiInside = kTRUE;
+            }
+            else if (phiMin<-Pi() && phi0>phiMax)
+            {
+               phi0 -= TwoPi();
+               phi1 -= TwoPi();
+               if (phi0>=phiMin && phi1<=phiMax)
+                  phiInside = kTRUE;
+            }
+
+            if (phiInside)
+            {
+               TIter next(fHStack->GetHists());
+               Int_t slice = 0;
+               bin = hist0->GetBin(ieta, iphi);
+               while ((hist = (TH2F*) next()) != 0) {
+                  val = hist->GetBinContent(bin);
+                  if (val>fThreshold && val>minVal && val<=maxVal)
+                  {
+                     out.push_back(TEveCaloData::CellId_t(bin, slice));
+                  }
+                  slice++;
                }
-               slice++;
             }
          }
       }
@@ -180,6 +183,43 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloDat
                       hist->GetXaxis()->GetBinUpEdge(x),
                       hist->GetYaxis()->GetBinLowEdge(y),
                       hist->GetYaxis()->GetBinUpEdge(y));
+}
+
+//______________________________________________________________________________
+void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, Float_t phi, Float_t phiRng,
+                                   TEveCaloData::CellData_t& cellData)
+{
+   // Get cell geometry and value from cell ID.
+   // Respect external phi range shifted for a given phi.
+
+   using namespace TMath;
+
+   Float_t phiMin = phi-phiRng;
+   Float_t phiMax = phi+phiRng;
+
+   TH2F* hist  = (TH2F*) (fHStack->GetHists()->At(id.fSlice));
+
+   Int_t x, y, z;
+   hist->GetBinXYZ(id.fTower, x, y, z);
+
+   Float_t phi1 = hist->GetYaxis()->GetBinLowEdge(y);
+   Float_t phi2 = hist->GetYaxis()->GetBinUpEdge(y);
+
+   if (phiMax>Pi() && phi2<=phiMin)
+   {
+      phi1 += TwoPi();
+      phi2 += TwoPi();
+   }
+   else if (phiMin<-Pi() && phi1>=phiMax)
+   {
+      phi1 -= TwoPi();
+      phi2 -= TwoPi();
+   }
+
+   cellData.Configure(hist->GetBinContent(id.fTower),
+                      hist->GetXaxis()->GetBinLowEdge(x),
+                      hist->GetXaxis()->GetBinUpEdge(x),
+                      phi1, phi2);
 }
 
 //______________________________________________________________________________
@@ -207,7 +247,27 @@ Float_t TEveCaloDataHist::GetMaxVal() const
 }
 
 //______________________________________________________________________________
-const TAxis* TEveCaloDataHist::GetEtaBins()
+void TEveCaloDataHist::GetEtaLimits(Double_t &min, Double_t &max) const
+{
+   // Get eta limits.
+
+   TH2F* hist  = (TH2F*) (fHStack->GetHists()->At(0));
+   min = hist->GetXaxis()->GetXmin();
+   max = hist->GetXaxis()->GetXmax();
+}
+
+//______________________________________________________________________________
+void TEveCaloDataHist::GetPhiLimits(Double_t &min, Double_t &max) const
+{
+   // Get phi limits.
+
+   TH2F* hist  = (TH2F*) (fHStack->GetHists()->At(0));
+   min = hist->GetYaxis()->GetXmin();
+   max = hist->GetYaxis()->GetXmax();
+}
+
+//______________________________________________________________________________
+TAxis* TEveCaloDataHist::GetEtaBins()
 {
    // Get eta axis.
 
@@ -216,7 +276,7 @@ const TAxis* TEveCaloDataHist::GetEtaBins()
 }
 
 //______________________________________________________________________________
-const TAxis* TEveCaloDataHist::GetPhiBins()
+TAxis* TEveCaloDataHist::GetPhiBins()
 {
    // Get phi axis.
 

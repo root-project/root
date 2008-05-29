@@ -89,19 +89,23 @@ public:
                              Float_t etaMin, Float_t etaMax,
                              Float_t phi, Float_t phiRng, vCellId_t &out) = 0;
 
-   virtual void  GetCellData(const CellId_t &id, CellData_t& data) = 0;
+   virtual void GetCellData(const CellId_t &id, CellData_t& data) = 0;
+   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) = 0;
 
    virtual Int_t GetNSlices() const = 0;
 
    virtual Float_t  GetMaxVal() const = 0;
+
+   virtual void  GetEtaLimits(Double_t &min, Double_t &max) const=0;
+   virtual void  GetPhiLimits(Double_t &min, Double_t &max) const=0;
 
    Float_t GetThreshold() {return fThreshold;}
    void    SetThreshold(Float_t t) {fThreshold = t;}
 
    virtual Bool_t SupportsEtaBinning(){ return kFALSE; }
    virtual Bool_t SupportsPhiBinning(){ return kFALSE; }
-   virtual const TAxis* GetEtaBins(){ return 0 ;}
-   virtual const TAxis* GetPhiBins(){ return 0 ;}
+   virtual TAxis* GetEtaBins(){ return 0 ;}
+   virtual TAxis* GetPhiBins(){ return 0 ;}
 
    ClassDef(TEveCaloData, 0); // Manages calorimeter event data.
 };
@@ -127,10 +131,13 @@ public:
                              Float_t phi, Float_t phiRng, vCellId_t &out);
 
    virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data);
+   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data);
 
    virtual Int_t GetNSlices() const;
 
-   virtual Float_t  GetMaxVal() const;
+   virtual Float_t GetMaxVal() const;
+   virtual void    GetEtaLimits(Double_t &min, Double_t &max) const;
+   virtual void    GetPhiLimits(Double_t &min, Double_t &max) const;
 
    virtual Bool_t SupportsEtaBinning(){ return kTRUE; }
    virtual Bool_t SupportsPhiBinning(){ return kTRUE; }
@@ -138,8 +145,8 @@ public:
    void   AddHistogram(TH2F* hist);
    const  TH2F*  GetHistogram(Int_t slice);
 
-   const TAxis* GetEtaBins();
-   const TAxis* GetPhiBins();
+   TAxis* GetEtaBins();
+   TAxis* GetPhiBins();
 
    ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.
 };

@@ -20,6 +20,9 @@
 #include <TGLUtil.h>
 #include <TGLCamera.h>
 
+#include <THLimitsFinder.h>
+
+
 //______________________________________________________________________________
 //
 //
@@ -74,25 +77,10 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
 {
    // Draw slider and calorimeter Z scale on left side of screen.
 
-   Float_t w = fButtonW*fMenuW*0.5f;
-   glTranslatef(0, fSliderPosY, 0);
+   TGLUtil::Color(fCalo->GetFontColor());
+   Float_t off = -0.01; 
 
-   Int_t tickval = fCalo->GetAxisStep(fCalo->GetData()->GetMaxVal());
-   Float_t scale = fSliderH/(fCalo->GetNZSteps()*tickval);
-   // event handling
-   if ( rnrCtx.Selection())
-   {
-      TGLUtil::Color(2);
-      glLoadName(2);
-      glBegin(GL_QUADS);
-      glVertex2f(-w, 0);
-      glVertex2f( w, 0);
-      glVertex2f( w, fSliderH);
-      glVertex2f(-w, fSliderH);
-      glEnd();
-   }
-
-   // labels
+   // font
    TGLRect& wprt = rnrCtx.RefCamera().RefViewport();
    Float_t cfs =   wprt.Height()*fSliderH*0.07;
    Int_t fs = TGLFontManager::GetFontSize(cfs);
@@ -106,45 +94,86 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
       rnrCtx.RegisterFont(fs, "arial",  TGLFont::kPixmap, fNumFont);
    }
 
-   TGLUtil::Color(fCalo->GetFontColor());
-   Float_t off = -0.008;
+   // optimize binning
+   Float_t w = fButtonW*fMenuW*0.5f;
+   glTranslatef(0, fSliderPosY, 0);
+   Int_t nsteps, ndiv;
+   Double_t omin, omax, zmax, tickval;
+   THLimitsFinder::Optimize(0, fCalo->GetData()->GetMaxVal(), fCalo->GetNZSteps(), omin, omax, ndiv, tickval);
+   nsteps = ndiv+1;
+   zmax = nsteps*tickval;
+   
+   // labels
    fNumFont.PreRender(kFALSE);
-   Int_t val = 0;
    glPushMatrix();
    glTranslatef(3*off, 0, 0);
-   for(Int_t i=0; i<=fCalo->GetNZSteps(); i++)
+   glScalef(1, fSliderH/zmax , 1.);
+   Double_t val = 0;
+   for(Int_t i=0; i<=nsteps; i++)
    {
-      RenderText(Form("%d", val), val*scale);
+      RenderText(TEveUtil::FormAxisValue(val), val);
       val+= tickval;
    }
    glPopMatrix();
    fNumFont.PostRender();
 
-   // tick-marks
-   Int_t nt = 5*fCalo->GetNZSteps();
-   Float_t tmStep =  fSliderH/nt;
 
-   glLineWidth(2);
-   glBegin(GL_LINES);
-   glVertex2f(0, 0);
-   glVertex2f(0, tickval*scale*fCalo->GetNZSteps());
-   glEnd();
+  // event handling
+   if (rnrCtx.Selection())
+   {
+      glLoadName(2);
+      glBegin(GL_QUADS);
+      glVertex2f(-w, 0);
+      glVertex2f( w, 0);
+      glVertex2f( w, fSliderH);
+      glVertex2f(-w, fSliderH);
+      glEnd();
+   }
 
+
+   glPushMatrix();
+   glScalef(1, fSliderH/zmax , 1.);
+
+   // body
    glLineWidth(1);
    glBegin(GL_LINES);
-   for (Int_t i = 0; i <= nt; ++i)
+   glVertex2f(0, 0);
+   glVertex2f(0, zmax);
+   // primary tick-marks
+   Double_t tv1= 0;
+   for (Int_t i = 0; i <= nsteps; ++i)
    {
-      glVertex2f(0,  i*tmStep);
-      glVertex2f((i % 5) ? off :2*off,  i*tmStep);
+      glVertex2d(0,  tv1);
+      glVertex2d(2*off , tv1);
+      tv1+= tickval;
+   }
+
+   // secondary tick-marks
+   Double_t omin2, zmax2, tickval2;
+   Int_t nsteps2;
+   THLimitsFinder::Optimize(0, tickval, fCalo->GetNZSteps(), omin2, zmax2, nsteps2, tickval2);
+   Int_t nt2 = Int_t(zmax/tickval2);
+   Float_t step2 = zmax/nt2;
+
+   Double_t tv2= 0;
+   for (Int_t i = 0; i <= nt2; ++i)
+   {
+      glVertex2d(0,  tv2);
+      glVertex2d(off , tv2);
+      tv2+= step2;
    }
    glEnd();
+
+   glPopMatrix();
+   
 
    // marker
    TGLUtil::Color((fActiveID == 2) ? fActiveCol : 3);
    glPointSize(8);
    glBegin(GL_POINTS);
    glVertex3f(0, fSliderVal*fSliderH, -0.1);
-   glEnd();
+   glEnd(); 
+
 }
 
 /******************************************************************************/
