@@ -393,7 +393,7 @@ static int G__debug_compiledfunc_arg(FILE* fout, const ::Reflex::Member& ifunc, 
 }
 
 //______________________________________________________________________________
-int Cint::Internal::G__call_cppfunc(G__value* return_value, G__param* libp, const ::Reflex::Member& ifunc)
+int Cint::Internal::G__call_cppfunc(G__value* return_value, G__param* libp, const ::Reflex::Member ifunc)
 {
    // -- Calling C++ compiled function.
    int result = 0;
@@ -6664,307 +6664,284 @@ extern "C" int G__tag_memfunc_setup(int tagnum)
 
 //______________________________________________________________________________
 extern "C" int G__memfunc_setup(const char* funcname, int hash, G__InterfaceMethod funcp, int type, int tagnum, int typenum, int reftype, int para_nu, int ansi, int accessin, int isconst, const char* paras, const char* comment
-                                   // --
+   // --
 #ifdef G__TRUEP2F
-                                   , void* truep2f
-                                   , int isvirtual
+   , void* truep2f
+   , int isvirtual
 #endif // G__TRUEP2F
-                                   // --
-                                  )
+   // --
+   )
+
 {
    G__BuilderInfo builder;
-   /* set entry pointer */
-   builder.prop.entry.p = (void*)funcp;
-   builder.prop.entry.size = -1;
+   // set entry pointer
+   builder.fProp.entry.p = (void*) funcp;
+   builder.fProp.entry.size = -1;
    if (G__p_ifunc && !G__p_ifunc.IsTopScope()) {
-      builder.prop.filenum = G__get_properties(G__p_ifunc)->filenum;
+      builder.fProp.filenum = G__get_properties(G__p_ifunc)->filenum;
    }
    else {
-      builder.prop.filenum = G__ifile.filenum;
+      builder.fProp.filenum = G__ifile.filenum;
    }
-   builder.prop.entry.line_number = -1;
-   builder.prop.entry.bytecode = 0;
+   builder.fProp.entry.line_number = -1;
+   builder.fProp.entry.bytecode = 0;
 #ifdef G__TRUEP2F
-   if (truep2f) builder.prop.entry.tp2f = truep2f;
-   else builder.prop.entry.tp2f = (void*)funcp;
-#endif
-   bool return_is_const = isconst & (~G__CONSTFUNC);
-   builder.returnType = G__get_Type(type, tagnum, typenum, return_is_const);
-   // if (type !=isupper(type)) builder.returnType = Reflex::PointerBuilder(builder.returnType);
+   if (truep2f) {
+      builder.fProp.entry.tp2f = truep2f;
+   }
+   else {
+      builder.fProp.entry.tp2f = (void*)funcp;
+   }
+#endif // G__TRUEP2F
+   bool return_is_const = isconst & ~G__CONSTFUNC;
+   builder.fReturnType = G__get_Type(type, tagnum, typenum, return_is_const);
    bool return_is_pointer = (G__var_type == 'U');
-   builder.isconst = isconst & G__CONSTFUNC;
-   builder.returnType = G__modify_type(builder.returnType, return_is_pointer, reftype, isconst & (~G__CONSTVAR), 0, 0);
-
-   if (ansi&8) builder.prop.entry.ansi = 2;
-   else if (ansi&1) builder.prop.entry.ansi = 1;
-
-   builder.access = accessin;
-   builder.isexplicit = (ansi & 4) / 4;
-   builder.staticalloc = (ansi & 2) / 2;
-
+   builder.fIsconst = isconst & G__CONSTFUNC;
+   builder.fReturnType = G__modify_type(builder.fReturnType, return_is_pointer, reftype, isconst & ~G__CONSTVAR, 0, 0);
+   if (ansi & 8) {
+      builder.fProp.entry.ansi = 2;
+   }
+   else if (ansi & 1) {
+      builder.fProp.entry.ansi = 1;
+   }
+   builder.fAccess = accessin;
+   builder.fIsexplicit = (ansi & 0x04) >> 2;
+   builder.fStaticalloc = (ansi & 0x02) >> 1;
 #ifdef G__TRUEP2F
-   builder.isvirtual = isvirtual & 0x01;
-   builder.ispurevirtual = (isvirtual & 0x02) / 2;
-#else
-   builder.isvirtual = 0;
-   builder.ispurevirtual = 0;
-#endif
-
+   builder.fIsvirtual = isvirtual & 0x01;
+   builder.fIspurevirtual = (isvirtual & 0x02) >> 1;
+#else // G__TRUEP2F
+   builder.fIsvirtual = 0;
+   builder.fIspurevirtual = 0;
+#endif // G__TRUEP2F
 #ifdef G__FRIEND
-   builder.prop.entry.friendtag = (struct G__friendtag*)NULL;
-#endif
-
-   builder.prop.comment.p.com = (char*)comment;
-   if (comment) builder.prop.comment.filenum = -2;
-   else        builder.prop.comment.filenum = -1;
-
-   /* parse parameter setup information */
+   builder.fProp.entry.friendtag = 0;
+#endif // G__FRIEND
+   builder.fProp.comment.p.com = (char*) comment;
+   if (comment) {
+      builder.fProp.comment.filenum = -2;
+   }
+   else {
+      builder.fProp.comment.filenum = -1;
+   }
+   // parse parameter setup information
    builder.ParseParameterLink(paras);
-
    Reflex::Member newfunc = builder.Build(funcname);
-
-   /* Stub Pointer Adjustement */
-   builder.prop.entry.ptradjust = 0;
-   
-   // Stub Pointer initialisation.
-   // If funcp parameter is null. It means that the stub is in a base class.
-   // We have to look for the stub pointer in the base classes.
-   if (!funcp && (builder.isvirtual)&&(builder.access==G__PUBLIC)){
-
-     // tagnum's Base Classes structure
-     G__inheritance* cbases = G__struct.baseclass[G__get_tagnum(G__p_ifunc)];
-     
-     // If there's any base class
-     if (cbases){
-
-        // Ifunc Method's index in the base class
-        int base = -1;
-
-        // Stub function pointer
-        void * basefuncp = 0;
-
-        // Go through the bases tagnums if there are base classes and a valid stub is not found yet
-        for (int idx=0; (idx < cbases->basen)&&(!basefuncp); ++idx){
-
-           // Current tagnum
-           int basetagnum = cbases->basetagnum[idx];
-
-           // Warning: Global G__p_ifunc is modified in G__incsetup_memfunc
-           // We save and later we restore the G__p_ifunc's value
-	   Reflex::Scope store_ifunc = G__p_ifunc;
-
-           // We force memfunc_setup for the base classes
-           G__incsetup_memfunc(basetagnum);
-
-           // Restore G__p_ifunc
-           G__p_ifunc = store_ifunc;
-
-	   Reflex::Type base( G__Dict::GetDict().GetType(basetagnum) );
-
-           // Look for the method in the base class
-	   // FIXME: Should we be looking in ALL bases classes instead of just one level?
-           ::Reflex::Member found = G__ifunc_exist(newfunc, base, true); // FIXME: Should we really match the return type?
-
-           // Method found
-           if(found) {
-
-	      // Method's stub pointer
-	      G__RflxFuncProperties* found_prop = G__get_funcproperties(found);
-	      G__RflxFuncProperties* newfunc_prop = G__get_funcproperties(newfunc);
-
-	      basefuncp = found_prop->entry.p;
-
-              G__value ptr;
-	      G__value_typenum(ptr) = Reflex::Type(newfunc.DeclaringScope());
-
-              ptr = G__castvalue((char*)found.DeclaringScope().Name(Reflex::SCOPED).c_str(), ptr);
-	   
-              // Pointer Adjustement
-              newfunc_prop->entry.ptradjust = found_prop->entry.ptradjust + ptr.obj.i;
-
-              // Method's stub pointer found.
-              // We update the current method stub pointer
-              newfunc_prop->entry.p= (void *) basefuncp;
-
-	      if(truep2f) {
-		 newfunc_prop->entry.tp2f=truep2f;
-              } else {
-		 newfunc_prop->entry.tp2f=(void*) basefuncp;
-	      }
-
-           }
-
-        }
-
-     }
-     
-  }
-
-
-   return(0);
+   // stub pointer adjustement
+   builder.fProp.entry.ptradjust = 0;
+   // stub pointer initialization.
+   if (funcp || !builder.fIsvirtual || (builder.fAccess != G__PUBLIC)) {
+      return 0;
+   }
+   // The function is in a base class.
+   G__inheritance* cbases = G__struct.baseclass[G__get_tagnum(G__p_ifunc)];
+   if (!cbases) {
+      return 0;
+   }
+   void* base_memberfunc_addr = 0;
+   // Go through the bases tagnums if there are base classes and a valid stub is not found yet
+   for (int idx = 0; (idx < cbases->basen) && !base_memberfunc_addr; ++idx) {
+      int basetagnum = cbases->basetagnum[idx];
+      {
+         Reflex::Scope store_ifunc = G__p_ifunc;
+         G__incsetup_memfunc(basetagnum); // Force memfunc_setup for the base.
+         G__p_ifunc = store_ifunc;
+      }
+      Reflex::Type base(G__Dict::GetDict().GetType(basetagnum));
+      // Look for the method in the base class.
+      // FIXME: Should we be looking in ALL bases classes instead of just one level?
+      ::Reflex::Member base_memberfunc = G__ifunc_exist(newfunc, base, true); // FIXME: Should we really match the return type?
+      if (base_memberfunc) {
+         G__RflxFuncProperties* base_memberfunc_prop = G__get_funcproperties(base_memberfunc);
+         G__RflxFuncProperties* newfunc_prop = G__get_funcproperties(newfunc);
+         G__value ptr;
+         G__value_typenum(ptr) = Reflex::PointerBuilder(Reflex::Type(newfunc.DeclaringScope()));
+         ptr.obj.i = 0;
+         //{
+         //   char buf[G__ONELINE];
+         //   fprintf(stderr, "G__memfunc_setup: newfunc.Name(): '%s'  %s:%d\n", newfunc.Name(::Reflex::SCOPED).c_str(), __FILE__, __LINE__);
+         //   fprintf(stderr, "G__memfunc_setup: Calling G__castvalue('%s', '%s')  %s:%d\n", base_memberfunc.DeclaringScope().Name(Reflex::SCOPED).c_str(), G__valuemonitor(ptr, buf), __FILE__, __LINE__);
+         //}
+         ptr = G__castvalue((char*) base_memberfunc.DeclaringScope().Name(Reflex::SCOPED).c_str(), ptr);
+         //{
+         //   fprintf(stderr, "G__memfunc_setup: base_memberfunc_prop->entry.ptradjust: %016lx  %s:%d\n", (unsigned long) base_memberfunc_prop->entry.ptradjust, __FILE__, __LINE__);
+         //   fprintf(stderr, "G__memfunc_setup: ptr.obj.i: %016lx  %s:%d\n", (unsigned long) ptr.obj.i, __FILE__, __LINE__);
+         //}
+         newfunc_prop->entry.ptradjust = base_memberfunc_prop->entry.ptradjust + ptr.obj.i;
+         base_memberfunc_addr = base_memberfunc_prop->entry.p;
+         newfunc_prop->entry.p = (void*) base_memberfunc_addr;
+         if (truep2f) {
+            newfunc_prop->entry.tp2f = truep2f;
+         }
+         else {
+            newfunc_prop->entry.tp2f = (void*) base_memberfunc_addr;
+         }
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__separate_parameter(const char* original, int* pos, char* param)
 {
-   // --
+// --
 #ifndef G__SMALLOBJECT
-   int single_quote = 0;
-   int double_quote = 0;
-   int single_arg_quote = 0;
-   bool argStartsWithSingleQuote = false;
+int single_quote = 0;
+int double_quote = 0;
+int single_arg_quote = 0;
+bool argStartsWithSingleQuote = false;
 
-   int startPos = (*pos);
-   if (original[startPos] == '\'') {
-      // don't put beginning ' into param
-      ++startPos;
-      argStartsWithSingleQuote = true;
-      single_arg_quote = 1;
-   }
+int startPos = (*pos);
+if (original[startPos] == '\'') {
+// don't put beginning ' into param
+++startPos;
+argStartsWithSingleQuote = true;
+single_arg_quote = 1;
+}
 
-   int i = startPos;
-   bool done = false;
-   for (; !done; ++i) {
-      int c = original[i];
-      switch (c) {
-         case '\'':
-            if (!double_quote)
-               if (single_quote) single_quote = 0;
-            // only turn on single_quote if at the beginning!
-               else if (i == startPos)  single_quote = 1;
-               else if (single_arg_quote) single_arg_quote = 0;
-            break;
-         case '"':
-            if (!single_quote) double_quote ^= 1;
-            break;
-         case ' ':
-            if (!single_quote && !double_quote && !single_arg_quote) {
-               c = 0;
-               done = true;
-            }
-            break;
-         case '\\':
-            if (single_quote || double_quote) {
-               // prevent special treatment of next char
-               *(param++) = c;
-               c = original[++i];
-            }
-            break;
-         case 0:
-            done = true;
-            break;
+int i = startPos;
+bool done = false;
+for (; !done; ++i) {
+int c = original[i];
+switch (c) {
+   case '\'':
+      if (!double_quote)
+         if (single_quote) single_quote = 0;
+      // only turn on single_quote if at the beginning!
+         else if (i == startPos)  single_quote = 1;
+         else if (single_arg_quote) single_arg_quote = 0;
+      break;
+   case '"':
+      if (!single_quote) double_quote ^= 1;
+      break;
+   case ' ':
+      if (!single_quote && !double_quote && !single_arg_quote) {
+         c = 0;
+         done = true;
       }
+      break;
+   case '\\':
+      if (single_quote || double_quote) {
+         // prevent special treatment of next char
+         *(param++) = c;
+         c = original[++i];
+      }
+      break;
+   case 0:
+      done = true;
+      break;
+}
 
-      *(param++) = c;
-   }
+*(param++) = c;
+}
 
-   if (argStartsWithSingleQuote && ! *(param - 1) && *(param - 2) == '\'')
-      *(param - 2) = 0; // skip trailing '
-   *pos = i;
+if (argStartsWithSingleQuote && ! *(param - 1) && *(param - 2) == '\'')
+*(param - 2) = 0; // skip trailing '
+*pos = i;
 
-   if (i > startPos) --i;
-   else i = startPos;
+if (i > startPos) --i;
+else i = startPos;
 
-   return original[i];
+return original[i];
 
 #endif
-   // --
+// --
 }
 
 //______________________________________________________________________________
 extern "C" int G__memfunc_next()
 {
-   // -- FIXME: Describe this function!
-   return 0;
+// -- FIXME: Describe this function!
+return 0;
 }
 
 //______________________________________________________________________________
 extern "C" int G__tag_memfunc_reset()
 {
-   /* Variables stack restoring */
-   std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
-   G__IncSetupStack *incsetup_stack = &var_stack->top();
+/* Variables stack restoring */
+std::stack<G__IncSetupStack> *var_stack = G__stack_instance(); 
+G__IncSetupStack *incsetup_stack = &var_stack->top();
 
-   G__tagnum = incsetup_stack->G__incset_tagnum;
-   G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
-   G__func_now = incsetup_stack->G__incset_func_now;
-   G__var_type = incsetup_stack->G__incset_var_type;
-   G__tagdefining = incsetup_stack->G__incset_tagdefining;
-   G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
+G__tagnum = incsetup_stack->G__incset_tagnum;
+G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
+G__func_now = incsetup_stack->G__incset_func_now;
+G__var_type = incsetup_stack->G__incset_var_type;
+G__tagdefining = incsetup_stack->G__incset_tagdefining;
+G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
 
-   var_stack->pop();
+var_stack->pop();
 
-   return(0);
+return(0);
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__cppif_p2memfunc(FILE* fp)
 {
-   fprintf(fp, "\n/*********************************************************\n");
-   fprintf(fp, "* Get size of pointer to member function\n");
-   fprintf(fp, "*********************************************************/\n");
-   fprintf(fp, "class G__Sizep2memfunc%s {\n", G__DLLID);
-   fprintf(fp, " public:\n");
-   fprintf(fp, "  G__Sizep2memfunc%s(): p(&G__Sizep2memfunc%s::sizep2memfunc) {}\n"
-           , G__DLLID, G__DLLID);
-   fprintf(fp, "    size_t sizep2memfunc() { return(sizeof(p)); }\n");
-   fprintf(fp, "  private:\n");
-   fprintf(fp, "    size_t (G__Sizep2memfunc%s::*p)();\n", G__DLLID);
-   fprintf(fp, "};\n\n");
+fprintf(fp, "\n/*********************************************************\n");
+fprintf(fp, "* Get size of pointer to member function\n");
+fprintf(fp, "*********************************************************/\n");
+fprintf(fp, "class G__Sizep2memfunc%s {\n", G__DLLID);
+fprintf(fp, " public:\n");
+fprintf(fp, "  G__Sizep2memfunc%s(): p(&G__Sizep2memfunc%s::sizep2memfunc) {}\n"
+        , G__DLLID, G__DLLID);
+fprintf(fp, "    size_t sizep2memfunc() { return(sizeof(p)); }\n");
+fprintf(fp, "  private:\n");
+fprintf(fp, "    size_t (G__Sizep2memfunc%s::*p)();\n", G__DLLID);
+fprintf(fp, "};\n\n");
 
-   fprintf(fp, "size_t G__get_sizep2memfunc%s()\n", G__DLLID);
-   fprintf(fp, "{\n");
-   fprintf(fp, "  G__Sizep2memfunc%s a;\n", G__DLLID);
-   fprintf(fp, "  G__setsizep2memfunc((int)a.sizep2memfunc());\n");
-   fprintf(fp, "  return((size_t)a.sizep2memfunc());\n");
-   fprintf(fp, "}\n\n");
-   return 0;
+fprintf(fp, "size_t G__get_sizep2memfunc%s()\n", G__DLLID);
+fprintf(fp, "{\n");
+fprintf(fp, "  G__Sizep2memfunc%s a;\n", G__DLLID);
+fprintf(fp, "  G__setsizep2memfunc((int)a.sizep2memfunc());\n");
+fprintf(fp, "  return((size_t)a.sizep2memfunc());\n");
+fprintf(fp, "}\n\n");
+return 0;
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__set_sizep2memfunc(FILE* fp)
 {
-   fprintf(fp, "\n   if(0==G__getsizep2memfunc()) G__get_sizep2memfunc%s();\n", G__DLLID);
-   return 0;
+fprintf(fp, "\n   if(0==G__getsizep2memfunc()) G__get_sizep2memfunc%s();\n", G__DLLID);
+return 0;
 }
 
 //______________________________________________________________________________
 int Cint::Internal::G__getcommentstring(char* buf, int tagnum, G__comment_info* pcomment)
 {
-   char temp[G__LONGLINE];
-   G__getcomment(temp, pcomment, tagnum);
-   if ('\0' == temp[0]) {
-      sprintf(buf, "(char*)NULL");
-   }
-   else {
-      G__add_quotation(temp, buf);
-   }
-   return(1);
+char temp[G__LONGLINE];
+G__getcomment(temp, pcomment, tagnum);
+if ('\0' == temp[0]) {
+   sprintf(buf, "(char*)NULL");
+}
+else {
+   G__add_quotation(temp, buf);
+}
+return(1);
 }
 
 //______________________________________________________________________________
 static void G__pragmalinkenum(int tagnum, int globalcomp)
 {
-   // double check tagnum points to a enum
-   if (-1 == tagnum || 'e' != G__struct.type[tagnum]) return;
+// double check tagnum points to a enum
+if (-1 == tagnum || 'e' != G__struct.type[tagnum]) return;
 
-   /* enum in global scope */
-   if (-1 == G__struct.parent_tagnum[tagnum]
-         || G__nestedclass
-      ) {
-      ::Reflex::Scope scope = ::Reflex::Scope::GlobalScope();
-      for (::Reflex::Member_Iterator memvar = scope.DataMember_Begin();
-            memvar != scope.DataMember_End();
-            ++memvar) {
-         if (G__get_tagnum(memvar->TypeOf().RawType()) == tagnum) {
-            G__get_properties(*memvar)->globalcomp = globalcomp;
-         }
+/* enum in global scope */
+if (-1 == G__struct.parent_tagnum[tagnum]
+      || G__nestedclass
+   ) {
+   ::Reflex::Scope scope = ::Reflex::Scope::GlobalScope();
+   for (::Reflex::Member_Iterator memvar = scope.DataMember_Begin();
+         memvar != scope.DataMember_End();
+         ++memvar) {
+      if (G__get_tagnum(memvar->TypeOf().RawType()) == tagnum) {
+         G__get_properties(*memvar)->globalcomp = globalcomp;
       }
    }
-   else {
-      /* enum enclosed in class  */
-      /* do nothing, should already be OK. */
-   }
+}
+else {
+   /* enum enclosed in class  */
+   /* do nothing, should already be OK. */
+}
 }
 
 #if !defined(G__OLDIMPLEMENTATION1955) && defined(G__ROOT)

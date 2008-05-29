@@ -581,31 +581,31 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //
    G__BuilderInfo builder;
    G__funcentry builder_entry;
-   fgetpos(G__ifile.fp, &builder.prop.entry.pos);
-   builder.prop.entry.p = (void*) G__ifile.fp;
-   builder.prop.filenum = G__ifile.filenum;
-   builder.prop.linenum = G__ifile.line_number;
-   builder.prop.entry.line_number = G__ifile.line_number;
-   builder.prop.entry.filenum = G__ifile.filenum;
+   fgetpos(G__ifile.fp, &builder.fProp.entry.pos);
+   builder.fProp.entry.p = (void*) G__ifile.fp;
+   builder.fProp.filenum = G__ifile.filenum;
+   builder.fProp.linenum = G__ifile.line_number;
+   builder.fProp.entry.line_number = G__ifile.line_number;
+   builder.fProp.entry.filenum = G__ifile.filenum;
 #ifdef G__ASM_FUNC
-   builder.prop.entry.size = 0;
+   builder.fProp.entry.size = 0;
 #endif // G__ASM_FUNC
 #ifdef G__ASM_WHOLEFUNC
-   builder.prop.entry.bytecode = 0;
-   builder.prop.entry.bytecodestatus = G__BYTECODE_NOTYET;
+   builder.fProp.entry.bytecode = 0;
+   builder.fProp.entry.bytecodestatus = G__BYTECODE_NOTYET;
 #endif // G__ASM_WHOLEFUNC
    if (G__get_tagnum(G__p_ifunc.DeclaringScope()) == -1) {
-      builder.prop.globalcomp = G__default_link ? G__globalcomp : G__NOLINK;
+      builder.fProp.globalcomp = G__default_link ? G__globalcomp : G__NOLINK;
    }
    else {
-      builder.prop.globalcomp = G__globalcomp;
+      builder.fProp.globalcomp = G__globalcomp;
    }
 #ifdef G__FRIEND
    if (!G__friendtagnum) {
-      builder.prop.entry.friendtag = 0;
+      builder.fProp.entry.friendtag = 0;
    }
    else {
-      builder.prop.entry.friendtag = G__new_friendtag(G__get_tagnum(G__friendtagnum));
+      builder.fProp.entry.friendtag = G__new_friendtag(G__get_tagnum(G__friendtagnum));
    }
 #endif // G__FRIEND
    //
@@ -621,29 +621,29 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
 #ifndef __GNUC__
 #pragma message(FIXME("We no longer have the irregular constructor function setting preventing temp obj creation"))
 #endif // __GNUC__
-      builder.returnType = G__modify_type(G__def_tagnum, 0, G__reftype, G__constvar, 0, 0);
+      builder.fReturnType = G__modify_type(G__def_tagnum, 0, G__reftype, G__constvar, 0, 0);
       G__struct.isctor[G__get_tagnum(G__def_tagnum)] = 1;
    }
    else if (funcname.size() && funcname.at(0) == '~') {
       // -- This is a destructor, return type is void.
-      builder.returnType = ::Reflex::Type::ByName("void");
+      builder.fReturnType = ::Reflex::Type::ByName("void");
    }
    else if (G__typenum) {
       // -- The return type is a typedef.
-      builder.returnType = G__typenum;
+      builder.fReturnType = G__typenum;
       if (G__constvar & G__PCONSTVAR) {
          // const pointer to something
-         assert(builder.returnType.FinalType().IsPointer());
-         builder.returnType = ::Reflex::Type(builder.returnType, ::Reflex::CONST, Reflex::Type::APPEND);
+         assert(builder.fReturnType.FinalType().IsPointer());
+         builder.fReturnType = ::Reflex::Type(builder.fReturnType, ::Reflex::CONST, Reflex::Type::APPEND);
       } else if (G__constvar & G__CONSTVAR) {
-         if (builder.returnType.IsPointer()) {
+         if (builder.fReturnType.IsPointer()) {
             // Pointer to const something (const char*).
             // FIXME we do not conserve the modifiers of the pointer to.
-            Reflex::Type tmp = builder.returnType.ToType();
+            Reflex::Type tmp = builder.fReturnType.ToType();
             tmp = ::Reflex::Type(tmp, ::Reflex::CONST, Reflex::Type::APPEND);
-            builder.returnType = Reflex::PointerBuilder( tmp );
+            builder.fReturnType = Reflex::PointerBuilder( tmp );
          } else {
-            builder.returnType = ::Reflex::Type(builder.returnType, ::Reflex::CONST, Reflex::Type::APPEND);
+            builder.fReturnType = ::Reflex::Type(builder.fReturnType, ::Reflex::CONST, Reflex::Type::APPEND);
          }
       }
       int ref = G__REF(G__reftype);
@@ -653,13 +653,13 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          ref = 1;
       }
       for (int i = 0; i < plvl; ++i) {
-         builder.returnType = ::Reflex::PointerBuilder(builder.returnType);
+         builder.fReturnType = ::Reflex::PointerBuilder(builder.fReturnType);
       }
       for (int i = 0; i < numstar; ++i) {
-         builder.returnType = ::Reflex::PointerBuilder(builder.returnType);
+         builder.fReturnType = ::Reflex::PointerBuilder(builder.fReturnType);
       }
       if (ref) {
-         builder.returnType = ::Reflex::Type(builder.returnType, ::Reflex::REFERENCE, Reflex::Type::APPEND);
+         builder.fReturnType = ::Reflex::Type(builder.fReturnType, ::Reflex::REFERENCE, Reflex::Type::APPEND);
       }
    }
    else {
@@ -676,15 +676,15 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       }
       if (G__tagnum && !G__tagnum.IsNamespace()) {
          // -- The return type is either a class, enum, struct, or union.
-         builder.returnType = G__modify_type(G__tagnum, isupper(G__var_type), G__reftype, G__constvar, 0, 0);
+         builder.fReturnType = G__modify_type(G__tagnum, isupper(G__var_type), G__reftype, G__constvar, 0, 0);
       }
       else {
          // -- The return type is a fundamental type.
-         builder.returnType = G__get_from_type(G__var_type, 1, G__constvar);
-         builder.returnType = G__modify_type(builder.returnType, 0, G__reftype, G__constvar & ~G__CONSTVAR, 0, 0);
+         builder.fReturnType = G__get_from_type(G__var_type, 1, G__constvar);
+         builder.fReturnType = G__modify_type(builder.fReturnType, 0, G__reftype, G__constvar & ~G__CONSTVAR, 0, 0);
       }
    }
-   builder.isexplicit = G__isexplicit;
+   builder.fIsexplicit = G__isexplicit;
    G__isexplicit = 0;
    G__reftype = G__PARANORMAL;
 #ifndef G__NEWINHERIT
@@ -692,23 +692,23 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
 #endif // G__NEWINHERIT
    // member access control
    if (G__def_struct_member) {
-      builder.access = G__access;
+      builder.fAccess = G__access;
    }
    else {
-      builder.access = G__PUBLIC;
+      builder.fAccess = G__PUBLIC;
    }
-   builder.staticalloc = (char) G__static_alloc;
+   builder.fStaticalloc = (char) G__static_alloc;
    // initiazlize baseoffset
 #ifndef G__NEWINHERIT
    if (G__def_tagnum) {
-      builder.basetagnum = G__def_tagnum;
+      builder.fBasetagnum = G__def_tagnum;
    }
    else {
-      builder.basetagnum = G__tagdefining;
+      builder.fBasetagnum = G__tagdefining;
    }
 #endif // G__NEWINHERIT
-   builder.isvirtual = G__virtual;
-   builder.ispurevirtual = 0;
+   builder.fIsvirtual = G__virtual;
+   builder.fIspurevirtual = 0;
    if (
       // -- We are virtual and have no virtual offset calculated yet.
 #ifdef G__NEWINHERIT
@@ -744,14 +744,14 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       // --
    }
    G__virtual = 0; // this position is not very best
-   builder.prop.comment.p.com = 0;
-   builder.prop.comment.filenum = -1;
+   builder.fProp.comment.p.com = 0;
+   builder.fProp.comment.filenum = -1;
    // initialize virtual table index
    //  TODO, may need to this this in other places too, need investigation
-   builder.prop.entry.vtblindex = -1;
-   builder.prop.entry.vtblbasetagnum = -1;
-   builder.prop.entry.busy = 0;
-   builder.prop.iscpplink = (char) G__iscpp;
+   builder.fProp.entry.vtblindex = -1;
+   builder.fProp.entry.vtblbasetagnum = -1;
+   builder.fProp.entry.busy = 0;
+   builder.fProp.iscpplink = (char) G__iscpp;
    //
    //  Remember the file position of the beginning of the parameters.
    //
@@ -790,13 +790,13 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //  ansi-style function declaration.
    //
    int isvoid = 0;
-   builder.prop.entry.ansi = 0;
+   builder.fProp.entry.ansi = 0;
    if (!paraname[0]) {
       // -- No parameters given.
       isvoid = 1;
       if (G__iscpp || G__def_struct_member) {
          // -- We are C++, force ansi.
-         builder.prop.entry.ansi = 1;
+         builder.fProp.entry.ansi = 1;
       }
    }
    else {
@@ -811,11 +811,11 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             case ')':
                // -- We have the special case of myfunc(void).
                isvoid = 1;
-               builder.prop.entry.ansi = 1;
+               builder.fProp.entry.ansi = 1;
                break;
             case '*':
             case '(':
-               builder.prop.entry.ansi = 1;
+               builder.fProp.entry.ansi = 1;
                break;
             default:
                G__genericerror("G__make_ifunctable: 823: Syntax error");
@@ -824,10 +824,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          }
       }
       else if (!strcmp("register", paraname)) {
-         builder.prop.entry.ansi = 1;
+         builder.fProp.entry.ansi = 1;
       }
       else if (G__istypename(paraname) || strchr(paraname, '[') || G__friendtagnum) {
-         builder.prop.entry.ansi = 1;
+         builder.fProp.entry.ansi = 1;
       }
       else {
          if (G__def_struct_member) {
@@ -860,10 +860,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //            ^
    // and check type of paramaters and store it into G__ifunc
    //
-   if (builder.prop.entry.ansi) {
+   if (builder.fProp.entry.ansi) {
       if (isvoid | (funcheader[0] == '~')) {
-         // -- No parameters, initialize builder.params_type,
-         //    builder.params_names, and builder.default_vals
+         // -- No parameters, initialize builder.fParams_type,
+         //    builder.fParams_names, and builder.fDefault_vals
          //    to empty.
       }
       else {
@@ -879,7 +879,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          G__ifile.line_number = store_line_number;
          // Parse the parameter declarations.
          //fprintf(stderr, "G__make_ifunctable: calling G__readansiproto for '%s'\n", funcheader);
-         G__readansiproto(builder.params_type, builder.params_name, builder.default_vals, &builder.prop.entry.ansi);
+         G__readansiproto(builder.fParams_type, builder.fParams_name, builder.fDefault_vals, &builder.fProp.entry.ansi);
          cin = ')';
          if (G__dispsource) {
             // -- Allow read characters to be seen again.
@@ -923,7 +923,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       if (isparam) {
          fsetpos(G__ifile.fp, &temppos);
          G__ifile.line_number = store_line_number;
-         G__readansiproto(builder.params_type, builder.params_name, builder.default_vals, &builder.prop.entry.ansi);
+         G__readansiproto(builder.fParams_type, builder.fParams_name, builder.fDefault_vals, &builder.fProp.entry.ansi);
          cin = G__fignorestream(",;");
       }
       if (cin == ',') {
@@ -934,10 +934,10 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          }
       }
       // entry fp = NULL means this is header
-      builder.prop.entry.p = 0;
-      builder.prop.entry.line_number = -1;
-      builder.prop.entry.filenum = -1;
-      builder.ispurevirtual = 0;
+      builder.fProp.entry.p = 0;
+      builder.fProp.entry.line_number = -1;
+      builder.fProp.entry.filenum = -1;
+      builder.fIspurevirtual = 0;
       // Key the class comment off of DeclFileLine rather than ClassDef
       // because ClassDef is removed by a preprocessor
       if (
@@ -966,13 +966,13 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          G__genericerror("Error: invalid pure virtual function initializer");
       }
       // this is ANSI style func proto without param name
-      if (!builder.prop.entry.ansi) {
-         builder.prop.entry.ansi = 1;
+      if (!builder.fProp.entry.ansi) {
+         builder.fProp.entry.ansi = 1;
       }
       if (isparam) {
          fsetpos(G__ifile.fp, &temppos);
          G__ifile.line_number = store_line_number;
-         G__readansiproto(builder.params_type, builder.params_name, builder.default_vals, &builder.prop.entry.ansi);
+         G__readansiproto(builder.fParams_type, builder.fParams_name, builder.fDefault_vals, &builder.fProp.entry.ansi);
          cin = G__fignorestream(",;");
       }
       if (cin == ',') {
@@ -983,9 +983,9 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          }
       }
       // entry fp = 0 means this is header
-      builder.prop.entry.p = 0;
-      builder.prop.entry.line_number = -1;
-      builder.ispurevirtual = 1;
+      builder.fProp.entry.p = 0;
+      builder.fProp.entry.line_number = -1;
+      builder.fIspurevirtual = 1;
       if (G__tagdefining) {
          //fprintf(stderr, "G__make_ifunctable: Incrementing abstract count of class '%s' cnt: %d  for: '%s'\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], funcheader);
          ++G__struct.isabstract[G__get_tagnum(G__tagdefining)];
@@ -997,18 +997,18 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          }
       }
       if (!strncmp(paraname, "const", 5)) {
-         builder.isconst |= G__CONSTFUNC;
+         builder.fIsconst |= G__CONSTFUNC;
       }
    }
    else if (!strcmp(paraname, "const") || !strcmp(paraname, "const ")) {
       // this is ANSI style func proto without param name
-      if (!builder.prop.entry.ansi) {
-         builder.prop.entry.ansi = 1;
+      if (!builder.fProp.entry.ansi) {
+         builder.fProp.entry.ansi = 1;
       }
       if (isparam) {
          fsetpos(G__ifile.fp, &temppos);
          G__ifile.line_number = store_line_number;
-         G__readansiproto(builder.params_type, builder.params_name, builder.default_vals, &builder.prop.entry.ansi);
+         G__readansiproto(builder.fParams_type, builder.fParams_name, builder.fDefault_vals, &builder.fProp.entry.ansi);
          cin = G__fignorestream(",;{");
       }
       if (cin == ',') {
@@ -1028,11 +1028,11 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       }
       else {
          // entry fp = NULL means this is header
-         builder.prop.entry.p = 0;
-         builder.prop.entry.line_number = -1;
+         builder.fProp.entry.p = 0;
+         builder.fProp.entry.line_number = -1;
       }
-      builder.ispurevirtual = 0;
-      builder.isconst |= G__CONSTFUNC;
+      builder.fIspurevirtual = 0;
+      builder.fIsconst |= G__CONSTFUNC;
    }
    else if (
       G__def_struct_member &&
@@ -1092,7 +1092,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
          //          ^ <--  ^
          fsetpos(G__ifile.fp, &temppos);
          G__ifile.line_number = store_line_number;
-         G__readansiproto(builder.params_type, builder.params_name, builder.default_vals, &builder.prop.entry.ansi);
+         G__readansiproto(builder.fParams_type, builder.fParams_name, builder.fDefault_vals, &builder.fProp.entry.ansi);
          cin = G__fignorestream("{");
       }
       if (!strcmp(funcname.c_str(), "main") && (G__def_tagnum == ::Reflex::Scope::GlobalScope())) {
@@ -1102,7 +1102,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       if ((G__globalcomp == G__CPPLINK) || (G__globalcomp == R__CPPLINK)) {
          if (
             !strcmp(funcname.c_str(), "operator new") &&
-            (builder.params_type.size() == 2) &&
+            (builder.fParams_type.size() == 2) &&
             !(G__is_operator_newdelete & G__MASK_OPERATOR_NEW)
          ) {
             G__is_operator_newdelete |= G__IS_OPERATOR_NEW;
@@ -1114,8 +1114,8 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
             G__is_operator_newdelete |= G__IS_OPERATOR_DELETE;
          }
       }
-      if ((paraname[0] == ':') && !builder.prop.entry.ansi) {
-         builder.prop.entry.ansi = 1;
+      if ((paraname[0] == ':') && !builder.fProp.entry.ansi) {
+         builder.fProp.entry.ansi = 1;
       }
       if (cin != '{') {
          G__fignorestream("{");
@@ -1126,11 +1126,11 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       }
       // skip body of the function surrounded by '{' '}'.
       // G__exec_statement(&brace_level); does the job
-      builder.ispurevirtual = 0;
+      builder.fIspurevirtual = 0;
       dobody = 1;
    }
    if (G__nonansi_func) {
-      builder.prop.entry.ansi = 0;
+      builder.fProp.entry.ansi = 0;
    }
 #ifdef G__DETECT_NEWDEL
    //
@@ -1151,7 +1151,7 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
       (strcmp(funcname.c_str(), "operator delete") == 0 || strcmp(funcname.c_str(), "operator delete[]") == 0) &&
       -1 != G__get_tagnum(G__p_ifunc)
    ) {
-      builder.staticalloc = 1;
+      builder.fStaticalloc = 1;
    }
    ::Reflex::Member newFunction = builder.Build(funcname);
    G__func_now = newFunction;

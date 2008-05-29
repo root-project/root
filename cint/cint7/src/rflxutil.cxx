@@ -419,6 +419,10 @@ G__RflxFuncProperties* Cint::Internal::G__get_funcproperties(const ::Reflex::Mem
 {
    // -- Get REFLEX property list from a class member function.
    if (!in || !(in.IsFunctionMember() || in.IsTemplateInstance())) {
+      //fprintf(stderr, "G__get_funcproperties(const ::Reflex::Member): Bad member '%s'  %s:%d\n", in.Name(::Reflex::SCOPED), __FILE__, __LINE__);
+      //fprintf(stderr, "G__get_funcproperties(const ::Reflex::Member): valid: %d  %s:%d\n", (bool) in, __FILE__, __LINE__);
+      //fprintf(stderr, "G__get_funcproperties(const ::Reflex::Member): IsFunctionMember: %d  %s:%d\n", in.IsFunctionMember(), __FILE__, __LINE__);
+      //fprintf(stderr, "G__get_funcproperties(const ::Reflex::Member): IsTemplateInstance: %d  %s:%d\n", in.IsTemplateInstance(), __FILE__, __LINE__);
       return 0;
    }
    size_t pid = GetReflexPropertyID();
@@ -1506,6 +1510,26 @@ int ::Cint::Internal::G__get_static(const ::Reflex::Member mem)
 #include "common.h"
 
 //______________________________________________________________________________
+G__RflxStackProperties::~G__RflxStackProperties()
+{
+}
+
+//______________________________________________________________________________
+G__RflxProperties::~G__RflxProperties()
+{
+}
+
+//______________________________________________________________________________
+G__RflxVarProperties::~G__RflxVarProperties()
+{
+}
+
+//______________________________________________________________________________
+G__RflxFuncProperties::~G__RflxFuncProperties()
+{
+}
+
+//______________________________________________________________________________
 G__funcentry::~G__funcentry()
 {
    G__funcentry::clear();
@@ -1526,7 +1550,7 @@ void G__funcentry::clear()
 }
 
 //______________________________________________________________________________
-G__funcentry &G__funcentry::copy(const G__funcentry &orig) 
+G__funcentry& G__funcentry::copy(const G__funcentry& orig) 
 {
    // This function must NOT be made virtual
    p = orig.p;
@@ -1564,13 +1588,13 @@ G__funcentry &G__funcentry::copy(const G__funcentry &orig)
 
 //______________________________________________________________________________
 Cint::Internal::G__BuilderInfo::G__BuilderInfo()
-: baseoffset(0)
-, access(G__PUBLIC)
-, isconst(0)
-, isexplicit(0)
-, staticalloc(0)
-, isvirtual(-1)
-, ispurevirtual(0)
+: fBaseoffset(0)
+, fAccess(G__PUBLIC)
+, fIsconst(0)
+, fIsexplicit(0)
+, fStaticalloc(0)
+, fIsvirtual(-1)
+, fIspurevirtual(0)
 {
    // -- Used by: v6_newlink.cxx(G__memfunc_setup), and v6_ifunc.cxx(G__make_ifunctable).
 }
@@ -1580,8 +1604,8 @@ std::string Cint::Internal::G__BuilderInfo::GetParamNames()
 {
    // -- Internal, called only by G__BuilderInfo::Build().
    std::string result;
-   for (names_t::const_iterator iter = params_name.begin(); iter != params_name.end(); ++iter) {
-      if (iter != params_name.begin()) {
+   for (names_t::const_iterator iter = fParams_name.begin(); iter != fParams_name.end(); ++iter) {
+      if (iter != fParams_name.begin()) {
          result += ";";
       }
       result += iter->first;
@@ -1706,9 +1730,9 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    int isconst = (reftype_const / 10) % 10;
    int reftype = reftype_const - (reftype_const / 10 % 10 * 10);
    paramType = G__modify_type(paramType, 0, reftype, isconst, 0, 0);
-   params_type.push_back(paramType);
-   default_vals.push_back(para_default);
-   params_name.push_back(std::make_pair(para_name, para_def));
+   fParams_type.push_back(paramType);
+   fDefault_vals.push_back(para_default);
+   fParams_name.push_back(std::make_pair(para_name, para_def));
 }
 
 //______________________________________________________________________________
@@ -1721,19 +1745,19 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    //  Note: The Reflex::TypeBase constructor explicitly does not
    //        add the created function type as a member of any Reflex::Scope.
    //
-   ::Reflex::Type ftype = Reflex::FunctionTypeBuilder(returnType, params_type, typeid(::Reflex::UnknownType));
-   //fprintf(stderr, "\nG__BuilderInfo::Build: processing function '%s::%s' type '%s'.\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), name.c_str(), ftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
-   //if (!G__tagdefining.Name().compare("FumiliMinimizer")) {
-      //fprintf(stderr, "G__BuilderInfo::Build: Abstract count for '%s' count: %d  for: '%s'\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_properties(G__tagdefining)->tagnum], name.c_str());
+   ::Reflex::Type ftype = Reflex::FunctionTypeBuilder(fReturnType, fParams_type, typeid(::Reflex::UnknownType));
+   //fprintf(stderr, "\nG__BuilderInfo::Build: processing function '%s::%s' type '%s'.\n", G__p_ifunc.Name(Reflex::SCOPED).c_str(), name.c_str(), ftype.Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
+   //if (!G__p_ifunc.Name().compare("FumiliMinimizer")) {
+   //   fprintf(stderr, "G__BuilderInfo::Build: Abstract count for '%s' count: %d  for: '%s'\n", G__p_ifunc.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_properties(G__tagdefining)->tagnum], name.c_str());
    //}
-   //fprintf(stderr, "G__Builderinfo::Build: isconst: %d\n", isconst);
-   //fprintf(stderr, "G__Builderinfo::Build: isexplicit: %d\n", isexplicit);
-   //fprintf(stderr, "G__Builderinfo::Build: staticalloc: %d\n", (int) staticalloc);
-   //fprintf(stderr, "G__Builderinfo::Build: isvirtual: %d\n", isvirtual);
-   //fprintf(stderr, "G__Builderinfo::Build: ispurevirtual: %d\n", ispurevirtual);
+   //fprintf(stderr, "G__Builderinfo::Build: fIsconst: %d\n", fIsconst);
+   //fprintf(stderr, "G__Builderinfo::Build: fIsexplicit: %d\n", fIsexplicit);
+   //fprintf(stderr, "G__Builderinfo::Build: fStaticalloc: %d\n", (int) fStaticalloc);
+   //fprintf(stderr, "G__Builderinfo::Build: fIsvirtual: %d\n", fIsvirtual);
+   //fprintf(stderr, "G__Builderinfo::Build: fIspurevirtual: %d\n", fIspurevirtual);
    //for (
-   //   std::vector<Reflex::Type>::iterator iter = params_type.begin();
-   //   iter != params_type.end();
+   //   std::vector<Reflex::Type>::iterator iter = fParams_type.begin();
+   //   iter != fParams_type.end();
    //   ++iter
    //) {
    //   fprintf(stderr, "G__Builderinfo::Build: param type: %s\n", iter->Name(Reflex::SCOPED | Reflex::QUALIFIED).c_str());
@@ -1749,19 +1773,19 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    //  Build the reflex modifiers.  // FIXME: Name lookup should be done without regard to modifiers!
    //
    int modifiers = 0;
-   if (isconst) {
+   if (fIsconst) {
       modifiers |= ::Reflex::CONST;
    }
-   if (isexplicit) {
+   if (fIsexplicit) {
       modifiers |= ::Reflex::EXPLICIT;
    }
-   if (staticalloc) {
+   if (fStaticalloc) {
       modifiers |= ::Reflex::STATIC;
    }
-   if (isvirtual) {
+   if (fIsvirtual) {
       modifiers |= ::Reflex::VIRTUAL;
    }
-   if (ispurevirtual) {
+   if (fIspurevirtual) {
       modifiers |= ::Reflex::ABSTRACT;
    }
    //
@@ -1809,12 +1833,12 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
          if (base_m) {
             int tagnum_tagdefining  = G__get_tagnum(G__tagdefining);
             if (base_m.IsAbstract() && G__struct.isabstract[tagnum_tagdefining]) {
-               //fprintf(stderr, "G__BuilderInfo::Build: 1 Decrement abstract count for '%s' count: %d -> %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[tagnum_tagdefining], G__struct.isabstract[tagnum_tagdefining] - 1);
+               //fprintf(stderr, "G__BuilderInfo::Build: 1 Decrement abstract count for '%s' count: %d -> %d\n", G__p_ifunc.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[tagnum_tagdefining], G__struct.isabstract[tagnum_tagdefining] - 1);
                --G__struct.isabstract[tagnum_tagdefining]; // We now have one less pure virtual member function.
             }
             if (base_m.IsVirtual()) {
-               isvirtual = 1; // FIXME: We need to update the reflex entry immediately, we may return in the next block.
-               //fprintf(stderr, "G__Builderinfo::Build: changed isvirtual to: %d\n", isvirtual);
+               fIsvirtual = 1; // FIXME: We need to update the reflex entry immediately, we may return in the next block.
+               //fprintf(stderr, "G__Builderinfo::Build: changed fIsvirtual to: %d\n", fIsvirtual);
             }
             break;
          }
@@ -1832,18 +1856,18 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       // -- Now handle the parts which go into the function property.
       //
       // Consume the friendtag, put it into the function properties friendtag list.
-      if (prop.entry.friendtag) {
+      if (fProp.entry.friendtag) {
          if (!G__get_funcproperties(m)->entry.friendtag) {
-            G__get_funcproperties(m)->entry.friendtag = prop.entry.friendtag;
+            G__get_funcproperties(m)->entry.friendtag = fProp.entry.friendtag;
          }
          else {
             struct G__friendtag* friendtag = G__get_funcproperties(m)->entry.friendtag;
             while (friendtag->next) {
                friendtag = friendtag->next;
             }
-            friendtag->next = prop.entry.friendtag;
+            friendtag->next = fProp.entry.friendtag;
          }
-         prop.entry.friendtag = 0;
+         fProp.entry.friendtag = 0;
       }
       // The old code was doing:
       // 
@@ -1856,7 +1880,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       //      - Avoid double counting pure virtual function.
       //
       if (
-         (FILE*) prop.entry.p && // we have file pointer to text of body, and
+         (FILE*) fProp.entry.p && // we have file pointer to text of body, and
          (
             !G__def_struct_member || // not a class member, or
             (G__struct.iscpplink[G__get_tagnum(G__def_tagnum)] != G__CPPLINK) // is not precompiled
@@ -1866,9 +1890,9 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
          // if (!m.IsExplicit() && isexplicit)
          // if (m.IsAbstract() != !ispurevirtual)
          // if (m.IsConst() != isconst)
-         if (ispurevirtual & !m.IsAbstract()) {
+         if (fIspurevirtual & !m.IsAbstract()) {
             if (G__tagdefining) {
-               //fprintf(stderr, "G__BuilderInfo::Build: 2 Decrement abstract count for '%s' count: %d -> %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], G__struct.isabstract[G__get_tagnum(G__tagdefining)] - 1);
+               //fprintf(stderr, "G__BuilderInfo::Build: 2 Decrement abstract count for '%s' count: %d -> %d\n", G__p_ifunc.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], G__struct.isabstract[G__get_tagnum(G__tagdefining)] - 1);
                --G__struct.isabstract[G__get_tagnum(G__tagdefining)];
             }
          }
@@ -1876,7 +1900,7 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
          G__get_funcproperties(m)->entry.friendtag = 0;
          std::vector<G__value*> prev_para_default = G__get_funcproperties(m)->entry.para_default;
          G__get_funcproperties(m)->entry.para_default.clear();
-         G__get_funcproperties(m)->entry = prop.entry;
+         G__get_funcproperties(m)->entry = fProp.entry;
          G__get_funcproperties(m)->entry.friendtag = prev_friendtag;
          G__get_funcproperties(m)->entry.para_default = prev_para_default;
 #ifndef GNUC
@@ -1884,16 +1908,16 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
 #endif
          G__get_funcproperties(m)->entry.for_tp2f = m.Name();
          G__get_funcproperties(m)->entry.tp2f = (void*) G__get_funcproperties(m)->entry.for_tp2f.c_str();
-         for (unsigned int i = 0; i < params_name.size(); ++i) {
-            if (params_name[i].second.size()) {
+         for (unsigned int i = 0; i < fParams_name.size(); ++i) {
+            if (fParams_name[i].second.size()) {
                G__genericerror("Error: Redefinition of default argument");
             }
          }
          //m.UpdateFunctionParameterNames( GetParamNames().c_str() );
       }
       else {
-         if (ispurevirtual && G__tagdefining) {
-            //fprintf(stderr, "G__BuilderInfo::Build: 3 Decrement abstract count for '%s' count: %d -> %d\n", G__tagdefining.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], G__struct.isabstract[G__get_tagnum(G__tagdefining)] - 1);
+         if (fIspurevirtual && G__tagdefining) {
+            //fprintf(stderr, "G__BuilderInfo::Build: 3 Decrement abstract count for '%s' count: %d -> %d\n", G__p_ifunc.Name(Reflex::SCOPED).c_str(), G__struct.isabstract[G__get_tagnum(G__tagdefining)], G__struct.isabstract[G__get_tagnum(G__tagdefining)] - 1);
             --G__struct.isabstract[G__get_tagnum(G__tagdefining)];
          }
       }
@@ -1901,11 +1925,11 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
    }
    else if ( // function not seen before, and ok to process
       (
-         prop.entry.p || // we have a file pointer to the function body (definition), or
-         prop.entry.ansi || // ansi-style declaration, or
+         fProp.entry.p || // we have a file pointer to the function body (definition), or
+         fProp.entry.ansi || // ansi-style declaration, or
          G__nonansi_func || // not ansi-style declaration, or // FIXME: What???  Combined with previous clause is always true???
          (G__globalcomp < G__NOLINK) || // is precompiled, or
-         prop.entry.friendtag // is a friend
+         fProp.entry.friendtag // is a friend
       )
       // This block is skipped only when compicated template
       // instantiation is done during reading argument list
@@ -1921,22 +1945,22 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
       // --
    ) {
       int modifiers = 0;
-      if (isconst) {
+      if (fIsconst) {
          modifiers |= ::Reflex::CONST;
       }
-      if (isexplicit) {
+      if (fIsexplicit) {
          modifiers |= ::Reflex::EXPLICIT;
       }
-      if (staticalloc) {
+      if (fStaticalloc) {
          modifiers |= ::Reflex::STATIC;
       }
-      if (isvirtual) {
+      if (fIsvirtual) {
          modifiers |= ::Reflex::VIRTUAL;
       }
-      if (ispurevirtual) {
+      if (fIspurevirtual) {
          modifiers |= ::Reflex::ABSTRACT;
       }
-      switch (access) {
+      switch (fAccess) {
          case G__PUBLIC:
             modifiers |= ::Reflex::PUBLIC;
             break;
@@ -2025,13 +2049,24 @@ void Cint::Internal::G__BuilderInfo::AddParameter(int ifn, int type, int numeric
          return m;
       }
       G__RflxFuncProperties* a = G__get_funcproperties(m);
-      *a = prop;
-      a->entry.para_default = default_vals;
+      //fprintf(stderr, "G__BuilderInfo::Build: a: %p  %s:%d\n", a, __FILE__, __LINE__);
+      //fprintf(stderr, "G__BuilderInfo::Build: fProp.entry.ptradjust: %ld  %s:%d\n", fProp.entry.ptradjust, __FILE__, __LINE__);
+      *a = fProp;
+      //fprintf(stderr, "G__BuilderInfo::Build: a->entry.ptradjust: %ld  %s:%d\n", a->entry.ptradjust, __FILE__, __LINE__);
+      a->entry.para_default = fDefault_vals;
       if (!a->entry.tp2f) {
          a->entry.for_tp2f = m.Name();
          a->entry.tp2f = (void*) a->entry.for_tp2f.c_str();
       }
    }
+   //else {
+   //   fprintf(stderr, "G__BuilderInfo::Build: Skipping creation of function properties for '%s'  %s:%d\n", name.c_str(), __FILE__, __LINE__);
+   //   fprintf(stderr, "G__BuilderInfo::Build:    fProp.entry.p: 0x%lx  %s:%d\n", (long) fProp.entry.p, __FILE__, __LINE__);
+   //   fprintf(stderr, "G__BuilderInfo::Build:    fProp.entry.ansi: %d  %s:%d\n", fProp.entry.ansi, __FILE__, __LINE__);
+   //   fprintf(stderr, "G__BuilderInfo::Build:    G__nonansi_func: %d  %s:%d\n", G__nonansi_func, __FILE__, __LINE__);
+   //   fprintf(stderr, "G__BuilderInfo::Build:    G__globalcomp < G__NOLINK: %d %d  %s:%d\n", G__globalcomp, G__globalcomp < G__NOLINK, __FILE__, __LINE__);
+   //   fprintf(stderr, "G__BuilderInfo::Build:    fProp.entry.friendtag: %d  %s:%d\n", fProp.entry.friendtag, __FILE__, __LINE__);
+   //}
    return m;
 }
 

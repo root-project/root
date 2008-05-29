@@ -1269,32 +1269,66 @@ struct G__tempobject_list {
 *********************************************************************/
 class G__RflxStackProperties {
 public:
-   G__RflxStackProperties() : prev_filenum(-1), prev_line_number(-1), struct_offset(0), exec_memberfunc(0), libp(0) {}
+   G__RflxStackProperties() : prev_filenum(-1), prev_line_number(-1), struct_offset(0), exec_memberfunc(0)
+#ifdef G__VAARG
+   , libp(0)
+#endif // G__VAARG
+   {
+   }
+   G__RflxStackProperties(const G__RflxStackProperties& rhs) : prev_filenum(rhs.prev_filenum), prev_line_number(rhs.prev_line_number), struct_offset(rhs.struct_offset), tagnum(rhs.tagnum), exec_memberfunc(rhs.exec_memberfunc), ifunc(rhs.ifunc), calling_scope(rhs.calling_scope)
+#ifdef G__VAARG
+   , libp(rhs.libp)
+#endif // G__VAARG
+   {
+   }
+   ~G__RflxStackProperties();
+   G__RflxStackProperties& operator=(const G__RflxStackProperties& rhs)
+   {
+      if (this != &rhs) {
+         prev_filenum = rhs.prev_filenum;
+         prev_line_number = rhs.prev_line_number;
+         struct_offset = rhs.struct_offset;
+         tagnum = rhs.tagnum;
+         exec_memberfunc = rhs.exec_memberfunc;
+         ifunc = rhs.ifunc;
+         calling_scope = rhs.calling_scope;
+#ifdef G__VAARG
+         libp = rhs.libp;
+#endif // G__VAARG
+         // --
+      }
+      return *this;
+   }
+public:
    int prev_filenum; // File number of the calling pointing that induced this stack level.
    short prev_line_number;
    char* struct_offset;
    ::Reflex::Scope tagnum; 
    int exec_memberfunc;
-
    ::Reflex::Member ifunc;
-   ::Reflex::Scope  calling_scope; /* aka prev_local */
+   ::Reflex::Scope calling_scope; // aka prev_local
 #ifdef G__VAARG
-   struct G__param *libp; /* store the values of function parameters as passed */
-#endif
+   struct G__param* libp; // store the values of function parameters as passed
+#endif // G__VAARG
+   // --
 }; 
 
 class BuilderHolder {
-   union {
-      Reflex::UnionBuilder* u;
-      Reflex::ClassBuilder* c;
-      Reflex::EnumBuilder* e;
-      Reflex::NamespaceBuilder* n;
-   };
-   char tagtype;
-public:
-   BuilderHolder() : u(0),tagtype(0) {}
+public: // Public Interface
+   BuilderHolder() : u(0), tagtype(0) {}
+   BuilderHolder(const BuilderHolder& rhs) : tagtype(rhs.tagtype)
+   {
+      switch (tagtype) {
+         case 'a':
+         case 'c':
+         case 's': c = rhs.c; break;
+         case 'e': e = rhs.e; break;
+         case 'u': u = rhs.u; break;
+         case 'n': n = rhs.n; break;
+      }
+   }
    ~BuilderHolder() {
-      switch(tagtype) {
+      switch (tagtype) {
          case 'a':
          case 'c':
          case 's': delete c; break;
@@ -1303,20 +1337,66 @@ public:
          case 'n': delete n; break;
       }
    }
+   BuilderHolder& operator=(const BuilderHolder& rhs)
+   {
+      if (this != &rhs) {
+         tagtype = rhs.tagtype;
+         switch (tagtype) {
+            case 'a':
+            case 'c':
+            case 's': c = rhs.c; break;
+            case 'e': e = rhs.e; break;
+            case 'u': u = rhs.u; break;
+            case 'n': n = rhs.n; break;
+         }
+      }
+      return *this;
+   }
    Reflex::UnionBuilder& Union() { return *u; }
    Reflex::ClassBuilder& Class() { return *c; }
    Reflex::EnumBuilder& Enum()  { return *e; }
    Reflex::NamespaceBuilder& Namespace() { return *n; }
-   void Set(Reflex::UnionBuilder* b) { u = b; tagtype = 'u'; };
-   void Set(Reflex::ClassBuilder* b) { c = b; tagtype = 'c'; };
-   void Set(Reflex::EnumBuilder* b)  { e = b; tagtype = 'e'; };
-   void Set(Reflex::NamespaceBuilder* b)  { n = b; tagtype = 'n'; };
+   void Set(Reflex::UnionBuilder* b) { u = b; tagtype = 'u'; }
+   void Set(Reflex::ClassBuilder* b) { c = b; tagtype = 'c'; }
+   void Set(Reflex::EnumBuilder* b)  { e = b; tagtype = 'e'; }
+   void Set(Reflex::NamespaceBuilder* b)  { n = b; tagtype = 'n'; }
    char Tagtype() { return tagtype; }
+private: // Private Data Members
+   union {
+      Reflex::UnionBuilder* u;
+      Reflex::ClassBuilder* c;
+      Reflex::EnumBuilder* e;
+      Reflex::NamespaceBuilder* n;
+   };
+   char tagtype;
 };
    
 class G__RflxProperties {
 public:
-   G__RflxProperties() : autoload(0), filenum(-1), linenum(-1), globalcomp(G__NOLINK), iscpplink(G__NOLINK), typenum(-1), tagnum(-1), isFromUsing(false), vtable(0), isBytecodeArena(0) {}
+   G__RflxProperties() : autoload(0), filenum(-1), linenum(-1), globalcomp(G__NOLINK), iscpplink(G__NOLINK), typenum(-1), tagnum(-1), isFromUsing(false), vtable(0), isBytecodeArena(0), statictype(0) {}
+   G__RflxProperties(const G__RflxProperties& rhs) : autoload(rhs.autoload), filenum(rhs.filenum), linenum(rhs.linenum), globalcomp(rhs.globalcomp), iscpplink(rhs.iscpplink), typenum(rhs.typenum), tagnum(rhs.tagnum), isFromUsing(rhs.isFromUsing), comment(rhs.comment), stackinfo(rhs.stackinfo), builder(rhs.builder), vtable(rhs.vtable), isBytecodeArena(rhs.isBytecodeArena), statictype(rhs.statictype) {}
+   virtual ~G__RflxProperties();
+   G__RflxProperties& operator=(const G__RflxProperties& rhs)
+   {
+      if (this != &rhs) {
+         autoload = rhs.autoload;
+         filenum = rhs.filenum;
+         linenum = rhs.linenum;
+         globalcomp = rhs.globalcomp;
+         iscpplink = rhs.iscpplink;
+         typenum = rhs.typenum;
+         tagnum = rhs.tagnum;
+         isFromUsing = rhs.isFromUsing;
+         comment = rhs.comment;
+         stackinfo = rhs.stackinfo;
+         builder = rhs.builder;
+         vtable = rhs.vtable;
+         isBytecodeArena = rhs.isBytecodeArena;
+         statictype = rhs.statictype;
+      }
+      return *this;
+   }
+public:
    int autoload;
    int filenum; // entry in G__srcfile
    int linenum;
@@ -1333,21 +1413,45 @@ public:
    int statictype;
 };
 
-class G__RflxVarProperties: public G__RflxProperties {
+class G__RflxVarProperties : public G__RflxProperties {
 public:
-   G__RflxVarProperties(): G__RflxProperties(), bitfield_start(0), bitfield_width(0), addressOffset(0), isCompiledGlobal(false) , lock(false) {}
+   G__RflxVarProperties(): G__RflxProperties(), bitfield_start(0), bitfield_width(0), addressOffset(0), isCompiledGlobal(false), lock(false) {}
+   G__RflxVarProperties(const G__RflxVarProperties& rhs): G__RflxProperties(rhs), bitfield_start(rhs.bitfield_start), bitfield_width(rhs.bitfield_width), addressOffset(rhs.addressOffset), isCompiledGlobal(rhs.isCompiledGlobal), lock(rhs.lock) {}
+   virtual ~G__RflxVarProperties();
+   G__RflxVarProperties& operator=(const G__RflxVarProperties& rhs)
+   {
+      if (this != &rhs) {
+         bitfield_start = rhs.bitfield_start;
+         bitfield_width = rhs.bitfield_width;
+         addressOffset = rhs.addressOffset;
+         isCompiledGlobal = rhs.isCompiledGlobal;
+         lock = rhs.lock;
+      }
+      return *this;
+   }
+public:
    short bitfield_start;
    short bitfield_width;
-
    char* addressOffset;   // Offset to be added to the 'base' address (the object address for data member, 0 for global variable, etc.)
    bool isCompiledGlobal; // true if G__var_array::statictype was equal to G__COMPILEDGLOBAL
    bool lock;
 };
 
-class G__RflxFuncProperties: public G__RflxProperties
-{
+class G__RflxFuncProperties : public G__RflxProperties {
 public:
    G__RflxFuncProperties() : G__RflxProperties() {}
+   G__RflxFuncProperties(const G__RflxFuncProperties& rhs) : G__RflxProperties(rhs), ifmethod(rhs.ifmethod), entry(rhs.entry) {}
+   virtual ~G__RflxFuncProperties();
+   G__RflxFuncProperties& operator=(const G__RflxFuncProperties& rhs)
+   {
+      if (this != &rhs) {
+         this->G__RflxProperties::operator=(rhs);
+         ifmethod = rhs.ifmethod;
+         entry = rhs.entry;
+      }
+      return *this;
+   }
+public:
    G__InterfaceMethod ifmethod;
    G__funcentry entry;
 };
@@ -1356,43 +1460,46 @@ namespace Cint {
 namespace Internal {
 
 class G__BuilderInfo {
-public:
+public: // Public Types
    typedef std::vector<std::pair<std::string, std::string> > names_t;
-public:
+public: // Public Interface
+   G__BuilderInfo();
+   G__BuilderInfo(const G__BuilderInfo& rhs); // NOT IMPLEMENTED
+   ~G__BuilderInfo() {}
+   G__BuilderInfo& operator=(const G__BuilderInfo& rhs); // NOT IMPLEMENTED
+   std::string GetParamNames(); // "p1=val1; p2=val2", Internal, called by Build().
+   void ParseParameterLink(const char* paras); // Dictionary Interface, called by v6_newlink.cxx(G__memfunc_setup)
+   void AddParameter(int ifn, int type, int tagnum, int typenum, int reftype_const, G__value* para_default, char* para_def, char* para_name); // Internal, called by ParseParameterLink()
+// called by v6_ifunc.cxx(G__make_ifunctable)
+   ::Reflex::Member Build(const std::string& name); // Called by v6_newlink.cxx(G__memfunc_setup), v6_ifunc.cxx(G__make_ifunctable).
+public: // Public Data Members
    // -- The containing class of this member, despite the name.
-   ::Reflex::Scope basetagnum; // This is our containing class, despite the name.
+   ::Reflex::Scope fBasetagnum; // This is our containing class, despite the name.
    // -- Offset of data member in most derived class.
-   int baseoffset; // beginning of this data member's class in most derived class
+   int fBaseoffset; // beginning of this data member's class in most derived class
    // -- Access.
-   int access; // public, protected, private
+   int fAccess; // public, protected, private
    // -- Modifiers.
-   int isconst; // int f() const;
-   int isexplicit; // explict MyClass();
-   char staticalloc; // static f();
-   int isvirtual; // virtual f();
-   int ispurevirtual; // virtual f() = 0;
+   int fIsconst; // int f() const;
+   int fIsexplicit; // explict MyClass();
+   char fStaticalloc; // static f();
+   int fIsvirtual; // virtual f();
+   int fIspurevirtual; // virtual f() = 0;
    // -- Type of return value.
-   ::Reflex::Type returnType; // type of return value
+   ::Reflex::Type fReturnType; // type of return value
    //
    //  Function parameter names, parameter types,
    //  parameter default texts, and parameter default values
    //
    //  Note: Set by G__readansiproto().
    //
-   std::vector<Reflex::Type> params_type; // [ type1, type2, ... ]
-   names_t params_name; // [ (nm1, def1), (nm2, def2), ... ]
-   std::vector<G__value*> default_vals; // [ def_val1, def_val2, ... ]
+   std::vector<Reflex::Type> fParams_type; // [ type1, type2, ... ]
+   names_t fParams_name; // [ (nm1, def1), (nm2, def2), ... ]
+   std::vector<G__value*> fDefault_vals; // [ def_val1, def_val2, ... ]
    //
    //  Extended properties beyond what Reflex supports.
    //
-   G__RflxFuncProperties prop;
-public:
-   G__BuilderInfo();
-   std::string GetParamNames(); // "p1=val1; p2=val2", Internal, called by Build().
-   void ParseParameterLink(const char* paras); // Dictionary Interface, called by v6_newlink.cxx(G__memfunc_setup)
-   void AddParameter(int ifn, int type, int tagnum, int typenum, int reftype_const, G__value* para_default, char* para_def, char* para_name); // Internal, called by ParseParameterLink()
-// called by v6_ifunc.cxx(G__make_ifunctable)
-   ::Reflex::Member Build(const std::string& name); // Called by v6_newlink.cxx(G__memfunc_setup), v6_ifunc.cxx(G__make_ifunctable).
+   G__RflxFuncProperties fProp;
 };
 
 } // namespace Internal
@@ -1414,7 +1521,9 @@ namespace Cint {
       class G__CriticalSection {
       public:
          G__CriticalSection() { G__LockCriticalSection(); }
+         G__CriticalSection(const G__CriticalSection& rhs); // NOT IMPLEMENTED
          ~G__CriticalSection() { G__UnlockCriticalSection(); }
+         G__CriticalSection& operator=(const G__CriticalSection& rhs); // NOT IMPLEMENTED
       };
    }
 }

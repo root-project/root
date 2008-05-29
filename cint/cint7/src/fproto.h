@@ -67,7 +67,7 @@ int G__matchregex(char *pattern,char *string);
 #endif
 G__value G__castvalue(char *casttype,G__value result3);
 G__value G__castvalue_bc(char *casttype,G__value result3, int i);
-void G__this_adjustment(const Reflex::Member& ifunc);
+void G__this_adjustment(const Reflex::Member ifunc);
 void G__asm_cast(G__value *buf, const Reflex::Type& totype);
   /* void G__setdebugcond(void); */
 int G__findposition(char *string,struct G__input_file view,int *pline,int *pfnum);
@@ -292,7 +292,7 @@ void G__delete_operator(char *expression,int isarray);
 int G__alloc_newarraylist(void* point,int pinc);
 int G__free_newarraylist(void* point);
 int G__handle_delete(int *piout,char *statement);
-int G__call_cppfunc(G__value *result7,struct G__param *libp,const ::Reflex::Member &ifunc);
+int G__call_cppfunc(G__value *result7,struct G__param *libp,const ::Reflex::Member ifunc);
 void G__gen_cppheader(char *headerfile);
 void G__gen_clink(void);
 void G__gen_cpplink(void);

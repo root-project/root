@@ -215,7 +215,7 @@ void Cint::Internal::G__asm_cast(G__value* buf, const Reflex::Type& totype)
 }
 
 //______________________________________________________________________________
-void Cint::Internal::G__this_adjustment(const Reflex::Member &ifunc)
+void Cint::Internal::G__this_adjustment(const Reflex::Member ifunc)
 {
    // -- FIXME: Describe this function!
    G__store_struct_offset += G__get_funcproperties(ifunc)->entry.ptradjust;
