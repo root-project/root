@@ -185,7 +185,7 @@ int cfstati_(char *fname, int *info, int *lgname)
       info[4] = (int) buf.st_uid;
       info[5] = (int) buf.st_gid;
       info[6] = (int) buf.st_size;
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
       info[7] = (int) buf.st_atimespec.tv_sec;
       info[8] = (int) buf.st_mtimespec.tv_sec;
       info[9] = (int) buf.st_ctimespec.tv_sec;
