@@ -791,7 +791,11 @@ class genDictionary(object) :
     elif notAccessibleType :
       sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s), %s, %s)' % ( cls, self.xref[notAccessibleType]['attrs']['access'].title(), self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable), mod, typ )
     else :
-      sc += '  ClassBuilder("%s", typeid(::%s), sizeof(::%s), %s, %s)' % (cls, cls, cls, mod, typ)
+      globalscopeprefix = "::"
+      # a funny bug in MSVC7.1: sizeof(::std::vector<int>) doesn't work
+      if sys.platform == 'win32' and cls[0:5] == "std::" : globalscopeprefix=""
+      sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s%s), %s, %s)' \
+            % (cls, globalscopeprefix, cls, globalscopeprefix, cls, mod, typ)
     if 'extra' in attrs :
       for pname, pval in attrs['extra'].items() :
         if pname not in ('name','pattern','n_name','file_name','file_pattern') :
