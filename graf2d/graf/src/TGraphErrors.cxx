@@ -511,6 +511,218 @@ Double_t TGraphErrors::GetErrorYlow(Int_t i) const
 
 
 //______________________________________________________________________________
+void TGraphErrors::Paint(Option_t *option)
+{
+   // Paint this TGraphErrors with its current attributes
+   //
+   // by default horizonthal and vertical small lines are drawn at
+   // the end of the error bars. if option "z" or "Z" is specified,
+   // these lines are not drawn.
+   //
+   // if option contains ">" an arrow is drawn at the end of the error bars
+   // if option contains "|>" a full arrow is drawn at the end of the error bars
+   // the size of the arrow is set to 2/3 of the marker size.
+   //
+   // By default, error bars are drawn. If option "X" is specified,
+   // the errors are not drawn (TGraph::Paint equivalent).
+   //
+   // if option "[]" is specified only the end vertical/horizonthal lines
+   // of the error bars are drawn. This option is interesting to superimpose
+   // systematic errors on top of a graph with statistical errors.
+   //
+   // if option "2" is specified error rectangles are drawn.
+   //
+   // if option "3" is specified a filled area is drawn through the end points of
+   // the vertical error bars.
+   //
+   // if option "4" is specified a smoothed filled area is drawn through the end
+   // points of the vertical error bars.
+   //
+   // Use gStyle->SetErrorX(dx) to control the size of the error along x.
+   // set dx = 0 to suppress the error along x.
+   //
+   // Use gStyle->SetEndErrorSize(np) to control the size of the lines
+   // at the end of the error bars (when option 1 is used).
+   // By default np=1. (np represents the number of pixels).
+
+   Double_t *xline = 0;
+   Double_t *yline = 0;
+   Int_t if1 = 0;
+   Int_t if2 = 0;
+
+   const Int_t kBASEMARKER=8;
+   Double_t s2x, s2y, symbolsize, sbase;
+   Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
+   static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
+   static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
+
+   if (strchr(option,'X') || strchr(option,'x')) {TGraph::Paint(option); return;}
+   Bool_t brackets = kFALSE;
+   if (strstr(option,"[]")) brackets = kTRUE;
+   Bool_t endLines = kTRUE;
+   if (strchr(option,'z')) endLines = kFALSE;
+   if (strchr(option,'Z')) endLines = kFALSE;
+   const char *arrowOpt = 0;
+   if (strchr(option,'>'))  arrowOpt = ">";
+   if (strstr(option,"|>")) arrowOpt = "|>";
+
+   Bool_t axis = kFALSE;
+   if (strchr(option,'a')) axis = kTRUE;
+   if (strchr(option,'A')) axis = kTRUE;
+   if (axis) TGraph::Paint(option);
+
+   Bool_t option2 = kFALSE;
+   Bool_t option3 = kFALSE;
+   Bool_t option4 = kFALSE;
+   if (strchr(option,'2')) option2 = kTRUE;
+   if (strchr(option,'3')) option3 = kTRUE;
+   if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
+
+   if (option3) {
+      xline = new Double_t[2*fNpoints];
+      yline = new Double_t[2*fNpoints];
+      if (!xline || !yline) {
+         Error("Paint", "too many points, out of memory");
+         return;
+      }
+      if1 = 1;
+      if2 = 2*fNpoints;
+   }
+
+   TAttLine::Modify();
+
+   TArrow arrow;
+   arrow.SetLineWidth(GetLineWidth());
+   arrow.SetLineColor(GetLineColor());
+   arrow.SetFillColor(GetFillColor());
+
+   TBox box;
+   box.SetLineWidth(GetLineWidth());
+   box.SetLineColor(GetLineColor());
+   box.SetFillColor(GetFillColor());
+   box.SetFillStyle(GetFillStyle());
+
+   symbolsize  = GetMarkerSize();
+   sbase       = symbolsize*kBASEMARKER;
+   Int_t mark  = GetMarkerStyle();
+   Double_t cx  = 0;
+   Double_t cy  = 0;
+   if (mark >= 20 && mark < 31) {
+      cx = cxx[mark-20];
+      cy = cyy[mark-20];
+   }
+
+   //      define the offset of the error bars due to the symbol size
+   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
+   tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
+
+   gPad->SetBit(kClipFrame, TestBit(kClipFrame));
+   for (Int_t i=0;i<fNpoints;i++) {
+      x  = gPad->XtoPad(fX[i]);
+      y  = gPad->YtoPad(fY[i]);
+      if (option3) {
+         if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
+         if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
+         if (y < gPad->GetUymin()) y = gPad->GetUymin();
+         if (y > gPad->GetUymax()) y = gPad->GetUymax();
+      } else {
+         if (x < gPad->GetUxmin()) continue;
+         if (x > gPad->GetUxmax()) continue;
+         if (y < gPad->GetUymin()) continue;
+         if (y > gPad->GetUymax()) continue;
+      }
+      ex = fEX[i];
+      ex = fEX[i];
+      ey = fEY[i];
+
+      //  draw the error rectangles
+      if (option2) {
+         box.PaintBox(gPad->XtoPad(fX[i] - ex),
+                      gPad->YtoPad(fY[i] - ey),
+                      gPad->XtoPad(fX[i] + ex),
+                      gPad->YtoPad(fY[i] + ey));
+         continue;
+      }
+
+      //  keep points for fill area drawing
+      if (option3) {
+         xline[if1-1] = x;
+         xline[if2-1] = x;
+         yline[if1-1] = gPad->YtoPad(fY[i] + ey);
+         yline[if2-1] = gPad->YtoPad(fY[i] - ey);
+         if1++;
+         if2--;
+         continue;
+      }
+
+      xl1 = x - s2x*cx;
+      xl2 = gPad->XtoPad(fX[i] - ex);
+      if (xl1 > xl2) {
+         if (arrowOpt) {
+            arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+         } else {
+            if (!brackets) gPad->PaintLine(xl1,y,xl2,y);
+            if (endLines)  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+         }
+      }
+      xr1 = x + s2x*cx;
+      xr2 = gPad->XtoPad(fX[i] + ex);
+      if (xr1 < xr2) {
+         if (arrowOpt) {
+            arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
+         } else {
+            if (!brackets) gPad->PaintLine(xr1,y,xr2,y);
+            if (endLines)  gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+         }
+      }
+      yup1 = y + s2y*cy;
+      yup2 = gPad->YtoPad(fY[i] + ey);
+      if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
+      if (yup2 > yup1) {
+         if (arrowOpt) {
+            arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
+         } else {
+            if (!brackets) gPad->PaintLine(x,yup1,x,yup2);
+            if (endLines)  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+         }
+      }
+      ylow1 = y - s2y*cy;
+      ylow2 = gPad->YtoPad(fY[i] - ey);
+      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
+      if (ylow2 < ylow1) {
+         if (arrowOpt) {
+            arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
+         } else {
+            if (!brackets) gPad->PaintLine(x,ylow1,x,ylow2);
+            if (endLines)  gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+         }
+      }
+   }
+   if (!brackets && !axis) TGraph::Paint(option);
+   gPad->ResetBit(kClipFrame);
+
+   if (option3) {
+      Int_t logx = gPad->GetLogx();
+      Int_t logy = gPad->GetLogy();
+      gPad->SetLogx(0);
+      gPad->SetLogy(0);
+
+      if (option4) PaintGraph(2*fNpoints, xline, yline,"FC");
+      else         PaintGraph(2*fNpoints, xline, yline,"F");
+
+      gPad->SetLogx(logx);
+      gPad->SetLogy(logy);
+      delete [] xline;
+      delete [] yline;
+   }
+}
+
+
+//______________________________________________________________________________
 void TGraphErrors::Print(Option_t *) const
 {
    // Print graph and errors values.

@@ -1156,7 +1156,7 @@ void TMultiGraph::Paint(Option_t *option)
       }
    }
 
-   if (fit) gfit->PaintStats(fit);
+   if (fit) gfit->PaintFit(fit);
 }
 
 

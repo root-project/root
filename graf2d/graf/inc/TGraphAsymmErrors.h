@@ -37,7 +37,7 @@ protected:
    Double_t        Ibetai(double a, double b, double x) const;
    Double_t        Betai(double a, double b, double x) const;
    Double_t        Brent(double ax, double bx, double cx, double tol, double *xmin) const;
-   virtual void    Efficiency(int k, int N, double conflevel,
+   virtual void    Efficiency(int k, int N, double conflevel, 
                               double& mode, double& low, double& high) const;
    Double_t        Interval(double low) const;
    Double_t        SearchLower(double high, int k, int N, double c) const;
@@ -80,6 +80,7 @@ public:
    Double_t       *GetEYlow()  const {return fEYlow;}
    Double_t       *GetEYhigh() const {return fEYhigh;}
 
+   virtual void    Paint(Option_t *chopt="");
    virtual void    Print(Option_t *chopt="") const;
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh); // *MENU*
