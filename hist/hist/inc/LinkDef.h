@@ -67,6 +67,7 @@
 #pragma link C++ class TProfile2D-;
 #pragma link C++ class TProfile3D+;
 #pragma link C++ class TVirtualHistPainter+;
+#pragma link C++ class TVirtualGraphPainter+;
 
 #pragma link C++ typedef THnSparseD;
 #pragma link C++ typedef THnSparseF;
