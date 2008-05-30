@@ -65,7 +65,6 @@ public:
    Double_t        GetErrorYlow(Int_t bin)  const;
    Double_t       *GetEX() const {return fEX;}
    Double_t       *GetEY() const {return fEY;}
-   virtual void    Paint(Option_t *chopt="");
    virtual void    Print(Option_t *chopt="") const;
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t ex, Double_t ey);  // *MENU
