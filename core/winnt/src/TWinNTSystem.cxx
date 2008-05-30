@@ -56,6 +56,7 @@
 #include <iostream>
 #include <list>
 #include <shlobj.h>
+#include <conio.h>
 
 extern "C" {
    extern int G__get_security_error();
@@ -101,8 +102,6 @@ namespace {
    static TWinNTSystem::ThreadMsgFunc_t gGUIThreadMsgFunc = 0;      // GUI thread message handler func
 
    static HANDLE gGlobalEvent;
-   static HANDLE gConsoleEvent;
-   static HANDLE gConsoleThreadHandle;
    static HANDLE gTimerThreadHandle;
    typedef NET_API_STATUS (WINAPI *pfn1)(LPVOID);
    typedef NET_API_STATUS (WINAPI *pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
@@ -425,41 +424,6 @@ namespace {
       return (DWORD_PTR)_ReturnAddress();
    }
 #pragma auto_inline(on)
-
-   //______________________________________________________________________________
-   unsigned __stdcall HandleConsoleThread(void *pArg )
-   {
-      //
-
-      while (1) {
-         if (gROOT->GetApplication()) {
-            if (gConsoleEvent) {
-               ::WaitForSingleObject(gConsoleEvent, INFINITE);
-            }
-
-            if (!gApplication->HandleTermInput()) break; // no terminal input
-
-            if (gSplash) {    // terminate splash window after first key press
-               delete gSplash;
-               gSplash = 0;
-            }
-            ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE),
-               ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
-            if (gConsoleEvent)
-               ::ResetEvent(gConsoleEvent);
-         } else {
-            static int i = 0;
-            ::SleepEx(100, 1);
-            i++;
-            if (i > 20) break; // TApplication object doesn't exist
-         }
-      }
-
-      ::CloseHandle(gConsoleThreadHandle);
-      gConsoleThreadHandle = 0;
-      _endthreadex( 0 );
-      return 0;
-   }
 
    //______________________________________________________________________________
    static DWORD WINAPI GUIThreadMessageProcessingLoop(void *p)
@@ -877,6 +841,29 @@ namespace {
       ::SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
    } // UpdateRegistry()
 
+   //______________________________________________________________________________
+   bool NeedSplash()
+   {
+      // return kFALSE if option "-l" was specified as main programm command arg
+      
+      static bool once = true;
+      if (!once || gROOT->IsBatch() || !gApplication) return false;
+      TString arg = gSystem->BaseName(gApplication->Argv(0));
+      if ((arg != "root") && (arg != "rootn") &&
+          (arg != "root.exe") && (arg != "rootn.exe")) return false;
+      for(int i=1; i<gApplication->Argc(); i++) {
+         arg = gApplication->Argv(i);
+         arg.Strip(TString::kBoth);
+         if ((arg == "-l") || (arg == "-b")) {
+            return false;
+         }
+      }
+      if (once) {
+         once = false;
+         return true;
+      }
+      return false;
+   }
 } // end unnamed namespace
 
 
@@ -972,17 +959,11 @@ TWinNTSystem::~TWinNTSystem()
       fDirNameBuffer = 0;
    }
 
-   if (gConsoleEvent) {
-      ::ResetEvent(gConsoleEvent);
-      ::CloseHandle(gConsoleEvent);
-      gConsoleEvent = 0;
-   }
    if (gGlobalEvent) {
       ::ResetEvent(gGlobalEvent);
       ::CloseHandle(gGlobalEvent);
       gGlobalEvent = 0;
    }
-   if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
    if (gTimerThreadHandle) ::CloseHandle(gTimerThreadHandle);
 }
 
@@ -1050,12 +1031,6 @@ Bool_t TWinNTSystem::Init()
          pTimeBeginPeriod(1);
       FreeLibrary(hInstWinMM);
    }
-   if (!gROOT->IsBatch()) {
-      gConsoleEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-      gConsoleThreadHandle = (HANDLE)_beginthreadex(NULL, 0, &HandleConsoleThread,
-                                                    0, 0, 0);
-   }
-
    gTimerThreadHandle = ::CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ThreadStub,
                         this, NULL, NULL);
 
@@ -1171,6 +1146,9 @@ void TWinNTSystem::SetProgname(const char *name)
       if (which) delete [] which;
       delete[] fullname;
       delete[] progname;
+   }
+   if (::NeedSplash()) {
+      new TWin32SplashThread(FALSE);
    }
 }
 
@@ -1526,7 +1504,18 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event in TApplication::Run() loop
 
-   if (gConsoleEvent) ::SetEvent(gConsoleEvent);
+   // check for keyboard events
+   if (_kbhit()) {
+      if (gROOT->GetApplication()) {
+         gApplication->HandleTermInput();
+         if (gSplash) {    // terminate splash window after first key press
+            delete gSplash;
+            gSplash = 0;
+         }
+         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE),
+                          ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+      }
+   }
    if (pendingOnly && gGlobalEvent) ::SetEvent(gGlobalEvent);
 
    Bool_t pollOnce = pendingOnly;

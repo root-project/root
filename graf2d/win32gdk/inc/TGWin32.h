@@ -120,8 +120,6 @@ private:
    void MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox = kTRUE);
    void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
 
-   Bool_t NeedSplash();
-
 protected:
    GdkVisual   *fVisual;            //
    GdkColormap *fColormap;          // Default colormap, 0 if b/w

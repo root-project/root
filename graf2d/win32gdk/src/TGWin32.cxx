@@ -807,10 +807,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
 
    fColors = new TExMap;
 
-   if (NeedSplash()) {
-      new TWin32SplashThread(FALSE);
-   }
-
    if (gApplication) {
       TString arg = gSystem->BaseName(gApplication->Argv(0));
       if (!arg.Contains("PVSS"))
@@ -885,31 +881,6 @@ Bool_t TGWin32::IsCmdThread() const
    // returns kTRUE if we are inside cmd/server thread
 
    return (::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId);
-}
-
-//______________________________________________________________________________
-Bool_t TGWin32::NeedSplash()
-{
-   // return kFALSE if option "-l" was specified as main programm command arg
-
-   if (gROOT->IsBatch() || !gApplication) return kFALSE;
-
-   TString arg = gSystem->BaseName(gApplication->Argv(0));
-
-   if ((arg != "root") && (arg != "rootn") &&
-       (arg != "root.exe") && (arg != "rootn.exe")) return kFALSE;
-
-   if (gROOT->IsBatch()) return kFALSE;
-
-   for(int i=1; i<gApplication->Argc(); i++) {
-      arg = gApplication->Argv(i);
-      arg.Strip(TString::kBoth);
-
-      if ((arg == "-l") || (arg == "-b")) {
-         return kFALSE;
-      }
-   }
-   return TRUE;
 }
 
 //______________________________________________________________________________
