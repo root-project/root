@@ -49,7 +49,8 @@ int Cint::Internal::G__call_atexit()
 {
    // -- Execute atexit function.
    // Note: atexit is reset before calling the function to avoid recursive atexit call.
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
    if (G__breaksignal) {
       G__fprinterr(G__serr, "!!! atexit() call\n");
    }

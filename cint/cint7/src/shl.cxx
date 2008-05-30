@@ -315,7 +315,8 @@ extern "C" void *G__shl_findsym(G__SHLHANDLE *phandle,char *sym,short /* type */
   struct dsc$descriptor_s sym_d;
   struct dsc$descriptor_s phandle_d;
 #endif
-  char sym_underscore[G__ONELINE];
+  G__StrBuf sym_underscore_sb(G__ONELINE);
+  char *sym_underscore = sym_underscore_sb;
 
   if(G__sym_underscore) {
     sym_underscore[0]='_';
@@ -616,10 +617,12 @@ int Cint::Internal::G__shl_load(char *shlfile)
   int store_globalcomp;
   char *p;
   char *post;
-  char dllid[G__ONELINE];
+  G__StrBuf dllid_sb(G__ONELINE);
+  char *dllid = dllid_sb;
   int (*sharedlib_func)();
   int error=0,cintdll=0;
-  char dllidheader[G__ONELINE];
+  G__StrBuf dllidheader_sb(G__ONELINE);
+  char *dllidheader = dllidheader_sb;
   int allsl=G__allsl;
 
   if(G__allsl==G__MAX_SL) {
@@ -958,7 +961,8 @@ extern "C" int G__isinterpretedp2f(void *p2f)
 G__value Cint::Internal::G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,int *known3)
 {
   G__value result3;
-  char result7[G__ONELINE];
+  G__StrBuf result7_sb(G__ONELINE);
+  char *result7 = result7_sb;
   int ig15,ig35;
   struct G__ifunc_table *ifunc;
 #ifdef G__SHAREDLIB
@@ -1817,7 +1821,8 @@ void* Cint::Internal::G__FindSymbol(const ::Reflex::Member &ifunc)
    const char *funcname=ifunc.Name().c_str();
    void *p2f=0;
    if(G__ShlHandle) {
-      char buf[G__ONELINE];
+      G__StrBuf buf_sb(G__ONELINE);
+      char *buf = buf_sb;
 
       /* funcname, VC++, GCC, C function */
       p2f = (void*)G__shl_findsym(&G__ShlHandle,(char*)funcname,TYPE_PROCEDURE);

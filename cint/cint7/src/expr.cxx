@@ -1118,16 +1118,23 @@ G__value Cint::Internal::G__getexpr(char* expression)
    int op = 0;               /* operator stack pointer */
    int unaopr[G__STACKDEPTH]; /* unary operator stack */
    int up = 0;                    /* unary operator stack pointer */
-#ifndef G__OLDIMPLEMENTATION1802
-   char vv[G__BUFLEN];
-   char *ebuf = vv;
-#else
-   char ebuf[G__LONGLINE]; /* evaluation buffer */
-#endif
+
+   //
+   // Return null for no expression.
+   //
    int lenbuf = 0;           /* ebuf pointer */
+   int length = strlen(expression);
+   if (!length) {
+      return G__null;
+   }
+#ifndef G__OLDIMPLEMENTATION1802
+   G__StrBuf ebuf_sb(length + 6);
+#else
+   G__StrBuf ebuf_sb(G__LONGLINE);
+#endif
+   char *ebuf = ebuf_sb;
    int c; /* temp char */
    int ig1 = 0;  /* input expression pointer */
-   int length; /* length of input expression */
    int nest = 0; /* parenthesis nesting state variable */
    int single_quote = 0, double_quote = 0; /* quotation flags */
    int iscastexpr = 0; /* whether this expression start with a cast */
@@ -1140,20 +1147,7 @@ G__value Cint::Internal::G__getexpr(char* expression)
    int store_no_exec_compile_and[G__STACKDEPTH];
    int store_no_exec_compile_or[G__STACKDEPTH];
    G__value vtmp_and, vtmp_or;
-   //
-   // Return null for no expression.
-   //
-   length = strlen(expression);
-   if (!length) {
-      return G__null;
-   }
-   if (strlen(expression) > G__BUFLEN - 2) {
-      ebuf = (char*)malloc(strlen(expression) + 6);
-   }
-   if (!ebuf) {
-      G__genericerror("Internal error: malloc, G__getexpr(), ebuf");
-      return G__null;
-   }
+
    //
    // Operator expression.
    //
@@ -1179,9 +1173,6 @@ G__value Cint::Internal::G__getexpr(char* expression)
          case '(': /* new(arena) type(),  (type)val, (expr) */
             if ((nest == 0) && (single_quote == 0) && (double_quote == 0) &&
                   lenbuf == 3 && strncmp(expression + inew, "new", 3) == 0) { /* ON994 */
-#ifndef G__OLDIMPLEMENTATION1802
-               if (vv != ebuf) free((void*)ebuf);
-#endif
                return(G__new_operator(expression + ig1));
             }
             /* no break here */
@@ -1216,9 +1207,6 @@ G__value Cint::Internal::G__getexpr(char* expression)
          case ' ': /* new type, new (arena) type */
             if ((nest == 0) && (single_quote == 0) && (double_quote == 0)) {
                if (lenbuf - inew == 3 && strncmp(expression + inew, "new", 3) == 0) { /* ON994 */
-#ifndef G__OLDIMPLEMENTATION1802
-                  if (vv != ebuf) free((void*)ebuf);
-#endif
                   return(G__new_operator(expression + ig1 + 1));
                }
                /* else ignore c, shoud not happen, but not sure */
@@ -1459,13 +1447,7 @@ G__value Cint::Internal::G__getexpr(char* expression)
                   strncpy(ebuf, expression, ig1);
                   ebuf[ig1] = '\0';
                   G__var_type = store_var_type;
-#ifndef G__OLDIMPLEMENTATION1802
-                  vstack[0] = G__letvariable(ebuf, defined,::Reflex::Scope::GlobalScope(), G__p_local);
-                  if (vv != ebuf) free((void*)ebuf);
-                  return(vstack[0]);
-#else
                   return(G__letvariable(ebuf, defined, &G__global, G__p_local));
-#endif
                }
                inew = ig1 + 1;
             }
@@ -1478,13 +1460,7 @@ G__value Cint::Internal::G__getexpr(char* expression)
                G__RESTORE_NOEXEC_OROPR
                G__RESTORE_ANDOPR
                G__RESTORE_OROPR
-#ifndef G__OLDIMPLEMENTATION1802
-               vstack[1] = G__conditionaloperator(vstack[0], expression, ig1, ebuf);
-               if (vv != ebuf) free((void*)ebuf);
-               return(vstack[1]);
-#else
                return(G__conditionaloperator(vstack[0], expression, ig1, ebuf));
-#endif
             }
             else ebuf[lenbuf++] = c;
             break;
@@ -1510,8 +1486,6 @@ G__value Cint::Internal::G__getexpr(char* expression)
    G__RESTORE_NOEXEC_OROPR
    G__RESTORE_ANDOPR
    G__RESTORE_OROPR
-   if (vv != ebuf) {
-      free((void*) ebuf);
    }
    return vstack[0];
 }
@@ -1520,7 +1494,8 @@ G__value Cint::Internal::G__getexpr(char* expression)
 G__value Cint::Internal::G__getprod(char* expression1)
 {
    G__value defined1, reg;
-   char ebuf1[G__ONELINE];
+   G__StrBuf ebuf1_sb(G__ONELINE);
+   char *ebuf1 = ebuf1_sb;
    int operator1, prodpower = 0;
    int lenbuf1 = 0;
    int ig11, ig2;
@@ -1650,7 +1625,8 @@ G__value Cint::Internal::G__getprod(char* expression1)
 G__value Cint::Internal::G__getpower(char* expression2)
 {
    G__value defined2, reg;
-   char ebuf2[G__ONELINE];
+   G__StrBuf ebuf2_sb(G__ONELINE);
+   char *ebuf2 = ebuf2_sb;
    int operator2 /*,c */;
    int lenbuf2 = 0;
    int ig12;
@@ -1962,7 +1938,8 @@ G__value Cint::Internal::G__getitem(char* item)
 #ifndef G__OLDIMPLEMENTATION1802
                      char *sbuf;
 #else
-                     char sbuf[G__LONGLINE];
+                     G__StrBuf sbuf_sb(G__LONGLINE);
+                     char *sbuf = sbuf_sb;
 #endif
                      int store_return = G__return;
                      int store_security_error = G__security_error;

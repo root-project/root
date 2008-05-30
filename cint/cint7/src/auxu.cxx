@@ -297,7 +297,8 @@ int Cint::Internal::G__scanobject(G__value* buf)
          tagname = raw.Name();
       }
       std::string type_name( m.TypeOf().Name() );
-      char ifunc[G__ONELINE];
+      G__StrBuf ifunc_sb(G__ONELINE);
+      char *ifunc = ifunc_sb;
       sprintf(ifunc, "G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)", tagname.size() ? tagname.c_str() : 0, pointer, (long) name.c_str(), type, (long) tagname.c_str(), (long) type_name.c_str());
       G__getexpr(ifunc);
    }

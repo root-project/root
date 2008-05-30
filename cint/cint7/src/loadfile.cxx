@@ -172,7 +172,8 @@ int Cint::Internal::G__include_file()
 {
   int result;
   int c;
-  char filename[G__MAXFILENAME];
+  G__StrBuf filename_sb(G__MAXFILENAME);
+  char *filename = filename_sb;
   int i=0;
   int storeit=0;
   /* char sysinclude[G__MAXFILENAME]; */
@@ -288,10 +289,13 @@ int Cint::Internal::G__include_file()
 ******************************************************************/
 extern "C" char *G__getmakeinfo(char *item)
 {
-  char makeinfo[G__MAXFILENAME];
+  G__StrBuf makeinfo_sb(G__MAXFILENAME);
+  char *makeinfo = makeinfo_sb;
   FILE *fp;
-  char line[G__LARGEBUF];
-  char argbuf[G__LARGEBUF];
+  G__StrBuf line_sb(G__LARGEBUF);
+  char *line = line_sb;
+  G__StrBuf argbuf_sb(G__LARGEBUF);
+  char *argbuf = argbuf_sb;
   char *arg[G__MAXARG];
   int argn;
   char *p;
@@ -572,7 +576,8 @@ int Cint::Internal::G__matchfilename(int i1,char *filename)
   if(filenamebase) {
     char *parentdir = G__strrstr(G__srcfile[i1].filename,"../");
     if(!parentdir && strcmp(filename,filenamebase+2)==0) {
-      char buf[G__ONELINE];
+      G__StrBuf buf_sb(G__ONELINE);
+      char *buf = buf_sb;
 #if defined(G__WIN32)
       char *p;
 #endif
@@ -582,7 +587,8 @@ int Cint::Internal::G__matchfilename(int i1,char *filename)
       p=buf;
       while((p=strchr(p,'\\'))) *p='/';
       if(strlen(buf)>1 && ':'==buf[1]) {
-        char buf2[G__ONELINE];
+        G__StrBuf buf2_sb(G__ONELINE);
+        char *buf2 = buf2_sb;
         strcpy(buf2,buf+2);
         strcpy(buf,buf2);
       }
@@ -609,7 +615,8 @@ extern "C" char* G__stripfilename(char *filename)
   filenamebase = G__strrstr(filename,"./");
   if(filenamebase) {
     char *parentdir = G__strrstr(filename,"../");
-    char buf[G__ONELINE];
+    G__StrBuf buf_sb(G__ONELINE);
+    char *buf = buf_sb;
 #if defined(G__WIN32)
     char *p;
 #endif
@@ -620,7 +627,8 @@ extern "C" char* G__stripfilename(char *filename)
     p=buf;
     while((p=strchr(p,'\\'))) *p='/';
     if(strlen(buf)>1 && ':'==buf[1]) {
-      char buf2[G__ONELINE];
+      G__StrBuf buf2_sb(G__ONELINE);
+      char *buf2 = buf2_sb;
       strcpy(buf2,buf+2);
       strcpy(buf,buf2);
     }
@@ -694,7 +702,8 @@ extern "C" int G__unloadfile(const char *filename)
   int hash;
   /* int from = -1 ,to = -1, next; */
   int flag;
-  char buf[G__MAXFILENAME];
+  G__StrBuf buf_sb(G__MAXFILENAME);
+  char *buf = buf_sb;
   char *fname;
   char *scope;
   int envtagnum;
@@ -1180,7 +1189,8 @@ extern "C" int G__loadfile(const char *filenamein)
   struct G__includepath *ipath;
   int store_nobreak;
 #ifdef G__TMPFILE
-  char prepname[G__MAXFILENAME];
+  G__StrBuf prepname_sb(G__MAXFILENAME);
+  char *prepname = prepname_sb;
 #else
   char prepname[L_tmpnam+10];
 #endif
@@ -1207,7 +1217,8 @@ extern "C" int G__loadfile(const char *filenamein)
   char soext[]=SOEXT;
 #endif
   char hdrprop = G__NONCINTHDR;
-  char filename[G__ONELINE];
+  G__StrBuf filename_sb(G__ONELINE);
+  char *filename = filename_sb;
   strcpy(filename,filenamein);
 
 
@@ -2220,9 +2231,11 @@ int Cint::Internal::G__preprocessor(char *outname,char *inname,int cppflag
                     ,char *macros,char *undeflist,char *ppopt
                     ,char *includepath)
 {
-  char temp[G__LARGEBUF];
+  G__StrBuf temp_sb(G__LARGEBUF);
+  char *temp = temp_sb;
   /* char *envcpp; */
-  char tmpfilen[G__MAXFILENAME];
+  G__StrBuf tmpfilen_sb(G__MAXFILENAME);
+  char *tmpfilen = tmpfilen_sb;
   int tmplen;
   FILE *fp;
   int flag=0;

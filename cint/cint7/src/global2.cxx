@@ -34,7 +34,8 @@ namespace Cint {
       int G__castcheckoff;
       int G__security_error;
       int G__max_stack_depth;
-      char G__commandline[G__LONGLINE];
+      G__StrBuf G__commandline_sb(G__LONGLINE);
+      char *G__commandline = G__commandline_sb;
    }
 }
 #endif

@@ -423,7 +423,8 @@ G__value Cint::Internal::G__tovalue(G__value p)
          }
          break;
       case 'u': {
-         char refopr[G__MAXNAME];
+         G__StrBuf refopr_sb(G__MAXNAME);
+         char *refopr = refopr_sb;
          char * store_struct_offsetX = G__store_struct_offset;
          ::Reflex::Scope store_tagnumX = G__tagnum;
          int done = 0;
@@ -540,7 +541,8 @@ G__value Cint::Internal::G__letvalue(G__value *p, G__value result)
                break;
             case 'u': {
                G__value para;
-               char refopr[G__MAXNAME];
+               G__StrBuf refopr_sb(G__MAXNAME);
+               char *refopr = refopr_sb;
                char *store_struct_offsetX = G__store_struct_offset;
                ::Reflex::Scope store_tagnumX = G__tagnum;
                int done = 0;
@@ -647,7 +649,8 @@ G__value Cint::Internal::G__letvalue(G__value *p, G__value result)
          break;
       case 'u': {
          G__value para;
-         char refopr[G__MAXNAME];
+         G__StrBuf refopr_sb(G__MAXNAME);
+         char *refopr = refopr_sb;
          char *store_struct_offsetX = G__store_struct_offset;
          ::Reflex::Scope store_tagnumX = G__tagnum;
          int done = 0;

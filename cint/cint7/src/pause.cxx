@@ -245,7 +245,8 @@ void Cint::Internal::G__UnlockCriticalSection() {
 extern "C" int G__autoloading(char *com)
 {
   int i=0,j=0;
-  char classname[G__ONELINE];
+  G__StrBuf classname_sb(G__ONELINE);
+  char *classname = classname_sb;
   while(com[i] && !isalpha(com[i])) ++i;
   while(com[i] && (isalnum(com[i]) || '_'==com[i])) classname[j++]=com[i++];
   classname[j]=0;
@@ -257,8 +258,10 @@ extern "C" int G__autoloading(char *com)
   }
   if(classname[0] && -1==G__defined_tagname(classname,2)) {
     char *dllpost = G__getmakeinfo1("DLLPOST");
-    char fname[G__MAXFILENAME];
-    char prompt[G__ONELINE];
+    G__StrBuf fname_sb(G__MAXFILENAME);
+    char *fname = fname_sb;
+    G__StrBuf prompt_sb(G__ONELINE);
+    char *prompt = prompt_sb;
     FILE *fp;
     sprintf(fname,"%s%s",classname,dllpost);
     fp=fopen(fname,"r");
@@ -436,7 +439,8 @@ static void G__rewind_undo_position()
   G__decrement_undo_index(&undoindex);
   if(undodictpos[undoindex].var &&
      G__is_valid_dictpos(&undodictpos[undoindex])){
-    char buf[G__ONELINE];
+    G__StrBuf buf_sb(G__ONELINE);
+    char *buf = buf_sb;
     G__show_undo_position(undoindex);
     strcpy(buf,G__input("Are you sure? (y/n) "));
     if('y'==tolower(buf[0])) {
@@ -609,7 +613,8 @@ static int G__atevaluate(G__value buf)
 static void G__display_tempobj(FILE *fout)
 {
   struct G__tempobject_list *p = G__p_tempbuf;
-  char buf[G__ONELINE];
+  G__StrBuf buf_sb(G__ONELINE);
+  char *buf = buf_sb;
   fprintf(fout,"current tempobj stack level = %d\n",G__templevel);
   do {
     G__valuemonitor(p->obj,buf);
@@ -632,7 +637,8 @@ static void G__display_keyword(FILE *fout,char *keyword,
 #endif
 )
 {
-  char line[G__LONGLINE];
+  G__StrBuf line_sb(G__LONGLINE);
+  char *line = line_sb;
   char *null_fgets;
 #ifdef G__OLDIMPLEMENTATION1917
   FILE *keyfile;
@@ -750,10 +756,12 @@ extern "C" int G__reloadfile(char *filename)
 void Cint::Internal::G__display_classkeyword(FILE *fout,char *classnamein,char *keyword,int base) 
 {
 #ifndef G__OLDIMPLEMENTATION1823
-  char buf[G__BUFLEN];
+  G__StrBuf buf_sb(G__BUFLEN);
+  char *buf = buf_sb;
   char *classname=buf;
 #else
-  char classname[G__ONELINE];
+  G__StrBuf classname_sb(G__ONELINE);
+  char *classname = classname_sb;
 #endif
   int istmpnam=0;
 
@@ -769,7 +777,8 @@ void Cint::Internal::G__display_classkeyword(FILE *fout,char *classnamein,char *
 #ifndef G__TMPFILE
     char tname[L_tmpnam+10];
 #else
-    char tname[G__MAXFILENAME];
+    G__StrBuf tname_sb(G__MAXFILENAME);
+    char *tname = tname_sb;
 #endif
     FILE *G__temp;
     do {
@@ -893,10 +902,14 @@ extern "C" int G__init_process_cmd()
 extern "C" int G__pause()
 {
   char *p;
-  char cintname[G__ONELINE];
-  char filename[G__ONELINE];
-  char command[G__LONGLINE];
-  char prompt[G__ONELINE];
+  G__StrBuf cintname_sb(G__ONELINE);
+  char *cintname = cintname_sb;
+  G__StrBuf filename_sb(G__ONELINE);
+  char *filename = filename_sb;
+  G__StrBuf command_sb(G__LONGLINE);
+  char *command = command_sb;
+  G__StrBuf prompt_sb(G__ONELINE);
+  char *prompt = prompt_sb;
   int ignore=G__PAUSE_NORMAL;
   int more = 0;
 
@@ -1055,7 +1068,8 @@ extern "C" int G__pause()
 ******************************************************************/
 int Cint::Internal::G__update_stdio()
 {
-  char command[G__LONGLINE];
+  G__StrBuf command_sb(G__LONGLINE);
+  char *command = command_sb;
 
   G__intp_sout = G__sout;
   G__intp_serr = G__serr;
@@ -1092,7 +1106,8 @@ static void G__redirectoutput(char *com
   char *blacket;
   /* int issemicolumn; */
   char *openmode;
-  char filename[G__MAXFILENAME];
+  G__StrBuf filename_sb(G__MAXFILENAME);
+  char *filename = filename_sb;
   int i=0;
   int j=1;
   int mode=0; /* 0:stdout, 1:stderr, 2:stdout+stderr */
@@ -1557,8 +1572,10 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
                    ,G__value *rslt)
 {
   FILE *tempfp;   /* used for input dump file */
-  char command[G__LONGLINE];
-  char syscom[G__LONGLINE];
+  G__StrBuf command_sb(G__LONGLINE);
+  char *command = command_sb;
+  G__StrBuf syscom_sb(G__LONGLINE);
+  char *syscom = syscom_sb;
   char editor[64];
   int temp,temp1=0,temp2;
   int index = -1;
@@ -1572,7 +1589,8 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
 /* pass to parent otherwise not re-entrant */
 #ifdef G__TMPFILE
   static char tname[G__MAXFILENAME];
-  char sname[G__MAXFILENAME];
+  G__StrBuf sname_sb(G__MAXFILENAME);
+  char *sname = sname_sb;
 #else
   static char tname[L_tmpnam+10];
   char sname[L_tmpnam+10];
@@ -1594,12 +1612,15 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
   char *evalbase;
   /* void *evalp; */
   int base=0 /* ,digit */ ,num;
-  char evalresult[G__ONELINE];
+  G__StrBuf evalresult_sb(G__ONELINE);
+  char *evalresult = evalresult_sb;
   FILE* store_stderr=NULL;
   FILE* store_stdout=NULL;
   FILE* store_stdin=NULL;
-  char keyword[G__ONELINE];
-  char pipefile[G__MAXFILENAME];
+  G__StrBuf keyword_sb(G__ONELINE);
+  char *keyword = keyword_sb;
+  G__StrBuf pipefile_sb(G__MAXFILENAME);
+  char *pipefile = pipefile_sb;
   int dmy = 0;
   int noprintflag=0;
   int istmpnam=0;
@@ -2327,13 +2348,15 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
          ::Reflex::Type type(G__value_typenum(buf).FinalType()); 
          if(type.IsConst()) {
             if (type.IsPointer()) {
-               char tmp2[G__ONELINE];
+               G__StrBuf tmp2_sb(G__ONELINE);
+               char *tmp2 = tmp2_sb;
                char *ptmp = strchr(syscom,')');
                strcpy(tmp2,ptmp);
                strcpy(ptmp,"const");
                strcat(syscom,tmp2);
             } else {
-               char tmp[G__ONELINE];
+               G__StrBuf tmp_sb(G__ONELINE);
+               char *tmp = tmp_sb;
                sprintf(tmp,"(const %s",syscom+1);
                strcpy(syscom,tmp);
             }
@@ -3234,13 +3257,15 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
         ::Reflex::Type type(G__value_typenum(buf).FinalType()); 
         if(type.IsConst()) {
            if (type.IsPointer()) {
-              char tmp2[G__ONELINE];
+              G__StrBuf tmp2_sb(G__ONELINE);
+              char *tmp2 = tmp2_sb;
               char *ptmp = strchr(syscom,')');
               strcpy(tmp2,ptmp);
               strcpy(ptmp,"const");
               strcat(syscom,tmp2);
            } else {
-              char tmp[G__ONELINE];
+              G__StrBuf tmp_sb(G__ONELINE);
+              char *tmp = tmp_sb;
               sprintf(tmp,"(const %s",syscom+1);
               strcpy(syscom,tmp);
            }
@@ -3403,13 +3428,15 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
           ::Reflex::Type type(G__value_typenum(buf).FinalType()); 
           if(type.IsConst()) {
              if (type.IsPointer()) {
-                char tmp2[G__ONELINE];
+                G__StrBuf tmp2_sb(G__ONELINE);
+                char *tmp2 = tmp2_sb;
                 char *ptmp = strchr(syscom,')');
                 strcpy(tmp2,ptmp);
                 strcpy(ptmp,"const");
                 strcat(syscom,tmp2);
              } else {
-                char tmp[G__ONELINE];
+                G__StrBuf tmp_sb(G__ONELINE);
+                char *tmp = tmp_sb;
                 sprintf(tmp,"(const %s",syscom+1);
                 strcpy(syscom,tmp);
              }
@@ -3593,13 +3620,15 @@ extern "C" int G__process_cmd(char *line,char *prompt,int *more,int *err
          ::Reflex::Type type(G__value_typenum(buf).FinalType()); 
          if(type.IsConst()) {
             if (type.IsPointer()) {
-               char tmp2[G__ONELINE];
+               G__StrBuf tmp2_sb(G__ONELINE);
+               char *tmp2 = tmp2_sb;
                char *ptmp = strchr(syscom,')');
                strcpy(tmp2,ptmp);
                strcpy(ptmp,"const");
                strcat(syscom,tmp2);
             } else {
-               char tmp[G__ONELINE];
+               G__StrBuf tmp_sb(G__ONELINE);
+               char *tmp = tmp_sb;
                sprintf(tmp,"(const %s",syscom+1);
                strcpy(syscom,tmp);
             }

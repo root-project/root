@@ -431,7 +431,8 @@ char *Cint::Internal::G__tocharexpr(char *result7)
 ****************************************************************/
 char *Cint::Internal::G__string(G__value buf,char *temp)
 {
-  char temp1[G__MAXNAME];
+  G__StrBuf temp1_sb(G__MAXNAME);
+  char *temp1 = temp1_sb;
   switch(G__get_type(G__value_typenum(buf))) {
   case '\0':
     temp[0]='\0'; /* sprintf(temp,""); */
@@ -490,7 +491,8 @@ char *Cint::Internal::G__quotedstring(char *buf,char *result)
 ****************************************************************/
 char *Cint::Internal::G__logicstring(G__value buf,int dig,char *result)
 {
-        char tristate[G__MAXNAME];
+        G__StrBuf tristate_sb(G__MAXNAME);
+        char *tristate = tristate_sb;
         unsigned int hilo,hiz,i,ii,flag;
         switch(G__get_type(G__value_typenum(buf))) {
         case 'd': /* double */

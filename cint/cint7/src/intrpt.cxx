@@ -284,7 +284,8 @@ int Cint::Internal::G__call_interruptfunc(char *func)
 ******************************************************************/
 void Cint::Internal::G__fsigabrt(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGABRT,SIG_DFL);
   if(G__SIGABRT) {
 #define G__OLDIMPLEMENTATION1945
@@ -299,7 +300,8 @@ void Cint::Internal::G__fsigabrt(int)
 ******************************************************************/
 void Cint::Internal::G__fsigfpe(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGFPE,G__floatexception);
   if(G__SIGFPE) {
     sprintf(temp,"%s()",G__SIGFPE);
@@ -313,7 +315,8 @@ void Cint::Internal::G__fsigfpe(int)
 ******************************************************************/
 void Cint::Internal::G__fsigill(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGILL,SIG_DFL);
   if(G__SIGILL) {
     sprintf(temp,"%s()",G__SIGILL);
@@ -327,7 +330,8 @@ void Cint::Internal::G__fsigill(int)
 ******************************************************************/
 void Cint::Internal::G__fsigint(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGINT,G__breakkey);
   if(G__SIGINT) {
     sprintf(temp,"%s()",G__SIGINT);
@@ -341,7 +345,8 @@ void Cint::Internal::G__fsigint(int)
 ******************************************************************/
 void Cint::Internal::G__fsigsegv(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGSEGV,G__segmentviolation);
   if(G__SIGSEGV) {
     sprintf(temp,"%s()",G__SIGSEGV);
@@ -355,7 +360,8 @@ void Cint::Internal::G__fsigsegv(int)
 ******************************************************************/
 void Cint::Internal::G__fsigterm(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGTERM,SIG_DFL);
   if(G__SIGTERM) {
     sprintf(temp,"%s()",G__SIGTERM);
@@ -370,7 +376,8 @@ void Cint::Internal::G__fsigterm(int)
 ******************************************************************/
 void Cint::Internal::G__fsighup(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGHUP,SIG_DFL);
   if(G__SIGHUP) {
     sprintf(temp,"%s()",G__SIGHUP);
@@ -386,7 +393,8 @@ void Cint::Internal::G__fsighup(int)
 ******************************************************************/
 void Cint::Internal::G__fsigquit(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGQUIT,SIG_DFL);
   if(G__SIGQUIT) {
     sprintf(temp,"%s()",G__SIGQUIT);
@@ -402,7 +410,8 @@ void Cint::Internal::G__fsigquit(int)
 ******************************************************************/
 void Cint::Internal::G__fsigtstp(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGTSTP,SIG_DFL);
   if(G__SIGTSTP) {
     sprintf(temp,"%s()",G__SIGTSTP);
@@ -418,7 +427,8 @@ void Cint::Internal::G__fsigtstp(int)
 ******************************************************************/
 void Cint::Internal::G__fsigttin(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGTTIN,SIG_DFL);
   if(G__SIGTTIN) {
     sprintf(temp,"%s()",G__SIGTTIN);
@@ -434,7 +444,8 @@ void Cint::Internal::G__fsigttin(int)
 ******************************************************************/
 void Cint::Internal::G__fsigttou(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGTTOU,SIG_DFL);
   if(G__SIGTTOU) {
     sprintf(temp,"%s()",G__SIGTTOU);
@@ -450,7 +461,8 @@ void Cint::Internal::G__fsigttou(int)
 ******************************************************************/
 void Cint::Internal::G__fsigalrm(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGALRM,SIG_DFL);
   if(G__SIGALRM) {
     sprintf(temp,"%s()",G__SIGALRM);
@@ -466,7 +478,8 @@ void Cint::Internal::G__fsigalrm(int)
 ******************************************************************/
 void Cint::Internal::G__fsigusr1(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGUSR1,SIG_DFL);
   if(G__SIGUSR1) {
     sprintf(temp,"%s()",G__SIGUSR1);
@@ -482,7 +495,8 @@ void Cint::Internal::G__fsigusr1(int)
 ******************************************************************/
 void Cint::Internal::G__fsigusr2(int)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   signal(SIGUSR2,SIG_DFL);
   if(G__SIGUSR2) {
     sprintf(temp,"%s()",G__SIGUSR2);

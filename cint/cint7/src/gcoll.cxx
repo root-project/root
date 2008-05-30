@@ -175,7 +175,8 @@ static void G__destroy_garbageobject(G__alloclist *alloc)
   char *store_struct_offset;
   char *store_globalvarpointer;
   int done=0;
-  char dtor[G__ONELINE];
+  G__StrBuf dtor_sb(G__ONELINE);
+  char *dtor = dtor_sb;
 
   if(-1!=alloc->tagnum) {
     /* Call destructor if class object */

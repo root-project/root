@@ -25,7 +25,8 @@ extern "C" int G__exec_bytecode(G__value* result7, G__CONST char* funcname, stru
    char* store_memberfunc_struct_offset;
    ::Reflex::Scope store_memberfunc_tagnum;
    const int G__LOCALBUFSIZE = 32;
-   char localbuf[G__LOCALBUFSIZE];
+   G__StrBuf localbuf_sb(G__LOCALBUFSIZE);
+   char *localbuf = localbuf_sb;
    if (G__asm_dbg) {
       G__fprinterr(G__serr, "G__exec_bytecode: starting bytecode execution ...\n");
    }
@@ -172,7 +173,8 @@ extern "C" int G__exec_bytecode(G__value* result7, G__CONST char* funcname, stru
    if (G__dumpfile)
    {
       int ipara;
-      char resultx[G__ONELINE];
+      G__StrBuf resultx_sb(G__ONELINE);
+      char *resultx = resultx_sb;
       for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
       fprintf(G__dumpfile, "%s(", bytecode->ifunc.Name().c_str());
       for (ipara = 1;ipara <= libp->paran;ipara++) {
@@ -197,7 +199,8 @@ extern "C" int G__exec_bytecode(G__value* result7, G__CONST char* funcname, stru
 #endif // G__OLDIMPLEMENTATION1259
 #ifdef G__ASM_DBG
    if (G__asm_dbg) {
-      char temp[G__ONELINE];
+      G__StrBuf temp_sb(G__ONELINE);
+      char *temp = temp_sb;
       G__fprinterr(G__serr, "bytecode function '%s' returns: %s  %s:%d\n", bytecode->ifunc.Name(::Reflex::SCOPED).c_str(), G__valuemonitor(*result7, temp), __FILE__, __LINE__);
    }
 #endif // G__ASM_DBG
@@ -217,7 +220,8 @@ extern "C" int G__exec_bytecode(G__value* result7, G__CONST char* funcname, stru
 #ifdef G__DUMPFILE
    if (G__dumpfile) {
       int ipara;
-      char resultx[G__ONELINE];
+      G__StrBuf resultx_sb(G__ONELINE);
+      char *resultx = resultx_sb;
       G__dumpspace -= 3;
       for (ipara = 0;ipara < G__dumpspace;ipara++) fprintf(G__dumpfile, " ");
       G__valuemonitor(*result7, resultx);

@@ -143,7 +143,8 @@ extern "C" void G__p2f_void_void(void* p2f)
    // Pointer to function evaluation function
    switch (G__isinterpretedp2f(p2f)) {
       case G__INTERPRETEDFUNC: {
-         char buf[G__ONELINE];
+         G__StrBuf buf_sb(G__ONELINE);
+         char *buf = buf_sb;
          char *fname;
          fname = G__p2f2funcname(p2f);
          sprintf(buf, "%s()", fname);
@@ -215,7 +216,8 @@ static void G__getindexedvalue(G__value* result3, char* cindex)
 {
    int size;
    int index;
-   char sindex[G__ONELINE];
+   G__StrBuf sindex_sb(G__ONELINE);
+   char *sindex = sindex_sb;
    strcpy(sindex, cindex);
    char* p = strstr(sindex, "][");
    if (p) {
@@ -597,9 +599,12 @@ void Cint::Internal::G__gen_addstros(long addstros)
 //______________________________________________________________________________
 static G__value G__pointer2memberfunction(char* parameter0, char* parameter1, int* known3)
 {
-   char buf[G__LONGLINE];
-   char buf2[G__ONELINE];
-   char expr[G__LONGLINE];
+   G__StrBuf buf_sb(G__LONGLINE);
+   char *buf = buf_sb;
+   G__StrBuf buf2_sb(G__ONELINE);
+   char *buf2 = buf2_sb;
+   G__StrBuf expr_sb(G__LONGLINE);
+   char *expr = expr_sb;
    char* mem;
    G__value res;
    char* opx;
@@ -657,7 +662,8 @@ static G__value G__pointerReference(char* item, G__param* libp, int* known3)
    }
    *known3 = 1;
    if ((libp->paran == 2) && strstr(libp->parameter[1], "][")) {
-      char arg[G__ONELINE];
+      G__StrBuf arg_sb(G__ONELINE);
+      char *arg = arg_sb;
       char* p = arg;
       strcpy(p, libp->parameter[1]);
       int i = 1;
@@ -678,7 +684,8 @@ static G__value G__pointerReference(char* item, G__param* libp, int* known3)
       libp->paran = i;
    }
    for (int i = 1; i < libp->paran; ++i) {
-      char arg[G__ONELINE];
+      G__StrBuf arg_sb(G__ONELINE);
+      char *arg = arg_sb;
       strcpy(arg, libp->parameter[i]);
       if (arg[0] == '[') {
          int j = 0;
@@ -690,7 +697,8 @@ static G__value G__pointerReference(char* item, G__param* libp, int* known3)
       ::Reflex::Type rtype = G__value_typenum(result3).FinalType();
       if (G__get_type(G__value_typenum(result3)) == 'u') {
          // -- This is operator[] overloading.
-         char expr[G__ONELINE];
+         G__StrBuf expr_sb(G__ONELINE);
+         char *expr = expr_sb;
          //
          //  Set member function environment.
          //
@@ -759,7 +767,8 @@ static G__value G__pointerReference(char* item, G__param* libp, int* known3)
 //______________________________________________________________________________
 static int G__additional_parenthesis(G__value* presult, G__param* libp)
 {
-   char buf[G__LONGLINE];
+   G__StrBuf buf_sb(G__LONGLINE);
+   char *buf = buf_sb;
    int known;
    ::Reflex::Scope store_tagnum = G__tagnum;
    char* store_struct_offset = G__store_struct_offset;
@@ -800,8 +809,10 @@ bool Cint::Internal::G__rename_templatefunc(std::string& funcname)
       }
    }
    if (ptmplt) {
-      char funcname2[G__LONGLINE];
-      char buf[G__ONELINE];
+      G__StrBuf funcname2_sb(G__LONGLINE);
+      char *funcname2 = funcname2_sb;
+      G__StrBuf buf_sb(G__ONELINE);
+      char *buf = buf_sb;
       char buf2[20];
       ::Reflex::Type typenum;
       int tagnum, len;
@@ -931,7 +942,8 @@ static G__value G__operatorfunction(G__value* presult, char* item, int* known3, 
             if (ig35 >= G__ONELINE - 1) {
                if (result7[0] == '"') {
                   G__value bufv;
-                  char bufx[G__LONGLINE];
+                  G__StrBuf bufx_sb(G__LONGLINE);
+                  char *bufx = bufx_sb;
                   strncpy(bufx, result7, G__ONELINE - 1);
                   while ((((item[ig15] != ',') && (item[ig15] != ')')) ||
                           (nest > 0) || (single_quote > 0) ||
@@ -1059,7 +1071,8 @@ static G__value G__operatorfunction(G__value* presult, char* item, int* known3, 
 static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, int* known3, int memfunc_flag)
 {
    G__value result3;
-   char result7[G__LONGLINE];
+   G__StrBuf result7_sb(G__LONGLINE);
+   char *result7 = result7_sb;
    int ipara;
    static struct G__param *p2ffpara = (struct G__param*)NULL;
    int hash;
@@ -1328,7 +1341,8 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
                      ) {
                      G__fprinterr(G__serr, "Possible candidates are...\n");
                      {
-                        char itemtmp[G__LONGLINE];
+                        G__StrBuf itemtmp_sb(G__LONGLINE);
+                        char *itemtmp = itemtmp_sb;
                         sprintf(itemtmp, "%s::%s", G__struct.name[G__get_tagnum(G__tagnum)], funcname);
                         G__display_proto_pretty(G__serr, itemtmp, 1);
                      }
@@ -1880,9 +1894,11 @@ static G__value G__getfunction_libp(char* item, char* funcname, G__param* libp, 
 extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
 {
    G__value result3 = G__null;
-   char funcname[G__LONGLINE];
+   G__StrBuf funcname_sb(G__LONGLINE);
+   char *funcname = funcname_sb;
    int overflowflag = 0;
-   char result7[G__LONGLINE];
+   G__StrBuf result7_sb(G__LONGLINE);
+   char *result7 = result7_sb;
    int ipara;
    int ig35;
    int ig15;
@@ -2054,7 +2070,8 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
          if (ig35 >= G__ONELINE - 1) {
             if (result7[0] == '"') {
                G__value bufv;
-               char bufx[G__LONGLINE];
+               G__StrBuf bufx_sb(G__LONGLINE);
+               char *bufx = bufx_sb;
                strncpy(bufx, result7, G__ONELINE - 1);
                while ((((item[ig15] != ',') && (item[ig15] != ')')) ||
                        (nest > 0) || (single_quote > 0) ||
@@ -2682,7 +2699,8 @@ extern "C" G__value G__getfunction(char* item, int* known3, int memfunc_flag)
                if (!G__const_noerror && (!G__no_exec_compile || G__asm_noverflow)) {
                   G__fprinterr(G__serr, "Possible candidates are...\n");
                   {
-                     char itemtmp[G__LONGLINE];
+                     G__StrBuf itemtmp_sb(G__LONGLINE);
+                     char *itemtmp = itemtmp_sb;
                      sprintf(itemtmp, "%s::%s", G__struct.name[G__get_tagnum(G__tagnum)], funcname);
                      G__display_proto_pretty(G__serr, itemtmp, 1);
                   }
@@ -4913,7 +4931,8 @@ char *Cint::Internal::G__charformatter(int ifmt, G__param* libp, char* result)
    int ipara, ichar, lenfmt;
    int ionefmt = 0, fmtflag = 0;
    char onefmt[G__LONGLINE], fmt[G__LONGLINE];
-   char pformat[G__LONGLINE];
+   G__StrBuf pformat_sb(G__LONGLINE);
+   char *pformat = pformat_sb;
    short dig = 0;
    int usedpara = 0;
 

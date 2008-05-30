@@ -32,7 +32,8 @@ using namespace Cint::Internal;
 ******************************************************************/
 static int G__check_semicolumn_after_classdef(int isclassdef)
 {
-   char checkbuf[G__ONELINE];
+   G__StrBuf checkbuf_sb(G__ONELINE);
+   char *checkbuf = checkbuf_sb;
    int store_linenum = G__ifile.line_number;
    int store_c;
    int errflag = 0;
@@ -42,7 +43,8 @@ static int G__check_semicolumn_after_classdef(int isclassdef)
 
    store_c = G__fgetname(checkbuf, ";,(");
    if (isspace(store_c) && '*' != checkbuf[0] && 0 == strchr(checkbuf, '[')) {
-      char checkbuf2[G__ONELINE];
+      G__StrBuf checkbuf2_sb(G__ONELINE);
+      char *checkbuf2 = checkbuf2_sb;
       store_c = G__fgetname(checkbuf2, ";,(");
       if (isalnum(checkbuf2[0])) errflag = 1;
    }
@@ -69,7 +71,8 @@ static int G__check_semicolumn_after_classdef(int isclassdef)
 int Cint::Internal::G__using_namespace()
 {
    int result = 0;
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    int c;
 
    /* check if using directive or declaration */
@@ -670,7 +673,8 @@ extern "C" int G__defined_tagname(const char *tagname, int noerror)
       *p = '\0';
       int slen = p - temp;
       //assert(slen < G__LONGLINE);
-      char given_scopename[G__LONGLINE];
+      G__StrBuf given_scopename_sb(G__LONGLINE);
+      char *given_scopename = given_scopename_sb;
       strncpy(given_scopename, temp, slen);
       // Note: Not really necessary, but make sure
       //       in the case that slen == 0, and provoke
@@ -871,13 +875,17 @@ extern "C" int G__search_tagname(const char *tagname, int type)
    int i , len;
    char *p;
 #ifndef G__OLDIMPLEMENTATION1823
-   char buf[G__BUFLEN*2];
-   char buf2[G__BUFLEN*2];
+   G__StrBuf buf_sb(G__BUFLEN*2);
+   char *buf = buf_sb;
+   G__StrBuf buf2_sb(G__BUFLEN*2);
+   char *buf2 = buf2_sb;
    char *temp = buf;
    char *atom_tagname = buf2;
 #else
-   char temp[G__LONGLINE];
-   char atom_tagname[G__LONGLINE];
+   G__StrBuf temp_sb(G__LONGLINE);
+   char *temp = temp_sb;
+   G__StrBuf atom_tagname_sb(G__LONGLINE);
+   char *atom_tagname = atom_tagname_sb;
 #endif
    int noerror = 0;
    if (type == G__CLASS_AUTOLOAD) {
@@ -1336,16 +1344,20 @@ void Cint::Internal::G__define_struct(char type)
    // struct G__input_file *fin;
    // fpos_t rewind_fpos;
    int c;
-   char tagname[G__LONGLINE];
+   G__StrBuf tagname_sb(G__LONGLINE);
+   char *tagname = tagname_sb;
    char category[10];
-   char memname[G__ONELINE];
-   char val[G__ONELINE];
+   G__StrBuf memname_sb(G__ONELINE);
+   char *memname = memname_sb;
+   G__StrBuf val_sb(G__ONELINE);
+   char *val = val_sb;
    ::Reflex::Scope store_tagnum;
    int store_def_struct_member = 0;
    ::Reflex::Scope store_local;
    G__value enumval;
    int store_access;
-   char basename[G__LONGLINE];
+   G__StrBuf basename_sb(G__LONGLINE);
+   char *basename = basename_sb;
    int* pbasen;
    struct G__inheritance* baseclass;
    int baseaccess;
@@ -1678,7 +1690,8 @@ void Cint::Internal::G__define_struct(char type)
           * class MyClass : public MyNamespace:: MyTopClass !
          */
          int namespace_tagnum;
-         char temp[G__LONGLINE];
+         G__StrBuf temp_sb(G__LONGLINE);
+         char *temp = temp_sb;
 
          namespace_tagnum = G__defined_tagname(basename, 2);
          while ((((namespace_tagnum != -1)

@@ -1853,7 +1853,8 @@ int Cint::Internal::G__scopeoperator(char* name /* name is modified and this is 
    int offset;
    int offset_sum;
    int i;
-   char temp[G__MAXNAME*2];
+   G__StrBuf temp_sb(G__MAXNAME*2);
+   char *temp = temp_sb;
    re_try_after_std:
    /* search for pattern "::" */
    char* pc = G__find_first_scope_operator(name);
@@ -2047,7 +2048,8 @@ int Cint::Internal::G__getunaryop(char unaryop, char* expression, char* buf, G__
 int Cint::Internal::G__iosrdstate(G__value* pios)
 {
    // -- ios rdstate condition test
-   char buf[G__MAXNAME];
+   G__StrBuf buf_sb(G__MAXNAME);
+   char *buf = buf_sb;
    G__value result;
    int ig2;
    char *store_struct_offset;
@@ -2719,7 +2721,8 @@ int Cint::Internal::G__parenthesisovld(G__value* result3, char* funcname, G__par
    ::Reflex::Scope store_tagnum;
    int funcmatch;
    int hash;
-   char realname[G__ONELINE];
+   G__StrBuf realname_sb(G__ONELINE);
+   char *realname = realname_sb;
    int store_exec_memberfunc;
    ::Reflex::Scope store_memberfunc_tagnum;
    char *store_memberfunc_struct_offset;
@@ -2912,8 +2915,10 @@ int Cint::Internal::G__tryindexopr(G__value* result7, G__value* para, int paran,
             G__inc_cp_asm(1, 0);
          }
 #endif // G__ASM
-         char expr[G__ONELINE];
-         char arg2[G__MAXNAME];
+         G__StrBuf expr_sb(G__ONELINE);
+         char *expr = expr_sb;
+         G__StrBuf arg2_sb(G__MAXNAME);
+         char *arg2 = arg2_sb;
          if (G__get_type(para[ig25]) == 'u') {
             // --
 #ifndef G__OLDIMPLEMENTATION1825

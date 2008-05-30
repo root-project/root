@@ -42,9 +42,11 @@ static ::Reflex::Type G__defined_typename_exact(char *type_name)
 #ifdef BEFORE_REFLEX
   int i,flag=0,len;
   char ispointer=0;
-  char temp[G__LONGLINE];
+  G__StrBuf temp_sb(G__LONGLINE);
+  char *temp = temp_sb;
   char *p;
-  char temp2[G__LONGLINE];
+  G__StrBuf temp2_sb(G__LONGLINE);
+  char *temp2 = temp2_sb;
   int env_tagnum;
   char *par;
 
@@ -121,8 +123,10 @@ static void G__define_struct_in_typedef(fpos_t fpos
    // See the enum section below
    char category[10],c;
    G__value enumval;
-   char memname[G__MAXNAME];
-   char val[G__ONELINE];
+   G__StrBuf memname_sb(G__MAXNAME);
+   char *memname = memname_sb;
+   G__StrBuf val_sb(G__ONELINE);
+   char *val = val_sb;
    int store_def_struct_member=0;
 
    ::Reflex::Scope store_def_tagnum = G__def_tagnum;
@@ -284,8 +288,10 @@ void Cint::Internal::G__define_type()
    fpos_t rewind_fpos;
    int c;
    char type1[G__LONGLINE],tagname[G__LONGLINE],type_name[G__LONGLINE];
-   char temp[G__LONGLINE];
-   char val[G__ONELINE];
+   G__StrBuf temp_sb(G__LONGLINE);
+   char *temp = temp_sb;
+   G__StrBuf val_sb(G__ONELINE);
+   char *val = val_sb;
    int isnext;
    fpos_t next_fpos;
    ::Reflex::Scope store_tagnum;
@@ -297,7 +303,8 @@ void Cint::Internal::G__define_type()
    int typedef2=0;
    int nindex=0;
    int index[G__MAXVARDIM];
-   char aryindex[G__MAXNAME];
+   G__StrBuf aryindex_sb(G__MAXNAME);
+   char *aryindex = aryindex_sb;
    /* int lenheader; */
    char *p;
    int store_var_type;
@@ -798,7 +805,8 @@ void Cint::Internal::G__define_type()
          c=G__fgetstream(type_name+1,";,[");
       }
       else {
-         char ltemp1[G__LONGLINE];
+         G__StrBuf ltemp1_sb(G__LONGLINE);
+         char *ltemp1 = ltemp1_sb;
          c = G__fgetstream(ltemp1,";,[");
          if('('==ltemp1[0]) {
             type = 'q';
@@ -1126,7 +1134,8 @@ int G__defined_typename(const char *type_name)
 /*******************************************************************/
 ::Reflex::Type Cint::Internal::G__find_typedef(const char *type_name)
 {
-  char buf[G__LONGLINE];
+  G__StrBuf buf_sb(G__LONGLINE);
+  char *buf = buf_sb;
   strcpy(buf, type_name);
   int len = strlen(buf);
   int ispointer = 0;
@@ -1305,7 +1314,8 @@ int G__search_typename(const char *typenamein,int typein
   int len;
   char ispointer=0;
 
-  char type_name[G__LONGLINE];
+  G__StrBuf type_name_sb(G__LONGLINE);
+  char *type_name = type_name_sb;
   strcpy(type_name,typenamein);
   /* keep uniqueness for pointer to function typedefs */
 #ifndef G__OLDIMPLEMENTATION2191
@@ -1447,7 +1457,8 @@ int Cint::Internal::G__defined_type(char *type_name,int len)
    int refrewind = -2;
    fpos_t pos;
    int line;
-   char store_typename[G__LONGLINE];  
+   G__StrBuf store_typename_sb(G__LONGLINE);
+   char *store_typename = store_typename_sb;  
 
    if(G__prerun&&'~'==type_name[0]) {
       G__var_type = 'y';

@@ -88,7 +88,8 @@ void Cint::Internal::G__freepragma(G__AppPragma *paddpragma)
 int Cint::Internal::G__read_setmode(int *pmode)
 {
   int c;
-  char command[G__ONELINE];
+  G__StrBuf command_sb(G__ONELINE);
+  char *command = command_sb;
   c=G__fgetstream(command,";\n\r");
   if(strcmp(command,"on")==0||'\0'==command[0]) *pmode=1;
   else if(strcmp(command,"ON")==0)              *pmode=1;
@@ -111,7 +112,8 @@ static int G__addpreprocessfile()
 {
   int c;
   struct G__Preprocessfilekey *pkey;
-  char keystring[G__ONELINE];
+  G__StrBuf keystring_sb(G__ONELINE);
+  char *keystring = keystring_sb;
 
   /* Get the key string for preprocessed header file group */
   c=G__fgetstream(keystring,";\n\r");
@@ -137,7 +139,8 @@ static int G__addpreprocessfile()
 static void G__do_not_include()
 {
   int c;
-  char fnameorig[G__ONELINE];
+  G__StrBuf fnameorig_sb(G__ONELINE);
+  char *fnameorig = fnameorig_sb;
   char *fname;
   int len;
   int hash;
@@ -201,7 +204,8 @@ void Cint::Internal::G__force_bytecode_compilation()
 **************************************************************************/
 int Cint::Internal::G__pragma()
 {
-  char command[G__ONELINE];
+  G__StrBuf command_sb(G__ONELINE);
+  char *command = command_sb;
   int c;
   int store_no_exec_compile;
   /* static int store_asm_loopcompile=4; */
@@ -449,7 +453,8 @@ int Cint::Internal::G__pragma()
 
   else {
     int c2;
-    char args[G__ONELINE];
+    G__StrBuf args_sb(G__ONELINE);
+    char *args = args_sb;
     args[0]='\0';
     if('\n'!=c&&'\r'!=c) c = G__fgetline(args);
     /* Back up before a line terminator, to get errors reported correctly. */
@@ -560,8 +565,10 @@ extern "C" int G__security_handle(G__UINT32 category)
 **************************************************************************/
 int Cint::Internal::G__setautoccnames()
 {
-  char backup[G__MAXFILE];
-  char fname[G__MAXFILE];
+  G__StrBuf backup_sb(G__MAXFILE);
+  char *backup = backup_sb;
+  G__StrBuf fname_sb(G__MAXFILE);
+  char *fname = fname_sb;
   char *p;
   FILE *fpto;
   FILE *fpfrom;
@@ -627,7 +634,8 @@ int Cint::Internal::G__setautoccnames()
 **************************************************************************/
 int Cint::Internal::G__autocc()
 {
-  char temp[G__LONGLINE];
+  G__StrBuf temp_sb(G__LONGLINE);
+  char *temp = temp_sb;
   char ansi[10],cpp[10];
 #if defined(G__VISUAL)
   FILE *fp;
@@ -698,8 +706,10 @@ int Cint::Internal::G__autocc()
 **************************************************************************/
 int Cint::Internal::G__appendautocc(FILE *fp)
 {
-  char G__oneline[G__LONGLINE*2];
-  char G__argbuf[G__LONGLINE*2];
+  G__StrBuf G__oneline_sb(G__LONGLINE*2);
+  char *G__oneline = G__oneline_sb;
+  G__StrBuf G__argbuf_sb(G__LONGLINE*2);
+  char *G__argbuf = G__argbuf_sb;
   char *arg[G__ONELINE];
   int argn;
   FILE *G__fp;
@@ -744,7 +754,8 @@ int Cint::Internal::G__appendautocc(FILE *fp)
 **************************************************************************/
 int Cint::Internal::G__isautoccupdate()
 {
-  char backup[G__MAXFILE];
+  G__StrBuf backup_sb(G__MAXFILE);
+  char *backup = backup_sb;
   int result;
   FILE *fp;
   sprintf(backup,"G__%s",G__autocc_c);

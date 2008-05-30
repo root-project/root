@@ -6816,7 +6816,8 @@ int Cint::Internal::G__dasm(FILE* fout, int isthrow)
             else {
                fpos_t store_pos;
                struct G__input_file store_ifile = G__ifile;
-               char statement[G__LONGLINE];
+               G__StrBuf statement_sb(G__LONGLINE);
+               char *statement = statement_sb;
 #if defined(G__NONSCALARFPOS2)
                fpos_t pos;
                pos.__pos = (off_t)G__asm_inst[pc+3];

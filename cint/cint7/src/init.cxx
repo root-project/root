@@ -298,7 +298,8 @@ extern "C" int G__init_cint(const char *command)
   int argn=0,i;
   int result;
   char *arg[G__MAXARG];
-  char argbuf[G__LONGLINE];
+  G__StrBuf argbuf_sb(G__LONGLINE);
+  char *argbuf = argbuf_sb;
 
     G__LockCriticalSection();
 
@@ -554,7 +555,8 @@ extern "C" int G__main(int argc,char **argv)
   int  ii ;
   char *forceassignment=NULL;
   int xfileflag=0;
-  char sourcefile[G__MAXFILENAME];
+  G__StrBuf sourcefile_sb(G__MAXFILENAME);
+  char *sourcefile = sourcefile_sb;
   /*************************************************************
    * C/C++ interpreter option related variables
    *************************************************************/
@@ -568,9 +570,11 @@ extern "C" int G__main(int argc,char **argv)
    * Interpreted code option related variables
    *************************************************************/
   int c,iarg;
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   long G__argpointer[G__MAXARG];
-  char dumpfile[G__MAXFILENAME];
+  G__StrBuf dumpfile_sb(G__MAXFILENAME);
+  char *dumpfile = dumpfile_sb;
   G__value result = G__null;
   char *linkfilename=(char*)NULL;
   int linkflag=0;
@@ -1292,7 +1296,8 @@ extern "C" int G__main(int argc,char **argv)
     int more = 0;
     G__redirect_on();
     G__init_process_cmd();
-    char prompt[G__ONELINE];
+    G__StrBuf prompt_sb(G__ONELINE);
+    char *prompt = prompt_sb;
     strcpy(prompt,"cint>");
     G__process_cmd(icom, prompt, &more,(int*)NULL,(G__value*)NULL);
     G__scratch_all();
@@ -1940,7 +1945,8 @@ int Cint::Internal::G__init_globals()
 static void G__defineMacro(const char* name, long value,
                            const char* cintname = 0,
                            bool cap = true, bool compiler = false) {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
 
   if (G__globalcomp != G__NOLINK && !compiler)
      // not a compiler, and !=G__NOLINK - already dealt with in first pass
@@ -2038,7 +2044,8 @@ static void G__platformMacro()
   ::Reflex::TypedefTypeBuilder("macroChar*$",::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char")))); 
   ::Reflex::TypedefTypeBuilder("macro$",::Reflex::PointerBuilder(::Reflex::ConstBuilder(::Reflex::Type::ByName("char")))); 
 
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   /***********************************************************************
    * operating system
    ***********************************************************************/
@@ -2281,7 +2288,8 @@ static void G__platformMacro()
 ******************************************************************/
 void Cint::Internal::G__set_stdio()
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
 
   G__globalvarpointer = G__PVOID ;
 
@@ -2344,7 +2352,8 @@ void Cint::Internal::G__set_stdio()
 ******************************************************************/
 extern "C" void G__set_stdio_handle(FILE *sout,FILE *serr,FILE *sin)
 {
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
 
   G__sout = G__stdout = sout;
   G__serr = G__stderr = serr;

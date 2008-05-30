@@ -100,7 +100,8 @@ static void G__class_2nd_decl(const ::Reflex::Member& var)
    }
    int store_decl = G__decl;
    G__decl = 0;
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
    sprintf(temp, "~%s()", tagnum.Name().c_str());
    if (G__dispsource) {
       G__fprinterr(G__serr, "\n!!!Calling destructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp, var.Name().c_str());
@@ -184,7 +185,8 @@ static void G__class_2nd_decl_i(const ::Reflex::Member& var)
 #endif // G__ASM_DBG
    G__asm_inst[G__asm_cp] = G__SETSTROS;
    G__inc_cp_asm(1, 0);
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
    sprintf(temp, "~%s()", G__tagnum.Name().c_str());
    if (G__get_varlabel(var.TypeOf(), 1) /* number of elements */ || G__get_paran(var)) {
       // array
@@ -258,7 +260,8 @@ static void G__class_2nd_decl_c(const ::Reflex::Member& var)
 #endif // G__ASM_DBG
    G__asm_inst[G__asm_cp] = G__SETSTROS;
    G__inc_cp_asm(1, 0);
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
    sprintf(temp, "~%s()", G__tagnum.Name().c_str());
    int known = 0;
    G__getfunction(temp, &known, G__TRYDESTRUCTOR);
@@ -592,10 +595,15 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
    int store_no_exec = 0;
    int store_getarraydim = 0;
    int store_asm_noverflow = 0;
-   char tmp[G__ONELINE];
-   char result7[G__ONELINE];
-   char parameter[G__MAXVARDIM][G__ONELINE];
-   G__value para[G__MAXVARDIM];
+   G__StrBuf tmp_sb(G__ONELINE);
+   char *tmp = tmp_sb;
+   G__StrBuf result7_sb(G__ONELINE);
+   char *result7 = result7_sb;
+   G__StrBuf parameter_sb(G__MAXVARDIM * G__ONELINE);
+   typedef char parameterarr_t[G__ONELINE];
+   parameterarr_t *parameter = (parameterarr_t*)parameter_sb.data();
+   G__StrBuf para_sb(G__MAXVARDIM * sizeof(G__value));
+   G__value *para = (G__value*) para_sb.data();
    std::string varname;
    ::Reflex::Scope varscope;
    //--
@@ -1031,7 +1039,8 @@ G__value Cint::Internal::G__letvariable(char* item, G__value expression, const :
                G__tagnum &&
                (G__struct.iscpplink[G__get_tagnum(G__tagnum)] == G__CPPLINK)
             ) {
-               char protect_temp[G__ONELINE];
+               G__StrBuf protect_temp_sb(G__ONELINE);
+               char *protect_temp = protect_temp_sb;
                char* protect_struct_offset = G__store_struct_offset;
                int done = 0;
                G__store_struct_offset = G__globalvarpointer;
@@ -2028,8 +2037,10 @@ void Cint::Internal::G__letstruct(G__value* result, int linear_index, const ::Re
    // and try to call operator=(). It may not be required to search for
    // non member operator=() function, so, some part of these functions
    // could be omitted.
-   char tmp[G__ONELINE];
-   char result7[G__ONELINE];
+   G__StrBuf tmp_sb(G__ONELINE);
+   char *tmp = tmp_sb;
+   G__StrBuf result7_sb(G__ONELINE);
+   char *result7 = result7_sb;
    int ig2 = 0;
    char* store_struct_offset = 0;
    int largestep = 0;
@@ -2336,7 +2347,8 @@ void Cint::Internal::G__letstruct(G__value* result, int linear_index, const ::Re
             break;
          }
          if (G__var_type == 'v') {
-            char refopr[G__MAXNAME];
+            G__StrBuf refopr_sb(G__MAXNAME);
+            char *refopr = refopr_sb;
             char* store_struct_offsetX = G__store_struct_offset;
             ::Reflex::Scope store_tagnumX = G__tagnum;
             int done = 0;
@@ -2552,14 +2564,18 @@ G__value Cint::Internal::G__classassign(char* pdest, const ::Reflex::Type& tagnu
 {
    // -- FIXME: Describe me!
 #ifndef G__OLDIMPLEMENTATION1823
-   char buf[G__BUFLEN*2];
-   char buf2[G__BUFLEN*2];
+   G__StrBuf buf_sb(G__BUFLEN*2);
+   char *buf = buf_sb;
+   G__StrBuf buf2_sb(G__BUFLEN*2);
+   char *buf2 = buf2_sb;
    char* ttt = buf;
    char* result7 = buf2;
    int lenttt;
 #else // G__OLDIMPLEMENTATION1823
-   char ttt[G__ONELINE];
-   char result7[G__ONELINE];
+   G__StrBuf ttt_sb(G__ONELINE);
+   char *ttt = ttt_sb;
+   G__StrBuf result7_sb(G__ONELINE);
+   char *result7 = result7_sb;
 #endif // G__OLDIMPLEMENTATION1823
    char* store_struct_offset = 0;
    ::Reflex::Scope store_tagnum;
@@ -2873,7 +2889,8 @@ int Cint::Internal::G__class_conversion_operator(const ::Reflex::Type& tagnum, G
          G__var_type = 'p';
          G__store_struct_offset = (char*) presult->obj.i;
          // Synthesize function name.
-         char tmp[G__ONELINE];
+         G__StrBuf tmp_sb(G__ONELINE);
+         char *tmp = tmp_sb;
          strcpy(tmp, "operator ");
          strcpy(tmp + 9, tagnum.Name().c_str());
          strcpy(tmp + strlen(tmp), "()");
@@ -2906,7 +2923,8 @@ int Cint::Internal::G__fundamental_conversion_operator(int type, int tagnum, ::R
    //
    // Note: Bytecode compilation is alive after conversion operator is used.
    //
-   char tmp[G__ONELINE];
+   G__StrBuf tmp_sb(G__ONELINE);
+   char *tmp = tmp_sb;
    G__value conv_result;
    int conv_done = 0;
    ::Reflex::Scope conv_tagnum = G__tagnum;
@@ -5286,7 +5304,8 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                // -- This is a member of struct or union accessed by member reference.
                if (!paren && !double_quote && !single_quote) {
                   // To get full struct member name path when not found.
-                  char tmp[G__ONELINE];
+                  G__StrBuf tmp_sb(G__ONELINE);
+                  char *tmp = tmp_sb;
                   strcpy(tmp, item);
                   tmp[i++] = '\0';
                   char* tagname = tmp;
@@ -5300,7 +5319,8 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                // -- This is a member of struct or union accessed by pointer dereference.
                if (!paren && !double_quote && !single_quote && (item[i+1] == '>')) {
                   // To get full struct member name path when not found.
-                  char tmp[G__ONELINE];
+                  G__StrBuf tmp_sb(G__ONELINE);
+                  char *tmp = tmp_sb;
                   strncpy(tmp, item, i);
                   tmp[i++] = '\0';
                   tmp[i++] = '\0';
@@ -6045,7 +6065,8 @@ G__value Cint::Internal::G__getvariable(char* item, int* known, const ::Reflex::
                default :
                   // return value
                   if (G__var_type == 'v') {
-                     char refopr[G__MAXNAME];
+                     G__StrBuf refopr_sb(G__MAXNAME);
+                     char *refopr = refopr_sb;
                      char* store_struct_offsetX = G__store_struct_offset;
                      ::Reflex::Scope store_tagnumX = G__tagnum;
                      int done = 0;

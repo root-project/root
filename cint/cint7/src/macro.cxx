@@ -172,7 +172,8 @@ void Cint::Internal::G__createmacro(char *new_name,char *initvalue)
    //
    // Note: This routine is part of the parser proper.
    //
-   char line[G__ONELINE];
+   G__StrBuf line_sb(G__ONELINE);
+   char *line = line_sb;
    int c;
    char *p,*null_fgets;
    fpos_t pos;
@@ -281,7 +282,8 @@ int Cint::Internal::G__createfuncmacro(char *new_name)
    //
    struct G__Deffuncmacro *deffuncmacro;
    int hash,i;
-   char paralist[G__ONELINE];
+   G__StrBuf paralist_sb(G__ONELINE);
+   char *paralist = paralist_sb;
    int c;
 
    if(G__ifile.filenum>G__gettempfilenum()) {
@@ -354,7 +356,8 @@ int Cint::Internal::G__replacefuncmacro(char *item,G__Callfuncmacro *callfuncmac
    fpos_t pos;
    int c;
    int semicolumn;
-   char symbol[G__ONELINE];
+   G__StrBuf symbol_sb(G__ONELINE);
+   char *symbol = symbol_sb;
    char *punctuation=" \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
    int double_quote=0,single_quote=0;
    fpos_t backup_pos;
@@ -539,7 +542,8 @@ int Cint::Internal::G__getparameterlist(char *paralist,G__Charlist *charlist)
 {
    // -- FIXME: Describe this function!
    int isrc;
-   char string[G__ONELINE];
+   G__StrBuf string_sb(G__ONELINE);
+   char *string = string_sb;
    int c;
 
    charlist->string = (char*)NULL;
@@ -737,10 +741,12 @@ G__value Cint::Internal::G__execfuncmacro(char *item,int *done)
    struct G__Callfuncmacro *callfuncmacro;
    char *p;
 #ifndef G__OLDIMPLEMENTATION1823
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    char *funcmacro=buf;
 #else
-   char funcmacro[G__ONELINE];
+   G__StrBuf funcmacro_sb(G__ONELINE);
+   char *funcmacro = funcmacro_sb;
 #endif
    int hash,i;
    int found;
@@ -868,10 +874,12 @@ int Cint::Internal::G__execfuncmacro_noexec (char* macroname)
    struct G__Callfuncmacro *callfuncmacro;
    char *p;
 #ifndef G__OLDIMPLEMENTATION1823
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    char *funcmacro=buf;
 #else
-   char funcmacro[G__ONELINE];
+   G__StrBuf funcmacro_sb(G__ONELINE);
+   char *funcmacro = funcmacro_sb;
 #endif
    int hash,i,c;
    int found;

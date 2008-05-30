@@ -24,7 +24,8 @@ using namespace Cint::Internal;
 //______________________________________________________________________________
 char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
 {
-   char temp2[G__ONELINE];
+   G__StrBuf temp2_sb(G__ONELINE);
+   char *temp2 = temp2_sb;
    if (G__value_typenum(buf).IsTypedef()) {
       switch (G__get_type(G__value_typenum(buf))) {
          case 'd':
@@ -470,7 +471,8 @@ char* Cint::Internal::G__valuemonitor(G__value buf, char* temp)
          break;
    }
    if (isupper(G__get_type(G__value_typenum(buf)))) {
-      char sbuf[G__ONELINE];
+      G__StrBuf sbuf_sb(G__ONELINE);
+      char *sbuf = sbuf_sb;
       char* p = strchr(temp, '*');
       switch (G__get_reftype(G__value_typenum(buf))) {
          case G__PARAP2P:
@@ -976,7 +978,8 @@ int Cint::Internal::G__val2pointer(G__value* result7)
 //______________________________________________________________________________
 char* Cint::Internal::G__getbase(unsigned int expression, int base, int digit, char* result1)
 {
-   char result[G__MAXNAME];
+   G__StrBuf result_sb(G__MAXNAME);
+   char *result = result_sb;
    int ig18 = 0, ig28 = 0;
    unsigned int onedig, value;  /* bug fix  3 mar 1993 */
 

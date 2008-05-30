@@ -45,10 +45,12 @@ extern "C" void G__set_allocunlockfunc(void(*foo)())
 ****************************************************************/
 G__value Cint::Internal::G__new_operator(char *expression)
 {
-   char arena[G__ONELINE];
+   G__StrBuf arena_sb(G__ONELINE);
+   char *arena = arena_sb;
    char *memarena = 0;
    int arenaflag = 0;
-   char construct[G__LONGLINE];
+   G__StrBuf construct_sb(G__LONGLINE);
+   char *construct = construct_sb;
    char *type;
    char *basictype;
    char *initializer;
@@ -473,7 +475,8 @@ G__value Cint::Internal::G__new_operator(char *expression)
                   ++bp;
                   {
                      int cx, nx = 0;
-                     char tmpx[G__ONELINE];
+                     G__StrBuf tmpx_sb(G__ONELINE);
+                     char *tmpx = tmpx_sb;
                      cx = G__getstream(bp, &nx, tmpx, "),");
                      if (',' == cx) {
                         *ep = ')';
@@ -648,7 +651,8 @@ G__value Cint::Internal::G__new_operator(char *expression)
 ****************************************************************/
 int Cint::Internal::G__getarrayindex(char* indexlist)
 {
-   char index[G__ONELINE];
+   G__StrBuf index_sb(G__ONELINE);
+   char *index = index_sb;
    int store_var_type = G__var_type;
    G__var_type = 'p';
    int p = 1;
@@ -698,7 +702,8 @@ void Cint::Internal::G__delete_operator(char *expression, int isarray)
    ::Reflex::Scope store_tagnum;
    ::Reflex::Type store_typenum;
    int done;
-   char destruct[G__ONELINE];
+   G__StrBuf destruct_sb(G__ONELINE);
+   char *destruct = destruct_sb;
    G__value buf;
    int pinc, i, size;
    int cpplink = 0;

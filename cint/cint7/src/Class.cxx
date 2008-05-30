@@ -827,7 +827,8 @@ void* Cint::G__ClassInfo::New()
          // Interpreted class,struct
          char *store_struct_offset;
          ::Reflex::Scope store_tagnum;
-         char temp[G__ONELINE];
+         G__StrBuf temp_sb(G__ONELINE);
+         char *temp = temp_sb;
          int known = 0;
          p = new char[G__struct.size[tagnum]];
          store_tagnum = G__tagnum;
@@ -883,7 +884,8 @@ void* Cint::G__ClassInfo::New(int n)
       int i;
       char *store_struct_offset;
       ::Reflex::Scope store_tagnum;
-      char temp[G__ONELINE];
+      G__StrBuf temp_sb(G__ONELINE);
+      char *temp = temp_sb;
       int known=0;
       p = new char[G__struct.size[tagnum]*n];
       // Record that we have allocated an array, and how many
@@ -958,7 +960,8 @@ void* Cint::G__ClassInfo::New(void *arena)
       // Interpreted class,struct
       char *store_struct_offset;
       ::Reflex::Scope store_tagnum;
-      char temp[G__ONELINE];
+      G__StrBuf temp_sb(G__ONELINE);
+      char *temp = temp_sb;
       int known=0;
       p = arena;
       store_tagnum = G__tagnum;
@@ -1017,7 +1020,8 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
       // Interpreted class,struct
       char *store_struct_offset;
       ::Reflex::Scope store_tagnum;
-      char temp[G__ONELINE];
+      G__StrBuf temp_sb(G__ONELINE);
+      char *temp = temp_sb;
       int known=0;
       p = arena;
       // Record that we have allocated an array, and how many

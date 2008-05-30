@@ -97,8 +97,10 @@ static void G__cppstub_setparam(char *pformat,char *pbody
                                 ,const ::Reflex::Scope &/*tagnum*/
                                 ,const ::Reflex::Member &ifunc,int k)
 {
-  char paraname[G__MAXNAME];
-  char temp[G__ONELINE];
+  G__StrBuf paraname_sb(G__MAXNAME);
+  char *paraname = paraname_sb;
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
 
   if (!ifunc) return;
 
@@ -175,8 +177,10 @@ static void G__cppstub_genfunc(FILE *fp,const ::Reflex::Scope &tagnum,
                                const ::Reflex::Member &ifunc)
 {
   unsigned int k;
-  char pformat[G__ONELINE];
-  char pbody[G__LONGLINE];
+  G__StrBuf pformat_sb(G__ONELINE);
+  char *pformat = pformat_sb;
+  G__StrBuf pbody_sb(G__LONGLINE);
+  char *pbody = pbody_sb;
 
   ::Reflex::Type argType( ifunc.TypeOf().ReturnType() );
   std::string type_name = argType.Name();

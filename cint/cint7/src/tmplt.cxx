@@ -122,7 +122,8 @@ static void G__instantiate_templateclasslater(G__Definedtemplateclass *deftmpcla
   ::Reflex::Scope store_def_tagnum=G__def_tagnum;
   ::Reflex::Scope store_tagdefining=G__tagdefining;
   int store_def_struct_member=G__def_struct_member;
-  char tagname[G__LONGLINE];
+  G__StrBuf tagname_sb(G__LONGLINE);
+  char *tagname = tagname_sb;
   while(ilist) {
     G__ASSERT(ilist->i>=0);
     strcpy(tagname,G__struct.name[ilist->i]);
@@ -154,8 +155,10 @@ static void G__instantiate_templatememfunclater(G__Definedtemplateclass *deftmpc
 {
   struct G__IntList* ilist=deftmpclass->instantiatedtagnum;
   struct G__Charlist call_para;
-  char templatename[G__LONGLINE];
-  char tagname[G__LONGLINE];
+  G__StrBuf templatename_sb(G__LONGLINE);
+  char *templatename = templatename_sb;
+  G__StrBuf tagname_sb(G__LONGLINE);
+  char *tagname = tagname_sb;
   char *arg;
   int npara=0;
   ::Reflex::Scope store_def_tagnum=G__def_tagnum;
@@ -463,7 +466,8 @@ static G__Templatearg *G__read_specializationarg(char *source)
 {
   struct G__Templatearg *targ=0;
   struct G__Templatearg *p=0;
-  char type[G__MAXNAME];
+  G__StrBuf type_sb(G__MAXNAME);
+  char *type = type_sb;
   bool done = false;
   int i,j,nest;
   int isrc=0;
@@ -973,7 +977,8 @@ struct G__Definetemplatefunc *Cint::Internal::G__defined_templatememfunc(char *n
    char *p;
    char *p1;
    char *p2;
-   char atom_name[G__LONGLINE];
+   G__StrBuf atom_name_sb(G__LONGLINE);
+   char *atom_name = atom_name_sb;
    int store_asm_noverflow = G__asm_noverflow ;
    struct G__Definetemplatefunc *result= NULL;
 
@@ -1041,7 +1046,8 @@ struct G__Definetemplatefunc *Cint::Internal::G__defined_templatefunc(const char
   struct G__Definetemplatefunc *deftmplt;
   int hash,temp;
   char *dmy_struct_offset=0;
-  char atom_name[G__LONGLINE];
+  G__StrBuf atom_name_sb(G__LONGLINE);
+  char *atom_name = atom_name_sb;
   ::Reflex::Scope env_tagnum=G__get_envtagnum();
   ::Reflex::Scope scope_tagnum;
   struct G__inheritance *baseclass;
@@ -1144,7 +1150,8 @@ extern "C" struct G__Definedtemplateclass *G__defined_templateclass(char *name)
   struct G__Definedtemplateclass *deftmplt;
   int hash,temp;
   char *dmy_struct_offset=0;
-  char atom_name[G__LONGLINE];
+  G__StrBuf atom_name_sb(G__LONGLINE);
+  char *atom_name = atom_name_sb;
   ::Reflex::Scope env_tagnum=G__get_envtagnum();
   ::Reflex::Scope scope_tagnum;
   struct G__inheritance *baseclass = 0;
@@ -1253,7 +1260,8 @@ extern "C" struct G__Definedtemplateclass *G__defined_templateclass(char *name)
 static int G__explicit_template_specialization()
 {
 #if !defined(G__OLDIMPLEMENTATION1792)
-  char buf[G__ONELINE];
+  G__StrBuf buf_sb(G__ONELINE);
+  char *buf = buf_sb;
   int cin;
 
   /* store file position */
@@ -1268,7 +1276,8 @@ static int G__explicit_template_specialization()
     /* template<>  class A<int> { A(A& x); A& operator=(A& x); };
      *                  ^                      */
     char *pp;
-    char templatename[G__ONELINE];
+    G__StrBuf templatename_sb(G__ONELINE);
+    char *templatename = templatename_sb;
     int npara=0;
     ::Reflex::Scope envtagnum = G__get_envtagnum();
     struct G__Charlist call_para;
@@ -1355,14 +1364,17 @@ static int G__explicit_template_specialization()
 ***********************************************************************/
 void Cint::Internal::G__declare_template()
 {
-  char temp[G__LONGLINE];
+  G__StrBuf temp_sb(G__LONGLINE);
+  char *temp = temp_sb;
   fpos_t pos;
   int store_line_number;
   struct G__Templatearg *targ;
   int c;
   char *p;
-  char temp2[G__LONGLINE];
-  char temp3[G__LONGLINE];
+  G__StrBuf temp2_sb(G__LONGLINE);
+  char *temp2 = temp2_sb;
+  G__StrBuf temp3_sb(G__LONGLINE);
+  char *temp3 = temp3_sb;
   int ismemvar=0;
   int isforwarddecl = 0;
   int isfrienddecl = 0;
@@ -1739,7 +1751,8 @@ static void G__templatemaptypename(char *string)
     }
 /* #define G__OLDIMPLEMENTATION787 */
   else {
-     char saveref[G__LONGLINE];
+     G__StrBuf saveref_sb(G__LONGLINE);
+     char *saveref = saveref_sb;
      char* p = string + strlen (string);
      while (p > string && (p[-1] == '*' || p[-1] == '&'))
         --p;
@@ -1891,8 +1904,10 @@ int Cint::Internal::G__gettemplatearglist(char *paralist,G__Charlist *charlist_i
   struct G__Charlist *charlist = charlist_in;
   struct G__Templatearg *def_para = def_para_in;
   int isrc;
-  char string[G__LONGLINE];
-  char temp[G__LONGLINE];
+  G__StrBuf string_sb(G__LONGLINE);
+  char *string = string_sb;
+  G__StrBuf temp_sb(G__LONGLINE);
+  char *temp = temp_sb;
   int c;
   G__value buf;
   int searchflag=0;
@@ -2045,7 +2060,8 @@ int Cint::Internal::G__instantiate_templateclass(char *tagnamein, int noerror)
   ::Reflex::Type typenum;
   ::Reflex::Scope tagnum;
   int hash,temp;
-  char templatename[G__LONGLINE];
+  G__StrBuf templatename_sb(G__LONGLINE);
+  char *templatename = templatename_sb;
   char *arg;
   struct G__Definedtemplateclass *deftmpclass;
   struct G__Charlist call_para;
@@ -2055,7 +2071,8 @@ int Cint::Internal::G__instantiate_templateclass(char *tagnamein, int noerror)
   int npara=0;
   ::Reflex::Scope store_tagdefining;
   ::Reflex::Scope store_def_tagnum;
-  char atom_name[G__LONGLINE];
+  G__StrBuf atom_name_sb(G__LONGLINE);
+  char *atom_name = atom_name_sb;
   ::Reflex::Scope env_tagnum=G__get_envtagnum();
   ::Reflex::Scope scope_tagnum;
   struct G__inheritance *baseclass;
@@ -2067,7 +2084,8 @@ int Cint::Internal::G__instantiate_templateclass(char *tagnamein, int noerror)
 #ifndef G__OLDIMPLEMENTATION1712
   int store_templatearg_enclosedscope;
 #endif
-  char tagname[G__LONGLINE];
+  G__StrBuf tagname_sb(G__LONGLINE);
+  char *tagname = tagname_sb;
   strcpy(tagname,tagnamein);
 
   typenum =G__find_typedef(tagname);
@@ -2380,7 +2398,8 @@ void Cint::Internal::G__replacetemplate(char *templatename,char *tagname,G__Char
   fpos_t pos;
   int c,c2;
   int mparen;
-  char symbol[G__LONGLINE];
+  G__StrBuf symbol_sb(G__LONGLINE);
+  char *symbol = symbol_sb;
   char *punctuation=" \t\n;:=+-)(*&^%$#@!~'\"\\|][}{/?.>,<";
   int double_quote=0,single_quote=0;
   struct G__input_file store_ifile;
@@ -2542,7 +2561,8 @@ void Cint::Internal::G__replacetemplate(char *templatename,char *tagname,G__Char
                   if(c && (c == ' ' || strchr(punctuation,c))) {
                      if (G__templatesubstitute(symbol + templsubst_upto + 1,callpara,def_para,templatename
                                                ,tagname,c,npara,1) && '>'!=c) {
-                        char ignorebuf[G__LONGLINE];
+                        G__StrBuf ignorebuf_sb(G__LONGLINE);
+                        char *ignorebuf = ignorebuf_sb;
                         c=G__fgetstream(ignorebuf,">");
                         G__ASSERT('>'==c);
                         c='>';
@@ -2555,7 +2575,8 @@ void Cint::Internal::G__replacetemplate(char *templatename,char *tagname,G__Char
                if(symbol[templsubst_upto] == ' ' || strchr(punctuation, symbol[templsubst_upto]))
                   if (G__templatesubstitute(symbol + templsubst_upto + 1,callpara,def_para,templatename
                                             ,tagname,c,npara,1) && '>'!=c) {
-                     char ignorebuf[G__LONGLINE];
+                     G__StrBuf ignorebuf_sb(G__LONGLINE);
+                     char *ignorebuf = ignorebuf_sb;
                      c=G__fgetstream(ignorebuf,">");
                      G__ASSERT('>'==c);
                      c='>';
@@ -2566,7 +2587,8 @@ void Cint::Internal::G__replacetemplate(char *templatename,char *tagname,G__Char
         }
         if(G__templatesubstitute(symbol,callpara,def_para,templatename
            ,tagname,c,npara,isnew) && '>'!=c) {
-              char ignorebuf[G__LONGLINE];
+              G__StrBuf ignorebuf_sb(G__LONGLINE);
+              char *ignorebuf = ignorebuf_sb;
               SET_READINGFILE; /* ON777 */
               c=G__fgetstream(ignorebuf,">");
               SET_WRITINGFILE; /* ON777 */
@@ -2822,7 +2844,8 @@ int Cint::Internal::G__templatesubstitute(char *symbol,G__Charlist *callpara
           ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' ') ||  
           strchr(symbol,'<') )
          ) {
-        char temp[G__LONGLINE];
+        G__StrBuf temp_sb(G__LONGLINE);
+        char *temp = temp_sb;
         strcpy(temp,symbol);
         sprintf(symbol,"(%s)",temp);
       }
@@ -3009,7 +3032,8 @@ int Cint::Internal::G__matchtemplatefunc(G__Definetemplatefunc *deftmpfunc
   /* int fparadefault; */
   int fargtmplt;
   int i;
-  char paratype[G__LONGLINE];
+  G__StrBuf paratype_sb(G__LONGLINE);
+  char *paratype = paratype_sb;
   int *fntarg;
   int fnt;
   char **fntargc;
@@ -3394,8 +3418,10 @@ int Cint::Internal::G__createtemplatefunc(char *funcname,G__Templatearg *targ
   struct G__Definetemplatefunc *deftmpfunc;
   /* fpos_t store_pos; */
   /* int store_line; */
-  char paraname[G__MAXNAME];
-  char temp[G__LONGLINE];
+  G__StrBuf paraname_sb(G__MAXNAME);
+  char *paraname = paraname_sb;
+  G__StrBuf temp_sb(G__LONGLINE);
+  char *temp = temp_sb;
   /* struct G__Templatearg *tmparg; */
   int c,tmp;
   int unsigned_flag,reftype,pointlevel;

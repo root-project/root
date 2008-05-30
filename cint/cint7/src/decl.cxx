@@ -69,8 +69,10 @@ static int G__get_newname(char* new_name)
    //                   ^
    //
    int store_def_struct_member = 0;
-   char temp[G__ONELINE];
-   char temp1[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
+   G__StrBuf temp1_sb(G__ONELINE);
+   char *temp1 = temp1_sb;
    int cin = G__fgetvarname(new_name, "*&,;=():}");
    if (cin == '&') {
       if (!strcmp(new_name, "operator")) {
@@ -565,7 +567,8 @@ static int G__setvariablecomment(char* new_name)
 static void G__removespacetemplate(char* name)
 {
    // -- FIXME: Describe this function!
-   char buf[G__LONGLINE];
+   G__StrBuf buf_sb(G__LONGLINE);
+   char *buf = buf_sb;
    int c = 0;
    int i = 0;
    int j = 0;
@@ -610,12 +613,14 @@ static int G__initstruct(char* new_name)
    // FIXME: We do not handle brace nesting properly,
    //        we need to default initialize members
    //        whose initializers were omitted.
-   char expr[G__ONELINE];
+   G__StrBuf expr_sb(G__ONELINE);
+   char *expr = expr_sb;
 #ifdef G__ASM
    G__abortbytecode();
 #endif // G__ASM
    // Separate the variable name from any index specification.
-   char name[G__MAXNAME];
+   G__StrBuf name_sb(G__MAXNAME);
+   char *name = name_sb;
    std::strcpy(name, new_name);
    {
       char* p = std::strchr(name, '[');
@@ -1415,7 +1420,8 @@ static void G__initstructary(char* new_name, int tagnum)
    int cin = 0;
    char* store_struct_offset = G__store_struct_offset;
    char* store_globalvarpointer = G__globalvarpointer;
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
 #ifdef G__ASM
    G__abortbytecode();
 #endif // G__ASM
@@ -1523,7 +1529,8 @@ static int G__readpointer2function(char* new_name, char* pvar_type)
    else {
       line2 = 0;
    }
-   char tagname[G__ONELINE];
+   G__StrBuf tagname_sb(G__ONELINE);
+   char *tagname = tagname_sb;
    tagname[0] = '\0';
    {
       char* p = strstr(new_name, "::*");
@@ -1546,7 +1553,8 @@ static int G__readpointer2function(char* new_name, char* pvar_type)
    if (c == '[') {
       // -- type (*pary)[n]; pointer to array
       //                ^
-      char temp[G__ONELINE];
+      G__StrBuf temp_sb(G__ONELINE);
+      char *temp = temp_sb;
       int n = 0;
       while (c == '[') {
          c = G__fgetstream(temp, "]");
@@ -1563,7 +1571,8 @@ static int G__readpointer2function(char* new_name, char* pvar_type)
       // -- type (*pfunc)(...); pointer to function
       //                 ^
       // Set newtype for pointer to function.
-      char temp[G__ONELINE];
+      G__StrBuf temp_sb(G__ONELINE);
+      char *temp = temp_sb;
       fpos_t pos;
       fgetpos(G__ifile.fp, &pos);
       int line = G__ifile.line_number;
@@ -1677,9 +1686,12 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
    static int bitfieldwarn = 0;
    fpos_t store_fpos;
    G__value reg = G__null;
-   char temp1[G__LONGLINE];
-   char new_name[G__LONGLINE];
-   char temp[G__LONGLINE];
+   G__StrBuf temp1_sb(G__LONGLINE);
+   char *temp1 = temp1_sb;
+   G__StrBuf new_name_sb(G__LONGLINE);
+   char *new_name = new_name_sb;
+   G__StrBuf temp_sb(G__LONGLINE);
+   char *temp = temp_sb;
    store_static_alloc2 = G__static_alloc;
    new_name[0] = '\0';
    store_tagnum = G__tagnum;
@@ -1917,7 +1929,8 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
             G__ansiheader = 0;
             if (G__struct.iscpplink[tagnum] == G__CPPLINK) {
                // -- The struct is compiled code.
-               char tttt[G__ONELINE];
+               G__StrBuf tttt_sb(G__ONELINE);
+               char *tttt = tttt_sb;
                G__valuemonitor(reg, tttt);
                sprintf(temp1, "%s(%s)", G__struct.name[tagnum], tttt);
                if (G__struct.parent_tagnum[tagnum] != -1) {
@@ -2085,7 +2098,8 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                   // we have a namespace followed by '::' in which case we have
                   // to grab more before stopping!
                   int namespace_tagnum;
-                  char more[G__LONGLINE];
+                  G__StrBuf more_sb(G__LONGLINE);
+                  char *more = more_sb;
                   namespace_tagnum = G__defined_tagname(temp, 2);
                   while (
                      isspace(cin) &&
@@ -3069,7 +3083,8 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                   if (temp == strstr(temp, temp1)) {
                      int c;
                      int isrc = 0;
-                     char buf[G__LONGLINE];
+                     G__StrBuf buf_sb(G__LONGLINE);
+                     char *buf = buf_sb;
                      flag = 1;
                      c = G__getstream_template(temp, &isrc, buf, "(");
                      if (c == '(') {
@@ -3202,7 +3217,8 @@ void Cint::Internal::G__define_var(int tagnum, ::Reflex::Type typenum)
                            }
                         }
                         else {
-                           char tttt[G__ONELINE];
+                           G__StrBuf tttt_sb(G__ONELINE);
+                           char *tttt = tttt_sb;
 #define G__OLDIMPLEMENTATION1780 // FIXME: Should this be removed?
                            G__valuemonitor(reg, tttt);
                            sprintf(temp, "%s(%s)", G__struct.name[tagnum], tttt);

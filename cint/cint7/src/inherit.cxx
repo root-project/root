@@ -125,7 +125,8 @@ void Cint::Internal::G__inheritclass(int to_tagnum,int from_tagnum,char baseacce
 int Cint::Internal::G__baseconstructorwp()
 {
   int c;
-  char buf[G__ONELINE];
+  G__StrBuf buf_sb(G__ONELINE);
+  char *buf = buf_sb;
   int n=0;
   struct G__baseparam *pbaseparamin = (struct G__baseparam*)NULL;
   struct G__baseparam *pbaseparam = pbaseparamin;
@@ -285,7 +286,8 @@ int Cint::Internal::G__baseconstructor(int n, G__baseparam *pbaseparamin)
   struct G__baseparam *pbaseparam = pbaseparamin;
   char *tagname;
   int flag;
-  char construct[G__ONELINE];
+  G__StrBuf construct_sb(G__ONELINE);
+  char *construct = construct_sb;
   int p_inc,size;
   char *store_globalvarpointer;
   int donen=0;
@@ -634,7 +636,8 @@ int Cint::Internal::G__basedestructor()
   ::Reflex::Scope store_tagnum = G__tagnum;
   char *store_struct_offset;
   int i,j;
-  char destruct[G__ONELINE];
+  G__StrBuf destruct_sb(G__ONELINE);
+  char *destruct = destruct_sb;
   char *store_globalvarpointer;
   char *store_addstros=0;
 
@@ -719,7 +722,8 @@ int Cint::Internal::G__basedestructrc(const ::Reflex::Type &type)
   /* int store_tagnum; */
   char *store_struct_offset;
   int j;
-  char destruct[G__ONELINE];
+  G__StrBuf destruct_sb(G__ONELINE);
+  char *destruct = destruct_sb;
   int p_inc,size;
   char *store_globalvarpointer;
   char *address;

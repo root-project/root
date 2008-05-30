@@ -276,7 +276,8 @@ int Cint::Internal::G__warnundefined(char* item)
          //PSRXXX//G__dumpreflex();
          char *p = strchr(item, '(');
          if (p) {
-            char tmp[G__ONELINE];
+            G__StrBuf tmp_sb(G__ONELINE);
+            char *tmp = tmp_sb;
             strcpy(tmp, item);
             p = G__strrstr(tmp, "::");
             if (p) {
@@ -289,7 +290,8 @@ int Cint::Internal::G__warnundefined(char* item)
             }
          }
          else {
-            char tmp[G__ONELINE];
+            G__StrBuf tmp_sb(G__ONELINE);
+            char *tmp = tmp_sb;
             strcpy(tmp, item);
             if (p) {
                *p = 0;
@@ -415,7 +417,8 @@ int Cint::Internal::G__changeconsterror(const char* item, char* categ)
 int Cint::Internal::G__pounderror()
 {
    // -- #error xxx
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    fgets(buf, G__ONELINE, G__ifile.fp);
    char* p = strchr(buf, '\n');
    if (p) {

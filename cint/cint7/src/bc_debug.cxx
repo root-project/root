@@ -69,7 +69,8 @@ int Cint::Bytecode::G__bc_funccall::setstackenv(struct G__view* pview) const {
 int Cint::Bytecode::G__bc_funccall::disp(FILE* fout) const {
   // todo, need some review
   if(!m_bytecode)  return(0);
-  char msg[G__LONGLINE];
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   const Reflex::Member& func = m_bytecode->ifunc;
   int filenum = G__get_funcproperties(func)->entry.filenum;
   struct G__param* libp=m_libp;

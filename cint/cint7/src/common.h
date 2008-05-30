@@ -1528,6 +1528,11 @@ namespace Cint {
    }
 }
 
+#ifdef __cplusplus
+#include "strbuf.h"
+using namespace Cint::Internal;
+#endif
+
 #endif /* G__COMMON_H */
 
 /*

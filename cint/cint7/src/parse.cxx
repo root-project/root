@@ -201,9 +201,11 @@ static int G__setline(char* statement, int c, int* piout)
             if (statement[0] == '"') {
                // -- We have #<line> "<filename>".
                G__getcintsysdir();
-               char sysinclude[G__MAXFILENAME];
+               G__StrBuf sysinclude_sb(G__MAXFILENAME);
+               char *sysinclude = sysinclude_sb;
                sprintf(sysinclude, "%s/%s/include/", G__cintsysdir, G__CFG_COREVERSION);
-               char sysstl[G__MAXFILENAME];
+               G__StrBuf sysstl_sb(G__MAXFILENAME);
+               char *sysstl = sysstl_sb;
                sprintf(sysstl, "%s/%s/stl/", G__cintsysdir, G__CFG_COREVERSION);
                int len = strlen(sysinclude);
                int lenstl = strlen(sysstl);
@@ -385,7 +387,8 @@ static int G__pp_ifdefextern(char* temp)
       int flag=0;
       int store_iscpp=G__iscpp;
       int store_externblock_iscpp=G__externblock_iscpp;
-      char fname[G__MAXFILENAME];
+      G__StrBuf fname_sb(G__MAXFILENAME);
+      char *fname = fname_sb;
       cin = G__fgetstream(fname,"\"");
 
       temp[0] = 0;
@@ -443,7 +446,8 @@ static int G__pp_ifdefextern(char* temp)
 ***********************************************************************/
 static void G__pp_undef()
 {
-   char temp[G__MAXNAME];
+   G__StrBuf temp_sb(G__MAXNAME);
+   char *temp = temp_sb;
    G__fgetname(temp,"\n\r");
 
    typedef std::deque< ::Reflex::Member> rlist;
@@ -541,7 +545,8 @@ static int G__ignore_catch()
 static int G__exec_throw(char* statement)
 {
    int iout;
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    G__fgetstream(buf,";");
    if(isdigit(buf[0])||'.'==buf[0]) {
       strcpy(statement,buf);
@@ -818,7 +823,8 @@ static G__value G__exec_switch()
    //
    //  Scan the switch condition.
    //
-   char condition[G__ONELINE];
+   G__StrBuf condition_sb(G__ONELINE);
+   char *condition = condition_sb;
    G__fgetstream(condition, ")");
    //{
    //   char buf[128];
@@ -2209,7 +2215,8 @@ static G__value G__exec_do()
    //   G__fgetstream_peek(buf, 10);
    //   fprintf(stderr, "G__exec_do: peek ahead: '%s'\n", buf);
    //}
-   char condition[G__ONELINE];
+   G__StrBuf condition_sb(G__ONELINE);
+   char *condition = condition_sb;
    G__fgetstream(condition, "(");
    if (strcmp(condition, "while")) {
       G__fprinterr(G__serr, "Syntax error: do {} %s(); Should be do {} while (); FILE: %s LINE: %d\n", condition, G__ifile.name, G__ifile.line_number);
@@ -2639,7 +2646,8 @@ static G__value G__exec_for()
    //  Collect the third clause of the for,
    //  separating it on commas.
    //
-   char foractionbuf[G__ONELINE];
+   G__StrBuf foractionbuf_sb(G__ONELINE);
+   char *foractionbuf = foractionbuf_sb;
    char* foraction[10];
    int naction = 0;
    char* p = foractionbuf;
@@ -3442,7 +3450,8 @@ static int G__search_gotolabel(char *label,fpos_t *pfpos,int line,int *pmparen)
    int single_quote = 0;
    int double_quote = 0;
    do {
-      char token[G__LONGLINE];
+      G__StrBuf token_sb(G__LONGLINE);
+      char *token = token_sb;
       // The extraneous punctuation is here to keep from overflowing token.
       c = G__fgetstream(token, "'\"{}:();");
       if (c == EOF) {
@@ -3510,7 +3519,8 @@ static int G__label_access_scope(char* statement, int* piout, int* pspaceflag, i
    int line;
    ::Reflex::Scope store_tagdefining;
    fpos_t pos;
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
    // Look ahead to see if we have a "::".
    int c = G__fgetc();
    if (c == ':') {
@@ -3661,7 +3671,8 @@ static int G__label_access_scope(char* statement, int* piout, int* pspaceflag, i
  ***********************************************************************/
 static int G__IsFundamentalDecl()
 {
-  char type_name[G__ONELINE];
+  G__StrBuf type_name_sb(G__ONELINE);
+  char *type_name = type_name_sb;
   int c;
   fpos_t pos;
   int result=1;
@@ -3720,7 +3731,8 @@ static int G__IsFundamentalDecl()
 static void G__unsignedintegral()
 {
    // -- FIXME: Describe this function!
-   char name[G__MAXNAME];
+   G__StrBuf name_sb(G__MAXNAME);
+   char *name = name_sb;
    fpos_t pos;
    G__unsigned = -1;
    fgetpos(G__ifile.fp, &pos);
@@ -3775,7 +3787,8 @@ static void G__externignore()
 {
    // -- Handle extern "...", EXTERN "..."
    int flag = 0;
-   char fname[G__MAXFILENAME];
+   G__StrBuf fname_sb(G__MAXFILENAME);
+   char *fname = fname_sb;
    int c = G__fgetstream(fname, "\"");
    int store_iscpp = G__iscpp;
    // FIXME: We should handle "C++" as well!
@@ -3831,7 +3844,8 @@ static void G__parse_friend()
    fpos_t pos;
    fgetpos(G__ifile.fp, &pos);
    int line_number = G__ifile.line_number;
-   char classname[G__LONGLINE];
+   G__StrBuf classname_sb(G__LONGLINE);
+   char *classname = classname_sb;
    int c = G__fgetname_template(classname, ";");
    int tagtype = 0;
    if (c == ';') {
@@ -4180,7 +4194,8 @@ static int G__keyword_anytime_8(char* statement)
     int c;
     fpos_t pos;
     int line_number;
-    char tcname[G__ONELINE];
+    G__StrBuf tcname_sb(G__ONELINE);
+    char *tcname = tcname_sb;
     line_number = G__ifile.line_number;
     fgetpos(G__ifile.fp,&pos);
     c=G__fgetspace();
@@ -4252,7 +4267,8 @@ G__value Cint::Internal::G__alloc_exceptionbuffer(int tagnum)
 int Cint::Internal::G__free_exceptionbuffer()
 {
   if(G__get_type(G__exceptionbuffer)=='u' && G__exceptionbuffer.obj.i) {
-    char destruct[G__ONELINE];
+    G__StrBuf destruct_sb(G__ONELINE);
+    char *destruct = destruct_sb;
     ::Reflex::Scope store_tagnum=G__tagnum;
     char *store_struct_offset = G__store_struct_offset;
     int dmy=0;
@@ -4382,7 +4398,8 @@ int Cint::Internal::G__defined_macro(char *macro)
 int Cint::Internal::G__pp_command()
 {
   int c;
-  char condition[G__ONELINE];
+  G__StrBuf condition_sb(G__ONELINE);
+  char *condition = condition_sb;
   c=G__fgetname(condition,"\n\r");
   if(isdigit(condition[0])) {
     if('\n'!=c && '\r'!=c) G__fignoreline();
@@ -4412,15 +4429,19 @@ int Cint::Internal::G__pp_command()
 ***********************************************************************/
 void Cint::Internal::G__pp_skip(int elifskip)
 {
-  char oneline[G__LONGLINE*2];
-  char argbuf[G__LONGLINE*2];
+  G__StrBuf oneline_sb(G__LONGLINE*2);
+  char *oneline = oneline_sb;
+  G__StrBuf argbuf_sb(G__LONGLINE*2);
+  char *argbuf = argbuf_sb;
   char *arg[G__ONELINE];
   int argn;
   
   FILE *fp;
   int nest=1;
-  char condition[G__ONELINE];
-  char temp[G__ONELINE];
+  G__StrBuf condition_sb(G__ONELINE);
+  char *condition = condition_sb;
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
   int i;
   
   fp=G__ifile.fp;
@@ -4580,7 +4601,8 @@ void Cint::Internal::G__pp_skip(int elifskip)
 int Cint::Internal::G__pp_if()
 {
    // -- FIXME: Describe this function!
-   char condition[G__LONGLINE];
+   G__StrBuf condition_sb(G__LONGLINE);
+   char *condition = condition_sb;
    int c, len = 0;
    int store_no_exec_compile;
    int store_asm_wholefunction;
@@ -4664,7 +4686,8 @@ int Cint::Internal::G__pp_ifdef(int def)
 {
    // -- FIXME: Describe this function!
    // def: 1 for ifdef; 0 for ifndef
-   char temp[G__LONGLINE];
+   G__StrBuf temp_sb(G__LONGLINE);
+   char *temp = temp_sb;
    int notfound = 1;
 
    G__fgetname(temp, "\n\r");
@@ -4884,7 +4907,8 @@ G__value Cint::Internal::G__exec_statement(int *mparen)
    int fake_space = 0;
    int discard_space = 0;
    int discarded_space = 0;
-   char statement[G__LONGLINE];
+   G__StrBuf statement_sb(G__LONGLINE);
+   char *statement = statement_sb;
    G__value result = G__null;
    //fprintf(stderr, "\nG__exec_statement: Begin.\n");
    fpos_t start_pos;
@@ -5012,7 +5036,8 @@ G__preproc_again:
                         if ((*mparen == 1) && !strcmp(statement, "case")) {
                            //fprintf(stderr, "G__exec_statement: Saw a case.\n");
                            // Scan the case label in.
-                           char casepara[G__ONELINE];
+                           G__StrBuf casepara_sb(G__ONELINE);
+                           char *casepara = casepara_sb;
                            G__fgetstream(casepara, ":");
                            c = G__fgetc();
                            while (c == ':') {
@@ -5802,7 +5827,8 @@ G__preproc_again:
                            //                    ^
                            ::Reflex::Scope store_tagnum;
                            do {
-                              char oprbuf[G__ONELINE];
+                              G__StrBuf oprbuf_sb(G__ONELINE);
+                              char *oprbuf = oprbuf_sb;
                               iout = strlen(statement);
                               c = G__fgetname(oprbuf, "(");
                               switch (oprbuf[0]) {
@@ -6354,7 +6380,8 @@ G__preproc_again:
                         // -- Handle keyword "case", even if skipping code.
                         //fprintf(stderr, "G__exec_statement: Saw a case.\n");
                         // Scan the case label in.
-                        char casepara[G__ONELINE];
+                        G__StrBuf casepara_sb(G__ONELINE);
+                        char *casepara = casepara_sb;
                         casepara[0] = '(';
                         {
                            int lencasepara = 1;
@@ -6549,7 +6576,8 @@ G__preproc_again:
                // -- Handle keyword "case", even if skipping code.
                //fprintf(stderr, "G__exec_statement: Saw a case.\n");
                // Scan the case label in.
-               char casepara[G__ONELINE];
+               G__StrBuf casepara_sb(G__ONELINE);
+               char *casepara = casepara_sb;
                casepara[0] = '(';
                {
                   int lencasepara = 1;

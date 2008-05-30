@@ -536,7 +536,8 @@ int Cint::G__SetGlobalcomp(char* funcname, char* param, int globalcomp)
    G__ClassInfo globalscope;
    G__MethodInfo method;
    long dummy = 0;
-   char classname[G__LONGLINE];
+   G__StrBuf classname_sb(G__LONGLINE);
+   char *classname = classname_sb;
 
    // Actually find the last :: to get the full classname, including
    // namespace and/or containing classes.
@@ -582,7 +583,8 @@ int Cint::G__ForceBytecodecompilation(char *funcname, char *param)
    G__ClassInfo globalscope;
    G__MethodInfo method;
    long dummy = 0;
-   char classname[G__LONGLINE];
+   G__StrBuf classname_sb(G__LONGLINE);
+   char *classname = classname_sb;
 
    // Actually find the last :: to get the full classname, including
    // namespace and/or containing classes.

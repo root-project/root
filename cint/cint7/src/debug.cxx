@@ -209,7 +209,8 @@ static G__value G__exec_tempfile_core(const char *file,FILE *fp)
 
   long asm_inst_g[G__MAXINST]; /* p-code instruction buffer */
   G__value asm_stack_g[G__MAXSTACK]; /* data stack */
-  char asm_name[G__ASM_FUNCNAMEBUF];
+  G__StrBuf asm_name_sb(G__ASM_FUNCNAMEBUF);
+  char *asm_name = asm_name_sb;
 
   long *store_asm_inst;
   G__value *store_asm_stack;

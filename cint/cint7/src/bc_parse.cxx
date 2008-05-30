@@ -1838,7 +1838,8 @@ int G__blockscope::initstruct(G__TypeReader& type, const Reflex::Member& var, st
   int mparen = 1;
   int linear_index = -1;
   buf.obj.i = var->p[varid] + memvar->p[memindex];
-  char expr[G__ONELINE];
+  G__StrBuf expr_sb(G__ONELINE);
+  char *expr = expr_sb;
   while (mparen) {
     // -- Read the next initializer value.
     int c = G__fgetstream(expr, ",{}");
@@ -1936,7 +1937,8 @@ int G__blockscope::initscalarary(G__TypeReader& /*type*/, const Reflex::Member& 
    // type ary[]  =  { 1,2,3 };
    // type ary[n] =  { 1,2,3 };
    //               ^
-   char expr[G__ONELINE];
+   G__StrBuf expr_sb(G__ONELINE);
+   char *expr = expr_sb;
    int num_of_elements = G__get_varlabel(var, 1);
    const int stride = G__get_varlabel(var, 0);
    // Check for an unspecified length array declaration.

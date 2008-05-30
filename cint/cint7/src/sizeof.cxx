@@ -179,7 +179,8 @@ int Cint::Internal::G__Lsizeof(const char *type_name)
   ::Reflex::Type typenum;
   int result;
   int pointlevel=0;
-  char namebody[G__MAXNAME+20];
+  G__StrBuf namebody_sb(G__MAXNAME+20);
+  char *namebody = namebody_sb;
   char *p;
   int i;
 
@@ -362,7 +363,8 @@ long *Cint::Internal::G__typeid(char *typenamein)
   int len;
   int pointlevel=0,isref=0;
   int tag_type_info;
-  char typenamebuf[G__MAXNAME*2];
+  G__StrBuf typenamebuf_sb(G__MAXNAME*2);
+  char *typenamebuf = typenamebuf_sb;
   char *type_name;
   int isconst = 0;
 

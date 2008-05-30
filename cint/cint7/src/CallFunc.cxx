@@ -330,7 +330,8 @@ void Cint::G__CallFunc::SetFunc(G__ClassInfo* cls
   // G__getstream(), G__type2string()
    int isrc=0;
    char *endmark=(char*)",";
-   char argtype[G__ONELINE];
+   G__StrBuf argtype_sb(G__ONELINE);
+   char *argtype = argtype_sb;
    int pos=0;
    G__value *buf;
 

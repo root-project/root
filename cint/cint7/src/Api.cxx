@@ -363,14 +363,16 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
   }
 #ifdef G__STD_EXCEPTION
   catch(std::exception& x) {
-    char buf[G__LONGLINE];
+    G__StrBuf buf_sb(G__LONGLINE);
+    char *buf = buf_sb;
 #ifdef G__VISUAL
     // VC++ has problem in typeid(x).name(), so every thrown exception is
     // translated to G__exception.
     sprintf(buf,"new G__exception(\"%s\")",x.what());
     G__fprinterr(G__serr,"Exception: %s\n",x.what());
 #else
-    char buf2[G__ONELINE];
+    G__StrBuf buf2_sb(G__ONELINE);
+    char *buf2 = buf2_sb;
     if(G__DemangleClassname(buf2,typeid(x).name())) {
       sprintf(buf,"new %s(*(%s*)%ld)",buf2,buf2,(long)(&x));
       G__fprinterr(G__serr,"Exception %s: %s\n", buf2, x.what());
@@ -469,7 +471,8 @@ extern "C" void G__operator_delete_ary(void *p) {
 void Cint::Internal::G__initcxx() 
 {
 #if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)||defined(__INTEL_COMPILER)
-  char temp[G__ONELINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
   sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
@@ -541,7 +544,8 @@ const char* Cint::Internal::G__replacesymbol(const char* s) {
 ******************************************************************/
 int Cint::Internal::G__display_replacesymbol(FILE *fout,const char* name) {
   map<string,string>::iterator i;
-  char msg[G__LONGLINE];
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   for(i=G__get_symbolmacro().begin();i!=G__get_symbolmacro().end();++i) {
     if(!name || !name[0] || strcmp(name,(*i).first.c_str())==0) {
       sprintf(msg,"#define %s %s\n",(*i).first.c_str(),(*i).second.c_str());

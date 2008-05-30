@@ -373,7 +373,8 @@ const char* Cint::Internal::G__fulltypename(::Reflex::Type typenum)
 static int G__debug_compiledfunc_arg(FILE* fout, const ::Reflex::Member& ifunc, G__param* libp)
 {
    // -- Show compiled function call parameters.
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
    int i;
    fprintf(fout, "\n!!!Calling compiled function %s()\n", ifunc.Name().c_str());
    G__in_pause = 1;
@@ -1225,7 +1226,8 @@ static void G__cpplink_protected_stub(FILE* fp, FILE* hfp)
 void Cint::Internal::G__cpplink_linked_taginfo(FILE* fp, FILE* hfp)
 {
    int i;
-   char buf[G__MAXFILENAME];
+   G__StrBuf buf_sb(G__MAXFILENAME);
+   char *buf = buf_sb;
    FILE* pfp;
    if (G__privateaccess) {
       char *xp;
@@ -1545,8 +1547,10 @@ static void G__write_windef_header()
 void Cint::Internal::G__set_globalcomp(char* mode, char* linkfilename, char* dllid)
 {
    FILE *fp;
-   char buf[G__LONGLINE];
-   char linkfilepref[G__LONGLINE];
+   G__StrBuf buf_sb(G__LONGLINE);
+   char *buf = buf_sb;
+   G__StrBuf linkfilepref_sb(G__LONGLINE);
+   char *linkfilepref = linkfilepref_sb;
    char linkfilepostf[20];
    char *p;
 
@@ -1727,7 +1731,8 @@ void Cint::Internal::G__gen_cppheader(char* headerfilein)
 {
    FILE *fp;
    static char hdrpost[10] = "";
-   char headerfile[G__ONELINE];
+   G__StrBuf headerfile_sb(G__ONELINE);
+   char *headerfile = headerfile_sb;
    char* p;
 
    switch (G__globalcomp) {
@@ -1769,7 +1774,8 @@ void Cint::Internal::G__gen_cppheader(char* headerfilein)
       /* backslash escape sequence */
       p = strchr(headerfile, '\\');
       if (p) {
-         char temp2[G__ONELINE];
+         G__StrBuf temp2_sb(G__ONELINE);
+         char *temp2 = temp2_sb;
          int i = 0, j = 0;
          while (headerfile[i]) {
             switch (headerfile[i]) {
@@ -1890,10 +1896,12 @@ extern "C" void G__add_macro(const char* macroin)
 {
    // Macros starting with '!' are assumed to be system level macros
    // that will not be passed to an external preprocessor.
-   char temp[G__LONGLINE];
+   G__StrBuf temp_sb(G__LONGLINE);
+   char *temp = temp_sb;
    FILE *fp;
    char *p;
-   char macro[G__LONGLINE];
+   G__StrBuf macro_sb(G__LONGLINE);
+   char *macro = macro_sb;
    ::Reflex::Scope store_tagnum = G__tagnum;
    ::Reflex::Scope store_def_tagnum = G__def_tagnum;
    ::Reflex::Scope store_tagdefining = G__tagdefining;
@@ -1974,7 +1982,8 @@ end_add_macro:
 extern "C" void G__add_ipath(const char* path)
 {
    struct G__includepath *ipath;
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
    FILE *fp;
    char *p;
    char *store_allincludepath;
@@ -2028,7 +2037,8 @@ extern "C" void G__add_ipath(const char* path)
    /* backslash escape sequence */
    p = strchr(temp, '\\');
    if (p) {
-      char temp2[G__ONELINE];
+      G__StrBuf temp2_sb(G__ONELINE);
+      char *temp2 = temp2_sb;
       int i = 0, j = 0;
       while (temp[i]) {
          switch (temp[i]) {
@@ -2067,8 +2077,10 @@ extern "C" int G__delete_ipath(const char* path)
 {
    struct G__includepath *ipath;
    struct G__includepath *previpath;
-   char temp[G__ONELINE];
-   char temp2[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
+   G__StrBuf temp2_sb(G__ONELINE);
+   char *temp2 = temp2_sb;
    int i = 0, flag = 0;
    char *p;
 
@@ -2468,7 +2480,8 @@ char* Cint::Internal::G__p2f_typedefname(int ifn, short page, int k)
 //______________________________________________________________________________
 void Cint::Internal::G__p2f_typedef(FILE* fp, int ifn, struct G__ifunc_table* ifunc)
 {
-   char buf[G__LONGLINE];
+   G__StrBuf buf_sb(G__LONGLINE);
+   char *buf = buf_sb;
    char *p;
    int k;
    if (G__CPPLINK != G__globalcomp) return;
@@ -2820,7 +2833,8 @@ void Cint::Internal::G__cppif_genconstructor(FILE* fp, FILE* /*hfp*/, int tagnum
 #ifndef G__SMALLOBJECT
    int k, m;
    int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
-   char buf[G__LONGLINE]; /* 1481 */
+   G__StrBuf buf_sb(G__LONGLINE);
+   char *buf = buf_sb; /* 1481 */
 
    G__ASSERT(tagnum != -1);
 
@@ -3571,19 +3585,25 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
 #ifndef G__SMALLOBJECT
 #define G__OLDIMPLEMENtATION1972
 #ifndef G__OLDIMPLEMENtATION1972
-   char buf1[G__MAXNAME];
-   char buf2[G__MAXNAME];
-   char buf3[G__MAXNAME];
+   G__StrBuf buf1_sb(G__MAXNAME);
+   char *buf1 = buf1_sb;
+   G__StrBuf buf2_sb(G__MAXNAME);
+   char *buf2 = buf2_sb;
+   G__StrBuf buf3_sb(G__MAXNAME);
+   char *buf3 = buf3_sb;
    char *funcname = buf1;
    char *temp = buf2;
    char *dtorname = buf3;
 #else
-   char funcname[G__MAXNAME*6];
-   char temp[G__MAXNAME*6];
+   G__StrBuf funcname_sb(G__MAXNAME*6);
+   char *funcname = funcname_sb;
+   G__StrBuf temp_sb(G__MAXNAME*6);
+   char *temp = temp_sb;
 #endif
    int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
 #ifdef G__OLDIMPLEMENtATION1972
-   char dtorname[G__LONGLINE];
+   G__StrBuf dtorname_sb(G__LONGLINE);
+   char *dtorname = dtorname_sb;
 #endif
 
    G__ASSERT(tagnum != -1);
@@ -3613,7 +3633,8 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
 
    if (!isconstructor && !G__struct.isabstract[tagnum] && !isnonpublicnew) {
 
-      char buf[G__LONGLINE];
+      G__StrBuf buf_sb(G__LONGLINE);
+      char *buf = buf_sb;
       strcpy(buf, G__fulltagname(tagnum, 1));
 
       strcpy(funcname, G__struct.name[tagnum]);
@@ -3782,7 +3803,8 @@ void Cint::Internal::G__cppif_gendefault(FILE* fp, FILE* /*hfp*/, int tagnum, in
 
    if ((0 >= isdestructor) && (G__struct.type[tagnum] != 'n')) {
 
-      char buf[G__LONGLINE];
+      G__StrBuf buf_sb(G__LONGLINE);
+      char *buf = buf_sb;
       strcpy(buf, G__fulltagname(tagnum, 1));
 
       bool has_a_delete = G__struct.funcs[tagnum] & G__HAS_OPERATORDELETE;
@@ -3923,16 +3945,20 @@ void Cint::Internal::G__cppif_genfunc(FILE* fp, FILE* /*hfp*/, int tagnum, const
    int k = 0;
    int m = 0;
 #ifndef G__OLDIMPLEMENTATION1823
-   char buf2[G__LONGLINE];
+   G__StrBuf buf2_sb(G__LONGLINE);
+   char *buf2 = buf2_sb;
    char *endoffunc = buf2;
 #else // G__OLDIMPLEMENTATION1823
-   char endoffunc[G__LONGLINE];
+   G__StrBuf endoffunc_sb(G__LONGLINE);
+   char *endoffunc = endoffunc_sb;
 #endif // G__OLDIMPLEMENTATION1823
 #ifndef G__OLDIMPLEMENTATION1823
-   char buf[G__BUFLEN*4];
+   G__StrBuf buf_sb(G__BUFLEN*4);
+   char *buf = buf_sb;
    char *castname = buf;
 #else // G__OLDIMPLEMENTATION1823
-   char castname[G__ONELINE];
+   G__StrBuf castname_sb(G__ONELINE);
+   char *castname = castname_sb;
 #endif // G__OLDIMPLEMENTATION1823
 #ifndef G__OLDIMPLEMENTATION1823
    // Expand castname and endoffunc buffers if necessary.
@@ -4721,9 +4747,12 @@ void Cint::Internal::G__cpplink_tagtable(FILE* fp, FILE* hfp)
    // --
 #ifndef G__SMALLOBJECT
    int i;
-   char tagname[G__MAXNAME*8];
-   char mappedtagname[G__MAXNAME*6];
-   char buf[G__ONELINE];
+   G__StrBuf tagname_sb(G__MAXNAME*8);
+   char *tagname = tagname_sb;
+   G__StrBuf mappedtagname_sb(G__MAXNAME*6);
+   char *mappedtagname = mappedtagname_sb;
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
 
    fprintf(fp, "\n/*********************************************************\n");
    fprintf(fp, "* Class,struct,union,enum tag information setup\n");
@@ -4936,7 +4965,8 @@ void Cint::Internal::G__cpplink_tagtable(FILE* fp, FILE* hfp)
 static char* G__vbo_funcname(int tagnum, int basetagnum, int basen)
 {
    static char result[G__LONGLINE*2];
-   char temp[G__LONGLINE];
+   G__StrBuf temp_sb(G__LONGLINE);
+   char *temp = temp_sb;
    strcpy(temp, G__map_cpp_name(G__fulltagname(tagnum, 1)));
    sprintf(result, "G__2vbo_%s_%s_%d", temp
            , G__map_cpp_name(G__fulltagname(basetagnum, 1)), basen);
@@ -4951,7 +4981,8 @@ void Cint::Internal::G__cppif_inheritance(FILE* fp)
    int i;
    int basen;
    int basetagnum;
-   char temp[G__LONGLINE*2];
+   G__StrBuf temp_sb(G__LONGLINE*2);
+   char *temp = temp_sb;
 
    fprintf(fp, "\n/*********************************************************\n");
    fprintf(fp, "* virtual base class offset calculation interface\n");
@@ -5000,7 +5031,8 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
    int i;
    int basen;
    int basetagnum;
-   char temp[G__MAXNAME*6];
+   G__StrBuf temp_sb(G__MAXNAME*6);
+   char *temp = temp_sb;
    int flag;
 
    fprintf(fp, "\n/*********************************************************\n");
@@ -5041,7 +5073,8 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
 #ifdef G__VIRTUALBASE
                      strcpy(temp, G__mark_linked_tagnum(basetagnum));
                      if (G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE) {
-                        char temp2[G__LONGLINE*2];
+                        G__StrBuf temp2_sb(G__LONGLINE*2);
+                        char *temp2 = temp2_sb;
                         strcpy(temp2, G__vbo_funcname(i, basetagnum, basen));
                         fprintf(fp, "       G__inheritance_setup(G__get_linked_tagnum(&%s),G__get_linked_tagnum(&%s),(long)%s,%d,%ld);\n"
                                 , G__mark_linked_tagnum(i)
@@ -5120,8 +5153,10 @@ void Cint::Internal::G__cpplink_inheritance(FILE* fp)
 //______________________________________________________________________________
 void Cint::Internal::G__cpplink_typetable(FILE* fp, FILE* /*hfp*/)
 {
-   char temp[G__ONELINE];
-   char buf[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
 
 
    fprintf(fp, "\n/*********************************************************\n");
@@ -5242,7 +5277,8 @@ void Cint::Internal::G__cpplink_memvar(FILE* fp)
    int store_var_type;
    fpos_t pos;
    int count;
-   char commentbuf[G__LONGLINE];
+   G__StrBuf commentbuf_sb(G__LONGLINE);
+   char *commentbuf = commentbuf_sb;
    /* int alltag=0; */
 
    fprintf(fp, "\n/*********************************************************\n");
@@ -5456,9 +5492,11 @@ void Cint::Internal::G__cpplink_memfunc(FILE* fp)
 #ifndef G__SMALLOBJECT
    int i, k;
    int hash;
-   char funcname[G__MAXNAME*6];
+   G__StrBuf funcname_sb(G__MAXNAME*6);
+   char *funcname = funcname_sb;
    int isconstructor, iscopyconstructor, isdestructor, isassignmentoperator;
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    int isnonpublicnew;
    int virtualdtorflag;
    int dtoraccess = G__PUBLIC;
@@ -6180,7 +6218,8 @@ void Cint::Internal::G__cpplink_func(FILE* fp)
 {
    // -- Making C++ link routine to global function.
    int k;
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    int divn = 0;
    int maxfnc = 100;
    int fnc = 0;
@@ -6353,10 +6392,12 @@ extern "C" int G__tagtable_setup(int tagnum, int size, int cpplink, int isabstra
    // -- FIXME: Describe this function!
    char *p;
 #ifndef G__OLDIMPLEMENTATION1823
-   char xbuf[G__BUFLEN];
+   G__StrBuf xbuf_sb(G__BUFLEN);
+   char *xbuf = xbuf_sb;
    char *buf = xbuf;
 #else // G__OLDIMPLEMENTATION1823
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
 #endif // G__OLDIMPLEMENTATION1823
 
    if (G__struct.incsetup_memvar[tagnum]==0)
@@ -6908,15 +6949,16 @@ return 0;
 //______________________________________________________________________________
 int Cint::Internal::G__getcommentstring(char* buf, int tagnum, G__comment_info* pcomment)
 {
-char temp[G__LONGLINE];
-G__getcomment(temp, pcomment, tagnum);
-if ('\0' == temp[0]) {
-   sprintf(buf, "(char*)NULL");
-}
-else {
-   G__add_quotation(temp, buf);
-}
-return(1);
+   G__StrBuf temp_sb(G__LONGLINE);
+   char *temp = temp_sb;
+   G__getcomment(temp, pcomment, tagnum);
+   if ('\0' == temp[0]) {
+      sprintf(buf, "(char*)NULL");
+   }
+   else {
+      G__add_quotation(temp, buf);
+   }
+   return(1);
 }
 
 //______________________________________________________________________________
@@ -7060,7 +7102,8 @@ void G__link_enclosing(const std::string& buf, int globalcomp)
 void Cint::Internal::G__specify_link(int link_stub)
 {
    int c;
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    int globalcomp = G__NOLINK;
    /* int store_globalcomp; */
    int i;
@@ -7091,7 +7134,8 @@ void Cint::Internal::G__specify_link(int link_stub)
       G__prerun = 0;
       c = G__fgetname_template(buf, ";");
       if (G__LOADFILE_SUCCESS <= G__loadfile(buf)) {
-         char buf2[G__ONELINE];
+         G__StrBuf buf2_sb(G__ONELINE);
+         char *buf2 = buf2_sb;
          c = G__fgetstream(buf2, ";");
          G__calc(buf2);
          G__unloadfile(buf);
@@ -7461,8 +7505,10 @@ void Cint::Internal::G__specify_link(int link_stub)
          else if (strcmp(p, ")") == 0) p = 0;
       }
       if (p) {
-         char funcname[G__LONGLINE];
-         char param[G__LONGLINE];
+         G__StrBuf funcname_sb(G__LONGLINE);
+         char *funcname = funcname_sb;
+         G__StrBuf param_sb(G__LONGLINE);
+         char *param = param_sb;
          if (')' == *(p + 1) && '(' == *(p + 2)) p = strchr(p + 1, '(');
          *p = '\0';
          strcpy(funcname, buf);
@@ -8701,7 +8747,8 @@ void Cint::Internal::G__specify_extra_include()
 {
    int i;
    int c;
-   char buf[G__ONELINE];
+   G__StrBuf buf_sb(G__ONELINE);
+   char *buf = buf_sb;
    char *tobecopied;
    if (!G__extra_include) {
       G__extra_include = (char**)malloc(G__MAXFILE * sizeof(char*));

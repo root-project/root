@@ -341,7 +341,8 @@ static int G__free_struct_upto(int tagnum)
             ) {
                if ((G__get_type(var.TypeOf()) == 'u') && G__get_offset(var)) {
                   // -- Static class object member try destructor.
-                  char com[G__ONELINE];
+                  G__StrBuf com_sb(G__ONELINE);
+                  char *com = com_sb;
                   sprintf(com, "~%s()", var.TypeOf().RawType().Name().c_str());
                   char* store_struct_offset = G__store_struct_offset;
                   ::Reflex::Scope store_tagnum = G__tagnum;

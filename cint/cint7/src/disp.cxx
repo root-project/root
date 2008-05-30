@@ -249,7 +249,8 @@ int Cint::Internal::G__more_pause(FILE *fp,int len)
      * judgement for pause
      *************************************************/
     if(shownline>=dispsize || onemore) {
-      char buf[G__MAXNAME];
+      G__StrBuf buf_sb(G__MAXNAME);
+      char *buf = buf_sb;
       shownline=0;
       strcpy(buf,G__input("-- Press return for more -- (input [number] of lines, Cont,Step,More) "));
       if(isdigit(buf[0])) { /* change display size */
@@ -312,7 +313,8 @@ void Cint::Internal::G__display_purevirtualfunc(int /* tagnum */)
 static int G__display_friend(FILE *fp,const ::Reflex::Member &func)
 {
   G__friendtag*friendtag = G__get_funcproperties(func)->entry.friendtag;
-  char msg[G__LONGLINE];
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   sprintf(msg," friend ");
   if(G__more(fp,msg)) return(1);
   while(friendtag) {
@@ -336,8 +338,7 @@ int Cint::Internal::G__listfunc(FILE *fp,int access,char *fname,const ::Reflex::
 ***********************************************************************/
 int Cint::Internal::G__listfunc_pretty(FILE *fp,int access,const char *fname,const ::Reflex::Scope &i_func, char friendlyStyle)
 {
-  char temp[G__ONELINE];
-  char msg[G__LONGLINE];
+  char msg[G__LONGLINE);];
 
   G__browsing=1;
   
@@ -540,6 +541,8 @@ int Cint::Internal::G__listfunc_pretty(FILE *fp,int access,const char *fname,con
         }
         sprintf(msg,";");
         if(G__more(fp,msg)) return(1);
+        G__StrBuf temp_sb(G__ONELINE);
+        char *temp = temp_sb;
         temp[0] = '\0';
         G__getcomment(temp,&(G__get_funcproperties(*i)->comment),G__get_tagnum(i->DeclaringScope()));
         if(temp[0]) {
@@ -568,8 +571,10 @@ int Cint::Internal::G__showstack(FILE *fout)
 {
    int temp,temp1;
    ::Reflex::Scope local;
-   char syscom[G__MAXNAME];
-   char msg[G__LONGLINE];
+   G__StrBuf syscom_sb(G__MAXNAME);
+   char *syscom = syscom_sb;
+   G__StrBuf msg_sb(G__LONGLINE);
+   char *msg = msg_sb;
 
    local=G__p_local;
    temp=0;
@@ -666,7 +671,8 @@ int Cint::Internal::G__display_string(FILE *fout)
   int len;
   unsigned long totalsize=0;
   struct G__ConstStringList *pconststring;
-  char msg[G__ONELINE];
+  G__StrBuf msg_sb(G__ONELINE);
+  char *msg = msg_sb;
 
   pconststring = G__plastconststring;
   while(pconststring->prev) {
@@ -697,8 +703,10 @@ static int G__display_classinheritance(FILE *fout,int tagnum,char *space)
   int i;
   struct G__inheritance *baseclass;
   char addspace[50];
-  char temp[G__ONELINE];
-  char msg[G__LONGLINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
 
   baseclass = G__struct.baseclass[tagnum];
 
@@ -819,8 +827,10 @@ int Cint::Internal::G__display_typedef(FILE *fout,char *name,int startin)
 {
    int k;
    ::Reflex::Type_Iterator start,stop;
-   char temp[G__ONELINE];
-   char msg[G__LONGLINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
+   G__StrBuf msg_sb(G__LONGLINE);
+   char *msg = msg_sb;
 
    k=0;
    while(name[k]&&isspace(name[k])) k++;
@@ -935,7 +945,8 @@ static int G__display_eachtemplate(FILE *fout,G__Definedtemplateclass *deftmplt,
   struct G__Definedtemplatememfunc *memfunctmplt;
   fpos_t store_pos;
   /* char buf[G__LONGLINE]; */
-  char msg[G__LONGLINE];
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   int c;
 
   if(!deftmplt->def_fp) return(0);
@@ -1020,7 +1031,8 @@ static int G__display_eachtemplate(FILE *fout,G__Definedtemplateclass *deftmplt,
 ****************************************************************/
 static int G__display_eachtemplatefunc(FILE *fout, G__Definetemplatefunc *deftmpfunc)
 {
-  char msg[G__LONGLINE];
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   struct G__Templatearg *def_para;
   struct G__Templatefuncarg *pfuncpara;
   int i;
@@ -1183,7 +1195,8 @@ int Cint::Internal::G__display_macro(FILE *fout,char *name)
   int i=0;
 
   ::Reflex::Scope var = ::Reflex::Scope::GlobalScope(); 
-  char msg[G__LONGLINE];
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   while(name[i]&&isspace(name[i])) i++;
 
   for(::Reflex::Member_Iterator ig15 = var.DataMember_Begin();
@@ -1253,7 +1266,8 @@ int Cint::Internal::G__display_macro(FILE *fout,char *name)
 ****************************************************************/
 int Cint::Internal::G__display_files(FILE *fout)
 {
-  char msg[G__ONELINE];
+  G__StrBuf msg_sb(G__ONELINE);
+  char *msg = msg_sb;
   int i;
   for(i=0;i<G__nfile;i++) {
     if(G__srcfile[i].hasonlyfunc)
@@ -1285,7 +1299,8 @@ int Cint::Internal::G__display_files(FILE *fout)
 int Cint::Internal::G__pr(FILE *fout,G__input_file view)
 {
   int center,thisline,filenum;
-  char G__oneline[G__LONGLINE*2];
+  G__StrBuf G__oneline_sb(G__LONGLINE*2);
+  char *G__oneline = G__oneline_sb;
   int top,bottom,screen,line=0;
   fpos_t store_fpos;
   /* char original[G__MAXFILENAME]; */
@@ -1445,8 +1460,10 @@ int Cint::Internal::G__dump_tracecoverage(FILE *fout)
 int Cint::Internal::G__objectmonitor(FILE *fout,char *pobject,const ::Reflex::Type &tagnum,char *addspace)
 {
   struct G__inheritance *baseclass;
-  char space[G__ONELINE];
-  char msg[G__LONGLINE];
+  G__StrBuf space_sb(G__ONELINE);
+  char *space = space_sb;
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   int i;
 
   sprintf(space,"%s  ",addspace);
@@ -1512,8 +1529,10 @@ int Cint::Internal::G__varmonitor(FILE *fout,const ::Reflex::Scope &var,char *in
 {
    char *addr;
    char space[50];
-   char temp[G__ONELINE];
-   char msg[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
+   G__StrBuf msg_sb(G__ONELINE);
+   char *msg = msg_sb;
    unsigned int startindex,stopindex;
    int precompiled_private;
 
@@ -2247,8 +2266,10 @@ extern "C" int G__display_class(FILE *fout,char *name,int base,int start)
   int tagnum;
   int i,j;
   struct G__inheritance *baseclass;
-  char temp[G__ONELINE];
-  char msg[G__LONGLINE];
+  G__StrBuf temp_sb(G__ONELINE);
+  char *temp = temp_sb;
+  G__StrBuf msg_sb(G__LONGLINE);
+  char *msg = msg_sb;
   char *p;
   int store_globalcomp;
   int store_iscpp;
@@ -2371,7 +2392,8 @@ extern "C" int G__display_class(FILE *fout,char *name,int base,int start)
   if((char*)NULL!=strstr(name+i,">>")) {
     /* dealing with A<A<int>> -> A<A<int> > */
     char *pt1;
-    char tmpbuf[G__ONELINE];
+    G__StrBuf tmpbuf_sb(G__ONELINE);
+    char *tmpbuf = tmpbuf_sb;
     pt1 = strstr(name+i,">>");
     ++pt1;
     strcpy(tmpbuf,pt1);

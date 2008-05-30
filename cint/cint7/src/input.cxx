@@ -46,13 +46,16 @@ extern "C" int add_history(char* str);
 *************************************************************/
 static void G__input_history(int *state,char *string)
 {
-  char G__oneline[G__LONGLINE*2];
-  char G__argbuf[G__LONGLINE*2];
+  G__StrBuf G__oneline_sb(G__LONGLINE*2);
+  char *G__oneline = G__oneline_sb;
+  G__StrBuf G__argbuf_sb(G__LONGLINE*2);
+  char *G__argbuf = G__argbuf_sb;
   /* int  G__null_fgets=1; */
   char *arg[G__LONGLINE];
   int argn;
 #ifdef G__TMPFILE
-  char tname[G__MAXFILENAME];
+  G__StrBuf tname_sb(G__MAXFILENAME);
+  char *tname = tname_sb;
 #else
   char tname[L_tmpnam+10];
 #endif

@@ -1436,6 +1436,11 @@ struct G__tempobject_list {
 #include "fproto.h"
 #include "global.h"
 
+#ifdef __cplusplus
+#include "strbuf.h"
+using namespace Cint::Internal;
+#endif
+
 #endif /* G__COMMON_H */
 
 /*

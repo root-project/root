@@ -762,13 +762,15 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //  Try to read in a single parameter declaration.
    //
    int isparam = 0;
-   char paraname[G__LONGLINE];
+   G__StrBuf paraname_sb(G__LONGLINE);
+   char *paraname = paraname_sb;
    int cin = G__fgetname_template(paraname, "<*&,()=");
    if (strlen(paraname) && isspace(cin)) {
       // -- There was an argument and the parsing was stopped by whitespace.
       // It is possible that we have a namespace name followed by '::', in
       // which case we have to grab more before stopping!
-      char more[G__LONGLINE];
+      G__StrBuf more_sb(G__LONGLINE);
+      char *more = more_sb;
       int namespace_tagnum = G__defined_tagname(paraname, 2);
       while (
          isspace(cin) &&
@@ -1271,7 +1273,8 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
          return 1;
       }
       int isconst = G__VARIABLE;
-      char buf[G__LONGLINE]; // Parsing I/O buffer.
+      G__StrBuf buf_sb(G__LONGLINE);
+      char *buf = buf_sb; // Parsing I/O buffer.
       buf[0] = '\0';
       // Get first keyword, id, or separator of the type specification.
       c = G__fgetname_template(buf, "&*[(=,)");
@@ -1288,7 +1291,8 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
                !strcmp("std", buf)
             )
          ) {
-            char more[G__LONGLINE];
+            G__StrBuf more_sb(G__LONGLINE);
+            char *more = more_sb;
             c = G__fgetname(more, "&*[(=,)");
             strcat(buf, more);
             namespace_tagnum = G__defined_tagname(buf, 2);
@@ -1517,7 +1521,8 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
       //
       int is_a_reference = 0;
       int has_a_default = 0;
-      char param_name[G__LONGLINE];
+      G__StrBuf param_name_sb(G__LONGLINE);
+      char *param_name = param_name_sb;
       param_name[0] = '\0';
       {
          int arydim = 0; // Track which array bound we are processing, so we can handle an unspecified length array.
@@ -1780,7 +1785,8 @@ static int Cint::Internal::G__readansiproto(std::vector<Reflex::Type>& i_params_
             }
             G__value* val = default_val;
             if (is_a_reference && !ptrcnt && (toupper(G__get_type(*val)) != toupper(type) || G__value_typenum(*val).RawType() != G__Dict::GetDict().GetType(tagnum).RawType())) {
-               char tmp[G__ONELINE];
+               G__StrBuf tmp_sb(G__ONELINE);
+               char *tmp = tmp_sb;
                sprintf(tmp, "%s(%s)", G__type2string(type, tagnum, -1, 0, 0), buf);
                *val = G__getexpr(tmp);
                if (G__get_type(*val) == 'u') {
@@ -2324,9 +2330,11 @@ static int G__param_match(char formal_type, const ::Reflex::Scope& formal_tagnum
          //
          //  Try finding constructor.
          //
-         char conv[G__ONELINE];
+         G__StrBuf conv_sb(G__ONELINE);
+         char *conv = conv_sb;
          {
-            char tmp[G__ONELINE];
+            G__StrBuf tmp_sb(G__ONELINE);
+            char *tmp = tmp_sb;
             if (param_type == 'u') {
                if (param->obj.i < 0) {
                   sprintf(tmp, "(%s)(%ld)", G__fulltagname(G__get_tagnum(param_tagnum), 1), param->obj.i);
@@ -2560,7 +2568,8 @@ static int G__param_match(char formal_type, const ::Reflex::Scope& formal_tagnum
       else if (G__get_tagnum(G__value_typenum(*param)) != -1) {
          char* store_struct_offset = G__store_struct_offset;
          ::Reflex::Scope store_tagnum = G__tagnum;
-         char conv[G__ONELINE];
+         G__StrBuf conv_sb(G__ONELINE);
+         char *conv = conv_sb;
          sprintf(conv, "operator %s()", G__type2string(formal_type, G__get_tagnum(formal_tagnum), -1, 0, 0));
          G__store_struct_offset = (char*)param->obj.i;
          G__tagnum = G__value_typenum(*param).RawType();
@@ -2648,7 +2657,8 @@ static int G__param_match(char formal_type, const ::Reflex::Scope& formal_tagnum
       else {
          match = 0;
          if (recursive && G__dispsource) {
-            char tmp[G__ONELINE];
+            G__StrBuf tmp_sb(G__ONELINE);
+            char *tmp = tmp_sb;
             G__valuemonitor(*param, tmp);
             G__fprinterr(G__serr, "!!!Recursive implicit conversion %s(%s) rejected\n", formal_tagnum.Name().c_str(), tmp);
          }
@@ -2766,6 +2776,9 @@ static unsigned int G__rate_inheritance(const ::Reflex::Type &basetagnum, const 
 //______________________________________________________________________________
 static int G__igrd(int formal_type)
 {
+
+   // this looks good but is actually nowhere to be found in the standard;
+   // it's not how conversions are to be ranked.
    switch (formal_type) {
       case 'g':
          return(1);
@@ -2874,183 +2887,93 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
       /* promotion */
       if (G__NOMATCH == funclist->p_rate[i]) {
          switch (formal_type) {
-            case 'd':
+         case 'd': /* 4.6: conv.fpprom */
+            switch (param_type) {
             case 'f':
-               switch (param_type) {
-                  case 'f':
-                     funclist->p_rate[i] = G__PROMOTIONMATCH;
-                     break;
-                  default:
-                     break;
-               }
+               funclist->p_rate[i] = G__PROMOTIONMATCH;
                break;
-            case 'l':
-               switch (param_type) {
-                  case 'b':
-                  case 'c':
-                  case 'r':
-                  case 's':
-                     /* case 'h': */
-                  case 'i':
-                     /* case 'k': */
-                  case 'l':
-                  case 'g':
-#ifndef G__OLDIMPLEMENTATION1959
-                     funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
-#else
-                     funclist->p_rate[i] = G__PROMOTIONMATCH;
-#endif
-                     break;
-                  default:
-                     break;
-               }
+            default:
                break;
-            case 'i':
-               switch (param_type) {
-                  case 'b':
-                  case 'c':
-                  case 'r':
-                  case 's':
-                     /* case 'h': */
-                  case 'i':
-                     /* case 'k': */
-                     /* case 'l': */
-                  case 'g':
-#ifndef G__OLDIMPLEMENTATION1959
-                     funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
-#else
-                     funclist->p_rate[i] = G__PROMOTIONMATCH;
-#endif
-                     break;
-                  case 'u':
-                     if ('e' == G__get_tagtype(param_tagnum)) {
-                        funclist->p_rate[i] = G__PROMOTIONMATCH;
-                     }
-                     break;
-                  default:
-                     break;
-               }
-               break;
-            case 's':
-               switch (param_type) {
-                  case 'b':
-                  case 'c':
-                     /* case 'r': */
-                  case 's':
-                     /* case 'h': */
-                     /* case 'i': */
-                     /* case 'k': */
-                     /* case 'l': */
-                  case 'g':
-#ifndef G__OLDIMPLEMENTATION1959
-                     funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
-#else
-                     funclist->p_rate[i] = G__PROMOTIONMATCH;
-#endif
-                     break;
-                  default:
-                     break;
-               }
-               break;
-            case 'k':
-               switch (param_type) {
-                  case 'b':
-                     /* case 'c': */
-                  case 'r':
-                     /* case 's': */
-                  case 'h':
-                     /* case 'i': */
-                  case 'k':
-                     /* case 'l': */
-                  case 'g':
-#ifndef G__OLDIMPLEMENTATION1959
-                     funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
-#else
-                     funclist->p_rate[i] = G__PROMOTIONMATCH;
-#endif
-                     break;
-                  default:
-                     break;
-               }
-               break;
-            case 'h':
-               switch (param_type) {
-                  case 'b':
-                     /* case 'c': */
-                  case 'r':
-                     /* case 's': */
-                  case 'h':
-                     /* case 'i': */
-                     /* case 'k': */
-                     /* case 'l': */
-                  case 'g':
-#ifndef G__OLDIMPLEMENTATION1959
-                     funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
-#else
-                     funclist->p_rate[i] = G__PROMOTIONMATCH;
-#endif
-                     break;
-                  default:
-                     break;
-               }
-               break;
+            }
+            break;
+         case 'i': /* 4.5: conv.prom */
+         case 'h': /* 4.5: conv.prom */
+            switch (param_type) {
+            case 'b':
+            case 'c':
             case 'r':
-               switch (param_type) {
-                  case 'b':
-                     /* case 'c': */
-                  case 'r':
-                     /* case 's': */
-                     /* case 'h': */
-                     /* case 'i': */
-                     /* case 'k': */
-                     /* case 'l': */
-                  case 'g':
-#ifndef G__OLDIMPLEMENTATION1959
-                     funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
-#else
-                     funclist->p_rate[i] = G__PROMOTIONMATCH;
-#endif
-                     break;
-                  default:
-                     break;
-               }
+            case 's':
+            case 'g':
+               funclist->p_rate[i] = G__promotiongrade(formal_type, param_type);
                break;
             case 'u':
-               if (0 <= G__get_tagnum(formal_tagnum) && 'e' == G__get_tagtype(formal_tagnum)) {
-                  switch (param_type) {
-                     case 'i':
-                     case 's':
-                     case 'l':
-                     case 'c':
-                     case 'h':
-                     case 'r':
-                     case 'k':
-                     case 'b':
-                        funclist->p_rate[i] = G__PROMOTIONMATCH;
-                        break;
-                     default:
-                        break;
-                  }
-               }
-            else {}
-               break;
-            case 'Y':
-               if (isupper(param_type) || 0 == libp->para[i].obj.i
-#ifndef G__OLDIMPLEMENTATION2191
-                     || '1' == param_type
-#endif
-                  ) {
-                  funclist->p_rate[i] = G__PROMOTIONMATCH + G__TOVOIDPMATCH;
+               if ('e' == G__get_tagtype(param_tagnum)) {
+                  funclist->p_rate[i] = G__PROMOTIONMATCH;
                }
                break;
             default:
                break;
+            }
+            break;
+         case 'l':
+         case 'k': /* only enums get promoted to (u)long! */
+            if (param_type == 'u' && 'e' == G__get_tagtype(param_tagnum)) {
+                  funclist->p_rate[i] = G__PROMOTIONMATCH;
+            }
+            break;
+         case 'Y':
+            if (isupper(param_type) || 0 == libp->para[i].obj.i
+#ifndef G__OLDIMPLEMENTATION2191
+                || '1' == param_type
+#endif
+                ) {
+               funclist->p_rate[i] = G__PROMOTIONMATCH + G__TOVOIDPMATCH;
+            }
+            break;
+         default:
+            break;
          }
       }
 
       /* standard conversion */
       if (G__NOMATCH == funclist->p_rate[i]) {
          switch (formal_type) {
+         /* no; f(enum E) cannot be called as f(1)!
+         case 'u':
+            if (0 <= G__get_tagnum(formal_tagnum) && 'e' == G__get_tagtype(formal_tagnum)) {
+               switch (param_type) {
+               case 'i':
+               case 's':
+               case 'l':
+               case 'c':
+               case 'h':
+               case 'r':
+               case 'k':
+               case 'b':
+                  funclist->p_rate[i] = G__PROMOTIONMATCH;
+                  break;
+               default:
+                  break;
+               }
+            }
+            else {}
+         */
+         case 'b':
+         case 'c':
+         case 'r':
+         case 's':
+         case 'h':
+         case 'i':
+         case 'k':
+         case 'l':
+         case 'g':
+         case 'n':
+         case 'm':
+         case 'd':
+         case 'f':
+            switch (param_type) {
+            case 'd':
+            case 'f':
             case 'b':
             case 'c':
             case 'r':
@@ -3062,67 +2985,96 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
             case 'g':
             case 'n':
             case 'm':
-               switch (param_type) {
-                  case 'd':
-                  case 'f':
-                  case 'b':
-                  case 'c':
-                  case 'r':
-                  case 's':
-                  case 'h':
-                  case 'i':
-                  case 'k':
-                  case 'l':
-                  case 'g':
-                  case 'n':
-                  case 'm':
-                  case 'q':
-                     funclist->p_rate[i] = G__STDCONVMATCH;
-                     break;
-                  default:
-                     break;
+            case 'q':
+               funclist->p_rate[i] = G__STDCONVMATCH;
+               break;
+            case 'u':
+               if ('e' == G__get_tagtype(param_tagnum)) {
+                  funclist->p_rate[i] = G__PROMOTIONMATCH;
                }
                break;
-            case 'd':
-            case 'f':
-               switch (param_type) {
-                  case 'b':
-                  case 'c':
-                  case 'r':
-                  case 's':
-                  case 'h':
-                  case 'i':
-                  case 'k':
-                  case 'l':
-                  case 'd':
-                  case 'f':
-                  case 'g':
-                  case 'n':
-                  case 'm':
-                     funclist->p_rate[i] = G__STDCONVMATCH;
-                     break;
-                  default:
-                     break;
+            default:
+               break;
+            }
+        case 'C':
+            switch (param_type) {
+            case 'i':
+            case 'l':
+               if (0 == libp->para[i].obj.i)
+                  funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
+               break;
+            case 'Y':
+               if (G__PARANORMAL == param_reftype) {
+                  funclist->p_rate[i] = G__STDCONVMATCH;
                }
                break;
-            case 'C':
-               switch (param_type) {
-                  case 'i':
-                  case 'l':
-                     if (0 == libp->para[i].obj.i)
-                        funclist->p_rate[i] = G__STDCONVMATCH + G__I02PCONVMATCH;
-                     break;
-                  case 'Y':
-                     if (G__PARANORMAL == param_reftype) {
-                        funclist->p_rate[i] = G__STDCONVMATCH;
-                     }
-                     break;
-                  default:
-                     break;
+            default:
+               break;
+            }
+            break;
+         case 'Y':
+            if (isupper(param_type) || 0 == libp->para[i].obj.i) {
+               funclist->p_rate[i] = G__STDCONVMATCH;
+            }
+            break;
+#ifndef G__OLDIMPLEMENTATION2191
+         case '1': /* questionable */
+#else
+         case 'Q': /* questionable */
+#endif
+            if (
+#ifndef G__OLDIMPLEMENTATION2191
+                '1' == param_type
+#else
+                'Q' == param_type
+#endif
+                )
+               funclist->p_rate[i] = G__STDCONVMATCH;
+            else if ('Y' == param_type)
+               funclist->p_rate[i] = G__STDCONVMATCH + G__V2P2FCONVMATCH;
+            else if ('C' == param_type) {
+               if (
+                   G__get_funcproperties(func)->entry.size >= 0
+                   )
+                  funclist->p_rate[i] = G__STDCONVMATCH - G__C2P2FCONVMATCH;
+               else {
+                  funclist->p_rate[i] = G__STDCONVMATCH + G__C2P2FCONVMATCH;/*???*/
+               }
+            }
+            break;
+         case 'u':
+            switch (param_type) {
+            case 'u':
+               /* reference to derived class can be converted to reference to base
+                * class. add offset, modify char *parameter and G__value *param */
+               {
+                  unsigned int rate_inheritance =
+                     G__rate_inheritance(formal_tagnum, param_tagnum);
+                  if (G__NOMATCH != rate_inheritance) {
+                     funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
+                  }
+               }
+               break;
+            }
+            break;
+         case 'U':
+            switch (param_type) {
+            case 'U':
+               /* Pointer to derived class can be converted to
+                * pointer to base class.
+                * add offset, modify char *parameter and
+                * G__value *param
+                */
+               {
+                  unsigned int rate_inheritance =
+                     G__rate_inheritance(formal_tagnum, param_tagnum);
+                  if (G__NOMATCH != rate_inheritance) {
+                     funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
+                  }
                }
                break;
             case 'Y':
-               if (isupper(param_type) || 0 == libp->para[i].obj.i) {
+               if (G__PARANORMAL == param_reftype) {
                   funclist->p_rate[i] = G__STDCONVMATCH;
                }
                break;
@@ -3131,91 +3083,30 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
 #else
             case 'Q': /* questionable */
 #endif
-               if (
-#ifndef G__OLDIMPLEMENTATION2191
-                  '1' == param_type
-#else
-                  'Q' == param_type
-#endif
-               )
-                  funclist->p_rate[i] = G__STDCONVMATCH;
-               else if ('Y' == param_type)
-                  funclist->p_rate[i] = G__STDCONVMATCH + G__V2P2FCONVMATCH;
-               else if ('C' == param_type) {
-                  if (
-                     G__get_funcproperties(func)->entry.size >= 0
-                  )
-                     funclist->p_rate[i] = G__STDCONVMATCH - G__C2P2FCONVMATCH;
-                  else {
-                     funclist->p_rate[i] = G__STDCONVMATCH + G__C2P2FCONVMATCH;/*???*/
-                  }
-               }
+               funclist->p_rate[i] = G__STDCONVMATCH;
                break;
-            case 'u':
-               switch (param_type) {
-                  case 'u':
-                     /* reference to derived class can be converted to reference to base
-                      * class. add offset, modify char *parameter and G__value *param */
-                  {
-                     unsigned int rate_inheritance =
-                        G__rate_inheritance(formal_tagnum, param_tagnum);
-                     if (G__NOMATCH != rate_inheritance) {
-                        funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
-                     }
-                  }
-                  break;
-               }
-               break;
-            case 'U':
-               switch (param_type) {
-                  case 'U':
-                     /* Pointer to derived class can be converted to
-                      * pointer to base class.
-                      * add offset, modify char *parameter and
-                      * G__value *param
-                      */
-                  {
-                     unsigned int rate_inheritance =
-                        G__rate_inheritance(formal_tagnum, param_tagnum);
-                     if (G__NOMATCH != rate_inheritance) {
-                        funclist->p_rate[i] = G__STDCONVMATCH + rate_inheritance;
-                     }
-                  }
-                  break;
-                  case 'Y':
-                     if (G__PARANORMAL == param_reftype) {
-                        funclist->p_rate[i] = G__STDCONVMATCH;
-                     }
-                     break;
-#ifndef G__OLDIMPLEMENTATION2191
-                  case '1': /* questionable */
-#else
-                  case 'Q': /* questionable */
-#endif
-                     funclist->p_rate[i] = G__STDCONVMATCH;
-                     break;
-                  case 'i':
-                  case 0:
-                     if (0 == libp->para[0].obj.i) funclist->p_rate[i] = G__STDCONVMATCH;
-                     break;
-                  default:
-                     break;
-               }
+            case 'i':
+            case 0:
+               if (0 == libp->para[0].obj.i) funclist->p_rate[i] = G__STDCONVMATCH;
                break;
             default:
-               /* questionable */
-#ifndef G__OLDIMPLEMENTATION2191
-               if ((param_type == 'Y' || param_type == '1') &&
-                     (isupper(formal_type) || 'a' == formal_type)) {
-                  funclist->p_rate[i] = G__STDCONVMATCH;
-               }
-#else
-               if ((param_type == 'Y' || param_type == 'Q' || 0 == libp->para[0].obj.i) &&
-                     (isupper(formal_type) || 'a' == formal_type)) {
-                  funclist->p_rate[i] = G__STDCONVMATCH;
-               }
-#endif
                break;
+            }
+            break;
+         default:
+            /* questionable */
+#ifndef G__OLDIMPLEMENTATION2191
+            if ((param_type == 'Y' || param_type == '1') &&
+                (isupper(formal_type) || 'a' == formal_type)) {
+               funclist->p_rate[i] = G__STDCONVMATCH;
+            }
+#else
+            if ((param_type == 'Y' || param_type == 'Q' || 0 == libp->para[0].obj.i) &&
+                (isupper(formal_type) || 'a' == formal_type)) {
+               funclist->p_rate[i] = G__STDCONVMATCH;
+            }
+#endif
+            break;
          }
       }
 
@@ -3224,7 +3115,8 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
          if (formal_type == 'u') {
             int hash2;
             int ifn2;
-            char funcname2[G__ONELINE];
+            G__StrBuf funcname2_sb(G__ONELINE);
+            char *funcname2 = funcname2_sb;
             struct G__param para;
             G__incsetup_memfunc(formal_tagnum);
             para.paran = 1;
@@ -3245,7 +3137,8 @@ static void G__rate_parameter_match(G__param *libp, const ::Reflex::Member &func
       if (0 == recursive && G__NOMATCH == funclist->p_rate[i]) {
          if (param_type == 'u' && -1 != G__get_tagnum(param_tagnum)) {
             int hash2, ifn2;
-            char funcname2[G__ONELINE];
+            G__StrBuf funcname2_sb(G__ONELINE);
+            char *funcname2 = funcname2_sb;
             struct G__param para;
             G__incsetup_memfunc(param_tagnum);
             para.paran = 0;
@@ -4201,7 +4094,8 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
          int itmp = 0;
          int ip = 1;
          int c;
-         char buf[G__ONELINE];
+         G__StrBuf buf_sb(G__ONELINE);
+         char *buf = buf_sb;
          do {
             c = G__getstream_template(ptmplt, &ip, buf, ",>");
             G__checkset_charlist(buf, &call_para, ++itmp, 'u');
@@ -4596,7 +4490,8 @@ int Cint::Internal::G__interpret_func(G__value *result7, struct G__param *libp, 
 #ifndef __GNUC__
 #pragma message (FIXME("Remove static buf and this func's overload"))
 #endif // __GNUC__
-   char funcname[G__LONGLINE];
+   G__StrBuf funcname_sb(G__LONGLINE);
+   char *funcname = funcname_sb;
    strcpy(funcname, func.Name().c_str());
    return G__interpret_func(result7, funcname, libp, hash, func.DeclaringScope(), funcmatch, memfunc_flag);
 }
@@ -4612,9 +4507,12 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    FILE *prev_fp;
    fpos_t prev_pos /*,temppos */;
    /* paraname[][] is used only for K&R func param. length should be OK */
-   char paraname[G__MAXFUNCPARA][G__MAXNAME];
+   G__StrBuf paraname_buf(G__MAXFUNCPARA * G__MAXNAME);
+   typedef char namearray_t[G__MAXNAME];
+   namearray_t *paraname = (namearray_t*) paraname_buf.data();
 #ifdef G__OLDIMPLEMENTATION1802
-   char temp[G__ONELINE];
+   G__StrBuf temp_sb(G__ONELINE);
+   char *temp = temp_sb;
 #endif
    unsigned int ipara = 0;
    int cin = '\0';
@@ -4638,9 +4536,12 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    G__UINT32 store_security;
    int match_error = 0;
 #ifdef G__ASM_IFUNC
-   long asm_inst_g[G__MAXINST]; /* p-code instruction buffer */
-   G__value asm_stack_g[G__MAXSTACK]; /* data stack */
-   char asm_name[G__ASM_FUNCNAMEBUF];
+   G__StrBuf asm_inst_g_sb(G__MAXINST * sizeof(long));
+   long *asm_inst_g = asm_inst_g_sb.data(); /* p-code instruction buffer */
+   G__StrBuf asm_stack_g_sb(G__MAXSTACK * sizeof(G__value));
+   G__value* asm_stack_g = (G__value*)asm_stack_g_sb.data(); /* data stack */
+   G__StrBuf asm_name_sb(G__ASM_FUNCNAMEBUF);
+   char *asm_name = asm_name_sb;
    long *store_asm_inst;
    int store_asm_instsize;
    G__value *store_asm_stack;
@@ -5349,7 +5250,8 @@ asm_ifunc_start:   /* loop compilation execution label */
       ipara = 0;
       while (cin != ')') {
 #ifndef G__OLDIMPLEMENTATION1802
-         char temp[G__ONELINE];
+         G__StrBuf temp_sb(G__ONELINE);
+         char *temp = temp_sb;
 #endif
          cin = G__fgetstream(temp, ",)");
          if (temp[0] != '\0') {
@@ -5721,7 +5623,8 @@ asm_ifunc_start:   /* loop compilation execution label */
              * which will be destroyed right after this.
              ***************************************************/
 #ifndef G__OLDIMPLEMENTATION1802
-            char temp[G__ONELINE];
+            G__StrBuf temp_sb(G__ONELINE);
+            char *temp = temp_sb;
 #endif // G__OLDIMPLEMENTATION1802
             /* don't call copy constructor if returning reference type */
             if (G__PARANORMAL != G__get_reftype(ifn.TypeOf().ReturnType())) {
@@ -5756,7 +5659,8 @@ asm_ifunc_start:   /* loop compilation execution label */
                }
             }
             else {
-               char buf2[G__ONELINE];
+               G__StrBuf buf2_sb(G__ONELINE);
+               char *buf2 = buf2_sb;
                G__valuemonitor(*result7, buf2);
                sprintf(temp, "%s(%s)", ifn.TypeOf().ReturnType().RawType().Name().c_str(), buf2);
             }
@@ -6353,7 +6257,8 @@ int Cint::Internal::G__function_signature_match(const Reflex::Member& func1, con
 //______________________________________________________________________________
 void Cint::Internal::G__argtype2param(char *argtype, G__param *libp)
 {
-   char typenam[G__MAXNAME*2];
+   G__StrBuf typenam_sb(G__MAXNAME*2);
+   char *typenam = typenam_sb;
    int p = 0;
    int c;
    char *endmark = ",);";
