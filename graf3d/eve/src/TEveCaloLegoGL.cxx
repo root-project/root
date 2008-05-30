@@ -108,7 +108,7 @@ void TEveCaloLegoGL::DLCacheDrop()
 {
    // Drop all display-list definitions.
 
-   for (std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); ++i)
+   for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
       i->second = 0;
 
    TGLObject::DLCacheDrop();
@@ -123,7 +123,7 @@ void TEveCaloLegoGL::DLCachePurge()
 
    if (fDLMap.empty()) return;
 
-   for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
+   for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
    {
       if (fScene) {
          fScene->GetGLCtxIdentity()->RegisterDLNameRangeToWipe(i->second, 1);
@@ -134,6 +134,7 @@ void TEveCaloLegoGL::DLCachePurge()
    }
    TGLObject::DLCachePurge();
 }
+
 //______________________________________________________________________________
 void TEveCaloLegoGL::MakeQuad(Float_t x1, Float_t y1, Float_t z1,
                               Float_t xw, Float_t yw, Float_t h) const
@@ -211,13 +212,13 @@ void TEveCaloLegoGL::MakeDisplayList() const
 
    // ids in eta phi rng
    Int_t nSlices = fM->fData->GetNSlices();
-   for(Int_t s=0; s<nSlices; s++)
+   for (Int_t s = 0; s < nSlices; ++s)
    {
-      if (fDLMap.empty() || fDLMap[s]== 0)
+      if (fDLMap.empty() || fDLMap[s] == 0)
          fDLMap[s] = glGenLists(1);
       glNewList(fDLMap[s], GL_COMPILE);
 
-      for (UInt_t i=0; i<fM->fCellList.size(); ++i)
+      for (UInt_t i = 0; i < fM->fCellList.size(); ++i)
       {
          if (fM->fCellList[i].fSlice > s) continue;
          if (fM->fCellList[i].fTower != prevTower)
@@ -349,7 +350,7 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) cons
    Int_t div2;
    THLimitsFinder::Optimize(0, fZAxisStep, fM->GetNZSteps(), omin2, omax2, div2, step2);
    Double_t z2 = step2;
-   while (z2<fZAxisMax)
+   while (z2 < fZAxisMax)
    {
       glVertex3f(0, 0, z2);
       glVertex3f(off.X(), off.Y(), z2-off.Z());
@@ -443,7 +444,7 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
       // get corner closest to eye, excluding left corner
       Double_t zt = 1.f;
       Int_t idxDepth = 0;
-      for (Int_t i=0; i<4; ++i)
+      for (Int_t i = 0; i < 4; ++i)
       {
          if (z[i] < zt)
          {
@@ -453,15 +454,15 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
       }
       Double_t zm = 1.f;
       Int_t idxDepthT = 0;
-      for (Int_t i=0; i<4; ++i)
+      for (Int_t i = 0; i < 4; ++i)
       {
-         if (z[i] < zm && z[i]>=zt && i!=idxDepth)
+         if (z[i] < zm && z[i] >= zt && i != idxDepth)
          {
             zm  = z[i];
             idxDepthT = i;
          }
       }
-      if (idxDepth==idxLeft)  idxDepth =idxDepthT;
+      if (idxDepth == idxLeft)  idxDepth =idxDepthT;
 
       Float_t ayX = 0; // Y position of back plane X = const
       Float_t axY = 0; // X postion of back plane  Y = const
@@ -518,7 +519,7 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
       glBegin(GL_LINES);
       Int_t nhs = TMath::CeilNint(fZAxisMax/fZAxisStep);
       Float_t hz  = 0;
-      for (Int_t i = 1; i<=nhs; ++i, hz+=fZAxisStep)
+      for (Int_t i = 1; i <= nhs; ++i, hz += fZAxisStep)
       {
          glVertex3f(x0, axY, hz); glVertex3f(x1, axY, hz);
          glVertex3f(ayX, y0, hz); glVertex3f(ayX, y1, hz);
@@ -587,7 +588,7 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
    Float_t zt = 1.f;
    Float_t zm = 0.f;
    Int_t idx = 0;
-   for (Int_t i=0; i<4; ++i)
+   for (Int_t i = 0; i < 4; ++i)
    {
       if (z[i] < zt)
       {
@@ -645,14 +646,14 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
    Double_t oXmin, oXmax, oXbw;
    Int_t oXndiv;
    THLimitsFinder::Optimize(x0, x1, fM->fNZSteps, oXmin, oXmax, oXndiv, oXbw);
-   for (Int_t i=0; i<=oXndiv; i++)
+   for (Int_t i = 0; i <= oXndiv; ++i)
       RnrText(TEveUtil::FormAxisValue(oXmin + oXbw*i), oXmin+oXbw*i, axY + TMath::Sign(yOff*1.5f,axY), 0, fNumFont, 2);
 
    // Y labels
    Double_t oYmin, oYmax, oYbw;
    Int_t oYndiv;
    THLimitsFinder::Optimize(y0, y1, fM->fNZSteps, oYmin, oYmax, oYndiv, oYbw);
-   for (Int_t i=0; i<=oYndiv; ++i)
+   for (Int_t i = 0; i <= oYndiv; ++i)
       RnrText(TEveUtil::FormAxisValue(oYmin + oYbw*i), ayX + TMath::Sign(xOff*1.5f,ayX), oYmin+oYbw*i, 0, fNumFont, 2);
 
    glPopMatrix();
@@ -674,14 +675,14 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
    THLimitsFinder::Optimize(oXmin, oXbw+oXmin, fM->fNZSteps, oXmin2, oXmax2, oXndiv2, oXbw2);
    Float_t xt = oXmin;
    Float_t xt2;
-   for(Int_t i=0; i<=oXndiv; i++)
+   for(Int_t i = 0; i <= oXndiv; ++i)
    {
       glVertex3f(xt, 0,    0);
       glVertex3f(xt, 0,    zOff);
       glVertex3f(xt, 0,    0);
       glVertex3f(xt, yOff, 0);
       xt2 = xt;
-      for (Int_t j=0; j<=oXndiv2; j++)
+      for (Int_t j = 0; j <= oXndiv2; ++j)
       {
          if (xt2 >= x1) break;
          glVertex3f(xt2, 0,     0);
@@ -693,7 +694,7 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
       xt += oXbw;
    }
    xt2 = oXmin;
-   while(xt2 > x0)
+   while (xt2 > x0)
    {
       glVertex3f(xt2, 0,     0);
       glVertex3f(xt2, 0,     zOff2);
@@ -719,14 +720,14 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
    THLimitsFinder::Optimize(oYmin, oYbw+oYmin, fM->fNZSteps, oYmin2, oYmax2, oYndiv2, oYbw2);
    Float_t yt = oYmin;
    Float_t yt2;
-   for(Int_t i=0; i<=oYndiv; i++)
+   for (Int_t i = 0; i <= oYndiv; ++i)
    {
       glVertex3f(0,    yt, 0);
       glVertex3f(0,    yt, zOff);
       glVertex3f(0,    yt, 0);
       glVertex3f(xOff, yt, 0);
       yt2 = yt;
-      for (Int_t j=0; j<=oYndiv2; j++)
+      for (Int_t j=0; j<=oYndiv2; ++j)
       {
          if (yt2 >= y1) break;
          glVertex3f(0,     yt2, 0);
@@ -738,7 +739,7 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
       yt += oYbw;
    }
    yt2 = oYmin;
-   while(yt2 > y0)
+   while (yt2 > y0)
    {
       glVertex3f(0,     yt2, 0);
       glVertex3f(0,     yt2, zOff2);
@@ -767,32 +768,29 @@ Int_t TEveCaloLegoGL::GetGridStep(Int_t axId, TGLRnrCtx &rnrCtx) const
    Int_t firstY = fPhiAxis->GetFirst();
    Int_t lastY  = fPhiAxis->GetLast();
 
-
-   Float_t gap;
-
    if (axId == 0)
    {
       Float_t y0 = fPhiAxis->GetBinLowEdge(firstY);
-      for (Int_t idx =0; idx<fNBinSteps; ++idx)
+      for (Int_t idx = 0; idx < fNBinSteps; ++idx)
       {
-         if (firstX +fBinSteps[idx] > lastX) return 1;
+         if (firstX + fBinSteps[idx] > lastX) return 1;
          gluProject(fEtaAxis->GetBinLowEdge(firstX), y0, 0, mm, pm, vp, &xp0, &yp0, &zp0);
          gluProject(fEtaAxis->GetBinLowEdge(firstX+fBinSteps[idx]), y0, 0, mm, pm, vp, &xp1, &yp1, &zp1);
-         gap = TMath::Sqrt((xp0-xp1)*(xp0-xp1) + (yp0-yp1)*(yp0-yp1));
-         if (gap>fM->fBinWidth)
+         Float_t gapsqr = (xp0-xp1)*(xp0-xp1) + (yp0-yp1)*(yp0-yp1);
+         if (gapsqr > fM->fBinWidth*fM->fBinWidth)
             return fBinSteps[idx];
       }
    }
    else if (axId == 1)
    {
       Float_t x0 = fEtaAxis->GetBinLowEdge(firstX);
-      for (Int_t idx =firstY; idx<fNBinSteps; ++idx)
+      for (Int_t idx = firstY; idx < fNBinSteps; ++idx)
       {
-         if (firstY +fBinSteps[idx] > lastY) return 1;
+         if (firstY + fBinSteps[idx] > lastY) return 1;
          gluProject(x0, fEtaAxis->GetBinLowEdge(firstY), 0, mm, pm, vp, &xp0, &yp0, &zp0);
          gluProject(x0, fEtaAxis->GetBinLowEdge(firstY+fBinSteps[idx]), 0, mm, pm, vp, &xp1, &yp1, &zp1);
-         Float_t  gap = TMath::Sqrt((xp0-xp1)*(xp0-xp1) + (yp0-yp1)*(yp0-yp1));
-         if (gap>fM->fBinWidth)
+         Float_t  gapsqr = (xp0-xp1)*(xp0-xp1) + (yp0-yp1)*(yp0-yp1);
+         if (gapsqr > fM->fBinWidth*fM->fBinWidth)
             return fBinSteps[idx];
       }
    }
@@ -887,9 +885,9 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
 
    // quads
    {
-      for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
+      for(SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
       {
-         TGLUtil::Color(fM->GetPalette()->GetDefaultColor()+i->first);
+         TGLUtil::Color(fM->GetPalette()->GetDefaultColor() + i->first);
          glCallList(i->second);
       }
    }
@@ -900,7 +898,7 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
          glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
          glDisable(GL_POLYGON_OFFSET_FILL);
          TGLUtil::Color(1);
-         for(std::map<Int_t, UInt_t>::iterator i=fDLMap.begin(); i!=fDLMap.end(); i++)
+         for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
             glCallList(i->second);
       }
    }

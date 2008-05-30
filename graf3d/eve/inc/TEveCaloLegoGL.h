@@ -56,7 +56,11 @@ protected:
    void    MakeDisplayList() const;
 
    mutable Bool_t                   fDLCacheOK;
-   mutable std::map< Int_t, UInt_t> fDLMap;
+
+   typedef std::map<Int_t, UInt_t>           SliceDLMap_t;
+   typedef std::map<Int_t, UInt_t>::iterator SliceDLMap_i;
+
+   mutable SliceDLMap_t     fDLMap;
 
    TEveCaloLego            *fM;  // Model object.
 
