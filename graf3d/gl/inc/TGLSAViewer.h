@@ -52,7 +52,7 @@ public:
       kGLXOY,  kGLXOZ,  kGLZOY,
       kGLXnOY, kGLXnOZ, kGLZnOY,
       kGLOrthoRotate, kGLOrthoDolly,
-      kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF,
+      kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF, kGLSaveAnimGIF,
       kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT,
       kGLEditObject };
 
@@ -72,8 +72,6 @@ private:
    TString            fDirName;
    Int_t              fTypeIdx;
    Bool_t             fOverwrite;
-
-   TString            fPictureFileName;
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -105,8 +103,6 @@ public:
 
    void   Show();
    void   Close();
-   void   SavePicture();
-   void   SavePicture(const TString &fileName);
 
    // GUI events - editors, frame etc
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);

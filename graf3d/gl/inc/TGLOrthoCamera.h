@@ -93,11 +93,17 @@ public:
    virtual void Configure(Double_t zoom, Double_t dolly, Double_t center[3],
                           Double_t hRotate, Double_t vRotate);
 
-   void   SetEnableRotate(Bool_t x) { fEnableRotate = x; }
-   Bool_t GetEnableRotate()   const { return fEnableRotate; }
+   void     SetEnableRotate(Bool_t x) { fEnableRotate = x; }
+   Bool_t   GetEnableRotate()   const { return fEnableRotate; }
 
-   void   SetDollyToZoom(Bool_t x) { fDollyToZoom = x; }
-   Bool_t GetDollyToZoom()   const { return fDollyToZoom; }
+   Double_t GetZoomMin() const { return fZoomMin; }
+   Double_t GetZoomMax() const { return fZoomMax; }
+   void     SetZoomMin(Double_t z);
+   void     SetZoomMax(Double_t z);
+   void     SetZoomMinMax(Double_t min, Double_t max) { SetZoomMin(min); SetZoomMax(max); }
+
+   void     SetDollyToZoom(Bool_t x) { fDollyToZoom = x; }
+   Bool_t   GetDollyToZoom()   const { return fDollyToZoom; }
 
    // Stuff for TGLPlotPainter.
    void   SetViewport(TGLPaintDevice *dev);

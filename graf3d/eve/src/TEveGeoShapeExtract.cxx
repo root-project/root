@@ -10,12 +10,17 @@
  *************************************************************************/
 
 #include "TEveGeoShapeExtract.h"
+#include "TEveGeoNode.h"
 
 #include "TList.h"
+#include "TGeoManager.h"
 #include "TGeoShape.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveGeoShapeExtract
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Globally positioned TGeoShape with rendering attributes and an
 // optional list of daughter shape-extracts.
@@ -23,7 +28,7 @@
 // Vessel to carry hand-picked geometry from gled to reve.
 // This class exists in both frameworks.
 
-ClassImp(TEveGeoShapeExtract)
+ClassImp(TEveGeoShapeExtract);
 
 //______________________________________________________________________________
 TEveGeoShapeExtract::TEveGeoShapeExtract(const Text_t* n, const Text_t* t) :
@@ -39,6 +44,7 @@ TEveGeoShapeExtract::TEveGeoShapeExtract(const Text_t* n, const Text_t* t) :
    memset(fTrans, 0, sizeof(fTrans));
    fTrans[0] = fTrans[5] = fTrans[10] = fTrans[15] = 1;
    fRGBA [0] = fRGBA [1] = fRGBA [2]  = fRGBA [3]  = 1;
+   gGeoManager = TEveGeoShape::GetGeoMangeur(); // To inforce phony geo-manager on load time.
 }
 
 //______________________________________________________________________________

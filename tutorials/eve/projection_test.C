@@ -10,6 +10,9 @@ void projection_test()
    gEve->GetDefViewer()->AddScene(s);
    TGLViewer* v = (TGLViewer *)gEve->GetGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   TGLOrthoCamera* cam = (TGLOrthoCamera*) v->CurrentCamera();
+   cam->SetZoomMinMax(0.2, 20);
+
    TGLCameraMarkupStyle* mup = v->GetCameraMarkup();
    if(mup) mup->SetShow(kFALSE);
 
@@ -33,9 +36,8 @@ void projection_test()
    TEveGeoShape* gsre = TEveGeoShape::ImportShapeExtract(gse, 0);
    geom->Close();
    delete geom;
-   gEve->AddGlobalElement(gsre);
+   // gEve->AddToListTree(gsre);
    mng->ImportElements(gsre);
-   gsre->SetRnrState(kFALSE);
 
    TEveLine* line = new TEveLine;
    line->SetMainColor(kGreen);

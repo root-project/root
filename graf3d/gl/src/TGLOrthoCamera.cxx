@@ -154,6 +154,32 @@ Bool_t TGLOrthoCamera::Zoom(Int_t delta, Bool_t mod1, Bool_t mod2)
 }
 
 //______________________________________________________________________________
+void TGLOrthoCamera::SetZoomMin(Double_t z)
+{
+   // Set minimum zoom factor. If current zoom is less than z it is
+   // set to z.
+
+   fZoomMin = z;
+   if (fZoom < fZoomMin) {
+      fZoom = fZoomMin;
+      IncTimeStamp();
+   }
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::SetZoomMax(Double_t z)
+{
+   // Set maximum zoom factor. If current zoom is greater than z it
+   // is set to z.
+
+   fZoomMax = z;
+   if (fZoom > fZoomMax) {
+      fZoom = fZoomMax;
+      IncTimeStamp();
+   }
+}
+
+//______________________________________________________________________________
 Bool_t TGLOrthoCamera::Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
    // Truck the camera - 'move camera parallel to film plane'.

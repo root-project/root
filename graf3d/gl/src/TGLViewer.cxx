@@ -49,6 +49,8 @@
 
 #include "KeySymbols.h"
 #include "TContextMenu.h"
+#include "TImage.h"
+
 
 #ifndef GL_BGRA
 #define GL_BGRA GL_BGRA_EXT
@@ -117,6 +119,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
+   fPictureFileName("viewer.jpg"),
    fGLWidget(0),
    fGLDevice(-1),
    fGLCtxId(0),
@@ -171,6 +174,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fSmartRefresh(kFALSE),
    fDebugMode(kFALSE),
    fIsPrinting(kFALSE),
+   fPictureFileName("viewer.jpg"),
    fGLWidget(0),
    fGLDevice(fPad->GetGLDevice()),
    fGLCtxId(0),
@@ -512,6 +516,70 @@ void TGLViewer::DoDraw()
       // Request final draw pass.
       fRedrawTimer->RequestDraw(100, TGLRnrCtx::kLODHigh);
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::SavePicture(const TString &fileName)
+{
+   // Save current image in various formats (gif, gif+, jpg, png, eps, pdf).
+   // 'gif+' will append image to an existng file (animated gif).
+   // 'eps' and 'pdf' do not fully support transparency and texturing.
+   // The viewer window most be fully contained within the desktop but
+   // can be covered by other windows.
+   // Returns false if something obvious goes wrong, true otherwise.
+
+   if (fileName.EndsWith(".gif") || fileName.Contains("gif+") ||
+            fileName.EndsWith(".jpg") || fileName.EndsWith(".png"))
+   {
+      if ( ! TakeLock(kDrawLock)) {
+         Error("TGLViewer::SavePicture", "viewer locked - try later.");
+         return kFALSE;
+      }
+
+      std::auto_ptr<TImage>gif(TImage::Create());
+
+      fRnrCtx->SetGrabImage(kTRUE);
+
+      fLOD = TGLRnrCtx::kLODHigh;
+
+      if (!gVirtualX->IsCmdThread())
+         gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", this));
+      else
+         DoDraw();
+
+      gif->FromGLBuffer(fRnrCtx->GetGrabbedImage(), fViewport.Width(), fViewport.Height());
+
+      fRnrCtx->SetGrabImage(kFALSE);
+      delete [] fRnrCtx->GetGrabbedImage();
+      fRnrCtx->SetGrabbedImage(0);
+
+      gif->WriteImage(fileName.Data());
+   }
+   else if (fileName.EndsWith(".eps"))
+   {
+      TGLOutput::Capture(*this, TGLOutput::kEPS_BSP, fileName.Data());
+   }
+   else if (fileName.EndsWith(".pdf"))
+   {
+      TGLOutput::Capture(*this, TGLOutput::kPDF_BSP, fileName.Data());
+   }
+   else
+   {
+      Warning("TGLViewer::SavePicture",
+              "file %s cannot be saved with this extension.", fileName.Data());
+      return kFALSE;
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::SavePicture()
+{
+   // Save current image using the defualt file name which can be set
+   // via SetPictureFileName() and defaults to "viewer.jpg".
+   // Really useful for the files ending with 'gif+'.
+
+   return SavePicture(fPictureFileName);
 }
 
 //______________________________________________________________________________

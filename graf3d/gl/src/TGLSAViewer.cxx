@@ -31,7 +31,6 @@
 #include "TRootEmbeddedCanvas.h"
 #include "TString.h"
 #include "TGFileDialog.h"
-#include "TImage.h"
 
 #include "TGLOutput.h"
 
@@ -271,6 +270,7 @@ void TGLSAViewer::CreateMenus()
    fFileSaveMenu->AddEntry("viewer.&eps", kGLSaveEPS);
    fFileSaveMenu->AddEntry("viewer.&pdf", kGLSavePDF);
    fFileSaveMenu->AddEntry("viewer.&gif", kGLSaveGIF);
+   fFileSaveMenu->AddEntry("viewer.g&if+", kGLSaveAnimGIF);
    fFileSaveMenu->AddEntry("viewer.&jpg", kGLSaveJPG);
    fFileSaveMenu->AddEntry("viewer.p&ng", kGLSavePNG);
    fFileMenu->AddPopup("&Save", fFileSaveMenu);
@@ -409,20 +409,6 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             hd->Popup();
             break;
          }
-         case kGLSaveEPS:
-            fPictureFileName = "viewer.eps";
-            if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
-            else
-               SavePicture();
-            break;
-         case kGLSavePDF:
-            fPictureFileName = "viewer.pdf";
-            if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
-            else
-               SavePicture();
-            break;
          case kGLPerspYOZ:
             SetCurrentCamera(TGLViewer::kCameraPerspYOZ);
             break;
@@ -456,25 +442,23 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLOrthoDolly:
             ToggleOrthoDolly();
             break;
+         case kGLSaveEPS:
+            SavePicture("viewer.eps");
+            break;
+         case kGLSavePDF:
+            SavePicture("viewer.pdf");
+            break;
          case kGLSaveGIF:
-            fPictureFileName = "viewer.gif";
-            if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
-            else
-               SavePicture();
+            SavePicture("viewer.gif");
+            break;
+         case kGLSaveAnimGIF:
+            SavePicture("viewer.gif+");
             break;
          case kGLSaveJPG:
-            fPictureFileName = "viewer.jpg";
-            if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
-            else
-               SavePicture();
+            SavePicture("viewer.jpg");
+            break;
          case kGLSavePNG:
-            fPictureFileName = "viewer.png";
-            if (!gVirtualX->IsCmdThread())
-               gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
-            else
-               SavePicture();
+            SavePicture("viewer.png");
             break;
          case kGLSaveAS:
             {
@@ -485,29 +469,16 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
                fi.fOverwrite   = fOverwrite;
                new TGFileDialog(gClient->GetDefaultRoot(), fFrame, kFDSave, &fi);
                if (!fi.fFilename) return kTRUE;
-               fPictureFileName = fi.fFilename;
                TString ft(fi.fFileTypes[fi.fFileTypeIdx+1]);
                fDirName   = fi.fIniDir;
                fTypeIdx   = fi.fFileTypeIdx;
                fOverwrite = fi.fOverwrite;
 
-               if (!fPictureFileName.EndsWith(".eps")  && !fPictureFileName.EndsWith(".pdf")  &&
-                   !fPictureFileName.EndsWith(".jpg")  && !fPictureFileName.EndsWith(".gif")  &&
-                   !fPictureFileName.EndsWith(".png")) {
-                  if (ft.Index(".") != kNPOS)
-                     fPictureFileName += ft(ft.Index("."), ft.Length());
-                  else {
-                     Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
-                     return kTRUE;
-                  }
-               }
-
-               if (!gVirtualX->IsCmdThread())
-                  gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
-               else
-                  SavePicture();
+               TString file = fi.fFilename;
+               if (ft.Index(".") != kNPOS)
+                  file += ft(ft.Index("."), ft.Length());
+               SavePicture(file);
             }
-
             break;
          case kGLEditObject:
             ToggleEditObject();
@@ -567,54 +538,6 @@ void TGLSAViewer::OverlayDragFinished()
    // Refresh geditor.
 
    fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
-}
-
-//______________________________________________________________________________
-void TGLSAViewer::SavePicture()
-{
-   // Save the current GL structure in various formats (eps,pdf, gif, jpg, png).
-   if (fPictureFileName.EndsWith(".eps"))
-      TGLOutput::Capture(*this, TGLOutput::kEPS_BSP, fPictureFileName.Data());
-   else if (fPictureFileName.EndsWith(".pdf"))
-      TGLOutput::Capture(*this, TGLOutput::kPDF_BSP, fPictureFileName.Data());
-   else if (fPictureFileName.EndsWith(".gif") || fPictureFileName.Contains("gif+") ||
-            fPictureFileName.EndsWith(".jpg") || fPictureFileName.EndsWith(".png"))
-   {
-      if ( ! TakeLock(kDrawLock)) {
-         Error("TGLSAViewer::SavePicture", "viewer locked - try later.");
-         return;
-      }
-
-      std::auto_ptr<TImage>gif(TImage::Create());
-
-      fRnrCtx->SetGrabImage(kTRUE);
-
-      fLOD = TGLRnrCtx::kLODHigh;
-
-      if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLViewer *)0x%x)->DoDraw()", this));
-      else
-         DoDraw();
-
-      gif->FromGLBuffer(fRnrCtx->GetGrabbedImage(), fViewport.Width(), fViewport.Height());
-
-      fRnrCtx->SetGrabImage(kFALSE);
-      delete [] fRnrCtx->GetGrabbedImage();
-      fRnrCtx->SetGrabbedImage(0);
-
-      gif->WriteImage(fPictureFileName.Data());
-   }
-}
-
-//______________________________________________________________________________
-void TGLSAViewer::SavePicture(const TString &fileName)
-{
-   // Save the current GL structure in various formats (eps,pdf, gif, jpg, png).
-   fPictureFileName = fileName;
-   if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLSAViewer *)0x%lx)->SavePicture()", this));
-   else
-      SavePicture();
 }
 
 //______________________________________________________________________________

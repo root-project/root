@@ -67,10 +67,10 @@ private:
 
 protected:
    // External handles
-   TVirtualPad  * fPad;         //! external pad - remove replace with signal
+   TVirtualPad   *fPad;         //! external pad - remove replace with signal
 
    // GUI Handles
-   TContextMenu * fContextMenu; //!
+   TContextMenu  *fContextMenu; //!
 
    // Cameras
    // TODO: Put in vector and allow external creation
@@ -83,19 +83,19 @@ protected:
    TGLOrthoCamera       fOrthoXnOYCamera;       //!
    TGLOrthoCamera       fOrthoXnOZCamera;       //!
    TGLOrthoCamera       fOrthoZnOYCamera;       //!
-   TGLCamera          * fCurrentCamera;        //!
+   TGLCamera           *fCurrentCamera;        //!
 
    // Lights
-   TGLLightSet        * fLightSet;             //!
+   TGLLightSet         *fLightSet;             //!
    // Clipping
-   TGLClipSet         * fClipSet;              //!
+   TGLClipSet          *fClipSet;              //!
    // Selected physical
    TGLSelectRecord      fCurrentSelRec;        //! select record in use as selected
    TGLSelectRecord      fSelRec;               //! select record from last select (should go to context)
    TGLSelectRecord      fSecSelRec;            //! select record from last secondary select (should go to context)
-   TGLManipSet        * fSelectedPShapeRef;    //!
+   TGLManipSet         *fSelectedPShapeRef;    //!
    // Overlay
-   TGLOverlayElement  * fCurrentOvlElm;        //! current overlay element
+   TGLOverlayElement   *fCurrentOvlElm;        //! current overlay element
    TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
 
    TGEventHandler      *fEventHandler;         //! event handler
@@ -112,7 +112,7 @@ protected:
    EDragAction          fDragAction;
 
    // Redraw timer
-   TGLRedrawTimer     * fRedrawTimer;        //! timer for triggering redraws
+   TGLRedrawTimer      *fRedrawTimer;        //! timer for triggering redraws
    Float_t              fMaxSceneDrawTimeHQ; //! max time for scene rendering at high LOD (in ms)
    Float_t              fMaxSceneDrawTimeLQ; //! max time for scene rendering at high LOD (in ms)
 
@@ -123,14 +123,15 @@ protected:
    Bool_t         fReferenceOn;    //! reference marker on?
    TGLVertex3     fReferencePos;   //! reference position
    Bool_t         fDrawCameraCenter; //! reference marker on?
-   TGLCameraMarkupStyle * fCameraMarkup; //! markup size of viewport in scene units
+   TGLCameraMarkupStyle  *fCameraMarkup; //! markup size of viewport in scene units
 
    Bool_t         fInitGL;         //! has GL been initialised?
    Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds, use TAtt3D time-stamp to determine if they are still valid
 
    // Debug tracing (for scene rebuilds)
-   Bool_t         fDebugMode;             //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
-   Bool_t         fIsPrinting;
+   Bool_t         fDebugMode;            //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
+   Bool_t         fIsPrinting;           //! 
+   TString        fPictureFileName;      //! default file-name for SavePicture()
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
@@ -147,9 +148,9 @@ protected:
    void        SetupCameras(Bool_t reset);
 
 protected:
-   TGLWidget         *fGLWidget;
-   Int_t              fGLDevice; //!for embedded gl viewer
-   TGLContextIdentity*fGLCtxId;  //!for embedded gl viewer
+   TGLWidget          *fGLWidget;
+   Int_t               fGLDevice; //!for embedded gl viewer
+   TGLContextIdentity *fGLCtxId;  //!for embedded gl viewer
 
    // Updata/camera-reset behaviour
    Bool_t           fIgnoreSizesOnUpdate;      // ignore sizes of bounding-boxes on update
@@ -158,8 +159,8 @@ protected:
    Bool_t           fResetCameraOnDoubleClick; // reposition camera on double-click
 
 public:
-   TGLViewer(TVirtualPad * pad, Int_t x, Int_t y, Int_t width, Int_t height);
-   TGLViewer(TVirtualPad * pad);
+   TGLViewer(TVirtualPad* pad, Int_t x, Int_t y, Int_t width, Int_t height);
+   TGLViewer(TVirtualPad* pad);
    virtual ~TGLViewer();
 
    // TVirtualViewer3D interface ... mostly a facade
@@ -244,6 +245,12 @@ public:
 
    Bool_t RequestOverlaySelect(Int_t x, Int_t y); // Cross thread select request
    Bool_t DoOverlaySelect(Int_t x, Int_t y);      // Window coords origin top left
+
+   // Saveing of screen image
+   Bool_t       SavePicture(const TString &fileName);
+   Bool_t       SavePicture();
+   const char*  GetPictureFileName() const { return fPictureFileName.Data(); }
+   void         SetPictureFileName(const TString& f) { fPictureFileName = f; }
 
    // Update/camera-reset
    void   UpdateScene();

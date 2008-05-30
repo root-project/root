@@ -434,7 +434,33 @@ void TEveGeoTopNode::NodeVisChanged(TGeoNode* node)
 // active TGeoManager) and simplified geometries (needed for NLT
 // projections).
 
+namespace
+{
+TGeoManager* init_geo_mangeur()
+{
+   // Create a phony geo manager that 
+   TGeoManager* old = gGeoManager;
+   TGeoManager* mgr = new TGeoManager("TEveGeoShape::fgGeoMangeur",
+                                      "Static geo manager used for wrapped TGeoShapes.");
+   gGeoManager = old;
+   return mgr;
+}
+}
+
 ClassImp(TEveGeoShape);
+
+TGeoManager* TEveGeoShape::fgGeoMangeur = init_geo_mangeur();
+
+//______________________________________________________________________________
+TGeoManager* TEveGeoShape::GetGeoMangeur()
+{
+   // Return static geo-manager that is used intenally to make shapes
+   // lead a happy life.
+   // Set gGeoManager to this object when creating TGeoShapes to be
+   // passed into TEveGeoShapes.
+
+   return fgGeoMangeur;
+}
 
 //______________________________________________________________________________
 TEveGeoShape::TEveGeoShape(const Text_t* name, const Text_t* title) :
@@ -462,6 +488,8 @@ void TEveGeoShape::SetShape(TGeoShape* s)
 {
    // Set TGeoShape shown by this object.
 
+   TEveGeoManagerHolder gmgr(fgGeoMangeur);
+
    if (fShape) {
       fShape->SetUniqueID(fShape->GetUniqueID() - 1);
       if (fShape->GetUniqueID() == 0)
@@ -485,7 +513,7 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
    if (fShape == 0)
       return;
 
-   TEveGeoManagerHolder gmgr(0);
+   TEveGeoManagerHolder gmgr(fgGeoMangeur);
 
    TBuffer3D& buff = (TBuffer3D&) fShape->GetBuffer3D
       (TBuffer3D::kCore, kFALSE);
@@ -550,7 +578,7 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
    she->SetRnrSelf(gsre->GetRnrSelf());
    she->SetRnrElements(gsre->GetRnrChildren());
    she->SetShape(gsre->GetShape());
-   if ( gsre->GetNChildren())
+   if (gsre->GetNChildren())
    {
       TList* ele = new TList();
       she->SetElements(ele);
@@ -562,7 +590,7 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
          i++;
       }
    }
-   if(parent)
+   if (parent)
       parent->GetElements()->Add(she);
 
    return she;
@@ -574,6 +602,7 @@ TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
 {
    // Import a shape extract 'gse' under element 'parent'.
 
+   TEveGeoManagerHolder gmgr(fgGeoMangeur);
    TEveManager::TRedrawDisabler redrawOff(gEve);
    TEveGeoShape* gsre = SubImportShapeExtract(gse, parent);
    gsre->ElementChanged();
@@ -635,6 +664,8 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
       // !!!! TGeoShapeAssembly makes a bad TBuffer3D
       return 0;
    }
+
+   TEveGeoManagerHolder gmgr(fgGeoMangeur);
 
    TBuffer3D* buff  = fShape->MakeBuffer3D();
    TEveTrans& mx    = RefMainTrans();

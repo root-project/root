@@ -128,6 +128,8 @@ protected:
    UChar_t           fTransparency;
    TGeoShape*        fShape;
 
+   static TGeoManager* fgGeoMangeur;
+
    static TEveGeoShape* SubImportShapeExtract(TEveGeoShapeExtract* gse, TEveElement* parent);
    TEveGeoShapeExtract* DumpShapeTree(TEveGeoShape* geon, TEveGeoShapeExtract* parent = 0);
 
@@ -153,6 +155,8 @@ public:
    // GeoProjectable
    virtual TBuffer3D*   MakeBuffer3D();
    virtual TClass*      ProjectedClass() const;
+
+   static TGeoManager*  GetGeoMangeur();
 
    ClassDef(TEveGeoShape, 1); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };

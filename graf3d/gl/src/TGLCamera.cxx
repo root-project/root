@@ -695,7 +695,7 @@ Bool_t TGLCamera::AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
    }
 
    // Calculate a sensitivity based on passed modifiers
-   Double_t sens = 1.0;
+   Double_t sens = val * static_cast<Double_t>(screenShift);
 
    if (mod1) {
       sens *= 0.1;
@@ -709,7 +709,7 @@ Bool_t TGLCamera::AdjustAndClampVal(Double_t & val, Double_t min, Double_t max,
    }
 
    Double_t oldVal = val;
-   Double_t shift = static_cast<Double_t>(screenShift) * (val-min) * sens / static_cast<Double_t>(screenShiftRange);
+   Double_t shift  = sens / static_cast<Double_t>(screenShiftRange);
    val -= shift;
 
    if (val < min) {
