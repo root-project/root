@@ -69,46 +69,42 @@ void MakeCalo2D(TEveCalo3D* calo3d)
 void MakeCaloLego(TEveCaloDataHist* data)
 {
   TEveViewer* v2 = gEve->SpawnNewViewer("Lego Viewer");
-  TGLViewer* v = v2->GetGLViewer();
+  TGLViewer*  v  = v2->GetGLViewer();
   v->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
   v->SetEventHandler(new TEveLegoEventHandler("Lego", v->GetGLWidget(), v));
-
-  // histogram
   TEveRGBAPalette* pal = new TEveRGBAPalette(0, 100);
   pal->SetLimits(0, TMath::CeilNint(data->GetMaxVal()));
   pal->SetDefaultColor((Color_t)4);
   TEveScene*  s2 = gEve->SpawnNewScene("Lego");
   v2->AddScene(s2);
+  
+  // lego1
   TEveCaloLego* lego = new TEveCaloLego(data);
   lego->SetPalette(pal);
   lego->SetGridColor(kGray+2);
   lego->Set2DMode(TEveCaloLego::kValSize);
+  lego->SetName("TwoHistLego");
   gEve->AddElement(lego, s2);
   gEve->AddToListTree(lego, kTRUE);
-  
-  // random lines to demonstrate TEveLegoEventHandler
-  TRandom r(0);
-  gStyle->SetPalette(1, 0);
-  TEveRGBAPalette* pal = new TEveRGBAPalette(0, 130);
-  TEveQuadSet* q = new TEveQuadSet("LineXYFixedZ");
-  q->SetPalette(pal);
-  q->Reset(TEveQuadSet::kQT_LineXYFixedZ, kFALSE, 32);
-  for (Int_t i=0; i<10; ++i) {
-    q->AddLine(r.Uniform(-10, 10), r.Uniform(-10, 10), r.Uniform(-10, 10),
-	       r.Uniform(0.2, 1));
-    q->QuadValue(r.Uniform(0, 130));
-  }
-  q->RefitPlex();
-  TEveTrans& t = q->RefMainTrans();
-  Float_t  sc = 0.3;
-  t.SetScale(sc, sc, sc);
-  gEve->AddElement(q, s2);
 
-  // overlay
+  // overlay lego1
   gEve->DisableRedraw();
   TEveLegoOverlay* overlay = new TEveLegoOverlay();
   overlay->SetCaloLego(lego);
   v->AddOverlayElement(overlay);
   gEve->AddElement(overlay, s2);
   gEve->EnableRedraw();
+
+  // lego2
+  TEveCaloDataHist* data2 = new TEveCaloDataHist();
+  data2->AddHistogram(data->GetHistogram(0));
+  TEveCaloLego* lego2 = new TEveCaloLego(data2);
+  lego2->SetName("OneHistLego");
+  lego2->SetPalette(pal);
+  gEve->AddElement(lego2, s2);
+  gEve->AddToListTree(lego2, kTRUE);  
+  lego2->InitMainTrans();
+  lego2->RefMainTrans().Move3PF(0, 0, 15);
+  lego2->SetEta(-3, 3);
+  lego2->SetPhi(TMath::PiOver4());
 }

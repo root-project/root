@@ -271,7 +271,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
             TEveCaloData::vCellId_t* aa = new TEveCaloData::vCellId_t();
             data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
                               fM->GetEta() + ax->GetBinCenter(ibin), ax->GetBinWidth(ibin),
-                              fM->fPhi, fM->fPhiRng, *aa);
+                              fM->fPhi, fM->fPhiOffset, *aa);
             if (aa->size()) fM->fCellLists.push_back(aa);
          }
       }

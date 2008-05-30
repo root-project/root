@@ -33,7 +33,7 @@ protected:
 
    TEveGDoubleValuator       *fEtaRng;
    TEveGValuator             *fPhi;
-   TEveGValuator             *fPhiRng;
+   TEveGValuator             *fPhiOffset;
 
    TGVerticalFrame            *fTower;
    TEveRGBAPaletteSubEditor   *fPalette;        // Palette sub-editor.x

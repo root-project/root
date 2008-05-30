@@ -42,12 +42,15 @@ protected:
    Double_t      fEtaMax;
 
    Double_t      fPhi;
-   Double_t      fPhiRng;
+   Double_t      fPhiOffset;
 
-   Float_t      fBarrelRadius;  // barrel raidus in cm
-   Float_t      fEndCapPos;     // end cap z coordinate in cm
+   Float_t       fBarrelRadius;  // barrel raidus in cm
+   Float_t       fEndCapPos;     // end cap z coordinate in cm
 
-   Float_t      fCellZScale;
+   Float_t       fCellZScale;
+
+   Bool_t        fUseExternalZMax;
+   Float_t       fExternalZMax;
 
    Bool_t            fValueIsColor;   // Interpret signal value as RGBA color.
    TEveRGBAPalette*  fPalette;        // Pointer to signal-color palette.
@@ -77,6 +80,12 @@ public:
    virtual void    SetCellZScale(Float_t s) { fCellZScale = s; ResetBBox(); }
    virtual Float_t GetDefaultCellHeight() const { return fBarrelRadius*fCellZScale; }
 
+   void    SetUseExternalZMax(Bool_t x) { fUseExternalZMax = x; }
+   Bool_t  GetUseExternalZMax() const { return fUseExternalZMax; }
+
+   void    SetExternalZMax(Float_t val) { fExternalZMax = val; }
+   Float_t GetExternalZMax() const { return fExternalZMax; }
+
    Float_t GetTransitionEta() const;
    Float_t GetTransitionTheta() const;
 
@@ -91,13 +100,13 @@ public:
    Float_t GetEtaMax() const {return fEtaMax;}
    Float_t GetEtaRng() const {return fEtaMax-fEtaMin;}
 
-   virtual void SetPhi(Float_t phi)    { SetPhiWithRng(phi, fPhiRng); }
+   virtual void SetPhi(Float_t phi)    { SetPhiWithRng(phi, fPhiOffset); }
    virtual void SetPhiRng(Float_t rng) { SetPhiWithRng(fPhi, rng); }
    virtual void SetPhiWithRng(Float_t x, Float_t r);
    Float_t GetPhi() const { return fPhi;}
-   Float_t GetPhiMin() const {return fPhi-fPhiRng;}
-   Float_t GetPhiMax() const {return fPhi+fPhiRng;}
-   Float_t GetPhiRng() const {return fPhiRng;}
+   Float_t GetPhiMin() const {return fPhi-fPhiOffset;}
+   Float_t GetPhiMax() const {return fPhi+fPhiOffset;}
+   Float_t GetPhiRng() const {return fPhiOffset*2;}
 
 
    virtual void ResetCache() = 0;

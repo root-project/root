@@ -46,12 +46,15 @@ TEveCaloViz::TEveCaloViz(const Text_t* n, const Text_t* t) :
    fEtaMax(1),
 
    fPhi(0.),
-   fPhiRng(TMath::Pi()),
+   fPhiOffset(TMath::Pi()),
 
    fBarrelRadius(-1.f),
    fEndCapPos(-1.f),
 
    fCellZScale(1.),
+
+   fUseExternalZMax(kFALSE),
+   fExternalZMax(1),
 
    fValueIsColor(kTRUE),
    fPalette(0),
@@ -74,12 +77,15 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
    fEtaMax(1),
 
    fPhi(0.),
-   fPhiRng(TMath::Pi()),
+   fPhiOffset(TMath::Pi()),
 
    fBarrelRadius(-1.f),
    fEndCapPos(-1.f),
 
    fCellZScale(1.),
+
+   fUseExternalZMax(kFALSE),
+   fExternalZMax(1),
 
    fValueIsColor(kTRUE),
    fPalette(0),
@@ -122,7 +128,7 @@ void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
    using namespace TMath;
 
    fPhi = phi;
-   fPhiRng = rng;
+   fPhiOffset = rng;
 
    InvalidateCache();
 }
@@ -160,7 +166,7 @@ void TEveCaloViz::SetData(TEveCaloData* data)
    Double_t min, max;
    fData->GetPhiLimits(min, max);
    fPhi = (max+min)*0.5;
-   fPhiRng =(max-min)*0.5;
+   fPhiOffset =(max-min)*0.5;
 
    InvalidateCache();
 }
@@ -176,7 +182,7 @@ void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
    fEtaMax    = m->fEtaMax;
 
    fPhi       = m->fPhi;
-   fPhiRng    = m->fPhiRng;
+   fPhiOffset    = m->fPhiOffset;
    fBarrelRadius = m->fBarrelRadius;
    fEndCapPos    = m->fEndCapPos;
 
@@ -463,7 +469,12 @@ Float_t TEveCaloLego::GetDefaultCellHeight() const
 {
    // Get default cell height.
 
-   return TMath::TwoPi();
+   Float_t h = 10;
+
+   if (fUseExternalZMax)
+      h *= (fData->GetMaxVal()/fExternalZMax);
+
+   return h;
 }
 
 //______________________________________________________________________________
@@ -483,21 +494,36 @@ void TEveCaloLego::ComputeBBox()
    BBoxInit();
 
    // Float_t[6] X(min,max), Y(min,max), Z(min,max)
+
    if (fData)
    {
       Float_t ex = 1.2;
 
+      Float_t a = 0.5*GetDefaultCellHeight()*ex;
+
+      fBBox[0] = -a; 
+      fBBox[1] =  a;
+      fBBox[2] = -a; 
+      fBBox[3] =  a;
+
+      // scaling is relative to shortest XY axis
       Double_t em, eM, pm, pM;
       fData->GetEtaLimits(em, eM);
       fData->GetPhiLimits(pm, pM);
+      Double_t r = (eM-em)/(pM-pm);
+      if (r<1)
+      {
+         fBBox[2] /= r;
+         fBBox[3] /= r;
+      }
+      else 
+      {
+         fBBox[0] *= r;
+         fBBox[1] *= r; 
+      }
 
-      fBBox[0] = ex*em;
-      fBBox[1] = ex*eM;
-
-      fBBox[2] = ex*pm;
-      fBBox[3] = ex*pM;
-
-      fBBox[4] = -GetDefaultCellHeight()*fCellZScale*0.2;
-      fBBox[5] =  GetDefaultCellHeight()*fCellZScale*1.2;
+      fBBox[4] =  GetDefaultCellHeight()*fCellZScale*(1-ex);
+      fBBox[5] =  GetDefaultCellHeight()*fCellZScale*ex;
    }
 }
+

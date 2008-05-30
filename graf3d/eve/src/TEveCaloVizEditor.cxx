@@ -37,7 +37,7 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
 
    fEtaRng(0),
    fPhi(0),
-   fPhiRng(0),
+   fPhiOffset(0),
    fTower(0),
    fPalette(0),
    fCellZScale(0)
@@ -66,13 +66,13 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    fPhi->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoPhi()");
    fTower->AddFrame(fPhi, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
-   fPhiRng = new TEveGValuator(fTower, "PhiRng:", 90, 0);
-   fPhiRng->SetLabelWidth(labelW);
-   fPhiRng->SetNELength(6);
-   fPhiRng->Build();
-   fPhiRng->SetLimits(0, 180);
-   fPhiRng->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoPhi()");
-   fTower->AddFrame(fPhiRng, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fPhiOffset = new TEveGValuator(fTower, "PhiOff:", 90, 0);
+   fPhiOffset->SetLabelWidth(labelW);
+   fPhiOffset->SetNELength(6);
+   fPhiOffset->Build();
+   fPhiOffset->SetLimits(0, 180);
+   fPhiOffset->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoPhi()");
+   fTower->AddFrame(fPhiOffset, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
    fCellZScale = new TEveGValuator(fTower, "ZScale:", 90, 0);
    fCellZScale->SetLabelWidth(labelW);
@@ -107,7 +107,7 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
    fEtaRng->SetValues(fM->fEtaMin, fM->fEtaMax);
 
    fPhi->SetValue(fM->fPhi*TMath::RadToDeg());
-   fPhiRng->SetValue(fM->fPhiRng*TMath::RadToDeg());
+   fPhiOffset->SetValue(fM->fPhiOffset*TMath::RadToDeg());
 
    fPalette->SetModel(fM->fPalette);
 
@@ -128,7 +128,7 @@ void TEveCaloVizEditor::DoPhi()
 {
   // Slot for setting phi range.
 
-   fM->SetPhiWithRng(fPhi->GetValue()*TMath::DegToRad(), fPhiRng->GetValue()*TMath::DegToRad());
+   fM->SetPhiWithRng(fPhi->GetValue()*TMath::DegToRad(), fPhiOffset->GetValue()*TMath::DegToRad());
    Update();
 }
 

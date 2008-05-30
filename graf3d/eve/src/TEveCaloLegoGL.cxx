@@ -227,7 +227,7 @@ void TEveCaloLegoGL::MakeDisplayList() const
             prevTower = fM->fCellList[i].fTower;
          }
 
-         fM->fData->GetCellData(fM->fCellList[i], fM->fPhi, fM->fPhiRng, cellData);
+         fM->fData->GetCellData(fM->fCellList[i], fM->fPhi, fM->fPhiOffset, cellData);
          if (s == fM->fCellList[i].fSlice)
          {
             glLoadName(i);
@@ -546,7 +546,7 @@ void TEveCaloLegoGL::DrawZScales3D(TGLRnrCtx & rnrCtx,
    {
       // left most corner of the picked tower
       TEveCaloData::CellData_t cd;
-      fM->fData->GetCellData(fM->fCellList[fTowerPicked], fM->fPhi, fM->fPhiRng, cd);
+      fM->fData->GetCellData(fM->fCellList[fTowerPicked], fM->fPhi, fM->fPhiOffset, cd);
       switch(idxLeft)
       {
          case 0:
@@ -624,14 +624,22 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
 
    Float_t zOff  = -fDataMax*0.03;
    Float_t zOff2 =  zOff*0.5;
+   
+   Float_t yOff  =  0.03*TMath::Sign(y1-y0, axY);
+   Float_t xOff  =  0.03*TMath::Sign(x1-x0, ayX);
 
+   Float_t rxy = (fPhiAxis->GetXmax()-fPhiAxis->GetXmin())/(fEtaAxis->GetXmax()-fEtaAxis->GetXmin());
+   if (rxy>1)
+   {
+      yOff /= rxy;
+   }
+   else
+   {
+      xOff *=rxy;
+   }
 
-   Float_t rxy = (fEtaAxis->GetXmax()-fEtaAxis->GetXmin())/(fPhiAxis->GetXmax()-fPhiAxis->GetXmin());
-   Float_t yOff  =  0.03*TMath::Sign(y1-y0, axY)/rxy;
-   Float_t yOff2 =  yOff*0.5;
-
-   Float_t xOff  =  0.03*TMath::Sign(x1-x0, ayX)*rxy;
    Float_t xOff2 =  xOff*0.5;
+   Float_t yOff2 =  yOff*0.5;
 
    glPushMatrix();
    glTranslatef(0, 0, zOff);
@@ -756,42 +764,50 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
 Int_t TEveCaloLegoGL::GetGridStep(Int_t axId, TGLRnrCtx &rnrCtx) const
 {
    // Calculate view-dependent grid density.
-   GLdouble xp0, yp0, zp0, xp1, yp1, zp1;
+
+   GLdouble x0, y0, z0, x1, y1, z1;
+
    GLdouble mm[16];
    GLint    vp[4];
    glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
    glGetIntegerv(GL_VIEWPORT, vp);
    const GLdouble *pm = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
 
-   Int_t firstX = fEtaAxis->GetFirst();
-   Int_t lastX  = fEtaAxis->GetLast();
-   Int_t firstY = fPhiAxis->GetFirst();
-   Int_t lastY  = fPhiAxis->GetLast();
 
    if (axId == 0)
    {
-      Float_t y0 = fPhiAxis->GetBinLowEdge(firstY);
-      for (Int_t idx = 0; idx < fNBinSteps; ++idx)
+      Int_t firstX = fEtaAxis->GetFirst();
+      Int_t lastX  = fEtaAxis->GetLast();
+
+      for (Int_t i=0; i<fNBinSteps; ++i)
       {
-         if (firstX + fBinSteps[idx] > lastX) return 1;
-         gluProject(fEtaAxis->GetBinLowEdge(firstX), y0, 0, mm, pm, vp, &xp0, &yp0, &zp0);
-         gluProject(fEtaAxis->GetBinLowEdge(firstX+fBinSteps[idx]), y0, 0, mm, pm, vp, &xp1, &yp1, &zp1);
-         Float_t gapsqr = (xp0-xp1)*(xp0-xp1) + (yp0-yp1)*(yp0-yp1);
+         if (firstX+fBinSteps[i] > lastX)
+            return TMath::Max(i-1, 1);
+
+         gluProject(fEtaAxis->GetBinLowEdge(firstX), fM->GetPhi(), 0, mm, pm, vp, &x0, &y0, &z0);
+         gluProject(fEtaAxis->GetBinLowEdge(firstX+fBinSteps[i]), fM->GetPhi(), 0, mm, pm, vp, &x1, &y1, &z1);
+
+         Float_t gapsqr = (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1);
          if (gapsqr > fM->fBinWidth*fM->fBinWidth)
-            return fBinSteps[idx];
+            return fBinSteps[i];
       }
    }
    else if (axId == 1)
    {
-      Float_t x0 = fEtaAxis->GetBinLowEdge(firstX);
-      for (Int_t idx = firstY; idx < fNBinSteps; ++idx)
-      {
-         if (firstY + fBinSteps[idx] > lastY) return 1;
-         gluProject(x0, fEtaAxis->GetBinLowEdge(firstY), 0, mm, pm, vp, &xp0, &yp0, &zp0);
-         gluProject(x0, fEtaAxis->GetBinLowEdge(firstY+fBinSteps[idx]), 0, mm, pm, vp, &xp1, &yp1, &zp1);
-         Float_t  gapsqr = (xp0-xp1)*(xp0-xp1) + (yp0-yp1)*(yp0-yp1);
+      Double_t bw = fPhiAxis->GetBinWidth(1);
+      Float_t phi = bw*TMath::CeilNint(fM->GetPhiMin()/bw);
+      for (Int_t i=0; i<fNBinSteps; ++i)
+      {         
+         Float_t ps = fBinSteps[i]*bw;
+         if (phi+ps > fM->GetPhiMax())
+            return fBinSteps[TMath::Max(i-1, 1)];
+
+         gluProject(fM->GetEta(), phi, 0, mm, pm, vp, &x0, &y0, &z0);
+         gluProject(fM->GetEta(), phi+ps, 0, mm, pm, vp, &x1, &y1, &z1);
+
+         Float_t  gapsqr = (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1);
          if (gapsqr > fM->fBinWidth*fM->fBinWidth)
-            return fBinSteps[idx];
+            return fBinSteps[i];
       }
    }
    return 1;
@@ -801,6 +817,8 @@ Int_t TEveCaloLegoGL::GetGridStep(Int_t axId, TGLRnrCtx &rnrCtx) const
 void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
 {
    // Draw basic histogram components: x-y grid
+
+   using namespace TMath;
 
    Int_t es = GetGridStep(0, rnrCtx);
    Int_t ps = GetGridStep(1, rnrCtx);
@@ -835,12 +853,6 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
          glVertex2f(fEtaAxis->GetBinUpEdge(i), phi0);
          glVertex2f(fEtaAxis->GetBinUpEdge(i), phi1);
       }
-
-      for (Int_t i=fPhiAxis->GetFirst(); i<fPhiAxis->GetLast(); i+= es)
-      {
-         glVertex2f(eta0, fEtaAxis->GetBinUpEdge(i));
-         glVertex2f(eta1, fEtaAxis->GetBinUpEdge(i));
-      }
    }
    else
    {
@@ -853,15 +865,16 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
          glVertex2f(i*ebw, phi0);
          glVertex2f(i*ebw, phi1);
       }
+   }
 
-      Float_t pbw = ps*(phi1-phi0)/fPhiAxis->GetNbins();
-      Int_t j0 = Int_t(phi0/pbw);
-      Int_t j1 = Int_t(phi1/pbw);
-      for (Int_t j=j0; j<=j1; j++)
-      {
-         glVertex2f(eta0, j*pbw);
-         glVertex2f(eta1, j*pbw);
-      }
+   //phi
+   Double_t phiW = ps*fPhiAxis->GetBinWidth(1);
+   Float_t phi = phiW*CeilNint(phi0/phiW);
+   while (phi < phi1)
+   {
+      glVertex2f(eta0, phi);
+      glVertex2f(eta1, phi);
+      phi+=phiW;
    }
    glEnd();
 
@@ -927,7 +940,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
 
       for (TEveCaloData::vCellId_t::iterator it=fM->fCellList.begin(); it!=fM->fCellList.end(); it++)
       {
-         fM->fData->GetCellData(*it, fM->fPhi, fM->fPhiRng, cellData);
+         fM->fData->GetCellData(*it, fM->fPhi, fM->fPhiOffset, cellData);
          glLoadName(name);
          glBegin(GL_QUADS);
          if ((*it).fTower != prevTower)
@@ -984,7 +997,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
       Float_t left, right, up, down; // cell corners
       for (TEveCaloData::vCellId_t::iterator it=fM->fCellList.begin(); it!=fM->fCellList.end(); it++)
       {
-         fM->fData->GetCellData(*it, fM->fPhi, fM->fPhiRng, cd);
+         fM->fData->GetCellData(*it, fM->fPhi, fM->fPhiOffset, cd);
          Int_t iMin = FloorNint((cd.EtaMin()- eta0)/etaStep);
          Int_t iMax = CeilNint ((cd.EtaMax()- eta0)/etaStep);
          Int_t jMin = FloorNint((cd.PhiMin()- phi0)/phiStep);
@@ -1097,19 +1110,29 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       fM->ResetCache();
       fM->fData->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
                              fM->GetEta(), fM->GetEtaRng()*0.5,
-                             fM->fPhi, fM->fPhiRng, fM->fCellList);
+                             fM->fPhi, fM->fPhiOffset, fM->fCellList);
       fM->fCacheOK = kTRUE;
    }
    if (cells3D && fDLCacheOK == kFALSE) MakeDisplayList();
 
 
-   // set modelview matrix
+   // modelview matrix
    glPushMatrix();
-   glTranslatef(0, -fM->fPhi, 0);
 
-   glScalef((fEtaAxis->GetXmax()-fEtaAxis->GetXmin())/fM->GetEtaRng(),
-            0.5*(fPhiAxis->GetXmax()-fPhiAxis->GetXmin())/fM->fPhiRng,
-            fM->fCellZScale*fM->GetDefaultCellHeight()/fZAxisMax);
+   // scale from rebinning
+   Float_t sx = (fEtaAxis->GetXmax()-fEtaAxis->GetXmin())/fM->GetEtaRng();
+   Float_t sy = (fPhiAxis->GetXmax()-fPhiAxis->GetXmin())/fM->GetPhiRng();
+
+   // scale due to shortest XY axis have same length as  z axis
+   Float_t zf;
+   if (fEtaAxis->GetXmax()-fEtaAxis->GetXmin() < fPhiAxis->GetXmax()-fPhiAxis->GetXmin())
+      zf = fM->GetDefaultCellHeight()/(fEtaAxis->GetXmax()-fEtaAxis->GetXmin());
+   else
+      zf = fM->GetDefaultCellHeight()/(fPhiAxis->GetXmax()-fPhiAxis->GetXmin());
+
+   glScalef(sx*zf, sy*zf, fM->fCellZScale*fM->GetDefaultCellHeight()/fZAxisMax);
+
+   glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    glLineWidth(1);
