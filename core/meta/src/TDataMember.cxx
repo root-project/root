@@ -175,6 +175,8 @@
 #include "TList.h"
 #include "TGlobal.h"
 #include "TRealData.h"
+ 
+#include <stdlib.h>
 
 
 ClassImp(TDataMember)
