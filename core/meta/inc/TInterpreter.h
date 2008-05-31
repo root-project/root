@@ -154,7 +154,7 @@ public:
    virtual void  CallFunc_ResetArg(CallFunc_t * /* func */) const {;}
    virtual void  CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const {;}
    virtual void  CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const {;}
-   virtual void  CallFunc_SetArg(CallFunc_t */* func */, Long64_t /* param */) const {;}
+   virtual void  CallFunc_SetArg(CallFunc_t * /* func */, Long64_t /* param */) const {;}
    virtual void  CallFunc_SetArg(CallFunc_t * /* func */, ULong64_t /* param */) const {;}
    virtual void  CallFunc_SetArgArray(CallFunc_t * /* func */, Long_t * /* paramArr */, Int_t /* nparam */) const {;}
    virtual void  CallFunc_SetArgs(CallFunc_t * /* func */, const char * /* param */) const {;}
