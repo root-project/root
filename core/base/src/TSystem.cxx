@@ -41,7 +41,6 @@
 #include "TString.h"
 #include "TOrdCollection.h"
 #include "TInterpreter.h"
-#include "G__ci.h"
 #include "TRegexp.h"
 #include "TTimer.h"
 #include "TObjString.h"
@@ -1645,8 +1644,9 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
          if (!l.EndsWith("."))
             idx++;
          while (idx < len && libs[idx] != '.') {
-            if (libs[idx] == ' ' || idx+1 == len)
+            if (libs[idx] == ' ' || idx+1 == len) {
                return 1;
+            }
             ++idx;
          }
       }
@@ -1761,7 +1761,7 @@ Func_t TSystem::DynFindSymbol(const char * /*lib*/, const char *entry)
    AbstractMethod("DynFindSymbol");
    return 0;
 #else
-   return G__findsym(entry);
+   return gInterpreter->FindSym(entry);
 #endif
 }
 
@@ -1775,7 +1775,7 @@ void TSystem::Unload(const char *module)
 #else
    char *path;
    if ((path = DynamicPathName(module))) {
-      G__unloadfile(path);
+      gInterpreter->UnloadFile(path);
       delete [] path;
    }
 #endif
@@ -2407,7 +2407,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       ::Info("ACLiC","script has already been loaded in interpreted mode");
       ::Info("ACLiC","unloading %s and compiling it", filename);
 
-      if ( G__unloadfile( (char*) filename ) != 0 ) {
+      if ( gInterpreter->UnloadFile( (char*) filename ) != 0 ) {
          // We can not unload it.
          return kFALSE;
       }
@@ -2638,7 +2638,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          ::Info("ACLiC","%s has been modified and will be reloaded",
                 libname.Data());
-         if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
+         if ( gInterpreter->UnloadFile( (char*) library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
          }
@@ -2668,7 +2668,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          // core dump at termination.
 
          ::Info("ACLiC","it will be regenerated and reloaded!");
-         if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
+         if ( gInterpreter->UnloadFile( (char*) library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
          }
@@ -3098,7 +3098,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #ifndef NOCINT
       // This is intended to force a failure if not all symbols needed
       // by the library are present.
-      G__Set_RTLD_NOW();
+      gInterpreter->SetRTLD_NOW();
 #endif
       if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
          gInterpreter->UnloadLibraryMap(libmapfilename);
@@ -3108,7 +3108,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (loadLib) result = !gSystem->Load(library);
       else result = kTRUE;
 #ifndef NOCINT
-      G__Set_RTLD_LAZY();
+      gInterpreter->SetRTLD_LAZY();
 #endif
 
       if ( !result ) {

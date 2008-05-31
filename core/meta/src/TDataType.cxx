@@ -20,7 +20,6 @@
 
 #include "TDataType.h"
 #include "TInterpreter.h"
-#include "Api.h"
 #ifdef R__SOLARIS
 #include <typeinfo>
 #endif
@@ -28,7 +27,7 @@
 ClassImp(TDataType)
 
 //______________________________________________________________________________
-TDataType::TDataType(G__TypedefInfo *info) : TDictionary()
+TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
 {
    // Default TDataType ctor. TDataTypes are constructed in TROOT via
    // a call to TCint::UpdateListOfTypes().
@@ -36,11 +35,11 @@ TDataType::TDataType(G__TypedefInfo *info) : TDictionary()
    fInfo = info;
 
    if (fInfo) {
-      SetName(info->Name());
-      SetTitle(info->Title());
-      SetType(fInfo->TrueName());
-      fProperty = fInfo->Property();
-      fSize = fInfo->Size();
+      SetName(gCint->TypedefInfo_Name(fInfo));
+      SetTitle(gCint->TypedefInfo_Title(fInfo));
+      SetType(gCint->TypedefInfo_TrueName(fInfo));
+      fProperty = gCint->TypedefInfo_Property(fInfo);
+      fSize = gCint->TypedefInfo_Size(fInfo);
    } else {
       SetTitle("Builtin basic type");
    }
@@ -88,9 +87,9 @@ TDataType& TDataType::operator=(const TDataType& dt)
 //______________________________________________________________________________
 TDataType::~TDataType()
 {
-   // TDataType dtor deletes adopted G__TypedefInfo object.
+   // TDataType dtor deletes adopted CINT TypedefInfo object.
 
-   delete fInfo;
+   gCint->TypedefInfo_Delete(fInfo);
 }
 
 //______________________________________________________________________________
@@ -342,20 +341,20 @@ void TDataType::CheckInfo()
    // This intentionally cast the constness away so that
    // we can call CheckInfo from const data members.
 
-   if (!fInfo->IsValid() ||
-       strcmp(fInfo->Name(),fName.Data())!=0) {
+   if (!gCint->TypedefInfo_IsValid(fInfo) ||
+       strcmp(gCint->TypedefInfo_Name(fInfo),fName.Data())!=0) {
 
       // The fInfo is invalid or does not
       // point to this typedef anymore, let's
       // refresh it
 
-      fInfo->Init(fName.Data());
+      gCint->TypedefInfo_Init(fInfo, fName.Data());
 
-      if (!fInfo->IsValid()) return;
+      if (!gCint->TypedefInfo_IsValid(fInfo)) return;
 
-      SetTitle(fInfo->Title());
-      SetType(fInfo->TrueName());
-      fProperty = fInfo->Property();
-      fSize = fInfo->Size();
+      SetTitle(gCint->TypedefInfo_Title(fInfo));
+      SetType(gCint->TypedefInfo_TrueName(fInfo));
+      fProperty = gCint->TypedefInfo_Property(fInfo);
+      fSize = gCint->TypedefInfo_Size(fInfo);
    }
 }

@@ -25,9 +25,6 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 
 enum EDataType {
@@ -39,16 +36,11 @@ enum EDataType {
    kCounter =  6,  kCharStar = 7,  kBits     = 15 /* for compatibility with TStreamerInfo */
 };
 
-namespace Cint {
-class G__TypedefInfo;
-}
-using namespace Cint;
-
 
 class TDataType : public TDictionary {
 
 private:
-   G__TypedefInfo   *fInfo;     //pointer to CINT typedef info
+   TypedefInfo_t    *fInfo;     //pointer to CINT typedef info
    Int_t             fSize;     //size of type
    EDataType         fType;     //type id
    Long_t            fProperty; //The property information for the (potential) underlying class
@@ -62,7 +54,7 @@ protected:
    TDataType& operator=(const TDataType&);
 
 public:
-   TDataType(G__TypedefInfo *info = 0);
+   TDataType(TypedefInfo_t *info = 0);
    TDataType(const char *typenam);
    virtual       ~TDataType();
    Int_t          Size() const;

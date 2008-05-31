@@ -27,7 +27,6 @@
 #include "TRealData.h"
 #include "TFolder.h"
 #include "TRef.h"
-#include "Api.h"
 #include "TInterpreter.h"
 #include "TError.h"
 #include "TDataType.h"
@@ -1510,8 +1509,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
          if (isPointer) fCtype = TVirtualStreamerInfo::kObjectp;
          else           fCtype = TVirtualStreamerInfo::kObject;
       } else {
-         G__ClassInfo info(sopen);
-         if (info.IsValid() && info.Property()&G__BIT_ISENUM) {
+         if (gCint->ClassInfo_IsEnum(sopen)) {
             if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
          } else {
             if(strcmp(sopen,"string")) {

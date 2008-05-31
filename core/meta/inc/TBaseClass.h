@@ -25,27 +25,19 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 class TBrowser;
 class TClass;
-namespace Cint {
-class G__BaseClassInfo;
-}
-using namespace Cint;
-
 
 class TBaseClass : public TDictionary {
 
 private:
-   G__BaseClassInfo  *fInfo;      //pointer to CINT base class info
+   BaseClassInfo_t   *fInfo;      //pointer to CINT base class info
    TClass            *fClassPtr;  //pointer to the base class TClass
    TClass            *fClass;     //pointer to parent class
 
 public:
-   TBaseClass(G__BaseClassInfo *info = 0, TClass *cl = 0);
+   TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);
    virtual     ~TBaseClass();
    virtual void Browse(TBrowser *b);
    const char  *GetTitle() const;

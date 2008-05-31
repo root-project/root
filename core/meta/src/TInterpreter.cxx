@@ -21,6 +21,7 @@
 #include "TInterpreter.h"
 
 TInterpreter*   (*gPtr2Interpreter)() = 0; // returns pointer to global object
+TInterpreter*   gCint = 0; // returns pointer to global TCint object
 
 ClassImp(TInterpreter)
 
@@ -31,6 +32,7 @@ TInterpreter::TInterpreter(const char *name, const char *title)
    // TInterpreter ctor only called by derived classes.
 
    gInterpreter = this;
+   gCint        = this;
 }
 
 //______________________________________________________________________________

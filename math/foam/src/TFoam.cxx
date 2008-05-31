@@ -129,7 +129,7 @@
 #include "TMethodCall.h"
 #include "TRandom.h"
 #include "TMath.h"
-#include "G__ci.h"
+#include "TInterpreter.h"
 
 ClassImp(TFoam);
 
@@ -1038,7 +1038,7 @@ void TFoam::SetRhoInt(void *fun)
 // Note that persistency for FOAM object will not work in the case of such
 // a distribution.
 
-   const Char_t *namefcn = G__p2f2funcname(fun); //name of integrand function
+   const char *namefcn = gCint->Getp2f2funcname(fun); //name of integrand function
    if(namefcn) {
       fMethodCall=new TMethodCall();
       fMethodCall->InitWithPrototype(namefcn, "Int_t, Double_t *");

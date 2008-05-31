@@ -27,20 +27,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
+#ifndef ROOT_TDictionary
+#include "TDictionary.h"
 #endif
 
 class TClass;
 class TFunction;
-namespace Cint {
-class G__CallFunc;
-class G__ClassInfo;
-}
-using namespace Cint;
 
 class TMethodCall : public TObject {
 
@@ -48,7 +40,7 @@ public:
    enum EReturnType { kLong, kDouble, kString, kOther, kNone };
 
 private:
-   G__CallFunc   *fFunc;      //CINT method invocation environment
+   CallFunc_t    *fFunc;      //CINT method invocation environment
    Long_t         fOffset;    //offset added to object pointer before method invocation
    TClass        *fClass;     //pointer to the class info
    TFunction     *fMetPtr;    //pointer to the method or function info
@@ -61,7 +53,7 @@ private:
    void Execute(const char *,  const char *, int * /*error*/ = 0) { }    // versions of TObject
    void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
-   void InitImplementation(const char *methodname, const char *params, const char *proto, TClass *cl, const G__ClassInfo &cinfo);
+   void InitImplementation(const char *methodname, const char *params, const char *proto, TClass *cl, const ClassInfo_t *cinfo);
 
 public:
    TMethodCall();

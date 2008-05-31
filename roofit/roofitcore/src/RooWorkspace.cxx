@@ -41,8 +41,6 @@
 #include <string>
 #include <list>
 
-#include "Api.h"
-#include "Class.h"
 using namespace std ;
 
 #include "TClass.h"
@@ -566,7 +564,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
   // (We also need a default ctor of abstract classes, but cannot check that through is interface
   //  as TClass::HasDefaultCtor only returns true for callable default ctors)
-  if (!(tc->GetClassInfo()->Property()&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
+  if (!(gCint->ClassInfo_Property(tc->GetClassInfo())&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class " 
 				    << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;
     return kFALSE ;      

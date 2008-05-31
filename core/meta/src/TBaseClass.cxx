@@ -11,8 +11,7 @@
 
 #include "TBaseClass.h"
 #include "TClass.h"
-#include "TString.h"
-#include "Api.h"
+#include "TInterpreter.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -30,7 +29,7 @@
 ClassImp(TBaseClass)
 
 //______________________________________________________________________________
-TBaseClass::TBaseClass(G__BaseClassInfo *info, TClass *cl) : TDictionary()
+TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) : TDictionary()
 {
    // Default TBaseClass ctor. TBaseClasses are constructed in TClass
    // via a call to TCint::CreateListOfBaseClasses().
@@ -38,15 +37,15 @@ TBaseClass::TBaseClass(G__BaseClassInfo *info, TClass *cl) : TDictionary()
    fInfo     = info;
    fClass    = cl;
    fClassPtr = 0;
-   if (fInfo) SetName(fInfo->Fullname());
+   if (fInfo) SetName(gCint->BaseClassInfo_FullName(fInfo));
 }
 
 //______________________________________________________________________________
 TBaseClass::~TBaseClass()
 {
-   // TBaseClass dtor deletes adopted G__BaseClassInfo object.
+   // TBaseClass dtor deletes adopted CINT BaseClassInfo object.
 
-   delete fInfo;
+   gCint->BaseClassInfo_Delete(fInfo);
 }
 
 //______________________________________________________________________________
@@ -72,7 +71,7 @@ Int_t TBaseClass::GetDelta() const
 {
    // Get offset from "this" to part of base class.
 
-   return (Int_t)fInfo->Offset();
+   return (Int_t)gCint->BaseClassInfo_Offset(fInfo);
 }
 
 //______________________________________________________________________________
@@ -90,7 +89,7 @@ int TBaseClass::IsSTLContainer()
    // Return which type (if any) of STL container the data member is.
 
    if (!fInfo) return kNone;
-   const char *s = fInfo->TmpltName();
+   const char *s = gCint->BaseClassInfo_TmpltName(fInfo);
    if (!s) return kNone;
    char type[4096];
    strcpy(type, s);
@@ -110,5 +109,5 @@ Long_t TBaseClass::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return fInfo->Property();
+   return gCint->BaseClassInfo_Property(fInfo);
 }

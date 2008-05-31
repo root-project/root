@@ -7,6 +7,7 @@
 #include "TChi2FCN.h"
 #include "TChi2ExtendedFCN.h"
 #include "TBinLikelihoodFCN.h"
+#include "TInterpreter.h"
 
 
 #include "Minuit2/MnMigrad.h"
@@ -27,8 +28,6 @@ using namespace ROOT::Minuit2;
 #ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
 #endif
-//for the G__p2f2funcname symbol
-#include "Api.h"
 
 //#define DEBUG 1
 
@@ -795,7 +794,7 @@ void TFitterMinuit::SetFCN(void *fcn)
    
    if (!fcn) return;
    
-   char *funcname = G__p2f2funcname(fcn);
+   const char *funcname = gCint->Getp2f2funcname(fcn);
    if (funcname) {
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");

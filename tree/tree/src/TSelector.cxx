@@ -71,7 +71,6 @@
 #include "TTree.h"
 #include "TError.h"
 #include "TSelectorCint.h"
-#include "Api.h"
 #include "TClass.h"
 #include "TInterpreter.h"
 
@@ -162,16 +161,16 @@ TSelector *TSelector::GetSelector(const char *filename)
    // if a file was not specified, try to load the class via the interpreter;
    // this returns 0 (== failure) in the case the class is already in memory
    // but does not have a dictionary, so we just raise a flag for better
-   // diagnostic in the case the class is not found in the G__ClassInfo table.
+   // diagnostic in the case the class is not found in the CINT ClassInfo table.
    Bool_t autoloaderr = kFALSE;
-   if (!fromFile && gInterpreter->AutoLoad(localname) != 1)
+   if (!fromFile && gCint->AutoLoad(localname) != 1)
       autoloaderr = kTRUE;
 
-   G__ClassInfo cl;
+   ClassInfo_t *cl = gCint->ClassInfo_Factory();
    Bool_t ok = kFALSE;
-   while (cl.Next()) {
-      if (localname == cl.Fullname()) {
-         if (cl.IsBase("TSelector")) ok = kTRUE;
+   while (gCint->ClassInfo_Next(cl)) {
+      if (localname == gCint->ClassInfo_FullName(cl)) {
+         if (gCint->ClassInfo_IsBase(cl,"TSelector")) ok = kTRUE;
          break;
       }
    }
@@ -190,14 +189,14 @@ TSelector *TSelector::GetSelector(const char *filename)
    }
 
    // we can now create an instance of the class
-   TSelector *selector = (TSelector*)cl.New();
+   TSelector *selector = (TSelector*)gCint->ClassInfo_New(cl);
    if (!selector || isCompiled) return selector;
 
    //interpreted selector: cannot be used as such
    //create a fake selector
    TSelectorCint *select = new TSelectorCint();
-   select->Build(selector, &cl);
-
+   select->Build(selector, cl);
+   gCint->ClassInfo_Delete(cl);
    return select;
 }
 

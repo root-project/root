@@ -13,7 +13,6 @@
 #include "TROOT.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
-#include "Api.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
 #include "TDataMember.h"
@@ -33,7 +32,7 @@
 ClassImp(TMethodArg)
 
 //______________________________________________________________________________
-TMethodArg::TMethodArg(G__MethodArgInfo *info, TFunction *method) : TDictionary()
+TMethodArg::TMethodArg(MethodArgInfo_t *info, TFunction *method) : TDictionary()
 {
    // Default TMethodArg ctor. TMethodArgs are constructed in TFunction
    // via a call to TCint::CreateListOfMethodArgs().
@@ -42,17 +41,17 @@ TMethodArg::TMethodArg(G__MethodArgInfo *info, TFunction *method) : TDictionary(
    fInfo       = info;
    fMethod     = method;
    if (fInfo) {
-      SetName(fInfo->Name());
-      SetTitle(fInfo->Type()->Name());
+      SetName(gCint->MethodArgInfo_Name(fInfo));
+      SetTitle(gCint->MethodArgInfo_TypeName(fInfo));
    }
 }
 
 //______________________________________________________________________________
 TMethodArg::~TMethodArg()
 {
-   // TMethodArg dtor deletes adopted G__MethodArgInfo object.
+   // TMethodArg dtor deletes adopted CINT MethodArgInfo object.
 
-   if (fInfo) delete fInfo;
+   if (fInfo) gCint->MethodArgInfo_Delete(fInfo);
 }
 
 //______________________________________________________________________________
@@ -60,7 +59,7 @@ const char *TMethodArg::GetDefault() const
 {
    // Get default value of method argument.
 
-   return fInfo->DefaultValue();
+   return gCint->MethodArgInfo_DefaultValue(fInfo);
 }
 
 //______________________________________________________________________________
@@ -69,7 +68,7 @@ const char *TMethodArg::GetTypeName() const
    // Get type of method argument, e.g.: "class TDirectory*" -> "TDirectory"
    // Result needs to be used or copied immediately.
 
-   return gInterpreter->TypeName(fInfo->Type()->Name());
+   return gCint->TypeName(gCint->MethodArgInfo_TypeName(fInfo));
 }
 
 //______________________________________________________________________________
@@ -77,7 +76,7 @@ const char *TMethodArg::GetFullTypeName() const
 {
    // Get full type description of method argument, e.g.: "class TDirectory*".
 
-   return fInfo->Type()->Name();
+   return gCint->MethodArgInfo_TypeName(fInfo);
 }
 
 //______________________________________________________________________________
@@ -85,7 +84,7 @@ Long_t TMethodArg::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return fInfo->Property();
+   return gCint->MethodArgInfo_Property(fInfo);
 }
 
 //______________________________________________________________________________

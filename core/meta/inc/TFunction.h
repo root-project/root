@@ -25,22 +25,13 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
-
-namespace Cint {
-class G__MethodInfo;
-}
-using namespace Cint;
-
 
 class TFunction : public TDictionary {
 
 friend class TCint;
 
 protected:
-   G__MethodInfo  *fInfo;            //pointer to CINT function info
+   MethodInfo_t   *fInfo;            //pointer to CINT function info
    TString         fMangledName;     //Mangled name as determined by CINT.
    TString         fSignature;       //string containing function signature
    TList          *fMethodArgs;      //list of function arguments
@@ -48,7 +39,7 @@ protected:
    virtual void    CreateSignature();
 
 public:
-   TFunction(G__MethodInfo *info = 0);
+   TFunction(MethodInfo_t *info = 0);
    TFunction(const TFunction &orig);
    TFunction& operator=(const TFunction &rhs);
    virtual            ~TFunction();

@@ -30,9 +30,9 @@
 #include "TVirtualPad.h"
 #include "TMethodCall.h"
 #include "TTimeStamp.h"
+#include "TInterpreter.h"
 #include "TError.h"
 #include "snprintf.h"
-#include "Api.h"
 #include "Varargs.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;
@@ -244,8 +244,8 @@ void TThread::Init()
 
    // Create the single global mutex
    gGlobalMutex = new TMutex(kTRUE);
-   G__set_alloclockfunc(CINT_alloc_lock);
-   G__set_allocunlockfunc(CINT_alloc_unlock);
+   gCint->SetAlloclockfunc(CINT_alloc_lock);
+   gCint->SetAllocunlockfunc(CINT_alloc_unlock);
 }
 
 //______________________________________________________________________________

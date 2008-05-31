@@ -72,8 +72,6 @@
 #include "TInterpreter.h"
 #include "TQClass.h"
 #include "TError.h"
-#include "G__ci.h"
-#include "Api.h"
 #include "Riostream.h"
 #include "RQ_OBJECT.h"
 #include "TVirtualMutex.h"
@@ -164,14 +162,10 @@ TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
       // interpreted class
-      G__MethodInfo meth;
-      long offset;
-      if (cl->GetClassInfo())
-         meth = cl->GetClassInfo()->GetMethod(method, proto, &offset);
-      if (meth.IsValid()) {
-         nargs = meth.NArg();
-         return (TMethod *) -1;
-      }
+      void *clinfo = cl->GetClassInfo();
+      nargs = gCint->ClassInfo_GetMethodNArg(clinfo,method, proto);
+      if (nargs >= 0)  return (TMethod *) -1;
+      nargs = 0;
       return 0;
    } else {
       faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(cl, method,
@@ -214,14 +208,17 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
       // interpreted class
-      G__CallFunc  func;
+      CallFunc_t *func = gCint->CallFunc_Factory();
       long         offset;
-      func.SetFunc(cl->GetClassInfo(), method, params, &offset);
-      if (func.IsValid())
+      void *cinfo = cl->GetClassInfo();
+      gCint->CallFunc_SetFunc(func, cinfo, method, params, &offset);
+      Bool_t valid = gCint->CallFunc_IsValid(func);
+      gCint->CallFunc_Delete(func);
+      if (valid)
          return (TMethod *) -1;
       return 0;
    } else {
-      faddr = (Long_t)gInterpreter->GetInterfaceMethod(cl, method, params);
+      faddr = (Long_t)gCint->GetInterfaceMethod(cl, method, params);
       if (!faddr) return 0;
    }
 
@@ -1458,9 +1455,9 @@ void TQObject::LoadRQ_OBJECT()
    // Load RQ_OBJECT.h which contains the #define RQ_OBJECT needed to
    // let interpreted classes connect to signals of compiled classes.
 
-   G__load_text(RQ_OBJECT_STRING1);
-   G__load_text(RQ_OBJECT_STRING2);
-   G__load_text(RQ_OBJECT_STRING);
+   gCint->LoadText(RQ_OBJECT_STRING1);
+   gCint->LoadText(RQ_OBJECT_STRING2);
+   gCint->LoadText(RQ_OBJECT_STRING);
 
 }
 

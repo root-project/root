@@ -11,7 +11,7 @@
 
 #include "TClass.h"
 #include "TError.h"
-#include "Api.h"
+#include "TInterpreter.h"
 #include "TIsAProxy.h"
 
 #include <map>
@@ -116,7 +116,7 @@ TClass* TIsAProxy::operator()(const void *obj)
       if ( !fClass && fType ) fClass = TClass::GetClass(*fType);
       fClass->Property();
       if ( fClass->GetClassInfo() )  {
-         fVirtual = (fClass->GetClassInfo()->ClassProperty()&G__CLS_HASVIRTUAL) == G__CLS_HASVIRTUAL;
+         fVirtual = (gCint->ClassInfo_ClassProperty(fClass->GetClassInfo())&G__CLS_HASVIRTUAL) == G__CLS_HASVIRTUAL;
       }
    }
    if ( !obj || !fVirtual )  {

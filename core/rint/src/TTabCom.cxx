@@ -122,6 +122,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <assert.h>
 
 #include "RConfigure.h"
 #include "TTabCom.h"
@@ -137,12 +138,9 @@
 #include "Getline.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
+#include "TInterpreter.h"
 #include "Riostream.h"
 #include "Rstrstream.h"
-
-//Direct CINT include
-#include "DataMbr.h"
-
 
 #define BUF_SIZE    1024        // must match value in C_Getline.c (for bounds checking)
 #define IfDebug(x)  if(gDebug==TTabCom::kDebug) x
@@ -440,7 +438,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       const char *tmpfilename = tmpnam(0);
       FILE *fout = fopen(tmpfilename, "w");
       if (!fout) return 0;
-      G__display_class(fout, (char*)"", 0, 0);
+      gCint->DisplayClass(fout, (char*)"", 0, 0);
       fclose(fout);
 
       // open the file
@@ -610,30 +608,31 @@ const TSeqCollection *TTabCom::GetListOfGlobals()
 
       fpGlobals = new TContainer;
 
-      G__DataMemberInfo *a;
+      DataMemberInfo_t *a;
       int last = 0;
       int nglob = 0;
 
       // find the number of global objects
-      G__DataMemberInfo t;
-      while (t.Next())
+      DataMemberInfo_t *t = gCint->DataMemberInfo_Factory();
+      while (gCint->DataMemberInfo_Next(t))
          nglob++;
 
       for (int i = 0; i < nglob; i++) {
-         a = new G__DataMemberInfo();
-         a->Next();             // initial positioning
+         a = gCint->DataMemberInfo_Factory();
+         gCint->DataMemberInfo_Next(a);             // initial positioning
 
          for (int j = 0; j < last; j++)
-            a->Next();
+            gCint->DataMemberInfo_Next(a);
 
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name()) {
+         if (gCint->DataMemberInfo_IsValid(a) && gCint->DataMemberInfo_Name(a)) {
             fpGlobals->Add(new TGlobal(a));
          } else
-            delete a;
+            gCint->DataMemberInfo_Delete(a);
 
          last++;
       }
+      gCint->DataMemberInfo_Delete(t);
    }
 
    return fpGlobals;
@@ -647,30 +646,31 @@ const TSeqCollection *TTabCom::GetListOfGlobalFunctions()
 
       fpGlobalFuncs = new TContainer;
 
-      G__MethodInfo *a;
+      MethodInfo_t *a;
       int last = 0;
       int nglob = 0;
 
       // find the number of global functions
-      G__MethodInfo t;
-      while (t.Next())
+      MethodInfo_t *t = gCint->MethodInfo_Factory();
+      while (gCint->MethodInfo_Next(t))
          nglob++;
 
       for (int i = 0; i < nglob; i++) {
-         a = new G__MethodInfo();
-         a->Next();             // initial positioning
+         a = gCint->MethodInfo_Factory();
+         gCint->MethodInfo_Next(a);             // initial positioning
 
          for (int j = 0; j < last; j++)
-            a->Next();
+            gCint->MethodInfo_Next(a);
 
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name()) {
+         if (gCint->MethodInfo_IsValid(a) && gCint->MethodInfo_Name(a)) {
             fpGlobalFuncs->Add(new TFunction(a));
          } else
-            delete a;
+            gCint->MethodInfo_Delete(a);
 
          last++;
       }
+      gCint->MethodInfo_Delete(t);
    }
 
    return fpGlobalFuncs;
@@ -1050,7 +1050,7 @@ TString TTabCom::GetSysIncludePath()
 
    FILE *fout = fopen(tmpfilename, "w");
    if (!fout) return "";
-   G__display_includepath(fout);
+   gCint->DisplayIncludePath(fout);
    fclose(fout);
 
    // open the tmp file

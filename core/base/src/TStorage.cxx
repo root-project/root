@@ -38,6 +38,7 @@
 #include "TError.h"
 #include "TString.h"
 #include "TVirtualMutex.h"
+#include "TInterpreter.h"
 
 #if !defined(R__NOSTATS)
 #   define MEM_DEBUG
@@ -59,9 +60,7 @@
 #   define storage_size(p) ((size_t)0)
 #endif
 
-#ifndef NOCINT
-#include "G__ci.h"
-#endif
+#define PVOID (-1)
 
 ULong_t       TStorage::fgHeapBegin = (ULong_t)-1L;
 ULong_t       TStorage::fgHeapEnd;
@@ -351,8 +350,9 @@ void TStorage::ObjectDealloc(void *vp)
 
 #ifndef NOCINT
    // to handle delete with placement called via CINT
-   Long_t gvp = G__getgvp();
-   if ((Long_t)vp == gvp && gvp != (Long_t)G__PVOID)
+   Long_t gvp = 0;
+   if (gCint) gvp = gCint->Getgvp();
+   if ((Long_t)vp == gvp && gvp != (Long_t)PVOID)
       return;
 #endif
    ::operator delete(vp);

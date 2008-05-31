@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "TString.h"
-#include "Api.h"  
+#include "TInterpreter.h"  
 #include "RooGenCategory.h"
 #include "RooStreamParser.h"
 #include "RooMapCatEntry.h"
@@ -53,7 +53,7 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
   
   // Convert the function pointer into a parse object using the CINT
   // dictionary in memory.
-  _userFuncName = G__p2f2funcname(userFunc);
+  _userFuncName = gCint->Getp2f2funcname(userFunc);
   if(_userFuncName.IsNull()) {
     coutE(InputArguments) << GetName() << ": cannot find dictionary info for (void*)"
 			  << (void*)userFunc << endl;

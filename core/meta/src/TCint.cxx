@@ -144,6 +144,7 @@ TCint::~TCint()
    free(fDictPosGlobals.ptype);
    delete fMapfile;
    delete fRootmapFiles;
+   gCint = 0;
 }
 
 //______________________________________________________________________________
@@ -651,10 +652,12 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 
    if (!cl->fClassInfo || reload) {
 
-      delete cl->fClassInfo; cl->fClassInfo = 0;
+      delete (G__ClassInfo*)cl->fClassInfo;
+      cl->fClassInfo = 0;
       if (CheckClassInfo(cl->GetName())) {
 
-         cl->fClassInfo = new G__ClassInfo(cl->GetName());
+         G__ClassInfo *info = new G__ClassInfo(cl->GetName());
+         cl->fClassInfo = info;
 
 
          Bool_t zombieCandidate = kFALSE;
@@ -666,13 +669,13 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
          // assumes that the TClass is well formed to do a lot of information
          // caching. The method SetClassInfo (i.e. here) is usually called during
          // the building phase of the TClass, hence it is NOT well formed yet.
-         if (cl->fClassInfo->IsValid() &&
-             !(cl->fClassInfo->Property() & (kIsClass|kIsStruct|kIsNamespace))) {
+         if (info->IsValid() &&
+             !(info->Property() & (kIsClass|kIsStruct|kIsNamespace))) {
             zombieCandidate = kTRUE; // cl->MakeZombie();
          }
 
-         if (!cl->fClassInfo->IsLoaded()) {
-            if (cl->fClassInfo->Property() & (kIsNamespace)) {
+         if (!info->IsLoaded()) {
+            if (info->Property() & (kIsNamespace)) {
                // Namespace can have a ClassInfo but no CINT dictionary per se
                // because they are auto-created if one of their contained
                // classes has a dictionary.
@@ -680,7 +683,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
             }
 
             // this happens when no CINT dictionary is available
-            delete cl->fClassInfo;
+            delete info;
             cl->fClassInfo = 0;
          }
 
@@ -773,7 +776,7 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
 
       cl->fBase = new TList;
 
-      G__BaseClassInfo t(*cl->GetClassInfo()), *a;
+      G__BaseClassInfo t(*(G__ClassInfo *)cl->GetClassInfo()), *a;
       while (t.Next()) {
          // if name cannot be obtained no use to put in list
          if (t.IsValid() && t.Name()) {
@@ -795,7 +798,7 @@ void TCint::CreateListOfDataMembers(TClass *cl)
 
       cl->fData = new TList;
 
-      G__DataMemberInfo t(*cl->GetClassInfo()), *a;
+      G__DataMemberInfo t(*(G__ClassInfo*)cl->GetClassInfo()), *a;
       while (t.Next()) {
          // if name cannot be obtained no use to put in list
          if (t.IsValid() && t.Name() && strcmp(t.Name(), "G__virtualinfo")) {
@@ -817,7 +820,8 @@ void TCint::CreateListOfMethods(TClass *cl)
 
       cl->fMethod = new TList;
 
-      G__MethodInfo t(*cl->GetClassInfo()), *a;
+      G__MethodInfo *a;
+      G__MethodInfo t(*(G__ClassInfo*)cl->GetClassInfo());
       while (t.Next()) {
          // if name cannot be obtained no use to put in list
          if (t.IsValid() && t.Name()) {
@@ -839,7 +843,7 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 
       m->fMethodArgs = new TList;
 
-      G__MethodArgInfo t(*m->fInfo), *a;
+      G__MethodArgInfo t(*(G__MethodInfo *)m->fInfo), *a;
       while (t.Next()) {
          // if type cannot be obtained no use to put in list
          if (t.IsValid() && t.Type()) {
@@ -864,7 +868,7 @@ TString TCint::GetMangledName(TClass *cl, const char *method,
    Long_t       offset;
 
    if (cl)
-      func.SetFunc(cl->GetClassInfo(), method, params, &offset);
+      func.SetFunc((G__ClassInfo*)cl->GetClassInfo(), method, params, &offset);
    else {
       G__ClassInfo gcl;   // default G__ClassInfo is global environment
       func.SetFunc(&gcl, method, params, &offset);
@@ -885,7 +889,7 @@ TString TCint::GetMangledNameWithPrototype(TClass *cl, const char *method,
    Long_t             offset;
 
    if (cl)
-      return cl->GetClassInfo()->GetMethod(method, proto, &offset).GetMangledName();
+      return ((G__ClassInfo*)cl->GetClassInfo())->GetMethod(method, proto, &offset).GetMangledName();
    G__ClassInfo gcl;   // default G__ClassInfo is global environment
    return gcl.GetMethod(method, proto, &offset).GetMangledName();
 }
@@ -904,7 +908,7 @@ void *TCint::GetInterfaceMethod(TClass *cl, const char *method,
    Long_t       offset;
 
    if (cl)
-      func.SetFunc(cl->GetClassInfo(), method, params, &offset);
+      func.SetFunc((G__ClassInfo*)cl->GetClassInfo(), method, params, &offset);
    else {
       G__ClassInfo gcl;   // default G__ClassInfo is global environment
       func.SetFunc(&gcl, method, params, &offset);
@@ -926,7 +930,7 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
    Long_t             offset;
 
    if (cl)
-      f = cl->GetClassInfo()->GetMethod(method, proto, &offset).InterfaceMethod();
+      f = ((G__ClassInfo*)cl->GetClassInfo())->GetMethod(method, proto, &offset).InterfaceMethod();
    else {
       G__ClassInfo gcl;   // default G__ClassInfo is global environment
       f = gcl.GetMethod(method, proto, &offset).InterfaceMethod();
@@ -992,7 +996,7 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
    void *addr = cl->DynamicCast( TObject::Class(), obj, kFALSE);
 
    // set pointer to interface method and arguments
-   func.SetFunc(cl->GetClassInfo(), method, params, &offset);
+   func.SetFunc((G__ClassInfo*)cl->GetClassInfo(), method, params, &offset);
 
    // call function
    address = (void*)((Long_t)addr + offset);
@@ -1573,7 +1577,6 @@ Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
       }
       delete tokens;
    }
-
    if (lib[0]) {
       if (gROOT->LoadClass(cls, lib) == 0) {
          if (gDebug > 0)
@@ -1883,4 +1886,1039 @@ const char *TCint::GetIncludePath()
    }
 
    return fIncludePath;
+}
+
+
+
+//______________________________________________________________________________
+//                      M I S C
+//______________________________________________________________________________
+
+int TCint::DisplayClass(FILE *fout,char *name,int base,int start) const
+{
+   // Interface to CINT function 
+   
+   return G__display_class(fout,name,base,start);
+}
+int TCint::DisplayIncludePath(FILE *fout) const
+{
+   // Interface to CINT function 
+   
+   return G__display_includepath(fout);
+}
+void  *TCint::FindSym(const char *entry) const
+{
+   // Interface to CINT function 
+   
+   return G__findsym(entry);
+}
+void   TCint::GenericError(const char *error) const
+{
+   // Interface to CINT function 
+   G__genericerror(error);
+}
+Long_t TCint::GetExecByteCode() const
+{
+   // Interface to CINT function 
+   
+   return (Long_t)G__exec_bytecode;
+}
+
+Long_t TCint::Getgvp() const
+{
+   // Interface to CINT function 
+   
+   return (Long_t)G__getgvp();
+}
+const char *TCint::Getp2f2funcname(void *receiver) const
+{
+   // Interface to CINT function 
+   
+   return G__p2f2funcname(receiver);
+}
+int    TCint::GetSecurityError() const
+{
+   // Interface to CINT function 
+   
+   return G__get_security_error();
+}
+int    TCint::LoadFile(const char *path) const
+{
+   // Interface to CINT function 
+   
+   return G__loadfile(path);
+}
+void   TCint::LoadText(const char *text) const
+{
+   // Interface to CINT function 
+   
+   G__load_text(text);
+}
+const char *TCint::MapCppName(const char *name) const
+{
+   // Interface to CINT function 
+   
+   return G__map_cpp_name(name);
+}
+void   TCint::SetAlloclockfunc(void (*p)()) const  
+{
+   // Interface to CINT function 
+   
+   G__set_alloclockfunc(p);
+}
+void   TCint::SetAllocunlockfunc(void (*p)()) const  
+{
+   // Interface to CINT function 
+   
+   G__set_allocunlockfunc(p);
+}
+int    TCint::SetClassAutoloading(int autoload) const
+{
+   // Interface to CINT function 
+   
+   return G__set_class_autoloading(autoload);
+}
+void   TCint::SetErrmsgcallback(void *p) const
+{
+   // Interface to CINT function 
+   
+   G__set_errmsgcallback(p);
+}
+void   TCint::Setgvp(Long_t gvp) const
+{
+   // Interface to CINT function 
+   
+   G__setgvp(gvp);
+}
+void   TCint::SetRTLD_NOW() const
+{
+   // Interface to CINT function 
+   
+   G__Set_RTLD_NOW();
+}
+void   TCint::SetRTLD_LAZY() const
+{
+   // Interface to CINT function 
+   
+   G__Set_RTLD_LAZY();
+}
+void   TCint::SetTempLevel(int val) const
+{
+   // Interface to CINT function 
+   
+   G__settemplevel(val);
+}
+int    TCint::UnloadFile(const char *path) const
+{
+   // Interface to CINT function 
+   
+   return G__unloadfile(path);
+}
+
+   
+   
+//______________________________________________________________________________
+// G__CallFunc interface
+//______________________________________________________________________________
+void  TCint::CallFunc_Delete(CallFunc_t *func) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   delete f;
+}
+void  TCint::CallFunc_Exec(CallFunc_t *func, void *address) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->Exec(address);
+}
+Long_t  TCint::CallFunc_ExecInt(CallFunc_t *func, void *address) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   return f->ExecInt(address);
+}
+Long_t  TCint::CallFunc_ExecInt64(CallFunc_t *func, void *address) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   return f->ExecInt64(address);
+}
+Double_t  TCint::CallFunc_ExecDouble(CallFunc_t *func, void *address) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   return f->ExecDouble(address);
+}
+
+
+
+void *TCint::CallFunc_Factory() const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = new G__CallFunc();
+   return f;
+}
+void *TCint::CallFunc_FactoryCopy(CallFunc_t *func) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f1 = (G__CallFunc*)func;
+   G__CallFunc *f  = new G__CallFunc(*f1);
+   return f;
+}
+void *TCint::CallFunc_FactoryMethod(CallFunc_t *func) const
+{
+   // Interface to CINT function
+
+   G__CallFunc *f = (G__CallFunc*)func;
+   G__MethodInfo *info = new G__MethodInfo((*f).GetMethodInfo());
+   return info;
+}
+void  TCint::CallFunc_Init(CallFunc_t *func) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->Init();
+}
+bool  TCint::CallFunc_IsValid(CallFunc_t *func) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   return f->IsValid();
+}
+void  TCint::CallFunc_ResetArg(CallFunc_t *func) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->ResetArg();
+}
+void  TCint::CallFunc_SetArg(CallFunc_t *func, Long_t param) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->SetArg(param);
+}
+void  TCint::CallFunc_SetArg(CallFunc_t *func, Double_t param) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->SetArg(param);
+}
+void  TCint::CallFunc_SetArg(CallFunc_t *func, Long64_t param) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->SetArg(param);
+}
+void  TCint::CallFunc_SetArg(CallFunc_t *func, ULong64_t param) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->SetArg(param);
+}
+void  TCint::CallFunc_SetArgArray(CallFunc_t *func, Long_t *paramArr, Int_t nparam) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->SetArgArray(paramArr,nparam);
+}
+void  TCint::CallFunc_SetArgs(CallFunc_t *func, const char *param) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->SetArgs(param);
+}
+void  TCint::CallFunc_SetFunc(CallFunc_t *func, ClassInfo_t *info, const char *method, const char *params, Long_t *offset) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   f->SetFunc((G__ClassInfo*)info,method,params,offset);
+}
+void  TCint::CallFunc_SetFunc(CallFunc_t *func, MethodInfo_t *info) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   G__MethodInfo *minfo = (G__MethodInfo*)info;
+   f->SetFunc(*minfo);
+}
+void  TCint::CallFunc_SetFuncProto(CallFunc_t *func, ClassInfo_t *info, const char *method, const char *proto, Long_t *offset) const
+{
+   // Interface to CINT function 
+   
+   G__CallFunc *f = (G__CallFunc*)func;
+   G__ClassInfo *cinfo = (G__ClassInfo*)info;   
+   f->SetFuncProto(cinfo,method,proto,offset);
+}
+
+//______________________________________________________________________________
+// G__ClassInfo interface            
+//______________________________________________________________________________
+int   TCint::ClassInfo_ClassProperty(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->ClassProperty();
+}
+void  TCint::ClassInfo_Delete(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   delete info;
+}
+void  TCint::ClassInfo_Delete(ClassInfo_t *cinfo, void *arena) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   info->Delete(arena);
+}
+void  TCint::ClassInfo_DeleteArray(ClassInfo_t *cinfo, void *arena, bool dtorOnly) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   info->DeleteArray(arena,dtorOnly);
+}
+void  TCint::ClassInfo_Destruct(ClassInfo_t *cinfo, void *arena) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   info->Destruct(arena);
+}
+void *TCint::ClassInfo_Factory() const
+{
+   // Interface to CINT function 
+   
+   return new G__ClassInfo();
+}
+void *TCint::ClassInfo_Factory(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return new G__ClassInfo(*info);
+}
+void *TCint::ClassInfo_Factory(const char *name) const
+{
+   // Interface to CINT function 
+   
+   return new G__ClassInfo(name);
+}
+int TCint::ClassInfo_GetMethodNArg(ClassInfo_t *cinfo, const char *method,const char *proto) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   G__MethodInfo meth;
+   if (info) {
+      long offset;
+      meth = info->GetMethod(method,proto,&offset);
+   }
+   if (meth.IsValid()) return meth.NArg();
+   return -1;
+}
+bool  TCint::ClassInfo_HasDefaultConstructor(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->HasDefaultConstructor();
+}
+bool  TCint::ClassInfo_HasMethod(ClassInfo_t *cinfo, const char *name) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->HasMethod(name);
+}
+void  TCint::ClassInfo_Init(ClassInfo_t *cinfo, const char *funcname) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   info->Init(funcname);
+}
+void  TCint::ClassInfo_Init(ClassInfo_t *cinfo, int tagnum) const
+{
+   // Interface to CINT function 
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   info->Init(tagnum);
+   
+}
+bool  TCint::ClassInfo_IsBase(ClassInfo_t *cinfo, const char*name) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->IsBase(name);
+}
+bool  TCint::ClassInfo_IsEnum(const char*name) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo info(name);
+   if (info.IsValid() && info.Property()&G__BIT_ISENUM) return kTRUE;
+   return kFALSE;
+}
+bool  TCint::ClassInfo_IsLoaded(ClassInfo_t *cinfo) const             
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->IsLoaded();
+}
+bool  TCint::ClassInfo_IsValid(ClassInfo_t *cinfo) const             
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->IsValid();
+}
+bool  TCint::ClassInfo_IsValidMethod(ClassInfo_t *cinfo,  const char *method,const char *proto, Long_t *offset) const             
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->GetMethod(method,proto,offset).IsValid();
+}
+int  TCint::ClassInfo_Next(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->Next();
+}
+void  *TCint::ClassInfo_New(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->New();
+}
+void  *TCint::ClassInfo_New(ClassInfo_t *cinfo, int n) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->New(n);
+}
+void  *TCint::ClassInfo_New(ClassInfo_t *cinfo, int n, void *arena) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->New(n,arena);
+}
+void  *TCint::ClassInfo_New(ClassInfo_t *cinfo, void *arena) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->New(arena);
+}
+int   TCint::ClassInfo_Property(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->Property();
+}
+int   TCint::ClassInfo_RootFlag(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->RootFlag();
+}
+int   TCint::ClassInfo_Size(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->Size();
+}
+int   TCint::ClassInfo_Tagnum(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->Tagnum();
+}
+const char *TCint::ClassInfo_FileName(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->FileName();
+}
+const char *TCint::ClassInfo_FullName(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->Fullname();
+}
+const char *TCint::ClassInfo_Name(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->Name();
+}
+const char *TCint::ClassInfo_Title(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->Title();
+}
+const char *TCint::ClassInfo_TmpltName(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *info = (G__ClassInfo*)cinfo;
+   return info->TmpltName();
+}
+   
+                  
+//______________________________________________________________________________
+// G__BaseClassInfo interface            
+//______________________________________________________________________________
+void  TCint::BaseClassInfo_Delete(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   delete info;
+}
+void *TCint::BaseClassInfo_Factory() const
+{
+   // Interface to CINT function 
+   
+   //G__BaseClassInfo *info = new G__BaseClassInfo();
+   printf("WARNING!!! TCint::BaseClassInfo_Factory called and dummy\n");
+   return 0;
+}
+void *TCint::BaseClassInfo_Factory(ClassInfo_t *cinfo) const
+{
+   // Interface to CINT function 
+   
+   G__ClassInfo *cinfo1 = (G__ClassInfo*)cinfo;
+   G__BaseClassInfo *info = new G__BaseClassInfo(*cinfo1);
+   return info;
+}
+int  TCint::BaseClassInfo_Next(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->Next();
+}
+int  TCint::BaseClassInfo_Next(BaseClassInfo_t *bcinfo, int onlyDirect) const
+{
+   // Interface to CINT function 
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->Next(onlyDirect);
+}
+int   TCint::BaseClassInfo_Offset(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->Offset();
+}
+int   TCint::BaseClassInfo_Property(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->Property();
+}
+int   TCint::BaseClassInfo_Tagnum(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->Tagnum();
+}
+const char *TCint::BaseClassInfo_FullName(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->Fullname();
+}
+const char *TCint::BaseClassInfo_Name(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->Name();
+}
+const char *TCint::BaseClassInfo_TmpltName(BaseClassInfo_t *bcinfo) const
+{
+   // Interface to CINT function 
+   
+   G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
+   return info->TmpltName();
+}
+               
+//______________________________________________________________________________
+// G__DataMemberInfo interface            
+//______________________________________________________________________________
+int   TCint::DataMemberInfo_ArrayDim(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->ArrayDim();
+}
+void  TCint::DataMemberInfo_Delete(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   delete info;
+}
+void *TCint::DataMemberInfo_Factory() const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = new G__DataMemberInfo();
+   return info;
+}
+void *TCint::DataMemberInfo_FactoryCopy(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info1 = (G__DataMemberInfo*)dminfo;
+   G__DataMemberInfo *info = new G__DataMemberInfo(*info1);
+   return info;
+}
+bool   TCint::DataMemberInfo_IsValid(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->IsValid();
+}
+int   TCint::DataMemberInfo_MaxIndex(DataMemberInfo_t *dminfo, Int_t dim) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->MaxIndex(dim);
+}
+int  TCint::DataMemberInfo_Next(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Next();
+}
+int TCint::DataMemberInfo_Offset(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Offset();
+}
+int   TCint::DataMemberInfo_Property(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Property();
+}
+int   TCint::DataMemberInfo_TypeProperty(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Type()->Property();
+}
+int   TCint::DataMemberInfo_TypeSize(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Type()->Size();
+}
+const char *TCint::DataMemberInfo_TypeName(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Type()->Name();
+}
+const char *TCint::DataMemberInfo_TypeTrueName(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   if (!info->Type()) {
+      printf("TCint::DataMemberInfo_TypeTrueName info->Type=0\n");
+      return "xxx";
+   }
+   return info->Type()->TrueName();
+}
+const char *TCint::DataMemberInfo_Name(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Name();
+}
+const char *TCint::DataMemberInfo_Title(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->Title();
+}
+const char *TCint::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t *dminfo) const
+{
+   // Interface to CINT function 
+   
+   G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
+   return info->ValidArrayIndex();
+}
+               
+//______________________________________________________________________________
+// G__MethodInfo interface            
+//______________________________________________________________________________
+void  TCint::MethodInfo_Delete(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   delete info;
+}
+void  TCint::MethodInfo_CreateSignature(MethodInfo_t *minfo, TString &signature) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   G__MethodArgInfo arg(*info);
+
+   int ifirst = 0;
+   signature = "(";
+   while (arg.Next()) {
+      if (ifirst) signature += ", ";
+      if (arg.Type() == 0) break;
+      signature += arg.Type()->Name();
+      if (arg.Name() && strlen(arg.Name())) {
+         signature += " ";
+         signature += arg.Name();
+      }
+      if (arg.DefaultValue()) {
+         signature += " = ";
+         signature += arg.DefaultValue();
+      }
+      ifirst++;
+   }
+   signature += ")";
+}
+void *TCint::MethodInfo_Factory() const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = new G__MethodInfo();
+   return info;
+}
+void *TCint::MethodInfo_FactoryCopy(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info1 = (G__MethodInfo*)minfo;
+   G__MethodInfo *info  = new G__MethodInfo(*info1);
+   return info;
+}
+void *TCint::MethodInfo_InterfaceMethod(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   G__InterfaceMethod pfunc = info->InterfaceMethod();
+   if (!pfunc) {
+      struct G__bytecodefunc *bytecode = info->GetBytecode();
+
+      if(bytecode) pfunc = (G__InterfaceMethod)G__exec_bytecode;
+      else {
+         pfunc = (G__InterfaceMethod)NULL;
+      }
+   }
+   return (void*)pfunc;
+}
+bool  TCint::MethodInfo_IsValid(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->IsValid();
+}
+int   TCint::MethodInfo_NArg(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->NArg();
+}
+int   TCint::MethodInfo_NDefaultArg(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->NDefaultArg();
+}
+int   TCint::MethodInfo_Next(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->Next();
+}
+int   TCint::MethodInfo_Property(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->Property();
+}
+void *TCint::MethodInfo_Type(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->Type();
+}
+const char *TCint::MethodInfo_GetMangledName(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->GetMangledName();
+}
+const char *TCint::MethodInfo_GetPrototype(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->GetPrototype();
+}
+const char *TCint::MethodInfo_Name(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->Name();
+}
+const char *TCint::MethodInfo_TypeName(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->Type()->Name();
+}
+const char *TCint::MethodInfo_Title(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->Title();
+}
+               
+//______________________________________________________________________________
+// G__MethodArgInfo interface            
+//______________________________________________________________________________
+void  TCint::MethodArgInfo_Delete(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   delete info;
+}
+void *TCint::MethodArgInfo_Factory() const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = new G__MethodArgInfo();
+   return info;
+}
+void *TCint::MethodArgInfo_FactoryCopy(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info1 = (G__MethodArgInfo*)marginfo;
+   G__MethodArgInfo *info  = new G__MethodArgInfo(*info1);
+   return info;
+}
+bool  TCint::MethodArgInfo_IsValid(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->IsValid();
+}
+int  TCint::MethodArgInfo_Next(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->Next();
+}
+int TCint::MethodArgInfo_Property(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->Property();
+}
+const char *TCint::MethodArgInfo_DefaultValue(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->DefaultValue();;
+}
+const char *TCint::MethodArgInfo_Name(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->Name();
+}
+const char *TCint::MethodArgInfo_TypeName(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function 
+   
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->Type()->Name();
+}
+
+                  
+//______________________________________________________________________________
+// G__TypeInfo interface            
+//______________________________________________________________________________
+void  TCint::TypeInfo_Delete(TypeInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = (G__TypeInfo*)tinfo;
+   delete info;
+}
+void *TCint::TypeInfo_Factory() const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = new G__TypeInfo();
+   return info;
+}
+void  TCint::TypeInfo_Init(TypeInfo_t *tinfo, const char *funcname) const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = (G__TypeInfo*)tinfo;
+   info->Init(funcname);
+}
+int   TCint::TypeInfo_Property(TypeInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = (G__TypeInfo*)tinfo;
+   return info->Property();
+}
+const char *TCint::TypeInfo_TrueName(TypeInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypeInfo *info = (G__TypeInfo*)tinfo;
+   return info->TrueName();
+}
+   
+                  
+//______________________________________________________________________________
+// G__TypedefInfo interface            
+//______________________________________________________________________________
+void  TCint::TypedefInfo_Delete(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   delete info;
+}
+void *TCint::TypedefInfo_Factory() const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = new G__TypedefInfo();
+   return info;
+}
+void  TCint::TypedefInfo_Init(TypedefInfo_t *tinfo, const char *funcname) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   info->Init(funcname);
+}
+bool  TCint::TypedefInfo_IsValid(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   return info->IsValid();
+}
+int   TCint::TypedefInfo_Property(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   return info->Property();
+}
+int   TCint::TypedefInfo_Size(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   return info->Size();
+}
+const char *TCint::TypedefInfo_TrueName(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   return info->TrueName();
+}
+const char *TCint::TypedefInfo_Name(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   return info->Name();
+}
+const char *TCint::TypedefInfo_Title(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function 
+   
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   return info->Title();
 }

@@ -42,10 +42,6 @@ class TMethod;
 class TRealData;
 class TCint;
 class TBuffer;
-namespace Cint {
-class G__ClassInfo;
-}
-using namespace Cint;
 class TVirtualStreamerInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;
@@ -95,7 +91,7 @@ private:
    mutable UInt_t     fCheckSum;        //checksum of data members and base classes
    TVirtualCollectionProxy *fCollectionProxy; //Collection interface
    Version_t          fClassVersion;    //Class version Identifier
-   G__ClassInfo      *fClassInfo;       //pointer to CINT class info class
+   ClassInfo_t       *fClassInfo;       //pointer to CINT class info class
    TString            fContextMenuTitle;//context menu title
    TList             *fClassMenuList;   //list of class menu items
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
@@ -218,7 +214,7 @@ public:
    ROOT::DelFunc_t    GetDelete() const;
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
-   G__ClassInfo      *GetClassInfo() const { return fClassInfo; }
+   ClassInfo_t       *GetClassInfo() const { return fClassInfo; }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo) return fCurrentInfo;

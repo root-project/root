@@ -25,19 +25,14 @@
 #include "TDictionary.h"
 #endif
 
-namespace Cint {
-class G__DataMemberInfo;
-}
-using namespace Cint;
-
 
 class TGlobal : public TDictionary {
 
 private:
-   G__DataMemberInfo  *fInfo;      //pointer to CINT data member info
+   DataMemberInfo_t  *fInfo;      //pointer to CINT data member info
 
 public:
-   TGlobal(G__DataMemberInfo *info = 0);
+   TGlobal(DataMemberInfo_t *info = 0);
    virtual       ~TGlobal();
    Int_t          GetArrayDim() const;
    Int_t          GetMaxIndex(Int_t dim) const;

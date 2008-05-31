@@ -47,6 +47,16 @@
 
 #include "Property.h"
 
+typedef void CallFunc_t;
+typedef void ClassInfo_t;
+typedef void BaseClassInfo_t;
+typedef void DataMemberInfo_t;
+typedef void MethodInfo_t;
+typedef void MethodArgInfo_t;
+typedef void MethodArgInfo_t;
+typedef void TypeInfo_t;
+typedef void TypedefInfo_t;
+
 enum EProperty {
    kIsClass        = G__BIT_ISCLASS,
    kIsStruct       = G__BIT_ISSTRUCT,

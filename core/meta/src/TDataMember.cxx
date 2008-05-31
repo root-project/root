@@ -167,7 +167,6 @@
 #include "TGlobal.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
-#include "Api.h"
 #include "TMethodCall.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -181,7 +180,7 @@
 ClassImp(TDataMember)
 
 //______________________________________________________________________________
-TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
+TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 {
    // Default TDataMember ctor. TDataMembers are constructed in TClass
    // via a call to TCint::CreateListOfDataMembers(). It parses the comment
@@ -199,11 +198,11 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
    if (!fInfo && !fClass) return; // default ctor is called
 
    if (fInfo) {
-      fFullTypeName = fInfo->Type()->Name();
-      fTrueTypeName = fInfo->Type()->TrueName();
-      fTypeName     = gInterpreter->TypeName(fFullTypeName);
-      SetName(fInfo->Name());
-      const char *t = fInfo->Title();
+      fFullTypeName = gCint->DataMemberInfo_TypeName(fInfo);
+      fTrueTypeName = gCint->DataMemberInfo_TypeTrueName(fInfo);
+      fTypeName     = gCint->TypeName(fFullTypeName);
+      SetName(gCint->DataMemberInfo_Name(fInfo));
+      const char *t = gCint->DataMemberInfo_Title(fInfo);
       SetTitle(t);
       if (t && t[0] != '!') SetBit(kObjIsPersistent);
       fDataType = 0;
@@ -254,7 +253,7 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
    Int_t token_cnt;
    Int_t i;
 
-   strcpy(cmt,fInfo->Title());
+   strcpy(cmt,gCint->DataMemberInfo_Title(fInfo));
 
    if ((opt_ptr=strstr(cmt,"*OPTION={"))) {
 
@@ -451,12 +450,12 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
    //assignement operator
    if(this!=&dm) {
-      delete fInfo;
+      gCint->DataMemberInfo_Delete(fInfo);
       delete fValueSetter;
       delete fValueGetter;
 
       TDictionary::operator=(dm);
-      fInfo=new G__DataMemberInfo(*dm.fInfo);
+      fInfo= gCint->DataMemberInfo_FactoryCopy(dm.fInfo);
       fClass=dm.fClass;
       fDataType=dm.fDataType;
       fOffset=dm.fOffset;
@@ -472,9 +471,9 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
 //______________________________________________________________________________
 TDataMember::~TDataMember()
 {
-   // TDataMember dtor deletes adopted G__DataMemberInfo object.
+   // TDataMember dtor deletes adopted CINT DataMemberInfo object.
 
-   delete fInfo;
+   gCint->DataMemberInfo_Delete(fInfo);
    delete fValueSetter;
    delete fValueGetter;
    if (fOptions) {
@@ -488,7 +487,7 @@ Int_t TDataMember::GetArrayDim() const
 {
    // Return number of array dimensions.
 
-   return fInfo->ArrayDim();
+   return gCint->DataMemberInfo_ArrayDim(fInfo);
 }
 
 //______________________________________________________________________________
@@ -498,7 +497,7 @@ const char *TDataMember::GetArrayIndex() const
    // GetArrayIndex returns a string pointing to it;
    // otherwise it returns an empty string.
 
-   const char* val = fInfo->ValidArrayIndex();
+   const char* val = gCint->DataMemberInfo_ValidArrayIndex(fInfo);
    return (val && IsaPointer() ) ? val : "";
 }
 
@@ -507,7 +506,7 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
 
-   return fInfo->MaxIndex(dim);
+   return gCint->DataMemberInfo_MaxIndex(fInfo,dim);
 }
 
 //______________________________________________________________________________
@@ -545,7 +544,7 @@ Long_t TDataMember::GetOffset() const
 
    //case of an interpreted or emulated class
    if (fClass->GetDeclFileLine() < 0) {
-      ((TDataMember*)this)->fOffset = fInfo->Offset();
+      ((TDataMember*)this)->fOffset = gCint->DataMemberInfo_Offset(fInfo);
       return fOffset;
    }
    //case of a compiled class
@@ -589,7 +588,7 @@ Long_t TDataMember::GetOffsetCint() const
 {
    // Get offset from "this" using the information in CINT only.
 
-   return fInfo->Offset();
+   return gCint->DataMemberInfo_Offset(fInfo);
 }
 
 //______________________________________________________________________________
@@ -656,11 +655,14 @@ Long_t TDataMember::Property() const
 
    TDataMember *t = (TDataMember*)this;
    if (!fInfo) return 0;
-   t->fProperty = fInfo->Property()|fInfo->Type()->Property();
-   t->fTypeName = gInterpreter->TypeName(fInfo->Type()->Name());
-   t->fFullTypeName = fInfo->Type()->Name();
-   t->fName = fInfo->Name();
-   t->fTitle = fInfo->Title();
+   int prop  = gCint->DataMemberInfo_Property(fInfo);
+   int propt = gCint->DataMemberInfo_TypeProperty(fInfo);
+   t->fProperty = prop|propt;
+   const char *tname = gCint->DataMemberInfo_TypeName(fInfo);
+   t->fTypeName = gCint->TypeName(tname);
+   t->fFullTypeName = tname;
+   t->fName  = gCint->DataMemberInfo_Name(fInfo);
+   t->fTitle = gCint->DataMemberInfo_Title(fInfo);
 
    return fProperty;
 }

@@ -26,7 +26,6 @@
 
 #include "TClass.h"
 
-#include "Api.h"
 #include "Riostream.h"
 #include "TBaseClass.h"
 #include "TBrowser.h"
@@ -66,12 +65,10 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <cmath>
+#include <assert.h>
 
 using namespace std;
-
-#ifndef WIN32
-extern Long_t G__globalvarpointer;
-#endif
 
 // Mutex to protect CINT operations
 // (exported to be used for similar cases in related classes)
@@ -499,16 +496,16 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
    int ln = strcspn(name,"[ ");
    TString iname(name,ln);
 
-   G__ClassInfo *classInfo = cl->GetClassInfo();
+   ClassInfo_t *classInfo = cl->GetClassInfo();
    if (!classInfo)               return;
 
    //              Browse data members
-   G__DataMemberInfo m(*classInfo);
+   DataMemberInfo_t *m = gCint->DataMemberInfo_FactoryCopy(classInfo);
    TString mname;
 
    int found=0;
-   while (m.Next()) {    // MemberLoop
-      mname = m.Name();
+   while (gCint->DataMemberInfo_Next(m)) {    // MemberLoop
+      mname = gCint->DataMemberInfo_Name(m);
       mname.ReplaceAll("*","");
       if ((found = (iname==mname))) break;
    }
@@ -517,7 +514,8 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
    // we skip: non static members and non objects
    //  - the member G__virtualinfo inserted by the CINT RTTI system
 
-   Long_t prop = m.Property() | m.Type()->Property();
+   //Long_t prop = m.Property() | m.Type()->Property();
+   Long_t prop = gCint->DataMemberInfo_Property(m) | gCint->DataMemberInfo_TypeProperty(m);
    if (prop & G__BIT_ISSTATIC)           return;
    if (prop & G__BIT_ISFUNDAMENTAL)      return;
    if (prop & G__BIT_ISENUM)             return;
@@ -527,18 +525,20 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
 
    int nmax = 1;
    if (prop & G__BIT_ISARRAY) {
-      for (int dim = 0; dim < m.ArrayDim(); dim++) nmax *= m.MaxIndex(dim);
+      for (int dim = 0; dim < gCint->DataMemberInfo_ArrayDim(m); dim++) nmax *= gCint->DataMemberInfo_MaxIndex(m,dim);
    }
 
-   std::string clmName(TClassEdit::ShortType(m.Type()->Name(),
+   std::string clmName(TClassEdit::ShortType(gCint->DataMemberInfo_TypeName(m),
                                              TClassEdit::kDropTrailStar) );
    TClass * clm = TClass::GetClass(clmName.c_str());
    R__ASSERT(clm);
    if (!(prop&G__BIT_ISPOINTER)) {
       size = clm->Size();
-      if (size==0) size = m.Type()->Size();
+      if (size==0) size = gCint->DataMemberInfo_TypeSize(m);
    }
 
+
+   gCint->DataMemberInfo_Delete(m);
    TVirtualCollectionProxy *proxy = clm->GetCollectionProxy();
 
    for(int i=0; i<nmax; i++) {
@@ -718,7 +718,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
          ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
       ResetBit(kLoading);
    }
-   if (fClassInfo) SetTitle(fClassInfo->Title());
+   if (fClassInfo) SetTitle(gCint->ClassInfo_Title(fClassInfo));
 }
 
 //______________________________________________________________________________
@@ -947,7 +947,7 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
    }
-   if (fClassInfo) SetTitle(fClassInfo->Title());
+   if (fClassInfo) SetTitle(gCint->ClassInfo_Title(fClassInfo));
 
    ResetBit(kLoading);
 
@@ -1132,13 +1132,14 @@ TClass::~TClass()
    if (fDeclFileLine >= -1)
       TClass::RemoveClass(this);
 
-   delete fClassInfo;  fClassInfo=0;
+   gCint->ClassInfo_Delete(fClassInfo);  
+   fClassInfo=0;
 
    if (fClassMenuList)
       fClassMenuList->Delete();
    delete fClassMenuList; fClassMenuList=0;
 
-   if ( fInterStreamer ) delete ((G__CallFunc*)fInterStreamer);
+   if ( fInterStreamer ) gCint->CallFunc_Delete((CallFunc_t*)fInterStreamer);
    fInterStreamer=0;
 
    if ( fIsA ) delete fIsA;
@@ -1328,22 +1329,23 @@ void TClass::BuildRealData(void* pointer)
             realTObject->ShowMembers(brd, parent);
          } else {
             R__LOCKGUARD2(gCINTMutex);
-            G__CallFunc func;
+            CallFunc_t *func = gCint->CallFunc_Factory();
             void* address = 0;
             Long_t offset = 0;
-            func.SetFunc(fClassInfo->GetMethod("ShowMembers", "TMemberInspector&,char*", &offset));
-            if (!func.IsValid()) {
+            gCint->CallFunc_SetFuncProto(func,fClassInfo,"ShowMembers", "TMemberInspector&,char*", &offset);
+            if (!gCint->CallFunc_IsValid(func)) {
                if (strcmp(GetName(), "string") != 0) {
                   // For std::string we know that we do not have a ShowMembers
                   // function and that it's okay.
                   Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
                }
             } else {
-               func.SetArg((long) &brd);
-               func.SetArg((long) parent);
+               gCint->CallFunc_SetArg(func,(long) &brd);
+               gCint->CallFunc_SetArg(func,(long) parent);
                address = (void*) (((long) realDataObject) + offset);
-               func.Exec(address);
+               gCint->CallFunc_Exec(func,address);
             }
+            gCint->CallFunc_Delete(func);
          }
       }
 
@@ -1425,8 +1427,8 @@ void TClass::CalculateStreamerOffset()
    // that offset to access any virtual method of TObject like
    // Streamer() and ShowMembers().
    if (!fInterStreamer) {
-      G__CallFunc* f  = new G__CallFunc;
-      f->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
+      CallFunc_t *f  = gCint->CallFunc_Factory();
+      gCint->CallFunc_SetFuncProto(f,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
       fInterStreamer = f;
       fOffsetStreamer = GetBaseClassOffset(TObject::Class());
    }
@@ -1574,19 +1576,19 @@ void TClass::Dump(void *obj) const
       //will not work if the class derives from TObject but not as primary
       //inheritance.
       R__LOCKGUARD2(gCINTMutex);
-      G__CallFunc func;
+      CallFunc_t *func = gCint->CallFunc_Factory();
       void *address;
       Long_t offset;
-      func.SetFunc(fClassInfo->GetMethod("ShowMembers",
-                                         "TMemberInspector&,char*", &offset));
-      if (!func.IsValid()) {
+      gCint->CallFunc_SetFuncProto(func,fClassInfo,"ShowMembers","TMemberInspector&,char*", &offset);
+      if (!gCint->CallFunc_IsValid(func)) {
          Printf("==>No Showmembers functions ... dumping disabled\n");
       } else {
-         func.SetArg((long)&dm);
-         func.SetArg((long)parent);
+         gCint->CallFunc_SetArg(func,(long)&dm);
+         gCint->CallFunc_SetArg(func,(long)parent);
          address = (void*)((long)obj + offset);
-         func.Exec(address);
+         gCint->CallFunc_Exec(func,address);
       }
+      gCint->CallFunc_Delete(func);
    }
 }
 
@@ -1791,16 +1793,19 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    if (offset == -2) {
       // Can we get the offset from CINT?
       if (cl->GetClassInfo()) {
-         Long_t base_tagnum = cl->GetClassInfo()->Tagnum();
-         G__BaseClassInfo t(*GetClassInfo());
-         while (t.Next(0)) {
-            if (t.Tagnum() == base_tagnum) {
-               if ((t.Property() & G__BIT_ISVIRTUALBASE) != 0) {
+         Long_t base_tagnum = gCint->ClassInfo_Tagnum(cl->GetClassInfo());
+         BaseClassInfo_t *t = gCint->BaseClassInfo_Factory(GetClassInfo());
+         while (gCint->BaseClassInfo_Next(t,0)) {
+            if (gCint->BaseClassInfo_Tagnum(t) == base_tagnum) {
+               if ((gCint->BaseClassInfo_Property(t) & G__BIT_ISVIRTUALBASE) != 0) {
                   break;
                }
-               return t.Offset();
+               int off = gCint->BaseClassInfo_Offset(t);
+               gCint->BaseClassInfo_Delete(t);
+               return off;
             }
          }
+         gCint->BaseClassInfo_Delete(t);
       }
       offset = -1;
    }
@@ -1932,7 +1937,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load)
 
       if (TClassEdit::IsSTLCont(name)) {
 
-         const char *altname = gInterpreter->GetInterpreterTypeName(name);
+         const char *altname = gCint->GetInterpreterTypeName(name);
          if (altname && strcmp(altname,name)!=0) {
 
             // Remove the existing (soon to be invalid) TClass object to
@@ -2569,10 +2574,10 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
 //______________________________________________________________________________
 void TClass::ResetClassInfo(Long_t tagnum)
 {
-   // Make sure that the current G__ClassInfo is up to date.
+   // Make sure that the current ClassInfo is up to date.
 
-   if (fClassInfo && fClassInfo->Tagnum() != tagnum) {
-      fClassInfo->Init((Int_t)tagnum);
+   if (fClassInfo && gCint->ClassInfo_Tagnum(fClassInfo) != tagnum) {
+      gCint->ClassInfo_Init(fClassInfo,(Int_t)tagnum);
       if (fBase) {
          fBase->Delete();
          delete fBase; fBase = 0;
@@ -2721,17 +2726,17 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    TMethod *m;
 
 #if defined(R__WIN32)
-   // On windows G__exec_bytecode can (seemingly) have several values :(
+   // On windows CINT G__exec_bytecode can (seemingly) have several values :(
    // So we can not easily determine whether something is interpreted or
    // so the optimization of not looking at the mangled name can not be
    // used
    m = GetClassMethod(method,params);
 
 #else
-   if (faddr == (Long_t)G__exec_bytecode) {
+   if (faddr == (Long_t)gCint->GetExecByteCode()) {
       // the method is actually interpreted, its address is
       // not a discriminant (it always point to the same
-      // function (G__exec_bytecode).
+      // function pointed by CINT G__exec_bytecode.
       m = GetClassMethod(method,params);
    } else {
       m = GetClassMethod(faddr);
@@ -2818,19 +2823,22 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
    // the valued params (i.e. from "1.0,3" to "double,int")
 
    R__LOCKGUARD2(gCINTMutex);
-   G__CallFunc  func;
+   CallFunc_t  *func = gCint->CallFunc_Factory();
    Long_t       offset;
-   func.SetFunc(GetClassInfo(), name, params, &offset);
-   G__MethodInfo *info = new G__MethodInfo(func.GetMethodInfo());
+   gCint->CallFunc_SetFunc(func,GetClassInfo(), name, params, &offset);
+   MethodInfo_t *info = gCint->CallFunc_FactoryMethod(func);
    TMethod request(info,this);
 
    TMethod *m;
    TIter    next(GetListOfMethods());
    while ((m = (TMethod *) next())) {
       if (!strcmp(name,m->GetName())
-          &&!strcmp(request.GetSignature(),m->GetSignature()))
+          &&!strcmp(request.GetSignature(),m->GetSignature())) {
+         gCint->CallFunc_Delete(func);
          return m;
+      }
    }
+   gCint->CallFunc_Delete(func);
    return 0;
 }
 
@@ -3097,7 +3105,7 @@ void *TClass::New(ENewType defConstructor)
       // [This is very unlikely to work, but who knows!]
       fgCallingNew = defConstructor;
       R__LOCKGUARD2(gCINTMutex);
-      p = GetClassInfo()->New();
+      p = gCint->ClassInfo_New(GetClassInfo());
       fgCallingNew = kRealNew;
       if (!p) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
@@ -3187,7 +3195,7 @@ void *TClass::New(void *arena, ENewType defConstructor)
       // [This is very unlikely to work, but who knows!]
       fgCallingNew = defConstructor;
       R__LOCKGUARD2(gCINTMutex);
-      p = GetClassInfo()->New(arena);
+      p = gCint->ClassInfo_New(GetClassInfo(),arena);
       fgCallingNew = kRealNew;
       if (!p) {
          Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
@@ -3271,7 +3279,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
       // [This is very unlikely to work, but who knows!]
       fgCallingNew = defConstructor;
       R__LOCKGUARD2(gCINTMutex);
-      p = GetClassInfo()->New(nElements);
+      p = gCint->ClassInfo_New(GetClassInfo(),nElements);
       fgCallingNew = kRealNew;
       if (!p) {
          Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
@@ -3354,7 +3362,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
       // we fail.
       fgCallingNew = defConstructor;
       R__LOCKGUARD2(gCINTMutex);
-      p = GetClassInfo()->New(nElements, arena);
+      p = gCint->ClassInfo_New(GetClassInfo(),nElements, arena);
       fgCallingNew = kRealNew;
       if (!p) {
          Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
@@ -3437,9 +3445,9 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // or it will be interpreted, otherwise we fail
       // because there is no destructor code at all.
       if (dtorOnly) {
-         fClassInfo->Destruct(p);
+         gCint->ClassInfo_Destruct(fClassInfo,p);
       } else {
-         fClassInfo->Delete(p);
+         gCint->ClassInfo_Delete(fClassInfo,p);
       }
    } else if (!fClassInfo && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
@@ -3551,7 +3559,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // the class library is loaded and there will be
       // a destructor we can call.
       R__LOCKGUARD2(gCINTMutex);
-      GetClassInfo()->DeleteArray(ary, dtorOnly);
+      gCint->ClassInfo_DeleteArray(GetClassInfo(),ary, dtorOnly);
    } else if (!fClassInfo && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
@@ -3655,7 +3663,7 @@ Int_t TClass::Size() const
 
    if (fSizeof!=-1) return fSizeof;
    if (fCollectionProxy) return fCollectionProxy->Sizeof();
-   if (fClassInfo) return GetClassInfo()->Size();
+   if (fClassInfo) return gCint->ClassInfo_Size(GetClassInfo());
    return GetStreamerInfo()->GetSize();
 }
 
@@ -3891,16 +3899,16 @@ Long_t TClass::Property() const
 
    if (fClassInfo) {
 
-      kl->fProperty = fClassInfo->Property();
+      kl->fProperty = gCint->ClassInfo_Property(fClassInfo);
 
-      if (!fClassInfo->HasMethod("Streamer") ||
-          !fClassInfo->GetMethod("Streamer","TBuffer&",&dummy).IsValid() ) {
+      if (!gCint->ClassInfo_HasMethod(fClassInfo,"Streamer") ||
+          !gCint->ClassInfo_IsValidMethod(fClassInfo,"Streamer","TBuffer&",&dummy) ) {
 
          kl->SetBit(kIsForeign);
          kl->fStreamerType  = kForeign;
 
       } else if ( kl->fStreamerType == kNone ) {
-         if (strcmp( fClassInfo->FileName(),"{CINTEX dictionary translator}")==0) {
+         if (strcmp( gCint->ClassInfo_FileName(fClassInfo),"{CINTEX dictionary translator}")==0) {
             kl->SetBit(kIsForeign);
          }
          kl->fStreamerType  = kInstrumented;
@@ -3982,9 +3990,9 @@ void TClass::SetUnloaded()
    delete fIsA; fIsA = 0;
    // Disable the autoloader while calling SetClassInfo, to prevent
    // the library from being reloaded!
-   int autoload_old = G__set_class_autoloading(0);
+   int autoload_old = gCint->SetClassAutoloading(0);
    gInterpreter->SetClassInfo(this,kTRUE);
-   G__set_class_autoloading(autoload_old);
+   gCint->SetClassAutoloading(autoload_old);
    fDeclFileName = 0;
    fDeclFileLine = 0;
    fImplFileName = 0;
@@ -4341,21 +4349,21 @@ void TClass::Streamer(void *object, TBuffer &b)
 
       case kInstrumented: /* Instrumented class with a library */
       {
-         G__CallFunc* func = (G__CallFunc*)fInterStreamer;
+         CallFunc_t *func = (CallFunc_t*)fInterStreamer;
 
          if (!func)  {
-            func  = new G__CallFunc;
-            func->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
+            func  = gCint->CallFunc_Factory();
+            gCint->CallFunc_SetFuncProto(func,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
             fInterStreamer = func;
          } else {
             // Reset the argument list!
-            func->SetArgs("");
+            gCint->CallFunc_SetArgs(func,"");
          }
 
          // set arguments
-         func->SetArg((Long_t)&b);
+         gCint->CallFunc_SetArg(func,(Long_t)&b);
          // call function
-         func->Exec((char*)((Long_t)object + fOffsetStreamer) );
+         gCint->CallFunc_Exec(func,(char*)((Long_t)object + fOffsetStreamer) );
 
       }
       return;
@@ -4483,7 +4491,7 @@ Bool_t TClass::HasDefaultConstructor() const
 
    if (!GetClassInfo()) return kFALSE;
 
-   return GetClassInfo()->HasDefaultConstructor();
+   return gCint->ClassInfo_HasDefaultConstructor(GetClassInfo());
 }
 
 //______________________________________________________________________________

@@ -24,18 +24,11 @@
 #ifndef ROOT_TFunction
 #include "TFunction.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 class TList;
 class TDataMember;
 class TMethodCall;
 class TClass;
-namespace Cint {
-class G__MethodInfo;
-}
-using namespace Cint;
 
 enum EMenuItemKind {
    kMenuNoMenu = 0,
@@ -56,7 +49,7 @@ private:
    void                    CreateSignature();
 
 public:
-                           TMethod(G__MethodInfo *info = 0, TClass *cl = 0);
+                           TMethod(MethodInfo_t *info = 0, TClass *cl = 0);
                            TMethod(const TMethod &org);
    TMethod&                operator=(const TMethod &rhs);
    virtual                ~TMethod();

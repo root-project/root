@@ -1079,8 +1079,11 @@ TCollection *TROOT::GetListOfTypes(Bool_t load)
    if (!fInterpreter)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
 
-   if (load)
+   if (load) {
+///      printf("calling Update ListOfTypes\n");
       gInterpreter->UpdateListOfTypes();
+///      printf("after calling Update ListOfTypes\n");
+   }
 
    return fTypes;
 }
@@ -1265,7 +1268,9 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
    // Returns 0 on successful loading, -1 in case libname does not
    // exist or in case of error and -2 in case of version mismatch.
 
-   if (TClassTable::GetDict(classname)) return 0;
+   if (TClassTable::GetDict(classname)) {
+      return 0;
+   }
 
    Int_t err = -1;
 
@@ -1276,8 +1281,9 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
    if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
       if (check)
          err = 0;
-      else
+      else {
          err = gSystem->Load(path, 0, kTRUE);
+      }
       delete [] path;
    } else {
       if (check) {
@@ -1290,12 +1296,14 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname,
                err = -1;
          } else
             err = -1;
-      } else
+      } else {
          err = gSystem->Load(libname, 0, kTRUE);
+      }
    }
 
-   if (err == 0 && !check)
+   if (err == 0 && !check) {
       GetListOfTypes(kTRUE);
+   }
 
    if (err == -1) {
       //Error("LoadClass", "library %s could not be loaded", libname);

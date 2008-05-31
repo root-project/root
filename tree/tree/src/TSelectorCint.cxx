@@ -20,7 +20,6 @@
 #include "TTree.h"
 #include "THashList.h"
 #include "TSelectorCint.h"
-#include "Api.h"
 #include "TError.h"
 
 ClassImp(TSelectorCint)
@@ -57,29 +56,29 @@ TSelectorCint::~TSelectorCint()
 {
    // destructor for a Selector.
 
-   delete fFuncVersion;
-   delete fFuncInit;
-   delete fFuncBegin;
-   delete fFuncSlBegin;
-   delete fFuncNotif;
-   delete fFuncSlTerm;
-   delete fFuncTerm;
-   delete fFuncCut;
-   delete fFuncFill;
-   delete fFuncProc;
-   delete fFuncOption;
-   delete fFuncObj;
-   delete fFuncInp;
-   delete fFuncOut;
-   delete fFuncGetAbort;
-   delete fFuncGetStat;
+   gCint->CallFunc_Delete(fFuncVersion);
+   gCint->CallFunc_Delete(fFuncInit);
+   gCint->CallFunc_Delete(fFuncBegin);
+   gCint->CallFunc_Delete(fFuncSlBegin);
+   gCint->CallFunc_Delete(fFuncNotif);
+   gCint->CallFunc_Delete(fFuncSlTerm);
+   gCint->CallFunc_Delete(fFuncTerm);
+   gCint->CallFunc_Delete(fFuncCut);
+   gCint->CallFunc_Delete(fFuncFill);
+   gCint->CallFunc_Delete(fFuncProc);
+   gCint->CallFunc_Delete(fFuncOption);
+   gCint->CallFunc_Delete(fFuncObj);
+   gCint->CallFunc_Delete(fFuncInp);
+   gCint->CallFunc_Delete(fFuncOut);
+   gCint->CallFunc_Delete(fFuncGetAbort);
+   gCint->CallFunc_Delete(fFuncGetStat);
 
-   if (fIsOwner && fIntSelector) fClass->Delete(fIntSelector);
-   delete fClass;
+   if (fIsOwner && fIntSelector) gCint->ClassInfo_Delete(fClass,fIntSelector);
+   gCint->ClassInfo_Delete(fClass);
 }
 
 //______________________________________________________________________________
-void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl,
+void TSelectorCint::SetFuncProto(CallFunc_t *cf, ClassInfo_t *cl,
                                  const char* fname, const char* argtype,
                                  Bool_t required)
 {
@@ -87,64 +86,64 @@ void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl,
 
    Long_t offset = 0;
 
-   cf->SetFuncProto(cl,fname,argtype,&offset);
+   gCint->CallFunc_SetFuncProto(cf, cl,fname,argtype,&offset);
 
    if (gDebug > 2)
       Info("SetFuncProto","set %s(%s) offset = %ld",fname,argtype,offset);
 
-   if (!cf->IsValid() && required)
+   if (!gCint->CallFunc_IsValid(cf) && required)
       Error("SetFuncProto","cannot set %s(%s)",fname,argtype);
 }
 
 //______________________________________________________________________________
-void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl, Bool_t isowner)
+void TSelectorCint::Build(TSelector *iselector, ClassInfo_t *cl, Bool_t isowner)
 {
    // Initialize the CallFunc objects when selector is interpreted.
 
-   delete fFuncVersion;
-   delete fFuncInit;
-   delete fFuncBegin;
-   delete fFuncSlBegin;
-   delete fFuncNotif;
-   delete fFuncSlTerm;
-   delete fFuncTerm;
-   delete fFuncCut;
-   delete fFuncFill;
-   delete fFuncProc;
-   delete fFuncOption;
-   delete fFuncObj;
-   delete fFuncInp;
-   delete fFuncOut;
-   delete fFuncGetAbort;
-   delete fFuncGetStat;
+   gCint->CallFunc_Delete(fFuncVersion);
+   gCint->CallFunc_Delete(fFuncInit);
+   gCint->CallFunc_Delete(fFuncBegin);
+   gCint->CallFunc_Delete(fFuncSlBegin);
+   gCint->CallFunc_Delete(fFuncNotif);
+   gCint->CallFunc_Delete(fFuncSlTerm);
+   gCint->CallFunc_Delete(fFuncTerm);
+   gCint->CallFunc_Delete(fFuncCut);
+   gCint->CallFunc_Delete(fFuncFill);
+   gCint->CallFunc_Delete(fFuncProc);
+   gCint->CallFunc_Delete(fFuncOption);
+   gCint->CallFunc_Delete(fFuncObj);
+   gCint->CallFunc_Delete(fFuncInp);
+   gCint->CallFunc_Delete(fFuncOut);
+   gCint->CallFunc_Delete(fFuncGetAbort);
+   gCint->CallFunc_Delete(fFuncGetStat);
 
-   if (fIsOwner && fIntSelector) fClass->Delete(fIntSelector);
-   delete fClass;
+   if (fIsOwner && fIntSelector) gCint->ClassInfo_Delete(fClass, fIntSelector);
+   gCint->ClassInfo_Delete(fClass);
 
    R__ASSERT(cl);
 
-   // The G__MethodInfo created by SetFuncProto will remember the address
+   // The CINT MethodInfo created by SetFuncProto will remember the address
    // of cl, so we need to keep it around.
-   fClass        = new G__ClassInfo(*cl);
+   fClass        = gCint->ClassInfo_Factory(cl);
 
    fIntSelector  = iselector;
    fIsOwner      = isowner;
-   fFuncVersion  = new G__CallFunc();
-   fFuncInit     = new G__CallFunc();
-   fFuncBegin    = new G__CallFunc();
-   fFuncSlBegin  = new G__CallFunc();
-   fFuncNotif    = new G__CallFunc();
-   fFuncSlTerm   = new G__CallFunc();
-   fFuncTerm     = new G__CallFunc();
-   fFuncCut      = new G__CallFunc();
-   fFuncFill     = new G__CallFunc();
-   fFuncProc     = new G__CallFunc();
-   fFuncOption   = new G__CallFunc();
-   fFuncObj      = new G__CallFunc();
-   fFuncInp      = new G__CallFunc();
-   fFuncOut      = new G__CallFunc();
-   fFuncGetAbort = new G__CallFunc();
-   fFuncGetStat  = new G__CallFunc();
+   fFuncVersion  = gCint->CallFunc_Factory();
+   fFuncInit     = gCint->CallFunc_Factory();
+   fFuncBegin    = gCint->CallFunc_Factory();
+   fFuncSlBegin  = gCint->CallFunc_Factory();
+   fFuncNotif    = gCint->CallFunc_Factory();
+   fFuncSlTerm   = gCint->CallFunc_Factory();
+   fFuncTerm     = gCint->CallFunc_Factory();
+   fFuncCut      = gCint->CallFunc_Factory();
+   fFuncFill     = gCint->CallFunc_Factory();
+   fFuncProc     = gCint->CallFunc_Factory();
+   fFuncOption   = gCint->CallFunc_Factory();
+   fFuncObj      = gCint->CallFunc_Factory();
+   fFuncInp      = gCint->CallFunc_Factory();
+   fFuncOut      = gCint->CallFunc_Factory();
+   fFuncGetAbort = gCint->CallFunc_Factory();
+   fFuncGetStat  = gCint->CallFunc_Factory();
 
    SetFuncProto(fFuncVersion,fClass,"Version","",kFALSE);
    SetFuncProto(fFuncInit,fClass,"Init","TTree*");
@@ -172,9 +171,9 @@ int TSelectorCint::Version() const
    if (gDebug > 2)
       Info("Version","Call Version");
 
-   if (fFuncVersion->IsValid()) {
-      fFuncVersion->ResetArg();
-      return fFuncVersion->ExecInt(fIntSelector);
+   if (gCint->CallFunc_IsValid(fFuncVersion)) {
+      gCint->CallFunc_ResetArg(fFuncVersion);
+      return gCint->CallFunc_ExecInt(fFuncVersion, fIntSelector);
    } else {
       return 0; // emulate for old version
    }
@@ -188,9 +187,9 @@ void TSelectorCint::Init(TTree *tree)
    if (gDebug > 2)
       Info("Init","Call Init tree = %p", tree);
 
-   fFuncInit->ResetArg();
-   fFuncInit->SetArg((Long_t)tree);
-   fFuncInit->Exec(fIntSelector);
+   gCint->CallFunc_ResetArg(fFuncInit);
+   gCint->CallFunc_SetArg(fFuncInit, (Long_t)tree);
+   gCint->CallFunc_Exec(fFuncInit, fIntSelector);
 }
 
 //______________________________________________________________________________
@@ -200,9 +199,9 @@ void TSelectorCint::Begin(TTree *tree)
 
    if (gDebug > 2)
       Info("Begin","Call Begin tree = %p", tree);
-   fFuncBegin->ResetArg();
-   fFuncBegin->SetArg((Long_t)tree);
-   fFuncBegin->ExecInt(fIntSelector);
+   gCint->CallFunc_ResetArg(fFuncBegin);
+   gCint->CallFunc_SetArg(fFuncBegin, (Long_t)tree);
+   gCint->CallFunc_ExecInt(fFuncBegin, fIntSelector);
 }
 
 //______________________________________________________________________________
@@ -213,10 +212,10 @@ void TSelectorCint::SlaveBegin(TTree *tree)
    if (gDebug > 2)
       Info("SlaveBegin","Call SlaveBegin tree = %p", tree);
 
-   if (fFuncSlBegin->IsValid()) {
-      fFuncSlBegin->ResetArg();
-      fFuncSlBegin->SetArg((Long_t)tree);
-      fFuncSlBegin->ExecInt(fIntSelector);
+   if (gCint->CallFunc_IsValid(fFuncSlBegin)) {
+      gCint->CallFunc_ResetArg(fFuncSlBegin);
+      gCint->CallFunc_SetArg(fFuncSlBegin, (Long_t)tree);
+      gCint->CallFunc_ExecInt(fFuncSlBegin, fIntSelector);
    } else {
       if (gDebug > 1)
          Info("SlaveBegin","SlaveBegin unavailable");
@@ -230,7 +229,7 @@ Bool_t TSelectorCint::Notify()
 
    if (gDebug > 2)
       Info("Notify","Call Notify");
-   Long64_t sel = fFuncNotif->ExecInt(fIntSelector);
+   Long64_t sel = gCint->CallFunc_ExecInt(fFuncNotif, fIntSelector);
    return (Bool_t)sel;
 }
 
@@ -242,10 +241,10 @@ Bool_t TSelectorCint::ProcessCut(Long64_t entry)
    if (gDebug > 3)
       Info("ProcessCut","Call ProcessCut entry = %d", entry);
 
-   if(fFuncCut->IsValid()) {
-      fFuncCut->ResetArg();
-      fFuncCut->SetArg((Long_t)entry);
-      Int_t sel = fFuncCut->ExecInt(fIntSelector);
+   if(gCint->CallFunc_IsValid(fFuncCut)) {
+      gCint->CallFunc_ResetArg(fFuncCut);
+      gCint->CallFunc_SetArg(fFuncCut, (Long_t)entry);
+      Int_t sel = gCint->CallFunc_ExecInt(fFuncCut, fIntSelector);
       return (Bool_t)sel;
    } else {
       Error("ProcessCut","ProcessCut unavailable");
@@ -261,10 +260,10 @@ void TSelectorCint::ProcessFill(Long64_t entry)
    if (gDebug > 3)
       Info("ProcessFill","Call ProcessFill entry = %d", entry);
 
-   if(fFuncFill->IsValid()) {
-      fFuncFill->ResetArg();
-      fFuncFill->SetArg((Long_t)entry);
-      fFuncFill->Exec(fIntSelector);
+   if(gCint->CallFunc_IsValid(fFuncFill)) {
+      gCint->CallFunc_ResetArg(fFuncFill);
+      gCint->CallFunc_SetArg(fFuncFill, (Long_t)entry);
+      gCint->CallFunc_Exec(fFuncFill, fIntSelector);
    } else {
       Error("ProcessFill","ProcessFill unavailable");
    }
@@ -278,10 +277,10 @@ Bool_t TSelectorCint::Process(Long64_t entry)
    if (gDebug > 3)
       Info("Process","Call Process entry = %d", entry);
 
-   if(fFuncProc->IsValid()) {
-      fFuncProc->ResetArg();
-      fFuncProc->SetArg((Long_t)entry);
-      Int_t sel = fFuncProc->ExecInt(fIntSelector);
+   if(gCint->CallFunc_IsValid(fFuncProc)) {
+      gCint->CallFunc_ResetArg(fFuncProc);
+      gCint->CallFunc_SetArg(fFuncProc, (Long_t)entry);
+      Int_t sel = gCint->CallFunc_ExecInt(fFuncProc, fIntSelector);
       return (Bool_t)sel;
    } else {
       Error("Process","Process unavailable");
@@ -296,9 +295,9 @@ void TSelectorCint::SetOption(const char *option)
 
    if (gDebug > 2)
       Info("SetOption","Option = %s", option);
-   fFuncOption->ResetArg();
-   fFuncOption->SetArg((Long_t)option);
-   fFuncOption->Exec(fIntSelector);
+   gCint->CallFunc_ResetArg(fFuncOption);
+   gCint->CallFunc_SetArg(fFuncOption, (Long_t)option);
+   gCint->CallFunc_Exec(fFuncOption, fIntSelector);
 }
 
 //______________________________________________________________________________
@@ -308,9 +307,9 @@ void TSelectorCint::SetObject(TObject *obj)
 
    if (gDebug > 3)
       Info("SetObject","Object = %p", obj);
-   fFuncObj->ResetArg();
-   fFuncObj->SetArg((Long_t)obj);
-   fFuncObj->Exec(fIntSelector);
+   gCint->CallFunc_ResetArg(fFuncObj);
+   gCint->CallFunc_SetArg(fFuncObj, (Long_t)obj);
+   gCint->CallFunc_Exec(fFuncObj, fIntSelector);
 }
 
 //______________________________________________________________________________
@@ -320,9 +319,9 @@ void TSelectorCint::SetInputList(TList *input)
 
    if (gDebug > 2)
       Info("SetInputList","Object = %p", input);
-   fFuncInp->ResetArg();
-   fFuncInp->SetArg((Long_t)input);
-   fFuncInp->Exec(fIntSelector);
+   gCint->CallFunc_ResetArg(fFuncInp);
+   gCint->CallFunc_SetArg(fFuncInp,(Long_t)input);
+   gCint->CallFunc_Exec(fFuncInp,fIntSelector);
 }
 
 //______________________________________________________________________________
@@ -330,7 +329,7 @@ TList *TSelectorCint::GetOutputList() const
 {
    // Return the list of output object.
 
-   TList *out = (TList *) fFuncOut->ExecInt(fIntSelector);
+   TList *out = (TList *) gCint->CallFunc_ExecInt(fFuncOut, fIntSelector);
 
    if (gDebug > 2)
       Info("GetOutputList","List = %p", out);
@@ -346,8 +345,8 @@ void TSelectorCint::SlaveTerminate()
    if (gDebug > 2)
       Info("SlaveTerminate","Call SlaveTerminate");
 
-   if(fFuncSlTerm->IsValid()) {
-      fFuncSlTerm->Exec(fIntSelector);
+   if(gCint->CallFunc_IsValid(fFuncSlTerm)) {
+      gCint->CallFunc_Exec(fFuncSlTerm, fIntSelector);
    } else {
       if (gDebug > 1)
          Info("SlaveTerminate","SlaveTerminate unavailable");
@@ -361,7 +360,7 @@ void TSelectorCint::Terminate()
 
    if (gDebug > 2)
       Info("Terminate","Call Terminate");
-   fFuncTerm->Exec(fIntSelector);
+   gCint->CallFunc_Exec(fFuncTerm,fIntSelector);
 }
 
 //______________________________________________________________________________
@@ -372,9 +371,9 @@ TSelector::EAbort TSelectorCint::GetAbort() const
    if (gDebug > 2)
       Info("GetAbort","Call GetAbort");
 
-   if (fFuncGetAbort->IsValid()) {
-      fFuncGetAbort->ResetArg();
-      return (EAbort)fFuncGetAbort->ExecInt(fIntSelector);
+   if (gCint->CallFunc_IsValid(fFuncGetAbort)) {
+      gCint->CallFunc_ResetArg(fFuncGetAbort);
+      return (EAbort)gCint->CallFunc_ExecInt(fFuncGetAbort, fIntSelector);
    } else {
       return kContinue; // emulate for old version
    }
@@ -388,9 +387,9 @@ Long64_t TSelectorCint::GetStatus() const
    if (gDebug > 2)
       Info("GetStatus","Call GetStatus");
 
-   if (fFuncGetStat->IsValid()) {
-      fFuncGetStat->ResetArg();
-      return fFuncGetStat->ExecInt64(fIntSelector);
+   if (gCint->CallFunc_IsValid(fFuncGetStat)) {
+      gCint->CallFunc_ResetArg(fFuncGetStat);
+      return gCint->CallFunc_ExecInt64(fFuncGetStat, fIntSelector);
    } else {
       return 0; // emulate for old version
    }

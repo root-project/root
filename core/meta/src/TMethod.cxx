@@ -28,14 +28,13 @@
 #include "TApplication.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
-#include "Api.h"
 #include "TDataMember.h"
 
 
 ClassImp(TMethod)
 
 //______________________________________________________________________________
-TMethod::TMethod(G__MethodInfo *info, TClass *cl) : TFunction(info)
+TMethod::TMethod(MethodInfo_t *info, TClass *cl) : TFunction(info)
 {
    // Default TMethod ctor. TMethods are constructed in TClass.
    // Comment strings are pre-parsed to find out whether the method is
@@ -46,7 +45,7 @@ TMethod::TMethod(G__MethodInfo *info, TClass *cl) : TFunction(info)
    fSetterMethod = 0;
 
    if (fInfo) {
-      const char *t = fInfo->Title();
+      const char *t = gCint->MethodInfo_Title(fInfo);
 
       if (t && strstr(t, "*TOGGLE")) {
          fMenuItem = kMenuToggle;
@@ -124,7 +123,7 @@ const char *TMethod::GetCommentString()
 {
    // Returns a comment string from the class declaration.
 
-   return fInfo->Title();
+   return gCint->MethodInfo_Title(fInfo);
 }
 
 

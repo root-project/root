@@ -24,15 +24,10 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
-#include "TString.h"
 
 class TList;
 class TClass;
 class TDataType;
-namespace Cint {
-class G__DataMemberInfo;
-}
-using namespace Cint;
 class TMethodCall;
 
 class TDataMember : public TDictionary {
@@ -40,7 +35,7 @@ class TDataMember : public TDictionary {
 private:
    enum { kObjIsPersistent = BIT(2) };
 
-   G__DataMemberInfo  *fInfo;         //pointer to CINT data member info
+   DataMemberInfo_t   *fInfo;         //pointer to CINT data member info
    TClass             *fClass;        //pointer to the class
    TDataType          *fDataType;     //pointer to data basic type descriptor
 
@@ -65,7 +60,7 @@ protected:
 
 public:
 
-   TDataMember(G__DataMemberInfo *info = 0, TClass *cl = 0);
+   TDataMember(DataMemberInfo_t *info = 0, TClass *cl = 0);
    virtual       ~TDataMember();
    Int_t          GetArrayDim() const;
    Int_t          GetMaxIndex(Int_t dim) const;

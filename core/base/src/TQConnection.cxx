@@ -32,12 +32,11 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TDataType.h"
-#include "Api.h"
-#include "G__ci.h"
+#include "TInterpreter.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "THashTable.h"
-#include "TCint.h"
+//#include "TCint.h"
 
 ClassImpQ(TQConnection)
 
@@ -53,8 +52,8 @@ char *gTQSlotParams; // used to pass string parameter
 class TQSlot : public TObject, public TRefCnt {
 
 protected:
-   G__CallFunc   *fFunc;      // CINT method invocation environment
-   G__ClassInfo  *fClass;     // CINT class for fFunc
+   CallFunc_t    *fFunc;      // CINT method invocation environment
+   ClassInfo_t   *fClass;     // CINT class for fFunc
    TFunction     *fMethod;    // slot method or global function
    Long_t         fOffset;    // offset added to object pointer
    TString        fName;      // full name of method
@@ -124,26 +123,26 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
    }
 
    R__LOCKGUARD2(gCINTMutex);
-   fFunc = new G__CallFunc;
+   fFunc = gCint->CallFunc_Factory();
 
    // initiate class method (function) with proto
    // or with default params
 
    if (cl) {
       if (params) {
-         fFunc->SetFunc(cl->GetClassInfo(), method, params, &fOffset);
+         gCint->CallFunc_SetFunc(fFunc,cl->GetClassInfo(), method, params, &fOffset);
          fMethod = cl->GetMethod(method, params);
       } else {
-         fFunc->SetFuncProto(cl->GetClassInfo(), method, proto, &fOffset);
+         gCint->CallFunc_SetFuncProto(fFunc,cl->GetClassInfo(), method, proto, &fOffset);
          fMethod = cl->GetMethodWithPrototype(method, proto);
       }
    } else {
-      fClass = new G__ClassInfo();
+      fClass = gCint->ClassInfo_Factory();
       if (params) {
-         fFunc->SetFunc(fClass, (char*)funcname, params, &fOffset);
+         gCint->CallFunc_SetFunc(fFunc,fClass, (char*)funcname, params, &fOffset);
          fMethod = gROOT->GetGlobalFunction(funcname, params, kTRUE);
       } else {
-         fFunc->SetFuncProto(fClass, (char*)funcname, proto, &fOffset);
+         gCint->CallFunc_SetFuncProto(fFunc,fClass, (char*)funcname, proto, &fOffset);
          fMethod = gROOT->GetGlobalFunctionWithPrototype(funcname, proto, kTRUE);
       }
    }
@@ -189,26 +188,26 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    }
 
    R__LOCKGUARD2(gCINTMutex);
-   fFunc = new G__CallFunc;
+   fFunc = gCint->CallFunc_Factory();
 
-   fClass = new G__ClassInfo();
+   fClass = gCint->ClassInfo_Factory();
    TClass *cl = 0;
 
    if (!class_name)
       ;                       // function
    else {
-      fClass->Init(class_name);   // class
+      gCint->ClassInfo_Init(fClass,class_name);   // class
       cl = TClass::GetClass(class_name);
    }
 
    if (params) {
-      fFunc->SetFunc(fClass, method, params, &fOffset);
+      gCint->CallFunc_SetFunc(fFunc,fClass, method, params, &fOffset);
       if (cl)
          fMethod = cl->GetMethod(method, params);
       else
          fMethod = gROOT->GetGlobalFunction(method, params, kTRUE);
    } else {
-      fFunc->SetFuncProto(fClass, method, proto , &fOffset);
+      gCint->CallFunc_SetFuncProto(fFunc,fClass, method, proto , &fOffset);
       if (cl)
          fMethod = cl->GetMethodWithPrototype(method, proto);
       else
@@ -225,8 +224,8 @@ TQSlot::~TQSlot()
 
    // don't delete executing environment of a slot that is being executed
    if (!fExecuting) {
-      delete fFunc;
-      delete fClass;
+      gCint->CallFunc_Delete(fFunc);
+      gCint->ClassInfo_Delete(fClass);
    }
 }
 
@@ -240,10 +239,10 @@ inline void TQSlot::ExecuteMethod(void *object)
    if (object) address = (void*)((Long_t)object + fOffset);
    R__LOCKGUARD2(gCINTMutex);
    fExecuting++;
-   fFunc->Exec(address);
+   gCint->CallFunc_Exec(fFunc,address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
-      delete fFunc;
+      gCint->CallFunc_Delete(fFunc);
 }
 
 //______________________________________________________________________________
@@ -270,7 +269,7 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
    void *address = 0;
    R__LOCKGUARD2(gCINTMutex);
 
-   fFunc->ResetArg();
+   gCint->CallFunc_ResetArg(fFunc);
 
    if (nargs > 0) {
       TIter next(fMethod->GetListOfMethodArgs());
@@ -283,44 +282,44 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
          if (dt)
             type = dt->GetFullTypeName();
          if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
-            fFunc->SetArg((Long_t) va_arg(ap, void*));
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, void*));
             //fCallEnv->SetParam((Long_t) va_arg(ap, void*));
          else if (type == "bool")
-            fFunc->SetArg((Long_t) va_arg(ap, int));  // bool is promoted to int
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));  // bool is promoted to int
             //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // bool is promoted to int
          else if (type == "char" || type == "unsigned char")
-            fFunc->SetArg((Long_t) va_arg(ap, int));  // char is promoted to int
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));  // char is promoted to int
             //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // char is promoted to int
          else if (type == "short" || type == "unsigned short")
-            fFunc->SetArg((Long_t) va_arg(ap, int));  // short is promoted to int
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));  // short is promoted to int
             //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // short is promoted to int
          else if (type == "int" || type == "unsigned int")
-            fFunc->SetArg((Long_t) va_arg(ap, int));
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));
             //fCallEnv->SetParam((Long_t) va_arg(ap, int));
          else if (type == "long" || type == "unsigned long")
-            fFunc->SetArg((Long_t) va_arg(ap, long));
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, long));
             //fCallEnv->SetParam((Long_t) va_arg(ap, long));
          else if (type == "long long")
-            fFunc->SetArg((Long64_t) va_arg(ap, Long64_t));
+            gCint->CallFunc_SetArg(fFunc,(Long64_t) va_arg(ap, Long64_t));
             //fCallEnv->SetParam((Long64_t) va_arg(ap, Long64_t));
          else if (type == "unsigned long long")
-            fFunc->SetArg((ULong64_t) va_arg(ap, ULong64_t));
+            gCint->CallFunc_SetArg(fFunc,(ULong64_t) va_arg(ap, ULong64_t));
             //fCallEnv->SetParam((ULong64_t) va_arg(ap, ULong64_t));
          else if (type == "float")
-            fFunc->SetArg((Double_t) va_arg(ap, double));  // float is promoted to double
+            gCint->CallFunc_SetArg(fFunc,(Double_t) va_arg(ap, double));  // float is promoted to double
             //fCallEnv->SetParam((Double_t) va_arg(ap, double));  // float is promoted to double
          else if (type == "double")
-            fFunc->SetArg((Double_t) va_arg(ap, double));
+            gCint->CallFunc_SetArg(fFunc,(Double_t) va_arg(ap, double));
             //fCallEnv->SetParam((Double_t) va_arg(ap, double));
       }
    }
 
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
-   fFunc->Exec(address);
+   gCint->CallFunc_Exec(fFunc,address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
-      delete fFunc;
+      gCint->CallFunc_Delete(fFunc);
 }
 
 //______________________________________________________________________________
@@ -331,14 +330,14 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
 
    void *address = 0;
    R__LOCKGUARD2(gCINTMutex);
-   fFunc->ResetArg();
-   fFunc->SetArg(param);
+   gCint->CallFunc_ResetArg(fFunc);
+   gCint->CallFunc_SetArg(fFunc,param);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
-   fFunc->Exec(address);
+   gCint->CallFunc_Exec(fFunc,address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
-      delete fFunc;
+      gCint->CallFunc_Delete(fFunc);
 }
 
 //______________________________________________________________________________
@@ -349,14 +348,14 @@ inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
 
    void *address = 0;
    R__LOCKGUARD2(gCINTMutex);
-   fFunc->ResetArg();
-   fFunc->SetArg(param);
+   gCint->CallFunc_ResetArg(fFunc);
+   gCint->CallFunc_SetArg(fFunc,param);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
-   fFunc->Exec(address);
+   gCint->CallFunc_Exec(fFunc,address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
-      delete fFunc;
+      gCint->CallFunc_Delete(fFunc);
 }
 
 //______________________________________________________________________________
@@ -367,14 +366,14 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
 
    void *address = 0;
    R__LOCKGUARD2(gCINTMutex);
-   fFunc->ResetArg();
-   fFunc->SetArg(param);
+   gCint->CallFunc_ResetArg(fFunc);
+   gCint->CallFunc_SetArg(fFunc,param);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
-   fFunc->Exec(address);
+   gCint->CallFunc_Exec(fFunc,address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
-      delete fFunc;
+      gCint->CallFunc_Delete(fFunc);
 }
 
 //______________________________________________________________________________
@@ -385,13 +384,13 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
    void *address = 0;
    R__LOCKGUARD2(gCINTMutex);
    gTQSlotParams = (char*)param;
-   fFunc->SetArgs("gTQSlotParams");
+   gCint->CallFunc_SetArgs(fFunc,"gTQSlotParams");
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
-   fFunc->Exec(address);
+   gCint->CallFunc_Exec(fFunc,address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
-      delete fFunc;
+      gCint->CallFunc_Delete(fFunc);
 }
 
 //______________________________________________________________________________
@@ -407,13 +406,13 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
 
    void *address = 0;
    R__LOCKGUARD2(gCINTMutex);
-   fFunc->SetArgArray(paramArr, nparam);
+   gCint->CallFunc_SetArgArray(fFunc,paramArr, nparam);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
-   fFunc->Exec(address);
+   gCint->CallFunc_Exec(fFunc,address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
-      delete fFunc;
+      gCint->CallFunc_Delete(fFunc);
 }
 
 //______________________________________________________________________________
@@ -517,11 +516,11 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
    //               and method == method_name
    //    cl == 0  - connection to function with name == method_name
 
-   char *funcname = 0;
+   const char *funcname = 0;
    fReceiver = receiver;      // fReceiver is pointer to receiver
 
    if (!cl) {
-      funcname = G__p2f2funcname(fReceiver);
+      funcname = gCint->Getp2f2funcname(fReceiver);
       if (!funcname)
          Warning("TQConnection", "%s cannot be compiled", method_name);
    }

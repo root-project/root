@@ -17,7 +17,7 @@
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
-#include "Api.h"
+#include "TInterpreter.h"
 
 
 TVirtualFitter *TVirtualFitter::fgFitter    = 0;
@@ -261,7 +261,7 @@ void TVirtualFitter::SetFCN(void *fcn)
 
    if (!fcn) return;
 
-   char *funcname = G__p2f2funcname(fcn);
+   const char *funcname = gCint->Getp2f2funcname(fcn);
    if (funcname) {
       delete fMethodCall;
       fMethodCall = new TMethodCall();

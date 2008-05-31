@@ -23,13 +23,12 @@
 #include "TROOT.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
-#include "Api.h"
 
 
 ClassImp(TFunction)
 
 //______________________________________________________________________________
-TFunction::TFunction(G__MethodInfo *info) : TDictionary()
+TFunction::TFunction(MethodInfo_t *info) : TDictionary()
 {
    // Default TFunction ctor. TFunctions are constructed in TROOT via
    // a call to TCint::UpdateListOfGlobalFunctions().
@@ -37,9 +36,9 @@ TFunction::TFunction(G__MethodInfo *info) : TDictionary()
    fInfo       = info;
    fMethodArgs = 0;
    if (fInfo) {
-      SetName(fInfo->Name());
-      SetTitle(fInfo->Title());
-      fMangledName = fInfo->GetMangledName();
+      SetName(gCint->MethodInfo_Name(fInfo));
+      SetTitle(gCint->MethodInfo_Title(fInfo));
+      fMangledName = gCint->MethodInfo_GetMangledName(fInfo);
    }
 }
 
@@ -49,8 +48,8 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
    // Copy operator.
 
    if (orig.fInfo) {
-      fInfo = new G__MethodInfo(*orig.fInfo);
-      fMangledName = fInfo->GetMangledName();
+      fInfo = gCint->MethodInfo_FactoryCopy(orig.fInfo);
+      fMangledName = gCint->MethodInfo_GetMangledName(fInfo);
    } else
       fInfo = 0;
    fMethodArgs = 0;
@@ -62,14 +61,14 @@ TFunction& TFunction::operator=(const TFunction &rhs)
    // Assignment operator.
 
    if (this != &rhs) {
-      delete fInfo;
+      gCint->MethodInfo_Delete(fInfo);
       if (fMethodArgs) fMethodArgs->Delete();
       delete fMethodArgs;
       if (rhs.fInfo) {
-         fInfo = new G__MethodInfo(*rhs.fInfo);
-         SetName(fInfo->Name());
-         SetTitle(fInfo->Title());
-         fMangledName = fInfo->GetMangledName();
+         fInfo = gCint->MethodInfo_FactoryCopy(rhs.fInfo);
+         SetName(gCint->MethodInfo_Name(fInfo));
+         SetTitle(gCint->MethodInfo_Title(fInfo));
+         fMangledName = gCint->MethodInfo_GetMangledName(fInfo);
       } else
          fInfo = 0;
       fMethodArgs = 0;
@@ -80,9 +79,9 @@ TFunction& TFunction::operator=(const TFunction &rhs)
 //______________________________________________________________________________
 TFunction::~TFunction()
 {
-   // TFunction dtor deletes adopted G__MethodInfo.
+   // TFunction dtor deletes adopted CINT MethodInfo.
 
-   delete fInfo;
+   gCint->MethodInfo_Delete(fInfo);
 
    if (fMethodArgs) fMethodArgs->Delete();
    delete fMethodArgs;
@@ -103,27 +102,7 @@ void TFunction::CreateSignature()
 {
    // Using the CINT method arg information to create a complete signature string.
 
-   G__MethodArgInfo arg(*fInfo);
-
-   int ifirst = 0;
-   fSignature = "(";
-   while (arg.Next()) {
-      if (ifirst) fSignature += ", ";
-      if (arg.Type() == 0) break;
-      //if (arg.Property() & G__BIT_ISCONSTANT)   // is returned as part of the name
-      //   fSignature += "const ";
-      fSignature += arg.Type()->Name();
-      if (arg.Name() && strlen(arg.Name())) {
-         fSignature += " ";
-         fSignature += arg.Name();
-      }
-      if (arg.DefaultValue()) {
-         fSignature += " = ";
-         fSignature += arg.DefaultValue();
-      }
-      ifirst++;
-   }
-   fSignature += ")";
+   gCint->MethodInfo_CreateSignature(fInfo, fSignature);
 }
 
 //______________________________________________________________________________
@@ -156,8 +135,8 @@ const char *TFunction::GetReturnTypeName() const
 {
    // Get full type description of function return type, e,g.: "class TDirectory*".
 
-   if (fInfo->Type() == 0) return "Unknown";
-   return fInfo->Type()->Name();
+   if (gCint->MethodInfo_Type(fInfo) == 0) return "Unknown";
+   return gCint->MethodInfo_TypeName(fInfo);
 }
 
 //______________________________________________________________________________
@@ -165,7 +144,7 @@ Int_t TFunction::GetNargs() const
 {
    // Number of function arguments.
 
-   return fInfo->NArg();
+   return gCint->MethodInfo_NArg(fInfo);
 }
 
 //______________________________________________________________________________
@@ -173,7 +152,7 @@ Int_t TFunction::GetNargsOpt() const
 {
    // Number of function optional (default) arguments.
 
-   return fInfo->NDefaultArg();
+   return gCint->MethodInfo_NDefaultArg(fInfo);
 }
 
 //______________________________________________________________________________
@@ -181,26 +160,17 @@ Long_t TFunction::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return fInfo->Property();
+   return gCint->MethodInfo_Property(fInfo);
 }
 
 //______________________________________________________________________________
 void *TFunction::InterfaceMethod() const
 {
    // Return pointer to the interface method. Using this pointer we
-   // can find which TFunction belongs to a G__MethodInfo object.
+   // can find which TFunction belongs to a CINT MethodInfo object.
    // Both need to have the same InterfaceMethod pointer.
 
-   G__InterfaceMethod pfunc = fInfo->InterfaceMethod();
-   if (!pfunc) {
-      struct G__bytecodefunc *bytecode = fInfo->GetBytecode();
-
-      if(bytecode) pfunc = (G__InterfaceMethod)G__exec_bytecode;
-      else {
-         pfunc = (G__InterfaceMethod)NULL;
-      }
-   }
-   return (void*)pfunc;
+   return gCint->MethodInfo_InterfaceMethod(fInfo);
 }
 
 //______________________________________________________________________________
@@ -227,7 +197,7 @@ const char *TFunction::GetPrototype() const
    // case of error.
 
    if (fInfo)
-      return fInfo->GetPrototype();
+      return gCint->MethodInfo_GetPrototype(fInfo);
    else
       return 0;
 }

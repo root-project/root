@@ -24,10 +24,6 @@
 #include <stdio.h>
 #endif
 
-#ifndef NOCINT
-#include "G__ci.h"
-#endif
-
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif

@@ -299,7 +299,6 @@
 #include "RConfig.h"
 #include "TTree.h"
 
-#include "Api.h"
 #include "TArrayC.h"
 #include "TBufferFile.h"
 #include "TBaseClass.h"
@@ -1742,16 +1741,17 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
          Error("Bronch", "TClonesArray with no class defined in branch: %s", name);
          return 0;
       }
-      G__ClassInfo* classinfo = clones->GetClass()->GetClassInfo();
+      void* classinfo = clones->GetClass()->GetClassInfo();
       if (!classinfo) {
          Error("Bronch", "TClonesArray with no dictionary defined in branch: %s", name);
          return 0;
       }
+      int rootflag = gCint->ClassInfo_RootFlag(classinfo);
       if (splitlevel > 0) {
-         if (classinfo->RootFlag() & 1)
+         if (rootflag & 1)
             Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", clones->GetClass()->GetName());
       } else {
-         if (classinfo->RootFlag() & 1) clones->BypassStreamer(kFALSE);
+         if (rootflag & 1) clones->BypassStreamer(kFALSE);
          TBranchObject *branch = new TBranchObject(this,name,classname,addr,bufsize,0,isptrptr);
          fBranches.Add(branch);
          return branch;
@@ -1771,12 +1771,12 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       if ((splitlevel > 0) && inklass && (inklass->GetCollectionProxy() == 0)) {
          Int_t stl = -TClassEdit::IsSTLCont(cl->GetName(), 0);
          if ((stl != TClassEdit::kMap) && (stl != TClassEdit::kMultiMap)) {
-            G__ClassInfo* classinfo = inklass->GetClassInfo();
+            void *classinfo = inklass->GetClassInfo();
             if (!classinfo) {
                Error("Bronch", "Container with no dictionary defined in branch: %s", name);
                return 0;
             }
-            if (classinfo->RootFlag() & 1) {
+            if (gCint->ClassInfo_RootFlag(classinfo) & 1) {
                Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", inklass->GetName());
             }
          }
@@ -1805,7 +1805,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       return 0;
    }
 
-   if (!cl->GetCollectionProxy() && (cl->GetClassInfo()->RootFlag() & 1)) {
+   if (!cl->GetCollectionProxy() && (gCint->ClassInfo_RootFlag(cl->GetClassInfo()) & 1)) {
       // Not an STL container and the linkdef file had a "-" after the class name.
       hasCustomStreamer = kTRUE;
    }
@@ -2765,7 +2765,7 @@ void TTree::Delete(Option_t* option /* = "" */)
    }
 
     // Delete object from CINT symbol table so it can not be used anymore.
-   gInterpreter->DeleteGlobal(this);
+   gCint->DeleteGlobal(this);
    
    // Warning: We have intentional invalidated this object while inside a member function!
    delete this;

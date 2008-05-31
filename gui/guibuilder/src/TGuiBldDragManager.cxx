@@ -30,7 +30,7 @@
 #include "TToggle.h"
 #include "TDataType.h"
 #include "TObjString.h"
-#include "Api.h"
+#include "TInterpreter.h"
 
 #include "KeySymbols.h"
 #include "TGResourcePool.h"
@@ -5407,7 +5407,7 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
          TString str2;
          str2.Form("((TGuiBldDragManager*)0x%lx)->%s((%s*)0x%lx)", this, method->GetName(), 
                   fPimpl->fMenuObject->ClassName(), fPimpl->fMenuObject);
-         G__calc((char *)str2.Data());
+         gCint->Calc((char *)str2.Data());
          //delete fFrameMenu;  // suicide (BB)?
          //fFrameMenu = 0;
          return;

@@ -29,23 +29,18 @@
 
 class TFunction;
 class TMethod;
-namespace Cint {
-class G__MethodArgInfo;
-}
-using namespace Cint;
-
 
 class TMethodArg : public TDictionary {
 
 friend class TMethod;
 
 private:
-   G__MethodArgInfo  *fInfo;         //pointer to CINT method argument info
+   MethodArgInfo_t   *fInfo;         //pointer to CINT method argument info
    TFunction         *fMethod;       //pointer to the method or global function
    TDataMember       *fDataMember;   //TDataMember pointed by this arg,to get values and options from.
 
 public:
-   TMethodArg(G__MethodArgInfo *info = 0, TFunction *method = 0);
+   TMethodArg(MethodArgInfo_t *info = 0, TFunction *method = 0);
    virtual       ~TMethodArg();
    const char    *GetDefault() const;
    TFunction     *GetMethod() const { return fMethod; }
