@@ -163,7 +163,7 @@ public:
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
    Bool_t              IgnoreDuplicates(Bool_t ignore);
 
-   ClassDef(TEnv,1)  // Handle ROOT configuration resources
+   ClassDef(TEnv,2)  // Handle ROOT configuration resources
 };
 
 R__EXTERN TEnv *gEnv;
