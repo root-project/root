@@ -143,6 +143,8 @@ enum EDNDFlags {
 class TGFrame : public TGWindow, public TQObject {
 
 protected:
+   enum { kDeleteWindowCalled = BIT(15) };
+
    Int_t    fX;             // frame x position
    Int_t    fY;             // frame y position
    UInt_t   fWidth;         // frame width
