@@ -365,14 +365,14 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             leaf = new TLeafD(this, leafname, leaftype);
          }
          if (!leaf) {
-            Error("TLeaf", "Illegal data type for %s/%s", *leaftype, name, leaflist);
+            Error("TLeaf", "Illegal data type for %s/%s", name, leaflist);
             MakeZombie();
             return;
          }
          if (leaf->IsZombie()) {
             delete leaf;
             leaf = 0;
-            Error("TBranch", "Illegal leaf: '%s/%s'", name, leaflist);
+            Error("TBranch", "Illegal leaf: %s/%s", name, leaflist);
             MakeZombie();
             return;
          }
