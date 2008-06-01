@@ -41,7 +41,7 @@
 #include "TGaxis.h"
 #include "TColor.h"
 #include "TPainter3dAlgorithms.h"
-#include "TGraphPainter.h"
+#include "TGraph2DPainter.h"
 #include "TGraphDelaunay.h"
 #include "TView.h"
 #include "TMath.h"
@@ -121,7 +121,7 @@ THistPainter::THistPainter()
    fStack = 0;
    fLego  = 0;
    fPie   = 0;
-   fGraphPainter = 0;
+   fGraph2DPainter = 0;
    fShowProjection = 0;
    fShowOption = "";
 
@@ -485,9 +485,9 @@ TList *THistPainter::GetContourList(Double_t contour) const
 
    gCurrentHist = fH;
 
-   if (!fGraphPainter) ((THistPainter*)this)->fGraphPainter = new TGraphPainter(dt);
+   if (!fGraph2DPainter) ((THistPainter*)this)->fGraph2DPainter = new TGraph2DPainter(dt);
 
-   return fGraphPainter->GetContourList(contour);
+   return fGraph2DPainter->GetContourList(contour);
 }
 
 
@@ -2751,8 +2751,8 @@ void THistPainter::PaintContour(Option_t *option)
       TList *hl = fH->GetListOfFunctions();
       dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
       if (!dt) return;
-      if (!fGraphPainter) fGraphPainter = new TGraphPainter(dt);
-      fGraphPainter->Paint(option);
+      if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
+      fGraph2DPainter->Paint(option);
       return;
    }
 
@@ -5976,8 +5976,8 @@ void THistPainter::PaintTriangles(Option_t *option)
    dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
    if (!dt) return;
 
-   // If needed, create a TGraphPainter
-   if (!fGraphPainter) fGraphPainter = new TGraphPainter(dt);
+   // If needed, create a TGraph2DPainter
+   if (!fGraph2DPainter) fGraph2DPainter = new TGraph2DPainter(dt);
 
    // Define the 3D view
    fXbuf[0] = Hparam.xmin;
@@ -6018,7 +6018,7 @@ void THistPainter::PaintTriangles(Option_t *option)
    }
 
    // Paint the triangles
-   fGraphPainter->Paint(option);
+   fGraph2DPainter->Paint(option);
 
    // Paint the Front Box if needed
    if (Hoption.FrontBox) {

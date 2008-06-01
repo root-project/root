@@ -15,6 +15,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TPainter3dAlgorithms;
+#pragma link C++ class TGraph2DPainter;
 #pragma link C++ class TGraphPainter;
 #pragma link C++ class THistPainter;
 #pragma link C++ class TPaletteAxis+;

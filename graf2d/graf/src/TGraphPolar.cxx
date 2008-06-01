@@ -53,6 +53,7 @@ End_Macro */
 #include "TH1.h"
 #include "TMath.h"
 #include "Riostream.h"
+#include "TVirtualGraphPainter.h"
 
 
 ClassImp(TGraphPolar);
@@ -332,7 +333,7 @@ void TGraphPolar::Paint(Option_t* options)
                j++;
                fXpol[j] = xt;
                fYpol[j] = yt;
-               TGraph::PaintGraph(j+1, fXpol, fYpol, opt);
+               TVirtualGraphPainter::GetPainter()->PaintGraph(this, j+1, fXpol, fYpol, opt);
             }
          } else {
             // We check that the previous point was in the circle.
@@ -356,21 +357,21 @@ void TGraphPolar::Paint(Option_t* options)
                   fXpol[j] = x2;
                   fYpol[j] = y2;
                }
-               TGraph::PaintGraph(j+1, fXpol, fYpol, opt);
+               TVirtualGraphPainter::GetPainter()->PaintGraph(this, j+1, fXpol, fYpol, opt);
             }
             j=-1;
          }
       }
       if (j>=1) {
          // If the last point is in the circle, we draw the last serie of point.
-         TGraph::PaintGraph(j+1, fXpol, fYpol, opt);
+         TVirtualGraphPainter::GetPainter()->PaintGraph(this, j+1, fXpol, fYpol, opt);
       }
    } else {
       for (i=0; i<fNpoints; i++) {
          fXpol[i] = TMath::Abs((fY[i]-rwrmin)/radiusNDC*TMath::Cos((fX[i]-rwtmin)/thetaNDC)+1);
          fYpol[i] = TMath::Abs((fY[i]-rwrmin)/radiusNDC*TMath::Sin((fX[i]-rwtmin)/thetaNDC)+1);
       }
-      TGraph::PaintGraph(fNpoints, fXpol, fYpol,opt);
+      TVirtualGraphPainter::GetPainter()->PaintGraph(this, fNpoints, fXpol, fYpol,opt);
    }
    PaintTitle();
 }

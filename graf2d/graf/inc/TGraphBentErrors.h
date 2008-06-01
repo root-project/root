@@ -32,10 +32,10 @@ protected:
    Double_t    *fEYlow;        //[fNpoints] array of Y low errors
    Double_t    *fEYhigh;       //[fNpoints] array of Y high errors
 
-   Double_t    *fEXlowd;        //[fNpoints] array of X low displacements
-   Double_t    *fEXhighd;       //[fNpoints] array of X high displacements
-   Double_t    *fEYlowd;        //[fNpoints] array of Y low displacements
-   Double_t    *fEYhighd;       //[fNpoints] array of Y high displacements
+   Double_t    *fEXlowd;       //[fNpoints] array of X low displacements
+   Double_t    *fEXhighd;      //[fNpoints] array of X high displacements
+   Double_t    *fEYlowd;       //[fNpoints] array of Y low displacements
+   Double_t    *fEYhighd;      //[fNpoints] array of Y high displacements
 
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
 
@@ -82,7 +82,6 @@ public:
    Double_t       *GetEXhighd() const {return fEXhighd;}
    Double_t       *GetEYlowd()  const {return fEYlowd;}
    Double_t       *GetEYhighd() const {return fEYhighd;}
-   virtual void    Paint(Option_t *chopt="");
    virtual void    Print(Option_t *chopt="") const;
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh,

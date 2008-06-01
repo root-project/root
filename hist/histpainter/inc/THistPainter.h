@@ -34,7 +34,7 @@ class TAxis;
 class TCutG;
 class TGaxis;
 class TPainter3dAlgorithms;
-class TGraphPainter;
+class TGraph2DPainter;
 class TPie;
 const Int_t kMaxCuts = 16;
 
@@ -47,7 +47,7 @@ protected:
    TAxis                *fZaxis;             //pointer to Z axis
    TList                *fFunctions;         //pointer to histogram list of functions
    TPainter3dAlgorithms *fLego;              //pointer to a TPainter3dAlgorithms object
-   TGraphPainter        *fGraphPainter;      //pointer to a fGraphPainter object
+   TGraph2DPainter      *fGraph2DPainter;    //pointer to a TGraph2DPainter object
    TPie                 *fPie;               //pointer to a TPie in case of option PIE
    Double_t             *fXbuf;              //X buffer coordinates
    Double_t             *fYbuf;              //Y buffer coordinates
