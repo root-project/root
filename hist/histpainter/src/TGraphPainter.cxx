@@ -386,7 +386,7 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 //______________________________________________________________________________
 char *TGraphPainter::GetObjectInfoHelper(TGraph * /*theGraph*/, Int_t /*px*/, Int_t /*py*/) const
 {
-   return "";
+   return (char*)"";
 }
 
 
