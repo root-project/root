@@ -577,7 +577,7 @@ void TCint::UpdateListOfGlobalFunctions()
          // first remove if already in list
          TList* listFuncs = ((THashTable*)(gROOT->fGlobalFunctions))->GetListForObject(t.Name());
          if (listFuncs && (vt = (void*)t.InterfaceMethod())) {
-            Int_t prop = -1;
+            Long_t prop = -1;
             TIter iFunc(listFuncs);
             TFunction* f = 0;
             Bool_t foundStart = kFALSE;
@@ -2171,7 +2171,7 @@ void  TCint::CallFunc_SetFuncProto(CallFunc_t *func, ClassInfo_t *info, const ch
 //______________________________________________________________________________
 // G__ClassInfo interface            
 //______________________________________________________________________________
-int   TCint::ClassInfo_ClassProperty(ClassInfo_t *cinfo) const
+Long_t   TCint::ClassInfo_ClassProperty(ClassInfo_t *cinfo) const
 {
    // Interface to CINT function 
    
@@ -2337,7 +2337,7 @@ void  *TCint::ClassInfo_New(ClassInfo_t *cinfo, void *arena) const
    G__ClassInfo *info = (G__ClassInfo*)cinfo;
    return info->New(arena);
 }
-int   TCint::ClassInfo_Property(ClassInfo_t *cinfo) const
+Long_t  TCint::ClassInfo_Property(ClassInfo_t *cinfo) const
 {
    // Interface to CINT function 
    
@@ -2358,7 +2358,7 @@ int   TCint::ClassInfo_Size(ClassInfo_t *cinfo) const
    G__ClassInfo *info = (G__ClassInfo*)cinfo;
    return info->Size();
 }
-int   TCint::ClassInfo_Tagnum(ClassInfo_t *cinfo) const
+Long_t  TCint::ClassInfo_Tagnum(ClassInfo_t *cinfo) const
 {
    // Interface to CINT function 
    
@@ -2440,21 +2440,21 @@ int  TCint::BaseClassInfo_Next(BaseClassInfo_t *bcinfo, int onlyDirect) const
    G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
    return info->Next(onlyDirect);
 }
-int   TCint::BaseClassInfo_Offset(BaseClassInfo_t *bcinfo) const
+Long_t  TCint::BaseClassInfo_Offset(BaseClassInfo_t *bcinfo) const
 {
    // Interface to CINT function 
    
    G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
    return info->Offset();
 }
-int   TCint::BaseClassInfo_Property(BaseClassInfo_t *bcinfo) const
+Long_t  TCint::BaseClassInfo_Property(BaseClassInfo_t *bcinfo) const
 {
    // Interface to CINT function 
    
    G__BaseClassInfo *info = (G__BaseClassInfo*)bcinfo;
    return info->Property();
 }
-int   TCint::BaseClassInfo_Tagnum(BaseClassInfo_t *bcinfo) const
+Long_t  TCint::BaseClassInfo_Tagnum(BaseClassInfo_t *bcinfo) const
 {
    // Interface to CINT function 
    
@@ -2536,21 +2536,21 @@ int  TCint::DataMemberInfo_Next(DataMemberInfo_t *dminfo) const
    G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
    return info->Next();
 }
-int TCint::DataMemberInfo_Offset(DataMemberInfo_t *dminfo) const
+Long_t TCint::DataMemberInfo_Offset(DataMemberInfo_t *dminfo) const
 {
    // Interface to CINT function 
    
    G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
    return info->Offset();
 }
-int   TCint::DataMemberInfo_Property(DataMemberInfo_t *dminfo) const
+Long_t  TCint::DataMemberInfo_Property(DataMemberInfo_t *dminfo) const
 {
    // Interface to CINT function 
    
    G__DataMemberInfo *info = (G__DataMemberInfo*)dminfo;
    return info->Property();
 }
-int   TCint::DataMemberInfo_TypeProperty(DataMemberInfo_t *dminfo) const
+Long_t  TCint::DataMemberInfo_TypeProperty(DataMemberInfo_t *dminfo) const
 {
    // Interface to CINT function 
    
@@ -2698,7 +2698,7 @@ int   TCint::MethodInfo_Next(MethodInfo_t *minfo) const
    G__MethodInfo *info = (G__MethodInfo*)minfo;
    return info->Next();
 }
-int   TCint::MethodInfo_Property(MethodInfo_t *minfo) const
+Long_t  TCint::MethodInfo_Property(MethodInfo_t *minfo) const
 {
    // Interface to CINT function 
    
@@ -2786,7 +2786,7 @@ int  TCint::MethodArgInfo_Next(MethodArgInfo_t *marginfo) const
    G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
    return info->Next();
 }
-int TCint::MethodArgInfo_Property(MethodArgInfo_t *marginfo) const
+Long_t TCint::MethodArgInfo_Property(MethodArgInfo_t *marginfo) const
 {
    // Interface to CINT function 
    
@@ -2840,7 +2840,7 @@ void  TCint::TypeInfo_Init(TypeInfo_t *tinfo, const char *funcname) const
    G__TypeInfo *info = (G__TypeInfo*)tinfo;
    info->Init(funcname);
 }
-int   TCint::TypeInfo_Property(TypeInfo_t *tinfo) const
+Long_t  TCint::TypeInfo_Property(TypeInfo_t *tinfo) const
 {
    // Interface to CINT function 
    
@@ -2887,7 +2887,7 @@ bool  TCint::TypedefInfo_IsValid(TypedefInfo_t *tinfo) const
    G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
    return info->IsValid();
 }
-int   TCint::TypedefInfo_Property(TypedefInfo_t *tinfo) const
+Long_t  TCint::TypedefInfo_Property(TypedefInfo_t *tinfo) const
 {
    // Interface to CINT function 
    
