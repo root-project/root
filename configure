@@ -391,7 +391,11 @@ check_library() {
                         else
                             found_dir=$l
                             found_lib=$j
-                            check_lib64 $n
+                            if test "x$arch" = "linux"; then
+                               check_lib64 $n
+                            else
+                               is_lib64=0
+                            fi
                             if test $is_lib64 -eq 1 ; then
                                 found_dir=no
                                 found_lib=no
