@@ -81,7 +81,6 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
    // Graph default constructor.
 
    fNpoints = -1;  //will be reset to 0 in CtorAllocate
-///   fPainter = 0;
    CtorAllocate();
 }
 
@@ -94,7 +93,6 @@ TGraph::TGraph(Int_t n)
    // the arrsys x and y will be set later
 
    fNpoints = n;
-///   fPainter = 0;
    if (!CtorAllocate()) return;
    FillZero(0, fNpoints);
 }
@@ -111,7 +109,6 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
    } else {
       fNpoints = n;
    }
-///   fPainter = 0;
    if (!CtorAllocate()) return;
    for (Int_t i=0;i<n;i++) {
       fX[i] = (Double_t)x[i];
@@ -131,7 +128,6 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
    } else {
       fNpoints = n;
    }
-///   fPainter = 0;
    if (!CtorAllocate()) return;
    for (Int_t i=0;i<n;i++) {
       fX[i] = x[i];
@@ -151,7 +147,6 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
    } else {
       fNpoints = n;
    }
-///   fPainter = 0;
    if (!CtorAllocate()) return;
    n = fNpoints*sizeof(Double_t);
    memcpy(fX, x, n);
@@ -233,7 +228,6 @@ TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
    // in vx and vy.
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
-///   fPainter = 0;
    if (!CtorAllocate()) return;
    Int_t ivxlow  = vx.GetLwb();
    Int_t ivylow  = vy.GetLwb();
@@ -254,7 +248,6 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
    // in vx and vy.
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
-///   fPainter = 0;
    if (!CtorAllocate()) return;
    Int_t ivxlow  = vx.GetLwb();
    Int_t ivylow  = vy.GetLwb();
@@ -275,7 +268,6 @@ TGraph::TGraph(const TH1 *h)
       Error("TGraph", "Pointer to histogram is null");
       fNpoints = 0;
    }
-///   fPainter = 0;
    if (h->GetDimension() != 1) {
       Error("TGraph", "Histogram must be 1-D; h %s is %d-D",h->GetName(),h->GetDimension());
       fNpoints = 0;
@@ -322,7 +314,6 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
       if (option) coption = *option;
       if (coption == 'i' || coption == 'I') fNpoints++;
    }
-///   fPainter = 0;
    if (!CtorAllocate()) return;
 
    Double_t xmin = f->GetXmin();
@@ -374,7 +365,6 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
    } else {
       fNpoints = 100;  //initial number of points
    }
-///   fPainter = 0;
    if (!CtorAllocate()) return;
    std::string line;
    Int_t np=0;
@@ -1602,7 +1592,6 @@ TAxis *TGraph::GetXaxis() const
 {
    // Get x axis of the graph.
 
-   //if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetXaxis();
@@ -1614,7 +1603,6 @@ TAxis *TGraph::GetYaxis() const
 {
    // Get y axis of the graph.
 
-   //if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
