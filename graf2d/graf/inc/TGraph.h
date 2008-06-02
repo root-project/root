@@ -178,6 +178,7 @@ public:
    virtual void          Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
    virtual void          UseCurrentStyle();
+   void                  Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y,Int_t maxiterations);
 
    ClassDef(TGraph,4)  //Graph graphics class
 };
