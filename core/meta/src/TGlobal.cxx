@@ -75,7 +75,7 @@ const char *TGlobal::GetTypeName() const
    // Get type of global variable, e,g.: "class TDirectory*" -> "TDirectory".
    // Result needs to be used or copied immediately.
 
-   return gCint->DataMemberInfo_TypeName(fInfo);
+   return gCint->TypeName(gCint->DataMemberInfo_TypeName(fInfo));
 }
 
 //______________________________________________________________________________
