@@ -30,6 +30,7 @@
 
 #ifndef __CINT__
 #include "G__ci.h"
+#include "Api.h"
 #else
 struct G__dictposition;
 #endif
