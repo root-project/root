@@ -83,6 +83,9 @@ else
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			FREECC="cc"; \
 		fi; \
+		if [ $(ARCH) = "linux" ]; then \
+			FREECC="gcc -m32"; \
+		fi; \
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
 			FREECC="gcc -m64"; \
 		fi; \

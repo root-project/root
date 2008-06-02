@@ -131,6 +131,9 @@ else
 		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
 			ACC="gcc -m64"; \
 		fi; \
+		if [ "$(ARCH)" = "linux" ]; then \
+			ACC="gcc -m32"; \
+		fi; \
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			ACC="gcc -m64"; \
 			MMX="--enable-mmx-optimization=no"; \

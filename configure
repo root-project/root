@@ -391,14 +391,20 @@ check_library() {
                         else
                             found_dir=$l
                             found_lib=$j
-                            # skip cygwin libraries when in pure Win32 mode
-                            if test "x$platform" = "xwin32"; then
-                                case $found_dir in
-                                    /lib|/lib/*|/usr/*) found_dir="no" ;;
-                                    *) break 4;;
-                                esac
+                            check_lib64 $n
+                            if test $is_lib64 -eq 1 ; then
+                                found_dir=no
+                                found_lib=no
                             else
-                              break 4
+                                # skip cygwin libraries when in pure Win32 mode
+                                if test "x$platform" = "xwin32"; then
+                                    case $found_dir in
+                                        /lib|/lib/*|/usr/*) found_dir=no ;;
+                                        *) break 4;;
+                                    esac
+                                else
+                                    break 4
+                                fi
                             fi
                         fi
 		    else
@@ -1774,22 +1780,28 @@ if test ! "x$enable_mysql" = "xno"; then
     if test ! "x$mysql_config" = "x" && test -x "$mysql_config" && \
        test "x$mysqlincdir" = "x"    && test "x$mysqllibdir" = "x" && \
        test ! "x$platform" = "xwin32" ; then
-       $cwhich mysql_config
+       echo $mysql_config
        # we found mysql_config - now check the version number
        message "Checking for libmysqlclient version >= 3.23.*"
-       mysql_version=`mysql_config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+       mysql_version=`$mysql_config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
        if test $mysql_version -lt 3023 ; then
-          result "no (`mysql_config --version`)"
+          result "no (`$mysql_config --version`)"
           enable_mysql="no"
           mysqllibdir=""
        else
-          result "ok"
-          mysqllib=`mysql_config --libs | sed -e s/\'//g`
-          mysqlincdir=`mysql_config --cflags | sed -e 's,^.*-I\([^ ]*\).*$,\1,' -e s/\'//g`
-          mysqllibdir=""
-          check_header "mysql.h" "" $mysqlincdir
-          if test "x$found_hdr" = "x"; then
+          if test "x$arch" = "xlinux" && mysql_config --libs | grep 'lib64' > /dev/null 2>& 1; then
+             result "no (lib64 version found)"
              enable_mysql="no"
+             mysqllibdir=""
+          else
+             result "ok"
+             mysqllib=`$mysql_config --libs | sed -e s/\'//g`
+             mysqlincdir=`$mysql_config --cflags | sed -e 's,^.*-I\([^ ]*\).*$,\1,' -e s/\'//g`
+             mysqllibdir=""
+             check_header "mysql.h" "" $mysqlincdir
+             if test "x$found_hdr" = "x"; then
+                enable_mysql="no"
+             fi
           fi
        fi
     else

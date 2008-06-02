@@ -74,6 +74,7 @@ $(XROOTDMAKE):
 		RELE=`uname -r`; \
 		CHIP=`uname -m | tr '[A-Z]' '[a-z]'`; \
 		PROC=`uname -p`; \
+                xarch="" ; \
 		case "$(ARCH):$$RELE:$$CHIP:$$PROC" in \
 		freebsd*:*)      xopt="--ccflavour=gcc";; \
 		linuxicc:*)      xopt="--ccflavour=icc --use-xrd-strlcpy";; \
@@ -81,7 +82,7 @@ $(XROOTDMAKE):
 		linuxx8664gcc:*) xopt="--ccflavour=gccx8664 --use-xrd-strlcpy";; \
 		linuxx8664icc:*) xopt="--ccflavour=iccx8664 --use-xrd-strlcpy";; \
 		linuxppc64gcc:*) xopt="--ccflavour=gccppc64 --use-xrd-strlcpy";; \
-		linux*:*)        xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
+		linux*:*)        xarch="i386_linux"; xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		macosx64:*)      xopt="--ccflavour=macos64";; \
 		macosx*:*)       xopt="--ccflavour=macos";; \
 		solaris*:*:i86pc:x86*) xopt="--ccflavour=sunCCamd --use-xrd-strlcpy";; \
@@ -129,8 +130,8 @@ $(XROOTDMAKE):
 		fi; \
 		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
-		echo "Options to Xrootd-configure: $$xopt $(XRDDBG)"; \
-		GNUMAKE=$(MAKE) ./configure.classic $$xopt $(XRDDBG); \
+		echo "Options to Xrootd-configure: $$xarch $$xopt $(XRDDBG)"; \
+		GNUMAKE=$(MAKE) ./configure.classic $$xarch $$xopt $(XRDDBG); \
 		rc=$$? ; \
 		if [ $$rc != "0" ] ; then \
 		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):" \
