@@ -33,6 +33,7 @@
 #include "TInterpreter.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
+#include <stdlib.h>
 
 #define MESSAGE(which,text)
 
