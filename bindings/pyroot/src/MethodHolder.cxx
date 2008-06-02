@@ -22,7 +22,7 @@
 
 // CINT
 #include "Api.h"
-#include "TCint.h"
+#include "TInterpreter.h"
 
 // Standard
 #include <assert.h>
