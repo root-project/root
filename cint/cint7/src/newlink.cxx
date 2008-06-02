@@ -947,7 +947,7 @@ void Cint::Internal::G__cpplink_header(FILE* fp)
 }
 
 //______________________________________________________________________________
-extern "C" char *G__map_cpp_name(char* in)
+extern "C" char *G__map_cpp_name(const char* in)
 {
    static char out[G__MAXNAME*6];
    int i = 0, j = 0, c;
