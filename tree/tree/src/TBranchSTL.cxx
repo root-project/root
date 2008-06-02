@@ -226,8 +226,10 @@ Int_t TBranchSTL::Fill()
       // Determine the actual class of current element
       //------------------------------------------------------------------------
       element = *(char**)fCollProxy->At( i );
-      if( !element )
+      if( !element ) {
          fInd.At(i) = 0;
+         continue;
+      }
 
       actClass = cl->GetActualClass( element );
       brIter = fBranchMap.find( actClass );
