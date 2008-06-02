@@ -793,7 +793,9 @@ class genDictionary(object) :
     else :
       globalscopeprefix = "::"
       # a funny bug in MSVC7.1: sizeof(::std::vector<int>) doesn't work
-      if sys.platform == 'win32' and cls[0:5] == "std::" : globalscopeprefix=""
+      if sys.platform == 'win32' \
+         and (cls[0:5] == "std::" or cls[0:8] == "stdext::" ) :
+        globalscopeprefix=""
       sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s%s), %s, %s)' \
             % (cls, globalscopeprefix, cls, globalscopeprefix, cls, mod, typ)
     if 'extra' in attrs :
