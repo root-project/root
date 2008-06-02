@@ -262,7 +262,9 @@ public:
    virtual void   TypeInfo_Delete(TypeInfo_t * /* tinfo */) const {;}
    virtual void  *TypeInfo_Factory() const {return 0;}
    virtual void   TypeInfo_Init(TypeInfo_t * /* tinfo */, const char * /* funcname */) const {;}
+   virtual bool   TypeInfo_IsValid(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual Long_t TypeInfo_Property(TypeInfo_t * /* tinfo */) const {return 0;}
+   virtual int    TypeInfo_Size(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypeInfo_TrueName(TypeInfo_t * /* tinfo */) const {return 0;}
    
                   
