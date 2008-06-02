@@ -779,20 +779,12 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    //  object of the class type it describes. This new object now calls its
    //  Streamer function to rebuilt itself.
    //
-   //  NOTE:
-   //  In case the class of this object derives from TObject but not
-   //  as a first inheritance, one must cast the return value twice.
-   //  Example1: Normal case:
-   //      class MyClass : public TObject, public AnotherClass
-   //   then on return, one can do:
-   //    MyClass *obj = (MyClass*)key->ReadObj();
-   //
-   //  Example2: Special case:
-   //      class MyClass : public AnotherClass, public TObject
-   //   then on return, one must do:
-   //    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
-   //
-   //  Of course, dynamic_cast<> can also be used in the example 1.
+   //  NOTE :
+   //  This function is called only internally by ROOT classes.
+   //  Although being public it is not supposed to be used outside ROOT.
+   //  If used, you must make sure that the bufferRead is large enough to
+   //  accomodate the object being read.
+   
 
    TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
