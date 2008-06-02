@@ -1426,7 +1426,6 @@ TStreamerSTL::TStreamerSTL()
 
 }
 
-#include "Api.h"
 //______________________________________________________________________________
 TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
                            const char *typeName, const char *trueType, Bool_t dmPointer)
