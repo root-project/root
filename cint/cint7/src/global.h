@@ -513,7 +513,7 @@ extern G__ConstStringList *G__plastconststring ;
 extern int G__castcheckoff;
 extern int G__security_error;
 extern int G__max_stack_depth;
-extern char G__commandline[];
+extern char *G__commandline;
 #endif
 
 /**************************************************************************

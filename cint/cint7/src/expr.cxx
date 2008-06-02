@@ -1447,7 +1447,7 @@ G__value Cint::Internal::G__getexpr(char* expression)
                   strncpy(ebuf, expression, ig1);
                   ebuf[ig1] = '\0';
                   G__var_type = store_var_type;
-                  return(G__letvariable(ebuf, defined, &G__global, G__p_local));
+                  return(G__letvariable(ebuf, defined, ::Reflex::Scope::GlobalScope(), G__p_local));
                }
                inew = ig1 + 1;
             }
@@ -1486,7 +1486,6 @@ G__value Cint::Internal::G__getexpr(char* expression)
    G__RESTORE_NOEXEC_OROPR
    G__RESTORE_ANDOPR
    G__RESTORE_OROPR
-   }
    return vstack[0];
 }
 

@@ -338,7 +338,7 @@ int Cint::Internal::G__listfunc(FILE *fp,int access,char *fname,const ::Reflex::
 ***********************************************************************/
 int Cint::Internal::G__listfunc_pretty(FILE *fp,int access,const char *fname,const ::Reflex::Scope &i_func, char friendlyStyle)
 {
-  char msg[G__LONGLINE);];
+  char msg[G__LONGLINE];
 
   G__browsing=1;
   

@@ -449,7 +449,9 @@ void Cint::Internal::G__make_ifunctable(char* funcheader)
    //
    // Note: G__no_exec is always zero on entry.
    //
+#ifndef G__NEWINHERIT
    int func_now = -1; // FIXME: Used but not initialized!
+#endif
    int dobody = 0;
    G__ASSERT(G__prerun);
    ::Reflex::Scope store_ifunc = G__p_ifunc;
@@ -4206,7 +4208,7 @@ struct G__funclist* Cint::Internal::G__add_templatefunc(char *funcnamein, G__par
 }
 
 //______________________________________________________________________________
-static struct G__funclist* G__rate_binary_operator(const ::Reflex::Scope &p_ifunc, G__param *libp, const ::Reflex::Type &tagnum, char* funcname, int hash, G__funclist *funclist, int isrecursive)
+static struct G__funclist* G__rate_binary_operator(const ::Reflex::Scope &p_ifunc, G__param *libp, const ::Reflex::Type &tagnum, char* funcname, int /*hash*/, G__funclist *funclist, int isrecursive)
 {
    int i;
    struct G__param fpara;
@@ -4537,9 +4539,9 @@ int Cint::Internal::G__interpret_func(G__value *result7, char* funcname, G__para
    int match_error = 0;
 #ifdef G__ASM_IFUNC
    G__StrBuf asm_inst_g_sb(G__MAXINST * sizeof(long));
-   long *asm_inst_g = asm_inst_g_sb.data(); /* p-code instruction buffer */
+   long *asm_inst_g = (long*) asm_inst_g_sb.data(); /* p-code instruction buffer */
    G__StrBuf asm_stack_g_sb(G__MAXSTACK * sizeof(G__value));
-   G__value* asm_stack_g = (G__value*)asm_stack_g_sb.data(); /* data stack */
+   G__value* asm_stack_g = (G__value*) asm_stack_g_sb.data(); /* data stack */
    G__StrBuf asm_name_sb(G__ASM_FUNCNAMEBUF);
    char *asm_name = asm_name_sb;
    long *store_asm_inst;
@@ -5622,6 +5624,7 @@ asm_ifunc_start:   /* loop compilation execution label */
              * result7 contains pointer to the local variable
              * which will be destroyed right after this.
              ***************************************************/
+            {
 #ifndef G__OLDIMPLEMENTATION1802
             G__StrBuf temp_sb(G__ONELINE);
             char *temp = temp_sb;
@@ -5771,6 +5774,7 @@ asm_ifunc_start:   /* loop compilation execution label */
             }
 #endif // G__OLDIMPLEMENTATION1259
             break;
+            }
          case 'i':
             // -- Return value of constructor.
             if (-1 != G__get_tagnum(ifn.TypeOf().ReturnType())) {
