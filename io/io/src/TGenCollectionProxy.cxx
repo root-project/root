@@ -27,11 +27,10 @@
 #include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TClassEdit.h"
-#include "Property.h"
 #include "TClass.h"
 #include "TError.h"
 #include "TROOT.h"
-#include "Api.h"
+#include "TInterpreter.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 
@@ -276,9 +275,11 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
          G__value gval = G__string2type_body(inside.c_str(),2);
          G__TypeInfo ti(gval);
 #else
-         G__TypeInfo ti(inside.c_str());
-#endif
-         if ( !ti.IsValid() ) {
+         //G__TypeInfo ti(inside.c_str());
+         TypeInfo_t *ti = gCint->TypeInfo_Factory();
+         gCint->TypeInfo_Init(ti,inside.c_str());
+#endif   
+         if ( !gCint->TypeInfo_IsValid(ti) ) {
             if (intype != inside) {
                fCase |= G__BIT_ISPOINTER;
                fSize = sizeof(void*);
@@ -299,7 +300,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
             }
          }
          else {
-            Long_t prop = ti.Property();
+            Long_t prop = gCint->TypeInfo_Property(ti);
             if ( prop&G__BIT_ISPOINTER ) {
                fSize = sizeof(void*);
             }
@@ -319,7 +320,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
                   fKind = (EDataType)kBOOL_t;
                }
-               fSize = ti.Size();
+               fSize = gCint->TypeInfo_Size(ti);
                R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
             }
             else if ( prop&G__BIT_ISENUM ) {
@@ -331,6 +332,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                fCase |= kBIT_ISTSTRING;
             }
          }
+         gCint->TypeInfo_Delete(ti);
       }
    }
    if ( fSize == std::string::npos ) {
