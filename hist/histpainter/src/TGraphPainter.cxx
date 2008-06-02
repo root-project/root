@@ -1944,6 +1944,10 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    Double_t *theEYlow  = theGraph->GetEYlow();
    Double_t *theEXhigh = theGraph->GetEXhigh();
    Double_t *theEYhigh = theGraph->GetEYhigh();
+   Double_t *theEXlowd  = theGraph->GetEXlowd();
+   Double_t *theEXhighd = theGraph->GetEXhighd();
+   Double_t *theEYlowd  = theGraph->GetEYlowd();
+   Double_t *theEYhighd = theGraph->GetEYhighd();
 
    if (strchr(option,'X') || strchr(option,'x')) {PaintGraphSimple(theGraph, option); return;}
    Bool_t brackets = kFALSE;
@@ -2012,10 +2016,10 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
-      bxl = gPad->YtoPad(theY[i]+theEXlow[i]);
-      bxh = gPad->YtoPad(theY[i]+theEXhigh[i]);
-      byl = gPad->XtoPad(theX[i]+theEYlow[i]);
-      byh = gPad->XtoPad(theX[i]+theEYhigh[i]);
+      bxl = gPad->YtoPad(theY[i]+theEXlowd[i]);
+      bxh = gPad->YtoPad(theY[i]+theEXhighd[i]);
+      byl = gPad->XtoPad(theX[i]+theEYlowd[i]);
+      byh = gPad->XtoPad(theX[i]+theEYhighd[i]);
       if (x < gPad->GetUxmin()) continue;
       if (x > gPad->GetUxmax()) continue;
       if (y < gPad->GetUymin()) continue;
