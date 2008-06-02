@@ -200,7 +200,6 @@ public:
                   
    // G__BaseClassInfo interface            
    virtual void   BaseClassInfo_Delete(BaseClassInfo_t * /* bcinfo */) const {;}
-   virtual void  *BaseClassInfo_Factory() const {return 0;}
    virtual void  *BaseClassInfo_Factory(ClassInfo_t * /* info */) const {return 0;}
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */, int  /* onlyDirect */) const {return 0;}

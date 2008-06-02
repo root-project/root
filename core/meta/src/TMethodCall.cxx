@@ -460,7 +460,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
       // count the number of stars in the name.
       Int_t nstar = 0;
       const char* rettype = func->GetReturnTypeName();
-     const char* returntype = rettype;
+      const char* returntype = rettype;
       while (*returntype) {
          if (*returntype == '*') nstar++;
          returntype++;
@@ -474,7 +474,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
       TypeInfo_t *typed = 0;
       if (!strcmp("(unknown)",name)) {
          typed = gCint->TypeInfo_Factory();         
-         gCint->TypeInfo_Init(typed,func->GetReturnTypeName());
+         gCint->TypeInfo_Init(typed,rettype);
          name  = gCint->TypeInfo_TrueName(typed);
          if (gCint->TypeInfo_Property(typed)&kIsEnum) {
             isEnum = kTRUE;

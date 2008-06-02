@@ -229,7 +229,6 @@ public:
                   
    // G__BaseClassInfo interface            
    virtual void   BaseClassInfo_Delete(BaseClassInfo_t *bcinfo) const;
-   virtual void  *BaseClassInfo_Factory() const;
    virtual void  *BaseClassInfo_Factory(ClassInfo_t *info) const;
    virtual int    BaseClassInfo_Next(BaseClassInfo_t *bcinfo) const;
    virtual int    BaseClassInfo_Next(BaseClassInfo_t *bcinfo, int onlyDirect) const;
