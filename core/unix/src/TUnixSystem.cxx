@@ -360,15 +360,15 @@ static const char *GetExePath()
       exepath = _dyld_get_image_name(0);
 #endif
 #ifdef __linux
-      char linkname[64];  // /proc/<pid>/exe
-      char buf[1024];     // exe path name
+      char linkname[64];      // /proc/<pid>/exe
+      char buf[kMAXPATHLEN];  // exe path name
       pid_t pid;
 
       // get our pid and build the name of the link in /proc
       pid = getpid();
       sprintf(linkname, "/proc/%i/exe", pid);
-      int ret = readlink(linkname, buf, 1024);
-      if (ret > 0 && ret < 1024) {
+      int ret = readlink(linkname, buf, kMAXPATHLEN);
+      if (ret > 0 && ret < kMAXPATHLEN) {
          buf[ret] = 0;
          exepath = buf;
       }
