@@ -122,17 +122,17 @@ RooWorkspace::~RooWorkspace()
 Bool_t RooWorkspace::import(const RooArgSet& args, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
 {
   TIterator* iter = args.createIterator() ;
-  RooAbsArg* arg ;
+  RooAbsArg* oneArg ;
   Bool_t ret(kFALSE) ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    ret |= import(*arg,arg1,arg2,arg3) ;
+  while((oneArg=(RooAbsArg*)iter->Next())) {
+    ret |= import(*oneArg,arg1,arg2,arg3) ;
   }
   return ret ;
 }
 
 
 
-Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
+Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
 {
   //  Import a RooAbsArg object, e.g. function, p.d.f or variable into the workspace. This import function clones the input argument and will
   //  own the clone. If a composite object is offered for import, e.g. a p.d.f with parameters and observables, the
@@ -192,14 +192,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   const char* suffix = suffixA ? suffixA : suffixC ;
   
   // Scan for overlaps with current contents
-  RooAbsArg* wsarg = _allOwnedNodes.find(arg.GetName()) ;
+  RooAbsArg* wsarg = _allOwnedNodes.find(inArg.GetName()) ;
   if (!suffix && wsarg && !useExistingNodes ) {
-    if (wsarg!=&arg) {
-      coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << arg.GetName() 
+    if (wsarg!=&inArg) {
+      coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << inArg.GetName() 
 			    << ": another instance with same name already in the workspace and no conflict resolution protocol specified" << endl ;
       return kTRUE ;    
     } else {
-      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Object " << arg.GetName() << " is already in workspace!" << endl ;
+      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Object " << inArg.GetName() << " is already in workspace!" << endl ;
       return kTRUE ;    
     }
   }
@@ -207,7 +207,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   // Make list of conflicting nodes
   RooArgSet conflictNodes ;
   RooArgSet branchSet ;
-  arg.branchNodeServerList(&branchSet) ;
+  inArg.branchNodeServerList(&branchSet) ;
   TIterator* iter = branchSet.createIterator() ;
   RooAbsArg* branch ;
   while ((branch=(RooAbsArg*)iter->Next())) {
@@ -220,14 +220,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   
   // Terminate here if there are conflicts and no resolution protocol
   if (conflictNodes.getSize()>0 && !suffix && !useExistingNodes) {
-      coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << arg.GetName() << ": component(s) " 
+      coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << inArg.GetName() << ": component(s) " 
 	   << conflictNodes << " already in the workspace and no conflict resolution protocol specified" << endl ;      
       return kTRUE ;
   }
     
   // Now create a working copy of the incoming object tree
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(arg).snapshot(kTRUE) ;
-  RooAbsArg* cloneTop = cloneSet->find(arg.GetName()) ;
+  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(inArg).snapshot(kTRUE) ;
+  RooAbsArg* cloneTop = cloneSet->find(inArg.GetName()) ;
 
   // Mark all nodes for renaming if we are not in conflictOnly mode
   if (!conflictOnly) {
@@ -306,7 +306,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   // Make final check list of conflicting nodes
   RooArgSet conflictNodes2 ;
   RooArgSet branchSet2 ;
-  arg.branchNodeServerList(&branchSet) ;
+  inArg.branchNodeServerList(&branchSet) ;
   TIterator* iter2 = branchSet2.createIterator() ;
   RooAbsArg* branch2 ;
   while ((branch2=(RooAbsArg*)iter2->Next())) {
@@ -318,7 +318,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
 
   // Terminate here if there are conflicts and no resolution protocol
   if (conflictNodes2.getSize()) {
-    coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << arg.GetName() << ": component(s) " 
+    coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << inArg.GetName() << ": component(s) " 
 			  << conflictNodes2 << " cause naming conflict after conflict resolution protocol was executed" << endl ;      
     return kTRUE ;
   }
@@ -453,9 +453,9 @@ Bool_t RooWorkspace::import(RooAbsData& inData, const RooCmdArg& arg1, const Roo
 
   // Now import the dataset observables
   TIterator* iter = clone->get()->createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    import(*arg) ;
+  RooAbsArg* carg ;
+  while((carg=(RooAbsArg*)iter->Next())) {
+    import(*carg) ;
   }
   delete iter ;
     
@@ -476,12 +476,12 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
 
   TRegexp re(pat,kTRUE) ;
   TIterator* iter = componentIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    TString className = arg->IsA()->GetName() ;
-    if (className.Index(re)>=0 && !_classes.autoImportClass(arg->IsA(),doReplace)) {
+  RooAbsArg* carg ;
+  while((carg=(RooAbsArg*)iter->Next())) {
+    TString className = carg->IsA()->GetName() ;
+    if (className.Index(re)>=0 && !_classes.autoImportClass(carg->IsA(),doReplace)) {
       coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object " 
-			    << arg->IsA()->GetName() << "::" << arg->GetName() << ", reading of workspace will require external definition of class" << endl ;
+			    << carg->IsA()->GetName() << "::" << carg->GetName() << ", reading of workspace will require external definition of class" << endl ;
       ret = kFALSE ;
     }
   }  
@@ -865,9 +865,9 @@ Bool_t RooWorkspace::makeDir()
   _dir = new WSDir(name.Data(),title.Data(),this) ;
 
   TIterator* iter = componentIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    _dir->InternalAppend(arg) ;
+  RooAbsArg* darg ;
+  while((darg=(RooAbsArg*)iter->Next())) {
+    _dir->InternalAppend(darg) ;
   }
 
   return kTRUE ;
@@ -879,7 +879,7 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
   // Print contents of the workspace 
   cout << endl << "RooWorkspace(" << GetName() << ") " << GetTitle() << " contents" << endl << endl  ;
 
-  RooAbsArg* arg ;
+  RooAbsArg* parg ;
 
   RooArgSet pdfSet ;
   RooArgSet funcSet ;
@@ -888,29 +888,29 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
 
   // Split list of components in pdfs, functions and variables
   TIterator* iter = _allOwnedNodes.createIterator() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter->Next())) {
 
-    if (arg->IsA()->InheritsFrom(RooAbsPdf::Class())) {
-      pdfSet.add(*arg) ;
+    if (parg->IsA()->InheritsFrom(RooAbsPdf::Class())) {
+      pdfSet.add(*parg) ;
     }
 
-    if (arg->IsA()->InheritsFrom(RooAbsReal::Class()) && 
-	!arg->IsA()->InheritsFrom(RooAbsPdf::Class()) && 
-	!arg->IsA()->InheritsFrom(RooRealVar::Class())) {
-      funcSet.add(*arg) ;
+    if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) && 
+	!parg->IsA()->InheritsFrom(RooAbsPdf::Class()) && 
+	!parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+      funcSet.add(*parg) ;
     }
 
-    if (arg->IsA()->InheritsFrom(RooRealVar::Class())) {
-      varSet.add(*arg) ;
+    if (parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+      varSet.add(*parg) ;
     }
 
-    if (arg->IsA()->InheritsFrom(RooAbsCategory::Class()) && 
-	!arg->IsA()->InheritsFrom(RooCategory::Class())) {
-      catfuncSet.add(*arg) ;
+    if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) && 
+	!parg->IsA()->InheritsFrom(RooCategory::Class())) {
+      catfuncSet.add(*parg) ;
     }
 
-    if (arg->IsA()->InheritsFrom(RooCategory::Class())) {
-      varSet.add(*arg) ;
+    if (parg->IsA()->InheritsFrom(RooCategory::Class())) {
+      varSet.add(*parg) ;
     }
 
   }
@@ -928,8 +928,8 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << "p.d.f.s" << endl ;
     cout << "-------" << endl ;
     iter = pdfSet.createIterator() ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      arg->Print() ;
+    while((parg=(RooAbsArg*)iter->Next())) {
+      parg->Print() ;
     }
     delete iter ;
     cout << endl ;
@@ -939,8 +939,8 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << "functions" << endl ;
     cout << "--------" << endl ;
     iter = funcSet.createIterator() ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      arg->Print() ;
+    while((parg=(RooAbsArg*)iter->Next())) {
+      parg->Print() ;
     }
     delete iter ;
     cout << endl ;
@@ -950,8 +950,8 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << "category functions" << endl ;
     cout << "------------------" << endl ;
     iter = catfuncSet.createIterator() ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      arg->Print() ;
+    while((parg=(RooAbsArg*)iter->Next())) {
+      parg->Print() ;
     }
     delete iter ;
     cout << endl ;

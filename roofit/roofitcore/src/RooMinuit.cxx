@@ -960,7 +960,7 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
 
   // Calculate the function for these parameters
   f= context->_func->getVal() ;
-  if (f==0 || ((context->_handleLocalErrors && (RooAbsPdf::evalError()) || RooAbsReal::numEvalErrors()>0)) ) {
+  if  (f==0 || ( (context->_handleLocalErrors && (  (RooAbsPdf::evalError()) || RooAbsReal::numEvalErrors()>0) ) ) ) {
 
     if (context->_printEvalErrors>=0) {
       oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status." << endl 

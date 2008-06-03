@@ -293,13 +293,13 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
       // If split is composite, first make multicategory with name 'A,B,C' and insert in WS
       
       // Construct name of (composite) split category (function)
-      RooArgSet& splitCatSet = splitIter->second.first ;
-      string splitName = makeSplitName(splitCatSet) ;
+      RooArgSet& splitCatSetTmp = splitIter->second.first ;
+      string splitName = makeSplitName(splitCatSetTmp) ;
 
       // If composite split object does not exist yet, create it now
       RooAbsCategory* splitCat = _ws->catfunc(splitName.c_str()) ;
       if (!splitCat) {
-	splitCat = new RooMultiCategory(splitName.c_str(),splitName.c_str(),splitCatSet) ;
+	splitCat = new RooMultiCategory(splitName.c_str(),splitName.c_str(),splitCatSetTmp) ;
 	cleanupList.addOwned(*splitCat) ;
 	_ws->import(*splitCat) ;
       }

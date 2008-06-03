@@ -30,13 +30,13 @@ RooLinearMorph::RooLinearMorph(const char *name, const char *title,
 			       RooAbsReal& _pdf2,
 			       RooAbsReal& _x,
 			       RooAbsReal& _alpha,
-			       Bool_t cacheAlpha) :
+			       Bool_t doCacheAlpha) :
   RooAbsCachedPdf(name,title,2), 
   pdf1("pdf1","pdf1",this,_pdf1),
   pdf2("pdf2","pdf2",this,_pdf2),
   x("x","x",this,_x),
   alpha("alpha","alpha",this,_alpha),
-  _cacheAlpha(cacheAlpha),
+  _cacheAlpha(doCacheAlpha),
   _cache(0)
 { 
 
@@ -146,7 +146,7 @@ RooArgList RooLinearMorph::MorphCacheElem::containedArgs(Action action)
 }
 
 
-RooLinearMorph::MorphCacheElem::MorphCacheElem(RooLinearMorph& self, const RooArgSet* nset) : PdfCacheElem(self,nset)
+RooLinearMorph::MorphCacheElem::MorphCacheElem(RooLinearMorph& self, const RooArgSet* nsetIn) : PdfCacheElem(self,nsetIn)
 {
   // Mark in base class that normalization of cached pdf is invariant under pdf parameters
   _x = (RooRealVar*)self.x.absArg() ;
@@ -217,7 +217,7 @@ void RooLinearMorph::MorphCacheElem::calculate(TIterator* dIter)
     _calcX = new Double_t[_x->numBins("cache")+1] ;
   }
 
-  RooArgSet nset(*_x) ;
+  RooArgSet nsetTmp(*_x) ;
   _ccounter = 0 ;
   
   // Get number of bins from PdfCacheElem histogram
@@ -295,13 +295,13 @@ void RooLinearMorph::MorphCacheElem::calculate(TIterator* dIter)
     
     Double_t x1,x2 ;    
 
-    Double_t xmin = _x->getMin("cache") ;
-    Double_t xmax = _x->getMax("cache") ;
-    _rf1->findRoot(x1,xmin,xmax,y) ;
-    _rf2->findRoot(x2,xmin,xmax,y) ;
+    Double_t xMin = _x->getMin("cache") ;
+    Double_t xMax = _x->getMax("cache") ;
+    _rf1->findRoot(x1,xMin,xMax,y) ;
+    _rf2->findRoot(x2,xMin,xMax,y) ;
     
-    _x->setVal(x1) ; Double_t f1x1 = _pdf1->getVal(&nset) ;
-    _x->setVal(x2) ; Double_t f2x2 = _pdf2->getVal(&nset) ;
+    _x->setVal(x1) ; Double_t f1x1 = _pdf1->getVal(&nsetTmp) ;
+    _x->setVal(x2) ; Double_t f2x2 = _pdf2->getVal(&nsetTmp) ;
     Double_t fbarX = f1x1*f2x2 / ( _alpha->getVal()*f2x2 + (1-_alpha->getVal())*f1x1 ) ;
 
     dIter->Next() ;
