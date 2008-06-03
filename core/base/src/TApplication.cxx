@@ -292,6 +292,21 @@ void TApplication::ClearInputFiles()
 }
 
 //______________________________________________________________________________
+char *TApplication::Argv(Int_t index) const
+{
+   // Return specified argument.
+
+   if (fArgv) {
+      if (index >= fArgc) {
+         Error("Argv", "index (%d) >= number of arguments (%d)", index, fArgc);
+         return 0;
+      }
+      return fArgv[index];
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 void TApplication::GetOptions(Int_t *argc, char **argv)
 {
    // Get and handle command line options. Arguments handled are removed

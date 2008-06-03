@@ -128,7 +128,7 @@ public:
 
    Int_t           Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }
-   char           *Argv(Int_t index) const { return fArgv ? fArgv[index] : 0; }
+   char           *Argv(Int_t index) const;
    Bool_t          NoLogOpt() const { return fNoLog; }
    Bool_t          NoLogoOpt() const { return fNoLogo; }
    Bool_t          QuitOpt() const { return fQuit; }
