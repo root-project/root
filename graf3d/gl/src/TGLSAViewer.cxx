@@ -125,12 +125,14 @@ MANIPULATORS\n\n\
    cannot be selected/dragged.\n";
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLSAViewer                                                          //
-//                                                                      //
-// The top level standalone viewer object - created via plugin manager. //
-//////////////////////////////////////////////////////////////////////////
+//==============================================================================
+// TGLSAViewer
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// The top level standalone GL-viewer - created via plugin manager.
+
 
 ClassImp(TGLSAViewer);
 
@@ -244,6 +246,7 @@ TGLSAViewer::~TGLSAViewer()
    delete fFileSaveMenu;
    delete fFileMenu;
    delete fFrame;
+   fGLWidget = 0;
 }
 
 //______________________________________________________________________________

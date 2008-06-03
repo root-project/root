@@ -56,8 +56,11 @@
 #define GL_BGRA GL_BGRA_EXT
 #endif
 
-//______________________________________________________________________
+//==============================================================================
 // TGLViewer
+//==============================================================================
+
+//______________________________________________________________________
 //
 // Base GL viewer object - used by both standalone and embedded (in pad)
 // GL. Contains core viewer objects :
@@ -80,7 +83,7 @@
 // manager. For standalone the derived TGLSAViewer is.
 //
 
-ClassImp(TGLViewer)
+ClassImp(TGLViewer);
 
 //______________________________________________________________________________
 TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
@@ -231,7 +234,8 @@ TGLViewer::~TGLViewer()
    delete fRedrawTimer;
 
    if (fEventHandler) {
-      fGLWidget->SetEventHandler(0);
+      if (fGLWidget)
+         fGLWidget->SetEventHandler(0);
       delete fEventHandler;
    }
 
