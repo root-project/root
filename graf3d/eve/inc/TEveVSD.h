@@ -28,13 +28,14 @@ protected:
    TDirectory*  fDirectory;   //!
 
 public:
-   TTree*             fTreeK;       //!
-   TTree*             fTreeH;       //!
-   TTree*             fTreeC;       //!
-   TTree*             fTreeR;       //!
-   TTree*             fTreeKK;      //!
-   TTree*             fTreeV0;      //!
-   TTree*             fTreeGI;      //!
+   TTree*             fTreeK;       //! Kinematics.
+   TTree*             fTreeH;       //! Hits.
+   TTree*             fTreeC;       //! Clusters.
+   TTree*             fTreeR;       //! Reconstructed tracks.
+   TTree*             fTreeKK;      //! Kinks.
+   TTree*             fTreeV0;      //! VO's.
+   TTree*             fTreeCC;      //! Cascades.
+   TTree*             fTreeGI;      //! Sim-Rec cross references.
 
    TEveMCTrack        fK,  *fpK;    //!
    TEveHit            fH,  *fpH;    //!
@@ -42,6 +43,7 @@ public:
    TEveRecTrack       fR,  *fpR;    //!
    TEveRecKink        fKK, *fpKK;   //!
    TEveRecV0          fV0, *fpV0;   //!
+   TEveRecCascade     fCC, *fpCC;   //!
    TEveMCRecCrossRef  fGI, *fpGI;   //!
 
 public:

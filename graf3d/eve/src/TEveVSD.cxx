@@ -12,13 +12,16 @@
 #include "TEveVSD.h"
 #include "TFile.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveVSD
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Visualization Summary Data - a collection of trees holding standard
 // event data in experiment independant format.
 
-ClassImp(TEveVSD)
+ClassImp(TEveVSD);
 
 //______________________________________________________________________________
 TEveVSD::TEveVSD(const Text_t* , const Text_t* ) :
@@ -35,6 +38,7 @@ TEveVSD::TEveVSD(const Text_t* , const Text_t* ) :
    fTreeR  (0),
    fTreeKK (0),
    fTreeV0 (0),
+   fTreeCC (0),
    fTreeGI (0),
 
    fK(),  fpK (&fK),
@@ -43,6 +47,7 @@ TEveVSD::TEveVSD(const Text_t* , const Text_t* ) :
    fR(),  fpR (&fR),
    fKK(), fpKK(&fKK),
    fV0(), fpV0(&fV0),
+   fCC(), fpCC(&fCC),
    fGI(), fpGI(&fGI)
 {
    // Constructor.
@@ -71,6 +76,7 @@ void TEveVSD::CreateTrees()
    fTreeR  = new TTree("RecTracks",  "Reconstructed tracks.");
    fTreeKK = new TTree("RecKinks",   "Reconstructed kinks.");
    fTreeV0 = new TTree("RecV0s",     "Reconstructed V0s.");
+   fTreeCC = new TTree("RecCascades","Reconstructed cascades.");
    fTreeGI = new TTree("TEveMCRecCrossRef",    "Objects prepared for cross query.");
 }
 

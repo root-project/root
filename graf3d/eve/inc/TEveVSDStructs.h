@@ -33,6 +33,7 @@
 //  * placement in TClonesArray (composites are TObject derived);
 //
 //  * minimal member-naming (impossible to make everybody happy).
+//
 
 
 /******************************************************************************/
@@ -366,12 +367,39 @@ public:
    ClassDef(TEveRecV0, 1); // Reconstructed V0 (also used in VSD).
 };
 
+
 /******************************************************************************/
+// TEveRecCascade
 /******************************************************************************/
 
-// Missing primary vertex.
+class TEveRecCascade : public TObject
+{
+public:
+   Int_t      fStatus;
 
-// Missing TEveMCRecCrossRef, RecInfo.
+   TEveVector fVBac;         // Vertex of bachelor track.
+   TEveVector fPBac;         // Momentum of bachelor track.
+
+   TEveVector fCascadeVCa;   // Point of closest approach for Cascade.
+   TEveVector fCascadeBirth; // Reconstucted birth point of cascade particle.
+
+   // ? Data from simulation.
+   Int_t      fLabel;        // Cascade mother label read from kinematics.
+   Int_t      fPdg;          // PDG code of mother.
+   Int_t      fDLabel;       // Daughter label.
+
+   TEveRecCascade() : fStatus(),  fVBac(), fPBac(),
+                      fCascadeVCa(), fCascadeBirth(),
+                      fLabel(0), fPdg(0), fDLabel(0) {}
+   virtual ~TEveRecCascade() {}
+
+   ClassDef(TEveRecCascade, 1); // Reconstructed Cascade (also used in VSD).
+};
+
+
+/******************************************************************************/
+// TEveMCRecCrossRef
+/******************************************************************************/
 
 class TEveMCRecCrossRef : public TObject
 {
@@ -389,6 +417,12 @@ public:
 
    ClassDef(TEveMCRecCrossRef, 1); // Cross-reference of sim/rec data per particle (also used in VSD).
 };
+
+
+/******************************************************************************/
+// Missing primary vertex class.
+/******************************************************************************/
+
 
 /******************************************************************************/
 /******************************************************************************/
