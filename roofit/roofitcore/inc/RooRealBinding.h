@@ -31,15 +31,20 @@ public:
   virtual Double_t getMinLimit(UInt_t dimension) const;
   virtual Double_t getMaxLimit(UInt_t dimension) const;
 
+  virtual void saveXVec() const ;
+  virtual void restoreXVec() const ;
+
   virtual const char* getName() const ; 
 
 protected:
+
   void loadValues(const Double_t xvector[]) const;
   const RooAbsReal *_func;
   RooAbsRealLValue **_vars;
   const RooArgSet *_nset;
   mutable Bool_t _xvecValid;
   Bool_t _clipInvalid ;
+  mutable Double_t* _xsave ;
   const TNamed* _rangeName ; //!
 
   ClassDef(RooRealBinding,0) // RooAbsReal interface adaptor

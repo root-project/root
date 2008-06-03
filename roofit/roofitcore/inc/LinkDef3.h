@@ -61,6 +61,21 @@
 #pragma link C++ class RooConstraintSum+ ;
 #pragma link C++ class RooRecursiveFraction+ ;
 #pragma link C++ class RooDataWeightedAverage+ ;
+#pragma link C++ class RooSimWSTool+ ;
+#pragma link C++ class RooSimWSTool::SplitRule+ ;
+#pragma link C++ class RooSimWSTool::BuildConfig+ ;
+#pragma link C++ class RooSimWSTool::MultiBuildConfig+ ;
+#pragma link C++ class RooSimWSTool::ObjSplitRule+ ;
+#pragma link C++ class RooSimWSTool::ObjBuildConfig+ ;
+#pragma link C++ class RooFracRemainder+ ;
+#pragma link C++ class RooLinearMorph+ ;
+#pragma link C++ class RooAbsCachedReal+ ;
+#pragma link C++ class RooAbsSelfCachedReal+ ;
+#pragma link C++ class RooCachedReal+ ;
+#pragma link C++ class RooNumCdf+ ;
+#pragma link C++ class RooChangeTracker+ ;
+#pragma link C++ class RooNumRunningInt+ ;
+#pragma link C++ class RooHistFunc+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
 #endif 

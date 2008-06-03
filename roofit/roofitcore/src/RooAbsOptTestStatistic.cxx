@@ -163,7 +163,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 
 
   // Fix RooAddPdf coefficients to original normalization range
-  if (rangeName) {
+  if (rangeName && strlen(rangeName)) {
 
     // WVE Remove projected dependents from normalization
     _funcClone->fixAddCoefNormalization(*_dataClone->get()) ;

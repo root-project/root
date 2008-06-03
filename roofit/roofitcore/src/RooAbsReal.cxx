@@ -51,6 +51,9 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooDataWeightedAverage.h"
+#include "RooNumRunningInt.h"
+#include "RooGlobalFunc.h"
+#include "RooParamBinning.h"
 
 #include "Riostream.h"
 
@@ -73,7 +76,7 @@ ClassImp(RooAbsReal)
 Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
 
 Bool_t RooAbsReal::_doLogEvalError ;
-map<const RooAbsArg*,list<RooAbsReal::EvalError> > RooAbsReal::_evalErrorList ;
+map<const RooAbsArg*,pair<string,list<RooAbsReal::EvalError> > > RooAbsReal::_evalErrorList ;
 
 RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE)
 {
@@ -352,6 +355,7 @@ Bool_t RooAbsReal::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const
 }
 
 
+
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
 				       const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
 				       const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) const 
@@ -389,6 +393,9 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg ar
 
   return createIntegral(iset,nset,cfg,rangeName) ;
 }
+
+
+
 
 
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const 
@@ -712,6 +719,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
   RooArgSet* plotLeafNodes = (RooArgSet*) leafNodes.selectCommon(dependentVars) ;
   theClone->recursiveRedirectServers(*plotLeafNodes,kFALSE,kFALSE,kFALSE);
+  delete plotLeafNodes ;
 
   // Create the set of normalization variables to use in the projection integrand
   RooArgSet normSet(dependentVars);
@@ -897,7 +905,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
 
 
-RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, Double_t scaleFactor) const {
+RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSet, Double_t scaleFactor, Bool_t correctForBinSize, Bool_t showProgress) const {
   // Loop over the bins of the input histogram and add an amount equal to our value evaluated
   // at the bin center to each one. Our value is calculated by first integrating out any variables
   // in projectedVars and then scaling the result by scaleFactor. Returns a pointer to the
@@ -922,9 +930,18 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, Double_t scaleFactor) c
   theClone->attachDataSet(*hist) ;
 
   // Iterator over all bins of RooDataHist and fill weights
-  for (Int_t i=0 ; i<hist->numEntries() ; i++) {
+  Int_t onePct = hist->numEntries()/100 ;
+  if (onePct==0) {
+    onePct++ ;
+  }
+  for (Int_t i=0 ; i<hist->numEntries() ; i++) {    
+    if (showProgress && (i%onePct==0)) {
+      ccoutP(Eval) << "." << flush ;
+    }
     const RooArgSet* obs = hist->get(i) ;
-    hist->set(theClone->getVal(obs)*scaleFactor) ;
+    Double_t binVal = theClone->getVal(normSet?normSet:obs)*scaleFactor ;
+    if (correctForBinSize) binVal*= hist->binVolume() ;
+    hist->set(binVal) ;
   }
 
   delete cloneSet ;
@@ -949,7 +966,7 @@ TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   //
   // Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
   // Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
-  // Binning(double lo, double hi, int nbins)     -- Apply specified binning to x axis of histogram
+  // Binning(int nbins, [double lo, double hi])   -- Apply specified binning to x axis of histogram
   // ConditionalObservables(const RooArgSet& set) -- Do not normalized PDF over following observables when projecting PDF into histogram
   // Scaling(Bool_t)                              -- Apply density-correction scaling (multiply by bin volume), default is kTRUE
   //
@@ -2267,10 +2284,6 @@ Double_t RooAbsReal::maxVal(Int_t /*code*/)
 
 void RooAbsReal::logEvalError(const char* message, const char* serverValueString) const
 {
-  if (!_doLogEvalError) {
-    return ;
-  }
-
   EvalError ee ;
   ee.setMessage(message) ;
 
@@ -2293,8 +2306,19 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
     ee.setServerValues(oss.str().c_str()) ;
   }
 
-  _evalErrorList[this].push_back(ee) ;
+  ostringstream oss2 ;
+  printStream(oss2,kName|kClassName|kArgs,kInline)  ;
 
+  if (!_doLogEvalError) {
+   coutE(Eval) << "RooAbsReal::logEvalError(" << GetName() << ") evaluation error, " << endl 
+	       << " origin       : " << oss2.str() << endl 
+	       << " message      : " << ee._msg << endl
+	       << " server values: " << ee._srvval << endl ;
+  } else {
+    _evalErrorList[this].first = oss2.str().c_str() ;
+    _evalErrorList[this].second.push_back(ee) ;
+  }
+    
   //coutE(Tracing) << "RooAbsReal::logEvalError(" << GetName() << ") message = " << message << endl ;
 }
 
@@ -2306,26 +2330,28 @@ void RooAbsReal::clearEvalErrorLog()
 
 void RooAbsReal::printEvalErrors(ostream& os, Int_t maxPerNode) 
 {
-  map<const RooAbsArg*,list<EvalError> >::iterator iter = _evalErrorList.begin() ;
+  map<const RooAbsArg*,pair<string,list<EvalError> > >::iterator iter = _evalErrorList.begin() ;
 
   for(;iter!=_evalErrorList.end() ; ++iter) {
     if (maxPerNode==0) {
 
       // Only print node name with total number of errors
-      iter->first->printStream(os,kName|kClassName|kArgs,kInline)  ;
-      os << " has " << iter->second.size() << " errors" << endl ;      
+      os << iter->second.first ;
+      //iter->first->printStream(os,kName|kClassName|kArgs,kInline)  ;
+      os << " has " << iter->second.second.size() << " errors" << endl ;      
 
     } else {
 
       // Print node name and details of 'maxPerNode' errors
-      iter->first->printStream(os,kName|kClassName|kArgs,kSingleLine) ;
+      os << iter->second.first << endl ;
+      //iter->first->printStream(os,kName|kClassName|kArgs,kSingleLine) ;
 
       Int_t i(0) ;
-      std::list<EvalError>::iterator iter2 = iter->second.begin() ;
-      for(;iter2!=iter->second.end() ; ++iter2, i++) {
+      std::list<EvalError>::iterator iter2 = iter->second.second.begin() ;
+      for(;iter2!=iter->second.second.end() ; ++iter2, i++) {
 	os << "     " << iter2->_msg << " @ " << iter2->_srvval << endl ;
 	if (i>maxPerNode) {
-	  os << "    ... (remaining " << iter->second.size() - maxPerNode << " messages suppressed)" << endl ;
+	  os << "    ... (remaining " << iter->second.second.size() - maxPerNode << " messages suppressed)" << endl ;
 	  break ;
 	}
       } 
@@ -2335,9 +2361,9 @@ void RooAbsReal::printEvalErrors(ostream& os, Int_t maxPerNode)
 
 Int_t RooAbsReal::numEvalErrors() { 
   Int_t ntot(0) ;
-  map<const RooAbsArg*,list<EvalError> >::iterator iter = _evalErrorList.begin() ;
+  map<const RooAbsArg*,pair<string,list<EvalError> > >::iterator iter = _evalErrorList.begin() ;
   for(;iter!=_evalErrorList.end() ; ++iter) {
-    ntot += iter->second.size() ;
+    ntot += iter->second.second.size() ;
   }
   return ntot ;
 }
@@ -2376,4 +2402,164 @@ void RooAbsReal::fixAddCoefRange(const char* rangeName, Bool_t force)
   delete compSet ;    
 }
 
+
+
+void RooAbsReal::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const
+{
+  // Dummy implementation, do nothing 
+  orderedObs.removeAll() ;
+  orderedObs.add(obs) ;
+}
+
+
+
+RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset) 
+{
+  return createRunningIntegral(iset,RooFit::SupNormSet(nset)) ;
+}
+
+RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
+				 const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
+				 const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) 
+{
+  // Create an object that represents the integral of the function over one or more observables listed in iset
+  // The actual integration calculation is only performed when the return object is evaluated. The name
+  // of the integral object is automatically constructed from the name of the input function, the variables
+  // it integrates and the range integrates over
+  //
+  // The following named arguments are accepted
+  //
+  // SupNormSet(const RooArgSet&)         -- Observables over which should be normalized _in_addition_ to the
+  //                                         integration observables
+  // ScanParameters(Int_t nbins,          -- Parameters for scanning technique of making CDF: number
+  //                Int_t intOrder)          of sampled bins and order of interpolation applied on numeric cdf
+  // ScanNum()                            -- Apply scanning technique if cdf integral involves numeric integration
+  // ScanAll()                            -- Always apply scanning technique 
+  // ScanNone()                           -- Never apply scanning technique                  
+
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsReal::createRunningIntegral(%s)",GetName())) ;
+  pc.defineObject("supNormSet","SupNormSet",0,0) ;
+  pc.defineInt("numScanBins","ScanParameters",0,1000) ;
+  pc.defineInt("intOrder","ScanParameters",1,2) ;
+  pc.defineInt("doScanNum","ScanNum",0,1) ;
+  pc.defineInt("doScanAll","ScanAll",0,0) ;
+  pc.defineInt("doScanNon","ScanNone",0,0) ;
+  pc.defineMutex("ScanNum","ScanAll","ScanNone") ;
+
+  // Process & check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Extract values from named arguments
+  const RooArgSet* snset = static_cast<const RooArgSet*>(pc.getObject("supNormSet",0)) ;
+  RooArgSet nset ;
+  if (snset) {
+    nset.add(*snset) ;
+  }
+  Int_t numScanBins = pc.getInt("numScanBins") ;
+  Int_t intOrder = pc.getInt("intOrder") ;
+  Int_t doScanNum = pc.getInt("doScanNum") ;
+  Int_t doScanAll = pc.getInt("doScanAll") ;
+  Int_t doScanNon = pc.getInt("doScanNon") ;
+
+  // If scanning technique is not requested make integral-based cdf and return
+  if (doScanNon) {
+    return createIntRI(iset,nset) ;
+  }
+  if (doScanAll) {
+    return createScanRI(iset,nset,numScanBins,intOrder) ;
+  }
+  if (doScanNum) {
+    RooRealIntegral* tmp = (RooRealIntegral*) createIntegral(iset) ;
+    Int_t isNum= (tmp->numIntRealVars().getSize()>0) ;
+    delete tmp ;
+
+    if (isNum) {
+      coutI(NumIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << endl 
+			    << "      constructing cdf though numeric integration of sampled pdf in " << numScanBins << " bins and applying order " 
+			    << intOrder << " interpolation on integrated histogram." << endl 
+			    << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << endl ;
+    }
+    
+    return isNum ? createScanRI(iset,nset,numScanBins,intOrder) : createIntRI(iset,nset) ;
+  }
+  return 0 ;
+}
+
+RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) 
+{
+  string name = string(GetName()) + "_NUMRUNINT_" + integralNameSuffix(iset,&nset).Data() ;  
+  RooRealVar* ivar = (RooRealVar*) iset.first() ;
+  ivar->setBins(numScanBins,"numcdf") ;
+  RooNumRunningInt* ret = new RooNumRunningInt(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
+  ret->setInterpolationOrder(intOrder) ;
+  return ret ;
+}
+
+
+RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset) 
+{
+  // Make CDF from PDF
+
+  // Make list of input arguments keeping only RooRealVars
+  RooArgList ilist ;
+  TIterator* iter2 = iset.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter2->Next())) {
+    if (dynamic_cast<RooRealVar*>(arg)) {
+      ilist.add(*arg) ;
+    } else {
+      coutW(InputArguments) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") WARNING ignoring non-RooRealVar input argument " << arg->GetName() << endl ;      
+    }
+  }
+  delete iter2 ;
+
+  RooArgList cloneList ;
+  RooArgList loList ;
+  RooArgSet clonedBranchNodes ;
+
+  // Setup customizer that stores all cloned branches in our non-owning list
+  RooCustomizer cust(*this,"cdf") ;
+  cust.setCloneBranchSet(clonedBranchNodes) ;
+  cust.setOwning(kFALSE) ;
+
+  // Make integration observable x_prime for each observable x as well as an x_lowbound 
+  TIterator* iter = ilist.createIterator() ;
+  RooRealVar* rrv ;
+  while((rrv=(RooRealVar*)iter->Next())) {
+
+    // Make clone x_prime of each c.d.f observable x represening running integral
+    RooRealVar* cloneArg = (RooRealVar*) rrv->clone(Form("%s_prime",rrv->GetName())) ;
+    cloneList.add(*cloneArg) ;
+    cust.replaceArg(*rrv,*cloneArg) ;
+
+    // Make clone x_lowbound of each c.d.f observable representing low bound of x
+    RooRealVar* cloneLo = (RooRealVar*) rrv->clone(Form("%s_lowbound",rrv->GetName())) ;
+    cloneLo->setVal(rrv->getMin()) ;
+    loList.add(*cloneLo) ;
+
+    // Make parameterized binning from [x_lowbound,x] for each x_prime
+    RooParamBinning pb(*cloneLo,*rrv,100) ;
+    cloneArg->setBinning(pb,"CDF") ;
+    
+  }
+  delete iter ;
+
+  RooAbsReal* tmp = (RooAbsReal*) cust.build() ;
+
+  // Construct final normalization set for c.d.f = integrated observables + any extra specified by user
+  RooArgSet finalNset(nset) ;
+  finalNset.add(cloneList,kTRUE) ;
+  RooAbsReal* cdf = tmp->createIntegral(cloneList,finalNset,"CDF") ;
+
+  // Transfer ownership of cloned items to top-level c.d.f object
+  cdf->addOwnedComponents(clonedBranchNodes) ;
+  cdf->addOwnedComponents(cloneList) ;
+  cdf->addOwnedComponents(loList) ;
+
+  return cdf ;
+}
 

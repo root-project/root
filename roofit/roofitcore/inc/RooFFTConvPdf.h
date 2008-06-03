@@ -45,7 +45,7 @@ protected:
   virtual const char* inputBaseName() const ;
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(CacheElem& cache) const ;
+  virtual void fillCacheObject(PdfCacheElem& cache) const ;
   void fillCacheSlice(RooHistPdf& cachePdf, const RooArgSet& slicePosition) const ;
 
   class CacheAuxInfo {

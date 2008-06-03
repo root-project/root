@@ -1361,7 +1361,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
     if (dynamic_cast<RooRealIntegral*>(this)) {
       cxcoutI(Integration) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") integral depends on value of one or more observables and will be evaluated for every event" << endl ;
     }
-    optimizedNodes.add(*this) ;
+    optimizedNodes.add(*this,kTRUE) ;
     if (operMode()==AClean) {
     } else {
       setOperMode(ADirty) ;

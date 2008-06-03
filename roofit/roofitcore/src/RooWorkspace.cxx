@@ -119,6 +119,18 @@ RooWorkspace::~RooWorkspace()
   }
 }
 
+Bool_t RooWorkspace::import(const RooArgSet& args, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
+{
+  TIterator* iter = args.createIterator() ;
+  RooAbsArg* arg ;
+  Bool_t ret(kFALSE) ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    ret |= import(*arg,arg1,arg2,arg3) ;
+  }
+  return ret ;
+}
+
+
 
 Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
 {
@@ -134,8 +146,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   //  RenameConflictNodes(const char* suffix) -- Add suffix to branch node name if name conflicts with existing node in workspace
   //  RenameNodes(const char* suffix) -- Add suffix to all branch node names including top level node
   //  RenameVariable(const char* inputName, const char* outputName) -- Rename variable as specified upon import.
+  //  RecycleConflicyNodes() -- If any of the function objects to be imported already exist in the name space, connect the
+  //                            imported expression to the already existing nodes. WARNING: use with care! If function definitions
+  //                            do not match, this alters the definition of your function upon import
   //
-  //  The RenameConflictNodes and RenameNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
+  //  The RenameConflictNodes, RenameNodes and RecycleConflictNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
   //  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
   //  two comma separated lists.
 
@@ -151,7 +166,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   pc.defineString("allSuffix","RenameAllNodes",0) ;
   pc.defineString("varChangeIn","RenameVar",0,"",kTRUE) ;
   pc.defineString("varChangeOut","RenameVar",1,"",kTRUE) ;
+  pc.defineInt("useExistingNodes","RecycleConflictNodes",0,0) ;
   pc.defineMutex("RenameConflictNodes","RenameAllNodes") ;
+  pc.defineMutex("RenameConflictNodes","RecycleConflictNodes") ;
+  pc.defineMutex("RenameAllNodes","RecycleConflictNodes") ;
 
   // Process and check varargs 
   pc.process(args) ;
@@ -164,6 +182,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   const char* suffixA = pc.getString("allSuffix") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
+  Int_t useExistingNodes = pc.getInt("useExistingNodes") ;
 
   // Turn zero length strings into null pointers 
   if (suffixC && strlen(suffixC)==0) suffixC = 0 ;
@@ -173,10 +192,16 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   const char* suffix = suffixA ? suffixA : suffixC ;
   
   // Scan for overlaps with current contents
-  if (!suffix && _allOwnedNodes.find(arg.GetName())) {
-    coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << arg.GetName() 
-			 << ": already in the workspace and no conflict resolution protocol specified" << endl ;
-    return kTRUE ;    
+  RooAbsArg* wsarg = _allOwnedNodes.find(arg.GetName()) ;
+  if (!suffix && wsarg && !useExistingNodes ) {
+    if (wsarg!=&arg) {
+      coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << arg.GetName() 
+			    << ": another instance with same name already in the workspace and no conflict resolution protocol specified" << endl ;
+      return kTRUE ;    
+    } else {
+      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Object " << arg.GetName() << " is already in workspace!" << endl ;
+      return kTRUE ;    
+    }
   }
 
   // Make list of conflicting nodes
@@ -186,14 +211,15 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
   TIterator* iter = branchSet.createIterator() ;
   RooAbsArg* branch ;
   while ((branch=(RooAbsArg*)iter->Next())) {
-    if (_allOwnedNodes.find(branch->GetName())) {
+    RooAbsArg* wsbranch = _allOwnedNodes.find(branch->GetName()) ;
+    if (wsbranch && wsbranch!=branch) {
       conflictNodes.add(*branch) ;
     }
   }
   delete iter ;
   
   // Terminate here if there are conflicts and no resolution protocol
-  if (conflictNodes.getSize()>0 && !suffix) {
+  if (conflictNodes.getSize()>0 && !suffix && !useExistingNodes) {
       coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << arg.GetName() << ": component(s) " 
 	   << conflictNodes << " already in the workspace and no conflict resolution protocol specified" << endl ;      
       return kTRUE ;
@@ -310,10 +336,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& arg, const RooCmdArg& arg1, const R
       }
     }
 
-    // Check if node is already in workspace (can only happen for variables)
+    // Check if node is already in workspace (can only happen for variables or identical instances, unless RecycleConflictNodes is specified)
     if (_allOwnedNodes.find(node->GetName())) {
       // Do not import node, add not to list of nodes that require reconnection
-      coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of variable " << node->IsA()->GetName() 
+      coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of " << node->IsA()->GetName() 
 			 << "::" << node->GetName() << " for import of " << cloneTop2->IsA()->GetName() << "::" 
 			 << cloneTop2->GetName() << endl ;      
       recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
@@ -500,6 +526,28 @@ RooCategory* RooWorkspace::cat(const char* name)
   // Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
   return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name)) ; 
 }
+
+RooAbsCategory* RooWorkspace::catfunc(const char* name)
+{
+  // Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
+  return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name)) ; 
+}
+
+
+RooAbsArg* RooWorkspace::arg(const char* name) 
+{
+  return _allOwnedNodes.find(name) ;
+}
+
+RooAbsArg* RooWorkspace::fundArg(const char* name) 
+{
+  RooAbsArg* tmp = arg(name) ;
+  if (!tmp) {
+    return 0 ;
+  }
+  return tmp->isFundamental() ? tmp : 0 ;
+}
+
 
 RooAbsData* RooWorkspace::data(const char* name) 
 {
@@ -836,6 +884,7 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
   RooArgSet pdfSet ;
   RooArgSet funcSet ;
   RooArgSet varSet ;
+  RooArgSet catfuncSet ;
 
   // Split list of components in pdfs, functions and variables
   TIterator* iter = _allOwnedNodes.createIterator() ;
@@ -854,6 +903,12 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     if (arg->IsA()->InheritsFrom(RooRealVar::Class())) {
       varSet.add(*arg) ;
     }
+
+    if (arg->IsA()->InheritsFrom(RooAbsCategory::Class()) && 
+	!arg->IsA()->InheritsFrom(RooCategory::Class())) {
+      catfuncSet.add(*arg) ;
+    }
+
     if (arg->IsA()->InheritsFrom(RooCategory::Class())) {
       varSet.add(*arg) ;
     }
@@ -891,6 +946,16 @@ void RooWorkspace::Print(Option_t* /*opts*/) const
     cout << endl ;
   }
 
+  if (catfuncSet.getSize()>0) {
+    cout << "category functions" << endl ;
+    cout << "------------------" << endl ;
+    iter = catfuncSet.createIterator() ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      arg->Print() ;
+    }
+    delete iter ;
+    cout << endl ;
+  }
 
   if (_dataList.GetSize()>0) {
     cout << "datasets" << endl ;

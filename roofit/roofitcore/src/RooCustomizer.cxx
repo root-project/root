@@ -406,17 +406,17 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
   delete nIter ;
 
-  if (!_sterile) {
-    if (_owning) {
-      _cloneNodeListOwned->addOwned(clonedMasterNodes) ;
-    } else {
-      _cloneNodeListOwned->add(clonedMasterNodes) ;
-    }
-    if (_cloneNodeListAll) {
-      _cloneNodeListAll->add(clonedMasterNodes) ;
-    }
-  }
-
+//   if (_sterile) {
+//      if (_owning) {
+//        _cloneNodeListOwned->addOwned(clonedMasterNodes) ;
+//      } else {
+//        _cloneNodeListOwned->add(clonedMasterNodes) ;
+//      }
+//      if (_cloneNodeListAll) {
+//        _cloneNodeListAll->add(clonedMasterNodes) ;
+//      }
+//   }
+  
   // Find branches that are affected by splitting and must be cloned
   RooArgSet masterBranchesToBeCloned("masterBranchesToBeCloned") ;
   masterBranchesToBeCloned.setHashTableSize(1000) ;

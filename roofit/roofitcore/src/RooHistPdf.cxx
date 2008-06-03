@@ -24,9 +24,10 @@
 #include "Riostream.h"
 
 #include "RooHistPdf.h"
-#include "RooHistPdf.h"
 #include "RooDataHist.h"
 #include "RooMsgService.h"
+#include "RooRealVar.h"
+#include "RooCategory.h"
 
 
 
@@ -34,7 +35,7 @@ ClassImp(RooHistPdf)
 ;
 
 
-RooHistPdf::RooHistPdf() : _dataHist(0) 
+RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0)
 {
 }
 
@@ -44,7 +45,10 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   _depList("depList","List of dependents",this),
   _dataHist((RooDataHist*)&dhist), 
   _codeReg(10),
-  _intOrder(intOrder)
+  _intOrder(intOrder),
+  _cdfBoundaries(kFALSE),
+  _totVolume(0),
+  _unitNorm(kFALSE)
 {
   // Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
   // PDF. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
@@ -79,7 +83,10 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   _depList("depList",this,other._depList),
   _dataHist(other._dataHist),
   _codeReg(other._codeReg),
-  _intOrder(other._intOrder)
+  _intOrder(other._intOrder),
+  _cdfBoundaries(other._cdfBoundaries),
+  _totVolume(other._totVolume),
+  _unitNorm(other._unitNorm)
 {
   // Copy constructor
 }
@@ -88,9 +95,36 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
 Double_t RooHistPdf::evaluate() const
 {
   // Return the current value: The value of the bin enclosing the current coordinates
-  // of the dependents, normalized by the histograms contents
-  Double_t ret =  _dataHist->weight(_depList,_intOrder,kTRUE) ;
+  // of the dependents, normalized by the histograms contents  
+  Double_t ret =  _dataHist->weight(_depList,_intOrder,kFALSE,_cdfBoundaries) ;  
+  if (ret<0) {
+    ret=0 ;
+  }
   return ret ;
+}
+
+Double_t RooHistPdf::totVolume() const
+{
+  // Return previously calculated value, if any
+  if (_totVolume>0) {
+    return _totVolume ;
+  }
+  _totVolume = 1. ;
+  TIterator* iter = _depList.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    RooRealVar* real = dynamic_cast<RooRealVar*>(arg) ;
+    if (real) {
+      _totVolume *= (real->getMax()-real->getMin()) ;
+    } else {
+      RooCategory* cat = dynamic_cast<RooCategory*>(arg) ;
+      if (cat) {
+	_totVolume *= cat->numTypes() ;
+      }
+    }
+  }
+  delete iter ;
+  return _totVolume ;
 }
 
 
@@ -105,8 +139,11 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   }
 
   // Simplest scenario, integrate over all dependents
-  if ((allVars.getSize()==_depList.getSize()) && 
-      matchArgs(allVars,analVars,_depList)) return 1000 ;
+  RooAbsCollection *allVarsCommon = allVars.selectCommon(_depList) ;  
+  Bool_t intAllObs = (allVarsCommon->getSize()==_depList.getSize()) ;
+  if (intAllObs && matchArgs(allVars,analVars,_depList)) {
+    return 1000 ;
+  }
 
   // Disable partial analytical integrals if interpolation is used
   if (_intOrder>0) {
@@ -132,10 +169,8 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   delete iter ;
   analVars.add(*allVarsSel) ;
 
-  // Register bit pattern and store with associated argset of variable to be integrated
-  Int_t masterCode =  _codeReg.store(&code,1,new RooArgSet(*allVarsSel))+1 ;
-  delete allVarsSel ;
-  return masterCode ;
+  return code ;
+
 }
 
 
@@ -149,13 +184,37 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
   // WVE needs adaptation for rangeName feature
 
   // Simplest scenario, integration over all dependents
-  if (code==1000) return _dataHist->sum(kFALSE) ;
+  if (code==1000) {
+    return _dataHist->sum(kFALSE) ;
+  }
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
-  RooArgSet* intSet = 0;
-  _codeReg.retrieve(code-1,intSet) ;
 
-  return _dataHist->sum(*intSet,_depList,kTRUE) ;
+  RooArgSet intSet ;
+  TIterator* iter = _depList.createIterator() ;
+  RooAbsArg* arg ;
+  Int_t n(0) ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (code & (1<<n)) {
+      intSet.add(*arg) ;
+    }
+    n++ ;
+  }
+  delete iter ;
+
+  Double_t ret =  _dataHist->sum(intSet,_depList,kTRUE) ;
+  return ret ;
+}
+
+
+Int_t RooHistPdf::getMaxVal(const RooArgSet& /*vars*/) const 
+{
+  return 0 ;
+}
+
+Double_t RooHistPdf::maxVal(Int_t /*code*/) 
+{
+  return 0 ;
 }
 
 

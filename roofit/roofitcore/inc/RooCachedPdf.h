@@ -19,27 +19,24 @@
 
 class RooCachedPdf : public RooAbsCachedPdf {
 public:
+  RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& cacheObs);
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf);
   RooCachedPdf(const RooCachedPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooCachedPdf(*this,newname); }
   virtual ~RooCachedPdf() ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void initGenerator(Int_t /*code*/) {} ; // optional pre-generation initialization
-  void generateEvent(Int_t code);
+  virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
 
 protected:
 
   virtual const char* inputBaseName() const { return pdf.arg().GetName() ; } ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const { return pdf.arg().getObservables(nset) ; }
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const { return pdf.arg().getParameters(nset) ; }
-  virtual void fillCacheObject(CacheElem& cachePdf) const ;
+  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
+  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
+  virtual void fillCacheObject(PdfCacheElem& cachePdf) const ;
   virtual Double_t evaluate() const { return 0 ; } // dummy
   
   RooRealProxy pdf ; // Proxy to p.d.f being cached
+  RooSetProxy  _cacheObs ; // Observable to be cached
 
 private:
 

@@ -141,6 +141,7 @@
 #include "RooCustomizer.h"
 #include "RooConstraintSum.h"
 #include "RooParamBinning.h"
+#include "RooNumCdf.h"
 
 ClassImp(RooAbsPdf) 
 ;
@@ -417,7 +418,6 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     TString nname(GetName()) ; nname.Append("_UnitNorm") ;
     _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;
   } else {
-
     _norm = createIntegral(*depList,*getIntegratorConfig()) ;
   }
 
@@ -508,24 +508,6 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
     logEvalError("getLogVal() top-level p.d.f evaluates to zero or negative number") ;
 
-    if (_negCount-- > 0) {     
-
-//       RooArgSet* params = getParameters(nset) ;
-//       RooArgSet* depends = getObservables(nset) ;	 
-
-//       coutW(Eval) << endl 
-// 		  << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: PDF evaluates to zero or negative value (" << prob << ")" << endl ;
-//       if (dologW(Eval)) {
-// 	coutW(Eval) << "  Current values of PDF dependents:" << endl ;
-// 	depends->Print("v") ;
-// 	coutW(Eval) << "  Current values of PDF parameters:" ;
-// 	params->Print("v") ;
-//       }
-//       delete params ;
-//       delete depends ;
-
-//       if(_negCount == 0) coutW(Eval) << "(no more such warnings will be printed) "<<endl;
-    }
     return 0;
   }
   return log(prob);
@@ -2004,67 +1986,93 @@ RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
 }
 
 
-  // Make CDF from PDF
 RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooArgSet& nset) 
 {
-  // Make list of input arguments keeping only RooRealVars
-  RooArgList ilist ;
-  TIterator* iter2 = iset.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter2->Next())) {
-    if (dynamic_cast<RooRealVar*>(arg)) {
-      ilist.add(*arg) ;
-    } else {
-      coutW(InputArguments) << "RooAbsPdf::createCdf(" << GetName() << ") WARNING ignoring non-RooRealVar input argument " << arg->GetName() << endl ;      
-    }
-  }
-  delete iter2 ;
-
-  RooArgList cloneList ;
-  RooArgList loList ;
-  RooArgSet clonedBranchNodes ;
-
-  // Setup customizer that stores all cloned branches in our non-owning list
-  RooCustomizer cust(*this,"cdf") ;
-  cust.setCloneBranchSet(clonedBranchNodes) ;
-  cust.setOwning(kFALSE) ;
-
-  // Make integration observable x_prime for each observable x as well as an x_lowbound 
-  TIterator* iter = ilist.createIterator() ;
-  RooRealVar* rrv ;
-  while((rrv=(RooRealVar*)iter->Next())) {
-
-    // Make clone x_prime of each c.d.f observable x represening running integral
-    RooRealVar* cloneArg = (RooRealVar*) rrv->clone(Form("%s_prime",rrv->GetName())) ;
-    cloneList.add(*cloneArg) ;
-    cust.replaceArg(*rrv,*cloneArg) ;
-
-    // Make clone x_lowbound of each c.d.f observable representing low bound of x
-    RooRealVar* cloneLo = (RooRealVar*) rrv->clone(Form("%s_lowbound",rrv->GetName())) ;
-    cloneLo->setVal(rrv->getMin()) ;
-    loList.add(*cloneLo) ;
-
-    // Make parameterized binning from [x_lowbound,x] for each x_prime
-    RooParamBinning pb(*cloneLo,*rrv,100) ;
-    cloneArg->setBinning(pb,"CDF") ;
-    
-  }
-  delete iter ;
-
-  RooAbsReal* tmp = (RooAbsReal*) cust.build() ;
-
-  // Construct final normalization set for c.d.f = integrated observables + any extra specified by user
-  RooArgSet finalNset(nset) ;
-  finalNset.add(cloneList,kTRUE) ;
-  RooAbsReal* cdf = tmp->createIntegral(cloneList,finalNset,"CDF") ;
-
-  // Transfer ownership of cloned items to top-level c.d.f object
-  cdf->addOwnedComponents(clonedBranchNodes) ;
-  cdf->addOwnedComponents(cloneList) ;
-  cdf->addOwnedComponents(loList) ;
-
-  return cdf ;
+  return createCdf(iset,RooFit::SupNormSet(nset)) ;
 }
+
+RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
+				 const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
+				 const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) 
+{
+  // Create an object that represents the integral of the function over one or more observables listed in iset
+  // The actual integration calculation is only performed when the return object is evaluated. The name
+  // of the integral object is automatically constructed from the name of the input function, the variables
+  // it integrates and the range integrates over
+  //
+  // The following named arguments are accepted
+  //
+  // SupNormSet(const RooArgSet&)         -- Observables over which should be normalized _in_addition_ to the
+  //                                         integration observables
+  // ScanParameters(Int_t nbins,          -- Parameters for scanning technique of making CDF: number
+  //                Int_t intOrder)          of sampled bins and order of interpolation applied on numeric cdf
+  // ScanNum()                            -- Apply scanning technique if cdf integral involves numeric integration
+  // ScanAll()                            -- Always apply scanning technique 
+  // ScanNone()                           -- Never apply scanning technique                  
+
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooAbsReal::createCdf(%s)",GetName())) ;
+  pc.defineObject("supNormSet","SupNormSet",0,0) ;
+  pc.defineInt("numScanBins","ScanParameters",0,1000) ;
+  pc.defineInt("intOrder","ScanParameters",1,2) ;
+  pc.defineInt("doScanNum","ScanNumCdf",0,1) ;
+  pc.defineInt("doScanAll","ScanAllCdf",0,0) ;
+  pc.defineInt("doScanNon","ScanNoCdf",0,0) ;
+  pc.defineMutex("ScanNumCdf","ScanAllCdf","ScanNoCdf") ;
+
+  // Process & check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Extract values from named arguments
+  const RooArgSet* snset = static_cast<const RooArgSet*>(pc.getObject("supNormSet",0)) ;
+  RooArgSet nset ;
+  if (snset) {
+    nset.add(*snset) ;
+  }
+  Int_t numScanBins = pc.getInt("numScanBins") ;
+  Int_t intOrder = pc.getInt("intOrder") ;
+  Int_t doScanNum = pc.getInt("doScanNum") ;
+  Int_t doScanAll = pc.getInt("doScanAll") ;
+  Int_t doScanNon = pc.getInt("doScanNon") ;
+
+  // If scanning technique is not requested make integral-based cdf and return
+  if (doScanNon) {
+    return createIntRI(iset,nset) ;
+  }
+  if (doScanAll) {
+    return createScanCdf(iset,nset,numScanBins,intOrder) ;
+  }
+  if (doScanNum) {
+    RooRealIntegral* tmp = (RooRealIntegral*) createIntegral(iset) ;
+    Int_t isNum= (tmp->numIntRealVars().getSize()>0) ;
+    delete tmp ;
+
+    if (isNum) {
+      coutI(NumIntegration) << "RooAbsPdf::createCdf(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << endl 
+			    << "      constructing cdf though numeric integration of sampled pdf in " << numScanBins << " bins and applying order " 
+			    << intOrder << " interpolation on integrated histogram." << endl 
+			    << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << endl ;
+    }
+    
+    return isNum ? createScanCdf(iset,nset,numScanBins,intOrder) : createIntRI(iset,nset) ;
+  }
+  return 0 ;
+}
+
+RooAbsReal* RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) 
+{
+  string name = string(GetName()) + "_NUMCDF_" + integralNameSuffix(iset,&nset).Data() ;  
+  RooRealVar* ivar = (RooRealVar*) iset.first() ;
+  ivar->setBins(numScanBins,"numcdf") ;
+  RooNumCdf* ret = new RooNumCdf(name.c_str(),name.c_str(),*this,*ivar,"numcdf") ;
+  ret->setInterpolationOrder(intOrder) ;
+  return ret ;
+}
+
+
 
 RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const 
 {

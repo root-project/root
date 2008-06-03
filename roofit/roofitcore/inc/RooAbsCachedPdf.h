@@ -17,8 +17,10 @@
 #include "RooAbsReal.h"
 #include "RooHistPdf.h"
 #include "RooObjCacheManager.h"
+#include "RooAICRegistry.h"
 #include <map>
 class RooArgSet ;
+class RooChangeTracker ;
  
 class RooAbsCachedPdf : public RooAbsPdf {
 public:
@@ -31,45 +33,73 @@ public:
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
+  RooAbsPdf* getCachePdf(const RooArgSet& nset) const {
+    return getCachePdf(&nset) ;
+  }
+  RooDataHist* getCacheHist(const RooArgSet& nset) const {
+    return getCacheHist(&nset) ;
+  }
+  RooAbsPdf* getCachePdf(const RooArgSet* nset=0) const ;
+  RooDataHist* getCacheHist(const RooArgSet* nset=0) const ;
+
   void setInterpolationOrder(Int_t order) ;
   Int_t getInterpolationOrder() const { return _ipOrder ; }
 
-   virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kTRUE ; } 
-   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ; 
-   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
+  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ; 
+  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
 protected:
 
-  class CacheElem : public RooAbsCacheElement {
+  class PdfCacheElem : public RooAbsCacheElement {
   public:
-    virtual ~CacheElem() {} ;
-    // Payload
-    RooHistPdf*  _pdf ;
-    RooAbsReal* _params ;
-    RooDataHist* _hist ;
+    PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nset) ;
+    virtual ~PdfCacheElem()  ;
+
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
+
+    RooHistPdf* pdf() { return _pdf ; }
+    RooDataHist* hist() { return _hist ; }
+    const RooArgSet& nset() { return _nset ; }
+    RooChangeTracker* paramTracker() { return _paramTracker ; }
+
+  private:
+    // Payload
+    RooHistPdf*  _pdf ;
+    RooChangeTracker* _paramTracker ;
+    RooDataHist* _hist ;
+    RooArgSet    _nset ;
+    RooAbsReal*  _norm ;
+
   } ;
 
-  const CacheElem* getCache(const RooArgSet* nset) const ;
-  void clearCacheObject(CacheElem& cache) const ;
-
+  PdfCacheElem* getCache(const RooArgSet* nset, Bool_t recalculate=kTRUE) const ;
+  void clearCacheObject(PdfCacheElem& cache) const ;
+  
+  virtual const char* binningName() const { return "cache" ; }
+  virtual PdfCacheElem* createCache(const RooArgSet* nset) const { return new PdfCacheElem(*this,nset) ; }
   virtual const char* inputBaseName() const = 0 ;
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const = 0 ;
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const = 0 ;
-  virtual void fillCacheObject(CacheElem& cache) const = 0 ;
+  virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
-
-  
+  mutable RooObjCacheManager _cacheMgr ; // The cache manager  
   Int_t _ipOrder ; // Interpolation order for cache histograms 
  
   TString cacheNameSuffix(const RooArgSet& nset) const ;
   void disableCache(Bool_t flag) { _disableCache = flag ; }
 
-  mutable std::map<Int_t,std::pair<const RooArgSet*,const RooArgSet*> > _anaIntMap ; //!
-  
+  mutable RooAICRegistry _anaReg ; //!
+  class AnaIntConfig {
+  public:
+    RooArgSet _allVars ;
+    RooArgSet _anaVars ;
+    const RooArgSet* _nset ;
+    Bool_t    _unitNorm ;
+  } ;
+  mutable std::map<Int_t,AnaIntConfig> _anaIntMap ; //!
 
 private:
 

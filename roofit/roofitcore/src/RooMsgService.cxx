@@ -102,12 +102,13 @@ RooMsgService::RooMsgService()
   _topicNames[ObjectHandling]="ObjectHandling" ;
   _topicNames[InputArguments]="InputArguments" ;
   _topicNames[Tracing]="Tracing" ;
+  _topicNames[NumIntegration]="NumericIntegration" ;
 
   _instance = this ;
   gMsgService = this ;
 
-  addStream(RooMsgService::WARNING) ;
-  addStream(RooMsgService::INFO,Topic(RooMsgService::Generation|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Optimization|RooMsgService::Minimization|RooMsgService::Caching|RooMsgService::ObjectHandling)) ;
+  addStream(RooMsgService::PROGRESS) ;
+  addStream(RooMsgService::INFO,Topic(RooMsgService::Generation|RooMsgService::Plotting|RooMsgService::Fitting|RooMsgService::Optimization|RooMsgService::Minimization|RooMsgService::Caching|RooMsgService::ObjectHandling|RooMsgService::NumIntegration)) ;
 
 
 }

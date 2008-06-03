@@ -467,7 +467,7 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve,bool normalize) const {
     Double_t dyl = GetErrorYlow(i) ;
     Double_t dyh = GetErrorYhigh(i) ;
     if (normalize) {
-        Double_t norm = (yy>0?dyh:dyl);
+        Double_t norm = (yy>0?dyl:dyh);
 	if (norm==0.) {
 	  coutW(Plotting) << "RooHist::makeResisHist(" << GetName() << ") WARNING: point " << i << " has zero error, setting residual to zero" << endl ;
 	  yy=0 ;

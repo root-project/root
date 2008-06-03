@@ -31,16 +31,17 @@ ClassImp(RooDataHistSliceIter)
 
 RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceArg) : _hist(&hist), _sliceArg(&sliceArg)
 {
-  // Calculate base index (for 0th bin) for slice
-  dynamic_cast<RooAbsLValue&>(sliceArg).setBin(0) ;
+  // Calculate base index (for 0th bin) for slice    
+  RooAbsArg* sliceArgInt = hist.get()->find(sliceArg.GetName()) ;
+  dynamic_cast<RooAbsLValue&>(*sliceArgInt).setBin(0,hist.bname()) ;
   _baseIndex = hist.calcTreeIndex() ;
-  _nStep = dynamic_cast<RooAbsLValue&>(sliceArg).numBins() ;
+  _nStep = dynamic_cast<RooAbsLValue&>(*sliceArgInt).numBins(hist.bname()) ;
 
   hist._iterator->Reset() ;
   RooAbsArg* arg ;
   Int_t i=0 ;
   while((arg=(RooAbsArg*)hist._iterator->Next())) {
-    if (arg==&sliceArg) break ;
+    if (arg==sliceArgInt) break ;
     i++ ;
   }
   _stepSize = hist._idxMult[i] ;

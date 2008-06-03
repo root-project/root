@@ -40,7 +40,7 @@ ClassImp(RooMultiCategory)
 ;
 
 RooMultiCategory::RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList2) :
-  RooAbsCategory(name, title), _catSet("catSet","Input category set",this,kTRUE,kTRUE)
+  RooAbsCategory(name, title), _catSet("input","Input category set",this,kTRUE,kTRUE)
 {  
   // Constructor from list of input categories
 
@@ -61,7 +61,7 @@ RooMultiCategory::RooMultiCategory(const char *name, const char *title, const Ro
 
 
 RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *name) :
-  RooAbsCategory(other,name), _catSet("catSet",this,other._catSet)
+  RooAbsCategory(other,name), _catSet("input",this,other._catSet)
 {
   // Copy constructor
   updateIndexList() ;

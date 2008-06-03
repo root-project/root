@@ -42,7 +42,7 @@ ClassImp(RooSuperCategory)
 ;
 
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, const RooArgSet& inInputCatList) :
-  RooAbsCategoryLValue(name, title), _catSet("catSet","Input category set",this,kTRUE,kTRUE)
+  RooAbsCategoryLValue(name, title), _catSet("input","Input category set",this,kTRUE,kTRUE)
 {  
   // Constructor from list of input categories
 
@@ -64,7 +64,7 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
 
 
 RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *name) :
-  RooAbsCategoryLValue(other,name), _catSet("catSet",this,other._catSet)
+  RooAbsCategoryLValue(other,name), _catSet("input",this,other._catSet)
 {
   // Copy constructor
   _catIter = _catSet.createIterator() ;

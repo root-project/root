@@ -774,7 +774,7 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
   
   // Adjust the with of the name field to fit the largest name, if requesed
   Int_t maxNameLen(1) ;
-  Int_t nameFieldLengthSaved = RooAbsArg::_nameLength ;
+  Int_t nameFieldLengthSaved = RooPrintable::_nameLength ;
   if (nameFieldLengthSaved==0) {
     while((next=(RooAbsArg*)iterator->Next())) {
       Int_t len = strlen(next->GetName()) ;
@@ -791,7 +791,7 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
   delete iterator;
   
   // Reset name field length, if modified
-  if (nameFieldLengthSaved!=0) RooPrintable::nameFieldLength(0) ;
+  RooPrintable::nameFieldLength(nameFieldLengthSaved) ;
 }
 
 

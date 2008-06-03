@@ -88,6 +88,15 @@ public:
               { return createIntegral(iset,0,&cfg,rangeName) ; }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
 
+  // Create running integrals
+  RooAbsReal* createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooAbsReal* createRunningIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2=RooCmdArg::none(),
+			const RooCmdArg arg3=RooCmdArg::none(), const RooCmdArg arg4=RooCmdArg::none(), 
+			const RooCmdArg arg5=RooCmdArg::none(), const RooCmdArg arg6=RooCmdArg::none(), 
+			const RooCmdArg arg7=RooCmdArg::none(), const RooCmdArg arg8=RooCmdArg::none()) ;
+  RooAbsReal* createIntRI(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooAbsReal* createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
+
   
   // Optimized accept/reject generator support
   virtual Int_t getMaxVal(const RooArgSet& vars) const ;
@@ -117,6 +126,7 @@ public:
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet(),Bool_t force=kTRUE) ;
   virtual void fixAddCoefRange(const char* rangeName=0,Bool_t force=kTRUE) ;
 
+  virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
 
 public:
 
@@ -146,7 +156,7 @@ public:
                        const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
 
   // Fill a RooDataHist
-  RooDataHist* fillDataHist(RooDataHist *hist, Double_t scaleFactor) const ;
+  RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor, Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -174,7 +184,7 @@ public:
   static void printEvalErrors(ostream&os=std::cout, Int_t maxPerNode=10000000) ;
   static Int_t numEvalErrors() ;
   static Int_t numEvalErrorItems() { return _evalErrorList.size() ; }
-  static std::map<const RooAbsArg*,std::list<EvalError> >::const_iterator evalErrorIter() { return _evalErrorList.begin() ; }
+  static std::map<const RooAbsArg*,std::pair<std::string,std::list<EvalError> > >::const_iterator evalErrorIter() { return _evalErrorList.begin() ; }
 
   static void clearEvalErrorLog() ;
 
@@ -300,7 +310,7 @@ protected:
 private:
 
   static Bool_t _doLogEvalError ;
-  static std::map<const RooAbsArg*,std::list<EvalError> > _evalErrorList ;
+  static std::map<const RooAbsArg*,std::pair<std::string,std::list<EvalError> > > _evalErrorList ;
 
   Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;
 

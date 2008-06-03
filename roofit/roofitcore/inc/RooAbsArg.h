@@ -253,6 +253,7 @@ public:
   virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
 
   // Dirty state modifiers
+ public:
   inline void setValueDirty() const { setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 
   inline void clearValueDirty() const { 
@@ -261,6 +262,7 @@ public:
   inline void clearShapeDirty() const { 
     _shapeDirty=kFALSE ; 
   }
+ protected:
 
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
@@ -276,32 +278,20 @@ public:
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
 
   // Server redirection interface
-  friend class RooAbsCachedPdf ;
-  friend class RooWorkspace ;
-  friend class RooAcceptReject;
-  friend class RooGenContext;
-  friend class RooResolutionModel ;
-  friend class RooSimultaneous ;
-  friend class RooSimGenContext ;  
-  friend class RooEffGenContext ;  
-  friend class RooSimPdfBuilder ;
-  friend class RooAbsOptTestStatistic ;
-  friend class RooAbsPdf ;
-  friend class RooGenProdProj ;
-
+ public:
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t recurseInNewSet=kTRUE) ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) { return kFALSE ; } ;
   virtual void serverNameChangeHook(const RooAbsArg* /*oldServer*/, const RooAbsArg* /*newServer*/) { } ;
 
-  friend class RooFormula ;
-  friend class RooParamBinning ;
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void addServerList(RooAbsCollection& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
   void replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t valueProp, Bool_t shapeProp) ;
   void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
   void removeServer(RooAbsArg& server, Bool_t force=kFALSE) ;
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
+
+ protected:
 
   // Proxy management
   friend class RooAddModel ;
@@ -347,14 +337,13 @@ void printAttribList(ostream& os) const;
   Bool_t _deleteWatch ; //! Delete watch flag 
 
   static Bool_t inhibitDirty() ;
-
-private:
-
+  
   // Value and Shape dirty state bits
   void setValueDirty(const RooAbsArg* source) const ; 
   void setShapeDirty(const RooAbsArg* source) const ; 
   mutable Bool_t _valueDirty ;  // Flag set if value needs recalculating because input values modified
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
+
   mutable OperMode _operMode ; // Dirty state propagation mode
 
   // Owned components

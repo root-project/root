@@ -24,6 +24,7 @@
 #include "RooRealConstant.h"
 #include "RooDataSet.h"
 #include "RooNumIntConfig.h"
+#include "RooRealVar.h"
 
 namespace RooFit {
 
@@ -196,11 +197,24 @@ namespace RooFit {
 
   // RooWorkspace::import() arguments
   RooCmdArg RenameConflictNodes(const char* suffix)         { return RooCmdArg("RenameConflictNodes",0,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg RecycleConflictNodes(Bool_t flag)               { return RooCmdArg("RecycleConflictNodes",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg RenameAllNodes(const char* suffix)              { return RooCmdArg("RenameAllNodes",0,0,0,0,suffix,0,0,0) ; }
   RooCmdArg RenameVariable(const char* in, const char* out) { return RooCmdArg("RenameVar",0,0,0,0,in,out,0,0) ; }
   RooCmdArg RenameDataset(const char* suffix)               { return RooCmdArg("RenameDataset",0,0,0,0,suffix,0,0,0) ; }
 
+  // RooSimCloneTool::build() arguments
+  RooCmdArg SplitParam(const char* varname, const char* catname)         { return RooCmdArg("SplitParam",0,0,0,0,varname,catname,0,0) ; }
+  RooCmdArg SplitParam(const RooRealVar& var, const RooAbsCategory& cat) { return RooCmdArg("SplitParam",0,0,0,0,var.GetName(),cat.GetName(),0,0) ; }
+  RooCmdArg SplitParamConstrained(const char* varname, const char* catname, const char* rsname)        { return RooCmdArg("SplitParamConstrained",0,0,0,0,varname,catname,0,0,0,rsname) ; }
+  RooCmdArg SplitParamConstrained(const RooRealVar& var, const RooAbsCategory& cat, const char* rsname) { return RooCmdArg("SplitParamConstrained",0,0,0,0,var.GetName(),cat.GetName(),0,0,0,rsname) ; }
+  RooCmdArg Restrict(const char* catName, const char* stateNameList) { return RooCmdArg("Restrict",0,0,0,0,catName,stateNameList,0,0) ; }
 
+  // RooAbsPdf::createCdf() arguments
+  RooCmdArg SupNormSet(const RooArgSet& nset) { return RooCmdArg("SupNormSet",0,0,0,0,0,0,&nset,0) ; } 
+  RooCmdArg ScanParameters(Int_t nbins,Int_t intOrder) { return RooCmdArg("ScanParameters",nbins,intOrder,0,0,0,0,0,0) ; }
+  RooCmdArg ScanNumCdf() { return RooCmdArg("ScanNumCdf",1,0,0,0,0,0,0,0) ; }
+  RooCmdArg ScanAllCdf() { return RooCmdArg("ScanAllCdf",1,0,0,0,0,0,0,0) ; }
+  RooCmdArg ScanNoCdf() { return RooCmdArg("ScanNoCdf",1,0,0,0,0,0,0,0) ; }
 
   RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
  

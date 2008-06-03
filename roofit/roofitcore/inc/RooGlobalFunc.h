@@ -29,6 +29,8 @@ class RooAbsReal ;
 class RooAbsBinning ;
 class RooAbsPdf ;
 class RooConstVar ;
+class RooRealVar ;
+class RooAbsCategory ;
 
 namespace RooFit {
 
@@ -183,6 +185,22 @@ RooCmdArg RenameConflictNodes(const char* suffix) ;
 RooCmdArg RenameAllNodes(const char* suffix) ; 
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg RenameDataset(const char* suffix) ;
+RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
+
+// RooSimCloneTool::build() arguments
+RooCmdArg SplitParam(const char* varname, const char* catname) ;
+RooCmdArg SplitParam(const RooRealVar& var, const RooAbsCategory& cat) ;
+RooCmdArg SplitParamConstrained(const char* varname, const char* catname, const char* rsname) ;
+RooCmdArg SplitParamConstrained(const RooRealVar& var, const RooAbsCategory& cat, const char* rsname) ;
+RooCmdArg Restrict(const char* catName, const char* stateNameList) ;
+
+// RooAbsPdf::createCdf() arguments
+RooCmdArg SupNormSet(const RooArgSet& nset) ; 
+RooCmdArg ScanParameters(Int_t nbins,Int_t intOrder) ;
+RooCmdArg ScanNumCdf() ;
+RooCmdArg ScanAllCdf() ;
+RooCmdArg ScanNoCdf() ;
+
 
 
 RooConstVar& RooConst(Double_t val) ; 

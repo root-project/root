@@ -31,7 +31,7 @@ protected:
   virtual const char* inputBaseName() const { return GetName() ; }
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(CacheElem& cache) const ;  
+  virtual void fillCacheObject(PdfCacheElem& cache) const ;  
 
 private:
 

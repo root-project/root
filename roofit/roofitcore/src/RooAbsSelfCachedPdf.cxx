@@ -44,9 +44,9 @@ RooAbsSelfCachedPdf::~RooAbsSelfCachedPdf()
 }
 
 
-void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::CacheElem& cache) const 
+void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const 
 {
-  RooDataHist& cacheHist = *cache._hist ;
+  RooDataHist& cacheHist = *cache.hist() ;
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
   RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;

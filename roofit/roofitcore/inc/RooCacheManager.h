@@ -182,26 +182,26 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   // Check if object is already registered
   Int_t sterileIdx(-1) ;
   if (getObj(nset,iset,&sterileIdx,isetRangeName)) {
-    //cout << "RooCacheManager::setNormList(" << self->GetName() << "): normalization list already registered" << endl ;
+    //cout << "RooCacheManager::setNormList(" << "NULL" << "): normalization list already registered" << endl ;
     return lastIndex() ;
   } 
 
 
   if (sterileIdx>=0) {
     // Found sterile slot that can should be recycled [ sterileIndex only set if isetRangeName matches ]
-    //cout << "RooCacheManager::setNormList(" << self->GetName() << "): recycling sterile slot " << lastIndex() << endl ;
+    //cout << "RooCacheManager::setNormList(" << "NULL" << "): recycling sterile slot " << lastIndex() << endl ;
     _object[sterileIdx] = obj ;
     return lastIndex() ;
   }
 
   if (_size==_maxSize) {
-    //cout << "RooCacheManager::setNormList(" << self->GetName() << "): cache is full" << endl ;
+    //cout << "RooCacheManager::setNormList(" << "NULL" << "): cache is full" << endl ;
     return -1 ;
   }
 
   _nsetCache[_size].autoCache(_owner,nset,iset,isetRangeName,kTRUE) ;
   if (_object[_size]) {
-    //cout << "RooCacheManager::setNormList(" << self->GetName() << "): deleting previous normalization list of slot " << _size << endl ;
+    //cout << "RooCacheManager::setNormList(" << "NULL" << "): deleting previous normalization list of slot " << _size << endl ;
     delete _object[_size] ;
   }
 
@@ -219,7 +219,6 @@ template<class T>
 T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx, const TNamed* isetRangeName) 
 {
   Int_t i ;
-
   for (i=0 ; i<_size ; i++) {
     if (_nsetCache[i].contains(nset,iset,isetRangeName)==kTRUE) {      
       _lastIndex = i ;

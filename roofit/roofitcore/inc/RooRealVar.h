@@ -68,7 +68,7 @@ public:
   inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
   inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(0,min,max) ; }
 
-  void setBins(Int_t nBins) { setBinning(RooUniformBinning(getMin(),getMax(),nBins)) ; } 
+  void setBins(Int_t nBins, const char* name=0) { setBinning(RooUniformBinning(getMin(name),getMax(name),nBins),name) ; } 
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
 
   // RooAbsRealLValue implementation

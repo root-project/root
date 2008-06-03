@@ -45,6 +45,10 @@ public:
 
   void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
+  const RooArgSet& numIntCatVars() const { return _sumList ; }
+  const RooArgSet& numIntRealVars() const { return _intList ; }
+  const RooArgSet& anaIntVars() const { return _anaList ; }
+
 protected:
 
   mutable Bool_t _valid;

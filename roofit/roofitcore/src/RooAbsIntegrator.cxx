@@ -43,7 +43,11 @@ RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, Bool_t doPrintEva
 Double_t RooAbsIntegrator::calculate(const Double_t *yvec) 
 {
   if (_printEvalCounter) integrand()->resetNumCall() ;
+
+  integrand()->saveXVec() ;
   Double_t ret = integral(yvec) ; 
+  integrand()->restoreXVec() ;
+  
   if (_printEvalCounter) {
     cxcoutD(Tracing) << IsA()->GetName() << "::calculate() number of function calls = " << integrand()->numCall() << endl ;
   }

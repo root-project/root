@@ -520,7 +520,7 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
 }
 
 
-const RooCatType* RooAbsCategory::getOrdinal(UInt_t n) const 
+const RooCatType* RooAbsCategory::getOrdinal(UInt_t n, const char* /*rangeName*/) const 
 {
   // Return state definition of ordinal nth defined state,
   // needed by the generator mechanism.

@@ -50,7 +50,7 @@ public:
   const RooCatType* lookupType(const char* label, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const RooCatType& type, Bool_t printError=kFALSE) const ;
   TIterator* typeIterator() const ;
-  Int_t numTypes() const { return _types.GetEntries() ; }
+  Int_t numTypes(const char* /*rangeName*/=0) const { return _types.GetEntries() ; }
   Bool_t isSignType(Bool_t mustHaveZero=kFALSE) const ;
 
   Roo1DTable *createTable(const char *label) const ;
@@ -77,7 +77,7 @@ protected:
   const RooCatType* defineType(const char* label) ;
   const RooCatType* defineType(const char* label, Int_t index) ;
   const RooCatType* defineTypeUnchecked(const char* label, Int_t index) ;
-  const RooCatType* getOrdinal(UInt_t n) const;
+  const RooCatType* getOrdinal(UInt_t n, const char* rangeName=0) const;
   void clearTypes() ;
 
   virtual Bool_t isValid() const ;

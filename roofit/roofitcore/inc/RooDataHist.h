@@ -39,7 +39,7 @@ public:
 
   // Constructors, factory methods etc.
   RooDataHist() ; 
-  RooDataHist(const char *name, const char *title, const RooArgSet& vars) ;
+  RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName=0) ;
   RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
   RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
@@ -71,7 +71,7 @@ public:
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize) ;
 
   virtual Double_t weight() const { return _curWeight ; }
-  Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE) ;   
+  Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE, Bool_t cdfBoundaries=kFALSE) ;   
   Double_t binVolume() const { return _curVolume ; }
   Double_t binVolume(const RooArgSet& bin) ; 
 
@@ -90,12 +90,15 @@ public:
   virtual void reset() ;
   void dump2() ;
 
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;
 
 protected:
 
   friend class RooAbsCachedPdf ;
+  friend class RooAbsCachedReal ;
   friend class RooDataHistSliceIter ;
   void setAllWeights(Double_t value) ;
  
@@ -104,7 +107,7 @@ protected:
 	      const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
 	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
-  Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) ;
+  Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
@@ -131,10 +134,12 @@ protected:
   mutable std::vector<Double_t>* _pbinv ; //! Partial bin volume array
   mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; // Cache manager for arrays of partial bin volumes
   std::list<RooAbsLValue*> _lvvars ; //!
-
+  char* _binningName ; //!Name of binning to be used to define grid
+  inline const char* bname() const { return _binningName ; }
+    
 private:
 
-  ClassDef(RooDataHist,1) // Binned data set
+  ClassDef(RooDataHist,2) // Binned data set
 };
 
 #endif

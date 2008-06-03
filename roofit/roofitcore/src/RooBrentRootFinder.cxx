@@ -33,7 +33,8 @@ ClassImp(RooBrentRootFinder)
 
 
 RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
-  RooAbsRootFinder(function)
+  RooAbsRootFinder(function),
+  _tol(2.2204460492503131e-16)
 {
 }
 
@@ -48,8 +49,8 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   Double_t fa= (*_function)(&a) - value;
   Double_t fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
-    oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot: initial interval does not bracket a root: ("
-			      << a << "," << b << "), value = " << value << endl;
+//     oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
+// 			      << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
     return kFALSE;
   }
 
@@ -77,11 +78,12 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
       fc = fa;
     }
 
-    Double_t tol = 0.5 * 2.2204460492503131e-16 * fabs(b);
+    Double_t tol = 0.5 * _tol * fabs(b);
     Double_t m = 0.5 * (c - b);
 
 
     if (fb == 0 || fabs(m) <= tol) {
+      //cout << "RooBrentRootFinder: iter = " << iter << " m = " << m << " tol = " << tol << endl ;
       result= b;
       return kTRUE;
     }
@@ -141,7 +143,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
 
   }
   // Return our best guess if we run out of iterations
-  oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot: maximum iterations exceeded." << endl;
+  oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): maximum iterations exceeded." << endl;
   result= b;
   return kFALSE;
 }

@@ -24,9 +24,12 @@ public:
   inline virtual ~RooBrentRootFinder() { }
 
   virtual Bool_t findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const;
+  void setTol(Double_t tol) { _tol = tol ; }
 
 protected:
-  enum { MaxIterations = 100 };
+  enum { MaxIterations = 512 };
+
+  Double_t _tol ;
 
   ClassDef(RooBrentRootFinder,0) // Abstract interface for 1-dim real-valued function root finders
 };

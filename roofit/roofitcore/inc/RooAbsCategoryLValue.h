@@ -36,12 +36,13 @@ public:
   RooAbsArg& operator=(const RooAbsCategory& other) ;
 
   // Binned fit interface
-  virtual void setBin(Int_t ibin) ;
-  virtual Int_t getBin() const ;
-  virtual Int_t numBins() const ;
-  virtual Double_t getBinWidth(Int_t /*i*/) const { return 1.0 ; }
+  virtual void setBin(Int_t ibin, const char* rangeName=0) ;
+  virtual Int_t getBin(const char* rangeName=0) const ;
+  virtual Int_t numBins(const char* rangeName) const ;
+  virtual Double_t getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const { return 1.0 ; }
+  virtual Double_t volume(const char* rangeName) const { return numTypes(rangeName) ; }
+  virtual void randomize(const char* rangeName=0);
 
-  virtual void randomize();
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
   
   inline virtual Bool_t isLValue() const { return kTRUE; }
@@ -52,7 +53,7 @@ public:
 
 protected:
 
-  Bool_t setOrdinal(UInt_t index);
+  Bool_t setOrdinal(UInt_t index, const char* rangeName);
   void copyCache(const RooAbsArg* source) ;
 
   ClassDef(RooAbsCategoryLValue,1) // Abstract modifiable index variable 

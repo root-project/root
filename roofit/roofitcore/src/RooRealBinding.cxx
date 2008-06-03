@@ -37,7 +37,7 @@ ClassImp(RooRealBinding)
 ;
 
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _rangeName(rangeName)
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName)
 {
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
@@ -62,7 +62,30 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 
 RooRealBinding::~RooRealBinding() {
   if(0 != _vars) delete[] _vars;
+  if (_xsave) delete[] _xsave ;
 }
+
+
+void RooRealBinding::saveXVec() const
+{
+  if (!_xsave) {
+    _xsave = new Double_t[getDimension()] ;    
+    for (UInt_t i=0 ; i<getDimension() ; i++) {
+      _xsave[i] = _vars[i]->getVal() ;
+    }
+  }
+}
+
+void RooRealBinding::restoreXVec() const
+{
+  if (!_xsave) {
+    return ;
+  }
+  for (UInt_t i=0 ; i<getDimension() ; i++) {
+   _vars[i]->setVal(_xsave[i]) ;
+  }
+}
+
 
 void RooRealBinding::loadValues(const Double_t xvector[]) const {
   _xvecValid = kTRUE ;
@@ -79,6 +102,7 @@ Double_t RooRealBinding::operator()(const Double_t xvector[]) const {
   assert(isValid());
   _ncall++ ;
   loadValues(xvector);
+  //cout << getName() << "(x=" << xvector[0] << ")=" << _func->getVal(_nset) << endl ;
   return _xvecValid ? _func->getVal(_nset) : 0. ;
 }
 

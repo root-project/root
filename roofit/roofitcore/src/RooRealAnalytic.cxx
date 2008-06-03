@@ -35,5 +35,5 @@ Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const {
   assert(isValid());
   loadValues(xvector);  
   _ncall++ ;
-  return _code?_func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0):_func->getVal(_nset) ;
+  return _code ? _func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0):_func->getVal(_nset) ;
 }

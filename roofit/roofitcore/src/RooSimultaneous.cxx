@@ -58,7 +58,7 @@ ClassImp(RooSimultaneous)
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
 				 RooAbsCategoryLValue& inIndexCat) : 
   RooAbsPdf(name,title), 
-  _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
+  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
@@ -79,7 +79,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
 				 const RooArgList& inPdfList, RooAbsCategoryLValue& inIndexCat) :
   RooAbsPdf(name,title), 
-  _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
+  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _plotCoefNormRange(0),
   _partIntMgr(this,10),
   _indexCat("indexCat","Index category",this,inIndexCat),
@@ -120,7 +120,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 
 RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
-  _plotCoefNormSet("plotCoefNormSet",this,other._plotCoefNormSet),
+  _plotCoefNormSet("!plotCoefNormSet",this,other._plotCoefNormSet),
   _plotCoefNormRange(other._plotCoefNormRange),
   _partIntMgr(other._partIntMgr,this),
   _indexCat("indexCat",this,other._indexCat), 
@@ -205,8 +205,8 @@ Double_t RooSimultaneous::evaluate() const
   // Retrieve the proxy by index name
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
   
-  assert(proxy!=0) ;
-
+  //assert(proxy!=0) ;
+  if (proxy==0) return 0 ;
 
   // Return the selected PDF value, normalized by the number of index states
   return ((RooAbsPdf*)(proxy->absArg()))->getVal(_normSet) ; 
@@ -238,8 +238,9 @@ Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const
     // Retrieve the proxy by index name
     RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
     
-    assert(proxy!=0) ;
-    
+    //assert(proxy!=0) ;
+    if (proxy==0) return 0 ;
+
     // Return the selected PDF value, normalized by the number of index states
     return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset); 
   }

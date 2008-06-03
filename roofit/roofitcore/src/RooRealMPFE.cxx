@@ -259,11 +259,11 @@ void RooRealMPFE::serverLoop()
 
       // Loop over errors
       {
-	static std::map<const RooAbsArg*,list<EvalError> >::const_iterator iter = evalErrorIter() ;
+	static std::map<const RooAbsArg*,pair<string,list<EvalError> > >::const_iterator iter = evalErrorIter() ;
 	for (int i=0 ; i<numEvalErrorItems() ; i++) {
 	  
-	  list<EvalError>::const_iterator iter2 = iter->second.begin() ;
-	  for (;iter2!=iter->second.end();++iter2) {
+	  list<EvalError>::const_iterator iter2 = iter->second.second.begin() ;
+	  for (;iter2!=iter->second.second.end();++iter2) {
 	    
 	    // Reply with SendError message
 	    msg = SendError ;

@@ -1,0 +1,196 @@
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ * @(#)root/roofitcore:$Id$
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
+
+// -- CLASS DESCRIPTION [REAL] --
+//
+// RooChangeTracker calculates the sum of a set of RooAbsReal terms, or
+// when constructed with two sets, it sums the product of the terms
+// in the two sets. This class does not (yet) do any smart handling of integrals, 
+// i.e. all integrals of the product are handled numerically
+
+
+#include "RooFit.h"
+
+#include "Riostream.h"
+#include <math.h>
+
+#include "RooChangeTracker.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
+#include "RooArgSet.h"
+#include "RooMsgService.h"
+
+using namespace std ;
+
+ClassImp(RooChangeTracker)
+;
+
+RooChangeTracker::RooChangeTracker()
+{
+  _realSetIter = _realSet.createIterator() ;
+  _catSetIter = _catSet.createIterator() ;
+}
+
+
+RooChangeTracker::RooChangeTracker(const char* name, const char* title, const RooArgSet& trackSet, Bool_t checkValues) :
+  RooAbsReal(name, title),
+  _realSet("realSet","Set of real-valued components to be tracked",this),
+  _catSet("catSet","Set of discrete-valued components to be tracked",this),
+  _realRef(trackSet.getSize()),
+  _catRef(trackSet.getSize()),
+  _checkVal(checkValues)
+{
+  // Constructor
+  _realSetIter = _realSet.createIterator() ;
+  _catSetIter = _catSet.createIterator() ;
+
+  TIterator* iter = trackSet.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (dynamic_cast<RooAbsReal*>(arg)) {
+      _realSet.add(*arg) ;      
+    }
+    if (dynamic_cast<RooAbsCategory*>(arg)) {
+      _catSet.add(*arg) ;      
+    }
+  }
+  
+  if (_checkVal) {
+    RooAbsReal* real  ;
+    RooAbsCategory* cat  ;
+    Int_t i(0) ;
+    while((real=(RooAbsReal*)_realSetIter->Next())) {
+      _realRef[i++] = real->getVal() ;
+    }
+    i=0 ;
+    while((cat=(RooAbsCategory*)_catSetIter->Next())) {
+      _catRef[i++] = cat->getIndex() ;
+    }
+  }
+
+}
+
+
+
+RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* name) :
+  RooAbsReal(other, name), 
+  _realSet("realSet",this,other._realSet),
+  _catSet("catSet",this,other._catSet),
+  _realRef(other._realRef),
+  _catRef(other._catRef),
+  _checkVal(other._checkVal)
+{
+  // Copy constructor
+  _realSetIter = _realSet.createIterator() ;
+  _catSetIter = _catSet.createIterator() ;
+
+  _realSet.add(other._realSet) ;
+  _catSet.add(other._catSet) ;
+
+}
+
+
+Bool_t RooChangeTracker::hasChanged(Bool_t clearState) 
+{
+  // If dirty flag did not change, object has not changed in any case
+  if (!isValueDirty()) {
+    return kFALSE ;
+  }
+
+  // If no value checking is required and dirty flag has changed, return true
+  if (!_checkVal) {
+
+    if (clearState) {
+      // Clear dirty flag by calling getVal()
+      //cout << "RooChangeTracker(" << GetName() << ") clearing isValueDirty" << endl ;
+      clearValueDirty() ;
+    }
+
+    //cout << "RooChangeTracker(" << GetName() << ") isValueDirty = kTRUE, returning kTRUE" << endl ;
+
+    return kTRUE ;
+  }
+  
+  // Compare values against reference
+  _realSetIter->Reset() ;  
+  _catSetIter->Reset() ;
+  RooAbsReal* real ;
+  RooAbsCategory* cat ;
+  Int_t i(0) ;
+
+  if (clearState) {
+
+    Bool_t valuesChanged(kFALSE) ;
+
+    // Check if any of the real values changed
+    while ((real=(RooAbsReal*)_realSetIter->Next())) {
+      if (real->getVal() != _realRef[i++]) {
+	//cout << "RooChangeTracker(" << GetName() << ") value of " << real->GetName() << " has changed from " << _realRef[i-1] << " to " << real->getVal() << endl ;
+	valuesChanged = kTRUE ;
+	_realRef[i-1] = real->getVal() ;
+      }
+    }
+    // Check if any of the categories changed
+    i=0 ;
+    while ((cat=(RooAbsCategory*)_catSetIter->Next())) {
+      if (cat->getIndex() != _catRef[i++]) {
+	//cout << "RooChangeTracker(" << GetName() << ") value of " << cat->GetName() << " has changed from " << _catRef[i-1] << " to " << cat->getIndex() << endl ;
+	valuesChanged = kTRUE ;
+	_catRef[i-1] = cat->getIndex() ;
+      }
+    }
+
+    clearValueDirty() ;
+
+    return valuesChanged ;
+
+  } else {
+    
+    // Return true as soon as any input has changed
+
+    // Check if any of the real values changed
+    while ((real=(RooAbsReal*)_realSetIter->Next())) {
+      if (real->getVal() != _realRef[i++]) {
+	return kTRUE ;
+      }
+    }
+    // Check if any of the categories changed
+    i=0 ;
+    while ((cat=(RooAbsCategory*)_catSetIter->Next())) {
+      if (cat->getIndex() != _catRef[i++]) {
+	return kTRUE ;
+      }
+    }
+   
+  }
+  
+  return kFALSE ;
+}
+
+
+RooChangeTracker::~RooChangeTracker() 
+{
+  if (_realSetIter) delete _realSetIter ;
+  if (_catSetIter) delete _catSetIter ;
+}
+
+
+
+Double_t RooChangeTracker::evaluate() const 
+{
+  return 1 ;
+}
+

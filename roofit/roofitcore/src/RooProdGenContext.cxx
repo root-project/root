@@ -143,6 +143,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
  	  coutI(Generation) << "RooProdGenContext::ctor() creating subcontext for generation of observables " << *pdfDep << " from model " << pdf->GetName() << endl ;
 	  RooArgSet* auxProto2 = impDeps ? pdf->getObservables(impDeps) : 0 ;
 	  RooAbsGenContext* cx = pdf->genContext(*pdfDep,prototype,auxProto2,verbose) ;
+	  delete auxProto2 ;
 	  _gcList.Add(cx) ;
 	} 
 

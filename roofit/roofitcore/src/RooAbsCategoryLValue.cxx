@@ -93,12 +93,12 @@ RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other)
 }
 
 
-Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n) 
+Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n, const char* rangeName) 
 {
   // Set our state to our n'th defined type and return kTRUE.
   // Return kFALSE if n is out of range.
 
-  const RooCatType *newValue= getOrdinal(n);
+  const RooCatType *newValue= getOrdinal(n,rangeName);
   if(newValue) {
     return setIndex(newValue->getVal());
   }
@@ -131,27 +131,28 @@ void RooAbsCategoryLValue::writeToStream(ostream&, Bool_t) const
 
 
 
-void RooAbsCategoryLValue::randomize() {
+void RooAbsCategoryLValue::randomize(const char* rangeName) {
   // Randomize current value
-  UInt_t ordinal= RooRandom::integer(numTypes());
-  setOrdinal(ordinal);
+
+  UInt_t ordinal= RooRandom::integer(numTypes(rangeName));
+  setOrdinal(ordinal,rangeName);
 }
 
 
 
-void RooAbsCategoryLValue::setBin(Int_t ibin) 
+void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName) 
 {
   // Set category to i-th fit bin, which is the i-th registered state.
 
   // Check validity of ibin
-  if (ibin<0 || ibin>=numBins()) {
+  if (ibin<0 || ibin>=numBins(rangeName)) {
     coutE(InputArguments) << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-			  << " is out of range (0," << numBins()-1 << ")" << endl ;
+			  << " is out of range (0," << numBins(rangeName)-1 << ")" << endl ;
     return ;
   }
 
   // Retrieve state corresponding to bin
-  const RooCatType* type = getOrdinal(ibin) ;
+  const RooCatType* type = getOrdinal(ibin,rangeName) ;
 
   // Set value to requested state
   setIndex(type->getVal()) ;
@@ -159,7 +160,7 @@ void RooAbsCategoryLValue::setBin(Int_t ibin)
 
 
 
-Int_t RooAbsCategoryLValue::getBin() const 
+Int_t RooAbsCategoryLValue::getBin(const char* /*rangeName*/) const 
 {
   // Get index of plot bin for current value this category.
 
@@ -172,8 +173,8 @@ Int_t RooAbsCategoryLValue::getBin() const
 
 
 
-Int_t RooAbsCategoryLValue::numBins() const 
+Int_t RooAbsCategoryLValue::numBins(const char* rangeName) const 
 {
   // Returm the number of fit bins ( = number of types )
-  return numTypes() ;
+  return numTypes(rangeName) ;
 }

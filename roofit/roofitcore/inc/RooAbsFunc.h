@@ -32,6 +32,9 @@ public:
   Int_t numCall() const { return _ncall ; }
   void resetNumCall() const { _ncall = 0 ; }
 
+  virtual void saveXVec() const {} ;
+  virtual void restoreXVec() const {} ;
+
   virtual const char* getName() const { return "(unnamed)" ; }  
 
 protected:

@@ -31,7 +31,7 @@ public:
 	    Int_t i1=0, Int_t i2=0, 
 	    Double_t d1=0, Double_t d2=0, 
 	    const char* s1=0, const char* s2=0, 
-	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0) ;
+	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0) ;
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
@@ -48,18 +48,16 @@ public:
 
   static const RooCmdArg& none() ;
 
-protected:
-
-  static const RooCmdArg _none  ;
-
-  friend class RooCmdConfig ;
-  friend class RooProdPdf ;
-
   const char* opcode() const { return strlen(GetName()) ? GetName() : 0 ; }
   Int_t getInt(Int_t idx) const { return _i[idx] ; }
   Double_t getDouble(Int_t idx) const { return _d[idx] ; }
   const char* getString(Int_t idx) const { return _s[idx] ; }
   const TObject* getObject(Int_t idx) const { return _o[idx] ; }
+
+protected:
+
+  static const RooCmdArg _none  ;
+  friend class RooCmdConfig ;
 
 private:
 
@@ -68,7 +66,7 @@ private:
   // Payload
   Double_t _d[2] ;
   Int_t _i[2] ;
-  const char* _s[2] ;
+  const char* _s[3] ;
   TObject* _o[2] ;
   Bool_t _procSubArgs ;
   RooLinkedList _argList ;

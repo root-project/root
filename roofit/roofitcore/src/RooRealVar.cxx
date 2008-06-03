@@ -113,7 +113,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
     _altNonSharedBinning.Add(abc) ;
     abc->insertHook(*this) ;
   }
-
+  delete iter ;
   
   
 }
@@ -141,8 +141,10 @@ void RooRealVar::setVal(Double_t value) {
   Double_t clipValue ;
   inRange(value,0,&clipValue) ;
 
-  setValueDirty() ;
-  _value = clipValue;
+  if (clipValue != _value) {
+    setValueDirty() ;
+    _value = clipValue;
+  }
 }
 
 
@@ -152,8 +154,10 @@ void RooRealVar::setVal(Double_t value, const char* rangeName)
   Double_t clipValue ;
   inRange(value,rangeName,&clipValue) ;
 
-  setValueDirty() ;
-  _value = clipValue;
+  if (clipValue != _value) {
+    setValueDirty() ;
+    _value = clipValue;
+  }
 }
 
 

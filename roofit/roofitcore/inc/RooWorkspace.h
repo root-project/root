@@ -30,6 +30,7 @@ class RooAbsData ;
 class RooRealVar ;
 class RooCategory ;
 class RooAbsReal ;
+class RooAbsCategory ;
 //class RooModelView ;
 
 #include "TNamed.h"
@@ -46,8 +47,9 @@ public:
   Bool_t importClassCode(const char* pat="*", Bool_t doReplace=kFALSE) ;
   Bool_t importClassCode(TClass* theClass, Bool_t doReplace=kFALSE) ;
 
-  // Import functions for dataset, functions
+  // Import functions for dataset, functions 
   Bool_t import(const RooAbsArg& arg, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
+  Bool_t import(const RooArgSet& args, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   Bool_t import(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
 
   // Import other workspaces
@@ -59,7 +61,10 @@ public:
   RooAbsReal* function(const char* name) ;
   RooRealVar* var(const char* name) ;
   RooCategory* cat(const char* name) ;
+  RooAbsCategory* catfunc(const char* name) ;
   RooAbsData* data(const char* name) ;
+  RooAbsArg* arg(const char* name) ;
+  RooAbsArg* fundArg(const char* name) ;
   TIterator* componentIterator() { return _allOwnedNodes.createIterator() ; }
   const RooArgSet& components() const { return _allOwnedNodes ; }
 

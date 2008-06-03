@@ -41,13 +41,14 @@ public:
   virtual RooAbsArg& operator=(const RooAbsReal& other) ;
   virtual RooAbsArg& operator=(Double_t newValue);
   virtual RooAbsArg& operator=(Int_t ival) { return operator=((Double_t)ival) ; }
-  virtual void randomize();
 
   // Implementation of RooAbsLValue
-  virtual void setBin(Int_t ibin) ;
-  virtual Int_t getBin() const { return getBinning().binNumber(getVal()) ; }
-  virtual Int_t numBins() const { return getBins() ; }
-  virtual Double_t getBinWidth(Int_t i) const { return getBinning().binWidth(i) ; }
+  virtual void setBin(Int_t ibin, const char* rangeName=0) ;
+  virtual Int_t getBin(const char* rangeName=0) const { return getBinning(rangeName).binNumber(getVal()) ; }
+  virtual Int_t numBins(const char* rangeName=0) const { return getBins(rangeName) ; }
+  virtual Double_t getBinWidth(Int_t i, const char* rangeName=0) const { return getBinning(rangeName).binWidth(i) ; }
+  virtual Double_t volume(const char* rangeName) const { return getMax(rangeName)-getMin(rangeName) ; }
+  virtual void randomize(const char* rangeName=0);
   
   // Get fit range limits
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const = 0 ;

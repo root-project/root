@@ -133,6 +133,11 @@ public:
 
   // Create cumulative density function from p.d.f
   RooAbsReal* createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooAbsReal* createCdf(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2=RooCmdArg::none(),
+			const RooCmdArg arg3=RooCmdArg::none(), const RooCmdArg arg4=RooCmdArg::none(), 
+			const RooCmdArg arg5=RooCmdArg::none(), const RooCmdArg arg6=RooCmdArg::none(), 
+			const RooCmdArg arg7=RooCmdArg::none(), const RooCmdArg arg8=RooCmdArg::none()) ;
+  RooAbsReal* createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  

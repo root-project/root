@@ -355,13 +355,13 @@ void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, Bool_t verbos
   }
 }
 
-void RooAbsRealLValue::randomize() {
+void RooAbsRealLValue::randomize(const char* rangeName) {
   // Set a new value sampled from a uniform distribution over the fit range.
   // Prints a warning and does nothing if the fit range is not finite.
 
-  if(hasMin() && hasMax()) {
-    Double_t range= getMax()-getMin();
-    setVal(getMin() + RooRandom::uniform()*range);
+  if(hasMin(rangeName) && hasMax(rangeName)) {
+    Double_t range= getMax(rangeName)-getMin(rangeName);
+    setVal(getMin(rangeName) + RooRandom::uniform()*range);
   }
   else {
     coutE(Generation) << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;
@@ -369,17 +369,17 @@ void RooAbsRealLValue::randomize() {
 }
 
 
-void RooAbsRealLValue::setBin(Int_t ibin) 
+void RooAbsRealLValue::setBin(Int_t ibin, const char* rangeName) 
 {
   // Check range of plot bin index
-  if (ibin<0 || ibin>=numBins()) {
+  if (ibin<0 || ibin>=numBins(rangeName)) {
     coutE(InputArguments) << "RooAbsRealLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-			  << " is out of range (0," << getBins()-1 << ")" << endl ;
+			  << " is out of range (0," << getBins(rangeName)-1 << ")" << endl ;
     return ;
   }
  
   // Set value to center of requested bin
-  setVal(getBinning().binCenter(ibin)) ;
+  setVal(getBinning(rangeName).binCenter(ibin)) ;
 }
 
 

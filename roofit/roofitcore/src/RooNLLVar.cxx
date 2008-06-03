@@ -121,8 +121,6 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     _dataClone->get(i);
     if (_dataClone->weight()==0) continue ;
 
-    //cout << "RooNLLVar(" << GetName() << ") wgt[" << i << "] = " << _dataClone->weight() << endl ;
-    
     //cout << "evaluating nll for event #" << i << " of " << lastEvent-firstEvent << endl ;
     Double_t term = _dataClone->weight() * pdfClone->getLogVal(_normSet);
     sumWeight += _dataClone->weight() ;
