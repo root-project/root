@@ -468,13 +468,15 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 
       TypedefInfo_t *atype = gCint->TypedefInfo_Factory();
       gCint->TypedefInfo_Init(atype,gCint->TypeName(rettype));
+      //be careful, below this point rettype cannot be reused (point to a static in TCint)
+      
       const char *name = gCint->TypedefInfo_TrueName(atype);
 
       Bool_t isEnum = kFALSE;
       TypeInfo_t *typed = 0;
       if (!strcmp("(unknown)",name)) {
          typed = gCint->TypeInfo_Factory();         
-         gCint->TypeInfo_Init(typed,rettype);
+         gCint->TypeInfo_Init(typed,func->GetReturnTypeName());
          name  = gCint->TypeInfo_TrueName(typed);
          if (gCint->TypeInfo_Property(typed)&kIsEnum) {
             isEnum = kTRUE;
