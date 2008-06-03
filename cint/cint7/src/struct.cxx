@@ -645,6 +645,13 @@ extern "C" int G__defined_tagname(const char *tagname, int noerror)
          strcpy(p + 1, temp);
          ++p;
       }
+      // handles X<int, int> as X<int,int>
+      p = (char*) tagname;
+      while (0 != (p = strstr(p, ", "))) {
+         strcpy(temp, p + 2);
+         strcpy(p + 1, temp);
+         ++p;
+      }
    }
 
    /* handle X<const const Y> */
