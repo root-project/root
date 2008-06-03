@@ -791,13 +791,13 @@ class genDictionary(object) :
     elif notAccessibleType :
       sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s), %s, %s)' % ( cls, self.xref[notAccessibleType]['attrs']['access'].title(), self.xref[attrs['id']]['elem'], '__shadow__::'+ string.translate(str(clf),self.transtable), mod, typ )
     else :
-      globalscopeprefix = "::"
-      # a funny bug in MSVC7.1: sizeof(::std::vector<int>) doesn't work
-      if sys.platform == 'win32' \
-         and (cls[0:5] == "std::" or cls[0:8] == "stdext::" ) :
-        globalscopeprefix=""
-      sc += '  ClassBuilder("%s", typeid(%s%s), sizeof(%s%s), %s, %s)' \
-            % (cls, globalscopeprefix, cls, globalscopeprefix, cls, mod, typ)
+      typeidtype = '::' + cls
+      # a funny bug in MSVC7.1: sizeof(::namesp::cl) doesn't work
+      if sys.platform == 'win32':
+         typeidtype = 'MSVC71_typeid_bug_workaround'
+         sc += '  typedef ::%s %s;\n' % (cls, typeidtype)
+      sc += '  ClassBuilder("%s", typeid(%s), sizeof(::%s), %s, %s)' \
+            % (cls, typeidtype, cls, mod, typ)
     if 'extra' in attrs :
       for pname, pval in attrs['extra'].items() :
         if pname not in ('name','pattern','n_name','file_name','file_pattern') :
