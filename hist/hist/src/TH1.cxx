@@ -4985,13 +4985,19 @@ Long64_t TH1::Merge(TCollection *li)
                ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
             } else {
                const char* label=h->GetXaxis()->GetBinLabel(binx);
-               if (!label) label="";
-               ix = fXaxis.FindBin(label);
+               if (!label || label[0]==0) {
+                  ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx)); 
+               } else { 
+                  ix = fXaxis.FindBin(label);
+                  if (ix==-1) ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx)); 
+               }
             }
-            if (ix >= 0) AddBinContent(ix,cu);
-            if (fSumw2.fN) {
-               Double_t error1 = h->GetBinError(binx);
-               fSumw2.fArray[ix] += error1*error1;
+            if (ix >= 0) {
+               AddBinContent(ix,cu);
+               if (fSumw2.fN) {
+                  Double_t error1 = h->GetBinError(binx);
+                  fSumw2.fArray[ix] += error1*error1;
+               }
             }
          }
       }
