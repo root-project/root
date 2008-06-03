@@ -1914,7 +1914,11 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
          if (element->GetType() == kObjectp || element->GetType() == kObjectP ||
              element->GetType() == kAnyp || element->GetType() == kAnyP || 
              element->GetType() == kCharStar) {
-            fprintf(sfp,"   %s = 0;\n",element->GetName());
+            if(element->GetArrayLength() <= 1) {
+               fprintf(sfp,"   %s = 0;\n",element->GetName());
+            } else {
+               fprintf(sfp,"   memset(%s,0,%d);\n",element->GetName(),element->GetSize());
+            }
          }
          if (kOffsetP <= element->GetType() && element->GetType() < kObject ) {
             fprintf(sfp,"   %s = 0;\n",element->GetName());
@@ -1931,7 +1935,11 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                const char *ename = element->GetName();
                const char *colon2 = strstr(ename,"::");
                if (colon2) ename = colon2+2;
-               fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
+               if(element->GetArrayLength() <= 1) {
+                  fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
+               } else {
+                  fprintf(sfp,"   for (int i=0;i<%d;i++) delete %s[i];   memset(%s,0,%d);\n",element->GetArrayLength(),ename,ename,element->GetSize());
+               }
          }
          if (element->GetType() == kCharStar) {
             const char *ename = element->GetName();
