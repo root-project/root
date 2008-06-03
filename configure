@@ -1427,8 +1427,17 @@ if test ! "x$platform" = "xwin32"; then
         /usr/X11/include /usr/include/X11R5
 
     if test "x$found_dir" = "x" ; then
-        enable_xft="no"
         result "`basename $0`: Xft headers (libxft-devel) MUST be installed"
+        exit 1
+    fi
+
+    check_header "X11/extensions/shape.h" "" \
+        /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
+        /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
+        /usr/X11/include /usr/include/X11R5
+
+    if test "x$found_dir" = "x" ; then
+        result "`basename $0`: X11/extensions/shape.h header (xorg-x11-proto-devel) MUST be installed"
         exit 1
     fi
 
@@ -1448,11 +1457,19 @@ if test ! "x$platform" = "xwin32"; then
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
         /usr/X11/lib
-    xftlib=$found_lib
 
-    if test "x$xftlib" = "x" ; then
-        enable_xft="no"
+    if test "x$found_lib" = "x" ; then
         result "`basename $0`: libXft (libxft-devel) MUST be installed"
+        exit 1
+    fi
+
+    check_library "libXext" "$enable_shared" "" \
+        /usr/local/lib /usr/lib /usr/lib/X11 \
+        /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
+        /usr/X11/lib
+
+    if test "x$found_lib" = "x" ; then
+        result "`basename $0`: libXext (libXext-devel) MUST be installed"
         exit 1
     fi
 fi
