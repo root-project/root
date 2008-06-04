@@ -279,7 +279,7 @@ G__DECL_API(179, void, G__setglobalcomp, (int globalcomp));
 G__DECL_API(180, char, *G__getmakeinfo, (char *item));
 G__DECL_API(181, char, *G__getmakeinfo1, (char *item));
 G__DECL_API(182, int, G__get_security_error, (void));
-G__DECL_API(183, char*, G__map_cpp_name, (char *in));
+G__DECL_API(183, char*, G__map_cpp_name, (const char *in));
 G__DECL_API(184, char*, G__Charref, (G__value *buf));
 G__DECL_API(185, short*, G__Shortref, (G__value *buf));
 G__DECL_API(186, int*, G__Intref, (G__value *buf));
