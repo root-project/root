@@ -822,6 +822,12 @@ struct G__REFLEXTYPE_C_PLACEHOLDER {
 #endif
    unsigned int fModifiers;
 };
+struct G__DUMMY_FOR_CINT5 {
+   // Stuff we removed from Cint5
+   int type;
+   int tagnum;
+   G__SIGNEDCHAR_T isconst;
+};
 typedef struct {
   union {
     double d;
@@ -843,6 +849,7 @@ typedef struct {
   long ref;
 #endif
   struct G__REFLEXTYPE_C_PLACEHOLDER buf_typenum;
+   char dummyForCint5[sizeof(struct G__DUMMY_FOR_CINT5)];  
 } G__value;
 
 /**************************************************************************
