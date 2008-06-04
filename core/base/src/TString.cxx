@@ -704,6 +704,12 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
    // Remove at most n1 characters from self beginning at pos,
    // and replace them with the first n2 characters of cs.
 
+   if (pos <= kNPOS || pos > Length()) {
+      Error("TString::Replace",
+            "first argument out of bounds: pos = %d, Length = %d", pos, Length());
+      return *this;
+   }
+
    n1 = TMath::Min(n1, Length()-pos);
    if (!cs) n2 = 0;
 
@@ -1500,6 +1506,7 @@ void TSubString::ToUpper()
 void TSubString::SubStringError(Ssiz_t sr, Ssiz_t start, Ssiz_t n) const
 {
    // Output error message.
+
    Error("TSubString::SubStringError",
          "out of bounds: start = %d, n = %d, sr = %d", start, n, sr);
 }
