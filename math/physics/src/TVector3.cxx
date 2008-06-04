@@ -82,7 +82,7 @@ another vector:
 <P><TT>&nbsp; Double_t ppv1 = v.Perp(v1);</TT>
 <BR><TT>&nbsp; Double_t pp2v1 = v.Perp2(v1);</TT>
 
-<P>The pseudorapiditiy ( eta=-ln (tan (phi/2)) ) can be get by <TT>Eta()</TT>
+<P>The pseudo-rapidity ( eta=-ln (tan (theta/2)) ) can be obtained by <TT>Eta()</TT>
 or <TT>PseudoRapidity()</TT>:
 <BR>&nbsp;
 <BR><TT>&nbsp; Double_t eta = v.PseudoRapidity();</TT>
