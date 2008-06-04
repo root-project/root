@@ -40,6 +40,7 @@
 #pragma link C++ class TEveRecTrack+;
 #pragma link C++ class TEveRecKink+;
 #pragma link C++ class TEveRecV0+;
+#pragma link C++ class TEveRecCascade+;
 #pragma link C++ class TEveMCRecCrossRef+;
 
 // TEveTrans
