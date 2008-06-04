@@ -364,8 +364,7 @@ static void PrintUsage(char *pname)
 
 int main(int argc, char **argv)
 {
-   const int kMAXARGS = 4096;  // POSIX minimum
-   char *argvv[kMAXARGS];
+   char **argvv;
    char  arg0[kMAXPATHLEN];
 
 #ifndef ROOTPREFIX
@@ -474,6 +473,7 @@ int main(int argc, char **argv)
    // Child is going to overlay itself with the actual ROOT module...
 
    // Build argv vector
+   argvv = new char* [argc+2];
 #ifdef ROOTBINDIR
    sprintf(arg0, "%s/%s", ROOTBINDIR, ROOTBINARY);
 #else
@@ -482,9 +482,7 @@ int main(int argc, char **argv)
    argvv[0] = arg0;
    argvv[1] = (char *) "-splash";
 
-   int iargc = argc;
-   if (iargc > kMAXARGS-2) iargc = kMAXARGS-2;
-   for (i = 1; i < iargc; i++)
+   for (i = 1; i < argc; i++)
       argvv[1+i] = argv[i];
    argvv[1+i] = 0;
 
