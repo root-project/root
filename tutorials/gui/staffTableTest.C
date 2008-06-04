@@ -69,7 +69,7 @@ TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
    DontCallClose() ;
    
    // Open root file for the tree
-   fFile = new TFile("$ROOTSYS/staff.root");
+   fFile = new TFile("$ROOTSYS/tutorials/tree/staff.root");
 
    if (!fFile || fFile->IsZombie()) {
       printf("Please run <ROOT location>/tutorials/tree/staff.C first.");
