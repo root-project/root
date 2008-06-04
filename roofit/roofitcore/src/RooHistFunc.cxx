@@ -182,7 +182,7 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) 
 
   // Simplest scenario, integration over all dependents
   if (code==1000) {
-    return _dataHist->sum(kFALSE) ;
+    return _dataHist->sum(kTRUE) ;
   }
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum

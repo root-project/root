@@ -972,7 +972,7 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
   for (i=0 ; i<_arrSize ; i++) {
     
     Double_t theBinVolume = correctForBinSize ? _binv[i] : 1.0 ;
-    total += _wgt[i]/theBinVolume ;
+    total += _wgt[i]*theBinVolume ;
   }
 
   return total ;

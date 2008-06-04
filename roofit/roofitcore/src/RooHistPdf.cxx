@@ -185,7 +185,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
 
   // Simplest scenario, integration over all dependents
   if (code==1000) {
-    return _dataHist->sum(kFALSE) ;
+    return _dataHist->sum(kTRUE) ;
   }
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
