@@ -225,7 +225,8 @@ Float_t TEveCalo3DGL::RenderBarrelCell(const TEveCaloData::CellData_t &cellData,
 
    RenderBox(box);
 
-   return offset + towerH*sin1;
+   return offset + towerH*Sin(cellData.ThetaMin());
+
 }// end RenderBarrelCell
 
 //______________________________________________________________________________
@@ -301,8 +302,6 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 {
    // GL rendering.
 
-   fM->AssertPalette();
-
    if (fM->fCacheOK == kFALSE)
    {
       fM->ResetCache();
@@ -332,7 +331,7 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
          offset = 0;
          prevTower = fM->fCellList[i].fTower;
       }
-      fM->SetupColorHeight(cellData.Value(), fM->fCellList[i].fSlice, towerH, visible);
+      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), fM->fCellList[i].fSlice, towerH, visible);
       if (visible)
       {
          if (rnrCtx.SecSelection()) glLoadName(i);

@@ -51,10 +51,10 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
       // grid color
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
       TGLabel* lab = new TGLabel(f, "GridColor:");
-      f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 10, 1, 2));
+      f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 10, 1, 1));
 
       fGridColor = new TGColorSelect(f, 0, -1);
-      f->AddFrame(fGridColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 2));
+      f->AddFrame(fGridColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 1));
       fGridColor->Connect("ColorSelected(Pixel_t)", "TEveCaloLegoEditor", this, "DoGridColor(Pixel_t)");
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
@@ -67,7 +67,7 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 8, 1, 1));
 
       fFontColor = new TGColorSelect(f, 0, -1);
-      f->AddFrame(fFontColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 2));
+      f->AddFrame(fFontColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 1));
       fFontColor->Connect("ColorSelected(Pixel_t)", "TEveCaloLegoEditor", this, "DoFontColor(Pixel_t)");
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
@@ -79,7 +79,7 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 1, 1, 1));
 
       fPlaneColor = new TGColorSelect(f, 0, -1);
-      f->AddFrame(fPlaneColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 2));
+      f->AddFrame(fPlaneColor, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 1));
       fPlaneColor->Connect("ColorSelected(Pixel_t)", "TEveCaloLegoEditor", this, "DoPlaneColor(Pixel_t)");
 
       fTransparency = new TGNumberEntry(f, 0., 2, -1,
@@ -116,15 +116,6 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    fBinWidth->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoBinWidth()");
    AddFrame(fBinWidth, new TGLayoutHints(kLHintsTop, 4, 2, 1, 2));
 
-   {
-      TGHorizontalFrame *title1 = new TGHorizontalFrame(this, 145, 10,
-                                                        kLHintsExpandX | kFixedWidth);
-      title1->AddFrame(new TGLabel(title1, "View"),
-                       new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-      title1->AddFrame(new TGHorizontal3DLine(title1),
-                       new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
-      AddFrame(title1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
-   }
    fProjection = MakeLabeledCombo("Project:", 1);
    fProjection->AddEntry("Auto", TEveCaloLego::kAuto);
    fProjection->AddEntry("3D", TEveCaloLego::k3D);

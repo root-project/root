@@ -99,7 +99,7 @@ void TEveLegoOverlay::DrawSlider(TGLRnrCtx& rnrCtx)
    glTranslatef(0, fSliderPosY, 0);
    Int_t nsteps, ndiv;
    Double_t omin, omax, zmax, tickval;
-   THLimitsFinder::Optimize(0, fCalo->GetData()->GetMaxVal(), fCalo->GetNZSteps(), omin, omax, ndiv, tickval);
+   THLimitsFinder::Optimize(0, fCalo->GetData()->GetMaxVal(fCalo->GetPlotEt()), fCalo->GetNZSteps(), omin, omax, ndiv, tickval);
    nsteps = ndiv+1;
    zmax = nsteps*tickval;
    

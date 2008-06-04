@@ -19,6 +19,8 @@ class TGDoubleHSlider;
 class TEveGValuator;
 class TEveGDoubleValuator;
 class TEveRGBAPaletteSubEditor;
+class TGCheckButton;
+class TGRadioButton;
 
 class TGVerticalFrame;
 
@@ -31,14 +33,19 @@ private:
 protected:
    TEveCaloViz               *fM; // Model object.
 
+   TGRadioButton             *fPlotE;
+   TGRadioButton             *fPlotEt;
+
+   TGCheckButton             *fScaleAbs;
+   TEveGValuator             *fMaxValAbs;
+   TEveGValuator             *fMaxTowerH;
+
    TEveGDoubleValuator       *fEtaRng;
    TEveGValuator             *fPhi;
    TEveGValuator             *fPhiOffset;
 
    TGVerticalFrame            *fTower;
    TEveRGBAPaletteSubEditor   *fPalette;        // Palette sub-editor.x
-
-   TEveGValuator              *fCellZScale;
 
 public:
    TEveCaloVizEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -47,11 +54,17 @@ public:
 
    virtual void SetModel(TObject* obj);
 
+   void DoMaxTowerH();
+   void DoScaleAbs();
+   void DoMaxValAbs();
+
+   void DoPlot();
+
    void DoEtaRange();
    void DoPhi();
 
-   void DoCellZScale();
    void DoPalette();
+
 
    ClassDef(TEveCaloVizEditor, 0); // GUI editor for TEveCaloVizEditor.
 };

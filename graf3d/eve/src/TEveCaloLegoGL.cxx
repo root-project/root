@@ -232,9 +232,9 @@ void TEveCaloLegoGL::MakeDisplayList() const
          {
             glLoadName(i);
             MakeQuad(cellData.EtaMin(), cellData.PhiMin(), offset,
-                     cellData.EtaDelta(), cellData.PhiDelta(), cellData.Value());
+                     cellData.EtaDelta(), cellData.PhiDelta(), cellData.Value(fM->fPlotEt));
          }
-         offset += cellData.Value();
+         offset += cellData.Value(fM->fPlotEt);
       }
       glEndList();
    }
@@ -331,7 +331,7 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) cons
 
    // size of tick-mark 8 pixels
    TGLVertex3 worldRef(0, 0, fZAxisMax*0.5);
-   TGLVector3 off = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -8, 0);
+   TGLVector3 off = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0);
 
    // primary tick-marks
    Int_t np = TMath::CeilNint(fZAxisMax/fZAxisStep);
@@ -964,12 +964,12 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
                glVertex3f(cellData.Eta() +etaW, cellData.Phi()+phiW, sum);
                glVertex3f(cellData.Eta() -etaW, cellData.Phi()+phiW, sum);
             }
-            sum = cellData.Value();
+            sum = cellData.Value(fM->fPlotEt);
             prevTower = (*it).fTower;
          }
          else
          {
-            sum += cellData.Value();
+            sum += cellData.Value(fM->fPlotEt);
          }
          glEnd();
          name++;
@@ -1028,7 +1028,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
                if (j == (jMax-1))
                   up = cd.PhiMax() -phi0;
 
-               vec[i*nPhi+j]  += cd.Value()*(right-left)*(up-down);
+               vec[i*nPhi+j]  += cd.Value(fM->fPlotEt)*(right-left)*(up-down);
             }
          }
       }
@@ -1096,21 +1096,28 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       cells3D = kTRUE;
 
    // init cached variables
-   fDataMax   = fM->fData->GetMaxVal();
+   if (fM->fScaleAbs)
+      fDataMax   = fM->fMaxValAbs;
+   else
+      fDataMax   = fM->fData->GetMaxVal(fM->fPlotEt);
+
+   //   printf("Direct draw max %f\n", fDataMax);
    Int_t ondiv;
    Double_t omin, omax;
    THLimitsFinder::Optimize(0, fDataMax, fM->fNZSteps, omin, omax, ondiv,  fZAxisStep);
-   fZAxisMax = (ondiv+1)*fZAxisStep;
+   fZAxisMax = (ondiv)*fZAxisStep;
+   if (fZAxisMax < fDataMax)
+      fZAxisMax += fZAxisStep;
+
 
    // cache
-   fM->AssertPalette();
    if (fM->fCacheOK == kFALSE)
    {
       fDLCacheOK = kFALSE;
       fM->ResetCache();
       fM->fData->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                             fM->GetEta(), fM->GetEtaRng()*0.5,
-                             fM->fPhi, fM->fPhiOffset, fM->fCellList);
+                             fM->GetEta(), fM->GetEtaRng(),
+                             fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
       fM->fCacheOK = kTRUE;
    }
    if (cells3D && fDLCacheOK == kFALSE) MakeDisplayList();
@@ -1119,20 +1126,20 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // modelview matrix
    glPushMatrix();
 
+   Double_t em, eM, pm, pM;
+   fM->fData->GetEtaLimits(em, eM);
+   fM->fData->GetPhiLimits(pm, pM);
+
+   // scale due to shortest XY axis
+   Double_t unit = ((eM-em) < (pM-pm)) ? (eM-em):(pM-pm);
+
    // scale from rebinning
-   Float_t sx = (fEtaAxis->GetXmax()-fEtaAxis->GetXmin())/fM->GetEtaRng();
-   Float_t sy = (fPhiAxis->GetXmax()-fPhiAxis->GetXmin())/fM->GetPhiRng();
-
-   // scale due to shortest XY axis have same length as  z axis
-   Float_t zf;
-   if (fEtaAxis->GetXmax()-fEtaAxis->GetXmin() < fPhiAxis->GetXmax()-fPhiAxis->GetXmin())
-      zf = fM->GetDefaultCellHeight()/(fEtaAxis->GetXmax()-fEtaAxis->GetXmin());
-   else
-      zf = fM->GetDefaultCellHeight()/(fPhiAxis->GetXmax()-fPhiAxis->GetXmin());
-
-   glScalef(sx*zf, sy*zf, fM->fCellZScale*fM->GetDefaultCellHeight()/fZAxisMax);
+   Float_t sx = (eM-em)/fM->GetEtaRng();
+   Float_t sy = (pM-pm)/fM->GetPhiRng();
+   glScalef(sx/unit, sy/unit, fM->GetValToHeight());
 
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
+
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    glLineWidth(1);

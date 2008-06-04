@@ -38,7 +38,7 @@
 //
 // Standard utility functions for Reve.
 
-ClassImp(TEveUtil)
+ClassImp(TEveUtil);
 
 //______________________________________________________________________________
 void TEveUtil::SetupEnvironment()
@@ -270,6 +270,52 @@ const char* TEveUtil::FormAxisValue(Float_t x)
    return "0";
 }
 
+/******************************************************************************/
+// Math utilities
+/******************************************************************************/
+
+//______________________________________________________________________________
+Bool_t TEveUtil::IsU1IntervalContainedByMinMax(Float_t minM, Float_t maxM,
+                                               Float_t minQ, Float_t maxQ)
+{
+   // Return true if interval Q is contained within interval M for U1 variables.
+   // It is assumed that all values are within the [-2pi, 2pi] interval and
+   // minM <= maxM & minQ <= maxQ.
+
+   using namespace TMath;
+
+   if (maxQ < minM)
+   {
+      minQ += TwoPi(); maxQ += TwoPi();
+   }
+   else if (minQ > maxM)
+   {
+      minQ -= TwoPi(); maxQ -= TwoPi();
+   }
+   return minQ >= minM && maxQ <= maxM;
+}
+
+//______________________________________________________________________________
+Bool_t TEveUtil::IsU1IntervalOverlappingByMinMax(Float_t minM, Float_t maxM,
+                                                 Float_t minQ, Float_t maxQ)
+{
+   // Return true if interval Q is overlapping within interval M for U1 variables.
+   // It is assumed that all values are within the [-2pi, 2pi] interval and
+   // minM <= maxM & minQ <= maxQ.
+
+   using namespace TMath;
+
+   if (maxQ < minM)
+   {
+      minQ += TwoPi(); maxQ += TwoPi();
+   }
+   else if (minQ > maxM)
+   {
+      minQ -= TwoPi(); maxQ -= TwoPi();
+   }
+   return maxQ >= minM && minQ <= maxM;
+}
+
 
 /******************************************************************************/
 // TEveException
@@ -279,7 +325,7 @@ const char* TEveUtil::FormAxisValue(Float_t x)
 //
 // Exception class thrown by TEve classes and macros.
 
-ClassImp(TEveException)
+ClassImp(TEveException);
 
 //______________________________________________________________________________
 bool operator==(const TString& t, const std::string& s)
@@ -316,7 +362,7 @@ TEveException operator+(const TEveException &s1,  const char *s2)
 // Exception safe wrapper for setting gPad.
 // Optionally calls gPad->Modified()/Update() in destructor.
 
-ClassImp(TEvePadHolder)
+ClassImp(TEvePadHolder);
 
 //______________________________________________________________________________
 TEvePadHolder::TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t subpad) :
@@ -383,7 +429,7 @@ TEveGeoManagerHolder::~TEveGeoManagerHolder()
 // Base-class for reference-counted objects.
 // By default the object is destroyed when zero referece-count is reached.
 
-ClassImp(TEveRefCnt)
+ClassImp(TEveRefCnt);
 
 
 /******************************************************************************/
@@ -395,7 +441,7 @@ ClassImp(TEveRefCnt)
 // Base-class for reference-counted objects with reverse references to
 // TEveElement objects.
 
-ClassImp(TEveRefBackPtr)
+ClassImp(TEveRefBackPtr);
 
 //______________________________________________________________________________
 TEveRefBackPtr::TEveRefBackPtr() :

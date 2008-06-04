@@ -51,10 +51,11 @@ TEveCaloViz::TEveCaloViz(const Text_t* n, const Text_t* t) :
    fBarrelRadius(-1.f),
    fEndCapPos(-1.f),
 
-   fCellZScale(1.),
+   fPlotEt(kTRUE),
 
-   fUseExternalZMax(kFALSE),
-   fExternalZMax(1),
+   fMaxTowerH(100),
+   fScaleAbs(kFALSE),
+   fMaxValAbs(100),
 
    fValueIsColor(kTRUE),
    fPalette(0),
@@ -82,10 +83,11 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
    fBarrelRadius(-1.f),
    fEndCapPos(-1.f),
 
-   fCellZScale(1.),
+   fPlotEt(kTRUE),
 
-   fUseExternalZMax(kFALSE),
-   fExternalZMax(1),
+   fMaxTowerH(100),
+   fScaleAbs(kFALSE),
+   fMaxValAbs(100),
 
    fValueIsColor(kTRUE),
    fPalette(0),
@@ -94,6 +96,7 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
 {
    // Constructor.
 
+   SetElementName("TEveCaloViz");
    SetData(data);
 }
 
@@ -120,7 +123,18 @@ void TEveCaloViz::SetEta(Float_t l, Float_t u)
    InvalidateCache();
 }
 
- //______________________________________________________________________________
+//______________________________________________________________________________
+void TEveCaloViz::SetPlotEt(Bool_t isEt)
+{
+   // Set E/Et plot.
+
+  fPlotEt=isEt;
+  fPalette->SetLimits(0, TMath::CeilNint(fData->GetMaxVal(fPlotEt)));
+
+  InvalidateCache();
+}
+
+//______________________________________________________________________________
 void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
 {
    // Set phi range.
@@ -161,12 +175,14 @@ void TEveCaloViz::SetData(TEveCaloData* data)
    fData = data;
    if (fData) fData->IncRefCount();
 
-
    fData->GetEtaLimits(fEtaMin, fEtaMax);
    Double_t min, max;
    fData->GetPhiLimits(min, max);
    fPhi = (max+min)*0.5;
    fPhiOffset =(max-min)*0.5;
+
+   AssertPalette();
+   fPalette->SetLimits(0, TMath::CeilNint(data->GetMaxVal(fPlotEt)));
 
    InvalidateCache();
 }
@@ -206,6 +222,21 @@ void TEveCaloViz::SetPalette(TEveRGBAPalette* p)
 }
 
 //______________________________________________________________________________
+Float_t TEveCaloViz::GetValToHeight() const
+{
+   // Get transformation factor from E/Et to height
+
+   if (fScaleAbs)
+   {
+      return fMaxTowerH/fMaxValAbs;
+   }
+   else
+   {
+      return fMaxTowerH/fData->GetMaxVal(fPlotEt);
+   }
+}
+
+//______________________________________________________________________________
 TEveRGBAPalette* TEveCaloViz::AssertPalette()
 {
    // Make sure the TEveRGBAPalette pointer is not null.
@@ -214,9 +245,11 @@ TEveRGBAPalette* TEveCaloViz::AssertPalette()
 
    if (fPalette == 0) {
       fPalette = new TEveRGBAPalette;
+      fPalette->SetDefaultColor((Color_t)4);
    }
    return fPalette;
 }
+
 //______________________________________________________________________________
 void TEveCaloViz::Paint(Option_t* /*option*/)
 {
@@ -255,25 +288,22 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice,
 {
    // Set color and height for a given value and slice using TEveRGBAPalette.
 
-   Int_t val = (Int_t) value;
-   outH = GetDefaultCellHeight();
    Bool_t visible = kFALSE;
-
    if (fPalette->GetShowDefValue())
    {
       if (value > fPalette->GetMinVal() && value < fPalette->GetMaxVal())
       {
          TGLUtil::Color(fPalette->GetDefaultColor() + slice);
-         outH *= ((value -fPalette->GetMinVal())*fData->GetNSlices()
-                  / (fPalette->GetHighLimit() - fPalette->GetLowLimit()));
+         outH = GetValToHeight()*value;
          visible = kTRUE;
       }
    }
 
-   if (fPalette->GetShowDefValue() == kFALSE && fPalette->WithinVisibleRange(val))
+   if (fPalette->GetShowDefValue() == kFALSE && fPalette->WithinVisibleRange((Int_t)value))
    {
+      outH = GetValToHeight()*fData->GetMaxVal(fPlotEt);
       UChar_t c[4];
-      fPalette->ColorFromValue(val, c);
+      fPalette->ColorFromValue((Int_t)value, c);
       TGLUtil::Color4ubv(c);
       visible = kTRUE;
    }
@@ -303,7 +333,7 @@ void TEveCalo3D::ComputeBBox()
 
    BBoxInit();
 
-   Float_t th = GetDefaultCellHeight()*fData->GetNSlices();
+   Float_t th = GetValToHeight() * fData->GetMaxVal(fPlotEt);
 
    fBBox[0] = -fBarrelRadius - th;
    fBBox[1] =  fBarrelRadius + th;
@@ -373,7 +403,7 @@ void TEveCalo2D::ComputeBBox()
    BBoxZero();
 
    Float_t x, y, z;
-   Float_t th = GetDefaultCellHeight()*fData->GetNSlices();
+   Float_t th = GetValToHeight()*fData->GetMaxVal(fPlotEt);
    Float_t r  = fBarrelRadius + th;
    Float_t ze = fEndCapPos + th;
 
@@ -416,7 +446,7 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
    TEveCaloViz(n, t),
 
    fFontColor(0),
-   fGridColor(kGray+3),
+   fGridColor(kGray+2),
    fPlaneColor(kRed-5),
    fPlaneTransparency(60),
 
@@ -433,6 +463,7 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
 {
    // Constructor.
 
+   fMaxTowerH = 1;
    SetElementNameTitle("TEveCaloLego", "TEveCaloLego");
 }
 
@@ -441,7 +472,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    TEveCaloViz(),
 
    fFontColor(0),
-   fGridColor(kGray+3),
+   fGridColor(kGray+2),
    fPlaneColor(kRed-5),
    fPlaneTransparency(60),
 
@@ -460,21 +491,9 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
 {
    // Constructor.
 
+   fMaxTowerH = 1;
    SetElementNameTitle("TEveCaloLego", "TEveCaloLego");
    SetData(data);
-}
-
-//______________________________________________________________________________
-Float_t TEveCaloLego::GetDefaultCellHeight() const
-{
-   // Get default cell height.
-
-   Float_t h = 10;
-
-   if (fUseExternalZMax)
-      h *= (fData->GetMaxVal()/fExternalZMax);
-
-   return h;
 }
 
 //______________________________________________________________________________
@@ -499,7 +518,7 @@ void TEveCaloLego::ComputeBBox()
    {
       Float_t ex = 1.2;
 
-      Float_t a = 0.5*GetDefaultCellHeight()*ex;
+      Float_t a = 0.5*ex;
 
       fBBox[0] = -a; 
       fBBox[1] =  a;
@@ -522,8 +541,8 @@ void TEveCaloLego::ComputeBBox()
          fBBox[1] *= r; 
       }
 
-      fBBox[4] =  GetDefaultCellHeight()*fCellZScale*(1-ex);
-      fBBox[5] =  GetDefaultCellHeight()*fCellZScale*ex;
-   }
+      fBBox[4] =  fMaxTowerH*(1-ex);
+      fBBox[5] =  fMaxTowerH*ex;
+   } 
 }
 

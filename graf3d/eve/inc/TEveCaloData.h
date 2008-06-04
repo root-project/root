@@ -40,7 +40,7 @@ public:
       Float_t fValue;
       Float_t fPhiMin;
       Float_t fPhiMax;
-      Float_t fThetaMin;
+      Float_t fThetaMin;  // theta=0 on z axis
       Float_t fThetaMax;
       Float_t fEtaMin;
       Float_t fEtaMax;
@@ -49,7 +49,7 @@ public:
       CellData_t(): fValue(0), fPhiMin(0), fPhiMax(0), fThetaMin(0), fThetaMax(0), fZSideSign(1) {}
       void Configure(Float_t v, Float_t e1, Float_t e2, Float_t p1, Float_t p2);
 
-      Float_t Value()    const { return fValue;    }
+      Float_t Value(Bool_t)    const;
 
       Float_t EtaMin()   const { return fEtaMin; }
       Float_t EtaMax()   const { return fEtaMax; }
@@ -94,7 +94,7 @@ public:
 
    virtual Int_t GetNSlices() const = 0;
 
-   virtual Float_t  GetMaxVal() const = 0;
+   virtual Float_t  GetMaxVal(Bool_t et) const = 0;
 
    virtual void  GetEtaLimits(Double_t &min, Double_t &max) const=0;
    virtual void  GetPhiLimits(Double_t &min, Double_t &max) const=0;
@@ -121,6 +121,8 @@ private:
 
 protected:
    THStack*    fHStack;
+   Float_t     fMaxValEt; // cached
+   Float_t     fMaxValE;  // cached
 
 public:
    TEveCaloDataHist();
@@ -135,7 +137,7 @@ public:
 
    virtual Int_t GetNSlices() const;
 
-   virtual Float_t GetMaxVal() const;
+   virtual Float_t GetMaxVal(Bool_t et) const {return (et)? fMaxValEt:fMaxValE;}
    virtual void    GetEtaLimits(Double_t &min, Double_t &max) const;
    virtual void    GetPhiLimits(Double_t &min, Double_t &max) const;
 

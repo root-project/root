@@ -115,44 +115,28 @@ Float_t TEveCalo2DGL::MakeRPhiCell(Float_t phiMin, Float_t phiMax, Float_t tower
 //______________________________________________________________________________
 void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
 {
-  // Draw calorimeter cells in RPhi projection.
+   // Draw calorimeter cells in RPhi projection.
 
    TEveCaloData* data = fM->GetData();
-   const TAxis* ax = data->GetPhiBins();
 
    if (fM->fCacheOK == kFALSE) {
       fM->ResetCache();
-      Float_t eta = fM->GetEta();
-      Float_t etaRng = fM->GetEtaRng();
-      Float_t pr[4];
-      // calculate the two intervals when circle is cut
-      Float_t phi1 = fM->GetPhiMin();
-      Float_t phi2 = fM->GetPhiMax();
-      if (phi2 >Pi() && phi1<-Pi()) {
-         pr[0] =  phi1;
-         pr[1] =  Pi();
-         pr[2] =  -Pi();
-         pr[3] =  -TwoPi()+phi2;
-      }
-      else if (phi1<-Pi() && phi2<=Pi()) {
-         pr[0] = -Pi();
-         pr[1] =  phi2;
-         pr[2] =  TwoPi()+phi1;
-         pr[3] =  Pi();
-      } else {
-         pr[0] = pr[2] = phi1;
-         pr[1] = pr[3] = phi2;
-      }
 
-      Int_t nBins = ax->GetNbins();
-      for (Int_t ibin=1; ibin<=nBins; ibin++) {
-         if ( (   ax->GetBinLowEdge(ibin)>=pr[0] && ax->GetBinUpEdge(ibin)<pr[1])
-              || (ax->GetBinLowEdge(ibin)>=pr[2] && ax->GetBinUpEdge(ibin)<pr[3]))
+      const TAxis* ay = data->GetPhiBins();
+      Int_t nBins = ay->GetNbins();
+
+
+      for (Int_t ibin=1; ibin<=nBins; ibin++)
+      {
+         if (TEveUtil::IsU1IntervalOverlappingByMinMax(fM->GetPhiMin(), fM->GetPhiMax(), 
+                                                       ay->GetBinLowEdge(ibin), ay->GetBinUpEdge(ibin)))
          {
             TEveCaloData::vCellId_t* clv = new TEveCaloData::vCellId_t();
-            Int_t nc = data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                                         eta, etaRng, fM->fPhi+ax->GetBinCenter(ibin), ax->GetBinWidth(ibin),*clv);
-            if (nc)
+
+            data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
+                              fM->GetEta(), fM->GetEtaRng(), ay->GetBinCenter(ibin), ay->GetBinWidth(ibin),*clv);
+
+            if (clv->empty() == kFALSE) 
                fM->fCellLists.push_back(clv);
             else
                delete clv;
@@ -167,16 +151,20 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
    Float_t towerH;
    Bool_t visible;
    if (rnrCtx.SecSelection()) glPushName(0);
-   for(UInt_t vi=0; vi<fM->fCellLists.size(); vi++) {
+
+
+   for(UInt_t vi=0; vi<fM->fCellLists.size(); vi++)
+   {
       // reset values
       Float_t off = 0;
       for (Int_t s=0; s<nSlices; s++)
          sliceVal[s]=0;
+
       // loop through eta bins
       TEveCaloData::vCellId_t* cids = fM->fCellLists[vi];
       for (TEveCaloData::vCellId_i it = cids->begin(); it != cids->end(); it++) {
          data->GetCellData(*it, cellData);
-         sliceVal[(*it).fSlice] += cellData.Value();
+         sliceVal[(*it).fSlice] += cellData.Value(fM->fPlotEt);
       }
       // draw
       if (rnrCtx.SecSelection()) {
@@ -265,14 +253,19 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
       fM->ResetCache();
       const TAxis* ax = data->GetEtaBins();
       Int_t nBins = ax->GetNbins();
-      for (Int_t ibin=1; ibin<=nBins; ibin++){
+
+      for (Int_t ibin=1; ibin<=nBins; ibin++)
+      {
          if (ax->GetBinLowEdge(ibin)>fM->fEtaMin && ax->GetBinUpEdge(ibin)<=fM->fEtaMax)
          {
             TEveCaloData::vCellId_t* aa = new TEveCaloData::vCellId_t();
             data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                              fM->GetEta() + ax->GetBinCenter(ibin), ax->GetBinWidth(ibin),
-                              fM->fPhi, fM->fPhiOffset, *aa);
-            if (aa->size()) fM->fCellLists.push_back(aa);
+                              ax->GetBinCenter(ibin), ax->GetBinWidth(ibin)+1e-5,
+                              fM->fPhi, fM->GetPhiRng(), *aa);
+            if (aa->size())
+               fM->fCellLists.push_back(aa);
+            else 
+               delete aa;
          }
       }
       fM->fCacheOK= kTRUE;
@@ -301,9 +294,9 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
       for (TEveCaloData::vCellId_i it = fM->fCellLists[vi]->begin(); it !=  fM->fCellLists[vi]->end(); it++) {
          data->GetCellData(*it, cellData);
          if (cellData.Phi() > 0)
-            sliceValsUp[(*it).fSlice]  += cellData.Value();
+            sliceValsUp[(*it).fSlice]  += cellData.Value(fM->fPlotEt);
          else
-            sliceValsLow[(*it).fSlice] += cellData.Value();
+            sliceValsLow[(*it).fSlice] += cellData.Value(fM->fPlotEt);
       }
 
       // draw
@@ -338,8 +331,6 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    TGLCapabilitySwitch light_off  (GL_LIGHTING,  kFALSE);
    TGLCapabilitySwitch culling_ogg(GL_CULL_FACE, kFALSE);
-
-   fM->AssertPalette();
 
    TEveProjection::EPType_e pt = fM->fManager->GetProjection()->GetType();
    if (pt == TEveProjection::kPT_RhoZ)
