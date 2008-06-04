@@ -13,7 +13,7 @@
 #include "TAttFill.h"
 #include "TAttText.h"
 #include "TAttLine.h"
-#include "TGraphPolar.h"
+#include "TGraphPolargram.h"
 #include "TPolyLine.h"
 #include "TNtuple.h"
 #include "TTreeFormula.h"

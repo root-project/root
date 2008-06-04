@@ -46,6 +46,7 @@ public:
    void           PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option);
    void           PaintGraphBentErrors(TGraph *theGraph, Option_t *option);
    void           PaintGraphErrors(TGraph *theGraph, Option_t *option);
+   void           PaintGraphPolar(TGraph *theGraph, Option_t *option);
    void           PaintGraphSimple(TGraph *theGraph, Option_t *option);
    void           PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y);
    void           PaintStats(TGraph *theGraph, TF1 *fit);

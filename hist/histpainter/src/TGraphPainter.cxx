@@ -22,13 +22,15 @@
 #include "TF1.h"
 #include "TPaveStats.h"
 #include "TGaxis.h"
+#include "TGraphPolargram.h"
+#include "TGraphPolar.h"
+#include "TLatex.h"
 #include "TArrow.h"
 #include "TFrame.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 
-ClassImp(TGraphPainter)
-
+ClassImp(TGraphPainter);
 
 //______________________________________________________________________________
 //
@@ -40,7 +42,6 @@ ClassImp(TGraphPainter)
 TGraphPainter::TGraphPainter()
 {
    // TGraphPainter default constructor
-
 }
 
 
@@ -53,7 +54,7 @@ TGraphPainter::~TGraphPainter()
 
 //______________________________________________________________________________
 void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
-{   
+{
    // Convert WC from Log scales.
    //
    //   Take the LOG10 of gxwork and gywork according to the value of Options
@@ -61,7 +62,7 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
    //
    //  npoints : Number of points in gxwork and in gywork.
    //
-			      
+
    Int_t i;
    memcpy(gxworkl,gxwork,npoints*8);
    memcpy(gyworkl,gywork,npoints*8);
@@ -114,9 +115,16 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
    distance = big;
 
    Int_t theNpoints = theGraph->GetN();
-   Double_t *theX  = theGraph->GetX();
-   Double_t *theY  = theGraph->GetY();
-   
+   Double_t *theX, *theY;
+   if (theGraph->InheritsFrom("TGraphPolar")) {
+      TGraphPolar *theGraphPolar = (TGraphPolar*) theGraph;
+      theX   = theGraphPolar->GetXpol();
+      theY   = theGraphPolar->GetYpol();
+   } else {
+      theX   = theGraph->GetX();
+      theY   = theGraph->GetY();
+   }
+
    for (i=0;i<theNpoints;i++) {
       pxp = gPad->XtoAbsPixel(gPad->XtoPad(theX[i]));
       pyp = gPad->YtoAbsPixel(gPad->YtoPad(theY[i]));
@@ -181,12 +189,15 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
    static Int_t dpx, dpy;
    static Int_t *x=0, *y=0;
 
-   if (!theGraph->IsEditable()) {gPad->SetCursor(kHand); return;}
+   if (!theGraph->IsEditable() || theGraph->InheritsFrom("TGraphPolar")) {
+      gPad->SetCursor(kHand);
+      return;
+   }
    if (!gPad->IsEditable()) return;
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
- 
+
    switch (event) {
 
    case kButton1Down:
@@ -402,7 +413,11 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       } else if (theGraph->InheritsFrom("TGraphAsymmErrors")) {
          PaintGraphAsymmErrors(theGraph,option);
       } else if (theGraph->InheritsFrom("TGraphErrors")) {
-         PaintGraphErrors(theGraph,option);
+         if (theGraph->InheritsFrom("TGraphPolar")) {
+            PaintGraphPolar(theGraph,option);
+         } else {
+            PaintGraphErrors(theGraph,option);
+         }
       } else {
          PaintGraphSimple(theGraph,option);
       }
@@ -467,7 +482,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    Double_t x1, xn, y1, yn;
    Double_t dbar, bdelta;
    Int_t theNpoints = theGraph->GetN();
-   
+
    if (npoints <= 0) {
       Error("PaintGraph", "illegal number of points (%d)", npoints);
       return;
@@ -2157,7 +2172,6 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Double_t *theEX = theGraph->GetEX();
    Double_t *theEY = theGraph->GetEY();
 
-   
    if (strchr(option,'X') || strchr(option,'x')) {PaintGraphSimple(theGraph, option); return;}
    Bool_t brackets = kFALSE;
    if (strstr(option,"[]")) brackets = kTRUE;
@@ -2322,6 +2336,306 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
 
 //______________________________________________________________________________
+void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
+{
+   // Paint TGraphPolar.
+   //
+   // "options" can have the following values:
+   //    - "O" Polar labels are paint orthogonally to the polargram radius.
+   //    - "P" Polymarker are paint at each point position.
+   //    - "E" Paint error bars.
+   //    - "F" Paint fill area (closed polygon).
+   //    - "A" Force axis redrawing even if a polargram already exists.
+   //    - "N" Disable the display of the polar labels.
+
+   Int_t ipt, i;
+   Double_t rwrmin, rwrmax, rwtmin, rwtmax;
+
+   TGraphPolar *theGraphPolar = (TGraphPolar*) theGraph;
+
+   Int_t theNpoints  = theGraphPolar->GetN();
+   Double_t *theX    = theGraphPolar->GetX();
+   Double_t *theY    = theGraphPolar->GetY();
+   Double_t *theEX   = theGraphPolar->GetEX();
+   Double_t *theEY   = theGraphPolar->GetEY();
+
+   if (theNpoints<1) return;
+   TString opt = options;
+   opt.ToUpper();
+
+   Bool_t nolabel = kFALSE;
+   if(opt.Contains("N")){
+      nolabel = kTRUE;
+      opt.ReplaceAll("N","");
+   }
+
+   TGraphPolargram *thePolargram = theGraphPolar->GetPolargram();
+
+   // Check for existing TGraphPolargram in the Pad
+   if (gPad) {
+      // Existing polargram
+      if (thePolargram) if (!gPad->FindObject(thePolargram->GetName())) thePolargram=0;
+      if (!thePolargram) {
+         // Find any other Polargram in the Pad
+         TListIter padObjIter(gPad->GetListOfPrimitives());
+         while (TObject* AnyObj = padObjIter.Next()) {
+            if (TString(AnyObj->ClassName()).CompareTo("TGraphPolargram",
+                                                      TString::kExact)==0)
+            thePolargram = (TGraphPolargram*)AnyObj;
+            theGraphPolar->SetPolargram(thePolargram);
+         }
+      }
+   }
+
+   // Get new polargram range if necessary.
+   if (!thePolargram) {
+      // Get range, initialize with first/last value
+      rwrmin = theY[0]; rwrmax = theY[theNpoints-1];
+      rwtmin = theX[0]; rwtmax = theX[theNpoints-1];
+
+      for (ipt = 0; ipt < theNpoints; ipt++) {
+         // Check for errors if available
+         if (theEX) {
+            if (theX[ipt] -theEX[ipt] < rwtmin) rwtmin = theX[ipt]-theEX[ipt];
+            if (theX[ipt] +theEX[ipt] > rwtmax) rwtmax = theX[ipt]+theEX[ipt];
+         } else {
+            if (theX[ipt] < rwtmin) rwtmin=theX[ipt];
+            if (theX[ipt] > rwtmax) rwtmax=theX[ipt];
+         }
+         if (theEY) {
+            if (theY[ipt] -theEY[ipt] < rwrmin) rwrmin = theY[ipt]-theEY[ipt];
+            if (theY[ipt] +theEY[ipt] > rwrmax) rwrmax = theY[ipt]+theEY[ipt];
+         } else {
+            if (theY[ipt] < rwrmin) rwrmin=theY[ipt];
+            if (theY[ipt] > rwrmax) rwrmax=theY[ipt];
+         }
+      }
+      // Add radial and Polar margins.
+      if (rwrmin == rwrmax) rwrmax += 1.;
+      if (rwtmin == rwtmax) rwtmax += 1.;
+      Double_t dr = (rwrmax-rwrmin);
+      Double_t dt = (rwtmax-rwtmin);
+      rwrmax += 0.1*dr;
+      rwrmin -= 0.1*dr;
+
+      // Assume equaly spaced points for full 2*Pi.
+      rwtmax += dt/theNpoints;
+   } else {
+      rwrmin = thePolargram->GetRMin();
+      rwrmax = thePolargram->GetRMax();
+      rwtmin = thePolargram->GetTMin();
+      rwtmax = thePolargram->GetTMax();
+   }
+
+   if ((!thePolargram) || theGraphPolar->GetOptionAxis()) {
+      // Draw Polar coord system
+      thePolargram = new TGraphPolargram("Polargram",rwrmin,rwrmax,rwtmin,rwtmax);
+      theGraphPolar->SetPolargram(thePolargram);
+      if (opt.Contains("O")) thePolargram->SetBit(TGraphPolargram::kLabelOrtho);
+      else thePolargram->ResetBit(TGraphPolargram::kLabelOrtho);
+      if (nolabel) thePolargram->Draw("N");
+      else         thePolargram->Draw("");
+      theGraphPolar->SetOptionAxis(kFALSE);   //Prevent redrawing
+   }
+
+   // Convert points to polar.
+   Double_t *theXpol = theGraphPolar->GetXpol();
+   Double_t *theYpol = theGraphPolar->GetYpol();
+
+   // Project theta in [0,2*Pi] and radius in [0,1].
+   Double_t radiusNDC = rwrmax-rwrmin;
+   Double_t thetaNDC  = (rwtmax-rwtmin)/(2*TMath::Pi());
+
+   // Draw the error bars.
+   // Y errors are lines, but X errors are pieces of circles.
+   if (opt.Contains("E")) {
+      if (theEY) {
+         for (i=0; i<theNpoints; i++) {
+            Double_t eymin, eymax, exmin,exmax;
+            exmin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
+                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+            eymin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
+                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+            exmax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
+                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+            eymax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
+                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+            theGraphPolar->TAttLine::Modify();
+            gPad->PaintLine(exmin,eymin,exmax,eymax);
+         }
+      }
+      if (theEX) {
+         for (i=0; i<theNpoints; i++) {
+            Double_t rad = (theY[i]-rwrmin)/radiusNDC;
+            Double_t phimin = (theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
+            Double_t phimax = (theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
+            theGraphPolar->TAttLine::Modify();
+            thePolargram->PaintCircle(0,0,rad,phimin,phimax,0);
+         }
+      }
+   }
+
+   // Draw the graph itself.
+   if (!(gPad->GetLogx()) && !(gPad->GetLogy())) {
+      Double_t a, b, c=1, x1, x2, y1, y2, discr, norm1, norm2, xts, yts;
+      Bool_t previouspointin = kFALSE;
+      Double_t norm = 0;
+      Double_t xt   = 0;
+      Double_t yt   = 0 ;
+      Int_t j       = -1;
+      for (i=0; i<theNpoints; i++) {
+         if (thePolargram->IsRadian()) {c=1;}
+         if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
+         if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
+         xts  = xt;
+         yts  = yt;
+         xt   = (theY[i]-rwrmin)/radiusNDC*TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
+         yt   = (theY[i]-rwrmin)/radiusNDC*TMath::Sin(c*(theX[i]-rwtmin)/thetaNDC);
+         norm = sqrt(xt*xt+yt*yt);
+         // Check if points are in the main circle.
+         if ( norm <= 1) {
+            // We check that the previous point was in the circle too.
+            // We record new point position.
+            if (!previouspointin) {
+               j++;
+               theXpol[j] = xt;
+               theYpol[j] = yt;
+            } else {
+               a = (yt-yts)/(xt-xts);
+               b = yts-a*xts;
+               discr = 4*(a*a-b*b+1);
+               x1 = (-2*a*b+sqrt(discr))/(2*(a*a+1));
+               x2 = (-2*a*b-sqrt(discr))/(2*(a*a+1));
+               y1 = a*x1+b;
+               y2 = a*x2+b;
+               norm1 = sqrt((x1-xt)*(x1-xt)+(y1-yt)*(y1-yt));
+               norm2 = sqrt((x2-xt)*(x2-xt)+(y2-yt)*(y2-yt));
+               previouspointin = kFALSE;
+               j = 0;
+               if (norm1 < norm2) {
+                  theXpol[j] = x1;
+                  theYpol[j] = y1;
+               } else {
+                  theXpol[j] = x2;
+                  theYpol[j] = y2;
+               }
+               j++;
+               theXpol[j] = xt;
+               theYpol[j] = yt;
+               PaintGraph(theGraphPolar, j+1, theXpol, theYpol, opt);
+            }
+         } else {
+            // We check that the previous point was in the circle.
+            // We record new point position
+            if (j>=1 && !previouspointin) {
+               a = (yt-theYpol[j])/(xt-theXpol[j]);
+               b = theYpol[j]-a*theXpol[j];
+               previouspointin = kTRUE;
+               discr = 4*(a*a-b*b+1);
+               x1 = (-2*a*b+sqrt(discr))/(2*(a*a+1));
+               x2 = (-2*a*b-sqrt(discr))/(2*(a*a+1));
+               y1 = a*x1+b;
+               y2 = a*x2+b;
+               norm1 = sqrt((x1-xt)*(x1-xt)+(y1-yt)*(y1-yt));
+               norm2 = sqrt((x2-xt)*(x2-xt)+(y2-yt)*(y2-yt));
+               j++;
+               if (norm1 < norm2) {
+                  theXpol[j] = x1;
+                  theYpol[j] = y1;
+               } else {
+                  theXpol[j] = x2;
+                  theYpol[j] = y2;
+               }
+               PaintGraph(theGraphPolar, j+1, theXpol, theYpol, opt);
+            }
+            j=-1;
+         }
+      }
+      if (j>=1) {
+         // If the last point is in the circle, we draw the last serie of point.
+         PaintGraph(theGraphPolar, j+1, theXpol, theYpol, opt);
+      }
+   } else {
+      for (i=0; i<theNpoints; i++) {
+         theXpol[i] = TMath::Abs((theY[i]-rwrmin)/radiusNDC*TMath::Cos((theX[i]-rwtmin)/thetaNDC)+1);
+         theYpol[i] = TMath::Abs((theY[i]-rwrmin)/radiusNDC*TMath::Sin((theX[i]-rwtmin)/thetaNDC)+1);
+      }
+      PaintGraph(theGraphPolar, theNpoints, theXpol, theYpol,opt);
+   }
+
+   // Paint the title.
+
+   if (TestBit(TH1::kNoTitle)) return;
+   Int_t nt = strlen(GetTitle());
+   TPaveText *title = 0;
+   TObject *obj;
+   TIter next(gPad->GetListOfPrimitives());
+   while ((obj = next())) {
+      if (!obj->InheritsFrom(TPaveText::Class())) continue;
+      title = (TPaveText*)obj;
+      if (strcmp(title->GetName(),"title")) {title = 0; continue;}
+      break;
+   }
+   if (nt == 0 || gStyle->GetOptTitle() <= 0) {
+      if (title) delete title;
+      return;
+   }
+   Double_t ht = gStyle->GetTitleH();
+   Double_t wt = gStyle->GetTitleW();
+   if (ht <= 0) ht = 1.1*gStyle->GetTitleFontSize();
+   if (ht <= 0) ht = 0.05;
+   if (wt <= 0) {
+      TLatex l;
+      l.SetTextSize(ht);
+      l.SetTitle(GetTitle());
+      // Adjustment in case the title has several lines (#splitline)
+      ht = TMath::Max(ht, 1.2*l.GetYsize()/(gPad->GetY2() - gPad->GetY1()));
+      Double_t wndc = l.GetXsize()/(gPad->GetX2() - gPad->GetX1());
+      wt = TMath::Min(0.7, 0.02+wndc);
+   }
+   if (title) {
+      TText *t0 = (TText*)title->GetLine(0);
+      if (t0) {
+         if (!strcmp(t0->GetTitle(),GetTitle())) return;
+         t0->SetTitle(GetTitle());
+         if (wt > 0) title->SetX2NDC(title->GetX1NDC()+wt);
+      }
+      return;
+   }
+
+   Int_t talh = gStyle->GetTitleAlign()/10;
+   if (talh < 1) talh = 1; if (talh > 3) talh = 3;
+   Int_t talv = gStyle->GetTitleAlign()%10;
+   if (talv < 1) talv = 1; if (talv > 3) talv = 3;
+
+   Double_t xpos, ypos;
+   xpos = gStyle->GetTitleX();
+   ypos = gStyle->GetTitleY();
+
+   if (talh == 2) xpos = xpos-wt/2.;
+   if (talh == 3) xpos = xpos-wt;
+   if (talv == 2) ypos = ypos+ht/2.;
+   if (talv == 1) ypos = ypos+ht;
+
+   TPaveText *ptitle = new TPaveText(xpos, ypos-ht, xpos+wt, ypos,"blNDC");
+
+   // Box with the histogram title.
+   ptitle->SetFillColor(gStyle->GetTitleFillColor());
+   ptitle->SetFillStyle(gStyle->GetTitleStyle());
+   ptitle->SetName("title");
+   ptitle->SetBorderSize(gStyle->GetTitleBorderSize());
+   ptitle->SetTextColor(gStyle->GetTitleTextColor());
+   ptitle->SetTextFont(gStyle->GetTitleFont(""));
+   if (gStyle->GetTitleFont("")%10 > 2)
+   ptitle->SetTextSize(gStyle->GetTitleFontSize());
+   ptitle->AddText(GetTitle());
+   ptitle->SetBit(kCanDelete);
+   ptitle->Draw();
+   ptitle->Paint();
+}
+
+
+//______________________________________________________________________________
 void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 {
    // Paint a simple graph, without errors bars.
@@ -2330,15 +2644,15 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
       PaintGrapHist(theGraph, theGraph->GetN(), theGraph->GetX(), theGraph->GetY(), option);
    } else {
       PaintGraph(theGraph, theGraph->GetN(), theGraph->GetX(), theGraph->GetY(), option);
-   } 
-					      
+   }
+
    // Paint associated objects in the list of functions (for instance
    // the fit function).
    TList *functions = theGraph->GetListOfFunctions();
    if (!functions) return;
    TObjOptLink *lnk = (TObjOptLink*)functions->FirstLink();
    TObject *obj;
-							     
+
    while (lnk) {
       obj = lnk->GetObject();
       TVirtualPad *padsave = gPad;
