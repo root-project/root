@@ -467,6 +467,11 @@ void TEveManager::PreDeleteElement(TEveElement* element)
    TEveElement::Set_i sei = fStampedElements.find(element);
    if (sei != fStampedElements.end())
       fStampedElements.erase(sei);
+
+   if (element->fImpliedSelected > 0)
+      fSelection->RemoveImpliedSelected(element);
+   if (element->fImpliedHighlighted > 0)
+      fHighlight->RemoveImpliedSelected(element);
 }
 
 /******************************************************************************/
@@ -501,14 +506,18 @@ Bool_t TEveManager::ElementPaste(TEveElement* element)
 
 //______________________________________________________________________________
 Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
-                                     Bool_t replace)
+                                     Bool_t replace, Bool_t update)
 {
    // Insert a new visualization-parameter database entry. Returns
    // true if the element is inserted successfully.
    // If entry with the same key already exists the behaviour depends on the
    // 'replace' flag:
-   //   true  - the old model is deleted and new one is inserted (default);
-   //   false - the old model is kept, false is returned.
+   //   true  - The old model is deleted and new one is inserted (default).
+   //           Clients of the old model are transferred to the new one and
+   //           if 'update' flag is true (default), the new model's parameters
+   //           are assigned to all clients.
+   //   false - The old model is kept, false is returned.
+   //
    // If insert is successful, the ownership of the model-element is
    // transferred to the manager.
 
@@ -518,6 +527,12 @@ Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
       if (replace)
       {
          TEveElement* old_model = dynamic_cast<TEveElement*>(pair->Value());
+         for (TEveElement::List_i i = old_model->BeginChildren(); i != old_model->EndChildren(); ++i)
+         {
+            (*i)->SetVizModel(model);
+            if (update)
+               (*i)->CopyVizParams(model);
+         }
          old_model->DecDenyDestroy();
          old_model->Destroy();
          model->IncDenyDestroy();

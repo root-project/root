@@ -184,8 +184,9 @@ public:
    Bool_t ElementPaste(TEveElement* element);
 
    // VizDB - Visualization-parameter data-base.
-   Bool_t       InsertVizDBEntry(const TString& tag, TEveElement* model, Bool_t replace=kTRUE);
-   TEveElement* FindVizDBEntry(const TString& tag);
+   Bool_t       InsertVizDBEntry(const TString& tag, TEveElement* model,
+                                 Bool_t replace=kTRUE, Bool_t update=kTRUE);
+   TEveElement* FindVizDBEntry  (const TString& tag);
 
    // Geometry management.
    TGeoManager* GetGeometry(const TString& filename);

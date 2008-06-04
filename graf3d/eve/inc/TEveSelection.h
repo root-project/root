@@ -73,6 +73,8 @@ public:
    virtual void RemoveElements();
    virtual void RemoveElementsLocal();
 
+   virtual void RemoveImpliedSelected(TEveElement* el);
+
    void SelectionAdded(TEveElement* el);   // *SIGNAL*
    void SelectionRemoved(TEveElement* el); // *SIGNAL*
    void SelectionCleared();                // *SIGNAL*

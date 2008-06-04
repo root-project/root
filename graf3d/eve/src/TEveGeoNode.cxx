@@ -274,7 +274,7 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeE
    }
    gse->SetShape(tshape);
    ++level;
-   if (geon->GetNChildren())
+   if (geon->HasChildren())
    {
       TList* ele = new TList();
       gse->SetElements(ele);
@@ -578,7 +578,7 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
    she->SetRnrSelf(gsre->GetRnrSelf());
    she->SetRnrElements(gsre->GetRnrChildren());
    she->SetShape(gsre->GetShape());
-   if (gsre->GetNChildren())
+   if (gsre->HasChildren())
    {
       TList* ele = new TList();
       she->SetElements(ele);

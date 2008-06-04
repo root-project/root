@@ -79,8 +79,10 @@ protected:
    TEveElement     *fVizModel;             //! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
+   Int_t            fParentIgnoreCnt;      //! Counter for parents that are ignored in ref-counting.
+   Int_t            fTopItemCnt;           //! Counter for top-level list-tree items that prevent automatic destruction.
+   Int_t            fDenyDestroy;          //! Deny-destroy count.
    Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
-   Int_t            fDenyDestroy;          //  Deny-destroy count.
 
    Bool_t           fRnrSelf;              //  Render this element.
    Bool_t           fRnrChildren;          //  Render children of this element.
@@ -112,12 +114,14 @@ public:
 
    TEveElement*   GetVizModel() const           { return fVizModel; }
    void           SetVizModel(TEveElement* model);
+   Bool_t         FindVizModel();
+
+   Bool_t         ApplyVizTag(const TString& tag);
 
    virtual void PropagateVizParamsToProjecteds();
+   virtual void PropagateVizParamsToElements(TEveElement* el=0);
    virtual void CopyVizParams(const TEveElement* el);
    virtual void CopyVizParamsFromDB();
-
-   void ApplyVizTag(const TString& tag) { SetVizTag(tag); CopyVizParamsFromDB(); }
 
    TEveElement*  GetMaster();
    TEveCompound* GetCompound()                { return fCompound; }
@@ -130,13 +134,15 @@ public:
    virtual void CollectSceneParentsFromChildren(List_t& scenes,
                                                 TEveElement* parent);
 
-   List_i BeginParents() { return fParents.begin(); }
-   List_i EndParents()   { return fParents.end();   }
-   Int_t  GetNParents() const { return fParents.size(); }
+   List_i BeginParents()      { return  fParents.begin();  }
+   List_i EndParents()        { return  fParents.end();    }
+   Int_t  NumParents()  const { return  fParents.size();   }
+   Bool_t HasParents()  const { return !fParents.empty();  }
 
-   List_i BeginChildren() { return fChildren.begin(); }
-   List_i EndChildren()   { return fChildren.end();   }
-   Int_t  GetNChildren() const { return fChildren.size(); }
+   List_i BeginChildren()     { return  fChildren.begin(); }
+   List_i EndChildren()       { return  fChildren.end();   }
+   Int_t  NumChildren() const { return  fChildren.size();  }
+   Bool_t HasChildren() const { return !fChildren.empty(); }
 
    Bool_t       HasChild(TEveElement* el);
    TEveElement* FindChild(const TString& name, const TClass* cls=0);

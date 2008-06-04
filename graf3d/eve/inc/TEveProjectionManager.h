@@ -32,6 +32,8 @@ protected:
 
    List_t          fDependentEls;   // elements that depend on manager and need to be destroyed with it
 
+   Bool_t          fImportEmpty;    // import sub-trees with no projectable elements
+
    virtual Bool_t  ShouldImport(TEveElement* el);
    virtual void    UpdateDependentElsAndScenes(TEveElement* root);
 
@@ -48,10 +50,13 @@ public:
    virtual void    UpdateName();
 
    void            SetCenter(Float_t x, Float_t y, Float_t z);
-   TEveVector&     GetCenter() {return fCenter;}
+   TEveVector&     GetCenter() { return fCenter; }
 
    void            SetCurrentDepth(Float_t d) { fCurrentDepth = d;      }
    Float_t         GetCurrentDepth()    const { return fCurrentDepth;   }
+
+   void            SetImportEmpty(Bool_t ie)  { fImportEmpty = ie;   }
+   Bool_t          GetImportEmpty()     const { return fImportEmpty; }
 
    virtual Bool_t  HandleElementPaste(TEveElement* el);
 

@@ -45,7 +45,8 @@ TEveProjectionManager::TEveProjectionManager():
    TEveElementList("TEveProjectionManager",""),
    TAttBBox(),
    fProjection  (0),
-   fCurrentDepth(0)
+   fCurrentDepth(0),
+   fImportEmpty (kFALSE)
 {
    // Constructor.
 
@@ -144,7 +145,14 @@ Bool_t TEveProjectionManager::HandleElementPaste(TEveElement* el)
 //______________________________________________________________________________
 Bool_t TEveProjectionManager::ShouldImport(TEveElement* el)
 {
-   // Returns true if el or any of its children is NTLProjectable.
+   // Returns true if element el should be imported.
+   //
+   // Behaviour depends on the value of the fImportEmpty member:
+   //   false - el or any of its children must be projectable (default);
+   //   true  - always import.
+
+   if (fImportEmpty)
+      return kTRUE;
 
    if (el->IsA()->InheritsFrom(TEveProjectable::Class()))
       return kTRUE;
@@ -299,7 +307,7 @@ void TEveProjectionManager::ComputeBBox()
 
    static const TEveException eH("TEveProjectionManager::ComputeBBox ");
 
-   if (GetNChildren() == 0) {
+   if (HasChildren() == kFALSE) {
       BBoxZero();
       return;
    }

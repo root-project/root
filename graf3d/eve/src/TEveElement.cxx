@@ -67,8 +67,10 @@ TEveElement::TEveElement() :
    fCompound            (0),
    fVizModel            (0),
    fVizTag              (),
-   fDestroyOnZeroRefCnt (kTRUE),
+   fParentIgnoreCnt     (0),
+   fTopItemCnt          (0),
    fDenyDestroy         (0),
+   fDestroyOnZeroRefCnt (kTRUE),
    fRnrSelf             (kTRUE),
    fRnrChildren         (kTRUE),
    fCanEditMainTrans    (kFALSE),
@@ -94,8 +96,10 @@ TEveElement::TEveElement(Color_t& main_color) :
    fCompound            (0),
    fVizModel            (0),
    fVizTag              (),
-   fDestroyOnZeroRefCnt (kTRUE),
+   fParentIgnoreCnt     (0),
+   fTopItemCnt          (0),
    fDenyDestroy         (0),
+   fDestroyOnZeroRefCnt (kTRUE),
    fRnrSelf             (kTRUE),
    fRnrChildren         (kTRUE),
    fCanEditMainTrans    (kFALSE),
@@ -212,14 +216,60 @@ void TEveElement::SetElementNameTitle(const Text_t* name, const Text_t* title)
 void TEveElement::SetVizModel(TEveElement* model)
 {
    // Set visualization-parameter model element.
-   // Direct calling of this function should in principle be avoided as
-   // it can lead to dissynchronization of viz-tag and viz-model.
+   // Calling of this function from outside of EVE should in principle
+   // be avoided as it can lead to dis-synchronization of viz-tag and
+   // viz-model.
 
-   if (fVizModel)
+   if (fVizModel) {
       fVizModel->RemoveElement(this);
+      --fParentIgnoreCnt;
+   }
    fVizModel = model;
-   if (fVizModel)
+   if (fVizModel) {
+      ++fParentIgnoreCnt;
       fVizModel->AddElement(this);
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TEveElement::FindVizModel()
+{
+   // Find model element in VizDB that corresponds to previously
+   // assigned fVizTag and set fVizModel accordingly.
+   // If the tag is not found in VizDB, the old model-element is kept
+   // and false is returned.
+
+   TEveElement* model = gEve->FindVizDBEntry(fVizTag);
+   if (model)
+   {
+      SetVizModel(model);
+      return kTRUE;
+   }
+   else
+   {
+      return kFALSE;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TEveElement::ApplyVizTag(const TString& tag)
+{
+   // Set the VizTag, find model-element from the VizDB and copy
+   // visualization-parameters from it.
+   // If the model-element can not be found a warning is printed and
+   // false is returned.
+
+   SetVizTag(tag);
+   if (FindVizModel())
+   {
+      CopyVizParamsFromDB();
+      return kTRUE;
+   }
+   else
+   {
+      Warning("TEveElement::ApplyVizTag", "entry for tag '%s' not found in VizDB.", tag.Data());
+      return kFALSE;
+   }
 }
 
 //______________________________________________________________________________
@@ -241,6 +291,24 @@ void TEveElement::PropagateVizParamsToProjecteds()
 }
 
 //______________________________________________________________________________
+void TEveElement::PropagateVizParamsToElements(TEveElement* el)
+{
+   // Propagate visualization parameters from element el (defaulting
+   // to this) to all elements (children).
+   //
+   // The primary use of this is for model-elements from
+   // visualization-parameter database.
+
+   if (el == 0)
+      el = this;
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      (*i)->CopyVizParams(el);
+   }
+}
+
+//______________________________________________________________________________
 void TEveElement::CopyVizParams(const TEveElement* /* el */)
 {
    // Copy visualization parameters from element el.
@@ -255,17 +323,16 @@ void TEveElement::CopyVizParams(const TEveElement* /* el */)
 //______________________________________________________________________________
 void TEveElement::CopyVizParamsFromDB()
 {
-   // Copy visualization parameters from the data-base. The data-base
-   // entry to use as the model is chosen from the fVizTag and the
-   // class of the element.
+   // Copy visualization parameters from the model-element fVizModel.
+   // A warning is printed if the model-element fVizModel is not set.
 
-   TEveElement* model = gEve->FindVizDBEntry(fVizTag);
-   if (model) {
-      SetVizModel(model);
+   if (fVizModel)
+   {
       CopyVizParams(fVizModel);
-   } else {
-      Warning("TEveElement::CopyVizParamsFromDB",
-              "Model element not found for tag '%s'.", fVizTag.Data());
+   }
+   else
+   {
+      Warning("TEveElement::CopyVizParamsFromDB", "VizModel has not been set.");
    }
 }
 
@@ -320,20 +387,8 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    // Check external references to this and eventually auto-destruct
    // the render-element.
 
-   UInt_t parent_cnt = 0, item_cnt = 0;
-   if (fSelected)
-   {
-      ++parent_cnt;
-      item_cnt += gEve->GetSelection()->GetNItems();
-   }
-   if (fHighlighted)
-   {
-      ++parent_cnt;
-      item_cnt += gEve->GetHighlight()->GetNItems();
-   }
-
-   if(fParents.size() <= parent_cnt && fItems.size() <= item_cnt &&
-      fDenyDestroy    <= 0          && fDestroyOnZeroRefCnt)
+   if(NumParents() <= fParentIgnoreCnt && fTopItemCnt  <= 0 &&
+      fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
    {
       if (gDebug > 0)
          Info(eh, Form("auto-destructing '%s' on zero reference count.", GetElementName()));
@@ -444,6 +499,7 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
    TGListTreeItem* lti = 0;
    if (parent == 0) {
       lti = AddIntoListTree(ltree, (TGListTreeItem*) 0);
+      ++fTopItemCnt;
    } else {
       for (sLTI_ri i = parent->fItems.rbegin(); i != parent->fItems.rend(); ++i)
       {
@@ -486,7 +542,10 @@ Bool_t TEveElement::RemoveFromListTree(TGListTree* ltree,
       ltree->DeleteItem(i->fItem);
       ltree->ClearViewPort();
       fItems.erase(i);
-      if (parent_lti == 0) CheckReferenceCount(eh);
+      if (parent_lti == 0) {
+         --fTopItemCnt;
+         CheckReferenceCount(eh);
+      }
       return kTRUE;
    } else {
       return kFALSE;
@@ -497,7 +556,9 @@ Bool_t TEveElement::RemoveFromListTree(TGListTree* ltree,
 Int_t TEveElement::RemoveFromListTrees(TEveElement* parent)
 {
    // Remove element from all list-trees where 'parent' is the
-   // user-data of the list-tree-item.
+   // user-data of the parent list-tree-item.
+
+   static const TEveException eh("TEveElement::RemoveFromListTrees ");
 
    Int_t count = 0;
 
@@ -506,15 +567,21 @@ Int_t TEveElement::RemoveFromListTrees(TEveElement* parent)
    {
       sLTI_i j = i++;
       TGListTreeItem *plti = j->fItem->GetParent();
-      if (plti != 0 && (TEveElement*) plti->GetUserData() == parent)
+      if ((plti != 0 && (TEveElement*) plti->GetUserData() == parent) ||
+          (plti == 0 && parent == 0))
       {
          DestroyListSubTree(j->fTree, j->fItem);
          j->fTree->DeleteItem(j->fItem);
          j->fTree->ClearViewPort();
          fItems.erase(j);
+         if (parent == 0)
+            --fTopItemCnt;            
          ++count;
       }
    }
+
+   if (parent == 0 && count > 0)
+      CheckReferenceCount(eh);
 
    return count;
 }
@@ -1155,6 +1222,7 @@ void TEveElement::SelectElement(Bool_t state)
 
    if (fSelected != state) {
       fSelected = state;
+      fParentIgnoreCnt += (fSelected) ? 1 : -1;
       StampColorSelection();
    }
 }
@@ -1184,6 +1252,7 @@ void TEveElement::HighlightElement(Bool_t state)
 
    if (fHighlighted != state) {
       fHighlighted = state;
+      fParentIgnoreCnt += (fHighlighted) ? 1 : -1;
       StampColorSelection();
    }
 }

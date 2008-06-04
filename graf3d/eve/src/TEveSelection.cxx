@@ -173,6 +173,28 @@ void TEveSelection::RemoveElementsLocal()
 }
 
 //______________________________________________________________________________
+void TEveSelection::RemoveImpliedSelected(TEveElement* el)
+{
+   // Remove element from all implied-selected sets.
+   //
+   // This is called as part of the element destruction from
+   // TEveManager::PreDeleteElement() and should not be called
+   // directly.
+
+   for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
+   {
+      Set_i j = i->second.find(el);
+      if (j != i->second.end())
+         i->second.erase(j);
+   }
+}
+
+
+//******************************************************************************
+// Signals
+//******************************************************************************
+
+//______________________________________________________________________________
 void TEveSelection::SelectionAdded(TEveElement* el)
 {
    // Emit SelectionAdded signal.
@@ -290,7 +312,7 @@ void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
 
    el = MapPickedToSelected(el);
 
-   if (el || GetNChildren() > 0)
+   if (el || HasChildren())
    {
       if (!multi)
          RemoveElements();
