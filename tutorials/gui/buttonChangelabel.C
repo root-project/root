@@ -4,8 +4,8 @@
 // This macro gives an example for changing text button labels anytime
 // the Start or Pause buttons are clicked.
 // To run it do either:
-// .x buttonsLayout.C
-// .x buttonsLayout.C++
+// .x buttonChangelabel.C
+// .x buttonChangelabel.C++
 
 #include <TGClient.h>
 #include <TGButton.h>

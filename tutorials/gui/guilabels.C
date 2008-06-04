@@ -4,8 +4,8 @@
 // This macro gives an example of how to create different kind of labels
 // and the possibility to enable/disable them.
 // To run it do either:
-// .x labels.C
-// .x labels.C++
+// .x guilabels.C
+// .x guilabels.C++
 
 #include <TApplication.h>
 #include <TGClient.h>
