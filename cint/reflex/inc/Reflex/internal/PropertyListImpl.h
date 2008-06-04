@@ -19,6 +19,11 @@
 #include <map>
 #include <iostream>
 
+#ifdef _WIN32
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+
 namespace Reflex {
 
    /**
@@ -332,5 +337,10 @@ inline void Reflex::PropertyListImpl::RemoveProperty( size_t key ) {
 //------------------------------------------------------------------------------- 
   if ( fProperties ) fProperties->at(key).Swap(Dummy::Any());
 }
+
+
+#ifdef _WIN32
+#pragma warning( pop )
+#endif
 
 #endif // Reflex_PropertyListImpl

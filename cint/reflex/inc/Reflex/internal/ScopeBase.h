@@ -19,6 +19,11 @@
 #include "Reflex/internal/OwnedPropertyList.h"
 #include <vector>
 
+#ifdef _WIN32
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+
 namespace Reflex {
 
    // forward declarations
@@ -1127,5 +1132,9 @@ inline Reflex::Reverse_Scope_Iterator Reflex::ScopeBase::UsingDirective_REnd() c
    return ((const std::vector<Scope>&)fUsingDirectives).rend();
 }
 
+
+#ifdef _WIN32
+#pragma warning( pop )
+#endif
 
 #endif // Reflex_ScopeBase

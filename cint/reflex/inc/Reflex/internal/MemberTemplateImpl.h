@@ -16,6 +16,11 @@
 #include "Reflex/Kernel.h"
 #include "Reflex/Scope.h"
 
+#ifdef _WIN32
+#pragma warning( push )
+#pragma warning( disable : 4251 )
+#endif
+
 namespace Reflex {
 
    // forward declarations
@@ -281,5 +286,10 @@ inline Reflex::Reverse_StdString_Iterator Reflex::MemberTemplateImpl::TemplatePa
 //-------------------------------------------------------------------------------
    return ((const std::vector<std::string>&)fParameterNames).rend();
 }
+
+
+#ifdef _WIN32
+#pragma warning( pop )
+#endif
 
 #endif // Reflex_MemberTemplateImpl
