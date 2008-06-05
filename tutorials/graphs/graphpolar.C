@@ -48,6 +48,7 @@ void graphpolar()
    grP1->GetPolargram()->SetTextColor(8);
    grP1->GetPolargram()->SetRangePolar(-TMath::Pi(),TMath::Pi());
    grP1->GetPolargram()->SetNdivPolar(703);
+   grP1->GetPolargram()->SetToRadian();
 
    CPol->cd(2);
    Double_t x2[30];
@@ -71,4 +72,5 @@ void graphpolar()
    CPol->Update();
    grPE->GetPolargram()->SetTextSize(0.03);
    grPE->GetPolargram()->SetTwoPi();
+   grPE->GetPolargram()->SetToRadian();
 }
