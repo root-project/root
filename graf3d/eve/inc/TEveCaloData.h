@@ -89,8 +89,8 @@ public:
                              Float_t etaMin, Float_t etaMax,
                              Float_t phi, Float_t phiRng, vCellId_t &out) = 0;
 
-   virtual void GetCellData(const CellId_t &id, CellData_t& data) = 0;
-   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) = 0;
+   virtual void GetCellData(const CellId_t &id, CellData_t& data) const = 0;
+   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const = 0;
 
    virtual Int_t GetNSlices() const = 0;
 
@@ -132,8 +132,8 @@ public:
                              Float_t etaMin, Float_t etaMax,
                              Float_t phi, Float_t phiRng, vCellId_t &out);
 
-   virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data);
-   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data);
+   virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
+   virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const;
 
    virtual Int_t GetNSlices() const;
 

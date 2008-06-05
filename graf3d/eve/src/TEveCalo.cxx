@@ -181,9 +181,24 @@ void TEveCaloViz::SetData(TEveCaloData* data)
    fPhi = (max+min)*0.5;
    fPhiOffset =(max-min)*0.5;
 
-   AssertPalette();
-   fPalette->SetLimits(0, TMath::CeilNint(data->GetMaxVal(fPlotEt)));
-
+   Float_t hlimit = fScaleAbs ? fMaxValAbs :data->GetMaxVal(fPlotEt);
+   if (fPalette == 0)
+   {
+      AssertPalette();
+      fPalette->SetLimits(0, TMath::CeilNint(hlimit));
+      fPalette->SetMax(fPalette->GetHighLimit());
+   }
+   else 
+   { 
+      if (!fScaleAbs)
+      {   
+         Float_t ratio = Float_t(fPalette->GetMinVal())/fPalette->GetHighLimit();
+        
+         fPalette->SetLimits(0, TMath::CeilNint(data->GetMaxVal(fPlotEt)));
+         fPalette->SetMin(Int_t(ratio*fPalette->GetHighLimit()));
+         fPalette->SetMax(fPalette->GetHighLimit());
+      }
+   }
    InvalidateCache();
 }
 

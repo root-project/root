@@ -226,12 +226,12 @@ public:
    EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
    TGLRect    ViewportRect   (const TGLBoundingBox & box, TGLBoundingBox::EFace face) const;
    TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace * face = 0) const;
-   TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex) const;
+   TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex, TGLMatrix* modviewMat=0) const;
    TGLVector3 WorldDeltaToViewport(const TGLVertex3 & worldRef, const TGLVector3 & worldDelta) const;
-   TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex) const;
+   TGLVertex3 ViewportToWorld(const TGLVertex3 & viewportVertex, TGLMatrix* modviewMat=0) const;
    TGLLine3   ViewportToWorld(Double_t viewportX, Double_t viewportY) const;
    TGLLine3   ViewportToWorld(const TPoint & viewport) const;
-   TGLVector3 ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta, Double_t viewportYDelta) const;
+   TGLVector3 ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta, Double_t viewportYDelta, TGLMatrix* modviewMat=0) const;
    std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(Double_t viewportX, Double_t viewportY, const TGLPlane & worldPlane) const;
    std::pair<Bool_t, TGLVertex3> ViewportPlaneIntersection(const TPoint & viewport, const TGLPlane & worldPlane) const;
 

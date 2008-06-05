@@ -328,19 +328,21 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) cons
 
    glPushMatrix();
    glTranslatef(azX,  azY, 0);
-
-   // size of tick-mark 8 pixels
-   TGLVertex3 worldRef(0, 0, fZAxisMax*0.5);
-   TGLVector3 off = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0);
+  
+   // tick mark projected vector is in x dimension 
+   TGLMatrix modview;
+   glGetDoublev(GL_MODELVIEW_MATRIX, modview.Arr());
+   TGLVertex3 worldRef(azX, azY, fZAxisMax*0.5);
+   TGLVector3 off = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &modview);
 
    // primary tick-marks
    Int_t np = TMath::CeilNint(fZAxisMax/fZAxisStep);
    glBegin(GL_LINES);
-   Float_t z =fZAxisStep;
+   Float_t z = fZAxisStep;
    for (Int_t i = 0; i < np; ++i)
    {
       glVertex3f(0, 0, z);
-      glVertex3f(off.X(), off.Y(), z-off.Z());
+      glVertex3f(off.X(), off.Y(), z+off.Z());
       z += fZAxisStep;
    }
 
@@ -353,11 +355,10 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) cons
    while (z2 < fZAxisMax)
    {
       glVertex3f(0, 0, z2);
-      glVertex3f(off.X(), off.Y(), z2-off.Z());
+      glVertex3f(off.X(), off.Y(), z2+off.Z());
       z2 += step2;
    }
    glEnd();
-
 
    off *= 4; // label offset
    fNumFont.PreRender(kFALSE);
@@ -369,7 +370,7 @@ void TEveCaloLegoGL::DrawZAxis(TGLRnrCtx &rnrCtx, Float_t azX, Float_t azY) cons
    RnrText(Form("Et[GeV] %s", txt), off.X(), off.Y(), fZAxisMax+off.Z(), fNumFont, 3);
 
    fNumFont.PostRender();
-
+  
    glPopMatrix();
 }
 
@@ -813,7 +814,7 @@ Int_t TEveCaloLegoGL::GetGridStep(Int_t axId, TGLRnrCtx &rnrCtx) const
    return 1;
 }
 
- //______________________________________________________________________________
+//______________________________________________________________________________
 void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
 {
    // Draw basic histogram components: x-y grid
@@ -1083,6 +1084,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
 void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Draw the object.
+
    fEtaAxis = fM->fData->GetEtaBins();
    fPhiAxis = fM->fData->GetPhiBins();
 
@@ -1148,6 +1150,11 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glEnable(GL_NORMALIZE);
    glEnable(GL_POLYGON_OFFSET_FILL);
 
+   // draw cells
+   glPushName(0);
+   glPolygonOffset(0.8, 1);
+   cells3D ? DrawCells3D(rnrCtx):DrawCells2D(rnrCtx);
+   glPopName();
 
    // draw histogram base
    if (rnrCtx.Selection() == kFALSE && rnrCtx.Highlight() == kFALSE)
@@ -1168,12 +1175,6 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          glEnd();
       }
    }
-
-   // draw cells
-   glPushName(0);
-   glPolygonOffset(0.8, 1);
-   cells3D ? DrawCells3D(rnrCtx):DrawCells2D(rnrCtx);
-   glPopName();
 
    glPopMatrix();
    glPopAttrib();

@@ -161,7 +161,7 @@ Int_t TEveCaloDataHist::GetCellList(Float_t minVal, Float_t maxVal,
 }
 
 //______________________________________________________________________________
-void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& cellData)
+void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& cellData) const
 {
   // Get cell geometry and value from cell ID.
 
@@ -179,7 +179,7 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloDat
 
 //______________________________________________________________________________
 void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, Float_t phi, Float_t phiRng,
-                                   TEveCaloData::CellData_t& cellData)
+                                   TEveCaloData::CellData_t& cellData)  const
 {
    // Get cell geometry and value from cell ID.
    // Respect external phi range shifted for a given phi.

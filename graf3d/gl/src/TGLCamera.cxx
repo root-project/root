@@ -380,7 +380,8 @@ TGLRect TGLCamera::ViewportRect(const TGLBoundingBox & box,
 }
 
 //______________________________________________________________________________
-TGLVertex3 TGLCamera::WorldToViewport(const TGLVertex3 & worldVertex) const
+TGLVertex3 TGLCamera::WorldToViewport(const TGLVertex3 & worldVertex,
+                                      TGLMatrix* modviewMat) const
 {
    // Convert a 3D world vertex to '3D' viewport (screen) one. The X()/Y()
    // components of the viewport vertex are the horizontal/vertical pixel
@@ -395,7 +396,8 @@ TGLVertex3 TGLCamera::WorldToViewport(const TGLVertex3 & worldVertex) const
    }
    TGLVertex3 viewportVertex;
    gluProject(worldVertex[0], worldVertex[1], worldVertex[2],
-              fModVM.CArr(), fProjM.CArr(), fViewport.CArr(),
+              modviewMat ? modviewMat->CArr() : fModVM.CArr(),
+              fProjM.CArr(), fViewport.CArr(),
               &viewportVertex[0], &viewportVertex[1], &viewportVertex[2]);
    return viewportVertex;
 }
@@ -421,7 +423,8 @@ TGLVector3 TGLCamera::WorldDeltaToViewport(const TGLVertex3 & worldRef,
 }
 
 //______________________________________________________________________________
-TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
+TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex,
+                                      TGLMatrix* modviewMat) const
 {
    // Convert a '3D' viewport vertex to 3D world one. The X()/Y() components
    // of viewportVertex are the horizontal/vertical pixel position.
@@ -442,7 +445,8 @@ TGLVertex3 TGLCamera::ViewportToWorld(const TGLVertex3 & viewportVertex) const
    }
    TGLVertex3 worldVertex;
    gluUnProject(viewportVertex[0], viewportVertex[1], viewportVertex[2],
-                fModVM.CArr(), fProjM.CArr(), fViewport.CArr(),
+                modviewMat ? modviewMat->CArr() : fModVM.CArr(),
+                fProjM.CArr(), fViewport.CArr(),
                 &worldVertex[0], &worldVertex[1], &worldVertex[2]);
    return worldVertex;
 }
@@ -517,7 +521,7 @@ std::pair<Bool_t, TGLVertex3> TGLCamera::ViewportPlaneIntersection(const TPoint 
 
 //______________________________________________________________________________
 TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t viewportXDelta,
-                                           Double_t viewportYDelta) const
+                                           Double_t viewportYDelta, TGLMatrix* modviewMat) const
 {
    // Apply a 2D viewport delta (shift) to the projection of worldRef onto viewport,
    // returning the resultant world vector which equates to it. Useful for making
@@ -527,9 +531,9 @@ TGLVector3 TGLCamera::ViewportDeltaToWorld(const TGLVertex3 & worldRef, Double_t
    if (fCacheDirty) {
       Error("TGLCamera::ViewportDeltaToWorld()", "cache dirty - must call Apply()");
    }
-   TGLVertex3 winVertex = WorldToViewport(worldRef);
+   TGLVertex3 winVertex = WorldToViewport(worldRef, modviewMat);
    winVertex.Shift(viewportXDelta, viewportYDelta, 0.0);
-   return (ViewportToWorld(winVertex) - worldRef);
+   return (ViewportToWorld(winVertex, modviewMat) - worldRef);
 }
 
 //______________________________________________________________________________
