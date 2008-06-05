@@ -3191,6 +3191,13 @@ void G__rate_parameter_match(G__param* libp, G__ifunc_table_internal* p_ifunc, i
       formal_isconst = p_ifunc->param[ifn][i]->isconst;
       funclist->p_rate[i] = G__NOMATCH;
 
+      if (param_type == 'i' && param_tagnum != -1
+	  && formal_type == 'u' && formal_tagnum == param_tagnum
+	  && G__struct.type[formal_tagnum] == 'e')
+	// enum constants come in as param_type== 'i'
+	param_type = 'u';
+	
+
       /* exact match */
       if (param_type == formal_type) {
          if (tolower(param_type) == 'u') {
