@@ -31,7 +31,7 @@ EventDict.d: EventDict.cxx Event.h
 Event.$(ObjSuf): $(ROOTCORELIBS)
 EventDict.$(ObjSuf): $(ROOTCORELIBS)
 MainEvent.$(ObjSuf): $(ROOTCORELIBS)
-$(EVENTO): Event.d EventDict.d
+$(EVENTO): %.o: %.d
 
 $(MAINEVENTO): MainEvent.d
 
