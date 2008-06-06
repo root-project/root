@@ -8,7 +8,7 @@ void basic() {
 
 // read file $ROOTSYS/tutorials/tree/basic.dat
 // this file has 3 columns of float data
-   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("basic.C","");
    dir.ReplaceAll("/./","/");
    ifstream in;

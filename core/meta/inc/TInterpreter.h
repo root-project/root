@@ -112,6 +112,8 @@ public:
    virtual Bool_t   IsProcessLineLocked() const = 0;
    virtual void     SetProcessLineLock(Bool_t lock = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;
+   virtual const char *GetTopLevelMacroName() const = 0;
+   virtual const char *GetCurrentMacroName() const = 0;
 
    // All the functions below must be virtual with a dummy implementation
    // These functions are redefined in TCint.

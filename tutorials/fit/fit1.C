@@ -15,7 +15,7 @@ void fit1() {
    // We connect the ROOT file generated in a previous tutorial
    // (see begin_html <a href="fillrandom.C.html">Filling histograms with random numbers from a function</a>) end_html
    //
-   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("fit1.C","");
    dir.ReplaceAll("/./","/");
    TFile *fill = TFile::Open("fillrandom.root");

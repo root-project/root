@@ -1070,7 +1070,7 @@ Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 }
 
 //______________________________________________________________________________
-const char *TCint::GetTopLevelMacroName()
+const char *TCint::GetTopLevelMacroName() const
 {
    // Return the file name of the current un-included interpreted file.
    // See the documentation for GetCurrentMacroName().
@@ -1083,7 +1083,7 @@ const char *TCint::GetTopLevelMacroName()
 }
 
 //______________________________________________________________________________
-const char *TCint::GetCurrentMacroName()
+const char *TCint::GetCurrentMacroName() const
 {
    // Return the file name of the currently interpreted file,
    // included or not. Example to illustrate the difference between

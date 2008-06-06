@@ -15,7 +15,7 @@ void bexec(TString &dir,char *macro)
 }
 
 void benchmarks() {
-   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("benchmarks.C","");
    dir.ReplaceAll("/./","/");
    bench = new TCanvas("bench","Benchmarks Summary",-1000,50,200,500);

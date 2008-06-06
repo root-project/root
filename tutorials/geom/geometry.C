@@ -2,7 +2,7 @@
 //Author: Rene Brun
    
 void geometry() {
-   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("geometry.C","");
    dir.ReplaceAll("/./","/");
    gROOT->Macro(Form("%s/na49.C",dir.Data()));

@@ -16,7 +16,7 @@ void h1draw()
    // We draw one histogram in different formats
    //Author: Rene Brun
    
-   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("h1draw.C","../hsimple.C");
    dir.ReplaceAll("/./","/");
    if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());

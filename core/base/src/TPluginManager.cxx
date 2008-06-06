@@ -87,7 +87,7 @@
 #include "THashTable.h"
 #include "Varargs.h"
 #include "TClass.h"
-#include "TCint.h"
+#include "TInterpreter.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TDataType.h"
@@ -510,7 +510,7 @@ void TPluginManager::AddHandler(const char *base, const char *regexp,
    RemoveHandler(base, regexp);
 
    if (fReadingDirs)
-      origin = TCint::GetCurrentMacroName();
+      origin = gInterpreter->GetCurrentMacroName();
 
    TPluginHandler *h = new TPluginHandler(base, regexp, className,
                                           pluginName, ctor, origin);

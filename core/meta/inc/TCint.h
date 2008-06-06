@@ -137,14 +137,14 @@ public:
    Bool_t  IsProcessLineLocked() const { return fLockProcessLine; }
    void    SetProcessLineLock(Bool_t lock = kTRUE) { fLockProcessLine = lock; }
    const char *TypeName(const char *typeDesc);
+   const char *GetTopLevelMacroName() const;
+   const char *GetCurrentMacroName() const;
 
    static void *FindSpecialObject(const char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);
    static int   AutoLoadCallback(const char *cls, const char *lib);
    static void  UpdateClassInfo(char *name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char *name, Long_t tagnum);
    static void  UpdateAllCanvases();
-   static const char *GetTopLevelMacroName();
-   static const char *GetCurrentMacroName();
 
    // Misc
    virtual int    DisplayClass(FILE *fout,char *name,int base,int start) const;

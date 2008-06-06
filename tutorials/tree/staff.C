@@ -23,7 +23,7 @@ void staff() {
 
    //The input file cern.dat is a copy of the CERN staff data base
    //from 1988
-   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("staff.C","");
    dir.ReplaceAll("/./","/");
    FILE *fp = fopen(Form("%scernstaff.dat",dir.Data()),"r");
