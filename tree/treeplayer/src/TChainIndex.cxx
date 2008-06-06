@@ -283,7 +283,7 @@ Long64_t TChainIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
       return -1;
    }
    else {
-      Long64_t rv = indexAndNumber.first->GetEntryNumberWithBestIndex(major, minor);
+      Long64_t rv = indexAndNumber.first->GetEntryNumberWithIndex(major, minor);
       ReleaseSubTreeIndex(indexAndNumber.first, indexAndNumber.second);
       TChain* chain = dynamic_cast<TChain*> (fTree);
       R__ASSERT(chain);
