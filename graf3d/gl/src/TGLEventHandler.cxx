@@ -427,7 +427,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
 
       if (grabPointer)
       {
-         gVirtualX->GrabPointer(fGLViewer->GetGLWidget()->GetContId(),
+         gVirtualX->GrabPointer(fGLViewer->GetGLWidget()->GetId(),
                                 kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
                                 kNone, kNone, kTRUE, kFALSE);
          fInPointerGrab = kTRUE;

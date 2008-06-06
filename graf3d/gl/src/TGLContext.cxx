@@ -141,7 +141,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 
    std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
    LayoutCompatible_t *trick =
-      reinterpret_cast<LayoutCompatible_t *>(gVirtualX->GetWindowID(widget->GetWindowIndex()));
+      reinterpret_cast<LayoutCompatible_t *>(widget->GetId());
    HWND hWND = *trick->fPHwnd;
    HDC  hDC  = GetWindowDC(hWND);
 
@@ -283,7 +283,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fPimpl->fDpy = dpy;
    fPimpl->fVisualInfo = visInfo;
    fPimpl->fGLContext = glCtx;
-   fPimpl->fWindowIndex = widget->GetWindowIndex();
+   fPimpl->fWindowID = widget->GetId();
 
    fValid = kTRUE;
    fDevice->AddContext(this);
@@ -317,9 +317,8 @@ Bool_t TGLContext::MakeCurrent()
       return kFALSE;
    }
 
-   if (fPimpl->fWindowIndex != -1) {
-      const Bool_t rez = glXMakeCurrent(fPimpl->fDpy,
-                                        gVirtualX->GetWindowID(fPimpl->fWindowIndex),
+   if (fPimpl->fWindowID != 0) {
+      const Bool_t rez = glXMakeCurrent(fPimpl->fDpy, fPimpl->fWindowID,
                                         fPimpl->fGLContext);
       if (rez)
          fIdentity->DeleteGLResources();
@@ -341,8 +340,8 @@ void TGLContext::SwapBuffers()
       return;
    }
 
-   if (fPimpl->fWindowIndex != -1)
-      glXSwapBuffers(fPimpl->fDpy, gVirtualX->GetWindowID(fPimpl->fWindowIndex));
+   if (fPimpl->fWindowID != 0)
+      glXSwapBuffers(fPimpl->fDpy, fPimpl->fWindowID);
    else
       glFinish();
 }

@@ -47,14 +47,14 @@ public:
    Display     *fDpy;
    XVisualInfo *fVisualInfo;
    GLXContext   fGLContext;
-   Int_t        fWindowIndex;
+   Window       fWindowID;
    //GLXPbuffer   fPBDC;
 
    TGLContextPrivate()
       : fDpy(0),
         fVisualInfo(0),
         fGLContext(0),
-        fWindowIndex(-1)
+        fWindowID(0)
    {
    }
 
