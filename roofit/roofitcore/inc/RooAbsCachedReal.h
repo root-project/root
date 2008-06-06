@@ -64,6 +64,7 @@ protected:
   FuncCacheElem* getCache(const RooArgSet* nset) const ;
   void clearCacheObject(FuncCacheElem& cache) const ;
 
+  friend class FuncCacheElem ;
   virtual const char* binningName() const { return "cache" ; }
   virtual FuncCacheElem* createCache(const RooArgSet* nset) const ;
   virtual const char* inputBaseName() const = 0 ;

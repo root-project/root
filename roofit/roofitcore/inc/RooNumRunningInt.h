@@ -42,7 +42,7 @@ protected:
 
   } ;
 
-
+  friend class RICacheElem ;
   virtual const char* binningName() const { return _binningName.c_str() ; }
   virtual FuncCacheElem* createCache(const RooArgSet* nset) const ;
   virtual const char* inputBaseName() const ; 

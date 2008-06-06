@@ -136,11 +136,11 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
 
 
-RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nset) : 
+RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nsetIn) : 
   _pdf(0), _paramTracker(0), _hist(0), _norm(0) 
 {
   // Create cache object itself -- Default implementation is a RooHistPdf
-  RooArgSet* nset2 = self.actualObservables(nset?*nset:RooArgSet()) ;
+  RooArgSet* nset2 = self.actualObservables(nsetIn?*nsetIn:RooArgSet()) ;
 
   RooArgSet orderedObs ;
   if (nset2) {
@@ -161,8 +161,8 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   pdfname.Append("_CACHE") ;
   pdfname.Append(self.cacheNameSuffix(orderedObs)) ;
   _pdf = new RooHistPdf(pdfname,pdfname,*observables,*_hist,self.getInterpolationOrder()) ;
-  if (nset) {
-    _nset.addClone(*nset) ;
+  if (nsetIn) {
+    _nset.addClone(*nsetIn) ;
   }
 
   // Create pseudo-object that tracks changes in parameter values

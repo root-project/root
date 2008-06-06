@@ -77,7 +77,8 @@ protected:
 
   PdfCacheElem* getCache(const RooArgSet* nset, Bool_t recalculate=kTRUE) const ;
   void clearCacheObject(PdfCacheElem& cache) const ;
-  
+
+  friend class PdfCacheElem ;
   virtual const char* binningName() const { return "cache" ; }
   virtual PdfCacheElem* createCache(const RooArgSet* nset) const { return new PdfCacheElem(*this,nset) ; }
   virtual const char* inputBaseName() const = 0 ;
