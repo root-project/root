@@ -327,6 +327,9 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
    if ( (entry < fFirstEntry) || (entry >= fEntryNumber) )
       return 0;
 
+   if( !fAddress )
+      return 0;
+
    //---------------------------------------------------------------------------
    // Set up the collection proxy
    //---------------------------------------------------------------------------
