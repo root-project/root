@@ -28,6 +28,9 @@
 #ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
 #endif
+#ifndef ROOT_TBits
+#include "TBits.h"
+#endif
 
 class TList;
 
@@ -40,6 +43,7 @@ friend class TXSocket;
 
 private:
    TList   *fInfos;       //Array of TStreamerInfo used in WriteObject
+   TBits    fBitsPIDs;    //Array of bits to mark the TProcessIDs uids written to the mesasge
    UInt_t   fWhat;        //Message type
    TClass  *fClass;       //If message is kMESS_OBJECT pointer to object's class
    Int_t    fCompress;    //Compression level from 0 (not compressed) to 9 (max compression)
@@ -77,7 +81,9 @@ public:
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
    Int_t    CompLength() const { return (Int_t)(fBufCompCur - fBufComp); }
+   Bool_t   TestBitNumber(UInt_t bitnumber) const {return fBitsPIDs.TestBitNumber(bitnumber);}
    void     WriteObject(const TObject *obj);
+   UShort_t WriteProcessID(TProcessID *pid);
 
    ClassDef(TMessage,0)  // Message buffer class
 };

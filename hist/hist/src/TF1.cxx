@@ -1469,7 +1469,7 @@ void TF1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    //  This member function is called when a F1 is clicked with the locator
 
-   fHistogram->ExecuteEvent(event,px,py);
+   if (fHistogram) fHistogram->ExecuteEvent(event,px,py);
 
    if (!gPad->GetView()) {
       if (event == kMouseMotion)  gPad->SetCursor(kHand);

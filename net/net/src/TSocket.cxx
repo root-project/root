@@ -34,6 +34,7 @@
 #include "TVirtualAuth.h"
 #include "TVirtualMutex.h"
 #include "TStreamerInfo.h"
+#include "TProcessID.h"
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
@@ -449,6 +450,35 @@ Int_t TSocket::Send(const TMessage &mess)
          messinfo.fInfos->Clear();
          Send(messinfo);
       }
+   }  
+          
+   //check if TProcessID must be sent. The list of TProcessID
+   //in the object in the message is in the fInfos list of the message.
+   //We send only the TProcessIDs not yet send on this socket.
+   if (mess.TestBitNumber(0)) {
+      TObjArray *pids = TProcessID::GetPIDs();
+      Int_t npids = pids->GetEntries();
+      TProcessID *pid;
+      for (Int_t ipid = 0;ipid<npids;ipid+) {
+         pid = TProcessID*)pids->At(ipid);
+         if (!pid) continue;
+         if (!mess.TestBitNumber(pid->GetUniqueID()+1)) continue;
+         //check if a pid with this title has already been sent through the socket
+         
+      TList *minilist =0;
+      while ((pid=(TProcessID*)next())) {
+         UInt_t uid = pid->GetUniqueID();
+         if (mess.TestBitNumber(uid+1)) continue; //TProcessID had already been sent
+         fBitsInfo.SetBitNumber(uid);
+         if (!minilist) minilist = new TList();
+         minilist->Add(pid);
+      }
+      if (minilist) {
+         TMessage messpid(kMESS_PROCESSID);
+         messpid.WriteObject(minilist);
+         delete minilist;
+         Send(messpid);
+      }
    }         
 
    mess.SetLength();   //write length in first word of buffer
@@ -689,6 +719,24 @@ Int_t TSocket::Recv(TMessage *&mess)
          }
          info->BuildCheck();
          printf("importing TStreamerInfo: %s, version=%d\n",info->GetName(),info->GetOldVersion());
+         
+      }
+      delete list;
+      delete mess;
+      goto oncemore;
+   }
+   
+   if (mess->What() == kMESS_PROCESSID) {
+      TList *list = (TList*)mess->ReadObject(TList::Class());
+      TIter next(list);
+      TProcessID *pid;
+      while ((pid = (TProcessID*)next())) {
+         //if (cl && cl->GetStreamerInfo(info->GetOldVersion())) {
+            //delete
+            //printf("TStreamerInfo: %s, version=%d already there\n",info->GetName(),info->GetOldVersion());
+         //    continue;
+         //}
+         printf("importing TProcessID: %s\n",pid->GetTitle());
          
       }
       delete list;

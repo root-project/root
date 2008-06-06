@@ -35,6 +35,7 @@ enum EMessageTypes {
    kMESS_OBJECT          = 4,            //object follows
    kMESS_CINT            = 5,            //cint command follows
    kMESS_STREAMERINFO    = 6,            //TStreamerInfo object follows
+   kMESS_PROCESSID       = 7,            //TProcessID object follows
       
    //---- PROOF message opcodes (1000 - 1999)
    kPROOF_GROUPVIEW      = 1000,         //groupview follows

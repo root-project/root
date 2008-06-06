@@ -23,6 +23,7 @@
 #include "TVirtualStreamerInfo.h"
 #include "Bytes.h"
 #include "TFile.h"
+#include "TProcessID.h"
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -350,5 +351,21 @@ void TMessage::WriteObject(const TObject *obj)
       if (fInfos) fInfos->Clear();
       else        fInfos = new TList();
    }
+   fBitsPIDs.ResetAllBits();
    WriteObjectAny(obj, TObject::Class());
+}
+
+//______________________________________________________________________________
+UShort_t TMessage::WriteProcessID(TProcessID *pid)
+{
+   // Check if the ProcessID pid is already in the message.
+   // If not, then
+   //   -mark bit 0 of fBitsPIDs to indicate that a ProcessID has been found
+   //   -mark bit uid+1 where uid id the uid of the ProcessID
+
+   if (fBitsPIDs.TestBitNumber(0)) return 0;
+   fBitsPIDs.SetBitNumber(0);
+   UInt_t uid = pid->GetUniqueID();
+   fBitsPIDs.SetBitNumber(uid+1);
+   return 1;
 }
