@@ -1421,6 +1421,7 @@ public:
    G__RflxVarProperties& operator=(const G__RflxVarProperties& rhs)
    {
       if (this != &rhs) {
+         this->G__RflxProperties::operator=(rhs);
          bitfield_start = rhs.bitfield_start;
          bitfield_width = rhs.bitfield_width;
          addressOffset = rhs.addressOffset;
