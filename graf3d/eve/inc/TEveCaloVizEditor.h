@@ -18,7 +18,6 @@ class TEveCaloViz;
 class TGDoubleHSlider;
 class TEveGValuator;
 class TEveGDoubleValuator;
-class TEveRGBAPaletteSubEditor;
 class TGCheckButton;
 class TGRadioButton;
 
@@ -29,6 +28,7 @@ class TEveCaloVizEditor : public TGedFrame
 private:
    TEveCaloVizEditor(const TEveCaloVizEditor&);            // Not implemented
    TEveCaloVizEditor& operator=(const TEveCaloVizEditor&); // Not implemented
+   void MakeSliceInfo();
 
 protected:
    TEveCaloViz               *fM; // Model object.
@@ -44,8 +44,8 @@ protected:
    TEveGValuator             *fPhi;
    TEveGValuator             *fPhiOffset;
 
-   TGVerticalFrame            *fTower;
-   TEveRGBAPaletteSubEditor   *fPalette;        // Palette sub-editor.x
+   TGVerticalFrame           *fTowerFrame;
+   TGVerticalFrame           *fSliceFrame;
 
 public:
    TEveCaloVizEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -63,8 +63,8 @@ public:
    void DoEtaRange();
    void DoPhi();
 
-   void DoPalette();
-
+   void DoSliceThreshold();
+   void DoSliceColor(Pixel_t color);
 
    ClassDef(TEveCaloVizEditor, 0); // GUI editor for TEveCaloVizEditor.
 };

@@ -13,6 +13,7 @@
 #include "TEveCalo.h"
 #include "TEveGValuators.h"
 #include "TEveRGBAPaletteEditor.h"
+#include "TEveCaloData.h"
 
 #include "TGClient.h"
 #include "TGFont.h"
@@ -23,6 +24,8 @@
 #include "TGNumberEntry.h"
 #include "TG3DLine.h"
 #include "TGButtonGroup.h"
+#include "TColor.h"
+#include "TGColorSelect.h"
 
 #include "TMathBase.h"
 #include "TMath.h"
@@ -49,8 +52,8 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    fEtaRng(0),
    fPhi(0),
    fPhiOffset(0),
-   fTower(0),
-   fPalette(0)
+   fTowerFrame(0),
+   fSliceFrame(0)
 {
    // Constructor.
 
@@ -114,47 +117,101 @@ TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t heigh
    
    //______________________________________________________________________________
 
-   fTower = CreateEditorTabSubFrame("Towers");
+   fTowerFrame = CreateEditorTabSubFrame("Towers");
    Int_t  labelW = 45;
 
    // eta
-   fEtaRng = new TEveGDoubleValuator(fTower,"Eta rng:", 40, 0);
+   fEtaRng = new TEveGDoubleValuator(fTowerFrame,"Eta rng:", 40, 0);
    fEtaRng->SetNELength(6);
    fEtaRng->SetLabelWidth(labelW);
    fEtaRng->Build();
    fEtaRng->GetSlider()->SetWidth(195);
    fEtaRng->SetLimits(-5.5, 5.5, TGNumberFormat::kNESRealTwo);
    fEtaRng->Connect("ValueSet()", "TEveCaloVizEditor", this, "DoEtaRange()");
-   fTower->AddFrame(fEtaRng, new TGLayoutHints(kLHintsTop, 1, 1, 4, 5));
+   fTowerFrame->AddFrame(fEtaRng, new TGLayoutHints(kLHintsTop, 1, 1, 4, 5));
 
    // phi
-   fPhi = new TEveGValuator(fTower, "Phi:", 90, 0);
+   fPhi = new TEveGValuator(fTowerFrame, "Phi:", 90, 0);
    fPhi->SetLabelWidth(labelW);
    fPhi->SetNELength(6);
    fPhi->Build();
    fPhi->SetLimits(-180, 180);
    fPhi->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoPhi()");
-   fTower->AddFrame(fPhi, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fTowerFrame->AddFrame(fPhi, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
-   fPhiOffset = new TEveGValuator(fTower, "PhiOff:", 90, 0);
+   fPhiOffset = new TEveGValuator(fTowerFrame, "PhiOff:", 90, 0);
    fPhiOffset->SetLabelWidth(labelW);
    fPhiOffset->SetNELength(6);
    fPhiOffset->Build();
    fPhiOffset->SetLimits(0, 180);
    fPhiOffset->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoPhi()");
-   fTower->AddFrame(fPhiOffset, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fTowerFrame->AddFrame(fPhiOffset, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
-   
-   TGHorizontalFrame *title2 = new TGHorizontalFrame(fTower, 145, 10, kLHintsExpandX| kFixedWidth);
-   title2->AddFrame(new TGLabel(title2, "Palette Controls"),
-                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   title2->AddFrame(new TGHorizontal3DLine(title2),
-                    new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
-   fTower->AddFrame(title2, new TGLayoutHints(kLHintsTop, 0, 0, 5, 0));
+   fSliceFrame = new TGVerticalFrame(fTowerFrame);
+   fTowerFrame->AddFrame(fSliceFrame);
+}
 
-   fPalette = new TEveRGBAPaletteSubEditor(fTower);
-   fTower->AddFrame(fPalette, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
-   fPalette->Connect("Changed()", "TEveCaloVizEditor", this, "DoPalette()");
+//______________________________________________________________________________
+void TEveCaloVizEditor::MakeSliceInfo()
+{
+
+   // Create slice info gui.
+
+   Int_t ns = fM->GetData()->GetNSlices();
+   Int_t nf = fSliceFrame->GetList()->GetSize();
+
+   if (ns > nf)
+   {
+      for (Int_t i=nf; i<ns; ++i)
+      {
+         TGHorizontalFrame* f = new TGHorizontalFrame(fSliceFrame);
+  
+         TEveGValuator* threshold = new TEveGValuator(f,"", 90, 0, i);
+         threshold->SetLabelWidth(50);
+         threshold->SetNELength(6);
+         threshold->SetShowSlider(kFALSE);
+         threshold->Build();
+         threshold->SetLimits(0, 1000, TGNumberFormat::kNESRealTwo);
+         threshold->Connect("ValueSet(Double_t)", "TEveCaloVizEditor", this, "DoSliceThreshold()");
+         f->AddFrame(threshold, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+
+         TGColorSelect* color = new TGColorSelect(f, 0, i);
+         f->AddFrame(color, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 1));
+         color->Connect("ColorSelected(Pixel_t)", "TEveCaloVizEditor", this, "DoSliceColor(Pixel_t)");
+
+         fSliceFrame->AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
+      }
+      nf = ns;
+   }
+
+   TIter frame_iterator(fSliceFrame->GetList());
+   for (Int_t i=0; i<nf; ++i)
+   {
+      TGFrameElement    *el = (TGFrameElement*)    frame_iterator();
+      TGHorizontalFrame *fr = (TGHorizontalFrame*) el->fFrame;
+      if (i < ns)
+      {
+         TEveCaloData::SliceInfo_t &si = fM->GetData()->RefSliceInfo(i);
+
+         TEveGValuator *threshold = (TEveGValuator*) ((TGFrameElement*) fr->GetList()->First())->fFrame;
+         TGColorSelect *color     = (TGColorSelect*) ((TGFrameElement*) fr->GetList()->Last() )->fFrame;
+
+         threshold->GetLabel()->SetText(si.fName);
+         threshold->SetValue(si.fThreshold);
+         color->SetColor(TColor::Number2Pixel(si.fColor), kFALSE);
+
+         if (! fr->IsMapped()) {
+            fr->MapSubwindows();
+            fr->MapWindow();
+         }
+      }
+      else
+      {
+         if (fr->IsMapped()) {
+            fr->UnmapWindow();
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -163,7 +220,7 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
    // Set model object.
 
    fM = dynamic_cast<TEveCaloViz*>(obj);
-   if(fM->GetPlotEt())
+   if (fM->GetPlotEt())
    {
       fPlotEt->SetState(kButtonDown, kFALSE);
       fPlotE->SetState(kButtonUp, kFALSE);
@@ -187,7 +244,7 @@ void TEveCaloVizEditor::SetModel(TObject* obj)
    fPhi->SetValue(fM->fPhi*TMath::RadToDeg());
    fPhiOffset->SetValue(fM->fPhiOffset*TMath::RadToDeg());
 
-   fPalette->SetModel(fM->fPalette);
+   MakeSliceInfo();
 }
 
 //______________________________________________________________________________
@@ -253,10 +310,24 @@ void TEveCaloVizEditor::DoPhi()
 }
 
 //______________________________________________________________________________
-void TEveCaloVizEditor::DoPalette()
+void TEveCaloVizEditor::DoSliceThreshold()
 {
-   // Slot for palette changed.
+   // Slot for SliceThreshold.
+
+   TEveGValuator *st = (TEveGValuator *) gTQSender;
+   fM->GetData()->RefSliceInfo(st->WidgetId()).fThreshold = st->GetValue();
 
    fM->InvalidateCache();
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloVizEditor::DoSliceColor(Pixel_t pixel)
+{
+   // Slot for slice info Color.
+   
+   TGColorSelect *cs = (TGColorSelect *) gTQSender;
+   fM->GetData()->RefSliceInfo(cs->WidgetId()).fColor = Color_t(TColor::GetColor(pixel));
+
    Update();
 }

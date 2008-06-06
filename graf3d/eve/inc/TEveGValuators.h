@@ -18,7 +18,7 @@ class TGLabel;
 class TGHSlider;
 class TGDoubleHSlider;
 
-class TEveGValuatorBase: public TGCompositeFrame
+class TEveGValuatorBase: public TGCompositeFrame, public TGWidget
 {
    TEveGValuatorBase(const TEveGValuatorBase&);            // Not implemented
    TEveGValuatorBase& operator=(const TEveGValuatorBase&); // Not implemented
@@ -34,7 +34,7 @@ protected:
    TGLabel*    fLabel;
 
 public:
-   TEveGValuatorBase(const TGWindow *p, const char* title, UInt_t w, UInt_t h);
+   TEveGValuatorBase(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
    virtual ~TEveGValuatorBase() {}
 
    virtual void Build(Bool_t connect=kTRUE) = 0;
@@ -45,6 +45,8 @@ public:
 
    void SetNELength(Int_t l)          { fNELength = l; }
    void SetNEHeight(Int_t h)          { fNEHeight = h; }
+
+   TGLabel* GetLabel() {return fLabel;}
 
    ClassDef(TEveGValuatorBase, 0); // Base class for composite GUI elements for setting of numeric values.
 };
@@ -70,7 +72,7 @@ protected:
    Int_t CalcSliderPos(Float_t v);
 
 public:
-   TEveGValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h);
+   TEveGValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
    virtual ~TEveGValuator() {}
 
    virtual void Build(Bool_t connect=kTRUE);
@@ -114,7 +116,7 @@ protected:
    TGDoubleHSlider*  fSlider;
 
 public:
-   TEveGDoubleValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h);
+   TEveGDoubleValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
    virtual ~TEveGDoubleValuator() {}
 
    virtual void Build(Bool_t connect=kTRUE);
@@ -145,7 +147,7 @@ public:
 
 /******************************************************************************/
 
-class TEveGTriVecValuator : public TGCompositeFrame
+class TEveGTriVecValuator : public TGCompositeFrame, public TGWidget
 {
    TEveGTriVecValuator(const TEveGTriVecValuator&);            // Not implemented
    TEveGTriVecValuator& operator=(const TEveGTriVecValuator&); // Not implemented
@@ -159,7 +161,7 @@ protected:
    Int_t       fNEHeight; // Number-entry height (in pixels)
 
 public:
-   TEveGTriVecValuator(const TGWindow *p, const char* name, UInt_t w, UInt_t h);
+   TEveGTriVecValuator(const TGWindow *p, const char* name, UInt_t w, UInt_t h, Int_t widgetId=-1);
    virtual ~TEveGTriVecValuator() {}
 
    void Build(Bool_t vertical, const char* lab0, const char* lab1, const char* lab2);

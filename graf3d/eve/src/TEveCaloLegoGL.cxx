@@ -901,7 +901,7 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
    {
       for(SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
       {
-         TGLUtil::Color(fM->GetPalette()->GetDefaultColor() + i->first);
+         TGLUtil::Color(fM->fData->RefSliceInfo(i->first).fColor);
          glCallList(i->second);
       }
    }
@@ -1117,9 +1117,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    {
       fDLCacheOK = kFALSE;
       fM->ResetCache();
-      fM->fData->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                             fM->GetEta(), fM->GetEtaRng(),
-                             fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
+      fM->fData->GetCellList(fM->GetEta(), fM->GetEtaRng(),fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
       fM->fCacheOK = kTRUE;
    }
    if (cells3D && fDLCacheOK == kFALSE) MakeDisplayList();

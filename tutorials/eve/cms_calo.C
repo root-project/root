@@ -13,8 +13,12 @@ void cms_calo()
   TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
   TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
   TEveCaloDataHist* data = new TEveCaloDataHist();
-  data->AddHistogram(ecalHist);
-  data->AddHistogram(hcalHist);
+
+  Int_t s;
+  s = data->AddHistogram(ecalHist);
+  data->RefSliceInfo(s).Setup("ECAL", 0.3, 4);
+  s = data->AddHistogram(hcalHist);
+  data->RefSliceInfo(s).Setup("HCAL", 0.1, 5);
   
   // palette
   gStyle->SetPalette(1, 0);

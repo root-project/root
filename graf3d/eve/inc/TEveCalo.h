@@ -60,7 +60,7 @@ protected:
 
    void AssignCaloVizParameters(TEveCaloViz* cv);
 
-   void SetupColorHeight(Float_t value, Int_t slice, Float_t& height, Bool_t &viz) const;
+   void SetupColorHeight(Float_t value, Int_t slice, Float_t& height) const;
 
    virtual Float_t GetValToHeight() const;
 
@@ -94,6 +94,9 @@ public:
    TEveRGBAPalette* GetPalette() const { return fPalette; }
    void             SetPalette(TEveRGBAPalette* p);
    TEveRGBAPalette* AssertPalette();
+
+   Bool_t  GetValueIsColor() const { return fValueIsColor;}
+   void  SetValueIsColor(Bool_t x) { fValueIsColor = x;}
 
 
    void SetEta(Float_t l, Float_t u);

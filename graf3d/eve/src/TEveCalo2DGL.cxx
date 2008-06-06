@@ -133,8 +133,7 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
          {
             TEveCaloData::vCellId_t* clv = new TEveCaloData::vCellId_t();
 
-            data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                              fM->GetEta(), fM->GetEtaRng(), ay->GetBinCenter(ibin), ay->GetBinWidth(ibin),*clv);
+            data->GetCellList(fM->GetEta(), fM->GetEtaRng(), ay->GetBinCenter(ibin), ay->GetBinWidth(ibin),*clv);
 
             if (clv->empty() == kFALSE) 
                fM->fCellLists.push_back(clv);
@@ -149,9 +148,8 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
    Float_t *sliceVal = new Float_t[nSlices];
    TEveCaloData::CellData_t cellData;
    Float_t towerH;
-   Bool_t visible;
-   if (rnrCtx.SecSelection()) glPushName(0);
 
+   if (rnrCtx.SecSelection()) glPushName(0);
 
    for(UInt_t vi=0; vi<fM->fCellLists.size(); vi++)
    {
@@ -171,15 +169,13 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
          glLoadName(vi);
          glPushName(0);
       }
+
       for (Int_t s=0; s<nSlices; s++) {
-         fM->SetupColorHeight(sliceVal[s], s, towerH, visible);
-         if (visible)
-         {
-            if (rnrCtx.SecSelection()) glLoadName(s);
-            glBegin(GL_QUADS);
-            off = MakeRPhiCell(cellData.PhiMin(), cellData.PhiMax(), towerH, off);
-            glEnd();
-         }
+         fM->SetupColorHeight(sliceVal[s], s, towerH);
+         if (rnrCtx.SecSelection()) glLoadName(s);
+         glBegin(GL_QUADS);
+         off = MakeRPhiCell(cellData.PhiMin(), cellData.PhiMax(), towerH, off);
+         glEnd();
       }
       if (rnrCtx.SecSelection()) glPopName(); // slice
    }
@@ -259,8 +255,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
          if (ax->GetBinLowEdge(ibin)>fM->fEtaMin && ax->GetBinUpEdge(ibin)<=fM->fEtaMax)
          {
             TEveCaloData::vCellId_t* aa = new TEveCaloData::vCellId_t();
-            data->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                              ax->GetBinCenter(ibin), ax->GetBinWidth(ibin)+1e-5,
+            data->GetCellList(ax->GetBinCenter(ibin), ax->GetBinWidth(ibin)+1e-5,
                               fM->fPhi, fM->GetPhiRng(), *aa);
             if (aa->size())
                fM->fCellLists.push_back(aa);
@@ -273,7 +268,6 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
 
    TEveCaloData::CellData_t cellData;
    Float_t towerH;
-   Bool_t visible;
    Int_t nSlices = data->GetNSlices();
    Float_t *sliceValsUp  = new Float_t[nSlices];
    Float_t *sliceValsLow = new Float_t[nSlices];
@@ -309,12 +303,12 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
       for (Int_t s=0; s<nSlices; s++) {
          if (rnrCtx.SecSelection())glLoadName(s);
          //  phi +
-         fM->SetupColorHeight(sliceValsUp[s], s, towerH, visible);
-         if (visible) MakeRhoZCell(cellData, offUp, kTRUE , towerH);
+         fM->SetupColorHeight(sliceValsUp[s], s, towerH);
+         MakeRhoZCell(cellData, offUp, kTRUE , towerH);
 
          // phi -
-         fM->SetupColorHeight(sliceValsLow[s], s, towerH, visible);
-         if (visible) MakeRhoZCell(cellData, offLow, kFALSE , towerH);
+         fM->SetupColorHeight(sliceValsLow[s], s, towerH);
+         MakeRhoZCell(cellData, offLow, kFALSE , towerH);
       }
 
       if (rnrCtx.SecSelection()) glPopName(); // slice

@@ -305,8 +305,7 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    if (fM->fCacheOK == kFALSE)
    {
       fM->ResetCache();
-      fM->fData->GetCellList(fM->fPalette->GetMinVal(), fM->fPalette->GetMaxVal(),
-                             fM->GetEta(), fM->GetEtaRng(), fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
+      fM->fData->GetCellList(fM->GetEta(), fM->GetEtaRng(), fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
       fM->fCacheOK= kTRUE;
    }
 
@@ -317,7 +316,6 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    TEveCaloData::CellData_t cellData;
    Float_t transEta = fM->GetTransitionEta();
    Float_t towerH;
-   Bool_t  visible;
    Int_t   prevTower = 0;
    Float_t offset = 0;
 
@@ -331,15 +329,12 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
          offset = 0;
          prevTower = fM->fCellList[i].fTower;
       }
-      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), fM->fCellList[i].fSlice, towerH, visible);
-      if (visible)
-      {
-         if (rnrCtx.SecSelection()) glLoadName(i);
-         if (TMath::Abs(cellData.EtaMax()) < transEta)
-            offset = RenderBarrelCell(cellData, towerH, offset);
-         else
-            offset = RenderEndCapCell(cellData, towerH, offset);
-      }
+      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), fM->fCellList[i].fSlice, towerH);
+      if (rnrCtx.SecSelection()) glLoadName(i);
+      if (TMath::Abs(cellData.EtaMax()) < transEta)
+         offset = RenderBarrelCell(cellData, towerH, offset);
+      else
+         offset = RenderEndCapCell(cellData, towerH, offset);
    }
    if (rnrCtx.SecSelection()) glPopName();
 

@@ -26,12 +26,12 @@
 // Base class for composite GUI elements for setting of numeric
 // values.
 
-ClassImp(TEveGValuatorBase)
+ClassImp(TEveGValuatorBase);
 
 //______________________________________________________________________________
 TEveGValuatorBase::TEveGValuatorBase(const TGWindow *p, const char* name,
-                                     UInt_t w, UInt_t h) :
-   TGCompositeFrame(p, w, h),
+                                     UInt_t w, UInt_t h, Int_t widgetId) :
+   TGCompositeFrame(p, w, h), TGWidget(widgetId),
 
    fLabelWidth (0),
    fAlignRight (kFALSE),
@@ -57,12 +57,12 @@ TEveGValuatorBase::TEveGValuatorBase(const TGWindow *p, const char* name,
 // Composite GUI element for single value selection (supports label,
 // number-entry and slider).
 
-ClassImp(TEveGValuator)
+ClassImp(TEveGValuator);
 
 //______________________________________________________________________________
 TEveGValuator::TEveGValuator(const TGWindow *p, const char* title,
-                             UInt_t w, UInt_t h) :
-   TEveGValuatorBase(p, title, w, h),
+                             UInt_t w, UInt_t h, Int_t widgetId) :
+   TEveGValuatorBase(p, title, w, h, widgetId),
 
    fValue (0),
    fMin   (0),
@@ -255,12 +255,12 @@ void TEveGValuator::SetEnabled(Bool_t state)
 // Composite GUI element for selection of range (label, two
 // number-entries and double-slider).
 
-ClassImp(TEveGDoubleValuator)
+ClassImp(TEveGDoubleValuator);
 
 //______________________________________________________________________________
 TEveGDoubleValuator::TEveGDoubleValuator(const TGWindow *p, const char* title,
-                                         UInt_t w, UInt_t h) :
-   TEveGValuatorBase(p, title, w, h),
+                                         UInt_t w, UInt_t h, Int_t widgetId) :
+   TEveGValuatorBase(p, title, w, h, widgetId),
 
    fMinEntry(0),
    fMaxEntry(0),
@@ -430,12 +430,12 @@ void TEveGDoubleValuator::ValueSet()
 // three number-entries). All three values have the same number-format
 // and value-range.
 
-ClassImp(TEveGTriVecValuator)
+ClassImp(TEveGTriVecValuator);
 
 //______________________________________________________________________________
 TEveGTriVecValuator::TEveGTriVecValuator(const TGWindow *p, const char* name,
-                                         UInt_t w, UInt_t h) :
-   TGCompositeFrame(p, w, h),
+                                         UInt_t w, UInt_t h, Int_t widgetId) :
+   TGCompositeFrame(p, w, h), TGWidget(widgetId),
 
    fLabelWidth (0),
    fNELength   (5),

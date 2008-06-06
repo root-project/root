@@ -298,32 +298,22 @@ TClass* TEveCaloViz::ProjectedClass() const
 }
 
 //______________________________________________________________________________
-void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice,
-                                   Float_t &outH, Bool_t &viz) const
+void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t &outH) const
 {
-   // Set color and height for a given value and slice using TEveRGBAPalette.
+   // Set color and height for a given value and slice using slice color or TEveRGBAPalette.
 
-   Bool_t visible = kFALSE;
-   if (fPalette->GetShowDefValue())
-   {
-      if (value > fPalette->GetMinVal() && value < fPalette->GetMaxVal())
-      {
-         TGLUtil::Color(fPalette->GetDefaultColor() + slice);
-         outH = GetValToHeight()*value;
-         visible = kTRUE;
-      }
-   }
-
-   if (fPalette->GetShowDefValue() == kFALSE && fPalette->WithinVisibleRange((Int_t)value))
+   if (fValueIsColor)
    {
       outH = GetValToHeight()*fData->GetMaxVal(fPlotEt);
       UChar_t c[4];
       fPalette->ColorFromValue((Int_t)value, c);
       TGLUtil::Color4ubv(c);
-      visible = kTRUE;
    }
-
-   viz = visible;
+   else 
+   {
+      TGLUtil::Color(fData->RefSliceInfo(slice).fColor);
+      outH = GetValToHeight()*value;
+   }
 }
 
 //______________________________________________________________________________
