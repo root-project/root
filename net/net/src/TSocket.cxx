@@ -34,6 +34,7 @@
 #include "TVirtualAuth.h"
 #include "TVirtualMutex.h"
 #include "TStreamerInfo.h"
+#include "TProcessID.h"
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
@@ -93,7 +94,8 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress  = 0;
    fTcpWindowSize = tcpwindowsize;
-
+   fUUIDs     = 0;
+   
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                         tcpwindowsize);
@@ -138,6 +140,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress  = 0;
    fTcpWindowSize = tcpwindowsize;
+   fUUIDs     = 0;
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                      tcpwindowsize);
@@ -180,6 +183,7 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress  = 0;
    fTcpWindowSize = tcpwindowsize;
+   fUUIDs     = 0;
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
@@ -228,6 +232,7 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress  = 0;
    fTcpWindowSize = tcpwindowsize;
+   fUUIDs     = 0;
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
    if (fSocket == -1) {
@@ -252,6 +257,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    fBytesSent = 0;
    fBytesRecv = 0;
    fCompress  = 0;
+   fUUIDs     = 0;
 
    if (desc >= 0) {
       fSocket  = desc;
@@ -277,7 +283,8 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
-
+   fUUIDs     = 0;
+   
    if (fSocket != -1) {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
@@ -418,7 +425,9 @@ Int_t TSocket::Send(const TMessage &mess)
    // received an acknowledgement, making the sending process synchronous.
    // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
    // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
-
+   // support for streaming TStreamerInfo added by Rene Brun May 2008
+   // support for streaming TProcessID added by Rene Brun June 2008
+   
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
@@ -448,6 +457,40 @@ Int_t TSocket::Send(const TMessage &mess)
          delete minilist;
          messinfo.fInfos->Clear();
          Send(messinfo);
+      }
+   }  
+          
+   //check if TProcessID must be sent. The list of TProcessID
+   //in the object in the message is found by looking in the TMessage bits.
+   //We send only the TProcessIDs not yet send on this socket.
+   if (mess.TestBitNumber(0)) {
+      TObjArray *pids = TProcessID::GetPIDs();
+      Int_t npids = pids->GetEntries();
+      TProcessID *pid;
+      TList *minilist =0;
+      for (Int_t ipid = 0;ipid<npids;ipid++) {
+         pid = (TProcessID*)pids->At(ipid);
+         if (!pid) continue;
+         if (!mess.TestBitNumber(pid->GetUniqueID()+1)) continue;
+         //check if a pid with this title has already been sent through the socket
+         //if not add it to the fUUIDs list
+         if (!fUUIDs) {
+            fUUIDs = new TList();
+         } else {
+            if (fUUIDs->FindObject(pid->GetTitle())) continue;
+         }                     
+         fUUIDs->Add(new TObjString(pid->GetTitle()));
+         if (!minilist) minilist = new TList();
+         if (gDebug > 0) {
+            printf("sending TProcessID = %s\n",pid->GetTitle());
+         }
+         minilist->Add(pid);
+      }
+      if (minilist) {
+         TMessage messpid(kMESS_PROCESSID);
+         messpid.WriteObject(minilist);
+         delete minilist;
+         Send(messpid);
       }
    }         
 
@@ -688,8 +731,40 @@ Int_t TSocket::Recv(TMessage *&mess)
             continue;
          }
          info->BuildCheck();
-         printf("importing TStreamerInfo: %s, version=%d\n",info->GetName(),info->GetOldVersion());
-         
+         if (gDebug > 0) {
+            printf("importing TStreamerInfo: %s, version=%d\n",info->GetName(),info->GetOldVersion());
+         }         
+      }
+      delete list;
+      delete mess;
+      goto oncemore;
+   }
+   
+   if (mess->What() == kMESS_PROCESSID) {
+      TList *list = (TList*)mess->ReadObject(TList::Class());
+      TIter next(list);
+      TProcessID *pid;
+      while ((pid = (TProcessID*)next())) {
+         if (gDebug > 0) {
+            printf("importing TProcessID: %s\n",pid->GetTitle());
+         }
+         //check that a similar pid is not already registered in fgPIDs
+         TObjArray *pidslist = TProcessID::GetPIDs();
+         TIter nextpid(pidslist);
+         TProcessID *p;
+         while ((p = (TProcessID*)nextpid())) {
+            if (!strcmp(p->GetTitle(),pid->GetTitle())) {
+               delete pid;
+               pid = 0;
+               break;
+            }
+         }
+         if (pid) {
+            pid->IncrementCount();
+            pidslist->Add(pid);
+            Int_t ind = pidslist->IndexOf(pid);
+            pid->SetUniqueID((UInt_t)ind);
+         }
       }
       delete list;
       delete mess;

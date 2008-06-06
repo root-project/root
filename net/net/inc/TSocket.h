@@ -93,7 +93,8 @@ protected:
    Int_t         fTcpWindowSize;  // TCP window size (default 65535);
    TString       fUrl;            // needs this for special authentication options
    TBits         fBitsInfo;       // bits array to mark TStreamerInfo classes already sent
-   
+   TList        *fUUIDs;          // list of TProcessIDs already sent through the socket
+      
    static ULong64_t fgBytesRecv;  // total bytes received by all socket objects
    static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
