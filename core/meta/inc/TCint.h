@@ -137,8 +137,6 @@ public:
    Bool_t  IsProcessLineLocked() const { return fLockProcessLine; }
    void    SetProcessLineLock(Bool_t lock = kTRUE) { fLockProcessLine = lock; }
    const char *TypeName(const char *typeDesc);
-   const char *GetTopLevelMacroName() const;
-   const char *GetCurrentMacroName() const;
 
    static void *FindSpecialObject(const char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);
    static int   AutoLoadCallback(const char *cls, const char *lib);
@@ -154,6 +152,8 @@ public:
    virtual Long_t GetExecByteCode() const;
    virtual Long_t Getgvp() const;
    virtual const char *Getp2f2funcname(void *receiver) const;
+   virtual const char *GetTopLevelMacroName() const;
+   virtual const char *GetCurrentMacroName() const;
    virtual int    GetSecurityError() const;
    virtual int    LoadFile(const char *path) const;
    virtual void   LoadText(const char *text) const;
