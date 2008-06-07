@@ -172,6 +172,11 @@ endif
 
 ObjSuf   = o
 
+ifeq ($(ARCH),macosx64)
+PYTHON := python64
+else
+PYTHON := python
+endif
 ifeq ($(HAS_PYTHON),)
    export HAS_PYTHON := $(shell root-config --has-python)
 endif
@@ -444,9 +449,9 @@ endif
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
-	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib python $< -b > $@ 2>&1
+	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b > $@ 2>&1
 else 
-	$(CMDECHO) python $< -b > $@ 2>&1
+	$(CMDECHO) $(PYTHON) $< -b > $@ 2>&1
 endif
 
 .PRECIOUS: %_C.$(DllSuf) 
@@ -454,7 +459,7 @@ endif
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1
 
-ifneq ($(ARCH),macosx)
+ifneq ($(PLATFORM),macosx)
 
 define BuildWithLib
 	$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log 
@@ -506,7 +511,7 @@ $(CMDECHO) ( touch dummy$$$$.C && \
 endef
 
 RemoveLeadingDirs := sed -e 's?^[A-Za-z/\].*[/\]??' -e 's/.dll/.so/'
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
    RemoveDirs := sed -E -e 's,([[:alpha:]]:\\|/)[^[:space:]]*[/\\],,g' 
 else
    RemoveDirs := sed -e 's?\([A-Za-z]:\|[/]\).*[/\]??'
