@@ -62,7 +62,8 @@ void MakeCalo2D(TEveCalo3D* calo3d)
   mng->SetProjection(TEveProjection::kPT_RhoZ);
   gEve->AddElement(mng, s1);
   gEve->AddToListTree(mng, kTRUE);
-  mng->ImportElements(calo3d);
+  TEveCalo2D* c2d = (TEveCalo2D*) mng->ImportElements(calo3d);
+  c2d->SetValueIsColor(kFALSE);
 }
 
 //______________________________________________________________________________

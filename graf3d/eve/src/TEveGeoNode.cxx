@@ -440,8 +440,10 @@ TGeoManager* init_geo_mangeur()
 {
    // Create a phony geo manager that 
    TGeoManager* old = gGeoManager;
-   TGeoManager* mgr = new TGeoManager("TEveGeoShape::fgGeoMangeur",
-                                      "Static geo manager used for wrapped TGeoShapes.");
+   gGeoManager = 0;
+   TGeoManager* mgr = new TGeoManager();
+   mgr->SetNameTitle("TEveGeoShape::fgGeoMangeur",
+                     "Static geo manager used for wrapped TGeoShapes.");
    gGeoManager = old;
    return mgr;
 }
