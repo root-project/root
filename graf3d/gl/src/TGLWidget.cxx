@@ -73,7 +73,7 @@ TGLWidget::TGLWidget(const TGWindow &p, Bool_t select,
                      const TGLPaintDevice *shareDevice,
                      UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
               : TGFrame(&p, w, h, opt, back),
-                fFromCtor(kTRUE)
+                fFromCtor(kTRUE), fEventHandler(0)
 {
    //Creates widget with default pixel format.
    CreateWidget(shareDevice);
@@ -100,7 +100,7 @@ TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select,
                      UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
               : TGFrame(&p, w, h, opt, back),
                 fGLFormat(format),
-                fFromCtor(kTRUE)
+                fFromCtor(kTRUE), fEventHandler(0)
 {
    //Create widget with the requested pixel format.
    CreateWidget(shareDevice);
@@ -125,7 +125,7 @@ TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select,
 TGLWidget::TGLWidget(const TGWindow &p, Bool_t select,
                      UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
               : TGFrame(&p, w, h, opt, back),
-                fFromCtor(kTRUE)
+                fFromCtor(kTRUE), fEventHandler(0)
 {
    //Creates widget with default pixel format, default shareList.
    CreateWidget();
@@ -151,7 +151,7 @@ TGLWidget::TGLWidget(const TGLFormat &format, const TGWindow &p, Bool_t select,
                      UInt_t w, UInt_t h, UInt_t opt, Pixel_t back)
               : TGFrame(&p, w, h, opt, back),
                 fGLFormat(format),
-                fFromCtor(kTRUE)
+                fFromCtor(kTRUE), fEventHandler(0)
 {
    //Create widget with the requested pixel format, default shareList.
    CreateWidget();
