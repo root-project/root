@@ -12,6 +12,12 @@ PYROOTDIR    := $(MODDIR)
 PYROOTDIRS   := $(PYROOTDIR)/src
 PYROOTDIRI   := $(PYROOTDIR)/inc
 
+##### python64 #####
+PYTHON64S    := $(MODDIRS)/python64.c
+PYTHON64O    := $(PYTHON64S:.c=.o)
+PYTHON64     := bin/python64
+PYTHON64DEP  := $(PYTHON64O:.o=.d)
+
 ##### libPyROOT #####
 PYROOTL      := $(MODDIRI)/LinkDef.h
 PYROOTDS     := $(MODDIRS)/G__PyROOT.cxx
@@ -31,7 +37,7 @@ endif
 PYROOTMAP    := $(PYROOTLIB:.$(SOEXT)=.rootmap)
 
 ROOTPYS      := $(wildcard $(MODDIR)/*.py)
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 ROOTPY       := $(subst $(MODDIR),bin,$(ROOTPYS))
 bin/%.py: $(MODDIR)/%.py; cp $< $@
 else
@@ -42,9 +48,13 @@ ROOTPYC      := $(ROOTPY:.py=.pyc)
 ROOTPYO      := $(ROOTPY:.py=.pyo)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
-ALLLIBS     += $(PYROOTLIB)
-ALLMAPS     += $(PYROOTMAP)
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
+ALLLIBS      += $(PYROOTLIB)
+ALLMAPS      += $(PYROOTMAP)
+ifeq ($(ARCH),macosx64)
+ALLEXECS     += $(PYTHON64)
+INCLUDEFILES += $(PYTHON64DEP)
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)
@@ -77,17 +87,25 @@ $(PYROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PYROOTL)
 		$(RLIBMAP) -o $(PYROOTMAP) -l $(PYROOTLIB) \
 		   -d $(PYROOTLIBDEPM) -c $(PYROOTL)
 
+$(PYTHON64):    $(PYTHON64O)
+		$(CC) $(LDFLAGS) -o $@ $(PYTHON64O) \
+		   $(PYTHONLIBDIR) $(PYTHONLIB)
+
+ifeq ($(ARCH),macosx64)
+all-$(MODNAME): $(PYROOTLIB) $(PYROOTMAP) $(PYTHON64)
+else
 all-$(MODNAME): $(PYROOTLIB) $(PYROOTMAP)
+endif
 
 clean-$(MODNAME):
-		@rm -f $(PYROOTO) $(PYROOTDO)
+		@rm -f $(PYROOTO) $(PYROOTDO) $(PYTHON64O)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
 		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO) $(PYROOTMAP) \
-		   $(PYROOTPYD)
+		   $(PYROOTPYD) $(PYTHON64DEP) $(PYTHON64)
 
 distclean::     distclean-$(MODNAME)
 
@@ -100,3 +118,4 @@ $(PYROOTLIB): $(LPATH)/libReflex.$(SOEXT)
 else
 $(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)
 endif
+$(PYTHON64O): CFLAGS += $(PYTHONINCDIR:%=-I%)
