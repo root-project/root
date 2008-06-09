@@ -17,7 +17,18 @@ LDOPT:=-debug
 
 #all: bigeventTest
 
-bigeventTest: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
-	$(CMDECHO)./Event 10 1 1 1 > Event.write.log
-	$(CMDECHO)./Event 10 1 1 20 > Event.read.log
+bigeventTest.write.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
+	$(CMDECHO)./Event 10 1 1 1 > Event.write.log 2>bigeventTest.write.log && echo "write success" > bigeventTest.write.log
+
+bigeventTest.read.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf) bigeventTest.write.log
+	$(CMDECHO)./Event 10 1 1 20 > Event.write.log 2>bigeventTest.read.log && echo "read success" > bigeventTest.read.log
+ 
+bigeventTest.log: bigeventTest.write.log bigeventTest.read.log
+	$(CMDECHO) cat bigeventTest.write.log bigeventTest.read.log > bigeventTest.log
+
+bigeventTest.success: bigeventTest.log
+	$(CMDECHO) diff -u -b bigeventTest.ref bigeventTest.log && touch bigeventTest.success
+
+bigeventTest: bigeventTest.log bigeventTest.success
+	$(TestDiff)
 

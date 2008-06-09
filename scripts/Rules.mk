@@ -73,6 +73,9 @@ endif
 ifeq ($(PLATFORM),)
    export PLATFORM      := $(shell root-config --platform)
 endif
+ifeq ($(ROOTSYS),)
+   export ROOTSYS       := $(shell root-config --prefix)
+endif
 
 ifeq ($(ROOTTEST_LOC),)
 
@@ -395,7 +398,7 @@ UTILS_PREREQ =  $(UTILS_LIBS)
 
 utils:  $(UTILS_LIBS) 
 
-copiedEvent$(ExeSuf): $(EVENTDIR)/$(SUCCESS_FILE)
+copiedEvent$(ExeSuf): $(EVENTDIR)/bigeventTest.success
 	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h .
 	$(CMDECHO) cp $(EVENTDIR)/Event$(ExeSuf) ./copiedEvent$(ExeSuf)
 ifeq ($(PLATFORM),win32)
