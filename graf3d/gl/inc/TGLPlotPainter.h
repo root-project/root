@@ -153,6 +153,8 @@ private:
    const TColor         *fPadColor;
 
 protected:
+   Double_t              fPadPhi;
+   Double_t              fPadTheta;
    TH1                  *fHist;
    TAxis                *fXAxis;
    TAxis                *fYAxis;

@@ -115,7 +115,7 @@ public:
    void   ZoomIn();
    void   ZoomOut();
    void   SetCamera()const;
-   void   Apply()const;
+   void   Apply(Double_t phi, Double_t theta)const;
    Bool_t ViewportChanged()const{return fVpChanged;}
    Int_t  GetX()const;
    Int_t  GetY()const;

@@ -43,6 +43,8 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordin
                   : //fGLContext(context),
                     fGLDevice(dev),
                     fPadColor(0),
+                    fPadPhi(45.),
+                    fPadTheta(0.),
                     fHist(hist),
                     fXAxis(hist->GetXaxis()),
                     fYAxis(hist->GetYaxis()),
@@ -64,6 +66,10 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordin
    //TGLPlotPainter's ctor.
    if (MakeGLContextCurrent())
       fCamera->SetViewport(fGLDevice);
+   if (gPad) {
+      fPadPhi   = gPad->GetPhi();
+      fPadTheta = gPad->GetTheta();
+   }
 }
 
 //______________________________________________________________________________
@@ -71,6 +77,8 @@ TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, TGLPaintDevice *dev)
                   : //fGLContext(context),
                     fGLDevice(dev),
                     fPadColor(0),
+                    fPadPhi(45.),
+                    fPadTheta(0.),
                     fHist(0),
                     fXAxis(0),
                     fYAxis(0),
@@ -92,6 +100,10 @@ TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, TGLPaintDevice *dev)
    //TGLPlotPainter's ctor.
    if (MakeGLContextCurrent())
       fCamera->SetViewport(fGLDevice);
+   if (gPad) {
+      fPadPhi   = gPad->GetPhi();
+      fPadTheta = gPad->GetTheta();
+   }
 }
 
 //______________________________________________________________________________
@@ -119,7 +131,7 @@ void TGLPlotPainter::Paint()
    const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
    glLightfv(GL_LIGHT0, GL_POSITION, pos);
    //Set transformation - shift and rotate the scene.
-   fCamera->Apply();
+   fCamera->Apply(fPadPhi, fPadTheta);
    fBackBox.FindFrontPoint();
    if (gVirtualPS)
       PrintPlot();
@@ -196,7 +208,7 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
       TGLDisableGuard lightGuard(GL_LIGHTING);
       glClearColor(0.f, 0.f, 0.f, 0.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      fCamera->Apply();
+      fCamera->Apply(fPadPhi, fPadTheta);
       DrawPlot();
       glFlush();
       fSelection.ReadColorBuffer(fCamera->GetWidth(), fCamera->GetHeight());

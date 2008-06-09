@@ -506,15 +506,13 @@ void TGLOrthoCamera::SetCamera()const
 }
 
 //______________________________________________________________________________
-void TGLOrthoCamera::Apply()const
+void TGLOrthoCamera::Apply(Double_t phi, Double_t theta)const
 {
    //Applies rotations and translations before drawing
    glTranslated(0., 0., -fShift);
    glMultMatrixd(fArcBall.GetRotMatrix());
-   glRotated(45., 1., 0., 0.);
-   glRotated(-45., 0., 1., 0.);
-   glRotated(-90., 0., 1., 0.);
-   glRotated(-90., 1., 0., 0.);
+   glRotated(theta - 90., 1., 0., 0.);
+   glRotated(phi, 0., 0., 1.);
    glTranslated(-fTruck[0], -fTruck[1], -fTruck[2]);
    glTranslated(-fCenter[0], -fCenter[1], -fCenter[2]);
 }

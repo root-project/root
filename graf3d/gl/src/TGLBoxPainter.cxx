@@ -498,7 +498,7 @@ void TGLBoxPainter::DrawPalette()const
    glFinish();
 
    fCamera->SetCamera();
-   fCamera->Apply();
+   fCamera->Apply(fPadPhi, fPadTheta);
 }
 
 //______________________________________________________________________________

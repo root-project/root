@@ -13,7 +13,7 @@ Float_t phi = 30;
 void anim()
 {
    gStyle->SetFrameFillColor(42);
-   TCanvas *c1 = new TCanvas("c1");
+   TCanvas *c1 = new TCanvas("glc1");
    c1->SetFillColor(17);
    pi = TMath::Pi();
    f2 = new TF2("f2","sin(2*x)*sin(2*y)*[0]",0,pi,0,pi);
@@ -22,14 +22,14 @@ void anim()
    f2->SetNpy(15);
    f2->SetMaximum(1);
    f2->SetMinimum(-1);
-   f2->Draw("surf1");
+   f2->Draw("glsurf1");
    TTimer *timer = new TTimer(20);
    timer->SetCommand("Animate()");
    timer->TurnOn();
 }   
 void Animate()
 {
-   if (!gROOT->GetListOfCanvases()->FindObject("c1")) return; //just in case the canvas has been deleted
+   if (!gROOT->GetListOfCanvases()->FindObject("glc1")) return; //just in case the canvas has been deleted
    t += 0.05*pi;
    f2->SetParameter(0,TMath::Cos(t));
    phi += 2;
