@@ -1,6 +1,5 @@
 // Example of bar charts
 // Author: Rene Brun
-void hbars()
 {
    TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("hbars.C","../tree/cernbuild.C");
@@ -10,7 +9,7 @@ void hbars()
    if (!f) return;
    TTree *T = (TTree*)f->Get("T");
    T->SetFillColor(45);
-   TCanvas *c1 = new TCanvas("c1","histograms with bars",10,10,800,900);
+   TCanvas *c1 = new TCanvas("c1","histograms with bars",700,800);
    c1->SetFillColor(42);
    c1->Divide(1,2);
    
@@ -41,4 +40,5 @@ void hbars()
    
    c1->cd();
    delete f;
+   return c1;
 }
