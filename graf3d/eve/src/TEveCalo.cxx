@@ -458,7 +458,7 @@ TEveCaloLego::TEveCaloLego(const Text_t* n, const Text_t* t):
    fNZSteps(6),
    fZAxisStep(0.f),
 
-   fBinWidth(5),
+   fBinWidth(4),
 
    fProjection(kAuto),
    f2DMode(kValColor),
@@ -484,7 +484,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
    fNZSteps(6),
    fZAxisStep(0.f),
 
-   fBinWidth(5),
+   fBinWidth(4),
 
    fProjection(kAuto),
    f2DMode(kValColor),

@@ -16,9 +16,9 @@ void cms_calo()
 
   Int_t s;
   s = data->AddHistogram(ecalHist);
-  data->RefSliceInfo(s).Setup("ECAL", 0.3, 4);
+  data->RefSliceInfo(s).Setup("ECAL", 0.3, kRed);
   s = data->AddHistogram(hcalHist);
-  data->RefSliceInfo(s).Setup("HCAL", 0.1, 5);
+  data->RefSliceInfo(s).Setup("HCAL", 0.1, kYellow);
   
   // palette
   gStyle->SetPalette(1, 0);
@@ -78,7 +78,7 @@ void MakeCaloLego(TEveCaloDataHist* data)
   
   // lego
   TEveCaloLego* lego = new TEveCaloLego(data);
-  lego->SetGridColor(kGray+2);
+  lego->SetPlaneColor(kBlue-5);
   lego->Set2DMode(TEveCaloLego::kValSize);
   lego->SetName("TwoHistLego");
   gEve->AddElement(lego, s2);
