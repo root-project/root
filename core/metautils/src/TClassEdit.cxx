@@ -333,7 +333,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    //fprintf(stderr,"calling ShortType with mode %d\n",mode);
 //    int imode = mode;
 
-   string full = CleanType(typeDesc, 1);
+   string full = CleanType(typeDesc, 1 );
    string answ;
    int tailLoc=0;
    int nestedLoc=0; // location of the tail (if set to >0)
@@ -446,9 +446,16 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    //   do the same for all inside
    for (int i=1;i<narg; i++) {
       if (strchr(arglist[i].c_str(),'<')==0) continue;
+      bool hasconst = 0==strncmp("const ",arglist[i].c_str(),6);
+      //NOTE: Should we also check the end of the type for 'const'?
       arglist[i] = ShortType(arglist[i].c_str(),mode);
+      if (hasconst) {
+         arglist[i] = "const " + arglist[i];
+      }
    }
-   if (!arglist[0].empty()) {answ = arglist[0]; answ +="<";}
+
+   if (!arglist[0].empty()) {answ += arglist[0]; answ +="<";}
+
 
    { for (int i=1;i<narg-1; i++) { answ += arglist[i]; answ+=",";} }
    if (narg>1) { answ += arglist[narg-1]; }
