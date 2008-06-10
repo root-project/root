@@ -131,6 +131,8 @@ TCanvas *ContourList(){
    }
    c1->Update();
    printf("\n\n\tExtracted %d Contours and %d Graphs \n", TotalConts, nGraphs );
+   gStyle->SetTitleW(0.);
+   gStyle->SetTitleH(0.);
    return c1;
 }
 
