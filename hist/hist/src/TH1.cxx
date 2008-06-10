@@ -873,7 +873,6 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       if (i == 1) s1[i] += c1*c1*s2[i];
       else        s1[i] += TMath::Abs(c1)*s2[i];
    }
-   PutStats(s1);
 
    SetMinimum();
    SetMaximum();
@@ -909,6 +908,9 @@ void TH1::Add(const TH1 *h1, Double_t c1)
          }
       }
    }
+
+   // update statistics (do here to avoid changes by SetBinContent)
+   PutStats(s1);
 }
 
 //______________________________________________________________________________
@@ -984,7 +986,6 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
       else        s3[i] = TMath::Abs(c1)*s1[i] + TMath::Abs(c2)*s2[i];
    }
-   PutStats(s3);
 
    SetMinimum();
    SetMaximum();
@@ -1037,6 +1038,8 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          }
       }
    }
+   // update statistics (do here to avoid changes by SetBinContent)
+   PutStats(s3);
    SetEntries(nEntries);
 }
 
@@ -5349,10 +5352,15 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew = (TH1*)Clone(newname);
    }
 
+   // save original statistics
+   Double_t stat[kNstat]; 
+   GetStats(stat); 
+
+   bool resetStat = false; 
    // change axis specs and rebuild bin contents array::RebinAx
    if(!xbins && (newbins*ngroup != nbins)) {
       xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
-      hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+      resetStat = true; //stats must be reset because top bins will be moved to overflow bin
    }
    // save the TAttAxis members (reset by SetBins)
    Int_t    nDivisions  = fXaxis.GetNdivisions();
@@ -5415,7 +5423,9 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    }
    hnew->SetBinContent(0,oldBins[0]);
    hnew->SetBinContent(newbins+1,oldBins[nbins+1]);
-   hnew->SetEntries(entries); //was modified by SetBinContent
+   //restore statistics and entries  modified by SetBinContent
+   hnew->SetEntries(entries); 
+   if (!resetStat) hnew->PutStats(stat);
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;
    return hnew;
