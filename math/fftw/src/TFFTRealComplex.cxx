@@ -65,6 +65,7 @@ TFFTRealComplex::TFFTRealComplex(Int_t n, Bool_t inPlace)
 //For 1d transforms
 //Allocates memory for the input array, and, if inPlace = kFALSE, for the output array
 
+
    if (!inPlace){
       fIn = fftw_malloc(sizeof(Double_t)*n);
       fOut = fftw_malloc(sizeof(fftw_complex)*(n/2+1));
@@ -280,71 +281,75 @@ void TFFTRealComplex::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_
 
 
    Int_t ireal = ipoint[0];
-   for (Int_t i=0; i<fNdim-1; i++)
+   for (Int_t i=0; i<fNdim-2; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
+   //special treatment of the last dimension
+   ireal = (fN[fNdim-1]/2+1)*ireal + ipoint[fNdim-1];
+
    if (fromInput){
       re = ((Double_t*)fIn)[ireal];
-   } else {
-      if (fNdim==1){
-         if (fOut){
-            if (ipoint[0] <fN[0]/2+1){
-               re = ((fftw_complex*)fOut)[ipoint[0]][0];
-               im = ((fftw_complex*)fOut)[ipoint[0]][1];
-            } else {
-               re = ((fftw_complex*)fOut)[fN[0]-ipoint[0]][0];
-               im = -((fftw_complex*)fOut)[fN[0]-ipoint[0]][1];
-            }
+      return;
+   } 
+   if (fNdim==1){
+      if (fOut){
+         if (ipoint[0] <fN[0]/2+1){
+            re = ((fftw_complex*)fOut)[ipoint[0]][0];
+            im = ((fftw_complex*)fOut)[ipoint[0]][1];
          } else {
-            if (ireal <fN[0]/2+1){
-               re = ((Double_t*)fIn)[2*ipoint[0]];
-               im = ((Double_t*)fIn)[2*ipoint[0]+1];
-            } else {
-               re = ((Double_t*)fIn)[2*(fN[0]-ipoint[0])];
-               im = ((Double_t*)fIn)[2*(fN[0]-ipoint[0])+1];
-            }
+            re = ((fftw_complex*)fOut)[fN[0]-ipoint[0]][0];
+            im = -((fftw_complex*)fOut)[fN[0]-ipoint[0]][1];
          }
-      }
-      else if (fNdim==2){
-         if (fOut){
-            if (ipoint[1]<fN[1]/2+1){
-               re = ((fftw_complex*)fOut)[ipoint[1]+(fN[1]/2+1)*ipoint[0]][0];
-               im = ((fftw_complex*)fOut)[ipoint[1]+(fN[1]/2+1)*ipoint[0]][1];
-            } else {
-               if (ipoint[0]==0){
-                  re = ((fftw_complex*)fOut)[fN[1]-ipoint[1]][0];
-                  im = -((fftw_complex*)fOut)[fN[1]-ipoint[1]][1];
-               } else {
-                  re = ((fftw_complex*)fOut)[(fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0])][0];
-                  im = -((fftw_complex*)fOut)[(fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0])][1];
-               }
-            }
+      } else {
+         if (ireal <fN[0]/2+1){
+            re = ((Double_t*)fIn)[2*ipoint[0]];
+            im = ((Double_t*)fIn)[2*ipoint[0]+1];
          } else {
-            if (ipoint[1]<fN[1]/2+1){
-               re = ((Double_t*)fIn)[2*(ipoint[1]+(fN[1]/2+1)*ipoint[0])];
-               im = ((Double_t*)fIn)[2*(ipoint[1]+(fN[1]/2+1)*ipoint[0])+1];
-            } else {
-               if (ipoint[0]==0){
-                  re = ((Double_t*)fIn)[2*(fN[1]-ipoint[1])];
-                  im = -((Double_t*)fIn)[2*(fN[1]-ipoint[1])+1];
-               } else {
-                  re = ((Double_t*)fIn)[2*((fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0]))];
-                  im = -((Double_t*)fIn)[2*((fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0]))+1];
-               }
-            }
-         }
-      }
-      else {
-
-         if (fOut){
-            re = ((fftw_complex*)fOut)[ireal][0];
-            im = ((fftw_complex*)fOut)[ireal][1];
-         } else {
-            re = ((Double_t*)fIn)[2*ireal];
-            im = ((Double_t*)fIn)[2*ireal+1];
+            re = ((Double_t*)fIn)[2*(fN[0]-ipoint[0])];
+            im = ((Double_t*)fIn)[2*(fN[0]-ipoint[0])+1];
          }
       }
    }
+   else if (fNdim==2){
+      if (fOut){
+         if (ipoint[1]<fN[1]/2+1){
+            re = ((fftw_complex*)fOut)[ipoint[1]+(fN[1]/2+1)*ipoint[0]][0];
+            im = ((fftw_complex*)fOut)[ipoint[1]+(fN[1]/2+1)*ipoint[0]][1];
+         } else {
+            if (ipoint[0]==0){
+               re = ((fftw_complex*)fOut)[fN[1]-ipoint[1]][0];
+               im = -((fftw_complex*)fOut)[fN[1]-ipoint[1]][1];
+            } else {
+               re = ((fftw_complex*)fOut)[(fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0])][0];
+               im = -((fftw_complex*)fOut)[(fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0])][1];
+            }
+         }
+      } else {
+         if (ipoint[1]<fN[1]/2+1){
+            re = ((Double_t*)fIn)[2*(ipoint[1]+(fN[1]/2+1)*ipoint[0])];
+            im = ((Double_t*)fIn)[2*(ipoint[1]+(fN[1]/2+1)*ipoint[0])+1];
+         } else {
+            if (ipoint[0]==0){
+               re = ((Double_t*)fIn)[2*(fN[1]-ipoint[1])];
+               im = -((Double_t*)fIn)[2*(fN[1]-ipoint[1])+1];
+            } else {
+               re = ((Double_t*)fIn)[2*((fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0]))];
+               im = -((Double_t*)fIn)[2*((fN[1]-ipoint[1])+(fN[1]/2+1)*(fN[0]-ipoint[0]))+1];
+            }
+         }
+      }
+   }
+   else {
+      
+      if (fOut){
+         re = ((fftw_complex*)fOut)[ireal][0];
+         im = ((fftw_complex*)fOut)[ireal][1];
+      } else {
+         re = ((Double_t*)fIn)[2*ireal];
+         im = ((Double_t*)fIn)[2*ireal+1];
+      }
+   }
 }
+
 
 //_____________________________________________________________________________
 Double_t* TFFTRealComplex::GetPointsReal(Bool_t fromInput) const

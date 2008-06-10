@@ -3018,6 +3018,7 @@ void TBranchElement::ResetAddress()
 
    for (Int_t i = 0; i < fNleaves; ++i) {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
+      //if (leaf) leaf->SetAddress(0);
       leaf->SetAddress(0);
    }
 
@@ -3027,7 +3028,7 @@ void TBranchElement::ResetAddress()
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i)  {
       TBranch* br = (TBranch*) fBranches[i];
-      br->ResetAddress();
+      if (br) br->ResetAddress();
    }
 
    //
