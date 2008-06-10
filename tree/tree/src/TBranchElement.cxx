@@ -101,7 +101,7 @@ TBranchElement::TBranchElement()
 , fBranchID(-1)
 {
    // -- Default and I/O constructor.
-   fNleaves = 1;
+   fNleaves = 0;
 }
 
 //______________________________________________________________________________
