@@ -414,7 +414,6 @@ endif
 
 ##### Utilities #####
 
-ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 MAKEDEP       = $(RMKDEP)
 MAKELIB       = build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      = build/unix/makedist.sh
@@ -453,9 +452,6 @@ COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
 ifneq ($(BUILTINZLIB),yes)
 CORELIBEXTRA += $(ZLIBCLILIB)
 endif
-
-##### Dependencies for all dictionaries
-ROOTCINTTMPDEP = $(ROOTCINTTMPO) $(ORDER_) $(ROOTCINTTMPEXE)
 
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
 
@@ -549,6 +545,7 @@ fast:           rootexecs
 skip:
 		@true;
 
+-include $(patsubst %,%/ModuleVars.mk,$(MODULES))
 include $(patsubst %,%/Module.mk,$(MODULES))
 include cint/ROOT/cintdlls.mk
 

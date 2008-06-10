@@ -8,9 +8,7 @@ MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-UTILSDIR     := $(MODDIR)
-UTILSDIRS    := $(UTILSDIR)/src
-UTILSDIRI    := $(UTILSDIR)/inc
+# see also ModuleVars.mk
 
 ##### rootcint #####
 ROOTCINTS    := $(MODDIRS)/rootcint.cxx \
@@ -18,14 +16,11 @@ ROOTCINTS    := $(MODDIRS)/rootcint.cxx \
 ROOTCINTO    := $(ROOTCINTS:.cxx=.o)
 ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
 ROOTCINTDEP  := $(ROOTCINTO:.o=.d) $(ROOTCINTTMPO:.o=.d) 
-ROOTCINTTMPEXE:= $(MODDIRS)/rootcint_tmp$(EXEEXT)
-ROOTCINTEXE  := bin/rootcint$(EXEEXT)
 
 ##### rlibmap #####
 RLIBMAPS     := $(MODDIRS)/rlibmap.cxx
 RLIBMAPO     := $(RLIBMAPS:.cxx=.o)
 RLIBMAPDEP   := $(RLIBMAPO:.o=.d)
-RLIBMAP      := bin/rlibmap$(EXEEXT)
 
 # include all dependency files
 INCLUDEFILES += $(ROOTCINTDEP) $(RLIBMAPDEP)

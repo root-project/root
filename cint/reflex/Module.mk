@@ -8,9 +8,7 @@ MODDIR       := cint/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-REFLEXDIR    := $(MODDIR)
-REFLEXDIRS   := $(REFLEXDIR)/src
-REFLEXDIRI   := $(REFLEXDIR)/inc
+# see also ModuleVars.mk
 
 ##### libReflex #####
 REFLEXL      := $(MODDIRI)/LinkDef.h
@@ -32,7 +30,6 @@ REFLEXO      := $(REFLEXS:.cxx=.o)
 
 REFLEXDEP    := $(REFLEXO:.o=.d) $(REFLEXDO:.o=.d)
 
-REFLEXLIB    := $(LPATH)/libReflex.$(SOEXT)
 REFLEXDICTLIB:= $(LPATH)/libReflexDict.$(SOEXT)
 REFLEXDICTMAP:= $(REFLEXDICTLIB:.$(SOEXT)=.rootmap)
 
@@ -63,21 +60,10 @@ ifeq ($(PLATFORM),win32)
 # test suite
 RFLX_CPPUNITI   = "$(shell cygpath -w '$(CPPUNIT)/include')"
 RFLX_CPPUNITLL  = "$(shell cygpath -w '$(CPPUNIT)/lib/cppunit.lib')"
-RFLX_REFLEXLL   = lib/libReflex.lib
 else
 # test suite
 RFLX_CPPUNITI   = $(CPPUNIT)/include
 RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
-RFLX_REFLEXLL   = -Llib -lReflex
-ifneq ($(PLATFORM),fbsd)
-ifneq ($(PLATFORM),obsd)
-RFLX_REFLEXLL   += -ldl
-endif
-endif
-endif
-
-ifeq ($(PLATFORM),solaris)
-RFLX_REFLEXLL   += -ldemangle
 endif
 
 RFLX_TESTD      = $(REFLEXDIR)/test
@@ -101,7 +87,6 @@ RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 
 RFLX_GENMAPS   = $(REFLEXDIRS)/genmap/genmap.cxx
 RFLX_GENMAPO   = $(RFLX_GENMAPS:.cxx=.o)
-RFLX_GENMAPX   = bin/genmap$(EXEEXT)
 
 ALLEXECS += $(RFLX_GENMAPX)
 
@@ -154,7 +139,7 @@ $(REFLEXDICTLIB): $(REFLEXDO) $(ORDER_) $(MAINLIBS) $(REFLEXLIB)
 		"$(SOFLAGS)" libReflexDict.$(SOEXT) $@ "$(REFLEXDO)" \
 		"$(REFLEXDICTLIBEXTRA)"
 
-$(REFLEXDS): $(REFLEXAPIH) $(REFLEXL) core/utils/src/rootcint_tmp.o $(ORDER_) core/utils/src/rootcint_tmp$(EXEEXT)
+$(REFLEXDS): $(REFLEXAPIH) $(REFLEXL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -p -Icint/reflex/inc $(REFLEXAPIH) $(REFLEXL)
 
