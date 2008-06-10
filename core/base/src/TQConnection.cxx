@@ -426,10 +426,12 @@ void TQSlot::Print(Option_t *) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TQSlotPool : public THashTable {
+class TQSlotPool {
+private:
+   THashTable *fTable;
 public:
-   TQSlotPool() : THashTable(50) { }
-   virtual ~TQSlotPool() { Clear("nodelete"); }
+   TQSlotPool() { fTable = new THashTable(50); }
+   virtual ~TQSlotPool() { fTable->Clear("nodelete"); }
 
    TQSlot  *New(const char *class_name, const char *funcname);
    TQSlot  *New(TClass *cl, const char *method, const char *func);
@@ -445,11 +447,11 @@ TQSlot *TQSlotPool::New(const char *class_name, const char *funcname)
    name += "::";
    name += funcname;
 
-   TQSlot *slot = (TQSlot*)FindObject(name.Data());
+   TQSlot *slot = (TQSlot*)fTable->FindObject(name.Data());
 
    if (!slot) {
       slot = new TQSlot(class_name, funcname);
-      Add(slot);
+      fTable->Add(slot);
    }
    slot->AddReference();
    return slot;
@@ -471,11 +473,11 @@ TQSlot *TQSlotPool::New(TClass *cl, const char *method, const char *func)
       name += func;
    }
 
-   TQSlot *slot = (TQSlot*)FindObject(name.Data());
+   TQSlot *slot = (TQSlot*)fTable->FindObject(name.Data());
 
    if (!slot) {
       slot = new TQSlot(cl, method, func);
-      Add(slot);
+      fTable->Add(slot);
    }
    slot->AddReference();
    return slot;
@@ -489,7 +491,7 @@ void TQSlotPool::Free(TQSlot *slot)
    slot->RemoveReference();  // decrease references to slot
 
    if (slot->References() <= 0) {
-      Remove(slot);
+      fTable->Remove(slot);
       if (!slot->IsExecuting()) SafeDelete(slot);
    }
 }
