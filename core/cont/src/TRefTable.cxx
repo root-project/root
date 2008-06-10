@@ -247,6 +247,7 @@ void TRefTable::FillBuffer(TBuffer & b)
       b << fN[iid];
       b.WriteFastArray(fParentIDs[iid], fN[iid]);
    }
+   b.WriteProcessID(fUIDContext);
 }
 
 
