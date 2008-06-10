@@ -30,10 +30,12 @@ class TGLPaintDevice;
 class TGLWidget;
 class TGLFontManager;
 
-class TGLContext {
+class TGLContext
+{
    friend class TGLContextPrivate;
    friend class TGLWidget;
-//   friend class TGLPBuffer;
+   //   friend class TGLPBuffer;
+
 private:
    TGLPaintDevice *fDevice;
    TGLContextPrivate *fPimpl;
@@ -44,9 +46,8 @@ private:
    TGLContextIdentity *fIdentity;
 
 public:
-   TGLContext(TGLWidget *glWidget);
-   TGLContext(TGLWidget *glWidget, const TGLContext *shareList);
-//   TGLContext(TGLPBuffer *glPbuf, const TGLContext *shareList = 0);
+   TGLContext(TGLWidget *glWidget, Bool_t shareDefault=kTRUE, const TGLContext *shareList=0);
+   //   TGLContext(TGLPBuffer *glPbuf, const TGLContext *shareList = 0);
 
    TGLContextIdentity *GetIdentity()const;
 
@@ -58,7 +59,7 @@ public:
    //This functions are public _ONLY_ for calls via
    //gROOT under win32. Please, DO NOT CALL IT DIRECTLY.
    void             SetContext(TGLWidget *widget, const TGLContext *shareList);
-//   void             SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList);
+   // void          SetContextPB(TGLPBuffer *pbuff, const TGLContext *shareList);
    void             Release();
 
    Bool_t           IsValid()const
@@ -72,13 +73,15 @@ private:
    TGLContext(const TGLContext &);
    TGLContext &operator = (const TGLContext &);
 
-   ClassDef(TGLContext, 0) // Control internal gl-context resources.
+   ClassDef(TGLContext, 0); // Control internal gl-context resources.
 };
 
 
 //______________________________________________________________________________
 
-class TGLContextIdentity {
+class TGLContextIdentity
+{
+
 protected:
    TGLFontManager*      fFontManager;  // FreeType font manager.
 
@@ -124,7 +127,7 @@ private:
 
    static TGLContextIdentity * fgDefaultIdentity;
 
-   ClassDef(TGLContextIdentity, 0) // Identity of a shared GL context.
+   ClassDef(TGLContextIdentity, 0); // Identity of a shared GL context.
 };
 
 #endif

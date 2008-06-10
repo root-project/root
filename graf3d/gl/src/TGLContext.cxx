@@ -40,55 +40,40 @@
 // This class encapsulates window-system specific information about a
 // GL-context and alows their proper management in ROOT.
 
-ClassImp(TGLContext)
+ClassImp(TGLContext);
 
 //______________________________________________________________________________
-TGLContext::TGLContext(TGLWidget *wid)
-               : fDevice(wid),
-                 fPimpl(0),
-                 fFromCtor(kTRUE),
-                 fValid(kFALSE),
-                 fIdentity(0)
+TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
+                       const TGLContext *shareList)
+   : fDevice(wid),
+     fPimpl(0),
+     fFromCtor(kTRUE),
+     fValid(kFALSE),
+     fIdentity(0)
 {
-   //TGLContext ctor "from" TGLWidget. Use default shareList.
-   //Makes thread switching.
-   const TGLContext *shareList = TGLContextIdentity::GetDefaultContextAny();
+   // TGLContext ctor "from" TGLWidget.
+   // Is shareDefault is true, the shareList is set from default
+   // context-identity. Otherwise the given shareList is used (can be
+   // null).
+   // Makes thread switching.
+
+   if (shareDefault)
+      shareList = TGLContextIdentity::GetDefaultContextAny();
+
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
                                   this, wid, shareList));
    } else
       SetContext(wid, shareList);
 
-   fIdentity = TGLContextIdentity::GetDefaultIdentity();
+   if (shareDefault)
+      fIdentity = TGLContextIdentity::GetDefaultIdentity();
+   else
+      fIdentity = shareList ? shareList->GetIdentity() : new TGLContextIdentity;
+
    fIdentity->AddRef(this);
 
    fFromCtor = kFALSE;
-//   fValid = kTRUE;
-
-}
-
-//______________________________________________________________________________
-TGLContext::TGLContext(TGLWidget *wid, const TGLContext *shareList)
-               : fDevice(wid),
-                 fPimpl(0),
-                 fFromCtor(kTRUE),
-                 fValid(kFALSE),
-                 fIdentity(0)
-{
-   //TGLContext ctor "from" TGLWidget. Specify shareList, can be null.
-   //Makes thread switching.
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
-                                  this, wid, shareList));
-   } else
-      SetContext(wid, shareList);
-
-   fIdentity = shareList ? shareList->GetIdentity() : new TGLContextIdentity;
-   fIdentity->AddRef(this);
-
-   fFromCtor = kFALSE;
-//   fValid = kTRUE;
-
 }
 
 //______________________________________________________________________________
@@ -110,7 +95,9 @@ TGLContext::TGLContext(TGLPBuffer *pbuff, const TGLContext *shareList)
 }
 */
 
+//==============================================================================
 #ifdef WIN32
+//==============================================================================
 
 namespace {
 
@@ -254,7 +241,9 @@ void TGLContext::Release()
    fValid = kFALSE;
 }
 
-#else
+//==============================================================================
+#else // Non WIN32
+//==============================================================================
 
 //______________________________________________________________________________
 void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
@@ -356,13 +345,16 @@ void TGLContext::Release()
    fValid = kFALSE;
 }
 
+//==============================================================================
 #endif
+//==============================================================================
 
 //______________________________________________________________________________
 TGLContext::~TGLContext()
 {
-   //TGLContext dtor. If it's called before TGLPaintDevice's dtor (context is valid)
-   //resource will be freed and context un-registered.
+   //TGLContext dtor. If it's called before TGLPaintDevice's dtor
+   //(context is valid) resource will be freed and context
+   //un-registered.
    if (fValid) {
       Release();
       fDevice->RemoveContext(this);

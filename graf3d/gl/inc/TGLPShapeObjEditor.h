@@ -75,6 +75,8 @@ private:
    void CreateGeoControls();
    void CreateColorControls();
 
+   virtual void DoRedraw();
+
 public:
    TGLPShapeObjEditor(const TGWindow *p = 0,
                       Int_t width = 140, Int_t height = 30,
@@ -95,12 +97,10 @@ public:
    void GetObjectData(Double_t *shift, Double_t *scale);
    void GeoValueSet(Long_t unusedVal);
    //colors
-   void CreateMaterialView();
    void CreateColorRadioButtons();
    void CreateColorSliders();
    void SetColorSlidersPos();
-   Bool_t HandleContainerNotify(Event_t *event);
-   Bool_t HandleContainerExpose(Event_t *event);
+
    void DrawSphere()const;
 
    void SetRGBA(const Float_t *rgba);

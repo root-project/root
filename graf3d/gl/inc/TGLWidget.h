@@ -32,40 +32,33 @@
 class TGLWidget;
 class TGEventHandler;
 
-class TGLWidget : public TGFrame, public TGLPaintDevice {
+class TGLWidget : public TGFrame, public TGLPaintDevice
+{
    friend class TGLContext;
+
 private:
-   std::auto_ptr<TGLContext>         fGLContext;
+   TGLContext                       *fGLContext;
    //fInnerData is for X11 - <dpy, visualInfo> pair.
    std::pair<void *, void *>         fInnerData;
+   Int_t                             fWindowIndex;
 
    TGLFormat                         fGLFormat;
    //fFromCtor checks that SetFormat was called only from ctor.
-   Bool_t                            fFromCtor;
+   Bool_t                            fFromInit;
 
    std::set<TGLContext *>            fValidContexts;
 
    TGEventHandler                   *fEventHandler;
 
 public:
-   TGLWidget(const TGWindow &parent, Bool_t selectInput,
-             const TGLPaintDevice *shareDevice,
-             UInt_t width, UInt_t height,
-             UInt_t options = kSunkenFrame | kDoubleBorder,
-             Pixel_t back = 0);
-   TGLWidget(const TGLFormat &format, const TGWindow &parent, Bool_t selectInput,
-             const TGLPaintDevice *shareDevice,
-             UInt_t width, UInt_t height,
-             UInt_t options = kSunkenFrame | kDoubleBorder,
-             Pixel_t back = 0);
-   TGLWidget(const TGWindow &parent, Bool_t selectInput,
-             UInt_t width, UInt_t height,
-             UInt_t options = kSunkenFrame | kDoubleBorder,
-             Pixel_t back = 0);
-   TGLWidget(const TGLFormat &format, const TGWindow &parent, Bool_t selectInput,
-             UInt_t width, UInt_t height,
-             UInt_t options = kSunkenFrame | kDoubleBorder,
-             Pixel_t back = 0);
+   static TGLWidget* Create(const TGWindow* parent, Bool_t selectInput,
+             Bool_t shareDefault, const TGLPaintDevice *shareDevice,
+             UInt_t width, UInt_t height);
+
+   static TGLWidget* Create(const TGLFormat &format,
+             const TGWindow* parent, Bool_t selectInput,
+             Bool_t shareDefault, const TGLPaintDevice *shareDevice,
+             UInt_t width, UInt_t height);
 
    ~TGLWidget();
 
@@ -98,18 +91,22 @@ public:
    void   DoRedraw();
 
 private:
-   TGLWidget(const TGLWidget &);
-   TGLWidget &operator = (const TGLWidget &);
+   TGLWidget(const TGLWidget &);              // Not implemented.
+   TGLWidget &operator = (const TGLWidget &); // Not implemented.
 
-   void CreateWidget(const TGLPaintDevice *shareDevice);
-   void CreateWidget();
+protected:
+   TGLWidget(Window_t glw, const TGWindow* parent, Bool_t selectInput);
+
+   static Window_t CreateWindow(const TGWindow* parent, const TGLFormat &format,
+                                UInt_t width, UInt_t height,
+                                std::pair<void *, void *>& innerData);
 
    void AddContext(TGLContext *ctx);
    void RemoveContext(TGLContext *ctx);
 
    std::pair<void *, void *> GetInnerData()const;
 
-   ClassDef(TGLWidget, 0)//Window (widget) version of TGLPaintDevice
+   ClassDef(TGLWidget, 0); //Window (widget) version of TGLPaintDevice
 };
 
 #endif

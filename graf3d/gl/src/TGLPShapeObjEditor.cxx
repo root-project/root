@@ -313,11 +313,7 @@ void TGLPShapeObjEditor::SetRGBA(const Float_t *rgba)
    fGreenSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 1] * 100));
    fBlueSlider->SetPosition(Int_t(fRGBA[fLMode * 4 + 2] * 100));
 
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
-   } else {
-      DrawSphere();
-   }
+   DrawSphere();
 }
 
 //______________________________________________________________________________
@@ -349,14 +345,9 @@ void TGLPShapeObjEditor::DoColorSlider(Int_t val)
       }
 
       if (!fIsLight || (wid != kHSa && wid != kHSs)) {
-            fColorApplyButton->SetState(kButtonUp);
-            if (!fIsLight) fColorApplyFamily->SetState(kButtonUp);
-
-         if (!gVirtualX->IsCmdThread()) {
-            gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
-         } else {
-            DrawSphere();
-         }
+         fColorApplyButton->SetState(kButtonUp);
+         if (!fIsLight) fColorApplyFamily->SetState(kButtonUp);
+         DrawSphere();
       }
    }
 }
@@ -407,25 +398,6 @@ void TGLPShapeObjEditor::DoColorButton()
       fPShapeObj->fViewer->RequestDraw();
       break;
    }
-
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
-   } else {
-      DrawSphere();
-   }
-}
-
-//______________________________________________________________________________
-void TGLPShapeObjEditor::CreateMaterialView()
-{
-   // Small gl-window with sphere.
-
-   fMatView = new TGLWidget(*fColorFrame, kFALSE, 120, 120, 0, kSunkenFrame | kDoubleBorder);
-   fMatView->AddInput(kExposureMask | kStructureNotifyMask);
-   //gVirtualX->SelectInput(fMatView->GetContId(), kExposureMask | kStructureNotifyMask);
-   fMatView->Connect("HandleExpose(Event_t*)", "TGLPShapeObjEditor", this, "HandleContainerExpose(Event_t*)");
-   fMatView->Connect("HandleConfigureNotify(Event_t*)", "TGLPShapeObjEditor", this, "HandleContainerNotify(Event_t*)");
-   fColorFrame->AddFrame(fMatView, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2));
 }
 
 //______________________________________________________________________________
@@ -501,7 +473,6 @@ void TGLPShapeObjEditor::CreateColorSliders()
    fShineSlider->Connect("PositionChanged(Int_t)", "TGLPShapeObjEditor", this, "DoColorSlider(Int_t)");
    fShineSlider->SetRange(0, 128);
    fColorFrame->AddFrame(fShineSlider, new TGLayoutHints(fLs));
-
 }
 
 //______________________________________________________________________________
@@ -519,21 +490,12 @@ void TGLPShapeObjEditor::SetColorSlidersPos()
 }
 
 //______________________________________________________________________________
-Bool_t TGLPShapeObjEditor::HandleContainerNotify(Event_t * /*event*/)
+void TGLPShapeObjEditor::DoRedraw()
 {
-   // Handle resize event.
+   // Redraw widget. Render sphere and pass to base-class.
 
    DrawSphere();
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGLPShapeObjEditor::HandleContainerExpose(Event_t * /*event*/)
-{
-   // Handle expose (show) event.
-
-   DrawSphere();
-   return kTRUE;
+   TGedFrame::DoRedraw();
 }
 
 //______________________________________________________________________________
@@ -572,6 +534,12 @@ namespace {
 void TGLPShapeObjEditor::DrawSphere()const
 {
    // Draw local sphere reflecting current color options.
+
+   if (!gVirtualX->IsCmdThread()) {
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
+      return;
+   }
+
    fMatView->MakeCurrent();
    glViewport(0, 0, fMatView->GetWidth(), fMatView->GetHeight());
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -632,12 +600,13 @@ void TGLPShapeObjEditor::CreateColorControls()
    // model or family it belongs to.
 
    fColorFrame = this;
-   CreateMaterialView();
+
+   fMatView = TGLWidget::Create(fColorFrame, kFALSE, kTRUE, 0, 120, 120);
+   fColorFrame->AddFrame(fMatView, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2));
 
    CreateColorRadioButtons();
 
    CreateColorSliders();
-
 
    //apply button creation
    fColorApplyButton = new TGTextButton(fColorFrame, "Apply", kTBa);
@@ -649,11 +618,4 @@ void TGLPShapeObjEditor::CreateColorControls()
    fColorFrame->AddFrame(fColorApplyFamily, new TGLayoutHints(fLb));
    fColorApplyFamily->SetState(kButtonDisabled);
    fColorApplyFamily->Connect("Pressed()", "TGLPShapeObjEditor", this, "DoColorButton()");
-
-   if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
-   } else {
-      DrawSphere();
-   }
-
 }
