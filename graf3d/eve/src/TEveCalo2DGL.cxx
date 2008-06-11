@@ -322,8 +322,6 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Render with OpenGL.
 
-   printf("TEveCalo2DGL::DirectDraw()\n");
-
    TGLCapabilitySwitch light_off(GL_LIGHTING,  kFALSE);
    TGLCapabilitySwitch cull_off (GL_CULL_FACE, kFALSE);
 
