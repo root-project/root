@@ -13,6 +13,7 @@
 #define ROOT_TEveBoxSet
 
 #include "TEveDigitSet.h"
+#include "TEveVSDStructs.h"
 
 class TGeoMatrix;
 class TRandom;
@@ -30,7 +31,8 @@ public:
          kBT_Undef,           // unknown-ignored
          kBT_FreeBox,         // arbitrary box: specify 8*(x,y,z) box corners
          kBT_AABox,           // axis-aligned box: specify (x,y,z) and (w, h, d)
-         kBT_AABoxFixedDim    // axis-aligned box w/ fixed dimensions: specify (x,y,z)
+         kBT_AABoxFixedDim,    // axis-aligned box w/ fixed dimensions: specify (x,y,z)
+         kBT_Cone
       };
 
 protected:
@@ -44,12 +46,16 @@ protected:
 
    struct BAABoxFixedDim_t : public BOrigin_t {};
 
+   struct BCone_t          : public DigitBase_t { TEveVector fDir; TEveVector fPos; Float_t fR;};
+
 protected:
    EBoxType_e        fBoxType;      // Type of rendered box.
 
    Float_t           fDefWidth;     // Breadth assigned to first coordinate  (A).
    Float_t           fDefHeight;    // Breadth assigned to second coordinate (B).
    Float_t           fDefDepth;     // Breadth assigned to third coordinate  (C).
+
+   Bool_t            fDrawConeCap;
 
    static Int_t SizeofAtom(EBoxType_e bt);
 
@@ -63,6 +69,7 @@ public:
    void AddBox(const Float_t* verts);
    void AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, Float_t d);
    void AddBox(Float_t a, Float_t b, Float_t c);
+   void AddBox(TEveVector fDir, TEveVector fPos, Float_t fOpenAngle);
 
    virtual void ComputeBBox();
    // virtual void Paint(Option_t* option = "");
@@ -72,10 +79,12 @@ public:
    Float_t GetDefWidth()  const { return fDefWidth;  }
    Float_t GetDefHeight() const { return fDefHeight; }
    Float_t GetDefDepth()  const { return fDefDepth;  }
+   Bool_t  GetDrawConeCap() const { return fDrawConeCap;  }
 
    void SetDefWidth(Float_t v)  { fDefWidth  = v ; }
    void SetDefHeight(Float_t v) { fDefHeight = v ; }
    void SetDefDepth(Float_t v)  { fDefDepth  = v ; }
+   void SetDrawConeCap(Bool_t x) { fDrawConeCap=x; StampObjProps(); }
 
    ClassDef(TEveBoxSet, 0); // Collection of 3D primitives (fixed-size boxes, boxes of different sizes, or arbitrary sexto-epipeds); each primitive can be assigned a signal value and a TRef.
 };

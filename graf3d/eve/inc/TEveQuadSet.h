@@ -53,8 +53,6 @@ public:
          // QT_CircleXYFixedR,    // specify z
       };
 
-   enum ERenderMode_e { kRM_AsIs, kRM_TEveLine, kRM_Fill };
-
 protected:
 
    struct QFreeQuad_t     : public DigitBase_t      { Float_t fVertices[12]; };

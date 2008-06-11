@@ -126,7 +126,7 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if (mQ.fRenderMode == TEveDigitSet::kRM_Fill)
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   else if (mQ.fRenderMode == TEveDigitSet::kRM_TEveLine)
+   else if (mQ.fRenderMode == TEveDigitSet::kRM_Line)
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
    if (mQ.fDisableLigting)  glDisable(GL_LIGHTING);
@@ -149,7 +149,7 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
    TEveQuadSet& mQ = * fM;
 
    GLenum primitiveType;
-   if (mQ.fRenderMode != TEveDigitSet::kRM_TEveLine)
+   if (mQ.fRenderMode != TEveDigitSet::kRM_Line)
    {
       primitiveType = GL_QUADS;
       if (mQ.fQuadType == TEveQuadSet::kQT_FreeQuad)
@@ -462,7 +462,7 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
 
    TEveQuadSet& mQ = * fM;
 
-   GLenum primitveType = (mQ.fRenderMode != TEveDigitSet::kRM_TEveLine) ?
+   GLenum primitveType = (mQ.fRenderMode != TEveDigitSet::kRM_Line) ?
       GL_POLYGON : GL_LINE_LOOP;
 
    glNormal3f(0, 0, 1);

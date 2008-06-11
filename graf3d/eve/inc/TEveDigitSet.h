@@ -36,7 +36,7 @@ class TEveDigitSet : public TEveElement,
    TEveDigitSet& operator=(const TEveDigitSet&); // Not implemented
 
 public:
-   enum ERenderMode_e { kRM_AsIs, kRM_TEveLine, kRM_Fill };
+   enum ERenderMode_e { kRM_AsIs, kRM_Line, kRM_Fill };
 
    typedef void (*Callback_foo)(TEveDigitSet*, Int_t, TObject*);
 

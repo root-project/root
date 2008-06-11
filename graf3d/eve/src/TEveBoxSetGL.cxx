@@ -17,6 +17,7 @@
 #include "TGLScene.h"
 #include "TGLSelectRecord.h"
 #include "TGLContext.h"
+#include "TGLQuadric.h"
 
 //==============================================================================
 //==============================================================================
@@ -48,7 +49,7 @@ Int_t TEveBoxSetGL::PrimitiveType() const
    // Return GL primitive used to render the boxes, based on the
    // render-mode specified in the model object.
 
-   return (fM->fRenderMode != TEveDigitSet::kRM_TEveLine) ? GL_QUADS : GL_LINE_LOOP;
+   return (fM->fRenderMode != TEveDigitSet::kRM_Line) ? GL_QUADS : GL_LINE_LOOP;
 }
 
 //______________________________________________________________________________
@@ -128,21 +129,34 @@ void TEveBoxSetGL::MakeDisplayList() const
    // so display-list is not created.
 
    if (fM->fBoxType == TEveBoxSet::kBT_AABox ||
-       fM->fBoxType == TEveBoxSet::kBT_AABoxFixedDim)
+       fM->fBoxType == TEveBoxSet::kBT_AABoxFixedDim ||
+       fM->fBoxType == TEveBoxSet::kBT_Cone)
    {
       if (fBoxDL == 0)
          fBoxDL = glGenLists(1);
 
-      Float_t p[24];
-      if (fM->fBoxType == TEveBoxSet::kBT_AABox)
-         MakeOriginBox(p, 1.0f, 1.0f, 1.0f);
-      else
-         MakeOriginBox(p, fM->fDefWidth, fM->fDefHeight, fM->fDefDepth);
-
       glNewList(fBoxDL, GL_COMPILE);
-      glBegin(PrimitiveType());
-      RenderBox(p);
-      glEnd();
+  
+      if (fM->fBoxType != TEveBoxSet::kBT_Cone) { 
+         glBegin(PrimitiveType());
+         Float_t p[24];
+         if (fM->fBoxType == TEveBoxSet::kBT_AABox)
+            MakeOriginBox(p, 1.0f, 1.0f, 1.0f);
+         else
+            MakeOriginBox(p, fM->fDefWidth, fM->fDefHeight, fM->fDefDepth);
+         RenderBox(p);
+         glEnd();
+      }
+      else 
+      {
+         static TGLQuadric quad;
+         Int_t nt = 15; // number of corners
+         gluCylinder(quad.Get(), 1, 0, 1, nt, 1);
+
+         if (fM->fDrawConeCap)
+            gluDisk(quad.Get(), 0, 1, nt, 1);
+      }
+
       glEndList();
    }
 }
@@ -226,13 +240,8 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    static const TEveException eH("TEveBoxSetGL::DirectDraw ");
 
-   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
-      return;
-
    TEveBoxSet& mB = * fM;
    // printf("TEveBoxSetGL::DirectDraw N boxes %d\n", mB.fPlex.Size());
-
-   // !!!! Missing frame rendering (wire-frame, of course).
 
    if(mB.fPlex.Size() == 0)
       return;
@@ -245,8 +254,10 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if (mB.fRenderMode == TEveDigitSet::kRM_Fill)
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   else if (mB.fRenderMode == TEveDigitSet::kRM_TEveLine)
+   else if (mB.fRenderMode == TEveDigitSet::kRM_Line)
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+   if (mB.fBoxType == TEveBoxSet::kBT_Cone) glDisable(GL_CULL_FACE);
 
    if (mB.fDisableLigting) glDisable(GL_LIGHTING);
 
@@ -310,6 +321,33 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
                glTranslatef(b.fA, b.fB, b.fC);
                glCallList(fBoxDL);
                glTranslatef(-b.fA, -b.fB, -b.fC);
+            }
+            if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
+         }
+         break;
+      }
+      case TEveBoxSet::kBT_Cone:
+      {
+         using namespace TMath;
+
+         glEnable(GL_NORMALIZE);
+         Float_t theta=0, phi=0, h=0;
+         while (bi.next())
+         {
+            TEveBoxSet::BCone_t& b = * (TEveBoxSet::BCone_t*) bi();
+            if (SetupColor(b))
+            {
+               if (rnrCtx.SecSelection()) glLoadName(bi.index());
+               h = b.fDir.Mag();
+               theta = ACos(b.fDir.fZ/h)*RadToDeg();
+               phi   = ACos(b.fDir.fX/b.fR)*RadToDeg();
+               glPushMatrix();
+               glTranslatef(b.fPos.fX, b.fPos.fY, b.fPos.fZ);
+               glRotatef(theta, 1, 0, 0);
+               glRotatef(phi,   0, 0, 1);
+               glScalef    (b.fR, b.fR, h);
+               glCallList(fBoxDL);
+               glPopMatrix();
             }
             if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
          }

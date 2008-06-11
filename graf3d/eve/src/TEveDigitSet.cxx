@@ -56,7 +56,7 @@ TEveDigitSet::TEveDigitSet(const Text_t* n, const Text_t* t) :
 
    fFrame          (0),
    fPalette        (0),
-   fRenderMode     (kRM_Fill),
+   fRenderMode     (kRM_AsIs),
    fDisableLigting (kTRUE),
    fHistoButtons   (kTRUE),
    fEmitSignals    (kFALSE),

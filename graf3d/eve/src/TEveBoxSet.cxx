@@ -46,7 +46,9 @@ TEveBoxSet::TEveBoxSet(const Text_t* n, const Text_t* t) :
    fBoxType      (kBT_Undef),
    fDefWidth     (1),
    fDefHeight    (1),
-   fDefDepth     (1)
+   fDefDepth     (1),
+
+   fDrawConeCap  (kFALSE)
 {
    // Constructor.
 
@@ -68,6 +70,7 @@ Int_t TEveBoxSet::SizeofAtom(TEveBoxSet::EBoxType_e bt)
       case kBT_FreeBox:              return sizeof(BFreeBox_t);
       case kBT_AABox:                return sizeof(BAABox_t);
       case kBT_AABoxFixedDim:        return sizeof(BAABoxFixedDim_t);
+      case kBT_Cone:                 return sizeof(BCone_t);
       default:                       throw(eH + "unexpected atom type.");
    }
    return 0;
@@ -149,6 +152,23 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c)
    box->fA = a; box->fB = b; box->fC = c;
 }
 
+//______________________________________________________________________________
+void TEveBoxSet::AddBox(TEveVector dir, TEveVector pos, Float_t r)
+{
+   // Create a cone with axis pointing to direction fDir, radius fDir and
+   // height od fDir size. To be used for box-type kBT_Cone.
+
+   static const TEveException eH("TEveBoxSet::AddBox ");
+
+   if (fBoxType != kBT_Cone)
+      throw(eH + "expect cone box-type.");
+
+   BCone_t* cone = (BCone_t*) NewDigit();
+   cone->fDir = dir;
+   cone->fPos = pos;
+   cone->fR = r;
+}
+
 /******************************************************************************/
 
 //______________________________________________________________________________
@@ -211,7 +231,21 @@ void TEveBoxSet::ComputeBBox()
          }
          break;
       }
-
+      case kBT_Cone:
+      {
+         Float_t mag2=0, mag2Max=0, rMax=0;  
+         while (bi.next()) {
+            BCone_t& b = * (BCone_t*) bi();
+            BBoxCheckPoint(b.fPos.fX, b.fPos.fY, b.fPos.fZ);
+            mag2 = b.fDir.Mag2();
+            if (mag2>mag2Max) mag2Max=mag2;
+            if (b.fR>rMax)    rMax=b.fR;
+         }
+         Float_t off = TMath::Sqrt(mag2Max + rMax*rMax);
+         fBBox[0] -= off;fBBox[2] -= off;fBBox[4] -= off;
+         fBBox[1] += off;fBBox[3] += off;fBBox[5] += off;
+         break;
+      }
       default:
       {
          throw(eH + "unsupported box-type.");
