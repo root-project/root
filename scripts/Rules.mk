@@ -53,7 +53,9 @@ TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log
+ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C \
+	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log \
+	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap
 
 .PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz
 
