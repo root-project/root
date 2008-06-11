@@ -2087,7 +2087,7 @@ Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
          //must write StreamerInfo if pointer is null
          if (!strInfo && !start[j] ) {
             TStreamerInfo *info = (TStreamerInfo*)((TClass*)cl)->GetStreamerInfo();
-            info->ForceWriteInfo((TFile *)GetParent());
+            ForceWriteInfo(info,kFALSE);
          }
          strInfo = 2003;
          res |= WriteObjectAny(start[j],cl);
@@ -3160,10 +3160,19 @@ UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
    return file->WriteProcessID(pid);
 }
 
-//---- Utilities for TClonesArray ----------------------------------------------
+//---- Utilities for TStreamerInfo ----------------------------------------------
 
 //______________________________________________________________________________
-void TBufferFile::ForceWriteInfo(TClonesArray *a)
+void TBufferFile::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
+{
+   // force writing the TStreamerInfo to the file
+   
+   if (info) info->ForceWriteInfo((TFile*)GetParent(),force);
+}
+   
+
+//______________________________________________________________________________
+void TBufferFile::ForceWriteInfoClones(TClonesArray *a)
 {
    // Make sure TStreamerInfo is not optimized, otherwise it will not be
    // possible to support schema evolution in read mode.
@@ -3173,7 +3182,7 @@ void TBufferFile::ForceWriteInfo(TClonesArray *a)
    Bool_t optim = TStreamerInfo::CanOptimize();
    if (optim) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
-   sinfo->ForceWriteInfo((TFile *)GetParent());
+   ForceWriteInfo(sinfo,kFALSE);
    if (optim) TStreamerInfo::Optimize(kTRUE);
    if (sinfo->IsOptimized()) a->BypassStreamer(kFALSE);
 }

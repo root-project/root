@@ -280,8 +280,9 @@ public:
    virtual   TProcessID *ReadProcessID(UShort_t pidf);
    virtual   UShort_t    WriteProcessID(TProcessID *pid);
 
-   // Utilities for TClonesArray
-   virtual   void   ForceWriteInfo(TClonesArray *a);
+   // Utilities for TStreamerInfo
+   virtual   void   ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
+   virtual   void   ForceWriteInfoClones(TClonesArray *a);
    virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects, Version_t objvers);
    virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
 
