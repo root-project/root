@@ -903,19 +903,53 @@ inline void TGLMatrix::GetBaseVec(Int_t b, Double_t* x) const
 
 class TGLUtil
 {
+public:
+   class TColorLocker
+   {
+   public:
+      TColorLocker()          { LockColor();   }
+      virtual ~TColorLocker() { UnlockColor(); }
+
+      ClassDef(TColorLocker,0); // Lock/unlock color in constructor/destructor.
+   };
+
+   class TDrawQualityModifier
+   {
+      Int_t fOldQuality;
+   public:
+      TDrawQualityModifier(Int_t dq)
+      { fOldQuality = GetDrawQuality(); SetDrawQuality(dq); }
+
+      virtual ~TDrawQualityModifier()
+      { SetDrawQuality(fOldQuality); }
+
+      ClassDef(TDrawQualityModifier,0); // Set/restore draw quality in constructor/destructor.
+   };
+
+   class TDrawQualityScaler
+   {
+      Int_t fOldQuality;
+   public:
+      TDrawQualityScaler(Float_t fac)
+      { fOldQuality = GetDrawQuality(); SetDrawQuality((Int_t)(fac*fOldQuality)); }
+
+      virtual ~TDrawQualityScaler()
+      { SetDrawQuality(fOldQuality); }
+
+      ClassDef(TDrawQualityScaler,0); // Multiply/restore draw quality in constructor/destructor.
+   };
+
 private:
    static UInt_t fgDefaultDrawQuality;
    static UInt_t fgDrawQuality;
 
    static UInt_t fgColorLockCount;
 
-protected:
-   TGLUtil(const TGLUtil&) {} // copy constructor
-   TGLUtil& operator=(const TGLUtil& glu) // assignment operator
-     {if(this!=&glu) {} return *this;}
+   TGLUtil(const TGLUtil&);            // Not implemented.
+   TGLUtil& operator=(const TGLUtil&); // Not implemented.
 
 public:
-   virtual ~TGLUtil() { }
+   virtual ~TGLUtil() {}
 
    // Error checking
    static void   CheckError(const char * loc);
@@ -924,6 +958,7 @@ public:
    enum ELineHeadShape { kLineHeadNone, kLineHeadArrow, kLineHeadBox };
    enum EAxesType      { kAxesNone, kAxesEdge, kAxesOrigin };
 
+   static UInt_t GetDrawQuality();
    static void   SetDrawQuality(UInt_t dq);
    static void   ResetDrawQuality();
    static UInt_t GetDefaultDrawQuality();

@@ -24,6 +24,8 @@ private:
    static TClass* SearchGLRenderer(TClass* cls);
 
 protected:
+   mutable Bool_t fMultiColor; // Are multiple colors used for object rendering.
+
    Bool_t SetModelCheckClass(TObject* obj, TClass* cls);
 
    void   SetAxisAlignedBBox(Float_t xmin, Float_t xmax,
@@ -32,8 +34,10 @@ protected:
    void   SetAxisAlignedBBox(const Float_t* p);
 
 public:
-   TGLObject() : TGLLogicalShape(0) {}
+   TGLObject() : TGLLogicalShape(0), fMultiColor(kFALSE) {}
    virtual ~TGLObject() {}
+
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
 
    // Kept from TGLLogicalShape
    // virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }

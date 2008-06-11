@@ -18,8 +18,11 @@
 #include "TGLSelectRecord.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveQuadSetGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GL-renderer for TEveQuadSet class.
 
@@ -27,24 +30,13 @@ ClassImp(TEveQuadSetGL);
 
 /******************************************************************************/
 
+//______________________________________________________________________________
 TEveQuadSetGL::TEveQuadSetGL() : TGLObject(), fM(0)
 {
    // Constructor.
 
    // fDLCache = false; // Disable DL.
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-Bool_t TEveQuadSetGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
-{
-   // Decide if render-pass given by rnrCtx should use the display-list cache.
-   // Virtual from TGLLogicalShape.
-
-   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
-      return kFALSE;
-   return TGLObject::ShouldDLCache(rnrCtx);
+   fMultiColor = kTRUE;
 }
 
 /******************************************************************************/
@@ -99,9 +91,6 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    static const TEveException eH("TEveQuadSetGL::DirectDraw ");
 
    // printf("QuadSetGLRenderer::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
-
-   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
-      return;
 
    TEveQuadSet& mQ = * fM;
 

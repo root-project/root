@@ -82,16 +82,15 @@ public:
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
 
-   virtual void  SetBBox();
+   virtual void   SetBBox();
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
    virtual void   DLCacheDrop();
    virtual void   DLCachePurge();
 
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
 
    ClassDef(TEveCaloLegoGL, 0); // GL renderer class for TEveCaloLego.

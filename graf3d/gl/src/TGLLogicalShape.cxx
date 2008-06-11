@@ -1,9 +1,25 @@
 // @(#)root/gl:$Id$
 // Author:  Richard Maunder  25/05/2005
 
+#include "TGLLogicalShape.h"
+#include "TGLPhysicalShape.h"
+#include "TGLRnrCtx.h"
+#include "TGLScene.h"
+#include "TGLSelectRecord.h"
+#include "TGLContext.h"
+#include "TGLIncludes.h"
+
+#include "TBuffer3D.h"
+#include "TAtt3D.h"
+#include "TClass.h"
+#include "TContextMenu.h"
+
+
+//==============================================================================
+// TGLLogicalShape
+//==============================================================================
 
 //______________________________________________________________________________
-// TGLLogicalShape
 //
 // Abstract logical shape - a GL 'drawable' - base for all shapes -
 // faceset sphere etc. Logical shapes are a unique piece of geometry,
@@ -47,20 +63,7 @@
 // viewer architecture and how external viewer clients use it.
 //
 
-#include "TGLLogicalShape.h"
-#include "TGLPhysicalShape.h"
-#include "TGLRnrCtx.h"
-#include "TGLScene.h"
-#include "TGLSelectRecord.h"
-#include "TGLContext.h"
-#include "TGLIncludes.h"
-
-#include "TBuffer3D.h"
-#include "TAtt3D.h"
-#include "TClass.h"
-#include "TContextMenu.h"
-
-ClassImp(TGLLogicalShape)
+ClassImp(TGLLogicalShape);
 
 //______________________________________________________________________________
 TGLLogicalShape::TGLLogicalShape() :
@@ -73,7 +76,9 @@ TGLLogicalShape::TGLLogicalShape() :
    fDLCache       (kTRUE),
    fRefStrong     (kFALSE),
    fOwnExtObj     (kFALSE)
-{}
+{
+   // Constructor.
+}
 
 //______________________________________________________________________________
 TGLLogicalShape::TGLLogicalShape(TObject* obj) :
@@ -86,7 +91,9 @@ TGLLogicalShape::TGLLogicalShape(TObject* obj) :
    fDLCache       (kTRUE),
    fRefStrong     (kFALSE),
    fOwnExtObj     (kFALSE)
-{}
+{
+   // Constructor with external object.
+}
 
 //______________________________________________________________________________
 TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
@@ -100,6 +107,8 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    fRefStrong     (kFALSE),
    fOwnExtObj     (kFALSE)
 {
+   // Constructor from TBuffer3D.
+
    // Use the bounding box in buffer if valid
    if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
       fBoundingBox.Set(buffer.fBBVertex);
@@ -183,6 +192,7 @@ void TGLLogicalShape::SubRef(TGLPhysicalShape* phys) const
       delete this;
 }
 
+//______________________________________________________________________________
 void TGLLogicalShape::DestroyPhysicals()
 {
    // Destroy all physicals attached to this logical.
@@ -199,6 +209,7 @@ void TGLLogicalShape::DestroyPhysicals()
    assert (fRef == 0);
 }
 
+//______________________________________________________________________________
 UInt_t TGLLogicalShape::UnrefFirstPhysical()
 {
    // Unreference first physical in the list, returning its id and
@@ -268,8 +279,13 @@ Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
    //
    // Override this in sub-class if different behaviour is required.
 
-   if (!fScene || rnrCtx.SecSelection()) return kFALSE;
-   return fDLCache;
+   if (!fDLCache ||
+       !fScene   ||
+       (rnrCtx.SecSelection() && SupportsSecondarySelect()))
+   {
+      return kFALSE;
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________

@@ -89,18 +89,7 @@ void TEveCaloLegoGL::SetBBox()
 {
    // Set bounding box.
 
-
-   // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveCaloLego*)fExternalObj)->AssertBBox());
-}
-
-//______________________________________________________________________________
-Bool_t TEveCaloLegoGL::ShouldDLCache(const TGLRnrCtx & /*rnrCtx*/) const
-{
-   // Determines if display-list will be used for rendering.
-   // Virtual from TGLLogicalShape.
-
-   return kFALSE;
 }
 
 //______________________________________________________________________________

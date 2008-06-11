@@ -31,6 +31,8 @@ TEveCalo3DGL::TEveCalo3DGL() :
    TGLObject(), fM(0)
 {
    // Constructor.
+
+   fMultiColor = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -52,21 +54,6 @@ void TEveCalo3DGL::SetBBox()
 
    // !! This ok if master sub-classed from TAttBBox
    SetAxisAlignedBBox(((TEveCalo3D*)fExternalObj)->AssertBBox());
-}
-
-//______________________________________________________________________________
-Bool_t TEveCalo3DGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
-{
-   // Check if display-lists should be used.
-   // Compared to TGLLogicalShape version we also don't use them
-   // for outline-pass as colors are set internally.
-
-   if (!fScene || rnrCtx.SecSelection() ||
-       rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
-   {
-      return kFALSE;
-   }
-   return fDLCache;
 }
 
 //______________________________________________________________________________

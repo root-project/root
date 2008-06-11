@@ -106,6 +106,8 @@ void TGLRotateManip::Draw(const TGLCamera & camera) const
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glDisable(GL_CULL_FACE);
 
+   TGLUtil::TDrawQualityScaler hiRes(3);
+
    // Draw three axis rings where permitted
    // Not drawing will prevent interaction
    // GL name loading for hit testing - 0 reserved for no selection

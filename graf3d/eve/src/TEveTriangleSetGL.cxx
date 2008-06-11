@@ -15,14 +15,17 @@
 
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveTriangleSetGL
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GL-renderer for TEveTriangleSet class.
 //
 // See also: TGLObject, TGLLogicalShape.
 
-ClassImp(TEveTriangleSetGL)
+ClassImp(TEveTriangleSetGL);
 
 //______________________________________________________________________________
 TEveTriangleSetGL::TEveTriangleSetGL() : TGLObject(), fM(0)
@@ -30,6 +33,7 @@ TEveTriangleSetGL::TEveTriangleSetGL() : TGLObject(), fM(0)
    // Constructor.
 
    // fDLCache = false; // Disable display list.
+   fMultiColor = kTRUE;
 }
 
 //______________________________________________________________________________

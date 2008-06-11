@@ -32,34 +32,21 @@ TEveLineGL::TEveLineGL() : TPointSet3DGL(), fM(0)
    // Constructor.
 
    // fDLCache = false; // Disable display list.
+   fMultiColor = kTRUE;
 }
-
-//______________________________________________________________________________
-TEveLineGL::~TEveLineGL()
-{}
 
 /******************************************************************************/
 
 //______________________________________________________________________________
 Bool_t TEveLineGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // TPointSet3DGL::SetModel(obj);
-   if(SetModelCheckClass(obj, TEveLine::Class())) {
+   // Set model object.
+
+   if (SetModelCheckClass(obj, TEveLine::Class())) {
       fM = dynamic_cast<TEveLine*>(obj);
       return kTRUE;
    }
    return kFALSE;
-}
-
-//______________________________________________________________________________
-Bool_t TEveLineGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
-{
-   // Override from TGLLogicalShape.
-   // To account for large point-sizes we modify the projection matrix
-   // during selection and thus we need a direct draw.
-
-   if (rnrCtx.Selection()) return kFALSE;
-   return fDLCache;
 }
 
 /******************************************************************************/
@@ -70,9 +57,6 @@ void TEveLineGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // Direct GL rendering for TEveLine.
 
    // printf("TEveLineGL::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
-
-   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
-      return;
 
    TEveLine& q = *fM;
    if (q.Size() <= 0) return;

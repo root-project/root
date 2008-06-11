@@ -27,6 +27,11 @@
 
 #include "TGLUtil.h"
 
+
+//==============================================================================
+// TEveCaloViz
+//==============================================================================
+
 //______________________________________________________________________________
 //
 // Base class for calorimeter data visualization.
@@ -298,7 +303,7 @@ TClass* TEveCaloViz::ProjectedClass() const
 }
 
 //______________________________________________________________________________
-void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t &outH) const
+void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) const
 {
    // Set color and height for a given value and slice using slice color or TEveRGBAPalette.
 
@@ -315,6 +320,11 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t &outH) co
       outH = GetValToHeight()*value;
    }
 }
+
+
+//==============================================================================
+// TEveCalo3D
+//==============================================================================
 
 //______________________________________________________________________________
 //
@@ -348,6 +358,11 @@ void TEveCalo3D::ComputeBBox()
    fBBox[5] =  fEndCapPos + th;
 }
 
+
+//==============================================================================
+// TEveCalo2D
+//==============================================================================
+
 //______________________________________________________________________________
 //
 // Visualization of a calorimeter event data in 2D.
@@ -361,7 +376,6 @@ TEveCalo2D::TEveCalo2D(const Text_t* n, const Text_t* t):
    fOldProjectionType(TEveProjection::kPT_Unknown)
 {
    // Constructor.
-
 }
 
 //______________________________________________________________________________
@@ -440,9 +454,13 @@ void TEveCalo2D::ComputeBBox()
 }
 
 
+//==============================================================================
+// TEveCaloLego
+//==============================================================================
+
 //______________________________________________________________________________
 //
-// Visualization of a calorimeter eta, phi histogram
+// Visualization of calorimeter data as eta/phi histogram.
 
 ClassImp(TEveCaloLego);
 
@@ -550,4 +568,3 @@ void TEveCaloLego::ComputeBBox()
       fBBox[5] =  fMaxTowerH*ex;
    } 
 }
-

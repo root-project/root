@@ -11,6 +11,7 @@
 
 
 #include "TGLObject.h"
+#include "TGLRnrCtx.h"
 #include "TObject.h"
 #include "TClass.h"
 #include "TBaseClass.h"
@@ -19,8 +20,11 @@
 #include "TAtt3D.h"
 #include "TAttBBox.h"
 
-//______________________________________________________________________
+//==============================================================================
 // TGLObject
+//==============================================================================
+
+//______________________________________________________________________
 //
 // Base-class for direct OpenGL renderers.
 // This allows classes to circumvent passing of TBuffer3D and
@@ -31,9 +35,26 @@
 // TAttBBox can be used to facilitate calculation of bounding-boxes.
 // See TPointSet3D and TPointSet3DGL.
 
-ClassImp(TGLObject)
+ClassImp(TGLObject);
 
 TMap TGLObject::fgGLClassMap;
+
+//______________________________________________________________________________
+Bool_t TGLObject::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
+{
+   // Decide if display-list should be used for this pass rendering,
+   // as determined by rnrCtx.
+
+   if (!fDLCache ||
+       !fScene   ||
+       (rnrCtx.SecSelection() && SupportsSecondarySelect()) ||
+       (fMultiColor && (rnrCtx.Highlight() || rnrCtx.IsDrawPassOutlineLine())))
+   {
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
 
 //______________________________________________________________________________
 void TGLObject::UpdateBoundingBox()

@@ -58,7 +58,7 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    // Draw track with GL.
 
    // printf("TEveTrackProjectedGL::DirectDraw Style %d, LOD %d\n", flags.Style(), flags.LOD());
-   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine || fM->Size() == 0)
+   if (fM->Size() == 0)
       return;
 
    // lines

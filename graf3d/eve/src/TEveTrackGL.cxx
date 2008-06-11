@@ -51,17 +51,6 @@ Bool_t TEveTrackGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 }
 
 //______________________________________________________________________________
-Bool_t TEveTrackGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
-{
-   // Override from TGLLogicalShape.
-   // To account for large point-sizes we modify the projection matrix
-   // during selection and thus we need a direct draw.
-
-   if (rnrCtx.Selection()) return kFALSE;
-   return fDLCache;
-}
-
-//______________________________________________________________________________
 void TEveTrackGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
 {
    // Processes secondary selection from TGLViewer.

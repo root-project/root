@@ -984,31 +984,40 @@ void TGLMatrix::Dump() const
    }
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLUtil                                                              //
-//                                                                      //
-// Wrapper class for various misc static functions - error checking,    //
-// draw helpers etc.                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLUtil)
+//==============================================================================
+// TGLUtil
+//==============================================================================
 
-UInt_t TGLUtil::fgDefaultDrawQuality = 60;
+//______________________________________________________________________________
+//
+// Wrapper class for various misc static functions - error checking,
+// draw helpers etc.
+//
+
+ClassImp(TGLUtil);
+
+UInt_t TGLUtil::fgDefaultDrawQuality = 10;
 UInt_t TGLUtil::fgDrawQuality        = fgDefaultDrawQuality;
 UInt_t TGLUtil::fgColorLockCount     = 0;
 
 
 //______________________________________________________________________________
-void   TGLUtil::SetDrawQuality(UInt_t dq)
+UInt_t TGLUtil::GetDrawQuality()
+{
+   //static: get draw quality
+   return fgDrawQuality;
+}
+
+//______________________________________________________________________________
+void TGLUtil::SetDrawQuality(UInt_t dq)
 {
    //static: set draw quality
    fgDrawQuality = dq;
 }
 
 //______________________________________________________________________________
-void   TGLUtil::ResetDrawQuality()
+void TGLUtil::ResetDrawQuality()
 {
    //static: reset draw quality
    fgDrawQuality = fgDefaultDrawQuality;
@@ -1022,17 +1031,10 @@ UInt_t TGLUtil::GetDefaultDrawQuality()
 }
 
 //______________________________________________________________________________
-void   TGLUtil::SetDefaultDrawQuality(UInt_t dq)
+void TGLUtil::SetDefaultDrawQuality(UInt_t dq)
 {
    //static: set default draw quality
    fgDefaultDrawQuality = dq;
-}
-
-//______________________________________________________________________________
-Bool_t   TGLUtil::IsColorLocked()
-{
-   //static: return true if color lockcount is greater than 0
-   return fgColorLockCount != 0;
 }
 
 //______________________________________________________________________________
@@ -1075,6 +1077,13 @@ UInt_t TGLUtil::UnlockColor()
    else
       Error("TGLUtil::UnlockColor", "fgColorLockCount already 0.");
    return fgColorLockCount;
+}
+
+//______________________________________________________________________________
+Bool_t TGLUtil::IsColorLocked()
+{
+   //static: return true if color lockcount is greater than 0
+   return fgColorLockCount > 0;
 }
 
 //______________________________________________________________________________
@@ -1464,23 +1473,23 @@ void TGLUtil::DrawLine(const TGLVertex3 & start, const TGLVector3 & vector,
    }
 
    // Line (tube) component
-   gluCylinder(quad.Get(), size/4.0, size/4.0, vector.Mag() - headHeight, fgDrawQuality, fgDrawQuality);
+   gluCylinder(quad.Get(), size/4.0, size/4.0, vector.Mag() - headHeight, fgDrawQuality, 1);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality);
+   gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, 1);
 
    glTranslated(0.0, 0.0, vector.Mag() - headHeight); // Shift down local Z to end of line
 
    if (head == kLineHeadNone) {
       // Cap end of line
       gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-      gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, fgDrawQuality);
+      gluDisk(quad.Get(), 0.0, size/4.0, fgDrawQuality, 1);
    }
    else if (head == kLineHeadArrow) {
       // Arrow base / end line cap
-      gluDisk(quad.Get(), 0.0, size, fgDrawQuality, fgDrawQuality);
+      gluDisk(quad.Get(), 0.0, size, fgDrawQuality, 1);
       // Arrow cone
       gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-      gluCylinder(quad.Get(), size, 0.0, headHeight, fgDrawQuality, fgDrawQuality);
+      gluCylinder(quad.Get(), size, 0.0, headHeight, fgDrawQuality, 1);
    } else if (head == kLineHeadBox) {
       // Box
       // TODO: Drawing box should be simplier - maybe make
@@ -1519,15 +1528,15 @@ void TGLUtil::DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
    glTranslated(0.0, 0.0, -width/2.0);
 
    // Inner and outer faces
-   gluCylinder(quad.Get(), inner, inner, width, fgDrawQuality, fgDrawQuality);
-   gluCylinder(quad.Get(), outer, outer, width, fgDrawQuality, fgDrawQuality);
+   gluCylinder(quad.Get(), inner, inner, width, fgDrawQuality, 1);
+   gluCylinder(quad.Get(), outer, outer, width, fgDrawQuality, 1);
 
    // Top/bottom
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality);
+   gluDisk(quad.Get(), inner, outer, fgDrawQuality, 1);
    glTranslated(0.0, 0.0, width);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-   gluDisk(quad.Get(), inner, outer, fgDrawQuality, fgDrawQuality);
+   gluDisk(quad.Get(), inner, outer, fgDrawQuality, 1);
 
    glPopMatrix();
 }

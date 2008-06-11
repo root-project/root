@@ -18,11 +18,14 @@
 #include "TList.h"
 
 
+//==============================================================================
+// TEveCaloData
+//==============================================================================
 
 //______________________________________________________________________________
 //
 //  A central manager for calorimeter event data. It provides a list of
-//  cells within requested phi and etha rng.
+//  cells within requested phi and eta range.
 //
 
 ClassImp(TEveCaloData);
@@ -34,17 +37,18 @@ TEveCaloData::TEveCaloData():
    fPhiAxis(0)
 {
    // Constructor.
-
 }
 
 //______________________________________________________________________________
 Float_t TEveCaloData::CellData_t::Value(Bool_t isEt) const
 {
+   // Return energy value associated with the cell, usually Et.
+   // If isEt is false it is transformed into energy E.
+
    if (isEt)
       return fValue;
    else
-     return TMath::Abs(fValue/TMath::Cos(Theta()));
-
+      return TMath::Abs(fValue/TMath::Cos(Theta()));
 }
 
 //______________________________________________________________________________
@@ -67,7 +71,6 @@ void TEveCaloData::CellData_t::Configure(Float_t v, Float_t e1, Float_t e2, Floa
       fZSideSign = 1;
    }
 
-
    fEtaMin = e1;
    fEtaMax = e2;
 
@@ -87,10 +90,15 @@ void TEveCaloData::CellData_t::Dump() const
           Phi()*TMath::RadToDeg(), Value(kFALSE), Value(kTRUE));
 }
 
+
+//==============================================================================
+// TEveCaloDataHist
+//==============================================================================
+
 //______________________________________________________________________________
 //
 // A central manager for calorimeter data of an event written in TH2F.
-// X axis present eta bin, Y axis present phi bin.
+// X axis is used for eta and Y axis for phi.
 //
 
 ClassImp(TEveCaloDataHist);
@@ -109,14 +117,12 @@ TEveCaloDataHist::TEveCaloDataHist():
 TEveCaloDataHist::~TEveCaloDataHist()
 {
    // Destructor.
-
 }
 
 //______________________________________________________________________________
 void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
                                    Float_t phi, Float_t phiD,
                                    TEveCaloData::vCellId_t &out) const
-
 {
    // Get list of cell IDs in given eta and phi range.
 
@@ -157,7 +163,8 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
 }
 
 //______________________________________________________________________________
-void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& cellData) const
+void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
+                                   TEveCaloData::CellData_t& cellData) const
 {
   // Get cell geometry and value from cell ID.
 
@@ -174,8 +181,9 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, TEveCaloDat
 }
 
 //______________________________________________________________________________
-void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, Float_t phi, Float_t phiRng,
-                                   TEveCaloData::CellData_t& cellData)  const
+void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
+                                   Float_t phi, Float_t phiRng,
+                                   TEveCaloData::CellData_t& cellData) const
 {
    // Get cell geometry and value from cell ID.
    // Respect external phi range shifted for a given phi.
@@ -213,7 +221,8 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id, Float_t phi
 //______________________________________________________________________________
 Int_t TEveCaloDataHist::AddHistogram(TH2F* hist)
 {
-   // Add  new slice to calo tower. Updates cached variables fMaxValE and fMaxValEt
+   // Add new slice to calo tower. Updates cached variables fMaxValE
+   // and fMaxValEt
    // Return last index in the vector of slice infos.
 
    using namespace TMath;

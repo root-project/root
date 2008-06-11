@@ -37,6 +37,7 @@ TEveBoxSetGL::TEveBoxSetGL() : fM(0), fBoxDL(0)
    // Default constructor.
 
    // fDLCache = false; // Disable display list.
+   fMultiColor = kTRUE;
 }
 
 /******************************************************************************/
@@ -173,8 +174,6 @@ Bool_t TEveBoxSetGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
 
    MakeDisplayList();
 
-   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
-      return kFALSE;
    return TGLObject::ShouldDLCache(rnrCtx);
 }
 

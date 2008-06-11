@@ -33,8 +33,6 @@ public:
    TEveQuadSetGL();
    virtual ~TEveQuadSetGL() {}
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
-
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;

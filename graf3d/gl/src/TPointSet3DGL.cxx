@@ -21,11 +21,10 @@
 #include <TGLIncludes.h>
 
 //______________________________________________________________________
-// TPointSet3DGL
 //
 // Direct OpenGL renderer for TPointSet3D.
 
-ClassImp(TPointSet3DGL)
+ClassImp(TPointSet3DGL);
 
 //______________________________________________________________________________
 Bool_t TPointSet3DGL::SetModel(TObject* obj, const Option_t*)
@@ -50,8 +49,9 @@ Bool_t TPointSet3DGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
    // To account for large point-sizes we modify the projection matrix
    // during selection and thus we need a direct draw.
 
-   if (rnrCtx.Selection()) return kFALSE;
-   return fDLCache;
+   if (rnrCtx.Selection())
+      return kFALSE;
+   return TGLObject::ShouldDLCache(rnrCtx);
 }
 
 //______________________________________________________________________________
@@ -59,7 +59,7 @@ void TPointSet3DGL::Draw(TGLRnrCtx& rnrCtx) const
 {
    // Draw function for TPointSet3D. Skips line-pass of outline mode.
 
-   if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+   if (rnrCtx.IsDrawPassOutlineLine())
       return;
 
    TGLObject::Draw(rnrCtx);

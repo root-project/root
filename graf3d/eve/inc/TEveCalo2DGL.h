@@ -30,7 +30,7 @@ private:
 protected:
    TEveCalo2D   *fM;  // Model object.
 
-   void      MakeRhoZCell      (const TEveCaloData::CellData_t &cell, Float_t& offset, Bool_t phiPlus, Float_t towerH) const;
+   void      MakeRhoZCell(const TEveCaloData::CellData_t &cell, Float_t& offset, Bool_t phiPlus, Float_t towerH) const;
 
    Float_t   MakeRPhiCell(Float_t phiMin, Float_t phiMax, Float_t towerH, Float_t offset) const;
 
@@ -43,8 +43,6 @@ public:
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
-
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
 
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 

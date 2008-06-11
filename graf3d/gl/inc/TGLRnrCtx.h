@@ -173,6 +173,7 @@ public:
    Short_t DrawPass()    const         { return fDrawPass;  }
    void    SetDrawPass(Short_t dpass)  { fDrawPass = dpass; }
    Bool_t  IsDrawPassFilled() const;
+   Bool_t  IsDrawPassOutlineLine() const { return fDrawPass == kPassOutlineLine; }
 
    // Render time-out
    Double_t RenderTimeOut()           const { return fRenderTimeOut; }

@@ -39,7 +39,8 @@ TEveProjectionAxesGL::TEveProjectionAxesGL() :
 {
    // Constructor.
 
-   fDLCache = kFALSE; // Disable display list.
+   fDLCache    = kFALSE; // Disable display list.
+   fMultiColor = kTRUE;
 }
 
 /******************************************************************************/
@@ -95,17 +96,17 @@ void TEveProjectionAxesGL::DrawTickMarks(Float_t y) const
 {
    // Draw tick-marks on the current axis.
 
-   if(fFont.GetMode() == TGLFont::kTexture) glDisable(GL_TEXTURE_2D);
+   if (fFont.GetMode() == TGLFont::kTexture) glDisable(GL_TEXTURE_2D);
 
    glBegin(GL_LINES);
-   for (std::list<TM_t>::iterator it = fTMList.begin(); it!= fTMList.end(); ++it)
+   for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
    {
       glVertex2f((*it).first, 0);
       glVertex2f((*it).first, y);
    }
    glEnd();
 
-   if(fFont.GetMode() == TGLFont::kTexture) glEnable(GL_TEXTURE_2D);
+   if (fFont.GetMode() == TGLFont::kTexture) glEnable(GL_TEXTURE_2D);
 }
 
 //______________________________________________________________________________
@@ -119,7 +120,7 @@ void TEveProjectionAxesGL::DrawHInfo() const
    Float_t off = tmH + fLabelOff*tmH;
    Float_t llx, lly, llz, urx, ury, urz;
    const char* txt;
-   for (std::list<TM_t>::iterator it = fTMList.begin(); it!= fTMList.end(); ++it)
+   for (std::list<TM_t>::iterator it = fTMList.begin(); it != fTMList.end(); ++it)
    {
       glPushMatrix();
       glTranslatef((*it).first, -off, 0);
@@ -171,10 +172,10 @@ void TEveProjectionAxesGL::SplitInterval(Float_t p1, Float_t p2, Int_t ax) const
    // Build an array of tick-mark position-value pairs.
 
    Float_t down = fProjection->GetLimit(ax, kFALSE)*0.95;
-   p1 = p1<down ? down : p1;
+   p1 = TMath::Max(p1, down);
 
    Float_t up = fProjection->GetLimit(ax, kTRUE)*0.95;
-   p2 = p2>up ? up : p2;
+   p2 = TMath::Min(p2, up);
 
    if (fAxesModel->GetStepMode() == TEveProjectionAxes::kValue)
    {
@@ -302,5 +303,3 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    fProjection = 0;
 }
-
-

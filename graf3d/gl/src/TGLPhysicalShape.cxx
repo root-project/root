@@ -354,7 +354,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    // any logical call, caching etc.
    if (rnrCtx.ShapeLOD() == TGLRnrCtx::kLODPixel)
    {
-      if (rnrCtx.DrawPass() != TGLRnrCtx::kPassOutlineLine)
+      if (!rnrCtx.IsDrawPassOutlineLine())
       {
          glColor4fv(fColor);
          glBegin(GL_POINTS);
@@ -372,8 +372,7 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    glPushMatrix();
    glMultMatrixd(fTransform.CArr());
    if (fInvertedWind)  glFrontFace(GL_CW);
-   if (fSelected && !rnrCtx.Selection() &&
-       rnrCtx.DrawPass() != TGLRnrCtx::kPassOutlineLine)
+   if (fSelected && !rnrCtx.Selection() && !rnrCtx.IsDrawPassOutlineLine())
    {
       const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
       Int_t inner[4][2] = { { 0,-1}, { 1, 0}, { 0, 1}, {-1, 0} };
@@ -389,9 +388,10 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       {
          glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
          glColor4ubv(rnrCtx.GetSSLColor(fSelected));
-         fLogicalShape->DirectDraw(rnrCtx);
+         fLogicalShape->Draw(rnrCtx);
       }
       TGLUtil::UnlockColor();
+      rnrCtx.SetHighlight(kFALSE);
 
       SetupGLColors(rnrCtx);
       for (int i = 0; i < 4; ++i)
@@ -401,7 +401,6 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
          fLogicalShape->Draw(rnrCtx);
       }
       glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
-      rnrCtx.SetHighlight(kFALSE);
 
       SetupGLColors(rnrCtx);
       Float_t dr[2];
@@ -413,10 +412,10 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    else
    {
       SetupGLColors(rnrCtx);
-      if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+      if (rnrCtx.IsDrawPassOutlineLine())
          TGLUtil::LockColor();
       fLogicalShape->Draw(rnrCtx);
-      if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)
+      if (rnrCtx.IsDrawPassOutlineLine())
          TGLUtil::UnlockColor();
    }
    if (fInvertedWind)  glFrontFace(GL_CCW);

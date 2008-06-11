@@ -33,6 +33,7 @@ TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(0)
    // Constructor.
 
    // fDLCache = false; // Disable display list.
+   fMultiColor = kTRUE;
 }
 
 /******************************************************************************/
@@ -61,12 +62,12 @@ void TEveStraightLineSetGL::SetBBox()
 //______________________________________________________________________________
 Bool_t TEveStraightLineSetGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   // Override from TGLLogicalShape.
+   // Override from TGLObject.
    // To account for large point-sizes we modify the projection matrix
    // during selection and thus we need a direct draw.
 
    if (rnrCtx.Selection()) return kFALSE;
-   return fDLCache;
+   return TGLObject::ShouldDLCache(rnrCtx);
 }
 
 /******************************************************************************/
