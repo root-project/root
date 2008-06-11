@@ -247,7 +247,6 @@ void TRefTable::FillBuffer(TBuffer & b)
       b << fN[iid];
       b.WriteFastArray(fParentIDs[iid], fN[iid]);
    }
-   b.WriteProcessID(fUIDContext);
 }
 
 
@@ -399,4 +398,30 @@ void TRefTable::SetRefTable(TRefTable *table)
    // Static function setting the current TRefTable.
 
    fgRefTable = table;
+}
+
+//______________________________________________________________________________
+void TRefTable::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TRefTable.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TRefTable::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(TRefTable::Class(),this);
+      //make sure that all TProcessIDs referenced in the Tree are put to the buffer
+      //this is important in case the buffer is a TMessage to be sent through a TSocket
+      TObjArray *pids = TProcessID::GetPIDs();
+      Int_t npids = pids->GetEntries();
+      Int_t npid2 = fProcessGUIDs.size();
+      for (Int_t i = 0; i < npid2; i++) {
+         TProcessID *pid;
+         for (Int_t ipid = 0;ipid<npids;ipid++) {
+            pid = (TProcessID*)pids->At(ipid);
+            if (!pid) continue;
+            if (!strcmp(pid->GetTitle(),fProcessGUIDs[i].c_str()))
+               R__b.WriteProcessID(pid);
+         }
+      }
+   }
 }

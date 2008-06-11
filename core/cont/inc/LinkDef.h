@@ -52,7 +52,7 @@
 #pragma link C++ class TExMapIter;
 #pragma link C++ class TRefArray-;
 #pragma link C++ class TRefArrayIter;
-#pragma link C++ class TRefTable+;
+#pragma link C++ class TRefTable-;
 #pragma link C++ class TVirtualCollectionProxy-;
 #pragma link C++ class vector<Int_t>;
 
