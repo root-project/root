@@ -1934,7 +1934,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 
       for (Int_t j=0;j<n;j++) {
          //must write StreamerInfo if pointer is null
-         if (!strInfo && !start[j] ) ((TClass*)cl)->GetStreamerInfo()->ForceWriteInfo((TFile *)GetParent());
+         if (!strInfo && !start[j] ) ForceWriteInfo(((TClass*)cl)->GetStreamerInfo(),kFALSE);
          strInfo = 2003;
          res |= WriteObjectAny(start[j],cl);
       }
