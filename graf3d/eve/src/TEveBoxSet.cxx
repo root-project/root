@@ -16,26 +16,32 @@
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
-//______________________________________________________________________________
+//==============================================================================
 // TEveBoxSet
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // Collection of 3D primitives (fixed-size boxes, boxes of different
-// sizes, or arbitrary sexto-epipeds); each primitive can be assigned
+// sizes, or arbitrary sexto-epipeds, cones); each primitive can be assigned
 // a signal value and a TRef.
 //
-// A collection of 3D-boxes. The way how the boxes are defined depends
+// A collection of 3D-markers. The way how they are defined depends
 // on the fBoxType data-member.
 //   kBT_FreeBox         arbitrary box: specify 8*(x,y,z) box corners
 //   kBT_AABox           axis-aligned box: specify (x,y,z) and (w, h, d)
 //   kBT_AABoxFixedDim   axis-aligned box w/ fixed dimensions: specify (x,y,z)
-//                      also set fDefWidth, fDefHeight and fDefDepth
+//                       also set fDefWidth, fDefHeight and fDefDepth
+//   kBT_Cone            cone defined with position, axis-vector and radius
 //
-// Each box can be assigned:
+// Each primitive can be assigned:
 // a) Color or signal value. Thresholds and signal-to-color mapping
 //    can then be set dynamically via the TEveRGBAPalette class.
 // b) External TObject* (stored as TRef).
 //
 // See also base-class TEveDigitSet for more information.
+// Tutorial: tutorials/eve/boxset_test.C
+
 
 ClassImp(TEveBoxSet);
 
@@ -153,20 +159,20 @@ void TEveBoxSet::AddBox(Float_t a, Float_t b, Float_t c)
 }
 
 //______________________________________________________________________________
-void TEveBoxSet::AddBox(TEveVector dir, TEveVector pos, Float_t r)
+void TEveBoxSet::AddCone(const TEveVector& pos, const TEveVector& dir, Float_t r)
 {
-   // Create a cone with axis pointing to direction fDir, radius fDir and
-   // height od fDir size. To be used for box-type kBT_Cone.
+   // Create a cone with apex at pos, axis dir and radius r.
+   // To be used for box-type kBT_Cone.
 
-   static const TEveException eH("TEveBoxSet::AddBox ");
+   static const TEveException eH("TEveBoxSet::AddCone ");
 
    if (fBoxType != kBT_Cone)
       throw(eH + "expect cone box-type.");
 
    BCone_t* cone = (BCone_t*) NewDigit();
-   cone->fDir = dir;
    cone->fPos = pos;
-   cone->fR = r;
+   cone->fDir = dir;
+   cone->fR   = r;
 }
 
 /******************************************************************************/

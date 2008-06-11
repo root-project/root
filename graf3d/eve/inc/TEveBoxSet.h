@@ -46,7 +46,7 @@ protected:
 
    struct BAABoxFixedDim_t : public BOrigin_t {};
 
-   struct BCone_t          : public DigitBase_t { TEveVector fDir; TEveVector fPos; Float_t fR;};
+   struct BCone_t          : public DigitBase_t { TEveVector fPos, fDir; Float_t fR; };
 
 protected:
    EBoxType_e        fBoxType;      // Type of rendered box.
@@ -69,7 +69,8 @@ public:
    void AddBox(const Float_t* verts);
    void AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, Float_t d);
    void AddBox(Float_t a, Float_t b, Float_t c);
-   void AddBox(TEveVector fDir, TEveVector fPos, Float_t fOpenAngle);
+
+   void AddCone(const TEveVector& pos, const TEveVector& dir, Float_t r);
 
    virtual void ComputeBBox();
    // virtual void Paint(Option_t* option = "");

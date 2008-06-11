@@ -36,7 +36,7 @@ TEveBoxSet* boxset_test(Float_t x=0, Float_t y=0, Float_t z=0,
 
 
 
-TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0,  Int_t num=1000)
+TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0, Int_t num=1000)
 {
   using namespace TMath;
 
@@ -50,7 +50,9 @@ TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0,  Int_t num=1000)
   TEveBoxSet* q = new TEveBoxSet("ConeSet");
   q->SetPalette(pal);
   q->Reset(TEveBoxSet::kBT_Cone, kFALSE, 64);
-  Float_t a=400;
+
+  Float_t a = 400;
+
   TEveVector dir, pos;
   Float_t theta, phi, height;
 
@@ -61,11 +63,11 @@ TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0,  Int_t num=1000)
     phi    = r.Uniform (-TMath::Pi(), TMath::Pi());
     height = r.Uniform(5, 15);
 
+    pos.Set(r.Uniform(-a,a), r.Uniform(-a, a), r.Uniform(-a, a));
     dir.Set(Cos(phi)*Sin(theta), Sin(phi)*Sin(theta), Cos(theta));
     dir *= height;
-    pos.Set(r.Uniform(-a,a), r.Uniform(-a, a), r.Uniform(-a, a));
 
-    q->AddBox(dir, pos, r.Uniform(3, 5));
+    q->AddCone(pos, dir, r.Uniform(3, 5));
     q->DigitValue(r.Uniform(0, 500));
   }
 
