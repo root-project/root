@@ -1,5 +1,5 @@
 TEST_TARGETS += sepDictLibs
-CLEAN_TARGETS +=  *.$(ObjSuf) *.$(DllSuf) *Dict* run.log *.build.log
+CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.$(ObjSuf) *.$(DllSuf) *Dict* run.log *.build.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
