@@ -117,6 +117,14 @@ void TMessage::EnableSchemaEvolution(Bool_t enable)
 }
 
 //______________________________________________________________________________
+void TMessage::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t /* force */)
+{
+   // force writing the TStreamerInfo to the message
+   
+   if (fgEvolution) fInfos->Add(info);
+}
+
+//______________________________________________________________________________
 void TMessage::Forward()
 {
    // Change a buffer that was received into one that can be send, i.e.

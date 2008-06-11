@@ -33,6 +33,7 @@
 #endif
 
 class TList;
+class TVirtualStreamerInfo;
 
 class TMessage : public TBufferFile {
 
@@ -67,6 +68,7 @@ public:
 
    static void EnableSchemaEvolution(Bool_t enable=kTRUE);
    
+   void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
    void     Forward();
    TClass  *GetClass() const { return fClass;} 
    void     IncrementLevel(TVirtualStreamerInfo* info);
