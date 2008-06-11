@@ -1,7 +1,7 @@
 TEST_TARGETS += newTest
 CLEAN_TARGETS += \ ti_files $(DICTS) $(DICTS_H) ii_files \
 	*.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~ \
-	*.exp .def *.log *.pdb
+	*.exp .def *.log *.pdb *.rootmap 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
