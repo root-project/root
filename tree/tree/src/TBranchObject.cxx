@@ -535,7 +535,7 @@ void TBranchObject::Streamer(TBuffer& R__b)
 
       // make sure that all TStreamerInfo objects referenced by
       // this class are written to the file
-      TClass::GetClass(fClassName.Data())->GetStreamerInfo()->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
+      R__b.ForceWriteInfo(TClass::GetClass(fClassName.Data())->GetStreamerInfo(), kTRUE);
 
       // if branch is in a separate file save this branch
       // as an independent key

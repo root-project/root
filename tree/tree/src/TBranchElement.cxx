@@ -1151,8 +1151,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
             Error("FillLeaves", "Cannot get streamer info for branch '%s' class '%s'", GetName(), cl->GetName());
             return;
          }
-         // FIXME: What if GetParent() returns a zero pointer here?
-         si->ForceWriteInfo((TFile *) b.GetParent());
+         b.ForceWriteInfo(si,kFALSE);
          Int_t* nptr = (Int_t*) fAddress;
          b << *nptr;
       } else {
@@ -3739,10 +3738,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
       //  to be written to our output file.
       //
       {
-         TStreamerInfo* si = GetInfo();
-         if (si) {
-            si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
-         }
+         R__b.ForceWriteInfo(GetInfo(), kTRUE);
       }
       //
       //  If we are a clones array master branch, or an
@@ -3760,10 +3756,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
          if (nm && strlen(nm)) {
             TClass* cl = TClass::GetClass(nm);
             if (cl) {
-               TVirtualStreamerInfo* si = cl->GetStreamerInfo();
-               if (si) {
-                  si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
-               }
+               R__b.ForceWriteInfo(cl->GetStreamerInfo(), kTRUE);
             }
          }
       }
@@ -3777,10 +3770,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
          if (cp) {
             TClass* cl = cp->GetValueClass();
             if (cl) {
-               TVirtualStreamerInfo* si = cl->GetStreamerInfo();
-               if (si) {
-                  si->ForceWriteInfo((TFile*) R__b.GetParent(), kTRUE);
-               }
+               R__b.ForceWriteInfo(cl->GetStreamerInfo(), kTRUE);
             }
          }
       }
