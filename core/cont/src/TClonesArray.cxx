@@ -691,7 +691,7 @@ void TClonesArray::Streamer(TBuffer &b)
       //sinfo->ForceWriteInfo((TFile *)b.GetParent());
       //if (optim) TStreamerInfo::Optimize(kTRUE);
       //if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
-      b.ForceWriteInfo(this);
+      b.ForceWriteInfoClones(this);
 
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
