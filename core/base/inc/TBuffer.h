@@ -274,8 +274,9 @@ public:
    virtual   TProcessID *ReadProcessID(UShort_t pidf) = 0;
    virtual   UShort_t    WriteProcessID(TProcessID *pid) = 0;
 
-   // Utilities for TClonesArray
-   virtual   void     ForceWriteInfo(TClonesArray *a) = 0;
+   // Utilities for TStreamerInfo
+   virtual   void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) = 0;
+   virtual   void     ForceWriteInfoClones(TClonesArray *a) = 0;
    virtual   Int_t    ReadClones (TClonesArray *a, Int_t nobjects, Version_t objvers) = 0;
    virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects) = 0;
 
