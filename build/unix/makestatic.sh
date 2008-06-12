@@ -24,7 +24,7 @@ excl="main proof/proofd net/rootd net/xrootd rootx montecarlo/pythia6 \
       hist/hbook core/newdelete misc/table core/utils net/srputils \
       net/krb5auth net/globusauth io/chirp io/dcache net/alien \
       graf2d/asimage net/ldap graf2d/qt gui/qtroot math/quadp \
-      bindings/pyroot bindings/ruby montecarlo/vmc \
+      bindings/pyroot bindings/ruby \
       io/xmlparser graf3d/gl graf3d/ftgl roofit/roofit roofit/roofitcore \
       sql/oracle net/netx net/auth net/rpdutils math/mathmore \
       math/minuit2 io/gfal net/monalisa proof/proofx math/fftw gui/qtgsi \
