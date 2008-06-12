@@ -2883,7 +2883,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
          return;
       }
       TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
-      if( fSplitLevel > 100 )
+      if( fSplitLevel >= 100 )
          GetInfo()->ReadBufferSTLPtrs(b, GetCollectionProxy(), fNdata, fID, fOffset);
       else
          GetInfo()->ReadBufferSTL(b, GetCollectionProxy(), fNdata, fID, fOffset);
