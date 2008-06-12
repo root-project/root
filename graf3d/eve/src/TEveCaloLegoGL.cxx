@@ -900,7 +900,7 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
    {
       for(SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
       {
-         TGLUtil::Color(fM->fData->RefSliceInfo(i->first).fColor);
+         TGLUtil::Color(fM->GetDataSliceColor(i->first));
          glCallList(i->second);
       }
    }
@@ -926,7 +926,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
    static const TEveException eh("TEveCaloLegoGL::DrawCells2D ");
 
    UChar_t col[4];
-   Color_t defCol = fM->fData->RefSliceInfo(0).fColor;  // default color is first slice color
+   Color_t defCol = fM->GetDataSliceColor(0);  // default color is first slice color
    Int_t es = GetGridStep(0, rnrCtx);
    Int_t ps = GetGridStep(1, rnrCtx);
    if (es==1 && ps==1)
@@ -1058,11 +1058,11 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
       Float_t scaleLog =fM->fData->GetMaxVal(fM->fPlotEt)/logMax;
      
       // take smallest threshold
-      Float_t threshold = fM->fData->RefSliceInfo(0).fThreshold;
+      Float_t threshold = fM->GetDataSliceThreshold(0);
       for (Int_t s=1; s<fM->fData->GetNSlices(); s++)
       {
-         if (threshold > fM->fData->RefSliceInfo(s).fThreshold)
-            threshold = fM->fData->RefSliceInfo(s).fThreshold;
+         if (threshold > fM->GetDataSliceThreshold(s))
+            threshold = fM->GetDataSliceThreshold(s);
       }
 
       // draw  scaled    
@@ -1143,7 +1143,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    if (fM->fCacheOK == kFALSE)
    {
       fDLCacheOK = kFALSE;
-      fM->ResetCache();
+      fM->ClearCache();
       fM->fData->GetCellList(fM->GetEta(), fM->GetEtaRng(),fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
       fM->fCacheOK = kTRUE;
    }

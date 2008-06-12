@@ -104,7 +104,7 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
 
    if (fM->fCacheOK == kFALSE)
    {
-      fM->ResetCache();
+      fM->ClearCache();
 
       const TAxis* ay = data->GetPhiBins();
       Int_t nBins = ay->GetNbins();
@@ -238,7 +238,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
 
    if (fM->fCacheOK == kFALSE)
    {
-      fM->ResetCache();
+      fM->ClearCache();
       const TAxis* ax = data->GetEtaBins();
       Int_t nBins = ax->GetNbins();
 

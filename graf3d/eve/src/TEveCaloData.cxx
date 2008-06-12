@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TEveCaloData.h"
+#include "TEveCalo.h"
 
 #include "TAxis.h"
 #include "THStack.h"
@@ -31,7 +32,7 @@
 ClassImp(TEveCaloData);
 
 TEveCaloData::TEveCaloData():
-   TEveRefCnt(),
+   TEveRefBackPtr(),
 
    fEtaAxis(0),
    fPhiAxis(0)
@@ -104,7 +105,9 @@ void TEveCaloData::CellData_t::Dump() const
 ClassImp(TEveCaloDataHist);
 
 
-TEveCaloDataHist::TEveCaloDataHist(): 
+TEveCaloDataHist::TEveCaloDataHist():
+   TEveCaloData(),
+
    fHStack(0),
    fMaxValEt(0),
    fMaxValE(0)
@@ -216,6 +219,22 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
                       hist->GetXaxis()->GetBinLowEdge(x),
                       hist->GetXaxis()->GetBinUpEdge(x),
                       phi1, phi2);
+}
+
+//______________________________________________________________________________
+void TEveCaloDataHist::InvalidateUsersCache()
+{
+   // Invalidate cell ids cache on back ptr references.
+
+   TEveCaloViz* calo;
+   std::list<TEveElement*>::iterator i = fBackRefs.begin();
+   while (i != fBackRefs.end())
+   {
+      calo = dynamic_cast<TEveCaloViz*>(*i);
+      calo->InvalidateCache();
+      calo->StampObjProps();
+      ++i;
+   }
 }
 
 //______________________________________________________________________________

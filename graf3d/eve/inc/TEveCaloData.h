@@ -20,16 +20,16 @@ class TH2F;
 class TAxis;
 class THStack;
 
-class TEveCaloData: public TEveRefCnt
+class TEveCaloData: public TEveRefBackPtr
 {
 public:
    struct SliceInfo_t
    {
-      TString fName;
-      Float_t fThreshold;
-      Int_t   fID;
-      Color_t fColor;
-      TH2F*    fHist;
+      TString  fName;
+      Float_t  fThreshold;
+      Int_t    fID;
+      Color_t  fColor;
+      TH2F    *fHist;
 
       SliceInfo_t(): fName(""), fThreshold(0), fID(-1), fColor(Color_t(4)), fHist(0){}
       SliceInfo_t(TH2F* h): fName(""), fThreshold(0), fID(-1), fColor(Color_t(4)), fHist(h) {}
@@ -122,6 +122,8 @@ public:
    virtual void GetCellData(const CellId_t &id, CellData_t& data) const = 0;
    virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const = 0;
 
+   virtual void  InvalidateUsersCache() = 0;
+
    virtual Bool_t SupportsEtaBinning(){ return kFALSE; }
    virtual Bool_t SupportsPhiBinning(){ return kFALSE; }
 
@@ -164,6 +166,7 @@ public:
    virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
    virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const;
 
+   virtual void  InvalidateUsersCache();
 
    virtual Bool_t SupportsEtaBinning(){ return kTRUE; }
    virtual Bool_t SupportsPhiBinning(){ return kTRUE; }

@@ -291,7 +291,7 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 
    if (fM->fCacheOK == kFALSE)
    {
-      fM->ResetCache();
+      fM->ClearCache();
       fM->fData->GetCellList(fM->GetEta(), fM->GetEtaRng(), fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
       fM->fCacheOK= kTRUE;
    }

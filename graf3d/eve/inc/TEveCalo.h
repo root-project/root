@@ -64,6 +64,8 @@ protected:
 
    virtual Float_t GetValToHeight() const;
 
+   virtual void ClearCache() = 0;
+
 public:
    TEveCaloViz(const Text_t* n="TEveCaloViz", const Text_t* t="");
    TEveCaloViz(TEveCaloData* data, const Text_t* n="TEveCaloViz", const Text_t* t="");
@@ -72,6 +74,11 @@ public:
 
    TEveCaloData* GetData() const { return fData; }
    virtual void  SetData(TEveCaloData* d);
+
+   Float_t GetDataSliceThreshold(Int_t slice) const;
+   void    SetDataSliceThreshold(Int_t slice, Float_t val);
+   Color_t GetDataSliceColor(Int_t slice) const;
+   void    SetDataSliceColor(Int_t slice, Color_t col);
 
    Float_t GetBarrelRadius() const { return fBarrelRadius; }
    void    SetBarrelRadius(Float_t r) { fBarrelRadius = r; ResetBBox(); }
@@ -113,7 +120,6 @@ public:
    Float_t GetPhiMax() const {return fPhi+fPhiOffset;}
    Float_t GetPhiRng() const {return fPhiOffset*2;}
 
-   virtual void ResetCache() = 0;
    void InvalidateCache() { fCacheOK=kFALSE; ResetBBox(); } // compute bbox
 
    virtual void Paint(Option_t* option="");
@@ -136,13 +142,13 @@ private:
 protected:
    TEveCaloData::vCellId_t fCellList;
 
+   virtual void ClearCache();
+
 public:
    TEveCalo3D(const Text_t* n="TEveCalo3D", const Text_t* t=""):TEveCaloViz(n, t){}
    TEveCalo3D(TEveCaloData* data): TEveCaloViz(data) { SetElementName("TEveCalo3D");}
    virtual ~TEveCalo3D() {}
    virtual void ComputeBBox();
-
-   virtual void ResetCache();
 
    ClassDef(TEveCalo3D, 0); // Class for 3D visualization of calorimeter event data.
 };
@@ -163,6 +169,8 @@ private:
 protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellLists;
 
+   virtual void ClearCache();
+
 public:
    TEveCalo2D(const Text_t* n="TEveCalo2D", const Text_t* t="");
    virtual ~TEveCalo2D(){}
@@ -170,8 +178,6 @@ public:
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();
    virtual void SetDepth(Float_t x){fDepth = x;}
-
-   virtual void ResetCache();
 
    virtual void ComputeBBox();
 
@@ -213,6 +219,8 @@ protected:
    Bool_t                  fDrawHPlane;
    Float_t                 fHPlaneVal;
 
+   virtual void ClearCache();
+
 public:
    TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");
    TEveCaloLego(TEveCaloData* data);
@@ -251,8 +259,6 @@ public:
 
    Float_t  GetHPlaneVal() const { return fHPlaneVal; }
    void     SetHPlaneVal(Float_t s) { fHPlaneVal = s;}
-
-   virtual void ResetCache();
 
    virtual void ComputeBBox();
 

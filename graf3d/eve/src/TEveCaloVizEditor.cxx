@@ -315,9 +315,7 @@ void TEveCaloVizEditor::DoSliceThreshold()
    // Slot for SliceThreshold.
 
    TEveGValuator *st = (TEveGValuator *) gTQSender;
-   fM->GetData()->RefSliceInfo(st->WidgetId()).fThreshold = st->GetValue();
-
-   fM->InvalidateCache();
+   fM->SetDataSliceThreshold(st->WidgetId(), st->GetValue());
    Update();
 }
 
@@ -327,7 +325,6 @@ void TEveCaloVizEditor::DoSliceColor(Pixel_t pixel)
    // Slot for slice info Color.
    
    TGColorSelect *cs = (TGColorSelect *) gTQSender;
-   fM->GetData()->RefSliceInfo(cs->WidgetId()).fColor = Color_t(TColor::GetColor(pixel));
-
+   fM->SetDataSliceColor(cs->WidgetId(), Color_t(TColor::GetColor(pixel)));
    Update();
 }

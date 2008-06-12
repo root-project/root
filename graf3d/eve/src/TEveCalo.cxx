@@ -115,6 +115,40 @@ TEveCaloViz::~TEveCaloViz()
 }
 
 //______________________________________________________________________________
+Float_t TEveCaloViz::GetDataSliceThreshold(Int_t slice) const
+{
+   // Get threshold for given slice.
+
+   return fData->RefSliceInfo(slice).fThreshold;
+}
+
+//______________________________________________________________________________
+void TEveCaloViz::SetDataSliceThreshold(Int_t slice, Float_t val)
+{
+   // Set threshold for given slice.
+
+   fData->RefSliceInfo(slice).fThreshold = val;
+   fData->InvalidateUsersCache();
+}
+
+//______________________________________________________________________________
+Color_t TEveCaloViz::GetDataSliceColor(Int_t slice) const
+{
+   // Get slice color from data.
+
+   return fData->RefSliceInfo(slice).fColor;
+}
+
+//______________________________________________________________________________
+void TEveCaloViz::SetDataSliceColor(Int_t slice, Color_t col)
+{
+   // Set slice color in data.
+  
+   fData->RefSliceInfo(slice).fColor = col;
+   fData->StampBackPtrElements(kCBObjProps);
+}
+
+//______________________________________________________________________________
 void TEveCaloViz::SetEta(Float_t l, Float_t u)
 {
    // Set eta range.
@@ -176,9 +210,9 @@ void TEveCaloViz::SetData(TEveCaloData* data)
    // Set calorimeter event data.
 
    if (data == fData) return;
-   if (fData) fData->DecRefCount();
+   if (fData) fData->DecRefCount(this);
    fData = data;
-   if (fData) fData->IncRefCount();
+   if (fData) fData->IncRefCount(this);
 
    fData->GetEtaLimits(fEtaMin, fEtaMax);
    Double_t min, max;
@@ -333,7 +367,7 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) co
 ClassImp(TEveCalo3D);
 
 //______________________________________________________________________________
-void TEveCalo3D::ResetCache()
+void TEveCalo3D::ClearCache()
 {
    // Clear list of drawn cell IDs. See TEveCalo3DGL::DirectDraw().
 
@@ -402,7 +436,7 @@ void TEveCalo2D::SetProjection(TEveProjectionManager* mng, TEveProjectable* mode
 }
 
 //______________________________________________________________________________
-void TEveCalo2D::ResetCache()
+void TEveCalo2D::ClearCache()
 {
    // Clear lists of drawn cell IDs. See TEveCalo2DGL::DirecDraw().
 
@@ -520,7 +554,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
 }
 
 //______________________________________________________________________________
-void TEveCaloLego::ResetCache()
+void TEveCaloLego::ClearCache()
 {
    // Clear list of drawn cell IDs. For more information see TEveCaloLegoGL:DirectDraw().
 
