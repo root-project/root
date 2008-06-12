@@ -28,7 +28,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2)
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2) || defined(__APPLE__)
 #include <bits/atomicity.h>
 #else
 #include <ext/atomicity.h>
