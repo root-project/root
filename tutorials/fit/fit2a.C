@@ -28,14 +28,17 @@ Double_t fun2(Double_t *x, Double_t *par) {
    return result;
 }
 
-void fit2a() {
+TCanvas *fit2a() {
+   TCanvas *c = new TCanvas();
+   gStyle->SetOptStat(kTRUE); 
+   gStyle->SetPalette(1); 
    const Int_t npar = 15;
    Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
    TF2 *f2 = new TF2("f2",fun2,-10,10,-10,10, npar);
    f2->SetParameters(f2params);
 
    //Create an histogram and fill it randomly with f2
-   TH2F *h2 = new TH2F("h2","from f2",40,-10,10,40,-10,10);
+   TH2F *h2 = new TH2F("h2","From f2",40,-10,10,40,-10,10);
    Int_t nentries = 100000;
    h2->FillRandom("f2",nentries);
    //Fit h2 with original function f2
@@ -51,9 +54,10 @@ void fit2a() {
    cutg->SetPoint(2, 2, 2);
    cutg->SetPoint(3,-7, 2);
    cutg->SetPoint(4,-7,-7);
-   h2->Draw("lego2");
+   h2->Draw("lego2 0");
    h2->SetFillColor(38);
    f2->SetNpx(80);
    f2->SetNpy(80);
-   f2->Draw("surf1 same [cutg]");
+   f2->Draw("surf1 same bb [cutg]");
+   return c;
 }
