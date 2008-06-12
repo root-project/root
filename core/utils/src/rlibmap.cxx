@@ -117,6 +117,9 @@ char *Compress(const char *str)
    // Remove all blanks from the string str. The returned string has to be
    // deleted by the user.
 
+   static const char* composedTypes[] = {"const ", "signed ","unsigned "};
+   static unsigned int composedTypesLen[] = {6, 7, 9};
+
    if (!str) return 0;
 
    const char *p = str;
@@ -125,8 +128,19 @@ char *Compress(const char *str)
    s = s1;
 
    while (*p) {
-      if (*p != ' ')
+      if (*p != ' ') {
+         for (unsigned int i = 0; i < sizeof(composedTypes) / sizeof(char*); ++i) {
+            if (!strncmp(p, composedTypes[i], composedTypesLen[i])
+                && (p == str || !isalnum(p[-1]))) {
+               // the last one will be copied after the for loop
+               memcpy(s, composedTypes[i], composedTypesLen[i] - 1);
+               p += composedTypesLen[i] - 1;
+               s += composedTypesLen[i] - 1;
+               continue;
+            }
+         }
          *s++ = *p;
+      }
       p++;
    }
    *s = '\0';
