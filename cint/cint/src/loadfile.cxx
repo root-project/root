@@ -1361,7 +1361,7 @@ int G__loadfile(const char *filenamein)
             bool cintdlls = false;
             int len = strlen(filename);
             for (unsigned int i = 0; !cintdlls && i < excludelistsize; ++i) {
-               if (len>excludelen[i]) {
+               if (len>=excludelen[i]) {
                   cintdlls = (!strncmp(filename+len-excludelen[i], excludelist[i], excludelen[i]));
                }
             }
