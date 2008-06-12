@@ -49,13 +49,13 @@ protected:
   void optimizeCaching() ;
   void optimizeConstantTerms(Bool_t) ;
 
-  RooArgSet*  _normSet ;
-  RooArgSet*  _funcCloneSet ;
-  RooAbsData* _dataClone ;
-  RooAbsReal* _funcClone ;
-  RooArgSet*  _projDeps ;
+  RooArgSet*  _normSet ; // Pointer to set with observables used for normalization 
+  RooArgSet*  _funcCloneSet ; // Set owning all components of internal clone of input function
+  RooAbsData* _dataClone ; // Pointer to internal clone if input data
+  RooAbsReal* _funcClone ; // Pointer to internal clone of input function
+  RooArgSet*  _projDeps ; // Set of projected observable
 
-  ClassDef(RooAbsOptTestStatistic,1) // Abstract real-valued variable
+  ClassDef(RooAbsOptTestStatistic,1) // Abstract base class for optimized test statistics
 };
 
 #endif

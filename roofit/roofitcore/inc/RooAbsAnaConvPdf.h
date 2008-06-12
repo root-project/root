@@ -47,7 +47,10 @@ public:
   virtual void printMultiline(ostream& stream, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const ;
 
   // Coefficient normalization access
-  inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const { return getCoefNorm(coefIdx,&nset,rangeName) ; }
+  inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const { 
+    // Returns normalization integral for coefficient coefIdx for observables nset in range rangeNae
+    return getCoefNorm(coefIdx,&nset,rangeName) ; 
+  }
   Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0, const char* rangeName=0) const ;
 
   // Analytical integration support
@@ -107,7 +110,7 @@ protected:
   } ;
   mutable RooObjCacheManager _coefNormMgr ; // Coefficient normalization manager
 
-  mutable RooAICRegistry _codeReg ;   //!
+  mutable RooAICRegistry _codeReg ;   //! Registry of analytical integration codes
 
   ClassDef(RooAbsAnaConvPdf,1) // Abstract Composite Convoluted PDF
 };

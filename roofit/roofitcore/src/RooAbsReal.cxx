@@ -14,13 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsReal is the common abstract base class for objects that represent a
-// real value. Implementation of RooAbsReal may be derived, there no interface
+// real value and implements functionality common to all real-valued objects
+// such as the ability to plot them, to construct integrals of them, the
+// ability to advertise (partial) analytical integrals etc..
+
+// Implementation of RooAbsReal may be derived, thus no interface
 // is provided to modify the contents.
 // 
-// This class holds in addition a unit and label string, as well
-// as a plot range and number of plot bins and plot creation methods.
+// 
+// END_HTML
+//
 
 #include <sys/types.h>
 
@@ -78,10 +85,16 @@ Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
 Bool_t RooAbsReal::_doLogEvalError ;
 map<const RooAbsArg*,pair<string,list<RooAbsReal::EvalError> > > RooAbsReal::_evalErrorList ;
 
+
+//_____________________________________________________________________________
 RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE)
 {
+  // Default constructor
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _plotMin(0), _plotMax(0), _plotBins(100), 
   _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE)
@@ -92,6 +105,9 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 		       Double_t inMaxVal, const char *unit) :
   RooAbsArg(name,title), _plotMin(inMinVal), _plotMax(inMaxVal), _plotBins(100),
@@ -104,12 +120,14 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax), 
   _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt), _treeVar(other._treeVar)
 {
-
   // Copy constructor
+
   if (other._specIntegratorConfig) {
     _specIntegratorConfig = new RooNumIntConfig(*other._specIntegratorConfig) ;
   } else {
@@ -118,14 +136,18 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsReal::~RooAbsReal()
 {
-  if (_specIntegratorConfig) delete _specIntegratorConfig ;
   // Destructor
+
+  if (_specIntegratorConfig) delete _specIntegratorConfig ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::operator==(Double_t value) const
 {
   // Equality operator comparing to a Double_t
@@ -133,18 +155,25 @@ Bool_t RooAbsReal::operator==(Double_t value) const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsReal::operator==(const RooAbsArg& other) 
 {
+  // Equality operator when comparing to another RooAbsArg.
+  // Only functional when the other arg is a RooAbsReal
+
   const RooAbsReal* otherReal = dynamic_cast<const RooAbsReal*>(&other) ;
   return otherReal ? operator==(otherReal->getVal()) : kFALSE ;
 }
 
 
 
-TString RooAbsReal::getTitle(Bool_t appendUnit) const {
+//_____________________________________________________________________________
+TString RooAbsReal::getTitle(Bool_t appendUnit) const 
+{
   // Return this variable's title string. If appendUnit is true and
   // this variable has units, also append a string " (<unit>)".
-
+  
   TString title(GetTitle());
   if(appendUnit && 0 != strlen(getUnit())) {
     title.Append(" (");
@@ -154,9 +183,15 @@ TString RooAbsReal::getTitle(Bool_t appendUnit) const {
   return title;
 }
 
+
+
+//_____________________________________________________________________________
 Double_t RooAbsReal::getVal(const RooArgSet* set) const
 {
-  // Return value of object. Calculated if dirty, otherwise cached value is returned.
+  // Return value of object. If the cache is clean, return the
+  // cached value, otherwise recalculate on the fly and refill
+  // the cache
+
   if (isValueDirty() || isShapeDirty()) {
 
     _value = traceEval(set) ;
@@ -184,9 +219,12 @@ Double_t RooAbsReal::getVal(const RooArgSet* set) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
 {
   // Calculate current value of object, with error tracing wrapper
+
   Double_t value = evaluate() ;
   cxcoutD(Tracing) << "RooAbsReal::getVal(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
   
@@ -203,74 +241,118 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allDeps, RooArgSet& analDeps, 
 					  const RooArgSet* /*normSet*/, const char* rangeName) const
 {
-  // Default implementation of getAnalyticalIntegralWN for real valued objects defers to
-  // normalization invariant getAnalyticalIntegral()
+  // Variant of getAnalyticalIntegral that is also passed the normalization set
+  // that should be applied to the integrand of which the integral is request.
+  // For certain operator p.d.f it is useful to overload this function rather
+  // than analyticalIntegralWN() as the additional normalization information
+  // may be useful in determining a more efficient decomposition of the
+  // requested integral
+
   return _forceNumInt ? 0 : getAnalyticalIntegral(allDeps,analDeps,rangeName) ;
 }
 
 
-Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& /*allDeps*/, RooArgSet& /*analDeps*/, const char* /*rangeName*/) const
+
+//_____________________________________________________________________________
+Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& /*integSet*/, RooArgSet& /*anaIntSet*/, const char* /*rangeName*/) const
 {
-  // By default we do not supply any analytical integrals
+  // Interface function getAnalyticalIntergral advertises the
+  // analytical integrals that are supported. 'integSet'
+  // is the set of dependents for which integration is requested. The
+  // function should copy the subset of dependents it can analytically
+  // integrate to anaIntSet and return a unique identification code for
+  // this integration configuration.  If no integration can be
+  // performed, zero should be returned.
+  
   return 0 ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooAbsReal::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
-  // Default implementation of analyticalIntegralWN handles only the pass-through
-  // scenario (code =0). All other codes are deferred to to the normalization
-  // invariant analyticalIntegral() 
+  // Implements the actual analytical integral(s) advertised by
+  // getAnalyticalIntegral.  This functions will only be called with
+  // codes returned by getAnalyticalIntegral, except code zero.
 
   if (code==0) return getVal(normSet) ;
   return analyticalIntegral(code,rangeName) ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooAbsReal::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
+  // Implements the actual analytical integral(s) advertised by
+  // getAnalyticalIntegral.  This functions will only be called with
+  // codes returned by getAnalyticalIntegral, except code zero.
+
   // By default no analytical integrals are implemented
   coutF(Eval)  << "RooAbsReal::analyticalIntegral(" << GetName() << ") code " << code << " not implemented" << endl ;
-  assert(0) ;
   return 0 ;
 }
 
 
-const char *RooAbsReal::getPlotLabel() const {
+
+//_____________________________________________________________________________
+const char *RooAbsReal::getPlotLabel() const 
+{
   // Get the label associated with the variable
+
   return _label.IsNull() ? fName.Data() : _label.Data();
 }
 
-void RooAbsReal::setPlotLabel(const char *label) {
+
+
+//_____________________________________________________________________________
+void RooAbsReal::setPlotLabel(const char *label) 
+{
   // Set the label associated with this variable
+
   _label= label;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   //Read object contents from stream (dummy for now)
+
   return kFALSE ;
 } 
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
 {
   //Write object contents to stream (dummy for now)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsReal::printValue(ostream& os) const
 {
+  // Print object value 
   os << getVal() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Structure printing
+
   RooAbsArg::printMultiline(os,contents,verbose,indent) ;
   os << indent << "--- RooAbsReal ---" << endl;
   TString unit(_unit);
@@ -280,82 +362,29 @@ void RooAbsReal::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
 
 }
 
-void RooAbsReal::setPlotMin(Double_t value) {
-  // Set minimum value of output associated with this object
 
-  // Check if new limit is consistent
-  if (_plotMin>_plotMax) {
-    coutW(Plotting) << "RooAbsReal::setPlotMin(" << GetName() 
-		    << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
-    _plotMin = _plotMax ;
-  } else {
-    _plotMin = value ;
-  }
-
-}
-
-void RooAbsReal::setPlotMax(Double_t value) {
-  // Set maximum value of output associated with this object
-
-  // Check if new limit is consistent
-  if (_plotMax<_plotMin) {
-    coutW(Plotting) << "RooAbsReal::setPlotMax(" << GetName() 
-		    << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
-    _plotMax = _plotMin ;
-  } else {
-    _plotMax = value ;
-  }
-
-}
-
-
-void RooAbsReal::setPlotRange(Double_t, Double_t) {
-  // Set a new plot range
-  coutW(Plotting) << "RooAbsReal::setPlotBins(" << GetName() 
-		  << ") WARNING: setPlotRange deprecated. Specify plot range in RooAbsRealLValue::frame() when different from fitRange" << endl ;
-
-//   // Check if new limit is consistent
-//   if (min>max) {
-//     cout << "RooAbsReal::setPlotMinMax(" << GetName() 
-// 	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
-//     _plotMin = min ;
-//     _plotMax = min ;
-//   } else {
-//     _plotMin = min ;
-//     _plotMax = max ;
-//   }
-}
-
-
-void RooAbsReal::setPlotBins(Int_t /*value*/) {
-  // Set number of histogram bins 
-  coutW(Plotting) << "RooAbsReal::setPlotBins(" << GetName() 
-		  << ") WARNING: setPlotBins deprecated. Specify plot bins in RooAbsRealLValue::frame() when different from fitBins" << endl ;
-//   _plotBins = value ;  
-}
-
-
-Bool_t RooAbsReal::inPlotRange(Double_t value) const {
-  // Check if given value is in the min-max range for this object
-  return (value >= _plotMin && value <= _plotMax) ? kTRUE : kFALSE;
-}
-
-
-
-Bool_t RooAbsReal::isValid() const {
+//_____________________________________________________________________________
+Bool_t RooAbsReal::isValid() const 
+{
   // Check if current value is valid
+
   return isValidReal(_value) ;
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsReal::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const 
 {
-  // Check if given value is valid
+  // Interface function to check if given value is a valid value for this object.
+  // This default implementation considers all values valid
+
   return kTRUE ;
 }
 
 
 
+//_____________________________________________________________________________
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
 				       const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
 				       const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) const 
@@ -398,8 +427,19 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg ar
 
 
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const 
+RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, 
+				       const RooNumIntConfig* cfg, const char* rangeName) const 
 {
+  // Create an object that represents the integral of the function over one or more observables listed in iset
+  // The actual integration calculation is only performed when the return object is evaluated. The name
+  // of the integral object is automatically constructed from the name of the input function, the variables
+  // it integrates and the range integrates over. If nset is specified the integrand is request
+  // to be normalized over nset (only meaningful when the integrand is a pdf). If rangename is specified
+  // the integral is performed over the named range, otherwise it is performed over the domain of each
+  // integrated observable. If cfg is specified it will be used to configure any numeric integration
+  // aspect of the integral. It will not force the integral to be performed numerically, which is
+  // decided automatically by RooRealIntegral
+
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: integral over full range or single limited range
     return createIntObj(iset,nset,cfg,rangeName) ;
@@ -425,8 +465,14 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   return new RooAddition(fullName.Data(),title.Data(),components,kTRUE) ;
 }
 
-RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2, const RooNumIntConfig* cfg, const char* rangeName) const 
+
+
+//_____________________________________________________________________________
+RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2, 
+				     const RooNumIntConfig* cfg, const char* rangeName) const 
 {
+  // Utility function for createIntegral that creates the actual integreal object
+
   // Make internal use copies of iset and nset
   RooArgSet iset(iset2) ;
   const RooArgSet* nset = nset2 ;
@@ -502,13 +548,22 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
   return integral ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& innerObs, const char* rangeName) const
 {
+  // Utility function for createIntObj() that aids in the construct of recursive integrals
+  // over functions with multiple observables with parameterized ranges. This function
+  // finds in a given set allObs over which integration is requested the largeset subset
+  // of observables that can be integrated simultaneously. This subset consists of
+  // observables with fixed ranges and observables with parameterized ranges whose
+  // parameterization does not depend on any observable that is also integrated.
+
   // Make lists of 
   // a) integrated observables with fixed ranges, 
   // b) integrated observables with parameterized ranges depending on other integrated observables
   // c) integrated observables used in definition of any parameterized ranges of integrated observables
-
   RooArgSet obsWithFixedRange(allObs) ;
   RooArgSet obsWithParamRange ;
   RooArgSet obsServingAsRangeParams ;
@@ -557,8 +612,11 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
 }
 
 
+//_____________________________________________________________________________
 TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset, const char* rangeName) const 
 {
+  // Construct string with unique suffix name to give to integral object that encodes
+  // integrated observables, normalization observables and the integration range name
 
   TString name ;
   name.Append("_Int[") ;
@@ -605,24 +663,35 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
 
 
 
+//_____________________________________________________________________________
 const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, 
                                                RooArgSet*& cloneSet) const 
 {
+  // Utility function for plotOn() that creates a projection of a function or p.d.f 
+  // to be plotted on a RooPlot. 
   return createPlotProjection(depVars,&projVars,cloneSet) ; 
 }
 
 
 
+//_____________________________________________________________________________
 const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const 
 {
+  // Utility function for plotOn() that creates a projection of a function or p.d.f 
+  // to be plotted on a RooPlot. 
   RooArgSet* cloneSet = new RooArgSet() ;
   return createPlotProjection(depVars,&projVars,cloneSet) ; 
 }
 
 
 
+//_____________________________________________________________________________
 const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-					       RooArgSet *&cloneSet, const char* rangeName) const {
+					       RooArgSet *&cloneSet, const char* rangeName) const 
+{
+  // Utility function for plotOn() that creates a projection of a function or p.d.f 
+  // to be plotted on a RooPlot. 
+  //
   // Create a new object G that represents the normalized projection:
   //
   //             Integral [ F[x,y,p] , { y } ]
@@ -634,11 +703,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   // "p" are our remaining variables ("parameters"). Return a
   // pointer to the newly created object, or else zero in case of an
   // error.  The caller is responsible for deleting the contents of
-  // cloneSet (which includes the returned projection object) whatever
-  // the return value. Note that you should normally call getVal()
-  // on the returned object, without providing any set of normalization
-  // variables. Otherwise you are requesting an additional normalization
-  // beyond what is already specified in the equation above.
+  // cloneSet (which includes the returned projection object) 
 
   // Get the set of our leaf nodes
   RooArgSet leafNodes;
@@ -758,14 +823,22 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
 
 
+//_____________________________________________________________________________
 TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
-			       Double_t scaleFactor, const RooArgSet *projectedVars, Bool_t scaleForDensity) const {
-  // Loop over the bins of the input histogram and add an amount equal to our value evaluated
-  // at the bin center to each one. Our value is calculated by first integrating out any variables
-  // in projectedVars and then scaling the result by scaleFactor. Returns a pointer to the
-  // input histogram, or zero in case of an error. The input histogram can be any TH1 subclass, and
-  // therefore of arbitrary dimension. Variables are matched with the (x,y,...) dimensions of the input
-  // histogram according to the order in which they appear in the input plotVars list.
+			       Double_t scaleFactor, const RooArgSet *projectedVars, Bool_t scaleForDensity) const 
+{
+  // Fill the ROOT histogram 'hist' with values sampled from this
+  // function at the bin centers.  Our value is calculated by first
+  // integrating out any variables in projectedVars and then scaling
+  // the result by scaleFactor. Returns a pointer to the input
+  // histogram, or zero in case of an error. The input histogram can
+  // be any TH1 subclass, and therefore of arbitrary
+  // dimension. Variables are matched with the (x,y,...) dimensions of
+  // the input histogram according to the order in which they appear
+  // in the input plotVars list. If scaleForDensity is true the
+  // histogram is filled with a the functions density rather than
+  // the functions value (i.e. the value at the bin center is multiplied
+  // with bin volume)
 
   // Do we have a valid histogram to use?
   if(0 == hist) {
@@ -905,11 +978,20 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
 
 
-RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSet, Double_t scaleFactor, Bool_t correctForBinSize, Bool_t showProgress) const {
-  // Loop over the bins of the input histogram and add an amount equal to our value evaluated
-  // at the bin center to each one. Our value is calculated by first integrating out any variables
-  // in projectedVars and then scaling the result by scaleFactor. Returns a pointer to the
-  // input RooDataHist, or zero in case of an error. 
+//_____________________________________________________________________________
+RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSet, 
+				      Double_t scaleFactor, Bool_t correctForBinSize, Bool_t showProgress) const 
+{
+  // Fill a RooDataHist with values sampled from this function at the
+  // bin centers.  Our value is calculated by first integrating out
+  // any variables in projectedVars and then scaling the result by
+  // scaleFactor. Returns a pointer to the input RooDataHist, or zero
+  // in case of an error. If correctForBinSize is true the RooDataHist
+  // is filled with the functions density (function value times the
+  // bin volume) rather than function value.  If showProgress is true
+  // a process indicator is printed on stdout in steps of one percent,
+  // which is mostly useful for the sampling of expensive functions
+  // such as likelihoods
 
   // Do we have a valid histogram to use?
   if(0 == hist) {
@@ -952,7 +1034,7 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
 
 
 
-
+//_____________________________________________________________________________
 TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 				 const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4, 
 				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
@@ -1029,7 +1111,7 @@ TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
 
 
-
+//_____________________________________________________________________________
 RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
 			    const RooCmdArg& arg3, const RooCmdArg& arg4,
 			    const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -1103,10 +1185,12 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   return plotOn(frame,l) ;
 }
 
+
+
+//_____________________________________________________________________________
 RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 {
-
-  // New experimental plotOn() with varargs...
+  // Internal back-end function of plotOn() with named arguments
 
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::plotOn(%s)",GetName())) ;
@@ -1261,10 +1345,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
 
 
-
-
+//_____________________________________________________________________________
 RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 {
+  // Plotting engine function for internal use
+  // 
   // Plot ourselves on given frame. If frame contains a histogram, all dimensions of the plotted
   // function that occur in the previously plotted dataset are projected via partial integration,
   // otherwise no projections are performed. Optionally, certain projections can be performed
@@ -1571,14 +1656,12 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 
+//_____________________________________________________________________________
 RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions, 
 				 Double_t scaleFactor, ScaleType stype, const RooAbsData* projData) const
 {
-  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
-  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
-  // by plotOn().
+  // OBSOLETE -- RETAINED FOR BACKWARD COMPATIBILITY. Use the plotOn(frame,Slice(...)) instead
 
-  // Plot
   RooArgSet projectedVars ;
   makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   
@@ -1608,10 +1691,12 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
 
 
 
-
+//_____________________________________________________________________________
 RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const
 
 {
+  // Plotting engine for asymmetries. Implements the functionality if plotOn(frame,Asymmetry(...))) 
+  //
   // Plot asymmetry of ourselves, defined as
   //
   //   asym = f(asymCat=-1) - f(asymCat=+1) / ( f(asymCat=-1) + f(asymCat=+1) )
@@ -1851,9 +1936,10 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
 {
-  // Perform general sanity check on frame to ensure safe plotting operations
+  // Utility function for plotOn(), perform general sanity check on frame to ensure safe plotting operations
 
   // check that we are passed a valid plot frame to use
   if(0 == frame) {
@@ -1888,15 +1974,19 @@ Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
 
 
 
+//_____________________________________________________________________________
 void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars, 
 				   RooArgSet& projectedVars, Bool_t silent) const
 {
-  // Construct the set of dependents to project when plotting ourselves as function
-  // of 'plotVar'. 'allVars' is the list of variables that must be projected, but
-  // may contain variables that we do not depend on. If 'silent' is cleared,
-  // warnings about inconsistent input parameters will be printed.
+  // Utility function for plotOn() that constructs the set of
+  // observables to project when plotting ourselves as function of
+  // 'plotVar'. 'allVars' is the list of variables that must be
+  // projected, but may contain variables that we do not depend on. If
+  // 'silent' is cleared, warnings about inconsistent input parameters
+  // will be printed.
 
-  cxcoutD(Plotting) << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName() << " allVars = " << (allVars?(*allVars):RooArgSet()) << endl ;
+  cxcoutD(Plotting) << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName() 
+		    << " allVars = " << (allVars?(*allVars):RooArgSet()) << endl ;
 
   projectedVars.removeAll() ;
   if (!allVars) return ;
@@ -1949,8 +2039,9 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
 
 
 
-
-RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid) const {
+//_____________________________________________________________________________
+RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid) const 
+{
   // Create an interface adaptor f(vars) that binds us to the specified variables
   // (in arbitrary order). For example, calling bindVars({x1,x3}) on an object
   // F(x1,x2,x3,x4) returns an object f(x1,x3) that is evaluated using the
@@ -1967,13 +2058,10 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
 
 void RooAbsReal::copyCache(const RooAbsArg* source) 
 {
-  // Copy the cached value of another RooAbsArg to our cache
-
+  // Copy the cached value of another RooAbsArg to our cache.
   // Warning: This function copies the cached values of source,
-  //          it is the callers responsibility to make sure the cache is clean
+  // it is the callers responsibility to make sure the cache is clean
 
-//   RooAbsReal* other = dynamic_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
-//   assert(other!=0) ;
   RooAbsReal* other = static_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
 
   if (!other->_treeVar) {
@@ -1993,9 +2081,19 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
 }
 
 
+
 void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 {
-  // Attach object to a branch of given TTree
+  // Attach object to a branch of given TTree. By default it will
+  // register the internal value cache RooAbsReal::_value as branch
+  // buffer for a Double_t tree branch with the same name as this
+  // object. If no Double_t branch is found with the name of this
+  // object, this method looks for a Float_t Int_t, UChar_t and UInt_t
+  // branch in that order. If any of these are found the buffer for
+  // that branch is set to a correctly typed conversion buffer in this
+  // RooRealVar.  A flag is set that will cause copyCache to copy the
+  // object value from the appropriate conversion buffer instead of
+  // the _value buffer.
 
   // First determine if branch is taken
   TString cleanName(cleanBranchName()) ;
@@ -2051,9 +2149,11 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsReal::fillTreeBranch(TTree& t) 
 {
-  // Attach object to a branch of given TTree
+  // Fill the tree branch that associated with this object with its current value
 
   // First determine if branch is taken
   TBranch* branch = t.GetBranch(cleanBranchName()) ;
@@ -2067,9 +2167,11 @@ void RooAbsReal::fillTreeBranch(TTree& t)
 
 
 
+//_____________________________________________________________________________
 void RooAbsReal::setTreeBranchStatus(TTree& t, Bool_t active) 
 {
-  // (De)Activate associate tree branch
+  // (De)Activate associated tree branch
+
   TBranch* branch = t.GetBranch(cleanBranchName()) ;
   if (branch) { 
     t.SetBranchStatus(cleanBranchName(),active?1:0) ;
@@ -2078,14 +2180,14 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, Bool_t active)
 
 
 
-RooAbsArg *RooAbsReal::createFundamental(const char* newname) const {
+//_____________________________________________________________________________
+RooAbsArg *RooAbsReal::createFundamental(const char* newname) const 
+{
   // Create a RooRealVar fundamental object with our properties. The new
   // object will be created without any fit limits.
 
   RooRealVar *fund= new RooRealVar(newname?newname:GetName(),GetTitle(),_value,getUnit());
   fund->removeRange();
-//   fund->setPlotRange(getPlotMin(),getPlotMax());
-//   fund->setPlotBins(getPlotBins());
   fund->setPlotLabel(getPlotLabel());
   fund->setAttribute("fundamentalCopy");
   return fund;
@@ -2093,10 +2195,14 @@ RooAbsArg *RooAbsReal::createFundamental(const char* newname) const {
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a) const
 {
-  // Wrapper function for matchArgsByName()
+  // Utility function for use in getAnalyticalIntegral(). If the
+  // content of proxy 'a' occurs in set 'allDeps' then the argument
+  // held in 'a' is copied from allDeps to analDeps
+
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
   Bool_t result = matchArgsByName(allDeps,analDeps,nameList) ;
@@ -2106,10 +2212,14 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a, const RooArgProxy& b) const
 {
-  // Wrapper function for matchArgsByName()
+  // Utility function for use in getAnalyticalIntegral(). If the
+  // contents of proxies a,b occur in set 'allDeps' then the arguments
+  // held in a,b are copied from allDeps to analDeps
+
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
   nameList.Add(new TObjString(b.absArg()->GetName())) ;  
@@ -2120,11 +2230,15 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a, const RooArgProxy& b,
 			      const RooArgProxy& c) const
 {
-  // Wrapper function for matchArgsByName()
+  // Utility function for use in getAnalyticalIntegral(). If the
+  // contents of proxies a,b,c occur in set 'allDeps' then the arguments
+  // held in a,b,c are copied from allDeps to analDeps
+
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
   nameList.Add(new TObjString(b.absArg()->GetName())) ;
@@ -2136,11 +2250,15 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
 			      const RooArgProxy& a, const RooArgProxy& b,
 			      const RooArgProxy& c, const RooArgProxy& d) const
 {
-  // Wrapper function for matchArgsByName()
+  // Utility function for use in getAnalyticalIntegral(). If the
+  // contents of proxies a,b,c,d occur in set 'allDeps' then the arguments
+  // held in a,b,c,d are copied from allDeps to analDeps
+
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
   nameList.Add(new TObjString(b.absArg()->GetName())) ;
@@ -2152,12 +2270,16 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 }
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 
-			    const RooArgSet& set) const 
+			     const RooArgSet& refset) const 
 {
-  // Wrapper function for matchArgsByName()
+  // Utility function for use in getAnalyticalIntegral(). If the
+  // contents of 'refset' occur in set 'allDeps' then the arguments
+  // held in 'refset' are copied from allDeps to analDeps.
+
   TList nameList ;
-  TIterator* iter = set.createIterator() ;
+  TIterator* iter = refset.createIterator() ;
   RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)iter->Next())) {
     nameList.Add(new TObjString(arg->GetName())) ;    
@@ -2171,12 +2293,14 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs,
-				  const TList &nameList) const {
+				  const TList &nameList) const 
+{
   // Check if allArgs contains matching elements for each name in nameList. If it does,
   // add the corresponding args from allArgs to matchedArgs and return kTRUE. Otherwise
   // return kFALSE and do not change matchedArgs.
-
+  
   RooArgSet matched("matched");
   TIterator *iterator= nameList.MakeIterator();
   TObjString *name = 0;
@@ -2204,28 +2328,43 @@ Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedA
 
 
 
+//_____________________________________________________________________________
 RooNumIntConfig* RooAbsReal::defaultIntegratorConfig() 
 {
+  // Returns the default numeric integration configuration for all RooAbsReals
   return &RooNumIntConfig::defaultConfig() ;
 }
 
 
+//_____________________________________________________________________________
 RooNumIntConfig* RooAbsReal::specialIntegratorConfig() const 
 {
+  // Returns the specialized integrator configuration for _this_ RooAbsReal.
+  // If this object has no specialized configuration, a null pointer is returned
   return _specIntegratorConfig ;
 }
 
 
+
+//_____________________________________________________________________________
 const RooNumIntConfig* RooAbsReal::getIntegratorConfig() const 
 {
+  // Return the numeric integration configuration used for this object. If
+  // a specialized configuration was associated with this object, that configuration
+  // is returned, otherwise the default configuration for all RooAbsReals is returned
+
   const RooNumIntConfig* config = specialIntegratorConfig() ;
   if (config) return config ;
   return defaultIntegratorConfig() ;
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsReal::setIntegratorConfig(const RooNumIntConfig& config) 
 {
+  // Set the given integrator configuration as default numeric integration
+  // configuration for this object
   if (_specIntegratorConfig) {
     delete _specIntegratorConfig ;
   }
@@ -2233,8 +2372,12 @@ void RooAbsReal::setIntegratorConfig(const RooNumIntConfig& config)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsReal::setIntegratorConfig() 
 {
+  // Remove the specialized numeric integration configuration associated
+  // with this object
   if (_specIntegratorConfig) {
     delete _specIntegratorConfig ;
   }
@@ -2244,34 +2387,53 @@ void RooAbsReal::setIntegratorConfig()
 
 
 
-
+//_____________________________________________________________________________
 void RooAbsReal::selectNormalization(const RooArgSet*, Bool_t) 
 {
-} 
+  // Interface function to force use of a given set of observables
+  // to interpret function value. Needed for functions or p.d.f.s
+  // whose shape depends on the choice of normalization such as
+  // RooAddPdf
+}
+ 
 
 
+
+//_____________________________________________________________________________
 void RooAbsReal::selectNormalizationRange(const char*, Bool_t) 
 {
+  // Interface function to force use of a given normalization range
+  // to interpret function value. Needed for functions or p.d.f.s
+  // whose shape depends on the choice of normalization such as
+  // RooAddPdf
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::setCacheCheck(Bool_t flag) 
 { 
+  // Activate cache validation mode
   _cacheCheck = flag ; 
 }
 
 
 
+//_____________________________________________________________________________
 Int_t RooAbsReal::getMaxVal(const RooArgSet& /*vars*/) const 
+{
   // Advertise capability to determine maximum value of function for given set of 
   // observables. If no direct generator method is provided, this information
   // will assist the accept/reject generator to operate more efficiently as
   // it can skip the initial trial sampling phase to empirically find the function
   // maximum
-{
+
   return 0 ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooAbsReal::maxVal(Int_t /*code*/) 
 {
   // Return maximum value for set of observables identified by code assigned
@@ -2282,8 +2444,23 @@ Double_t RooAbsReal::maxVal(Int_t /*code*/)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsReal::logEvalError(const char* message, const char* serverValueString) const
 {
+  // Log evaluation error message. Evaluation errors may be routed through a different
+  // protocol than generic RooFit warning message (which go straight through RooMsgService)
+  // because evaluation errors can occur in very large numbers in the use of likelihood
+  // evaluations. In logEvalError mode, controlled by global method enableEvalErrorLogging()
+  // messages reported through this function are not printed but all stored in a list,
+  // along with server values at the time of reporting. Error messages logged in this
+  // way can be printed in a structured way, eliminating duplicates and with the ability
+  // to truncate the list by printEvalErrors. This is the standard mode of error logging
+  // during MINUIT operations. If enableEvalErrorLogging() is false, all errors
+  // reported through this method are passed for immediate printing through RooMsgService.
+  // A string with server names and values is constructed automatically for error logging
+  // purposes, unless a custom string with similar information is passed as argument.
+
   EvalError ee ;
   ee.setMessage(message) ;
 
@@ -2322,14 +2499,27 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
   //coutE(Tracing) << "RooAbsReal::logEvalError(" << GetName() << ") message = " << message << endl ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::clearEvalErrorLog() 
 {
+  // Clear the stack of evaluation error messages
   if (!_doLogEvalError) return ;
   _evalErrorList.clear() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::printEvalErrors(ostream& os, Int_t maxPerNode) 
 {
+  // Print all outstanding logged evaluation error on the given ostream. If maxPerNode
+  // is zero, only the number of errors for each source (object with unique name) is listed.
+  // If maxPerNode is greater than zero, up to maxPerNode detailed error messages are shown
+  // per source of errors. A truncation message is shown if there were more errors logged
+  // than shown.
+
   map<const RooAbsArg*,pair<string,list<EvalError> > >::iterator iter = _evalErrorList.begin() ;
 
   for(;iter!=_evalErrorList.end() ; ++iter) {
@@ -2359,7 +2549,13 @@ void RooAbsReal::printEvalErrors(ostream& os, Int_t maxPerNode)
   }
 }
 
-Int_t RooAbsReal::numEvalErrors() { 
+
+
+//_____________________________________________________________________________
+Int_t RooAbsReal::numEvalErrors()
+{
+  // Return the number of logged evaluation errors since the last clearing.
+
   Int_t ntot(0) ;
   map<const RooAbsArg*,pair<string,list<EvalError> > >::iterator iter = _evalErrorList.begin() ;
   for(;iter!=_evalErrorList.end() ; ++iter) {
@@ -2368,8 +2564,20 @@ Int_t RooAbsReal::numEvalErrors() {
   return ntot ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::fixAddCoefNormalization(const RooArgSet& addNormSet, Bool_t force) 
 {
+  // Fix the interpretation of the coefficient of any RooAddPdf component in
+  // the expression tree headed by this object to the given set of observables.
+  //
+  // If the force flag is false, the normalization choice is only fixed for those
+  // RooAddPdf components that have the default 'automatic' interpretation of
+  // coefficients (i.e. the interpretation is defined by the observables passed
+  // to getVal()). If force is true, also RooAddPdf that already have a fixed
+  // interpretation are changed to a new fixed interpretation.
+
   RooArgSet* compSet = getComponents() ;
   TIterator* iter = compSet->createIterator() ;
   RooAbsArg* arg ;
@@ -2387,8 +2595,19 @@ void RooAbsReal::fixAddCoefNormalization(const RooArgSet& addNormSet, Bool_t for
   delete compSet ;  
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsReal::fixAddCoefRange(const char* rangeName, Bool_t force) 
 {
+  // Fix the interpretation of the coefficient of any RooAddPdf component in
+  // the expression tree headed by this object to the given set of observables.
+  //
+  // If the force flag is false, the normalization range choice is only fixed for those
+  // RooAddPdf components that currently use the default full domain to interpret their
+  // coefficients. If force is true, also RooAddPdf that already have a fixed
+  // interpretation range are changed to a new fixed interpretation range.
+
   RooArgSet* compSet = getComponents() ;
   TIterator* iter = compSet->createIterator() ;
   RooAbsArg* arg ;
@@ -2404,8 +2623,15 @@ void RooAbsReal::fixAddCoefRange(const char* rangeName, Bool_t force)
 
 
 
+//_____________________________________________________________________________
 void RooAbsReal::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const
 {
+  // Interface method for function objects to indicate their prefferred order of observables
+  // for scanning their values into a (multi-dimensional) histogram or RooDataSet. The observables
+  // to be ordered are offered in argument 'obs' and should be copied in their preferred
+  // order into argument 'orderdObs', This default implementation indicates no preference
+  // and copies the original order of 'obs' into 'orderedObs'
+
   // Dummy implementation, do nothing 
   orderedObs.removeAll() ;
   orderedObs.add(obs) ;
@@ -2413,19 +2639,47 @@ void RooAbsReal::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& o
 
 
 
+//_____________________________________________________________________________
 RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset) 
 {
+  // Create a running integral over this function, i.e. given a f(x), create an object
+  // representing 'int[x_lo,x] f(x_prime) dx_prime'
+
   return createRunningIntegral(iset,RooFit::SupNormSet(nset)) ;
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2,
 				 const RooCmdArg arg3, const RooCmdArg arg4, const RooCmdArg arg5, 
 				 const RooCmdArg arg6, const RooCmdArg arg7, const RooCmdArg arg8) 
 {
-  // Create an object that represents the integral of the function over one or more observables listed in iset
+  // Create an object that represents the running integral of the function over one or more observables listed in iset, i.e.
+  // 
+  //   int[x_lo,x] f(x_prime) dx_prime
+  // 
   // The actual integration calculation is only performed when the return object is evaluated. The name
   // of the integral object is automatically constructed from the name of the input function, the variables
-  // it integrates and the range integrates over
+  // it integrates and the range integrates over. The default strategy to calculate the running integrals is
+  //
+  //   - If the integrand (this object) supports analytical integration, construct an integral object
+  //     that calculate the running integrals value by calculating the analytical integral each
+  //     time the running integral object is evaluated
+  //
+  //   - If the integrand (this object) requires numeric integration to construct the running integral
+  //     create an object of class RooNumRunningInt which first samples the entire function and integrates
+  //     the sampled function numerically. This method has superior performance as there is no need to
+  //     perform a full (numeric) integration for each evaluation of the running integral object, but
+  //     only when one of its parameters has changed.
+  //
+  // The choice of strategy can be changed with the ScanAll() argument, which forces the use of the
+  // scanning technique implemented in RooNumRunningInt for all use cases, and with the ScanNone()
+  // argument which forces the 'integrate each evaluation' technique for all use cases. The sampling
+  // granularity for the scanning technique can be controlled with the ScanParameters technique
+  // which allows to specify the number of samples to be taken, and to which order the resulting
+  // running integral should be interpolated. The default values are 1000 samples and 2nd order
+  // interpolation.
   //
   // The following named arguments are accepted
   //
@@ -2489,8 +2743,14 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCm
   return 0 ;
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) 
 {
+  // Utility function for createRunningIntegral that construct an object
+  // implementing the numeric scanning technique for calculating the running integral
+  
   string name = string(GetName()) + "_NUMRUNINT_" + integralNameSuffix(iset,&nset).Data() ;  
   RooRealVar* ivar = (RooRealVar*) iset.first() ;
   ivar->setBins(numScanBins,"numcdf") ;
@@ -2500,9 +2760,13 @@ RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nse
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset) 
 {
-  // Make CDF from PDF
+  // Utility function for createRunningIntegral that construct an
+  // object implementing the standard (analytical) integration
+  // technique for calculating the running integral
 
   // Make list of input arguments keeping only RooRealVars
   RooArgList ilist ;

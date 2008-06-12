@@ -14,13 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CAT] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsCategoryLValue is the common abstract base class for objects that represent a
 // discrete value that may appear on the left hand side of an equation ('lvalue')
 //
 // Each implementation must provide setIndex()/setLabel() members to allow direct modification 
 // of the value. RooAbsCategoryLValue may be derived, but its functional relation
 // to other RooAbsArgs must be invertible
+// END_HTML
+//
 //
 
 #include "RooFit.h"
@@ -42,15 +46,19 @@ ClassImp(RooAbsCategoryLValue)
 ;
 
 
+//_____________________________________________________________________________
 RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) : 
   RooAbsCategory(name,title)
 {
   // Constructor
+
   setValueDirty() ;  
   setShapeDirty() ;  
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsCategoryLValue::RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name) :
   RooAbsCategory(other, name), RooAbsLValue(other)
 {
@@ -58,30 +66,42 @@ RooAbsCategoryLValue::RooAbsCategoryLValue(const RooAbsCategoryLValue& other, co
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsCategoryLValue::~RooAbsCategoryLValue()
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsArg& RooAbsCategoryLValue::operator=(Int_t index) 
 {
   // Assignment operator from integer index number
+
   setIndex(index,kTRUE) ;
   return *this ;
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsArg& RooAbsCategoryLValue::operator=(const char *label) 
 {
   // Assignment operator from string pointer
+
   setLabel(label) ;
   return *this ;
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other) 
 {
-  // Assignment from another RooCategory
+  // Assignment from another RooAbsCategory
+
   if (&other==this) return *this ;
 
   const RooCatType* type = lookupType(other.getLabel(),kTRUE) ;
@@ -93,6 +113,8 @@ RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n, const char* rangeName) 
 {
   // Set our state to our n'th defined type and return kTRUE.
@@ -107,39 +129,52 @@ Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n, const char* rangeName)
   }
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsCategoryLValue::copyCache(const RooAbsArg* source) 
 {
-  // copy cached value from another object
+  // Copy the cached value from given source and raise dirty flag.
+  // It is the callers responsability to ensure that the sources
+  // cache is clean(valid) before this function is called, e.g. by
+  // calling syncCache() on the source.
+
   RooAbsCategory::copyCache(source) ;
   setIndex(_value.getVal()) ; // force back-propagation
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsCategoryLValue::readFromStream(istream&, Bool_t, Bool_t) 
 {
-  // Read object contents from given stream
+  // Read object contents from given stream (dummy implementation)
+
   return kTRUE ;
 }
 
 
 
+//_____________________________________________________________________________
 void RooAbsCategoryLValue::writeToStream(ostream&, Bool_t) const
 {
-  // Write object contents to given stream
+  // Write object contents to given stream (dummy implementation)
 }
 
 
 
-void RooAbsCategoryLValue::randomize(const char* rangeName) {
+//_____________________________________________________________________________
+void RooAbsCategoryLValue::randomize(const char* rangeName) 
+{
   // Randomize current value
-
+  
   UInt_t ordinal= RooRandom::integer(numTypes(rangeName));
   setOrdinal(ordinal,rangeName);
 }
 
 
 
+//_____________________________________________________________________________
 void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName) 
 {
   // Set category to i-th fit bin, which is the i-th registered state.
@@ -160,6 +195,7 @@ void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName)
 
 
 
+//_____________________________________________________________________________
 Int_t RooAbsCategoryLValue::getBin(const char* /*rangeName*/) const 
 {
   // Get index of plot bin for current value this category.
@@ -173,8 +209,10 @@ Int_t RooAbsCategoryLValue::getBin(const char* /*rangeName*/) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooAbsCategoryLValue::numBins(const char* rangeName) const 
 {
   // Returm the number of fit bins ( = number of types )
+
   return numTypes(rangeName) ;
 }

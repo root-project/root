@@ -27,12 +27,17 @@ class RooAbsBinning : public TNamed, public RooPrintable {
 public:
 
   RooAbsBinning(const char* name=0) ;
-  RooAbsBinning(const RooAbsBinning& other, const char* name=0) : TNamed(name,name), RooPrintable(other) {}
+  RooAbsBinning(const RooAbsBinning& other, const char* name=0) : TNamed(name,name), RooPrintable(other) {
+    // Copy constructor
+  }
   virtual TObject* Clone(const char* newname=0) const { return clone(newname) ; }
   virtual RooAbsBinning* clone(const char* name=0) const = 0 ;
   virtual ~RooAbsBinning() ;
 
-  Int_t numBins() const { return numBoundaries()-1 ; }
+  Int_t numBins() const { 
+    // Return number of bins 
+    return numBoundaries()-1 ; 
+  }
   virtual Int_t numBoundaries() const = 0 ;
   virtual Int_t binNumber(Double_t x) const = 0 ;
   virtual Double_t binCenter(Int_t bin) const = 0 ;
@@ -41,8 +46,14 @@ public:
   virtual Double_t binHigh(Int_t bin) const = 0 ;
 
   virtual void setRange(Double_t xlo, Double_t xhi) = 0 ;
-  virtual void setMin(Double_t xlo) { setRange(xlo,highBound()) ; }
-  virtual void setMax(Double_t xhi) { setRange(lowBound(),xhi) ; }
+  virtual void setMin(Double_t xlo) { 
+    // Change lower bound to xlo
+    setRange(xlo,highBound()) ; 
+  }
+  virtual void setMax(Double_t xhi) { 
+    // Change upper bound to xhi
+    setRange(lowBound(),xhi) ; 
+  }
 
   virtual Double_t lowBound() const = 0 ;
   virtual Double_t highBound() const = 0 ;
@@ -52,6 +63,7 @@ public:
   virtual Double_t* array() const = 0 ;
 
   inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -62,15 +74,30 @@ public:
   virtual void printValue(ostream& os) const ;
   
 
-  virtual Bool_t isParameterized() const { return kFALSE ; }
-  virtual RooAbsReal* lowBoundFunc() const { return 0 ; }
-  virtual RooAbsReal* highBoundFunc() const { return 0 ; }
-  virtual Bool_t isShareable() const { return kTRUE ; }
-  virtual void insertHook(RooAbsRealLValue&) const {} ;
-  virtual void removeHook(RooAbsRealLValue&) const {} ;
+  virtual Bool_t isParameterized() const { 
+    // Interface function. If true, min/max of binning is parameterized by external RooAbsReals
+    return kFALSE ; 
+  }
+  virtual RooAbsReal* lowBoundFunc() const { 
+    // Return pointer to RooAbsReal parameterized lower bound, if any
+    return 0 ; 
+  }
+  virtual RooAbsReal* highBoundFunc() const { 
+    // Return pointer to RooAbsReal parameterized upper bound, if any
+    return 0 ; 
+  }
+  virtual Bool_t isShareable() const { 
+    // If true (default) range definition can be shared across clones of a RooRealVar
+    return kTRUE ; 
+  }
+  virtual void insertHook(RooAbsRealLValue&) const {
+    // Hook interface function to execute code upon insertion into a RooAbsRealLValue
+  } ;
+  virtual void removeHook(RooAbsRealLValue&) const {
+    // Hook interface functionto execute code upon removal from a RooAbsRealLValue
+  } ;
 
-protected:
-  
+protected:  
 
   ClassDef(RooAbsBinning,2) // Abstract base class for binning specification
 };

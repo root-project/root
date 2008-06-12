@@ -14,9 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsBinning is the abstract base class for RooRealVar binning definitions
 // This class defines the interface to retrieve bin boundaries, ranges etc.
+// END_HTML
+//
+//
 
 #include "RooFit.h"
 
@@ -30,33 +35,58 @@ ClassImp(RooAbsBinning)
 ;
 
 
+//_____________________________________________________________________________
 RooAbsBinning::RooAbsBinning(const char* name) : TNamed(name,name)
 {
+  // Constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsBinning::~RooAbsBinning() 
 {
+  // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsBinning::printName(ostream& os) const 
 {
+  // Print binning name
+
   os << GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsBinning::printTitle(ostream& os) const 
 {
+  // Print binning title
+
   os << GetTitle() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsBinning::printClassName(ostream& os) const 
 {
+  // Print binning class name
+
   os << IsA()->GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsBinning::printArgs(ostream& os) const 
 {
+  // Print binning arguments (the RooAbsReal objects represening
+  // the variable bin boundaries for parameterized binning implementations
+
   os << "[ " ;    
   if (lowBoundFunc()) {
     os << "lowerBound=" << lowBoundFunc()->GetName() ;
@@ -71,8 +101,11 @@ void RooAbsBinning::printArgs(ostream& os) const
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsBinning::printValue(ostream &os) const
 {
+  // Print binning value, i.e the bin boundary positions
   Int_t n = numBins() ;
   os << "B(" ;
   
@@ -88,9 +121,12 @@ void RooAbsBinning::printValue(ostream &os) const
 
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsBinning::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class RooAbsBinning.
+  // Custom streamer implementing schema evolution between V1 and V2 persistent binnings
 
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {

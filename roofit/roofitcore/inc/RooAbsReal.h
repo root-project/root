@@ -41,6 +41,7 @@ class TH3F;
 #include <string>
 #include <iostream>
 
+
 class RooAbsReal : public RooAbsArg {
 public:
   // Constructors, assignment etc
@@ -53,11 +54,20 @@ public:
 
   // Return value and unit accessors
   virtual Double_t getVal(const RooArgSet* set=0) const ;
-  inline  Double_t getVal(const RooArgSet& set) const { return getVal(&set) ; }
+  inline  Double_t getVal(const RooArgSet& set) const { 
+    // Return value with given choice of observables
+    return getVal(&set) ; 
+  }
   Bool_t operator==(Double_t value) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
-  inline const Text_t *getUnit() const { return _unit.Data(); }
-  inline void setUnit(const char *unit) { _unit= unit; }
+  inline const Text_t *getUnit() const { 
+    // Return string with unit description
+    return _unit.Data(); 
+  }
+  inline void setUnit(const char *unit) { 
+    // Set unit description to given string
+    _unit= unit; 
+  }
   TString getTitle(Bool_t appendUnit= kFALSE) const;
 
   // Lightweight interface adaptors (caller takes ownership)
@@ -71,21 +81,39 @@ public:
   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kFALSE ; }
-  virtual void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
+    // Interface to force RooRealIntegral to offer given observable for internal integration
+    // even if this is deemed unsafe. This default implementation returns always flase
+    return kFALSE ; 
+  }
+  virtual void forceNumInt(Bool_t flag=kTRUE) { 
+    // If flag is true, all advertised analytical integrals will be ignored
+    // and all integrals are calculated numerically
+    _forceNumInt = flag ; 
+  }
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooCmdArg arg1, const RooCmdArg arg2=RooCmdArg::none(),
-                             const RooCmdArg arg3=RooCmdArg::none(), const RooCmdArg arg4=RooCmdArg::none(), const RooCmdArg arg5=RooCmdArg::none(), 
-                             const RooCmdArg arg6=RooCmdArg::none(), const RooCmdArg arg7=RooCmdArg::none(), const RooCmdArg arg8=RooCmdArg::none()) const ;
+                             const RooCmdArg arg3=RooCmdArg::none(), const RooCmdArg arg4=RooCmdArg::none(), 
+			     const RooCmdArg arg5=RooCmdArg::none(), const RooCmdArg arg6=RooCmdArg::none(), 
+			     const RooCmdArg arg7=RooCmdArg::none(), const RooCmdArg arg8=RooCmdArg::none()) const ;
 
-  RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const 
-              { return createIntegral(iset,0,0,rangeName) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=0) const 
-              { return createIntegral(iset,&nset,0,rangeName) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const 
-              { return createIntegral(iset,&nset,&cfg,rangeName) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=0) const 
-              { return createIntegral(iset,0,&cfg,rangeName) ; }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const { 
+    // Create integral over observables in iset in range named rangeName
+    return createIntegral(iset,0,0,rangeName) ; 
+  }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=0) const { 
+    // Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
+    return createIntegral(iset,&nset,0,rangeName) ; 
+  }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=0) const { 
+    // Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
+    // using specified configuration for any numeric integration
+    return createIntegral(iset,&nset,&cfg,rangeName) ; 
+  }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=0) const { 
+    // Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration
+    return createIntegral(iset,0,&cfg,rangeName) ; 
+  }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
 
   // Create running integrals
@@ -104,18 +132,13 @@ public:
 
 
   // Plotting options
-  inline Double_t getPlotMin() const { return _plotMin; }
-  inline Double_t getPlotMax() const { return _plotMax; }
-  virtual Int_t getPlotBins() const { return _plotBins; }
-  void setPlotMin(Double_t value) ;
-  void setPlotMax(Double_t value) ;
-  void setPlotRange(Double_t min, Double_t max) ;
-  void setPlotBins(Int_t value) ; 
   void setPlotLabel(const char *label);
   const char *getPlotLabel() const;
-  virtual Bool_t inPlotRange(Double_t value) const;
 
-  virtual Double_t defaultErrorLevel() const { return 1.0 ; }
+  virtual Double_t defaultErrorLevel() const { 
+    // Return default level for MINUIT error analysis
+    return 1.0 ; 
+  }
 
   const RooNumIntConfig* getIntegratorConfig() const ;
   static RooNumIntConfig* defaultIntegratorConfig()  ;
@@ -156,7 +179,8 @@ public:
                        const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
 
   // Fill a RooDataHist
-  RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor, Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
+  RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor, 
+			    Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -184,7 +208,10 @@ public:
   static void printEvalErrors(ostream&os=std::cout, Int_t maxPerNode=10000000) ;
   static Int_t numEvalErrors() ;
   static Int_t numEvalErrorItems() { return _evalErrorList.size() ; }
-  static std::map<const RooAbsArg*,std::pair<std::string,std::list<EvalError> > >::const_iterator evalErrorIter() { return _evalErrorList.begin() ; }
+
+   
+  typedef std::map<const RooAbsArg*,std::pair<std::string,std::list<EvalError> > >::const_iterator EvalErrorIter ; 
+  static EvalErrorIter evalErrorIter() { return _evalErrorList.begin() ; } 
 
   static void clearEvalErrorLog() ;
 
@@ -238,7 +265,10 @@ protected:
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;
-  virtual Bool_t traceEvalHook(Double_t /*value*/) const { return kFALSE ;}
+  virtual Bool_t traceEvalHook(Double_t /*value*/) const { 
+    // Hook function to add functionality to evaluation tracing in derived classes
+    return kFALSE ;
+  }
   virtual Double_t evaluate() const = 0 ;
 
   // Hooks for RooDataSet interface
@@ -270,7 +300,7 @@ protected:
 
   Bool_t   _treeVar ;       // !do not persist
 
-  static Bool_t _cacheCheck ;
+  static Bool_t _cacheCheck ; // If true, always validate contents of clean which outcome of evaluate()
 
   friend class RooDataProjBinding ;
   friend class RooAbsOptGoodnessOfFit ;

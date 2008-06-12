@@ -35,15 +35,24 @@ public:
   // Constructors, assignment etc.
   RooAbsProxy() ;
   RooAbsProxy(const char* name, const RooAbsProxy& other) ;
-  virtual ~RooAbsProxy() {} ;
+  virtual ~RooAbsProxy() {
+    // Destructor
+  } ;
 
-  virtual const char* name() const { return "dummy" ; } ;  
-  inline const RooArgSet* nset() const { return _nset ; }
+  virtual const char* name() const { 
+    // Return name of proxy
+    return "dummy" ; 
+  } ;  
+
+  inline const RooArgSet* nset() const { 
+    // Return normalization set to be used for evaluation of contents
+    return _nset ; 
+  }
   virtual void print(ostream& os, Bool_t addContents=kFALSE) const ;
 
 protected:
 
-  RooArgSet* _nset ; //! do not persist
+  RooArgSet* _nset ; //! Normalization set to be used for evaluation of RooAbsPdf contents
 
   friend class RooAbsArg ;
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE) = 0 ;

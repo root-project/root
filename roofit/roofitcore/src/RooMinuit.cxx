@@ -712,7 +712,7 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     // set the value corresponding to an n1-sigma contour
     gMinuit->SetErrorDef(n1*n1*errdef);
     // calculate and draw the contour
-    graph1= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph1= (TGraph*)gMinuit->Contour(50, index1, index2);
     if (graph1) {
       gDirectory->Append(graph1) ;
     } else {
@@ -725,7 +725,7 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     // set the value corresponding to an n2-sigma contour
     gMinuit->SetErrorDef(n2*n2*errdef);
     // calculate and draw the contour
-    graph2= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph2= (TGraph*)gMinuit->Contour(50, index1, index2);
     if (graph2) {
       graph2->SetLineStyle(2);
       gDirectory->Append(graph2) ;
@@ -740,7 +740,7 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     gMinuit->SetErrorDef(n3*n3*errdef);
     // calculate and draw the contour
     
-    graph3= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph3= (TGraph*)gMinuit->Contour(50, index1, index2);
 
     if (graph3) {
       graph3->SetLineStyle(3);
@@ -757,7 +757,7 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     gMinuit->SetErrorDef(n4*n4*errdef);
     // calculate and draw the contour
     
-    graph4= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph4= (TGraph*)gMinuit->Contour(50, index1, index2);
 
     if (graph4) {
       graph4->SetLineStyle(4);
@@ -774,7 +774,7 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     gMinuit->SetErrorDef(n5*n5*errdef);
     // calculate and draw the contour
     
-    graph5= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph5= (TGraph*)gMinuit->Contour(50, index1, index2);
 
     if (graph5) {
       graph5->SetLineStyle(5);
@@ -791,7 +791,7 @@ TH2F* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double
     gMinuit->SetErrorDef(n6*n6*errdef);
     // calculate and draw the contour
     
-    graph6= (TGraph*)gMinuit->Contour(25, index1, index2);
+    graph6= (TGraph*)gMinuit->Contour(50, index1, index2);
 
     if (graph6) {
       graph6->SetLineStyle(6);

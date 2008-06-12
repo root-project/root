@@ -14,8 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// RooAbsGenContext is the abstract base class for generator contexts.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooAbsGenContext is the abstract base class for generator contexts of 
+// RooAbsPdf objects. A generator context is an object that controls
+// the generation of events from a given p.d.f in one or more sessions.
+// This class defines the common interface for all such contexts and organizes
+// storage of common components, such as the observables definition, the 
+// prototype data etc..
+// END_HTML
+//
+//
 
 #include "RooFit.h"
 
@@ -33,6 +43,8 @@
 ClassImp(RooAbsGenContext)
 ;
 
+
+//_____________________________________________________________________________
 RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars,
 				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   TNamed(model), 
@@ -71,9 +83,6 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
   // Add auxiliary protovars to _protoVars, if provided
   if (auxProto) {
-//     cout << "RooAbsGenContext::ctor(" << this << ", " << model.GetName() << ") adding following auxProto to _protoVars and _theEvent " << endl ;
-//     auxProto->Print("v") ;
-
     _protoVars.add(*auxProto) ;
     _theEvent->addClone(*auxProto) ; 
   }
@@ -88,6 +97,8 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsGenContext::~RooAbsGenContext()
 {
   // Destructor
@@ -97,13 +108,18 @@ RooAbsGenContext::~RooAbsGenContext()
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsGenContext::attach(const RooArgSet& /*params*/) 
 {
-  // Empty
+  // Interface to attach given parameters to object in this context
 }
 
 
-RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
+
+//_____________________________________________________________________________
+RooDataSet *RooAbsGenContext::generate(Int_t nEvents) 
+{
   // Generate the specified number of events with nEvents>0 and
   // and return a dataset containing the generated events. With nEvents<=0,
   // generate the number of events in the prototype dataset, if available,
@@ -200,28 +216,52 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
   return data;
 }
 
-void RooAbsGenContext::initGenerator(const RooArgSet&) {
-  // The base class provides a do-nothing default implementation.
+
+
+//_____________________________________________________________________________
+void RooAbsGenContext::initGenerator(const RooArgSet&) 
+{
+  // Interface function to initialize context for generation for given
+  // set of observables
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsGenContext::printName(ostream& os) const 
 {
+  // Print name of context
+
   os << GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsGenContext::printTitle(ostream& os) const 
 {
+  // Print title of context
+
   os << GetTitle() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsGenContext::printClassName(ostream& os) const 
 {
+  // Print class name of context
+
   os << IsA()->GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsGenContext::printArgs(ostream& os) const 
 {
+  // Print arguments of context, i.e. the observables being generated in this context
+
   os << "[ " ;    
   TIterator* iter = _theEvent->createIterator() ;
   RooAbsArg* arg ;
@@ -240,14 +280,23 @@ void RooAbsGenContext::printArgs(ostream& os) const
 
 
 
+//_____________________________________________________________________________
 void RooAbsGenContext::printMultiline(ostream &/*os*/, Int_t /*contents*/, Bool_t /*verbose*/, TString /*indent*/) const
 {
+  // Interface for multi-line printing
 }
 
 
 
+
+//_____________________________________________________________________________
 void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
 {
+  // Set the traversal order of prototype data to that in the lookup tables
+  // passed as argument. The LUT must be an array of integers with the same
+  // size as the number of entries in the prototype dataset and must contain
+  // integer values in the range [0,Nevt-1]
+
   // Delete any previous lookup table
   if (_protoOrder) {
     delete[] _protoOrder ;
@@ -265,13 +314,21 @@ void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
   }
 }
 
+
+
+//_____________________________________________________________________________
 Int_t RooAbsGenContext::defaultPrintContents(Option_t* /*opt*/) const 
 {
+  // Define default contents when printing
   return kName|kClassName|kValue ;
 }
 
+
+
+//_____________________________________________________________________________
 RooPrintable::StyleOption RooAbsGenContext::defaultPrintStyle(Option_t* opt) const 
 {
+  // Define default print style 
   if (opt && TString(opt).Contains("v")) {
     return kVerbose ;
   } 

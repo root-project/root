@@ -30,12 +30,22 @@ public:
   virtual ~RooAbsCachedReal() ;
 
   virtual Double_t getVal(const RooArgSet* set=0) const ;
-  virtual Bool_t selfNormalized() const { return kTRUE ; }
+  virtual Bool_t selfNormalized() const { 
+    // Declares function self normalized
+    return kTRUE ; 
+  }
 
   void setInterpolationOrder(Int_t order) ;
-  Int_t getInterpolationOrder() const { return _ipOrder ; }
+  Int_t getInterpolationOrder() const { 
+    // Set interpolation order in RooHistFuncs that represent cache histograms
+    return _ipOrder ; 
+  }
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kTRUE ; } 
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
+    // Force all observables to be offered for internal integration
+    return kTRUE ; 
+  }
+  
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ; 
   virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
    
@@ -65,7 +75,10 @@ protected:
   void clearCacheObject(FuncCacheElem& cache) const ;
 
   friend class FuncCacheElem ;
-  virtual const char* binningName() const { return "cache" ; }
+  virtual const char* binningName() const { 
+    // Returns name of binning to be used for cache histogram creation
+    return "cache" ; 
+  }
   virtual FuncCacheElem* createCache(const RooArgSet* nset) const ;
   virtual const char* inputBaseName() const = 0 ;
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const = 0 ;
@@ -78,16 +91,19 @@ protected:
   Int_t _ipOrder ; // Interpolation order for cache histograms 
  
   TString cacheNameSuffix(const RooArgSet& nset) const ;
-  void disableCache(Bool_t flag) { _disableCache = flag ; }
+  void disableCache(Bool_t flag) { 
+    // Switch to disable caching mechanism
+    _disableCache = flag ; 
+  }
 
-  mutable std::map<Int_t,std::pair<const RooArgSet*,const RooArgSet*> > _anaIntMap ; //!
+  mutable std::map<Int_t,std::pair<const RooArgSet*,const RooArgSet*> > _anaIntMap ; //! Map for analytical integration codes
   
 
 private:
 
   Bool_t _disableCache ; // Flag to run object in passthrough (= non-caching mode)
 
-  ClassDef(RooAbsCachedReal,0) // Abstract base class for cached p.d.f.s
+  ClassDef(RooAbsCachedReal,1) // Abstract base class for cached p.d.f.s
 };
  
 #endif

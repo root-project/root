@@ -56,7 +56,10 @@ public:
   virtual void fill() = 0 ;
 
   // Load a given row of data
-  virtual inline const RooArgSet* get() const { return &_vars ; } // last loaded row
+  virtual inline const RooArgSet* get() const { 
+    // Return current row of dataset
+    return &_vars ; 
+  } 
   virtual Double_t weight() const = 0 ; 
   enum ErrorType { Poisson, SumW2 } ;
   virtual Double_t weightError(ErrorType etype=Poisson) const ;
@@ -65,7 +68,10 @@ public:
 
   virtual Int_t numEntries(Bool_t useWeights=kFALSE) const = 0 ;
   virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const = 0 ;
-  virtual Bool_t isWeighted() const { return kFALSE ; }
+  virtual Bool_t isWeighted() const { 
+    // Do events in dataset have weights?
+    return kFALSE ; 
+  }
   virtual void reset() = 0 ;
 
   // Plot the distribution of a real valued arg
@@ -93,6 +99,7 @@ public:
 
   // Printing interface (human readable)
   inline virtual void Print(Option_t *options= 0) const {
+    // Print contents on stdout
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -120,7 +127,10 @@ protected:
   virtual void cacheArgs(RooArgSet& varSet, const RooArgSet* nset=0) = 0 ;
   virtual void resetCache() = 0 ;
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) = 0 ;
-  void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
+  void setDirtyProp(Bool_t flag) { 
+    // Control propagation of dirty flags from observables in dataset
+    _doDirtyProp = flag ; 
+  }
 
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
 	                        Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) = 0 ;

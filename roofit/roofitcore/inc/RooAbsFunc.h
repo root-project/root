@@ -22,26 +22,46 @@ class RooAbsFunc {
 public:
   inline RooAbsFunc(UInt_t dimension) : _ncall(0), _dimension(dimension), _valid(kTRUE) { }
   inline virtual ~RooAbsFunc() { }
-  inline UInt_t getDimension() const { return _dimension; }
-  inline Bool_t isValid() const { return _valid; }
+  inline UInt_t getDimension() const { 
+    // Dimension of function
+    return _dimension; 
+  }
+  inline Bool_t isValid() const { 
+    // Is function in valid state
+    return _valid; 
+  }
 
   virtual Double_t operator()(const Double_t xvector[]) const = 0;
   virtual Double_t getMinLimit(UInt_t dimension) const = 0;
   virtual Double_t getMaxLimit(UInt_t dimension) const = 0;
 
-  Int_t numCall() const { return _ncall ; }
-  void resetNumCall() const { _ncall = 0 ; }
+  Int_t numCall() const { 
+    // Return number of function calls since last reset
+    return _ncall ; 
+  }
+  void resetNumCall() const { 
+    // Reset function call counter
+    _ncall = 0 ; 
+  }
 
-  virtual void saveXVec() const {} ;
-  virtual void restoreXVec() const {} ;
+  virtual void saveXVec() const {
+    // Interface to save current values of observables (if supported by binding implementation)
+  } ;
+  virtual void restoreXVec() const {
+    // Interface to restore observables to saved values (if supported
+    // by binding implementation)
+  } ;
 
-  virtual const char* getName() const { return "(unnamed)" ; }  
+  virtual const char* getName() const { 
+    // Name of function binding
+    return "(unnamed)" ; 
+  }  
 
 protected:
-  mutable Int_t _ncall ;
-  UInt_t _dimension;
-  Bool_t _valid;
-  ClassDef(RooAbsFunc,0) // Abstract real-valued function interface
+  mutable Int_t _ncall ; // Function call counter
+  UInt_t _dimension;     // Number of observables
+  Bool_t _valid;         // Is binding in valid state?
+   ClassDef(RooAbsFunc,0) // Abstract real-valued function interface
 };
 
 #endif

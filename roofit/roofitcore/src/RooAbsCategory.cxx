@@ -14,13 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [CAT] --
-// RooAbsCategory is the common abstract base class for objects that represent a
-// discrete value with a finite number of states. Each state consist of a 
-// label/index pair, which is stored in a RooCatType object.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooAbsCategory is the common abstract base class for objects that
+// represent a discrete value with a finite number of states. Each
+// state consist of a label/index pair, which is stored in a
+// RooCatType object.
 // 
 // Implementation of RooAbsCategory may be derived, there no interface
 // is provided to modify the contents, nor a public interface to define states.
+// END_HTML
+//
+//
 
 #include "RooFit.h"
 
@@ -40,19 +46,26 @@
 ClassImp(RooAbsCategory) 
 ;
 
+
+//_____________________________________________________________________________
 RooAbsCategory::RooAbsCategory(const char *name, const char *title) : 
   RooAbsArg(name,title), _value("NULL",0), _treeVar(kFALSE)
 {
   // Constructor
+
   _typeIter = _types.MakeIterator() ;
   setValueDirty() ;  
   setShapeDirty() ;  
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
   RooAbsArg(other,name), _value(other._value), _treeVar(other._treeVar) 
 {
   // Copy constructor, copies the registered category states from the original.
+
   _typeIter = _types.MakeIterator() ;
 
   other._typeIter->Reset() ;
@@ -66,6 +79,8 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsCategory::~RooAbsCategory()
 {
   // Destructor
@@ -76,6 +91,8 @@ RooAbsCategory::~RooAbsCategory()
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooAbsCategory::getIndex() const
 {
   // Return index number of current state 
@@ -91,6 +108,8 @@ Int_t RooAbsCategory::getIndex() const
 }
 
 
+
+//_____________________________________________________________________________
 const char* RooAbsCategory::getLabel() const
 {
   // Return label string of current state 
@@ -107,7 +126,7 @@ const char* RooAbsCategory::getLabel() const
 
 
 
-
+//_____________________________________________________________________________
 RooCatType RooAbsCategory::traceEval() const
 {
   // Recalculate current value and check validity of new result.
@@ -126,48 +145,68 @@ RooCatType RooAbsCategory::traceEval() const
 
 
 
+//_____________________________________________________________________________
 TIterator* RooAbsCategory::typeIterator() const
 {
   // Return iterator over all defined states
+
   return _types.MakeIterator() ;
 }
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::operator==(Int_t index) const
 {
   // Equality operator with a integer (compares with state index number)
+
   return (index==getIndex()) ;
 }
 
+
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::operator==(const char* label) const
 {
   // Equality operator with a string (compares with state label string)
+
   return !TString(label).CompareTo(getLabel()) ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::operator==(const RooAbsArg& other) 
 {
+  // Equality operator with another RooAbsArg. Only functional
+  // is also a RooAbsCategory, will return true if index is the same
+
   const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
   return otherCat ? operator==(otherCat->getIndex()) : kFALSE ;
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::isValidIndex(Int_t index) const
 {
   // Check if state with given index is defined
+
   return lookupType(index)?kTRUE:kFALSE ;
 }
 
+
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::isValidLabel(const char* label) const
 {
   // Check if state with given name is defined
+
   return lookupType(label)?kTRUE:kFALSE ;
 }
 
 
 
+//_____________________________________________________________________________
 const RooCatType* RooAbsCategory::defineType(const char* label)
 {
   // Define a new state with given name. The lowest available
@@ -182,8 +221,12 @@ const RooCatType* RooAbsCategory::defineType(const char* label)
 }
 
 
+//_____________________________________________________________________________
 const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, Int_t index) 
 {
+  // Internal version of defineType that does not check if type
+  // already exists
+
   Bool_t first = _types.GetEntries()?kFALSE:kTRUE ;
   RooCatType *newType = new RooCatType(label,index) ;
   _types.Add(newType) ;
@@ -196,6 +239,7 @@ const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, Int_t i
 
 
 
+//_____________________________________________________________________________
 const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index) 
 {
   // Define new state with given name and index number.
@@ -217,6 +261,7 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
 
 
 
+//_____________________________________________________________________________
 void RooAbsCategory::clearTypes() 
 {
   // Delete all currently defined states
@@ -228,6 +273,7 @@ void RooAbsCategory::clearTypes()
 
 
 
+//_____________________________________________________________________________
 const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t printError) const 
 {
   // Find our type that matches the specified type, or return 0 for no match.
@@ -247,6 +293,9 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
   return 0 ;
 }
 
+
+
+//_____________________________________________________________________________
 const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
 {
   // Find our type corresponding to the specified index, or return 0 for no match.
@@ -263,6 +312,9 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
   return 0 ;
 }
 
+
+
+//_____________________________________________________________________________
 const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printError) const 
 {
   // Find our type corresponding to the specified label, or return 0 for no match.
@@ -290,24 +342,39 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
   return 0 ;
 }
 
+
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::isValid() const
 {
   // Check if current value is a valid state
+
   return isValid(_value) ;
 }
 
+
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::isValid(RooCatType value)  const
 {
   // Check if given state is defined for this object
+
   return isValidIndex(value.getVal()) ;
 }
 
+
+
+//_____________________________________________________________________________
 Roo1DTable* RooAbsCategory::createTable(const char *label)  const
 {
   // Create a table matching the shape of this category
+
   return new Roo1DTable(GetName(),label,*this) ;
 }
 
+
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::readFromStream(istream&, Bool_t, Bool_t) 
 {
   // Read object contents from stream (dummy for now)
@@ -315,9 +382,13 @@ Bool_t RooAbsCategory::readFromStream(istream&, Bool_t, Bool_t)
   return kFALSE ;
 } 
 
+
+
+//_____________________________________________________________________________
 void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
 {
-  // Write object contents to stream 
+  // Write object contents to ostream 
+
   if (compact) {
     os << getLabel() ;
   } else {
@@ -325,11 +396,18 @@ void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
   }
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsCategory::printValue(ostream& os) const
 {
+  // Print value (label name)
   os << getLabel() ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsCategory::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
   // Print info about this object to the specified stream. In addition to the info
@@ -356,12 +434,14 @@ void RooAbsCategory::printMultiline(ostream& os, Int_t contents, Bool_t verbose,
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 {
-  // Attach the category index and label to as branches
-  // to the given TTree. The index field will be attached
-  // as integer with name <name>_idx, the label field will be attached
-  // as char[] with label <name>_lbl.
+  // Attach the category index and label to as branches to the given
+  // TTree. The index field will be attached as integer with name
+  // <name>_idx, the label field will be attached as char[] with label
+  // <name>_lbl.
 
   // First check if there is an integer branch matching the category name
   TString cleanName(cleanBranchName()) ;
@@ -437,9 +517,11 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsCategory::fillTreeBranch(TTree& t) 
 {
-  // Attach object to a branch of given TTree
+  // Fill tree branches associated with current object with current value
 
   TString idxName(GetName()) ;
   TString lblName(GetName()) ;  
@@ -459,9 +541,12 @@ void RooAbsCategory::fillTreeBranch(TTree& t)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsCategory::setTreeBranchStatus(TTree& t, Bool_t active) 
 {
-  // (De)Activate associate tree branch
+  // (De)activate associate tree branch
+
   TBranch* branch = t.GetBranch(Form("%s_idx",GetName())) ;
   if (branch) { 
     t.SetBranchStatus(Form("%s_idx",GetName()),active?1:0) ;
@@ -470,21 +555,25 @@ void RooAbsCategory::setTreeBranchStatus(TTree& t, Bool_t active)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsCategory::syncCache(const RooArgSet*) 
 { 
+  // Explicitly synchronize RooAbsCategory internal cache
+
   getIndex() ; 
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsCategory::copyCache(const RooAbsArg* source) 
 {
   // Copy the cached value from given source and raise dirty flag.
-  // It is the callers responsability to unsure that the sources
-  // cache is clean before this function is called, e.g. by
+  // It is the callers responsability to ensure that the sources
+  // cache is clean(valid) before this function is called, e.g. by
   // calling syncCache() on the source.
 
-//   RooAbsCategory* other = dynamic_cast<RooAbsCategory*>(const_cast<RooAbsArg*>(source)) ;
-//   assert(other!=0) ;
   RooAbsCategory* other = static_cast<RooAbsCategory*>(const_cast<RooAbsArg*>(source)) ;
 
   if (!_treeVar) {
@@ -520,6 +609,8 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
 }
 
 
+
+//_____________________________________________________________________________
 const RooCatType* RooAbsCategory::getOrdinal(UInt_t n, const char* /*rangeName*/) const 
 {
   // Return state definition of ordinal nth defined state,
@@ -528,6 +619,9 @@ const RooCatType* RooAbsCategory::getOrdinal(UInt_t n, const char* /*rangeName*/
   return (const RooCatType*)_types.At(n);
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsArg *RooAbsCategory::createFundamental(const char* newname) const 
 {
   // Create a RooCategory fundamental object with our properties.
@@ -547,6 +641,8 @@ RooAbsArg *RooAbsCategory::createFundamental(const char* newname) const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsCategory::isSignType(Bool_t mustHaveZero) const 
 {
   // Determine if category has 2 or 3 states with index values -1,0,1

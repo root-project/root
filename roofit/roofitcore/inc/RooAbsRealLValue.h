@@ -62,14 +62,7 @@ public:
   virtual Bool_t inRange(const char* name) const ;
   virtual Bool_t hasRange(const char* name) const { return hasBinning(name) ; }
 
-  // Backward compatibility functions
-  Int_t getFitBins() const ;
-  Int_t numFitBins() const ;
-  Double_t getFitMin() const ;
-  Double_t getFitMax() const ;
-  Bool_t hasFitMin() const ;
-  Bool_t hasFitMax() const ;
-
+  // Jacobian term management
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;
   virtual Double_t jacobian() const { return 1 ; }
 
@@ -127,13 +120,15 @@ public:
 protected:
 
   friend class RooRealBinding ;
-  virtual void setVal(Double_t value, const char* /*rangeName*/) { return setVal(value) ; }
 
+  virtual void setVal(Double_t value, const char* /*rangeName*/) { 
+    // Set object value to 'value'
+    return setVal(value) ; 
+  }
   Bool_t fitRangeOKForPlotting() const ;
-
   void copyCache(const RooAbsArg* source) ;
 
-  ClassDef(RooAbsRealLValue,1) // Abstract modifiable real-valued variable
+  ClassDef(RooAbsRealLValue,1) // Abstract modifiable real-valued object
 };
 
 #endif

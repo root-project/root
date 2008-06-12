@@ -14,17 +14,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsRealLValue is the common abstract base class for objects that represent a
 // real value that may appear on the left hand side of an equation ('lvalue')
 // Each implementation must provide a setVal() member to allow direct modification 
 // of the value. RooAbsRealLValue may be derived, but its functional relation
 // to other RooAbsArg must be invertible
 //
-// This class has methods that export a fit range, but doesn't hold its values
-// because these limits may be derived from limits of client object.
-// The fit limits serve as integration range when interpreted
-// as a dependent and a boundaries when interpreted as a parameter.
+// This class has methods that export the defined range of the lvalue,
+// but doesn't hold its values because these limits may be derived
+// from limits of client object.  The range serve as integration
+// range when interpreted as a observable and a boundaries when
+// interpreted as a parameter.
+// END_HTML
+//
+//
 
 #include "RooFit.h"
 
@@ -55,6 +61,7 @@
 
 ClassImp(RooAbsRealLValue)
 
+//_____________________________________________________________________________
 RooAbsRealLValue::RooAbsRealLValue(const char *name, const char *title, const char *unit) :
   RooAbsReal(name, title, 0, 0, unit)
 {
@@ -62,6 +69,8 @@ RooAbsRealLValue::RooAbsRealLValue(const char *name, const char *title, const ch
 }  
 
 
+
+//_____________________________________________________________________________
 RooAbsRealLValue::RooAbsRealLValue(const RooAbsRealLValue& other, const char* name) :
   RooAbsReal(other,name), RooAbsLValue(other)
 {
@@ -69,6 +78,7 @@ RooAbsRealLValue::RooAbsRealLValue(const RooAbsRealLValue& other, const char* na
 }
 
 
+//_____________________________________________________________________________
 RooAbsRealLValue::~RooAbsRealLValue() 
 {
   // Destructor
@@ -76,6 +86,7 @@ RooAbsRealLValue::~RooAbsRealLValue()
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t* clippedValPtr) const
 {
   // Return kTRUE if the input value is within our fit range. Otherwise, return
@@ -110,9 +121,11 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const 
 {
   // Check if given value is valid
+
   if (!inRange(value,0)) {
     if (verbose)
       coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value
@@ -123,18 +136,26 @@ Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const
 }                                                                                                                         
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsRealLValue::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   // Read object contents from given stream
+
   return kTRUE ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsRealLValue::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
 {
   // Write object contents to given stream
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsArg& RooAbsRealLValue::operator=(Double_t newValue) 
 {
   // Assignment operator from a Double_t
@@ -148,11 +169,16 @@ RooAbsArg& RooAbsRealLValue::operator=(Double_t newValue)
 }
 
 
+//_____________________________________________________________________________
 RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg) 
 {
+  // Assignment operator from other RooAbsReal
   return operator=(arg.getVal()) ;
 }
 
+
+
+//_____________________________________________________________________________
 RooPlot* RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
 				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
 
@@ -184,7 +210,13 @@ RooPlot* RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2, c
   return frame(cmdList) ;
 }
 
-RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const {
+
+
+//_____________________________________________________________________________
+RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const 
+{
+  // Back-end function for named argument frame() method
+
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsRealLValue::frame(%s)",GetName())) ;
   pc.defineDouble("min","Range",0,getMin()) ;
@@ -258,7 +290,11 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const {
   return theFrame ;
 }
 
-RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const {
+
+
+//_____________________________________________________________________________
+RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const 
+{
   // Create a new RooPlot on the heap with a drawing frame initialized for this
   // object, but no plot contents. Use x.frame() as the first argument to a
   // y.plotOn(...) method, for example. The caller is responsible for deleting
@@ -268,7 +304,10 @@ RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const 
 }
 
 
-RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi) const {
+
+//_____________________________________________________________________________
+RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi) const 
+{
   // Create a new RooPlot on the heap with a drawing frame initialized for this
   // object, but no plot contents. Use x.frame() as the first argument to a
   // y.plotOn(...) method, for example. The caller is responsible for deleting
@@ -279,7 +318,9 @@ RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi) const {
 
 
 
-RooPlot *RooAbsRealLValue::frame(Int_t nbins) const {
+//_____________________________________________________________________________
+RooPlot *RooAbsRealLValue::frame(Int_t nbins) const 
+{
   // Create a new RooPlot on the heap with a drawing frame initialized for this
   // object, but no plot contents. Use x.frame() as the first argument to a
   // y.plotOn(...) method, for example. The caller is responsible for deleting
@@ -302,7 +343,9 @@ RooPlot *RooAbsRealLValue::frame(Int_t nbins) const {
 
 
 
-RooPlot *RooAbsRealLValue::frame() const {
+//_____________________________________________________________________________
+RooPlot *RooAbsRealLValue::frame() const 
+{
   // Create a new RooPlot on the heap with a drawing frame initialized for this
   // object, but no plot contents. Use x.frame() as the first argument to a
   // y.plotOn(...) method, for example. The caller is responsible for deleting
@@ -325,6 +368,7 @@ RooPlot *RooAbsRealLValue::frame() const {
 
 
 
+//_____________________________________________________________________________
 void RooAbsRealLValue::copyCache(const RooAbsArg* source) 
 {
   // Copy cache of another RooAbsArg to our cache
@@ -333,9 +377,12 @@ void RooAbsRealLValue::copyCache(const RooAbsArg* source)
   setVal(_value) ; // force back-propagation
 }
 
+
+//_____________________________________________________________________________
 void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
-{
+{  
   // Structure printing
+
   RooAbsReal::printMultiline(os,contents,verbose,indent);
   os << indent << "--- RooAbsRealLValue ---" << endl;
   TString unit(_unit);
@@ -355,10 +402,14 @@ void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, Bool_t verbos
   }
 }
 
-void RooAbsRealLValue::randomize(const char* rangeName) {
+
+
+//_____________________________________________________________________________
+void RooAbsRealLValue::randomize(const char* rangeName) 
+{
   // Set a new value sampled from a uniform distribution over the fit range.
   // Prints a warning and does nothing if the fit range is not finite.
-
+  
   if(hasMin(rangeName) && hasMax(rangeName)) {
     Double_t range= getMax(rangeName)-getMin(rangeName);
     setVal(getMin(rangeName) + RooRandom::uniform()*range);
@@ -369,8 +420,13 @@ void RooAbsRealLValue::randomize(const char* rangeName) {
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsRealLValue::setBin(Int_t ibin, const char* rangeName) 
 {
+  // Set value to center of bin 'ibin' of binning 'rangeName' (or of 
+  // default binning if no range is specified)
+
   // Check range of plot bin index
   if (ibin<0 || ibin>=numBins(rangeName)) {
     coutE(InputArguments) << "RooAbsRealLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
@@ -384,6 +440,7 @@ void RooAbsRealLValue::setBin(Int_t ibin, const char* rangeName)
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const 
 {
   // Check if fit range is usable as plot range, i.e. it is neither
@@ -392,14 +449,18 @@ Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsRealLValue::inRange(const char* name) const 
 {
   // Check if current value is inside range with given name
+
   return (getVal() >= getMin(name) && getVal() <= getMax(name)) ;
 }
 
 
 
+//_____________________________________________________________________________
 TH1* RooAbsRealLValue::createHistogram(const char *name, const RooCmdArg& arg1, const RooCmdArg& arg2, 
 					const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
 					const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const 
@@ -432,6 +493,9 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooCmdArg& arg1, 
   return createHistogram(name,l) ;
 }
 
+
+
+//_____________________________________________________________________________
 TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cmdList) const 
 {  
   // Create empty 1,2 or 3D histogram
@@ -532,7 +596,9 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
 
 
 
-TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel) const {
+//_____________________________________________________________________________
+TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel) const 
+{
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
   // This method uses the default plot range which can be changed using the
   // setPlotMin(),setPlotMax() methods, and the default binning which can be
@@ -553,7 +619,11 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins);
 }
 
-TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, Double_t xlo, Double_t xhi, Int_t nBins) const {
+
+
+//_____________________________________________________________________________
+TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, Double_t xlo, Double_t xhi, Int_t nBins) const 
+{
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
   // This method uses the default plot range which can be changed using the
   // setPlotMin(),setPlotMax() methods, and the default binning which can be
@@ -564,7 +634,11 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins);
 }
 
-TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, const RooAbsBinning& bins) const {
+
+
+//_____________________________________________________________________________
+TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, const RooAbsBinning& bins) const 
+{
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
 
   RooArgList list(*this) ;
@@ -572,8 +646,12 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   return (TH1F*)createHistogram(name, list, yAxisLabel, &pbins);
 }
 
+
+
+//_____________________________________________________________________________
 TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, 
-					Double_t* xlo, Double_t* xhi, Int_t* nBins) const {
+					Double_t* xlo, Double_t* xhi, Int_t* nBins) const 
+{
   // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y variable. This method uses the default plot ranges for x and y which
   // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
@@ -628,7 +706,12 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   return (TH2F*)createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2);
 }
 
-TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, const RooAbsBinning** bins) const {
+
+
+//_____________________________________________________________________________
+TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, 
+					const char *zAxisLabel, const RooAbsBinning** bins) const 
+{
   // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y variable. 
 
@@ -636,8 +719,12 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   return (TH2F*)createHistogram(name, list, zAxisLabel, bins);
 }
 
+
+
+//_____________________________________________________________________________
 TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar,
-					const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins) const {
+					const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins) const 
+{
   // Create an empty 3D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y,z variables. This method uses the default plot ranges for x,y,z which
   // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
@@ -701,7 +788,8 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
 
 TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar, 
-					const char* tAxisLabel, const RooAbsBinning** bins) const {
+					const char* tAxisLabel, const RooAbsBinning** bins) const 
+{
   // Create an empty 3D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y,z variables. 
 
@@ -710,8 +798,17 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 }
 
 
-TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins)
+
+
+//_____________________________________________________________________________
+TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, 
+				       Double_t* xlo, Double_t* xhi, Int_t* nBins)
 {
+  // Create 1-, 2- or 3-d ROOT histogram with labels taken
+  // from the variables in 'vars' and the with range and binning
+  // specified in xlo,xhi and nBins. The dimensions of the arrays xlo,xhi,
+  // nBins should match the number of objects in vars.
+
   const RooAbsBinning* bin[3] ;
   Int_t ndim = vars.getSize() ;
   bin[0] = new RooUniformBinning(xlo[0],xhi[0],nBins[0]) ;
@@ -727,6 +824,8 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 }
 
 
+
+//_____________________________________________________________________________
 TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning** bins) 
 {
   // Create a 1,2, or 3D-histogram with appropriate scale and labels.
@@ -841,43 +940,11 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 }
 
 
-Double_t RooAbsRealLValue::getFitMin() const 
-{
-  coutW(InputArguments) << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMin()" << endl ;
-  return getMin() ;
-}
-
-Double_t RooAbsRealLValue::getFitMax() const 
-{
-  coutW(InputArguments) << "WARNING getFitMax() IS OBSOLETE, PLEASE USE getMax()" << endl ;
-  return getMax() ;
-}
-
-Bool_t RooAbsRealLValue::hasFitMin() const 
-{
-  coutW(InputArguments) << "WARNING hasFitMin() IS OBSOLETE, PLEASE USE hasMin()" << endl ;
-  return hasMin() ;
-}
-
-Bool_t RooAbsRealLValue::hasFitMax() const 
-{
-  coutW(InputArguments) << "WARNING hasFitMax() IS OBSOLETE, PLEASE USE hasMax()" << endl ;
-  return hasMax() ;
-}
-
-Int_t RooAbsRealLValue::getFitBins() const
-{
-  coutW(InputArguments) << "WARNING getFitBins() IS OBSOLETE, PLEASE USE getBins()" << endl ;
-  return hasMax() ;
-}
-
-Int_t RooAbsRealLValue::numFitBins() const
-{
-  coutW(InputArguments) << "WARNING numFitBins() IS OBSOLETE, PLEASE USE numBins()" << endl ;
-  return hasMax() ;
-}
-
 Bool_t RooAbsRealLValue::isJacobianOK(const RooArgSet&) const 
 { 
+  // Interface function to indicate that this lvalue
+  // has a unit or constant jacobian terms with respect to
+  // the observable passed as argument. This default implementation
+  // always returns true (i.e. jacobian is constant)
   return kTRUE ; 
 }

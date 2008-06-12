@@ -14,20 +14,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// RooAbsOptTestStatistic is the abstract base class for goodness-of-fit
-// variables that evaluate the PDF at each point of a given dataset.
-// This class provides generic optimizations, such as caching and precalculation
-// of constant terms that can be made for all such quantities
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooAbsOptTestStatistic is the abstract base class for test
+// statistics objects that evaluate a function or PDF at each point of a given
+// dataset.  This class provides generic optimizations, such as
+// caching and precalculation of constant terms that can be made for
+// all such quantities
 //
 // Implementations should define evaluatePartition(), which calculates the
 // value of a (sub)range of the dataset and optionally combinedValue(),
 // which combines the values calculated for each partition. If combinedValue()
-// is overloaded, the default implementation will add the partition results
+// is not overloaded, the default implementation will add the partition results
 // to obtain the combined result
 //
-// Support for calculation in partitions is needed to allow parallel calculation
-// of goodness-of-fit values.
+// Support for calculation in partitions is needed to allow multi-core
+// parallelized calculation of test statistics
+// END_HTML
+//
+//
 
 #include "RooFit.h"
 
@@ -47,8 +53,13 @@
 ClassImp(RooAbsOptTestStatistic)
 ;
 
+
+//_____________________________________________________________________________
 RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 {
+  // Default Constructor
+
+  // Initialize all non-persisted data members
   _normSet = 0 ;
   _funcCloneSet = 0 ;
   _dataClone = 0 ;
@@ -56,12 +67,27 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
   _projDeps = 0 ;
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
 					       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsTestStatistic(name,title,real,data,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
   _projDeps(0)
 {
+  // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If 
+  // rangeName is not null, only events in the dataset inside the range will be used in the test
+  // statistic calculation. If addCoefRangeName is not null, all RooAddPdf component of 'real' will be
+  // instructed to fix their fraction definitions to the given named range. If nCPU is greater than
+  // 1 the test statistic calculation will be paralellized over multiple processes. By default the data
+  // is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+  // of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
+  // in each processing block many vary greatly thereby distributing the workload rather unevenly.
+  // If interleave is set to true, the interleave partitioning strategy is used where each partition
+  // i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
+  // If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
+  // as range definition for each index state of a RooSimultaneous
 
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
@@ -169,10 +195,12 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     _funcClone->fixAddCoefNormalization(*_dataClone->get()) ;
     
     if (addCoefRangeName) {
-      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
+      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() 
+		       << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
       _funcClone->fixAddCoefRange(addCoefRangeName,kFALSE) ;
     } else {
-	cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
+	cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() 
+			 << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
 	_funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
     }
   }
@@ -226,9 +254,12 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 }
 
 
+//_____________________________________________________________________________
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
   RooAbsTestStatistic(other,name)
 {
+  // Copy constructor
+
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
     _projDeps = 0 ;
@@ -262,8 +293,11 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
 
 
 
+//_____________________________________________________________________________
 RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
 {
+  // Destructor
+
   if (operMode()==Slave) {
     delete _funcCloneSet ;
     delete _dataClone ;
@@ -274,8 +308,13 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
 
 
 
+//_____________________________________________________________________________
 Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) const
 {
+  // Method to combined test statistic results calculated into partitions into
+  // the global result. This default implementation adds the partition return
+  // values
+  
   // Default implementation returns sum of components
   Double_t sum(0) ;
   Int_t i ;
@@ -288,8 +327,12 @@ Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) cons
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsOptTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
 {
+  // Catch server redirect calls and forward to internal clone of function
+
   RooAbsTestStatistic::redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
   if (operMode()!=Slave) return kFALSE ;  
   Bool_t ret = _funcClone->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
@@ -297,8 +340,12 @@ Bool_t RooAbsOptTestStatistic::redirectServersHook(const RooAbsCollection& newSe
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* indent) 
 {
+  // Catch print hook function and forward to function clone
+
   RooAbsTestStatistic::printCompactTreeHook(os,indent) ;
   if (operMode()!=Slave) return ;
   TString indent2(indent) ;
@@ -308,30 +355,44 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
 
 
 
+//_____________________________________________________________________________
 void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode) 
 {
-  // Driver function to propagate const optimization
+  // Driver function to propagate constant term optimizations in test statistic.
+  // If code Activate is sent, constant term optimization will be executed.
+  // If code Deacivate is sent, any existing constant term optimizations will
+  // be abanoned. If codes ConfigChange or ValueChange are sent, any existing
+  // constant term optimizations will be redone.
+
+
   RooAbsTestStatistic::constOptimizeTestStatistic(opcode);
   if (operMode()!=Slave) return ;
 
   switch(opcode) {
   case Activate:     
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
-			    << " on observables and constant parameters and precalculating their values" << endl ;
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
+			  << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
+			  << " on observables and constant parameters and precalculating their values" << endl ;
     optimizeConstantTerms(kTRUE) ;
     break ;
+
   case DeActivate:  
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") deactivating optimization of constant terms in test statistic" << endl ;
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
+			  << ") deactivating optimization of constant terms in test statistic" << endl ;
     optimizeConstantTerms(kFALSE) ;
     break ;
+
   case ConfigChange: 
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") one ore more parameter were changed from constant to floating or vice versa, "
-			    << "re-evaluating constant term optimization" << endl ;
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
+			  << ") one ore more parameter were changed from constant to floating or vice versa, "
+			  << "re-evaluating constant term optimization" << endl ;
     optimizeConstantTerms(kFALSE) ;
     optimizeConstantTerms(kTRUE) ;
     break ;
+
   case ValueChange: 
-    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << endl ;
+    cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
+			  << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << endl ;
     optimizeConstantTerms(kFALSE) ;
     optimizeConstantTerms(kTRUE) ;
     break ;
@@ -339,6 +400,8 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsOptTestStatistic::optimizeCaching() 
 {
   // This method changes the value caching logic for all nodes that depends on any of the observables
@@ -364,8 +427,18 @@ void RooAbsOptTestStatistic::optimizeCaching()
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
 {
+  // Driver function to activate global constant term optimization.
+  // If activated constant terms are found and cached with the dataset
+  // The operation mode of cached nodes is set to AClean meaning that
+  // their getVal() call will never result in an evaluate call.
+  // Finally the branches in the dataset that correspond to observables
+  // that are exclusively used in constant terms are disabled as
+  // they serve no more purpose
+
   if(activate) {
     // Trigger create of all object caches now in nodes that have deferred object creation
     // so that cache contents can be processed immediately

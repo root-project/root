@@ -14,7 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML 
+// RooAICRegistry is a utility class for operator p.d.f
+// classes that keeps track of analytical integration codes and
+// associated normalization and integration sets.  
+// END_HTML
+//
+
 #include "RooFit.h"
 
 #include "RooAICRegistry.h"
@@ -29,15 +37,21 @@ ClassImp(RooAICRegistry)
 ;
 
 
+//_____________________________________________________________________________
 RooAICRegistry::RooAICRegistry(Int_t regSize) :
   _regSize(regSize), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
+  // Constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
   _regSize(other._regSize), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
+  // Copy constructor
+
   // Copy code-list array if other PDF has one
   if (other._clArr) {
     _clArr = new pInt_t[other._regSize] ;    
@@ -73,8 +87,11 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
 
 
 
+//_____________________________________________________________________________
 RooAICRegistry::~RooAICRegistry() 
 {
+  // Destructor
+
   // Delete code list array, if allocated
   if (_clArr) {
     Int_t i(0) ;
@@ -97,8 +114,19 @@ RooAICRegistry::~RooAICRegistry()
 
 
 
+//_____________________________________________________________________________
 Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArgSet* set2, RooArgSet* set3, RooArgSet* set4)
 {
+  // Store given arrays of integer codes, and up to four RooArgSets in
+  // the registry (each setX pointer may be null). The size of the
+  // arrays should be passed by the 'size' argument. The registry
+  // clones all RooArgSets internally so the RooArgSets passed as
+  // arguments do not need to live beyond the store() call. The return
+  // value is a unique master code for the given configuration of
+  // integers and RooArgSets. If an identical combination is
+  // previously stored in the registry no objects are stored and the
+  // unique code of the existing entry is returned.
+
   Int_t i,j ;
 
   // If code list array has never been used, allocate and initialize here
@@ -178,27 +206,49 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
 }
 
 
+
+//_____________________________________________________________________________
 const Int_t* RooAICRegistry::retrieve(Int_t masterCode) const 
 {
+  // Retrieve the array of integer codes associated with the given master code
   return _clArr[masterCode] ;
 }
 
 
+
+//_____________________________________________________________________________
 const Int_t* RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1) const 
 {
+  // Retrieve the array of integer codes associated with the given master code
+  // and set the passed set1 pointer to the first RooArgSet associated with this master code
+
   set1 = _asArr1[masterCode] ;
   return _clArr[masterCode] ;
 }
 
+
+
+//_____________________________________________________________________________
 const Int_t* RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const 
 {
+  // Retrieve the array of integer codes associated with the given master code
+  // and set the passed set1,set2 pointers to the first and second  RooArgSets associated with this 
+  // master code respectively
+
   set1 = _asArr1[masterCode] ;
   set2 = _asArr2[masterCode] ;
   return _clArr[masterCode] ;
 }
 
+
+
+//_____________________________________________________________________________
 const Int_t* RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const 
 {
+  // Retrieve the array of integer codes associated with the given master code
+  // and set the passed set1-4 pointers to the four  RooArgSets associated with this 
+  // master code respectively
+
   set1 = _asArr1[masterCode] ;
   set2 = _asArr2[masterCode] ;
   set3 = _asArr3[masterCode] ;

@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsMCStudyModule is a base class for add-on modules to RooMCStudy that
 // can perform additional calculations on each generate+fit cycle managed
 // by RooMCStudy
@@ -25,6 +27,8 @@
 // summaryData() is merged with the 'master' summary dataset in RooMCStudy
 //
 // Look at RooDLLSignificanceMCStudyModule for an example of an implementation
+// END_HTML
+//
 //
 
 #include "RooFit.h"
@@ -34,17 +38,25 @@ ClassImp(RooAbsMCStudyModule)
   ;
 
 
+//_____________________________________________________________________________
 RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : TNamed(name,title), _mcs(0) 
 {
+  // Constructor
 } 
 
 
+//_____________________________________________________________________________
 RooAbsMCStudyModule::RooAbsMCStudyModule(const RooAbsMCStudyModule& other) : TNamed(other), _mcs(other._mcs)
 {
+  // Copy constructor
 } 
 
 
-Bool_t RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study) { 
+//_____________________________________________________________________________
+Bool_t RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study) 
+{ 
+  // Store reference to RooMCStudy object that this module relates to and call internal module
+  // initialization function
   _mcs = &study ; 
   return initializeInstance() ; 
 }  

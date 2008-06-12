@@ -14,13 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
-//
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 //  Abstract base class for objects that are lvalues, i.e. objects
 //  whose value can be modified directly. This class implements
-//  abstract methods for binned fits that return the number
-//  of fit bins and change the value of the object to the central
-//  value of a given fit bin, regardless of the type of value.
+//  abstract methods for binned fits that return the number of fit
+//  bins and change the value of the object to the central value of a
+//  given fit bin, regardless of the type of value.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -30,10 +33,17 @@
 ClassImp(RooAbsLValue)
 ;
 
+
+//_____________________________________________________________________________
 RooAbsLValue::RooAbsLValue() 
 {
+  // Constructor
 }
 
+
+
+//_____________________________________________________________________________
 RooAbsLValue::~RooAbsLValue() 
 {
+  // Destructor
 }

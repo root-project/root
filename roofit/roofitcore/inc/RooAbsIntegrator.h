@@ -23,15 +23,29 @@ class RooAbsIntegrator : public TObject {
 public:
   RooAbsIntegrator() ;
   RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter=kFALSE);
-  inline virtual ~RooAbsIntegrator() { }
+  inline virtual ~RooAbsIntegrator() { 
+    // Destructor
+  }
   virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const = 0 ;
   
-  inline Bool_t isValid() const { return _valid; }
+  inline Bool_t isValid() const { 
+    // Is integrator in valid state
+    return _valid; 
+  }
 
-  inline Double_t integrand(const Double_t x[]) const { return (*_function)(x); }
-  inline const RooAbsFunc *integrand() const { return _function; }
+  inline Double_t integrand(const Double_t x[]) const { 
+    // Return value of integrand at given observable values
+    return (*_function)(x); 
+  }
+  inline const RooAbsFunc *integrand() const { 
+    // Return integrand function binding
+    return _function; 
+  }
 
-  inline virtual Bool_t checkLimits() const { return kTRUE; }
+  inline virtual Bool_t checkLimits() const { 
+    // If true, finite limits are required on the observable range
+    return kTRUE; 
+  }
 
   Double_t calculate(const Double_t *yvec=0) ;
   virtual Double_t integral(const Double_t *yvec=0)=0 ;
@@ -49,9 +63,9 @@ public:
 
 protected:
 
-  const RooAbsFunc *_function;
-  Bool_t _valid;
-  Bool_t _printEvalCounter ;
+  const RooAbsFunc *_function; // Pointer to function binding of integrand
+  Bool_t _valid;               // Is integrator in valid state?
+  Bool_t _printEvalCounter ;   // If true print number of function evaluation required for integration
 
   ClassDef(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };

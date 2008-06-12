@@ -14,13 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooAbsHiddenReal is a base class for objects that want to hide
+// their return value from interactive use, e.g. for implementations
+// of parameter unblinding functions. This class overrides all
+// printing methods with versions that do not reveal the objects value
+// and it has a protected version of getVal()
+// END_HTML
 //
-// RooAbsHiddenReal is a base class for objects that want to
-// hide their return value from interactive use, e.g. for implementations
-// of parameter unblinding functions. This class overrides all printing
-// methods with versions that do not reveal the objects value and it
-// has a protected version of getVal()
 //
 
 #include "RooFit.h"
@@ -39,6 +42,7 @@ ClassImp(RooAbsHiddenReal)
 RooCategory* RooAbsHiddenReal::_dummyBlindState = 0;
 
 
+//_____________________________________________________________________________
 RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, const char* unit)
   : RooAbsReal(name,title,unit),
     _state("state","Blinding state",this,dummyBlindState())
@@ -47,6 +51,8 @@ RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, const ch
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, RooAbsCategory& blindState, const char* unit)
   : RooAbsReal(name,title,unit),
   _state("state","Blinding state",this,blindState)
@@ -55,6 +61,8 @@ RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, RooAbsCa
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name) : 
   RooAbsReal(other, name),
   _state("state",this,other._state)
@@ -63,21 +71,30 @@ RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* na
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsHiddenReal::~RooAbsHiddenReal() 
 {
   // Destructor 
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsHiddenReal::printValue(ostream& os) const
 {
   // Special version of printValue that doesn't reveal the objects value
+
   os << "(hidden)" ;
 } 
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsHiddenReal::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {
+  // Special version of readFromStream that disallows reading from stream
+
   if (isHidden()) {
     // No-op version of readFromStream 
     coutE(InputArguments) << "RooAbsHiddenReal::readFromStream(" << GetName() << "): not allowed" << endl ;
@@ -88,8 +105,12 @@ Bool_t RooAbsHiddenReal::readFromStream(istream& is, Bool_t compact, Bool_t verb
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsHiddenReal::writeToStream(ostream& os, Bool_t compact) const
 {
+  // Special version of writeToStream that disallows reading from stream
+
   if (isHidden()) {
     // No-op version of writeToStream 
     coutE(InputArguments) << "RooAbsHiddenReal::writeToStream(" << GetName() << "): not allowed" << endl ;
@@ -99,8 +120,13 @@ void RooAbsHiddenReal::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsCategory& RooAbsHiddenReal::dummyBlindState() const 
 {
+  // Return reference to internal dummy RooCategory implementation
+  // blinding state switch
+
   if (!_dummyBlindState) {
     _dummyBlindState = new RooCategory("dummyBlindState","dummy blinding state") ;
     _dummyBlindState->defineType("Normal",0) ;

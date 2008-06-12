@@ -61,8 +61,8 @@ protected:
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void fillTreeBranch(TTree& t) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
-  Int_t _len ;
-  mutable char *_value ; //[_len] 
+  Int_t _len ; // Length of _value
+  mutable char *_value ; //[_len] Value
 
   ClassDef(RooAbsString,1) // Abstract string-valued variable
 };

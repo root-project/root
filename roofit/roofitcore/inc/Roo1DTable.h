@@ -26,7 +26,9 @@ class Roo1DTable : public RooTable {
 public:
 
   // Constructors, cloning and assignment
-  Roo1DTable() {} ;
+  Roo1DTable() {
+    // Default constructor
+  } ;
   virtual ~Roo1DTable();
   Roo1DTable(const char *name, const char *title, const RooAbsCategory &cat);
   Roo1DTable(const Roo1DTable& other) ;
@@ -48,10 +50,10 @@ public:
 protected:
 
   
-  TObjArray _types ;
-  std::vector<Double_t> _count ;
-  Double_t  _total ;
-  Double_t  _nOverflow ;
+  TObjArray _types ;             // Array of defined category states
+  std::vector<Double_t> _count ; // Array of counters for each state
+  Double_t  _total ;             // Total number of entries
+  Double_t  _nOverflow ;         // Number of overflow entries
 
   ClassDef(Roo1DTable,1) // 1-dimensional table
 };

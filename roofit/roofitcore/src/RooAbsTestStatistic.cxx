@@ -14,26 +14,29 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// RooAbsTestStatistic is the abstract base class for goodness-of-fit
-// for all goodness-of-fit variables. Goodness-of-fit quantities that
-// evaluate the PDF at each data point should inherit from the RooAbsOptTestStatistic
-// class which implements several generic optimizations that can be done for
-// such quantities.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooAbsTestStatistic is the abstract base class for all test
+// statistics. Test statistics that evaluate the PDF at each data
+// point should inherit from the RooAbsOptTestStatistic class which
+// implements several generic optimizations that can be done for such
+// quantities.
 //
-// This base class organizes calculation of GOF values for RooSimultaneous PDF
-// as a sum of GOF-values for the PDF components of the simultaneous PDF
-// (more efficient) and organizes parallel calculation of GOF values.
-// For the latter, the GOF values is calculated in partitions in parallel executing
-// processes and later combined in the main thread.
+// This test statistic base class organizes calculation of test
+// statistic values for RooSimultaneous PDF as a combination of test
+// statistic values for the PDF components of the simultaneous PDF and
+// organizes multi-processor parallel calculation of test statistic
+// values. For the latter, the test statistic value is calculated in
+// partitions in parallel executing processes and a posteriori
+// combined in the main thread.
+// END_HTML
+//
 
 
 #include "RooFit.h"
-
 #include "Riostream.h"
 
-
-#include "RooAbsTestStatistic.h"
 #include "RooAbsTestStatistic.h"
 #include "RooAbsPdf.h"
 #include "RooSimultaneous.h"
@@ -48,14 +51,20 @@
 ClassImp(RooAbsTestStatistic)
 ;
 
+
+//_____________________________________________________________________________
 RooAbsTestStatistic::RooAbsTestStatistic() 
 { 
+  // Default constructor
+
   _init = kFALSE ; 
   _gofArray = 0 ;
   _mpfeArray = 0 ;
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName, 
 					 Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) : 
@@ -75,6 +84,20 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _mpfeArray(0),
   _mpinterl(interleave)
 {
+  // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If 
+  // rangeName is not null, only events in the dataset inside the range will be used in the test
+  // statistic calculation. If addCoefRangeName is not null, all RooAddPdf component of 'real' will be
+  // instructed to fix their fraction definitions to the given named range. If nCPU is greater than
+  // 1 the test statistic calculation will be paralellized over multiple processes. By default the data
+  // is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+  // of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
+  // in each processing block many vary greatly thereby distributing the workload rather unevenly.
+  // If interleave is set to true, the interleave partitioning strategy is used where each partition
+  // i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
+  // If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
+  // as range definition for each index state of a RooSimultaneous
+
+
   // Register all parameters as servers 
   RooArgSet* params = real.getParameters(&data) ;
   _paramSet.add(*params) ;
@@ -104,6 +127,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
 
 
 
+//_____________________________________________________________________________
 RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name) : 
   RooAbsReal(other,name), 
   _paramSet("paramSet",this,other._paramSet),
@@ -122,6 +146,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _nCPU(other._nCPU),
   _mpinterl(other._mpinterl)
 {
+  // Copy constructor
+
   if (operMode()==SimMaster) {
     _nGof = other._nGof ; 
     _gofArray = new pRooAbsTestStatistic[_nGof] ;
@@ -145,8 +171,11 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
 
 
 
+//_____________________________________________________________________________
 RooAbsTestStatistic::~RooAbsTestStatistic()
 {
+  // Destructor
+
   if (_gofOpMode==MPMaster && _init) {
     Int_t i ;
     for (i=0 ; i<_nCPU ; i++) {
@@ -168,8 +197,15 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 
 
 
+//_____________________________________________________________________________
 Double_t RooAbsTestStatistic::evaluate() const
 {
+  // Calculates and return value of test statistic. If the test statistic
+  // is calculated from on a RooSimultaneous, the test statistic calculation
+  // is performed separately on each simultaneous p.d.f component and associated
+  // data and then combined. If the test statistic calculation is parallelized
+  // partitions are calculated in nCPU processes and a posteriori combined.
+
   // One-time Initialization
   if (!_init) {
     const_cast<RooAbsTestStatistic*>(this)->initialize() ;
@@ -226,8 +262,13 @@ Double_t RooAbsTestStatistic::evaluate() const
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsTestStatistic::initialize() 
 {
+  // One-time initialization of the test statistic. Setup
+  // infrastructure for simultaneous p.d.f processing and/or
+  // parallelized processing if requested
+
   if (_init) return kFALSE ;
 
   if (_gofOpMode==MPMaster) {
@@ -241,8 +282,11 @@ Bool_t RooAbsTestStatistic::initialize()
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t) 
 {
+  // Forward server redirect calls to component test statistics
+
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     Int_t i ;
@@ -258,8 +302,13 @@ Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServe
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent) 
 {
+  // Add extra information on component test statistics when printing 
+  // itself as part of a tree structure
+
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     Int_t i ;
@@ -278,8 +327,12 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode) 
 {
+  // Forward constant term optimization management calls to component
+  // test statistics
   Int_t i ;
   initialize() ;
   if (_gofOpMode==SimMaster) {
@@ -296,8 +349,11 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
 
 
 
+//_____________________________________________________________________________
 void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets) 
 {
+  // Set MultiProcessor set number identification of this instance
+
   _setNum = inSetNum ; _numSets = inNumSets ;
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
@@ -310,27 +366,28 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
+  // Initialize multi-processor calculation mode. Create component test statistics in separate
+  // processed that are connected to this process through a RooAbsRealMPFE front-end class.
+
   Int_t i ;
   _mpfeArray = new pRooRealMPFE[_nCPU] ;
 
   // Create proto-goodness-of-fit 
-  //cout << "initMPMode -- creating prototype gof" << endl ;
   RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_verbose,_splitRange) ;
 
   for (i=0 ; i<_nCPU ; i++) {
 
-    //cout << "initMPMode -- tayloring prototype for partition " << i << endl ;
     gof->setMPSet(i,_nCPU) ;
     gof->SetName(Form("%s_GOF%d",GetName(),i)) ;
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i)) ;
     
     Bool_t doInline = (i==_nCPU-1) ;
     if (!doInline) coutI(Generation) << "RooAbsTestStatistic::initMPMode: starting remote GOF server process #" << i << endl ; 
-    //cout << "initMPMode -- creating MP front-end" << endl ;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_MPFE%d",GetName(),i),Form("%s_MPFE%d",GetTitle(),i),*gof,doInline) ;    
-    //cout << "initMPMode -- initializing MP front-end" << endl ;
     _mpfeArray[i]->initialize() ;
   }
   //cout << "initMPMode --- done" << endl ;
@@ -338,8 +395,17 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
 }
 
 
-void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
+
+//_____________________________________________________________________________
+void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data, 
+				      const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
+  // Initialize simultaneous p.d.f processing mode. Strip simultaneous
+  // p.d.f into individual components, split dataset in subset
+  // matching each component and create component test statistics for
+  // each of them.
+
+
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->indexCat() ;
 
 

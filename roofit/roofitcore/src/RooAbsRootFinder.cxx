@@ -14,9 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsRootFinder is the abstract interface for finding roots of real-valued
 // 1-dimensional function that implements the RooAbsFunc interface.
+// END_HTML
+//
+//
 
 #include "RooFit.h"
 
@@ -30,9 +35,11 @@ ClassImp(RooAbsRootFinder)
 ;
 
 
+//_____________________________________________________________________________
 RooAbsRootFinder::RooAbsRootFinder(const RooAbsFunc& function) :
   _function(&function), _valid(function.isValid())
 {
+  // Constructor take function binding as argument
   if(_function->getDimension() != 1) {
     oocoutE((TObject*)0,Eval) << "RooAbsRootFinder:: cannot find roots for function of dimension "
 			      << _function->getDimension() << endl;

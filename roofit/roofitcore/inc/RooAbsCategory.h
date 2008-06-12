@@ -29,7 +29,11 @@ class Roo1DTable ;
 class RooAbsCategory : public RooAbsArg {
 public:
   // Constructors, assignment etc.
-  RooAbsCategory() { _treeVar = kFALSE ; _typeIter = _types.MakeIterator() ; } ;
+  RooAbsCategory() { 
+    // Default constructor
+    _treeVar = kFALSE ; 
+    _typeIter = _types.MakeIterator() ; 
+  } ;
   RooAbsCategory(const char *name, const char *title);
   RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
   virtual ~RooAbsCategory();
@@ -38,7 +42,7 @@ public:
   virtual Int_t getIndex() const ;
   virtual const char* getLabel() const ;
   Bool_t operator==(Int_t index) const ;
-  Bool_t operator!=(Int_t index) { return !operator==(index);}
+  Bool_t operator!=(Int_t index) {  return !operator==(index);}
   Bool_t operator==(const char* label) const ;
   Bool_t operator!=(const char* label) { return !operator==(label);}
   virtual Bool_t operator==(const RooAbsArg& other) ;
@@ -50,7 +54,10 @@ public:
   const RooCatType* lookupType(const char* label, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const RooCatType& type, Bool_t printError=kFALSE) const ;
   TIterator* typeIterator() const ;
-  Int_t numTypes(const char* /*rangeName*/=0) const { return _types.GetEntries() ; }
+  Int_t numTypes(const char* /*rangeName*/=0) const { 
+    // Return number of types defined (in range named rangeName if rangeName!=0)
+    return _types.GetEntries() ; 
+  }
   Bool_t isSignType(Bool_t mustHaveZero=kFALSE) const ;
 
   Roo1DTable *createTable(const char *label) const ;
@@ -62,7 +69,10 @@ public:
   virtual void printValue(ostream& os) const ;
   virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { return kTRUE ; }
+  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { 
+    // Is this l-value object safe for use as integration observable
+    return kTRUE ; 
+  }
 
   RooAbsArg *createFundamental(const char* newname=0) const;
 
@@ -70,7 +80,10 @@ protected:
 
   // Function evaluation and error tracing
   RooCatType traceEval() const ;
-  virtual Bool_t traceEvalHook(RooCatType /*value*/) const { return kFALSE ;}
+  virtual Bool_t traceEvalHook(RooCatType /*value*/) const { 
+    // Hook function for trace evaluation (dummy)
+    return kFALSE ;
+  }
   virtual RooCatType evaluate() const = 0 ;
 
   // Type definition management

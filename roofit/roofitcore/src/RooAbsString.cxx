@@ -14,12 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsString is the common abstract base class for objects that represent a
 // string value
 // 
 // Implementation of RooAbsString may be derived, there no interface
 // is provided to modify the contents
+// END_HTML
+//
 // 
 
 #include "RooFit.h"
@@ -39,40 +43,51 @@ ClassImp(RooAbsString)
 ;
 
 
+//_____________________________________________________________________________
 RooAbsString::RooAbsString() : RooAbsArg(), _len(128) , _value(new char[128])
 {
+  // Default constructor
 }
 
 
+//_____________________________________________________________________________
 RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) : 
   RooAbsArg(name,title), _len(bufLen), _value(new char[bufLen]) 
 {
   // Constructor
+
   setValueDirty() ;
   setShapeDirty() ;
 }
 
 
 
+//_____________________________________________________________________________
 RooAbsString::RooAbsString(const RooAbsString& other, const char* name) : 
   RooAbsArg(other, name), _len(other._len), _value(new char[other._len])
 {
   // Copy constructor
+
   strcpy(_value,other._value) ;
 }
 
 
 
+//_____________________________________________________________________________
 RooAbsString::~RooAbsString()
 {
-  delete[] _value ;
   // Destructor
+
+  delete[] _value ;
 }
 
 
+
+//_____________________________________________________________________________
 const char* RooAbsString::getVal() const
 {
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
+
   if (isValueDirty()) {
     clearValueDirty() ;
     strcpy(_value,traceEval()) ;
@@ -83,42 +98,54 @@ const char* RooAbsString::getVal() const
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsString::operator==(const char* value) const
 {
   // Equality operator comparing with a TString
+
   return !TString(getVal()).CompareTo(value) ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsString::operator==(const RooAbsArg& other) 
 {
+  // Equality operator comparing to another RooAbsArg
+
   const RooAbsString* otherString = dynamic_cast<const RooAbsString*>(&other) ;
   return otherString ? operator==(otherString->getVal()) : kFALSE ;
 }
 
 
 
-
+//_____________________________________________________________________________
 Bool_t RooAbsString::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
 {
   //Read object contents from stream (dummy for now)
   return kFALSE ;
 } 
 
+
+
+//_____________________________________________________________________________
 void RooAbsString::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
 {
   //Write object contents to stream (dummy for now)
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsString::printValue(ostream& os) const
 {
+  // Print value
   os << getVal() ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsString::isValid() const 
 {
   // Check if current value is valid
@@ -126,9 +153,11 @@ Bool_t RooAbsString::isValid() const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooAbsString::isValidString(const char* value, Bool_t /*printError*/) const 
 {
-  // Check if given value is valid
+  // Check if given string value is valid
 
   // Protect against string overflows
   if (TString(value).Length()>_len) return kFALSE ;
@@ -137,15 +166,20 @@ Bool_t RooAbsString::isValidString(const char* value, Bool_t /*printError*/) con
 }
 
 
+//_____________________________________________________________________________
 Bool_t RooAbsString::traceEvalHook(const char* /*value*/) const 
 { 
+  // Hook function for trace evaluation
   return kFALSE ; 
 }
 
 
+
+//_____________________________________________________________________________
 const char* RooAbsString::traceEval() const
 {
   // Calculate current value of object, with error tracing wrapper
+
   const char* value = evaluate() ;
   
   //Standard tracing code goes here
@@ -160,16 +194,21 @@ const char* RooAbsString::traceEval() const
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsString::syncCache(const RooArgSet*) 
 { 
+  // Forcibly bring internal cache up-to-date
   getVal() ; 
 }
 
 
+
+//_____________________________________________________________________________
 void RooAbsString::copyCache(const RooAbsArg* source) 
 {
   // Copy cache of another RooAbsArg to our cache
-
+  //
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
 
@@ -182,6 +221,7 @@ void RooAbsString::copyCache(const RooAbsArg* source)
 
 
 
+//_____________________________________________________________________________
 void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
 {
   // Attach object to a branch of given TTree
@@ -204,8 +244,11 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
  
 
 
+//_____________________________________________________________________________
 void RooAbsString::fillTreeBranch(TTree& t) 
 {
+  // Fill tree branch associated with this object
+
   // First determine if branch is taken
   TBranch* branch = t.GetBranch(GetName()) ;
   if (!branch) { 
@@ -217,9 +260,11 @@ void RooAbsString::fillTreeBranch(TTree& t)
 
 
 
+//_____________________________________________________________________________
 void RooAbsString::setTreeBranchStatus(TTree& t, Bool_t active) 
 {
-  // (De)Activate associate tree branch
+  // (De)Activate associated tree branch
+
   TBranch* branch = t.GetBranch(GetName()) ;
   if (branch) { 
     t.SetBranchStatus(GetName(),active?1:0) ;
@@ -228,7 +273,9 @@ void RooAbsString::setTreeBranchStatus(TTree& t, Bool_t active)
 
 
 
-RooAbsArg *RooAbsString::createFundamental(const char* newname) const {
+//_____________________________________________________________________________
+RooAbsArg *RooAbsString::createFundamental(const char* newname) const 
+{
   // Create a RooStringVar fundamental object with our properties.
 
   RooStringVar *fund= new RooStringVar(newname?newname:GetName(),GetTitle(),"") ; 

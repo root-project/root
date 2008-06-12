@@ -67,35 +67,6 @@ public:
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
 
-  // Backward compatibility functions
-  virtual RooPlot *plotCompOn(RooPlot *frame, const char* compNameList, Option_t* drawOptions="L",
-			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
-			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
-
-  virtual RooPlot *plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions="L",
-			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
-			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
-
-  virtual RooPlot *plotCompSliceOn(RooPlot *frame, const char* compNameList, const RooArgSet& sliceSet,
-				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
-				   const RooAbsData* projData=0) const ;
-
-  virtual RooPlot *plotCompSliceOn(RooPlot *frame, const RooArgSet& compSet, const RooArgSet& sliceSet,
-				   Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
-				   const RooAbsData* projData=0) const ;
-
-  inline RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
-                            Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
-    return plotNLLOn(frame,data,kFALSE,RooArgSet(),drawOptions,prec,fixMinToZero) ;
-  }
-  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, Option_t* drawOptions="L", 
-                             Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) {
-    return plotNLLOn(frame,data,extended,RooArgSet(),drawOptions,prec,fixMinToZero) ;
-  }
-  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended, const RooArgSet& projDeps,
-                             Option_t* drawOptions="L", Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
-  // End backward compatibility functions
-
 
   virtual RooPlot* paramOn(RooPlot* frame, 
                            const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(), 
@@ -125,7 +96,10 @@ public:
   virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "c", const char* fitRange=0) ;
 
   // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, const RooArgSet& /*constrainedParams*/) const { return 0 ; }
+  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, const RooArgSet& /*constrainedParams*/) const { 
+    // Interface to retrieve constraint terms on this pdf. Default implementation returns null
+    return 0 ; 
+  }
   virtual RooArgSet* getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams) const ;
   
   // Project p.d.f into lower dimensional p.d.f
@@ -144,7 +118,10 @@ public:
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
-  Double_t getNorm(const RooArgSet& nset) const { return getNorm(&nset) ; }
+  Double_t getNorm(const RooArgSet& nset) const { 
+    // Get p.d.f normalization term needed for observables 'nset'
+    return getNorm(&nset) ; 
+  }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
 
   virtual void resetErrorCounters(Int_t resetValue=10) ;
@@ -153,15 +130,33 @@ public:
 
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
-  virtual Bool_t selfNormalized() const { return kFALSE ; }
+  virtual Bool_t selfNormalized() const { 
+    // If true, p.d.f is taken as self-normalized and no attempt is made to add a normalization term
+    // This default implementation return false
+    return kFALSE ; 
+  }
 
   // Support for extended maximum likelihood, switched off by default
   enum ExtendMode { CanNotBeExtended, CanBeExtended, MustBeExtended } ;
-  virtual ExtendMode extendMode() const { return CanNotBeExtended ; } 
-  inline Bool_t canBeExtended() const { return (extendMode() != CanNotBeExtended) ; }
-  inline Bool_t mustBeExtended() const { return (extendMode() == MustBeExtended) ; }
+  virtual ExtendMode extendMode() const { 
+    // Returns ability of p.d.f to provided extended likelihood terms. Possible
+    // answers are CanNotBeExtended, CanBeExtended or MustBeExtended. This
+    // default implementation always return CanNotBeExtended
+    return CanNotBeExtended ; 
+  } 
+  inline Bool_t canBeExtended() const { 
+    // If true p.d.f can provide extended likelihood term
+    return (extendMode() != CanNotBeExtended) ; 
+  }
+  inline Bool_t mustBeExtended() const { 
+    // If true p.d.f must extended likelihood term
+    return (extendMode() == MustBeExtended) ; 
+  }
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
+  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
+    // Return expecteded number of p.d.fs to be used in calculated of extended likelihood
+    return expectedEvents(&nset) ; 
+  }
 
   // Printing interface (human readable)
   virtual void printValue(ostream& os) const ;
@@ -217,11 +212,6 @@ protected:
 
   virtual Bool_t syncNormalization(const RooArgSet* dset, Bool_t adjustProxies=kTRUE) const ;
 
-  virtual RooPlot *plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option_t* drawOptions="L",
-				    Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
-				    const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
-
-
   friend class RooAbsAnaConvPdf ;
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      //! Normalization integral (owned by _normMgr)
@@ -240,6 +230,11 @@ protected:
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
   
   virtual Bool_t redirectServersHook(const RooAbsCollection&, Bool_t, Bool_t, Bool_t) { 
+    // Hook function intercepting redirectServer calls. Discard current normalization
+    // object if any server is redirected
+
+    // Object is own by _normCacheManager that will delete object as soon as cache
+    // is sterilized by server redirect
     _norm = 0 ;
     return kFALSE ; 
   } ;
@@ -250,7 +245,10 @@ protected:
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
 
   friend class RooAddPdf ;
-  void selectComp(Bool_t flag) { _selectComp = flag ; }
+  void selectComp(Bool_t flag) { 
+    // If flag is true, only selected component will be included in evaluates of RooAddPdf components
+    _selectComp = flag ; 
+  }
   static void globalSelectComp(Bool_t flag) ;
   Bool_t _selectComp ;               // Component selection flag for RooAbsPdf::plotCompOn
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection

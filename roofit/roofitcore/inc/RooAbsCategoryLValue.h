@@ -23,7 +23,9 @@
 class RooAbsCategoryLValue : public RooAbsCategory, public RooAbsLValue {
 public:
   // Constructor, assignment etc.
-  RooAbsCategoryLValue() {} ;
+  RooAbsCategoryLValue() {
+    // Default constructor
+  } ;
   RooAbsCategoryLValue(const char *name, const char *title);
   RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name=0) ;
   virtual ~RooAbsCategoryLValue();
@@ -39,13 +41,25 @@ public:
   virtual void setBin(Int_t ibin, const char* rangeName=0) ;
   virtual Int_t getBin(const char* rangeName=0) const ;
   virtual Int_t numBins(const char* rangeName) const ;
-  virtual Double_t getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const { return 1.0 ; }
-  virtual Double_t volume(const char* rangeName) const { return numTypes(rangeName) ; }
+  virtual Double_t getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const { 
+    // Return volume of i-th bin (according to binning named rangeName if rangeName!=0)
+    return 1.0 ; 
+  }
+  virtual Double_t volume(const char* rangeName) const { 
+    // Return span of range with given name (=number of states included in this range)
+    return numTypes(rangeName) ; 
+  }
   virtual void randomize(const char* rangeName=0);
 
-  inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
+  inline void setConstant(Bool_t value= kTRUE) { 
+    // Declare category constant 
+    setAttribute("Constant",value); 
+  }
   
-  inline virtual Bool_t isLValue() const { return kTRUE; }
+  inline virtual Bool_t isLValue() const { 
+    // Object is an l-value
+    return kTRUE; 
+  }
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

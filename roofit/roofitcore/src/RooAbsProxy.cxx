@@ -22,24 +22,31 @@
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooAbsProxy is the abstact interface for proxy classes.
-// Proxy classes hold pointers to other RFC objects 
+// Proxy classes hold pointers to other Roofit objects 
 // and process serverRedirect changes so that the proxied
 // pointers are updated accordingly on a clone or copy of
 // of the owning class
+// END_HTML
+//
 
 
 ClassImp(RooAbsProxy)
 ;
 
 
+//_____________________________________________________________________________
 RooAbsProxy::RooAbsProxy() : _nset(0)
 {
-  // Constructor with owner and proxied object
+  // Constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsProxy::RooAbsProxy(const char* /*name*/, const RooAbsProxy& other) : 
   _nset(other._nset)
 {
@@ -47,13 +54,18 @@ RooAbsProxy::RooAbsProxy(const char* /*name*/, const RooAbsProxy& other) :
 }
 
 
+//_____________________________________________________________________________
 void RooAbsProxy::changeNormSet(const RooArgSet* newNormSet) 
 {
   // Destructor
   _nset = (RooArgSet*) newNormSet ;
 }
 
+
+
+//_____________________________________________________________________________
 void RooAbsProxy::print(ostream& os, Bool_t /*addContents*/) const 
 { 
+  // Print proxy name
   os << name() << endl ; 
 }

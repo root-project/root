@@ -28,14 +28,17 @@ public:
 
 protected:
 
-  virtual const char* inputBaseName() const { return GetName() ; }
+  virtual const char* inputBaseName() const { 
+    // Use own name as base name for caches
+    return GetName() ; 
+  }
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
   virtual void fillCacheObject(FuncCacheElem& cache) const ;  
 
 private:
 
-  ClassDef(RooAbsSelfCachedReal,0) // Abstract base class for self-caching p.d.f.s
+  ClassDef(RooAbsSelfCachedReal,0) // Abstract base class for self-caching functions
 };
  
 #endif

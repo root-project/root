@@ -25,7 +25,9 @@ class RooCategory ;
 class RooAbsHiddenReal : public RooAbsReal {
 public:
   // Constructors, assignment etc.
-  inline RooAbsHiddenReal() { }
+  inline RooAbsHiddenReal() { 
+    // Default constructor
+  }
   RooAbsHiddenReal(const char *name, const char *title, const char *unit= "") ;
   RooAbsHiddenReal(const char *name, const char *title, RooAbsCategory& blindState, const char *unit= "") ;
   RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name=0) ;
@@ -38,20 +40,30 @@ public:
   // Printing interface (human readable)
   virtual void printValue(ostream& stream) const ;
   
-  inline Bool_t isHidden() const { return _state.arg().getIndex()!=0 ; }
-  Double_t getHiddenVal(const RooArgSet* nset=0) const { return RooAbsReal::getVal(nset) ; }
+  inline Bool_t isHidden() const { 
+    // If true, hiding mode is active
+    return _state.arg().getIndex()!=0 ; 
+  }
+
+  Double_t getHiddenVal(const RooArgSet* nset=0) const { 
+    // Bypass accessor to function value that also works in hidden mode
+    return RooAbsReal::getVal(nset) ; 
+  }
 
 protected:
 
   // This is dubious from a C++ point of view, but it blocks the interactive user
   // from accidentally calling getVal() without explicit cast, which is the whole
   // point of this class
-  virtual Double_t getVal(const RooArgSet* nset=0) const { return RooAbsReal::getVal(nset) ; }
+  virtual Double_t getVal(const RooArgSet* nset=0) const { 
+    // Forward call to RooAbsReal
+    return RooAbsReal::getVal(nset) ; 
+  }
 
-  static RooCategory* _dummyBlindState ;
+  static RooCategory* _dummyBlindState ; 
   RooAbsCategory& dummyBlindState() const ;
 
-  RooCategoryProxy _state ;
+  RooCategoryProxy _state ; // Proxy to hiding state category
 
   ClassDef(RooAbsHiddenReal,1) // Abstract hidden real-valued variable
 };

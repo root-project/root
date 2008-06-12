@@ -31,15 +31,25 @@ public:
 
   RooDataSet *generate(Int_t nEvents= 0);
 
-  Bool_t isValid() const { return _isValid; }
+  Bool_t isValid() const { 
+    // If true generator context is in a valid state
+    return _isValid; 
+  }
 
-  inline void setVerbose(Bool_t verbose= kTRUE) { _verbose= verbose; }
-  inline Bool_t isVerbose() const { return _verbose; }
+  inline void setVerbose(Bool_t verbose= kTRUE) { 
+    // Set/clear verbose messaging
+    _verbose= verbose; 
+  }
+  inline Bool_t isVerbose() const { 
+    // If true verbose messaging is active
+    return _verbose; 
+  }
 
   virtual void setProtoDataOrder(Int_t* lut) ;
 
    inline virtual void Print(Option_t *options= 0) const {
-    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
+     // Print context information on stdout
+     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
   virtual void attach(const RooArgSet& params) ;
@@ -65,15 +75,15 @@ protected:
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;
 
-  const RooDataSet *_prototype;
-  RooArgSet *_theEvent;
-  Bool_t _isValid;
-  Bool_t _verbose;
-  UInt_t _expectedEvents;
-  RooArgSet _protoVars;
-  Int_t _nextProtoIndex;
-  RooAbsPdf::ExtendMode _extendMode ;
-  Int_t* _protoOrder ;
+  const RooDataSet *_prototype; // Pointer to prototype dataset
+  RooArgSet *_theEvent;         // Pointer to observable event being generated
+  Bool_t _isValid;              // Is context in valid state?
+  Bool_t _verbose;              // Verbose messaging?
+  UInt_t _expectedEvents;       // Number of expected events from extended p.d.f
+  RooArgSet _protoVars;         // Prototype observables
+  Int_t _nextProtoIndex;        // Next prototype event to load according to LUT
+  RooAbsPdf::ExtendMode _extendMode ;  // Extended mode capabilities of p.d.f.
+  Int_t* _protoOrder ;          // LUT with traversal order of prototype data
 
   ClassDef(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
 };

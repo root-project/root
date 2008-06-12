@@ -41,7 +41,7 @@ public:
    
 protected:
 
-  RooAbsArg* _owner ;
+  RooAbsArg* _owner ; // Pointer to owning RooAbsArg
 
   ClassDef(RooAbsCache,1) // Base class for cache managers 
 

@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PLOT] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // Roo1DTable implements a one-dimensional table. A table is the category
 // equivalent of a plot. To create a table use the RooDataSet::table method.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -33,6 +37,7 @@ using namespace std ;
 ClassImp(Roo1DTable)
 
 
+//_____________________________________________________________________________
 Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) : 
   RooTable(name,title), _total(0), _nOverflow(0)
 {
@@ -58,6 +63,7 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
 
 
 
+//_____________________________________________________________________________
 Roo1DTable::Roo1DTable(const Roo1DTable& other) : 
   RooTable(other), _count(other._count), _total(other._total), _nOverflow(other._nOverflow)
 {  
@@ -73,6 +79,8 @@ Roo1DTable::Roo1DTable(const Roo1DTable& other) :
 }
 
 
+
+//_____________________________________________________________________________
 Roo1DTable::~Roo1DTable()
 {
   // Destructor
@@ -82,13 +90,14 @@ Roo1DTable::~Roo1DTable()
 }
 
 
+
+//_____________________________________________________________________________
 void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight) 
 {
-  // Increment the counter of the table slot with
-  // the name corresponding to that of the current 
-  // category state. If the current category state
-  // matches no table slot name, the table overflow
-  // counter is incremented.
+  // Increment the counter of the table slot with the name
+  // corresponding to that of the current category state. If the
+  // current category state matches no table slot name, the table
+  // overflow counter is incremented.
 
   if (weight==0) return ;
 
@@ -110,24 +119,38 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
 }
 
 
+
+//_____________________________________________________________________________
 void Roo1DTable::printName(ostream& os) const 
 {
+  // Print the name of the table
   os << GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void Roo1DTable::printTitle(ostream& os) const 
 {
+  // Print the title of the table
   os << GetTitle() ;
 }
 
+
+
+//_____________________________________________________________________________
 void Roo1DTable::printClassName(ostream& os) const 
 {
+  // Print the class name of the table
   os << IsA()->GetName() ;
 }
 
+
+
+//_____________________________________________________________________________
 void Roo1DTable::printValue(ostream& os) const 
 {
-  // Contents
+  // Print the table value, i.e. the contents, in 'inline' format
   os << "(" ;
   for (Int_t i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
@@ -142,6 +165,8 @@ void Roo1DTable::printValue(ostream& os) const
 }
 
 
+
+//_____________________________________________________________________________
 void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
 {
   // Print the formatted table contents on the given stream
@@ -195,10 +220,14 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose,
 }
 
 
+
+//_____________________________________________________________________________
 Double_t Roo1DTable::get(const char* label, Bool_t silent) const 
 {
-  // Return the table entry named 'label'. Zero is returned
-  // if given label doesn't occur in table. 
+  // Return the table entry named 'label'. Zero is returned if given
+  // label doesn't occur in table.
+
+
   TObject* cat = _types.FindObject(label) ;
   if (!cat) {
     if (!silent) {
@@ -210,18 +239,24 @@ Double_t Roo1DTable::get(const char* label, Bool_t silent) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t Roo1DTable::getOverflow() const 
 {
   // Return the number of overflow entries in the table.
+
   return _nOverflow ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const 
 {
   // Return the fraction of entries in the table contained in the slot named 'label'. 
   // The normalization includes the number of overflows.
   // Zero is returned if given label doesn't occur in table.   
+
   if (_total) {
     return get(label,silent) / _total ;
   } else {
@@ -231,8 +266,12 @@ Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t Roo1DTable::isIdentical(const RooTable& other) 
 {
+  // Return true if table is identical in contents to given reference table
+
   const Roo1DTable* other1d = &dynamic_cast<const Roo1DTable&>(other) ;
 
   if (!other1d) {
