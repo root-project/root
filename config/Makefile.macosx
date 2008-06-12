@@ -103,18 +103,10 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 # Fortran:
 F77           =
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
-ifeq (g95,$(findstring g95,$(ROOTBUILD)))
-ifeq ($(shell which g95 2>&1 | sed -ne "s/.*\/g95/g95/p"),g95)
-F77          := g95
-F77LIBS      := -L`$(F77) -print-search-dirs | awk '/^install:/{print $$2}'` \
-                -lf95
-endif
-else
 ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
 F77          := gfortran
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.dylib)
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
-endif
 endif
 endif
 
