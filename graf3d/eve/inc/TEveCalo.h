@@ -42,21 +42,21 @@ protected:
    Double_t      fEtaMax;
 
    Double_t      fPhi;
-   Double_t      fPhiOffset;
-
+   Double_t      fPhiOffset;     // phi range +/- offset
+  
    Float_t       fBarrelRadius;  // barrel raidus in cm
    Float_t       fEndCapPos;     // end cap z coordinate in cm
 
-   Float_t       fPlotEt;
+   Float_t       fPlotEt;        // plot E or Et.
 
-   Float_t           fMaxTowerH;
+   Float_t           fMaxTowerH;  // bounding box z dimesion
    Bool_t            fScaleAbs;
    Float_t           fMaxValAbs;
 
    Bool_t            fValueIsColor;   // Interpret signal value as RGBA color.
    TEveRGBAPalette*  fPalette;        // Pointer to signal-color palette.
 
-   Bool_t            fCacheOK;        // is list of list of cell ids valid
+   Bool_t            fCellIdCacheOK;  // Flag cell ids cache state
 
    void AssignCaloVizParameters(TEveCaloViz* cv);
 
@@ -64,7 +64,7 @@ protected:
 
    virtual Float_t GetValToHeight() const;
 
-   virtual void ClearCache() = 0;
+   virtual void BuildCellIdCache() = 0;
 
 public:
    TEveCaloViz(const Text_t* n="TEveCaloViz", const Text_t* t="");
@@ -120,7 +120,7 @@ public:
    Float_t GetPhiMax() const {return fPhi+fPhiOffset;}
    Float_t GetPhiRng() const {return fPhiOffset*2;}
 
-   void InvalidateCache() { fCacheOK=kFALSE; ResetBBox(); } // compute bbox
+   void InvalidateCellIdCache() { fCellIdCacheOK=kFALSE; ResetBBox(); } // compute bbox
 
    virtual void Paint(Option_t* option="");
 
@@ -142,7 +142,7 @@ private:
 protected:
    TEveCaloData::vCellId_t fCellList;
 
-   virtual void ClearCache();
+   virtual void BuildCellIdCache();
 
 public:
    TEveCalo3D(const Text_t* n="TEveCalo3D", const Text_t* t=""):TEveCaloViz(n, t){}
@@ -169,7 +169,7 @@ private:
 protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellLists;
 
-   virtual void ClearCache();
+   virtual void BuildCellIdCache();
 
 public:
    TEveCalo2D(const Text_t* n="TEveCalo2D", const Text_t* t="");
@@ -214,12 +214,12 @@ protected:
 
    EProjection_e           fProjection;
    E2DMode_e               f2DMode;
-   EBoxMode_e              fBoxMode;
+   EBoxMode_e              fBoxMode;  // additional scale info
 
    Bool_t                  fDrawHPlane;
    Float_t                 fHPlaneVal;
 
-   virtual void ClearCache();
+   virtual void BuildCellIdCache();
 
 public:
    TEveCaloLego(const Text_t* n="TEveCaloLego", const Text_t* t="");

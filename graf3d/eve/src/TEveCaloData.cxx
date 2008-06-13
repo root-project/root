@@ -222,7 +222,7 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
 }
 
 //______________________________________________________________________________
-void TEveCaloDataHist::InvalidateUsersCache()
+void TEveCaloDataHist::InvalidateUsersCellIdCache()
 {
    // Invalidate cell ids cache on back ptr references.
 
@@ -231,7 +231,7 @@ void TEveCaloDataHist::InvalidateUsersCache()
    while (i != fBackRefs.end())
    {
       calo = dynamic_cast<TEveCaloViz*>(*i);
-      calo->InvalidateCache();
+      calo->InvalidateCellIdCache();
       calo->StampObjProps();
       ++i;
    }

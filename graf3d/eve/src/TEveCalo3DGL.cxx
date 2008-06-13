@@ -289,12 +289,8 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 {
    // GL rendering.
 
-   if (fM->fCacheOK == kFALSE)
-   {
-      fM->ClearCache();
-      fM->fData->GetCellList(fM->GetEta(), fM->GetEtaRng(), fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
-      fM->fCacheOK= kTRUE;
-   }
+   if (fM->fCellIdCacheOK == kFALSE)
+      fM->BuildCellIdCache();
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
    glEnable(GL_NORMALIZE);

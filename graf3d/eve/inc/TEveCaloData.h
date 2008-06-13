@@ -122,7 +122,7 @@ public:
    virtual void GetCellData(const CellId_t &id, CellData_t& data) const = 0;
    virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const = 0;
 
-   virtual void  InvalidateUsersCache() = 0;
+   virtual void  InvalidateUsersCellIdCache() = 0;
 
    virtual Bool_t SupportsEtaBinning(){ return kFALSE; }
    virtual Bool_t SupportsPhiBinning(){ return kFALSE; }
@@ -166,7 +166,7 @@ public:
    virtual void GetCellData(const TEveCaloData::CellId_t &id, TEveCaloData::CellData_t& data) const;
    virtual void GetCellData(const CellId_t &id, Float_t  phiMin, Float_t phiRng, CellData_t& data) const;
 
-   virtual void  InvalidateUsersCache();
+   virtual void  InvalidateUsersCellIdCache();
 
    virtual Bool_t SupportsEtaBinning(){ return kTRUE; }
    virtual Bool_t SupportsPhiBinning(){ return kTRUE; }
@@ -183,3 +183,4 @@ public:
 };
 
 #endif
+

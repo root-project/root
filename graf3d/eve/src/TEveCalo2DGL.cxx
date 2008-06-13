@@ -101,35 +101,6 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx) const
    // Draw calorimeter cells in RPhi projection.
 
    TEveCaloData* data = fM->GetData();
-
-   if (fM->fCacheOK == kFALSE)
-   {
-      fM->ClearCache();
-
-      const TAxis* ay = data->GetPhiBins();
-      Int_t nBins = ay->GetNbins();
-
-      for (Int_t ibin = 1; ibin <= nBins; ++ibin)
-      {
-         if (TEveUtil::IsU1IntervalOverlappingByMinMax
-             (fM->GetPhiMin(),         fM->GetPhiMax(), 
-              ay->GetBinLowEdge(ibin), ay->GetBinUpEdge(ibin)))
-         {
-            TEveCaloData::vCellId_t* clv = new TEveCaloData::vCellId_t();
-
-            data->GetCellList(fM->GetEta(), fM->GetEtaRng(),
-                              ay->GetBinCenter(ibin), ay->GetBinWidth(ibin),
-                              *clv);
-
-            if (clv->empty() == kFALSE) 
-               fM->fCellLists.push_back(clv);
-            else
-               delete clv;
-         }
-      }
-      fM->fCacheOK = kTRUE;
-   }
-
    Int_t    nSlices  = data->GetNSlices();
    Float_t *sliceVal = new Float_t[nSlices];
    TEveCaloData::CellData_t cellData;
@@ -234,33 +205,9 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx) const
 {
    // Draw calorimeter in RhoZ projection.
 
-   TEveCaloData* data = fM->GetData();
-
-   if (fM->fCacheOK == kFALSE)
-   {
-      fM->ClearCache();
-      const TAxis* ax = data->GetEtaBins();
-      Int_t nBins = ax->GetNbins();
-
-      for (Int_t ibin = 1; ibin <= nBins; ++ibin)
-      {
-         if (ax->GetBinLowEdge(ibin) > fM->fEtaMin &&
-             ax->GetBinUpEdge(ibin) <= fM->fEtaMax)
-         {
-            TEveCaloData::vCellId_t* aa = new TEveCaloData::vCellId_t();
-            data->GetCellList(ax->GetBinCenter(ibin), ax->GetBinWidth(ibin)+1e-5,
-                              fM->fPhi, fM->GetPhiRng(), *aa);
-            if (aa->size())
-               fM->fCellLists.push_back(aa);
-            else 
-               delete aa;
-         }
-      }
-      fM->fCacheOK= kTRUE;
-   }
-
    TEveCaloData::CellData_t cellData;
    Float_t towerH;
+   TEveCaloData* data = fM->GetData();
    Int_t nSlices = data->GetNSlices();
 
    Float_t *sliceValsUp  = new Float_t[nSlices];
@@ -324,6 +271,9 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    TGLCapabilitySwitch light_off(GL_LIGHTING,  kFALSE);
    TGLCapabilitySwitch cull_off (GL_CULL_FACE, kFALSE);
+
+   if (fM->fCellIdCacheOK == kFALSE)
+      fM->BuildCellIdCache();
 
    TEveProjection::EPType_e pt = fM->fManager->GetProjection()->GetType();
    if (pt == TEveProjection::kPT_RhoZ)

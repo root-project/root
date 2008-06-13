@@ -625,16 +625,8 @@ void TEveCaloLegoGL::DrawXYScales(TGLRnrCtx & rnrCtx,
    
    Float_t yOff  =  0.03*TMath::Sign(y1-y0, axY);
    Float_t xOff  =  0.03*TMath::Sign(x1-x0, ayX);
-
    Float_t rxy = (fPhiAxis->GetXmax()-fPhiAxis->GetXmin())/(fEtaAxis->GetXmax()-fEtaAxis->GetXmin());
-   if (rxy>1)
-   {
-      yOff /= rxy;
-   }
-   else
-   {
-      xOff *=rxy;
-   }
+   (rxy>1) ? yOff /= rxy : xOff *=rxy;
 
    Float_t xOff2 =  xOff*0.5;
    Float_t yOff2 =  yOff*0.5;
@@ -1130,7 +1122,6 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    else
       fDataMax   = fM->fData->GetMaxVal(fM->fPlotEt);
 
-   //   printf("Direct draw max %f\n", fDataMax);
    Int_t ondiv;
    Double_t omin, omax;
    THLimitsFinder::Optimize(0, fDataMax, fM->fNZSteps, omin, omax, ondiv,  fZAxisStep);
@@ -1140,12 +1131,10 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
 
    // cache
-   if (fM->fCacheOK == kFALSE)
+   if (fM->fCellIdCacheOK == kFALSE)
    {
       fDLCacheOK = kFALSE;
-      fM->ClearCache();
-      fM->fData->GetCellList(fM->GetEta(), fM->GetEtaRng(),fM->GetPhi(), fM->GetPhiRng(), fM->fCellList);
-      fM->fCacheOK = kTRUE;
+      fM->BuildCellIdCache();
    }
    if (cells3D && fDLCacheOK == kFALSE) MakeDisplayList();
 

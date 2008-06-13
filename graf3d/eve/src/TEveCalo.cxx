@@ -65,7 +65,7 @@ TEveCaloViz::TEveCaloViz(const Text_t* n, const Text_t* t) :
    fValueIsColor(kTRUE),
    fPalette(0),
 
-   fCacheOK(kFALSE)
+   fCellIdCacheOK(kFALSE)
 {
    // Constructor.
 
@@ -97,7 +97,7 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const Text_t* n, const Text_t* t) :
    fValueIsColor(kTRUE),
    fPalette(0),
 
-   fCacheOK(kFALSE)
+   fCellIdCacheOK(kFALSE)
 {
    // Constructor.
 
@@ -128,7 +128,7 @@ void TEveCaloViz::SetDataSliceThreshold(Int_t slice, Float_t val)
    // Set threshold for given slice.
 
    fData->RefSliceInfo(slice).fThreshold = val;
-   fData->InvalidateUsersCache();
+   fData->InvalidateUsersCellIdCache();
 }
 
 //______________________________________________________________________________
@@ -159,7 +159,7 @@ void TEveCaloViz::SetEta(Float_t l, Float_t u)
    if(fData && fData->GetEtaBins())
          fData->GetEtaBins()->SetRangeUser(l, u);
 
-   InvalidateCache();
+   InvalidateCellIdCache();
 }
 
 //______________________________________________________________________________
@@ -170,7 +170,7 @@ void TEveCaloViz::SetPlotEt(Bool_t isEt)
   fPlotEt=isEt;
   fPalette->SetLimits(0, TMath::CeilNint(fData->GetMaxVal(fPlotEt)));
 
-  InvalidateCache();
+  InvalidateCellIdCache();
 }
 
 //______________________________________________________________________________
@@ -183,7 +183,7 @@ void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
    fPhi = phi;
    fPhiOffset = rng;
 
-   InvalidateCache();
+   InvalidateCellIdCache();
 }
 
 //______________________________________________________________________________
@@ -238,7 +238,7 @@ void TEveCaloViz::SetData(TEveCaloData* data)
          fPalette->SetMax(fPalette->GetHighLimit());
       }
    }
-   InvalidateCache();
+   InvalidateCellIdCache();
 }
 
 //______________________________________________________________________________
@@ -367,11 +367,14 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) co
 ClassImp(TEveCalo3D);
 
 //______________________________________________________________________________
-void TEveCalo3D::ClearCache()
+void TEveCalo3D::BuildCellIdCache()
 {
-   // Clear list of drawn cell IDs. See TEveCalo3DGL::DirectDraw().
+   // Build list of drawn cell IDs. See TEveCalo3DGL::DirectDraw().
 
    fCellList.clear();
+
+   fData->GetCellList(GetEta(), GetEtaRng(), GetPhi(), GetPhiRng(), fCellList);
+   fCellIdCacheOK = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -419,7 +422,7 @@ void TEveCalo2D::UpdateProjection()
 
    if (fManager->GetProjection()->GetType() != fOldProjectionType)
    {
-      fCacheOK=kFALSE;
+      fCellIdCacheOK=kFALSE;
       fOldProjectionType = fManager->GetProjection()->GetType();
    }
    ComputeBBox();
@@ -436,15 +439,60 @@ void TEveCalo2D::SetProjection(TEveProjectionManager* mng, TEveProjectable* mode
 }
 
 //______________________________________________________________________________
-void TEveCalo2D::ClearCache()
+void TEveCalo2D::BuildCellIdCache()
 {
-   // Clear lists of drawn cell IDs. See TEveCalo2DGL::DirecDraw().
+   // Build lists of drawn cell IDs. See TEveCalo2DGL::DirecDraw().
 
+   // clear old cache 
    for (std::vector<TEveCaloData::vCellId_t*>::iterator it = fCellLists.begin(); it != fCellLists.end(); it++)
-   {
       delete *it;
-   }
+
    fCellLists.clear();
+
+
+   TEveProjection::EPType_e pt = fManager->GetProjection()->GetType();
+   TEveCaloData::vCellId_t*  clv; // ids per phi bin in r-phi projection else ids per eta bins in rho-z projection  
+   if (pt == TEveProjection::kPT_RhoZ)
+   {
+      // build list on basis of phi bins
+      const TAxis* ax = fData->GetEtaBins();
+      Int_t nBins = ax->GetNbins();
+      for (Int_t ibin = 1; ibin <= nBins; ++ibin)
+      {
+         if (ax->GetBinLowEdge(ibin) > fEtaMin && ax->GetBinUpEdge(ibin) <= fEtaMax)
+         {
+            clv = new TEveCaloData::vCellId_t();
+            fData->GetCellList(ax->GetBinCenter(ibin), ax->GetBinWidth(ibin)+1e-5, fPhi, GetPhiRng(), *clv);
+           
+            if (clv->size()) 
+               fCellLists.push_back(clv);
+            else 
+               delete clv;
+         }
+      }
+   }
+   else if (pt == TEveProjection::kPT_RPhi)
+   {
+      // build list on basis of phi bins
+      const TAxis* ay = fData->GetPhiBins();
+      Int_t nBins = ay->GetNbins();
+      for (Int_t ibin = 1; ibin <= nBins; ++ibin)
+      {
+         if (TEveUtil::IsU1IntervalOverlappingByMinMax
+             (GetPhiMin(), GetPhiMax(), ay->GetBinLowEdge(ibin), ay->GetBinUpEdge(ibin)))
+         {
+            clv = new TEveCaloData::vCellId_t();
+            fData->GetCellList(GetEta(), GetEtaRng(), ay->GetBinCenter(ibin), ay->GetBinWidth(ibin),*clv);
+
+            if (clv->size()) 
+               fCellLists.push_back(clv);
+            else
+               delete clv;
+         }
+      }
+   }
+
+   fCellIdCacheOK= kTRUE;
 }
 
 //______________________________________________________________________________
@@ -554,11 +602,14 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* data):
 }
 
 //______________________________________________________________________________
-void TEveCaloLego::ClearCache()
+void TEveCaloLego::BuildCellIdCache()
 {
-   // Clear list of drawn cell IDs. For more information see TEveCaloLegoGL:DirectDraw().
+   // Build list of drawn cell IDs. For more information see TEveCaloLegoGL:DirectDraw().
 
    fCellList.clear();
+
+   fData->GetCellList(GetEta(), GetEtaRng(), GetPhi(), GetPhiRng(), fCellList);
+   fCellIdCacheOK = kTRUE;
 }
 
 //______________________________________________________________________________
