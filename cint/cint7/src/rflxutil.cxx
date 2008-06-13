@@ -1200,7 +1200,8 @@ bool Cint::Internal::G__test_access(const ::Reflex::Member var, int access)
 //______________________________________________________________________________
 bool Cint::Internal::G__is_cppmacro(const ::Reflex::Member var)
 {
-   return (var.TypeOf().RawType().Name() == "$MACRO$");
+  const Reflex::Type type = var.TypeOf();
+  return (type.Name()  == "macroInt$") || (type.Name()  == "macroDouble$");
 }
 
 //______________________________________________________________________________
