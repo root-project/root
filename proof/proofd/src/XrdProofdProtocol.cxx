@@ -1571,7 +1571,7 @@ int XrdProofdProtocol::MapClient(bool all)
    if (!(fStatus & XPD_NEED_AUTH))
       fgEDest.Log(XPD_LOG_01, ":MapClient", fLink->ID, "login");
 
-   return rc;
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -1778,7 +1778,7 @@ int XrdProofdProtocol::Attach()
    }
 
    // Over
-   return rc;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1822,7 +1822,7 @@ int XrdProofdProtocol::Detach()
    // Notify to user
    fResponse.Send();
 
-   return rc;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1908,7 +1908,7 @@ int XrdProofdProtocol::Destroy()
    fResponse.Send();
 
    // Over
-   return rc;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3083,7 +3083,7 @@ int XrdProofdProtocol::Create()
 
       // Take a short-cut and process the initial request as a sticky request
       xp->Process(linkpsrv);
-      if (xp->Process(linkpsrv) != 1) {
+      if (xp->Process(linkpsrv) != 0) {
          // We need the right privileges to do this
          XrdOucString msg("handshake with internal link failed: ");
          if (KillProofServ(pid, 0) != 0)
@@ -3166,7 +3166,7 @@ int XrdProofdProtocol::Create()
    }
 
    // Over
-   return rc;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3458,7 +3458,7 @@ int XrdProofdProtocol::SendMsg()
    }
 
    // Over
-   return rc;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3516,7 +3516,7 @@ int XrdProofdProtocol::Urgent()
    TRACEP(DBG, "Urgent: request propagated to proofsrv");
 
    // Over
-   return rc;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -4346,7 +4346,7 @@ int XrdProofdProtocol::Admin()
    }
 
    // Over
-   return rc;
+   return 0;
 }
 
 //___________________________________________________________________________
@@ -4394,7 +4394,7 @@ int XrdProofdProtocol::Interrupt()
    }
 
    // Over
-   return rc;
+   return 0;
 }
 
 //___________________________________________________________________________
@@ -4460,7 +4460,7 @@ int XrdProofdProtocol::Ping()
    // Failure
    TRACEP(XERR, "Ping: session ID not found");
    fResponse.Send(kXR_ok, pingres);
-   return rc;
+   return 0;
 }
 
 //___________________________________________________________________________
