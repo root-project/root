@@ -89,7 +89,6 @@ class XrdProofdManager {
    int               VerifyProcessByID(int pid, const char *pname = 0);
 
    // Authorization control
-   const char       *AllowedUsers() const { return fAllowedUsers.c_str(); }
    bool              ChangeOwn() const { return fChangeOwn; }
    bool              CheckMaster(const char *m);
    int               CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e);
@@ -188,7 +187,8 @@ class XrdProofdManager {
    int               fCronFrequency;  // Frequency for running cron checks in secs
    //
    int               fOperationMode;  // Operation mode
-   XrdOucString      fAllowedUsers;   // Users allowed in controlled mode
+   XrdOucHash<int>   fAllowedUsers;   // UNIX users allowed in controlled mode
+   XrdOucHash<int>   fAllowedGroups;  // UNIX groups allowed in controlled mode
    bool              fMultiUser;      // Allow/disallow multi-user mode
    bool              fChangeOwn;      // TRUE is ownership has to be changed
    //
@@ -222,6 +222,7 @@ class XrdProofdManager {
 
    int               DoDirectiveAdminReqTO(char *, XrdOucStream *, bool);
    int               DoDirectiveAllow(char *, XrdOucStream *, bool);
+   int               DoDirectiveAllowedGroups(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedUsers(char *, XrdOucStream *, bool);
    int               DoDirectiveCron(char *, XrdOucStream *, bool);
    int               DoDirectiveGroupfile(char *, XrdOucStream *, bool);

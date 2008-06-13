@@ -49,6 +49,21 @@ public:
 };
 
 //
+// Group Info class
+//
+class XrdProofGI {
+public:
+   XrdOucString fGroup;
+   int          fGid;
+
+   XrdProofGI() { fGid = -1; }
+   XrdProofGI(const XrdProofGI &gi) { fGroup = gi.fGroup; fGid = gi.fGid; }
+   ~XrdProofGI() { }
+
+   void Reset() { fGroup = ""; fGid = -1; }
+};
+
+//
 // File container (e.g. for config files)
 //
 class XrdProofdFile {
@@ -125,6 +140,8 @@ public:
    static int GetMacProcList(kinfo_proc **plist, int &nproc);
 #endif
    static int GetNumCPUs();
+   static int GetGroupInfo(const char *grp, XrdProofGI &gi);
+   static int GetGroupInfo(int gid, XrdProofGI &gi);
    static int GetUserInfo(const char *usr, XrdProofUI &ui);
    static int GetUserInfo(int uid, XrdProofUI &ui);
    static int SymLink(const char *path, const char *link);

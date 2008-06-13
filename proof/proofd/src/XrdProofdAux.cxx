@@ -172,6 +172,74 @@ long int XrdProofdAux::GetLong(char *str)
 }
 
 //__________________________________________________________________________
+int XrdProofdAux::GetGroupInfo(const char *grp, XrdProofGI &gi)
+{
+   // Get information about group with 'gid' in a thread safe way.
+   // Retur 0 on success, -errno on error
+
+   // Make sure input is defined
+   if (!grp || strlen(grp) <= 0)
+      return -EINVAL;
+
+   // Call getgrgid_r ...
+   struct group gr;
+   struct group *pgr = 0;
+   char buf[2048];
+#if defined(__sun) && !defined(__GNUC__)
+   pgr = getgrnam_r(grp, &gr, buf, sizeof(buf));
+#else
+   getgrnam_r(grp, &gr, buf, sizeof(buf), &pgr);
+#endif
+   if (pgr) {
+      // Fill output
+      gi.fGroup = grp;
+      gi.fGid = (int) gr.gr_gid;
+      // Done
+      return 0;
+   }
+
+   // Failure
+   if (errno != 0)
+      return ((int) -errno);
+   else
+      return -ENOENT;
+}
+
+//__________________________________________________________________________
+int XrdProofdAux::GetGroupInfo(int gid, XrdProofGI &gi)
+{
+   // Get information about group with 'gid' in a thread safe way.
+   // Retur 0 on success, -errno on error
+
+   // Make sure input make sense
+   if (gid <= 0)
+      return -EINVAL;
+
+   // Call getgrgid_r ...
+   struct group gr;
+   struct group *pgr = 0;
+   char buf[2048];
+#if defined(__sun) && !defined(__GNUC__)
+   pgr = getgrgid_r((gid_t)gid, &gr, buf, sizeof(buf));
+#else
+   getgrgid_r((gid_t)gid, &gr, buf, sizeof(buf), &pgr);
+#endif
+   if (pgr) {
+      // Fill output
+      gi.fGroup = gr.gr_name;
+      gi.fGid = gid;
+      // Done
+      return 0;
+   }
+
+   // Failure
+   if (errno != 0)
+      return ((int) -errno);
+   else
+      return -ENOENT;
+}
+
+//__________________________________________________________________________
 int XrdProofdAux::GetUserInfo(const char *usr, XrdProofUI &ui)
 {
    // Get information about user 'usr' in a thread safe way.
