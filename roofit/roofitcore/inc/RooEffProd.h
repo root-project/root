@@ -32,14 +32,23 @@ public:
 
   virtual Double_t getVal(const RooArgSet* set=0) const ;
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kTRUE ; }
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
+    // Return kTRUE to force RooRealIntegral to offer all observables for internal integration
+    return kTRUE ; 
+  }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   
 protected:
   
-  const RooAbsPdf* pdf() const { return (RooAbsPdf*) _pdf.absArg() ; }
-  const RooAbsReal* eff() const { return (RooAbsReal*) _eff.absArg() ; }
+  const RooAbsPdf* pdf() const { 
+    // Return pointer to pdf in product
+    return (RooAbsPdf*) _pdf.absArg() ; 
+  }
+  const RooAbsReal* eff() const { 
+    // Return pointer to efficiency function in product
+    return (RooAbsReal*) _eff.absArg() ; 
+  }
 
   // Function evaluation
   virtual Double_t evaluate() const ;
@@ -59,8 +68,8 @@ protected:
 
 
   // the real stuff...
-  RooRealProxy _pdf ;     // Probability Density function
-  RooRealProxy _eff;      // Efficiency function
+  RooRealProxy _pdf ;               // Probability Density function
+  RooRealProxy _eff;                // Efficiency function
   mutable const RooArgSet* _nset  ; //! Normalization set to be used in evaluation
 
   RooArgSet* _fixedNset ; //! Fixed normalization set overriding default normalization set (if provided)

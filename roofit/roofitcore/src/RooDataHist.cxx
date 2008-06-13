@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [DATA] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooDataSet is a container class to hold N-dimensional binned data. Each bins central 
 // coordinates in N-dimensional space are represented by a RooArgSet of RooRealVar, RooCategory 
 // or RooStringVar objects, thus data can be binned in real and/or discrete dimensions
+// END_HTML
+//
 //
 
 #include "RooFit.h"
@@ -44,6 +48,8 @@ ClassImp(RooDataHist)
 ;
 
 
+
+//_____________________________________________________________________________
 RooDataHist::RooDataHist() 
 {
   // Default constructor
@@ -63,6 +69,7 @@ RooDataHist::RooDataHist()
 
 
 
+//_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const char* binningName) : 
   RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
@@ -92,6 +99,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 }
 
 
+
+//_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t wgt) :
   RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
@@ -121,6 +130,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 }
 
 
+
+//_____________________________________________________________________________
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t wgt) :
   RooTreeData(name,title,vars), _wgt(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10), _binningName(0)
 {
@@ -322,6 +333,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
 
 
+//_____________________________________________________________________________
 void RooDataHist::initialize(Bool_t fillTree)
 {
   // Initialization procedure: allocate weights array, calculate
@@ -403,10 +415,12 @@ void RooDataHist::initialize(Bool_t fillTree)
 
 
 
+//_____________________________________________________________________________
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   RooTreeData(other,newname), RooDirItem(), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(other._pbinvCacheMgr,0)
 {
   // Copy constructor
+
   if (other._binningName) {
     _binningName = new char[strlen(other._binningName)+1] ;
     strcpy(_binningName,other._binningName) ;
@@ -454,6 +468,8 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 }
 
 
+
+//_____________________________________________________________________________
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
   RooTreeData(name,title,h,varSubset,cutVar,cutRange,nStart,nStop,copyCache), 
@@ -467,6 +483,7 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   //
   // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
   // is the most convenient way to create a subset of an existing data  
+
   if (h->_binningName) {
     _binningName = new char[strlen(h->_binningName)+1] ;
     strcpy(_binningName,h->_binningName) ;
@@ -487,8 +504,12 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   appendToDir(this,kTRUE) ;
 }
 
+
+//_____________________________________________________________________________
 RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* newName) 
 {
+  // Construct a clone of this dataset that contains only the cached variables
+
   RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,0,0,2000000000,kTRUE) ; 
 
   RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dhist->_cachedVars) ;
@@ -499,10 +520,13 @@ RooAbsData* RooDataHist::cacheClone(const RooArgSet* newCacheVars, const char* n
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange, 
 				   Int_t nStart, Int_t nStop, Bool_t /*copyCache*/)
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
+
   checkInit() ;
 
   RooArgSet* myVarSubset = (RooArgSet*) _vars.selectCommon(varSubset) ;
@@ -558,9 +582,11 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
 
 
 
+//_____________________________________________________________________________
 RooDataHist::~RooDataHist() 
 {
   // Destructor
+
   if (_binningName) delete[] _binningName ;
   if (_wgt) delete[] _wgt ;
   if (_errLo) delete[] _errLo ;
@@ -574,6 +600,8 @@ RooDataHist::~RooDataHist()
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooDataHist::calcTreeIndex() const 
 {
   // Calculate the index for the weights array corresponding to 
@@ -593,6 +621,8 @@ Int_t RooDataHist::calcTreeIndex() const
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataHist::dump2() 
 {
   // Debug stuff, should go...
@@ -608,8 +638,15 @@ void RooDataHist::dump2()
 }
 
 
+
+//_____________________________________________________________________________
 RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const 
 {
+  // Back end function to plotting functionality. Plot RooDataHist on given
+  // frame in mode specified by plot options 'o'. The main purpose of
+  // this function is to match the specified binning on 'o' to the
+  // internal binning of the plot observable in this RooDataHist.
+
   if (o.bins) return RooTreeData::plotOn(frame,o) ;
 
   if(0 == frame) {
@@ -637,6 +674,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) 
 {
   // Return the weight at given coordinates with optional
@@ -750,9 +788,11 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 
 
 
+//_____________________________________________________________________________
 void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const 
 { 
-  // Return error on current weight
+  // Return the error on current weight
+
   switch (etype) {
   case Poisson:
     if (_curWgtErrLo>=0) {
@@ -782,11 +822,12 @@ void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const
 
 
 // wve adjust for variable bin sizes
+
+//_____________________________________________________________________________
 Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) 
 {
   // Perform boundary safe 'intOrder'-th interpolation of weights in dimension 'dim'
   // at current value 'xval'
-  //cout << "RooDataHist::interpolateDim(" << GetName() << ") dim=" << dim.GetName() << " x = " << xval << " intorder = " << intOrder << endl ;
 
  
   // Fill workspace arrays spanning interpolation area
@@ -850,10 +891,13 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOr
 
 
 
+//_____________________________________________________________________________
 void RooDataHist::add(const RooArgSet& row, Double_t wgt, Double_t sumw2) 
 {
-  // Increment the weight of the bin enclosing the coordinates
-  // given by 'row' by the specified amount
+  // Increment the weight of the bin enclosing the coordinates given
+  // by 'row' by the specified amount. Add the sum of weights squared
+  // for the bin by 'sumw2' rather than wgt^2
+
   checkInit() ;
 
   _vars = row ;
@@ -865,10 +909,14 @@ void RooDataHist::add(const RooArgSet& row, Double_t wgt, Double_t sumw2)
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErrLo, Double_t wgtErrHi) 
 {
   // Increment the weight of the bin enclosing the coordinates
-  // given by 'row' by the specified amount
+  // given by 'row' by the specified amount. Associate errors
+  // [wgtErrLo,wgtErrHi] with the event weight on this bin.
+
   checkInit() ;
 
   _vars = row ;
@@ -879,13 +927,16 @@ void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErrLo, Dou
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataHist::set(Double_t wgt, Double_t wgtErr) 
 {
   // Increment the weight of the bin enclosing the coordinates
-  // given by 'row' by the specified amount
+  // given by 'row' by the specified amount. Associate errors
+  // [wgtErrLo,wgtErrHi] with the event weight on this bin.
+
   checkInit() ;
   
-
   if (_curIndex<0) {
     _curIndex = calcTreeIndex() ;
   }
@@ -896,10 +947,14 @@ void RooDataHist::set(Double_t wgt, Double_t wgtErr)
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErr) 
 {
   // Increment the weight of the bin enclosing the coordinates
-  // given by 'row' by the specified amount
+  // given by 'row' by the specified amount. Associate errors
+  // [wgtErrLo,wgtErrHi] with the event weight on this bin.
+
   checkInit() ;
 
   _vars = row ;
@@ -910,6 +965,8 @@ void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErr)
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataHist::add(const RooAbsData& dset, const char* cut, Double_t wgt) 
 {  
   // Add all data points contained in 'dset' to this data set with given weight.
@@ -922,10 +979,12 @@ void RooDataHist::add(const RooAbsData& dset, const char* cut, Double_t wgt)
 
 
 
+//_____________________________________________________________________________
 void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Double_t wgt) 
 {
   // Add all data points contained in 'dset' to this data set with given weight.
   // Optional RooFormulaVar pointer selects the data points to be added.
+
   checkInit() ;
 
   RooFormulaVar* cloneVar = 0;
@@ -958,6 +1017,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
 
 
 
+//_____________________________________________________________________________
 Double_t RooDataHist::sum(Bool_t correctForBinSize) const 
 {
   // Return the sum of the weights of all hist bins.
@@ -980,6 +1040,7 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize)
 {
   // Return the sum of the weights of a multi-dimensional slice of the histogram
@@ -1054,8 +1115,13 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const 
 {
+  // Fill the transient cache with partial bin volumes with up-to-date
+  // values for the partial volume specified by observables 'dimSet'
+
   // Allocate cache if not yet existing
   vector<Double_t> *pbinv = _pbinvCacheMgr.getObj(&dimSet) ;
   if (pbinv) {
@@ -1106,6 +1172,7 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
 
 
 
+//_____________________________________________________________________________
 Int_t RooDataHist::numEntries(Bool_t useWeights) const 
 {
   // Return the number of bins (useWeights=false) or
@@ -1116,8 +1183,14 @@ Int_t RooDataHist::numEntries(Bool_t useWeights) const
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
 {
+  // Return the sum of weights in all entries matching cutSpec (if specified)
+  // and in named range cutRange (if specified)
+  // Return the
+
   if (cutSpec==0 && cutRange==0) {
     Int_t i ;
     Double_t n(0) ;
@@ -1151,6 +1224,7 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
 
 
 
+//_____________________________________________________________________________
 void RooDataHist::reset() 
 {
   // Reset all bin weights to zero
@@ -1171,6 +1245,8 @@ void RooDataHist::reset()
 }
 
 
+
+//_____________________________________________________________________________
 const RooArgSet* RooDataHist::get(Int_t masterIdx) const  
 {
   // Return an argset with the bin center coordinates for 
@@ -1186,30 +1262,47 @@ const RooArgSet* RooDataHist::get(Int_t masterIdx) const
 }
 
 
+
+//_____________________________________________________________________________
 const RooArgSet* RooDataHist::get(const RooArgSet& coord) const
 {
+  // Return a RooArgSet with center coordinates of the bin
+  // enclosing the point 'coord'
+
   ((RooDataHist*)this)->_vars = coord ;
   return get(calcTreeIndex()) ;
 }
 
 
 
+//_____________________________________________________________________________
 Double_t RooDataHist::binVolume(const RooArgSet& coord) 
 {
+  // Return the volume of the bin enclosing coordinates 'coord'
+
   ((RooDataHist*)this)->_vars = coord ;
   return _binv[calcTreeIndex()] ;
 }
 
+
+//_____________________________________________________________________________
 void RooDataHist::setAllWeights(Double_t value) 
 {
+  // Set all the event weight of all bins to the specified value
+
   for (Int_t i=0 ; i<_arrSize ; i++) {
     _wgt[i] = value ;
   }
 }
 
 
+
+//_____________________________________________________________________________
 TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& otherArgs) 
 {
+  // Create an iterator over all bins in a slice defined by the subset of observables
+  // listed in sliceArg. The position of the slice is given by otherArgs
+
   // Update to current position
   _vars = otherArgs ;
   _curIndex = calcTreeIndex() ;
@@ -1222,22 +1315,34 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
   return new RooDataHistSliceIter(*this,*intArg) ;
 }
 
+
+//_____________________________________________________________________________
 void RooDataHist::SetName(const char *name) 
 {
+  // Change the name of the RooDataHist
+
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetName(name) ;
   if (_dir) _dir->GetList()->Add(this);
 }
 
+
+//_____________________________________________________________________________
 void RooDataHist::SetNameTitle(const char *name, const char* title) 
 {
+  // Change the title of this RooDataHist
+
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetNameTitle(name,title) ;
   if (_dir) _dir->GetList()->Add(this);
 }
 
 
-void RooDataHist::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const {
+
+//_____________________________________________________________________________
+void RooDataHist::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const 
+{
+  // Print the details on the dataset contents
 
   RooAbsData::printMultiline(os,content,verbose,indent) ;  
 

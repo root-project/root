@@ -35,8 +35,15 @@ public:
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
-  void setProcessRecArgs(Bool_t flag) { _procSubArgs = flag ; }
-  const RooLinkedList& subArgs() const { return _argList ; }
+  void setProcessRecArgs(Bool_t flag) { 
+    // If true flag this object as containing recursive arguments
+    _procSubArgs = flag ; 
+  }
+
+  const RooLinkedList& subArgs() const { 
+    // Return list of sub-arguments in this RooCmdArg
+    return _argList ; 
+  }
 
   virtual TObject* Clone(const char* newName=0) const {
     RooCmdArg* newarg = new RooCmdArg(*this) ;
@@ -48,15 +55,30 @@ public:
 
   static const RooCmdArg& none() ;
 
-  const char* opcode() const { return strlen(GetName()) ? GetName() : 0 ; }
-  Int_t getInt(Int_t idx) const { return _i[idx] ; }
-  Double_t getDouble(Int_t idx) const { return _d[idx] ; }
-  const char* getString(Int_t idx) const { return _s[idx] ; }
-  const TObject* getObject(Int_t idx) const { return _o[idx] ; }
+  const char* opcode() const { 
+    // Return operator code
+    return strlen(GetName()) ? GetName() : 0 ; 
+  }
+  Int_t getInt(Int_t idx) const { 
+    // Return integer stored in slot idx
+    return _i[idx] ; 
+  }
+  Double_t getDouble(Int_t idx) const { 
+    // Return double stored in slot idx
+    return _d[idx] ; 
+  }
+  const char* getString(Int_t idx) const { 
+    // Return string stored in slot idx
+      return _s[idx] ; 
+  }
+  const TObject* getObject(Int_t idx) const { 
+  // Return TObject stored in slot idx
+    return _o[idx] ; 
+  }
 
 protected:
 
-  static const RooCmdArg _none  ;
+  static const RooCmdArg _none  ; // Static instance of null object
   friend class RooCmdConfig ;
 
 private:
@@ -64,14 +86,14 @@ private:
   friend class RooAbsCollection ;
 
   // Payload
-  Double_t _d[2] ;
-  Int_t _i[2] ;
-  const char* _s[3] ;
-  TObject* _o[2] ;
-  Bool_t _procSubArgs ;
-  RooLinkedList _argList ;
+  Double_t _d[2] ;       // Payload doubles
+  Int_t _i[2] ;          // Payload integers
+  const char* _s[3] ;    // Payload strings
+  TObject* _o[2] ;       // Payload objects
+  Bool_t _procSubArgs ;  // If true argument requires recursive processing
+  RooLinkedList _argList ; // Payload sub-arguments
 	
-  ClassDef(RooCmdArg,0) // Universal method argument
+  ClassDef(RooCmdArg,0) // Generic named argument container
 };
 
 #endif

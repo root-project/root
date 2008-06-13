@@ -14,9 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// RooDataHistSliceIter iterators over all state permutations of a list of categories.
-// It serves as the state iterator for a RooSuperCategory.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooDataHistSliceIter iterates over all bins in a RooDataHist that
+// occur in a slice defined by the bin coordinates of the input
+// sliceSet.
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -29,8 +34,13 @@ ClassImp(RooDataHistSliceIter)
 ;
 
 
+
+//_____________________________________________________________________________
 RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceArg) : _hist(&hist), _sliceArg(&sliceArg)
 {
+  // Construct an iterator over all bins of RooDataHist 'hist' in the slice defined
+  // by the values of the arguments in 'sliceArg'
+
   // Calculate base index (for 0th bin) for slice    
   RooAbsArg* sliceArgInt = hist.get()->find(sliceArg.GetName()) ;
   dynamic_cast<RooAbsLValue&>(*sliceArgInt).setBin(0,hist.bname()) ;
@@ -51,6 +61,8 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
 }
 
 
+
+//_____________________________________________________________________________
 RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) : 
   TIterator(other), 
   _hist(other._hist), 
@@ -63,6 +75,7 @@ RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) :
 
 
 
+//_____________________________________________________________________________
 RooDataHistSliceIter::~RooDataHistSliceIter() 
 {
   // Destructor
@@ -70,18 +83,21 @@ RooDataHistSliceIter::~RooDataHistSliceIter()
 
 
 
+//_____________________________________________________________________________
 const TCollection* RooDataHistSliceIter::GetCollection() const 
 {
-  // Return set of categories iterated over
+  // Dummy
   return 0 ;
 }
 
 
 
 
+//_____________________________________________________________________________
 TObject* RooDataHistSliceIter::Next() 
-{
+{  
   // Iterator increment operator
+
   if (_curStep==_nStep) return 0 ;
   
   // Select appropriate entry in RooDataHist 
@@ -95,14 +111,20 @@ TObject* RooDataHistSliceIter::Next()
 
 
 
+//_____________________________________________________________________________
 void RooDataHistSliceIter::Reset() 
 {
+  // Reset iterator position to beginning
   _curStep=0 ;
 }
 
 
+
+//_____________________________________________________________________________
 TObject *RooDataHistSliceIter::operator*() const
 {
+  // Iterator dereference operator, not functional for this iterator
+
    Int_t step = _curStep == 0 ? _curStep : _curStep - 1;
    // Select appropriate entry in RooDataHist 
    _hist->get(_baseIndex + step*_stepSize) ;
@@ -110,10 +132,16 @@ TObject *RooDataHistSliceIter::operator*() const
    return _sliceArg ;
 }
 
+
+//_____________________________________________________________________________
 bool RooDataHistSliceIter::operator!=(const TIterator &aIter) const
 {
+  // Returns true if position of this iterator differs from position
+  // of iterator 'aIter'
+
    if (nullptr == &aIter)
       return false;
+
    if ((aIter.IsA() == RooDataHistSliceIter::Class())) {
       const RooDataHistSliceIter &iter(dynamic_cast<const RooDataHistSliceIter &>(aIter));
       return (_curStep != iter._curStep);

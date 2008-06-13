@@ -14,21 +14,29 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooDouble is a minimal implementation of a TObject holding a Double_t
 // value.
+// END_HTML
+//
 
 #include "RooFit.h"
 
-#include "RooDouble.h"
 #include "RooDouble.h"
 
 ClassImp(RooDouble)
 ;
 
 
+
+//_____________________________________________________________________________
 Int_t RooDouble::Compare(const TObject* other) const 
 {
+  // Implement comparison to other TObjects that are also RooDouble
+  // to faciliate sorting of RooDoubles in a ROOT container
+
   const RooDouble* otherD = dynamic_cast<const RooDouble*>(other) ;
   if (!other) return 0 ;
   return (_value>otherD->_value) ? 1 : -1 ;

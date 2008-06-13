@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooDLLSignificanceMCSModule is an add-on modules to RooMCStudy that
 // calculates the significance of a signal by comparing the likelihood of
 // a fit fit with a given parameter floating with a fit with that given
@@ -24,6 +26,8 @@
 // or larger than the signal observed. This interpretation is contingent
 // on underlying normal sampling distributions and a MC study is a good way
 // to test that assumption.
+// END_HTML
+//
 //
 
 #include "Riostream.h"
@@ -42,32 +46,47 @@ ClassImp(RooDLLSignificanceMCSModule)
   ;
 
 
+
+//_____________________________________________________________________________
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue) : 
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
   _parName(param.GetName()), 
   _data(0), _nll0h(0), _sig0h(0), _nullValue(nullHypoValue)
 {
+  // Constructor of module with parameter to be interpreted as nSignal and the value of the
+  // null hypothesis for nSignal (usually zero)
 }
 
 
+
+//_____________________________________________________________________________
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Double_t nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
   _parName(parName), 
   _data(0), _nll0h(0), _sig0h(0), _nullValue(nullHypoValue)
 {
+  // Constructor of module with parameter name to be interpreted as nSignal and the value of the
+  // null hypothesis for nSignal (usually zero)
 }
 
 
+
+//_____________________________________________________________________________
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) : 
   RooAbsMCStudyModule(other), 
   _parName(other._parName),
   _data(0), _nll0h(0), _sig0h(0), _nullValue(other._nullValue)
 {
+  // Copy constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooDLLSignificanceMCSModule:: ~RooDLLSignificanceMCSModule() 
 {
+  // Destructor
+
   if (_nll0h) {
     delete _nll0h ;
   }    
@@ -80,6 +99,8 @@ RooDLLSignificanceMCSModule:: ~RooDLLSignificanceMCSModule()
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooDLLSignificanceMCSModule::initializeInstance()
 {
   // Initialize module after attachment to RooMCStudy object
@@ -112,6 +133,8 @@ Bool_t RooDLLSignificanceMCSModule::initializeInstance()
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/) 
 {
   // Initialize module at beginning of RooCMStudy run
@@ -121,19 +144,25 @@ Bool_t RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/)
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet* RooDLLSignificanceMCSModule::finalizeRun() 
 {
-  // Return auxiliary data of this module so that it is merged with RooMCStudy::fitParDataSet()
+  // Return auxiliary dataset with results of delta(-log(L))
+  // calculations of this module so that it is merged with
+  // RooMCStudy::fitParDataSet() by RooMCStudy
 
   return _data ;
 }
 
 
 
+//_____________________________________________________________________________
 Bool_t RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)  
 {
-  // Save likelihood from nominal fit, fix chosen parameter to its null hypothesis value and rerun fit
-  // Save difference in likelihood and associated Gaussian significance in auxilary dataset
+  // Save likelihood from nominal fit, fix chosen parameter to its
+  // null hypothesis value and rerun fit Save difference in likelihood
+  // and associated Gaussian significance in auxilary dataset
 
   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
   par->setVal(_nullValue) ;

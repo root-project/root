@@ -14,10 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [DATA] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooDataSet is a container class to hold unbinned data. Each data point
 // in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 
 // or RooStringVar objects 
+// END_HTML
 //
 
 #include "RooFit.h"
@@ -48,35 +51,48 @@ char* operator+( streampos&, char* );
 ClassImp(RooDataSet)
 ;
 
-RooDataSet::RooDataSet() : _wgtVar(0) {}
+
+//_____________________________________________________________________________
+RooDataSet::RooDataSet() : _wgtVar(0) 
+{
+  // Default constructor for persistence
+}
 
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName) :
   RooTreeData(name,title,vars)
 {
   // Constructor of an empty data set from a RooArgSet defining the dimensions
   // of the data space.
-  appendToDir(this,kTRUE) ;
 
+  appendToDir(this,kTRUE) ;
   initialize(wgtVarName) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
 		       const RooArgSet& vars, const char *cuts, const char* wgtVarName) :
   RooTreeData(name,title,dset,vars,cuts)
 {
-  // Constructor of a data set from (part of) an existing data set. The dimensions
-  // of the data set are defined by the 'vars' RooArgSet, which can be identical
-  // to 'dset' dimensions, or a subset thereof. The 'cuts' string is an optional
-  // RooFormula expression and can be used to select the subset of the data points 
-  // in 'dset' to be copied. The cut expression can refer to any variable in the
-  // source dataset. For cuts involving variables other than those contained in
-  // the source data set, such as intermediate formula objects, use the 
-  // equivalent constructor accepting RooFormulaVar reference as cut specification
+  // Constructor of a data set from (part of) an existing data
+  // set. The dimensions of the data set are defined by the 'vars'
+  // RooArgSet, which can be identical to 'dset' dimensions, or a
+  // subset thereof. The 'cuts' string is an optional RooFormula
+  // expression and can be used to select the subset of the data
+  // points in 'dset' to be copied. The cut expression can refer to
+  // any variable in the source dataset. For cuts involving variables
+  // other than those contained in the source data set, such as
+  // intermediate formula objects, use the equivalent constructor
+  // accepting RooFormulaVar reference as cut specification
   //
-  // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
-  // is the most convenient way to create a subset of an existing data
+  // For most uses the RooAbsData::reduce() wrapper function, which
+  // uses this constructor, is the most convenient way to create a
+  // subset of an existing data
+  //
   appendToDir(this,kTRUE) ;
 
   if (wgtVarName) {
@@ -94,20 +110,26 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
 		       const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
   RooTreeData(name,title,t,vars,cutVar)
 {
-  // Constructor of a data set from (part of) an existing data set. The dimensions
-  // of the data set are defined by the 'vars' RooArgSet, which can be identical
-  // to 'dset' dimensions, or a subset thereof. The 'cutVar' formula variable
-  // is used to select the subset of data points to be copied.
-  // For subsets without selection on the data points, or involving cuts
-  // operating exclusively and directly on the data set dimensions, the equivalent
-  // constructor with a string based cut expression is recommended.
+  // Constructor of a data set from (part of) an existing data
+  // set. The dimensions of the data set are defined by the 'vars'
+  // RooArgSet, which can be identical to 'dset' dimensions, or a
+  // subset thereof. The 'cutVar' formula variable is used to select
+  // the subset of data points to be copied.  For subsets without
+  // selection on the data points, or involving cuts operating
+  // exclusively and directly on the data set dimensions, the
+  // equivalent constructor with a string based cut expression is
+  // recommended.
   //
-  // For most uses the RooAbsData::reduce() wrapper function, which uses this constructor, 
-  // is the most convenient way to create a subset of an existing data
+  // For most uses the RooAbsData::reduce() wrapper function, which
+  // uses this constructor, is the most convenient way to create a
+  // subset of an existing data
+
   appendToDir(this,kTRUE) ;
 
   if (wgtVarName) {
@@ -124,6 +146,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(const char *name, const char *title, TTree *t, 
 		       const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
   RooTreeData(name,title,t,vars,cutVar)
@@ -140,12 +164,15 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *t,
   // For subsets without selection on the data points, or involving cuts
   // operating exclusively and directly on the data set dimensions, the equivalent
   // constructor with a string based cut expression is recommended.
+
   appendToDir(this,kTRUE) ;
 
   initialize(wgtVarName) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(const char *name, const char *title, TTree *ntuple, 
 		       const RooArgSet& vars, const char *cuts, const char* wgtVarName) :
   RooTreeData(name,title,ntuple,vars,cuts)
@@ -164,12 +191,15 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *ntuple,
   // the vars argset, such as intermediate formula objects, use the 
   // equivalent constructor accepting RooFormulaVar reference as cut specification
   //
+
   appendToDir(this,kTRUE) ;
 
   initialize(wgtVarName) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(const char *name, const char *filename, const char *treename, 
 		       const RooArgSet& vars, const char *cuts, const char* wgtVarName) :
   RooTreeData(name,filename,treename,vars,cuts)
@@ -188,44 +218,57 @@ RooDataSet::RooDataSet(const char *name, const char *filename, const char *treen
   // the vars argset, such as intermediate formula objects, use the 
   // equivalent constructor accepting RooFormulaVar reference as cut specification
   //
+
   appendToDir(this,kTRUE) ;
 
   initialize(wgtVarName) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   RooTreeData(other,newname), RooDirItem()
 {
   // Copy constructor
-  appendToDir(this,kTRUE) ;
 
+  appendToDir(this,kTRUE) ;
   initialize(other._wgtVar?other._wgtVar->GetName():0) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooArgSet RooDataSet::addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar)
 {
-  // Helper function for constructor below
+  // Helper function for constructor that adds optional weight variable to construct
+  // total set of observables
+
   RooArgSet tmp(origVars) ;
   if (wgtVar) tmp.add(*wgtVar) ;
   return tmp ;
 }
 
+
+//_____________________________________________________________________________
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
 		       const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 		       Int_t nStart, Int_t nStop, Bool_t copyCache) :
   RooTreeData(name,title,ntuple,addWgtVar(vars,ntuple->_wgtVar),cutVar,cutRange,nStart,nStop,copyCache)
 {
   // Protected constructor for internal use only
-  appendToDir(this,kTRUE) ;
 
+  appendToDir(this,kTRUE) ;
   initialize(ntuple->_wgtVar?ntuple->_wgtVar->GetName():0) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsData* RooDataSet::cacheClone(const RooArgSet* newCacheVars, const char* newName) 
 {
+  // Return a clone of this dataset containing only the cached variables
+
   RooDataSet* dset = new RooDataSet(newName?newName:GetName(),GetTitle(),this,_vars,(RooFormulaVar*)0,0,0,2000000000,kTRUE) ;  
   if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;
 
@@ -237,8 +280,12 @@ RooAbsData* RooDataSet::cacheClone(const RooArgSet* newCacheVars, const char* ne
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, const RooArgSet* vars) const 
 {
+  // Return an empty clone of this dataset. If vars is not null, only the variables in vars
+  // are added to the definition of the empty clone
 
   // If variables are given, be sure to include weight variable if it exists and is not included
   RooArgSet vars2 ;
@@ -257,8 +304,13 @@ RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, co
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataSet::initialize(const char* wgtVarName) 
 {
+  // Initialize the dataset. If wgtVarName is not null, interpret the observable
+  // with that name as event weight
+
   _varsNoWgt.removeAll() ;
   _varsNoWgt.add(_vars) ;
   _wgtVar = 0 ;
@@ -278,10 +330,13 @@ void RooDataSet::initialize(const char* wgtVarName)
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange, 
 				  Int_t nStart, Int_t nStop, Bool_t copyCache)
 {
   // Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
+
   checkInit() ;
   return new RooDataSet(GetName(), GetTitle(), this, varSubset, cutVar, cutRange, nStart, nStop, copyCache) ;
 
@@ -292,14 +347,21 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
 
 
 
+//_____________________________________________________________________________
 RooDataSet::~RooDataSet()
 {
+  // Destructor
+
   removeFromDir(this) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) const 
 {
+  // Return binned clone of this dataset
+
   TString title, name ;
   if (newName) {
     name = newName ;
@@ -317,29 +379,44 @@ RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) 
 
 
 
+//_____________________________________________________________________________
 void RooDataSet::setWeightVar(const char* name) 
 {
+  // Designate observable with given name as event weight
+
   _varsNoWgt.removeAll() ;
   initialize(name) ;
 }
 
 
 
+//_____________________________________________________________________________
 Double_t RooDataSet::weight() const 
 {
+  // Return event weight of current event
+
   return _wgtVar ? _wgtVar->getVal() : 1. ;
 }
 
 
+
+//_____________________________________________________________________________
 const RooArgSet* RooDataSet::get(Int_t index) const
 {
+  // Return RooArgSet with coordinates of event 'index' 
   const RooArgSet* ret  = RooTreeData::get(index) ;
   return ret ? &_varsNoWgt : 0 ;
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooDataSet::numEntries(Bool_t useWeights) const 
 {
+  // Return either number of entries (useWeights=false) or
+  // rounded sum of weights (useWeights=true). Use the
+  // sumEntries() function to get the exact sum of weight
+
   // Return number of entries if no weights are requested or available
   if (!useWeights || !_wgtVar) return (Int_t) GetEntries() ;
 
@@ -349,8 +426,12 @@ Int_t RooDataSet::numEntries(Bool_t useWeights) const
 
 
 
+//_____________________________________________________________________________
 Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const 
 {
+  // Return the sum of weights in all entries matching cutSpec (if specified)
+  // and in named range cutRange (if specified)
+
   // Setup RooFormulaVar for cutSpec if it is present
   RooFormula* select = 0 ;
   if (cutSpec) {
@@ -374,12 +455,16 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 
 
 
+//_____________________________________________________________________________
 const RooArgSet* RooDataSet::get() const 
 { 
+  // Return a RooArgSet with the coordinates of the current event
   return &_varsNoWgt ; 
 } 
 
 
+
+//_____________________________________________________________________________
 void RooDataSet::add(const RooArgSet& data, Double_t wgt) 
 {
   // Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
@@ -394,12 +479,15 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt)
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooDataSet::merge(RooDataSet* data1, RooDataSet* data2, RooDataSet* data3, 
 			 RooDataSet* data4, RooDataSet* data5, RooDataSet* data6) 
 {
-  // Merge columns of supplied data set(s) with this data set.
-  // All data sets must have equal number of entries.
-  // In case of duplicate columns the column of the last dataset in the list prevails
+  // Merge columns of supplied data set(s) with this data set.  All
+  // data sets must have equal number of entries.  In case of
+  // duplicate columns the column of the last dataset in the list
+  // prevails
 
   TList dsetList ;
   dsetList.Add(data1) ;
@@ -424,11 +512,14 @@ Bool_t RooDataSet::merge(RooDataSet* data1, RooDataSet* data2, RooDataSet* data3
 
 
 
+//_____________________________________________________________________________
 Bool_t RooDataSet::merge(const TList& dsetList) 
 {
-  // Merge columns of supplied data set(s) with this data set.
-  // All data sets must have equal number of entries.
-  // In case of duplicate columns the column of the last dataset in the list prevails
+  // Merge columns of supplied data set(s) with this data set.  All
+  // data sets must have equal number of entries.  In case of
+  // duplicate columns the column of the last dataset in the list
+  // prevails
+
   checkInit() ;
   
   TIterator* iter = dsetList.MakeIterator() ;
@@ -482,9 +573,13 @@ Bool_t RooDataSet::merge(const TList& dsetList)
 
 
 
-void RooDataSet::append(RooTreeData& data) {
+//_____________________________________________________________________________
+void RooDataSet::append(RooTreeData& data) 
+{
   // Add all data points of given data set to this data set.
-  // Eventual extra dimensions of 'data' will be stripped in transfer
+  // Observable in 'data' that are not in this dataset
+  // with not be transferred
+
   checkInit() ;
 
   loadValues(data._tree,(RooFormulaVar*)0) ;
@@ -492,15 +587,31 @@ void RooDataSet::append(RooTreeData& data) {
 
 
 
+//_____________________________________________________________________________
 RooAbsArg* RooDataSet::addColumn(RooAbsArg& var) 
 {
+  // Add a column with the values of the given (function) argument
+  // to this dataset. The function value is calculated for each
+  // event using the observable values of each event in case the
+  // function depends on variables with names that are identical
+  // to the observable names in the dataset
+
+
   RooAbsArg* ret = RooTreeData::addColumn(var) ;
   initialize(_wgtVar?_wgtVar->GetName():0) ;
   return ret ;
 }
 
+
+//_____________________________________________________________________________
 RooArgSet* RooDataSet::addColumns(const RooArgList& varList) 
 {
+  // Add a column with the values of the given list of (function)
+  // argument to this dataset. Each function value is calculated for
+  // each event using the observable values of the event in case the
+  // function depends on variables with names that are identical to
+  // the observable names in the dataset
+
   RooArgSet* ret = RooTreeData::addColumns(varList) ;
   initialize(_wgtVar?_wgtVar->GetName():0) ;
   return ret ;
@@ -508,6 +619,7 @@ RooArgSet* RooDataSet::addColumns(const RooArgList& varList)
 
 
 
+//_____________________________________________________________________________
 TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts, const char *name) const
 {
   // Create a TH2F histogram of the distribution of the specified variable
@@ -516,12 +628,15 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   // dataset, or else be a function of the variables in this dataset.
   // The histogram will be created using RooAbsReal::createHistogram() with
   // the name provided (with our dataset name prepended).
+
   return createHistogram(var1, var2, var1.getBins(), var2.getBins(), cuts, name);
 }
 
 
 
-TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny, const char* cuts, const char *name) const
+//_____________________________________________________________________________
+TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, 
+				  Int_t nx, Int_t ny, const char* cuts, const char *name) const
 {
   // Create a TH2F histogram of the distribution of the specified variable
   // using this dataset. Apply any cuts to select which events are used.
@@ -614,6 +729,8 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
 }
 
 
+
+//_____________________________________________________________________________
 RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 			     const char *verbOpt, const char* commonPath, 
 			     const char* indexCatName) {
@@ -870,8 +987,14 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
 
 
+//_____________________________________________________________________________
 Bool_t RooDataSet::write(const char* filename)
 {
+  // Write the contents of this dataset to an ASCII file with the specified name
+  // Each event will be written as a single line containing the written values
+  // of each observable in the order they were declared in the dataset and
+  // separated by whitespaces
+
   checkInit() ;
 
   // Open file for writing 
@@ -896,7 +1019,10 @@ Bool_t RooDataSet::write(const char* filename)
 }
 
 
-void RooDataSet::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const {
+
+//_____________________________________________________________________________
+void RooDataSet::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const 
+{
   // Print info about this dataset to the specified output stream.
   //
   //   Standard: number of entries
@@ -909,15 +1035,23 @@ void RooDataSet::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
 }
 
 
+
+//_____________________________________________________________________________
 void RooDataSet::SetName(const char *name) 
 {
+  // Change the name of this dataset into the given name
+
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetName(name) ;
   if (_dir) _dir->GetList()->Add(this);
 }
 
+
+//_____________________________________________________________________________
 void RooDataSet::SetNameTitle(const char *name, const char* title) 
 {
+  // Change the title of this dataset into the given name
+
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetNameTitle(name,title) ;
   if (_dir) _dir->GetList()->Add(this);

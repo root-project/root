@@ -53,6 +53,7 @@ public:
   virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
 
   inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -72,7 +73,7 @@ protected:
 
   void shiftCurveToZero(Double_t prevYMax) ;
 
-  ClassDef(RooCurve,1) // 1-dimensional smooth curve
+  ClassDef(RooCurve,1) // 1-dimensional smooth curve for use in RooPlots
 };
 
 #endif

@@ -25,7 +25,9 @@ class RooArgSet ;
 class RooConstVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  inline RooConstVar() { }
+  inline RooConstVar() { 
+    // Default constructor
+  }
   RooConstVar(const char *name, const char *title, Double_t value);
   RooConstVar(const RooConstVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooConstVar(*this,newname); }
@@ -36,11 +38,14 @@ public:
 
 protected:
 
-  virtual Double_t evaluate() const { return _value ; } ;
+  virtual Double_t evaluate() const { 
+    // Return value
+    return _value ; 
+  } ;
 
-  Double_t _value ;
+  Double_t _value ; // Constant value of self
 
-  ClassDef(RooConstVar,1) // Real-valued variable, calculated from a string expression formula 
+  ClassDef(RooConstVar,1) // Constant RooAbsReal value object
 };
 
 #endif

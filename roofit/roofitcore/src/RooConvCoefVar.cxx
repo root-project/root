@@ -14,10 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooConvCoefVar is an auxilary class that represents the coefficient
 // of a RooAbsAnaConvPdf implementation as a separate RooAbsReal object
-// to be able to interface these coefficient terms with RooRealIntegreal
+// to be able to interface these coefficient terms with the generic
+// RooRealIntegral integration mechanism
+// END_HTML
+//
 //
 
 #include "RooFit.h"
@@ -29,6 +34,8 @@
 ClassImp(RooConvCoefVar)
 ;
 
+
+//_____________________________________________________________________________
 RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, 
 			       Int_t coefIdx, const RooArgSet* varList) :
   RooAbsReal(name,title),
@@ -36,11 +43,14 @@ RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooAbs
   _convPdf("convPdf","Convoluted PDF",this,(RooAbsReal&)input,kFALSE,kFALSE),
   _coefIdx(coefIdx)
 {
-  // Constuctor
+  // Constuctor given a RooAbsAnaConvPdf a coefficient index and a set with the
+  // convoluted observable(s)
   if (varList) _varSet.add(*varList) ;
 }
 
 
+
+//_____________________________________________________________________________
 RooConvCoefVar::RooConvCoefVar(const RooConvCoefVar& other, const char* name) :
   RooAbsReal(other,name),
   _varSet("varSet",this,other._varSet),
@@ -51,29 +61,41 @@ RooConvCoefVar::RooConvCoefVar(const RooConvCoefVar& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooConvCoefVar::getVal(const RooArgSet*) const 
 { 
+  // Return value of chosen coefficient
   return evaluate() ; 
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooConvCoefVar::evaluate() const 
 {
+  // Return value of chosen coefficient
   return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefficient(_coefIdx) ;
 }
 
 
+
+//_____________________________________________________________________________
 Int_t RooConvCoefVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
+  // Return analytical integration capabilities of chosen coefficient
+
   Int_t code = ((RooAbsAnaConvPdf&)_convPdf.arg()).getCoefAnalyticalIntegral(_coefIdx,allVars,analVars,rangeName) ;
-//   cout << "RooConvCoefVar::getAnalyticalIntegral code = " << code << " for " ; analVars.Print("1") ;
   return code ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooConvCoefVar::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-//   cout << "RooConvCoefVar::analyticalIntegral(" << _coefIdx << "," << code << ")" << endl ;
+  // Return analytical integral of chosen coefficient
+
   return ((RooAbsAnaConvPdf&)_convPdf.arg()).coefAnalyticalIntegral(_coefIdx,code,rangeName) ;
 }
 

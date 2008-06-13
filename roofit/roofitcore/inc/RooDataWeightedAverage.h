@@ -23,7 +23,9 @@ class RooDataWeightedAverage : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooDataWeightedAverage() {} ;  
+  RooDataWeightedAverage() {
+    // Default constructor
+  } ;  
 
   RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& real, RooAbsData& data, 
 			 Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t showProgress=kFALSE, Bool_t verbose=kTRUE) ;
@@ -34,6 +36,7 @@ public:
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 				      const RooArgSet& /*projDeps*/, const char* /*rangeName*/=0, const char* /*addCoefRangeName*/=0, 
 				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t /*splitCutRange*/=kFALSE) {
+    // Virtual constructor
     return new RooDataWeightedAverage(name,title,real,data,nCPU,interleave,verbose) ;
   }
 
@@ -44,11 +47,11 @@ public:
 
 protected:
 
-  Double_t _sumWeight ;
-  Bool_t _showProgress ;
+  Double_t _sumWeight ;  // Global sum of weights needed for normalization
+  Bool_t _showProgress ; // Show progress indication during evaluation if true
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
   
-  ClassDef(RooDataWeightedAverage,1) // Abstract real-valued variable
+  ClassDef(RooDataWeightedAverage,1) // Optimized calculator of data weighted average of a RooAbsReal
 };
 
 #endif

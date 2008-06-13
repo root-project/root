@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-//  RooExtendedTerm is a p.d.f with no observables that only introduces
-//  an extended ML term for a given number of expected events term when an extended ML 
-//  is constructed.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooExtendedTerm is a p.d.f with no observables that only introduces
+// an extended ML term for a given number of expected events term when an extended ML 
+// is constructed.
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "RooExtendedTerm.h"
@@ -26,21 +30,27 @@ ClassImp(RooExtendedTerm)
 ;
 
 
+//_____________________________________________________________________________
 RooExtendedTerm::RooExtendedTerm()
 {
+  // Constructor
 }
 
+
+
+//_____________________________________________________________________________
 RooExtendedTerm::RooExtendedTerm(const char *name, const char *title, const RooAbsReal& n) :
   RooAbsPdf(name,title),
   _n("n","Nexpected",this,(RooAbsReal&)n)
 {
-  // Constructor. The ExtendedTerm has no observables, it only introduces an extended
+  // Constructor. An ExtendedTerm has no observables, it only introduces an extended
   // ML term with the given number of expected events when an extended ML is constructed
   // from this p.d.f.
 }
 
 
 
+//_____________________________________________________________________________
 RooExtendedTerm::RooExtendedTerm(const RooExtendedTerm& other, const char* name) :
   RooAbsPdf(other,name),
   _n("n",this,other._n)
@@ -49,6 +59,8 @@ RooExtendedTerm::RooExtendedTerm(const RooExtendedTerm& other, const char* name)
 }
 
 
+
+//_____________________________________________________________________________
 RooExtendedTerm::~RooExtendedTerm() 
 {
   // Destructor
@@ -56,9 +68,10 @@ RooExtendedTerm::~RooExtendedTerm()
 }
 
 
-
+//_____________________________________________________________________________
 Double_t RooExtendedTerm::expectedEvents(const RooArgSet* /*nset*/) const 
 {
+  // Return number of expected events from associated event count variable
   return _n ;
 }
 

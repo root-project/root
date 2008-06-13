@@ -37,12 +37,12 @@ public:
 	
 private:
 
-  std::string _parName ;
-  RooDataSet* _data ;
-  RooRealVar* _nll0h ;
-  RooRealVar* _dll0h ;
-  RooRealVar* _sig0h ;
-  Double_t    _nullValue ;
+  std::string _parName ;  // Name of Nsignal parameter
+  RooDataSet* _data ;     // Summary dataset to store results
+  RooRealVar* _nll0h ;    // Container variable for NLL result on null hypothesis
+  RooRealVar* _dll0h ;    // Container variable for delta NLL 
+  RooRealVar* _sig0h ;    // Container variable for NLL result with signal
+  Double_t    _nullValue ;  // Numeric value of Nsignal parameter representing the null hypothesis
 
   ClassDef(RooDLLSignificanceMCSModule,0) // MCStudy module to calculate Delta(-logL) significance w.r.t given null hypothesis
 } ;

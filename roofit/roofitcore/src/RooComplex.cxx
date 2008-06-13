@@ -14,7 +14,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// Class RooComplex is a simple container class for complex values
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -25,6 +30,8 @@
 
 ClassImp(RooComplex)
 
+
+//_____________________________________________________________________________
 void RooComplex::Print() const {
 //  WVE Solaric CC5.0 complains about this
   cout << *this << endl;
@@ -32,5 +39,6 @@ void RooComplex::Print() const {
 
 ostream& operator<<(ostream& os, const RooComplex& z)
 {
+  // Print real and imaginary component on ostream
   return os << "(" << z.re() << "," << z.im() << ")";
 }

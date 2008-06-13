@@ -45,6 +45,7 @@ public:
     // Getter function without integration set 
     return getObj(nset,0,sterileIndex,isetRangeName) ;
   }
+
   Int_t setObj(const RooArgSet* nset, T* obj, const TNamed* isetRangeName=0) {
     // Setter function without integration set 
     return setObj(nset,0,obj,isetRangeName) ;

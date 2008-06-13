@@ -20,6 +20,7 @@
 // the event generation in a more efficient for cases where the PDF has an internal
 // generator that is smarter than accept reject. 
 // END_HTML
+//
 
 #include "RooFit.h"
 #include "RooEffProd.h"
@@ -32,6 +33,8 @@ ClassImp(RooEffProd)
 
 
 //_____________________________________________________________________________
+
+//_____________________________________________________________________________
 RooEffProd::RooEffProd(const char *name, const char *title, 
                              RooAbsPdf& inPdf, RooAbsReal& inEff) :
   RooAbsPdf(name,title),
@@ -41,11 +44,13 @@ RooEffProd::RooEffProd(const char *name, const char *title,
   _nset(0),
   _fixedNset(0)
 {  
-  // Constructor
+  // Constructor of a a production of p.d.f inPdf with efficiency
+  // function inEff.
 }
 
 
 
+//_____________________________________________________________________________
 //_____________________________________________________________________________
 RooEffProd::RooEffProd(const RooEffProd& other, const char* name) : 
   RooAbsPdf(other, name),
@@ -60,6 +65,8 @@ RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
 
 
 //_____________________________________________________________________________
+
+//_____________________________________________________________________________
 RooEffProd::~RooEffProd() 
 {
   // Destructor
@@ -67,21 +74,29 @@ RooEffProd::~RooEffProd()
 
 
 //_____________________________________________________________________________
+
+//_____________________________________________________________________________
 Double_t RooEffProd::getVal(const RooArgSet* set) const 
 {  
   // Return p.d.f. value normalized over given set of observables
+
   _nset = _fixedNset ? _fixedNset : set ;
   return RooAbsPdf::getVal(set) ;
 }
 
 
 //_____________________________________________________________________________
+
+//_____________________________________________________________________________
 Double_t RooEffProd::evaluate() const
 {
-  // Return 'raw' unnormalized value of p.d.f
+  // Calculate and return 'raw' unnormalized value of p.d.f
+
   return eff()->getVal() * pdf()->getVal(_nset);
 }
 
+
+//_____________________________________________________________________________
 
 //_____________________________________________________________________________
 RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet *prototype,
@@ -89,6 +104,7 @@ RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet
 {
   // Return specialized generator context for RooEffProds that implements generation
   // in a more efficient way than can be done for generic correlated products
+
   assert(pdf()!=0);
   assert(eff()!=0);
   return new RooEffGenContext(*this,*pdf(),*eff(),vars,prototype,auxProto,verbose) ;
@@ -96,6 +112,7 @@ RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet
 
 
 
+//_____________________________________________________________________________
 //_____________________________________________________________________________
 Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					  const RooArgSet* normSet, const char* rangeName) const 
@@ -139,7 +156,6 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
     return _cacheMgr.lastIndex()+1;
   }
 
-
   // Construct cache with clone of p.d.f that has fixed normalization set that is passed to input pdf
   cache = new CacheElem ;
   cache->_intObs.addClone(allVars) ;
@@ -156,6 +172,7 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
 
 
+//_____________________________________________________________________________
 //_____________________________________________________________________________
 Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
@@ -176,6 +193,7 @@ Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
 
 
+//_____________________________________________________________________________
 //_____________________________________________________________________________
 RooArgList RooEffProd::CacheElem::containedArgs(Action) 
 {

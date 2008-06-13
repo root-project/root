@@ -37,7 +37,10 @@ public:
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
   virtual ~RooCustomizer() ;
   
-  void setOwning(Bool_t flag) { _owning = flag ; }
+  void setOwning(Bool_t flag) { 
+    // If flag is true, make customizer own all created components
+    _owning = flag ; 
+  }
   
   void splitArgs(const RooArgSet& argSet, const RooAbsCategory& splitCat) ;
   void splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) ;
@@ -45,8 +48,14 @@ public:
   RooAbsArg* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
   RooAbsArg* build(Bool_t verbose=kFALSE) ;
 
-  const RooArgSet& cloneBranchList() const { return *_cloneBranchList ; }
-  const RooArgSet& cloneLeafList() const { return *_cloneNodeListOwned ; }
+  const RooArgSet& cloneBranchList() const { 
+    // Return list of cloned branch nodes
+    return *_cloneBranchList ; 
+  }
+  const RooArgSet& cloneLeafList() const { 
+    // Return list of cloned leaf nodes
+    return *_cloneNodeListOwned ; 
+  }
 
   // Printing interface 
   virtual void printName(ostream& os) const ;
@@ -56,6 +65,7 @@ public:
   virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent= "") const;
 
   inline virtual void Print(Option_t *options= 0) const {
+    // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -69,34 +79,34 @@ protected:
   
   RooAbsArg* doBuild(const char* masterCatState, Bool_t verbose) ;
 
-  Bool_t _sterile ;
-  Bool_t _owning ;
-  TString _name ;
+  Bool_t _sterile ; // If true we do not have as associated master category
+  Bool_t _owning ;  // If true we own all created components
+  TString _name ;   // Name of this object
 
-  TList _splitArgList ;
-  TList _splitCatList ;
+  TList _splitArgList ; // List of RooAbsArgs to be split
+  TList _splitCatList ; // List of categories to be used for above splits
 
-  TList _replaceArgList ;
-  TList _replaceSubList ;
+  TList _replaceArgList ; // List of RooAbsArgs to be replaced
+  TList _replaceSubList ; // List of replacement RooAbsArgs
 
   // Master nodes are not owned
-  RooAbsArg* _masterPdf ;
-  RooAbsCategoryLValue* _masterCat ;
+  RooAbsArg* _masterPdf ;             // Pointer to input p.d.f
+  RooAbsCategoryLValue* _masterCat ;  // Pointer to input master category
 
-  TIterator* _masterLeafListIter ;
-  TIterator* _masterBranchListIter ;
+  TIterator* _masterLeafListIter ;    // Iterator over leaf list
+  TIterator* _masterBranchListIter ;  // Iterator over branch list
 
-  RooArgSet  _masterBranchList ;
-  RooArgSet  _masterLeafList ;
+  RooArgSet  _masterBranchList ;      // List of branch nodes
+  RooArgSet  _masterLeafList ;        // List of leaf nodes
 
-  RooArgSet  _internalCloneBranchList ;
-  RooArgSet* _cloneBranchList ;
+  RooArgSet  _internalCloneBranchList ; // List of branches of internal clone
+  RooArgSet* _cloneBranchList ;         // Pointer to list of cloned branches used
 
   // Cloned leafs are owned by the user supplied list in the ctor
-  RooArgSet* _cloneNodeListAll ;
-  RooArgSet* _cloneNodeListOwned ;
+  RooArgSet* _cloneNodeListAll ;        // List of all cloned nodes
+  RooArgSet* _cloneNodeListOwned ;      // List of owned cloned nodes
 
-  ClassDef(RooCustomizer,0) // PDF customizer 
+  ClassDef(RooCustomizer,0) // Editing tool for RooAbsArg composite object expressions
 } ;
 
 #endif

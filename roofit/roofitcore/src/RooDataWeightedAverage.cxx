@@ -14,13 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
-// Class RooDataWeightedAverage implements a a -log(likelihood) calculation from a dataset
-// and a PDF. The NLL is calculated as 
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML 
+// Class RooDataWeightedAverage calculate a weighted
+// average of a function or p.d.f given a dataset with observable
+// values, i.e. DWA(f(x),D(x)) = sum_i f(x_i) where x_i is draw from
+// D(i). This class is an implementation of RooAbsOptTestStatistics 
+// can make use of the optimization and parallization infrastructure
+// of that base class. The main use of RooDataWeightedAverage is
+// to calculate curves in RooPlots that are added with ProjWData()
+// plot option.
 //
-//  Sum[data] -log( pdf(x_data) )
+// END_HTML
 //
-// In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -36,11 +43,18 @@
 ClassImp(RooDataWeightedAverage)
 ;
 
+
+//_____________________________________________________________________________
 RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& data,
 					       Int_t nCPU, Bool_t interleave, Bool_t showProgress, Bool_t verbose) : 
   RooAbsOptTestStatistic(name,title,pdf,data,RooArgSet(),0,0,nCPU,interleave,verbose,kFALSE),
   _showProgress(showProgress)
 {
+  // Constructor of data weighted average of given p.d.f over given data. If nCPU>1 the calculation is parallelized
+  // over multuple processes. If showProgress is true a progress indicator printing a single dot for each evaluation
+  // is shown. If interleave is true, the dataset split over multiple processes is done with an interleave pattern
+  // rather than a bulk-split pattern.
+
   if (_showProgress) {
     coutI(Plotting) << "RooDataWeightedAverage::ctor(" << GetName() << ") constructing data weighted average of function " << pdf.GetName() 
 		    << " over " << data.numEntries() << " data points of " << *(data.get()) << " with a total weight of " << data.numEntries(kTRUE) << endl ;
@@ -48,27 +62,43 @@ RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *tit
   _sumWeight = data.numEntries(kTRUE) ;
 }
 
+
+//_____________________________________________________________________________
 RooDataWeightedAverage::RooDataWeightedAverage(const RooDataWeightedAverage& other, const char* name) : 
   RooAbsOptTestStatistic(other,name),
   _sumWeight(other._sumWeight),
   _showProgress(other._showProgress)
 {
+  // Copy constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooDataWeightedAverage::~RooDataWeightedAverage()
 {
+  // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooDataWeightedAverage::globalNormalization() const 
 {
+  // Return global normalization term by which raw (combined) test statistic should
+  // be defined to obtain final test statistic. For a data weighted avarage this
+  // the the sum of all weights
+
   return _sumWeight ;
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooDataWeightedAverage::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
 {
+  // Calculate the data weighted average for events [firstEVent,lastEvent] with step size stepSize
+
   Int_t i ;
   Double_t result(0) ;
 

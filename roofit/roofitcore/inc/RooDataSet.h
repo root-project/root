@@ -59,8 +59,14 @@ public:
   Bool_t write(const char* filename) ;
 
   void setWeightVar(const char* name=0) ;
-  void setWeightVar(const RooAbsArg& arg) { setWeightVar(arg.GetName()) ; }
-  virtual Bool_t isWeighted() const { return _wgtVar ? kTRUE : kFALSE ; }
+  void setWeightVar(const RooAbsArg& arg) { 
+    // Interpret given argument as event weight
+    setWeightVar(arg.GetName()) ; 
+  }
+  virtual Bool_t isWeighted() const { 
+    // Return true if dataset contains weighted events
+    return _wgtVar ? kTRUE : kFALSE ; 
+  }
 
   virtual Double_t weight() const ; 
   virtual const RooArgSet* get(Int_t index) const;
@@ -104,7 +110,7 @@ protected:
   RooArgSet addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar) ;
 
   RooArgSet _varsNoWgt ;   // Vars without weight variable
-  RooRealVar* _wgtVar ;
+  RooRealVar* _wgtVar ;    // Pointer to weight variable (if set)
 
   ClassDef(RooDataSet,1) // Unbinned data set
 };

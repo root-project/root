@@ -29,11 +29,15 @@ class RooAbsAnaConvPdf ;
 class RooConvCoefVar : public RooAbsReal {
 public:
   // Constructors, assignment etc.
-  inline RooConvCoefVar() { }
+  inline RooConvCoefVar() { 
+    // Default constructor
+  }
   RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, Int_t coefIdx, const RooArgSet* varList=0) ;
   RooConvCoefVar(const RooConvCoefVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooConvCoefVar(*this,newname); }
-  virtual ~RooConvCoefVar() {} ;
+  virtual ~RooConvCoefVar() {
+    // Destructor
+  } ;
 
   virtual Double_t getVal(const RooArgSet* nset=0) const ;
 
@@ -43,11 +47,11 @@ public:
 
 protected:
 
-  RooSetProxy  _varSet ; 
-  RooRealProxy _convPdf ; // ConvolutedPDfs implementing our coefficient
+  RooSetProxy  _varSet ;  // Not used anymore?
+  RooRealProxy _convPdf ; // RooAbsAnaConv object implementing our coefficient
   Int_t    _coefIdx  ;    // Index code of the coefficient
 
-  ClassDef(RooConvCoefVar,1) // Auxiliary class representing the coefficient of a RooAbsAnaConvPdf
+  ClassDef(RooConvCoefVar,1) // Auxiliary class representing the coefficient of a RooAbsAnaConvPdf as a RooAbsReal
 };
 
 #endif

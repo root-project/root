@@ -31,9 +31,16 @@ public:
   RooCmdConfig(const RooCmdConfig& other) ;
   ~RooCmdConfig();
 
-  void setVerbose(Bool_t flag) { _verbose = flag ; }
+  void setVerbose(Bool_t flag) { 
+    // If flag is true verbose messaging is activated
+    _verbose = flag ; 
+  }
 
-  void allowUndefined(Bool_t flag=kTRUE) { _allowUndefined = flag ; }
+  void allowUndefined(Bool_t flag=kTRUE) { 
+    // If flag is true the processing of unrecognized RooCmdArgs
+    // is not considered an error
+    _allowUndefined = flag ; 
+  }
   void defineDependency(const char* refArgName, const char* neededArgName) ;
   void defineMutex(const char* argName1, const char* argName2) ;
   void defineMutex(const char* argName1, const char* argName2, const char* argName3) ;
@@ -105,17 +112,17 @@ protected:
   TList _yList ; // Dependency cmd list
   TList _pList ; // Processed cmd list 
 
-  TIterator* _iIter ;
-  TIterator* _dIter ;
-  TIterator* _sIter ;
-  TIterator* _oIter ;
-  TIterator* _rIter ;
-  TIterator* _fIter ;
-  TIterator* _mIter ;
-  TIterator* _yIter ;
-  TIterator* _pIter ;
+  TIterator* _iIter ; // Iterator over integer list
+  TIterator* _dIter ; // Iterator over double list
+  TIterator* _sIter ; // Iterator over string list
+  TIterator* _oIter ; // Iterator over object list
+  TIterator* _rIter ; // Iterator over required cmd list
+  TIterator* _fIter ; // Iterator over forbidden cmd list
+  TIterator* _mIter ; // Iterator over mutex list
+  TIterator* _yIter ; // Iterator over dependency list
+  TIterator* _pIter ; // Iterator over processed cmd list
 
-  ClassDef(RooCmdConfig,0) // Method configuration holder
+  ClassDef(RooCmdConfig,0) // Configurable parse of RooCmdArg objects
 };
 
 #endif

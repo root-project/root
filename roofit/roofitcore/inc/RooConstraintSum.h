@@ -34,12 +34,12 @@ public:
 
 protected:
 
-  RooListProxy _set1 ;
+  RooListProxy _set1 ;    // Set of constraint terms
   TIterator* _setIter1 ;  //! do not persist
 
   Double_t evaluate() const;
 
-  ClassDef(RooConstraintSum,1) // Sum of RooAbsReal terms
+  ClassDef(RooConstraintSum,1) // sum of -log of set of RooAbsPdf representing parameter constraints
 };
 
 #endif

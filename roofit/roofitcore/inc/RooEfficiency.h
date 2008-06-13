@@ -27,7 +27,9 @@ class RooArgList ;
 class RooEfficiency : public RooAbsPdf {
 public:
   // Constructors, assignment etc
-  inline RooEfficiency() { }
+  inline RooEfficiency() { 
+    // Default constructor
+  }
   RooEfficiency(const char *name, const char *title, const RooAbsReal& effFunc, const RooAbsCategory& cat, const char* sigCatName);
   RooEfficiency(const RooEfficiency& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooEfficiency(*this,newname); }

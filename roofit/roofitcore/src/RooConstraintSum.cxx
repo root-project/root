@@ -14,12 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [REAL] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// RooConstraintSum calculates the sum of the -(log) likelihoods of
+// a set of RooAbsPfs that represent constraint functions. This class
+// is used to calculate the composite -log(L) of constraints to be
+// added the regular -log(L) in RooAbsPdf::fitTo() with Constrain(..)
+// arguments
+// END_HTML
 //
-// RooConstraintSum calculates the sum of a set of RooAbsReal terms, or
-// when constructed with two sets, it sums the product of the terms
-// in the two sets. This class does not (yet) do any smart handling of integrals, 
-// i.e. all integrals of the product are handled numerically
 
 
 #include "RooFit.h"
@@ -40,17 +44,23 @@
 ClassImp(RooConstraintSum)
 ;
 
+
+//_____________________________________________________________________________
 RooConstraintSum::RooConstraintSum()
 {
+  // Default constructor
   _setIter1 = _set1.createIterator() ;
 }
 
 
+
+//_____________________________________________________________________________
 RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this)
 {
-  // Constructor
+  // Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf
+
   _setIter1 = _set1.createIterator() ;
 
   TIterator* inputIter = constraintSet.createIterator() ;
@@ -71,24 +81,33 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 
 
 
+//_____________________________________________________________________________
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
   RooAbsReal(other, name), 
   _set1("set1",this,other._set1)
 {
   // Copy constructor
+
   _setIter1 = _set1.createIterator() ;  
 }
 
 
+
+//_____________________________________________________________________________
 RooConstraintSum::~RooConstraintSum() 
 {
+  // Destructor
+
   if (_setIter1) delete _setIter1 ;
 }
 
 
 
+//_____________________________________________________________________________
 Double_t RooConstraintSum::evaluate() const 
 {
+  // Return sum of -log of constraint p.d.f.s
+
   Double_t sum(0);
   RooAbsReal* comp ;
   const RooArgSet* nset = _set1.nset() ;

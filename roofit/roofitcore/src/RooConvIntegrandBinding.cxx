@@ -14,13 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Lightweight interface adaptor that binds a RooAbsReal object to a subset
-// of its servers.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
+// Implementation of RooAbsFunc that represent the the integrand
+// of a generic (numeric) convolution A (x) B so that it can be
+// passed to a numeric integrator. This is a utility class for
+// RooNumConvPdf
+// END_HTML
+//
 
 #include "RooFit.h"
 
-#include "RooConvIntegrandBinding.h"
 #include "RooConvIntegrandBinding.h"
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
@@ -32,17 +37,21 @@
 ClassImp(RooConvIntegrandBinding)
 ;
 
+
+//_____________________________________________________________________________
 RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model, 
 				       RooAbsReal& xprime, RooAbsReal& x, 
 				       const RooArgSet* nset, Bool_t clipInvalid) :
 
   RooAbsFunc(2), _func(&func), _model(&model), _vars(0), _nset(nset), _clipInvalid(clipInvalid)
 {
+  // Constructor where func and model 
+  //
   // 'func'  = func(xprime)
   // 'model' = model(xprime)
   // 
-  // i.e.
-  //
+  // and 
+
   // 'xprime' is the RRV that should be connected to func and model 
   //          (i.e. the variable that will be integrated over)
   // 'x'      is RRV that represents the value at which the convolution is calculated
@@ -78,11 +87,20 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
 }
 
 
-RooConvIntegrandBinding::~RooConvIntegrandBinding() {
+
+//_____________________________________________________________________________
+RooConvIntegrandBinding::~RooConvIntegrandBinding() 
+{
+  // Destructor
   if(0 != _vars) delete[] _vars;
 }
 
-void RooConvIntegrandBinding::loadValues(const Double_t xvector[], Bool_t clipInvalid) const {
+
+//_____________________________________________________________________________
+void RooConvIntegrandBinding::loadValues(const Double_t xvector[], Bool_t clipInvalid) const 
+{
+  // Load external input values
+
   _xvecValid = kTRUE ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
@@ -94,7 +112,12 @@ void RooConvIntegrandBinding::loadValues(const Double_t xvector[], Bool_t clipIn
   }
 }  
 
-Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const {
+
+//_____________________________________________________________________________
+Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const 
+{
+  // Evaluate self at given parameter values
+
   assert(isValid());
   _ncall++ ;
 
@@ -119,12 +142,21 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const {
   return f_xp*g_xmxp ;
 }
 
-Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const {
+
+//_____________________________________________________________________________
+Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const 
+{
+  // Retrieve lower limit of i-th observable 
   assert(isValid());
   return _vars[index]->getMin();
 }
 
-Double_t RooConvIntegrandBinding::getMaxLimit(UInt_t index) const {
+
+//_____________________________________________________________________________
+Double_t RooConvIntegrandBinding::getMaxLimit(UInt_t index) const 
+{
+  // Retrieve upper limit of i-th observable 
+
   assert(isValid());
   return _vars[index]->getMax();
 }

@@ -14,10 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [MISC] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooClassFactory is a clase like TTree::MakeClass() that generates
 // skeleton code for RooAbsPdf and RooAbsReal functions given
-// a list of input parameter names
+// a list of input parameter names. The factory can also compile
+// the generated code on the fly, and on request also immediate
+// instantiate objects.
+// END_HTML
 //
 
 #include "RooFit.h"
@@ -39,18 +44,27 @@ ClassImp(RooClassFactory)
 ;
 
 
+
+//_____________________________________________________________________________
 RooClassFactory::RooClassFactory()
 {
+  // Default constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooClassFactory::~RooClassFactory() 
 {
+  // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
 {
+
   string realArgNames,catArgNames ;
   TIterator* iter = vars.createIterator() ;
   RooAbsArg* arg ;
@@ -83,8 +97,22 @@ Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expressi
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
 {
+  // Write, compile and load code for a RooAbsReal implementation with
+  // class name 'name', taking all elements of 'vars' as constructor
+  // arguments. The initial value expression is taken to be
+  // 'expression' which can be any one-line C++ expression in terms of
+  // variables that occur in 'vars'. You can add optional expressions
+  // for analytical integrals to be advertised by your class in the
+  // syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral.
+
   string realArgNames,catArgNames ;
   TIterator* iter = vars.createIterator() ;
   RooAbsArg* arg ;
@@ -117,8 +145,29 @@ Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* exp
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression) 
 {
+  // Write, compile and load code and instantiate object for a
+  // RooAbsReal implementation with class name 'name', taking all
+  // elements of 'vars' as constructor arguments. The initial value
+  // expression is taken to be 'expression' which can be any one-line
+  // C++ expression in terms of variables that occur in 'vars'. 
+  //
+  // The returned object is an instance of the object you just defined
+  // connected to the variables listed in 'vars'. The name of the
+  // object is 'name', its class name Roo<name>Class.
+  //
+  // This function is an effective compiled replacement of RooFormulaVar
+  //
+  // You can add optional expressions for analytical integrals to be
+  // advertised by your class in the syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral.
+
   if (gInterpreter->GetRootMapFiles()==0) {
     gInterpreter->EnableAutoLoading() ;
   }
@@ -166,9 +215,30 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
 }
 
 
+
+//_____________________________________________________________________________
 RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expression, 
 					    const RooArgList& vars, const char* intExpression)
 {
+  // Write, compile and load code and instantiate object for a
+  // RooAbsPdf implementation with class name 'name', taking all
+  // elements of 'vars' as constructor arguments. The initial value
+  // expression is taken to be 'expression' which can be any one-line
+  // C++ expression in terms of variables that occur in 'vars'. 
+  //
+  // The returned object is an instance of the object you just defined
+  // connected to the variables listed in 'vars'. The name of the
+  // object is 'name', its class name Roo<name>Class.
+  //
+  // This function is an effective compiled replacement of RooGenericPdf
+  //
+  // You can add optional expressions for analytical integrals to be
+  // advertised by your class in the syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral.
+
   if (gInterpreter->GetRootMapFiles()==0) {
     gInterpreter->EnableAutoLoading() ;
   }
@@ -216,20 +286,75 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
 }
 
 
+
+//_____________________________________________________________________________
 Bool_t RooClassFactory::makePdf(const char* name, const char* argNames, const char* catArgNames, const char* expression, 
 				Bool_t hasAnaInt, Bool_t hasIntGen, const char* intExpression) 
 {
+  // Write code for a RooAbsPdf implementation with class name 'name',
+  // taking RooAbsReal arguments with names listed in argNames and
+  // RooAbsCategory arguments with names listed in catArgNames as
+  // constructor arguments (use a comma separated list for multiple
+  // arguments). The initial value expression is taken to be
+  // 'expression' which can be any one-line C++ expression in terms of
+  // variables that occur in 'vars'. Skeleton code for handling of
+  // analytical integrals is added if hasAnaInt is true. You can add
+  // optional expressions for analytical integrals to be advertised by
+  // your class in the syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral. Skeleton code for internal event generation is added
+  // if hasIntGen is true
+  // 
+
   return makeClass("RooAbsPdf",name,argNames,catArgNames,expression,hasAnaInt,hasIntGen,intExpression) ;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooClassFactory::makeFunction(const char* name, const char* argNames, const char* catArgNames, const char* expression, Bool_t hasAnaInt, const char* intExpression) 
 {
+  // Write code for a RooAbsReal implementation with class name 'name',
+  // taking RooAbsReal arguments with names listed in argNames and
+  // RooAbsCategory arguments with names listed in catArgNames as
+  // constructor arguments (use a comma separated list for multiple
+  // arguments). The initial value expression is taken to be
+  // 'expression' which can be any one-line C++ expression in terms of
+  // variables that occur in 'vars'. Skeleton code for handling of
+  // analytical integrals is added if hasAnaInt is true. You can add
+  // optional expressions for analytical integrals to be advertised by
+  // your class in the syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral. 
+
   return makeClass("RooAbsReal",name,argNames,catArgNames,expression,hasAnaInt,kFALSE,intExpression) ;
 }
 
+
+//_____________________________________________________________________________
 Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, const char* realArgNames, const char* catArgNames, 
 				  const char* expression,  Bool_t hasAnaInt, Bool_t hasIntGen, const char* intExpression)
 {
+  // Write code for a 'baseName' implementation with class name 'className',
+  // taking RooAbsReal arguments with names listed in argNames and
+  // RooAbsCategory arguments with names listed in catArgNames as
+  // constructor arguments (use a comma separated list for multiple
+  // arguments). The initial value expression is taken to be
+  // 'expression' which can be any one-line C++ expression in terms of
+  // variables that occur in 'vars'. Skeleton code for handling of
+  // analytical integrals is added if hasAnaInt is true. You can add
+  // optional expressions for analytical integrals to be advertised by
+  // your class in the syntax
+  // "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
+  // where <intObsName> a name of the observable integrated over and
+  // <CPPAnaIntExpression> is the C++ expression that calculates that
+  // integral. Skeleton code for internal event generation is added
+  // if hasIntGen is true
+  // 
+
   // Check that arguments were given
   if (!baseName) {
     oocoutE((TObject*)0,InputArguments) << "RooClassFactory::makeClass: ERROR: a base class name must be given" << endl ;
@@ -289,12 +414,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   hf << "/*****************************************************************************" << endl
      << " * Project: RooFit                                                           *" << endl
      << " *                                                                           *" << endl
-     << " * Copyright (c) 2000-2007, Regents of the University of California          *" << endl
-     << " *                          and Stanford University. All rights reserved.    *" << endl
-     << " *                                                                           *" << endl
-     << " * Redistribution and use in source and binary forms,                        *" << endl
-     << " * with or without modification, are permitted according to the terms        *" << endl
-     << " * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *" << endl
+     << "  * This code was autogenerated by RooClassFactory                            * " << endl 
      << " *****************************************************************************/" << endl
      << endl
      << "#ifndef " << ifdefName << endl
@@ -373,16 +493,9 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   cf << " /***************************************************************************** " << endl 
      << "  * Project: RooFit                                                           * " << endl 
      << "  *                                                                           * " << endl 
-     << "  * Copyright (c) 2000-2005, Regents of the University of California          * " << endl 
-     << "  *                          and Stanford University. All rights reserved.    * " << endl 
-     << "  *                                                                           * " << endl 
-     << "  * Redistribution and use in source and binary forms,                        * " << endl 
-     << "  * with or without modification, are permitted according to the terms        * " << endl 
-     << "  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * " << endl 
+     << "  * This code was autogenerated by RooClassFactory                            * " << endl 
      << "  *****************************************************************************/ " << endl 
      << endl 
-
-     << " // -- CLASS DESCRIPTION [PDF] -- " << endl 
      << " // Your description goes here... " << endl 
      << endl 
 

@@ -14,9 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PLOT] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // A RooEllipse is a two-dimensional ellipse that can be used to represent
 // an error contour.
+// END_HTML
+//
 
 
 #include "RooFit.h"
@@ -34,13 +38,24 @@
 ClassImp(RooEllipse)
 
 
-RooEllipse::RooEllipse() { }
 
-RooEllipse::~RooEllipse() 
-{
+//_____________________________________________________________________________
+RooEllipse::RooEllipse() 
+{ 
+  // Default constructor
 }
 
-RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho, Int_t points) {
+
+//_____________________________________________________________________________
+RooEllipse::~RooEllipse() 
+{
+  // Destructor
+}
+
+
+//_____________________________________________________________________________
+RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho, Int_t points) 
+{
   // Create a 2-dimensional ellipse centered at (x1,x2) that represents the confidence
   // level contour for a measurement with errors (s1,s2) and correlation coefficient rho.
   // The resulting curve is defined as the unique ellipse that passes through these points:
@@ -101,23 +116,35 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
 }
 
 
+
+//_____________________________________________________________________________
 void RooEllipse::printName(ostream& os) const 
 {
+  // Print name of ellipse on ostream
   os << GetName() ;
 }
 
+
+//_____________________________________________________________________________
 void RooEllipse::printTitle(ostream& os) const 
 {
+  // Print title of ellipse on ostream
   os << GetName() ;
 }
 
+
+//_____________________________________________________________________________
 void RooEllipse::printClassName(ostream& os) const 
 {
+  // Print class name of ellipse on ostream
   os << IsA()->GetName() ;
 }
 
+
+//_____________________________________________________________________________
 void RooEllipse::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
+  // Print detailed multi line information on ellipse on ostreamx
   RooPlotable::printMultiline(os,contents,verbose,indent);
   for(Int_t index=0; index < fNpoints; index++) {
     os << indent << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;

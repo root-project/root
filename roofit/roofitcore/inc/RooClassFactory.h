@@ -50,7 +50,7 @@ protected:
   
   RooClassFactory(const RooClassFactory&) ;
 
-  ClassDef(RooClassFactory,0) // RooFit class factory
+  ClassDef(RooClassFactory,0) // RooFit class code and instance factory 
 } ;
 
 #endif

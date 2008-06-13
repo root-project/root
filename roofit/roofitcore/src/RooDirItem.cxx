@@ -14,10 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooDirItem is a utility base class for RooFit objects that are to be attached
 // to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
 // methods that can be used to safely attach and detach one self from a TDirectory
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -31,26 +35,35 @@
 
 ClassImp(RooDirItem) ;
 
+
+//_____________________________________________________________________________
 RooDirItem::RooDirItem() : _dir(0) 
 {
   // Default constructor
 }
 
+
+//_____________________________________________________________________________
 RooDirItem::RooDirItem(const RooDirItem& /*other*/) : _dir(0) 
 {
   // Copy constructor
 }
 
 
+
+//_____________________________________________________________________________
 RooDirItem::~RooDirItem() 
 {  
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 void RooDirItem::removeFromDir(TObject* obj) 
 {
-  // Remove self from directory it was added to
+  // Remove object from directory it was added to
+
   if (_dir) {
     if (!_dir->TestBit(TDirectoryFile::kCloseDirectory))
       _dir->GetList()->Remove(obj) ;
@@ -58,8 +71,14 @@ void RooDirItem::removeFromDir(TObject* obj)
 } 
 
 
+
+//_____________________________________________________________________________
 void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident) 
 {
+  // Append object to directory. If forceMemoryResident is
+  // true, force addition to ROOT memory directory if that
+  // is not the current directory
+
   if (forceMemoryResident) {
     // Append self forcibly to memory directory
     TString pwd(gDirectory->GetPath()) ;

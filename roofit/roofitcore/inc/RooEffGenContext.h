@@ -32,9 +32,9 @@ protected:
   void initGenerator(const RooArgSet &theEvent);
   void generateEvent(RooArgSet &theEvent, Int_t remaining);
 private:
-   RooArgSet *_cloneSet;
-   RooAbsReal *_eff;
-   RooAbsGenContext *_generator;
+   RooArgSet *_cloneSet;           // Internal clone of p.d.f.
+   RooAbsReal *_eff;               // Pointer to efficiency function
+   RooAbsGenContext *_generator;   // Generator context for p.d.f
 
    ClassDef(RooEffGenContext,0) // Context for generating a dataset from a PDF
 };

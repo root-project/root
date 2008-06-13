@@ -14,7 +14,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [PDF] --
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML
 // RooEfficiency is a PDF helper class to fit efficiencies parameterized
 // by a supplied function F.
 // 
@@ -23,6 +25,8 @@
 // this class evaluates as F if C is 'accept' and as (1-F) if
 // C is 'reject'. Values of F below 0 and above 1 are clipped.
 // F may have an arbitrary number of dependents and parameters
+// END_HTML
+//
 
 #include "RooFit.h"
 
@@ -34,16 +38,22 @@
 ClassImp(RooEfficiency)
   ;
 
+
+//_____________________________________________________________________________
 RooEfficiency::RooEfficiency(const char *name, const char *title, const RooAbsReal& effFunc, const RooAbsCategory& cat, const char* sigCatName) :
   RooAbsPdf(name,title),
   _cat("cat","Signal/Background category",this,(RooAbsCategory&)cat),
   _effFunc("effFunc","Efficiency modeling function",this,(RooAbsReal&)effFunc),
   _sigCatName(sigCatName)
 {  
-  // Constructor with title used as formula expression
+  // Construct an N+1 dimensional efficiency p.d.f from an N-dimensional efficiency
+  // function and a category cat with two states (0,1) that indicate if a given
+  // event should be counted as rejected or accepted respectively
 }
 
 
+
+//_____________________________________________________________________________
 RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) : 
   RooAbsPdf(other, name),
   _cat("cat",this,other._cat),
@@ -54,15 +64,21 @@ RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
 }
 
 
+
+//_____________________________________________________________________________
 RooEfficiency::~RooEfficiency() 
 {
   // Destructor
 }
 
 
+
+//_____________________________________________________________________________
 Double_t RooEfficiency::evaluate() const
 {
-  // Calculate current value of this object
+  // Calculate the raw value of this p.d.f which is the effFunc
+  // value if cat==1 and it is (1-effFunc) if cat==0
+
   Double_t effFuncVal = _effFunc ;
 
   // Truncate efficiency function in range 0.0-1.0

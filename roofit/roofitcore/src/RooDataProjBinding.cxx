@@ -14,14 +14,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION [AUX] --
-// Lightweight interface adaptor that projects a real function via summation
-// of states provided in a dataset. The real function must be attached to
-// the dataset before creating this binding object.
+//////////////////////////////////////////////////////////////////////////////
+// 
+// BEGIN_HTML Class RooDataProjBinding is a lightweight interface
+// adaptor that projects a real function via summation of states
+// provided in a dataset. The real function must be attached to the
+// dataset before creating this binding object.
 //
 // If the dataset only contains category variables, the summation is optimized
 // performing a weighted sum over the states of a RooSuperCategory that is
 // constructed from all the categories in the dataset
+//
+// END_HTML
+//
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -42,12 +47,16 @@
 ClassImp(RooDataProjBinding)
 ;
 
+
+//_____________________________________________________________________________
 RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, 
 				       const RooArgSet &vars, const RooArgSet* nset) :
   RooRealBinding(real,vars,0), _first(kTRUE), _real(&real), _data(&data), _nset(nset), 
   _superCat(0), _catTable(0)
 {  
-  // Constructor
+  // Constructor of a data weighted average function binding with
+  // variables 'vars' for function 'real' and dataset 'data' with
+  // weights.
 
   // Determine if dataset contains only categories
   TIterator* iter = data.get()->createIterator() ;
@@ -59,7 +68,6 @@ RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData&
   delete iter ;
 
   // Determine weights of various super categories fractions
-  //allCat = kFALSE ;
   if (allCat) {
      _superCat = new RooSuperCategory("superCat","superCat",*data.get()) ;
      _catTable = data.table(*_superCat) ;
@@ -68,6 +76,7 @@ RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData&
 
 
 
+//_____________________________________________________________________________
 RooDataProjBinding::~RooDataProjBinding() 
 {
   // Destructor, delete owned objects
@@ -77,9 +86,11 @@ RooDataProjBinding::~RooDataProjBinding()
 
 
 
+//_____________________________________________________________________________
 Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const 
 {
-  // Evaluate data-projected values of boud real function.
+  // Evaluate data-projected values of the bound real function.
+
   assert(isValid());
   loadValues(xvector);    
 

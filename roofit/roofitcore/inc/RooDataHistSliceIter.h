@@ -48,8 +48,10 @@ protected:
   Int_t      _nStep ;
   Int_t      _curStep ;
   
-  TIterator& operator=(const TIterator&) { return *this ; } // forbidden for now
-
+  TIterator& operator=(const TIterator&) { 
+    // Prohibit iterator assignment 
+    return *this ; 
+  }
 
   ClassDef(RooDataHistSliceIter,0) // Iterator over a one-dimensional slice of a RooDataHist
 };
